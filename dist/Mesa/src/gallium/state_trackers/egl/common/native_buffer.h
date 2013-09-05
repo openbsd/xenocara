@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.9
  *
  * Copyright (C) 2010 LunarG Inc.
  *
@@ -33,9 +32,11 @@
 #include "pipe/p_state.h"
 
 struct native_display;
+struct ANativeWindowBuffer;
 
 enum native_buffer_type {
    NATIVE_BUFFER_DRM,
+   NATIVE_BUFFER_ANDROID,
 
    NUM_NATIVE_BUFFERS
 };
@@ -50,6 +51,8 @@ struct native_buffer {
          unsigned handle; /**< the handle of the GEM object */
          unsigned stride;
       } drm;
+
+      struct ANativeWindowBuffer *android; /**< opaque native buffer */
    } u;
 };
 

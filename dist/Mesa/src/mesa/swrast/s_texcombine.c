@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.5
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * Copyright (C) 2009  VMware, Inc.   All Rights Reserved.
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -29,6 +29,7 @@
 #include "main/colormac.h"
 #include "main/imports.h"
 #include "main/pixeltransfer.h"
+#include "main/samplerobj.h"
 #include "program/prog_instruction.h"
 
 #include "s_context.h"
@@ -45,10 +46,14 @@ typedef float (*float4_array)[4];
 /**
  * Return array of texels for given unit.
  */
-static INLINE float4_array
+static inline float4_array
 get_texel_array(SWcontext *swrast, GLuint unit)
 {
-   return (float4_array) (swrast->TexelBuffer + unit * MAX_WIDTH * 4);
+#ifdef _OPENMP
+   return (float4_array) (swrast->TexelBuffer + unit * SWRAST_MAX_WIDTH * 4 * omp_get_num_threads() + (SWRAST_MAX_WIDTH * 4 * omp_get_thread_num()));
+#else
+   return (float4_array) (swrast->TexelBuffer + unit * SWRAST_MAX_WIDTH * 4);
+#endif
 }
 
 
@@ -65,17 +70,18 @@ get_texel_array(SWcontext *swrast, GLuint unit)
  *
  * \param ctx          rendering context
  * \param unit         the texture combiner unit
- * \param n            number of fragments to process (span width)
  * \param primary_rgba incoming fragment color array
  * \param texelBuffer  pointer to texel colors for all texture units
  * 
- * \param rgba         incoming/result fragment colors
+ * \param span         two fields are used in this function:
+ *                       span->end: number of fragments to process
+ *                       span->array->rgba: incoming/result fragment colors
  */
 static void
-texture_combine( struct gl_context *ctx, GLuint unit, GLuint n,
+texture_combine( struct gl_context *ctx, GLuint unit,
                  const float4_array primary_rgba,
                  const GLfloat *texelBuffer,
-                 GLchan (*rgbaChan)[4] )
+                 SWspan *span )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    const struct gl_texture_unit *textureUnit = &(ctx->Texture.Unit[unit]);
@@ -88,22 +94,25 @@ texture_combine( struct gl_context *ctx, GLuint unit, GLuint n,
    const GLuint numArgsA = combine->_NumArgsA;
    float4_array ccolor[4], rgba;
    GLuint i, term;
+   GLuint n = span->end;
+   GLchan (*rgbaChan)[4] = span->array->rgba;
 
    /* alloc temp pixel buffers */
-   rgba = (float4_array) malloc(4 * n * sizeof(GLfloat));
+   rgba = malloc(4 * n * sizeof(GLfloat));
    if (!rgba) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "texture_combine");
       return;
    }
 
    for (i = 0; i < numArgsRGB || i < numArgsA; i++) {
-      ccolor[i] = (float4_array) malloc(4 * n * sizeof(GLfloat));
+      ccolor[i] = malloc(4 * n * sizeof(GLfloat));
       if (!ccolor[i]) {
          while (i) {
             free(ccolor[i]);
             i--;
          }
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "texture_combine");
+         free(rgba);
          return;
       }
    }
@@ -537,6 +546,10 @@ texture_combine( struct gl_context *ctx, GLuint unit, GLuint n,
       UNCLAMPED_FLOAT_TO_CHAN(rgbaChan[i][BCOMP], rgba[i][BCOMP]);
       UNCLAMPED_FLOAT_TO_CHAN(rgbaChan[i][ACOMP], rgba[i][ACOMP]);
    }
+   /* The span->array->rgba values are of CHAN type so set
+    * span->array->ChanType field accordingly.
+    */
+   span->array->ChanType = CHAN_TYPE;
 
 end:
    for (i = 0; i < numArgsRGB || i < numArgsA; i++) {
@@ -586,14 +599,34 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
    float4_array primary_rgba;
    GLuint unit;
 
-   primary_rgba = (float4_array) malloc(span->end * 4 * sizeof(GLfloat));
+   if (!swrast->TexelBuffer) {
+#ifdef _OPENMP
+      const GLint maxThreads = omp_get_max_threads();
+#else
+      const GLint maxThreads = 1;
+#endif
+
+      /* TexelBuffer is also global and normally shared by all SWspan
+       * instances; when running with multiple threads, create one per
+       * thread.
+       */
+      swrast->TexelBuffer =
+	 malloc(ctx->Const.FragmentProgram.MaxTextureImageUnits * maxThreads *
+			    SWRAST_MAX_WIDTH * 4 * sizeof(GLfloat));
+      if (!swrast->TexelBuffer) {
+	 _mesa_error(ctx, GL_OUT_OF_MEMORY, "texture_combine");
+	 return;
+      }
+   }
+
+   primary_rgba = malloc(span->end * 4 * sizeof(GLfloat));
 
    if (!primary_rgba) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "texture_span");
       return;
    }
 
-   ASSERT(span->end <= MAX_WIDTH);
+   ASSERT(span->end <= SWRAST_MAX_WIDTH);
 
    /*
     * Save copy of the incoming fragment colors (the GL_PRIMARY_COLOR)
@@ -615,12 +648,12 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
       if (texUnit->_ReallyEnabled &&
          texUnit->_CurrentCombine->ModeRGB == GL_BUMP_ENVMAP_ATI) {
          const GLfloat (*texcoords)[4] = (const GLfloat (*)[4])
-            span->array->attribs[FRAG_ATTRIB_TEX0 + unit];
+            span->array->attribs[VARYING_SLOT_TEX0 + unit];
          float4_array targetcoords =
-            span->array->attribs[FRAG_ATTRIB_TEX0 +
+            span->array->attribs[VARYING_SLOT_TEX0 +
                ctx->Texture.Unit[unit].BumpTarget - GL_TEXTURE0];
 
-         const struct gl_texture_object *curObj = texUnit->_Current;
+         const struct gl_sampler_object *samp = _mesa_get_samplerobj(ctx, unit);
          GLfloat *lambda = span->array->lambda[unit];
          float4_array texels = get_texel_array(swrast, unit);
          GLuint i;
@@ -631,9 +664,9 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
 
          /* adjust texture lod (lambda) */
          if (span->arrayMask & SPAN_LAMBDA) {
-            if (texUnit->LodBias + curObj->Sampler.LodBias != 0.0F) {
+            if (texUnit->LodBias + samp->LodBias != 0.0F) {
                /* apply LOD bias, but don't clamp yet */
-               const GLfloat bias = CLAMP(texUnit->LodBias + curObj->Sampler.LodBias,
+               const GLfloat bias = CLAMP(texUnit->LodBias + samp->LodBias,
                                           -ctx->Const.MaxTextureLodBias,
                                           ctx->Const.MaxTextureLodBias);
                GLuint i;
@@ -642,11 +675,11 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
                }
             }
 
-            if (curObj->Sampler.MinLod != -1000.0 ||
-                curObj->Sampler.MaxLod != 1000.0) {
+            if (samp->MinLod != -1000.0 ||
+                samp->MaxLod != 1000.0) {
                /* apply LOD clamping to lambda */
-               const GLfloat min = curObj->Sampler.MinLod;
-               const GLfloat max = curObj->Sampler.MaxLod;
+               const GLfloat min = samp->MinLod;
+               const GLfloat max = samp->MaxLod;
                GLuint i;
                for (i = 0; i < span->end; i++) {
                   GLfloat l = lambda[i];
@@ -656,8 +689,9 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
          }
 
          /* Sample the texture (span->end = number of fragments) */
-         swrast->TextureSample[unit]( ctx, texUnit->_Current, span->end,
-                                      texcoords, lambda, texels );
+         swrast->TextureSample[unit]( ctx, samp,
+                                      ctx->Texture.Unit[unit]._Current,
+                                      span->end, texcoords, lambda, texels );
 
          /* manipulate the span values of the bump target
             not sure this can work correctly even ignoring
@@ -680,16 +714,17 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
       if (texUnit->_ReallyEnabled &&
           texUnit->_CurrentCombine->ModeRGB != GL_BUMP_ENVMAP_ATI) {
          const GLfloat (*texcoords)[4] = (const GLfloat (*)[4])
-            span->array->attribs[FRAG_ATTRIB_TEX0 + unit];
+            span->array->attribs[VARYING_SLOT_TEX0 + unit];
          const struct gl_texture_object *curObj = texUnit->_Current;
+         const struct gl_sampler_object *samp = _mesa_get_samplerobj(ctx, unit);
          GLfloat *lambda = span->array->lambda[unit];
          float4_array texels = get_texel_array(swrast, unit);
 
          /* adjust texture lod (lambda) */
          if (span->arrayMask & SPAN_LAMBDA) {
-            if (texUnit->LodBias + curObj->Sampler.LodBias != 0.0F) {
+            if (texUnit->LodBias + samp->LodBias != 0.0F) {
                /* apply LOD bias, but don't clamp yet */
-               const GLfloat bias = CLAMP(texUnit->LodBias + curObj->Sampler.LodBias,
+               const GLfloat bias = CLAMP(texUnit->LodBias + samp->LodBias,
                                           -ctx->Const.MaxTextureLodBias,
                                           ctx->Const.MaxTextureLodBias);
                GLuint i;
@@ -698,11 +733,11 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
                }
             }
 
-            if (curObj->Sampler.MinLod != -1000.0 ||
-                curObj->Sampler.MaxLod != 1000.0) {
+            if (samp->MinLod != -1000.0 ||
+                samp->MaxLod != 1000.0) {
                /* apply LOD clamping to lambda */
-               const GLfloat min = curObj->Sampler.MinLod;
-               const GLfloat max = curObj->Sampler.MaxLod;
+               const GLfloat min = samp->MinLod;
+               const GLfloat max = samp->MaxLod;
                GLuint i;
                for (i = 0; i < span->end; i++) {
                   GLfloat l = lambda[i];
@@ -710,8 +745,8 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
                }
             }
          }
-         else if (curObj->Sampler.MaxAnisotropy > 1.0 &&
-                  curObj->Sampler.MinFilter == GL_LINEAR_MIPMAP_LINEAR) {
+         else if (samp->MaxAnisotropy > 1.0 &&
+                  samp->MinFilter == GL_LINEAR_MIPMAP_LINEAR) {
             /* sample_lambda_2d_aniso is beeing used as texture_sample_func,
              * it requires the current SWspan *span as an additional parameter.
              * In order to keep the same function signature, the unused lambda
@@ -724,8 +759,9 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
          }
 
          /* Sample the texture (span->end = number of fragments) */
-         swrast->TextureSample[unit]( ctx, texUnit->_Current, span->end,
-                                      texcoords, lambda, texels );
+         swrast->TextureSample[unit]( ctx, samp,
+                                      ctx->Texture.Unit[unit]._Current,
+                                      span->end, texcoords, lambda, texels );
 
          /* GL_EXT_texture_swizzle */
          if (curObj->_Swizzle != SWIZZLE_NOOP) {
@@ -739,12 +775,8 @@ _swrast_texture_span( struct gl_context *ctx, SWspan *span )
     * We modify the span->color.rgba values.
     */
    for (unit = 0; unit < ctx->Const.MaxTextureUnits; unit++) {
-      if (ctx->Texture.Unit[unit]._ReallyEnabled) {
-         texture_combine( ctx, unit, span->end,
-                          primary_rgba,
-                          swrast->TexelBuffer,
-                          span->array->rgba );
-      }
+      if (ctx->Texture.Unit[unit]._ReallyEnabled)
+         texture_combine(ctx, unit, primary_rgba, swrast->TexelBuffer, span);
    }
 
    free(primary_rgba);

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
  *
  * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -56,10 +56,6 @@
 
 #ifdef USE_SPARC_ASM
 #include "sparc/sparc.h"
-#endif
-
-#ifdef USE_PPC_ASM
-#include "ppc/common_ppc_features.h"
 #endif
 
 clip_func _mesa_clip_tab[5];
@@ -120,8 +116,6 @@ _math_init_transformation( void )
    _mesa_init_all_x86_transform_asm();
 #elif defined( USE_SPARC_ASM )
    _mesa_init_all_sparc_transform_asm();
-#elif defined( USE_PPC_ASM )
-   _mesa_init_all_ppc_transform_asm();
 #elif defined( USE_X86_64_ASM )
    _mesa_init_all_x86_64_transform_asm();
 #endif

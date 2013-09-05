@@ -5,7 +5,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -22,9 +21,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -40,7 +40,7 @@
  * Return pointer to current texture unit.
  * This the texture unit set by glActiveTexture(), not glClientActiveTexture().
  */
-static INLINE struct gl_texture_unit *
+static inline struct gl_texture_unit *
 _mesa_get_current_tex_unit(struct gl_context *ctx)
 {
    ASSERT(ctx->Texture.CurrentUnit < Elements(ctx->Texture.Unit));
@@ -62,10 +62,10 @@ _mesa_print_texunit_state( struct gl_context *ctx, GLuint unit );
 /*@{*/
 
 extern void GLAPIENTRY
-_mesa_ActiveTextureARB( GLenum target );
+_mesa_ActiveTexture( GLenum target );
 
 extern void GLAPIENTRY
-_mesa_ClientActiveTextureARB( GLenum target );
+_mesa_ClientActiveTexture( GLenum target );
 
 /*@}*/
 

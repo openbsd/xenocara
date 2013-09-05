@@ -49,6 +49,7 @@
 #include "lp_bld_gather.h"
 #include "lp_bld_debug.h"
 #include "lp_bld_format.h"
+#include "lp_bld_intr.h"
 
 
 /**
@@ -138,12 +139,12 @@ format_matches_type(const struct util_format_description *desc,
 
 
 /**
- * Unpack a single pixel into its RGBA components.
+ * Unpack a single pixel into its XYZW components.
  *
  * @param desc  the pixel format for the packed pixel value
  * @param packed integer pixel in a format such as PIPE_FORMAT_B8G8R8A8_UNORM
  *
- * @return RGBA in a float[4] or ubyte[4] or ushort[4] vector.
+ * @return XYZW in a float[4] or ubyte[4] or ushort[4] vector.
  */
 static INLINE LLVMValueRef
 lp_build_unpack_arith_rgba_aos(struct gallivm_state *gallivm,
@@ -158,7 +159,6 @@ lp_build_unpack_arith_rgba_aos(struct gallivm_state *gallivm,
 
    boolean normalized;
    boolean needs_uitofp;
-   unsigned shift;
    unsigned i;
 
    /* TODO: Support more formats */
@@ -189,11 +189,11 @@ lp_build_unpack_arith_rgba_aos(struct gallivm_state *gallivm,
    /* Initialize vector constants */
    normalized = FALSE;
    needs_uitofp = FALSE;
-   shift = 0;
 
    /* Loop over 4 color components */
    for (i = 0; i < 4; ++i) {
       unsigned bits = desc->channel[i].size;
+      unsigned shift = desc->channel[i].shift;
 
       if (desc->channel[i].type == UTIL_FORMAT_TYPE_VOID) {
          shifts[i] = LLVMGetUndef(LLVMInt32TypeInContext(gallivm->context));
@@ -219,16 +219,13 @@ lp_build_unpack_arith_rgba_aos(struct gallivm_state *gallivm,
          else
             scales[i] =  lp_build_const_float(gallivm, 1.0);
       }
-
-      shift += bits;
    }
 
-   /* Ex: convert packed = {BGRA, BGRA, BGRA, BGRA}
-    * into masked = {B, G, R, A}
+   /* Ex: convert packed = {XYZW, XYZW, XYZW, XYZW}
+    * into masked = {X, Y, Z, W}
     */
    shifted = LLVMBuildLShr(builder, packed, LLVMConstVector(shifts, 4), "");
    masked = LLVMBuildAnd(builder, shifted, LLVMConstVector(masks, 4), "");
-
 
    if (!needs_uitofp) {
       /* UIToFP can't be expressed in SSE2 */
@@ -272,7 +269,6 @@ lp_build_pack_rgba_aos(struct gallivm_state *gallivm,
    LLVMValueRef shifts[4];
    LLVMValueRef scales[4];
    boolean normalized;
-   unsigned shift;
    unsigned i, j;
 
    assert(desc->layout == UTIL_FORMAT_LAYOUT_PLAIN);
@@ -298,9 +294,9 @@ lp_build_pack_rgba_aos(struct gallivm_state *gallivm,
                                        LLVMConstVector(swizzles, 4), "");
 
    normalized = FALSE;
-   shift = 0;
    for (i = 0; i < 4; ++i) {
       unsigned bits = desc->channel[i].size;
+      unsigned shift = desc->channel[i].shift;
 
       if (desc->channel[i].type == UTIL_FORMAT_TYPE_VOID) {
          shifts[i] = LLVMGetUndef(LLVMInt32TypeInContext(gallivm->context));
@@ -321,8 +317,6 @@ lp_build_pack_rgba_aos(struct gallivm_state *gallivm,
          else
             scales[i] = lp_build_const_float(gallivm, 1.0);
       }
-
-      shift += bits;
    }
 
    if (normalized)
@@ -396,6 +390,8 @@ lp_build_fetch_rgba_aos(struct gallivm_state *gallivm,
        format_desc->block.bits <= type.width * 4 &&
        util_is_power_of_two(format_desc->block.bits)) {
       LLVMValueRef packed;
+      LLVMTypeRef dst_vec_type = lp_build_vec_type(gallivm, type);
+      unsigned vec_len = type.width * type.length;
 
       /*
        * The format matches the type (apart of a swizzle) so no need for
@@ -404,13 +400,11 @@ lp_build_fetch_rgba_aos(struct gallivm_state *gallivm,
 
       packed = lp_build_gather(gallivm, type.length/4,
                                format_desc->block.bits, type.width*4,
-                               base_ptr, offset);
+                               base_ptr, offset, TRUE);
 
-      assert(format_desc->block.bits <= type.width * type.length);
+      assert(format_desc->block.bits <= vec_len);
 
-      packed = LLVMBuildBitCast(gallivm->builder, packed,
-                                lp_build_vec_type(gallivm, type), "");
-
+      packed = LLVMBuildBitCast(gallivm->builder, packed, dst_vec_type, "");
       return lp_build_format_swizzle_aos(format_desc, &bld, packed);
    }
 
@@ -428,7 +422,8 @@ lp_build_fetch_rgba_aos(struct gallivm_state *gallivm,
        format_desc->is_bitmask &&
        !format_desc->is_mixed &&
        (format_desc->channel[0].type == UTIL_FORMAT_TYPE_UNSIGNED ||
-        format_desc->channel[1].type == UTIL_FORMAT_TYPE_UNSIGNED)) {
+        format_desc->channel[1].type == UTIL_FORMAT_TYPE_UNSIGNED) &&
+       !format_desc->channel[0].pure_integer) {
 
       LLVMValueRef tmps[LP_MAX_VECTOR_LENGTH/4];
       LLVMValueRef res;
@@ -443,7 +438,7 @@ lp_build_fetch_rgba_aos(struct gallivm_state *gallivm,
 
          packed = lp_build_gather_elem(gallivm, num_pixels,
                                        format_desc->block.bits, 32,
-                                       base_ptr, offset, k);
+                                       base_ptr, offset, k, FALSE);
 
          tmps[k] = lp_build_unpack_arith_rgba_aos(gallivm,
                                                   format_desc,
@@ -468,6 +463,13 @@ lp_build_fetch_rgba_aos(struct gallivm_state *gallivm,
                     tmps, num_pixels, &res, 1);
 
       return lp_build_format_swizzle_aos(format_desc, &bld, res);
+   }
+
+   /* If all channels are of same type and we are not using half-floats */
+   if (format_desc->is_array &&
+       format_desc->colorspace == UTIL_FORMAT_COLORSPACE_RGB) {
+      assert(!format_desc->is_mixed);
+      return lp_build_fetch_rgba_aos_array(gallivm, format_desc, type, base_ptr, offset);
    }
 
    /*
@@ -601,7 +603,6 @@ lp_build_fetch_rgba_aos(struct gallivm_state *gallivm,
       return res;
    }
 
-
    /*
     * Fallback to util_format_description::fetch_rgba_float().
     */
@@ -643,28 +644,18 @@ lp_build_fetch_rgba_aos(struct gallivm_state *gallivm,
           */
          LLVMTypeRef ret_type;
          LLVMTypeRef arg_types[4];
-         LLVMTypeRef function_type;
 
          ret_type = LLVMVoidTypeInContext(gallivm->context);
          arg_types[0] = pf32t;
          arg_types[1] = pi8t;
          arg_types[2] = i32t;
          arg_types[3] = i32t;
-         function_type = LLVMFunctionType(ret_type, arg_types,
-                                          Elements(arg_types), 0);
 
-         /* Note: we're using this casting here instead of LLVMAddGlobalMapping()
-          * to work around a bug in LLVM 2.6, and for efficiency/simplicity.
-          */
-
-         /* make const pointer for the C fetch_rgba_float function */
-         function = lp_build_const_int_pointer(gallivm,
-            func_to_pointer((func_pointer) format_desc->fetch_rgba_float));
-
-         /* cast the callee pointer to the function's type */
-         function = LLVMBuildBitCast(builder, function,
-                                     LLVMPointerType(function_type, 0),
-                                     "cast callee");
+         function = lp_build_const_func_pointer(gallivm,
+                                                func_to_pointer((func_pointer) format_desc->fetch_rgba_float),
+                                                ret_type,
+                                                arg_types, Elements(arg_types),
+                                                format_desc->short_name);
       }
 
       tmp_ptr = lp_build_alloca(gallivm, f32x4t, "");
@@ -703,6 +694,8 @@ lp_build_fetch_rgba_aos(struct gallivm_state *gallivm,
 
       return res;
    }
+
+   assert(!util_format_is_pure_integer(format_desc->format));
 
    assert(0);
    return lp_build_undef(gallivm, type);

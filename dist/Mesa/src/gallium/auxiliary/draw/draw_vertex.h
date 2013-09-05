@@ -42,6 +42,7 @@
 #include "pipe/p_compiler.h"
 #include "pipe/p_state.h"
 #include "util/u_debug.h"
+#include "util/u_memory.h"
 
 
 /**
@@ -87,7 +88,7 @@ struct vertex_info
       unsigned interp_mode:4;      /**< INTERP_x */
       unsigned emit:4;             /**< EMIT_x */
       unsigned src_index:8;          /**< map to post-xform attribs */
-   } attrib[PIPE_MAX_SHADER_INPUTS];
+   } attrib[PIPE_MAX_SHADER_OUTPUTS];
 };
 
 static INLINE size_t
@@ -124,10 +125,17 @@ static INLINE uint
 draw_emit_vertex_attr(struct vertex_info *vinfo,
                       enum attrib_emit emit, 
                       enum interp_mode interp, /* only used by softpipe??? */
-                      uint src_index)
+                      int src_index)
 {
    const uint n = vinfo->num_attribs;
-   assert(n < PIPE_MAX_SHADER_INPUTS);
+
+   /* If the src_index is negative, meaning it hasn't been found
+    * lets just redirect it to the first output slot */
+   if (src_index < 0) {
+      src_index = 0;
+   }
+
+   assert(n < Elements(vinfo->attrib));
    vinfo->attrib[n].emit = emit;
    vinfo->attrib[n].interp_mode = interp;
    vinfo->attrib[n].src_index = src_index;

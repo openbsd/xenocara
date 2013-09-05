@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.3
  *
  * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -38,16 +38,16 @@ _swrast_stencil_and_ztest_span(struct gl_context *ctx, SWspan *span);
 
 extern void
 _swrast_read_stencil_span(struct gl_context *ctx, struct gl_renderbuffer *rb,
-                          GLint n, GLint x, GLint y, GLstencil stencil[]);
+                          GLint n, GLint x, GLint y, GLubyte stencil[]);
 
 
 extern void
 _swrast_write_stencil_span( struct gl_context *ctx, GLint n, GLint x, GLint y,
-                          const GLstencil stencil[] );
+                          const GLubyte stencil[] );
 
 
 extern void
-_swrast_clear_stencil_buffer( struct gl_context *ctx, struct gl_renderbuffer *rb );
+_swrast_clear_stencil_buffer(struct gl_context *ctx);
 
 
 #endif

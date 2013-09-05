@@ -28,7 +28,7 @@
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/colormac.h"
-
+#include "swrast/s_chan.h"
 #include "t_context.h"
 #include "t_vertex.h"
 
@@ -87,7 +87,7 @@ void _tnl_register_fastpath( struct tnl_clipspace *vtx,
    fastpath->attr_count = vtx->attr_count;
    fastpath->match_strides = match_strides;
    fastpath->func = vtx->emit;
-   fastpath->attr = (struct tnl_attr_type *)
+   fastpath->attr =
       malloc(vtx->attr_count * sizeof(fastpath->attr[0]));
 
    for (i = 0; i < vtx->attr_count; i++) {
@@ -156,9 +156,11 @@ static void choose_interp_func( struct gl_context *ctx,
 				GLboolean force_boundary )
 {
    struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
+   GLboolean unfilled = (ctx->Polygon.FrontMode != GL_FILL ||
+                         ctx->Polygon.BackMode != GL_FILL);
+   GLboolean twosided = ctx->Light.Enabled && ctx->Light.Model.TwoSide;
 
-   if (vtx->need_extras && 
-       (ctx->_TriangleCaps & (DD_TRI_LIGHT_TWOSIDE|DD_TRI_UNFILLED))) {
+   if (vtx->need_extras && (twosided || unfilled)) {
       vtx->interp = _tnl_generic_interp_extras;
    } else {
       vtx->interp = _tnl_generic_interp;
@@ -171,9 +173,12 @@ static void choose_interp_func( struct gl_context *ctx,
 static void choose_copy_pv_func(  struct gl_context *ctx, GLuint edst, GLuint esrc )
 {
    struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
+   GLboolean unfilled = (ctx->Polygon.FrontMode != GL_FILL ||
+                         ctx->Polygon.BackMode != GL_FILL);
 
-   if (vtx->need_extras && 
-       (ctx->_TriangleCaps & (DD_TRI_LIGHT_TWOSIDE|DD_TRI_UNFILLED))) {
+   GLboolean twosided = ctx->Light.Enabled && ctx->Light.Model.TwoSide;
+
+   if (vtx->need_extras && (twosided || unfilled)) {
       vtx->copy_pv = _tnl_generic_copy_pv_extras;
    } else {
       vtx->copy_pv = _tnl_generic_copy_pv;
@@ -269,7 +274,8 @@ void *_tnl_get_vertex( struct gl_context *ctx, GLuint nr )
 
 void _tnl_invalidate_vertex_state( struct gl_context *ctx, GLuint new_state )
 {
-   if (new_state & (_DD_NEW_TRI_LIGHT_TWOSIDE|_DD_NEW_TRI_UNFILLED) ) {
+   /* if two-sided lighting changes or filled/unfilled polygon state changes */
+   if (new_state & (_NEW_LIGHT | _NEW_POLYGON) ) {
       struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
       vtx->new_inputs = ~0;
       vtx->interp = choose_interp_func;
@@ -494,7 +500,7 @@ void _tnl_init_vertices( struct gl_context *ctx,
    if (max_vertex_size > vtx->max_vertex_size) {
       _tnl_free_vertices( ctx );
       vtx->max_vertex_size = max_vertex_size;
-      vtx->vertex_buf = (GLubyte *)_mesa_align_calloc(vb_size * max_vertex_size, 32 );
+      vtx->vertex_buf = _mesa_align_calloc(vb_size * max_vertex_size, 32 );
       invalidate_funcs(vtx);
    }
 
@@ -547,7 +553,7 @@ void _tnl_free_vertices( struct gl_context *ctx )
 
       for (fp = vtx->fastpath ; fp ; fp = tmp) {
          tmp = fp->next;
-         FREE(fp->attr);
+         free(fp->attr);
 
          /* KW: At the moment, fp->func is constrained to be allocated by
           * _mesa_exec_alloc(), as the hardwired fastpaths in
@@ -556,7 +562,7 @@ void _tnl_free_vertices( struct gl_context *ctx )
           * module gets another overhaul.
           */
          _mesa_exec_free((void *) fp->func);
-         FREE(fp);
+         free(fp);
       }
 
       vtx->fastpath = NULL;

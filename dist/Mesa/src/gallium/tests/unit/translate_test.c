@@ -24,11 +24,12 @@
  **************************************************************************/
 
 #include <stdio.h>
-#include <translate/translate.h>
-#include <util/u_memory.h>
-#include <util/u_format.h>
-#include <util/u_cpu_detect.h>
-#include <rtasm/rtasm_cpu.h>
+#include "translate/translate.h"
+#include "util/u_memory.h"
+#include "util/u_format.h"
+#include "util/u_half.h"
+#include "util/u_cpu_detect.h"
+#include "rtasm/rtasm_cpu.h"
 
 /* don't use this for serious use */
 static double rand_double()
@@ -57,6 +58,7 @@ int main(int argc, char** argv)
    unsigned char* byte_buffer;
    float* float_buffer;
    double* double_buffer;
+   uint16_t *half_buffer;
    unsigned * elts;
    unsigned count = 4;
    unsigned i, j, k;
@@ -137,6 +139,7 @@ int main(int argc, char** argv)
    byte_buffer = align_malloc(buffer_size, 4096);
    float_buffer = align_malloc(buffer_size, 4096);
    double_buffer = align_malloc(buffer_size, 4096);
+   half_buffer = align_malloc(buffer_size, 4096);
 
    elts = align_malloc(count * sizeof *elts, 4096);
 
@@ -158,6 +161,9 @@ int main(int argc, char** argv)
 
    for (i = 0; i < buffer_size / sizeof(double); ++i)
       double_buffer[i] = rand_double();
+
+   for (i = 0; i < buffer_size / sizeof(double); ++i)
+      half_buffer[i] = util_float_to_half((float) rand_double());
 
    for (i = 0; i < count; ++i)
       elts[i] = i;
@@ -246,19 +252,21 @@ int main(int argc, char** argv)
             buffer[0] = (unsigned char*)float_buffer;
          else if(input_is_float && input_format_desc->channel[0].size == 64)
             buffer[0] = (unsigned char*)double_buffer;
+         else if(input_is_float && input_format_desc->channel[0].size == 16)
+            buffer[0] = (unsigned char*)half_buffer;
          else if(input_is_float)
             abort();
          else
             buffer[0] = byte_buffer;
 
          translate[0]->set_buffer(translate[0], 0, buffer[0], input_format_size, count - 1);
-         translate[0]->run_elts(translate[0], elts, count, 0, buffer[1]);
+         translate[0]->run_elts(translate[0], elts, count, 0, 0, buffer[1]);
          translate[1]->set_buffer(translate[1], 0, buffer[1], output_format_size, count - 1);
-         translate[1]->run_elts(translate[1], elts, count, 0, buffer[2]);
+         translate[1]->run_elts(translate[1], elts, count, 0, 0, buffer[2]);
          translate[0]->set_buffer(translate[0], 0, buffer[2], input_format_size, count - 1);
-         translate[0]->run_elts(translate[0], elts, count, 0, buffer[3]);
+         translate[0]->run_elts(translate[0], elts, count, 0, 0, buffer[3]);
          translate[1]->set_buffer(translate[1], 0, buffer[3], output_format_size, count - 1);
-         translate[1]->run_elts(translate[1], elts, count, 0, buffer[4]);
+         translate[1]->run_elts(translate[1], elts, count, 0, 0, buffer[4]);
 
          for (i = 0; i < count; ++i)
          {

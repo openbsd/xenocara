@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.11
  *
  * Copyright (C) 2011 Benjamin Franzke <benjaminfranzke@googlemail.com>
  *
@@ -32,6 +31,7 @@ struct wl_display;
 struct winsys_handle {
    int fd;
    unsigned stride;
+   unsigned size;
 };
 
 struct sw_winsys *

@@ -20,6 +20,11 @@ OpenGL: glClampColor(GL_CLAMP_VERTEX_COLOR) in GL 3.0 or GL_ARB_color_buffer_flo
 
 D3D11: seems always disabled
 
+Note the PIPE_CAP_VERTEX_COLOR_CLAMPED query indicates whether or not the
+driver supports this control.  If it's not supported, the state tracker may
+have to insert extra clamping code.
+
+
 clamp_fragment_color
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -29,6 +34,10 @@ are clamped to [0, 1].
 OpenGL: glClampColor(GL_CLAMP_FRAGMENT_COLOR) in GL 3.0 or ARB_color_buffer_float
 
 D3D11: seems always disabled
+
+Note the PIPE_CAP_FRAGMENT_COLOR_CLAMPED query indicates whether or not the
+driver supports this control.  If it's not supported, the state tracker may
+have to insert extra clamping code.
 
 
 Shading
@@ -59,13 +68,14 @@ flatshade_first
 Whether the first vertex should be the provoking vertex, for most primitives.
 If not set, the last vertex is the provoking vertex.
 
-There are several important exceptions to the specification of this rule.
+There are a few important exceptions to the specification of this rule.
 
 * ``PIPE_PRIMITIVE_POLYGON``: The provoking vertex is always the first
   vertex. If the caller wishes to change the provoking vertex, they merely
   need to rotate the vertices themselves.
-* ``PIPE_PRIMITIVE_QUAD``, ``PIPE_PRIMITIVE_QUAD_STRIP``: This option has no
-  effect; the provoking vertex is always the last vertex.
+* ``PIPE_PRIMITIVE_QUAD``, ``PIPE_PRIMITIVE_QUAD_STRIP``: The option only has
+  an effect if ``PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION`` is true.
+  If it is not, the provoking vertex is always the last vertex.
 * ``PIPE_PRIMITIVE_TRIANGLE_FAN``: When set, the provoking vertex is the
   second vertex, not the first. This permits each segment of the fan to have
   a different color.
@@ -119,6 +129,8 @@ offset_units
     Specifies the polygon offset bias
 offset_scale
     Specifies the polygon offset scale
+offset_clamp
+    Upper (if > 0) or lower (if < 0) bound on the polygon offset result
 
 
 
@@ -147,12 +159,17 @@ Points
 
 sprite_coord_enable
 ^^^^^^^^^^^^^^^^^^^
+The effect of this state depends on PIPE_CAP_TGSI_TEXCOORD !
 
 Controls automatic texture coordinate generation for rendering sprite points.
 
+If PIPE_CAP_TGSI_TEXCOORD is false:
 When bit k in the sprite_coord_enable bitfield is set, then generic
 input k to the fragment shader will get an automatically computed
 texture coordinate.
+
+If PIPE_CAP_TGSI_TEXCOORD is true:
+The bitfield refers to inputs with TEXCOORD semantic instead of generic inputs.
 
 The texture coordinate will be of the form (s, t, 0, 1) where s varies
 from 0 to 1 from left to right while t varies from 0 to 1 according to
@@ -221,7 +238,92 @@ scissor
 multisample
     Whether :term:`MSAA` is enabled.
 
-gl_rasterization_rules
-    Whether the rasterizer should use (0.5, 0.5) pixel centers. When not set,
-    the rasterizer will use (0, 0) for pixel centers.
+half_pixel_center
+    When true, the rasterizer should use (0.5, 0.5) pixel centers for
+    determining pixel ownership (e.g, OpenGL, D3D10 and higher)::
 
+           0 0.5 1
+        0  +-----+
+           |     |
+       0.5 |  X  |
+           |     |
+        1  +-----+
+
+    When false, the rasterizer should use (0, 0) pixel centers for determining
+    pixel ownership (e.g., D3D9 or ealier)::
+
+         -0.5 0 0.5
+      -0.5 +-----+
+           |     |
+        0  |  X  |
+           |     |
+       0.5 +-----+
+
+bottom_edge_rule
+    Determines what happens when a pixel sample lies precisely on a triangle
+    edge.
+
+    When true, a pixel sample is considered to lie inside of a triangle if it
+    lies on the *bottom edge* or *left edge* (e.g., OpenGL drawables)::
+
+        0                    x
+      0 +--------------------->
+        |
+        |  +-------------+
+        |  |             |
+        |  |             |
+        |  |             |
+        |  +=============+
+        |
+      y V
+
+    When false, a pixel sample is considered to lie inside of a triangle if it
+    lies on the *top edge* or *left edge* (e.g., OpenGL FBOs, D3D)::
+
+        0                    x
+      0 +--------------------->
+        |
+        |  +=============+
+        |  |             |
+        |  |             |
+        |  |             |
+        |  +-------------+
+        |
+      y V
+
+    Where:
+     - a *top edge* is an edge that is horizontal and is above the other edges;
+     - a *bottom edge* is an edge that is horizontal and is below the other
+       edges;
+     - a *left edge* is an edge that is not horizontal and is on the left side of
+       the triangle.
+
+    .. note::
+
+        Actually all graphics APIs use a top-left rasterization rule for pixel
+        ownership, but their notion of top varies with the axis origin (which
+        can be either at y = 0 or at y = height).  Gallium instead always
+        assumes that top is always at y=0.
+
+    See also:
+     - http://msdn.microsoft.com/en-us/library/windows/desktop/cc627092.aspx
+     - http://msdn.microsoft.com/en-us/library/windows/desktop/bb147314.aspx
+
+clip_halfz
+    When true clip space in the z axis goes from [0..1] (D3D).  When false
+    [-1, 1] (GL)
+
+depth_clip
+    When false, the near and far depth clipping planes of the view volume are
+    disabled and the depth value will be clamped at the per-pixel level, after
+    polygon offset has been applied and before depth testing.
+
+clip_plane_enable
+    For each k in [0, PIPE_MAX_CLIP_PLANES), if bit k of this field is set,
+    clipping half-space k is enabled, if it is clear, it is disabled.
+    The clipping half-spaces are defined either by the user clip planes in
+    ``pipe_clip_state``, or by the clip distance outputs of the shader stage
+    preceding the fragment shader.
+    If any clip distance output is written, those half-spaces for which no
+    clip distance is written count as disabled; i.e. user clip planes and
+    shader clip distances cannot be mixed, and clip distances take precedence.

@@ -47,14 +47,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef WIN32
+#ifdef _WIN32
 #include <stdint.h>
 #endif
 #include "GL/glxproto.h"
-#include "glapi/glapitable.h"
 #include "glxconfig.h"
 #include "glxhash.h"
-#if defined( PTHREADS )
+#if defined( HAVE_PTHREAD )
 # include <pthread.h>
 #endif
 
@@ -114,9 +113,9 @@ struct __GLXDRIscreenRec {
 				       struct glx_config *config);
 
    int64_t (*swapBuffers)(__GLXDRIdrawable *pdraw, int64_t target_msc,
-			  int64_t divisor, int64_t remainder);
+			  int64_t divisor, int64_t remainder, Bool flush);
    void (*copySubBuffer)(__GLXDRIdrawable *pdraw,
-			 int x, int y, int width, int height);
+			 int x, int y, int width, int height, Bool flush);
    int (*getDrawableMSC)(struct glx_screen *psc, __GLXDRIdrawable *pdraw,
 			 int64_t *ust, int64_t *msc, int64_t *sbc);
    int (*waitForMSC)(__GLXDRIdrawable *pdraw, int64_t target_msc,
@@ -215,7 +214,7 @@ struct glx_context_vtable {
    void (*destroy)(struct glx_context *ctx);
    int (*bind)(struct glx_context *context, struct glx_context *old,
 	       GLXDrawable draw, GLXDrawable read);
-   void (*unbind)(struct glx_context *context, struct glx_context *new);
+   void (*unbind)(struct glx_context *context, struct glx_context *new_ctx);
    void (*wait_gl)(struct glx_context *ctx);
    void (*wait_x)(struct glx_context *ctx);
    void (*use_x_font)(struct glx_context *ctx,
@@ -226,9 +225,6 @@ struct glx_context_vtable {
    void (*release_tex_image)(Display * dpy, GLXDrawable drawable, int buffer);
    void * (*get_proc_address)(const char *symbol);
 };
-
-extern void
-glx_send_destroy_context(Display *dpy, XID xid);
 
 /**
  * GLX state that needs to be kept on the client.  One of these records
@@ -471,6 +467,14 @@ struct glx_screen_vtable {
 					 struct glx_config *config,
 					 struct glx_context *shareList,
 					 int renderType);
+
+   struct glx_context *(*create_context_attribs)(struct glx_screen *psc,
+						 struct glx_config *config,
+						 struct glx_context *shareList,
+						 unsigned num_attrib,
+						 const uint32_t *attribs,
+						 unsigned *error);
+
 };
 
 struct glx_screen
@@ -567,6 +571,8 @@ struct glx_display
      */
    struct glx_screen **screens;
 
+   __glxHashTable *glXDrawHash;
+
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
    __glxHashTable *drawHash;
 
@@ -577,6 +583,14 @@ struct glx_display
    __GLXDRIdisplay *driDisplay;
    __GLXDRIdisplay *dri2Display;
 #endif
+};
+
+struct glx_drawable {
+   XID xDrawable;
+   XID drawable;
+
+   uint32_t lastEventSbc;
+   int64_t eventSbcWrap;
 };
 
 extern int
@@ -609,7 +623,7 @@ extern void __glXPreferEGL(int state);
 extern int __glXDebug;
 
 /* This is per-thread storage in an MT environment */
-#if defined( PTHREADS )
+#if defined( HAVE_PTHREAD )
 
 extern void __glXSetCurrentContext(struct glx_context * c);
 
@@ -632,7 +646,7 @@ extern struct glx_context *__glXcurrentContext;
 #define __glXGetCurrentContext() __glXcurrentContext
 #define __glXSetCurrentContext(gc) __glXcurrentContext = gc
 
-#endif /* defined( PTHREADS ) */
+#endif /* defined( HAVE_PTHREAD ) */
 
 extern void __glXSetCurrentContextNull(void);
 
@@ -641,7 +655,7 @@ extern void __glXSetCurrentContextNull(void);
 ** Global lock for all threads in this address space using the GLX
 ** extension
 */
-#if defined( PTHREADS )
+#if defined( HAVE_PTHREAD )
 extern pthread_mutex_t __glXmutex;
 #define __glXLock()    pthread_mutex_lock(&__glXmutex)
 #define __glXUnlock()  pthread_mutex_unlock(&__glXmutex)
@@ -719,6 +733,9 @@ extern void __glXFreeVertexArrayState(struct glx_context *);
 */
 extern void __glXClientInfo(Display * dpy, int opcode);
 
+_X_HIDDEN void
+__glX_send_client_info(struct glx_display *glx_dpy);
+
 /************************************************************************/
 
 /*
@@ -771,6 +788,8 @@ extern __GLXDRIdrawable *
 GetGLXDRIDrawable(Display *dpy, GLXDrawable drawable);
 #endif
 
+extern struct glx_screen *GetGLXScreenConfigs(Display * dpy, int scrn);
+
 #ifdef GLX_USE_APPLEGL
 extern struct glx_screen *
 applegl_create_screen(int screen, struct glx_display * priv);
@@ -784,6 +803,15 @@ extern int
 applegl_create_display(struct glx_display *display);
 #endif
 
+extern Bool validate_renderType_against_config(const struct glx_config *config,
+                                               int renderType);
+
+
+extern struct glx_drawable *GetGLXDrawable(Display *dpy, GLXDrawable drawable);
+extern int InitGLXDrawable(Display *dpy, struct glx_drawable *glxDraw,
+			   XID xDrawable, GLXDrawable drawable);
+extern void DestroyGLXDrawable(Display *dpy, GLXDrawable drawable);
+
 extern struct glx_context dummyContext;
 
 extern struct glx_screen *
@@ -792,5 +820,12 @@ extern struct glx_context *
 indirect_create_context(struct glx_screen *psc,
 			struct glx_config *mode,
 			struct glx_context *shareList, int renderType);
+extern struct glx_context *
+indirect_create_context_attribs(struct glx_screen *base,
+                                struct glx_config *config_base,
+                                struct glx_context *shareList,
+                                unsigned num_attribs,
+                                const uint32_t *attribs,
+                                unsigned *error);
 
 #endif /* !__GLX_client_h__ */

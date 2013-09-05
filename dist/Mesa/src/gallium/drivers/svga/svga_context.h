@@ -31,17 +31,25 @@
 #include "pipe/p_defines.h"
 #include "pipe/p_state.h"
 
+#include "util/u_blitter.h"
 #include "util/u_double_list.h"
 
 #include "tgsi/tgsi_scan.h"
 
 #include "svga_state.h"
+#include "svga_tgsi.h"
+#include "svga_hw_reg.h"
+#include "svga3d_shaderdefs.h"
 
 
-#define SVGA_TEX_UNITS 8
-#define SVGA_MAX_POINTSIZE 80.0
+/** Non-GPU queries for gallium HUD */
+#define SVGA_QUERY_DRAW_CALLS   (PIPE_QUERY_DRIVER_SPECIFIC + 0)
+#define SVGA_QUERY_FALLBACKS    (PIPE_QUERY_DRIVER_SPECIFIC + 1)
+#define SVGA_QUERY_MEMORY_USED  (PIPE_QUERY_DRIVER_SPECIFIC + 2)
+
 
 struct draw_vertex_shader;
+struct draw_fragment_shader;
 struct svga_shader_result;
 struct SVGACmdMemory;
 struct util_bitmask;
@@ -56,14 +64,19 @@ struct svga_shader
 
    struct svga_shader_result *results;
 
-   unsigned id;
-
-   boolean use_sm30;
+   unsigned id;  /**< for debugging only */
 };
 
 struct svga_fragment_shader
 {
    struct svga_shader base;
+
+   struct draw_fragment_shader *draw_shader;
+
+   /** Mask of which generic varying variables are read by this shader */
+   unsigned generic_inputs;
+   /** Table mapping original TGSI generic indexes to low integers */
+   int8_t generic_remap_table[MAX_GENERIC_VARYING];
 };
 
 struct svga_vertex_shader
@@ -141,6 +154,7 @@ struct svga_rasterizer_state {
    unsigned multisampleantialias:1;
    unsigned antialiasedlineenable:1;
    unsigned lastpixel:1;
+   unsigned pointsprite:1;
 
    unsigned linepattern;
 
@@ -226,18 +240,7 @@ struct svga_state
       unsigned flag_1d;
       unsigned flag_srgb;
    } tex_flags;
-
-   boolean any_user_vertex_buffers;
-
-   unsigned zero_stride_vertex_elements;
-   unsigned num_zero_stride_vertex_elements;
-   /* ### maybe dynamically allocate this */
-   float zero_stride_constants[PIPE_MAX_ATTRIBS*4];
 };
-
-#define RS_MAX 97
-#define TS_MAX 30
-#define CB_MAX 256
 
 struct svga_prescale {
    float translate[4];
@@ -275,9 +278,9 @@ struct svga_hw_view_state
  */
 struct svga_hw_draw_state
 {
-   unsigned rs[RS_MAX];
-   unsigned ts[16][TS_MAX];
-   float cb[PIPE_SHADER_TYPES][CB_MAX][4];
+   unsigned rs[SVGA3D_RS_MAX];
+   unsigned ts[SVGA3D_PIXEL_SAMPLERREG_MAX][SVGA3D_TS_MAX];
+   float cb[PIPE_SHADER_TYPES][SVGA3D_CONSTREG_MAX][4];
 
    struct svga_shader_result *fs;
    struct svga_shader_result *vs;
@@ -316,6 +319,7 @@ struct svga_context
 {
    struct pipe_context pipe;
    struct svga_winsys_context *swc;
+   struct blitter_context *blitter;
 
    struct {
       boolean no_swtnl;
@@ -373,8 +377,9 @@ struct svga_context
    /** List of buffers with queued transfers */
    struct list_head dirty_buffers;
 
-   /** Was the previous draw done with the SW path? */
-   boolean prev_draw_swtnl;
+   /** performance / info queries */
+   uint64_t num_draw_calls;  /**< SVGA_QUERY_DRAW_CALLS */
+   uint64_t num_fallbacks;   /**< SVGA_QUERY_FALLBACKS */
 };
 
 /* A flag for each state_tracker state object:
@@ -404,7 +409,6 @@ struct svga_context
 #define SVGA_NEW_NEED_SWTNL          0x400000
 #define SVGA_NEW_FS_RESULT           0x800000
 #define SVGA_NEW_VS_RESULT           0x1000000
-#define SVGA_NEW_ZERO_STRIDE         0x2000000
 #define SVGA_NEW_TEXTURE_FLAGS       0x4000000
 #define SVGA_NEW_STENCIL_REF         0x8000000
 
@@ -417,7 +421,7 @@ struct svga_context
  */
 void svga_clear(struct pipe_context *pipe, 
                 unsigned buffers,
-                const float *rgba,
+                const union pipe_color_union *color,
                 double depth,
                 unsigned stencil);
 
@@ -456,6 +460,8 @@ void svga_context_flush( struct svga_context *svga,
                          struct pipe_fence_handle **pfence );
 
 void svga_hwtnl_flush_retry( struct svga_context *svga );
+void svga_hwtnl_flush_buffer( struct svga_context *svga,
+                              struct pipe_resource *buffer );
 
 void svga_surfaces_flush(struct svga_context *svga);
 

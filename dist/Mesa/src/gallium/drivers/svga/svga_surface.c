@@ -33,6 +33,7 @@
 #include "util/u_math.h"
 #include "util/u_memory.h"
 
+#include "svga_format.h"
 #include "svga_screen.h"
 #include "svga_context.h"
 #include "svga_resource_texture.h"
@@ -86,7 +87,7 @@ svga_texture_copy_handle(struct svga_context *svga,
                                  &src.base,
                                  &dst.base,
                                  &boxes, 1);
-   if(ret != PIPE_OK) {
+   if (ret != PIPE_OK) {
       svga_context_flush(svga, NULL);
       ret = SVGA3D_BeginSurfaceCopy(svga->swc,
                                     &src.base,
@@ -128,14 +129,14 @@ svga_texture_view_surface(struct svga_context *svga,
    key->cachable = 1;
    assert(key->size.depth == 1);
    
-   if(tex->b.b.target == PIPE_TEXTURE_CUBE && face_pick < 0) {
+   if (tex->b.b.target == PIPE_TEXTURE_CUBE && face_pick < 0) {
       key->flags |= SVGA3D_SURFACE_CUBEMAP;
       key->numFaces = 6;
    } else {
       key->numFaces = 1;
    }
 
-   if(key->format == SVGA3D_FORMAT_INVALID) {
+   if (key->format == SVGA3D_FORMAT_INVALID) {
       key->cachable = 0;
       return NULL;
    }
@@ -153,11 +154,11 @@ svga_texture_view_surface(struct svga_context *svga,
       face_pick = 0;
 
    if (zslice_pick >= 0)
-       z_offset = zslice_pick;
+      z_offset = zslice_pick;
 
    for (i = 0; i < key->numMipLevels; i++) {
       for (j = 0; j < key->numFaces; j++) {
-         if(tex->defined[j + face_pick][i + start_mip]) {
+         if (tex->defined[j + face_pick][i + start_mip]) {
             unsigned depth = (zslice_pick < 0 ?
                               u_minify(tex->b.b.depth0, i + start_mip) :
                               1);
@@ -187,11 +188,9 @@ svga_create_surface(struct pipe_context *pipe,
    struct svga_context *svga = svga_context(pipe);
    struct svga_texture *tex = svga_texture(pt);
    struct pipe_screen *screen = pipe->screen;
+   struct svga_screen *ss = svga_screen(screen);
    struct svga_surface *s;
    unsigned face, zslice;
-   /* XXX surfaces should only be used for rendering purposes nowadays */
-   boolean render = (surf_tmpl->usage & (PIPE_BIND_RENDER_TARGET |
-                                         PIPE_BIND_DEPTH_STENCIL)) ? TRUE : FALSE;
    boolean view = FALSE;
    SVGA3dSurfaceFlags flags;
    SVGA3dSurfaceFormat format;
@@ -203,8 +202,8 @@ svga_create_surface(struct pipe_context *pipe,
       return NULL;
 
    if (pt->target == PIPE_TEXTURE_CUBE) {
-         face = surf_tmpl->u.tex.first_layer;
-         zslice = 0;
+      face = surf_tmpl->u.tex.first_layer;
+      zslice = 0;
    }
    else {
       face = 0;
@@ -217,32 +216,25 @@ svga_create_surface(struct pipe_context *pipe,
    s->base.format = surf_tmpl->format;
    s->base.width = u_minify(pt->width0, surf_tmpl->u.tex.level);
    s->base.height = u_minify(pt->height0, surf_tmpl->u.tex.level);
-   s->base.usage = surf_tmpl->usage;
    s->base.u.tex.level = surf_tmpl->u.tex.level;
    s->base.u.tex.first_layer = surf_tmpl->u.tex.first_layer;
    s->base.u.tex.last_layer = surf_tmpl->u.tex.last_layer;
 
-   if (!render) {
-      flags = SVGA3D_SURFACE_HINT_TEXTURE;
-      format = svga_translate_format(surf_tmpl->format);
-   } else {
-      if (surf_tmpl->usage & PIPE_BIND_RENDER_TARGET) {
-         flags = SVGA3D_SURFACE_HINT_RENDERTARGET;
-      }
-      if (surf_tmpl->usage & PIPE_BIND_DEPTH_STENCIL) {
-         flags = SVGA3D_SURFACE_HINT_DEPTHSTENCIL;
-      }
-      format = svga_translate_format_render(surf_tmpl->format);
+   if (util_format_is_depth_or_stencil(surf_tmpl->format)) {
+      flags = SVGA3D_SURFACE_HINT_DEPTHSTENCIL;
+   }
+   else {
+      flags = SVGA3D_SURFACE_HINT_RENDERTARGET;
    }
 
+   format = svga_translate_format(ss, surf_tmpl->format, 0);
    assert(format != SVGA3D_FORMAT_INVALID);
 
    if (svga_screen(screen)->debug.force_surface_view)
       view = TRUE;
 
    /* Currently only used for compressed textures */
-   if (render && 
-       format != svga_translate_format(surf_tmpl->format)) {
+   if (format != svga_translate_format(ss, surf_tmpl->format, 0)) {
       view = TRUE;
    }
 
@@ -262,7 +254,7 @@ svga_create_surface(struct pipe_context *pipe,
 
       s->handle = svga_texture_view_surface(svga, tex, flags, format,
                                             surf_tmpl->u.tex.level,
-	                                    1, face, zslice, &s->key);
+                                            1, face, zslice, &s->key);
       s->real_face = 0;
       s->real_level = 0;
       s->real_zslice = 0;
@@ -289,7 +281,7 @@ svga_surface_destroy(struct pipe_context *pipe,
    struct svga_texture *t = svga_texture(surf->texture);
    struct svga_screen *ss = svga_screen(surf->texture->screen);
 
-   if(s->handle != t->handle) {
+   if (s->handle != t->handle) {
       SVGA_DBG(DEBUG_DMA, "unref sid %p (tex surface)\n", s->handle);
       svga_screen_surface_destroy(ss, &s->key, &s->handle);
    }
@@ -304,7 +296,7 @@ svga_mark_surface_dirty(struct pipe_surface *surf)
 {
    struct svga_surface *s = svga_surface(surf);
 
-   if(!s->dirty) {
+   if (!s->dirty) {
       struct svga_texture *tex = svga_texture(surf->texture);
 
       s->dirty = TRUE;
@@ -319,11 +311,17 @@ svga_mark_surface_dirty(struct pipe_surface *surf)
       else {
          /* this will happen later in svga_propagate_surface */
       }
+
+      /* Increment the view_age and texture age for this surface's slice
+       * so that any sampler views into the texture are re-validated too.
+       */
+      svga_age_texture_view(tex, surf->u.tex.first_layer);
    }
 }
 
 
-void svga_mark_surfaces_dirty(struct svga_context *svga)
+void
+svga_mark_surfaces_dirty(struct svga_context *svga)
 {
    unsigned i;
 
@@ -365,7 +363,9 @@ svga_propagate_surface(struct svga_context *svga, struct pipe_surface *surf)
    tex->view_age[surf->u.tex.level] = ++(tex->age);
 
    if (s->handle != tex->handle) {
-      SVGA_DBG(DEBUG_VIEWS, "svga: Surface propagate: tex %p, level %u, from %p\n", tex, surf->u.tex.level, surf);
+      SVGA_DBG(DEBUG_VIEWS,
+               "svga: Surface propagate: tex %p, level %u, from %p\n",
+               tex, surf->u.tex.level, surf);
       svga_texture_copy_handle(svga,
                                s->handle, 0, 0, 0, s->real_level, s->real_face,
                                tex->handle, 0, 0, zslice, surf->u.tex.level, face,
@@ -375,20 +375,18 @@ svga_propagate_surface(struct svga_context *svga, struct pipe_surface *surf)
    }
 }
 
+
 /**
  * Check if we should call svga_propagate_surface on the surface.
  */
 boolean
-svga_surface_needs_propagation(struct pipe_surface *surf)
+svga_surface_needs_propagation(const struct pipe_surface *surf)
 {
-   struct svga_surface *s = svga_surface(surf);
+   const struct svga_surface *s = svga_surface_const(surf);
    struct svga_texture *tex = svga_texture(surf->texture);
 
    return s->dirty && s->handle != tex->handle;
 }
-
-
-
 
 
 
@@ -398,4 +396,3 @@ svga_init_surface_functions(struct svga_context *svga)
    svga->pipe.create_surface = svga_create_surface;
    svga->pipe.surface_destroy = svga_surface_destroy;
 }
-

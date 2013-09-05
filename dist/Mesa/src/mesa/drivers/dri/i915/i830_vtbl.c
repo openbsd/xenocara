@@ -28,6 +28,7 @@
 #include "i830_context.h"
 #include "i830_reg.h"
 #include "intel_batchbuffer.h"
+#include "intel_mipmap_tree.h"
 #include "intel_regions.h"
 #include "intel_tris.h"
 #include "intel_fbo.h"
@@ -38,11 +39,12 @@
 #include "swrast_setup/swrast_setup.h"
 #include "main/renderbuffer.h"
 #include "main/framebuffer.h"
+#include "main/fbobject.h"
 
 #define FILE_DEBUG_FLAG DEBUG_STATE
 
-static GLboolean i830_check_vertex_size(struct intel_context *intel,
-                                        GLuint expected);
+static bool i830_check_vertex_size(struct intel_context *intel,
+				   GLuint expected);
 
 #define SZ_TO_HW(sz)  ((sz-2)&0x3)
 #define EMIT_SZ(sz)   (EMIT_1F + (sz) - 1)
@@ -78,12 +80,10 @@ i830_render_start(struct intel_context *intel)
    struct i830_context *i830 = i830_context(ctx);
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
-   DECLARE_RENDERINPUTS(index_bitset);
+   GLbitfield64 index_bitset = tnl->render_inputs_bitset;
    GLuint v0 = _3DSTATE_VFT0_CMD;
    GLuint v2 = _3DSTATE_VFT1_CMD;
    GLuint mcsb1 = 0;
-
-   RENDERINPUTS_COPY(index_bitset, tnl->render_inputs_bitset);
 
    /* Important:
     */
@@ -93,7 +93,7 @@ i830_render_start(struct intel_context *intel)
    /* EMIT_ATTR's must be in order as they tell t_vertex.c how to
     * build up a hardware vertex.
     */
-   if (RENDERINPUTS_TEST_RANGE(index_bitset, _TNL_FIRST_TEX, _TNL_LAST_TEX)) {
+   if (index_bitset & BITFIELD64_RANGE(_TNL_ATTRIB_TEX0, _TNL_NUM_TEX)) {
       EMIT_ATTR(_TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, VFT0_XYZW);
       intel->coloroffset = 4;
    }
@@ -102,33 +102,33 @@ i830_render_start(struct intel_context *intel)
       intel->coloroffset = 3;
    }
 
-   if (RENDERINPUTS_TEST(index_bitset, _TNL_ATTRIB_POINTSIZE)) {
+   if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_POINTSIZE)) {
       EMIT_ATTR(_TNL_ATTRIB_POINTSIZE, EMIT_1F, VFT0_POINT_WIDTH);
    }
 
    EMIT_ATTR(_TNL_ATTRIB_COLOR0, EMIT_4UB_4F_BGRA, VFT0_DIFFUSE);
 
    intel->specoffset = 0;
-   if (RENDERINPUTS_TEST(index_bitset, _TNL_ATTRIB_COLOR1) ||
-       RENDERINPUTS_TEST(index_bitset, _TNL_ATTRIB_FOG)) {
-      if (RENDERINPUTS_TEST(index_bitset, _TNL_ATTRIB_COLOR1)) {
+   if (index_bitset & (BITFIELD64_BIT(_TNL_ATTRIB_COLOR1) |
+                       BITFIELD64_BIT(_TNL_ATTRIB_FOG))) {
+      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_COLOR1)) {
          intel->specoffset = intel->coloroffset + 1;
          EMIT_ATTR(_TNL_ATTRIB_COLOR1, EMIT_3UB_3F_BGR, VFT0_SPEC);
       }
       else
          EMIT_PAD(3);
 
-      if (RENDERINPUTS_TEST(index_bitset, _TNL_ATTRIB_FOG))
+      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_FOG))
          EMIT_ATTR(_TNL_ATTRIB_FOG, EMIT_1UB_1F, VFT0_SPEC);
       else
          EMIT_PAD(1);
    }
 
-   if (RENDERINPUTS_TEST_RANGE(index_bitset, _TNL_FIRST_TEX, _TNL_LAST_TEX)) {
+   if (index_bitset & BITFIELD64_RANGE(_TNL_ATTRIB_TEX0, _TNL_NUM_TEX)) {
       int i, count = 0;
 
       for (i = 0; i < I830_TEX_UNITS; i++) {
-         if (RENDERINPUTS_TEST(index_bitset, _TNL_ATTRIB_TEX(i))) {
+         if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_TEX(i))) {
             GLuint sz = VB->AttribPtr[_TNL_ATTRIB_TEX0 + i]->size;
             GLuint emit;
             GLuint mcs = (i830->state.Tex[i][I830_TEXREG_MCS] &
@@ -178,9 +178,7 @@ i830_render_start(struct intel_context *intel)
    if (v0 != i830->state.Ctx[I830_CTXREG_VF] ||
        v2 != i830->state.Ctx[I830_CTXREG_VF2] ||
        mcsb1 != i830->state.Ctx[I830_CTXREG_MCSB1] ||
-       !RENDERINPUTS_EQUAL(index_bitset, i830->last_index_bitset)) {
-      int k;
-
+       index_bitset != i830->last_index_bitset) {
       I830_STATECHANGE(i830, I830_UPLOAD_CTX);
 
       /* Must do this *after* statechange, so as not to affect
@@ -197,10 +195,9 @@ i830_render_start(struct intel_context *intel)
       i830->state.Ctx[I830_CTXREG_VF] = v0;
       i830->state.Ctx[I830_CTXREG_VF2] = v2;
       i830->state.Ctx[I830_CTXREG_MCSB1] = mcsb1;
-      RENDERINPUTS_COPY(i830->last_index_bitset, index_bitset);
+      i830->last_index_bitset = index_bitset;
 
-      k = i830_check_vertex_size(intel, intel->vertex_size);
-      assert(k);
+      assert(i830_check_vertex_size(intel, intel->vertex_size));
    }
 }
 
@@ -236,7 +233,7 @@ i830_reduced_primitive_state(struct intel_context *intel, GLenum rprim)
 /* Pull apart the vertex format registers and figure out how large a
  * vertex is supposed to be. 
  */
-static GLboolean
+static bool
 i830_check_vertex_size(struct intel_context *intel, GLuint expected)
 {
    struct i830_context *i830 = i830_context(&intel->ctx);
@@ -369,7 +366,7 @@ i830_emit_invarient_state(struct intel_context *intel)
 
 
 #define emit( intel, state, size )			\
-   intel_batchbuffer_data(intel, state, size, false)
+   intel_batchbuffer_data(intel, state, size)
 
 static GLuint
 get_dirty(struct i830_hw_state *state)
@@ -434,8 +431,8 @@ i830_emit_state(struct intel_context *intel)
     * batchbuffer fills up.
     */
    intel_batchbuffer_require_space(intel,
-				   get_state_size(state) + INTEL_PRIM_EMIT_SIZE,
-				   false);
+				   get_state_size(state) +
+                                   INTEL_PRIM_EMIT_SIZE);
    count = 0;
  again:
    aper_count = 0;
@@ -443,9 +440,9 @@ i830_emit_state(struct intel_context *intel)
 
    aper_array[aper_count++] = intel->batch.bo;
    if (dirty & I830_UPLOAD_BUFFERS) {
-      aper_array[aper_count++] = state->draw_region->buffer;
+      aper_array[aper_count++] = state->draw_region->bo;
       if (state->depth_region)
-         aper_array[aper_count++] = state->depth_region->buffer;
+         aper_array[aper_count++] = state->depth_region->bo;
    }
 
    for (i = 0; i < I830_TEX_UNITS; i++)
@@ -501,13 +498,13 @@ i830_emit_state(struct intel_context *intel)
       BEGIN_BATCH(count);
       OUT_BATCH(state->Buffer[I830_DESTREG_CBUFADDR0]);
       OUT_BATCH(state->Buffer[I830_DESTREG_CBUFADDR1]);
-      OUT_RELOC(state->draw_region->buffer,
+      OUT_RELOC(state->draw_region->bo,
 		I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER, 0);
 
       if (state->depth_region) {
          OUT_BATCH(state->Buffer[I830_DESTREG_DBUFADDR0]);
          OUT_BATCH(state->Buffer[I830_DESTREG_DBUFADDR1]);
-         OUT_RELOC(state->depth_region->buffer,
+         OUT_RELOC(state->depth_region->bo,
 		   I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER, 0);
       }
 
@@ -593,8 +590,11 @@ static uint32_t i830_render_target_format_for_mesa_format[MESA_FORMAT_COUNT] =
 };
 
 static bool
-i830_render_target_supported(gl_format format)
+i830_render_target_supported(struct intel_context *intel,
+			     struct gl_renderbuffer *rb)
 {
+   gl_format format = rb->Format;
+
    if (format == MESA_FORMAT_S8_Z24 ||
        format == MESA_FORMAT_X8_Z24 ||
        format == MESA_FORMAT_Z16) {
@@ -621,11 +621,9 @@ i830_set_draw_region(struct intel_context *intel,
    uint32_t draw_x, draw_y;
 
    if (state->draw_region != color_regions[0]) {
-      intel_region_release(&state->draw_region);
       intel_region_reference(&state->draw_region, color_regions[0]);
    }
    if (state->depth_region != depth_region) {
-      intel_region_release(&state->depth_region);
       intel_region_reference(&state->depth_region, depth_region);
    }
 
@@ -645,7 +643,7 @@ i830_set_draw_region(struct intel_context *intel,
             DSTORG_VERT_BIAS(0x8) | DEPTH_IS_Z);    /* .5 */
 
    if (irb != NULL) {
-      value |= i830_render_target_format_for_mesa_format[irb->Base.Format];
+      value |= i830_render_target_format_for_mesa_format[intel_rb_format(irb)];
    }
 
    if (depth_region && depth_region->cpp == 4) {
@@ -692,8 +690,8 @@ i830_set_draw_region(struct intel_context *intel,
    state->Buffer[I830_DESTREG_DRAWRECT1] = 0;
    state->Buffer[I830_DESTREG_DRAWRECT2] = (draw_y << 16) | draw_x;
    state->Buffer[I830_DESTREG_DRAWRECT3] =
-      ((ctx->DrawBuffer->Width + draw_x) & 0xffff) |
-      ((ctx->DrawBuffer->Height + draw_y) << 16);
+      ((ctx->DrawBuffer->Width + draw_x - 1) & 0xffff) |
+      ((ctx->DrawBuffer->Height + draw_y - 1) << 16);
    state->Buffer[I830_DESTREG_DRAWRECT4] = (draw_y << 16) | draw_x;
    state->Buffer[I830_DESTREG_DRAWRECT5] = MI_NOOP;
 
@@ -717,7 +715,6 @@ i830_update_draw_buffer(struct intel_context *intel)
    struct gl_framebuffer *fb = ctx->DrawBuffer;
    struct intel_region *colorRegions[MAX_DRAW_BUFFERS], *depthRegion = NULL;
    struct intel_renderbuffer *irbDepth = NULL, *irbStencil = NULL;
-   bool fb_has_hiz = intel_framebuffer_has_hiz(fb);
 
    if (!fb) {
       /* this can happen during the initial context initialization */
@@ -763,14 +760,14 @@ i830_update_draw_buffer(struct intel_context *intel)
 
        for (i = 0; i < fb->_NumColorDrawBuffers; i++) {
            irb = intel_renderbuffer(fb->_ColorDrawBuffers[i]);
-           colorRegions[i] = irb ? irb->region : NULL;
+           colorRegions[i] = (irb && irb->mt) ? irb->mt->region : NULL;
        }
    }
    else {
       /* Get the intel_renderbuffer for the single colorbuffer we're drawing
        * into.
        */
-      if (fb->Name == 0) {
+      if (_mesa_is_winsys_fbo(fb)) {
 	 /* drawing to window system buffer */
 	 if (fb->_ColorDrawBufferIndexes[0] == BUFFER_FRONT_LEFT)
 	    colorRegions[0] = intel_get_rb_region(fb, BUFFER_FRONT_LEFT);
@@ -781,55 +778,53 @@ i830_update_draw_buffer(struct intel_context *intel)
 	 /* drawing to user-created FBO */
 	 struct intel_renderbuffer *irb;
 	 irb = intel_renderbuffer(fb->_ColorDrawBuffers[0]);
-	 colorRegions[0] = (irb && irb->region) ? irb->region : NULL;
+	 colorRegions[0] = (irb && irb->mt->region) ? irb->mt->region : NULL;
       }
    }
 
    if (!colorRegions[0]) {
-      FALLBACK(intel, INTEL_FALLBACK_DRAW_BUFFER, GL_TRUE);
+      FALLBACK(intel, INTEL_FALLBACK_DRAW_BUFFER, true);
    }
    else {
-      FALLBACK(intel, INTEL_FALLBACK_DRAW_BUFFER, GL_FALSE);
+      FALLBACK(intel, INTEL_FALLBACK_DRAW_BUFFER, false);
    }
 
    /* Check for depth fallback. */
-   if (irbDepth && irbDepth->region) {
-      assert(!fb_has_hiz || irbDepth->Base.Format != MESA_FORMAT_S8_Z24);
-      FALLBACK(intel, INTEL_FALLBACK_DEPTH_BUFFER, GL_FALSE);
-      depthRegion = irbDepth->region;
-   } else if (irbDepth && !irbDepth->region) {
-      FALLBACK(intel, INTEL_FALLBACK_DEPTH_BUFFER, GL_TRUE);
+   if (irbDepth && irbDepth->mt) {
+      FALLBACK(intel, INTEL_FALLBACK_DEPTH_BUFFER, false);
+      depthRegion = irbDepth->mt->region;
+   } else if (irbDepth && !irbDepth->mt) {
+      FALLBACK(intel, INTEL_FALLBACK_DEPTH_BUFFER, true);
       depthRegion = NULL;
    } else { /* !irbDepth */
       /* No fallback is needed because there is no depth buffer. */
-      FALLBACK(intel, INTEL_FALLBACK_DEPTH_BUFFER, GL_FALSE);
+      FALLBACK(intel, INTEL_FALLBACK_DEPTH_BUFFER, false);
       depthRegion = NULL;
    }
 
    /* Check for stencil fallback. */
-   if (irbStencil && irbStencil->region) {
-      assert(irbStencil->Base.Format == MESA_FORMAT_S8_Z24);
-      FALLBACK(intel, INTEL_FALLBACK_STENCIL_BUFFER, GL_FALSE);
-   } else if (irbStencil && !irbStencil->region) {
-      FALLBACK(intel, INTEL_FALLBACK_STENCIL_BUFFER, GL_TRUE);
+   if (irbStencil && irbStencil->mt) {
+      assert(intel_rb_format(irbStencil) == MESA_FORMAT_S8_Z24);
+      FALLBACK(intel, INTEL_FALLBACK_STENCIL_BUFFER, false);
+   } else if (irbStencil && !irbStencil->mt) {
+      FALLBACK(intel, INTEL_FALLBACK_STENCIL_BUFFER, true);
    } else { /* !irbStencil */
       /* No fallback is needed because there is no stencil buffer. */
-      FALLBACK(intel, INTEL_FALLBACK_STENCIL_BUFFER, GL_FALSE);
+      FALLBACK(intel, INTEL_FALLBACK_STENCIL_BUFFER, false);
    }
 
    /* If we have a (packed) stencil buffer attached but no depth buffer,
     * we still need to set up the shared depth/stencil state so we can use it.
     */
-   if (depthRegion == NULL && irbStencil && irbStencil->region
-       && irbStencil->Base.Format == MESA_FORMAT_S8_Z24) {
-      depthRegion = irbStencil->region;
+   if (depthRegion == NULL && irbStencil && irbStencil->mt
+       && intel_rb_format(irbStencil) == MESA_FORMAT_S8_Z24) {
+      depthRegion = irbStencil->mt->region;
    }
 
    /*
     * Update depth and stencil test state
     */
-   ctx->Driver.Enable(ctx, GL_DEPTH_TEST,
-		      (ctx->Depth.Test && fb->Visual.depthBits > 0));
+   ctx->Driver.Enable(ctx, GL_DEPTH_TEST, ctx->Depth.Test);
    ctx->Driver.Enable(ctx, GL_STENCIL_TEST,
 		      (ctx->Stencil.Enabled && fb->Visual.stencilBits > 0));
 
@@ -883,12 +878,6 @@ i830_invalidate_state(struct intel_context *intel, GLuint new_state)
       i830_update_provoking_vertex(&intel->ctx);
 }
 
-static bool
-i830_is_hiz_depth_format(struct intel_context *intel, gl_format format)
-{
-   return false;
-}
-
 void
 i830InitVtbl(struct i830_context *i830)
 {
@@ -906,5 +895,4 @@ i830InitVtbl(struct i830_context *i830)
    i830->intel.vtbl.finish_batch = intel_finish_vb;
    i830->intel.vtbl.invalidate_state = i830_invalidate_state;
    i830->intel.vtbl.render_target_supported = i830_render_target_supported;
-   i830->intel.vtbl.is_hiz_depth_format = i830_is_hiz_depth_format;
 }

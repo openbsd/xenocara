@@ -30,15 +30,15 @@
 #include "main/context.h"
 #include "main/macros.h"
 #include "main/enums.h"
+#include "main/fbobject.h"
 #include "main/dd.h"
 #include "main/state.h"
-
-#include "texmem.h"
 
 #include "drivers/common/driverfuncs.h"
 
 #include "intel_screen.h"
 #include "intel_batchbuffer.h"
+#include "intel_mipmap_tree.h"
 #include "intel_fbo.h"
 #include "intel_buffers.h"
 
@@ -235,7 +235,7 @@ i830EvalLogicOpBlendState(struct gl_context * ctx)
 
    I830_STATECHANGE(i830, I830_UPLOAD_CTX);
 
-   if (_mesa_rgba_logicop_enabled(ctx)) {
+   if (ctx->Color.ColorLogicOpEnabled) {
       i830->state.Ctx[I830_CTXREG_ENABLES_1] &= ~(ENABLE_COLOR_BLEND |
                                                   ENABLE_LOGIC_OP_MASK);
       i830->state.Ctx[I830_CTXREG_ENABLES_1] |= (DISABLE_COLOR_BLEND |
@@ -437,7 +437,10 @@ i830DepthMask(struct gl_context * ctx, GLboolean flag)
    struct i830_context *i830 = i830_context(ctx);
 
    DBG("%s flag (%d)\n", __FUNCTION__, flag);
-   
+
+   if (!ctx->DrawBuffer || !ctx->DrawBuffer->Visual.depthBits)
+      flag = false;
+
    I830_STATECHANGE(i830, I830_UPLOAD_CTX);
 
    i830->state.Ctx[I830_CTXREG_ENABLES_2] &= ~ENABLE_DIS_DEPTH_WRITE_MASK;
@@ -474,7 +477,7 @@ static void
 i830PolygonStipple(struct gl_context * ctx, const GLubyte * mask)
 {
    struct i830_context *i830 = i830_context(ctx);
-   const GLubyte *m = mask;
+   const GLubyte *m;
    GLubyte p[4];
    int i, j, k;
    int active = (ctx->Polygon.StippleFlag &&
@@ -485,6 +488,12 @@ i830PolygonStipple(struct gl_context * ctx, const GLubyte * mask)
       I830_STATECHANGE(i830, I830_UPLOAD_STIPPLE);
       i830->state.Stipple[I830_STPREG_ST1] &= ~ST1_ENABLE;
    }
+
+   /* Use the already unpacked stipple data from the context rather than the
+    * uninterpreted mask passed in.
+    */
+   mask = (const GLubyte *)ctx->PolygonStipple;
+   m = mask;
 
    p[0] = mask[12] & 0xf;
    p[0] |= p[0] << 4;
@@ -537,7 +546,7 @@ i830Scissor(struct gl_context * ctx, GLint x, GLint y, GLsizei w, GLsizei h)
 
    DBG("%s %d,%d %dx%d\n", __FUNCTION__, x, y, w, h);
 
-   if (ctx->DrawBuffer->Name == 0) {
+   if (_mesa_is_winsys_fbo(ctx->DrawBuffer)) {
       x1 = x;
       y1 = ctx->DrawBuffer->Height - (y + h);
       x2 = x + w - 1;
@@ -796,6 +805,9 @@ i830Enable(struct gl_context * ctx, GLenum cap, GLboolean state)
       I830_STATECHANGE(i830, I830_UPLOAD_CTX);
       i830->state.Ctx[I830_CTXREG_ENABLES_1] &= ~ENABLE_DIS_DEPTH_TEST_MASK;
 
+      if (!ctx->DrawBuffer || !ctx->DrawBuffer->Visual.depthBits)
+	 state = false;
+
       if (state)
          i830->state.Ctx[I830_CTXREG_ENABLES_1] |= ENABLE_DEPTH_TEST;
       else
@@ -846,11 +858,11 @@ i830Enable(struct gl_context * ctx, GLenum cap, GLboolean state)
 
    case GL_STENCIL_TEST:
       {
-         GLboolean hw_stencil = GL_FALSE;
+         bool hw_stencil = false;
          if (ctx->DrawBuffer) {
             struct intel_renderbuffer *irbStencil
                = intel_get_renderbuffer(ctx->DrawBuffer, BUFFER_STENCIL);
-            hw_stencil = (irbStencil && irbStencil->region);
+            hw_stencil = (irbStencil && irbStencil->mt);
          }
          if (hw_stencil) {
             I830_STATECHANGE(i830, I830_UPLOAD_CTX);
@@ -1089,6 +1101,15 @@ i830_update_provoking_vertex(struct gl_context * ctx)
     }
 }
 
+/* Fallback to swrast for select and feedback.
+ */
+static void
+i830RenderMode(struct gl_context *ctx, GLenum mode)
+{
+   struct intel_context *intel = intel_context(ctx);
+   FALLBACK(intel, INTEL_FALLBACK_RENDERMODE, (mode != GL_RENDER));
+}
+
 void
 i830InitStateFuncs(struct dd_function_table *functions)
 {
@@ -1108,6 +1129,7 @@ i830InitStateFuncs(struct dd_function_table *functions)
    functions->LogicOpcode = i830LogicOp;
    functions->PointSize = i830PointSize;
    functions->PolygonStipple = i830PolygonStipple;
+   functions->RenderMode = i830RenderMode;
    functions->Scissor = i830Scissor;
    functions->ShadeModel = i830ShadeModel;
    functions->StencilFuncSeparate = i830StencilFuncSeparate;

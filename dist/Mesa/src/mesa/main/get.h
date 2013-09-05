@@ -5,7 +5,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
  *
  * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
  *
@@ -22,9 +21,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -54,13 +54,13 @@ extern void GLAPIENTRY
 _mesa_GetFixedv(GLenum pname, GLfixed *params);
 
 extern void GLAPIENTRY
-_mesa_GetBooleanIndexedv( GLenum pname, GLuint index, GLboolean *params );
+_mesa_GetBooleani_v( GLenum pname, GLuint index, GLboolean *params );
 
 extern void GLAPIENTRY
-_mesa_GetIntegerIndexedv( GLenum pname, GLuint index, GLint *params );
+_mesa_GetIntegeri_v( GLenum pname, GLuint index, GLint *params );
 
 extern void GLAPIENTRY
-_mesa_GetInteger64Indexedv( GLenum pname, GLuint index, GLint64 *params );
+_mesa_GetInteger64i_v( GLenum pname, GLuint index, GLint64 *params );
 
 extern void GLAPIENTRY
 _mesa_GetPointerv( GLenum pname, GLvoid **params );

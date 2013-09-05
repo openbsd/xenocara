@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.9
  *
  * Copyright 2009 VMware, Inc.  All Rights Reserved.
  * Copyright (C) 2010 LunarG Inc.
@@ -61,9 +60,7 @@ vg_context_update_color_rb(struct vg_context *ctx, struct pipe_resource *pt)
 
    strb->texture = pt;
 
-   memset(&surf_tmpl, 0, sizeof(surf_tmpl));
-   u_surface_default_template(&surf_tmpl, strb->texture,
-                              PIPE_BIND_RENDER_TARGET);
+   u_surface_default_template(&surf_tmpl, strb->texture);
    strb->surface = pipe->create_surface(pipe, strb->texture, &surf_tmpl);
 
    if (!strb->surface) {
@@ -91,7 +88,7 @@ vg_manager_flush_frontbuffer(struct vg_context *ctx)
    switch (stfb->strb_att) {
    case ST_ATTACHMENT_FRONT_LEFT:
    case ST_ATTACHMENT_FRONT_RIGHT:
-      stfb->iface->flush_front(stfb->iface, stfb->strb_att);
+      stfb->iface->flush_front(&ctx->iface, stfb->iface, stfb->strb_att);
       break;
    default:
       break;
@@ -106,35 +103,38 @@ vg_manager_validate_framebuffer(struct vg_context *ctx)
 {
    struct st_framebuffer *stfb = ctx->draw_buffer;
    struct pipe_resource *pt;
+   int32_t new_stamp;
 
    /* no binding surface */
    if (!stfb)
       return;
 
-   if (!p_atomic_read(&ctx->draw_buffer_invalid))
-      return;
+   new_stamp = p_atomic_read(&stfb->iface->stamp);
+   if (stfb->iface_stamp != new_stamp) {
+      do {
+	 /* validate the fb */
+	 if (!stfb->iface->validate(stfb->iface, &stfb->strb_att,
+				    1, &pt) || !pt)
+	    return;
 
-   /* validate the fb */
-   if (!stfb->iface->validate(stfb->iface, &stfb->strb_att, 1, &pt) || !pt)
-      return;
+	 stfb->iface_stamp = new_stamp;
+	 new_stamp = p_atomic_read(&stfb->iface->stamp);
 
-   p_atomic_set(&ctx->draw_buffer_invalid, FALSE);
+      } while (stfb->iface_stamp != new_stamp);
 
-   if (vg_context_update_color_rb(ctx, pt) ||
-       stfb->width != pt->width0 ||
-       stfb->height != pt->height0)
+      if (vg_context_update_color_rb(ctx, pt) ||
+          stfb->width != pt->width0 ||
+          stfb->height != pt->height0)
+         ++stfb->stamp;
+
+      stfb->width = pt->width0;
+      stfb->height = pt->height0;
+   }
+
+   if (ctx->draw_stamp != stfb->stamp) {
       ctx->state.dirty |= FRAMEBUFFER_DIRTY;
-
-   stfb->width = pt->width0;
-   stfb->height = pt->height0;
-}
-
-static void
-vg_context_notify_invalid_framebuffer(struct st_context_iface *stctxi,
-                                      struct st_framebuffer_iface *stfbi)
-{
-   struct vg_context *ctx = (struct vg_context *) stctxi;
-   p_atomic_set(&ctx->draw_buffer_invalid, TRUE);
+      ctx->draw_stamp = stfb->stamp;
+   }
 }
 
 static void
@@ -142,7 +142,13 @@ vg_context_flush(struct st_context_iface *stctxi, unsigned flags,
                  struct pipe_fence_handle **fence)
 {
    struct vg_context *ctx = (struct vg_context *) stctxi;
-   ctx->pipe->flush(ctx->pipe, fence);
+   unsigned pipe_flags = 0;
+
+   if (flags & ST_FLUSH_END_OF_FRAME) {
+      pipe_flags |= PIPE_FLUSH_END_OF_FRAME;
+   }
+
+   ctx->pipe->flush(ctx->pipe, fence, pipe_flags);
    if (flags & ST_FLUSH_FRONT)
       vg_manager_flush_frontbuffer(ctx);
 }
@@ -160,35 +166,41 @@ vg_context_destroy(struct st_context_iface *stctxi)
 static struct st_context_iface *
 vg_api_create_context(struct st_api *stapi, struct st_manager *smapi,
                       const struct st_context_attribs *attribs,
+                      enum st_context_error *error,
                       struct st_context_iface *shared_stctxi)
 {
    struct vg_context *shared_ctx = (struct vg_context *) shared_stctxi;
    struct vg_context *ctx;
    struct pipe_context *pipe;
 
-   if (!(stapi->profile_mask & (1 << attribs->profile)))
+   if (!(stapi->profile_mask & (1 << attribs->profile))) {
+      *error = ST_CONTEXT_ERROR_BAD_API;
       return NULL;
+   }
 
    /* only 1.0 is supported */
-   if (attribs->major > 1 || (attribs->major == 1 && attribs->minor > 0))
+   if (attribs->major > 1 || (attribs->major == 1 && attribs->minor > 0)) {
+      *error = ST_CONTEXT_ERROR_BAD_VERSION;
       return NULL;
+   }
 
    /* for VGHandle / pointer lookups */
    init_handles();
 
    pipe = smapi->screen->context_create(smapi->screen, NULL);
-   if (!pipe)
+   if (!pipe) {
+      *error = ST_CONTEXT_ERROR_NO_MEMORY;
       return NULL;
+   }
    ctx = vg_create_context(pipe, NULL, shared_ctx);
    if (!ctx) {
       pipe->destroy(pipe);
+      *error = ST_CONTEXT_ERROR_NO_MEMORY;
       return NULL;
    }
 
    ctx->iface.destroy = vg_context_destroy;
 
-   ctx->iface.notify_invalid_framebuffer =
-      vg_context_notify_invalid_framebuffer;
    ctx->iface.flush = vg_context_flush;
 
    ctx->iface.teximage = NULL;
@@ -266,8 +278,6 @@ vg_context_bind_framebuffers(struct st_context_iface *stctxi,
    if (stdrawi != streadi)
       return FALSE;
 
-   p_atomic_set(&ctx->draw_buffer_invalid, TRUE);
-
    strb_att = (stdrawi) ? choose_attachment(stdrawi) : ST_ATTACHMENT_INVALID;
 
    if (ctx->draw_buffer) {
@@ -313,11 +323,14 @@ vg_context_bind_framebuffers(struct st_context_iface *stctxi,
       stfb->width = 0;
       stfb->height = 0;
       stfb->strb_att = strb_att;
+      stfb->stamp = 1;
+      stfb->iface_stamp = p_atomic_read(&stdrawi->stamp) - 1;
 
       ctx->draw_buffer = stfb;
    }
 
    ctx->draw_buffer->iface = stdrawi;
+   ctx->draw_stamp = ctx->draw_buffer->stamp - 1;
 
    return TRUE;
 }
@@ -356,9 +369,10 @@ vg_api_destroy(struct st_api *stapi)
 }
 
 static const struct st_api vg_api = {
-   "Vega " VEGA_VERSION_STRING,
+   "Vega " PACKAGE_VERSION,
    ST_API_OPENVG,
    ST_PROFILE_DEFAULT_MASK,
+   0,
    vg_api_destroy,
    vg_api_get_proc_address,
    vg_api_create_context,

@@ -15,9 +15,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  **************************************************************************/
 
@@ -27,13 +28,13 @@
 #include "u_format_rgtc.h"
 #include "u_format_latc.h"
 
-static void u_format_unsigned_encode_rgtc_chan(uint8_t *blkaddr, uint8_t srccolors[4][4],
+static void u_format_unsigned_encode_rgtc_ubyte(uint8_t *blkaddr, uint8_t srccolors[4][4],
 					       int numxpixels, int numypixels);
 
 static void u_format_unsigned_fetch_texel_rgtc(unsigned srcRowStride, const uint8_t *pixdata,
 					       unsigned i, unsigned j, uint8_t *value, unsigned comps);
 
-static void u_format_signed_encode_rgtc_chan(int8_t *blkaddr, int8_t srccolors[4][4],
+static void u_format_signed_encode_rgtc_ubyte(int8_t *blkaddr, int8_t srccolors[4][4],
 					     int numxpixels, int numypixels);
 
 static void u_format_signed_fetch_texel_rgtc(unsigned srcRowStride, const int8_t *pixdata,
@@ -43,10 +44,13 @@ void
 util_format_latc1_unorm_fetch_rgba_8unorm(uint8_t *dst, const uint8_t *src, unsigned i, unsigned j)
 {
    /* Fix warnings here: */
-   (void) u_format_unsigned_encode_rgtc_chan;
-   (void) u_format_signed_encode_rgtc_chan;
+   (void) u_format_unsigned_encode_rgtc_ubyte;
+   (void) u_format_signed_encode_rgtc_ubyte;
 
    u_format_unsigned_fetch_texel_rgtc(0, src, i, j, dst, 1);
+   dst[1] = dst[0];
+   dst[2] = dst[0];
+   dst[3] = 255;
 }
 
 void
@@ -172,10 +176,10 @@ util_format_latc1_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigne
 void
 util_format_latc2_unorm_fetch_rgba_8unorm(uint8_t *dst, const uint8_t *src, unsigned i, unsigned j)
 {
-   puts(__func__);
-
    u_format_unsigned_fetch_texel_rgtc(0, src, i, j, dst, 2);
-   u_format_unsigned_fetch_texel_rgtc(0, src + 8, i, j, dst + 1, 2);
+   dst[1] = dst[0];
+   dst[2] = dst[0];
+   u_format_unsigned_fetch_texel_rgtc(0, src + 8, i, j, dst + 3, 2);
 }
 
 void

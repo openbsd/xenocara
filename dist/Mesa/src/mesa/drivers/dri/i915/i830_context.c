@@ -26,13 +26,16 @@
  **************************************************************************/
 
 #include "i830_context.h"
+#include "main/api_exec.h"
 #include "main/imports.h"
+#include "main/version.h"
+#include "main/vtxfmt.h"
 #include "tnl/tnl.h"
 #include "tnl/t_vertex.h"
 #include "tnl/t_context.h"
 #include "tnl/t_pipeline.h"
-#include "intel_span.h"
 #include "intel_tris.h"
+#include "../glsl/ralloc.h"
 
 /***************************************
  * Mesa's Driver Functions
@@ -47,31 +50,42 @@ i830InitDriverFunctions(struct dd_function_table *functions)
 
 extern const struct tnl_pipeline_stage *intel_pipeline[];
 
-GLboolean
-i830CreateContext(const struct gl_config * mesaVis,
+bool
+i830CreateContext(int api,
+                  const struct gl_config * mesaVis,
                   __DRIcontext * driContextPriv,
+                  unsigned major_version,
+                  unsigned minor_version,
+                  unsigned *error,
                   void *sharedContextPrivate)
 {
    struct dd_function_table functions;
-   struct i830_context *i830 = CALLOC_STRUCT(i830_context);
+   struct i830_context *i830 = rzalloc(NULL, struct i830_context);
    struct intel_context *intel = &i830->intel;
    struct gl_context *ctx = &intel->ctx;
-   if (!i830)
-      return GL_FALSE;
+
+   if (!i830) {
+      *error = __DRI_CTX_ERROR_NO_MEMORY;
+      return false;
+   }
 
    i830InitVtbl(i830);
    i830InitDriverFunctions(&functions);
 
-   if (!intelInitContext(intel, __DRI_API_OPENGL, mesaVis, driContextPriv,
-                         sharedContextPrivate, &functions)) {
-      FREE(i830);
-      return GL_FALSE;
+   if (!intelInitContext(intel, __DRI_API_OPENGL,
+                         major_version, minor_version,
+                         mesaVis, driContextPriv,
+                         sharedContextPrivate, &functions,
+                         error)) {
+      ralloc_free(i830);
+      return false;
    }
+
+   intel_init_texture_formats(ctx);
 
    _math_matrix_ctr(&intel->ViewportMatrix);
 
    /* Initialize swrast, tnl driver tables: */
-   intelInitSpanFuncs(ctx);
    intelInitTriFuncs(ctx);
 
    /* Install the customized pipeline: */
@@ -82,7 +96,7 @@ i830CreateContext(const struct gl_config * mesaVis,
       FALLBACK(intel, INTEL_FALLBACK_USER, 1);
 
    intel->ctx.Const.MaxTextureUnits = I830_TEX_UNITS;
-   intel->ctx.Const.MaxTextureImageUnits = I830_TEX_UNITS;
+   intel->ctx.Const.FragmentProgram.MaxTextureImageUnits = I830_TEX_UNITS;
    intel->ctx.Const.MaxTextureCoordUnits = I830_TEX_UNITS;
 
    /* Advertise the full hardware capabilities.  The new memory
@@ -97,6 +111,7 @@ i830CreateContext(const struct gl_config * mesaVis,
    ctx->Const.MaxTextureMaxAnisotropy = 2.0;
 
    ctx->Const.MaxDrawBuffers = 1;
+   ctx->Const.QueryCounterBits.SamplesPassed = 0;
 
    _tnl_init_vertices(ctx, ctx->Const.MaxArrayLockSize + 12,
                       18 * sizeof(GLfloat));
@@ -108,5 +123,10 @@ i830CreateContext(const struct gl_config * mesaVis,
    _tnl_allow_vertex_fog(ctx, 1);
    _tnl_allow_pixel_fog(ctx, 0);
 
-   return GL_TRUE;
+   _mesa_compute_version(ctx);
+
+   _mesa_initialize_dispatch_tables(ctx);
+   _mesa_initialize_vbo_vtxfmt(ctx);
+
+   return true;
 }

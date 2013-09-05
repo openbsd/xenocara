@@ -99,15 +99,6 @@ def generate_format_type(format):
     print
 
 
-def bswap_format(format):
-    '''Generate a structure that describes the format.'''
-
-    if format.is_bitmask() and not format.is_array() and format.block_size() > 8:
-        print '#ifdef PIPE_ARCH_BIG_ENDIAN'
-        print '   pixel.value = util_bswap%u(pixel.value);' % format.block_size()
-        print '#endif'
-
-
 def is_format_supported(format):
     '''Determines whether we actually have the plumbing necessary to generate the 
     to read/write to/from this format.'''
@@ -126,9 +117,34 @@ def is_format_supported(format):
 
     return True
 
+def is_format_pure_unsigned(format):
+    for i in range(4):
+        channel = format.channels[i]
+        if channel.type not in (VOID, UNSIGNED):
+            return False
+        if channel.type == UNSIGNED and channel.pure == False:
+            return False
+
+    return True
+
+
+def is_format_pure_signed(format):
+    for i in range(4):
+        channel = format.channels[i]
+        if channel.type not in (VOID, SIGNED):
+            return False
+        if channel.type == SIGNED and channel.pure == False:
+            return False
+
+    return True
 
 def native_type(format):
     '''Get the native appropriate for a format.'''
+
+    if format.name == 'PIPE_FORMAT_R11G11B10_FLOAT':
+        return 'uint32_t'
+    if format.name == 'PIPE_FORMAT_R9G9B9E5_FLOAT':
+        return 'uint32_t'
 
     if format.layout == PLAIN:
         if not format.is_array():
@@ -290,6 +306,7 @@ def conversion_expr(src_channel,
     src_type = src_channel.type
     src_size = src_channel.size
     src_norm = src_channel.norm
+    src_pure = src_channel.pure
 
     # Promote half to float
     if src_type == FLOAT and src_size == 16:
@@ -357,7 +374,7 @@ def conversion_expr(src_channel,
         if dst_channel.norm or dst_channel.type == FIXED:
             dst_one = get_one(dst_channel)
             if dst_channel.size <= 23:
-                value = '(%s * 0x%x)' % (value, dst_one)
+                value = 'util_iround(%s * 0x%x)' % (value, dst_one)
             else:
                 # bigger than single precision mantissa, use double
                 value = '(%s * (double)0x%x)' % (value, dst_one)
@@ -397,16 +414,11 @@ def generate_unpack_kernel(format, dst_channel, dst_native_type):
             elif src_channel.type == SIGNED:
                 print '         int%u_t %s;' % (depth, src_channel.name)
 
-        if depth > 8:
-            print '#ifdef PIPE_ARCH_BIG_ENDIAN'
-            print '         value = util_bswap%u(value);' % depth
-            print '#endif'
-
         # Compute the intermediate unshifted values 
-        shift = 0
         for i in range(format.nr_channels()):
             src_channel = format.channels[i]
             value = 'value'
+            shift = src_channel.shift
             if src_channel.type == UNSIGNED:
                 if shift:
                     value = '%s >> %u' % (value, shift)
@@ -429,8 +441,6 @@ def generate_unpack_kernel(format, dst_channel, dst_native_type):
             if value is not None:
                 print '         %s = %s;' % (src_channel.name, value)
                 
-            shift += src_channel.size
-
         # Convert, swizzle, and store final values
         for i in range(4):
             swizzle = format.swizzles[i]
@@ -458,7 +468,6 @@ def generate_unpack_kernel(format, dst_channel, dst_native_type):
     else:
         print '         union util_format_%s pixel;' % format.short_name()
         print '         memcpy(&pixel, src, sizeof pixel);'
-        bswap_format(format)
     
         for i in range(4):
             swizzle = format.swizzles[i]
@@ -499,9 +508,9 @@ def generate_pack_kernel(format, src_channel, src_native_type):
         depth = format.block_size()
         print '         uint%u_t value = 0;' % depth 
 
-        shift = 0
         for i in range(4):
             dst_channel = format.channels[i]
+            shift = dst_channel.shift
             if inv_swizzle[i] is not None:
                 value ='src[%u]' % inv_swizzle[i]
                 dst_colorspace = format.colorspace
@@ -525,13 +534,6 @@ def generate_pack_kernel(format, src_channel, src_native_type):
                 if value is not None:
                     print '         value |= %s;' % (value)
                 
-            shift += dst_channel.size
-
-        if depth > 8:
-            print '#ifdef PIPE_ARCH_BIG_ENDIAN'
-            print '         value = util_bswap%u(value);' % depth
-            print '#endif'
-        
         print '         *(uint%u_t *)dst = value;' % depth 
 
     else:
@@ -553,7 +555,6 @@ def generate_pack_kernel(format, src_channel, src_native_type):
                                     dst_colorspace = dst_colorspace)
             print '         pixel.chan.%s = %s;' % (dst_channel.name, value)
     
-        bswap_format(format)
         print '         memcpy(dst, &pixel, sizeof pixel);'
     
 
@@ -632,7 +633,7 @@ def generate_format_fetch(format, dst_channel, dst_native_type, dst_suffix):
 
 
 def is_format_hand_written(format):
-    return format.layout in ('s3tc', 'rgtc', 'subsampled', 'other') or format.colorspace == ZS
+    return format.layout in ('s3tc', 'rgtc', 'etc', 'subsampled', 'other') or format.colorspace == ZS
 
 
 def generate(formats):
@@ -653,18 +654,47 @@ def generate(formats):
             if is_format_supported(format):
                 generate_format_type(format)
 
-            channel = Channel(FLOAT, False, 32)
-            native_type = 'float'
-            suffix = 'rgba_float'
+            if is_format_pure_unsigned(format):
+                native_type = 'unsigned'
+                suffix = 'unsigned'
+                channel = Channel(UNSIGNED, False, True, 32)
 
-            generate_format_unpack(format, channel, native_type, suffix)
-            generate_format_pack(format, channel, native_type, suffix)
-            generate_format_fetch(format, channel, native_type, suffix)
+                generate_format_unpack(format, channel, native_type, suffix)
+                generate_format_pack(format, channel, native_type, suffix)
+                generate_format_fetch(format, channel, native_type, suffix)
 
-            channel = Channel(UNSIGNED, True, 8)
-            native_type = 'uint8_t'
-            suffix = 'rgba_8unorm'
+                channel = Channel(SIGNED, False, True, 32)
+                native_type = 'int'
+                suffix = 'signed'
+                generate_format_unpack(format, channel, native_type, suffix)
+                generate_format_pack(format, channel, native_type, suffix)   
+            elif is_format_pure_signed(format):
+                native_type = 'int'
+                suffix = 'signed'
+                channel = Channel(SIGNED, False, True, 32)
 
-            generate_format_unpack(format, channel, native_type, suffix)
-            generate_format_pack(format, channel, native_type, suffix)
+                generate_format_unpack(format, channel, native_type, suffix)
+                generate_format_pack(format, channel, native_type, suffix)   
+                generate_format_fetch(format, channel, native_type, suffix)
+
+                native_type = 'unsigned'
+                suffix = 'unsigned'
+                channel = Channel(UNSIGNED, False, True, 32)
+                generate_format_unpack(format, channel, native_type, suffix)
+                generate_format_pack(format, channel, native_type, suffix)   
+            else:
+                channel = Channel(FLOAT, False, False, 32)
+                native_type = 'float'
+                suffix = 'rgba_float'
+
+                generate_format_unpack(format, channel, native_type, suffix)
+                generate_format_pack(format, channel, native_type, suffix)
+                generate_format_fetch(format, channel, native_type, suffix)
+
+                channel = Channel(UNSIGNED, True, False, 8)
+                native_type = 'uint8_t'
+                suffix = 'rgba_8unorm'
+
+                generate_format_unpack(format, channel, native_type, suffix)
+                generate_format_pack(format, channel, native_type, suffix)
 

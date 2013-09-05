@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,13 +16,13 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Authors:
- *    Brian Paul
- *    Keith Whitwell <keith@tungstengraphics.com>
+ *    Brian Paul Keith Whitwell <keith@tungstengraphics.com>
  */
 
 /*
@@ -117,7 +116,7 @@ static void build_m3( GLfloat f[][3], GLfloat m[],
       fz = f[i][2] = u[2] - norm[2] * two_nu;
       m[i] = fx * fx + fy * fy + (fz + 1.0F) * (fz + 1.0F);
       if (m[i] != 0.0F) {
-	 m[i] = 0.5F * _mesa_inv_sqrtf(m[i]);
+	 m[i] = 0.5F * INV_SQRTF(m[i]);
       }
    }
 }
@@ -146,7 +145,7 @@ static void build_m2( GLfloat f[][3], GLfloat m[],
       fz = f[i][2] = u[2] - norm[2] * two_nu;
       m[i] = fx * fx + fy * fy + (fz + 1.0F) * (fz + 1.0F);
       if (m[i] != 0.0F) {
-	 m[i] = 0.5F * _mesa_inv_sqrtf(m[i]);
+	 m[i] = 0.5F * INV_SQRTF(m[i]);
       }
    }
 }
@@ -562,7 +561,7 @@ static GLboolean alloc_texgen_data( struct gl_context *ctx,
    struct texgen_stage_data *store;
    GLuint i;
 
-   stage->privatePtr = CALLOC(sizeof(*store));
+   stage->privatePtr = calloc(1, sizeof(*store));
    store = TEXGEN_STAGE_DATA(stage);
    if (!store)
       return GL_FALSE;
@@ -570,8 +569,8 @@ static GLboolean alloc_texgen_data( struct gl_context *ctx,
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
       _mesa_vector4f_alloc( &store->texcoord[i], 0, VB->Size, 32 );
 
-   store->tmp_f = (GLfloat (*)[3]) MALLOC(VB->Size * sizeof(GLfloat) * 3);
-   store->tmp_m = (GLfloat *) MALLOC(VB->Size * sizeof(GLfloat));
+   store->tmp_f = malloc(VB->Size * sizeof(GLfloat) * 3);
+   store->tmp_m = malloc(VB->Size * sizeof(GLfloat));
 
    return GL_TRUE;
 }
@@ -589,9 +588,9 @@ static void free_texgen_data( struct tnl_pipeline_stage *stage )
 	    _mesa_vector4f_free( &store->texcoord[i] );
 
 
-      if (store->tmp_f) FREE( store->tmp_f );
-      if (store->tmp_m) FREE( store->tmp_m );
-      FREE( store );
+      free( store->tmp_f );
+      free( store->tmp_m );
+      free( store );
       stage->privatePtr = NULL;
    }
 }

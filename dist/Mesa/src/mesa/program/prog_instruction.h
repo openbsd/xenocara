@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.3
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -147,14 +147,9 @@ typedef enum prog_opcode {
    OPCODE_NOP = 0,   /*                                      X   */
    OPCODE_ABS,       /*   X        X       1.1               X   */
    OPCODE_ADD,       /*   X        X       X       X         X   */
-   OPCODE_AND,       /*                                          */
-   OPCODE_ARA,       /*                    2                     */
    OPCODE_ARL,       /*   X                X                 X   */
-   OPCODE_ARL_NV,    /*                    2                     */
-   OPCODE_ARR,       /*                    2                     */
    OPCODE_BGNLOOP,   /*                                     opt  */
    OPCODE_BGNSUB,    /*                                     opt  */
-   OPCODE_BRA,       /*                    2                     */
    OPCODE_BRK,       /*                    2                opt  */
    OPCODE_CAL,       /*                    2       2        opt  */
    OPCODE_CMP,       /*            X                         X   */
@@ -163,15 +158,12 @@ typedef enum prog_opcode {
    OPCODE_DDX,       /*                            X         X   */
    OPCODE_DDY,       /*                            X         X   */
    OPCODE_DP2,       /*                            2         X   */
-   OPCODE_DP2A,      /*                            2             */
    OPCODE_DP3,       /*   X        X       X       X         X   */
    OPCODE_DP4,       /*   X        X       X       X         X   */
    OPCODE_DPH,       /*   X        X       1.1                   */
    OPCODE_DST,       /*   X        X       X       X             */
    OPCODE_ELSE,      /*                                     opt  */
-   OPCODE_EMIT_VERTEX,/*                                     X   */
    OPCODE_END,       /*   X        X       X       X        opt  */
-   OPCODE_END_PRIMITIVE,/*                                   X   */
    OPCODE_ENDIF,     /*                                     opt  */
    OPCODE_ENDLOOP,   /*                                     opt  */
    OPCODE_ENDSUB,    /*                                     opt  */
@@ -195,22 +187,14 @@ typedef enum prog_opcode {
    OPCODE_NOISE2,    /*                                      X   */
    OPCODE_NOISE3,    /*                                      X   */
    OPCODE_NOISE4,    /*                                      X   */
-   OPCODE_NOT,       /*                                          */
-   OPCODE_NRM3,      /*                                          */
-   OPCODE_NRM4,      /*                                          */
-   OPCODE_OR,        /*                                          */
    OPCODE_PK2H,      /*                            X             */
    OPCODE_PK2US,     /*                            X             */
    OPCODE_PK4B,      /*                            X             */
    OPCODE_PK4UB,     /*                            X             */
    OPCODE_POW,       /*   X        X               X         X   */
-   OPCODE_POPA,      /*                    3                     */
-   OPCODE_PRINT,     /*                    X       X             */
-   OPCODE_PUSHA,     /*                    3                     */
-   OPCODE_RCC,       /*                    1.1                   */
    OPCODE_RCP,       /*   X        X       X       X         X   */
    OPCODE_RET,       /*                    2       2        opt  */
-   OPCODE_RFL,       /*            X               X             */
+   OPCODE_RFL,       /*                            X             */
    OPCODE_RSQ,       /*   X        X       X       X         X   */
    OPCODE_SCS,       /*            X                         X   */
    OPCODE_SEQ,       /*                    2       X         X   */
@@ -237,7 +221,6 @@ typedef enum prog_opcode {
    OPCODE_UP4B,      /*                            X             */
    OPCODE_UP4UB,     /*                            X             */
    OPCODE_X2D,       /*                            X             */
-   OPCODE_XOR,       /*                                          */
    OPCODE_XPD,       /*   X        X                             */
    MAX_OPCODE
 } gl_inst_opcode;
@@ -304,8 +287,7 @@ struct prog_dst_register
     * \name Conditional destination update control.
     *
     * \since
-    * NV_fragment_program, NV_fragment_program_option, NV_vertex_program2,
-    * NV_vertex_program2_option.
+    * NV_fragment_program_option, NV_vertex_program2, NV_vertex_program2_option.
     */
    /*@{*/
    /**
@@ -320,15 +302,6 @@ struct prog_dst_register
     * Condition code swizzle value.
     */
    GLuint CondSwizzle:12;
-
-   /**
-    * Selects the condition code register to use for conditional destination
-    * update masking.  In NV_fragmnet_program or NV_vertex_program2 mode, only
-    * condition code register 0 is available.  In NV_vertex_program3 mode,
-    * condition code registers 0 and 1 are available.
-    */
-   GLuint CondSrc:1;
-   /*@}*/
 };
 
 
@@ -346,8 +319,7 @@ struct prog_instruction
     * register.
     *
     * \since
-    * NV_fragment_program, NV_fragment_program_option, NV_vertex_program2,
-    * NV_vertex_program2_option.
+    * NV_fragment_program_option, NV_vertex_program2, NV_vertex_program2_option.
     */
    GLuint CondUpdate:1;
 
@@ -360,8 +332,7 @@ struct prog_instruction
     * code registers 0 and 1 are available.
     *
     * \since
-    * NV_fragment_program, NV_fragment_program_option, NV_vertex_program2,
-    * NV_vertex_program2_option.
+    * NV_fragment_program_option, NV_vertex_program2, NV_vertex_program2_option.
     */
    GLuint CondDst:1;
 
@@ -372,7 +343,7 @@ struct prog_instruction
     * Value is one of the SATURATE_* tokens.
     *
     * \since
-    * NV_fragment_program, NV_fragment_program_option, NV_vertex_program3.
+    * NV_fragment_program_option, NV_vertex_program3.
     */
    GLuint SaturateMode:2;
 
@@ -380,7 +351,7 @@ struct prog_instruction
     * Per-instruction selectable precision: FLOAT32, FLOAT16, FIXED12.
     *
     * \since
-    * NV_fragment_program, NV_fragment_program_option.
+    * NV_fragment_program_option.
     */
    GLuint Precision:3;
 
@@ -392,7 +363,7 @@ struct prog_instruction
    GLuint TexSrcUnit:5;
 
    /** Source texture target, one of TEXTURE_{1D,2D,3D,CUBE,RECT}_INDEX */
-   GLuint TexSrcTarget:3;
+   GLuint TexSrcTarget:4;
 
    /** True if tex instruction should do shadow comparison */
    GLuint TexShadow:1;
@@ -409,9 +380,6 @@ struct prog_instruction
 
    /** for debugging purposes */
    const char *Comment;
-
-   /** Arbitrary data.  Used for OPCODE_PRINT and some drivers */
-   void *Data;
 
    /** for driver use (try to remove someday) */
    GLint Aux;

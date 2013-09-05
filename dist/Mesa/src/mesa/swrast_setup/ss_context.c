@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Authors:
  *    Keith Whitwell <keith@tungstengraphics.com>
@@ -49,7 +49,7 @@
 GLboolean
 _swsetup_CreateContext( struct gl_context *ctx )
 {
-   SScontext *swsetup = (SScontext *)CALLOC(sizeof(SScontext));
+   SScontext *swsetup = calloc(1, sizeof(SScontext));
 
    if (!swsetup)
       return GL_FALSE;
@@ -72,7 +72,7 @@ _swsetup_DestroyContext( struct gl_context *ctx )
    SScontext *swsetup = SWSETUP_CONTEXT(ctx);
 
    if (swsetup) {
-      FREE(swsetup);
+      free(swsetup);
       ctx->swsetup_context = 0;
    }
 
@@ -118,63 +118,59 @@ setup_vertex_format(struct gl_context *ctx)
                       && CHAN_TYPE != GL_FLOAT;
 
    if (intColors != swsetup->intColors ||
-       !RENDERINPUTS_EQUAL(tnl->render_inputs_bitset,
-                           swsetup->last_index_bitset)) {
-      DECLARE_RENDERINPUTS(index_bitset);
+       tnl->render_inputs_bitset != swsetup->last_index_bitset) {
+      GLbitfield64 index_bitset = tnl->render_inputs_bitset;
       struct tnl_attr_map map[_TNL_ATTRIB_MAX];
       unsigned int i, e = 0;
 
       swsetup->intColors = intColors;
 
-      RENDERINPUTS_COPY( index_bitset, tnl->render_inputs_bitset );
+      EMIT_ATTR( _TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, attrib[VARYING_SLOT_POS] );
 
-      EMIT_ATTR( _TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, attrib[FRAG_ATTRIB_WPOS] );
-
-      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_COLOR0 )) {
+      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_COLOR0)) {
          if (swsetup->intColors)
             EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4CHAN_4F_RGBA, color );
          else
-            EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4F, attrib[FRAG_ATTRIB_COL0]);
+            EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4F, attrib[VARYING_SLOT_COL0]);
       }
 
-      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_COLOR1 )) {
-         EMIT_ATTR( _TNL_ATTRIB_COLOR1, EMIT_4F, attrib[FRAG_ATTRIB_COL1]);
+      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_COLOR1)) {
+         EMIT_ATTR( _TNL_ATTRIB_COLOR1, EMIT_4F, attrib[VARYING_SLOT_COL1]);
       }
 
-      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_FOG )) {
+      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_FOG)) {
          const GLint emit = ctx->FragmentProgram._Current ? EMIT_4F : EMIT_1F;
-         EMIT_ATTR( _TNL_ATTRIB_FOG, emit, attrib[FRAG_ATTRIB_FOGC]);
+         EMIT_ATTR( _TNL_ATTRIB_FOG, emit, attrib[VARYING_SLOT_FOGC]);
       }
 
-      if (RENDERINPUTS_TEST_RANGE(index_bitset, _TNL_FIRST_TEX, _TNL_LAST_TEX))
+      if (index_bitset & BITFIELD64_RANGE(_TNL_ATTRIB_TEX0, _TNL_NUM_TEX))
       {
          for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
-            if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_TEX(i) )) {
+            if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_TEX(i))) {
                EMIT_ATTR( _TNL_ATTRIB_TEX(i), EMIT_4F,
-                          attrib[FRAG_ATTRIB_TEX0 + i] );
+                          attrib[VARYING_SLOT_TEX0 + i] );
             }
          }
       }
 
       /* shader varying vars */
-      if (RENDERINPUTS_TEST_RANGE( index_bitset,
-                                   _TNL_FIRST_GENERIC, _TNL_LAST_GENERIC )) {
+      if (index_bitset & BITFIELD64_RANGE(_TNL_ATTRIB_GENERIC0, _TNL_NUM_GENERIC)) {
          for (i = 0; i < ctx->Const.MaxVarying; i++) {
-            if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_GENERIC(i) )) {
+            if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_GENERIC(i))) {
                EMIT_ATTR( _TNL_ATTRIB_GENERIC(i), VARYING_EMIT_STYLE,
-                          attrib[FRAG_ATTRIB_VAR0 + i] );
+                          attrib[VARYING_SLOT_VAR0 + i] );
             }
          }
       }
 
-      if (RENDERINPUTS_TEST( index_bitset, _TNL_ATTRIB_POINTSIZE ))
+      if (index_bitset & BITFIELD64_BIT(_TNL_ATTRIB_POINTSIZE))
          EMIT_ATTR( _TNL_ATTRIB_POINTSIZE, EMIT_1F, pointSize );
 
       _tnl_install_attrs( ctx, map, e,
                           ctx->Viewport._WindowMap.m,
                           sizeof(SWvertex) );
 
-      RENDERINPUTS_COPY( swsetup->last_index_bitset, index_bitset );
+      swsetup->last_index_bitset = index_bitset;
    }
 }
 
@@ -195,7 +191,7 @@ _swsetup_RenderStart( struct gl_context *ctx )
    }
 
    if (swsetup->NewState & _NEW_PROGRAM) {
-      RENDERINPUTS_ZERO( swsetup->last_index_bitset );
+      swsetup->last_index_bitset = 0;
    }
 
    swsetup->NewState = 0;
@@ -259,7 +255,7 @@ _swsetup_Wakeup( struct gl_context *ctx )
    _swsetup_InvalidateState( ctx, ~0 );
 
    swsetup->verts = (SWvertex *)tnl->clipspace.vertex_buf;
-   RENDERINPUTS_ZERO( swsetup->last_index_bitset );
+   swsetup->last_index_bitset = 0;
 }
 
 
@@ -275,29 +271,29 @@ _swsetup_Translate( struct gl_context *ctx, const void *vertex, SWvertex *dest )
 
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_POS, tmp );
 
-   dest->attrib[FRAG_ATTRIB_WPOS][0] = m[0]  * tmp[0] + m[12];
-   dest->attrib[FRAG_ATTRIB_WPOS][1] = m[5]  * tmp[1] + m[13];
-   dest->attrib[FRAG_ATTRIB_WPOS][2] = m[10] * tmp[2] + m[14];
-   dest->attrib[FRAG_ATTRIB_WPOS][3] =         tmp[3];
+   dest->attrib[VARYING_SLOT_POS][0] = m[0]  * tmp[0] + m[12];
+   dest->attrib[VARYING_SLOT_POS][1] = m[5]  * tmp[1] + m[13];
+   dest->attrib[VARYING_SLOT_POS][2] = m[10] * tmp[2] + m[14];
+   dest->attrib[VARYING_SLOT_POS][3] =         tmp[3];
 
    /** XXX try to limit these loops someday */
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
       _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_TEX0 + i,
-                     dest->attrib[FRAG_ATTRIB_TEX0 + i] );
+                     dest->attrib[VARYING_SLOT_TEX0 + i] );
 
    for (i = 0 ; i < ctx->Const.MaxVarying ; i++)
       _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_GENERIC0 + i,
-                     dest->attrib[FRAG_ATTRIB_VAR0 + i] );
+                     dest->attrib[VARYING_SLOT_VAR0 + i] );
 
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR0,
-                  dest->attrib[FRAG_ATTRIB_COL0] );
+                  dest->attrib[VARYING_SLOT_COL0] );
    UNCLAMPED_FLOAT_TO_RGBA_CHAN( dest->color, tmp );
 
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR1,
-                  dest->attrib[FRAG_ATTRIB_COL1]);
+                  dest->attrib[VARYING_SLOT_COL1]);
 
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_FOG, tmp );
-   dest->attrib[FRAG_ATTRIB_FOGC][0] = tmp[0];
+   dest->attrib[VARYING_SLOT_FOGC][0] = tmp[0];
 
    /* XXX See _tnl_get_attr about pointsize ... */
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_POINTSIZE, tmp );

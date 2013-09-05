@@ -27,32 +27,15 @@
 #include "util/u_simple_list.h"
 #include "util/u_upload_mgr.h"
 #include "os/os_time.h"
+#include "vl/vl_decoder.h"
+#include "vl/vl_video_buffer.h"
 
 #include "r300_cb.h"
 #include "r300_context.h"
 #include "r300_emit.h"
 #include "r300_screen.h"
 #include "r300_screen_buffer.h"
-
-static void r300_update_num_contexts(struct r300_screen *r300screen,
-                                     int diff)
-{
-    pipe_mutex_lock(r300screen->num_contexts_mutex);
-    if (diff > 0) {
-        r300screen->num_contexts++;
-
-        if (r300screen->num_contexts > 1)
-            util_slab_set_thread_safety(&r300screen->pool_buffers,
-                                        UTIL_SLAB_MULTITHREADED);
-    } else {
-        r300screen->num_contexts--;
-
-        if (r300screen->num_contexts <= 1)
-            util_slab_set_thread_safety(&r300screen->pool_buffers,
-                                        UTIL_SLAB_SINGLETHREADED);
-    }
-    pipe_mutex_unlock(r300screen->num_contexts_mutex);
-}
+#include "compiler/radeon_regalloc.h"
 
 static void r300_release_referenced_objects(struct r300_context *r300)
 {
@@ -60,7 +43,6 @@ static void r300_release_referenced_objects(struct r300_context *r300)
             (struct pipe_framebuffer_state*)r300->fb_state.state;
     struct r300_textures_state *textures =
             (struct r300_textures_state*)r300->textures_state.state;
-    struct r300_query *query, *temp;
     unsigned i;
 
     /* Framebuffer state. */
@@ -79,14 +61,8 @@ static void r300_release_referenced_objects(struct r300_context *r300)
     }
 
     /* Manually-created vertex buffers. */
-    pipe_resource_reference(&r300->dummy_vb, NULL);
-    pipe_resource_reference(&r300->vbo, NULL);
-
-    /* If there are any queries pending or not destroyed, remove them now. */
-    foreach_s(query, temp, &r300->query_list) {
-        remove_from_list(query);
-        FREE(query);
-    }
+    pipe_resource_reference(&r300->dummy_vb.buffer, NULL);
+    pb_reference(&r300->vbo, NULL);
 
     r300->context.delete_depth_stencil_alpha_state(&r300->context,
                                                    r300->dsa_decompress_zmask);
@@ -97,7 +73,10 @@ static void r300_destroy_context(struct pipe_context* context)
     struct r300_context* r300 = r300_context(context);
 
     if (r300->cs && r300->hyperz_enabled) {
-        r300->rws->cs_request_feature(r300->cs, RADEON_FID_HYPERZ_RAM_ACCESS, FALSE);
+        r300->rws->cs_request_feature(r300->cs, RADEON_FID_R300_HYPERZ_ACCESS, FALSE);
+    }
+    if (r300->cs && r300->cmask_access) {
+        r300->rws->cs_request_feature(r300->cs, RADEON_FID_R300_CMASK_ACCESS, FALSE);
     }
 
     if (r300->blitter)
@@ -105,8 +84,8 @@ static void r300_destroy_context(struct pipe_context* context)
     if (r300->draw)
         draw_destroy(r300->draw);
 
-    if (r300->vbuf_mgr)
-        u_vbuf_destroy(r300->vbuf_mgr);
+    if (r300->uploader)
+        u_upload_destroy(r300->uploader);
 
     /* XXX: This function assumes r300->query_list was initialized */
     r300_release_referenced_objects(r300);
@@ -114,10 +93,10 @@ static void r300_destroy_context(struct pipe_context* context)
     if (r300->cs)
         r300->rws->cs_destroy(r300->cs);
 
+    rc_destroy_regalloc_state(&r300->fs_regalloc_state);
+
     /* XXX: No way to tell if this was initialized or not? */
     util_slab_destroy(&r300->pool_transfers);
-
-    r300_update_num_contexts(r300->screen, -1);
 
     /* Free the structs allocated in r300_setup_atoms() */
     if (r300->aa_state.state) {
@@ -129,6 +108,7 @@ static void r300_destroy_context(struct pipe_context* context)
         FREE(r300->hyperz_state.state);
         FREE(r300->invariant_state.state);
         FREE(r300->rs_block_state.state);
+        FREE(r300->sample_mask.state);
         FREE(r300->scissor_state.state);
         FREE(r300->textures_state.state);
         FREE(r300->vap_invariant_state.state);
@@ -171,7 +151,7 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     boolean is_rv350 = r300->screen->caps.is_rv350;
     boolean is_r500 = r300->screen->caps.is_r500;
     boolean has_tcl = r300->screen->caps.has_tcl;
-    boolean drm_2_6_0 = r300->rws->get_value(r300->rws, RADEON_VID_DRM_2_6_0);
+    boolean drm_2_6_0 = r300->screen->info.drm_minor >= 6;
 
     /* Create the actual atom list.
      *
@@ -199,9 +179,10 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     R300_INIT_ATOM(blend_state, 8);
     R300_INIT_ATOM(blend_color_state, is_r500 ? 3 : 2);
     /* SC. */
+    R300_INIT_ATOM(sample_mask, 2);
     R300_INIT_ATOM(scissor_state, 3);
     /* GB, FG, GA, SU, SC, RB3D. */
-    R300_INIT_ATOM(invariant_state, 16 + (is_rv350 ? 4 : 0) + (is_r500 ? 4 : 0));
+    R300_INIT_ATOM(invariant_state, 14 + (is_rv350 ? 4 : 0) + (is_r500 ? 4 : 0));
     /* VAP. */
     R300_INIT_ATOM(viewport_state, 9);
     R300_INIT_ATOM(pvs_flush, 2);
@@ -209,7 +190,7 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     R300_INIT_ATOM(vertex_stream_state, 0);
     R300_INIT_ATOM(vs_state, 0);
     R300_INIT_ATOM(vs_constants, 0);
-    R300_INIT_ATOM(clip_state, has_tcl ? 5 + (6 * 4) : 2);
+    R300_INIT_ATOM(clip_state, has_tcl ? 3 + (6 * 4) : 0);
     /* VAP, RS, GA, GB, SU, SC. */
     R300_INIT_ATOM(rs_block_state, 0);
     R300_INIT_ATOM(rs_state, 0);
@@ -222,10 +203,10 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     /* TX. */
     R300_INIT_ATOM(texture_cache_inval, 2);
     R300_INIT_ATOM(textures_state, 0);
-    /* HiZ Clear */
+    /* Clear commands */
     R300_INIT_ATOM(hiz_clear, r300->screen->caps.hiz_ram > 0 ? 4 : 0);
-    /* zmask clear */
     R300_INIT_ATOM(zmask_clear, r300->screen->caps.zmask_ram > 0 ? 4 : 0);
+    R300_INIT_ATOM(cmask_clear, 4);
     /* ZB (unpipelined), SU. */
     R300_INIT_ATOM(query_start, 4);
 
@@ -248,6 +229,7 @@ static boolean r300_setup_atoms(struct r300_context* r300)
     R300_ALLOC_ATOM(ztop_state, r300_ztop_state);
     R300_ALLOC_ATOM(fb_state, pipe_framebuffer_state);
     R300_ALLOC_ATOM(gpu_flush, pipe_framebuffer_state);
+    r300->sample_mask.state = malloc(4);
     R300_ALLOC_ATOM(scissor_state, pipe_scissor_state);
     R300_ALLOC_ATOM(rs_block_state, r300_rs_block);
     R300_ALLOC_ATOM(fs_constants, r300_constant_buffer);
@@ -282,8 +264,6 @@ static void r300_init_states(struct pipe_context *pipe)
     struct pipe_blend_color bc = {{0}};
     struct pipe_clip_state cs = {{{0}}};
     struct pipe_scissor_state ss = {0};
-    struct r300_clip_state *clip =
-            (struct r300_clip_state*)r300->clip_state.state;
     struct r300_gpu_flush *gpuflush =
             (struct r300_gpu_flush*)r300->gpu_flush.state;
     struct r300_vap_invariant_state *vap_invariant =
@@ -294,16 +274,9 @@ static void r300_init_states(struct pipe_context *pipe)
     CB_LOCALS;
 
     pipe->set_blend_color(pipe, &bc);
-    pipe->set_scissor_state(pipe, &ss);
-
-    /* Initialize the clip state. */
-    if (r300->screen->caps.has_tcl) {
-        pipe->set_clip_state(pipe, &cs);
-    } else {
-        BEGIN_CB(clip->cb, 2);
-        OUT_CB_REG(R300_VAP_CLIP_CNTL, R300_CLIP_DISABLE);
-        END_CB;
-    }
+    pipe->set_clip_state(pipe, &cs);
+    pipe->set_scissor_states(pipe, 0, 1, &ss);
+    pipe->set_sample_mask(pipe, ~0);
 
     /* Initialize the GPU flush. */
     {
@@ -351,7 +324,6 @@ static void r300_init_states(struct pipe_context *pipe)
         OUT_CB_REG(R300_SU_DEPTH_SCALE, 0x4B7FFFFF);
         OUT_CB_REG(R300_SU_DEPTH_OFFSET, 0);
         OUT_CB_REG(R300_SC_EDGERULE, 0x2DA49525);
-        OUT_CB_REG(R300_SC_SCREENDOOR, 0xffffff);
 
         if (r300->screen->caps.is_rv350) {
             OUT_CB_REG(R500_RB3D_DISCARD_SRC_PIXEL_LTE_THRESHOLD, 0x01010101);
@@ -378,7 +350,7 @@ static void r300_init_states(struct pipe_context *pipe)
 
         if (r300->screen->caps.is_r500 ||
             (r300->screen->caps.is_rv350 &&
-             r300->rws->get_value(r300->rws, RADEON_VID_DRM_2_6_0))) {
+             r300->screen->info.drm_minor >= 6)) {
             OUT_CB_REG(R300_GB_Z_PEQ_CONFIG, 0);
         }
         END_CB;
@@ -395,24 +367,19 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
     if (!r300)
         return NULL;
 
-    r300_update_num_contexts(r300screen, 1);
-
     r300->rws = rws;
     r300->screen = r300screen;
 
-    r300->context.winsys = (struct pipe_winsys*)rws;
     r300->context.screen = screen;
     r300->context.priv = priv;
 
     r300->context.destroy = r300_destroy_context;
 
-    make_empty_list(&r300->query_list);
-
     util_slab_create(&r300->pool_transfers,
                      sizeof(struct pipe_transfer), 64,
                      UTIL_SLAB_SINGLETHREADED);
 
-    r300->cs = rws->cs_create(rws);
+    r300->cs = rws->cs_create(rws, RING_GFX, NULL);
     if (r300->cs == NULL)
         goto fail;
 
@@ -426,6 +393,9 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
         /* Disable converting points/lines to triangles. */
         draw_wide_line_threshold(r300->draw, 10000000.f);
         draw_wide_point_threshold(r300->draw, 10000000.f);
+        draw_wide_point_sprites(r300->draw, FALSE);
+        draw_enable_line_stipple(r300->draw, TRUE);
+        draw_enable_point_sprites(r300->draw, FALSE);
     }
 
     if (!r300_setup_atoms(r300))
@@ -436,23 +406,21 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
     r300_init_query_functions(r300);
     r300_init_state_functions(r300);
     r300_init_resource_functions(r300);
+    r300_init_render_functions(r300);
+    r300_init_states(&r300->context);
 
-    r300->vbuf_mgr = u_vbuf_create(&r300->context, 1024 * 1024, 16,
-                                       PIPE_BIND_VERTEX_BUFFER |
-                                       PIPE_BIND_INDEX_BUFFER,
-                                       U_VERTEX_FETCH_DWORD_ALIGNED);
-    if (!r300->vbuf_mgr)
-        goto fail;
+    r300->context.create_video_decoder = vl_create_decoder;
+    r300->context.create_video_buffer = vl_video_buffer_create;
+
+    r300->uploader = u_upload_create(&r300->context, 256 * 1024, 4,
+                                     PIPE_BIND_CUSTOM);
 
     r300->blitter = util_blitter_create(&r300->context);
     if (r300->blitter == NULL)
         goto fail;
+    r300->blitter->draw_rectangle = r300_blitter_draw_rectangle;
 
-    /* Render functions must be initialized after blitter. */
-    r300_init_render_functions(r300);
-    r300_init_states(&r300->context);
-
-    rws->cs_set_flush(r300->cs, r300_flush_callback, r300);
+    rws->cs_set_flush_callback(r300->cs, r300_flush_callback, r300);
 
     /* The KIL opcode needs the first texture unit to be enabled
      * on r3xx-r4xx. In order to calm down the CS checker, we bind this
@@ -464,7 +432,6 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
 
         rtempl.target = PIPE_TEXTURE_2D;
         rtempl.format = PIPE_FORMAT_I8_UNORM;
-        rtempl.bind = PIPE_BIND_SAMPLER_VIEW;
         rtempl.usage = PIPE_USAGE_IMMUTABLE;
         rtempl.width0 = 1;
         rtempl.height0 = 1;
@@ -479,18 +446,18 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
         pipe_resource_reference(&tex, NULL);
     }
 
-    {
+    if (r300screen->caps.has_tcl) {
         struct pipe_resource vb;
         memset(&vb, 0, sizeof(vb));
         vb.target = PIPE_BUFFER;
         vb.format = PIPE_FORMAT_R8_UNORM;
-        vb.bind = PIPE_BIND_VERTEX_BUFFER;
-        vb.usage = PIPE_USAGE_IMMUTABLE;
+        vb.usage = PIPE_USAGE_STATIC;
         vb.width0 = sizeof(float) * 16;
         vb.height0 = 1;
         vb.depth0 = 1;
 
-        r300->dummy_vb = screen->resource_create(screen, &vb);
+        r300->dummy_vb.buffer = screen->resource_create(screen, &vb);
+        r300->context.set_vertex_buffers(&r300->context, 0, 1, &r300->dummy_vb);
     }
 
     {
@@ -505,6 +472,9 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
 
     r300->hyperz_time_of_last_flush = os_time_get();
 
+    /* Register allocator state */
+    rc_init_regalloc_state(&r300->fs_regalloc_state);
+
     /* Print driver info. */
 #ifdef DEBUG
     {
@@ -515,15 +485,15 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
                 "r300: DRM version: %d.%d.%d, Name: %s, ID: 0x%04x, GB: %d, Z: %d\n"
                 "r300: GART size: %d MB, VRAM size: %d MB\n"
                 "r300: AA compression RAM: %s, Z compression RAM: %s, HiZ RAM: %s\n",
-                rws->get_value(rws, RADEON_VID_DRM_MAJOR),
-                rws->get_value(rws, RADEON_VID_DRM_MINOR),
-                rws->get_value(rws, RADEON_VID_DRM_PATCHLEVEL),
+                r300->screen->info.drm_major,
+                r300->screen->info.drm_minor,
+                r300->screen->info.drm_patchlevel,
                 screen->get_name(screen),
-                rws->get_value(rws, RADEON_VID_PCI_ID),
-                rws->get_value(rws, RADEON_VID_R300_GB_PIPES),
-                rws->get_value(rws, RADEON_VID_R300_Z_PIPES),
-                rws->get_value(rws, RADEON_VID_GART_SIZE) >> 20,
-                rws->get_value(rws, RADEON_VID_VRAM_SIZE) >> 20,
+                r300->screen->info.pci_id,
+                r300->screen->info.r300_num_gb_pipes,
+                r300->screen->info.r300_num_z_pipes,
+                r300->screen->info.gart_size >> 20,
+                r300->screen->info.vram_size >> 20,
                 "YES", /* XXX really? */
                 r300->screen->caps.zmask_ram ? "YES" : "NO",
                 r300->screen->caps.hiz_ram ? "YES" : "NO");

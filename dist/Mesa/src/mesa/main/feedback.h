@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.5
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
@@ -18,20 +17,35 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef FEEDBACK_H
 #define FEEDBACK_H
 
 
-#include "main/mfeatures.h"
 #include "main/mtypes.h"
 
 
-#if FEATURE_feedback
+void GLAPIENTRY
+_mesa_FeedbackBuffer( GLsizei size, GLenum type, GLfloat *buffer );
+void GLAPIENTRY
+_mesa_PassThrough( GLfloat token );
+void GLAPIENTRY
+_mesa_SelectBuffer( GLsizei size, GLuint *buffer );
+void GLAPIENTRY
+_mesa_InitNames( void );
+void GLAPIENTRY
+_mesa_LoadName( GLuint name );
+void GLAPIENTRY
+_mesa_PushName( GLuint name );
+void GLAPIENTRY
+_mesa_PopName( void );
+GLint GLAPIENTRY
+_mesa_RenderMode( GLenum mode );
 
 extern void
 _mesa_feedback_vertex( struct gl_context *ctx,
@@ -40,7 +54,7 @@ _mesa_feedback_vertex( struct gl_context *ctx,
                        const GLfloat texcoord[4] );
 
 
-static INLINE void
+static inline void
 _mesa_feedback_token( struct gl_context *ctx, GLfloat token )
 {
    if (ctx->Feedback.Count < ctx->Feedback.BufferSize) {
@@ -53,45 +67,6 @@ _mesa_feedback_token( struct gl_context *ctx, GLfloat token )
 extern void
 _mesa_update_hitflag( struct gl_context *ctx, GLfloat z );
 
-
-extern void
-_mesa_init_feedback_dispatch(struct _glapi_table *disp);
-
-#else /* FEATURE_feedback */
-
-#include "main/compiler.h"
-
-static INLINE void
-_mesa_feedback_vertex( struct gl_context *ctx,
-                       const GLfloat win[4],
-                       const GLfloat color[4],
-                       const GLfloat texcoord[4] )
-{
-   /* render mode is always GL_RENDER */
-   ASSERT_NO_FEATURE();
-}
-
-
-static INLINE void
-_mesa_feedback_token( struct gl_context *ctx, GLfloat token )
-{
-   /* render mode is always GL_RENDER */
-   ASSERT_NO_FEATURE();
-}
-
-static INLINE void
-_mesa_update_hitflag( struct gl_context *ctx, GLfloat z )
-{
-   /* render mode is always GL_RENDER */
-   ASSERT_NO_FEATURE();
-}
-
-static INLINE void
-_mesa_init_feedback_dispatch(struct _glapi_table *disp)
-{
-}
-
-#endif /* FEATURE_feedback */
 
 extern void
 _mesa_init_feedback( struct gl_context *ctx );

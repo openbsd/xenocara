@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -51,6 +51,11 @@
 
 #include "imports.h"
 #include "mtypes.h"
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 struct _glapi_table;
@@ -104,15 +109,13 @@ _mesa_initialize_context( struct gl_context *ctx,
                           gl_api api,
                           const struct gl_config *visual,
                           struct gl_context *share_list,
-                          const struct dd_function_table *driverFunctions,
-                          void *driverContext );
+                          const struct dd_function_table *driverFunctions);
 
 extern struct gl_context *
 _mesa_create_context(gl_api api,
                      const struct gl_config *visual,
                      struct gl_context *share_list,
-                     const struct dd_function_table *driverFunctions,
-                     void *driverContext);
+                     const struct dd_function_table *driverFunctions);
 
 extern void
 _mesa_free_context_data( struct gl_context *ctx );
@@ -151,11 +154,6 @@ extern struct _glapi_table *
 _mesa_get_dispatch(struct gl_context *ctx);
 
 
-void
-_mesa_set_mvp_with_dp4( struct gl_context *ctx,
-                        GLboolean flag );
-
-
 extern GLboolean
 _mesa_valid_to_render(struct gl_context *ctx, const char *where);
 
@@ -174,6 +172,8 @@ _mesa_finish(struct gl_context *ctx);
 extern void
 _mesa_flush(struct gl_context *ctx);
 
+extern int
+_mesa_generic_nop(void);
 
 extern void GLAPIENTRY
 _mesa_Finish( void );
@@ -182,6 +182,28 @@ extern void GLAPIENTRY
 _mesa_Flush( void );
 
 /*@}*/
+
+
+/**
+ * Are we currently between glBegin and glEnd?
+ * During execution, not display list compilation.
+ */
+static inline GLboolean
+_mesa_inside_begin_end(const struct gl_context *ctx)
+{
+   return ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END;
+}
+
+
+/**
+ * Are we currently between glBegin and glEnd in a display list?
+ */
+static inline GLboolean
+_mesa_inside_dlist_begin_end(const struct gl_context *ctx)
+{
+   return ctx->Driver.CurrentSavePrimitive <= PRIM_MAX;
+}
+
 
 
 /**
@@ -233,11 +255,11 @@ do {								\
  * glBegin()/glEnd() pair, with return value.
  * 
  * \param ctx GL context.
- * \param retval value to return value in case the assertion fails.
+ * \param retval value to return in case the assertion fails.
  */
 #define ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, retval)		\
 do {									\
-   if (ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END) {	\
+   if (_mesa_inside_begin_end(ctx)) {					\
       _mesa_error(ctx, GL_INVALID_OPERATION, "Inside glBegin/glEnd");	\
       return retval;							\
    }									\
@@ -251,39 +273,48 @@ do {									\
  */
 #define ASSERT_OUTSIDE_BEGIN_END(ctx)					\
 do {									\
-   if (ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END) {	\
+   if (_mesa_inside_begin_end(ctx)) {					\
       _mesa_error(ctx, GL_INVALID_OPERATION, "Inside glBegin/glEnd");	\
       return;								\
    }									\
 } while (0)
 
-/**
- * Macro to assert that the API call was made outside the
- * glBegin()/glEnd() pair and flush the vertices.
- * 
- * \param ctx GL context.
- */
-#define ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx)				\
-do {									\
-   ASSERT_OUTSIDE_BEGIN_END(ctx);					\
-   FLUSH_VERTICES(ctx, 0);						\
-} while (0)
-
-/**
- * Macro to assert that the API call was made outside the
- * glBegin()/glEnd() pair and flush the vertices, with return value.
- * 
- * \param ctx GL context.
- * \param retval value to return value in case the assertion fails.
- */
-#define ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH_WITH_RETVAL(ctx, retval)	\
-do {									\
-   ASSERT_OUTSIDE_BEGIN_END_WITH_RETVAL(ctx, retval);			\
-   FLUSH_VERTICES(ctx, 0);						\
-} while (0)
-
 /*@}*/
 
+
+/**
+ * Checks if the context is for Desktop GL (Compatibility or Core)
+ */
+static inline GLboolean
+_mesa_is_desktop_gl(const struct gl_context *ctx)
+{
+   return ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE;
+}
+
+
+/**
+ * Checks if the context is for any GLES version
+ */
+static inline GLboolean
+_mesa_is_gles(const struct gl_context *ctx)
+{
+   return ctx->API == API_OPENGLES || ctx->API == API_OPENGLES2;
+}
+
+
+/**
+ * Checks if the context is for GLES 3.x
+ */
+static inline GLboolean
+_mesa_is_gles3(const struct gl_context *ctx)
+{
+   return ctx->API == API_OPENGLES2 && ctx->Version >= 30;
+}
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* CONTEXT_H */

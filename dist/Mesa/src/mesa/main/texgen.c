@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.5
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /** 
@@ -34,22 +34,24 @@
 #include "main/context.h"
 #include "main/enums.h"
 #include "main/macros.h"
-#include "main/mfeatures.h"
 #include "main/texgen.h"
 #include "main/texstate.h"
 #include "math/m_matrix.h"
 #include "main/dispatch.h"
 
 
-#if FEATURE_texgen
-
-
 /**
  * Return texgen state for given coordinate
  */
 static struct gl_texgen *
-get_texgen(struct gl_texture_unit *texUnit, GLenum coord)
+get_texgen(struct gl_context *ctx, struct gl_texture_unit *texUnit,
+           GLenum coord)
 {
+   if (ctx->API == API_OPENGLES) {
+      return (coord == GL_TEXTURE_GEN_STR_OES)
+         ? &texUnit->GenS : NULL;
+   }
+
    switch (coord) {
    case GL_S:
       return &texUnit->GenS;
@@ -71,7 +73,6 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
    struct gl_texture_unit *texUnit;
    struct gl_texgen *texgen;
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE&(VERBOSE_API|VERBOSE_TEXTURE))
       _mesa_debug(ctx, "glTexGen %s %s %.1f(%s)...\n",
@@ -87,7 +88,7 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
 
    texUnit = _mesa_get_current_tex_unit(ctx);
 
-   texgen = get_texgen(texUnit, coord);
+   texgen = get_texgen(ctx, texUnit, coord);
    if (!texgen) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glTexGen(coord)");
       return;
@@ -126,6 +127,12 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
             _mesa_error( ctx, GL_INVALID_ENUM, "glTexGenfv(param)" );
             return;
          }
+         if (ctx->API != API_OPENGL_COMPAT
+             && (bit & (TEXGEN_REFLECTION_MAP_NV | TEXGEN_NORMAL_MAP_NV)) == 0) {
+            _mesa_error( ctx, GL_INVALID_ENUM, "glTexGenfv(param)" );
+            return;
+         }
+
          FLUSH_VERTICES(ctx, _NEW_TEXTURE);
          texgen->Mode = mode;
          texgen->_ModeBit = bit;
@@ -134,6 +141,10 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
 
    case GL_OBJECT_PLANE:
       {
+         if (ctx->API != API_OPENGL_COMPAT) {
+            _mesa_error( ctx, GL_INVALID_ENUM, "glTexGenfv(param)" );
+            return;
+         }
          if (TEST_EQ_4V(texgen->ObjectPlane, params))
             return;
          FLUSH_VERTICES(ctx, _NEW_TEXTURE);
@@ -144,6 +155,12 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
    case GL_EYE_PLANE:
       {
          GLfloat tmp[4];
+
+         if (ctx->API != API_OPENGL_COMPAT) {
+            _mesa_error( ctx, GL_INVALID_ENUM, "glTexGenfv(param)" );
+            return;
+         }
+
          /* Transform plane equation by the inverse modelview matrix */
          if (_math_matrix_is_dirty(ctx->ModelviewMatrixStack.Top)) {
             _math_matrix_analyse(ctx->ModelviewMatrixStack.Top);
@@ -167,7 +184,7 @@ _mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params )
 }
 
 
-static void GLAPIENTRY
+void GLAPIENTRY
 _mesa_TexGeniv(GLenum coord, GLenum pname, const GLint *params )
 {
    GLfloat p[4];
@@ -184,7 +201,7 @@ _mesa_TexGeniv(GLenum coord, GLenum pname, const GLint *params )
 }
 
 
-static void GLAPIENTRY
+void GLAPIENTRY
 _mesa_TexGend(GLenum coord, GLenum pname, GLdouble param )
 {
    GLfloat p[4];
@@ -193,12 +210,10 @@ _mesa_TexGend(GLenum coord, GLenum pname, GLdouble param )
    _mesa_TexGenfv( coord, pname, p );
 }
 
-#if FEATURE_ES1
 
 void GLAPIENTRY
 _es_GetTexGenfv(GLenum coord, GLenum pname, GLfloat *params)
 {
-   ASSERT(coord == GL_TEXTURE_GEN_STR_OES);
    _mesa_GetTexGenfv(GL_S, pname, params);
 }
 
@@ -206,7 +221,11 @@ _es_GetTexGenfv(GLenum coord, GLenum pname, GLfloat *params)
 void GLAPIENTRY
 _es_TexGenf(GLenum coord, GLenum pname, GLfloat param)
 {
-   ASSERT(coord == GL_TEXTURE_GEN_STR_OES);
+   if (coord != GL_TEXTURE_GEN_STR_OES) {
+      GET_CURRENT_CONTEXT(ctx);
+      _mesa_error( ctx, GL_INVALID_ENUM, "glTexGen[fx](pname)" );
+      return;
+   }
    /* set S, T, and R at the same time */
    _mesa_TexGenf(GL_S, pname, param);
    _mesa_TexGenf(GL_T, pname, param);
@@ -217,16 +236,19 @@ _es_TexGenf(GLenum coord, GLenum pname, GLfloat param)
 void GLAPIENTRY
 _es_TexGenfv(GLenum coord, GLenum pname, const GLfloat *params)
 {
-   ASSERT(coord == GL_TEXTURE_GEN_STR_OES);
+   if (coord != GL_TEXTURE_GEN_STR_OES) {
+      GET_CURRENT_CONTEXT(ctx);
+      _mesa_error( ctx, GL_INVALID_ENUM, "glTexGen[fx]v(pname)" );
+      return;
+   }
    /* set S, T, and R at the same time */
    _mesa_TexGenfv(GL_S, pname, params);
    _mesa_TexGenfv(GL_T, pname, params);
    _mesa_TexGenfv(GL_R, pname, params);
 }
 
-#endif
 
-static void GLAPIENTRY
+void GLAPIENTRY
 _mesa_TexGendv(GLenum coord, GLenum pname, const GLdouble *params )
 {
    GLfloat p[4];
@@ -264,13 +286,12 @@ _mesa_TexGeni( GLenum coord, GLenum pname, GLint param )
 
 
 
-static void GLAPIENTRY
+void GLAPIENTRY
 _mesa_GetTexGendv( GLenum coord, GLenum pname, GLdouble *params )
 {
    struct gl_texture_unit *texUnit;
    struct gl_texgen *texgen;
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (ctx->Texture.CurrentUnit >= ctx->Const.MaxTextureCoordUnits) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glGetTexGendv(current unit)");
@@ -279,7 +300,7 @@ _mesa_GetTexGendv( GLenum coord, GLenum pname, GLdouble *params )
 
    texUnit = _mesa_get_current_tex_unit(ctx);
 
-   texgen = get_texgen(texUnit, coord);
+   texgen = get_texgen(ctx, texUnit, coord);
    if (!texgen) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexGendv(coord)");
       return;
@@ -308,7 +329,6 @@ _mesa_GetTexGenfv( GLenum coord, GLenum pname, GLfloat *params )
    struct gl_texture_unit *texUnit;
    struct gl_texgen *texgen;
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (ctx->Texture.CurrentUnit >= ctx->Const.MaxTextureCoordUnits) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glGetTexGenfv(current unit)");
@@ -317,7 +337,7 @@ _mesa_GetTexGenfv( GLenum coord, GLenum pname, GLfloat *params )
 
    texUnit = _mesa_get_current_tex_unit(ctx);
 
-   texgen = get_texgen(texUnit, coord);
+   texgen = get_texgen(ctx, texUnit, coord);
    if (!texgen) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexGenfv(coord)");
       return;
@@ -328,9 +348,17 @@ _mesa_GetTexGenfv( GLenum coord, GLenum pname, GLfloat *params )
       params[0] = ENUM_TO_FLOAT(texgen->Mode);
       break;
    case GL_OBJECT_PLANE:
+      if (ctx->API != API_OPENGL_COMPAT) {
+         _mesa_error( ctx, GL_INVALID_ENUM, "glGetTexGenfv(param)" );
+         return;
+      }
       COPY_4V(params, texgen->ObjectPlane);
       break;
    case GL_EYE_PLANE:
+      if (ctx->API != API_OPENGL_COMPAT) {
+         _mesa_error( ctx, GL_INVALID_ENUM, "glGetTexGenfv(param)" );
+         return;
+      }
       COPY_4V(params, texgen->EyePlane);
       break;
    default:
@@ -340,13 +368,12 @@ _mesa_GetTexGenfv( GLenum coord, GLenum pname, GLfloat *params )
 
 
 
-static void GLAPIENTRY
+void GLAPIENTRY
 _mesa_GetTexGeniv( GLenum coord, GLenum pname, GLint *params )
 {
    struct gl_texture_unit *texUnit;
    struct gl_texgen *texgen;
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (ctx->Texture.CurrentUnit >= ctx->Const.MaxTextureCoordUnits) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glGetTexGeniv(current unit)");
@@ -355,7 +382,7 @@ _mesa_GetTexGeniv( GLenum coord, GLenum pname, GLint *params )
 
    texUnit = _mesa_get_current_tex_unit(ctx);
 
-   texgen = get_texgen(texUnit, coord);
+   texgen = get_texgen(ctx, texUnit, coord);
    if (!texgen) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glGetTexGeniv(coord)");
       return;
@@ -366,12 +393,20 @@ _mesa_GetTexGeniv( GLenum coord, GLenum pname, GLint *params )
       params[0] = texgen->Mode;
       break;
    case GL_OBJECT_PLANE:
+      if (ctx->API != API_OPENGL_COMPAT) {
+         _mesa_error( ctx, GL_INVALID_ENUM, "glGetTexGeniv(param)" );
+         return;
+      }
       params[0] = (GLint) texgen->ObjectPlane[0];
       params[1] = (GLint) texgen->ObjectPlane[1];
       params[2] = (GLint) texgen->ObjectPlane[2];
       params[3] = (GLint) texgen->ObjectPlane[3];
       break;
    case GL_EYE_PLANE:
+      if (ctx->API != API_OPENGL_COMPAT) {
+         _mesa_error( ctx, GL_INVALID_ENUM, "glGetTexGeniv(param)" );
+         return;
+      }
       params[0] = (GLint) texgen->EyePlane[0];
       params[1] = (GLint) texgen->EyePlane[1];
       params[2] = (GLint) texgen->EyePlane[2];
@@ -381,21 +416,3 @@ _mesa_GetTexGeniv( GLenum coord, GLenum pname, GLint *params )
       _mesa_error( ctx, GL_INVALID_ENUM, "glGetTexGeniv(pname)" );
    }
 }
-
-
-void
-_mesa_init_texgen_dispatch(struct _glapi_table *disp)
-{
-   SET_GetTexGendv(disp, _mesa_GetTexGendv);
-   SET_GetTexGenfv(disp, _mesa_GetTexGenfv);
-   SET_GetTexGeniv(disp, _mesa_GetTexGeniv);
-   SET_TexGend(disp, _mesa_TexGend);
-   SET_TexGendv(disp, _mesa_TexGendv);
-   SET_TexGenf(disp, _mesa_TexGenf);
-   SET_TexGenfv(disp, _mesa_TexGenfv);
-   SET_TexGeni(disp, _mesa_TexGeni);
-   SET_TexGeniv(disp, _mesa_TexGeniv);
-}
-
-
-#endif /* FEATURE_texgen */

@@ -17,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -93,273 +94,12 @@ _mesa_map_rgba( const struct gl_context *ctx, GLuint n, GLfloat rgba[][4] )
       GLfloat g = CLAMP(rgba[i][GCOMP], 0.0F, 1.0F);
       GLfloat b = CLAMP(rgba[i][BCOMP], 0.0F, 1.0F);
       GLfloat a = CLAMP(rgba[i][ACOMP], 0.0F, 1.0F);
-      rgba[i][RCOMP] = rMap[IROUND(r * rscale)];
-      rgba[i][GCOMP] = gMap[IROUND(g * gscale)];
-      rgba[i][BCOMP] = bMap[IROUND(b * bscale)];
-      rgba[i][ACOMP] = aMap[IROUND(a * ascale)];
+      rgba[i][RCOMP] = rMap[F_TO_I(r * rscale)];
+      rgba[i][GCOMP] = gMap[F_TO_I(g * gscale)];
+      rgba[i][BCOMP] = bMap[F_TO_I(b * bscale)];
+      rgba[i][ACOMP] = aMap[F_TO_I(a * ascale)];
    }
 }
-
-/**
- * Apply a color table lookup to an array of floating point RGBA colors.
- */
-void
-_mesa_lookup_rgba_float(const struct gl_color_table *table,
-                        GLuint n, GLfloat rgba[][4])
-{
-   const GLint max = table->Size - 1;
-   const GLfloat scale = (GLfloat) max;
-   const GLfloat *lut = table->TableF;
-   GLuint i;
-
-   if (!table->TableF || table->Size == 0)
-      return;
-
-   switch (table->_BaseFormat) {
-      case GL_INTENSITY:
-         /* replace RGBA with I */
-         for (i = 0; i < n; i++) {
-            GLint j = IROUND(rgba[i][RCOMP] * scale);
-            GLfloat c = lut[CLAMP(j, 0, max)];
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] =
-            rgba[i][ACOMP] = c;
-         }
-         break;
-      case GL_LUMINANCE:
-         /* replace RGB with L */
-         for (i = 0; i < n; i++) {
-            GLint j = IROUND(rgba[i][RCOMP] * scale);
-            GLfloat c = lut[CLAMP(j, 0, max)];
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] = c;
-         }
-         break;
-      case GL_ALPHA:
-         /* replace A with A */
-         for (i = 0; i < n; i++) {
-            GLint j = IROUND(rgba[i][ACOMP] * scale);
-            rgba[i][ACOMP] = lut[CLAMP(j, 0, max)];
-         }
-         break;
-      case GL_LUMINANCE_ALPHA:
-         /* replace RGBA with LLLA */
-         for (i = 0; i < n; i++) {
-            GLint jL = IROUND(rgba[i][RCOMP] * scale);
-            GLint jA = IROUND(rgba[i][ACOMP] * scale);
-            GLfloat luminance, alpha;
-            jL = CLAMP(jL, 0, max);
-            jA = CLAMP(jA, 0, max);
-            luminance = lut[jL * 2 + 0];
-            alpha     = lut[jA * 2 + 1];
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] = luminance;
-            rgba[i][ACOMP] = alpha;;
-         }
-         break;
-      case GL_RED:
-         /* replace RGB with RGB */
-         for (i = 0; i < n; i++) {
-            GLint jR = IROUND(rgba[i][RCOMP] * scale);
-            jR = CLAMP(jR, 0, max);
-            rgba[i][RCOMP] = lut[jR * 3 + 0];
-         }
-         break;
-      case GL_RG:
-         /* replace RG with RG */
-         for (i = 0; i < n; i++) {
-            GLint jR = IROUND(rgba[i][RCOMP] * scale);
-            GLint jG = IROUND(rgba[i][GCOMP] * scale);
-            jR = CLAMP(jR, 0, max);
-            jG = CLAMP(jG, 0, max);
-            rgba[i][RCOMP] = lut[jR * 3 + 0];
-            rgba[i][GCOMP] = lut[jG * 3 + 1];
-         }
-         break;
-      case GL_RGB:
-         /* replace RGB with RGB */
-         for (i = 0; i < n; i++) {
-            GLint jR = IROUND(rgba[i][RCOMP] * scale);
-            GLint jG = IROUND(rgba[i][GCOMP] * scale);
-            GLint jB = IROUND(rgba[i][BCOMP] * scale);
-            jR = CLAMP(jR, 0, max);
-            jG = CLAMP(jG, 0, max);
-            jB = CLAMP(jB, 0, max);
-            rgba[i][RCOMP] = lut[jR * 3 + 0];
-            rgba[i][GCOMP] = lut[jG * 3 + 1];
-            rgba[i][BCOMP] = lut[jB * 3 + 2];
-         }
-         break;
-      case GL_RGBA:
-         /* replace RGBA with RGBA */
-         for (i = 0; i < n; i++) {
-            GLint jR = IROUND(rgba[i][RCOMP] * scale);
-            GLint jG = IROUND(rgba[i][GCOMP] * scale);
-            GLint jB = IROUND(rgba[i][BCOMP] * scale);
-            GLint jA = IROUND(rgba[i][ACOMP] * scale);
-            jR = CLAMP(jR, 0, max);
-            jG = CLAMP(jG, 0, max);
-            jB = CLAMP(jB, 0, max);
-            jA = CLAMP(jA, 0, max);
-            rgba[i][RCOMP] = lut[jR * 4 + 0];
-            rgba[i][GCOMP] = lut[jG * 4 + 1];
-            rgba[i][BCOMP] = lut[jB * 4 + 2];
-            rgba[i][ACOMP] = lut[jA * 4 + 3];
-         }
-         break;
-      default:
-         _mesa_problem(NULL, "Bad format in _mesa_lookup_rgba_float");
-         return;
-   }
-}
-
-
-
-/**
- * Apply a color table lookup to an array of ubyte/RGBA colors.
- */
-void
-_mesa_lookup_rgba_ubyte(const struct gl_color_table *table,
-                        GLuint n, GLubyte rgba[][4])
-{
-   const GLubyte *lut = table->TableUB;
-   const GLfloat scale = (GLfloat) (table->Size - 1) / (GLfloat)255.0;
-   GLuint i;
-
-   if (!table->TableUB || table->Size == 0)
-      return;
-
-   switch (table->_BaseFormat) {
-   case GL_INTENSITY:
-      /* replace RGBA with I */
-      if (table->Size == 256) {
-         for (i = 0; i < n; i++) {
-            const GLubyte c = lut[rgba[i][RCOMP]];
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] =
-            rgba[i][ACOMP] = c;
-         }
-      }
-      else {
-         for (i = 0; i < n; i++) {
-            GLint j = IROUND((GLfloat) rgba[i][RCOMP] * scale);
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] =
-            rgba[i][ACOMP] = lut[j];
-         }
-      }
-      break;
-   case GL_LUMINANCE:
-      /* replace RGB with L */
-      if (table->Size == 256) {
-         for (i = 0; i < n; i++) {
-            const GLubyte c = lut[rgba[i][RCOMP]];
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] = c;
-         }
-      }
-      else {
-         for (i = 0; i < n; i++) {
-            GLint j = IROUND((GLfloat) rgba[i][RCOMP] * scale);
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] = lut[j];
-         }
-      }
-      break;
-   case GL_ALPHA:
-      /* replace A with A */
-      if (table->Size == 256) {
-         for (i = 0; i < n; i++) {
-            rgba[i][ACOMP] = lut[rgba[i][ACOMP]];
-         }
-      }
-      else {
-         for (i = 0; i < n; i++) {
-            GLint j = IROUND((GLfloat) rgba[i][ACOMP] * scale);
-            rgba[i][ACOMP] = lut[j];
-         }
-      }
-      break;
-   case GL_LUMINANCE_ALPHA:
-      /* replace RGBA with LLLA */
-      if (table->Size == 256) {
-         for (i = 0; i < n; i++) {
-            GLubyte l = lut[rgba[i][RCOMP] * 2 + 0];
-            GLubyte a = lut[rgba[i][ACOMP] * 2 + 1];;
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] = l;
-            rgba[i][ACOMP] = a;
-         }
-      }
-      else {
-         for (i = 0; i < n; i++) {
-            GLint jL = IROUND((GLfloat) rgba[i][RCOMP] * scale);
-            GLint jA = IROUND((GLfloat) rgba[i][ACOMP] * scale);
-            GLubyte luminance = lut[jL * 2 + 0];
-            GLubyte alpha     = lut[jA * 2 + 1];
-            rgba[i][RCOMP] =
-            rgba[i][GCOMP] =
-            rgba[i][BCOMP] = luminance;
-            rgba[i][ACOMP] = alpha;
-         }
-      }
-      break;
-   case GL_RGB:
-      if (table->Size == 256) {
-         for (i = 0; i < n; i++) {
-            rgba[i][RCOMP] = lut[rgba[i][RCOMP] * 3 + 0];
-            rgba[i][GCOMP] = lut[rgba[i][GCOMP] * 3 + 1];
-            rgba[i][BCOMP] = lut[rgba[i][BCOMP] * 3 + 2];
-         }
-      }
-      else {
-         for (i = 0; i < n; i++) {
-            GLint jR = IROUND((GLfloat) rgba[i][RCOMP] * scale);
-            GLint jG = IROUND((GLfloat) rgba[i][GCOMP] * scale);
-            GLint jB = IROUND((GLfloat) rgba[i][BCOMP] * scale);
-            rgba[i][RCOMP] = lut[jR * 3 + 0];
-            rgba[i][GCOMP] = lut[jG * 3 + 1];
-            rgba[i][BCOMP] = lut[jB * 3 + 2];
-         }
-      }
-      break;
-   case GL_RGBA:
-      if (table->Size == 256) {
-         for (i = 0; i < n; i++) {
-            rgba[i][RCOMP] = lut[rgba[i][RCOMP] * 4 + 0];
-            rgba[i][GCOMP] = lut[rgba[i][GCOMP] * 4 + 1];
-            rgba[i][BCOMP] = lut[rgba[i][BCOMP] * 4 + 2];
-            rgba[i][ACOMP] = lut[rgba[i][ACOMP] * 4 + 3];
-         }
-      }
-      else {
-         for (i = 0; i < n; i++) {
-            GLint jR = IROUND((GLfloat) rgba[i][RCOMP] * scale);
-            GLint jG = IROUND((GLfloat) rgba[i][GCOMP] * scale);
-            GLint jB = IROUND((GLfloat) rgba[i][BCOMP] * scale);
-            GLint jA = IROUND((GLfloat) rgba[i][ACOMP] * scale);
-            CLAMPED_FLOAT_TO_CHAN(rgba[i][RCOMP], lut[jR * 4 + 0]);
-            CLAMPED_FLOAT_TO_CHAN(rgba[i][GCOMP], lut[jG * 4 + 1]);
-            CLAMPED_FLOAT_TO_CHAN(rgba[i][BCOMP], lut[jB * 4 + 2]);
-            CLAMPED_FLOAT_TO_CHAN(rgba[i][ACOMP], lut[jA * 4 + 3]);
-         }
-      }
-      break;
-   default:
-      _mesa_problem(NULL, "Bad format in _mesa_lookup_rgba_chan");
-      return;
-   }
-}
-
-
 
 /*
  * Map color indexes to float rgba values.
@@ -376,32 +116,6 @@ _mesa_map_ci_to_rgba( const struct gl_context *ctx, GLuint n,
    const GLfloat *gMap = ctx->PixelMaps.ItoG.Map;
    const GLfloat *bMap = ctx->PixelMaps.ItoB.Map;
    const GLfloat *aMap = ctx->PixelMaps.ItoA.Map;
-   GLuint i;
-   for (i=0;i<n;i++) {
-      rgba[i][RCOMP] = rMap[index[i] & rmask];
-      rgba[i][GCOMP] = gMap[index[i] & gmask];
-      rgba[i][BCOMP] = bMap[index[i] & bmask];
-      rgba[i][ACOMP] = aMap[index[i] & amask];
-   }
-}
-
-
-/**
- * Map ubyte color indexes to ubyte/RGBA values.
- */
-void
-_mesa_map_ci8_to_rgba8(const struct gl_context *ctx,
-                       GLuint n, const GLubyte index[],
-                       GLubyte rgba[][4])
-{
-   GLuint rmask = ctx->PixelMaps.ItoR.Size - 1;
-   GLuint gmask = ctx->PixelMaps.ItoG.Size - 1;
-   GLuint bmask = ctx->PixelMaps.ItoB.Size - 1;
-   GLuint amask = ctx->PixelMaps.ItoA.Size - 1;
-   const GLubyte *rMap = ctx->PixelMaps.ItoR.Map8;
-   const GLubyte *gMap = ctx->PixelMaps.ItoG.Map8;
-   const GLubyte *bMap = ctx->PixelMaps.ItoB.Map8;
-   const GLubyte *aMap = ctx->PixelMaps.ItoA.Map8;
    GLuint i;
    for (i=0;i<n;i++) {
       rgba[i][RCOMP] = rMap[index[i] & rmask];
@@ -522,7 +236,7 @@ _mesa_apply_ci_transfer_ops(const struct gl_context *ctx,
       GLuint i;
       for (i = 0; i < n; i++) {
          const GLuint j = indexes[i] & mask;
-         indexes[i] = IROUND(ctx->PixelMaps.ItoI.Map[j]);
+         indexes[i] = F_TO_I(ctx->PixelMaps.ItoI.Map[j]);
       }
    }
 }
@@ -534,7 +248,7 @@ _mesa_apply_ci_transfer_ops(const struct gl_context *ctx,
  */
 void
 _mesa_apply_stencil_transfer_ops(const struct gl_context *ctx, GLuint n,
-                                 GLstencil stencil[])
+                                 GLubyte stencil[])
 {
    if (ctx->Pixel.IndexShift != 0 || ctx->Pixel.IndexOffset != 0) {
       const GLint offset = ctx->Pixel.IndexOffset;
@@ -561,7 +275,7 @@ _mesa_apply_stencil_transfer_ops(const struct gl_context *ctx, GLuint n,
       GLuint mask = ctx->PixelMaps.StoS.Size - 1;
       GLuint i;
       for (i = 0; i < n; i++) {
-         stencil[i] = (GLstencil)ctx->PixelMaps.StoS.Map[ stencil[i] & mask ];
+         stencil[i] = (GLubyte) ctx->PixelMaps.StoS.Map[ stencil[i] & mask ];
       }
    }
 }

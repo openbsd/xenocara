@@ -15,25 +15,28 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Author: Kristian Høgsberg <krh@bitplanet.net>
  */
 
 #include "glheader.h"
 #include "context.h"
+#include "blend.h"
 #include "enable.h"
 #include "enums.h"
 #include "extensions.h"
 #include "get.h"
 #include "macros.h"
-#include "mfeatures.h"
 #include "mtypes.h"
 #include "state.h"
 #include "texcompress.h"
 #include "framebuffer.h"
+#include "samplerobj.h"
+#include "stencil.h"
 
 /* This is a table driven implemetation of the glGet*v() functions.
  * The basic idea is that most getters just look up an int somewhere
@@ -61,8 +64,6 @@
  * is about as concise as the specification in the old python script.
  */
 
-#undef CONST
-
 #define FLOAT_TO_BOOLEAN(X)   ( (X) ? GL_TRUE : GL_FALSE )
 #define FLOAT_TO_FIXED(F)     ( ((F) * 65536.0f > INT_MAX) ? INT_MAX : \
                                 ((F) * 65536.0f < INT_MIN) ? INT_MIN : \
@@ -86,7 +87,6 @@
 
 enum value_type {
    TYPE_INVALID,
-   TYPE_API_MASK,
    TYPE_INT,
    TYPE_INT_2,
    TYPE_INT_3,
@@ -102,6 +102,8 @@ enum value_type {
    TYPE_BIT_3,
    TYPE_BIT_4,
    TYPE_BIT_5,
+   TYPE_BIT_6,
+   TYPE_BIT_7,
    TYPE_FLOAT,
    TYPE_FLOAT_2,
    TYPE_FLOAT_3,
@@ -129,12 +131,18 @@ enum value_extra {
    EXTRA_VERSION_30,
    EXTRA_VERSION_31,
    EXTRA_VERSION_32,
-   EXTRA_VERSION_ES2,
+   EXTRA_API_GL,
+   EXTRA_API_GL_CORE,
+   EXTRA_API_ES2,
+   EXTRA_API_ES3,
    EXTRA_NEW_BUFFERS, 
    EXTRA_NEW_FRAG_CLAMP,
    EXTRA_VALID_DRAW_BUFFER,
    EXTRA_VALID_TEXTURE_UNIT,
+   EXTRA_VALID_CLIP_DISTANCE,
    EXTRA_FLUSH_CURRENT,
+   EXTRA_GLSL_130,
+   EXTRA_EXT_UBO_GS4,
 };
 
 #define NO_EXTRA NULL
@@ -170,6 +178,7 @@ union value {
    LOC_CONTEXT, type, offsetof(struct gl_context, field)
 #define ARRAY_FIELD(field, type) \
    LOC_ARRAY, type, offsetof(struct gl_array_object, field)
+#undef CONST /* already defined through windows.h */
 #define CONST(value) \
    LOC_CONTEXT, TYPE_CONST, value
 
@@ -189,6 +198,8 @@ union value {
 #define CONTEXT_BIT3(field) CONTEXT_FIELD(field, TYPE_BIT_3)
 #define CONTEXT_BIT4(field) CONTEXT_FIELD(field, TYPE_BIT_4)
 #define CONTEXT_BIT5(field) CONTEXT_FIELD(field, TYPE_BIT_5)
+#define CONTEXT_BIT6(field) CONTEXT_FIELD(field, TYPE_BIT_6)
+#define CONTEXT_BIT7(field) CONTEXT_FIELD(field, TYPE_BIT_7)
 #define CONTEXT_FLOAT(field) CONTEXT_FIELD(field, TYPE_FLOAT)
 #define CONTEXT_FLOAT2(field) CONTEXT_FIELD(field, TYPE_FLOAT_2)
 #define CONTEXT_FLOAT3(field) CONTEXT_FIELD(field, TYPE_FLOAT_3)
@@ -217,7 +228,13 @@ union value {
  * extensions or specific gl versions) or actions (flush current, new
  * buffers) that we need to do before looking up an enum.  We need to
  * declare them all up front so we can refer to them in the value_desc
- * structs below. */
+ * structs below.
+ *
+ * Each EXTRA_ will be executed.  For EXTRA_* enums of extensions and API
+ * versions, listing multiple ones in an array means an error will be thrown
+ * only if none of them are available.  If you need to check for "AND"
+ * behavior, you would need to make a custom EXTRA_ enum.
+ */
 
 static const int extra_new_buffers[] = {
    EXTRA_NEW_BUFFERS,
@@ -239,6 +256,11 @@ static const int extra_valid_texture_unit[] = {
    EXTRA_END
 };
 
+static const int extra_valid_clip_distance[] = {
+   EXTRA_VALID_CLIP_DISTANCE,
+   EXTRA_END
+};
+
 static const int extra_flush_current_valid_texture_unit[] = {
    EXTRA_FLUSH_CURRENT,
    EXTRA_VALID_TEXTURE_UNIT,
@@ -250,100 +272,105 @@ static const int extra_flush_current[] = {
    EXTRA_END
 };
 
-static const int extra_new_buffers_OES_read_format[] = {
-   EXTRA_NEW_BUFFERS,
-   EXT(OES_read_format),
-   EXTRA_END
-};
-
-static const int extra_EXT_secondary_color_flush_current[] = {
-   EXT(EXT_secondary_color),
-   EXTRA_FLUSH_CURRENT,
-   EXTRA_END
-};
-
-static const int extra_EXT_fog_coord_flush_current[] = {
-   EXT(EXT_fog_coord),
-   EXTRA_FLUSH_CURRENT,
-   EXTRA_END
-};
-
 static const int extra_EXT_texture_integer[] = {
    EXT(EXT_texture_integer),
    EXTRA_END
 };
 
-static const int extra_EXT_gpu_shader4[] = {
-   EXT(EXT_gpu_shader4),
+static const int extra_EXT_texture_integer_and_new_buffers[] = {
+   EXT(EXT_texture_integer),
+   EXTRA_NEW_BUFFERS,
    EXTRA_END
 };
 
-static const int extra_ARB_sampler_objects[] = {
-   EXT(ARB_sampler_objects),
+static const int extra_GLSL_130_es3[] = {
+   EXTRA_GLSL_130,
+   EXTRA_API_ES3,
    EXTRA_END
 };
 
+static const int extra_texture_buffer_object[] = {
+   EXTRA_API_GL_CORE,
+   EXTRA_VERSION_31,
+   EXT(ARB_texture_buffer_object),
+   EXTRA_END
+};
 
-EXTRA_EXT(ARB_ES2_compatibility);
-EXTRA_EXT(ARB_multitexture);
+static const int extra_ARB_transform_feedback2_api_es3[] = {
+   EXT(ARB_transform_feedback2),
+   EXTRA_API_ES3,
+   EXTRA_END
+};
+
+static const int extra_ARB_uniform_buffer_object_and_geometry_shader[] = {
+   EXTRA_EXT_UBO_GS4,
+   EXTRA_END
+};
+
+static const int extra_ARB_ES2_compatibility_api_es2[] = {
+   EXT(ARB_ES2_compatibility),
+   EXTRA_API_ES2,
+   EXTRA_END
+};
+
+static const int extra_ARB_ES3_compatibility_api_es3[] = {
+   EXT(ARB_ES3_compatibility),
+   EXTRA_API_ES3,
+   EXTRA_END
+};
+
+static const int extra_EXT_framebuffer_sRGB_and_new_buffers[] = {
+   EXT(EXT_framebuffer_sRGB),
+   EXTRA_NEW_BUFFERS,
+   EXTRA_END
+};
+
+static const int extra_MESA_texture_array_es3[] = {
+   EXT(MESA_texture_array),
+   EXTRA_API_ES3,
+   EXTRA_END
+};
+
 EXTRA_EXT(ARB_texture_cube_map);
 EXTRA_EXT(MESA_texture_array);
-EXTRA_EXT2(EXT_secondary_color, ARB_vertex_program);
-EXTRA_EXT(EXT_secondary_color);
-EXTRA_EXT(EXT_fog_coord);
-EXTRA_EXT(EXT_texture_lod_bias);
+EXTRA_EXT(NV_fog_distance);
 EXTRA_EXT(EXT_texture_filter_anisotropic);
-EXTRA_EXT(IBM_rasterpos_clip);
 EXTRA_EXT(NV_point_sprite);
-EXTRA_EXT(SGIS_generate_mipmap);
-EXTRA_EXT(NV_vertex_program);
-EXTRA_EXT(NV_fragment_program);
 EXTRA_EXT(NV_texture_rectangle);
 EXTRA_EXT(EXT_stencil_two_side);
-EXTRA_EXT(NV_light_max_exponent);
 EXTRA_EXT(EXT_depth_bounds_test);
 EXTRA_EXT(ARB_depth_clamp);
 EXTRA_EXT(ATI_fragment_shader);
 EXTRA_EXT(EXT_framebuffer_blit);
-EXTRA_EXT(ARB_shader_objects);
 EXTRA_EXT(EXT_provoking_vertex);
 EXTRA_EXT(ARB_fragment_shader);
 EXTRA_EXT(ARB_fragment_program);
 EXTRA_EXT2(ARB_framebuffer_object, EXT_framebuffer_multisample);
-EXTRA_EXT(EXT_framebuffer_object);
-EXTRA_EXT(APPLE_vertex_array_object);
 EXTRA_EXT(ARB_seamless_cube_map);
-EXTRA_EXT(EXT_compiled_vertex_array);
 EXTRA_EXT(ARB_sync);
 EXTRA_EXT(ARB_vertex_shader);
 EXTRA_EXT(EXT_transform_feedback);
-EXTRA_EXT(ARB_transform_feedback2);
+EXTRA_EXT(ARB_transform_feedback3);
 EXTRA_EXT(EXT_pixel_buffer_object);
 EXTRA_EXT(ARB_vertex_program);
 EXTRA_EXT2(NV_point_sprite, ARB_point_sprite);
-EXTRA_EXT2(ARB_fragment_program, NV_fragment_program);
-EXTRA_EXT2(ARB_vertex_program, NV_vertex_program);
 EXTRA_EXT2(ARB_vertex_program, ARB_fragment_program);
-EXTRA_EXT(ARB_vertex_buffer_object);
 EXTRA_EXT(ARB_geometry_shader4);
-EXTRA_EXT(ARB_copy_buffer);
+EXTRA_EXT(ARB_color_buffer_float);
 EXTRA_EXT(EXT_framebuffer_sRGB);
-EXTRA_EXT(ARB_texture_buffer_object);
+EXTRA_EXT(OES_EGL_image_external);
+EXTRA_EXT(ARB_blend_func_extended);
+EXTRA_EXT(ARB_uniform_buffer_object);
+EXTRA_EXT(ARB_timer_query);
+EXTRA_EXT(ARB_map_buffer_alignment);
+EXTRA_EXT(ARB_texture_cube_map_array);
+EXTRA_EXT(ARB_texture_buffer_range);
+EXTRA_EXT(ARB_texture_multisample);
 
 static const int
-extra_ARB_vertex_program_ARB_fragment_program_NV_vertex_program[] = {
-   EXT(ARB_vertex_program),
-   EXT(ARB_fragment_program),
-   EXT(NV_vertex_program),
-   EXTRA_END
-};
-
-static const int
-extra_NV_vertex_program_ARB_vertex_program_ARB_fragment_program_NV_vertex_program[] = {
-   EXT(NV_vertex_program),
-   EXT(ARB_vertex_program),
-   EXT(ARB_fragment_program),
-   EXT(NV_vertex_program),
+extra_ARB_color_buffer_float_or_glcore[] = {
+   EXT(ARB_color_buffer_float),
+   EXTRA_API_GL_CORE,
    EXTRA_END
 };
 
@@ -357,934 +384,51 @@ static const int extra_version_30[] = { EXTRA_VERSION_30, EXTRA_END };
 static const int extra_version_31[] = { EXTRA_VERSION_31, EXTRA_END };
 static const int extra_version_32[] = { EXTRA_VERSION_32, EXTRA_END };
 
+static const int extra_gl30_es3[] = {
+    EXTRA_VERSION_30,
+    EXTRA_API_ES3,
+    EXTRA_END,
+};
+
+static const int extra_gl32_es3[] = {
+    EXTRA_VERSION_32,
+    EXTRA_API_ES3,
+    EXTRA_END,
+};
+
 static const int
-extra_ARB_vertex_program_version_es2[] = {
+extra_ARB_vertex_program_api_es2[] = {
    EXT(ARB_vertex_program),
-   EXTRA_VERSION_ES2,
+   EXTRA_API_ES2,
    EXTRA_END
 };
 
-#define API_OPENGL_BIT (1 << API_OPENGL)
-#define API_OPENGLES_BIT (1 << API_OPENGLES)
-#define API_OPENGLES2_BIT (1 << API_OPENGLES2)
+/* The ReadBuffer get token is valid under either full GL or under
+ * GLES2 if the NV_read_buffer extension is available. */
+static const int
+extra_NV_read_buffer_api_gl[] = {
+   EXTRA_API_ES2,
+   EXTRA_API_GL,
+   EXTRA_END
+};
+
+static const int extra_core_ARB_color_buffer_float_and_new_buffers[] = {
+   EXTRA_API_GL_CORE,
+   EXT(ARB_color_buffer_float),
+   EXTRA_NEW_BUFFERS,
+   EXTRA_END
+};
 
 /* This is the big table describing all the enums we accept in
  * glGet*v().  The table is partitioned into six parts: enums
  * understood by all GL APIs (OpenGL, GLES and GLES2), enums shared
  * between OpenGL and GLES, enums exclusive to GLES, etc for the
- * remaining combinations.  When we add the enums to the hash table in
- * _mesa_init_get_hash(), we only add the enums for the API we're
- * instantiating and the different sections are guarded by #if
- * FEATURE_GL etc to make sure we only compile in the enums we may
- * need. */
-
-static const struct value_desc values[] = {
-   /* Enums shared between OpenGL, GLES1 and GLES2 */
-   { 0, 0, TYPE_API_MASK,
-     API_OPENGL_BIT | API_OPENGLES_BIT | API_OPENGLES2_BIT, NO_EXTRA},
-   { GL_ALPHA_BITS, BUFFER_INT(Visual.alphaBits), extra_new_buffers },
-   { GL_BLEND, CONTEXT_BIT0(Color.BlendEnabled), NO_EXTRA },
-   { GL_BLEND_SRC, CONTEXT_ENUM(Color.Blend[0].SrcRGB), NO_EXTRA },
-   { GL_BLUE_BITS, BUFFER_INT(Visual.blueBits), extra_new_buffers },
-   { GL_COLOR_CLEAR_VALUE, LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp },
-   { GL_COLOR_WRITEMASK, LOC_CUSTOM, TYPE_INT_4, 0, NO_EXTRA },
-   { GL_CULL_FACE, CONTEXT_BOOL(Polygon.CullFlag), NO_EXTRA },
-   { GL_CULL_FACE_MODE, CONTEXT_ENUM(Polygon.CullFaceMode), NO_EXTRA },
-   { GL_DEPTH_BITS, BUFFER_INT(Visual.depthBits), NO_EXTRA },
-   { GL_DEPTH_CLEAR_VALUE, CONTEXT_FIELD(Depth.Clear, TYPE_DOUBLEN), NO_EXTRA },
-   { GL_DEPTH_FUNC, CONTEXT_ENUM(Depth.Func), NO_EXTRA },
-   { GL_DEPTH_RANGE, CONTEXT_FIELD(Viewport.Near, TYPE_FLOATN_2), NO_EXTRA },
-   { GL_DEPTH_TEST, CONTEXT_BOOL(Depth.Test), NO_EXTRA },
-   { GL_DEPTH_WRITEMASK, CONTEXT_BOOL(Depth.Mask), NO_EXTRA },
-   { GL_DITHER, CONTEXT_BOOL(Color.DitherFlag), NO_EXTRA },
-   { GL_FRONT_FACE, CONTEXT_ENUM(Polygon.FrontFace), NO_EXTRA },
-   { GL_GREEN_BITS, BUFFER_INT(Visual.greenBits), extra_new_buffers },
-   { GL_LINE_WIDTH, CONTEXT_FLOAT(Line.Width), NO_EXTRA },
-   { GL_ALIASED_LINE_WIDTH_RANGE, CONTEXT_FLOAT2(Const.MinLineWidth), NO_EXTRA },
-   { GL_MAX_ELEMENTS_VERTICES, CONTEXT_INT(Const.MaxArrayLockSize), NO_EXTRA },
-   { GL_MAX_ELEMENTS_INDICES, CONTEXT_INT(Const.MaxArrayLockSize), NO_EXTRA },
-   { GL_MAX_TEXTURE_SIZE, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_context, Const.MaxTextureLevels), NO_EXTRA },
-   { GL_MAX_VIEWPORT_DIMS, CONTEXT_INT2(Const.MaxViewportWidth), NO_EXTRA },
-   { GL_PACK_ALIGNMENT, CONTEXT_INT(Pack.Alignment), NO_EXTRA },
-   { GL_ALIASED_POINT_SIZE_RANGE, CONTEXT_FLOAT2(Const.MinPointSize), NO_EXTRA },
-   { GL_POLYGON_OFFSET_FACTOR, CONTEXT_FLOAT(Polygon.OffsetFactor ), NO_EXTRA },
-   { GL_POLYGON_OFFSET_UNITS, CONTEXT_FLOAT(Polygon.OffsetUnits ), NO_EXTRA },
-   { GL_POLYGON_OFFSET_FILL, CONTEXT_BOOL(Polygon.OffsetFill), NO_EXTRA },
-   { GL_RED_BITS, BUFFER_INT(Visual.redBits), extra_new_buffers },
-   { GL_SCISSOR_BOX, LOC_CUSTOM, TYPE_INT_4, 0, NO_EXTRA },
-   { GL_SCISSOR_TEST, CONTEXT_BOOL(Scissor.Enabled), NO_EXTRA },
-   { GL_STENCIL_BITS, BUFFER_INT(Visual.stencilBits), NO_EXTRA },
-   { GL_STENCIL_CLEAR_VALUE, CONTEXT_INT(Stencil.Clear), NO_EXTRA },
-   { GL_STENCIL_FAIL, LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA },
-   { GL_STENCIL_FUNC, LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA },
-   { GL_STENCIL_PASS_DEPTH_FAIL, LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA },
-   { GL_STENCIL_PASS_DEPTH_PASS, LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA },
-   { GL_STENCIL_REF, LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA },
-   { GL_STENCIL_TEST, CONTEXT_BOOL(Stencil.Enabled), NO_EXTRA },
-   { GL_STENCIL_VALUE_MASK, LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA },
-   { GL_STENCIL_WRITEMASK, LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA },
-   { GL_SUBPIXEL_BITS, CONTEXT_INT(Const.SubPixelBits), NO_EXTRA },
-   { GL_TEXTURE_BINDING_2D, LOC_CUSTOM, TYPE_INT, TEXTURE_2D_INDEX, NO_EXTRA },
-   { GL_UNPACK_ALIGNMENT, CONTEXT_INT(Unpack.Alignment), NO_EXTRA },
-   { GL_VIEWPORT, LOC_CUSTOM, TYPE_INT_4, 0, NO_EXTRA },
-
-   /* GL_ARB_multitexture */
-   { GL_ACTIVE_TEXTURE_ARB,
-     LOC_CUSTOM, TYPE_INT, 0, extra_ARB_multitexture },
-
-   /* Note that all the OES_* extensions require that the Mesa "struct
-    * gl_extensions" include a member with the name of the extension.
-    * That structure does not yet include OES extensions (and we're
-    * not sure whether it will).  If it does, all the OES_*
-    * extensions below should mark the dependency. */
-
-   /* GL_ARB_texture_cube_map */
-   { GL_TEXTURE_BINDING_CUBE_MAP_ARB, LOC_CUSTOM, TYPE_INT,
-     TEXTURE_CUBE_INDEX, extra_ARB_texture_cube_map },
-   { GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_context, Const.MaxCubeTextureLevels),
-     extra_ARB_texture_cube_map }, /* XXX: OES_texture_cube_map */
-
-   /* XXX: OES_blend_subtract */
-   { GL_BLEND_SRC_RGB_EXT, CONTEXT_ENUM(Color.Blend[0].SrcRGB), NO_EXTRA },
-   { GL_BLEND_DST_RGB_EXT, CONTEXT_ENUM(Color.Blend[0].DstRGB), NO_EXTRA },
-   { GL_BLEND_SRC_ALPHA_EXT, CONTEXT_ENUM(Color.Blend[0].SrcA), NO_EXTRA },
-   { GL_BLEND_DST_ALPHA_EXT, CONTEXT_ENUM(Color.Blend[0].DstA), NO_EXTRA },
-
-   /* GL_BLEND_EQUATION_RGB, which is what we're really after, is
-    * defined identically to GL_BLEND_EQUATION. */
-   { GL_BLEND_EQUATION, CONTEXT_ENUM(Color.Blend[0].EquationRGB), NO_EXTRA },
-   { GL_BLEND_EQUATION_ALPHA_EXT, CONTEXT_ENUM(Color.Blend[0].EquationA), NO_EXTRA },
-
-   /* GL_ARB_texture_compression */
-   { GL_NUM_COMPRESSED_TEXTURE_FORMATS_ARB, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_COMPRESSED_TEXTURE_FORMATS_ARB, LOC_CUSTOM, TYPE_INT_N, 0, NO_EXTRA },
-
-   /* GL_ARB_multisample */
-   { GL_SAMPLE_ALPHA_TO_COVERAGE_ARB,
-     CONTEXT_BOOL(Multisample.SampleAlphaToCoverage), NO_EXTRA },
-   { GL_SAMPLE_COVERAGE_ARB, CONTEXT_BOOL(Multisample.SampleCoverage), NO_EXTRA },
-   { GL_SAMPLE_COVERAGE_VALUE_ARB,
-     CONTEXT_FLOAT(Multisample.SampleCoverageValue), NO_EXTRA },
-   { GL_SAMPLE_COVERAGE_INVERT_ARB,
-     CONTEXT_BOOL(Multisample.SampleCoverageInvert), NO_EXTRA },
-   { GL_SAMPLE_BUFFERS_ARB, BUFFER_INT(Visual.sampleBuffers), NO_EXTRA },
-   { GL_SAMPLES_ARB, BUFFER_INT(Visual.samples), NO_EXTRA },
-
-   /* GL_SGIS_generate_mipmap */
-   { GL_GENERATE_MIPMAP_HINT_SGIS, CONTEXT_ENUM(Hint.GenerateMipmap),
-     extra_SGIS_generate_mipmap },
-
-   /* GL_ARB_vertex_buffer_object */
-   { GL_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-
-   /* GL_ARB_vertex_buffer_object */
-   /* GL_WEIGHT_ARRAY_BUFFER_BINDING_ARB - not supported */
-   { GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_vertex_buffer_object },
-
-   /* GL_ARB_copy_buffer */
-   { GL_COPY_READ_BUFFER, LOC_CUSTOM, TYPE_INT, 0, extra_ARB_copy_buffer },
-   { GL_COPY_WRITE_BUFFER, LOC_CUSTOM, TYPE_INT, 0, extra_ARB_copy_buffer },
-
-   /* GL_OES_read_format */
-   { GL_IMPLEMENTATION_COLOR_READ_TYPE_OES, LOC_CUSTOM, TYPE_INT, 0,
-     extra_new_buffers_OES_read_format },
-   { GL_IMPLEMENTATION_COLOR_READ_FORMAT_OES, LOC_CUSTOM, TYPE_INT, 0,
-     extra_new_buffers_OES_read_format },
-
-   /* GL_EXT_framebuffer_object */
-   { GL_FRAMEBUFFER_BINDING_EXT, BUFFER_INT(Name),
-     extra_EXT_framebuffer_object },
-   { GL_RENDERBUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_framebuffer_object },
-   { GL_MAX_RENDERBUFFER_SIZE_EXT, CONTEXT_INT(Const.MaxRenderbufferSize),
-     extra_EXT_framebuffer_object },
-
-   /* This entry isn't spec'ed for GLES 2, but is needed for Mesa's
-    * GLSL: */
-   { GL_MAX_CLIP_PLANES, CONTEXT_INT(Const.MaxClipPlanes), NO_EXTRA },
-
-#if FEATURE_GL || FEATURE_ES1
-   /* Enums in OpenGL and GLES1 */
-   { 0, 0, TYPE_API_MASK, API_OPENGL_BIT | API_OPENGLES_BIT, NO_EXTRA },
-   { GL_MAX_LIGHTS, CONTEXT_INT(Const.MaxLights), NO_EXTRA },
-   { GL_LIGHT0, CONTEXT_BOOL(Light.Light[0].Enabled), NO_EXTRA },
-   { GL_LIGHT1, CONTEXT_BOOL(Light.Light[1].Enabled), NO_EXTRA },
-   { GL_LIGHT2, CONTEXT_BOOL(Light.Light[2].Enabled), NO_EXTRA },
-   { GL_LIGHT3, CONTEXT_BOOL(Light.Light[3].Enabled), NO_EXTRA },
-   { GL_LIGHT4, CONTEXT_BOOL(Light.Light[4].Enabled), NO_EXTRA },
-   { GL_LIGHT5, CONTEXT_BOOL(Light.Light[5].Enabled), NO_EXTRA },
-   { GL_LIGHT6, CONTEXT_BOOL(Light.Light[6].Enabled), NO_EXTRA },
-   { GL_LIGHT7, CONTEXT_BOOL(Light.Light[7].Enabled), NO_EXTRA },
-   { GL_LIGHTING, CONTEXT_BOOL(Light.Enabled), NO_EXTRA },
-   { GL_LIGHT_MODEL_AMBIENT,
-     CONTEXT_FIELD(Light.Model.Ambient[0], TYPE_FLOATN_4), NO_EXTRA },
-   { GL_LIGHT_MODEL_TWO_SIDE, CONTEXT_BOOL(Light.Model.TwoSide), NO_EXTRA },
-   { GL_ALPHA_TEST, CONTEXT_BOOL(Color.AlphaEnabled), NO_EXTRA },
-   { GL_ALPHA_TEST_FUNC, CONTEXT_ENUM(Color.AlphaFunc), NO_EXTRA },
-   { GL_ALPHA_TEST_REF, LOC_CUSTOM, TYPE_FLOATN, 0, extra_new_frag_clamp },
-   { GL_BLEND_DST, CONTEXT_ENUM(Color.Blend[0].DstRGB), NO_EXTRA },
-   { GL_CLIP_PLANE0, CONTEXT_BIT0(Transform.ClipPlanesEnabled), NO_EXTRA },
-   { GL_CLIP_PLANE1, CONTEXT_BIT1(Transform.ClipPlanesEnabled), NO_EXTRA },
-   { GL_CLIP_PLANE2, CONTEXT_BIT2(Transform.ClipPlanesEnabled), NO_EXTRA },
-   { GL_CLIP_PLANE3, CONTEXT_BIT3(Transform.ClipPlanesEnabled), NO_EXTRA },
-   { GL_CLIP_PLANE4, CONTEXT_BIT4(Transform.ClipPlanesEnabled), NO_EXTRA },
-   { GL_CLIP_PLANE5, CONTEXT_BIT5(Transform.ClipPlanesEnabled), NO_EXTRA },
-   { GL_COLOR_MATERIAL, CONTEXT_BOOL(Light.ColorMaterialEnabled), NO_EXTRA },
-   { GL_CURRENT_COLOR,
-     CONTEXT_FIELD(Current.Attrib[VERT_ATTRIB_COLOR0][0], TYPE_FLOATN_4),
-     extra_flush_current },
-   { GL_CURRENT_NORMAL,
-     CONTEXT_FIELD(Current.Attrib[VERT_ATTRIB_NORMAL][0], TYPE_FLOATN_3),
-     extra_flush_current },
-   { GL_CURRENT_TEXTURE_COORDS, LOC_CUSTOM, TYPE_FLOAT_4, 0,
-     extra_flush_current_valid_texture_unit },
-   { GL_DISTANCE_ATTENUATION_EXT, CONTEXT_FLOAT3(Point.Params[0]), NO_EXTRA },
-   { GL_FOG, CONTEXT_BOOL(Fog.Enabled), NO_EXTRA },
-   { GL_FOG_COLOR, LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp },
-   { GL_FOG_DENSITY, CONTEXT_FLOAT(Fog.Density), NO_EXTRA },
-   { GL_FOG_END, CONTEXT_FLOAT(Fog.End), NO_EXTRA },
-   { GL_FOG_HINT, CONTEXT_ENUM(Hint.Fog), NO_EXTRA },
-   { GL_FOG_MODE, CONTEXT_ENUM(Fog.Mode), NO_EXTRA },
-   { GL_FOG_START, CONTEXT_FLOAT(Fog.Start), NO_EXTRA },
-   { GL_LINE_SMOOTH, CONTEXT_BOOL(Line.SmoothFlag), NO_EXTRA },
-   { GL_LINE_SMOOTH_HINT, CONTEXT_ENUM(Hint.LineSmooth), NO_EXTRA },
-   { GL_LINE_WIDTH_RANGE, CONTEXT_FLOAT2(Const.MinLineWidthAA), NO_EXTRA },
-   { GL_COLOR_LOGIC_OP, CONTEXT_BOOL(Color.ColorLogicOpEnabled), NO_EXTRA },
-   { GL_LOGIC_OP_MODE, CONTEXT_ENUM(Color.LogicOp), NO_EXTRA },
-   { GL_MATRIX_MODE, CONTEXT_ENUM(Transform.MatrixMode), NO_EXTRA },
-   { GL_MAX_MODELVIEW_STACK_DEPTH, CONST(MAX_MODELVIEW_STACK_DEPTH), NO_EXTRA },
-   { GL_MAX_PROJECTION_STACK_DEPTH, CONST(MAX_PROJECTION_STACK_DEPTH), NO_EXTRA },
-   { GL_MAX_TEXTURE_STACK_DEPTH, CONST(MAX_TEXTURE_STACK_DEPTH), NO_EXTRA },
-   { GL_MODELVIEW_MATRIX, CONTEXT_MATRIX(ModelviewMatrixStack.Top), NO_EXTRA },
-   { GL_MODELVIEW_STACK_DEPTH, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_context, ModelviewMatrixStack.Depth), NO_EXTRA },
-   { GL_NORMALIZE, CONTEXT_BOOL(Transform.Normalize), NO_EXTRA },
-   { GL_PACK_SKIP_IMAGES_EXT, CONTEXT_INT(Pack.SkipImages), NO_EXTRA },
-   { GL_PERSPECTIVE_CORRECTION_HINT, CONTEXT_ENUM(Hint.PerspectiveCorrection), NO_EXTRA },
-   { GL_POINT_SIZE, CONTEXT_FLOAT(Point.Size), NO_EXTRA },
-   { GL_POINT_SIZE_RANGE, CONTEXT_FLOAT2(Const.MinPointSizeAA), NO_EXTRA },
-   { GL_POINT_SMOOTH, CONTEXT_BOOL(Point.SmoothFlag), NO_EXTRA },
-   { GL_POINT_SMOOTH_HINT, CONTEXT_ENUM(Hint.PointSmooth), NO_EXTRA },
-   { GL_POINT_SIZE_MIN_EXT, CONTEXT_FLOAT(Point.MinSize), NO_EXTRA },
-   { GL_POINT_SIZE_MAX_EXT, CONTEXT_FLOAT(Point.MaxSize), NO_EXTRA },
-   { GL_POINT_FADE_THRESHOLD_SIZE_EXT, CONTEXT_FLOAT(Point.Threshold), NO_EXTRA },
-   { GL_PROJECTION_MATRIX, CONTEXT_MATRIX(ProjectionMatrixStack.Top), NO_EXTRA },
-   { GL_PROJECTION_STACK_DEPTH, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_context, ProjectionMatrixStack.Depth), NO_EXTRA },
-   { GL_RESCALE_NORMAL, CONTEXT_BOOL(Transform.RescaleNormals), NO_EXTRA },
-   { GL_SHADE_MODEL, CONTEXT_ENUM(Light.ShadeModel), NO_EXTRA },
-   { GL_TEXTURE_2D, LOC_CUSTOM, TYPE_BOOLEAN, 0, NO_EXTRA },
-   { GL_TEXTURE_MATRIX, LOC_CUSTOM, TYPE_MATRIX, 0, extra_valid_texture_unit },
-   { GL_TEXTURE_STACK_DEPTH, LOC_CUSTOM, TYPE_INT, 0,
-     extra_valid_texture_unit  },
-
-   { GL_VERTEX_ARRAY, ARRAY_BOOL(Vertex.Enabled), NO_EXTRA },
-   { GL_VERTEX_ARRAY_SIZE, ARRAY_INT(Vertex.Size), NO_EXTRA },
-   { GL_VERTEX_ARRAY_TYPE, ARRAY_ENUM(Vertex.Type), NO_EXTRA },
-   { GL_VERTEX_ARRAY_STRIDE, ARRAY_INT(Vertex.Stride), NO_EXTRA },
-   { GL_NORMAL_ARRAY, ARRAY_BOOL(Normal.Enabled), NO_EXTRA },
-   { GL_NORMAL_ARRAY_TYPE, ARRAY_ENUM(Normal.Type), NO_EXTRA },
-   { GL_NORMAL_ARRAY_STRIDE, ARRAY_INT(Normal.Stride), NO_EXTRA },
-   { GL_COLOR_ARRAY, ARRAY_BOOL(Color.Enabled), NO_EXTRA },
-   { GL_COLOR_ARRAY_SIZE, ARRAY_INT(Color.Size), NO_EXTRA },
-   { GL_COLOR_ARRAY_TYPE, ARRAY_ENUM(Color.Type), NO_EXTRA },
-   { GL_COLOR_ARRAY_STRIDE, ARRAY_INT(Color.Stride), NO_EXTRA },
-   { GL_TEXTURE_COORD_ARRAY,
-     LOC_CUSTOM, TYPE_BOOLEAN, offsetof(struct gl_client_array, Enabled), NO_EXTRA },
-   { GL_TEXTURE_COORD_ARRAY_SIZE,
-     LOC_CUSTOM, TYPE_INT, offsetof(struct gl_client_array, Size), NO_EXTRA },
-   { GL_TEXTURE_COORD_ARRAY_TYPE,
-     LOC_CUSTOM, TYPE_ENUM, offsetof(struct gl_client_array, Type), NO_EXTRA },
-   { GL_TEXTURE_COORD_ARRAY_STRIDE,
-     LOC_CUSTOM, TYPE_INT, offsetof(struct gl_client_array, Stride), NO_EXTRA },
-
-   /* GL_ARB_ES2_compatibility */
-   { GL_SHADER_COMPILER, CONST(1), extra_ARB_ES2_compatibility },
-   { GL_MAX_VARYING_VECTORS, CONTEXT_INT(Const.MaxVarying),
-     extra_ARB_ES2_compatibility },
-   { GL_MAX_VERTEX_UNIFORM_VECTORS, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_ES2_compatibility },
-   { GL_MAX_FRAGMENT_UNIFORM_VECTORS, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_ES2_compatibility },
-
-   /* GL_ARB_multitexture */
-   { GL_MAX_TEXTURE_UNITS_ARB,
-     CONTEXT_INT(Const.MaxTextureUnits), extra_ARB_multitexture },
-   { GL_CLIENT_ACTIVE_TEXTURE_ARB,
-     LOC_CUSTOM, TYPE_INT, 0, extra_ARB_multitexture },
-
-   /* GL_ARB_texture_cube_map */
-   { GL_TEXTURE_CUBE_MAP_ARB, LOC_CUSTOM, TYPE_BOOLEAN, 0, NO_EXTRA },
-   /* S, T, and R are always set at the same time */
-   { GL_TEXTURE_GEN_STR_OES, LOC_TEXUNIT, TYPE_BIT_0,
-     offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA },
-
-   /* GL_ARB_multisample */
-   { GL_MULTISAMPLE_ARB, CONTEXT_BOOL(Multisample.Enabled), NO_EXTRA },
-   { GL_SAMPLE_ALPHA_TO_ONE_ARB, CONTEXT_BOOL(Multisample.SampleAlphaToOne), NO_EXTRA },
-
-   /* GL_ARB_vertex_buffer_object */
-   { GL_VERTEX_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, Vertex.BufferObj), NO_EXTRA },
-   { GL_NORMAL_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, Normal.BufferObj), NO_EXTRA },
-   { GL_COLOR_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, Color.BufferObj), NO_EXTRA },
-   { GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA },
-
-   /* GL_OES_point_sprite */
-   { GL_POINT_SPRITE_NV,
-     CONTEXT_BOOL(Point.PointSprite),
-     extra_NV_point_sprite_ARB_point_sprite },
-
-   /* GL_ARB_fragment_shader */
-   { GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB,
-     CONTEXT_INT(Const.FragmentProgram.MaxUniformComponents),
-     extra_ARB_fragment_shader },
-
-   /* GL_ARB_vertex_shader */
-   { GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB,
-     CONTEXT_INT(Const.VertexProgram.MaxUniformComponents),
-     extra_ARB_vertex_shader },
-   { GL_MAX_VARYING_FLOATS_ARB, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_vertex_shader },
-
-   /* GL_EXT_texture_lod_bias */
-   { GL_MAX_TEXTURE_LOD_BIAS_EXT, CONTEXT_FLOAT(Const.MaxTextureLodBias),
-	 extra_EXT_texture_lod_bias },
-
-   /* GL_EXT_texture_filter_anisotropic */
-   { GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT,
-     CONTEXT_FLOAT(Const.MaxTextureMaxAnisotropy),
-     extra_EXT_texture_filter_anisotropic },
-#endif /* FEATURE_GL || FEATURE_ES1 */
-
-#if FEATURE_ES1
-   { 0, 0, TYPE_API_MASK, API_OPENGLES_BIT },
-   /* XXX: OES_matrix_get */
-   { GL_MODELVIEW_MATRIX_FLOAT_AS_INT_BITS_OES },
-   { GL_PROJECTION_MATRIX_FLOAT_AS_INT_BITS_OES },
-   { GL_TEXTURE_MATRIX_FLOAT_AS_INT_BITS_OES },
-
-   /* OES_point_size_array */
-   { GL_POINT_SIZE_ARRAY_OES, ARRAY_FIELD(PointSize.Enabled, TYPE_BOOLEAN) },
-   { GL_POINT_SIZE_ARRAY_TYPE_OES, ARRAY_FIELD(PointSize.Type, TYPE_ENUM) },
-   { GL_POINT_SIZE_ARRAY_STRIDE_OES, ARRAY_FIELD(PointSize.Stride, TYPE_INT) },
-   { GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES, LOC_CUSTOM, TYPE_INT, 0 },
-#endif /* FEATURE_ES1 */
-
-#if FEATURE_GL || FEATURE_ES2
-   { 0, 0, TYPE_API_MASK, API_OPENGL_BIT | API_OPENGLES2_BIT, NO_EXTRA },
-   { GL_MAX_TEXTURE_COORDS_ARB, /* == GL_MAX_TEXTURE_COORDS_NV */
-     CONTEXT_INT(Const.MaxTextureCoordUnits),
-     extra_ARB_fragment_program_NV_fragment_program },
-
-   /* GL_ARB_draw_buffers */
-   { GL_MAX_DRAW_BUFFERS_ARB, CONTEXT_INT(Const.MaxDrawBuffers), NO_EXTRA },
-
-   { GL_BLEND_COLOR_EXT, LOC_CUSTOM, TYPE_FLOATN_4, 0, extra_new_frag_clamp },
-   /* GL_ARB_fragment_program */
-   { GL_MAX_TEXTURE_IMAGE_UNITS_ARB, /* == GL_MAX_TEXTURE_IMAGE_UNITS_NV */
-     CONTEXT_INT(Const.MaxTextureImageUnits),
-     extra_ARB_fragment_program_NV_fragment_program },
-   { GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS_ARB,
-     CONTEXT_INT(Const.MaxVertexTextureImageUnits), extra_ARB_vertex_shader },
-   { GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_ARB,
-     CONTEXT_INT(Const.MaxCombinedTextureImageUnits),
-     extra_ARB_vertex_shader },
-
-   /* GL_ARB_shader_objects
-    * Actually, this token isn't part of GL_ARB_shader_objects, but is
-    * close enough for now. */
-   { GL_CURRENT_PROGRAM, LOC_CUSTOM, TYPE_INT, 0, extra_ARB_shader_objects },
-
-   /* OpenGL 2.0 */
-   { GL_STENCIL_BACK_FUNC, CONTEXT_ENUM(Stencil.Function[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_VALUE_MASK, CONTEXT_INT(Stencil.ValueMask[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_WRITEMASK, CONTEXT_INT(Stencil.WriteMask[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_REF, CONTEXT_INT(Stencil.Ref[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_FAIL, CONTEXT_ENUM(Stencil.FailFunc[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_PASS_DEPTH_FAIL, CONTEXT_ENUM(Stencil.ZFailFunc[1]), NO_EXTRA },
-   { GL_STENCIL_BACK_PASS_DEPTH_PASS, CONTEXT_ENUM(Stencil.ZPassFunc[1]), NO_EXTRA },
-
-   { GL_MAX_VERTEX_ATTRIBS_ARB,
-     CONTEXT_INT(Const.VertexProgram.MaxAttribs),
-     extra_ARB_vertex_program_version_es2 },
-
-   /* OES_texture_3D */
-   { GL_TEXTURE_BINDING_3D, LOC_CUSTOM, TYPE_INT, TEXTURE_3D_INDEX, NO_EXTRA },
-   { GL_MAX_3D_TEXTURE_SIZE, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_context, Const.Max3DTextureLevels), NO_EXTRA },
-
-   /* GL_ARB_fragment_program/OES_standard_derivatives */
-   { GL_FRAGMENT_SHADER_DERIVATIVE_HINT_ARB,
-     CONTEXT_ENUM(Hint.FragmentShaderDerivative), extra_ARB_fragment_shader },
-#endif /* FEATURE_GL || FEATURE_ES2 */
-
-#if FEATURE_ES2
-   /* Enums unique to OpenGL ES 2.0 */
-   { 0, 0, TYPE_API_MASK, API_OPENGLES2_BIT, NO_EXTRA },
-   { GL_MAX_FRAGMENT_UNIFORM_VECTORS, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_MAX_VARYING_VECTORS, CONTEXT_INT(Const.MaxVarying), NO_EXTRA },
-   { GL_MAX_VERTEX_UNIFORM_VECTORS, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_SHADER_COMPILER, CONST(1), NO_EXTRA },
-   /* OES_get_program_binary */
-   { GL_NUM_SHADER_BINARY_FORMATS, CONST(0), NO_EXTRA },
-   { GL_SHADER_BINARY_FORMATS, CONST(0), NO_EXTRA },
-#endif /* FEATURE_ES2 */
-
-#if FEATURE_GL
-   /* Remaining enums are only in OpenGL */
-   { 0, 0, TYPE_API_MASK, API_OPENGL_BIT, NO_EXTRA },
-   { GL_ACCUM_RED_BITS, BUFFER_INT(Visual.accumRedBits), NO_EXTRA },
-   { GL_ACCUM_GREEN_BITS, BUFFER_INT(Visual.accumGreenBits), NO_EXTRA },
-   { GL_ACCUM_BLUE_BITS, BUFFER_INT(Visual.accumBlueBits), NO_EXTRA },
-   { GL_ACCUM_ALPHA_BITS, BUFFER_INT(Visual.accumAlphaBits), NO_EXTRA },
-   { GL_ACCUM_CLEAR_VALUE, CONTEXT_FIELD(Accum.ClearColor[0], TYPE_FLOATN_4), NO_EXTRA },
-   { GL_ALPHA_BIAS, CONTEXT_FLOAT(Pixel.AlphaBias), NO_EXTRA },
-   { GL_ALPHA_SCALE, CONTEXT_FLOAT(Pixel.AlphaScale), NO_EXTRA },
-   { GL_ATTRIB_STACK_DEPTH, CONTEXT_INT(AttribStackDepth), NO_EXTRA },
-   { GL_AUTO_NORMAL, CONTEXT_BOOL(Eval.AutoNormal), NO_EXTRA },
-   { GL_AUX_BUFFERS, BUFFER_INT(Visual.numAuxBuffers), NO_EXTRA },
-   { GL_BLUE_BIAS, CONTEXT_FLOAT(Pixel.BlueBias), NO_EXTRA },
-   { GL_BLUE_SCALE, CONTEXT_FLOAT(Pixel.BlueScale), NO_EXTRA },
-   { GL_CLIENT_ATTRIB_STACK_DEPTH, CONTEXT_INT(ClientAttribStackDepth), NO_EXTRA },
-   { GL_COLOR_MATERIAL_FACE, CONTEXT_ENUM(Light.ColorMaterialFace), NO_EXTRA },
-   { GL_COLOR_MATERIAL_PARAMETER, CONTEXT_ENUM(Light.ColorMaterialMode), NO_EXTRA },
-   { GL_CURRENT_INDEX,
-     CONTEXT_FLOAT(Current.Attrib[VERT_ATTRIB_COLOR_INDEX][0]),
-     extra_flush_current },
-   { GL_CURRENT_RASTER_COLOR,
-     CONTEXT_FIELD(Current.RasterColor[0], TYPE_FLOATN_4), NO_EXTRA },
-   { GL_CURRENT_RASTER_DISTANCE, CONTEXT_FLOAT(Current.RasterDistance), NO_EXTRA },
-   { GL_CURRENT_RASTER_INDEX, CONST(1), NO_EXTRA },
-   { GL_CURRENT_RASTER_POSITION, CONTEXT_FLOAT4(Current.RasterPos[0]), NO_EXTRA },
-   { GL_CURRENT_RASTER_SECONDARY_COLOR,
-     CONTEXT_FIELD(Current.RasterSecondaryColor[0], TYPE_FLOATN_4), NO_EXTRA },
-   { GL_CURRENT_RASTER_TEXTURE_COORDS, LOC_CUSTOM, TYPE_FLOAT_4, 0,
-     extra_valid_texture_unit },
-   { GL_CURRENT_RASTER_POSITION_VALID, CONTEXT_BOOL(Current.RasterPosValid), NO_EXTRA },
-   { GL_DEPTH_BIAS, CONTEXT_FLOAT(Pixel.DepthBias), NO_EXTRA },
-   { GL_DEPTH_SCALE, CONTEXT_FLOAT(Pixel.DepthScale), NO_EXTRA },
-   { GL_DOUBLEBUFFER, BUFFER_INT(Visual.doubleBufferMode), NO_EXTRA },
-   { GL_DRAW_BUFFER, BUFFER_ENUM(ColorDrawBuffer[0]), NO_EXTRA },
-   { GL_EDGE_FLAG, LOC_CUSTOM, TYPE_BOOLEAN, 0, NO_EXTRA },
-   { GL_FEEDBACK_BUFFER_SIZE, CONTEXT_INT(Feedback.BufferSize), NO_EXTRA },
-   { GL_FEEDBACK_BUFFER_TYPE, CONTEXT_ENUM(Feedback.Type), NO_EXTRA },
-   { GL_FOG_INDEX, CONTEXT_FLOAT(Fog.Index), NO_EXTRA },
-   { GL_GREEN_BIAS, CONTEXT_FLOAT(Pixel.GreenBias), NO_EXTRA },
-   { GL_GREEN_SCALE, CONTEXT_FLOAT(Pixel.GreenScale), NO_EXTRA },
-   { GL_INDEX_BITS, BUFFER_INT(Visual.indexBits), extra_new_buffers },
-   { GL_INDEX_CLEAR_VALUE, CONTEXT_INT(Color.ClearIndex), NO_EXTRA },
-   { GL_INDEX_MODE, CONST(0) , NO_EXTRA}, 
-   { GL_INDEX_OFFSET, CONTEXT_INT(Pixel.IndexOffset), NO_EXTRA },
-   { GL_INDEX_SHIFT, CONTEXT_INT(Pixel.IndexShift), NO_EXTRA },
-   { GL_INDEX_WRITEMASK, CONTEXT_INT(Color.IndexMask), NO_EXTRA },
-   { GL_LIGHT_MODEL_COLOR_CONTROL, CONTEXT_ENUM(Light.Model.ColorControl), NO_EXTRA },
-   { GL_LIGHT_MODEL_LOCAL_VIEWER, CONTEXT_BOOL(Light.Model.LocalViewer), NO_EXTRA },
-   { GL_LINE_STIPPLE, CONTEXT_BOOL(Line.StippleFlag), NO_EXTRA },
-   { GL_LINE_STIPPLE_PATTERN, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_LINE_STIPPLE_REPEAT, CONTEXT_INT(Line.StippleFactor), NO_EXTRA },
-   { GL_LINE_WIDTH_GRANULARITY, CONTEXT_FLOAT(Const.LineWidthGranularity), NO_EXTRA },
-   { GL_LIST_BASE, CONTEXT_INT(List.ListBase), NO_EXTRA },
-   { GL_LIST_INDEX, LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA },
-   { GL_LIST_MODE, LOC_CUSTOM, TYPE_ENUM, 0, NO_EXTRA },
-   { GL_INDEX_LOGIC_OP, CONTEXT_BOOL(Color.IndexLogicOpEnabled), NO_EXTRA },
-   { GL_MAP1_COLOR_4, CONTEXT_BOOL(Eval.Map1Color4), NO_EXTRA },
-   { GL_MAP1_GRID_DOMAIN, CONTEXT_FLOAT2(Eval.MapGrid1u1), NO_EXTRA },
-   { GL_MAP1_GRID_SEGMENTS, CONTEXT_INT(Eval.MapGrid1un), NO_EXTRA },
-   { GL_MAP1_INDEX, CONTEXT_BOOL(Eval.Map1Index), NO_EXTRA },
-   { GL_MAP1_NORMAL, CONTEXT_BOOL(Eval.Map1Normal), NO_EXTRA },
-   { GL_MAP1_TEXTURE_COORD_1, CONTEXT_BOOL(Eval.Map1TextureCoord1), NO_EXTRA },
-   { GL_MAP1_TEXTURE_COORD_2, CONTEXT_BOOL(Eval.Map1TextureCoord2), NO_EXTRA },
-   { GL_MAP1_TEXTURE_COORD_3, CONTEXT_BOOL(Eval.Map1TextureCoord3), NO_EXTRA },
-   { GL_MAP1_TEXTURE_COORD_4, CONTEXT_BOOL(Eval.Map1TextureCoord4), NO_EXTRA },
-   { GL_MAP1_VERTEX_3, CONTEXT_BOOL(Eval.Map1Vertex3), NO_EXTRA },
-   { GL_MAP1_VERTEX_4, CONTEXT_BOOL(Eval.Map1Vertex4), NO_EXTRA },
-   { GL_MAP2_COLOR_4, CONTEXT_BOOL(Eval.Map2Color4), NO_EXTRA },
-   { GL_MAP2_GRID_DOMAIN, LOC_CUSTOM, TYPE_FLOAT_4, 0, NO_EXTRA },
-   { GL_MAP2_GRID_SEGMENTS, CONTEXT_INT2(Eval.MapGrid2un), NO_EXTRA },
-   { GL_MAP2_INDEX, CONTEXT_BOOL(Eval.Map2Index), NO_EXTRA },
-   { GL_MAP2_NORMAL, CONTEXT_BOOL(Eval.Map2Normal), NO_EXTRA },
-   { GL_MAP2_TEXTURE_COORD_1, CONTEXT_BOOL(Eval.Map2TextureCoord1), NO_EXTRA },
-   { GL_MAP2_TEXTURE_COORD_2, CONTEXT_BOOL(Eval.Map2TextureCoord2), NO_EXTRA },
-   { GL_MAP2_TEXTURE_COORD_3, CONTEXT_BOOL(Eval.Map2TextureCoord3), NO_EXTRA },
-   { GL_MAP2_TEXTURE_COORD_4, CONTEXT_BOOL(Eval.Map2TextureCoord4), NO_EXTRA },
-   { GL_MAP2_VERTEX_3, CONTEXT_BOOL(Eval.Map2Vertex3), NO_EXTRA },
-   { GL_MAP2_VERTEX_4, CONTEXT_BOOL(Eval.Map2Vertex4), NO_EXTRA },
-   { GL_MAP_COLOR, CONTEXT_BOOL(Pixel.MapColorFlag), NO_EXTRA },
-   { GL_MAP_STENCIL, CONTEXT_BOOL(Pixel.MapStencilFlag), NO_EXTRA },
-   { GL_MAX_ATTRIB_STACK_DEPTH, CONST(MAX_ATTRIB_STACK_DEPTH), NO_EXTRA },
-   { GL_MAX_CLIENT_ATTRIB_STACK_DEPTH, CONST(MAX_CLIENT_ATTRIB_STACK_DEPTH), NO_EXTRA },
-
-   { GL_MAX_EVAL_ORDER, CONST(MAX_EVAL_ORDER), NO_EXTRA },
-   { GL_MAX_LIST_NESTING, CONST(MAX_LIST_NESTING), NO_EXTRA },
-   { GL_MAX_NAME_STACK_DEPTH, CONST(MAX_NAME_STACK_DEPTH), NO_EXTRA },
-   { GL_MAX_PIXEL_MAP_TABLE, CONST(MAX_PIXEL_MAP_TABLE), NO_EXTRA },
-   { GL_NAME_STACK_DEPTH, CONTEXT_INT(Select.NameStackDepth), NO_EXTRA },
-   { GL_PACK_LSB_FIRST, CONTEXT_BOOL(Pack.LsbFirst), NO_EXTRA },
-   { GL_PACK_ROW_LENGTH, CONTEXT_INT(Pack.RowLength), NO_EXTRA },
-   { GL_PACK_SKIP_PIXELS, CONTEXT_INT(Pack.SkipPixels), NO_EXTRA },
-   { GL_PACK_SKIP_ROWS, CONTEXT_INT(Pack.SkipRows), NO_EXTRA },
-   { GL_PACK_SWAP_BYTES, CONTEXT_BOOL(Pack.SwapBytes), NO_EXTRA },
-   { GL_PACK_IMAGE_HEIGHT_EXT, CONTEXT_INT(Pack.ImageHeight), NO_EXTRA },
-   { GL_PACK_INVERT_MESA, CONTEXT_BOOL(Pack.Invert), NO_EXTRA },
-   { GL_PIXEL_MAP_A_TO_A_SIZE, CONTEXT_INT(PixelMaps.AtoA.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_B_TO_B_SIZE, CONTEXT_INT(PixelMaps.BtoB.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_G_TO_G_SIZE, CONTEXT_INT(PixelMaps.GtoG.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_I_TO_A_SIZE, CONTEXT_INT(PixelMaps.ItoA.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_I_TO_B_SIZE, CONTEXT_INT(PixelMaps.ItoB.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_I_TO_G_SIZE, CONTEXT_INT(PixelMaps.ItoG.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_I_TO_I_SIZE, CONTEXT_INT(PixelMaps.ItoI.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_I_TO_R_SIZE, CONTEXT_INT(PixelMaps.ItoR.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_R_TO_R_SIZE, CONTEXT_INT(PixelMaps.RtoR.Size), NO_EXTRA },
-   { GL_PIXEL_MAP_S_TO_S_SIZE, CONTEXT_INT(PixelMaps.StoS.Size), NO_EXTRA },
-   { GL_POINT_SIZE_GRANULARITY, CONTEXT_FLOAT(Const.PointSizeGranularity), NO_EXTRA },
-   { GL_POLYGON_MODE, CONTEXT_ENUM2(Polygon.FrontMode), NO_EXTRA },
-   { GL_POLYGON_OFFSET_BIAS_EXT, CONTEXT_FLOAT(Polygon.OffsetUnits), NO_EXTRA },
-   { GL_POLYGON_OFFSET_POINT, CONTEXT_BOOL(Polygon.OffsetPoint), NO_EXTRA },
-   { GL_POLYGON_OFFSET_LINE, CONTEXT_BOOL(Polygon.OffsetLine), NO_EXTRA },
-   { GL_POLYGON_SMOOTH, CONTEXT_BOOL(Polygon.SmoothFlag), NO_EXTRA },
-   { GL_POLYGON_SMOOTH_HINT, CONTEXT_ENUM(Hint.PolygonSmooth), NO_EXTRA },
-   { GL_POLYGON_STIPPLE, CONTEXT_BOOL(Polygon.StippleFlag), NO_EXTRA },
-   { GL_READ_BUFFER, LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA },
-   { GL_RED_BIAS, CONTEXT_FLOAT(Pixel.RedBias), NO_EXTRA },
-   { GL_RED_SCALE, CONTEXT_FLOAT(Pixel.RedScale), NO_EXTRA },
-   { GL_RENDER_MODE, CONTEXT_ENUM(RenderMode), NO_EXTRA },
-   { GL_RGBA_MODE, CONST(1), NO_EXTRA },
-   { GL_SELECTION_BUFFER_SIZE, CONTEXT_INT(Select.BufferSize), NO_EXTRA },
-   { GL_SHARED_TEXTURE_PALETTE_EXT, CONTEXT_BOOL(Texture.SharedPalette), NO_EXTRA },
-
-   { GL_STEREO, BUFFER_INT(Visual.stereoMode), NO_EXTRA },
-
-   { GL_TEXTURE_1D, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
-   { GL_TEXTURE_3D, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
-   { GL_TEXTURE_1D_ARRAY_EXT, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
-   { GL_TEXTURE_2D_ARRAY_EXT, LOC_CUSTOM, TYPE_BOOLEAN, NO_OFFSET, NO_EXTRA },
-
-   { GL_TEXTURE_BINDING_1D, LOC_CUSTOM, TYPE_INT, TEXTURE_1D_INDEX, NO_EXTRA },
-   { GL_TEXTURE_BINDING_1D_ARRAY, LOC_CUSTOM, TYPE_INT,
-     TEXTURE_1D_ARRAY_INDEX, extra_MESA_texture_array },
-   { GL_TEXTURE_BINDING_2D_ARRAY, LOC_CUSTOM, TYPE_INT,
-     TEXTURE_1D_ARRAY_INDEX, extra_MESA_texture_array },
-   { GL_MAX_ARRAY_TEXTURE_LAYERS_EXT,
-     CONTEXT_INT(Const.MaxArrayTextureLayers), extra_MESA_texture_array },
-
-   { GL_TEXTURE_GEN_S, LOC_TEXUNIT, TYPE_BIT_0,
-     offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA },
-   { GL_TEXTURE_GEN_T, LOC_TEXUNIT, TYPE_BIT_1,
-     offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA },
-   { GL_TEXTURE_GEN_R, LOC_TEXUNIT, TYPE_BIT_2,
-     offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA },
-   { GL_TEXTURE_GEN_Q, LOC_TEXUNIT, TYPE_BIT_3,
-     offsetof(struct gl_texture_unit, TexGenEnabled), NO_EXTRA },
-   { GL_UNPACK_LSB_FIRST, CONTEXT_BOOL(Unpack.LsbFirst), NO_EXTRA },
-   { GL_UNPACK_ROW_LENGTH, CONTEXT_INT(Unpack.RowLength), NO_EXTRA },
-   { GL_UNPACK_SKIP_PIXELS, CONTEXT_INT(Unpack.SkipPixels), NO_EXTRA },
-   { GL_UNPACK_SKIP_ROWS, CONTEXT_INT(Unpack.SkipRows), NO_EXTRA },
-   { GL_UNPACK_SWAP_BYTES, CONTEXT_BOOL(Unpack.SwapBytes), NO_EXTRA },
-   { GL_UNPACK_SKIP_IMAGES_EXT, CONTEXT_INT(Unpack.SkipImages), NO_EXTRA },
-   { GL_UNPACK_IMAGE_HEIGHT_EXT, CONTEXT_INT(Unpack.ImageHeight), NO_EXTRA },
-   { GL_UNPACK_CLIENT_STORAGE_APPLE, CONTEXT_BOOL(Unpack.ClientStorage), NO_EXTRA },
-   { GL_ZOOM_X, CONTEXT_FLOAT(Pixel.ZoomX), NO_EXTRA },
-   { GL_ZOOM_Y, CONTEXT_FLOAT(Pixel.ZoomY), NO_EXTRA },
-
-   /* Vertex arrays */
-   { GL_VERTEX_ARRAY_COUNT_EXT, CONST(0), NO_EXTRA },
-   { GL_NORMAL_ARRAY_COUNT_EXT, CONST(0), NO_EXTRA },
-   { GL_COLOR_ARRAY_COUNT_EXT, CONST(0), NO_EXTRA },
-   { GL_INDEX_ARRAY, ARRAY_BOOL(Index.Enabled), NO_EXTRA },
-   { GL_INDEX_ARRAY_TYPE, ARRAY_ENUM(Index.Type), NO_EXTRA },
-   { GL_INDEX_ARRAY_STRIDE, ARRAY_INT(Index.Stride), NO_EXTRA },
-   { GL_INDEX_ARRAY_COUNT_EXT, CONST(0), NO_EXTRA },
-   { GL_TEXTURE_COORD_ARRAY_COUNT_EXT, CONST(0), NO_EXTRA },
-   { GL_EDGE_FLAG_ARRAY, ARRAY_BOOL(EdgeFlag.Enabled), NO_EXTRA },
-   { GL_EDGE_FLAG_ARRAY_STRIDE, ARRAY_INT(EdgeFlag.Stride), NO_EXTRA },
-   { GL_EDGE_FLAG_ARRAY_COUNT_EXT, CONST(0), NO_EXTRA },
-
-   /* GL_ARB_texture_compression */
-   { GL_TEXTURE_COMPRESSION_HINT_ARB, CONTEXT_INT(Hint.TextureCompression), NO_EXTRA },
-
-   /* GL_EXT_compiled_vertex_array */
-   { GL_ARRAY_ELEMENT_LOCK_FIRST_EXT, CONTEXT_INT(Array.LockFirst),
-     extra_EXT_compiled_vertex_array },
-   { GL_ARRAY_ELEMENT_LOCK_COUNT_EXT, CONTEXT_INT(Array.LockCount),
-     extra_EXT_compiled_vertex_array },
-
-   /* GL_ARB_transpose_matrix */
-   { GL_TRANSPOSE_MODELVIEW_MATRIX_ARB,
-     CONTEXT_MATRIX_T(ModelviewMatrixStack), NO_EXTRA },
-   { GL_TRANSPOSE_PROJECTION_MATRIX_ARB,
-     CONTEXT_MATRIX_T(ProjectionMatrixStack.Top), NO_EXTRA },
-   { GL_TRANSPOSE_TEXTURE_MATRIX_ARB, CONTEXT_MATRIX_T(TextureMatrixStack), NO_EXTRA },
-
-   /* GL_EXT_secondary_color */
-   { GL_COLOR_SUM_EXT, CONTEXT_BOOL(Fog.ColorSumEnabled),
-     extra_EXT_secondary_color_ARB_vertex_program },
-   { GL_CURRENT_SECONDARY_COLOR_EXT,
-     CONTEXT_FIELD(Current.Attrib[VERT_ATTRIB_COLOR1][0], TYPE_FLOATN_4),
-     extra_EXT_secondary_color_flush_current },
-   { GL_SECONDARY_COLOR_ARRAY_EXT, ARRAY_BOOL(SecondaryColor.Enabled),
-     extra_EXT_secondary_color },
-   { GL_SECONDARY_COLOR_ARRAY_TYPE_EXT, ARRAY_ENUM(SecondaryColor.Type),
-     extra_EXT_secondary_color },
-   { GL_SECONDARY_COLOR_ARRAY_STRIDE_EXT, ARRAY_INT(SecondaryColor.Stride),
-     extra_EXT_secondary_color },
-   { GL_SECONDARY_COLOR_ARRAY_SIZE_EXT, ARRAY_INT(SecondaryColor.Size),
-     extra_EXT_secondary_color },
-
-   /* GL_EXT_fog_coord */
-   { GL_CURRENT_FOG_COORDINATE_EXT,
-     CONTEXT_FLOAT(Current.Attrib[VERT_ATTRIB_FOG][0]),
-     extra_EXT_fog_coord_flush_current },
-   { GL_FOG_COORDINATE_ARRAY_EXT, ARRAY_BOOL(FogCoord.Enabled),
-     extra_EXT_fog_coord },
-   { GL_FOG_COORDINATE_ARRAY_TYPE_EXT, ARRAY_ENUM(FogCoord.Type),
-     extra_EXT_fog_coord },
-   { GL_FOG_COORDINATE_ARRAY_STRIDE_EXT, ARRAY_INT(FogCoord.Stride),
-     extra_EXT_fog_coord },
-   { GL_FOG_COORDINATE_SOURCE_EXT, CONTEXT_ENUM(Fog.FogCoordinateSource),
-     extra_EXT_fog_coord },
-
-   /* GL_IBM_rasterpos_clip */
-   { GL_RASTER_POSITION_UNCLIPPED_IBM,
-     CONTEXT_BOOL(Transform.RasterPositionUnclipped),
-     extra_IBM_rasterpos_clip },
-
-   /* GL_NV_point_sprite */
-   { GL_POINT_SPRITE_R_MODE_NV,
-     CONTEXT_ENUM(Point.SpriteRMode), extra_NV_point_sprite },
-   { GL_POINT_SPRITE_COORD_ORIGIN, CONTEXT_ENUM(Point.SpriteOrigin),
-     extra_NV_point_sprite_ARB_point_sprite },
-
-   /* GL_NV_vertex_program */
-   { GL_VERTEX_PROGRAM_BINDING_NV, LOC_CUSTOM, TYPE_INT, 0,
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY0_NV, ARRAY_BOOL(VertexAttrib[0].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY1_NV, ARRAY_BOOL(VertexAttrib[1].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY2_NV, ARRAY_BOOL(VertexAttrib[2].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY3_NV, ARRAY_BOOL(VertexAttrib[3].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY4_NV, ARRAY_BOOL(VertexAttrib[4].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY5_NV, ARRAY_BOOL(VertexAttrib[5].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY6_NV, ARRAY_BOOL(VertexAttrib[6].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY7_NV, ARRAY_BOOL(VertexAttrib[7].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY8_NV, ARRAY_BOOL(VertexAttrib[8].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY9_NV, ARRAY_BOOL(VertexAttrib[9].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY10_NV, ARRAY_BOOL(VertexAttrib[10].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY11_NV, ARRAY_BOOL(VertexAttrib[11].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY12_NV, ARRAY_BOOL(VertexAttrib[12].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY13_NV, ARRAY_BOOL(VertexAttrib[13].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY14_NV, ARRAY_BOOL(VertexAttrib[14].Enabled),
-     extra_NV_vertex_program },
-   { GL_VERTEX_ATTRIB_ARRAY15_NV, ARRAY_BOOL(VertexAttrib[15].Enabled),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB0_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[0]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB1_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[1]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB2_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[2]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB3_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[3]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB4_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[4]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB5_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[5]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB6_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[6]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB7_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[7]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB8_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[8]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB9_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[9]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB10_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[10]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB11_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[11]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB12_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[12]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB13_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[13]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB14_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[14]),
-     extra_NV_vertex_program },
-   { GL_MAP1_VERTEX_ATTRIB15_4_NV, CONTEXT_BOOL(Eval.Map1Attrib[15]),
-     extra_NV_vertex_program },
-
-   /* GL_NV_fragment_program */
-   { GL_FRAGMENT_PROGRAM_NV, CONTEXT_BOOL(FragmentProgram.Enabled),
-     extra_NV_fragment_program },
-   { GL_FRAGMENT_PROGRAM_BINDING_NV, LOC_CUSTOM, TYPE_INT, 0,
-     extra_NV_fragment_program },
-   { GL_MAX_FRAGMENT_PROGRAM_LOCAL_PARAMETERS_NV,
-     CONST(MAX_NV_FRAGMENT_PROGRAM_PARAMS),
-     extra_NV_fragment_program },
-
-   /* GL_NV_texture_rectangle */
-   { GL_TEXTURE_RECTANGLE_NV,
-     LOC_CUSTOM, TYPE_BOOLEAN, 0, extra_NV_texture_rectangle },
-   { GL_TEXTURE_BINDING_RECTANGLE_NV,
-     LOC_CUSTOM, TYPE_INT, TEXTURE_RECT_INDEX, extra_NV_texture_rectangle },
-   { GL_MAX_RECTANGLE_TEXTURE_SIZE_NV,
-     CONTEXT_INT(Const.MaxTextureRectSize), extra_NV_texture_rectangle },
-
-   /* GL_EXT_stencil_two_side */
-   { GL_STENCIL_TEST_TWO_SIDE_EXT, CONTEXT_BOOL(Stencil.TestTwoSide),
-	 extra_EXT_stencil_two_side },
-   { GL_ACTIVE_STENCIL_FACE_EXT, LOC_CUSTOM, TYPE_ENUM, NO_OFFSET, NO_EXTRA },
-
-   /* GL_NV_light_max_exponent */
-   { GL_MAX_SHININESS_NV, CONTEXT_FLOAT(Const.MaxShininess),
-     extra_NV_light_max_exponent },
-   { GL_MAX_SPOT_EXPONENT_NV, CONTEXT_FLOAT(Const.MaxSpotExponent),
-     extra_NV_light_max_exponent },
-     
-   /* GL_NV_primitive_restart */
-   { GL_PRIMITIVE_RESTART_NV, CONTEXT_BOOL(Array.PrimitiveRestart),
-     extra_NV_primitive_restart },
-   { GL_PRIMITIVE_RESTART_INDEX_NV, CONTEXT_INT(Array.RestartIndex),
-     extra_NV_primitive_restart },
- 
-   /* GL_ARB_vertex_buffer_object */
-   { GL_INDEX_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, Index.BufferObj), NO_EXTRA },
-   { GL_EDGE_FLAG_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, EdgeFlag.BufferObj), NO_EXTRA },
-   { GL_SECONDARY_COLOR_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, SecondaryColor.BufferObj), NO_EXTRA },
-   { GL_FOG_COORDINATE_ARRAY_BUFFER_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     offsetof(struct gl_array_object, FogCoord.BufferObj), NO_EXTRA },
-
-   /* GL_EXT_pixel_buffer_object */
-   { GL_PIXEL_PACK_BUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_pixel_buffer_object },
-   { GL_PIXEL_UNPACK_BUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_pixel_buffer_object },
-
-   /* GL_ARB_vertex_program */
-   { GL_VERTEX_PROGRAM_ARB, /* == GL_VERTEX_PROGRAM_NV */
-     CONTEXT_BOOL(VertexProgram.Enabled),
-     extra_ARB_vertex_program_NV_vertex_program },
-   { GL_VERTEX_PROGRAM_POINT_SIZE_ARB, /* == GL_VERTEX_PROGRAM_POINT_SIZE_NV*/
-     CONTEXT_BOOL(VertexProgram.PointSizeEnabled),
-     extra_ARB_vertex_program_NV_vertex_program },
-   { GL_VERTEX_PROGRAM_TWO_SIDE_ARB, /* == GL_VERTEX_PROGRAM_TWO_SIDE_NV */
-     CONTEXT_BOOL(VertexProgram.TwoSideEnabled),
-     extra_ARB_vertex_program_NV_vertex_program },
-   { GL_MAX_PROGRAM_MATRIX_STACK_DEPTH_ARB, /* == GL_MAX_TRACK_MATRIX_STACK_DEPTH_NV */
-     CONTEXT_INT(Const.MaxProgramMatrixStackDepth),
-     extra_ARB_vertex_program_ARB_fragment_program_NV_vertex_program },
-   { GL_MAX_PROGRAM_MATRICES_ARB, /* == GL_MAX_TRACK_MATRICES_NV */
-     CONTEXT_INT(Const.MaxProgramMatrices),
-     extra_ARB_vertex_program_ARB_fragment_program_NV_vertex_program },
-   { GL_CURRENT_MATRIX_STACK_DEPTH_ARB, /* == GL_CURRENT_MATRIX_STACK_DEPTH_NV */
-     LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_vertex_program_ARB_fragment_program_NV_vertex_program },
-
-   { GL_CURRENT_MATRIX_ARB, /* == GL_CURRENT_MATRIX_NV */
-     LOC_CUSTOM, TYPE_MATRIX, 0,
-     extra_ARB_vertex_program_ARB_fragment_program_NV_vertex_program },
-   { GL_TRANSPOSE_CURRENT_MATRIX_ARB, /* == GL_CURRENT_MATRIX_NV */
-     LOC_CUSTOM, TYPE_MATRIX, 0,
-     extra_ARB_vertex_program_ARB_fragment_program },
-
-   { GL_PROGRAM_ERROR_POSITION_ARB, /* == GL_PROGRAM_ERROR_POSITION_NV */
-     CONTEXT_INT(Program.ErrorPos),
-     extra_NV_vertex_program_ARB_vertex_program_ARB_fragment_program_NV_vertex_program },
-
-   /* GL_ARB_fragment_program */
-   { GL_FRAGMENT_PROGRAM_ARB, CONTEXT_BOOL(FragmentProgram.Enabled),
-     extra_ARB_fragment_program },
-
-   /* GL_EXT_depth_bounds_test */
-   { GL_DEPTH_BOUNDS_TEST_EXT, CONTEXT_BOOL(Depth.BoundsTest),
-     extra_EXT_depth_bounds_test },
-   { GL_DEPTH_BOUNDS_EXT, CONTEXT_FLOAT2(Depth.BoundsMin),
-     extra_EXT_depth_bounds_test },
-
-   /* GL_ARB_depth_clamp*/
-   { GL_DEPTH_CLAMP, CONTEXT_BOOL(Transform.DepthClamp),
-     extra_ARB_depth_clamp },
-
-   /* GL_ARB_draw_buffers */
-   { GL_DRAW_BUFFER0_ARB, BUFFER_ENUM(ColorDrawBuffer[0]), NO_EXTRA },
-   { GL_DRAW_BUFFER1_ARB, BUFFER_ENUM(ColorDrawBuffer[1]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER2_ARB, BUFFER_ENUM(ColorDrawBuffer[2]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER3_ARB, BUFFER_ENUM(ColorDrawBuffer[3]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER4_ARB, BUFFER_ENUM(ColorDrawBuffer[4]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER5_ARB, BUFFER_ENUM(ColorDrawBuffer[5]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER6_ARB, BUFFER_ENUM(ColorDrawBuffer[6]),
-     extra_valid_draw_buffer },
-   { GL_DRAW_BUFFER7_ARB, BUFFER_ENUM(ColorDrawBuffer[7]),
-     extra_valid_draw_buffer },
-
-   /* GL_ATI_fragment_shader */
-   { GL_NUM_FRAGMENT_REGISTERS_ATI, CONST(6), extra_ATI_fragment_shader },
-   { GL_NUM_FRAGMENT_CONSTANTS_ATI, CONST(8), extra_ATI_fragment_shader },
-   { GL_NUM_PASSES_ATI, CONST(2), extra_ATI_fragment_shader },
-   { GL_NUM_INSTRUCTIONS_PER_PASS_ATI, CONST(8), extra_ATI_fragment_shader },
-   { GL_NUM_INSTRUCTIONS_TOTAL_ATI, CONST(16), extra_ATI_fragment_shader },
-   { GL_COLOR_ALPHA_PAIRING_ATI, CONST(GL_TRUE), extra_ATI_fragment_shader },
-   { GL_NUM_LOOPBACK_COMPONENTS_ATI, CONST(3), extra_ATI_fragment_shader },
-   { GL_NUM_INPUT_INTERPOLATOR_COMPONENTS_ATI,
-     CONST(3), extra_ATI_fragment_shader },
-
-   /* GL_EXT_framebuffer_object */
-   { GL_MAX_COLOR_ATTACHMENTS_EXT, CONTEXT_INT(Const.MaxColorAttachments),
-     extra_EXT_framebuffer_object },
-   
-   /* GL_EXT_framebuffer_blit
-    * NOTE: GL_DRAW_FRAMEBUFFER_BINDING_EXT == GL_FRAMEBUFFER_BINDING_EXT */
-   { GL_READ_FRAMEBUFFER_BINDING_EXT, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_framebuffer_blit },
-
-   /* GL_EXT_provoking_vertex */
-   { GL_PROVOKING_VERTEX_EXT,
-     CONTEXT_ENUM(Light.ProvokingVertex), extra_EXT_provoking_vertex },
-   { GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION_EXT,
-     CONTEXT_BOOL(Const.QuadsFollowProvokingVertexConvention),
-     extra_EXT_provoking_vertex },
-
-   /* GL_ARB_framebuffer_object */
-   { GL_MAX_SAMPLES, CONTEXT_INT(Const.MaxSamples),
-     extra_ARB_framebuffer_object_EXT_framebuffer_multisample },
-
-   /* GL_APPLE_vertex_array_object */
-   { GL_VERTEX_ARRAY_BINDING_APPLE, ARRAY_INT(Name),
-     extra_APPLE_vertex_array_object },
-
-   /* GL_ARB_seamless_cube_map */
-   { GL_TEXTURE_CUBE_MAP_SEAMLESS,
-     CONTEXT_BOOL(Texture.CubeMapSeamless), extra_ARB_seamless_cube_map },
-
-   /* GL_ARB_sync */
-   { GL_MAX_SERVER_WAIT_TIMEOUT,
-     CONTEXT_INT64(Const.MaxServerWaitTimeout), extra_ARB_sync },
-
-   /* GL_EXT_texture_integer */
-   { GL_RGBA_INTEGER_MODE_EXT, BUFFER_BOOL(_IntegerColor),
-     extra_EXT_texture_integer },
-
-   /* GL_EXT_transform_feedback */
-   { GL_TRANSFORM_FEEDBACK_BUFFER_BINDING, LOC_CUSTOM, TYPE_INT, 0,
-     extra_EXT_transform_feedback },
-   { GL_RASTERIZER_DISCARD, CONTEXT_BOOL(TransformFeedback.RasterDiscard),
-     extra_EXT_transform_feedback },
-   { GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS,
-     CONTEXT_INT(Const.MaxTransformFeedbackInterleavedComponents),
-     extra_EXT_transform_feedback },
-   { GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
-     CONTEXT_INT(Const.MaxTransformFeedbackSeparateAttribs),
-     extra_EXT_transform_feedback },
-   { GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS,
-     CONTEXT_INT(Const.MaxTransformFeedbackSeparateComponents),
-     extra_EXT_transform_feedback },
-
-   /* GL_ARB_transform_feedback2 */
-   { GL_TRANSFORM_FEEDBACK_BUFFER_PAUSED, LOC_CUSTOM, TYPE_BOOLEAN, 0,
-     extra_ARB_transform_feedback2 },
-   { GL_TRANSFORM_FEEDBACK_BUFFER_ACTIVE, LOC_CUSTOM, TYPE_BOOLEAN, 0,
-     extra_ARB_transform_feedback2 },
-   { GL_TRANSFORM_FEEDBACK_BINDING, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_transform_feedback2 },
-
-   /* GL_ARB_geometry_shader4 */
-   { GL_MAX_GEOMETRY_TEXTURE_IMAGE_UNITS_ARB,
-     CONTEXT_INT(Const.MaxGeometryTextureImageUnits),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB,
-     CONTEXT_INT(Const.MaxGeometryOutputVertices),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS_ARB,
-     CONTEXT_INT(Const.MaxGeometryTotalOutputComponents),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_GEOMETRY_UNIFORM_COMPONENTS_ARB,
-     CONTEXT_INT(Const.GeometryProgram.MaxUniformComponents),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_GEOMETRY_VARYING_COMPONENTS_ARB,
-     CONTEXT_INT(Const.MaxGeometryVaryingComponents),
-     extra_ARB_geometry_shader4 },
-   { GL_MAX_VERTEX_VARYING_COMPONENTS_ARB,
-     CONTEXT_INT(Const.MaxVertexVaryingComponents),
-     extra_ARB_geometry_shader4 },
-
-   /* GL_ARB_color_buffer_float */
-   { GL_RGBA_FLOAT_MODE_ARB, BUFFER_FIELD(Visual.floatMode, TYPE_BOOLEAN), 0 },
-
-   /* GL_EXT_gpu_shader4 / GL 3.0 */
-   { GL_MIN_PROGRAM_TEXEL_OFFSET,
-     CONTEXT_INT(Const.MinProgramTexelOffset),
-     extra_EXT_gpu_shader4 },
-   { GL_MAX_PROGRAM_TEXEL_OFFSET,
-     CONTEXT_INT(Const.MaxProgramTexelOffset),
-     extra_EXT_gpu_shader4 },
-
-   /* GL_ARB_texture_buffer_object */
-   { GL_MAX_TEXTURE_BUFFER_SIZE_ARB, CONTEXT_INT(Const.MaxTextureBufferSize),
-     extra_ARB_texture_buffer_object },
-   { GL_TEXTURE_BINDING_BUFFER_ARB, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_texture_buffer_object },
-   { GL_TEXTURE_BUFFER_DATA_STORE_BINDING_ARB, LOC_CUSTOM, TYPE_INT,
-     TEXTURE_BUFFER_INDEX, extra_ARB_texture_buffer_object },
-   { GL_TEXTURE_BUFFER_FORMAT_ARB, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_texture_buffer_object },
-   { GL_TEXTURE_BUFFER_ARB, LOC_CUSTOM, TYPE_INT, 0,
-     extra_ARB_texture_buffer_object },
-
-   /* GL_ARB_sampler_objects / GL 3.3 */
-   { GL_SAMPLER_BINDING,
-     LOC_CUSTOM, TYPE_INT, GL_SAMPLER_BINDING, extra_ARB_sampler_objects },
-
-   /* GL 3.0 */
-   { GL_NUM_EXTENSIONS, LOC_CUSTOM, TYPE_INT, 0, extra_version_30 },
-   { GL_MAJOR_VERSION, CONTEXT_INT(VersionMajor), extra_version_30 },
-   { GL_MINOR_VERSION, CONTEXT_INT(VersionMinor), extra_version_30  },
-   { GL_CONTEXT_FLAGS, CONTEXT_INT(Const.ContextFlags), extra_version_30  },
-
-   /* GL3.0 / GL_EXT_framebuffer_sRGB */
-   { GL_FRAMEBUFFER_SRGB_EXT, CONTEXT_BOOL(Color.sRGBEnabled), extra_EXT_framebuffer_sRGB },
-   { GL_FRAMEBUFFER_SRGB_CAPABLE_EXT, BUFFER_INT(Visual.sRGBCapable), extra_EXT_framebuffer_sRGB },
-
-   /* GL 3.1 */
-   /* NOTE: different enum values for GL_PRIMITIVE_RESTART_NV
-    * vs. GL_PRIMITIVE_RESTART!
-    */
-   { GL_PRIMITIVE_RESTART, CONTEXT_BOOL(Array.PrimitiveRestart),
-     extra_version_31 },
-   { GL_PRIMITIVE_RESTART_INDEX, CONTEXT_INT(Array.RestartIndex),
-     extra_version_31 },
- 
-
-   /* GL 3.2 */
-   { GL_CONTEXT_PROFILE_MASK, CONTEXT_INT(Const.ProfileMask),
-     extra_version_32 },
-
-   /* GL_ARB_robustness */
-   { GL_RESET_NOTIFICATION_STRATEGY_ARB, CONTEXT_ENUM(Const.ResetStrategy), NO_EXTRA },
-#endif /* FEATURE_GL */
-};
+ * remaining combinations. To look up the enums valid in a given API
+ * we will use a hash table specific to that API. These tables are in
+ * turn generated at build time and included through get_hash.h.
+ */
+
+#include "get_hash.h"
 
 /* All we need now is a way to look up the value struct from the enum.
  * The code generated by gcc for the old generated big switch
@@ -1299,45 +443,51 @@ static const struct value_desc values[] = {
  * collisions for any enum (typical numbers).  And the code is very
  * simple, even though it feels a little magic. */
 
-static unsigned short table[1024];
-static const int prime_factor = 89, prime_step = 281;
-
 #ifdef GET_DEBUG
 static void
-print_table_stats(void)
+print_table_stats(int api)
 {
    int i, j, collisions[11], count, hash, mask;
    const struct value_desc *d;
+   const char *api_names[] = {
+      [API_OPENGL_COMPAT] = "GL",
+      [API_OPENGL_CORE] = "GL_CORE",
+      [API_OPENGLES] = "GLES",
+      [API_OPENGLES2] = "GLES2",
+   };
+   const char *api_name;
 
+   api_name = api < Elements(api_names) ? api_names[api] : "N/A";
    count = 0;
-   mask = Elements(table) - 1;
+   mask = Elements(table(api)) - 1;
    memset(collisions, 0, sizeof collisions);
 
-   for (i = 0; i < Elements(table); i++) {
-      if (!table[i])
-	 continue;
+   for (i = 0; i < Elements(table(api)); i++) {
+      if (!table(api)[i])
+         continue;
       count++;
-      d = &values[table[i]];
+      d = &values[table(api)[i]];
       hash = (d->pname * prime_factor);
       j = 0;
       while (1) {
-	 if (values[table[hash & mask]].pname == d->pname)
-	    break;
-	 hash += prime_step;
-	 j++;
+         if (values[table(api)[hash & mask]].pname == d->pname)
+            break;
+         hash += prime_step;
+         j++;
       }
 
       if (j < 10)
-	 collisions[j]++;
+         collisions[j]++;
       else
-	 collisions[10]++;
+         collisions[10]++;
    }
 
-   printf("number of enums: %d (total %d)\n", count, Elements(values));
+   printf("number of enums for %s: %d (total %ld)\n",
+         api_name, count, Elements(values));
    for (i = 0; i < Elements(collisions) - 1; i++)
       if (collisions[i] > 0)
-	 printf("  %d enums with %d %scollisions\n",
-		collisions[i], i, i == 10 ? "or more " : "");
+         printf("  %d enums with %d %scollisions\n",
+               collisions[i], i, i == 10 ? "or more " : "");
 }
 #endif
 
@@ -1351,31 +501,6 @@ print_table_stats(void)
  */
 void _mesa_init_get_hash(struct gl_context *ctx)
 {
-   int i, hash, index, mask;
-   int api_mask = 0, api_bit;
-
-   mask = Elements(table) - 1;
-   api_bit = 1 << ctx->API;
-
-   for (i = 0; i < Elements(values); i++) {
-      if (values[i].type == TYPE_API_MASK) {
-	 api_mask = values[i].offset;
-	 continue;
-      }
-      if (!(api_mask & api_bit))
-	 continue;
-
-      hash = (values[i].pname * prime_factor) & mask;
-      while (1) {
-	 index = hash & mask;
-	 if (!table[index]) {
-	    table[index] = i;
-	    break;
-	 }
-	 hash += prime_step;
-      }
-   }
-
 #ifdef GET_DEBUG
    print_table_stats();
 #endif
@@ -1405,6 +530,13 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    GLuint unit, *p;
 
    switch (d->pname) {
+   case GL_MAJOR_VERSION:
+      v->value_int = ctx->Version / 10;
+      break;
+   case GL_MINOR_VERSION:
+      v->value_int = ctx->Version % 10;
+      break;
+
    case GL_TEXTURE_1D:
    case GL_TEXTURE_2D:
    case GL_TEXTURE_3D:
@@ -1412,6 +544,7 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_2D_ARRAY_EXT:
    case GL_TEXTURE_CUBE_MAP_ARB:
    case GL_TEXTURE_RECTANGLE_NV:
+   case GL_TEXTURE_EXTERNAL_OES:
       v->value_bool = _mesa_IsEnabled(d->pname);
       break;
 
@@ -1472,7 +605,7 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_COORD_ARRAY_SIZE:
    case GL_TEXTURE_COORD_ARRAY_TYPE:
    case GL_TEXTURE_COORD_ARRAY_STRIDE:
-      array = &ctx->Array.ArrayObj->TexCoord[ctx->Array.ActiveTexture];
+      array = &ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX(ctx->Array.ActiveTexture)];
       v->value_int = *(GLuint *) ((char *) array + d->offset);
       break;
 
@@ -1539,7 +672,10 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       v->value_enum = ctx->Stencil.ZPassFunc[ctx->Stencil.ActiveFace];
       break;
    case GL_STENCIL_REF:
-      v->value_int = ctx->Stencil.Ref[ctx->Stencil.ActiveFace];
+      v->value_int = _mesa_get_stencil_ref(ctx, ctx->Stencil.ActiveFace);
+      break;
+   case GL_STENCIL_BACK_REF:
+      v->value_int = _mesa_get_stencil_ref(ctx, 1);
       break;
    case GL_STENCIL_VALUE_MASK:
       v->value_int = ctx->Stencil.ValueMask[ctx->Stencil.ActiveFace];
@@ -1577,6 +713,7 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       break;
 
    case GL_MAX_VARYING_FLOATS_ARB:
+   case GL_MAX_FRAGMENT_INPUT_COMPONENTS:
       v->value_int = ctx->Const.MaxVarying * 4;
       break;
 
@@ -1589,6 +726,10 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
    case GL_TEXTURE_BINDING_2D_ARRAY_EXT:
    case GL_TEXTURE_BINDING_CUBE_MAP_ARB:
    case GL_TEXTURE_BINDING_RECTANGLE_NV:
+   case GL_TEXTURE_BINDING_EXTERNAL_OES:
+   case GL_TEXTURE_BINDING_CUBE_MAP_ARRAY:
+   case GL_TEXTURE_BINDING_2D_MULTISAMPLE:
+   case GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY:
       unit = ctx->Texture.CurrentUnit;
       v->value_int =
 	 ctx->Texture.Unit[unit].CurrentTex[d->offset]->Name;
@@ -1611,10 +752,10 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       break;
    case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING_ARB:
       v->value_int =
-	 ctx->Array.ArrayObj->TexCoord[ctx->Array.ActiveTexture].BufferObj->Name;
+	 ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX(ctx->Array.ActiveTexture)].BufferObj->Name;
       break;
    case GL_ELEMENT_ARRAY_BUFFER_BINDING_ARB:
-      v->value_int = ctx->Array.ElementArrayBufferObj->Name;
+      v->value_int = ctx->Array.ArrayObj->ElementArrayBufferObj->Name;
       break;
 
    /* ARB_copy_buffer */
@@ -1625,14 +766,6 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       v->value_int = ctx->CopyWriteBuffer->Name;
       break;
 
-   case GL_FRAGMENT_PROGRAM_BINDING_NV:
-      v->value_int = 
-	 ctx->FragmentProgram.Current ? ctx->FragmentProgram.Current->Base.Id : 0;
-      break;
-   case GL_VERTEX_PROGRAM_BINDING_NV:
-      v->value_int =
-	 ctx->VertexProgram.Current ? ctx->VertexProgram.Current->Base.Id : 0;
-      break;
    case GL_PIXEL_PACK_BUFFER_BINDING_EXT:
       v->value_int = ctx->Pack.BufferObj->Name;
       break;
@@ -1663,29 +796,32 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
 	 ctx->CurrentRenderbuffer ? ctx->CurrentRenderbuffer->Name : 0;
       break;
    case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
-      v->value_int = ctx->Array.ArrayObj->PointSize.BufferObj->Name;
+      v->value_int = ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POINT_SIZE].BufferObj->Name;
       break;
 
    case GL_FOG_COLOR:
-      if(ctx->Color._ClampFragmentColor)
+      if (_mesa_get_clamp_fragment_color(ctx))
          COPY_4FV(v->value_float_4, ctx->Fog.Color);
       else
          COPY_4FV(v->value_float_4, ctx->Fog.ColorUnclamped);
       break;
    case GL_COLOR_CLEAR_VALUE:
-      if(ctx->Color._ClampFragmentColor)
-         COPY_4FV(v->value_float_4, ctx->Color.ClearColor);
-      else
-         COPY_4FV(v->value_float_4, ctx->Color.ClearColorUnclamped);
+      if (_mesa_get_clamp_fragment_color(ctx)) {
+         v->value_float_4[0] = CLAMP(ctx->Color.ClearColor.f[0], 0.0F, 1.0F);
+         v->value_float_4[1] = CLAMP(ctx->Color.ClearColor.f[1], 0.0F, 1.0F);
+         v->value_float_4[2] = CLAMP(ctx->Color.ClearColor.f[2], 0.0F, 1.0F);
+         v->value_float_4[3] = CLAMP(ctx->Color.ClearColor.f[3], 0.0F, 1.0F);
+      } else
+         COPY_4FV(v->value_float_4, ctx->Color.ClearColor.f);
       break;
    case GL_BLEND_COLOR_EXT:
-      if(ctx->Color._ClampFragmentColor)
+      if (_mesa_get_clamp_fragment_color(ctx))
          COPY_4FV(v->value_float_4, ctx->Color.BlendColor);
       else
          COPY_4FV(v->value_float_4, ctx->Color.BlendColorUnclamped);
       break;
    case GL_ALPHA_TEST_REF:
-      if(ctx->Color._ClampFragmentColor)
+      if (_mesa_get_clamp_fragment_color(ctx))
          v->value_float = ctx->Color.AlphaRef;
       else
          v->value_float = ctx->Color.AlphaRefUnclamped;
@@ -1725,10 +861,32 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
       {
          struct gl_sampler_object *samp =
             ctx->Texture.Unit[ctx->Texture.CurrentUnit].Sampler;
-         v->value_int = samp ? samp->Name : 0;
+
+         /*
+          * The sampler object may have been deleted on another context,
+          * so we try to lookup the sampler object before returning its Name.
+          */
+         if (samp && _mesa_lookup_samplerobj(ctx, samp->Name)) {
+            v->value_int = samp->Name;
+         } else {
+            v->value_int = 0;
+         }
       }
       break;
-   }   
+   /* GL_ARB_uniform_buffer_object */
+   case GL_UNIFORM_BUFFER_BINDING:
+      v->value_int = ctx->UniformBuffer->Name;
+      break;
+   /* GL_ARB_timer_query */
+   case GL_TIMESTAMP:
+      if (ctx->Driver.GetTimestamp) {
+         v->value_int64 = ctx->Driver.GetTimestamp(ctx);
+      }
+      else {
+         _mesa_problem(ctx, "driver doesn't implement GetTimestamp");
+      }
+      break;
+   }
 }
 
 /**
@@ -1743,47 +901,57 @@ find_custom_value(struct gl_context *ctx, const struct value_desc *d, union valu
  * \param func name of calling glGet*v() function for error reporting
  * \param d the struct value_desc that has the extra constraints
  *
- * \return GL_FALSE if one of the constraints was not satisfied,
+ * \return GL_FALSE if all of the constraints were not satisfied,
  *     otherwise GL_TRUE.
  */
 static GLboolean
 check_extra(struct gl_context *ctx, const char *func, const struct value_desc *d)
 {
-   const GLuint version = ctx->VersionMajor * 10 + ctx->VersionMinor;
-   int total, enabled;
+   const GLuint version = ctx->Version;
+   GLboolean api_check = GL_FALSE;
+   GLboolean api_found = GL_FALSE;
    const int *e;
 
-   total = 0;
-   enabled = 0;
-   for (e = d->extra; *e != EXTRA_END; e++)
+   for (e = d->extra; *e != EXTRA_END; e++) {
       switch (*e) {
       case EXTRA_VERSION_30:
-	 if (version >= 30) {
-	    total++;
-	    enabled++;
-	 }
+         api_check = GL_TRUE;
+         if (version >= 30)
+            api_found = GL_TRUE;
 	 break;
       case EXTRA_VERSION_31:
-	 if (version >= 31) {
-	    total++;
-	    enabled++;
-	 }
+         api_check = GL_TRUE;
+         if (version >= 31)
+            api_found = GL_TRUE;
 	 break;
       case EXTRA_VERSION_32:
-	 if (version >= 32) {
-	    total++;
-	    enabled++;
-	 }
+         api_check = GL_TRUE;
+         if (version >= 32)
+            api_found = GL_TRUE;
 	 break;
       case EXTRA_NEW_FRAG_CLAMP:
          if (ctx->NewState & (_NEW_BUFFERS | _NEW_FRAG_CLAMP))
             _mesa_update_state(ctx);
          break;
-      case EXTRA_VERSION_ES2:
-	 if (ctx->API == API_OPENGLES2) {
-	    total++;
-	    enabled++;
-	 }
+      case EXTRA_API_ES2:
+         api_check = GL_TRUE;
+         if (ctx->API == API_OPENGLES2)
+            api_found = GL_TRUE;
+	 break;
+      case EXTRA_API_ES3:
+         api_check = GL_TRUE;
+         if (_mesa_is_gles3(ctx))
+            api_found = GL_TRUE;
+	 break;
+      case EXTRA_API_GL:
+         api_check = GL_TRUE;
+         if (_mesa_is_desktop_gl(ctx))
+            api_found = GL_TRUE;
+	 break;
+      case EXTRA_API_GL_CORE:
+         api_check = GL_TRUE;
+         if (ctx->API == API_OPENGL_CORE)
+            api_found = GL_TRUE;
 	 break;
       case EXTRA_NEW_BUFFERS:
 	 if (ctx->NewState & _NEW_BUFFERS)
@@ -1806,16 +974,34 @@ check_extra(struct gl_context *ctx, const char *func, const struct value_desc *d
 	    return GL_FALSE;
 	 }
 	 break;
+      case EXTRA_VALID_CLIP_DISTANCE:
+	 if (d->pname - GL_CLIP_DISTANCE0 >= ctx->Const.MaxClipPlanes) {
+	    _mesa_error(ctx, GL_INVALID_ENUM, "%s(clip distance %u)",
+			func, d->pname - GL_CLIP_DISTANCE0);
+	    return GL_FALSE;
+	 }
+	 break;
+      case EXTRA_GLSL_130:
+         api_check = GL_TRUE;
+         if (ctx->Const.GLSLVersion >= 130)
+            api_found = GL_TRUE;
+	 break;
+      case EXTRA_EXT_UBO_GS4:
+         api_check = GL_TRUE;
+         api_found = (ctx->Extensions.ARB_uniform_buffer_object &&
+                      ctx->Extensions.ARB_geometry_shader4);
+         break;
       case EXTRA_END:
 	 break;
       default: /* *e is a offset into the extension struct */
-	 total++;
+	 api_check = GL_TRUE;
 	 if (*(GLboolean *) ((char *) &ctx->Extensions + *e))
-	    enabled++;
+	    api_found = GL_TRUE;
 	 break;
       }
+   }
 
-   if (total > 0 && enabled == 0) {
+   if (api_check && !api_found) {
       _mesa_error(ctx, GL_INVALID_ENUM, "%s(pname=%s)", func,
                   _mesa_lookup_enum_by_nr(d->pname));
       return GL_FALSE;
@@ -1856,22 +1042,35 @@ find_value(const char *func, GLenum pname, void **p, union value *v)
    struct gl_texture_unit *unit;
    int mask, hash;
    const struct value_desc *d;
+   int api;
 
-   mask = Elements(table) - 1;
+   api = ctx->API;
+   /* We index into the table_set[] list of per-API hash tables using the API's
+    * value in the gl_api enum. Since GLES 3 doesn't have an API_OPENGL* enum
+    * value since it's compatible with GLES2 its entry in table_set[] is at the
+    * end.
+    */
+   STATIC_ASSERT(Elements(table_set) == API_OPENGL_LAST + 2);
+   if (_mesa_is_gles3(ctx)) {
+      api = API_OPENGL_LAST + 1;
+   }
+   mask = Elements(table(api)) - 1;
    hash = (pname * prime_factor);
    while (1) {
-      d = &values[table[hash & mask]];
+      int idx = table(api)[hash & mask];
 
       /* If the enum isn't valid, the hash walk ends with index 0,
-       * which is the API mask entry at the beginning of values[]. */
-      if (unlikely(d->type == TYPE_API_MASK)) {
-	 _mesa_error(ctx, GL_INVALID_ENUM, "%s(pname=%s)", func,
-                     _mesa_lookup_enum_by_nr(pname));
-	 return &error_value;
+       * pointing to the first entry of values[] which doesn't hold
+       * any valid enum. */
+      if (unlikely(idx == 0)) {
+         _mesa_error(ctx, GL_INVALID_ENUM, "%s(pname=%s)", func,
+               _mesa_lookup_enum_by_nr(pname));
+         return &error_value;
       }
 
+      d = &values[idx];
       if (likely(d->pname == pname))
-	 break;
+         break;
 
       hash += prime_step;
    }
@@ -1921,9 +1120,6 @@ _mesa_GetBooleanv(GLenum pname, GLboolean *params)
    GLmatrix *m;
    int shift, i;
    void *p;
-   GET_CURRENT_CONTEXT(ctx);
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    d = find_value("glGetBooleanv", pname, &p, &v);
    switch (d->type) {
@@ -1994,6 +1190,8 @@ _mesa_GetBooleanv(GLenum pname, GLboolean *params)
    case TYPE_BIT_3:
    case TYPE_BIT_4:
    case TYPE_BIT_5:
+   case TYPE_BIT_6:
+   case TYPE_BIT_7:
       shift = d->type - TYPE_BIT_0;
       params[0] = (*(GLbitfield *) p >> shift) & 1;
       break;
@@ -2008,9 +1206,6 @@ _mesa_GetFloatv(GLenum pname, GLfloat *params)
    GLmatrix *m;
    int shift, i;
    void *p;
-   GET_CURRENT_CONTEXT(ctx);
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    d = find_value("glGetFloatv", pname, &p, &v);
    switch (d->type) {
@@ -2035,7 +1230,7 @@ _mesa_GetFloatv(GLenum pname, GLfloat *params)
       break;
 
    case TYPE_DOUBLEN:
-      params[0] = ((GLdouble *) p)[0];
+      params[0] = (GLfloat) (((GLdouble *) p)[0]);
       break;
 
    case TYPE_INT_4:
@@ -2056,7 +1251,7 @@ _mesa_GetFloatv(GLenum pname, GLfloat *params)
       break;
 
    case TYPE_INT64:
-      params[0] = ((GLint64 *) p)[0];
+      params[0] = (GLfloat) (((GLint64 *) p)[0]);
       break;
 
    case TYPE_BOOLEAN:
@@ -2081,6 +1276,8 @@ _mesa_GetFloatv(GLenum pname, GLfloat *params)
    case TYPE_BIT_3:
    case TYPE_BIT_4:
    case TYPE_BIT_5:
+   case TYPE_BIT_6:
+   case TYPE_BIT_7:
       shift = d->type - TYPE_BIT_0;
       params[0] = BOOLEAN_TO_FLOAT((*(GLbitfield *) p >> shift) & 1);
       break;
@@ -2095,9 +1292,6 @@ _mesa_GetIntegerv(GLenum pname, GLint *params)
    GLmatrix *m;
    int shift, i;
    void *p;
-   GET_CURRENT_CONTEXT(ctx);
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    d = find_value("glGetIntegerv", pname, &p, &v);
    switch (d->type) {
@@ -2174,13 +1368,14 @@ _mesa_GetIntegerv(GLenum pname, GLint *params)
    case TYPE_BIT_3:
    case TYPE_BIT_4:
    case TYPE_BIT_5:
+   case TYPE_BIT_6:
+   case TYPE_BIT_7:
       shift = d->type - TYPE_BIT_0;
       params[0] = (*(GLbitfield *) p >> shift) & 1;
       break;
    }
 }
 
-#if FEATURE_ARB_sync
 void GLAPIENTRY
 _mesa_GetInteger64v(GLenum pname, GLint64 *params)
 {
@@ -2189,9 +1384,6 @@ _mesa_GetInteger64v(GLenum pname, GLint64 *params)
    GLmatrix *m;
    int shift, i;
    void *p;
-   GET_CURRENT_CONTEXT(ctx);
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    d = find_value("glGetInteger64v", pname, &p, &v);
    switch (d->type) {
@@ -2268,12 +1460,13 @@ _mesa_GetInteger64v(GLenum pname, GLint64 *params)
    case TYPE_BIT_3:
    case TYPE_BIT_4:
    case TYPE_BIT_5:
+   case TYPE_BIT_6:
+   case TYPE_BIT_7:
       shift = d->type - TYPE_BIT_0;
       params[0] = (*(GLbitfield *) p >> shift) & 1;
       break;
    }
 }
-#endif /* FEATURE_ARB_sync */
 
 void GLAPIENTRY
 _mesa_GetDoublev(GLenum pname, GLdouble *params)
@@ -2283,9 +1476,6 @@ _mesa_GetDoublev(GLenum pname, GLdouble *params)
    GLmatrix *m;
    int shift, i;
    void *p;
-   GET_CURRENT_CONTEXT(ctx);
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    d = find_value("glGetDoublev", pname, &p, &v);
    switch (d->type) {
@@ -2331,7 +1521,7 @@ _mesa_GetDoublev(GLenum pname, GLdouble *params)
       break;
 
    case TYPE_INT64:
-      params[0] = ((GLint64 *) p)[0];
+      params[0] = (GLdouble) (((GLint64 *) p)[0]);
       break;
 
    case TYPE_BOOLEAN:
@@ -2356,6 +1546,8 @@ _mesa_GetDoublev(GLenum pname, GLdouble *params)
    case TYPE_BIT_3:
    case TYPE_BIT_4:
    case TYPE_BIT_5:
+   case TYPE_BIT_6:
+   case TYPE_BIT_7:
       shift = d->type - TYPE_BIT_0;
       params[0] = (*(GLbitfield *) p >> shift) & 1;
       break;
@@ -2363,7 +1555,7 @@ _mesa_GetDoublev(GLenum pname, GLdouble *params)
 }
 
 static enum value_type
-find_value_indexed(const char *func, GLenum pname, int index, union value *v)
+find_value_indexed(const char *func, GLenum pname, GLuint index, union value *v)
 {
    GET_CURRENT_CONTEXT(ctx);
 
@@ -2436,7 +1628,7 @@ find_value_indexed(const char *func, GLenum pname, int index, union value *v)
       return TYPE_INT_4;
 
    case GL_TRANSFORM_FEEDBACK_BUFFER_START:
-      if (index >= ctx->Const.MaxTransformFeedbackSeparateAttribs)
+      if (index >= ctx->Const.MaxTransformFeedbackBuffers)
 	 goto invalid_value;
       if (!ctx->Extensions.EXT_transform_feedback)
 	 goto invalid_enum;
@@ -2444,19 +1636,53 @@ find_value_indexed(const char *func, GLenum pname, int index, union value *v)
       return TYPE_INT64;
 
    case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
-      if (index >= ctx->Const.MaxTransformFeedbackSeparateAttribs)
+      if (index >= ctx->Const.MaxTransformFeedbackBuffers)
 	 goto invalid_value;
       if (!ctx->Extensions.EXT_transform_feedback)
 	 goto invalid_enum;
-      v->value_int64 = ctx->TransformFeedback.CurrentObject->Size[index];
+      v->value_int64
+         = ctx->TransformFeedback.CurrentObject->RequestedSize[index];
       return TYPE_INT64;
 
    case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
-      if (index >= ctx->Const.MaxTransformFeedbackSeparateAttribs)
+      if (index >= ctx->Const.MaxTransformFeedbackBuffers)
 	 goto invalid_value;
       if (!ctx->Extensions.EXT_transform_feedback)
 	 goto invalid_enum;
-      v->value_int = ctx->TransformFeedback.CurrentObject->Buffers[index]->Name;
+      v->value_int = ctx->TransformFeedback.CurrentObject->BufferNames[index];
+      return TYPE_INT;
+
+   case GL_UNIFORM_BUFFER_BINDING:
+      if (index >= ctx->Const.MaxUniformBufferBindings)
+	 goto invalid_value;
+      if (!ctx->Extensions.ARB_uniform_buffer_object)
+	 goto invalid_enum;
+      v->value_int = ctx->UniformBufferBindings[index].BufferObject->Name;
+      return TYPE_INT;
+
+   case GL_UNIFORM_BUFFER_START:
+      if (index >= ctx->Const.MaxUniformBufferBindings)
+	 goto invalid_value;
+      if (!ctx->Extensions.ARB_uniform_buffer_object)
+	 goto invalid_enum;
+      v->value_int = ctx->UniformBufferBindings[index].Offset;
+      return TYPE_INT;
+
+   case GL_UNIFORM_BUFFER_SIZE:
+      if (index >= ctx->Const.MaxUniformBufferBindings)
+	 goto invalid_value;
+      if (!ctx->Extensions.ARB_uniform_buffer_object)
+	 goto invalid_enum;
+      v->value_int = ctx->UniformBufferBindings[index].Size;
+      return TYPE_INT;
+
+   /* ARB_texture_multisample / GL3.2 */
+   case GL_SAMPLE_MASK_VALUE:
+      if (index != 0)
+         goto invalid_value;
+      if (!ctx->Extensions.ARB_texture_multisample)
+         goto invalid_enum;
+      v->value_int = ctx->Multisample.SampleMaskValue;
       return TYPE_INT;
    }
 
@@ -2471,11 +1697,11 @@ find_value_indexed(const char *func, GLenum pname, int index, union value *v)
 }
 
 void GLAPIENTRY
-_mesa_GetBooleanIndexedv( GLenum pname, GLuint index, GLboolean *params )
+_mesa_GetBooleani_v( GLenum pname, GLuint index, GLboolean *params )
 {
    union value v;
    enum value_type type =
-      find_value_indexed("glGetBooleanIndexedv", pname, index, &v);
+      find_value_indexed("glGetBooleani_v", pname, index, &v);
 
    switch (type) {
    case TYPE_INT:
@@ -2496,11 +1722,11 @@ _mesa_GetBooleanIndexedv( GLenum pname, GLuint index, GLboolean *params )
 }
 
 void GLAPIENTRY
-_mesa_GetIntegerIndexedv( GLenum pname, GLuint index, GLint *params )
+_mesa_GetIntegeri_v( GLenum pname, GLuint index, GLint *params )
 {
    union value v;
    enum value_type type =
-      find_value_indexed("glGetIntegerIndexedv", pname, index, &v);
+      find_value_indexed("glGetIntegeri_v", pname, index, &v);
 
    switch (type) {
    case TYPE_INT:
@@ -2520,13 +1746,12 @@ _mesa_GetIntegerIndexedv( GLenum pname, GLuint index, GLint *params )
    }
 }
 
-#if FEATURE_ARB_sync
 void GLAPIENTRY
-_mesa_GetInteger64Indexedv( GLenum pname, GLuint index, GLint64 *params )
+_mesa_GetInteger64i_v( GLenum pname, GLuint index, GLint64 *params )
 {
    union value v;
    enum value_type type =
-      find_value_indexed("glGetIntegerIndexedv", pname, index, &v);      
+      find_value_indexed("glGetInteger64i_v", pname, index, &v);
 
    switch (type) {
    case TYPE_INT:
@@ -2545,9 +1770,7 @@ _mesa_GetInteger64Indexedv( GLenum pname, GLuint index, GLint64 *params )
       ; /* nothing - GL error was recorded */
    }
 }
-#endif /* FEATURE_ARB_sync */
 
-#if FEATURE_ES1
 void GLAPIENTRY
 _mesa_GetFixedv(GLenum pname, GLfixed *params)
 {
@@ -2626,9 +1849,10 @@ _mesa_GetFixedv(GLenum pname, GLfixed *params)
    case TYPE_BIT_3:
    case TYPE_BIT_4:
    case TYPE_BIT_5:
+   case TYPE_BIT_6:
+   case TYPE_BIT_7:
       shift = d->type - TYPE_BIT_0;
       params[0] = BOOLEAN_TO_FIXED((*(GLbitfield *) p >> shift) & 1);
       break;
    }
 }
-#endif

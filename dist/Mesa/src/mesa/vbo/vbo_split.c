@@ -1,7 +1,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Authors:
  *    Keith Whitwell <keith@tungstengraphics.com>
@@ -121,8 +121,7 @@ void vbo_split_prims( struct gl_context *ctx,
 	 /* Could traverse the indices, re-emitting vertices in turn.
 	  * But it's hard to see why this case would be needed - for
 	  * software tnl, it is better to convert to non-indexed
-	  * rendering after transformation is complete, as is done in
-	  * the t_dd_rendertmp.h templates.  Are there any devices
+	  * rendering after transformation is complete.  Are there any devices
 	  * with hardware tnl that cannot do indexed rendering?
 	  *
 	  * For now, this path is disabled.

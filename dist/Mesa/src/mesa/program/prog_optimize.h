@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.5
  *
  * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
  *
@@ -43,5 +42,8 @@ _mesa_find_temp_intervals(const struct prog_instruction *instructions,
 
 extern void
 _mesa_optimize_program(struct gl_context *ctx, struct gl_program *program);
+
+extern GLboolean
+_mesa_constant_fold(struct gl_program *prog);
 
 #endif

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.5
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -45,11 +45,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#if defined(__linux__) && defined(__i386__)
-#include <fpu_control.h>
-#endif
 #include <float.h>
 #include <stdarg.h>
+
+#include "c99_compat.h" /* inline, __func__, etc. */
 
 
 #ifdef __cplusplus
@@ -60,29 +59,7 @@ extern "C" {
 /**
  * Get standard integer types
  */
-#if defined(_MSC_VER)
-   typedef __int8             int8_t;
-   typedef unsigned __int8    uint8_t;
-   typedef __int16            int16_t;
-   typedef unsigned __int16   uint16_t;
-   typedef __int32            int32_t;
-   typedef unsigned __int32   uint32_t;
-   typedef __int64            int64_t;
-   typedef unsigned __int64   uint64_t;
-
-#  if defined(_WIN64)
-     typedef __int64            intptr_t;
-     typedef unsigned __int64   uintptr_t;
-#  else
-     typedef __int32            intptr_t;
-     typedef unsigned __int32   uintptr_t;
-#  endif
-
-#  define INT64_C(__val) __val##i64
-#  define UINT64_C(__val) __val##ui64
-#else
-#  include <stdint.h>
-#endif
+#include <stdint.h>
 
 
 /**
@@ -115,7 +92,7 @@ extern "C" {
 /**
  * Disable assorted warnings
  */
-#if !defined(OPENSTEP) && (defined(__WIN32__) && !defined(__CYGWIN__)) && !defined(BUILD_FOR_SNAP)
+#if !defined(OPENSTEP) && (defined(_WIN32) && !defined(__CYGWIN__)) && !defined(BUILD_FOR_SNAP)
 #  if !defined(__GNUC__) /* mingw environment */
 #    pragma warning( disable : 4068 ) /* unknown pragma */
 #    pragma warning( disable : 4710 ) /* function 'foo' not inlined */
@@ -136,29 +113,9 @@ extern "C" {
 
 
 
-/**
- * Function inlining
- */
-#if defined(__GNUC__)
-#  define INLINE __inline__
-#elif defined(__MSC__)
-#  define INLINE __inline
-#elif defined(_MSC_VER)
-#  define INLINE __inline
-#elif defined(__ICL)
-#  define INLINE __inline
-#elif defined(__INTEL_COMPILER)
+/* XXX: Use standard `inline` keyword instead */
+#ifndef INLINE
 #  define INLINE inline
-#elif defined(__WATCOMC__) && (__WATCOMC__ >= 1100)
-#  define INLINE __inline
-#elif defined(__SUNPRO_C) && defined(__C99FEATURES__)
-#  define INLINE inline
-#  define __inline inline
-#  define __inline__ inline
-#elif (__STDC_VERSION__ >= 199901L) /* C99 */
-#  define INLINE inline
-#else
-#  define INLINE
 #endif
 
 
@@ -183,17 +140,6 @@ extern "C" {
 
 
 /**
- * Some compilers don't like some of Mesa's const usage.  In those places use
- * CONST instead of const.  Pass -DNO_CONST to compilers where this matters.
- */
-#ifdef NO_CONST
-#  define CONST
-#else
-#  define CONST const
-#endif
-
-
-/**
  * __builtin_expect macros
  */
 #if !defined(__GNUC__)
@@ -210,37 +156,10 @@ extern "C" {
 #  endif
 #endif
 
-/**
- * The __FUNCTION__ gcc variable is generally only used for debugging.
- * If we're not using gcc, define __FUNCTION__ as a cpp symbol here.
- * Don't define it if using a newer Windows compiler.
- */
+/* XXX: Use standard `__func__` instead */
 #ifndef __FUNCTION__
-# if defined(__VMS)
-#  define __FUNCTION__ "VMS$NL:"
-# elif !defined(__GNUC__) && !defined(__xlC__) &&	\
-      (!defined(_MSC_VER) || _MSC_VER < 1300)
-#  if (__STDC_VERSION__ >= 199901L) /* C99 */ || \
-    (defined(__SUNPRO_C) && defined(__C99FEATURES__))
-#   define __FUNCTION__ __func__
-#  else
-#   define __FUNCTION__ "<unknown>"
-#  endif
-# endif
+#  define __FUNCTION__ __func__
 #endif
-#ifndef __func__
-#  if (__STDC_VERSION__ >= 199901L) || \
-      (defined(__SUNPRO_C) && defined(__C99FEATURES__))
-       /* __func__ is part of C99 */
-#  elif defined(_MSC_VER)
-#    if _MSC_VER >= 1300
-#      define __func__ __FUNCTION__
-#    else
-#      define __func__ "<unknown>"
-#    endif
-#  endif
-#endif
-
 
 /**
  * Either define MESA_BIG_ENDIAN or MESA_LITTLE_ENDIAN, and CPU_TO_LE32.
@@ -279,7 +198,7 @@ static INLINE GLuint CPU_TO_LE32(GLuint x)
 
 
 
-#if !defined(CAPI) && defined(WIN32) && !defined(BUILD_FOR_SNAP)
+#if !defined(CAPI) && defined(_WIN32) && !defined(BUILD_FOR_SNAP)
 #define CAPI _cdecl
 #endif
 
@@ -289,7 +208,7 @@ static INLINE GLuint CPU_TO_LE32(GLuint x)
  * than GNU C
  */
 #ifndef _ASMAPI
-#if defined(WIN32) && !defined(BUILD_FOR_SNAP)/* was: !defined( __GNUC__ ) && !defined( VMS ) && !defined( __INTEL_COMPILER )*/
+#if defined(_WIN32) && !defined(BUILD_FOR_SNAP)/* was: !defined( __GNUC__ ) && !defined( VMS ) && !defined( __INTEL_COMPILER )*/
 #define _ASMAPI __cdecl
 #else
 #define _ASMAPI
@@ -307,12 +226,6 @@ static INLINE GLuint CPU_TO_LE32(GLuint x)
 #else
 #define _NORMAPI
 #define _NORMAPIP *
-#endif
-
-
-/* This is a macro on IRIX */
-#ifdef _P
-#undef _P
 #endif
 
 
@@ -334,6 +247,18 @@ static INLINE GLuint CPU_TO_LE32(GLuint x)
 #  define ASSERT(X)
 #endif
 #endif
+
+
+/**
+ * Static (compile-time) assertion.
+ * Basically, use COND to dimension an array.  If COND is false/zero the
+ * array size will be -1 and we'll get a compilation error.
+ */
+#define STATIC_ASSERT(COND) \
+   do { \
+      (void) sizeof(char [1 - 2*!(COND)]); \
+   } while (0)
+
 
 #if (__GNUC__ >= 3)
 #define PRINTFLIKE(f, a) __attribute__ ((format(__printf__, f, a)))
@@ -382,15 +307,16 @@ static INLINE GLuint CPU_TO_LE32(GLuint x)
  * USE_IEEE: Determine if we're using IEEE floating point
  */
 #if defined(__i386__) || defined(__386__) || defined(__sparc__) || \
-    defined(__s390x__) || defined(__powerpc__) || \
+    defined(__s390__) || defined(__s390x__) || defined(__powerpc__) || \
     defined(__x86_64__) || \
+    defined(__m68k__) || \
     defined(ia64) || defined(__ia64__) || \
     defined(__hppa__) || defined(hpux) || \
     defined(__mips) || defined(_MIPS_ARCH) || \
     defined(__arm__) || \
     defined(__sh__) || defined(__m32r__) || \
     (defined(__sun) && defined(_IEEE_754)) || \
-    (defined(__alpha__) && (defined(__IEEE_FLOAT) || !defined(VMS)))
+    defined(__alpha__)
 #define USE_IEEE
 #define IEEE_ONE 0x3f800000
 #endif

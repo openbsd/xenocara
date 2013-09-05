@@ -40,7 +40,8 @@ env = Environment(
 	ENV = os.environ,
 )
 
-opts.Save('config.py', env)
+# XXX: This creates a many problems as it saves...
+#opts.Save('config.py', env)
 
 # Backwards compatability with old target configuration variable
 try:
@@ -67,6 +68,11 @@ if env['gles']:
 
 #######################################################################
 # Environment setup
+
+env.Append(CPPDEFINES = [
+    ('PACKAGE_VERSION', '\\"9.2.0\\"'),
+    ('PACKAGE_BUGREPORT', '\\"https://bugs.freedesktop.org/enter_bug.cgi?product=Mesa\\"'),
+])
 
 # Includes
 env.Prepend(CPPPATH = [

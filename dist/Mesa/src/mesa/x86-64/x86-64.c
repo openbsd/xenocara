@@ -1,7 +1,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.3
  *
  * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
  *
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /*
@@ -64,17 +64,7 @@ extern void _mesa_x86_64_transform_points4_2d( XFORM_ARGS );
 #ifdef USE_X86_64_ASM
 static void message( const char *msg )
 {
-   GLboolean debug;
-#ifdef DEBUG
-   debug = GL_TRUE;
-#else
-   if ( _mesa_getenv( "MESA_DEBUG" ) ) {
-      debug = GL_TRUE;
-   } else {
-      debug = GL_FALSE;
-   }
-#endif
-   if ( debug ) {
+   if (_mesa_getenv("MESA_DEBUG")) {
       _mesa_debug( NULL, "%s", msg );
    }
 }

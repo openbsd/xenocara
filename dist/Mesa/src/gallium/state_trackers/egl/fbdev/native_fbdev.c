@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.9
  *
  * Copyright (C) 2010 LunarG Inc.
  *
@@ -41,6 +40,7 @@
  *  - no pixmap support
  */
 
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -183,17 +183,15 @@ fbdev_surface_update_drawable(struct native_surface *nsurf,
 
 static boolean
 fbdev_surface_present(struct native_surface *nsurf,
-                      enum native_attachment natt,
-                      boolean preserve,
-                      uint swap_interval)
+                      const struct native_present_control *ctrl)
 {
    struct fbdev_surface *fbsurf = fbdev_surface(nsurf);
    struct fbdev_display *fbdpy = fbsurf->fbdpy;
    boolean ret = FALSE;
 
-   if (swap_interval)
+   if (ctrl->swap_interval)
       return FALSE;
-   if (natt != NATIVE_ATTACHMENT_BACK_LEFT)
+   if (ctrl->natt != NATIVE_ATTACHMENT_BACK_LEFT)
       return FALSE;
 
    if (!fbdpy->assume_fixed_vinfo) {
@@ -206,7 +204,7 @@ fbdev_surface_present(struct native_surface *nsurf,
       /* present the surface */
       if (fbdev_surface_update_drawable(&fbsurf->base, &vinfo)) {
          ret = resource_surface_present(fbsurf->rsurf,
-               natt, (void *) &fbsurf->drawable);
+               ctrl->natt, (void *) &fbsurf->drawable);
       }
 
       fbsurf->width = vinfo.xres;
@@ -223,7 +221,7 @@ fbdev_surface_present(struct native_surface *nsurf,
    else {
       /* the drawable never changes */
       ret = resource_surface_present(fbsurf->rsurf,
-            natt, (void *) &fbsurf->drawable);
+            ctrl->natt, (void *) &fbsurf->drawable);
    }
 
    return ret;
@@ -517,7 +515,16 @@ native_create_display(void *dpy, boolean use_sw)
 
    /* well, this makes fd 0 being ignored */
    if (!dpy) {
-      fd = open("/dev/fb0", O_RDWR);
+      const char *device_name="/dev/fb0";
+#ifdef O_CLOEXEC
+      fd = open(device_name, O_RDWR | O_CLOEXEC);
+      if (fd == -1 && errno == EINVAL)
+#endif
+      {
+         fd = open(device_name, O_RDWR);
+         if (fd != -1)
+            fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+      }
    }
    else {
       fd = dup((int) pointer_to_intptr(dpy));

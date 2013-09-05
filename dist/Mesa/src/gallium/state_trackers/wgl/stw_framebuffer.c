@@ -31,6 +31,7 @@
 #include "pipe/p_screen.h"
 #include "util/u_format.h"
 #include "util/u_memory.h"
+#include "hud/hud_context.h"
 #include "state_tracker/st_api.h"
 
 #include "stw_icd.h"
@@ -92,8 +93,6 @@ stw_framebuffer_destroy_locked(
 
    stw_st_destroy_framebuffer_locked(fb->stfb);
    
-   ReleaseDC(fb->hWnd, fb->hDC);
-
    pipe_mutex_unlock( fb->mutex );
 
    pipe_mutex_destroy( fb->mutex );
@@ -140,6 +139,8 @@ stw_framebuffer_get_size( struct stw_framebuffer *fb )
    assert(client_rect.top == 0);
    width  = client_rect.right  - client_rect.left;
    height = client_rect.bottom - client_rect.top;
+
+   fb->minimized = width == 0 || height == 0;
 
    if (width <= 0 || height <= 0) {
       /*
@@ -254,15 +255,16 @@ stw_framebuffer_create(
    if (fb == NULL)
       return NULL;
 
-   /* Applications use, create, destroy device contexts, so the hdc passed is.  We create our own DC
-    * because we need one for single buffered visuals.
-    */
-   fb->hDC = GetDC(hWnd);
-
    fb->hWnd = hWnd;
    fb->iPixelFormat = iPixelFormat;
 
-   fb->pfi = pfi = stw_pixelformat_get_info( iPixelFormat - 1 );
+   /*
+    * We often need a displayable pixel format to make GDI happy. Set it here (always 1, i.e.,
+    * out first pixel format) where appropriat.
+    */
+   fb->iDisplayablePixelFormat = iPixelFormat <= stw_dev->pixelformat_count ? iPixelFormat : 1;
+
+   fb->pfi = pfi = stw_pixelformat_get_info( iPixelFormat );
    fb->stfb = stw_st_create_framebuffer( fb );
    if (!fb->stfb) {
       FREE( fb );
@@ -445,15 +447,21 @@ DrvSetPixelFormat(
       return FALSE;
 
    index = (uint) iPixelFormat - 1;
-   count = stw_pixelformat_get_extended_count();
+   count = stw_pixelformat_get_count();
    if (index >= count)
       return FALSE;
 
    fb = stw_framebuffer_from_hdc_locked(hdc);
    if(fb) {
-      /* SetPixelFormat must be called only once */
+      /*
+       * SetPixelFormat must be called only once.  However ignore 
+       * pbuffers, for which the framebuffer object is created first.
+       */
+      boolean bPbuffer = fb->bPbuffer;
+
       stw_framebuffer_release( fb );
-      return FALSE;
+
+      return bPbuffer;
    }
 
    fb = stw_framebuffer_create(hdc, iPixelFormat);
@@ -467,7 +475,8 @@ DrvSetPixelFormat(
     * function instead of SetPixelFormat, so we call SetPixelFormat here to 
     * avoid opengl32.dll's wglCreateContext to fail */
    if (GetPixelFormat(hdc) == 0) {
-        SetPixelFormat(hdc, iPixelFormat, NULL);
+      BOOL bRet = SetPixelFormat(hdc, iPixelFormat, NULL);
+      assert(bRet);
    }
    
    return TRUE;
@@ -523,15 +532,17 @@ DrvPresentBuffers(HDC hdc, PGLPRESENTBUFFERSDATA data)
       }
    }
 
-   if(fb->shared_surface) {
-      stw_dev->stw_winsys->compose(screen,
-                                   res,
-                                   fb->shared_surface,
-                                   &fb->client_rect,
-                                   data->PresentHistoryToken);
-   }
-   else {
-      stw_dev->stw_winsys->present( screen, res, hdc );
+   if (!fb->minimized) {
+      if (fb->shared_surface) {
+         stw_dev->stw_winsys->compose(screen,
+                                      res,
+                                      fb->shared_surface,
+                                      &fb->client_rect,
+                                      data->PresentHistoryToken);
+      }
+      else {
+         stw_dev->stw_winsys->present( screen, res, hdc );
+      }
    }
 
    stw_framebuffer_update(fb);
@@ -587,6 +598,7 @@ BOOL APIENTRY
 DrvSwapBuffers(
    HDC hdc )
 {
+   struct stw_context *ctx;
    struct stw_framebuffer *fb;
 
    if (!stw_dev)
@@ -599,6 +611,14 @@ DrvSwapBuffers(
    if (!(fb->pfi->pfd.dwFlags & PFD_DOUBLEBUFFER)) {
       stw_framebuffer_release(fb);
       return TRUE;
+   }
+
+   /* Display the HUD */
+   ctx = stw_current_context();
+   if (ctx && ctx->hud) {
+      struct pipe_resource *back =
+         stw_get_framebuffer_resource(fb->stfb, ST_ATTACHMENT_BACK_LEFT);
+      hud_draw(ctx->hud, back);
    }
 
    stw_flush_current_locked(fb);

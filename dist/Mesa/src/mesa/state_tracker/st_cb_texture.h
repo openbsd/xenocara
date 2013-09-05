@@ -38,14 +38,16 @@ struct gl_texture_object;
 struct pipe_context;
 struct st_context;
 
+extern enum pipe_texture_target
+gl_target_to_pipe(GLenum target);
+
+unsigned
+st_get_blit_mask(GLenum srcFormat, GLenum dstFormat);
+
 extern GLboolean
 st_finalize_texture(struct gl_context *ctx,
 		    struct pipe_context *pipe, 
 		    struct gl_texture_object *tObj);
-
-
-extern struct gl_texture_object *
-st_get_default_texture(struct st_context *st);
 
 
 extern void

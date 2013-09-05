@@ -50,13 +50,13 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
 {
    const struct lp_fragment_shader *lpfs = llvmpipe->fs;
    struct vertex_info *vinfo = &llvmpipe->vertex_info;
-   unsigned vs_index;
+   int vs_index;
    uint i;
 
-   llvmpipe->color_slot[0] = ~0;
-   llvmpipe->color_slot[1] = ~0;
-   llvmpipe->bcolor_slot[0] = ~0;
-   llvmpipe->bcolor_slot[1] = ~0;
+   llvmpipe->color_slot[0] = -1;
+   llvmpipe->color_slot[1] = -1;
+   llvmpipe->bcolor_slot[0] = -1;
+   llvmpipe->bcolor_slot[1] = -1;
 
    /*
     * Match FS inputs against VS outputs, emitting the necessary
@@ -84,7 +84,7 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
       if (lpfs->info.base.input_semantic_name[i] == TGSI_SEMANTIC_COLOR &&
           lpfs->info.base.input_semantic_index[i] < 2) {
          int idx = lpfs->info.base.input_semantic_index[i];
-         llvmpipe->color_slot[idx] = vinfo->num_attribs;
+         llvmpipe->color_slot[idx] = (int)vinfo->num_attribs;
       }
 
       /*
@@ -99,8 +99,8 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
       vs_index = draw_find_shader_output(llvmpipe->draw,
                                          TGSI_SEMANTIC_BCOLOR, i);
 
-      if (vs_index > 0) {
-         llvmpipe->bcolor_slot[i] = vinfo->num_attribs;
+      if (vs_index >= 0) {
+         llvmpipe->bcolor_slot[i] = (int)vinfo->num_attribs;
          draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_PERSPECTIVE, vs_index);
       }
    }
@@ -111,10 +111,33 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
    vs_index = draw_find_shader_output(llvmpipe->draw,
                                       TGSI_SEMANTIC_PSIZE, 0);
 
-   if (vs_index > 0) {
+   if (vs_index >= 0) {
       llvmpipe->psize_slot = vinfo->num_attribs;
       draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_CONSTANT, vs_index);
    }
+
+   /* Figure out if we need viewport index */
+   vs_index = draw_find_shader_output(llvmpipe->draw,
+                                      TGSI_SEMANTIC_VIEWPORT_INDEX,
+                                      0);
+   if (vs_index >= 0) {
+      llvmpipe->viewport_index_slot = vinfo->num_attribs;
+      draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_CONSTANT, vs_index);
+   } else {
+      llvmpipe->viewport_index_slot = 0;
+   }
+
+   /* Figure out if we need layer */
+   vs_index = draw_find_shader_output(llvmpipe->draw,
+                                      TGSI_SEMANTIC_LAYER,
+                                      0);
+   if (vs_index >= 0) {
+      llvmpipe->layer_slot = vinfo->num_attribs;
+      draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_CONSTANT, vs_index);
+   } else {
+      llvmpipe->layer_slot = 0;
+   }
+
 
    draw_compute_vertex_size(vinfo);
    lp_setup_set_vertex_info(llvmpipe->setup, vinfo);
@@ -145,13 +168,14 @@ void llvmpipe_update_derived( struct llvmpipe_context *llvmpipe )
       compute_vertex_info( llvmpipe );
 
    if (llvmpipe->dirty & (LP_NEW_FS |
+                          LP_NEW_FRAMEBUFFER |
                           LP_NEW_BLEND |
                           LP_NEW_SCISSOR |
                           LP_NEW_DEPTH_STENCIL_ALPHA |
                           LP_NEW_RASTERIZER |
                           LP_NEW_SAMPLER |
                           LP_NEW_SAMPLER_VIEW |
-                          LP_NEW_QUERY))
+                          LP_NEW_OCCLUSION_QUERY))
       llvmpipe_update_fs( llvmpipe );
 
    if (llvmpipe->dirty & (LP_NEW_FS |
@@ -163,7 +187,7 @@ void llvmpipe_update_derived( struct llvmpipe_context *llvmpipe )
                                &llvmpipe->blend_color);
 
    if (llvmpipe->dirty & LP_NEW_SCISSOR)
-      lp_setup_set_scissor(llvmpipe->setup, &llvmpipe->scissor);
+      lp_setup_set_scissors(llvmpipe->setup, llvmpipe->scissors);
 
    if (llvmpipe->dirty & LP_NEW_DEPTH_STENCIL_ALPHA) {
       lp_setup_set_alpha_ref_value(llvmpipe->setup, 
@@ -173,18 +197,19 @@ void llvmpipe_update_derived( struct llvmpipe_context *llvmpipe )
    }
 
    if (llvmpipe->dirty & LP_NEW_CONSTANTS)
-      lp_setup_set_fs_constants(llvmpipe->setup, 
-                                llvmpipe->constants[PIPE_SHADER_FRAGMENT][0]);
+      lp_setup_set_fs_constants(llvmpipe->setup,
+                                Elements(llvmpipe->constants[PIPE_SHADER_FRAGMENT]),
+                                llvmpipe->constants[PIPE_SHADER_FRAGMENT]);
 
    if (llvmpipe->dirty & (LP_NEW_SAMPLER_VIEW))
       lp_setup_set_fragment_sampler_views(llvmpipe->setup,
-                                          llvmpipe->num_fragment_sampler_views,
-                                          llvmpipe->fragment_sampler_views);
+                                          llvmpipe->num_sampler_views[PIPE_SHADER_FRAGMENT],
+                                          llvmpipe->sampler_views[PIPE_SHADER_FRAGMENT]);
 
    if (llvmpipe->dirty & (LP_NEW_SAMPLER))
       lp_setup_set_fragment_sampler_state(llvmpipe->setup,
-                                          llvmpipe->num_samplers,
-                                          llvmpipe->sampler);
+                                          llvmpipe->num_samplers[PIPE_SHADER_FRAGMENT],
+                                          llvmpipe->samplers[PIPE_SHADER_FRAGMENT]);
 
    llvmpipe->dirty = 0;
 }

@@ -38,9 +38,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 extern void r200SetTexBuffer(__DRIcontext *pDRICtx, GLint target, __DRIdrawable *dPriv);
 extern void r200SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_format,
 			      __DRIdrawable *dPriv);
-extern void r200SetTexOffset(__DRIcontext *pDRICtx, GLint texname,
-			     unsigned long long offset, GLint depth,
-			     GLuint pitch);
 
 extern void r200UpdateTextureState( struct gl_context *ctx );
 
@@ -51,6 +48,7 @@ extern void r200DestroyTexObj( r200ContextPtr rmesa, radeonTexObjPtr t );
 extern void r200InitTextureFuncs( radeonContextPtr radeon, struct dd_function_table *functions );
 
 extern void r200UpdateFragmentShader( struct gl_context *ctx );
+extern void r200TexUpdateParameters(struct gl_context *ctx, GLuint unit);
 
 extern void set_re_cntl_d3d( struct gl_context *ctx, int unit, GLboolean use_d3d );
 

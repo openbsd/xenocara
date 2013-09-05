@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.3
  *
  * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Authors:
  *    Keith Whitwell <keith@tungstengraphics.com>
@@ -33,12 +33,7 @@
 #include "vbo.h"
 #include "vbo_context.h"
 
-
-
-#define NR_LEGACY_ATTRIBS 16
-#define NR_GENERIC_ATTRIBS 16
 #define NR_MAT_ATTRIBS 12
-
 
 static GLuint check_size( const GLfloat *attr )
 {
@@ -52,15 +47,15 @@ static GLuint check_size( const GLfloat *attr )
 static void init_legacy_currval(struct gl_context *ctx)
 {
    struct vbo_context *vbo = vbo_context(ctx);
-   struct gl_client_array *arrays = vbo->legacy_currval;
+   struct gl_client_array *arrays = &vbo->currval[VBO_ATTRIB_POS];
    GLuint i;
 
-   memset(arrays, 0, sizeof(*arrays) * NR_LEGACY_ATTRIBS);
+   memset(arrays, 0, sizeof(*arrays) * VERT_ATTRIB_FF_MAX);
 
    /* Set up a constant (StrideB == 0) array for each current
     * attribute:
     */
-   for (i = 0; i < NR_LEGACY_ATTRIBS; i++) {
+   for (i = 0; i < VERT_ATTRIB_FF_MAX; i++) {
       struct gl_client_array *cl = &arrays[i];
 
       /* Size will have to be determined at runtime:
@@ -82,12 +77,12 @@ static void init_legacy_currval(struct gl_context *ctx)
 static void init_generic_currval(struct gl_context *ctx)
 {
    struct vbo_context *vbo = vbo_context(ctx);
-   struct gl_client_array *arrays = vbo->generic_currval;
+   struct gl_client_array *arrays = &vbo->currval[VBO_ATTRIB_GENERIC0];
    GLuint i;
 
-   memset(arrays, 0, sizeof(*arrays) * NR_GENERIC_ATTRIBS);
+   memset(arrays, 0, sizeof(*arrays) * VERT_ATTRIB_GENERIC_MAX);
 
-   for (i = 0; i < NR_GENERIC_ATTRIBS; i++) {
+   for (i = 0; i < VERT_ATTRIB_GENERIC_MAX; i++) {
       struct gl_client_array *cl = &arrays[i];
 
       /* This will have to be determined at runtime:
@@ -109,7 +104,8 @@ static void init_generic_currval(struct gl_context *ctx)
 static void init_mat_currval(struct gl_context *ctx)
 {
    struct vbo_context *vbo = vbo_context(ctx);
-   struct gl_client_array *arrays = vbo->mat_currval;
+   struct gl_client_array *arrays =
+      &vbo->currval[VBO_ATTRIB_MAT_FRONT_AMBIENT];
    GLuint i;
 
    ASSERT(NR_MAT_ATTRIBS == MAT_ATTRIB_MAX);
@@ -165,12 +161,6 @@ GLboolean _vbo_CreateContext( struct gl_context *ctx )
       return GL_FALSE;
    }
 
-   /* TODO: remove these pointers.
-    */
-   vbo->legacy_currval = &vbo->currval[VBO_ATTRIB_POS];
-   vbo->generic_currval = &vbo->currval[VBO_ATTRIB_GENERIC0];
-   vbo->mat_currval = &vbo->currval[VBO_ATTRIB_MAT_FRONT_AMBIENT];
-
    init_legacy_currval( ctx );
    init_generic_currval( ctx );
    init_mat_currval( ctx );
@@ -181,16 +171,14 @@ GLboolean _vbo_CreateContext( struct gl_context *ctx )
    {
       GLuint i;
 
-      /* When no vertex program, pull in the material attributes in
-       * the 16..32 generic range.
-       */
-      for (i = 0; i < 16; i++) 
+      /* identity mapping */
+      for (i = 0; i < Elements(vbo->map_vp_none); i++) 
 	 vbo->map_vp_none[i] = i;
-      for (i = 0; i < 12; i++) 
-	 vbo->map_vp_none[16+i] = VBO_ATTRIB_MAT_FRONT_AMBIENT + i;
-      for (i = 0; i < 4; i++)
-	 vbo->map_vp_none[28+i] = i;	
-      
+      /* map material attribs to generic slots */
+      for (i = 0; i < NR_MAT_ATTRIBS; i++) 
+	 vbo->map_vp_none[VERT_ATTRIB_GENERIC(i)]
+            = VBO_ATTRIB_MAT_FRONT_AMBIENT + i;
+
       for (i = 0; i < Elements(vbo->map_vp_arb); i++)
 	 vbo->map_vp_arb[i] = i;
    }
@@ -201,7 +189,7 @@ GLboolean _vbo_CreateContext( struct gl_context *ctx )
     * vtxfmt mechanism can be removed now.
     */
    vbo_exec_init( ctx );
-   if (ctx->API == API_OPENGL)
+   if (ctx->API == API_OPENGL_COMPAT)
       vbo_save_init( ctx );
 
    _math_init_eval();
@@ -233,9 +221,9 @@ void _vbo_DestroyContext( struct gl_context *ctx )
       }
 
       vbo_exec_destroy(ctx);
-      if (ctx->API == API_OPENGL)
+      if (ctx->API == API_OPENGL_COMPAT)
          vbo_save_destroy(ctx);
-      FREE(vbo);
+      free(vbo);
       ctx->swtnl_im = NULL;
    }
 }

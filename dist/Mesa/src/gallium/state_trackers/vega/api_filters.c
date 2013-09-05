@@ -78,15 +78,15 @@ static INLINE struct pipe_resource *create_texture_1d(struct vg_context *ctx,
    tex = screen->resource_create(screen, &templ);
 
    { /* upload color_data */
-      struct pipe_transfer *transfer =
-         pipe_get_transfer(pipe, tex,
+      struct pipe_transfer *transfer;
+      void *map =
+         pipe_transfer_map(pipe, tex,
                            0, 0,
                            PIPE_TRANSFER_READ_WRITE ,
-                           0, 0, tex->width0, tex->height0);
-      void *map = pipe->transfer_map(pipe, transfer);
+                           0, 0, tex->width0, tex->height0,
+                           &transfer);
       memcpy(map, color_data, sizeof(VGint)*color_data_len);
       pipe->transfer_unmap(pipe, transfer);
-      pipe->transfer_destroy(pipe, transfer);
    }
 
    return tex;
@@ -194,7 +194,7 @@ static void execute_filter(struct vg_context *ctx,
    case VG_TILE_FILL:
       tex_wrap = PIPE_TEX_WRAP_CLAMP_TO_BORDER;
       /* copy border color */
-      memcpy(sampler.border_color, ctx->state.vg.tile_fill_color,
+      memcpy(sampler.border_color.f, ctx->state.vg.tile_fill_color,
             sizeof(sampler.border_color));
       break;
    case VG_TILE_PAD:
@@ -273,7 +273,7 @@ void vegaColorMatrix(VGImage dst, VGImage src,
 
 static VGfloat texture_offset(VGfloat width, VGint kernelSize, VGint current, VGint shift)
 {
-   VGfloat diff = current - shift;
+   VGfloat diff = (VGfloat) (current - shift);
 
    return diff / width;
 }
@@ -329,14 +329,14 @@ void vegaConvolve(VGImage dst, VGImage src,
    vg_validate_state(ctx);
 
    buffer_len = 8 + 2 * 4 * kernel_size;
-   buffer = (VGfloat*)malloc(buffer_len * sizeof(VGfloat));
+   buffer = malloc(buffer_len * sizeof(VGfloat));
 
    buffer[0] = 0.f;
    buffer[1] = 1.f;
    buffer[2] = 2.f; /*unused*/
    buffer[3] = 4.f; /*unused*/
 
-   buffer[4] = kernelWidth * kernelHeight;
+   buffer[4] = (VGfloat) (kernelWidth * kernelHeight);
    buffer[5] = scale;
    buffer[6] = bias;
    buffer[7] = 0.f;
@@ -347,8 +347,8 @@ void vegaConvolve(VGImage dst, VGImage src,
          VGint index = j * kernelWidth + i;
          VGfloat x, y;
 
-         x = texture_offset(s->width, kernelWidth, i, shiftX);
-         y = texture_offset(s->height, kernelHeight, j, shiftY);
+         x = (VGfloat) texture_offset(s->width, kernelWidth, i, shiftX);
+         y = (VGfloat) texture_offset(s->height, kernelHeight, j, shiftY);
 
          buffer[idx + index*4 + 0] = x;
          buffer[idx + index*4 + 1] = y;
@@ -519,7 +519,7 @@ void vegaGaussianBlur(VGImage dst, VGImage src,
                            stdDeviationX, stdDeviationY);
 
    buffer_len = 8 + 2 * 4 * kernel_size;
-   buffer = (VGfloat*)malloc(buffer_len * sizeof(VGfloat));
+   buffer = malloc(buffer_len * sizeof(VGfloat));
 
    buffer[0] = 0.f;
    buffer[1] = 1.f;

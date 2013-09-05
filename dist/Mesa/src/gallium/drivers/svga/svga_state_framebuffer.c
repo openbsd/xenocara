@@ -38,8 +38,9 @@
  */
 
 
-static int emit_framebuffer( struct svga_context *svga,
-                             unsigned dirty )
+static enum pipe_error
+emit_framebuffer( struct svga_context *svga,
+                  unsigned dirty )
 {
    const struct pipe_framebuffer_state *curr = &svga->curr.framebuffer;
    struct pipe_framebuffer_state *hw = &svga->state.hw_clear.framebuffer;
@@ -74,7 +75,7 @@ static int emit_framebuffer( struct svga_context *svga,
          return ret;
 
       if (curr->zsbuf &&
-          curr->zsbuf->format == PIPE_FORMAT_S8_USCALED_Z24_UNORM) {
+          curr->zsbuf->format == PIPE_FORMAT_S8_UINT_Z24_UNORM) {
          ret = SVGA3D_SetRenderTarget(svga->swc, SVGA3D_RT_STENCIL, curr->zsbuf);
          if (ret != PIPE_OK)
             return ret;
@@ -90,7 +91,7 @@ static int emit_framebuffer( struct svga_context *svga,
 
    svga->rebind.rendertargets = FALSE;
 
-   return 0;
+   return PIPE_OK;
 }
 
 
@@ -127,7 +128,7 @@ svga_reemit_framebuffer_bindings(struct svga_context *svga)
       }
 
       if (hw->zsbuf &&
-          hw->zsbuf->format == PIPE_FORMAT_S8_USCALED_Z24_UNORM) {
+          hw->zsbuf->format == PIPE_FORMAT_S8_UINT_Z24_UNORM) {
          ret = SVGA3D_SetRenderTarget(svga->swc, SVGA3D_RT_STENCIL, hw->zsbuf);
          if (ret != PIPE_OK) {
             return ret;
@@ -160,8 +161,9 @@ struct svga_tracked_state svga_hw_framebuffer =
 /*********************************************************************** 
  */
 
-static int emit_viewport( struct svga_context *svga,
-                          unsigned dirty )
+static enum pipe_error
+emit_viewport( struct svga_context *svga,
+               unsigned dirty )
 {
    const struct pipe_viewport_state *viewport = &svga->curr.viewport;
    struct svga_prescale prescale;
@@ -173,15 +175,16 @@ static int emit_viewport( struct svga_context *svga,
    float range_max = 1.0;
    float flip = -1.0;
    boolean degenerate = FALSE;
+   boolean invertY = FALSE;
    enum pipe_error ret;
 
-   float fb_width = svga->curr.framebuffer.width;
-   float fb_height = svga->curr.framebuffer.height;
+   float fb_width = (float) svga->curr.framebuffer.width;
+   float fb_height = (float) svga->curr.framebuffer.height;
 
-   float fx =        viewport->scale[0] * -1.0 + viewport->translate[0];
-   float fy = flip * viewport->scale[1] * -1.0 + viewport->translate[1];
-   float fw =        viewport->scale[0] * 2; 
-   float fh = flip * viewport->scale[1] * 2; 
+   float fx =        viewport->scale[0] * -1.0f + viewport->translate[0];
+   float fy = flip * viewport->scale[1] * -1.0f + viewport->translate[1];
+   float fw =        viewport->scale[0] * 2.0f; 
+   float fh = flip * viewport->scale[1] * 2.0f; 
 
    memset( &prescale, 0, sizeof(prescale) );
 
@@ -210,31 +213,37 @@ static int emit_viewport( struct svga_context *svga,
 
 
    if (fw < 0) {
-      prescale.scale[0] *= -1.0;
+      prescale.scale[0] *= -1.0f;
       prescale.translate[0] += -fw;
       fw = -fw;
-      fx =        viewport->scale[0] * 1.0 + viewport->translate[0];
+      fx =        viewport->scale[0] * 1.0f + viewport->translate[0];
    }
 
-   if (fh < 0) {
-      prescale.scale[1] *= -1.0;
-      prescale.translate[1] += -fh;
+   if (fh < 0.0) {
+      prescale.translate[1] = fh - 1.0f + fy * 2.0f;
       fh = -fh;
-      fy = flip * viewport->scale[1] * 1.0 + viewport->translate[1];
+      fy -= fh;
+      prescale.scale[1] = -1.0f;
+      invertY = TRUE;
    }
 
    if (fx < 0) {
       prescale.translate[0] += fx;
       prescale.scale[0] *= fw / (fw + fx); 
       fw += fx;
-      fx = 0;
+      fx = 0.0f;
    }
 
    if (fy < 0) {
-      prescale.translate[1] += fy;
+      if (invertY) {
+         prescale.translate[1] -= fy;
+      }
+      else {
+         prescale.translate[1] += fy;
+      }
       prescale.scale[1] *= fh / (fh + fy); 
       fh += fy;
-      fy = 0;
+      fy = 0.0f;
    }
 
    if (fx + fw > fb_width) {
@@ -247,8 +256,15 @@ static int emit_viewport( struct svga_context *svga,
 
    if (fy + fh > fb_height) {
       prescale.scale[1] *= fh / (fb_height - fy);
-      prescale.translate[1] -= fy * (fh / (fb_height - fy));
-      prescale.translate[1] += fy;
+      if (invertY) {
+         float in = fb_height - fy;       /* number of vp pixels inside view */
+         float out = fy + fh - fb_height; /* number of vp pixels out of view */
+         prescale.translate[1] += fy * out / in;
+      }
+      else {
+         prescale.translate[1] -= fy * (fh / (fb_height - fy));
+         prescale.translate[1] += fy;
+      }
       fh = fb_height - fy;
    }
 
@@ -265,10 +281,10 @@ static int emit_viewport( struct svga_context *svga,
     * TODO: adjust pretranslate correct for any subpixel error
     * introduced converting to integers.
     */
-   rect.x = fx;
-   rect.y = fy;
-   rect.w = fw;
-   rect.h = fh;
+   rect.x = (uint32) fx;
+   rect.y = (uint32) fy;
+   rect.w = (uint32) fw;
+   rect.h = (uint32) fh;
 
    SVGA_DBG(DEBUG_VIEWPORT,
             "viewport error %f,%f %fx%f\n",
@@ -289,7 +305,7 @@ static int emit_viewport( struct svga_context *svga,
     * screen-space coordinates slightly relative to D3D which is
     * what hardware implements natively.
     */
-   if (svga->curr.rast->templ.gl_rasterization_rules) {
+   if (svga->curr.rast->templ.half_pixel_center) {
       float adjust_x = 0.0;
       float adjust_y = 0.0;
 
@@ -305,6 +321,9 @@ static int emit_viewport( struct svga_context *svga,
          break;
       }
 
+      if (invertY)
+         adjust_y = -adjust_y;
+
       prescale.translate[0] += adjust_x;
       prescale.translate[1] += adjust_y;
       prescale.translate[2] = 0.5; /* D3D clip space */
@@ -312,8 +331,8 @@ static int emit_viewport( struct svga_context *svga,
    }
 
 
-   range_min = viewport->scale[2] * -1.0 + viewport->translate[2];
-   range_max = viewport->scale[2] *  1.0 + viewport->translate[2];
+   range_min = viewport->scale[2] * -1.0f + viewport->translate[2];
+   range_max = viewport->scale[2] *  1.0f + viewport->translate[2];
 
    /* D3D (and by implication SVGA) doesn't like dealing with zmax
     * less than zmin.  Detect that case, flip the depth range and
@@ -339,10 +358,10 @@ static int emit_viewport( struct svga_context *svga,
                prescale.scale[0],
                prescale.scale[1]);
 
-      H[0] = (float)rect.w / 2.0;
-      H[1] = -(float)rect.h / 2.0;
-      J[0] = (float)rect.x + (float)rect.w / 2.0;
-      J[1] = (float)rect.y + (float)rect.h / 2.0;
+      H[0] = (float)rect.w / 2.0f;
+      H[1] = -(float)rect.h / 2.0f;
+      J[0] = (float)rect.x + (float)rect.w / 2.0f;
+      J[1] = (float)rect.y + (float)rect.h / 2.0f;
 
       SVGA_DBG(DEBUG_VIEWPORT,
                "H %f,%f\n"
@@ -375,7 +394,7 @@ static int emit_viewport( struct svga_context *svga,
        */
       for (i = 0; i < 2; i++) {
          prescale.translate[i] = ((prescale.translate[i] +
-                                   (prescale.scale[i] - 1.0) * J[i]) / H[i]);
+                                   (prescale.scale[i] - 1.0f) * J[i]) / H[i]);
       }
 
       SVGA_DBG(DEBUG_VIEWPORT,
@@ -420,7 +439,7 @@ out:
       svga->state.hw_clear.prescale = prescale;
    }
 
-   return 0;
+   return PIPE_OK;
 }
 
 
@@ -438,8 +457,9 @@ struct svga_tracked_state svga_hw_viewport =
 /***********************************************************************
  * Scissor state
  */
-static int emit_scissor_rect( struct svga_context *svga,
-                              unsigned dirty )
+static enum pipe_error
+emit_scissor_rect( struct svga_context *svga,
+                   unsigned dirty )
 {
    const struct pipe_scissor_state *scissor = &svga->curr.scissor;
    SVGA3dRect rect;
@@ -465,15 +485,16 @@ struct svga_tracked_state svga_hw_scissor =
  * Userclip state
  */
 
-static int emit_clip_planes( struct svga_context *svga,
-                             unsigned dirty )
+static enum pipe_error
+emit_clip_planes( struct svga_context *svga,
+                  unsigned dirty )
 {
    unsigned i;
    enum pipe_error ret;
 
    /* TODO: just emit directly from svga_set_clip_state()?
     */
-   for (i = 0; i < svga->curr.clip.nr; i++) {
+   for (i = 0; i < SVGA3D_MAX_CLIP_PLANES; i++) {
       /* need to express the plane in D3D-style coordinate space.
        * GL coords get converted to D3D coords with the matrix:
        * [ 1  0  0  0 ]
@@ -498,7 +519,7 @@ static int emit_clip_planes( struct svga_context *svga,
          return ret;
    }
 
-   return 0;
+   return PIPE_OK;
 }
 
 

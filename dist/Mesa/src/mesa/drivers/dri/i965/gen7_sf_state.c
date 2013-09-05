@@ -26,36 +26,41 @@
 #include "brw_defines.h"
 #include "brw_util.h"
 #include "main/macros.h"
+#include "main/fbobject.h"
 #include "intel_batchbuffer.h"
 
 static void
 upload_sbe_state(struct brw_context *brw)
 {
-   struct intel_context *intel = &brw->intel;
-   struct gl_context *ctx = &intel->ctx;
-   /* CACHE_NEW_VS_PROG */
-   uint32_t num_inputs = brw_count_bits(brw->vs.prog_data->outputs_written);
+   struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FRAGMENT_PROGRAM */
-   uint32_t num_outputs = brw_count_bits(brw->fragment_program->Base.InputsRead);
+   uint32_t num_outputs = _mesa_bitcount_64(brw->fragment_program->Base.InputsRead);
+   /* _NEW_LIGHT */
+   bool shade_model_flat = ctx->Light.ShadeModel == GL_FLAT;
    uint32_t dw1, dw10, dw11;
    int i;
    int attr = 0, input_index = 0;
-   /* _NEW_TRANSFORM */
-   int urb_start = ctx->Transform.ClipPlanesEnabled ? 2 : 1;
-   /* _NEW_LIGHT */
-   int two_side_color = (ctx->Light.Enabled && ctx->Light.Model.TwoSide);
-   uint16_t attr_overrides[FRAG_ATTRIB_MAX];
+   int urb_entry_read_offset = 1;
+   uint16_t attr_overrides[VARYING_SLOT_MAX];
+   /* _NEW_BUFFERS */
+   bool render_to_fbo = _mesa_is_user_fbo(ctx->DrawBuffer);
+   uint32_t point_sprite_origin;
 
    /* FINISHME: Attribute Swizzle Control Mode? */
-   dw1 =
-      GEN7_SBE_SWIZZLE_ENABLE |
-      num_outputs << GEN7_SBE_NUM_OUTPUTS_SHIFT |
-      (num_inputs + 1) / 2 << GEN7_SBE_URB_ENTRY_READ_LENGTH_SHIFT |
-      urb_start << GEN7_SBE_URB_ENTRY_READ_OFFSET_SHIFT;
+   dw1 = GEN7_SBE_SWIZZLE_ENABLE | num_outputs << GEN7_SBE_NUM_OUTPUTS_SHIFT;
 
-   /* _NEW_POINT */
-   if (ctx->Point.SpriteOrigin == GL_LOWER_LEFT)
-      dw1 |= GEN6_SF_POINT_SPRITE_LOWERLEFT;
+   /* _NEW_POINT
+    *
+    * Window coordinates in an FBO are inverted, which means point
+    * sprite origin must be inverted.
+    */
+   if ((ctx->Point.SpriteOrigin == GL_LOWER_LEFT) != render_to_fbo) {
+      point_sprite_origin = GEN6_SF_POINT_SPRITE_LOWERLEFT;
+   } else {
+      point_sprite_origin = GEN6_SF_POINT_SPRITE_UPPERLEFT;
+   }
+   dw1 |= point_sprite_origin;
+
 
    dw10 = 0;
    dw11 = 0;
@@ -63,31 +68,29 @@ upload_sbe_state(struct brw_context *brw)
    /* Create the mapping from the FS inputs we produce to the VS outputs
     * they source from.
     */
-   for (; attr < FRAG_ATTRIB_MAX; attr++) {
+   uint32_t max_source_attr = 0;
+   for (; attr < VARYING_SLOT_MAX; attr++) {
+      enum glsl_interp_qualifier interp_qualifier =
+         brw->fragment_program->InterpQualifier[attr];
+      bool is_gl_Color = attr == VARYING_SLOT_COL0 || attr == VARYING_SLOT_COL1;
+
       if (!(brw->fragment_program->Base.InputsRead & BITFIELD64_BIT(attr)))
 	 continue;
 
       if (ctx->Point.PointSprite &&
-	  attr >= FRAG_ATTRIB_TEX0 && attr <= FRAG_ATTRIB_TEX7 &&
-	  ctx->Point.CoordReplace[attr - FRAG_ATTRIB_TEX0]) {
+	  attr >= VARYING_SLOT_TEX0 && attr <= VARYING_SLOT_TEX7 &&
+	  ctx->Point.CoordReplace[attr - VARYING_SLOT_TEX0]) {
 	 dw10 |= (1 << input_index);
       }
 
-      if (attr == FRAG_ATTRIB_PNTC)
+      if (attr == VARYING_SLOT_PNTC)
 	 dw10 |= (1 << input_index);
 
       /* flat shading */
-      if (ctx->Light.ShadeModel == GL_FLAT) {
-         /*
-          * Setup the Constant Interpolation Enable bit mask for each
-          * corresponding attribute(currently, we only care two attrs:
-          * FRAG_BIT_COL0 and FRAG_BIT_COL1).
-          *
-          * FIXME: should we care other attributes?
-          */
-	  if (attr == FRAG_ATTRIB_COL0 || attr == FRAG_ATTRIB_COL1)
-             dw11 |= (1 << input_index);
-      }
+      if (interp_qualifier == INTERP_QUALIFIER_FLAT ||
+          (shade_model_flat && is_gl_Color &&
+           interp_qualifier == INTERP_QUALIFIER_NONE))
+         dw11 |= (1 << input_index);
 
       /* The hardware can only do the overrides on 16 overrides at a
        * time, and the other up to 16 have to be lined up so that the
@@ -96,12 +99,31 @@ upload_sbe_state(struct brw_context *brw)
        */
       assert(input_index < 16 || attr == input_index);
 
-      attr_overrides[input_index++] = get_attr_override(brw, attr,
-							two_side_color);
+      /* BRW_NEW_VUE_MAP_GEOM_OUT | _NEW_LIGHT | _NEW_PROGRAM */
+      attr_overrides[input_index++] =
+         get_attr_override(&brw->vue_map_geom_out,
+			   urb_entry_read_offset, attr,
+                           ctx->VertexProgram._TwoSideEnabled,
+                           &max_source_attr);
    }
 
-   for (; attr < FRAG_ATTRIB_MAX; attr++)
-      attr_overrides[input_index++] = 0;
+   /* From the Ivy Bridge PRM, Volume 2, Part 1, documentation for
+    * 3DSTATE_SBE DWord 1 bits 15:11, "Vertex URB Entry Read Length":
+    *
+    * "This field should be set to the minimum length required to read the
+    *  maximum source attribute.  The maximum source attribute is indicated
+    *  by the maximum value of the enabled Attribute # Source Attribute if
+    *  Attribute Swizzle Enable is set, Number of Output Attributes-1 if
+    *  enable is not set.
+    *
+    *  read_length = ceiling((max_source_attr + 1) / 2)"
+    */
+   uint32_t urb_entry_read_length = ALIGN(max_source_attr + 1, 2) / 2;
+   dw1 |= urb_entry_read_length << GEN7_SBE_URB_ENTRY_READ_LENGTH_SHIFT |
+          urb_entry_read_offset << GEN7_SBE_URB_ENTRY_READ_OFFSET_SHIFT;
+
+   for (; input_index < VARYING_SLOT_MAX; input_index++)
+      attr_overrides[input_index] = 0;
 
    BEGIN_BATCH(14);
    OUT_BATCH(_3DSTATE_SBE << 16 | (14 - 2));
@@ -121,12 +143,13 @@ upload_sbe_state(struct brw_context *brw)
 
 const struct brw_tracked_state gen7_sbe_state = {
    .dirty = {
-      .mesa  = (_NEW_LIGHT |
+      .mesa  = (_NEW_BUFFERS |
+		_NEW_LIGHT |
 		_NEW_POINT |
-		_NEW_TRANSFORM),
+		_NEW_PROGRAM),
       .brw   = (BRW_NEW_CONTEXT |
-		BRW_NEW_FRAGMENT_PROGRAM),
-      .cache = CACHE_NEW_VS_PROG
+		BRW_NEW_FRAGMENT_PROGRAM |
+                BRW_NEW_VUE_MAP_GEOM_OUT)
    },
    .emit = upload_sbe_state,
 };
@@ -134,17 +157,18 @@ const struct brw_tracked_state gen7_sbe_state = {
 static void
 upload_sf_state(struct brw_context *brw)
 {
-   struct intel_context *intel = &brw->intel;
-   struct gl_context *ctx = &intel->ctx;
+   struct gl_context *ctx = &brw->ctx;
    uint32_t dw1, dw2, dw3;
    float point_size;
    /* _NEW_BUFFERS */
-   bool render_to_fbo = brw->intel.ctx.DrawBuffer->Name != 0;
+   bool render_to_fbo = _mesa_is_user_fbo(ctx->DrawBuffer);
+   bool multisampled_fbo = ctx->DrawBuffer->Visual.samples > 1;
 
-   dw1 = GEN6_SF_STATISTICS_ENABLE | GEN6_SF_VIEWPORT_TRANSFORM_ENABLE;
+   dw1 = GEN6_SF_STATISTICS_ENABLE |
+         GEN6_SF_VIEWPORT_TRANSFORM_ENABLE;
 
    /* _NEW_BUFFERS */
-   dw1 |= (gen7_depth_format(brw) << GEN7_SF_DEPTH_BUFFER_SURFACE_FORMAT_SHIFT);
+   dw1 |= (brw_depthbuffer_format(brw) << GEN7_SF_DEPTH_BUFFER_SURFACE_FORMAT_SHIFT);
 
    /* _NEW_POLYGON */
    if ((ctx->Polygon.FrontFace == GL_CCW) ^ render_to_fbo)
@@ -221,21 +245,30 @@ upload_sf_state(struct brw_context *brw)
       dw2 |= GEN6_SF_SCISSOR_ENABLE;
 
    /* _NEW_LINE */
-   dw2 |= U_FIXED(CLAMP(ctx->Line.Width, 0.0, 7.99), 7) <<
-      GEN6_SF_LINE_WIDTH_SHIFT;
+   {
+      uint32_t line_width_u3_7 = U_FIXED(CLAMP(ctx->Line.Width, 0.0, 7.99), 7);
+      /* TODO: line width of 0 is not allowed when MSAA enabled */
+      if (line_width_u3_7 == 0)
+         line_width_u3_7 = 1;
+      dw2 |= line_width_u3_7 << GEN6_SF_LINE_WIDTH_SHIFT;
+   }
    if (ctx->Line.SmoothFlag) {
       dw2 |= GEN6_SF_LINE_AA_ENABLE;
-      dw2 |= GEN6_SF_LINE_AA_MODE_TRUE;
       dw2 |= GEN6_SF_LINE_END_CAP_WIDTH_1_0;
    }
+   if (ctx->Line.StippleFlag && brw->is_haswell) {
+      dw2 |= HSW_SF_LINE_STIPPLE_ENABLE;
+   }
+   /* _NEW_MULTISAMPLE */
+   if (multisampled_fbo && ctx->Multisample.Enabled)
+      dw2 |= GEN6_SF_MSRAST_ON_PATTERN;
 
    /* FINISHME: Last Pixel Enable?  Vertex Sub Pixel Precision Select?
-    * FINISHME: AA Line Distance Mode?
     */
 
-   dw3 = 0;
+   dw3 = GEN6_SF_LINE_AA_MODE_TRUE;
 
-   /* _NEW_POINT */
+   /* _NEW_PROGRAM | _NEW_POINT */
    if (!(ctx->VertexProgram.PointSizeEnabled || ctx->Point._Attenuated))
       dw3 |= GEN6_SF_USE_STATE_POINT_WIDTH;
 
@@ -269,12 +302,14 @@ upload_sf_state(struct brw_context *brw)
 const struct brw_tracked_state gen7_sf_state = {
    .dirty = {
       .mesa  = (_NEW_LIGHT |
+		_NEW_PROGRAM |
 		_NEW_POLYGON |
 		_NEW_LINE |
 		_NEW_SCISSOR |
 		_NEW_BUFFERS |
-		_NEW_POINT),
-      .brw   = (BRW_NEW_CONTEXT),
+		_NEW_POINT |
+                _NEW_MULTISAMPLE),
+      .brw   = BRW_NEW_CONTEXT,
       .cache = CACHE_NEW_VS_PROG
    },
    .emit = upload_sf_state,

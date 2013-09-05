@@ -16,7 +16,6 @@ extern "C" {
 
 struct wl_egl_window {
 	struct wl_surface *surface;
-	struct wl_visual *visual;
 
 	int width;
 	int height;
@@ -25,18 +24,9 @@ struct wl_egl_window {
 
 	int attached_width;
 	int attached_height;
-};
 
-struct wl_egl_pixmap {
-	struct wl_visual *visual;
-	struct wl_buffer *buffer;
-
-	int width;
-	int height;
-
-	void (*destroy) (struct wl_egl_pixmap *egl_pixmap);
-
-	void *driver_private;
+	void *private;
+	void (*resize_callback)(struct wl_egl_window *, void *);
 };
 
 #ifdef  __cplusplus

@@ -163,6 +163,10 @@ clip_emit_quad(struct setup_context *setup, struct quad_header *quad)
    if (quad->inout.mask) {
       struct softpipe_context *sp = setup->softpipe;
 
+#if DEBUG_FRAGS
+      setup->numFragsEmitted += util_bitcount(quad->inout.mask);
+#endif
+
       sp->quad.first->run( sp->quad.first, &quad, 1 );
    }
 }
@@ -234,6 +238,9 @@ flush_spans(struct setup_context *setup)
                setup->quad[q].inout.mask = quadmask;
                setup->quad_ptrs[q] = &setup->quad[q];
                q++;
+#if DEBUG_FRAGS
+               setup->numFragsEmitted += util_bitcount(quadmask);
+#endif
             }
             mask0 >>= 2;
             mask1 >>= 2;
@@ -387,7 +394,7 @@ setup_sort_vertices(struct setup_context *setup,
     *  - pixel center (0.5, 0.5) for GL, or
     *  - assume (0.0, 0.0) for other APIs.
     */
-   if (setup->softpipe->rasterizer->gl_rasterization_rules) {
+   if (setup->softpipe->rasterizer->half_pixel_center) {
       setup->pixel_offset = 0.5f;
    } else {
       setup->pixel_offset = 0.0f;
@@ -568,17 +575,18 @@ tri_persp_coeff(struct setup_context *setup,
 static void
 setup_fragcoord_coeff(struct setup_context *setup, uint slot)
 {
-   struct sp_fragment_shader* spfs = setup->softpipe->fs;
+   const struct tgsi_shader_info *fsInfo = &setup->softpipe->fs_variant->info;
+
    /*X*/
-   setup->coef[slot].a0[0] = spfs->pixel_center_integer ? 0.0 : 0.5;
-   setup->coef[slot].dadx[0] = 1.0;
-   setup->coef[slot].dady[0] = 0.0;
+   setup->coef[slot].a0[0] = fsInfo->pixel_center_integer ? 0.0f : 0.5f;
+   setup->coef[slot].dadx[0] = 1.0f;
+   setup->coef[slot].dady[0] = 0.0f;
    /*Y*/
    setup->coef[slot].a0[1] =
-		   (spfs->origin_lower_left ? setup->softpipe->framebuffer.height-1 : 0)
-		   + (spfs->pixel_center_integer ? 0.0 : 0.5);
-   setup->coef[slot].dadx[1] = 0.0;
-   setup->coef[slot].dady[1] = spfs->origin_lower_left ? -1.0 : 1.0;
+		   (fsInfo->origin_lower_left ? setup->softpipe->framebuffer.height-1 : 0)
+		   + (fsInfo->pixel_center_integer ? 0.0f : 0.5f);
+   setup->coef[slot].dadx[1] = 0.0f;
+   setup->coef[slot].dady[1] = fsInfo->origin_lower_left ? -1.0f : 1.0f;
    /*Z*/
    setup->coef[slot].a0[2] = setup->posCoef.a0[2];
    setup->coef[slot].dadx[2] = setup->posCoef.dadx[2];
@@ -599,7 +607,7 @@ static void
 setup_tri_coefficients(struct setup_context *setup)
 {
    struct softpipe_context *softpipe = setup->softpipe;
-   const struct sp_fragment_shader *spfs = softpipe->fs;
+   const struct tgsi_shader_info *fsInfo = &setup->softpipe->fs_variant->info;
    const struct vertex_info *vinfo = softpipe_get_vertex_info(softpipe);
    uint fragSlot;
    float v[3];
@@ -618,31 +626,31 @@ setup_tri_coefficients(struct setup_context *setup)
 
    /* setup interpolation for all the remaining attributes:
     */
-   for (fragSlot = 0; fragSlot < spfs->info.num_inputs; fragSlot++) {
+   for (fragSlot = 0; fragSlot < fsInfo->num_inputs; fragSlot++) {
       const uint vertSlot = vinfo->attrib[fragSlot].src_index;
       uint j;
 
       switch (vinfo->attrib[fragSlot].interp_mode) {
       case INTERP_CONSTANT:
-         for (j = 0; j < NUM_CHANNELS; j++)
+         for (j = 0; j < TGSI_NUM_CHANNELS; j++)
             const_coeff(setup, &setup->coef[fragSlot], vertSlot, j);
          break;
       case INTERP_LINEAR:
-         for (j = 0; j < NUM_CHANNELS; j++) {
+         for (j = 0; j < TGSI_NUM_CHANNELS; j++) {
             tri_apply_cylindrical_wrap(setup->vmin[vertSlot][j],
                                        setup->vmid[vertSlot][j],
                                        setup->vmax[vertSlot][j],
-                                       spfs->info.input_cylindrical_wrap[fragSlot] & (1 << j),
+                                       fsInfo->input_cylindrical_wrap[fragSlot] & (1 << j),
                                        v);
             tri_linear_coeff(setup, &setup->coef[fragSlot], j, v);
          }
          break;
       case INTERP_PERSPECTIVE:
-         for (j = 0; j < NUM_CHANNELS; j++) {
+         for (j = 0; j < TGSI_NUM_CHANNELS; j++) {
             tri_apply_cylindrical_wrap(setup->vmin[vertSlot][j],
                                        setup->vmid[vertSlot][j],
                                        setup->vmax[vertSlot][j],
-                                       spfs->info.input_cylindrical_wrap[fragSlot] & (1 << j),
+                                       fsInfo->input_cylindrical_wrap[fragSlot] & (1 << j),
                                        v);
             tri_persp_coeff(setup, &setup->coef[fragSlot], j, v);
          }
@@ -654,7 +662,7 @@ setup_tri_coefficients(struct setup_context *setup)
          assert(0);
       }
 
-      if (spfs->info.input_semantic_name[fragSlot] == TGSI_SEMANTIC_FACE) {
+      if (fsInfo->input_semantic_name[fragSlot] == TGSI_SEMANTIC_FACE) {
          /* convert 0 to 1.0 and 1 to -1.0 */
          setup->coef[fragSlot].a0[0] = setup->facing * -2.0f + 1.0f;
          setup->coef[fragSlot].dadx[0] = 0.0;
@@ -806,7 +814,7 @@ sp_setup_tri(struct setup_context *setup,
    print_vertex(setup, v2);
 #endif
 
-   if (setup->softpipe->no_rast)
+   if (setup->softpipe->no_rast || setup->softpipe->rasterizer->rasterizer_discard)
       return;
    
    det = calc_det(v0, v1, v2);
@@ -848,6 +856,10 @@ sp_setup_tri(struct setup_context *setup,
    }
 
    flush_spans( setup );
+
+   if (setup->softpipe->active_statistics_queries) {
+      setup->softpipe->pipeline_statistics.c_primitives++;
+   }
 
 #if DEBUG_FRAGS
    printf("Tri: %u frags emitted, %u written\n",
@@ -939,7 +951,7 @@ setup_line_coefficients(struct setup_context *setup,
                         const float (*v1)[4])
 {
    struct softpipe_context *softpipe = setup->softpipe;
-   const struct sp_fragment_shader *spfs = softpipe->fs;
+   const struct tgsi_shader_info *fsInfo = &setup->softpipe->fs_variant->info;
    const struct vertex_info *vinfo = softpipe_get_vertex_info(softpipe);
    uint fragSlot;
    float area;
@@ -974,29 +986,29 @@ setup_line_coefficients(struct setup_context *setup,
 
    /* setup interpolation for all the remaining attributes:
     */
-   for (fragSlot = 0; fragSlot < spfs->info.num_inputs; fragSlot++) {
+   for (fragSlot = 0; fragSlot < fsInfo->num_inputs; fragSlot++) {
       const uint vertSlot = vinfo->attrib[fragSlot].src_index;
       uint j;
 
       switch (vinfo->attrib[fragSlot].interp_mode) {
       case INTERP_CONSTANT:
-         for (j = 0; j < NUM_CHANNELS; j++)
+         for (j = 0; j < TGSI_NUM_CHANNELS; j++)
             const_coeff(setup, &setup->coef[fragSlot], vertSlot, j);
          break;
       case INTERP_LINEAR:
-         for (j = 0; j < NUM_CHANNELS; j++) {
+         for (j = 0; j < TGSI_NUM_CHANNELS; j++) {
             line_apply_cylindrical_wrap(setup->vmin[vertSlot][j],
                                         setup->vmax[vertSlot][j],
-                                        spfs->info.input_cylindrical_wrap[fragSlot] & (1 << j),
+                                        fsInfo->input_cylindrical_wrap[fragSlot] & (1 << j),
                                         v);
             line_linear_coeff(setup, &setup->coef[fragSlot], j, v);
          }
          break;
       case INTERP_PERSPECTIVE:
-         for (j = 0; j < NUM_CHANNELS; j++) {
+         for (j = 0; j < TGSI_NUM_CHANNELS; j++) {
             line_apply_cylindrical_wrap(setup->vmin[vertSlot][j],
                                         setup->vmax[vertSlot][j],
-                                        spfs->info.input_cylindrical_wrap[fragSlot] & (1 << j),
+                                        fsInfo->input_cylindrical_wrap[fragSlot] & (1 << j),
                                         v);
             line_persp_coeff(setup, &setup->coef[fragSlot], j, v);
          }
@@ -1008,7 +1020,7 @@ setup_line_coefficients(struct setup_context *setup,
          assert(0);
       }
 
-      if (spfs->info.input_semantic_name[fragSlot] == TGSI_SEMANTIC_FACE) {
+      if (fsInfo->input_semantic_name[fragSlot] == TGSI_SEMANTIC_FACE) {
          /* convert 0 to 1.0 and 1 to -1.0 */
          setup->coef[fragSlot].a0[0] = setup->facing * -2.0f + 1.0f;
          setup->coef[fragSlot].dadx[0] = 0.0;
@@ -1072,7 +1084,7 @@ sp_setup_line(struct setup_context *setup,
    print_vertex(setup, v1);
 #endif
 
-   if (setup->softpipe->no_rast)
+   if (setup->softpipe->no_rast || setup->softpipe->rasterizer->rasterizer_discard)
       return;
 
    if (dx == 0 && dy == 0)
@@ -1188,7 +1200,7 @@ sp_setup_point(struct setup_context *setup,
                const float (*v0)[4])
 {
    struct softpipe_context *softpipe = setup->softpipe;
-   const struct sp_fragment_shader *spfs = softpipe->fs;
+   const struct tgsi_shader_info *fsInfo = &setup->softpipe->fs_variant->info;
    const int sizeAttr = setup->softpipe->psize_slot;
    const float size
       = sizeAttr > 0 ? v0[sizeAttr][0]
@@ -1205,7 +1217,7 @@ sp_setup_point(struct setup_context *setup,
    print_vertex(setup, v0);
 #endif
 
-   if (softpipe->no_rast)
+   if (setup->softpipe->no_rast || setup->softpipe->rasterizer->rasterizer_discard)
       return;
 
    assert(setup->softpipe->reduced_prim == PIPE_PRIM_POINTS);
@@ -1232,7 +1244,7 @@ sp_setup_point(struct setup_context *setup,
    const_coeff(setup, &setup->posCoef, 0, 2);
    const_coeff(setup, &setup->posCoef, 0, 3);
 
-   for (fragSlot = 0; fragSlot < spfs->info.num_inputs; fragSlot++) {
+   for (fragSlot = 0; fragSlot < fsInfo->num_inputs; fragSlot++) {
       const uint vertSlot = vinfo->attrib[fragSlot].src_index;
       uint j;
 
@@ -1240,11 +1252,11 @@ sp_setup_point(struct setup_context *setup,
       case INTERP_CONSTANT:
          /* fall-through */
       case INTERP_LINEAR:
-         for (j = 0; j < NUM_CHANNELS; j++)
+         for (j = 0; j < TGSI_NUM_CHANNELS; j++)
             const_coeff(setup, &setup->coef[fragSlot], vertSlot, j);
          break;
       case INTERP_PERSPECTIVE:
-         for (j = 0; j < NUM_CHANNELS; j++)
+         for (j = 0; j < TGSI_NUM_CHANNELS; j++)
             point_persp_coeff(setup, setup->vprovoke,
                               &setup->coef[fragSlot], vertSlot, j);
          break;
@@ -1255,7 +1267,7 @@ sp_setup_point(struct setup_context *setup,
          assert(0);
       }
 
-      if (spfs->info.input_semantic_name[fragSlot] == TGSI_SEMANTIC_FACE) {
+      if (fsInfo->input_semantic_name[fragSlot] == TGSI_SEMANTIC_FACE) {
          /* convert 0 to 1.0 and 1 to -1.0 */
          setup->coef[fragSlot].a0[0] = setup->facing * -2.0f + 1.0f;
          setup->coef[fragSlot].dadx[0] = 0.0;
@@ -1396,7 +1408,7 @@ sp_setup_prepare(struct setup_context *setup)
    struct softpipe_context *sp = setup->softpipe;
 
    if (sp->dirty) {
-      softpipe_update_derived(sp);
+      softpipe_update_derived(sp, sp->reduced_api_prim);
    }
 
    /* Note: nr_attrs is only used for debugging (vertex printing) */

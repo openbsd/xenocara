@@ -30,6 +30,13 @@
 
 #include "svga_hw_reg.h"
 
+
+/**
+ * We use a 32-bit mask to keep track of the generic indexes.
+ */
+#define MAX_GENERIC_VARYING 32
+
+
 struct svga_fragment_shader;
 struct svga_vertex_shader;
 struct svga_shader;
@@ -39,10 +46,9 @@ struct tgsi_token;
 
 struct svga_vs_compile_key
 {
-   unsigned zero_stride_vertex_elements;
+   unsigned fs_generic_inputs;
    unsigned need_prescale:1;
    unsigned allow_psiz:1;
-   unsigned num_zero_stride_vertex_elements:6;
 };
 
 struct svga_fs_compile_key
@@ -52,34 +58,48 @@ struct svga_fs_compile_key
    unsigned white_fragments:1;
    unsigned num_textures:8;
    unsigned num_unnormalized_coords:8;
+   unsigned sprite_origin_lower_left:1;
    struct {
       unsigned compare_mode:1;
       unsigned compare_func:3;
       unsigned unnormalized:1;
       unsigned width_height_idx:7;
       unsigned texture_target:8;
+      unsigned sprite_texgen:1;
+      unsigned swizzle_r:3;
+      unsigned swizzle_g:3;
+      unsigned swizzle_b:3;
+      unsigned swizzle_a:3;
    } tex[PIPE_MAX_SAMPLERS];
 };
 
-union svga_compile_key {
+struct svga_compile_key {
    struct svga_vs_compile_key vkey;
    struct svga_fs_compile_key fkey;
+   int8_t generic_remap_table[MAX_GENERIC_VARYING];
 };
 
+
+/**
+ * A single TGSI shader may be compiled into different variants of
+ * SVGA3D shaders depending on the compile key.  Each user shader
+ * will have a linked list of these results.
+ */
 struct svga_shader_result
 {
    const struct svga_shader *shader;
 
    /* Parameters used to generate this compilation result:
     */
-   union svga_compile_key key;
+   struct svga_compile_key key;
 
    /* Compiled shader tokens:
     */
    const unsigned *tokens;
    unsigned nr_tokens;
 
-   /* SVGA Shader ID:
+   /** Per-context shader identifier used with SVGA_3D_CMD_SHADER_DEFINE,
+    * SVGA_3D_CMD_SET_SHADER and SVGA_3D_CMD_SHADER_DESTROY.
     */
    unsigned id;
    
@@ -133,5 +153,19 @@ svga_translate_vertex_program( const struct svga_vertex_shader *fs,
 
 
 void svga_destroy_shader_result( struct svga_shader_result *result );
+
+unsigned
+svga_get_generic_inputs_mask(const struct tgsi_shader_info *info);
+
+unsigned
+svga_get_generic_outputs_mask(const struct tgsi_shader_info *info);
+
+void
+svga_remap_generics(unsigned generics_mask,
+                    int8_t remap_table[MAX_GENERIC_VARYING]);
+
+int
+svga_remap_generic_index(int8_t remap_table[MAX_GENERIC_VARYING],
+                         int generic_index);
 
 #endif

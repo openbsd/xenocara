@@ -34,6 +34,7 @@
 #include "util/u_memory.h"
 #include "util/u_string.h"
 
+#include "svga_format.h"
 #include "svga_screen.h"
 #include "svga_context.h"
 #include "svga_resource_texture.h"
@@ -60,11 +61,10 @@ svga_get_tex_sampler_view(struct pipe_context *pipe,
    struct svga_texture *tex = svga_texture(pt); 
    struct svga_sampler_view *sv = NULL;
    SVGA3dSurfaceFlags flags = SVGA3D_SURFACE_HINT_TEXTURE;
-   SVGA3dSurfaceFormat format = svga_translate_format(pt->format);
+   SVGA3dSurfaceFormat format = svga_translate_format(ss, pt->format, PIPE_BIND_SAMPLER_VIEW);
    boolean view = TRUE;
 
    assert(pt);
-   assert(min_lod >= 0);
    assert(min_lod <= max_lod);
    assert(max_lod <= pt->last_level);
 
@@ -103,8 +103,16 @@ svga_get_tex_sampler_view(struct pipe_context *pipe,
    }
 
    sv = CALLOC_STRUCT(svga_sampler_view);
+   if (!sv)
+      return NULL;
+
    pipe_reference_init(&sv->reference, 1);
-   pipe_resource_reference(&sv->texture, pt);
+
+   /* Note: we're not refcounting the texture resource here to avoid
+    * a circular dependency.
+    */
+   sv->texture = pt;
+
    sv->min_lod = min_lod;
    sv->max_lod = max_lod;
 
@@ -166,7 +174,8 @@ svga_validate_sampler_view(struct svga_context *svga, struct svga_sampler_view *
    struct svga_texture *tex = svga_texture(v->texture);
    unsigned numFaces;
    unsigned age = 0;
-   int i, k;
+   int i;
+   unsigned k;
 
    assert(svga);
 
@@ -182,6 +191,7 @@ svga_validate_sampler_view(struct svga_context *svga, struct svga_sampler_view *
 
    for (i = v->min_lod; i <= v->max_lod; i++) {
       for (k = 0; k < numFaces; k++) {
+         assert(i < Elements(tex->view_age));
          if (v->age < tex->view_age[i])
             svga_texture_copy_handle(svga,
                                      tex->handle, 0, 0, 0, i, k,
@@ -205,6 +215,11 @@ svga_destroy_sampler_view_priv(struct svga_sampler_view *v)
       SVGA_DBG(DEBUG_DMA, "unref sid %p (sampler view)\n", v->handle);
       svga_screen_surface_destroy(ss, &v->key, &v->handle);
    }
-   pipe_resource_reference(&v->texture, NULL);
+
+   /* Note: we're not refcounting the texture resource here to avoid
+    * a circular dependency.
+    */
+   v->texture = NULL;
+
    FREE(v);
 }

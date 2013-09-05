@@ -46,15 +46,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/imports.h"
 #include "main/context.h"
 #include "main/enums.h"
+#include "main/fbobject.h"
 #include "main/framebuffer.h"
 #include "main/renderbuffer.h"
 #include "drivers/common/meta.h"
 
-#include "vblank.h"
-
 #include "radeon_common.h"
-#include "radeon_bocs_wrapper.h"
-#include "radeon_lock.h"
 #include "radeon_drm.h"
 #include "radeon_queryobj.h"
 
@@ -70,100 +67,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Scissoring
  */
 
-static GLboolean intersect_rect(drm_clip_rect_t * out,
-				drm_clip_rect_t * a, drm_clip_rect_t * b)
-{
-	*out = *a;
-	if (b->x1 > out->x1)
-		out->x1 = b->x1;
-	if (b->y1 > out->y1)
-		out->y1 = b->y1;
-	if (b->x2 < out->x2)
-		out->x2 = b->x2;
-	if (b->y2 < out->y2)
-		out->y2 = b->y2;
-	if (out->x1 >= out->x2)
-		return GL_FALSE;
-	if (out->y1 >= out->y2)
-		return GL_FALSE;
-	return GL_TRUE;
-}
-
-void radeonRecalcScissorRects(radeonContextPtr radeon)
-{
-	drm_clip_rect_t *out;
-	int i;
-
-	/* Grow cliprect store?
-	 */
-	if (radeon->state.scissor.numAllocedClipRects < radeon->numClipRects) {
-		while (radeon->state.scissor.numAllocedClipRects <
-		       radeon->numClipRects) {
-			radeon->state.scissor.numAllocedClipRects += 1;	/* zero case */
-			radeon->state.scissor.numAllocedClipRects *= 2;
-		}
-
-		if (radeon->state.scissor.pClipRects)
-			FREE(radeon->state.scissor.pClipRects);
-
-		radeon->state.scissor.pClipRects =
-			MALLOC(radeon->state.scissor.numAllocedClipRects *
-			       sizeof(drm_clip_rect_t));
-
-		if (radeon->state.scissor.pClipRects == NULL) {
-			radeon->state.scissor.numAllocedClipRects = 0;
-			return;
-		}
-	}
-
-	out = radeon->state.scissor.pClipRects;
-	radeon->state.scissor.numClipRects = 0;
-
-	for (i = 0; i < radeon->numClipRects; i++) {
-		if (intersect_rect(out,
-				   &radeon->pClipRects[i],
-				   &radeon->state.scissor.rect)) {
-			radeon->state.scissor.numClipRects++;
-			out++;
-		}
-	}
-
-	if (radeon->vtbl.update_scissor)
-	   radeon->vtbl.update_scissor(radeon->glCtx);
-}
-
-void radeon_get_cliprects(radeonContextPtr radeon,
-			  struct drm_clip_rect **cliprects,
-			  unsigned int *num_cliprects,
-			  int *x_off, int *y_off)
-{
-	__DRIdrawable *dPriv = radeon_get_drawable(radeon);
-	struct radeon_framebuffer *rfb = dPriv->driverPrivate;
-
-	if (radeon->constant_cliprect) {
-		radeon->fboRect.x1 = 0;
-		radeon->fboRect.y1 = 0;
-		radeon->fboRect.x2 = radeon->glCtx->DrawBuffer->Width;
-		radeon->fboRect.y2 = radeon->glCtx->DrawBuffer->Height;
-
-		*cliprects = &radeon->fboRect;
-		*num_cliprects = 1;
-		*x_off = 0;
-		*y_off = 0;
-	} else if (radeon->front_cliprects ||
-		   rfb->pf_active || dPriv->numBackClipRects == 0) {
-		*cliprects = dPriv->pClipRects;
-		*num_cliprects = dPriv->numClipRects;
-		*x_off = dPriv->x;
-		*y_off = dPriv->y;
-	} else {
-		*num_cliprects = dPriv->numBackClipRects;
-		*cliprects = dPriv->pBackClipRects;
-		*x_off = dPriv->backX;
-		*y_off = dPriv->backY;
-	}
-}
-
 /**
  * Update cliprects and scissors.
  */
@@ -177,29 +80,23 @@ void radeonSetCliprects(radeonContextPtr radeon)
 
 	struct radeon_framebuffer *const draw_rfb = drawable->driverPrivate;
 	struct radeon_framebuffer *const read_rfb = readable->driverPrivate;
-	int x_off, y_off;
-
-	radeon_get_cliprects(radeon, &radeon->pClipRects,
-			     &radeon->numClipRects, &x_off, &y_off);
 
 	if ((draw_rfb->base.Width != drawable->w) ||
 	    (draw_rfb->base.Height != drawable->h)) {
-		_mesa_resize_framebuffer(radeon->glCtx, &draw_rfb->base,
+		_mesa_resize_framebuffer(&radeon->glCtx, &draw_rfb->base,
 					 drawable->w, drawable->h);
-		draw_rfb->base.Initialized = GL_TRUE;
 	}
 
 	if (drawable != readable) {
 		if ((read_rfb->base.Width != readable->w) ||
 		    (read_rfb->base.Height != readable->h)) {
-			_mesa_resize_framebuffer(radeon->glCtx, &read_rfb->base,
+			_mesa_resize_framebuffer(&radeon->glCtx, &read_rfb->base,
 						 readable->w, readable->h);
-			read_rfb->base.Initialized = GL_TRUE;
 		}
 	}
 
 	if (radeon->state.scissor.enabled)
-		radeonRecalcScissorRects(radeon);
+		radeonUpdateScissor(&radeon->glCtx);
 
 }
 
@@ -219,7 +116,7 @@ void radeonUpdateScissor( struct gl_context *ctx )
 	max_x = ctx->DrawBuffer->Width - 1;
 	max_y = ctx->DrawBuffer->Height - 1;
 
-	if ( !ctx->DrawBuffer->Name ) {
+	if (_mesa_is_winsys_fbo(ctx->DrawBuffer)) {
 		x1 = x;
 		y1 = ctx->DrawBuffer->Height - (y + h);
 		x2 = x + w - 1;
@@ -231,25 +128,14 @@ void radeonUpdateScissor( struct gl_context *ctx )
 		y2 = y + h - 1;
 
 	}
-	if (!rmesa->radeonScreen->kernel_mm) {
-	   /* Fix scissors for dri 1 */
-	   __DRIdrawable *dPriv = radeon_get_drawable(rmesa);
-	   x1 += dPriv->x;
-	   x2 += dPriv->x + 1;
-	   min_x += dPriv->x;
-	   max_x += dPriv->x + 1;
-	   y1 += dPriv->y;
-	   y2 += dPriv->y + 1;
-	   min_y += dPriv->y;
-	   max_y += dPriv->y + 1;
-	}
 
 	rmesa->state.scissor.rect.x1 = CLAMP(x1,  min_x, max_x);
 	rmesa->state.scissor.rect.y1 = CLAMP(y1,  min_y, max_y);
 	rmesa->state.scissor.rect.x2 = CLAMP(x2,  min_x, max_x);
 	rmesa->state.scissor.rect.y2 = CLAMP(y2,  min_y, max_y);
 
-	radeonRecalcScissorRects( rmesa );
+	if (rmesa->vtbl.update_scissor)
+	   rmesa->vtbl.update_scissor(ctx);
 }
 
 /* =============================================================
@@ -270,25 +156,6 @@ void radeonScissor(struct gl_context* ctx, GLint x, GLint y, GLsizei w, GLsizei 
  * SwapBuffers with client-side throttling
  */
 
-static uint32_t radeonGetLastFrame(radeonContextPtr radeon)
-{
-	drm_radeon_getparam_t gp;
-	int ret;
-	uint32_t frame = 0;
-
-	gp.param = RADEON_PARAM_LAST_FRAME;
-	gp.value = (int *)&frame;
-	ret = drmCommandWriteRead(radeon->dri.fd, DRM_RADEON_GETPARAM,
-				  &gp, sizeof(gp));
-	if (ret) {
-		fprintf(stderr, "%s: drmRadeonGetParam: %d\n", __FUNCTION__,
-			ret);
-		exit(1);
-	}
-
-	return frame;
-}
-
 uint32_t radeonGetAge(radeonContextPtr radeon)
 {
 	drm_radeon_getparam_t gp;
@@ -306,343 +173,6 @@ uint32_t radeonGetAge(radeonContextPtr radeon)
 	}
 
 	return age;
-}
-
-static void radeonEmitIrqLocked(radeonContextPtr radeon)
-{
-	drm_radeon_irq_emit_t ie;
-	int ret;
-
-	ie.irq_seq = &radeon->iw.irq_seq;
-	ret = drmCommandWriteRead(radeon->dri.fd, DRM_RADEON_IRQ_EMIT,
-				  &ie, sizeof(ie));
-	if (ret) {
-		fprintf(stderr, "%s: drmRadeonIrqEmit: %d\n", __FUNCTION__,
-			ret);
-		exit(1);
-	}
-}
-
-static void radeonWaitIrq(radeonContextPtr radeon)
-{
-	int ret;
-
-	do {
-		ret = drmCommandWrite(radeon->dri.fd, DRM_RADEON_IRQ_WAIT,
-				      &radeon->iw, sizeof(radeon->iw));
-	} while (ret && (errno == EINTR || errno == EBUSY));
-
-	if (ret) {
-		fprintf(stderr, "%s: drmRadeonIrqWait: %d\n", __FUNCTION__,
-			ret);
-		exit(1);
-	}
-}
-
-static void radeonWaitForFrameCompletion(radeonContextPtr radeon)
-{
-	drm_radeon_sarea_t *sarea = radeon->sarea;
-
-	if (radeon->do_irqs) {
-		if (radeonGetLastFrame(radeon) < sarea->last_frame) {
-			if (!radeon->irqsEmitted) {
-				while (radeonGetLastFrame(radeon) <
-				       sarea->last_frame) ;
-			} else {
-				UNLOCK_HARDWARE(radeon);
-				radeonWaitIrq(radeon);
-				LOCK_HARDWARE(radeon);
-			}
-			radeon->irqsEmitted = 10;
-		}
-
-		if (radeon->irqsEmitted) {
-			radeonEmitIrqLocked(radeon);
-			radeon->irqsEmitted--;
-		}
-	} else {
-		while (radeonGetLastFrame(radeon) < sarea->last_frame) {
-			UNLOCK_HARDWARE(radeon);
-			if (radeon->do_usleeps)
-				DO_USLEEP(1);
-			LOCK_HARDWARE(radeon);
-		}
-	}
-}
-
-/* wait for idle */
-void radeonWaitForIdleLocked(radeonContextPtr radeon)
-{
-	int ret;
-	int i = 0;
-
-	do {
-		ret = drmCommandNone(radeon->dri.fd, DRM_RADEON_CP_IDLE);
-		if (ret)
-			DO_USLEEP(1);
-	} while (ret && ++i < 100);
-
-	if (ret < 0) {
-		UNLOCK_HARDWARE(radeon);
-		fprintf(stderr, "Error: R300 timed out... exiting\n");
-		exit(-1);
-	}
-}
-
-static void radeonWaitForIdle(radeonContextPtr radeon)
-{
-	if (!radeon->radeonScreen->driScreen->dri2.enabled) {
-        LOCK_HARDWARE(radeon);
-	    radeonWaitForIdleLocked(radeon);
-	    UNLOCK_HARDWARE(radeon);
-    }
-}
-
-static void radeon_flip_renderbuffers(struct radeon_framebuffer *rfb)
-{
-	int current_page = rfb->pf_current_page;
-	int next_page = (current_page + 1) % rfb->pf_num_pages;
-	struct gl_renderbuffer *tmp_rb;
-
-	/* Exchange renderbuffers if necessary but make sure their
-	 * reference counts are preserved.
-	 */
-	if (rfb->color_rb[current_page] &&
-	    rfb->base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer !=
-	    &rfb->color_rb[current_page]->base) {
-		tmp_rb = NULL;
-		_mesa_reference_renderbuffer(&tmp_rb,
-					     rfb->base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer);
-		tmp_rb = &rfb->color_rb[current_page]->base;
-		_mesa_reference_renderbuffer(&rfb->base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer, tmp_rb);
-		_mesa_reference_renderbuffer(&tmp_rb, NULL);
-	}
-
-	if (rfb->color_rb[next_page] &&
-	    rfb->base.Attachment[BUFFER_BACK_LEFT].Renderbuffer !=
-	    &rfb->color_rb[next_page]->base) {
-		tmp_rb = NULL;
-		_mesa_reference_renderbuffer(&tmp_rb,
-					     rfb->base.Attachment[BUFFER_BACK_LEFT].Renderbuffer);
-		tmp_rb = &rfb->color_rb[next_page]->base;
-		_mesa_reference_renderbuffer(&rfb->base.Attachment[BUFFER_BACK_LEFT].Renderbuffer, tmp_rb);
-		_mesa_reference_renderbuffer(&tmp_rb, NULL);
-	}
-}
-
-/* Copy the back color buffer to the front color buffer.
- */
-void radeonCopyBuffer( __DRIdrawable *dPriv,
-		       const drm_clip_rect_t	  *rect)
-{
-	radeonContextPtr rmesa;
-	struct radeon_framebuffer *rfb;
-	GLint nbox, i, ret;
-
-	assert(dPriv);
-	assert(dPriv->driContextPriv);
-	assert(dPriv->driContextPriv->driverPrivate);
-
-	rmesa = (radeonContextPtr) dPriv->driContextPriv->driverPrivate;
-
-	LOCK_HARDWARE(rmesa);
-
-	rfb = dPriv->driverPrivate;
-
-	if ( RADEON_DEBUG & RADEON_IOCTL ) {
-		fprintf( stderr, "\n%s( %p )\n\n", __FUNCTION__, (void *) rmesa->glCtx );
-	}
-
-	nbox = dPriv->numClipRects; /* must be in locked region */
-
-	for ( i = 0 ; i < nbox ; ) {
-		GLint nr = MIN2( i + RADEON_NR_SAREA_CLIPRECTS , nbox );
-		drm_clip_rect_t *box = dPriv->pClipRects;
-		drm_clip_rect_t *b = rmesa->sarea->boxes;
-		GLint n = 0;
-
-		for ( ; i < nr ; i++ ) {
-
-			*b = box[i];
-
-			if (rect)
-			{
-				if (rect->x1 > b->x1)
-					b->x1 = rect->x1;
-				if (rect->y1 > b->y1)
-					b->y1 = rect->y1;
-				if (rect->x2 < b->x2)
-					b->x2 = rect->x2;
-				if (rect->y2 < b->y2)
-					b->y2 = rect->y2;
-
-				if (b->x1 >= b->x2 || b->y1 >= b->y2)
-					continue;
-			}
-
-			b++;
-			n++;
-		}
-		rmesa->sarea->nbox = n;
-
-		if (!n)
-			continue;
-
-		ret = drmCommandNone( rmesa->dri.fd, DRM_RADEON_SWAP );
-
-		if ( ret ) {
-			fprintf( stderr, "DRM_RADEON_SWAP_BUFFERS: return = %d\n", ret );
-			UNLOCK_HARDWARE( rmesa );
-			exit( 1 );
-		}
-	}
-
-	UNLOCK_HARDWARE( rmesa );
-}
-
-static int radeonScheduleSwap(__DRIdrawable *dPriv, GLboolean *missed_target)
-{
-	radeonContextPtr rmesa;
-
-	rmesa = (radeonContextPtr) dPriv->driContextPriv->driverPrivate;
-	radeon_firevertices(rmesa);
-
-	LOCK_HARDWARE( rmesa );
-
-	if (!dPriv->numClipRects) {
-		UNLOCK_HARDWARE(rmesa);
-		usleep(10000);	/* throttle invisible client 10ms */
-		return 0;
-	}
-
-	radeonWaitForFrameCompletion(rmesa);
-
-	UNLOCK_HARDWARE(rmesa);
-	driWaitForVBlank(dPriv, missed_target);
-
-	return 0;
-}
-
-static GLboolean radeonPageFlip( __DRIdrawable *dPriv )
-{
-	radeonContextPtr radeon;
-	GLint ret;
-	__DRIscreen *psp;
-	struct radeon_renderbuffer *rrb;
-	struct radeon_framebuffer *rfb;
-
-	assert(dPriv);
-	assert(dPriv->driContextPriv);
-	assert(dPriv->driContextPriv->driverPrivate);
-
-	radeon = (radeonContextPtr) dPriv->driContextPriv->driverPrivate;
-	rfb = dPriv->driverPrivate;
-	rrb = (void *)rfb->base.Attachment[BUFFER_FRONT_LEFT].Renderbuffer;
-
-	psp = dPriv->driScreenPriv;
-
-	LOCK_HARDWARE(radeon);
-
-	if ( RADEON_DEBUG & RADEON_IOCTL ) {
-		fprintf(stderr, "%s: pfCurrentPage: %d %d\n", __FUNCTION__,
-			radeon->sarea->pfCurrentPage, radeon->sarea->pfState);
-	}
-	drm_clip_rect_t *box = dPriv->pClipRects;
-	drm_clip_rect_t *b = radeon->sarea->boxes;
-	b[0] = box[0];
-	radeon->sarea->nbox = 1;
-
-	ret = drmCommandNone( radeon->dri.fd, DRM_RADEON_FLIP );
-
-	UNLOCK_HARDWARE(radeon);
-
-	if ( ret ) {
-		fprintf( stderr, "DRM_RADEON_FLIP: return = %d\n", ret );
-		return GL_FALSE;
-	}
-
-	if (!rfb->pf_active)
-		return GL_FALSE;
-
-	rfb->pf_current_page = radeon->sarea->pfCurrentPage;
-	radeon_flip_renderbuffers(rfb);
-	radeon_draw_buffer(radeon->glCtx, &rfb->base);
-
-	return GL_TRUE;
-}
-
-
-/**
- * Swap front and back buffer.
- */
-void radeonSwapBuffers(__DRIdrawable * dPriv)
-{
-	int64_t ust;
-	__DRIscreen *psp;
-
-	if (dPriv->driContextPriv && dPriv->driContextPriv->driverPrivate) {
-		radeonContextPtr radeon;
-		struct gl_context *ctx;
-
-		radeon = (radeonContextPtr) dPriv->driContextPriv->driverPrivate;
-		ctx = radeon->glCtx;
-
-		if (ctx->Visual.doubleBufferMode) {
-			GLboolean missed_target;
-			struct radeon_framebuffer *rfb = dPriv->driverPrivate;
-			_mesa_notifySwapBuffers(ctx);/* flush pending rendering comands */
-
-			radeonScheduleSwap(dPriv, &missed_target);
-
-			if (rfb->pf_active) {
-				radeonPageFlip(dPriv);
-			} else {
-				radeonCopyBuffer(dPriv, NULL);
-			}
-
-			psp = dPriv->driScreenPriv;
-
-			rfb->swap_count++;
-			(*psp->systemTime->getUST)( & ust );
-			if ( missed_target ) {
-				rfb->swap_missed_count++;
-				rfb->swap_missed_ust = ust - rfb->swap_ust;
-			}
-
-			rfb->swap_ust = ust;
-			radeon->hw.all_dirty = GL_TRUE;
-		}
-	} else {
-		/* XXX this shouldn't be an error but we can't handle it for now */
-		_mesa_problem(NULL, "%s: drawable has no context!",
-			      __FUNCTION__);
-	}
-}
-
-void radeonCopySubBuffer(__DRIdrawable * dPriv,
-			 int x, int y, int w, int h )
-{
-	if (dPriv->driContextPriv && dPriv->driContextPriv->driverPrivate) {
-		radeonContextPtr radeon;
-		struct gl_context *ctx;
-
-		radeon = (radeonContextPtr) dPriv->driContextPriv->driverPrivate;
-		ctx = radeon->glCtx;
-
-		if (ctx->Visual.doubleBufferMode) {
-			drm_clip_rect_t rect;
-			rect.x1 = x + dPriv->x;
-			rect.y1 = (dPriv->h - y - h) + dPriv->y;
-			rect.x2 = rect.x1 + w;
-			rect.y2 = rect.y1 + h;
-			_mesa_notifySwapBuffers(ctx);	/* flush pending rendering comands */
-			radeonCopyBuffer(dPriv, &rect);
-		}
-	} else {
-		/* XXX this shouldn't be an error but we can't handle it for now */
-		_mesa_problem(NULL, "%s: drawable has no context!",
-			      __FUNCTION__);
-	}
 }
 
 /**
@@ -724,7 +254,6 @@ void radeon_draw_buffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 			offset = rrb->draw_offset;
 			rrbColor = rrb;
 		}
-		radeon->constant_cliprect = GL_TRUE;
 	}
 
 	if (rrbColor == NULL)
@@ -733,8 +262,8 @@ void radeon_draw_buffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 		radeon->vtbl.fallback(ctx, RADEON_FALLBACK_DRAW_BUFFER, GL_FALSE);
 
 
-	if (fb->_DepthBuffer && fb->_DepthBuffer->Wrapped) {
-		rrbDepth = radeon_renderbuffer(fb->_DepthBuffer->Wrapped);
+	if (fb->Attachment[BUFFER_DEPTH].Renderbuffer) {
+		rrbDepth = radeon_renderbuffer(fb->Attachment[BUFFER_DEPTH].Renderbuffer);
 		if (rrbDepth && rrbDepth->bo) {
 			radeon->vtbl.fallback(ctx, RADEON_FALLBACK_DEPTH_BUFFER, GL_FALSE);
 		} else {
@@ -745,8 +274,8 @@ void radeon_draw_buffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 		rrbDepth = NULL;
 	}
 
-	if (fb->_StencilBuffer && fb->_StencilBuffer->Wrapped) {
-		rrbStencil = radeon_renderbuffer(fb->_StencilBuffer->Wrapped);
+	if (fb->Attachment[BUFFER_STENCIL].Renderbuffer) {
+		rrbStencil = radeon_renderbuffer(fb->Attachment[BUFFER_STENCIL].Renderbuffer);
 		if (rrbStencil && rrbStencil->bo) {
 			radeon->vtbl.fallback(ctx, RADEON_FALLBACK_STENCIL_BUFFER, GL_FALSE);
 			/* need to re-compute stencil hw state */
@@ -784,8 +313,8 @@ void radeon_draw_buffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 		ctx->NewState |= (_NEW_DEPTH | _NEW_STENCIL);
 	}
 
-	_mesa_reference_renderbuffer(&radeon->state.depth.rb, &rrbDepth->base);
-	_mesa_reference_renderbuffer(&radeon->state.color.rb, &rrbColor->base);
+	_mesa_reference_renderbuffer(&radeon->state.depth.rb, &rrbDepth->base.Base);
+	_mesa_reference_renderbuffer(&radeon->state.color.rb, &rrbColor->base.Base);
 	radeon->state.color.draw_offset = offset;
 
 #if 0
@@ -827,7 +356,7 @@ void radeonDrawBuffer( struct gl_context *ctx, GLenum mode )
 		fprintf(stderr, "%s %s\n", __FUNCTION__,
 			_mesa_lookup_enum_by_nr( mode ));
 
-	if (ctx->DrawBuffer->Name == 0) {
+	if (_mesa_is_winsys_fbo(ctx->DrawBuffer)) {
 		radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 
 		const GLboolean was_front_buffer_rendering =
@@ -850,7 +379,7 @@ void radeonDrawBuffer( struct gl_context *ctx, GLenum mode )
 
 void radeonReadBuffer( struct gl_context *ctx, GLenum mode )
 {
-	if ((ctx->DrawBuffer != NULL) && (ctx->DrawBuffer->Name == 0)) {
+	if (ctx->DrawBuffer && _mesa_is_winsys_fbo(ctx->DrawBuffer)) {
 		struct radeon_context *const rmesa = RADEON_CONTEXT(ctx);
 		const GLboolean was_front_buffer_reading = rmesa->is_front_buffer_reading;
 		rmesa->is_front_buffer_reading = (mode == GL_FRONT_LEFT)
@@ -872,27 +401,10 @@ void radeonReadBuffer( struct gl_context *ctx, GLenum mode )
 	}
 }
 
-
-/* Turn on/off page flipping according to the flags in the sarea:
- */
-void radeonUpdatePageFlipping(radeonContextPtr radeon)
-{
-	struct radeon_framebuffer *rfb = radeon_get_drawable(radeon)->driverPrivate;
-
-	rfb->pf_active = radeon->sarea->pfState;
-	rfb->pf_current_page = radeon->sarea->pfCurrentPage;
-	rfb->pf_num_pages = 2;
-	radeon_flip_renderbuffers(rfb);
-	radeon_draw_buffer(radeon->glCtx, radeon->glCtx->DrawBuffer);
-}
-
 void radeon_window_moved(radeonContextPtr radeon)
 {
 	/* Cliprects has to be updated before doing anything else */
 	radeonSetCliprects(radeon);
-	if (!radeon->radeonScreen->driScreen->dri2.enabled) {
-		radeonUpdatePageFlipping(radeon);
-	}
 }
 
 void radeon_viewport(struct gl_context *ctx, GLint x, GLint y, GLsizei width, GLsizei height)
@@ -902,10 +414,7 @@ void radeon_viewport(struct gl_context *ctx, GLint x, GLint y, GLsizei width, GL
 	void (*old_viewport)(struct gl_context *ctx, GLint x, GLint y,
 			     GLsizei w, GLsizei h);
 
-	if (!driContext->driScreenPriv->dri2.enabled)
-		return;
-
-	if (ctx->DrawBuffer->Name == 0) {
+	if (_mesa_is_winsys_fbo(ctx->DrawBuffer)) {
 		if (radeon->is_front_buffer_rendering) {
 			ctx->Driver.Flush(ctx);
 		}
@@ -917,36 +426,8 @@ void radeon_viewport(struct gl_context *ctx, GLint x, GLint y, GLsizei width, GL
 	old_viewport = ctx->Driver.Viewport;
 	ctx->Driver.Viewport = NULL;
 	radeon_window_moved(radeon);
-	radeon_draw_buffer(ctx, radeon->glCtx->DrawBuffer);
+	radeon_draw_buffer(ctx, radeon->glCtx.DrawBuffer);
 	ctx->Driver.Viewport = old_viewport;
-}
-
-static void radeon_print_state_atom_prekmm(radeonContextPtr radeon, struct radeon_state_atom *state)
-{
-	int i, j, reg;
-	int dwords = (*state->check) (radeon->glCtx, state);
-	drm_r300_cmd_header_t cmd;
-
-	fprintf(stderr, "  emit %s %d/%d\n", state->name, dwords, state->cmd_size);
-
-	if (radeon_is_debug_enabled(RADEON_STATE, RADEON_TRACE)) {
-		if (dwords > state->cmd_size)
-			dwords = state->cmd_size;
-
-		for (i = 0; i < dwords;) {
-			cmd = *((drm_r300_cmd_header_t *) &state->cmd[i]);
-			reg = (cmd.packet0.reghi << 8) | cmd.packet0.reglo;
-			fprintf(stderr, "      %s[%d]: cmdpacket0 (first reg=0x%04x, count=%d)\n",
-					state->name, i, reg, cmd.packet0.count);
-			++i;
-			for (j = 0; j < cmd.packet0.count && i < dwords; j++) {
-				fprintf(stderr, "      %s[%d]: 0x%04x = %08x\n",
-						state->name, i, reg, state->cmd[i]);
-				reg += 4;
-				++i;
-			}
-		}
-	}
 }
 
 static void radeon_print_state_atom(radeonContextPtr radeon, struct radeon_state_atom *state)
@@ -957,12 +438,7 @@ static void radeon_print_state_atom(radeonContextPtr radeon, struct radeon_state
 	if (!radeon_is_debug_enabled(RADEON_STATE, RADEON_VERBOSE) )
 		return;
 
-	if (!radeon->radeonScreen->kernel_mm) {
-		radeon_print_state_atom_prekmm(radeon, state);
-		return;
-	}
-
-	dwords = (*state->check) (radeon->glCtx, state);
+	dwords = (*state->check) (&radeon->glCtx, state);
 
 	fprintf(stderr, "  emit %s %d/%d\n", state->name, dwords, state->cmd_size);
 
@@ -1000,7 +476,7 @@ GLuint radeonCountStateEmitSize(radeonContextPtr radeon)
 			goto out;
 		foreach(atom, &radeon->hw.atomlist) {
 			if (atom->dirty) {
-				const GLuint atom_size = atom->check(radeon->glCtx, atom);
+				const GLuint atom_size = atom->check(&radeon->glCtx, atom);
 				dwords += atom_size;
 				if (RADEON_CMDBUF && atom_size) {
 					radeon_print_state_atom(radeon, atom);
@@ -1009,7 +485,7 @@ GLuint radeonCountStateEmitSize(radeonContextPtr radeon)
 		}
 	} else {
 		foreach(atom, &radeon->hw.atomlist) {
-			const GLuint atom_size = atom->check(radeon->glCtx, atom);
+			const GLuint atom_size = atom->check(&radeon->glCtx, atom);
 			dwords += atom_size;
 			if (RADEON_CMDBUF && atom_size) {
 				radeon_print_state_atom(radeon, atom);
@@ -1027,13 +503,13 @@ static INLINE void radeon_emit_atom(radeonContextPtr radeon, struct radeon_state
 	BATCH_LOCALS(radeon);
 	int dwords;
 
-	dwords = (*atom->check) (radeon->glCtx, atom);
+	dwords = (*atom->check) (&radeon->glCtx, atom);
 	if (dwords) {
 
 		radeon_print_state_atom(radeon, atom);
 
 		if (atom->emit) {
-			(*atom->emit)(radeon->glCtx, atom);
+			(*atom->emit)(&radeon->glCtx, atom);
 		} else {
 			BEGIN_BATCH_NO_AUTOSTATE(dwords);
 			OUT_BATCH_TABLE(atom->cmd, dwords);
@@ -1129,7 +605,7 @@ void radeonFlush(struct gl_context *ctx)
 		rcommonFlushCmdBuf(radeon, __FUNCTION__);
 
 flush_front:
-	if ((ctx->DrawBuffer->Name == 0) && radeon->front_buffer_dirty) {
+	if (_mesa_is_winsys_fbo(ctx->DrawBuffer) && radeon->front_buffer_dirty) {
 		__DRIscreen *const screen = radeon->radeonScreen->driScreen;
 
 		if (screen->dri2.loader && (screen->dri2.loader->base.version >= 2)
@@ -1153,32 +629,21 @@ void radeonFinish(struct gl_context * ctx)
 {
 	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 	struct gl_framebuffer *fb = ctx->DrawBuffer;
+	struct radeon_renderbuffer *rrb;
 	int i;
 
 	if (ctx->Driver.Flush)
 		ctx->Driver.Flush(ctx); /* +r6/r7 */
 
-	if (radeon->radeonScreen->kernel_mm) {
-		for (i = 0; i < fb->_NumColorDrawBuffers; i++) {
-			struct radeon_renderbuffer *rrb;
-			rrb = radeon_renderbuffer(fb->_ColorDrawBuffers[i]);
-			if (rrb && rrb->bo)
-				radeon_bo_wait(rrb->bo);
-		}
-		{
-			struct radeon_renderbuffer *rrb;
-			rrb = radeon_get_depthbuffer(radeon);
-			if (rrb && rrb->bo)
-				radeon_bo_wait(rrb->bo);
-		}
-	} else if (radeon->do_irqs) {
-		LOCK_HARDWARE(radeon);
-		radeonEmitIrqLocked(radeon);
-		UNLOCK_HARDWARE(radeon);
-		radeonWaitIrq(radeon);
-	} else {
-		radeonWaitForIdle(radeon);
+	for (i = 0; i < fb->_NumColorDrawBuffers; i++) {
+		struct radeon_renderbuffer *rrb;
+		rrb = radeon_renderbuffer(fb->_ColorDrawBuffers[i]);
+		if (rrb && rrb->bo)
+			radeon_bo_wait(rrb->bo);
 	}
+	rrb = radeon_get_depthbuffer(radeon);
+	if (rrb && rrb->bo)
+		radeon_bo_wait(rrb->bo);
 }
 
 /* cmdbuffer */
@@ -1196,11 +661,10 @@ int rcommonFlushCmdBufLocked(radeonContextPtr rmesa, const char *caller)
 	rmesa->cmdbuf.flushing = 1;
 
 	if (RADEON_DEBUG & RADEON_IOCTL) {
-		fprintf(stderr, "%s from %s - %i cliprects\n",
-			__FUNCTION__, caller, rmesa->numClipRects);
+		fprintf(stderr, "%s from %s\n", __FUNCTION__, caller);
 	}
 
-	radeonEmitQueryEnd(rmesa->glCtx);
+	radeonEmitQueryEnd(&rmesa->glCtx);
 
 	if (rmesa->cmdbuf.cs->cdw) {
 		ret = radeon_cs_emit(rmesa->cmdbuf.cs);
@@ -1209,7 +673,7 @@ int rcommonFlushCmdBufLocked(radeonContextPtr rmesa, const char *caller)
 	radeon_cs_erase(rmesa->cmdbuf.cs);
 	rmesa->cmdbuf.flushing = 0;
 
-	if (radeon_revalidate_bos(rmesa->glCtx) == GL_FALSE) {
+	if (radeon_revalidate_bos(&rmesa->glCtx) == GL_FALSE) {
 		fprintf(stderr,"failed to revalidate buffers\n");
 	}
 
@@ -1222,9 +686,7 @@ int rcommonFlushCmdBuf(radeonContextPtr rmesa, const char *caller)
 
 	radeonReleaseDmaRegions(rmesa);
 
-	LOCK_HARDWARE(rmesa);
 	ret = rcommonFlushCmdBufLocked(rmesa, caller);
-	UNLOCK_HARDWARE(rmesa);
 
 	if (ret) {
 		fprintf(stderr, "drmRadeonCmdBuffer: %d. Kernel failed to "
@@ -1257,6 +719,8 @@ GLboolean rcommonEnsureCmdBufSpace(radeonContextPtr rmesa, int dwords, const cha
 void rcommonInitCmdBuf(radeonContextPtr rmesa)
 {
 	GLuint size;
+	struct drm_radeon_gem_info mminfo = { 0 };
+
 	/* Initialize command buffer */
 	size = 256 * driQueryOptioni(&rmesa->optionCache,
 				     "command_buffer_size");
@@ -1274,12 +738,8 @@ void rcommonInitCmdBuf(radeonContextPtr rmesa)
 			"Allocating %d bytes command buffer (max state is %d bytes)\n",
 			size * 4, rmesa->hw.max_state_size * 4);
 
-	if (rmesa->radeonScreen->kernel_mm) {
-		int fd = rmesa->radeonScreen->driScreen->fd;
-		rmesa->cmdbuf.csm = radeon_cs_manager_gem_ctor(fd);
-	} else {
-		rmesa->cmdbuf.csm = radeon_cs_manager_legacy_ctor(rmesa);
-	}
+	rmesa->cmdbuf.csm =
+		radeon_cs_manager_gem_ctor(rmesa->radeonScreen->driScreen->fd);
 	if (rmesa->cmdbuf.csm == NULL) {
 		/* FIXME: fatal error */
 		return;
@@ -1289,33 +749,25 @@ void rcommonInitCmdBuf(radeonContextPtr rmesa)
 	rmesa->cmdbuf.size = size;
 
 	radeon_cs_space_set_flush(rmesa->cmdbuf.cs,
-				  (void (*)(void *))rmesa->glCtx->Driver.Flush, rmesa->glCtx);
+				  (void (*)(void *))rmesa->glCtx.Driver.Flush, &rmesa->glCtx);
 
-	if (!rmesa->radeonScreen->kernel_mm) {
-		radeon_cs_set_limit(rmesa->cmdbuf.cs, RADEON_GEM_DOMAIN_VRAM, rmesa->radeonScreen->texSize[0]);
-		radeon_cs_set_limit(rmesa->cmdbuf.cs, RADEON_GEM_DOMAIN_GTT, rmesa->radeonScreen->gartTextures.size);
-	} else {
-		struct drm_radeon_gem_info mminfo = { 0 };
 
-		if (!drmCommandWriteRead(rmesa->dri.fd, DRM_RADEON_GEM_INFO, &mminfo, sizeof(mminfo)))
-		{
-			radeon_cs_set_limit(rmesa->cmdbuf.cs, RADEON_GEM_DOMAIN_VRAM, mminfo.vram_visible);
-			radeon_cs_set_limit(rmesa->cmdbuf.cs, RADEON_GEM_DOMAIN_GTT, mminfo.gart_size);
-		}
+	if (!drmCommandWriteRead(rmesa->dri.fd, DRM_RADEON_GEM_INFO,
+				 &mminfo, sizeof(mminfo))) {
+		radeon_cs_set_limit(rmesa->cmdbuf.cs, RADEON_GEM_DOMAIN_VRAM,
+				    mminfo.vram_visible);
+		radeon_cs_set_limit(rmesa->cmdbuf.cs, RADEON_GEM_DOMAIN_GTT,
+				    mminfo.gart_size);
 	}
-
 }
+
 /**
  * Destroy the command buffer
  */
 void rcommonDestroyCmdBuf(radeonContextPtr rmesa)
 {
 	radeon_cs_destroy(rmesa->cmdbuf.cs);
-	if (rmesa->radeonScreen->driScreen->dri2.enabled || rmesa->radeonScreen->kernel_mm) {
-		radeon_cs_manager_gem_dtor(rmesa->cmdbuf.csm);
-	} else {
-		radeon_cs_manager_legacy_dtor(rmesa->cmdbuf.csm);
-	}
+	radeon_cs_manager_gem_dtor(rmesa->cmdbuf.csm);
 }
 
 void rcommonBeginBatch(radeonContextPtr rmesa, int n,

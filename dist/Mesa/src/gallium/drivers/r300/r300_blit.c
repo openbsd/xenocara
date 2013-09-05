@@ -23,8 +23,10 @@
 #include "r300_context.h"
 #include "r300_emit.h"
 #include "r300_texture.h"
+#include "r300_reg.h"
 
 #include "util/u_format.h"
+#include "util/u_half.h"
 #include "util/u_pack_color.h"
 #include "util/u_surface.h"
 
@@ -40,6 +42,9 @@ enum r300_blitter_op /* bitmask */
     R300_CLEAR_SURFACE = R300_STOP_QUERY | R300_SAVE_FRAMEBUFFER,
 
     R300_COPY          = R300_STOP_QUERY | R300_SAVE_FRAMEBUFFER |
+                         R300_SAVE_TEXTURES | R300_IGNORE_RENDER_COND,
+
+    R300_BLIT          = R300_STOP_QUERY | R300_SAVE_FRAMEBUFFER |
                          R300_SAVE_TEXTURES | R300_IGNORE_RENDER_COND,
 
     R300_DECOMPRESS    = R300_STOP_QUERY | R300_IGNORE_RENDER_COND,
@@ -62,10 +67,10 @@ static void r300_blitter_begin(struct r300_context* r300, enum r300_blitter_op o
     util_blitter_save_fragment_shader(r300->blitter, r300->fs.state);
     util_blitter_save_vertex_shader(r300->blitter, r300->vs_state.state);
     util_blitter_save_viewport(r300->blitter, &r300->viewport);
-    util_blitter_save_clip(r300->blitter, (struct pipe_clip_state*)r300->clip_state.state);
+    util_blitter_save_scissor(r300->blitter, r300->scissor_state.state);
+    util_blitter_save_sample_mask(r300->blitter, *(unsigned*)r300->sample_mask.state);
+    util_blitter_save_vertex_buffer_slot(r300->blitter, r300->vertex_buffer);
     util_blitter_save_vertex_elements(r300->blitter, r300->velems);
-    util_blitter_save_vertex_buffers(r300->blitter, r300->vbuf_mgr->nr_vertex_buffers,
-                                     r300->vbuf_mgr->vertex_buffer);
 
     if (op & R300_SAVE_FRAMEBUFFER) {
         util_blitter_save_framebuffer(r300->blitter, r300->fb_state.state);
@@ -131,7 +136,8 @@ static boolean r300_cbzb_clear_allowed(struct r300_context *r300,
     return r300_surface(fb->cbufs[0])->cbzb_allowed;
 }
 
-static boolean r300_fast_zclear_allowed(struct r300_context *r300)
+static boolean r300_fast_zclear_allowed(struct r300_context *r300,
+                                        unsigned clear_buffers)
 {
     struct pipe_framebuffer_state *fb =
         (struct pipe_framebuffer_state*)r300->fb_state.state;
@@ -155,7 +161,7 @@ static uint32_t r300_depth_clear_value(enum pipe_format format,
         case PIPE_FORMAT_X8Z24_UNORM:
             return util_pack_z(format, depth);
 
-        case PIPE_FORMAT_S8_USCALED_Z24_UNORM:
+        case PIPE_FORMAT_S8_UINT_Z24_UNORM:
             return util_pack_z_stencil(format, depth, stencil);
 
         default:
@@ -171,10 +177,32 @@ static uint32_t r300_hiz_clear_value(double depth)
     return r | (r << 8) | (r << 16) | (r << 24);
 }
 
+static void r300_set_clear_color(struct r300_context *r300,
+                                 const union pipe_color_union *color)
+{
+    struct pipe_framebuffer_state *fb =
+        (struct pipe_framebuffer_state*)r300->fb_state.state;
+    union util_color uc;
+
+    memset(&uc, 0, sizeof(uc));
+    util_pack_color(color->f, fb->cbufs[0]->format, &uc);
+
+    if (fb->cbufs[0]->format == PIPE_FORMAT_R16G16B16A16_FLOAT ||
+        fb->cbufs[0]->format == PIPE_FORMAT_R16G16B16X16_FLOAT) {
+        /* (0,1,2,3) maps to (B,G,R,A) */
+        r300->color_clear_value_gb = uc.h[0] | ((uint32_t)uc.h[1] << 16);
+        r300->color_clear_value_ar = uc.h[2] | ((uint32_t)uc.h[3] << 16);
+    } else {
+        r300->color_clear_value = uc.ui;
+    }
+}
+
+DEBUG_GET_ONCE_BOOL_OPTION(hyperz, "RADEON_HYPERZ", FALSE)
+
 /* Clear currently bound buffers. */
 static void r300_clear(struct pipe_context* pipe,
                        unsigned buffers,
-                       const float* rgba,
+                       const union pipe_color_union *color,
                        double depth,
                        unsigned stencil)
 {
@@ -231,23 +259,29 @@ static void r300_clear(struct pipe_context* pipe,
     uint32_t height = fb->height;
     uint32_t hyperz_dcv = hyperz->zb_depthclearvalue;
 
-    /* Enable fast Z clear.
+    /* Use fast Z clear.
      * The zbuffer must be in micro-tiled mode, otherwise it locks up. */
     if (buffers & PIPE_CLEAR_DEPTHSTENCIL) {
         boolean zmask_clear, hiz_clear;
 
-        zmask_clear = r300_fast_zclear_allowed(r300);
-        hiz_clear = r300_hiz_clear_allowed(r300);
+        /* If both depth and stencil are present, they must be cleared together. */
+        if (fb->zsbuf->texture->format == PIPE_FORMAT_S8_UINT_Z24_UNORM &&
+            (buffers & PIPE_CLEAR_DEPTHSTENCIL) != PIPE_CLEAR_DEPTHSTENCIL) {
+            zmask_clear = FALSE;
+            hiz_clear = FALSE;
+        } else {
+            zmask_clear = r300_fast_zclear_allowed(r300, buffers);
+            hiz_clear = r300_hiz_clear_allowed(r300);
+        }
 
         /* If we need Hyper-Z. */
         if (zmask_clear || hiz_clear) {
-            r300->num_z_clears++;
-
             /* Try to obtain the access to Hyper-Z buffers if we don't have one. */
-            if (!r300->hyperz_enabled) {
+            if (!r300->hyperz_enabled &&
+                (r300->screen->caps.is_r500 || debug_get_option_hyperz())) {
                 r300->hyperz_enabled =
                     r300->rws->cs_request_feature(r300->cs,
-                                                RADEON_FID_HYPERZ_RAM_ACCESS,
+                                                RADEON_FID_R300_HYPERZ_ACCESS,
                                                 TRUE);
                 if (r300->hyperz_enabled) {
                    /* Need to emit HyperZ buffer regs for the first time. */
@@ -257,31 +291,68 @@ static void r300_clear(struct pipe_context* pipe,
 
             /* Setup Hyper-Z clears. */
             if (r300->hyperz_enabled) {
-                DBG(r300, DBG_HYPERZ, "r300: Clear memory: %s%s\n",
-                    zmask_clear ? "ZMASK " : "", hiz_clear ? "HIZ" : "");
-
                 if (zmask_clear) {
                     hyperz_dcv = hyperz->zb_depthclearvalue =
                         r300_depth_clear_value(fb->zsbuf->format, depth, stencil);
 
                     r300_mark_atom_dirty(r300, &r300->zmask_clear);
+                    r300_mark_atom_dirty(r300, &r300->gpu_flush);
                     buffers &= ~PIPE_CLEAR_DEPTHSTENCIL;
                 }
 
                 if (hiz_clear) {
                     r300->hiz_clear_value = r300_hiz_clear_value(depth);
                     r300_mark_atom_dirty(r300, &r300->hiz_clear);
+                    r300_mark_atom_dirty(r300, &r300->gpu_flush);
                 }
+                r300->num_z_clears++;
             }
         }
     }
 
+    /* Use fast color clear for an AA colorbuffer.
+     * The CMASK is shared between all colorbuffers, so we use it
+     * if there is only one colorbuffer bound. */
+    if ((buffers & PIPE_CLEAR_COLOR) && fb->nr_cbufs == 1 &&
+        r300_resource(fb->cbufs[0]->texture)->tex.cmask_dwords) {
+        /* Try to obtain the access to the CMASK if we don't have one. */
+        if (!r300->cmask_access) {
+            r300->cmask_access =
+                r300->rws->cs_request_feature(r300->cs,
+                                              RADEON_FID_R300_CMASK_ACCESS,
+                                              TRUE);
+        }
+
+        /* Setup the clear. */
+        if (r300->cmask_access) {
+            /* Pair the resource with the CMASK to avoid other resources
+             * accessing it. */
+            if (!r300->screen->cmask_resource) {
+                pipe_mutex_lock(r300->screen->cmask_mutex);
+                /* Double checking (first unlocked, then locked). */
+                if (!r300->screen->cmask_resource) {
+                    /* Don't reference this, so that the texture can be
+                     * destroyed while set in cmask_resource.
+                     * Then in texture_destroy, we set cmask_resource to NULL. */
+                    r300->screen->cmask_resource = fb->cbufs[0]->texture;
+                }
+                pipe_mutex_unlock(r300->screen->cmask_mutex);
+            }
+
+            if (r300->screen->cmask_resource == fb->cbufs[0]->texture) {
+                r300_set_clear_color(r300, color);
+                r300_mark_atom_dirty(r300, &r300->cmask_clear);
+                r300_mark_atom_dirty(r300, &r300->gpu_flush);
+                buffers &= ~PIPE_CLEAR_COLOR;
+            }
+        }
+    }
     /* Enable CBZB clear. */
-    if (r300_cbzb_clear_allowed(r300, buffers)) {
+    else if (r300_cbzb_clear_allowed(r300, buffers)) {
         struct r300_surface *surf = r300_surface(fb->cbufs[0]);
 
         hyperz->zb_depthclearvalue =
-                r300_depth_clear_cb_value(surf->base.format, rgba);
+                r300_depth_clear_cb_value(surf->base.format, color->f);
 
         width = surf->cbzb_width;
         height = surf->cbzb_height;
@@ -297,16 +368,19 @@ static void r300_clear(struct pipe_context* pipe,
         util_blitter_clear(r300->blitter,
                            width,
                            height,
-                           fb->nr_cbufs,
-                           buffers, rgba, depth, stencil);
+                           buffers, color, depth, stencil);
         r300_blitter_end(r300);
-    } else if (r300->zmask_clear.dirty || r300->hiz_clear.dirty) {
+    } else if (r300->zmask_clear.dirty ||
+               r300->hiz_clear.dirty ||
+               r300->cmask_clear.dirty) {
         /* Just clear zmask and hiz now, this does not use the standard draw
          * procedure. */
         /* Calculate zmask_clear and hiz_clear atom sizes. */
         unsigned dwords =
+            r300->gpu_flush.size +
             (r300->zmask_clear.dirty ? r300->zmask_clear.size : 0) +
             (r300->hiz_clear.dirty ? r300->hiz_clear.size : 0) +
+            (r300->cmask_clear.dirty ? r300->cmask_clear.size : 0) +
             r300_get_num_cs_end_dwords(r300);
 
         /* Reserve CS space. */
@@ -315,6 +389,9 @@ static void r300_clear(struct pipe_context* pipe,
         }
 
         /* Emit clear packets. */
+        r300_emit_gpu_flush(r300, r300->gpu_flush.size, r300->gpu_flush.state);
+        r300->gpu_flush.dirty = FALSE;
+
         if (r300->zmask_clear.dirty) {
             r300_emit_zmask_clear(r300, r300->zmask_clear.size,
                                   r300->zmask_clear.state);
@@ -324,6 +401,11 @@ static void r300_clear(struct pipe_context* pipe,
             r300_emit_hiz_clear(r300, r300->hiz_clear.size,
                                 r300->hiz_clear.state);
             r300->hiz_clear.dirty = FALSE;
+        }
+        if (r300->cmask_clear.dirty) {
+            r300_emit_cmask_clear(r300, r300->cmask_clear.size,
+                                  r300->cmask_clear.state);
+            r300->cmask_clear.dirty = FALSE;
         }
     } else {
         assert(0);
@@ -348,14 +430,14 @@ static void r300_clear(struct pipe_context* pipe,
 /* Clear a region of a color surface to a constant value. */
 static void r300_clear_render_target(struct pipe_context *pipe,
                                      struct pipe_surface *dst,
-                                     const float *rgba,
+                                     const union pipe_color_union *color,
                                      unsigned dstx, unsigned dsty,
                                      unsigned width, unsigned height)
 {
     struct r300_context *r300 = r300_context(pipe);
 
     r300_blitter_begin(r300, R300_CLEAR_SURFACE);
-    util_blitter_clear_render_target(r300->blitter, dst, rgba,
+    util_blitter_clear_render_target(r300->blitter, dst, color,
                                      dstx, dsty, width, height);
     r300_blitter_end(r300);
 }
@@ -398,7 +480,7 @@ void r300_decompress_zmask(struct r300_context *r300)
     r300_mark_atom_dirty(r300, &r300->hyperz_state);
 
     r300_blitter_begin(r300, R300_DECOMPRESS);
-    util_blitter_clear_depth_custom(r300->blitter, fb->width, fb->height, 0,
+    util_blitter_custom_clear_depth(r300->blitter, fb->width, fb->height, 0,
                                     r300->dsa_decompress_zmask);
     r300_blitter_end(r300);
 
@@ -409,10 +491,11 @@ void r300_decompress_zmask(struct r300_context *r300)
 
 void r300_decompress_zmask_locked_unsafe(struct r300_context *r300)
 {
-    struct pipe_framebuffer_state fb = {0};
+    struct pipe_framebuffer_state fb;
+
+    memset(&fb, 0, sizeof(fb));
     fb.width = r300->locked_zbuffer->width;
     fb.height = r300->locked_zbuffer->height;
-    fb.nr_cbufs = 0;
     fb.zsbuf = r300->locked_zbuffer;
 
     r300->context.set_framebuffer_state(&r300->context, &fb);
@@ -421,8 +504,9 @@ void r300_decompress_zmask_locked_unsafe(struct r300_context *r300)
 
 void r300_decompress_zmask_locked(struct r300_context *r300)
 {
-    struct pipe_framebuffer_state saved_fb = {0};
+    struct pipe_framebuffer_state saved_fb;
 
+    memset(&saved_fb, 0, sizeof(saved_fb));
     util_copy_framebuffer_state(&saved_fb, r300->fb_state.state);
     r300_decompress_zmask_locked_unsafe(r300);
     r300->context.set_framebuffer_state(&r300->context, &saved_fb);
@@ -431,21 +515,14 @@ void r300_decompress_zmask_locked(struct r300_context *r300)
     pipe_surface_reference(&r300->locked_zbuffer, NULL);
 }
 
-/* Copy a block of pixels from one surface to another using HW. */
-static void r300_hw_copy_region(struct pipe_context* pipe,
-                                struct pipe_resource *dst,
-                                unsigned dst_level,
-                                unsigned dstx, unsigned dsty, unsigned dstz,
-                                struct pipe_resource *src,
-                                unsigned src_level,
-                                const struct pipe_box *src_box)
+bool r300_is_blit_supported(enum pipe_format format)
 {
-    struct r300_context* r300 = r300_context(pipe);
+    const struct util_format_description *desc =
+        util_format_description(format);
 
-    r300_blitter_begin(r300, R300_COPY);
-    util_blitter_copy_region(r300->blitter, dst, dst_level, dstx, dsty, dstz,
-                             src, src_level, src_box, TRUE);
-    r300_blitter_end(r300);
+    return desc->layout == UTIL_FORMAT_LAYOUT_PLAIN ||
+           desc->layout == UTIL_FORMAT_LAYOUT_S3TC ||
+           desc->layout == UTIL_FORMAT_LAYOUT_RGTC;
 }
 
 /* Copy a block of pixels from one surface to another. */
@@ -457,24 +534,125 @@ static void r300_resource_copy_region(struct pipe_context *pipe,
                                       unsigned src_level,
                                       const struct pipe_box *src_box)
 {
+    struct pipe_screen *screen = pipe->screen;
     struct r300_context *r300 = r300_context(pipe);
     struct pipe_framebuffer_state *fb =
         (struct pipe_framebuffer_state*)r300->fb_state.state;
-    struct pipe_resource old_src = *src;
-    struct pipe_resource old_dst = *dst;
-    struct pipe_resource new_src = old_src;
-    struct pipe_resource new_dst = old_dst;
-    const struct util_format_description *desc =
-            util_format_description(dst->format);
-    struct pipe_box box;
+    unsigned src_width0 = r300_resource(src)->tex.width0;
+    unsigned src_height0 = r300_resource(src)->tex.height0;
+    unsigned dst_width0 = r300_resource(dst)->tex.width0;
+    unsigned dst_height0 = r300_resource(dst)->tex.height0;
+    unsigned layout;
+    struct pipe_box box, dstbox;
+    struct pipe_sampler_view src_templ, *src_view;
+    struct pipe_surface dst_templ, *dst_view;
 
     /* Fallback for buffers. */
-    if (dst->target == PIPE_BUFFER && src->target == PIPE_BUFFER) {
+    if ((dst->target == PIPE_BUFFER && src->target == PIPE_BUFFER) ||
+        !r300_is_blit_supported(dst->format)) {
         util_resource_copy_region(pipe, dst, dst_level, dstx, dsty, dstz,
                                   src, src_level, src_box);
         return;
     }
 
+    /* Can't read MSAA textures. */
+    if (src->nr_samples > 1 || dst->nr_samples > 1) {
+        return;
+    }
+
+    /* The code below changes the texture format so that the copy can be done
+     * on hardware. E.g. depth-stencil surfaces are copied as RGBA
+     * colorbuffers. */
+
+    util_blitter_default_dst_texture(&dst_templ, dst, dst_level, dstz);
+    util_blitter_default_src_texture(&src_templ, src, src_level);
+
+    layout = util_format_description(dst_templ.format)->layout;
+
+    /* Handle non-renderable plain formats. */
+    if (layout == UTIL_FORMAT_LAYOUT_PLAIN &&
+        (!screen->is_format_supported(screen, src_templ.format, src->target,
+                                      src->nr_samples,
+                                      PIPE_BIND_SAMPLER_VIEW) ||
+         !screen->is_format_supported(screen, dst_templ.format, dst->target,
+                                      dst->nr_samples,
+                                      PIPE_BIND_RENDER_TARGET))) {
+        switch (util_format_get_blocksize(dst_templ.format)) {
+            case 1:
+                dst_templ.format = PIPE_FORMAT_I8_UNORM;
+                break;
+            case 2:
+                dst_templ.format = PIPE_FORMAT_B4G4R4A4_UNORM;
+                break;
+            case 4:
+                dst_templ.format = PIPE_FORMAT_B8G8R8A8_UNORM;
+                break;
+            case 8:
+                dst_templ.format = PIPE_FORMAT_R16G16B16A16_UNORM;
+                break;
+            default:
+                debug_printf("r300: copy_region: Unhandled format: %s. Falling back to software.\n"
+                             "r300: copy_region: Software fallback doesn't work for tiled textures.\n",
+                             util_format_short_name(dst_templ.format));
+        }
+        src_templ.format = dst_templ.format;
+    }
+
+    /* Handle compressed formats. */
+    if (layout == UTIL_FORMAT_LAYOUT_S3TC ||
+        layout == UTIL_FORMAT_LAYOUT_RGTC) {
+        assert(src_templ.format == dst_templ.format);
+
+        box = *src_box;
+        src_box = &box;
+
+        dst_width0 = align(dst_width0, 4);
+        dst_height0 = align(dst_height0, 4);
+        src_width0 = align(src_width0, 4);
+        src_height0 = align(src_height0, 4);
+        box.width = align(box.width, 4);
+        box.height = align(box.height, 4);
+
+        switch (util_format_get_blocksize(dst_templ.format)) {
+        case 8:
+            /* one 4x4 pixel block has 8 bytes.
+             * we set 1 pixel = 4 bytes ===> 1 block corrensponds to 2 pixels. */
+            dst_templ.format = PIPE_FORMAT_R8G8B8A8_UNORM;
+            dst_width0 = dst_width0 / 2;
+            src_width0 = src_width0 / 2;
+            dstx /= 2;
+            box.x /= 2;
+            box.width /= 2;
+            break;
+        case 16:
+            /* one 4x4 pixel block has 16 bytes.
+             * we set 1 pixel = 4 bytes ===> 1 block corresponds to 4 pixels. */
+            dst_templ.format = PIPE_FORMAT_R8G8B8A8_UNORM;
+            break;
+        }
+        src_templ.format = dst_templ.format;
+
+        dst_height0 = dst_height0 / 4;
+        src_height0 = src_height0 / 4;
+        dsty /= 4;
+        box.y /= 4;
+        box.height /= 4;
+    }
+
+    /* Fallback for textures. */
+    if (!screen->is_format_supported(screen, dst_templ.format,
+                                     dst->target, dst->nr_samples,
+                                     PIPE_BIND_RENDER_TARGET) ||
+	!screen->is_format_supported(screen, src_templ.format,
+                                     src->target, src->nr_samples,
+                                     PIPE_BIND_SAMPLER_VIEW)) {
+        assert(0 && "this shouldn't happen, update r300_is_blit_supported");
+        util_resource_copy_region(pipe, dst, dst_level, dstx, dsty, dstz,
+                                  src, src_level, src_box);
+        return;
+    }
+
+    /* Decompress ZMASK. */
     if (r300->zmask_in_use && !r300->locked_zbuffer) {
         if (fb->zsbuf->texture == src ||
             fb->zsbuf->texture == dst) {
@@ -482,78 +660,197 @@ static void r300_resource_copy_region(struct pipe_context *pipe,
         }
     }
 
-    /* Handle non-renderable plain formats. */
-    if (desc->layout == UTIL_FORMAT_LAYOUT_PLAIN &&
-        (desc->colorspace == UTIL_FORMAT_COLORSPACE_SRGB ||
-         !pipe->screen->is_format_supported(pipe->screen,
-                                            src->format, src->target,
-                                            src->nr_samples,
-                                            PIPE_BIND_SAMPLER_VIEW) ||
-         !pipe->screen->is_format_supported(pipe->screen,
-                                            dst->format, dst->target,
-                                            dst->nr_samples,
-                                            PIPE_BIND_RENDER_TARGET))) {
-        switch (util_format_get_blocksize(old_dst.format)) {
-            case 1:
-                new_dst.format = PIPE_FORMAT_I8_UNORM;
-                break;
-            case 2:
-                new_dst.format = PIPE_FORMAT_B4G4R4A4_UNORM;
-                break;
-            case 4:
-                new_dst.format = PIPE_FORMAT_B8G8R8A8_UNORM;
-                break;
-            case 8:
-                new_dst.format = PIPE_FORMAT_R16G16B16A16_UNORM;
-                break;
-            default:
-                debug_printf("r300: surface_copy: Unhandled format: %s. Falling back to software.\n"
-                             "r300: surface_copy: Software fallback doesn't work for tiled textures.\n",
-                             util_format_short_name(dst->format));
-        }
-        new_src.format = new_dst.format;
+    dst_view = r300_create_surface_custom(pipe, dst, &dst_templ, dst_width0, dst_height0);
+    src_view = r300_create_sampler_view_custom(pipe, src, &src_templ, src_width0, src_height0);
+
+    u_box_3d(dstx, dsty, dstz, abs(src_box->width), abs(src_box->height),
+             abs(src_box->depth), &dstbox);
+
+    r300_blitter_begin(r300, R300_COPY);
+    util_blitter_blit_generic(r300->blitter, dst_view, &dstbox,
+                              src_view, src_box, src_width0, src_height0,
+                              PIPE_MASK_RGBAZS, PIPE_TEX_FILTER_NEAREST, NULL,
+                              FALSE);
+    r300_blitter_end(r300);
+
+    pipe_surface_reference(&dst_view, NULL);
+    pipe_sampler_view_reference(&src_view, NULL);
+}
+
+static boolean r300_is_simple_msaa_resolve(const struct pipe_blit_info *info)
+{
+    unsigned dst_width = u_minify(info->dst.resource->width0, info->dst.level);
+    unsigned dst_height = u_minify(info->dst.resource->height0, info->dst.level);
+
+    return info->dst.resource->format == info->src.resource->format &&
+           info->dst.resource->format == info->dst.format &&
+           info->src.resource->format == info->src.format &&
+           !info->scissor_enable &&
+           info->mask == PIPE_MASK_RGBA &&
+           dst_width == info->src.resource->width0 &&
+           dst_height == info->src.resource->height0 &&
+           info->dst.box.x == 0 &&
+           info->dst.box.y == 0 &&
+           info->dst.box.width == dst_width &&
+           info->dst.box.height == dst_height &&
+           info->src.box.x == 0 &&
+           info->src.box.y == 0 &&
+           info->src.box.width == dst_width &&
+           info->src.box.height == dst_height &&
+           (r300_resource(info->dst.resource)->tex.microtile != RADEON_LAYOUT_LINEAR ||
+            r300_resource(info->dst.resource)->tex.macrotile[info->dst.level] != RADEON_LAYOUT_LINEAR);
+}
+
+static void r300_simple_msaa_resolve(struct pipe_context *pipe,
+                                     struct pipe_resource *dst,
+                                     unsigned dst_level,
+                                     unsigned dst_layer,
+                                     struct pipe_resource *src,
+                                     enum pipe_format format)
+{
+    struct r300_context *r300 = r300_context(pipe);
+    struct r300_surface *srcsurf, *dstsurf;
+    struct pipe_surface surf_tmpl;
+    struct r300_aa_state *aa = (struct r300_aa_state*)r300->aa_state.state;
+
+    memset(&surf_tmpl, 0, sizeof(surf_tmpl));
+    surf_tmpl.format = format;
+    srcsurf = r300_surface(pipe->create_surface(pipe, src, &surf_tmpl));
+
+    surf_tmpl.format = format;
+    surf_tmpl.u.tex.level = dst_level;
+    surf_tmpl.u.tex.first_layer =
+    surf_tmpl.u.tex.last_layer = dst_layer;
+    dstsurf = r300_surface(pipe->create_surface(pipe, dst, &surf_tmpl));
+
+    /* COLORPITCH should contain the tiling info of the resolve buffer.
+     * The tiling of the AA buffer isn't programmable anyway. */
+    srcsurf->pitch &= ~(R300_COLOR_TILE(1) | R300_COLOR_MICROTILE(3));
+    srcsurf->pitch |= dstsurf->pitch & (R300_COLOR_TILE(1) | R300_COLOR_MICROTILE(3));
+
+    /* Enable AA resolve. */
+    aa->dest = dstsurf;
+    r300->aa_state.size = 8;
+    r300_mark_atom_dirty(r300, &r300->aa_state);
+
+    /* Resolve the surface. */
+    r300_blitter_begin(r300, R300_CLEAR_SURFACE);
+    util_blitter_custom_color(r300->blitter, &srcsurf->base, NULL);
+    r300_blitter_end(r300);
+
+    /* Disable AA resolve. */
+    aa->dest = NULL;
+    r300->aa_state.size = 4;
+    r300_mark_atom_dirty(r300, &r300->aa_state);
+
+    pipe_surface_reference((struct pipe_surface**)&srcsurf, NULL);
+    pipe_surface_reference((struct pipe_surface**)&dstsurf, NULL);
+}
+
+static void r300_msaa_resolve(struct pipe_context *pipe,
+                              const struct pipe_blit_info *info)
+{
+    struct r300_context *r300 = r300_context(pipe);
+    struct pipe_screen *screen = pipe->screen;
+    struct pipe_resource *tmp, templ;
+    struct pipe_blit_info blit;
+
+    assert(info->src.level == 0);
+    assert(info->src.box.z == 0);
+    assert(info->src.box.depth == 1);
+    assert(info->dst.box.depth == 1);
+
+    if (r300_is_simple_msaa_resolve(info)) {
+        r300_simple_msaa_resolve(pipe, info->dst.resource, info->dst.level,
+                                 info->dst.box.z, info->src.resource,
+                                 info->src.format);
+        return;
     }
 
-    /* Handle compressed formats. */
-    if (desc->layout == UTIL_FORMAT_LAYOUT_S3TC ||
-        desc->layout == UTIL_FORMAT_LAYOUT_RGTC) {
-        switch (util_format_get_blocksize(old_dst.format)) {
-        case 8:
-            /* 1 pixel = 4 bits,
-             * we set 1 pixel = 2 bytes ===> 4 times larger pixels. */
-            new_dst.format = PIPE_FORMAT_B4G4R4A4_UNORM;
-            break;
-        case 16:
-            /* 1 pixel = 8 bits,
-             * we set 1 pixel = 4 bytes ===> 4 times larger pixels. */
-            new_dst.format = PIPE_FORMAT_B8G8R8A8_UNORM;
-            break;
-        }
+    /* resolve into a temporary texture, then blit */
+    memset(&templ, 0, sizeof(templ));
+    templ.target = PIPE_TEXTURE_2D;
+    templ.format = info->src.resource->format;
+    templ.width0 = info->src.resource->width0;
+    templ.height0 = info->src.resource->height0;
+    templ.depth0 = 1;
+    templ.array_size = 1;
+    templ.usage = PIPE_USAGE_STATIC;
+    templ.flags = R300_RESOURCE_FORCE_MICROTILING;
 
-        /* Since the pixels are 4 times larger, we must decrease
-         * the image size and the coordinates 4 times. */
-        new_src.format = new_dst.format;
-        new_dst.height0 = (new_dst.height0 + 3) / 4;
-        new_src.height0 = (new_src.height0 + 3) / 4;
-        dsty /= 4;
-        box = *src_box;
-        box.y /= 4;
-        box.height = (box.height + 3) / 4;
-        src_box = &box;
+    tmp = screen->resource_create(screen, &templ);
+
+    /* resolve */
+    r300_simple_msaa_resolve(pipe, tmp, 0, 0, info->src.resource,
+                             info->src.format);
+
+    /* blit */
+    blit = *info;
+    blit.src.resource = tmp;
+    blit.src.box.z = 0;
+
+    r300_blitter_begin(r300, R300_BLIT);
+    util_blitter_blit(r300->blitter, &blit);
+    r300_blitter_end(r300);
+
+    pipe_resource_reference(&tmp, NULL);
+}
+
+static void r300_blit(struct pipe_context *pipe,
+                      const struct pipe_blit_info *blit)
+{
+    struct r300_context *r300 = r300_context(pipe);
+    struct pipe_framebuffer_state *fb =
+        (struct pipe_framebuffer_state*)r300->fb_state.state;
+    struct pipe_blit_info info = *blit;
+
+    /* MSAA resolve. */
+    if (info.src.resource->nr_samples > 1 &&
+        info.dst.resource->nr_samples <= 1 &&
+        !util_format_is_depth_or_stencil(info.src.resource->format)) {
+        r300_msaa_resolve(pipe, &info);
+        return;
     }
 
-    if (old_src.format != new_src.format)
-        r300_resource_set_properties(pipe->screen, src, 0, &new_src);
-    if (old_dst.format != new_dst.format)
-        r300_resource_set_properties(pipe->screen, dst, 0, &new_dst);
+    /* Can't read MSAA textures. */
+    if (info.src.resource->nr_samples > 1) {
+        return;
+    }
 
-    r300_hw_copy_region(pipe, dst, dst_level, dstx, dsty, dstz,
-                        src, src_level, src_box);
+    /* Blit a combined depth-stencil resource as color.
+     * S8Z24 is the only supported stencil format. */
+    if ((info.mask & PIPE_MASK_S) &&
+        info.src.format == PIPE_FORMAT_S8_UINT_Z24_UNORM &&
+        info.dst.format == PIPE_FORMAT_S8_UINT_Z24_UNORM) {
+        if (info.dst.resource->nr_samples > 1) {
+            /* Cannot do that with MSAA buffers. */
+            info.mask &= ~PIPE_MASK_S;
+            if (!(info.mask & PIPE_MASK_Z)) {
+                return;
+            }
+        } else {
+            /* Single-sample buffer. */
+            info.src.format = PIPE_FORMAT_B8G8R8A8_UNORM;
+            info.dst.format = PIPE_FORMAT_B8G8R8A8_UNORM;
+            if (info.mask & PIPE_MASK_Z) {
+                info.mask = PIPE_MASK_RGBA; /* depth+stencil */
+            } else {
+                info.mask = PIPE_MASK_B; /* stencil only */
+            }
+        }
+    }
 
-    if (old_src.format != new_src.format)
-        r300_resource_set_properties(pipe->screen, src, 0, &old_src);
-    if (old_dst.format != new_dst.format)
-        r300_resource_set_properties(pipe->screen, dst, 0, &old_dst);
+    /* Decompress ZMASK. */
+    if (r300->zmask_in_use && !r300->locked_zbuffer) {
+        if (fb->zsbuf->texture == info.src.resource ||
+            fb->zsbuf->texture == info.dst.resource) {
+            r300_decompress_zmask(r300);
+        }
+    }
+
+    r300_blitter_begin(r300, R300_BLIT);
+    util_blitter_blit(r300->blitter, &info);
+    r300_blitter_end(r300);
 }
 
 void r300_init_blit_functions(struct r300_context *r300)
@@ -562,4 +859,5 @@ void r300_init_blit_functions(struct r300_context *r300)
     r300->context.clear_render_target = r300_clear_render_target;
     r300->context.clear_depth_stencil = r300_clear_depth_stencil;
     r300->context.resource_copy_region = r300_resource_copy_region;
+    r300->context.blit = r300_blit;
 }

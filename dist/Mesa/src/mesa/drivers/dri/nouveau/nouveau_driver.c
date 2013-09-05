@@ -24,7 +24,8 @@
  *
  */
 
-#include "main/mfeatures.h"
+#include "main/mtypes.h"
+#include "main/fbobject.h"
 
 #include "nouveau_driver.h"
 #include "nouveau_context.h"
@@ -57,24 +58,38 @@ static void
 nouveau_flush(struct gl_context *ctx)
 {
 	struct nouveau_context *nctx = to_nouveau_context(ctx);
-	struct nouveau_channel *chan = context_chan(ctx);
+	struct nouveau_pushbuf *push = context_push(ctx);
 
-	FIRE_RING(chan);
+	PUSH_KICK(push);
 
-	if (ctx->DrawBuffer->Name == 0 &&
+	if (_mesa_is_winsys_fbo(ctx->DrawBuffer) &&
 	    ctx->DrawBuffer->_ColorDrawBufferIndexes[0] == BUFFER_FRONT_LEFT) {
 		__DRIscreen *screen = nctx->screen->dri_screen;
 		__DRIdri2LoaderExtension *dri2 = screen->dri2.loader;
 		__DRIdrawable *drawable = nctx->dri_context->driDrawablePriv;
 
-		dri2->flushFrontBuffer(drawable, drawable->loaderPrivate);
+		if (drawable && drawable->loaderPrivate)
+			dri2->flushFrontBuffer(drawable, drawable->loaderPrivate);
 	}
 }
 
 static void
 nouveau_finish(struct gl_context *ctx)
 {
+	struct nouveau_context *nctx = to_nouveau_context(ctx);
+	struct nouveau_pushbuf *push = context_push(ctx);
+	struct nouveau_pushbuf_refn refn =
+		{ nctx->fence, NOUVEAU_BO_VRAM | NOUVEAU_BO_RDWR };
+
 	nouveau_flush(ctx);
+
+	if (!nouveau_pushbuf_space(push, 16, 0, 0) &&
+	    !nouveau_pushbuf_refn(push, &refn, 1)) {
+		PUSH_DATA(push, 0);
+		PUSH_KICK(push);
+	}
+
+	nouveau_bo_wait(nctx->fence, NOUVEAU_BO_RDWR, context_client(ctx));
 }
 
 void
@@ -96,11 +111,11 @@ nouveau_clear(struct gl_context *ctx, GLbitfield buffers)
 			continue;
 
 		s = &to_nouveau_renderbuffer(
-			fb->Attachment[i].Renderbuffer->Wrapped)->surface;
+			fb->Attachment[i].Renderbuffer)->surface;
 
 		if (buf & BUFFER_BITS_COLOR) {
 			mask = pack_rgba_i(s->format, ctx->Color.ColorMask[0]);
-			value = pack_rgba_f(s->format, ctx->Color.ClearColor);
+			value = pack_rgba_clamp_f(s->format, ctx->Color.ClearColor.f);
 
 			if (mask)
 				context_drv(ctx)->surface_fill(
@@ -140,7 +155,5 @@ nouveau_driver_functions_init(struct dd_function_table *functions)
 	functions->DrawPixels = _mesa_meta_DrawPixels;
 	functions->CopyPixels = _mesa_meta_CopyPixels;
 	functions->Bitmap = _mesa_meta_Bitmap;
-#if FEATURE_EXT_framebuffer_blit
 	functions->BlitFramebuffer = _mesa_meta_BlitFramebuffer;
-#endif
 }

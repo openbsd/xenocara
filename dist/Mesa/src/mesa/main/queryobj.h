@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -27,14 +27,11 @@
 #define QUERYOBJ_H
 
 
-#include "main/mfeatures.h"
 #include "main/mtypes.h"
 #include "main/hash.h"
 
 
-#if FEATURE_queryobj
-
-static INLINE struct gl_query_object *
+static inline struct gl_query_object *
 _mesa_lookup_query_object(struct gl_context *ctx, GLuint id)
 {
    return (struct gl_query_object *)
@@ -46,33 +43,39 @@ extern void
 _mesa_init_query_object_functions(struct dd_function_table *driver);
 
 extern void
-_mesa_init_queryobj_dispatch(struct _glapi_table *disp);
-
-#else /* FEATURE_queryobj */
-
-static INLINE struct gl_query_object *
-_mesa_lookup_query_object(struct gl_context *ctx, GLuint id)
-{
-   return NULL;
-}
-
-static INLINE void
-_mesa_init_query_object_functions(struct dd_function_table *driver)
-{
-}
-
-static INLINE void
-_mesa_init_queryobj_dispatch(struct _glapi_table *disp)
-{
-}
-
-#endif /* FEATURE_queryobj */
-
-extern void
 _mesa_init_queryobj(struct gl_context *ctx);
 
 extern void
 _mesa_free_queryobj_data(struct gl_context *ctx);
 
+void GLAPIENTRY
+_mesa_GenQueries(GLsizei n, GLuint *ids);
+void GLAPIENTRY
+_mesa_DeleteQueries(GLsizei n, const GLuint *ids);
+GLboolean GLAPIENTRY
+_mesa_IsQuery(GLuint id);
+void GLAPIENTRY
+_mesa_BeginQueryIndexed(GLenum target, GLuint index, GLuint id);
+void GLAPIENTRY
+_mesa_EndQueryIndexed(GLenum target, GLuint index);
+void GLAPIENTRY
+_mesa_BeginQuery(GLenum target, GLuint id);
+void GLAPIENTRY
+_mesa_EndQuery(GLenum target);
+void GLAPIENTRY
+_mesa_QueryCounter(GLuint id, GLenum target);
+void GLAPIENTRY
+_mesa_GetQueryIndexediv(GLenum target, GLuint index, GLenum pname,
+                        GLint *params);
+void GLAPIENTRY
+_mesa_GetQueryiv(GLenum target, GLenum pname, GLint *params);
+void GLAPIENTRY
+_mesa_GetQueryObjectiv(GLuint id, GLenum pname, GLint *params);
+void GLAPIENTRY
+_mesa_GetQueryObjectuiv(GLuint id, GLenum pname, GLuint *params);
+void GLAPIENTRY
+_mesa_GetQueryObjecti64v(GLuint id, GLenum pname, GLint64EXT *params);
+void GLAPIENTRY
+_mesa_GetQueryObjectui64v(GLuint id, GLenum pname, GLuint64EXT *params);
 
 #endif /* QUERYOBJ_H */

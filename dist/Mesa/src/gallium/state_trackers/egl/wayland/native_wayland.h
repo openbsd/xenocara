@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.11
  *
  * Copyright (C) 2011 Benjamin Franzke <benjaminfranzke@googlemail.com>
  *
@@ -36,12 +35,23 @@
 
 struct wayland_surface;
 
+enum wayland_format_flag {
+   HAS_ARGB8888        = (1 << 0),
+   HAS_XRGB8888        = (1 << 1)
+};
+
 struct wayland_display {
    struct native_display base;
 
-   struct wayland_config *config;
    struct wl_display *dpy;
+   struct wl_event_queue *queue;
+   struct wl_registry *registry;
    boolean own_dpy;
+   /* supported formats */
+   uint32_t formats;
+
+   struct wayland_config *configs;
+   int num_configs;
 
    struct wl_buffer *(*create_buffer)(struct wayland_display *display,
                                       struct wayland_surface *surface,
@@ -56,7 +66,6 @@ enum wayland_buffer_type {
 
 enum wayland_surface_type {
    WL_WINDOW_SURFACE,
-   WL_PIXMAP_SURFACE,
    WL_PBUFFER_SURFACE
 };
 
@@ -65,7 +74,6 @@ struct wayland_surface {
    struct wayland_display *display;
 
    struct wl_egl_window *win;
-   struct wl_egl_pixmap *pix;
    enum wayland_surface_type type;
    int dx, dy;
    struct resource_surface *rsurf;
@@ -76,7 +84,8 @@ struct wayland_surface {
    struct wl_buffer *buffer[WL_BUFFER_COUNT];
    unsigned int attachment_mask;
 
-   boolean block_swap_buffers;
+   struct wl_callback *frame_callback;
+   boolean premultiplied_alpha;
 };
 
 struct wayland_config {
@@ -108,5 +117,8 @@ wayland_create_shm_display(struct wl_display *display,
 struct wayland_display *
 wayland_create_drm_display(struct wl_display *display,
                            const struct native_event_handler *event_handler);
+
+int
+wayland_roundtrip(struct wayland_display *drmdpy);
 
 #endif /* _NATIVE_WAYLAND_H_ */

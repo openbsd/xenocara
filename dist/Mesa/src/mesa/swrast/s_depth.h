@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -48,14 +48,11 @@ extern void
 _swrast_read_depth_span_float( struct gl_context *ctx, struct gl_renderbuffer *rb,
                                GLint n, GLint x, GLint y, GLfloat depth[] );
 
+extern void
+_swrast_clear_depth_buffer(struct gl_context *ctx);
 
 extern void
-_swrast_read_depth_span_uint( struct gl_context *ctx, struct gl_renderbuffer *rb,
-                              GLint n, GLint x, GLint y, GLuint depth[] );
-
-
-extern void
-_swrast_clear_depth_buffer( struct gl_context *ctx, struct gl_renderbuffer *rb );
+_swrast_clear_depth_stencil_buffer(struct gl_context *ctx);
 
 
 #endif

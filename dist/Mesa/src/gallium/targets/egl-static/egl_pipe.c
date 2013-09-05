@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.10
  *
  * Copyright (C) 2011 LunarG Inc.
  *
@@ -32,21 +31,24 @@
 /* for i915 */
 #include "i915/drm/i915_drm_public.h"
 #include "i915/i915_public.h"
-/* for i965 */
 #include "target-helpers/inline_wrapper_sw_helper.h"
-#include "i965/drm/i965_drm_public.h"
-#include "i965/brw_public.h"
+/* for ilo */
+#include "intel/intel_winsys.h"
+#include "ilo/ilo_public.h"
 /* for nouveau */
 #include "nouveau/drm/nouveau_drm_public.h"
 /* for r300 */
 #include "radeon/drm/radeon_drm_public.h"
 #include "r300/r300_public.h"
 /* for r600 */
-#include "r600/drm/r600_drm_public.h"
 #include "r600/r600_public.h"
+/* for radeonsi */
+#include "radeonsi/radeonsi_public.h"
 /* for vmwgfx */
 #include "svga/drm/svga_drm_public.h"
 #include "svga/svga_public.h"
+/* for freedreno */
+#include "freedreno/drm/freedreno_drm_public.h"
 
 static struct pipe_screen *
 pipe_i915_create_screen(int fd)
@@ -72,21 +74,19 @@ pipe_i915_create_screen(int fd)
 }
 
 static struct pipe_screen *
-pipe_i965_create_screen(int fd)
+pipe_ilo_create_screen(int fd)
 {
-#if _EGL_PIPE_I965
-   struct brw_winsys_screen *bws;
+#if _EGL_PIPE_ILO
+   struct intel_winsys *iws;
    struct pipe_screen *screen;
 
-   bws = i965_drm_winsys_screen_create(fd);
-   if (!bws)
+   iws = intel_winsys_create_for_fd(fd);
+   if (!iws)
       return NULL;
 
-   screen = brw_screen_create(bws);
+   screen = ilo_screen_create(iws);
    if (!screen)
       return NULL;
-
-   screen = sw_screen_wrap(screen);
 
    screen = debug_screen_wrap(screen);
 
@@ -141,14 +141,37 @@ static struct pipe_screen *
 pipe_r600_create_screen(int fd)
 {
 #if _EGL_PIPE_R600
-   struct radeon *rw;
+   struct radeon_winsys *rw;
    struct pipe_screen *screen;
 
-   rw = r600_drm_winsys_create(fd);
+   rw = radeon_drm_winsys_create(fd);
    if (!rw)
       return NULL;
 
    screen = r600_screen_create(rw);
+   if (!screen)
+      return NULL;
+
+   screen = debug_screen_wrap(screen);
+
+   return screen;
+#else
+   return NULL;
+#endif
+}
+
+static struct pipe_screen *
+pipe_radeonsi_create_screen(int fd)
+{
+#if _EGL_PIPE_RADEONSI
+   struct radeon_winsys *rw;
+   struct pipe_screen *screen;
+
+   rw = radeon_drm_winsys_create(fd);
+   if (!rw)
+      return NULL;
+
+   screen = radeonsi_screen_create(rw);
    if (!screen)
       return NULL;
 
@@ -183,21 +206,43 @@ pipe_vmwgfx_create_screen(int fd)
 #endif
 }
 
+static struct pipe_screen *
+pipe_freedreno_create_screen(int fd)
+{
+#if _EGL_PIPE_FREEDRENO
+   struct pipe_screen *screen;
+
+   screen = fd_drm_screen_create(fd);
+   if (!screen)
+      return NULL;
+
+   screen = debug_screen_wrap(screen);
+
+   return screen;
+#else
+   return NULL;
+#endif
+}
+
 struct pipe_screen *
 egl_pipe_create_drm_screen(const char *name, int fd)
 {
    if (strcmp(name, "i915") == 0)
       return pipe_i915_create_screen(fd);
    else if (strcmp(name, "i965") == 0)
-      return pipe_i965_create_screen(fd);
+      return pipe_ilo_create_screen(fd);
    else if (strcmp(name, "nouveau") == 0)
       return pipe_nouveau_create_screen(fd);
    else if (strcmp(name, "r300") == 0)
       return pipe_r300_create_screen(fd);
    else if (strcmp(name, "r600") == 0)
       return pipe_r600_create_screen(fd);
+   else if (strcmp(name, "radeonsi") == 0)
+      return pipe_radeonsi_create_screen(fd);
    else if (strcmp(name, "vmwgfx") == 0)
       return pipe_vmwgfx_create_screen(fd);
+   else if (strcmp(name, "kgsl") == 0)
+      return pipe_freedreno_create_screen(fd);
    else
       return NULL;
 }

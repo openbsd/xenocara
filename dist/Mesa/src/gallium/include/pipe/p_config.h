@@ -73,6 +73,10 @@
 #define PIPE_CC_ICL
 #endif
 
+#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+#define PIPE_CC_SUNPRO
+#endif
+
 
 /*
  * Processor architecture
@@ -106,6 +110,17 @@
 #endif
 #endif
 
+#if defined(__s390x__)
+#define PIPE_ARCH_S390
+#endif
+
+#if defined(__arm__)
+#define PIPE_ARCH_ARM
+#endif
+
+#if defined(__aarch64__)
+#define PIPE_ARCH_AARCH64
+#endif
 
 /*
  * Endian detection.
@@ -129,6 +144,15 @@
 # define PIPE_ARCH_BIG_ENDIAN
 #endif
 
+#elif defined(__sun)
+#include <sys/isa_defs.h>
+
+#if defined(_LITTLE_ENDIAN)
+# define PIPE_ARCH_LITTLE_ENDIAN
+#elif defined(_BIG_ENDIAN)
+# define PIPE_ARCH_BIG_ENDIAN
+#endif
+
 #elif defined(__OpenBSD__)
 #include <sys/types.h>
 #include <machine/endian.h>
@@ -141,9 +165,9 @@
 
 #else
 
-#if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
+#if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64) || defined(PIPE_ARCH_ARM) || defined(PIPE_ARCH_AARCH64)
 #define PIPE_ARCH_LITTLE_ENDIAN
-#elif defined(PIPE_ARCH_PPC) || defined(PIPE_ARCH_PPC_64)
+#elif defined(PIPE_ARCH_PPC) || defined(PIPE_ARCH_PPC_64) || defined(PIPE_ARCH_S390)
 #define PIPE_ARCH_BIG_ENDIAN
 #endif
 
@@ -162,6 +186,14 @@
 #if defined(__linux__)
 #define PIPE_OS_LINUX
 #define PIPE_OS_UNIX
+#endif
+
+/*
+ * Android defines __linux__ so PIPE_OS_LINUX and PIPE_OS_UNIX will also be
+ * defined.
+ */
+#if defined(ANDROID)
+#define PIPE_OS_ANDROID
 #endif
 
 #if defined(__FreeBSD__)
@@ -222,20 +254,10 @@
 #endif /* PIPE_OS_LINUX || PIPE_OS_BSD || PIPE_OS_SOLARIS */
 
 #if defined(PIPE_OS_WINDOWS)
-#if defined(PIPE_SUBSYSTEM_WINDOWS_DISPLAY)
-/* Windows 2000/XP Display Driver */ 
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_MINIPORT)
-/* Windows 2000/XP Miniport Driver */ 
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_USER)
+#if defined(PIPE_SUBSYSTEM_WINDOWS_USER)
 /* Windows User-space Library */
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_CE)
-/* Windows CE 5.0/6.0 */
 #else
-#ifdef _WIN32_WCE
-#define PIPE_SUBSYSTEM_WINDOWS_CE
-#else /* !_WIN32_WCE */
-#error No PIPE_SUBSYSTEM_WINDOWS_xxx subsystem defined. 
-#endif /* !_WIN32_WCE */
+#define PIPE_SUBSYSTEM_WINDOWS_USER
 #endif
 #endif /* PIPE_OS_WINDOWS */
 

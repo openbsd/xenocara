@@ -22,8 +22,7 @@
 
 #include "r300_tgsi_to_rc.h"
 
-#include "radeon_compiler.h"
-#include "radeon_program.h"
+#include "compiler/radeon_compiler.h"
 
 #include "tgsi/tgsi_info.h"
 #include "tgsi/tgsi_parse.h"
@@ -58,7 +57,7 @@ static unsigned translate_opcode(unsigned opcode)
         case TGSI_OPCODE_FRC: return RC_OPCODE_FRC;
         case TGSI_OPCODE_CLAMP: return RC_OPCODE_CLAMP;
         case TGSI_OPCODE_FLR: return RC_OPCODE_FLR;
-     /* case TGSI_OPCODE_ROUND: return RC_OPCODE_ROUND; */
+        case TGSI_OPCODE_ROUND: return RC_OPCODE_ROUND;
         case TGSI_OPCODE_EX2: return RC_OPCODE_EX2;
         case TGSI_OPCODE_LG2: return RC_OPCODE_LG2;
         case TGSI_OPCODE_POW: return RC_OPCODE_POW;
@@ -70,7 +69,7 @@ static unsigned translate_opcode(unsigned opcode)
         case TGSI_OPCODE_COS: return RC_OPCODE_COS;
         case TGSI_OPCODE_DDX: return RC_OPCODE_DDX;
         case TGSI_OPCODE_DDY: return RC_OPCODE_DDY;
-        case TGSI_OPCODE_KILP: return RC_OPCODE_KILP;
+        case TGSI_OPCODE_KILL: return RC_OPCODE_KILP;
      /* case TGSI_OPCODE_PK2H: return RC_OPCODE_PK2H; */
      /* case TGSI_OPCODE_PK2US: return RC_OPCODE_PK2US; */
      /* case TGSI_OPCODE_PK4B: return RC_OPCODE_PK4B; */
@@ -115,7 +114,7 @@ static unsigned translate_opcode(unsigned opcode)
         case TGSI_OPCODE_CEIL: return RC_OPCODE_CEIL;
      /* case TGSI_OPCODE_I2F: return RC_OPCODE_I2F; */
      /* case TGSI_OPCODE_NOT: return RC_OPCODE_NOT; */
-        case TGSI_OPCODE_TRUNC: return RC_OPCODE_FLR;
+        case TGSI_OPCODE_TRUNC: return RC_OPCODE_TRUNC;
      /* case TGSI_OPCODE_SHL: return RC_OPCODE_SHL; */
      /* case TGSI_OPCODE_ISHR: return RC_OPCODE_SHR; */
      /* case TGSI_OPCODE_AND: return RC_OPCODE_AND; */
@@ -136,9 +135,8 @@ static unsigned translate_opcode(unsigned opcode)
                                         /* gap */
      /* case TGSI_OPCODE_NRM4: return RC_OPCODE_NRM4; */
      /* case TGSI_OPCODE_CALLNZ: return RC_OPCODE_CALLNZ; */
-     /* case TGSI_OPCODE_IFC: return RC_OPCODE_IFC; */
      /* case TGSI_OPCODE_BREAKC: return RC_OPCODE_BREAKC; */
-        case TGSI_OPCODE_KIL: return RC_OPCODE_KIL;
+        case TGSI_OPCODE_KILL_IF: return RC_OPCODE_KIL;
     }
 
     fprintf(stderr, "r300: Unknown TGSI/RC opcode: %s\n", tgsi_get_opcode_name(opcode));

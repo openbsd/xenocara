@@ -1,9 +1,13 @@
 TOP = ../../..
+top_builddir = $(TOP)
+# This can be a filthy lie. But it doesn't currently build out-of-tree
+# anyway, so it's no worse than what we've got now.
+top_srcdir = $(TOP)
 
 include $(TOP)/configs/current
 
 #CC=gcc
-#GL_CFLAGS=-Wall -ggdb3 -Os -DPTHREADS -D_REENTRANT $(RC_CFLAGS) $(CFLAGS)
+#GL_CFLAGS=-Wall -ggdb3 -Os -DHAVE_PTHREAD -D_REENTRANT $(RC_CFLAGS) $(CFLAGS)
 #GL_LDFLAGS=-L$(INSTALL_DIR)/lib -L$(X11_DIR)/lib $(LDFLAGS) -Wl,-single_module
 
 TCLSH=tclsh8.5
@@ -19,13 +23,14 @@ RM=rm
 #The directory with the final binaries.
 BUILD_DIR=builds
 
-all: $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME)
+default: $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME)
 
 SOURCES = \
 	apple_cgl.c \
 	apple_glx.c \
 	apple_glx_context.c \
 	apple_glx_drawable.c \
+	apple_glx_log.c \
 	apple_glx_pbuffer.c \
 	apple_glx_pixmap.c \
 	apple_glx_surface.c \
@@ -35,23 +40,25 @@ SOURCES = \
 	apple_xgl_api_stereo.c \
 	apple_xgl_api_viewport.c \
 	appledri.c \
+	../create_context.c \
 	../clientattrib.c \
 	../compsize.c \
 	../glxconfig.c \
 	glx_empty.c \
-	glx_error.c \
+	../glx_error.c \
 	../glx_pbuffer.c \
 	../glx_query.c \
 	../glxcmds.c \
 	../glxcurrent.c \
 	../glxext.c \
 	../glxextensions.c \
+	../glxhash.c \
 	glxreply.c \
 	../pixel.c \
 	../xfont.c \
 	../applegl_glx.c
 
-include $(TOP)/src/mesa/sources.mak
+include $(TOP)/src/mesa/Makefile.sources
 
 # override GLAPI_LIB
 GLAPI_LIB = $(TOP)/src/mapi/glapi/libglapi.a

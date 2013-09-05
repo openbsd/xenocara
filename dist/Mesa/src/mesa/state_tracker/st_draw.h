@@ -49,30 +49,23 @@ void st_destroy_draw( struct st_context *st );
 
 extern void
 st_draw_vbo(struct gl_context *ctx,
-            const struct gl_client_array **arrays,
             const struct _mesa_prim *prims,
             GLuint nr_prims,
             const struct _mesa_index_buffer *ib,
 	    GLboolean index_bounds_valid,
             GLuint min_index,
-            GLuint max_index);
+            GLuint max_index,
+            struct gl_transform_feedback_object *tfb_vertcount);
 
 extern void
 st_feedback_draw_vbo(struct gl_context *ctx,
-                     const struct gl_client_array **arrays,
                      const struct _mesa_prim *prims,
                      GLuint nr_prims,
                      const struct _mesa_index_buffer *ib,
 		     GLboolean index_bounds_valid,
                      GLuint min_index,
-                     GLuint max_index);
-
-/* Internal function:
- */
-extern enum pipe_format
-st_pipe_vertex_format(GLenum type, GLuint size, GLenum format,
-                      GLboolean normalized);
-
+                     GLuint max_index,
+                     struct gl_transform_feedback_object *tfb_vertcount);
 
 /**
  * When drawing with VBOs, the addresses specified with

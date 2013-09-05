@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.9
  *
  * Copyright (C) 2010 LunarG Inc.
  * Copyright (C) 2011 VMware Inc. All rights reserved.
@@ -105,6 +104,11 @@ resource_surface_flush(struct resource_surface *rsurf,
  */
 void
 resource_surface_wait(struct resource_surface *rsurf);
+
+boolean
+native_display_copy_to_pixmap(struct native_display *ndpy,
+                              EGLNativePixmapType pix,
+                              struct pipe_resource *src);
 
 struct pipe_resource *
 drm_display_import_native_buffer(struct native_display *ndpy,

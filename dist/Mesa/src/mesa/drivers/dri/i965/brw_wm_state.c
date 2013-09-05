@@ -44,7 +44,7 @@
 bool
 brw_color_buffer_write_enabled(struct brw_context *brw)
 {
-   struct gl_context *ctx = &brw->intel.ctx;
+   struct gl_context *ctx = &brw->ctx;
    const struct gl_fragment_program *fp = brw->fragment_program;
    int i;
 
@@ -71,14 +71,14 @@ brw_color_buffer_write_enabled(struct brw_context *brw)
  * Setup wm hardware state.  See page 225 of Volume 2
  */
 static void
-brw_prepare_wm_unit(struct brw_context *brw)
+brw_upload_wm_unit(struct brw_context *brw)
 {
-   struct intel_context *intel = &brw->intel;
-   struct gl_context *ctx = &intel->ctx;
+   struct gl_context *ctx = &brw->ctx;
    const struct gl_fragment_program *fp = brw->fragment_program;
    struct brw_wm_unit_state *wm;
 
-   wm = brw_state_batch(brw, sizeof(*wm), 32, &brw->wm.state_offset);
+   wm = brw_state_batch(brw, AUB_TRACE_WM_STATE,
+			sizeof(*wm), 32, &brw->wm.state_offset);
    memset(wm, 0, sizeof(*wm));
 
    if (brw->wm.prog_data->prog_offset_16) {
@@ -110,14 +110,17 @@ brw_prepare_wm_unit(struct brw_context *brw)
 			(wm->wm9.grf_reg_count_2 << 1)) >> 6;
 
    wm->thread1.depth_coef_urb_read_offset = 1;
-   wm->thread1.floating_point_mode = BRW_FLOATING_POINT_NON_IEEE_754;
+   /* Use ALT floating point mode for ARB fragment programs, because they
+    * require 0^0 == 1.  Even though _CurrentFragmentProgram is used for
+    * rendering, CurrentFragmentProgram is used for this check to
+    * differentiate between the GLSL and non-GLSL cases.
+    */
+   if (ctx->Shader.CurrentFragmentProgram == NULL)
+      wm->thread1.floating_point_mode = BRW_FLOATING_POINT_NON_IEEE_754;
+   else
+      wm->thread1.floating_point_mode = BRW_FLOATING_POINT_IEEE_754;
 
-   if (intel->gen == 5)
-      wm->thread1.binding_table_entry_count = 0; /* hardware requirement */
-   else {
-      /* BRW_NEW_NR_SURFACES */
-      wm->thread1.binding_table_entry_count = brw->wm.nr_surfaces;
-   }
+   wm->thread1.binding_table_entry_count = 0;
 
    if (brw->wm.prog_data->total_scratch != 0) {
       wm->thread2.scratch_space_base_pointer =
@@ -137,24 +140,24 @@ brw_prepare_wm_unit(struct brw_context *brw)
    /* BRW_NEW_CURBE_OFFSETS */
    wm->thread3.const_urb_entry_read_offset = brw->curbe.wm_start * 2;
 
-   if (intel->gen == 5)
+   if (brw->gen == 5)
       wm->wm4.sampler_count = 0; /* hardware requirement */
    else {
       /* CACHE_NEW_SAMPLER */
-      wm->wm4.sampler_count = (brw->wm.sampler_count + 1) / 4;
+      wm->wm4.sampler_count = (brw->sampler.count + 1) / 4;
    }
 
-   if (brw->wm.sampler_count) {
+   if (brw->sampler.count) {
       /* reloc */
-      wm->wm4.sampler_state_pointer = (intel->batch.bo->offset +
-				       brw->wm.sampler_offset) >> 5;
+      wm->wm4.sampler_state_pointer = (brw->batch.bo->offset +
+				       brw->sampler.offset) >> 5;
    } else {
       wm->wm4.sampler_state_pointer = 0;
    }
 
    /* BRW_NEW_FRAGMENT_PROGRAM */
    wm->wm5.program_uses_depth = (fp->Base.InputsRead &
-				 (1 << FRAG_ATTRIB_WPOS)) != 0;
+				 (1 << VARYING_SLOT_POS)) != 0;
    wm->wm5.program_computes_depth = (fp->Base.OutputsWritten &
 				     BITFIELD64_BIT(FRAG_RESULT_DEPTH)) != 0;
    /* _NEW_BUFFERS
@@ -167,26 +170,11 @@ brw_prepare_wm_unit(struct brw_context *brw)
    /* _NEW_COLOR */
    wm->wm5.program_uses_killpixel = fp->UsesKill || ctx->Color.AlphaEnabled;
 
-
-   /* BRW_NEW_FRAGMENT_PROGRAM
-    *
-    * If using the fragment shader backend, the program is always
-    * 8-wide.  If not, it's always 16.
-    */
-   if (ctx->Shader.CurrentFragmentProgram) {
-      struct brw_shader *shader = (struct brw_shader *)
-	 ctx->Shader.CurrentFragmentProgram->_LinkedShaders[MESA_SHADER_FRAGMENT];
-
-      if (shader != NULL && shader->ir != NULL) {
-	 wm->wm5.enable_8_pix = 1;
-	 if (brw->wm.prog_data->prog_offset_16)
-	    wm->wm5.enable_16_pix = 1;
-      }
-   }
-   if (!wm->wm5.enable_8_pix)
+   wm->wm5.enable_8_pix = 1;
+   if (brw->wm.prog_data->prog_offset_16)
       wm->wm5.enable_16_pix = 1;
 
-   wm->wm5.max_threads = brw->wm_max_threads - 1;
+   wm->wm5.max_threads = brw->max_wm_threads - 1;
 
    /* _NEW_BUFFERS | _NEW_COLOR */
    if (brw_color_buffer_write_enabled(brw) ||
@@ -222,13 +210,13 @@ brw_prepare_wm_unit(struct brw_context *brw)
    /* _NEW_LINE */
    wm->wm5.line_stipple = ctx->Line.StippleFlag;
 
-   /* _NEW_DEPTH */
-   if (unlikely(INTEL_DEBUG & DEBUG_STATS) || intel->stats_wm)
+   /* BRW_NEW_STATS_WM */
+   if (unlikely(INTEL_DEBUG & DEBUG_STATS) || brw->stats_wm)
       wm->wm4.stats_enable = 1;
 
    /* Emit scratch space relocation */
    if (brw->wm.prog_data->total_scratch != 0) {
-      drm_intel_bo_emit_reloc(intel->batch.bo,
+      drm_intel_bo_emit_reloc(brw->batch.bo,
 			      brw->wm.state_offset +
 			      offsetof(struct brw_wm_unit_state, thread2),
 			      brw->wm.scratch_bo,
@@ -237,11 +225,11 @@ brw_prepare_wm_unit(struct brw_context *brw)
    }
 
    /* Emit sampler state relocation */
-   if (brw->wm.sampler_count != 0) {
-      drm_intel_bo_emit_reloc(intel->batch.bo,
+   if (brw->sampler.count != 0) {
+      drm_intel_bo_emit_reloc(brw->batch.bo,
 			      brw->wm.state_offset +
 			      offsetof(struct brw_wm_unit_state, wm4),
-			      intel->batch.bo, (brw->wm.sampler_offset |
+			      brw->batch.bo, (brw->sampler.offset |
 						wm->wm4.stats_enable |
 						(wm->wm4.sampler_count << 2)),
 			      I915_GEM_DOMAIN_INSTRUCTION, 0);
@@ -256,18 +244,17 @@ const struct brw_tracked_state brw_wm_unit = {
 	       _NEW_POLYGONSTIPPLE | 
 	       _NEW_LINE | 
 	       _NEW_COLOR |
-	       _NEW_DEPTH |
 	       _NEW_BUFFERS),
 
       .brw = (BRW_NEW_BATCH |
 	      BRW_NEW_PROGRAM_CACHE |
 	      BRW_NEW_FRAGMENT_PROGRAM |
 	      BRW_NEW_CURBE_OFFSETS |
-	      BRW_NEW_NR_WM_SURFACES),
+              BRW_NEW_STATS_WM),
 
       .cache = (CACHE_NEW_WM_PROG |
 		CACHE_NEW_SAMPLER)
    },
-   .prepare = brw_prepare_wm_unit,
+   .emit = brw_upload_wm_unit,
 };
 

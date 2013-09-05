@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.9
  *
  * Copyright (C) 2010 LunarG Inc.
  *
@@ -161,16 +160,14 @@ gdi_surface_swap_buffers(struct native_surface *nsurf)
 
 static boolean
 gdi_surface_present(struct native_surface *nsurf,
-                    enum native_attachment natt,
-                    boolean preserve,
-                    uint swap_interval)
+                    const struct native_present_control *ctrl)
 {
    boolean ret;
 
-   if (preserve || swap_interval)
+   if (ctrl->preserve || ctrl->swap_interval)
       return FALSE;
 
-   switch (natt) {
+   switch (ctrl->natt) {
    case NATIVE_ATTACHMENT_FRONT_LEFT:
       ret = gdi_surface_flush_frontbuffer(nsurf);
       break;
@@ -360,8 +357,7 @@ gdi_display_destroy(struct native_display *ndpy)
 {
    struct gdi_display *gdpy = gdi_display(ndpy);
 
-   if (gdpy->configs)
-      FREE(gdpy->configs);
+   FREE(gdpy->configs);
 
    ndpy_uninit(ndpy);
 

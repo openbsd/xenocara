@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -29,56 +29,38 @@
 
 #include "compiler.h"
 #include "glheader.h"
-#include "mfeatures.h"
 
 struct _glapi_table;
-struct gl_color_table;
 
-#if FEATURE_colortable
-
-extern void GLAPIENTRY
+void GLAPIENTRY
 _mesa_ColorTable( GLenum target, GLenum internalformat,
                   GLsizei width, GLenum format, GLenum type,
                   const GLvoid *table );
-
-extern void GLAPIENTRY
+void GLAPIENTRY
 _mesa_ColorSubTable( GLenum target, GLsizei start,
                      GLsizei count, GLenum format, GLenum type,
                      const GLvoid *table );
+void GLAPIENTRY
+_mesa_CopyColorTable(GLenum target, GLenum internalformat,
+                     GLint x, GLint y, GLsizei width);
+void GLAPIENTRY
+_mesa_CopyColorSubTable(GLenum target, GLsizei start,
+                        GLint x, GLint y, GLsizei width);
+void GLAPIENTRY
+_mesa_GetnColorTableARB( GLenum target, GLenum format, GLenum type,
+                         GLsizei bufSize, GLvoid *data );
+void GLAPIENTRY
+_mesa_GetColorTable( GLenum target, GLenum format,
+                     GLenum type, GLvoid *data );
+void GLAPIENTRY
+_mesa_ColorTableParameterfv(GLenum target, GLenum pname,
+                            const GLfloat *params);
+void GLAPIENTRY
+_mesa_ColorTableParameteriv(GLenum target, GLenum pname, const GLint *params);
+void GLAPIENTRY
+_mesa_GetColorTableParameterfv( GLenum target, GLenum pname, GLfloat *params );
+void GLAPIENTRY
+_mesa_GetColorTableParameteriv( GLenum target, GLenum pname, GLint *params );
 
-extern void
-_mesa_init_colortable_dispatch(struct _glapi_table *disp);
-
-#else /* FEATURE_colortable */
-
-static INLINE void GLAPIENTRY
-_mesa_ColorTable( GLenum target, GLenum internalformat,
-                  GLsizei width, GLenum format, GLenum type,
-                  const GLvoid *table )
-{
-   ASSERT_NO_FEATURE();
-}
-
-static INLINE void GLAPIENTRY
-_mesa_ColorSubTable( GLenum target, GLsizei start,
-                     GLsizei count, GLenum format, GLenum type,
-                     const GLvoid *table )
-{
-   ASSERT_NO_FEATURE();
-}
-
-static INLINE void
-_mesa_init_colortable_dispatch(struct _glapi_table *disp)
-{
-}
-
-#endif /* FEATURE_colortable */
-
-
-extern void
-_mesa_init_colortable( struct gl_color_table *table );
-
-extern void
-_mesa_free_colortable_data( struct gl_color_table *table );
 
 #endif /* COLORTAB_H */

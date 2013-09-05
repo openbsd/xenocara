@@ -4,7 +4,7 @@
 
 Import('*')
 
-if env['platform'] in ('cygwin', 'linux', 'sunos'):
+if env['platform'] in ('cygwin', 'darwin', 'freebsd', 'linux', 'sunos'):
 
     env = env.Clone()
 
@@ -20,4 +20,5 @@ if env['platform'] in ('cygwin', 'linux', 'sunos'):
            'xlib_sw_winsys.c',
         ]
     )
+    env.Alias('ws_xlib', ws_xlib)
     Export('ws_xlib')

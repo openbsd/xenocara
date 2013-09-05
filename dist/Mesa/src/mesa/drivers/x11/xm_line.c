@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -31,7 +31,6 @@
 
 
 #include "glxheader.h"
-#include "main/depth.h"
 #include "main/macros.h"
 #include "main/mtypes.h"
 #include "xmesaP.h"
@@ -121,7 +120,7 @@ void xmesa_choose_point( struct gl_context *ctx )
 
 
 #define GET_XRB(XRB)  struct xmesa_renderbuffer *XRB = \
-   xmesa_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[0]->Wrapped)
+   xmesa_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[0])
 
 
 /*
@@ -242,63 +241,6 @@ void xmesa_choose_point( struct gl_context *ctx )
 #define CLIP_HACK 1
 #define PLOT(X,Y) PACK_TRUEDITHER( *pixelPtr, X, Y, color[0], color[1], color[2] );
 #include "swrast/s_linetemp.h"
-
-
-
-
-/*
- * Draw a flat-shaded, PF_DITHER 8-bit line into an XImage.
- */
-#define NAME flat_DITHER8_line
-#define SETUP_CODE						\
-   GET_XRB(xrb);						\
-   const GLubyte *color = vert1->color;				\
-   GLint r = color[0], g = color[1], b = color[2];		\
-   DITHER_SETUP;
-#define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X, Y)
-#define CLIP_HACK 1
-#define PLOT(X,Y) *pixelPtr = DITHER(X,Y,r,g,b);
-#include "swrast/s_linetemp.h"
-
-
-
-/*
- * Draw a flat-shaded, PF_LOOKUP 8-bit line into an XImage.
- */
-#define NAME flat_LOOKUP8_line
-#define SETUP_CODE						\
-   GET_XRB(xrb);						\
-   const GLubyte *color = vert1->color;				\
-   GLubyte pixel;						\
-   LOOKUP_SETUP;						\
-   pixel = (GLubyte) LOOKUP( color[0], color[1], color[2] );
-#define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
-#define CLIP_HACK 1
-#define PLOT(X,Y) *pixelPtr = pixel;
-#include "swrast/s_linetemp.h"
-
-
-
-/*
- * Draw a flat-shaded, PF_HPCR line into an XImage.
- */
-#define NAME flat_HPCR_line
-#define SETUP_CODE						\
-   GET_XRB(xrb);						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   const GLubyte *color = vert1->color;				\
-   GLint r = color[0], g = color[1], b = color[2];
-#define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
-#define CLIP_HACK 1
-#define PLOT(X,Y) *pixelPtr = (GLubyte) DITHER_HPCR(X,Y,r,g,b);
-#include "swrast/s_linetemp.h"
-
 
 
 
@@ -463,80 +405,6 @@ void xmesa_choose_point( struct gl_context *ctx )
 
 
 
-/*
- * Draw a flat-shaded, Z-less, PF_DITHER 8-bit line into an XImage.
- */
-#define NAME flat_DITHER8_z_line
-#define SETUP_CODE					\
-   GET_XRB(xrb);						\
-   const GLubyte *color = vert1->color;			\
-   GLint r = color[0], g = color[1], b = color[2];	\
-   DITHER_SETUP;
-#define INTERP_Z 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
-#define CLIP_HACK 1
-#define PLOT(X,Y)						\
-	if (Z < *zPtr) {					\
-	   *zPtr = Z;						\
-	   *pixelPtr = (GLubyte) DITHER( X, Y, r, g, b);	\
-	}
-#include "swrast/s_linetemp.h"
-
-
-
-/*
- * Draw a flat-shaded, Z-less, PF_LOOKUP 8-bit line into an XImage.
- */
-#define NAME flat_LOOKUP8_z_line
-#define SETUP_CODE						\
-   GET_XRB(xrb);						\
-   const GLubyte *color = vert1->color;				\
-   GLubyte pixel;						\
-   LOOKUP_SETUP;						\
-   pixel = (GLubyte) LOOKUP( color[0], color[1], color[2] );
-#define INTERP_Z 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
-#define CLIP_HACK 1
-#define PLOT(X,Y)		\
-	if (Z < *zPtr) {	\
-	   *zPtr = Z;		\
-	   *pixelPtr = pixel;	\
-	}
-#include "swrast/s_linetemp.h"
-
-
-
-/*
- * Draw a flat-shaded, Z-less, PF_HPCR line into an XImage.
- */
-#define NAME flat_HPCR_z_line
-#define SETUP_CODE 						\
-   GET_XRB(xrb);						\
-   XMesaContext xmesa = XMESA_CONTEXT(ctx);			\
-   const GLubyte *color = vert1->color;				\
-   GLint r = color[0], g = color[1], b = color[2];
-#define INTERP_Z 1
-#define DEPTH_TYPE DEFAULT_SOFTWARE_DEPTH_TYPE
-#define PIXEL_TYPE GLubyte
-#define BYTES_PER_ROW (xrb->ximage->bytes_per_line)
-#define PIXEL_ADDRESS(X,Y) PIXEL_ADDR1(xrb, X,Y)
-#define CLIP_HACK 1
-#define PLOT(X,Y)						\
-	if (Z < *zPtr) {					\
-	   *zPtr = Z;						\
-	   *pixelPtr = (GLubyte) DITHER_HPCR( X, Y, r, g, b);	\
-	}
-#include "swrast/s_linetemp.h"
-
-
-
-
 /**
  * Draw fast, XOR line with XDrawLine in front color buffer.
  * WARNING: this isn't fully OpenGL conformant because different pixels
@@ -555,10 +423,10 @@ xor_line(struct gl_context *ctx, const SWvertex *vert0, const SWvertex *vert1)
                                               vert1->color[0], vert1->color[1],
                                               vert1->color[2], vert1->color[3],
                                               xmesa->pixelformat);
-   int x0 =            (GLint) vert0->attrib[FRAG_ATTRIB_WPOS][0];
-   int y0 = YFLIP(xrb, (GLint) vert0->attrib[FRAG_ATTRIB_WPOS][1]);
-   int x1 =            (GLint) vert1->attrib[FRAG_ATTRIB_WPOS][0];
-   int y1 = YFLIP(xrb, (GLint) vert1->attrib[FRAG_ATTRIB_WPOS][1]);
+   int x0 =            (GLint) vert0->attrib[VARYING_SLOT_POS][0];
+   int y0 = YFLIP(xrb, (GLint) vert0->attrib[VARYING_SLOT_POS][1]);
+   int x1 =            (GLint) vert1->attrib[VARYING_SLOT_POS][0];
+   int y1 = YFLIP(xrb, (GLint) vert1->attrib[VARYING_SLOT_POS][1]);
    XMesaSetForeground(dpy, gc, pixel);
    XMesaSetFunction(dpy, gc, GXxor);
    XSetLineAttributes(dpy, gc, (int) ctx->Line.Width,
@@ -581,8 +449,6 @@ get_line_func(struct gl_context *ctx)
 #if CHAN_BITS == 8
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    XMesaContext xmesa = XMESA_CONTEXT(ctx);
-   XMesaBuffer xmbuf = XMESA_BUFFER(ctx->DrawBuffer);
-   const int depth = GET_VISUAL_DEPTH(xmesa->xm_visual);
    const struct xmesa_renderbuffer *xrb;
 
    if ((ctx->DrawBuffer->_ColorDrawBufferIndexes[0] != BUFFER_BIT_FRONT_LEFT) &&
@@ -594,9 +460,8 @@ get_line_func(struct gl_context *ctx)
    if (ctx->Light.ShadeModel != GL_FLAT)  return (swrast_line_func) NULL;
    if (ctx->Line.StippleFlag)             return (swrast_line_func) NULL;
    if (swrast->_RasterMask & MULTI_DRAW_BIT) return (swrast_line_func) NULL;
-   if (xmbuf->swAlpha)                    return (swrast_line_func) NULL;
 
-   xrb = xmesa_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[0]->Wrapped);
+   xrb = xmesa_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[0]);
 
    if (xrb->ximage
        && swrast->_RasterMask==DEPTH_BIT
@@ -619,12 +484,6 @@ get_line_func(struct gl_context *ctx)
             return flat_5R6G5B_z_line;
          case PF_Dither_5R6G5B:
             return flat_DITHER_5R6G5B_z_line;
-         case PF_Dither:
-            return (depth==8) ? flat_DITHER8_z_line : (swrast_line_func) NULL;
-         case PF_Lookup:
-            return (depth==8) ? flat_LOOKUP8_z_line : (swrast_line_func) NULL;
-         case PF_HPCR:
-            return flat_HPCR_z_line;
          default:
             return (swrast_line_func)NULL;
       }
@@ -647,12 +506,6 @@ get_line_func(struct gl_context *ctx)
             return flat_5R6G5B_line;
          case PF_Dither_5R6G5B:
             return flat_DITHER_5R6G5B_line;
-         case PF_Dither:
-            return (depth==8) ? flat_DITHER8_line : (swrast_line_func) NULL;
-         case PF_Lookup:
-            return (depth==8) ? flat_LOOKUP8_line : (swrast_line_func) NULL;
-         case PF_HPCR:
-            return flat_HPCR_line;
 	 default:
 	    return (swrast_line_func)NULL;
       }

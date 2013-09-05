@@ -33,9 +33,6 @@ extern "C" {
 #include "program/symbol_table.h"
 }
 
-extern void _mesa_print_ir(exec_list *instructions,
-			   struct _mesa_glsl_parse_state *state);
-
 /**
  * Abstract base class of visitors of IR instruction trees
  */
@@ -54,6 +51,7 @@ public:
     * the hierarchy should not have \c visit methods.
     */
    /*@{*/
+   virtual void visit(ir_rvalue *);
    virtual void visit(ir_variable *);
    virtual void visit(ir_function_signature *);
    virtual void visit(ir_function *);

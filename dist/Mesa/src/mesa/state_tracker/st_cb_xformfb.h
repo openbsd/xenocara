@@ -30,22 +30,17 @@
 
 
 #include "main/compiler.h"
-#include "main/mfeatures.h"
 
 struct dd_function_table;
-
-#if FEATURE_EXT_transform_feedback
+struct gl_transform_feedback_object;
+struct pipe_draw_info;
 
 extern void
 st_init_xformfb_functions(struct dd_function_table *functions);
 
-#else
+extern void
+st_transform_feedback_draw_init(struct gl_transform_feedback_object *obj,
+                                struct pipe_draw_info *out);
 
-static INLINE void
-st_init_xformfb_functions(struct dd_function_table *functions)
-{
-}
-
-#endif /* FEATURE_EXT_transform_feedback */
 
 #endif /* ST_CB_XFORMFB_H */

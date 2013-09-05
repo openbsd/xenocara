@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
@@ -33,6 +33,35 @@
 #define SWRAST_H
 
 #include "main/mtypes.h"
+#include "swrast/s_chan.h"
+
+
+/**
+ * If non-zero use GLdouble for walking triangle edges, for better accuracy.
+ */
+#define TRIANGLE_WALK_DOUBLE 0
+
+
+/**
+ * Bits per depth buffer value (max is 32).
+ */
+#ifndef DEFAULT_SOFTWARE_DEPTH_BITS
+#define DEFAULT_SOFTWARE_DEPTH_BITS 16
+#endif
+/** Depth buffer data type */
+#if DEFAULT_SOFTWARE_DEPTH_BITS <= 16
+#define DEFAULT_SOFTWARE_DEPTH_TYPE GLushort
+#else
+#define DEFAULT_SOFTWARE_DEPTH_TYPE GLuint
+#endif
+
+
+/**
+ * Max image/surface/texture size.
+ */
+#define SWRAST_MAX_WIDTH 16384
+#define SWRAST_MAX_HEIGHT 16384
+
 
 /**
  * \struct SWvertex
@@ -45,7 +74,7 @@
  * improve its usefulness as a fallback mechanism for hardware
  * drivers.
  *
- * wpos = attr[FRAG_ATTRIB_WPOS] and MUST BE THE FIRST values in the
+ * wpos = attr[VARYING_SLOT_POS] and MUST BE THE FIRST values in the
  * vertex because of the tnl clipping code.
 
  * wpos[0] and [1] are the screen-coords of SWvertex.
@@ -69,13 +98,13 @@
  *     primitives unaccelerated), hook in swrast_setup instead.
  */
 typedef struct {
-   GLfloat attrib[FRAG_ATTRIB_MAX][4];
+   GLfloat attrib[VARYING_SLOT_MAX][4];
    GLchan color[4];   /** integer color */
    GLfloat pointSize;
 } SWvertex;
 
 
-#define FRAG_ATTRIB_CI FRAG_ATTRIB_COL0
+#define VARYING_SLOT_CI VARYING_SLOT_COL0
 
 
 struct swrast_device_driver;
@@ -109,6 +138,11 @@ _swrast_CopyPixels( struct gl_context *ctx,
 		    GLsizei width, GLsizei height,
 		    GLenum type );
 
+extern GLboolean
+swrast_fast_copy_pixels(struct gl_context *ctx,
+			GLint srcX, GLint srcY, GLsizei width, GLsizei height,
+			GLint dstX, GLint dstY, GLenum type);
+
 extern void
 _swrast_DrawPixels( struct gl_context *ctx,
 		    GLint x, GLint y,
@@ -118,13 +152,6 @@ _swrast_DrawPixels( struct gl_context *ctx,
 		    const GLvoid *pixels );
 
 extern void
-_swrast_ReadPixels( struct gl_context *ctx,
-		    GLint x, GLint y, GLsizei width, GLsizei height,
-		    GLenum format, GLenum type,
-		    const struct gl_pixelstore_attrib *unpack,
-		    GLvoid *pixels );
-
-extern void
 _swrast_BlitFramebuffer(struct gl_context *ctx,
                         GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
                         GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
@@ -132,9 +159,6 @@ _swrast_BlitFramebuffer(struct gl_context *ctx,
 
 extern void
 _swrast_Clear(struct gl_context *ctx, GLbitfield buffers);
-
-extern void
-_swrast_Accum(struct gl_context *ctx, GLenum op, GLfloat value);
 
 
 
@@ -182,6 +206,38 @@ _swrast_render_start( struct gl_context *ctx );
 extern void
 _swrast_render_finish( struct gl_context *ctx );
 
+extern struct gl_texture_image *
+_swrast_new_texture_image( struct gl_context *ctx );
+
+extern void
+_swrast_delete_texture_image(struct gl_context *ctx,
+                             struct gl_texture_image *texImage);
+
+extern GLboolean
+_swrast_alloc_texture_image_buffer(struct gl_context *ctx,
+                                   struct gl_texture_image *texImage);
+
+extern GLboolean
+_swrast_init_texture_image(struct gl_texture_image *texImage);
+
+extern void
+_swrast_free_texture_image_buffer(struct gl_context *ctx,
+                                  struct gl_texture_image *texImage);
+
+extern void
+_swrast_map_teximage(struct gl_context *ctx,
+		     struct gl_texture_image *texImage,
+		     GLuint slice,
+		     GLuint x, GLuint y, GLuint w, GLuint h,
+		     GLbitfield mode,
+		     GLubyte **mapOut,
+		     GLint *rowStrideOut);
+
+extern void
+_swrast_unmap_teximage(struct gl_context *ctx,
+		       struct gl_texture_image *texImage,
+		       GLuint slice);
+
 /* Tell the software rasterizer about core state changes.
  */
 extern void
@@ -213,8 +269,7 @@ _swrast_render_texture(struct gl_context *ctx,
 
 extern void
 _swrast_finish_render_texture(struct gl_context *ctx,
-                              struct gl_renderbuffer_attachment *att);
-
+                              struct gl_renderbuffer *rb);
 
 
 /**

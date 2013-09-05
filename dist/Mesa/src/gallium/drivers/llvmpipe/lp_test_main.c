@@ -39,6 +39,7 @@
 
 #include "gallivm/lp_bld_const.h"
 #include "gallivm/lp_bld_init.h"
+#include "gallivm/lp_bld_debug.h"
 #include "lp_test.h"
 
 
@@ -369,7 +370,11 @@ int main(int argc, char **argv)
    unsigned i;
    boolean success;
    boolean single = FALSE;
-   struct gallivm_state *gallivm;
+   unsigned fpstate;
+
+   util_cpu_detect();
+   fpstate = util_fpstate_get();
+   util_fpstate_set_denorms_to_zero(fpstate);
 
    for(i = 1; i < argc; ++i) {
       if(strcmp(argv[i], "-v") == 0)
@@ -384,23 +389,28 @@ int main(int argc, char **argv)
 
    lp_build_init();
 
-   gallivm = gallivm_create();
+#ifdef DEBUG
+   if (verbose >= 2) {
+      gallivm_debug |= GALLIVM_DEBUG_IR;
+      gallivm_debug |= GALLIVM_DEBUG_ASM;
+   }
+#endif
 
    util_cpu_detect();
 
    if(fp) {
       /* Warm up the caches */
-      test_some(gallivm, 0, NULL, 100);
+      test_some(0, NULL, 100);
 
       write_tsv_header(fp);
    }
       
    if (single)
-      success = test_single(gallivm, verbose, fp);
+      success = test_single(verbose, fp);
    else if (n)
-      success = test_some(gallivm, verbose, fp, n);
+      success = test_some(verbose, fp, n);
    else
-      success = test_all(gallivm, verbose, fp);
+      success = test_all(verbose, fp);
 
    if(fp)
       fclose(fp);

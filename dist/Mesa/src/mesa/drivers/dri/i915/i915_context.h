@@ -40,6 +40,7 @@
 #define I915_FALLBACK_POINT_SMOOTH	 0x80000
 #define I915_FALLBACK_POINT_SPRITE_COORD_ORIGIN	 0x100000
 #define I915_FALLBACK_DRAW_OFFSET	 0x200000
+#define I915_FALLBACK_COORD_REPLACE	 0x400000
 
 #define I915_UPLOAD_CTX              0x1
 #define I915_UPLOAD_BUFFERS          0x2
@@ -139,10 +140,10 @@ struct i915_fragment_program
 {
    struct gl_fragment_program FragProg;
 
-   GLboolean translated;
-   GLboolean params_uptodate;
-   GLboolean on_hardware;
-   GLboolean error;             /* If program is malformed for any reason. */
+   bool translated;
+   bool params_uptodate;
+   bool on_hardware;
+   bool error;             /* If program is malformed for any reason. */
 
    /** Record of which phases R registers were last written in. */
    GLuint register_phases[16];
@@ -194,7 +195,7 @@ struct i915_fragment_program
    /* Helpers for i915_fragprog.c:
     */
    GLuint wpos_tex;
-   GLboolean depth_written;
+   bool depth_written;
 
    struct
    {
@@ -318,10 +319,13 @@ do {									\
 /*======================================================================
  * i915_context.c
  */
-extern GLboolean i915CreateContext(int api,
-				   const struct gl_config * mesaVis,
-                                   __DRIcontext * driContextPriv,
-                                   void *sharedContextPrivate);
+extern bool i915CreateContext(int api,
+			      const struct gl_config * mesaVis,
+			      __DRIcontext * driContextPriv,
+                              unsigned major_version,
+                              unsigned minor_version,
+                              unsigned *error,
+			      void *sharedContextPrivate);
 
 
 /*======================================================================
@@ -338,6 +342,7 @@ extern void i915InitStateFunctions(struct dd_function_table *functions);
 extern void i915InitState(struct i915_context *i915);
 extern void i915_update_stencil(struct gl_context * ctx);
 extern void i915_update_provoking_vertex(struct gl_context *ctx);
+extern void i915_update_sprite_point_enable(struct gl_context *ctx);
 
 
 /*======================================================================

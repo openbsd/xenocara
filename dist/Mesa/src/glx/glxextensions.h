@@ -33,33 +33,30 @@
 
 enum
 {
-   ARB_get_proc_address_bit = 0,
+   ARB_create_context_bit = 0,
+   ARB_create_context_profile_bit,
+   ARB_create_context_robustness_bit,
+   ARB_fbconfig_float_bit,
+   ARB_get_proc_address_bit,
    ARB_multisample_bit,
-   ARB_render_texture_bit,
    ATI_pixel_format_float_bit,
    EXT_visual_info_bit,
    EXT_visual_rating_bit,
    EXT_import_context_bit,
    EXT_framebuffer_sRGB_bit,
-   MESA_agp_offset_bit,
+   EXT_fbconfig_packed_float_bit,
+   EXT_create_context_es2_profile_bit,
    MESA_copy_sub_buffer_bit,
    MESA_depth_float_bit,
    MESA_multithread_makecurrent_bit,
-   MESA_pixmap_colormap_bit,
-   MESA_release_buffers_bit,
    MESA_swap_control_bit,
    MESA_swap_frame_usage_bit,
    NV_float_buffer_bit,
-   NV_render_depth_texture_bit,
-   NV_render_texture_rectangle_bit,
-   NV_vertex_array_range_bit,
    OML_swap_method_bit,
    OML_sync_control_bit,
    SGI_make_current_read_bit,
    SGI_swap_control_bit,
    SGI_video_sync_bit,
-   SGIS_blended_overlay_bit,
-   SGIS_color_range_bit,
    SGIS_multisample_bit,
    SGIX_fbconfig_bit,
    SGIX_pbuffer_bit,
@@ -69,6 +66,11 @@ enum
    EXT_texture_from_pixmap_bit,
    INTEL_swap_event_bit,
 };
+
+/* From the GLX perspective, the ARB and EXT extensions are identical.  Use a
+ * single bit for both.
+ */
+#define ARB_framebuffer_sRGB_bit EXT_framebuffer_sRGB_bit
 
 enum
 {

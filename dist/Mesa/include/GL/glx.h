@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  * 
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  * 
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -27,21 +27,8 @@
 #define GLX_H
 
 
-#ifdef __VMS
-#include <GL/vms_x_fix.h>
-# ifdef __cplusplus
-/* VMS Xlib.h gives problems with C++.
- * this avoids a bunch of trivial warnings */
-#pragma message disable nosimpint
-#endif
-#endif
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#ifdef __VMS
-# ifdef __cplusplus
-#pragma message enable nosimpint
-#endif
-#endif
 #include <GL/gl.h>
 
 

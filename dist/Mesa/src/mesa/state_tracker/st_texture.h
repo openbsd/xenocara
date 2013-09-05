@@ -45,13 +45,13 @@ struct st_texture_image
 {
    struct gl_texture_image base;
 
-   /* These aren't stored in gl_texture_image 
+   /** Used to store texture data that doesn't fit in the parent
+    * object's mipmap buffer.
     */
-   GLuint level;
-   GLuint face;
+   GLubyte *TexData;
 
    /* If stImage->pt != NULL, image data is stored here.
-    * Else if stImage->base.Data != NULL, image is stored there.
+    * Else if stImage->TexData != NULL, image is stored there.
     * Else there is no image data.
     */
    struct pipe_resource *pt;
@@ -87,10 +87,16 @@ struct st_texture_object
     */
    struct pipe_sampler_view *sampler_view;
 
-   /* True if there is/was a surface bound to this texture object.  It helps
-    * track whether the texture object is surface based or not.
+   /* True if this texture comes from the window system. Such a texture
+    * cannot be reallocated and the format can only be changed with a sampler
+    * view or a surface.
     */
    GLboolean surface_based;
+
+   /* If surface_based is true, this format should be used for all sampler
+    * views and surfaces instead of pt->format.
+    */
+   enum pipe_format surface_format;
 };
 
 
@@ -123,18 +129,6 @@ st_get_stobj_resource(struct st_texture_object *stObj)
 
 
 static INLINE struct pipe_sampler_view *
-st_create_texture_sampler_view(struct pipe_context *pipe,
-                               struct pipe_resource *texture)
-{
-   struct pipe_sampler_view templ;
-
-   u_sampler_view_default_template(&templ, texture, texture->format);
-
-   return pipe->create_sampler_view(pipe, texture, &templ);
-}
-
-
-static INLINE struct pipe_sampler_view *
 st_create_texture_sampler_view_format(struct pipe_context *pipe,
                                       struct pipe_resource *texture,
                                       enum pipe_format format)
@@ -146,21 +140,14 @@ st_create_texture_sampler_view_format(struct pipe_context *pipe,
    return pipe->create_sampler_view(pipe, texture, &templ);
 }
 
-
 static INLINE struct pipe_sampler_view *
-st_get_texture_sampler_view(struct st_texture_object *stObj,
-                            struct pipe_context *pipe)
+st_create_texture_sampler_view(struct pipe_context *pipe,
+                               struct pipe_resource *texture)
 {
-   if (!stObj || !stObj->pt) {
-      return NULL;
-   }
-
-   if (!stObj->sampler_view) {
-      stObj->sampler_view = st_create_texture_sampler_view(pipe, stObj->pt);
-   }
-
-   return stObj->sampler_view;
+   return st_create_texture_sampler_view_format(pipe, texture,
+                                                texture->format);
 }
+
 
 
 extern struct pipe_resource *
@@ -172,6 +159,7 @@ st_texture_create(struct st_context *st,
                   GLuint height0,
                   GLuint depth0,
                   GLuint layers,
+                  GLuint nr_samples,
                   GLuint tex_usage );
 
 
@@ -189,19 +177,16 @@ st_gl_texture_dims_to_pipe_dims(GLenum texture,
  */
 extern GLboolean
 st_texture_match_image(const struct pipe_resource *pt,
-                       const struct gl_texture_image *image,
-                       GLuint face, GLuint level);
+                       const struct gl_texture_image *image);
 
 /* Return a pointer to an image within a texture.  Return image stride as
  * well.
  */
 extern GLubyte *
-st_texture_image_map(struct st_context *st,
-                     struct st_texture_image *stImage,
-		     GLuint zoffset,
+st_texture_image_map(struct st_context *st, struct st_texture_image *stImage,
                      enum pipe_transfer_usage usage,
-                     unsigned x, unsigned y,
-                     unsigned w, unsigned h);
+                     GLuint x, GLuint y, GLuint z,
+                     GLuint w, GLuint h, GLuint d);
 
 extern void
 st_texture_image_unmap(struct st_context *st,
@@ -231,5 +216,9 @@ st_texture_image_copy(struct pipe_context *pipe,
                       struct pipe_resource *dst, GLuint dstLevel,
                       struct pipe_resource *src, GLuint srcLevel,
                       GLuint face);
+
+
+extern struct pipe_resource *
+st_create_color_map_texture(struct gl_context *ctx);
 
 #endif

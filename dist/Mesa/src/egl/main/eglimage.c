@@ -34,9 +34,6 @@
 #include "egllog.h"
 
 
-#ifdef EGL_KHR_image_base
-
-
 /**
  * Parse the list of image attributes and return the proper error code.
  */
@@ -48,7 +45,7 @@ _eglParseImageAttribList(_EGLImageAttribs *attrs, _EGLDisplay *dpy,
 
    (void) dpy;
 
-   memset(attrs, 0, sizeof(attrs));
+   memset(attrs, 0, sizeof(*attrs));
    attrs->ImagePreserved = EGL_FALSE;
    attrs->GLTextureLevel = 0;
    attrs->GLTextureZOffset = 0;
@@ -91,6 +88,11 @@ _eglParseImageAttribList(_EGLImageAttribs *attrs, _EGLDisplay *dpy,
          attrs->DRMBufferStrideMESA = val;
          break;
 
+      /* EGL_WL_bind_wayland_display */
+      case EGL_WAYLAND_PLANE_WL:
+         attrs->PlaneWL = val;
+         break;
+
       default:
          /* unknown attrs are ignored */
          break;
@@ -113,6 +115,3 @@ _eglInitImage(_EGLImage *img, _EGLDisplay *dpy)
 
    return EGL_TRUE;
 }
-
-
-#endif /* EGL_KHR_image_base */

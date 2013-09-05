@@ -44,6 +44,8 @@ enum _egl_platform_type {
    _EGL_PLATFORM_WAYLAND,
    _EGL_PLATFORM_DRM,
    _EGL_PLATFORM_FBDEV,
+   _EGL_PLATFORM_NULL,
+   _EGL_PLATFORM_ANDROID,
 
    _EGL_NUM_PLATFORMS,
    _EGL_INVALID_PLATFORM = -1
@@ -101,12 +103,19 @@ struct _egl_extensions
    EGLBoolean KHR_reusable_sync;
    EGLBoolean KHR_fence_sync;
 
-   EGLBoolean KHR_surfaceless_gles1;
-   EGLBoolean KHR_surfaceless_gles2;
-   EGLBoolean KHR_surfaceless_opengl;
+   EGLBoolean KHR_surfaceless_context;
+   EGLBoolean KHR_create_context;
 
    EGLBoolean NOK_swap_region;
    EGLBoolean NOK_texture_from_pixmap;
+
+   EGLBoolean ANDROID_image_native_buffer;
+
+   EGLBoolean NV_post_sub_buffer;
+
+   EGLBoolean EXT_create_context_robustness;
+   EGLBoolean EXT_buffer_age;
+   EGLBoolean EXT_swap_buffers_with_damage;
 };
 
 
@@ -150,7 +159,7 @@ struct _egl_display
 
 
 extern _EGLPlatformType
-_eglGetNativePlatform(void);
+_eglGetNativePlatform(EGLNativeDisplayType nativeDisplay);
 
 
 extern void

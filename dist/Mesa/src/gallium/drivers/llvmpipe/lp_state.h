@@ -51,7 +51,7 @@
 #define LP_NEW_SAMPLER_VIEW  0x800
 #define LP_NEW_VERTEX        0x1000
 #define LP_NEW_VS            0x2000
-#define LP_NEW_QUERY         0x4000
+#define LP_NEW_OCCLUSION_QUERY 0x4000
 #define LP_NEW_BLEND_COLOR   0x8000
 #define LP_NEW_GS            0x10000
 #define LP_NEW_SO            0x20000
@@ -86,7 +86,7 @@ struct lp_velems_state
 };
 
 struct lp_so_state {
-   struct pipe_stream_output_state base;
+   struct pipe_stream_output_info base;
 };
 
 
@@ -139,6 +139,14 @@ llvmpipe_prepare_vertex_sampling(struct llvmpipe_context *ctx,
                                  struct pipe_sampler_view **views);
 void
 llvmpipe_cleanup_vertex_sampling(struct llvmpipe_context *ctx);
+
+
+void
+llvmpipe_prepare_geometry_sampling(struct llvmpipe_context *ctx,
+                                   unsigned num,
+                                   struct pipe_sampler_view **views);
+void
+llvmpipe_cleanup_geometry_sampling(struct llvmpipe_context *ctx);
 
 
 #endif

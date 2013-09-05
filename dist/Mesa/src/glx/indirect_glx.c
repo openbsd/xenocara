@@ -43,23 +43,16 @@ static struct _glapi_table *IndirectAPI = NULL;
 static void
 indirect_destroy_context(struct glx_context *gc)
 {
-   if (!gc->imported && gc->xid)
-      glx_send_destroy_context(gc->psc->dpy, gc->xid);
-
    __glXFreeVertexArrayState(gc);
 
-   if (gc->vendor)
-      XFree((char *) gc->vendor);
-   if (gc->renderer)
-      XFree((char *) gc->renderer);
-   if (gc->version)
-      XFree((char *) gc->version);
-   if (gc->extensions)
-      XFree((char *) gc->extensions);
+   free((char *) gc->vendor);
+   free((char *) gc->renderer);
+   free((char *) gc->version);
+   free((char *) gc->extensions);
    __glFreeAttributeState(gc);
-   XFree((char *) gc->buf);
-   Xfree((char *) gc->client_state_private);
-   XFree((char *) gc);
+   free((char *) gc->buf);
+   free((char *) gc->client_state_private);
+   free((char *) gc);
 }
 
 static Bool
@@ -342,6 +335,10 @@ static const struct glx_context_vtable indirect_context_vtable = {
  * \todo Eliminate \c __glXInitVertexArrayState.  Replace it with a new
  * function called \c __glXAllocateClientState that allocates the memory and
  * does all the initialization (including the pixel pack / unpack).
+ *
+ * \note
+ * This function is \b not the place to validate the context creation
+ * parameters.  It is just the allocator for the \c glx_context.
  */
 _X_HIDDEN struct glx_context *
 indirect_create_context(struct glx_screen *psc,
@@ -359,24 +356,24 @@ indirect_create_context(struct glx_screen *psc,
    }
 
    /* Allocate our context record */
-   gc = Xmalloc(sizeof *gc);
+   gc = calloc(1, sizeof *gc);
    if (!gc) {
       /* Out of memory */
       return NULL;
    }
-   memset(gc, 0, sizeof *gc);
 
    glx_context_init(gc, psc, mode);
    gc->isDirect = GL_FALSE;
    gc->vtable = &indirect_context_vtable;
-   state = Xmalloc(sizeof(struct __GLXattributeRec));
+   state = calloc(1, sizeof(struct __GLXattributeRec));
+   gc->renderType = renderType;
+
    if (state == NULL) {
       /* Out of memory */
-      Xfree(gc);
+      free(gc);
       return NULL;
    }
    gc->client_state_private = state;
-   memset(gc->client_state_private, 0, sizeof(struct __GLXattributeRec));
    state->NoDrawArraysProtocol = (getenv("LIBGL_NO_DRAWARRAYS") != NULL);
 
    /*
@@ -387,10 +384,10 @@ indirect_create_context(struct glx_screen *psc,
     */
 
    bufSize = (XMaxRequestSize(psc->dpy) * 4) - sz_xGLXRenderReq;
-   gc->buf = (GLubyte *) Xmalloc(bufSize);
+   gc->buf = malloc(bufSize);
    if (!gc->buf) {
-      Xfree(gc->client_state_private);
-      Xfree(gc);
+      free(gc->client_state_private);
+      free(gc);
       return NULL;
    }
    gc->bufSize = bufSize;
@@ -439,8 +436,37 @@ indirect_create_context(struct glx_screen *psc,
    return gc;
 }
 
+_X_HIDDEN struct glx_context *
+indirect_create_context_attribs(struct glx_screen *base,
+				struct glx_config *config_base,
+				struct glx_context *shareList,
+				unsigned num_attribs,
+				const uint32_t *attribs,
+				unsigned *error)
+{
+   int renderType = GLX_RGBA_TYPE;
+   unsigned i;
+
+   /* The error parameter is only used on the server so that correct GLX
+    * protocol errors can be generated.  On the client, it can be ignored.
+    */
+   (void) error;
+
+   /* All of the attribute validation for indirect contexts is handled on the
+    * server, so there's not much to do here. Still, we need to parse the
+    * attributes to correctly set renderType.
+    */
+   for (i = 0; i < num_attribs; i++) {
+      if (attribs[i * 2] == GLX_RENDER_TYPE)
+         renderType = attribs[i * 2 + 1];
+   }
+
+   return indirect_create_context(base, config_base, shareList, renderType);
+}
+
 struct glx_screen_vtable indirect_screen_vtable = {
-   indirect_create_context
+   indirect_create_context,
+   indirect_create_context_attribs
 };
 
 _X_HIDDEN struct glx_screen *
@@ -448,11 +474,10 @@ indirect_create_screen(int screen, struct glx_display * priv)
 {
    struct glx_screen *psc;
 
-   psc = Xmalloc(sizeof *psc);
+   psc = calloc(1, sizeof *psc);
    if (psc == NULL)
       return NULL;
 
-   memset(psc, 0, sizeof *psc);
    glx_screen_init(psc, screen, priv);
    psc->vtable = &indirect_screen_vtable;
 

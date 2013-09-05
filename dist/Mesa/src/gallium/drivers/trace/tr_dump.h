@@ -49,7 +49,7 @@ struct pipe_box;
  */
 boolean trace_dump_trace_begin(void);
 boolean trace_dump_trace_enabled(void);
-void trace_dump_trace_end(void);
+void trace_dump_trace_flush(void);
 
 /*
  * Lock and unlock the call mutex.
@@ -88,7 +88,7 @@ void trace_dump_uint(long long unsigned value);
 void trace_dump_float(double value);
 void trace_dump_bytes(const void *data, size_t size);
 void trace_dump_box_bytes(const void *data,
-			  enum pipe_format format,
+                          struct pipe_resource *resource,
 			  const struct pipe_box *box,
 			  unsigned stride,
 			  unsigned slice_stride);
@@ -136,26 +136,34 @@ void trace_dump_transfer_ptr(struct pipe_transfer *_transfer);
 
 #define trace_dump_array(_type, _obj, _size) \
    do { \
-      size_t idx; \
-      trace_dump_array_begin(); \
-      for(idx = 0; idx < (_size); ++idx) { \
-         trace_dump_elem_begin(); \
-         trace_dump_##_type((_obj)[idx]); \
-         trace_dump_elem_end(); \
+      if (_obj) { \
+         size_t idx; \
+         trace_dump_array_begin(); \
+         for(idx = 0; idx < (_size); ++idx) { \
+            trace_dump_elem_begin(); \
+            trace_dump_##_type((_obj)[idx]); \
+            trace_dump_elem_end(); \
+         } \
+         trace_dump_array_end(); \
+      } else { \
+         trace_dump_null(); \
       } \
-      trace_dump_array_end(); \
    } while(0)
 
 #define trace_dump_struct_array(_type, _obj, _size) \
    do { \
-      size_t idx; \
-      trace_dump_array_begin(); \
-      for(idx = 0; idx < (_size); ++idx) { \
-         trace_dump_elem_begin(); \
-         trace_dump_##_type(&(_obj)[idx]); \
-         trace_dump_elem_end(); \
+      if (_obj) { \
+         size_t idx; \
+         trace_dump_array_begin(); \
+         for(idx = 0; idx < (_size); ++idx) { \
+            trace_dump_elem_begin(); \
+            trace_dump_##_type(&(_obj)[idx]); \
+            trace_dump_elem_end(); \
+         } \
+         trace_dump_array_end(); \
+      } else { \
+         trace_dump_null(); \
       } \
-      trace_dump_array_end(); \
    } while(0)
 
 #define trace_dump_member(_type, _obj, _member) \

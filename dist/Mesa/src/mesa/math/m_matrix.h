@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.3
  *
  * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -33,6 +33,11 @@
 
 
 #include "main/glheader.h"
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 /**
@@ -69,7 +74,7 @@ enum GLmatrixtype {
  */
 typedef struct {
    GLfloat *m;		/**< 16 matrix elements (16-byte aligned) */
-   GLfloat *inv;	/**< optional 16-element inverse (16-byte aligned) */
+   GLfloat *inv;	/**< 16-element inverse (16-byte aligned) */
    GLuint flags;        /**< possible values determined by (of \link
                          * MatFlags MAT_FLAG_* flags\endlink)
                          */
@@ -84,9 +89,6 @@ _math_matrix_ctr( GLmatrix *m );
 
 extern void
 _math_matrix_dtr( GLmatrix *m );
-
-extern void
-_math_matrix_alloc_inv( GLmatrix *m );
 
 extern void
 _math_matrix_mul_matrix( GLmatrix *dest, const GLmatrix *a, const GLmatrix *b );
@@ -208,5 +210,9 @@ _mesa_transform_vector(GLfloat u[4], const GLfloat v[4], const GLfloat m[16]);
 
 /*@}*/
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

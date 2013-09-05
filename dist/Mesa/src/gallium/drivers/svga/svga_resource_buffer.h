@@ -42,7 +42,6 @@
 #define SVGA_BUFFER_MAX_RANGES 32
 
 
-struct svga_screen;
 struct svga_context;
 struct svga_winsys_buffer;
 struct svga_winsys_surface;
@@ -129,6 +128,12 @@ struct svga_buffer
        * is the relative offset within that buffer.
        */
       unsigned offset;
+
+      /**
+       * Range of user buffer that is uploaded in @buffer at @offset.
+       */
+      unsigned start;
+      unsigned end;
    } uploaded;
 
    /**
@@ -172,6 +177,8 @@ struct svga_buffer
     * a context. It is only valid if the dma.pending is set above.
     */
    struct list_head head;
+
+   unsigned size;  /**< Approximate size in bytes */
 };
 
 
@@ -193,7 +200,11 @@ svga_buffer(struct pipe_resource *buffer)
 static INLINE boolean 
 svga_buffer_is_user_buffer( struct pipe_resource *buffer )
 {
-   return svga_buffer(buffer)->user;
+   if (buffer) {
+      return svga_buffer(buffer)->user;
+   } else {
+      return FALSE;
+   }
 }
 
 
@@ -231,12 +242,6 @@ struct svga_winsys_buffer *
 svga_winsys_buffer_create(struct svga_context *svga,
                           unsigned alignment, 
                           unsigned usage,
-                          unsigned size);
-
-void
-svga_redefine_user_buffer(struct pipe_context *ctx,
-                          struct pipe_resource *resource,
-                          unsigned offset,
                           unsigned size);
 
 #endif /* SVGA_BUFFER_H */

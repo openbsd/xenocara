@@ -5,7 +5,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -22,9 +21,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -54,7 +54,6 @@ void GLAPIENTRY
 _mesa_CullFace( GLenum mode )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE&VERBOSE_API)
       _mesa_debug(ctx, "glCullFace %s\n", _mesa_lookup_enum_by_nr(mode));
@@ -90,7 +89,6 @@ void GLAPIENTRY
 _mesa_FrontFace( GLenum mode )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE&VERBOSE_API)
       _mesa_debug(ctx, "glFrontFace %s\n", _mesa_lookup_enum_by_nr(mode));
@@ -129,7 +127,6 @@ void GLAPIENTRY
 _mesa_PolygonMode( GLenum face, GLenum mode )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE&VERBOSE_API)
       _mesa_debug(ctx, "glPolygonMode %s %s\n",
@@ -143,6 +140,10 @@ _mesa_PolygonMode( GLenum face, GLenum mode )
 
    switch (face) {
    case GL_FRONT:
+      if (ctx->API == API_OPENGL_CORE) {
+         _mesa_error( ctx, GL_INVALID_ENUM, "glPolygonMode(face)" );
+         return;
+      }
       if (ctx->Polygon.FrontMode == mode)
 	 return;
       FLUSH_VERTICES(ctx, _NEW_POLYGON);
@@ -157,6 +158,10 @@ _mesa_PolygonMode( GLenum face, GLenum mode )
       ctx->Polygon.BackMode = mode;
       break;
    case GL_BACK:
+      if (ctx->API == API_OPENGL_CORE) {
+         _mesa_error( ctx, GL_INVALID_ENUM, "glPolygonMode(face)" );
+         return;
+      }
       if (ctx->Polygon.BackMode == mode)
 	 return;
       FLUSH_VERTICES(ctx, _NEW_POLYGON);
@@ -167,16 +172,9 @@ _mesa_PolygonMode( GLenum face, GLenum mode )
       return;
    }
 
-   if (ctx->Polygon.FrontMode == GL_FILL && ctx->Polygon.BackMode == GL_FILL)
-      ctx->_TriangleCaps &= ~DD_TRI_UNFILLED;
-   else
-      ctx->_TriangleCaps |= DD_TRI_UNFILLED;
-
    if (ctx->Driver.PolygonMode)
       ctx->Driver.PolygonMode(ctx, face, mode);
 }
-
-#if _HAVE_FULL_GL
 
 
 /**
@@ -214,7 +212,6 @@ void GLAPIENTRY
 _mesa_PolygonStipple( const GLubyte *pattern )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE&VERBOSE_API)
       _mesa_debug(ctx, "glPolygonStipple\n");
@@ -235,7 +232,6 @@ void GLAPIENTRY
 _mesa_GetnPolygonStippleARB( GLsizei bufSize, GLubyte *dest )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE&VERBOSE_API)
       _mesa_debug(ctx, "glGetPolygonStipple\n");
@@ -264,7 +260,6 @@ void GLAPIENTRY
 _mesa_PolygonOffset( GLfloat factor, GLfloat units )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE&VERBOSE_API)
       _mesa_debug(ctx, "glPolygonOffset %f %f\n", factor, units);
@@ -290,7 +285,6 @@ _mesa_PolygonOffsetEXT( GLfloat factor, GLfloat bias )
    _mesa_PolygonOffset(factor, bias * ctx->DrawBuffer->_DepthMaxF );
 }
 
-#endif
 
 
 /**********************************************************************/

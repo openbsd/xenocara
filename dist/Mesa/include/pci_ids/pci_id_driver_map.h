@@ -7,22 +7,14 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
-#if !defined(DRIVER_MAP_DRI2_ONLY) && !defined(DRIVER_MAP_GALLIUM_ONLY)
-static const int i810_chip_ids[] = {
-#define CHIPSET(chip, desc, misc) chip,
-#include "pci_ids/i810_pci_ids.h"
-#undef CHIPSET
-};
-#endif
-
 static const int i915_chip_ids[] = {
-#define CHIPSET(chip, desc, misc) chip,
+#define CHIPSET(chip, desc, name) chip,
 #include "pci_ids/i915_pci_ids.h"
 #undef CHIPSET
 };
 
 static const int i965_chip_ids[] = {
-#define CHIPSET(chip, desc, misc) chip,
+#define CHIPSET(chip, desc, name) chip,
 #include "pci_ids/i965_pci_ids.h"
 #undef CHIPSET
 };
@@ -53,15 +45,24 @@ static const int r600_chip_ids[] = {
 #undef CHIPSET
 };
 
+static const int radeonsi_chip_ids[] = {
+#define CHIPSET(chip, name, family) chip,
+#include "pci_ids/radeonsi_pci_ids.h"
+#undef CHIPSET
+};
+
+static const int vmwgfx_chip_ids[] = {
+#define CHIPSET(chip, name, family) chip,
+#include "pci_ids/vmwgfx_pci_ids.h"
+#undef CHIPSET
+};
+
 static const struct {
    int vendor_id;
    const char *driver;
    const int *chip_ids;
    int num_chips_ids;
 } driver_map[] = {
-#if !defined(DRIVER_MAP_DRI2_ONLY) && !defined(DRIVER_MAP_GALLIUM_ONLY)
-   { 0x8086, "i810", i810_chip_ids, ARRAY_SIZE(i810_chip_ids) },
-#endif
    { 0x8086, "i915", i915_chip_ids, ARRAY_SIZE(i915_chip_ids) },
    { 0x8086, "i965", i965_chip_ids, ARRAY_SIZE(i965_chip_ids) },
 #ifndef DRIVER_MAP_GALLIUM_ONLY
@@ -70,7 +71,9 @@ static const struct {
 #endif
    { 0x1002, "r300", r300_chip_ids, ARRAY_SIZE(r300_chip_ids) },
    { 0x1002, "r600", r600_chip_ids, ARRAY_SIZE(r600_chip_ids) },
+   { 0x1002, "radeonsi", radeonsi_chip_ids, ARRAY_SIZE(radeonsi_chip_ids) },
    { 0x10de, "nouveau", NULL, -1 },
+   { 0x15ad, "vmwgfx", vmwgfx_chip_ids, ARRAY_SIZE(vmwgfx_chip_ids) },
    { 0x0000, NULL, NULL, 0 },
 };
 

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -35,6 +35,10 @@
 #include "main/formats.h"
 #include "main/framebuffer.h"
 #include "main/renderbuffer.h"
+#include "swrast/s_renderbuffer.h"
+
+
+#define XMESA_RENDERBUFFER 0x1234
 
 
 #if defined(USE_XSHM) 
@@ -199,7 +203,7 @@ alloc_back_buffer(XMesaBuffer b, GLuint width, GLuint height)
 	    _mesa_warning(NULL, "alloc_back_buffer: XCreateImage failed.\n");
             return;
 	 }
-         b->backxrb->ximage->data = (char *) MALLOC(b->backxrb->ximage->height
+         b->backxrb->ximage->data = malloc(b->backxrb->ximage->height
                                         * b->backxrb->ximage->bytes_per_line);
          if (!b->backxrb->ximage->data) {
             _mesa_warning(NULL, "alloc_back_buffer: MALLOC failed.\n");
@@ -231,7 +235,7 @@ alloc_back_buffer(XMesaBuffer b, GLuint width, GLuint height)
 
 
 static void
-xmesa_delete_renderbuffer(struct gl_renderbuffer *rb)
+xmesa_delete_renderbuffer(struct gl_context *ctx, struct gl_renderbuffer *rb)
 {
    /* XXX Note: the ximage or Pixmap attached to this renderbuffer
     * should probably get freed here, but that's currently done in
@@ -252,7 +256,6 @@ xmesa_alloc_front_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
    struct xmesa_renderbuffer *xrb = xmesa_renderbuffer(rb);
 
    /* just clear these to be sure we don't accidentally use them */
-   xrb->origin1 = NULL;
    xrb->origin2 = NULL;
    xrb->origin3 = NULL;
    xrb->origin4 = NULL;
@@ -288,10 +291,6 @@ xmesa_alloc_back_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
 
    /* plus... */
    if (xrb->ximage) {
-      /* Needed by PIXELADDR1 macro */
-      xrb->width1 = xrb->ximage->bytes_per_line;
-      xrb->origin1 = (GLubyte *) xrb->ximage->data + xrb->width1 * (height - 1);
-
       /* Needed by PIXELADDR2 macro */
       xrb->width2 = xrb->ximage->bytes_per_line / 2;
       xrb->origin2 = (GLushort *) xrb->ximage->data + xrb->width2 * (height - 1);
@@ -306,8 +305,7 @@ xmesa_alloc_back_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
    }
    else {
       /* out of memory or buffer size is 0 x 0 */
-      xrb->width1 = xrb->width2 = xrb->width3 = xrb->width4 = 0;
-      xrb->origin1 = NULL;
+      xrb->width2 = xrb->width3 = xrb->width4 = 0;
       xrb->origin2 = NULL;
       xrb->origin3 = NULL;
       xrb->origin4 = NULL;
@@ -317,25 +315,51 @@ xmesa_alloc_back_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
 }
 
 
+/**
+ * Used for allocating front/back renderbuffers for an X window.
+ */
 struct xmesa_renderbuffer *
-xmesa_new_renderbuffer(struct gl_context *ctx, GLuint name, const struct gl_config *visual,
+xmesa_new_renderbuffer(struct gl_context *ctx, GLuint name,
+                       const struct xmesa_visual *xmvis,
                        GLboolean backBuffer)
 {
    struct xmesa_renderbuffer *xrb = CALLOC_STRUCT(xmesa_renderbuffer);
    if (xrb) {
       GLuint name = 0;
-      _mesa_init_renderbuffer(&xrb->Base, name);
+      _mesa_init_renderbuffer(&xrb->Base.Base, name);
 
-      xrb->Base.Delete = xmesa_delete_renderbuffer;
+      xrb->Base.Base.Delete = xmesa_delete_renderbuffer;
       if (backBuffer)
-         xrb->Base.AllocStorage = xmesa_alloc_back_storage;
+         xrb->Base.Base.AllocStorage = xmesa_alloc_back_storage;
       else
-         xrb->Base.AllocStorage = xmesa_alloc_front_storage;
+         xrb->Base.Base.AllocStorage = xmesa_alloc_front_storage;
 
-      xrb->Base.InternalFormat = GL_RGBA;
-      xrb->Base.Format = MESA_FORMAT_RGBA8888;
-      xrb->Base._BaseFormat = GL_RGBA;
-      xrb->Base.DataType = GL_UNSIGNED_BYTE;
+      xrb->Base.Base.InternalFormat = GL_RGBA;
+      xrb->Base.Base._BaseFormat = GL_RGBA;
+      xrb->Base.Base.ClassID = XMESA_RENDERBUFFER;
+
+      switch (xmvis->undithered_pf) {
+      case PF_8R8G8B:
+         /* This will really only happen for pixmaps.  We'll access the
+          * pixmap via a temporary XImage which will be 32bpp.
+          */
+         xrb->Base.Base.Format = MESA_FORMAT_XRGB8888;
+         break;
+      case PF_8A8R8G8B:
+         xrb->Base.Base.Format = MESA_FORMAT_ARGB8888;
+         break;
+      case PF_8A8B8G8R:
+         xrb->Base.Base.Format = MESA_FORMAT_RGBA8888_REV;
+         break;
+      case PF_5R6G5B:
+         xrb->Base.Base.Format = MESA_FORMAT_RGB565;
+         break;
+      default:
+         _mesa_warning(ctx, "Bad pixel format in xmesa_new_renderbuffer");
+         xrb->Base.Base.Format = MESA_FORMAT_ARGB8888;
+         break;
+      }
+
       /* only need to set Red/Green/EtcBits fields for user-created RBs */
    }
    return xrb;
@@ -382,20 +406,152 @@ xmesa_delete_framebuffer(struct gl_framebuffer *fb)
       }
       if (b->backxrb->pixmap) {
          XMesaFreePixmap( b->display, b->backxrb->pixmap );
-         if (b->xm_visual->hpcr_clear_flag) {
-            XMesaFreePixmap( b->display,
-                             b->xm_visual->hpcr_clear_pixmap );
-            XMesaDestroyImage( b->xm_visual->hpcr_clear_ximage );
-         }
       }
-   }
-
-   if (b->rowimage) {
-      free( b->rowimage->data );
-      b->rowimage->data = NULL;
-      XMesaDestroyImage( b->rowimage );
    }
 
    _mesa_free_framebuffer_data(fb);
    free(fb);
 }
+
+
+/**
+ * Called via ctx->Driver.MapRenderbuffer()
+ */
+void
+xmesa_MapRenderbuffer(struct gl_context *ctx,
+                      struct gl_renderbuffer *rb,
+                      GLuint x, GLuint y, GLuint w, GLuint h,
+                      GLbitfield mode,
+                      GLubyte **mapOut, GLint *rowStrideOut)
+{
+   struct xmesa_renderbuffer *xrb = xmesa_renderbuffer(rb);
+
+   if (xrb->Base.Base.ClassID == XMESA_RENDERBUFFER) {
+      XImage *ximage = xrb->ximage;
+
+      assert(!xrb->map_mode); /* only a single mapping allowed */
+
+      xrb->map_mode = mode;
+      xrb->map_x = x;
+      xrb->map_y = y;
+      xrb->map_w = w;
+      xrb->map_h = h;
+
+      if (ximage) {
+         int y2 = rb->Height - y - 1;
+
+         *mapOut = (GLubyte *) ximage->data
+            + y2 * ximage->bytes_per_line
+            + x * ximage->bits_per_pixel / 8;
+      }
+      else {
+         /* this must be a pixmap/window renderbuffer */
+         int (*old_handler)(XMesaDisplay *, XErrorEvent *);
+         int y2 = rb->Height - y - h;
+
+         assert(xrb->pixmap);
+
+         /* Install error handler for XGetImage() in case the the window
+          * isn't mapped.  If we fail we'll create a temporary XImage.
+          */
+         mesaXErrorFlag = 0;
+         old_handler = XSetErrorHandler(mesaHandleXError);
+
+         /* read pixel data out of the pixmap/window into an XImage */
+         ximage = XGetImage(xrb->Parent->display,
+                            xrb->pixmap, x, y2, w, h,
+                            AllPlanes, ZPixmap);
+
+         XSetErrorHandler(old_handler);
+
+         if (mesaXErrorFlag) {
+            /* create new, temporary XImage */
+            int bytes_per_line =
+               _mesa_format_row_stride(xrb->Base.Base.Format,
+                                       xrb->Base.Base.Width);
+            char *image = malloc(bytes_per_line *
+                                          xrb->Base.Base.Height);
+            ximage = XCreateImage(xrb->Parent->display,
+                                  xrb->Parent->xm_visual->visinfo->visual,
+                                  xrb->Parent->xm_visual->visinfo->depth,
+                                  ZPixmap, /* format */
+                                  0, /* offset */
+                                  image, /* data */
+                                  xrb->Base.Base.Width,
+                                  xrb->Base.Base.Height,
+                                  8, /* pad */
+                                  bytes_per_line);
+         }
+
+         if (!ximage) {
+            *mapOut = NULL;
+            *rowStrideOut = 0;
+            return;
+         }
+
+         xrb->map_ximage = ximage;
+
+         /* the first row of the OpenGL image is last row of the XImage */
+         *mapOut = (GLubyte *) ximage->data
+            + (h - 1) * ximage->bytes_per_line;
+      }
+
+      /* We return a negative stride here since XImage data is upside down
+       * with respect to OpenGL images.
+       */
+      *rowStrideOut = -ximage->bytes_per_line;
+      return;
+   }
+
+   /* otherwise, this is an ordinary malloc-based renderbuffer */
+   _swrast_map_soft_renderbuffer(ctx, rb, x, y, w, h, mode,
+                                 mapOut, rowStrideOut);
+}
+
+
+/**
+ * Called via ctx->Driver.UnmapRenderbuffer()
+ */
+void
+xmesa_UnmapRenderbuffer(struct gl_context *ctx, struct gl_renderbuffer *rb)
+{
+   struct xmesa_renderbuffer *xrb = xmesa_renderbuffer(rb);
+
+   if (xrb->Base.Base.ClassID == XMESA_RENDERBUFFER) {
+      XImage *ximage = xrb->ximage;
+
+      if (!ximage) {
+         /* this must be a pixmap/window renderbuffer */
+         assert(xrb->pixmap);
+         assert(xrb->map_ximage);
+         if (xrb->map_ximage) {
+            if (xrb->map_mode & GL_MAP_WRITE_BIT) {
+               /* put modified ximage data back into the pixmap/window */
+               int y2 = rb->Height - xrb->map_y - xrb->map_h;
+               GC gc = XCreateGC(xrb->Parent->display, xrb->pixmap, 0, NULL);
+
+               XPutImage(xrb->Parent->display,
+                         xrb->pixmap,              /* dest */
+                         gc,
+                         xrb->map_ximage,          /* source */
+                         0, 0,                     /* src x, y */
+                         xrb->map_x, y2,           /* dest x, y */
+                         xrb->map_w, xrb->map_h);  /* size */
+
+               XFreeGC(xrb->Parent->display, gc);
+            }
+            XMesaDestroyImage(xrb->map_ximage);
+            xrb->map_ximage = NULL;
+         }
+      }
+
+      xrb->map_mode = 0x0;
+
+      return;
+   }
+
+   /* otherwise, this is an ordinary malloc-based renderbuffer */
+   _swrast_unmap_soft_renderbuffer(ctx, rb);
+}
+
+

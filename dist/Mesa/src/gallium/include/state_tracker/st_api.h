@@ -57,10 +57,10 @@ enum st_api_type {
  */
 enum st_profile_type
 {
-   ST_PROFILE_DEFAULT,
-   ST_PROFILE_OPENGL_CORE,
-   ST_PROFILE_OPENGL_ES1,
-   ST_PROFILE_OPENGL_ES2
+   ST_PROFILE_DEFAULT,			/**< OpenGL compatibility profile */
+   ST_PROFILE_OPENGL_CORE,		/**< OpenGL 3.2+ core profile */
+   ST_PROFILE_OPENGL_ES1,		/**< OpenGL ES 1.x */
+   ST_PROFILE_OPENGL_ES2		/**< OpenGL ES 2.0 */
 };
 
 /* for profile_mask in st_api */
@@ -70,13 +70,38 @@ enum st_profile_type
 #define ST_PROFILE_OPENGL_ES2_MASK   (1 << ST_PROFILE_OPENGL_ES2)
 
 /**
- * New context flags for GL 3.0 and beyond.
+ * Optional API/state tracker features.
  */
-#define ST_CONTEXT_FLAG_CORE_PROFILE        (1 << 0)
-#define ST_CONTEXT_FLAG_COMPATIBLE_PROFILE  (1 << 1)
-#define ST_CONTEXT_FLAG_FORWARD_COMPATIBLE  (1 << 2)
-#define ST_CONTEXT_FLAG_DEBUG               (1 << 3)
-#define ST_CONTEXT_FLAG_ROBUST_ACCESS       (1 << 4)
+enum st_api_feature
+{
+   ST_API_FEATURE_MS_VISUALS  /**< support for multisample visuals */
+};
+
+/* for feature_mask in st_api */
+#define ST_API_FEATURE_MS_VISUALS_MASK (1 << ST_API_FEATURE_MS_VISUALS)
+
+/**
+ * New context flags for GL 3.0 and beyond.
+ *
+ * Profile information (core vs. compatibilty for OpenGL 3.2+) is communicated
+ * through the \c st_profile_type, not through flags.
+ */
+#define ST_CONTEXT_FLAG_DEBUG               (1 << 0)
+#define ST_CONTEXT_FLAG_FORWARD_COMPATIBLE  (1 << 1)
+#define ST_CONTEXT_FLAG_ROBUST_ACCESS       (1 << 2)
+
+/**
+ * Reasons that context creation might fail.
+ */
+enum st_context_error {
+   ST_CONTEXT_SUCCESS = 0,
+   ST_CONTEXT_ERROR_NO_MEMORY,
+   ST_CONTEXT_ERROR_BAD_API,
+   ST_CONTEXT_ERROR_BAD_VERSION,
+   ST_CONTEXT_ERROR_BAD_FLAG,
+   ST_CONTEXT_ERROR_UNKNOWN_ATTRIBUTE,
+   ST_CONTEXT_ERROR_UNKNOWN_FLAG
+};
 
 /**
  * Used in st_context_iface->teximage.
@@ -133,6 +158,7 @@ enum st_context_resource_type {
  * Flush flags.
  */
 #define ST_FLUSH_FRONT                    (1 << 0)
+#define ST_FLUSH_END_OF_FRAME             (1 << 1)
 
 /**
  * Value to st_manager->get_param function.
@@ -162,7 +188,7 @@ struct pipe_fence_handle;
  */
 struct st_context_resource
 {
-   /* these fields are filled by the caller */
+   /* these fields are filled in by the caller */
    enum st_context_resource_type type;
    void *resource;
 
@@ -207,6 +233,20 @@ struct st_visual
    enum st_attachment_type render_buffer;
 };
 
+
+/**
+ * Configuration options from driconf
+ */
+struct st_config_options
+{
+   boolean disable_blend_func_extended;
+   boolean disable_glsl_line_continuations;
+   boolean disable_shader_bit_encoding;
+   boolean force_glsl_extensions_warn;
+   unsigned force_glsl_version;
+   boolean force_s3tc_enable;
+};
+
 /**
  * Represent the attributes of a context.
  */
@@ -216,8 +256,7 @@ struct st_context_attribs
     * The profile and minimal version to support.
     *
     * The valid profiles and versions are rendering API dependent.  The latest
-    * version satisfying the request should be returned, unless the
-    * ST_CONTEXT_FLAG_FORWARD_COMPATIBLE bit is set.
+    * version satisfying the request should be returned.
     */
    enum st_profile_type profile;
    int major, minor;
@@ -229,7 +268,14 @@ struct st_context_attribs
     * The visual of the framebuffers the context will be bound to.
     */
    struct st_visual visual;
+
+   /**
+    * Configuration options.
+    */
+   struct st_config_options options;
 };
+
+struct st_context_iface;
 
 /**
  * Represent a windowing system drawable.
@@ -237,21 +283,26 @@ struct st_context_attribs
  * The framebuffer is implemented by the state tracker manager and
  * used by the state trackers.
  *
- * Instead of the winsys pokeing into the API context to figure
+ * Instead of the winsys poking into the API context to figure
  * out what buffers that might be needed in the future by the API
  * context, it calls into the framebuffer to get the textures.
  *
  * This structure along with the notify_invalid_framebuffer
  * allows framebuffers to be shared between different threads
  * but at the same make the API context free from thread
- * syncronisation primitves, with the exception of a small
+ * synchronization primitves, with the exception of a small
  * atomic flag used for notification of framebuffer dirty status.
  *
- * The thread syncronisation is put inside the framebuffer
+ * The thread synchronization is put inside the framebuffer
  * and only called once the framebuffer has become dirty.
  */
 struct st_framebuffer_iface
 {
+   /**
+    * Atomic stamp which changes when framebuffers need to be updated.
+    */
+   int32_t stamp;
+
    /**
     * Available for the state tracker manager to use.
     */
@@ -270,7 +321,8 @@ struct st_framebuffer_iface
     *
     * @att is one of the front buffer attachments.
     */
-   boolean (*flush_front)(struct st_framebuffer_iface *stfbi,
+   boolean (*flush_front)(struct st_context_iface *stctx,
+                          struct st_framebuffer_iface *stfbi,
                           enum st_attachment_type statt);
 
    /**
@@ -310,28 +362,20 @@ struct st_context_iface
    void *st_manager_private;
 
    /**
+    * The CSO context associated with this context in case we need to draw
+    * something before swap buffers.
+    */
+   struct cso_context *cso_context;
+
+   /**
+    * The gallium context.
+    */
+   struct pipe_context *pipe;
+
+   /**
     * Destroy the context.
     */
    void (*destroy)(struct st_context_iface *stctxi);
-
-   /**
-    * Invalidate the current textures that was taken from a framebuffer.
-    *
-    * The state tracker manager calls this function to let the rendering
-    * context know that it should update the textures it got from
-    * st_framebuffer_iface::validate.  It should do so at the latest time possible.
-    * Possible right before sending triangles to the pipe context.
-    *
-    * For certain platforms this function might be called from a thread other
-    * than the thread that the context is currently bound in, and must
-    * therefore be thread safe. But it is the state tracker manager's
-    * responsibility to make sure that the framebuffer is bound to the context
-    * and the API context is current for the duration of this call.
-    *
-    * Thus reducing the sync primitive needed to a single atomic flag.
-    */
-   void (*notify_invalid_framebuffer)(struct st_context_iface *stctxi,
-                                      struct st_framebuffer_iface *stfbi);
 
    /**
     * Flush all drawing from context to the pipe also flushes the pipe.
@@ -344,7 +388,8 @@ struct st_context_iface
     *
     * This function is optional.
     */
-   boolean (*teximage)(struct st_context_iface *stctxi, enum st_texture_type target,
+   boolean (*teximage)(struct st_context_iface *stctxi,
+                       enum st_texture_type target,
                        int level, enum pipe_format internal_format,
                        struct pipe_resource *tex, boolean mipmap);
 
@@ -429,6 +474,11 @@ struct st_api
    unsigned profile_mask;
 
    /**
+    * The supported optional features.  Tested with ST_FEATURE_*_MASK.
+    */
+   unsigned feature_mask;
+
+   /**
     * Destroy the API.
     */
    void (*destroy)(struct st_api *stapi);
@@ -446,6 +496,7 @@ struct st_api
    struct st_context_iface *(*create_context)(struct st_api *stapi,
                                               struct st_manager *smapi,
                                               const struct st_context_attribs *attribs,
+                                              enum st_context_error *error,
                                               struct st_context_iface *stsharei);
 
    /**

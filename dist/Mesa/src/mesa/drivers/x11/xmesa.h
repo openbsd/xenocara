@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  * 
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  * 
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -64,10 +64,6 @@ and create a window, you must do the following to use the X/Mesa interface:
 #ifndef XMESA_H
 #define XMESA_H
 
-#ifdef __VMS
-#include <GL/vms_x_fix.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -76,12 +72,6 @@ extern "C" {
 #include <X11/Xutil.h>
 #include "xmesa_x.h"
 #include "GL/gl.h"
-
-#ifdef AMIWIN
-#include <pragmas/xlib_pragmas.h>
-extern struct Library *XLibBase;
-#endif
-
 
 #define XMESA_MAJOR_VERSION 6
 #define XMESA_MINOR_VERSION 3

@@ -43,6 +43,7 @@ struct offset_stage {
 
    float scale;
    float units;
+   float clamp;
 };
 
 
@@ -90,6 +91,10 @@ static void do_offset_tri( struct draw_stage *stage,
 
    float zoffset = offset->units + MAX2(dzdx, dzdy) * offset->scale;
 
+   if (offset->clamp)
+      zoffset = (offset->clamp < 0.0f) ? MAX2(zoffset, offset->clamp) :
+                                         MIN2(zoffset, offset->clamp);
+
    /*
     * Note: we're applying the offset and clamping per-vertex.
     * Ideally, the offset is applied per-fragment prior to fragment shading.
@@ -122,9 +127,44 @@ static void offset_first_tri( struct draw_stage *stage,
 			      struct prim_header *header )
 {
    struct offset_stage *offset = offset_stage(stage);
+   const struct pipe_rasterizer_state *rast = stage->draw->rasterizer;
+   unsigned fill_mode = rast->fill_front;
+   boolean do_offset;
 
-   offset->units = (float) (stage->draw->rasterizer->offset_units * stage->draw->mrd);
-   offset->scale = stage->draw->rasterizer->offset_scale;
+   if (rast->fill_back != rast->fill_front) {
+      /* Need to check for back-facing triangle */
+      boolean ccw = header->det < 0.0f;
+      if (ccw != rast->front_ccw)
+         fill_mode = rast->fill_back;
+   }
+
+   /* Now determine if we need to do offsetting for the point/line/fill mode */
+   switch (fill_mode) {
+   case PIPE_POLYGON_MODE_FILL:
+      do_offset = rast->offset_tri;
+      break;
+   case PIPE_POLYGON_MODE_LINE:
+      do_offset = rast->offset_line;
+      break;
+   case PIPE_POLYGON_MODE_POINT:
+      do_offset = rast->offset_point;
+      break;
+   default:
+      assert(!"invalid fill_mode in offset_first_tri()");
+      do_offset = rast->offset_tri;
+   }
+
+   if (do_offset) {
+      offset->scale = rast->offset_scale;
+      offset->clamp = rast->offset_clamp;
+      offset->units = (float) (rast->offset_units * stage->draw->mrd);
+   }
+   else {
+      offset->scale = 0.0f;
+      offset->clamp = 0.0f;
+      offset->units = 0.0f;
+   }
+
 
    stage->tri = offset_tri;
    stage->tri( stage, header );

@@ -40,7 +40,6 @@
 #include "main/imports.h"
 #include "main/context.h"
 #include "main/feedback.h"
-#include "main/mfeatures.h"
 
 #include "vbo/vbo.h"
 
@@ -54,8 +53,6 @@
 #include "draw/draw_context.h"
 #include "draw/draw_pipe.h"
 
-
-#if FEATURE_feedback
 
 /**
  * This is actually used for both feedback and selection.
@@ -99,13 +96,13 @@ feedback_vertex(struct gl_context *ctx, const struct draw_context *draw,
     * color and texcoord attribs to use here.
     */
 
-   slot = st->vertex_result_to_slot[VERT_RESULT_COL0];
+   slot = st->vertex_result_to_slot[VARYING_SLOT_COL0];
    if (slot != ~0U)
       color = v->data[slot];
    else
       color = ctx->Current.Attrib[VERT_ATTRIB_COLOR0];
 
-   slot = st->vertex_result_to_slot[VERT_RESULT_TEX0];
+   slot = st->vertex_result_to_slot[VARYING_SLOT_TEX0];
    if (slot != ~0U)
       texcoord = v->data[slot];
    else
@@ -305,5 +302,3 @@ void st_init_feedback_functions(struct dd_function_table *functions)
 {
    functions->RenderMode = st_RenderMode;
 }
-
-#endif /* FEATURE_feedback */

@@ -68,7 +68,7 @@ public:
        * Doing so will modify the original shader.  This may prevent that
        * shader from being linkable in other programs.
        */
-      const ir_function_signature *const callee = ir->get_callee();
+      const ir_function_signature *const callee = ir->callee;
       assert(callee != NULL);
       const char *const name = callee->function_name();
 
@@ -79,7 +79,7 @@ public:
 	 find_matching_signature(name, &callee->parameters, &linked, 1,
 				 ir->use_builtin);
       if (sig != NULL) {
-	 ir->set_callee(sig);
+	 ir->callee = sig;
 	 return visit_continue;
       }
 
@@ -104,10 +104,12 @@ public:
       if (f == NULL) {
 	 f = new(linked) ir_function(name);
 
-	 /* Add the new function to the linked IR.
+	 /* Add the new function to the linked IR.  Put it at the end
+          * so that it comes after any global variable declarations
+          * that it refers to.
 	  */
 	 linked->symbols->add_function(f);
-	 linked->ir->push_head(f);
+	 linked->ir->push_tail(f);
       }
 
       ir_function_signature *linked_sig =
@@ -166,7 +168,7 @@ public:
        */
       linked_sig->accept(this);
 
-      ir->set_callee(linked_sig);
+      ir->callee = linked_sig;
 
       return visit_continue;
    }

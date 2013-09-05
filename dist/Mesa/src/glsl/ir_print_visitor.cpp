@@ -24,10 +24,8 @@
 #include "ir_print_visitor.h"
 #include "glsl_types.h"
 #include "glsl_parser_extras.h"
-
-extern "C" {
+#include "main/macros.h"
 #include "program/hash_table.h"
-}
 
 static void print_type(const glsl_type *t);
 
@@ -40,6 +38,7 @@ ir_instruction::print(void) const
    deconsted->accept(&v);
 }
 
+extern "C" {
 void
 _mesa_print_ir(exec_list *instructions,
 	       struct _mesa_glsl_parse_state *state)
@@ -70,6 +69,8 @@ _mesa_print_ir(exec_list *instructions,
    }
    printf("\n)");
 }
+
+} /* extern "C" */
 
 ir_print_visitor::ir_print_visitor()
 {
@@ -138,6 +139,10 @@ print_type(const glsl_type *t)
    }
 }
 
+void ir_print_visitor::visit(ir_rvalue *ir)
+{
+   printf("error");
+}
 
 void ir_print_visitor::visit(ir_variable *ir)
 {
@@ -145,9 +150,12 @@ void ir_print_visitor::visit(ir_variable *ir)
 
    const char *const cent = (ir->centroid) ? "centroid " : "";
    const char *const inv = (ir->invariant) ? "invariant " : "";
-   const char *const mode[] = { "", "uniform ", "in ", "out ", "inout ",
+   const char *const mode[] = { "", "uniform ", "shader_in ", "shader_out ",
+                                "in ", "out ", "inout ",
 			        "const_in ", "sys ", "temporary " };
-   const char *const interp[] = { "", "flat", "noperspective" };
+   STATIC_ASSERT(ARRAY_SIZE(mode) == ir_var_mode_count);
+   const char *const interp[] = { "", "smooth", "flat", "noperspective" };
+   STATIC_ASSERT(ARRAY_SIZE(interp) == INTERP_QUALIFIER_COUNT);
 
    printf("(%s%s%s%s) ",
 	  cent, inv, mode[ir->mode], interp[ir->interpolation]);
@@ -244,19 +252,21 @@ void ir_print_visitor::visit(ir_texture *ir)
    ir->sampler->accept(this);
    printf(" ");
 
-   ir->coordinate->accept(this);
+   if (ir->op != ir_txs) {
+      ir->coordinate->accept(this);
 
-   printf(" ");
+      printf(" ");
 
-   if (ir->offset != NULL) {
-      ir->offset->accept(this);
-   } else {
-      printf("0");
+      if (ir->offset != NULL) {
+	 ir->offset->accept(this);
+      } else {
+	 printf("0");
+      }
+
+      printf(" ");
    }
 
-   printf(" ");
-
-   if (ir->op != ir_txf) {
+   if (ir->op != ir_txf && ir->op != ir_txf_ms && ir->op != ir_txs) {
       if (ir->projector)
 	 ir->projector->accept(this);
       else
@@ -274,13 +284,18 @@ void ir_print_visitor::visit(ir_texture *ir)
    switch (ir->op)
    {
    case ir_tex:
+   case ir_lod:
       break;
    case ir_txb:
       ir->lod_info.bias->accept(this);
       break;
    case ir_txl:
    case ir_txf:
+   case ir_txs:
       ir->lod_info.lod->accept(this);
+      break;
+   case ir_txf_ms:
+      ir->lod_info.sample_index->accept(this);
       break;
    case ir_txd:
       printf("(");
@@ -368,8 +383,6 @@ void ir_print_visitor::visit(ir_assignment *ir)
 
 void ir_print_visitor::visit(ir_constant *ir)
 {
-   const glsl_type *const base_type = ir->type->get_base_type();
-
    printf("(constant ");
    print_type(ir->type);
    printf(" (");
@@ -390,7 +403,7 @@ void ir_print_visitor::visit(ir_constant *ir)
       for (unsigned i = 0; i < ir->type->components(); i++) {
 	 if (i != 0)
 	    printf(" ");
-	 switch (base_type->base_type) {
+	 switch (ir->type->base_type) {
 	 case GLSL_TYPE_UINT:  printf("%u", ir->value.u[i]); break;
 	 case GLSL_TYPE_INT:   printf("%d", ir->value.i[i]); break;
 	 case GLSL_TYPE_FLOAT: printf("%f", ir->value.f[i]); break;
@@ -406,7 +419,10 @@ void ir_print_visitor::visit(ir_constant *ir)
 void
 ir_print_visitor::visit(ir_call *ir)
 {
-   printf("(call %s (", ir->callee_name());
+   printf("(call %s ", ir->callee_name());
+   if (ir->return_deref)
+      ir->return_deref->accept(this);
+   printf(" (");
    foreach_iter(exec_list_iterator, iter, *ir) {
       ir_instruction *const inst = (ir_instruction *) iter.get();
 

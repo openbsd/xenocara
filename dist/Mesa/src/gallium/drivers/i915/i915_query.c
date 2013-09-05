@@ -65,11 +65,12 @@ static void i915_end_query(struct pipe_context *ctx, struct pipe_query *query)
 static boolean i915_get_query_result(struct pipe_context *ctx,
                                      struct pipe_query *query,
                                      boolean wait,
-                                     void *vresult)
+                                     union pipe_query_result *vresult)
 {
    uint64_t *result = (uint64_t*)vresult;
 
-   *result = 0;
+   /* 2* viewport Max */
+   *result = 512*1024*1024;
    return TRUE;
 }
 

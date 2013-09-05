@@ -10,8 +10,8 @@
 #include "pipe/p_defines.h"
 
 enum pipe_format formats[] = {
-   PIPE_FORMAT_R8G8B8A8_UNORM,
-   PIPE_FORMAT_B8G8R8A8_UNORM,
+   PIPE_FORMAT_RGBA8888_UNORM,
+   PIPE_FORMAT_BGRA8888_UNORM,
    PIPE_FORMAT_NONE
 };
 
@@ -26,10 +26,10 @@ static void *window = NULL;
 
 static void draw( void )
 {
-   float clear_color[4] = {1,0,1,1};
+   union pipe_color_union clear_color = { {1, 0, 1, 1} };
 
-   ctx->clear(ctx, PIPE_CLEAR_COLOR, clear_color, 0, 0);
-   ctx->flush(ctx, NULL);
+   ctx->clear(ctx, PIPE_CLEAR_COLOR, &clear_color, 0, 0);
+   ctx->flush(ctx, NULL, 0);
 
    graw_save_surface_to_file(ctx, surf, NULL);
 
@@ -82,7 +82,6 @@ static void init( void )
       exit(4);
 
    surf_tmpl.format = templat.format;
-   surf_tmpl.usage = PIPE_BIND_RENDER_TARGET;
    surf_tmpl.u.tex.level = 0;
    surf_tmpl.u.tex.first_layer = 0;
    surf_tmpl.u.tex.last_layer = 0;

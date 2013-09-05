@@ -35,6 +35,7 @@
 #include "tgsi_info.h"
 #include "tgsi_parse.h"
 #include "tgsi_sanity.h"
+#include "tgsi_strings.h"
 #include "tgsi_util.h"
 #include "tgsi_dump.h"
 
@@ -80,6 +81,11 @@ streq_nocase_uprcase(const char *str1,
    return *str1 == 0 && *str2 == 0;
 }
 
+/* Return TRUE if both strings match.
+ * The second string is terminated by zero.
+ * The pointer to the first string is moved at end of the read word
+ * on success.
+ */
 static boolean str_match_no_case( const char **pcur, const char *str )
 {
    const char *cur = *pcur;
@@ -89,6 +95,24 @@ static boolean str_match_no_case( const char **pcur, const char *str )
       cur++;
    }
    if (*str == '\0') {
+      *pcur = cur;
+      return TRUE;
+   }
+   return FALSE;
+}
+
+/* Return TRUE if both strings match.
+ * The first string is be terminated by a non-digit non-letter non-underscore
+ * character, the second string is terminated by zero.
+ * The pointer to the first string is moved at end of the read word
+ * on success.
+ */
+static boolean str_match_nocase_whole( const char **pcur, const char *str )
+{
+   const char *cur = *pcur;
+
+   if (str_match_no_case(&cur, str) &&
+       !is_digit_alpha_underscore(cur)) {
       *pcur = cur;
       return TRUE;
    }
@@ -128,6 +152,23 @@ static boolean parse_uint( const char **pcur, uint *val )
       *pcur = cur;
       return TRUE;
    }
+   return FALSE;
+}
+
+static boolean parse_int( const char **pcur, int *val )
+{
+   const char *cur = *pcur;
+   int sign = (*cur == '-' ? -1 : 1);
+
+   if (*cur == '+' || *cur == '-')
+      cur++;
+
+   if (parse_uint(&cur, (uint *)val)) {
+      *val *= sign;
+      *pcur = cur;
+      return TRUE;
+   }
+
    return FALSE;
 }
 
@@ -201,6 +242,7 @@ struct translate_ctx
    struct tgsi_header *header;
    unsigned processor : 4;
    int implied_array_size : 5;
+   unsigned num_immediates;
 };
 
 static void report_error( struct translate_ctx *ctx, const char *msg )
@@ -231,12 +273,14 @@ static boolean parse_header( struct translate_ctx *ctx )
 {
    uint processor;
 
-   if (str_match_no_case( &ctx->cur, "FRAG" ))
+   if (str_match_nocase_whole( &ctx->cur, "FRAG" ))
       processor = TGSI_PROCESSOR_FRAGMENT;
-   else if (str_match_no_case( &ctx->cur, "VERT" ))
+   else if (str_match_nocase_whole( &ctx->cur, "VERT" ))
       processor = TGSI_PROCESSOR_VERTEX;
-   else if (str_match_no_case( &ctx->cur, "GEOM" ))
+   else if (str_match_nocase_whole( &ctx->cur, "GEOM" ))
       processor = TGSI_PROCESSOR_GEOMETRY;
+   else if (str_match_nocase_whole( &ctx->cur, "COMP" ))
+      processor = TGSI_PROCESSOR_COMPUTE;
    else {
       report_error( ctx, "Unknown header" );
       return FALSE;
@@ -270,23 +314,6 @@ static boolean parse_label( struct translate_ctx *ctx, uint *val )
    return FALSE;
 }
 
-static const char *file_names[TGSI_FILE_COUNT] =
-{
-   "NULL",
-   "CONST",
-   "IN",
-   "OUT",
-   "TEMP",
-   "SAMP",
-   "ADDR",
-   "IMM",
-   "PRED",
-   "SV",
-   "IMMX",
-   "TEMPX",
-   "RES"
-};
-
 static boolean
 parse_file( const char **pcur, uint *file )
 {
@@ -295,12 +322,10 @@ parse_file( const char **pcur, uint *file )
    for (i = 0; i < TGSI_FILE_COUNT; i++) {
       const char *cur = *pcur;
 
-      if (str_match_no_case( &cur, file_names[i] )) {
-         if (!is_digit_alpha_underscore( cur )) {
-            *pcur = cur;
-            *file = i;
-            return TRUE;
-         }
+      if (str_match_nocase_whole( &cur, tgsi_file_name(i) )) {
+         *pcur = cur;
+         *file = i;
+         return TRUE;
       }
    }
    return FALSE;
@@ -416,6 +441,7 @@ struct parsed_bracket {
    uint ind_file;
    int ind_index;
    uint ind_comp;
+   uint ind_array;
 };
 
 
@@ -463,24 +489,10 @@ parse_register_bracket(
          eat_opt_white(&ctx->cur);
       }
 
-      if (*ctx->cur == '+' || *ctx->cur == '-') {
-         boolean negate;
-
-         negate = *ctx->cur == '-';
-         ctx->cur++;
-         eat_opt_white( &ctx->cur );
-         if (!parse_uint( &ctx->cur, &uindex )) {
-            report_error( ctx, "Expected literal unsigned integer" );
-            return FALSE;
-         }
-         if (negate)
-            brackets->index = -(int) uindex;
-         else
-            brackets->index = (int) uindex;
-      }
-      else {
+      if (*ctx->cur == '+' || *ctx->cur == '-')
+         parse_int( &ctx->cur, &brackets->index );
+      else
          brackets->index = 0;
-      }
    }
    else {
       if (!parse_uint( &ctx->cur, &uindex )) {
@@ -497,6 +509,20 @@ parse_register_bracket(
       return FALSE;
    }
    ctx->cur++;
+   if (*ctx->cur == '(') {
+      ctx->cur++;
+      eat_opt_white( &ctx->cur );
+      if (!parse_uint( &ctx->cur, &brackets->ind_array )) {
+         report_error( ctx, "Expected literal unsigned integer" );
+         return FALSE;
+      }
+      eat_opt_white( &ctx->cur );
+      if (*ctx->cur != ')') {
+         report_error( ctx, "Expected `)'" );
+         return FALSE;
+      }
+      ctx->cur++;
+   }
    return TRUE;
 }
 
@@ -700,10 +726,8 @@ parse_dst_operand(
       dst->Register.Indirect = 1;
       dst->Indirect.File = bracket[0].ind_file;
       dst->Indirect.Index = bracket[0].ind_index;
-      dst->Indirect.SwizzleX = bracket[0].ind_comp;
-      dst->Indirect.SwizzleY = bracket[0].ind_comp;
-      dst->Indirect.SwizzleZ = bracket[0].ind_comp;
-      dst->Indirect.SwizzleW = bracket[0].ind_comp;
+      dst->Indirect.Swizzle = bracket[0].ind_comp;
+      dst->Indirect.ArrayID = bracket[0].ind_array;
    }
    return TRUE;
 }
@@ -786,10 +810,8 @@ parse_src_operand(
       src->Register.Indirect = 1;
       src->Indirect.File = bracket[0].ind_file;
       src->Indirect.Index = bracket[0].ind_index;
-      src->Indirect.SwizzleX = bracket[0].ind_comp;
-      src->Indirect.SwizzleY = bracket[0].ind_comp;
-      src->Indirect.SwizzleZ = bracket[0].ind_comp;
-      src->Indirect.SwizzleW = bracket[0].ind_comp;
+      src->Indirect.Swizzle = bracket[0].ind_comp;
+      src->Indirect.ArrayID = bracket[0].ind_array;
    }
 
    /* Parse optional swizzle.
@@ -816,35 +838,35 @@ parse_src_operand(
    return TRUE;
 }
 
-static const char *texture_names[TGSI_TEXTURE_COUNT] =
-{
-   "UNKNOWN",
-   "1D",
-   "2D",
-   "3D",
-   "CUBE",
-   "RECT",
-   "SHADOW1D",
-   "SHADOW2D",
-   "SHADOWRECT"
-};
-
-static const char *type_names[] =
-{
-   "UNORM",
-   "SNORM",
-   "SINT",
-   "UINT",
-   "FLOAT"
-};
-
 static boolean
-match_inst_mnemonic(const char **pcur,
-                    const struct tgsi_opcode_info *info)
+match_inst(const char **pcur,
+           unsigned *saturate,
+           const struct tgsi_opcode_info *info)
 {
-   if (str_match_no_case(pcur, info->mnemonic)) {
+   const char *cur = *pcur;
+
+   /* simple case: the whole string matches the instruction name */
+   if (str_match_nocase_whole(&cur, info->mnemonic)) {
+      *pcur = cur;
+      *saturate = TGSI_SAT_NONE;
       return TRUE;
    }
+
+   if (str_match_no_case(&cur, info->mnemonic)) {
+      /* the instruction has a suffix, figure it out */
+      if (str_match_nocase_whole(&cur, "_SAT")) {
+         *pcur = cur;
+         *saturate = TGSI_SAT_ZERO_ONE;
+         return TRUE;
+      }
+
+      if (str_match_nocase_whole(&cur, "_SATNV")) {
+         *pcur = cur;
+         *saturate = TGSI_SAT_MINUS_PLUS_ONE;
+         return TRUE;
+      }
+   }
+
    return FALSE;
 }
 
@@ -857,6 +879,7 @@ parse_instruction(
    uint saturate = TGSI_SAT_NONE;
    const struct tgsi_opcode_info *info;
    struct tgsi_full_instruction inst;
+   const char *cur;
    uint advance;
 
    inst = tgsi_default_full_instruction();
@@ -902,20 +925,13 @@ parse_instruction(
     */
    eat_opt_white( &ctx->cur );
    for (i = 0; i < TGSI_OPCODE_LAST; i++) {
-      const char *cur = ctx->cur;
+      cur = ctx->cur;
 
       info = tgsi_get_opcode_info( i );
-      if (match_inst_mnemonic(&cur, info)) {
-         if (str_match_no_case( &cur, "_SATNV" ))
-            saturate = TGSI_SAT_MINUS_PLUS_ONE;
-         else if (str_match_no_case( &cur, "_SAT" ))
-            saturate = TGSI_SAT_ZERO_ONE;
-
+      if (match_inst(&cur, &saturate, info)) {
          if (info->num_dst + info->num_src + info->is_tex == 0) {
-            if (!is_digit_alpha_underscore( cur )) {
-               ctx->cur = cur;
-               break;
-            }
+            ctx->cur = cur;
+            break;
          }
          else if (*cur == '\0' || eat_white( &cur )) {
             ctx->cur = cur;
@@ -935,6 +951,17 @@ parse_instruction(
    inst.Instruction.Saturate = saturate;
    inst.Instruction.NumDstRegs = info->num_dst;
    inst.Instruction.NumSrcRegs = info->num_src;
+
+   if (i >= TGSI_OPCODE_SAMPLE && i <= TGSI_OPCODE_GATHER4) {
+      /*
+       * These are not considered tex opcodes here (no additional
+       * target argument) however we're required to set the Texture
+       * bit so we can set the number of tex offsets (offsets aren't
+       * actually handled here yet in any case).
+       */
+      inst.Instruction.Texture = 1;
+      inst.Texture.Texture = TGSI_TEXTURE_UNKNOWN;
+   }
 
    /* Parse instruction operands.
     */
@@ -961,12 +988,10 @@ parse_instruction(
          uint j;
 
          for (j = 0; j < TGSI_TEXTURE_COUNT; j++) {
-            if (str_match_no_case( &ctx->cur, texture_names[j] )) {
-               if (!is_digit_alpha_underscore( ctx->cur )) {
-                  inst.Instruction.Texture = 1;
-                  inst.Texture.Texture = j;
-                  break;
-               }
+            if (str_match_nocase_whole( &ctx->cur, tgsi_texture_names[j] )) {
+               inst.Instruction.Texture = 1;
+               inst.Texture.Texture = j;
+               break;
             }
          }
          if (j == TGSI_TEXTURE_COUNT) {
@@ -976,22 +1001,20 @@ parse_instruction(
       }
    }
 
-   if (info->is_branch) {
+   cur = ctx->cur;
+   eat_opt_white( &cur );
+   if (info->is_branch && *cur == ':') {
       uint target;
 
-      eat_opt_white( &ctx->cur );
-      if (*ctx->cur != ':') {
-         report_error( ctx, "Expected `:'" );
-         return FALSE;
-      }
-      ctx->cur++;
-      eat_opt_white( &ctx->cur );
-      if (!parse_uint( &ctx->cur, &target )) {
+      cur++;
+      eat_opt_white( &cur );
+      if (!parse_uint( &cur, &target )) {
          report_error( ctx, "Expected a label" );
          return FALSE;
       }
       inst.Instruction.Label = 1;
       inst.Label.Label = target;
+      ctx->cur = cur;
    }
 
    advance = tgsi_build_full_instruction(
@@ -1006,36 +1029,13 @@ parse_instruction(
    return TRUE;
 }
 
-static const char *semantic_names[TGSI_SEMANTIC_COUNT] =
-{
-   "POSITION",
-   "COLOR",
-   "BCOLOR",
-   "FOG",
-   "PSIZE",
-   "GENERIC",
-   "NORMAL",
-   "FACE",
-   "EDGEFLAG",
-   "PRIM_ID",
-   "INSTANCEID",
-   "STENCIL"
-};
-
-static const char *interpolate_names[TGSI_INTERPOLATE_COUNT] =
-{
-   "CONSTANT",
-   "LINEAR",
-   "PERSPECTIVE"
-};
-
-
 /* parses a 4-touple of the form {x, y, z, w}
  * where x, y, z, w are numbers */
-static boolean parse_immediate_data(struct translate_ctx *ctx,
-                                    float *values)
+static boolean parse_immediate_data(struct translate_ctx *ctx, unsigned type,
+                                    union tgsi_immediate_data *values)
 {
    unsigned i;
+   int ret;
 
    eat_opt_white( &ctx->cur );
    if (*ctx->cur != '{') {
@@ -1053,8 +1053,25 @@ static boolean parse_immediate_data(struct translate_ctx *ctx,
          ctx->cur++;
          eat_opt_white( &ctx->cur );
       }
-      if (!parse_float( &ctx->cur, &values[i] )) {
-         report_error( ctx, "Expected literal floating point" );
+
+      switch (type) {
+      case TGSI_IMM_FLOAT32:
+         ret = parse_float(&ctx->cur, &values[i].Float);
+         break;
+      case TGSI_IMM_UINT32:
+         ret = parse_uint(&ctx->cur, &values[i].Uint);
+         break;
+      case TGSI_IMM_INT32:
+         ret = parse_int(&ctx->cur, &values[i].Int);
+         break;
+      default:
+         assert(0);
+         ret = FALSE;
+         break;
+      }
+
+      if (!ret) {
+         report_error( ctx, "Expected immediate constant" );
          return FALSE;
       }
    }
@@ -1075,13 +1092,9 @@ static boolean parse_declaration( struct translate_ctx *ctx )
    struct parsed_dcl_bracket brackets[2];
    int num_brackets;
    uint writemask;
-   const char *cur;
+   const char *cur, *cur2;
    uint advance;
    boolean is_vs_input;
-   boolean is_imm_array;
-
-   assert(Elements(semantic_names) == TGSI_SEMANTIC_COUNT);
-   assert(Elements(interpolate_names) == TGSI_INTERPOLATE_COUNT);
 
    if (!eat_white( &ctx->cur )) {
       report_error( ctx, "Syntax error" );
@@ -1109,10 +1122,37 @@ static boolean parse_declaration( struct translate_ctx *ctx )
 
    is_vs_input = (file == TGSI_FILE_INPUT &&
                   ctx->processor == TGSI_PROCESSOR_VERTEX);
-   is_imm_array = (file == TGSI_FILE_IMMEDIATE_ARRAY);
 
    cur = ctx->cur;
    eat_opt_white( &cur );
+   if (*cur == ',') {
+      cur2 = cur;
+      cur2++;
+      eat_opt_white( &cur2 );
+      if (str_match_nocase_whole( &cur2, "ARRAY" )) {
+         int arrayid;
+         if (*cur2 != '(') {
+            report_error( ctx, "Expected `('" );
+            return FALSE;
+         }
+         cur2++;
+         eat_opt_white( &cur2 );
+         if (!parse_int( &cur2, &arrayid )) {
+            report_error( ctx, "Expected `,'" );
+            return FALSE;
+         }
+         eat_opt_white( &cur2 );
+         if (*cur2 != ')') {
+            report_error( ctx, "Expected `)'" );
+            return FALSE;
+         }
+         cur2++;
+         decl.Declaration.Array = 1;
+         decl.Array.ArrayID = arrayid;
+         ctx->cur = cur = cur2;
+      }
+   }
+
    if (*cur == ',' && !is_vs_input) {
       uint i, j;
 
@@ -1120,11 +1160,41 @@ static boolean parse_declaration( struct translate_ctx *ctx )
       eat_opt_white( &cur );
       if (file == TGSI_FILE_RESOURCE) {
          for (i = 0; i < TGSI_TEXTURE_COUNT; i++) {
-            if (str_match_no_case(&cur, texture_names[i])) {
-               if (!is_digit_alpha_underscore(cur)) {
-                  decl.Resource.Resource = i;
-                  break;
-               }
+            if (str_match_nocase_whole(&cur, tgsi_texture_names[i])) {
+               decl.Resource.Resource = i;
+               break;
+            }
+         }
+         if (i == TGSI_TEXTURE_COUNT) {
+            report_error(ctx, "Expected texture target");
+            return FALSE;
+         }
+
+         cur2 = cur;
+         eat_opt_white(&cur2);
+         while (*cur2 == ',') {
+            cur2++;
+            eat_opt_white(&cur2);
+            if (str_match_nocase_whole(&cur2, "RAW")) {
+               decl.Resource.Raw = 1;
+
+            } else if (str_match_nocase_whole(&cur2, "WR")) {
+               decl.Resource.Writable = 1;
+
+            } else {
+               break;
+            }
+            cur = cur2;
+            eat_opt_white(&cur2);
+         }
+
+         ctx->cur = cur;
+
+      } else if (file == TGSI_FILE_SAMPLER_VIEW) {
+         for (i = 0; i < TGSI_TEXTURE_COUNT; i++) {
+            if (str_match_nocase_whole(&cur, tgsi_texture_names[i])) {
+               decl.SamplerView.Resource = i;
+               break;
             }
          }
          if (i == TGSI_TEXTURE_COUNT) {
@@ -1140,26 +1210,24 @@ static boolean parse_declaration( struct translate_ctx *ctx )
          eat_opt_white( &cur );
          for (j = 0; j < 4; ++j) {
             for (i = 0; i < PIPE_TYPE_COUNT; ++i) {
-               if (str_match_no_case(&cur, type_names[i])) {
-                  if (!is_digit_alpha_underscore(cur)) {
-                     switch (j) {
-                     case 0:
-                        decl.Resource.ReturnTypeX = i;
-                        break;
-                     case 1:
-                        decl.Resource.ReturnTypeY = i;
-                        break;
-                     case 2:
-                        decl.Resource.ReturnTypeZ = i;
-                        break;
-                     case 3:
-                        decl.Resource.ReturnTypeW = i;
-                        break;
-                     default:
-                        assert(0);
-                     }
+               if (str_match_nocase_whole(&cur, tgsi_type_names[i])) {
+                  switch (j) {
+                  case 0:
+                     decl.SamplerView.ReturnTypeX = i;
                      break;
+                  case 1:
+                     decl.SamplerView.ReturnTypeY = i;
+                     break;
+                  case 2:
+                     decl.SamplerView.ReturnTypeZ = i;
+                     break;
+                  case 3:
+                     decl.SamplerView.ReturnTypeW = i;
+                     break;
+                  default:
+                     assert(0);
                   }
+                  break;
                }
             }
             if (i == PIPE_TYPE_COUNT) {
@@ -1169,7 +1237,7 @@ static boolean parse_declaration( struct translate_ctx *ctx )
                }
                break;
             } else {
-               const char *cur2 = cur;
+               cur2 = cur;
                eat_opt_white( &cur2 );
                if (*cur2 == ',') {
                   cur2++;
@@ -1181,86 +1249,58 @@ static boolean parse_declaration( struct translate_ctx *ctx )
             }
          }
          if (j < 4) {
-            decl.Resource.ReturnTypeY =
-               decl.Resource.ReturnTypeZ =
-               decl.Resource.ReturnTypeW =
-               decl.Resource.ReturnTypeX;
+            decl.SamplerView.ReturnTypeY =
+               decl.SamplerView.ReturnTypeZ =
+               decl.SamplerView.ReturnTypeW =
+               decl.SamplerView.ReturnTypeX;
          }
          ctx->cur = cur;
       } else {
-         for (i = 0; i < TGSI_SEMANTIC_COUNT; i++) {
-            if (str_match_no_case( &cur, semantic_names[i] )) {
-               const char *cur2 = cur;
-               uint index;
+         if (str_match_nocase_whole(&cur, "LOCAL")) {
+            decl.Declaration.Local = 1;
+            ctx->cur = cur;
+         }
 
-               if (is_digit_alpha_underscore( cur ))
-                  continue;
-               eat_opt_white( &cur2 );
-               if (*cur2 == '[') {
-                  cur2++;
+         cur = ctx->cur;
+         eat_opt_white( &cur );
+         if (*cur == ',') {
+            cur++;
+            eat_opt_white( &cur );
+
+            for (i = 0; i < TGSI_SEMANTIC_COUNT; i++) {
+               if (str_match_nocase_whole(&cur, tgsi_semantic_names[i])) {
+                  uint index;
+
+                  cur2 = cur;
                   eat_opt_white( &cur2 );
-                  if (!parse_uint( &cur2, &index )) {
-                     report_error( ctx, "Expected literal integer" );
-                     return FALSE;
-                  }
-                  eat_opt_white( &cur2 );
-                  if (*cur2 != ']') {
-                     report_error( ctx, "Expected `]'" );
-                     return FALSE;
-                  }
-                  cur2++;
+                  if (*cur2 == '[') {
+                     cur2++;
+                     eat_opt_white( &cur2 );
+                     if (!parse_uint( &cur2, &index )) {
+                        report_error( ctx, "Expected literal integer" );
+                        return FALSE;
+                     }
+                     eat_opt_white( &cur2 );
+                     if (*cur2 != ']') {
+                        report_error( ctx, "Expected `]'" );
+                        return FALSE;
+                     }
+                     cur2++;
 
-                  decl.Semantic.Index = index;
+                     decl.Semantic.Index = index;
 
-                  cur = cur2;
+                     cur = cur2;
+                  }
+
+                  decl.Declaration.Semantic = 1;
+                  decl.Semantic.Name = i;
+
+                  ctx->cur = cur;
+                  break;
                }
-
-               decl.Declaration.Semantic = 1;
-               decl.Semantic.Name = i;
-
-               ctx->cur = cur;
-               break;
             }
          }
       }
-   } else if (is_imm_array) {
-      unsigned i;
-      float *vals_itr;
-      /* we have our immediate data */
-      if (*cur != '{') {
-         report_error( ctx, "Immediate array without data" );
-         return FALSE;
-      }
-      ++cur;
-      ctx->cur = cur;
-
-      decl.ImmediateData.u =
-         MALLOC(sizeof(union tgsi_immediate_data) * 4 *
-                (decl.Range.Last + 1));
-      vals_itr = (float*)decl.ImmediateData.u;
-      for (i = 0; i <= decl.Range.Last; ++i) {
-         if (!parse_immediate_data(ctx, vals_itr)) {
-            FREE(decl.ImmediateData.u);
-            return FALSE;
-         }
-         vals_itr += 4;
-         eat_opt_white( &ctx->cur );
-         if (*ctx->cur != ',') {
-            if (i !=  decl.Range.Last) {
-               report_error( ctx, "Not enough data in immediate array!" );
-               FREE(decl.ImmediateData.u);
-               return FALSE;
-            }
-         } else
-            ++ctx->cur;
-      }
-      eat_opt_white( &ctx->cur );
-      if (*ctx->cur != '}') {
-         FREE(decl.ImmediateData.u);
-         report_error( ctx, "Immediate array data missing closing '}'" );
-         return FALSE;
-      }
-      ++ctx->cur;
    }
 
    cur = ctx->cur;
@@ -1271,10 +1311,9 @@ static boolean parse_declaration( struct translate_ctx *ctx )
       cur++;
       eat_opt_white( &cur );
       for (i = 0; i < TGSI_INTERPOLATE_COUNT; i++) {
-         if (str_match_no_case( &cur, interpolate_names[i] )) {
-            if (is_digit_alpha_underscore( cur ))
-               continue;
-            decl.Declaration.Interpolate = i;
+         if (str_match_nocase_whole( &cur, tgsi_interpolate_names[i] )) {
+            decl.Declaration.Interpolate = 1;
+            decl.Interp.Interpolate = i;
 
             ctx->cur = cur;
             break;
@@ -1292,9 +1331,6 @@ static boolean parse_declaration( struct translate_ctx *ctx )
       ctx->header,
       (uint) (ctx->tokens_end - ctx->tokens_cur) );
 
-   if (is_imm_array)
-      FREE(decl.ImmediateData.u);
-
    if (advance == 0)
       return FALSE;
    ctx->tokens_cur += advance;
@@ -1305,28 +1341,51 @@ static boolean parse_declaration( struct translate_ctx *ctx )
 static boolean parse_immediate( struct translate_ctx *ctx )
 {
    struct tgsi_full_immediate imm;
-   float values[4];
    uint advance;
+   int type;
+
+   if (*ctx->cur == '[') {
+      uint uindex;
+
+      ++ctx->cur;
+
+      eat_opt_white( &ctx->cur );
+      if (!parse_uint( &ctx->cur, &uindex )) {
+         report_error( ctx, "Expected literal unsigned integer" );
+         return FALSE;
+      }
+
+      if (uindex != ctx->num_immediates) {
+         report_error( ctx, "Immediates must be sorted" );
+         return FALSE;
+      }
+
+      eat_opt_white( &ctx->cur );
+      if (*ctx->cur != ']') {
+         report_error( ctx, "Expected `]'" );
+         return FALSE;
+      }
+
+      ctx->cur++;
+   }
 
    if (!eat_white( &ctx->cur )) {
       report_error( ctx, "Syntax error" );
       return FALSE;
    }
-   if (!str_match_no_case( &ctx->cur, "FLT32" ) ||
-       is_digit_alpha_underscore( ctx->cur )) {
-      report_error( ctx, "Expected `FLT32'" );
+   for (type = 0; type < Elements(tgsi_immediate_type_names); ++type) {
+      if (str_match_nocase_whole(&ctx->cur, tgsi_immediate_type_names[type]))
+         break;
+   }
+   if (type == Elements(tgsi_immediate_type_names)) {
+      report_error( ctx, "Expected immediate type" );
       return FALSE;
    }
 
-   parse_immediate_data(ctx, values);
-
    imm = tgsi_default_full_immediate();
    imm.Immediate.NrTokens += 4;
-   imm.Immediate.DataType = TGSI_IMM_FLOAT32;
-   imm.u[0].Float = values[0];
-   imm.u[1].Float = values[1];
-   imm.u[2].Float = values[2];
-   imm.u[3].Float = values[3];
+   imm.Immediate.DataType = type;
+   parse_immediate_data(ctx, type, imm.u);
 
    advance = tgsi_build_full_immediate(
       &imm,
@@ -1336,6 +1395,8 @@ static boolean parse_immediate( struct translate_ctx *ctx )
    if (advance == 0)
       return FALSE;
    ctx->tokens_cur += advance;
+
+   ctx->num_immediates++;
 
    return TRUE;
 }
@@ -1348,7 +1409,7 @@ parse_primitive( const char **pcur, uint *primitive )
    for (i = 0; i < PIPE_PRIM_MAX; i++) {
       const char *cur = *pcur;
 
-      if (str_match_no_case( &cur, tgsi_primitive_names[i])) {
+      if (str_match_nocase_whole( &cur, tgsi_primitive_names[i])) {
          *primitive = i;
          *pcur = cur;
          return TRUE;
@@ -1365,7 +1426,7 @@ parse_fs_coord_origin( const char **pcur, uint *fs_coord_origin )
    for (i = 0; i < Elements(tgsi_fs_coord_origin_names); i++) {
       const char *cur = *pcur;
 
-      if (str_match_no_case( &cur, tgsi_fs_coord_origin_names[i])) {
+      if (str_match_nocase_whole( &cur, tgsi_fs_coord_origin_names[i])) {
          *fs_coord_origin = i;
          *pcur = cur;
          return TRUE;
@@ -1382,7 +1443,7 @@ parse_fs_coord_pixel_center( const char **pcur, uint *fs_coord_pixel_center )
    for (i = 0; i < Elements(tgsi_fs_coord_pixel_center_names); i++) {
       const char *cur = *pcur;
 
-      if (str_match_no_case( &cur, tgsi_fs_coord_pixel_center_names[i])) {
+      if (str_match_nocase_whole( &cur, tgsi_fs_coord_pixel_center_names[i])) {
          *fs_coord_pixel_center = i;
          *pcur = cur;
          return TRUE;
@@ -1489,15 +1550,15 @@ static boolean translate( struct translate_ctx *ctx )
          if (!parse_instruction( ctx, TRUE ))
             return FALSE;
       }
-      else if (str_match_no_case( &ctx->cur, "DCL" )) {
+      else if (str_match_nocase_whole( &ctx->cur, "DCL" )) {
          if (!parse_declaration( ctx ))
             return FALSE;
       }
-      else if (str_match_no_case( &ctx->cur, "IMM" )) {
+      else if (str_match_nocase_whole( &ctx->cur, "IMM" )) {
          if (!parse_immediate( ctx ))
             return FALSE;
       }
-      else if (str_match_no_case( &ctx->cur, "PROPERTY" )) {
+      else if (str_match_nocase_whole( &ctx->cur, "PROPERTY" )) {
          if (!parse_property( ctx ))
             return FALSE;
       }
@@ -1515,7 +1576,7 @@ tgsi_text_translate(
    struct tgsi_token *tokens,
    uint num_tokens )
 {
-   struct translate_ctx ctx;
+   struct translate_ctx ctx = {0};
 
    ctx.text = text;
    ctx.cur = text;

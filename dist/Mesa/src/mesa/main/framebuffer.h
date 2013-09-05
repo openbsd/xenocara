@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -30,6 +30,7 @@
 
 struct gl_config;
 struct gl_context;
+struct gl_renderbuffer;
 
 extern struct gl_framebuffer *
 _mesa_create_framebuffer(const struct gl_config *visual);
@@ -51,8 +52,16 @@ extern void
 _mesa_free_framebuffer_data(struct gl_framebuffer *buffer);
 
 extern void
+_mesa_reference_framebuffer_(struct gl_framebuffer **ptr,
+                             struct gl_framebuffer *fb);
+
+static inline void
 _mesa_reference_framebuffer(struct gl_framebuffer **ptr,
-                            struct gl_framebuffer *fb);
+                            struct gl_framebuffer *fb)
+{
+   if (*ptr != fb)
+      _mesa_reference_framebuffer_(ptr, fb);
+}
 
 extern void
 _mesa_resize_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
@@ -62,24 +71,12 @@ _mesa_resize_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
 extern void
 _mesa_resizebuffers( struct gl_context *ctx );
 
-extern void GLAPIENTRY
-_mesa_ResizeBuffersMESA( void );
-
-
 extern void 
 _mesa_update_draw_buffer_bounds(struct gl_context *ctx);
 
 extern void
 _mesa_update_framebuffer_visual(struct gl_context *ctx,
 				struct gl_framebuffer *fb);
-
-extern void
-_mesa_update_depth_buffer(struct gl_context *ctx, struct gl_framebuffer *fb,
-                            GLuint attIndex);
-
-extern void
-_mesa_update_stencil_buffer(struct gl_context *ctx, struct gl_framebuffer *fb,
-                            GLuint attIndex);
 
 extern void
 _mesa_update_framebuffer(struct gl_context *ctx);
@@ -95,6 +92,10 @@ _mesa_get_color_read_type(struct gl_context *ctx);
 
 extern GLenum
 _mesa_get_color_read_format(struct gl_context *ctx);
+
+extern struct gl_renderbuffer *
+_mesa_get_read_renderbuffer_for_format(const struct gl_context *ctx,
+                                       GLenum format);
 
 extern void
 _mesa_print_framebuffer(const struct gl_framebuffer *fb);

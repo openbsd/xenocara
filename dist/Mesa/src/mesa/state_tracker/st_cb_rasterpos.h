@@ -30,21 +30,10 @@
 
 
 #include "main/compiler.h"
-#include "main/mfeatures.h"
 
 struct dd_function_table;
 
-#if FEATURE_rastpos
-
 extern void st_init_rasterpos_functions(struct dd_function_table *functions);
 
-#else
-
-static INLINE void
-st_init_rasterpos_functions(struct dd_function_table *functions)
-{
-}
-
-#endif /* FEATURE_rastpos */
 
 #endif /* ST_CB_RASTERPOS_H */

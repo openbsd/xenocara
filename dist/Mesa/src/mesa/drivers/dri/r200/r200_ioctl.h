@@ -38,7 +38,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/simple_list.h"
 #include "radeon_dri.h"
 
-#include "radeon_bocs_wrapper.h"
+#include "radeon_bo_gem.h"
+#include "radeon_cs_gem.h"
 
 #include "xf86drm.h"
 #include "drm.h"
@@ -64,12 +65,6 @@ extern void r200EmitAOS(r200ContextPtr rmesa, GLuint nr, GLuint offset);
 
 extern void r200InitIoctlFuncs( struct dd_function_table *functions );
 
-extern GLboolean r200IsGartMemory( r200ContextPtr rmesa, const GLvoid *pointer,
-				   GLint size );
-
-extern GLuint r200GartOffsetFromVirtual( r200ContextPtr rmesa, 
-					 const GLvoid *pointer );
-
 void r200SetUpAtomList( r200ContextPtr rmesa );
 
 /* ================================================================
@@ -81,7 +76,7 @@ void r200SetUpAtomList( r200ContextPtr rmesa );
 #define R200_NEWPRIM( rmesa )			\
 do {						\
    if ( rmesa->radeon.dma.flush )			\
-      rmesa->radeon.dma.flush( rmesa->radeon.glCtx );	\
+      rmesa->radeon.dma.flush( &rmesa->radeon.glCtx );	\
 } while (0)
 
 /* Can accomodate several state changes and primitive changes without
@@ -150,23 +145,13 @@ static inline uint32_t cmdpacket3(int cmd_type)
 }
 
 #define OUT_BATCH_PACKET3(packet, num_extra) do {	      \
-    if (!b_l_rmesa->radeonScreen->kernel_mm) {		      \
-      OUT_BATCH(cmdpacket3(RADEON_CMD_PACKET3));				      \
-      OUT_BATCH(CP_PACKET3((packet), (num_extra)));	      \
-    } else {						      \
-      OUT_BATCH(CP_PACKET2);				      \
-      OUT_BATCH(CP_PACKET3((packet), (num_extra)));	      \
-    }							      \
+    OUT_BATCH(CP_PACKET2);				      \
+    OUT_BATCH(CP_PACKET3((packet), (num_extra)));	      \
   } while(0)
 
 #define OUT_BATCH_PACKET3_CLIP(packet, num_extra) do {	      \
-    if (!b_l_rmesa->radeonScreen->kernel_mm) {		      \
-      OUT_BATCH(cmdpacket3(RADEON_CMD_PACKET3_CLIP));	      \
-      OUT_BATCH(CP_PACKET3((packet), (num_extra)));	      \
-    } else {						      \
-      OUT_BATCH(CP_PACKET2);				      \
-      OUT_BATCH(CP_PACKET3((packet), (num_extra)));	      \
-    }							      \
+    OUT_BATCH(CP_PACKET2);				      \
+    OUT_BATCH(CP_PACKET3((packet), (num_extra)));	      \
   } while(0)
 
 

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.5
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  * Copyright (C) 2008  VMware, Inc.  All Rights Reserved.
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
@@ -46,9 +46,6 @@
 /** Maximum texture matrix stack depth */
 #define MAX_TEXTURE_STACK_DEPTH 10
 
-/** Maximum color matrix stack depth */
-#define MAX_COLOR_STACK_DEPTH 4
-
 /** Maximum attribute stack depth */
 #define MAX_ATTRIB_STACK_DEPTH 16
 
@@ -61,8 +58,11 @@
 /** Maximum number of lights */
 #define MAX_LIGHTS 8
 
-/** Maximum user-defined clipping planes */
-#define MAX_CLIP_PLANES 6
+/**
+ * Maximum number of user-defined clipping planes supported by any driver in
+ * Mesa.  This is used to size arrays.
+ */
+#define MAX_CLIP_PLANES 8
 
 /** Maximum pixel map lookup table size */
 #define MAX_PIXEL_MAP_TABLE 256
@@ -71,11 +71,7 @@
 #define MAX_AUX_BUFFERS 1
 
 /** Maximum order (degree) of curves */
-#ifdef AMIGA
-#   define MAX_EVAL_ORDER 12
-#else
-#   define MAX_EVAL_ORDER 30
-#endif
+#define MAX_EVAL_ORDER 30
 
 /** Maximum Name stack depth */
 #define MAX_NAME_STACK_DEPTH 64
@@ -94,9 +90,6 @@
 /** Line width granularity */
 #define LINE_WIDTH_GRANULARITY 0.1
 
-/** Max texture palette / color table size */
-#define MAX_COLOR_TABLE_SIZE 256
-
 /** Max memory to allow for a single texture image (in megabytes) */
 #define MAX_TEXTURE_MBYTES 1024
 
@@ -112,7 +105,9 @@
 /** Maximum rectangular texture size - GL_NV_texture_rectangle */
 #define MAX_TEXTURE_RECT_SIZE 16384
 
-/** Maximum number of layers in a 1D or 2D array texture - GL_MESA_texture_array */
+/**
+ * Maximum number of layers in a 1D or 2D array texture - GL_MESA_texture_array
+ */
 #define MAX_ARRAY_TEXTURE_LAYERS 64
 
 /**
@@ -138,48 +133,15 @@
 #define MAX_TEXTURE_UNITS ((MAX_TEXTURE_COORD_UNITS > MAX_TEXTURE_IMAGE_UNITS) ? MAX_TEXTURE_COORD_UNITS : MAX_TEXTURE_IMAGE_UNITS)
 
 
-/** 
- * Maximum viewport/image width. Must accomodate all texture sizes too. 
- */
-
-#ifndef MAX_WIDTH
-#   define MAX_WIDTH 16384
-#endif
-/** Maximum viewport/image height */
-#ifndef MAX_HEIGHT
-#   define MAX_HEIGHT 16384
-#endif
-
-/* XXX: hack to prevent stack overflow on windows until all temporary arrays
- * [MAX_WIDTH] are allocated from the heap */
-#ifdef WIN32
-#undef MAX_TEXTURE_LEVELS
-#undef MAX_3D_TEXTURE_LEVELS
-#undef MAX_CUBE_TEXTURE_LEVELS
-#undef MAX_TEXTURE_RECT_SIZE
-#undef MAX_WIDTH
-#undef MAX_HEIGHT
-#define MAX_TEXTURE_LEVELS 13
-#define MAX_3D_TEXTURE_LEVELS 9
-#define MAX_CUBE_TEXTURE_LEVELS 13
-#define MAX_TEXTURE_RECT_SIZE 4096
-#define MAX_WIDTH 4096
-#define MAX_HEIGHT 4096
-#endif
+/** Maximum viewport size */
+#define MAX_VIEWPORT_WIDTH 16384
+#define MAX_VIEWPORT_HEIGHT 16384
 
 /** Maxmimum size for CVA.  May be overridden by the drivers.  */
 #define MAX_ARRAY_LOCK_SIZE 3000
 
 /** Subpixel precision for antialiasing, window coordinate snapping */
 #define SUB_PIXEL_BITS 4
-
-/** Size of histogram tables */
-#define HISTOGRAM_TABLE_SIZE 256
-
-/** Max convolution filter width */
-#define MAX_CONVOLUTION_WIDTH 9
-/** Max convolution filter height */
-#define MAX_CONVOLUTION_HEIGHT 9
 
 /** For GL_ARB_texture_compression */
 #define MAX_COMPRESSED_TEXTURE_FORMATS 25
@@ -203,8 +165,11 @@
  * per-program parameters.
  */
 /*@{*/
-#define MAX_PROGRAM_LOCAL_PARAMS       1024
-#define MAX_UNIFORMS                   1024
+#define MAX_PROGRAM_LOCAL_PARAMS       4096
+#define MAX_UNIFORMS                   4096
+#define MAX_UNIFORM_BUFFERS            15 /* + 1 default uniform buffer */
+/* 6 is for vertex, hull, domain, geometry, fragment, and compute shader. */
+#define MAX_COMBINED_UNIFORM_BUFFERS   (MAX_UNIFORM_BUFFERS * 6)
 /*@}*/
 
 /**
@@ -221,8 +186,8 @@
 #define MAX_PROGRAM_MATRIX_STACK_DEPTH 4
 #define MAX_PROGRAM_CALL_DEPTH         8
 #define MAX_PROGRAM_TEMPS              256
-#define MAX_PROGRAM_ADDRESS_REGS       2
-#define MAX_VARYING                    16    /**< number of float[4] vectors */
+#define MAX_PROGRAM_ADDRESS_REGS       1
+#define MAX_VARYING                    32    /**< number of float[4] vectors */
 #define MAX_SAMPLERS                   MAX_TEXTURE_IMAGE_UNITS
 #define MAX_PROGRAM_INPUTS             32
 #define MAX_PROGRAM_OUTPUTS            64
@@ -239,15 +204,6 @@
 #define MAX_FRAGMENT_PROGRAM_ADDRESS_REGS 0
 /*@}*/
 
-/** For GL_NV_vertex_program */
-/*@{*/
-#define MAX_NV_VERTEX_PROGRAM_INSTRUCTIONS 128
-#define MAX_NV_VERTEX_PROGRAM_TEMPS         12
-#define MAX_NV_VERTEX_PROGRAM_PARAMS        96
-#define MAX_NV_VERTEX_PROGRAM_INPUTS        16
-#define MAX_NV_VERTEX_PROGRAM_OUTPUTS       15
-/*@}*/
-
 /** For GL_NV_fragment_program */
 /*@{*/
 #define MAX_NV_FRAGMENT_PROGRAM_INSTRUCTIONS 1024 /* 72 for GL_ARB_f_p */
@@ -262,9 +218,8 @@
 /** For GL_ARB_vertex_shader */
 /*@{*/
 #define MAX_VERTEX_GENERIC_ATTRIBS 16
-#define MAX_VERTEX_TEXTURE_IMAGE_UNITS MAX_TEXTURE_IMAGE_UNITS
-#define MAX_COMBINED_TEXTURE_IMAGE_UNITS (MAX_VERTEX_TEXTURE_IMAGE_UNITS + \
-					  MAX_TEXTURE_IMAGE_UNITS)
+/* 6 is for vertex, hull, domain, geometry, fragment, and compute shader. */
+#define MAX_COMBINED_TEXTURE_IMAGE_UNITS (MAX_TEXTURE_IMAGE_UNITS * 6)
 /*@}*/
 
 
@@ -277,63 +232,28 @@
 /** For GL_EXT_framebuffer_object */
 /*@{*/
 #define MAX_COLOR_ATTACHMENTS 8
+#define MAX_RENDERBUFFER_SIZE 16384
 /*@}*/
 
 /** For GL_ATI_envmap_bump - support bump mapping on first 8 units */
 #define SUPPORTED_ATI_BUMP_UNITS 0xff
 
 /** For GL_EXT_transform_feedback */
+#define MAX_FEEDBACK_BUFFERS 4
 #define MAX_FEEDBACK_ATTRIBS 32
 
 /** For GL_ARB_geometry_shader4 */
 /*@{*/
-#define MAX_GEOMETRY_TEXTURE_IMAGE_UNITS             8
-#define MAX_GEOMETRY_VARYING_COMPONENTS              32
-#define MAX_VERTEX_VARYING_COMPONENTS                32
 #define MAX_GEOMETRY_UNIFORM_COMPONENTS              512
 #define MAX_GEOMETRY_OUTPUT_VERTICES                 256
 #define MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS         1024
 /*@}*/
 
-
-/**
- * \name Mesa-specific parameters
- */
+/** For GL_ARB_debug_output */
 /*@{*/
-
-
-/**
- * If non-zero use GLdouble for walking triangle edges, for better accuracy.
- */
-#define TRIANGLE_WALK_DOUBLE 0
-
-
-/**
- * Bits per depth buffer value (max is 32).
- */
-#ifndef DEFAULT_SOFTWARE_DEPTH_BITS
-#define DEFAULT_SOFTWARE_DEPTH_BITS 16
-#endif
-/** Depth buffer data type */
-#if DEFAULT_SOFTWARE_DEPTH_BITS <= 16
-#define DEFAULT_SOFTWARE_DEPTH_TYPE GLushort
-#else
-#define DEFAULT_SOFTWARE_DEPTH_TYPE GLuint
-#endif
-
-
-/**
- * Bits per stencil value: 8
- */
-#define STENCIL_BITS 8
-
-
-/**
- * Bits per color channel:  8, 16 or 32
- */
-#ifndef CHAN_BITS
-#define CHAN_BITS 8
-#endif
+#define MAX_DEBUG_LOGGED_MESSAGES   10
+#define MAX_DEBUG_MESSAGE_LENGTH    4096
+/*@}*/
 
 
 /*

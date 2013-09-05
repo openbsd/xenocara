@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * Copyright 2008, 2010 George Sapountzis <gsapountzis@gmail.com>
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -30,7 +30,8 @@
 #include <GL/gl.h>
 #include <GL/internal/dri_interface.h>
 #include "main/mtypes.h"
-#include "drisw_util.h"
+#include "dri_util.h"
+#include "swrast/s_context.h"
 
 
 /**
@@ -100,8 +101,13 @@ swrast_drawable(struct gl_framebuffer *fb)
     return (struct dri_drawable *) fb;
 }
 
-struct swrast_renderbuffer {
-    struct gl_renderbuffer Base;
+struct dri_swrast_renderbuffer {
+    struct swrast_renderbuffer Base;
+    __DRIdrawable *dPriv;
+
+    /* GL_MAP_*_BIT, used for mapping of front buffer. */
+    GLbitfield map_mode;
+   int map_x, map_y, map_w, map_h;
 
     /* renderbuffer pitch (in bytes) */
     GLuint pitch;
@@ -109,10 +115,10 @@ struct swrast_renderbuffer {
     GLuint bpp;
 };
 
-static INLINE struct swrast_renderbuffer *
-swrast_renderbuffer(struct gl_renderbuffer *rb)
+static INLINE struct dri_swrast_renderbuffer *
+dri_swrast_renderbuffer(struct gl_renderbuffer *rb)
 {
-    return (struct swrast_renderbuffer *) rb;
+    return (struct dri_swrast_renderbuffer *) rb;
 }
 
 
@@ -124,15 +130,5 @@ swrast_renderbuffer(struct gl_renderbuffer *rb)
 #define PF_R3G3B2     3		/**<  8bpp TrueColor:  3-R, 3-G, 2-B bits */
 #define PF_X8R8G8B8   4		/**< 32bpp TrueColor:  8-R, 8-G, 8-B bits */
 
-
-/* swrast_span.c */
-
-extern void
-swrast_set_span_funcs_back(struct swrast_renderbuffer *xrb,
-			   GLuint pixel_format);
-
-extern void
-swrast_set_span_funcs_front(struct swrast_renderbuffer *xrb,
-			    GLuint pixel_format);
 
 #endif /* _SWRAST_PRIV_H_ */

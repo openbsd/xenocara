@@ -237,12 +237,13 @@ aa_transform_inst(struct tgsi_transform_context *ctx,
       decl = tgsi_default_full_declaration();
       decl.Declaration.File = TGSI_FILE_INPUT;
       /* XXX this could be linear... */
-      decl.Declaration.Interpolate = TGSI_INTERPOLATE_PERSPECTIVE;
+      decl.Declaration.Interpolate = 1;
       decl.Declaration.Semantic = 1;
       decl.Semantic.Name = TGSI_SEMANTIC_GENERIC;
       decl.Semantic.Index = aactx->maxGeneric + 1;
       decl.Range.First = 
       decl.Range.Last = aactx->maxInput + 1;
+      decl.Interp.Interpolate = TGSI_INTERPOLATE_PERSPECTIVE;
       ctx->emit_declaration(ctx, &decl);
 
       /* declare new sampler */
@@ -374,7 +375,9 @@ generate_aaline_fs(struct aaline_stage *aaline)
                          newLen, &transform.base);
 
 #if 0 /* DEBUG */
+   debug_printf("draw_aaline, orig shader:\n");
    tgsi_dump(orig_fs->tokens, 0);
+   debug_printf("draw_aaline, new shader:\n");
    tgsi_dump(aaline_fs.tokens, 0);
 #endif
 
@@ -448,13 +451,12 @@ aaline_create_texture(struct aaline_stage *aaline)
 
       /* This texture is new, no need to flush. 
        */
-      transfer = pipe->get_transfer(pipe,
-                                    aaline->texture,
-                                    level,
-                                    PIPE_TRANSFER_WRITE,
-                                    &box);
+      data = pipe->transfer_map(pipe,
+                                aaline->texture,
+                                level,
+                                PIPE_TRANSFER_WRITE,
+                                &box, &transfer);
 
-      data = pipe->transfer_map(pipe, transfer);
       if (data == NULL)
          return FALSE;
 
@@ -479,7 +481,6 @@ aaline_create_texture(struct aaline_stage *aaline)
 
       /* unmap */
       pipe->transfer_unmap(pipe, transfer);
-      pipe->transfer_destroy(pipe, transfer);
    }
    return TRUE;
 }
@@ -692,12 +693,12 @@ aaline_first_line(struct draw_stage *stage, struct prim_header *header)
    }
 
    /* update vertex attrib info */
-   aaline->tex_slot = draw_current_shader_outputs(draw);
    aaline->pos_slot = draw_current_shader_position_output(draw);;
 
    /* allocate the extra post-transformed vertex attribute */
-   (void) draw_alloc_extra_vertex_attrib(draw, TGSI_SEMANTIC_GENERIC,
-                                         aaline->fs->generic_attrib);
+   aaline->tex_slot = draw_alloc_extra_vertex_attrib(draw,
+                                                     TGSI_SEMANTIC_GENERIC,
+                                                     aaline->fs->generic_attrib);
 
    /* how many samplers? */
    /* we'll use sampler/texture[pstip->sampler_unit] for the stipple */
@@ -736,7 +737,7 @@ aaline_flush(struct draw_stage *stage, unsigned flags)
 
    /* restore original frag shader, texture, sampler state */
    draw->suspend_flushing = TRUE;
-   aaline->driver_bind_fs_state(pipe, aaline->fs->driver_fs);
+   aaline->driver_bind_fs_state(pipe, aaline->fs ? aaline->fs->driver_fs : NULL);
    aaline->driver_bind_sampler_states(pipe, aaline->num_samplers,
                                       aaline->state.sampler);
    aaline->driver_set_sampler_views(pipe,
@@ -784,6 +785,14 @@ aaline_destroy(struct draw_stage *stage)
 
    draw_free_temp_verts( stage );
 
+   /* restore the old entry points */
+   pipe->create_fs_state = aaline->driver_create_fs_state;
+   pipe->bind_fs_state = aaline->driver_bind_fs_state;
+   pipe->delete_fs_state = aaline->driver_delete_fs_state;
+
+   pipe->bind_fragment_sampler_states = aaline->driver_bind_sampler_states;
+   pipe->set_fragment_sampler_views = aaline->driver_set_sampler_views;
+
    FREE( stage );
 }
 
@@ -822,7 +831,12 @@ static struct aaline_stage *
 aaline_stage_from_pipe(struct pipe_context *pipe)
 {
    struct draw_context *draw = (struct draw_context *) pipe->draw;
-   return aaline_stage(draw->pipeline.aaline);
+
+   if (draw) {
+      return aaline_stage(draw->pipeline.aaline);
+   } else {
+      return NULL;
+   }
 }
 
 
@@ -835,12 +849,17 @@ aaline_create_fs_state(struct pipe_context *pipe,
                        const struct pipe_shader_state *fs)
 {
    struct aaline_stage *aaline = aaline_stage_from_pipe(pipe);
-   struct aaline_fragment_shader *aafs = CALLOC_STRUCT(aaline_fragment_shader);
+   struct aaline_fragment_shader *aafs = NULL;
+
+   if (aaline == NULL)
+      return NULL;
+
+   aafs = CALLOC_STRUCT(aaline_fragment_shader);
 
    if (aafs == NULL)
       return NULL;
 
-   aafs->state = *fs;
+   aafs->state.tokens = tgsi_dup_tokens(fs->tokens);
 
    /* pass-through */
    aafs->driver_fs = aaline->driver_create_fs_state(pipe, fs);
@@ -855,6 +874,10 @@ aaline_bind_fs_state(struct pipe_context *pipe, void *fs)
    struct aaline_stage *aaline = aaline_stage_from_pipe(pipe);
    struct aaline_fragment_shader *aafs = (struct aaline_fragment_shader *) fs;
 
+   if (aaline == NULL) {
+      return;
+   }
+
    /* save current */
    aaline->fs = aafs;
    /* pass-through */
@@ -868,12 +891,19 @@ aaline_delete_fs_state(struct pipe_context *pipe, void *fs)
    struct aaline_stage *aaline = aaline_stage_from_pipe(pipe);
    struct aaline_fragment_shader *aafs = (struct aaline_fragment_shader *) fs;
 
-   /* pass-through */
-   aaline->driver_delete_fs_state(pipe, aafs->driver_fs);
+   if (aafs == NULL) {
+      return;
+   }
 
-   if (aafs->aaline_fs)
-      aaline->driver_delete_fs_state(pipe, aafs->aaline_fs);
+   if (aaline != NULL) {
+      /* pass-through */
+      aaline->driver_delete_fs_state(pipe, aafs->driver_fs);
 
+      if (aafs->aaline_fs)
+         aaline->driver_delete_fs_state(pipe, aafs->aaline_fs);
+   }
+
+   FREE((void*)aafs->state.tokens);
    FREE(aafs);
 }
 
@@ -883,6 +913,10 @@ aaline_bind_sampler_states(struct pipe_context *pipe,
                            unsigned num, void **sampler)
 {
    struct aaline_stage *aaline = aaline_stage_from_pipe(pipe);
+
+   if (aaline == NULL) {
+      return;
+   }
 
    /* save current */
    memcpy(aaline->state.sampler, sampler, num * sizeof(void *));
@@ -900,6 +934,10 @@ aaline_set_sampler_views(struct pipe_context *pipe,
 {
    struct aaline_stage *aaline = aaline_stage_from_pipe(pipe);
    uint i;
+
+   if (aaline == NULL) {
+      return;
+   }
 
    /* save current */
    for (i = 0; i < num; i++) {

@@ -1,6 +1,5 @@
 /*
  * mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
@@ -50,7 +50,7 @@
 #define _T_CONTEXT_H
 
 #include "main/glheader.h"
-#include "main/bitset.h"
+#include "main/imports.h"
 #include "main/mtypes.h"
 
 #include "math/m_vector.h"
@@ -93,22 +93,22 @@ enum {
 	_TNL_ATTRIB_TEX6 = 14,
 	_TNL_ATTRIB_TEX7 = 15,
 
-	_TNL_ATTRIB_GENERIC0 = 16, /* doesn't really exist! */
-	_TNL_ATTRIB_GENERIC1 = 17,
-	_TNL_ATTRIB_GENERIC2 = 18,
-	_TNL_ATTRIB_GENERIC3 = 19,
-	_TNL_ATTRIB_GENERIC4 = 20,
-	_TNL_ATTRIB_GENERIC5 = 21,
-	_TNL_ATTRIB_GENERIC6 = 22,
-	_TNL_ATTRIB_GENERIC7 = 23,
-	_TNL_ATTRIB_GENERIC8 = 24,
-	_TNL_ATTRIB_GENERIC9 = 25,
-	_TNL_ATTRIB_GENERIC10 = 26,
-	_TNL_ATTRIB_GENERIC11 = 27,
-	_TNL_ATTRIB_GENERIC12 = 28,
-	_TNL_ATTRIB_GENERIC13 = 29,
-	_TNL_ATTRIB_GENERIC14 = 30,
-	_TNL_ATTRIB_GENERIC15 = 31,
+	_TNL_ATTRIB_GENERIC0 = 17, /* doesn't really exist! */
+	_TNL_ATTRIB_GENERIC1 = 18,
+	_TNL_ATTRIB_GENERIC2 = 19,
+	_TNL_ATTRIB_GENERIC3 = 20,
+	_TNL_ATTRIB_GENERIC4 = 21,
+	_TNL_ATTRIB_GENERIC5 = 22,
+	_TNL_ATTRIB_GENERIC6 = 23,
+	_TNL_ATTRIB_GENERIC7 = 24,
+	_TNL_ATTRIB_GENERIC8 = 25,
+	_TNL_ATTRIB_GENERIC9 = 26,
+	_TNL_ATTRIB_GENERIC10 = 27,
+	_TNL_ATTRIB_GENERIC11 = 28,
+	_TNL_ATTRIB_GENERIC12 = 29,
+	_TNL_ATTRIB_GENERIC13 = 30,
+	_TNL_ATTRIB_GENERIC14 = 31,
+	_TNL_ATTRIB_GENERIC15 = 32,
 
 	/* These alias with the generics, but they are not active
 	 * concurrently, so it's not a problem.  The TNL module
@@ -120,25 +120,25 @@ enum {
 	 * generic attribute in order to pick up per-vertex material
 	 * data.
 	 */
-	_TNL_ATTRIB_MAT_FRONT_AMBIENT = 16,
-	_TNL_ATTRIB_MAT_BACK_AMBIENT = 17,
-	_TNL_ATTRIB_MAT_FRONT_DIFFUSE = 18,
-	_TNL_ATTRIB_MAT_BACK_DIFFUSE = 19,
-	_TNL_ATTRIB_MAT_FRONT_SPECULAR = 20,
-	_TNL_ATTRIB_MAT_BACK_SPECULAR = 21,
-	_TNL_ATTRIB_MAT_FRONT_EMISSION = 22,
-	_TNL_ATTRIB_MAT_BACK_EMISSION = 23,
-	_TNL_ATTRIB_MAT_FRONT_SHININESS = 24,
-	_TNL_ATTRIB_MAT_BACK_SHININESS = 25,
-	_TNL_ATTRIB_MAT_FRONT_INDEXES = 26,
-	_TNL_ATTRIB_MAT_BACK_INDEXES = 27,
+	_TNL_ATTRIB_MAT_FRONT_AMBIENT = 17,
+	_TNL_ATTRIB_MAT_BACK_AMBIENT = 18,
+	_TNL_ATTRIB_MAT_FRONT_DIFFUSE = 19,
+	_TNL_ATTRIB_MAT_BACK_DIFFUSE = 20,
+	_TNL_ATTRIB_MAT_FRONT_SPECULAR = 21,
+	_TNL_ATTRIB_MAT_BACK_SPECULAR = 22,
+	_TNL_ATTRIB_MAT_FRONT_EMISSION = 23,
+	_TNL_ATTRIB_MAT_BACK_EMISSION = 24,
+	_TNL_ATTRIB_MAT_FRONT_SHININESS = 25,
+	_TNL_ATTRIB_MAT_BACK_SHININESS = 26,
+	_TNL_ATTRIB_MAT_FRONT_INDEXES = 27,
+	_TNL_ATTRIB_MAT_BACK_INDEXES = 28,
 
-	/* This is really a VERT_RESULT, not an attrib.  Need to fix
+	/* This is really a VARYING_SLOT, not an attrib.  Need to fix
 	 * tnl to understand the difference.
 	 */
 	_TNL_ATTRIB_POINTSIZE = 16,
 
-	_TNL_ATTRIB_MAX = 32
+	_TNL_ATTRIB_MAX = 33
 } ;
 
 #define _TNL_ATTRIB_TEX(u)       (_TNL_ATTRIB_TEX0 + (u))
@@ -162,6 +162,9 @@ enum {
 #define _TNL_FIRST_MAT       _TNL_ATTRIB_MAT_FRONT_AMBIENT /* GENERIC0 */
 #define _TNL_LAST_MAT        _TNL_ATTRIB_MAT_BACK_INDEXES  /* GENERIC11 */
 
+/* Number of available texture attributes */
+#define _TNL_NUM_TEX 8
+
 /* Number of available generic attributes */
 #define _TNL_NUM_GENERIC 16
 
@@ -173,7 +176,7 @@ enum {
 #define PRIM_END       0x20
 #define PRIM_MODE_MASK 0x0f
 
-static INLINE GLuint _tnl_translate_prim( const struct _mesa_prim *prim )
+static inline GLuint _tnl_translate_prim( const struct _mesa_prim *prim )
 {
    GLuint flag;
    flag = prim->mode;
@@ -218,7 +221,7 @@ struct vertex_buffer
    GLuint      PrimitiveCount;	      
 
    /* Inputs to the vertex program stage */
-   GLvector4f *AttribPtr[_TNL_ATTRIB_MAX];      /* GL_NV_vertex_program */
+   GLvector4f *AttribPtr[_TNL_ATTRIB_MAX];
 };
 
 
@@ -381,6 +384,20 @@ struct tnl_clipspace
 };
 
 
+#define SHINE_TABLE_SIZE 256	/**< Material shininess lookup table sizes */
+
+/**
+ * Material shininess lookup table.
+ */
+struct tnl_shine_tab
+{
+   struct tnl_shine_tab *next, *prev;
+   GLfloat tab[SHINE_TABLE_SIZE+1];
+   GLfloat shininess;
+   GLuint refcount;
+};
+
+
 struct tnl_device_driver
 {
    /***
@@ -480,19 +497,6 @@ struct tnl_device_driver
 };
 
 
-#define DECLARE_RENDERINPUTS(name) BITSET64_DECLARE(name, _TNL_ATTRIB_MAX)
-#define RENDERINPUTS_COPY BITSET64_COPY
-#define RENDERINPUTS_EQUAL BITSET64_EQUAL
-#define RENDERINPUTS_ZERO BITSET64_ZERO
-#define RENDERINPUTS_ONES BITSET64_ONES
-#define RENDERINPUTS_TEST BITSET64_TEST
-#define RENDERINPUTS_SET BITSET64_SET
-#define RENDERINPUTS_CLEAR BITSET64_CLEAR
-#define RENDERINPUTS_TEST_RANGE BITSET64_TEST_RANGE
-#define RENDERINPUTS_SET_RANGE BITSET64_SET_RANGE
-#define RENDERINPUTS_CLEAR_RANGE BITSET64_CLEAR_RANGE
-
-
 /**
  * Context state for T&L context.
  */
@@ -518,7 +522,7 @@ typedef struct
    GLboolean AllowPixelFog;
    GLboolean _DoVertexFog;  /* eval fog function at each vertex? */
 
-   DECLARE_RENDERINPUTS(render_inputs_bitset);
+   GLbitfield64 render_inputs_bitset;
 
    GLvector4f tmp_inputs[VERT_ATTRIB_MAX];
 
@@ -529,6 +533,9 @@ typedef struct
 
    GLuint CurInstance;
 
+   struct tnl_shine_tab *_ShineTable[2]; /**< Active shine tables */
+   struct tnl_shine_tab *_ShineTabList;  /**< MRU list of inactive shine tables */
+   /**@}*/
 } TNLcontext;
 
 

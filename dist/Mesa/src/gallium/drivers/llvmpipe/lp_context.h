@@ -34,6 +34,7 @@
 #include "pipe/p_context.h"
 
 #include "draw/draw_vertex.h"
+#include "util/u_blitter.h"
 
 #include "lp_tex_sample.h"
 #include "lp_jit.h"
@@ -57,8 +58,8 @@ struct llvmpipe_context {
 
    /** Constant state objects */
    const struct pipe_blend_state *blend;
-   const struct pipe_sampler_state *sampler[PIPE_MAX_SAMPLERS];
-   struct pipe_sampler_state *vertex_samplers[PIPE_MAX_VERTEX_SAMPLERS];
+   struct pipe_sampler_state *samplers[PIPE_SHADER_TYPES][PIPE_MAX_SAMPLERS];
+
    const struct pipe_depth_stencil_alpha_state *depth_stencil;
    const struct pipe_rasterizer_state *rasterizer;
    struct lp_fragment_shader *fs;
@@ -71,32 +72,34 @@ struct llvmpipe_context {
    struct pipe_blend_color blend_color;
    struct pipe_stencil_ref stencil_ref;
    struct pipe_clip_state clip;
-   struct pipe_resource *constants[PIPE_SHADER_TYPES][PIPE_MAX_CONSTANT_BUFFERS];
+   struct pipe_constant_buffer constants[PIPE_SHADER_TYPES][LP_MAX_TGSI_CONST_BUFFERS];
    struct pipe_framebuffer_state framebuffer;
    struct pipe_poly_stipple poly_stipple;
-   struct pipe_scissor_state scissor;
-   struct pipe_sampler_view *fragment_sampler_views[PIPE_MAX_SAMPLERS];
-   struct pipe_sampler_view *vertex_sampler_views[PIPE_MAX_VERTEX_SAMPLERS];
-   struct pipe_viewport_state viewport;
+   struct pipe_scissor_state scissors[PIPE_MAX_VIEWPORTS];
+   struct pipe_sampler_view *sampler_views[PIPE_SHADER_TYPES][PIPE_MAX_SHADER_SAMPLER_VIEWS];
+
+   struct pipe_viewport_state viewports[PIPE_MAX_VIEWPORTS];
    struct pipe_vertex_buffer vertex_buffer[PIPE_MAX_ATTRIBS];
    struct pipe_index_buffer index_buffer;
-   struct {
-      struct llvmpipe_resource *buffer[PIPE_MAX_SO_BUFFERS];
-      int offset[PIPE_MAX_SO_BUFFERS];
-      int so_count[PIPE_MAX_SO_BUFFERS];
-      int num_buffers;
-   } so_target;
-   struct pipe_resource *mapped_vs_tex[PIPE_MAX_VERTEX_SAMPLERS];
+   struct pipe_resource *mapped_vs_tex[PIPE_MAX_SHADER_SAMPLER_VIEWS];
+   struct pipe_resource *mapped_gs_tex[PIPE_MAX_SHADER_SAMPLER_VIEWS];
 
-   unsigned num_samplers;
-   unsigned num_fragment_sampler_views;
-   unsigned num_vertex_samplers;
-   unsigned num_vertex_sampler_views;
+   unsigned num_samplers[PIPE_SHADER_TYPES];
+   unsigned num_sampler_views[PIPE_SHADER_TYPES];
+
    unsigned num_vertex_buffers;
 
-   unsigned dirty; /**< Mask of LP_NEW_x flags */
+   struct draw_so_target *so_targets[PIPE_MAX_SO_BUFFERS];
+   int num_so_targets;
+   struct pipe_query_data_so_statistics so_stats;
+   unsigned num_primitives_generated;
 
-   int active_query_count;
+   struct pipe_query_data_pipeline_statistics pipeline_statistics;
+   unsigned active_statistics_queries;
+
+   unsigned active_occlusion_queries;
+
+   unsigned dirty; /**< Mask of LP_NEW_x flags */
 
    /** Mapped vertex buffers */
    ubyte *mapped_vbuffer[PIPE_MAX_ATTRIBS];
@@ -113,6 +116,12 @@ struct llvmpipe_context {
    /** Which vertex shader output slot contains point size */
    int psize_slot;
 
+   /** Which vertex shader output slot contains viewport index */
+   int viewport_index_slot;
+
+   /** Which geometry shader output slot contains layer */
+   int layer_slot;
+
    /**< minimum resolvable depth value, for polygon offset */   
    double mrd;
    
@@ -123,19 +132,23 @@ struct llvmpipe_context {
    /** The primitive drawing context */
    struct draw_context *draw;
 
+   struct blitter_context *blitter;
+
    unsigned tex_timestamp;
    boolean no_rast;
 
    /** List of all fragment shader variants */
    struct lp_fs_variant_list_item fs_variants_list;
    unsigned nr_fs_variants;
-
-   /** JIT code generation */
-   struct gallivm_state *gallivm;
-   LLVMTypeRef jit_context_ptr_type;
+   unsigned nr_fs_instrs;
 
    struct lp_setup_variant_list_item setup_variants_list;
    unsigned nr_setup_variants;
+
+   /** Conditional query object and mode */
+   struct pipe_query *render_cond_query;
+   uint render_cond_mode;
+   boolean render_cond_cond;
 };
 
 
@@ -149,6 +162,12 @@ extern unsigned llvmpipe_variant_count;
 
 struct pipe_context *
 llvmpipe_create_context( struct pipe_screen *screen, void *priv );
+
+struct pipe_resource *
+llvmpipe_user_buffer_create(struct pipe_screen *screen,
+                            void *ptr,
+                            unsigned bytes,
+			    unsigned bind_flags);
 
 
 static INLINE struct llvmpipe_context *

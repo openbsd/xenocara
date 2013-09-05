@@ -32,7 +32,8 @@
 
 
 static void svga_flush( struct pipe_context *pipe,
-                        struct pipe_fence_handle **fence )
+                        struct pipe_fence_handle **fence,
+                        unsigned flags)
 {
    struct svga_context *svga = svga_context(pipe);
 
@@ -55,12 +56,12 @@ static void svga_flush( struct pipe_context *pipe,
       unsigned i;
 
       for (i = 0; i < fb->nr_cbufs; i++) {
-         util_snprintf(filename, sizeof(filename), "cbuf%u_%04u", i, frame_no);
+         util_snprintf(filename, sizeof(filename), "cbuf%u_%04u.bmp", i, frame_no);
          debug_dump_surface_bmp(&svga->pipe, filename, fb->cbufs[i]);
       }
 
       if (0 && fb->zsbuf) {
-         util_snprintf(filename, sizeof(filename), "zsbuf_%04u", frame_no);
+         util_snprintf(filename, sizeof(filename), "zsbuf_%04u.bmp", frame_no);
          debug_dump_surface_bmp(&svga->pipe, filename, fb->zsbuf);
       }
 

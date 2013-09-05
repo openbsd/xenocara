@@ -47,47 +47,8 @@
 #include "lp_setup.h"
 
 
-DEBUG_GET_ONCE_BOOL_OPTION(lp_no_rast, "LP_NO_RAST", FALSE)
-
-
 /** shared by all contexts */
 unsigned llvmpipe_variant_count;
-
-
-/**
- * This function is called by the gallivm "garbage collector" when
- * the LLVM global data structures are freed.  We must free all LLVM-related
- * data.  Specifically, all JIT'd shader variants.
- */
-static void
-garbage_collect_callback(void *cb_data)
-{
-   struct llvmpipe_context *lp = (struct llvmpipe_context *) cb_data;
-   struct lp_fs_variant_list_item *li;
-
-   /* Free all the context's shader variants */
-   li = first_elem(&lp->fs_variants_list);
-   while (!at_end(&lp->fs_variants_list, li)) {
-      struct lp_fs_variant_list_item *next = next_elem(li);
-      llvmpipe_remove_shader_variant(lp, li->base);
-      li = next;
-   }
-
-   /* Free all the context's primitive setup variants */
-   lp_delete_setup_variants(lp);
-
-   /* release references to setup variants, shaders */
-   lp_setup_set_setup_variant(lp->setup, NULL);
-   lp_setup_set_fs_variant(lp->setup, NULL);
-   lp_setup_reset(lp->setup);
-
-   /* This type will be recreated upon demand */
-   lp->jit_context_ptr_type = NULL;
-
-   /* mark all state as dirty to ensure new shaders are jit'd, etc. */
-   lp->dirty = ~0;
-}
-
 
 
 static void llvmpipe_destroy( struct pipe_context *pipe )
@@ -97,8 +58,9 @@ static void llvmpipe_destroy( struct pipe_context *pipe )
 
    lp_print_counters();
 
-   gallivm_remove_garbage_collector_callback(garbage_collect_callback,
-                                             llvmpipe);
+   if (llvmpipe->blitter) {
+      util_blitter_destroy(llvmpipe->blitter);
+   }
 
    /* This will also destroy llvmpipe->setup:
     */
@@ -111,17 +73,21 @@ static void llvmpipe_destroy( struct pipe_context *pipe )
 
    pipe_surface_reference(&llvmpipe->framebuffer.zsbuf, NULL);
 
-   for (i = 0; i < PIPE_MAX_SAMPLERS; i++) {
-      pipe_sampler_view_reference(&llvmpipe->fragment_sampler_views[i], NULL);
+   for (i = 0; i < Elements(llvmpipe->sampler_views[0]); i++) {
+      pipe_sampler_view_reference(&llvmpipe->sampler_views[PIPE_SHADER_FRAGMENT][i], NULL);
    }
 
-   for (i = 0; i < PIPE_MAX_VERTEX_SAMPLERS; i++) {
-      pipe_sampler_view_reference(&llvmpipe->vertex_sampler_views[i], NULL);
+   for (i = 0; i < Elements(llvmpipe->sampler_views[0]); i++) {
+      pipe_sampler_view_reference(&llvmpipe->sampler_views[PIPE_SHADER_VERTEX][i], NULL);
+   }
+
+   for (i = 0; i < Elements(llvmpipe->sampler_views[0]); i++) {
+      pipe_sampler_view_reference(&llvmpipe->sampler_views[PIPE_SHADER_GEOMETRY][i], NULL);
    }
 
    for (i = 0; i < Elements(llvmpipe->constants); i++) {
       for (j = 0; j < Elements(llvmpipe->constants[i]); j++) {
-         pipe_resource_reference(&llvmpipe->constants[i][j], NULL);
+         pipe_resource_reference(&llvmpipe->constants[i][j].buffer, NULL);
       }
    }
 
@@ -129,18 +95,32 @@ static void llvmpipe_destroy( struct pipe_context *pipe )
       pipe_resource_reference(&llvmpipe->vertex_buffer[i].buffer, NULL);
    }
 
-   gallivm_destroy(llvmpipe->gallivm);
+   lp_delete_setup_variants(llvmpipe);
 
    align_free( llvmpipe );
 }
 
 static void
 do_flush( struct pipe_context *pipe,
-          struct pipe_fence_handle **fence)
+          struct pipe_fence_handle **fence,
+          unsigned flags)
 {
    llvmpipe_flush(pipe, fence, __FUNCTION__);
 }
 
+
+static void
+llvmpipe_render_condition ( struct pipe_context *pipe,
+                            struct pipe_query *query,
+                            boolean condition,
+                            uint mode )
+{
+   struct llvmpipe_context *llvmpipe = llvmpipe_context( pipe );
+
+   llvmpipe->render_cond_query = query;
+   llvmpipe->render_cond_mode = mode;
+   llvmpipe->render_cond_cond = condition;
+}
 
 struct pipe_context *
 llvmpipe_create_context( struct pipe_screen *screen, void *priv )
@@ -160,7 +140,6 @@ llvmpipe_create_context( struct pipe_screen *screen, void *priv )
    make_empty_list(&llvmpipe->setup_variants_list);
 
 
-   llvmpipe->pipe.winsys = screen->winsys;
    llvmpipe->pipe.screen = screen;
    llvmpipe->pipe.priv = priv;
 
@@ -169,6 +148,8 @@ llvmpipe_create_context( struct pipe_screen *screen, void *priv )
    llvmpipe->pipe.set_framebuffer_state = llvmpipe_set_framebuffer_state;
    llvmpipe->pipe.clear = llvmpipe_clear;
    llvmpipe->pipe.flush = do_flush;
+
+   llvmpipe->pipe.render_condition = llvmpipe_render_condition;
 
    llvmpipe_init_blend_funcs(llvmpipe);
    llvmpipe_init_clip_funcs(llvmpipe);
@@ -184,24 +165,27 @@ llvmpipe_create_context( struct pipe_screen *screen, void *priv )
    llvmpipe_init_context_resource_funcs( &llvmpipe->pipe );
    llvmpipe_init_surface_functions(llvmpipe);
 
-   llvmpipe->gallivm = gallivm_create();
-
    /*
     * Create drawing context and plug our rendering stage into it.
     */
-   llvmpipe->draw = draw_create_gallivm(&llvmpipe->pipe, llvmpipe->gallivm);
+   llvmpipe->draw = draw_create(&llvmpipe->pipe);
    if (!llvmpipe->draw)
       goto fail;
 
    /* FIXME: devise alternative to draw_texture_samplers */
 
-   if (debug_get_option_lp_no_rast())
-      llvmpipe->no_rast = TRUE;
-
    llvmpipe->setup = lp_setup_create( &llvmpipe->pipe,
                                       llvmpipe->draw );
    if (!llvmpipe->setup)
       goto fail;
+
+   llvmpipe->blitter = util_blitter_create(&llvmpipe->pipe);
+   if (!llvmpipe->blitter) {
+      goto fail;
+   }
+
+   /* must be done before installing Draw stages */
+   util_blitter_cache_all_shaders(llvmpipe->blitter);
 
    /* plug in AA line/point stages */
    draw_install_aaline_stage(llvmpipe->draw, &llvmpipe->pipe);
@@ -216,15 +200,7 @@ llvmpipe_create_context( struct pipe_screen *screen, void *priv )
    draw_wide_point_threshold(llvmpipe->draw, 10000.0);
    draw_wide_line_threshold(llvmpipe->draw, 10000.0);
 
-#if USE_DRAW_STAGE_PSTIPPLE
-   /* Do polygon stipple w/ texture map + frag prog? */
-   draw_install_pstipple_stage(llvmpipe->draw, &llvmpipe->pipe);
-#endif
-
    lp_reset_counters();
-
-   gallivm_register_garbage_collector_callback(garbage_collect_callback,
-                                               llvmpipe);
 
    return &llvmpipe->pipe;
 

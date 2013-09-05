@@ -48,6 +48,23 @@
 #include <gbm_driint.h>
 #endif
 
+#ifdef HAVE_ANDROID_PLATFORM
+#define LOG_TAG "EGL-DRI2"
+
+#if ANDROID_VERSION >= 0x0400
+#  include <system/window.h>
+#else
+#  define android_native_buffer_t ANativeWindowBuffer
+#  include <ui/egl/android_natives.h>
+#  include <ui/android_native_buffer.h>
+#endif
+
+#include <hardware/gralloc.h>
+#include <gralloc_drm_handle.h>
+#include <cutils/log.h>
+
+#endif /* HAVE_ANDROID_PLATFORM */
+
 #include "eglconfig.h"
 #include "eglcontext.h"
 #include "egldisplay.h"
@@ -82,8 +99,16 @@ struct dri2_egl_display
    __DRI2flushExtension     *flush;
    __DRItexBufferExtension  *tex_buffer;
    __DRIimageExtension      *image;
+   __DRIrobustnessExtension *robustness;
+   __DRI2configQueryExtension *config;
    int                       fd;
 
+   int                       own_device;
+   int                       swap_available;
+   int                       invalidate_available;
+   int                       min_swap_interval;
+   int                       max_swap_interval;
+   int                       default_swap_interval;
 #ifdef HAVE_DRM_PLATFORM
    struct gbm_dri_device    *gbm_dri;
 #endif
@@ -101,9 +126,13 @@ struct dri2_egl_display
 
 #ifdef HAVE_WAYLAND_PLATFORM
    struct wl_display        *wl_dpy;
+   struct wl_registry       *wl_registry;
    struct wl_drm            *wl_server_drm;
    struct wl_drm            *wl_drm;
+   struct wl_event_queue    *wl_queue;
    int			     authenticated;
+   int			     formats;
+   uint32_t                  capabilities;
 #endif
 
    int (*authenticate) (_EGLDisplay *disp, uint32_t id);
@@ -122,15 +151,7 @@ enum wayland_buffer_type {
    WL_BUFFER_THIRD,
    WL_BUFFER_COUNT
 };
-
-#define __DRI_BUFFER_COUNT 10
 #endif
-
-enum dri2_surface_type {
-   DRI2_WINDOW_SURFACE,
-   DRI2_PIXMAP_SURFACE,
-   DRI2_PBUFFER_SURFACE
-};
 
 struct dri2_egl_surface
 {
@@ -150,24 +171,41 @@ struct dri2_egl_surface
    xcb_gcontext_t       swapgc;
 #endif
 
-   enum dri2_surface_type type;
 #ifdef HAVE_WAYLAND_PLATFORM
    struct wl_egl_window  *wl_win;
-   struct wl_egl_pixmap  *wl_pix;
-   struct wl_buffer      *wl_drm_buffer[WL_BUFFER_COUNT];
-   int                    wl_buffer_lock[WL_BUFFER_COUNT];
    int                    dx;
    int                    dy;
-   __DRIbuffer           *dri_buffers[__DRI_BUFFER_COUNT];
-   __DRIbuffer           *third_buffer;
-   __DRIbuffer           *pending_buffer;
-   EGLBoolean             block_swap_buffers;
+   struct wl_callback    *frame_callback;
+   int			  format;
 #endif
-};
 
-struct dri2_egl_buffer {
-   __DRIbuffer *dri_buffer;
-   struct dri2_egl_display *dri2_dpy;
+#ifdef HAVE_DRM_PLATFORM
+   struct gbm_dri_surface *gbm_surf;
+#endif
+
+#if defined(HAVE_WAYLAND_PLATFORM) || defined(HAVE_DRM_PLATFORM)
+   __DRIbuffer           *dri_buffers[__DRI_BUFFER_COUNT];
+   struct {
+#ifdef HAVE_WAYLAND_PLATFORM
+      struct wl_buffer   *wl_buffer;
+      __DRIimage         *dri_image;
+      int                 pitch, name;
+#endif
+#ifdef HAVE_DRM_PLATFORM
+      struct gbm_bo       *bo;
+#endif
+      int                 locked;
+      int                 age;
+   } color_buffers[3], *back, *current;
+#endif
+
+#ifdef HAVE_ANDROID_PLATFORM
+   struct ANativeWindow *window;
+   struct ANativeWindowBuffer *buffer;
+
+   /* EGL-owned buffers */
+   __DRIbuffer           *local_buffers[__DRI_BUFFER_COUNT];
+#endif
 };
 
 
@@ -209,7 +247,8 @@ dri2_lookup_egl_image(__DRIscreen *screen, void *image, void *data);
 
 struct dri2_egl_config *
 dri2_add_config(_EGLDisplay *disp, const __DRIconfig *dri_config, int id,
-		int depth, EGLint surface_type, const EGLint *attr_list);
+		int depth, EGLint surface_type, const EGLint *attr_list,
+		const unsigned int *rgba_masks);
 
 _EGLImage *
 dri2_create_image_khr(_EGLDriver *drv, _EGLDisplay *disp,
@@ -224,6 +263,9 @@ dri2_initialize_drm(_EGLDriver *drv, _EGLDisplay *disp);
 
 EGLBoolean
 dri2_initialize_wayland(_EGLDriver *drv, _EGLDisplay *disp);
+
+EGLBoolean
+dri2_initialize_android(_EGLDriver *drv, _EGLDisplay *disp);
 
 char *
 dri2_get_driver_for_fd(int fd);

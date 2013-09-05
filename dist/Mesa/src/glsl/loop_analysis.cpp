@@ -105,10 +105,12 @@ loop_variable_state::insert(ir_if *if_stmt)
 
 class loop_analysis : public ir_hierarchical_visitor {
 public:
-   loop_analysis();
+   loop_analysis(loop_state *loops);
 
    virtual ir_visitor_status visit(ir_loop_jump *);
    virtual ir_visitor_status visit(ir_dereference_variable *);
+
+   virtual ir_visitor_status visit_enter(ir_call *);
 
    virtual ir_visitor_status visit_enter(ir_loop *);
    virtual ir_visitor_status visit_leave(ir_loop *);
@@ -127,12 +129,10 @@ public:
 };
 
 
-loop_analysis::loop_analysis()
+loop_analysis::loop_analysis(loop_state *loops)
+   : loops(loops), if_statement_depth(0), current_assignment(NULL)
 {
-   this->loops = new loop_state;
-
-   this->if_statement_depth = 0;
-   this->current_assignment = NULL;
+   /* empty */
 }
 
 
@@ -149,6 +149,21 @@ loop_analysis::visit(ir_loop_jump *ir)
    ls->num_loop_jumps++;
 
    return visit_continue;
+}
+
+
+ir_visitor_status
+loop_analysis::visit_enter(ir_call *ir)
+{
+   /* If we're not somewhere inside a loop, there's nothing to do. */
+   if (this->state.is_empty())
+      return visit_continue;
+
+   loop_variable_state *const ls =
+      (loop_variable_state *) this->state.get_head();
+
+   ls->contains_calls = true;
+   return visit_continue_with_parent;
 }
 
 
@@ -209,6 +224,17 @@ loop_analysis::visit_leave(ir_loop *ir)
    loop_variable_state *const ls =
       (loop_variable_state *) this->state.pop_head();
 
+   /* Function calls may contain side effects.  These could alter any of our
+    * variables in ways that cannot be known, and may even terminate shader
+    * execution (say, calling discard in the fragment shader).  So we can't
+    * rely on any of our analysis about assignments to variables.
+    *
+    * We could perform some conservative analysis (prove there's no statically
+    * possible assignment, etc.) but it isn't worth it for now; function
+    * inlining will allow us to unroll loops anyway.
+    */
+   if (ls->contains_calls)
+      return visit_continue;
 
    foreach_list(node, &ir->body_instructions) {
       /* Skip over declarations at the start of a loop.
@@ -477,7 +503,8 @@ is_loop_terminator(ir_if *ir)
 
    ir_instruction *const inst =
       (ir_instruction *) ir->then_instructions.get_head();
-   assert(inst != NULL);
+   if (inst == NULL)
+      return false;
 
    if (inst->ir_type != ir_type_loop_jump)
       return false;
@@ -493,7 +520,8 @@ is_loop_terminator(ir_if *ir)
 loop_state *
 analyze_loop_variables(exec_list *instructions)
 {
-   loop_analysis v;
+   loop_state *loops = new loop_state;
+   loop_analysis v(loops);
 
    v.run(instructions);
    return v.loops;

@@ -15,7 +15,6 @@
 #include "main/imports.h"
 #include "main/image.h"
 #include "main/macros.h"
-#include "main/mfeatures.h"
 #include "program/program.h"
 #include "program/prog_print.h"
 
@@ -29,11 +28,9 @@
 #include "pipe/p_shader_tokens.h"
 #include "util/u_draw_quad.h"
 #include "util/u_simple_shaders.h"
+#include "util/u_upload_mgr.h"
 
 #include "cso_cache/cso_context.h"
-
-
-#if FEATURE_OES_draw_texture
 
 
 struct cached_shader
@@ -107,19 +104,18 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
    struct st_context *st = ctx->st;
    struct pipe_context *pipe = st->pipe;
    struct cso_context *cso = ctx->st->cso_context;
-   struct pipe_resource *vbuffer;
-   struct pipe_transfer *vbuffer_transfer;
+   struct pipe_resource *vbuffer = NULL;
    GLuint i, numTexCoords, numAttribs;
    GLboolean emitColor;
    uint semantic_names[2 + MAX_TEXTURE_UNITS];
    uint semantic_indexes[2 + MAX_TEXTURE_UNITS];
    struct pipe_vertex_element velements[2 + MAX_TEXTURE_UNITS];
-   GLbitfield inputs = VERT_BIT_POS;
+   unsigned offset;
 
    st_validate_state(st);
 
    /* determine if we need vertex color */
-   if (ctx->FragmentProgram._Current->Base.InputsRead & FRAG_BIT_COL0)
+   if (ctx->FragmentProgram._Current->Base.InputsRead & VARYING_BIT_COL0)
       emitColor = GL_TRUE;
    else
       emitColor = GL_FALSE;
@@ -128,19 +124,12 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
    numTexCoords = 0;
    for (i = 0; i < ctx->Const.MaxTextureUnits; i++) {
       if (ctx->Texture.Unit[i]._ReallyEnabled & TEXTURE_2D_BIT) {
-         inputs |= VERT_BIT_TEX(i);
          numTexCoords++;
       }
    }
 
    /* total number of attributes per vertex */
    numAttribs = 1 + emitColor + numTexCoords;
-
-
-   /* create the vertex buffer */
-   vbuffer = pipe_buffer_create(pipe->screen, PIPE_BIND_VERTEX_BUFFER,
-                                PIPE_USAGE_STREAM,
-                                numAttribs * 4 * 4 * sizeof(GLfloat));
 
    /* load vertex buffer */
    {
@@ -155,10 +144,14 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
       } while (0)
 
       const GLfloat x0 = x, y0 = y, x1 = x + width, y1 = y + height;
-      GLfloat *vbuf = (GLfloat *) pipe_buffer_map(pipe, vbuffer,
-                                                  PIPE_TRANSFER_WRITE,
-                                                  &vbuffer_transfer);
+      GLfloat *vbuf = NULL;
       GLuint attr;
+
+      if (u_upload_alloc(st->uploader, 0,
+                         numAttribs * 4 * 4 * sizeof(GLfloat),
+                         &offset, &vbuffer, (void **) &vbuf) != PIPE_OK) {
+         return;
+      }
       
       z = CLAMP(z, 0.0f, 1.0f);
 
@@ -215,29 +208,34 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
             SET_ATTRIB(2, attr, s1, t1, 0.0f, 1.0f);  /* upper right */
             SET_ATTRIB(3, attr, s0, t1, 0.0f, 1.0f);  /* upper left */
 
-            semantic_names[attr] = TGSI_SEMANTIC_GENERIC;
+            semantic_names[attr] = st->needs_texcoord_semantic ?
+               TGSI_SEMANTIC_TEXCOORD : TGSI_SEMANTIC_GENERIC;
+            /* XXX: should this use semantic index i instead of 0 ? */
             semantic_indexes[attr] = 0;
 
             attr++;
          }
       }
 
-      pipe_buffer_unmap(pipe, vbuffer_transfer);
+      u_upload_unmap(st->uploader);
 
 #undef SET_ATTRIB
    }
 
 
    cso_save_viewport(cso);
+   cso_save_stream_outputs(cso);
    cso_save_vertex_shader(cso);
+   cso_save_geometry_shader(cso);
    cso_save_vertex_elements(cso);
-   cso_save_vertex_buffers(cso);
+   cso_save_aux_vertex_buffer_slot(cso);
 
    {
       void *vs = lookup_shader(pipe, numAttribs,
                                semantic_names, semantic_indexes);
       cso_set_vertex_shader_handle(cso, vs);
    }
+   cso_set_geometry_shader_handle(cso, NULL);
 
    for (i = 0; i < numAttribs; i++) {
       velements[i].src_offset = i * 4 * sizeof(float);
@@ -246,6 +244,7 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
       velements[i].src_format = PIPE_FORMAT_R32G32B32A32_FLOAT;
    }
    cso_set_vertex_elements(cso, numAttribs, velements);
+   cso_set_stream_outputs(st->cso_context, 0, NULL, 0);
 
    /* viewport state: viewport matching window dims */
    {
@@ -267,7 +266,8 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
 
 
    util_draw_vertex_buffer(pipe, cso, vbuffer,
-                           0,  /* offset */
+			   cso_get_aux_vertex_buffer_slot(cso),
+                           offset,  /* offset */
                            PIPE_PRIM_TRIANGLE_FAN,
                            4,  /* verts */
                            numAttribs); /* attribs/vert */
@@ -278,8 +278,10 @@ st_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
    /* restore state */
    cso_restore_viewport(cso);
    cso_restore_vertex_shader(cso);
+   cso_restore_geometry_shader(cso);
    cso_restore_vertex_elements(cso);
-   cso_restore_vertex_buffers(cso);
+   cso_restore_aux_vertex_buffer_slot(cso);
+   cso_restore_stream_outputs(cso);
 }
 
 
@@ -302,6 +304,3 @@ st_destroy_drawtex(struct st_context *st)
    }
    NumCachedShaders = 0;
 }
-
-
-#endif /* FEATURE_OES_draw_texture */

@@ -73,8 +73,14 @@ shade_quad(struct quad_stage *qs, struct quad_header *quad)
    struct softpipe_context *softpipe = qs->softpipe;
    struct tgsi_exec_machine *machine = softpipe->fs_machine;
 
+   if (softpipe->active_statistics_queries) {
+      softpipe->pipeline_statistics.ps_invocations +=
+         util_bitcount(quad->inout.mask);         
+   }
+
    /* run shader */
-   return softpipe->fs->run( softpipe->fs, machine, quad );
+   machine->flatshade_color = softpipe->rasterizer->flatshade ? TRUE : FALSE;
+   return softpipe->fs_variant->run( softpipe->fs_variant, machine, quad );
 }
 
 
@@ -89,7 +95,7 @@ coverage_quad(struct quad_stage *qs, struct quad_header *quad)
    for (cbuf = 0; cbuf < softpipe->framebuffer.nr_cbufs; cbuf++) {
       float (*quadColor)[4] = quad->output.color[cbuf];
       unsigned j;
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          assert(quad->input.coverage[j] >= 0.0);
          assert(quad->input.coverage[j] <= 1.0);
          quadColor[3][j] *= quad->input.coverage[j];
@@ -118,7 +124,16 @@ shade_quads(struct quad_stage *qs,
    machine->InterpCoefs = quads[0]->coef;
 
    for (i = 0; i < nr; i++) {
-      if (!shade_quad(qs, quads[i]))
+      /* Only omit this quad from the output list if all the fragments
+       * are killed _AND_ it's not the first quad in the list.
+       * The first quad is special in the (optimized) depth-testing code:
+       * the quads' Z coordinates are step-wise interpolated with respect
+       * to the first quad in the list.
+       * For multi-pass algorithms we need to produce exactly the same
+       * Z values in each pass.  If interpolation starts with different quads
+       * we can get different Z values for the same (x,y).
+       */
+      if (!shade_quad(qs, quads[i]) && i > 0)
          continue; /* quad totally culled/killed */
 
       if (/*do_coverage*/ 0)
@@ -138,13 +153,6 @@ shade_quads(struct quad_stage *qs,
 static void
 shade_begin(struct quad_stage *qs)
 {
-   struct softpipe_context *softpipe = qs->softpipe;
-
-   softpipe->fs->prepare( softpipe->fs, 
-			  softpipe->fs_machine,
-			  (struct tgsi_sampler **)
-                             softpipe->tgsi.frag_samplers_list );
-
    qs->next->begin(qs->next);
 }
 

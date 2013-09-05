@@ -54,17 +54,20 @@ extern "C" {
  * Implementation limits
  */
 #define PIPE_MAX_ATTRIBS          32
-#define PIPE_MAX_CLIP_PLANES       6
+#define PIPE_MAX_CLIP_PLANES       8
 #define PIPE_MAX_COLOR_BUFS        8
 #define PIPE_MAX_CONSTANT_BUFFERS 32
 #define PIPE_MAX_SAMPLERS         16
-#define PIPE_MAX_VERTEX_SAMPLERS  16
-#define PIPE_MAX_GEOMETRY_SAMPLERS  16
 #define PIPE_MAX_SHADER_INPUTS    32
-#define PIPE_MAX_SHADER_OUTPUTS   32
+#define PIPE_MAX_SHADER_OUTPUTS   48 /* 32 GENERICs + POS, PSIZE, FOG, etc. */
+#define PIPE_MAX_SHADER_SAMPLER_VIEWS 32
 #define PIPE_MAX_SHADER_RESOURCES 32
 #define PIPE_MAX_TEXTURE_LEVELS   16
 #define PIPE_MAX_SO_BUFFERS        4
+#define PIPE_MAX_SO_OUTPUTS       64
+#define PIPE_MAX_VIEWPORTS        16
+#define PIPE_MAX_CLIP_OR_CULL_DISTANCE_COUNT 8
+#define PIPE_MAX_CLIP_OR_CULL_DISTANCE_ELEMENT_COUNT 2
 
 
 struct pipe_reference
@@ -108,28 +111,47 @@ struct pipe_rasterizer_state
     */
    unsigned flatshade_first:1;
 
+   unsigned half_pixel_center:1;
+   unsigned bottom_edge_rule:1;
+
    /**
-    * When true, triangle rasterization uses (0.5, 0.5) pixel centers
-    * for determining pixel ownership.
-    *
-    * When false, triangle rasterization uses (0,0) pixel centers for
-    * determining pixel ownership.
-    *
-    * Triangle rasterization always uses a 'top,left' rule for pixel
-    * ownership, this just alters which point we consider the pixel
-    * center for that test.
+    * When true, rasterization is disabled and no pixels are written.
+    * This only makes sense with the Stream Out functionality.
     */
-   unsigned gl_rasterization_rules:1;
+   unsigned rasterizer_discard:1;
+
+   /**
+    * When false, depth clipping is disabled and the depth value will be
+    * clamped later at the per-pixel level before depth testing.
+    * This depends on PIPE_CAP_DEPTH_CLIP_DISABLE.
+    */
+   unsigned depth_clip:1;
+
+   /**
+    * When true clip space in the z axis goes from [0..1] (D3D).  When false
+    * [-1, 1] (GL).
+    */
+   unsigned clip_halfz:1;
+
+   /**
+    * Enable bits for clipping half-spaces.
+    * This applies to both user clip planes and shader clip distances.
+    * Note that if the bound shader exports any clip distances, these
+    * replace all user clip planes, and clip half-spaces enabled here
+    * but not written by the shader count as disabled.
+    */
+   unsigned clip_plane_enable:PIPE_MAX_CLIP_PLANES;
 
    unsigned line_stipple_factor:8;  /**< [1..256] actually */
    unsigned line_stipple_pattern:16;
 
-   unsigned sprite_coord_enable:PIPE_MAX_SHADER_OUTPUTS;
+   uint32_t sprite_coord_enable; /* referring to 32 TEXCOORD/GENERIC inputs */
 
    float line_width;
    float point_size;           /**< used when no per-vertex size */
    float offset_units;
    float offset_scale;
+   float offset_clamp;
 };
 
 
@@ -158,14 +180,36 @@ struct pipe_scissor_state
 struct pipe_clip_state
 {
    float ucp[PIPE_MAX_CLIP_PLANES][4];
-   unsigned nr;
-   unsigned depth_clamp:1;
+};
+
+
+/**
+ * Stream output for vertex transform feedback.
+ */
+struct pipe_stream_output_info
+{
+   unsigned num_outputs;
+   /** stride for an entire vertex for each buffer in dwords */
+   unsigned stride[PIPE_MAX_SO_BUFFERS];
+
+   /**
+    * Array of stream outputs, in the order they are to be written in.
+    * Selected components are tightly packed into the output buffer.
+    */
+   struct {
+      unsigned register_index:8;  /**< 0 to PIPE_MAX_SHADER_OUTPUTS */
+      unsigned start_component:2; /** 0 to 3 */
+      unsigned num_components:3;  /** 1 to 4 */
+      unsigned output_buffer:3;   /**< 0 to PIPE_MAX_SO_BUFFERS */
+      unsigned dst_offset:16;     /**< offset into the buffer in dwords */
+   } output[PIPE_MAX_SO_OUTPUTS];
 };
 
 
 struct pipe_shader_state
 {
    const struct tgsi_token *tokens;
+   struct pipe_stream_output_info stream_output;
 };
 
 
@@ -272,7 +316,7 @@ struct pipe_sampler_state
    unsigned seamless_cube_map:1;
    float lod_bias;               /**< LOD/lambda bias */
    float min_lod, max_lod;       /**< LOD clamp range, after bias */
-   float border_color[4];
+   union pipe_color_union border_color;
 };
 
 
@@ -284,14 +328,14 @@ struct pipe_surface
 {
    struct pipe_reference reference;
    struct pipe_resource *texture; /**< resource into which this is a view  */
-   struct pipe_context *context; /**< context this view belongs to */
+   struct pipe_context *context; /**< context this surface belongs to */
    enum pipe_format format;
 
    /* XXX width/height should be removed */
    unsigned width;               /**< logical width in pixels */
    unsigned height;              /**< logical height in pixels */
 
-   unsigned usage;               /**< bitmask of PIPE_BIND_x */
+   unsigned writable:1;          /**< writable shader resource */
 
    union {
       struct {
@@ -340,12 +384,12 @@ struct pipe_sampler_view
  */
 struct pipe_box
 {
-   unsigned x;
-   unsigned y;
-   unsigned z;
-   unsigned width;
-   unsigned height;
-   unsigned depth;
+   int x;
+   int y;
+   int z;
+   int width;
+   int height;
+   int depth;
 };
 
 
@@ -374,24 +418,6 @@ struct pipe_resource
 
 
 /**
- * Stream output for vertex transform feedback.
- */
-struct pipe_stream_output_state
-{
-   /** number of the output buffer to insert each element into */
-   int output_buffer[PIPE_MAX_SHADER_OUTPUTS];
-   /** which register to grab each output from */
-   int register_index[PIPE_MAX_SHADER_OUTPUTS];
-   /** TGSI_WRITEMASK signifying which components to output */
-   ubyte register_mask[PIPE_MAX_SHADER_OUTPUTS];
-   /** number of outputs */
-   int num_outputs;
-   /** stride for an entire vertex, only used if all output_buffers are 0 */
-   unsigned stride;
-};
-
-
-/**
  * Transfer object.  For data transfer to/from a resource.
  */
 struct pipe_transfer
@@ -402,7 +428,6 @@ struct pipe_transfer
    struct pipe_box box;            /**< region of the resource to access */
    unsigned stride;                /**< row stride in bytes */
    unsigned layer_stride;          /**< image/layer stride in bytes */
-   void *data;
 };
 
 
@@ -417,6 +442,50 @@ struct pipe_vertex_buffer
    unsigned stride;    /**< stride to same attrib in next vertex, in bytes */
    unsigned buffer_offset;  /**< offset to start of data in buffer, in bytes */
    struct pipe_resource *buffer;  /**< the actual buffer */
+   const void *user_buffer;  /**< pointer to a user buffer if buffer == NULL */
+};
+
+
+/**
+ * A constant buffer.  A subrange of an existing buffer can be set
+ * as a constant buffer.
+ */
+struct pipe_constant_buffer {
+   struct pipe_resource *buffer; /**< the actual buffer */
+   unsigned buffer_offset; /**< offset to start of data in buffer, in bytes */
+   unsigned buffer_size;   /**< how much data can be read in shader */
+   const void *user_buffer;  /**< pointer to a user buffer if buffer == NULL */
+};
+
+
+/**
+ * A stream output target. The structure specifies the range vertices can
+ * be written to.
+ *
+ * In addition to that, the structure should internally maintain the offset
+ * into the buffer, which should be incremented everytime something is written
+ * (appended) to it. The internal offset is buffer_offset + how many bytes
+ * have been written. The internal offset can be stored on the device
+ * and the CPU actually doesn't have to query it.
+ *
+ * Note that the buffer_size variable is actually specifying the available
+ * space in the buffer, not the size of the attached buffer. 
+ * In other words in majority of cases buffer_size would simply be 
+ * 'buffer->width0 - buffer_offset', so buffer_size refers to the size
+ * of the buffer left, after accounting for buffer offset, for stream output
+ * to write to.
+ *
+ * Use PIPE_QUERY_SO_STATISTICS to know how many primitives have
+ * actually been written.
+ */
+struct pipe_stream_output_target
+{
+   struct pipe_reference reference;
+   struct pipe_resource *buffer; /**< the output buffer */
+   struct pipe_context *context; /**< context this SO target belongs to */
+
+   unsigned buffer_offset;  /**< offset where data should be written, in bytes */
+   unsigned buffer_size;    /**< how much data is allowed to be written */
 };
 
 
@@ -451,6 +520,7 @@ struct pipe_index_buffer
    unsigned index_size;  /**< size of an index, in bytes */
    unsigned offset;  /**< offset to start of data in buffer, in bytes */
    struct pipe_resource *buffer; /**< the actual buffer */
+   const void *user_buffer;  /**< pointer to a user buffer if buffer == NULL */
 };
 
 
@@ -480,8 +550,62 @@ struct pipe_draw_info
     */
    boolean primitive_restart;
    unsigned restart_index;
+
+   /**
+    * Stream output target. If not NULL, it's used to provide the 'count'
+    * parameter based on the number vertices captured by the stream output
+    * stage. (or generally, based on the number of bytes captured)
+    *
+    * Only 'mode', 'start_instance', and 'instance_count' are taken into
+    * account, all the other variables from pipe_draw_info are ignored.
+    *
+    * 'start' is implicitly 0 and 'count' is set as discussed above.
+    * The draw command is non-indexed.
+    *
+    * Note that this only provides the count. The vertex buffers must
+    * be set via set_vertex_buffers manually.
+    */
+   struct pipe_stream_output_target *count_from_stream_output;
 };
 
+
+/**
+ * Information to describe a blit call.
+ */
+struct pipe_blit_info
+{
+   struct {
+      struct pipe_resource *resource;
+      unsigned level;
+      struct pipe_box box; /**< negative width, height only legal for src */
+      /* For pipe_surface-like format casting: */
+      enum pipe_format format; /**< must be supported for sampling (src)
+                               or rendering (dst), ZS is always supported */
+   } dst, src;
+
+   unsigned mask; /**< bitmask of PIPE_MASK_R/G/B/A/Z/S */
+   unsigned filter; /**< PIPE_TEX_FILTER_* */
+
+   boolean scissor_enable;
+   struct pipe_scissor_state scissor;
+};
+
+
+/**
+ * Structure used as a header for serialized LLVM programs.
+ */
+struct pipe_llvm_program_header
+{
+   uint32_t num_bytes; /**< Number of bytes in the LLVM bytecode program. */
+};
+
+struct pipe_compute_state
+{
+   const void *prog; /**< Compute program to be executed. */
+   unsigned req_local_mem; /**< Required size of the LOCAL resource. */
+   unsigned req_private_mem; /**< Required size of the PRIVATE resource. */
+   unsigned req_input_mem; /**< Required size of the INPUT resource. */
+};
 
 #ifdef __cplusplus
 }

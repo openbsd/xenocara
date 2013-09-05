@@ -11,7 +11,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
  *
  * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
  *
@@ -28,14 +27,19 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
 #ifndef _SIMPLE_LIST_H
 #define _SIMPLE_LIST_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct simple_node {
    struct simple_node *next;
@@ -198,5 +202,9 @@ do {						\
  */
 #define foreach_s(ptr, t, list)   \
         for(ptr=(list)->next,t=(ptr)->next; list != ptr; ptr=t, t=(t)->next)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

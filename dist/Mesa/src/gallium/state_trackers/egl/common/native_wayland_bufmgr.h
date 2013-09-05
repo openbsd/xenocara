@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.11
  *
  * Copyright (C) 2011 Benjamin Franzke <benjaminfranzke@googlemail.com>
  *
@@ -41,6 +40,10 @@ struct native_display_wayland_bufmgr {
    struct pipe_resource *(*buffer_get_resource)(struct native_display *ndpy,
                                                 struct wl_buffer *buffer);
                              
+
+   boolean (*query_buffer)(struct native_display *ndpy,
+                           struct wl_buffer *buffer,
+                           int attribute, int *value);
 };
 
 #endif /* _NATIVE_WAYLAND_BUFMGR_H_ */

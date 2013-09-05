@@ -29,6 +29,8 @@
 #define P_COMPILER_H
 
 
+#include "c99_compat.h" /* inline, __func__, etc. */
+
 #include "p_config.h"
 
 #include <stdlib.h>
@@ -67,7 +69,9 @@ extern "C" {
 
 
 #if !defined(__HAIKU__) && !defined(__USE_MISC)
+#if !defined(PIPE_OS_ANDROID)
 typedef unsigned int       uint;
+#endif
 typedef unsigned short     ushort;
 #endif
 typedef unsigned char      ubyte;
@@ -88,27 +92,9 @@ typedef unsigned char boolean;
 #endif
 #endif
 
-/* Function inlining */
+/* XXX: Use standard `inline` keyword instead */
 #ifndef INLINE
-#  ifdef __cplusplus
-#    define INLINE inline
-#  elif defined(__GNUC__)
-#    define INLINE __inline__
-#  elif defined(_MSC_VER)
-#    define INLINE __inline
-#  elif defined(__ICL)
-#    define INLINE __inline
-#  elif defined(__INTEL_COMPILER)
-#    define INLINE inline
-#  elif defined(__WATCOMC__) && (__WATCOMC__ >= 1100)
-#    define INLINE __inline
-#  elif defined(__SUNPRO_C) && defined(__C99FEATURES__)
-#    define INLINE inline
-#  elif (__STDC_VERSION__ >= 199901L) /* C99 */
-#    define INLINE inline
-#  else
-#    define INLINE
-#  endif
+#  define INLINE inline
 #endif
 
 /* Forced function inlining */
@@ -119,26 +105,6 @@ typedef unsigned char boolean;
 #    define ALWAYS_INLINE __forceinline
 #  else
 #    define ALWAYS_INLINE INLINE
-#  endif
-#endif
-
-/*
- * Define the C99 restrict keyword.
- *
- * See also:
- * - http://cellperformance.beyond3d.com/articles/2006/05/demystifying-the-restrict-keyword.html
- */
-#ifndef restrict
-#  if (__STDC_VERSION__ >= 199901L)
-     /* C99 */
-#  elif defined(__SUNPRO_C) && defined(__C99FEATURES__)
-     /* C99 */
-#  elif defined(__GNUC__)
-#    define restrict __restrict__
-#  elif defined(_MSC_VER)
-#    define restrict __restrict
-#  else
-#    define restrict /* */
 #  endif
 #endif
 
@@ -155,35 +121,10 @@ typedef unsigned char boolean;
 #endif
 
 
-/* The __FUNCTION__ gcc variable is generally only used for debugging.
- * If we're not using gcc, define __FUNCTION__ as a cpp symbol here.
- */
+/* XXX: Use standard `__func__` instead */
 #ifndef __FUNCTION__
-# if !defined(__GNUC__)
-#  if (__STDC_VERSION__ >= 199901L) /* C99 */ || \
-    (defined(__SUNPRO_C) && defined(__C99FEATURES__))
-#   define __FUNCTION__ __func__
-#  else
-#   define __FUNCTION__ "<unknown>"
-#  endif
-# endif
-# if defined(_MSC_VER) && _MSC_VER < 1300
-#  define __FUNCTION__ "<unknown>"
-# endif
+#  define __FUNCTION__ __func__
 #endif
-#ifndef __func__
-#  if (__STDC_VERSION__ >= 199901L) || \
-      (defined(__SUNPRO_C) && defined(__C99FEATURES__))
-       /* __func__ is part of C99 */
-#  elif defined(_MSC_VER)
-#    if _MSC_VER >= 1300
-#      define __func__ __FUNCTION__
-#    else
-#      define __func__ "<unknown>"
-#    endif
-#  endif
-#endif
-
 
 
 /* This should match linux gcc cdecl semantics everywhere, so that we
@@ -206,7 +147,7 @@ typedef unsigned char boolean;
 
 
 /* Macros for data alignment. */
-#if defined(__GNUC__) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
+#if defined(__GNUC__) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)) || defined(__SUNPRO_CC)
 
 /* See http://gcc.gnu.org/onlinedocs/gcc-4.4.2/gcc/Type-Attributes.html */
 #define PIPE_ALIGN_TYPE(_alignment, _type) _type __attribute__((aligned(_alignment)))
@@ -251,6 +192,10 @@ typedef unsigned char boolean;
 void _ReadWriteBarrier(void);
 #pragma intrinsic(_ReadWriteBarrier)
 #define PIPE_READ_WRITE_BARRIER() _ReadWriteBarrier()
+
+#elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
+
+#define PIPE_READ_WRITE_BARRIER() __machine_rw_barrier()
 
 #else
 
@@ -301,6 +246,17 @@ void _ReadWriteBarrier(void);
 #    define unlikely(x) (x)
 #  endif
 #endif
+
+
+/**
+ * Static (compile-time) assertion.
+ * Basically, use COND to dimension an array.  If COND is false/zero the
+ * array size will be -1 and we'll get a compilation error.
+ */
+#define STATIC_ASSERT(COND) \
+   do { \
+      (void) sizeof(char [1 - 2*!(COND)]); \
+   } while (0)
 
 
 #if defined(__cplusplus)

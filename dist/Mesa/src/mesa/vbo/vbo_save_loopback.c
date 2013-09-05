@@ -29,15 +29,11 @@
 #include "main/glheader.h"
 #include "main/enums.h"
 #include "main/imports.h"
-#include "main/mfeatures.h"
 #include "main/mtypes.h"
 #include "main/dispatch.h"
 #include "glapi/glapi.h"
 
 #include "vbo_context.h"
-
-
-#if FEATURE_dlist
 
 
 typedef void (*attr_func)( struct gl_context *ctx, GLint target, const GLfloat * );
@@ -181,7 +177,7 @@ void vbo_loopback_vertex_list( struct gl_context *ctx,
 
    for (i = 0 ; i < prim_count ; i++) {
       if ((prim[i].mode & VBO_SAVE_PRIM_WEAK) &&
-	  (ctx->Driver.CurrentExecPrimitive != PRIM_OUTSIDE_BEGIN_END))
+          _mesa_inside_begin_end(ctx))
       {
 	 loopback_weak_prim( ctx, &prim[i] );
       }
@@ -191,6 +187,3 @@ void vbo_loopback_vertex_list( struct gl_context *ctx,
       }
    }
 }
-
-
-#endif /* FEATURE_dlist */

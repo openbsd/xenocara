@@ -29,50 +29,64 @@
 #include "brw_state.h"
 #include "brw_defines.h"
 #include "intel_batchbuffer.h"
+#include "main/fbobject.h"
 
 /* The clip VP defines the guardband region where expensive clipping is skipped
  * and fragments are allowed to be generated and clipped out cheaply by the SF.
- *
- * By setting it to NDC bounds of [-1,1], we don't do GB clipping.  It's
- * supposed to cause seams to become visible in apps due to shared edges taking
- * different clip/no clip paths depending on whether the rest of the prim ends
- * up in the guardband or not.
  */
 static void
-prepare_clip_vp(struct brw_context *brw)
+gen6_upload_clip_vp(struct brw_context *brw)
 {
+   struct gl_context *ctx = &brw->ctx;
    struct brw_clipper_viewport *vp;
 
-   vp = brw_state_batch(brw, sizeof(*vp), 32, &brw->clip.vp_offset);
+   vp = brw_state_batch(brw, AUB_TRACE_CLIP_VP_STATE,
+			sizeof(*vp), 32, &brw->clip.vp_offset);
 
-   vp->xmin = -1.0;
-   vp->xmax = 1.0;
-   vp->ymin = -1.0;
-   vp->ymax = 1.0;
+   /* According to the "Vertex X,Y Clamping and Quantization" section of the
+    * Strips and Fans documentation, objects must not have a screen-space
+    * extents of over 8192 pixels, or they may be mis-rasterized.  The maximum
+    * screen space coordinates of a small object may larger, but we have no
+    * way to enforce the object size other than through clipping.
+    *
+    * If you're surprised that we set clip to -gbx to +gbx and it seems like
+    * we'll end up with 16384 wide, note that for a 8192-wide render target,
+    * we'll end up with a normal (-1, 1) clip volume that just covers the
+    * drawable.
+    */
+   const float maximum_post_clamp_delta = 8192;
+   float gbx = maximum_post_clamp_delta / (float) ctx->Viewport.Width;
+   float gby = maximum_post_clamp_delta / (float) ctx->Viewport.Height;
+
+   vp->xmin = -gbx;
+   vp->xmax = gbx;
+   vp->ymin = -gby;
+   vp->ymax = gby;
 
    brw->state.dirty.cache |= CACHE_NEW_CLIP_VP;
 }
 
 const struct brw_tracked_state gen6_clip_vp = {
    .dirty = {
-      .mesa = 0,
+      .mesa = _NEW_VIEWPORT,
       .brw = BRW_NEW_BATCH,
       .cache = 0,
    },
-   .prepare = prepare_clip_vp,
+   .emit = gen6_upload_clip_vp,
 };
 
 static void
-prepare_sf_vp(struct brw_context *brw)
+gen6_upload_sf_vp(struct brw_context *brw)
 {
-   struct gl_context *ctx = &brw->intel.ctx;
+   struct gl_context *ctx = &brw->ctx;
    const GLfloat depth_scale = 1.0F / ctx->DrawBuffer->_DepthMaxF;
    struct brw_sf_viewport *sfv;
    GLfloat y_scale, y_bias;
-   const GLboolean render_to_fbo = (ctx->DrawBuffer->Name != 0);
+   const bool render_to_fbo = _mesa_is_user_fbo(ctx->DrawBuffer);
    const GLfloat *v = ctx->Viewport._WindowMap.m;
 
-   sfv = brw_state_batch(brw, sizeof(*sfv), 32, &brw->sf.vp_offset);
+   sfv = brw_state_batch(brw, AUB_TRACE_SF_VP_STATE,
+			 sizeof(*sfv), 32, &brw->sf.vp_offset);
    memset(sfv, 0, sizeof(*sfv));
 
    /* _NEW_BUFFERS */
@@ -101,13 +115,11 @@ const struct brw_tracked_state gen6_sf_vp = {
       .brw = BRW_NEW_BATCH,
       .cache = 0,
    },
-   .prepare = prepare_sf_vp,
+   .emit = gen6_upload_sf_vp,
 };
 
 static void upload_viewport_state_pointers(struct brw_context *brw)
 {
-   struct intel_context *intel = &brw->intel;
-
    BEGIN_BATCH(4);
    OUT_BATCH(_3DSTATE_VIEWPORT_STATE_POINTERS << 16 | (4 - 2) |
 	     GEN6_CC_VIEWPORT_MODIFY |

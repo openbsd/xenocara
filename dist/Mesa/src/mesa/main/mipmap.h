@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -34,31 +34,22 @@ _mesa_generate_mipmap_level(GLenum target,
                             GLenum datatype, GLuint comps,
                             GLint border,
                             GLint srcWidth, GLint srcHeight, GLint srcDepth,
-                            const GLubyte *srcData,
+                            const GLubyte **srcData,
                             GLint srcRowStride,
                             GLint dstWidth, GLint dstHeight, GLint dstDepth,
-                            GLubyte *dstData,
+                            GLubyte **dstData,
                             GLint dstRowStride);
 
+
+extern GLboolean
+_mesa_prepare_mipmap_level(struct gl_context *ctx,
+                           struct gl_texture_object *texObj, GLuint level,
+                           GLsizei width, GLsizei height, GLsizei depth,
+                           GLsizei border, GLenum intFormat, gl_format format);
 
 extern void
 _mesa_generate_mipmap(struct gl_context *ctx, GLenum target,
                       struct gl_texture_object *texObj);
-
-
-extern void
-_mesa_rescale_teximage2d(GLuint bytesPerPixel,
-                         GLuint srcStrideInPixels,
-                         GLuint dstRowStride,
-                         GLint srcWidth, GLint srcHeight,
-                         GLint dstWidth, GLint dstHeight,
-                         const GLvoid *srcImage, GLvoid *dstImage);
-
-extern void
-_mesa_upscale_teximage2d(GLsizei inWidth, GLsizei inHeight,
-                         GLsizei outWidth, GLsizei outHeight,
-                         GLint comps, const GLchan *src, GLint srcRowStride,
-                         GLchan *dest);
 
 
 #endif /* MIPMAP_H */

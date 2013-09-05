@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -63,10 +63,10 @@ struct LineInfo
    GLfloat rPlane[4], gPlane[4], bPlane[4], aPlane[4];
    /* DO_ATTRIBS */
    GLfloat wPlane[4];
-   GLfloat attrPlane[FRAG_ATTRIB_MAX][4][4];
-   GLfloat lambda[FRAG_ATTRIB_MAX];
-   GLfloat texWidth[FRAG_ATTRIB_MAX];
-   GLfloat texHeight[FRAG_ATTRIB_MAX];
+   GLfloat attrPlane[VARYING_SLOT_MAX][4][4];
+   GLfloat lambda[VARYING_SLOT_MAX];
+   GLfloat texWidth[VARYING_SLOT_MAX];
+   GLfloat texHeight[VARYING_SLOT_MAX];
 
    SWspan span;
 };
@@ -130,7 +130,7 @@ compute_plane(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
 }
 
 
-static INLINE void
+static inline void
 constant_plane(GLfloat value, GLfloat plane[4])
 {
    plane[0] = 0.0;
@@ -140,7 +140,7 @@ constant_plane(GLfloat value, GLfloat plane[4])
 }
 
 
-static INLINE GLfloat
+static inline GLfloat
 solve_plane(GLfloat x, GLfloat y, const GLfloat plane[4])
 {
    const GLfloat z = (plane[3] + plane[0] * x + plane[1] * y) / -plane[2];
@@ -154,7 +154,7 @@ solve_plane(GLfloat x, GLfloat y, const GLfloat plane[4])
 /*
  * Return 1 / solve_plane().
  */
-static INLINE GLfloat
+static inline GLfloat
 solve_plane_recip(GLfloat x, GLfloat y, const GLfloat plane[4])
 {
    const GLfloat denom = plane[3] + plane[0] * x + plane[1] * y;
@@ -168,7 +168,7 @@ solve_plane_recip(GLfloat x, GLfloat y, const GLfloat plane[4])
 /*
  * Solve plane and return clamped GLchan value.
  */
-static INLINE GLchan
+static inline GLchan
 solve_plane_chan(GLfloat x, GLfloat y, const GLfloat plane[4])
 {
    const GLfloat z = (plane[3] + plane[0] * x + plane[1] * y) / -plane[2];
@@ -187,7 +187,7 @@ solve_plane_chan(GLfloat x, GLfloat y, const GLfloat plane[4])
 /*
  * Compute mipmap level of detail.
  */
-static INLINE GLfloat
+static inline GLfloat
 compute_lambda(const GLfloat sPlane[4], const GLfloat tPlane[4],
                GLfloat invQ, GLfloat width, GLfloat height)
 {
@@ -479,7 +479,7 @@ _swrast_choose_aa_line_function(struct gl_context *ctx)
    ASSERT(ctx->Line.SmoothFlag);
 
    if (ctx->Texture._EnabledCoordUnits != 0
-       || ctx->FragmentProgram._Current
+       || _swrast_use_fragment_program(ctx)
        || (ctx->Light.Enabled &&
            ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR)
        || ctx->Fog.ColorSumEnabled

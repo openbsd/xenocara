@@ -35,8 +35,15 @@
 #ifndef _UTIL_CPU_DETECT_H
 #define _UTIL_CPU_DETECT_H
 
+
 #include "pipe/p_compiler.h"
 #include "pipe/p_config.h"
+
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 
 struct util_cpu_caps {
    unsigned nr_cpus;
@@ -45,6 +52,7 @@ struct util_cpu_caps {
    int x86_cpu_type;
    unsigned cacheline;
 
+   unsigned has_intel:1;
    unsigned has_tsc:1;
    unsigned has_mmx:1;
    unsigned has_mmx2:1;
@@ -54,7 +62,9 @@ struct util_cpu_caps {
    unsigned has_ssse3:1;
    unsigned has_sse4_1:1;
    unsigned has_sse4_2:1;
+   unsigned has_popcnt:1;
    unsigned has_avx:1;
+   unsigned has_f16c:1;
    unsigned has_3dnow:1;
    unsigned has_3dnow_ext:1;
    unsigned has_altivec:1;
@@ -64,6 +74,11 @@ extern struct util_cpu_caps
 util_cpu_caps;
 
 void util_cpu_detect(void);
+
+
+#ifdef	__cplusplus
+}
+#endif
 
 
 #endif /* _UTIL_CPU_DETECT_H */

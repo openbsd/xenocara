@@ -22,86 +22,40 @@
  */
 #include <getopt.h>
 
+/** @file main.cpp
+ *
+ * This file is the main() routine and scaffolding for producing
+ * builtin_compiler (which doesn't include builtins itself and is used
+ * to generate the profile information for builtin_function.cpp), and
+ * for glsl_compiler (which does include builtins and can be used to
+ * offline compile GLSL code and examine the resulting GLSL IR.
+ */
+
 #include "ast.h"
 #include "glsl_parser_extras.h"
-#include "glsl_parser.h"
 #include "ir_optimization.h"
-#include "ir_print_visitor.h"
 #include "program.h"
 #include "loop_analysis.h"
-
-extern "C" struct gl_shader *
-_mesa_new_shader(struct gl_context *ctx, GLuint name, GLenum type);
-
-extern "C" void
-_mesa_reference_shader(struct gl_context *ctx, struct gl_shader **ptr,
-                       struct gl_shader *sh);
-
-/* Copied from shader_api.c for the stand-alone compiler.
- */
-void
-_mesa_reference_shader(struct gl_context *ctx, struct gl_shader **ptr,
-                       struct gl_shader *sh)
-{
-   *ptr = sh;
-}
-
-struct gl_shader *
-_mesa_new_shader(struct gl_context *ctx, GLuint name, GLenum type)
-{
-   struct gl_shader *shader;
-
-   (void) ctx;
-
-   assert(type == GL_FRAGMENT_SHADER || type == GL_VERTEX_SHADER);
-   shader = rzalloc(NULL, struct gl_shader);
-   if (shader) {
-      shader->Type = type;
-      shader->Name = name;
-      shader->RefCount = 1;
-   }
-   return shader;
-}
+#include "standalone_scaffolding.h"
 
 static void
 initialize_context(struct gl_context *ctx, gl_api api)
 {
-   memset(ctx, 0, sizeof(*ctx));
+   initialize_context_to_defaults(ctx, api);
 
-   ctx->API = api;
-
-   ctx->Extensions.ARB_ES2_compatibility = GL_TRUE;
-   ctx->Extensions.ARB_draw_buffers = GL_TRUE;
-   ctx->Extensions.ARB_draw_instanced = GL_TRUE;
-   ctx->Extensions.ARB_fragment_coord_conventions = GL_TRUE;
-   ctx->Extensions.EXT_texture_array = GL_TRUE;
-   ctx->Extensions.NV_texture_rectangle = GL_TRUE;
-   ctx->Extensions.EXT_texture3D = GL_TRUE;
-
-   /* GLSL 1.30 isn't fully supported, but we need to advertise 1.30 so that
-    * the built-in functions for 1.30 can be built.
+   /* The standalone compiler needs to claim support for almost
+    * everything in order to compile the built-in functions.
     */
-   ctx->Const.GLSLVersion = 130;
+   ctx->Const.GLSLVersion = 150;
+   ctx->Extensions.ARB_ES3_compatibility = true;
 
-   /* 1.10 minimums. */
-   ctx->Const.MaxLights = 8;
    ctx->Const.MaxClipPlanes = 8;
-   ctx->Const.MaxTextureUnits = 2;
+   ctx->Const.MaxDrawBuffers = 2;
 
    /* More than the 1.10 minimum to appease parser tests taken from
     * apps that (hopefully) already checked the number of coords.
     */
    ctx->Const.MaxTextureCoordUnits = 4;
-
-   ctx->Const.VertexProgram.MaxAttribs = 16;
-   ctx->Const.VertexProgram.MaxUniformComponents = 512;
-   ctx->Const.MaxVarying = 8;
-   ctx->Const.MaxVertexTextureImageUnits = 0;
-   ctx->Const.MaxCombinedTextureImageUnits = 2;
-   ctx->Const.MaxTextureImageUnits = 2;
-   ctx->Const.FragmentProgram.MaxUniformComponents = 64;
-
-   ctx->Const.MaxDrawBuffers = 2;
 
    ctx->Driver.NewShader = _mesa_new_shader;
 }
@@ -189,66 +143,12 @@ compile_shader(struct gl_context *ctx, struct gl_shader *shader)
    struct _mesa_glsl_parse_state *state =
       new(shader) _mesa_glsl_parse_state(ctx, shader->Type, shader);
 
-   const char *source = shader->Source;
-   state->error = preprocess(state, &source, &state->info_log,
-			     state->extensions, ctx->API) != 0;
-
-   if (!state->error) {
-      _mesa_glsl_lexer_ctor(state, source);
-      _mesa_glsl_parse(state);
-      _mesa_glsl_lexer_dtor(state);
-   }
-
-   if (dump_ast) {
-      foreach_list_const(n, &state->translation_unit) {
-	 ast_node *ast = exec_node_data(ast_node, n, link);
-	 ast->print();
-      }
-      printf("\n\n");
-   }
-
-   shader->ir = new(shader) exec_list;
-   if (!state->error && !state->translation_unit.is_empty())
-      _mesa_ast_to_hir(shader->ir, state);
-
-   /* Print out the unoptimized IR. */
-   if (!state->error && dump_hir) {
-      validate_ir_tree(shader->ir);
-      _mesa_print_ir(shader->ir, state);
-   }
-
-   /* Optimization passes */
-   if (!state->error && !shader->ir->is_empty()) {
-      bool progress;
-      do {
-	 progress = do_common_optimization(shader->ir, false, 32);
-      } while (progress);
-
-      validate_ir_tree(shader->ir);
-   }
-
+   _mesa_glsl_compile_shader(ctx, shader, dump_ast, dump_hir);
 
    /* Print out the resulting IR */
    if (!state->error && dump_lir) {
       _mesa_print_ir(shader->ir, state);
    }
-
-   shader->symbols = state->symbols;
-   shader->CompileStatus = !state->error;
-   shader->Version = state->language_version;
-   memcpy(shader->builtins_to_link, state->builtins_to_link,
-	  sizeof(shader->builtins_to_link[0]) * state->num_builtins_to_link);
-   shader->num_builtins_to_link = state->num_builtins_to_link;
-
-   if (shader->InfoLog)
-      ralloc_free(shader->InfoLog);
-
-   shader->InfoLog = state->info_log;
-
-   /* Retain any live IR, but trash the rest. */
-   reparent_ir(shader->ir, shader);
-
-   ralloc_free(state);
 
    return;
 }
@@ -269,7 +169,7 @@ main(int argc, char **argv)
    if (argc <= optind)
       usage_fail(argv[0]);
 
-   initialize_context(ctx, (glsl_es) ? API_OPENGLES2 : API_OPENGL);
+   initialize_context(ctx, (glsl_es) ? API_OPENGLES2 : API_OPENGL_COMPAT);
 
    struct gl_shader_program *whole_program;
 
@@ -293,7 +193,7 @@ main(int argc, char **argv)
 	 usage_fail(argv[0]);
 
       const char *const ext = & argv[optind][len - 5];
-      if (strncmp(".vert", ext, 5) == 0)
+      if (strncmp(".vert", ext, 5) == 0 || strncmp(".glsl", ext, 5) == 0)
 	 shader->Type = GL_VERTEX_SHADER;
       else if (strncmp(".geom", ext, 5) == 0)
 	 shader->Type = GL_GEOMETRY_SHADER;

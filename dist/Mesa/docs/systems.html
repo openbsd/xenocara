@@ -1,71 +1,97 @@
-<HTML>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Supported Systems and Drivers</title>
+  <link rel="stylesheet" type="text/css" href="mesa.css">
+</head>
+<body>
 
-<TITLE>Supported Systems and Drivers</TITLE>
+<div class="header">
+  <h1>The Mesa 3D Graphics Library</h1>
+</div>
 
-<link rel="stylesheet" type="text/css" href="mesa.css"></head>
+<iframe src="contents.html"></iframe>
+<div class="content">
 
-<BODY>
-
-<H1>Supported Systems and Drivers</H1>
+<h1>Supported Systems and Drivers</h1>
 
 <p>
-Mesa was originally designed for Unix/X11 systems and is still best
-supported on those systems. All you need is an ANSI C compiler and the
-X development environment to use Mesa.
+Mesa is primarily developed and used on Linux systems.
+But there's also support for Windows, other flavors of Unix and other
+systems such as Haiku.
+We're actively developing and maintaining several hardware and
+software drivers.
 </p>
 
 <p>
-The DRI hardware drivers for the X.org server and XFree86 provide
-hardware accelerated rendering for chips from ATI, Intel, Matrox, 3dfx
-and others on Linux and FreeBSD.
+The primary API is OpenGL but there's also support for OpenGL ES 1, ES2
+and ES 3, OpenVG, OpenCL, VDPAU, XvMC and the EGL interface.
 </p>
 
 <p>
-Drivers for other assorted platforms include:
-the Amiga, Apple Macintosh, BeOS, NeXT, OS/2, MS-DOS, VMS, Windows
-9x/NT, and Direct3D.
+Hardware drivers include:
 </p>
+<ul>
+  <li>Intel i965, i945, i915.
+    See <a href="http://intellinuxgraphics.org/index.html">
+      Intel's website</a></li>
+  <li>AMD Radeon series.
+  See <a href="http://www.x.org/wiki/RadeonFeature">RadeonFeature</a></li>
+  <li>NVIDIA GPUs.
+  See <a href="http://nouveau.freedesktop.org">Nouveau Wiki</a></li>
+  <li><a href="http://www.x.org/wiki/vmware">VMware virtual GPU</a></li>
+</ul>
 
 <p>
-Details about particular drivers follows:
+Software drivers include:
+</p>
+<ul>
+<li><a href="llvmpipe.html">llvmpipe</a> - uses LLVM for x86 JIT code
+    generation and is multi-threaded
+<li>softpipe - a reference Gallium driver
+<li>swrast - the legacy/original Mesa software rasterizer
+</ul>
+
+<p>
+Additional driver information:
 </p>
 
-<UL>
-<li><a href="http://dri.freedesktop.org/" target="_parent"> DRI hardware
+<ul>
+<li><a href="http://dri.freedesktop.org/"> DRI hardware
 drivers</a> for the X Window System
-<LI><a href="xlibdriver.html">Xlib software driver</a> for the X Window System
+<li><a href="xlibdriver.html">Xlib / swrast driver</a> for the X Window System
 and Unix-like operating systems
-<LI>Microsoft Windows <A HREF="README.WIN32">(README.WIN32)</A>
-<LI>DEC VMS <A HREF="README.VMS">(README.VMS)</A>
-</UL>
+<li><a href="README.WIN32">Microsoft Windows</a>
+<li><a href="vmware-guest.html">VMware</a> guest OS driver
+</ul>
 
 
-<h2>Deprecated Systems</h2>
+<h1>
+Deprecated Systems and Drivers
+</h1>
 
 <p>
-These drivers have not been maintained and are being deprecated.
-They can be saved if someone steps up to help.
+In the past there were other drivers for older GPUs and operating
+systems.
+These have been removed from the Mesa source tree and distribution.
+If anyone's interested though, the code can be found in the git repo.
+The list includes:
 </p>
 
-<UL>
-<LI>3dfx/Glide <A HREF="README.3DFX">(README.3DFX)</A>
-<LI>GGI <A HREF="README.GGI">(README.GGI)</A>
-<LI>Amiga Amiwin <A HREF="README.AMIWIN">(README.AMIWIN)</A>
-<LI>BeOS <A HREF="README.BEOS">(README.BEOS)</A>
-<LI>Direct3D driver <A HREF="README.D3D">(README.D3D)</A>
-<LI>DJGPP <A HREF="README.DJ">(README.DJ)</A>
-<LI>LynxOS <A HREF="README.LYNXOS">(README.LYNXOS)</A>
-<LI>Mingw32 <A HREF="README.MINGW32">(README.MINGW32)</A>
-<LI>NeXT <A HREF="README.NeXT">(README.NeXT)</A>
-<LI>OpenStep <A HREF="README.OpenStep">(README.OpenStep)</A>
-<LI>OS/2 <A HREF="README.OS2">(README.OS2)</A>
-<LI>WindML <A HREF="README.WINDML">(README.WINDML)</A>
-</UL>
+<ul>
+<li>3dfx/glide
+<li>Matrox
+<li>ATI R128
+<li>Savage
+<li>VIA Unichrome
+<li>SIS
+<li>3Dlabs gamma
+<li>DOS
+<li>fbdev
+<li>DEC/VMS
+</ul>
 
-And for historical reference:
-<UL>
-<LI><a href="http://utah-glx.sourceforge.net/" target="_parent">Utah GLX drivers</a>
-</UL>
-
+</div>
 </body>
 </html>

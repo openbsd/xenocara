@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.8
  *
  * Copyright (C) 2009-2010 Chia-I Wu <olv@0xlab.org>
  *
@@ -99,8 +98,6 @@ struct egl_g3d_image {
 _EGL_DRIVER_STANDARD_TYPECASTS(egl_g3d)
 _EGL_DRIVER_TYPECAST(egl_g3d_image, _EGLImage, obj)
 
-#ifdef EGL_KHR_reusable_sync
-
 struct egl_g3d_sync {
    _EGLSync base;
 
@@ -112,8 +109,6 @@ struct egl_g3d_sync {
    struct pipe_fence_handle *fence;
 };
 _EGL_DRIVER_TYPECAST(egl_g3d_sync, _EGLSync, obj)
-
-#endif /* EGL_KHR_reusable_sync */
 
 #ifdef EGL_MESA_screen_surface
 

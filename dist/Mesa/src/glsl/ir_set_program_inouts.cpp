@@ -26,6 +26,9 @@
  *
  * Sets the InputsRead and OutputsWritten of Mesa programs.
  *
+ * Additionally, for fragment shaders, sets the InterpQualifier array, the
+ * IsCentroid bitfield, and the UsesDFdy flag.
+ *
  * Mesa programs (gl_program, not gl_shader_program) have a set of
  * flags indicating which varyings are read and written.  Computing
  * which are actually read from some sort of backend code can be
@@ -34,39 +37,44 @@
  * from the GLSL IR.
  */
 
-extern "C" {
 #include "main/core.h" /* for struct gl_program */
-#include "program/hash_table.h"
-}
 #include "ir.h"
 #include "ir_visitor.h"
 #include "glsl_types.h"
 
 class ir_set_program_inouts_visitor : public ir_hierarchical_visitor {
 public:
-   ir_set_program_inouts_visitor(struct gl_program *prog)
+   ir_set_program_inouts_visitor(struct gl_program *prog,
+                                 bool is_fragment_shader)
    {
       this->prog = prog;
-      this->ht = hash_table_ctor(0,
-				 hash_table_pointer_hash,
-				 hash_table_pointer_compare);
+      this->is_fragment_shader = is_fragment_shader;
    }
    ~ir_set_program_inouts_visitor()
    {
-      hash_table_dtor(this->ht);
    }
 
    virtual ir_visitor_status visit_enter(ir_dereference_array *);
    virtual ir_visitor_status visit_enter(ir_function_signature *);
+   virtual ir_visitor_status visit_enter(ir_expression *);
+   virtual ir_visitor_status visit_enter(ir_discard *);
    virtual ir_visitor_status visit(ir_dereference_variable *);
-   virtual ir_visitor_status visit(ir_variable *);
 
    struct gl_program *prog;
-   struct hash_table *ht;
+   bool is_fragment_shader;
 };
 
+static inline bool
+is_shader_inout(ir_variable *var)
+{
+   return var->mode == ir_var_shader_in ||
+          var->mode == ir_var_shader_out ||
+          var->mode == ir_var_system_value;
+}
+
 static void
-mark(struct gl_program *prog, ir_variable *var, int offset, int len)
+mark(struct gl_program *prog, ir_variable *var, int offset, int len,
+     bool is_fragment_shader)
 {
    /* As of GLSL 1.20, varyings can only be floats, floating-point
     * vectors or matrices, or arrays of them.  For Mesa programs using
@@ -77,12 +85,22 @@ mark(struct gl_program *prog, ir_variable *var, int offset, int len)
     */
 
    for (int i = 0; i < len; i++) {
-      if (var->mode == ir_var_in)
-	 prog->InputsRead |= BITFIELD64_BIT(var->location + offset + i);
-      else if (var->mode == ir_var_system_value)
-         prog->SystemValuesRead |= (1 << (var->location + offset + i));
-      else
-	 prog->OutputsWritten |= BITFIELD64_BIT(var->location + offset + i);
+      GLbitfield64 bitfield = BITFIELD64_BIT(var->location + var->index + offset + i);
+      if (var->mode == ir_var_shader_in) {
+	 prog->InputsRead |= bitfield;
+         if (is_fragment_shader) {
+            gl_fragment_program *fprog = (gl_fragment_program *) prog;
+            fprog->InterpQualifier[var->location + var->index + offset + i] =
+               (glsl_interp_qualifier) var->interpolation;
+            if (var->centroid)
+               fprog->IsCentroid |= bitfield;
+         }
+      } else if (var->mode == ir_var_system_value) {
+         prog->SystemValuesRead |= bitfield;
+      } else {
+         assert(var->mode == ir_var_shader_out);
+	 prog->OutputsWritten |= bitfield;
+      }
    }
 }
 
@@ -90,16 +108,16 @@ mark(struct gl_program *prog, ir_variable *var, int offset, int len)
 ir_visitor_status
 ir_set_program_inouts_visitor::visit(ir_dereference_variable *ir)
 {
-   if (hash_table_find(this->ht, ir->var) == NULL)
+   if (!is_shader_inout(ir->var))
       return visit_continue;
 
    if (ir->type->is_array()) {
-      for (unsigned int i = 0; i < ir->type->length; i++) {
-	 mark(this->prog, ir->var, i,
-	      ir->type->length * ir->type->fields.array->matrix_columns);
-      }
+      mark(this->prog, ir->var, 0,
+	   ir->type->length * ir->type->fields.array->matrix_columns,
+           this->is_fragment_shader);
    } else {
-      mark(this->prog, ir->var, 0, ir->type->matrix_columns);
+      mark(this->prog, ir->var, 0, ir->type->matrix_columns,
+           this->is_fragment_shader);
    }
 
    return visit_continue;
@@ -111,13 +129,13 @@ ir_set_program_inouts_visitor::visit_enter(ir_dereference_array *ir)
    ir_dereference_variable *deref_var;
    ir_constant *index = ir->array_index->as_constant();
    deref_var = ir->array->as_dereference_variable();
-   ir_variable *var = NULL;
+   ir_variable *var = deref_var ? deref_var->var : NULL;
 
    /* Check that we're dereferencing a shader in or out */
-   if (deref_var)
-      var = (ir_variable *)hash_table_find(this->ht, deref_var->var);
+   if (!var || !is_shader_inout(var))
+      return visit_continue;
 
-   if (index && var) {
+   if (index) {
       int width = 1;
 
       if (deref_var->type->is_array() &&
@@ -125,20 +143,9 @@ ir_set_program_inouts_visitor::visit_enter(ir_dereference_array *ir)
 	 width = deref_var->type->fields.array->matrix_columns;
       }
 
-      mark(this->prog, var, index->value.i[0] * width, width);
+      mark(this->prog, var, index->value.i[0] * width, width,
+           this->is_fragment_shader);
       return visit_continue_with_parent;
-   }
-
-   return visit_continue;
-}
-
-ir_visitor_status
-ir_set_program_inouts_visitor::visit(ir_variable *ir)
-{
-   if (ir->mode == ir_var_in ||
-       ir->mode == ir_var_out ||
-       ir->mode == ir_var_system_value) {
-      hash_table_insert(this->ht, ir, ir);
    }
 
    return visit_continue;
@@ -154,13 +161,43 @@ ir_set_program_inouts_visitor::visit_enter(ir_function_signature *ir)
    return visit_continue_with_parent;
 }
 
-void
-do_set_program_inouts(exec_list *instructions, struct gl_program *prog)
+ir_visitor_status
+ir_set_program_inouts_visitor::visit_enter(ir_expression *ir)
 {
-   ir_set_program_inouts_visitor v(prog);
+   if (is_fragment_shader && ir->operation == ir_unop_dFdy) {
+      gl_fragment_program *fprog = (gl_fragment_program *) prog;
+      fprog->UsesDFdy = true;
+   }
+   return visit_continue;
+}
+
+ir_visitor_status
+ir_set_program_inouts_visitor::visit_enter(ir_discard *)
+{
+   /* discards are only allowed in fragment shaders. */
+   assert(is_fragment_shader);
+
+   gl_fragment_program *fprog = (gl_fragment_program *) prog;
+   fprog->UsesKill = true;
+
+   return visit_continue;
+}
+
+void
+do_set_program_inouts(exec_list *instructions, struct gl_program *prog,
+                      bool is_fragment_shader)
+{
+   ir_set_program_inouts_visitor v(prog, is_fragment_shader);
 
    prog->InputsRead = 0;
    prog->OutputsWritten = 0;
    prog->SystemValuesRead = 0;
+   if (is_fragment_shader) {
+      gl_fragment_program *fprog = (gl_fragment_program *) prog;
+      memset(fprog->InterpQualifier, 0, sizeof(fprog->InterpQualifier));
+      fprog->IsCentroid = 0;
+      fprog->UsesDFdy = false;
+      fprog->UsesKill = false;
+   }
    visit_list_elements(&v, instructions);
 }

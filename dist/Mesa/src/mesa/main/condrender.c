@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.8
  *
  * Copyright (C) 2009  VMware, Inc.   All Rights Reserved.
  *
@@ -139,6 +138,8 @@ _mesa_check_conditional_render(struct gl_context *ctx)
    case GL_QUERY_BY_REGION_NO_WAIT:
       /* fall-through */
    case GL_QUERY_NO_WAIT:
+      if (!q->Ready)
+         ctx->Driver.CheckQuery(ctx, q);
       return q->Ready ? (q->Result > 0) : GL_TRUE;
    default:
       _mesa_problem(ctx, "Bad cond render mode %s in "

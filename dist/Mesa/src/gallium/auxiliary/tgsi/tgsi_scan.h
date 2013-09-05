@@ -54,6 +54,8 @@ struct tgsi_shader_info
    ubyte num_system_values;
    ubyte system_value_semantic_name[PIPE_MAX_SHADER_INPUTS];
 
+   ubyte processor;
+
    uint file_mask[TGSI_FILE_COUNT];  /**< bitmask of declared registers */
    uint file_count[TGSI_FILE_COUNT];  /**< number of declared registers */
    int file_max[TGSI_FILE_COUNT];  /**< highest index of declared registers */
@@ -63,12 +65,23 @@ struct tgsi_shader_info
 
    uint opcode_count[TGSI_OPCODE_LAST];  /**< opcode histogram */
 
+   boolean reads_position; /**< does fragment shader read position? */
+   boolean reads_z; /**< does fragment shader read depth? */
    boolean writes_z;  /**< does fragment shader write Z value? */
    boolean writes_stencil; /**< does fragment shader write stencil value? */
    boolean writes_edgeflag; /**< vertex shader outputs edgeflag */
-   boolean uses_kill;  /**< KIL or KILP instruction used? */
+   boolean uses_kill;  /**< KILL or KILL_IF instruction used? */
    boolean uses_instanceid;
+   boolean uses_vertexid;
+   boolean uses_primid;
+   boolean origin_lower_left;
+   boolean pixel_center_integer;
+   boolean color0_writes_all_cbufs;
+   boolean writes_viewport_index;
+   boolean writes_layer;
 
+   unsigned num_written_culldistance;
+   unsigned num_written_clipdistance;
    /**
     * Bitmask indicating which register files are accessed with
     * indirect addressing.  The bits are (1 << TGSI_FILE_x), etc.

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.3
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -33,6 +33,7 @@
 
 #include "glheader.h"
 #include "mtypes.h"
+#include "arrayobj.h"
 #include "context.h"
 #include "debug.h"
 #include "macros.h"
@@ -43,143 +44,14 @@
 #include "pixel.h"
 #include "program/program.h"
 #include "program/prog_parameter.h"
+#include "shaderobj.h"
 #include "state.h"
 #include "stencil.h"
 #include "texenvprogram.h"
 #include "texobj.h"
 #include "texstate.h"
 #include "varray.h"
-
-
-static void
-update_separate_specular(struct gl_context *ctx)
-{
-   if (_mesa_need_secondary_color(ctx))
-      ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
-   else
-      ctx->_TriangleCaps &= ~DD_SEPARATE_SPECULAR;
-}
-
-
-/**
- * Helper for update_arrays().
- * \return  min(current min, array->_MaxElement).
- */
-static GLuint
-update_min(GLuint min, struct gl_client_array *array)
-{
-   _mesa_update_array_max_element(array);
-   return MIN2(min, array->_MaxElement);
-}
-
-
-/**
- * Update ctx->Array._MaxElement (the max legal index into all enabled arrays).
- * Need to do this upon new array state or new buffer object state.
- */
-static void
-update_arrays( struct gl_context *ctx )
-{
-   struct gl_array_object *arrayObj = ctx->Array.ArrayObj;
-   GLuint i, min = ~0;
-
-   /* find min of _MaxElement values for all enabled arrays */
-
-   /* 0 */
-   if (ctx->VertexProgram._Current
-       && arrayObj->VertexAttrib[VERT_ATTRIB_POS].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_POS]);
-   }
-   else if (arrayObj->Vertex.Enabled) {
-      min = update_min(min, &arrayObj->Vertex);
-   }
-
-   /* 1 */
-   if (ctx->VertexProgram._Enabled
-       && arrayObj->VertexAttrib[VERT_ATTRIB_WEIGHT].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_WEIGHT]);
-   }
-   /* no conventional vertex weight array */
-
-   /* 2 */
-   if (ctx->VertexProgram._Enabled
-       && arrayObj->VertexAttrib[VERT_ATTRIB_NORMAL].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_NORMAL]);
-   }
-   else if (arrayObj->Normal.Enabled) {
-      min = update_min(min, &arrayObj->Normal);
-   }
-
-   /* 3 */
-   if (ctx->VertexProgram._Enabled
-       && arrayObj->VertexAttrib[VERT_ATTRIB_COLOR0].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_COLOR0]);
-   }
-   else if (arrayObj->Color.Enabled) {
-      min = update_min(min, &arrayObj->Color);
-   }
-
-   /* 4 */
-   if (ctx->VertexProgram._Enabled
-       && arrayObj->VertexAttrib[VERT_ATTRIB_COLOR1].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_COLOR1]);
-   }
-   else if (arrayObj->SecondaryColor.Enabled) {
-      min = update_min(min, &arrayObj->SecondaryColor);
-   }
-
-   /* 5 */
-   if (ctx->VertexProgram._Enabled
-       && arrayObj->VertexAttrib[VERT_ATTRIB_FOG].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_FOG]);
-   }
-   else if (arrayObj->FogCoord.Enabled) {
-      min = update_min(min, &arrayObj->FogCoord);
-   }
-
-   /* 6 */
-   if (ctx->VertexProgram._Enabled
-       && arrayObj->VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_COLOR_INDEX]);
-   }
-   else if (arrayObj->Index.Enabled) {
-      min = update_min(min, &arrayObj->Index);
-   }
-
-   /* 7 */
-   if (ctx->VertexProgram._Enabled
-       && arrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG].Enabled) {
-      min = update_min(min, &arrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG]);
-   }
-
-   /* 8..15 */
-   for (i = VERT_ATTRIB_TEX0; i <= VERT_ATTRIB_TEX7; i++) {
-      if (ctx->VertexProgram._Enabled
-          && arrayObj->VertexAttrib[i].Enabled) {
-         min = update_min(min, &arrayObj->VertexAttrib[i]);
-      }
-      else if (i - VERT_ATTRIB_TEX0 < ctx->Const.MaxTextureCoordUnits
-               && arrayObj->TexCoord[i - VERT_ATTRIB_TEX0].Enabled) {
-         min = update_min(min, &arrayObj->TexCoord[i - VERT_ATTRIB_TEX0]);
-      }
-   }
-
-   /* 16..31 */
-   if (ctx->VertexProgram._Current) {
-      for (i = 0; i < Elements(arrayObj->VertexAttrib); i++) {
-         if (arrayObj->VertexAttrib[i].Enabled) {
-            min = update_min(min, &arrayObj->VertexAttrib[i]);
-         }
-      }
-   }
-
-   if (arrayObj->EdgeFlag.Enabled) {
-      min = update_min(min, &arrayObj->EdgeFlag);
-   }
-
-   /* _MaxElement is one past the last legal array element */
-   arrayObj->_MaxElement = min;
-}
+#include "blend.h"
 
 
 /**
@@ -224,7 +96,7 @@ update_program(struct gl_context *ctx)
 {
    const struct gl_shader_program *vsProg = ctx->Shader.CurrentVertexProgram;
    const struct gl_shader_program *gsProg = ctx->Shader.CurrentGeometryProgram;
-   const struct gl_shader_program *fsProg = ctx->Shader.CurrentFragmentProgram;
+   struct gl_shader_program *fsProg = ctx->Shader.CurrentFragmentProgram;
    const struct gl_vertex_program *prevVP = ctx->VertexProgram._Current;
    const struct gl_fragment_program *prevFP = ctx->FragmentProgram._Current;
    const struct gl_geometry_program *prevGP = ctx->GeometryProgram._Current;
@@ -246,32 +118,51 @@ update_program(struct gl_context *ctx)
     * come up, or matter.
     */
 
-   if (fsProg && fsProg->LinkStatus && fsProg->FragmentProgram) {
+   if (fsProg && fsProg->LinkStatus
+       && fsProg->_LinkedShaders[MESA_SHADER_FRAGMENT]) {
       /* Use GLSL fragment shader */
+      _mesa_reference_shader_program(ctx,
+				     &ctx->Shader._CurrentFragmentProgram,
+				     fsProg);
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
-                               fsProg->FragmentProgram);
+                               gl_fragment_program(fsProg->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program));
+      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram,
+			       NULL);
    }
    else if (ctx->FragmentProgram._Enabled) {
       /* Use user-defined fragment program */
+      _mesa_reference_shader_program(ctx,
+				     &ctx->Shader._CurrentFragmentProgram,
+				     NULL);
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
                                ctx->FragmentProgram.Current);
+      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram,
+			       NULL);
    }
    else if (ctx->FragmentProgram._MaintainTexEnvProgram) {
       /* Use fragment program generated from fixed-function state */
+      struct gl_shader_program *f = _mesa_get_fixed_func_fragment_program(ctx);
+
+      _mesa_reference_shader_program(ctx,
+				     &ctx->Shader._CurrentFragmentProgram,
+				     f);
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
-                               _mesa_get_fixed_func_fragment_program(ctx));
+			       gl_fragment_program(f->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program));
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram,
-                               ctx->FragmentProgram._Current);
+			       gl_fragment_program(f->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program));
    }
    else {
       /* No fragment program */
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, NULL);
+      _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram,
+			       NULL);
    }
 
-   if (gsProg && gsProg->LinkStatus && gsProg->GeometryProgram) {
+   if (gsProg && gsProg->LinkStatus
+       && gsProg->_LinkedShaders[MESA_SHADER_GEOMETRY]) {
       /* Use GLSL geometry shader */
       _mesa_reference_geomprog(ctx, &ctx->GeometryProgram._Current,
-                               gsProg->GeometryProgram);
+			       gl_geometry_program(gsProg->_LinkedShaders[MESA_SHADER_GEOMETRY]->Program));
    } else {
       /* No geometry program */
       _mesa_reference_geomprog(ctx, &ctx->GeometryProgram._Current, NULL);
@@ -281,10 +172,11 @@ update_program(struct gl_context *ctx)
     * _mesa_get_fixed_func_vertex_program() needs to know active
     * fragprog inputs.
     */
-   if (vsProg && vsProg->LinkStatus && vsProg->VertexProgram) {
+   if (vsProg && vsProg->LinkStatus
+       && vsProg->_LinkedShaders[MESA_SHADER_VERTEX]) {
       /* Use GLSL vertex shader */
       _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current,
-                               vsProg->VertexProgram);
+			       gl_vertex_program(vsProg->_LinkedShaders[MESA_SHADER_VERTEX]->Program));
    }
    else if (ctx->VertexProgram._Enabled) {
       /* Use user-defined vertex program */
@@ -407,150 +299,19 @@ update_multisample(struct gl_context *ctx)
 
 
 /**
- * Update derived color/blend/logicop state.
+ * Update the ctx->VertexProgram._TwoSideEnabled flag.
  */
 static void
-update_color(struct gl_context *ctx)
+update_twoside(struct gl_context *ctx)
 {
-   /* This is needed to support 1.1's RGB logic ops AND
-    * 1.0's blending logicops.
-    */
-   ctx->Color._LogicOpEnabled = _mesa_rgba_logicop_enabled(ctx);
-}
-
-
-/**
- * Update the ctx->Color._ClampFragmentColor field
- */
-static void
-update_clamp_fragment_color(struct gl_context *ctx)
-{
-   if (ctx->Color.ClampFragmentColor == GL_FIXED_ONLY_ARB)
-      ctx->Color._ClampFragmentColor =
-         !ctx->DrawBuffer || !ctx->DrawBuffer->Visual.floatMode;
-   else
-      ctx->Color._ClampFragmentColor = ctx->Color.ClampFragmentColor;
-}
-
-
-/**
- * Update the ctx->Color._ClampVertexColor field
- */
-static void
-update_clamp_vertex_color(struct gl_context *ctx)
-{
-   if (ctx->Light.ClampVertexColor == GL_FIXED_ONLY_ARB)
-      ctx->Light._ClampVertexColor =
-         !ctx->DrawBuffer || !ctx->DrawBuffer->Visual.floatMode;
-   else
-      ctx->Light._ClampVertexColor = ctx->Light.ClampVertexColor;
-}
-
-
-/**
- * Update the ctx->Color._ClampReadColor field
- */
-static void
-update_clamp_read_color(struct gl_context *ctx)
-{
-   if (ctx->Color.ClampReadColor == GL_FIXED_ONLY_ARB)
-      ctx->Color._ClampReadColor =
-         !ctx->ReadBuffer || !ctx->ReadBuffer->Visual.floatMode;
-   else
-      ctx->Color._ClampReadColor = ctx->Color.ClampReadColor;
-}
-
-
-
-
-/*
- * Check polygon state and set DD_TRI_CULL_FRONT_BACK and/or DD_TRI_OFFSET
- * in ctx->_TriangleCaps if needed.
- */
-static void
-update_polygon(struct gl_context *ctx)
-{
-   ctx->_TriangleCaps &= ~(DD_TRI_CULL_FRONT_BACK | DD_TRI_OFFSET);
-
-   if (ctx->Polygon.CullFlag && ctx->Polygon.CullFaceMode == GL_FRONT_AND_BACK)
-      ctx->_TriangleCaps |= DD_TRI_CULL_FRONT_BACK;
-
-   if (   ctx->Polygon.OffsetPoint
-       || ctx->Polygon.OffsetLine
-       || ctx->Polygon.OffsetFill)
-      ctx->_TriangleCaps |= DD_TRI_OFFSET;
-}
-
-
-/**
- * Update the ctx->_TriangleCaps bitfield.
- * XXX that bitfield should really go away someday!
- * This function must be called after other update_*() functions since
- * there are dependencies on some other derived values.
- */
-#if 0
-static void
-update_tricaps(struct gl_context *ctx, GLbitfield new_state)
-{
-   ctx->_TriangleCaps = 0;
-
-   /*
-    * Points
-    */
-   if (1/*new_state & _NEW_POINT*/) {
-      if (ctx->Point.SmoothFlag)
-         ctx->_TriangleCaps |= DD_POINT_SMOOTH;
-      if (ctx->Point._Attenuated)
-         ctx->_TriangleCaps |= DD_POINT_ATTEN;
+   if (ctx->Shader.CurrentVertexProgram ||
+       ctx->VertexProgram._Enabled) {
+      ctx->VertexProgram._TwoSideEnabled = ctx->VertexProgram.TwoSideEnabled;
+   } else {
+      ctx->VertexProgram._TwoSideEnabled = (ctx->Light.Enabled &&
+					    ctx->Light.Model.TwoSide);
    }
-
-   /*
-    * Lines
-    */
-   if (1/*new_state & _NEW_LINE*/) {
-      if (ctx->Line.SmoothFlag)
-         ctx->_TriangleCaps |= DD_LINE_SMOOTH;
-      if (ctx->Line.StippleFlag)
-         ctx->_TriangleCaps |= DD_LINE_STIPPLE;
-   }
-
-   /*
-    * Polygons
-    */
-   if (1/*new_state & _NEW_POLYGON*/) {
-      if (ctx->Polygon.SmoothFlag)
-         ctx->_TriangleCaps |= DD_TRI_SMOOTH;
-      if (ctx->Polygon.StippleFlag)
-         ctx->_TriangleCaps |= DD_TRI_STIPPLE;
-      if (ctx->Polygon.FrontMode != GL_FILL
-          || ctx->Polygon.BackMode != GL_FILL)
-         ctx->_TriangleCaps |= DD_TRI_UNFILLED;
-      if (ctx->Polygon.CullFlag
-          && ctx->Polygon.CullFaceMode == GL_FRONT_AND_BACK)
-         ctx->_TriangleCaps |= DD_TRI_CULL_FRONT_BACK;
-      if (ctx->Polygon.OffsetPoint ||
-          ctx->Polygon.OffsetLine ||
-          ctx->Polygon.OffsetFill)
-         ctx->_TriangleCaps |= DD_TRI_OFFSET;
-   }
-
-   /*
-    * Lighting and shading
-    */
-   if (ctx->Light.Enabled && ctx->Light.Model.TwoSide)
-      ctx->_TriangleCaps |= DD_TRI_LIGHT_TWOSIDE;
-   if (ctx->Light.ShadeModel == GL_FLAT)
-      ctx->_TriangleCaps |= DD_FLATSHADE;
-   if (_mesa_need_secondary_color(ctx))
-      ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
-
-   /*
-    * Stencil
-    */
-   if (ctx->Stencil._TestTwoSide)
-      ctx->_TriangleCaps |= DD_TRI_TWOSTENCIL;
 }
-#endif
 
 
 /**
@@ -581,12 +342,13 @@ _mesa_update_state_locked( struct gl_context *ctx )
    /* Determine which state flags effect vertex/fragment program state */
    if (ctx->FragmentProgram._MaintainTexEnvProgram) {
       prog_flags |= (_NEW_BUFFERS | _NEW_TEXTURE | _NEW_FOG |
-		     _NEW_ARRAY | _NEW_LIGHT | _NEW_POINT | _NEW_RENDERMODE |
-		     _NEW_PROGRAM | _NEW_FRAG_CLAMP);
+		     _NEW_VARYING_VP_INPUTS | _NEW_LIGHT | _NEW_POINT |
+		     _NEW_RENDERMODE | _NEW_PROGRAM | _NEW_FRAG_CLAMP |
+		     _NEW_COLOR);
    }
    if (ctx->VertexProgram._MaintainTnlProgram) {
-      prog_flags |= (_NEW_ARRAY | _NEW_TEXTURE | _NEW_TEXTURE_MATRIX |
-                     _NEW_TRANSFORM | _NEW_POINT |
+      prog_flags |= (_NEW_VARYING_VP_INPUTS | _NEW_TEXTURE |
+                     _NEW_TEXTURE_MATRIX | _NEW_TRANSFORM | _NEW_POINT |
                      _NEW_FOG | _NEW_LIGHT |
                      _MESA_NEW_NEED_EYE_COORDS);
    }
@@ -610,14 +372,11 @@ _mesa_update_state_locked( struct gl_context *ctx )
    if (new_state & (_NEW_SCISSOR | _NEW_BUFFERS | _NEW_VIEWPORT))
       _mesa_update_draw_buffer_bounds( ctx );
 
-   if (new_state & _NEW_POLYGON)
-      update_polygon( ctx );
-
    if (new_state & _NEW_LIGHT)
       _mesa_update_lighting( ctx );
 
-   if (new_state & (_NEW_LIGHT | _NEW_BUFFERS))
-      update_clamp_vertex_color(ctx);
+   if (new_state & (_NEW_LIGHT | _NEW_PROGRAM))
+      update_twoside( ctx );
 
    if (new_state & (_NEW_STENCIL | _NEW_BUFFERS))
       _mesa_update_stencil( ctx );
@@ -625,29 +384,11 @@ _mesa_update_state_locked( struct gl_context *ctx )
    if (new_state & _NEW_PIXEL)
       _mesa_update_pixel( ctx, new_state );
 
-   if (new_state & _DD_NEW_SEPARATE_SPECULAR)
-      update_separate_specular( ctx );
-
    if (new_state & (_NEW_BUFFERS | _NEW_VIEWPORT))
       update_viewport_matrix(ctx);
 
-   if (new_state & _NEW_MULTISAMPLE)
+   if (new_state & (_NEW_MULTISAMPLE | _NEW_BUFFERS))
       update_multisample( ctx );
-
-   if (new_state & _NEW_COLOR)
-      update_color( ctx );
-
-   if (new_state & (_NEW_COLOR | _NEW_BUFFERS))
-      update_clamp_read_color(ctx);
-
-   if(new_state & (_NEW_FRAG_CLAMP | _NEW_BUFFERS))
-      update_clamp_fragment_color(ctx);
-
-#if 0
-   if (new_state & (_NEW_POINT | _NEW_LINE | _NEW_POLYGON | _NEW_LIGHT
-                    | _NEW_STENCIL | _DD_NEW_SEPARATE_SPECULAR))
-      update_tricaps( ctx, new_state );
-#endif
 
    /* ctx->_NeedEyeCoords is now up to date.
     *
@@ -669,8 +410,10 @@ _mesa_update_state_locked( struct gl_context *ctx )
       new_prog_state |= update_program( ctx );
    }
 
-   if (new_state & (_NEW_ARRAY | _NEW_PROGRAM | _NEW_BUFFER_OBJECT))
-      update_arrays( ctx );
+   if (ctx->Const.CheckArrayBounds &&
+       new_state & (_NEW_ARRAY | _NEW_PROGRAM | _NEW_BUFFER_OBJECT)) {
+      _mesa_update_array_object_max_element(ctx, ctx->Array.ArrayObj);
+   }
 
  out:
    new_prog_state |= update_program_constants(ctx);
@@ -687,9 +430,6 @@ _mesa_update_state_locked( struct gl_context *ctx )
    new_state = ctx->NewState | new_prog_state;
    ctx->NewState = 0;
    ctx->Driver.UpdateState(ctx, new_state);
-   ctx->Array.NewState = 0;
-   if (!ctx->Array.RebindArrays)
-      ctx->Array.RebindArrays = (new_state & (_NEW_ARRAY | _NEW_PROGRAM)) != 0;
 }
 
 
@@ -730,11 +470,21 @@ _mesa_update_state( struct gl_context *ctx )
  */
 void
 _mesa_set_varying_vp_inputs( struct gl_context *ctx,
-                             GLbitfield varying_inputs )
+                             GLbitfield64 varying_inputs )
 {
    if (ctx->varying_vp_inputs != varying_inputs) {
       ctx->varying_vp_inputs = varying_inputs;
-      ctx->NewState |= _NEW_ARRAY;
+
+      /* Only the fixed-func generated programs need to use the flag
+       * and the fixed-func fragment program uses it only if there is also
+       * a fixed-func vertex program, so this only depends on the latter.
+       *
+       * It's okay to check the VP pointer here, because this is called after
+       * _mesa_update_state in the vbo module. */
+      if (ctx->VertexProgram._TnlProgram ||
+          ctx->FragmentProgram._TexEnvProgram) {
+         ctx->NewState |= _NEW_VARYING_VP_INPUTS;
+      }
       /*printf("%s %x\n", __FUNCTION__, varying_inputs);*/
    }
 }

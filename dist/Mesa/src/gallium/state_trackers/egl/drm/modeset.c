@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.9
  *
  * Copyright (C) 2010 LunarG Inc.
  * Copyright (C) 2011 VMware Inc. All rights reserved.
@@ -194,21 +193,19 @@ drm_surface_swap_buffers(struct native_surface *nsurf)
 
 static boolean
 drm_surface_present(struct native_surface *nsurf,
-                    enum native_attachment natt,
-                    boolean preserve,
-                    uint swap_interval)
+                    const struct native_present_control *ctrl)
 {
    boolean ret;
 
-   if (swap_interval)
+   if (ctrl->swap_interval)
       return FALSE;
 
-   switch (natt) {
+   switch (ctrl->natt) {
    case NATIVE_ATTACHMENT_FRONT_LEFT:
       ret = drm_surface_flush_frontbuffer(nsurf);
       break;
    case NATIVE_ATTACHMENT_BACK_LEFT:
-      if (preserve)
+      if (ctrl->preserve)
 	 ret = drm_surface_copy_swap(nsurf);
       else
 	 ret = drm_surface_swap_buffers(nsurf);
@@ -650,10 +647,8 @@ drm_display_fini_modeset(struct native_display *ndpy)
       FREE(drmdpy->connectors);
    }
 
-   if (drmdpy->shown_surfaces) {
-      FREE(drmdpy->shown_surfaces);
-      drmdpy->shown_surfaces = NULL;
-   }
+   FREE(drmdpy->shown_surfaces);
+   drmdpy->shown_surfaces = NULL;
 
    if (drmdpy->saved_crtcs) {
       for (i = 0; i < drmdpy->resources->count_crtcs; i++) {

@@ -33,8 +33,20 @@ import license
 import gl_XML, glX_XML
 import sys, getopt
 
-header = """
-#if defined(DEBUG) && !defined(_WIN32_WCE)
+header = """/* GLXEXT is the define used in the xserver when the GLX extension is being
+ * built.  Hijack this to determine whether this file is being built for the
+ * server or the client.
+ */
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
+#endif
+
+#if (defined(GLXEXT) && defined(HAVE_BACKTRACE)) \\
+	|| (!defined(GLXEXT) && defined(DEBUG) && !defined(_WIN32_WCE) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__OpenBSD__))
+#define USE_BACKTRACE
+#endif
+
+#ifdef USE_BACKTRACE
 #include <execinfo.h>
 #endif
 
@@ -42,16 +54,27 @@ header = """
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <GL/gl.h>
+#include "main/glheader.h"
 
 #include "glapi.h"
 #include "glapitable.h"
 
+#ifdef GLXEXT
+#include "os.h"
+#endif
+
 static void
 __glapi_gentable_NoOp(void) {
-#if defined(DEBUG) && !defined(_WIN32_WCE)
-    if (getenv("MESA_DEBUG") || getenv("LIBGL_DEBUG")) {
-        const char *fstr = "Unknown";
+    const char *fstr = "Unknown";
+
+    /* Silence potential GCC warning for some #ifdef paths.
+     */
+    (void) fstr;
+#if defined(USE_BACKTRACE)
+#if !defined(GLXEXT)
+    if (getenv("MESA_DEBUG") || getenv("LIBGL_DEBUG"))
+#endif
+    {
         void *frames[2];
 
         if(backtrace(frames, 2) == 2) {
@@ -61,8 +84,13 @@ __glapi_gentable_NoOp(void) {
                 fstr = info.dli_sname;
         }
 
+#if !defined(GLXEXT)
         fprintf(stderr, "Call to unimplemented API: %s\\n", fstr);
+#endif
     }
+#endif
+#if defined(GLXEXT)
+    LogMessage(X_ERROR, "GLX: Call to unimplemented API: %s\\n", fstr);
 #endif
 }
 
@@ -110,65 +138,65 @@ body_template = """
 
 class PrintCode(gl_XML.gl_print_base):
 
-	def __init__(self):
-		gl_XML.gl_print_base.__init__(self)
+    def __init__(self):
+        gl_XML.gl_print_base.__init__(self)
 
-		self.name = "gl_gen_table.py (from Mesa)"
-		self.license = license.bsd_license_template % ( \
+        self.name = "gl_gen_table.py (from Mesa)"
+        self.license = license.bsd_license_template % ( \
 """Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
 (C) Copyright IBM Corporation 2004, 2005
 (C) Copyright Apple Inc 2011""", "BRIAN PAUL, IBM")
 
-		return
+        return
 
 
-	def get_stack_size(self, f):
-		size = 0
-		for p in f.parameterIterator():
-			if p.is_padding:
-				continue
+    def get_stack_size(self, f):
+        size = 0
+        for p in f.parameterIterator():
+            if p.is_padding:
+                continue
 
-			size += p.get_stack_size()
+            size += p.get_stack_size()
 
-		return size
-
-
-	def printRealHeader(self):
-		print header
-		return
+        return size
 
 
-	def printRealFooter(self):
-		print footer
-		return
+    def printRealHeader(self):
+        print header
+        return
 
 
-	def printBody(self, api):
-		for f in api.functionIterateByOffset():
-			for entry_point in f.entry_points:
-				vars = { 'entry_point' : entry_point,
-				         'name' : f.name }
+    def printRealFooter(self):
+        print footer
+        return
 
-				print body_template % vars
-		return
+
+    def printBody(self, api):
+        for f in api.functionIterateByOffset():
+            for entry_point in f.entry_points:
+                vars = { 'entry_point' : entry_point,
+                         'name' : f.name }
+
+                print body_template % vars
+        return
 
 def show_usage():
-	print "Usage: %s [-f input_file_name]" % sys.argv[0]
-	sys.exit(1)
+    print "Usage: %s [-f input_file_name]" % sys.argv[0]
+    sys.exit(1)
 
 if __name__ == '__main__':
-	file_name = "gl_API.xml"
+    file_name = "gl_API.xml"
 
-	try:
-		(args, trail) = getopt.getopt(sys.argv[1:], "m:f:")
-	except Exception,e:
-		show_usage()
+    try:
+        (args, trail) = getopt.getopt(sys.argv[1:], "m:f:")
+    except Exception,e:
+        show_usage()
 
-	for (arg,val) in args:
-		if arg == "-f":
-			file_name = val
+    for (arg,val) in args:
+        if arg == "-f":
+            file_name = val
 
-	printer = PrintCode()
+    printer = PrintCode()
 
-	api = gl_XML.parse_GL_API(file_name, glX_XML.glx_item_factory())
-	printer.Print(api)
+    api = gl_XML.parse_GL_API(file_name, glX_XML.glx_item_factory())
+    printer.Print(api)

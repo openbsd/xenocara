@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -157,7 +157,7 @@ do {						\
 
 
 
-static INLINE void
+static inline void
 logicop_uint1(struct gl_context *ctx, GLuint n, GLuint src[], const GLuint dest[],
               const GLubyte mask[])
 {
@@ -165,7 +165,7 @@ logicop_uint1(struct gl_context *ctx, GLuint n, GLuint src[], const GLuint dest[
 }
 
 
-static INLINE void
+static inline void
 logicop_uint2(struct gl_context *ctx, GLuint n, GLuint src[], const GLuint dest[],
               const GLubyte mask[])
 {
@@ -173,7 +173,7 @@ logicop_uint2(struct gl_context *ctx, GLuint n, GLuint src[], const GLuint dest[
 }
 
 
-static INLINE void
+static inline void
 logicop_uint4(struct gl_context *ctx, GLuint n, GLuint src[], const GLuint dest[],
               const GLubyte mask[])
 {
@@ -193,9 +193,8 @@ _swrast_logicop_rgba_span(struct gl_context *ctx, struct gl_renderbuffer *rb,
 {
    void *rbPixels;
 
-   ASSERT(span->end < MAX_WIDTH);
+   ASSERT(span->end < SWRAST_MAX_WIDTH);
    ASSERT(span->arrayMask & SPAN_RGBA);
-   ASSERT(rb->DataType == span->array->ChanType);
 
    rbPixels = _swrast_get_dest_rgba(ctx, rb, span);
 
@@ -213,7 +212,7 @@ _swrast_logicop_rgba_span(struct gl_context *ctx, struct gl_renderbuffer *rb,
    }
    else {
       logicop_uint4(ctx, 4 * span->end,
-                    (GLuint *) span->array->attribs[FRAG_ATTRIB_COL0],
+                    (GLuint *) span->array->attribs[VARYING_SLOT_COL0],
                     (const GLuint *) rbPixels, span->array->mask);
    }
 }

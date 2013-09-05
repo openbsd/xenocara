@@ -38,6 +38,7 @@
 #include "main/texobj.h"
 #include "main/state.h"
 #include "main/dd.h"
+#include "main/fbobject.h"
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
@@ -51,7 +52,6 @@
 #include "intel_batchbuffer.h"
 #include "intel_buffers.h"
 #include "intel_reg.h"
-#include "intel_span.h"
 #include "i830_context.h"
 #include "i830_reg.h"
 #include "i915_context.h"
@@ -92,9 +92,7 @@ static void intel_start_inline(struct intel_context *intel, uint32_t prim)
 
    intel->vtbl.emit_state(intel);
 
-   intel->no_batch_wrap = GL_TRUE;
-
-   /*printf("%s *", __progname);*/
+   intel->no_batch_wrap = true;
 
    /* Emit a slot which will be filled with the inline primitive
     * command later.
@@ -108,7 +106,7 @@ static void intel_start_inline(struct intel_context *intel, uint32_t prim)
    OUT_BATCH(0);
    ADVANCE_BATCH();
 
-   intel->no_batch_wrap = GL_FALSE;
+   intel->no_batch_wrap = false;
 /*    printf(">"); */
 }
 
@@ -232,7 +230,11 @@ void intel_flush_prim(struct intel_context *intel)
     * depends on the state just emitted. emit_state should be making sure we
     * have the space for this.
     */
-   intel->no_batch_wrap = GL_TRUE;
+   intel->no_batch_wrap = true;
+
+   if (intel->always_flush_cache) {
+      intel_batchbuffer_emit_mi_flush(intel);
+   }
 
 #if 0
    printf("emitting %d..%d=%d vertices size %d\n", offset,
@@ -306,7 +308,11 @@ void intel_flush_prim(struct intel_context *intel)
       ADVANCE_BATCH();
    }
 
-   intel->no_batch_wrap = GL_FALSE;
+   if (intel->always_flush_cache) {
+      intel_batchbuffer_emit_mi_flush(intel);
+   }
+
+   intel->no_batch_wrap = false;
 
    drm_intel_bo_unreference(vb_bo);
 }
@@ -495,7 +501,7 @@ intel_emit_fragcoord(struct intel_context *intel, intelVertexPtr v)
 
    fragcoord[0] = vertex_position[0];
 
-   if (fb->Name)
+   if (_mesa_is_user_fbo(fb))
       fragcoord[1] = vertex_position[1];
    else
       fragcoord[1] = fb->Height - vertex_position[1];
@@ -632,7 +638,7 @@ do {							\
 } while (0)
 
 
-#define DEPTH_SCALE intel->polygon_offset_scale
+#define DEPTH_SCALE (ctx->DrawBuffer->Visual.depthBits == 16 ? 1.0 : 2.0)
 #define UNFILLED_TRI unfilled_tri
 #define UNFILLED_QUAD unfilled_quad
 #define VERT_X(_v) _v->v.x
@@ -655,7 +661,7 @@ do {							\
    struct intel_context *intel = intel_context(ctx);			\
    GLuint color[n] = { 0, }, spec[n] = { 0, };				\
    GLuint coloroffset = intel->coloroffset;				\
-   GLboolean specoffset = intel->specoffset;				\
+   GLuint specoffset = intel->specoffset;				\
    (void) color; (void) spec; (void) coloroffset; (void) specoffset;
 
 
@@ -799,9 +805,9 @@ intel_fallback_tri(struct intel_context *intel,
    _swsetup_Translate(ctx, v0, &v[0]);
    _swsetup_Translate(ctx, v1, &v[1]);
    _swsetup_Translate(ctx, v2, &v[2]);
-   intelSpanRenderStart(ctx);
+   _swrast_render_start(ctx);
    _swrast_Triangle(ctx, &v[0], &v[1], &v[2]);
-   intelSpanRenderFinish(ctx);
+   _swrast_render_finish(ctx);
 }
 
 
@@ -819,9 +825,9 @@ intel_fallback_line(struct intel_context *intel,
 
    _swsetup_Translate(ctx, v0, &v[0]);
    _swsetup_Translate(ctx, v1, &v[1]);
-   intelSpanRenderStart(ctx);
+   _swrast_render_start(ctx);
    _swrast_Line(ctx, &v[0], &v[1]);
-   intelSpanRenderFinish(ctx);
+   _swrast_render_finish(ctx);
 }
 
 static void
@@ -837,9 +843,9 @@ intel_fallback_point(struct intel_context *intel,
    INTEL_FIREVERTICES(intel);
 
    _swsetup_Translate(ctx, v0, &v[0]);
-   intelSpanRenderStart(ctx);
+   _swrast_render_start(ctx);
    _swrast_Point(ctx, &v[0]);
-   intelSpanRenderFinish(ctx);
+   _swrast_render_finish(ctx);
 }
 
 
@@ -934,9 +940,14 @@ intelFastRenderClippedPoly(struct gl_context * ctx, const GLuint * elts, GLuint 
 /**********************************************************************/
 
 
+#define DD_TRI_LIGHT_TWOSIDE (1 << 1)
+#define DD_TRI_UNFILLED (1 << 2)
+#define DD_TRI_STIPPLE  (1 << 4)
+#define DD_TRI_OFFSET   (1 << 5)
+#define DD_LINE_STIPPLE (1 << 7)
+#define DD_POINT_ATTEN  (1 << 9)
 
-
-#define ANY_FALLBACK_FLAGS (DD_LINE_STIPPLE | DD_TRI_STIPPLE | DD_POINT_ATTEN | DD_POINT_SMOOTH | DD_TRI_SMOOTH)
+#define ANY_FALLBACK_FLAGS (DD_LINE_STIPPLE | DD_TRI_STIPPLE | DD_POINT_ATTEN)
 #define ANY_RASTER_FLAGS (DD_TRI_LIGHT_TWOSIDE | DD_TRI_OFFSET | DD_TRI_UNFILLED)
 
 void
@@ -944,9 +955,19 @@ intelChooseRenderState(struct gl_context * ctx)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct intel_context *intel = intel_context(ctx);
-   GLuint flags = ctx->_TriangleCaps;
+   GLuint flags =
+      ((ctx->Light.Enabled &&
+        ctx->Light.Model.TwoSide) ? DD_TRI_LIGHT_TWOSIDE : 0) |
+      ((ctx->Polygon.FrontMode != GL_FILL ||
+        ctx->Polygon.BackMode != GL_FILL) ? DD_TRI_UNFILLED : 0) |
+      (ctx->Polygon.StippleFlag ? DD_TRI_STIPPLE : 0) |
+      ((ctx->Polygon.OffsetPoint ||
+        ctx->Polygon.OffsetLine ||
+        ctx->Polygon.OffsetFill) ? DD_TRI_OFFSET : 0) |
+      (ctx->Line.StippleFlag ? DD_LINE_STIPPLE : 0) |
+      (ctx->Point._Attenuated ? DD_POINT_ATTEN : 0);
    const struct gl_fragment_program *fprog = ctx->FragmentProgram._Current;
-   GLboolean have_wpos = (fprog && (fprog->Base.InputsRead & FRAG_BIT_WPOS));
+   bool have_wpos = (fprog && (fprog->Base.InputsRead & VARYING_BIT_POS));
    GLuint index = 0;
 
    if (INTEL_DEBUG & DEBUG_STATE)
@@ -987,20 +1008,10 @@ intelChooseRenderState(struct gl_context * ctx)
          if ((flags & DD_TRI_STIPPLE) && !intel->hw_stipple)
             intel->draw_tri = intel_fallback_tri;
 
-         if (flags & DD_TRI_SMOOTH) {
-	    if (intel->conformance_mode > 0)
-	       intel->draw_tri = intel_fallback_tri;
-	 }
-
          if (flags & DD_POINT_ATTEN) {
 	    if (0)
 	       intel->draw_point = intel_atten_point;
 	    else
-	       intel->draw_point = intel_fallback_point;
-	 }
-
-	 if (flags & DD_POINT_SMOOTH) {
-	    if (intel->conformance_mode > 0)
 	       intel->draw_point = intel_fallback_point;
 	 }
 
@@ -1082,11 +1093,9 @@ intelRunPipeline(struct gl_context * ctx)
       intel->NewGLState = 0;
    }
 
-   intel_map_vertex_shader_textures(ctx);
    intel->tnl_pipeline_running = true;
    _tnl_run_pipeline(ctx);
    intel->tnl_pipeline_running = false;
-   intel_unmap_vertex_shader_textures(ctx);
 
    _mesa_unlock_context_textures(ctx);
 }
@@ -1145,6 +1154,8 @@ static void
 intelRenderPrimitive(struct gl_context * ctx, GLenum prim)
 {
    struct intel_context *intel = intel_context(ctx);
+   GLboolean unfilled = (ctx->Polygon.FrontMode != GL_FILL ||
+                         ctx->Polygon.BackMode != GL_FILL);
 
    if (0)
       fprintf(stderr, "%s %s\n", __FUNCTION__, _mesa_lookup_enum_by_nr(prim));
@@ -1154,13 +1165,11 @@ intelRenderPrimitive(struct gl_context * ctx, GLenum prim)
     */
    intel->render_primitive = prim;
 
-   /* Shortcircuit this when called from t_dd_rendertmp.h for unfilled
-    * triangles.  The rasterized primitive will always be reset by
-    * lower level functions in that case, potentially pingponging the
-    * state:
+   /* Shortcircuit this when called for unfilled triangles.  The rasterized
+    * primitive will always be reset by lower level functions in that case,
+    * potentially pingponging the state:
     */
-   if (reduced_prim[prim] == GL_TRIANGLES &&
-       (ctx->_TriangleCaps & DD_TRI_UNFILLED))
+   if (reduced_prim[prim] == GL_TRIANGLES && unfilled)
       return;
 
    /* Set some primitive-dependent state and Start? a new primitive.
@@ -1191,6 +1200,7 @@ static char *fallbackStrings[] = {
    [19] = "Smooth point",
    [20] = "point sprite coord origin",
    [21] = "depth/color drawing offset",
+   [22] = "coord replace(SPRITE POINT ENABLE)",
 };
 
 
@@ -1212,7 +1222,7 @@ getFallbackString(GLuint bit)
  * \param bit  one of INTEL_FALLBACK_x flags.
  */
 void
-intelFallback(struct intel_context *intel, GLbitfield bit, GLboolean mode)
+intelFallback(struct intel_context *intel, GLbitfield bit, bool mode)
 {
    struct gl_context *ctx = &intel->ctx;
    TNLcontext *tnl = TNL_CONTEXT(ctx);
@@ -1224,7 +1234,7 @@ intelFallback(struct intel_context *intel, GLbitfield bit, GLboolean mode)
 	 assert(!intel->tnl_pipeline_running);
 
          intel_flush(ctx);
-         if (INTEL_DEBUG & DEBUG_FALLBACKS)
+         if (INTEL_DEBUG & DEBUG_PERF)
             fprintf(stderr, "ENTER FALLBACK %x: %s\n",
                     bit, getFallbackString(bit));
          _swsetup_Wakeup(ctx);
@@ -1237,7 +1247,7 @@ intelFallback(struct intel_context *intel, GLbitfield bit, GLboolean mode)
 	 assert(!intel->tnl_pipeline_running);
 
          _swrast_flush(ctx);
-         if (INTEL_DEBUG & DEBUG_FALLBACKS)
+         if (INTEL_DEBUG & DEBUG_PERF)
             fprintf(stderr, "LEAVE FALLBACK %s\n", getFallbackString(bit));
          tnl->Driver.Render.Start = intelRenderStart;
          tnl->Driver.Render.PrimitiveNotify = intelRenderPrimitive;

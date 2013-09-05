@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -43,6 +43,13 @@
 
 #ifndef _GLAPI_H
 #define _GLAPI_H
+
+#include "glapi/glthread.h"
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 #ifdef _GLAPI_NO_EXPORTS
@@ -71,8 +78,6 @@
 #define _glapi_Dispatch _mglapi_Dispatch
 #define _glapi_Context _mglapi_Context
 #endif
-
-#include "glapi/glthread.h"
 
 typedef void (*_glapi_proc)(void);
 struct _glapi_table;
@@ -177,5 +182,9 @@ _glapi_noop_enable_warnings(unsigned char enable);
 _GLAPI_EXPORT void
 _glapi_set_warning_func(_glapi_proc func);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _GLAPI_H */

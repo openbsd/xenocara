@@ -42,12 +42,20 @@ struct llvmpipe_context;
 
 
 struct llvmpipe_query {
-   uint64_t count[LP_MAX_THREADS];  /**< a counter for each thread */
-   struct lp_fence *fence;      /* fence from last scene this was binned in */
+   uint64_t start[LP_MAX_THREADS];  /* start count value for each thread */
+   uint64_t end[LP_MAX_THREADS];    /* end count value for each thread */
+   struct lp_fence *fence;          /* fence from last scene this was binned in */
+   unsigned type;                   /* PIPE_QUERY_* */
+   unsigned num_primitives_generated;
+   unsigned num_primitives_written;
+   boolean so_has_overflown;
+
+   struct pipe_query_data_pipeline_statistics stats;
 };
 
 
 extern void llvmpipe_init_query_funcs(struct llvmpipe_context * );
 
+extern boolean llvmpipe_check_render_cond(struct llvmpipe_context *);
 
 #endif /* LP_QUERY_H */

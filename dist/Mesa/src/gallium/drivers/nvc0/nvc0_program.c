@@ -14,485 +14,366 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "pipe/p_shader_tokens.h"
 #include "pipe/p_defines.h"
 
-#include "tgsi/tgsi_parse.h"
-#include "tgsi/tgsi_util.h"
-#include "tgsi/tgsi_dump.h"
-
 #include "nvc0_context.h"
-#include "nvc0_pc.h"
 
-static unsigned
-nvc0_tgsi_src_mask(const struct tgsi_full_instruction *inst, int c)
-{
-   unsigned mask = inst->Dst[0].Register.WriteMask;
+#include "nv50/codegen/nv50_ir_driver.h"
+#include "nve4_compute.h"
 
-   switch (inst->Instruction.Opcode) {
-   case TGSI_OPCODE_COS:
-   case TGSI_OPCODE_SIN:
-      return (mask & 0x8) | ((mask & 0x7) ? 0x1 : 0x0);
-   case TGSI_OPCODE_DP3:
-      return 0x7;
-   case TGSI_OPCODE_DP4:
-   case TGSI_OPCODE_DPH:
-   case TGSI_OPCODE_KIL: /* WriteMask ignored */
-      return 0xf;
-   case TGSI_OPCODE_DST:
-      return mask & (c ? 0xa : 0x6);
-   case TGSI_OPCODE_EX2:
-   case TGSI_OPCODE_EXP:
-   case TGSI_OPCODE_LG2:
-   case TGSI_OPCODE_LOG:
-   case TGSI_OPCODE_POW:
-   case TGSI_OPCODE_RCP:
-   case TGSI_OPCODE_RSQ:
-   case TGSI_OPCODE_SCS:
-      return 0x1;
-   case TGSI_OPCODE_IF:
-      return 0x1;
-   case TGSI_OPCODE_LIT:
-      return 0xb;
-   case TGSI_OPCODE_TEX:
-   case TGSI_OPCODE_TXB:
-   case TGSI_OPCODE_TXL:
-   case TGSI_OPCODE_TXP:
-   {
-      const struct tgsi_instruction_texture *tex;
-
-      assert(inst->Instruction.Texture);
-      tex = &inst->Texture;
-
-      mask = 0x7;
-      if (inst->Instruction.Opcode != TGSI_OPCODE_TEX &&
-          inst->Instruction.Opcode != TGSI_OPCODE_TXD)
-         mask |= 0x8; /* bias, lod or proj */
-
-      switch (tex->Texture) {
-      case TGSI_TEXTURE_1D:
-         mask &= 0x9;
-         break;
-      case TGSI_TEXTURE_SHADOW1D:
-         mask &= 0x5;
-         break;
-      case TGSI_TEXTURE_2D:
-         mask &= 0xb;
-         break;
-      default:
-         break;
-      }
-   }
-  	   return mask;
-   case TGSI_OPCODE_XPD:
-   {
-      unsigned x = 0;
-      if (mask & 1) x |= 0x6;
-      if (mask & 2) x |= 0x5;
-      if (mask & 4) x |= 0x3;
-      return x;
-   }
-   default:
-      break;
-   }
-
-   return mask;
-}
-
-static void
-nvc0_indirect_inputs(struct nvc0_translation_info *ti, int id)
-{
-   int i, c;
-
-   for (i = 0; i < PIPE_MAX_SHADER_INPUTS; ++i)
-      for (c = 0; c < 4; ++c)
-         ti->input_access[i][c] = id;
-
-   ti->indirect_inputs = TRUE;
-}
-
-static void
-nvc0_indirect_outputs(struct nvc0_translation_info *ti, int id)
-{
-   int i, c;
-
-   for (i = 0; i < PIPE_MAX_SHADER_OUTPUTS; ++i)
-      for (c = 0; c < 4; ++c)
-         ti->output_access[i][c] = id;
-
-   ti->indirect_outputs = TRUE;
-}
-
-static INLINE unsigned
-nvc0_system_value_location(unsigned sn, unsigned si, boolean *is_input)
-{
-   /* NOTE: locations 0xfxx indicate special regs */
-   switch (sn) {
-      /*
-   case TGSI_SEMANTIC_VERTEXID:
-      *is_input = TRUE;
-      return 0x2fc;
-      */
-   case TGSI_SEMANTIC_PRIMID:
-      *is_input = TRUE;
-      return 0x60;
-      /*
-   case TGSI_SEMANTIC_LAYER_INDEX:
-      return 0x64;
-   case TGSI_SEMANTIC_VIEWPORT_INDEX:
-      return 0x68;
-      */
-   case TGSI_SEMANTIC_INSTANCEID:
-      *is_input = TRUE;
-      return 0x2f8;
-   case TGSI_SEMANTIC_FACE:
-      *is_input = TRUE;
-      return 0x3fc;
-      /*
-   case TGSI_SEMANTIC_INVOCATIONID:
-      return 0xf11;
-      */
-   default:
-      assert(0);
-      return 0x000;
-   }
-}
-
-static INLINE unsigned
-nvc0_varying_location(unsigned sn, unsigned si)
-{
-   switch (sn) {
-   case TGSI_SEMANTIC_POSITION:
-      return 0x70;
-   case TGSI_SEMANTIC_COLOR:
-      return 0x280 + (si * 16); /* are these hard-wired ? */
-   case TGSI_SEMANTIC_BCOLOR:
-      return 0x2a0 + (si * 16);
-   case TGSI_SEMANTIC_FOG:
-      return 0x270;
-   case TGSI_SEMANTIC_PSIZE:
-      return 0x6c;
-      /*
-   case TGSI_SEMANTIC_PNTC:
-      return 0x2e0;
-      */
-   case TGSI_SEMANTIC_GENERIC:
-      /* We'd really like to distinguish between TEXCOORD and GENERIC here,
-       * since only 0x300 to 0x37c can be replaced by sprite coordinates.
-       * Also, gl_PointCoord should be a system value and must be assigned to
-       * address 0x2e0. For now, let's cheat:
-       */
-      assert(si < 31);
-      if (si <= 7)
-         return 0x300 + si * 16;
-      if (si == 9)
-         return 0x2e0;
-      return 0x80 + ((si - 8) * 16);
-   case TGSI_SEMANTIC_NORMAL:
-      return 0x360;
-   case TGSI_SEMANTIC_PRIMID:
-      return 0x40;
-   case TGSI_SEMANTIC_FACE:
-      return 0x3fc;
-   case TGSI_SEMANTIC_EDGEFLAG: /* doesn't exist, set value like for an sreg */
-      return 0xf00;
-      /*
-   case TGSI_SEMANTIC_CLIP_DISTANCE:
-      return 0x2c0 + (si * 4);
-      */
-   default:
-      assert(0);
-      return 0x000;
-   }
-}
-
-static INLINE unsigned
-nvc0_interp_mode(const struct tgsi_full_declaration *decl)
-{
-   unsigned mode;
-
-   if (decl->Declaration.Interpolate == TGSI_INTERPOLATE_CONSTANT)
-      mode = NVC0_INTERP_FLAT;
-   else
-   if (decl->Declaration.Interpolate == TGSI_INTERPOLATE_PERSPECTIVE)
-      mode = NVC0_INTERP_PERSPECTIVE;
-   else
-   if (decl->Declaration.Semantic && decl->Semantic.Name == TGSI_SEMANTIC_COLOR)
-      mode = NVC0_INTERP_PERSPECTIVE;
-   else
-      mode = NVC0_INTERP_LINEAR;
-
-   if (decl->Declaration.Centroid)
-      mode |= NVC0_INTERP_CENTROID;
-
-   return mode;
-}
-
-static void
-prog_immediate(struct nvc0_translation_info *ti,
-               const struct tgsi_full_immediate *imm)
-{
-   int c;
-   unsigned n = ti->immd32_nr++;
-
-   assert(ti->immd32_nr <= ti->scan.immediate_count);
-
-   for (c = 0; c < 4; ++c)
-      ti->immd32[n * 4 + c] = imm->u[c].Uint;
-
-   ti->immd32_ty[n] = imm->Immediate.DataType;
-}
-
-static boolean
-prog_decl(struct nvc0_translation_info *ti,
-          const struct tgsi_full_declaration *decl)
-{
-   unsigned i, c;
-   unsigned sn = TGSI_SEMANTIC_GENERIC;
-   unsigned si = 0;
-   const unsigned first = decl->Range.First;
-   const unsigned last = decl->Range.Last;
-
-   if (decl->Declaration.Semantic) {
-      sn = decl->Semantic.Name;
-      si = decl->Semantic.Index;
-   }
-   
-   switch (decl->Declaration.File) {
-   case TGSI_FILE_INPUT:
-      for (i = first; i <= last; ++i) {
-         if (ti->prog->type == PIPE_SHADER_VERTEX) {
-            for (c = 0; c < 4; ++c)
-               ti->input_loc[i][c] = 0x80 + i * 16 + c * 4;
-         } else {
-            for (c = 0; c < 4; ++c)
-               ti->input_loc[i][c] = nvc0_varying_location(sn, si) + c * 4;
-            /* for sprite coordinates: */
-            ti->prog->fp.in_pos[i] = ti->input_loc[i][0] / 4;
-         }
-         if (ti->prog->type == PIPE_SHADER_FRAGMENT)
-            ti->interp_mode[i] = nvc0_interp_mode(decl);
-      }
-      break;
-   case TGSI_FILE_OUTPUT:
-      for (i = first; i <= last; ++i, ++si) {
-         if (ti->prog->type == PIPE_SHADER_FRAGMENT) {
-            si = i;
-            if (i == ti->fp_depth_output) {
-               ti->output_loc[i][2] = (ti->scan.num_outputs - 1) * 4;
-            } else {
-               if (i > ti->fp_depth_output)
-                  si -= 1;
-               for (c = 0; c < 4; ++c)
-                  ti->output_loc[i][c] = si * 4 + c;
-            }
-         } else {
-            if (sn == TGSI_SEMANTIC_EDGEFLAG)
-               ti->edgeflag_out = i;
-            for (c = 0; c < 4; ++c)
-               ti->output_loc[i][c] = nvc0_varying_location(sn, si) + c * 4;
-            /* for TFB_VARYING_LOCS: */
-            ti->prog->vp.out_pos[i] = ti->output_loc[i][0] / 4;
-         }
-      }
-      break;
-   case TGSI_FILE_SYSTEM_VALUE:
-      i = first;
-      ti->sysval_loc[i] = nvc0_system_value_location(sn, si, &ti->sysval_in[i]);
-      assert(first == last);
-      break;
-   case TGSI_FILE_TEMPORARY:
-      ti->temp128_nr = MAX2(ti->temp128_nr, last + 1);
-      break;
-   case TGSI_FILE_NULL:
-   case TGSI_FILE_CONSTANT:
-   case TGSI_FILE_SAMPLER:
-   case TGSI_FILE_ADDRESS:
-   case TGSI_FILE_IMMEDIATE:
-   case TGSI_FILE_PREDICATE:
-      break;
-   default:
-      NOUVEAU_ERR("unhandled TGSI_FILE %d\n", decl->Declaration.File);
-      return FALSE;
-   }
-   return TRUE;
-}
-
-static void
-prog_inst(struct nvc0_translation_info *ti,
-          const struct tgsi_full_instruction *inst, int id)
-{
-   const struct tgsi_dst_register *dst;
-   const struct tgsi_src_register *src;
-   int s, c, k;
-   unsigned mask;
-
-   if (inst->Instruction.Opcode == TGSI_OPCODE_BGNSUB) {
-      ti->subr[ti->num_subrs].first_insn = id - 1;
-      ti->subr[ti->num_subrs].id = ti->num_subrs + 1; /* id 0 is main program */
-      ++ti->num_subrs;
-   }
-
-   if (inst->Dst[0].Register.File == TGSI_FILE_OUTPUT) {
-      dst = &inst->Dst[0].Register;
-
-      for (c = 0; c < 4; ++c) {
-         if (dst->Indirect)
-            nvc0_indirect_outputs(ti, id);
-         if (!(dst->WriteMask & (1 << c)))
-            continue;
-         ti->output_access[dst->Index][c] = id;
-      }
-
-      if (inst->Instruction.Opcode == TGSI_OPCODE_MOV &&
-          inst->Src[0].Register.File == TGSI_FILE_INPUT &&
-          dst->Index == ti->edgeflag_out)
-         ti->prog->vp.edgeflag = inst->Src[0].Register.Index;
-   } else
-   if (inst->Dst[0].Register.File == TGSI_FILE_TEMPORARY) {
-      if (inst->Dst[0].Register.Indirect)
-         ti->require_stores = TRUE;
-   }
-
-   for (s = 0; s < inst->Instruction.NumSrcRegs; ++s) {
-      src = &inst->Src[s].Register;
-      if (src->File == TGSI_FILE_TEMPORARY)
-         if (inst->Src[s].Register.Indirect)
-            ti->require_stores = TRUE;
-      if (src->File != TGSI_FILE_INPUT)
-         continue;
-      mask = nvc0_tgsi_src_mask(inst, s);
-
-      if (inst->Src[s].Register.Indirect)
-         nvc0_indirect_inputs(ti, id);
-
-      for (c = 0; c < 4; ++c) {
-         if (!(mask & (1 << c)))
-            continue;
-         k = tgsi_util_get_full_src_register_swizzle(&inst->Src[s], c);
-         if (k <= TGSI_SWIZZLE_W)
-            ti->input_access[src->Index][k] = id;
-      }
-   }
-}
-
-/* Probably should introduce something like struct tgsi_function_declaration
- * instead of trying to guess inputs/outputs.
+/* NOTE: Using a[0x270] in FP may cause an error even if we're using less than
+ * 124 scalar varying values.
  */
-static void
-prog_subroutine_inst(struct nvc0_subroutine *subr,
-                     const struct tgsi_full_instruction *inst)
+static uint32_t
+nvc0_shader_input_address(unsigned sn, unsigned si, unsigned ubase)
 {
-   const struct tgsi_dst_register *dst;
-   const struct tgsi_src_register *src;
-   int s, c, k;
-   unsigned mask;
-
-   for (s = 0; s < inst->Instruction.NumSrcRegs; ++s) {
-      src = &inst->Src[s].Register;
-      if (src->File != TGSI_FILE_TEMPORARY)
-         continue;
-      mask = nvc0_tgsi_src_mask(inst, s);
-
-      for (c = 0; c < 4; ++c) {
-         k = tgsi_util_get_full_src_register_swizzle(&inst->Src[s], c);
-
-         if ((mask & (1 << c)) && k < TGSI_SWIZZLE_W)
-            if (!(subr->retv[src->Index / 32][k] & (1 << (src->Index % 32))))
-               subr->argv[src->Index / 32][k] |= 1 << (src->Index % 32);
-      }
+   switch (sn) {
+   case NV50_SEMANTIC_TESSFACTOR:   return 0x000 + si * 0x4;
+   case TGSI_SEMANTIC_PRIMID:       return 0x060;
+   case TGSI_SEMANTIC_PSIZE:        return 0x06c;
+   case TGSI_SEMANTIC_POSITION:     return 0x070;
+   case TGSI_SEMANTIC_GENERIC:      return ubase + si * 0x10;
+   case TGSI_SEMANTIC_FOG:          return 0x2e8;
+   case TGSI_SEMANTIC_COLOR:        return 0x280 + si * 0x10;
+   case TGSI_SEMANTIC_BCOLOR:       return 0x2a0 + si * 0x10;
+   case NV50_SEMANTIC_CLIPDISTANCE: return 0x2c0 + si * 0x4;
+   case TGSI_SEMANTIC_CLIPDIST:     return 0x2c0 + si * 0x10;
+   case TGSI_SEMANTIC_CLIPVERTEX:   return 0x270;
+   case TGSI_SEMANTIC_PCOORD:       return 0x2e0;
+   case NV50_SEMANTIC_TESSCOORD:    return 0x2f0;
+   case TGSI_SEMANTIC_INSTANCEID:   return 0x2f8;
+   case TGSI_SEMANTIC_VERTEXID:     return 0x2fc;
+   case TGSI_SEMANTIC_TEXCOORD:     return 0x300 + si * 0x10;
+   case TGSI_SEMANTIC_FACE:         return 0x3fc;
+   case NV50_SEMANTIC_INVOCATIONID: return ~0;
+   default:
+      assert(!"invalid TGSI input semantic");
+      return ~0;
    }
+}
 
-   if (inst->Dst[0].Register.File == TGSI_FILE_TEMPORARY) {
-      dst = &inst->Dst[0].Register;
-
-      for (c = 0; c < 4; ++c)
-         if (dst->WriteMask & (1 << c))
-            subr->retv[dst->Index / 32][c] |= 1 << (dst->Index % 32);
+static uint32_t
+nvc0_shader_output_address(unsigned sn, unsigned si, unsigned ubase)
+{
+   switch (sn) {
+   case NV50_SEMANTIC_TESSFACTOR:    return 0x000 + si * 0x4;
+   case TGSI_SEMANTIC_PRIMID:        return 0x060;
+   case NV50_SEMANTIC_LAYER:         return 0x064;
+   case NV50_SEMANTIC_VIEWPORTINDEX: return 0x068;
+   case TGSI_SEMANTIC_PSIZE:         return 0x06c;
+   case TGSI_SEMANTIC_POSITION:      return 0x070;
+   case TGSI_SEMANTIC_GENERIC:       return ubase + si * 0x10;
+   case TGSI_SEMANTIC_FOG:           return 0x2e8;
+   case TGSI_SEMANTIC_COLOR:         return 0x280 + si * 0x10;
+   case TGSI_SEMANTIC_BCOLOR:        return 0x2a0 + si * 0x10;
+   case NV50_SEMANTIC_CLIPDISTANCE:  return 0x2c0 + si * 0x4;
+   case TGSI_SEMANTIC_CLIPDIST:      return 0x2c0 + si * 0x10;
+   case TGSI_SEMANTIC_CLIPVERTEX:    return 0x270;
+   case TGSI_SEMANTIC_TEXCOORD:      return 0x300 + si * 0x10;
+   case TGSI_SEMANTIC_EDGEFLAG:      return ~0;
+   default:
+      assert(!"invalid TGSI output semantic");
+      return ~0;
    }
 }
 
 static int
-nvc0_vp_gp_gen_header(struct nvc0_program *vp, struct nvc0_translation_info *ti)
+nvc0_vp_assign_input_slots(struct nv50_ir_prog_info *info)
 {
-   int i, c;
-   unsigned a;
+   unsigned i, c, n;
 
-   for (a = 0x80/4, i = 0; i <= ti->scan.file_max[TGSI_FILE_INPUT]; ++i) {
-      for (c = 0; c < 4; ++c, ++a)
-         if (ti->input_access[i][c])
-            vp->hdr[5 + a / 32] |= 1 << (a % 32); /* VP_ATTR_EN */
-   }
-
-   for (i = 0; i <= ti->scan.file_max[TGSI_FILE_OUTPUT]; ++i) {
-      a = (ti->output_loc[i][0] - 0x40) / 4;
-      if (ti->output_loc[i][0] >= 0xf00)
+   for (n = 0, i = 0; i < info->numInputs; ++i) {
+      switch (info->in[i].sn) {
+      case TGSI_SEMANTIC_INSTANCEID: /* for SM4 only, in TGSI they're SVs */
+      case TGSI_SEMANTIC_VERTEXID:
+         info->in[i].mask = 0x1;
+         info->in[i].slot[0] =
+            nvc0_shader_input_address(info->in[i].sn, 0, 0) / 4;
          continue;
-      for (c = 0; c < 4; ++c, ++a) {
-         if (!ti->output_access[i][c])
-            continue;
-         vp->hdr[13 + a / 32] |= 1 << (a % 32); /* VP_EXPORT_EN */
+      default:
+         break;
       }
-   }
-
-   for (i = 0; i < TGSI_SEMANTIC_COUNT; ++i) {
-      a = ti->sysval_loc[i] / 4;
-      if (a > 0 && a < (0xf00 / 4))
-         vp->hdr[(ti->sysval_in[i] ? 5 : 13) + a / 32] |= 1 << (a % 32);
+      for (c = 0; c < 4; ++c)
+         info->in[i].slot[c] = (0x80 + n * 0x10 + c * 0x4) / 4;
+      ++n;
    }
 
    return 0;
 }
 
 static int
-nvc0_vp_gen_header(struct nvc0_program *vp, struct nvc0_translation_info *ti)
+nvc0_sp_assign_input_slots(struct nv50_ir_prog_info *info)
 {
-   vp->hdr[0] = 0x20461;
-   vp->hdr[4] = 0xff000;
+   unsigned ubase = MAX2(0x80, 0x20 + info->numPatchConstants * 0x10);
+   unsigned offset;
+   unsigned i, c;
 
-   vp->hdr[18] = (1 << vp->vp.num_ucps) - 1;
+   for (i = 0; i < info->numInputs; ++i) {
+      offset = nvc0_shader_input_address(info->in[i].sn,
+                                         info->in[i].si, ubase);
+      if (info->in[i].patch && offset >= 0x20)
+         offset = 0x20 + info->in[i].si * 0x10;
 
-   return nvc0_vp_gp_gen_header(vp, ti);
+      if (info->in[i].sn == NV50_SEMANTIC_TESSCOORD)
+         info->in[i].mask &= 3;
+
+      for (c = 0; c < 4; ++c)
+         info->in[i].slot[c] = (offset + c * 0x4) / 4;
+   }
+
+   return 0;
 }
 
 static int
-nvc0_gp_gen_header(struct nvc0_program *gp, struct nvc0_translation_info *ti)
+nvc0_fp_assign_output_slots(struct nv50_ir_prog_info *info)
 {
-   unsigned invocations = 1;
-   unsigned max_output_verts, output_prim;
-   unsigned i;
+   unsigned count = info->prop.fp.numColourResults * 4;
+   unsigned i, c;
 
-   gp->hdr[0] = 0x21061;
+   for (i = 0; i < info->numOutputs; ++i)
+      if (info->out[i].sn == TGSI_SEMANTIC_COLOR)
+         for (c = 0; c < 4; ++c)
+            info->out[i].slot[c] = info->out[i].si * 4 + c;
 
-   for (i = 0; i < ti->scan.num_properties; ++i) {
-      switch (ti->scan.properties[i].name) {
-      case TGSI_PROPERTY_GS_OUTPUT_PRIM:
-         output_prim = ti->scan.properties[i].data[0];
+   if (info->io.sampleMask < PIPE_MAX_SHADER_OUTPUTS)
+      info->out[info->io.sampleMask].slot[0] = count++;
+   else
+   if (info->target >= 0xe0)
+      count++; /* on Kepler, depth is always last colour reg + 2 */
+
+   if (info->io.fragDepth < PIPE_MAX_SHADER_OUTPUTS)
+      info->out[info->io.fragDepth].slot[2] = count;
+
+   return 0;
+}
+
+static int
+nvc0_sp_assign_output_slots(struct nv50_ir_prog_info *info)
+{
+   unsigned ubase = MAX2(0x80, 0x20 + info->numPatchConstants * 0x10);
+   unsigned offset;
+   unsigned i, c;
+
+   for (i = 0; i < info->numOutputs; ++i) {
+      offset = nvc0_shader_output_address(info->out[i].sn,
+                                          info->out[i].si, ubase);
+      if (info->out[i].patch && offset >= 0x20)
+         offset = 0x20 + info->out[i].si * 0x10;
+
+      for (c = 0; c < 4; ++c)
+         info->out[i].slot[c] = (offset + c * 0x4) / 4;
+   }
+
+   return 0;
+}
+
+static int
+nvc0_program_assign_varying_slots(struct nv50_ir_prog_info *info)
+{
+   int ret;
+
+   if (info->type == PIPE_SHADER_VERTEX)
+      ret = nvc0_vp_assign_input_slots(info);
+   else
+      ret = nvc0_sp_assign_input_slots(info);
+   if (ret)
+      return ret;
+
+   if (info->type == PIPE_SHADER_FRAGMENT)
+      ret = nvc0_fp_assign_output_slots(info);
+   else
+      ret = nvc0_sp_assign_output_slots(info);
+   return ret;
+}
+
+static INLINE void
+nvc0_vtgp_hdr_update_oread(struct nvc0_program *vp, uint8_t slot)
+{
+   uint8_t min = (vp->hdr[4] >> 12) & 0xff;
+   uint8_t max = (vp->hdr[4] >> 24);
+
+   min = MIN2(min, slot);
+   max = MAX2(max, slot);
+
+   vp->hdr[4] = (max << 24) | (min << 12);
+}
+
+/* Common part of header generation for VP, TCP, TEP and GP. */
+static int
+nvc0_vtgp_gen_header(struct nvc0_program *vp, struct nv50_ir_prog_info *info)
+{
+   unsigned i, c, a;
+
+   for (i = 0; i < info->numInputs; ++i) {
+      if (info->in[i].patch)
+         continue;
+      for (c = 0; c < 4; ++c) {
+         a = info->in[i].slot[c];
+         if (info->in[i].mask & (1 << c)) {
+            if (info->in[i].sn != NV50_SEMANTIC_TESSCOORD)
+               vp->hdr[5 + a / 32] |= 1 << (a % 32);
+            else
+               nvc0_vtgp_hdr_update_oread(vp, info->in[i].slot[c]);
+         }
+      }
+   }
+
+   for (i = 0; i < info->numOutputs; ++i) {
+      if (info->out[i].patch)
+         continue;
+      for (c = 0; c < 4; ++c) {
+         if (!(info->out[i].mask & (1 << c)))
+            continue;
+         assert(info->out[i].slot[c] >= 0x40 / 4);
+         a = info->out[i].slot[c] - 0x40 / 4;
+         vp->hdr[13 + a / 32] |= 1 << (a % 32);
+         if (info->out[i].oread)
+            nvc0_vtgp_hdr_update_oread(vp, info->out[i].slot[c]);
+      }
+   }
+
+   for (i = 0; i < info->numSysVals; ++i) {
+      switch (info->sv[i].sn) {
+      case TGSI_SEMANTIC_PRIMID:
+         vp->hdr[5] |= 1 << 24;
          break;
-      case TGSI_PROPERTY_GS_MAX_OUTPUT_VERTICES:
-         max_output_verts = ti->scan.properties[i].data[0];
-         assert(max_output_verts < 512);
+      case TGSI_SEMANTIC_INSTANCEID:
+         vp->hdr[10] |= 1 << 30;
          break;
-         /*
-      case TGSI_PROPERTY_GS_INVOCATIONS:
-         invocations = ti->scan.properties[i].data[0];
-         assert(invocations <= 32);
+      case TGSI_SEMANTIC_VERTEXID:
+         vp->hdr[10] |= 1 << 31;
          break;
-         */
       default:
          break;
       }
    }
 
-   gp->hdr[2] = MIN2(invocations, 32) << 24;
+   vp->vp.clip_enable = info->io.clipDistanceMask;
+   for (i = 0; i < 8; ++i)
+      if (info->io.cullDistanceMask & (1 << i))
+         vp->vp.clip_mode |= 1 << (i * 4);
 
-   switch (output_prim) {
+   if (info->io.genUserClip < 0)
+      vp->vp.num_ucps = PIPE_MAX_CLIP_PLANES + 1; /* prevent rebuilding */
+
+   return 0;
+}
+
+static int
+nvc0_vp_gen_header(struct nvc0_program *vp, struct nv50_ir_prog_info *info)
+{
+   vp->hdr[0] = 0x20061 | (1 << 10);
+   vp->hdr[4] = 0xff000;
+
+   vp->hdr[18] = info->io.clipDistanceMask;
+
+   return nvc0_vtgp_gen_header(vp, info);
+}
+
+#if defined(PIPE_SHADER_HULL) || defined(PIPE_SHADER_DOMAIN)
+static void
+nvc0_tp_get_tess_mode(struct nvc0_program *tp, struct nv50_ir_prog_info *info)
+{
+   if (info->prop.tp.outputPrim == PIPE_PRIM_MAX) {
+      tp->tp.tess_mode = ~0;
+      return;
+   }
+   switch (info->prop.tp.domain) {
+   case PIPE_PRIM_LINES:
+      tp->tp.tess_mode = NVC0_3D_TESS_MODE_PRIM_ISOLINES;
+      break;
+   case PIPE_PRIM_TRIANGLES:
+      tp->tp.tess_mode = NVC0_3D_TESS_MODE_PRIM_TRIANGLES;
+      if (info->prop.tp.winding > 0)
+         tp->tp.tess_mode |= NVC0_3D_TESS_MODE_CW;
+      break;
+   case PIPE_PRIM_QUADS:
+      tp->tp.tess_mode = NVC0_3D_TESS_MODE_PRIM_QUADS;
+      break;
+   default:
+      tp->tp.tess_mode = ~0;
+      return;
+   }
+   if (info->prop.tp.outputPrim != PIPE_PRIM_POINTS)
+      tp->tp.tess_mode |= NVC0_3D_TESS_MODE_CONNECTED;
+
+   switch (info->prop.tp.partitioning) {
+   case PIPE_TESS_PART_INTEGER:
+   case PIPE_TESS_PART_POW2:
+      tp->tp.tess_mode |= NVC0_3D_TESS_MODE_SPACING_EQUAL;
+      break;
+   case PIPE_TESS_PART_FRACT_ODD:
+      tp->tp.tess_mode |= NVC0_3D_TESS_MODE_SPACING_FRACTIONAL_ODD;
+      break;
+   case PIPE_TESS_PART_FRACT_EVEN:
+      tp->tp.tess_mode |= NVC0_3D_TESS_MODE_SPACING_FRACTIONAL_EVEN;
+      break;
+   default:
+      assert(!"invalid tessellator partitioning");
+      break;
+   }
+}
+#endif
+
+#ifdef PIPE_SHADER_HULL
+static int
+nvc0_tcp_gen_header(struct nvc0_program *tcp, struct nv50_ir_prog_info *info)
+{
+   unsigned opcs = 6; /* output patch constants (at least the TessFactors) */
+
+   tcp->tp.input_patch_size = info->prop.tp.inputPatchSize;
+
+   if (info->numPatchConstants)
+      opcs = 8 + info->numPatchConstants * 4;
+
+   tcp->hdr[0] = 0x20061 | (2 << 10);
+
+   tcp->hdr[1] = opcs << 24;
+   tcp->hdr[2] = info->prop.tp.outputPatchSize << 24;
+
+   tcp->hdr[4] = 0xff000; /* initial min/max parallel output read address */
+
+   nvc0_vtgp_gen_header(tcp, info);
+
+   nvc0_tp_get_tess_mode(tcp, info);
+
+   return 0;
+}
+#endif
+
+#ifdef PIPE_SHADER_DOMAIN
+static int
+nvc0_tep_gen_header(struct nvc0_program *tep, struct nv50_ir_prog_info *info)
+{
+   tep->tp.input_patch_size = ~0;
+
+   tep->hdr[0] = 0x20061 | (3 << 10);
+   tep->hdr[4] = 0xff000;
+
+   nvc0_vtgp_gen_header(tep, info);
+
+   nvc0_tp_get_tess_mode(tep, info);
+
+   tep->hdr[18] |= 0x3 << 12; /* ? */
+
+   return 0;
+}
+#endif
+
+static int
+nvc0_gp_gen_header(struct nvc0_program *gp, struct nv50_ir_prog_info *info)
+{
+   gp->hdr[0] = 0x20061 | (4 << 10);
+
+   gp->hdr[2] = MIN2(info->prop.gp.instanceCount, 32) << 24;
+
+   switch (info->prop.gp.outputPrim) {
    case PIPE_PRIM_POINTS:
       gp->hdr[3] = 0x01000000;
       gp->hdr[0] |= 0xf0000000;
@@ -510,220 +391,421 @@ nvc0_gp_gen_header(struct nvc0_program *gp, struct nvc0_translation_info *ti)
       break;
    }
 
-   gp->hdr[4] = max_output_verts & 0x1ff;
+   gp->hdr[4] = info->prop.gp.maxVertices & 0x1ff;
 
-   return nvc0_vp_gp_gen_header(gp, ti);
+   return nvc0_vtgp_gen_header(gp, info);
+}
+
+#define NVC0_INTERP_FLAT          (1 << 0)
+#define NVC0_INTERP_PERSPECTIVE   (2 << 0)
+#define NVC0_INTERP_LINEAR        (3 << 0)
+#define NVC0_INTERP_CENTROID      (1 << 2)
+
+static uint8_t
+nvc0_hdr_interp_mode(const struct nv50_ir_varying *var)
+{
+   if (var->linear)
+      return NVC0_INTERP_LINEAR;
+   if (var->flat)
+      return NVC0_INTERP_FLAT;
+   return NVC0_INTERP_PERSPECTIVE;
 }
 
 static int
-nvc0_fp_gen_header(struct nvc0_program *fp, struct nvc0_translation_info *ti)
+nvc0_fp_gen_header(struct nvc0_program *fp, struct nv50_ir_prog_info *info)
 {
-   int i, c;
-   unsigned a, m;
-   
-   fp->hdr[0] = 0x21462;
+   unsigned i, c, a, m;
+
+   /* just 00062 on Kepler */
+   fp->hdr[0] = 0x20062 | (5 << 10);
    fp->hdr[5] = 0x80000000; /* getting a trap if FRAG_COORD_UMASK.w = 0 */
 
-   if (ti->scan.uses_kill)
+   if (info->prop.fp.usesDiscard)
       fp->hdr[0] |= 0x8000;
-   if (ti->scan.writes_z) {
+   if (info->prop.fp.numColourResults > 1)
+      fp->hdr[0] |= 0x4000;
+   if (info->io.sampleMask < PIPE_MAX_SHADER_OUTPUTS)
+      fp->hdr[19] |= 0x1;
+   if (info->prop.fp.writesDepth) {
       fp->hdr[19] |= 0x2;
-      if (ti->scan.num_outputs > 2)
-         fp->hdr[0] |= 0x4000; /* FP_MULTIPLE_COLOR_OUTPUTS */
-   } else {
-   if (ti->scan.num_outputs > 1)
-      fp->hdr[0] |= 0x4000; /* FP_MULTIPLE_COLOR_OUTPUTS */
+      fp->flags[0] = 0x11; /* deactivate ZCULL */
    }
 
-   for (i = 0; i <= ti->scan.file_max[TGSI_FILE_INPUT]; ++i) {
-      m = ti->interp_mode[i] & 3;
+   for (i = 0; i < info->numInputs; ++i) {
+      m = nvc0_hdr_interp_mode(&info->in[i]);
       for (c = 0; c < 4; ++c) {
-         if (!ti->input_access[i][c])
+         if (!(info->in[i].mask & (1 << c)))
             continue;
-         a = ti->input_loc[i][c] / 2;
-         if (ti->input_loc[i][c] >= 0x2c0)
-            a -= 32;
-         if (ti->input_loc[i][0] == 0x70)
-            fp->hdr[5] |= 1 << (28 + c); /* FRAG_COORD_UMASK */
-         else
-         if (ti->input_loc[i][0] == 0x2e0)
-            fp->hdr[14] |= 1 << (24 + c); /* POINT_COORD */
-         else
+         a = info->in[i].slot[c];
+         if (info->in[i].slot[0] >= (0x060 / 4) &&
+             info->in[i].slot[0] <= (0x07c / 4)) {
+            fp->hdr[5] |= 1 << (24 + (a - 0x060 / 4));
+         } else
+         if (info->in[i].slot[0] >= (0x2c0 / 4) &&
+             info->in[i].slot[0] <= (0x2fc / 4)) {
+            fp->hdr[14] |= (1 << (a - 0x280 / 4)) & 0x07ff0000;
+         } else {
+            if (info->in[i].slot[c] < (0x040 / 4) ||
+                info->in[i].slot[c] > (0x380 / 4))
+               continue;
+            a *= 2;
+            if (info->in[i].slot[0] >= (0x300 / 4))
+               a -= 32;
             fp->hdr[4 + a / 32] |= m << (a % 32);
+         }
       }
    }
 
-   for (i = 0; i <= ti->scan.file_max[TGSI_FILE_OUTPUT]; ++i) {
-      if (i != ti->fp_depth_output)
-         fp->hdr[18] |= 0xf << ti->output_loc[i][0];
+   for (i = 0; i < info->numOutputs; ++i) {
+      if (info->out[i].sn == TGSI_SEMANTIC_COLOR)
+         fp->hdr[18] |= info->out[i].mask << info->out[i].slot[0];
    }
 
-   for (i = 0; i < TGSI_SEMANTIC_COUNT; ++i) {
-      a = ti->sysval_loc[i] / 2;
-      if ((a > 0) && (a < 0xf00 / 2))
-         fp->hdr[4 + a / 32] |= NVC0_INTERP_FLAT << (a % 32);
-   }
+   fp->fp.early_z = info->prop.fp.earlyFragTests;
 
    return 0;
 }
 
-static boolean
-nvc0_prog_scan(struct nvc0_translation_info *ti)
+static struct nvc0_transform_feedback_state *
+nvc0_program_create_tfb_state(const struct nv50_ir_prog_info *info,
+                              const struct pipe_stream_output_info *pso)
 {
-   struct nvc0_program *prog = ti->prog;
-   struct tgsi_parse_context parse;
-   int ret;
-   unsigned i;
+   struct nvc0_transform_feedback_state *tfb;
+   unsigned b, i, c;
 
-#if NV50_DEBUG & NV50_DEBUG_SHADER
-   tgsi_dump(prog->pipe.tokens, 0);
+   tfb = MALLOC_STRUCT(nvc0_transform_feedback_state);
+   if (!tfb)
+      return NULL;
+   for (b = 0; b < 4; ++b) {
+      tfb->stride[b] = pso->stride[b] * 4;
+      tfb->varying_count[b] = 0;
+   }
+   memset(tfb->varying_index, 0xff, sizeof(tfb->varying_index)); /* = skip */
+
+   for (i = 0; i < pso->num_outputs; ++i) {
+      unsigned s = pso->output[i].start_component;
+      unsigned p = pso->output[i].dst_offset;
+      b = pso->output[i].output_buffer;
+
+      for (c = 0; c < pso->output[i].num_components; ++c)
+         tfb->varying_index[b][p++] =
+            info->out[pso->output[i].register_index].slot[s + c];
+
+      tfb->varying_count[b] = MAX2(tfb->varying_count[b], p);
+   }
+   for (b = 0; b < 4; ++b) // zero unused indices (looks nicer)
+      for (c = tfb->varying_count[b]; c & 3; ++c)
+         tfb->varying_index[b][c] = 0;
+
+   return tfb;
+}
+
+#ifdef DEBUG
+static void
+nvc0_program_dump(struct nvc0_program *prog)
+{
+   unsigned pos;
+
+   if (prog->type != PIPE_SHADER_COMPUTE) {
+      for (pos = 0; pos < sizeof(prog->hdr) / sizeof(prog->hdr[0]); ++pos)
+         debug_printf("HDR[%02lx] = 0x%08x\n",
+                      pos * sizeof(prog->hdr[0]), prog->hdr[pos]);
+   }
+   debug_printf("shader binary code (0x%x bytes):", prog->code_size);
+   for (pos = 0; pos < prog->code_size / 4; ++pos) {
+      if ((pos % 8) == 0)
+         debug_printf("\n");
+      debug_printf("%08x ", prog->code[pos]);
+   }
+   debug_printf("\n");
+}
 #endif
 
-   tgsi_scan_shader(prog->pipe.tokens, &ti->scan);
+boolean
+nvc0_program_translate(struct nvc0_program *prog, uint16_t chipset)
+{
+   struct nv50_ir_prog_info *info;
+   int ret;
 
-   if (ti->prog->type == PIPE_SHADER_FRAGMENT) {
-      ti->fp_depth_output = 255;
-      for (i = 0; i < ti->scan.num_outputs; ++i)
-         if (ti->scan.output_semantic_name[i] == TGSI_SEMANTIC_POSITION)
-            ti->fp_depth_output = i;
-   }
+   info = CALLOC_STRUCT(nv50_ir_prog_info);
+   if (!info)
+      return FALSE;
 
-   ti->subr =
-      CALLOC(ti->scan.opcode_count[TGSI_OPCODE_BGNSUB], sizeof(ti->subr[0]));
+   info->type = prog->type;
+   info->target = chipset;
+   info->bin.sourceRep = NV50_PROGRAM_IR_TGSI;
+   info->bin.source = (void *)prog->pipe.tokens;
 
-   ti->immd32 = (uint32_t *)MALLOC(ti->scan.immediate_count * 16);
-   ti->immd32_ty = (ubyte *)MALLOC(ti->scan.immediate_count * sizeof(ubyte));
+   info->io.genUserClip = prog->vp.num_ucps;
+   info->io.ucpBase = 256;
+   info->io.ucpCBSlot = 15;
 
-   ti->insns = MALLOC(ti->scan.num_instructions * sizeof(ti->insns[0]));
-
-   tgsi_parse_init(&parse, prog->pipe.tokens);
-   while (!tgsi_parse_end_of_tokens(&parse)) {
-      tgsi_parse_token(&parse);
-
-      switch (parse.FullToken.Token.Type) {
-      case TGSI_TOKEN_TYPE_IMMEDIATE:
-         prog_immediate(ti, &parse.FullToken.FullImmediate);
-         break;
-      case TGSI_TOKEN_TYPE_DECLARATION:
-         prog_decl(ti, &parse.FullToken.FullDeclaration);
-         break;
-      case TGSI_TOKEN_TYPE_INSTRUCTION:
-         ti->insns[ti->num_insns] = parse.FullToken.FullInstruction;
-         prog_inst(ti, &parse.FullToken.FullInstruction, ++ti->num_insns);
-         break;
-      default:
-         break;
+   if (prog->type == PIPE_SHADER_COMPUTE) {
+      if (chipset >= NVISA_GK104_CHIPSET) {
+         info->io.resInfoCBSlot = 0;
+         info->io.texBindBase = NVE4_CP_INPUT_TEX(0);
+         info->io.suInfoBase = NVE4_CP_INPUT_SUF(0);
+         info->prop.cp.gridInfoBase = NVE4_CP_INPUT_GRID_INFO(0);
       }
+      info->io.msInfoCBSlot = 0;
+      info->io.msInfoBase = NVE4_CP_INPUT_MS_OFFSETS;
+   } else {
+      if (chipset >= NVISA_GK104_CHIPSET) {
+         info->io.resInfoCBSlot = 15;
+         info->io.texBindBase = 0x20;
+         info->io.suInfoBase = 0; /* TODO */
+      }
+      info->io.msInfoCBSlot = 15;
+      info->io.msInfoBase = 0; /* TODO */
    }
 
-   for (i = 0; i < ti->num_subrs; ++i) {
-      unsigned pc = ti->subr[i].id;
-      while (ti->insns[pc].Instruction.Opcode != TGSI_OPCODE_ENDSUB)
-         prog_subroutine_inst(&ti->subr[i], &ti->insns[pc++]);
+   info->assignSlots = nvc0_program_assign_varying_slots;
+
+#ifdef DEBUG
+   info->optLevel = debug_get_num_option("NV50_PROG_OPTIMIZE", 3);
+   info->dbgFlags = debug_get_num_option("NV50_PROG_DEBUG", 0);
+#else
+   info->optLevel = 3;
+#endif
+
+   ret = nv50_ir_generate_code(info);
+   if (ret) {
+      NOUVEAU_ERR("shader translation failed: %i\n", ret);
+      goto out;
    }
+   if (prog->type != PIPE_SHADER_COMPUTE)
+      FREE(info->bin.syms);
+
+   prog->code = info->bin.code;
+   prog->code_size = info->bin.codeSize;
+   prog->immd_data = info->immd.buf;
+   prog->immd_size = info->immd.bufSize;
+   prog->relocs = info->bin.relocData;
+   prog->num_gprs = MAX2(4, (info->bin.maxGPR + 1));
+   prog->num_barriers = info->numBarriers;
+
+   prog->vp.need_vertex_id = info->io.vertexId < PIPE_MAX_SHADER_INPUTS;
+
+   if (info->io.edgeFlagOut < PIPE_MAX_ATTRIBS)
+      info->out[info->io.edgeFlagOut].mask = 0; /* for headergen */
+   prog->vp.edgeflag = info->io.edgeFlagIn;
 
    switch (prog->type) {
    case PIPE_SHADER_VERTEX:
-      ti->input_file = NV_FILE_MEM_A;
-      ti->output_file = NV_FILE_MEM_V;
-      ret = nvc0_vp_gen_header(prog, ti);
+      ret = nvc0_vp_gen_header(prog, info);
       break;
-      /*
-   case PIPE_SHADER_TESSELLATION_CONTROL:
-      ret = nvc0_tcp_gen_header(ti);
+#ifdef PIPE_SHADER_HULL
+   case PIPE_SHADER_HULL:
+      ret = nvc0_tcp_gen_header(prog, info);
       break;
-   case PIPE_SHADER_TESSELLATION_EVALUATION:
-      ret = nvc0_tep_gen_header(ti);
+#endif
+#ifdef PIPE_SHADER_DOMAIN
+   case PIPE_SHADER_DOMAIN:
+      ret = nvc0_tep_gen_header(prog, info);
       break;
+#endif
    case PIPE_SHADER_GEOMETRY:
-      ret = nvc0_gp_gen_header(ti);
+      ret = nvc0_gp_gen_header(prog, info);
       break;
-      */
    case PIPE_SHADER_FRAGMENT:
-      ti->input_file = NV_FILE_MEM_V;
-      ti->output_file = NV_FILE_GPR;
-
-      if (ti->scan.writes_z)
-         prog->flags[0] = 0x11; /* ? */
-      else
-      if (!ti->scan.uses_kill && !ti->global_stores)
-         prog->fp.early_z = 1;
-
-      ret = nvc0_fp_gen_header(prog, ti);
+      ret = nvc0_fp_gen_header(prog, info);
+      break;
+   case PIPE_SHADER_COMPUTE:
+      prog->cp.syms = info->bin.syms;
+      prog->cp.num_syms = info->bin.numSyms;
       break;
    default:
-      assert(!"unsupported program type");
       ret = -1;
+      NOUVEAU_ERR("unknown program type: %u\n", prog->type);
       break;
    }
+   if (ret)
+      goto out;
 
-   if (ti->require_stores) {
+   if (info->bin.tlsSpace) {
+      assert(info->bin.tlsSpace < (1 << 24));
       prog->hdr[0] |= 1 << 26;
-      prog->hdr[1] |= ti->temp128_nr * 16; /* l[] size */
+      prog->hdr[1] |= info->bin.tlsSpace; /* l[] size */
+      prog->need_tls = TRUE;
    }
+   /* TODO: factor 2 only needed where joinat/precont is used,
+    *       and we only have to count non-uniform branches
+    */
+   /*
+   if ((info->maxCFDepth * 2) > 16) {
+      prog->hdr[2] |= (((info->maxCFDepth * 2) + 47) / 48) * 0x200;
+      prog->need_tls = TRUE;
+   }
+   */
+   if (info->io.globalAccess)
+      prog->hdr[0] |= 1 << 16;
 
-   assert(!ret);
-   return ret;
+   if (prog->pipe.stream_output.num_outputs)
+      prog->tfb = nvc0_program_create_tfb_state(info,
+                                                &prog->pipe.stream_output);
+
+out:
+   FREE(info);
+   return !ret;
 }
 
 boolean
-nvc0_program_translate(struct nvc0_program *prog)
+nvc0_program_upload_code(struct nvc0_context *nvc0, struct nvc0_program *prog)
 {
-   struct nvc0_translation_info *ti;
+   struct nvc0_screen *screen = nvc0->screen;
+   const boolean is_cp = prog->type == PIPE_SHADER_COMPUTE;
    int ret;
+   uint32_t size = prog->code_size + (is_cp ? 0 : NVC0_SHADER_HEADER_SIZE);
+   uint32_t lib_pos = screen->lib_code->start;
+   uint32_t code_pos;
 
-   ti = CALLOC_STRUCT(nvc0_translation_info);
-   ti->prog = prog;
+   /* c[] bindings need to be aligned to 0x100, but we could use relocations
+    * to save space. */
+   if (prog->immd_size) {
+      prog->immd_base = size;
+      size = align(size, 0x40);
+      size += prog->immd_size + 0xc0; /* add 0xc0 for align 0x40 -> 0x100 */
+   }
+   /* On Fermi, SP_START_ID must be aligned to 0x40.
+    * On Kepler, the first instruction must be aligned to 0x80 because
+    * latency information is expected only at certain positions.
+    */
+   if (screen->base.class_3d >= NVE4_3D_CLASS)
+      size = size + (is_cp ? 0x40 : 0x70);
+   size = align(size, 0x40);
 
-   ti->edgeflag_out = PIPE_MAX_SHADER_OUTPUTS;
-
-   prog->vp.edgeflag = PIPE_MAX_ATTRIBS;
-
-   if (prog->type == PIPE_SHADER_VERTEX && prog->vp.num_ucps)
-      ti->append_ucp = TRUE;
-
-   ret = nvc0_prog_scan(ti);
+   ret = nouveau_heap_alloc(screen->text_heap, size, prog, &prog->mem);
    if (ret) {
-      NOUVEAU_ERR("unsupported shader program\n");
-      goto out;
+      struct nouveau_heap *heap = screen->text_heap;
+      struct nouveau_heap *iter;
+      for (iter = heap; iter && iter->next != heap; iter = iter->next) {
+         struct nvc0_program *evict = iter->priv;
+         if (evict)
+            nouveau_heap_free(&evict->mem);
+      }
+      debug_printf("WARNING: out of code space, evicting all shaders.\n");
+      ret = nouveau_heap_alloc(heap, size, prog, &prog->mem);
+      if (ret) {
+         NOUVEAU_ERR("shader too large (0x%x) to fit in code space ?\n", size);
+         return FALSE;
+      }
+      IMMED_NVC0(nvc0->base.pushbuf, NVC0_3D(SERIALIZE), 0);
+   }
+   prog->code_base = prog->mem->start;
+   prog->immd_base = align(prog->mem->start + prog->immd_base, 0x100);
+   assert((prog->immd_size == 0) || (prog->immd_base + prog->immd_size <=
+                                     prog->mem->start + prog->mem->size));
+
+   if (!is_cp) {
+      if (screen->base.class_3d >= NVE4_3D_CLASS) {
+         switch (prog->mem->start & 0xff) {
+         case 0x40: prog->code_base += 0x70; break;
+         case 0x80: prog->code_base += 0x30; break;
+         case 0xc0: prog->code_base += 0x70; break;
+         default:
+            prog->code_base += 0x30;
+            assert((prog->mem->start & 0xff) == 0x00);
+            break;
+         }
+      }
+      code_pos = prog->code_base + NVC0_SHADER_HEADER_SIZE;
+   } else {
+      if (screen->base.class_3d >= NVE4_3D_CLASS) {
+         if (prog->mem->start & 0x40)
+            prog->code_base += 0x40;
+         assert((prog->code_base & 0x7f) == 0x00);
+      }
+      code_pos = prog->code_base;
    }
 
-   ret = nvc0_generate_code(ti);
-   if (ret)
-      NOUVEAU_ERR("shader translation failed\n");
+   if (prog->relocs)
+      nv50_ir_relocate_code(prog->relocs, prog->code, code_pos, lib_pos, 0);
 
-#if NV50_DEBUG & NV50_DEBUG_SHADER
-   unsigned i;
-   for (i = 0; i < sizeof(prog->hdr) / sizeof(prog->hdr[0]); ++i)
-      debug_printf("HDR[%02lx] = 0x%08x\n",
-                   i * sizeof(prog->hdr[0]), prog->hdr[i]);
+#ifdef DEBUG
+   if (debug_get_bool_option("NV50_PROG_DEBUG", FALSE))
+      nvc0_program_dump(prog);
 #endif
 
-out:
-   if (ti->immd32)
-      FREE(ti->immd32);
-   if (ti->immd32_ty)
-      FREE(ti->immd32_ty);
-   if (ti->insns)
-      FREE(ti->insns);
-   if (ti->subr)
-      FREE(ti->subr);
-   FREE(ti);
-   return ret ? FALSE : TRUE;
+   if (!is_cp)
+      nvc0->base.push_data(&nvc0->base, screen->text, prog->code_base,
+                           NOUVEAU_BO_VRAM, NVC0_SHADER_HEADER_SIZE, prog->hdr);
+   nvc0->base.push_data(&nvc0->base, screen->text, code_pos,
+                        NOUVEAU_BO_VRAM, prog->code_size, prog->code);
+   if (prog->immd_size)
+      nvc0->base.push_data(&nvc0->base,
+                           screen->text, prog->immd_base, NOUVEAU_BO_VRAM,
+                           prog->immd_size, prog->immd_data);
+
+   BEGIN_NVC0(nvc0->base.pushbuf, NVC0_3D(MEM_BARRIER), 1);
+   PUSH_DATA (nvc0->base.pushbuf, 0x1011);
+
+   return TRUE;
+}
+
+/* Upload code for builtin functions like integer division emulation. */
+void
+nvc0_program_library_upload(struct nvc0_context *nvc0)
+{
+   struct nvc0_screen *screen = nvc0->screen;
+   int ret;
+   uint32_t size;
+   const uint32_t *code;
+
+   if (screen->lib_code)
+      return;
+
+   nv50_ir_get_target_library(screen->base.device->chipset, &code, &size);
+   if (!size)
+      return;
+
+   ret = nouveau_heap_alloc(screen->text_heap, align(size, 0x100), NULL,
+                            &screen->lib_code);
+   if (ret)
+      return;
+
+   nvc0->base.push_data(&nvc0->base,
+                        screen->text, screen->lib_code->start, NOUVEAU_BO_VRAM,
+                        size, code);
+   /* no need for a memory barrier, will be emitted with first program */
 }
 
 void
 nvc0_program_destroy(struct nvc0_context *nvc0, struct nvc0_program *prog)
 {
-   if (prog->res)
-      nouveau_resource_free(&prog->res);
+   const struct pipe_shader_state pipe = prog->pipe;
+   const ubyte type = prog->type;
 
+   if (prog->mem)
+      nouveau_heap_free(&prog->mem);
    if (prog->code)
-      FREE(prog->code);
-   if (prog->relocs)
-      FREE(prog->relocs);
+      FREE(prog->code); /* may be 0 for hardcoded shaders */
+   FREE(prog->immd_data);
+   FREE(prog->relocs);
+   if (prog->type == PIPE_SHADER_COMPUTE && prog->cp.syms)
+      FREE(prog->cp.syms);
+   if (prog->tfb) {
+      if (nvc0->state.tfb == prog->tfb)
+         nvc0->state.tfb = NULL;
+      FREE(prog->tfb);
+   }
 
-   memset(prog->hdr, 0, sizeof(prog->hdr));
+   memset(prog, 0, sizeof(*prog));
 
-   prog->translated = FALSE;
+   prog->pipe = pipe;
+   prog->type = type;
+}
+
+uint32_t
+nvc0_program_symbol_offset(const struct nvc0_program *prog, uint32_t label)
+{
+   const struct nv50_ir_prog_symbol *syms =
+      (const struct nv50_ir_prog_symbol *)prog->cp.syms;
+   unsigned base = 0;
+   unsigned i;
+   if (prog->type != PIPE_SHADER_COMPUTE)
+      base = NVC0_SHADER_HEADER_SIZE;
+   for (i = 0; i < prog->cp.num_syms; ++i)
+      if (syms[i].label == label)
+         return prog->code_base + base + syms[i].offset;
+   return prog->code_base; /* no symbols or symbol not found */
 }

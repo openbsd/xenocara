@@ -32,13 +32,16 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *   Keith Whitwell <keith@tungstengraphics.com>
  */
 
+#include <stdbool.h>
 #include "main/glheader.h"
 #include "main/api_arrayelt.h"
+#include "main/api_exec.h"
 #include "main/context.h"
 #include "main/simple_list.h"
 #include "main/imports.h"
 #include "main/extensions.h"
-#include "main/mfeatures.h"
+#include "main/version.h"
+#include "main/vtxfmt.h"
 
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
@@ -58,26 +61,9 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r200_vertprog.h"
 #include "radeon_queryobj.h"
 #include "r200_blit.h"
+#include "radeon_fog.h"
 
 #include "radeon_span.h"
-
-#define need_GL_ARB_occlusion_query
-#define need_GL_ARB_vertex_array_object
-#define need_GL_ARB_vertex_program
-#define need_GL_APPLE_vertex_array_object
-#define need_GL_ATI_fragment_shader
-#define need_GL_EXT_blend_minmax
-#define need_GL_EXT_fog_coord
-#define need_GL_EXT_secondary_color
-#define need_GL_EXT_blend_equation_separate
-#define need_GL_EXT_blend_func_separate
-#define need_GL_EXT_gpu_program_parameters
-#define need_GL_NV_vertex_program
-#define need_GL_ARB_point_parameters
-#define need_GL_EXT_framebuffer_object
-#define need_GL_OES_EGL_image
-
-#include "main/remap_helper.h"
 
 #include "utils.h"
 #include "xmlpool.h" /* for symbolic values of enum-type options */
@@ -110,75 +96,6 @@ static const GLubyte *r200GetString( struct gl_context *ctx, GLenum name )
    }
 }
 
-
-/* Extension strings exported by the R200 driver.
- */
-static const struct dri_extension card_extensions[] =
-{
-    { "GL_ARB_half_float_pixel",           NULL },
-    { "GL_ARB_multitexture",               NULL },
-    { "GL_ARB_occlusion_query",		   GL_ARB_occlusion_query_functions},
-    { "GL_ARB_texture_border_clamp",       NULL },
-    { "GL_ARB_texture_env_add",            NULL },
-    { "GL_ARB_texture_env_combine",        NULL },
-    { "GL_ARB_texture_env_dot3",           NULL },
-    { "GL_ARB_texture_env_crossbar",       NULL },
-    { "GL_ARB_texture_mirrored_repeat",    NULL },
-    { "GL_ARB_vertex_array_object",        GL_ARB_vertex_array_object_functions},
-    { "GL_EXT_blend_minmax",               GL_EXT_blend_minmax_functions },
-    { "GL_EXT_blend_subtract",             NULL },
-    { "GL_EXT_fog_coord",                  GL_EXT_fog_coord_functions },
-    { "GL_EXT_packed_depth_stencil",	   NULL},
-    { "GL_EXT_secondary_color",            GL_EXT_secondary_color_functions },
-    { "GL_EXT_stencil_wrap",               NULL },
-    { "GL_EXT_texture_edge_clamp",         NULL },
-    { "GL_EXT_texture_env_combine",        NULL },
-    { "GL_EXT_texture_env_dot3",           NULL },
-    { "GL_EXT_texture_filter_anisotropic", NULL },
-    { "GL_EXT_texture_lod_bias",           NULL },
-    { "GL_EXT_texture_mirror_clamp",       NULL },
-    { "GL_EXT_texture_rectangle",          NULL },
-    { "GL_APPLE_vertex_array_object",      GL_APPLE_vertex_array_object_functions },
-    { "GL_ATI_texture_env_combine3",       NULL },
-    { "GL_ATI_texture_mirror_once",        NULL },
-    { "GL_MESA_pack_invert",               NULL },
-    { "GL_NV_blend_square",                NULL },
-#if FEATURE_OES_EGL_image
-    { "GL_OES_EGL_image",                  GL_OES_EGL_image_functions },
-#endif
-    { NULL,                                NULL }
-};
-
-static const struct dri_extension blend_extensions[] = {
-    { "GL_EXT_blend_equation_separate",    GL_EXT_blend_equation_separate_functions },
-    { "GL_EXT_blend_func_separate",        GL_EXT_blend_func_separate_functions },
-    { NULL,                                NULL }
-};
-
-static const struct dri_extension ARB_vp_extension[] = {
-    { "GL_ARB_vertex_program",             GL_ARB_vertex_program_functions },
-    { "GL_EXT_gpu_program_parameters",     GL_EXT_gpu_program_parameters_functions},
-    { NULL,                                NULL }
-};
-
-static const struct dri_extension NV_vp_extension[] = {
-    { "GL_NV_vertex_program",              GL_NV_vertex_program_functions }
-};
-
-static const struct dri_extension ATI_fs_extension[] = {
-    { "GL_ATI_fragment_shader",            GL_ATI_fragment_shader_functions }
-};
-
-static const struct dri_extension point_extensions[] = {
-    { "GL_ARB_point_sprite",               NULL },
-    { "GL_ARB_point_parameters",           GL_ARB_point_parameters_functions },
-    { NULL,                                NULL }
-};
-
-static const struct dri_extension mm_extensions[] = {
-  { "GL_EXT_framebuffer_object", GL_EXT_framebuffer_object_functions },
-  { NULL, NULL }
-};
 
 extern const struct tnl_pipeline_stage _r200_render_stage;
 extern const struct tnl_pipeline_stage _r200_tcl_stage;
@@ -222,7 +139,6 @@ static const struct tnl_pipeline_stage *r200_pipeline[] = {
  */
 static void r200InitDriverFuncs( struct dd_function_table *functions )
 {
-    functions->GetBufferSize		= NULL; /* OBSOLETE */
     functions->GetString		= r200GetString;
 }
 
@@ -240,8 +156,6 @@ static void r200_get_lock(radeonContextPtr radeon)
 
    if ( sarea->ctx_owner != rmesa->radeon.dri.hwContext ) {
       sarea->ctx_owner = rmesa->radeon.dri.hwContext;
-      if (!radeon->radeonScreen->kernel_mm)
-         radeon_bo_legacy_texture_age(radeon->radeonScreen->bom);
    }
 
 }
@@ -284,29 +198,53 @@ static void r200_init_vtbl(radeonContextPtr radeon)
 GLboolean r200CreateContext( gl_api api,
 			     const struct gl_config *glVisual,
 			     __DRIcontext *driContextPriv,
+			     unsigned major_version,
+			     unsigned minor_version,
+			     uint32_t flags,
+			     unsigned *error,
 			     void *sharedContextPrivate)
 {
    __DRIscreen *sPriv = driContextPriv->driScreenPriv;
-   radeonScreenPtr screen = (radeonScreenPtr)(sPriv->private);
+   radeonScreenPtr screen = (radeonScreenPtr)(sPriv->driverPrivate);
    struct dd_function_table functions;
    r200ContextPtr rmesa;
    struct gl_context *ctx;
    int i;
    int tcl_mode;
 
+   switch (api) {
+   case API_OPENGL_COMPAT:
+      if (major_version > 1 || minor_version > 3) {
+         *error = __DRI_CTX_ERROR_BAD_VERSION;
+         return GL_FALSE;
+      }
+      break;
+   case API_OPENGLES:
+      break;
+   default:
+      *error = __DRI_CTX_ERROR_BAD_API;
+      return GL_FALSE;
+   }
+
+   /* Flag filtering is handled in dri2CreateContextAttribs.
+    */
+   (void) flags;
+
    assert(glVisual);
    assert(driContextPriv);
    assert(screen);
 
    /* Allocate the R200 context */
-   rmesa = (r200ContextPtr) CALLOC( sizeof(*rmesa) );
-   if ( !rmesa )
+   rmesa = calloc(1, sizeof(*rmesa));
+   if ( !rmesa ) {
+      *error = __DRI_CTX_ERROR_NO_MEMORY;
       return GL_FALSE;
+   }
 
    rmesa->radeon.radeonScreen = screen;
    r200_init_vtbl(&rmesa->radeon);
    /* init exp fog table data */
-   r200InitStaticFogData();
+   radeonInitStaticFogData();
 
    /* Parse configuration files.
     * Do this here so that initialMaxAnisotropy is set before we create
@@ -343,28 +281,31 @@ GLboolean r200CreateContext( gl_api api,
    if (!radeonInitContext(&rmesa->radeon, &functions,
 			  glVisual, driContextPriv,
 			  sharedContextPrivate)) {
-     FREE(rmesa);
+     free(rmesa);
+     *error = __DRI_CTX_ERROR_NO_MEMORY;
      return GL_FALSE;
    }
 
    rmesa->radeon.swtcl.RenderIndex = ~0;
    rmesa->radeon.hw.all_dirty = 1;
 
-   /* Set the maximum texture size small enough that we can guarentee that
-    * all texture units can bind a maximal texture and have all of them in
-    * texturable memory at once. Depending on the allow_large_textures driconf
-    * setting allow larger textures.
+   ctx = &rmesa->radeon.glCtx;
+   /* Initialize the software rasterizer and helper modules.
     */
+   _swrast_CreateContext( ctx );
+   _vbo_CreateContext( ctx );
+   _tnl_CreateContext( ctx );
+   _swsetup_CreateContext( ctx );
+   _ae_create_context( ctx );
 
-   ctx = rmesa->radeon.glCtx;
    ctx->Const.MaxTextureUnits = driQueryOptioni (&rmesa->radeon.optionCache,
 						 "texture_units");
-   ctx->Const.MaxTextureImageUnits = ctx->Const.MaxTextureUnits;
+   ctx->Const.FragmentProgram.MaxTextureImageUnits = ctx->Const.MaxTextureUnits;
    ctx->Const.MaxTextureCoordUnits = ctx->Const.MaxTextureUnits;
 
    ctx->Const.MaxCombinedTextureImageUnits = ctx->Const.MaxTextureUnits;
 
-   i = driQueryOptioni( &rmesa->radeon.optionCache, "allow_large_textures");
+   ctx->Const.StripTextureBorder = GL_TRUE;
 
    /* FIXME: When no memory manager is available we should set this 
     * to some reasonable value based on texture memory pool size */
@@ -382,10 +323,7 @@ GLboolean r200CreateContext( gl_api api,
    ctx->Const.MinPointSizeAA = 1.0;
    ctx->Const.MaxPointSizeAA = 1.0;
    ctx->Const.PointSizeGranularity = 0.0625;
-   if (rmesa->radeon.radeonScreen->drmSupportsPointSprites)
-      ctx->Const.MaxPointSize = 2047.0;
-   else
-      ctx->Const.MaxPointSize = 1.0;
+   ctx->Const.MaxPointSize = 2047.0;
 
    /* mesa initialization problem - _mesa_init_point was already called */
    ctx->Point.MaxSize = ctx->Const.MaxPointSize;
@@ -405,15 +343,7 @@ GLboolean r200CreateContext( gl_api api,
    ctx->Const.MaxDrawBuffers = 1;
    ctx->Const.MaxColorAttachments = 1;
 
-   _mesa_set_mvp_with_dp4( ctx, GL_TRUE );
-
-   /* Initialize the software rasterizer and helper modules.
-    */
-   _swrast_CreateContext( ctx );
-   _vbo_CreateContext( ctx );
-   _tnl_CreateContext( ctx );
-   _swsetup_CreateContext( ctx );
-   _ae_create_context( ctx );
+   ctx->ShaderCompilerOptions[MESA_SHADER_VERTEX].PreferDP4 = GL_TRUE;
 
    /* Install the customized pipeline:
     */
@@ -440,40 +370,52 @@ GLboolean r200CreateContext( gl_api api,
    _math_matrix_ctr( &rmesa->tmpmat );
    _math_matrix_set_identity( &rmesa->tmpmat );
 
-   driInitExtensions( ctx, card_extensions, GL_TRUE );
+   ctx->Extensions.ARB_half_float_pixel = true;
+   ctx->Extensions.ARB_occlusion_query = true;
+   ctx->Extensions.ARB_texture_border_clamp = true;
+   ctx->Extensions.ARB_texture_env_combine = true;
+   ctx->Extensions.ARB_texture_env_dot3 = true;
+   ctx->Extensions.ARB_texture_env_crossbar = true;
+   ctx->Extensions.EXT_blend_color = true;
+   ctx->Extensions.EXT_blend_minmax = true;
+   ctx->Extensions.EXT_packed_depth_stencil = true;
+   ctx->Extensions.EXT_texture_env_dot3 = true;
+   ctx->Extensions.EXT_texture_filter_anisotropic = true;
+   ctx->Extensions.EXT_texture_mirror_clamp = true;
+   ctx->Extensions.ATI_texture_env_combine3 = true;
+   ctx->Extensions.ATI_texture_mirror_once = true;
+   ctx->Extensions.MESA_pack_invert = true;
+   ctx->Extensions.NV_texture_rectangle = true;
+   ctx->Extensions.OES_EGL_image = true;
+   ctx->Extensions.ARB_occlusion_query = true;
 
-   if (rmesa->radeon.radeonScreen->kernel_mm)
-     driInitExtensions(ctx, mm_extensions, GL_FALSE);
    if (!(rmesa->radeon.radeonScreen->chip_flags & R200_CHIPSET_YCBCR_BROKEN)) {
      /* yuv textures don't work with some chips - R200 / rv280 okay so far
 	others get the bit ordering right but don't actually do YUV-RGB conversion */
-      _mesa_enable_extension( ctx, "GL_MESA_ycbcr_texture" );
+      ctx->Extensions.MESA_ycbcr_texture = true;
    }
-   if (rmesa->radeon.glCtx->Mesa_DXTn) {
-      _mesa_enable_extension( ctx, "GL_EXT_texture_compression_s3tc" );
-      _mesa_enable_extension( ctx, "GL_S3_s3tc" );
+   if (rmesa->radeon.glCtx.Mesa_DXTn) {
+      ctx->Extensions.EXT_texture_compression_s3tc = true;
+      ctx->Extensions.ANGLE_texture_compression_dxt = true;
    }
    else if (driQueryOptionb (&rmesa->radeon.optionCache, "force_s3tc_enable")) {
-      _mesa_enable_extension( ctx, "GL_EXT_texture_compression_s3tc" );
+      ctx->Extensions.EXT_texture_compression_s3tc = true;
+      ctx->Extensions.ANGLE_texture_compression_dxt = true;
    }
 
-   if (rmesa->radeon.radeonScreen->drmSupportsCubeMapsR200)
-      _mesa_enable_extension( ctx, "GL_ARB_texture_cube_map" );
-   if (rmesa->radeon.radeonScreen->drmSupportsBlendColor) {
-       driInitExtensions( ctx, blend_extensions, GL_FALSE );
-   }
-   if(rmesa->radeon.radeonScreen->drmSupportsVertexProgram)
-      driInitExtensions( ctx, ARB_vp_extension, GL_FALSE );
-   if(driQueryOptionb(&rmesa->radeon.optionCache, "nv_vertex_program"))
-      driInitSingleExtension( ctx, NV_vp_extension );
+   ctx->Extensions.ARB_texture_cube_map = true;
 
-   if ((ctx->Const.MaxTextureUnits == 6) && rmesa->radeon.radeonScreen->drmSupportsFragShader)
-      driInitSingleExtension( ctx, ATI_fs_extension );
-   if (rmesa->radeon.radeonScreen->drmSupportsPointSprites)
-      driInitExtensions( ctx, point_extensions, GL_FALSE );
+   ctx->Extensions.EXT_blend_equation_separate = true;
+   ctx->Extensions.EXT_blend_func_separate = true;
 
-   if (!rmesa->radeon.radeonScreen->kernel_mm)
-      _mesa_disable_extension(ctx, "GL_ARB_occlusion_query");
+   ctx->Extensions.ARB_vertex_program = true;
+   ctx->Extensions.EXT_gpu_program_parameters = true;
+
+   ctx->Extensions.ATI_fragment_shader = (ctx->Const.MaxTextureUnits == 6);
+
+   ctx->Extensions.ARB_point_sprite = true;
+   ctx->Extensions.EXT_point_parameters = true;
+
 #if 0
    r200InitDriverFuncs( ctx );
    r200InitIoctlFuncs( ctx );
@@ -502,9 +444,16 @@ GLboolean r200CreateContext( gl_api api,
 	 rmesa->radeon.radeonScreen->chip_flags &= ~RADEON_CHIPSET_TCL;
 	 fprintf(stderr, "Disabling HW TCL support\n");
       }
-      TCL_FALLBACK(rmesa->radeon.glCtx, R200_TCL_FALLBACK_TCL_DISABLE, 1);
+      TCL_FALLBACK(&rmesa->radeon.glCtx, R200_TCL_FALLBACK_TCL_DISABLE, 1);
    }
 
+   _mesa_compute_version(ctx);
+
+   /* Exec table initialization requires the version to be computed */
+   _mesa_initialize_dispatch_tables(ctx);
+   _mesa_initialize_vbo_vtxfmt(ctx);
+
+   *error = __DRI_CTX_ERROR_SUCCESS;
    return GL_TRUE;
 }
 

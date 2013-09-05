@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.6
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -53,6 +53,8 @@
    "GLX_MESA_copy_sub_buffer " \
    "GLX_MESA_pixmap_colormap " \
    "GLX_MESA_release_buffers " \
+   "GLX_ARB_create_context " \
+   "GLX_ARB_create_context_profile " \
    "GLX_ARB_get_proc_address " \
    "GLX_EXT_texture_from_pixmap " \
    "GLX_EXT_visual_info " \
@@ -63,6 +65,9 @@
 
 #define DEFAULT_DIRECT GL_TRUE
 
+
+/** XXX this could be based on gallium's max texture size */
+#define PBUFFER_MAX_SIZE 16384
 
 
 /**
@@ -272,7 +277,7 @@ default_depth_bits(void)
    if (zEnv)
       zBits = atoi(zEnv);
    else
-      zBits = DEFAULT_SOFTWARE_DEPTH_BITS;
+      zBits = 24;
    return zBits;
 }
 
@@ -321,7 +326,7 @@ create_glx_visual( Display *dpy, XVisualInfo *visinfo )
                               GL_TRUE,   /* double */
                               GL_FALSE,  /* stereo */
                               zBits,
-                              STENCIL_BITS,
+                              8,       /* stencil bits */
                               accBits, /* r */
                               accBits, /* g */
                               accBits, /* b */
@@ -404,7 +409,7 @@ get_visual( Display *dpy, int scr, unsigned int depth, int xclass )
          return vis;
       }
       else {
-         XFree((void *) vis);
+         free((void *) vis);
          return NULL;
       }
    }
@@ -658,7 +663,6 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
    const GLboolean rgbModeDefault = fbConfig;
    const int *parselist;
    XVisualInfo *vis;
-   int min_ci = 0;
    int min_red=0, min_green=0, min_blue=0;
    GLboolean rgb_flag = rgbModeDefault;
    GLboolean alpha_flag = GL_FALSE;
@@ -672,8 +676,6 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
    GLint accumAlphaSize = 0;
    int level = 0;
    int visual_type = DONT_CARE;
-   int trans_type = DONT_CARE;
-   int trans_value = DONT_CARE;
    GLint caveat = DONT_CARE;
    XMesaVisual xmvis = NULL;
    int desiredVisualID = -1;
@@ -684,6 +686,20 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
    parselist = list;
 
    while (*parselist) {
+
+      if (fbConfig &&
+          parselist[1] == GLX_DONT_CARE &&
+          parselist[0] != GLX_LEVEL) {
+         /* For glXChooseFBConfig(), skip attributes whose value is
+          * GLX_DONT_CARE, unless it's GLX_LEVEL (which can legitimately be
+          * a negative value).
+          *
+          * From page 17 (23 of the pdf) of the GLX 1.4 spec:
+          * GLX DONT CARE may be specified for all attributes except GLX LEVEL.
+          */
+         parselist += 2;
+         continue;
+      }
 
       switch (*parselist) {
 	 case GLX_USE_GL:
@@ -698,7 +714,7 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
 	    break;
 	 case GLX_BUFFER_SIZE:
 	    parselist++;
-	    min_ci = *parselist++;
+	    parselist++;
 	    break;
 	 case GLX_LEVEL:
 	    parselist++;
@@ -803,11 +819,11 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
             break;
          case GLX_TRANSPARENT_TYPE_EXT:
             parselist++;
-            trans_type = *parselist++;
+            parselist++;
             break;
          case GLX_TRANSPARENT_INDEX_VALUE_EXT:
             parselist++;
-            trans_value = *parselist++;
+            parselist++;
             break;
          case GLX_TRANSPARENT_RED_VALUE_EXT:
          case GLX_TRANSPARENT_GREEN_VALUE_EXT:
@@ -830,11 +846,13 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
           * GLX_ARB_multisample
           */
          case GLX_SAMPLE_BUFFERS_ARB:
-            /* ms not supported */
-            return NULL;
          case GLX_SAMPLES_ARB:
-            /* ms not supported */
-            return NULL;
+            parselist++;
+            if (*parselist++ != 0) {
+               /* ms not supported */
+               return NULL;
+            }
+            break;
 
          /*
           * FBConfig attribs.
@@ -975,7 +993,7 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
 
       /* we only support one size of stencil and accum buffers. */
       if (stencil_size > 0)
-         stencil_size = STENCIL_BITS;
+         stencil_size = 8;
 
       if (accumRedSize > 0 || 
           accumGreenSize > 0 || 
@@ -1259,7 +1277,7 @@ glXCreateGLXPixmap( Display *dpy, XVisualInfo *visinfo, Pixmap pixmap )
    if (!b) {
       return 0;
    }
-   return b->drawable;
+   return b->ws.drawable;
 }
 
 
@@ -1285,7 +1303,7 @@ glXCreateGLXPixmapMESA( Display *dpy, XVisualInfo *visinfo,
    if (!b) {
       return 0;
    }
-   return b->drawable;
+   return b->ws.drawable;
 }
 
 
@@ -1334,25 +1352,25 @@ glXQueryExtension( Display *dpy, int *errorBase, int *eventBase )
 PUBLIC void
 glXDestroyContext( Display *dpy, GLXContext ctx )
 {
-   GLXContext glxCtx = ctx;
-   (void) dpy;
-   MakeCurrent_PrevContext = 0;
-   MakeCurrent_PrevDrawable = 0;
-   MakeCurrent_PrevReadable = 0;
-   MakeCurrent_PrevDrawBuffer = 0;
-   MakeCurrent_PrevReadBuffer = 0;
-   XMesaDestroyContext( glxCtx->xmesaContext );
-   XMesaGarbageCollect();
-   free(glxCtx);
+   if (ctx) {
+      GLXContext glxCtx = ctx;
+      (void) dpy;
+      MakeCurrent_PrevContext = 0;
+      MakeCurrent_PrevDrawable = 0;
+      MakeCurrent_PrevReadable = 0;
+      MakeCurrent_PrevDrawBuffer = 0;
+      MakeCurrent_PrevReadBuffer = 0;
+      XMesaDestroyContext( glxCtx->xmesaContext );
+      XMesaGarbageCollect();
+      free(glxCtx);
+   }
 }
 
 
 PUBLIC Bool
 glXIsDirect( Display *dpy, GLXContext ctx )
 {
-   GLXContext glxCtx = ctx;
-   (void) ctx;
-   return glxCtx->isDirect;
+   return ctx ? ctx->isDirect : False;
 }
 
 
@@ -1786,6 +1804,9 @@ glXChooseFBConfig(Display *dpy, int screen,
 {
    XMesaVisual xmvis;
 
+   /* register ourselves as an extension on this display */
+   register_with_display(dpy);
+
    if (!attribList || !attribList[0]) {
       /* return list of all configs (per GLX_SGIX_fbconfig spec) */
       return glXGetFBConfigs(dpy, screen, nitems);
@@ -2019,13 +2040,13 @@ glXCreatePbuffer(Display *dpy, GLXFBConfig config, const int *attribList)
    if (width == 0 || height == 0)
       return 0;
 
-   if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+   if (width > PBUFFER_MAX_SIZE || height > PBUFFER_MAX_SIZE) {
       /* If allocation would have failed and GLX_LARGEST_PBUFFER is set,
        * allocate the largest possible buffer.
        */
       if (useLargest) {
-         width = MAX_WIDTH;
-         height = MAX_HEIGHT;
+         width = PBUFFER_MAX_SIZE;
+         height = PBUFFER_MAX_SIZE;
       }
    }
 
@@ -2036,7 +2057,7 @@ glXCreatePbuffer(Display *dpy, GLXFBConfig config, const int *attribList)
    if (xmbuf) {
       xmbuf->largestPbuffer = useLargest;
       xmbuf->preservedContents = preserveContents;
-      return (GLXPbuffer) xmbuf->drawable;
+      return (GLXPbuffer) xmbuf->ws.drawable;
    }
    else {
       return 0;
@@ -2310,7 +2331,7 @@ glXCreateGLXPixmapWithConfigSGIX(Display *dpy, GLXFBConfigSGIX config,
 {
    XMesaVisual xmvis = (XMesaVisual) config;
    XMesaBuffer xmbuf = XMesaCreatePixmapBuffer(xmvis, pixmap, 0);
-   return xmbuf->drawable; /* need to return an X ID */
+   return xmbuf->ws.drawable; /* need to return an X ID */
 }
 
 
@@ -2390,7 +2411,7 @@ glXCreateGLXPbufferSGIX(Display *dpy, GLXFBConfigSGIX config,
    /* A GLXPbuffer handle must be an X Drawable because that's what
     * glXMakeCurrent takes.
     */
-   return (GLXPbuffer) xmbuf->drawable;
+   return (GLXPbuffer) xmbuf->ws.drawable;
 }
 
 
@@ -2663,7 +2684,7 @@ glXCreateContextAttribsARB(Display *dpy, GLXFBConfig config,
                                 GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB);
 
    /* parse attrib_list */
-   for (i = 0; !done && attrib_list[i]; i++) {
+   for (i = 0; !done && attrib_list && attrib_list[i]; i++) {
       switch (attrib_list[i]) {
       case GLX_CONTEXT_MAJOR_VERSION_ARB:
          majorVersion = attrib_list[++i];

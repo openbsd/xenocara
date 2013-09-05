@@ -21,5 +21,58 @@
  * IN THE SOFTWARE.
  */
 
+#include <stdint.h>
+#include "brw_defines.h"
+#include "glsl/ir.h"
+
+#pragma once
+
+enum register_file {
+   BAD_FILE,
+   ARF,
+   GRF,
+   MRF,
+   IMM,
+   HW_REG, /* a struct brw_reg */
+   ATTR,
+   UNIFORM, /* prog_data->params[reg] */
+};
+
+class backend_instruction : public exec_node {
+public:
+   bool is_tex();
+   bool is_math();
+   bool is_control_flow();
+
+   enum opcode opcode; /* BRW_OPCODE_* or FS_OPCODE_* */
+
+   uint32_t predicate;
+   bool predicate_inverse;
+};
+
+class backend_visitor : public ir_visitor {
+public:
+
+   struct brw_context *brw;
+   struct gl_context *ctx;
+   struct brw_shader *shader;
+   struct gl_shader_program *shader_prog;
+
+   /** ralloc context for temporary data used during compile */
+   void *mem_ctx;
+
+   /**
+    * List of either fs_inst or vec4_instruction (inheriting from
+    * backend_instruction)
+    */
+   exec_list instructions;
+
+   virtual void dump_instruction(backend_instruction *inst) = 0;
+   void dump_instructions();
+};
+
 int brw_type_for_base_type(const struct glsl_type *type);
 uint32_t brw_conditional_for_comparison(unsigned int op);
+uint32_t brw_math_function(enum opcode op);
+uint32_t brw_texture_offset(ir_constant *offset);
+const char *brw_instruction_name(enum opcode op);

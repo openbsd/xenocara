@@ -37,16 +37,16 @@
 #include "main/texcompress.h"
 #include "main/texgetimage.h"
 #include "main/mipmap.h"
-#include "main/texfetch.h"
 #include "main/teximage.h"
 #include "drivers/common/meta.h"
+#include "swrast/s_texfetch.h"
 
 static struct gl_texture_object *
 nouveau_texture_new(struct gl_context *ctx, GLuint name, GLenum target)
 {
 	struct nouveau_texture *nt = CALLOC_STRUCT(nouveau_texture);
 
-	_mesa_initialize_texture_object(&nt->base, name, target);
+	_mesa_initialize_texture_object(ctx, &nt->base, name, target);
 
 	return &nt->base;
 }
@@ -68,7 +68,7 @@ nouveau_teximage_new(struct gl_context *ctx)
 {
 	struct nouveau_teximage *nti = CALLOC_STRUCT(nouveau_teximage);
 
-	return &nti->base;
+	return &nti->base.Base;
 }
 
 static void
@@ -80,16 +80,26 @@ nouveau_teximage_free(struct gl_context *ctx, struct gl_texture_image *ti)
 }
 
 static void
-nouveau_teximage_map(struct gl_context *ctx, struct gl_texture_image *ti,
-		     int access, int x, int y, int w, int h)
+nouveau_map_texture_image(struct gl_context *ctx,
+			  struct gl_texture_image *ti,
+			  GLuint slice,
+			  GLuint x, GLuint y, GLuint w, GLuint h,
+			  GLbitfield mode,
+			  GLubyte **map,
+			  GLint *stride)
 {
 	struct nouveau_teximage *nti = to_nouveau_teximage(ti);
 	struct nouveau_surface *s = &nti->surface;
 	struct nouveau_surface *st = &nti->transfer.surface;
+	struct nouveau_client *client = context_client(ctx);
+
+	/* Nouveau has no support for 3D or cubemap textures. */
+	assert(slice == 0);
 
 	if (s->bo) {
-		if (!(access & GL_MAP_READ_BIT) &&
-		    nouveau_bo_pending(s->bo)) {
+		if (!(mode & GL_MAP_READ_BIT) &&
+		    nouveau_pushbuf_refd(context_push(ctx), s->bo)) {
+			unsigned size;
 			/*
 			 * Heuristic: use a bounce buffer to pipeline
 			 * teximage transfers.
@@ -103,29 +113,39 @@ nouveau_teximage_map(struct gl_context *ctx, struct gl_texture_image *ti,
 			nti->transfer.x = x;
 			nti->transfer.y = y;
 
-			ti->Data = nouveau_get_scratch(ctx, st->pitch * h,
-						       &st->bo, &st->offset);
-
+			size = get_format_blocksy(st->format, h) * st->pitch;
+			*map = nouveau_get_scratch(ctx, size,
+					  &st->bo, &st->offset);
+			*stride = st->pitch;
 		} else {
 			int ret, flags = 0;
 
-			if (access & GL_MAP_READ_BIT)
+			if (mode & GL_MAP_READ_BIT)
 				flags |= NOUVEAU_BO_RD;
-			if (access & GL_MAP_WRITE_BIT)
+			if (mode & GL_MAP_WRITE_BIT)
 				flags |= NOUVEAU_BO_WR;
 
 			if (!s->bo->map) {
-				ret = nouveau_bo_map(s->bo, flags);
+				ret = nouveau_bo_map(s->bo, flags, client);
 				assert(!ret);
 			}
 
-			ti->Data = s->bo->map + y * s->pitch + x * s->cpp;
+			*map = s->bo->map +
+				get_format_blocksy(s->format, y) * s->pitch +
+				get_format_blocksx(s->format, x) * s->cpp;
+			*stride = s->pitch;
 		}
+	} else {
+		*map = nti->base.Buffer +
+			get_format_blocksy(s->format, y) * s->pitch +
+			get_format_blocksx(s->format, x) * s->cpp;
+		*stride = s->pitch;
 	}
 }
 
 static void
-nouveau_teximage_unmap(struct gl_context *ctx, struct gl_texture_image *ti)
+nouveau_unmap_texture_image(struct gl_context *ctx, struct gl_texture_image *ti,
+			    GLuint slice)
 {
 	struct nouveau_teximage *nti = to_nouveau_teximage(ti);
 	struct nouveau_surface *s = &nti->surface;
@@ -137,15 +157,12 @@ nouveau_teximage_unmap(struct gl_context *ctx, struct gl_texture_image *ti)
 					       st->width, st->height);
 		nouveau_surface_ref(NULL, st);
 
-	} else if (s->bo) {
-		nouveau_bo_unmap(s->bo);
 	}
-
-	ti->Data = NULL;
 }
 
 static gl_format
-nouveau_choose_tex_format(struct gl_context *ctx, GLint internalFormat,
+nouveau_choose_tex_format(struct gl_context *ctx, GLenum target,
+                          GLint internalFormat,
 			  GLenum srcFormat, GLenum srcType)
 {
 	switch (internalFormat) {
@@ -210,14 +227,21 @@ nouveau_choose_tex_format(struct gl_context *ctx, GLint internalFormat,
 	case GL_INTENSITY8:
 		return MESA_FORMAT_I8;
 
-	case GL_COLOR_INDEX:
-	case GL_COLOR_INDEX1_EXT:
-	case GL_COLOR_INDEX2_EXT:
-	case GL_COLOR_INDEX4_EXT:
-	case GL_COLOR_INDEX12_EXT:
-	case GL_COLOR_INDEX16_EXT:
-	case GL_COLOR_INDEX8_EXT:
-		return MESA_FORMAT_CI8;
+	case GL_RGB_S3TC:
+	case GL_RGB4_S3TC:
+	case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+		return MESA_FORMAT_RGB_DXT1;
+
+	case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+		return MESA_FORMAT_RGBA_DXT1;
+
+	case GL_RGBA_S3TC:
+	case GL_RGBA4_S3TC:
+	case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+		return MESA_FORMAT_RGBA_DXT3;
+
+	case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+		return MESA_FORMAT_RGBA_DXT5;
 
 	default:
 		assert(0);
@@ -274,7 +298,7 @@ get_last_level(struct gl_texture_object *t)
 	    t->Sampler.MinFilter == GL_LINEAR || !base)
 		return t->BaseLevel;
 	else
-		return MIN2(t->BaseLevel + base->MaxLog2, t->MaxLevel);
+		return MIN2(t->BaseLevel + base->MaxNumLevels - 1, t->MaxLevel);
 }
 
 static void
@@ -286,7 +310,9 @@ relayout_texture(struct gl_context *ctx, struct gl_texture_object *t)
 		struct nouveau_surface *ss = to_nouveau_texture(t)->surfaces;
 		struct nouveau_surface *s = &to_nouveau_teximage(base)->surface;
 		int i, ret, last = get_last_level(t);
-		unsigned size, offset = 0,
+		enum nouveau_surface_layout layout =
+			(_mesa_is_format_compressed(s->format) ? LINEAR : SWIZZLED);
+		unsigned size, pitch, offset = 0,
 			width = s->width,
 			height = s->height;
 
@@ -296,7 +322,8 @@ relayout_texture(struct gl_context *ctx, struct gl_texture_object *t)
 
 		/* Relayout the mipmap tree. */
 		for (i = t->BaseLevel; i <= last; i++) {
-			size = width * height * s->cpp;
+			pitch = _mesa_format_row_stride(s->format, width);
+			size = get_format_blocksy(s->format, height) * pitch;
 
 			/* Images larger than 16B have to be aligned. */
 			if (size > 16)
@@ -304,17 +331,17 @@ relayout_texture(struct gl_context *ctx, struct gl_texture_object *t)
 
 			ss[i] = (struct nouveau_surface) {
 				.offset = offset,
-				.layout = SWIZZLED,
+				.layout = layout,
 				.format = s->format,
 				.width = width,
 				.height = height,
 				.cpp = s->cpp,
-				.pitch = width * s->cpp,
+				.pitch = pitch,
 			};
 
 			offset += size;
-			width = MAX2(1, width / 2);
-			height = MAX2(1, height / 2);
+			width = minify(width, 1);
+			height = minify(height, 1);
 		}
 
 		/* Get new storage. */
@@ -322,7 +349,7 @@ relayout_texture(struct gl_context *ctx, struct gl_texture_object *t)
 
 		ret = nouveau_bo_new(context_dev(ctx), NOUVEAU_BO_MAP |
 				     NOUVEAU_BO_GART | NOUVEAU_BO_VRAM,
-				     0, size, &ss[last].bo);
+				     0, size, NULL, &ss[last].bo);
 		assert(!ret);
 
 		for (i = t->BaseLevel; i < last; i++)
@@ -351,7 +378,7 @@ nouveau_texture_validate(struct gl_context *ctx, struct gl_texture_object *t)
 					  s->width, s->height, 1);
 		}
 
-		FIRE_RING(context_chan(ctx));
+		PUSH_KICK(context_push(ctx));
 	}
 
 	return GL_TRUE;
@@ -382,43 +409,57 @@ get_teximage_placement(struct gl_texture_image *ti)
 }
 
 static void
-nouveau_teximage(struct gl_context *ctx, GLint dims, GLenum target, GLint level,
-		 GLint internalFormat,
-		 GLint width, GLint height, GLint depth, GLint border,
+nouveau_teximage(struct gl_context *ctx, GLint dims,
+		 struct gl_texture_image *ti,
+		 GLsizei imageSize,
 		 GLenum format, GLenum type, const GLvoid *pixels,
 		 const struct gl_pixelstore_attrib *packing,
-		 struct gl_texture_object *t,
-		 struct gl_texture_image *ti)
+		 GLboolean compressed)
 {
+	struct gl_texture_object *t = ti->TexObject;
+	const GLuint level = ti->Level;
 	struct nouveau_surface *s = &to_nouveau_teximage(ti)->surface;
+	struct nouveau_teximage *nti = to_nouveau_teximage(ti);
 	int ret;
+	GLuint depth = compressed ? 1 : ti->Depth;
 
 	/* Allocate a new bo for the image. */
 	nouveau_surface_alloc(ctx, s, LINEAR, get_teximage_placement(ti),
-			      ti->TexFormat, width, height);
-	ti->RowStride = s->pitch / s->cpp;
+			      ti->TexFormat, ti->Width, ti->Height);
+	nti->base.RowStride = s->pitch / s->cpp;
 
-	pixels = _mesa_validate_pbo_teximage(ctx, dims, width, height, depth,
-					     format, type, pixels, packing,
-					     "glTexImage");
+	if (compressed)
+		pixels = _mesa_validate_pbo_compressed_teximage(ctx,
+			dims, imageSize,
+			pixels, packing, "glCompressedTexImage");
+	else
+		pixels = _mesa_validate_pbo_teximage(ctx,
+			dims, ti->Width, ti->Height, depth, format, type,
+			pixels, packing, "glTexImage");
+
 	if (pixels) {
+		GLubyte *map;
+		int row_stride;
+
 		/* Store the pixel data. */
-		nouveau_teximage_map(ctx, ti, GL_MAP_WRITE_BIT,
-				     0, 0, width, height);
+		nouveau_map_texture_image(ctx, ti, 0,
+					  0, 0, ti->Width, ti->Height,
+					  GL_MAP_WRITE_BIT,
+					  &map, &row_stride);
 
 		ret = _mesa_texstore(ctx, dims, ti->_BaseFormat,
-				     ti->TexFormat, ti->Data,
-				     0, 0, 0, s->pitch,
-				     ti->ImageOffsets,
-				     width, height, depth,
+				     ti->TexFormat,
+				     row_stride,
+				     &map,
+				     ti->Width, ti->Height, depth,
 				     format, type, pixels, packing);
 		assert(ret);
 
-		nouveau_teximage_unmap(ctx, ti);
+		nouveau_unmap_texture_image(ctx, ti, 0);
 		_mesa_unmap_teximage_pbo(ctx, packing);
 
 		if (!validate_teximage(ctx, t, level, 0, 0, 0,
-				       width, height, depth))
+				       ti->Width, ti->Height, depth))
 			/* It doesn't fit, mark it as dirty. */
 			texture_dirty(t);
 	}
@@ -433,134 +474,95 @@ nouveau_teximage(struct gl_context *ctx, GLint dims, GLenum target, GLint level,
 	context_dirty_i(ctx, TEX_ENV, ctx->Texture.CurrentUnit);
 }
 
+
 static void
-nouveau_teximage_1d(struct gl_context *ctx, GLenum target, GLint level,
-		    GLint internalFormat,
-		    GLint width, GLint border,
-		    GLenum format, GLenum type, const GLvoid *pixels,
-		    const struct gl_pixelstore_attrib *packing,
-		    struct gl_texture_object *t,
-		    struct gl_texture_image *ti)
+nouveau_teximage_123d(struct gl_context *ctx, GLuint dims,
+                      struct gl_texture_image *ti,
+                      GLenum format, GLenum type, const GLvoid *pixels,
+                      const struct gl_pixelstore_attrib *packing)
 {
-	nouveau_teximage(ctx, 1, target, level, internalFormat,
-			 width, 1, 1, border, format, type, pixels,
-			 packing, t, ti);
+	nouveau_teximage(ctx, dims, ti, 0, format, type, pixels,
+			 packing, GL_FALSE);
 }
 
 static void
-nouveau_teximage_2d(struct gl_context *ctx, GLenum target, GLint level,
-		    GLint internalFormat,
-		    GLint width, GLint height, GLint border,
-		    GLenum format, GLenum type, const GLvoid *pixels,
-		    const struct gl_pixelstore_attrib *packing,
-		    struct gl_texture_object *t,
-		    struct gl_texture_image *ti)
+nouveau_compressed_teximage(struct gl_context *ctx, GLuint dims,
+		    struct gl_texture_image *ti,
+		    GLsizei imageSize, const GLvoid *data)
 {
-	nouveau_teximage(ctx, 2, target, level, internalFormat,
-			 width, height, 1, border, format, type, pixels,
-			 packing, t, ti);
+	nouveau_teximage(ctx, 2, ti, imageSize, 0, 0, data,
+			 &ctx->Unpack, GL_TRUE);
 }
 
 static void
-nouveau_teximage_3d(struct gl_context *ctx, GLenum target, GLint level,
-		    GLint internalFormat,
-		    GLint width, GLint height, GLint depth, GLint border,
-		    GLenum format, GLenum type, const GLvoid *pixels,
-		    const struct gl_pixelstore_attrib *packing,
-		    struct gl_texture_object *t,
-		    struct gl_texture_image *ti)
-{
-	nouveau_teximage(ctx, 3, target, level, internalFormat,
-			 width, height, depth, border, format, type, pixels,
-			 packing, t, ti);
-}
-
-static void
-nouveau_texsubimage(struct gl_context *ctx, GLint dims, GLenum target, GLint level,
+nouveau_texsubimage(struct gl_context *ctx, GLint dims,
+		    struct gl_texture_image *ti,
 		    GLint xoffset, GLint yoffset, GLint zoffset,
 		    GLint width, GLint height, GLint depth,
+		    GLsizei imageSize,
 		    GLenum format, GLenum type, const void *pixels,
 		    const struct gl_pixelstore_attrib *packing,
-		    struct gl_texture_object *t,
-		    struct gl_texture_image *ti)
+		    GLboolean compressed)
 {
-	struct nouveau_surface *s = &to_nouveau_teximage(ti)->surface;
 	int ret;
 
-	pixels = _mesa_validate_pbo_teximage(ctx, dims, width, height, depth,
-					     format, type, pixels, packing,
-					     "glTexSubImage");
-	if (pixels) {
-		nouveau_teximage_map(ctx, ti, GL_MAP_WRITE_BIT,
-				     xoffset, yoffset, width, height);
+	if (compressed)
+		pixels = _mesa_validate_pbo_compressed_teximage(ctx,
+				dims, imageSize,
+				pixels, packing, "glCompressedTexSubImage");
+	else
+		pixels = _mesa_validate_pbo_teximage(ctx,
+				dims, width, height, depth, format, type,
+				pixels, packing, "glTexSubImage");
 
-		ret = _mesa_texstore(ctx, 3, ti->_BaseFormat, ti->TexFormat,
-				     ti->Data, 0, 0, 0, s->pitch,
-				     ti->ImageOffsets, width, height, depth,
+	if (pixels) {
+		GLubyte *map;
+		int row_stride;
+
+		nouveau_map_texture_image(ctx, ti, 0,
+					  xoffset, yoffset, width, height,
+					  GL_MAP_WRITE_BIT, &map, &row_stride);
+
+		ret = _mesa_texstore(ctx, dims, ti->_BaseFormat, ti->TexFormat,
+				     row_stride, &map,
+                                     width, height, depth,
 				     format, type, pixels, packing);
 		assert(ret);
 
-		nouveau_teximage_unmap(ctx, ti);
+		nouveau_unmap_texture_image(ctx, ti, 0);
 		_mesa_unmap_teximage_pbo(ctx, packing);
 	}
 
-	if (!to_nouveau_texture(t)->dirty)
-		validate_teximage(ctx, t, level, xoffset, yoffset, zoffset,
+	if (!to_nouveau_texture(ti->TexObject)->dirty)
+		validate_teximage(ctx, ti->TexObject, ti->Level,
+				  xoffset, yoffset, zoffset,
 				  width, height, depth);
 }
 
 static void
-nouveau_texsubimage_3d(struct gl_context *ctx, GLenum target, GLint level,
+nouveau_texsubimage_123d(struct gl_context *ctx, GLuint dims,
+                         struct gl_texture_image *ti,
+                         GLint xoffset, GLint yoffset, GLint zoffset,
+                         GLint width, GLint height, GLint depth,
+                         GLenum format, GLenum type, const void *pixels,
+                         const struct gl_pixelstore_attrib *packing)
+{
+	nouveau_texsubimage(ctx, dims, ti, xoffset, yoffset, zoffset,
+			    width, height, depth, 0, format, type, pixels,
+			    packing, GL_FALSE);
+}
+
+static void
+nouveau_compressed_texsubimage(struct gl_context *ctx, GLuint dims,
+		       struct gl_texture_image *ti,
 		       GLint xoffset, GLint yoffset, GLint zoffset,
-		       GLint width, GLint height, GLint depth,
-		       GLenum format, GLenum type, const void *pixels,
-		       const struct gl_pixelstore_attrib *packing,
-		       struct gl_texture_object *t,
-		       struct gl_texture_image *ti)
+		       GLsizei width, GLint height, GLint depth,
+		       GLenum format,
+		       GLint imageSize, const void *data)
 {
-	nouveau_texsubimage(ctx, 3, target, level, xoffset, yoffset, zoffset,
-			    width, height, depth, format, type, pixels,
-			    packing, t, ti);
-}
-
-static void
-nouveau_texsubimage_2d(struct gl_context *ctx, GLenum target, GLint level,
-		       GLint xoffset, GLint yoffset,
-		       GLint width, GLint height,
-		       GLenum format, GLenum type, const void *pixels,
-		       const struct gl_pixelstore_attrib *packing,
-		       struct gl_texture_object *t,
-		       struct gl_texture_image *ti)
-{
-	nouveau_texsubimage(ctx, 2, target, level, xoffset, yoffset, 0,
-			    width, height, 1, format, type, pixels,
-			    packing, t, ti);
-}
-
-static void
-nouveau_texsubimage_1d(struct gl_context *ctx, GLenum target, GLint level,
-		       GLint xoffset, GLint width,
-		       GLenum format, GLenum type, const void *pixels,
-		       const struct gl_pixelstore_attrib *packing,
-		       struct gl_texture_object *t,
-		       struct gl_texture_image *ti)
-{
-	nouveau_texsubimage(ctx, 1, target, level, xoffset, 0, 0,
-			    width, 1, 1, format, type, pixels,
-			    packing, t, ti);
-}
-
-static void
-nouveau_get_teximage(struct gl_context *ctx, GLenum target, GLint level,
-		     GLenum format, GLenum type, GLvoid *pixels,
-		     struct gl_texture_object *t,
-		     struct gl_texture_image *ti)
-{
-	nouveau_teximage_map(ctx, ti, GL_MAP_READ_BIT,
-			     0, 0, ti->Width, ti->Height);
-	_mesa_get_teximage(ctx, target, level, format, type, pixels,
-			   t, ti);
-	nouveau_teximage_unmap(ctx, ti);
+	nouveau_texsubimage(ctx, dims, ti, xoffset, yoffset, zoffset,
+			  width, height, depth, imageSize, format, 0, data,
+			  &ctx->Unpack, GL_TRUE);
 }
 
 static void
@@ -596,10 +598,12 @@ nouveau_set_texbuffer(__DRIcontext *dri_ctx,
 		fb->Attachment[BUFFER_FRONT_LEFT].Renderbuffer;
 	struct gl_texture_object *t = _mesa_get_current_tex_object(ctx, target);
 	struct gl_texture_image *ti;
+	struct nouveau_teximage *nti;
 	struct nouveau_surface *s;
 
 	_mesa_lock_texture(ctx, t);
 	ti = _mesa_get_tex_image(ctx, t, target, 0);
+	nti = to_nouveau_teximage(ti);
 	s = &to_nouveau_teximage(ti)->surface;
 
 	/* Update the texture surface with the given drawable. */
@@ -609,9 +613,9 @@ nouveau_set_texbuffer(__DRIcontext *dri_ctx,
         s->format = get_texbuffer_format(rb, format);
 
 	/* Update the image fields. */
-	_mesa_init_teximage_fields(ctx, target, ti, s->width, s->height,
+	_mesa_init_teximage_fields(ctx, ti, s->width, s->height,
 				   1, 0, s->cpp, s->format);
-	ti->RowStride = s->pitch / s->cpp;
+	nti->base.RowStride = s->pitch / s->cpp;
 
 	/* Try to validate it. */
 	if (!validate_teximage(ctx, t, 0, 0, 0, 0, s->width, s->height, 1))
@@ -623,98 +627,19 @@ nouveau_set_texbuffer(__DRIcontext *dri_ctx,
 	_mesa_unlock_texture(ctx, t);
 }
 
-static void
-nouveau_texture_map(struct gl_context *ctx, struct gl_texture_object *t)
-{
-	int i;
-
-	for (i = t->BaseLevel; i < t->_MaxLevel; i++) {
-		struct gl_texture_image *ti = t->Image[0][i];
-
-		if (ti)
-			nouveau_teximage_map(ctx, ti, GL_MAP_READ_BIT,
-					     0, 0, ti->Width, ti->Height);
-	}
-}
-
-static void
-nouveau_texture_unmap(struct gl_context *ctx, struct gl_texture_object *t)
-{
-	int i;
-
-	for (i = t->BaseLevel; i < t->_MaxLevel; i++) {
-		if (t->Image[0][i])
-			nouveau_teximage_unmap(ctx, t->Image[0][i]);
-	}
-}
-
-static void
-store_mipmap(struct gl_context *ctx, GLenum target, int first, int last,
-	     struct gl_texture_object *t)
-{
-	struct gl_pixelstore_attrib packing = {
-		.BufferObj = ctx->Shared->NullBufferObj,
-		.Alignment = 1
-	};
-	GLenum format = t->Image[0][t->BaseLevel]->TexFormat;
-	unsigned base_format, type, comps;
-	int i;
-
-	base_format = _mesa_get_format_base_format(format);
-	_mesa_format_to_type_and_comps(format, &type, &comps);
-
-	for (i = first; i <= last; i++) {
-		struct gl_texture_image *ti = t->Image[0][i];
-		void *data = ti->Data;
-
-		nouveau_teximage(ctx, 3, target, i, ti->InternalFormat,
-				 ti->Width, ti->Height, ti->Depth,
-				 ti->Border, base_format, type, data,
-				 &packing, t, ti);
-
-		_mesa_free_texmemory(data);
-	}
-}
-
-static void
-nouveau_generate_mipmap(struct gl_context *ctx, GLenum target,
-			struct gl_texture_object *t)
-{
-	if (_mesa_meta_check_generate_mipmap_fallback(ctx, target, t)) {
-		struct gl_texture_image *base = t->Image[0][t->BaseLevel];
-
-		nouveau_teximage_map(ctx, base, GL_MAP_READ_BIT,
-				     0, 0, base->Width, base->Height);
-		_mesa_generate_mipmap(ctx, target, t);
-		nouveau_teximage_unmap(ctx, base);
-
-		if (!_mesa_is_format_compressed(base->TexFormat)) {
-			store_mipmap(ctx, target, t->BaseLevel + 1,
-				     get_last_level(t), t);
-		}
-
-	} else {
-		_mesa_meta_GenerateMipmap(ctx, target, t);
-	}
-}
-
 void
 nouveau_texture_functions_init(struct dd_function_table *functions)
 {
 	functions->NewTextureObject = nouveau_texture_new;
 	functions->DeleteTexture = nouveau_texture_free;
 	functions->NewTextureImage = nouveau_teximage_new;
-	functions->FreeTexImageData = nouveau_teximage_free;
+	functions->FreeTextureImageBuffer = nouveau_teximage_free;
 	functions->ChooseTextureFormat = nouveau_choose_tex_format;
-	functions->TexImage1D = nouveau_teximage_1d;
-	functions->TexImage2D = nouveau_teximage_2d;
-	functions->TexImage3D = nouveau_teximage_3d;
-	functions->TexSubImage1D = nouveau_texsubimage_1d;
-	functions->TexSubImage2D = nouveau_texsubimage_2d;
-	functions->TexSubImage3D = nouveau_texsubimage_3d;
-	functions->GetTexImage = nouveau_get_teximage;
+	functions->TexImage = nouveau_teximage_123d;
+	functions->TexSubImage = nouveau_texsubimage_123d;
+	functions->CompressedTexImage = nouveau_compressed_teximage;
+	functions->CompressedTexSubImage = nouveau_compressed_texsubimage;
 	functions->BindTexture = nouveau_bind_texture;
-	functions->MapTexture = nouveau_texture_map;
-	functions->UnmapTexture = nouveau_texture_unmap;
-	functions->GenerateMipmap = nouveau_generate_mipmap;
+	functions->MapTextureImage = nouveau_map_texture_image;
+	functions->UnmapTextureImage = nouveau_unmap_texture_image;
 }

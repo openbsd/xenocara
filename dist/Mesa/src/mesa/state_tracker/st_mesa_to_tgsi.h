@@ -59,10 +59,14 @@ st_translate_mesa_program(
    const GLuint outputMapping[],
    const ubyte outputSemanticName[],
    const ubyte outputSemanticIndex[],
-   boolean passthrough_edgeflags );
+   boolean passthrough_edgeflags,
+   boolean clamp_color);
 
 void
 st_free_tokens(const struct tgsi_token *tokens);
+
+unsigned
+st_translate_texture_target(GLuint textarget, GLboolean shadow);
 
 
 #if defined __cplusplus

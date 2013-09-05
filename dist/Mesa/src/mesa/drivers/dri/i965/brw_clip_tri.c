@@ -50,7 +50,7 @@ static void release_tmps( struct brw_clip_compile *c )
 void brw_clip_tri_alloc_regs( struct brw_clip_compile *c, 
 			      GLuint nr_verts )
 {
-   struct intel_context *intel = &c->func.brw->intel;
+   struct brw_context *brw = c->func.brw;
    GLuint i = 0,j;
 
    /* Register usage is static, precompute here:
@@ -74,9 +74,12 @@ void brw_clip_tri_alloc_regs( struct brw_clip_compile *c,
       i += c->nr_regs;
    }
 
-   if (c->nr_attrs & 1) {
+   if (c->vue_map.num_slots % 2) {
+      /* The VUE has an odd number of slots so the last register is only half
+       * used.  Fill the second half with zero.
+       */
       for (j = 0; j < 3; j++) {
-	 GLuint delta = c->offset[c->idx_to_attr[c->nr_attrs - 1]] + ATTR_SIZE;
+	 GLuint delta = brw_vue_slot_to_offset(c->vue_map.num_slots);
 
 	 brw_MOV(&c->func, byte_offset(c->reg.vertex[j], delta), brw_imm_f(0));
       }
@@ -116,7 +119,10 @@ void brw_clip_tri_alloc_regs( struct brw_clip_compile *c,
       i++;
    }
 
-   if (intel->needs_ff_sync) {
+   c->reg.vertex_src_mask = retype(brw_vec1_grf(i, 0), BRW_REGISTER_TYPE_UD);
+   i++;
+
+   if (brw->gen == 5) {
       c->reg.ff_sync = retype(brw_vec1_grf(i, 0), BRW_REGISTER_TYPE_UD);
       i++;
    }
@@ -216,6 +222,31 @@ void brw_clip_tri_flat_shade( struct brw_clip_compile *c )
 }
 
 
+static inline void
+load_vertex_pos(struct brw_clip_compile *c, struct brw_indirect vtx,
+                struct brw_reg dst,
+                GLuint hpos_offset, GLuint clip_offset)
+{
+   struct brw_compile *p = &c->func;
+
+   /*
+    * Roughly:
+    * dst = (vertex_src_mask & 1) ? src.hpos : src.clipvertex;
+    */
+
+   brw_set_conditionalmod(p, BRW_CONDITIONAL_NZ);
+   brw_AND(p, vec1(brw_null_reg()), c->reg.vertex_src_mask, brw_imm_ud(1));
+   brw_IF(p, BRW_EXECUTE_1);
+   {
+      brw_MOV(p, dst, deref_4f(vtx, clip_offset));
+   }
+   brw_ELSE(p);
+   {
+      brw_MOV(p, dst, deref_4f(vtx, hpos_offset));
+   }
+   brw_ENDIF(p);
+}
+
 
 /* Use mesa's clipping algorithms, translated to GEN4 assembly.
  */
@@ -229,9 +260,11 @@ void brw_clip_tri( struct brw_clip_compile *c )
    struct brw_indirect inlist_ptr = brw_indirect(4, 0);
    struct brw_indirect outlist_ptr = brw_indirect(5, 0);
    struct brw_indirect freelist_ptr = brw_indirect(6, 0);
-   struct brw_instruction *plane_loop;
-   struct brw_instruction *vertex_loop;
-   
+   GLuint hpos_offset = brw_varying_to_offset(&c->vue_map, VARYING_SLOT_POS);
+   GLuint clipvert_offset = brw_clip_have_varying(c, VARYING_SLOT_CLIP_VERTEX)
+      ? brw_varying_to_offset(&c->vue_map, VARYING_SLOT_CLIP_VERTEX)
+      : hpos_offset;
+
    brw_MOV(p, get_addr_reg(vtxPrev),     brw_address(c->reg.vertex[2]) );
    brw_MOV(p, get_addr_reg(plane_ptr),   brw_clip_plane0_address(c));
    brw_MOV(p, get_addr_reg(inlist_ptr),  brw_address(c->reg.inlist));
@@ -239,7 +272,12 @@ void brw_clip_tri( struct brw_clip_compile *c )
 
    brw_MOV(p, get_addr_reg(freelist_ptr), brw_address(c->reg.vertex[3]) );
 
-   plane_loop = brw_DO(p, BRW_EXECUTE_1);
+   /* Set the initial vertex source mask: The first 6 planes are the bounds
+    * of the view volume; the next 6 planes are the user clipping planes.
+    */
+   brw_MOV(p, c->reg.vertex_src_mask, brw_imm_ud(0xfc0));
+
+   brw_DO(p, BRW_EXECUTE_1);
    {
       /* if (planemask & 1)
        */
@@ -261,21 +299,23 @@ void brw_clip_tri( struct brw_clip_compile *c )
 	 brw_MOV(p, c->reg.loopcount, c->reg.nr_verts);
 	 brw_MOV(p, c->reg.nr_verts, brw_imm_ud(0));
 
-	 vertex_loop = brw_DO(p, BRW_EXECUTE_1);
+	 brw_DO(p, BRW_EXECUTE_1);
 	 {
 	    /* vtx = *input_ptr;
 	     */
 	    brw_MOV(p, get_addr_reg(vtx), deref_1uw(inlist_ptr, 0));
 
+            load_vertex_pos(c, vtxPrev, vec4(c->reg.dpPrev), hpos_offset, clipvert_offset);
 	    /* IS_NEGATIVE(prev) */
 	    brw_set_conditionalmod(p, BRW_CONDITIONAL_L);
-	    brw_DP4(p, vec4(c->reg.dpPrev), deref_4f(vtxPrev, c->offset[VERT_RESULT_HPOS]), c->reg.plane_equation);
+	    brw_DP4(p, vec4(c->reg.dpPrev), vec4(c->reg.dpPrev), c->reg.plane_equation);
 	    brw_IF(p, BRW_EXECUTE_1);
 	    {
+               load_vertex_pos(c, vtx, vec4(c->reg.dp), hpos_offset, clipvert_offset);
 	       /* IS_POSITIVE(next)
 		*/
 	       brw_set_conditionalmod(p, BRW_CONDITIONAL_GE);
-	       brw_DP4(p, vec4(c->reg.dp), deref_4f(vtx, c->offset[VERT_RESULT_HPOS]), c->reg.plane_equation);
+	       brw_DP4(p, vec4(c->reg.dp), vec4(c->reg.dp), c->reg.plane_equation);
 	       brw_IF(p, BRW_EXECUTE_1);
 	       {
 
@@ -291,7 +331,7 @@ void brw_clip_tri( struct brw_clip_compile *c )
 		  brw_MOV(p, get_addr_reg(vtxOut), get_addr_reg(vtxPrev) );
 		  brw_set_predicate_control(p, BRW_PREDICATE_NONE);
 
-		  brw_clip_interp_vertex(c, vtxOut, vtxPrev, vtx, c->reg.t, GL_FALSE);
+		  brw_clip_interp_vertex(c, vtxOut, vtxPrev, vtx, c->reg.t, false);
 
 		  /* *outlist_ptr++ = vtxOut;
 		   * nr_verts++; 
@@ -314,10 +354,11 @@ void brw_clip_tri( struct brw_clip_compile *c )
 	       brw_ADD(p, get_addr_reg(outlist_ptr), get_addr_reg(outlist_ptr), brw_imm_uw(sizeof(short)));
 	       brw_ADD(p, c->reg.nr_verts, c->reg.nr_verts, brw_imm_ud(1));
 
+               load_vertex_pos(c, vtx, vec4(c->reg.dp), hpos_offset, clipvert_offset);
 	       /* IS_NEGATIVE(next)
 		*/
 	       brw_set_conditionalmod(p, BRW_CONDITIONAL_L);
-	       brw_DP4(p, vec4(c->reg.dp), deref_4f(vtx, c->offset[VERT_RESULT_HPOS]), c->reg.plane_equation);
+	       brw_DP4(p, vec4(c->reg.dp), vec4(c->reg.dp), c->reg.plane_equation);
 	       brw_IF(p, BRW_EXECUTE_1);
 	       {
 		  /* Going out of bounds.  Avoid division by zero as we
@@ -333,7 +374,7 @@ void brw_clip_tri( struct brw_clip_compile *c )
 		  brw_MOV(p, get_addr_reg(vtxOut), get_addr_reg(vtx) );
 		  brw_set_predicate_control(p, BRW_PREDICATE_NONE);
 
-		  brw_clip_interp_vertex(c, vtxOut, vtx, vtxPrev, c->reg.t, GL_TRUE);		  
+		  brw_clip_interp_vertex(c, vtxOut, vtx, vtxPrev, c->reg.t, true);
 
 		  /* *outlist_ptr++ = vtxOut;
 		   * nr_verts++; 
@@ -359,7 +400,7 @@ void brw_clip_tri( struct brw_clip_compile *c )
 	    brw_set_conditionalmod(p, BRW_CONDITIONAL_NZ);
 	    brw_ADD(p, c->reg.loopcount, c->reg.loopcount, brw_imm_d(-1));
 	 } 
-	 brw_WHILE(p, vertex_loop);
+	 brw_WHILE(p);
 
 	 /* vtxPrev = *(outlist_ptr-1)  OR: outlist[nr_verts-1]
 	  * inlist = outlist
@@ -390,8 +431,9 @@ void brw_clip_tri( struct brw_clip_compile *c )
        */
       brw_set_conditionalmod(p, BRW_CONDITIONAL_NZ);
       brw_SHR(p, c->reg.planemask, c->reg.planemask, brw_imm_ud(1));
+      brw_SHR(p, c->reg.vertex_src_mask, c->reg.vertex_src_mask, brw_imm_ud(1));
    }
-   brw_WHILE(p, plane_loop);
+   brw_WHILE(p);
 }
 
 
@@ -399,7 +441,6 @@ void brw_clip_tri( struct brw_clip_compile *c )
 void brw_clip_tri_emit_polygon(struct brw_clip_compile *c)
 {
    struct brw_compile *p = &c->func;
-   struct brw_instruction *loop;
 
    /* for (loopcount = nr_verts-2; loopcount > 0; loopcount--)
     */
@@ -417,14 +458,17 @@ void brw_clip_tri_emit_polygon(struct brw_clip_compile *c)
       brw_MOV(p, get_addr_reg(vptr), brw_address(c->reg.inlist));
       brw_MOV(p, get_addr_reg(v0), deref_1uw(vptr, 0));
 
-      brw_clip_emit_vue(c, v0, 1, 0, ((_3DPRIM_TRIFAN << 2) | R02_PRIM_START));
+      brw_clip_emit_vue(c, v0, 1, 0,
+                        ((_3DPRIM_TRIFAN << URB_WRITE_PRIM_TYPE_SHIFT)
+                         | URB_WRITE_PRIM_START));
       
       brw_ADD(p, get_addr_reg(vptr), get_addr_reg(vptr), brw_imm_uw(2));
       brw_MOV(p, get_addr_reg(v0), deref_1uw(vptr, 0));
 
-      loop = brw_DO(p, BRW_EXECUTE_1);
+      brw_DO(p, BRW_EXECUTE_1);
       {
-	 brw_clip_emit_vue(c, v0, 1, 0, (_3DPRIM_TRIFAN << 2));
+	 brw_clip_emit_vue(c, v0, 1, 0,
+                           (_3DPRIM_TRIFAN << URB_WRITE_PRIM_TYPE_SHIFT));
   
 	 brw_ADD(p, get_addr_reg(vptr), get_addr_reg(vptr), brw_imm_uw(2));
 	 brw_MOV(p, get_addr_reg(v0), deref_1uw(vptr, 0));
@@ -432,9 +476,11 @@ void brw_clip_tri_emit_polygon(struct brw_clip_compile *c)
 	 brw_set_conditionalmod(p, BRW_CONDITIONAL_NZ);
 	 brw_ADD(p, c->reg.loopcount, c->reg.loopcount, brw_imm_d(-1));
       }
-      brw_WHILE(p, loop);
+      brw_WHILE(p);
 
-      brw_clip_emit_vue(c, v0, 0, 1, ((_3DPRIM_TRIFAN << 2) | R02_PRIM_END));
+      brw_clip_emit_vue(c, v0, 0, 1,
+                        ((_3DPRIM_TRIFAN << URB_WRITE_PRIM_TYPE_SHIFT)
+                         | URB_WRITE_PRIM_END));
    }
    brw_ENDIF(p);
 }
@@ -477,12 +523,15 @@ static void brw_clip_test( struct brw_clip_compile *c )
     struct brw_compile *p = &c->func;
     struct brw_reg tmp0 = c->reg.loopcount; /* handy temporary */
 
+    GLuint hpos_offset = brw_varying_to_offset(&c->vue_map,
+                                                   VARYING_SLOT_POS);
+
     brw_MOV(p, get_addr_reg(vt0), brw_address(c->reg.vertex[0]));
     brw_MOV(p, get_addr_reg(vt1), brw_address(c->reg.vertex[1]));
     brw_MOV(p, get_addr_reg(vt2), brw_address(c->reg.vertex[2]));
-    brw_MOV(p, v0, deref_4f(vt0, c->offset[VERT_RESULT_HPOS]));
-    brw_MOV(p, v1, deref_4f(vt1, c->offset[VERT_RESULT_HPOS]));
-    brw_MOV(p, v2, deref_4f(vt2, c->offset[VERT_RESULT_HPOS]));
+    brw_MOV(p, v0, deref_4f(vt0, hpos_offset));
+    brw_MOV(p, v1, deref_4f(vt1, hpos_offset));
+    brw_MOV(p, v2, deref_4f(vt2, hpos_offset));
     brw_AND(p, c->reg.planemask, c->reg.planemask, brw_imm_ud(~0x3f));
 
     /* test nearz, xmin, ymin plane */

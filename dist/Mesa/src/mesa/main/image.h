@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -38,54 +38,12 @@ _mesa_swap2( GLushort *p, GLuint n );
 extern void
 _mesa_swap4( GLuint *p, GLuint n );
 
-extern GLboolean
-_mesa_type_is_packed(GLenum type);
-
-extern GLint
-_mesa_sizeof_type( GLenum type );
-
-extern GLint
-_mesa_sizeof_packed_type( GLenum type );
-
-extern GLint
-_mesa_components_in_format( GLenum format );
-
-extern GLint
-_mesa_bytes_per_pixel( GLenum format, GLenum type );
-
-extern GLboolean
-_mesa_is_legal_format_and_type(const struct gl_context *ctx,
-                               GLenum format, GLenum type);
-
-extern GLboolean
-_mesa_is_color_format(GLenum format);
-
-extern GLboolean
-_mesa_is_index_format(GLenum format);
-
-extern GLboolean
-_mesa_is_depth_format(GLenum format);
-
-extern GLboolean
-_mesa_is_stencil_format(GLenum format);
-
-extern GLboolean
-_mesa_is_ycbcr_format(GLenum format);
-
-extern GLboolean
-_mesa_is_depthstencil_format(GLenum format);
-
-extern GLboolean
-_mesa_is_depth_or_stencil_format(GLenum format);
-
-extern GLboolean
-_mesa_is_dudv_format(GLenum format);
-
-extern GLboolean
-_mesa_is_integer_format(GLenum format);
-
-extern GLboolean
-_mesa_is_compressed_format(struct gl_context *ctx, GLenum format);
+extern GLintptr
+_mesa_image_offset( GLuint dimensions,
+                    const struct gl_pixelstore_attrib *packing,
+                    GLsizei width, GLsizei height,
+                    GLenum format, GLenum type,
+                    GLint img, GLint row, GLint column );
 
 extern GLvoid *
 _mesa_image_address( GLuint dimensions,

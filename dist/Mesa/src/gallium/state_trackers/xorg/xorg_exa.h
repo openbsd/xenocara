@@ -3,7 +3,7 @@
 
 #include "xorg_tracker.h"
 
-#include <pipe/p_state.h>
+#include "pipe/p_state.h"
 
 struct cso_context;
 struct xorg_shaders;
@@ -35,14 +35,9 @@ struct exa_context
    } transform;
 
    struct {
-      boolean use_surface_copy;
-
       struct exa_pixmap_priv *src;
       struct exa_pixmap_priv *dst;
-
-      struct pipe_surface *dst_surface;
-
-      struct pipe_resource *src_texture;
+      PixmapPtr tmp_pix;
    } copy;
 };
 

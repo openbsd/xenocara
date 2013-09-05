@@ -31,33 +31,51 @@
 #define RADEON_DRM_WINSYS_H
 
 #include "radeon_winsys.h"
-
 #include "os/os_thread.h"
+
+struct radeon_drm_cs;
+
+enum radeon_generation {
+    DRV_R300,
+    DRV_R600,
+    DRV_SI
+};
 
 struct radeon_drm_winsys {
     struct radeon_winsys base;
 
     int fd; /* DRM file descriptor */
     int num_cs; /* The number of command streams created. */
+    uint64_t allocated_vram;
+    uint64_t allocated_gtt;
+    uint64_t buffer_wait_time; /* time spent in buffer_wait in ns */
+
+    enum radeon_generation gen;
+    struct radeon_info info;
 
     struct pb_manager *kman;
     struct pb_manager *cman;
+    struct radeon_surface_manager *surf_man;
 
-    uint32_t pci_id;        /* PCI ID */
-    uint32_t gb_pipes;      /* GB pipe count */
-    uint32_t z_pipes;       /* Z pipe count (rv530 only) */
-    uint32_t gart_size;     /* GART size. */
-    uint32_t vram_size;     /* VRAM size. */
     uint32_t num_cpus;      /* Number of CPUs. */
-
-    unsigned drm_major;
-    unsigned drm_minor;
-    unsigned drm_patchlevel;
 
     struct radeon_drm_cs *hyperz_owner;
     pipe_mutex hyperz_owner_mutex;
     struct radeon_drm_cs *cmask_owner;
     pipe_mutex cmask_owner_mutex;
+
+    /* rings submission thread */
+    pipe_mutex cs_stack_lock;
+    pipe_semaphore cs_queued;
+    /* we cannot use semaphore for empty queue because maintaining an even
+     * number of call to semaphore_wait and semaphore_signal is, to say the
+     * least, tricky
+     */
+    pipe_condvar cs_queue_empty;
+    pipe_thread thread;
+    int kill_thread;
+    int ncs;
+    struct radeon_drm_cs *cs_stack[RING_LAST];
 };
 
 static INLINE struct radeon_drm_winsys *
@@ -65,5 +83,7 @@ radeon_drm_winsys(struct radeon_winsys *base)
 {
     return (struct radeon_drm_winsys*)base;
 }
+
+void radeon_drm_ws_queue_cs(struct radeon_drm_winsys *ws, struct radeon_drm_cs *cs);
 
 #endif

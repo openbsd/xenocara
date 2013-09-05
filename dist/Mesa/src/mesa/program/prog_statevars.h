@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -17,15 +16,23 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef PROG_STATEVARS_H
 #define PROG_STATEVARS_H
 
+
 #include "main/glheader.h"
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 struct gl_context;
 struct gl_program_parameter_list;
@@ -111,14 +118,12 @@ typedef enum gl_state_index_ {
    STATE_TEXRECT_SCALE,
    STATE_FOG_PARAMS_OPTIMIZED,  /* for faster fog calc */
    STATE_POINT_SIZE_CLAMPED,    /* includes implementation dependent size clamp */
-   STATE_POINT_SIZE_IMPL_CLAMP, /* for implementation clamp only in vs */
    STATE_LIGHT_SPOT_DIR_NORMALIZED,   /* pre-normalized spot dir */
    STATE_LIGHT_POSITION,              /* object vs eye space */
    STATE_LIGHT_POSITION_NORMALIZED,   /* object vs eye space */
    STATE_LIGHT_HALF_VECTOR,           /* object vs eye space */
    STATE_PT_SCALE,              /**< Pixel transfer RGBA scale */
    STATE_PT_BIAS,               /**< Pixel transfer RGBA bias */
-   STATE_SHADOW_AMBIENT,        /**< ARB_shadow_ambient fail value; token[2] is texture unit index */
    STATE_FB_SIZE,               /**< (width-1, height-1, 0, 0) */
    STATE_FB_WPOS_Y_TRANSFORM,   /**< (1, 0, -1, height) if a FBO is bound, (-1, height, 1, 0) otherwise */
    STATE_ROT_MATRIX_0,          /**< ATI_envmap_bumpmap, rot matrix row 0 */
@@ -141,8 +146,9 @@ extern char *
 _mesa_program_state_string(const gl_state_index state[STATE_LENGTH]);
 
 
-extern void
-_mesa_load_tracked_matrices(struct gl_context *ctx);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* PROG_STATEVARS_H */

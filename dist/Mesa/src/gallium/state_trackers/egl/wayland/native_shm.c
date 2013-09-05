@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.11
  *
  * Copyright (C) 2011 Benjamin Franzke <benjaminfranzke@googlemail.com>
  *
@@ -63,16 +62,14 @@ wayland_shm_display_destroy(struct native_display *ndpy)
 {
    struct wayland_shm_display *shmdpy = wayland_shm_display(ndpy);
 
-   if (shmdpy->base.config)
-      FREE(shmdpy->base.config);
+   FREE(shmdpy->base.configs);
    if (shmdpy->base.own_dpy)
-      wl_display_destroy(shmdpy->base.dpy);
+      wl_display_disconnect(shmdpy->base.dpy);
 
    ndpy_uninit(ndpy);
 
    FREE(shmdpy);
 }
-
 
 static struct wl_buffer *
 wayland_create_shm_buffer(struct wayland_display *display,
@@ -84,7 +81,9 @@ wayland_create_shm_buffer(struct wayland_display *display,
    struct pipe_resource *resource;
    struct winsys_handle wsh;
    uint width, height;
-   struct wl_visual *visual;
+   enum wl_shm_format format;
+   struct wl_buffer *buffer;
+   struct wl_shm_pool *pool;
 
    resource = resource_surface_get_single_resource(surface->rsurf, attachment);
    resource_surface_get_size(surface->rsurf, &width, &height);
@@ -93,38 +92,78 @@ wayland_create_shm_buffer(struct wayland_display *display,
 
    pipe_resource_reference(&resource, NULL);
 
-   switch (surface->type) {
-   case WL_WINDOW_SURFACE:
-      visual = surface->win->visual;
+   switch (surface->color_format) {
+   case PIPE_FORMAT_B8G8R8A8_UNORM:
+      format = WL_SHM_FORMAT_ARGB8888;
       break;
-   case WL_PIXMAP_SURFACE:
-      visual = surface->pix->visual;
+   case PIPE_FORMAT_B8G8R8X8_UNORM:
+      format = WL_SHM_FORMAT_XRGB8888;
       break;
    default:
       return NULL;
+      break;
    }
 
-   return wl_shm_create_buffer(shmdpy->wl_shm, wsh.fd,
-                               width, height,
-                               wsh.stride, visual);
+   pool = wl_shm_create_pool(shmdpy->wl_shm, wsh.fd, wsh.size);
+   buffer = wl_shm_pool_create_buffer(pool, 0, width, height,
+                                      wsh.stride, format);
+   wl_shm_pool_destroy(pool);
+
+   return buffer;
 }
+
+static void
+shm_handle_format(void *data, struct wl_shm *shm, uint32_t format)
+{
+   struct wayland_shm_display *shmdpy = data;
+
+   switch (format) {
+   case WL_SHM_FORMAT_ARGB8888:
+      shmdpy->base.formats |= HAS_ARGB8888;
+      break;
+   case WL_SHM_FORMAT_XRGB8888:
+      shmdpy->base.formats |= HAS_XRGB8888;
+      break;
+   }
+}
+
+static const struct wl_shm_listener shm_listener = {
+   shm_handle_format
+};
+
+static void
+registry_handle_global(void *data, struct wl_registry *registry, uint32_t name,
+                       const char *interface, uint32_t version)
+{
+   struct wayland_shm_display *shmdpy = data;
+
+   if (strcmp(interface, "wl_shm") == 0) {
+      shmdpy->wl_shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
+      wl_shm_add_listener(shmdpy->wl_shm, &shm_listener, shmdpy);
+   }
+}
+
+static const struct wl_registry_listener registry_listener = {
+       registry_handle_global
+};
 
 static boolean
 wayland_shm_display_init_screen(struct native_display *ndpy)
 {
    struct wayland_shm_display *shmdpy = wayland_shm_display(ndpy);
    struct sw_winsys *winsys = NULL;
-   uint32_t id;
 
-   id = wl_display_get_global(shmdpy->base.dpy, "wl_shm", 1);
-   if (id == 0)
-      wl_display_iterate(shmdpy->base.dpy, WL_DISPLAY_READABLE);
-   id = wl_display_get_global(shmdpy->base.dpy, "wl_shm", 1);
-   if (id == 0)
+   shmdpy->base.queue = wl_display_create_queue(shmdpy->base.dpy);
+   shmdpy->base.registry = wl_display_get_registry(shmdpy->base.dpy);
+   wl_proxy_set_queue((struct wl_proxy *) shmdpy->base.registry,
+                      shmdpy->base.queue);
+   wl_registry_add_listener(shmdpy->base.registry, &registry_listener, shmdpy);
+   if (wayland_roundtrip(&shmdpy->base) < 0 || shmdpy->wl_shm == NULL)
       return FALSE;
 
-   shmdpy->wl_shm = wl_shm_create(shmdpy->base.dpy, id, 1);
-   if (!shmdpy->wl_shm)
+   if (shmdpy->base.formats == 0)
+      wayland_roundtrip(&shmdpy->base);
+   if (shmdpy->base.formats == 0)
       return FALSE;
 
    winsys = wayland_create_sw_winsys(shmdpy->base.dpy);

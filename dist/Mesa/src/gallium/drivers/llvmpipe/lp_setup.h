@@ -55,7 +55,7 @@ lp_setup_create( struct pipe_context *pipe,
 
 void
 lp_setup_clear(struct lp_setup_context *setup,
-               const float *clear_color,
+               const union pipe_color_union *clear_color,
                double clear_depth,
                unsigned clear_stencil,
                unsigned flags);
@@ -77,7 +77,8 @@ lp_setup_set_triangle_state( struct lp_setup_context *setup,
                              unsigned cullmode,
                              boolean front_is_ccw,
                              boolean scissor,
-                             boolean gl_rasterization_rules );
+                             boolean half_pixel_center,
+                             boolean bottom_edge_rule);
 
 void 
 lp_setup_set_line_state( struct lp_setup_context *setup,
@@ -100,8 +101,8 @@ lp_setup_set_fs_variant( struct lp_setup_context *setup,
 
 void
 lp_setup_set_fs_constants(struct lp_setup_context *setup,
-                          struct pipe_resource *buffer);
-
+                          unsigned num,
+                          struct pipe_constant_buffer *buffers);
 
 void
 lp_setup_set_alpha_ref_value( struct lp_setup_context *setup,
@@ -116,8 +117,8 @@ lp_setup_set_blend_color( struct lp_setup_context *setup,
                           const struct pipe_blend_color *blend_color );
 
 void
-lp_setup_set_scissor( struct lp_setup_context *setup,
-                      const struct pipe_scissor_state *scissor );
+lp_setup_set_scissors( struct lp_setup_context *setup,
+                       const struct pipe_scissor_state *scissors );
 
 void
 lp_setup_set_fragment_sampler_views(struct lp_setup_context *setup,
@@ -127,7 +128,7 @@ lp_setup_set_fragment_sampler_views(struct lp_setup_context *setup,
 void
 lp_setup_set_fragment_sampler_state(struct lp_setup_context *setup,
                                     unsigned num,
-                                    const struct pipe_sampler_state **samplers);
+                                    struct pipe_sampler_state **samplers);
 
 unsigned
 lp_setup_is_resource_referenced( const struct lp_setup_context *setup,
@@ -136,6 +137,10 @@ lp_setup_is_resource_referenced( const struct lp_setup_context *setup,
 void
 lp_setup_set_flatshade_first( struct lp_setup_context *setup, 
                               boolean flatshade_first );
+
+void
+lp_setup_set_rasterizer_discard( struct lp_setup_context *setup, 
+                                 boolean rasterizer_discard );
 
 void
 lp_setup_set_vertex_info( struct lp_setup_context *setup, 
@@ -148,5 +153,11 @@ lp_setup_begin_query(struct lp_setup_context *setup,
 void
 lp_setup_end_query(struct lp_setup_context *setup,
                    struct llvmpipe_query *pq);
+
+static INLINE unsigned
+lp_clamp_scissor_idx(int idx)
+{
+   return (PIPE_MAX_VIEWPORTS > idx && idx >= 0) ? idx : 0;
+}
 
 #endif

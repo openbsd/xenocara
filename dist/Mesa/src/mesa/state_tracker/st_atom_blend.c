@@ -78,10 +78,10 @@ translate_blend(GLenum blend)
       return PIPE_BLENDFACTOR_CONST_COLOR;
    case GL_CONSTANT_ALPHA:
       return PIPE_BLENDFACTOR_CONST_ALPHA;
-      /*
+   case GL_SRC1_COLOR:
       return PIPE_BLENDFACTOR_SRC1_COLOR;
+   case GL_SRC1_ALPHA:
       return PIPE_BLENDFACTOR_SRC1_ALPHA;
-      */
    case GL_ZERO:
       return PIPE_BLENDFACTOR_ZERO;
    case GL_ONE_MINUS_SRC_COLOR:
@@ -96,10 +96,10 @@ translate_blend(GLenum blend)
       return PIPE_BLENDFACTOR_INV_CONST_COLOR;
    case GL_ONE_MINUS_CONSTANT_ALPHA:
       return PIPE_BLENDFACTOR_INV_CONST_ALPHA;
-      /*
+   case GL_ONE_MINUS_SRC1_COLOR:
       return PIPE_BLENDFACTOR_INV_SRC1_COLOR;
+   case GL_ONE_MINUS_SRC1_ALPHA:
       return PIPE_BLENDFACTOR_INV_SRC1_ALPHA;
-      */
    default:
       assert("invalid GL token in translate_blend()" == NULL);
       return 0;
@@ -200,15 +200,7 @@ update_blend( struct st_context *st )
       num_state = ctx->Const.MaxDrawBuffers;
       blend->independent_blend_enable = 1;
    }
-   /* Note it is impossible to correctly deal with EXT_blend_logic_op and
-      EXT_draw_buffers2/EXT_blend_equation_separate at the same time.
-      These combinations would require support for per-rt logicop enables
-      and separate alpha/rgb logicop/blend support respectively. Neither
-      possible in gallium nor most hardware. Assume these combinations
-      don't happen. */
-   if (ctx->Color.ColorLogicOpEnabled ||
-       (ctx->Color.BlendEnabled &&
-        ctx->Color.Blend[0].EquationRGB == GL_LOGIC_OP)) {
+   if (ctx->Color.ColorLogicOpEnabled) {
       /* logicop enabled */
       blend->logicop_enable = 1;
       blend->logicop_func = translate_logicop(ctx->Color.LogicOp);

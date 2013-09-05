@@ -23,6 +23,18 @@ When an instruction has a scalar result, the result is usually copied into
 each of the components of *dst*. When this happens, the result is said to be
 *replicated* to *dst*. :opcode:`RCP` is one such instruction.
 
+Modifiers
+^^^^^^^^^^^^^^^
+
+TGSI supports modifiers on inputs (as well as saturate modifier on instructions).
+
+For inputs which have a floating point type, both absolute value and negation
+modifiers are supported (with absolute value being applied first).
+TGSI_OPCODE_MOV is considered to have float input type for applying modifiers.
+
+For inputs which have signed or unsigned type only the negate modifier is
+supported.
+
 Instruction Set
 ---------------
 
@@ -82,11 +94,20 @@ This instruction replicates its result.
 
 .. opcode:: RSQ - Reciprocal Square Root
 
-This instruction replicates its result.
+This instruction replicates its result. The results are undefined for src <= 0.
 
 .. math::
 
-  dst = \frac{1}{\sqrt{|src.x|}}
+  dst = \frac{1}{\sqrt{src.x}}
+
+
+.. opcode:: SQRT - Square Root
+
+This instruction replicates its result. The results are undefined for src < 0.
+
+.. math::
+
+  dst = {\sqrt{src.x}}
 
 
 .. opcode:: EXP - Approximate Exponential Base 2
@@ -450,11 +471,6 @@ This instruction replicates its result.
   dst.w = partialy(src.w)
 
 
-.. opcode:: KILP - Predicated Discard
-
-  discard
-
-
 .. opcode:: PK2H - Pack Two 16-bit Floats
 
   TBD
@@ -585,6 +601,17 @@ This instruction replicates its result.
 
   dst = texture_sample(unit, coord, bias)
 
+  for array textures src0.y contains the slice for 1D,
+  and src0.z contain the slice for 2D.
+  for shadow textures with no arrays, src0.z contains
+  the reference value.
+  for shadow textures with arrays, src0.z contains
+  the reference value for 1D arrays, and src0.w contains
+  the reference value for 2D arrays.
+  There is no way to pass a bias in the .w value for
+  shadow arrays, and GLSL doesn't allow this.
+  GLSL does allow cube shadows maps to take a bias value,
+  and we have to determine how this will look in TGSI.
 
 .. opcode:: TXD - Texture Lookup with Derivatives
 
@@ -688,25 +715,6 @@ This instruction replicates its result.
   dst.w = round(src.w)
 
 
-.. opcode:: BRA - Branch
-
-  pc = target
-
-.. note::
-
-   Considered for removal.
-
-.. opcode:: CAL - Subroutine Call
-
-  push(pc)
-  pc = target
-
-
-.. opcode:: RET - Subroutine Call Return
-
-  pc = pop()
-
-
 .. opcode:: SSG - Set Sign
 
 .. math::
@@ -733,13 +741,20 @@ This instruction replicates its result.
   dst.w = (src0.w < 0) ? src1.w : src2.w
 
 
-.. opcode:: KIL - Conditional Discard
+.. opcode:: KILL_IF - Conditional Discard
+
+  Conditional discard.  Allowed in fragment shaders only.
 
 .. math::
 
   if (src.x < 0 || src.y < 0 || src.z < 0 || src.w < 0)
     discard
   endif
+
+
+.. opcode:: KILL - Discard
+
+  Unconditional discard.  Allowed in fragment shaders only.
 
 
 .. opcode:: SCS - Sine Cosine
@@ -824,26 +839,6 @@ This instruction replicates its result.
   dst = texture_sample(unit, coord, lod)
 
 
-.. opcode:: BRK - Break
-
-  TBD
-
-
-.. opcode:: IF - If
-
-  TBD
-
-
-.. opcode:: ELSE - Else
-
-  TBD
-
-
-.. opcode:: ENDIF - End If
-
-  TBD
-
-
 .. opcode:: PUSHA - Push Address Register On Stack
 
   push(src.x)
@@ -875,13 +870,35 @@ This instruction replicates its result.
    Considered for removal.
 
 
+.. opcode:: BRA - Branch
+
+  pc = target
+
+.. note::
+
+   Considered for removal.
+
+
+.. opcode:: CALLNZ - Subroutine Call If Not Zero
+
+   TBD
+
+.. note::
+
+   Considered for cleanup.
+
+.. note::
+
+   Considered for removal.
+
+
 Compute ISA
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 These opcodes are primarily provided for special-use computational shaders.
 Support for these opcodes indicated by a special pipe capability bit (TBD).
 
-XXX so let's discuss it, yeah?
+XXX doesn't look like most of the opcodes really belong here.
 
 .. opcode:: CEIL - Ceiling
 
@@ -894,32 +911,6 @@ XXX so let's discuss it, yeah?
   dst.z = \lceil src.z\rceil
 
   dst.w = \lceil src.w\rceil
-
-
-.. opcode:: I2F - Integer To Float
-
-.. math::
-
-  dst.x = (float) src.x
-
-  dst.y = (float) src.y
-
-  dst.z = (float) src.z
-
-  dst.w = (float) src.w
-
-
-.. opcode:: NOT - Bitwise Not
-
-.. math::
-
-  dst.x = ~src.x
-
-  dst.y = ~src.y
-
-  dst.z = ~src.z
-
-  dst.w = ~src.w
 
 
 .. opcode:: TRUNC - Truncate
@@ -935,30 +926,239 @@ XXX so let's discuss it, yeah?
   dst.w = trunc(src.w)
 
 
-.. opcode:: SHL - Shift Left
+.. opcode:: MOD - Modulus
 
 .. math::
 
-  dst.x = src0.x << src1.x
+  dst.x = src0.x \bmod src1.x
 
-  dst.y = src0.y << src1.x
+  dst.y = src0.y \bmod src1.y
 
-  dst.z = src0.z << src1.x
+  dst.z = src0.z \bmod src1.z
 
-  dst.w = src0.w << src1.x
+  dst.w = src0.w \bmod src1.w
 
 
-.. opcode:: SHR - Shift Right
+.. opcode:: UARL - Integer Address Register Load
+
+  Moves the contents of the source register, assumed to be an integer, into the
+  destination register, which is assumed to be an address (ADDR) register.
+
+
+.. opcode:: SAD - Sum Of Absolute Differences
 
 .. math::
 
-  dst.x = src0.x >> src1.x
+  dst.x = |src0.x - src1.x| + src2.x
 
-  dst.y = src0.y >> src1.x
+  dst.y = |src0.y - src1.y| + src2.y
 
-  dst.z = src0.z >> src1.x
+  dst.z = |src0.z - src1.z| + src2.z
 
-  dst.w = src0.w >> src1.x
+  dst.w = |src0.w - src1.w| + src2.w
+
+
+.. opcode:: TXF - Texel Fetch (as per NV_gpu_shader4), extract a single texel
+                  from a specified texture image. The source sampler may
+		  not be a CUBE or SHADOW.
+                  src 0 is a four-component signed integer vector used to
+		  identify the single texel accessed. 3 components + level.
+		  src 1 is a 3 component constant signed integer vector,
+		  with each component only have a range of
+		  -8..+8 (hw only seems to deal with this range, interface
+		  allows for up to unsigned int).
+		  TXF(uint_vec coord, int_vec offset).
+
+
+.. opcode:: TXQ - Texture Size Query (as per NV_gpu_program4)
+                  retrieve the dimensions of the texture
+                  depending on the target. For 1D (width), 2D/RECT/CUBE
+		  (width, height), 3D (width, height, depth),
+		  1D array (width, layers), 2D array (width, height, layers)
+
+.. math::
+
+  lod = src0.x
+
+  dst.x = texture_width(unit, lod)
+
+  dst.y = texture_height(unit, lod)
+
+  dst.z = texture_depth(unit, lod)
+
+
+Integer ISA
+^^^^^^^^^^^^^^^^^^^^^^^^
+These opcodes are used for integer operations.
+Support for these opcodes indicated by PIPE_SHADER_CAP_INTEGERS (all of them?)
+
+
+.. opcode:: I2F - Signed Integer To Float
+
+   Rounding is unspecified (round to nearest even suggested).
+
+.. math::
+
+  dst.x = (float) src.x
+
+  dst.y = (float) src.y
+
+  dst.z = (float) src.z
+
+  dst.w = (float) src.w
+
+
+.. opcode:: U2F - Unsigned Integer To Float
+
+   Rounding is unspecified (round to nearest even suggested).
+
+.. math::
+
+  dst.x = (float) src.x
+
+  dst.y = (float) src.y
+
+  dst.z = (float) src.z
+
+  dst.w = (float) src.w
+
+
+.. opcode:: F2I - Float to Signed Integer
+
+   Rounding is towards zero (truncate).
+   Values outside signed range (including NaNs) produce undefined results.
+
+.. math::
+
+  dst.x = (int) src.x
+
+  dst.y = (int) src.y
+
+  dst.z = (int) src.z
+
+  dst.w = (int) src.w
+
+
+.. opcode:: F2U - Float to Unsigned Integer
+
+   Rounding is towards zero (truncate).
+   Values outside unsigned range (including NaNs) produce undefined results.
+
+.. math::
+
+  dst.x = (unsigned) src.x
+
+  dst.y = (unsigned) src.y
+
+  dst.z = (unsigned) src.z
+
+  dst.w = (unsigned) src.w
+
+
+.. opcode:: UADD - Integer Add
+
+   This instruction works the same for signed and unsigned integers.
+   The low 32bit of the result is returned.
+
+.. math::
+
+  dst.x = src0.x + src1.x
+
+  dst.y = src0.y + src1.y
+
+  dst.z = src0.z + src1.z
+
+  dst.w = src0.w + src1.w
+
+
+.. opcode:: UMAD - Integer Multiply And Add
+
+   This instruction works the same for signed and unsigned integers.
+   The multiplication returns the low 32bit (as does the result itself).
+
+.. math::
+
+  dst.x = src0.x \times src1.x + src2.x
+
+  dst.y = src0.y \times src1.y + src2.y
+
+  dst.z = src0.z \times src1.z + src2.z
+
+  dst.w = src0.w \times src1.w + src2.w
+
+
+.. opcode:: UMUL - Integer Multiply
+
+   This instruction works the same for signed and unsigned integers.
+   The low 32bit of the result is returned.
+
+.. math::
+
+  dst.x = src0.x \times src1.x
+
+  dst.y = src0.y \times src1.y
+
+  dst.z = src0.z \times src1.z
+
+  dst.w = src0.w \times src1.w
+
+
+.. opcode:: IDIV - Signed Integer Division
+
+   TBD: behavior for division by zero.
+
+.. math::
+
+  dst.x = src0.x \ src1.x
+
+  dst.y = src0.y \ src1.y
+
+  dst.z = src0.z \ src1.z
+
+  dst.w = src0.w \ src1.w
+
+
+.. opcode:: UDIV - Unsigned Integer Division
+
+   For division by zero, 0xffffffff is returned.
+
+.. math::
+
+  dst.x = src0.x \ src1.x
+
+  dst.y = src0.y \ src1.y
+
+  dst.z = src0.z \ src1.z
+
+  dst.w = src0.w \ src1.w
+
+
+.. opcode:: UMOD - Unsigned Integer Remainder
+
+   If second arg is zero, 0xffffffff is returned.
+
+.. math::
+
+  dst.x = src0.x \ src1.x
+
+  dst.y = src0.y \ src1.y
+
+  dst.z = src0.z \ src1.z
+
+  dst.w = src0.w \ src1.w
+
+
+.. opcode:: NOT - Bitwise Not
+
+.. math::
+
+  dst.x = ~src.x
+
+  dst.y = ~src.y
+
+  dst.z = ~src.z
+
+  dst.w = ~src.w
 
 
 .. opcode:: AND - Bitwise And
@@ -987,19 +1187,6 @@ XXX so let's discuss it, yeah?
   dst.w = src0.w | src1.w
 
 
-.. opcode:: MOD - Modulus
-
-.. math::
-
-  dst.x = src0.x \bmod src1.x
-
-  dst.y = src0.y \bmod src1.y
-
-  dst.z = src0.z \bmod src1.z
-
-  dst.w = src0.w \bmod src1.w
-
-
 .. opcode:: XOR - Bitwise Xor
 
 .. math::
@@ -1013,37 +1200,229 @@ XXX so let's discuss it, yeah?
   dst.w = src0.w \oplus src1.w
 
 
-.. opcode:: SAD - Sum Of Absolute Differences
+.. opcode:: IMAX - Maximum of Signed Integers
 
 .. math::
 
-  dst.x = |src0.x - src1.x| + src2.x
+  dst.x = max(src0.x, src1.x)
 
-  dst.y = |src0.y - src1.y| + src2.y
+  dst.y = max(src0.y, src1.y)
 
-  dst.z = |src0.z - src1.z| + src2.z
+  dst.z = max(src0.z, src1.z)
 
-  dst.w = |src0.w - src1.w| + src2.w
-
-
-.. opcode:: TXF - Texel Fetch
-
-  TBD
+  dst.w = max(src0.w, src1.w)
 
 
-.. opcode:: TXQ - Texture Size Query
+.. opcode:: UMAX - Maximum of Unsigned Integers
 
-  TBD
+.. math::
+
+  dst.x = max(src0.x, src1.x)
+
+  dst.y = max(src0.y, src1.y)
+
+  dst.z = max(src0.z, src1.z)
+
+  dst.w = max(src0.w, src1.w)
 
 
-.. opcode:: CONT - Continue
+.. opcode:: IMIN - Minimum of Signed Integers
 
-  TBD
+.. math::
 
-.. note::
+  dst.x = min(src0.x, src1.x)
 
-   Support for CONT is determined by a special capability bit,
-   ``TGSI_CONT_SUPPORTED``. See :ref:`Screen` for more information.
+  dst.y = min(src0.y, src1.y)
+
+  dst.z = min(src0.z, src1.z)
+
+  dst.w = min(src0.w, src1.w)
+
+
+.. opcode:: UMIN - Minimum of Unsigned Integers
+
+.. math::
+
+  dst.x = min(src0.x, src1.x)
+
+  dst.y = min(src0.y, src1.y)
+
+  dst.z = min(src0.z, src1.z)
+
+  dst.w = min(src0.w, src1.w)
+
+
+.. opcode:: SHL - Shift Left
+
+.. math::
+
+  dst.x = src0.x << src1.x
+
+  dst.y = src0.y << src1.x
+
+  dst.z = src0.z << src1.x
+
+  dst.w = src0.w << src1.x
+
+
+.. opcode:: ISHR - Arithmetic Shift Right (of Signed Integer)
+
+.. math::
+
+  dst.x = src0.x >> src1.x
+
+  dst.y = src0.y >> src1.x
+
+  dst.z = src0.z >> src1.x
+
+  dst.w = src0.w >> src1.x
+
+
+.. opcode:: USHR - Logical Shift Right
+
+.. math::
+
+  dst.x = src0.x >> (unsigned) src1.x
+
+  dst.y = src0.y >> (unsigned) src1.x
+
+  dst.z = src0.z >> (unsigned) src1.x
+
+  dst.w = src0.w >> (unsigned) src1.x
+
+
+.. opcode:: UCMP - Integer Conditional Move
+
+.. math::
+
+  dst.x = src0.x ? src1.x : src2.x
+
+  dst.y = src0.y ? src1.y : src2.y
+
+  dst.z = src0.z ? src1.z : src2.z
+
+  dst.w = src0.w ? src1.w : src2.w
+
+
+
+.. opcode:: ISSG - Integer Set Sign
+
+.. math::
+
+  dst.x = (src0.x < 0) ? -1 : (src0.x > 0) ? 1 : 0
+
+  dst.y = (src0.y < 0) ? -1 : (src0.y > 0) ? 1 : 0
+
+  dst.z = (src0.z < 0) ? -1 : (src0.z > 0) ? 1 : 0
+
+  dst.w = (src0.w < 0) ? -1 : (src0.w > 0) ? 1 : 0
+
+
+
+.. opcode:: ISLT - Signed Integer Set On Less Than
+
+.. math::
+
+  dst.x = (src0.x < src1.x) ? ~0 : 0
+
+  dst.y = (src0.y < src1.y) ? ~0 : 0
+
+  dst.z = (src0.z < src1.z) ? ~0 : 0
+
+  dst.w = (src0.w < src1.w) ? ~0 : 0
+
+
+.. opcode:: USLT - Unsigned Integer Set On Less Than
+
+.. math::
+
+  dst.x = (src0.x < src1.x) ? ~0 : 0
+
+  dst.y = (src0.y < src1.y) ? ~0 : 0
+
+  dst.z = (src0.z < src1.z) ? ~0 : 0
+
+  dst.w = (src0.w < src1.w) ? ~0 : 0
+
+
+.. opcode:: ISGE - Signed Integer Set On Greater Equal Than
+
+.. math::
+
+  dst.x = (src0.x >= src1.x) ? ~0 : 0
+
+  dst.y = (src0.y >= src1.y) ? ~0 : 0
+
+  dst.z = (src0.z >= src1.z) ? ~0 : 0
+
+  dst.w = (src0.w >= src1.w) ? ~0 : 0
+
+
+.. opcode:: USGE - Unsigned Integer Set On Greater Equal Than
+
+.. math::
+
+  dst.x = (src0.x >= src1.x) ? ~0 : 0
+
+  dst.y = (src0.y >= src1.y) ? ~0 : 0
+
+  dst.z = (src0.z >= src1.z) ? ~0 : 0
+
+  dst.w = (src0.w >= src1.w) ? ~0 : 0
+
+
+.. opcode:: USEQ - Integer Set On Equal
+
+.. math::
+
+  dst.x = (src0.x == src1.x) ? ~0 : 0
+
+  dst.y = (src0.y == src1.y) ? ~0 : 0
+
+  dst.z = (src0.z == src1.z) ? ~0 : 0
+
+  dst.w = (src0.w == src1.w) ? ~0 : 0
+
+
+.. opcode:: USNE - Integer Set On Not Equal
+
+.. math::
+
+  dst.x = (src0.x != src1.x) ? ~0 : 0
+
+  dst.y = (src0.y != src1.y) ? ~0 : 0
+
+  dst.z = (src0.z != src1.z) ? ~0 : 0
+
+  dst.w = (src0.w != src1.w) ? ~0 : 0
+
+
+.. opcode:: INEG - Integer Negate
+
+  Two's complement.
+
+.. math::
+
+  dst.x = -src.x
+
+  dst.y = -src.y
+
+  dst.z = -src.z
+
+  dst.w = -src.w
+
+
+.. opcode:: IABS - Integer Absolute Value
+
+.. math::
+
+  dst.x = |src.x|
+
+  dst.y = |src.y|
+
+  dst.z = |src.z|
+
+  dst.w = |src.w|
 
 
 Geometry ISA
@@ -1054,12 +1433,14 @@ in any other type of shader.
 
 .. opcode:: EMIT - Emit
 
-  TBD
+  Generate a new vertex for the current primitive using the values in the
+  output registers.
 
 
 .. opcode:: ENDPRIM - End Primitive
 
-  TBD
+  Complete the current primitive (consisting of the emitted vertices),
+  and start a new one.
 
 
 GLSL ISA
@@ -1067,30 +1448,141 @@ GLSL ISA
 
 These opcodes are part of :term:`GLSL`'s opcode set. Support for these
 opcodes is determined by a special capability bit, ``GLSL``.
+Some require glsl version 1.30 (UIF/BREAKC/SWITCH/CASE/DEFAULT/ENDSWITCH).
+
+.. opcode:: CAL - Subroutine Call
+
+  push(pc)
+  pc = target
+
+
+.. opcode:: RET - Subroutine Call Return
+
+  pc = pop()
+
+
+.. opcode:: CONT - Continue
+
+  Unconditionally moves the point of execution to the instruction after the
+  last bgnloop. The instruction must appear within a bgnloop/endloop.
+
+.. note::
+
+   Support for CONT is determined by a special capability bit,
+   ``TGSI_CONT_SUPPORTED``. See :ref:`Screen` for more information.
+
 
 .. opcode:: BGNLOOP - Begin a Loop
 
-  TBD
+  Start a loop. Must have a matching endloop.
 
 
 .. opcode:: BGNSUB - Begin Subroutine
 
-  TBD
+  Starts definition of a subroutine. Must have a matching endsub.
 
 
 .. opcode:: ENDLOOP - End a Loop
 
-  TBD
+  End a loop started with bgnloop.
 
 
 .. opcode:: ENDSUB - End Subroutine
 
-  TBD
+  Ends definition of a subroutine.
 
 
 .. opcode:: NOP - No Operation
 
   Do nothing.
+
+
+.. opcode:: BRK - Break
+
+  Unconditionally moves the point of execution to the instruction after the
+  next endloop or endswitch. The instruction must appear within a loop/endloop
+  or switch/endswitch.
+
+
+.. opcode:: BREAKC - Break Conditional
+
+  Conditionally moves the point of execution to the instruction after the
+  next endloop or endswitch. The instruction must appear within a loop/endloop
+  or switch/endswitch.
+  Condition evaluates to true if src0.x != 0 where src0.x is interpreted
+  as an integer register.
+
+.. note::
+
+   Considered for removal as it's quite inconsistent wrt other opcodes
+   (could emulate with UIF/BRK/ENDIF). 
+
+
+.. opcode:: IF - Float If
+
+  Start an IF ... ELSE .. ENDIF block.  Condition evaluates to true if
+
+    src0.x != 0.0
+
+  where src0.x is interpreted as a floating point register.
+
+
+.. opcode:: UIF - Bitwise If
+
+  Start an UIF ... ELSE .. ENDIF block. Condition evaluates to true if
+
+    src0.x != 0
+
+  where src0.x is interpreted as an integer register.
+
+
+.. opcode:: ELSE - Else
+
+  Starts an else block, after an IF or UIF statement.
+
+
+.. opcode:: ENDIF - End If
+
+  Ends an IF or UIF block.
+
+
+.. opcode:: SWITCH - Switch
+
+   Starts a C-style switch expression. The switch consists of one or multiple
+   CASE statements, and at most one DEFAULT statement. Execution of a statement
+   ends when a BRK is hit, but just like in C falling through to other cases
+   without a break is allowed. Similarly, DEFAULT label is allowed anywhere not
+   just as last statement, and fallthrough is allowed into/from it.
+   CASE src arguments are evaluated at bit level against the SWITCH src argument.
+
+   Example:
+   SWITCH src[0].x
+   CASE src[0].x
+   (some instructions here)
+   (optional BRK here)
+   DEFAULT
+   (some instructions here)
+   (optional BRK here)
+   CASE src[0].x
+   (some instructions here)
+   (optional BRK here)
+   ENDSWITCH
+
+
+.. opcode:: CASE - Switch case
+
+   This represents a switch case label. The src arg must be an integer immediate.
+
+
+.. opcode:: DEFAULT - Switch default
+
+   This represents the default case in the switch, which is taken if no other
+   case matches.
+
+
+.. opcode:: ENDSWITCH - End of switch
+
+   Ends a switch expression.
 
 
 .. opcode:: NRM4 - 4-component Vector Normalise
@@ -1101,25 +1593,6 @@ This instruction replicates its result.
 
   dst = \frac{src.x}{src.x \times src.x + src.y \times src.y + src.z \times src.z + src.w \times src.w}
 
-
-ps_2_x
-^^^^^^^^^^^^
-
-XXX wait what
-
-.. opcode:: CALLNZ - Subroutine Call If Not Zero
-
-  TBD
-
-
-.. opcode:: IFC - If
-
-  TBD
-
-
-.. opcode:: BREAKC - Break Conditional
-
-  TBD
 
 .. _doubleopcodes:
 
@@ -1250,28 +1723,36 @@ This opcode is the inverse of :opcode:`DFRACEXP`.
    dst.zw = \sqrt{src.zw}
 
 
-.. _resourceopcodes:
+.. _samplingopcodes:
 
-Resource Access Opcodes
-^^^^^^^^^^^^^^^^^^^^^^^^
+Resource Sampling Opcodes
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Those opcodes follow very closely semantics of the respective Direct3D
 instructions. If in doubt double check Direct3D documentation.
 
-.. opcode:: LOAD - Simplified alternative to the "SAMPLE" instruction.
-               Using the provided integer address, LOAD fetches data
-               from the specified buffer/texture without any filtering.
+.. opcode:: SAMPLE - Using provided address, sample data from the
+               specified texture using the filtering mode identified
+               by the gven sampler. The source data may come from
+               any resource type other than buffers.
+               SAMPLE dst, address, sampler_view, sampler
+               e.g.
+               SAMPLE TEMP[0], TEMP[1], SVIEW[0], SAMP[0]
+
+.. opcode:: SAMPLE_I - Simplified alternative to the SAMPLE instruction.
+               Using the provided integer address, SAMPLE_I fetches data
+               from the specified sampler view without any filtering.
                The source data may come from any resource type other
                than CUBE.
-               LOAD dst, address, resource
+               SAMPLE_I dst, address, sampler_view
                e.g.
-               LOAD TEMP[0], TEMP[1], RES[0]
+               SAMPLE_I TEMP[0], TEMP[1], SVIEW[0]
                The 'address' is specified as unsigned integers. If the
                'address' is out of range [0...(# texels - 1)] the
                result of the fetch is always 0 in all components.
                As such the instruction doesn't honor address wrap
                modes, in cases where that behavior is desirable
-               'sample' instruction should be used.
+               'SAMPLE' instruction should be used.
                address.w always provides an unsigned integer mipmap
                level. If the value is out of the range then the
                instruction always returns 0 in all components.
@@ -1286,7 +1767,7 @@ instructions. If in doubt double check Direct3D documentation.
                For 2D texture arrays address.z provides the array
                index, otherwise it exhibits the same behavior as in
                the case for 1D texture arrays.
-               The exeact semantics of the source address are presented
+               The exact semantics of the source address are presented
                in the table below:
                resource type         X     Y     Z       W
                -------------         ------------------------
@@ -1302,29 +1783,21 @@ instructions. If in doubt double check Direct3D documentation.
                Where 'mpl' is a mipmap level and 'idx' is the
                array index.
 
-
-.. opcode:: LOAD_MS - Just like LOAD but allows fetch data from
+.. opcode:: SAMPLE_I_MS - Just like SAMPLE_I but allows fetch data from
                multi-sampled surfaces.
-
-.. opcode:: SAMPLE - Using provided address, sample data from the
-               specified texture using the filtering mode identified
-               by the gven sampler. The source data may come from
-               any resource type other than buffers.
-               SAMPLE dst, address, resource, sampler
-               e.g.
-               SAMPLE TEMP[0], TEMP[1], RES[0], SAMP[0]
+               SAMPLE_I_MS dst, address, sampler_view, sample
 
 .. opcode:: SAMPLE_B - Just like the SAMPLE instruction with the
-               exception that an additiona bias is applied to the
+               exception that an additional bias is applied to the
                level of detail computed as part of the instruction
                execution.
-               SAMPLE_B dst, address, resource, sampler, lod_bias
+               SAMPLE_B dst, address, sampler_view, sampler, lod_bias
                e.g.
-               SAMPLE_B TEMP[0], TEMP[1], RES[0], SAMP[0], TEMP[2].x
+               SAMPLE_B TEMP[0], TEMP[1], SVIEW[0], SAMP[0], TEMP[2].x
 
 .. opcode:: SAMPLE_C - Similar to the SAMPLE instruction but it
                performs a comparison filter. The operands to SAMPLE_C
-               are identical to SAMPLE, except that tere is an additional
+               are identical to SAMPLE, except that there is an additional
                float32 operand, reference value, which must be a register
                with single-component, or a scalar literal.
                SAMPLE_C makes the hardware use the current samplers
@@ -1332,59 +1805,57 @@ instructions. If in doubt double check Direct3D documentation.
                reference value against the red component value for the
                surce resource at each texel that the currently configured
                texture filter covers based on the provided coordinates.
-               SAMPLE_C dst, address, resource.r, sampler, ref_value
+               SAMPLE_C dst, address, sampler_view.r, sampler, ref_value
                e.g.
-               SAMPLE_C TEMP[0], TEMP[1], RES[0].r, SAMP[0], TEMP[2].x
+               SAMPLE_C TEMP[0], TEMP[1], SVIEW[0].r, SAMP[0], TEMP[2].x
 
 .. opcode:: SAMPLE_C_LZ - Same as SAMPLE_C, but LOD is 0 and derivatives
                are ignored. The LZ stands for level-zero.
-               SAMPLE_C_LZ dst, address, resource.r, sampler, ref_value
+               SAMPLE_C_LZ dst, address, sampler_view.r, sampler, ref_value
                e.g.
-               SAMPLE_C_LZ TEMP[0], TEMP[1], RES[0].r, SAMP[0], TEMP[2].x
+               SAMPLE_C_LZ TEMP[0], TEMP[1], SVIEW[0].r, SAMP[0], TEMP[2].x
 
 
 .. opcode:: SAMPLE_D - SAMPLE_D is identical to the SAMPLE opcode except
                that the derivatives for the source address in the x
                direction and the y direction are provided by extra
                parameters.
-               SAMPLE_D dst, address, resource, sampler, der_x, der_y
+               SAMPLE_D dst, address, sampler_view, sampler, der_x, der_y
                e.g.
-               SAMPLE_D TEMP[0], TEMP[1], RES[0], SAMP[0], TEMP[2], TEMP[3]
+               SAMPLE_D TEMP[0], TEMP[1], SVIEW[0], SAMP[0], TEMP[2], TEMP[3]
 
 .. opcode:: SAMPLE_L - SAMPLE_L is identical to the SAMPLE opcode except
                that the LOD is provided directly as a scalar value,
-               representing no anisotropy. Source addresses A channel
-               is used as the LOD.
-               SAMPLE_L dst, address, resource, sampler
+               representing no anisotropy.
+               SAMPLE_L dst, address, sampler_view, sampler, explicit_lod
                e.g.
-               SAMPLE_L TEMP[0], TEMP[1], RES[0], SAMP[0]
-
+               SAMPLE_L TEMP[0], TEMP[1], SVIEW[0], SAMP[0], TEMP[2].x
 
 .. opcode:: GATHER4 - Gathers the four texels to be used in a bi-linear
                filtering operation and packs them into a single register.
-               Only woth with 2D, 2D array, cubemaps, and cubemaps arrays.
+               Only works with 2D, 2D array, cubemaps, and cubemaps arrays.
                For 2D textures, only the addressing modes of the sampler and
                the top level of any mip pyramid are used. Set W to zero.
                It behaves like the SAMPLE instruction, but a filtered
                sample is not generated. The four samples that contribute
-               to filtering are places into xyzw in cunter-clockwise order,
+               to filtering are placed into xyzw in counter-clockwise order,
                starting with the (u,v) texture coordinate delta at the
                following locations (-, +), (+, +), (+, -), (-, -), where
                the magnitude of the deltas are half a texel.
 
 
-.. opcode:: RESINFO - query the dimensions of a given input buffer.
+.. opcode:: SVIEWINFO - query the dimensions of a given sampler view.
                dst receives width, height, depth or array size and
-               number of mipmap levels. The dst can have a writemask
+               number of mipmap levels as int4. The dst can have a writemask
                which will specify what info is the caller interested
                in.
-               RESINFO dst, src_mip_level, resource
+               SVIEWINFO dst, src_mip_level, sampler_view
                e.g.
-               RESINFO TEMP[0], TEMP[1].x, RES[0]
+               SVIEWINFO TEMP[0], TEMP[1].x, SVIEW[0]
                src_mip_level is an unsigned integer scalar. If it's
                out of range then returns 0 for width, height and
                depth/array size but the total number of mipmap is
-               still returned correctly for the given resource.
+               still returned correctly for the given sampler view.
                The returned width, height and depth values are for
                the mipmap level selected by the src_mip_level and
                are in the number of texels.
@@ -1399,6 +1870,272 @@ instructions. If in doubt double check Direct3D documentation.
 .. opcode:: SAMPLE_INFO - dst receives number of samples in x.
                If the resource is not a multi-sample resource and
                not a render target, the result is 0.
+
+
+.. _resourceopcodes:
+
+Resource Access Opcodes
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. opcode:: LOAD - Fetch data from a shader resource
+
+               Syntax: ``LOAD dst, resource, address``
+
+               Example: ``LOAD TEMP[0], RES[0], TEMP[1]``
+
+               Using the provided integer address, LOAD fetches data
+               from the specified buffer or texture without any
+               filtering.
+
+               The 'address' is specified as a vector of unsigned
+               integers.  If the 'address' is out of range the result
+               is unspecified.
+
+               Only the first mipmap level of a resource can be read
+               from using this instruction.
+
+               For 1D or 2D texture arrays, the array index is
+               provided as an unsigned integer in address.y or
+               address.z, respectively.  address.yz are ignored for
+               buffers and 1D textures.  address.z is ignored for 1D
+               texture arrays and 2D textures.  address.w is always
+               ignored.
+
+.. opcode:: STORE - Write data to a shader resource
+
+               Syntax: ``STORE resource, address, src``
+
+               Example: ``STORE RES[0], TEMP[0], TEMP[1]``
+
+               Using the provided integer address, STORE writes data
+               to the specified buffer or texture.
+
+               The 'address' is specified as a vector of unsigned
+               integers.  If the 'address' is out of range the result
+               is unspecified.
+
+               Only the first mipmap level of a resource can be
+               written to using this instruction.
+
+               For 1D or 2D texture arrays, the array index is
+               provided as an unsigned integer in address.y or
+               address.z, respectively.  address.yz are ignored for
+               buffers and 1D textures.  address.z is ignored for 1D
+               texture arrays and 2D textures.  address.w is always
+               ignored.
+
+
+.. _threadsyncopcodes:
+
+Inter-thread synchronization opcodes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These opcodes are intended for communication between threads running
+within the same compute grid.  For now they're only valid in compute
+programs.
+
+.. opcode:: MFENCE - Memory fence
+
+  Syntax: ``MFENCE resource``
+
+  Example: ``MFENCE RES[0]``
+
+  This opcode forces strong ordering between any memory access
+  operations that affect the specified resource.  This means that
+  previous loads and stores (and only those) will be performed and
+  visible to other threads before the program execution continues.
+
+
+.. opcode:: LFENCE - Load memory fence
+
+  Syntax: ``LFENCE resource``
+
+  Example: ``LFENCE RES[0]``
+
+  Similar to MFENCE, but it only affects the ordering of memory loads.
+
+
+.. opcode:: SFENCE - Store memory fence
+
+  Syntax: ``SFENCE resource``
+
+  Example: ``SFENCE RES[0]``
+
+  Similar to MFENCE, but it only affects the ordering of memory stores.
+
+
+.. opcode:: BARRIER - Thread group barrier
+
+  ``BARRIER``
+
+  This opcode suspends the execution of the current thread until all
+  the remaining threads in the working group reach the same point of
+  the program.  Results are unspecified if any of the remaining
+  threads terminates or never reaches an executed BARRIER instruction.
+
+
+.. _atomopcodes:
+
+Atomic opcodes
+^^^^^^^^^^^^^^
+
+These opcodes provide atomic variants of some common arithmetic and
+logical operations.  In this context atomicity means that another
+concurrent memory access operation that affects the same memory
+location is guaranteed to be performed strictly before or after the
+entire execution of the atomic operation.
+
+For the moment they're only valid in compute programs.
+
+.. opcode:: ATOMUADD - Atomic integer addition
+
+  Syntax: ``ATOMUADD dst, resource, offset, src``
+
+  Example: ``ATOMUADD TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = dst_i + src_i
+
+
+.. opcode:: ATOMXCHG - Atomic exchange
+
+  Syntax: ``ATOMXCHG dst, resource, offset, src``
+
+  Example: ``ATOMXCHG TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = src_i
+
+
+.. opcode:: ATOMCAS - Atomic compare-and-exchange
+
+  Syntax: ``ATOMCAS dst, resource, offset, cmp, src``
+
+  Example: ``ATOMCAS TEMP[0], RES[0], TEMP[1], TEMP[2], TEMP[3]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = (dst_i == cmp_i ? src_i : dst_i)
+
+
+.. opcode:: ATOMAND - Atomic bitwise And
+
+  Syntax: ``ATOMAND dst, resource, offset, src``
+
+  Example: ``ATOMAND TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = dst_i \& src_i
+
+
+.. opcode:: ATOMOR - Atomic bitwise Or
+
+  Syntax: ``ATOMOR dst, resource, offset, src``
+
+  Example: ``ATOMOR TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = dst_i | src_i
+
+
+.. opcode:: ATOMXOR - Atomic bitwise Xor
+
+  Syntax: ``ATOMXOR dst, resource, offset, src``
+
+  Example: ``ATOMXOR TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = dst_i \oplus src_i
+
+
+.. opcode:: ATOMUMIN - Atomic unsigned minimum
+
+  Syntax: ``ATOMUMIN dst, resource, offset, src``
+
+  Example: ``ATOMUMIN TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = (dst_i < src_i ? dst_i : src_i)
+
+
+.. opcode:: ATOMUMAX - Atomic unsigned maximum
+
+  Syntax: ``ATOMUMAX dst, resource, offset, src``
+
+  Example: ``ATOMUMAX TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = (dst_i > src_i ? dst_i : src_i)
+
+
+.. opcode:: ATOMIMIN - Atomic signed minimum
+
+  Syntax: ``ATOMIMIN dst, resource, offset, src``
+
+  Example: ``ATOMIMIN TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = (dst_i < src_i ? dst_i : src_i)
+
+
+.. opcode:: ATOMIMAX - Atomic signed maximum
+
+  Syntax: ``ATOMIMAX dst, resource, offset, src``
+
+  Example: ``ATOMIMAX TEMP[0], RES[0], TEMP[1], TEMP[2]``
+
+  The following operation is performed atomically on each component:
+
+.. math::
+
+  dst_i = resource[offset]_i
+
+  resource[offset]_i = (dst_i > src_i ? dst_i : src_i)
+
 
 
 Explanation of symbols used
@@ -1469,22 +2206,38 @@ of TGSI_FILE.
 UsageMask field specifies which of the register components can be accessed
 and is one of TGSI_WRITEMASK.
 
-Interpolate field is only valid for fragment shader INPUT register files.
-It specifes the way input is being interpolated by the rasteriser and is one
-of TGSI_INTERPOLATE.
+The Local flag specifies that a given value isn't intended for
+subroutine parameter passing and, as a result, the implementation
+isn't required to give any guarantees of it being preserved across
+subroutine boundaries.  As it's merely a compiler hint, the
+implementation is free to ignore it.
 
 If Dimension flag is set to 1, a Declaration Dimension token follows.
 
 If Semantic flag is set to 1, a Declaration Semantic token follows.
 
-CylindricalWrap bitfield is only valid for fragment shader INPUT register
-files. It specifies which register components should be subject to cylindrical
-wrapping when interpolating by the rasteriser. If TGSI_CYLINDRICAL_WRAP_X
-is set to 1, the X component should be interpolated according to cylindrical
-wrapping rules.
+If Interpolate flag is set to 1, a Declaration Interpolate token follows.
 
 If file is TGSI_FILE_RESOURCE, a Declaration Resource token follows.
 
+If Array flag is set to 1, a Declaration Array token follows.
+
+Array Declaration
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Declarations can optional have an ArrayID attribute which can be referred by
+indirect addressing operands. An ArrayID of zero is reserved and treaded as
+if no ArrayID is specified.
+
+If an indirect addressing operand refers to a specific declaration by using
+an ArrayID only the registers in this declaration are guaranteed to be
+accessed, accessing any register outside this declaration results in undefined
+behavior. Note that for compatibility the effective index is zero-based and
+not relative to the specified declaration
+
+If no ArrayID is specified with an indirect addressing operand the whole
+register file might be accessed by this operand. This is strongly discouraged
+and will prevent packing of scalar/vec2 arrays and effective alias analysis.
 
 Declaration Semantic
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1583,6 +2336,35 @@ When using this semantic, be sure to set the appropriate state in the
 :ref:`rasterizer` first.
 
 
+TGSI_SEMANTIC_TEXCOORD
+""""""""""""""""""""""
+
+Only available if PIPE_CAP_TGSI_TEXCOORD is exposed !
+
+Vertex shader outputs and fragment shader inputs may be labeled with
+this semantic to make them replaceable by sprite coordinates via the
+sprite_coord_enable state in the :ref:`rasterizer`.
+The semantic index permitted with this semantic is limited to <= 7.
+
+If the driver does not support TEXCOORD, sprite coordinate replacement
+applies to inputs with the GENERIC semantic instead.
+
+The intended use case for this semantic is gl_TexCoord.
+
+
+TGSI_SEMANTIC_PCOORD
+""""""""""""""""""""
+
+Only available if PIPE_CAP_TGSI_TEXCOORD is exposed !
+
+Fragment shader inputs may be labeled with TGSI_SEMANTIC_PCOORD to indicate
+that the register contains sprite coordinates in the form (x, y, 0, 1), if
+the current primitive is a point and point sprites are enabled. Otherwise,
+the contents of the register are undefined.
+
+The intended use case for this semantic is gl_PointCoord.
+
+
 TGSI_SEMANTIC_GENERIC
 """""""""""""""""""""
 
@@ -1620,20 +2402,102 @@ Edge flags are used to control which lines or points are actually
 drawn when the polygon mode converts triangles/quads/polygons into
 points or lines.
 
-TGSI_SEMANTIC_STENCIL
-""""""""""""""""""""""
 
-For fragment shaders, this semantic label indicates than an output
+TGSI_SEMANTIC_STENCIL
+"""""""""""""""""""""
+
+For fragment shaders, this semantic label indicates that an output
 is a writable stencil reference value. Only the Y component is writable.
 This allows the fragment shader to change the fragments stencilref value.
 
 
-Declaration Resource
+TGSI_SEMANTIC_VIEWPORT_INDEX
+""""""""""""""""""""""""""""
+
+For geometry shaders, this semantic label indicates that an output
+contains the index of the viewport (and scissor) to use.
+Only the X value is used.
+
+
+TGSI_SEMANTIC_LAYER
+"""""""""""""""""""
+
+For geometry shaders, this semantic label indicates that an output
+contains the layer value to use for the color and depth/stencil surfaces.
+Only the X value is used. (Also known as rendertarget array index.)
+
+
+TGSI_SEMANTIC_CULLDIST
+""""""""""""""""""""""
+
+Used as distance to plane for performing application-defined culling
+of individual primitives against a plane. When components of vertex
+elements are given this label, these values are assumed to be a
+float32 signed distance to a plane. Primitives will be completely
+discarded if the plane distance for all of the vertices in the
+primitive are < 0. If a vertex has a cull distance of NaN, that
+vertex counts as "out" (as if its < 0);
+The limits on both clip and cull distances are bound
+by the PIPE_MAX_CLIP_OR_CULL_DISTANCE_COUNT define which defines
+the maximum number of components that can be used to hold the
+distances and by the PIPE_MAX_CLIP_OR_CULL_DISTANCE_ELEMENT_COUNT
+which specifies the maximum number of registers which can be
+annotated with those semantics.
+
+
+TGSI_SEMANTIC_CLIPDIST
+""""""""""""""""""""""
+
+When components of vertex elements are identified this way, these
+values are each assumed to be a float32 signed distance to a plane.
+Primitive setup only invokes rasterization on pixels for which
+the interpolated plane distances are >= 0. Multiple clip planes
+can be implemented simultaneously, by annotating multiple
+components of one or more vertex elements with the above specified
+semantic. The limits on both clip and cull distances are bound
+by the PIPE_MAX_CLIP_OR_CULL_DISTANCE_COUNT define which defines
+the maximum number of components that can be used to hold the
+distances and by the PIPE_MAX_CLIP_OR_CULL_DISTANCE_ELEMENT_COUNT
+which specifies the maximum number of registers which can be
+annotated with those semantics.
+
+
+Declaration Interpolate
+^^^^^^^^^^^^^^^^^^^^^^^
+
+This token is only valid for fragment shader INPUT declarations.
+
+The Interpolate field specifes the way input is being interpolated by
+the rasteriser and is one of TGSI_INTERPOLATE_*.
+
+The CylindricalWrap bitfield specifies which register components
+should be subject to cylindrical wrapping when interpolating by the
+rasteriser. If TGSI_CYLINDRICAL_WRAP_X is set to 1, the X component
+should be interpolated according to cylindrical wrapping rules.
+
+
+Declaration Sampler View
 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+   Follows Declaration token if file is TGSI_FILE_SAMPLER_VIEW.
+
+   DCL SVIEW[#], resource, type(s)
+
+   Declares a shader input sampler view and assigns it to a SVIEW[#]
+   register.
+
+   resource can be one of BUFFER, 1D, 2D, 3D, 1DArray and 2DArray.
+
+   type must be 1 or 4 entries (if specifying on a per-component
+   level) out of UNORM, SNORM, SINT, UINT and FLOAT.
+
+
+Declaration Resource
+^^^^^^^^^^^^^^^^^^^^
 
    Follows Declaration token if file is TGSI_FILE_RESOURCE.
 
-   DCL RES[#], resource, type(s)
+   DCL RES[#], resource [, WR] [, RAW]
 
    Declares a shader input resource and assigns it to a RES[#]
    register.
@@ -1641,8 +2505,21 @@ Declaration Resource
    resource can be one of BUFFER, 1D, 2D, 3D, CUBE, 1DArray and
    2DArray.
 
-   type must be 1 or 4 entries (if specifying on a per-component
-   level) out of UNORM, SNORM, SINT, UINT and FLOAT.
+   If the RAW keyword is not specified, the texture data will be
+   subject to conversion, swizzling and scaling as required to yield
+   the specified data type from the physical data format of the bound
+   resource.
+
+   If the RAW keyword is specified, no channel conversion will be
+   performed: the values read for each of the channels (X,Y,Z,W) will
+   correspond to consecutive words in the same order and format
+   they're found in memory.  No element-to-address conversion will be
+   performed either: the value of the provided X coordinate will be
+   interpreted in byte units instead of texel units.  The result of
+   accessing a misaligned address is undefined.
+
+   Usage of the STORE opcode is only allowed if the WR (writable) flag
+   is set.
 
 
 Properties
@@ -1677,7 +2554,7 @@ If HALF_INTEGER, the fractionary part of the position will be 0.5
 If INTEGER, the fractionary part of the position will be 0.0
 
 Note that this does not affect the set of fragments generated by
-rasterization, which is instead controlled by gl_rasterization_rules in the
+rasterization, which is instead controlled by half_pixel_center in the
 rasterizer.
 
 OpenGL defaults to HALF_INTEGER, and is configurable with the
@@ -1691,6 +2568,17 @@ FS_COLOR0_WRITES_ALL_CBUFS
 Specifies that writes to the fragment shader color 0 are replicated to all
 bound cbufs. This facilitates OpenGL's fragColor output vs fragData[0] where
 fragData is directed to a single color buffer, but fragColor is broadcast.
+
+VS_PROHIBIT_UCPS
+""""""""""""""""""""""""""
+If this property is set on the program bound to the shader stage before the
+fragment shader, user clip planes should have no effect (be disabled) even if
+that shader does not write to any clip distance outputs and the rasterizer's
+clip_plane_enable is non-zero.
+This property is only supported by drivers that also support shader clip
+distance outputs.
+This is useful for APIs that don't have UCPs and where clip distances written
+by a shader cannot be disabled.
 
 
 Texture Sampling and Texture Formats

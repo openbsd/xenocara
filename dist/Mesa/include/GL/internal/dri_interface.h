@@ -84,6 +84,7 @@ typedef struct __DRIbufferRec			__DRIbuffer;
 typedef struct __DRIdri2ExtensionRec		__DRIdri2Extension;
 typedef struct __DRIdri2LoaderExtensionRec	__DRIdri2LoaderExtension;
 typedef struct __DRI2flushExtensionRec	__DRI2flushExtension;
+typedef struct __DRI2throttleExtensionRec	__DRI2throttleExtension;
 
 /*@}*/
 
@@ -266,7 +267,17 @@ struct __DRItexBufferExtensionRec {
  * Used by drivers that implement DRI2
  */
 #define __DRI2_FLUSH "DRI2_Flush"
-#define __DRI2_FLUSH_VERSION 3
+#define __DRI2_FLUSH_VERSION 4
+
+#define __DRI2_FLUSH_DRAWABLE (1 << 0) /* the drawable should be flushed. */
+#define __DRI2_FLUSH_CONTEXT  (1 << 1) /* glFlush should be called */
+
+enum __DRI2throttleReason {
+   __DRI2_THROTTLE_SWAPBUFFER,
+   __DRI2_THROTTLE_COPYSUBBUFFER,
+   __DRI2_THROTTLE_FLUSHFRONT
+};
+
 struct __DRI2flushExtensionRec {
     __DRIextension base;
     void (*flush)(__DRIdrawable *drawable);
@@ -280,8 +291,44 @@ struct __DRI2flushExtensionRec {
      * \since 3
      */
     void (*invalidate)(__DRIdrawable *drawable);
+
+    /**
+     * This function reduces the number of flushes in the driver by combining
+     * several operations into one call.
+     *
+     * It can:
+     * - throttle
+     * - flush a drawable
+     * - flush a context
+     *
+     * \param context           the context
+     * \param drawable          the drawable to flush
+     * \param flags             a combination of _DRI2_FLUSH_xxx flags
+     * \param throttle_reason   the reason for throttling, 0 = no throttling
+     *
+     * \since 4
+     */
+    void (*flush_with_flags)(__DRIcontext *ctx,
+                             __DRIdrawable *drawable,
+                             unsigned flags,
+                             enum __DRI2throttleReason throttle_reason);
 };
 
+
+/**
+ * Extension that the driver uses to request
+ * throttle callbacks.
+ */
+
+#define __DRI2_THROTTLE "DRI2_Throttle"
+#define __DRI2_THROTTLE_VERSION 1
+
+struct __DRI2throttleExtensionRec {
+   __DRIextension base;
+   void (*throttle)(__DRIcontext *ctx,
+		    __DRIdrawable *drawable,
+		    enum __DRI2throttleReason reason);
+};
 
 /**
  * XML document describing the configuration options supported by the
@@ -505,6 +552,8 @@ struct __DRIuseInvalidateExtensionRec {
 #define __DRI_ATTRIB_RGBA_BIT			0x01	
 #define __DRI_ATTRIB_COLOR_INDEX_BIT		0x02
 #define __DRI_ATTRIB_LUMINANCE_BIT		0x04
+#define __DRI_ATTRIB_FLOAT_BIT			0x08
+#define __DRI_ATTRIB_UNSIGNED_FLOAT_BIT		0x10
 
 /* __DRI_ATTRIB_CONFIG_CAVEAT */
 #define __DRI_ATTRIB_SLOW_BIT			0x01
@@ -657,7 +706,7 @@ struct __DRIlegacyExtensionRec {
  * conjunction with the core extension.
  */
 #define __DRI_SWRAST "DRI_SWRast"
-#define __DRI_SWRAST_VERSION 2
+#define __DRI_SWRAST_VERSION 3
 
 struct __DRIswrastExtensionRec {
     __DRIextension base;
@@ -677,6 +726,22 @@ struct __DRIswrastExtensionRec {
                                            const __DRIconfig *config,
                                            __DRIcontext *shared,
                                            void *data);
+
+   /**
+    * Create a context for a particular API with a set of attributes
+    *
+    * \since version 3
+    *
+    * \sa __DRIdri2ExtensionRec::createContextAttribs
+    */
+   __DRIcontext *(*createContextAttribs)(__DRIscreen *screen,
+					 int api,
+					 const __DRIconfig *config,
+					 __DRIcontext *shared,
+					 unsigned num_attribs,
+					 const uint32_t *attribs,
+					 unsigned *error,
+					 void *loaderPrivate);
 };
 
 /**
@@ -693,6 +758,9 @@ struct __DRIswrastExtensionRec {
 #define __DRI_BUFFER_FAKE_FRONT_RIGHT	8
 #define __DRI_BUFFER_DEPTH_STENCIL	9  /**< Only available with DRI2 1.1 */
 #define __DRI_BUFFER_HIZ		10
+
+/* Inofficial and for internal use. Increase when adding a new buffer token. */
+#define __DRI_BUFFER_COUNT		11
 
 struct __DRIbufferRec {
     unsigned int attachment;
@@ -759,16 +827,35 @@ struct __DRIdri2LoaderExtensionRec {
 #define __DRI_DRI2_VERSION 3
 
 #define __DRI_API_OPENGL	0	/**< OpenGL compatibility profile */
-#define __DRI_API_GLES		1
-#define __DRI_API_GLES2		2
+#define __DRI_API_GLES		1	/**< OpenGL ES 1.x */
+#define __DRI_API_GLES2		2	/**< OpenGL ES 2.x */
 #define __DRI_API_OPENGL_CORE	3	/**< OpenGL 3.2+ core profile */
+#define __DRI_API_GLES3		4	/**< OpenGL ES 3.x */
 
 #define __DRI_CTX_ATTRIB_MAJOR_VERSION		0
 #define __DRI_CTX_ATTRIB_MINOR_VERSION		1
 #define __DRI_CTX_ATTRIB_FLAGS			2
 
+/**
+ * \requires __DRI2_ROBUSTNESS.
+ */
+#define __DRI_CTX_ATTRIB_RESET_STRATEGY		3
+
 #define __DRI_CTX_FLAG_DEBUG			0x00000001
 #define __DRI_CTX_FLAG_FORWARD_COMPATIBLE	0x00000002
+
+/**
+ * \requires __DRI2_ROBUSTNESS.
+ */
+#define __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS	0x00000004
+
+/**
+ * \name Context reset strategies.
+ */
+/*@{*/
+#define __DRI_CTX_RESET_NO_NOTIFICATION		0
+#define __DRI_CTX_RESET_LOSE_CONTEXT		1
+/*@}*/
 
 /**
  * \name Reasons that __DRIdri2Extension::createContextAttribs might fail
@@ -834,6 +921,8 @@ struct __DRIdri2ExtensionRec {
     * Create a context for a particular API with a set of attributes
     *
     * \since version 3
+    *
+    * \sa __DRIswrastExtensionRec::createContextAttribs
     */
    __DRIcontext *(*createContextAttribs)(__DRIscreen *screen,
 					 int api,
@@ -851,21 +940,77 @@ struct __DRIdri2ExtensionRec {
  * extensions.
  */
 #define __DRI_IMAGE "DRI_IMAGE"
-#define __DRI_IMAGE_VERSION 1
+#define __DRI_IMAGE_VERSION 7
 
 /**
  * These formats correspond to the similarly named MESA_FORMAT_*
  * tokens, except in the native endian of the CPU.  For example, on
  * little endian __DRI_IMAGE_FORMAT_XRGB8888 corresponds to
  * MESA_FORMAT_XRGB8888, but MESA_FORMAT_XRGB8888_REV on big endian.
+ *
+ * __DRI_IMAGE_FORMAT_NONE is for images that aren't directly usable
+ * by the driver (YUV planar formats) but serve as a base image for
+ * creating sub-images for the different planes within the image.
+ *
+ * R8, GR88 and NONE should not be used with createImageFormName or
+ * createImage, and are returned by query from sub images created with
+ * createImageFromNames (NONE, see above) and fromPlane (R8 & GR88).
  */
 #define __DRI_IMAGE_FORMAT_RGB565       0x1001
 #define __DRI_IMAGE_FORMAT_XRGB8888     0x1002
 #define __DRI_IMAGE_FORMAT_ARGB8888     0x1003
+#define __DRI_IMAGE_FORMAT_ABGR8888     0x1004
+#define __DRI_IMAGE_FORMAT_XBGR8888     0x1005
+#define __DRI_IMAGE_FORMAT_R8           0x1006 /* Since version 5 */
+#define __DRI_IMAGE_FORMAT_GR88         0x1007
+#define __DRI_IMAGE_FORMAT_NONE         0x1008
 
 #define __DRI_IMAGE_USE_SHARE		0x0001
 #define __DRI_IMAGE_USE_SCANOUT		0x0002
-#define __DRI_IMAGE_USE_CURSOR		0x0004
+#define __DRI_IMAGE_USE_CURSOR		0x0004 /* Depricated */
+
+
+/**
+ * Four CC formats that matches with WL_DRM_FORMAT_* from wayland_drm.h
+ * and GBM_FORMAT_* from gbm.h, used with createImageFromNames.
+ *
+ * \since 5
+ */
+
+#define __DRI_IMAGE_FOURCC_RGB565	0x36314752
+#define __DRI_IMAGE_FOURCC_ARGB8888	0x34325241
+#define __DRI_IMAGE_FOURCC_XRGB8888	0x34325258
+#define __DRI_IMAGE_FOURCC_ABGR8888	0x34324241
+#define __DRI_IMAGE_FOURCC_XBGR8888	0x34324258
+#define __DRI_IMAGE_FOURCC_YUV410	0x39565559
+#define __DRI_IMAGE_FOURCC_YUV411	0x31315559
+#define __DRI_IMAGE_FOURCC_YUV420	0x32315559
+#define __DRI_IMAGE_FOURCC_YUV422	0x36315559
+#define __DRI_IMAGE_FOURCC_YUV444	0x34325559
+#define __DRI_IMAGE_FOURCC_NV12		0x3231564e
+#define __DRI_IMAGE_FOURCC_NV16		0x3631564e
+#define __DRI_IMAGE_FOURCC_YUYV		0x56595559
+
+
+/**
+ * Queryable on images created by createImageFromNames.
+ *
+ * RGB and RGBA are may be usable directly as images but its still
+ * recommended to call fromPlanar with plane == 0.
+ *
+ * Y_U_V, Y_UV and Y_XUXV all requires call to fromPlanar to create
+ * usable sub-images, sampling from images return raw YUV data and
+ * color conversion needs to be done in the shader.
+ *
+ * \since 5
+ */
+
+#define __DRI_IMAGE_COMPONENTS_RGB	0x3001
+#define __DRI_IMAGE_COMPONENTS_RGBA	0x3002
+#define __DRI_IMAGE_COMPONENTS_Y_U_V	0x3003
+#define __DRI_IMAGE_COMPONENTS_Y_UV	0x3004
+#define __DRI_IMAGE_COMPONENTS_Y_XUXV	0x3005
+
 
 /**
  * queryImage attributes
@@ -874,6 +1019,30 @@ struct __DRIdri2ExtensionRec {
 #define __DRI_IMAGE_ATTRIB_STRIDE	0x2000
 #define __DRI_IMAGE_ATTRIB_HANDLE	0x2001
 #define __DRI_IMAGE_ATTRIB_NAME		0x2002
+#define __DRI_IMAGE_ATTRIB_FORMAT	0x2003 /* available in versions 3+ */
+#define __DRI_IMAGE_ATTRIB_WIDTH	0x2004 /* available in versions 4+ */
+#define __DRI_IMAGE_ATTRIB_HEIGHT	0x2005
+#define __DRI_IMAGE_ATTRIB_COMPONENTS	0x2006 /* available in versions 5+ */
+#define __DRI_IMAGE_ATTRIB_FD           0x2007 /* available in versions
+                                                * 7+. Each query will return a
+                                                * new fd. */
+
+/**
+ * \name Reasons that __DRIimageExtensionRec::createImageFromTexture might fail
+ */
+/*@{*/
+/** Success! */
+#define __DRI_IMAGE_ERROR_SUCCESS       0
+
+/** Memory allocation failure */
+#define __DRI_IMAGE_ERROR_BAD_ALLOC     1
+
+/** Client requested an invalid attribute for a texture object  */
+#define __DRI_IMAGE_ERROR_BAD_MATCH     2
+
+/** Client requested an invalid texture object */
+#define __DRI_IMAGE_ERROR_BAD_PARAMETER 3
+/*@}*/
 
 typedef struct __DRIimageRec          __DRIimage;
 typedef struct __DRIimageExtensionRec __DRIimageExtension;
@@ -902,6 +1071,67 @@ struct __DRIimageExtensionRec {
     * The new __DRIimage will share the content with the old one, see dup(2).
     */
    __DRIimage *(*dupImage)(__DRIimage *image, void *loaderPrivate);
+
+   /**
+    * Validate that a __DRIimage can be used a certain way.
+    *
+    * \since 2
+    */
+   GLboolean (*validateUsage)(__DRIimage *image, unsigned int use);
+
+   /**
+    * Unlike createImageFromName __DRI_IMAGE_FORMAT is not but instead
+    * __DRI_IMAGE_FOURCC and strides are in bytes not pixels. Stride is
+    * also per block and not per pixel (for non-RGB, see gallium blocks).
+    *
+    * \since 5
+    */
+   __DRIimage *(*createImageFromNames)(__DRIscreen *screen,
+                                       int width, int height, int fourcc,
+                                       int *names, int num_names,
+                                       int *strides, int *offsets,
+                                       void *loaderPrivate);
+
+   /**
+    * Create an image out of a sub-region of a parent image.  This
+    * entry point lets us create individual __DRIimages for different
+    * planes in a planar buffer (typically yuv), for example.  While a
+    * sub-image shares the underlying buffer object with the parent
+    * image and other sibling sub-images, the life times of parent and
+    * sub-images are not dependent.  Destroying the parent or a
+    * sub-image doesn't affect other images.  The underlying buffer
+    * object is free when no __DRIimage remains that references it.
+    *
+    * Sub-images may overlap, but rendering to overlapping sub-images
+    * is undefined.
+    *
+    * \since 5
+    */
+    __DRIimage *(*fromPlanar)(__DRIimage *image, int plane,
+                              void *loaderPrivate);
+
+    /**
+     * Create image from texture.
+     *
+     * \since 6
+     */
+   __DRIimage *(*createImageFromTexture)(__DRIcontext *context,
+                                         int target,
+                                         unsigned texture,
+                                         int depth,
+                                         int level,
+                                         unsigned *error,
+                                         void *loaderPrivate);
+   /**
+    * Like createImageFromNames, but takes a prime fd instead.
+    *
+    * \since 7
+    */
+   __DRIimage *(*createImageFromFds)(__DRIscreen *screen,
+                                     int width, int height, int fourcc,
+                                     int *fds, int num_fds,
+                                     int *strides, int *offsets,
+                                     void *loaderPrivate);
 };
 
 
@@ -939,4 +1169,21 @@ struct __DRI2configQueryExtensionRec {
    int (*configQueryi)(__DRIscreen *screen, const char *var, GLint *val);
    int (*configQueryf)(__DRIscreen *screen, const char *var, GLfloat *val);
 };
+
+/**
+ * Robust context driver extension.
+ *
+ * Existence of this extension means the driver can accept the
+ * \c __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS flag and the
+ * \c __DRI_CTX_ATTRIB_RESET_STRATEGY attribute in
+ * \c __DRIdri2ExtensionRec::createContextAttribs.
+ */
+#define __DRI2_ROBUSTNESS "DRI_Robustness"
+#define __DRI2_ROBUSTNESS_VERSION 1
+
+typedef struct __DRIrobustnessExtensionRec __DRIrobustnessExtension;
+struct __DRIrobustnessExtensionRec {
+   __DRIextension base;
+};
+
 #endif

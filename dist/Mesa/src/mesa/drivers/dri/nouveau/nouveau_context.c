@@ -24,15 +24,21 @@
  *
  */
 
+#include <stdbool.h>
 #include "nouveau_driver.h"
 #include "nouveau_context.h"
 #include "nouveau_bufferobj.h"
 #include "nouveau_fbo.h"
+#include "nv_object.xml.h"
 
+#include "main/api_exec.h"
 #include "main/dd.h"
 #include "main/framebuffer.h"
+#include "main/fbobject.h"
 #include "main/light.h"
 #include "main/state.h"
+#include "main/version.h"
+#include "main/vtxfmt.h"
 #include "drivers/common/meta.h"
 #include "drivers/common/driverfuncs.h"
 #include "swrast/swrast.h"
@@ -41,58 +47,76 @@
 #include "tnl/tnl.h"
 #include "tnl/t_context.h"
 
-#define need_GL_EXT_framebuffer_object
-#define need_GL_EXT_fog_coord
-#define need_GL_EXT_secondary_color
-
-#include "main/remap_helper.h"
-
-static const struct dri_extension nouveau_extensions[] = {
-	{ "GL_ARB_multitexture",	NULL },
-	{ "GL_ARB_texture_env_add",	NULL },
-	{ "GL_ARB_texture_mirrored_repeat", NULL },
-	{ "GL_EXT_fog_coord",		GL_EXT_fog_coord_functions },
-	{ "GL_EXT_framebuffer_blit",	NULL },
-	{ "GL_EXT_framebuffer_object",	GL_EXT_framebuffer_object_functions },
-	{ "GL_EXT_packed_depth_stencil", NULL},
-	{ "GL_EXT_secondary_color",	GL_EXT_secondary_color_functions },
-	{ "GL_EXT_stencil_wrap",	NULL },
-	{ "GL_EXT_texture_env_combine",	NULL },
-	{ "GL_EXT_texture_filter_anisotropic", NULL },
-	{ "GL_EXT_texture_lod_bias",	NULL },
-	{ "GL_NV_blend_square",         NULL },
-	{ "GL_NV_texture_env_combine4",	NULL },
-	{ NULL,				NULL }
-};
-
-static void
-nouveau_channel_flush_notify(struct nouveau_channel *chan)
-{
-	struct nouveau_context *nctx = chan->user_private;
-	struct gl_context *ctx = &nctx->base;
-
-	if (nctx->fallback < SWRAST)
-		nouveau_bo_state_emit(ctx);
-}
-
 GLboolean
 nouveau_context_create(gl_api api,
 		       const struct gl_config *visual, __DRIcontext *dri_ctx,
+		       unsigned major_version,
+		       unsigned minor_version,
+		       uint32_t flags,
+		       unsigned *error,
 		       void *share_ctx)
 {
 	__DRIscreen *dri_screen = dri_ctx->driScreenPriv;
-	struct nouveau_screen *screen = dri_screen->private;
+	struct nouveau_screen *screen = dri_screen->driverPrivate;
 	struct nouveau_context *nctx;
 	struct gl_context *ctx;
 
-	ctx = screen->driver->context_create(screen, visual, share_ctx);
-	if (!ctx)
+	switch (api) {
+	case API_OPENGL_COMPAT:
+		/* Do after-the-fact version checking (below).
+		 */
+		break;
+	case API_OPENGLES:
+		/* NV10 and NV20 can support OpenGL ES 1.0 only.  Older chips
+		 * cannot do even that.
+		 */
+		if ((screen->device->chipset & 0xf0) == 0x00) {
+			*error = __DRI_CTX_ERROR_BAD_API;
+			return GL_FALSE;
+		} else if (minor_version != 0) {
+			*error = __DRI_CTX_ERROR_BAD_VERSION;
+			return GL_FALSE;
+		}
+		break;
+	case API_OPENGLES2:
+	case API_OPENGL_CORE:
+		*error = __DRI_CTX_ERROR_BAD_API;
 		return GL_FALSE;
+	}
+
+	/* API and flag filtering is handled in dri2CreateContextAttribs.
+	 */
+	(void) flags;
+
+	ctx = screen->driver->context_create(screen, visual, share_ctx);
+	if (!ctx) {
+		*error = __DRI_CTX_ERROR_NO_MEMORY;
+		return GL_FALSE;
+	}
 
 	nctx = to_nouveau_context(ctx);
 	nctx->dri_context = dri_ctx;
 	dri_ctx->driverPrivate = ctx;
 
+	_mesa_compute_version(ctx);
+	if (ctx->Version < major_version * 10 + minor_version) {
+	   nouveau_context_destroy(dri_ctx);
+	   *error = __DRI_CTX_ERROR_BAD_VERSION;
+	   return GL_FALSE;
+	}
+
+	/* Exec table initialization requires the version to be computed */
+	_mesa_initialize_dispatch_tables(ctx);
+	_mesa_initialize_vbo_vtxfmt(ctx);
+
+	if (nouveau_bo_new(context_dev(ctx), NOUVEAU_BO_VRAM, 0, 4096,
+			   NULL, &nctx->fence)) {
+		nouveau_context_destroy(dri_ctx);
+		*error = __DRI_CTX_ERROR_NO_MEMORY;
+		return GL_FALSE;
+	}
+
+	*error = __DRI_CTX_ERROR_SUCCESS;
 	return GL_TRUE;
 }
 
@@ -115,11 +139,10 @@ nouveau_context_init(struct gl_context *ctx, struct nouveau_screen *screen,
 	nouveau_fbo_functions_init(&functions);
 
 	/* Initialize the mesa context. */
-	_mesa_initialize_context(ctx, API_OPENGL, visual,
-                                 share_ctx, &functions, NULL);
+	_mesa_initialize_context(ctx, API_OPENGL_COMPAT, visual,
+                                 share_ctx, &functions);
 
 	nouveau_state_init(ctx);
-	nouveau_bo_state_init(ctx);
 	nouveau_scratch_init(ctx);
 	_mesa_meta_init(ctx);
 	_swrast_CreateContext(ctx);
@@ -129,18 +152,56 @@ nouveau_context_init(struct gl_context *ctx, struct nouveau_screen *screen,
 	_mesa_allow_light_in_model(ctx, GL_FALSE);
 
 	/* Allocate a hardware channel. */
-	ret = nouveau_channel_alloc(context_dev(ctx), 0xbeef0201, 0xbeef0202,
-				    512*1024, &nctx->hw.chan);
+	ret = nouveau_object_new(&context_dev(ctx)->object, 0xbeef0000,
+				 NOUVEAU_FIFO_CHANNEL_CLASS,
+				 &(struct nv04_fifo){
+					.vram = 0xbeef0201,
+					.gart = 0xbeef0202
+				 }, sizeof(struct nv04_fifo), &nctx->hw.chan);
 	if (ret) {
 		nouveau_error("Error initializing the FIFO.\n");
 		return GL_FALSE;
 	}
 
-	nctx->hw.chan->flush_notify = nouveau_channel_flush_notify;
-	nctx->hw.chan->user_private = nctx;
+	/* Allocate a client (thread data) */
+	ret = nouveau_client_new(context_dev(ctx), &nctx->hw.client);
+	if (ret) {
+		nouveau_error("Error creating thread data\n");
+		return GL_FALSE;
+	}
+
+	/* Allocate a push buffer */
+	ret = nouveau_pushbuf_new(nctx->hw.client, nctx->hw.chan, 4,
+				  512 * 1024, true, &nctx->hw.pushbuf);
+	if (ret) {
+		nouveau_error("Error allocating DMA push buffer\n");
+		return GL_FALSE;
+	}
+
+	/* Allocate buffer context */
+	ret = nouveau_bufctx_new(nctx->hw.client, 16, &nctx->hw.bufctx);
+	if (ret) {
+		nouveau_error("Error allocating buffer context\n");
+		return GL_FALSE;
+	}
+
+	nctx->hw.pushbuf->user_priv = nctx->hw.bufctx;
+
+	/* Allocate NULL object */
+	ret = nouveau_object_new(nctx->hw.chan, 0x00000000, NV01_NULL_CLASS,
+				 NULL, 0, &nctx->hw.null);
+	if (ret) {
+		nouveau_error("Error allocating NULL object\n");
+		return GL_FALSE;
+	}
 
 	/* Enable any supported extensions. */
-	driInitExtensions(ctx, nouveau_extensions, GL_TRUE);
+	ctx->Extensions.EXT_blend_color = true;
+	ctx->Extensions.EXT_blend_minmax = true;
+	ctx->Extensions.EXT_framebuffer_blit = true;
+	ctx->Extensions.EXT_packed_depth_stencil = true;
+	ctx->Extensions.EXT_texture_filter_anisotropic = true;
+	ctx->Extensions.NV_texture_env_combine4 = true;
 
 	return GL_TRUE;
 }
@@ -162,11 +223,12 @@ nouveau_context_deinit(struct gl_context *ctx)
 	if (ctx->Meta)
 		_mesa_meta_free(ctx);
 
-	if (nctx->hw.chan)
-		nouveau_channel_free(&nctx->hw.chan);
+	nouveau_bufctx_del(&nctx->hw.bufctx);
+	nouveau_pushbuf_del(&nctx->hw.pushbuf);
+	nouveau_client_del(&nctx->hw.client);
+	nouveau_object_del(&nctx->hw.chan);
 
 	nouveau_scratch_destroy(ctx);
-	nouveau_bo_state_destroy(ctx);
 	_mesa_free_context_data(ctx);
 }
 
@@ -176,6 +238,7 @@ nouveau_context_destroy(__DRIcontext *dri_ctx)
 	struct nouveau_context *nctx = dri_ctx->driverPrivate;
 	struct gl_context *ctx = &nctx->base;
 
+	nouveau_bo_ref(NULL, &nctx->fence);
 	context_drv(ctx)->context_destroy(ctx);
 }
 
@@ -191,9 +254,9 @@ nouveau_update_renderbuffers(__DRIcontext *dri_ctx, __DRIdrawable *draw)
 	__DRIbuffer *buffers = NULL;
 	int i = 0, count, ret;
 
-	if (draw->lastStamp == *draw->pStamp)
+	if (draw->lastStamp == draw->dri2.stamp)
 		return;
-	draw->lastStamp = *draw->pStamp;
+	draw->lastStamp = draw->dri2.stamp;
 
 	if (nfb->need_front)
 		attachments[i++] = __DRI_BUFFER_FRONT_LEFT;
@@ -246,7 +309,7 @@ nouveau_update_renderbuffers(__DRIcontext *dri_ctx, __DRIdrawable *draw)
 		s->cpp = buffers[i].cpp;
 
 		if (index == BUFFER_DEPTH && s->bo) {
-			ret = nouveau_bo_handle_get(s->bo, &old_name);
+			ret = nouveau_bo_name_get(s->bo, &old_name);
 			/*
 			 * Disable fast Z clears in the next frame, the
 			 * depth buffer contents are undefined.
@@ -256,8 +319,8 @@ nouveau_update_renderbuffers(__DRIcontext *dri_ctx, __DRIdrawable *draw)
 		}
 
 		nouveau_bo_ref(NULL, &s->bo);
-		ret = nouveau_bo_handle_ref(context_dev(ctx),
-					    buffers[i].name, &s->bo);
+		ret = nouveau_bo_name_ref(context_dev(ctx),
+					  buffers[i].name, &s->bo);
 		assert(!ret);
 	}
 
@@ -271,15 +334,15 @@ update_framebuffer(__DRIcontext *dri_ctx, __DRIdrawable *draw,
 	struct gl_context *ctx = dri_ctx->driverPrivate;
 	struct gl_framebuffer *fb = draw->driverPrivate;
 
-	*stamp = *draw->pStamp;
+	*stamp = draw->dri2.stamp;
 
 	nouveau_update_renderbuffers(dri_ctx, draw);
 	_mesa_resize_framebuffer(ctx, fb, draw->w, draw->h);
 
 	/* Clean up references to the old framebuffer objects. */
 	context_dirty(ctx, FRAMEBUFFER);
-	context_bctx(ctx, FRAMEBUFFER);
-	FIRE_RING(context_chan(ctx));
+	nouveau_bufctx_reset(to_nouveau_context(ctx)->hw.bufctx, BUFCTX_FB);
+	PUSH_KICK(context_push(ctx));
 }
 
 GLboolean
@@ -330,9 +393,11 @@ nouveau_fallback(struct gl_context *ctx, enum nouveau_fallback mode)
 
 	if (mode < SWRAST) {
 		nouveau_state_emit(ctx);
+#if 0
 		nouveau_bo_state_emit(ctx);
+#endif
 	} else {
-		FIRE_RING(context_chan(ctx));
+		PUSH_KICK(context_push(ctx));
 	}
 }
 
@@ -351,7 +416,7 @@ validate_framebuffer(__DRIcontext *dri_ctx, __DRIdrawable *draw,
 		dri2InvalidateDrawable(draw);
 	}
 
-	if (*draw->pStamp != *stamp)
+	if (draw->dri2.stamp != *stamp)
 		update_framebuffer(dri_ctx, draw, stamp);
 }
 
@@ -362,11 +427,11 @@ nouveau_validate_framebuffer(struct gl_context *ctx)
 	__DRIdrawable *dri_draw = dri_ctx->driDrawablePriv;
 	__DRIdrawable *dri_read = dri_ctx->driReadablePriv;
 
-	if (ctx->DrawBuffer->Name == 0)
+	if (_mesa_is_winsys_fbo(ctx->DrawBuffer))
 		validate_framebuffer(dri_ctx, dri_draw,
 				     &dri_ctx->dri2.draw_stamp);
 
-	if (ctx->ReadBuffer->Name == 0)
+	if (_mesa_is_winsys_fbo(ctx->ReadBuffer))
 		validate_framebuffer(dri_ctx, dri_read,
 				     &dri_ctx->dri2.read_stamp);
 

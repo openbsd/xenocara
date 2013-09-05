@@ -27,11 +27,18 @@
 
 #include <windows.h>
 
+#define WGL_WGLEXT_PROTOTYPES
+
+#include <GL/gl.h>
+#include <GL/wglext.h>
+
 #include "pipe/p_compiler.h"
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
 #include "util/u_memory.h"
+#include "util/u_atomic.h"
 #include "state_tracker/st_api.h"
+#include "hud/hud_context.h"
 
 #include "stw_icd.h"
 #include "stw_device.h"
@@ -42,7 +49,7 @@
 #include "stw_tls.h"
 
 
-static INLINE struct stw_context *
+struct stw_context *
 stw_current_context(void)
 {
    struct st_context_iface *st;
@@ -120,23 +127,57 @@ DrvCreateLayerContext(
    HDC hdc,
    INT iLayerPlane )
 {
+   return stw_create_context_attribs(hdc, iLayerPlane, 0, 1, 0, 0,
+                                     WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB);
+}
+
+DHGLRC
+stw_create_context_attribs(
+   HDC hdc,
+   INT iLayerPlane,
+   DHGLRC hShareContext,
+   int majorVersion, int minorVersion,
+   int contextFlags, int profileMask)
+{
    int iPixelFormat;
+   struct stw_framebuffer *fb;
    const struct stw_pixelformat_info *pfi;
    struct st_context_attribs attribs;
    struct stw_context *ctx = NULL;
-   
-   if(!stw_dev)
+   struct stw_context *shareCtx = NULL;
+   enum st_context_error ctx_err = 0;
+
+   if (!stw_dev)
       return 0;
-   
+
    if (iLayerPlane != 0)
       return 0;
 
    iPixelFormat = GetPixelFormat(hdc);
    if(!iPixelFormat)
       return 0;
-   
-   pfi = stw_pixelformat_get_info( iPixelFormat - 1 );
-   
+
+   /*
+    * GDI only knows about displayable pixel formats, so determine the pixel
+    * format from the framebuffer.
+    *
+    * TODO: Remove the GetPixelFormat() above, and stop relying on GDI.
+    */
+   fb = stw_framebuffer_from_hdc( hdc );
+   if (fb) {
+      assert(iPixelFormat == fb->iDisplayablePixelFormat);
+      iPixelFormat = fb->iPixelFormat;
+      stw_framebuffer_release(fb);
+   }
+
+   pfi = stw_pixelformat_get_info( iPixelFormat );
+
+   if (hShareContext != 0) {
+      pipe_mutex_lock( stw_dev->ctx_mutex );
+      shareCtx = stw_lookup_context_locked( hShareContext );
+      pipe_mutex_unlock( stw_dev->ctx_mutex );
+   }
+
    ctx = CALLOC_STRUCT( stw_context );
    if (ctx == NULL)
       goto no_ctx;
@@ -145,15 +186,41 @@ DrvCreateLayerContext(
    ctx->iPixelFormat = iPixelFormat;
 
    memset(&attribs, 0, sizeof(attribs));
-   attribs.profile = ST_PROFILE_DEFAULT;
    attribs.visual = pfi->stvis;
+   attribs.major = majorVersion;
+   attribs.minor = minorVersion;
+   if (contextFlags & WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB)
+      attribs.flags |= ST_CONTEXT_FLAG_FORWARD_COMPATIBLE;
+   if (contextFlags & WGL_CONTEXT_DEBUG_BIT_ARB)
+      attribs.flags |= ST_CONTEXT_FLAG_DEBUG;
+
+   /* There are no profiles before OpenGL 3.2.  The
+    * WGL_ARB_create_context_profile spec says:
+    *
+    *     "If the requested OpenGL version is less than 3.2,
+    *     WGL_CONTEXT_PROFILE_MASK_ARB is ignored and the functionality of the
+    *     context is determined solely by the requested version."
+    *
+    * The spec also says:
+    *
+    *     "The default value for WGL_CONTEXT_PROFILE_MASK_ARB is
+    *     WGL_CONTEXT_CORE_PROFILE_BIT_ARB."
+    */
+   attribs.profile = ST_PROFILE_DEFAULT;
+   if ((majorVersion > 3 || (majorVersion == 3 && minorVersion >= 2))
+       && ((profileMask & WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB) == 0))
+      attribs.profile = ST_PROFILE_OPENGL_CORE;
 
    ctx->st = stw_dev->stapi->create_context(stw_dev->stapi,
-         stw_dev->smapi, &attribs, NULL);
-   if (ctx->st == NULL) 
+         stw_dev->smapi, &attribs, &ctx_err, shareCtx ? shareCtx->st : NULL);
+   if (ctx->st == NULL)
       goto no_st_ctx;
 
    ctx->st->st_manager_private = (void *) ctx;
+
+   if (ctx->st->cso_context) {
+      ctx->hud = hud_create(ctx->st->pipe, ctx->st->cso_context);
+   }
 
    pipe_mutex_lock( stw_dev->ctx_mutex );
    ctx->dhglrc = handle_table_add(stw_dev->ctx_table, ctx);
@@ -164,6 +231,9 @@ DrvCreateLayerContext(
    return ctx->dhglrc;
 
 no_hglrc:
+   if (ctx->hud) {
+      hud_destroy(ctx->hud);
+   }
    ctx->st->destroy(ctx->st);
 no_st_ctx:
    FREE(ctx);
@@ -192,6 +262,10 @@ DrvDeleteContext(
       /* Unbind current if deleting current context. */
       if (curctx == ctx)
          stw_dev->stapi->make_current(stw_dev->stapi, NULL, NULL, NULL);
+
+      if (ctx->hud) {
+         hud_destroy(ctx->hud);
+      }
 
       ctx->st->destroy(ctx->st);
       FREE(ctx);
@@ -313,7 +387,8 @@ stw_make_current(
       /* Bind the new framebuffer */
       ctx->hdc = hdc;
 
-      ret = stw_dev->stapi->make_current(stw_dev->stapi, ctx->st, fb->stfb, fb->stfb);
+      ret = stw_dev->stapi->make_current(stw_dev->stapi, ctx->st,
+                                         fb->stfb, fb->stfb);
       stw_framebuffer_reference(&ctx->current_framebuffer, fb);
    } else {
       ret = stw_dev->stapi->make_current(stw_dev->stapi, NULL, NULL, NULL);
@@ -361,10 +436,7 @@ stw_flush_current_locked( struct stw_framebuffer *fb )
 void
 stw_notify_current_locked( struct stw_framebuffer *fb )
 {
-   struct stw_context *ctx = stw_current_context();
-
-   if (ctx && ctx->current_framebuffer == fb)
-      ctx->st->notify_invalid_framebuffer(ctx->st, fb->stfb);
+   p_atomic_inc(&fb->stfb->stamp);
 }
 
 /**

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.11
  *
  * Copyright (C) 2011 Benjamin Franzke <benjaminfranzke@googlemail.com>
  *
@@ -243,6 +242,7 @@ wayland_displaytarget_get_handle(struct sw_winsys *ws,
 
    whandle->fd = wldt->fd;
    whandle->stride = wldt->stride;
+   whandle->size = wldt->size;
 
    return TRUE;
 }

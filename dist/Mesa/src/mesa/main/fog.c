@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  5.1
  *
  * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -97,7 +97,6 @@ _mesa_Fogfv( GLenum pname, const GLfloat *params )
 {
    GET_CURRENT_CONTEXT(ctx);
    GLenum m;
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    switch (pname) {
       case GL_FOG_MODE:
@@ -141,6 +140,8 @@ _mesa_Fogfv( GLenum pname, const GLfloat *params )
          update_fog_scale(ctx);
          break;
       case GL_FOG_INDEX:
+         if (ctx->API != API_OPENGL_COMPAT)
+            goto invalid_pname;
  	 if (ctx->Fog.Index == *params)
 	    return;
 	 FLUSH_VERTICES(ctx, _NEW_FOG);
@@ -161,7 +162,7 @@ _mesa_Fogfv( GLenum pname, const GLfloat *params )
          break;
       case GL_FOG_COORDINATE_SOURCE_EXT: {
 	 GLenum p = (GLenum) (GLint) *params;
-         if (!ctx->Extensions.EXT_fog_coord ||
+         if (ctx->API != API_OPENGL_COMPAT ||
              (p != GL_FOG_COORDINATE_EXT && p != GL_FRAGMENT_DEPTH_EXT)) {
 	    _mesa_error(ctx, GL_INVALID_ENUM, "glFog");
 	    return;
@@ -172,14 +173,32 @@ _mesa_Fogfv( GLenum pname, const GLfloat *params )
 	 ctx->Fog.FogCoordinateSource = p;
 	 break;
       }
+      case GL_FOG_DISTANCE_MODE_NV: {
+	 GLenum p = (GLenum) (GLint) *params;
+         if (ctx->API != API_OPENGL_COMPAT || !ctx->Extensions.NV_fog_distance ||
+             (p != GL_EYE_RADIAL_NV && p != GL_EYE_PLANE && p != GL_EYE_PLANE_ABSOLUTE_NV)) {
+	    _mesa_error(ctx, GL_INVALID_ENUM, "glFog");
+	    return;
+	 }
+	 if (ctx->Fog.FogDistanceMode == p)
+	    return;
+	 FLUSH_VERTICES(ctx, _NEW_FOG);
+	 ctx->Fog.FogDistanceMode = p;
+	 break;
+      }
       default:
-         _mesa_error( ctx, GL_INVALID_ENUM, "glFog" );
-         return;
+         goto invalid_pname;
    }
 
    if (ctx->Driver.Fogfv) {
       (*ctx->Driver.Fogfv)( ctx, pname, params );
    }
+
+   return;
+
+invalid_pname:
+   _mesa_error( ctx, GL_INVALID_ENUM, "glFog" );
+   return;
 }
 
 
@@ -201,4 +220,5 @@ void _mesa_init_fog( struct gl_context * ctx )
    ctx->Fog.ColorSumEnabled = GL_FALSE;
    ctx->Fog.FogCoordinateSource = GL_FRAGMENT_DEPTH_EXT;
    ctx->Fog._Scale = 1.0f;
+   ctx->Fog.FogDistanceMode = GL_EYE_PLANE_ABSOLUTE_NV;
 }

@@ -33,25 +33,27 @@
 struct radeon_cs_context {
     uint32_t                    buf[RADEON_MAX_CMDBUF_DWORDS];
 
-    int fd;
+    int                         fd;
     struct drm_radeon_cs        cs;
-    struct drm_radeon_cs_chunk  chunks[2];
-    uint64_t                    chunk_array[2];
+    struct drm_radeon_cs_chunk  chunks[3];
+    uint64_t                    chunk_array[3];
+    uint32_t                    flags[2];
+
+    uint32_t                    cs_trace_id;
 
     /* Relocs. */
     unsigned                    nrelocs;
     unsigned                    crelocs;
-    unsigned			validated_crelocs;
+    unsigned                    validated_crelocs;
     struct radeon_bo            **relocs_bo;
     struct drm_radeon_cs_reloc  *relocs;
 
     /* 0 = BO not added, 1 = BO added */
-    char                        is_handle_added[256];
-    struct drm_radeon_cs_reloc  *relocs_hashlist[256];
-    unsigned                    reloc_indices_hashlist[256];
+    char                        is_handle_added[512];
+    unsigned                    reloc_indices_hashlist[512];
 
-    unsigned used_vram;
-    unsigned used_gart;
+    unsigned                    used_vram;
+    unsigned                    used_gart;
 };
 
 struct radeon_drm_cs {
@@ -74,7 +76,9 @@ struct radeon_drm_cs {
     void (*flush_cs)(void *ctx, unsigned flags);
     void *flush_data;
 
-    pipe_thread thread;
+    int flush_started;
+    pipe_semaphore flush_completed;
+    struct radeon_bo                    *trace_buf;
 };
 
 int radeon_get_reloc(struct radeon_cs_context *csc, struct radeon_bo *bo);
@@ -89,8 +93,9 @@ static INLINE boolean
 radeon_bo_is_referenced_by_cs(struct radeon_drm_cs *cs,
                               struct radeon_bo *bo)
 {
-    return bo->num_cs_references == bo->rws->num_cs ||
-           (bo->num_cs_references && radeon_get_reloc(cs->csc, bo) != -1);
+    int num_refs = bo->num_cs_references;
+    return num_refs == bo->rws->num_cs ||
+           (num_refs && radeon_get_reloc(cs->csc, bo) != -1);
 }
 
 static INLINE boolean
@@ -112,10 +117,13 @@ radeon_bo_is_referenced_by_cs_for_write(struct radeon_drm_cs *cs,
 static INLINE boolean
 radeon_bo_is_referenced_by_any_cs(struct radeon_bo *bo)
 {
-    return bo->num_cs_references;
+    return bo->num_cs_references != 0;
 }
 
-void radeon_drm_cs_sync_flush(struct radeon_drm_cs *cs);
+void radeon_drm_cs_sync_flush(struct radeon_winsys_cs *rcs);
 void radeon_drm_cs_init_functions(struct radeon_drm_winsys *ws);
+void radeon_drm_cs_emit_ioctl_oneshot(struct radeon_drm_cs *cs, struct radeon_cs_context *csc);
+
+void radeon_dump_cs_on_lockup(struct radeon_drm_cs *cs, struct radeon_cs_context *csc);
 
 #endif

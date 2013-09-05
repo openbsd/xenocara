@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -66,10 +66,10 @@ NAME(plot)(struct gl_context *ctx, struct LineInfo *line, int ix, int iy)
 #if defined(DO_ATTRIBS)
    ATTRIB_LOOP_BEGIN
       GLfloat (*attribArray)[4] = line->span.array->attribs[attr];
-      if (attr >= FRAG_ATTRIB_TEX0 && attr < FRAG_ATTRIB_VAR0
-          && !ctx->FragmentProgram._Current) {
+      if (attr >= VARYING_SLOT_TEX0 && attr < VARYING_SLOT_VAR0
+          && !_swrast_use_fragment_program(ctx)) {
          /* texcoord w/ divide by Q */
-         const GLuint unit = attr - FRAG_ATTRIB_TEX0;
+         const GLuint unit = attr - VARYING_SLOT_TEX0;
          const GLfloat invQ = solve_plane_recip(fx, fy, line->attrPlane[attr][3]);
          GLuint c;
          for (c = 0; c < 3; c++) {
@@ -91,7 +91,7 @@ NAME(plot)(struct gl_context *ctx, struct LineInfo *line, int ix, int iy)
    ATTRIB_LOOP_END
 #endif
 
-   if (line->span.end == MAX_WIDTH) {
+   if (line->span.end == SWRAST_MAX_WIDTH) {
       _swrast_write_rgba_span(ctx, &(line->span));
       line->span.end = 0; /* reset counter */
    }
@@ -112,13 +112,13 @@ NAME(line)(struct gl_context *ctx, const SWvertex *v0, const SWvertex *v1)
 
    /* Init the LineInfo struct */
    struct LineInfo line;
-   line.x0 = v0->attrib[FRAG_ATTRIB_WPOS][0];
-   line.y0 = v0->attrib[FRAG_ATTRIB_WPOS][1];
-   line.x1 = v1->attrib[FRAG_ATTRIB_WPOS][0];
-   line.y1 = v1->attrib[FRAG_ATTRIB_WPOS][1];
+   line.x0 = v0->attrib[VARYING_SLOT_POS][0];
+   line.y0 = v0->attrib[VARYING_SLOT_POS][1];
+   line.x1 = v1->attrib[VARYING_SLOT_POS][0];
+   line.y1 = v1->attrib[VARYING_SLOT_POS][1];
    line.dx = line.x1 - line.x0;
    line.dy = line.y1 - line.y0;
-   line.len = SQRTF(line.dx * line.dx + line.dy * line.dy);
+   line.len = sqrtf(line.dx * line.dx + line.dy * line.dy);
    line.halfWidth = 0.5F * CLAMP(ctx->Line.Width,
                                  ctx->Const.MinLineWidthAA,
                                  ctx->Const.MaxLineWidthAA);
@@ -135,7 +135,7 @@ NAME(line)(struct gl_context *ctx, const SWvertex *v0, const SWvertex *v1)
 #ifdef DO_Z
    line.span.arrayMask |= SPAN_Z;
    compute_plane(line.x0, line.y0, line.x1, line.y1,
-                 v0->attrib[FRAG_ATTRIB_WPOS][2], v1->attrib[FRAG_ATTRIB_WPOS][2], line.zPlane);
+                 v0->attrib[VARYING_SLOT_POS][2], v1->attrib[VARYING_SLOT_POS][2], line.zPlane);
 #endif
    line.span.arrayMask |= SPAN_RGBA;
    if (ctx->Light.ShadeModel == GL_SMOOTH) {
@@ -156,8 +156,8 @@ NAME(line)(struct gl_context *ctx, const SWvertex *v0, const SWvertex *v1)
    }
 #if defined(DO_ATTRIBS)
    {
-      const GLfloat invW0 = v0->attrib[FRAG_ATTRIB_WPOS][3];
-      const GLfloat invW1 = v1->attrib[FRAG_ATTRIB_WPOS][3];
+      const GLfloat invW0 = v0->attrib[VARYING_SLOT_POS][3];
+      const GLfloat invW1 = v1->attrib[VARYING_SLOT_POS][3];
       line.span.arrayMask |= SPAN_LAMBDA;
       compute_plane(line.x0, line.y0, line.x1, line.y1, invW0, invW1, line.wPlane);
       ATTRIB_LOOP_BEGIN
@@ -175,9 +175,9 @@ NAME(line)(struct gl_context *ctx, const SWvertex *v0, const SWvertex *v1)
                              line.attrPlane[attr][c]);
             }
          }
-         line.span.arrayAttribs |= (1 << attr);
-         if (attr >= FRAG_ATTRIB_TEX0 && attr < FRAG_ATTRIB_VAR0) {
-            const GLuint u = attr - FRAG_ATTRIB_TEX0;
+         line.span.arrayAttribs |= BITFIELD64_BIT(attr);
+         if (attr >= VARYING_SLOT_TEX0 && attr < VARYING_SLOT_VAR0) {
+            const GLuint u = attr - VARYING_SLOT_TEX0;
             const struct gl_texture_object *obj = ctx->Texture.Unit[u]._Current;
             const struct gl_texture_image *texImage = obj->Image[0][obj->BaseLevel];
             line.texWidth[attr]  = (GLfloat) texImage->Width;

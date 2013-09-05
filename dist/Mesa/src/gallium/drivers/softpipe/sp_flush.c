@@ -38,6 +38,8 @@
 #include "sp_state.h"
 #include "sp_tile_cache.h"
 #include "sp_tex_tile_cache.h"
+#include "util/u_memory.h"
+#include "util/u_string.h"
 
 
 void
@@ -51,14 +53,12 @@ softpipe_flush( struct pipe_context *pipe,
    draw_flush(softpipe->draw);
 
    if (flags & SP_FLUSH_TEXTURE_CACHE) {
-      for (i = 0; i < softpipe->num_fragment_sampler_views; i++) {
-         sp_flush_tex_tile_cache(softpipe->fragment_tex_cache[i]);
-      }
-      for (i = 0; i < softpipe->num_vertex_sampler_views; i++) {
-         sp_flush_tex_tile_cache(softpipe->vertex_tex_cache[i]);
-      }
-      for (i = 0; i < softpipe->num_geometry_sampler_views; i++) {
-         sp_flush_tex_tile_cache(softpipe->geometry_tex_cache[i]);
+      unsigned sh;
+
+      for (sh = 0; sh < Elements(softpipe->tex_cache); sh++) {
+         for (i = 0; i < softpipe->num_sampler_views[sh]; i++) {
+            sp_flush_tex_tile_cache(softpipe->tex_cache[sh][i]);
+         }
       }
    }
 
@@ -76,23 +76,15 @@ softpipe_flush( struct pipe_context *pipe,
 
    softpipe->dirty_render_cache = FALSE;
 
-   /* Need this call for hardware buffers before swapbuffers.
-    *
-    * there should probably be another/different flush-type function
-    * that's called before swapbuffers because we don't always want
-    * to unmap surfaces when flushing.
-    */
-   softpipe_unmap_transfers(softpipe);
-
    /* Enable to dump BMPs of the color/depth buffers each frame */
 #if 0
-   if(flags & PIPE_FLUSH_FRAME) {
+   if (flags & PIPE_FLUSH_END_OF_FRAME) {
       static unsigned frame_no = 1;
       static char filename[256];
       util_snprintf(filename, sizeof(filename), "cbuf_%u.bmp", frame_no);
-      debug_dump_surface_bmp(softpipe, filename, softpipe->framebuffer.cbufs[0]);
+      debug_dump_surface_bmp(pipe, filename, softpipe->framebuffer.cbufs[0]);
       util_snprintf(filename, sizeof(filename), "zsbuf_%u.bmp", frame_no);
-      debug_dump_surface_bmp(softpipe, filename, softpipe->framebuffer.zsbuf);
+      debug_dump_surface_bmp(pipe, filename, softpipe->framebuffer.zsbuf);
       ++frame_no;
    }
 #endif
@@ -102,8 +94,9 @@ softpipe_flush( struct pipe_context *pipe,
 }
 
 void
-softpipe_flush_wrapped( struct pipe_context *pipe,
-                        struct pipe_fence_handle **fence )
+softpipe_flush_wrapped(struct pipe_context *pipe,
+                       struct pipe_fence_handle **fence,
+                       unsigned flags)
 {
    softpipe_flush(pipe, SP_FLUSH_TEXTURE_CACHE, fence);
 }

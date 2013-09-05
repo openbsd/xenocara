@@ -44,6 +44,7 @@
 #include "st_program.h"
 #include "st_mesa_to_tgsi.h"
 #include "st_cb_program.h"
+#include "st_glsl_to_tgsi.h"
 
 
 
@@ -98,8 +99,7 @@ st_new_program(struct gl_context *ctx, GLenum target, GLuint id)
       return _mesa_init_vertex_program(ctx, &prog->Base, target, id);
    }
 
-   case GL_FRAGMENT_PROGRAM_ARB:
-   case GL_FRAGMENT_PROGRAM_NV: {
+   case GL_FRAGMENT_PROGRAM_ARB: {
       struct st_fragment_program *prog = ST_CALLOC_STRUCT(st_fragment_program);
       return _mesa_init_fragment_program(ctx, &prog->Base, target, id);
    }
@@ -129,6 +129,9 @@ st_delete_program(struct gl_context *ctx, struct gl_program *prog)
       {
          struct st_vertex_program *stvp = (struct st_vertex_program *) prog;
          st_release_vp_variants( st, stvp );
+         
+         if (stvp->glsl_to_tgsi)
+            free_glsl_to_tgsi_visitor(stvp->glsl_to_tgsi);
       }
       break;
    case MESA_GEOMETRY_PROGRAM:
@@ -137,6 +140,9 @@ st_delete_program(struct gl_context *ctx, struct gl_program *prog)
             (struct st_geometry_program *) prog;
 
          st_release_gp_variants(st, stgp);
+         
+         if (stgp->glsl_to_tgsi)
+            free_glsl_to_tgsi_visitor(stgp->glsl_to_tgsi);
 
          if (stgp->tgsi.tokens) {
             st_free_tokens((void *) stgp->tgsi.tokens);
@@ -151,10 +157,8 @@ st_delete_program(struct gl_context *ctx, struct gl_program *prog)
 
          st_release_fp_variants(st, stfp);
          
-         if (stfp->tgsi.tokens) {
-            st_free_tokens(stfp->tgsi.tokens);
-            stfp->tgsi.tokens = NULL;
-         }
+         if (stfp->glsl_to_tgsi)
+            free_glsl_to_tgsi_visitor(stfp->glsl_to_tgsi);
       }
       break;
    default:
@@ -194,11 +198,6 @@ st_program_string_notify( struct gl_context *ctx,
       struct st_fragment_program *stfp = (struct st_fragment_program *) prog;
 
       st_release_fp_variants(st, stfp);
-
-      if (stfp->tgsi.tokens) {
-         st_free_tokens(stfp->tgsi.tokens);
-         stfp->tgsi.tokens = NULL;
-      }
 
       if (st->fp == stfp)
 	 st->dirty.st |= ST_NEW_FRAGMENT_PROGRAM;
@@ -242,4 +241,8 @@ st_init_program_functions(struct dd_function_table *functions)
    functions->DeleteProgram = st_delete_program;
    functions->IsProgramNative = st_is_program_native;
    functions->ProgramStringNotify = st_program_string_notify;
+   
+   functions->NewShader = st_new_shader;
+   functions->NewShaderProgram = st_new_shader_program;
+   functions->LinkShader = st_link_shader;
 }

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -28,18 +28,15 @@
 
 
 struct _glapi_table;
+struct gl_context;
 
 extern struct _glapi_table *
-_mesa_alloc_dispatch_table(int size);
+_mesa_alloc_dispatch_table(void);
 
-extern struct _glapi_table *
-_mesa_create_exec_table(void);
+extern void
+_mesa_initialize_exec_table(struct gl_context *ctx);
 
-extern struct _glapi_table *
-_mesa_create_exec_table_es1(void);
-
-extern struct _glapi_table *
-_mesa_create_exec_table_es2(void);
-
+extern void
+_mesa_initialize_dispatch_tables(struct gl_context *ctx);
 
 #endif

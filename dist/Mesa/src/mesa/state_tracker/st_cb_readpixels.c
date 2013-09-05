@@ -25,573 +25,206 @@
  * 
  **************************************************************************/
 
-
-/**
- * glReadPixels interface to pipe
- *
- * \author Brian Paul
- */
-
-
-#include "main/imports.h"
-#include "main/bufferobj.h"
-#include "main/context.h"
 #include "main/image.h"
-#include "main/pack.h"
 #include "main/pbo.h"
-
-#include "pipe/p_context.h"
-#include "pipe/p_defines.h"
-#include "util/u_format.h"
+#include "main/imports.h"
+#include "main/readpix.h"
+#include "main/enums.h"
+#include "main/framebuffer.h"
 #include "util/u_inlines.h"
-#include "util/u_tile.h"
+#include "util/u_format.h"
 
-#include "st_debug.h"
-#include "st_context.h"
+#include "st_cb_fbo.h"
 #include "st_atom.h"
+#include "st_context.h"
 #include "st_cb_bitmap.h"
 #include "st_cb_readpixels.h"
-#include "st_cb_fbo.h"
-
-/**
- * Special case for reading stencil buffer.
- * For color/depth we use get_tile().  For stencil, map the stencil buffer.
- */
-void
-st_read_stencil_pixels(struct gl_context *ctx, GLint x, GLint y,
-                       GLsizei width, GLsizei height,
-                       GLenum format, GLenum type,
-                       const struct gl_pixelstore_attrib *packing,
-                       GLvoid *pixels)
-{
-   struct gl_framebuffer *fb = ctx->ReadBuffer;
-   struct pipe_context *pipe = st_context(ctx)->pipe;
-   struct st_renderbuffer *strb = st_renderbuffer(fb->_StencilBuffer);
-   struct pipe_transfer *pt;
-   ubyte *stmap;
-   GLint j;
-
-   if (strb->Base.Wrapped) {
-      strb = st_renderbuffer(strb->Base.Wrapped);
-   }
-
-   if (st_fb_orientation(ctx->DrawBuffer) == Y_0_TOP) {
-      y = ctx->DrawBuffer->Height - y - height;
-   }
-
-   /* Create a read transfer from the renderbuffer's texture */
-
-   pt = pipe_get_transfer(pipe, strb->texture,
-                          strb->rtt_level,
-                          strb->rtt_face + strb->rtt_slice,
-                          PIPE_TRANSFER_READ,
-                          x, y, width, height);
-
-   /* map the stencil buffer */
-   stmap = pipe_transfer_map(pipe, pt);
-
-   /* width should never be > MAX_WIDTH since we did clipping earlier */
-   ASSERT(width <= MAX_WIDTH);
-
-   /* process image row by row */
-   for (j = 0; j < height; j++) {
-      GLvoid *dest;
-      GLstencil sValues[MAX_WIDTH];
-      GLfloat zValues[MAX_WIDTH];
-      GLint srcY;
-
-      if (st_fb_orientation(ctx->DrawBuffer) == Y_0_TOP) {
-         srcY = height - j - 1;
-      }
-      else {
-         srcY = j;
-      }
-
-      /* get stencil (and Z) values */
-      switch (pt->resource->format) {
-      case PIPE_FORMAT_S8_USCALED:
-         {
-            const ubyte *src = stmap + srcY * pt->stride;
-            memcpy(sValues, src, width);
-         }
-         break;
-      case PIPE_FORMAT_Z24_UNORM_S8_USCALED:
-         if (format == GL_DEPTH_STENCIL) {
-            const uint *src = (uint *) (stmap + srcY * pt->stride);
-            const GLfloat scale = 1.0f / (0xffffff);
-            GLint k;
-            for (k = 0; k < width; k++) {
-               sValues[k] = src[k] >> 24;
-               zValues[k] = (src[k] & 0xffffff) * scale;
-            }
-         }
-         else {
-            const uint *src = (uint *) (stmap + srcY * pt->stride);
-            GLint k;
-            for (k = 0; k < width; k++) {
-               sValues[k] = src[k] >> 24;
-            }
-         }
-         break;
-      case PIPE_FORMAT_S8_USCALED_Z24_UNORM:
-         if (format == GL_DEPTH_STENCIL) {
-            const uint *src = (uint *) (stmap + srcY * pt->stride);
-            const GLfloat scale = 1.0f / (0xffffff);
-            GLint k;
-            for (k = 0; k < width; k++) {
-               sValues[k] = src[k] & 0xff;
-               zValues[k] = (src[k] >> 8) * scale;
-            }
-         }
-         else {
-            const uint *src = (uint *) (stmap + srcY * pt->stride);
-            GLint k;
-            for (k = 0; k < width; k++) {
-               sValues[k] = src[k] & 0xff;
-            }
-         }
-         break;
-      default:
-         assert(0);
-      }
-
-      /* store */
-      dest = _mesa_image_address2d(packing, pixels, width, height,
-                                   format, type, j, 0);
-      if (format == GL_DEPTH_STENCIL) {
-         _mesa_pack_depth_stencil_span(ctx, width, dest,
-                                       zValues, sValues, packing);
-      }
-      else {
-         _mesa_pack_stencil_span(ctx, width, type, dest, sValues, packing);
-      }
-   }
-
-   /* unmap the stencil buffer */
-   pipe_transfer_unmap(pipe, pt);
-   pipe->transfer_destroy(pipe, pt);
-}
+#include "state_tracker/st_cb_texture.h"
+#include "state_tracker/st_format.h"
+#include "state_tracker/st_texture.h"
 
 
 /**
- * Return renderbuffer to use for reading color pixels for glRead/CopyPixel
- * commands.
- */
-struct st_renderbuffer *
-st_get_color_read_renderbuffer(struct gl_context *ctx)
-{
-   struct gl_framebuffer *fb = ctx->ReadBuffer;
-   struct st_renderbuffer *strb =
-      st_renderbuffer(fb->_ColorReadBuffer);
-
-   return strb;
-}
-
-
-/**
- * Try to do glReadPixels in a fast manner for common cases.
- * \return GL_TRUE for success, GL_FALSE for failure
- */
-static GLboolean
-st_fast_readpixels(struct gl_context *ctx, struct st_renderbuffer *strb,
-                   GLint x, GLint y, GLsizei width, GLsizei height,
-                   GLenum format, GLenum type,
-                   const struct gl_pixelstore_attrib *pack,
-                   GLvoid *dest)
-{
-   GLubyte alphaORoperand;
-   enum combination {
-      A8R8G8B8_UNORM_TO_RGBA_UBYTE,
-      A8R8G8B8_UNORM_TO_RGB_UBYTE,
-      A8R8G8B8_UNORM_TO_BGRA_UINT,
-      A8R8G8B8_UNORM_TO_RGBA_UINT
-   } combo;
-
-   if (ctx->_ImageTransferState)
-      return GL_FALSE;
-
-   if (strb->format == PIPE_FORMAT_B8G8R8A8_UNORM) {
-      alphaORoperand = 0;
-   }
-   else if (strb->format == PIPE_FORMAT_B8G8R8X8_UNORM ) {
-      alphaORoperand = 0xff;
-   }
-   else {
-      return GL_FALSE;
-   }
-
-   if (format == GL_RGBA && type == GL_UNSIGNED_BYTE) {
-      combo = A8R8G8B8_UNORM_TO_RGBA_UBYTE;
-   }
-   else if (format == GL_RGB && type == GL_UNSIGNED_BYTE) {
-      combo = A8R8G8B8_UNORM_TO_RGB_UBYTE;
-   }
-   else if (format == GL_BGRA && type == GL_UNSIGNED_INT_8_8_8_8_REV) {
-      combo = A8R8G8B8_UNORM_TO_BGRA_UINT;
-   }
-   else if (format == GL_RGBA && type == GL_UNSIGNED_INT_8_8_8_8) {
-      combo = A8R8G8B8_UNORM_TO_RGBA_UINT;
-   }
-   else {
-      return GL_FALSE;
-   }
-
-   /*printf("st_fast_readpixels combo %d\n", (GLint) combo);*/
-
-   {
-      struct pipe_context *pipe = st_context(ctx)->pipe;
-      struct pipe_transfer *trans;
-      const GLubyte *map;
-      GLubyte *dst;
-      GLint row, col, dy, dstStride;
-
-      if (st_fb_orientation(ctx->ReadBuffer) == Y_0_TOP) {
-         /* convert GL Y to Gallium Y */
-         y = strb->texture->height0 - y - height;
-      }
-
-      trans = pipe_get_transfer(pipe, strb->texture,
-                                strb->rtt_level,
-                                strb->rtt_face + strb->rtt_slice,
-                                PIPE_TRANSFER_READ,
-                                x, y, width, height);
-      if (!trans) {
-         return GL_FALSE;
-      }
-
-      map = pipe_transfer_map(pipe, trans);
-      if (!map) {
-         pipe->transfer_destroy(pipe, trans);
-         return GL_FALSE;
-      }
-
-      /* We always write to the user/dest buffer from low addr to high addr
-       * but the read order depends on renderbuffer orientation
-       */
-      if (st_fb_orientation(ctx->ReadBuffer) == Y_0_TOP) {
-         /* read source rows from bottom to top */
-         y = height - 1;
-         dy = -1;
-      }
-      else {
-         /* read source rows from top to bottom */
-         y = 0;
-         dy = 1;
-      }
-
-      dst = _mesa_image_address2d(pack, dest, width, height,
-                                  format, type, 0, 0);
-      dstStride = _mesa_image_row_stride(pack, width, format, type);
-
-      switch (combo) {
-      case A8R8G8B8_UNORM_TO_RGBA_UBYTE:
-         for (row = 0; row < height; row++) {
-            const GLubyte *src = map + y * trans->stride;
-            for (col = 0; col < width; col++) {
-               GLuint pixel = ((GLuint *) src)[col];
-               dst[col*4+0] = (pixel >> 16) & 0xff;
-               dst[col*4+1] = (pixel >>  8) & 0xff;
-               dst[col*4+2] = (pixel >>  0) & 0xff;
-               dst[col*4+3] = ((pixel >> 24) & 0xff) | alphaORoperand;
-            }
-            dst += dstStride;
-            y += dy;
-         }
-         break;
-      case A8R8G8B8_UNORM_TO_RGB_UBYTE:
-         for (row = 0; row < height; row++) {
-            const GLubyte *src = map + y * trans->stride;
-            for (col = 0; col < width; col++) {
-               GLuint pixel = ((GLuint *) src)[col];
-               dst[col*3+0] = (pixel >> 16) & 0xff;
-               dst[col*3+1] = (pixel >>  8) & 0xff;
-               dst[col*3+2] = (pixel >>  0) & 0xff;
-            }
-            dst += dstStride;
-            y += dy;
-         }
-         break;
-      case A8R8G8B8_UNORM_TO_BGRA_UINT:
-         for (row = 0; row < height; row++) {
-            const GLubyte *src = map + y * trans->stride;
-            memcpy(dst, src, 4 * width);
-            if (alphaORoperand) {
-               assert(alphaORoperand == 0xff);
-               for (col = 0; col < width; col++) {
-                  dst[col*4+3] = 0xff;
-               }
-            }
-            dst += dstStride;
-            y += dy;
-         }
-         break;
-      case A8R8G8B8_UNORM_TO_RGBA_UINT:
-         for (row = 0; row < height; row++) {
-            const GLubyte *src = map + y * trans->stride;
-            for (col = 0; col < width; col++) {
-               GLuint pixel = ((GLuint *) src)[col];
-               dst[col*4+0] = ((pixel >> 24) & 0xff) | alphaORoperand;
-               dst[col*4+1] = (pixel >> 0) & 0xff;
-               dst[col*4+2] = (pixel >> 8) & 0xff;
-               dst[col*4+3] = (pixel >> 16) & 0xff;
-            }
-            dst += dstStride;
-            y += dy;
-         }
-         break;
-      default:
-         ; /* nothing */
-      }
-
-      pipe_transfer_unmap(pipe, trans);
-      pipe->transfer_destroy(pipe, trans);
-   }
-
-   return GL_TRUE;
-}
-
-
-/**
- * Do glReadPixels by getting rows from the framebuffer transfer with
- * get_tile().  Convert to requested format/type with Mesa image routines.
- * Image transfer ops are done in software too.
+ * This uses a blit to copy the read buffer to a texture format which matches
+ * the format and type combo and then a fast read-back is done using memcpy.
+ * We can do arbitrary X/Y/Z/W/0/1 swizzling here as long as there is
+ * a format which matches the swizzling.
+ *
+ * If such a format isn't available, we fall back to _mesa_readpixels.
+ *
+ * NOTE: Some drivers use a blit to convert between tiled and linear
+ *       texture layouts during texture uploads/downloads, so the blit
+ *       we do here should be free in such cases.
  */
 static void
-st_readpixels(struct gl_context *ctx, GLint x, GLint y, GLsizei width, GLsizei height,
+st_readpixels(struct gl_context *ctx, GLint x, GLint y,
+              GLsizei width, GLsizei height,
               GLenum format, GLenum type,
               const struct gl_pixelstore_attrib *pack,
-              GLvoid *dest)
+              GLvoid *pixels)
 {
    struct st_context *st = st_context(ctx);
+   struct gl_renderbuffer *rb =
+         _mesa_get_read_renderbuffer_for_format(ctx, format);
+   struct st_renderbuffer *strb = st_renderbuffer(rb);
    struct pipe_context *pipe = st->pipe;
-   GLfloat (*temp)[4];
-   GLbitfield transferOps = ctx->_ImageTransferState;
-   GLsizei i, j;
-   GLint yStep, dfStride;
-   GLfloat *df;
-   struct st_renderbuffer *strb;
-   struct gl_pixelstore_attrib clippedPacking = *pack;
-   struct pipe_transfer *trans;
-   enum pipe_format pformat;
+   struct pipe_screen *screen = pipe->screen;
+   struct pipe_resource *src;
+   struct pipe_resource *dst = NULL;
+   struct pipe_resource dst_templ;
+   enum pipe_format dst_format, src_format;
+   struct pipe_blit_info blit;
+   unsigned bind = PIPE_BIND_TRANSFER_READ;
+   struct pipe_transfer *tex_xfer;
+   ubyte *map = NULL;
 
-   assert(ctx->ReadBuffer->Width > 0);
-
+   /* Validate state (to be sure we have up-to-date framebuffer surfaces)
+    * and flush the bitmap cache prior to reading. */
    st_validate_state(st);
-
-   /* Do all needed clipping here, so that we can forget about it later */
-   if (!_mesa_clip_readpixels(ctx, &x, &y, &width, &height, &clippedPacking)) {
-      /* The ReadPixels transfer is totally outside the window bounds */
-      return;
-   }
-
    st_flush_bitmap_cache(st);
 
-   dest = _mesa_map_pbo_dest(ctx, &clippedPacking, dest);
-   if (!dest)
-      return;
-
-   if (format == GL_STENCIL_INDEX ||
-       format == GL_DEPTH_STENCIL) {
-      st_read_stencil_pixels(ctx, x, y, width, height,
-                             format, type, pack, dest);
-      return;
-   }
-   else if (format == GL_DEPTH_COMPONENT) {
-      strb = st_renderbuffer(ctx->ReadBuffer->_DepthBuffer);
-      if (strb->Base.Wrapped) {
-         strb = st_renderbuffer(strb->Base.Wrapped);
-      }
-   }
-   else {
-      /* Read color buffer */
-      strb = st_get_color_read_renderbuffer(ctx);
+   if (!st->prefer_blit_based_texture_transfer) {
+      goto fallback;
    }
 
-   if (!strb)
-      return;
+   /* This must be done after state validation. */
+   src = strb->texture;
 
-   /* try a fast-path readpixels before anything else */
-   if (st_fast_readpixels(ctx, strb, x, y, width, height,
-                          format, type, pack, dest)) {
-      /* success! */
-      _mesa_unmap_pbo_dest(ctx, &clippedPacking);
-      return;
+   /* XXX Fallback for depth-stencil formats due to an incomplete
+    * stencil blit implementation in some drivers. */
+   if (format == GL_DEPTH_STENCIL) {
+      goto fallback;
    }
 
-   /* allocate temp pixel row buffer */
-   temp = (GLfloat (*)[4]) malloc(4 * width * sizeof(GLfloat));
-   if (!temp) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glReadPixels");
-      return;
+   /* We are creating a texture of the size of the region being read back.
+    * Need to check for NPOT texture support. */
+   if (!screen->get_param(screen, PIPE_CAP_NPOT_TEXTURES) &&
+       (!util_is_power_of_two(width) ||
+        !util_is_power_of_two(height))) {
+      goto fallback;
    }
 
-   if(ctx->Color._ClampReadColor)
-      transferOps |= IMAGE_CLAMP_BIT;
+   /* If the base internal format and the texture format don't match, we have
+    * to use the slow path. */
+   if (rb->_BaseFormat !=
+       _mesa_get_format_base_format(rb->Format)) {
+      goto fallback;
+   }
 
-   if (format == GL_RGBA && type == GL_FLOAT && !transferOps) {
-      /* write tile(row) directly into user's buffer */
-      df = (GLfloat *) _mesa_image_address2d(&clippedPacking, dest, width,
-                                             height, format, type, 0, 0);
-      dfStride = width * 4;
+   /* See if the texture format already matches the format and type,
+    * in which case the memcpy-based fast path will likely be used and
+    * we don't have to blit. */
+   if (_mesa_format_matches_format_and_type(rb->Format, format,
+                                            type, pack->SwapBytes)) {
+      goto fallback;
    }
-   else {
-      /* write tile(row) into temp row buffer */
-      df = (GLfloat *) temp;
-      dfStride = 0;
+
+   if (_mesa_readpixels_needs_slow_path(ctx, format, type, GL_TRUE)) {
+      goto fallback;
    }
+
+   /* Convert the source format to what is expected by ReadPixels
+    * and see if it's supported. */
+   src_format = util_format_linear(src->format);
+   src_format = util_format_luminance_to_red(src_format);
+   src_format = util_format_intensity_to_red(src_format);
+
+   if (!src_format ||
+       !screen->is_format_supported(screen, src_format, src->target,
+                                    src->nr_samples,
+                                    PIPE_BIND_SAMPLER_VIEW)) {
+      goto fallback;
+   }
+
+   if (format == GL_DEPTH_COMPONENT || format == GL_DEPTH_STENCIL)
+      bind |= PIPE_BIND_DEPTH_STENCIL;
+   else
+      bind |= PIPE_BIND_RENDER_TARGET;
+
+   /* Choose the destination format by finding the best match
+    * for the format+type combo. */
+   dst_format = st_choose_matching_format(screen, bind, format, type,
+                                          pack->SwapBytes);
+   if (dst_format == PIPE_FORMAT_NONE) {
+      goto fallback;
+   }
+
+   /* create the destination texture */
+   memset(&dst_templ, 0, sizeof(dst_templ));
+   dst_templ.target = PIPE_TEXTURE_2D;
+   dst_templ.format = dst_format;
+   dst_templ.bind = bind;
+   dst_templ.usage = PIPE_USAGE_STAGING;
+
+   st_gl_texture_dims_to_pipe_dims(GL_TEXTURE_2D, width, height, 1,
+                                   &dst_templ.width0, &dst_templ.height0,
+                                   &dst_templ.depth0, &dst_templ.array_size);
+
+   dst = screen->resource_create(screen, &dst_templ);
+   if (!dst) {
+      goto fallback;
+   }
+
+   blit.src.resource = src;
+   blit.src.level = strb->rtt_level;
+   blit.src.format = src_format;
+   blit.dst.resource = dst;
+   blit.dst.level = 0;
+   blit.dst.format = dst->format;
+   blit.src.box.x = x;
+   blit.dst.box.x = 0;
+   blit.src.box.y = y;
+   blit.dst.box.y = 0;
+   blit.src.box.z = strb->rtt_face + strb->rtt_slice;
+   blit.dst.box.z = 0;
+   blit.src.box.width = blit.dst.box.width = width;
+   blit.src.box.height = blit.dst.box.height = height;
+   blit.src.box.depth = blit.dst.box.depth = 1;
+   blit.mask = st_get_blit_mask(rb->_BaseFormat, format);
+   blit.filter = PIPE_TEX_FILTER_NEAREST;
+   blit.scissor_enable = FALSE;
 
    if (st_fb_orientation(ctx->ReadBuffer) == Y_0_TOP) {
-      /* convert GL Y to Gallium Y */
-      y = strb->Base.Height - y - height;
+      blit.src.box.y = rb->Height - blit.src.box.y;
+      blit.src.box.height = -blit.src.box.height;
    }
 
-   /* Create a read transfer from the renderbuffer's texture */
-   trans = pipe_get_transfer(pipe, strb->texture,
-                             strb->rtt_level, /* level */
-                             strb->rtt_face + strb->rtt_slice, /* layer */
-                             PIPE_TRANSFER_READ,
-                             x, y, width, height);
+   /* blit */
+   st->pipe->blit(st->pipe, &blit);
 
-   /* determine bottom-to-top vs. top-to-bottom order */
-   if (st_fb_orientation(ctx->ReadBuffer) == Y_0_TOP) {
-      y = height - 1;
-      yStep = -1;
-   }
-   else {
-      y = 0;
-      yStep = 1;
+   /* map resources */
+   pixels = _mesa_map_pbo_dest(ctx, pack, pixels);
+
+   map = pipe_transfer_map_3d(pipe, dst, 0, PIPE_TRANSFER_READ,
+                              0, 0, 0, width, height, 1, &tex_xfer);
+   if (!map) {
+      _mesa_unmap_pbo_dest(ctx, pack);
+      pipe_resource_reference(&dst, NULL);
+      goto fallback;
    }
 
-   /* possibly convert sRGB format to linear RGB format */
-   pformat = util_format_linear(trans->resource->format);
-
-   if (ST_DEBUG & DEBUG_FALLBACK)
-      debug_printf("%s: fallback processing\n", __FUNCTION__);
-
-   /*
-    * Copy pixels from pipe_transfer to user memory
-    */
+   /* memcpy data into a user buffer */
    {
-      /* dest of first pixel in client memory */
-      GLubyte *dst = _mesa_image_address2d(&clippedPacking, dest, width,
-                                           height, format, type, 0, 0);
-      /* dest row stride */
-      const GLint dstStride = _mesa_image_row_stride(&clippedPacking, width,
-                                                     format, type);
+      const uint bytesPerRow = width * util_format_get_blocksize(dst_format);
+      GLuint row;
 
-      if (pformat == PIPE_FORMAT_Z24_UNORM_S8_USCALED ||
-          pformat == PIPE_FORMAT_Z24X8_UNORM) {
-         if (format == GL_DEPTH_COMPONENT) {
-            for (i = 0; i < height; i++) {
-               GLuint ztemp[MAX_WIDTH];
-               GLfloat zfloat[MAX_WIDTH];
-               const double scale = 1.0 / ((1 << 24) - 1);
-               pipe_get_tile_raw(pipe, trans, 0, y, width, 1, ztemp, 0);
-               y += yStep;
-               for (j = 0; j < width; j++) {
-                  zfloat[j] = (float) (scale * (ztemp[j] & 0xffffff));
-               }
-               _mesa_pack_depth_span(ctx, width, dst, type,
-                                     zfloat, &clippedPacking);
-               dst += dstStride;
-            }
-         }
-         else {
-            /* XXX: unreachable code -- should be before st_read_stencil_pixels */
-            assert(format == GL_DEPTH_STENCIL_EXT);
-            for (i = 0; i < height; i++) {
-               GLuint *zshort = (GLuint *)dst;
-               pipe_get_tile_raw(pipe, trans, 0, y, width, 1, dst, 0);
-               y += yStep;
-               /* Reverse into 24/8 */
-               for (j = 0; j < width; j++) {
-                  zshort[j] = (zshort[j] << 8) | (zshort[j] >> 24);
-               }
-               dst += dstStride;
-            }
-         }
-      }
-      else if (pformat == PIPE_FORMAT_S8_USCALED_Z24_UNORM ||
-               pformat == PIPE_FORMAT_X8Z24_UNORM) {
-         if (format == GL_DEPTH_COMPONENT) {
-            for (i = 0; i < height; i++) {
-               GLuint ztemp[MAX_WIDTH];
-               GLfloat zfloat[MAX_WIDTH];
-               const double scale = 1.0 / ((1 << 24) - 1);
-               pipe_get_tile_raw(pipe, trans, 0, y, width, 1, ztemp, 0);
-               y += yStep;
-               for (j = 0; j < width; j++) {
-                  zfloat[j] = (float) (scale * ((ztemp[j] >> 8) & 0xffffff));
-               }
-               _mesa_pack_depth_span(ctx, width, dst, type,
-                                     zfloat, &clippedPacking);
-               dst += dstStride;
-            }
-         }
-         else {
-            /* XXX: unreachable code -- should be before st_read_stencil_pixels */
-            assert(format == GL_DEPTH_STENCIL_EXT);
-            for (i = 0; i < height; i++) {
-               pipe_get_tile_raw(pipe, trans, 0, y, width, 1, dst, 0);
-               y += yStep;
-               dst += dstStride;
-            }
-         }
-      }
-      else if (pformat == PIPE_FORMAT_Z16_UNORM) {
-         for (i = 0; i < height; i++) {
-            GLushort ztemp[MAX_WIDTH];
-            GLfloat zfloat[MAX_WIDTH];
-            const double scale = 1.0 / 0xffff;
-            pipe_get_tile_raw(pipe, trans, 0, y, width, 1, ztemp, 0);
-            y += yStep;
-            for (j = 0; j < width; j++) {
-               zfloat[j] = (float) (scale * ztemp[j]);
-            }
-            _mesa_pack_depth_span(ctx, width, dst, type,
-                                  zfloat, &clippedPacking);
-            dst += dstStride;
-         }
-      }
-      else if (pformat == PIPE_FORMAT_Z32_UNORM) {
-         for (i = 0; i < height; i++) {
-            GLuint ztemp[MAX_WIDTH];
-            GLfloat zfloat[MAX_WIDTH];
-            const double scale = 1.0 / 0xffffffff;
-            pipe_get_tile_raw(pipe, trans, 0, y, width, 1, ztemp, 0);
-            y += yStep;
-            for (j = 0; j < width; j++) {
-               zfloat[j] = (float) (scale * ztemp[j]);
-            }
-            _mesa_pack_depth_span(ctx, width, dst, type,
-                                  zfloat, &clippedPacking);
-            dst += dstStride;
-         }
-      }
-      else {
-         /* RGBA format */
-         /* Do a row at a time to flip image data vertically */
-         for (i = 0; i < height; i++) {
-            pipe_get_tile_rgba_format(pipe, trans, 0, y, width, 1,
-                                      pformat, df);
-            y += yStep;
-            df += dfStride;
-            if (!dfStride) {
-               _mesa_pack_rgba_span_float(ctx, width, temp, format, type, dst,
-                                          &clippedPacking, transferOps);
-               dst += dstStride;
-            }
-         }
+      for (row = 0; row < (unsigned) height; row++) {
+         GLvoid *dest = _mesa_image_address3d(pack, pixels,
+                                              width, height, format,
+                                              type, 0, row, 0);
+         memcpy(dest, map, bytesPerRow);
+         map += tex_xfer->stride;
       }
    }
 
-   free(temp);
+   pipe_transfer_unmap(pipe, tex_xfer);
+   _mesa_unmap_pbo_dest(ctx, pack);
+   pipe_resource_reference(&dst, NULL);
+   return;
 
-   pipe->transfer_destroy(pipe, trans);
-
-   _mesa_unmap_pbo_dest(ctx, &clippedPacking);
+fallback:
+   _mesa_readpixels(ctx, x, y, width, height, format, type, pack, pixels);
 }
-
 
 void st_init_readpixels_functions(struct dd_function_table *functions)
 {

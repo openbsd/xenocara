@@ -34,6 +34,7 @@
 #include "draw/draw_gs.h"
 #include "draw/draw_private.h"
 #include "draw/draw_pt.h"
+#include "draw/draw_vbuf.h"
 #include "draw/draw_vs.h"
 #include "tgsi/tgsi_dump.h"
 #include "util/u_math.h"
@@ -52,7 +53,7 @@ DEBUG_GET_ONCE_BOOL_OPTION(draw_no_fse, "DRAW_NO_FSE", FALSE)
  *     - backend  -- the vbuf_render provided by the driver.
  */
 static boolean
-draw_pt_arrays(struct draw_context *draw, 
+draw_pt_arrays(struct draw_context *draw,
                unsigned prim,
                unsigned start, 
                unsigned count)
@@ -106,16 +107,67 @@ draw_pt_arrays(struct draw_context *draw,
          middle = draw->pt.middle.general;
    }
 
-   frontend = draw->pt.front.vsplit;
+   frontend = draw->pt.frontend;
 
-   frontend->prepare( frontend, prim, middle, opt );
+   if (frontend ) {
+      if (draw->pt.prim != prim || draw->pt.opt != opt) {
+         /* In certain conditions switching primitives requires us to flush
+          * and validate the different stages. One example is when smooth
+          * lines are active but first drawn with triangles and then with
+          * lines.
+          */
+         draw_do_flush( draw, DRAW_FLUSH_STATE_CHANGE );
+         frontend = NULL;
+      } else if (draw->pt.eltSize != draw->pt.user.eltSize) {
+         /* Flush draw state if eltSize changed.
+          * This could be improved so only the frontend is flushed since it
+          * converts all indices to ushorts and the fetch part of the middle
+          * always prepares both linear and indexed.
+          */
+         frontend->flush( frontend, DRAW_FLUSH_STATE_CHANGE );
+         frontend = NULL;
+      }
+   }
 
-   frontend->run(frontend, start, count);
+   if (!frontend) {
+      frontend = draw->pt.front.vsplit;
 
-   frontend->finish( frontend );
+      frontend->prepare( frontend, prim, middle, opt );
+
+      draw->pt.frontend = frontend;
+      draw->pt.eltSize = draw->pt.user.eltSize;
+      draw->pt.prim = prim;
+      draw->pt.opt = opt;
+   }
+
+   if (draw->pt.rebind_parameters) {
+      /* update constants, viewport dims, clip planes, etc */
+      middle->bind_parameters(middle);
+      draw->pt.rebind_parameters = FALSE;
+   }
+
+   frontend->run( frontend, start, count );
 
    return TRUE;
 }
+
+void draw_pt_flush( struct draw_context *draw, unsigned flags )
+{
+   assert(flags);
+
+   if (draw->pt.frontend) {
+      draw->pt.frontend->flush( draw->pt.frontend, flags );
+
+      /* don't prepare if we only are flushing the backend */
+      if (flags & DRAW_FLUSH_STATE_CHANGE)
+         draw->pt.frontend = NULL;
+   }
+
+   if (flags & DRAW_FLUSH_PARAMETER_CHANGE) {
+      draw->pt.rebind_parameters = TRUE;
+   }
+}
+
 
 
 boolean draw_pt_init( struct draw_context *draw )
@@ -193,28 +245,24 @@ draw_print_arrays(struct draw_context *draw, uint prim, int start, uint count)
       uint j;
 
       if (draw->pt.user.eltSize) {
-         const char *elts;
-
          /* indexed arrays */
-         elts = (const char *) draw->pt.user.elts;
-         elts += draw->pt.index_buffer.offset;
 
          switch (draw->pt.user.eltSize) {
          case 1:
             {
-               const ubyte *elem = (const ubyte *) elts;
+               const ubyte *elem = (const ubyte *) draw->pt.user.elts;
                ii = elem[start + i];
             }
             break;
          case 2:
             {
-               const ushort *elem = (const ushort *) elts;
+               const ushort *elem = (const ushort *) draw->pt.user.elts;
                ii = elem[start + i];
             }
             break;
          case 4:
             {
-               const uint *elem = (const uint *) elts;
+               const uint *elem = (const uint *) draw->pt.user.elts;
                ii = elem[start + i];
             }
             break;
@@ -234,7 +282,7 @@ draw_print_arrays(struct draw_context *draw, uint prim, int start, uint count)
 
       for (j = 0; j < draw->pt.nr_vertex_elements; j++) {
          uint buf = draw->pt.vertex_element[j].vertex_buffer_index;
-         ubyte *ptr = (ubyte *) draw->pt.user.vbuffer[buf];
+         ubyte *ptr = (ubyte *) draw->pt.user.vbuffer[buf].map;
 
          if (draw->pt.vertex_element[j].instance_divisor) {
             ii = draw->instance_id / draw->pt.vertex_element[j].instance_divisor;
@@ -278,6 +326,13 @@ draw_print_arrays(struct draw_context *draw, uint prim, int start, uint count)
                             (void *) u);
             }
             break;
+         case PIPE_FORMAT_A8R8G8B8_UNORM:
+            {
+               ubyte *u = (ubyte *) ptr;
+               debug_printf("ARGB %d %d %d %d  @ %p\n", u[0], u[1], u[2], u[3],
+                            (void *) u);
+            }
+            break;
          default:
             debug_printf("other format %s (fix me)\n",
                      util_format_name(draw->pt.vertex_element[j].src_format));
@@ -290,8 +345,9 @@ draw_print_arrays(struct draw_context *draw, uint prim, int start, uint count)
 /** Helper code for below */
 #define PRIM_RESTART_LOOP(elements) \
    do { \
-      for (i = start; i < end; i++) { \
-         if (elements[i] == info->restart_index) { \
+      for (j = 0; j < count; j++) {               \
+         i = draw_overflow_uadd(start, j, MAX_LOOP_IDX);  \
+         if (i < elt_max && elements[i] == info->restart_index) { \
             if (cur_count > 0) { \
                /* draw elts up to prev pos */ \
                draw_pt_arrays(draw, prim, cur_start, cur_count); \
@@ -322,12 +378,15 @@ draw_pt_arrays_restart(struct draw_context *draw,
    const unsigned prim = info->mode;
    const unsigned start = info->start;
    const unsigned count = info->count;
-   const unsigned end = start + count;
-   unsigned i, cur_start, cur_count;
+   const unsigned elt_max = draw->pt.user.eltMax;
+   unsigned i, j, cur_start, cur_count;
+   /* The largest index within a loop using the i variable as the index.
+    * Used for overflow detection */
+   const unsigned MAX_LOOP_IDX = 0xffffffff;
 
    assert(info->primitive_restart);
 
-   if (draw->pt.user.elts) {
+   if (draw->pt.user.eltSize) {
       /* indexed prims (draw_elements) */
       cur_start = start;
       cur_count = 0;
@@ -364,84 +423,67 @@ draw_pt_arrays_restart(struct draw_context *draw,
 }
 
 
-
 /**
- * Non-instanced drawing.
- * \sa draw_arrays_instanced
+ * Resolve true values within pipe_draw_info.
+ * If we're rendering from transform feedback/stream output
+ * buffers both the count and max_index need to be computed
+ * from the attached stream output target. 
  */
-void
-draw_arrays(struct draw_context *draw, unsigned prim,
-            unsigned start, unsigned count)
+static void
+resolve_draw_info(const struct pipe_draw_info *raw_info,
+                  struct pipe_draw_info *info)
 {
-   draw_arrays_instanced(draw, prim, start, count, 0, 1);
-}
+   memcpy(info, raw_info, sizeof(struct pipe_draw_info));
 
+   if (raw_info->count_from_stream_output) {
+      struct draw_so_target *target =
+         (struct draw_so_target *)info->count_from_stream_output;
+      info->count = target->emitted_vertices;
 
-/**
- * Instanced drawing.
- * \sa draw_vbo
- */
-void
-draw_arrays_instanced(struct draw_context *draw,
-                      unsigned mode,
-                      unsigned start,
-                      unsigned count,
-                      unsigned startInstance,
-                      unsigned instanceCount)
-{
-   struct pipe_draw_info info;
-
-   util_draw_init_info(&info);
-
-   info.mode = mode;
-   info.start = start;
-   info.count = count;
-   info.start_instance = startInstance;
-   info.instance_count = instanceCount;
-
-   info.indexed = (draw->pt.user.elts != NULL);
-   if (!info.indexed) {
-      info.min_index = start;
-      info.max_index = start + count - 1;
+      /* Stream output draw can not be indexed */
+      debug_assert(!info->indexed);
+      info->max_index = info->count - 1;
    }
-
-   draw_vbo(draw, &info);
 }
-
 
 /**
  * Draw vertex arrays.
  * This is the main entrypoint into the drawing module.  If drawing an indexed
- * primitive, the draw_set_index_buffer() and draw_set_mapped_index_buffer()
- * functions should have already been called to specify the element/index
- * buffer information.
+ * primitive, the draw_set_indexes() function should have already been called
+ * to specify the element/index buffer information.
  */
 void
 draw_vbo(struct draw_context *draw,
          const struct pipe_draw_info *info)
 {
-   unsigned reduced_prim = u_reduced_prim(info->mode);
    unsigned instance;
+   unsigned index_limit;
+   unsigned count;
+   unsigned fpstate = util_fpstate_get();
+   struct pipe_draw_info resolved_info;
+
+   /* Make sure that denorms are treated like zeros. This is 
+    * the behavior required by D3D10. OpenGL doesn't care.
+    */
+   util_fpstate_set_denorms_to_zero(fpstate);
+
+   resolve_draw_info(info, &resolved_info);
+   info = &resolved_info;
 
    assert(info->instance_count > 0);
    if (info->indexed)
       assert(draw->pt.user.elts);
 
-   draw->pt.user.eltSize =
-      (info->indexed) ? draw->pt.index_buffer.index_size : 0;
+   count = info->count;
 
    draw->pt.user.eltBias = info->index_bias;
    draw->pt.user.min_index = info->min_index;
    draw->pt.user.max_index = info->max_index;
-
-   if (reduced_prim != draw->reduced_prim) {
-      draw_do_flush(draw, DRAW_FLUSH_STATE_CHANGE);
-      draw->reduced_prim = reduced_prim;
-   }
+   draw->pt.user.eltSize = info->indexed ? draw->pt.user.eltSizeIB : 0;
 
    if (0)
       debug_printf("draw_vbo(mode=%u start=%u count=%u):\n",
-                   info->mode, info->start, info->count);
+                   info->mode, info->start, count);
 
    if (0)
       tgsi_dump(draw->vs.vertex_shader->state.tokens, 0);
@@ -459,22 +501,40 @@ draw_vbo(struct draw_context *draw,
       }
       debug_printf("Buffers:\n");
       for (i = 0; i < draw->pt.nr_vertex_buffers; i++) {
-         debug_printf("  %u: stride=%u offset=%u ptr=%p\n",
+         debug_printf("  %u: stride=%u offset=%u size=%d ptr=%p\n",
                       i,
                       draw->pt.vertex_buffer[i].stride,
                       draw->pt.vertex_buffer[i].buffer_offset,
-                      draw->pt.user.vbuffer[i]);
+                      (int) draw->pt.user.vbuffer[i].size,
+                      draw->pt.user.vbuffer[i].map);
       }
    }
 
    if (0)
-      draw_print_arrays(draw, info->mode, info->start, MIN2(info->count, 20));
+      draw_print_arrays(draw, info->mode, info->start, MIN2(count, 20));
 
-   draw->pt.max_index = util_draw_max_index(draw->pt.vertex_buffer,
-                                            draw->pt.nr_vertex_buffers,
-                                            draw->pt.vertex_element,
-                                            draw->pt.nr_vertex_elements,
-                                            info);
+   index_limit = util_draw_max_index(draw->pt.vertex_buffer,
+                                     draw->pt.vertex_element,
+                                     draw->pt.nr_vertex_elements,
+                                     info);
+#if HAVE_LLVM
+   if (!draw->llvm)
+#endif
+   {
+      if (index_limit == 0) {
+      /* one of the buffers is too small to do any valid drawing */
+         debug_warning("draw: VBO too small to draw anything\n");
+         util_fpstate_set(fpstate);
+         return;
+      }
+   }
+
+   /* If we're collecting stats then make sure we start from scratch */
+   if (draw->collect_statistics) {
+      memset(&draw->statistics, 0, sizeof(draw->statistics));
+   }
+
+   draw->pt.max_index = index_limit - 1;
 
    /*
     * TODO: We could use draw->pt.max_index to further narrow
@@ -483,12 +543,27 @@ draw_vbo(struct draw_context *draw,
 
    for (instance = 0; instance < info->instance_count; instance++) {
       draw->instance_id = instance + info->start_instance;
+      draw->start_instance = info->start_instance;
+      /* check for overflow */
+      if (draw->instance_id < instance ||
+          draw->instance_id < info->start_instance) {
+         /* if we overflown just set the instance id to the max */
+         draw->instance_id = 0xffffffff;
+      }
+
+      draw_new_instance(draw);
 
       if (info->primitive_restart) {
          draw_pt_arrays_restart(draw, info);
       }
       else {
-         draw_pt_arrays(draw, info->mode, info->start, info->count);
+         draw_pt_arrays(draw, info->mode, info->start, count);
       }
    }
+
+   /* If requested emit the pipeline statistics for this run */
+   if (draw->collect_statistics) {
+      draw->render->pipeline_statistics(draw->render, &draw->statistics);
+   }
+   util_fpstate_set(fpstate);
 }

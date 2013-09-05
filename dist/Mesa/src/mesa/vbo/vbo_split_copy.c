@@ -1,7 +1,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Authors:
  *    Keith Whitwell <keith@tungstengraphics.com>
@@ -32,7 +32,7 @@
 #include "main/glheader.h"
 #include "main/bufferobj.h"
 #include "main/imports.h"
-#include "main/image.h"
+#include "main/glformats.h"
 #include "main/macros.h"
 #include "main/mtypes.h"
 
@@ -171,6 +171,8 @@ dump_draw_info(struct gl_context *ctx,
 static void
 flush( struct copy_context *copy )
 {
+   struct gl_context *ctx = copy->ctx;
+   const struct gl_client_array **saved_arrays = ctx->Array._DrawArrays;
    GLuint i;
 
    /* Set some counters: 
@@ -189,14 +191,20 @@ flush( struct copy_context *copy )
    (void) dump_draw_info;
 #endif
 
-   copy->draw( copy->ctx,
-	       copy->dstarray_ptr,
+   ctx->Array._DrawArrays = copy->dstarray_ptr;
+   ctx->NewDriverState |= ctx->DriverFlags.NewArray;
+
+   copy->draw( ctx,
 	       copy->dstprim,
 	       copy->dstprim_nr,
 	       &copy->dstib,
 	       GL_TRUE,
 	       0,
-	       copy->dstbuf_nr - 1 );
+	       copy->dstbuf_nr - 1,
+	       NULL );
+
+   ctx->Array._DrawArrays = saved_arrays;
+   ctx->NewDriverState |= ctx->DriverFlags.NewArray;
 
    /* Reset all pointers: 
     */
@@ -444,7 +452,7 @@ replay_init( struct copy_context *copy )
 	 copy->vertex_size += attr_size(copy->array[i]);
       
 	 if (_mesa_is_bufferobj(vbo) && !_mesa_bufferobj_mapped(vbo)) 
-	    ctx->Driver.MapBuffer(ctx, GL_ARRAY_BUFFER, GL_READ_ONLY, vbo);
+	    ctx->Driver.MapBufferRange(ctx, 0, vbo->Size, GL_MAP_READ_BIT, vbo);
 
 	 copy->varying[j].src_ptr = ADD_POINTERS(vbo->Pointer,
 						 copy->array[i]->Ptr);
@@ -459,8 +467,8 @@ replay_init( struct copy_context *copy )
     */
    if (_mesa_is_bufferobj(copy->ib->obj) &&
        !_mesa_bufferobj_mapped(copy->ib->obj)) 
-      ctx->Driver.MapBuffer(ctx, GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY,
-			    copy->ib->obj);
+      ctx->Driver.MapBufferRange(ctx, 0, copy->ib->obj->Size, GL_MAP_READ_BIT,
+				 copy->ib->obj);
 
    srcptr = (const GLubyte *) ADD_POINTERS(copy->ib->obj->Pointer,
                                            copy->ib->ptr);
@@ -518,6 +526,7 @@ replay_init( struct copy_context *copy )
       dst->Ptr = copy->dstbuf + offset;
       dst->Enabled = GL_TRUE;
       dst->Normalized = src->Normalized; 
+      dst->Integer = src->Integer;
       dst->BufferObj = ctx->Shared->NullBufferObj;
       dst->_ElementSize = src->_ElementSize;
       dst->_MaxElement = copy->dstbuf_size; /* may be less! */
@@ -564,14 +573,14 @@ replay_finish( struct copy_context *copy )
    for (i = 0; i < copy->nr_varying; i++) {
       struct gl_buffer_object *vbo = copy->varying[i].array->BufferObj;
       if (_mesa_is_bufferobj(vbo) && _mesa_bufferobj_mapped(vbo)) 
-	 ctx->Driver.UnmapBuffer(ctx, GL_ARRAY_BUFFER, vbo);
+	 ctx->Driver.UnmapBuffer(ctx, vbo);
    }
 
    /* Unmap index buffer:
     */
    if (_mesa_is_bufferobj(copy->ib->obj) &&
        _mesa_bufferobj_mapped(copy->ib->obj)) {
-      ctx->Driver.UnmapBuffer(ctx, GL_ELEMENT_ARRAY_BUFFER, copy->ib->obj);
+      ctx->Driver.UnmapBuffer(ctx, copy->ib->obj);
    }
 }
 

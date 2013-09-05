@@ -29,7 +29,6 @@
 
 import sys
 import xml.parsers.expat
-import binascii
 import optparse
 
 from model import *
@@ -215,6 +214,7 @@ class TraceParser(XmlParser):
         method = attrs['method']
         args = []
         ret = None
+        time = None
         while self.token.type == ELEMENT_START:
             if self.token.name_or_data == 'arg':
                 arg = self.parse_arg()
@@ -224,11 +224,13 @@ class TraceParser(XmlParser):
             elif self.token.name_or_data == 'call':
                 # ignore nested function calls
                 self.parse_call()
+            elif self.token.name_or_data == 'time':
+                time = self.parse_time()
             else:
                 raise TokenMismatch("<arg ...> or <ret ...>", self.token)
         self.element_end('call')
         
-        return Call(no, klass, method, args, ret)
+        return Call(no, klass, method, args, ret, time)
 
     def parse_arg(self):
         attrs = self.element_start('arg')
@@ -244,6 +246,12 @@ class TraceParser(XmlParser):
         self.element_end('ret')
 
         return value
+
+    def parse_time(self):
+        attrs = self.element_start('time')
+        time = self.parse_value();
+        self.element_end('time')
+        return time
 
     def parse_value(self):
         expected_tokens = ('null', 'bool', 'int', 'uint', 'float', 'string', 'enum', 'array', 'struct', 'ptr', 'bytes')
@@ -296,9 +304,9 @@ class TraceParser(XmlParser):
         
     def parse_bytes(self):
         self.element_start('bytes')
-        value = binascii.a2b_hex(self.character_data())
+        value = self.character_data()
         self.element_end('bytes')
-        return Literal(value)
+        return Blob(value)
         
     def parse_array(self):
         self.element_start('array')
@@ -344,9 +352,9 @@ class TraceParser(XmlParser):
     
 class TraceDumper(TraceParser):
     
-    def __init__(self, fp):
+    def __init__(self, fp, outStream = sys.stdout):
         TraceParser.__init__(self, fp)
-        self.formatter = format.DefaultFormatter(sys.stdout)
+        self.formatter = format.DefaultFormatter(outStream)
         self.pretty_printer = PrettyPrinter(self.formatter)
 
     def handle_call(self, call):
@@ -364,23 +372,23 @@ class Main:
         optparser = self.get_optparser()
         (options, args) = optparser.parse_args(sys.argv[1:])
     
-        if args:
-            for arg in args:
-                if arg.endswith('.gz'):
-                    from gzip import GzipFile
-                    stream = GzipFile(arg, 'rt')
-                elif arg.endswith('.bz2'):
-                    from bz2 import BZ2File
-                    stream = BZ2File(arg, 'rU')
-                else:
-                    stream = open(arg, 'rt')
-                self.process_arg(stream, options)
-        else:
+        if not args:
+            optparser.error('insufficient number of arguments')
+
+        for arg in args:
+            if arg.endswith('.gz'):
+                from gzip import GzipFile
+                stream = GzipFile(arg, 'rt')
+            elif arg.endswith('.bz2'):
+                from bz2 import BZ2File
+                stream = BZ2File(arg, 'rU')
+            else:
+                stream = open(arg, 'rt')
             self.process_arg(stream, options)
 
     def get_optparser(self):
         optparser = optparse.OptionParser(
-            usage="\n\t%prog [options] [traces] ...")
+            usage="\n\t%prog [options] TRACE  [...]")
         return optparser
 
     def process_arg(self, stream, options):

@@ -92,7 +92,45 @@ def generate(env):
             'HAVE_STDINT_H',
         ])
         env.Prepend(LIBPATH = [os.path.join(llvm_dir, 'lib')])
-        if llvm_version >= distutils.version.LooseVersion('2.7'):
+        if llvm_version >= distutils.version.LooseVersion('3.2'):
+            # 3.2
+            env.Prepend(LIBS = [
+                'LLVMBitWriter', 'LLVMX86Disassembler', 'LLVMX86AsmParser',
+                'LLVMX86CodeGen', 'LLVMX86Desc', 'LLVMSelectionDAG',
+                'LLVMAsmPrinter', 'LLVMMCParser', 'LLVMX86AsmPrinter',
+                'LLVMX86Utils', 'LLVMX86Info', 'LLVMJIT',
+                'LLVMExecutionEngine', 'LLVMCodeGen', 'LLVMScalarOpts',
+                'LLVMInstCombine', 'LLVMTransformUtils', 'LLVMipa',
+                'LLVMAnalysis', 'LLVMTarget', 'LLVMMC', 'LLVMCore',
+                'LLVMSupport', 'LLVMRuntimeDyld', 'LLVMObject'
+            ])
+        elif llvm_version >= distutils.version.LooseVersion('3.0'):
+            # 3.0
+            env.Prepend(LIBS = [
+                'LLVMBitWriter', 'LLVMX86Disassembler', 'LLVMX86AsmParser',
+                'LLVMX86CodeGen', 'LLVMX86Desc', 'LLVMSelectionDAG',
+                'LLVMAsmPrinter', 'LLVMMCParser', 'LLVMX86AsmPrinter',
+                'LLVMX86Utils', 'LLVMX86Info', 'LLVMJIT',
+                'LLVMExecutionEngine', 'LLVMCodeGen', 'LLVMScalarOpts',
+                'LLVMInstCombine', 'LLVMTransformUtils', 'LLVMipa',
+                'LLVMAnalysis', 'LLVMTarget', 'LLVMMC', 'LLVMCore',
+                'LLVMSupport'
+            ])
+        elif llvm_version >= distutils.version.LooseVersion('2.9'):
+            # 2.9
+            env.Prepend(LIBS = [
+                'LLVMObject', 'LLVMMCJIT', 'LLVMMCDisassembler',
+                'LLVMLinker', 'LLVMipo', 'LLVMInterpreter',
+                'LLVMInstrumentation', 'LLVMJIT', 'LLVMExecutionEngine',
+                'LLVMBitWriter', 'LLVMX86Disassembler', 'LLVMX86AsmParser',
+                'LLVMMCParser', 'LLVMX86AsmPrinter', 'LLVMX86CodeGen',
+                'LLVMSelectionDAG', 'LLVMX86Utils', 'LLVMX86Info', 'LLVMAsmPrinter',
+                'LLVMCodeGen', 'LLVMScalarOpts', 'LLVMInstCombine',
+                'LLVMTransformUtils', 'LLVMipa', 'LLVMAsmParser',
+                'LLVMArchive', 'LLVMBitReader', 'LLVMAnalysis', 'LLVMTarget',
+                'LLVMCore', 'LLVMMC', 'LLVMSupport',
+            ])
+        elif llvm_version >= distutils.version.LooseVersion('2.7'):
             # 2.7
             env.Prepend(LIBS = [
                 'LLVMLinker', 'LLVMipo', 'LLVMInterpreter',
@@ -121,6 +159,8 @@ def generate(env):
         env.Append(LIBS = [
             'imagehlp',
             'psapi',
+            'shell32',
+            'advapi32'
         ])
         if env['msvc']:
             # Some of the LLVM C headers use the inline keyword without
@@ -134,15 +174,31 @@ def generate(env):
                 env.Append(LINKFLAGS = ['/nodefaultlib:LIBCMT'])
     else:
         if not env.Detect('llvm-config'):
-            print 'scons: llvm-config script not found' % llvm_version
+            print 'scons: llvm-config script not found'
             return
 
         llvm_version = env.backtick('llvm-config --version').rstrip()
         llvm_version = distutils.version.LooseVersion(llvm_version)
 
         try:
-            env.ParseConfig('llvm-config --cppflags')
-            env.ParseConfig('llvm-config --libs')
+            # Treat --cppflags specially to prevent NDEBUG from disabling
+            # assertion failures in debug builds.
+            cppflags = env.ParseFlags('!llvm-config --cppflags')
+            try:
+                cppflags['CPPDEFINES'].remove('NDEBUG')
+            except ValueError:
+                pass
+            env.MergeFlags(cppflags)
+
+            components = ['engine', 'bitwriter', 'x86asmprinter']
+
+            if llvm_version >= distutils.version.LooseVersion('3.1'):
+                components.append('mcjit')
+
+            if llvm_version >= distutils.version.LooseVersion('3.2'):
+                env.Append(CXXFLAGS = ('-fno-rtti',))
+
+            env.ParseConfig('llvm-config --libs ' + ' '.join(components))
             env.ParseConfig('llvm-config --ldflags')
         except OSError:
             print 'scons: llvm-config version %s failed' % llvm_version

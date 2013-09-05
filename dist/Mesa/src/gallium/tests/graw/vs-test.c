@@ -23,7 +23,7 @@ unsigned show_fps = 0;
 static void usage(char *name)
 {
    fprintf(stderr, "usage: %s [ options ] shader_filename\n", name);
-#ifndef WIN32
+#ifndef _WIN32
    fprintf(stderr, "\n" );
    fprintf(stderr, "options:\n");
    fprintf(stderr, "    -fps  show frames per second\n");
@@ -32,8 +32,8 @@ static void usage(char *name)
 
 
 enum pipe_format formats[] = {
-   PIPE_FORMAT_R8G8B8A8_UNORM,
-   PIPE_FORMAT_B8G8R8A8_UNORM,
+   PIPE_FORMAT_RGBA8888_UNORM,
+   PIPE_FORMAT_BGRA8888_UNORM,
    PIPE_FORMAT_NONE
 };
 
@@ -110,8 +110,8 @@ static void init_fs_constbuf( void )
                               sizeof constants);
 
 
-   ctx->set_constant_buffer(ctx,
-                            PIPE_SHADER_FRAGMENT, 0,
+   pipe_set_constant_buffer(ctx,
+                            PIPE_SHADER_VERTEX, 0,
                             constbuf);
 }
 
@@ -136,7 +136,7 @@ static void set_viewport( float x, float y,
    vp.translate[2] = half_depth + z;
    vp.translate[3] = 0.0f;
 
-   ctx->set_viewport_state( ctx, &vp );
+   ctx->set_viewport_states( ctx, 0, 1, &vp );
 }
 
 static void set_vertices( void )
@@ -170,14 +170,17 @@ static void set_vertices( void )
       }
    }
 
+   memset(&vbuf, 0, sizeof vbuf);
+
    vbuf.stride = sizeof( struct vertex );
    vbuf.buffer_offset = 0;
-   vbuf.buffer = screen->user_buffer_create(screen,
-                                            vertices,
-                                            sizeof(vertices),
-                                            PIPE_BIND_VERTEX_BUFFER);
+   vbuf.buffer = pipe_buffer_create_with_data(ctx,
+                                              PIPE_BIND_VERTEX_BUFFER,
+                                              PIPE_USAGE_STATIC,
+                                              sizeof(vertices),
+                                              vertices);
 
-   ctx->set_vertex_buffers(ctx, 1, &vbuf);
+   ctx->set_vertex_buffers(ctx, 0, 1, &vbuf);
 }
 
 static void set_vertex_shader( void )
@@ -223,11 +226,11 @@ static void set_fragment_shader( void )
 
 static void draw( void )
 {
-   float clear_color[4] = {.1,.3,.5,0};
+   union pipe_color_union clear_color = { {.1,.3,.5,0} };
 
-   ctx->clear(ctx, PIPE_CLEAR_COLOR, clear_color, 0, 0);
+   ctx->clear(ctx, PIPE_CLEAR_COLOR, &clear_color, 0, 0);
    util_draw_arrays(ctx, PIPE_PRIM_POINTS, 0, Elements(vertices));
-   ctx->flush(ctx, NULL);
+   ctx->flush(ctx, NULL, 0);
 
    graw_save_surface_to_file(ctx, surf, NULL);
 
@@ -319,12 +322,10 @@ static void init_tex( void )
    {
       struct pipe_transfer *t;
       uint32_t *ptr;
-      t = pipe_get_transfer(ctx, samptex,
-                            0, 0, /* level, layer */
-                            PIPE_TRANSFER_READ,
-                            0, 0, SIZE, SIZE); /* x, y, width, height */
-
-      ptr = ctx->transfer_map(ctx, t);
+      ptr = pipe_transfer_map(ctx, samptex,
+                              0, 0, /* level, layer */
+                              PIPE_TRANSFER_READ,
+                              0, 0, SIZE, SIZE, &t); /* x, y, width, height */
 
       if (memcmp(ptr, tex2d, sizeof tex2d) != 0) {
          assert(0);
@@ -332,8 +333,6 @@ static void init_tex( void )
       }
 
       ctx->transfer_unmap(ctx, t);
-
-      ctx->transfer_destroy(ctx, t);
    }
 
    memset(&sv_template, 0, sizeof sv_template);
@@ -416,7 +415,6 @@ static void init( void )
       exit(4);
 
    surf_tmpl.format = templat.format;
-   surf_tmpl.usage = PIPE_BIND_RENDER_TARGET;
    surf_tmpl.u.tex.level = 0;
    surf_tmpl.u.tex.first_layer = 0;
    surf_tmpl.u.tex.last_layer = 0;
@@ -455,7 +453,9 @@ static void init( void )
       memset(&rasterizer, 0, sizeof rasterizer);
       rasterizer.cull_face = PIPE_FACE_NONE;
       rasterizer.point_size = 8.0;
-      rasterizer.gl_rasterization_rules = 1;
+      rasterizer.half_pixel_center = 1;
+      rasterizer.bottom_edge_rule = 1;
+      rasterizer.depth_clip = 1;
       handle = ctx->create_rasterizer_state(ctx, &rasterizer);
       ctx->bind_rasterizer_state(ctx, handle);
    }

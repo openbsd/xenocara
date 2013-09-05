@@ -54,6 +54,8 @@
 #include "ir_optimization.h"
 #include "glsl_types.h"
 
+namespace {
+
 static bool debug = false;
 
 class ir_tree_grafting_visitor : public ir_hierarchical_visitor {
@@ -75,6 +77,8 @@ public:
    virtual ir_visitor_status visit_enter(class ir_loop *);
    virtual ir_visitor_status visit_enter(class ir_swizzle *);
    virtual ir_visitor_status visit_enter(class ir_texture *);
+
+   ir_visitor_status check_graft(ir_instruction *ir, ir_variable *var);
 
    bool do_graft(ir_rvalue **rvalue);
 
@@ -148,6 +152,28 @@ ir_tree_grafting_visitor::visit_enter(ir_loop *ir)
    return visit_stop;
 }
 
+/**
+ * Check if we can continue grafting after writing to a variable.  If the
+ * expression we're trying to graft references the variable, we must stop.
+ *
+ * \param ir   An instruction that writes to a variable.
+ * \param var  The variable being updated.
+ */
+ir_visitor_status
+ir_tree_grafting_visitor::check_graft(ir_instruction *ir, ir_variable *var)
+{
+   if (dereferences_variable(this->graft_assign->rhs, var)) {
+      if (debug) {
+	 printf("graft killed by: ");
+	 ir->print();
+	 printf("\n");
+      }
+      return visit_stop;
+   }
+
+   return visit_continue;
+}
+
 ir_visitor_status
 ir_tree_grafting_visitor::visit_leave(ir_assignment *ir)
 {
@@ -158,17 +184,7 @@ ir_tree_grafting_visitor::visit_leave(ir_assignment *ir)
    /* If this assignment updates a variable used in the assignment
     * we're trying to graft, then we're done.
     */
-   if (dereferences_variable(this->graft_assign->rhs,
-			     ir->lhs->variable_referenced())) {
-      if (debug) {
-	 printf("graft killed by: ");
-	 ir->print();
-	 printf("\n");
-      }
-      return visit_stop;
-   }
-
-   return visit_continue;
+   return check_graft(ir, ir->lhs->variable_referenced());
 }
 
 ir_visitor_status
@@ -188,15 +204,19 @@ ir_tree_grafting_visitor::visit_enter(ir_function_signature *ir)
 ir_visitor_status
 ir_tree_grafting_visitor::visit_enter(ir_call *ir)
 {
-   exec_list_iterator sig_iter = ir->get_callee()->parameters.iterator();
+   exec_list_iterator sig_iter = ir->callee->parameters.iterator();
    /* Reminder: iterating ir_call iterates its parameters. */
    foreach_iter(exec_list_iterator, iter, *ir) {
       ir_variable *sig_param = (ir_variable *)sig_iter.get();
       ir_rvalue *ir = (ir_rvalue *)iter.get();
       ir_rvalue *new_ir = ir;
 
-      if (sig_param->mode != ir_var_in && sig_param->mode != ir_var_const_in)
+      if (sig_param->mode != ir_var_function_in
+          && sig_param->mode != ir_var_const_in) {
+	 if (check_graft(ir, sig_param) == visit_stop)
+	    return visit_stop;
 	 continue;
+      }
 
       if (do_graft(&new_ir)) {
 	 ir->replace_with(new_ir);
@@ -204,6 +224,9 @@ ir_tree_grafting_visitor::visit_enter(ir_call *ir)
       }
       sig_iter.next();
    }
+
+   if (ir->return_deref && check_graft(ir, ir->return_deref->var) == visit_stop)
+      return visit_stop;
 
    return visit_continue;
 }
@@ -251,6 +274,7 @@ ir_tree_grafting_visitor::visit_enter(ir_texture *ir)
 
    switch (ir->op) {
    case ir_tex:
+   case ir_lod:
       break;
    case ir_txb:
       if (do_graft(&ir->lod_info.bias))
@@ -258,8 +282,13 @@ ir_tree_grafting_visitor::visit_enter(ir_texture *ir)
       break;
    case ir_txf:
    case ir_txl:
+   case ir_txs:
       if (do_graft(&ir->lod_info.lod))
 	 return visit_stop;
+      break;
+   case ir_txf_ms:
+      if (do_graft(&ir->lod_info.sample_index))
+         return visit_stop;
       break;
    case ir_txd:
       if (do_graft(&ir->lod_info.grad.dPdx) ||
@@ -327,11 +356,12 @@ tree_grafting_basic_block(ir_instruction *bb_first,
       if (!lhs_var)
 	 continue;
 
-      if (lhs_var->mode == ir_var_out ||
-	  lhs_var->mode == ir_var_inout)
+      if (lhs_var->mode == ir_var_function_out ||
+	  lhs_var->mode == ir_var_function_inout ||
+          lhs_var->mode == ir_var_shader_out)
 	 continue;
 
-      variable_entry *entry = info->refs->get_variable_entry(lhs_var);
+      ir_variable_refcount_entry *entry = info->refs->get_variable_entry(lhs_var);
 
       if (!entry->declaration ||
 	  entry->assigned_count != 1 ||
@@ -347,6 +377,8 @@ tree_grafting_basic_block(ir_instruction *bb_first,
       info->progress |= try_tree_grafting(assign, lhs_var, bb_last);
    }
 }
+
+} /* unnamed namespace */
 
 /**
  * Does a copy propagation pass on the code present in the instruction stream.

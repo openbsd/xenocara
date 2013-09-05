@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0.3
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef PROG_EXECUTE_H
@@ -39,6 +39,10 @@ typedef void (*FetchTexelDerivFunc)(struct gl_context *ctx, const GLfloat texcoo
                                     GLuint unit, GLfloat color[4]);
 
 
+/** NOTE: This must match SWRAST_MAX_WIDTH */
+#define PROG_MAX_WIDTH 16384
+
+
 /**
  * Virtual machine state used during execution of vertex/fragment programs.
  */
@@ -47,7 +51,7 @@ struct gl_program_machine
    const struct gl_program *CurProgram;
 
    /** Fragment Input attributes */
-   GLfloat (*Attribs)[MAX_WIDTH][4];
+   GLfloat (*Attribs)[PROG_MAX_WIDTH][4];
    GLfloat (*DerivX)[4];
    GLfloat (*DerivY)[4];
    GLuint NumDeriv; /**< Max index into DerivX/Y arrays */

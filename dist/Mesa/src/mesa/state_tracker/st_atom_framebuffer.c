@@ -33,6 +33,7 @@
  
 #include "st_context.h"
 #include "st_atom.h"
+#include "st_cb_bitmap.h"
 #include "st_cb_fbo.h"
 #include "st_texture.h"
 #include "pipe/p_context.h"
@@ -52,12 +53,13 @@ update_renderbuffer_surface(struct st_context *st,
                             struct st_renderbuffer *strb)
 {
    struct pipe_context *pipe = st->pipe;
-   struct pipe_resource *resource = strb->rtt->pt;
+   struct pipe_resource *resource = strb->rtt ? strb->rtt->pt : strb->texture;
    int rtt_width = strb->Base.Width;
    int rtt_height = strb->Base.Height;
    enum pipe_format format = st->ctx->Color.sRGBEnabled ? resource->format : util_format_linear(resource->format);
 
    if (!strb->surface ||
+       strb->surface->texture->nr_samples != strb->Base.NumSamples ||
        strb->surface->format != format ||
        strb->surface->texture != resource ||
        strb->surface->width != rtt_width ||
@@ -70,7 +72,6 @@ update_renderbuffer_surface(struct st_context *st,
             struct pipe_surface surf_tmpl;
             memset(&surf_tmpl, 0, sizeof(surf_tmpl));
             surf_tmpl.format = format;
-            surf_tmpl.usage = PIPE_BIND_RENDER_TARGET;
             surf_tmpl.u.tex.level = level;
             surf_tmpl.u.tex.first_layer = strb->rtt_face + strb->rtt_slice;
             surf_tmpl.u.tex.last_layer = strb->rtt_face + strb->rtt_slice;
@@ -103,6 +104,9 @@ update_framebuffer_state( struct st_context *st )
    struct st_renderbuffer *strb;
    GLuint i;
 
+   st_flush_bitmap_cache(st);
+
+   st->state.fb_orientation = st_fb_orientation(fb);
    framebuffer->width = fb->Width;
    framebuffer->height = fb->Height;
 
@@ -117,7 +121,8 @@ update_framebuffer_state( struct st_context *st )
 
       if (strb) {
          /*printf("--------- framebuffer surface rtt %p\n", strb->rtt);*/
-         if (strb->rtt) {
+         if (strb->rtt ||
+             (strb->texture && util_format_is_srgb(strb->texture->format))) {
             /* rendering to a GL texture, may have to update surface */
             update_renderbuffer_surface(st, strb);
          }
@@ -139,7 +144,6 @@ update_framebuffer_state( struct st_context *st )
     */
    strb = st_renderbuffer(fb->Attachment[BUFFER_DEPTH].Renderbuffer);
    if (strb) {
-      strb = st_renderbuffer(strb->Base.Wrapped);
       if (strb->rtt) {
          /* rendering to a GL texture, may have to update surface */
          update_renderbuffer_surface(st, strb);
@@ -149,7 +153,6 @@ update_framebuffer_state( struct st_context *st )
    else {
       strb = st_renderbuffer(fb->Attachment[BUFFER_STENCIL].Renderbuffer);
       if (strb) {
-         strb = st_renderbuffer(strb->Base.Wrapped);
          assert(strb->surface);
          pipe_surface_reference(&framebuffer->zsbuf, strb->surface);
       }

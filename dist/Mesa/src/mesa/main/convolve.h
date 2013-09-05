@@ -1,7 +1,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
  *
  * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
  *
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -29,23 +29,52 @@
 
 
 #include "compiler.h"
-#include "mfeatures.h"
 
 struct _glapi_table;
 
-
-#if FEATURE_convolve
-
-extern void
-_mesa_init_convolve_dispatch(struct _glapi_table *disp);
-
-#else /* FEATURE_convolve */
-
-static INLINE void
-_mesa_init_convolve_dispatch(struct _glapi_table *disp)
-{
-}
-
-#endif /* FEATURE_convolve */
+void GLAPIENTRY
+_mesa_ConvolutionFilter1D(GLenum target, GLenum internalFormat, GLsizei width,
+                          GLenum format, GLenum type, const GLvoid *image);
+void GLAPIENTRY
+_mesa_ConvolutionFilter2D(GLenum target, GLenum internalFormat, GLsizei width,
+                          GLsizei height, GLenum format, GLenum type,
+                          const GLvoid *image);
+void GLAPIENTRY
+_mesa_ConvolutionParameterf(GLenum target, GLenum pname, GLfloat param);
+void GLAPIENTRY
+_mesa_ConvolutionParameterfv(GLenum target, GLenum pname,
+                             const GLfloat *params);
+void GLAPIENTRY
+_mesa_ConvolutionParameteri(GLenum target, GLenum pname, GLint param);
+void GLAPIENTRY
+_mesa_ConvolutionParameteriv(GLenum target, GLenum pname, const GLint *params);
+void GLAPIENTRY
+_mesa_CopyConvolutionFilter1D(GLenum target, GLenum internalFormat, GLint x,
+                              GLint y, GLsizei width);
+void GLAPIENTRY
+_mesa_CopyConvolutionFilter2D(GLenum target, GLenum internalFormat, GLint x,
+                              GLint y, GLsizei width, GLsizei height);
+void GLAPIENTRY
+_mesa_GetnConvolutionFilterARB(GLenum target, GLenum format, GLenum type,
+                               GLsizei bufSize, GLvoid *image);
+void GLAPIENTRY
+_mesa_GetConvolutionFilter(GLenum target, GLenum format, GLenum type,
+                           GLvoid *image);
+void GLAPIENTRY
+_mesa_GetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat *params);
+void GLAPIENTRY
+_mesa_GetConvolutionParameteriv(GLenum target, GLenum pname, GLint *params);
+void GLAPIENTRY
+_mesa_GetnSeparableFilterARB(GLenum target, GLenum format, GLenum type,
+                             GLsizei rowBufSize, GLvoid *row,
+                             GLsizei columnBufSize,  GLvoid *column,
+                             GLvoid *span);
+void GLAPIENTRY
+_mesa_GetSeparableFilter(GLenum target, GLenum format, GLenum type,
+                         GLvoid *row, GLvoid *column, GLvoid *span);
+void GLAPIENTRY
+_mesa_SeparableFilter2D(GLenum target, GLenum internalFormat, GLsizei width,
+                        GLsizei height, GLenum format, GLenum type,
+                        const GLvoid *row, const GLvoid *column);
 
 #endif /* CONVOLVE_H */

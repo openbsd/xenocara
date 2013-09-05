@@ -78,7 +78,7 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
    /* point_size_per_vertex  - ? */
    /* sprite_coord_mode      - ??? */
    /* flatshade_first        - handled by index translation */
-   /* gl_rasterization_rules - XXX - viewport code */
+   /* half_pixel_center      - XXX - viewport code */
    /* line_width             - draw module */
    /* fill_cw, fill_ccw      - draw module or index translation */
 
@@ -89,6 +89,7 @@ svga_create_rasterizer_state(struct pipe_context *pipe,
    rast->multisampleantialias = templ->multisample;
    rast->antialiasedlineenable = templ->line_smooth;
    rast->lastpixel = templ->line_last_pixel;
+   rast->pointsprite = templ->sprite_coord_enable != 0x0;
    rast->pointsize = templ->point_size;
    rast->hw_unfilled = PIPE_POLYGON_MODE_FILL;
 
@@ -236,11 +237,11 @@ static void svga_bind_rasterizer_state( struct pipe_context *pipe,
    struct svga_context *svga = svga_context(pipe);
    struct svga_rasterizer_state *raster = (struct svga_rasterizer_state *)state;
 
-   svga->curr.rast = raster;
 
    draw_set_rasterizer_state(svga->swtnl.draw, raster ? &raster->templ : NULL,
                              state);
-   
+   svga->curr.rast = raster;
+
    svga->dirty |= SVGA_NEW_RAST;
 }
 

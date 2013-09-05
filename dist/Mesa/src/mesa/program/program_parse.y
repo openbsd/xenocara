@@ -98,7 +98,7 @@ static struct asm_instruction *asm_instruction_copy_ctor(
 
 #define YYLLOC_DEFAULT(Current, Rhs, N)					\
    do {									\
-      if (YYID(N)) {							\
+      if (N) {							\
 	 (Current).first_line = YYRHSLOC(Rhs, 1).first_line;		\
 	 (Current).first_column = YYRHSLOC(Rhs, 1).first_column;	\
 	 (Current).position = YYRHSLOC(Rhs, 1).position;		\
@@ -112,16 +112,14 @@ static struct asm_instruction *asm_instruction_copy_ctor(
 	 (Current).position = YYRHSLOC(Rhs, 0).position			\
 	    + (Current).first_column;					\
       }									\
-   } while(YYID(0))
-
-#define YYLEX_PARAM state->scanner
+   } while(0)
 %}
 
 %pure-parser
 %locations
+%lex-param   { struct asm_parser_state *state }
 %parse-param { struct asm_parser_state *state }
 %error-verbose
-%lex-param { void *scanner }
 
 %union {
    struct asm_instruction *inst;
@@ -269,8 +267,16 @@ static struct asm_instruction *asm_instruction_copy_ctor(
 %type <negate> optionalSign
 
 %{
-extern int yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param,
-    void *yyscanner);
+extern int
+_mesa_program_lexer_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param,
+                        void *yyscanner);
+
+static int
+yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param,
+      struct asm_parser_state *state)
+{
+   return _mesa_program_lexer_lex(yylval_param, yylloc_param, state->scanner);
+}
 %}
 
 %%
@@ -382,6 +388,8 @@ ARL_instruction: ARL maskedAddrReg ',' scalarSrcReg
 
 VECTORop_instruction: VECTOR_OP maskedDstReg ',' swizzleSrcReg
 	{
+	   if ($1.Opcode == OPCODE_DDY)
+	      state->fragment.UsesDFdy = 1;
 	   $$ = asm_instruction_copy_ctor(& $1, & $2, & $4, NULL, NULL);
 	}
 	;
@@ -466,7 +474,6 @@ KIL_instruction: KIL swizzleSrcReg
 	   $$ = asm_instruction_ctor(OPCODE_KIL_NV, NULL, NULL, NULL, NULL);
 	   $$->Base.DstReg.CondMask = $2.CondMask;
 	   $$->Base.DstReg.CondSwizzle = $2.CondSwizzle;
-	   $$->Base.DstReg.CondSrc = $2.CondSrc;
 	   state->fragment.UsesKill = 1;
 	}
 	;
@@ -635,7 +642,6 @@ maskedDstReg: dstReg optionalMask optionalCcMask
 	   $$.WriteMask = $2.mask;
 	   $$.CondMask = $3.CondMask;
 	   $$.CondSwizzle = $3.CondSwizzle;
-	   $$.CondSrc = $3.CondSrc;
 
 	   if ($$.File == PROGRAM_OUTPUT) {
 	      /* Technically speaking, this should check that it is in
@@ -643,7 +649,7 @@ maskedDstReg: dstReg optionalMask optionalCcMask
 	       * set in fragment program mode, so it is somewhat irrelevant.
 	       */
 	      if (state->option.PositionInvariant
-	       && ($$.Index == VERT_RESULT_HPOS)) {
+	       && ($$.Index == VARYING_SLOT_POS)) {
 		 yyerror(& @1, state, "position-invariant programs cannot "
 			 "write position");
 		 YYERROR;
@@ -709,6 +715,7 @@ extSwizSel: INTEGER
 	   }
 
 	   $$.swz = ($1 == 0) ? SWIZZLE_ZERO : SWIZZLE_ONE;
+           $$.negate = 0;
 
 	   /* 0 and 1 are valid for both RGBA swizzle names and XYZW
 	    * swizzle names.
@@ -727,6 +734,10 @@ extSwizSel: INTEGER
 
 	   s = $1[0];
 	   free($1);
+
+           $$.rgba_valid = 0;
+           $$.xyzw_valid = 0;
+           $$.negate = 0;
 
 	   switch (s) {
 	   case 'x':
@@ -802,7 +813,7 @@ srcReg: USED_IDENTIFIER /* temporaryReg | progParamSingle */
 	      break;
 	   case at_attrib:
 	      set_src_reg(& $$, PROGRAM_INPUT, s->attrib_binding);
-	      state->prog->InputsRead |= (1U << $$.Base.Index);
+	      state->prog->InputsRead |= BITFIELD64_BIT($$.Base.Index);
 
 	      if (!validate_inputs(& @1, state)) {
 		 YYERROR;
@@ -817,7 +828,7 @@ srcReg: USED_IDENTIFIER /* temporaryReg | progParamSingle */
 	| attribBinding
 	{
 	   set_src_reg(& $$, PROGRAM_INPUT, $1);
-	   state->prog->InputsRead |= (1U << $$.Base.Index);
+	   state->prog->InputsRead |= BITFIELD64_BIT($$.Base.Index);
 
 	   if (!validate_inputs(& @1, state)) {
 	      YYERROR;
@@ -1028,7 +1039,6 @@ optionalCcMask: '(' ccTest ')'
 	{
 	   $$.CondMask = COND_TR;
 	   $$.CondSwizzle = SWIZZLE_NOOP;
-	   $$.CondSrc = 0;
 	}
 	;
 
@@ -1065,7 +1075,6 @@ ccMaskRule: IDENTIFIER
 
 	   $$.CondMask = cond;
 	   $$.CondSwizzle = SWIZZLE_NOOP;
-	   $$.CondSrc = 0;
 	}
 	;
 
@@ -1088,7 +1097,6 @@ ccMaskRule2: USED_IDENTIFIER
 
 	   $$.CondMask = cond;
 	   $$.CondSwizzle = SWIZZLE_NOOP;
-	   $$.CondSrc = 0;
 	}
 	;
 
@@ -1110,7 +1118,7 @@ ATTRIB_statement: ATTRIB IDENTIFIER '=' attribBinding
 	      YYERROR;
 	   } else {
 	      s->attrib_binding = $4;
-	      state->InputsBound |= (1U << s->attrib_binding);
+	      state->InputsBound |= BITFIELD64_BIT(s->attrib_binding);
 
 	      if (!validate_inputs(& @4, state)) {
 		 YYERROR;
@@ -1143,20 +1151,10 @@ vtxAttribItem: POSITION
 	}
 	| COLOR optColorType
 	{
-	   if (!state->ctx->Extensions.EXT_secondary_color) {
-	      yyerror(& @2, state, "GL_EXT_secondary_color not supported");
-	      YYERROR;
-	   }
-
 	   $$ = VERT_ATTRIB_COLOR0 + $2;
 	}
 	| FOGCOORD
 	{
-	   if (!state->ctx->Extensions.EXT_fog_coord) {
-	      yyerror(& @1, state, "GL_EXT_fog_coord not supported");
-	      YYERROR;
-	   }
-
 	   $$ = VERT_ATTRIB_FOG;
 	}
 	| TEXCOORD optTexCoordUnitNum
@@ -1190,19 +1188,19 @@ vtxWeightNum: INTEGER;
 
 fragAttribItem: POSITION
 	{
-	   $$ = FRAG_ATTRIB_WPOS;
+	   $$ = VARYING_SLOT_POS;
 	}
 	| COLOR optColorType
 	{
-	   $$ = FRAG_ATTRIB_COL0 + $2;
+	   $$ = VARYING_SLOT_COL0 + $2;
 	}
 	| FOGCOORD
 	{
-	   $$ = FRAG_ATTRIB_FOGC;
+	   $$ = VARYING_SLOT_FOGC;
 	}
 	| TEXCOORD optTexCoordUnitNum
 	{
-	   $$ = FRAG_ATTRIB_TEX0 + $2;
+	   $$ = VARYING_SLOT_TEX0 + $2;
 	}
 	;
 
@@ -1854,64 +1852,64 @@ paramConstUse: paramConstScalarUse | paramConstVector;
 paramConstScalarDecl: signedFloatConstant
 	{
 	   $$.count = 4;
-	   $$.data[0] = $1;
-	   $$.data[1] = $1;
-	   $$.data[2] = $1;
-	   $$.data[3] = $1;
+	   $$.data[0].f = $1;
+	   $$.data[1].f = $1;
+	   $$.data[2].f = $1;
+	   $$.data[3].f = $1;
 	}
 	;
 
 paramConstScalarUse: REAL
 	{
 	   $$.count = 1;
-	   $$.data[0] = $1;
-	   $$.data[1] = $1;
-	   $$.data[2] = $1;
-	   $$.data[3] = $1;
+	   $$.data[0].f = $1;
+	   $$.data[1].f = $1;
+	   $$.data[2].f = $1;
+	   $$.data[3].f = $1;
 	}
 	| INTEGER
 	{
 	   $$.count = 1;
-	   $$.data[0] = (float) $1;
-	   $$.data[1] = (float) $1;
-	   $$.data[2] = (float) $1;
-	   $$.data[3] = (float) $1;
+	   $$.data[0].f = (float) $1;
+	   $$.data[1].f = (float) $1;
+	   $$.data[2].f = (float) $1;
+	   $$.data[3].f = (float) $1;
 	}
 	;
 
 paramConstVector: '{' signedFloatConstant '}'
 	{
 	   $$.count = 4;
-	   $$.data[0] = $2;
-	   $$.data[1] = 0.0f;
-	   $$.data[2] = 0.0f;
-	   $$.data[3] = 1.0f;
+	   $$.data[0].f = $2;
+	   $$.data[1].f = 0.0f;
+	   $$.data[2].f = 0.0f;
+	   $$.data[3].f = 1.0f;
 	}
 	| '{' signedFloatConstant ',' signedFloatConstant '}'
 	{
 	   $$.count = 4;
-	   $$.data[0] = $2;
-	   $$.data[1] = $4;
-	   $$.data[2] = 0.0f;
-	   $$.data[3] = 1.0f;
+	   $$.data[0].f = $2;
+	   $$.data[1].f = $4;
+	   $$.data[2].f = 0.0f;
+	   $$.data[3].f = 1.0f;
 	}
 	| '{' signedFloatConstant ',' signedFloatConstant ','
               signedFloatConstant '}'
 	{
 	   $$.count = 4;
-	   $$.data[0] = $2;
-	   $$.data[1] = $4;
-	   $$.data[2] = $6;
-	   $$.data[3] = 1.0f;
+	   $$.data[0].f = $2;
+	   $$.data[1].f = $4;
+	   $$.data[2].f = $6;
+	   $$.data[3].f = 1.0f;
 	}
 	| '{' signedFloatConstant ',' signedFloatConstant ','
               signedFloatConstant ',' signedFloatConstant '}'
 	{
 	   $$.count = 4;
-	   $$.data[0] = $2;
-	   $$.data[1] = $4;
-	   $$.data[2] = $6;
-	   $$.data[3] = $8;
+	   $$.data[0].f = $2;
+	   $$.data[1].f = $4;
+	   $$.data[2].f = $6;
+	   $$.data[3].f = $8;
 	}
 	;
 
@@ -2008,7 +2006,7 @@ OUTPUT_statement: optVarSize OUTPUT IDENTIFIER '=' resultBinding
 resultBinding: RESULT POSITION
 	{
 	   if (state->mode == ARB_vertex) {
-	      $$ = VERT_RESULT_HPOS;
+	      $$ = VARYING_SLOT_POS;
 	   } else {
 	      yyerror(& @2, state, "invalid program result name");
 	      YYERROR;
@@ -2017,7 +2015,7 @@ resultBinding: RESULT POSITION
 	| RESULT FOGCOORD
 	{
 	   if (state->mode == ARB_vertex) {
-	      $$ = VERT_RESULT_FOGC;
+	      $$ = VARYING_SLOT_FOGC;
 	   } else {
 	      yyerror(& @2, state, "invalid program result name");
 	      YYERROR;
@@ -2030,7 +2028,7 @@ resultBinding: RESULT POSITION
 	| RESULT POINTSIZE
 	{
 	   if (state->mode == ARB_vertex) {
-	      $$ = VERT_RESULT_PSIZ;
+	      $$ = VARYING_SLOT_PSIZ;
 	   } else {
 	      yyerror(& @2, state, "invalid program result name");
 	      YYERROR;
@@ -2039,7 +2037,7 @@ resultBinding: RESULT POSITION
 	| RESULT TEXCOORD optTexCoordUnitNum
 	{
 	   if (state->mode == ARB_vertex) {
-	      $$ = VERT_RESULT_TEX0 + $3;
+	      $$ = VARYING_SLOT_TEX0 + $3;
 	   } else {
 	      yyerror(& @2, state, "invalid program result name");
 	      YYERROR;
@@ -2065,7 +2063,7 @@ resultColBinding: COLOR optResultFaceType optResultColorType
 optResultFaceType:
 	{
 	   if (state->mode == ARB_vertex) {
-	      $$ = VERT_RESULT_COL0;
+	      $$ = VARYING_SLOT_COL0;
 	   } else {
 	      if (state->option.DrawBuffers)
 		 $$ = FRAG_RESULT_DATA0;
@@ -2104,7 +2102,7 @@ optResultFaceType:
 	| FRONT
 	{
 	   if (state->mode == ARB_vertex) {
-	      $$ = VERT_RESULT_COL0;
+	      $$ = VARYING_SLOT_COL0;
 	   } else {
 	      yyerror(& @1, state, "invalid program result name");
 	      YYERROR;
@@ -2113,7 +2111,7 @@ optResultFaceType:
 	| BACK
 	{
 	   if (state->mode == ARB_vertex) {
-	      $$ = VERT_RESULT_BFC0;
+	      $$ = VARYING_SLOT_BFC0;
 	   } else {
 	      yyerror(& @1, state, "invalid program result name");
 	      YYERROR;
@@ -2403,9 +2401,9 @@ set_src_reg_swz(struct asm_src_register *r, gl_register_file file, GLint index,
 int
 validate_inputs(struct YYLTYPE *locp, struct asm_parser_state *state)
 {
-   const int inputs = state->prog->InputsRead | state->InputsBound;
+   const GLbitfield64 inputs = state->prog->InputsRead | state->InputsBound;
 
-   if (((inputs & 0x0ffff) & (inputs >> 16)) != 0) {
+   if (((inputs & VERT_BIT_FF_ALL) & (inputs >> VERT_ATTRIB_GENERIC0)) != 0) {
       yyerror(locp, state, "illegal use of generic attribute and name attribute");
       return 0;
    }
@@ -2476,7 +2474,7 @@ int add_state_reference(struct gl_program_parameter_list *param_list,
 
    name = _mesa_program_state_string(tokens);
    index = _mesa_add_parameter(param_list, PROGRAM_STATE_VAR, name,
-                               size, GL_NONE, NULL, tokens, 0x0);
+                               size, GL_NONE, NULL, tokens);
    param_list->StateFlags |= _mesa_program_state_flags(tokens);
 
    /* free name string here since we duplicated it in add_parameter() */
@@ -2712,7 +2710,7 @@ _mesa_parse_arb_program(struct gl_context *ctx, GLenum target, const GLubyte *st
       ? & ctx->Const.VertexProgram
       : & ctx->Const.FragmentProgram;
 
-   state->MaxTextureImageUnits = ctx->Const.MaxTextureImageUnits;
+   state->MaxTextureImageUnits = ctx->Const.FragmentProgram.MaxTextureImageUnits;
    state->MaxTextureCoordUnits = ctx->Const.MaxTextureCoordUnits;
    state->MaxTextureUnits = ctx->Const.MaxTextureUnits;
    state->MaxClipPlanes = ctx->Const.MaxClipPlanes;
@@ -2768,7 +2766,7 @@ _mesa_parse_arb_program(struct gl_context *ctx, GLenum target, const GLubyte *st
    state->prog->NumInstructions++;
 
    state->prog->NumParameters = state->prog->Parameters->NumParameters;
-   state->prog->NumAttributes = _mesa_bitcount(state->prog->InputsRead);
+   state->prog->NumAttributes = _mesa_bitcount_64(state->prog->InputsRead);
 
    /*
     * Initialize native counts to logical counts.  The device driver may

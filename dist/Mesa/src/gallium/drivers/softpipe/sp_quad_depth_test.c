@@ -32,6 +32,7 @@
 
 #include "pipe/p_defines.h"
 #include "util/u_format.h"
+#include "util/u_math.h"
 #include "util/u_memory.h"
 #include "tgsi/tgsi_scan.h"
 #include "sp_context.h"
@@ -44,11 +45,11 @@
 struct depth_data {
    struct pipe_surface *ps;
    enum pipe_format format;
-   unsigned bzzzz[QUAD_SIZE];  /**< Z values fetched from depth buffer */
-   unsigned qzzzz[QUAD_SIZE];  /**< Z values from the quad */
-   ubyte stencilVals[QUAD_SIZE];
+   unsigned bzzzz[TGSI_QUAD_SIZE];  /**< Z values fetched from depth buffer */
+   unsigned qzzzz[TGSI_QUAD_SIZE];  /**< Z values from the quad */
+   ubyte stencilVals[TGSI_QUAD_SIZE];
    boolean use_shader_stencil_refs;
-   ubyte shader_stencil_refs[QUAD_SIZE];
+   ubyte shader_stencil_refs[TGSI_QUAD_SIZE];
    struct softpipe_cached_tile *tile;
 };
 
@@ -63,22 +64,22 @@ get_depth_stencil_values( struct depth_data *data,
 
    switch (data->format) {
    case PIPE_FORMAT_Z16_UNORM:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          data->bzzzz[j] = tile->data.depth16[y][x];
       }
       break;
    case PIPE_FORMAT_Z32_UNORM:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          data->bzzzz[j] = tile->data.depth32[y][x];
       }
       break;
    case PIPE_FORMAT_Z24X8_UNORM:
-   case PIPE_FORMAT_Z24_UNORM_S8_USCALED:
-      for (j = 0; j < QUAD_SIZE; j++) {
+   case PIPE_FORMAT_Z24_UNORM_S8_UINT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          data->bzzzz[j] = tile->data.depth32[y][x] & 0xffffff;
@@ -86,20 +87,35 @@ get_depth_stencil_values( struct depth_data *data,
       }
       break;
    case PIPE_FORMAT_X8Z24_UNORM:
-   case PIPE_FORMAT_S8_USCALED_Z24_UNORM:
-      for (j = 0; j < QUAD_SIZE; j++) {
+   case PIPE_FORMAT_S8_UINT_Z24_UNORM:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          data->bzzzz[j] = tile->data.depth32[y][x] >> 8;
          data->stencilVals[j] = tile->data.depth32[y][x] & 0xff;
       }
       break;
-   case PIPE_FORMAT_S8_USCALED:
-      for (j = 0; j < QUAD_SIZE; j++) {
+   case PIPE_FORMAT_S8_UINT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          data->bzzzz[j] = 0;
          data->stencilVals[j] = tile->data.stencil8[y][x];
+      }
+      break;
+   case PIPE_FORMAT_Z32_FLOAT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
+         int x = quad->input.x0 % TILE_SIZE + (j & 1);
+         int y = quad->input.y0 % TILE_SIZE + (j >> 1);
+         data->bzzzz[j] = tile->data.depth32[y][x];
+      }
+      break;
+   case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
+         int x = quad->input.x0 % TILE_SIZE + (j & 1);
+         int y = quad->input.y0 % TILE_SIZE + (j >> 1);
+         data->bzzzz[j] = tile->data.depth64[y][x] & 0xffffffff;
+         data->stencilVals[j] = (tile->data.depth64[y][x] >> 32) & 0xff;
       }
       break;
    default:
@@ -148,7 +164,7 @@ convert_quad_depth( struct depth_data *data,
       {
          float scale = 65535.0;
 
-         for (j = 0; j < QUAD_SIZE; j++) {
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) {
             data->qzzzz[j] = (unsigned) (quad->output.depth[j] * scale);
          }
       }
@@ -157,28 +173,39 @@ convert_quad_depth( struct depth_data *data,
       {
          double scale = (double) (uint) ~0UL;
 
-         for (j = 0; j < QUAD_SIZE; j++) {
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) {
             data->qzzzz[j] = (unsigned) (quad->output.depth[j] * scale);
          }
       }
       break;
    case PIPE_FORMAT_Z24X8_UNORM:
-   case PIPE_FORMAT_Z24_UNORM_S8_USCALED:
+   case PIPE_FORMAT_Z24_UNORM_S8_UINT:
       {
          float scale = (float) ((1 << 24) - 1);
 
-         for (j = 0; j < QUAD_SIZE; j++) {
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) {
             data->qzzzz[j] = (unsigned) (quad->output.depth[j] * scale);
          }
       }
       break;
    case PIPE_FORMAT_X8Z24_UNORM:
-   case PIPE_FORMAT_S8_USCALED_Z24_UNORM:
+   case PIPE_FORMAT_S8_UINT_Z24_UNORM:
       {
          float scale = (float) ((1 << 24) - 1);
 
-         for (j = 0; j < QUAD_SIZE; j++) {
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) {
             data->qzzzz[j] = (unsigned) (quad->output.depth[j] * scale);
+         }
+      }
+      break;
+   case PIPE_FORMAT_Z32_FLOAT:
+   case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
+      {
+         union fi fui;
+
+         for (j = 0; j < TGSI_QUAD_SIZE; j++) {
+            fui.f = quad->output.depth[j];
+            data->qzzzz[j] = fui.ui;
          }
       }
       break;
@@ -189,7 +216,8 @@ convert_quad_depth( struct depth_data *data,
 
 
 /**
- * Compute the depth_data::shader_stencil_refs[] values from the float fragment stencil values.
+ * Compute the depth_data::shader_stencil_refs[] values from the float
+ * fragment stencil values.
  */
 static void
 convert_quad_stencil( struct depth_data *data, 
@@ -202,11 +230,13 @@ convert_quad_stencil( struct depth_data *data,
     */
    switch (data->format) {
    case PIPE_FORMAT_Z24X8_UNORM:
-   case PIPE_FORMAT_Z24_UNORM_S8_USCALED:
+   case PIPE_FORMAT_Z24_UNORM_S8_UINT:
    case PIPE_FORMAT_X8Z24_UNORM:
-   case PIPE_FORMAT_S8_USCALED_Z24_UNORM:
-   case PIPE_FORMAT_S8_USCALED:
-      for (j = 0; j < QUAD_SIZE; j++) {
+   case PIPE_FORMAT_S8_UINT_Z24_UNORM:
+   case PIPE_FORMAT_S8_UINT:
+   case PIPE_FORMAT_Z32_FLOAT:
+   case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          data->shader_stencil_refs[j] = ((unsigned)(quad->output.stencil[j]));
       }
       break;
@@ -214,6 +244,7 @@ convert_quad_stencil( struct depth_data *data,
       assert(0);
    }
 }
+
 
 /**
  * Write data->bzzzz[] values and data->stencilVals into the Z/stencil buffer.
@@ -228,7 +259,7 @@ write_depth_stencil_values( struct depth_data *data,
    /* put updated Z values back into cached tile */
    switch (data->format) {
    case PIPE_FORMAT_Z16_UNORM:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          tile->data.depth16[y][x] = (ushort) data->bzzzz[j];
@@ -236,41 +267,54 @@ write_depth_stencil_values( struct depth_data *data,
       break;
    case PIPE_FORMAT_Z24X8_UNORM:
    case PIPE_FORMAT_Z32_UNORM:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          tile->data.depth32[y][x] = data->bzzzz[j];
       }
       break;
-   case PIPE_FORMAT_Z24_UNORM_S8_USCALED:
-      for (j = 0; j < QUAD_SIZE; j++) {
+   case PIPE_FORMAT_Z24_UNORM_S8_UINT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          tile->data.depth32[y][x] = (data->stencilVals[j] << 24) | data->bzzzz[j];
       }
       break;
-   case PIPE_FORMAT_S8_USCALED_Z24_UNORM:
-      for (j = 0; j < QUAD_SIZE; j++) {
+   case PIPE_FORMAT_S8_UINT_Z24_UNORM:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          tile->data.depth32[y][x] = (data->bzzzz[j] << 8) | data->stencilVals[j];
       }
       break;
    case PIPE_FORMAT_X8Z24_UNORM:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          tile->data.depth32[y][x] = data->bzzzz[j] << 8;
       }
       break;
-   case PIPE_FORMAT_S8_USCALED:
-      for (j = 0; j < QUAD_SIZE; j++) {
+   case PIPE_FORMAT_S8_UINT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          int x = quad->input.x0 % TILE_SIZE + (j & 1);
          int y = quad->input.y0 % TILE_SIZE + (j >> 1);
          tile->data.stencil8[y][x] = data->stencilVals[j];
       }
       break;
-
+   case PIPE_FORMAT_Z32_FLOAT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
+         int x = quad->input.x0 % TILE_SIZE + (j & 1);
+         int y = quad->input.y0 % TILE_SIZE + (j >> 1);
+         tile->data.depth32[y][x] = data->bzzzz[j];
+      }
+      break;
+   case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
+         int x = quad->input.x0 % TILE_SIZE + (j & 1);
+         int y = quad->input.y0 % TILE_SIZE + (j >> 1);
+         tile->data.depth64[y][x] = (uint64_t)data->bzzzz[j] | ((uint64_t)data->stencilVals[j] << 32);
+      }
+      break;
    default:
       assert(0);
    }
@@ -300,9 +344,9 @@ do_stencil_test(struct depth_data *data,
 {
    unsigned passMask = 0x0;
    unsigned j;
-   ubyte refs[QUAD_SIZE];
+   ubyte refs[TGSI_QUAD_SIZE];
 
-   for (j = 0; j < QUAD_SIZE; j++) {
+   for (j = 0; j < TGSI_QUAD_SIZE; j++) {
       if (data->use_shader_stencil_refs)
          refs[j] = data->shader_stencil_refs[j] & valMask;
       else 
@@ -314,42 +358,42 @@ do_stencil_test(struct depth_data *data,
       /* passMask = 0x0 */
       break;
    case PIPE_FUNC_LESS:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (refs[j] < (data->stencilVals[j] & valMask)) {
             passMask |= (1 << j);
          }
       }
       break;
    case PIPE_FUNC_EQUAL:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (refs[j] == (data->stencilVals[j] & valMask)) {
             passMask |= (1 << j);
          }
       }
       break;
    case PIPE_FUNC_LEQUAL:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (refs[j] <= (data->stencilVals[j] & valMask)) {
             passMask |= (1 << j);
          }
       }
       break;
    case PIPE_FUNC_GREATER:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (refs[j] > (data->stencilVals[j] & valMask)) {
             passMask |= (1 << j);
          }
       }
       break;
    case PIPE_FUNC_NOTEQUAL:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (refs[j] != (data->stencilVals[j] & valMask)) {
             passMask |= (1 << j);
          }
       }
       break;
    case PIPE_FUNC_GEQUAL:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (refs[j] >= (data->stencilVals[j] & valMask)) {
             passMask |= (1 << j);
          }
@@ -381,10 +425,10 @@ apply_stencil_op(struct depth_data *data,
                  unsigned mask, unsigned op, ubyte ref, ubyte wrtMask)
 {
    unsigned j;
-   ubyte newstencil[QUAD_SIZE];
-   ubyte refs[QUAD_SIZE];
+   ubyte newstencil[TGSI_QUAD_SIZE];
+   ubyte refs[TGSI_QUAD_SIZE];
 
-   for (j = 0; j < QUAD_SIZE; j++) {
+   for (j = 0; j < TGSI_QUAD_SIZE; j++) {
       newstencil[j] = data->stencilVals[j];
       if (data->use_shader_stencil_refs)
          refs[j] = data->shader_stencil_refs[j];
@@ -397,21 +441,21 @@ apply_stencil_op(struct depth_data *data,
       /* no-op */
       break;
    case PIPE_STENCIL_OP_ZERO:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (mask & (1 << j)) {
             newstencil[j] = 0;
          }
       }
       break;
    case PIPE_STENCIL_OP_REPLACE:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (mask & (1 << j)) {
             newstencil[j] = refs[j];
          }
       }
       break;
    case PIPE_STENCIL_OP_INCR:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (mask & (1 << j)) {
             if (data->stencilVals[j] < STENCIL_MAX) {
                newstencil[j] = data->stencilVals[j] + 1;
@@ -420,7 +464,7 @@ apply_stencil_op(struct depth_data *data,
       }
       break;
    case PIPE_STENCIL_OP_DECR:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (mask & (1 << j)) {
             if (data->stencilVals[j] > 0) {
                newstencil[j] = data->stencilVals[j] - 1;
@@ -429,21 +473,21 @@ apply_stencil_op(struct depth_data *data,
       }
       break;
    case PIPE_STENCIL_OP_INCR_WRAP:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (mask & (1 << j)) {
             newstencil[j] = data->stencilVals[j] + 1;
          }
       }
       break;
    case PIPE_STENCIL_OP_DECR_WRAP:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (mask & (1 << j)) {
             newstencil[j] = data->stencilVals[j] - 1;
          }
       }
       break;
    case PIPE_STENCIL_OP_INVERT:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (mask & (1 << j)) {
             newstencil[j] = ~data->stencilVals[j];
          }
@@ -458,12 +502,12 @@ apply_stencil_op(struct depth_data *data,
     */
    if (wrtMask != STENCIL_MAX) {
       /* apply bit-wise stencil buffer writemask */
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          data->stencilVals[j] = (wrtMask & newstencil[j]) | (~wrtMask & data->stencilVals[j]);
       }
    }
    else {
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          data->stencilVals[j] = newstencil[j];
       }
    }
@@ -493,37 +537,37 @@ depth_test_quad(struct quad_stage *qs,
       /* Note this is pretty much a single sse or cell instruction.  
        * Like this:  quad->mask &= (quad->outputs.depth < zzzz);
        */
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
 	 if (data->qzzzz[j] < data->bzzzz[j]) 
 	    zmask |= 1 << j;
       }
       break;
    case PIPE_FUNC_EQUAL:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
 	 if (data->qzzzz[j] == data->bzzzz[j]) 
 	    zmask |= 1 << j;
       }
       break;
    case PIPE_FUNC_LEQUAL:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
 	 if (data->qzzzz[j] <= data->bzzzz[j]) 
 	    zmask |= (1 << j);
       }
       break;
    case PIPE_FUNC_GREATER:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
 	 if (data->qzzzz[j] > data->bzzzz[j]) 
 	    zmask |= (1 << j);
       }
       break;
    case PIPE_FUNC_NOTEQUAL:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
 	 if (data->qzzzz[j] != data->bzzzz[j]) 
 	    zmask |= (1 << j);
       }
       break;
    case PIPE_FUNC_GEQUAL:
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
 	 if (data->qzzzz[j] >= data->bzzzz[j]) 
 	    zmask |= (1 << j);
       }
@@ -544,7 +588,7 @@ depth_test_quad(struct quad_stage *qs,
     * data due to stencil changes.
     */
    if (softpipe->depth_stencil->depth.writemask) {
-      for (j = 0; j < QUAD_SIZE; j++) {
+      for (j = 0; j < TGSI_QUAD_SIZE; j++) {
          if (quad->inout.mask & (1 << j)) {
             data->bzzzz[j] = data->qzzzz[j];
          }
@@ -627,7 +671,7 @@ depth_stencil_test_quad(struct quad_stage *qs,
 
 
 #define ALPHATEST( FUNC, COMP )                                         \
-   static int                                                           \
+   static unsigned                                                      \
    alpha_test_quads_##FUNC( struct quad_stage *qs,                      \
                            struct quad_header *quads[],                 \
                            unsigned nr )                                \
@@ -664,9 +708,9 @@ ALPHATEST( NOTEQUAL, != )
 ALPHATEST( GEQUAL,   >= )
 
 
-/* XXX: Incorporate into shader using KILP.
+/* XXX: Incorporate into shader using KILL_IF.
  */
-static int
+static unsigned
 alpha_test_quads(struct quad_stage *qs, 
                  struct quad_header *quads[], 
                  unsigned nr)
@@ -676,7 +720,6 @@ alpha_test_quads(struct quad_stage *qs,
       return alpha_test_quads_LESS( qs, quads, nr );
    case PIPE_FUNC_EQUAL:
       return alpha_test_quads_EQUAL( qs, quads, nr );
-      break;
    case PIPE_FUNC_LEQUAL:
       return alpha_test_quads_LEQUAL( qs, quads, nr );
    case PIPE_FUNC_GREATER:
@@ -725,9 +768,9 @@ depth_test_quads_fallback(struct quad_stage *qs,
                           unsigned nr)
 {
    unsigned i, pass = 0;
-   const struct sp_fragment_shader *fs = qs->softpipe->fs;
-   boolean interp_depth = !fs->info.writes_z;
-   boolean shader_stencil_ref = fs->info.writes_stencil;
+   const struct tgsi_shader_info *fsInfo = &qs->softpipe->fs_variant->info;
+   boolean interp_depth = !fsInfo->writes_z;
+   boolean shader_stencil_ref = fsInfo->writes_stencil;
    struct depth_data data;
 
    data.use_shader_stencil_refs = FALSE;
@@ -836,7 +879,9 @@ choose_depth_test(struct quad_stage *qs,
                   struct quad_header *quads[],
                   unsigned nr)
 {
-   boolean interp_depth = !qs->softpipe->fs->info.writes_z;
+   const struct tgsi_shader_info *fsInfo = &qs->softpipe->fs_variant->info;
+
+   boolean interp_depth = !fsInfo->writes_z;
 
    boolean alpha = qs->softpipe->depth_stencil->alpha.enabled;
 

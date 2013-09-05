@@ -33,6 +33,8 @@ Custom builders and methods.
 import os
 import os.path
 import re
+import sys
+import subprocess
 
 import SCons.Action
 import SCons.Builder
@@ -40,6 +42,7 @@ import SCons.Scanner
 
 import fixes
 
+import source_list
 
 def quietCommandLines(env):
     # Quiet command lines
@@ -92,7 +95,7 @@ def createConvenienceLibBuilder(env):
 
 # TODO: handle import statements with multiple modules
 # TODO: handle from import statements
-import_re = re.compile(r'^import\s+(\S+)$', re.M)
+import_re = re.compile(r'^\s*import\s+(\S+)\s*$', re.M)
 
 def python_scan(node, env, path):
     # http://www.scons.org/doc/0.98.5/HTML/scons-user/c2781.html#AEN2789
@@ -110,6 +113,7 @@ def python_scan(node, env, path):
             if os.path.exists(file):
                 results.append(env.File(file))
                 break
+    #print node, map(str, results)
     return results
 
 python_scanner = SCons.Scanner.Scanner(function = python_scan, skeys = ['.py'])
@@ -154,6 +158,142 @@ def createCodeGenerateMethod(env):
     env.AddMethod(code_generate, 'CodeGenerate')
 
 
+def _pkg_check_modules(env, name, modules):
+    '''Simple wrapper for pkg-config.'''
+
+    env['HAVE_' + name] = False
+
+    # For backwards compatability
+    env[name.lower()] = False
+
+    if env['platform'] == 'windows':
+        return
+
+    if not env.Detect('pkg-config'):
+        return
+
+    if subprocess.call(["pkg-config", "--exists", ' '.join(modules)]) != 0:
+        return
+
+    # Strip version expressions from modules
+    modules = [module.split(' ', 1)[0] for module in modules]
+
+    # Other flags may affect the compilation of unrelated targets, so store
+    # them with a prefix, (e.g., XXX_CFLAGS, XXX_LIBS, etc)
+    try:
+        flags = env.ParseFlags('!pkg-config --cflags --libs ' + ' '.join(modules))
+    except OSError:
+        return
+    prefix = name + '_'
+    for flag_name, flag_value in flags.iteritems():
+        assert '_' not in flag_name
+        env[prefix + flag_name] = flag_value
+
+    env['HAVE_' + name] = True
+
+def pkg_check_modules(env, name, modules):
+
+    sys.stdout.write('Checking for %s (%s)...' % (name, ' '.join(modules)))
+    _pkg_check_modules(env, name, modules)
+    result = env['HAVE_' + name]
+    sys.stdout.write(' %s\n' % ['no', 'yes'][int(bool(result))])
+
+    # XXX: For backwards compatability
+    env[name.lower()] = result
+
+
+def pkg_use_modules(env, names):
+    '''Search for all environment flags that match NAME_FOO and append them to
+    the FOO environment variable.'''
+
+    names = env.Flatten(names)
+
+    for name in names:
+        prefix = name + '_'
+
+        if not 'HAVE_' + name in env:
+            raise Exception('Attempt to use unknown module %s' % name)
+
+        if not env['HAVE_' + name]:
+            raise Exception('Attempt to use unavailable module %s' % name)
+
+        flags = {}
+        for flag_name, flag_value in env.Dictionary().iteritems():
+            if flag_name.startswith(prefix):
+                flag_name = flag_name[len(prefix):]
+                if '_' not in flag_name:
+                    flags[flag_name] = flag_value
+        if flags:
+            env.MergeFlags(flags)
+
+
+def createPkgConfigMethods(env):
+    env.AddMethod(pkg_check_modules, 'PkgCheckModules')
+    env.AddMethod(pkg_use_modules, 'PkgUseModules')
+
+
+def parse_source_list(env, filename, names=None):
+    # parse the source list file
+    parser = source_list.SourceListParser()
+    src = env.File(filename).srcnode()
+
+    cur_srcdir = env.Dir('.').srcnode().abspath
+    top_srcdir = env.Dir('#').abspath
+    top_builddir = os.path.join(top_srcdir, env['build_dir'])
+
+    # Normalize everything to / slashes
+    cur_srcdir = cur_srcdir.replace('\\', '/')
+    top_srcdir = top_srcdir.replace('\\', '/')
+    top_builddir = top_builddir.replace('\\', '/')
+
+    # Populate the symbol table of the Makefile parser.
+    parser.add_symbol('top_srcdir', top_srcdir)
+    parser.add_symbol('top_builddir', top_builddir)
+
+    sym_table = parser.parse(src.abspath)
+
+    if names:
+        if isinstance(names, basestring):
+            names = [names]
+
+        symbols = names
+    else:
+        symbols = sym_table.keys()
+
+    # convert the symbol table to source lists
+    src_lists = {}
+    for sym in symbols:
+        val = sym_table[sym]
+        srcs = []
+        for f in val.split():
+            if f:
+                # Process source paths
+                if f.startswith(top_builddir + '/src'):
+                    # Automake puts build output on a `src` subdirectory, but
+                    # SCons does not, so strip it here.
+                    f = top_builddir + f[len(top_builddir + '/src'):]
+                if f.startswith(cur_srcdir + '/'):
+                    # Prefer relative source paths, as absolute files tend to
+                    # cause duplicate actions.
+                    f = f[len(cur_srcdir + '/'):]
+                srcs.append(f)
+
+        src_lists[sym] = srcs
+
+    # if names are given, concatenate the lists
+    if names:
+        srcs = []
+        for name in names:
+            srcs.extend(src_lists[name])
+
+        return srcs
+    else:
+        return src_lists
+
+def createParseSourceListMethod(env):
+    env.AddMethod(parse_source_list, 'ParseSourceList')
+
+
 def generate(env):
     """Common environment generation code"""
 
@@ -164,6 +304,8 @@ def generate(env):
     # Custom builders and methods
     createConvenienceLibBuilder(env)
     createCodeGenerateMethod(env)
+    createPkgConfigMethods(env)
+    createParseSourceListMethod(env)
 
     # for debugging
     #print env.Dump()

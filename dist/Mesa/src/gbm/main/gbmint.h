@@ -38,6 +38,16 @@
 #define GBM_EXPORT
 #endif
 
+/**
+ * \file gbmint.h
+ * \brief Internal implementation details of gbm
+ */
+
+/**
+ * The device used for the memory allocation.
+ *
+ * The members of this structure should be not accessed directly
+ */
 struct gbm_device {
    /* Hack to make a gbm_device detectable by its first element. */
    struct gbm_device *(*dummy)(int);
@@ -49,26 +59,50 @@ struct gbm_device {
 
    void (*destroy)(struct gbm_device *gbm);
    int (*is_format_supported)(struct gbm_device *gbm,
-                              enum gbm_bo_format format,
+                              uint32_t format,
                               uint32_t usage);
 
    struct gbm_bo *(*bo_create)(struct gbm_device *gbm,
                                uint32_t width, uint32_t height,
-                               enum gbm_bo_format format,
+                               uint32_t format,
                                uint32_t usage);
-   struct gbm_bo *(*bo_create_from_egl_image)(struct gbm_device *gbm,
-                                              void *egl_dpy, void *egl_img,
-                                              uint32_t width, uint32_t height,
-                                              uint32_t usage);
+   struct gbm_bo *(*bo_import)(struct gbm_device *gbm, uint32_t type,
+                               void *buffer, uint32_t usage);
+   int (*bo_write)(struct gbm_bo *bo, const void *buf, size_t data);
    void (*bo_destroy)(struct gbm_bo *bo);
+
+   struct gbm_surface *(*surface_create)(struct gbm_device *gbm,
+                                         uint32_t width, uint32_t height,
+                                         uint32_t format, uint32_t flags);
+   struct gbm_bo *(*surface_lock_front_buffer)(struct gbm_surface *surface);
+   void (*surface_release_buffer)(struct gbm_surface *surface,
+                                  struct gbm_bo *bo);
+   int (*surface_has_free_buffers)(struct gbm_surface *surface);
+   void (*surface_destroy)(struct gbm_surface *surface);
 };
 
+/**
+ * The allocated buffer object.
+ *
+ * The members in this structure should not be accessed directly.
+ */
 struct gbm_bo {
    struct gbm_device *gbm;
    uint32_t width;
    uint32_t height;
-   uint32_t pitch;
+   uint32_t stride;
+   uint32_t format;
    union gbm_bo_handle  handle;
+   void *user_data;
+   void (*destroy_user_data)(struct gbm_bo *, void *);
+};
+
+struct gbm_surface {
+   struct gbm_device *gbm;
+   uint32_t width;
+   uint32_t height;
+   uint32_t format;
+   uint32_t flags;
 };
 
 struct gbm_backend {

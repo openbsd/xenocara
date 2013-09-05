@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef TEXCOMPRESS_H
@@ -27,11 +27,8 @@
 
 #include "formats.h"
 #include "glheader.h"
-#include "mfeatures.h"
 
 struct gl_context;
-
-#if _HAVE_FULL_GL
 
 extern GLenum
 _mesa_gl_compressed_format_base_format(GLenum format);
@@ -43,20 +40,27 @@ extern gl_format
 _mesa_glenum_to_compressed_format(GLenum format);
 
 extern GLenum
-_mesa_compressed_format_to_glenum(struct gl_context *ctx, GLuint mesaFormat);
+_mesa_compressed_format_to_glenum(struct gl_context *ctx, gl_format mesaFormat);
 
 extern GLubyte *
 _mesa_compressed_image_address(GLint col, GLint row, GLint img,
                                gl_format mesaFormat,
                                GLsizei width, const GLubyte *image);
 
-#else /* _HAVE_FULL_GL */
 
-/* no-op macros */
-#define _mesa_get_compressed_formats( c, f ) 0
-#define _mesa_compressed_image_address(c, r, i, f, w, i2 ) 0
-#define _mesa_compress_teximage( c, w, h, sF, s, sRS, dF, d, drs ) ((void)0)
+/** A function to fetch one texel from a compressed texture */
+typedef void (*compressed_fetch_func)(const GLubyte *map,
+                                      GLint rowStride,
+                                      GLint i, GLint j,
+                                      GLfloat *texel);
 
-#endif /* _HAVE_FULL_GL */
+extern compressed_fetch_func
+_mesa_get_compressed_fetch_func(gl_format format);
+
+
+extern void
+_mesa_decompress_image(gl_format format, GLuint width, GLuint height,
+                       const GLubyte *src, GLint srcRowStride,
+                       GLfloat *dest);
 
 #endif /* TEXCOMPRESS_H */

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.8
  *
  * Copyright (C) 2009-2010 Chia-I Wu <olv@0xlab.org>
  *
@@ -95,10 +94,8 @@ x11_screen_destroy(struct x11_screen *xscr)
 {
    if (xscr->dri_fd >= 0)
       close(xscr->dri_fd);
-   if (xscr->dri_driver)
-      Xfree(xscr->dri_driver);
-   if (xscr->dri_device)
-      Xfree(xscr->dri_device);
+   free(xscr->dri_driver);
+   free(xscr->dri_device);
 
 #ifdef GLX_DIRECT_RENDERING
    /* xscr->glx_dpy will be destroyed with the X display */
@@ -106,8 +103,7 @@ x11_screen_destroy(struct x11_screen *xscr)
       xscr->glx_dpy->xscr = NULL;
 #endif
 
-   if (xscr->visuals)
-      XFree(xscr->visuals);
+   free(xscr->visuals);
    FREE(xscr);
 }
 
@@ -265,7 +261,15 @@ x11_screen_enable_dri2(struct x11_screen *xscr,
       if (!x11_screen_probe_dri2(xscr, NULL, NULL))
          return -1;
 
-      fd = open(xscr->dri_device, O_RDWR);
+#ifdef O_CLOEXEC
+      fd = open(xscr->dri_device, O_RDWR | O_CLOEXEC);
+      if (fd == -1 && errno == EINVAL)
+#endif
+      {
+         fd = open(xscr->dri_device, O_RDWR);
+         if (fd != -1)
+            fcntl(fd, F_SETFD, fcntl(fd, F_GETFD) | FD_CLOEXEC);
+      }
       if (fd < 0) {
          _eglLog(_EGL_WARNING, "failed to open %s", xscr->dri_device);
          return -1;
@@ -341,21 +345,24 @@ x11_drawable_enable_dri2(struct x11_screen *xscr,
  * Copy between buffers of the DRI2 drawable.
  */
 void
-x11_drawable_copy_buffers(struct x11_screen *xscr, Drawable drawable,
-                          int x, int y, int width, int height,
-                          int src_buf, int dst_buf)
+x11_drawable_copy_buffers_region(struct x11_screen *xscr, Drawable drawable,
+                                 int num_rects, const int *rects,
+                                 int src_buf, int dst_buf)
 {
-   XRectangle rect;
    XserverRegion region;
+   XRectangle *rectangles = CALLOC(num_rects, sizeof(XRectangle));
 
-   rect.x = x;
-   rect.y = y;
-   rect.width = width;
-   rect.height = height;
+   for (int i = 0; i < num_rects; i++) {
+      rectangles[i].x = rects[i * 4 + 0];
+      rectangles[i].y = rects[i * 4 + 1];
+      rectangles[i].width = rects[i * 4 + 2];
+      rectangles[i].height = rects[i * 4 + 3];
+   }
 
-   region = XFixesCreateRegion(xscr->dpy, &rect, 1);
+   region = XFixesCreateRegion(xscr->dpy, rectangles, num_rects);
    DRI2CopyRegion(xscr->dpy, drawable, region, dst_buf, src_buf);
    XFixesDestroyRegion(xscr->dpy, region);
+   FREE(rectangles);
 }
 
 /**
@@ -452,12 +459,30 @@ dri2InvalidateBuffers(Display *dpy, XID drawable)
 extern unsigned
 dri2GetSwapEventType(Display *dpy, XID drawable);
 
+extern void *
+dri2GetGlxDrawableFromXDrawableId(Display *dpy, XID id);
+
+extern void *
+GetGLXDrawable(Display *dpy, XID drawable);
+
 /**
  * This is also called from src/glx/dri2.c.
  */
 unsigned dri2GetSwapEventType(Display *dpy, XID drawable)
 {
    return 0;
+}
+
+void *
+dri2GetGlxDrawableFromXDrawableId(Display *dpy, XID id)
+{
+   return NULL;
+}
+
+void *
+GetGLXDrawable(Display *dpy, XID drawable)
+{
+   return NULL;
 }
 
 #endif /* GLX_DIRECT_RENDERING */

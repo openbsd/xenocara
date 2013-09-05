@@ -46,6 +46,10 @@ clear_flags(struct pipe_rasterizer_state *rast)
 {
    rast->light_twoside = 0;
    rast->offset_tri = 0;
+   rast->offset_line = 0;
+   rast->offset_point = 0;
+   rast->offset_units = 0.0f;
+   rast->offset_scale = 0.0f;
 }
 
 
@@ -74,6 +78,8 @@ llvmpipe_create_rasterizer_state(struct pipe_context *pipe,
     */
    need_pipeline = (rast->fill_front != PIPE_POLYGON_MODE_FILL ||
 		    rast->fill_back != PIPE_POLYGON_MODE_FILL ||
+                    rast->offset_point ||
+                    rast->offset_line ||
 		    rast->point_smooth ||
 		    rast->line_smooth ||
 		    rast->line_stipple_enable ||
@@ -108,19 +114,22 @@ llvmpipe_bind_rasterizer_state(struct pipe_context *pipe, void *handle)
       /* XXX: just pass lp_state directly to setup.
        */
       lp_setup_set_triangle_state( llvmpipe->setup,
-				   state->lp_state.cull_face,
-				   state->lp_state.front_ccw,
-				   state->lp_state.scissor,
-				   state->lp_state.gl_rasterization_rules);
+                                  state->lp_state.cull_face,
+                                  state->lp_state.front_ccw,
+                                  state->lp_state.scissor,
+                                  state->lp_state.half_pixel_center,
+                                  state->lp_state.bottom_edge_rule);
       lp_setup_set_flatshade_first( llvmpipe->setup,
 				    state->lp_state.flatshade_first);
+      lp_setup_set_rasterizer_discard( llvmpipe->setup,
+				    state->lp_state.rasterizer_discard);
       lp_setup_set_line_state( llvmpipe->setup,
-			       state->lp_state.line_width);
+                              state->lp_state.line_width);
       lp_setup_set_point_state( llvmpipe->setup,
-				state->lp_state.point_size,
-				state->lp_state.point_size_per_vertex,
-				state->lp_state.sprite_coord_enable,
-				state->lp_state.sprite_coord_mode);
+                               state->lp_state.point_size,
+                               state->lp_state.point_size_per_vertex,
+                               state->lp_state.sprite_coord_enable,
+                               state->lp_state.sprite_coord_mode);
    }
    else {
       llvmpipe->rasterizer = NULL;

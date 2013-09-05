@@ -182,7 +182,7 @@ static int has_cpuid(void)
 static INLINE void
 cpuid(uint32_t ax, uint32_t *p)
 {
-#if defined(PIPE_CC_GCC) && defined(PIPE_ARCH_X86)
+#if (defined(PIPE_CC_GCC) || defined(PIPE_CC_SUNPRO)) && defined(PIPE_ARCH_X86)
    __asm __volatile (
      "xchgl %%ebx, %1\n\t"
      "cpuid\n\t"
@@ -193,7 +193,7 @@ cpuid(uint32_t ax, uint32_t *p)
        "=d" (p[3])
      : "0" (ax)
    );
-#elif defined(PIPE_CC_GCC) && defined(PIPE_ARCH_X86_64)
+#elif (defined(PIPE_CC_GCC) || defined(PIPE_CC_SUNPRO)) && defined(PIPE_ARCH_X86_64)
    __asm __volatile (
      "cpuid\n\t"
      : "=a" (p[0]),
@@ -250,6 +250,11 @@ util_cpu_detect(void)
    util_cpu_caps.nr_cpus = 1;
 #endif
 
+   /* Make the fallback cacheline size nonzero so that it can be
+    * safely passed to align().
+    */
+   util_cpu_caps.cacheline = sizeof(void *);
+
 #if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
    if (has_cpuid()) {
       uint32_t regs[4];
@@ -270,7 +275,7 @@ util_cpu_detect(void)
              util_cpu_caps.x86_cpu_type = 8 + ((regs2[0] >> 20) & 255); /* use extended family (P4, IA64) */
 
          /* general feature flags */
-         util_cpu_caps.has_tsc    = (regs2[3] >>  8) & 1; /* 0x0000010 */
+         util_cpu_caps.has_tsc    = (regs2[3] >>  4) & 1; /* 0x0000010 */
          util_cpu_caps.has_mmx    = (regs2[3] >> 23) & 1; /* 0x0800000 */
          util_cpu_caps.has_sse    = (regs2[3] >> 25) & 1; /* 0x2000000 */
          util_cpu_caps.has_sse2   = (regs2[3] >> 26) & 1; /* 0x4000000 */
@@ -278,12 +283,19 @@ util_cpu_detect(void)
          util_cpu_caps.has_ssse3  = (regs2[2] >>  9) & 1; /* 0x0000020 */
          util_cpu_caps.has_sse4_1 = (regs2[2] >> 19) & 1;
          util_cpu_caps.has_sse4_2 = (regs2[2] >> 20) & 1;
+         util_cpu_caps.has_popcnt = (regs2[2] >> 23) & 1;
          util_cpu_caps.has_avx    = (regs2[2] >> 28) & 1;
+         util_cpu_caps.has_f16c   = (regs2[2] >> 29) & 1;
          util_cpu_caps.has_mmx2   = util_cpu_caps.has_sse; /* SSE cpus supports mmxext too */
 
          cacheline = ((regs2[1] >> 8) & 0xFF) * 8;
          if (cacheline > 0)
             util_cpu_caps.cacheline = cacheline;
+      }
+
+      if (regs[1] == 0x756e6547 && regs[2] == 0x6c65746e && regs[3] == 0x49656e69) {
+         /* GenuineIntel */
+         util_cpu_caps.has_intel = 1;
       }
 
       cpuid(0x80000000, regs);

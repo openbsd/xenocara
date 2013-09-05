@@ -5,7 +5,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -22,9 +21,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -48,7 +48,6 @@ legal_src_factor(const struct gl_context *ctx, GLenum factor)
    switch (factor) {
    case GL_SRC_COLOR:
    case GL_ONE_MINUS_SRC_COLOR:
-      return ctx->Extensions.NV_blend_square;
    case GL_ZERO:
    case GL_ONE:
    case GL_DST_COLOR:
@@ -58,11 +57,18 @@ legal_src_factor(const struct gl_context *ctx, GLenum factor)
    case GL_DST_ALPHA:
    case GL_ONE_MINUS_DST_ALPHA:
    case GL_SRC_ALPHA_SATURATE:
+      return GL_TRUE;
    case GL_CONSTANT_COLOR:
    case GL_ONE_MINUS_CONSTANT_COLOR:
    case GL_CONSTANT_ALPHA:
    case GL_ONE_MINUS_CONSTANT_ALPHA:
-      return GL_TRUE;
+      return _mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES2;
+   case GL_SRC1_COLOR:
+   case GL_SRC1_ALPHA:
+   case GL_ONE_MINUS_SRC1_COLOR:
+   case GL_ONE_MINUS_SRC1_ALPHA:
+      return _mesa_is_desktop_gl(ctx)
+         && ctx->Extensions.ARB_blend_func_extended;
    default:
       return GL_FALSE;
    }
@@ -79,7 +85,6 @@ legal_dst_factor(const struct gl_context *ctx, GLenum factor)
    switch (factor) {
    case GL_DST_COLOR:
    case GL_ONE_MINUS_DST_COLOR:
-      return ctx->Extensions.NV_blend_square;
    case GL_ZERO:
    case GL_ONE:
    case GL_SRC_COLOR:
@@ -88,11 +93,22 @@ legal_dst_factor(const struct gl_context *ctx, GLenum factor)
    case GL_ONE_MINUS_SRC_ALPHA:
    case GL_DST_ALPHA:
    case GL_ONE_MINUS_DST_ALPHA:
+      return GL_TRUE;
    case GL_CONSTANT_COLOR:
    case GL_ONE_MINUS_CONSTANT_COLOR:
    case GL_CONSTANT_ALPHA:
    case GL_ONE_MINUS_CONSTANT_ALPHA:
-      return GL_TRUE;
+      return _mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES2;
+   case GL_SRC_ALPHA_SATURATE:
+      return (_mesa_is_desktop_gl(ctx)
+              && ctx->Extensions.ARB_blend_func_extended)
+         || _mesa_is_gles3(ctx);
+   case GL_SRC1_COLOR:
+   case GL_SRC1_ALPHA:
+   case GL_ONE_MINUS_SRC1_COLOR:
+   case GL_ONE_MINUS_SRC1_ALPHA:
+      return _mesa_is_desktop_gl(ctx)
+         && ctx->Extensions.ARB_blend_func_extended;
    default:
       return GL_FALSE;
    }
@@ -152,9 +168,27 @@ validate_blend_factors(struct gl_context *ctx, const char *func,
 void GLAPIENTRY
 _mesa_BlendFunc( GLenum sfactor, GLenum dfactor )
 {
-   _mesa_BlendFuncSeparateEXT(sfactor, dfactor, sfactor, dfactor);
+   _mesa_BlendFuncSeparate(sfactor, dfactor, sfactor, dfactor);
 }
 
+static GLboolean
+blend_factor_is_dual_src(GLenum factor)
+{
+   return (factor == GL_SRC1_COLOR ||
+	   factor == GL_SRC1_ALPHA ||
+	   factor == GL_ONE_MINUS_SRC1_COLOR ||
+	   factor == GL_ONE_MINUS_SRC1_ALPHA);
+}
+
+static void
+update_uses_dual_src(struct gl_context *ctx, int buf)
+{
+   ctx->Color.Blend[buf]._UsesDualSrc =
+      (blend_factor_is_dual_src(ctx->Color.Blend[buf].SrcRGB) ||
+       blend_factor_is_dual_src(ctx->Color.Blend[buf].DstRGB) ||
+       blend_factor_is_dual_src(ctx->Color.Blend[buf].SrcA) ||
+       blend_factor_is_dual_src(ctx->Color.Blend[buf].DstA));
+}
 
 /**
  * Set the separate blend source/dest factors for all draw buffers.
@@ -165,13 +199,12 @@ _mesa_BlendFunc( GLenum sfactor, GLenum dfactor )
  * \param dfactorA alpha destination factor operator.
  */
 void GLAPIENTRY
-_mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
+_mesa_BlendFuncSeparate( GLenum sfactorRGB, GLenum dfactorRGB,
                             GLenum sfactorA, GLenum dfactorA )
 {
    GLuint buf, numBuffers;
    GLboolean changed;
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glBlendFuncSeparate %s %s %s %s\n",
@@ -209,6 +242,7 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
       ctx->Color.Blend[buf].DstRGB = dfactorRGB;
       ctx->Color.Blend[buf].SrcA = sfactorA;
       ctx->Color.Blend[buf].DstA = dfactorA;
+      update_uses_dual_src(ctx, buf);
    }
    ctx->Color._BlendFuncPerBuffer = GL_FALSE;
 
@@ -219,16 +253,13 @@ _mesa_BlendFuncSeparateEXT( GLenum sfactorRGB, GLenum dfactorRGB,
 }
 
 
-#if _HAVE_FULL_GL
-
-
 /**
  * Set blend source/dest factors for one color buffer/target.
  */
 void GLAPIENTRY
-_mesa_BlendFunci(GLuint buf, GLenum sfactor, GLenum dfactor)
+_mesa_BlendFunciARB(GLuint buf, GLenum sfactor, GLenum dfactor)
 {
-   _mesa_BlendFuncSeparatei(buf, sfactor, dfactor, sfactor, dfactor);
+   _mesa_BlendFuncSeparateiARB(buf, sfactor, dfactor, sfactor, dfactor);
 }
 
 
@@ -236,11 +267,10 @@ _mesa_BlendFunci(GLuint buf, GLenum sfactor, GLenum dfactor)
  * Set separate blend source/dest factors for one color buffer/target.
  */
 void GLAPIENTRY
-_mesa_BlendFuncSeparatei(GLuint buf, GLenum sfactorRGB, GLenum dfactorRGB,
+_mesa_BlendFuncSeparateiARB(GLuint buf, GLenum sfactorRGB, GLenum dfactorRGB,
                          GLenum sfactorA, GLenum dfactorA)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (!ctx->Extensions.ARB_draw_buffers_blend) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glBlendFunc[Separate]i()");
@@ -271,6 +301,7 @@ _mesa_BlendFuncSeparatei(GLuint buf, GLenum sfactorRGB, GLenum dfactorRGB,
    ctx->Color.Blend[buf].DstRGB = dfactorRGB;
    ctx->Color.Blend[buf].SrcA = sfactorA;
    ctx->Color.Blend[buf].DstA = dfactorA;
+   update_uses_dual_src(ctx, buf);
    ctx->Color._BlendFuncPerBuffer = GL_TRUE;
 
    if (ctx->Driver.BlendFuncSeparatei) {
@@ -285,22 +316,16 @@ _mesa_BlendFuncSeparatei(GLuint buf, GLenum sfactorRGB, GLenum dfactorRGB,
  * \return GL_TRUE if legal, GL_FALSE otherwise.
  */
 static GLboolean
-legal_blend_equation(const struct gl_context *ctx,
-                     GLenum mode, GLboolean is_separate)
+legal_blend_equation(const struct gl_context *ctx, GLenum mode)
 {
    switch (mode) {
    case GL_FUNC_ADD:
+   case GL_FUNC_SUBTRACT:
+   case GL_FUNC_REVERSE_SUBTRACT:
       return GL_TRUE;
    case GL_MIN:
    case GL_MAX:
       return ctx->Extensions.EXT_blend_minmax;
-   case GL_LOGIC_OP:
-      /* glBlendEquationSeparate cannot take GL_LOGIC_OP as a parameter.
-       */
-      return ctx->Extensions.EXT_blend_logic_op && !is_separate;
-   case GL_FUNC_SUBTRACT:
-   case GL_FUNC_REVERSE_SUBTRACT:
-      return ctx->Extensions.EXT_blend_subtract;
    default:
       return GL_FALSE;
    }
@@ -314,13 +339,12 @@ _mesa_BlendEquation( GLenum mode )
    GLuint buf, numBuffers;
    GLboolean changed;
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glBlendEquation(%s)\n",
                   _mesa_lookup_enum_by_nr(mode));
 
-   if (!legal_blend_equation(ctx, mode, GL_FALSE)) {
+   if (!legal_blend_equation(ctx, mode)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquation");
       return;
    }
@@ -355,10 +379,9 @@ _mesa_BlendEquation( GLenum mode )
  * Set blend equation for one color buffer/target.
  */
 void GLAPIENTRY
-_mesa_BlendEquationi(GLuint buf, GLenum mode)
+_mesa_BlendEquationiARB(GLuint buf, GLenum mode)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glBlendEquationi(%u, %s)\n",
@@ -370,7 +393,7 @@ _mesa_BlendEquationi(GLuint buf, GLenum mode)
       return;
    }
 
-   if (!legal_blend_equation(ctx, mode, GL_FALSE)) {
+   if (!legal_blend_equation(ctx, mode)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationi");
       return;
    }
@@ -390,12 +413,11 @@ _mesa_BlendEquationi(GLuint buf, GLenum mode)
 
 
 void GLAPIENTRY
-_mesa_BlendEquationSeparateEXT( GLenum modeRGB, GLenum modeA )
+_mesa_BlendEquationSeparate( GLenum modeRGB, GLenum modeA )
 {
    GLuint buf, numBuffers;
    GLboolean changed;
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glBlendEquationSeparateEXT(%s %s)\n",
@@ -408,12 +430,12 @@ _mesa_BlendEquationSeparateEXT( GLenum modeRGB, GLenum modeA )
       return;
    }
 
-   if (!legal_blend_equation(ctx, modeRGB, GL_TRUE)) {
+   if (!legal_blend_equation(ctx, modeRGB)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationSeparateEXT(modeRGB)");
       return;
    }
 
-   if (!legal_blend_equation(ctx, modeA, GL_TRUE)) {
+   if (!legal_blend_equation(ctx, modeA)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationSeparateEXT(modeA)");
       return;
    }
@@ -448,10 +470,9 @@ _mesa_BlendEquationSeparateEXT( GLenum modeRGB, GLenum modeA )
  * Set separate blend equations for one color buffer/target.
  */
 void GLAPIENTRY
-_mesa_BlendEquationSeparatei(GLuint buf, GLenum modeRGB, GLenum modeA)
+_mesa_BlendEquationSeparateiARB(GLuint buf, GLenum modeRGB, GLenum modeA)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glBlendEquationSeparatei(%u, %s %s)\n", buf,
@@ -464,12 +485,12 @@ _mesa_BlendEquationSeparatei(GLuint buf, GLenum modeRGB, GLenum modeA)
       return;
    }
 
-   if (!legal_blend_equation(ctx, modeRGB, GL_TRUE)) {
+   if (!legal_blend_equation(ctx, modeRGB)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationSeparatei(modeRGB)");
       return;
    }
 
-   if (!legal_blend_equation(ctx, modeA, GL_TRUE)) {
+   if (!legal_blend_equation(ctx, modeA)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glBlendEquationSeparatei(modeA)");
       return;
    }
@@ -486,10 +507,6 @@ _mesa_BlendEquationSeparatei(GLuint buf, GLenum modeRGB, GLenum modeA)
    if (ctx->Driver.BlendEquationSeparatei)
       ctx->Driver.BlendEquationSeparatei(ctx, buf, modeRGB, modeA);
 }
-
-
-
-#endif /* _HAVE_FULL_GL */
 
 
 /**
@@ -511,7 +528,6 @@ _mesa_BlendColor( GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha )
 {
    GLfloat tmp[4];
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    tmp[0] = red;
    tmp[1] = green;
@@ -548,7 +564,6 @@ void GLAPIENTRY
 _mesa_AlphaFunc( GLenum func, GLclampf ref )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glAlphaFunc(%s, %f)\n",
@@ -596,7 +611,6 @@ void GLAPIENTRY
 _mesa_LogicOp( GLenum opcode )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glLogicOp(%s)\n", _mesa_lookup_enum_by_nr(opcode));
@@ -634,12 +648,11 @@ _mesa_LogicOp( GLenum opcode )
       ctx->Driver.LogicOpcode( ctx, opcode );
 }
 
-#if _HAVE_FULL_GL
+
 void GLAPIENTRY
 _mesa_IndexMask( GLuint mask )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (ctx->Color.IndexMask == mask)
       return;
@@ -647,7 +660,6 @@ _mesa_IndexMask( GLuint mask )
    FLUSH_VERTICES(ctx, _NEW_COLOR);
    ctx->Color.IndexMask = mask;
 }
-#endif
 
 
 /**
@@ -672,7 +684,6 @@ _mesa_ColorMask( GLboolean red, GLboolean green,
    GLubyte tmp[4];
    GLuint i;
    GLboolean flushed;
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glColorMask(%d, %d, %d, %d)\n",
@@ -706,12 +717,11 @@ _mesa_ColorMask( GLboolean red, GLboolean green,
  * For GL_EXT_draw_buffers2 and GL3
  */
 void GLAPIENTRY
-_mesa_ColorMaskIndexed( GLuint buf, GLboolean red, GLboolean green,
+_mesa_ColorMaski( GLuint buf, GLboolean red, GLboolean green,
                         GLboolean blue, GLboolean alpha )
 {
    GLubyte tmp[4];
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glColorMaskIndexed %u %d %d %d %d\n",
@@ -742,11 +752,9 @@ _mesa_ColorMaskIndexed( GLuint buf, GLboolean red, GLboolean green,
 
 
 void GLAPIENTRY
-_mesa_ClampColorARB(GLenum target, GLenum clamp)
+_mesa_ClampColor(GLenum target, GLenum clamp)
 {
    GET_CURRENT_CONTEXT(ctx);
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (clamp != GL_TRUE && clamp != GL_FALSE && clamp != GL_FIXED_ONLY_ARB) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glClampColorARB(clamp)");
@@ -755,25 +763,113 @@ _mesa_ClampColorARB(GLenum target, GLenum clamp)
 
    switch (target) {
    case GL_CLAMP_VERTEX_COLOR_ARB:
+      if (ctx->API == API_OPENGL_CORE &&
+          !ctx->Extensions.ARB_color_buffer_float) {
+         goto invalid_enum;
+      }
       FLUSH_VERTICES(ctx, _NEW_LIGHT);
       ctx->Light.ClampVertexColor = clamp;
+      _mesa_update_clamp_vertex_color(ctx);
       break;
    case GL_CLAMP_FRAGMENT_COLOR_ARB:
+      if (ctx->API == API_OPENGL_CORE &&
+          !ctx->Extensions.ARB_color_buffer_float) {
+         goto invalid_enum;
+      }
       FLUSH_VERTICES(ctx, _NEW_FRAG_CLAMP);
       ctx->Color.ClampFragmentColor = clamp;
+      _mesa_update_clamp_fragment_color(ctx);
       break;
    case GL_CLAMP_READ_COLOR_ARB:
-      FLUSH_VERTICES(ctx, _NEW_COLOR);
       ctx->Color.ClampReadColor = clamp;
       break;
    default:
-      _mesa_error(ctx, GL_INVALID_ENUM, "glClampColorARB(target)");
-      return;
+      goto invalid_enum;
    }
+   return;
+
+invalid_enum:
+   _mesa_error(ctx, GL_INVALID_ENUM, "glClampColor(%s)",
+               _mesa_lookup_enum_by_nr(target));
 }
 
+static GLboolean
+get_clamp_color(const struct gl_framebuffer *fb, GLenum clamp)
+{
+   if (clamp == GL_TRUE || clamp == GL_FALSE)
+      return clamp;
 
+   ASSERT(clamp == GL_FIXED_ONLY);
+   if (!fb)
+      return GL_TRUE;
 
+   return fb->_AllColorBuffersFixedPoint;
+}
+
+GLboolean
+_mesa_get_clamp_fragment_color(const struct gl_context *ctx)
+{
+   return get_clamp_color(ctx->DrawBuffer,
+                                ctx->Color.ClampFragmentColor);
+}
+
+GLboolean
+_mesa_get_clamp_vertex_color(const struct gl_context *ctx)
+{
+   return get_clamp_color(ctx->DrawBuffer, ctx->Light.ClampVertexColor);
+}
+
+GLboolean
+_mesa_get_clamp_read_color(const struct gl_context *ctx)
+{
+   return get_clamp_color(ctx->ReadBuffer, ctx->Color.ClampReadColor);
+}
+
+/**
+ * Update the ctx->Color._ClampFragmentColor field
+ */
+void
+_mesa_update_clamp_fragment_color(struct gl_context *ctx)
+{
+   struct gl_framebuffer *fb = ctx->DrawBuffer;
+
+   /* Don't clamp if:
+    * - there is no colorbuffer
+    * - all colorbuffers are unsigned normalized, so clamping has no effect
+    * - there is an integer colorbuffer
+    */
+   if (!fb || !fb->_HasSNormOrFloatColorBuffer || fb->_IntegerColor)
+      ctx->Color._ClampFragmentColor = GL_FALSE;
+   else
+      ctx->Color._ClampFragmentColor = _mesa_get_clamp_fragment_color(ctx);
+}
+
+/**
+ * Update the ctx->Color._ClampVertexColor field
+ */
+void
+_mesa_update_clamp_vertex_color(struct gl_context *ctx)
+{
+   ctx->Light._ClampVertexColor = _mesa_get_clamp_vertex_color(ctx);
+}
+
+/**
+ * Returns an appropriate gl_format for color rendering based on the
+ * GL_FRAMEBUFFER_SRGB state.
+ *
+ * Some drivers implement GL_FRAMEBUFFER_SRGB using a flag on the blend state
+ * (which GL_FRAMEBUFFER_SRGB maps to reasonably), but some have to do so by
+ * overriding the format of the surface.  This is a helper for doing the
+ * surface format override variant.
+ */
+gl_format
+_mesa_get_render_format(const struct gl_context *ctx, gl_format format)
+{
+   if (ctx->Color.sRGBEnabled)
+      return format;
+   else
+      return _mesa_get_srgb_format_linear(format);
+}
 
 /**********************************************************************/
 /** \name Initialization */
@@ -795,8 +891,7 @@ void _mesa_init_color( struct gl_context * ctx )
    ctx->Color.IndexMask = ~0u;
    memset(ctx->Color.ColorMask, 0xff, sizeof(ctx->Color.ColorMask));
    ctx->Color.ClearIndex = 0;
-   ASSIGN_4V( ctx->Color.ClearColor, 0, 0, 0, 0 );
-   ASSIGN_4V( ctx->Color.ClearColorUnclamped, 0, 0, 0, 0 );
+   ASSIGN_4V( ctx->Color.ClearColor.f, 0, 0, 0, 0 );
    ctx->Color.AlphaEnabled = GL_FALSE;
    ctx->Color.AlphaFunc = GL_ALWAYS;
    ctx->Color.AlphaRef = 0;
@@ -813,7 +908,6 @@ void _mesa_init_color( struct gl_context * ctx )
    ASSIGN_4V( ctx->Color.BlendColorUnclamped, 0.0, 0.0, 0.0, 0.0 );
    ctx->Color.IndexLogicOpEnabled = GL_FALSE;
    ctx->Color.ColorLogicOpEnabled = GL_FALSE;
-   ctx->Color._LogicOpEnabled = GL_FALSE;
    ctx->Color.LogicOp = GL_COPY;
    ctx->Color.DitherFlag = GL_TRUE;
 
@@ -824,10 +918,17 @@ void _mesa_init_color( struct gl_context * ctx )
       ctx->Color.DrawBuffer[0] = GL_FRONT;
    }
 
-   ctx->Color.ClampFragmentColor = GL_FIXED_ONLY_ARB;
-   ctx->Color._ClampFragmentColor = GL_TRUE;
+   ctx->Color.ClampFragmentColor = ctx->API == API_OPENGL_COMPAT ?
+                                   GL_FIXED_ONLY_ARB : GL_FALSE;
+   ctx->Color._ClampFragmentColor = GL_FALSE;
    ctx->Color.ClampReadColor = GL_FIXED_ONLY_ARB;
-   ctx->Color._ClampReadColor = GL_TRUE;
+
+   if (ctx->API == API_OPENGLES2) {
+      /* GLES 3 behaves as though GL_FRAMEBUFFER_SRGB is always enabled. */
+      ctx->Color.sRGBEnabled = GL_TRUE;
+   } else {
+      ctx->Color.sRGBEnabled = GL_FALSE;
+   }
 }
 
 /*@}*/

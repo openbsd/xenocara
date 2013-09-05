@@ -17,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
@@ -41,16 +42,20 @@
 #include "main/dispatch.h"
 #include "main/enums.h"
 #include "main/hash.h"
-#include "main/mfeatures.h"
 #include "main/mtypes.h"
 #include "main/shaderapi.h"
 #include "main/shaderobj.h"
+#include "main/transformfeedback.h"
+#include "main/uniforms.h"
 #include "program/program.h"
+#include "program/prog_print.h"
 #include "program/prog_parameter.h"
-#include "program/prog_uniform.h"
 #include "ralloc.h"
 #include <stdbool.h>
 #include "../glsl/glsl_parser_extras.h"
+#include "../glsl/ir.h"
+#include "../glsl/ir_uniform.h"
+#include "../glsl/program.h"
 
 /** Define this to enable shader substitution (see below) */
 #define SHADER_SUBST 0
@@ -82,6 +87,8 @@ get_shader_flags(void)
          flags |= GLSL_UNIFORMS;
       if (strstr(env, "useprog"))
          flags |= GLSL_USE_PROG;
+      if (strstr(env, "errors"))
+         flags |= GLSL_REPORT_ERRORS;
    }
 
    return flags;
@@ -102,6 +109,7 @@ _mesa_init_shader_state(struct gl_context *ctx)
 
    memset(&options, 0, sizeof(options));
    options.MaxUnrollIterations = 32;
+   options.MaxIfDepth = UINT_MAX;
 
    /* Default pragma settings */
    options.DefaultPragmas.Optimize = GL_TRUE;
@@ -124,65 +132,9 @@ _mesa_free_shader_state(struct gl_context *ctx)
 				  NULL);
    _mesa_reference_shader_program(ctx, &ctx->Shader.CurrentFragmentProgram,
 				  NULL);
+   _mesa_reference_shader_program(ctx, &ctx->Shader._CurrentFragmentProgram,
+				  NULL);
    _mesa_reference_shader_program(ctx, &ctx->Shader.ActiveProgram, NULL);
-}
-
-
-/**
- * Return the size of the given GLSL datatype, in floats (components).
- */
-GLint
-_mesa_sizeof_glsl_type(GLenum type)
-{
-   switch (type) {
-   case GL_FLOAT:
-   case GL_INT:
-   case GL_BOOL:
-   case GL_SAMPLER_1D:
-   case GL_SAMPLER_2D:
-   case GL_SAMPLER_3D:
-   case GL_SAMPLER_CUBE:
-   case GL_SAMPLER_1D_SHADOW:
-   case GL_SAMPLER_2D_SHADOW:
-   case GL_SAMPLER_2D_RECT_ARB:
-   case GL_SAMPLER_2D_RECT_SHADOW_ARB:
-   case GL_SAMPLER_1D_ARRAY_EXT:
-   case GL_SAMPLER_2D_ARRAY_EXT:
-   case GL_SAMPLER_1D_ARRAY_SHADOW_EXT:
-   case GL_SAMPLER_2D_ARRAY_SHADOW_EXT:
-   case GL_SAMPLER_CUBE_SHADOW_EXT:
-      return 1;
-   case GL_FLOAT_VEC2:
-   case GL_INT_VEC2:
-   case GL_UNSIGNED_INT_VEC2:
-   case GL_BOOL_VEC2:
-      return 2;
-   case GL_FLOAT_VEC3:
-   case GL_INT_VEC3:
-   case GL_UNSIGNED_INT_VEC3:
-   case GL_BOOL_VEC3:
-      return 3;
-   case GL_FLOAT_VEC4:
-   case GL_INT_VEC4:
-   case GL_UNSIGNED_INT_VEC4:
-   case GL_BOOL_VEC4:
-      return 4;
-   case GL_FLOAT_MAT2:
-   case GL_FLOAT_MAT2x3:
-   case GL_FLOAT_MAT2x4:
-      return 8; /* two float[4] vectors */
-   case GL_FLOAT_MAT3:
-   case GL_FLOAT_MAT3x2:
-   case GL_FLOAT_MAT3x4:
-      return 12; /* three float[4] vectors */
-   case GL_FLOAT_MAT4:
-   case GL_FLOAT_MAT4x2:
-   case GL_FLOAT_MAT4x3:
-      return 16;  /* four float[4] vectors */
-   default:
-      _mesa_problem(NULL, "Invalid type in _mesa_sizeof_glsl_type()");
-      return 1;
-   }
 }
 
 
@@ -220,41 +172,16 @@ static bool
 validate_shader_target(const struct gl_context *ctx, GLenum type)
 {
    switch (type) {
-#if FEATURE_ARB_fragment_shader
    case GL_FRAGMENT_SHADER:
       return ctx->Extensions.ARB_fragment_shader;
-#endif
-#if FEATURE_ARB_vertex_shader
    case GL_VERTEX_SHADER:
       return ctx->Extensions.ARB_vertex_shader;
-#endif
-#if FEATURE_ARB_geometry_shader4
    case GL_GEOMETRY_SHADER_ARB:
-      return ctx->Extensions.ARB_geometry_shader4;
-#endif
+      return _mesa_is_desktop_gl(ctx) && ctx->Extensions.ARB_geometry_shader4;
    default:
       return false;
    }
 }
-
-
-/**
- * Find the length of the longest transform feedback varying name
- * which was specified with glTransformFeedbackVaryings().
- */
-static GLint
-longest_feedback_varying_name(const struct gl_shader_program *shProg)
-{
-   GLuint i;
-   GLint max = 0;
-   for (i = 0; i < shProg->TransformFeedback.NumVarying; i++) {
-      GLint len = strlen(shProg->TransformFeedback.VaryingNames[i]);
-      if (len > max)
-         max = len;
-   }
-   return max;
-}
-
 
 
 static GLboolean
@@ -283,6 +210,8 @@ attach_shader(struct gl_context *ctx, GLuint program, GLuint shader)
    struct gl_shader *sh;
    GLuint i, n;
 
+   const bool same_type_disallowed = _mesa_is_gles(ctx);
+
    shProg = _mesa_lookup_shader_program_err(ctx, program, "glAttachShader");
    if (!shProg)
       return;
@@ -303,6 +232,18 @@ attach_shader(struct gl_context *ctx, GLuint program, GLuint shader)
           */
          _mesa_error(ctx, GL_INVALID_OPERATION, "glAttachShader");
          return;
+      } else if (same_type_disallowed &&
+                 shProg->Shaders[i]->Type == sh->Type) {
+        /* Shader with the same type is already attached to this program,
+         * OpenGL ES 2.0 and 3.0 specs say:
+         *
+         *      "Multiple shader objects of the same type may not be attached
+         *      to a single program object. [...] The error INVALID_OPERATION
+         *      is generated if [...] another shader object of the same type
+         *      as shader is already attached to program."
+         */
+         _mesa_error(ctx, GL_INVALID_OPERATION, "glAttachShader");
+         return;
       }
    }
 
@@ -320,90 +261,6 @@ attach_shader(struct gl_context *ctx, GLuint program, GLuint shader)
    shProg->Shaders[n] = NULL; /* since realloc() didn't zero the new space */
    _mesa_reference_shader(ctx, &shProg->Shaders[n], sh);
    shProg->NumShaders++;
-}
-
-
-static GLint
-get_attrib_location(struct gl_context *ctx, GLuint program, const GLchar *name)
-{
-   struct gl_shader_program *shProg
-      = _mesa_lookup_shader_program_err(ctx, program, "glGetAttribLocation");
-
-   if (!shProg) {
-      return -1;
-   }
-
-   if (!shProg->LinkStatus) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glGetAttribLocation(program not linked)");
-      return -1;
-   }
-
-   if (!name)
-      return -1;
-
-   if (shProg->VertexProgram) {
-      const struct gl_program_parameter_list *attribs =
-         shProg->VertexProgram->Base.Attributes;
-      if (attribs) {
-         GLint i = _mesa_lookup_parameter_index(attribs, -1, name);
-         if (i >= 0) {
-            return attribs->Parameters[i].StateIndexes[0];
-         }
-      }
-   }
-   return -1;
-}
-
-
-static void
-bind_attrib_location(struct gl_context *ctx, GLuint program, GLuint index,
-                     const GLchar *name)
-{
-   struct gl_shader_program *shProg;
-   const GLint size = -1; /* unknown size */
-   GLint i;
-   GLenum datatype = GL_FLOAT_VEC4;
-
-   shProg = _mesa_lookup_shader_program_err(ctx, program,
-                                            "glBindAttribLocation");
-   if (!shProg) {
-      return;
-   }
-
-   if (!name)
-      return;
-
-   if (strncmp(name, "gl_", 3) == 0) {
-      _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glBindAttribLocation(illegal name)");
-      return;
-   }
-
-   if (index >= ctx->Const.VertexProgram.MaxAttribs) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glBindAttribLocation(index)");
-      return;
-   }
-
-   /* this will replace the current value if it's already in the list */
-   i = _mesa_add_attribute(shProg->Attributes, name, size, datatype, index);
-   if (i < 0) {
-      _mesa_error(ctx, GL_OUT_OF_MEMORY, "glBindAttribLocation");
-      return;
-   }
-
-   /*
-    * Note that this attribute binding won't go into effect until
-    * glLinkProgram is called again.
-    */
-}
-
-
-static void
-bind_frag_data_location(struct gl_context *ctx, GLuint program,
-                        GLuint colorNumber, const GLchar *name)
-{
-   _mesa_problem(ctx, "bind_frag_data_location() not implemented yet");
 }
 
 
@@ -465,10 +322,12 @@ delete_shader_program(struct gl_context *ctx, GLuint name)
    if (!shProg)
       return;
 
-   shProg->DeletePending = GL_TRUE;
+   if (!shProg->DeletePending) {
+      shProg->DeletePending = GL_TRUE;
 
-   /* effectively, decr shProg's refcount */
-   _mesa_reference_shader_program(ctx, &shProg, NULL);
+      /* effectively, decr shProg's refcount */
+      _mesa_reference_shader_program(ctx, &shProg, NULL);
+   }
 }
 
 
@@ -481,10 +340,12 @@ delete_shader(struct gl_context *ctx, GLuint shader)
    if (!sh)
       return;
 
-   sh->DeletePending = GL_TRUE;
+   if (!sh->DeletePending) {
+      sh->DeletePending = GL_TRUE;
 
-   /* effectively, decr sh's refcount */
-   _mesa_reference_shader(ctx, &sh, NULL);
+      /* effectively, decr sh's refcount */
+      _mesa_reference_shader(ctx, &sh, NULL);
+   }
 }
 
 
@@ -510,7 +371,7 @@ detach_shader(struct gl_context *ctx, GLuint program, GLuint shader)
          _mesa_reference_shader(ctx, &shProg->Shaders[i], NULL);
 
          /* alloc new, smaller array */
-         newList = (struct gl_shader **)
+         newList =
             malloc((n - 1) * sizeof(struct gl_shader *));
          if (!newList) {
             _mesa_error(ctx, GL_OUT_OF_MEMORY, "glDetachShader");
@@ -556,38 +417,6 @@ detach_shader(struct gl_context *ctx, GLuint program, GLuint shader)
 }
 
 
-static void
-get_active_attrib(struct gl_context *ctx, GLuint program, GLuint index,
-                  GLsizei maxLength, GLsizei *length, GLint *size,
-                  GLenum *type, GLchar *nameOut)
-{
-   const struct gl_program_parameter_list *attribs = NULL;
-   struct gl_shader_program *shProg;
-
-   shProg = _mesa_lookup_shader_program_err(ctx, program, "glGetActiveAttrib");
-   if (!shProg)
-      return;
-
-   if (shProg->VertexProgram)
-      attribs = shProg->VertexProgram->Base.Attributes;
-
-   if (!attribs || index >= attribs->NumParameters) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glGetActiveAttrib(index)");
-      return;
-   }
-
-   _mesa_copy_string(nameOut, maxLength, length,
-                     attribs->Parameters[index].Name);
-
-   if (size)
-      *size = attribs->Parameters[index].Size
-         / _mesa_sizeof_glsl_type(attribs->Parameters[index].DataType);
-
-   if (type)
-      *type = attribs->Parameters[index].DataType;
-}
-
-
 /**
  * Return list of shaders attached to shader program.
  */
@@ -606,16 +435,6 @@ get_attached_shaders(struct gl_context *ctx, GLuint program, GLsizei maxCount,
          *count = i;
    }
 }
-
-
-static GLint
-get_frag_data_location(struct gl_context *ctx, GLuint program,
-                       const GLchar *name)
-{
-   _mesa_problem(ctx, "get_frag_data_location() not implemented yet");
-   return -1;
-}
-
 
 
 /**
@@ -645,79 +464,165 @@ get_handle(struct gl_context *ctx, GLenum pname)
 static void
 get_programiv(struct gl_context *ctx, GLuint program, GLenum pname, GLint *params)
 {
-   const struct gl_program_parameter_list *attribs;
    struct gl_shader_program *shProg
       = _mesa_lookup_shader_program(ctx, program);
+
+   /* Is transform feedback available in this context?
+    */
+   const bool has_xfb =
+      (ctx->API == API_OPENGL_COMPAT && ctx->Extensions.EXT_transform_feedback)
+      || ctx->API == API_OPENGL_CORE
+      || _mesa_is_gles3(ctx);
+
+   /* Are geometry shaders available in this context?
+    */
+   const bool has_gs =
+      _mesa_is_desktop_gl(ctx) && ctx->Extensions.ARB_geometry_shader4;
+
+   /* Are uniform buffer objects available in this context?
+    */
+   const bool has_ubo =
+      (ctx->API == API_OPENGL_COMPAT && ctx->Extensions.ARB_uniform_buffer_object)
+      || ctx->API == API_OPENGL_CORE
+      || _mesa_is_gles3(ctx);
 
    if (!shProg) {
       _mesa_error(ctx, GL_INVALID_VALUE, "glGetProgramiv(program)");
       return;
    }
 
-   if (shProg->VertexProgram)
-      attribs = shProg->VertexProgram->Base.Attributes;
-   else
-      attribs = NULL;
-
    switch (pname) {
    case GL_DELETE_STATUS:
       *params = shProg->DeletePending;
-      break; 
+      return;
    case GL_LINK_STATUS:
       *params = shProg->LinkStatus;
-      break;
+      return;
    case GL_VALIDATE_STATUS:
       *params = shProg->Validated;
-      break;
+      return;
    case GL_INFO_LOG_LENGTH:
       *params = shProg->InfoLog ? strlen(shProg->InfoLog) + 1 : 0;
-      break;
+      return;
    case GL_ATTACHED_SHADERS:
       *params = shProg->NumShaders;
-      break;
+      return;
    case GL_ACTIVE_ATTRIBUTES:
-      *params = attribs ? attribs->NumParameters : 0;
-      break;
+      *params = _mesa_count_active_attribs(shProg);
+      return;
    case GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
-      *params = _mesa_longest_parameter_name(attribs, PROGRAM_INPUT) + 1;
-      break;
+      *params = _mesa_longest_attribute_name_length(shProg);
+      return;
    case GL_ACTIVE_UNIFORMS:
-      *params = shProg->Uniforms ? shProg->Uniforms->NumUniforms : 0;
-      break;
-   case GL_ACTIVE_UNIFORM_MAX_LENGTH:
-      *params = _mesa_longest_uniform_name(shProg->Uniforms);
-      if (*params > 0)
-         (*params)++;  /* add one for terminating zero */
-      break;
-   case GL_PROGRAM_BINARY_LENGTH_OES:
-      *params = 0;
-      break;
-#if FEATURE_EXT_transform_feedback
-   case GL_TRANSFORM_FEEDBACK_VARYINGS:
-      *params = shProg->TransformFeedback.NumVarying;
-      break;
-   case GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH:
-      *params = longest_feedback_varying_name(shProg) + 1;
-      break;
-   case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
-      *params = shProg->TransformFeedback.BufferMode;
-      break;
-#endif
-#if FEATURE_ARB_geometry_shader4
-   case GL_GEOMETRY_VERTICES_OUT_ARB:
-      *params = shProg->Geom.VerticesOut;
-      break;
-   case GL_GEOMETRY_INPUT_TYPE_ARB:
-      *params = shProg->Geom.InputType;
-      break;
-   case GL_GEOMETRY_OUTPUT_TYPE_ARB:
-      *params = shProg->Geom.OutputType;
-      break;
-#endif
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetProgramiv(pname)");
+      *params = shProg->NumUserUniformStorage;
+      return;
+   case GL_ACTIVE_UNIFORM_MAX_LENGTH: {
+      unsigned i;
+      GLint max_len = 0;
+
+      for (i = 0; i < shProg->NumUserUniformStorage; i++) {
+	 /* Add one for the terminating NUL character for a non-array, and
+	  * 4 for the "[0]" and the NUL for an array.
+	  */
+	 const GLint len = strlen(shProg->UniformStorage[i].name) + 1 +
+	     ((shProg->UniformStorage[i].array_elements != 0) ? 3 : 0);
+
+	 if (len > max_len)
+	    max_len = len;
+      }
+
+      *params = max_len;
       return;
    }
+   case GL_TRANSFORM_FEEDBACK_VARYINGS:
+      if (!has_xfb)
+         break;
+      *params = shProg->TransformFeedback.NumVarying;
+      return;
+   case GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH: {
+      unsigned i;
+      GLint max_len = 0;
+      if (!has_xfb)
+         break;
+
+      for (i = 0; i < shProg->TransformFeedback.NumVarying; i++) {
+         /* Add one for the terminating NUL character.
+          */
+         const GLint len = strlen(shProg->TransformFeedback.VaryingNames[i]) + 1;
+
+         if (len > max_len)
+            max_len = len;
+      }
+
+      *params = max_len;
+      return;
+   }
+   case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
+      if (!has_xfb)
+         break;
+      *params = shProg->TransformFeedback.BufferMode;
+      return;
+   case GL_GEOMETRY_VERTICES_OUT_ARB:
+      if (!has_gs)
+         break;
+      *params = shProg->Geom.VerticesOut;
+      return;
+   case GL_GEOMETRY_INPUT_TYPE_ARB:
+      if (!has_gs)
+         break;
+      *params = shProg->Geom.InputType;
+      return;
+   case GL_GEOMETRY_OUTPUT_TYPE_ARB:
+      if (!has_gs)
+         break;
+      *params = shProg->Geom.OutputType;
+      return;
+   case GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH: {
+      unsigned i;
+      GLint max_len = 0;
+
+      if (!has_ubo)
+         break;
+
+      for (i = 0; i < shProg->NumUniformBlocks; i++) {
+	 /* Add one for the terminating NUL character.
+	  */
+	 const GLint len = strlen(shProg->UniformBlocks[i].Name) + 1;
+
+	 if (len > max_len)
+	    max_len = len;
+      }
+
+      *params = max_len;
+      return;
+   }
+   case GL_ACTIVE_UNIFORM_BLOCKS:
+      if (!has_ubo)
+         break;
+
+      *params = shProg->NumUniformBlocks;
+      return;
+   case GL_PROGRAM_BINARY_RETRIEVABLE_HINT:
+      /* This enum isn't part of the OES extension for OpenGL ES 2.0.  It is
+       * only available with desktop OpenGL 3.0+ with the
+       * GL_ARB_get_program_binary extension or OpenGL ES 3.0.
+       *
+       * On desktop, we ignore the 3.0+ requirement because it is silly.
+       */
+      if (!_mesa_is_desktop_gl(ctx) && !_mesa_is_gles3(ctx))
+         break;
+
+      *params = shProg->BinaryRetreivableHint;
+      return;
+   case GL_PROGRAM_BINARY_LENGTH:
+      *params = 0;
+      return;
+   default:
+      break;
+   }
+
+   _mesa_error(ctx, GL_INVALID_ENUM, "glGetProgramiv(pname=%s)",
+               _mesa_lookup_enum_by_nr(pname));
 }
 
 
@@ -801,7 +706,8 @@ get_shader_source(struct gl_context *ctx, GLuint shader, GLsizei maxLength,
 
 
 /**
- * Set/replace shader source code.
+ * Set/replace shader source code.  A helper function used by
+ * glShaderSource[ARB] and glCreateShaderProgramEXT.
  */
 static void
 shader_source(struct gl_context *ctx, GLuint shader, const GLchar *source)
@@ -813,9 +719,7 @@ shader_source(struct gl_context *ctx, GLuint shader, const GLchar *source)
       return;
 
    /* free old shader source string and install new one */
-   if (sh->Source) {
-      free((void *) sh->Source);
-   }
+   free((void *)sh->Source);
    sh->Source = source;
    sh->CompileStatus = GL_FALSE;
 #ifdef DEBUG
@@ -842,10 +746,48 @@ compile_shader(struct gl_context *ctx, GLuint shaderObj)
    /* set default pragma state for shader */
    sh->Pragmas = options->DefaultPragmas;
 
-   /* this call will set the sh->CompileStatus field to indicate if
-    * compilation was successful.
-    */
-   _mesa_glsl_compile_shader(ctx, sh);
+   if (!sh->Source) {
+      /* If the user called glCompileShader without first calling
+       * glShaderSource, we should fail to compile, but not raise a GL_ERROR.
+       */
+      sh->CompileStatus = GL_FALSE;
+   } else {
+      if (ctx->Shader.Flags & GLSL_DUMP) {
+         printf("GLSL source for %s shader %d:\n",
+                _mesa_glsl_shader_target_name(sh->Type), sh->Name);
+         printf("%s\n", sh->Source);
+      }
+
+      /* this call will set the shader->CompileStatus field to indicate if
+       * compilation was successful.
+       */
+      _mesa_glsl_compile_shader(ctx, sh, false, false);
+
+      if (ctx->Shader.Flags & GLSL_LOG) {
+         _mesa_write_shader_to_file(sh);
+      }
+
+      if (ctx->Shader.Flags & GLSL_DUMP) {
+         if (sh->CompileStatus) {
+            printf("GLSL IR for shader %d:\n", sh->Name);
+            _mesa_print_ir(sh->ir, NULL);
+            printf("\n\n");
+         } else {
+            printf("GLSL shader %d failed to compile.\n", sh->Name);
+         }
+         if (sh->InfoLog && sh->InfoLog[0] != 0) {
+            printf("GLSL shader %d info log:\n", sh->Name);
+            printf("%s\n", sh->InfoLog);
+         }
+      }
+
+   }
+
+   if (sh->CompileStatus == GL_FALSE && 
+       (ctx->Shader.Flags & GLSL_REPORT_ERRORS)) {
+      _mesa_debug(ctx, "Error compiling shader %u:\n%s\n",
+                  sh->Name, sh->InfoLog);
+   }
 }
 
 
@@ -868,13 +810,19 @@ link_program(struct gl_context *ctx, GLuint program)
 	   || shProg == ctx->Shader.CurrentGeometryProgram
 	   || shProg == ctx->Shader.CurrentFragmentProgram)) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
-                  "glLinkProgram(transform feedback active");
+                  "glLinkProgram(transform feedback active)");
       return;
    }
 
    FLUSH_VERTICES(ctx, _NEW_PROGRAM);
 
    _mesa_glsl_link_shader(ctx, shProg);
+
+   if (shProg->LinkStatus == GL_FALSE && 
+       (ctx->Shader.Flags & GLSL_REPORT_ERRORS)) {
+      _mesa_debug(ctx, "Error linking program %u:\n%s\n",
+                  shProg->Name, shProg->InfoLog);
+   }
 
    /* debug code */
    if (0) {
@@ -903,30 +851,20 @@ print_shader_info(const struct gl_shader_program *shProg)
 
    printf("Mesa: glUseProgram(%u)\n", shProg->Name);
    for (i = 0; i < shProg->NumShaders; i++) {
-      const char *s;
-      switch (shProg->Shaders[i]->Type) {
-      case GL_VERTEX_SHADER:
-         s = "vertex";
-         break;
-      case GL_FRAGMENT_SHADER:
-         s = "fragment";
-         break;
-      case GL_GEOMETRY_SHADER:
-         s = "geometry";
-         break;
-      default:
-         s = "";
-      }
-      printf("  %s shader %u, checksum %u\n", s, 
+      printf("  %s shader %u, checksum %u\n",
+             _mesa_glsl_shader_target_name(shProg->Shaders[i]->Type),
 	     shProg->Shaders[i]->Name,
 	     shProg->Shaders[i]->SourceChecksum);
    }
-   if (shProg->VertexProgram)
-      printf("  vert prog %u\n", shProg->VertexProgram->Base.Id);
-   if (shProg->FragmentProgram)
-      printf("  frag prog %u\n", shProg->FragmentProgram->Base.Id);
-   if (shProg->GeometryProgram)
-      printf("  geom prog %u\n", shProg->GeometryProgram->Base.Id);
+   if (shProg->_LinkedShaders[MESA_SHADER_VERTEX])
+      printf("  vert prog %u\n",
+	     shProg->_LinkedShaders[MESA_SHADER_VERTEX]->Program->Id);
+   if (shProg->_LinkedShaders[MESA_SHADER_FRAGMENT])
+      printf("  frag prog %u\n",
+	     shProg->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program->Id);
+   if (shProg->_LinkedShaders[MESA_SHADER_GEOMETRY])
+      printf("  geom prog %u\n",
+	     shProg->_LinkedShaders[MESA_SHADER_GEOMETRY]->Program->Id);
 }
 
 
@@ -957,7 +895,6 @@ use_shader_program(struct gl_context *ctx, GLenum type,
    struct gl_shader_program **target;
 
    switch (type) {
-#if FEATURE_ARB_vertex_shader
    case GL_VERTEX_SHADER:
       target = &ctx->Shader.CurrentVertexProgram;
       if ((shProg == NULL)
@@ -965,8 +902,6 @@ use_shader_program(struct gl_context *ctx, GLenum type,
 	 shProg = NULL;
       }
       break;
-#endif
-#if FEATURE_ARB_geometry_shader4
    case GL_GEOMETRY_SHADER_ARB:
       target = &ctx->Shader.CurrentGeometryProgram;
       if ((shProg == NULL)
@@ -974,8 +909,6 @@ use_shader_program(struct gl_context *ctx, GLenum type,
 	 shProg = NULL;
       }
       break;
-#endif
-#if FEATURE_ARB_fragment_shader
    case GL_FRAGMENT_SHADER:
       target = &ctx->Shader.CurrentFragmentProgram;
       if ((shProg == NULL)
@@ -983,13 +916,33 @@ use_shader_program(struct gl_context *ctx, GLenum type,
 	 shProg = NULL;
       }
       break;
-#endif
    default:
       return false;
    }
 
    if (*target != shProg) {
       FLUSH_VERTICES(ctx, _NEW_PROGRAM | _NEW_PROGRAM_CONSTANTS);
+
+      /* If the shader is also bound as the current rendering shader, unbind
+       * it from that binding point as well.  This ensures that the correct
+       * semantics of glDeleteProgram are maintained.
+       */
+      switch (type) {
+      case GL_VERTEX_SHADER:
+	 /* Empty for now. */
+	 break;
+      case GL_GEOMETRY_SHADER_ARB:
+	 /* Empty for now. */
+	 break;
+      case GL_FRAGMENT_SHADER:
+	 if (*target == ctx->Shader._CurrentFragmentProgram) {
+	    _mesa_reference_shader_program(ctx,
+					   &ctx->Shader._CurrentFragmentProgram,
+					   NULL);
+	 }
+	 break;
+      }
+
       _mesa_reference_shader_program(ctx, target, shProg);
       return true;
    }
@@ -1014,60 +967,6 @@ _mesa_use_program(struct gl_context *ctx, struct gl_shader_program *shProg)
 
 
 /**
- * Validate a program's samplers.
- * Specifically, check that there aren't two samplers of different types
- * pointing to the same texture unit.
- * \return GL_TRUE if valid, GL_FALSE if invalid
- */
-static GLboolean
-validate_samplers(const struct gl_program *prog, char *errMsg)
-{
-   static const char *targetName[] = {
-      "TEXTURE_BUFFER",
-      "TEXTURE_2D_ARRAY",
-      "TEXTURE_1D_ARRAY",
-      "TEXTURE_CUBE",
-      "TEXTURE_3D",
-      "TEXTURE_RECT",
-      "TEXTURE_2D",
-      "TEXTURE_1D",
-   };
-   GLint targetUsed[MAX_COMBINED_TEXTURE_IMAGE_UNITS];
-   GLbitfield samplersUsed = prog->SamplersUsed;
-   GLuint i;
-
-   assert(Elements(targetName) == NUM_TEXTURE_TARGETS);
-
-   if (samplersUsed == 0x0)
-      return GL_TRUE;
-
-   for (i = 0; i < Elements(targetUsed); i++)
-      targetUsed[i] = -1;
-
-   /* walk over bits which are set in 'samplers' */
-   while (samplersUsed) {
-      GLuint unit;
-      gl_texture_index target;
-      GLint sampler = _mesa_ffs(samplersUsed) - 1;
-      assert(sampler >= 0);
-      assert(sampler < Elements(prog->SamplerUnits));
-      unit = prog->SamplerUnits[sampler];
-      target = prog->SamplerTargets[sampler];
-      if (targetUsed[unit] != -1 && targetUsed[unit] != (int) target) {
-         _mesa_snprintf(errMsg, 100,
-		  "Texture unit %d is accessed both as %s and %s",
-		  unit, targetName[targetUsed[unit]], targetName[target]);
-         return GL_FALSE;
-      }
-      targetUsed[unit] = target;
-      samplersUsed ^= (1 << sampler);
-   }
-
-   return GL_TRUE;
-}
-
-
-/**
  * Do validation of the given shader program.
  * \param errMsg  returns error message if validation fails.
  * \return GL_TRUE if valid, GL_FALSE if invalid (and set errMsg)
@@ -1076,10 +975,6 @@ static GLboolean
 validate_shader_program(const struct gl_shader_program *shProg,
                         char *errMsg)
 {
-   const struct gl_vertex_program *vp = shProg->VertexProgram;
-   const struct gl_geometry_program *gp = shProg->GeometryProgram;
-   const struct gl_fragment_program *fp = shProg->FragmentProgram;
-
    if (!shProg->LinkStatus) {
       return GL_FALSE;
    }
@@ -1104,15 +999,8 @@ validate_shader_program(const struct gl_shader_program *shProg,
     * Check: any two active samplers in the current program object are of
     * different types, but refer to the same texture image unit,
     */
-   if (vp && !validate_samplers(&vp->Base, errMsg)) {
+   if (!_mesa_sampler_uniforms_are_valid(shProg, errMsg, 100))
       return GL_FALSE;
-   }
-   if (gp && !validate_samplers(&gp->Base, errMsg)) {
-      return GL_FALSE;
-   }
-   if (fp && !validate_samplers(&fp->Base, errMsg)) {
-      return GL_FALSE;
-   }
 
    return GL_TRUE;
 }
@@ -1161,26 +1049,7 @@ _mesa_AttachShader(GLuint program, GLuint shader)
 
 
 void GLAPIENTRY
-_mesa_BindAttribLocationARB(GLhandleARB program, GLuint index,
-                            const GLcharARB *name)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   bind_attrib_location(ctx, program, index, name);
-}
-
-
-/* GL_EXT_gpu_shader4, GL3 */
-void GLAPIENTRY
-_mesa_BindFragDataLocation(GLuint program, GLuint colorNumber,
-                           const GLchar *name)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   bind_frag_data_location(ctx, program, colorNumber, name);
-}
-
-
-void GLAPIENTRY
-_mesa_CompileShaderARB(GLhandleARB shaderObj)
+_mesa_CompileShader(GLhandleARB shaderObj)
 {
    GET_CURRENT_CONTEXT(ctx);
    if (MESA_VERBOSE & VERBOSE_API)
@@ -1288,16 +1157,6 @@ _mesa_DetachShader(GLuint program, GLuint shader)
 
 
 void GLAPIENTRY
-_mesa_GetActiveAttribARB(GLhandleARB program, GLuint index,
-                         GLsizei maxLength, GLsizei * length, GLint * size,
-                         GLenum * type, GLcharARB * name)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   get_active_attrib(ctx, program, index, maxLength, length, size, type, name);
-}
-
-
-void GLAPIENTRY
 _mesa_GetAttachedObjectsARB(GLhandleARB container, GLsizei maxCount,
                             GLsizei * count, GLhandleARB * obj)
 {
@@ -1313,24 +1172,6 @@ _mesa_GetAttachedShaders(GLuint program, GLsizei maxCount,
    GET_CURRENT_CONTEXT(ctx);
    get_attached_shaders(ctx, program, maxCount, count, obj);
 }
-
-
-GLint GLAPIENTRY
-_mesa_GetAttribLocationARB(GLhandleARB program, const GLcharARB * name)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   return get_attrib_location(ctx, program, name);
-}
-
-
-/* GL_EXT_gpu_shader4, GL3 */
-GLint GLAPIENTRY
-_mesa_GetFragDataLocation(GLuint program, const GLchar *name)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   return get_frag_data_location(ctx, program, name);
-}
-
 
 
 void GLAPIENTRY
@@ -1422,7 +1263,7 @@ _mesa_GetShaderInfoLog(GLuint shader, GLsizei bufSize,
 
 
 void GLAPIENTRY
-_mesa_GetShaderSourceARB(GLhandleARB shader, GLsizei maxLength,
+_mesa_GetShaderSource(GLhandleARB shader, GLsizei maxLength,
                          GLsizei *length, GLcharARB *sourceOut)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -1455,7 +1296,7 @@ _mesa_IsShader(GLuint name)
 
 
 void GLAPIENTRY
-_mesa_LinkProgramARB(GLhandleARB programObj)
+_mesa_LinkProgram(GLhandleARB programObj)
 {
    GET_CURRENT_CONTEXT(ctx);
    link_program(ctx, programObj);
@@ -1479,7 +1320,7 @@ read_shader(const char *fname)
       return NULL;
    }
 
-   buffer = (char *) malloc(max);
+   buffer = malloc(max);
    len = fread(buffer, 1, max, f);
    buffer[len] = 0;
 
@@ -1498,8 +1339,8 @@ read_shader(const char *fname)
  * and pass it to _mesa_shader_source().
  */
 void GLAPIENTRY
-_mesa_ShaderSourceARB(GLhandleARB shaderObj, GLsizei count,
-                      const GLcharARB ** string, const GLint * length)
+_mesa_ShaderSource(GLhandleARB shaderObj, GLsizei count,
+                      const GLcharARB * const * string, const GLint * length)
 {
    GET_CURRENT_CONTEXT(ctx);
    GLint *offsets;
@@ -1516,7 +1357,7 @@ _mesa_ShaderSourceARB(GLhandleARB shaderObj, GLsizei count,
     * This array holds offsets of where the appropriate string ends, thus the
     * last element will be set to the total length of the source code.
     */
-   offsets = (GLint *) malloc(count * sizeof(GLint));
+   offsets = malloc(count * sizeof(GLint));
    if (offsets == NULL) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glShaderSourceARB");
       return;
@@ -1543,7 +1384,7 @@ _mesa_ShaderSourceARB(GLhandleARB shaderObj, GLsizei count,
     * valgrind warnings in the parser/grammer code.
     */
    totalLength = offsets[count - 1] + 2;
-   source = (GLcharARB *) malloc(totalLength * sizeof(GLcharARB));
+   source = malloc(totalLength * sizeof(GLcharARB));
    if (source == NULL) {
       free((GLvoid *) offsets);
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glShaderSourceARB");
@@ -1592,16 +1433,12 @@ _mesa_ShaderSourceARB(GLhandleARB shaderObj, GLsizei count,
 
 
 void GLAPIENTRY
-_mesa_UseProgramObjectARB(GLhandleARB program)
+_mesa_UseProgram(GLhandleARB program)
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_shader_program *shProg;
-   struct gl_transform_feedback_object *obj =
-      ctx->TransformFeedback.CurrentObject;
 
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
-   if (obj->Active) {
+   if (_mesa_is_xfb_active_and_unpaused(ctx)) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glUseProgram(transform feedback active)");
       return;
@@ -1632,14 +1469,16 @@ _mesa_UseProgramObjectARB(GLhandleARB program)
 
 
 void GLAPIENTRY
-_mesa_ValidateProgramARB(GLhandleARB program)
+_mesa_ValidateProgram(GLhandleARB program)
 {
    GET_CURRENT_CONTEXT(ctx);
    validate_program(ctx, program);
 }
 
-#ifdef FEATURE_ES2
 
+/**
+ * For OpenGL ES 2.0, GL_ARB_ES2_compatibility
+ */
 void GLAPIENTRY
 _mesa_GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype,
                                GLint* range, GLint* precision)
@@ -1692,6 +1531,9 @@ _mesa_GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype,
 }
 
 
+/**
+ * For OpenGL ES 2.0, GL_ARB_ES2_compatibility
+ */
 void GLAPIENTRY
 _mesa_ReleaseShaderCompiler(void)
 {
@@ -1699,6 +1541,9 @@ _mesa_ReleaseShaderCompiler(void)
 }
 
 
+/**
+ * For OpenGL ES 2.0, GL_ARB_ES2_compatibility
+ */
 void GLAPIENTRY
 _mesa_ShaderBinary(GLint n, const GLuint* shaders, GLenum binaryformat,
                    const void* binary, GLint length)
@@ -1712,18 +1557,64 @@ _mesa_ShaderBinary(GLint n, const GLuint* shaders, GLenum binaryformat,
    _mesa_error(ctx, GL_INVALID_OPERATION, __FUNCTION__);
 }
 
-#endif /* FEATURE_ES2 */
-
-
-#if FEATURE_ARB_geometry_shader4
 
 void GLAPIENTRY
-_mesa_ProgramParameteriARB(GLuint program, GLenum pname, GLint value)
+_mesa_GetProgramBinary(GLuint program, GLsizei bufSize, GLsizei *length,
+                       GLenum *binaryFormat, GLvoid *binary)
 {
    struct gl_shader_program *shProg;
    GET_CURRENT_CONTEXT(ctx);
 
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
+   shProg = _mesa_lookup_shader_program_err(ctx, program, "glGetProgramBinary");
+   if (!shProg)
+      return;
+
+   if (!shProg->LinkStatus) {
+      _mesa_error(ctx, GL_INVALID_OPERATION,
+                  "glGetProgramBinary(program %u not linked)",
+                  shProg->Name);
+      return;
+   }
+
+   if (bufSize < 0){
+      _mesa_error(ctx, GL_INVALID_VALUE, "glGetProgramBinary(bufSize < 0)");
+      return;
+   }
+
+   /* The ARB_get_program_binary spec says:
+    *
+    *     "If <length> is NULL, then no length is returned."
+    */
+   if (length != NULL)
+      *length = 0;
+
+   (void) binaryFormat;
+   (void) binary;
+}
+
+void GLAPIENTRY
+_mesa_ProgramBinary(GLuint program, GLenum binaryFormat,
+                    const GLvoid *binary, GLsizei length)
+{
+   struct gl_shader_program *shProg;
+   GET_CURRENT_CONTEXT(ctx);
+
+   shProg = _mesa_lookup_shader_program_err(ctx, program, "glProgramBinary");
+   if (!shProg)
+      return;
+
+   (void) binaryFormat;
+   (void) binary;
+   (void) length;
+   _mesa_error(ctx, GL_INVALID_OPERATION, __FUNCTION__);
+}
+
+
+void GLAPIENTRY
+_mesa_ProgramParameteri(GLuint program, GLenum pname, GLint value)
+{
+   struct gl_shader_program *shProg;
+   GET_CURRENT_CONTEXT(ctx);
 
    shProg = _mesa_lookup_shader_program_err(ctx, program,
                                             "glProgramParameteri");
@@ -1732,6 +1623,9 @@ _mesa_ProgramParameteriARB(GLuint program, GLenum pname, GLint value)
 
    switch (pname) {
    case GL_GEOMETRY_VERTICES_OUT_ARB:
+      if (!_mesa_is_desktop_gl(ctx) || !ctx->Extensions.ARB_geometry_shader4)
+         break;
+
       if (value < 1 ||
           (unsigned) value > ctx->Const.MaxGeometryOutputVertices) {
          _mesa_error(ctx, GL_INVALID_VALUE,
@@ -1740,8 +1634,11 @@ _mesa_ProgramParameteriARB(GLuint program, GLenum pname, GLint value)
          return;
       }
       shProg->Geom.VerticesOut = value;
-      break;
+      return;
    case GL_GEOMETRY_INPUT_TYPE_ARB:
+      if (!_mesa_is_desktop_gl(ctx) || !ctx->Extensions.ARB_geometry_shader4)
+         break;
+
       switch (value) {
       case GL_POINTS:
       case GL_LINES:
@@ -1756,8 +1653,11 @@ _mesa_ProgramParameteriARB(GLuint program, GLenum pname, GLint value)
                      _mesa_lookup_enum_by_nr(value));
          return;
       }
-      break;
+      return;
    case GL_GEOMETRY_OUTPUT_TYPE_ARB:
+      if (!_mesa_is_desktop_gl(ctx) || !ctx->Extensions.ARB_geometry_shader4)
+         break;
+
       switch (value) {
       case GL_POINTS:
       case GL_LINE_STRIP:
@@ -1770,15 +1670,59 @@ _mesa_ProgramParameteriARB(GLuint program, GLenum pname, GLint value)
                      _mesa_lookup_enum_by_nr(value));
          return;
       }
-      break;
+      return;
+   case GL_PROGRAM_BINARY_RETRIEVABLE_HINT:
+      /* This enum isn't part of the OES extension for OpenGL ES 2.0, but it
+       * is part of OpenGL ES 3.0.  For the ES2 case, this function shouldn't
+       * even be in the dispatch table, so we shouldn't need to expclicitly
+       * check here.
+       *
+       * On desktop, we ignore the 3.0+ requirement because it is silly.
+       */
+
+      /* The ARB_get_program_binary extension spec says:
+       *
+       *     "An INVALID_VALUE error is generated if the <value> argument to
+       *     ProgramParameteri is not TRUE or FALSE."
+       */
+      if (value != GL_TRUE && value != GL_FALSE) {
+         _mesa_error(ctx, GL_INVALID_VALUE,
+                     "glProgramParameteri(pname=%s, value=%d): "
+                     "value must be 0 or 1.",
+                     _mesa_lookup_enum_by_nr(pname),
+                     value);
+         return;
+      }
+
+      /* No need to notify the driver.  Any changes will actually take effect
+       * the next time the shader is linked.
+       *
+       * The ARB_get_program_binary extension spec says:
+       *
+       *     "To indicate that a program binary is likely to be retrieved,
+       *     ProgramParameteri should be called with <pname>
+       *     PROGRAM_BINARY_RETRIEVABLE_HINT and <value> TRUE. This setting
+       *     will not be in effect until the next time LinkProgram or
+       *     ProgramBinary has been called successfully."
+       *
+       * The resloution of issue 9 in the extension spec also says:
+       *
+       *     "The application may use the PROGRAM_BINARY_RETRIEVABLE_HINT hint
+       *     to indicate to the GL implementation that this program will
+       *     likely be saved with GetProgramBinary at some point. This will
+       *     give the GL implementation the opportunity to track any state
+       *     changes made to the program before being saved such that when it
+       *     is loaded again a recompile can be avoided."
+       */
+      shProg->BinaryRetreivableHint = value;
+      return;
    default:
-      _mesa_error(ctx, GL_INVALID_ENUM, "glProgramParameteriARB(pname=%s)",
-                  _mesa_lookup_enum_by_nr(pname));
       break;
    }
-}
 
-#endif
+   _mesa_error(ctx, GL_INVALID_ENUM, "glProgramParameteri(pname=%s)",
+               _mesa_lookup_enum_by_nr(pname));
+}
 
 void
 _mesa_use_shader_program(struct gl_context *ctx, GLenum type,
@@ -1790,20 +1734,22 @@ _mesa_use_shader_program(struct gl_context *ctx, GLenum type,
       ctx->Driver.UseProgram(ctx, shProg);
 }
 
+
+/**
+ * For GL_EXT_separate_shader_objects
+ */
 void GLAPIENTRY
 _mesa_UseShaderProgramEXT(GLenum type, GLuint program)
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_shader_program *shProg = NULL;
 
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
    if (!validate_shader_target(ctx, type)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glUseShaderProgramEXT(type)");
       return;
    }
 
-   if (ctx->TransformFeedback.CurrentObject->Active) {
+   if (_mesa_is_xfb_active_and_unpaused(ctx)) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
                   "glUseShaderProgramEXT(transform feedback is active)");
       return;
@@ -1825,6 +1771,10 @@ _mesa_UseShaderProgramEXT(GLenum type, GLuint program)
    _mesa_use_shader_program(ctx, type, shProg);
 }
 
+
+/**
+ * For GL_EXT_separate_shader_objects
+ */
 void GLAPIENTRY
 _mesa_ActiveProgramEXT(GLuint program)
 {
@@ -1837,6 +1787,10 @@ _mesa_ActiveProgramEXT(GLuint program)
    return;
 }
 
+
+/**
+ * For GL_EXT_separate_shader_objects
+ */
 GLuint GLAPIENTRY
 _mesa_CreateShaderProgramEXT(GLenum type, const GLchar *string)
 {
@@ -1880,69 +1834,3 @@ _mesa_CreateShaderProgramEXT(GLenum type, const GLchar *string)
 
    return program;
 }
-
-/**
- * Plug in shader-related functions into API dispatch table.
- */
-void
-_mesa_init_shader_dispatch(struct _glapi_table *exec)
-{
-#if FEATURE_GL
-   /* GL_ARB_vertex/fragment_shader */
-   SET_DeleteObjectARB(exec, _mesa_DeleteObjectARB);
-   SET_GetHandleARB(exec, _mesa_GetHandleARB);
-   SET_DetachObjectARB(exec, _mesa_DetachObjectARB);
-   SET_CreateShaderObjectARB(exec, _mesa_CreateShaderObjectARB);
-   SET_ShaderSourceARB(exec, _mesa_ShaderSourceARB);
-   SET_CompileShaderARB(exec, _mesa_CompileShaderARB);
-   SET_CreateProgramObjectARB(exec, _mesa_CreateProgramObjectARB);
-   SET_AttachObjectARB(exec, _mesa_AttachObjectARB);
-   SET_LinkProgramARB(exec, _mesa_LinkProgramARB);
-   SET_UseProgramObjectARB(exec, _mesa_UseProgramObjectARB);
-   SET_ValidateProgramARB(exec, _mesa_ValidateProgramARB);
-   SET_GetObjectParameterfvARB(exec, _mesa_GetObjectParameterfvARB);
-   SET_GetObjectParameterivARB(exec, _mesa_GetObjectParameterivARB);
-   SET_GetInfoLogARB(exec, _mesa_GetInfoLogARB);
-   SET_GetAttachedObjectsARB(exec, _mesa_GetAttachedObjectsARB);
-   SET_GetShaderSourceARB(exec, _mesa_GetShaderSourceARB);
-
-   /* OpenGL 2.0 */
-   SET_AttachShader(exec, _mesa_AttachShader);
-   SET_CreateProgram(exec, _mesa_CreateProgram);
-   SET_CreateShader(exec, _mesa_CreateShader);
-   SET_DeleteProgram(exec, _mesa_DeleteProgram);
-   SET_DeleteShader(exec, _mesa_DeleteShader);
-   SET_DetachShader(exec, _mesa_DetachShader);
-   SET_GetAttachedShaders(exec, _mesa_GetAttachedShaders);
-   SET_GetProgramiv(exec, _mesa_GetProgramiv);
-   SET_GetProgramInfoLog(exec, _mesa_GetProgramInfoLog);
-   SET_GetShaderiv(exec, _mesa_GetShaderiv);
-   SET_GetShaderInfoLog(exec, _mesa_GetShaderInfoLog);
-   SET_IsProgram(exec, _mesa_IsProgram);
-   SET_IsShader(exec, _mesa_IsShader);
-
-#if FEATURE_ARB_vertex_shader
-   SET_BindAttribLocationARB(exec, _mesa_BindAttribLocationARB);
-   SET_GetActiveAttribARB(exec, _mesa_GetActiveAttribARB);
-   SET_GetAttribLocationARB(exec, _mesa_GetAttribLocationARB);
-#endif
-
-#if FEATURE_ARB_geometry_shader4
-   SET_ProgramParameteriARB(exec, _mesa_ProgramParameteriARB);
-#endif
-
-   SET_UseShaderProgramEXT(exec, _mesa_UseShaderProgramEXT);
-   SET_ActiveProgramEXT(exec, _mesa_ActiveProgramEXT);
-   SET_CreateShaderProgramEXT(exec, _mesa_CreateShaderProgramEXT);
-
-   /* GL_EXT_gpu_shader4 / GL 3.0 */
-   SET_BindFragDataLocationEXT(exec, _mesa_BindFragDataLocation);
-   SET_GetFragDataLocationEXT(exec, _mesa_GetFragDataLocation);
-
-   /* GL_ARB_ES2_compatibility */
-   SET_ReleaseShaderCompiler(exec, _mesa_ReleaseShaderCompiler);
-   SET_GetShaderPrecisionFormat(exec, _mesa_GetShaderPrecisionFormat);
-
-#endif /* FEATURE_GL */
-}
-

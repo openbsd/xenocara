@@ -52,8 +52,7 @@ static VGboolean del_glyph(struct vg_font *font,
 
    glyph = (struct vg_glyph *)
       cso_hash_take(font->glyphs, (unsigned) glyphIndex);
-   if (glyph)
-      FREE(glyph);
+   FREE(glyph);
 
    return (glyph != NULL);
 }
@@ -73,8 +72,8 @@ static void add_glyph(struct vg_font *font,
    glyph = CALLOC_STRUCT(vg_glyph);
    glyph->object = obj;
    glyph->is_hinted = isHinted;
-   memcpy(glyph->glyph_origin, glyphOrigin, sizeof(glyphOrigin));
-   memcpy(glyph->escapement, escapement, sizeof(escapement));
+   memcpy(glyph->glyph_origin, glyphOrigin, sizeof(glyph->glyph_origin));
+   memcpy(glyph->escapement, escapement, sizeof(glyph->glyph_origin));
 
    cso_hash_insert(font->glyphs, (unsigned) glyphIndex, glyph);
 }
@@ -138,7 +137,7 @@ struct vg_font *font_create(VGint glyphCapacityHint)
    vg_init_object(&font->base, ctx, VG_OBJECT_FONT);
    font->glyphs = cso_hash_create();
 
-   vg_context_add_object(ctx, VG_OBJECT_FONT, font);
+   vg_context_add_object(ctx, &font->base);
 
    return font;
 }
@@ -148,7 +147,7 @@ void font_destroy(struct vg_font *font)
    struct vg_context *ctx = vg_current_context();
    struct cso_hash_iter iter;
 
-   vg_context_remove_object(ctx, VG_OBJECT_FONT, font);
+   vg_context_remove_object(ctx, &font->base);
 
    iter = cso_hash_first_node(font->glyphs);
    while (!cso_hash_iter_is_null(iter)) {
@@ -157,6 +156,8 @@ void font_destroy(struct vg_font *font)
       iter = cso_hash_iter_next(iter);
    }
    cso_hash_delete(font->glyphs);
+
+   vg_free_object(&font->base);
 
    FREE(font);
 }

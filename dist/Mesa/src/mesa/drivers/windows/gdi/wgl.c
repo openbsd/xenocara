@@ -29,33 +29,11 @@
  */
 
 
-/* We're essentially building part of GDI here, so define this so that
- * we get the right export linkage. */
-#ifdef __MINGW32__
-
-#include <stdarg.h>
-#include <windef.h>
-#include <wincon.h>
-#include <winbase.h>
-
-#  if defined(BUILD_GL32)
-#    define WINGDIAPI __declspec(dllexport)	
-#  else
-#    define __W32API_USE_DLLIMPORT__
-#  endif
-
-#include <wingdi.h>
-#include "GL/mesa_wgl.h"
-#include <stdlib.h>
-
-#else
-
-#define _GDI32_
 #include <windows.h>
 
-#endif
 #include "main/config.h"
 #include "glapi/glapi.h"
+#include "swrast/swrast.h"
 #include "GL/wmesa.h"   /* protos for wmesa* functions */
 
 /*
@@ -358,9 +336,13 @@ WINGDIAPI BOOL GLAPIENTRY wglSetPixelFormat(HDC hdc,int iPixelFormat,
 					const PIXELFORMATDESCRIPTOR *ppfd)
 {
     (void) hdc;
-    
-    if(iPixelFormat < 1 || iPixelFormat > npfd || 
-       ppfd->nSize != sizeof(PIXELFORMATDESCRIPTOR)) {
+
+    /* SetPixelFormat (hence wglSetPixelFormat) must not touch ppfd, per
+     * http://msdn.microsoft.com/en-us/library/dd369049(v=vs.85).aspx
+     */
+    (void) ppfd;
+
+    if(iPixelFormat < 1 || iPixelFormat > npfd) {
 	SetLastError(0);
 	return(FALSE);
     }
@@ -400,7 +382,7 @@ static BOOL wglUseFontBitmaps_FX(HDC fontDevice, DWORD firstChar,
     
     VERIFY(GetTextMetrics(fontDevice, &metric));
     
-    dibInfo = (BITMAPINFO *) calloc(sizeof(BITMAPINFO) + sizeof(RGBQUAD), 1);
+    dibInfo = calloc(sizeof(BITMAPINFO) + sizeof(RGBQUAD), 1);
     dibInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     dibInfo->bmiHeader.biPlanes = 1;
     dibInfo->bmiHeader.biBitCount = 1;

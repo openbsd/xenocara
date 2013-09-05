@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.6
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * Copyright (C) 2009  VMware, Inc.  All Rights Reserved.
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -29,7 +29,6 @@
 
 
 #include "glheader.h"
-#include "mfeatures.h"
 
 struct gl_client_array;
 struct gl_context;
@@ -41,7 +40,7 @@ struct gl_context;
  * The array->_MaxElement field will be updated.
  * Later in glDrawArrays/Elements/etc we can do some bounds checking.
  */
-static INLINE void
+static inline void
 _mesa_update_array_max_element(struct gl_client_array *array)
 {
    assert(array->Enabled);
@@ -64,8 +63,6 @@ _mesa_update_array_max_element(struct gl_client_array *array)
    }
 }
 
-
-#if _HAVE_FULL_GL
 
 extern void GLAPIENTRY
 _mesa_VertexPointer(GLint size, GLenum type, GLsizei stride,
@@ -129,25 +126,20 @@ _mesa_EdgeFlagPointerEXT(GLsizei stride, GLsizei count, const GLboolean *ptr);
 
 
 extern void GLAPIENTRY
-_mesa_FogCoordPointerEXT(GLenum type, GLsizei stride, const GLvoid *ptr);
+_mesa_FogCoordPointer(GLenum type, GLsizei stride, const GLvoid *ptr);
 
 
 extern void GLAPIENTRY
-_mesa_SecondaryColorPointerEXT(GLint size, GLenum type,
+_mesa_SecondaryColorPointer(GLint size, GLenum type,
 			       GLsizei stride, const GLvoid *ptr);
 
 
 extern void GLAPIENTRY
-_mesa_PointSizePointer(GLenum type, GLsizei stride, const GLvoid *ptr);
+_mesa_PointSizePointerOES(GLenum type, GLsizei stride, const GLvoid *ptr);
 
 
 extern void GLAPIENTRY
-_mesa_VertexAttribPointerNV(GLuint index, GLint size, GLenum type,
-                            GLsizei stride, const GLvoid *pointer);
-
-
-extern void GLAPIENTRY
-_mesa_VertexAttribPointerARB(GLuint index, GLint size, GLenum type,
+_mesa_VertexAttribPointer(GLuint index, GLint size, GLenum type,
                              GLboolean normalized, GLsizei stride,
                              const GLvoid *pointer);
 
@@ -157,23 +149,23 @@ _mesa_VertexAttribIPointer(GLuint index, GLint size, GLenum type,
 
 
 extern void GLAPIENTRY
-_mesa_EnableVertexAttribArrayARB(GLuint index);
+_mesa_EnableVertexAttribArray(GLuint index);
 
 
 extern void GLAPIENTRY
-_mesa_DisableVertexAttribArrayARB(GLuint index);
+_mesa_DisableVertexAttribArray(GLuint index);
 
 
 extern void GLAPIENTRY
-_mesa_GetVertexAttribdvARB(GLuint index, GLenum pname, GLdouble *params);
+_mesa_GetVertexAttribdv(GLuint index, GLenum pname, GLdouble *params);
 
 
 extern void GLAPIENTRY
-_mesa_GetVertexAttribfvARB(GLuint index, GLenum pname, GLfloat *params);
+_mesa_GetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params);
 
 
 extern void GLAPIENTRY
-_mesa_GetVertexAttribivARB(GLuint index, GLenum pname, GLint *params);
+_mesa_GetVertexAttribiv(GLuint index, GLenum pname, GLint *params);
 
 
 extern void GLAPIENTRY
@@ -185,7 +177,7 @@ _mesa_GetVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params);
 
 
 extern void GLAPIENTRY
-_mesa_GetVertexAttribPointervARB(GLuint index, GLenum pname, GLvoid **pointer);
+_mesa_GetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid **pointer);
 
 
 extern void GLAPIENTRY
@@ -193,7 +185,7 @@ _mesa_InterleavedArrays(GLenum format, GLsizei stride, const GLvoid *pointer);
 
 
 extern void GLAPIENTRY
-_mesa_MultiDrawArraysEXT( GLenum mode, const GLint *first,
+_mesa_MultiDrawArrays( GLenum mode, const GLint *first,
                           const GLsizei *count, GLsizei primcount );
 
 extern void GLAPIENTRY
@@ -246,12 +238,17 @@ _mesa_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end,
 				  GLint basevertex);
 
 extern void GLAPIENTRY
+_mesa_DrawTransformFeedback(GLenum mode, GLuint name);
+
+extern void GLAPIENTRY
 _mesa_PrimitiveRestartIndex(GLuint index);
 
 
 extern void GLAPIENTRY
 _mesa_VertexAttribDivisor(GLuint index, GLuint divisor);
 
+extern unsigned
+_mesa_primitive_restart_index(const struct gl_context *ctx, GLenum ib_type);
 
 extern void
 _mesa_copy_client_array(struct gl_context *ctx,
@@ -267,13 +264,5 @@ _mesa_init_varray( struct gl_context * ctx );
 
 extern void 
 _mesa_free_varray_data(struct gl_context *ctx);
-
-#else
-
-/** No-op */
-#define _mesa_init_varray( c )  ((void)0)
-#define _mesa_free_varray_data( c )  ((void)0)
-
-#endif
 
 #endif

@@ -31,6 +31,7 @@
 #include "os/os_thread.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
+#include "util/u_resource.h"
 
 #include "svga_context.h"
 #include "svga_screen.h"
@@ -62,17 +63,19 @@ svga_buffer_needs_hw_storage(unsigned usage)
  * the end result is exactly the same as if one DMA was used for every mapped
  * range.
  */
-static struct pipe_transfer *
-svga_buffer_get_transfer(struct pipe_context *pipe,
+static void *
+svga_buffer_transfer_map(struct pipe_context *pipe,
                          struct pipe_resource *resource,
                          unsigned level,
                          unsigned usage,
-                         const struct pipe_box *box)
+                         const struct pipe_box *box,
+                         struct pipe_transfer **ptransfer)
 {
    struct svga_context *svga = svga_context(pipe);
    struct svga_screen *ss = svga_screen(pipe->screen);
    struct svga_buffer *sbuf = svga_buffer(resource);
    struct pipe_transfer *transfer;
+   uint8_t *map;
 
    transfer = CALLOC_STRUCT(pipe_transfer);
    if (transfer == NULL) {
@@ -87,9 +90,12 @@ svga_buffer_get_transfer(struct pipe_context *pipe,
    if (usage & PIPE_TRANSFER_WRITE) {
       if (usage & PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE) {
          /*
-          * Finish writing any pending DMA commands, and tell the host to discard
-          * the buffer contents on the next DMA operation.
+          * Flush any pending primitives, finish writing any pending DMA
+          * commands, and tell the host to discard the buffer contents on
+          * the next DMA operation.
           */
+
+         svga_hwtnl_flush_buffer(svga, resource);
 
          if (sbuf->dma.pending) {
             svga_buffer_upload_flush(svga, sbuf);
@@ -117,9 +123,11 @@ svga_buffer_get_transfer(struct pipe_context *pipe,
          }
       } else {
          /*
-          * Synchronizing, so finish writing any pending DMA command, and
-          * ensure the next DMA will be done in order.
+          * Synchronizing, so flush any pending primitives, finish writing any
+          * pending DMA command, and ensure the next DMA will be done in order.
           */
+
+         svga_hwtnl_flush_buffer(svga, resource);
 
          if (sbuf->dma.pending) {
             svga_buffer_upload_flush(svga, sbuf);
@@ -181,21 +189,6 @@ svga_buffer_get_transfer(struct pipe_context *pipe,
       }
    }
 
-   return transfer;
-}
-
-
-/**
- * Map a range of a buffer.
- */
-static void *
-svga_buffer_transfer_map( struct pipe_context *pipe,
-                          struct pipe_transfer *transfer )
-{
-   struct svga_buffer *sbuf = svga_buffer(transfer->resource);
-
-   uint8_t *map;
-
    if (sbuf->swbuf) {
       /* User/malloc buffer */
       map = sbuf->swbuf;
@@ -213,6 +206,9 @@ svga_buffer_transfer_map( struct pipe_context *pipe,
    if (map) {
       ++sbuf->map.count;
       map += transfer->box.x;
+      *ptransfer = transfer;
+   } else {
+      FREE(transfer);
    }
    
    return map;
@@ -275,16 +271,6 @@ svga_buffer_transfer_unmap( struct pipe_context *pipe,
    }
 
    pipe_mutex_unlock(ss->swc_mutex);
-}
-
-
-/**
- * Destroy transfer
- */
-static void
-svga_buffer_transfer_destroy(struct pipe_context *pipe,
-                             struct pipe_transfer *transfer)
-{
    FREE(transfer);
 }
 
@@ -312,6 +298,8 @@ svga_buffer_destroy( struct pipe_screen *screen,
    if(sbuf->swbuf && !sbuf->user)
       align_free(sbuf->swbuf);
    
+   ss->total_resource_bytes -= sbuf->size;
+
    FREE(sbuf);
 }
 
@@ -320,8 +308,6 @@ struct u_resource_vtbl svga_buffer_vtbl =
 {
    u_default_resource_get_handle,      /* get_handle */
    svga_buffer_destroy,		     /* resource_destroy */
-   svga_buffer_get_transfer,	     /* get_transfer */
-   svga_buffer_transfer_destroy,     /* transfer_destroy */
    svga_buffer_transfer_map,	     /* transfer_map */
    svga_buffer_transfer_flush_region,  /* transfer_flush_region */
    svga_buffer_transfer_unmap,	     /* transfer_unmap */
@@ -358,6 +344,9 @@ svga_buffer_create(struct pipe_screen *screen,
       
    debug_reference(&sbuf->b.b.reference,
                    (debug_reference_descriptor)debug_describe_resource, 0);
+
+   sbuf->size = util_resource_size(template);
+   ss->total_resource_bytes += sbuf->size;
 
    return &sbuf->b.b; 
 

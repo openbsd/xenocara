@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.10
  *
  * Copyright (C) 2011 LunarG Inc.
  *
@@ -54,8 +53,9 @@ dlopen_gl_lib_cb(const char *dir, size_t len, void *callback_data)
    int ret;
 
    if (len) {
+      assert(len <= INT_MAX && "path is insanely long!");
       ret = util_snprintf(path, sizeof(path), "%.*s/%s" UTIL_DL_EXT,
-            len, dir, name);
+            (int)len, dir, name);
    }
    else {
       ret = util_snprintf(path, sizeof(path), "%s" UTIL_DL_EXT, name);

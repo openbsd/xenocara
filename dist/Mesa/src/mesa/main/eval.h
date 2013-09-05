@@ -10,7 +10,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
  *
  * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
  *
@@ -27,9 +26,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -37,29 +37,11 @@
 #define EVAL_H
 
 
-#include "main/mfeatures.h"
 #include "main/mtypes.h"
+#include <stdbool.h>
 
-
-#if FEATURE_evaluators
-
-#define _MESA_INIT_EVAL_VTXFMT(vfmt, impl)         \
-   do {                                            \
-      (vfmt)->EvalCoord1f  = impl ## EvalCoord1f;  \
-      (vfmt)->EvalCoord1fv = impl ## EvalCoord1fv; \
-      (vfmt)->EvalCoord2f  = impl ## EvalCoord2f;  \
-      (vfmt)->EvalCoord2fv = impl ## EvalCoord2fv; \
-      (vfmt)->EvalPoint1   = impl ## EvalPoint1;   \
-      (vfmt)->EvalPoint2   = impl ## EvalPoint2;   \
-      (vfmt)->EvalMesh1    = impl ## EvalMesh1;    \
-      (vfmt)->EvalMesh2    = impl ## EvalMesh2;    \
-   } while (0)
 
 extern GLuint _mesa_evaluator_components( GLenum target );
-
-
-extern void gl_free_control_points( struct gl_context *ctx,
-                                    GLenum target, GLfloat *data );
 
 
 extern GLfloat *_mesa_copy_map_points1f( GLenum target,
@@ -84,28 +66,47 @@ extern void
 _mesa_install_eval_vtxfmt(struct _glapi_table *disp,
                           const GLvertexformat *vfmt);
 
-extern void
-_mesa_init_eval_dispatch(struct _glapi_table *disp);
-
-#else /* FEATURE_evaluators */
-
-#define _MESA_INIT_EVAL_VTXFMT(vfmt, impl) do { } while (0)
-
-static INLINE void
-_mesa_install_eval_vtxfmt(struct _glapi_table *disp,
-                          const GLvertexformat *vfmt)
-{
-}
-
-static INLINE void
-_mesa_init_eval_dispatch(struct _glapi_table *disp)
-{
-}
-
-#endif /* FEATURE_evaluators */
-
 extern void _mesa_init_eval( struct gl_context *ctx );
 extern void _mesa_free_eval_data( struct gl_context *ctx );
 
+void GLAPIENTRY
+_mesa_Map1f( GLenum target, GLfloat u1, GLfloat u2, GLint stride,
+             GLint order, const GLfloat *points );
+void GLAPIENTRY
+_mesa_Map1d( GLenum target, GLdouble u1, GLdouble u2, GLint stride,
+             GLint order, const GLdouble *points );
+void GLAPIENTRY
+_mesa_Map2f( GLenum target,
+             GLfloat u1, GLfloat u2, GLint ustride, GLint uorder,
+             GLfloat v1, GLfloat v2, GLint vstride, GLint vorder,
+             const GLfloat *points);
+void GLAPIENTRY
+_mesa_Map2d( GLenum target,
+             GLdouble u1, GLdouble u2, GLint ustride, GLint uorder,
+             GLdouble v1, GLdouble v2, GLint vstride, GLint vorder,
+             const GLdouble *points );
+void GLAPIENTRY
+_mesa_GetnMapdvARB( GLenum target, GLenum query, GLsizei bufSize,
+                    GLdouble *v );
+void GLAPIENTRY
+_mesa_GetMapdv( GLenum target, GLenum query, GLdouble *v );
+void GLAPIENTRY
+_mesa_GetnMapfvARB( GLenum target, GLenum query, GLsizei bufSize, GLfloat *v );
+void GLAPIENTRY
+_mesa_GetMapfv( GLenum target, GLenum query, GLfloat *v );
+void GLAPIENTRY
+_mesa_GetnMapivARB( GLenum target, GLenum query, GLsizei bufSize, GLint *v );
+void GLAPIENTRY
+_mesa_GetMapiv( GLenum target, GLenum query, GLint *v );
+void GLAPIENTRY
+_mesa_MapGrid1f( GLint un, GLfloat u1, GLfloat u2 );
+void GLAPIENTRY
+_mesa_MapGrid1d( GLint un, GLdouble u1, GLdouble u2 );
+void GLAPIENTRY
+_mesa_MapGrid2f( GLint un, GLfloat u1, GLfloat u2,
+                 GLint vn, GLfloat v1, GLfloat v2 );
+void GLAPIENTRY
+_mesa_MapGrid2d( GLint un, GLdouble u1, GLdouble u2,
+                 GLint vn, GLdouble v1, GLdouble v2 );
 
 #endif /* EVAL_H */

@@ -27,6 +27,8 @@
 
 extern "C" {
 #include "main/core.h" /* for struct gl_context */
+#include "main/context.h"
+#include "main/shaderobj.h"
 }
 
 #include "ralloc.h"
@@ -36,8 +38,24 @@ extern "C" {
 #include "ir_optimization.h"
 #include "loop_analysis.h"
 
-_mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *ctx,
+/**
+ * Format a short human-readable description of the given GLSL version.
+ */
+const char *
+glsl_compute_version_string(void *mem_ctx, bool is_es, unsigned version)
+{
+   return ralloc_asprintf(mem_ctx, "GLSL%s %d.%02d", is_es ? " ES" : "",
+                          version / 100, version % 100);
+}
+
+
+static unsigned known_desktop_glsl_versions[] =
+   { 110, 120, 130, 140, 150, 330, 400, 410, 420, 430 };
+
+
+_mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *_ctx,
 					       GLenum target, void *mem_ctx)
+ : ctx(_ctx)
 {
    switch (target) {
    case GL_VERTEX_SHADER:   this->target = vertex_shader; break;
@@ -50,10 +68,15 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *ctx,
    this->symbols = new(mem_ctx) glsl_symbol_table;
    this->info_log = ralloc_strdup(mem_ctx, "");
    this->error = false;
-   this->loop_or_switch_nesting = NULL;
+   this->loop_nesting_ast = NULL;
+   this->switch_state.switch_nesting_ast = NULL;
+
+   this->struct_specifier_depth = 0;
+   this->num_builtins_to_link = 0;
 
    /* Set default language version and extensions */
-   this->language_version = 110;
+   this->language_version = ctx->Const.ForceGLSLVersion ?
+                            ctx->Const.ForceGLSLVersion : 110;
    this->es_shader = false;
    this->ARB_texture_rectangle_enable = true;
 
@@ -73,46 +96,250 @@ _mesa_glsl_parse_state::_mesa_glsl_parse_state(struct gl_context *ctx,
    this->Const.MaxVertexAttribs = ctx->Const.VertexProgram.MaxAttribs;
    this->Const.MaxVertexUniformComponents = ctx->Const.VertexProgram.MaxUniformComponents;
    this->Const.MaxVaryingFloats = ctx->Const.MaxVarying * 4;
-   this->Const.MaxVertexTextureImageUnits = ctx->Const.MaxVertexTextureImageUnits;
+   this->Const.MaxVertexTextureImageUnits = ctx->Const.VertexProgram.MaxTextureImageUnits;
    this->Const.MaxCombinedTextureImageUnits = ctx->Const.MaxCombinedTextureImageUnits;
-   this->Const.MaxTextureImageUnits = ctx->Const.MaxTextureImageUnits;
+   this->Const.MaxTextureImageUnits = ctx->Const.FragmentProgram.MaxTextureImageUnits;
    this->Const.MaxFragmentUniformComponents = ctx->Const.FragmentProgram.MaxUniformComponents;
+   this->Const.MinProgramTexelOffset = ctx->Const.MinProgramTexelOffset;
+   this->Const.MaxProgramTexelOffset = ctx->Const.MaxProgramTexelOffset;
 
    this->Const.MaxDrawBuffers = ctx->Const.MaxDrawBuffers;
 
-   /* Note: Once the OpenGL 3.0 'forward compatible' context or the OpenGL 3.2
-    * Core context is supported, this logic will need change.  Older versions of
-    * GLSL are no longer supported outside the compatibility contexts of 3.x.
+   /* Populate the list of supported GLSL versions */
+   /* FINISHME: Once the OpenGL 3.0 'forward compatible' context or
+    * the OpenGL 3.2 Core context is supported, this logic will need
+    * change.  Older versions of GLSL are no longer supported
+    * outside the compatibility contexts of 3.x.
     */
-   this->Const.GLSL_100ES = (ctx->API == API_OPENGLES2)
-      || ctx->Extensions.ARB_ES2_compatibility;
-   this->Const.GLSL_110 = (ctx->API == API_OPENGL);
-   this->Const.GLSL_120 = (ctx->API == API_OPENGL)
-      && (ctx->Const.GLSLVersion >= 120);
-   this->Const.GLSL_130 = (ctx->API == API_OPENGL)
-      && (ctx->Const.GLSLVersion >= 130);
+   this->num_supported_versions = 0;
+   if (_mesa_is_desktop_gl(ctx)) {
+      for (unsigned i = 0; i < ARRAY_SIZE(known_desktop_glsl_versions); i++) {
+         if (known_desktop_glsl_versions[i] <= ctx->Const.GLSLVersion) {
+            this->supported_versions[this->num_supported_versions].ver
+               = known_desktop_glsl_versions[i];
+            this->supported_versions[this->num_supported_versions].es = false;
+            this->num_supported_versions++;
+         }
+      }
+   }
+   if (ctx->API == API_OPENGLES2 || ctx->Extensions.ARB_ES2_compatibility) {
+      this->supported_versions[this->num_supported_versions].ver = 100;
+      this->supported_versions[this->num_supported_versions].es = true;
+      this->num_supported_versions++;
+   }
+   if (_mesa_is_gles3(ctx) || ctx->Extensions.ARB_ES3_compatibility) {
+      this->supported_versions[this->num_supported_versions].ver = 300;
+      this->supported_versions[this->num_supported_versions].es = true;
+      this->num_supported_versions++;
+   }
+   assert(this->num_supported_versions
+          <= ARRAY_SIZE(this->supported_versions));
 
-   const unsigned lowest_version =
-      (ctx->API == API_OPENGLES2) || ctx->Extensions.ARB_ES2_compatibility
-      ? 100 : 110;
-   const unsigned highest_version =
-      (ctx->API == API_OPENGL) ? ctx->Const.GLSLVersion : 100;
+   /* Create a string for use in error messages to tell the user which GLSL
+    * versions are supported.
+    */
    char *supported = ralloc_strdup(this, "");
-
-   for (unsigned ver = lowest_version; ver <= highest_version; ver += 10) {
-      const char *const prefix = (ver == lowest_version)
+   for (unsigned i = 0; i < this->num_supported_versions; i++) {
+      unsigned ver = this->supported_versions[i].ver;
+      const char *const prefix = (i == 0)
 	 ? ""
-	 : ((ver == highest_version) ? ", and " : ", ");
+	 : ((i == this->num_supported_versions - 1) ? ", and " : ", ");
+      const char *const suffix = (this->supported_versions[i].es) ? " ES" : "";
 
-      ralloc_asprintf_append(& supported, "%s%d.%02d%s",
+      ralloc_asprintf_append(& supported, "%s%u.%02u%s",
 			     prefix,
 			     ver / 100, ver % 100,
-			     (ver == 100) ? " ES" : "");
+			     suffix);
    }
 
    this->supported_version_string = supported;
+
+   if (ctx->Const.ForceGLSLExtensionsWarn)
+      _mesa_glsl_process_extension("all", NULL, "warn", NULL, this);
+
+   this->default_uniform_qualifier = new(this) ast_type_qualifier();
+   this->default_uniform_qualifier->flags.q.shared = 1;
+   this->default_uniform_qualifier->flags.q.column_major = 1;
 }
 
+/**
+ * Determine whether the current GLSL version is sufficiently high to support
+ * a certain feature, and generate an error message if it isn't.
+ *
+ * \param required_glsl_version and \c required_glsl_es_version are
+ * interpreted as they are in _mesa_glsl_parse_state::is_version().
+ *
+ * \param locp is the parser location where the error should be reported.
+ *
+ * \param fmt (and additional arguments) constitute a printf-style error
+ * message to report if the version check fails.  Information about the
+ * current and required GLSL versions will be appended.  So, for example, if
+ * the GLSL version being compiled is 1.20, and check_version(130, 300, locp,
+ * "foo unsupported") is called, the error message will be "foo unsupported in
+ * GLSL 1.20 (GLSL 1.30 or GLSL 3.00 ES required)".
+ */
+bool
+_mesa_glsl_parse_state::check_version(unsigned required_glsl_version,
+                                      unsigned required_glsl_es_version,
+                                      YYLTYPE *locp, const char *fmt, ...)
+{
+   if (this->is_version(required_glsl_version, required_glsl_es_version))
+      return true;
+
+   va_list args;
+   va_start(args, fmt);
+   char *problem = ralloc_vasprintf(this, fmt, args);
+   va_end(args);
+   const char *glsl_version_string
+      = glsl_compute_version_string(this, false, required_glsl_version);
+   const char *glsl_es_version_string
+      = glsl_compute_version_string(this, true, required_glsl_es_version);
+   const char *requirement_string = "";
+   if (required_glsl_version && required_glsl_es_version) {
+      requirement_string = ralloc_asprintf(this, " (%s or %s required)",
+                                           glsl_version_string,
+                                           glsl_es_version_string);
+   } else if (required_glsl_version) {
+      requirement_string = ralloc_asprintf(this, " (%s required)",
+                                           glsl_version_string);
+   } else if (required_glsl_es_version) {
+      requirement_string = ralloc_asprintf(this, " (%s required)",
+                                           glsl_es_version_string);
+   }
+   _mesa_glsl_error(locp, this, "%s in %s%s.",
+                    problem, this->get_version_string(),
+                    requirement_string);
+
+   return false;
+}
+
+/**
+ * Process a GLSL #version directive.
+ *
+ * \param version is the integer that follows the #version token.
+ *
+ * \param ident is a string identifier that follows the integer, if any is
+ * present.  Otherwise NULL.
+ */
+void
+_mesa_glsl_parse_state::process_version_directive(YYLTYPE *locp, int version,
+                                                  const char *ident)
+{
+   bool es_token_present = false;
+   if (ident) {
+      if (strcmp(ident, "es") == 0) {
+         es_token_present = true;
+      } else if (version >= 150) {
+         if (strcmp(ident, "core") == 0) {
+            /* Accept the token.  There's no need to record that this is
+             * a core profile shader since that's the only profile we support.
+             */
+         } else if (strcmp(ident, "compatibility") == 0) {
+            _mesa_glsl_error(locp, this,
+                             "The compatibility profile is not supported.\n");
+         } else {
+            _mesa_glsl_error(locp, this,
+                             "\"%s\" is not a valid shading language profile; "
+                             "if present, it must be \"core\".\n", ident);
+         }
+      } else {
+         _mesa_glsl_error(locp, this,
+                          "Illegal text following version number\n");
+      }
+   }
+
+   this->es_shader = es_token_present;
+   if (version == 100) {
+      if (es_token_present) {
+         _mesa_glsl_error(locp, this,
+                          "GLSL 1.00 ES should be selected using "
+                          "`#version 100'\n");
+      } else {
+         this->es_shader = true;
+      }
+   }
+
+   this->language_version = version;
+
+   bool supported = false;
+   for (unsigned i = 0; i < this->num_supported_versions; i++) {
+      if (this->supported_versions[i].ver == (unsigned) version
+          && this->supported_versions[i].es == this->es_shader) {
+         supported = true;
+         break;
+      }
+   }
+
+   if (!supported) {
+      _mesa_glsl_error(locp, this, "%s is not supported. "
+                       "Supported versions are: %s\n",
+                       this->get_version_string(),
+                       this->supported_version_string);
+
+      /* On exit, the language_version must be set to a valid value.
+       * Later calls to _mesa_glsl_initialize_types will misbehave if
+       * the version is invalid.
+       */
+      switch (this->ctx->API) {
+      case API_OPENGL_COMPAT:
+      case API_OPENGL_CORE:
+	 this->language_version = this->ctx->Const.GLSLVersion;
+	 break;
+
+      case API_OPENGLES:
+	 assert(!"Should not get here.");
+	 /* FALLTHROUGH */
+
+      case API_OPENGLES2:
+	 this->language_version = 100;
+	 break;
+      }
+   }
+
+   if (this->language_version >= 140) {
+      this->ARB_uniform_buffer_object_enable = true;
+   }
+
+   if (this->language_version == 300 && this->es_shader) {
+      this->ARB_explicit_attrib_location_enable = true;
+   }
+}
+
+extern "C" {
+
+/**
+ * The most common use of _mesa_glsl_shader_target_name(), which is
+ * shared with C code in Mesa core to translate a GLenum to a short
+ * shader stage name in debug printouts.
+ *
+ * It recognizes the PROGRAM variants of the names so it can be used
+ * with a struct gl_program->Target, not just a struct
+ * gl_shader->Type.
+ */
+const char *
+_mesa_glsl_shader_target_name(GLenum type)
+{
+   switch (type) {
+   case GL_VERTEX_SHADER:
+   case GL_VERTEX_PROGRAM_ARB:
+      return "vertex";
+   case GL_FRAGMENT_SHADER:
+   case GL_FRAGMENT_PROGRAM_ARB:
+      return "fragment";
+   case GL_GEOMETRY_SHADER:
+      return "geometry";
+   default:
+      assert(!"Should not get here.");
+      return "unknown";
+   }
+}
+
+} /* extern "C" */
+
+/**
+ * Overloaded C++ variant usable within the compiler for translating
+ * our internal enum into short stage names.
+ */
 const char *
 _mesa_glsl_shader_target_name(enum _mesa_glsl_parser_targets target)
 {
@@ -126,6 +353,37 @@ _mesa_glsl_shader_target_name(enum _mesa_glsl_parser_targets target)
    return "unknown";
 }
 
+/* This helper function will append the given message to the shader's
+   info log and report it via GL_ARB_debug_output. Per that extension,
+   'type' is one of the enum values classifying the message, and
+   'id' is the implementation-defined ID of the given message. */
+static void
+_mesa_glsl_msg(const YYLTYPE *locp, _mesa_glsl_parse_state *state,
+               GLenum type, const char *fmt, va_list ap)
+{
+   bool error = (type == MESA_DEBUG_TYPE_ERROR);
+   GLuint msg_id = 0;
+
+   assert(state->info_log != NULL);
+
+   /* Get the offset that the new message will be written to. */
+   int msg_offset = strlen(state->info_log);
+
+   ralloc_asprintf_append(&state->info_log, "%u:%u(%u): %s: ",
+					    locp->source,
+					    locp->first_line,
+					    locp->first_column,
+					    error ? "error" : "warning");
+   ralloc_vasprintf_append(&state->info_log, fmt, ap);
+
+   const char *const msg = &state->info_log[msg_offset];
+   struct gl_context *ctx = state->ctx;
+
+   /* Report the error via GL_ARB_debug_output. */
+   _mesa_shader_debug(ctx, type, &msg_id, msg, strlen(msg));
+
+   ralloc_strcat(&state->info_log, "\n");
+}
 
 void
 _mesa_glsl_error(YYLTYPE *locp, _mesa_glsl_parse_state *state,
@@ -135,15 +393,9 @@ _mesa_glsl_error(YYLTYPE *locp, _mesa_glsl_parse_state *state,
 
    state->error = true;
 
-   assert(state->info_log != NULL);
-   ralloc_asprintf_append(&state->info_log, "%u:%u(%u): error: ",
-					    locp->source,
-					    locp->first_line,
-					    locp->first_column);
    va_start(ap, fmt);
-   ralloc_vasprintf_append(&state->info_log, fmt, ap);
+   _mesa_glsl_msg(locp, state, MESA_DEBUG_TYPE_ERROR, fmt, ap);
    va_end(ap);
-   ralloc_strcat(&state->info_log, "\n");
 }
 
 
@@ -153,15 +405,9 @@ _mesa_glsl_warning(const YYLTYPE *locp, _mesa_glsl_parse_state *state,
 {
    va_list ap;
 
-   assert(state->info_log != NULL);
-   ralloc_asprintf_append(&state->info_log, "%u:%u(%u): warning: ",
-					    locp->source,
-					    locp->first_line,
-					    locp->first_column);
    va_start(ap, fmt);
-   ralloc_vasprintf_append(&state->info_log, fmt, ap);
+   _mesa_glsl_msg(locp, state, MESA_DEBUG_TYPE_OTHER, fmt, ap);
    va_end(ap);
-   ralloc_strcat(&state->info_log, "\n");
 }
 
 
@@ -253,6 +499,7 @@ struct _mesa_glsl_extension {
 static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    /*                                  target availability  API availability */
    /* name                             VS     GS     FS     GL     ES         supported flag */
+   EXT(ARB_conservative_depth,         false, false, true,  true,  false,     ARB_conservative_depth),
    EXT(ARB_draw_buffers,               false, false, true,  true,  false,     dummy_true),
    EXT(ARB_draw_instanced,             true,  false, false, true,  false,     ARB_draw_instanced),
    EXT(ARB_explicit_attrib_location,   true,  false, true,  true,  false,     ARB_explicit_attrib_location),
@@ -261,9 +508,20 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    EXT(EXT_texture_array,              true,  false, true,  true,  false,     EXT_texture_array),
    EXT(ARB_shader_texture_lod,         true,  false, true,  true,  false,     ARB_shader_texture_lod),
    EXT(ARB_shader_stencil_export,      false, false, true,  true,  false,     ARB_shader_stencil_export),
-   EXT(AMD_conservative_depth,         true,  false, true,  true,  false,     AMD_conservative_depth),
+   EXT(AMD_conservative_depth,         false, false, true,  true,  false,     ARB_conservative_depth),
    EXT(AMD_shader_stencil_export,      false, false, true,  true,  false,     ARB_shader_stencil_export),
    EXT(OES_texture_3D,                 true,  false, true,  false, true,      EXT_texture3D),
+   EXT(OES_EGL_image_external,         true,  false, true,  false, true,      OES_EGL_image_external),
+   EXT(ARB_shader_bit_encoding,        true,  true,  true,  true,  false,     ARB_shader_bit_encoding),
+   EXT(ARB_uniform_buffer_object,      true,  false, true,  true,  false,     ARB_uniform_buffer_object),
+   EXT(OES_standard_derivatives,       false, false, true,  false,  true,     OES_standard_derivatives),
+   EXT(ARB_texture_cube_map_array,     true,  false, true,  true,  false,     ARB_texture_cube_map_array),
+   EXT(ARB_shading_language_packing,   true,  false, true,  true,  false,     ARB_shading_language_packing),
+   EXT(ARB_shading_language_420pack,   true,  true,  true,  true,  false,     ARB_shading_language_420pack),
+   EXT(ARB_texture_multisample,        true,  false, true,  true,  false,     ARB_texture_multisample),
+   EXT(ARB_texture_query_lod,          false, false, true,  true,  false,     ARB_texture_query_lod),
+   EXT(ARB_gpu_shader5,                true,  true,  true,  true,  false,     ARB_gpu_shader5),
+   EXT(AMD_vertex_shader_layer,        true,  false, false, true,  false,     AMD_vertex_shader_layer),
 };
 
 #undef EXT
@@ -406,6 +664,194 @@ _mesa_glsl_process_extension(const char *name, YYLTYPE *name_locp,
 
    return true;
 }
+
+
+/**
+ * Returns the name of the type of a column of a matrix. E.g.,
+ *
+ *    "mat3"   -> "vec3"
+ *    "mat4x2" -> "vec2"
+ */
+static const char *
+_mesa_ast_get_matrix_column_type_name(const char *matrix_type_name)
+{
+   static const char *vec_name[] = { "vec2", "vec3", "vec4" };
+
+   /* The number of elements in a row of a matrix is specified by the last
+    * character of the matrix type name.
+    */
+   long rows = strtol(matrix_type_name + strlen(matrix_type_name) - 1,
+                      NULL, 10);
+   return vec_name[rows - 2];
+}
+
+/**
+ * Recurses through <type> and <expr> if <expr> is an aggregate initializer
+ * and sets <expr>'s <constructor_type> field to <type>. Gives later functions
+ * (process_array_constructor, et al) sufficient information to do type
+ * checking.
+ *
+ * Operates on assignments involving an aggregate initializer. E.g.,
+ *
+ * vec4 pos = {1.0, -1.0, 0.0, 1.0};
+ *
+ * or more ridiculously,
+ *
+ * struct S {
+ *     vec4 v[2];
+ * };
+ *
+ * struct {
+ *     S a[2], b;
+ *     int c;
+ * } aggregate = {
+ *     {
+ *         {
+ *             {
+ *                 {1.0, 2.0, 3.0, 4.0}, // a[0].v[0]
+ *                 {5.0, 6.0, 7.0, 8.0}  // a[0].v[1]
+ *             } // a[0].v
+ *         }, // a[0]
+ *         {
+ *             {
+ *                 {1.0, 2.0, 3.0, 4.0}, // a[1].v[0]
+ *                 {5.0, 6.0, 7.0, 8.0}  // a[1].v[1]
+ *             } // a[1].v
+ *         } // a[1]
+ *     }, // a
+ *     {
+ *         {
+ *             {1.0, 2.0, 3.0, 4.0}, // b.v[0]
+ *             {5.0, 6.0, 7.0, 8.0}  // b.v[1]
+ *         } // b.v
+ *     }, // b
+ *     4 // c
+ * };
+ *
+ * This pass is necessary because the right-hand side of <type> e = { ... }
+ * doesn't contain sufficient information to determine if the types match.
+ */
+void
+_mesa_ast_set_aggregate_type(const ast_type_specifier *type,
+                             ast_expression *expr,
+                             _mesa_glsl_parse_state *state)
+{
+   void *ctx = state;
+   ast_aggregate_initializer *ai = (ast_aggregate_initializer *)expr;
+   ai->constructor_type = (ast_type_specifier *)type;
+
+   bool is_declaration = ai->constructor_type->structure != NULL;
+   if (!is_declaration) {
+      /* Look up <type> name in the symbol table to see if it's a struct. */
+      const ast_type_specifier *struct_type =
+         state->symbols->get_type_ast(type->type_name);
+      ai->constructor_type->structure =
+         struct_type ? new(ctx) ast_struct_specifier(*struct_type->structure)
+                     : NULL;
+   }
+
+   /* If the aggregate is an array, recursively set its elements' types. */
+   if (type->is_array) {
+      /* We want to set the element type which is not an array itself, so make
+       * a copy of the array type and set its is_array field to false.
+       *
+       * E.g., if <type> if struct S[2] we want to set each element's type to
+       * struct S.
+       *
+       * FINISHME: Update when ARB_array_of_arrays is supported.
+       */
+      const ast_type_specifier *non_array_type =
+         new(ctx) ast_type_specifier(type, false, NULL);
+
+      for (exec_node *expr_node = ai->expressions.head;
+           !expr_node->is_tail_sentinel();
+           expr_node = expr_node->next) {
+         ast_expression *expr = exec_node_data(ast_expression, expr_node,
+                                               link);
+
+         if (expr->oper == ast_aggregate)
+            _mesa_ast_set_aggregate_type(non_array_type, expr, state);
+      }
+
+   /* If the aggregate is a struct, recursively set its fields' types. */
+   } else if (ai->constructor_type->structure) {
+      ai->constructor_type->structure->is_declaration = is_declaration;
+      exec_node *expr_node = ai->expressions.head;
+
+      /* Iterate through the struct's fields' declarations. E.g., iterate from
+       * "float a, b" to "int c" in the struct below.
+       *
+       *     struct {
+       *         float a, b;
+       *         int c;
+       *     } s;
+       */
+      for (exec_node *decl_list_node =
+              ai->constructor_type->structure->declarations.head;
+           !decl_list_node->is_tail_sentinel();
+           decl_list_node = decl_list_node->next) {
+         ast_declarator_list *decl_list = exec_node_data(ast_declarator_list,
+                                                         decl_list_node, link);
+
+         for (exec_node *decl_node = decl_list->declarations.head;
+              !decl_node->is_tail_sentinel() && !expr_node->is_tail_sentinel();
+              decl_node = decl_node->next, expr_node = expr_node->next) {
+            ast_declaration *decl = exec_node_data(ast_declaration, decl_node,
+                                                   link);
+            ast_expression *expr = exec_node_data(ast_expression, expr_node,
+                                                  link);
+
+            bool is_array = decl_list->type->specifier->is_array;
+            ast_expression *array_size = decl_list->type->specifier->array_size;
+
+            /* Recognize variable declarations with the bracketed size attached
+             * to the type rather than the variable name as arrays. E.g.,
+             *
+             *     float a[2];
+             *     float[2] b;
+             *
+             * are both arrays, but <a>'s array_size is decl->array_size, while
+             * <b>'s array_size is decl_list->type->specifier->array_size.
+             */
+            if (!is_array) {
+               /* FINISHME: Update when ARB_array_of_arrays is supported. */
+               is_array = decl->is_array;
+               array_size = decl->array_size;
+            }
+
+            /* Declaration shadows the <type> parameter. */
+            ast_type_specifier *type =
+               new(ctx) ast_type_specifier(decl_list->type->specifier,
+                                           is_array, array_size);
+
+            if (expr->oper == ast_aggregate)
+               _mesa_ast_set_aggregate_type(type, expr, state);
+         }
+      }
+   } else {
+      /* If the aggregate is a matrix, set its columns' types. */
+      const char *name;
+      const glsl_type *const constructor_type =
+         ai->constructor_type->glsl_type(&name, state);
+
+      if (constructor_type->is_matrix()) {
+         for (exec_node *expr_node = ai->expressions.head;
+              !expr_node->is_tail_sentinel();
+              expr_node = expr_node->next) {
+            ast_expression *expr = exec_node_data(ast_expression, expr_node,
+                                                  link);
+
+            /* Declaration shadows the <type> parameter. */
+            ast_type_specifier *type = new(ctx)
+               ast_type_specifier(_mesa_ast_get_matrix_column_type_name(name));
+
+            if (expr->oper == ast_aggregate)
+               _mesa_ast_set_aggregate_type(type, expr, state);
+         }
+      }
+   }
+}
+
 
 void
 _mesa_ast_type_qualifier_print(const struct ast_type_qualifier *q)
@@ -606,6 +1052,19 @@ ast_expression::print(void) const
       break;
    }
 
+   case ast_aggregate: {
+      printf("{ ");
+      foreach_list_const(n, & this->expressions) {
+	 if (n != this->expressions.get_head())
+	    printf(", ");
+
+	 ast_node *ast = exec_node_data(ast_node, n, link);
+	 ast->print();
+      }
+      printf("} ");
+      break;
+   }
+
    default:
       assert(0);
       break;
@@ -621,6 +1080,7 @@ ast_expression::ast_expression(int oper,
    this->subexpressions[0] = ex0;
    this->subexpressions[1] = ex1;
    this->subexpressions[2] = ex2;
+   this->non_lvalue_description = NULL;
 }
 
 
@@ -702,7 +1162,7 @@ ast_declaration::print(void) const
 }
 
 
-ast_declaration::ast_declaration(char *identifier, int is_array,
+ast_declaration::ast_declaration(const char *identifier, bool is_array,
 				 ast_expression *array_size,
 				 ast_expression *initializer)
 {
@@ -766,6 +1226,7 @@ ast_jump_statement::print(void) const
 
 
 ast_jump_statement::ast_jump_statement(int mode, ast_expression *return_value)
+   : opt_return_value(NULL)
 {
    this->mode = ast_jump_modes(mode);
 
@@ -798,6 +1259,106 @@ ast_selection_statement::ast_selection_statement(ast_expression *condition,
    this->condition = condition;
    this->then_statement = then_statement;
    this->else_statement = else_statement;
+}
+
+
+void
+ast_switch_statement::print(void) const
+{
+   printf("switch ( ");
+   test_expression->print();
+   printf(") ");
+
+   body->print();
+}
+
+
+ast_switch_statement::ast_switch_statement(ast_expression *test_expression,
+					   ast_node *body)
+{
+   this->test_expression = test_expression;
+   this->body = body;
+}
+
+
+void
+ast_switch_body::print(void) const
+{
+   printf("{\n");
+   if (stmts != NULL) {
+      stmts->print();
+   }
+   printf("}\n");
+}
+
+
+ast_switch_body::ast_switch_body(ast_case_statement_list *stmts)
+{
+   this->stmts = stmts;
+}
+
+
+void ast_case_label::print(void) const
+{
+   if (test_value != NULL) {
+      printf("case ");
+      test_value->print();
+      printf(": ");
+   } else {
+      printf("default: ");
+   }
+}
+
+
+ast_case_label::ast_case_label(ast_expression *test_value)
+{
+   this->test_value = test_value;
+}
+
+
+void ast_case_label_list::print(void) const
+{
+   foreach_list_const(n, & this->labels) {
+      ast_node *ast = exec_node_data(ast_node, n, link);
+      ast->print();
+   }
+   printf("\n");
+}
+
+
+ast_case_label_list::ast_case_label_list(void)
+{
+}
+
+
+void ast_case_statement::print(void) const
+{
+   labels->print();
+   foreach_list_const(n, & this->stmts) {
+      ast_node *ast = exec_node_data(ast_node, n, link);
+      ast->print();
+      printf("\n");
+   }
+}
+
+
+ast_case_statement::ast_case_statement(ast_case_label_list *labels)
+{
+   this->labels = labels;
+}
+
+
+void ast_case_statement_list::print(void) const
+{
+   foreach_list_const(n, & this->cases) {
+      ast_node *ast = exec_node_data(ast_node, n, link);
+      ast->print();
+   }
+}
+
+
+ast_case_statement_list::ast_case_statement_list(void)
+{
 }
 
 
@@ -868,8 +1429,8 @@ ast_struct_specifier::print(void) const
 }
 
 
-ast_struct_specifier::ast_struct_specifier(char *identifier,
-					   ast_node *declarator_list)
+ast_struct_specifier::ast_struct_specifier(const char *identifier,
+					   ast_declarator_list *declarator_list)
 {
    if (identifier == NULL) {
       static unsigned anon_count = 1;
@@ -878,10 +1439,114 @@ ast_struct_specifier::ast_struct_specifier(char *identifier,
    }
    name = identifier;
    this->declarations.push_degenerate_list_at_head(&declarator_list->link);
+   is_declaration = true;
 }
 
+extern "C" {
+
+void
+_mesa_glsl_compile_shader(struct gl_context *ctx, struct gl_shader *shader,
+                          bool dump_ast, bool dump_hir)
+{
+   struct _mesa_glsl_parse_state *state =
+      new(shader) _mesa_glsl_parse_state(ctx, shader->Type, shader);
+   const char *source = shader->Source;
+
+   state->error = glcpp_preprocess(state, &source, &state->info_log,
+                             &ctx->Extensions, ctx);
+
+   if (!state->error) {
+     _mesa_glsl_lexer_ctor(state, source);
+     _mesa_glsl_parse(state);
+     _mesa_glsl_lexer_dtor(state);
+   }
+
+   if (dump_ast) {
+      foreach_list_const(n, &state->translation_unit) {
+         ast_node *ast = exec_node_data(ast_node, n, link);
+         ast->print();
+      }
+      printf("\n\n");
+   }
+
+   ralloc_free(shader->ir);
+   shader->ir = new(shader) exec_list;
+   if (!state->error && !state->translation_unit.is_empty())
+      _mesa_ast_to_hir(shader->ir, state);
+
+   if (!state->error) {
+      validate_ir_tree(shader->ir);
+
+      /* Print out the unoptimized IR. */
+      if (dump_hir) {
+         _mesa_print_ir(shader->ir, state);
+      }
+   }
+
+
+   if (!state->error && !shader->ir->is_empty()) {
+      struct gl_shader_compiler_options *options =
+         &ctx->ShaderCompilerOptions[_mesa_shader_type_to_index(shader->Type)];
+
+      /* Do some optimization at compile time to reduce shader IR size
+       * and reduce later work if the same shader is linked multiple times
+       */
+      while (do_common_optimization(shader->ir, false, false, 32, options))
+         ;
+
+      validate_ir_tree(shader->ir);
+   }
+
+   if (shader->InfoLog)
+      ralloc_free(shader->InfoLog);
+
+   shader->symbols = state->symbols;
+   shader->CompileStatus = !state->error;
+   shader->InfoLog = state->info_log;
+   shader->Version = state->language_version;
+   shader->InfoLog = state->info_log;
+   shader->IsES = state->es_shader;
+
+   memcpy(shader->builtins_to_link, state->builtins_to_link,
+          sizeof(shader->builtins_to_link[0]) * state->num_builtins_to_link);
+   shader->num_builtins_to_link = state->num_builtins_to_link;
+
+   if (shader->UniformBlocks)
+      ralloc_free(shader->UniformBlocks);
+   shader->NumUniformBlocks = state->num_uniform_blocks;
+   shader->UniformBlocks = state->uniform_blocks;
+   ralloc_steal(shader, shader->UniformBlocks);
+
+   /* Retain any live IR, but trash the rest. */
+   reparent_ir(shader->ir, shader->ir);
+
+   ralloc_free(state);
+}
+
+} /* extern "C" */
+/**
+ * Do the set of common optimizations passes
+ *
+ * \param ir                          List of instructions to be optimized
+ * \param linked                      Is the shader linked?  This enables
+ *                                    optimizations passes that remove code at
+ *                                    global scope and could cause linking to
+ *                                    fail.
+ * \param uniform_locations_assigned  Have locations already been assigned for
+ *                                    uniforms?  This prevents the declarations
+ *                                    of unused uniforms from being removed.
+ *                                    The setting of this flag only matters if
+ *                                    \c linked is \c true.
+ * \param max_unroll_iterations       Maximum number of loop iterations to be
+ *                                    unrolled.  Setting to 0 disables loop
+ *                                    unrolling.
+ * \param options                     The driver's preferred shader options.
+ */
 bool
-do_common_optimization(exec_list *ir, bool linked, unsigned max_unroll_iterations)
+do_common_optimization(exec_list *ir, bool linked,
+		       bool uniform_locations_assigned,
+		       unsigned max_unroll_iterations,
+                       const struct gl_shader_compiler_options *options)
 {
    GLboolean progress = GL_FALSE;
 
@@ -890,14 +1555,18 @@ do_common_optimization(exec_list *ir, bool linked, unsigned max_unroll_iteration
    if (linked) {
       progress = do_function_inlining(ir) || progress;
       progress = do_dead_functions(ir) || progress;
+      progress = do_structure_splitting(ir) || progress;
    }
-   progress = do_structure_splitting(ir) || progress;
    progress = do_if_simplification(ir) || progress;
-   progress = do_discard_simplification(ir) || progress;
+   progress = opt_flatten_nested_if_blocks(ir) || progress;
    progress = do_copy_propagation(ir) || progress;
    progress = do_copy_propagation_elements(ir) || progress;
+
+   if (options->PreferDP4 && !linked)
+      progress = opt_flip_matrices(ir) || progress;
+
    if (linked)
-      progress = do_dead_code(ir) || progress;
+      progress = do_dead_code(ir, uniform_locations_assigned) || progress;
    else
       progress = do_dead_code_unlinked(ir) || progress;
    progress = do_dead_code_local(ir) || progress;
@@ -911,9 +1580,11 @@ do_common_optimization(exec_list *ir, bool linked, unsigned max_unroll_iteration
    progress = do_algebraic(ir) || progress;
    progress = do_lower_jumps(ir) || progress;
    progress = do_vec_index_to_swizzle(ir) || progress;
+   progress = lower_vector_insert(ir, false) || progress;
    progress = do_swizzle_swizzle(ir) || progress;
    progress = do_noop_swizzle(ir) || progress;
 
+   progress = optimize_split_arrays(ir, linked) || progress;
    progress = optimize_redundant_jumps(ir) || progress;
 
    loop_state *ls = analyze_loop_variables(ir);

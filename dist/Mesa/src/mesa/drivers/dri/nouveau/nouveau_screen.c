@@ -28,13 +28,14 @@
 #include "nouveau_context.h"
 #include "nouveau_fbo.h"
 #include "nouveau_texture.h"
-#include "nouveau_drmif.h"
 #include "nv04_driver.h"
 #include "nv10_driver.h"
 #include "nv20_driver.h"
 
 #include "main/framebuffer.h"
+#include "main/fbobject.h"
 #include "main/renderbuffer.h"
+#include "swrast/s_renderbuffer.h"
 
 static const __DRIextension *nouveau_screen_extensions[];
 
@@ -51,24 +52,20 @@ nouveau_get_configs(void)
 	const uint8_t stencil_bits[] = { 0,  0,  0,  8 };
 	const uint8_t msaa_samples[] = { 0 };
 
-	const struct {
-		GLenum format;
-		GLenum type;
-	} fb_formats[] = {
-		{ GL_RGB , GL_UNSIGNED_SHORT_5_6_5     },
-		{ GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV },
-		{ GL_BGR , GL_UNSIGNED_INT_8_8_8_8_REV },
+	static const gl_format formats[3] = {
+		MESA_FORMAT_RGB565,
+		MESA_FORMAT_ARGB8888,
+		MESA_FORMAT_XRGB8888,
 	};
 
 	const GLenum back_buffer_modes[] = {
 		GLX_NONE, GLX_SWAP_UNDEFINED_OML
 	};
 
-	for (i = 0; i < Elements(fb_formats); i++) {
+	for (i = 0; i < Elements(formats); i++) {
 		__DRIconfig **config;
 
-		config = driCreateConfigs(fb_formats[i].format,
-					  fb_formats[i].type,
+		config = driCreateConfigs(formats[i],
 					  depth_bits, stencil_bits,
 					  Elements(depth_bits),
 					  back_buffer_modes,
@@ -78,8 +75,7 @@ nouveau_get_configs(void)
 					  GL_TRUE);
 		assert(config);
 
-		configs = configs ? driConcatConfigs(configs, config)
-			: config;
+		configs = driConcatConfigs(configs, config);
 	}
 
 	return (const __DRIconfig **)configs;
@@ -97,13 +93,12 @@ nouveau_init_screen2(__DRIscreen *dri_screen)
 	if (!screen)
 		return NULL;
 
-	dri_screen->private = screen;
+	dri_screen->driverPrivate = screen;
 	dri_screen->extensions = nouveau_screen_extensions;
 	screen->dri_screen = dri_screen;
 
 	/* Open the DRM device. */
-	ret = nouveau_device_open_existing(&screen->device, 0, dri_screen->fd,
-					   0);
+	ret = nouveau_device_wrap(dri_screen->fd, 0, &screen->device);
 	if (ret) {
 		nouveau_error("Error opening the DRM device.\n");
 		goto fail;
@@ -138,16 +133,15 @@ fail:
 static void
 nouveau_destroy_screen(__DRIscreen *dri_screen)
 {
-	struct nouveau_screen *screen = dri_screen->private;
+	struct nouveau_screen *screen = dri_screen->driverPrivate;
 
 	if (!screen)
 		return;
 
-	if (screen->device)
-		nouveau_device_close(&screen->device);
+	nouveau_device_del(&screen->device);
 
-	FREE(screen);
-	dri_screen->private = NULL;
+	free(screen);
+	dri_screen->driverPrivate = NULL;
 }
 
 static GLboolean
@@ -200,9 +194,9 @@ nouveau_create_buffer(__DRIscreen *dri_screen,
 	}
 
 	/* Software renderbuffers. */
-	_mesa_add_soft_renderbuffers(fb, GL_FALSE, GL_FALSE, GL_FALSE,
-				     visual->accumRedBits > 0,
-				     GL_FALSE, GL_FALSE);
+	_swrast_add_soft_renderbuffers(fb, GL_FALSE, GL_FALSE, GL_FALSE,
+                                       visual->accumRedBits > 0,
+                                       GL_FALSE, GL_FALSE);
 
 	drawable->driverPrivate = fb;
 
@@ -222,7 +216,7 @@ nouveau_drawable_flush(__DRIdrawable *draw)
 }
 
 static const struct __DRI2flushExtensionRec nouveau_flush_extension = {
-    { __DRI2_FLUSH, __DRI2_FLUSH_VERSION },
+    { __DRI2_FLUSH, 3 },
     nouveau_drawable_flush,
     dri2InvalidateDrawable,
 };
@@ -241,7 +235,7 @@ static const __DRIextension *nouveau_screen_extensions[] = {
 };
 
 const struct __DriverAPIRec driDriverAPI = {
-	.InitScreen2     = nouveau_init_screen2,
+	.InitScreen      = nouveau_init_screen2,
 	.DestroyScreen   = nouveau_destroy_screen,
 	.CreateBuffer    = nouveau_create_buffer,
 	.DestroyBuffer   = nouveau_destroy_buffer,

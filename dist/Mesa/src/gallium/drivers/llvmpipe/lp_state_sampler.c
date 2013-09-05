@@ -66,96 +66,128 @@ llvmpipe_create_sampler_state(struct pipe_context *pipe,
 
 static void
 llvmpipe_bind_sampler_states(struct pipe_context *pipe,
-                             unsigned num, void **sampler)
+                             unsigned shader,
+                             unsigned start,
+                             unsigned num,
+                             void **samplers)
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
    unsigned i;
 
-   assert(num <= PIPE_MAX_SAMPLERS);
+   assert(shader < PIPE_SHADER_TYPES);
+   assert(start + num <= Elements(llvmpipe->samplers[shader]));
 
    /* Check for no-op */
-   if (num == llvmpipe->num_samplers &&
-       !memcmp(llvmpipe->sampler, sampler, num * sizeof(void *)))
+   if (start + num <= llvmpipe->num_samplers[shader] &&
+       !memcmp(llvmpipe->samplers[shader] + start, samplers,
+               num * sizeof(void *))) {
       return;
+   }
 
    draw_flush(llvmpipe->draw);
 
-   for (i = 0; i < num; ++i)
-      llvmpipe->sampler[i] = sampler[i];
-   for (i = num; i < PIPE_MAX_SAMPLERS; ++i)
-      llvmpipe->sampler[i] = NULL;
+   /* set the new samplers */
+   for (i = 0; i < num; i++) {
+      llvmpipe->samplers[shader][start + i] = samplers[i];
+   }
 
-   llvmpipe->num_samplers = num;
+   /* find highest non-null samplers[] entry */
+   {
+      unsigned j = MAX2(llvmpipe->num_samplers[shader], start + num);
+      while (j > 0 && llvmpipe->samplers[shader][j - 1] == NULL)
+         j--;
+      llvmpipe->num_samplers[shader] = j;
+   }
+
+   if (shader == PIPE_SHADER_VERTEX || shader == PIPE_SHADER_GEOMETRY) {
+      draw_set_samplers(llvmpipe->draw,
+                        shader,
+                        llvmpipe->samplers[shader],
+                        llvmpipe->num_samplers[shader]);
+   }
 
    llvmpipe->dirty |= LP_NEW_SAMPLER;
+}
+
+
+static void
+llvmpipe_bind_fragment_sampler_states(struct pipe_context *pipe,
+                                      unsigned num, void **samplers)
+{
+   llvmpipe_bind_sampler_states(pipe, PIPE_SHADER_FRAGMENT, 0, num, samplers);
 }
 
 
 static void
 llvmpipe_bind_vertex_sampler_states(struct pipe_context *pipe,
-                                    unsigned num_samplers,
-                                    void **samplers)
+                                    unsigned num, void **samplers)
 {
-   struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
-   unsigned i;
-
-   assert(num_samplers <= PIPE_MAX_VERTEX_SAMPLERS);
-
-   /* Check for no-op */
-   if (num_samplers == llvmpipe->num_vertex_samplers &&
-       !memcmp(llvmpipe->vertex_samplers, samplers, num_samplers * sizeof(void *)))
-      return;
-
-   draw_flush(llvmpipe->draw);
-
-   for (i = 0; i < num_samplers; ++i)
-      llvmpipe->vertex_samplers[i] = samplers[i];
-   for (i = num_samplers; i < PIPE_MAX_VERTEX_SAMPLERS; ++i)
-      llvmpipe->vertex_samplers[i] = NULL;
-
-   llvmpipe->num_vertex_samplers = num_samplers;
-
-   draw_set_samplers(llvmpipe->draw,
-                     llvmpipe->vertex_samplers,
-                     llvmpipe->num_vertex_samplers);
-
-   llvmpipe->dirty |= LP_NEW_SAMPLER;
+   llvmpipe_bind_sampler_states(pipe, PIPE_SHADER_VERTEX, 0, num, samplers);
 }
 
 
 static void
 llvmpipe_bind_geometry_sampler_states(struct pipe_context *pipe,
-                                      unsigned num, void **sampler)
+                                      unsigned num, void **samplers)
 {
-   /* XXX: implementation missing */
+   llvmpipe_bind_sampler_states(pipe, PIPE_SHADER_GEOMETRY, 0, num, samplers);
 }
+
+static void
+llvmpipe_set_sampler_views(struct pipe_context *pipe,
+                           unsigned shader,
+                           unsigned start,
+                           unsigned num,
+                           struct pipe_sampler_view **views)
+{
+   struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
+   uint i;
+
+   assert(num <= PIPE_MAX_SHADER_SAMPLER_VIEWS);
+
+   assert(shader < PIPE_SHADER_TYPES);
+   assert(start + num <= Elements(llvmpipe->sampler_views[shader]));
+
+   /* Check for no-op */
+   if (start + num <= llvmpipe->num_sampler_views[shader] &&
+       !memcmp(llvmpipe->sampler_views[shader] + start, views,
+               num * sizeof(struct pipe_sampler_view *))) {
+      return;
+   }
+
+   draw_flush(llvmpipe->draw);
+
+   /* set the new sampler views */
+   for (i = 0; i < num; i++) {
+      pipe_sampler_view_reference(&llvmpipe->sampler_views[shader][start + i],
+                                  views[i]);
+   }
+
+   /* find highest non-null sampler_views[] entry */
+   {
+      unsigned j = MAX2(llvmpipe->num_sampler_views[shader], start + num);
+      while (j > 0 && llvmpipe->sampler_views[shader][j - 1] == NULL)
+         j--;
+      llvmpipe->num_sampler_views[shader] = j;
+   }
+
+   if (shader == PIPE_SHADER_VERTEX || shader == PIPE_SHADER_GEOMETRY) {
+      draw_set_sampler_views(llvmpipe->draw,
+                             shader,
+                             llvmpipe->sampler_views[shader],
+                             llvmpipe->num_sampler_views[shader]);
+   }
+
+   llvmpipe->dirty |= LP_NEW_SAMPLER_VIEW;
+}
+
 
 static void
 llvmpipe_set_fragment_sampler_views(struct pipe_context *pipe,
                                     unsigned num,
                                     struct pipe_sampler_view **views)
 {
-   struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
-   uint i;
-
-   assert(num <= PIPE_MAX_SAMPLERS);
-
-   /* Check for no-op */
-   if (num == llvmpipe->num_fragment_sampler_views &&
-       !memcmp(llvmpipe->fragment_sampler_views, views, num * sizeof(struct pipe_sampler_view *)))
-      return;
-
-   draw_flush(llvmpipe->draw);
-
-   for (i = 0; i < PIPE_MAX_SAMPLERS; i++) {
-      struct pipe_sampler_view *view = i < num ? views[i] : NULL;
-
-      pipe_sampler_view_reference(&llvmpipe->fragment_sampler_views[i], view);
-   }
-
-   llvmpipe->num_fragment_sampler_views = num;
-
-   llvmpipe->dirty |= LP_NEW_SAMPLER_VIEW;
+   llvmpipe_set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0, num, views);
 }
 
 
@@ -164,32 +196,7 @@ llvmpipe_set_vertex_sampler_views(struct pipe_context *pipe,
                                   unsigned num,
                                   struct pipe_sampler_view **views)
 {
-   struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
-   uint i;
-
-   assert(num <= PIPE_MAX_VERTEX_SAMPLERS);
-
-   /* Check for no-op */
-   if (num == llvmpipe->num_vertex_sampler_views &&
-       !memcmp(llvmpipe->vertex_sampler_views, views, num * sizeof(struct pipe_sampler_view *))) {
-      return;
-   }
-
-   draw_flush(llvmpipe->draw);
-
-   for (i = 0; i < PIPE_MAX_VERTEX_SAMPLERS; i++) {
-      struct pipe_sampler_view *view = i < num ? views[i] : NULL;
-
-      pipe_sampler_view_reference(&llvmpipe->vertex_sampler_views[i], view);
-   }
-
-   llvmpipe->num_vertex_sampler_views = num;
-
-   draw_set_sampler_views(llvmpipe->draw,
-                          llvmpipe->vertex_sampler_views,
-                          llvmpipe->num_vertex_sampler_views);
-
-   llvmpipe->dirty |= LP_NEW_SAMPLER_VIEW;
+   llvmpipe_set_sampler_views(pipe, PIPE_SHADER_VERTEX, 0, num, views);
 }
 
 
@@ -198,7 +205,7 @@ llvmpipe_set_geometry_sampler_views(struct pipe_context *pipe,
                                     unsigned num,
                                     struct pipe_sampler_view **views)
 {
-   /*XXX: implementation missing */
+   llvmpipe_set_sampler_views(pipe, PIPE_SHADER_GEOMETRY, 0, num, views);
 }
 
 static struct pipe_sampler_view *
@@ -207,6 +214,12 @@ llvmpipe_create_sampler_view(struct pipe_context *pipe,
                             const struct pipe_sampler_view *templ)
 {
    struct pipe_sampler_view *view = CALLOC_STRUCT(pipe_sampler_view);
+   /*
+    * XXX we REALLY want to see the correct bind flag here but the OpenGL
+    * state tracker can't guarantee that at least for texture buffer objects.
+    */
+   if (!(texture->bind & PIPE_BIND_SAMPLER_VIEW))
+      debug_printf("Illegal sampler view creation without bind flag\n");
 
    if (view) {
       *view = *templ;
@@ -237,44 +250,97 @@ llvmpipe_delete_sampler_state(struct pipe_context *pipe,
 }
 
 
-/**
- * Called during state validation when LP_NEW_SAMPLER_VIEW is set.
- */
-void
-llvmpipe_prepare_vertex_sampling(struct llvmpipe_context *lp,
-                                 unsigned num,
-                                 struct pipe_sampler_view **views)
+static void
+prepare_shader_sampling(
+   struct llvmpipe_context *lp,
+   unsigned num,
+   struct pipe_sampler_view **views,
+   unsigned shader_type,
+   struct pipe_resource *mapped_tex[PIPE_MAX_SHADER_SAMPLER_VIEWS])
 {
+
    unsigned i;
    uint32_t row_stride[PIPE_MAX_TEXTURE_LEVELS];
    uint32_t img_stride[PIPE_MAX_TEXTURE_LEVELS];
-   const void *data[PIPE_MAX_TEXTURE_LEVELS];
+   uint32_t mip_offsets[PIPE_MAX_TEXTURE_LEVELS];
+   const void *addr;
 
-   assert(num <= PIPE_MAX_VERTEX_SAMPLERS);
+   assert(num <= PIPE_MAX_SHADER_SAMPLER_VIEWS);
    if (!num)
       return;
 
-   for (i = 0; i < PIPE_MAX_VERTEX_SAMPLERS; i++) {
+   for (i = 0; i < PIPE_MAX_SHADER_SAMPLER_VIEWS; i++) {
       struct pipe_sampler_view *view = i < num ? views[i] : NULL;
 
       if (view) {
          struct pipe_resource *tex = view->texture;
          struct llvmpipe_resource *lp_tex = llvmpipe_resource(tex);
+         unsigned width0 = tex->width0;
+         unsigned num_layers = tex->depth0;
+         unsigned first_level = 0;
+         unsigned last_level = 0;
 
          /* We're referencing the texture's internal data, so save a
           * reference to it.
           */
-         pipe_resource_reference(&lp->mapped_vs_tex[i], tex);
+         pipe_resource_reference(&mapped_tex[i], tex);
 
          if (!lp_tex->dt) {
-            /* regular texture - setup array of mipmap level pointers */
+            /* regular texture - setup array of mipmap level offsets */
+            struct pipe_resource *res = view->texture;
             int j;
-            for (j = view->u.tex.first_level; j <= tex->last_level; j++) {
-               data[j] =
-                  llvmpipe_get_texture_image_all(lp_tex, j, LP_TEX_USAGE_READ,
-                                                 LP_TEX_LAYOUT_LINEAR);
-               row_stride[j] = lp_tex->row_stride[j];
-               img_stride[j] = lp_tex->img_stride[j];
+            void *mip_ptr;
+
+            if (llvmpipe_resource_is_texture(res)) {
+               first_level = view->u.tex.first_level;
+               last_level = view->u.tex.last_level;
+               assert(first_level <= last_level);
+               assert(last_level <= res->last_level);
+
+               /* must trigger allocation first before we can get base ptr */
+               /* XXX this may fail due to OOM ? */
+               mip_ptr = llvmpipe_get_texture_image_all(lp_tex, view->u.tex.first_level,
+                                                        LP_TEX_USAGE_READ);
+               addr = lp_tex->linear_img.data;
+
+               for (j = first_level; j <= last_level; j++) {
+                  mip_ptr = llvmpipe_get_texture_image_all(lp_tex, j,
+                                                           LP_TEX_USAGE_READ);
+                  mip_offsets[j] = (uint8_t *)mip_ptr - (uint8_t *)addr;
+                  /*
+                   * could get mip offset directly but need call above to
+                   * invoke tiled->linear conversion.
+                   */
+                  assert(lp_tex->linear_mip_offsets[j] == mip_offsets[j]);
+                  row_stride[j] = lp_tex->row_stride[j];
+                  img_stride[j] = lp_tex->img_stride[j];
+               }
+               if (res->target == PIPE_TEXTURE_1D_ARRAY ||
+                   res->target == PIPE_TEXTURE_2D_ARRAY) {
+                  num_layers = view->u.tex.last_layer - view->u.tex.first_layer + 1;
+                  for (j = first_level; j <= last_level; j++) {
+                     mip_offsets[j] += view->u.tex.first_layer *
+                                       lp_tex->img_stride[j];
+                  }
+                  assert(view->u.tex.first_layer <= view->u.tex.last_layer);
+                  assert(view->u.tex.last_layer < res->array_size);
+               }
+            }
+            else {
+               unsigned view_blocksize = util_format_get_blocksize(view->format);
+               mip_ptr = lp_tex->data;
+               addr = mip_ptr;
+               /* probably don't really need to fill that out */
+               mip_offsets[0] = 0;
+               row_stride[0] = 0;
+               row_stride[0] = 0;
+
+               /* everything specified in number of elements here. */
+               width0 = view->u.buf.last_element - view->u.buf.first_element + 1;
+               addr = (uint8_t *)addr + view->u.buf.first_element *
+                               view_blocksize;
+               assert(view->u.buf.first_element <= view->u.buf.last_element);
+               assert(view->u.buf.last_element * view_blocksize < res->width0);
             }
          }
          else {
@@ -284,19 +350,35 @@ llvmpipe_prepare_vertex_sampling(struct llvmpipe_context *lp,
              */
             struct llvmpipe_screen *screen = llvmpipe_screen(tex->screen);
             struct sw_winsys *winsys = screen->winsys;
-            data[0] = winsys->displaytarget_map(winsys, lp_tex->dt,
+            addr = winsys->displaytarget_map(winsys, lp_tex->dt,
                                                 PIPE_TRANSFER_READ);
             row_stride[0] = lp_tex->row_stride[0];
             img_stride[0] = lp_tex->img_stride[0];
-            assert(data[0]);
+            mip_offsets[0] = 0;
+            assert(addr);
          }
          draw_set_mapped_texture(lp->draw,
+                                 shader_type,
                                  i,
-                                 tex->width0, tex->height0, tex->depth0,
-                                 view->u.tex.first_level, tex->last_level,
-                                 row_stride, img_stride, data);
+                                 width0, tex->height0, num_layers,
+                                 first_level, last_level,
+                                 addr,
+                                 row_stride, img_stride, mip_offsets);
       }
    }
+}
+                        
+
+/**
+ * Called during state validation when LP_NEW_SAMPLER_VIEW is set.
+ */
+void
+llvmpipe_prepare_vertex_sampling(struct llvmpipe_context *lp,
+                                 unsigned num,
+                                 struct pipe_sampler_view **views)
+{
+   prepare_shader_sampling(lp, num, views, PIPE_SHADER_VERTEX,
+                           lp->mapped_vs_tex);
 }
 
 void
@@ -308,12 +390,34 @@ llvmpipe_cleanup_vertex_sampling(struct llvmpipe_context *ctx)
    }
 }
 
+
+/**
+ * Called during state validation when LP_NEW_SAMPLER_VIEW is set.
+ */
+void
+llvmpipe_prepare_geometry_sampling(struct llvmpipe_context *lp,
+                                   unsigned num,
+                                   struct pipe_sampler_view **views)
+{
+   prepare_shader_sampling(lp, num, views, PIPE_SHADER_GEOMETRY,
+                           lp->mapped_gs_tex);
+}
+
+void
+llvmpipe_cleanup_geometry_sampling(struct llvmpipe_context *ctx)
+{
+   unsigned i;
+   for (i = 0; i < Elements(ctx->mapped_gs_tex); i++) {
+      pipe_resource_reference(&ctx->mapped_gs_tex[i], NULL);
+   }
+}
+
 void
 llvmpipe_init_sampler_funcs(struct llvmpipe_context *llvmpipe)
 {
    llvmpipe->pipe.create_sampler_state = llvmpipe_create_sampler_state;
 
-   llvmpipe->pipe.bind_fragment_sampler_states  = llvmpipe_bind_sampler_states;
+   llvmpipe->pipe.bind_fragment_sampler_states  = llvmpipe_bind_fragment_sampler_states;
    llvmpipe->pipe.bind_vertex_sampler_states  = llvmpipe_bind_vertex_sampler_states;
    llvmpipe->pipe.bind_geometry_sampler_states  = llvmpipe_bind_geometry_sampler_states;
    llvmpipe->pipe.set_fragment_sampler_views = llvmpipe_set_fragment_sampler_views;

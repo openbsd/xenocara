@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.3
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -39,7 +39,7 @@ _mesa_update_state_locked(struct gl_context *ctx);
 
 
 extern void
-_mesa_set_varying_vp_inputs(struct gl_context *ctx, GLbitfield varying_inputs);
+_mesa_set_varying_vp_inputs(struct gl_context *ctx, GLbitfield64 varying_inputs);
 
 
 extern void
@@ -49,7 +49,7 @@ _mesa_set_vp_override(struct gl_context *ctx, GLboolean flag);
 /**
  * Is the secondary color needed?
  */
-static INLINE GLboolean
+static inline GLboolean
 _mesa_need_secondary_color(const struct gl_context *ctx)
 {
    if (ctx->Light.Enabled &&
@@ -66,23 +66,10 @@ _mesa_need_secondary_color(const struct gl_context *ctx)
 
    if (ctx->FragmentProgram._Current &&
        (ctx->FragmentProgram._Current != ctx->FragmentProgram._TexEnvProgram) &&
-       (ctx->FragmentProgram._Current->Base.InputsRead & FRAG_BIT_COL1))
+       (ctx->FragmentProgram._Current->Base.InputsRead & VARYING_BIT_COL1))
       return GL_TRUE;
 
    return GL_FALSE;
 }
-
-
-/**
- * Is RGBA LogicOp enabled?
- */
-static INLINE GLboolean
-_mesa_rgba_logicop_enabled(const struct gl_context *ctx)
-{
-   return ctx->Color.ColorLogicOpEnabled ||
-      (ctx->Color.BlendEnabled && ctx->Color.Blend[0].EquationRGB == GL_LOGIC_OP);
-}
-
-
 
 #endif

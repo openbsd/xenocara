@@ -36,14 +36,9 @@
 #include "pipe/p_config.h"
 
 #if defined(PIPE_OS_UNIX)
+#  include <time.h> /* timeval */
 #  include <sys/time.h> /* timeval */
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_DISPLAY)
-#  include <windows.h>
-#  include <winddi.h>
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_MINIPORT)
-#  include <windows.h>
-extern VOID KeQuerySystemTime(PLARGE_INTEGER);
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_USER) || defined(PIPE_SUBSYSTEM_WINDOWS_CE)
+#elif defined(PIPE_SUBSYSTEM_WINDOWS_USER)
 #  include <windows.h>
 #else
 #  error Unsupported OS
@@ -53,71 +48,47 @@ extern VOID KeQuerySystemTime(PLARGE_INTEGER);
 
 
 int64_t
-os_time_get(void)
+os_time_get_nano(void)
 {
-#if defined(PIPE_OS_UNIX)
+#if defined(PIPE_OS_LINUX)
+
+   struct timespec tv;
+   clock_gettime(CLOCK_MONOTONIC, &tv);
+   return tv.tv_nsec + tv.tv_sec*INT64_C(1000000000);
+
+#elif defined(PIPE_OS_UNIX)
 
    struct timeval tv;
    gettimeofday(&tv, NULL);
-   return tv.tv_usec + tv.tv_sec*1000000LL;
+   return tv.tv_usec*INT64_C(1000) + tv.tv_sec*INT64_C(1000000000);
 
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_DISPLAY)
-
-   static LONGLONG frequency;
-   LONGLONG counter;
-   if(!frequency)
-      EngQueryPerformanceFrequency(&frequency);
-   EngQueryPerformanceCounter(&counter);
-   return counter*INT64_C(1000000)/frequency;
-
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_USER) || defined(PIPE_SUBSYSTEM_WINDOWS_CE)
+#elif defined(PIPE_SUBSYSTEM_WINDOWS_USER)
 
    static LARGE_INTEGER frequency;
    LARGE_INTEGER counter;
    if(!frequency.QuadPart)
       QueryPerformanceFrequency(&frequency);
    QueryPerformanceCounter(&counter);
-   return counter.QuadPart*INT64_C(1000000)/frequency.QuadPart;
+   return counter.QuadPart*INT64_C(1000000000)/frequency.QuadPart;
 
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_MINIPORT)
+#else
 
-   /* Updated every 10 miliseconds, measured in units of 100 nanoseconds.
-    * http://msdn.microsoft.com/en-us/library/ms801642.aspx */
-   LARGE_INTEGER counter;
-   KeQuerySystemTime(&counter);
-   return counter.QuadPart/10;
+#error Unsupported OS
 
 #endif
 }
 
 
-#if defined(PIPE_SUBSYSTEM_WINDOWS_DISPLAY)
+#if defined(PIPE_SUBSYSTEM_WINDOWS_USER)
 
 void
 os_time_sleep(int64_t usecs)
 {
-   static LONGLONG frequency;
-   LONGLONG start, curr, end;
-   
-   EngQueryPerformanceCounter(&start);
-   
-   if(!frequency)
-      EngQueryPerformanceFrequency(&frequency);
-   
-   end = start + (usecs * frequency + 999999LL)/1000000LL;
-   
-   do {
-      EngQueryPerformanceCounter(&curr);
-   } while(start <= curr && curr < end || 
-	   end < start && (curr < end || start <= curr));
-}
-
-#elif defined(PIPE_SUBSYSTEM_WINDOWS_USER)
-
-void
-os_time_sleep(int64_t usecs)
-{
-   Sleep((usecs + 999) / 1000);
+   DWORD dwMilliseconds = (DWORD) ((usecs + 999) / 1000);
+   /* Avoid Sleep(O) as that would cause to sleep for an undetermined duration */
+   if (dwMilliseconds) {
+      Sleep(dwMilliseconds);
+   }
 }
 
 #endif

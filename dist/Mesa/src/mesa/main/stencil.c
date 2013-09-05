@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -65,13 +65,9 @@ validate_stencil_op(struct gl_context *ctx, GLenum op)
    case GL_INCR:
    case GL_DECR:
    case GL_INVERT:
+   case GL_INCR_WRAP:
+   case GL_DECR_WRAP:
       return GL_TRUE;
-   case GL_INCR_WRAP_EXT:
-   case GL_DECR_WRAP_EXT:
-      if (ctx->Extensions.EXT_stencil_wrap) {
-         return GL_TRUE;
-      }
-      /* FALL-THROUGH */
    default:
       return GL_FALSE;
    }
@@ -112,17 +108,8 @@ void GLAPIENTRY
 _mesa_ClearStencil( GLint s )
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
-   if (ctx->Stencil.Clear == (GLuint) s)
-      return;
-
-   FLUSH_VERTICES(ctx, _NEW_STENCIL);
    ctx->Stencil.Clear = (GLuint) s;
-
-   if (ctx->Driver.ClearStencil) {
-      ctx->Driver.ClearStencil( ctx, s );
-   }
 }
 
 
@@ -144,8 +131,6 @@ void GLAPIENTRY
 _mesa_StencilFuncSeparateATI( GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask )
 {
    GET_CURRENT_CONTEXT(ctx);
-   const GLint stencilMax = (1 << ctx->DrawBuffer->Visual.stencilBits) - 1;
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glStencilFuncSeparateATI()\n");
@@ -160,8 +145,6 @@ _mesa_StencilFuncSeparateATI( GLenum frontfunc, GLenum backfunc, GLint ref, GLui
                   "glStencilFuncSeparateATI(backfunc)");
       return;
    }
-
-   ref = CLAMP( ref, 0, stencilMax );
 
    /* set both front and back state */
    if (ctx->Stencil.Function[0] == frontfunc &&
@@ -202,9 +185,7 @@ void GLAPIENTRY
 _mesa_StencilFunc( GLenum func, GLint ref, GLuint mask )
 {
    GET_CURRENT_CONTEXT(ctx);
-   const GLint stencilMax = (1 << ctx->DrawBuffer->Visual.stencilBits) - 1;
    const GLint face = ctx->Stencil.ActiveFace;
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glStencilFunc()\n");
@@ -213,8 +194,6 @@ _mesa_StencilFunc( GLenum func, GLint ref, GLuint mask )
       _mesa_error(ctx, GL_INVALID_ENUM, "glStencilFunc(func)");
       return;
    }
-
-   ref = CLAMP( ref, 0, stencilMax );
 
    if (face != 0) {
       if (ctx->Stencil.Function[face] == func &&
@@ -276,8 +255,6 @@ _mesa_StencilMask( GLuint mask )
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glStencilMask()\n");
 
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
-
    if (face != 0) {
       /* Only modify the EXT_stencil_two_side back-face state.
        */
@@ -332,8 +309,6 @@ _mesa_StencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glStencilOp()\n");
-
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (!validate_stencil_op(ctx, fail)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOp(sfail)");
@@ -390,13 +365,11 @@ _mesa_StencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 
 
 
-#if _HAVE_FULL_GL
 /* GL_EXT_stencil_two_side */
 void GLAPIENTRY
 _mesa_ActiveStencilFaceEXT(GLenum face)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glActiveStencilFaceEXT()\n");
@@ -407,14 +380,12 @@ _mesa_ActiveStencilFaceEXT(GLenum face)
    }
 
    if (face == GL_FRONT || face == GL_BACK) {
-      FLUSH_VERTICES(ctx, _NEW_STENCIL);
       ctx->Stencil.ActiveFace = (face == GL_FRONT) ? 0 : 2;
    }
    else {
       _mesa_error(ctx, GL_INVALID_ENUM, "glActiveStencilFaceEXT(face)");
    }
 }
-#endif
 
 
 
@@ -429,7 +400,6 @@ _mesa_StencilOpSeparate(GLenum face, GLenum sfail, GLenum zfail, GLenum zpass)
 {
    GLboolean set = GL_FALSE;
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glStencilOpSeparate()\n");
@@ -486,8 +456,6 @@ void GLAPIENTRY
 _mesa_StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
 {
    GET_CURRENT_CONTEXT(ctx);
-   const GLint stencilMax = (1 << ctx->DrawBuffer->Visual.stencilBits) - 1;
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glStencilFuncSeparate()\n");
@@ -500,8 +468,6 @@ _mesa_StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
       _mesa_error(ctx, GL_INVALID_ENUM, "glStencilFuncSeparate(func)");
       return;
    }
-
-   ref = CLAMP(ref, 0, stencilMax);
 
    FLUSH_VERTICES(ctx, _NEW_STENCIL);
 
@@ -528,7 +494,6 @@ void GLAPIENTRY
 _mesa_StencilMaskSeparate(GLenum face, GLuint mask)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(ctx, "glStencilMaskSeparate()\n");
@@ -572,6 +537,11 @@ _mesa_update_stencil(struct gl_context *ctx)
 	ctx->Stencil.Ref[0] != ctx->Stencil.Ref[face] ||
 	ctx->Stencil.ValueMask[0] != ctx->Stencil.ValueMask[face] ||
 	ctx->Stencil.WriteMask[0] != ctx->Stencil.WriteMask[face]);
+
+   ctx->Stencil._WriteEnabled =
+      ctx->Stencil._Enabled &&
+      (ctx->Stencil.WriteMask[0] != 0 ||
+       (ctx->Stencil._TestTwoSide && ctx->Stencil.WriteMask[face] != 0));
 }
 
 

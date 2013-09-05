@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.8
  *
  * Copyright (C) 2010 Chia-I Wu <olv@0xlab.org>
  *
@@ -41,6 +40,8 @@
 #include "common/native_wayland_drm_bufmgr_helper.h"
 #endif
 
+#include "gbm_gallium_drmint.h"
+
 struct drm_config;
 struct drm_crtc;
 struct drm_connector;
@@ -52,6 +53,8 @@ struct drm_display {
 
    const struct native_event_handler *event_handler;
 
+   struct gbm_gallium_drm_device *gbmdrm;
+   int own_gbm;
    int fd;
    char *device_name;
    struct drm_config *config;

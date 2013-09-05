@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -35,34 +35,38 @@
 
 #include "compiler.h"
 #include "glheader.h"
-#include "mfeatures.h"
 
 struct _glapi_table;
 struct gl_context;
 
 
-#if FEATURE_pixel_transfer
+void GLAPIENTRY
+_mesa_PixelZoom( GLfloat xfactor, GLfloat yfactor );
+void GLAPIENTRY
+_mesa_PixelMapfv( GLenum map, GLsizei mapsize, const GLfloat *values );
+void GLAPIENTRY
+_mesa_PixelMapuiv(GLenum map, GLsizei mapsize, const GLuint *values );
+void GLAPIENTRY
+_mesa_PixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values );
+void GLAPIENTRY
+_mesa_GetnPixelMapfvARB( GLenum map, GLsizei bufSize, GLfloat *values );
+void GLAPIENTRY
+_mesa_GetPixelMapfv( GLenum map, GLfloat *values );
+void GLAPIENTRY
+_mesa_GetnPixelMapuivARB( GLenum map, GLsizei bufSize, GLuint *values );
+void GLAPIENTRY
+_mesa_GetPixelMapuiv( GLenum map, GLuint *values );
+void GLAPIENTRY
+_mesa_GetnPixelMapusvARB( GLenum map, GLsizei bufSize, GLushort *values );
+void GLAPIENTRY
+_mesa_GetPixelMapusv( GLenum map, GLushort *values );
+void GLAPIENTRY
+_mesa_PixelTransferf(GLenum pname, GLfloat param);
+void GLAPIENTRY
+_mesa_PixelTransferi( GLenum pname, GLint param );
 
 extern void 
 _mesa_update_pixel( struct gl_context *ctx, GLuint newstate );
-
-extern void
-_mesa_init_pixel_dispatch( struct _glapi_table * disp );
-
-#else /* FEATURE_pixel_transfer */
-
-static INLINE void
-_mesa_update_pixel(struct gl_context *ctx, GLuint newstate)
-{
-}
-
-static INLINE void
-_mesa_init_pixel_dispatch(struct _glapi_table *disp)
-{
-}
-
-#endif /* FEATURE_pixel_transfer */
-
 
 extern void 
 _mesa_init_pixel( struct gl_context * ctx );

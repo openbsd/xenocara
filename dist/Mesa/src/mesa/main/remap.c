@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.7
  *
  * Copyright (C) 2009 Chia-I Wu <olv@0xlab.org>
  *
@@ -35,10 +34,6 @@
  * remap table is in charge of mapping a static entry in mesa core to
  * a dynamic entry, or the corresponding static entry, in glapi.
  */
-
-#include "mfeatures.h"
-
-#if FEATURE_remap_table
 
 #include "remap.h"
 #include "imports.h"
@@ -208,8 +203,10 @@ _mesa_do_init_remap_table(const char *pool,
       offset = _mesa_map_function_spec(spec);
       /* store the dispatch offset in the remap table */
       driDispatchRemapTable[i] = offset;
-      if (offset < 0)
-         _mesa_warning(NULL, "failed to remap index %d", i);
+      if (offset < 0) {
+         const char *name = spec + strlen(spec) + 1;
+         _mesa_warning(NULL, "failed to remap %s", name);
+      }
    }
 }
 
@@ -221,6 +218,3 @@ _mesa_init_remap_table(void)
 			     driDispatchRemapTable_size,
 			     MESA_remap_table_functions);
 }
-
-
-#endif /* FEATURE_remap_table */

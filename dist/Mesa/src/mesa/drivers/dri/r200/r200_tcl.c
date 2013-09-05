@@ -38,6 +38,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/enums.h"
 #include "main/colormac.h"
 #include "main/light.h"
+#include "main/state.h"
 
 #include "vbo/vbo.h"
 #include "tnl/tnl.h"
@@ -68,8 +69,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define HAVE_ELTS        1
 
 
-#define HW_POINTS           (((R200_CONTEXT(ctx))->radeon.radeonScreen->drmSupportsPointSprites && \
-			      !(ctx->_TriangleCaps & DD_POINT_SMOOTH)) ? \
+#define HW_POINTS           ((!ctx->Point.SmoothFlag) ? \
 				R200_VF_PRIM_POINT_SPRITES : R200_VF_PRIM_POINTS)
 #define HW_LINES            R200_VF_PRIM_LINES
 #define HW_LINE_LOOP        0
@@ -154,7 +154,7 @@ static GLushort *r200AllocElts( r200ContextPtr rmesa, GLuint nr )
    }
    else {
       if (rmesa->radeon.dma.flush)
-	 rmesa->radeon.dma.flush( rmesa->radeon.glCtx );
+	 rmesa->radeon.dma.flush( &rmesa->radeon.glCtx );
 
       r200EmitAOS( rmesa,
 		   rmesa->radeon.tcl.aos_count, 0 );
@@ -219,8 +219,8 @@ static void r200EmitPrim( struct gl_context *ctx,
 #ifdef MESA_BIG_ENDIAN
 /* We could do without (most of) this ugliness if dest was always 32 bit word aligned... */
 #define EMIT_ELT(dest, offset, x) do {                          \
-        int off = offset + ( ( (GLuint)dest & 0x2 ) >> 1 );     \
-        GLushort *des = (GLushort *)( (GLuint)dest & ~0x2 );    \
+        int off = offset + ( ( (uintptr_t)dest & 0x2 ) >> 1 );     \
+        GLushort *des = (GLushort *)( (uintptr_t)dest & ~0x2 );    \
         (des)[ off + 1 - 2 * ( off & 1 ) ] = (GLushort)(x);	\
 	(void)rmesa; } while (0)
 #else
@@ -285,90 +285,6 @@ void r200TclPrimitive( struct gl_context *ctx,
    }
 }
 
-
-/**********************************************************************/
-/*             Fog blend factor computation for hw tcl                */
-/*             same calculation used as in t_vb_fog.c                 */
-/**********************************************************************/
-
-#define FOG_EXP_TABLE_SIZE 256
-#define FOG_MAX (10.0)
-#define EXP_FOG_MAX .0006595
-#define FOG_INCR (FOG_MAX/FOG_EXP_TABLE_SIZE)
-static GLfloat exp_table[FOG_EXP_TABLE_SIZE];
-
-#if 1
-#define NEG_EXP( result, narg )						\
-do {									\
-   GLfloat f = (GLfloat) (narg * (1.0/FOG_INCR));			\
-   GLint k = (GLint) f;							\
-   if (k > FOG_EXP_TABLE_SIZE-2) 					\
-      result = (GLfloat) EXP_FOG_MAX;					\
-   else									\
-      result = exp_table[k] + (f-k)*(exp_table[k+1]-exp_table[k]);	\
-} while (0)
-#else
-#define NEG_EXP( result, narg )					\
-do {								\
-   result = exp(-narg);						\
-} while (0)
-#endif
-
-
-/**
- * Initialize the exp_table[] lookup table for approximating exp().
- */
-void
-r200InitStaticFogData( void )
-{
-   GLfloat f = 0.0F;
-   GLint i = 0;
-   for ( ; i < FOG_EXP_TABLE_SIZE ; i++, f += FOG_INCR) {
-      exp_table[i] = (GLfloat) exp(-f);
-   }
-}
-
-
-/**
- * Compute per-vertex fog blend factors from fog coordinates by
- * evaluating the GL_LINEAR, GL_EXP or GL_EXP2 fog function.
- * Fog coordinates are distances from the eye (typically between the
- * near and far clip plane distances).
- * Note the fog (eye Z) coords may be negative so we use ABS(z) below.
- * Fog blend factors are in the range [0,1].
- */
-float
-r200ComputeFogBlendFactor( struct gl_context *ctx, GLfloat fogcoord )
-{
-   GLfloat end  = ctx->Fog.End;
-   GLfloat d, temp;
-   const GLfloat z = FABSF(fogcoord);
-
-   switch (ctx->Fog.Mode) {
-   case GL_LINEAR:
-      if (ctx->Fog.Start == ctx->Fog.End)
-         d = 1.0F;
-      else
-         d = 1.0F / (ctx->Fog.End - ctx->Fog.Start);
-      temp = (end - z) * d;
-      return CLAMP(temp, 0.0F, 1.0F);
-      break;
-   case GL_EXP:
-      d = ctx->Fog.Density;
-      NEG_EXP( temp, d * z );
-      return temp;
-      break;
-   case GL_EXP2:
-      d = ctx->Fog.Density*ctx->Fog.Density;
-      NEG_EXP( temp, d * z * z );
-      return temp;
-      break;
-   default:
-      _mesa_problem(ctx, "Bad fog mode in make_fog_coord");
-      return 0;
-   }
-}
-
 /**
  * Predict total emit size for next rendering operation so there is no flush in middle of rendering
  * Prediction has to aim towards the best possible value that is worse than worst case scenario
@@ -397,7 +313,7 @@ static GLuint r200EnsureEmitSize( struct gl_context * ctx , GLubyte* vimap_rev )
     state_size = radeonCountStateEmitSize( &rmesa->radeon );
     /* vtx may be changed in r200EmitArrays so account for it if not dirty */
     if (!rmesa->hw.vtx.dirty)
-      state_size += rmesa->hw.vtx.check(rmesa->radeon.glCtx, &rmesa->hw.vtx);
+      state_size += rmesa->hw.vtx.check(&rmesa->radeon.glCtx, &rmesa->hw.vtx);
     /* predict size for elements */
     for (i = 0; i < VB->PrimitiveCount; ++i)
     {
@@ -487,7 +403,7 @@ static GLboolean r200_run_tcl_render( struct gl_context *ctx,
          FIXME: OTOH, we're missing the case where a ATI_fragment_shader accesses
          the secondary color (if lighting is disabled). The chip seems
          misconfigured for that though elsewhere (tcl output, might lock up) */
-      if (ctx->_TriangleCaps & DD_SEPARATE_SPECULAR) {
+      if (_mesa_need_secondary_color(ctx)) {
 	 map_rev_fixed[5] = VERT_ATTRIB_COLOR1;
       }
 
@@ -516,23 +432,23 @@ static GLboolean r200_run_tcl_render( struct gl_context *ctx,
 	 rmesa->curr_vp_hw->mesa_program.Base.OutputsWritten;
 
       vimap_rev = &rmesa->curr_vp_hw->inputmap_rev[0];
-      assert(vp_out & BITFIELD64_BIT(VERT_RESULT_HPOS));
+      assert(vp_out & BITFIELD64_BIT(VARYING_SLOT_POS));
       out_compsel = R200_OUTPUT_XYZW;
-      if (vp_out & BITFIELD64_BIT(VERT_RESULT_COL0)) {
+      if (vp_out & BITFIELD64_BIT(VARYING_SLOT_COL0)) {
 	 out_compsel |= R200_OUTPUT_COLOR_0;
       }
-      if (vp_out & BITFIELD64_BIT(VERT_RESULT_COL1)) {
+      if (vp_out & BITFIELD64_BIT(VARYING_SLOT_COL1)) {
 	 out_compsel |= R200_OUTPUT_COLOR_1;
       }
-      if (vp_out & BITFIELD64_BIT(VERT_RESULT_FOGC)) {
+      if (vp_out & BITFIELD64_BIT(VARYING_SLOT_FOGC)) {
          out_compsel |= R200_OUTPUT_DISCRETE_FOG;
       }
-      if (vp_out & BITFIELD64_BIT(VERT_RESULT_PSIZ)) {
+      if (vp_out & BITFIELD64_BIT(VARYING_SLOT_PSIZ)) {
 	 out_compsel |= R200_OUTPUT_PT_SIZE;
       }
-      for (i = VERT_RESULT_TEX0; i < VERT_RESULT_TEX6; i++) {
+      for (i = VARYING_SLOT_TEX0; i < VARYING_SLOT_TEX6; i++) {
 	 if (vp_out & BITFIELD64_BIT(i)) {
-	    out_compsel |= R200_OUTPUT_TEX_0 << (i - VERT_RESULT_TEX0);
+	    out_compsel |= R200_OUTPUT_TEX_0 << (i - VARYING_SLOT_TEX0);
 	 }
       }
       if (rmesa->hw.vtx.cmd[VTX_TCL_OUTPUT_COMPSEL] != out_compsel) {
@@ -605,10 +521,10 @@ static void transition_to_swtnl( struct gl_context *ctx )
    r200ChooseVertexState( ctx );
    r200ChooseRenderState( ctx );
 
-   _mesa_validate_all_lighting_tables( ctx ); 
+   _tnl_validate_shine_tables( ctx ); 
 
    tnl->Driver.NotifyMaterialChange = 
-      _mesa_validate_all_lighting_tables;
+      _tnl_validate_shine_tables;
 
    radeonReleaseArrays( ctx, ~0 );
 
@@ -631,7 +547,7 @@ static void transition_to_hwtnl( struct gl_context *ctx )
    tnl->Driver.NotifyMaterialChange = r200UpdateMaterial;
 
    if ( rmesa->radeon.dma.flush )			
-      rmesa->radeon.dma.flush( rmesa->radeon.glCtx );	
+      rmesa->radeon.dma.flush( &rmesa->radeon.glCtx );	
 
    rmesa->radeon.dma.flush = NULL;
    
@@ -698,7 +614,7 @@ void r200TclFallback( struct gl_context *ctx, GLuint bit, GLboolean mode )
 		if (oldfallback == 0) {
 			/* We have to flush before transition */
 			if ( rmesa->radeon.dma.flush )
-				rmesa->radeon.dma.flush( rmesa->radeon.glCtx );
+				rmesa->radeon.dma.flush( &rmesa->radeon.glCtx );
 
 			if (R200_DEBUG & RADEON_FALLBACKS)
 				fprintf(stderr, "R200 begin tcl fallback %s\n",
@@ -711,7 +627,7 @@ void r200TclFallback( struct gl_context *ctx, GLuint bit, GLboolean mode )
 		if (oldfallback == bit) {
 			/* We have to flush before transition */
 			if ( rmesa->radeon.dma.flush )
-				rmesa->radeon.dma.flush( rmesa->radeon.glCtx );
+				rmesa->radeon.dma.flush( &rmesa->radeon.glCtx );
 
 			if (R200_DEBUG & RADEON_FALLBACKS)
 				fprintf(stderr, "R200 end tcl fallback %s\n",

@@ -26,9 +26,9 @@
 
 #define SB_RA_SCHED_CHECK DEBUG
 
+#include "r600_pipe.h"
 extern "C" {
 #include "os/os_time.h"
-#include "r600_pipe.h"
 #include "r600_shader.h"
 
 #include "sb_public.h"

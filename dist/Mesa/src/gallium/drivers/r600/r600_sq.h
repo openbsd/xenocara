@@ -114,6 +114,10 @@
 #define     V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_POS                 0x00000001
 #define     V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_PARAM               0x00000002
 #define     V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_SX                  0x00000003
+#define     V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_WRITE               0x00000000
+#define     V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_WRITE_IND           0x00000001
+#define     V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_READ                0x00000002
+#define     V_SQ_CF_ALLOC_EXPORT_WORD0_SQ_EXPORT_READ_IND            0x00000003
 #define   S_SQ_CF_ALLOC_EXPORT_WORD0_RW_GPR(x)                       (((x) & 0x7F) << 15)
 #define   G_SQ_CF_ALLOC_EXPORT_WORD0_RW_GPR(x)                       (((x) >> 15) & 0x7F)
 #define   C_SQ_CF_ALLOC_EXPORT_WORD0_RW_GPR                          0xFFC07FFF
@@ -371,6 +375,9 @@
 #define   S_SQ_TEX_WORD0_BC_FRAC_MODE(x)                             (((x) & 0x1) << 5)
 #define   G_SQ_TEX_WORD0_BC_FRAC_MODE(x)                             (((x) >> 5) & 0x1)
 #define   C_SQ_TEX_WORD0_BC_FRAC_MODE                                0xFFFFFFDF
+#define   EG_S_SQ_TEX_WORD0_INST_MOD(x)                                 (((x) & 0x3) << 5)
+#define   EG_G_SQ_TEX_WORD0_INST_MOD(x)                                 (((x) >> 5) & 0x3)
+#define   EG_C_SQ_TEX_WORD0_INST_MOD                                    0xFFFFFF9F
 #define   S_SQ_TEX_WORD0_FETCH_WHOLE_QUAD(x)                         (((x) & 0x1) << 7)
 #define   G_SQ_TEX_WORD0_FETCH_WHOLE_QUAD(x)                         (((x) >> 7) & 0x1)
 #define   C_SQ_TEX_WORD0_FETCH_WHOLE_QUAD                            0xFFFFFF7F
@@ -467,4 +474,11 @@
 #define SQ_ALU_SCL_122                           0x00000001
 #define SQ_ALU_SCL_212                           0x00000002
 #define SQ_ALU_SCL_221                           0x00000003
+
+#define   INDEX_MODE_AR_X 0
+#define   INDEX_MODE_AR_Y 1
+#define   INDEX_MODE_AR_Z 2
+#define   INDEX_MODE_AR_W 3
+#define   INDEX_MODE_LOOP 4
+
 #endif

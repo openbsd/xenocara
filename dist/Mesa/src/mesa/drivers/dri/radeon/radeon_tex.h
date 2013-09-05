@@ -37,10 +37,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __RADEON_TEX_H__
 #define __RADEON_TEX_H__
 
-extern void radeonSetTexOffset(__DRIcontext *pDRICtx, GLint texname,
-                               unsigned long long offset, GLint depth,
-                               GLuint pitch);
-
 extern void radeonSetTexBuffer(__DRIcontext *pDRICtx, GLint target, __DRIdrawable *dPriv);
 extern void radeonSetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_format,
 			       __DRIdrawable *dPriv);
@@ -51,6 +47,7 @@ extern int radeonUploadTexImages( r100ContextPtr rmesa, radeonTexObjPtr t,
 				  GLuint face );
 
 extern void radeonDestroyTexObj( r100ContextPtr rmesa, radeonTexObjPtr t );
+extern void radeonTexUpdateParameters(struct gl_context *ctx, GLuint unit);
 
 extern void radeonInitTextureFuncs( radeonContextPtr radeon, struct dd_function_table *functions );
 

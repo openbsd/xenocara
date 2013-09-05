@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.5
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -54,15 +54,24 @@
 #include "GL/glext.h"
 
 
-/**
- * GL_FIXED is defined in glext.h version 64 but these typedefs aren't (yet).
- */
-typedef int GLfixed;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 typedef int GLclampx;
 
 
 #ifndef GL_OES_EGL_image
 typedef void *GLeglImageOES;
+#endif
+
+
+#ifndef GL_OES_EGL_image_external
+#define GL_TEXTURE_EXTERNAL_OES                                 0x8D65
+#define GL_SAMPLER_EXTERNAL_OES                                 0x8D66
+#define GL_TEXTURE_BINDING_EXTERNAL_OES                         0x8D67
+#define GL_REQUIRED_TEXTURE_IMAGE_UNITS_OES                     0x8D68
 #endif
 
 
@@ -126,6 +135,17 @@ typedef void *GLeglImageOES;
 #define GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI 0x8837
 #endif
 
+#ifndef GL_OES_compressed_ETC1_RGB8_texture
+#define GL_ETC1_RGB8_OES                                        0x8D64
+#endif
+
+
+/* Inexplicably, GL_HALF_FLOAT_OES has a different value than GL_HALF_FLOAT.
+ */
+#ifndef GL_HALF_FLOAT_OES
+#define GL_HALF_FLOAT_OES 0x8D61
+#endif
+
 
 /**
  * Internal token to represent a GLSL shader program (a collection of
@@ -163,5 +183,10 @@ typedef void *GLeglImageOES;
 #define GLX_SWAP_UNDEFINED_OML             0x8063
 
 #define GLX_DONT_CARE                      0xFFFFFFFF
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* GLHEADER_H */

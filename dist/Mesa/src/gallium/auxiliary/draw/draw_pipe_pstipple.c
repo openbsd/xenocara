@@ -165,11 +165,16 @@ pstip_transform_decl(struct tgsi_transform_context *ctx,
 }
 
 
+/**
+ * TGSI immediate declaration transform callback.
+ * We're just counting the number of immediates here.
+ */
 static void
 pstip_transform_immed(struct tgsi_transform_context *ctx,
                       struct tgsi_full_immediate *immed)
 {
    struct pstip_transform_context *pctx = (struct pstip_transform_context *) ctx;
+   ctx->emit_immediate(ctx, immed); /* emit to output shader */
    pctx->numImmed++;
 }
 
@@ -229,12 +234,13 @@ pstip_transform_inst(struct tgsi_transform_context *ctx,
          /* declare new position input reg */
          decl = tgsi_default_full_declaration();
          decl.Declaration.File = TGSI_FILE_INPUT;
-         decl.Declaration.Interpolate = TGSI_INTERPOLATE_LINEAR; /* XXX? */
+         decl.Declaration.Interpolate = 1;
          decl.Declaration.Semantic = 1;
          decl.Semantic.Name = TGSI_SEMANTIC_POSITION;
          decl.Semantic.Index = 0;
          decl.Range.First = 
             decl.Range.Last = wincoordInput;
+         decl.Interp.Interpolate = TGSI_INTERPOLATE_LINEAR; /* XXX? */
          ctx->emit_declaration(ctx, &decl);
       }
 
@@ -272,7 +278,7 @@ pstip_transform_inst(struct tgsi_transform_context *ctx,
 
 
       /* 
-       * Insert new MUL/TEX/KILP instructions at start of program
+       * Insert new MUL/TEX/KILL_IF instructions at start of program
        * Take gl_FragCoord, divide by 32 (stipple size), sample the
        * texture and kill fragment if needed.
        *
@@ -309,9 +315,9 @@ pstip_transform_inst(struct tgsi_transform_context *ctx,
       newInst.Src[1].Register.Index = pctx->freeSampler;
       ctx->emit_instruction(ctx, &newInst);
 
-      /* KIL -texTemp;   # if -texTemp < 0, KILL fragment */
+      /* KILL_IF -texTemp;   # if -texTemp < 0, KILL fragment */
       newInst = tgsi_default_full_instruction();
-      newInst.Instruction.Opcode = TGSI_OPCODE_KIL;
+      newInst.Instruction.Opcode = TGSI_OPCODE_KILL_IF;
       newInst.Instruction.NumDstRegs = 0;
       newInst.Instruction.NumSrcRegs = 1;
       newInst.Src[0].Register.File = TGSI_FILE_TEMPORARY;
@@ -361,6 +367,8 @@ generate_pstip_fs(struct pstip_stage *pstip)
    tgsi_dump(pstip_fs.tokens, 0);
 #endif
 
+   assert(pstip->fs);
+
    pstip->fs->sampler_unit = transform.freeSampler;
    assert(pstip->fs->sampler_unit < PIPE_MAX_SAMPLERS);
 
@@ -388,14 +396,13 @@ pstip_update_texture(struct pstip_stage *pstip)
    uint i, j;
    ubyte *data;
 
-   transfer = pipe_get_transfer(pipe, pstip->texture, 0, 0,
-                                PIPE_TRANSFER_WRITE, 0, 0, 32, 32);
-   data = pipe->transfer_map(pipe, transfer);
+   data = pipe_transfer_map(pipe, pstip->texture, 0, 0,
+                                PIPE_TRANSFER_WRITE, 0, 0, 32, 32, &transfer);
 
    /*
     * Load alpha texture.
     * Note: 0 means keep the fragment, 255 means kill it.
-    * We'll negate the texel value and use KILP which kills if value
+    * We'll negate the texel value and use KILL_IF which kills if value
     * is negative.
     */
    for (i = 0; i < 32; i++) {
@@ -412,8 +419,7 @@ pstip_update_texture(struct pstip_stage *pstip)
    }
 
    /* unmap */
-   pipe->transfer_unmap(pipe, transfer);
-   pipe->transfer_destroy(pipe, transfer);
+   pipe_transfer_unmap(pipe, transfer);
 }
 
 
@@ -563,7 +569,7 @@ pstip_flush(struct draw_stage *stage, unsigned flags)
 
    /* restore original frag shader, texture, sampler state */
    draw->suspend_flushing = TRUE;
-   pstip->driver_bind_fs_state(pipe, pstip->fs->driver_fs);
+   pstip->driver_bind_fs_state(pipe, pstip->fs ? pstip->fs->driver_fs : NULL);
    pstip->driver_bind_sampler_states(pipe, pstip->num_samplers,
                                      pstip->state.samplers);
    pstip->driver_set_sampler_views(pipe,

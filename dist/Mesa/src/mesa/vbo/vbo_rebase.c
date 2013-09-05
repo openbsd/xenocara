@@ -1,7 +1,6 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Authors:
  *    Keith Whitwell <keith@tungstengraphics.com>
@@ -78,7 +78,8 @@ GLboolean vbo_all_varyings_in_vbos( const struct gl_client_array *arrays[] )
    GLuint i;
    
    for (i = 0; i < VERT_ATTRIB_MAX; i++)
-      if (arrays[i]->BufferObj->Name == 0)
+      if (arrays[i]->StrideB &&
+	  arrays[i]->BufferObj->Name == 0)
 	 return GL_FALSE;
 
    return GL_TRUE;
@@ -128,6 +129,7 @@ void vbo_rebase_prims( struct gl_context *ctx,
 
    struct _mesa_index_buffer tmp_ib;
    struct _mesa_prim *tmp_prims = NULL;
+   const struct gl_client_array **saved_arrays = ctx->Array._DrawArrays;
    void *tmp_indices = NULL;
    GLuint i;
 
@@ -144,7 +146,7 @@ void vbo_rebase_prims( struct gl_context *ctx,
       /* If we can just tell the hardware or the TNL to interpret our
        * indices with a different base, do so.
        */
-      tmp_prims = (struct _mesa_prim *)malloc(sizeof(*prim) * nr_prims);
+      tmp_prims = malloc(sizeof(*prim) * nr_prims);
 
       for (i = 0; i < nr_prims; i++) {
 	 tmp_prims[i] = prim[i];
@@ -159,10 +161,8 @@ void vbo_rebase_prims( struct gl_context *ctx,
       void *ptr;
 
       if (map_ib) 
-	 ctx->Driver.MapBuffer(ctx, 
-			       GL_ELEMENT_ARRAY_BUFFER,
-			       GL_READ_ONLY_ARB,
-			       ib->obj);
+	 ctx->Driver.MapBufferRange(ctx, 0, ib->obj->Size, GL_MAP_READ_BIT,
+				    ib->obj);
 
 
       ptr = ADD_POINTERS(ib->obj->Pointer, ib->ptr);
@@ -183,9 +183,7 @@ void vbo_rebase_prims( struct gl_context *ctx,
       }      
 
       if (map_ib) 
-	 ctx->Driver.UnmapBuffer(ctx, 
-				 GL_ELEMENT_ARRAY_BUFFER,
-				 ib->obj);
+	 ctx->Driver.UnmapBuffer(ctx, ib->obj);
 
       tmp_ib.obj = ctx->Shared->NullBufferObj;
       tmp_ib.ptr = tmp_indices;
@@ -197,7 +195,7 @@ void vbo_rebase_prims( struct gl_context *ctx,
    else {
       /* Otherwise the primitives need adjustment.
        */
-      tmp_prims = (struct _mesa_prim *)malloc(sizeof(*prim) * nr_prims);
+      tmp_prims = malloc(sizeof(*prim) * nr_prims);
 
       for (i = 0; i < nr_prims; i++) {
 	 /* If this fails, it could indicate an application error:
@@ -229,20 +227,24 @@ void vbo_rebase_prims( struct gl_context *ctx,
    
    /* Re-issue the draw call.
     */
+   ctx->Array._DrawArrays = tmp_array_pointers;
+   ctx->NewDriverState |= ctx->DriverFlags.NewArray;
+
    draw( ctx, 
-	 tmp_array_pointers, 
-	 prim, 
+	 prim,
 	 nr_prims, 
 	 ib, 
 	 GL_TRUE,
 	 0, 
-	 max_index - min_index );
+	 max_index - min_index,
+	 NULL );
+
+   ctx->Array._DrawArrays = saved_arrays;
+   ctx->NewDriverState |= ctx->DriverFlags.NewArray;
    
-   if (tmp_indices)
-      free(tmp_indices);
+   free(tmp_indices);
    
-   if (tmp_prims)
-      free(tmp_prims);
+   free(tmp_prims);
 }
 
 

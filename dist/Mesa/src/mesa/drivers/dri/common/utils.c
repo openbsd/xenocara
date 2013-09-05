@@ -31,33 +31,12 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/cpuinfo.h"
 #include "main/extensions.h"
 #include "utils.h"
-
-
-/**
- * Print message to \c stderr if the \c LIBGL_DEBUG environment variable
- * is set. 
- * 
- * Is called from the drivers.
- * 
- * \param f \c printf like format string.
- */
-void
-__driUtilMessage(const char *f, ...)
-{
-    va_list args;
-
-    if (getenv("LIBGL_DEBUG")) {
-        fprintf(stderr, "libGL: ");
-        va_start(args, f);
-        vfprintf(stderr, f, args);
-        va_end(args);
-        fprintf(stderr, "\n");
-    }
-}
 
 
 unsigned
@@ -137,238 +116,6 @@ driGetRendererString( char * buffer, const char * hardware_name,
 }
 
 
-
-
-#define need_GL_ARB_copy_buffer
-#define need_GL_ARB_draw_buffers
-#define need_GL_ARB_multisample
-#define need_GL_ARB_texture_compression
-#define need_GL_ARB_transpose_matrix
-#define need_GL_ARB_vertex_buffer_object
-#define need_GL_ARB_window_pos
-#define need_GL_EXT_compiled_vertex_array
-#define need_GL_EXT_multi_draw_arrays
-#define need_GL_EXT_polygon_offset
-#define need_GL_EXT_texture_object
-#define need_GL_EXT_vertex_array
-#define need_GL_IBM_multimode_draw_arrays
-#define need_GL_MESA_window_pos
-
-/* These are needed in *all* drivers because Mesa internally implements
- * certain functionality in terms of functions provided by these extensions.
- * For example, glBlendFunc is implemented by calling glBlendFuncSeparateEXT.
- */
-#define need_GL_EXT_blend_func_separate
-#define need_GL_NV_vertex_program
-
-#include "main/remap_helper.h"
-
-static const struct dri_extension all_mesa_extensions[] = {
-   { "GL_ARB_copy_buffer",           GL_ARB_copy_buffer_functions },
-   { "GL_ARB_draw_buffers",          GL_ARB_draw_buffers_functions },
-   { "GL_ARB_multisample",           GL_ARB_multisample_functions },
-   { "GL_ARB_texture_compression",   GL_ARB_texture_compression_functions },
-   { "GL_ARB_transpose_matrix",      GL_ARB_transpose_matrix_functions },
-   { "GL_ARB_vertex_buffer_object",  GL_ARB_vertex_buffer_object_functions},
-   { "GL_ARB_window_pos",            GL_ARB_window_pos_functions },
-   { "GL_EXT_blend_func_separate",   GL_EXT_blend_func_separate_functions },
-   { "GL_EXT_compiled_vertex_array", GL_EXT_compiled_vertex_array_functions },
-   { "GL_EXT_multi_draw_arrays",     GL_EXT_multi_draw_arrays_functions },
-   { "GL_EXT_polygon_offset",        GL_EXT_polygon_offset_functions },
-   { "GL_EXT_texture_object",        GL_EXT_texture_object_functions },
-   { "GL_EXT_vertex_array",          GL_EXT_vertex_array_functions },
-   { "GL_IBM_multimode_draw_arrays", GL_IBM_multimode_draw_arrays_functions },
-   { "GL_MESA_window_pos",           GL_MESA_window_pos_functions },
-   { "GL_NV_vertex_program",         GL_NV_vertex_program_functions },
-   { NULL,                           NULL }
-};
-
-
-/**
- * Enable and map extensions supported by the driver.
- * 
- * When ctx is NULL, extensions are not enabled, but their functions
- * are still mapped.  When extensions_to_enable is NULL, all static
- * functions known to mesa core are mapped.
- *
- * \bug
- * ARB_imaging isn't handled properly.  In Mesa, enabling ARB_imaging also
- * enables all the sub-extensions that are folded into it.  This means that
- * we need to add entry-points (via \c driInitSingleExtension) for those
- * new functions here.
- */
-void driInitExtensions( struct gl_context * ctx,
-			const struct dri_extension * extensions_to_enable,
-			GLboolean enable_imaging )
-{
-   static int first_time = 1;
-   unsigned   i;
-
-   if ( first_time ) {
-      first_time = 0;
-      driInitExtensions( NULL, all_mesa_extensions, GL_FALSE );
-   }
-
-   if ( (ctx != NULL) && enable_imaging ) {
-      _mesa_enable_imaging_extensions( ctx );
-   }
-
-   /* The caller is too lazy to list any extension */
-   if ( extensions_to_enable == NULL ) {
-      /* Map the static functions.  Together with those mapped by remap
-       * table, this should cover everything mesa core knows.
-       */
-      _mesa_map_static_functions();
-      return;
-   }
-
-   for ( i = 0 ; extensions_to_enable[i].name != NULL ; i++ ) {
-       driInitSingleExtension( ctx, & extensions_to_enable[i] );
-   }
-}
-
-
-
-
-/**
- * Enable and map functions for a single extension
- * 
- * \param ctx  Context where extension is to be enabled.
- * \param ext  Extension that is to be enabled.
- * 
- * \sa driInitExtensions, _mesa_enable_extension, _mesa_map_function_array
- */
-void driInitSingleExtension( struct gl_context * ctx,
-			     const struct dri_extension * ext )
-{
-    if ( ext->functions != NULL ) {
-       _mesa_map_function_array(ext->functions);
-    }
-
-    if ( ctx != NULL ) {
-	_mesa_enable_extension( ctx, ext->name );
-    }
-}
-
-
-/**
- * Utility function used by drivers to test the verions of other components.
- *
- * \param driver_name  Name of the driver.  Used in error messages.
- * \param driActual    Actual DRI version supplied __driCreateNewScreen.
- * \param driExpected  Minimum DRI version required by the driver.
- * \param ddxActual    Actual DDX version supplied __driCreateNewScreen.
- * \param ddxExpected  Minimum DDX minor and range of DDX major version required by the driver.
- * \param drmActual    Actual DRM version supplied __driCreateNewScreen.
- * \param drmExpected  Minimum DRM version required by the driver.
- * 
- * \returns \c GL_TRUE if all version requirements are met.  Otherwise,
- *          \c GL_FALSE is returned.
- * 
- * \sa __driCreateNewScreen, driCheckDriDdxDrmVersions2
- *
- * \todo
- * Now that the old \c driCheckDriDdxDrmVersions function is gone, this
- * function and \c driCheckDriDdxDrmVersions2 should be renamed.
- */
-GLboolean
-driCheckDriDdxDrmVersions3(const char * driver_name,
-			   const __DRIversion * driActual,
-			   const __DRIversion * driExpected,
-			   const __DRIversion * ddxActual,
-			   const __DRIutilversion2 * ddxExpected,
-			   const __DRIversion * drmActual,
-			   const __DRIversion * drmExpected)
-{
-   static const char format[] = "%s DRI driver expected %s version %d.%d.x "
-       "but got version %d.%d.%d\n";
-   static const char format2[] = "%s DRI driver expected %s version %d-%d.%d.x "
-       "but got version %d.%d.%d\n";
-
-
-   /* Check the DRI version */
-   if ( (driActual->major != driExpected->major)
-	|| (driActual->minor < driExpected->minor) ) {
-      fprintf(stderr, format, driver_name, "DRI",
-		       driExpected->major, driExpected->minor,
-		       driActual->major, driActual->minor, driActual->patch);
-      return GL_FALSE;
-   }
-
-   /* Check that the DDX driver version is compatible */
-   if ( (ddxActual->major < ddxExpected->major_min)
-	|| (ddxActual->major > ddxExpected->major_max)
-	|| (ddxActual->minor < ddxExpected->minor) ) {
-      fprintf(stderr, format2, driver_name, "DDX",
-		       ddxExpected->major_min, ddxExpected->major_max, ddxExpected->minor,
-		       ddxActual->major, ddxActual->minor, ddxActual->patch);
-      return GL_FALSE;
-   }
-   
-   /* Check that the DRM driver version is compatible */
-   if ( (drmActual->major != drmExpected->major)
-	|| (drmActual->minor < drmExpected->minor) ) {
-      fprintf(stderr, format, driver_name, "DRM",
-		       drmExpected->major, drmExpected->minor,
-		       drmActual->major, drmActual->minor, drmActual->patch);
-      return GL_FALSE;
-   }
-
-   return GL_TRUE;
-}
-
-GLboolean
-driCheckDriDdxDrmVersions2(const char * driver_name,
-			   const __DRIversion * driActual,
-			   const __DRIversion * driExpected,
-			   const __DRIversion * ddxActual,
-			   const __DRIversion * ddxExpected,
-			   const __DRIversion * drmActual,
-			   const __DRIversion * drmExpected)
-{
-   __DRIutilversion2 ddx_expected;
-   ddx_expected.major_min = ddxExpected->major;
-   ddx_expected.major_max = ddxExpected->major;
-   ddx_expected.minor = ddxExpected->minor;
-   ddx_expected.patch = ddxExpected->patch;
-   return driCheckDriDdxDrmVersions3(driver_name, driActual,
-				driExpected, ddxActual, & ddx_expected,
-				drmActual, drmExpected);
-}
-
-GLboolean driClipRectToFramebuffer( const struct gl_framebuffer *buffer,
-				    GLint *x, GLint *y,
-				    GLsizei *width, GLsizei *height )
-{
-   /* left clipping */
-   if (*x < buffer->_Xmin) {
-      *width -= (buffer->_Xmin - *x);
-      *x = buffer->_Xmin;
-   }
-
-   /* right clipping */
-   if (*x + *width > buffer->_Xmax)
-      *width -= (*x + *width - buffer->_Xmax - 1);
-
-   if (*width <= 0)
-      return GL_FALSE;
-
-   /* bottom clipping */
-   if (*y < buffer->_Ymin) {
-      *height -= (buffer->_Ymin - *y);
-      *y = buffer->_Ymin;
-   }
-
-   /* top clipping */
-   if (*y + *height > buffer->_Ymax)
-      *height -= (*y + *height - buffer->_Ymax - 1);
-
-   if (*height <= 0)
-      return GL_FALSE;
-
-   return GL_TRUE;
-}
-
 /**
  * Creates a set of \c struct gl_config that a driver will expose.
  * 
@@ -403,13 +150,7 @@ GLboolean driClipRectToFramebuffer( const struct gl_framebuffer *buffer,
  *                      If the function fails and returns \c GL_FALSE, this
  *                      value will be unmodified, but some elements in the
  *                      linked list may be modified.
- * \param fb_format     Format of the framebuffer.  Currently only \c GL_RGB,
- *                      \c GL_RGBA, \c GL_BGR, and \c GL_BGRA are supported.
- * \param fb_type       Type of the pixels in the framebuffer.  Currently only
- *                      \c GL_UNSIGNED_SHORT_5_6_5, 
- *                      \c GL_UNSIGNED_SHORT_5_6_5_REV,
- *                      \c GL_UNSIGNED_INT_8_8_8_8, and
- *                      \c GL_UNSIGNED_INT_8_8_8_8_REV are supported.
+ * \param format        Mesa gl_format enum describing the pixel format
  * \param depth_bits    Array of depth buffer sizes to be exposed.
  * \param stencil_bits  Array of stencil buffer sizes to be exposed.
  * \param num_depth_stencil_bits  Number of entries in both \c depth_bits and
@@ -428,155 +169,63 @@ GLboolean driClipRectToFramebuffer( const struct gl_framebuffer *buffer,
  *                      \c GLX_DIRECT_COLOR.
  * 
  * \returns
- * \c GL_TRUE on success or \c GL_FALSE on failure.  Currently the only
- * cause of failure is a bad parameter (i.e., unsupported \c fb_format or
- * \c fb_type).
- * 
- * \todo
- * There is currently no way to support packed RGB modes (i.e., modes with
- * exactly 3 bytes per pixel) or floating-point modes.  This could probably
- * be done by creating some new, private enums with clever names likes
- * \c GL_UNSIGNED_3BYTE_8_8_8, \c GL_4FLOAT_32_32_32_32, 
- * \c GL_4HALF_16_16_16_16, etc.  We can cross that bridge when we come to it.
+ * Pointer to any array of pointers to the \c __DRIconfig structures created
+ * for the specified formats.  If there is an error, \c NULL is returned.
+ * Currently the only cause of failure is a bad parameter (i.e., unsupported
+ * \c format).
  */
 __DRIconfig **
-driCreateConfigs(GLenum fb_format, GLenum fb_type,
+driCreateConfigs(gl_format format,
 		 const uint8_t * depth_bits, const uint8_t * stencil_bits,
 		 unsigned num_depth_stencil_bits,
 		 const GLenum * db_modes, unsigned num_db_modes,
 		 const uint8_t * msaa_samples, unsigned num_msaa_modes,
 		 GLboolean enable_accum)
 {
-   static const uint8_t bits_table[4][4] = {
-     /* R  G  B  A */
-      { 3, 3, 2, 0 }, /* Any GL_UNSIGNED_BYTE_3_3_2 */
-      { 5, 6, 5, 0 }, /* Any GL_UNSIGNED_SHORT_5_6_5 */
-      { 8, 8, 8, 0 }, /* Any RGB with any GL_UNSIGNED_INT_8_8_8_8 */
-      { 8, 8, 8, 8 }  /* Any RGBA with any GL_UNSIGNED_INT_8_8_8_8 */
+   static const uint32_t masks_table[][4] = {
+      /* MESA_FORMAT_RGB565 */
+      { 0x0000F800, 0x000007E0, 0x0000001F, 0x00000000 },
+      /* MESA_FORMAT_XRGB8888 */
+      { 0x00FF0000, 0x0000FF00, 0x000000FF, 0x00000000 },
+      /* MESA_FORMAT_ARGB8888 */
+      { 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000 },
    };
 
-   static const uint32_t masks_table_rgb[6][4] = {
-      { 0x000000E0, 0x0000001C, 0x00000003, 0x00000000 }, /* 3_3_2       */
-      { 0x00000007, 0x00000038, 0x000000C0, 0x00000000 }, /* 2_3_3_REV   */
-      { 0x0000F800, 0x000007E0, 0x0000001F, 0x00000000 }, /* 5_6_5       */
-      { 0x0000001F, 0x000007E0, 0x0000F800, 0x00000000 }, /* 5_6_5_REV   */
-      { 0xFF000000, 0x00FF0000, 0x0000FF00, 0x00000000 }, /* 8_8_8_8     */
-      { 0x000000FF, 0x0000FF00, 0x00FF0000, 0x00000000 }  /* 8_8_8_8_REV */
-   };
-
-   static const uint32_t masks_table_rgba[6][4] = {
-      { 0x000000E0, 0x0000001C, 0x00000003, 0x00000000 }, /* 3_3_2       */
-      { 0x00000007, 0x00000038, 0x000000C0, 0x00000000 }, /* 2_3_3_REV   */
-      { 0x0000F800, 0x000007E0, 0x0000001F, 0x00000000 }, /* 5_6_5       */
-      { 0x0000001F, 0x000007E0, 0x0000F800, 0x00000000 }, /* 5_6_5_REV   */
-      { 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF }, /* 8_8_8_8     */
-      { 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000 }, /* 8_8_8_8_REV */
-   };
-
-   static const uint32_t masks_table_bgr[6][4] = {
-      { 0x00000007, 0x00000038, 0x000000C0, 0x00000000 }, /* 3_3_2       */
-      { 0x000000E0, 0x0000001C, 0x00000003, 0x00000000 }, /* 2_3_3_REV   */
-      { 0x0000001F, 0x000007E0, 0x0000F800, 0x00000000 }, /* 5_6_5       */
-      { 0x0000F800, 0x000007E0, 0x0000001F, 0x00000000 }, /* 5_6_5_REV   */
-      { 0x0000FF00, 0x00FF0000, 0xFF000000, 0x00000000 }, /* 8_8_8_8     */
-      { 0x00FF0000, 0x0000FF00, 0x000000FF, 0x00000000 }, /* 8_8_8_8_REV */
-   };
-
-   static const uint32_t masks_table_bgra[6][4] = {
-      { 0x00000007, 0x00000038, 0x000000C0, 0x00000000 }, /* 3_3_2       */
-      { 0x000000E0, 0x0000001C, 0x00000003, 0x00000000 }, /* 2_3_3_REV   */
-      { 0x0000001F, 0x000007E0, 0x0000F800, 0x00000000 }, /* 5_6_5       */
-      { 0x0000F800, 0x000007E0, 0x0000001F, 0x00000000 }, /* 5_6_5_REV   */
-      { 0x0000FF00, 0x00FF0000, 0xFF000000, 0x000000FF }, /* 8_8_8_8     */
-      { 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000 }, /* 8_8_8_8_REV */
-   };
-
-   static const uint8_t bytes_per_pixel[6] = {
-      1, /* 3_3_2       */
-      1, /* 2_3_3_REV   */
-      2, /* 5_6_5       */
-      2, /* 5_6_5_REV   */
-      4, /* 8_8_8_8     */
-      4  /* 8_8_8_8_REV */
-   };
-
-   const uint8_t  * bits;
    const uint32_t * masks;
-   int index;
    __DRIconfig **configs, **c;
    struct gl_config *modes;
    unsigned i, j, k, h;
    unsigned num_modes;
    unsigned num_accum_bits = (enable_accum) ? 2 : 1;
+   int red_bits;
+   int green_bits;
+   int blue_bits;
+   int alpha_bits;
+   bool is_srgb;
 
-   switch ( fb_type ) {
-      case GL_UNSIGNED_BYTE_3_3_2:
-	 index = 0;
-	 break;
-      case GL_UNSIGNED_BYTE_2_3_3_REV:
-	 index = 1;
-	 break;
-      case GL_UNSIGNED_SHORT_5_6_5:
-	 index = 2;
-	 break;
-      case GL_UNSIGNED_SHORT_5_6_5_REV:
-	 index = 3;
-	 break;
-      case GL_UNSIGNED_INT_8_8_8_8:
-	 index = 4;
-	 break;
-      case GL_UNSIGNED_INT_8_8_8_8_REV:
-	 index = 5;
-	 break;
-      default:
-	 fprintf( stderr, "[%s:%u] Unknown framebuffer type 0x%04x.\n",
-               __FUNCTION__, __LINE__, fb_type );
-	 return NULL;
+   switch (format) {
+   case MESA_FORMAT_RGB565:
+      masks = masks_table[0];
+      break;
+   case MESA_FORMAT_XRGB8888:
+      masks = masks_table[1];
+      break;
+   case MESA_FORMAT_ARGB8888:
+   case MESA_FORMAT_SARGB8:
+      masks = masks_table[2];
+      break;
+   default:
+      fprintf(stderr, "[%s:%u] Unknown framebuffer type %s (%d).\n",
+              __FUNCTION__, __LINE__,
+              _mesa_get_format_name(format), format);
+      return NULL;
    }
 
-
-   /* Valid types are GL_UNSIGNED_SHORT_5_6_5 and GL_UNSIGNED_INT_8_8_8_8 and
-    * the _REV versions.
-    *
-    * Valid formats are GL_RGBA, GL_RGB, and GL_BGRA.
-    */
-
-   switch ( fb_format ) {
-      case GL_RGB:
-         masks = masks_table_rgb[ index ];
-         break;
-
-      case GL_RGBA:
-         masks = masks_table_rgba[ index ];
-         break;
-
-      case GL_BGR:
-         masks = masks_table_bgr[ index ];
-         break;
-
-      case GL_BGRA:
-         masks = masks_table_bgra[ index ];
-         break;
-
-      default:
-         fprintf( stderr, "[%s:%u] Unknown framebuffer format 0x%04x.\n",
-               __FUNCTION__, __LINE__, fb_format );
-         return NULL;
-   }
-
-   switch ( bytes_per_pixel[ index ] ) {
-      case 1:
-	 bits = bits_table[0];
-	 break;
-      case 2:
-	 bits = bits_table[1];
-	 break;
-      default:
-	 bits = ((fb_format == GL_RGB) || (fb_format == GL_BGR))
-	    ? bits_table[2]
-	    : bits_table[3];
-	 break;
-   }
+   red_bits = _mesa_get_format_bits(format, GL_RED_BITS);
+   green_bits = _mesa_get_format_bits(format, GL_GREEN_BITS);
+   blue_bits = _mesa_get_format_bits(format, GL_BLUE_BITS);
+   alpha_bits = _mesa_get_format_bits(format, GL_ALPHA_BITS);
+   is_srgb = _mesa_get_format_color_encoding(format) == GL_SRGB;
 
    num_modes = num_depth_stencil_bits * num_db_modes * num_accum_bits * num_msaa_modes;
    configs = calloc(1, (num_modes + 1) * sizeof *configs);
@@ -593,10 +242,10 @@ driCreateConfigs(GLenum fb_format, GLenum fb_type,
 		    c++;
 
 		    memset(modes, 0, sizeof *modes);
-		    modes->redBits   = bits[0];
-		    modes->greenBits = bits[1];
-		    modes->blueBits  = bits[2];
-		    modes->alphaBits = bits[3];
+		    modes->redBits   = red_bits;
+		    modes->greenBits = green_bits;
+		    modes->blueBits  = blue_bits;
+		    modes->alphaBits = alpha_bits;
 		    modes->redMask   = masks[0];
 		    modes->greenMask = masks[1];
 		    modes->blueMask  = masks[2];
@@ -648,7 +297,7 @@ driCreateConfigs(GLenum fb_format, GLenum fb_type,
 			__DRI_ATTRIB_TEXTURE_2D_BIT |
 			__DRI_ATTRIB_TEXTURE_RECTANGLE_BIT;
 
-		    modes->sRGBCapable = GL_FALSE;
+		    modes->sRGBCapable = is_srgb;
 		}
 	    }
 	}
@@ -663,6 +312,11 @@ __DRIconfig **driConcatConfigs(__DRIconfig **a,
 {
     __DRIconfig **all;
     int i, j, index;
+
+    if (a == NULL || a[0] == NULL)
+       return b;
+    else if (b == NULL || b[0] == NULL)
+       return a;
 
     i = 0;
     while (a[i] != NULL)
@@ -712,7 +366,6 @@ static const struct { unsigned int attrib, offset; } attribMap[] = {
     __ATTRIB(__DRI_ATTRIB_TRANSPARENT_GREEN_VALUE,	transparentGreen),
     __ATTRIB(__DRI_ATTRIB_TRANSPARENT_BLUE_VALUE,	transparentBlue),
     __ATTRIB(__DRI_ATTRIB_TRANSPARENT_ALPHA_VALUE,	transparentAlpha),
-    __ATTRIB(__DRI_ATTRIB_FLOAT_MODE,			floatMode),
     __ATTRIB(__DRI_ATTRIB_RED_MASK,			redMask),
     __ATTRIB(__DRI_ATTRIB_GREEN_MASK,			greenMask),
     __ATTRIB(__DRI_ATTRIB_BLUE_MASK,			blueMask),
@@ -737,8 +390,6 @@ static const struct { unsigned int attrib, offset; } attribMap[] = {
     __ATTRIB(__DRI_ATTRIB_CONFIG_CAVEAT,		level),
     __ATTRIB(__DRI_ATTRIB_SWAP_METHOD,			level)
 };
-
-#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
 
 
 /**
@@ -765,11 +416,6 @@ driGetConfigAttribIndex(const __DRIconfig *config,
     case __DRI_ATTRIB_SWAP_METHOD:
         /* XXX no return value??? */
 	break;
-
-    case __DRI_ATTRIB_FLOAT_MODE:
-        /* this field is not int-sized */
-        *value = config->modes.floatMode;
-        break;
 
     default:
         /* any other int-sized field */

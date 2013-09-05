@@ -97,7 +97,7 @@ static const struct {
 };
 
 
-static GLboolean check_urb_layout( struct brw_context *brw )
+static bool check_urb_layout(struct brw_context *brw)
 {
    brw->urb.vs_start = 0;
    brw->urb.gs_start = brw->urb.nr_vs_entries * brw->urb.vsize;
@@ -114,9 +114,8 @@ static GLboolean check_urb_layout( struct brw_context *brw )
  */
 static void recalculate_urb_fence( struct brw_context *brw )
 {
-   struct intel_context *intel = &brw->intel;
    GLuint csize = brw->curbe.total_size;
-   GLuint vsize = brw->vs.prog_data->urb_entry_size;
+   GLuint vsize = brw->vs.prog_data->base.urb_entry_size;
    GLuint sfsize = brw->sf.prog_data->urb_entry_size;
 
    if (csize < limits[CS].min_entry_size)
@@ -148,7 +147,7 @@ static void recalculate_urb_fence( struct brw_context *brw )
 
       brw->urb.constrained = 0;
 
-      if (intel->gen == 5) {
+      if (brw->gen == 5) {
          brw->urb.nr_vs_entries = 128;
          brw->urb.nr_sf_entries = 48;
          if (check_urb_layout(brw)) {
@@ -158,7 +157,7 @@ static void recalculate_urb_fence( struct brw_context *brw )
             brw->urb.nr_vs_entries = limits[VS].preferred_nr_entries;
             brw->urb.nr_sf_entries = limits[SF].preferred_nr_entries;
          }
-      } else if (intel->is_g4x) {
+      } else if (brw->is_g4x) {
 	 brw->urb.nr_vs_entries = 64;
 	 if (check_urb_layout(brw)) {
 	    goto done;
@@ -190,7 +189,7 @@ static void recalculate_urb_fence( struct brw_context *brw )
 	    exit(1);
 	 }
 	 
-	 if (unlikely(INTEL_DEBUG & (DEBUG_URB|DEBUG_FALLBACKS)))
+	 if (unlikely(INTEL_DEBUG & (DEBUG_URB|DEBUG_PERF)))
 	    printf("URB CONSTRAINED\n");
       }
 
@@ -216,7 +215,7 @@ const struct brw_tracked_state brw_recalculate_urb_fence = {
       .cache = (CACHE_NEW_VS_PROG |
 		CACHE_NEW_SF_PROG)
    },
-   .prepare = recalculate_urb_fence
+   .emit = recalculate_urb_fence
 };
 
 
@@ -249,10 +248,10 @@ void brw_upload_urb_fence(struct brw_context *brw)
    uf.bits1.cs_fence  = brw->urb.size;
 
    /* erratum: URB_FENCE must not cross a 64byte cacheline */
-   if ((brw->intel.batch.used & 15) > 12) {
-      int pad = 16 - (brw->intel.batch.used & 15);
+   if ((brw->batch.used & 15) > 12) {
+      int pad = 16 - (brw->batch.used & 15);
       do
-	 brw->intel.batch.map[brw->intel.batch.used++] = MI_NOOP;
+	 brw->batch.map[brw->batch.used++] = MI_NOOP;
       while (--pad);
    }
 
