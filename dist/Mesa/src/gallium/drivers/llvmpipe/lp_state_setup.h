@@ -14,21 +14,23 @@ struct lp_setup_variant_list_item
 };
 
 
-struct lp_setup_variant_key {   
+struct lp_setup_variant_key {
    unsigned size:16;
    unsigned num_inputs:8;
-   unsigned color_slot:8;
+   int color_slot:8;
 
-   unsigned bcolor_slot:8;
-   unsigned spec_slot:8;
-   unsigned bspec_slot:8;
+   int bcolor_slot:8;
+   int spec_slot:8;
+   int bspec_slot:8;
    unsigned flatshade_first:1;
    unsigned pixel_center_half:1;
    unsigned twoside:1;
    unsigned pad:5;
 
-   float units;
-   float scale;      
+   /* TODO: get those floats out of the key and use a jit_context for setup */
+   float pgon_offset_units;
+   float pgon_offset_scale;
+   float pgon_offset_clamp;
    struct lp_shader_input inputs[PIPE_MAX_SHADER_INPUTS];
 };
 
@@ -55,6 +57,8 @@ struct lp_setup_variant {
    
    struct lp_setup_variant_list_item list_item_global;
 
+   struct gallivm_state *gallivm;
+
    /* XXX: this is a pointer to the LLVM IR.  Once jit_function is
     * generated, we never need to use the IR again - need to find a
     * way to release this data without destroying the generated
@@ -68,15 +72,6 @@ struct lp_setup_variant {
 
    unsigned no;
 };
-
-void lp_setup_tri_fallback( const float (*v0)[4],
-			    const float (*v1)[4],
-			    const float (*v2)[4],
-			    boolean front_facing,
-			    float (*a0)[4],
-			    float (*dadx)[4],
-			    float (*dady)[4],
-			    const struct lp_setup_variant_key *key );
 
 void lp_delete_setup_variants(struct llvmpipe_context *lp);
 

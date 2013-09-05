@@ -43,8 +43,11 @@
 /**
  * Max texture sizes
  */
-#define LP_MAX_TEXTURE_2D_LEVELS 13  /* 4K x 4K for now */
-#define LP_MAX_TEXTURE_3D_LEVELS 10  /* 512 x 512 x 512 for now */
+#define LP_MAX_TEXTURE_SIZE (1 * 1024 * 1024 * 1024ULL)  /* 1GB for now */
+#define LP_MAX_TEXTURE_2D_LEVELS 14  /* 8K x 8K for now */
+#define LP_MAX_TEXTURE_3D_LEVELS 12  /* 2K x 2K x 2K for now */
+#define LP_MAX_TEXTURE_CUBE_LEVELS 14  /* 8K x 8K for now */
+#define LP_MAX_TEXTURE_ARRAY_LAYERS 512 /* 8K x 512 / 8K x 8K x 512 */
 
 
 /** This must be the larger of LP_MAX_TEXTURE_2D/3D_LEVELS */
@@ -58,7 +61,7 @@
 #define LP_MAX_WIDTH  (1 << (LP_MAX_TEXTURE_LEVELS - 1))
 
 
-#define LP_MAX_THREADS 8
+#define LP_MAX_THREADS 16
 
 
 /**
@@ -71,6 +74,12 @@
  * per context) that will be kept around.
  */
 #define LP_MAX_SHADER_VARIANTS 1024
+
+/**
+ * Max number of instructions (for all fragment shaders combined per context)
+ * that will be kept around.
+ */
+#define LP_MAX_SHADER_INSTRUCTIONS (128*1024)
 
 /**
  * Max number of setup variants that will be kept around.

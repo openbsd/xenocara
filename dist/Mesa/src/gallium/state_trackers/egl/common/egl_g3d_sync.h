@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.9
  *
  * Copyright (C) 2010 LunarG Inc.
  *
@@ -31,8 +30,6 @@
 
 #include "egl_g3d.h"
 
-#ifdef EGL_KHR_reusable_sync
-
 _EGLSync *
 egl_g3d_create_sync(_EGLDriver *drv, _EGLDisplay *dpy,
                     EGLenum type, const EGLint *attrib_list);
@@ -47,7 +44,5 @@ egl_g3d_client_wait_sync(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSync *sync,
 EGLBoolean
 egl_g3d_signal_sync(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSync *sync,
                     EGLenum mode);
-
-#endif /* EGL_KHR_reusable_sync */
 
 #endif /* _EGL_G3D_SYNC_H_ */

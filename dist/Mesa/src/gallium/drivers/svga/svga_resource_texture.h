@@ -30,6 +30,7 @@
 #include "pipe/p_compiler.h"
 #include "pipe/p_state.h"
 #include "util/u_inlines.h"
+#include "util/u_memory.h"
 #include "util/u_transfer.h"
 #include "svga_screen_cache.h"
 
@@ -75,6 +76,8 @@ struct svga_texture
     * to this texture and never destroy this handle directly.
     */
    struct svga_winsys_surface *handle;
+
+   unsigned size;  /**< Approximate size in bytes */
 };
 
 
@@ -114,6 +117,31 @@ svga_transfer(struct pipe_transfer *transfer)
 }
 
 
+/**
+ * Increment the age of a view into a texture
+ * This is used to track updates to textures when we draw into
+ * them via a surface.
+ */
+static INLINE void
+svga_age_texture_view(struct svga_texture *tex, unsigned level)
+{
+   assert(level < Elements(tex->view_age));
+   tex->view_age[level] = ++(tex->age);
+}
+
+
+/**
+ * Mark the given texture face/level as being defined.
+ */
+static INLINE void
+svga_define_texture_level(struct svga_texture *tex,
+                          unsigned face,unsigned level)
+{
+   assert(face < Elements(tex->defined));
+   assert(level < Elements(tex->defined[0]));
+   tex->defined[face][level] = TRUE;
+}
+
 
 struct pipe_resource *
 svga_texture_create(struct pipe_screen *screen,
@@ -125,12 +153,6 @@ svga_texture_from_handle(struct pipe_screen * screen,
 			struct winsys_handle *whandle);
 
 
-
-enum SVGA3dSurfaceFormat
-svga_translate_format(enum pipe_format format);
-
-enum SVGA3dSurfaceFormat
-svga_translate_format_render(enum pipe_format format);
 
 
 #endif /* SVGA_TEXTURE_H */

@@ -28,8 +28,9 @@
 #include "util/u_inlines.h"
 #include "util/u_memory.h"
 #include "util/u_format.h"
-#include "vmw_screen.h"
 
+#include "vmw_context.h"
+#include "vmw_screen.h"
 #include "vmw_surface.h"
 #include "svga_drm_public.h"
 
@@ -56,9 +57,8 @@ vmw_drm_surface_get_handle(struct svga_winsys_screen *sws,
 			   unsigned stride,
 			   struct winsys_handle *whandle);
 
-static struct dri1_api_version drm_required = { 1, 0, 0 };
-static struct dri1_api_version drm_compat = { 1, 0, 0 };
-static struct dri1_api_version drm_scanout = { 0, 9, 0 };
+static struct dri1_api_version drm_required = { 2, 1, 0 };
+static struct dri1_api_version drm_compat = { 2, 0, 0 };
 
 static boolean
 vmw_dri1_check_version(const struct dri1_api_version *cur,
@@ -71,13 +71,12 @@ vmw_dri1_check_version(const struct dri1_api_version *cur,
    if (cur->major == required->major && cur->minor >= required->minor)
       return TRUE;
 
-   fprintf(stderr, "%s version failure.\n", component);
-   fprintf(stderr, "%s version is %d.%d.%d and this driver can only work\n"
-	   "with versions %d.%d.x through %d.x.x.\n",
-	   component,
-	   cur->major,
-	   cur->minor,
-	   cur->patch_level, required->major, required->minor, compat->major);
+   vmw_error("%s version failure.\n", component);
+   vmw_error("%s version is %d.%d.%d and this driver can only work\n"
+             "with versions %d.%d.x through %d.x.x.\n",
+             component,
+             cur->major, cur->minor, cur->patch_level,
+             required->major, required->minor, compat->major);
    return FALSE;
 }
 
@@ -88,8 +87,6 @@ struct svga_winsys_screen *
 svga_drm_winsys_screen_create(int fd)
 {
    struct vmw_winsys_screen *vws;
-   boolean use_old_scanout_flag = FALSE;
-
    struct dri1_api_version drm_ver;
    drmVersionPtr ver;
 
@@ -106,11 +103,7 @@ svga_drm_winsys_screen_create(int fd)
 			       &drm_compat, "vmwgfx drm driver"))
       return NULL;
 
-   if (!vmw_dri1_check_version(&drm_ver, &drm_scanout,
-			       &drm_compat, "use old scanout field (not a error)"))
-      use_old_scanout_flag = TRUE;
-
-   vws = vmw_winsys_create( fd, use_old_scanout_flag );
+   vws = vmw_winsys_create( fd, FALSE );
    if (!vws)
       goto out_no_vws;
 
@@ -182,24 +175,24 @@ vmw_drm_surface_from_handle(struct svga_winsys_screen *sws,
 			      &arg, sizeof(arg));
 
     if (ret) {
-	fprintf(stderr, "Failed referencing shared surface. SID %d.\n"
-		"Error %d (%s).\n",
-		whandle->handle, ret, strerror(-ret));
+        vmw_error("Failed referencing shared surface. SID %d.\n"
+                  "Error %d (%s).\n",
+                  whandle->handle, ret, strerror(-ret));
 	return NULL;
     }
 
     if (rep->mip_levels[0] != 1) {
-	fprintf(stderr, "Incorrect number of mipmap levels on shared surface."
-		" SID %d, levels %d\n",
-		whandle->handle, rep->mip_levels[0]);
+        vmw_error("Incorrect number of mipmap levels on shared surface."
+                  " SID %d, levels %d\n",
+                  whandle->handle, rep->mip_levels[0]);
 	goto out_mip;
     }
 
     for (i=1; i < DRM_VMW_MAX_SURFACE_FACES; ++i) {
 	if (rep->mip_levels[i] != 0) {
-	    fprintf(stderr, "Incorrect number of faces levels on shared surface."
-		    " SID %d, face %d present.\n",
-		    whandle->handle, i);
+            vmw_error("Incorrect number of faces levels on shared surface."
+                      " SID %d, face %d present.\n",
+                      whandle->handle, i);
 	    goto out_mip;
 	}
    }

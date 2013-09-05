@@ -17,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -58,8 +59,8 @@ _mesa_pack_rgba_span_float(struct gl_context *ctx, GLuint n,
 
 
 extern void
-_mesa_unpack_color_span_chan(struct gl_context *ctx,
-                             GLuint n, GLenum dstFormat, GLchan dest[],
+_mesa_unpack_color_span_ubyte(struct gl_context *ctx,
+                             GLuint n, GLenum dstFormat, GLubyte dest[],
                              GLenum srcFormat, GLenum srcType,
                              const GLvoid *source,
                              const struct gl_pixelstore_attrib *srcPacking,
@@ -113,7 +114,7 @@ _mesa_unpack_stencil_span(struct gl_context *ctx, GLuint n,
 
 extern void
 _mesa_pack_stencil_span(struct gl_context *ctx, GLuint n,
-                        GLenum dstType, GLvoid *dest, const GLstencil *source,
+                        GLenum dstType, GLvoid *dest, const GLubyte *source,
                         const struct gl_pixelstore_attrib *dstPacking);
 
 
@@ -130,10 +131,10 @@ _mesa_pack_depth_span(struct gl_context *ctx, GLuint n, GLvoid *dest,
 
 
 extern void
-_mesa_pack_depth_stencil_span(struct gl_context *ctx,
-                              GLuint n, GLuint *dest,
+_mesa_pack_depth_stencil_span(struct gl_context *ctx,GLuint n,
+                              GLenum dstType, GLuint *dest,
                               const GLfloat *depthVals,
-                              const GLstencil *stencilVals,
+                              const GLubyte *stencilVals,
                               const struct gl_pixelstore_attrib *dstPacking);
 
 
@@ -143,5 +144,23 @@ _mesa_unpack_image(GLuint dimensions,
                    GLenum format, GLenum type, const GLvoid *pixels,
                    const struct gl_pixelstore_attrib *unpack);
 
+
+void
+_mesa_pack_rgba_span_from_uints(struct gl_context *ctx, GLuint n, GLuint rgba[][4],
+                                GLenum dstFormat, GLenum dstType,
+                                GLvoid *dstAddr);
+
+
+void
+_mesa_pack_rgba_span_from_ints(struct gl_context *ctx, GLuint n, GLint rgba[][4],
+                               GLenum dstFormat, GLenum dstType,
+                               GLvoid *dstAddr);
+
+
+extern void
+_mesa_rebase_rgba_float(GLuint n, GLfloat rgba[][4], GLenum baseFormat);
+
+extern void
+_mesa_rebase_rgba_uint(GLuint n, GLuint rgba[][4], GLenum baseFormat);
 
 #endif

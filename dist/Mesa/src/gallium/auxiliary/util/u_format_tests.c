@@ -26,6 +26,10 @@
  **************************************************************************/
 
 
+#include <math.h>
+#include <float.h>
+
+#include "pipe/p_config.h"
 #include "u_memory.h"
 #include "u_format_tests.h"
 
@@ -337,8 +341,8 @@ util_format_test_cases[] =
     * Depth-stencil formats
     */
 
-   {PIPE_FORMAT_S8_USCALED, PACKED_1x8(0xff), PACKED_1x8(0x00), UNPACKED_1x1(0.0,   0.0, 0.0, 0.0)},
-   {PIPE_FORMAT_S8_USCALED, PACKED_1x8(0xff), PACKED_1x8(0xff), UNPACKED_1x1(0.0, 255.0, 0.0, 0.0)},
+   {PIPE_FORMAT_S8_UINT, PACKED_1x8(0xff), PACKED_1x8(0x00), UNPACKED_1x1(0.0,   0.0, 0.0, 0.0)},
+   {PIPE_FORMAT_S8_UINT, PACKED_1x8(0xff), PACKED_1x8(0xff), UNPACKED_1x1(0.0, 255.0, 0.0, 0.0)},
 
    {PIPE_FORMAT_Z16_UNORM, PACKED_1x16(0xffff), PACKED_1x16(0x0000), UNPACKED_1x1(0.0, 0.0, 0.0, 0.0)},
    {PIPE_FORMAT_Z16_UNORM, PACKED_1x16(0xffff), PACKED_1x16(0xffff), UNPACKED_1x1(1.0, 0.0, 0.0, 0.0)},
@@ -349,15 +353,15 @@ util_format_test_cases[] =
    {PIPE_FORMAT_Z32_FLOAT, PACKED_1x32(0xffffffff), PACKED_1x32(0x00000000), UNPACKED_1x1(0.0, 0.0, 0.0, 0.0)},
    {PIPE_FORMAT_Z32_FLOAT, PACKED_1x32(0xffffffff), PACKED_1x32(0x3f800000), UNPACKED_1x1(1.0, 0.0, 0.0, 0.0)},
 
-   {PIPE_FORMAT_Z24_UNORM_S8_USCALED, PACKED_1x32(0xffffffff), PACKED_1x32(0x00000000), UNPACKED_1x1(0.0,   0.0, 0.0, 0.0)},
-   {PIPE_FORMAT_Z24_UNORM_S8_USCALED, PACKED_1x32(0xffffffff), PACKED_1x32(0x00ffffff), UNPACKED_1x1(1.0,   0.0, 0.0, 0.0)},
-   {PIPE_FORMAT_Z24_UNORM_S8_USCALED, PACKED_1x32(0xffffffff), PACKED_1x32(0xff000000), UNPACKED_1x1(0.0, 255.0, 0.0, 0.0)},
-   {PIPE_FORMAT_Z24_UNORM_S8_USCALED, PACKED_1x32(0xffffffff), PACKED_1x32(0xffffffff), UNPACKED_1x1(1.0, 255.0, 0.0, 0.0)},
+   {PIPE_FORMAT_Z24_UNORM_S8_UINT, PACKED_1x32(0xffffffff), PACKED_1x32(0x00000000), UNPACKED_1x1(0.0,   0.0, 0.0, 0.0)},
+   {PIPE_FORMAT_Z24_UNORM_S8_UINT, PACKED_1x32(0xffffffff), PACKED_1x32(0x00ffffff), UNPACKED_1x1(1.0,   0.0, 0.0, 0.0)},
+   {PIPE_FORMAT_Z24_UNORM_S8_UINT, PACKED_1x32(0xffffffff), PACKED_1x32(0xff000000), UNPACKED_1x1(0.0, 255.0, 0.0, 0.0)},
+   {PIPE_FORMAT_Z24_UNORM_S8_UINT, PACKED_1x32(0xffffffff), PACKED_1x32(0xffffffff), UNPACKED_1x1(1.0, 255.0, 0.0, 0.0)},
 
-   {PIPE_FORMAT_S8_USCALED_Z24_UNORM, PACKED_1x32(0xffffffff), PACKED_1x32(0x00000000), UNPACKED_1x1(0.0,   0.0, 0.0, 0.0)},
-   {PIPE_FORMAT_S8_USCALED_Z24_UNORM, PACKED_1x32(0xffffffff), PACKED_1x32(0xffffff00), UNPACKED_1x1(1.0,   0.0, 0.0, 0.0)},
-   {PIPE_FORMAT_S8_USCALED_Z24_UNORM, PACKED_1x32(0xffffffff), PACKED_1x32(0x000000ff), UNPACKED_1x1(0.0, 255.0, 0.0, 0.0)},
-   {PIPE_FORMAT_S8_USCALED_Z24_UNORM, PACKED_1x32(0xffffffff), PACKED_1x32(0xffffffff), UNPACKED_1x1(1.0, 255.0, 0.0, 0.0)},
+   {PIPE_FORMAT_S8_UINT_Z24_UNORM, PACKED_1x32(0xffffffff), PACKED_1x32(0x00000000), UNPACKED_1x1(0.0,   0.0, 0.0, 0.0)},
+   {PIPE_FORMAT_S8_UINT_Z24_UNORM, PACKED_1x32(0xffffffff), PACKED_1x32(0xffffff00), UNPACKED_1x1(1.0,   0.0, 0.0, 0.0)},
+   {PIPE_FORMAT_S8_UINT_Z24_UNORM, PACKED_1x32(0xffffffff), PACKED_1x32(0x000000ff), UNPACKED_1x1(0.0, 255.0, 0.0, 0.0)},
+   {PIPE_FORMAT_S8_UINT_Z24_UNORM, PACKED_1x32(0xffffffff), PACKED_1x32(0xffffffff), UNPACKED_1x1(1.0, 255.0, 0.0, 0.0)},
 
    {PIPE_FORMAT_Z24X8_UNORM, PACKED_1x32(0x00ffffff), PACKED_1x32(0x00000000), UNPACKED_1x1(0.0, 0.0, 0.0, 0.0)},
    {PIPE_FORMAT_Z24X8_UNORM, PACKED_1x32(0x00ffffff), PACKED_1x32(0x00ffffff), UNPACKED_1x1(1.0, 0.0, 0.0, 0.0)},
@@ -365,9 +369,9 @@ util_format_test_cases[] =
    {PIPE_FORMAT_X8Z24_UNORM, PACKED_1x32(0xffffff00), PACKED_1x32(0x00000000), UNPACKED_1x1(0.0, 0.0, 0.0, 0.0)},
    {PIPE_FORMAT_X8Z24_UNORM, PACKED_1x32(0xffffff00), PACKED_1x32(0xffffff00), UNPACKED_1x1(1.0, 0.0, 0.0, 0.0)},
 
-   {PIPE_FORMAT_Z32_FLOAT_S8X24_USCALED, PACKED_2x32(0xffffffff, 0x000000ff), PACKED_2x32(0x00000000, 0x00000000), UNPACKED_1x1( 0.0,   0.0, 0.0, 0.0)},
-   {PIPE_FORMAT_Z32_FLOAT_S8X24_USCALED, PACKED_2x32(0xffffffff, 0x000000ff), PACKED_2x32(0x3f800000, 0x00000000), UNPACKED_1x1( 1.0,   0.0, 0.0, 0.0)},
-   {PIPE_FORMAT_Z32_FLOAT_S8X24_USCALED, PACKED_2x32(0xffffffff, 0x000000ff), PACKED_2x32(0x00000000, 0x000000ff), UNPACKED_1x1( 0.0, 255.0, 0.0, 0.0)},
+   {PIPE_FORMAT_Z32_FLOAT_S8X24_UINT, PACKED_2x32(0xffffffff, 0x000000ff), PACKED_2x32(0x00000000, 0x00000000), UNPACKED_1x1( 0.0,   0.0, 0.0, 0.0)},
+   {PIPE_FORMAT_Z32_FLOAT_S8X24_UINT, PACKED_2x32(0xffffffff, 0x000000ff), PACKED_2x32(0x3f800000, 0x00000000), UNPACKED_1x1( 1.0,   0.0, 0.0, 0.0)},
+   {PIPE_FORMAT_Z32_FLOAT_S8X24_UINT, PACKED_2x32(0xffffffff, 0x000000ff), PACKED_2x32(0x00000000, 0x000000ff), UNPACKED_1x1( 0.0, 255.0, 0.0, 0.0)},
 
    /*
     * YUV formats
@@ -876,7 +880,44 @@ util_format_test_cases[] =
     * Half float formats
     */
 
-   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x0000), UNPACKED_1x1(  0.0, 0.0, 0.0, 1.0)},
+   /* Minimum positive normal */
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x0400), UNPACKED_1x1( 6.10352E-5, 0.0, 0.0, 1.0)},
+
+   /* XXX: Now that we disable denormals this test cases fails, except on
+    * IvyBridge processors which have intrinsics dedicated to half-float
+    * packing/unpacking. */
+#if 0
+   /* Max denormal */
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x03FF), UNPACKED_1x1( 6.09756E-5, 0.0, 0.0, 1.0)},
+#endif
+
+   /* Minimum positive denormal */
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x0001), UNPACKED_1x1( 5.96046E-8, 0.0, 0.0, 1.0)},
+
+   /* Min representable value */
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0xfbff), UNPACKED_1x1(   -65504.0, 0.0, 0.0, 1.0)},
+
+   /* Max representable value */
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x7bff), UNPACKED_1x1(    65504.0, 0.0, 0.0, 1.0)},
+
+#if !defined(PIPE_CC_MSVC)
+
+   /* NaNs */
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x7c01), UNPACKED_1x1(        NAN, 0.0, 0.0, 1.0)},
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0xfc01), UNPACKED_1x1(       -NAN, 0.0, 0.0, 1.0)},
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x7fff), UNPACKED_1x1(        NAN, 0.0, 0.0, 1.0)},
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0xffff), UNPACKED_1x1(       -NAN, 0.0, 0.0, 1.0)},
+
+   /* Inf */
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x7c00), UNPACKED_1x1(        INFINITY, 0.0, 0.0, 1.0)},
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0xfc00), UNPACKED_1x1(       -INFINITY, 0.0, 0.0, 1.0)},
+
+#endif
+
+   /* Zero, ignore sign */
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0x7fff), PACKED_1x16(0x8000), UNPACKED_1x1( -0.0, 0.0, 0.0, 1.0)},
+   {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0x7fff), PACKED_1x16(0x0000), UNPACKED_1x1(  0.0, 0.0, 0.0, 1.0)},
+
    {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0x3c00), UNPACKED_1x1(  1.0, 0.0, 0.0, 1.0)},
    {PIPE_FORMAT_R16_FLOAT, PACKED_1x16(0xffff), PACKED_1x16(0xbc00), UNPACKED_1x1( -1.0, 0.0, 0.0, 1.0)},
 

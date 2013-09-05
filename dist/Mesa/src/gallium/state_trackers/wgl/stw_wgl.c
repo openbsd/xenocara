@@ -25,6 +25,19 @@
  *
  **************************************************************************/
 
+/**
+ * @file
+ *
+ * Fake WGL API implementation.
+ *
+ * These functions implement the WGL API, on top of the ICD DDI, so that the
+ * resulting DLL can be used as a drop-in replacement for the system's
+ * opengl32.dll.
+ *
+ * These functions never get called for ICD drivers, which use exclusively the
+ * ICD DDI, i.e., the Drv* entrypoints.
+ */
+
 #include <windows.h>
 
 #include "util/u_debug.h"
@@ -172,8 +185,10 @@ wglSetPixelFormat(
    int iPixelFormat,
    const PIXELFORMATDESCRIPTOR *ppfd )
 {
-   if (ppfd->nSize != sizeof( PIXELFORMATDESCRIPTOR ))
-      return FALSE;
+    /* SetPixelFormat (hence wglSetPixelFormat) must not touch ppfd, per
+     * http://msdn.microsoft.com/en-us/library/dd369049(v=vs.85).aspx
+     */
+   (void) ppfd;
 
    return DrvSetPixelFormat( hdc, iPixelFormat );
 }

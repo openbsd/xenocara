@@ -32,106 +32,62 @@
 #include "util/u_memory.h"
 #include "draw/draw_context.h"
 
-
-static void *
-llvmpipe_create_stream_output_state(struct pipe_context *pipe,
-                                    const struct pipe_stream_output_state *templ)
+static struct pipe_stream_output_target *
+llvmpipe_create_so_target(struct pipe_context *pipe,
+                          struct pipe_resource *buffer,
+                          unsigned buffer_offset,
+                          unsigned buffer_size)
 {
-   struct lp_so_state *so;
-   so = (struct lp_so_state *) CALLOC_STRUCT(lp_so_state);
+   struct draw_so_target *t;
 
-   if (so) {
-      so->base.num_outputs = templ->num_outputs;
-      so->base.stride = templ->stride;
-      memcpy(so->base.output_buffer,
-             templ->output_buffer,
-             sizeof(int) * templ->num_outputs);
-      memcpy(so->base.register_index,
-             templ->register_index,
-             sizeof(int) * templ->num_outputs);
-      memcpy(so->base.register_mask,
-             templ->register_mask,
-             sizeof(ubyte) * templ->num_outputs);
-   }
-   return so;
+   t = CALLOC_STRUCT(draw_so_target);
+   if (!t)
+      return NULL;
+
+   t->target.context = pipe;
+   t->target.reference.count = 1;
+   pipe_resource_reference(&t->target.buffer, buffer);
+   t->target.buffer_offset = buffer_offset;
+   t->target.buffer_size = buffer_size;
+   return &t->target;
+}
+ 
+static void
+llvmpipe_so_target_destroy(struct pipe_context *pipe,
+                           struct pipe_stream_output_target *target)
+{
+   pipe_resource_reference(&target->buffer, NULL);
+   FREE(target);
 }
 
 static void
-llvmpipe_bind_stream_output_state(struct pipe_context *pipe,
-                                  void *so)
+llvmpipe_set_so_targets(struct pipe_context *pipe,
+                        unsigned num_targets,
+                        struct pipe_stream_output_target **targets,
+                        unsigned append_bitmask)
 {
-   struct llvmpipe_context *lp = llvmpipe_context(pipe);
-   struct lp_so_state *lp_so = (struct lp_so_state *) so;
-
-   lp->so = lp_so;
-
-   lp->dirty |= LP_NEW_SO;
-
-   if (lp_so)
-      draw_set_so_state(lp->draw, &lp_so->base);
-}
-
-static void
-llvmpipe_delete_stream_output_state(struct pipe_context *pipe, void *so)
-{
-   FREE( so );
-}
-
-static void
-llvmpipe_set_stream_output_buffers(struct pipe_context *pipe,
-                                   struct pipe_resource **buffers,
-                                   int *offsets,
-                                   int num_buffers)
-{
-   struct llvmpipe_context *lp = llvmpipe_context(pipe);
+   struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
    int i;
-   void *map_buffers[PIPE_MAX_SO_BUFFERS];
-
-   assert(num_buffers <= PIPE_MAX_SO_BUFFERS);
-   if (num_buffers > PIPE_MAX_SO_BUFFERS)
-      num_buffers = PIPE_MAX_SO_BUFFERS;
-
-   lp->dirty |= LP_NEW_SO_BUFFERS;
-
-   for (i = 0; i < num_buffers; ++i) {
-      void *mapped;
-      struct llvmpipe_resource *res = llvmpipe_resource(buffers[i]);
-
-      if (!res) {
-         /* the whole call is invalid, bail out */
-         lp->so_target.num_buffers = 0;
-         draw_set_mapped_so_buffers(lp->draw, 0, 0);
-         return;
-      }
-
-      lp->so_target.buffer[i] = res;
-      lp->so_target.offset[i] = offsets[i];
-      lp->so_target.so_count[i] = 0;
-
-      mapped = res->data;
-      if (offsets[i] >= 0)
-         map_buffers[i] = ((char*)mapped) + offsets[i];
-      else {
-         /* this is a buffer append */
-         assert(!"appending not implemented");
-         map_buffers[i] = mapped;
+   for (i = 0; i < num_targets; i++) {
+      pipe_so_target_reference((struct pipe_stream_output_target **)&llvmpipe->so_targets[i], targets[i]);
+      /* if we're not appending then lets reset the internal
+         data of our so target */
+      if (!(append_bitmask & (1 << i)) && llvmpipe->so_targets[i]) {
+         llvmpipe->so_targets[i]->internal_offset = 0;
+         llvmpipe->so_targets[i]->emitted_vertices = 0;
       }
    }
-   lp->so_target.num_buffers = num_buffers;
 
-   draw_set_mapped_so_buffers(lp->draw, map_buffers, num_buffers);
+   for (; i < llvmpipe->num_so_targets; i++) {
+      pipe_so_target_reference((struct pipe_stream_output_target **)&llvmpipe->so_targets[i], NULL);
+   }
+   llvmpipe->num_so_targets = num_targets;
 }
 
 void
-llvmpipe_init_so_funcs(struct llvmpipe_context *llvmpipe)
+llvmpipe_init_so_funcs(struct llvmpipe_context *pipe)
 {
-   llvmpipe->pipe.create_stream_output_state =
-      llvmpipe_create_stream_output_state;
-   llvmpipe->pipe.bind_stream_output_state =
-      llvmpipe_bind_stream_output_state;
-   llvmpipe->pipe.delete_stream_output_state =
-      llvmpipe_delete_stream_output_state;
-
-   llvmpipe->pipe.set_stream_output_buffers =
-      llvmpipe_set_stream_output_buffers;
+   pipe->pipe.create_stream_output_target = llvmpipe_create_so_target;
+   pipe->pipe.stream_output_target_destroy = llvmpipe_so_target_destroy;
+   pipe->pipe.set_stream_output_targets = llvmpipe_set_so_targets;
 }

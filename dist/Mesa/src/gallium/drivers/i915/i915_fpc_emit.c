@@ -30,44 +30,12 @@
 #include "i915_fpc.h"
 #include "util/u_math.h"
 
-
-#define A0_DEST( reg ) (((reg)&UREG_TYPE_NR_MASK)>>UREG_A0_DEST_SHIFT_LEFT)
-#define D0_DEST( reg ) (((reg)&UREG_TYPE_NR_MASK)>>UREG_A0_DEST_SHIFT_LEFT)
-#define T0_DEST( reg ) (((reg)&UREG_TYPE_NR_MASK)>>UREG_A0_DEST_SHIFT_LEFT)
-#define A0_SRC0( reg ) (((reg)&UREG_MASK)>>UREG_A0_SRC0_SHIFT_LEFT)
-#define A1_SRC0( reg ) (((reg)&UREG_MASK)<<UREG_A1_SRC0_SHIFT_RIGHT)
-#define A1_SRC1( reg ) (((reg)&UREG_MASK)>>UREG_A1_SRC1_SHIFT_LEFT)
-#define A2_SRC1( reg ) (((reg)&UREG_MASK)<<UREG_A2_SRC1_SHIFT_RIGHT)
-#define A2_SRC2( reg ) (((reg)&UREG_MASK)>>UREG_A2_SRC2_SHIFT_LEFT)
-
-/* These are special, and don't have swizzle/negate bits.
- */
-#define T0_SAMPLER( reg )     (GET_UREG_NR(reg)<<T0_SAMPLER_NR_SHIFT)
-#define T1_ADDRESS_REG( reg ) ((GET_UREG_NR(reg)<<T1_ADDRESS_REG_NR_SHIFT) | \
-			       (GET_UREG_TYPE(reg)<<T1_ADDRESS_REG_TYPE_SHIFT))
-
-
-/* Macros for translating UREG's into the various register fields used
- * by the I915 programmable unit.
- */
-#define UREG_A0_DEST_SHIFT_LEFT  (UREG_TYPE_SHIFT - A0_DEST_TYPE_SHIFT)
-#define UREG_A0_SRC0_SHIFT_LEFT  (UREG_TYPE_SHIFT - A0_SRC0_TYPE_SHIFT)
-#define UREG_A1_SRC0_SHIFT_RIGHT (A1_SRC0_CHANNEL_W_SHIFT - UREG_CHANNEL_W_SHIFT)
-#define UREG_A1_SRC1_SHIFT_LEFT  (UREG_TYPE_SHIFT - A1_SRC1_TYPE_SHIFT)
-#define UREG_A2_SRC1_SHIFT_RIGHT (A2_SRC1_CHANNEL_W_SHIFT - UREG_CHANNEL_W_SHIFT)
-#define UREG_A2_SRC2_SHIFT_LEFT  (UREG_TYPE_SHIFT - A2_SRC2_TYPE_SHIFT)
-
-#define UREG_MASK         0xffffff00
-#define UREG_TYPE_NR_MASK ((REG_TYPE_MASK << UREG_TYPE_SHIFT) | \
-  			   (REG_NR_MASK << UREG_NR_SHIFT))
-
-
 uint
 i915_get_temp(struct i915_fp_compile *p)
 {
    int bit = ffs(~p->temp_flag);
    if (!bit) {
-      i915_program_error(p, "i915_get_temp: out of temporaries\n");
+      i915_program_error(p, "i915_get_temp: out of temporaries");
       return 0;
    }
 
@@ -92,7 +60,7 @@ i915_get_utemp(struct i915_fp_compile * p)
 {
    int bit = ffs(~p->utemp_flag);
    if (!bit) {
-      i915_program_error(p, "i915_get_utemp: out of temporaries\n");
+      i915_program_error(p, "i915_get_utemp: out of temporaries");
       return 0;
    }
 
@@ -128,9 +96,13 @@ i915_emit_decl(struct i915_fp_compile *p,
    else
       return reg;
 
-   *(p->decl++) = (D0_DCL | D0_DEST(reg) | d0_flags);
-   *(p->decl++) = D1_MBZ;
-   *(p->decl++) = D2_MBZ;
+   if (p->decl< p->declarations + I915_PROGRAM_SIZE) {
+      *(p->decl++) = (D0_DCL | D0_DEST(reg) | d0_flags);
+      *(p->decl++) = D1_MBZ;
+      *(p->decl++) = D2_MBZ;
+   }
+   else
+      i915_program_error(p, "Out of declarations");
 
    p->nr_decl_insn++;
    return reg;
@@ -187,9 +159,16 @@ i915_emit_arith(struct i915_fp_compile * p,
       p->utemp_flag = old_utemp_flag;   /* restore */
    }
 
-   *(p->csr++) = (op | A0_DEST(dest) | mask | saturate | A0_SRC0(src0));
-   *(p->csr++) = (A1_SRC0(src0) | A1_SRC1(src1));
-   *(p->csr++) = (A2_SRC1(src1) | A2_SRC2(src2));
+   if (p->csr< p->program + I915_PROGRAM_SIZE) {
+      *(p->csr++) = (op | A0_DEST(dest) | mask | saturate | A0_SRC0(src0));
+      *(p->csr++) = (A1_SRC0(src0) | A1_SRC1(src1));
+      *(p->csr++) = (A2_SRC1(src1) | A2_SRC2(src2));
+   }
+   else
+      i915_program_error(p, "Out of instructions");
+
+   if (GET_UREG_TYPE(dest) == REG_TYPE_R)
+      p->register_phases[GET_UREG_NR(dest)] = p->nr_tex_indirect;
 
    p->nr_alu_insn++;
    return dest;
@@ -205,16 +184,36 @@ i915_emit_arith(struct i915_fp_compile * p,
  * \param opcode  the instruction opcode
  */
 uint i915_emit_texld( struct i915_fp_compile *p,
-			uint dest,
-			uint destmask,
-			uint sampler,
-			uint coord,
-			uint opcode )
+                      uint dest,
+                      uint destmask,
+                      uint sampler,
+                      uint coord,
+                      uint opcode,
+                      uint num_coord )
 {
    const uint k = UREG(GET_UREG_TYPE(coord), GET_UREG_NR(coord));
-   int temp = -1;
 
-   if (coord != k) {
+   int temp = -1;
+   uint ignore = 0;
+
+   /* Eliminate the useless texture coordinates. Otherwise we end up generating
+    * a swizzle for no reason below. */
+   switch(num_coord) {
+      case 0:
+         /* Ignore x */
+         ignore |= (0xf << UREG_CHANNEL_X_SHIFT);
+      case 1:
+         /* Ignore y */
+         ignore |= (0xf << UREG_CHANNEL_Y_SHIFT);
+      case 2:
+         /* Ignore z */
+         ignore |= (0xf << UREG_CHANNEL_Z_SHIFT);
+      case 3:
+         /* Ignore w */
+         ignore |= (0xf << UREG_CHANNEL_W_SHIFT);
+   }
+
+   if ( (coord & ~ignore ) != (k & ~ignore) ) {
       /* texcoord is swizzled or negated.  Need to allocate a new temporary
        * register (a utemp / unpreserved temp) won't do.
        */
@@ -237,7 +236,7 @@ uint i915_emit_texld( struct i915_fp_compile *p,
    if (destmask != A0_DEST_CHANNEL_ALL) {
       /* if not writing to XYZW... */
       uint tmp = i915_get_utemp(p);
-      i915_emit_texld( p, tmp, A0_DEST_CHANNEL_ALL, sampler, coord, opcode );
+      i915_emit_texld( p, tmp, A0_DEST_CHANNEL_ALL, sampler, coord, opcode, num_coord );
       i915_emit_arith( p, A0_MOV, dest, destmask, 0, tmp, 0, 0 );
       /* XXX release utemp here? */
    }
@@ -245,17 +244,31 @@ uint i915_emit_texld( struct i915_fp_compile *p,
       assert(GET_UREG_TYPE(dest) != REG_TYPE_CONST);
       assert(dest == UREG(GET_UREG_TYPE(dest), GET_UREG_NR(dest)));
 
-      /* is the sampler coord a texcoord input reg? */
-      if (GET_UREG_TYPE(coord) != REG_TYPE_T) {
-	 p->nr_tex_indirect++;
+      /* Output register being oC or oD defines a phase boundary */
+      if (GET_UREG_TYPE(dest) == REG_TYPE_OC ||
+          GET_UREG_TYPE(dest) == REG_TYPE_OD)
+         p->nr_tex_indirect++;
+
+      /* Reading from an r# register whose contents depend on output of the
+       * current phase defines a phase boundary.
+       */
+      if (GET_UREG_TYPE(coord) == REG_TYPE_R &&
+          p->register_phases[GET_UREG_NR(coord)] == p->nr_tex_indirect)
+         p->nr_tex_indirect++;
+
+      if (p->csr< p->program + I915_PROGRAM_SIZE) {
+         *(p->csr++) = (opcode |
+                        T0_DEST( dest ) |
+                        T0_SAMPLER( sampler ));
+
+         *(p->csr++) = T1_ADDRESS_REG( coord );
+         *(p->csr++) = T2_MBZ;
       }
+      else
+         i915_program_error(p, "Out of instructions");
 
-      *(p->csr++) = (opcode | 
-		     T0_DEST( dest ) |
-		     T0_SAMPLER( sampler ));
-
-      *(p->csr++) = T1_ADDRESS_REG( coord );
-      *(p->csr++) = T2_MBZ;
+      if (GET_UREG_TYPE(dest) == REG_TYPE_R)
+         p->register_phases[GET_UREG_NR(dest)] = p->nr_tex_indirect;
 
       p->nr_tex_insn++;
    }
@@ -293,7 +306,7 @@ i915_emit_const1f(struct i915_fp_compile * p, float c0)
       }
    }
 
-   i915_program_error(p, "i915_emit_const1f: out of constants\n");
+   i915_program_error(p, "i915_emit_const1f: out of constants");
    return 0;
 }
 
@@ -313,6 +326,8 @@ i915_emit_const2f(struct i915_fp_compile * p, float c0, float c1)
    if (c1 == 1.0)
       return swizzle(i915_emit_const1f(p, c0), X, ONE, Z, W);
 
+   // XXX emit swizzle here for 0, 1, -1 and any combination thereof
+   // we can use swizzle + neg for that
    for (reg = 0; reg < I915_MAX_CONSTANT; reg++) {
       if (ifs->constant_flags[reg] == 0xf ||
           ifs->constant_flags[reg] == I915_CONSTFLAG_USER)
@@ -329,11 +344,9 @@ i915_emit_const2f(struct i915_fp_compile * p, float c0, float c1)
       }
    }
 
-   i915_program_error(p, "i915_emit_const2f: out of constants\n");
+   i915_program_error(p, "i915_emit_const2f: out of constants");
    return 0;
 }
-
-
 
 uint
 i915_emit_const4f(struct i915_fp_compile * p,
@@ -342,6 +355,8 @@ i915_emit_const4f(struct i915_fp_compile * p,
    struct i915_fragment_shader *ifs = p->shader;
    unsigned reg;
 
+   // XXX emit swizzle here for 0, 1, -1 and any combination thereof
+   // we can use swizzle + neg for that
    for (reg = 0; reg < I915_MAX_CONSTANT; reg++) {
       if (ifs->constant_flags[reg] == 0xf &&
           ifs->constants[reg][0] == c0 &&
@@ -363,7 +378,7 @@ i915_emit_const4f(struct i915_fp_compile * p,
       }
    }
 
-   i915_program_error(p, "i915_emit_const4f: out of constants\n");
+   i915_program_error(p, "i915_emit_const4f: out of constants");
    return 0;
 }
 

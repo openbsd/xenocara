@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.3
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * Copyright (C) 1999-2009  VMware, Inc.  All Rights Reserved.
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -69,7 +69,7 @@ _mesa_init_instructions(struct prog_instruction *inst, GLuint count)
 struct prog_instruction *
 _mesa_alloc_instructions(GLuint numInst)
 {
-   return (struct prog_instruction *)
+   return
       calloc(1, numInst * sizeof(struct prog_instruction));
 }
 
@@ -127,10 +127,7 @@ _mesa_free_instructions(struct prog_instruction *inst, GLuint count)
 {
    GLuint i;
    for (i = 0; i < count; i++) {
-      if (inst[i].Data)
-         free(inst[i].Data);
-      if (inst[i].Comment)
-         free((char *) inst[i].Comment);
+      free((char *)inst[i].Comment);
    }
    free(inst);
 }
@@ -155,14 +152,9 @@ static const struct instruction_info InstInfo[MAX_OPCODE] = {
    { OPCODE_NOP,    "NOP",     0, 0 },
    { OPCODE_ABS,    "ABS",     1, 1 },
    { OPCODE_ADD,    "ADD",     2, 1 },
-   { OPCODE_AND,    "AND",     2, 1 },
-   { OPCODE_ARA,    "ARA",     1, 1 },
    { OPCODE_ARL,    "ARL",     1, 1 },
-   { OPCODE_ARL_NV, "ARL_NV",  1, 1 },
-   { OPCODE_ARR,    "ARL",     1, 1 },
    { OPCODE_BGNLOOP,"BGNLOOP", 0, 0 },
    { OPCODE_BGNSUB, "BGNSUB",  0, 0 },
-   { OPCODE_BRA,    "BRA",     0, 0 },
    { OPCODE_BRK,    "BRK",     0, 0 },
    { OPCODE_CAL,    "CAL",     0, 0 },
    { OPCODE_CMP,    "CMP",     3, 1 },
@@ -171,15 +163,12 @@ static const struct instruction_info InstInfo[MAX_OPCODE] = {
    { OPCODE_DDX,    "DDX",     1, 1 },
    { OPCODE_DDY,    "DDY",     1, 1 },
    { OPCODE_DP2,    "DP2",     2, 1 },
-   { OPCODE_DP2A,   "DP2A",    3, 1 },
    { OPCODE_DP3,    "DP3",     2, 1 },
    { OPCODE_DP4,    "DP4",     2, 1 },
    { OPCODE_DPH,    "DPH",     2, 1 },
    { OPCODE_DST,    "DST",     2, 1 },
    { OPCODE_ELSE,   "ELSE",    0, 0 },
-   { OPCODE_EMIT_VERTEX,   "EMIT_VERTEX",    0, 0 },
    { OPCODE_END,    "END",     0, 0 },
-   { OPCODE_END_PRIMITIVE,    "END_PRIMITIVE",     0, 0 },
    { OPCODE_ENDIF,  "ENDIF",   0, 0 },
    { OPCODE_ENDLOOP,"ENDLOOP", 0, 0 },
    { OPCODE_ENDSUB, "ENDSUB",  0, 0 },
@@ -203,19 +192,11 @@ static const struct instruction_info InstInfo[MAX_OPCODE] = {
    { OPCODE_NOISE2, "NOISE2",  1, 1 },
    { OPCODE_NOISE3, "NOISE3",  1, 1 },
    { OPCODE_NOISE4, "NOISE4",  1, 1 },
-   { OPCODE_NOT,    "NOT",     1, 1 },
-   { OPCODE_NRM3,   "NRM3",    1, 1 },
-   { OPCODE_NRM4,   "NRM4",    1, 1 },
-   { OPCODE_OR,     "OR",      2, 1 },
    { OPCODE_PK2H,   "PK2H",    1, 1 },
    { OPCODE_PK2US,  "PK2US",   1, 1 },
    { OPCODE_PK4B,   "PK4B",    1, 1 },
    { OPCODE_PK4UB,  "PK4UB",   1, 1 },
    { OPCODE_POW,    "POW",     2, 1 },
-   { OPCODE_POPA,   "POPA",    0, 0 },
-   { OPCODE_PRINT,  "PRINT",   1, 0 },
-   { OPCODE_PUSHA,  "PUSHA",   0, 0 },
-   { OPCODE_RCC,    "RCC",     1, 1 },
    { OPCODE_RCP,    "RCP",     1, 1 },
    { OPCODE_RET,    "RET",     0, 0 },
    { OPCODE_RFL,    "RFL",     1, 1 },
@@ -245,7 +226,6 @@ static const struct instruction_info InstInfo[MAX_OPCODE] = {
    { OPCODE_UP4B,   "UP4B",    1, 1 },
    { OPCODE_UP4UB,  "UP4UB",   1, 1 },
    { OPCODE_X2D,    "X2D",     3, 1 },
-   { OPCODE_XOR,    "XOR",     2, 1 },
    { OPCODE_XPD,    "XPD",     2, 1 }
 };
 

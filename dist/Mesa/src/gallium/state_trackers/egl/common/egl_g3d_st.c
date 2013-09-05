@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.9
  *
  * Copyright (C) 2010 LunarG Inc.
  *
@@ -113,7 +112,8 @@ egl_g3d_destroy_st_manager(struct st_manager *smapi)
 }
 
 static boolean
-egl_g3d_st_framebuffer_flush_front_pbuffer(struct st_framebuffer_iface *stfbi,
+egl_g3d_st_framebuffer_flush_front_pbuffer(struct st_context_iface *stctx,
+                                           struct st_framebuffer_iface *stfbi,
                                            enum st_attachment_type statt)
 {
    return TRUE;
@@ -126,7 +126,7 @@ pbuffer_reference_openvg_image(struct egl_g3d_surface *gsurf)
 }
 
 static void
-pbuffer_allocate_render_texture(struct egl_g3d_surface *gsurf)
+pbuffer_allocate_pbuffer_texture(struct egl_g3d_surface *gsurf)
 {
    struct egl_g3d_display *gdpy =
       egl_g3d_display(gsurf->base.Resource.Display);
@@ -141,7 +141,8 @@ pbuffer_allocate_render_texture(struct egl_g3d_surface *gsurf)
    templ.depth0 = 1;
    templ.array_size = 1;
    templ.format = gsurf->stvis.color_format;
-   templ.bind = PIPE_BIND_RENDER_TARGET;
+   /* for rendering and binding to texture */
+   templ.bind = PIPE_BIND_RENDER_TARGET | PIPE_BIND_SAMPLER_VIEW;
 
    ptex = screen->resource_create(screen, &templ);
    gsurf->render_texture = ptex;
@@ -166,7 +167,7 @@ egl_g3d_st_framebuffer_validate_pbuffer(struct st_framebuffer_iface *stfbi,
       if (!gsurf->render_texture) {
          switch (gsurf->client_buffer_type) {
          case EGL_NONE:
-            pbuffer_allocate_render_texture(gsurf);
+            pbuffer_allocate_pbuffer_texture(gsurf);
             break;
          case EGL_OPENVG_IMAGE:
             pbuffer_reference_openvg_image(gsurf);
@@ -186,14 +187,18 @@ egl_g3d_st_framebuffer_validate_pbuffer(struct st_framebuffer_iface *stfbi,
 }
 
 static boolean
-egl_g3d_st_framebuffer_flush_front(struct st_framebuffer_iface *stfbi,
+egl_g3d_st_framebuffer_flush_front(struct st_context_iface *stctx,
+                                   struct st_framebuffer_iface *stfbi,
                                    enum st_attachment_type statt)
 {
    _EGLSurface *surf = (_EGLSurface *) stfbi->st_manager_private;
    struct egl_g3d_surface *gsurf = egl_g3d_surface(surf);
+   struct native_present_control ctrl;
 
-   return gsurf->native->present(gsurf->native,
-         NATIVE_ATTACHMENT_FRONT_LEFT, FALSE, 0);
+   memset(&ctrl, 0, sizeof(ctrl));
+   ctrl.natt = NATIVE_ATTACHMENT_FRONT_LEFT;
+
+   return gsurf->native->present(gsurf->native, &ctrl);
 }
 
 static boolean 
@@ -292,6 +297,8 @@ egl_g3d_create_st_framebuffer(_EGLSurface *surf)
       return NULL;
 
    stfbi->visual = &gsurf->stvis;
+   p_atomic_set(&stfbi->stamp, 1);
+
    if (gsurf->base.Type != EGL_PBUFFER_BIT) {
       stfbi->flush_front = egl_g3d_st_framebuffer_flush_front;
       stfbi->validate = egl_g3d_st_framebuffer_validate;

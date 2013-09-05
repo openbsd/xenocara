@@ -45,9 +45,9 @@ extern "C" {
 #include "main/core.h"
 #include "brw_wm.h"
 }
-#include "../glsl/ir.h"
-#include "../glsl/ir_expression_flattening.h"
-#include "../glsl/glsl_types.h"
+#include "glsl/ir.h"
+#include "glsl/ir_expression_flattening.h"
+#include "glsl/glsl_types.h"
 
 class ir_channel_expressions_visitor : public ir_hierarchical_visitor {
 public:
@@ -83,7 +83,7 @@ channel_expressions_predicate(ir_instruction *ir)
    return false;
 }
 
-GLboolean
+bool
 brw_do_channel_expressions(exec_list *instructions)
 {
    ir_channel_expressions_visitor v;
@@ -135,7 +135,7 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    ir_expression *expr = ir->rhs->as_expression();
    bool found_vector = false;
    unsigned int i, vector_elements = 1;
-   ir_variable *op_var[2];
+   ir_variable *op_var[3];
 
    if (!expr)
       return visit_continue;
@@ -191,7 +191,14 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    case ir_unop_log:
    case ir_unop_exp2:
    case ir_unop_log2:
+   case ir_unop_bitcast_i2f:
+   case ir_unop_bitcast_f2i:
+   case ir_unop_bitcast_f2u:
+   case ir_unop_bitcast_u2f:
+   case ir_unop_i2u:
+   case ir_unop_u2i:
    case ir_unop_f2i:
+   case ir_unop_f2u:
    case ir_unop_i2f:
    case ir_unop_f2b:
    case ir_unop_b2f:
@@ -209,6 +216,10 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    case ir_unop_cos_reduced:
    case ir_unop_dFdx:
    case ir_unop_dFdy:
+   case ir_unop_bitfield_reverse:
+   case ir_unop_bit_count:
+   case ir_unop_find_msb:
+   case ir_unop_find_lsb:
       for (i = 0; i < vector_elements; i++) {
 	 ir_rvalue *op0 = get_element(op_var[0], i);
 
@@ -330,8 +341,78 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    case ir_unop_noise:
       assert(!"noise should have been broken down to function call");
       break;
+
+   case ir_binop_bfm: {
+      /* Does not need to be scalarized, since its result will be identical
+       * for all channels.
+       */
+      ir_rvalue *op0 = get_element(op_var[0], 0);
+      ir_rvalue *op1 = get_element(op_var[1], 0);
+
+      assign(ir, 0, new(mem_ctx) ir_expression(expr->operation,
+                                               element_type,
+                                               op0,
+                                               op1));
+      break;
+   }
+
+   case ir_binop_ubo_load:
+      assert(!"not yet supported");
+      break;
+
+   case ir_triop_lrp:
+   case ir_triop_bitfield_extract:
+      for (i = 0; i < vector_elements; i++) {
+	 ir_rvalue *op0 = get_element(op_var[0], i);
+	 ir_rvalue *op1 = get_element(op_var[1], i);
+	 ir_rvalue *op2 = get_element(op_var[2], i);
+
+	 assign(ir, i, new(mem_ctx) ir_expression(expr->operation,
+						  element_type,
+						  op0,
+						  op1,
+						  op2));
+      }
+      break;
+
+   case ir_triop_bfi: {
+      /* Only a single BFM is needed for multiple BFIs. */
+      ir_rvalue *op0 = get_element(op_var[0], 0);
+
+      for (i = 0; i < vector_elements; i++) {
+         ir_rvalue *op1 = get_element(op_var[1], i);
+         ir_rvalue *op2 = get_element(op_var[2], i);
+
+         assign(ir, i, new(mem_ctx) ir_expression(expr->operation,
+                                                  element_type,
+                                                  op0->clone(mem_ctx, NULL),
+                                                  op1,
+                                                  op2));
+      }
+      break;
+   }
+
+   case ir_unop_pack_snorm_2x16:
+   case ir_unop_pack_snorm_4x8:
+   case ir_unop_pack_unorm_2x16:
+   case ir_unop_pack_unorm_4x8:
+   case ir_unop_pack_half_2x16:
+   case ir_unop_unpack_snorm_2x16:
+   case ir_unop_unpack_snorm_4x8:
+   case ir_unop_unpack_unorm_2x16:
+   case ir_unop_unpack_unorm_4x8:
+   case ir_unop_unpack_half_2x16:
+   case ir_binop_vector_extract:
+   case ir_triop_vector_insert:
+   case ir_quadop_bitfield_insert:
    case ir_quadop_vector:
       assert(!"should have been lowered");
+      break;
+
+   case ir_unop_unpack_half_2x16_split_x:
+   case ir_unop_unpack_half_2x16_split_y:
+   case ir_binop_pack_half_2x16_split:
+      assert("!not reached: expression operates on scalars only");
       break;
    }
 

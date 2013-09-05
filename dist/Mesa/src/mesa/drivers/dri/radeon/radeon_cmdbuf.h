@@ -1,8 +1,6 @@
 #ifndef COMMON_CMDBUF_H
 #define COMMON_CMDBUF_H
 
-#include "radeon_bocs_wrapper.h"
-
 GLboolean rcommonEnsureCmdBufSpace(radeonContextPtr rmesa, int dwords, const char *caller);
 int rcommonFlushCmdBuf(radeonContextPtr rmesa, const char *caller);
 int rcommonFlushCmdBufLocked(radeonContextPtr rmesa, const char *caller);
@@ -62,8 +60,6 @@ void rcommonBeginBatch(radeonContextPtr rmesa,
         radeon_cs_write_dword(b_l_rmesa->cmdbuf.cs, __offset);	\
         radeon_cs_write_reloc(b_l_rmesa->cmdbuf.cs, 		\
                               bo, rd, wd, flags);		\
-	if (!b_l_rmesa->radeonScreen->kernel_mm) 		\
-		b_l_rmesa->cmdbuf.cs->section_cdw += 2;		\
 	} while(0)
 
 
@@ -104,10 +100,6 @@ void rcommonBeginBatch(radeonContextPtr rmesa,
 #define OUT_BATCH_REGSEQ(reg, count) \
 	OUT_BATCH(cmdpacket0(b_l_rmesa->radeonScreen, (reg), (count)))
 
-/** Write a 32 bit float to the ring; requires 1 dword. */
-#define OUT_BATCH_FLOAT32(f) \
-	OUT_BATCH(radeonPackFloat32((f)))
-
 /* +r6/r7 : code here moved */
 
 /* Fire the buffered vertices no matter what.
@@ -115,7 +107,7 @@ void rcommonBeginBatch(radeonContextPtr rmesa,
 static INLINE void radeon_firevertices(radeonContextPtr radeon)
 {
    if (radeon->cmdbuf.cs->cdw || radeon->dma.flush )
-      radeon->glCtx->Driver.Flush(radeon->glCtx); /* +r6/r7 */
+      radeon->glCtx.Driver.Flush(&radeon->glCtx); /* +r6/r7 */
 }
 
 #endif

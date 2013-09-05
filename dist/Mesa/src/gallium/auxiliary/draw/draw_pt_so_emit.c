@@ -25,11 +25,15 @@
  *
  **************************************************************************/
 
-#include "draw/draw_context.h"
 #include "draw/draw_private.h"
+#include "draw/draw_vs.h"
+#include "draw/draw_gs.h"
+#include "draw/draw_context.h"
 #include "draw/draw_vbuf.h"
 #include "draw/draw_vertex.h"
 #include "draw/draw_pt.h"
+
+#include "pipe/p_state.h"
 
 #include "util/u_math.h"
 #include "util/u_memory.h"
@@ -37,33 +41,58 @@
 struct pt_so_emit {
    struct draw_context *draw;
 
-   void *buffers[PIPE_MAX_SO_BUFFERS];
-
    unsigned input_vertex_stride;
    const float (*inputs)[4];
-
+   const float *pre_clip_pos;
    boolean has_so;
-
-   boolean single_buffer;
-
+   boolean use_pre_clip_pos;
+   int pos_idx;
    unsigned emitted_primitives;
    unsigned emitted_vertices;
+   unsigned generated_primitives;
 };
 
+static const struct pipe_stream_output_info *
+draw_so_info(const struct draw_context *draw)
+{
+   const struct pipe_stream_output_info *state = NULL;
 
-void draw_pt_so_emit_prepare(struct pt_so_emit *emit)
+   if (draw->gs.geometry_shader) {
+      state = &draw->gs.geometry_shader->state.stream_output;
+   } else {
+      state = &draw->vs.vertex_shader->state.stream_output;
+   }
+
+   return state;
+}
+
+static INLINE boolean
+draw_has_so(const struct draw_context *draw)
+{
+   const struct pipe_stream_output_info *state = draw_so_info(draw);
+
+   if (state && state->num_outputs > 0)
+      return TRUE;
+
+   return FALSE;
+}
+
+void draw_pt_so_emit_prepare(struct pt_so_emit *emit, boolean use_pre_clip_pos)
 {
    struct draw_context *draw = emit->draw;
 
-   emit->has_so = (draw->so.state.num_outputs > 0);
+   emit->use_pre_clip_pos = use_pre_clip_pos;
+   emit->has_so = draw_has_so(draw);
+   if (use_pre_clip_pos)
+      emit->pos_idx = draw_current_shader_position_output(draw);
 
    /* if we have a state with outputs make sure we have
     * buffers to output to */
    if (emit->has_so) {
       boolean has_valid_buffer = FALSE;
       unsigned i;
-      for (i = 0; i < draw->so.num_buffers; ++i) {
-         if (draw->so.buffers[i]) {
+      for (i = 0; i < draw->so.num_targets; ++i) {
+         if (draw->so.targets[i]) {
             has_valid_buffer = TRUE;
             break;
          }
@@ -79,49 +108,6 @@ void draw_pt_so_emit_prepare(struct pt_so_emit *emit)
    draw_do_flush( draw, DRAW_FLUSH_BACKEND );
 }
 
-static boolean
-is_component_writable(unsigned mask,
-                      unsigned compo)
-{
-   switch (mask) {
-   case TGSI_WRITEMASK_NONE:
-      return FALSE;
-   case TGSI_WRITEMASK_X:
-      return compo == 0;
-   case TGSI_WRITEMASK_Y:
-      return compo == 1;
-   case TGSI_WRITEMASK_XY:
-      return compo == 0 || compo == 1;
-   case TGSI_WRITEMASK_Z:
-      return compo == 2;
-   case TGSI_WRITEMASK_XZ:
-      return compo == 0 || compo == 2;
-   case TGSI_WRITEMASK_YZ:
-      return compo == 1 || compo == 2;
-   case TGSI_WRITEMASK_XYZ:
-      return compo == 0 || compo == 1 || compo == 2;
-   case TGSI_WRITEMASK_W:
-      return compo == 3;
-   case TGSI_WRITEMASK_XW:
-      return compo == 0 || compo == 3;
-   case TGSI_WRITEMASK_YW:
-      return compo == 1 || compo == 3;
-   case TGSI_WRITEMASK_XYW:
-      return compo == 0 || compo == 1 || compo == 3;
-   case TGSI_WRITEMASK_ZW:
-      return compo == 2 || compo == 3;
-   case TGSI_WRITEMASK_XZW:
-      return compo == 0 || compo == 1 || compo == 3;
-   case TGSI_WRITEMASK_YZW:
-      return compo == 1 || compo == 2 || compo == 4;
-   case TGSI_WRITEMASK_XYZW:
-      return compo < 4;
-   default:
-      debug_assert(!"Unknown writemask in stream out");
-      return compo < 4;
-   }
-}
-
 static void so_emit_prim(struct pt_so_emit *so,
                          unsigned *indices,
                          unsigned num_vertices)
@@ -130,57 +116,102 @@ static void so_emit_prim(struct pt_so_emit *so,
    unsigned input_vertex_stride = so->input_vertex_stride;
    struct draw_context *draw = so->draw;
    const float (*input_ptr)[4];
-   const struct pipe_stream_output_state *state =
-      &draw->so.state;
-   float **buffer = 0;
+   const float *pcp_ptr = NULL;
+   const struct pipe_stream_output_info *state = draw_so_info(draw);
+   float *buffer;
+   int buffer_total_bytes[PIPE_MAX_SO_BUFFERS];
+   boolean buffer_written[PIPE_MAX_SO_BUFFERS] = {0};
 
    input_ptr = so->inputs;
+   if (so->use_pre_clip_pos)
+      pcp_ptr = so->pre_clip_pos;
+
+   ++so->generated_primitives;
+
+   for (i = 0; i < draw->so.num_targets; i++) {
+      struct draw_so_target *target = draw->so.targets[i];
+      if (target) {
+         buffer_total_bytes[i] = target->internal_offset;
+      } else {
+         buffer_total_bytes[i] = 0;
+      }
+   }
+
+   /* check have we space to emit prim first - if not don't do anything */
+   for (i = 0; i < num_vertices; ++i) {
+      unsigned ob;
+      for (slot = 0; slot < state->num_outputs; ++slot) {
+         unsigned num_comps = state->output[slot].num_components;
+         int ob = state->output[slot].output_buffer;
+         unsigned dst_offset = state->output[slot].dst_offset * sizeof(float);
+         unsigned write_size = num_comps * sizeof(float);
+         /* If a buffer is missing then that's equivalent to
+          * an overflow */
+         if (!draw->so.targets[ob]) {
+            return;
+         }
+         if ((buffer_total_bytes[ob] + write_size + dst_offset) >
+             draw->so.targets[ob]->target.buffer_size) {
+            return;
+         }
+      }
+      for (ob = 0; ob < draw->so.num_targets; ++ob) {
+         buffer_total_bytes[ob] += state->stride[ob] * sizeof(float);
+      }
+   }
 
    for (i = 0; i < num_vertices; ++i) {
       const float (*input)[4];
-      unsigned total_written_compos = 0;
-      /*debug_printf("%d) vertex index = %d (prim idx = %d)\n", i, indices[i], prim_idx);*/
+      const float *pre_clip_pos = NULL;
+      int ob;
+
       input = (const float (*)[4])(
          (const char *)input_ptr + (indices[i] * input_vertex_stride));
+
+      if (pcp_ptr)
+         pre_clip_pos = (const float *)(
+         (const char *)pcp_ptr + (indices[i] * input_vertex_stride));
+
       for (slot = 0; slot < state->num_outputs; ++slot) {
-         unsigned idx = state->register_index[slot];
-         unsigned writemask = state->register_mask[slot];
-         unsigned written_compos = 0;
-         unsigned compo;
+         unsigned idx = state->output[slot].register_index;
+         unsigned start_comp = state->output[slot].start_component;
+         unsigned num_comps = state->output[slot].num_components;
 
-         buffer = (float**)&so->buffers[state->output_buffer[slot]];
+         ob = state->output[slot].output_buffer;
+         buffer_written[ob] = TRUE;
 
-         /*debug_printf("\tSlot = %d, vs_slot = %d, idx = %d:\n",
-           slot, vs_slot, idx);*/
-#if 1
-         assert(!util_is_inf_or_nan(input[idx][0]));
-         assert(!util_is_inf_or_nan(input[idx][1]));
-         assert(!util_is_inf_or_nan(input[idx][2]));
-         assert(!util_is_inf_or_nan(input[idx][3]));
-#endif
-         for (compo = 0; compo < 4; ++compo) {
-            if (is_component_writable(writemask, compo)) {
-               float *buf = *buffer;
-               buf[written_compos++] = input[idx][compo];
-            }
-         }
+         buffer = (float *)((char *)draw->so.targets[ob]->mapping +
+                            draw->so.targets[ob]->target.buffer_offset +
+                            draw->so.targets[ob]->internal_offset) +
+            state->output[slot].dst_offset;
+         
+         if (idx == so->pos_idx && pcp_ptr)
+            memcpy(buffer, &pre_clip_pos[start_comp],
+                   num_comps * sizeof(float));
+         else
+            memcpy(buffer, &input[idx][start_comp],
+                   num_comps * sizeof(float));
 #if 0
-         debug_printf("\t\t(writemask = %d)%f %f %f %f\n",
-                      writemask,
-                      input[idx][0],
-                      input[idx][1],
-                      input[idx][2],
-                      input[idx][3]);
+         {
+            int j;
+            debug_printf("VERT[%d], offset = %d, slot[%d] sc = %d, num_c = %d, idx = %d = [",
+                         i + draw->so.targets[ob]->emitted_vertices,
+                         draw->so.targets[ob]->internal_offset,
+                         slot, start_comp, num_comps, idx);
+            for (j = 0; j < num_comps; ++j) {
+               unsigned *ubuffer = (unsigned*)buffer;
+               debug_printf("%d (0x%x), ", ubuffer[j], ubuffer[j]);
+            }
+            debug_printf("]\n");
+         }
 #endif
-         *buffer += written_compos;
-         total_written_compos += written_compos;
       }
-      if (so->single_buffer) {
-         int stride = (int)state->stride -
-                      sizeof(float) * total_written_compos;
-
-         debug_assert(stride >= 0);
-         *buffer = (float*) (((char*)*buffer) + stride);
+      for (ob = 0; ob < draw->so.num_targets; ++ob) {
+         struct draw_so_target *target = draw->so.targets[ob];
+         if (target && buffer_written[ob]) {
+            target->internal_offset += state->stride[ob] * sizeof(float);
+            target->emitted_vertices += 1;
+         }
       }
    }
    so->emitted_vertices += num_vertices;
@@ -240,18 +271,17 @@ void draw_pt_so_emit( struct pt_so_emit *emit,
    if (!emit->has_so)
       return;
 
+   if (!draw->so.num_targets)
+      return;
+
    emit->emitted_vertices = 0;
    emit->emitted_primitives = 0;
+   emit->generated_primitives = 0;
    emit->input_vertex_stride = input_verts->stride;
+   if (emit->use_pre_clip_pos)
+      emit->pre_clip_pos = input_verts->verts->pre_clip_pos;
+
    emit->inputs = (const float (*)[4])input_verts->verts->data;
-   for (i = 0; i < draw->so.num_buffers; ++i) {
-      emit->buffers[i] = draw->so.buffers[i];
-   }
-   emit->single_buffer = TRUE;
-   for (i = 0; i < draw->so.state.num_outputs; ++i) {
-      if (draw->so.state.output_buffer[i] != 0)
-         emit->single_buffer = FALSE;
-   }
 
    /* XXX: need to flush to get prim_vbuf.c to release its allocation??*/
    draw_do_flush( draw, DRAW_FLUSH_BACKEND );
@@ -272,7 +302,8 @@ void draw_pt_so_emit( struct pt_so_emit *emit,
 
    render->set_stream_output_info(render,
                                   emit->emitted_primitives,
-                                  emit->emitted_vertices);
+                                  emit->emitted_vertices,
+                                  emit->generated_primitives);
 }
 
 

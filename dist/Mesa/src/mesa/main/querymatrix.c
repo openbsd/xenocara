@@ -14,8 +14,9 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include "GLES/gl.h"
-#include "GLES/glext.h"
+#include "glheader.h"
+#include "querymatrix.h"
+#include "main/get.h"
 
 
 /**
@@ -73,7 +74,7 @@ fpclassify(double x)
 #elif defined(__APPLE__) || defined(__CYGWIN__) || defined(__FreeBSD__) || \
      defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__) || \
      (defined(__sun) && defined(__C99FEATURES__)) || defined(__MINGW32__) || \
-     (defined(__sun) && defined(__GNUC__))
+     (defined(__sun) && defined(__GNUC__)) || defined(ANDROID) || defined(__HAIKU__)
 
 /* fpclassify is available. */
 
@@ -88,13 +89,7 @@ fpclassify(double x)
 
 #endif
 
-extern GLbitfield GL_APIENTRY _es_QueryMatrixxOES(GLfixed mantissa[16], GLint exponent[16]);
-
-/* The Mesa functions we'll need */
-extern void GL_APIENTRY _mesa_GetIntegerv(GLenum pname, GLint *params);
-extern void GL_APIENTRY _mesa_GetFloatv(GLenum pname, GLfloat *params);
-
-GLbitfield GL_APIENTRY _es_QueryMatrixxOES(GLfixed mantissa[16], GLint exponent[16])
+GLbitfield GLAPIENTRY _mesa_QueryMatrixxOES(GLfixed mantissa[16], GLint exponent[16])
 {
     GLfloat matrix[16];
     GLint tmp;

@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.8
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  * Copyright (C) 2010  VMware, Inc.  All Rights Reserved.
@@ -18,9 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -51,7 +51,11 @@ _glapi_set_warning_func(_glapi_proc func)
 {
 }
 
-#ifdef DEBUG
+/*
+ * When GLAPIENTRY is __stdcall (i.e. Windows), the stack is popped by the
+ * callee making the number/type of arguments significant.
+ */
+#if defined(_WIN32) || defined(DEBUG)
 
 /**
  * Called by each of the no-op GL entrypoints.
@@ -59,7 +63,7 @@ _glapi_set_warning_func(_glapi_proc func)
 static int
 Warn(const char *func)
 {
-#if !defined(_WIN32_WCE)
+#if defined(DEBUG) && !defined(_WIN32_WCE)
    if (getenv("MESA_DEBUG") || getenv("LIBGL_DEBUG")) {
       fprintf(stderr, "GL User Error: gl%s called without a rendering context\n",
               func);

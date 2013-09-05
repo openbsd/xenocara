@@ -32,7 +32,7 @@
 #ifndef DRI_SCREEN_H
 #define DRI_SCREEN_H
 
-#include "dri_wrapper.h"
+#include "dri_util.h"
 #include "xmlconfig.h"
 
 #include "pipe/p_compiler.h"
@@ -54,15 +54,17 @@ struct dri_screen
 
    /* dri */
    __DRIscreen *sPriv;
+   boolean throttling_enabled;
+   int default_throttle_frames;
 
-   /**
-    * Configuration cache with default values for all contexts
-    */
+   /** Configuration cache with default values for all contexts */
+   driOptionCache optionCacheDefaults;
+
+   /** The screen's effective configuration options */
    driOptionCache optionCache;
 
    /* drm */
    int fd;
-   drmLock *drmLock;
 
    /* gallium */
    boolean d_depth_bits_last;
@@ -78,13 +80,15 @@ struct dri_screen
 static INLINE struct dri_screen *
 dri_screen(__DRIscreen * sPriv)
 {
-   return (struct dri_screen *)sPriv->private;
+   return (struct dri_screen *)sPriv->driverPrivate;
 }
 
 struct __DRIimageRec {
    struct pipe_resource *texture;
    unsigned level;
    unsigned layer;
+   uint32_t dri_format;
+   uint32_t dri_components;
 
    void *loader_private;
 };
@@ -117,8 +121,7 @@ dri_fill_st_visual(struct st_visual *stvis, struct dri_screen *screen,
 
 const __DRIconfig **
 dri_init_screen_helper(struct dri_screen *screen,
-                       struct pipe_screen *pscreen,
-                       unsigned pixel_bits);
+                       struct pipe_screen *pscreen);
 
 void
 dri_destroy_screen_helper(struct dri_screen * screen);

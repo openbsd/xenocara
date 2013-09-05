@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.1
  *
  * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
@@ -30,7 +30,7 @@
 
 
 #include "glapi/glapi_priv.h"
-#include "mapi/u_execmem.h"
+#include "u_execmem.h"
 
 
 #ifdef USE_X86_ASM
@@ -136,7 +136,7 @@ extern void __glapi_sparc_icache_flush(unsigned int *);
 static void
 init_glapi_relocs( void )
 {
-#if defined(PTHREADS) || defined(GLX_USE_TLS)
+#if defined(HAVE_PTHREAD) || defined(GLX_USE_TLS)
     static const unsigned int template[] = {
 #ifdef GLX_USE_TLS
 	0x05000000, /* sethi %hi(_glapi_tls_Dispatch), %g2 */
@@ -266,7 +266,7 @@ init_glapi_relocs( void )
 _glapi_proc
 generate_entrypoint(GLuint functionOffset)
 {
-#if defined(PTHREADS) || defined(GLX_USE_TLS)
+#if defined(HAVE_PTHREAD) || defined(GLX_USE_TLS)
    static const unsigned int template[] = {
       0x07000000, /* sethi %hi(0), %g3 */
       0x8210000f, /* mov  %o7, %g1 */
@@ -337,7 +337,7 @@ fill_in_entrypoint_offset(_glapi_proc entrypoint, GLuint offset)
 void
 init_glapi_relocs_once( void )
 {
-#if defined(PTHREADS) || defined(GLX_USE_TLS)
+#if defined(HAVE_PTHREAD) || defined(GLX_USE_TLS)
    static pthread_once_t once_control = PTHREAD_ONCE_INIT;
    pthread_once( & once_control, init_glapi_relocs );
 #endif

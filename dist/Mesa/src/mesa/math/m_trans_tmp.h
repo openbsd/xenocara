@@ -1,6 +1,5 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
  *
  * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
@@ -17,9 +16,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * OTHER DEALINGS IN THE SOFTWARE.
  */
 
 /**
@@ -29,7 +29,7 @@
 
 #ifdef DEST_4F
 static void DEST_4F( GLfloat (*t)[4],
-		     CONST void *ptr,
+		     const void *ptr,
 		     GLuint stride,
 		     ARGS )
 {
@@ -55,7 +55,7 @@ static void DEST_4F( GLfloat (*t)[4],
 
 #ifdef DEST_4FN
 static void DEST_4FN( GLfloat (*t)[4],
-		      CONST void *ptr,
+		      const void *ptr,
 		      GLuint stride,
 		      ARGS )
 {
@@ -80,7 +80,7 @@ static void DEST_4FN( GLfloat (*t)[4],
 
 #ifdef DEST_3FN
 static void DEST_3FN( GLfloat (*t)[3],
-		     CONST void *ptr,
+		     const void *ptr,
 		     GLuint stride,
 		     ARGS )
 {
@@ -102,7 +102,7 @@ static void DEST_3FN( GLfloat (*t)[3],
 
 #ifdef DEST_1F
 static void DEST_1F( GLfloat *t,
-		     CONST void *ptr,
+		     const void *ptr,
 		     GLuint stride,
 		     ARGS )
 {
@@ -122,7 +122,7 @@ static void DEST_1F( GLfloat *t,
 
 #ifdef DEST_4UB
 static void DEST_4UB( GLubyte (*t)[4],
-                      CONST void *ptr,
+                      const void *ptr,
                       GLuint stride,
                       ARGS )
 {
@@ -146,7 +146,7 @@ static void DEST_4UB( GLubyte (*t)[4],
 
 #ifdef DEST_4US
 static void DEST_4US( GLushort (*t)[4],
-                      CONST void *ptr,
+                      const void *ptr,
                       GLuint stride,
                       ARGS )
 {
@@ -170,7 +170,7 @@ static void DEST_4US( GLushort (*t)[4],
 
 #ifdef DEST_1UB
 static void DEST_1UB( GLubyte *t,
-		      CONST void *ptr,
+		      const void *ptr,
 		      GLuint stride,
 		      ARGS )
 {
@@ -191,7 +191,7 @@ static void DEST_1UB( GLubyte *t,
 
 #ifdef DEST_1UI
 static void DEST_1UI( GLuint *t,
-		      CONST void *ptr,
+		      const void *ptr,
 		      GLuint stride,
 		      ARGS )
 {

@@ -26,6 +26,7 @@
 #ifndef IR_VISITOR_H
 #define IR_VISITOR_H
 
+#ifdef __cplusplus
 /**
  * Abstract base class of visitors of IR instruction trees
  */
@@ -44,6 +45,7 @@ public:
     * the hierarchy should not have \c visit methods.
     */
    /*@{*/
+   virtual void visit(class ir_rvalue *) { assert(!"unhandled error_type"); }
    virtual void visit(class ir_variable *) = 0;
    virtual void visit(class ir_function_signature *) = 0;
    virtual void visit(class ir_function *) = 0;
@@ -80,5 +82,6 @@ public:
    virtual void visit(class ir_constant *) {}
    virtual void visit(class ir_call *) {}
 };
+#endif /* __cplusplus */
 
 #endif /* IR_VISITOR_H */
