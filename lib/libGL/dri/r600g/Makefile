@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2013/08/12 04:16:52 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2013/09/05 15:11:58 jsg Exp $
 
 LIB=	r600_dri.so
 
@@ -20,14 +20,10 @@ DRIVER_DEFINES = \
 	-DGALLIUM_TRACE
 
 WINSYS_SOURCES = \
-	bof.c \
-	evergreen_hw_context.c \
-	radeon_bo.c \
-	radeon_pciid.c \
-	r600_bo.c \
-	r600_drm.c \
-	r600_hw_context.c \
-	r600_bomgr.c
+	radeon_drm_bo.c \
+	radeon_drm_cs.c \
+	radeon_drm_cs_dump.c \
+	radeon_drm_winsys.c
 
 DRIDRM_SOURCES = \
 	dri_context.c \
@@ -54,7 +50,7 @@ LDADD=	../../mesa/libmesagallium/libmesagallium_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
 	${DRIVER_LIBS} \
 	../../gallium/libgallium/libgallium_pic.a \
-	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc
+	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc -ldrm_radeon -lxcb-dri2
 DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a
 
 .include "../../gallium/Makefile.inc"
@@ -63,4 +59,4 @@ DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a
 .PATH: ${GALLIUM}/state_trackers/dri/common
 .PATH: ${GALLIUM}/state_trackers/dri/drm
 .PATH: ${GALLIUM}/targets/dri-r600
-.PATH: ${GALLIUM}/winsys/r600/drm
+.PATH: ${GALLIUM}/winsys/radeon/drm

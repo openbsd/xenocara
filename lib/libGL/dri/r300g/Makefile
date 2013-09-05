@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2013/08/12 04:16:52 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2013/09/05 15:11:57 jsg Exp $
 
 LIB=	r300_dri.so
 
@@ -21,6 +21,7 @@ DRIVER_DEFINES = \
 WINSYS_SOURCES = \
 	radeon_drm_bo.c \
 	radeon_drm_cs.c \
+	radeon_drm_cs_dump.c \
 	radeon_drm_winsys.c
 
 DRIDRM_SOURCES = \
@@ -48,7 +49,7 @@ LDADD=	../../mesa/libmesagallium/libmesagallium_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
 	${DRIVER_LIBS} \
 	../../gallium/libgallium/libgallium_pic.a \
-	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc
+	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc -ldrm_radeon -lxcb-dri2
 DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a
 
 .include "../../gallium/Makefile.inc"

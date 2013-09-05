@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.5 2013/08/12 04:16:52 jsg Exp $
+# $OpenBSD: Makefile,v 1.6 2013/09/05 15:11:59 jsg Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= rbug softpipe trace
 
 .if ${XENOCARA_BUILD_GALLIUM} == "llvm"
-SUBDIR+= llvmpipe
+SUBDIR+= llvmpipe radeonsi
 .endif
 
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm" &&

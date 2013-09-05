@@ -1,7 +1,10 @@
-# $OpenBSD: Makefile.inc,v 1.3 2013/04/14 10:23:04 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.4 2013/09/05 15:11:59 jsg Exp $
 .include <bsd.xconf.mk>
 
 CPP=	cpp -notraditional
+
+CFLAGS+= -std=c99
+CPPFLAGS+= -DPACKAGE_BUGREPORT=\"bugs@openbsd.org\"
 
 OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}
 
@@ -29,15 +32,20 @@ lib${LIB}_pic.a: ${OBJS} ${DPADD}
 .if ${XENOCARA_BUILD_GALLIUM} == "llvm"
 
 # Remember to keep in sync with LLVM port's version.
-LLVM_VERSION=	0x301	# 3.1 
+LLVM_VERSION=	0x303	# 3.3 
 LLVM_CONFIG?=	/usr/local/bin/llvm-config
 
-LLVM_CFLAGS!=	${LLVM_CONFIG} --cflags
-LLVM_CPPFLAGS!=	${LLVM_CONFIG} --cxxflags
+# ugh...
+ALLVM_CFLAGS!=		${LLVM_CONFIG} --cflags
+ALLVM_CPPFLAGS!=	${LLVM_CONFIG} --cxxflags
+BLLVM_CFLAGS=	${ALLVM_CFLAGS:M-[IDf]*}
+BLLVM_CPPFLAGS=	${ALLVM_CPPFLAGS:M-[IDf]*}
+LLVM_CFLAGS=	${BLLVM_CFLAGS:S/-DNDEBUG//}
+LLVM_CPPFLAGS=	${BLLVM_CPPFLAGS:S/-DNDEBUG//}
 LLVM_LIBDIR!=	${LLVM_CONFIG} --libdir
-LLVM_LIBS!=	${LLVM_CONFIG} --libs engine
+LLVM_LIBS!=	${LLVM_CONFIG} --libs engine bitwriter mcjit r600 bitreader ipo asmparser
 
-CFLAGS+=	${LLVM_CFLAGS} -std=gnu99
+CFLAGS+=	${LLVM_CFLAGS}
 CXXFLAGS=	${LLVM_CPPFLAGS}
 LDADD+=		-L${LLVM_LIBDIR} ${LLVM_LIBS}
 
@@ -46,8 +54,11 @@ CPPFLAGS+= \
 	-DHAVE_LLVM=${LLVM_VERSION}
 
 SWRAST_DRIVERS+= ../../gallium/drivers/llvmpipe/libllvmpipe_pic.a
-.endif
 
+# for r600 and radeonsi
+LOCALBASE?=	/usr/local
+LDADD+=		${LOCALBASE}/lib/libelf.a
+.endif
 
 .if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
 PICFLAG=-fPIC

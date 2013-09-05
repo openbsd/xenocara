@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile,v 1.8 2013/04/14 10:23:04 mpi Exp $
+#	$OpenBSD: Makefile,v 1.9 2013/09/05 15:11:58 jsg Exp $
 
-LIB=	swrastg_dri.so
+LIB=	swrast_dri.so
 
 CPPFLAGS= \
 	-I${GALLIUM}/include \

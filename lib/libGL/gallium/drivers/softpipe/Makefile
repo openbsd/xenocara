@@ -1,10 +1,9 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:34 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2013/09/05 15:12:00 jsg Exp $
 
 LIB = softpipe
 
 SRCS = \
 	sp_fs_exec.c \
-	sp_fs_sse.c \
 	sp_clear.c \
 	sp_fence.c \
 	sp_flush.c \

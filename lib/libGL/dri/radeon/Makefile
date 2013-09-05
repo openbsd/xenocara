@@ -1,29 +1,21 @@
-#	$OpenBSD: Makefile,v 1.5 2013/06/27 14:53:50 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2013/09/05 15:11:58 jsg Exp $
 
 LIB=	radeon_dri.so
 
-CS_SOURCES = \
-	radeon_cs_space_drm.c \
-	radeon_bo.c \
-	radeon_cs.c
-
 RADEON_COMMON_SOURCES = \
-	radeon_bo_legacy.c \
 	radeon_buffer_objects.c \
 	radeon_common_context.c \
 	radeon_common.c \
-	radeon_cs_legacy.c \
 	radeon_dma.c \
 	radeon_debug.c \
 	radeon_fbo.c \
-	radeon_lock.c \
+	radeon_fog.c \
 	radeon_mipmap_tree.c \
 	radeon_pixel_read.c \
 	radeon_queryobj.c \
 	radeon_span.c \
 	radeon_texture.c \
 	radeon_tex_copy.c \
-	radeon_tex_getimage.c \
 	radeon_tile.c
 
 DRIVER_SOURCES = \
@@ -43,8 +35,7 @@ DRIVER_SOURCES = \
 
 SRCS = \
 	$(COMMON_SOURCES) \
-	$(DRIVER_SOURCES) \
-	$(CS_SOURCES)
+	$(DRIVER_SOURCES)
 
 DRIVER_DEFINES = -DRADEON_R100 -DRADEON_COMMON=0 \
 	-DHAVE_LIBDRM_RADEON \

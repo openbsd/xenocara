@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.2 2012/11/28 13:53:16 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.3 2013/09/05 15:12:08 jsg Exp $
 
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
 MAPI=		${.CURDIR}/../../../../dist/Mesa/src/mapi
@@ -7,7 +7,13 @@ GALLIUM=	${.CURDIR}/../../../../dist/Mesa/src/gallium
 
 MESA_INCLUDE=	${.CURDIR}/../../../../dist/Mesa/include
 
+MESA_MAJOR=	9
+MESA_MINOR=	2
+MESA_TINY=	0
+
 CPP=	cpp -notraditional
+
+CFLAGS+= -std=c99
 
 CPPFLAGS+= \
 	-I. \
@@ -20,11 +26,18 @@ CPPFLAGS+= \
 	-I${MESA}/tnl \
 	-I${GLSL} \
 	-I${.OBJDIR}/shader/slang \
+	-I${.CURDIR}/../../generated \
+	-I${.CURDIR}/../../generated/main \
 	-I${X11BASE}/include \
-	-DPTHREADS \
+	-DHAVE_UNISTD_H \
+	-DHAVE_PTHREAD \
 	-DHAVE_ALIAS \
+	-DHAVE_DLOPEN \
+	-DHAVE_POSIX_MEMALIGN \
 	-D_REENTRANT \
-	-DIN_DRI_DRIVER
+	-DIN_DRI_DRIVER \
+	-DPACKAGE_VERSION=\"${MESA_MAJOR}.${MESA_MINOR}.${MESA_TINY}\" \
+	-DPACKAGE_BUGREPORT=\"bugs@openbsd.org\"
 
 .if ${MACHINE_ARCH} == "i386"
 CPPFLAGS += \
@@ -41,21 +54,19 @@ CPPFLAGS += \
 
 # this is part of MAIN_SOURCES
 MAIN_ES_SOURCES = \
-	api_exec_es1.c \
-	api_exec_es2.c
+	es1_conversion.c
 
 # main
 MAIN_SOURCES = \
+	accum.c \
 	api_arrayelt.c \
 	api_exec.c \
 	api_loopback.c \
-	api_noop.c \
 	api_validate.c \
-	accum.c \
 	arbprogram.c \
+	arrayobj.c \
 	atifragshader.c \
 	attrib.c \
-	arrayobj.c \
 	blend.c \
 	bufferobj.c \
 	buffers.c \
@@ -68,13 +79,12 @@ MAIN_SOURCES = \
 	cpuinfo.c \
 	debug.c \
 	depth.c \
-	depthstencil.c \
 	dlist.c \
-	dlopen.c \
 	drawpix.c \
 	drawtex.c \
 	enable.c \
 	enums.c \
+	errors.c \
 	eval.c \
 	execmem.c \
 	extensions.c \
@@ -82,10 +92,14 @@ MAIN_SOURCES = \
 	feedback.c \
 	ffvertex_prog.c \
 	fog.c \
+	format_pack.c \
+	formatquery.c \
+	format_unpack.c \
 	formats.c \
 	framebuffer.c \
 	get.c \
 	getstring.c \
+	glformats.c \
 	hash.c \
 	hint.c \
 	histogram.c \
@@ -97,7 +111,6 @@ MAIN_SOURCES = \
 	mipmap.c \
 	mm.c \
 	multisample.c \
-	nvprogram.c \
 	pack.c \
 	pbo.c \
 	pixel.c \
@@ -105,14 +118,15 @@ MAIN_SOURCES = \
 	pixeltransfer.c \
 	points.c \
 	polygon.c \
-	queryobj.c \
 	querymatrix.c \
+	queryobj.c \
 	rastpos.c \
 	readpix.c \
 	remap.c \
 	renderbuffer.c \
 	samplerobj.c \
 	scissor.c \
+	set.c \
 	shaderapi.c \
 	shaderobj.c \
 	shared.c \
@@ -120,19 +134,20 @@ MAIN_SOURCES = \
 	stencil.c \
 	syncobj.c \
 	texcompress.c \
+	texcompress_cpal.c \
+	texcompress_etc.c \
+	texcompress_fxt1.c \
 	texcompress_rgtc.c \
 	texcompress_s3tc.c \
-	texcompress_fxt1.c \
 	texenv.c \
-	texfetch.c \
 	texformat.c \
 	texgen.c \
 	texgetimage.c \
 	teximage.c \
 	texobj.c \
-	texpal.c \
 	texparam.c \
 	texstate.c \
+	texstorage.c \
 	texstore.c \
 	texturebarrier.c \
 	transformfeedback.c \
@@ -141,10 +156,12 @@ MAIN_SOURCES = \
 	version.c \
 	viewport.c \
 	vtxfmt.c \
-	$(MAIN_ES_SOURCES)
+	${MAIN_ES_SOURCES}
 
 MAIN_CXX_SOURCES = \
-	ff_fragment_shader.cpp
+	ff_fragment_shader.cpp \
+	shader_query.cpp \
+	uniform_query.cpp
 
 # math
 MATH_SOURCES= \
@@ -163,7 +180,6 @@ MATH_XFORM_SOURCES = \
 SWRAST_SOURCES= \
 	s_aaline.c \
 	s_aatriangle.c \
-	s_accum.c \
 	s_alpha.c \
 	s_atifragshader.c \
 	s_bitmap.c \
@@ -181,12 +197,14 @@ SWRAST_SOURCES= \
 	s_logic.c \
 	s_masking.c \
 	s_points.c \
-	s_readpix.c \
+	s_renderbuffer.c \
 	s_span.c \
 	s_stencil.c \
 	s_texcombine.c \
+	s_texfetch.c \
 	s_texfilter.c \
 	s_texrender.c \
+	s_texture.c \
 	s_triangle.c \
 	s_zoom.c
 
@@ -222,6 +240,8 @@ VBO_SOURCES = \
 	vbo_exec_array.c \
 	vbo_exec_draw.c \
 	vbo_exec_eval.c \
+	vbo_noop.c \
+	vbo_primitive_restart.c \
 	vbo_rebase.c \
 	vbo_split.c \
 	vbo_split_copy.c \
@@ -233,6 +253,7 @@ VBO_SOURCES = \
 
 STATETRACKER_SOURCES = \
 	st_atom.c \
+	st_atom_array.c \
 	st_atom_blend.c \
 	st_atom_clip.c \
 	st_atom_constbuf.c \
@@ -247,13 +268,13 @@ STATETRACKER_SOURCES = \
 	st_atom_stipple.c \
 	st_atom_texture.c \
 	st_atom_viewport.c \
-	st_cb_accum.c \
 	st_cb_bitmap.c \
 	st_cb_blit.c \
 	st_cb_bufferobjects.c \
 	st_cb_clear.c \
 	st_cb_condrender.c \
 	st_cb_flush.c \
+	st_cb_msaa.c \
 	st_cb_drawpixels.c \
 	st_cb_drawtex.c \
 	st_cb_eglimage.c \
@@ -281,28 +302,33 @@ STATETRACKER_SOURCES = \
 	st_program.c \
 	st_texture.c
 
+STATETRACKER_CXX_SOURCES = \
+	st_glsl_to_tgsi.cpp
+
 PROGRAM_SOURCES = \
 	arbprogparse.c \
 	hash_table.c \
 	lex.yy.c \
-	nvfragparse.c \
-	nvvertparse.c \
 	program.c \
 	program_parse.tab.c \
 	program_parse_extra.c \
 	prog_cache.c \
 	prog_execute.c \
+	prog_hash_table.c \
 	prog_instruction.c \
 	prog_noise.c \
+	prog_opt_constant_fold.c \
 	prog_optimize.c \
 	prog_parameter.c \
 	prog_parameter_layout.c \
 	prog_print.c \
 	prog_statevars.c \
-	prog_uniform.c \
 	programopt.c \
 	register_allocate.c \
 	symbol_table.c
+
+PROGRAM_CXX_SOURCES = \
+	string_to_uint_map.cpp
 
 SHADER_CXX_SOURCES = \
 	ir_to_mesa.cpp \
@@ -350,10 +376,6 @@ SPARC_SOURCES =			\
 	norm.S			\
 	xform.S
 .endif
-.if ${MACHINE_ARCH} == powerpc
-ASM_C_SOURCES= \
-	common_ppc.c
-.endif
 
 COMMON_DRIVER_SOURCES = \
 	driverfuncs.c		\
@@ -373,6 +395,7 @@ MESA_SOURCES = \
 
 MESA_CXX_SOURCES = \
 	$(MAIN_CXX_SOURCES) \
+	$(PROGRAM_CXX_SOURCES) \
 	$(SHADER_CXX_SOURCES)
 
 MESAGALLIUM_SOURCES = \
@@ -385,7 +408,9 @@ MESAGALLIUM_SOURCES = \
 
 MESAGALLIUM_CXX_SOURCES = \
 	${MAIN_CXX_SOURCES} \
-	${SHADER_CXX_SOURCES}
+	${SHADER_CXX_SOURCES} \
+	${PROGRAM_CXX_SOURCES} \
+	${STATETRACKER_CXX_SOURCES}
 
 OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}
 
@@ -493,7 +518,9 @@ x86_xform4.so: matypes.h
 .PATH: ${MESA}/vbo
 .PATH: ${MESA}/drivers/common
 .PATH: ${.CURDIR}/..
-.PATH: ${.CURDIR}/../generated
+.PATH: ${.CURDIR}/../../generated
+.PATH: ${.CURDIR}/../../generated/main
+.PATH: ${.CURDIR}/../../generated/program
 
 .if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
 PICFLAG=-fPIC

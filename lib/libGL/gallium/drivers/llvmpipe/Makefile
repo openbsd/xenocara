@@ -1,12 +1,12 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:34 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2013/09/05 15:11:59 jsg Exp $
 
 LIB = llvmpipe
 
 SRCS = \
 	lp_bld_alpha.c \
+	lp_bld_blend.c \
 	lp_bld_blend_aos.c \
 	lp_bld_blend_logicop.c \
-	lp_bld_blend_soa.c \
 	lp_bld_depth.c \
 	lp_bld_interp.c \
 	lp_clear.c \
@@ -37,20 +37,16 @@ SRCS = \
 	lp_state_gs.c \
 	lp_state_rasterizer.c \
 	lp_state_sampler.c \
-        lp_state_so.c \
+	lp_state_so.c \
 	lp_state_surface.c \
 	lp_state_vertex.c \
 	lp_state_vs.c \
 	lp_surface.c \
 	lp_tex_sample.c \
-	lp_texture.c \
-	lp_tile_image.c \
-	lp_tile_soa.c
+	lp_texture.c
 
 CPPFLAGS+= -I${GALLIUM}/drivers/llvmpipe
 
 lp_test_sincos.o: sse_mathfun.h
 
 .include <bsd.xorg.mk>
-
-.PATH: ${.CURDIR}/generated

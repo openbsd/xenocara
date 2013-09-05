@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2011/10/23 13:57:36 matthieu Exp $
+# $OpenBSD: Makefile,v 1.1 2013/09/05 15:12:07 jsg Exp $
 .include <bsd.xconf.mk>
 
 MESA=	${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -9,6 +9,8 @@ MESA_INCLUDE=	${.CURDIR}/../../../../dist/Mesa/include
 
 GLSL2_C_SOURCES = \
 	hash_table.c \
+	imports.c \
+	prog_hash_table.c \
 	symbol_table.c
 GLSL2_CXX_SOURCES = \
 	main.cpp
@@ -29,9 +31,9 @@ SRCS= 	$(GLSL2_C_SOURCES) \
 OBJS=	$(GLSL2_C_SOURCES:.c=.o) \
 	$(GLSL2_CXX_SOURCES:.cpp=.o)
 
-PROG=	glsl_compiler
+PROG=	builtin_compiler
 
-LDADD=	../libglsl/libglsl.a
+LDADD=	../libglsl/libglsl_pic.a
 
 all: ${PROG}
 
@@ -52,4 +54,5 @@ ${PROG}: ${LIBCRT0} ${OBJS} ${LIBC} ${CRTBEGIN} ${CRTEND} ${DPADD}
 .include <bsd.xorg.mk>
 
 .PATH: ${GLSL}
+.PATH: ${MESA}/main
 .PATH: ${MESA}/program

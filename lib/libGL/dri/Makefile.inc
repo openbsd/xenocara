@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.17 2013/08/22 18:48:46 miod Exp $
+# $OpenBSD: Makefile.inc,v 1.18 2013/09/05 15:11:57 jsg Exp $
 .include <bsd.xconf.mk>
 
 TOP=		${.CURDIR}/../../../../dist/Mesa
@@ -9,22 +9,21 @@ DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
 COMMON_GALLIUM_SOURCES = \
 	utils.c \
-	vblank.c \
 	dri_util.c \
 	xmlconfig.c \
 
 COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
 	driverfuncs.c \
-	texmem.c \
-	drirenderbuffer.c
+	meta.c
 
-CFLAGS+= -std=c99 -g -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS \
+CFLAGS+= -std=c99 -g -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DHAVE_PTHREAD \
 	 $(INCLUDES) $(DRIVER_DEFINES)
 
 INCLUDES = \
 	-I$(TOP)/src/mesa/drivers/dri/common \
 	-I$(TOP)/include \
 	-I$(TOP)/include/GL/internal \
+	-I$(TOP)/src \
 	-I$(TOP)/src/glsl \
 	-I$(TOP)/src/mesa \
 	-I$(TOP)/src/mesa/main \
@@ -36,6 +35,7 @@ INCLUDES = \
 	-I$(TOP)/src/mesa/swrast_setup \
 	-I$(TOP)/src/egl/main \
 	-I$(TOP)/src/egl/drivers/dri \
+	-I${.CURDIR}/../../generated \
 	-I$(X11BASE)/include \
 	-I/usr/include/dev/pci/drm
 

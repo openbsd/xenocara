@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2013/06/14 05:14:22 jsg Exp $
+# $OpenBSD: Makefile,v 1.3 2013/09/05 15:12:00 jsg Exp $
 
 LIB = r300
 
@@ -11,6 +11,7 @@ COMPILER_SOURCES = \
 	radeon_compiler_util.c \
 	radeon_emulate_branches.c \
 	radeon_emulate_loops.c \
+	radeon_inline_literals.c \
 	radeon_program.c \
 	radeon_program_print.c \
 	radeon_opcodes.c \
@@ -28,6 +29,7 @@ COMPILER_SOURCES = \
 	radeon_optimize.c \
 	radeon_remove_constants.c \
 	radeon_rename_regs.c \
+	radeon_vert_fc.c \
 	radeon_variable.c \
 	r3xx_fragprog.c \
 	r300_fragprog.c \
@@ -66,11 +68,10 @@ SRCS = \
 	r300_transfer.c \
 	${COMPILER_SOURCES}
 
-CPPFLAGS+= -I${MESA}/drivers/dri/r300/compiler -I${MESA}/../../include \
+CPPFLAGS+= -I${.CURDIR}/compiler -I${MESA}/../../include \
 	   -I${MESA} -I${MESA}/../glsl -I${MESA}/../mapi
-CFLAGS+= -std=gnu99
 
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA}/program
-.PATH: ${MESA}/drivers/dri/r300/compiler
+.PATH: ${MESA}/../gallium/drivers/r300/compiler

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.36 2013/06/13 10:39:28 jsg Exp $
+# $OpenBSD: Makefile,v 1.37 2013/09/05 15:11:56 jsg Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
@@ -19,9 +19,10 @@ GLX=	${.CURDIR}/../../dist/Mesa/src/glx
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 MESA_DRI=	${.CURDIR}/../../dist/Mesa/src/mesa/drivers/dri
 
-MESA_MAJOR=	7
-MESA_MINOR=	11
-MESA_TINY=	2
+# this needs to be updated in mesa/Makefile.inc as well
+MESA_MAJOR=	9
+MESA_MINOR=	2
+MESA_TINY=	0
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
@@ -31,15 +32,19 @@ INCSDIR=	${X11BASE}/include/GL
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 LDADD=		-L${X11BASE}/lib -lX11 -lXext -lXxf86vm -lXdamage -lXfixes \
-		-ldrm -lstdc++ -lm -lc
+		-lxcb -lX11-xcb -lxcb-dri2 -lxcb-glx -ldrm -lstdc++ -lm -lc
 # XXX link libGL with -lpthread to be able to dlopen() the llvm-pipe module
 LDADD+=		-lpthread
 .else
-LDADD=		-L${X11BASE}/lib -lX11 -lXext
+LDADD=		-L${X11BASE}/lib -lX11 -lXext -lxcb -lX11-xcb -lxcb-glx
 .endif
+
+LDADD+=		-lglapi
 
 CPP=	cpp -notraditional
 DEBUG?=
+
+CFLAGS+= -std=c99
 
 CPPFLAGS+= \
 	-I. \
@@ -51,12 +56,18 @@ CPPFLAGS+= \
 	-I${GLX} \
 	-I${X11BASE}/include \
 	-I/usr/include/dev/pci/drm \
+	-I${.CURDIR}/generated \
+	-I${.CURDIR}/generated/glx \
 	-DGLX_INDIRECT_RENDERING \
-	-DPTHREADS \
+	-DHAVE_PTHREAD \
 	-DHAVE_ALIAS \
+	-DHAVE_DLOPEN \
+	-DHAVE_POSIX_MEMALIGN \
 	-D_REENTRANT \
-	-DMAPI_MODE_UTIL \
-	-DMAPI_GLAPI_CURRENT
+	-DHAVE_SHARED_GLAPI \
+	-DGLX_SHARED_GLAPI \
+	-DMAPI_MODE_BRIDGE \
+	-DMAPI_ABI_HEADER=\"${.CURDIR}/generated/glapi/glapi_mapi_tmp.h\"
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 CPPFLAGS+= \
@@ -81,42 +92,22 @@ INCS= \
 	glxext.h \
 	osmesa.h
 
-GLAPI_SOURCES= \
-	glapi_dispatch.c \
-	glapi_entrypoint.c \
-	glapi_gentable.c \
-	glapi_getproc.c \
-	glapi_nop.c \
-	glthread.c \
-	glapi.c \
-	$(ASM_API)
-
-.if ${MACHINE_ARCH} == i386
-ASM_API = glapi_x86.S
-.endif
-
-.if ${MACHINE_ARCH} == amd64
-ASM_API = glapi_x86-64.S
-.endif
-
-.if ${MACHINE_ARCH} == sparc
-SPARC_API = glapi_sparc.S
-.endif
-
 GLX_SOURCES= \
 	clientattrib.c \
+	clientinfo.c \
 	compsize.c \
+	create_context.c \
 	glxeval.c \
 	glxconfig.c \
 	glxcmds.c \
 	glxcurrent.c \
 	glxext.c \
 	glxextensions.c \
-	indirect_glx.c \
 	indirect.c \
+	indirect_glx.c \
 	indirect_init.c \
-	indirect_size.c \
 	indirect_window_pos.c \
+	indirect_size.c \
 	indirect_texture_compression.c \
 	indirect_transpose_matrix.c \
 	indirect_vertex_array.c \
@@ -129,6 +120,7 @@ GLX_SOURCES= \
 	singlepix.c \
 	vertarr.c \
 	xfont.c \
+	glx_error.c \
 	glx_pbuffer.c \
 	glx_query.c \
 	drisw_glx.c \
@@ -140,21 +132,12 @@ GLX_SOURCES= \
 	dri2.c \
 	applegl_glx.c
 
-MAPI_GLAPI_SOURCES = \
-	u_current.c \
-	u_execmem.c \
-	u_thread.c
+MAPI_BRIDGE_SOURCES = \
+	entry.c
 
-MAPI_SOURCES = \
-	entry.c \
-	mapi.c \
-	stub.c \
-	table.c \
-	$(MAPI_GLAPI_SOURCES)
-
-SRCS = $(GLX_SOURCES)	\
+SRCS =	$(GLX_SOURCES) \
 	$(GLAPI_SOURCES) \
-	$(MAPI_GLAPI_SOURCES)
+	$(MAPI_BRIDGE_SOURCES)
 
 includes: _SUBDIRUSE
 	cd ${MESA_INCLUDE}/GL; for i in ${INCS}; do \
@@ -188,26 +171,28 @@ glxpixelstore.c: ${GLX}/pixelstore.c
 CLEANFILES+= glxeval.c glxpixel.c glxpixelstore.c
 
 gl.pc: ${MESA}/gl.pc.in Makefile
-	sed -e 's,@INSTALL_DIR@,$(X11BASE),' \
-	    -e 's,@INSTALL_LIB_DIR@,${LIBDIR},' \
-	    -e 's,@INSTALL_INC_DIR@,${INCSDIR},' \
-	    -e 's,@GL_PC_REQ_PRIV@,libdrm >= 2.4.15 dri2proto >= 2.1 glproto >= 1.4.11 x11 xext xdamage xfixes xxf86vm,' \
-	    -e 's,@GL_PC_LIB_PRIV@,-L${LIBDIR} -lXxf86vm -lXext -lXdamage -lXfixes -lX11 -lXau -lXdmcp,' \
-	    -e 's,@GL_PC_CFLAGS@,-I${INCSDIR},' \
+	sed -e 's,@prefix@,$(X11BASE),' \
+	    -e 's,@libdir@,${LIBDIR},' \
+	    -e 's,@includedir@,${INCSDIR},' \
+	    -e 's,@GL_PC_REQ_PRIV@,libdrm >= 2.4.24 x11 xext xdamage xfixes x11-xcb xcb-glx >= 1.8.1 xcb-dri2 >= 1.8 xxf86vm,' \
+	    -e 's,@GL_PC_LIB_PRIV@,-lm -lpthread,' \
+	    -e 's,@GL_PC_CFLAGS@,,' \
 	    -e 's,@GL_LIB@,GL,' \
-	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
+	    -e 's,@PACKAGE_VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
+	    -e 's,@GLX_TLS@,no,' \
 	< ${MESA}/gl.pc.in > gl.pc
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 DRI_PC=dri.pc
 
 dri.pc: ${MESA_DRI}/dri.pc.in Makefile
-	sed -e 's,@INSTALL_DIR@,${X11BASE},' \
-	    -e 's,@INSTALL_LIB_DIR@,${LIBDIR},' \
-	    -e 's,@INSTALL_INC_DIR@,${INCSDIR},' \
-	    -e 's,@DRI_DRIVER_DIR@,${DRI_DRIVER_INSTALL_DIR},' \
+	sed -e 's,@prefix@,${X11BASE},' \
+	    -e 's,@exec_prefix@,${X11BASE},' \
+	    -e 's,@libdir@,${LIBDIR},' \
+	    -e 's,@includedir@,${INCSDIR},' \
+	    -e 's,@DRI_DRIVER_INSTALL_DIR@,${DRI_DRIVER_INSTALL_DIR},' \
 	    -e 's,@VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
-	    -e 's,@DRI_PC_REQ_PRIV@,libdrm >= 2.4.15,' \
+	    -e 's,@DRI_PC_REQ_PRIV@,libdrm >= 2.4.24,' \
 	< ${MESA_DRI}/dri.pc.in > dri.pc
 .endif
 
@@ -236,7 +221,10 @@ CLEANFILES+= gl.pc ${DRI_PC}
 .endif
 .PATH: ${MESA}/main
 .PATH: ${MAPI}/glapi
-.PATH: ${MAPI}/mapi
+.PATH: ${MAPI}
 .PATH: ${GLX}
+.PATH: ${.CURDIR}/generated
+.PATH: ${.CURDIR}/generated/glapi
+.PATH: ${.CURDIR}/generated/glx
 
 .include <bsd.subdir.mk>

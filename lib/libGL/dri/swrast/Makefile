@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2011/10/23 13:57:36 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2013/09/05 15:11:58 jsg Exp $
 
 LIB=	swrast_dri.so
 
@@ -13,8 +13,7 @@ SWRAST_COMMON_SOURCES = \
 	drisw_util.c
 
 DRIVER_SOURCES = \
-	swrast.c \
-	swrast_span.c
+	swrast.c
 
 SRCS = \
 	$(SWRAST_COMMON_SOURCES) \
