@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2013/09/05 15:11:54 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2013/09/05 20:23:03 todd Exp $
 .include <bsd.xconf.mk>
 
 LIB=	EGL
@@ -116,6 +116,8 @@ includes: _SUBDIRUSE
 	done
 
 NOPROFILE=
+
+obj: _xenocara_obj
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
