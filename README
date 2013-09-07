@@ -128,21 +128,18 @@ You can also set XENOCARA_RERUN_AUTOCONF in /etc/mk.conf or in the
 environment to force the regeneration of configure scripts
 in every component during a make build.
 
-o Building Gallium3D rasterizer for Mesa
+o Building Gallium3D with LLVM support
   --------------------------------------
 
-The Gallium3D software rasterizer can be built to be used as an
-alternative to the default Mesa software rasterizer. For that, use
-the following command in the libGL build directory (the default is 
-/usr/xenocara/lib/libGL):
+When building Mesa with LLVM support instead of the 'classic'
+software rasteriser the Gallium3D LLVMpipe rasteriser will be used.
 
- env XENOCARA_BUILD_GALLIUM=Yes make obj
- env XENOCARA_BUILD_GALLIUM=Yes make build
+The radeonsi driver for Southern Islands and newer AMD Radeon parts
+is only built when Gallium is compiled with LLVM support as it requires
+the R600 LLVM target.
 
-This software rasertizer can also benefit from the LLVM infrastructure
-and use a special pipe if it is built with LLVM support. You will need
-to have the llvm package installed and use the following command in the
-libGL build directory:
+You will need to have the llvm and libelf packages installed and use the following
+command in the libGL build directory:
 
  env XENOCARA_BUILD_GALLIUM=llvm make obj
  env XENOCARA_BUILD_GALLIUM=llvm make build
@@ -224,4 +221,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.33 2013/05/14 07:55:46 ajacoutot Exp $
+$OpenBSD: README,v 1.34 2013/09/07 02:18:32 jsg Exp $
