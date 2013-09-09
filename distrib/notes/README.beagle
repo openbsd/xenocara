@@ -1,9 +1,0 @@
-Post-installation instructions for X.Org on OpenBSD/beagle
-----------------------------------------------------------
-
-There is no X server for beagle.  Only userland X.
-
-problem_blurb
-
-$OpenBSD: README.beagle,v 1.1 2013/06/21 10:38:32 florian Exp $
-

@@ -1,0 +1,9 @@
+Post-installation instructions for X.Org on OpenBSD/armv7
+----------------------------------------------------------
+
+There is no X server for armv7.  Only userland X.
+
+problem_blurb
+
+$OpenBSD: README.armv7,v 1.1 2013/09/09 13:38:33 patrick Exp $
+
