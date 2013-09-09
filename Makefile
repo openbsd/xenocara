@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.52 2013/08/22 18:48:45 miod Exp $
+# $OpenBSD: Makefile,v 1.53 2013/09/09 19:17:09 espie Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -70,13 +70,15 @@ fix-appd:
 font-cache:
 	cd font/alias && exec ${MAKE} -f Makefile.bsd-wrapper afterinstall
 
+.if ! ( defined(DESTDIR) && defined(RELEASEDIR) )
+release:
+	@echo You must set DESTDIR and RELEASEDIR for a release.; exit 255
+.else
 release: release-clean release-install dist
 .ORDER: release-clean release-install dist
+.endif
 
 release-clean:
-.if ! ( defined(DESTDIR) && defined(RELEASEDIR) )
-	@echo You must set DESTDIR and RELEASEDIR for a release.; exit 255
-.endif
 	${RM} -rf ${DESTDIR}/usr/X11R6/* ${DESTDIR}/usr/X11R6/.[a-zA-Z0-9]*
 	${RM} -rf ${DESTDIR}/var/cache/*
 	${RM} -rf ${DESTDIR}/etc/X11/*
