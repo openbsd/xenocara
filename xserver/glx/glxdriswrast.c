@@ -432,7 +432,7 @@ initializeExtensions(__GLXDRIscreen * screen)
 static __GLXscreen *
 __glXDRIscreenProbe(ScreenPtr pScreen)
 {
-    const char *driverName = "swrastg";
+    const char *driverName = "swrast";
     __GLXDRIscreen *screen;
 
     screen = calloc(1, sizeof *screen);
@@ -450,16 +450,6 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
                                     __DRI_CORE, __DRI_CORE_VERSION,
                                     (void **) &screen->swrast,
                                     __DRI_SWRAST, __DRI_SWRAST_VERSION);
-
-    if (screen->driver == NULL) {
-    	    driverName = "swrast";
-	    screen->driver = glxProbeDriver(driverName,
-					    (void **) &screen->core,
-					    __DRI_CORE, __DRI_CORE_VERSION,
-					    (void **) &screen->swrast,
-					    __DRI_SWRAST, __DRI_SWRAST_VERSION);
-    }
-
     if (screen->driver == NULL) {
         goto handle_error;
     }
