@@ -1,3 +1,63 @@
+commit e09a9195be80bd29c59f56e641dda52789d837b5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 8 10:05:00 2013 -0700
+
+    xmodmap 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a0818fd69cf7711e70a686758b8714f39ae1df1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 8 10:02:26 2013 -0700
+
+    Add missing copyright dates from xmodmap.man to COPYING
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d288dfa7fd5f9f88939f2842202e1b7eb7aca87
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 6 15:56:02 2013 -0700
+
+    Allow printing -help & -grammar messages without a valid DISPLAY
+    
+    If a user just wants to see syntax hints, don't require XOpenDisplay()
+    to succeed when we're not going to use it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bf4620e2d78d2a4766948f136f2372a596ac275d
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Sun Jun 30 01:50:58 2013 +0200
+
+    error in manpage example about swapping Control_L/Caps_Lock keys
+    
+    Reported by Luca Capello at
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=641588
+    
+    Signed-off-by: Luca Capello <luca@pca.it>
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f784ef30fdbd1b32aacf44537d9e7c85d268465b
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Wed Jan 4 19:07:03 2012 +0000
+
+    Include X11/Xwindows.h on WIN32
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+commit 42f99a7a7b836f6f9704a7b1747eb722c93446ec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 23 07:28:39 2012 -0700
+
+    include config.h before stdio.h & other system headers
+    
+    Ensures definitions like _GNU_SOURCE are visible when needed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit f857804dd904c69de447f4117220db149d9239ec
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Apr 20 14:09:31 2012 -0700

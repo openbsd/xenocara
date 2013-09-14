@@ -26,6 +26,10 @@ from The Open Group.
 
 */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
 #include <stdio.h>
@@ -110,6 +114,7 @@ static const char help_message[] =
 "    -pk                          print keymap table\n"
 "    -pke                         print keymap table as expressions\n"
 "    -pp                          print pointer map\n"
+"    -help                        print this usage message\n"
 "    -grammar                     print out short help on allowable input\n"
 "    -                            read standard input\n"
 "\n";
@@ -117,11 +122,11 @@ static const char help_message[] =
 
 static void 
 _X_NORETURN
-usage(void)
+usage(int exitcode)
 {
     fprintf (stderr, "usage:  %s [-options ...] [filename]\n", ProgramName);
     fprintf (stderr, "%s\n", help_message);
-    Exit (1);
+    Exit (exitcode);
 }
 
 static const char grammar_message[] = 
@@ -176,9 +181,21 @@ main(int argc, char *argv[])
      */
 
     for (i = 1; i < argc; i++) {
-	if (strncmp (argv[i], "-d", 2) == 0) {
-	    if (++i >= argc) usage ();
-	    displayname = argv[i];
+	const char *arg = argv[i];
+
+	if (arg[0] == '-') {
+	    switch (arg[1]) {
+	    case 'd':			/* -display host:dpy */
+		if (++i >= argc) usage (1);
+		displayname = argv[i];
+		break;
+	    case 'g':			/* -grammar */
+		grammar_usage ();
+		/*NOTREACHED*/
+	    case 'h':			/* -help */
+	    case '?':
+		usage(0);
+	    }
 	}
     }
 
@@ -217,7 +234,7 @@ main(int argc, char *argv[])
 		continue;
 	      case 'e':			/* -e expression */
 		didAnything = True;
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage (1);
 		process_line (argv[i]);
 		continue;
 	      case 'p':			/* -p... */
@@ -235,14 +252,14 @@ main(int argc, char *argv[])
 			printKeyTableExprs = True;
 			break;
 		    default:
-			usage ();
+			usage (1);
 		    }
 		    break;
 		  case 'p':		/* -pp */
 		    printPointerMap = True;
 		    break;
 		  default:
-		    usage ();
+		    usage (1);
 		    /* NOTREACHED */
 		}
 		didAnything = True;
@@ -285,7 +302,7 @@ main(int argc, char *argv[])
 	      case 'c': {
 		  char *cmd;
 		  didAnything = True;
-		  if (++i >= argc) usage ();
+		  if (++i >= argc) usage (1);
 		  if (asprintf (&cmd, "remove %s = %s",
 				  ((arg[1] == 's') ? "shift" :
 				   ((arg[1] == 'l') ? "lock" :
@@ -295,7 +312,7 @@ main(int argc, char *argv[])
 		  continue;
 	      }
 	      default:
-		usage ();
+		usage (1);
 		/*NOTREACHED*/
 	    }
 	} else if (arg[0] == '+') {	/* old xmodmap args */
@@ -307,7 +324,7 @@ main(int argc, char *argv[])
 	      case '5': {
 		  char *cmd;
 		  didAnything = True;
-		  if (++i >= argc) usage ();
+		  if (++i >= argc) usage (1);
 		  if (asprintf (&cmd, "add mod%c = %s", arg[1], argv[i]) == -1)
 		      FatalError("Could not allocate memory for add cmd");
 		  process_line (cmd);
@@ -323,7 +340,7 @@ main(int argc, char *argv[])
 	      case 'c': {
 		  char *cmd;
 		  didAnything = True;
-		  if (++i >= argc) usage ();
+		  if (++i >= argc) usage (1);
 		  if (asprintf (&cmd, "add %s = %s",
 				  ((arg[1] == 's') ? "shift" :
 				   ((arg[1] == 'l') ? "lock" :
@@ -333,7 +350,7 @@ main(int argc, char *argv[])
 		  continue;
 	      }
 	      default:
-		usage ();
+		usage (1);
 	    }
 	} else {
 	    didAnything = True;

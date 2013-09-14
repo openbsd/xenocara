@@ -261,7 +261,7 @@ keysym period = period greater
 .EE
 .PP
 One of the more irritating differences between keyboards is the location of the
-Control and Shift Lock keys.  A common use of \fIxmodmap\fP is to swap these
+Control and CapsLock keys.  A common use of \fIxmodmap\fP is to swap these
 two keys as follows:
 .EX
 !
