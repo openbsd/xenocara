@@ -28,26 +28,8 @@
 #include <X11/SM/SMlib.h>
 
 extern void ConnectToSessionManager ( char *previous_id );
-extern void DieCB ( SmcConn smcConn, SmPointer clientData );
-extern char * GetClientID ( Window window );
 extern int GetWindowConfig ( TwmWindow *theWindow, short *x, short *y, unsigned short *width, unsigned short *height, Bool *iconified, Bool *icon_info_present, short *icon_x, short *icon_y, Bool *width_ever_changed_by_user, Bool *height_ever_changed_by_user );
-extern char * GetWindowRole ( Window window );
-extern void ProcessIceMsgProc ( XtPointer client_data, int *source, XtInputId *id );
-extern int ReadWinConfigEntry ( FILE *configFile, unsigned short version, TWMWinConfigEntry **pentry );
 extern void ReadWinConfigFile ( char *filename );
-extern int read_byte ( FILE *file, unsigned char *bp );
-extern int read_counted_string ( FILE *file, char **stringp );
-extern int read_short ( FILE *file, short *shortp );
-extern int read_ushort ( FILE *file, unsigned short *shortp );
-extern void SaveCompleteCB ( SmcConn smcConn, SmPointer clientData );
-extern void SaveYourselfCB ( SmcConn smcConn, SmPointer clientData, int saveType, Bool shutdown, int interactStyle, Bool fast );
-extern void SaveYourselfPhase2CB ( SmcConn smcConn, SmPointer clientData );
-extern void ShutdownCancelledCB ( SmcConn smcConn, SmPointer clientData );
-extern int WriteWinConfigEntry ( FILE *configFile, TwmWindow *theWindow, char *clientId, char *windowRole );
-extern int write_byte ( FILE *file, unsigned char b );
-extern int write_counted_string ( FILE *file, char *string );
-extern int write_short ( FILE *file, short s );
-extern int write_ushort ( FILE *file, unsigned short s );
 
 extern SmcConn smcConn;
 

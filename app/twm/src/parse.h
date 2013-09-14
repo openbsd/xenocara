@@ -70,10 +70,8 @@ extern int do_number_keyword ( int keyword, int num );
 extern name_list **do_colorlist_keyword ( int keyword, int colormode,
 					  char *s );
 extern int do_color_keyword ( int keyword, int colormode, char *s );
-void put_pixel_on_root ( Pixel pixel );
 extern void do_string_savecolor ( int colormode, char *s );
 extern void do_var_savecolor ( int key );
-extern int ParseStringList ( unsigned char **sl );
 extern int ParseTwmrc ( char *filename );
 extern int parse_keyword ( char *s, int *nump );
 extern void TwmOutput ( int c );

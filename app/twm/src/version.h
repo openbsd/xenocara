@@ -60,6 +60,6 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _VERSION_
 #define _VERSION_
 
-extern char *Version;
+extern const char *Version;
 
 #endif /* _VERSION_ */

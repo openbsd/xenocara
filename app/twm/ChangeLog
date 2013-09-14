@@ -1,3 +1,186 @@
+commit 46c4255ba661145df429d9dc190355a9661da3c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 6 18:59:24 2013 -0700
+
+    twm 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97b55a970dc5281c2d41500990d99fcd24d2dd5f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 18 10:50:01 2013 -0700
+
+    Replace malloc(strlen()+1); strcpy(); pairs with strdup()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8b2a314c267071656ca4d86bae56c6d82bb8127a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 18 10:42:45 2013 -0700
+
+    AddWindow: Use NULL instead of 0 for null pointer check
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c2e232e6915356eba3edf2efea99720746694c52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 18 10:28:21 2013 -0700
+
+    Stop casting return values from malloc & calloc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58f3c3b8d518786764f45ac2be1f1f0850129125
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 18 10:18:21 2013 -0700
+
+    Stop casting pointers to (char *) when freeing them
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a637337713c5c92c44249b88e31696ce9efdf9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 31 23:28:42 2013 -0700
+
+    Delete trailing whitespace in non *.[ch] source files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce4e11143f982234be1076e384b31228f1cc84ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 31 22:54:01 2013 -0700
+
+    Make more functions static that aren't called from other files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8a3d3a58350506a99efd24f9856466a99bbb9c51
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 31 22:28:11 2013 -0700
+
+    Assume C89 signal handlers, returning void
+    
+    Removes old #ifdef SIGNALRETURNSINT check that was never defined in
+    autoconf builds, only old Imake builds.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit afcad0de54ecd1a8bfaf261e4e6882985a234963
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 31 22:24:22 2013 -0700
+
+    Make some more previously global variables into file-scoped statics
+    
+    Not used from other source files, so no need to export them
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c2ff3f0a6bae8b369dfb74267f7fa52d511dfb2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 31 22:21:00 2013 -0700
+
+    Remove unused global variable gotFirstSave
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca038999b5c1387f3aa19baeafc81a27563631b1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 31 22:04:39 2013 -0700
+
+    unifdef macII - drop support for A/UX 2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 55681f9d66b788b2e86a5ad3c0722904fa020962
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 30 22:15:28 2013 -0700
+
+    Make various helper & callback functions private to session.c
+    
+    Nothing else ever called them, so no reason to export them.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by:  <wharms@bfs.de>
+
+commit cf88a8c16958ddfaeff6349d30c6c423fc4a7afa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 30 22:11:51 2013 -0700
+
+    Convert remaining K&R function declarations to C89 style
+    
+    Many existing function declarations were C89, and headers all use C89
+    prototypes, but a few function declarations had been left in the old
+    style.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by:  <wharms@bfs.de>
+
+commit ea349d3c406695665322c71caf5ea3c970cb3155
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 30 21:57:04 2013 -0700
+
+    Use (void) to declare functions that take no arguments, instead of ()
+    
+    It's time for C89.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by:  <wharms@bfs.de>
+
+commit abb8b6198b639359f34ab6f0ab97039016d8b6db
+Author: Colin Harrison <colin.harrison@virgin.net>
+Date:   Fri Jul 19 00:48:09 2013 +0100
+
+    Syntax error in recent twm commit
+    
+    twm needs a typo/syntax correction following a recent commit.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e84f2e87222879ca667c1fb3d1cb3236a1159d12
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 18 00:24:30 2013 -0700
+
+    Constification cleanup - fix dozens of gcc warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b16ce9773e4da5897ab546de85e48a3ea58d0e00
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Wed Jun 19 05:39:10 2013 -0400
+
+    Don't rely on the ability to set tab stops.
+
+commit 07ed63f865f6fef4c14711063534b73eb33e0cdb
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu May 19 11:08:21 2011 +0200
+
+    Fix SEGV if CreateColormapWindow() returns NULL.
+    
+    twm can segfault when it cannot collect attribute information on
+    a window that has been destroyed before it got a chance to collect
+    it's attributes.
+    twm seems to assume that it is always able to collect this information
+    and disregards the error if the function that attempts to collect it
+    fails and CreateColormapWindow() returns NULL.
+    If this happens correct number_cmap_windows to prevent a SEGV later
+    on due to an incorrect setting.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit b62e91790d1f07f729d4221c878a0847ff14ad82
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 19 11:38:33 2011 -0800
+
+    Terminate execl() arguments with NULL instead of 0
+    
+    Makes sure that a full 64-bits of 0 is passed in 64-bit builds, and
+    clears gcc warning of:
+    
+    menus.c: In function ‘System’:
+    menus.c:2344:2: warning: missing sentinel in function call
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4c5e72e9d8571bfb2a98d1ffc9724596764f5b0b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jul 27 20:33:13 2011 -0700

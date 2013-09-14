@@ -72,7 +72,7 @@ int yylineno;
 
 #undef YY_INPUT
 #define YY_INPUT(buf,result,size) ((result) = doinput((buf),(size)))
-int doinput (char *buf, int size)
+static int doinput (char *buf, int size)
 {
 	int c;
 
@@ -103,15 +103,15 @@ number				[0-9]+
 "-"				{ return MINUS; }
 "|"				{ return OR; }
 
-[a-zA-Z\.]+			{ int token = parse_keyword ((char *)yytext, 
+[a-zA-Z\.]+			{ int token = parse_keyword ((char *)yytext,
 							     &yylval.num);
 				  if (token == ERRORTOKEN) {
 				      twmrc_error_prefix();
 				      fprintf (stderr,
-				       "ignoring unknown keyword:  %s\n", 
+				       "ignoring unknown keyword:  %s\n",
 					       yytext);
 				      ParseError = 1;
-				  } else 
+				  } else
 				    return token;
 				}
 
@@ -126,7 +126,7 @@ number				[0-9]+
 [\r\n\t ]			{;}
 .				{
 				  twmrc_error_prefix();
-				  fprintf (stderr, 
+				  fprintf (stderr,
 					   "ignoring character \"%s\"\n",
 					   yytext);
 				  ParseError = 1;

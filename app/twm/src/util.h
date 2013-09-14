@@ -65,23 +65,23 @@ extern void MoveOutline ( Window root, int x, int y, int width, int height,
 			  int bw, int th );
 extern void Zoom ( Window wf, Window wt );
 extern char * ExpandFilename ( char *name );
-extern void GetUnknownIcon ( char *name );
-extern Pixmap FindBitmap ( char *name, unsigned int *widthp,
+extern void GetUnknownIcon ( const char *name );
+extern Pixmap FindBitmap ( const char *name, unsigned int *widthp,
 			   unsigned int *heightp );
-extern Pixmap GetBitmap ( char *name );
+extern Pixmap GetBitmap ( const char *name );
 extern void InsertRGBColormap ( Atom a, XStandardColormap *maps, int nmaps,
 			       Bool replace );
 extern void RemoveRGBColormap ( Atom a );
 extern void LocateStandardColormaps ( void );
-extern void GetColor ( int kind, Pixel *what, char *name );
-extern void GetColorValue ( int kind, XColor *what, char *name );
+extern void GetColor ( int kind, Pixel *what, const char *name );
+extern void GetColorValue ( int kind, XColor *what, const char *name );
 extern void GetFont ( MyFont *font );
-extern int MyFont_TextWidth( MyFont *font, char *string, int len);
+extern int MyFont_TextWidth( MyFont *font, const char *string, int len);
 extern void MyFont_DrawImageString( Display *dpy, Drawable d, MyFont *font,
-				    GC gc, int x, int y, char * string,
+				    GC gc, int x, int y, const char * string,
 				    int len);
-extern void MyFont_DrawString( Display *dpy, Drawable d, MyFont *font,
-			       GC gc, int x, int y, char * string, int len);
+extern void MyFont_DrawString( Display *dpy, Drawable d, MyFont *font, GC gc,
+                               int x, int y, const char * string, int len);
 extern void MyFont_ChangeGC( unsigned long fix_fore, unsigned long fix_back,
 			     MyFont *fix_font);
 extern Status I18N_FetchName( Display *dpy, Window win, char **winname);

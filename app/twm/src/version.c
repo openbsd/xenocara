@@ -49,5 +49,5 @@ in this Software without prior written authorization from The Open Group.
 /**    OR PERFORMANCE OF THIS SOFTWARE.                                     **/
 /*****************************************************************************/
 
-char *Version = XVENDORNAME", "XORG_RELEASE;
+const char *Version = XVENDORNAME", "XORG_RELEASE;
 

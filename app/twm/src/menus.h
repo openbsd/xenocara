@@ -72,8 +72,8 @@ typedef struct MenuItem
     struct MenuItem *prev;	/* prev menu item */
     struct MenuRoot *sub;	/* MenuRoot of a pull right menu */
     struct MenuRoot *root;	/* back pointer to my MenuRoot */
-    char *item;			/* the character string displayed */
-    char *action;		/* action to be performed */
+    const char *item;		/* the character string displayed */
+    const char *action;		/* action to be performed */
     Pixel fore;			/* foreground color */
     Pixel back;			/* background color */
     Pixel hi_fore;		/* highlight foreground */
@@ -92,7 +92,7 @@ typedef struct MenuRoot
     struct MenuItem *last;	/* last item in menu */
     struct MenuRoot *prev;	/* previous root menu if pull right */
     struct MenuRoot *next;	/* next in list of root menus */
-    char *name;			/* name of root */
+    const char *name;		/* name of root */
     Window w;			/* the window of the menu */
     Window shadow;		/* the shadow window */
     Pixel hi_fore;		/* highlight foreground */
@@ -166,36 +166,25 @@ extern int MenuDepth;
 
 extern void InitMenus ( void );
 extern Bool AddFuncKey ( char *name, int cont, int mods, int func, char *win_name, char *action );
-extern int CreateTitleButton ( char *name, int func, char *action, MenuRoot *menuroot, Bool rightside, Bool append );
+extern int CreateTitleButton ( const char *name, int func, const char *action, MenuRoot *menuroot, Bool rightside, Bool append );
 extern void InitTitlebarButtons ( void );
 extern void PaintEntry ( MenuRoot *mr, MenuItem *mi, int exposure );
 extern void PaintMenu ( MenuRoot *mr, XEvent *e );
 extern void UpdateMenu ( void );
-extern MenuRoot * NewMenuRoot ( char *name );
-extern MenuItem * AddToMenu ( MenuRoot *menu, char *item, char *action, MenuRoot *sub, int func, char *fore, char *back );
+extern MenuRoot * NewMenuRoot ( const char *name );
+extern MenuItem * AddToMenu ( MenuRoot *menu, const char *item, const char *action, MenuRoot *sub, int func, const char *fore, const char *back );
 extern void MakeMenus ( void );
-extern void MakeMenu ( MenuRoot *mr );
 extern Bool PopUpMenu ( MenuRoot *menu, int x, int y, Bool center );
 extern void PopDownMenu ( void );
-extern MenuRoot * FindMenuRoot ( char *name );
-extern void resizeFromCenter ( Window w, TwmWindow *tmp_win );
-extern int WarpThere ( TwmWindow * t );
-extern int ExecuteFunction ( int func, char *action, Window w, TwmWindow *tmp_win, XEvent *eventp, int context, int pulldown );
-extern int DeferExecution ( int context, int func, Cursor cursor );
+extern MenuRoot * FindMenuRoot ( const char *name );
+extern int ExecuteFunction ( int func, const char *action, Window w, TwmWindow *tmp_win, XEvent *eventp, int context, int pulldown );
 extern void ReGrab ( void );
-extern Bool NeedToDefer ( MenuRoot *root );
-extern void Execute ( char *s );
 extern void FocusOnRoot ( void );
 extern void DeIconify ( TwmWindow *tmp_win );
 extern void Iconify ( TwmWindow *tmp_win, int def_x, int def_y );
 extern void SetMapStateProp ( TwmWindow *tmp_win, int state );
 extern void WarpToScreen ( int n, int inc );
-extern void BumpWindowColormap ( TwmWindow *tmp, int inc );
-extern void HideIconManager ( void );
 extern void SetBorder ( TwmWindow *tmp, Bool onoroff );
-extern void DestroyMenu ( MenuRoot *menu );
-extern void WarpAlongRing ( XButtonEvent *ev, Bool forward );
-extern void WarpToWindow ( TwmWindow *t );
 extern void SendDeleteWindowMessage ( TwmWindow *tmp, Time timestamp );
 extern void SendSaveYourselfMessage ( TwmWindow *tmp, Time timestamp );
 extern void SendTakeFocusMessage ( TwmWindow *tmp, Time timestamp );

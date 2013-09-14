@@ -86,6 +86,8 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/extensions/Print.h>
 #endif /* XPRINT */
 
+static void InitVariables ( void );
+
 XtAppContext appContext;	/* Xt application context */
 XtSignalId si;
 
@@ -103,14 +105,14 @@ ScreenInfo **ScreenList;	/* structures for each screen */
 ScreenInfo *Scr = NULL;		/* the cur and prev screens */
 int PreviousScreen;		/* last screen that we were on */
 int FirstScreen;		/* TRUE ==> first screen of display */
-Bool PrintErrorMessages = False;	/* controls error messages */
+static Bool PrintErrorMessages = False;	/* controls error messages */
 static int RedirectError;	/* TRUE ==> another window manager running */
 static int TwmErrorHandler ( Display *dpy, XErrorEvent *event );	/* for settting RedirectError */
 static int CatchRedirectError ( Display *dpy, XErrorEvent *event );	/* for everything else */
-static SIGNAL_T sigHandler(int);
+static void sigHandler(int);
 char Info[INFO_LINES][INFO_SIZE];		/* info strings to print */
 int InfoLines;
-char *InitFile = NULL;
+static char *InitFile = NULL;
 
 Cursor UpperLeftCursor;		/* upper Left corner cursor */
 Cursor RightButt;
@@ -127,7 +129,7 @@ XClassHint NoClass;		/* for applications with no class */
 
 XGCValues Gcv;
 
-char *Home;			/* the HOME environment variable */
+const char *Home;		/* the HOME environment variable */
 int HomeLen;			/* length of Home */
 int ParseError;			/* error parsing the .twmrc file */
 
@@ -145,7 +147,7 @@ char **Argv;
 
 Bool RestartPreviousState = False;	/* try to restart in previous state */
 
-unsigned long black, white;
+static unsigned long black, white;
 
 Atom TwmAtoms[11];
 
@@ -373,7 +375,7 @@ main(int argc, char *argv[])
     InfoLines = 0;
 
     /* for simplicity, always allocate NumScreens ScreenInfo struct pointers */
-    ScreenList = (ScreenInfo **) calloc (NumScreens, sizeof (ScreenInfo *));
+    ScreenList = calloc (NumScreens, sizeof (ScreenInfo *));
     if (ScreenList == NULL)
     {
 	fprintf (stderr, "%s: Unable to allocate memory for screen list, exiting.\n",
@@ -422,8 +424,7 @@ main(int argc, char *argv[])
 	numManaged ++;
 
 	/* Note:  ScreenInfo struct is calloc'ed to initialize to zero. */
-	Scr = ScreenList[scrnum] =
-	    (ScreenInfo *) calloc(1, sizeof(ScreenInfo));
+	Scr = ScreenList[scrnum] = calloc(1, sizeof(ScreenInfo));
   	if (Scr == NULL)
   	{
   	    fprintf (stderr, "%s: unable to allocate memory for ScreenInfo structure for screen %d.\n",
@@ -471,8 +472,7 @@ main(int argc, char *argv[])
 	XSaveContext (dpy, Scr->Root, ScreenContext, (caddr_t) Scr);
 
 	Scr->TwmRoot.cmaps.number_cwins = 1;
-	Scr->TwmRoot.cmaps.cwins =
-		(ColormapWindow **) malloc(sizeof(ColormapWindow *));
+	Scr->TwmRoot.cmaps.cwins = malloc(sizeof(ColormapWindow *));
 	Scr->TwmRoot.cmaps.cwins[0] =
 		CreateColormapWindow(Scr->Root, True, False);
 	Scr->TwmRoot.cmaps.cwins[0]->visibility = VisibilityPartiallyObscured;
@@ -600,7 +600,7 @@ main(int argc, char *argv[])
 			    }
 			}
 		    }
-		    XFree ((char *) wmhintsp);
+		    XFree (wmhintsp);
 		}
 	    }
 	}
@@ -682,8 +682,8 @@ main(int argc, char *argv[])
 /**
  * initialize twm variables
  */
-void
-InitVariables()
+static void
+InitVariables(void)
 {
     FreeList(&Scr->BorderColorL);
     FreeList(&Scr->IconBorderColorL);
@@ -832,7 +832,7 @@ InitVariables()
 }
 
 void
-CreateFonts ()
+CreateFonts (void)
 {
     GetFont(&Scr->TitleBarFont);
     GetFont(&Scr->MenuFont);
@@ -917,11 +917,10 @@ Reborder (Time time)
     SetFocus ((TwmWindow*)NULL, time);
 }
 
-static SIGNAL_T
+static void
 sigHandler(int sig)
 {
     XtNoticeSignal(si);
-    SIGNAL_RETURN;
 }
 
 /**

@@ -68,6 +68,8 @@ in this Software without prior written authorization from The Open Group.
 #include "screen.h"
 #include "events.h"
 
+static void DisplaySize ( TwmWindow *tmp_win, int width, int height );
+
 #define MINHEIGHT 0     /* had been 32 */
 #define MINWIDTH 0      /* had been 60 */
 
@@ -473,7 +475,7 @@ DoResize(int x_root, int y_root, TwmWindow *tmp_win)
  *  \param width   the width of the rubber band
  *  \param height  the height of the rubber band
  */
-void
+static void
 DisplaySize(TwmWindow *tmp_win, int width, int height)
 {
     char str[100];
@@ -523,7 +525,7 @@ DisplaySize(TwmWindow *tmp_win, int width, int height)
  * finish the resize operation
  */
 void
-EndResize()
+EndResize(void)
 {
     TwmWindow *tmp_win;
 

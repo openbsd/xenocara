@@ -82,7 +82,6 @@ extern void HandleVisibilityNotify ( void );
 extern void HandleKeyPress ( void );
 extern void free_cwins ( TwmWindow *tmp );
 extern void HandlePropertyNotify ( void );
-extern void RedoIconName ( void );
 extern void HandleClientMessage ( void );
 extern void HandleExpose ( void );
 extern void HandleDestroyNotify ( void );

@@ -41,12 +41,11 @@ in this Software without prior written authorization from The Open Group.
 #include "siconify.bm"
 #include <X11/Xos.h>
 #include <X11/Xmu/CharSet.h>
-#ifdef macII
-int strcmp(); /* missing from string.h in AUX 2.0 */
-#endif
+
+static void InsertInIconManager ( IconMgr *ip, WList *tmp, TwmWindow *tmp_win );
 
 int iconmgr_textx = siconify_width+11;
-WList *Active = NULL;
+static WList *Active = NULL;
 WList *DownIconManager = NULL;
 int iconifybox_width = siconify_width;
 int iconifybox_height = siconify_height;
@@ -54,7 +53,8 @@ int iconifybox_height = siconify_height;
 /**
  * create all the icon manager windows for this screen.
  */
-void CreateIconManagers()
+void
+CreateIconManagers(void)
 {
     IconMgr *p;
     int mask;
@@ -133,7 +133,7 @@ IconMgr *AllocateIconManager(char *name, char *icon_name, char *geom, int column
     if (Scr->NoIconManagers)
 	return NULL;
 
-    p = (IconMgr *)malloc(sizeof(IconMgr));
+    p = malloc(sizeof(IconMgr));
     p->name = name;
     p->icon_name = icon_name;
     p->geometry = geom;
@@ -368,7 +368,7 @@ WList *AddIconManager(TwmWindow *tmp_win)
 	    &tmp_win->class)) == NULL)
 	ip = &Scr->iconmgr;
 
-    tmp = (WList *) malloc(sizeof(WList));
+    tmp = malloc(sizeof(WList));
     tmp->iconmgr = ip;
     tmp->next = NULL;
     tmp->active = FALSE;
@@ -453,7 +453,7 @@ WList *AddIconManager(TwmWindow *tmp_win)
  *  \param ip  the icon manager pointer
  *  \param tmp the entry to insert
  */
-void InsertInIconManager(IconMgr *ip, WList *tmp, TwmWindow *tmp_win)
+static void InsertInIconManager(IconMgr *ip, WList *tmp, TwmWindow *tmp_win)
 {
     WList *tmp1;
     int added;
@@ -495,7 +495,7 @@ void InsertInIconManager(IconMgr *ip, WList *tmp, TwmWindow *tmp_win)
     }
 }
 
-void RemoveFromIconManager(IconMgr *ip, WList *tmp)
+static void RemoveFromIconManager(IconMgr *ip, WList *tmp)
 {
     if (tmp->prev == NULL)
 	ip->first = tmp->next;
@@ -534,7 +534,7 @@ void RemoveIconManager(TwmWindow *tmp_win)
     XDeleteContext(dpy, tmp->w, ScreenContext);
     XDestroyWindow(dpy, tmp->w);
     ip->count -= 1;
-    free((char *) tmp);
+    free(tmp);
 
     PackIconManager(ip);
 

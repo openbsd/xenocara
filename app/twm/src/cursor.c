@@ -38,7 +38,7 @@ in this Software without prior written authorization from The Open Group.
 #include "util.h"
 
 static struct _CursorName {
-    char		*name;
+    const char		*name;
     unsigned int	shape;
     Cursor		cursor;
 } cursor_names[] = {
@@ -123,7 +123,7 @@ static struct _CursorName {
 };
 
 void
-NewFontCursor (Cursor *cp, char *str)
+NewFontCursor (Cursor *cp, const char *str)
 {
     int i;
 

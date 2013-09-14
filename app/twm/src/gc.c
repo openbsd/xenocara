@@ -69,7 +69,7 @@ in this Software without prior written authorization from The Open Group.
  *		    want to do this once, hence the first_time flag.
  */
 void
-CreateGCs()
+CreateGCs(void)
 {
     static ScreenInfo *prevScr = NULL;
     XGCValues	    gcv;

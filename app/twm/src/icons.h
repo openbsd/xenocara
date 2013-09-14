@@ -51,9 +51,6 @@ typedef struct IconEntry
     short 		used;
 }IconEntry;
 
-extern int roundUp ( int v, int multiple );
-extern void PlaceIcon ( TwmWindow *tmp_win, int def_x, int def_y,
-		       int *final_x, int *final_y );
 extern void IconUp ( TwmWindow *tmp_win );
 extern void IconDown ( TwmWindow *tmp_win );
 extern void AddIconRegion ( char *geom, int grav1, int grav2,

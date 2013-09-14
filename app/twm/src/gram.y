@@ -82,13 +82,14 @@ static char *Action = "";
 static char *Name = "";
 static MenuRoot	*root, *pull = NULL;
 
-static MenuRoot *GetRoot ( char *name, char *fore, char *back );
+static MenuRoot *GetRoot ( const char *name, const char *fore, const char *back );
 static void GotButton ( int butt, int func );
 static void GotKey ( char *key, int func );
 static void GotTitleButton ( char *bitmapname, int func, Bool rightside );
 static Bool CheckWarpScreenArg ( char *s );
 static Bool CheckWarpRingArg ( char *s );
 static Bool CheckColormapArg ( char *s );
+static void RemoveDQuote ( char *str );
 
 static char *ptr;
 static name_list **list;
@@ -98,6 +99,8 @@ int mods = 0;
 unsigned int mods_used = (ShiftMask | ControlMask | Mod1Mask);
 
 extern int yylineno;
+static void yyerror ( const char *s );
+
 %}
 
 %union
@@ -107,19 +110,19 @@ extern int yylineno;
 };
 
 %token <num> LB RB LP RP MENUS MENU BUTTON DEFAULT_FUNCTION PLUS MINUS
-%token <num> ALL OR CURSORS PIXMAPS ICONS COLOR SAVECOLOR MONOCHROME FUNCTION 
+%token <num> ALL OR CURSORS PIXMAPS ICONS COLOR SAVECOLOR MONOCHROME FUNCTION
 %token <num> ICONMGR_SHOW ICONMGR WINDOW_FUNCTION ZOOM ICONMGRS
 %token <num> ICONMGR_GEOMETRY ICONMGR_NOSHOW MAKE_TITLE GRAYSCALE
-%token <num> ICONIFY_BY_UNMAPPING DONT_ICONIFY_BY_UNMAPPING 
-%token <num> NO_TITLE AUTO_RAISE NO_HILITE ICON_REGION 
-%token <num> META SHIFT LOCK CONTROL WINDOW TITLE ICON ROOT FRAME 
+%token <num> ICONIFY_BY_UNMAPPING DONT_ICONIFY_BY_UNMAPPING
+%token <num> NO_TITLE AUTO_RAISE NO_HILITE ICON_REGION
+%token <num> META SHIFT LOCK CONTROL WINDOW TITLE ICON ROOT FRAME
 %token <num> COLON EQUALS SQUEEZE_TITLE DONT_SQUEEZE_TITLE
 %token <num> START_ICONIFIED NO_TITLE_HILITE TITLE_HILITE
-%token <num> MOVE RESIZE WAIT SELECT KILL LEFT_TITLEBUTTON RIGHT_TITLEBUTTON 
-%token <num> NUMBER KEYWORD NKEYWORD CKEYWORD CLKEYWORD FKEYWORD FSKEYWORD 
+%token <num> MOVE RESIZE WAIT SELECT KILL LEFT_TITLEBUTTON RIGHT_TITLEBUTTON
+%token <num> NUMBER KEYWORD NKEYWORD CKEYWORD CLKEYWORD FKEYWORD FSKEYWORD
 %token <num> SKEYWORD DKEYWORD JKEYWORD WINDOW_RING WARP_CURSOR ERRORTOKEN
 %token <num> NO_STACKMODE
-%token <ptr> STRING 
+%token <ptr> STRING
 
 %type <ptr> string
 %type <num> pixmap_list cursor_list color_list save_color_list stmt
@@ -127,7 +130,7 @@ extern int yylineno;
 %type <num> noarg sarg error narg squeeze color_entry
 %type <num> action button number signed_number full fullkey
 
-%start twmrc 
+%start twmrc
 
 %%
 twmrc		: stmts
@@ -159,18 +162,18 @@ stmt		: error
 						Scr->ZoomCount = $2;
 					  }
 					}
-		| ZOOM			{ if (Scr->FirstTime) 
+		| ZOOM			{ if (Scr->FirstTime)
 						Scr->DoZoom = TRUE; }
 		| PIXMAPS pixmap_list	{}
 		| CURSORS cursor_list	{}
 		| ICONIFY_BY_UNMAPPING	{ list = &Scr->IconifyByUn; }
 		  win_list
-		| ICONIFY_BY_UNMAPPING	{ if (Scr->FirstTime) 
+		| ICONIFY_BY_UNMAPPING	{ if (Scr->FirstTime)
 		    Scr->IconifyByUnmapping = TRUE; }
-		| LEFT_TITLEBUTTON string EQUALS action { 
+		| LEFT_TITLEBUTTON string EQUALS action {
 					  GotTitleButton ($2, $4, False);
 					}
-		| RIGHT_TITLEBUTTON string EQUALS action { 
+		| RIGHT_TITLEBUTTON string EQUALS action {
 					  GotTitleButton ($2, $4, True);
 					}
 		| button string		{ root = GetRoot($2, NULLSTR, NULLSTR);
@@ -186,7 +189,7 @@ stmt		: error
 					  else
 					  {
 					    root = GetRoot(TWM_ROOT,NULLSTR,NULLSTR);
-					    Scr->Mouse[$1][C_ROOT][0].item = 
+					    Scr->Mouse[$1][C_ROOT][0].item =
 						AddToMenu(root,"x",Action,
 							  NULL,$2,NULLSTR,NULLSTR);
 					  }
@@ -239,7 +242,7 @@ stmt		: error
 		  color_list
 		| GRAYSCALE 		{ color = GRAYSCALE; }
   		  color_list
-		| SAVECOLOR          
+		| SAVECOLOR
                   save_color_list
 		| MONOCHROME 		{ color = MONOCHROME; }
 	          color_list
@@ -252,7 +255,7 @@ stmt		: error
 					  else
 					  {
 					    root = GetRoot(TWM_ROOT,NULLSTR,NULLSTR);
-					    Scr->DefaultFunction.item = 
+					    Scr->DefaultFunction.item =
 						AddToMenu(root,"x",Action,
 							  NULL,$2, NULLSTR, NULLSTR);
 					  }
@@ -261,7 +264,7 @@ stmt		: error
 					}
 		| WINDOW_FUNCTION action { Scr->WindowFunction.func = $2;
 					   root = GetRoot(TWM_ROOT,NULLSTR,NULLSTR);
-					   Scr->WindowFunction.item = 
+					   Scr->WindowFunction.item =
 						AddToMenu(root,"x",Action,
 							  NULL,$2, NULLSTR, NULLSTR);
 					   Action = "";
@@ -269,7 +272,7 @@ stmt		: error
 					}
 		| WARP_CURSOR		{ list = &Scr->WarpCursorL; }
 		  win_list
-		| WARP_CURSOR		{ if (Scr->FirstTime) 
+		| WARP_CURSOR		{ if (Scr->FirstTime)
 					    Scr->WarpCursor = TRUE; }
 		| WINDOW_RING		{ list = &Scr->WindowRingL; }
 		  win_list
@@ -324,7 +327,7 @@ key		: META			{ mods |= Mod1Mask; }
 		| CONTROL		{ mods |= ControlMask; }
 		| META number		{ if ($2 < 1 || $2 > 5) {
 					     twmrc_error_prefix();
-					     fprintf (stderr, 
+					     fprintf (stderr,
 				"bad modifier number (%d), must be 1-5\n",
 						      $2);
 					     ParseError = 1;
@@ -470,11 +473,11 @@ color_entry	: CLKEYWORD string	{ if (!do_colorlist_keyword ($1, color,
 					}
 		;
 
-save_color_list : LB s_color_entries RB 
+save_color_list : LB s_color_entries RB
                 ;
 
 s_color_entries : /* Empty */
-                | s_color_entries s_color_entry 
+                | s_color_entries s_color_entry
                 ;
 
 s_color_entry   : string            { do_string_savecolor(color, $1); }
@@ -493,10 +496,10 @@ win_color_entry	: string string		{ if (Scr->FirstTime &&
 					    AddToList(list, $1, $2); }
 		;
 
-squeeze		: SQUEEZE_TITLE { 
+squeeze		: SQUEEZE_TITLE {
 				    if (HasShape) Scr->SqueezeTitle = TRUE;
 				}
-		| SQUEEZE_TITLE { list = &Scr->SqueezeTitleL; 
+		| SQUEEZE_TITLE { list = &Scr->SqueezeTitleL;
 				  if (HasShape && Scr->SqueezeTitle == -1)
 				    Scr->SqueezeTitle = TRUE;
 				}
@@ -610,8 +613,8 @@ action		: FKEYWORD	{ $$ = $1; }
 				  case F_WARPTOSCREEN:
 				    if (!CheckWarpScreenArg (Action)) {
 					twmrc_error_prefix();
-					fprintf (stderr, 
-			"ignoring invalid f.warptoscreen argument \"%s\"\n", 
+					fprintf (stderr,
+			"ignoring invalid f.warptoscreen argument \"%s\"\n",
 					         Action);
 					$$ = F_NOP;
 				    }
@@ -622,7 +625,7 @@ action		: FKEYWORD	{ $$ = $1; }
 				    } else {
 					twmrc_error_prefix();
 					fprintf (stderr,
-			"ignoring invalid f.colormap argument \"%s\"\n", 
+			"ignoring invalid f.colormap argument \"%s\"\n",
 						 Action);
 					$$ = F_NOP;
 				    }
@@ -658,15 +661,15 @@ number		: NUMBER		{ $$ = $1; }
 		;
 
 %%
-void
-yyerror(char *s)
+static void
+yyerror(const char *s)
 {
     twmrc_error_prefix();
     fprintf (stderr, "error in input file:  %s\n", s ? s : "");
     ParseError = 1;
 }
 
-void
+static void
 RemoveDQuote(char *str)
 {
     register char *i, *o;
@@ -750,7 +753,7 @@ RemoveDQuote(char *str)
     *o = '\0';
 }
 
-static MenuRoot *GetRoot(char *name, char* fore, char *back)
+static MenuRoot *GetRoot(const char *name, const char* fore, const char *back)
 {
     MenuRoot *tmp;
 
@@ -807,9 +810,9 @@ static void GotKey(char *key, int func)
 
     for (i = 0; i < NUM_CONTEXTS; i++)
     {
-	if ((cont & (1 << i)) == 0) 
+	if ((cont & (1 << i)) == 0)
 	  continue;
-	if (!AddFuncKey(key, i, mods, func, Name, Action)) 
+	if (!AddFuncKey(key, i, mods, func, Name, Action))
 	  break;
     }
 
@@ -825,7 +828,7 @@ static void GotTitleButton (char *bitmapname, int func, Bool rightside)
 {
     if (!CreateTitleButton (bitmapname, func, Action, pull, rightside, True)) {
 	twmrc_error_prefix();
-	fprintf (stderr, 
+	fprintf (stderr,
 		 "unable to create %s titlebutton \"%s\"\n",
 		 rightside ? "right" : "left", bitmapname);
     }
@@ -873,7 +876,7 @@ static Bool CheckColormapArg (char *s)
 
 
 void
-twmrc_error_prefix ()
+twmrc_error_prefix (void)
 {
     fprintf (stderr, "%s:  line %d:  ", ProgramName, yylineno);
 }

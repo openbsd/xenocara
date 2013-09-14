@@ -64,7 +64,6 @@ in this Software without prior written authorization from The Open Group.
 extern void AddEndResize ( TwmWindow *tmp_win );
 extern void AddStartResize ( TwmWindow *tmp_win, int x, int y, int w, int h );
 extern void ConstrainSize ( TwmWindow *tmp_win, int *widthp, int *heightp );
-extern void DisplaySize ( TwmWindow *tmp_win, int width, int height );
 extern void DoResize ( int x_root, int y_root, TwmWindow *tmp_win );
 extern void EndResize ( void );
 extern void fullzoom ( TwmWindow *tmp_win, int flag );

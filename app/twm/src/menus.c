@@ -114,6 +114,16 @@ static Cursor LastCursor;
 static Bool belongs_to_twm_window ( TwmWindow *t, Window w );
 static void Identify ( TwmWindow *t );
 static void send_clientmessage ( Window w, Atom a, Time timestamp );
+static void BumpWindowColormap ( TwmWindow *tmp, int inc );
+static int  DeferExecution ( int context, int func, Cursor cursor );
+static Bool NeedToDefer ( MenuRoot *root );
+static void DestroyMenu ( MenuRoot *menu );
+static void MakeMenu ( MenuRoot *mr );
+static void Execute ( const char *s );
+static void HideIconManager ( void );
+static void WarpAlongRing ( XButtonEvent *ev, Bool forward );
+static int  WarpThere ( TwmWindow * t );
+static void WarpToWindow ( TwmWindow *t );
 
 #define SHADOWWIDTH 5			/* in pixels */
 
@@ -124,7 +134,7 @@ static void send_clientmessage ( Window w, Atom a, Time timestamp );
  * initialize menu roots
  */
 void
-InitMenus()
+InitMenus(void)
 {
     int i, j, k;
     FuncKey *key, *tmp;
@@ -147,7 +157,7 @@ InitMenus()
 	    free(key->name);
 	    tmp = key;
 	    key = key->next;
-	    free((char *) tmp);
+	    free(tmp);
 	}
 	Scr->FuncKeyRoot.next = NULL;
     }
@@ -194,7 +204,7 @@ Bool AddFuncKey (char *name, int cont, int mods, int func, char *win_name,
 
     if (tmp == NULL)
     {
-	tmp = (FuncKey *) malloc(sizeof(FuncKey));
+	tmp = malloc(sizeof(FuncKey));
 	tmp->next = Scr->FuncKeyRoot.next;
 	Scr->FuncKeyRoot.next = tmp;
     }
@@ -213,10 +223,10 @@ Bool AddFuncKey (char *name, int cont, int mods, int func, char *win_name,
 
 
 
-int CreateTitleButton (char *name, int func, char *action, MenuRoot *menuroot,
-                       Bool rightside, Bool append)
+int CreateTitleButton (const char *name, int func, const char *action,
+                       MenuRoot *menuroot, Bool rightside, Bool append)
 {
-    TitleButton *tb = (TitleButton *) malloc (sizeof(TitleButton));
+    TitleButton *tb = malloc (sizeof(TitleButton));
 
     if (!tb) {
 	fprintf (stderr,
@@ -283,7 +293,7 @@ int CreateTitleButton (char *name, int func, char *action, MenuRoot *menuroot,
  * the button, then put in a question; if we can't find the question mark,
  * something is wrong and we are probably going to be in trouble later on.
  */
-void InitTitlebarButtons ()
+void InitTitlebarButtons (void)
 {
     TitleButton *tb;
     int h;
@@ -472,7 +482,7 @@ PaintMenu(MenuRoot *mr, XEvent *e)
 static Bool fromMenu;
 
 void
-UpdateMenu()
+UpdateMenu(void)
 {
     MenuItem *mi;
     int i, x, y, x_root, y_root, entry;
@@ -617,13 +627,13 @@ UpdateMenu()
  *  \param name  the name of the menu root
  */
 MenuRoot *
-NewMenuRoot(char *name)
+NewMenuRoot(const char *name)
 {
     MenuRoot *tmp;
 
 #define UNUSED_PIXEL ((unsigned long) (~0))	/* more than 24 bits */
 
-    tmp = (MenuRoot *) malloc(sizeof(MenuRoot));
+    tmp = malloc(sizeof(MenuRoot));
     tmp->hi_fore = UNUSED_PIXEL;
     tmp->hi_back = UNUSED_PIXEL;
     tmp->name = name;
@@ -676,8 +686,8 @@ NewMenuRoot(char *name)
  *  \param back   background color string
  */
 MenuItem *
-AddToMenu(MenuRoot *menu, char *item, char *action, MenuRoot *sub, int func,
-          char *fore, char *back)
+AddToMenu(MenuRoot *menu, const char *item, const char *action,
+          MenuRoot *sub, int func, const char *fore, const char *back)
 {
     MenuItem *tmp;
     int width;
@@ -687,7 +697,7 @@ AddToMenu(MenuRoot *menu, char *item, char *action, MenuRoot *sub, int func,
 	item, action, sub, func);
 #endif
 
-    tmp = (MenuItem *) malloc(sizeof(MenuItem));
+    tmp = malloc(sizeof(MenuItem));
     tmp->root = menu;
 
     if (menu->first == NULL)
@@ -741,7 +751,7 @@ AddToMenu(MenuRoot *menu, char *item, char *action, MenuRoot *sub, int func,
 
 
 void
-MakeMenus()
+MakeMenus(void)
 {
     MenuRoot *mr;
 
@@ -755,7 +765,7 @@ MakeMenus()
 }
 
 
-void
+static void
 MakeMenu(MenuRoot *mr)
 {
     MenuItem *start, *end, *cur, *tmp;
@@ -989,8 +999,7 @@ PopUpMenu (MenuRoot *menu, int x, int y, Bool center)
           WindowNameCount++;
         if (WindowNameCount != 0)
         {
-            WindowNames =
-              (TwmWindow **)malloc(sizeof(TwmWindow *)*WindowNameCount);
+            WindowNames = malloc(sizeof(TwmWindow *) * WindowNameCount);
             WindowNames[0] = Scr->TwmRoot.next;
             for(tmp_win = Scr->TwmRoot.next->next , WindowNameCount=1;
                 tmp_win != NULL;
@@ -1082,7 +1091,7 @@ PopUpMenu (MenuRoot *menu, int x, int y, Bool center)
  * unhighlight the current menu selection and take down the menus
  */
 void
-PopDownMenu()
+PopDownMenu(void)
 {
     MenuRoot *tmp;
 
@@ -1123,7 +1132,7 @@ PopDownMenu()
  *  \param name the name of the menu root
  */
 MenuRoot *
-FindMenuRoot(char *name)
+FindMenuRoot(const char *name)
 {
     MenuRoot *tmp;
 
@@ -1157,7 +1166,7 @@ belongs_to_twm_window (TwmWindow *t, Window w)
 
 
 
-void
+static void
 resizeFromCenter(Window w, TwmWindow *tmp_win)
 {
   int lastx, lasty, bw2;
@@ -1265,7 +1274,7 @@ resizeFromCenter(Window w, TwmWindow *tmp_win)
  *           else FALSE to abort
  */
 
-int
+static int
 WarpThere(TwmWindow *t)
 {
     if (Scr->WarpUnmapped || t->mapped) {
@@ -1279,7 +1288,7 @@ WarpThere(TwmWindow *t)
 
 
 int
-ExecuteFunction(int func, char *action, Window w, TwmWindow *tmp_win,
+ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                 XEvent *eventp, int context, int pulldown)
 {
     static Time last_time = 0;
@@ -2250,7 +2259,7 @@ ExecuteFunction(int func, char *action, Window w, TwmWindow *tmp_win,
  *	\param func    the function to defer
  *  \param cursor  cursor the cursor to display while waiting
  */
-int
+static int
 DeferExecution(int context, int func, Cursor cursor)
 {
   if (context == C_ROOT)
@@ -2275,7 +2284,7 @@ DeferExecution(int context, int func, Cursor cursor)
  *regrab the pointer with the LastCursor;
  */
 void
-ReGrab()
+ReGrab(void)
 {
     XGrabPointer(dpy, Scr->Root, True,
 	ButtonPressMask | ButtonReleaseMask,
@@ -2291,7 +2300,7 @@ ReGrab()
  *
  *  \param root the menu root to check
  */
-Bool
+static Bool
 NeedToDefer(MenuRoot *root)
 {
     MenuItem *mitem;
@@ -2336,12 +2345,12 @@ NeedToDefer(MenuRoot *root)
  *  \param s  the string containing the command
  */
 static int
-System (char *s)
+System (const char *s)
 {
     int pid, status;
     if ((pid = fork ()) == 0) {
 	(void) setpgrp();
-	execl ("/bin/sh", "sh", "-c", s, 0);
+	execl ("/bin/sh", "sh", "-c", s, NULL);
     } else
 	waitpid (pid, &status, 0);
     return status;
@@ -2350,8 +2359,8 @@ System (char *s)
 
 #endif
 
-void
-Execute(char *s)
+static void
+Execute(const char *s)
 {
 	/* FIXME: is all this stuff needed?  There could be security problems here. */
     static char buf[256];
@@ -2402,7 +2411,7 @@ Execute(char *s)
  * put input focus on the root window.
  */
 void
-FocusOnRoot()
+FocusOnRoot(void)
 {
     SetFocus ((TwmWindow *) NULL, LastTimestamp());
     if (Scr->Focus != NULL)
@@ -2743,7 +2752,7 @@ WarpToScreen (int n, int inc)
 /**
  * rotate our internal copy of WM_COLORMAP_WINDOWS
  */
-void
+static void
 BumpWindowColormap (TwmWindow *tmp, int inc)
 {
     int i, j, previously_installed;
@@ -2752,8 +2761,7 @@ BumpWindowColormap (TwmWindow *tmp, int inc)
     if (!tmp) return;
 
     if (inc && tmp->cmaps.number_cwins > 0) {
-	cwins = (ColormapWindow **) malloc(sizeof(ColormapWindow *)*
-					   tmp->cmaps.number_cwins);
+	cwins = malloc(sizeof(ColormapWindow *) * tmp->cmaps.number_cwins);
 	if (cwins) {
 	    if ((previously_installed =
 		/* SUPPRESS 560 */(Scr->cmapInfo.cmaps == &tmp->cmaps &&
@@ -2771,7 +2779,7 @@ BumpWindowColormap (TwmWindow *tmp, int inc)
 		cwins[j] = tmp->cmaps.cwins[i];
 	    }
 
-	    free((char *) tmp->cmaps.cwins);
+	    free(tmp->cmaps.cwins);
 
 	    tmp->cmaps.cwins = cwins;
 
@@ -2787,8 +2795,8 @@ BumpWindowColormap (TwmWindow *tmp, int inc)
 }
 
 
-void
-HideIconManager ()
+static void
+HideIconManager (void)
 {
     SetMapStateProp (Scr->iconmgr.twm_win, WithdrawnState);
     XUnmapWindow(dpy, Scr->iconmgr.twm_win->frame);
@@ -2817,7 +2825,7 @@ SetBorder (TwmWindow *tmp, Bool onoroff)
 }
 
 
-void
+static void
 DestroyMenu (MenuRoot *menu)
 {
     MenuItem *item;
@@ -2832,7 +2840,7 @@ DestroyMenu (MenuRoot *menu)
     for (item = menu->first; item; ) {
 	MenuItem *tmp = item;
 	item = item->next;
-	free ((char *) tmp);
+	free (tmp);
     }
 }
 
@@ -2842,7 +2850,7 @@ DestroyMenu (MenuRoot *menu)
  * warping routines
  */
 
-void
+static void
 WarpAlongRing (XButtonEvent *ev, Bool forward)
 {
     TwmWindow *r, *head;
@@ -2892,7 +2900,7 @@ WarpAlongRing (XButtonEvent *ev, Bool forward)
 
 
 
-void
+static void
 WarpToWindow (TwmWindow *t)
 {
     int x, y;

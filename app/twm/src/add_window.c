@@ -170,8 +170,8 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
 #endif
 
     /* allocate space for the twm window */
-    tmp_win = (TwmWindow *)calloc(1, sizeof(TwmWindow));
-    if (tmp_win == 0)
+    tmp_win = calloc(1, sizeof(TwmWindow));
+    if (tmp_win == NULL)
     {
 	fprintf (stderr, "%s: Unable to allocate memory to manage window ID %lx.\n",
 		 ProgramName, w);
@@ -362,7 +362,7 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
     {
 	if (!tmp_win->wmhints)
 	{
-	    tmp_win->wmhints = (XWMHints *)malloc(sizeof(XWMHints));
+	    tmp_win->wmhints = malloc(sizeof(XWMHints));
 	    tmp_win->wmhints->flags = 0;
 	}
 	tmp_win->wmhints->initial_state = IconicState;
@@ -745,7 +745,7 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
     if (XGetGeometry(dpy, tmp_win->w, &JunkRoot, &JunkX, &JunkY,
 		     &JunkWidth, &JunkHeight, &JunkBW, &JunkDepth) == 0)
     {
-	free((char *)tmp_win);
+	free(tmp_win);
 	XUngrabServer(dpy);
 	return(NULL);
     }
@@ -981,7 +981,7 @@ static void do_add_binding (int button, int context, int modifier, int func)
 }
 
 void
-AddDefaultBindings ()
+AddDefaultBindings (void)
 {
     /*
      * The bindings are stored in Scr->Mouse, indexed by
@@ -1161,7 +1161,7 @@ static Window CreateHighlightWindow (TwmWindow *tmp_win)
 }
 
 
-void ComputeCommonTitleOffsets ()
+void ComputeCommonTitleOffsets (void)
 {
     int buttonwidth = (Scr->TBInfo.width + Scr->TBInfo.pad);
 
@@ -1287,7 +1287,7 @@ static void CreateWindowTitlebarButtons (TwmWindow *tmp_win)
     tmp_win->titlebuttons = NULL;
     nb = Scr->TBInfo.nleft + Scr->TBInfo.nright;
     if (nb > 0) {
-	tmp_win->titlebuttons = (TBWindow *) malloc (nb * sizeof(TBWindow));
+	tmp_win->titlebuttons = malloc (nb * sizeof(TBWindow));
 	if (!tmp_win->titlebuttons) {
 	    fprintf (stderr, "%s:  unable to allocate %d titlebuttons\n",
 		     ProgramName, nb);
@@ -1360,7 +1360,7 @@ FetchWmProtocols (TwmWindow *tmp)
 	    if (*ap == _XA_WM_SAVE_YOURSELF) flags |= DoesWmSaveYourself;
 	    if (*ap == _XA_WM_DELETE_WINDOW) flags |= DoesWmDeleteWindow;
 	}
-	if (protocols) XFree ((char *) protocols);
+	if (protocols) XFree (protocols);
     }
     tmp->protocols = flags;
 }
@@ -1369,10 +1369,10 @@ TwmColormap *
 CreateTwmColormap(Colormap c)
 {
     TwmColormap *cmap;
-    cmap = (TwmColormap *) malloc(sizeof(TwmColormap));
+    cmap = malloc(sizeof(TwmColormap));
     if (!cmap ||
 	XSaveContext(dpy, c, ColormapContext, (caddr_t) cmap)) {
-	if (cmap) free((char *) cmap);
+	if (cmap) free(cmap);
 	return (NULL);
     }
     cmap->c = c;
@@ -1390,11 +1390,11 @@ CreateColormapWindow(Window w, Bool creating_parent, Bool property_window)
     TwmColormap *cmap;
     XWindowAttributes attributes;
 
-    cwin = (ColormapWindow *) malloc(sizeof(ColormapWindow));
+    cwin = malloc(sizeof(ColormapWindow));
     if (cwin) {
 	if (!XGetWindowAttributes(dpy, w, &attributes) ||
 	    XSaveContext(dpy, w, ColormapContext, (caddr_t) cwin)) {
-	    free((char *) cwin);
+	    free(cwin);
 	    return (NULL);
 	}
 
@@ -1403,7 +1403,7 @@ CreateColormapWindow(Window w, Bool creating_parent, Bool property_window)
 	    cwin->colormap = cmap = CreateTwmColormap(attributes.colormap);
 	    if (!cmap) {
 		XDeleteContext(dpy, w, ColormapContext);
-		free((char *) cwin);
+		free(cwin);
 		return (NULL);
 	    }
 	} else {
@@ -1469,7 +1469,7 @@ FetchWmColormapWindows (TwmWindow *tmp)
 	}
 	if (i == number_cmap_windows) {	 /* not in list */
 	    Window *new_cmap_windows =
-	      (Window *) malloc (sizeof(Window) * (number_cmap_windows + 1));
+	      malloc (sizeof(Window) * (number_cmap_windows + 1));
 
 	    if (!new_cmap_windows) {
 		fprintf (stderr,
@@ -1481,14 +1481,13 @@ FetchWmColormapWindows (TwmWindow *tmp)
 	    for (i = 0; i < number_cmap_windows; i++) {	 /* append rest */
 		new_cmap_windows[i+1] = cmap_windows[i];
 	    }
-	    XFree ((char *) cmap_windows);
+	    XFree (cmap_windows);
 	    can_free_cmap_windows = True;  /* do not use XFree any more */
 	    cmap_windows = new_cmap_windows;
 	    number_cmap_windows++;
 	}
 
-	cwins = (ColormapWindow **) malloc(sizeof(ColormapWindow *) *
-		number_cmap_windows);
+	cwins = malloc(sizeof(ColormapWindow *) * number_cmap_windows);
 	if (cwins) {
 	    for (i = 0; i < number_cmap_windows; i++) {
 
@@ -1533,12 +1532,14 @@ FetchWmColormapWindows (TwmWindow *tmp)
 
 	number_cmap_windows = 1;
 
-	cwins = (ColormapWindow **) malloc(sizeof(ColormapWindow *));
+	cwins = malloc(sizeof(ColormapWindow *));
 	if (XFindContext(dpy, tmp->w, ColormapContext, (caddr_t *)&cwins[0]) ==
-		XCNOENT)
+	    XCNOENT) {
 	    cwins[0] = CreateColormapWindow(tmp->w,
 			    (Bool) tmp->cmaps.number_cwins == 0, False);
-	else
+	    if (cwins[0] == NULL)
+		number_cmap_windows = 0;
+	} else
 	    cwins[0]->refcnt++;
     }
 
@@ -1549,7 +1550,7 @@ FetchWmColormapWindows (TwmWindow *tmp)
     tmp->cmaps.number_cwins = number_cmap_windows;
     if (number_cmap_windows > 1)
 	tmp->cmaps.scoreboard =
-	  (char *) calloc(1, ColormapsScoreboardLength(&tmp->cmaps));
+	  calloc(1, ColormapsScoreboardLength(&tmp->cmaps));
 
     if (previously_installed)
 	InstallWindowColormaps(PropertyNotify, (TwmWindow *) NULL);
@@ -1557,9 +1558,9 @@ FetchWmColormapWindows (TwmWindow *tmp)
   done:
     if (cmap_windows) {
 	if (can_free_cmap_windows)
-	  free ((char *) cmap_windows);
+	  free (cmap_windows);
 	else
-	  XFree ((char *) cmap_windows);
+	  XFree (cmap_windows);
     }
 
     return;
