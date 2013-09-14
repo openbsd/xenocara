@@ -86,28 +86,28 @@ indentation indicates hierarchical structure.  The widget class name
 is given first, followed by the widget instance name.
 .sp
 .nf
-.TA .5i 1.0i 1.5i
-.ta .5i 1.0i 1.5i
+.ft CW
 XClipboard  xclipboard
-	Form  form
-		Command  Quit
-		Command  delete
-		Command  new
-		Command  Save
-		Command  next
-		Command  prev
-		Label  index
-		Text  text
-	TransientShell  fileDialogShell
-		Dialog  fileDialog
-			Label  label
-			Command  accept
-			Command  cancel
-			Text value
-	TransientShell  failDialogShell
-		Dialog  failDialog
-			Label  label
-			Command  continue
+        Form  form
+                Command  Quit
+                Command  delete
+                Command  new
+                Command  Save
+                Command  next
+                Command  prev
+                Label  index
+                Text  text
+        TransientShell  fileDialogShell
+                Dialog  fileDialog
+                        Label  label
+                        Command  accept
+                        Command  cancel
+                        Text value
+        TransientShell  failDialogShell
+                Dialog  failDialog
+                        Label  label
+                        Command  continue
+.ft
 .fi
 .sp
 .SH SENDING/RETRIEVING CLIPBOARD CONTENTS
@@ -118,13 +118,13 @@ event bindings that a user may wish to include in a resource configuration
 file to use the clipboard are:
 .sp
 .nf
-.TA .5i
-.ta .5i 3.0i
+.ft CW
 *VT100.Translations: #override \\
-	<Btn3Up>:	select-end(CLIPBOARD) \\n\\
-	<Btn2Up>:	insert-selection(PRIMARY,CLIPBOARD) \\n\\
-	<Btn2Down>:	ignore ()
+        <Btn3Up>:       select-end(CLIPBOARD) \\n\\
+        <Btn2Up>:       insert-selection(PRIMARY,CLIPBOARD) \\n\\
+        <Btn2Down>:     ignore ()
 
+.ft
 .fi
 .sp
 .SH "SEE ALSO"

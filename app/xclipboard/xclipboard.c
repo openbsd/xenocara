@@ -67,7 +67,7 @@ typedef struct _Clip {
     struct _Clip    *next, *prev;
     char	    *clip;
     char	    *filename;
-    int		    avail;
+    size_t	    avail;
 } ClipRec, *ClipPtr;
 
 static Atom wm_delete_window;
@@ -81,7 +81,7 @@ static String fallback_resources[] = {
     NULL
 };
 
-static long 
+static long
 TextLength(Widget w)
 {
     return XawTextSourceScan (XawTextGetSource (w),
@@ -94,7 +94,7 @@ SaveClip(Widget w, ClipPtr clip)
 {
     Arg	    args[1];
     char    *data;
-    int	    len;
+    size_t  len;
     Widget  source;
 
     source = XawTextGetSource (w);
@@ -129,7 +129,7 @@ RestoreClip(Widget w, ClipPtr clip)
 }
 
 /*ARGSUSED*/
-static ClipPtr 
+static ClipPtr
 NewClip(Widget w, ClipPtr old)
 {
     ClipPtr newClip;
@@ -193,7 +193,7 @@ set_button_state (void)
     XtSetValues (prevButton, &arg, ONE);
     XtSetArg (arg, XtNsensitive, nextvalid);
     XtSetValues (nextButton, &arg, ONE);
-    sprintf (labelString, "%d", IndexCurrentClip ());
+    snprintf (labelString, sizeof(labelString), "%d", IndexCurrentClip ());
     XtSetArg (arg, XtNlabel, labelString);
     XtSetValues (indexLabel, &arg, ONE);
 }
@@ -246,7 +246,7 @@ DeleteCurrentClip(Widget w, XEvent *ev, String *parms, Cardinal *np)
 }
 
 /* ARGSUSED */
-static void
+static void _X_NORETURN
 Quit(Widget w, XEvent *ev, String *parms, Cardinal *np)
 {
     XtCloseDisplay  (XtDisplay (text));
@@ -324,7 +324,7 @@ static void
 AcceptSaveFile(Widget w, XEvent *e, String *argv, Cardinal *argc)
 {
     char    *filename;
-    Boolean success;
+    Bool    success;
     Arg	    args[1];
 
     filename = XawDialogGetValueString (fileDialog);
@@ -345,9 +345,7 @@ AcceptSaveFile(Widget w, XEvent *e, String *argv, Cardinal *argc)
     {
 	if (currentClip->filename)
 	    free (currentClip->filename);
-	currentClip->filename = malloc (strlen (filename) + 1);
-	if (currentClip->filename)
-	    strcpy (currentClip->filename, filename);
+	currentClip->filename = strdup (filename);
     }
 }
 
@@ -366,7 +364,7 @@ FailContinue(Widget w, XEvent *ev, String *parms, Cardinal *np)
 }
 
 /*ARGSUSED*/
-static void 
+static void
 WMProtocols(Widget w, XEvent *ev, String *params, Cardinal *n)
 {
     if (ev->type == ClientMessage &&
@@ -403,7 +401,7 @@ NewCurrentClipContents(char *data, int len)
     /* any trailing clips with no text get overwritten */
     if (strlen (currentClip->clip) != 0)
 	currentClip = NewClip (text, currentClip);
-    
+
     textBlock.ptr = data;
     textBlock.firstPos = 0;
     textBlock.length = len;
@@ -434,7 +432,7 @@ EraseTextWidget(void)
 
 
 static XtActionsRec xclipboard_actions[] = {
-    { "NewClip", 	NewCurrentClip }, 
+    { "NewClip", 	NewCurrentClip },
     { "NextClip",	NextCurrentClip },
     { "PrevClip",	PrevCurrentClip },
     { "DeleteClip",	DeleteCurrentClip },
@@ -451,17 +449,17 @@ static XrmOptionDescRec table[] = {
 /*    {"-nw",	    "wrap",		XrmoptionNoArg,  "False"} */
 };
 
-static Boolean ConvertSelection ( Widget w, Atom *selection, Atom *target, 
-				  Atom *type, XtPointer *value, 
+static Boolean ConvertSelection ( Widget w, Atom *selection, Atom *target,
+				  Atom *type, XtPointer *value,
 				  unsigned long *length, int *format );
 static void LoseSelection ( Widget w, Atom *selection );
 
 static Atom	ManagerAtom, ClipboardAtom;
 
 /*ARGSUSED*/
-static void 
-InsertClipboard(Widget w, XtPointer client_data, Atom *selection, 
-		Atom *type, XtPointer value, unsigned long *length, 
+static void
+InsertClipboard(Widget w, XtPointer client_data, Atom *selection,
+		Atom *type, XtPointer value, unsigned long *length,
 		int *format)
 {
     Display *d = XtDisplay(w);
@@ -525,14 +523,14 @@ InsertClipboard(Widget w, XtPointer client_data, Atom *selection,
 #endif
 	}
     }
-    
+
     XtOwnSelection(top, ClipboardAtom, CurrentTime,
 		   ConvertSelection, LoseSelection, NULL);
 }
 
-static Boolean 
+static Boolean
 ConvertSelection(Widget w, Atom *selection, Atom *target,
-		 Atom *type, XtPointer *value, unsigned long *length, 
+		 Atom *type, XtPointer *value, unsigned long *length,
 		 int *format)
 {
     Display* d = XtDisplay(w);
@@ -567,24 +565,24 @@ ConvertSelection(Widget w, Atom *selection, Atom *target,
 	*target == XA_LENGTH(d))
     {
     	long * temp;
-    	
+
     	temp = (long *) XtMalloc(sizeof(long));
     	if (*target == XA_LIST_LENGTH(d))
       	  *temp = 1L;
     	else			/* *target == XA_LENGTH(d) */
       	  *temp = (long) TextLength (text);
-    	
+
     	*value = (XPointer) temp;
     	*type = XA_INTEGER;
     	*length = 1L;
     	*format = 32;
     	return True;
     }
-    
+
     if (*target == XA_CHARACTER_POSITION(d))
     {
     	long * temp;
-    	
+
     	temp = (long *) XtMalloc(2 * sizeof(long));
     	temp[0] = (long) 0;
     	temp[1] = TextLength (text);
@@ -594,7 +592,7 @@ ConvertSelection(Widget w, Atom *selection, Atom *target,
     	*format = 32;
     	return True;
     }
-    
+
     if (*target == XA_STRING ||
 	*target == XA_TEXT(d) ||
 	*target == XA_UTF8_STRING(d) ||
@@ -635,7 +633,7 @@ ConvertSelection(Widget w, Atom *selection, Atom *target,
     return False;
 }
 
-static void 
+static void
 LoseSelection(Widget w, Atom *selection)
 {
     Display *d = XtDisplay(w);
@@ -644,16 +642,16 @@ LoseSelection(Widget w, Atom *selection)
 }
 
 /*ARGSUSED*/
-static Boolean 
+static Boolean
 RefuseSelection(Widget w, Atom *selection, Atom *target,
-		Atom *type, XtPointer *value, unsigned long *length, 
+		Atom *type, XtPointer *value, unsigned long *length,
 		int *format)
 {
     return False;
 }
 
 /*ARGSUSED*/
-static void 
+static void
 LoseManager(Widget w, Atom *selection)
 {
     XtError("another clipboard has taken over control\n");
@@ -687,7 +685,7 @@ main(int argc, char *argv[])
     top = XtAppInitialize( &xtcontext, "XClipboard", table, XtNumber(table),
 			  &argc, argv, fallback_resources, NULL, 0);
 
-    XtGetApplicationResources(top, (XtPointer)&userOptions, resources, 
+    XtGetApplicationResources(top, (XtPointer)&userOptions, resources,
 			      XtNumber(resources), NULL, 0);
 
     XtAppAddActions (xtcontext,
@@ -716,7 +714,7 @@ main(int argc, char *argv[])
     }
 
     text = XtCreateManagedWidget( "text", Text, parent, args, n);
-    
+
     currentClip = NewClip (text, (ClipPtr) 0);
 
     set_button_state ();
