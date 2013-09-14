@@ -120,15 +120,15 @@ static char *filename = NULL;
 #ifdef PATHETICCPP
 static Bool need_real_defines = False;
 static char tmpname2[32];
+#endif
 #ifdef WIN32
 static char tmpname3[32];
-#endif
 #endif
 static int oper = OPLOAD;
 static char *editFile = NULL;
 static const char *cpp_program = NULL;
 static const char* const cpp_locations[] = { CPP };
-static char *backup_suffix = BACKUP_SUFFIX;
+static const char *backup_suffix = BACKUP_SUFFIX;
 static Bool dont_execute = False;
 static String defines;
 static int defines_base;
@@ -140,12 +140,12 @@ static Display *dpy;
 static Buffer buffer;
 static Entries newDB;
 
-static void fatal(char *, ...);
+static void fatal(const char *, ...) _X_ATTRIBUTE_PRINTF(1,2) _X_NORETURN;
 static void addstring ( String *arg, const char *s );
 static void addescapedstring ( String *arg, const char *s );
 static void addtokstring ( String *arg, const char *s );
-static void FormatEntries ( Buffer *buffer, Entries *entries );
-static void StoreProperty ( Display *dpy, Window root, Atom res_prop );
+static void FormatEntries ( Buffer *b, Entries *entries );
+static void StoreProperty ( Display *display, Window root, Atom res_prop );
 static void Process ( int scrno, Bool doScreen, Bool execute );
 static void ShuffleEntries ( Entries *db, Entries *dbs, int num );
 static void ReProcess ( int scrno, Bool doScreen );
@@ -192,42 +192,42 @@ asprintf(char ** ret, const char *format, ...)
 }
 #endif /* HAVE_ASPRINTF */
 
-static void 
+static void
 InitBuffer(Buffer *b)
 {
     b->room = INIT_BUFFER_SIZE;
     b->used = 0;
-    b->buff = (char *)malloc(INIT_BUFFER_SIZE*sizeof(char));
+    b->buff = malloc(INIT_BUFFER_SIZE*sizeof(char));
 }
 
 #ifdef notyet
-static void 
+static void
 FreeBuffer(Buffer *b)
 {
     free(b->buff);
 }
 #endif
 
-static void 
-AppendToBuffer(Buffer *b, char *str, int len)
+static void
+AppendToBuffer(Buffer *b, const char *str, int len)
 {
     while (b->used + len > b->room) {
-	b->buff = (char *)realloc(b->buff, 2*b->room*(sizeof(char)));
+	b->buff = realloc(b->buff, 2*b->room*(sizeof(char)));
 	b->room *= 2;
     }
     strncpy(b->buff + b->used, str, len);
     b->used += len;
 }
 
-static void 
+static void
 InitEntries(Entries *e)
 {
     e->room = INIT_ENTRY_SIZE;
     e->used = 0;
-    e->entry = (Entry *)malloc(INIT_ENTRY_SIZE*sizeof(Entry));
+    e->entry = malloc(INIT_ENTRY_SIZE*sizeof(Entry));
 }
 
-static void 
+static void
 FreeEntries(Entries *e)
 {
     register int i;
@@ -241,7 +241,7 @@ FreeEntries(Entries *e)
     free((char *)e->entry);
 }
 
-static void 
+static void
 AddEntry(Entries *e, Entry *entry)
 {
     register int n;
@@ -250,9 +250,9 @@ AddEntry(Entries *e, Entry *entry)
 	if (!strcmp(e->entry[n].tag, entry->tag)) {
 	    /* overwrite old entry */
 	    if (e->entry[n].lineno && !quiet) {
-		fprintf (stderr, 
+		fprintf (stderr,
 			 "%s:  \"%s\" on line %d overrides entry on line %d\n",
-			 ProgramName, entry->tag, entry->lineno, 
+			 ProgramName, entry->tag, entry->lineno,
 			 e->entry[n].lineno);
 	    }
 	    free(e->entry[n].tag);
@@ -264,8 +264,7 @@ AddEntry(Entries *e, Entry *entry)
     }
 
     if (e->used == e->room) {
-	e->entry = (Entry *)realloc((char *)e->entry,
-				    2*e->room*(sizeof(Entry)));
+	e->entry = realloc(e->entry, 2 * e->room * (sizeof(Entry)));
 	e->room *= 2;
     }
     entry->usable = True;
@@ -273,27 +272,27 @@ AddEntry(Entries *e, Entry *entry)
 }
 
 
-static int 
+static int
 CompareEntries(const void *e1, const void *e2)
 {
-    return strcmp(((Entry *)e1)->tag, ((Entry *)e2)->tag);
+    return strcmp(((const Entry *)e1)->tag, ((const Entry *)e2)->tag);
 }
 
-static void 
-AppendEntryToBuffer(Buffer *buffer, Entry *entry)
+static void
+AppendEntryToBuffer(Buffer *b, Entry *entry)
 {
-    AppendToBuffer(buffer, entry->tag, strlen(entry->tag));
-    AppendToBuffer(buffer, ":\t", 2);
-    AppendToBuffer(buffer, entry->value, strlen(entry->value));
-    AppendToBuffer(buffer, "\n", 1);
+    AppendToBuffer(b, entry->tag, strlen(entry->tag));
+    AppendToBuffer(b, ":\t", 2);
+    AppendToBuffer(b, entry->value, strlen(entry->value));
+    AppendToBuffer(b, "\n", 1);
 }
 
 /*
  * Return the position of the first unescaped occurrence of dest in string.
  * If lines is non-null, return the number of newlines skipped over.
  */
-static char *
-FindFirst(char *string, char dest, int *lines)
+static const char *
+FindFirst(const char *string, char dest, int *lines)
 {
     if (lines)
 	*lines = 0;
@@ -311,10 +310,10 @@ FindFirst(char *string, char dest, int *lines)
     }
 }
 
-static void 
+static void
 GetEntries(Entries *entries, Buffer *buff, int bequiet)
 {
-    register char *line, *colon, *temp, *str;
+    const char *line, *colon, *temp, *str;
     Entry entry;
     register int length;
     int lineno = 0;
@@ -339,15 +338,15 @@ GetEntries(Entries *entries, Buffer *buff, int bequiet)
 		lineno = dummy - 1;
 	    continue;
 	}
-	for (temp = str; 
-	     *temp && *temp != '\n' && isascii(*temp) && isspace(*temp); 
+	for (temp = str;
+	     *temp && *temp != '\n' && isascii(*temp) && isspace(*temp);
 	     temp++) ;
 	if (!*temp || *temp == '\n') continue;
 
 	colon = FindFirst(str, ':', NULL);
 	if (!colon || colon > line) {
 	    if (!bequiet && !quiet)
-		fprintf (stderr, 
+		fprintf (stderr,
 			 "%s: colon missing on line %d, ignoring line\n",
 			 ProgramName, lineno);
 	    continue;
@@ -359,20 +358,18 @@ GetEntries(Entries *entries, Buffer *buff, int bequiet)
 	length = colon - str;
 	while (length && (str[length-1] == ' ' || str[length-1] == '\t'))
 	    length--;
-	temp = (char *)malloc(length + 1);
-	strncpy(temp, str, length);
-	temp[length] = '\0';
-	entry.tag = temp;
+	entry.tag = malloc(length + 1);
+	strncpy(entry.tag, str, length);
+	entry.tag[length] = '\0';
 
 	/* strip leading and trailing blanks from value and store result */
 	colon++;
 	while (*colon == ' ' || *colon == '\t')
 	    colon++;
 	length = line - colon;
-	temp = (char *)malloc(length + 1);
-	strncpy(temp, colon, length);
-	temp[length] = '\0';
-	entry.value = temp;
+	entry.value = malloc(length + 1);
+	strncpy(entry.value, colon, length);
+	entry.value[length] = '\0';
 	entry.lineno = bequiet ? 0 : lineno;
 
 	AddEntry(entries, &entry);
@@ -391,13 +388,13 @@ GetEntriesString(Entries *entries, char *str)
     }
 }
 
-static void 
-ReadFile(Buffer *buffer, FILE *input)
+static void
+ReadFile(Buffer *b, FILE *input)
 {
 	     char	buf[BUFSIZ + 1];
     register int	bytes;
 
-    buffer->used = 0;
+    b->used = 0;
     while (!feof(input) && (bytes = fread(buf, 1, BUFSIZ, input)) > 0) {
 #ifdef WIN32
 	char *p;
@@ -409,18 +406,18 @@ ReadFile(Buffer *buffer, FILE *input)
 	    }
 	}
 #endif
-	AppendToBuffer(buffer, buf, bytes);
+	AppendToBuffer(b, buf, bytes);
     }
-    AppendToBuffer(buffer, "", 1);
+    AppendToBuffer(b, "", 1);
 }
 
 static void
-AddDef(String *buff, char *title, char *value)
+AddDef(String *buff, const char *title, const char *value)
 {
 #ifdef PATHETICCPP
     if (need_real_defines) {
 	addstring(buff, "\n#define ");
-	addstring(buff, title);
+	addtokstring(buff, title);
 	if (value && (value[0] != '\0')) {
 	    addstring(buff, " ");
 	    addstring(buff, value);
@@ -443,13 +440,13 @@ AddDef(String *buff, char *title, char *value)
 }
 
 static void
-AddSimpleDef(String *buff, char *title)
+AddSimpleDef(String *buff, const char *title)
 {
     AddDef(buff, title, (char *)NULL);
 }
 
 static void
-AddDefQ(String *buff, char *title, char *value)
+AddDefQ(String *buff, const char *title, const char *value)
 {
 #ifdef PATHETICCPP
     if (need_real_defines)
@@ -466,7 +463,7 @@ AddDefQ(String *buff, char *title, char *value)
 }
 
 static void
-AddNum(String *buff, char *title, int value)
+AddNum(String *buff, const char *title, int value)
 {
     char num[20];
     snprintf(num, sizeof(num), "%d", value);
@@ -474,7 +471,7 @@ AddNum(String *buff, char *title, int value)
 }
 
 static void
-AddDefTok(String *buff, char *prefix, char *title)
+AddDefTok(String *buff, const char *prefix, char *title)
 {
     char name[512];
 
@@ -483,7 +480,7 @@ AddDefTok(String *buff, char *prefix, char *title)
 }
 
 static void
-AddDefHostname(String *buff, char *title, char *value)
+AddDefHostname(String *buff, const char *title, const char *value)
 {
     char *s;
     char name[512];
@@ -499,7 +496,7 @@ AddDefHostname(String *buff, char *title, char *value)
 }
 
 static void
-AddUndef(String *buff, char *title)
+AddUndef(String *buff, const char *title)
 {
 #ifdef PATHETICCPP
     if (need_real_defines) {
@@ -518,7 +515,7 @@ AddUndef(String *buff, char *title)
     addtokstring(buff, title);
 }
 
-static void 
+static void
 DoCmdDefines(String *buff)
 {
     int i;
@@ -534,12 +531,15 @@ DoCmdDefines(String *buff)
 		*val = '=';
 	    } else
 		AddSimpleDef(buff, arg + 2);
-	} else
+	} else if (arg[1] == 'U') {
 	    AddUndef(buff, arg + 2);
+	} else if (!strcmp(arg, "-undef") && oper != OPSYMBOLS) {
+	    addstring(buff, " -undef");
+	}
     }
 }
 
-static int 
+static int
 Resolution(int pixels, int mm)
 {
     if (mm == 0)
@@ -558,7 +558,7 @@ DoDisplayDefines(Display *display, String *defs, char *host)
     char client[MAXHOSTNAMELEN], server[MAXHOSTNAMELEN], *colon;
     char **extnames;
     int n;
-    
+
     XmuGetHostname(client, MAXHOSTNAMELEN);
     strncpy(server, XDisplayName(host), sizeof(server));
     server[sizeof(server) - 1] = '\0';
@@ -567,7 +567,7 @@ DoDisplayDefines(Display *display, String *defs, char *host)
     colon = strrchr(server, ':');
     n = 0;
     if (colon) {
-	/* remove extra colon if there are exactly two, since it indicates 
+	/* remove extra colon if there are exactly two, since it indicates
 	   DECnet.  Three colons is an IPv6 address ending in :: though. */
 	if ((colon > server) && (*(colon-1) == ':') &&
 	  ( ((colon - 1) == server) || (*(colon-2) != ':') ) ) {
@@ -596,7 +596,7 @@ DoDisplayDefines(Display *display, String *defs, char *host)
     XFreeExtensionList(extnames);
 }
 
-static char *ClassNames[] = {
+static const char *ClassNames[] = {
     "StaticGray",
     "GrayScale",
     "StaticColor",
@@ -604,6 +604,8 @@ static char *ClassNames[] = {
     "TrueColor",
     "DirectColor"
 };
+
+#define NUM_CLASS_NAMES (int)(sizeof(ClassNames) / sizeof(ClassNames[0]))
 
 static void
 DoScreenDefines(Display *display, int scrno, String *defs)
@@ -613,7 +615,7 @@ DoScreenDefines(Display *display, int scrno, String *defs)
     XVisualInfo vinfo, *vinfos;
     int nv, i, j;
     char name[50];
-    
+
     screen = ScreenOfDisplay(display, scrno);
     visual = DefaultVisualOfScreen(screen);
     vinfo.screen = scrno;
@@ -625,9 +627,16 @@ DoScreenDefines(Display *display, int scrno, String *defs)
     AddNum(defs, "Y_RESOLUTION", Resolution(screen->height,screen->mheight));
     AddNum(defs, "PLANES", DisplayPlanes(display, scrno));
     AddNum(defs, "BITS_PER_RGB", visual->bits_per_rgb);
-    AddDefQ(defs, "CLASS", ClassNames[visual->class]);
-    snprintf(name, sizeof(name), "CLASS_%s", ClassNames[visual->class]);
-    AddNum(defs, name, (int)visual->visualid);
+    if (visual->class >= 0 && visual->class < NUM_CLASS_NAMES) {
+	AddDefQ(defs, "CLASS", ClassNames[visual->class]);
+	snprintf(name, sizeof(name), "CLASS_%s", ClassNames[visual->class]);
+	AddNum(defs, name, (int)visual->visualid);
+    }
+    else {
+	fprintf(stderr,
+		"%s: unknown visual type %d for default visual id 0x%lx\n",
+		ProgramName, visual->class, visual->visualid);
+    }
     switch(visual->class) {
 	case StaticColor:
 	case PseudoColor:
@@ -643,9 +652,16 @@ DoScreenDefines(Display *display, int scrno, String *defs)
 		break;
 	}
 	if (j < 0) {
-	    snprintf(name, sizeof(name), "CLASS_%s_%d",
-		    ClassNames[vinfos[i].class], vinfos[i].depth);
-	    AddNum(defs, name, (int)vinfos[i].visualid);
+	    if (vinfos[i].class >= 0 && vinfos[i].class < NUM_CLASS_NAMES) {
+		snprintf(name, sizeof(name), "CLASS_%s_%d",
+			 ClassNames[vinfos[i].class], vinfos[i].depth);
+		AddNum(defs, name, (int)vinfos[i].visualid);
+	    }
+	    else {
+		fprintf(stderr,
+			"%s: unknown visual type %d for visual id 0x%lx\n",
+			ProgramName, vinfos[i].class, vinfos[i].visualid);
+	    }
 	}
     }
     XFree((char *)vinfos);
@@ -682,7 +698,7 @@ FindEntry(Entries *db, Buffer  *b)
     return NULL;
 }
 
-static void 
+static void
 EditFile(Entries *new, FILE *in, FILE *out)
 {
     Buffer b;
@@ -716,12 +732,14 @@ cleanup:
     }
 }
 
-static void 
+static void _X_NORETURN
 Syntax (void)
 {
-    fprintf (stderr, 
+    fprintf (stderr,
 	     "usage:  %s [-options ...] [filename]\n\n"
 	     "where options include:\n"
+	     " -help               print this help message\n"
+	     " -version            print the program version\n"
 	     " -display host:dpy   display to use\n"
 	     " -all                do all resources [default]\n"
 	     " -global             do screen-independent resources\n"
@@ -743,7 +761,7 @@ Syntax (void)
 	     " -Dname[=value], -Uname, -Idirectory    passed to preprocessor\n"
 	     "\n"
 	     "A - or no input filename represents stdin.\n",
-	     ProgramName, CPP, BACKUP_SUFFIX);
+	     ProgramName, cpp_program ? cpp_program : "", BACKUP_SUFFIX);
     exit (1);
 }
 
@@ -752,8 +770,8 @@ Syntax (void)
  * whether or not the given string is an abbreviation of the arg.
  */
 
-static Bool 
-isabbreviation(char *arg, char *s, int minslen)
+static Bool
+isabbreviation(const char *arg, const char *s, int minslen)
 {
     int arglen;
     int slen;
@@ -779,9 +797,9 @@ addstring(String *arg, const char *s)
 {
     if(arg->used + strlen(s) + 1 >= arg->room) {
 	if(arg->val)
-	    arg->val = (char *)realloc(arg->val, arg->room + CHUNK_SIZE);
+	    arg->val = realloc(arg->val, arg->room + CHUNK_SIZE);
 	else
-	    arg->val = (char *)malloc(arg->room + CHUNK_SIZE);	    
+	    arg->val = malloc(arg->room + CHUNK_SIZE);
 	if(arg->val == NULL)
 	    fatal("%s: Not enough memory\n", ProgramName);
 	arg->room += CHUNK_SIZE;
@@ -791,7 +809,7 @@ addstring(String *arg, const char *s)
     else
 	strcpy(arg->val, s);
     arg->used += strlen(s);
-}   
+}
 
 static void
 addescapedstring(String *arg, const char *s)
@@ -855,11 +873,19 @@ main(int argc, char *argv[])
 	int j;
 
 	for (j = 0; j < number_of_elements; j++) {
-	    if (access(cpp_locations[j], X_OK) == 0) {
+	    char *end, *dup;
+	    /* cut off arguments */
+	    dup = strdup(cpp_locations[j]);
+	    end = strchr(dup,' ');
+	    if (end)
+		*end = '\0';
+	    if (access(dup, X_OK) == 0) {
 		cpp_program = cpp_locations[j];
+		free(dup);
 		break;
 	    }
-	} 
+	    free(dup);
+	}
     }
 
     /* needs to be replaced with XrmParseCommand */
@@ -874,6 +900,9 @@ main(int argc, char *argv[])
 	    } else if (isabbreviation ("-help", arg, 2)) {
 		Syntax ();
 		/* doesn't return */
+	    } else if (isabbreviation ("-version", arg, 2)) {
+		printf("%s\n", PACKAGE_STRING);
+		exit(0);
 	    } else if (isabbreviation ("-display", arg, 2)) {
 		if (++i >= argc) Syntax ();
 		displayname = argv[i];
@@ -948,9 +977,16 @@ main(int argc, char *argv[])
 		    fatal("%s: Too many -U/-D arguments\n", ProgramName);
 		}
 		continue;
+	    } else if (!strcmp ("-undef", arg)) {
+		if (num_cmd_defines < MAX_CMD_DEFINES) {
+		    cmd_defines[num_cmd_defines++] = "-undef";
+		} else {
+		    fatal("%s: Too many cpp arguments\n", ProgramName);
+		}
+		continue;
 	    }
 	    Syntax ();
-	} else if (arg[0] == '=') 
+	} else if (arg[0] == '=')
 	    continue;
 	else
 	    filename = arg;
@@ -1025,11 +1061,11 @@ main(int argc, char *argv[])
 	if (!fp)
 	    fatal("%s: Failed to open temp file: %s\n", ProgramName,
 		  filename);
-	while (fgets(inputbuf, sizeof(inputbuf), stdin) != NULL) 
+	while (fgets(inputbuf, sizeof(inputbuf), stdin) != NULL)
 	    fputs(inputbuf, fp);
 	fclose(fp);
     }
-	
+
     DoDisplayDefines(dpy, &defines, displayname);
     defines_base = defines.used;
     need_newline = (oper == OPQUERY || oper == OPSYMBOLS ||
@@ -1069,7 +1105,7 @@ main(int argc, char *argv[])
     else {
 	Entries *dbs;
 
-	dbs = (Entries *)malloc(ScreenCount(dpy) * sizeof(Entries));
+	dbs = malloc(ScreenCount(dpy) * sizeof(Entries));
 	for (i = 0; i < ScreenCount(dpy); i++) {
 	    Process(i, True, False);
 	    dbs[i] = newDB;
@@ -1107,12 +1143,12 @@ main(int argc, char *argv[])
 }
 
 
-static void 
-FormatEntries(Buffer *buffer, Entries *entries)
+static void
+FormatEntries(Buffer *b, Entries *entries)
 {
     register int i;
 
-    buffer->used = 0;
+    b->used = 0;
     if (!entries->used)
 	return;
     if (oper == OPMERGE)
@@ -1120,30 +1156,30 @@ FormatEntries(Buffer *buffer, Entries *entries)
 	      CompareEntries);
     for (i = 0; i < entries->used; i++) {
 	if (entries->entry[i].usable)
-	    AppendEntryToBuffer(buffer, &entries->entry[i]);
+	    AppendEntryToBuffer(b, &entries->entry[i]);
     }
 }
 
 static void
-StoreProperty(Display *dpy, Window root, Atom res_prop)
+StoreProperty(Display *display, Window root, Atom res_prop)
 {
     int len = buffer.used;
     int mode = PropModeReplace;
     unsigned char *buf = (unsigned char *)buffer.buff;
-    int max = (XMaxRequestSize(dpy) << 2) - 28;
+    int max = (XMaxRequestSize(display) << 2) - 28;
 
     if (len > max) {
-	XGrabServer(dpy);
+	XGrabServer(display);
 	do {
-	    XChangeProperty(dpy, root, res_prop, XA_STRING, 8, mode, buf, max);
+	    XChangeProperty(display, root, res_prop, XA_STRING, 8, mode, buf, max);
 	    buf += max;
 	    len -= max;
 	    mode = PropModeAppend;
 	} while (len > max);
     }
-    XChangeProperty(dpy, root, res_prop, XA_STRING, 8, mode, buf, len);
+    XChangeProperty(display, root, res_prop, XA_STRING, 8, mode, buf, len);
     if (mode != PropModeReplace)
-	XUngrabServer(dpy);
+	XUngrabServer(display);
 }
 
 static void
@@ -1187,7 +1223,7 @@ Process(int scrno, Bool doScreen, Bool execute)
 	(void) mktemp(template);
 	output = fopen(template, "w");
 #else
-	{ 
+	{
 	int fd = mkstemp(template);
 	output = fdopen(fd, "w");
 	}
@@ -1219,8 +1255,18 @@ Process(int scrno, Bool doScreen, Bool execute)
 		      template, editFile);
 	}
     } else {
+	const char *cpp_addflags = "";
+
 	if (oper == OPMERGE || oper == OPOVERRIDE)
 	    GetEntriesString(&newDB, xdefs);
+
+	/* Add -P flag only if using cpp, not another preprocessor */
+	if (cpp_program) {
+	    const char *cp = strstr(cpp_program, "cpp");
+
+	    if (cp && ((cp[3] == '\0') || cp[3] == ' '))
+		cpp_addflags = "-P";
+	}
 #ifdef PATHETICCPP
 	if (need_real_defines) {
 #ifdef WIN32
@@ -1230,8 +1276,8 @@ Process(int scrno, Bool doScreen, Bool execute)
 	    fprintf(input, "\n#include \"%s\"\n", filename);
 	    fclose(input);
 	    (void) mktemp(tmpname3);
-	    if (asprintf(&cmd, "%s -P%s %s > %s", cpp_program, includes.val,
-			 tmpname2, tmpname3) == -1)
+	    if (asprintf(&cmd, "%s %s %s %s > %s", cpp_program, cpp_addflags,
+			 includes.val, tmpname2, tmpname3) == -1)
 		fatal("%s: Out of memory\n", ProgramName);
 	    if (system(cmd) < 0)
 		fatal("%s: cannot run '%s'\n", ProgramName, cmd);
@@ -1245,7 +1291,8 @@ Process(int scrno, Bool doScreen, Bool execute)
 	    fprintf(stdin, "\n#include \"%s\"\n", filename);
 	    fflush(stdin);
 	    fseek(stdin, 0, 0);
-	    if (asprintf(&cmd, "%s -P%s", cpp_program, includes.val) == -1)
+	    if (asprintf(&cmd, "%s %s %s", cpp_program, cpp_addflags,
+			 includes.val) == -1)
 		fatal("%s: Out of memory\n", ProgramName);
 	    if (!(input = popen(cmd, "r")))
 		fatal("%s: cannot run '%s'\n", ProgramName, cmd);
@@ -1260,8 +1307,8 @@ Process(int scrno, Bool doScreen, Bool execute)
 	if (cpp_program) {
 #ifdef WIN32
 	    (void) mktemp(tmpname3);
-	    if (asprintf(&cmd, "%s -P%s %s %s > %s", cpp_program,
-			 includes.val, defines.val,
+	    if (asprintf(&cmd, "%s %s %s %s %s > %s", cpp_program,
+			 cpp_addflags, includes.val, defines.val,
 			 filename ? filename : "", tmpname3) == -1)
 		fatal("%s: Out of memory\n", ProgramName);
 	    if (system(cmd) < 0)
@@ -1270,8 +1317,8 @@ Process(int scrno, Bool doScreen, Bool execute)
 	    if (!(input = fopen(tmpname3, "r")))
 		fatal("%s: can't open file '%s'\n", ProgramName, tmpname3);
 #else
-	    if (asprintf(&cmd, "%s -P%s %s %s", cpp_program,
-			 includes.val, defines.val,
+	    if (asprintf(&cmd, "%s %s %s %s %s", cpp_program,
+			 cpp_addflags, includes.val, defines.val,
 			 filename ? filename : "") == -1)
 		fatal("%s: Out of memory\n", ProgramName);
 	    if (!(input = popen(cmd, "r")))
@@ -1329,7 +1376,7 @@ ShuffleEntries(Entries *db, Entries *dbs, int num)
     Entries cur, cmp;
     char *curtag, *curvalue;
 
-    hits = (int *)malloc(num * sizeof(int));
+    hits = malloc(num * sizeof(int));
     cur = dbs[0];
     for (i = 0; i < cur.used; i++) {
 	curtag = cur.entry[i].tag;
@@ -1387,7 +1434,7 @@ ReProcess(int scrno, Bool doScreen)
 }
 
 static void
-fatal(char *msg, ...)
+fatal(const char *msg, ...)
 {
     va_list args;
 

@@ -1,3 +1,190 @@
+commit 17eda976c8dca736ef63fc45ff7de8c73c0e2936
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 8 10:16:42 2013 -0700
+
+    xrdb 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e49a64191d3b08044d29d32896e15013e5e7540
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 19:51:09 2013 -0700
+
+    Add -version flag to print package version string from autoconf
+    
+    Also adds missing entry for -help flag to usage message.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-By: Matt Dew <marcoz@osource.org>
+
+commit ec7b273fd135a14a2ca6c19cd0e6afe1536db552
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 19:31:04 2013 -0700
+
+    Only add -P flag if using cpp as our preprocessor
+    
+    Restores ability to use m4 (broken in xrdb-1.0.8 by commit 117021570515f)
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=34546
+    
+    Reviewed-by: <wharms@bfs.de>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11e7f4610cd6468aeea115081dd72ddd7eba0f3f
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Dec 3 15:52:04 2010 -0500
+
+    predefined cpp macros can produce unexpected results (bug 3413)
+    
+    GNU cpp is predefining a number of symbols, depending on the host and target
+    architecture. This can produce some unexpected results: for example, the
+    expansion of CLIENTHOST if the host name is i386.my.domain.
+    
+    The attached patch creates a new -undef option to xrdb that is passed to
+    cpp.
+    
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d23e17e09c45e214737ddf8f653dc31cdcf3a0d2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 18:53:49 2013 -0700
+
+    Rename args to several functions to not shadow global variables
+    
+    Renamed "buffer" to "b" and "dpy" to "display" to match common patterns
+    in other functions in xrdb.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b8da0a0a296dce4ead1baac4a39ac27dee144da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 18:44:47 2013 -0700
+
+    Mark fatal() & Syntax() with printf & noreturn attributes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 45909ffe71788d80b2dabff886341b44c10a096d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 18:42:28 2013 -0700
+
+    Strip trailing whitespace
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce7d8d3eaab2a5392c24ba3cca79b6fd1610abcb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 18:41:19 2013 -0700
+
+    Remove unnecessary casts from malloc & realloc calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 49022f26d97786b8252f9782d1517c6bf763e008
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 18:37:44 2013 -0700
+
+    Fix many const pointer warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 965ef4b3357a1dbf996529d98e812069878e07c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 12:02:23 2013 -0700
+
+    Ensure we don't read out of ClassName array bounds for unknown visual type
+    
+    Should never happen, but has been reported as happening at least once:
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=488535
+    
+    Instead prints warning messages to stderr to help diagnose where the
+    bad visual information is coming from.
+    
+    (Tested by temporarily commenting out names in the ClassName array.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed086df97fc816dfeb792ac0094eaa8795177bf5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 30 09:11:12 2013 -0700
+
+    Clarify .Xresources vs. .Xdefaults in man page
+    
+    Reported by John Feuerstein at
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=649187
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 420347005ccf1886dfbb2eb2902beafdcf4e2477
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu May 19 11:35:25 2011 +0200
+
+    Allow the CPP macro to contain preprocessors with command line options (v2)
+    
+    The preprocessor used for xrdb may require a command line option to
+    produce the desired output. For the GNU cpp this could be
+    'traditional-cpp' which may not be valid for other preprocessors.
+    Therefore support the specification of preprocessors along with
+    required command line arguments when using the '--with-cpp' configure
+    option.
+    Example:
+       ./configure --with-cpp="/usr/bin/cpp --traditional-cpp, /usr/lib/cpp".
+    
+    v2: Followed a suggestion by Julien Cristau <jcristau@debian.org>
+        to allocate memory for the dup string dynamically instead of
+        using a static buffer.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit 76f2c5b2a744587a9e97b622ab359d6fd7689604
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu May 19 11:29:57 2011 +0200
+
+    Usage: In usage message print preprocessor that's actually chosen.
+    
+    The CPP macro may contain a list of preprocessors to chose from.
+    In the usage message describing the -cpp command line option print
+    the preprocessor that would actually be chosen.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58349f9efc204f5843cfeccc25fbc51f1f5029ae
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Wed Jan 4 19:00:03 2012 +0000
+
+    Fix build with WIN32 defined, but PATHETICCPP not defined
+    
+    (Note that PATHETICCPP seems to be never defined now, see [1])
+    
+    [1] http://lists.x.org/archives/xorg-devel/2010-October/013860.html
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+commit 60577129058e018f13748b99e51ab1a17088db8e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 16 15:38:17 2011 -0700
+
+    Tokenize #define names in the PATHETICCPP case too
+    
+    Fixes generation of the EXT_<extension-name> #defines, since cpp treats
+    a #define EXT_MIT-SHM as a token "EXT_MIT" with a value of "-SHM".
+    
+    Without this fix, an xrdb built with PATHETICCPP prints warnings of:
+    macro EXT_XC redefines previous macro at "", line 27
+    macro EXT_XVideo redefines previous macro at "", line 33
+    macro EXT_MIT redefines previous macro at "", line 35
+    macro EXT_MIT redefines previous macro at "", line 37
+    
+    due to extension #defines such as EXT_MIT-SCREEN-SAVER & EXT_MIT-SHM
+    conflicting with each other.
+    
+    Now matches the non-PATHETICCPP handling of #define names.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4b8990ea599aee08284481b258cccdc25dd5d8d8
 Author: Matthias Hopf <mhopf@suse.de>
 Date:   Tue Apr 5 17:50:00 2011 +0200

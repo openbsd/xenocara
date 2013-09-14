@@ -168,6 +168,10 @@ program accepts the following options:
 This option (or any unsupported option) will cause a brief description of
 the allowable options and parameters to be printed.
 .TP 8
+.B \-version
+This option will cause the xrdb version to be printed and the program to exit
+without performing any other operations.
+.TP 8
 .B \-display \fIdisplay\fP
 This option specifies the X server to be used; see \fIX(__miscmansuffix__)\fP.
 It also specifies the screen to use for the \fI-screen\fP option,
@@ -222,6 +226,10 @@ This option indicates that
 .I xrdb
 should not run the input file through a preprocessor before loading it
 into properties.
+.TP 8
+.B -undef
+This option is passed to the C preprocessor if used. It prevents it from
+predefining any system specific macros.
 .TP 8
 .B \-symbols
 This option indicates that the symbols that are defined for the preprocessor
@@ -286,7 +294,11 @@ This option is passed through to the preprocessor and is used to specify
 a directory to search for files that are referenced with
 .I #include.
 .SH FILES
-Generalizes \fI~/.Xdefaults\fP files.
+.I Xrdb
+does not load any files on its own, but many desktop environments use
+xrdb to load \fI~/.Xresources\fP files on session startup to initialize
+the resource database, as a generalized replacement for \fI~/.Xdefaults\fP
+files.
 .SH "SEE ALSO"
 X(__miscmansuffix__), appres(__appmansuffix__), listres(__appmansuffix__),
 Xlib Resource Manager documentation, Xt resource documentation
