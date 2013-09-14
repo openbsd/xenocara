@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xinit], [1.3.2],
+AC_INIT([xinit], [1.3.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xinit])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -51,7 +51,7 @@ DEFAULT_XSERVER=${bindir}/X
 DEFAULT_XAUTH=xauth
 DEFAULT_XINIT=xinit
 DEFAULT_WM=fvwm
-DEFAULT_XINITDIR=${libdir}/X11/xinit
+DEFAULT_XINITDIR=${sysconfdir}/X11/xinit
 DEFAULT_XCONSOLE=xconsole
 
 AC_ARG_WITH(xrdb,
@@ -153,7 +153,7 @@ AM_CONDITIONAL(TIGER_LAUNCHD, [test "x$TIGER_LAUNCHD" = "xyes"])
 AM_CONDITIONAL(LAUNCHAGENT_XSERVER, [test "x$launchagentxserver" != "xno"])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XINIT, x11)
+PKG_CHECK_MODULES(XINIT, x11 xproto >= 7.0.17)
 
 case $host_os in
     *bsd*)
@@ -165,17 +165,26 @@ esac
 AC_PATH_PROGS(MCOOKIE, [mcookie], [$MCOOKIE],
   [$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/local/bin])
 
-case $host_os in
-	*openbsd*)
-	MCOOKIE='/usr/sbin/openssl rand -hex 16'
-	;;
-	*solaris*)
-	MCOOKIE="/usr/bin/od -X -A n -N 16 /dev/urandom | /usr/bin/tr -d ' '"
-	;;
-esac
-
+# If mcookie not found, try openssl, else per-system fallbacks
+if test "x$MCOOKIE" = x ; then
+    AC_PATH_PROGS(OPENSSL, [openssl], [$OPENSSL],
+        [$PATH:/bin:/usr/bin:/usr/sbin:/usr/lib:/usr/libexec:/usr/local/bin])
+    if test "x$OPENSSL" != x ; then
+        MCOOKIE="$OPENSSL rand -hex 16"
+    else
+        case $host_os in
+            *openbsd*)
+                MCOOKIE='/usr/sbin/openssl rand -hex 16'
+                ;;
+            *solaris*)
+                MCOOKIE="/usr/bin/od -X -A n -N 16 /dev/urandom | /usr/bin/tr -d ' '"
+                ;;
+        esac
+    fi
+fi
 if test "x$MCOOKIE" != x ; then
 	STARTX_COOKIE_FLAGS='-DHAS_COOKIE_MAKER -DMK_COOKIE="$(MCOOKIE)"'
+	AC_MSG_NOTICE([startx will depend on "$MCOOKIE" to generate xauth cookies])
 fi
 AC_SUBST(STARTX_COOKIE_FLAGS)
 

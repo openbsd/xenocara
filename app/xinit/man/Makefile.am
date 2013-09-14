@@ -13,7 +13,9 @@ MAN_SUBSTS+=	-e 's|__XSERVERNAME__|$(XSERVERNAME)|g' \
 		-e 's|__xinitdir__|$(XINITDIR)|g' \
 		-e 's|__bindir__|$(bindir)|g' \
 		-e 's|__libdir__|$(libdir)|g' \
-		-e 's|__SCOMAN__|$(SCOMAN)|g'
+		-e 's|__SCOMAN__|$(SCOMAN)|g' \
+		-e 's|__configdir__|$(XINITDIR)|g'
+
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(APP_MAN_SUFFIX):

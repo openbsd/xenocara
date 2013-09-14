@@ -126,7 +126,9 @@ if [ x`defaults read $X11_PREFS_DOMAIN nolisten_tcp` = x1 ] ; then
     defaultserverargs="$defaultserverargs -nolisten tcp"
 fi
 
-if defaults read $X11_PREFS_DOMAIN dpi > /dev/null 2>&1 ; then
+XCOMM The second check is the real one.  The first is to hopefully avoid
+XCOMM needless syslog spamming.
+if defaults read $X11_PREFS_DOMAIN 2> /dev/null | grep -q 'dpi' && defaults read $X11_PREFS_DOMAIN dpi > /dev/null 2>&1 ; then
     defaultserverargs="$defaultserverargs -dpi `defaults read $X11_PREFS_DOMAIN dpi`"
 fi
 

@@ -84,8 +84,8 @@ host_triplet = @host@
 bin_PROGRAMS = xinit$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure $(top_srcdir)/cpprules.in AUTHORS \
-	COPYING ChangeLog INSTALL NEWS config.guess config.sub depcomp \
+	$(top_srcdir)/configure $(top_srcdir)/cpprules.in COPYING \
+	ChangeLog INSTALL NEWS compile config.guess config.sub depcomp \
 	install-sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -280,6 +280,7 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKDIR_P = @MKDIR_P@
 OBJEXT = @OBJEXT@
+OPENSSL = @OPENSSL@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -289,6 +290,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
 SCOMAN = @SCOMAN@
@@ -384,7 +387,6 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/^[ 	]*XCOMM$$/s/XCOMM/\#/' \
                        -e '/^[ 	]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
                        -e '/^[ 	]*XHASH/s/XHASH/\#/' \
-                       -e '/XSLASHGLOB/s/XSLASHGLOB/\/\*/' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
 SUFFIXES = .cpp

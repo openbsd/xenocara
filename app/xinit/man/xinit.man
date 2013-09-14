@@ -109,7 +109,7 @@ used.
 This will start up a server named \fIX\fP and run the user's \fI\.xinitrc\fP,
 if it exists, or else start an \fIxterm\fP.
 .TP 8
-.B "xinit \-\^\- /usr/local/bin/Xvnc  :1"
+.B "xinit \-\^\- __bindir__/Xvnc  :1"
 This is how one could start a specific type of server on an alternate display.
 .TP 8
 .B "xinit \-geometry =80x65+10+10 \-fn 8x13 \-j \-fg white \-bg navy"
@@ -149,7 +149,7 @@ a default \fI\.xinitrc\fP that references a site-wide startup file:
 .in +8
 .nf
 \&#!/bin/sh
-\&. /usr/local/lib/site.xinitrc
+\&. __configdir__/site.xinitrc
 .fi
 .in -8
 .sp
@@ -161,7 +161,7 @@ novice users:
 .in +8
 .nf
 \&#!/bin/sh
-xinit /usr/local/lib/site.xinitrc \-\^\- __bindir__/X -br
+xinit __configdir__/site.xinitrc \-\^\- __bindir__/X -br
 .fi
 .in -8
 .sp

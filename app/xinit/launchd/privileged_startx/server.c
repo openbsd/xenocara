@@ -125,9 +125,19 @@ int server_main(const char *dir) {
     aslclient aslc;
 
     checkin = launch_data_new_string(LAUNCH_KEY_CHECKIN);
+    if (!checkin) {
+        asl_log(NULL, NULL, ASL_LEVEL_ERR, "unable to create launchd checkin string");
+        exit(EXIT_FAILURE);
+    }
+
     config = launch_msg(checkin);
-    if (!config || launch_data_get_type(config) == LAUNCH_DATA_ERRNO) {
-        asl_log(NULL, NULL, ASL_LEVEL_ERR, "launchd checkin failed");
+    if (!config) {
+        asl_log(NULL, NULL, ASL_LEVEL_ERR, "could not send a message to launchd");
+        exit(EXIT_FAILURE);
+    }
+
+    if (launch_data_get_type(config) == LAUNCH_DATA_ERRNO) {
+        asl_log(NULL, NULL, ASL_LEVEL_ERR, "launchd checkin failed eith error: %d %s", launch_data_get_errno(config), strerror(launch_data_get_errno(config)));
         exit(EXIT_FAILURE);
     }
 

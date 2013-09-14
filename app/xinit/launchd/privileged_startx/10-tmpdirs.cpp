@@ -1,5 +1,5 @@
 XCOMM!/bin/sh
-XCOMM Copyright (c) 2008 Apple Inc.
+XCOMM Copyright (c) 2008-2012 Apple Inc.
 XCOMM
 XCOMM Permission is hereby granted, free of charge, to any person
 XCOMM obtaining a copy of this software and associated documentation files
@@ -36,11 +36,33 @@ else
     MKTEMP=mktemp
 fi
 
+STAT=/usr/bin/stat
+
 for dir in /tmp/.ICE-unix /tmp/.X11-unix /tmp/.font-unix ; do
-	XCOMM Use mktemp rather than mkdir to avoid possible security issue
-	XCOMM if $dir exists and is a symlink
-	if ${MKTEMP} -d ${dir} >& /dev/null ; then
-		chmod 1777 $dir
-		chown root:wheel $dir
+	success=0
+	for attempt in 1 2 3 4 5 ; do
+		check=`${STAT} -f '%#p %u %g' ${dir} 2> /dev/null`
+		if [ "${check}" = "041777 0 0" ] ; then
+			success=1
+			break
+		elif [ -n "${check}" ] ; then
+			saved=$(${MKTEMP} -d ${dir}-XXXXXXXX)
+			mv ${dir} ${saved}
+			echo "${dir} exists but is insecure.  It has been moved into ${saved}" >&2
+		fi
+
+		# Use mktemp rather than mkdir to avoid possible security issue
+		# if $dir exists and is a symlink (ie protect against a race
+		# against the above check)
+		if ${MKTEMP} -d ${dir} >& /dev/null ; then
+			chmod 1777 $dir
+			chown root:wheel $dir
+			success=1
+			break
+		fi
+	done
+
+	if [ "${success}" -eq 0 ] ; then
+		echo "Could not successfully create ${dir}" >&2
 	fi
 done

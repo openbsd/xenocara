@@ -1,3 +1,209 @@
+commit cdc39fd28649ea906dea8f58981d15d4b04a0a47
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 8 09:35:35 2013 -0700
+
+    xinit 1.3.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2363f7ed1c7f838107c1209a97d103f72d980f99
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 8 09:35:27 2013 -0700
+
+    Add Apple copyright/license notice from launchd files to COPYING
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5250190bd436b5b762ebb57452d15dff5ae6a24a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 24 14:46:33 2013 -0700
+
+    Use pid_t instead of int for type of pids
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 14ea26b8dc0c601e445331e09a4cc9ca082a1345
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 00:15:34 2013 -0700
+
+    Check for openssl as mkcookie fallback on all platforms, not just OpenBSD
+    
+    Configure will notify the builder which cookie maker it chooses,
+    so that packagers can add a dependency on the program needed.
+    
+    (Matthieu says the -hex flag to the openssl command was originally
+     OpenBSD-specific but has since been added in upstream OpenSSL.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 09ab37f816d2fe9482574c825132d9b516b8e0bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 18 22:58:10 2013 -0700
+
+    Declare processTimeout() as taking a const string arg
+    
+    Fixes gcc const warnings on every call to it
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1dd71b4eae433896e41f8366f23b8269712b4cf3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 18 22:51:56 2013 -0700
+
+    If we have to forcibly kill the Xserver on Solaris, reset kbd_mode
+    
+    If the Xserver hangs when xinit is waiting for it to die, and xinit
+    sends a kill -9 to it, then it will leave the keyboard in a state that
+    can't be used on the text console, so fix it up ourselves.
+    
+    Upstreaming from Solaris, where it was originally implemented to fix
+    Sun bug 4221128 “If Xserver is slow to exit, xinit does "kill -9" and
+    kbd_mode -a is required”
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 79fd43329e15432bab4f9f8856af385ac2ac0417
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Thu Apr 4 14:58:30 2013 +0200
+
+    Use xinitrc.d/?*.sh as the matching pattern instead of needing a fragile sed substitution XSLASHGLOB to produce xinitrc.d/*.sh. (If that were used literally the slash-star would confuse cpp.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ef3d1d64958c51d7716445574bb7e5653aab714d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 23 11:23:25 2013 -0800
+
+    Add printf attributes suggested by gcc
+    
+    Also moves existing noreturn attributes up to function prototypes for
+    functions with forward declarations.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e85bce64acef1fa0ddff04d59737444e942ff12
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu May 19 09:27:13 2011 +0200
+
+    install: Use sysconfdir instead of libdir for config files.
+    
+    Most X packages today install their config files in sysconfigdir,
+    only a few are left which still put their configuration in libdir.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7c2f87264db950dfecb1a5467d06b3d9d621e32c
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu May 19 09:26:24 2011 +0200
+
+    man: Set correct config file location in man page
+    
+    Change the config file location from a hard coded path to what is
+    set during build.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fb4d46c9a85755910a222dcc7167df3b5a5c8d94
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Sep 20 22:31:44 2012 -0700
+
+    privileged_startx: use root:wheel instead of 0:0
+    
+    http://xquartz.macosforge.org/trac/ticket/637
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit bfed997da5f083e3ddfbda440e114d1261d18b14
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Jul 24 08:47:29 2012 -0700
+
+    XQuartz: Fix an issue where -dpi was not being passed to the server despite being set
+    
+    For some reason 'defaults' sometimes shows dpi in quotes and sometimes
+    doesn't.
+    
+    Regression-from: 335937217a51e5e159a14463e0b1e3aedf35c6be
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8156aad786754499f4636104aa5bd8a27a281448
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat May 19 04:34:32 2012 -0700
+
+    Annotate Fatal and Fatalx as _X_NORETURN
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 641588afe92c803a1231ecf6281115f55b20e62a
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat May 19 04:30:49 2012 -0700
+
+    laucnhd: Silence some syslog spam
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 335937217a51e5e159a14463e0b1e3aedf35c6be
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat May 19 04:22:14 2012 -0700
+
+    darwin: Silence a syslog message from defaults
+    
+    Unfortunately defaults has no way to check if a preference exists, and it
+    prints a message to syslog if we read one that doesn't exist.  dpi is one
+    that commonly doesn't exist and results in user confusion when they read
+    syslog.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit eda973a32552c916e7e7cce8877674106cbda0cb
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Apr 18 10:02:07 2012 -0700
+
+    launchd: Fix the destination of moved-aside directories in privileged_startx
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c781653f956043e0ee476d4e95e0ae93b27aff96
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Apr 18 09:52:18 2012 -0700
+
+    launchd: Load privileged_startx properly on Tiger
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4cd122efcfa47afbe8c2ebeee6d8fd48914839a7
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Apr 18 09:47:33 2012 -0700
+
+    launchd: Provide more verbose error reporting for launchd checkin failures
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2d9bdc819adbe45ec3ffdc72429fd92b7f613601
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Apr 18 09:20:37 2012 -0700
+
+    launchd: Don't provide the LaunchAgent on Tiger
+    
+    Tiger's launchd doesn't support all the features we need from it.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 49cfa8b7253096d24b2ef6a8d0ba32c4bae9ac23
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Feb 17 17:35:26 2012 -0800
+
+    launchd/privileged_startx: Improved error resolution
+    
+    Rather than just failing to do anything when directories aren't what we
+    want them to be, we now try our best to fix the situation.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit f5ef7a3f8c1e8ac3f715e4059bf3b9a03aafd5a7
 Author: Jeremy Huddleston <jeremyhu@apple.com>
 Date:   Fri Jan 27 23:13:48 2012 -0800

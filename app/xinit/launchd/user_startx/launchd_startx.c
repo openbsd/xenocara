@@ -1,4 +1,4 @@
-/* Copyright (c) 2011 Apple Inc.
+/* Copyright (c) 2011-2012 Apple Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation files
@@ -37,15 +37,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <stdlib.h>
-
-/* Using MIN_REQUIRED instead of MAX_ALLOWED logic due to posix_spawn not
- * being marked with availability macros until 10.7
- */
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 #include <spawn.h>
-#else
-#include <errno.h>
-#endif
 
 #include "console_redirect.h"
 
@@ -64,20 +56,7 @@ int main(int argc, char **argv, char **envp) {
     xi_asl_capture_fd(aslc, NULL, ASL_LEVEL_INFO, STDOUT_FILENO);
     xi_asl_capture_fd(aslc, NULL, ASL_LEVEL_NOTICE, STDERR_FILENO);
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
     assert(posix_spawnp(&child, argv[1], NULL, NULL, &argv[1], envp) == 0);
-#else
-    switch(child = fork()) {
-        case -1:
-            perror("fork");
-            return errno;
-        case 0:
-            return execvp(argv[1], &argv[1]);
-        default:
-            break;
-    }
-#endif
-
     wait4(child, &pstat, 0, (struct rusage *)0);
 
     return pstat;
