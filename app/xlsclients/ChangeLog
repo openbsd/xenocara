@@ -1,3 +1,90 @@
+commit 1bdd68ccb6f107525d27a2963f01f7bc4830e643
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 8 09:56:46 2013 -0700
+
+    xlsclients 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c5de636fc500d5151ce4a4d0ceb0cbc152d73b49
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 00:48:10 2013 -0700
+
+    Fix deconstification warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a67a804a43ad75efb3040c9e9e067fc60cde1256
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 00:45:13 2013 -0700
+
+    Add -version flag to print version from PACKAGE_STRING
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81a64c9112b9d650106a01d8bcd246011d037bc2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 22 22:46:42 2013 -0800
+
+    Give unique names to the two reply variables in child_info
+    
+    Clears compiler warnings:
+    
+    xlsclients.c:253:28: warning: declaration shadows a local variable [-Wshadow]
+            xcb_get_property_reply_t *reply;
+                                      ^
+    xlsclients.c:250:30: note: previous declaration is here
+        xcb_query_tree_reply_t **reply;
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 70c0bd30f0f77e70910d10f91ecca617d6b5acb7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jan 22 20:19:45 2012 -0500
+
+    configure.ac: regroup statements and comment
+    
+    Add missing AC_CONFIG_SRCDIR([Makefile.am])
+    
+    Move AC_USE_SYSTEM_EXTENSIONS higher up in Autoconf init section
+    which must come before XORG_DEFAULT_OPTIONS
+    
+    Move XORG_DEFAULT_OPTIONS to its usual place with X.Org macros
+    Note that AC_FUNC_STRNLEN calls AC_REQUIRE(AC_USE_SYSTEM_EXTENSIONS)
+    
+    Comment the strnlen function replacement.
+    http://pubs.opengroup.org/onlinepubs/9699919799/functions/strlen.html
+    
+    No functional changes. Following the layout in
+    http://www.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 395f3573fe0124991eb9a2f33473ea2ed2fd422c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 20 19:57:48 2012 -0500
+
+    Revert "make: remove $(LIBOBJS) dead code"
+    
+    AC_FUNC_STRLEN is one of the functions that call AC_LIBOBJ
+    which sets $LIBOBJ.
+    
+    This reverts commit 789a5b42a716b14429c67161147151dd57dd5480.
+
+commit 789a5b42a716b14429c67161147151dd57dd5480
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 20 15:19:26 2012 -0500
+
+    make: remove $(LIBOBJS) dead code
+    
+    Starting at Autoconf 2.53, the use of LIBOBJS is an error.
+    http://www.gnu.org/software/autoconf/manual/autoconf.html#
+    AC_005fLIBOBJ-vs-LIBOBJS
+    
+    There are no system functions to override in this module.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 5f064f70b183147578919166bedeca55cdb0af71
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon May 2 21:12:31 2011 -0700

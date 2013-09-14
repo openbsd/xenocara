@@ -55,7 +55,7 @@ static xcb_atom_t WM_STATE;
 static void lookat (xcb_connection_t *dpy, xcb_window_t root, int verbose, int maxcmdlen);
 static void print_client_properties (xcb_connection_t *dpy, xcb_window_t w,
 				     int verbose, int maxcmdlen );
-static void print_text_field (xcb_connection_t *dpy, char *s, xcb_get_property_reply_t *tp );
+static void print_text_field (xcb_connection_t *dpy, const char *s, xcb_get_property_reply_t *tp );
 static int print_quoted_word (char *s, int maxlen);
 static void unknown (xcb_connection_t *dpy, xcb_atom_t actual_type, int actual_format );
 
@@ -68,7 +68,8 @@ static void
 usage(void)
 {
     fprintf (stderr,
-	     "usage:  %s  [-display dpy] [-m len] [-[a][l]]\n", ProgramName);
+	     "usage:  %s  [-display dpy] [-m len] [-[a][l]] [-version]\n",
+	     ProgramName);
     exit (1);
 }
 
@@ -168,6 +169,9 @@ main(int argc, char *argv[])
 		if (++i >= argc) usage ();
 		maxcmdlen = atoi (argv[i]);
 		continue;
+	      case 'v':			/* -version */
+		printf("%s\n", PACKAGE_STRING);
+		exit(0);
 	    }
 
 	    for (cp = &arg[1]; *cp; cp++) {
@@ -189,7 +193,7 @@ main(int argc, char *argv[])
 
     dpy = xcb_connect(displayname, &screen_number);
     if (xcb_connection_has_error(dpy)) {
-	char *name = displayname;
+	const char *name = displayname;
 	if (!name)
 	    name = getenv("DISPLAY");
 	if (!name)
@@ -247,23 +251,23 @@ static void child_info(void *closure)
     int i, j;
 
     int child_count, num_rep;
-    xcb_query_tree_reply_t **reply;
+    xcb_query_tree_reply_t **qt_reply;
 
     for (i = 0; i < cs->list_length; i++) {
-	xcb_get_property_reply_t *reply;
-	reply = xcb_get_property_reply(c, cs->prop_cookie[i], NULL);
-	if (reply) {
-	    if (reply->type) {
+	xcb_get_property_reply_t *gp_reply;
+	gp_reply = xcb_get_property_reply(c, cs->prop_cookie[i], NULL);
+	if (gp_reply) {
+	    if (gp_reply->type) {
 		/* Show information for this window */
 		print_client_properties(c, cs->win[i], cs->verbose, cs->maxcmdlen);
 
-		free(reply);
+		free(gp_reply);
 
 		/* drain stale replies */
 		for (j = i+1; j < cs->list_length; j++) {
-		    reply = xcb_get_property_reply(c, cs->prop_cookie[j], NULL);
-		    if (reply)
-			free(reply);
+		    gp_reply = xcb_get_property_reply(c, cs->prop_cookie[j], NULL);
+		    if (gp_reply)
+			free(gp_reply);
 		}
 		for (j = 0; j < cs->list_length; j++) {
 		    xcb_query_tree_reply_t *rep;
@@ -273,25 +277,25 @@ static void child_info(void *closure)
 		}
 		goto done;
 	    }
-	    free(reply);
+	    free(gp_reply);
 	}
     }
 
     /* WM_STATE not found. Recurse into children: */
     num_rep = 0;
-    reply = malloc(sizeof(*reply) * cs->list_length);
-    if (!reply)
+    qt_reply = malloc(sizeof(*qt_reply) * cs->list_length);
+    if (!qt_reply)
 	goto done; /* TODO: print OOM message, drain reply queue */
 
     for (i = 0; i < cs->list_length; i++) {
-	reply[num_rep] = xcb_query_tree_reply(c, cs->tree_cookie[i], NULL);
-	if (reply[num_rep])
+	qt_reply[num_rep] = xcb_query_tree_reply(c, cs->tree_cookie[i], NULL);
+	if (qt_reply[num_rep])
 	    num_rep++;
     }
 
     child_count = 0;
     for (i = 0; i < num_rep; i++)
-	child_count += reply[i]->children_len;
+	child_count += qt_reply[i]->children_len;
 
     if (!child_count) {
 	/* No children have CS_STATE; try the parent window */
@@ -314,8 +318,8 @@ static void child_info(void *closure)
 
     child_count = 0;
     for (i = 0; i < num_rep; i++) {
-	xcb_window_t *child = xcb_query_tree_children(reply[i]);
-	for (j = 0; j < reply[i]->children_len; j++) {
+	xcb_window_t *child = xcb_query_tree_children(qt_reply[i]);
+	for (j = 0; j < qt_reply[i]->children_len; j++) {
 	    cs->win[child_count] = child[j];
 	    cs->prop_cookie[child_count] = xcb_get_property(c, 0, child[j],
 			    WM_STATE, XCB_GET_PROPERTY_TYPE_ANY,
@@ -329,8 +333,8 @@ static void child_info(void *closure)
 
 reply_done:
     for (i = 0; i < num_rep; i++)
-	free(reply[i]);
-    free(reply);
+	free(qt_reply[i]);
+    free(qt_reply);
 
 done:
     free(closure);
@@ -404,7 +408,7 @@ lookat(xcb_connection_t *dpy, xcb_window_t root, int verbose, int maxcmdlen)
     enqueue(root_list, rl);
 }
 
-static char *Nil = "(nil)";
+static const char *Nil = "(nil)";
 
 typedef struct {
     xcb_connection_t *c;
@@ -487,7 +491,7 @@ show_client_properties(void *closure)
      */
     if (cs->verbose) {
 	if (wm_class && wm_class->type) {
-	    char *res_name, *res_class;
+	    const char *res_name, *res_class;
 	    int name_len, class_len;
 	    res_name = xcb_get_property_value(wm_class);
 	    name_len = strnlen(res_name, wm_class->value_len) + 1;
@@ -560,7 +564,7 @@ print_client_properties(xcb_connection_t *dpy, xcb_window_t w, int verbose, int 
 }
 
 static void
-print_text_field(xcb_connection_t *dpy, char *s, xcb_get_property_reply_t *tp)
+print_text_field(xcb_connection_t *dpy, const char *s, xcb_get_property_reply_t *tp)
 {
     if (tp->type == XCB_NONE || tp->format == 0) {  /* Or XCB_ATOM_NONE after libxcb 1.5 */
 	printf ("''");

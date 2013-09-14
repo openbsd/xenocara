@@ -27,7 +27,7 @@
 xlsclients - list client applications running on a display
 .SH SYNOPSIS
 .B "xlsclients"
-[-display \fIdisplayname\fP] [-a] [-l] [-m maxcmdlen]
+[-display \fIdisplayname\fP] [-a] [-l] [-m maxcmdlen] [-version]
 .SH DESCRIPTION
 .PP
 .I Xlsclients
@@ -51,6 +51,9 @@ the default format.
 .B \-m \fImaxcmdlen\fP
 This option specifies the maximum number of characters in a command to
 print out.  The default is 10000.
+.TP 8
+.B \-version
+Print the program version and exit.
 .SH ENVIRONMENT
 .PP
 .TP 8

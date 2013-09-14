@@ -21,10 +21,15 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
+# Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xlsclients], [1.1.2],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
-	[xlsclients])
+AC_INIT([xlsclients], [1.1.3],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xlsclients])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+AC_USE_SYSTEM_EXTENSIONS
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -32,19 +37,15 @@ AM_MAINTAINER_MODE
 m4_ifndef([XORG_MACROS_VERSION],
 	  [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
-AC_CONFIG_HEADERS([config.h])
-
-# Check for functional strnlen
-AC_USE_SYSTEM_EXTENSIONS
+# Use POSIX strnlen or the implementation supplied in this module
 AC_FUNC_STRNLEN
 if test "x$ac_cv_func_strnlen_working" = xyes; then
   AC_DEFINE(HAVE_STRNLEN, 1, [Define to 1 if you have a working strnlen function.])
 fi
 
-XORG_DEFAULT_OPTIONS
-
-# Checks for pkg-config packages
+# Obtain compiler/linker options for xlsclients dependencies
 PKG_CHECK_MODULES(XLSCLIENTS, xcb >= 1.6)
 
 AC_CONFIG_FILES([
