@@ -54,7 +54,7 @@ in this Software without prior written authorization from The Open Group.
     }
 
 #define CHECK_COMPLETE_SIZE(_iceConn, _majorOp, _minorOp, _expected_len, _actual_len, _pStart, _severity) \
-    if (((PADDED_BYTES64((_actual_len)) - SIZEOF (iceMsg)) >> 3) \
+    if (((unsigned long)(PADDED_BYTES64((_actual_len)) - SIZEOF (iceMsg)) >> 3)	\
         != _expected_len) \
     { \
        _IceErrorBadLength (_iceConn, _majorOp, _minorOp, _severity); \

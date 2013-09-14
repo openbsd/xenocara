@@ -119,7 +119,7 @@ _SmcDefaultErrorHandler(SmcConn smcConn, Bool swap, int offendingMinorOpcode,
     {
         case IceBadValue:
         {
-	    int offset, length, val;
+	    unsigned int offset, length, val;
 
 	    EXTRACT_CARD32 (pData, swap, offset);
 	    EXTRACT_CARD32 (pData, swap, length);
@@ -132,7 +132,7 @@ _SmcDefaultErrorHandler(SmcConn smcConn, Bool swap, int offendingMinorOpcode,
 	    if (length <= 4)
 	    {
 		if (length == 1)
-		    val = (int) *pData;
+		    val = (unsigned int) *pData;
 		else if (length == 2)
 		{
 		    EXTRACT_CARD16 (pData, swap, val);
@@ -233,7 +233,7 @@ _SmsDefaultErrorHandler(SmsConn smsConn, Bool swap, int offendingMinorOpcode,
     {
         case IceBadValue:
         {
-	    int offset, length, val;
+	    unsigned int offset, length, val;
 
 	    EXTRACT_CARD32 (pData, swap, offset);
 	    EXTRACT_CARD32 (pData, swap, length);
@@ -246,7 +246,7 @@ _SmsDefaultErrorHandler(SmsConn smsConn, Bool swap, int offendingMinorOpcode,
 	    if (length <= 4)
 	    {
 		if (length == 1)
-		    val = (int) *pData;
+		    val = (unsigned int) *pData;
 		else if (length == 2)
 		{
 		    EXTRACT_CARD16 (pData, swap, val);

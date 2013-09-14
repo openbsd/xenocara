@@ -37,13 +37,8 @@ in this Software without prior written authorization from The Open Group.
 int 	_SmcOpcode = 0;
 int 	_SmsOpcode = 0;
 
-#ifndef __UNIXOS2__
 SmsNewClientProc _SmsNewClientProc;
 SmPointer        _SmsNewClientData;
-#else
-SmsNewClientProc _SmsNewClientProc = 0;
-SmPointer        _SmsNewClientData = 0;
-#endif
 
 SmcErrorHandler _SmcErrorHandler = _SmcDefaultErrorHandler;
 SmsErrorHandler _SmsErrorHandler = _SmsDefaultErrorHandler;
@@ -57,7 +52,7 @@ SmcConn
 SmcOpenConnection(char *networkIdsList, SmPointer context,
 		  int xsmpMajorRev, int xsmpMinorRev,
 		  unsigned long mask, SmcCallbacks *callbacks,
-		  char *previousId, char **clientIdRet,
+		  const char *previousId, char **clientIdRet,
 		  int errorLength, char *errorStringRet)
 {
     SmcConn			smcConn;
@@ -70,7 +65,7 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
     char			*release = NULL;
     smRegisterClientMsg 	*pMsg;
     char 			*pData;
-    int				extra, len;
+    unsigned int		extra, len;
     IceReplyWaitInfo		replyWait;
     _SmcRegisterClientReply	reply;
     Bool			gotReply, ioErrorOccured;
@@ -301,7 +296,7 @@ SmcCloseConnection(SmcConn smcConn, int count, char **reasonMsgs)
 	SIZEOF (smCloseConnectionMsg), WORD64COUNT (extra),
 	smCloseConnectionMsg, pMsg, pData);
 
-    STORE_CARD32 (pData, count);
+    STORE_CARD32 (pData, (CARD32) count);
     pData += 4;
 
     for (i = 0; i < count; i++)
@@ -365,7 +360,7 @@ SmcSetProperties(SmcConn smcConn, int numProps, SmProp **props)
     smSetPropertiesMsg	*pMsg;
     char		*pBuf;
     char		*pStart;
-    int			bytes;
+    unsigned int	bytes;
 
     IceGetHeader (iceConn, _SmcOpcode, SM_SetProperties,
 	SIZEOF (smSetPropertiesMsg), smSetPropertiesMsg, pMsg);

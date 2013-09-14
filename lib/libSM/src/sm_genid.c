@@ -70,7 +70,7 @@ in this Software without prior written authorization from The Open Group.
 
 #ifndef WIN32
 
-# if defined(TCPCONN) || defined(STREAMSCONN)
+# ifdef TCPCONN
 #  include <sys/socket.h>
 #  include <netinet/in.h>
 #  include <arpa/inet.h>
@@ -139,7 +139,7 @@ SmsGenerateClientID(SmsConn smsConn)
 
     return id;
 #else
-# if defined(TCPCONN) || defined(STREAMSCONN)
+# ifdef TCPCONN
     static const char hex[] = "0123456789abcdef";
     char hostname[256];
     char address[64], *addr_ptr = address;
@@ -149,7 +149,7 @@ SmsGenerateClientID(SmsConn smsConn)
     char* inet_addr;
     char *ptr1;
     unsigned char decimal[4];
-    int i, len;
+    int i;
     struct in_addr *haddr = NULL;
 #  if defined(IPv6) && defined(AF_INET6)
     struct addrinfo *ai, *first_ai;
@@ -202,8 +202,8 @@ SmsGenerateClientID(SmsConn smsConn)
 	{
 	    char temp4[4];
 	    char *ptr2 = strchr (ptr1, '.');
+	    size_t len = (size_t) (ptr2 - ptr1);
 
-	    len = ptr2 - ptr1;
 	    if (!ptr2 || len > 3) {
 #  if defined(IPv6) && defined(AF_INET6)
 		freeaddrinfo(first_ai);
@@ -212,11 +212,11 @@ SmsGenerateClientID(SmsConn smsConn)
 	    }
 	    strncpy (temp4, ptr1, len);
 	    temp4[len] = '\0';
-	    decimal[i] = atoi (temp4);
+	    decimal[i] = (unsigned char) atoi (temp4);
 	    ptr1 = ptr2 + 1;
 	}
 
-	decimal[3] = atoi (ptr1);
+	decimal[3] = (unsigned char) atoi (ptr1);
 
 	*addr_ptr++ = '1';
 

@@ -1,3 +1,79 @@
+commit 0fd7aa17da41779129a3acfdad28e07c0072a160
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 7 23:05:16 2013 -0700
+
+    libSM 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 95cb4dcd618774b3f7b5b915c5ce5aa72f853b53
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 9 17:24:16 2013 -0700
+
+    Fix some clang warnings about integer size/sign conversions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a06ff257f72a629539f23b35026fbcdb8bb372e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 9 00:09:30 2013 -0700
+
+    unifdef WORD64 (leftover bits of Cray support)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 759bbd43f0fdc9a96ba1676d7830164bc9954be2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 9 00:06:01 2013 -0700
+
+    Constify previous_id argument to SmcOpenConnection
+    
+    Clears gcc warning of:
+    sm_client.c: In function 'SmcOpenConnection':
+    sm_client.c:199:13: warning: assignment discards 'const' qualifier from
+     pointer target type [enabled by default]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77ddd273239a629eeed7bd1d5b4509b1bd6d4e37
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 49eb906eee49f68dcf5b358546924b7085c9d75d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 3cb1f18a6a2657f9c8e74fb2195558abca0652bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 19:36:53 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4cbd659505f2acafe2645c59532e52d4cfa00e1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 26 23:42:30 2012 -0800
+
+    Remove unused TLI ("STREAMSCONN") code from libSM
+    
+    Has never been converted to build in modular builds, so has been unusable
+    since X11R7.0 release in 2005.  All known platforms with TLI/XTI support
+    that X11R7 & later releases run on also have (and mostly prefer) BSD
+    socket support for their networking API.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b3d1f4896cab54717acd691b62b7fa3122a5fd8c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 2 20:53:41 2012 -0800

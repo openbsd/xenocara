@@ -1,14 +1,13 @@
 
 # Initialize Autoconf
 AC_PREREQ(2.60)
-AC_INIT([libSM], [1.2.1],
+AC_INIT([libSM], [1.2.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libSM])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL

@@ -352,7 +352,7 @@ extern SmcConn SmcOpenConnection (
     int			/* xsmpMinorRev */,
     unsigned long	/* mask */,
     SmcCallbacks *	/* callbacks */,
-    char *		/* previousId */,
+    const char *	/* previousId */,
     char **		/* clientIdRet */,
     int			/* errorLength */,
     char *		/* errorStringRet */

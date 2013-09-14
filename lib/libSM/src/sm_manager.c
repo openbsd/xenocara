@@ -183,7 +183,7 @@ Status
 SmsRegisterClientReply(SmsConn smsConn, char *clientId)
 {
     IceConn			iceConn = smsConn->iceConn;
-    int				extra;
+    size_t			extra;
     smRegisterClientReplyMsg 	*pMsg;
     char 			*pData;
 
@@ -307,7 +307,7 @@ void
 SmsReturnProperties(SmsConn smsConn, int numProps, SmProp **props)
 {
     IceConn			iceConn = smsConn->iceConn;
-    int 			bytes;
+    unsigned int		bytes;
     smPropertiesReplyMsg	*pMsg;
     char 			*pBuf;
     char			*pStart;
