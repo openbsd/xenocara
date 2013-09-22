@@ -20,7 +20,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- * 
+ *
  * Author: Thomas Hellström, 2004.
  */
 
@@ -31,7 +31,7 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/XvMC.h>
 
-/* 
+/*
  * New "Motion compensation type".
  */
 
@@ -74,7 +74,7 @@
 /*
  * Which of two mappings between quantiser_scale_code
  * and quantiser_scale shall apply.
- */ 
+ */
 
 #define XVMC_Q_SCALE_TYPE         0x00000400
 
@@ -86,20 +86,20 @@
 #define XVMC_INTRA_VLC_FORMAT     0x00000800
 
 /*
- * Also XVMC_SECOND_FIELD should be set in flags if active. 
- */ 
+ * Also XVMC_SECOND_FIELD should be set in flags if active.
+ */
 
 #define XVMC_I_PICTURE 1
 #define XVMC_P_PICTURE 2
 #define XVMC_B_PICTURE 3
 
 typedef struct _XvMCMpegControl{
-    unsigned 
+    unsigned
         BVMV_range,        /* Backward vertical motion vector range */
 	BHMV_range,        /* Backward horizontal motion vector range */
 	FVMV_range,        /* Forward vertical motion vector range */
 	FHMV_range,        /* Forward horizontal motion vector range */
-	picture_structure, /* XVMC_TOP_FIELD, XVMC_BOTTOM_FIELD, 
+	picture_structure, /* XVMC_TOP_FIELD, XVMC_BOTTOM_FIELD,
 			    *  XVMC_FRAME_PICTURE
 			    */
 	intra_dc_precision, /* 0x00 - 0x03 corresponds to 8 to 11 bits prec. */
@@ -126,13 +126,13 @@ extern Status XvMCBeginSurface(Display *display,
 
 /*
  * The quantizer matrix structure. This should be filled in by the user and
- * uploaded whenever a change is needed. The lib initializes with 
+ * uploaded whenever a change is needed. The lib initializes with
  * default matrices and will automatically load the hardware with new matrices
  * on decoder context switches. To load data, set the corresponding load flag
  * to true and fill in the values. The VIA MPEG2 engine only uses the
- * intra_quantiser_matrix and the non_intra_quantiser_matrix. 
+ * intra_quantiser_matrix and the non_intra_quantiser_matrix.
  */
-    
+
 typedef struct _XvMCQMatrix {
     int load_intra_quantiser_matrix;
     int load_non_intra_quantiser_matrix;
@@ -145,7 +145,7 @@ typedef struct _XvMCQMatrix {
 } XvMCQMatrix;
 
 /*
- * Upload a XvMCQMatrix structure to the clientlib. 
+ * Upload a XvMCQMatrix structure to the clientlib.
  * The hardware will start using it the next XvMCBeginSurface.
  */
 
@@ -154,21 +154,21 @@ extern Status XvMCLoadQMatrix(Display *display, XvMCContext *context,
 
 
 /*
- * Put a slice to the decoder. The hardware will start processing it 
+ * Put a slice to the decoder. The hardware will start processing it
  * immediately.
  */
 
-extern Status XvMCPutSlice(Display *display,XvMCContext *context, 
+extern Status XvMCPutSlice(Display *display,XvMCContext *context,
 			   char *slice, int nBytes);
 /*
- * Put a slice without the slice start code to the decoder. 
- * The hardware will start processing it 
- * immediately. This function is for client optimization. 
+ * Put a slice without the slice start code to the decoder.
+ * The hardware will start processing it
+ * immediately. This function is for client optimization.
  * XvMCPutSlice(display,context,slice,nBytes) is equivalent to
  * XvMCPutSlice2(display,context,slice+4,nBytes-4,slice[3]);
  */
 
-extern Status XvMCPutSlice2(Display *display,XvMCContext *context, 
+extern Status XvMCPutSlice2(Display *display,XvMCContext *context,
 			   char *slice, int nBytes, int sliceCode);
 
 #endif
