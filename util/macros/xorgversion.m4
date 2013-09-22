@@ -26,7 +26,7 @@ dnl
 # XORG_RELEASE_VERSION
 # --------------------
 # Defines PACKAGE_VERSION_{MAJOR,MINOR,PATCHLEVEL} for modules to use.
- 
+
 AC_DEFUN([XORG_RELEASE_VERSION],[
 	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MAJOR],
 		[`echo $PACKAGE_VERSION | cut -d . -f 1`],

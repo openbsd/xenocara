@@ -1,3 +1,74 @@
+commit 052fa1dc1779de34ba69f68b7dc32b3c733c823e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 6 23:34:33 2013 -0700
+
+    Version bump: 1.17.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e6a41a0c6a84b34c6dc173a0a41089d0ebaddac0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 6 23:30:00 2013 -0700
+
+    Strip trailing whitespace
+    
+    sed -i 's/[[:space:]]*$//' *
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3683c2b2d0b5e7d57374860147ca827da596bad5
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Mon Aug 5 16:00:20 2013 +0100
+
+    Use the right variable names for the compiler flags in XORG_TESTSET_CFLAG
+    
+    Whilst populating the xorg_cv_ cache entries, and the subsequent
+    xorg_testset_, we always include the FLAG_PREFIX in the name, to
+    distinguish between C and C++ iterations. However, in the body of the
+    test function, we dropped the FLAG_PREFIX expansion and so always used
+    the empty string and hence did not correctly detect incorrect flags.
+    
+    The bug was introduced with
+    commit 51f69514e65637f575df901ef942515e70314f6a
+    Author: Chase Douglas <chase.douglas@canonical.com>
+    Date:   Mon Mar 12 11:49:28 2012 -0700
+    
+        Separate unknown warning options by language
+    
+    Reported-and-tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+    Cc: Sedat Dilek <sedat.dilek@gmail.com>
+    Cc: Chase Douglas <chase.douglas@canonical.com>
+    Cc: Gaetan Nadon<memsize@videotron.ca>
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c98b41de5596c675c603ef43ae9570133f1a9921
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit bd25ef721dff995096efffef4dcc9275cea43d4f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 13:44:31 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 0890e4003aacfa7113ab3f4e3ad7c5636f8e922a
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Tue Apr 3 18:43:02 2012 -0500
+
+    Fix spacing in XORG_TESTSET_CFLAG
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit c0c42057e0d357c144e7933ee413b522950a0f17
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Tue Mar 13 19:45:12 2012 -0400
