@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.27 2013/08/22 19:26:51 miod Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.28 2013/09/24 21:03:32 miod Exp $
 
 # Shared libs?
 .if ${MACHINE} == "vax"
@@ -8,7 +8,7 @@ XENOCARA_HAVE_SHARED_LIBS?=yes
 .endif
 
 # Build GL libs and apps?
-.if ${MACHINE} == "octeon"
+.if ${MACHINE} == "octeon" || ${MACHINE_ARCH} == "m88k"
 XENOCARA_BUILD_GL?=no
 XENOCARA_BUILD_DRI?=no
 .else
