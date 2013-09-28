@@ -60,7 +60,7 @@
 
 int
 XpmReadFileToBuffer(
-    char	 *filename,
+    const char	 *filename,
     char	**buffer_return)
 {
     int fd, fcheck;
