@@ -1,4 +1,3 @@
-/* $XConsortium: vendor.c,v 1.10 94/04/17 20:43:59 rws Exp $ */
 /*
 
 Copyright (c) 1987, 1988  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xman/vendor.c,v 1.2 2000/03/03 20:02:25 dawes Exp $ */
 
 /* Vendor-specific data structures and operations */
 
@@ -36,54 +34,54 @@ from the X Consortium.
 #include "vendor.h"
 
 typedef struct sectionName {
-    char *	name;
-    char *	suffix;
+    const char *name;
+    const char *suffix;
 } SectionNameRec;
 
-#if (defined(SYSV) || defined(__osf__) || defined(SVR4)) && !defined(sun)
+#if (defined(__osf__) || defined(SVR4)) && !defined(sun)
 
 static SectionNameRec SectionNames[] = {
-    {"(1) User Commands",		"1"},
-    {"(1m) Sys, Administration",	"1m"},
-    {"(2) System Calls",		"2"},
-    {"(3) Subroutines",			"3"},
-    {"(4) File Formats",		"4"},
-    {"(5) Miscellaneous",		"5"},
-    {"(6) Games",			"6"},
-    {"(7) Devices",			"7"},
-    {"(8) Sys. Administration",		"8"},
-    {"(l) Local",			"l"},
-    {"(n) New",				"n"},
-    {"(o) Old",				"o"}
+    {"(1) User Commands",               "1"},
+    {"(1m) Sys, Administration",        "1m"},
+    {"(2) System Calls",                "2"},
+    {"(3) Subroutines",                 "3"},
+    {"(4) File Formats",                "4"},
+    {"(5) Miscellaneous",               "5"},
+    {"(6) Games",                       "6"},
+    {"(7) Devices",                     "7"},
+    {"(8) Sys. Administration",         "8"},
+    {"(l) Local",                       "l"},
+    {"(n) New",                         "n"},
+    {"(o) Old",                         "o"}
 #ifdef __SCO__
-      ,
-      { "(ADM) System Administration", "ADM" },
-      { "(ADMN) Network Administration", "ADMN" },
-      { "(ADMP) Protocol Administration", "ADMP" },
-      { "(C) Commands", "C" },
-      { "(CMD) DOS Commands", "CMD" },
-      { "(CP) Programming Commands", "CP" },
-      { "(DOS) DOS Subroutines and Libraries", "DOS" },
-      { "(F) File Formats", "F" },
-      { "(HW) Hardware Dependant", "HW" },
-      { "(K) Kernel Subroutines", "K" },
-      { "(LOCAL) Local utilities for your system", "LOCAL" },
-      { "(M) Miscellaneous", "M" },
-      { "(NADM) NFS Administration", "NADM" },
-      { "(NC) Network Commands", "NC" },
-      { "(NF) Network File Formats", "NF" },
-      { "(NS) Network Subroutines", "NS" },
-      { "(NSL) Network Services", "NSL" },
-      { "(S) Subroutines and Libraries", "S" },
-      { "(SCO) Product Engineering Toolkit", "SCO" },
-      { "(SFF) Socket File Formats", "SFF" },
-      { "(STR) Streams", "STR" },
-      { "(TC) Transport Layer Commands", "TC" },
-      { "(X) X Man pages", "X" },
-      { "(XNX) Xenix Subroutines, Commands and Libs", "XNX" },
-      { "(XS) X11 Subroutines and Libraries", "XS" },
-      { "(Xm) Motif Commands and Subroutines", "Xm" },
-      { "(Xt) X Intrinsics", "Xt" }
+    ,
+    {"(ADM) System Administration", "ADM"},
+    {"(ADMN) Network Administration", "ADMN"},
+    {"(ADMP) Protocol Administration", "ADMP"},
+    {"(C) Commands", "C"},
+    {"(CMD) DOS Commands", "CMD"},
+    {"(CP) Programming Commands", "CP"},
+    {"(DOS) DOS Subroutines and Libraries", "DOS"},
+    {"(F) File Formats", "F"},
+    {"(HW) Hardware Dependant", "HW"},
+    {"(K) Kernel Subroutines", "K"},
+    {"(LOCAL) Local utilities for your system", "LOCAL"},
+    {"(M) Miscellaneous", "M"},
+    {"(NADM) NFS Administration", "NADM"},
+    {"(NC) Network Commands", "NC"},
+    {"(NF) Network File Formats", "NF"},
+    {"(NS) Network Subroutines", "NS"},
+    {"(NSL) Network Services", "NSL"},
+    {"(S) Subroutines and Libraries", "S"},
+    {"(SCO) Product Engineering Toolkit", "SCO"},
+    {"(SFF) Socket File Formats", "SFF"},
+    {"(STR) Streams", "STR"},
+    {"(TC) Transport Layer Commands", "TC"},
+    {"(X) X Man pages", "X"},
+    {"(XNX) Xenix Subroutines, Commands and Libs", "XNX"},
+    {"(XS) X11 Subroutines and Libraries", "XS"},
+    {"(Xm) Motif Commands and Subroutines", "Xm"},
+    {"(Xt) X Intrinsics", "Xt"}
 #endif
 };
 
@@ -93,74 +91,122 @@ static SectionNameRec SectionNames[] = {
 /* losing man.cf is useless because it has no section names */
 
 static SectionNameRec SectionNames[] = {
-    {"(1)  User Commands",			"1"},
-    {"(1b) SunOS/BSD Compatibility Commands",	"1b"},
-    {"(1c) Communication Commands",		"1c"},
-    {"(1f) FMLI Commands",			"1f"},
-    {"(1m) Maintenance Commands",		"1m"},
-    {"(1s) SunOS Specific Commands",		"1s"},
-    {"(2)  System Calls",			"2"},
-    {"(3)  C Library Functions",		"3"},
-    {"(3b) SunOS/BSD Compatibility Functions",	"3b"},
-    {"(3c) C Library Functions",		"3c"},
-    {"(3e) ELF Library Functions",		"3e"},
-    {"(3g) C Library Functions",		"3g"},
-    {"(3i) Wid Character Functions",		"3i"},
-    {"(3k) Kernel VM Library Functions",	"3k"},
-    {"(3m) Mathematical Library",		"3m"},
-    {"(3n) Network Functions",			"3n"},
-    {"(3r) RPC Services Library",		"3r"},
-    {"(3s) Standard I/O Functions",		"3s"},
-#if OSMINORVERSION == 5
-    {"(3t) Threads Library",			"3t"},
-#endif
-    {"(3x) Miscellaneous Library Functions",	"3x"},
-    {"(4)  File Formats",			"4"},
-    {"(4b) Misc. Reference Manual Pages",	"4b"},
+    {"(1)  User Commands",                      "1"},
+    {"(1b) SunOS/BSD Compatibility Commands",   "1b"},
+    {"(1c) Communication Commands",             "1c"},
+    {"(1f) FMLI Commands",                      "1f"},
+    {"(1m) Maintenance Commands",               "1m"},
+    {"(1s) SunOS Specific Commands",            "1s"},
+    {"(2)  System Calls",                       "2"},
+    {"(3)  Introduction to Library Functions",  "3"},
+    {"(3adm) General Administrative Library Functions", "3adm"},
+    {"(3aio) Asynchronous I/O Library Functions",       "3aio"},
+    {"(3b) SunOS/BSD Compatibility Functions",  "3b"},
+    {"(3bsm) Security and Auditing Library Functions",  "3bsm"},
+    {"(3c) C Library Functions",                "3c"},
+    {"(3cfgadm) Configuration Administration Library Functions",  "3cfgadm"},
+    {"(3crypt) Encryption and Decryption Library",  "3crypt"},
+    {"(3curses) Curses Library Functions",      "3curses"},
+    {"(3devid) Device ID Library Functions",    "3devid"},
+    {"(3devinfo) Device Information Library Functions",  "3devinfo"},
+    {"(3dl) Dynamic Linking Library Functions", "3dl"},
+    {"(3dmi) DMI Library Functions",            "3dmi"},
+    {"(3door) Door Library Functions",          "3door"},
+    {"(3e) ELF Library Functions",              "3e"},
+    {"(3elf) ELF Library Functions",            "3elf"},
+    {"(3ext) Extended Library Functions",       "3ext"},
+    {"(3g) C Library Functions",                "3g"},
+    {"(3gen) String Pattern-Matching Library Functions", "3gen"},
+    {"(3head) Headers",                         "3head"},
+    {"(3i) Wide Character Functions",           "3i"},
+    {"(3k) Kernel VM Library Functions",        "3k"},
+    {"(3krb) Kerberos Library Functions",       "3krb"},
+    {"(3kstat) Kernel Statistics Library Functions",    "3kstat"},
+    {"(3kvm) Kernel VM Library Functions",      "3kvm"},
+    {"(3layout) Layout Services Library Functions",     "3layout"},
+    {"(3ldap) LDAP Library Functions",          "3ldap"},
+    {"(3lib) Interface Libraries",              "3lib"},
+    {"(3libucb) SunOS/BSD Compatibility Interface Libraries",   "3libucb"},
+    {"(3m) Mathematical Library Functions",     "3m"},
+    {"(3mail) User Mailbox Library Functions",  "3mail"},
+    {"(3malloc) Memory Allocation Library Functions",   "3malloc"},
+    {"(3mp) Integer Mathematical Library Functions",    "3mp"},
+    {"(3n) Network Functions",                  "3n"},
+    {"(3nsl) Networking Services Library Functions",    "3nsl"},
+    {"(3pam) PAM Library Functions",                    "3pam"},
+    {"(3plot) Graphics Interface Library Functions",    "3plot"},
+    {"(3proc) Process Control Library Functions",       "3proc"},
+    {"(3r) Realtime Library",                   "3r"},
+    {"(3rac) Remote Asynchronous Calls Library Functions", "3rac"},
+    {"(3resolv) Resolver Library Functions",    "3resolv"},
+    {"(3rpc) RPC Library Functions",            "3rpc"},
+    {"(3rt) Realtime Library Functions",        "3rt"},
+    {"(3s) Standard I/O Functions",             "3s"},
+    {"(3sched) LWP Scheduling Library Functions",       "3sched"},
+    {"(3sec) File Access Control Library Functions",    "3sec"},
+    {"(3secdb) Security Attributes Database Library Functions", "3secdb"},
+    {"(3snmp) SNMP Library Functions",          "3snmp"},
+    {"(3socket) Sockets Library Functions",     "3socket"},
+    {"(3t) Threads Library Functions",          "3t"},
+    {"(3thr) Threads Library Functions",        "3thr"},
+    {"(3tnf) TNF Library Functions",            "3tnf"},
+    {"(3ucb) SunOS/BSD Compatibility Library Functions", "3ucb"},
+    {"(3volmgt) Volume Management Library Functions",   "3volmgt"},
+    {"(3x) Miscellaneous Library Functions",    "3x"},
+    {"(3xc) X/Open Curses Library Functions",   "3xc"},
+    {"(3xcurses) X/Open Curses Library Functions",      "3xcurses"},
+    {"(3xfn) XFN Interface Library Functions",  "3xfn"},
+    {"(3xn) X/Open Networking Services Library Functions",      "3xn"},
+    {"(3xnet) X/Open Networking Services Library Functions",    "3xnet"},
+    {"(3x11)  X Window System: Xlib Functions", "3x11"},
+    {"(3xcb)  X Window System: X C Binding Functions",          "3xcb"},
+    {"(3xext) X Window System: Protocol Extension Functions",   "3xext"},
+    {"(3xi)   X Window System: Input Extension Functions",      "3xi"},
+    {"(3xmu)  X Window System: Miscellaneous Utility Functions","3xmu"},
+    {"(3xp)   X Window System: Print Extension Functions",      "3xp"},
+    {"(3xt)   X Window System: Toolkit Intrinsics Functions",   "3xt"},
+    {"(4)  File Formats",                       "4"},
+    {"(4b) Misc. Reference Manual Pages",       "4b"},
     {"(5)  Environments, Tables, and TROFF Macros", "5"},
-    {"(6)  Games and Demos",			"6"},
-    {"(7)  Special Files",			"7"},
-#if OSMINORVERSION == 5
-    {"(7d)  Devices",				"7d"},
-    {"(7fs) File Systems",			"7fs"},
-    {"(7i)  Ioctl Requests",			"7i"},
-    {"(7m)  STREAMS Modules",			"7m"},
-    {"(7p)  Protocols",				"7p"},
-#endif
-    {"(9)  Device Driver Information",		"9"},
-    {"(9e) DDI and DKI Driver Entry Points",	"9e"},
-    {"(9f) DDI and DKI Kernel Functions",	"9f"},
-    {"(9s) DDI and DKI Data Structures",	"9s"},
-    {"(l)  Local",				"l"},
-    {"(n)  New",				"n"},
+    {"(6)  Games and Demos",                    "6"},
+    {"(7)  Special Files",                      "7"},
+    {"(7d)  Devices",                           "7d"},
+    {"(7fs) File Systems",                      "7fs"},
+    {"(7i)  Ioctl Requests",                    "7i"},
+    {"(7m)  STREAMS Modules",                   "7m"},
+    {"(7p)  Protocols",                         "7p"},
+    {"(9)  Device Driver Information",          "9"},
+    {"(9e) DDI and DKI Driver Entry Points",    "9e"},
+    {"(9f) DDI and DKI Kernel Functions",       "9f"},
+    {"(9s) DDI and DKI Data Structures",        "9s"},
+    {"(l)  Local",                              "l"},
+    {"(n)  New",                                "n"},
+    {"(o)  Old",                                "o"}
 };
 
 #else
 
 static SectionNameRec SectionNames[] = {
-    {"(1) User Commands",		"1"},
-    {"(2) System Calls",		"2"},
-    {"(3) Subroutines",			"3"},
-    {"(4) Devices",			"4"},
-    {"(5) File Formats",		"5"},
-    {"(6) Games",			"6"},
-    {"(7) Miscellaneous",		"7"},
-    {"(8) Sys. Administration",		"8"},
-#ifdef Lynx
-    {"(9) Device driver service calls",	"9"},
-#endif
+    {"(1) User Commands",                       "1"},
+    {"(2) System Calls",                        "2"},
+    {"(3) Subroutines",                         "3"},
+    {"(4) Devices",                             "4"},
+    {"(5) File Formats",                        "5"},
+    {"(6) Games",                               "6"},
+    {"(7) Miscellaneous",                       "7"},
+    {"(8) Sys. Administration",                 "8"},
 #if defined(__OpenBSD__) || defined(__NetBSD__)
-    {"(9) Kernel Manual",		"9"},
+    {"(9) Kernel Manual",                       "9"},
 #endif
 #if defined(__FreeBSD__)
-    {"(9) Kernel Interfaces",		"9"},
+    {"(9) Kernel Interfaces",                   "9"},
 #endif
-    {"(l) Local",			"l"},
-    {"(n) New",				"n"},
-    {"(o) Old",				"o"},
+    {"(l) Local",                               "l"},
+    {"(n) New",                                 "n"},
+    {"(o) Old",                                 "o"},
 #ifdef sony
-    {"(p) Public Domain",		"p"},
-    {"(s) Sony Specific",		"s"},
+    {"(p) Public Domain",                       "p"},
+    {"(s) Sony Specific",                       "s"},
 #endif
 };
 
@@ -174,90 +220,24 @@ static SectionNameRec SectionNames[] = {
  *	Returns: none.
  */
 
-void AddStandardSections(
-SectionList **list,
-char * path)
+void
+AddStandardSections(SectionList ** list, const char *path)
 {
-#ifdef CRAY
-    AddStandardCraySections(list, path);
-    return;
-#else
-  register int i;
-  char file[BUFSIZ];
-  int numSections = sizeof(SectionNames) / sizeof(SectionNames[0]);
+    register int i;
+    char file[BUFSIZ];
+    int numSections = sizeof(SectionNames) / sizeof(SectionNames[0]);
 
-  for (i=0; i < numSections; i++) {
-    snprintf(file, sizeof(file), "%s%s", SEARCHDIR, SectionNames[i].suffix);
-    AddNewSection(list, path, file, SectionNames[i].name, TRUE);
+    for (i = 0; i < numSections; i++) {
+        snprintf(file, sizeof(file), "%s%s", SEARCHDIR, SectionNames[i].suffix);
+        AddNewSection(list, path, file, SectionNames[i].name, TRUE);
 #ifdef SEARCHOTHER
-    snprintf(file, sizeof(file), "%s%s", SEARCHOTHER, SectionNames[i].suffix);
-    AddNewSection(list, path, file, SectionNames[i].name, TRUE);
+        snprintf(file, sizeof(file), "%s%s", SEARCHOTHER,
+                 SectionNames[i].suffix);
+        AddNewSection(list, path, file, SectionNames[i].name, TRUE);
 #endif
-  }
-#endif
-}
-
-#ifdef CRAY
-/*	Function Name: AddStandardCraySections
- *	Description: Add sections specific to the Cray.
- *	Arguments: list - a pointer to the section list.
- *                 path - the path to these standard sections.
- *                 names - standard section names.
- *	Returns: none.
- */
-
-void AddStandardCraySections(
-SectionList **list,
-char *path)
-{
-  char file[BUFSIZ];
-  int i;
-#define NoSuf  (char *)0
-#define Suffix (char *)1
-#define Fold (char *)2
-#define FoldSuffix (char *)3
-  static char *cname[] = {
-    "(1) User Commands",	Suffix,	"1",	"1bsd",	NULL,
-    "(1) User Commands (instant)",	NoSuf,	"1r",	"1rb",	NULL,
-    "(1m) System Administration",	NoSuf,	"1m",	NULL,
-    "(2) System Calls",		Suffix,	"2",	NULL,
-    "(3) Subroutines",		FoldSuffix,	"3",	"3bsd",	"3c",	"3m",	"3mt",	"3s",	"3sl",	"3z",	NULL,
-    "(3) Subroutines (FORTRAN)", Fold,	"3f",	NULL,
-    "(3) Subroutines (I/O)",	Fold,	"3io",	NULL,
-    "(3) Subroutines (X11)",	NoSuf,	"3X11",	NULL,
-    "(3) Subroutines (Xt)",	NoSuf,	"3Xt",	NULL,
-    "(3) Subroutines (misc.)",	Suffix,	"3q",	NULL,
-    "(3) Subroutines (misc.)",	Fold,	"3x",	NULL,
-    "(3) Subroutines (networking)",	Suffix,	"3n",	"3rpc",	"3svc",	"3w",	"3yp",	NULL,
-    "(3) Subroutines (scientific)",	Fold,	"3sci",	NULL,
-    "(3) Subroutines (utilities)",	FoldSuffix,	"3db",	"3u",	NULL,
-    "(4) Devices",		Suffix,	"4",	"4d",	"4f",	"4n",	"4p",	"4s",	NULL,
-    "(5) File Formats",		Suffix,	"5",	NULL,
-    "(6) Games",		Suffix,	"6",	NULL,
-    "(7) Miscellaneous",	Suffix,	"7",	NULL,
-    "(8) Sys. Administration",	NoSuf,	"8",	NULL,
-    "(l) Local",		Suffix,	"l",	NULL,
-    "(n) New",			Suffix,	"n",	NULL,
-    "(o) Old",			Suffix,	"o",	NULL,
-    "(info) Information",	NoSuf,	"info",	NULL,
-    "(osi) Miscellaneous",	NoSuf,	"osi",	NULL,
-    "(sl) Miscellaneous",	NoSuf,	"sl",	NULL,
-    "(ultra) Miscellaneous",	NoSuf,	"ultra",	NULL,
-    NULL
-  };
-  char **p = cname;
-
-  while (*p != NULL) {
-    char *message = *p++;
-    int flags = (int) *p++;
-    while (*p != NULL) {
-      snprintf(file, sizeof(file), "%s%s", SEARCHDIR, *p++);
-      AddNewSection(list, path, file, message, flags);
     }
-    p++;
-  }
 }
-#endif /* CRAY */
+
 
 
 /*	Function Name: CreateManpageName
@@ -273,46 +253,29 @@ char *path)
  */
 
 char *
-CreateManpageName(
-char * entry,
-int section,	/* FIXME: unused */
-int flags)
+CreateManpageName(const char *entry, int section,     /* FIXME: unused */
+                  int flags)
 {
-  char * cp;
-  char page[BUFSIZ];
-  char sect[BUFSIZ];
+    char *cp;
+    char page[BUFSIZ];
+    char sect[BUFSIZ];
 
-  ParseEntry(entry, NULL, sect, page);
+    ParseEntry(entry, NULL, sect, page);
 
-#ifndef CRAY
-  if ( (cp = rindex(page, '.')) != NULL) {
-    if ( (int)strlen(cp) > 2 ) {
-      *cp++ = '(';
-      while( (cp[1] != '\0') ) {
-	*cp = *(cp + 1); 
-	cp++;
-      }
-      *cp++ = ')';
-      *cp = '\0';
+    if ((cp = strrchr(page, '.')) != NULL) {
+        if ((int) strlen(cp) > 2) {
+            *cp++ = '(';
+            while ((cp[1] != '\0')) {
+                *cp = *(cp + 1);
+                cp++;
+            }
+            *cp++ = ')';
+            *cp = '\0';
+        }
+        else
+            *cp = '\0';
     }
-    else
-      *cp = '\0';
-  }
 
-#else	/* CRAY	- pick up the Cray name from the section */
 
-  if ( (cp = rindex(page, '.')) == NULL)
-    cp = page + strlen(page);
-  if ((flags & MSUFFIX) && strlen(sect) > 4) {
-    char *p = sect + 4;
-    *cp++ = '(';
-    while (*p)
-      *cp++ = *p++;
-    *cp++ = ')';
-  }
-  *cp = '\0';  
-
-#endif	/* CRAY */
-  
-  return(StrAlloc(page));
+    return (XtNewString(page));
 }

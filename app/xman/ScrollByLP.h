@@ -1,4 +1,3 @@
-/* $XConsortium: ScrollByLP.h,v 1.9 94/04/17 20:43:49 keith Exp $ */
 /*
 
 Copyright (c) 1987, 1988  X Consortium
@@ -45,12 +44,12 @@ from the X Consortium.
 
 /* New fields for the ScrollByLine widget class record */
 typedef struct {
-     int mumble;   /* No new procedures */
+    int mumble;                 /* No new procedures */
 } ScrollByLineClassPart;
 
 /* Full class record declaration */
 typedef struct _ScrollByLineClassRec {
-    CoreClassPart	  core_class;
+    CoreClassPart         core_class;
     SimpleClassPart       simple_class;
     ScrollByLineClassPart scrolled_widget_class;
 } ScrollByLineClassRec;
@@ -59,30 +58,30 @@ extern ScrollByLineClassRec scrollByLineClassRec;
 
 /* New fields for the ScrollByLine widget record */
 typedef struct _ScrollByLinePart {
-  Pixel foreground;		/* The color for the forground of the text. */
-  Boolean force_vert,		/* Must have scrollbar visable */
-    use_right;			/* put scroll bar on right side of window. */
-  FILE * file;			/* The file to display. */
-  Dimension indent;		/* amount to indent the file. */
-  XFontStruct * bold_font,	/* The four fonts. */
-    * normal_font,
-    * italic_font,
-    * symbol_font;
-  int h_width;			/* Main font width */
-  
+    Pixel foreground;           /* The color for the foreground of the text. */
+    Boolean force_vert,         /* Must have scrollbar visible */
+     use_right;                 /* put scroll bar on right side of window. */
+    FILE *file;                 /* The file to display. */
+    Dimension indent;           /* amount to indent the file. */
+    XFontStruct *bold_font,     /* The four fonts. */
+        *normal_font,
+        *italic_font,
+        *symbol_font;
+    int h_width;                /* Main font width */
+
 /* variables not in resource list. */
 
-  Widget bar;			/* The scrollbar. */
-  int font_height;		/* the height of the font. */
-  int line_pointer;		/* The line that currently is at the top 
-				   of the window being displayed. */
-  Dimension offset;		/* Drawing offset because of scrollbar. */
-  GC move_gc;			/* GC to use when moving the text. */
-  GC bold_gc, normal_gc, italic_gc, symbol_gc; /* gc for drawing. */
+    Widget bar;                 /* The scrollbar. */
+    int font_height;            /* the height of the font. */
+    int line_pointer;           /* The line that currently is at the top
+                                   of the window being displayed. */
+    Dimension offset;           /* Drawing offset because of scrollbar. */
+    GC move_gc;                 /* GC to use when moving the text. */
+    GC bold_gc, normal_gc, italic_gc, symbol_gc;        /* gc for drawing. */
 
-  char ** top_line;		/* The top line of the file. */
-  int lines;		/* Total number of line in the file. */
-  int num_visible_lines;  /* Number of lines visible */
+    char **top_line;            /* The top line of the file. */
+    int lines;                  /* Total number of line in the file. */
+    int num_visible_lines;      /* Number of lines visible */
 } ScrollByLinePart;
 
 /****************************************************************
@@ -92,7 +91,7 @@ typedef struct _ScrollByLinePart {
  ****************************************************************/
 
 typedef struct _ScrollByLineRec {
-    CorePart	      core;
+    CorePart          core;
     SimplePart        simple;
     ScrollByLinePart  scroll;
 } ScrollByLineRec;

@@ -6,7 +6,7 @@
 
 *manualBrowser.Title:		Manual Page
 *manualBrowser.IconName:	Manual Page
-*manualBrowser.geometry:	600x600
+*manualBrowser.geometry:	780x600
 
 *manualFontBold:		-*-courier-bold-r-*-*-*-120-*-*-*-*-*-*
 *manualFontItalic:		-*-courier-medium-o-*-*-*-120-*-*-*-*-*-*
@@ -51,7 +51,7 @@
 *displayDirectory.Label:	Display Directory 
 *displayManualPage.Label:	Display Manual Page
 *help.Label:			Help
-*help.geometry:			600x600
+*help.geometry:			780x600
 *search.Label:			Search
 *removeThisManpage.Label:	Remove This Manpage
 *help*removeThisManpage.Label:	Remove Help
@@ -95,8 +95,8 @@
 	        Shift<Btn5Down>,<Btn5Up>: Page(Line,1) \n\
 	        Ctrl<Btn4Down>,<Btn4Up>: Page(Back) \n\
 		Ctrl<Btn5Down>,<Btn5Up>: Page(Forward) \n\
-		None<Btn4Down>,<Btn4Up>: Page(Line,-5) \n\
-		None<Btn5Down>,<Btn5Up>: Page(Line,5)
+		~Shift ~Ctrl<Btn4Down>,<Btn4Up>: Page(Line,-5) \n\
+		~Shift ~Ctrl<Btn5Down>,<Btn5Up>: Page(Line,5)
 
 *manualBrowser*manualPage.translations:  #override \
 		Ctrl<Btn1Down>: \
@@ -120,8 +120,8 @@
 	        Shift<Btn5Down>,<Btn5Up>: Page(Line,1) \n\
 	        Ctrl<Btn4Down>,<Btn4Up>: Page(Back) \n\
 		Ctrl<Btn5Down>,<Btn5Up>: Page(Forward) \n\
-		None<Btn4Down>,<Btn4Up>: Page(Line,-5) \n\
-		None<Btn5Down>,<Btn5Up>: Page(Line,5) \n\
+		~Shift ~Ctrl<Btn4Down>,<Btn4Up>: Page(Line,-5) \n\
+		~Shift ~Ctrl<Btn5Down>,<Btn5Up>: Page(Line,5) \n\
 		Ctrl<Key>s: PopupSearch()
 
 !*manualBrowser*directory.background: Grey80

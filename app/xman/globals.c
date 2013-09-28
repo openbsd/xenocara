@@ -1,4 +1,3 @@
-/* $XConsortium: globals.c,v 1.9 94/04/17 20:43:51 rws Exp $ */
 /*
 
 Copyright (c) 1987, 1988  X Consortium
@@ -32,23 +31,24 @@ from the X Consortium.
 
 #include "man.h"
 
-Xman_Resources resources;	/* Resource manager sets these. */
+Xman_Resources resources;       /* Resource manager sets these. */
 
 /* bookkeeping global variables. */
 
-Widget help_widget;		/* The help widget. */
+Widget help_widget;             /* The help widget. */
 
-int default_height,default_width; /* Approximately the default with and
-					    height, of the manpage when shown,
-					    the the top level manual page 
-					    window */
+int default_height, default_width;      /* Approximately the default width and
+                                           height, of the manpage when shown,
+                                           the the top level manual page
+                                           window */
 
-Manual * manual;		/* The manual structure. */
-int sections;			/* The number of manual sections. */
+Manual *manual;                 /* The manual structure. */
 
-int man_pages_shown;		/* The current number of manual
-				   pages being shown, if 0 we exit. */
+int sections;                   /* The number of manual sections. */
 
-Widget initial_widget;		/* The initial widget, never realized. */
+int man_pages_shown;            /* The current number of manual
+                                   pages being shown, if 0 we exit. */
 
-XContext manglobals_context;	/* The context for man_globals. */
+Widget initial_widget;          /* The initial widget, never realized. */
+
+XContext manglobals_context;    /* The context for man_globals. */

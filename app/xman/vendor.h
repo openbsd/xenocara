@@ -1,5 +1,3 @@
-/* $XConsortium: vendor.h,v 1.12 94/04/17 20:44:00 rws Exp $ */
-/* $XdotOrg: xc/programs/xman/vendor.h,v 1.4 2004/10/18 14:21:47 eich Exp $ */
 /*
 
 Copyright (c) 1991  X Consortium
@@ -29,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xman/vendor.h,v 1.13 2003/07/29 21:16:56 dawes Exp $ */
 
 /* Vendor-specific definitions */
 #ifdef HAVE_CONFIG_H
@@ -53,27 +50,21 @@ from the X Consortium.
  * complete than the cat directories.
  */
 
-#if ( defined(UTEK) || defined(apollo) || defined(Lynx) )
-#  define SEARCHDIR  CAT
-#else
-#  define SEARCHDIR  MAN
-#endif
+#define SEARCHDIR  MAN
 
-#if ( defined(sgi) || (defined(i386) && (defined(SYSV) || defined(SVR4))  && !defined(sun)) || (defined(BSD) && (BSD >= 199103)) || defined(linux) || defined(__CYGWIN__) )
+#if (defined(sgi) || (defined(SVR4) && !defined(sun)) || (defined(BSD) && (BSD >= 199103)) || defined(linux) || defined(__CYGWIN__) )
 # define SEARCHOTHER CAT
 #endif
 
 /*
  * The default manual page directory.
  *
- * The MANPATH enviornment variable will override this.
+ * The MANPATH environment variable will override this.
  */
 
 #ifndef SYSMANPATH
 
-#if defined(macII)
-#  define SYSMANPATH "/usr/catman/u_man:/usr/catman/a_man"
-#elif defined(__bsdi__)
+#if defined(__bsdi__)
 #  define SYSMANPATH "/usr/share/man:/usr/contrib/man:/usr/contrib/isode/man:/usr/local/man"
 #elif defined(__OpenBSD__) || defined(__DARWIN__)
 #  define SYSMANPATH "/usr/share/man:/usr/local/man:/usr/X11R6/man"
@@ -81,10 +72,6 @@ from the X Consortium.
 #  define SYSMANPATH "/usr/share/man:/usr/X11/man:/usr/openwin/share/man:/usr/dt/share/man:/usr/sfw/share/man"
 #elif defined(SVR4) || defined(__osf__) || (defined(BSD) && (BSD >= 199103))
 #  define SYSMANPATH "/usr/share/man"
-#elif defined(hcx)
-#  define SYSMANPATH "/usr/catman/local_man:/usr/catman/u_man:/usr/catman/a_man:/usr/catman/p_man:/usr/catman/ada_man"
-#elif defined(SYSV) && defined(i386) && !defined(__SCO__) && !defined(sun)
-#  define SYSMANPATH "/usr/catman/u_man:/usr/catman/p_man"
 #elif defined(sgi)
 #  define SYSMANPATH "/usr/catman/a_man:/usr/catman/g_man:/usr/catman/p_man:/usr/catman/u_man:/usr/man/p_man:/usr/man/u_man:/usr/man"
 #endif
@@ -99,23 +86,17 @@ from the X Consortium.
  * Compression Definitions.
  */
 
-#if defined( macII ) || defined( hcx ) || \
-	(defined(SYSV) && defined(i386) && !defined(ISC) && \
-	!defined(__UNIXWARE__) && !defined(__SCO__) && !defined(sun)) || defined(sgi)
+#if defined(sgi)
 #  define COMPRESSION_EXTENSION   "z"
 #  define UNCOMPRESS_FORMAT       "pcat %s > %s"
-#  define NO_COMPRESS		/* mac can't handle using pack as a filter and
-				   xman needs it to be done that way. */
-#elif defined(UTEK)
-#  define COMPRESSION_EXTENSION "C"
-#  define UNCOMPRESS_FORMAT     "ccat < %s > %s"
-#  define COMPRESS              "compact"
+#  define NO_COMPRESS           /* mac can't handle using pack as a filter and
+                                   xman needs it to be done that way. */
 #elif defined (ISC) || defined(__SCO__) || defined(__UNIXWARE__)
-#  define COMPRESSION_EXTENSION   "Z"     /* dummy */
+#  define COMPRESSION_EXTENSION   "Z"           /* dummy */
 #  if !defined(__SCO__) && !defined(__UNIXWARE__)
-#    define COMPRESSION_EXTENSIONS  "zZF" /* pack, compress, freeze */
+#    define COMPRESSION_EXTENSIONS  "zZF"       /* pack, compress, freeze */
 #  else
-#    define COMPRESSION_EXTENSIONS  "zZ"  /* pack, compress */
+#    define COMPRESSION_EXTENSIONS  "zZ"        /* pack, compress */
 #  endif
 #  define UNCOMPRESS_FORMAT       uncompress_format
 #  define UNCOMPRESS_FORMAT_1     "pcat %s > %s"
@@ -124,29 +105,16 @@ from the X Consortium.
 #  define NO_COMPRESS
 #else
 #  define COMPRESSION_EXTENSION "Z"
-#  ifndef HAS_MKSTEMP
-#    define UNCOMPRESS_FORMAT     "zcat < %s > %s"
-#  else
-#    define UNCOMPRESS_FORMAT     "zcat < %s >> %s"
-#  endif
+#  define UNCOMPRESS_FORMAT     "zcat < %s >> %s"
 #  define COMPRESS              "compress"
 #  define GZIP_EXTENSION "gz"
-#  ifndef HAS_MKSTEMP
-#    define GUNZIP_FORMAT "gzip -c -d < %s > %s"
-#  else
-#    define GUNZIP_FORMAT "gzip -c -d < %s >> %s"
-#  endif
+#  define GUNZIP_FORMAT "gzip -c -d < %s >> %s"
 #  define GZIP_COMPRESS "gzip"
 #  define BZIP2_EXTENSION "bz2"
-#  define LZMA_EXTENSION "lzma"
-#  ifndef HAS_MKSTEMP
-#    define BUNZIP2_FORMAT "bunzip2 -c -d < %s > %s"
-#    define UNLZMA_FORMAT "unlzma -c -d < %s > %s"
-#  else
-#    define BUNZIP2_FORMAT "bunzip2 -c -d < %s >> %s"
-#    define UNLZMA_FORMAT "unlzma -c -d < %s >> %s"
-#  endif
+#  define BUNZIP2_FORMAT "bunzip2 -c -d < %s >> %s"
 #  define BZIP2_COMPRESS "bzip2"
+#  define LZMA_EXTENSION "lzma"
+#  define UNLZMA_FORMAT "unlzma -c -d < %s >> %s"
 #  define LZMA_COMPRESS "lzma"
 #endif
 
@@ -156,31 +124,19 @@ from the X Consortium.
  * The command filters for the manual and apropos searches.
  */
 
-#if (defined(hpux) || defined(macII) || defined(CRAY) || defined(ultrix) || \
-	defined(hcx) )
+#if defined(hpux)
 #  define NO_MANPATH_SUPPORT
 #endif
 
-#ifndef HAS_MKSTEMP
-#  ifdef NO_MANPATH_SUPPORT
-#    define APROPOS_FORMAT ("man -k %s | pr -h Apropos > %s")
-#  else
-#    define APROPOS_FORMAT ("man -M %s -k %s | pr -h Apropos > %s")
-#  endif
+#ifdef NO_MANPATH_SUPPORT
+#  define APROPOS_FORMAT ("man -k %s | pr -h Apropos >> %s")
 #else
-/* with mkstemp the temp output file is already created */
-#  ifdef NO_MANPATH_SUPPORT
-#    define APROPOS_FORMAT ("man -k %s | pr -h Apropos >> %s")
-#  else
-#    define APROPOS_FORMAT ("man -M %s -k %s | pr -h Apropos >> %s")
-#  endif
+#  define APROPOS_FORMAT ("man -M %s -k %s | pr -h Apropos >> %s")
 #endif
 
 #ifndef HANDLE_ROFFSEQ
 # if defined(__OpenBSD__)
 #  define FORMAT "| mandoc -Tascii"
-# elif defined(ultrix)
-#  define FORMAT "| nroff -man"             /* The format command. */
 # elif defined(CSRG_BASED)
 #  define FORMAT "| eqn | tbl | nroff -mandoc"
 # elif defined(BSD) && (BSD >= 199103)
@@ -188,10 +144,10 @@ from the X Consortium.
 # elif defined(linux) || defined(__CYGWIN__)
 #  define FORMAT "| pic | eqn | tbl -Tlatin1 | GROFF_NO_SGR= groff -Tlatin1 -mandoc"
 # else
-#  define FORMAT "| neqn | nroff -man"      /* The format command. */
+#  define FORMAT "| neqn | nroff -man"  /* The format command. */
 # endif
 # define TBL "tbl"
-#else /* HANDLE_ROFFSEQ */
+#else                           /* HANDLE_ROFFSEQ */
 # if defined(linux)
 #  define ZSOELIM	"zsoelim"
 # else
@@ -200,7 +156,7 @@ from the X Consortium.
 # define EQN		"eqn"
 # define TBL		"tbl"
 # define GRAP		"grap"
-# define PIC		"pic"
+# define ROFF_PIC	"pic"
 # define VGRIND		"vgrind"
 # define REFER		"refer"
 # if defined(__OpenBSD__)
@@ -230,14 +186,7 @@ from the X Consortium.
 #define MAN "man"
 #endif
 
-/*
- * The Apple, Cray,, SYSV386, and HCX folks put the preformatted pages in the
- * "man" directories.
- */
-#if (defined(macII) || defined(CRAY) || defined(hcx) || \
-	(defined(SYSV) && defined(i386))) && !defined(SCO) && !defined(sun)
-#  define CAT MAN
-#elif defined(SCO)
+#if defined(SCO)
 #  define CAT "cat."
 #else
 #  define CAT "cat"
@@ -249,17 +198,18 @@ from the X Consortium.
 #  define SMAN			"sman"
 #  undef SEARCHOTHER
 #  define SEARCHOTHER 		SMAN
-#  define SGMLENT_EXTENSION	"ent"	/* SGML entity files end in ".ent" */
+#  define SGMLENT_EXTENSION	"ent"   /* SGML entity files end in ".ent" */
 #endif
 
 
 typedef struct _SectionList {
-  struct _SectionList * next;
-  char * label;			/* section label */
-  char * directory;		/* section directory */
-  int flags;
+    struct _SectionList *next;
+    char *label;                /* section label */
+    char *directory;            /* section directory */
+    int flags;
 } SectionList;
 
-extern char * CreateManpageName(char * entry, int section, int flags);
-extern void AddStandardSections(SectionList **list, char * path);
-extern void AddNewSection(SectionList **list, char * path, char * file, char * label, int flags);
+extern char *CreateManpageName(const char *entry, int section, int flags);
+extern void AddStandardSections(SectionList ** list, const char *path);
+extern void AddNewSection(SectionList ** list, const char *path,
+                          const char *file, const char *label, int flags);

@@ -1,3 +1,323 @@
+commit 46c0034ae501360edb541082d0eadb23babf302e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 6 23:46:22 2013 -0700
+
+    xman 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9382d2510db6184fee7a531add217c5e38cefea4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 6 23:44:27 2013 -0700
+
+    COPYING: Remove notice for Xprint code removed in 5722ca728763e7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 64e6ead0bde2806f7be8222bd4805293d9c0f6ce
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Aug 7 23:59:04 2013 -0700
+
+    Resync Solaris man page section list with current Solaris xman
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cf05d354a937e234f60d90c36c7bd676c521b548
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 13:11:23 2013 -0700
+
+    Check for CreateManpage returning NULL
+    
+    Now that it can propogate the malloc failure on from InitPsuedoGlobals,
+    we need to check its result before using it as well.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4d31718584028d9f3df144d54269c4b62a8b5bb5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 13:08:38 2013 -0700
+
+    Check for InitPsuedoGlobals() returning NULL
+    
+    Fixes possible NULL pointer dereferences warned about by parfait:
+    
+       Read from null pointer 'man_globals'
+            at line 162 of buttons.c in function 'CreateManpage'.
+              Function 'InitPsuedoGlobals' may return constant 'NULL' at line 183, called at line 153.
+              Null pointer introduced at line 183 in function 'InitPsuedoGlobals'.
+       Read from null pointer 'man_globals'
+            at line 59 of help.c in function 'MakeHelpWidget'.
+              Function 'InitPsuedoGlobals' may return constant 'NULL' at line 185, called at line 56.
+              Null pointer introduced at line 183 of buttons.c in function 'InitPsuedoGlobals'.
+    
+    and various ones following from each path from those points.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e34e8c6d3203cfeed0f98aae504f318a26d5d75b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 11:29:59 2013 -0700
+
+    Close file pointer before setting it to NULL in Format()
+    
+    Avoids more file leaks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58b857bcc005552b1ae90733c52d456dc56c3f9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 10:36:41 2013 -0700
+
+    Fix file leak in ConstructCommand()
+    
+    File was never closed in any code path.
+    
+    Found by parfait 1.1 bug checking tool:
+    Error: File Leak
+       File Leak: Leaked File file
+            at line 729 of misc.c in function 'ConstructCommand'.
+              file initialized at line 703 with fopen
+              file leaks when fopen(fname, "r") != NULL at line 703.
+            at line 771 of misc.c in function 'ConstructCommand'.
+              file initialized at line 703 with fopen
+              file leaks when fopen(fname, "r") != NULL at line 703.
+            at line 773 of misc.c in function 'ConstructCommand'.
+              file initialized at line 703 with fopen
+              file leaks when fopen(fname, "r") != NULL at line 703.
+            at line 763 of misc.c in function 'ConstructCommand'.
+              file initialized at line 703 with fopen
+              file leaks when fopen(fname, "r") != NULL at line 703
+                  and left <= 1 at line 762.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d25a3b87ce9fdf950b42f45b644242d72e7167b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 20 09:56:08 2013 -0700
+
+    configure: check for groff and enable groff extensions if found
+    
+    Check for groff never got translated from imake to autoconf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 72b3760a2a5c4ea81c3bebf085b3b8f5ac56730e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 20 08:58:46 2013 -0700
+
+    Provide a fallback mkstemp so we don't need to maintain 2 API versions
+    
+    Unifies the file handling API's to always return an open fd or FILE *,
+    instead of delaying the open when mkstemp was not available.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 5ca3757aaa698c8482cec092551e0cc72597981d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 20 09:38:27 2013 -0700
+
+    Fix scroll wheel when CapsLock, NumLock or other modifiers are on
+    
+    "None" means no modifiers at all, when all we really want is not
+    Shift or Control, which have their own mappings.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 78c43bb3d12ed38bc5d750c3e0b1f7f0ea44cf0d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 20 09:02:32 2013 -0700
+
+    Increase default text window sizes from 600 to 780 pixels
+    
+    Old defaults weren't wide enough to display 80 columns of text in our
+    default fonts, so our help & man pages didn't fit.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f82ad2fe93d85190e21a9fcdcc66fdd9ccdbbdb6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 20 08:54:29 2013 -0700
+
+    Stop checking for OSMINORVERSION in list of Solaris man page sections
+    
+    It's never defined in the autotool setup, so these sections were always
+    hidden - better to always define them and let the existing logic filter
+    them out if they don't exist.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2c52f843d4a359e32273bef4c08a49bcaec56100
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 20 00:04:18 2013 -0700
+
+    Use strchr() & strrchr() instead of index() & rindex()
+    
+    Welcome to ANSI C89.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0c2d9fa7e5c2c109c68037e1b4da56fc4598b61b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 23:55:11 2013 -0700
+
+    Use remove() instead of unlink()
+    
+    In normal cases, no difference.   If somehow our file path ends up
+    pointing to a directory, can save having to fsck to clean up the
+    mess, if someone is silly enough to be running xman as root.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2e5d074873fe7440c397cbf257b0a9c2da28e08b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 23:08:32 2013 -0700
+
+    Mark PrintError as noreturn
+    
+    Suggested by gcc -Wsuggest-attribute=noreturn
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d8f02da4e3e9d65608b26222d76ce75567956d0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 23:04:17 2013 -0700
+
+    Remove unused NULLSTR macro
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da80716836bd7a049e74503c660d853e512e6239
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 23:02:23 2013 -0700
+
+    constify char *'s to clear compiler complaints
+    
+    Can't get them all, due to Xt API, but this gets rid of dozens of
+    warnings when building with gcc 4.7.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 27b1aadf2b24ad18e2d0d722e3b720f3f846dfec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 20:19:11 2013 -0700
+
+    Replace StrAlloc with XtNewString
+    
+    Wasn't as hard as the comment suggested.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e92ce109f36918b700eaaafed338fd532d017aa9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 20:13:21 2013 -0700
+
+    Remove XConsortium/XFree86/XdotOrg RCS/CVS id tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d0b3ac1adbbfc055555f6f9be1f61ed4686d235
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 23:34:12 2013 -0700
+
+    unifdef SYSV386 (really defined(SYSV) && defined(i386))
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bc2cd98ebf50dab5db099a812b9dedc62b593c85
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 23:27:17 2013 -0700
+
+    unifdef -Uhcx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c50a01ea37e0242943d276b6af39b81860cba2a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 23:25:09 2013 -0700
+
+    unifdef -UmacII
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 08da0a2c5be93a9b711722d725b005e23bd50638
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 23:22:39 2013 -0700
+
+    unifdef -Uultrix
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 401961177f9411e80213bab0d66ad0d82a1e96f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 20:23:49 2013 -0700
+
+    unifdef -UUTEK -Uapollo -ULynx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 767616ea1e22716901e9043faa912b25f56c23f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 20:11:51 2013 -0700
+
+    unifdef -UCRAY
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2803776db88953904e5b789c5d81ab375c7653f7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 20:10:05 2013 -0700
+
+    Convert to X.Org standard code style
+    
+    Mostly via util/modular/x-indent-all.sh, plus some manual cleanup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8140c2d43519fc44606a82e0d249541a2cdf516d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 18:41:23 2013 -0700
+
+    Fix numerous typos & spelling errors in comments and message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eec31c83594049fc52c985daacca0f8007a2a410
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 18:04:12 2013 -0700
+
+    Use <dirent.h> everywhere instead of checking for X_NOT_POSIX/SYSV/USG/etc.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ffd48bf0084e3e26dee31b16b7234805db00c44
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 18:45:53 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a502d748344549a2b74f8e147243048a400c451
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 12:34:15 2012 -0400
+
+    Eliminate use of tab stops.  Use real TBL markup where indicated.
+    
+    These changes assist structural translation to DocBook.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit a52a5150dd353a6dcc8db1720d0616d14b14905e
+Author: Christos Zoulas <christos@NetBSD.org>
+Date:   Thu Jul 12 20:26:03 2012 +0200
+
+    Rename PIC to ROFF_PIC to avoid problems with "-DPIC" compilations.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0824a8ce82e053723b661bf1c2864e52eebac917
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jun 29 20:53:53 2011 -0700

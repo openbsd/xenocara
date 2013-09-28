@@ -1,4 +1,3 @@
-/* $XConsortium: globals.h,v 1.9 94/04/17 20:43:51 dave Exp $ */
 /*
 
 Copyright (c) 1987, 1988  X Consortium
@@ -28,32 +27,32 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86$ */
 
 #ifndef _globals_h
 #define _globals_h
 
 #include "man.h"
 
-extern Xman_Resources resources;	/* Resource manager sets these. */
+extern Xman_Resources resources;        /* Resource manager sets these. */
 
 /* bookkeeping global variables. */
 
-extern Widget help_widget;		/* The help widget. */
+extern Widget help_widget;              /* The help widget. */
 
-extern int default_height,default_width; /* Approximately the default with and
-					    height, of the manpage when shown,
-					    the the top level manual page 
-					    window */
-extern int man_pages_shown;		/* The current number of manual
-					   pages being shown, if 0 we exit. */
+extern int default_height, default_width; /* Approximately the default width and
+                                             height, of the manpage when shown,
+                                             the the top level manual page
+                                             window */
+extern int man_pages_shown;             /* The current number of manual
+                                           pages being shown, if 0 we exit. */
 
-extern Manual * manual;		        /* The manual structure. */
-extern int sections;			/* The number of manual sections. */
+extern Manual *manual;                  /* The manual structure. */
 
-extern XContext manglobals_context;	/* The context for man_globals. */
+extern int sections;                    /* The number of manual sections. */
 
-extern Widget initial_widget;	      /* The initial widget, never realized. */
+extern XContext manglobals_context;     /* The context for man_globals. */
+
+extern Widget initial_widget;           /* The initial widget, never realized. */
 
 extern char **saved_argv;
 extern int saved_argc;

@@ -1,4 +1,3 @@
-/* $XConsortium: tkfuncs.c,v 1.6 94/04/17 20:43:59 rws Exp $ */
 /*
 
 Copyright (c) 1987, 1988  X Consortium
@@ -28,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86$ */
 
 #include <X11/X.h>
 #include <X11/Xos.h>
@@ -39,7 +37,7 @@ from the X Consortium.
 
 #include "globals.h"
 
-/* 
+/*
  * I am doing the "wrong" thing here by looking in the core field for the
  * widget to get this info, the "right" thing to do is to do a XtGetValues
  * to get this information.
@@ -54,7 +52,7 @@ from the X Consortium.
 int
 Width(Widget w)
 {
-  return( (int) w->core.width );
+    return ((int) w->core.width);
 }
 
 /*	Function Name: Height
@@ -66,7 +64,7 @@ Width(Widget w)
 int
 Height(Widget w)
 {
-  return( (int) w->core.height );
+    return ((int) w->core.height);
 }
 
 /*	Function Name: BorderWidth
@@ -78,10 +76,10 @@ Height(Widget w)
 int
 BorderWidth(Widget w)
 {
-  return( (int) w->core.border_width );
+    return ((int) w->core.border_width);
 }
 
-/* 
+/*
  * These functions have got to be able to get at the widget tree, I don't see
  * any way around this one.
  */
@@ -92,8 +90,8 @@ BorderWidth(Widget w)
  *	Returns: the popup child.
  */
 
-char * 
+char *
 Name(Widget w)
 {
-  return( w->core.name);
+    return (w->core.name);
 }

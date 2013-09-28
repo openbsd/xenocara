@@ -1,5 +1,3 @@
-/* $XConsortium: main.c,v 1.23 94/04/17 20:43:55 rws Exp $ */
-/* $XdotOrg: $ */
 /*
 
 Copyright (c) 1987, 1988  X Consortium
@@ -29,7 +27,6 @@ other dealings in this Software without prior written authorization
 from the X Consortium.
 
 */
-/* $XFree86: xc/programs/xman/main.c,v 1.3 2000/03/03 23:16:27 dawes Exp $ */
 
 /*
  * xman - X window system manual page display program.
@@ -42,41 +39,41 @@ from the X Consortium.
 #include <X11/Xaw/Cardinals.h>
 #endif /* ZERO */
 
-static void ArgError(int argc, char ** argv);
+static void ArgError(int argc, char **argv);
 static void AdjustDefResources(void);
 
 #define Offset(field) (XtOffsetOf(Xman_Resources , field))
 
 static XtResource my_resources[] = {
-  {"directoryFontNormal", XtCFont, XtRFontStruct, sizeof(XFontStruct *),
+    {"directoryFontNormal", XtCFont, XtRFontStruct, sizeof(XFontStruct *),
      Offset(fonts.directory), XtRString, DIRECTORY_NORMAL},
-  {"bothShown", XtCBoolean, XtRBoolean, sizeof(Boolean),
+    {"bothShown", XtCBoolean, XtRBoolean, sizeof(Boolean),
      Offset(both_shown_initial), XtRString, "False"},
-  {"directoryHeight", "DirectoryHeight", XtRInt, sizeof(int),
-     Offset(directory_height), XtRString, "150"},  
-  {"topCursor", XtCCursor, XtRCursor, sizeof(Cursor), 
+    {"directoryHeight", "DirectoryHeight", XtRInt, sizeof(int),
+     Offset(directory_height), XtRString, "150"},
+    {"topCursor", XtCCursor, XtRCursor, sizeof(Cursor),
      Offset(cursors.top), XtRString, XMAN_CURSOR},
-  {"helpCursor", XtCCursor, XtRCursor, sizeof(Cursor),
+    {"helpCursor", XtCCursor, XtRCursor, sizeof(Cursor),
      Offset(cursors.help), XtRString, HELP_CURSOR},
-  {"manpageCursor", XtCCursor, XtRCursor, sizeof(Cursor),
+    {"manpageCursor", XtCCursor, XtRCursor, sizeof(Cursor),
      Offset(cursors.manpage), XtRString, MANPAGE_CURSOR},
-  {"searchEntryCursor", XtCCursor, XtRCursor, sizeof(Cursor),
+    {"searchEntryCursor", XtCCursor, XtRCursor, sizeof(Cursor),
      Offset(cursors.search_entry), XtRString, SEARCH_ENTRY_CURSOR},
-  {"pointerColor", XtCForeground, XtRPixel, sizeof(Pixel),
+    {"pointerColor", XtCForeground, XtRPixel, sizeof(Pixel),
      Offset(cursors.fg_color), XtRString, "XtDefaultForeground"},
-  {"pointerColorBackground", XtCBackground, XtRPixel, sizeof(Pixel),
+    {"pointerColorBackground", XtCBackground, XtRPixel, sizeof(Pixel),
      Offset(cursors.bg_color), XtRString, "XtDefaultBackground"},
-  {"help", XtCBoolean, XtRBoolean, sizeof(Boolean),
+    {"help", XtCBoolean, XtRBoolean, sizeof(Boolean),
      Offset(show_help_syntax), XtRImmediate, NULL},
-  {"helpFile", XtCFile, XtRString, sizeof(char *),
+    {"helpFile", XtCFile, XtRString, sizeof(char *),
      Offset(help_file), XtRString, HELPFILE},
-  {"topBox", XtCBoolean, XtRBoolean, sizeof(Boolean),
+    {"topBox", XtCBoolean, XtRBoolean, sizeof(Boolean),
      Offset(top_box_active), XtRString, "True"},
-  {"clearSearchString", "ClearSearchString", XtRBoolean, sizeof(Boolean),
+    {"clearSearchString", "ClearSearchString", XtRBoolean, sizeof(Boolean),
      Offset(clear_search_string), XtRImmediate, (caddr_t) TRUE},
-  {"title", XtCString, XtRString, sizeof(char *),
+    {"title", XtCString, XtRString, sizeof(char *),
      Offset(title), XtRString, "xman"},
-  {"iconic", XtCBoolean, XtRBoolean, sizeof(Boolean),
+    {"iconic", XtCBoolean, XtRBoolean, sizeof(Boolean),
      Offset(iconic), XtRString, "False"},
 };
 
@@ -86,14 +83,15 @@ static XtResource my_resources[] = {
  * The resource that we absolutely need.
  */
 
-static char * fallback_resources[] = { "Xman*quitButton.translations:	#override \\n   <Btn1Up>: Quit() reset()",
- "Xman*helpButton.sensitive:                    FALSE",
- "Xman*manpageButton.sensitive:                 FALSE",
- "Xman*helpButton.Label:			Help",
- "Xman*quitButton.Label:			Quit",
- "Xman*manpageButton.Label:		        Manual Page",
- "Xman*topLabel.label:         		        No App-Defaults File",
- NULL,
+static char *fallback_resources[] = {
+    "Xman*quitButton.translations:	#override \\n   <Btn1Up>: Quit() reset()",
+    "Xman*helpButton.sensitive:                    FALSE",
+    "Xman*manpageButton.sensitive:                 FALSE",
+    "Xman*helpButton.Label:			Help",
+    "Xman*quitButton.Label:			Quit",
+    "Xman*manpageButton.Label:		        Manual Page",
+    "Xman*topLabel.label:         		        No App-Defaults File",
+    NULL,
 };
 
 /*
@@ -102,30 +100,30 @@ static char * fallback_resources[] = { "Xman*quitButton.translations:	#override 
  */
 
 static XrmOptionDescRec xman_options[] = {
-{"-geometry", "*topBox.geometry",        XrmoptionSepArg, (caddr_t) NULL},
-{"-help",     "help",                    XrmoptionNoArg,  (caddr_t) "True"},
-{"=",         "*topBox.geometry",        XrmoptionIsArg,  (caddr_t) NULL},
-{"-pagesize", "*manualBrowser.geometry", XrmoptionSepArg, (caddr_t) NULL},
-{"-notopbox", "topBox",                  XrmoptionNoArg,  (caddr_t) "False"},
-{"-helpfile", "helpFile",                XrmoptionSepArg, (caddr_t) NULL},
-{"-bothshown","bothShown",               XrmoptionNoArg,  (caddr_t) "True"},
-{"-title",    "title",                   XrmoptionSepArg, (caddr_t) "xman"}, 
-{"-iconic",   "iconic",                  XrmoptionNoArg,  (caddr_t) "True"},
+    {"-geometry", "*topBox.geometry", XrmoptionSepArg, (caddr_t) NULL},
+    {"-help", "help", XrmoptionNoArg, (caddr_t) "True"},
+    {"=", "*topBox.geometry", XrmoptionIsArg, (caddr_t) NULL},
+    {"-pagesize", "*manualBrowser.geometry", XrmoptionSepArg, (caddr_t) NULL},
+    {"-notopbox", "topBox", XrmoptionNoArg, (caddr_t) "False"},
+    {"-helpfile", "helpFile", XrmoptionSepArg, (caddr_t) NULL},
+    {"-bothshown", "bothShown", XrmoptionNoArg, (caddr_t) "True"},
+    {"-title", "title", XrmoptionSepArg, (caddr_t) "xman"},
+    {"-iconic", "iconic", XrmoptionNoArg, (caddr_t) "True"},
 };
 
 static XtActionsRec xman_actions[] = {
-  {"GotoPage",          GotoPage},
-  {"Quit",              Quit},
-  {"Search",            Search},
-  {"PopupHelp",         PopupHelp},
-  {"PopupSearch",       PopupSearch},
-  {"CreateNewManpage",  CreateNewManpage},
-  {"RemoveThisManpage", RemoveThisManpage},
-  {"SaveFormattedPage", SaveFormattedPage},
+    {"GotoPage", GotoPage},
+    {"Quit", Quit},
+    {"Search", Search},
+    {"PopupHelp", PopupHelp},
+    {"PopupSearch", PopupSearch},
+    {"CreateNewManpage", CreateNewManpage},
+    {"RemoveThisManpage", RemoveThisManpage},
+    {"SaveFormattedPage", SaveFormattedPage},
 #ifdef INCLUDE_XPRINT_SUPPORT
-  {"PrintThisManpage",  PrintThisManpage},
-#endif /* INCLUDE_XPRINT_SUPPORT */
-  {"ShowVersion",       ShowVersion},
+    {"PrintThisManpage", PrintThisManpage},
+#endif                          /* INCLUDE_XPRINT_SUPPORT */
+    {"ShowVersion", ShowVersion},
 };
 
 char **saved_argv;
@@ -142,42 +140,43 @@ Atom wm_delete_window;
  *	Returns: return, what return.
  */
 
-int main(int argc, char ** argv)
+int
+main(int argc, char **argv)
 {
-  XtAppContext app_con;
+    XtAppContext app_con;
 
-  saved_argc = argc;
-  saved_argv = (char **)XtMalloc(argc * sizeof(char *));
-  bcopy(argv, saved_argv, argc * sizeof(char *));
+    saved_argc = argc;
+    saved_argv = (char **) XtMalloc(argc * sizeof(char *));
+    bcopy(argv, saved_argv, argc * sizeof(char *));
 
-  XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
+    XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
-  initial_widget = XtAppInitialize(&app_con, "Xman", xman_options,
-				   XtNumber(xman_options), &argc, argv,
-				   fallback_resources, NULL, ZERO);
-  wm_delete_window = XInternAtom(XtDisplay(initial_widget), "WM_DELETE_WINDOW",
-				 False);
+    initial_widget = XtAppInitialize(&app_con, "Xman", xman_options,
+                                     XtNumber(xman_options), &argc, argv,
+                                     fallback_resources, NULL, ZERO);
+    wm_delete_window =
+        XInternAtom(XtDisplay(initial_widget), "WM_DELETE_WINDOW", False);
 
-  manglobals_context = XStringToContext(MANNAME);
+    manglobals_context = XStringToContext(MANNAME);
 
-  AdjustDefResources();
+    AdjustDefResources();
 
-  XtGetApplicationResources( initial_widget, (caddr_t) &resources, 
-			    my_resources, XtNumber(my_resources),
-			    NULL, (Cardinal) 0);
+    XtGetApplicationResources(initial_widget, (caddr_t) & resources,
+                              my_resources, XtNumber(my_resources),
+                              NULL, (Cardinal) 0);
 
-  if ( (argc != 1) || (resources.show_help_syntax) ) {
-    ArgError(argc, argv);
-    return EXIT_FAILURE;
-  }
+    if ((argc != 1) || (resources.show_help_syntax)) {
+        ArgError(argc, argv);
+        return EXIT_FAILURE;
+    }
 
-  XtAppAddActions(app_con, xman_actions, XtNumber(xman_actions));
+    XtAppAddActions(app_con, xman_actions, XtNumber(xman_actions));
 
-  if (!resources.fonts.directory)
-	PrintError("Failed to get the directory font.");
+    if (!resources.fonts.directory)
+        PrintError("Failed to get the directory font.");
 
 #ifdef DEBUG
-  printf("debugging mode\n");
+    printf("debugging mode\n");
 #endif
 
 /*
@@ -188,19 +187,20 @@ int main(int argc, char ** argv)
  * NOTE: if you are in a 100 dpi display you will lose.
  */
 
-  default_width = DEFAULT_WIDTH;
-  default_height=DisplayHeight(XtDisplay(initial_widget), 
-			       DefaultScreen(XtDisplay(initial_widget)));
-  default_height *= 3;
-  default_height /= 4;
+    default_width = DEFAULT_WIDTH;
+    default_height = DisplayHeight(XtDisplay(initial_widget),
+                                   DefaultScreen(XtDisplay(initial_widget)));
+    default_height *= 3;
+    default_height /= 4;
 
-  if ( (sections = Man()) == 0 )
-    PrintError("There are no manual sections to display, check your MANPATH.");
+    if ((sections = Man()) == 0)
+        PrintError
+            ("There are no manual sections to display, check your MANPATH.");
 
-  if (resources.top_box_active) 
-    MakeTopBox();	
-  else
-    (void) CreateManpage(NULL);
+    if (resources.top_box_active)
+        MakeTopBox();
+    else
+        (void) CreateManpage(NULL);
 
 /*
  * We need to keep track of the number of manual pages that are shown on
@@ -211,60 +211,60 @@ int main(int argc, char ** argv)
  * no top box is present.
  */
 
-  man_pages_shown = 1;		
+    man_pages_shown = 1;
 
-  XtAppMainLoop(app_con);
+    XtAppMainLoop(app_con);
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 /*	Function Name: ArgError
- *	Description:  Prints error message about unknow arguments.
+ *	Description:  Prints error message about unknown arguments.
  *	Arguments: argc, argv - args not understood.
  *	Returns: none.
  */
 
-static void 
-ArgError(int argc, char ** argv)
+static void
+ArgError(int argc, char **argv)
 {
-  int i;
+    int i;
 
-  static char **syntax, *syntax_def[] = {
-  "-help",                   "Print this message",
-  "-helpfile <filename>",    "Specifies the helpfile to use.",
-  "-bothshown",              "Show both the directory and manpage at once.",
-  "-notopbox",               "Starts with manpage rather than topbox.",
-  "-geometry <geom>",        "Specifies the geometry of the top box.",
-  "=<geom>",                 "Specifies the geometry of the top box.",
-  "-pagesize <geom>",        "Specifies the geometry of the manual page.",
-  "-bw <pixels>",            "Width of all window borders.",
-  "-borderwidth <pixels>",   "Width of all window borders.",
-  "-bd <color>",             "Color of all window borders.",
-  "-bordercolor <color>",    "Color of all window borders.",
-  "-fg <color>",             "Foreground color for the application.",
-  "-foreground <color>",     "Foreground color for the application.",
-  "-bg <color>",             "Background color for the application.",
-  "-background <color>",     "Background color for the application.",
-  "-display <display name>", "Specify a display that is not the default",
-  "-fn <font>",              "Font to be used for button and label text.",
-  "-font <font>",            "Font to be used for button and label text.",
-  "-name <name>",            "Change the name used for retrieving resources.",
-  "-title <name>",           "Change the name without affecting resources.",
-  "-xrm <resource>",         "Specifies a resource on the command line.",
-  NULL, NULL,
-  };
-  
-  syntax = syntax_def;
+    static const char **syntax, *syntax_def[] = {
+        "-help", "Print this message",
+        "-helpfile <filename>", "Specifies the helpfile to use.",
+        "-bothshown", "Show both the directory and manpage at once.",
+        "-notopbox", "Starts with manpage rather than topbox.",
+        "-geometry <geom>", "Specifies the geometry of the top box.",
+        "=<geom>", "Specifies the geometry of the top box.",
+        "-pagesize <geom>", "Specifies the geometry of the manual page.",
+        "-bw <pixels>", "Width of all window borders.",
+        "-borderwidth <pixels>", "Width of all window borders.",
+        "-bd <color>", "Color of all window borders.",
+        "-bordercolor <color>", "Color of all window borders.",
+        "-fg <color>", "Foreground color for the application.",
+        "-foreground <color>", "Foreground color for the application.",
+        "-bg <color>", "Background color for the application.",
+        "-background <color>", "Background color for the application.",
+        "-display <display name>", "Specify a display that is not the default",
+        "-fn <font>", "Font to be used for button and label text.",
+        "-font <font>", "Font to be used for button and label text.",
+        "-name <name>", "Change the name used for retrieving resources.",
+        "-title <name>", "Change the name without affecting resources.",
+        "-xrm <resource>", "Specifies a resource on the command line.",
+        NULL, NULL,
+    };
 
-  for (i = 1; i < argc ; i++) 
-    (void) printf("This argument is unknown to Xman: %s\n", argv[i]);
-  
-  (void) printf("\nKnown arguments are:\n");
+    syntax = syntax_def;
 
-  while ( *syntax != NULL ) {
-    printf("%-30s - %s\n", syntax[0], syntax[1]);
-    syntax += 2;
-  }
+    for (i = 1; i < argc; i++)
+        (void) printf("This argument is unknown to Xman: %s\n", argv[i]);
+
+    (void) printf("\nKnown arguments are:\n");
+
+    while (*syntax != NULL) {
+        printf("%-30s - %s\n", syntax[0], syntax[1]);
+        syntax += 2;
+    }
 }
 
 /*    Function Name: AdjustDefResources
@@ -277,20 +277,22 @@ ArgError(int argc, char ** argv)
 static void
 AdjustDefResources(void)
 {
-  char        *xwinhome = NULL;
-  int i;
+    char *xwinhome = NULL;
+    int i;
 
-  if (!(xwinhome = getenv("XWINHOME")))
-    return;
+    if (!(xwinhome = getenv("XWINHOME")))
+        return;
 
-  for (i = 0; i < sizeof(my_resources)/sizeof(XtResource); i++) {
-    if (!strcmp(my_resources[i].resource_name, "helpFile")) {
-      char filename[PATH_MAX];
-      snprintf(filename, sizeof(filename), "%s/lib/X11/xman.help", xwinhome);
-      if (!(my_resources[i].default_addr = strdup(filename))) {
-        fprintf(stderr, "malloc failure\n");
-        exit(EXIT_FAILURE);
-      }
+    for (i = 0; i < sizeof(my_resources) / sizeof(XtResource); i++) {
+        if (!strcmp(my_resources[i].resource_name, "helpFile")) {
+            char filename[PATH_MAX];
+
+            snprintf(filename, sizeof(filename), "%s/lib/X11/xman.help",
+                     xwinhome);
+            if (!(my_resources[i].default_addr = strdup(filename))) {
+                fprintf(stderr, "malloc failure\n");
+                exit(EXIT_FAILURE);
+            }
+        }
     }
-  }
 }
