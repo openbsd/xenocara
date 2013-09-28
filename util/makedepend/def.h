@@ -24,9 +24,8 @@ in this Software without prior written authorization from The Open Group.
 
 */
 
-#ifdef HAVE_CONFIG_H /* Autotooled for Xorg 7.0? */
+#ifdef HAVE_CONFIG_H
 # include "makedepend-config.h"
-# define USING_AUTOCONF
 #endif
 
 #include <X11/Xos.h>
@@ -107,9 +106,9 @@ struct	inclist {
 	char		*i_incstring;	/* string from #include line */
 	char		*i_file;	/* path name of the include file */
 	struct inclist	**i_list;	/* list of files it itself includes */
-	int		i_listlen;	/* length of i_list */
 	struct symtab	**i_defs;	/* symbol table for this file and its
 					   children when merged */
+	int		i_listlen;	/* length of i_list */
 	int		i_ndefs;	/* current # defines */
 	boolean		*i_merged;      /* whether we have merged child
 					   defines */
@@ -173,7 +172,7 @@ int                     cppsetup(const char *filename,
 				 struct inclist *inc);
 
 
-extern void fatalerr(const char *, ...) _X_ATTRIBUTE_PRINTF(1, 2);
+extern void fatalerr(const char *, ...) _X_ATTRIBUTE_PRINTF(1, 2) _X_NORETURN;
 extern void warning(const char *, ...) _X_ATTRIBUTE_PRINTF(1, 2);
 extern void warning1(const char *, ...) _X_ATTRIBUTE_PRINTF(1, 2);
 

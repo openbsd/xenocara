@@ -1,8 +1,6 @@
 
 bin_PROGRAMS = makedepend
 
-INCLUDES =  @X_CFLAGS@
-
 makedepend_SOURCES = include.c \
                      main.c \
                      parse.c \
@@ -14,6 +12,7 @@ makedepend_SOURCES = include.c \
                      imakemdep.h
 
 AM_CPPFLAGS = -DOBJSUFFIX=\".${OBJEXT}\" -DINCLUDEDIR=\"/usr/include\"
+AM_CPPFLAGS += $(X_CFLAGS)
 AM_CFLAGS = $(CWARNFLAGS)
 
 EXTRA_DIST = autogen.sh makedepend.man

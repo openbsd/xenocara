@@ -50,7 +50,7 @@ issymbolic(const char *dir, const char *component)
 	struct stat	st;
 	char	buf[ BUFSIZ ], **pp;
 
-	sprintf(buf, "%s%s%s", dir, *dir ? "/" : "", component);
+	snprintf(buf, sizeof(buf), "%s%s%s", dir, *dir ? "/" : "", component);
 	for (pp=notdotdot; *pp; pp++)
 		if (strcmp(*pp, buf) == 0)
 			return (TRUE);
@@ -178,10 +178,8 @@ included_by(struct inclist *ip, struct inclist *newfile)
 	 * If it is already on the list, don't stick it on again.
 	 */
 	if (ip->i_list == NULL) {
-		ip->i_list = (struct inclist **)
-			malloc(sizeof(struct inclist *) * ++ip->i_listlen);
-		ip->i_merged = (boolean *)
-		    malloc(sizeof(boolean) * ip->i_listlen);
+		ip->i_list = malloc(sizeof(struct inclist *) * ++ip->i_listlen);
+		ip->i_merged = malloc(sizeof(boolean) * ip->i_listlen);
 	} else {
 		for (i=0; i<ip->i_listlen; i++)
 			if (ip->i_list[ i ] == newfile) {
@@ -205,9 +203,9 @@ included_by(struct inclist *ip, struct inclist *newfile)
 			    }
 			    return;
 			}
-		ip->i_list = (struct inclist **) realloc(ip->i_list,
+		ip->i_list = realloc(ip->i_list,
 			sizeof(struct inclist *) * ++ip->i_listlen);
-		ip->i_merged = (boolean *)
+		ip->i_merged =
 		    realloc(ip->i_merged, sizeof(boolean) * ip->i_listlen);
 	}
 	ip->i_list[ ip->i_listlen-1 ] = newfile;
@@ -294,7 +292,7 @@ inc_path(const char *file, const char *include, int type)
 	pp = includedirsnext;
 
 	for (; *pp; pp++) {
-		sprintf(path, "%s/%s", *pp, include);
+		snprintf(path, sizeof(path), "%s/%s", *pp, include);
 		remove_dotdot(path);
 		if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode)) {
 			includedirsnext = pp + 1;

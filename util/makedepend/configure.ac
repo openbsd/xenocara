@@ -11,12 +11,8 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 
 dnl Checks for programs.
-AC_PROG_CC
 XORG_DEFAULT_OPTIONS
 XORG_WITH_LINT
-
-dnl Replacement for Imake SIGNAL_DEFINES
-AC_TYPE_SIGNAL
 
 dnl Checks for functions
 AC_CHECK_FUNCS([rename fchmod])
@@ -25,7 +21,6 @@ dnl Use 64-bit file operations on 32-bit systems that support them
 AC_SYS_LARGEFILE
 
 dnl Check for pkg-config packages
-PKG_CHECK_MODULES(X, [xproto])
-AC_SUBST(X_CFLAGS)
+PKG_CHECK_MODULES(X, [xproto >= 7.0.17])
 
 AC_OUTPUT([Makefile])

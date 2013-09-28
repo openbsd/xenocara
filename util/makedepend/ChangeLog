@@ -1,3 +1,224 @@
+commit 30859adfd6a6523a92a637ca26bd61ce59680a1b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 22 22:14:36 2013 -0700
+
+    makedepend 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b6d3797eae3bac824cf72c0c8f64f51e3d4eaef
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Jul 1 18:57:12 2013 +0200
+
+    Don't crash if an option's argument is missing
+    
+    Avoid dereferencing argv[argc].
+    
+    See http://www.forallsecure.com/bug-reports/011f1a55f79a5501b36008d6ee0d40e8b6644569/
+    
+    Reported-by: Alexandre Rebert <alexandre@cmu.edu>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 107c2fcf5c7576ee66ee23926f0431b6db27a07a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 23 09:57:51 2013 -0800
+
+    Assume signal handlers return void, as C89 requires
+    
+    Drops use of autoconf's obsolete AC_TYPE_SIGNAL
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b2c6d0d0f64d419590c7cd77aae4890866665cba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 12 18:36:30 2013 -0800
+
+    Bug 56091 - Unsafe use of strcpy() in makedepend
+    
+    Use memmove for potentially overlapping copies.
+    
+    Reported-by: Laurence Jupp <laurence@narya.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 897e25de0cf27bd345130912a6da34b0c802a0ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 12 18:33:44 2013 -0800
+
+    Store len in a size_t instead of an int in redirect()
+    
+    Fixes clang warnings about converting back & forth:
+    
+    main.c:761:8: warning: implicit conversion loses integer precision: 'size_t'
+          (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+            len = strlen(line);
+                ~ ^~~~~~~~~~~~
+    main.c:763:41: warning: implicit conversion changes signedness: 'int' to
+          'size_t' (aka 'unsigned long') [-Wsign-conversion]
+                    if (*buf == '#' && strncmp(line, buf, len) == 0)
+                                       ~~~~~~~            ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87fd28cd5a5acfe6e91c97c4af0a469e1e86cbd5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 20 22:45:53 2013 -0800
+
+    Mark fatalerr & catch as _X_NORETURN
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 637c59e78f699a824e78316cb8ca3113bb5c738b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 14:40:40 2013 -0800
+
+    Replace deprecated Automake INCLUDES variable with AM_CPPFLAGS
+    
+    Excerpt https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+    
+      - Support for the long-deprecated INCLUDES variable will be removed
+        altogether in Automake 1.14.  The AM_CPPFLAGS variable should be
+        used instead.
+    
+    This variable was deprecated in Automake releases prior to 1.10, which is
+    the current minimum level required to build X.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 059e9be5a7321974b190d786d426b2ae27be8c56
+Author: Glenn Burkhardt <gbburkhardt@gmail.com>
+Date:   Fri Jan 11 22:09:54 2013 -0800
+
+    Bug 52099 - makedepend rename fails on CIFS mounted shares
+    
+    Patch v1: https://bugs.freedesktop.org/attachment.cgi?id=64218
+    
+    v2: modified by Alan Coopersmith to restore Makefile to original name
+    if contents cannot be read, instead of leaving it moved to .bak name.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bb29c304c09aba567af0f0d77a63f0202c3836c6
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9685da3e7136e01a7bc780d81667abf5897b87a6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 16 12:59:58 2013 -0500
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 8e4373712409e2411652cf0697c33d91e95fd405
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 11 22:29:19 2013 -0800
+
+    Fix a comment typo
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3a28a2a0146c4979281ffea641dede9a32df08f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 5 09:55:04 2013 -0800
+
+    Convert more sprintf calls to snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 639071ff3446b0df53078be1ff5820c812313aa7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 5 09:42:33 2013 -0800
+
+    Remove unnecessary casts from malloc/realloc calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1b5e7ee6483415d7093f3d5395c4832fa69f0a28
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 5 09:25:43 2013 -0800
+
+    Remove fallbacks for Imake configuration, assume autoconf
+    
+    For the original 6.9/7.0 release, we supported using either autoconf or
+    imake to generate configuration.  For releases after that, we're only
+    supporting autoconf, so no longer need to check & fall back to imake.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4db1a4f15ef704b6b6faf1741054d59cb527298a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 5 09:15:28 2013 -0800
+
+    Move i_listlen in struct inclist for better packing in 64-bit builds
+    
+    Putting it with another int instead of between two pointers gets rid
+    of two places where 4 bytes each had to be padded into the structure
+    for alignment.
+    
+    Reduces the size of an individual struct from 64 bytes to 56 bytes,
+    and of the inclist[ MAXFILES ] array from 128k to 112k.
+    
+    Found by clang:
+    ./def.h:111:18: warning: padding struct 'struct inclist' with 4 bytes to align 'i_defs' [-Wpadded]
+            struct symtab   **i_defs;       /* symbol table for this file and its
+                              ^
+    ./def.h:114:12: warning: padding struct 'struct inclist' with 4 bytes to align 'i_merged' [-Wpadded]
+            boolean         *i_merged;      /* whether we have merged child
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c5378d3e7bb79880b9ea6f7f055393ae42eae55f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 5 09:05:17 2013 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC is provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+
+commit 3db923e80852b088b1d0583bad7fca05e173efdc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 5 09:01:03 2013 -0800
+
+    Update configure.ac initialization to X.Org standard form
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d70e2776b41977a87bbe32220f4d3f8a62dc763
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 20:07:43 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01238aa25c3bb1e0c909f63dd3bc97c48bd8bf6d
+Author: Marko Lindqvist <cazfi74@gmail.com>
+Date:   Fri Jan 4 20:02:33 2013 -0800
+
+    Bug 59005 - makedepend: Build with automake-1.13 broken
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 49d72ba286c1ddd99cf1e6477ee2b6af59007341
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Mar 14 19:49:14 2012 +0100
+
+    configure.ac: use AM_MAINTAINER_MODE
+
 commit b6605e3945eaaabbd090672f33e888d394f9a4f0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 21:52:14 2012 -0800

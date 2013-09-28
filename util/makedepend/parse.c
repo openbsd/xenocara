@@ -229,7 +229,7 @@ deftype (char *line, struct filepointer *filep,
 		/*
 		 * copy the definition back to the beginning of the line.
 		 */
-		strcpy (line, p);
+		memmove (line, p, strlen(p) + 1);
 		break;
 	case ELSE:
 	case ENDIF:
@@ -322,13 +322,11 @@ define2(const char *name, const char *val, struct inclist *file)
     /* Make space if it's needed */
     if (file->i_defs == NULL)
     {
-	file->i_defs = (struct symtab **)
-			malloc(sizeof (struct symtab*) * SYMTABINC);
+	file->i_defs = malloc(sizeof (struct symtab*) * SYMTABINC);
 	file->i_ndefs = 0;
     }
     else if (!(file->i_ndefs % SYMTABINC))
-	file->i_defs = (struct symtab **)
-			realloc(file->i_defs,
+	file->i_defs = realloc(file->i_defs,
 			   sizeof(struct symtab*)*(file->i_ndefs+SYMTABINC));
 
     if (file->i_defs == NULL)
@@ -387,7 +385,7 @@ define2(const char *name, const char *val, struct inclist *file)
 	*sp = sp[-1];
 	sp--;
     }
-    stab = (struct symtab *) malloc(sizeof (struct symtab));
+    stab = malloc(sizeof (struct symtab));
     if (stab == NULL)
 	fatalerr("malloc()/realloc() failure in insert_defn()\n");
 
@@ -492,8 +490,7 @@ merge2defines(struct inclist *file1, struct inclist *file2)
                 {
                 	/* make sure deflen % SYMTABINC == 0 is still true */
                 	deflen += (SYMTABINC - deflen % SYMTABINC) % SYMTABINC;
-                	i_defs=(struct symtab**)
-			    malloc(deflen*sizeof(struct symtab*));
+			i_defs = malloc(deflen*sizeof(struct symtab*));
                 	if (i_defs==NULL) return 0;
         	}
 

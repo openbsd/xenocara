@@ -31,9 +31,6 @@ in this Software without prior written authorization from The Open Group.
  * definitions.  In general you should *not* edit ccimake.c or imake.c!
  */
 
-#ifdef __UNIXOS2__
-#define lstat stat
-#endif
 
 #if !defined (CROSSCOMPILE) || defined (CROSSCOMPILE_CPP)
 /* predefs:
@@ -340,9 +337,6 @@ static const struct symtab	predefs[] = {
 #endif
 #ifdef __ELF__
 	{"__ELF__", "1"},
-#endif
-#ifdef __UNIXOS2__
-	{"__UNIXOS2__", "1"},
 #endif
 #if defined(__QNX__)
         {"__QNX__", "1"},

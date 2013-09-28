@@ -113,23 +113,14 @@ boolean 	warn_multiple = FALSE;
 static void setfile_cmdinc(struct filepointer *filep, long count, char **list);
 static void redirect(const char *line, const char *makefile);
 
-static
-#ifdef RETSIGTYPE
-RETSIGTYPE
-#else
-# ifdef SIGNALRETURNSINT
-int
-# else
-void
-# endif
-#endif
+static void _X_NORETURN
 catch (int sig)
 {
 	fflush (stdout);
 	fatalerr ("got signal %d\n", sig);
 }
 
-#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32) || defined(__UNIXOS2__) || defined(Lynx_22) || defined(__CYGWIN__)
+#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32) || defined(Lynx_22) || defined(__CYGWIN__)
 #define USGISH
 #endif
 
@@ -142,12 +133,6 @@ catch (int sig)
 #endif
 static struct sigaction sig_act;
 #endif /* USGISH */
-
-#ifndef USING_AUTOCONF
-# if !defined(USGISH) && !defined(_SEQUENT_) && !defined(MINIX)
-#  define HAVE_FCHMOD	1
-# endif
-#endif
 
 int
 main(int argc, char *argv[])
@@ -202,7 +187,7 @@ main(int argc, char *argv[])
 	    if ((afd = open(argv[1]+1, O_RDONLY)) < 0)
 		fatalerr("cannot open \"%s\"\n", argv[1]+1);
 	    fstat(afd, &ast);
-	    args = (char *)malloc(ast.st_size + 1);
+	    args = malloc(ast.st_size + 1);
 	    if ((ast.st_size = read(afd, args, ast.st_size)) < 0)
 		fatalerr("failed to read %s\n", argv[1]+1);
 	    args[ast.st_size] = '\0';
@@ -230,7 +215,7 @@ main(int argc, char *argv[])
 	    }
 	    if (p[-1])
 		nargc++;
-	    nargv = (char **)malloc(nargc * sizeof(char *));
+	    nargv = malloc(nargc * sizeof(char *));
 	    nargv[0] = argv[0];
 	    argc = 1;
 	    for (p = args; argc < nargc; p += strlen(p) + 1)
@@ -257,6 +242,8 @@ main(int argc, char *argv[])
 			break;
 		case 'D':
 			if (argv[0][2] == '\0') {
+				if (argc < 2)
+					fatalerr("Missing argument for -D\n");
 				argv++;
 				argc--;
 			}
@@ -272,6 +259,8 @@ main(int argc, char *argv[])
 			    fatalerr("Too many -I flags.\n");
 			*incp++ = argv[0]+2;
 			if (**(incp-1) == '\0') {
+				if (argc < 2)
+					fatalerr("Missing argument for -I\n");
 				*(incp-1) = *(++argv);
 				argc--;
 			}
@@ -285,6 +274,8 @@ main(int argc, char *argv[])
 			    undeflist = realloc(undeflist,
 						numundefs * sizeof(char *));
 			if (argv[0][2] == '\0') {
+				if (argc < 2)
+					fatalerr("Missing argument for -U\n");
 				argv++;
 				argc--;
 			}
@@ -301,6 +292,8 @@ main(int argc, char *argv[])
 		case 'w':
 			if (endmarker) break;
 			if (argv[0][2] == '\0') {
+				if (argc < 2)
+					fatalerr("Missing argument for -w\n");
 				argv++;
 				argc--;
 				width = atoi(argv[0]);
@@ -310,6 +303,8 @@ main(int argc, char *argv[])
 		case 'o':
 			if (endmarker) break;
 			if (argv[0][2] == '\0') {
+				if (argc < 2)
+					fatalerr("Missing argument for -o\n");
 				argv++;
 				argc--;
 				objsuffix = argv[0];
@@ -319,6 +314,8 @@ main(int argc, char *argv[])
 		case 'p':
 			if (endmarker) break;
 			if (argv[0][2] == '\0') {
+				if (argc < 2)
+					fatalerr("Missing argument for -p\n");
 				argv++;
 				argc--;
 				objprefix = argv[0];
@@ -337,6 +334,8 @@ main(int argc, char *argv[])
 			if (endmarker) break;
 			startat = argv[0]+2;
 			if (*startat == '\0') {
+				if (argc < 2)
+					fatalerr("Missing argument for -s\n");
 				startat = *(++argv);
 				argc--;
 			}
@@ -348,6 +347,8 @@ main(int argc, char *argv[])
 			if (endmarker) break;
 			makefile = argv[0]+2;
 			if (*makefile == '\0') {
+				if (argc < 2)
+					fatalerr("Missing argument for -f\n");
 				makefile = *(++argv);
 				argc--;
 			}
@@ -403,29 +404,9 @@ main(int argc, char *argv[])
 		fatalerr("Too many -I flags.\n");
 	    *incp++ = PREINCDIR;
 #endif
-#ifdef __UNIXOS2__
-	    {
-		char *emxinc = getenv("C_INCLUDE_PATH");
-		/* can have more than one component */
-		if (emxinc) {
-		    char *beg, *end;
-		    beg= (char*)strdup(emxinc);
-		    for (;;) {
-			end = (char*)strchr(beg,';');
-			if (end) *end = 0;
-		    	if (incp >= includedirs + MAXDIRS)
-				fatalerr("Too many include dirs\n");
-			*incp++ = beg;
-			if (!end) break;
-			beg = end+1;
-		    }
-		}
-	    }
-#else /* !__UNIXOS2__, does not use INCLUDEDIR at all */
 	    if (incp >= includedirs + MAXDIRS)
 		fatalerr("Too many -I flags.\n");
 	    *incp++ = INCLUDEDIR;
-#endif
 
 #ifdef EXTRAINCDIR
 	    if (incp >= includedirs + MAXDIRS)
@@ -530,21 +511,6 @@ main(int argc, char *argv[])
 	return 0;
 }
 
-#ifdef __UNIXOS2__
-/*
- * eliminate \r chars from file
- */
-static int
-elim_cr(char *buf, int sz)
-{
-	int i,wp;
-	for (i= wp = 0; i<sz; i++) {
-		if (buf[i] != '\r')
-			buf[wp++] = buf[i];
-	}
-	return wp;
-}
-#endif
 
 struct filepointer *
 getfile(const char *file)
@@ -553,23 +519,20 @@ getfile(const char *file)
 	struct filepointer	*content;
 	struct stat	st;
 
-	content = (struct filepointer *)malloc(sizeof(struct filepointer));
+	content = malloc(sizeof(struct filepointer));
 	content->f_name = file;
 	if ((fd = open(file, O_RDONLY)) < 0) {
 		warning("cannot open \"%s\"\n", file);
-		content->f_p = content->f_base = content->f_end = (char *)malloc(1);
+		content->f_p = content->f_base = content->f_end = malloc(1);
 		*content->f_p = '\0';
 		return(content);
 	}
 	fstat(fd, &st);
-	content->f_base = (char *)malloc(st.st_size+1);
+	content->f_base = malloc(st.st_size+1);
 	if (content->f_base == NULL)
 		fatalerr("cannot allocate mem\n");
 	if ((st.st_size = read(fd, content->f_base, st.st_size)) < 0)
 		fatalerr("failed to read %s\n", file);
-#ifdef __UNIXOS2__
-	st.st_size = elim_cr(content->f_base,st.st_size);
-#endif
 	close(fd);
 	content->f_len = st.st_size+1;
 	content->f_p = content->f_base;
@@ -750,17 +713,7 @@ char *base_name(const char *in_file)
 	return(file);
 }
 
-#ifdef USING_AUTOCONF
-# ifndef HAVE_RENAME
-#  define NEED_RENAME
-# endif
-#else /* Imake configured, check known OS'es without rename() */
-# if defined(USG) && !defined(CRAY) && !defined(SVR4) && !defined(__UNIXOS2__) && !defined(clipper) && !defined(__clipper__)
-#  define NEED_RENAME
-# endif
-#endif
-
-#ifdef NEED_RENAME
+#ifndef HAVE_RENAME
 int rename (char *from, char *to)
 {
     (void) unlink (to);
@@ -771,7 +724,7 @@ int rename (char *from, char *to)
 	return -1;
     }
 }
-#endif /* NEED_RENAME */
+#endif /* !HAVE_RENAME */
 
 static void
 redirect(const char *line, const char *makefile)
@@ -781,7 +734,7 @@ redirect(const char *line, const char *makefile)
 	char	backup[ BUFSIZ ],
 		buf[ BUFSIZ ];
 	boolean	found = FALSE;
-	int	len;
+	size_t	len;
 
 	/*
 	 * if makefile is "-" then let it pour onto stdout.
@@ -792,7 +745,7 @@ redirect(const char *line, const char *makefile)
 	}
 
 	/*
-	 * use a default makefile is not specified.
+	 * use a default if makefile is not specified.
 	 */
 	if (!makefile) {
 		if (stat("Makefile", &st) == 0)
@@ -802,21 +755,23 @@ redirect(const char *line, const char *makefile)
 		else
 			fatalerr("[mM]akefile is not present\n");
 	}
-	else
-	    stat(makefile, &st);
-	if ((fdin = fopen(makefile, "r")) == NULL)
-		fatalerr("cannot open \"%s\"\n", makefile);
-	sprintf(backup, "%s.bak", makefile);
+	else {
+		if (stat(makefile, &st) != 0)
+			fatalerr("\"%s\" is not present\n", makefile);
+	}
+
+	snprintf(backup, sizeof(backup), "%s.bak", makefile);
 	unlink(backup);
-#if defined(WIN32) || defined(__UNIXOS2__) || defined(__CYGWIN__)
-	fclose(fdin);
-#endif
+
+	/* rename() won't work on WIN32, CYGWIN, or CIFS if src file is open */
 	if (rename(makefile, backup) < 0)
 		fatalerr("cannot rename %s to %s\n", makefile, backup);
-#if defined(WIN32) || defined(__UNIXOS2__) || defined(__CYGWIN__)
-	if ((fdin = fopen(backup, "r")) == NULL)
-		fatalerr("cannot open \"%s\"\n", backup);
-#endif
+	if ((fdin = fopen(backup, "r")) == NULL) {
+		if (rename(backup, makefile) < 0)
+			warning("renamed %s to %s, but can't move it back\n",
+				makefile, backup);
+		fatalerr("cannot open \"%s\"\n", makefile);
+	}
 	if ((fdout = freopen(makefile, "w", stdout)) == NULL)
 		fatalerr("cannot open \"%s\"\n", backup);
 	len = strlen(line);
