@@ -56,9 +56,8 @@ host_triplet = @host@
 # ========================= Extra stuff ============================
 #
 @OS2_TRUE@am__append_1 = os2Stubs.c
-@UDC_TRUE@am__append_2 = udcInf.c
-@THRSTUBS_TRUE@am__append_3 = UIThrStubs.c
-@MAKE_LINT_LIB_TRUE@am__append_4 = $(lintlib_DATA)
+@THRSTUBS_TRUE@am__append_2 = UIThrStubs.c
+@MAKE_LINT_LIB_TRUE@am__append_3 = $(lintlib_DATA)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/depcomp
@@ -166,10 +165,9 @@ am__libX11_la_SOURCES_DIST = AllCells.c AllowEv.c AllPlanes.c \
 	Withdraw.c WMGeom.c WMProps.c WrBitF.c Xatomtype.h xcb_disp.c \
 	xcb_io.c Xintatom.h Xintconn.h XlibAsync.c XlibInt.c \
 	Xprivate.h XomGeneric.h Xresinternal.h Xrm.c Xxcbint.h \
-	os2Stubs.c udcInf.c UIThrStubs.c
+	os2Stubs.c UIThrStubs.c
 @OS2_TRUE@am__objects_1 = os2Stubs.lo
-@UDC_TRUE@am__objects_2 = udcInf.lo
-@THRSTUBS_TRUE@am__objects_3 = UIThrStubs.lo
+@THRSTUBS_TRUE@am__objects_2 = UIThrStubs.lo
 am_libX11_la_OBJECTS = AllCells.lo AllowEv.lo AllPlanes.lo AutoRep.lo \
 	Backgnd.lo BdrWidth.lo Bell.lo Border.lo ChAccCon.lo \
 	ChActPGb.lo ChClMode.lo ChCmap.lo ChGC.lo ChKeyCon.lo \
@@ -223,7 +221,7 @@ am_libX11_la_OBJECTS = AllCells.lo AllowEv.lo AllPlanes.lo AutoRep.lo \
 	UnldFont.lo UnmapSubs.lo UnmapWin.lo VisUtil.lo WarpPtr.lo \
 	Window.lo WinEvent.lo Withdraw.lo WMGeom.lo WMProps.lo \
 	WrBitF.lo xcb_disp.lo xcb_io.lo XlibAsync.lo XlibInt.lo Xrm.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3)
+	$(am__objects_1) $(am__objects_2)
 libX11_la_OBJECTS = $(am_libX11_la_OBJECTS)
 libX11_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -497,7 +495,7 @@ top_srcdir = @top_srcdir@
 SUBDIRS = util xcms xlibi18n $(XKB_SUBDIRS)
 lib_LTLIBRARIES = libX11.la libX11-xcb.la
 BUILT_SOURCES = ks_tables.h
-CLEANFILES = ks_tables.h ks_tables_h $(am__append_4)
+CLEANFILES = ks_tables.h ks_tables_h $(am__append_3)
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/include/X11 \
@@ -589,13 +587,12 @@ libX11_la_SOURCES = AllCells.c AllowEv.c AllPlanes.c AutoRep.c \
 	Withdraw.c WMGeom.c WMProps.c WrBitF.c Xatomtype.h xcb_disp.c \
 	xcb_io.c Xintatom.h Xintconn.h XlibAsync.c XlibInt.c \
 	Xprivate.h XomGeneric.h Xresinternal.h Xrm.c Xxcbint.h \
-	$(am__append_1) $(am__append_2) $(am__append_3)
+	$(am__append_1) $(am__append_2)
 x11datadir = @X11_DATADIR@
 x11data_DATA = XErrorDB
 EXTRA_DIST = \
 	$(x11data_DATA) \
 	os2Stubs.c \
-	udcInf.c \
 	UIThrStubs.c 
 
 libX11_xcb_la_SOURCES = x11_xcb.c Xxcbint.h
@@ -977,7 +974,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imConv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/locking.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os2Stubs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/udcInf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x11_xcb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xcb_disp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xcb_io.Plo@am__quote@

@@ -162,7 +162,7 @@ _XimSync(
 	    preply = reply;
 	} else {
 	    buf_size = len;
-	    preply = (XPointer)Xmalloc(len);
+	    preply = Xmalloc(len);
 	    ret_code = _XimRead(im, &len, preply, buf_size,
 					_XimSyncCheck, (XPointer)ic);
 	    if(ret_code != XIM_TRUE) {
@@ -269,6 +269,8 @@ _XimForwardEventCore(
     int		 ret_code;
     INT16	 len;
 
+    bzero(buf32, sizeof(buf32)); /* valgrind noticed uninitialized memory use! */
+
     if (!(len = _XimSetEventToWire(ev, (xEvent *)&buf_s[4])))
 	return False;				/* X event */
 
@@ -300,7 +302,7 @@ _XimForwardEventCore(
 		preply = reply;
 	    } else {
 		buf_size = len;
-		preply = (XPointer)Xmalloc(len);
+		preply = Xmalloc(len);
 		ret_code = _XimRead(im, &len, preply, buf_size,
 					_XimSyncCheck, (XPointer)ic);
 		if(ret_code != XIM_TRUE) {
@@ -415,7 +417,7 @@ _XimRegisterTriggerkey(
     len = buf_l[0];				/* length of on-keys */
     len += sizeof(INT32);			/* sizeof length of on-keys */
 
-    if (!(key = (CARD32 *)Xmalloc(len))) {
+    if (!(key = Xmalloc(len))) {
 	_XimError(im, 0, XIM_BadAlloc, (INT16)0, (CARD16)0, (char *)NULL);
 	return False;
     }
@@ -432,7 +434,7 @@ _XimRegisterTriggerkey(
     len = buf_l[0];				/* length of off-keys */
     len += sizeof(INT32);			/* sizeof length of off-keys */
 
-    if (!(key = (CARD32 *)Xmalloc(len))) {
+    if (!(key = Xmalloc(len))) {
 	_XimError(im, 0, XIM_BadAlloc, (INT16)0, (CARD16)0, (char *)NULL);
 	return False;
     }
@@ -544,7 +546,7 @@ _XimTriggerNotify(
 	    preply = reply;
 	} else {
 	    buf_size = len;
-	    preply = (XPointer)Xmalloc(len);
+	    preply = Xmalloc(len);
 	    ret_code = _XimRead(im, &len, (XPointer)reply, buf_size,
 				_XimTriggerNotifyCheck, (XPointer)ic);
 	    if(ret_code != XIM_TRUE) {
@@ -577,7 +579,7 @@ _XimRegCommitInfo(
 {
     XimCommitInfo	info;
 
-    if (!(info = (XimCommitInfo)Xmalloc(sizeof(XimCommitInfoRec))))
+    if (!(info = Xmalloc(sizeof(XimCommitInfoRec))))
 	return False;
     info->string	= string;
     info->string_len	= string_len;
@@ -624,7 +626,7 @@ _XimProcKeySym(
 {
     Xim			 im = (Xim)ic->core.im;
 
-    if (!(*xim_keysym = (KeySym *)Xmalloc(sizeof(KeySym)))) {
+    if (!(*xim_keysym = Xmalloc(sizeof(KeySym)))) {
 	_XimError(im, ic, XIM_BadAlloc, (INT16)0, (CARD16)0, (char *)NULL);
 	return False;
     }
@@ -646,7 +648,7 @@ _XimProcCommit(
     Xim		 im = (Xim)ic->core.im;
     char	*string;
 
-    if (!(string = (char *)Xmalloc(len + 1))) {
+    if (!(string = Xmalloc(len + 1))) {
 	_XimError(im, ic, XIM_BadAlloc, (INT16)0, (CARD16)0, (char *)NULL);
 	return False;
     }
@@ -704,7 +706,11 @@ _XimCommitRecv(
 
     (void)_XimRespSyncReply(ic, flag);
 
-    MARK_FABRICATED(im);
+    if (ic->private.proto.registed_filter_event
+	& (KEYPRESS_MASK | KEYRELEASE_MASK))
+	    MARK_FABRICATED(im);
+
+    bzero(&ev, sizeof(ev));	/* uninitialized : found when running kterm under valgrind */
 
     ev.type = KeyPress;
     ev.send_event = False;
@@ -712,6 +718,15 @@ _XimCommitRecv(
     ev.window = ic->core.focus_window;
     ev.keycode = 0;
     ev.state = 0;
+
+    ev.time = 0L;
+    ev.serial = LastKnownRequestProcessed(im->core.display);
+    /* FIXME :
+       I wish there were COMMENTs (!) about the data passed around.
+    */
+#if 0
+    fprintf(stderr,"%s,%d: putback k press   FIXED ev.time=0 ev.serial=%lu\n", __FILE__, __LINE__, ev.serial);
+#endif
 
     XPutBackEvent(im->core.display, (XEvent *)&ev);
 
