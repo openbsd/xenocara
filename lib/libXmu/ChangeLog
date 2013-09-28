@@ -1,3 +1,100 @@
+commit 2539e539eafdac88177c8ee30b043c5d52f017e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 7 21:28:14 2013 -0700
+
+    libXmu 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 54043bd96cc474b8f96d64a46cf99d76aac8206d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 7 21:27:41 2013 -0700
+
+    Add missing copyright notices to COPYING file
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d5dac08d65c4865f311cb62c161dbb1300eecd11
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 22 18:05:02 2013 -0700
+
+    Preserve constness when casting const pointers in various functions
+    
+    Fixes gcc warnings:
+    
+    CrCmap.c: In function 'compare':
+    CrCmap.c:499:18: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    CrCmap.c:499:32: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    
+    LocBitmap.c: In function 'XmuLocatePixmapFile':
+    LocBitmap.c:161:11: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    LocBitmap.c:178:11: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    
+    Lower.c: In function 'XmuCopyISOLatin1Lowered':
+    Lower.c:65:46: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    Lower.c: In function 'XmuCopyISOLatin1Uppered':
+    Lower.c:77:46: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    Lower.c: In function 'XmuCompareISOLatin1':
+    Lower.c:89:13: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    Lower.c:89:42: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    Lower.c: In function 'XmuNCopyISOLatin1Lowered':
+    Lower.c:104:50: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    Lower.c: In function 'XmuNCopyISOLatin1Uppered':
+    Lower.c:119:50: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    
+    WidgetNode.c: In function 'compare_resource_entries':
+    WidgetNode.c:89:21: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    WidgetNode.c:90:7: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e46ecb4e02b7f919b11efa79448d4db71d1deb69
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jun 2 21:10:27 2013 +0200
+
+    Fix a const issue.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 474d22468c90f99104873b4c5fd7b0f0d2cbf823
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 2f66383e79b9d2fae79d49cf0b1b3a3811c6d47e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9b253d99d5b4f3fbb681c2cb1b84f8f9acfee528
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 19:46:16 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5d0ae34fb30ae1e4795f93561235fd2c72f0cc47
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 26 23:32:03 2012 -0800
+
+    Remove unused DECnet ("DNETCONN") code from XmuConvertStandardSelection
+    
+    Has never been converted to build in modular builds, so has been unusable
+    since X11R7.0 release in 2005.  DNETCONN support was removed from xtrans
+    back in 2008.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6437d834cd66621e4e9f4decf7341b6d7ff45556
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Mar 5 23:00:10 2012 -0800
