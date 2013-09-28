@@ -22,7 +22,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXv], [1.0.9],
+AC_INIT([libXv], [1.0.10],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXv])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -41,13 +41,7 @@ XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
 
 # Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(XV, x11 xext xextproto videoproto)
-
-# Check for _XEatDataWords function that may be patched into older Xlib release
-SAVE_LIBS="$LIBS"
-LIBS="$XV_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
+PKG_CHECK_MODULES(XV, [x11 >= 1.6 xext xextproto videoproto])
 
 # Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT

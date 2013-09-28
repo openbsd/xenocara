@@ -1,3 +1,195 @@
+commit 736d7ac5a94c7aa6761d50ab58339a3d9a116c51
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 7 22:19:48 2013 -0700
+
+    libXv 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4a7d2ca2438649e61b7dcb9491391ff6fbd482ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 5 21:19:29 2013 -0700
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 06d275959b5dd78c319d5200ca6d986934b18920
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 23:43:58 2013 -0700
+
+    Refactor error handling
+    
+    Reduce code duplication, make error checking & cleanup more consistent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 29b23d387e32d09e1b34682f01cee899a08a1176
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 21:47:34 2013 -0700
+
+    Add missing calls to _XEatDataWords when we are skipping _XRead
+    
+    If we failed to allocate the buffer to _XRead into, discard the
+    rest of the reply, instead of leaving it to confuse the reading
+    of the next reply.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a09a55b5b13280990465d83205e796bb8cd68ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 21:04:06 2013 -0700
+
+    Replace custom copy of GetReq macro with call to Xlib 1.5's _XGetRequest
+    
+    xvproto.h names don't match those required by the Xlibint.h GetReq* macros,
+    but at least we can rely on the _XGetRequest function for the bulk of the
+    work now, instead of duplicating it.
+    
+    Also clears clang warnings repeated for every request function:
+    
+    Xv.c:137:5: warning: cast from 'char *' to 'xvQueryExtensionReq *' increases re
+    quired alignment from 1 to 2 [-Wcast-align]
+        XvGetReq(QueryExtension, req);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ./Xvlibint.h:52:8: note: expanded from macro 'XvGetReq'
+            req = (xv##name##Req *)(dpy->last_req = dpy->bufptr);\
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Xv.c:137:5: warning: implicit conversion loses integer precision: 'int' to 'CAR
+    D8' (aka 'unsigned char') [-Wconversion]
+        XvGetReq(QueryExtension, req);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ./Xvlibint.h:53:30: note: expanded from macro 'XvGetReq'
+            req->reqType = info->codes->major_opcode;\
+                         ~ ~~~~~~~~~~~~~^~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ef2722e10b275d13d754d2b92e67f72b0716d070
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 20:33:13 2013 -0700
+
+    Require ANSI C89 pre-processor, drop pre-C89 token pasting support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit e73a2199f039e9ae772efb6be8d1db68eb346fa4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 13:35:12 2013 -0700
+
+    Use pad_to_int32 macro instead of repeated (x + 3) & ~3 pattern
+    
+    Makes code clearer, and using ~3U instead of ~3 clears some signed int
+    warnings.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4ced44196d6636006c9724a373c0d2ca0c12dc1e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 11:20:13 2013 -0700
+
+    Fix sign conversion & comparison warnings from clang
+    
+    Clears up:
+    Xv.c:196:21: warning: implicit conversion changes signedness: 'CARD32' (aka 'unsigned int') to 'int' [-Wsign-conversion]
+      size = rep.length << 2;
+           ~ ~~~~~~~~~~~^~~~
+    Xv.c:212:41: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+          if ((pas=(XvAdaptorInfo *)Xmalloc(size))==NULL) {
+                                    ~~~~~~~~^~~~~
+    Xv.c:236:43: warning: implicit conversion changes signedness: 'int' to 'unsigned long' [-Wsign-conversion]
+          pa->num_adaptors = rep.num_adaptors - ii;
+                           ~ ~~~~~~~~~~~~~~~~~^~~~
+    Xv.c:243:40: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+          if ( (name = (char *)Xmalloc(size+1)) == NULL)
+                               ~~~~~~~~~~~~^~~
+    Xv.c:251:37: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+          (void)strncpy(name, u.string, size);
+                ~~~~~~~                 ^~~~
+    Xv.c:260:36: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+          if ((pfs=(XvFormat *)Xmalloc(size))==NULL) {
+                               ~~~~~~~~^~~~~
+    Xv.c:269:20: warning: comparison of integers of different signs: 'int' and 'unsigned long' [-Wsign-compare]
+          for (jj=0; jj<pa->num_formats; jj++) {
+                     ~~^~~~~~~~~~~~~~~~
+    Xv.c:259:29: warning: implicit conversion loses integer precision: 'unsigned long' to 'int' [-Wshorten-64-to-32]
+          size = pa->num_formats*sizeof(XvFormat);
+               ~ ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+    Xv.c:305:16: warning: comparison of integers of different signs: 'int' and 'unsigned long' [-Wsign-compare]
+      for (ii=0; ii<pAdaptors->num_adaptors; ii++, pa++)
+                 ~~^~~~~~~~~~~~~~~~~~~~~~~~
+    Xv.c:356:21: warning: implicit conversion changes signedness: 'CARD32' (aka 'unsigned int') to 'int' [-Wsign-conversion]
+      size = rep.length << 2;
+           ~ ~~~~~~~~~~~^~~~
+    Xv.c:369:41: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+      if ( (pes = (XvEncodingInfo *)Xmalloc(size)) == NULL) {
+                                    ~~~~~~~~^~~~~
+    Xv.c:392:45: warning: implicit conversion changes signedness: 'int' to 'unsigned long' [-Wsign-conversion]
+          pe->num_encodings = rep.num_encodings - jj;
+                            ~ ~~~~~~~~~~~~~~~~~~^~~~
+    Xv.c:397:40: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+          if ( (name = (char *)Xmalloc(size+1)) == NULL) {
+                               ~~~~~~~~~~~~^~~
+    Xv.c:404:31: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+          strncpy(name, u.string, size);
+          ~~~~~~~                 ^~~~
+    Xv.c:433:16: warning: comparison of integers of different signs: 'int' and 'unsigned long' [-Wsign-compare]
+      for (ii=0; ii<pEncodings->num_encodings; ii++, pe++) {
+                 ~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+    Xv.c:886:27: warning: comparison of integers of different signs: 'int' and 'CAR
+    D32' (aka 'unsigned int') [-Wsign-compare]
+                for (i = 0; i < rep.num_attributes; i++) {
+                            ~ ^ ~~~~~~~~~~~~~~~~~~
+    Xv.c:946:27: warning: comparison of integers of different signs: 'int' and 'CAR
+    D32' (aka 'unsigned int') [-Wsign-compare]
+                for (i = 0; i < rep.num_formats; i++) {
+                            ~ ^ ~~~~~~~~~~~~~~~
+    Xv.c:1100:5: warning: comparison of integers of different signs: 'int' and 'unsigned int' [-Wsign-compare]
+        SetReqLen(req, len, len);
+        ^~~~~~~~~~~~~~~~~~~~~~~~
+    X11/Xlibint.h:530:27: note: expanded from macro 'SetReqLen'
+        if ((req->length + n) > (unsigned)65535) { \
+                              ^ ~~~~~~~~~~~~~~~
+    Xv.c:1100:20: warning: implicit conversion changes signedness: 'int' to 'unsigned int' [-Wsign-conversion]
+        SetReqLen(req, len, len);
+        ~~~~~~~~~~~~~~~^~~~~~~~~
+    X11/Xlibint.h:532:21: note: expanded from macro 'SetReqLen'
+                MakeBigReq(req,n) \
+                               ^
+    X11/Xlibint.h:505:35: note: expanded from macro 'MakeBigReq'
+        ((CARD32 *)req)[1] = _BRlen + n + 2; \
+                                    ~ ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 89dc3ff457644271b1c633efa9682ae45e55d9d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 11:07:13 2013 -0700
+
+    Remove unnecessary casts from Xmalloc calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit 54851e0e72e2017c14c504459078c97d6112696b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 19:58:20 2013 -0700
+
+    Adopt X.Org standard code style, with consistent indentation
+    
+    Having differing indent levels of 2, 3, & 4 spaces hurts my eyes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d58f74ebfd0c56ffeb8e288c65592228af197a2e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jun 22 19:06:09 2013 -0700

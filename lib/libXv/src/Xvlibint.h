@@ -44,30 +44,12 @@ SOFTWARE.
 #include <X11/extensions/Xvproto.h>
 #include <X11/extensions/Xvlib.h>
 
-#if !defined(UNIXCPP)
-#define XvGetReq(name, req) \
-        WORD64ALIGN\
-	if ((dpy->bufptr + SIZEOF(xv##name##Req)) > dpy->bufmax)\
-		_XFlush(dpy);\
-	req = (xv##name##Req *)(dpy->last_req = dpy->bufptr);\
-	req->reqType = info->codes->major_opcode;\
-        req->xvReqType = xv_##name; \
-        req->length = (SIZEOF(xv##name##Req))>>2;\
-	dpy->bufptr += SIZEOF(xv##name##Req);\
-	dpy->request++
+/* names in Xvproto.h don't match the expectation of Xlib's GetReq* macros,
+   so we have to provide our own implementation */
 
-#else  /* non-ANSI C uses empty comment instead of "##" for token concatenation */
 #define XvGetReq(name, req) \
-        WORD64ALIGN\
-	if ((dpy->bufptr + SIZEOF(xv/**/name/**/Req)) > dpy->bufmax)\
-		_XFlush(dpy);\
-	req = (xv/**/name/**/Req *)(dpy->last_req = dpy->bufptr);\
-	req->reqType = info->codes->major_opcode;\
-	req->xvReqType = xv_/**/name;\
-	req->length = (SIZEOF(xv/**/name/**/Req))>>2;\
-	dpy->bufptr += SIZEOF(xv/**/name/**/Req);\
-	dpy->request++
-#endif
-
+    req = (xv##name##Req *) _XGetRequest(                               \
+        dpy, (CARD8) info->codes->major_opcode, SIZEOF(xv##name##Req)); \
+    req->xvReqType = xv_##name;
 
 #endif /* XVLIBINT_H */
