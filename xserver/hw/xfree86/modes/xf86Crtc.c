@@ -1908,6 +1908,14 @@ xf86CollectEnabledOutputs(ScrnInfoPtr scrn, xf86CrtcConfigPtr config,
     Bool any_enabled = FALSE;
     int o;
 
+    /*
+     * Don't bother enabling outputs on GPU screens: a client needs to attach
+     * it to a source provider before setting a mode that scans out a shared
+     * pixmap.
+     */
+    if (scrn->is_gpu)
+        return FALSE;
+
     for (o = 0; o < config->num_output; o++)
         any_enabled |= enabled[o] = xf86OutputEnabled(config->output[o], TRUE);
 
@@ -2360,11 +2368,11 @@ xf86InitialConfiguration(ScrnInfoPtr scrn, Bool canGrow)
     config->debug_modes = xf86ReturnOptValBool(config->options,
                                                OPTION_MODEDEBUG, FALSE);
 
-    if (scrn->display->virtualX)
+    if (scrn->display->virtualX && !scrn->is_gpu)
         width = scrn->display->virtualX;
     else
         width = config->maxWidth;
-    if (scrn->display->virtualY)
+    if (scrn->display->virtualY && !scrn->is_gpu)
         height = scrn->display->virtualY;
     else
         height = config->maxHeight;
@@ -2377,9 +2385,11 @@ xf86InitialConfiguration(ScrnInfoPtr scrn, Bool canGrow)
 
     ret = xf86CollectEnabledOutputs(scrn, config, enabled);
     if (ret == FALSE && canGrow) {
-        xf86DrvMsg(i, X_WARNING,
-                   "Unable to find connected outputs - setting %dx%d initial framebuffer\n",
-                   NO_OUTPUT_DEFAULT_WIDTH, NO_OUTPUT_DEFAULT_HEIGHT);
+        if (!scrn->is_gpu)
+            xf86DrvMsg(i, X_WARNING,
+		       "Unable to find connected outputs - setting %dx%d "
+                       "initial framebuffer\n",
+                       NO_OUTPUT_DEFAULT_WIDTH, NO_OUTPUT_DEFAULT_HEIGHT);
         have_outputs = FALSE;
     }
     else {
@@ -2428,8 +2438,10 @@ xf86InitialConfiguration(ScrnInfoPtr scrn, Bool canGrow)
 
     /* XXX override xf86 common frame computation code */
 
-    scrn->display->frameX0 = 0;
-    scrn->display->frameY0 = 0;
+    if (!scrn->is_gpu) {
+        scrn->display->frameX0 = 0;
+        scrn->display->frameY0 = 0;
+    }
 
     for (c = 0; c < config->num_crtc; c++) {
         xf86CrtcPtr crtc = config->crtc[c];
@@ -2477,7 +2489,7 @@ xf86InitialConfiguration(ScrnInfoPtr scrn, Bool canGrow)
         }
     }
 
-    if (scrn->display->virtualX == 0) {
+    if (scrn->display->virtualX == 0 || scrn->is_gpu) {
         /*
          * Expand virtual size to cover the current config and potential mode
          * switches, if the driver can't enlarge the screen later.
@@ -2492,8 +2504,10 @@ xf86InitialConfiguration(ScrnInfoPtr scrn, Bool canGrow)
             }
         }
 
-        scrn->display->virtualX = width;
-        scrn->display->virtualY = height;
+	if (!scrn->is_gpu) {
+            scrn->display->virtualX = width;
+            scrn->display->virtualY = height;
+	}
     }
 
     if (width > scrn->virtualX)

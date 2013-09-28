@@ -195,7 +195,7 @@ typedef struct _GrabRec {
     unsigned keyboardMode:1;
     unsigned pointerMode:1;
     enum InputLevel grabtype;
-    CARD8 type;                 /* event type */
+    CARD8 type;                 /* event type for passive grabs, 0 for active grabs */
     DetailRec modifiersDetail;
     DeviceIntPtr modifierDevice;
     DetailRec detail;           /* key or button */
@@ -485,7 +485,7 @@ typedef struct _GrabInfoRec {
     TimeStamp grabTime;
     Bool fromPassiveGrab;       /* true if from passive grab */
     Bool implicitGrab;          /* implicit from ButtonPress */
-    GrabPtr activeGrab;
+    GrabPtr unused;             /* Kept for ABI stability, remove soon */
     GrabPtr grab;
     CARD8 activatingKey;
     void (*ActivateGrab) (DeviceIntPtr /*device */ ,
