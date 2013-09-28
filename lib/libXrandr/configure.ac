@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.7 2013/06/01 14:22:09 matthieu Exp $
+dnl  $Id: configure.ac,v 1.8 2013/09/28 17:47:02 matthieu Exp $
 #
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #
@@ -31,7 +31,7 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so Xrandr version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXrandr], [1.4.1],
+AC_INIT([libXrandr], [1.4.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXrandr])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

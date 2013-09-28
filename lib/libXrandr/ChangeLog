@@ -1,3 +1,54 @@
+commit 30a7b506ae2071b8d265ce4eaeed1af60bc7ee7b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 7 21:50:49 2013 -0700
+
+    libXrandr 1.4.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 293d6b579b243574d98bd5974cce6e5fe48e7613
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 7 21:49:52 2013 -0700
+
+    Add copyright notice from src/XrrProvider.c to COPYING
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e4bbb85499cff052ce03e173b88f1083ba83f86
+Author: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+Date:   Mon Jun 14 13:45:08 2010 +0300
+
+    XRRUpdateConfiguration: Check if getting screen for root fails
+    
+    XRRRootToScreen might return -1 if it fails to find screen for the root
+    window.  Following code uses screen number unconditionally to index the
+    screen array.
+    
+    Signed-off-by: Pauli Nieminen <ext-pauli.nieminen@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e4abe746786f0f632d1f82f99fe0c6b8ffedf9e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 30 16:52:59 2013 -0700
+
+    XRRGetProviderInfo returned bad associated_capability list in 64-bit
+    
+    Unlike most of the values returned by this function, which are arrays
+    of XIDs (long int), associated_capability is defined as an array of
+    unsigned int.   _XRead32 reads 32-bit values from the wire protocol
+    and writes them to the provided buffer as an array of long ints, even
+    if that means expanding them from 32-bit to 64-bit.   Doing that for
+    associated_capability resulted in a garbage value between each actual
+    value, and overflowing the provided buffer into the space for the
+    provider name (which is written later and would overwrite the overflowed
+    data).
+    
+    Created xhiv libXrandr/XRRGetProviderInfo test case to test & confirm.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
 commit f97d44f8fb9f90ce3227cca8affd3b947e9b08ca
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri May 31 15:52:23 2013 -0700

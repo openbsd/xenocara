@@ -483,6 +483,9 @@ int XRRUpdateConfiguration(XEvent *event)
 	scevent = (XRRScreenChangeNotifyEvent *) event;
 	snum = XRRRootToScreen(dpy,
 			       ((XRRScreenChangeNotifyEvent *) event)->root);
+	if (snum < 0)
+	    return 0;
+
 	if (scevent->rotation & (RR_Rotate_90 | RR_Rotate_270)) {
 		dpy->screens[snum].width   = scevent->height;
 		dpy->screens[snum].height  = scevent->width;
