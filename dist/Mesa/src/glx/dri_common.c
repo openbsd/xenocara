@@ -474,8 +474,14 @@ dri2_convert_glx_attribs(unsigned num_attribs, const uint32_t *attribs,
    bool got_profile = false;
    uint32_t profile;
 
+   *major_ver = 1;
+   *minor_ver = 0;
+   *render_type = GLX_RGBA_TYPE;
+   *reset = __DRI_CTX_RESET_NO_NOTIFICATION;
+   *flags = 0;
+   *api = __DRI_API_OPENGL;
+
    if (num_attribs == 0) {
-      *api = __DRI_API_OPENGL;
       return true;
    }
 
@@ -485,11 +491,6 @@ dri2_convert_glx_attribs(unsigned num_attribs, const uint32_t *attribs,
       *error = __DRI_CTX_ERROR_UNKNOWN_ATTRIBUTE;
       return false;
    }
-
-   *major_ver = 1;
-   *minor_ver = 0;
-   *render_type = GLX_RGBA_TYPE;
-   *reset = __DRI_CTX_RESET_NO_NOTIFICATION;
 
    for (i = 0; i < num_attribs; i++) {
       switch (attribs[i * 2]) {
@@ -530,7 +531,6 @@ dri2_convert_glx_attribs(unsigned num_attribs, const uint32_t *attribs,
       }
    }
 
-   *api = __DRI_API_OPENGL;
    if (!got_profile) {
       if (*major_ver > 3 || (*major_ver == 3 && *minor_ver >= 2))
 	 *api = __DRI_API_OPENGL_CORE;
