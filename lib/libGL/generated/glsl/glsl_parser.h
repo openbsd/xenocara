@@ -484,7 +484,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 65 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glsl_parser.yy"
+#line 65 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glsl_parser.yy"
 {
    int n;
    float real;

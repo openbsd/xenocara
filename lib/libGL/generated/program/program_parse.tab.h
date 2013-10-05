@@ -258,7 +258,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 124 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 124 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
 {
    struct asm_instruction *inst;
    struct asm_symbol *sym;

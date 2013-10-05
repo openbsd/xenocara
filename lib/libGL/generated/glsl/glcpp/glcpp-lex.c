@@ -557,8 +557,8 @@ static yyconst flex_int16_t yy_chk[365] =
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
-#line 2 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 1 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 2 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 /*
  * Copyright © 2010 Intel Corporation
  *
@@ -879,7 +879,7 @@ YY_DECL
 	register int yy_act;
     struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
 
-#line 94 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 94 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 
 	/* Implicitly switch between SKIP and INITIAL (non-skipping);
 	 * don't switch if some other state was explicitly set.
@@ -980,41 +980,41 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 108 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 108 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 }
 	YY_BREAK
 /* Multi-line comments */
 case 2:
 YY_RULE_SETUP
-#line 112 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 112 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 { yy_push_state(COMMENT, yyscanner); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 113 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 113 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 
 	YY_BREAK
 case 4:
 /* rule 4 can match eol */
 YY_RULE_SETUP
-#line 114 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 114 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 { yylineno++; yycolumn = 0; return NEWLINE; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 115 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 115 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 116 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 116 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 { yylineno++; yycolumn = 0; return NEWLINE; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 117 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 117 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yy_pop_state(yyscanner);
 	if (yyextra->space_tokens)
@@ -1023,7 +1023,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 123 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 123 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yylval->str = ralloc_strdup (yyextra, yytext);
 	yyextra->space_tokens = 0;
@@ -1034,7 +1034,7 @@ YY_RULE_SETUP
 	 * Simply pass them through to the main compiler's lexer/parser. */
 case 9:
 YY_RULE_SETUP
-#line 131 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 131 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yylval->str = ralloc_strdup (yyextra, yytext);
 	yylineno++;
@@ -1044,7 +1044,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 138 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 138 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return HASH_LINE;
 }
@@ -1052,7 +1052,7 @@ YY_RULE_SETUP
 
 case 11:
 YY_RULE_SETUP
-#line 143 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 143 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->lexing_if = 1;
 	yyextra->space_tokens = 0;
@@ -1061,7 +1061,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 149 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 149 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->lexing_if = 1;
 	yyextra->space_tokens = 0;
@@ -1074,7 +1074,7 @@ case 13:
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 155 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 155 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->lexing_if = 1;
 	yyextra->space_tokens = 0;
@@ -1087,7 +1087,7 @@ case 14:
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 161 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 161 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->lexing_if = 1;
 	yyextra->space_tokens = 0;
@@ -1096,7 +1096,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 167 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 167 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->space_tokens = 0;
 	return HASH_ELSE;
@@ -1104,7 +1104,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 172 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 172 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->space_tokens = 0;
 	return HASH_ENDIF;
@@ -1113,12 +1113,12 @@ YY_RULE_SETUP
 
 case 17:
 YY_RULE_SETUP
-#line 178 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 178 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 ;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 180 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 180 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	char *p;
 	for (p = yytext; !isalpha(p[0]); p++); /* skip "  #   " */
@@ -1128,7 +1128,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 187 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 187 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->space_tokens = 0;
 	yy_push_state(DEFINE, yyscanner);
@@ -1140,7 +1140,7 @@ case 20:
 yyg->yy_c_buf_p = yy_cp -= 1;
 YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 193 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 193 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yy_pop_state(yyscanner);
 	yylval->str = ralloc_strdup (yyextra, yytext);
@@ -1149,7 +1149,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 199 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 199 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yy_pop_state(yyscanner);
 	yylval->str = ralloc_strdup (yyextra, yytext);
@@ -1158,7 +1158,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 205 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 205 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->space_tokens = 0;
 	return HASH_UNDEF;
@@ -1166,7 +1166,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 210 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 210 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->space_tokens = 0;
 	return HASH;
@@ -1174,7 +1174,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 215 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 215 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yylval->str = ralloc_strdup (yyextra, yytext);
 	return INTEGER_STRING;
@@ -1182,7 +1182,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 220 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 220 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yylval->str = ralloc_strdup (yyextra, yytext);
 	return INTEGER_STRING;
@@ -1190,7 +1190,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 225 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 225 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yylval->str = ralloc_strdup (yyextra, yytext);
 	return INTEGER_STRING;
@@ -1198,63 +1198,63 @@ YY_RULE_SETUP
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 230 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 230 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return LEFT_SHIFT;
 }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 234 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 234 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return RIGHT_SHIFT;
 }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 238 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 238 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return LESS_OR_EQUAL;
 }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 242 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 242 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return GREATER_OR_EQUAL;
 }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 246 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 246 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return EQUAL;
 }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 250 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 250 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return NOT_EQUAL;
 }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 254 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 254 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return AND;
 }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 258 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 258 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return OR;
 }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 262 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 262 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	if (parser->is_gles)
 		glcpp_error(yylloc, yyextra, "Token pasting (##) is illegal in GLES");
@@ -1263,14 +1263,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 268 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 268 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return DEFINED;
 }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 272 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 272 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yylval->str = ralloc_strdup (yyextra, yytext);
 	return IDENTIFIER;
@@ -1278,14 +1278,14 @@ YY_RULE_SETUP
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 277 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 277 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	return yytext[0];
 }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 281 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 281 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yylval->str = ralloc_strdup (yyextra, yytext);
 	return OTHER;
@@ -1293,7 +1293,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 286 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 286 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	if (yyextra->space_tokens) {
 		return SPACE;
@@ -1303,7 +1303,7 @@ YY_RULE_SETUP
 case 41:
 /* rule 41 can match eol */
 YY_RULE_SETUP
-#line 292 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 292 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	yyextra->lexing_if = 0;
 	yylineno++;
@@ -1313,7 +1313,7 @@ YY_RULE_SETUP
 	YY_BREAK
 /* Handle missing newline at EOF. */
 case YY_STATE_EOF(INITIAL):
-#line 300 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 300 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	BEGIN DONE; /* Don't keep matching this rule forever. */
 	yyextra->lexing_if = 0;
@@ -1326,7 +1326,7 @@ case YY_STATE_EOF(INITIAL):
 	warnings. */
 case 42:
 YY_RULE_SETUP
-#line 310 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 310 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 {
 	unput('.');
 	yy_top_state(yyextra);
@@ -1334,7 +1334,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 315 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 315 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 ECHO;
 	YY_BREAK
 #line 1341 "glsl/glcpp/glcpp-lex.c"
@@ -2560,7 +2560,7 @@ void glcpp_free (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 315 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
+#line 315 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-lex.l"
 
 
 

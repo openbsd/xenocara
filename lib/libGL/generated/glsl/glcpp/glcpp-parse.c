@@ -152,7 +152,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 1 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
 
 /*
  * Copyright © 2010 Intel Corporation
@@ -1652,7 +1652,7 @@ YYLTYPE yylloc;
 
 
   /* User initialization code.  */
-#line 155 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 155 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
 {
 	yylloc.first_line = 1;
 	yylloc.first_column = 1;
@@ -1846,14 +1846,14 @@ yyreduce:
   switch (yyn)
     {
         case 4:
-#line 194 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 194 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		ralloc_asprintf_rewrite_tail (&parser->output, &parser->output_length, "\n");
 	;}
     break;
 
   case 5:
-#line 197 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 197 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		if (parser->skip_stack == NULL ||
 		    parser->skip_stack->type == SKIP_NO_SKIP)
@@ -1865,7 +1865,7 @@ yyreduce:
     break;
 
   case 6:
-#line 205 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 205 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_glcpp_parser_print_expanded_token_list (parser, (yyvsp[(1) - (1)].token_list));
 		ralloc_asprintf_rewrite_tail (&parser->output, &parser->output_length, "\n");
@@ -1874,21 +1874,21 @@ yyreduce:
     break;
 
   case 9:
-#line 215 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 215 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_glcpp_parser_skip_stack_push_if (parser, & (yylsp[(1) - (3)]), (yyvsp[(2) - (3)].ival));
 	;}
     break;
 
   case 10:
-#line 218 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 218 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_glcpp_parser_skip_stack_change_if (parser, & (yylsp[(1) - (3)]), "elif", (yyvsp[(2) - (3)].ival));
 	;}
     break;
 
   case 11:
-#line 221 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 221 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		parser->has_new_line_number = 1;
 		parser->new_line_number = (yyvsp[(2) - (3)].ival);
@@ -1900,7 +1900,7 @@ yyreduce:
     break;
 
   case 12:
-#line 229 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 229 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		parser->has_new_line_number = 1;
 		parser->new_line_number = (yyvsp[(2) - (4)].ival);
@@ -1914,28 +1914,28 @@ yyreduce:
     break;
 
   case 13:
-#line 242 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 242 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_define_object_macro (parser, & (yylsp[(2) - (4)]), (yyvsp[(2) - (4)].str), (yyvsp[(3) - (4)].token_list));
 	;}
     break;
 
   case 14:
-#line 245 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 245 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_define_function_macro (parser, & (yylsp[(2) - (6)]), (yyvsp[(2) - (6)].str), NULL, (yyvsp[(5) - (6)].token_list));
 	;}
     break;
 
   case 15:
-#line 248 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 248 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_define_function_macro (parser, & (yylsp[(2) - (7)]), (yyvsp[(2) - (7)].str), (yyvsp[(4) - (7)].string_list), (yyvsp[(6) - (7)].token_list));
 	;}
     break;
 
   case 16:
-#line 251 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 251 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		macro_t *macro = hash_table_find (parser->defines, (yyvsp[(2) - (3)].str));
 		if (macro) {
@@ -1947,7 +1947,7 @@ yyreduce:
     break;
 
   case 17:
-#line 259 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 259 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		/* Be careful to only evaluate the 'if' expression if
 		 * we are not skipping. When we are skipping, we
@@ -1971,7 +1971,7 @@ yyreduce:
     break;
 
   case 18:
-#line 279 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 279 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		/* #if without an expression is only an error if we
 		 *  are not skipping */
@@ -1985,7 +1985,7 @@ yyreduce:
     break;
 
   case 19:
-#line 289 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 289 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		macro_t *macro = hash_table_find (parser->defines, (yyvsp[(2) - (4)].str));
 		ralloc_free ((yyvsp[(2) - (4)].str));
@@ -1994,7 +1994,7 @@ yyreduce:
     break;
 
   case 20:
-#line 294 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 294 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		macro_t *macro = hash_table_find (parser->defines, (yyvsp[(2) - (4)].str));
 		ralloc_free ((yyvsp[(2) - (4)].str));
@@ -2003,7 +2003,7 @@ yyreduce:
     break;
 
   case 21:
-#line 299 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 299 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		/* Be careful to only evaluate the 'elif' expression
 		 * if we are not skipping. When we are skipping, we
@@ -2027,7 +2027,7 @@ yyreduce:
     break;
 
   case 22:
-#line 319 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 319 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		/* #elif without an expression is an error unless we
 		 * are skipping. */
@@ -2046,35 +2046,35 @@ yyreduce:
     break;
 
   case 23:
-#line 334 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 334 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_glcpp_parser_skip_stack_change_if (parser, & (yylsp[(1) - (1)]), "else", 1);
 	;}
     break;
 
   case 25:
-#line 337 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 337 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_glcpp_parser_skip_stack_pop (parser, & (yylsp[(1) - (1)]));
 	;}
     break;
 
   case 27:
-#line 340 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 340 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_glcpp_parser_handle_version_declaration(parser, (yyvsp[(2) - (3)].ival), NULL);
 	;}
     break;
 
   case 28:
-#line 343 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 343 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		_glcpp_parser_handle_version_declaration(parser, (yyvsp[(2) - (4)].ival), (yyvsp[(3) - (4)].str));
 	;}
     break;
 
   case 30:
-#line 350 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 350 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		if (strlen ((yyvsp[(1) - (1)].str)) >= 3 && strncmp ((yyvsp[(1) - (1)].str), "0x", 2) == 0) {
 			(yyval.ival) = strtoll ((yyvsp[(1) - (1)].str) + 2, NULL, 16);
@@ -2087,14 +2087,14 @@ yyreduce:
     break;
 
   case 31:
-#line 359 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 359 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (1)].ival);
 	;}
     break;
 
   case 33:
-#line 365 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 365 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		if (parser->is_gles)
 			glcpp_error(& (yylsp[(1) - (1)]), parser, "undefined macro %s in expression (illegal in GLES)", (yyvsp[(1) - (1)].str));
@@ -2103,112 +2103,112 @@ yyreduce:
     break;
 
   case 34:
-#line 370 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 370 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) || (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 35:
-#line 373 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 373 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) && (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 36:
-#line 376 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 376 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) | (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 37:
-#line 379 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 379 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) ^ (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 38:
-#line 382 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 382 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) & (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 39:
-#line 385 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 385 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) != (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 40:
-#line 388 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 388 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) == (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 41:
-#line 391 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 391 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) >= (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 42:
-#line 394 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 394 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) <= (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 43:
-#line 397 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 397 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) > (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 44:
-#line 400 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 400 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) < (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 45:
-#line 403 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 403 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) >> (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 46:
-#line 406 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 406 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) << (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 47:
-#line 409 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 409 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) - (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 48:
-#line 412 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 412 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) + (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 49:
-#line 415 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 415 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		if ((yyvsp[(3) - (3)].ival) == 0) {
 			yyerror (& (yylsp[(1) - (3)]), parser,
@@ -2220,7 +2220,7 @@ yyreduce:
     break;
 
   case 50:
-#line 423 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 423 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		if ((yyvsp[(3) - (3)].ival) == 0) {
 			yyerror (& (yylsp[(1) - (3)]), parser,
@@ -2232,49 +2232,49 @@ yyreduce:
     break;
 
   case 51:
-#line 431 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 431 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(1) - (3)].ival) * (yyvsp[(3) - (3)].ival);
 	;}
     break;
 
   case 52:
-#line 434 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 434 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = ! (yyvsp[(2) - (2)].ival);
 	;}
     break;
 
   case 53:
-#line 437 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 437 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = ~ (yyvsp[(2) - (2)].ival);
 	;}
     break;
 
   case 54:
-#line 440 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 440 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = - (yyvsp[(2) - (2)].ival);
 	;}
     break;
 
   case 55:
-#line 443 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 443 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = + (yyvsp[(2) - (2)].ival);
 	;}
     break;
 
   case 56:
-#line 446 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 446 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.ival) = (yyvsp[(2) - (3)].ival);
 	;}
     break;
 
   case 57:
-#line 452 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 452 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.string_list) = _string_list_create (parser);
 		_string_list_append_item ((yyval.string_list), (yyvsp[(1) - (1)].str));
@@ -2283,7 +2283,7 @@ yyreduce:
     break;
 
   case 58:
-#line 457 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 457 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.string_list) = (yyvsp[(1) - (3)].string_list);	
 		_string_list_append_item ((yyval.string_list), (yyvsp[(3) - (3)].str));
@@ -2292,31 +2292,31 @@ yyreduce:
     break;
 
   case 59:
-#line 465 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 465 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.token_list) = NULL; ;}
     break;
 
   case 61:
-#line 470 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 470 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		yyerror (& (yylsp[(1) - (2)]), parser, "Invalid tokens after #");
 	;}
     break;
 
   case 62:
-#line 476 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 476 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.token_list) = NULL; ;}
     break;
 
   case 65:
-#line 482 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 482 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		glcpp_warning(&(yylsp[(1) - (1)]), parser, "extra tokens at end of directive");
 	;}
     break;
 
   case 66:
-#line 489 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 489 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		int v = hash_table_find (parser->defines, (yyvsp[(2) - (2)].str)) ? 1 : 0;
 		(yyval.token) = _token_create_ival (parser, INTEGER, v);
@@ -2324,7 +2324,7 @@ yyreduce:
     break;
 
   case 67:
-#line 493 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 493 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		int v = hash_table_find (parser->defines, (yyvsp[(3) - (4)].str)) ? 1 : 0;
 		(yyval.token) = _token_create_ival (parser, INTEGER, v);
@@ -2332,7 +2332,7 @@ yyreduce:
     break;
 
   case 69:
-#line 502 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 502 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.token_list) = _token_list_create (parser);
 		_token_list_append ((yyval.token_list), (yyvsp[(1) - (1)].token));
@@ -2340,7 +2340,7 @@ yyreduce:
     break;
 
   case 70:
-#line 506 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 506 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.token_list) = (yyvsp[(1) - (2)].token_list);
 		_token_list_append ((yyval.token_list), (yyvsp[(2) - (2)].token));
@@ -2348,7 +2348,7 @@ yyreduce:
     break;
 
   case 71:
-#line 513 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 513 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		parser->space_tokens = 1;
 		(yyval.token_list) = _token_list_create (parser);
@@ -2357,7 +2357,7 @@ yyreduce:
     break;
 
   case 72:
-#line 518 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 518 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.token_list) = (yyvsp[(1) - (2)].token_list);
 		_token_list_append ((yyval.token_list), (yyvsp[(2) - (2)].token));
@@ -2365,7 +2365,7 @@ yyreduce:
     break;
 
   case 73:
-#line 525 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 525 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.token) = _token_create_str (parser, IDENTIFIER, (yyvsp[(1) - (1)].str));
 		(yyval.token)->location = yylloc;
@@ -2373,7 +2373,7 @@ yyreduce:
     break;
 
   case 74:
-#line 529 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 529 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.token) = _token_create_str (parser, INTEGER_STRING, (yyvsp[(1) - (1)].str));
 		(yyval.token)->location = yylloc;
@@ -2381,7 +2381,7 @@ yyreduce:
     break;
 
   case 75:
-#line 533 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 533 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.token) = _token_create_ival (parser, (yyvsp[(1) - (1)].ival), (yyvsp[(1) - (1)].ival));
 		(yyval.token)->location = yylloc;
@@ -2389,7 +2389,7 @@ yyreduce:
     break;
 
   case 76:
-#line 537 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 537 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.token) = _token_create_str (parser, OTHER, (yyvsp[(1) - (1)].str));
 		(yyval.token)->location = yylloc;
@@ -2397,7 +2397,7 @@ yyreduce:
     break;
 
   case 77:
-#line 541 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 541 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     {
 		(yyval.token) = _token_create_ival (parser, SPACE, SPACE);
 		(yyval.token)->location = yylloc;
@@ -2405,157 +2405,157 @@ yyreduce:
     break;
 
   case 78:
-#line 548 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 548 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '['; ;}
     break;
 
   case 79:
-#line 549 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 549 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = ']'; ;}
     break;
 
   case 80:
-#line 550 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 550 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '('; ;}
     break;
 
   case 81:
-#line 551 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 551 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = ')'; ;}
     break;
 
   case 82:
-#line 552 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 552 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '{'; ;}
     break;
 
   case 83:
-#line 553 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 553 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '}'; ;}
     break;
 
   case 84:
-#line 554 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 554 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '.'; ;}
     break;
 
   case 85:
-#line 555 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 555 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '&'; ;}
     break;
 
   case 86:
-#line 556 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 556 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '*'; ;}
     break;
 
   case 87:
-#line 557 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 557 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '+'; ;}
     break;
 
   case 88:
-#line 558 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 558 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '-'; ;}
     break;
 
   case 89:
-#line 559 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 559 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '~'; ;}
     break;
 
   case 90:
-#line 560 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 560 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '!'; ;}
     break;
 
   case 91:
-#line 561 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 561 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '/'; ;}
     break;
 
   case 92:
-#line 562 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 562 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '%'; ;}
     break;
 
   case 93:
-#line 563 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 563 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = LEFT_SHIFT; ;}
     break;
 
   case 94:
-#line 564 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 564 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = RIGHT_SHIFT; ;}
     break;
 
   case 95:
-#line 565 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 565 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '<'; ;}
     break;
 
   case 96:
-#line 566 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 566 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '>'; ;}
     break;
 
   case 97:
-#line 567 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 567 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = LESS_OR_EQUAL; ;}
     break;
 
   case 98:
-#line 568 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 568 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = GREATER_OR_EQUAL; ;}
     break;
 
   case 99:
-#line 569 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 569 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = EQUAL; ;}
     break;
 
   case 100:
-#line 570 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 570 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = NOT_EQUAL; ;}
     break;
 
   case 101:
-#line 571 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 571 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '^'; ;}
     break;
 
   case 102:
-#line 572 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 572 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '|'; ;}
     break;
 
   case 103:
-#line 573 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 573 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = AND; ;}
     break;
 
   case 104:
-#line 574 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 574 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = OR; ;}
     break;
 
   case 105:
-#line 575 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 575 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = ';'; ;}
     break;
 
   case 106:
-#line 576 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 576 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = ','; ;}
     break;
 
   case 107:
-#line 577 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 577 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = '='; ;}
     break;
 
   case 108:
-#line 578 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 578 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
     { (yyval.ival) = PASTE; ;}
     break;
 
@@ -2781,7 +2781,7 @@ yyreturn:
 }
 
 
-#line 581 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
+#line 581 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/glsl/glcpp/glcpp-parse.y"
 
 
 string_list_t *

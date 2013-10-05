@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2013/09/05 20:23:03 todd Exp $
+# $OpenBSD: Makefile,v 1.3 2013/10/05 10:12:54 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	EGL
@@ -9,7 +9,7 @@ MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
 MESA_MAJOR=	9
 MESA_MINOR=	2
-MESA_TINY=	0
+MESA_TINY=	1
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 EGL_DRIVER_SEARCH_DIR=	${X11BASE}/lib/modules/egl

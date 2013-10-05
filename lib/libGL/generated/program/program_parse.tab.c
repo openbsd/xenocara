@@ -292,7 +292,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
 
 /*
  * Copyright © 2009 Intel Corporation
@@ -430,7 +430,7 @@ static struct asm_instruction *asm_instruction_copy_ctor(
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 124 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 124 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
 {
    struct asm_instruction *inst;
    struct asm_symbol *sym;
@@ -479,7 +479,7 @@ typedef struct YYLTYPE
 
 
 /* Copy the second part of user declarations.  */
-#line 269 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 269 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
 
 extern int
 _mesa_program_lexer_lex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param,
@@ -2224,7 +2224,7 @@ yyreduce:
   switch (yyn)
     {
         case 3:
-#line 288 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 288 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->prog->Target != GL_VERTEX_PROGRAM_ARB) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid fragment program header");
@@ -2235,7 +2235,7 @@ yyreduce:
     break;
 
   case 4:
-#line 296 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 296 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->prog->Target != GL_FRAGMENT_PROGRAM_ARB) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid vertex program header");
@@ -2248,7 +2248,7 @@ yyreduce:
     break;
 
   case 7:
-#line 312 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 312 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   int valid = 0;
 
@@ -2273,7 +2273,7 @@ yyreduce:
     break;
 
   case 10:
-#line 340 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 340 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((yyvsp[(1) - (2)].inst) != NULL) {
 	      if (state->inst_tail == NULL) {
@@ -2291,7 +2291,7 @@ yyreduce:
     break;
 
   case 12:
-#line 358 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 358 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = (yyvsp[(1) - (1)].inst);
 	   state->prog->NumAluInstructions++;
@@ -2299,7 +2299,7 @@ yyreduce:
     break;
 
   case 13:
-#line 363 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 363 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = (yyvsp[(1) - (1)].inst);
 	   state->prog->NumTexInstructions++;
@@ -2307,14 +2307,14 @@ yyreduce:
     break;
 
   case 24:
-#line 384 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 384 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_ctor(OPCODE_ARL, & (yyvsp[(2) - (4)].dst_reg), & (yyvsp[(4) - (4)].src_reg), NULL, NULL);
 	;}
     break;
 
   case 25:
-#line 390 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 390 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((yyvsp[(1) - (4)].temp_inst).Opcode == OPCODE_DDY)
 	      state->fragment.UsesDFdy = 1;
@@ -2323,35 +2323,35 @@ yyreduce:
     break;
 
   case 26:
-#line 398 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 398 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_copy_ctor(& (yyvsp[(1) - (4)].temp_inst), & (yyvsp[(2) - (4)].dst_reg), & (yyvsp[(4) - (4)].src_reg), NULL, NULL);
 	;}
     break;
 
   case 27:
-#line 404 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 404 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_copy_ctor(& (yyvsp[(1) - (6)].temp_inst), & (yyvsp[(2) - (6)].dst_reg), & (yyvsp[(4) - (6)].src_reg), & (yyvsp[(6) - (6)].src_reg), NULL);
 	;}
     break;
 
   case 28:
-#line 411 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 411 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_copy_ctor(& (yyvsp[(1) - (6)].temp_inst), & (yyvsp[(2) - (6)].dst_reg), & (yyvsp[(4) - (6)].src_reg), & (yyvsp[(6) - (6)].src_reg), NULL);
 	;}
     break;
 
   case 29:
-#line 418 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 418 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_copy_ctor(& (yyvsp[(1) - (8)].temp_inst), & (yyvsp[(2) - (8)].dst_reg), & (yyvsp[(4) - (8)].src_reg), & (yyvsp[(6) - (8)].src_reg), & (yyvsp[(8) - (8)].src_reg));
 	;}
     break;
 
   case 30:
-#line 424 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 424 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_copy_ctor(& (yyvsp[(1) - (8)].temp_inst), & (yyvsp[(2) - (8)].dst_reg), & (yyvsp[(4) - (8)].src_reg), NULL, NULL);
 	   if ((yyval.inst) != NULL) {
@@ -2396,7 +2396,7 @@ yyreduce:
     break;
 
   case 31:
-#line 468 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 468 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_ctor(OPCODE_KIL, NULL, & (yyvsp[(2) - (2)].src_reg), NULL, NULL);
 	   state->fragment.UsesKill = 1;
@@ -2404,7 +2404,7 @@ yyreduce:
     break;
 
   case 32:
-#line 473 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 473 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_ctor(OPCODE_KIL_NV, NULL, NULL, NULL, NULL);
 	   (yyval.inst)->Base.DstReg.CondMask = (yyvsp[(2) - (2)].dst_reg).CondMask;
@@ -2414,7 +2414,7 @@ yyreduce:
     break;
 
   case 33:
-#line 482 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 482 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.inst) = asm_instruction_copy_ctor(& (yyvsp[(1) - (12)].temp_inst), & (yyvsp[(2) - (12)].dst_reg), & (yyvsp[(4) - (12)].src_reg), & (yyvsp[(6) - (12)].src_reg), & (yyvsp[(8) - (12)].src_reg));
 	   if ((yyval.inst) != NULL) {
@@ -2459,74 +2459,74 @@ yyreduce:
     break;
 
   case 34:
-#line 526 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 526 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = (yyvsp[(2) - (2)].integer);
 	;}
     break;
 
   case 35:
-#line 531 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 531 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = TEXTURE_1D_INDEX; ;}
     break;
 
   case 36:
-#line 532 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 532 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = TEXTURE_2D_INDEX; ;}
     break;
 
   case 37:
-#line 533 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 533 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = TEXTURE_3D_INDEX; ;}
     break;
 
   case 38:
-#line 534 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 534 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = TEXTURE_CUBE_INDEX; ;}
     break;
 
   case 39:
-#line 535 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 535 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = TEXTURE_RECT_INDEX; ;}
     break;
 
   case 40:
-#line 536 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 536 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = -TEXTURE_1D_INDEX; ;}
     break;
 
   case 41:
-#line 537 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 537 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = -TEXTURE_2D_INDEX; ;}
     break;
 
   case 42:
-#line 538 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 538 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = -TEXTURE_RECT_INDEX; ;}
     break;
 
   case 43:
-#line 539 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 539 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = TEXTURE_1D_ARRAY_INDEX; ;}
     break;
 
   case 44:
-#line 540 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 540 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = TEXTURE_2D_ARRAY_INDEX; ;}
     break;
 
   case 45:
-#line 541 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 541 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = -TEXTURE_1D_ARRAY_INDEX; ;}
     break;
 
   case 46:
-#line 542 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 542 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = -TEXTURE_2D_ARRAY_INDEX; ;}
     break;
 
   case 47:
-#line 546 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 546 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   /* FIXME: Is this correct?  Should the extenedSwizzle be applied
 	    * FIXME: to the existing swizzle?
@@ -2539,7 +2539,7 @@ yyreduce:
     break;
 
   case 48:
-#line 558 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 558 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.src_reg) = (yyvsp[(2) - (2)].src_reg);
 
@@ -2550,7 +2550,7 @@ yyreduce:
     break;
 
   case 49:
-#line 566 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 566 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.src_reg) = (yyvsp[(3) - (4)].src_reg);
 
@@ -2568,7 +2568,7 @@ yyreduce:
     break;
 
   case 50:
-#line 583 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 583 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.src_reg) = (yyvsp[(1) - (2)].src_reg);
 
@@ -2578,7 +2578,7 @@ yyreduce:
     break;
 
   case 51:
-#line 590 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 590 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol temp_sym;
 
@@ -2598,7 +2598,7 @@ yyreduce:
     break;
 
   case 52:
-#line 609 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 609 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.src_reg) = (yyvsp[(2) - (3)].src_reg);
 
@@ -2612,7 +2612,7 @@ yyreduce:
     break;
 
   case 53:
-#line 620 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 620 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.src_reg) = (yyvsp[(3) - (5)].src_reg);
 
@@ -2632,7 +2632,7 @@ yyreduce:
     break;
 
   case 54:
-#line 640 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 640 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.dst_reg) = (yyvsp[(1) - (3)].dst_reg);
 	   (yyval.dst_reg).WriteMask = (yyvsp[(2) - (3)].swiz_mask).mask;
@@ -2657,7 +2657,7 @@ yyreduce:
     break;
 
   case 55:
-#line 664 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 664 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   set_dst_reg(& (yyval.dst_reg), PROGRAM_ADDRESS, 0);
 	   (yyval.dst_reg).WriteMask = (yyvsp[(2) - (2)].swiz_mask).mask;
@@ -2665,7 +2665,7 @@ yyreduce:
     break;
 
   case 56:
-#line 671 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 671 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   const unsigned xyzw_valid =
 	      ((yyvsp[(1) - (7)].ext_swizzle).xyzw_valid << 0)
@@ -2699,7 +2699,7 @@ yyreduce:
     break;
 
   case 57:
-#line 704 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 704 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.ext_swizzle) = (yyvsp[(2) - (2)].ext_swizzle);
 	   (yyval.ext_swizzle).negate = ((yyvsp[(1) - (2)].negate)) ? 1 : 0;
@@ -2707,7 +2707,7 @@ yyreduce:
     break;
 
   case 58:
-#line 711 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 711 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (((yyvsp[(1) - (1)].integer) != 0) && ((yyvsp[(1) - (1)].integer) != 1)) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid extended swizzle selector");
@@ -2726,7 +2726,7 @@ yyreduce:
     break;
 
   case 59:
-#line 727 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 727 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   char s;
 
@@ -2786,7 +2786,7 @@ yyreduce:
     break;
 
   case 60:
-#line 786 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 786 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol *const s = (struct asm_symbol *)
 	      _mesa_symbol_table_find_symbol(state->st, 0, (yyvsp[(1) - (1)].string));
@@ -2832,7 +2832,7 @@ yyreduce:
     break;
 
   case 61:
-#line 829 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 829 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   set_src_reg(& (yyval.src_reg), PROGRAM_INPUT, (yyvsp[(1) - (1)].attrib));
 	   state->prog->InputsRead |= BITFIELD64_BIT((yyval.src_reg).Base.Index);
@@ -2844,7 +2844,7 @@ yyreduce:
     break;
 
   case 62:
-#line 838 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 838 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (! (yyvsp[(3) - (4)].src_reg).Base.RelAddr
 	       && ((unsigned) (yyvsp[(3) - (4)].src_reg).Base.Index >= (yyvsp[(1) - (4)].sym)->param_binding_length)) {
@@ -2869,7 +2869,7 @@ yyreduce:
     break;
 
   case 63:
-#line 860 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 860 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
            gl_register_file file = ((yyvsp[(1) - (1)].temp_sym).name != NULL) 
 	      ? (yyvsp[(1) - (1)].temp_sym).param_binding_type
@@ -2880,14 +2880,14 @@ yyreduce:
     break;
 
   case 64:
-#line 870 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 870 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   set_dst_reg(& (yyval.dst_reg), PROGRAM_OUTPUT, (yyvsp[(1) - (1)].result));
 	;}
     break;
 
   case 65:
-#line 874 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 874 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol *const s = (struct asm_symbol *)
 	      _mesa_symbol_table_find_symbol(state->st, 0, (yyvsp[(1) - (1)].string));
@@ -2917,7 +2917,7 @@ yyreduce:
     break;
 
   case 66:
-#line 903 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 903 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol *const s = (struct asm_symbol *)
 	      _mesa_symbol_table_find_symbol(state->st, 0, (yyvsp[(1) - (1)].string));
@@ -2937,7 +2937,7 @@ yyreduce:
     break;
 
   case 69:
-#line 924 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 924 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   init_src_reg(& (yyval.src_reg));
 	   (yyval.src_reg).Base.Index = (yyvsp[(1) - (1)].integer);
@@ -2945,7 +2945,7 @@ yyreduce:
     break;
 
   case 70:
-#line 931 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 931 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   /* FINISHME: Add support for multiple address registers.
 	    */
@@ -2958,22 +2958,22 @@ yyreduce:
     break;
 
   case 71:
-#line 942 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 942 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 0; ;}
     break;
 
   case 72:
-#line 943 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 943 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = (yyvsp[(2) - (2)].integer); ;}
     break;
 
   case 73:
-#line 944 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 944 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = -(yyvsp[(2) - (2)].integer); ;}
     break;
 
   case 74:
-#line 948 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 948 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (((yyvsp[(1) - (1)].integer) < 0) || ((yyvsp[(1) - (1)].integer) > (state->limits->MaxAddressOffset - 1))) {
               char s[100];
@@ -2988,7 +2988,7 @@ yyreduce:
     break;
 
   case 75:
-#line 962 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 962 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (((yyvsp[(1) - (1)].integer) < 0) || ((yyvsp[(1) - (1)].integer) > state->limits->MaxAddressOffset)) {
               char s[100];
@@ -3003,7 +3003,7 @@ yyreduce:
     break;
 
   case 76:
-#line 976 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 976 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol *const s = (struct asm_symbol *)
 	      _mesa_symbol_table_find_symbol(state->st, 0, (yyvsp[(1) - (1)].string));
@@ -3024,7 +3024,7 @@ yyreduce:
     break;
 
   case 77:
-#line 996 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 996 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((yyvsp[(1) - (1)].swiz_mask).mask != WRITEMASK_X) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid address component selector");
@@ -3036,7 +3036,7 @@ yyreduce:
     break;
 
   case 78:
-#line 1007 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1007 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((yyvsp[(1) - (1)].swiz_mask).mask != WRITEMASK_X) {
 	      yyerror(& (yylsp[(1) - (1)]), state,
@@ -3049,31 +3049,31 @@ yyreduce:
     break;
 
   case 83:
-#line 1023 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1023 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.swiz_mask).swizzle = SWIZZLE_NOOP; (yyval.swiz_mask).mask = WRITEMASK_XYZW; ;}
     break;
 
   case 88:
-#line 1027 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1027 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.swiz_mask).swizzle = SWIZZLE_NOOP; (yyval.swiz_mask).mask = WRITEMASK_XYZW; ;}
     break;
 
   case 89:
-#line 1031 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1031 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.dst_reg) = (yyvsp[(2) - (3)].dst_reg);
 	;}
     break;
 
   case 90:
-#line 1035 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1035 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.dst_reg) = (yyvsp[(2) - (3)].dst_reg);
 	;}
     break;
 
   case 91:
-#line 1039 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1039 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.dst_reg).CondMask = COND_TR;
 	   (yyval.dst_reg).CondSwizzle = SWIZZLE_NOOP;
@@ -3081,7 +3081,7 @@ yyreduce:
     break;
 
   case 92:
-#line 1046 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1046 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.dst_reg) = (yyvsp[(1) - (2)].dst_reg);
 	   (yyval.dst_reg).CondSwizzle = (yyvsp[(2) - (2)].swiz_mask).swizzle;
@@ -3089,7 +3089,7 @@ yyreduce:
     break;
 
   case 93:
-#line 1053 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1053 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.dst_reg) = (yyvsp[(1) - (2)].dst_reg);
 	   (yyval.dst_reg).CondSwizzle = (yyvsp[(2) - (2)].swiz_mask).swizzle;
@@ -3097,7 +3097,7 @@ yyreduce:
     break;
 
   case 94:
-#line 1060 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1060 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   const int cond = _mesa_parse_cc((yyvsp[(1) - (1)].string));
 	   if ((cond == 0) || ((yyvsp[(1) - (1)].string)[2] != '\0')) {
@@ -3120,7 +3120,7 @@ yyreduce:
     break;
 
   case 95:
-#line 1082 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1082 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   const int cond = _mesa_parse_cc((yyvsp[(1) - (1)].string));
 	   if ((cond == 0) || ((yyvsp[(1) - (1)].string)[2] != '\0')) {
@@ -3143,7 +3143,7 @@ yyreduce:
     break;
 
   case 102:
-#line 1112 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1112 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol *const s =
 	      declare_variable(state, (yyvsp[(2) - (4)].string), at_attrib, & (yylsp[(2) - (4)]));
@@ -3163,63 +3163,63 @@ yyreduce:
     break;
 
   case 103:
-#line 1131 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1131 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = (yyvsp[(2) - (2)].attrib);
 	;}
     break;
 
   case 104:
-#line 1135 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1135 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = (yyvsp[(2) - (2)].attrib);
 	;}
     break;
 
   case 105:
-#line 1141 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1141 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VERT_ATTRIB_POS;
 	;}
     break;
 
   case 106:
-#line 1145 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1145 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VERT_ATTRIB_WEIGHT;
 	;}
     break;
 
   case 107:
-#line 1149 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1149 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VERT_ATTRIB_NORMAL;
 	;}
     break;
 
   case 108:
-#line 1153 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1153 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VERT_ATTRIB_COLOR0 + (yyvsp[(2) - (2)].integer);
 	;}
     break;
 
   case 109:
-#line 1157 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1157 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VERT_ATTRIB_FOG;
 	;}
     break;
 
   case 110:
-#line 1161 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1161 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VERT_ATTRIB_TEX0 + (yyvsp[(2) - (2)].integer);
 	;}
     break;
 
   case 111:
-#line 1165 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1165 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   yyerror(& (yylsp[(1) - (4)]), state, "GL_ARB_matrix_palette not supported");
 	   YYERROR;
@@ -3227,14 +3227,14 @@ yyreduce:
     break;
 
   case 112:
-#line 1170 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1170 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VERT_ATTRIB_GENERIC0 + (yyvsp[(3) - (4)].integer);
 	;}
     break;
 
   case 113:
-#line 1176 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1176 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->limits->MaxAttribs) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid vertex attribute reference");
@@ -3246,35 +3246,35 @@ yyreduce:
     break;
 
   case 117:
-#line 1190 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1190 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VARYING_SLOT_POS;
 	;}
     break;
 
   case 118:
-#line 1194 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1194 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VARYING_SLOT_COL0 + (yyvsp[(2) - (2)].integer);
 	;}
     break;
 
   case 119:
-#line 1198 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1198 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VARYING_SLOT_FOGC;
 	;}
     break;
 
   case 120:
-#line 1202 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1202 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.attrib) = VARYING_SLOT_TEX0 + (yyvsp[(2) - (2)].integer);
 	;}
     break;
 
   case 123:
-#line 1210 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1210 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol *const s =
 	      declare_variable(state, (yyvsp[(2) - (3)].string), at_param, & (yylsp[(2) - (3)]));
@@ -3293,7 +3293,7 @@ yyreduce:
     break;
 
   case 124:
-#line 1228 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1228 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (((yyvsp[(4) - (6)].integer) != 0) && ((unsigned) (yyvsp[(4) - (6)].integer) != (yyvsp[(6) - (6)].temp_sym).param_binding_length)) {
 	      free((yyvsp[(2) - (6)].string));
@@ -3319,14 +3319,14 @@ yyreduce:
     break;
 
   case 125:
-#line 1253 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1253 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = 0;
 	;}
     break;
 
   case 126:
-#line 1257 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1257 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (((yyvsp[(1) - (1)].integer) < 1) || ((unsigned) (yyvsp[(1) - (1)].integer) > state->limits->MaxParameters)) {
               char msg[100];
@@ -3342,21 +3342,21 @@ yyreduce:
     break;
 
   case 127:
-#line 1272 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1272 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.temp_sym) = (yyvsp[(2) - (2)].temp_sym);
 	;}
     break;
 
   case 128:
-#line 1278 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1278 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.temp_sym) = (yyvsp[(3) - (4)].temp_sym);
 	;}
     break;
 
   case 130:
-#line 1285 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1285 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyvsp[(1) - (3)].temp_sym).param_binding_length += (yyvsp[(3) - (3)].temp_sym).param_binding_length;
 	   (yyval.temp_sym) = (yyvsp[(1) - (3)].temp_sym);
@@ -3364,7 +3364,7 @@ yyreduce:
     break;
 
   case 131:
-#line 1292 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1292 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3373,7 +3373,7 @@ yyreduce:
     break;
 
   case 132:
-#line 1298 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1298 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3382,7 +3382,7 @@ yyreduce:
     break;
 
   case 133:
-#line 1304 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1304 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3391,7 +3391,7 @@ yyreduce:
     break;
 
   case 134:
-#line 1312 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1312 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3400,7 +3400,7 @@ yyreduce:
     break;
 
   case 135:
-#line 1318 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1318 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3409,7 +3409,7 @@ yyreduce:
     break;
 
   case 136:
-#line 1324 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1324 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3418,7 +3418,7 @@ yyreduce:
     break;
 
   case 137:
-#line 1332 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1332 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3427,7 +3427,7 @@ yyreduce:
     break;
 
   case 138:
-#line 1338 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1338 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3436,7 +3436,7 @@ yyreduce:
     break;
 
   case 139:
-#line 1344 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1344 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset(& (yyval.temp_sym), 0, sizeof((yyval.temp_sym)));
 	   (yyval.temp_sym).param_binding_begin = ~0;
@@ -3445,72 +3445,72 @@ yyreduce:
     break;
 
   case 140:
-#line 1351 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1351 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(1) - (1)].state), sizeof((yyval.state))); ;}
     break;
 
   case 141:
-#line 1352 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1352 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 142:
-#line 1355 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1355 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 143:
-#line 1356 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1356 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 144:
-#line 1357 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1357 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 145:
-#line 1358 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1358 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 146:
-#line 1359 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1359 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 147:
-#line 1360 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1360 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 148:
-#line 1361 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1361 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 149:
-#line 1362 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1362 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 150:
-#line 1363 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1363 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 151:
-#line 1364 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1364 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 152:
-#line 1365 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1365 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { memcpy((yyval.state), (yyvsp[(2) - (2)].state), sizeof((yyval.state))); ;}
     break;
 
   case 153:
-#line 1369 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1369 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = STATE_MATERIAL;
@@ -3520,28 +3520,28 @@ yyreduce:
     break;
 
   case 154:
-#line 1378 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1378 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = (yyvsp[(1) - (1)].integer);
 	;}
     break;
 
   case 155:
-#line 1382 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1382 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_EMISSION;
 	;}
     break;
 
   case 156:
-#line 1386 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1386 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_SHININESS;
 	;}
     break;
 
   case 157:
-#line 1392 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1392 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = STATE_LIGHT;
@@ -3551,21 +3551,21 @@ yyreduce:
     break;
 
   case 158:
-#line 1401 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1401 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = (yyvsp[(1) - (1)].integer);
 	;}
     break;
 
   case 159:
-#line 1405 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1405 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_POSITION;
 	;}
     break;
 
   case 160:
-#line 1409 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1409 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (!state->ctx->Extensions.EXT_point_parameters) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "GL_ARB_point_parameters not supported");
@@ -3577,28 +3577,28 @@ yyreduce:
     break;
 
   case 161:
-#line 1418 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1418 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = (yyvsp[(2) - (2)].integer);
 	;}
     break;
 
   case 162:
-#line 1422 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1422 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_HALF_VECTOR;
 	;}
     break;
 
   case 163:
-#line 1428 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1428 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_SPOT_DIRECTION;
 	;}
     break;
 
   case 164:
-#line 1434 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1434 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = (yyvsp[(2) - (2)].state)[0];
 	   (yyval.state)[1] = (yyvsp[(2) - (2)].state)[1];
@@ -3606,7 +3606,7 @@ yyreduce:
     break;
 
   case 165:
-#line 1441 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1441 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = STATE_LIGHTMODEL_AMBIENT;
@@ -3614,7 +3614,7 @@ yyreduce:
     break;
 
   case 166:
-#line 1446 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1446 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = STATE_LIGHTMODEL_SCENECOLOR;
@@ -3623,7 +3623,7 @@ yyreduce:
     break;
 
   case 167:
-#line 1454 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1454 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = STATE_LIGHTPROD;
@@ -3634,7 +3634,7 @@ yyreduce:
     break;
 
   case 169:
-#line 1466 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1466 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = (yyvsp[(3) - (3)].integer);
@@ -3643,35 +3643,35 @@ yyreduce:
     break;
 
   case 170:
-#line 1474 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1474 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_TEXENV_COLOR;
 	;}
     break;
 
   case 171:
-#line 1480 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1480 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_AMBIENT;
 	;}
     break;
 
   case 172:
-#line 1484 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1484 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_DIFFUSE;
 	;}
     break;
 
   case 173:
-#line 1488 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1488 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_SPECULAR;
 	;}
     break;
 
   case 174:
-#line 1494 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1494 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->MaxLights) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid light selector");
@@ -3683,7 +3683,7 @@ yyreduce:
     break;
 
   case 175:
-#line 1505 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1505 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = STATE_TEXGEN;
@@ -3693,49 +3693,49 @@ yyreduce:
     break;
 
   case 176:
-#line 1514 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1514 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_TEXGEN_EYE_S;
 	;}
     break;
 
   case 177:
-#line 1518 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1518 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_TEXGEN_OBJECT_S;
 	;}
     break;
 
   case 178:
-#line 1523 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1523 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_TEXGEN_EYE_S - STATE_TEXGEN_EYE_S;
 	;}
     break;
 
   case 179:
-#line 1527 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1527 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_TEXGEN_EYE_T - STATE_TEXGEN_EYE_S;
 	;}
     break;
 
   case 180:
-#line 1531 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1531 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_TEXGEN_EYE_R - STATE_TEXGEN_EYE_S;
 	;}
     break;
 
   case 181:
-#line 1535 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1535 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_TEXGEN_EYE_Q - STATE_TEXGEN_EYE_S;
 	;}
     break;
 
   case 182:
-#line 1541 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1541 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = (yyvsp[(2) - (2)].integer);
@@ -3743,21 +3743,21 @@ yyreduce:
     break;
 
   case 183:
-#line 1548 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1548 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_FOG_COLOR;
 	;}
     break;
 
   case 184:
-#line 1552 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1552 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_FOG_PARAMS;
 	;}
     break;
 
   case 185:
-#line 1558 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1558 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = STATE_CLIPPLANE;
@@ -3766,7 +3766,7 @@ yyreduce:
     break;
 
   case 186:
-#line 1566 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1566 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->MaxClipPlanes) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid clip plane selector");
@@ -3778,7 +3778,7 @@ yyreduce:
     break;
 
   case 187:
-#line 1577 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1577 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = (yyvsp[(2) - (2)].integer);
@@ -3786,21 +3786,21 @@ yyreduce:
     break;
 
   case 188:
-#line 1584 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1584 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_POINT_SIZE;
 	;}
     break;
 
   case 189:
-#line 1588 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1588 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_POINT_ATTENUATION;
 	;}
     break;
 
   case 190:
-#line 1594 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1594 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = (yyvsp[(1) - (5)].state)[0];
 	   (yyval.state)[1] = (yyvsp[(1) - (5)].state)[1];
@@ -3811,7 +3811,7 @@ yyreduce:
     break;
 
   case 191:
-#line 1604 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1604 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = (yyvsp[(1) - (2)].state)[0];
 	   (yyval.state)[1] = (yyvsp[(1) - (2)].state)[1];
@@ -3822,7 +3822,7 @@ yyreduce:
     break;
 
   case 192:
-#line 1614 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1614 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[2] = 0;
 	   (yyval.state)[3] = 3;
@@ -3830,7 +3830,7 @@ yyreduce:
     break;
 
   case 193:
-#line 1619 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1619 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   /* It seems logical that the matrix row range specifier would have
 	    * to specify a range or more than one row (i.e., $5 > $3).
@@ -3849,7 +3849,7 @@ yyreduce:
     break;
 
   case 194:
-#line 1637 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1637 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = (yyvsp[(2) - (3)].state)[0];
 	   (yyval.state)[1] = (yyvsp[(2) - (3)].state)[1];
@@ -3858,42 +3858,42 @@ yyreduce:
     break;
 
   case 195:
-#line 1645 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1645 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = 0;
 	;}
     break;
 
   case 196:
-#line 1649 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1649 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = (yyvsp[(1) - (1)].integer);
 	;}
     break;
 
   case 197:
-#line 1655 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1655 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_MATRIX_INVERSE;
 	;}
     break;
 
   case 198:
-#line 1659 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1659 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_MATRIX_TRANSPOSE;
 	;}
     break;
 
   case 199:
-#line 1663 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1663 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = STATE_MATRIX_INVTRANS;
 	;}
     break;
 
   case 200:
-#line 1669 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1669 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((yyvsp[(1) - (1)].integer) > 3) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid matrix row reference");
@@ -3905,7 +3905,7 @@ yyreduce:
     break;
 
   case 201:
-#line 1680 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1680 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = STATE_MODELVIEW_MATRIX;
 	   (yyval.state)[1] = (yyvsp[(2) - (2)].integer);
@@ -3913,7 +3913,7 @@ yyreduce:
     break;
 
   case 202:
-#line 1685 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1685 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = STATE_PROJECTION_MATRIX;
 	   (yyval.state)[1] = 0;
@@ -3921,7 +3921,7 @@ yyreduce:
     break;
 
   case 203:
-#line 1690 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1690 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = STATE_MVP_MATRIX;
 	   (yyval.state)[1] = 0;
@@ -3929,7 +3929,7 @@ yyreduce:
     break;
 
   case 204:
-#line 1695 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1695 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = STATE_TEXTURE_MATRIX;
 	   (yyval.state)[1] = (yyvsp[(2) - (2)].integer);
@@ -3937,7 +3937,7 @@ yyreduce:
     break;
 
   case 205:
-#line 1700 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1700 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   yyerror(& (yylsp[(1) - (4)]), state, "GL_ARB_matrix_palette not supported");
 	   YYERROR;
@@ -3945,7 +3945,7 @@ yyreduce:
     break;
 
   case 206:
-#line 1705 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1705 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = STATE_PROGRAM_MATRIX;
 	   (yyval.state)[1] = (yyvsp[(3) - (4)].integer);
@@ -3953,21 +3953,21 @@ yyreduce:
     break;
 
   case 207:
-#line 1712 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1712 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = 0;
 	;}
     break;
 
   case 208:
-#line 1716 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1716 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = (yyvsp[(2) - (3)].integer);
 	;}
     break;
 
   case 209:
-#line 1721 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1721 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   /* Since GL_ARB_vertex_blend isn't supported, only modelview matrix
 	    * zero is valid.
@@ -3982,7 +3982,7 @@ yyreduce:
     break;
 
   case 210:
-#line 1734 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1734 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   /* Since GL_ARB_matrix_palette isn't supported, just let any value
 	    * through here.  The error will be generated later.
@@ -3992,7 +3992,7 @@ yyreduce:
     break;
 
   case 211:
-#line 1742 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1742 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->MaxProgramMatrices) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid program matrix selector");
@@ -4004,7 +4004,7 @@ yyreduce:
     break;
 
   case 212:
-#line 1753 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1753 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = STATE_DEPTH_RANGE;
@@ -4012,7 +4012,7 @@ yyreduce:
     break;
 
   case 217:
-#line 1765 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1765 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = state->state_param_enum;
@@ -4023,7 +4023,7 @@ yyreduce:
     break;
 
   case 218:
-#line 1775 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1775 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = (yyvsp[(1) - (1)].integer);
 	   (yyval.state)[1] = (yyvsp[(1) - (1)].integer);
@@ -4031,7 +4031,7 @@ yyreduce:
     break;
 
   case 219:
-#line 1780 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1780 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = (yyvsp[(1) - (3)].integer);
 	   (yyval.state)[1] = (yyvsp[(3) - (3)].integer);
@@ -4039,7 +4039,7 @@ yyreduce:
     break;
 
   case 220:
-#line 1787 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1787 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = state->state_param_enum;
@@ -4050,7 +4050,7 @@ yyreduce:
     break;
 
   case 221:
-#line 1797 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1797 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = state->state_param_enum;
@@ -4061,7 +4061,7 @@ yyreduce:
     break;
 
   case 222:
-#line 1806 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1806 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = (yyvsp[(1) - (1)].integer);
 	   (yyval.state)[1] = (yyvsp[(1) - (1)].integer);
@@ -4069,7 +4069,7 @@ yyreduce:
     break;
 
   case 223:
-#line 1811 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1811 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.state)[0] = (yyvsp[(1) - (3)].integer);
 	   (yyval.state)[1] = (yyvsp[(3) - (3)].integer);
@@ -4077,7 +4077,7 @@ yyreduce:
     break;
 
   case 224:
-#line 1818 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1818 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   memset((yyval.state), 0, sizeof((yyval.state)));
 	   (yyval.state)[0] = state->state_param_enum;
@@ -4088,7 +4088,7 @@ yyreduce:
     break;
 
   case 225:
-#line 1828 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1828 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->limits->MaxEnvParams) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid environment parameter reference");
@@ -4099,7 +4099,7 @@ yyreduce:
     break;
 
   case 226:
-#line 1838 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1838 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->limits->MaxLocalParams) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid local parameter reference");
@@ -4110,7 +4110,7 @@ yyreduce:
     break;
 
   case 231:
-#line 1853 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1853 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.vector).count = 4;
 	   (yyval.vector).data[0].f = (yyvsp[(1) - (1)].real);
@@ -4121,7 +4121,7 @@ yyreduce:
     break;
 
   case 232:
-#line 1863 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1863 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.vector).count = 1;
 	   (yyval.vector).data[0].f = (yyvsp[(1) - (1)].real);
@@ -4132,7 +4132,7 @@ yyreduce:
     break;
 
   case 233:
-#line 1871 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1871 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.vector).count = 1;
 	   (yyval.vector).data[0].f = (float) (yyvsp[(1) - (1)].integer);
@@ -4143,7 +4143,7 @@ yyreduce:
     break;
 
   case 234:
-#line 1881 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1881 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.vector).count = 4;
 	   (yyval.vector).data[0].f = (yyvsp[(2) - (3)].real);
@@ -4154,7 +4154,7 @@ yyreduce:
     break;
 
   case 235:
-#line 1889 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1889 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.vector).count = 4;
 	   (yyval.vector).data[0].f = (yyvsp[(2) - (5)].real);
@@ -4165,7 +4165,7 @@ yyreduce:
     break;
 
   case 236:
-#line 1898 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1898 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.vector).count = 4;
 	   (yyval.vector).data[0].f = (yyvsp[(2) - (7)].real);
@@ -4176,7 +4176,7 @@ yyreduce:
     break;
 
   case 237:
-#line 1907 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1907 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.vector).count = 4;
 	   (yyval.vector).data[0].f = (yyvsp[(2) - (9)].real);
@@ -4187,41 +4187,41 @@ yyreduce:
     break;
 
   case 238:
-#line 1917 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1917 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.real) = ((yyvsp[(1) - (2)].negate)) ? -(yyvsp[(2) - (2)].real) : (yyvsp[(2) - (2)].real);
 	;}
     break;
 
   case 239:
-#line 1921 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1921 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.real) = (float)(((yyvsp[(1) - (2)].negate)) ? -(yyvsp[(2) - (2)].integer) : (yyvsp[(2) - (2)].integer));
 	;}
     break;
 
   case 240:
-#line 1926 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1926 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.negate) = FALSE; ;}
     break;
 
   case 241:
-#line 1927 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1927 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.negate) = TRUE;  ;}
     break;
 
   case 242:
-#line 1928 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1928 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.negate) = FALSE; ;}
     break;
 
   case 243:
-#line 1931 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1931 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = (yyvsp[(2) - (2)].integer); ;}
     break;
 
   case 245:
-#line 1935 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1935 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   /* NV_fragment_program_option defines the size qualifiers in a
 	    * fairly broken way.  "SHORT" or "LONG" can optionally be used
@@ -4258,18 +4258,18 @@ yyreduce:
     break;
 
   case 246:
-#line 1969 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1969 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	;}
     break;
 
   case 247:
-#line 1973 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1973 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = (yyvsp[(1) - (1)].integer); ;}
     break;
 
   case 249:
-#line 1977 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1977 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (!declare_variable(state, (yyvsp[(3) - (3)].string), (yyvsp[(0) - (3)].integer), & (yylsp[(3) - (3)]))) {
 	      free((yyvsp[(3) - (3)].string));
@@ -4279,7 +4279,7 @@ yyreduce:
     break;
 
   case 250:
-#line 1984 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1984 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (!declare_variable(state, (yyvsp[(1) - (1)].string), (yyvsp[(0) - (1)].integer), & (yylsp[(1) - (1)]))) {
 	      free((yyvsp[(1) - (1)].string));
@@ -4289,7 +4289,7 @@ yyreduce:
     break;
 
   case 251:
-#line 1993 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 1993 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol *const s =
 	      declare_variable(state, (yyvsp[(3) - (5)].string), at_output, & (yylsp[(3) - (5)]));
@@ -4304,7 +4304,7 @@ yyreduce:
     break;
 
   case 252:
-#line 2007 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2007 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.result) = VARYING_SLOT_POS;
@@ -4316,7 +4316,7 @@ yyreduce:
     break;
 
   case 253:
-#line 2016 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2016 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.result) = VARYING_SLOT_FOGC;
@@ -4328,14 +4328,14 @@ yyreduce:
     break;
 
   case 254:
-#line 2025 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2025 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.result) = (yyvsp[(2) - (2)].result);
 	;}
     break;
 
   case 255:
-#line 2029 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2029 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.result) = VARYING_SLOT_PSIZ;
@@ -4347,7 +4347,7 @@ yyreduce:
     break;
 
   case 256:
-#line 2038 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2038 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.result) = VARYING_SLOT_TEX0 + (yyvsp[(3) - (3)].integer);
@@ -4359,7 +4359,7 @@ yyreduce:
     break;
 
   case 257:
-#line 2047 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2047 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_fragment) {
 	      (yyval.result) = FRAG_RESULT_DEPTH;
@@ -4371,14 +4371,14 @@ yyreduce:
     break;
 
   case 258:
-#line 2058 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2058 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.result) = (yyvsp[(2) - (3)].integer) + (yyvsp[(3) - (3)].integer);
 	;}
     break;
 
   case 259:
-#line 2064 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2064 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.integer) = VARYING_SLOT_COL0;
@@ -4392,7 +4392,7 @@ yyreduce:
     break;
 
   case 260:
-#line 2075 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2075 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      yyerror(& (yylsp[(1) - (3)]), state, "invalid program result name");
@@ -4423,7 +4423,7 @@ yyreduce:
     break;
 
   case 261:
-#line 2103 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2103 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.integer) = VARYING_SLOT_COL0;
@@ -4435,7 +4435,7 @@ yyreduce:
     break;
 
   case 262:
-#line 2112 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2112 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.integer) = VARYING_SLOT_BFC0;
@@ -4447,14 +4447,14 @@ yyreduce:
     break;
 
   case 263:
-#line 2123 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2123 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   (yyval.integer) = 0; 
 	;}
     break;
 
   case 264:
-#line 2127 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2127 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.integer) = 0;
@@ -4466,7 +4466,7 @@ yyreduce:
     break;
 
   case 265:
-#line 2136 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2136 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if (state->mode == ARB_vertex) {
 	      (yyval.integer) = 1;
@@ -4478,67 +4478,67 @@ yyreduce:
     break;
 
   case 266:
-#line 2146 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2146 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 0; ;}
     break;
 
   case 267:
-#line 2147 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2147 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 0; ;}
     break;
 
   case 268:
-#line 2148 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2148 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 1; ;}
     break;
 
   case 269:
-#line 2151 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2151 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 0; ;}
     break;
 
   case 270:
-#line 2152 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2152 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 0; ;}
     break;
 
   case 271:
-#line 2153 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2153 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 1; ;}
     break;
 
   case 272:
-#line 2156 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2156 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 0; ;}
     break;
 
   case 273:
-#line 2157 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2157 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = (yyvsp[(2) - (3)].integer); ;}
     break;
 
   case 274:
-#line 2160 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2160 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 0; ;}
     break;
 
   case 275:
-#line 2161 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2161 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = (yyvsp[(2) - (3)].integer); ;}
     break;
 
   case 276:
-#line 2164 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2164 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = 0; ;}
     break;
 
   case 277:
-#line 2165 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2165 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     { (yyval.integer) = (yyvsp[(2) - (3)].integer); ;}
     break;
 
   case 278:
-#line 2169 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2169 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->MaxTextureCoordUnits) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid texture coordinate unit selector");
@@ -4550,7 +4550,7 @@ yyreduce:
     break;
 
   case 279:
-#line 2180 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2180 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->MaxTextureImageUnits) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid texture image unit selector");
@@ -4562,7 +4562,7 @@ yyreduce:
     break;
 
   case 280:
-#line 2191 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2191 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   if ((unsigned) (yyvsp[(1) - (1)].integer) >= state->MaxTextureUnits) {
 	      yyerror(& (yylsp[(1) - (1)]), state, "invalid texture unit selector");
@@ -4574,7 +4574,7 @@ yyreduce:
     break;
 
   case 281:
-#line 2202 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2202 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
     {
 	   struct asm_symbol *exist = (struct asm_symbol *)
 	      _mesa_symbol_table_find_symbol(state->st, 0, (yyvsp[(2) - (4)].string));
@@ -4822,7 +4822,7 @@ yyreturn:
 }
 
 
-#line 2231 "/usr/xenocara/lib/libGL-new/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
+#line 2231 "/usr/xenocara/lib/libGL/generated/../../../dist/Mesa/src/mesa/program/program_parse.y"
 
 
 void
