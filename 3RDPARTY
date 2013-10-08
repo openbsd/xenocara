@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.167 2013/10/05 10:31:01 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.168 2013/10/08 19:26:10 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -27,7 +27,7 @@ Archive Site:	http://dri.freedesktop.org/
 
 Package:	fontconfig
 Version:	2.10.91
-Current Vers:	2.10.93
+Current Vers:	2.10.95
 Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
 
@@ -45,7 +45,7 @@ Archive Site:	http://www.tux.org/~bagleyd/latest/
 
 Package:	xkeyboard-config
 Version:	2.7
-Current Vers:	2.9
+Current Vers:	2.10.1
 Maintainer:	xkb@listserv.bat.ru
 Archive Site:	http://www.freedesktop.org/wiki/Software/XKeyboardConfig
 
