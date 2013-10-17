@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.79 2013/07/08 18:19:22 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.80 2013/10/17 13:59:10 okan Exp $
  */
 
 #include <sys/param.h>
@@ -250,7 +250,7 @@ kbfunc_exec(struct client_ctx *cc, union arg *arg)
 			label = "wm";
 			break;
 		default:
-			err(1, "kbfunc_exec: invalid cmd %d", cmd);
+			errx(1, "kbfunc_exec: invalid cmd %d", cmd);
 			/*NOTREACHED*/
 	}
 
@@ -305,7 +305,7 @@ kbfunc_exec(struct client_ctx *cc, union arg *arg)
 				warn("%s", mi->text);
 				break;
 			default:
-				err(1, "kb_func: egad, cmd changed value!");
+				errx(1, "kb_func: egad, cmd changed value!");
 				break;
 		}
 	}
