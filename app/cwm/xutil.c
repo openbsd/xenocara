@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.75 2013/10/03 13:52:00 okan Exp $
+ * $OpenBSD: xutil.c,v 1.76 2013/10/19 19:39:34 okan Exp $
  */
 
 #include <sys/param.h>
@@ -65,12 +65,9 @@ xu_btn_grab(Window win, int mask, u_int btn)
 }
 
 void
-xu_btn_ungrab(Window win, int mask, u_int btn)
+xu_btn_ungrab(Window win)
 {
-	u_int	i;
-
-	for (i = 0; i < nitems(ign_mods); i++)
-		XUngrabButton(X_Dpy, btn, (mask | ign_mods[i]), win);
+	XUngrabButton(X_Dpy, AnyButton, AnyModifier, win);
 }
 
 void

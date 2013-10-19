@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.139 2013/10/19 18:59:22 okan Exp $
+ * $OpenBSD: client.c,v 1.140 2013/10/19 19:39:34 okan Exp $
  */
 
 #include <sys/param.h>
@@ -186,15 +186,10 @@ client_delete(struct client_ctx *cc)
 void
 client_leave(struct client_ctx *cc)
 {
-	struct screen_ctx	*sc;
-
 	if (cc == NULL)
 		cc = client_current();
 	if (cc == NULL)
 		return;
-
-	sc = cc->sc;
-	xu_btn_ungrab(sc->rootwin, AnyModifier, Button1);
 }
 
 void
