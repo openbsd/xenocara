@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.138 2013/10/19 00:24:54 okan Exp $
+ * $OpenBSD: client.c,v 1.139 2013/10/19 18:59:22 okan Exp $
  */
 
 #include <sys/param.h>
@@ -398,8 +398,6 @@ client_resize(struct client_ctx *cc, int reset)
 		xu_ewmh_set_net_wm_state(cc);
 	}
 
-	client_draw_border(cc);
-
 	XMoveResizeWindow(X_Dpy, cc->win, cc->geom.x,
 	    cc->geom.y, cc->geom.w, cc->geom.h);
 	client_config(cc);
@@ -495,7 +493,6 @@ client_unhide(struct client_ctx *cc)
 	cc->flags &= ~CLIENT_HIDDEN;
 	cc->state = NormalState;
 	xu_set_wm_state(cc->win, cc->state);
-	client_draw_border(cc);
 }
 
 void
