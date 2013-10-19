@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.137 2013/10/03 13:51:59 okan Exp $
+ * $OpenBSD: client.c,v 1.138 2013/10/19 00:24:54 okan Exp $
  */
 
 #include <sys/param.h>
@@ -213,6 +213,8 @@ client_setactive(struct client_ctx *cc, int fg)
 		XInstallColormap(X_Dpy, cc->colormap);
 		XSetInputFocus(X_Dpy, cc->win,
 		    RevertToPointerRoot, CurrentTime);
+		if (cc->xproto & _WM_TAKE_FOCUS)
+			client_msg(cc, cwmh[WM_TAKE_FOCUS]);
 		conf_grab_mouse(cc->win);
 		/*
 		 * If we're in the middle of alt-tabbing, don't change
