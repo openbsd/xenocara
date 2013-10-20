@@ -1,3 +1,70 @@
+commit 3e5d56d94720db7a9b97809f15e2432014d94553
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Sep 9 21:14:03 2013 +0200
+
+    Bump to 2.3.3
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit ad0864d4fae1db24d32e95abff8a37d7eebea7ef
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed May 25 13:35:21 2011 +0200
+
+    Make bool option parsing clearer and more consistent
+    
+    When there's no need to know whether the user has set the value
+    of a configurable option (for logging for instance) the return
+    of xf86ReturnOptValBool() can be assigned directly.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 29a149544e2120a582043738d5b09dd80e896345
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit d6042a43b6cedc7bbd7c1cb1b2f7b9df9fce1102
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 16 13:18:23 2013 -0500
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 60d2dc115c4b6210d3b1e05f5b0c39d1f7917cbc
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:55:03 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 7aafaf56fbca97f36c775462c1ceea3e03700c42
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Sat Aug 18 20:53:34 2012 +0600
+
+    Fix check function in VESASaveRestore
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4cb7fa8191ca41491330e4adc8c8188648ed7e11
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Sat Aug 18 20:53:33 2012 +0600
+
+    Remove unneeded AM_CONDITIONAL
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 0249d01a2623c4f7769914fc0a7b50657a50560f
 Author: Dave Airlie <airlied@gmail.com>
 Date:   Wed Jul 18 20:02:49 2012 +1000
