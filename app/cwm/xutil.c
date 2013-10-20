@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.77 2013/10/20 01:55:32 okan Exp $
+ * $OpenBSD: xutil.c,v 1.78 2013/10/20 02:00:02 okan Exp $
  */
 
 #include <sys/param.h>
@@ -31,6 +31,45 @@
 #include "calmwm.h"
 
 static unsigned int ign_mods[] = { 0, LockMask, Mod2Mask, Mod2Mask | LockMask };
+
+void
+xu_btn_grab(Window win, int mask, u_int btn)
+{
+	u_int	i;
+
+	for (i = 0; i < nitems(ign_mods); i++)
+		XGrabButton(X_Dpy, btn, (mask | ign_mods[i]), win,
+		    False, BUTTONMASK, GrabModeAsync,
+		    GrabModeSync, None, None);
+}
+
+void
+xu_btn_ungrab(Window win)
+{
+	XUngrabButton(X_Dpy, AnyButton, AnyModifier, win);
+}
+
+void
+xu_key_grab(Window win, u_int mask, KeySym keysym)
+{
+	KeyCode	 code;
+	u_int	 i;
+
+	code = XKeysymToKeycode(X_Dpy, keysym);
+	if ((XkbKeycodeToKeysym(X_Dpy, code, 0, 0) != keysym) &&
+	    (XkbKeycodeToKeysym(X_Dpy, code, 0, 1) == keysym))
+		mask |= ShiftMask;
+
+	for (i = 0; i < nitems(ign_mods); i++)
+		XGrabKey(X_Dpy, code, (mask | ign_mods[i]), win,
+		    True, GrabModeAsync, GrabModeAsync);
+}
+
+void
+xu_key_ungrab(Window win)
+{
+	XUngrabKey(X_Dpy, AnyKey, AnyModifier, win);
+}
 
 int
 xu_ptr_grab(Window win, u_int mask, Cursor curs)
@@ -54,23 +93,6 @@ xu_ptr_ungrab(void)
 }
 
 void
-xu_btn_grab(Window win, int mask, u_int btn)
-{
-	u_int	i;
-
-	for (i = 0; i < nitems(ign_mods); i++)
-		XGrabButton(X_Dpy, btn, (mask | ign_mods[i]), win,
-		    False, BUTTONMASK, GrabModeAsync,
-		    GrabModeSync, None, None);
-}
-
-void
-xu_btn_ungrab(Window win)
-{
-	XUngrabButton(X_Dpy, AnyButton, AnyModifier, win);
-}
-
-void
 xu_ptr_getpos(Window win, int *x, int *y)
 {
 	Window	 w0, w1;
@@ -84,28 +106,6 @@ void
 xu_ptr_setpos(Window win, int x, int y)
 {
 	XWarpPointer(X_Dpy, None, win, 0, 0, 0, 0, x, y);
-}
-
-void
-xu_key_grab(Window win, u_int mask, KeySym keysym)
-{
-	KeyCode	 code;
-	u_int	 i;
-
-	code = XKeysymToKeycode(X_Dpy, keysym);
-	if ((XkbKeycodeToKeysym(X_Dpy, code, 0, 0) != keysym) &&
-	    (XkbKeycodeToKeysym(X_Dpy, code, 0, 1) == keysym))
-		mask |= ShiftMask;
-
-	for (i = 0; i < nitems(ign_mods); i++)
-		XGrabKey(X_Dpy, code, (mask | ign_mods[i]), win,
-		    True, GrabModeAsync, GrabModeAsync);
-}
-
-void
-xu_key_ungrab(Window win)
-{
-	XUngrabKey(X_Dpy, AnyKey, AnyModifier, win);
 }
 
 int
