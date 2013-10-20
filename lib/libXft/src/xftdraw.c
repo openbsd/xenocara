@@ -332,7 +332,7 @@ XftDrawSrcPicture (XftDraw *draw, _Xconst XftColor *color)
     /*
      * Pick one to replace at random
      */
-    i = (unsigned int) rand () % XFT_NUM_SOLID_COLOR;
+    i = (unsigned int) arc4random_uniform (XFT_NUM_SOLID_COLOR);
     /*
      * Recreate if it was for the wrong screen
      */

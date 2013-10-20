@@ -132,7 +132,7 @@ _XftUncacheFiles (void)
     XftFtFile	*f;
     while ((n = _XftNumFiles ()) > XftMaxFreeTypeFiles)
     {
-	f = _XftNthFile (rand () % n);
+	f = _XftNthFile (arc4random_uniform (n));
 	if (f)
 	{
 	    if (XftDebug() & XFT_DBG_REF)
@@ -1094,7 +1094,8 @@ XftFontManageMemory (Display *dpy)
 	return;
     while (info->num_unref_fonts > info->max_unref_fonts)
     {
-	public = XftFontFindNthUnref (info, rand() % info->num_unref_fonts);
+	public = XftFontFindNthUnref (info, 
+	    arc4random_uniform(info->num_unref_fonts));
 	font = (XftFontInt *) public;
 
 	if (XftDebug () & XFT_DBG_CACHE)

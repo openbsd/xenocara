@@ -880,7 +880,7 @@ _XftFontUncacheGlyph (Display *dpy, XftFont *pub)
 	return;
     if (font->use_free_glyphs)
     {
-	glyph_memory = rand() % font->glyph_memory;
+	glyph_memory = arc4random_uniform(font->glyph_memory);
     }
     else
     {

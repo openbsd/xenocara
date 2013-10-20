@@ -229,7 +229,7 @@ _XftDisplayManageMemory (Display *dpy)
     }
     while (info->glyph_memory > info->max_glyph_memory)
     {
-	glyph_memory = rand () % info->glyph_memory;
+	glyph_memory = arc4random_uniform (info->glyph_memory);
 	public = info->fonts;
 	while (public)
 	{
