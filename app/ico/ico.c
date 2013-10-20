@@ -1008,11 +1008,14 @@ do_ico_window(void *ptr)
 
 	/* Get the initial position, size, and speed of the bounding-box */
 
+#ifndef HAVE_ARC4RANDOM_UNIFORM
 	srand((int) time((time_t *)0) % 231);
 	icoX = ((closure->winW - icoW) * (rand() & 0xFF)) >> 8;
 	icoY = ((closure->winH - icoH) * (rand() & 0xFF)) >> 8;
-
-
+#else
+	icoX = ((closure->winW - icoW) * arc4random_uniform(0xFF)) >> 8;
+        icoY = ((closure->winH - icoH) * arc4random_uniform(0xFF)) >> 8;
+#endif
 	/* Bounce the box in the window */
 
 	icodeltax2 = icoDeltaX * 2;

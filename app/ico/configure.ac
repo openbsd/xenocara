@@ -35,6 +35,9 @@ XORG_DEFAULT_OPTIONS
 
 AC_CONFIG_HEADERS([config.h])
 
+# Checks for library functions.
+AC_CHECK_FUNCS([arc4random_uniform])
+
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(ICO, [x11 >= 0.99.1 xproto >= 7.0.22])
 

@@ -657,6 +657,8 @@ build_vendor
 build_cpu
 build
 INSTALL_CMD
+PKG_CONFIG_LIBDIR
+PKG_CONFIG_PATH
 PKG_CONFIG
 CHANGELOG_CMD
 STRICT_CFLAGS
@@ -765,6 +767,8 @@ LIBS
 CPPFLAGS
 CPP
 PKG_CONFIG
+PKG_CONFIG_PATH
+PKG_CONFIG_LIBDIR
 ICO_CFLAGS
 ICO_LIBS'
 
@@ -1411,6 +1415,10 @@ Some influential environment variables:
               you have headers in a nonstandard directory <include dir>
   CPP         C preprocessor
   PKG_CONFIG  path to pkg-config utility
+  PKG_CONFIG_PATH
+              directories to add to pkg-config's search path
+  PKG_CONFIG_LIBDIR
+              path overriding pkg-config's built-in search path
   ICO_CFLAGS  C compiler flags for ICO, overriding pkg-config
   ICO_LIBS    linker flags for ICO, overriding pkg-config
 
@@ -1733,6 +1741,73 @@ fi
   as_fn_set_status $ac_retval
 
 } # ac_fn_c_try_link
+
+# ac_fn_c_check_func LINENO FUNC VAR
+# ----------------------------------
+# Tests whether FUNC exists, setting the cache variable VAR accordingly
+ac_fn_c_check_func ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
+$as_echo_n "checking for $2... " >&6; }
+if eval \${$3+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+/* Define $2 to an innocuous variant, in case <limits.h> declares $2.
+   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
+#define $2 innocuous_$2
+
+/* System header to define __stub macros and hopefully few prototypes,
+    which can conflict with char $2 (); below.
+    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
+    <limits.h> exists even on freestanding compilers.  */
+
+#ifdef __STDC__
+# include <limits.h>
+#else
+# include <assert.h>
+#endif
+
+#undef $2
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char $2 ();
+/* The GNU C library defines this for functions which it implements
+    to always fail with ENOSYS.  Some functions are actually named
+    something starting with __ and the normal name is an alias.  */
+#if defined __stub_$2 || defined __stub___$2
+choke me
+#endif
+
+int
+main ()
+{
+return $2 ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  eval "$3=yes"
+else
+  eval "$3=no"
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+eval ac_res=\$$3
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+
+} # ac_fn_c_check_func
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -4226,6 +4301,11 @@ fi
 
 
 
+
+
+
+
+
 if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
 	if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
@@ -4338,7 +4418,6 @@ $as_echo "yes" >&6; }
 $as_echo "no" >&6; }
 		PKG_CONFIG=""
 	fi
-
 fi
 # Make sure we can run config.sub.
 $SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
@@ -10300,52 +10379,65 @@ AM_BACKSLASH='\'
 ac_config_headers="$ac_config_headers config.h"
 
 
+# Checks for library functions.
+for ac_func in arc4random_uniform
+do :
+  ac_fn_c_check_func "$LINENO" "arc4random_uniform" "ac_cv_func_arc4random_uniform"
+if test "x$ac_cv_func_arc4random_uniform" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_ARC4RANDOM_UNIFORM 1
+_ACEOF
+
+fi
+done
+
+
 # Checks for pkg-config packages
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ICO" >&5
 $as_echo_n "checking for ICO... " >&6; }
 
-if test -n "$PKG_CONFIG"; then
-    if test -n "$ICO_CFLAGS"; then
-        pkg_cv_ICO_CFLAGS="$ICO_CFLAGS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$ICO_CFLAGS"; then
+    pkg_cv_ICO_CFLAGS="$ICO_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"x11 >= 0.99.1 xproto >= 7.0.22\""; } >&5
   ($PKG_CONFIG --exists --print-errors "x11 >= 0.99.1 xproto >= 7.0.22") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_ICO_CFLAGS=`$PKG_CONFIG --cflags "x11 >= 0.99.1 xproto >= 7.0.22" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
-if test -n "$PKG_CONFIG"; then
-    if test -n "$ICO_LIBS"; then
-        pkg_cv_ICO_LIBS="$ICO_LIBS"
-    else
-        if test -n "$PKG_CONFIG" && \
+if test -n "$ICO_LIBS"; then
+    pkg_cv_ICO_LIBS="$ICO_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
     { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"x11 >= 0.99.1 xproto >= 7.0.22\""; } >&5
   ($PKG_CONFIG --exists --print-errors "x11 >= 0.99.1 xproto >= 7.0.22") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
   pkg_cv_ICO_LIBS=`$PKG_CONFIG --libs "x11 >= 0.99.1 xproto >= 7.0.22" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
 fi
-    fi
-else
-	pkg_failed=untried
+ else
+    pkg_failed=untried
 fi
 
 
 
 if test $pkg_failed = yes; then
+   	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
         _pkg_short_errors_supported=yes
@@ -10353,9 +10445,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        ICO_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "x11 >= 0.99.1 xproto >= 7.0.22"`
+	        ICO_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "x11 >= 0.99.1 xproto >= 7.0.22" 2>&1`
         else
-	        ICO_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "x11 >= 0.99.1 xproto >= 7.0.22"`
+	        ICO_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "x11 >= 0.99.1 xproto >= 7.0.22" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$ICO_PKG_ERRORS" >&5
@@ -10369,9 +10461,10 @@ installed software in a non-standard prefix.
 
 Alternatively, you may set the environment variables ICO_CFLAGS
 and ICO_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-" "$LINENO" 5
+See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
+     	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
 	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "The pkg-config script could not be found or is too old.  Make sure it
@@ -10382,14 +10475,14 @@ Alternatively, you may set the environment variables ICO_CFLAGS
 and ICO_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details.
 
-To get pkg-config, see <http://www.freedesktop.org/software/pkgconfig>.
+To get pkg-config, see <http://pkg-config.freedesktop.org/>.
 See \`config.log' for more details" "$LINENO" 5; }
 else
 	ICO_CFLAGS=$pkg_cv_ICO_CFLAGS
 	ICO_LIBS=$pkg_cv_ICO_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	:
+
 fi
 
 XTHREADLIB=`$PKG_CONFIG --variable=xthreadlib x11`
