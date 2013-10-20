@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.147 2013/10/19 19:39:34 okan Exp $
+ * $OpenBSD: conf.c,v 1.148 2013/10/20 01:55:32 okan Exp $
  */
 
 #include <sys/param.h>
@@ -663,7 +663,7 @@ conf_grab_kbd(Window win)
 {
 	struct keybinding	*kb;
 
-	XUngrabKey(X_Dpy, AnyKey, AnyModifier, win);
+	xu_key_ungrab(win);
 
 	TAILQ_FOREACH(kb, &Conf.keybindingq, entry)
 		xu_key_grab(win, kb->modmask, kb->keysym);
