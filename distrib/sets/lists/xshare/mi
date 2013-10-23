@@ -646,8 +646,6 @@
 ./usr/X11R6/include/freetype2/freetype/fttypes.h
 ./usr/X11R6/include/freetype2/freetype/ftwinfnt.h
 ./usr/X11R6/include/freetype2/freetype/ftxf86.h
-./usr/X11R6/include/freetype2/freetype/internal
-./usr/X11R6/include/freetype2/freetype/internal/services
 ./usr/X11R6/include/freetype2/freetype/t1tables.h
 ./usr/X11R6/include/freetype2/freetype/ttnameid.h
 ./usr/X11R6/include/freetype2/freetype/tttables.h
