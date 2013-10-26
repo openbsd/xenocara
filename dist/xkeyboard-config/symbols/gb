@@ -1,6 +1,6 @@
 // based on a keyboard map from an 'xkb/symbols/gb' file
 
-partial default alphanumeric_keys
+default  partial alphanumeric_keys
 xkb_symbols "basic" {
 
     // Describes the differences between a very simple en_US
@@ -74,7 +74,6 @@ xkb_symbols "extd" {
 
     name[Group1]="English (UK, extended WinKeys)";
     
-    // Alphanumeric section
     key <TLDE> { [ dead_grave,    notsign,       brokenbar,    NoSymbol ] };
     
     key <AE02> { [     2,        quotedbl,  dead_diaeresis,     onehalf ] };
@@ -96,7 +95,6 @@ xkb_symbols "extd" {
 
     key <BKSL>  { [ numbersign, asciitilde,     dead_tilde,    NoSymbol ] };
     key <LSGT>  { [  backslash,        bar,       NoSymbol,    NoSymbol ] };
-    // End alphanumeric section
 
     include "level3(ralt_switch)"
 };
@@ -169,10 +167,9 @@ xkb_symbols "mac" {
 
     key <AE02> {	[               2,              at,         EuroSign	]	};
     key <AE03> {	[               3,        sterling,       numbersign	]	};
-    key <LSGT> {	[               grave,  asciitilde ]	};
+    key <TLDE> {	[         section,       plusminus ]	};
+    key <LSGT> {	[           grave,      asciitilde ]	};
 
-    // End alphanumeric section
-    
     include "level3(ralt_switch)"
     include "level3(enter_switch)"
 };
@@ -198,4 +195,11 @@ xkb_symbols "mac_intl" {
     key <LSGT>  { [ dead_grave,        dead_tilde,          brokenbar,        bar ] };
 
     include "level3(ralt_switch)"
+};
+
+// EXTRAS:
+
+partial alphanumeric_keys
+	xkb_symbols "sun_type6" {
+	include "sun_vndr/gb(sun_type6)"
 };

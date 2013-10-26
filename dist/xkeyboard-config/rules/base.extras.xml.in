@@ -7,57 +7,50 @@
       <configItem>
         <name>apl</name>
         <_shortDescription>apl</_shortDescription>
-        <_description>APL Keyboard Symbols</_description>
+        <_description>APL keyboard symbols</_description>
         <languageList><iso639Id>eng</iso639Id></languageList>
       </configItem>
       <variantList>
         <variant>
           <configItem>
             <name>dyalog</name>
-            <shortDescription>dyalog</shortDescription>
-            <description>dyalog</description>
+            <shortDescription>dlg</shortDescription>
+            <description>APL keyboard symbols (Dyalog)</description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>sax</name>
             <shortDescription>sax</shortDescription>
-            <description>sax</description>
+            <description>APL keyboard symbols (sax)</description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>unified</name>
-            <shortDescription>unified</shortDescription>
-            <description>unified</description>
+            <shortDescription>ufd</shortDescription>
+            <description>APL keyboard symbols (unified)</description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>apl2</name>
             <shortDescription>apl2</shortDescription>
-            <description>apl2</description>
+            <description>APL keyboard symbols (IBM APL2)</description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>aplplusII</name>
-            <shortDescription>aplplusII</shortDescription>
-            <description>aplplusII</description>
+            <shortDescription>aplII</shortDescription>
+            <description>APL keyboard symbols (Manugistics APL*PLUS II)</description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>aplx</name>
             <shortDescription>aplx</shortDescription>
-            <description>aplx</description>
-          </configItem>
-        </variant>
-        <variant>
-          <configItem>
-            <name>dyalog_base</name>
-            <shortDescription>dyalog_base</shortDescription>
-            <description>dyalog without box or op-codes</description>
+            <description>APL keyboard symbols (APLX unified)</description>
           </configItem>
         </variant>
       </variantList>
@@ -67,7 +60,7 @@
         <name>ca</name>
         <_shortDescription>fr</_shortDescription>
         <_description>French (Canada)</_description>
-        <languageList><iso639Id>fr</iso639Id></languageList>
+        <languageList><iso639Id>fra</iso639Id></languageList>
       </configItem>
       <variantList>
         <variant>
@@ -82,6 +75,12 @@
             <name>shs</name>
             <_shortDescription>shs</_shortDescription>
             <_description>Secwepemctsin</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Multilingual (Canada, Sun Type 6/7)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -115,6 +114,12 @@
             </languageList>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>German (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -146,6 +151,12 @@
           <configItem>
             <name>us_dvorak</name>
             <_description>Lithuanian (US Dvorak with Lithuanian letters)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Lithuanian (Sun Type 6/7)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -208,6 +219,12 @@
             <_description>Latvian (US Colemak, apostrophe variant)</_description>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Latvian (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -240,7 +257,7 @@
         <variant>
           <configItem>
             <name>crd</name>
-            <_description>Couer D'alene Salish</_description>
+            <_description>Coeur d'Alene Salish</_description>
             <languageList><iso639Id>crd</iso639Id></languageList>
           </configItem>
         </variant>
@@ -252,6 +269,12 @@
                           <iso639Id>cze</iso639Id>
                           <iso639Id>slo</iso639Id>
                           <iso639Id>ger</iso639Id> </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>English (US, Sun Type 6/7)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -268,6 +291,18 @@
           <configItem>
             <name>intl</name>
             <_description>Polish (international with dead keys)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>colemak</name>
+            <_description>Polish (Colemak)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Polish (Sun Type 6/7)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -294,6 +329,12 @@
           <configItem>
             <name>ergonomic</name>
             <_description>Romanian (ergonomic Touchtype)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Romanian (Sun Type 6/7)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -338,6 +379,12 @@
                           <iso639Id>bel</iso639Id></languageList>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Russian (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -362,19 +409,367 @@
       <configItem>
         <name>il</name>
         <_shortDescription>he</_shortDescription>
-        <_description>Hebrew (Biblical SIL)</_description>
+        <_description>Hebrew</_description>
         <languageList><iso639Id>heb</iso639Id></languageList>
       </configItem>
       <variantList>
         <variant>
           <configItem>
-            <name>SIL Phonetic</name>
-            <_description>Biblical SIL phonetic</_description>
+            <name>biblicalSIL</name>
+            <_description>Hebrew (Biblical, SIL phonetic)</_description>
             <languageList><iso639Id>heb</iso639Id></languageList>
           </configItem>
         </variant>
       </variantList>
     </layout>
+    <layout>
+      <configItem>
+        <name>ara</name>
+        <_shortDescription>ar</_shortDescription>
+        <_description>Arabic</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Arabic (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>be</name>
+        <_shortDescription>be</_shortDescription>
+        <_description>Belgian</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Belgian (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>br</name>
+        <_shortDescription>pt</_shortDescription>
+        <_description>Portuguese (Brazil)</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Portuguese (Brazil, Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>cz</name>
+        <_shortDescription>cs</_shortDescription>
+        <_description>Czech</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Czech (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>dk</name>
+        <_shortDescription>da</_shortDescription>
+        <_description>Danish</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Danish (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>nl</name>
+        <_shortDescription>nl</_shortDescription>
+        <_description>Dutch</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Dutch (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>ee</name>
+        <_shortDescription>et</_shortDescription>
+        <_description>Estonian</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Estonian (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>fi</name>
+        <_shortDescription>fi</_shortDescription>
+        <_description>Finnish</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Finnish (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>fr</name>
+        <_shortDescription>fr</_shortDescription>
+        <_description>French</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>French (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>gr</name>
+        <_shortDescription>gr</_shortDescription>
+        <_description>Greek</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Greek (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>it</name>
+        <_shortDescription>it</_shortDescription>
+        <_description>Italian</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Italian (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>jp</name>
+        <_shortDescription>ja</_shortDescription>
+        <_description>Japanese</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Japanese (Sun Type 6)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sun_type7</name>
+            <_description>Japanese (Sun Type 7 - pc compatible)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sun_type7_suncompat</name>
+            <_description>Japanese (Sun Type 7 - sun compatible)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>no</name>
+        <_shortDescription>no</_shortDescription>
+        <_description>Norwegian</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Norwegian (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>pt</name>
+        <_shortDescription>pt</_shortDescription>
+        <_description>Portuguese</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Portuguese (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>sk</name>
+        <_shortDescription>sk</_shortDescription>
+        <_description>Slovak</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Slovak (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>es</name>
+        <_shortDescription>es</_shortDescription>
+        <_description>Spanish</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Spanish (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>se</name>
+        <_shortDescription>sv</_shortDescription>
+        <_description>Swedish</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Swedish (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>ch</name>
+        <_shortDescription>de</_shortDescription>
+        <_description>German (Switzerland)</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6_de</name>
+            <_description>German (Switzerland, Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>sun_type6_fr</name>
+            <_description>French (Switzerland, Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>tr</name>
+        <_shortDescription>tr</_shortDescription>
+        <_description>Turkish</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Turkish (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>ua</name>
+        <_shortDescription>uk</_shortDescription>
+        <_description>Ukrainian</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Ukrainian (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>gb</name>
+        <_shortDescription>en</_shortDescription>
+        <_description>English (UK)</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>English (UK, Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
+    <layout>
+      <configItem>
+        <name>kr</name>
+        <_shortDescription>ko</_shortDescription>
+        <_description>Korean</_description>
+	  </configItem>
+	  <variantList>
+        <variant>
+          <configItem>
+            <name>sun_type6</name>
+            <_description>Korean (Sun Type 6/7)</_description>
+          </configItem>
+        </variant>
+	  </variantList>
+	</layout>
   </layoutList>
   <optionList/>
 </xkbConfigRegistry>

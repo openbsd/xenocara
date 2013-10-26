@@ -97,7 +97,7 @@ xkb_symbols "evdev" {
     key <UNDO>   {      [ Undo                  ]       };
     key <FRNT>   {      [ SunFront              ]       };
     key <COPY>   {      [ XF86Copy              ]       };
-    key <OPEN>   {      [ SunOpen               ]       };
+    key <OPEN>   {      [ XF86Open              ]       };
     key <PAST>   {      [ XF86Paste             ]       };
     key <FIND>   {      [ Find                  ]       };
     key <CUT>    {      [ XF86Cut               ]       };
@@ -119,6 +119,8 @@ xkb_symbols "evdev" {
     key <FK21>   {      [ XF86TouchpadToggle    ]       };
     key <FK22>   {      [ XF86TouchpadOn        ]       };
     key <FK23>   {      [ XF86TouchpadOff       ]       };
+
+    key <FK20>   {      [ XF86AudioMicMute      ]       };
 
 //  key <I120>   {      [ ]       }; // KEY_MACRO 
     key <I126>   {      [ plusminus             ]       };

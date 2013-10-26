@@ -4,14 +4,13 @@ partial default alphanumeric_keys
 xkb_symbols "basic" {
 	name[Group1]= "Sharp WS007SH";
 
-	// Upper row
 	key <AE01> { [ 1, exclam ] };
 	key <AE02> { [ 2, quotedbl ] };
 	key <AE03> { [ 3, numbersign ] };
 	key <AE04> { [ 4, dollar ] };
 	key <AE05> { [ 5, percent ] };
 	key <AE06> { [ 6, ampersand ] };
-	key <AE07> { [ 7, quoteright, quoteleft ] };
+	key <AE07> { [ 7, apostrophe, grave ] };
 	key <AE08> { [ 8, parenleft, braceleft ] };
 	key <AE09> { [ 9, parenright, braceright ] };
 	key <AE10> { [ 0 ] };
@@ -59,9 +58,7 @@ xkb_symbols "basic" {
 
 	key <LCTL> { [ Control_L ] };
 	key <SPCE> { [ space ] };
-	// End alphanumeric section
 	
-	// keypad
 	key <UP> { [ Up, Up, Prior ] };
 	key <LEFT> { [ Left, Left, Home ] };
 	key <DOWN> { [ Down, Down, Next ] };

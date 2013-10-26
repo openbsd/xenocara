@@ -1199,8 +1199,64 @@
     </model>
     <model>
       <configItem>
-        <name>sun6</name>
-        <_description>Sun Type 5/6</_description>
+        <name>sun_type7_usb</name>
+        <_description>Sun Type 7 USB</_description>
+        <vendor>Sun Microsystems</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>sun_type7_euro_usb</name>
+        <_description>Sun Type 7 USB (European layout)</_description>
+        <vendor>Sun Microsystems</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>sun_type7_unix_usb</name>
+        <_description>Sun Type 7 USB (Unix layout)</_description>
+        <vendor>Sun Microsystems</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>sun_type7_jp_usb</name>
+        <_description>Sun Type 7 USB (Japanese layout) / Japanese 106-key</_description>
+        <vendor>Sun Microsystems</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>sun_type6_usb</name>
+        <_description>Sun Type 6/7 USB</_description>
+        <vendor>Sun Microsystems</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>sun_type6_euro_usb</name>
+        <_description>Sun Type 6/7 USB (European layout)</_description>
+        <vendor>Sun Microsystems</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>sun_type6_unix_usb</name>
+        <_description>Sun Type 6 USB (Unix layout)</_description>
+        <vendor>Sun Microsystems</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>sun_type6_jp_usb</name>
+        <_description>Sun Type 6 USB (Japanese layout)</_description>
+        <vendor>Sun Microsystems</vendor>
+      </configItem>
+    </model>
+    <model>
+      <configItem>
+        <name>sun_type6_jp</name>
+        <_description>Sun Type 6 (Japanese layout)</_description>
         <vendor>Sun Microsystems</vendor>
       </configItem>
     </model>
@@ -1296,7 +1352,7 @@
         <variant>
           <configItem>
             <name>dvorak-intl</name>
-            <_description>English (Dvorak international with dead keys)</_description>
+            <_description>English (Dvorak, international with dead keys)</_description>
           </configItem>
         </variant>
         <variant>
@@ -1358,7 +1414,7 @@
         <variant>
           <configItem>
             <name>olpc2</name>
-            <_description>English (layout toggle on multiply/divide key)</_description>
+            <_description>English (the divide/multiply keys toggle the layout)</_description>
           </configItem>
         </variant>
         <variant>
@@ -1372,19 +1428,19 @@
                           <iso639Id>srp</iso639Id> </languageList>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>workman</name>
+            <_description>English (Workman)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>workman-intl</name>
+            <_description>English (Workman, international with dead keys)</_description>
+           </configItem>
+         </variant>
       </variantList>
-    </layout>
-    <layout>
-      <configItem>
-        <name>ad</name>
-        <!-- Keyboard indicator for Catalan layouts -->
-        <_shortDescription>ca</_shortDescription>
-        <_description>Catalan</_description>
-        <languageList>
-          <iso639Id>cat</iso639Id>
-        </languageList>
-      </configItem>
-      <variantList/>
     </layout>
     <layout>
       <configItem>
@@ -1668,7 +1724,7 @@
         <variant>
           <configItem>
             <name>oss_latin9</name>
-            <_description>Belgian (alternative, latin-9 only)</_description>
+            <_description>Belgian (alternative, Latin-9 only)</_description>
           </configItem>
         </variant>
         <variant>
@@ -1826,6 +1882,17 @@
         </variant>
         <variant>
           <configItem>
+            <name>kan-kagapa</name>
+            <!-- Keyboard indicator for Kannada layouts -->
+            <_shortDescription>kn</_shortDescription>
+            <_description>Kannada (KaGaPa phonetic)</_description>
+            <languageList>
+              <iso639Id>kan</iso639Id>
+            </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>mal</name>
             <!-- Keyboard indicator for Malayalam layouts -->
             <_shortDescription>ml</_shortDescription>
@@ -1934,6 +2001,17 @@
         </variant>
         <variant>
           <configItem>
+            <name>tel-kagapa</name>
+            <!-- Keyboard indicator for Telugu layouts -->
+            <_shortDescription>te</_shortDescription>
+            <_description>Telugu (KaGaPa phonetic)</_description>
+            <languageList>
+              <iso639Id>tel</iso639Id>
+            </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>urd-phonetic</name>
             <!-- Keyboard indicator for Urdu layouts -->
             <_shortDescription>ur</_shortDescription>
@@ -1984,6 +2062,39 @@
             <_description>Hindi (Wx)</_description>
             <languageList>
               <iso639Id>hin</iso639Id>
+            </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>hin-kagapa</name>
+            <!-- Keyboard indicator for Hindi layouts -->
+            <_shortDescription>hi</_shortDescription>
+            <_description>Hindi (KaGaPa phonetic)</_description>
+            <languageList>
+              <iso639Id>hin</iso639Id>
+            </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>san-kagapa</name>
+            <!-- Keyboard indicator for Sanskrit layouts -->
+            <_shortDescription>sa</_shortDescription>
+            <_description>Sanskrit (KaGaPa phonetic)</_description>
+            <languageList>
+              <iso639Id>san</iso639Id>
+            </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>mar-kagapa</name>
+            <!-- Keyboard indicator for Marathi layouts -->
+            <_shortDescription>mr</_shortDescription>
+            <_description>Marathi (KaGaPa phonetic)</_description>
+            <languageList>
+              <iso639Id>mar</iso639Id>
             </languageList>
           </configItem>
         </variant>
@@ -2069,7 +2180,7 @@
         <variant>
           <configItem>
             <name>nativo-us</name>
-            <_description>Portuguese (Brazil, nativo for USA keyboards)</_description>
+            <_description>Portuguese (Brazil, nativo for US keyboards)</_description>
           </configItem>
         </variant>
         <variant>
@@ -2433,7 +2544,7 @@
         <_shortDescription>hr</_shortDescription>
         <_description>Croatian</_description>
         <languageList>
-          <iso639Id>scr</iso639Id>
+          <iso639Id>hrv</iso639Id>
         </languageList>
       </configItem>
       <variantList>
@@ -2824,7 +2935,7 @@
         <variant>
           <configItem>
             <name>oss_latin9</name>
-            <_description>French (alternative, latin-9 only)</_description>
+            <_description>French (alternative, Latin-9 only)</_description>
           </configItem>
         </variant>
         <variant>
@@ -2866,7 +2977,7 @@
         <variant>
           <configItem>
             <name>bepo_latin9</name>
-            <_description>French (Bepo, ergonomic, Dvorak way, latin-9 only)</_description>
+            <_description>French (Bepo, ergonomic, Dvorak way, Latin-9 only)</_description>
           </configItem>
         </variant>
         <variant>
@@ -3086,6 +3197,12 @@
         </variant>
         <variant>
           <configItem>
+            <name>T3</name>
+            <_description>German (T3)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>ro</name>
             <_description>Romanian (Germany)</_description>
             <languageList><iso639Id>rum</iso639Id></languageList>
@@ -3155,10 +3272,18 @@
         <variant>
           <configItem>
             <name>ru</name>
+            <!-- Keyboard indicator for Russian layouts -->
+            <_shortDescription>ru</_shortDescription>
             <_description>Russian (Germany, phonetic)</_description>
             <languageList>
               <iso639Id>rus</iso639Id>
             </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>legacy</name>
+            <_description>German (legacy)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -3431,6 +3556,12 @@
             <languageList>
               <iso639Id>geo</iso639Id>
             </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>ibm</name>
+            <_description>Italian (IBM 142)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -3819,7 +3950,7 @@
         <_shortDescription>mn</_shortDescription>
         <_description>Mongolian</_description>
         <languageList>
-          <iso639Id>mng</iso639Id>
+          <iso639Id>mon</iso639Id>
         </languageList>
       </configItem>
       <variantList/>
@@ -3898,6 +4029,12 @@
       <variantList>
         <variant>
           <configItem>
+            <name>legacy</name>
+            <_description>Polish (legacy)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>qwertz</name>
             <_description>Polish (qwertz)</_description>
           </configItem>
@@ -3927,6 +4064,13 @@
             <languageList>
               <iso639Id>csb</iso639Id>
             </languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>szl</name>
+            <description>Silesian</description>
+            <languageList><iso639Id>szl</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
@@ -3998,7 +4142,7 @@
         <variant>
           <configItem>
             <name>nativo-us</name>
-            <_description>Portuguese (Nativo for USA keyboards)</_description>
+            <_description>Portuguese (Nativo for US keyboards)</_description>
           </configItem>
         </variant>
         <variant>
@@ -4179,6 +4323,12 @@
         </variant>
         <variant>
           <configItem>
+            <name>mac</name>
+            <_description>Russian (Macintosh)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>srp</name>
             <_description>Serbian (Russia)</_description>
             <languageList><iso639Id>rus</iso639Id>
@@ -4210,7 +4360,7 @@
         <name>rs</name>
         <!-- Keyboard indicator for Serbian layouts -->
         <_shortDescription>sr</_shortDescription>
-        <_description>Serbian (Cyrillic)</_description>
+        <_description>Serbian</_description>
         <languageList>
           <iso639Id>srp</iso639Id>
         </languageList>
@@ -4796,7 +4946,7 @@
         <_shortDescription>zh</_shortDescription>
         <_description>Taiwanese</_description>
         <languageList>
-          <iso639Id>trv</iso639Id>
+          <iso639Id>fox</iso639Id>
         </languageList>
       </configItem>
       <variantList>
@@ -4816,6 +4966,11 @@
               <iso639Id>ssf</iso639Id>
               <iso639Id>tao</iso639Id>
               <iso639Id>tsu</iso639Id>
+              <iso639Id>trv</iso639Id>
+              <iso639Id>xnb</iso639Id>
+              <iso639Id>sxr</iso639Id>
+              <iso639Id>uun</iso639Id>
+              <iso639Id>fos</iso639Id>
             </languageList>
           </configItem>
         </variant>
@@ -5023,7 +5178,7 @@
             <name>CloGaelach</name>
             <_description>CloGaelach</_description>
             <languageList>
-              <iso639Id>gla</iso639Id>
+              <iso639Id>gle</iso639Id>
             </languageList>
           </configItem>
         </variant>
@@ -5093,7 +5248,7 @@
             <_shortDescription>sd</_shortDescription>
             <_description>Sindhi</_description>
             <languageList>
-              <iso639Id>sd</iso639Id>
+              <iso639Id>snd</iso639Id>
             </languageList>
           </configItem>
         </variant>
@@ -5281,7 +5436,7 @@
             <_shortDescription>fr</_shortDescription>
             <_description>French (Mali, alternative)</_description>
             <languageList>
-              <iso639Id>fr</iso639Id>
+              <iso639Id>fra</iso639Id>
             </languageList>
           </configItem>
         </variant>
@@ -5291,6 +5446,9 @@
             <!-- Keyboard indicator for English layouts -->
             <_shortDescription>en</_shortDescription>
             <_description>English (Mali, US Macintosh)</_description>
+            <languageList>
+              <iso639Id>eng</iso639Id>
+            </languageList>
           </configItem>
         </variant>
         <variant>
@@ -5299,6 +5457,9 @@
             <!-- Keyboard indicator for English layouts -->
             <_shortDescription>en</_shortDescription>
             <_description>English (Mali, US international)</_description>
+            <languageList>
+              <iso639Id>eng</iso639Id>
+            </languageList>
           </configItem>
         </variant>
       </variantList>
@@ -5486,7 +5647,7 @@
           <configItem>
             <name>gag</name>
             <_shortDescription>gag</_shortDescription>
-            <_description>Gagauz</_description>
+            <_description>Moldavian (Gagauz)</_description>
             <languageList><iso639Id>gag</iso639Id></languageList>
           </configItem>
         </variant>
@@ -5498,7 +5659,7 @@
       <!-- The key combination used to switch between groups -->
       <configItem>
         <name>grp</name>
-        <_description>Key(s) to change layout</_description>
+        <_description>Switching to another layout</_description>
       </configItem>
       <option>
         <configItem>
@@ -5763,7 +5924,7 @@
       <option>
         <configItem>
           <name>lv3:ralt_switch_multikey</name>
-          <_description>Right Alt, Shift+Right Alt key is Multi_Key</_description>
+          <_description>Right Alt, Shift+Right Alt key is Compose</_description>
         </configItem>
       </option>
       <option>
@@ -5899,7 +6060,7 @@
       <!-- Select a keypad type -->
       <configItem>
         <name>keypad</name>
-        <_description>Numeric keypad layout selection</_description>
+        <_description>Layout of numeric keypad</_description>
       </configItem>
       <option>
         <configItem>
@@ -5916,7 +6077,7 @@
       <option>
         <configItem>
           <name>keypad:future</name>
-          <_description>Unicode additions (arrows and math operators). Math operators on default level</_description>
+          <_description>Unicode additions (arrows and math operators; math operators on default level)</_description>
        </configItem>
       </option>
       <option>
@@ -5934,7 +6095,7 @@
       <option>
         <configItem>
           <name>keypad:future_wang</name>
-          <_description>Wang 724 keypad with Unicode additions (arrows and math operators). Math operators on default level</_description>
+          <_description>Wang 724 keypad with Unicode additions (arrows and math operators; math operators on default level)</_description>
        </configItem>
       </option>
       <option>
@@ -5980,7 +6141,7 @@
       <option>
         <configItem>
           <name>kpdl:dotoss_latin9</name>
-          <_description>Four-level key with dot, latin-9 restriction</_description>
+          <_description>Four-level key with dot, Latin-9 only</_description>
        </configItem>
       </option>
       <option>
@@ -6006,7 +6167,7 @@
       <option>
         <configItem>
           <name>kpdl:semi</name>
-          <_description>Semi-colon on third level</_description>
+          <_description>Semicolon on third level</_description>
        </configItem>
       </option>
     </group>
@@ -6021,25 +6182,25 @@
       <option>
         <configItem>
           <name>caps:internal</name>
-          <_description>Caps Lock uses internal capitalization. Shift "pauses" Caps Lock</_description>
+          <_description>Caps Lock uses internal capitalization; Shift "pauses" Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:internal_nocancel</name>
-          <_description>Caps Lock uses internal capitalization. Shift doesn't affect Caps Lock</_description>
+          <_description>Caps Lock uses internal capitalization; Shift doesn't affect Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:shift</name>
-          <_description>Caps Lock acts as Shift with locking. Shift "pauses" Caps Lock</_description>
+          <_description>Caps Lock acts as Shift with locking; Shift "pauses" Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>caps:shift_nocancel</name>
-          <_description>Caps Lock acts as Shift with locking. Shift doesn't affect Caps Lock</_description>
+          <_description>Caps Lock acts as Shift with locking; Shift doesn't affect Caps Lock</_description>
         </configItem>
       </option>
       <option>
@@ -6087,7 +6248,7 @@
       <option>
         <configItem>
           <name>caps:shiftlock</name>
-          <_description>Caps Lock toggles Shift so all keys are affected</_description>
+          <_description>Caps Lock toggles ShiftLock (affects all keys)</_description>
         </configItem>
       </option>
       <option>
@@ -6099,7 +6260,7 @@
       <option>
         <configItem>
           <name>caps:ctrl_modifier</name>
-          <_description>Make Caps Lock an additional Control but keep the Caps_Lock keysym</_description>
+          <_description>Make Caps Lock an additional Ctrl</_description>
         </configItem>
       </option>
     </group>
@@ -6123,14 +6284,20 @@
       </option>
       <option>
         <configItem>
+          <name>altwin:alt_win</name>
+          <_description>Alt is mapped to Win keys (and the usual Alt keys)</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>altwin:ctrl_win</name>
-          <_description>Control is mapped to Win keys (and the usual Ctrl keys)</_description>
+          <_description>Ctrl is mapped to Win keys (and the usual Ctrl keys)</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>altwin:ctrl_alt_win</name>
-          <_description>Control is mapped to Alt keys, Alt is mapped to Win keys</_description>
+          <_description>Ctrl is mapped to Alt keys, Alt is mapped to Win keys</_description>
         </configItem>
       </option>
       <option>
@@ -6159,8 +6326,8 @@
       </option>
       <option>
         <configItem>
-          <name>altwin:swap_lalt_lwin</name>
-          <_description>Left Alt is swapped with Left Win</_description>
+          <name>altwin:swap_alt_win</name>
+          <_description>Alt is swapped with Win</_description>
         </configItem>
       </option>
     </group>
@@ -6168,7 +6335,7 @@
       <!-- Tweaking the position of the "Compose" key: mapping to existing PC keys -->
       <configItem>
         <name>Compose key</name>
-        <_description>Compose key position</_description>
+        <_description>Position of Compose key</_description>
       </configItem>
       <option>
         <configItem>
@@ -6184,8 +6351,20 @@
       </option>
       <option>
         <configItem>
+          <name>compose:lwin-altgr</name>
+          <_description>3rd level of Left Win</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>compose:rwin</name>
           <_description>Right Win</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>compose:rwin-altgr</name>
+          <_description>3rd level of Right Win</_description>
         </configItem>
       </option>
       <option>
@@ -6196,8 +6375,20 @@
       </option>
       <option>
         <configItem>
+          <name>compose:menu-altgr</name>
+          <_description>3rd level of Menu</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>compose:lctrl</name>
           <_description>Left Ctrl</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>compose:lctrl-altgr</name>
+          <_description>3rd level of Left Ctrl</_description>
         </configItem>
       </option>
       <option>
@@ -6208,14 +6399,32 @@
       </option>
       <option>
         <configItem>
+          <name>compose:rctrl-altgr</name>
+          <_description>3rd level of Right Ctrl</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>compose:caps</name>
           <_description>Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
+          <name>compose:caps-altgr</name>
+          <_description>3rd level of Caps Lock</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>compose:102</name>
           <_description>&lt;Less/Greater&gt;</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>compose:102-altgr</name>
+          <_description>3rd level of &lt;Less/Greater&gt;</_description>
         </configItem>
       </option>
       <option>
@@ -6293,25 +6502,25 @@
       <option>
         <configItem>
           <name>shift:both_capslock</name>
-          <_description>Both Shift-Keys together toggle Caps Lock</_description>
+          <_description>Both Shift keys together toggle Caps Lock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>shift:both_capslock_cancel</name>
-          <_description>Both Shift-Keys together activate Caps Lock, one Shift-Key deactivates</_description>
+          <_description>Both Shift keys together activate Caps Lock, one Shift key deactivates</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>shift:both_shiftlock</name>
-          <_description>Both Shift-Keys together toggle ShiftLock</_description>
+          <_description>Both Shift keys together toggle ShiftLock</_description>
         </configItem>
       </option>
       <option>
         <configItem>
           <name>keypad:pointerkeys</name>
-          <_description>Toggle PointerKeys with Shift + NumLock.</_description>
+          <_description>Shift + NumLock toggles PointerKeys</_description>
         </configItem>
       </option>
       <option>
@@ -6324,7 +6533,7 @@
     <group allowMultipleSelection="true">
       <!-- Special shortcuts for the Euro character -->
       <configItem>
-        <name>eurosign</name>
+        <name>currencysign</name>
         <_description>Adding currency signs to certain keys</_description>
       </configItem>
       <option>
@@ -6556,19 +6765,37 @@
     <group allowMultipleSelection="false">
       <configItem>
         <name>esperanto</name>
-        <_description>Adding Esperanto circumflexes (supersigno)</_description>
+        <_description>Adding Esperanto supersigned letters</_description>
       </configItem>
       <option>
         <configItem>
           <name>esperanto:qwerty</name>
-          <_description>To the corresponding key in a Qwerty keyboard.</_description>
+          <_description>To the corresponding key in a Qwerty layout</_description>
        </configItem>
       </option>
       <option>
         <configItem>
           <name>esperanto:dvorak</name>
-          <_description>To the corresponding key in a Dvorak keyboard.</_description>
+          <_description>To the corresponding key in a Dvorak layout</_description>
        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>esperanto:colemak</name>
+          <_description>To the corresponding key in a Colemak layout</_description>
+       </configItem>
+      </option>
+    </group>
+    <group allowMultipleSelection="true">
+      <configItem>
+        <name>solaris</name>
+        <_description>Maintain key compatibility with old Solaris keycodes</_description>
+      </configItem>
+      <option>
+        <configItem>
+          <name>solaris:sun_compat</name>
+          <_description>Sun Key compatibility</_description>
+        </configItem>
       </option>
     </group>
     <group allowMultipleSelection="true">
@@ -6579,7 +6806,7 @@
       <option>
         <configItem>
           <name>terminate:ctrl_alt_bksp</name>
-          <_description>Control + Alt + Backspace</_description>
+          <_description>Ctrl + Alt + Backspace</_description>
         </configItem>
       </option>
     </group>

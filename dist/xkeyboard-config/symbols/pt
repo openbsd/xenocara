@@ -1,13 +1,13 @@
 // based on a keyboard map from an 'xkb/symbols/pt' file
 
-partial default alphanumeric_keys
+default  partial alphanumeric_keys
 xkb_symbols "basic" {
 
     include "latin(type4)"
 
     name[Group1]="Portuguese";
 
-    key <LSGT>  { [      less,    greater ] };
+    key <LSGT>  { [      less,    greater,    backslash,    backslash ] };
     key <AE03>	{ [         3, numbersign,     sterling,     sterling ]	};
     key <AE04>	{ [         4,     dollar,      section,       dollar ]	};
     key <AE11>	{ [apostrophe,   question,    backslash, questiondown ]	};
@@ -62,9 +62,6 @@ xkb_symbols "nodeadkeys" {
 // Copied from macintosh_vndr/pt
 partial alphanumeric_keys 
 xkb_symbols "mac" {
-
-    // Describes the differences between a very simple en_US
-    // keyboard and a very simple Portuguese keybaord
 
     include "pt"
     name[Group1]= "Portuguese (Macintosh)";
@@ -186,7 +183,7 @@ partial alphanumeric_keys
 xkb_symbols "nativo-us" {
     include "pt(nativo)"
 
-    name[Group1]="Portuguese (Nativo for USA keyboards)";
+    name[Group1]="Portuguese (Nativo for US keyboards)";
 
 // Lower row
     key <AB01> { [            y,               Y,              ccedilla,        Ccedilla ] };
@@ -217,4 +214,11 @@ xkb_symbols "nativo-epo" {
     key <AB02> { [  scircumflex,     Scircumflex,             ccedilla,         Ccedilla ] };
     key <AB06> { [  gcircumflex,     Gcircumflex,                    q,                Q ] };
 
+};
+
+// EXTRAS:
+
+partial alphanumeric_keys
+	xkb_symbols "sun_type6" {
+	include "sun_vndr/pt(sun_type6)"
 };

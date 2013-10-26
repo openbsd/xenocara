@@ -15,7 +15,7 @@
 // 1999, Pablo Saratxaga <srtxg@chanae.alphanet.ch>
 //
 
-partial default alphanumeric_keys
+default  partial alphanumeric_keys
 xkb_symbols "basic" {
 
     name[Group1]= "Georgian";
@@ -149,7 +149,7 @@ xkb_symbols "mess" {
 
     name[Group1]= "Georgian (MESS)";
 
-    key <TLDE> { [ 0x010010ed, backslash, quoteleft ] };
+    key <TLDE> { [ 0x010010ed, backslash, grave ] };
     key <AE01> { [ 1, exclam, apostrophe ] };
     key <AE02> { [ 2, at, asciitilde ] };
     key <AE03> { [ 3, 0x01002116, numbersign ]	};

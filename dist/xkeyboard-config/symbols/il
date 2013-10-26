@@ -4,7 +4,7 @@
 // It does not implement changes to the English layout ("Alt-English"), 
 // as I believe that it is not the job of this layout to modify the English
 // layout.
-partial default alphanumeric_keys 
+default  partial alphanumeric_keys
 xkb_symbols "basic" {
     // uses the kbd layout in use in Israel.
 
@@ -126,8 +126,16 @@ xkb_symbols "lyx" {
     // Note the parens mirroring below:
     key <AD11> { [ bracketright,	braceright	]       };
     key <AD12> { [ bracketleft,	braceleft	]       };
-    key <AE09> { [ 9         ,	parenright	]       };
-    key <AE10> { [ 0         ,	parenleft	]       };
+    key <AE01> { [ 1, exclam      ]};
+    key <AE02> { [ 2, at          ]};
+    key <AE03> { [ 3, numbersign  ]};
+    key <AE04> { [ 4, dollar      ]};
+    key <AE05> { [ 5, percent     ]};
+    key <AE06> { [ 6, asciicircum ]};
+    key <AE07> { [ 7, ampersand   ]};
+    key <AE08> { [ 8, asterisk    ]};
+    key <AE09> { [ 9, parenright  ]};
+    key <AE10> { [ 0, parenleft	  ]};
     
     key <AE11> { [ minus     ,	0x10005be	]	}; // H. Hiphen
     key <AE12> { [ equal     ,	plus		]	};
@@ -250,6 +258,8 @@ xkb_symbols "biblical" {
 	key <SPCE> { [ space, space, thinspace, nobreakspace ] };
 };
 
+// EXTRAS
+
 // Biblical hebrew (SIL) US Standard layout version 1.5
 // This map is based closely on v 1.5 of the standard. The only deviation being the replacement of the composite characters sin and shin 
 // by their more recent Unicodev6 counterparts
@@ -259,7 +269,7 @@ xkb_symbols "biblical" {
 // This linux port created and maintained by Dennis Meulensteen, dennis@meulensteen.nl
 partial alphanumeric_keys 
 xkb_symbols "biblicalSIL" {
-	name[Group1]= "Israel - Biblical Hebrew SIL Phonetic";
+	name[Group1]= "Hebrew (Biblical, SIL phonetic)";
 	key.type = "FOUR_LEVEL_SEMIALPHABETIC";
 
 	key <TLDE> { [ U20AC,		U20AA,		U0024 ] }; 			//Euro, 		Shekel, 		Dollar		-

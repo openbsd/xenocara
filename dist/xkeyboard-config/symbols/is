@@ -7,7 +7,7 @@
 //     Some positions are according to IST ISO/IEC 9995-3:1994
 //     Added nobreakspace
 
-default partial alphanumeric_keys
+default  partial alphanumeric_keys
 xkb_symbols "basic" {
 
     include "latin(type4)"
@@ -33,7 +33,7 @@ xkb_symbols "basic" {
 //  <AB00> = <LSGT>, is in file "pc": pc105
     key <AB10>	{ [     thorn,      THORN, dead_belowdot, dead_abovedot ] };
 
-    key <SPCE>  { [     space,      space,  nobreakspace, nobreakspace ] };
+    key <SPCE>  { [     space,      space,  space, space ] };
 
     include "level3(ralt_switch)"
 };

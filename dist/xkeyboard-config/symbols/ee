@@ -2,7 +2,7 @@
 // Estonian XKB-keymap by Ville Hallik <ville@linux.ee>
 //
 
-partial default alphanumeric_keys
+default  partial alphanumeric_keys
 xkb_symbols "basic" {
 
     // Describes the differences between a very simple en_US
@@ -90,7 +90,7 @@ xkb_symbols "us" {
     // š, Š
     key <AC02>	{ [           s,  S,          scaron,     Scaron     ]	};
     key <AC10>	{ [ semicolon,    colon,      odiaeresis, Odiaeresis ]	};
-    key <AC11>	{ [ quoteright,   quotedbl,   adiaeresis, Adiaeresis ]	};
+    key <AC11>	{ [ apostrophe,   quotedbl,   adiaeresis, Adiaeresis ]	};
     key <AD11>	{ [ bracketleft,  braceleft,  udiaeresis, Udiaeresis ]	};
     key <AD12>	{ [ bracketright, braceright, otilde,     Otilde     ]	};
     // £
@@ -98,4 +98,11 @@ xkb_symbols "us" {
 
     include "level3(ralt_switch)"
     include "eurosign(e)"
+};
+
+// EXTRAS:
+
+partial alphanumeric_keys
+	xkb_symbols "sun_type6" {
+	include "sun_vndr/ee(sun_type6)"
 };
