@@ -29,7 +29,6 @@ extern int ws_debug_level;
 #define NAXES		2	/* X and Y axes only */
 #define NBUTTONS	32	/* max theoretical buttons */
 #define DFLTBUTTONS	3	/* default number of buttons */
-#define NUMEVENTS	16	/* max # of ws events to read at once */
 
 #define WS_NOMAP	0
 
@@ -39,6 +38,12 @@ typedef struct {
 	int positive;
 	int traveled_distance;
 } WheelAxis, *WheelAxisPtr;
+
+typedef struct {
+	unsigned int buttons;
+	int dx, dy, dz, dw;
+	int ax, ay;
+} wsHwState;
 
 typedef struct WSDevice {
 	char *devName;			/* device name */
@@ -50,7 +55,6 @@ typedef struct WSDevice {
 	int raw;
 	int inv_x, inv_y;
 	int screen_no;
-	pointer buffer;
 	WheelAxis Z;
 	WheelAxis W;
 	struct wsmouse_calibcoords coords; /* mirror of the kernel values */

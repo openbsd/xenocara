@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.58 2013/07/20 13:24:50 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.59 2013/10/30 18:05:34 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -428,13 +428,6 @@ wsDeviceOn(DeviceIntPtr pWS)
 			}
 		}
 	}
-	priv->buffer = XisbNew(pInfo->fd,
-	    sizeof(struct wscons_event) * NUMEVENTS);
-	if (priv->buffer == NULL) {
-		xf86IDrvMsg(pInfo, X_ERROR, "cannot alloc xisb buffer\n");
-		wsClose(pInfo);
-		return !Success;
-	}
 	xf86AddEnabledDevice(pInfo);
 	wsmbEmuOn(pInfo);
 	pWS->public.on = TRUE;
@@ -462,170 +455,157 @@ wsDeviceOff(DeviceIntPtr pWS)
 		xf86RemoveEnabledDevice(pInfo);
 		wsClose(pInfo);
 	}
-	if (priv->buffer) {
-		XisbFree(priv->buffer);
-		priv->buffer = NULL;
-	}
 	pWS->public.on = FALSE;
+}
+
+static Bool
+wsReadEvent(InputInfoPtr pInfo, struct wscons_event *event)
+{
+	Bool rc = TRUE;
+	ssize_t len;
+
+	len = read(pInfo->fd, event, sizeof(struct wscons_event));
+	if (len <= 0) {
+		if (errno != EAGAIN)
+			xf86IDrvMsg(pInfo, X_ERROR, "read error %s\n",
+			    strerror(errno));
+		rc = FALSE;
+	} else if (len != sizeof(struct wscons_event)) {
+		xf86IDrvMsg(pInfo, X_ERROR,
+		    "read error, invalid number of bytes\n");
+		rc = FALSE;
+	}
+
+	return rc;
+}
+
+static Bool
+wsReadHwState(InputInfoPtr pInfo, wsHwState *hw)
+{
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
+	struct wscons_event event;
+
+	bzero(hw, sizeof(wsHwState));
+
+	hw->buttons = priv->lastButtons;
+	hw->ax = priv->old_ax;
+	hw->ay = priv->old_ay;
+
+	while (wsReadEvent(pInfo, &event)) {
+		switch (event.type) {
+		case WSCONS_EVENT_MOUSE_UP:
+			hw->buttons &= ~(1 << event.value);
+			DBG(4, ErrorF("Button %d up %x\n", event.value,
+			    hw->buttons));
+			break;
+		case WSCONS_EVENT_MOUSE_DOWN:
+			hw->buttons |= (1 << event.value);
+			DBG(4, ErrorF("Button %d down %x\n", event.value,
+			    hw->buttons));
+			break;
+		case WSCONS_EVENT_MOUSE_DELTA_X:
+			hw->dx = event.value;
+			DBG(4, ErrorF("Relative X %d\n", event.value));
+			break;
+		case WSCONS_EVENT_MOUSE_DELTA_Y:
+			hw->dy = -event.value;
+			DBG(4, ErrorF("Relative Y %d\n", event.value));
+			break;
+		case WSCONS_EVENT_MOUSE_DELTA_Z:
+			hw->dz = event.value;
+			DBG(4, ErrorF("Relative Z %d\n", event.value));
+			break;
+		case WSCONS_EVENT_MOUSE_DELTA_W:
+			hw->dw = event.value;
+			DBG(4, ErrorF("Relative W %d\n", event.value));
+			break;
+		case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
+			hw->ax = event.value;
+			if (priv->inv_x)
+				hw->ax = priv->max_x - hw->ax + priv->min_x;
+			DBG(4, ErrorF("Absolute X %d\n", event.value));
+			break;
+		case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
+			hw->ay = event.value;
+			if (priv->inv_y)
+				hw->ay = priv->max_y - hw->ay + priv->min_y;
+			DBG(4, ErrorF("Absolute Y %d\n", event.value));
+			break;
+		case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
+		case WSCONS_EVENT_MOUSE_ABSOLUTE_W:
+			/* ignore those */
+			continue;
+		case WSCONS_EVENT_SYNC:
+			DBG(4, ErrorF("Sync\n"));
+			return TRUE;
+		default:
+			xf86IDrvMsg(pInfo, X_WARNING,
+			    "bad wsmouse event type=%d\n", event.type);
+			continue;
+		}
+#ifdef __NetBSD__
+		/*
+		 * XXX NetBSD reads only one event.
+		 * WSCONS_EVENT_SYNC is not supported yet.
+		 */
+		return TRUE;
+#endif
+	}
+
+	return FALSE;
 }
 
 static void
 wsReadInput(InputInfoPtr pInfo)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
-	static struct wscons_event eventList[NUMEVENTS];
-	int n, c, dx, dy;
-	struct wscons_event *event = eventList;
-	unsigned char *pBuf;
+	wsHwState hw;
 
-	XisbBlockDuration(priv->buffer, -1);
-	pBuf = (unsigned char *)eventList;
-	n = 0;
-	while (n < sizeof(eventList) && (c = XisbRead(priv->buffer)) >= 0) {
-		pBuf[n++] = (unsigned char)c;
-	}
-
-	if (n == 0)
+	if (!wsReadHwState(pInfo, &hw))
 		return;
 
-	dx = dy = 0;
-	n /= sizeof(struct wscons_event);
-	while (n--) {
-		int buttons = priv->lastButtons;
-		int newdx = 0, newdy = 0, dz = 0, dw = 0, ax = 0, ay = 0;
-		int zbutton = 0, wbutton = 0;
-
-		switch (event->type) {
-		case WSCONS_EVENT_MOUSE_UP:
-			buttons &= ~(1 << event->value);
-			DBG(4, ErrorF("Button %d up %x\n", event->value,
-			    buttons));
-			break;
-		case WSCONS_EVENT_MOUSE_DOWN:
-			buttons |= (1 << event->value);
-			DBG(4, ErrorF("Button %d down %x\n", event->value,
-			    buttons));
-			break;
-		case WSCONS_EVENT_MOUSE_DELTA_X:
-			if (!dx)
-				dx = event->value;
-			else
-				newdx = event->value;
-			DBG(4, ErrorF("Relative X %d\n", event->value));
-			break;
-		case WSCONS_EVENT_MOUSE_DELTA_Y:
-			if (!dy)
-				dy = -event->value;
-			else
-				newdy = -event->value;
-			DBG(4, ErrorF("Relative Y %d\n", event->value));
-			break;
-		case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
-			DBG(4, ErrorF("Absolute X %d\n", event->value));
-			if (event->value == 4095)
-				break;
-			ax = event->value;
-			if (priv->inv_x)
-				ax = priv->max_x - ax + priv->min_x;
-			break;
-		case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
-			DBG(4, ErrorF("Absolute Y %d\n", event->value));
-			ay = event->value;
-			if (priv->inv_y)
-				ay = priv->max_y - ay + priv->min_y;
-			break;
-		case WSCONS_EVENT_MOUSE_DELTA_Z:
-			DBG(4, ErrorF("Relative Z %d\n", event->value));
-			dz = event->value;
-			break;
-		case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
-			/* ignore those */
-			++event;
-			continue;
-			break;
-		case WSCONS_EVENT_MOUSE_DELTA_W:
-			DBG(4, ErrorF("Relative W %d\n", event->value));
-			dw = event->value;
-			break;
-		default:
-			xf86IDrvMsg(pInfo, X_WARNING,
-			    "bad wsmouse event type=%d\n", event->type);
-			++event;
-			continue;
-		}
-		++event;
-
-		if ((newdx || newdy) || ((dx || dy) &&
-		    event->type != WSCONS_EVENT_MOUSE_DELTA_X &&
-		    event->type != WSCONS_EVENT_MOUSE_DELTA_Y)) {
-			int tmpx = dx, tmpy = dy;
-			dx = newdx;
-			dy = newdy;
-
-			if (wsWheelEmuFilterMotion(pInfo, tmpx, tmpy))
-				continue;
-
-			/* relative motion event */
-			DBG(3, ErrorF("postMotionEvent dX %d dY %d\n",
-			    tmpx, tmpy));
-			xf86PostMotionEvent(pInfo->dev, 0, 0, 2, tmpx, tmpy);
-		}
-		if (dz && priv->Z.negative != WS_NOMAP
-		    && priv->Z.positive != WS_NOMAP) {
-			zbutton = (dz < 0) ? priv->Z.negative :
-			    priv->Z.positive;
-			DBG(4, ErrorF("Z -> button %d\n", zbutton));
-			wsButtonClicks(pInfo, zbutton, abs(dz));
-		}
-		if (dw && priv->W.negative != WS_NOMAP
-		    && priv->W.positive != WS_NOMAP) {
-			wbutton = (dw < 0) ? priv->W.negative :
-			    priv->W.positive;
-			DBG(4, ErrorF("W -> button %d\n", wbutton));
-			wsButtonClicks(pInfo, wbutton, abs(dw));
-		}
-		if (priv->lastButtons != buttons) {
-			/* button event */
-			wsSendButtons(pInfo, buttons);
-		}
-		if (priv->swap_axes) {
-			int tmp;
-
-			tmp = ax;
-			ax = ay;
-			ay = tmp;
-		}
-		if (ax) {
-			int xdelta = ax - priv->old_ax;
-			priv->old_ax = ax;
-			if (wsWheelEmuFilterMotion(pInfo, xdelta, 0))
-				continue;
-
-			/* absolute position event */
-			DBG(3, ErrorF("postMotionEvent X %d\n", ax));
-			xf86PostMotionEvent(pInfo->dev, 1, 0, 1, ax);
-		}
-		if (ay) {
-			int ydelta = ay - priv->old_ay;
-			priv->old_ay = ay;
-			if (wsWheelEmuFilterMotion(pInfo, 0, ydelta))
-				continue;
-
-			/* absolute position event */
-			DBG(3, ErrorF("postMotionEvent y %d\n", ay));
-			xf86PostMotionEvent(pInfo->dev, 1, 1, 1, ay);
-		}
+	if ((hw.dx || hw.dy) && !wsWheelEmuFilterMotion(pInfo, hw.dx, hw.dy)) {
+		/* relative motion event */
+		DBG(3, ErrorF("postMotionEvent dX %d dY %d\n", hw.dx, hw.dy));
+		xf86PostMotionEvent(pInfo->dev, 0, 0, 2, hw.dx, hw.dy);
 	}
-	if (dx || dy) {
-		if (wsWheelEmuFilterMotion(pInfo, dx, dy))
+	if (hw.dz && priv->Z.negative != WS_NOMAP
+	    && priv->Z.positive != WS_NOMAP) {
+		int zbutton;
+		zbutton = (hw.dz < 0) ? priv->Z.negative : priv->Z.positive;
+		DBG(4, ErrorF("Z -> button %d (%d)\n", zbutton, abs(hw.dz)));
+		wsButtonClicks(pInfo, zbutton, abs(hw.dz));
+	}
+	if (hw.dw && priv->W.negative != WS_NOMAP
+	    && priv->W.positive != WS_NOMAP) {
+		int wbutton;
+		wbutton = (hw.dw < 0) ? priv->W.negative : priv->W.positive;
+		DBG(4, ErrorF("W -> button %d (%d)\n", wbutton, abs(hw.dw)));
+		wsButtonClicks(pInfo, wbutton, abs(hw.dw));
+	}
+	if (priv->lastButtons != hw.buttons) {
+		/* button event */
+		wsSendButtons(pInfo, hw.buttons);
+	}
+	if (priv->swap_axes) {
+		int tmp;
+
+		tmp = hw.ax;
+		hw.ax = hw.ay;
+		hw.ay = tmp;
+	}
+	if ((hw.ax != priv->old_ax) || (hw.ay != priv->old_ay)) {
+		int xdelta = hw.ax - priv->old_ax;
+		int ydelta = hw.ay - priv->old_ay;
+		priv->old_ax = hw.ax;
+		priv->old_ay = hw.ay;
+		if (wsWheelEmuFilterMotion(pInfo, xdelta, ydelta))
 			return;
 
-		/* relative motion event */
-		DBG(3, ErrorF("postMotionEvent dX %d dY %d\n",
-		    dx, dy));
-		xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
+		/* absolute position event */
+		DBG(3, ErrorF("postMotionEvent X %d Y %d\n", hw.ax, hw.ay));
+		xf86PostMotionEvent(pInfo->dev, 1, 0, 2, hw.ax, hw.ay);
 	}
-	return;
 }
 
 static void
