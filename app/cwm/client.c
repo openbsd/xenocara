@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.143 2013/11/01 14:07:19 okan Exp $
+ * $OpenBSD: client.c,v 1.144 2013/11/01 21:54:20 okan Exp $
  */
 
 #include <sys/param.h>
@@ -695,10 +695,8 @@ client_placecalc(struct client_ctx *cc)
 		 */
 		xslack = sc->view.w - cc->geom.w - cc->bwidth * 2;
 		yslack = sc->view.h - cc->geom.h - cc->bwidth * 2;
-		if (cc->size->x > 0)
-			cc->geom.x = MIN(cc->size->x, xslack);
-		if (cc->size->y > 0)
-			cc->geom.y = MIN(cc->size->y, yslack);
+		cc->geom.x = MIN(cc->geom.x, xslack);
+		cc->geom.y = MIN(cc->geom.y, yslack);
 	} else {
 		struct geom		 xine;
 		int			 xmouse, ymouse;
