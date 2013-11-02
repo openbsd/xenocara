@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.59 2013/10/30 18:05:34 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.60 2013/11/02 13:17:32 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -32,7 +32,6 @@
 #include <X11/extensions/XIproto.h>
 #include <xf86Xinput.h>
 #include <exevents.h>
-#include <xisb.h>
 #include <mipointer.h>
 #include <extinit.h>
 
