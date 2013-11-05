@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.145 2013/11/02 19:13:57 okan Exp $
+ * $OpenBSD: client.c,v 1.146 2013/11/05 00:55:42 okan Exp $
  */
 
 #include <sys/param.h>
@@ -211,7 +211,8 @@ client_setactive(struct client_ctx *cc, int fg)
 
 	if (fg) {
 		XInstallColormap(X_Dpy, cc->colormap);
-		if (cc->flags & CLIENT_INPUT) {
+		if ((cc->flags & CLIENT_INPUT) ||
+		    ((cc->xproto & _WM_TAKE_FOCUS) == 0)) {
 			XSetInputFocus(X_Dpy, cc->win,
 			    RevertToPointerRoot, CurrentTime);
 		}
