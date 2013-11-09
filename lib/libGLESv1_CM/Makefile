@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2013/10/05 10:12:57 jsg Exp $
+# $OpenBSD: Makefile,v 1.3 2013/11/09 02:54:53 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	GLESv1_CM
@@ -10,7 +10,7 @@ MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
 MESA_MAJOR=	9
 MESA_MINOR=	2
-MESA_TINY=	1
+MESA_TINY=	2
 
 INCSDIR=	${X11BASE}/include/GLES
 
