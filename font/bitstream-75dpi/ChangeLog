@@ -1,3 +1,37 @@
+commit e508a9afd88bf773a4c548ee722a0b8329926916
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 21:42:17 2010 +0100
+
+    font-bitstream-75dpi 1.0.3
+
+commit 050d87416606e012d8b54de59170e73b46b810a1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:55 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d7fa2d43630d97f21ea3cc8a0facfef969d89f9a
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:57 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e7a70399848f35806332f033b3255f20aa8bca50
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 4 23:56:41 2010 -0700

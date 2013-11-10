@@ -1,3 +1,28 @@
+commit f484bd456e5a269ad2147b49aee5439ce8769757
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 22:30:42 2010 +0100
+
+    font-ibm-type1 1.0.3
+
+commit 186c498eb7d18c3ae8fa3f945c92db3973a4f638
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:56 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 9bc38f63582a50aa691599a38d8fe15168bcb2b2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:04:49 2010 -0700

@@ -1,3 +1,28 @@
+commit 1381087f99b786c3bd0b3c461b6df8f444525455
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Tue Nov 16 00:18:29 2010 +0100
+
+    font-sun-misc 1.0.3
+
+commit 0b5535c539d1d96a3ac37f0b8a9b7313edbffc10
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:56 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 250d1b00d9b242311861411b976baf81532081e1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:29:59 2010 -0700

@@ -1,3 +1,28 @@
+commit 7089f20c3d1678682abcca536bc84dca38869388
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 22:17:43 2010 +0100
+
+    font-daewoo-misc 1.0.3
+
+commit b91cc46c8a5522e3e2789648c5bed9a2813c5a82
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:55 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit e197ffd6aad990a34ab25de55434988751fd5716
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:02:07 2010 -0700

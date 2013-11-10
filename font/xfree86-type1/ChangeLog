@@ -1,3 +1,28 @@
+commit d13323281edec3fb632cb54553a2172a806d16a4
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Tue Nov 16 00:21:45 2010 +0100
+
+    font-xfree86-type1 1.0.4
+
+commit 814e597be5f350794eafae4a581f47dd86196d11
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:56 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit fdbdf938637d2bf340a28c42639c29f9f8ae4b1e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:32:37 2010 -0700

@@ -1,3 +1,28 @@
+commit 0d4459c253eba412cf0dbbdf71c57207721e7873
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 01:02:58 2010 +0100
+
+    adobe-utopia-type1 1.0.4
+
+commit 0921d8a5a209145718677441276bbe1dc5dd039e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:55 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit af18f0164efab346739b3a976eb689fe3fbebb1d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 4 23:13:08 2010 -0700

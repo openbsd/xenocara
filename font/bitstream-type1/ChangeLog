@@ -1,3 +1,28 @@
+commit ed229e2119276054bb8bf6a85447952cfeb5eae3
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 21:53:38 2010 +0100
+
+    font-bitstream-type1 1.0.3
+
+commit 1fc8db6b6cb07c2fc08364fdb20aafed76842879
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:55 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 64666ca4d2c90e953525471cc844911b0d346325
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 4 23:58:03 2010 -0700

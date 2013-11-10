@@ -1,3 +1,28 @@
+commit f719f92d34465bc73a7332a233dae79675e9f788
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 23:48:30 2010 +0100
+
+    font-misc-meltho 1.0.3
+
+commit 181188056bb283369a60d6aed4e15accaebe25b7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:56 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit fdb3704f8210e521a08b36a4271a6aee6d260e93
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:15:18 2010 -0700

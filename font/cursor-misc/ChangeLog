@@ -1,3 +1,28 @@
+commit 95bd2b0fde069eada1bf70cd0987fd1be2c6d797
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 22:09:32 2010 +0100
+
+    font-cursor-misc 1.0.3
+
+commit 16e2c0f7ec0c33378935720aece0e97800e71c24
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:55 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit ff5e0fc8c922591e03884590271604b285fbb32b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:01:01 2010 -0700

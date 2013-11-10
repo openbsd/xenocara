@@ -1,3 +1,28 @@
+commit 3d8bb21eb452f40436407266a19d3495d9193d02
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Tue Nov 16 00:10:12 2010 +0100
+
+    font-schumacher-misc 1.1.2
+
+commit b26ebcd568c8f67ea48cf320e397cc318bcfc0e2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:56 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 6193a809f0c87b94e3b8eb8c65e8ec829cdc314c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:26:05 2010 -0700

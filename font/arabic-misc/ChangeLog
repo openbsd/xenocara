@@ -1,3 +1,28 @@
+commit 75edcf3b04b1e75aacc7c858786879308687d63a
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 20:51:41 2010 +0100
+
+    font-arabic-misc 1.0.3
+
+commit 519fd776879beaed6726517b958f7776bff05d29
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:55 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 52252550f603189ec51b1b4c476b3a6353d75e1a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 4 23:16:45 2010 -0700

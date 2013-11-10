@@ -1,3 +1,28 @@
+commit a107f0b7de9335a6f150f02f75070dcca70b90a6
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Tue Nov 16 00:20:13 2010 +0100
+
+    font-winitzki-cyrillic 1.0.3
+
+commit b4ba672ecffc87fb381992eb498a8e52c538c948
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:56 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 4609b10ce626b8a7c9aee5fa65427d0cf0c5b914
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:31:22 2010 -0700

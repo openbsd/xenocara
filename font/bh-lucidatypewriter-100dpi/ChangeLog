@@ -1,3 +1,28 @@
+commit e4742583136a7eb2ca0bd5615ccd058b55dad30b
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 21:07:50 2010 +0100
+
+    font-bh-lucidatypewriter-100dpi 1.0.3
+
+commit f59aa96d51df3b264555221ff2e219888991887f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:55 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 5ffcfb0112db4c0ffdf42411bc1c6027a00b7c06
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 4 23:32:59 2010 -0700

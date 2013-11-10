@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
-AC_INIT([font-adobe-utopia-100dpi], [1.0.3],
+AC_INIT([font-adobe-utopia-100dpi], [1.0.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [font-adobe-utopia-100dpi])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -35,6 +35,11 @@ XORG_MACROS_VERSION(1.3)
 XORG_DEFAULT_OPTIONS
 
 AC_PROG_INSTALL
+
+# Require X.Org's font util macros 1.2 or later
+m4_ifndef([XORG_FONT_MACROS_VERSION],
+	  [m4_fatal([must install X.Org font-util 1.2 or later before running autoconf/autogen])])
+XORG_FONT_MACROS_VERSION(1.2)
 
 XORG_FONTDIR([100dpi])
 XORG_FONT_BDF_UTILS

@@ -1,3 +1,37 @@
+commit 67ef1f1770c0c79b67d092998f31d5f6555876d5
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 00:55:56 2010 +0100
+
+    adobe-utopia-100dpi 1.0.4
+
+commit 62bcb0a627ef6bdb434ec6d16df1316650250634
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:17:20 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a0b17139dc386c07ed3e3a4758b96936e8ed9c46
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:56 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 823af263bc534286098f434b457528add980057b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 4 22:50:53 2010 -0700

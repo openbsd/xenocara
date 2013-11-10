@@ -1,3 +1,28 @@
+commit 451daa6ffa20358b200bb2f727303a57b58a5a96
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Mon Nov 15 20:59:12 2010 +0100
+
+    font-bh-100dpi 1.0.3
+
+commit e0be24f1b613d330b9d78a939f0e4be05f211873
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:55 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit ac447f3d1b52cafd2fb650e565d9da5e0521a2b8
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 4 23:18:12 2010 -0700

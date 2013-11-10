@@ -1,3 +1,28 @@
+commit 6e42aab3475fe0fb8bc38b30bb9f7a8f9ba73ed8
+Author: Rémi Cardona <remi@gentoo.org>
+Date:   Tue Nov 16 00:16:52 2010 +0100
+
+    font-sony-misc 1.0.3
+
+commit 338b654728826b08120344cceb8abbc4b4ff26a1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 20:09:56 2010 -0400
+
+    config: Use the shorthand --disable-all-encodings option in font-util v1.2
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit cabba3de8c86afa012b9256f5e9c3be32e0d37aa
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 5 00:28:49 2010 -0700
