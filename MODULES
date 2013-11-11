@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.273 2013/11/10 16:08:06 matthieu Exp $
+# $OpenBSD: MODULES,v 1.274 2013/11/11 16:56:08 shadchin Exp $
 #
 # X.Org maintained modules
 #
@@ -93,7 +93,7 @@ driver/xf86-input-elographics	1.4.1		needs-update
 driver/xf86-input-fpit		1.4.0
 driver/xf86-input-hyperpen	1.4.1
 driver/xf86-input-joystick	1.6.2	7.7+	needs-update
-driver/xf86-input-keyboard	1.8.0	7.7+	needs-update
+driver/xf86-input-keyboard	1.8.0	7.7+
 driver/xf86-input-mouse		1.9.0	7.7+
 driver/xf86-input-mutouch	1.3.0
 driver/xf86-input-penmount	1.5.0
