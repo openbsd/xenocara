@@ -1,3 +1,311 @@
+commit ddeb7940b956682451392717b135be4454b5756e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 1 09:45:21 2013 +1000
+
+    keyboard 1.8.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 014101d157fb7eb54c79fecc424b53ca95f582bc
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Oct 27 13:53:34 2013 +0100
+
+    Whitespace fixes.
+    
+    Replace <SPACE><TAB> with <TAB>.
+    Remove whitespace at end-of-line.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b8f4e7065566512a123c4957ab432cad3e7c688e
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jul 30 15:07:31 2013 +0200
+
+    Check open() return value.
+    
+    Suggested by Walter Harms <wharms@bfs.de>.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dc9486a22f4b7fec2860928c555636bfc9f58741
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:49 2013 +0200
+
+    Factor out common code.
+    
+    Suggested by Walter Harms <wharms@bfs.de>.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2d6661d5c7aff662ad76ddb225664260f0a07a1e
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:48 2013 +0200
+
+    Do not assume type in WS_*_MAP_SIZE macros.
+    
+    Suggested by Walter Harms <wharms@bfs.de>.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6042ab2647197d9aa09578ed1befe03931737f1c
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:47 2013 +0200
+
+    Add some NetBSD feature detection code.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4f1a3cff9dfbfb33fcc6ff0a4ffd1db106301b97
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:46 2013 +0200
+
+    Move WSCONS case inside switch statement.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 390c4621dd4e2f6070508796385e2d23e5418b89
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:45 2013 +0200
+
+    Improve auto-detection.
+    
+    If WSKBDIO_GTYPE succeeds and returns type=0, it is a mux with no
+    keyboard attached. In this case, assume USB.
+    
+    >From Jared McNeill <jmcneill@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8ac42401a6db161e0983df17ac1787f164faf2f3
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:44 2013 +0200
+
+    Fix wskbd handling when VT switching.
+    
+    When using /dev/wskbd* we need to close the device when VT switching
+    out of X, and open it again when switching back.
+    
+    >From Michael Lorenz <macallan@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d61dcfd5c297f405a4c200131e88e5dfc95bfa95
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:43 2013 +0200
+
+    Make OpenKeyboard() warn instead of error out.
+    
+    This way we can still setup keyboard map manually by xmodmap(1)
+    etc. on less well supported ports.
+    
+    >From Izumi Tsutsui <tsutsui@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e511907a5f7047a9c14b378084525137510511f5
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:42 2013 +0200
+
+    Add WSKBD_TYPE_LK201.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e5ecacb20ad3685d6f422c5ed21632fb8b1f7fa0
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:41 2013 +0200
+
+    Add default device for Protocol "wskbd".
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8879a7682ef94471e907bb660d2b96cc95ed7b81
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:40 2013 +0200
+
+    Recognize WSKBD_TYPE_MAPLE for dreamcast.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f105a796ae29eaaae7c25447734013537fad2a87
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:39 2013 +0200
+
+    Fix a shadowing warning, and add const.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c783746c4f72249645e43c6d96d08cb6c74812d0
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:38 2013 +0200
+
+    Set the version for the keyboard.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 83faa4123ae5d182f936faab77925d45da181f5f
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:37 2013 +0200
+
+    Add a basic map for an LK201 keyboard.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e7ba236dbaf8df9364bf61ef5c3d67d377fbd2ec
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:36 2013 +0200
+
+    Fix scan code 50 key on non-US-USB keyboards.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 60d947b34830b850d53de1ee756502c471796fa9
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:35 2013 +0200
+
+    Add a couple mappings for keys found on Sun keyboards.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0baa215b57d104bf22bc9a179bae3ff413bf055c
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:34 2013 +0200
+
+    Use existing wscons USB keymap for WSKBD_TYPE_MAPLE on dreamcast.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9c6acb2a2a4806d14ce84dcd1fb81268359dbe35
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:33 2013 +0200
+
+    Add translation table for AT/PS2 pseudo XT scancodes.
+    
+    Add another translation table to make the modular kbd driver cope with NetBSD's
+    AT/PS2 pseudo XT scancodes. Tested on shark and sgimips with an IBM Model M -
+    this should be tested with more keyboards, there might still be errors in the
+    table.
+    
+    >From Michael Lorenz <macallan@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e7a1f964782817acc4807beddc6e6ef1c8d94c96
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:32 2013 +0200
+
+    More ADB fixes.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 42b22d5dc3892309d276df131d35951a79311843
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:31 2013 +0200
+
+    Fixes for the ADB map.
+    
+    - map the backspace key to KEY_BackSpace
+    - swap LAlt and LMeta to match the keyboard (Alt=Alt/Option, Meta=Command)
+    - add a keysym for . on the number pad
+    ... so killing the Xserver with Ctrl-Alt-BackSpace works now and the default
+    map matches an US keyboard without any xmodmap stunts.
+    
+    >From Michael Lorenz <macallan@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b8e12ae87352922eaea305f66ca232ea2a3b2d61
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:30 2013 +0200
+
+    Added keysyms for extra keys on Sun Type 6 USB keyboard.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ad527f5c25984fa023f1be9fcb8e953aa7459e8a
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:29 2013 +0200
+
+    Added keysym for Power keys.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a0eec5ddd0f3b1a23f5fcbaf85cd34680a1944fc
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:28 2013 +0200
+
+    Map the Sun keyboard "help" key.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2d5bc7db251facdb2bb478eaad1dfd820cf28d13
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Jul 29 23:23:27 2013 +0200
+
+    Added some missing keysyms to the ADB keymap.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit ec3ccb22d4e7348ac537100fcb1b7ddc07df57b8
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Mar 27 11:13:18 2013 +1000

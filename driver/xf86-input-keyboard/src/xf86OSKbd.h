@@ -82,6 +82,7 @@ typedef struct {
     pointer		private;
     int			consType;
     int			wsKbdType;
+    char		wsKbdDev[256];
 
 } KbdDevRec, *KbdDevPtr;
 
