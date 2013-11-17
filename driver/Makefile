@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.57 2013/10/25 18:14:20 miod Exp $
+# $OpenBSD: Makefile,v 1.58 2013/11/17 14:33:05 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -59,7 +59,7 @@ VIDEO_DRV_amd64= \
 	xf86-video-i128 xf86-video-intel xf86-video-mach64 \
 	xf86-video-mga xf86-video-neomagic \
 	xf86-video-nv xf86-video-openchrome xf86-video-r128 \
-	xf86-video-radeonold xf86-video-rendition xf86-video-s3 \
+	xf86-video-rendition xf86-video-s3 \
 	xf86-video-s3virge xf86-video-savage xf86-video-siliconmotion \
 	xf86-video-sis xf86-video-tdfx xf86-video-trident \
 	xf86-video-tseng xf86-video-vesa xf86-video-vmware \
@@ -93,7 +93,7 @@ VIDEO_DRV_luna88k= \
 
 VIDEO_DRV_macppc= \
 	xf86-video-ati xf86-video-mach64 xf86-video-nv xf86-video-r128 \
-	xf86-video-radeonold xf86-video-wsfb xf86-video-wsudl
+	xf86-video-wsfb xf86-video-wsudl
 
 VIDEO_DRV_mvme68k=
 VIDEO_DRV_mvme88k=
@@ -104,7 +104,7 @@ VIDEO_DRV_sgi= xf86-video-wsfb
 
 VIDEO_DRV_sparc64= \
 	xf86-video-ati xf86-video-mach64 xf86-video-r128 xf86-video-glint \
-	xf86-video-radeonold xf86-video-sunffb \
+	xf86-video-sunffb \
 	xf86-video-wildcatfb xf86-video-wsfb
 
 VIDEO_DRV_vax=
