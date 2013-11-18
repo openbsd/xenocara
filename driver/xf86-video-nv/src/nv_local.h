@@ -32,6 +32,7 @@
 #include "compiler.h"
 #include "xf86_OSproc.h"
 
+#include "shadow.h"
 /*
  * Typedefs to force certain sized values.
  */

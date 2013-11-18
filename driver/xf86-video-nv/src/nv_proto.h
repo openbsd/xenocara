@@ -49,6 +49,7 @@ int  NVShowHideCursor(NVPtr,int);
 void NVLockUnlock(NVPtr,int);
 
 /* in nv_shadow.c */
+void NVShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf);
 void NVRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void NVRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void NVRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);

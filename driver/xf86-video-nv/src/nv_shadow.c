@@ -13,6 +13,17 @@
 #include "shadowfb.h"
 #include "servermd.h"
 
+void
+NVShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf)
+{
+    RegionPtr damage = DamageRegion(pBuf->pDamage);
+    ScrnInfoPtr pScrn;
+    pScrn = xf86ScreenToScrn(pScreen);
+
+    (NVPTR(pScrn))->refreshArea (pScrn, REGION_NUM_RECTS(damage),
+	REGION_RECTS(damage));
+}
+
 
 void
 NVRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
