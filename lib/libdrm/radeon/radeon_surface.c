@@ -1382,10 +1382,16 @@ static int si_surface_sanity(struct radeon_surface_manager *surf_man,
         break;
     case RADEON_SURF_MODE_1D:
         if (surf->flags & RADEON_SURF_SBUFFER) {
-            *stencil_tile_mode = SI_TILE_MODE_DEPTH_STENCIL_1D;
+            if (surf_man->family >= CHIP_BONAIRE)
+                *stencil_tile_mode = CIK_TILE_MODE_DEPTH_STENCIL_1D;
+            else
+                *stencil_tile_mode = SI_TILE_MODE_DEPTH_STENCIL_1D;
         }
         if (surf->flags & RADEON_SURF_ZBUFFER) {
-            *tile_mode = SI_TILE_MODE_DEPTH_STENCIL_1D;
+            if (surf_man->family >= CHIP_BONAIRE)
+                *tile_mode = CIK_TILE_MODE_DEPTH_STENCIL_1D;
+            else
+                *tile_mode = SI_TILE_MODE_DEPTH_STENCIL_1D;
         } else if (surf->flags & RADEON_SURF_SCANOUT) {
             *tile_mode = SI_TILE_MODE_COLOR_1D_SCANOUT;
         } else {
@@ -1406,7 +1412,11 @@ static void si_surf_minify(struct radeon_surface *surf,
                            uint32_t xalign, uint32_t yalign, uint32_t zalign,
                            uint32_t slice_align, unsigned offset)
 {
-    surflevel->npix_x = mip_minify(surf->npix_x, level);
+    if (level == 0) {
+        surflevel->npix_x = surf->npix_x;
+    } else {
+        surflevel->npix_x = mip_minify(next_power_of_two(surf->npix_x), level);
+    }
     surflevel->npix_y = mip_minify(surf->npix_y, level);
     surflevel->npix_z = mip_minify(surf->npix_z, level);
 
@@ -1428,7 +1438,7 @@ static void si_surf_minify(struct radeon_surface *surf,
     if (level == 0 && surf->last_level == 0)
         /* Non-mipmap pitch padded to slice alignment */
         xalign = MAX2(xalign, slice_align / surf->bpe);
-    else
+    else if (surflevel->mode == RADEON_SURF_MODE_LINEAR_ALIGNED)
         /* Small rows evenly distributed across slice */
         xalign = MAX2(xalign, slice_align / surf->bpe / surflevel->nblk_y);
 
@@ -1450,7 +1460,11 @@ static void si_surf_minify_2d(struct radeon_surface *surf,
 {
     unsigned mtile_pr, mtile_ps;
 
-    surflevel->npix_x = mip_minify(surf->npix_x, level);
+    if (level == 0) {
+        surflevel->npix_x = surf->npix_x;
+    } else {
+        surflevel->npix_x = mip_minify(next_power_of_two(surf->npix_x), level);
+    }
     surflevel->npix_y = mip_minify(surf->npix_y, level);
     surflevel->npix_z = mip_minify(surf->npix_z, level);
 
@@ -1643,7 +1657,10 @@ static int si_surface_init_2d(struct radeon_surface_manager *surf_man,
                 tile_mode = SI_TILE_MODE_COLOR_1D_SCANOUT;
                 break;
             case SI_TILE_MODE_DEPTH_STENCIL_2D:
-                tile_mode = SI_TILE_MODE_DEPTH_STENCIL_1D;
+                if (surf_man->family >= CHIP_BONAIRE)
+                    tile_mode = CIK_TILE_MODE_DEPTH_STENCIL_1D;
+                else
+                    tile_mode = SI_TILE_MODE_DEPTH_STENCIL_1D;
                 break;
             default:
                 return -EINVAL;

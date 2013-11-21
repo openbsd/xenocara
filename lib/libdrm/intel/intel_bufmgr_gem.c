@@ -1326,6 +1326,7 @@ int drm_intel_gem_bo_map_gtt(drm_intel_bo *bo)
 int drm_intel_gem_bo_map_unsynchronized(drm_intel_bo *bo)
 {
 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
+	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
 	int ret;
 
 	/* If the CPU cache isn't coherent with the GTT, then use a
@@ -1339,7 +1340,13 @@ int drm_intel_gem_bo_map_unsynchronized(drm_intel_bo *bo)
 		return drm_intel_gem_bo_map_gtt(bo);
 
 	pthread_mutex_lock(&bufmgr_gem->lock);
+
 	ret = map_gtt(bo);
+	if (ret == 0) {
+		drm_intel_gem_bo_mark_mmaps_incoherent(bo);
+		VG(VALGRIND_MAKE_MEM_DEFINED(bo_gem->gtt_virtual, bo->size));
+	}
+
 	pthread_mutex_unlock(&bufmgr_gem->lock);
 
 	return ret;
@@ -2459,7 +2466,17 @@ drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr, int prime_fd, int s
 	if (!bo_gem)
 		return NULL;
 
-	bo_gem->bo.size = size;
+	/* Determine size of bo.  The fd-to-handle ioctl really should
+	 * return the size, but it doesn't.  If we have kernel 3.12 or
+	 * later, we can lseek on the prime fd to get the size.  Older
+	 * kernels will just fail, in which case we fall back to the
+	 * provided (estimated or guess size). */
+	ret = lseek(prime_fd, 0, SEEK_END);
+	if (ret != -1)
+		bo_gem->bo.size = ret;
+	else
+		bo_gem->bo.size = size;
+
 	bo_gem->bo.handle = handle;
 	bo_gem->bo.bufmgr = bufmgr;
 
