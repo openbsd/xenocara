@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.48 2013/04/14 19:57:40 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.49 2013/11/22 15:44:48 espie Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -234,22 +234,10 @@ cleandir: clean
 _xenocara_obj:
 . else
 
-. if defined(OBJMACHINE)
-__objdir=	obj.$(MACHINE)
+. if defined(MAKEOBJDIR)
+__objdir=	${MAKEOBJDIR}
 . else
 __objdir=	obj
-. endif
-
-. if defined(XOBJMACHINE)
-__xobjdir=	$(XOBJDIR).$(MACHINE)
-__xobjdirpf=
-. else
-__xobjdir=	$(XOBJDIR)
-.  if defined(OBJMACHINE)
-__xobjdirpf=	.$(MACHINE)
-.  else
-__xobjdirpf=
-.  endif
 . endif
 
 _SUBDIRUSE:
@@ -259,20 +247,20 @@ _xenocara_obj! _SUBDIRUSE
 	here=`/bin/pwd`; xsrcdir=`cd $(XSRCDIR); /bin/pwd`; \
 	subdir=$${here#$${xsrcdir}/}; \
 	if test $$here != $$subdir ; then \
-	    dest=${__xobjdir}/$$subdir${__xobjdirpf}; \
+	    dest=${XOBJDIR}/$$subdir; \
 	    echo "$$here/${__objdir} -> $$dest"; \
 	    if test ! -L ${__objdir} -o \
 		X`readlink ${__objdir}` != X$$dest; then \
 		    if  test -e ${__objdir}; then rm -rf ${__objdir}; fi; \
 		    ln -sf $$dest ${__objdir}; \
 	    fi; \
-	    if test -d ${__xobjdir}; then \
+	    if test -d ${XOBJDIR}; then \
 		    test -d $$dest || mkdir -p $$dest; \
 	    else \
-		    if test -e ${__xobjdir}; then \
-			    echo "${__xobjdir} is not a directory"; \
+		    if test -e ${XOBJDIR}; then \
+			    echo "${XOBJDIR} is not a directory"; \
 		    else \
-			    echo "${__xobjdir} does not exist"; \
+			    echo "${XOBJDIR} does not exist"; \
 		    fi; \
 	    fi; \
 	else \
