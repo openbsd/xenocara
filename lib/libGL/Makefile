@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.39 2013/11/09 02:54:53 jsg Exp $
+# $OpenBSD: Makefile,v 1.40 2013/11/24 06:23:35 jsg Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
@@ -22,7 +22,7 @@ MESA_DRI=	${.CURDIR}/../../dist/Mesa/src/mesa/drivers/dri
 # this needs to be updated in mesa/Makefile.inc as well
 MESA_MAJOR=	9
 MESA_MINOR=	2
-MESA_TINY=	2
+MESA_TINY=	3
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 

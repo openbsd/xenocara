@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.5 2013/11/09 02:54:53 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.6 2013/11/24 06:23:35 jsg Exp $
 
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
 MAPI=		${.CURDIR}/../../../../dist/Mesa/src/mapi
@@ -9,7 +9,7 @@ MESA_INCLUDE=	${.CURDIR}/../../../../dist/Mesa/include
 
 MESA_MAJOR=	9
 MESA_MINOR=	2
-MESA_TINY=	2
+MESA_TINY=	3
 
 CPP=	cpp -notraditional
 
