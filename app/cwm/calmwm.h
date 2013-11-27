@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.229 2013/11/27 00:01:23 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.230 2013/11/27 18:34:34 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -216,6 +216,7 @@ struct screen_ctx {
 	Window			 rootwin;
 	Window			 menuwin;
 	int			 cycling;
+	int			 snapdist;
 	struct geom		 view; /* viewable area */
 	struct geom		 work; /* workable area, gap-applied */
 	struct gap		 gap;
