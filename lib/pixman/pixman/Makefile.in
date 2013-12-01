@@ -69,24 +69,29 @@ DIST_COMMON = $(libpixmaninclude_HEADERS) $(srcdir)/Makefile.am \
 @USE_SSE2_TRUE@am__append_7 = $(SSE2_LDFLAGS)
 @USE_SSE2_TRUE@am__append_8 = libpixman-sse2.la
 
+# ssse3 code
+@USE_SSSE3_TRUE@am__append_9 = libpixman-ssse3.la
+@USE_SSSE3_TRUE@am__append_10 = $(SSSE3_LDFLAGS)
+@USE_SSSE3_TRUE@am__append_11 = libpixman-ssse3.la
+
 # arm simd code
-@USE_ARM_SIMD_TRUE@am__append_9 = libpixman-arm-simd.la
-@USE_ARM_SIMD_TRUE@am__append_10 = libpixman-arm-simd.la
+@USE_ARM_SIMD_TRUE@am__append_12 = libpixman-arm-simd.la
+@USE_ARM_SIMD_TRUE@am__append_13 = libpixman-arm-simd.la
 
 # arm neon code
-@USE_ARM_NEON_TRUE@am__append_11 = libpixman-arm-neon.la
-@USE_ARM_NEON_TRUE@am__append_12 = libpixman-arm-neon.la
-@USE_ARM_IWMMXT_TRUE@am__append_13 = libpixman-iwmmxt.la
-@USE_ARM_IWMMXT_TRUE@am__append_14 = libpixman-iwmmxt.la
+@USE_ARM_NEON_TRUE@am__append_14 = libpixman-arm-neon.la
+@USE_ARM_NEON_TRUE@am__append_15 = libpixman-arm-neon.la
+@USE_ARM_IWMMXT_TRUE@am__append_16 = libpixman-iwmmxt.la
+@USE_ARM_IWMMXT_TRUE@am__append_17 = libpixman-iwmmxt.la
 
 # mips dspr2 code
-@USE_MIPS_DSPR2_TRUE@am__append_15 = libpixman-mips-dspr2.la
-@USE_MIPS_DSPR2_TRUE@am__append_16 = libpixman-mips-dspr2.la
+@USE_MIPS_DSPR2_TRUE@am__append_18 = libpixman-mips-dspr2.la
+@USE_MIPS_DSPR2_TRUE@am__append_19 = libpixman-mips-dspr2.la
 
 # loongson code
-@USE_LOONGSON_MMI_TRUE@am__append_17 = libpixman-loongson-mmi.la
-@USE_LOONGSON_MMI_TRUE@am__append_18 = $(LS_LDFLAGS)
-@USE_LOONGSON_MMI_TRUE@am__append_19 = libpixman-loongson-mmi.la
+@USE_LOONGSON_MMI_TRUE@am__append_20 = libpixman-loongson-mmi.la
+@USE_LOONGSON_MMI_TRUE@am__append_21 = $(LS_LDFLAGS)
+@USE_LOONGSON_MMI_TRUE@am__append_22 = libpixman-loongson-mmi.la
 subdir = pixman
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -127,8 +132,9 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(libpixmanincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libpixman_1_la_DEPENDENCIES = $(am__append_3) $(am__append_5) \
-	$(am__append_8) $(am__append_10) $(am__append_12) \
-	$(am__append_14) $(am__append_16) $(am__append_19)
+	$(am__append_8) $(am__append_11) $(am__append_13) \
+	$(am__append_15) $(am__append_17) $(am__append_19) \
+	$(am__append_22)
 am__objects_1 = pixman.lo pixman-access.lo pixman-access-accessors.lo \
 	pixman-bits-image.lo pixman-combine32.lo \
 	pixman-combine-float.lo pixman-conical-gradient.lo \
@@ -216,6 +222,16 @@ libpixman_sse2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(libpixman_sse2_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
 @USE_SSE2_TRUE@am_libpixman_sse2_la_rpath =
+libpixman_ssse3_la_LIBADD =
+am__libpixman_ssse3_la_SOURCES_DIST = pixman-ssse3.c
+@USE_SSSE3_TRUE@am_libpixman_ssse3_la_OBJECTS =  \
+@USE_SSSE3_TRUE@	libpixman_ssse3_la-pixman-ssse3.lo
+libpixman_ssse3_la_OBJECTS = $(am_libpixman_ssse3_la_OBJECTS)
+libpixman_ssse3_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libpixman_ssse3_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+@USE_SSSE3_TRUE@am_libpixman_ssse3_la_rpath =
 libpixman_vmx_la_LIBADD =
 am__libpixman_vmx_la_SOURCES_DIST = pixman-vmx.c pixman-combine32.h
 @USE_VMX_TRUE@am_libpixman_vmx_la_OBJECTS =  \
@@ -275,7 +291,8 @@ SOURCES = $(libpixman_1_la_SOURCES) $(libpixman_arm_neon_la_SOURCES) \
 	$(libpixman_iwmmxt_la_SOURCES) \
 	$(libpixman_loongson_mmi_la_SOURCES) \
 	$(libpixman_mips_dspr2_la_SOURCES) $(libpixman_mmx_la_SOURCES) \
-	$(libpixman_sse2_la_SOURCES) $(libpixman_vmx_la_SOURCES)
+	$(libpixman_sse2_la_SOURCES) $(libpixman_ssse3_la_SOURCES) \
+	$(libpixman_vmx_la_SOURCES)
 DIST_SOURCES = $(libpixman_1_la_SOURCES) \
 	$(am__libpixman_arm_neon_la_SOURCES_DIST) \
 	$(am__libpixman_arm_simd_la_SOURCES_DIST) \
@@ -284,6 +301,7 @@ DIST_SOURCES = $(libpixman_1_la_SOURCES) \
 	$(am__libpixman_mips_dspr2_la_SOURCES_DIST) \
 	$(am__libpixman_mmx_la_SOURCES_DIST) \
 	$(am__libpixman_sse2_la_SOURCES_DIST) \
+	$(am__libpixman_ssse3_la_SOURCES_DIST) \
 	$(am__libpixman_vmx_la_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -326,7 +344,7 @@ GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
 HAVE_LIBPNG = @HAVE_LIBPNG@
-HAVE_PTHREAD_SETSPECIFIC = @HAVE_PTHREAD_SETSPECIFIC@
+HAVE_PTHREADS = @HAVE_PTHREADS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -372,6 +390,7 @@ PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PNG_CFLAGS = @PNG_CFLAGS@
 PNG_LIBS = @PNG_LIBS@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LDFLAGS = @PTHREAD_LDFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
@@ -380,6 +399,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SSE2_CFLAGS = @SSE2_CFLAGS@
 SSE2_LDFLAGS = @SSE2_LDFLAGS@
+SSSE3_CFLAGS = @SSSE3_CFLAGS@
 STRIP = @STRIP@
 TESTPROGS_EXTRA_LDFLAGS = @TESTPROGS_EXTRA_LDFLAGS@
 TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR = @TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR@
@@ -484,17 +504,17 @@ libpixman_headers = \
 lib_LTLIBRARIES = libpixman-1.la
 libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO) \
 	-no-undefined @PTHREAD_LDFLAGS@ $(am__append_2) \
-	$(am__append_7) $(am__append_18)
+	$(am__append_7) $(am__append_10) $(am__append_21)
 libpixman_1_la_LIBADD = @PTHREAD_LIBS@ -lm $(am__append_3) \
-	$(am__append_5) $(am__append_8) $(am__append_10) \
-	$(am__append_12) $(am__append_14) $(am__append_16) \
-	$(am__append_19)
+	$(am__append_5) $(am__append_8) $(am__append_11) \
+	$(am__append_13) $(am__append_15) $(am__append_17) \
+	$(am__append_19) $(am__append_22)
 libpixman_1_la_SOURCES = $(libpixman_sources) $(libpixman_headers)
 libpixmanincludedir = $(includedir)/pixman-1
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = $(am__append_1) $(am__append_4) $(am__append_6) \
-	$(am__append_9) $(am__append_11) $(am__append_13) \
-	$(am__append_15) $(am__append_17)
+	$(am__append_9) $(am__append_12) $(am__append_14) \
+	$(am__append_16) $(am__append_18) $(am__append_20)
 EXTRA_DIST = \
 	Makefile.win32			\
 	pixman-region.c			\
@@ -517,6 +537,11 @@ EXTRA_DIST = \
 
 @USE_SSE2_TRUE@libpixman_sse2_la_CFLAGS = $(SSE2_CFLAGS)
 @USE_SSE2_TRUE@ASM_CFLAGS_sse2 = $(SSE2_CFLAGS)
+@USE_SSSE3_TRUE@libpixman_ssse3_la_SOURCES = \
+@USE_SSSE3_TRUE@	pixman-ssse3.c
+
+@USE_SSSE3_TRUE@libpixman_ssse3_la_CFLAGS = $(SSSE3_CFLAGS)
+@USE_SSSE3_TRUE@ASM_CFLAGS_ssse3 = $(SSSE3_CFLAGS)
 @USE_ARM_SIMD_TRUE@libpixman_arm_simd_la_SOURCES = \
 @USE_ARM_SIMD_TRUE@	pixman-arm-simd.c	\
 @USE_ARM_SIMD_TRUE@	pixman-arm-common.h	\
@@ -650,6 +675,8 @@ libpixman-mmx.la: $(libpixman_mmx_la_OBJECTS) $(libpixman_mmx_la_DEPENDENCIES) $
 	$(AM_V_CCLD)$(libpixman_mmx_la_LINK) $(am_libpixman_mmx_la_rpath) $(libpixman_mmx_la_OBJECTS) $(libpixman_mmx_la_LIBADD) $(LIBS)
 libpixman-sse2.la: $(libpixman_sse2_la_OBJECTS) $(libpixman_sse2_la_DEPENDENCIES) $(EXTRA_libpixman_sse2_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libpixman_sse2_la_LINK) $(am_libpixman_sse2_la_rpath) $(libpixman_sse2_la_OBJECTS) $(libpixman_sse2_la_LIBADD) $(LIBS)
+libpixman-ssse3.la: $(libpixman_ssse3_la_OBJECTS) $(libpixman_ssse3_la_DEPENDENCIES) $(EXTRA_libpixman_ssse3_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libpixman_ssse3_la_LINK) $(am_libpixman_ssse3_la_rpath) $(libpixman_ssse3_la_OBJECTS) $(libpixman_ssse3_la_LIBADD) $(LIBS)
 libpixman-vmx.la: $(libpixman_vmx_la_OBJECTS) $(libpixman_vmx_la_DEPENDENCIES) $(EXTRA_libpixman_vmx_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libpixman_vmx_la_LINK) $(am_libpixman_vmx_la_rpath) $(libpixman_vmx_la_OBJECTS) $(libpixman_vmx_la_LIBADD) $(LIBS)
 
@@ -662,6 +689,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_loongson_mmi_la-pixman-mmx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_mmx_la-pixman-mmx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_sse2_la-pixman-sse2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_ssse3_la-pixman-ssse3.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpixman_vmx_la-pixman-vmx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-access-accessors.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-access.Plo@am__quote@
@@ -766,6 +794,13 @@ libpixman_sse2_la-pixman-sse2.lo: pixman-sse2.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pixman-sse2.c' object='libpixman_sse2_la-pixman-sse2.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_sse2_la_CFLAGS) $(CFLAGS) -c -o libpixman_sse2_la-pixman-sse2.lo `test -f 'pixman-sse2.c' || echo '$(srcdir)/'`pixman-sse2.c
+
+libpixman_ssse3_la-pixman-ssse3.lo: pixman-ssse3.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_ssse3_la_CFLAGS) $(CFLAGS) -MT libpixman_ssse3_la-pixman-ssse3.lo -MD -MP -MF $(DEPDIR)/libpixman_ssse3_la-pixman-ssse3.Tpo -c -o libpixman_ssse3_la-pixman-ssse3.lo `test -f 'pixman-ssse3.c' || echo '$(srcdir)/'`pixman-ssse3.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libpixman_ssse3_la-pixman-ssse3.Tpo $(DEPDIR)/libpixman_ssse3_la-pixman-ssse3.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pixman-ssse3.c' object='libpixman_ssse3_la-pixman-ssse3.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_ssse3_la_CFLAGS) $(CFLAGS) -c -o libpixman_ssse3_la-pixman-ssse3.lo `test -f 'pixman-ssse3.c' || echo '$(srcdir)/'`pixman-ssse3.c
 
 libpixman_vmx_la-pixman-vmx.lo: pixman-vmx.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpixman_vmx_la_CFLAGS) $(CFLAGS) -MT libpixman_vmx_la-pixman-vmx.lo -MD -MP -MF $(DEPDIR)/libpixman_vmx_la-pixman-vmx.Tpo -c -o libpixman_vmx_la-pixman-vmx.lo `test -f 'pixman-vmx.c' || echo '$(srcdir)/'`pixman-vmx.c

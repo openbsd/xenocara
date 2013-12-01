@@ -6,6 +6,11 @@
 #include "pixman-private.h" /* For 'inline' definition */
 #include "utils-prng.h"
 
+#if defined(_MSC_VER)
+#define snprintf _snprintf
+#define strcasecmp _stricmp
+#endif
+
 #define ARRAY_LENGTH(A) ((int) (sizeof (A) / sizeof ((A) [0])))
 
 /* A primitive pseudorandom number generator,
@@ -62,6 +67,10 @@ compute_crc32 (uint32_t    in_crc32,
 uint32_t
 compute_crc32_for_image (uint32_t        in_crc32,
 			 pixman_image_t *image);
+
+/* Print the image in hexadecimal */
+void
+print_image (pixman_image_t *image);
 
 /* Returns TRUE if running on a little endian system
  */

@@ -79,162 +79,203 @@ am__EXEEXT_1 = prng-test$(EXEEXT) a1-trap-test$(EXEEXT) \
 	region-translate-test$(EXEEXT) combiner-test$(EXEEXT) \
 	pixel-test$(EXEEXT) fetch-test$(EXEEXT) rotate-test$(EXEEXT) \
 	oob-test$(EXEEXT) infinite-loop$(EXEEXT) trap-crasher$(EXEEXT) \
-	alpha-loop$(EXEEXT) scaling-crash-test$(EXEEXT) \
-	scaling-helpers-test$(EXEEXT) gradient-crash-test$(EXEEXT) \
-	region-contains-test$(EXEEXT) alphamap$(EXEEXT) \
-	matrix-test$(EXEEXT) stress-test$(EXEEXT) \
+	alpha-loop$(EXEEXT) thread-test$(EXEEXT) \
+	scaling-crash-test$(EXEEXT) scaling-helpers-test$(EXEEXT) \
+	gradient-crash-test$(EXEEXT) region-contains-test$(EXEEXT) \
+	alphamap$(EXEEXT) matrix-test$(EXEEXT) stress-test$(EXEEXT) \
 	composite-traps-test$(EXEEXT) blitters-test$(EXEEXT) \
 	glyph-test$(EXEEXT) scaling-test$(EXEEXT) affine-test$(EXEEXT) \
 	composite$(EXEEXT)
 am__EXEEXT_2 = lowlevel-blt-bench$(EXEEXT) radial-perf-test$(EXEEXT) \
-	check-formats$(EXEEXT)
+	check-formats$(EXEEXT) scaling-bench$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 a1_trap_test_SOURCES = a1-trap-test.c
 a1_trap_test_OBJECTS = a1-trap-test.$(OBJEXT)
 a1_trap_test_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 a1_trap_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 affine_test_SOURCES = affine-test.c
 affine_test_OBJECTS = affine-test.$(OBJEXT)
 affine_test_LDADD = $(LDADD)
 affine_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 alpha_loop_SOURCES = alpha-loop.c
 alpha_loop_OBJECTS = alpha-loop.$(OBJEXT)
 alpha_loop_LDADD = $(LDADD)
 alpha_loop_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 alphamap_SOURCES = alphamap.c
 alphamap_OBJECTS = alphamap.$(OBJEXT)
 alphamap_LDADD = $(LDADD)
 alphamap_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 blitters_test_SOURCES = blitters-test.c
 blitters_test_OBJECTS = blitters-test.$(OBJEXT)
 blitters_test_LDADD = $(LDADD)
 blitters_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 check_formats_SOURCES = check-formats.c
 check_formats_OBJECTS = check-formats.$(OBJEXT)
 check_formats_LDADD = $(LDADD)
 check_formats_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 combiner_test_SOURCES = combiner-test.c
 combiner_test_OBJECTS = combiner-test.$(OBJEXT)
 combiner_test_LDADD = $(LDADD)
 combiner_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 composite_SOURCES = composite.c
 composite_OBJECTS = composite.$(OBJEXT)
 composite_LDADD = $(LDADD)
 composite_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 composite_traps_test_SOURCES = composite-traps-test.c
 composite_traps_test_OBJECTS = composite-traps-test.$(OBJEXT)
 composite_traps_test_LDADD = $(LDADD)
 composite_traps_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 fetch_test_SOURCES = fetch-test.c
 fetch_test_OBJECTS = fetch-test.$(OBJEXT)
 fetch_test_LDADD = $(LDADD)
 fetch_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 glyph_test_SOURCES = glyph-test.c
 glyph_test_OBJECTS = glyph-test.$(OBJEXT)
 glyph_test_LDADD = $(LDADD)
 glyph_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 gradient_crash_test_SOURCES = gradient-crash-test.c
 gradient_crash_test_OBJECTS = gradient-crash-test.$(OBJEXT)
 gradient_crash_test_LDADD = $(LDADD)
 gradient_crash_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 infinite_loop_SOURCES = infinite-loop.c
 infinite_loop_OBJECTS = infinite-loop.$(OBJEXT)
 infinite_loop_LDADD = $(LDADD)
 infinite_loop_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 lowlevel_blt_bench_SOURCES = lowlevel-blt-bench.c
 lowlevel_blt_bench_OBJECTS = lowlevel-blt-bench.$(OBJEXT)
 lowlevel_blt_bench_LDADD = $(LDADD)
 lowlevel_blt_bench_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 matrix_test_SOURCES = matrix-test.c
 matrix_test_OBJECTS = matrix-test.$(OBJEXT)
 matrix_test_LDADD = $(LDADD)
 matrix_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 oob_test_SOURCES = oob-test.c
 oob_test_OBJECTS = oob-test.$(OBJEXT)
 oob_test_LDADD = $(LDADD)
 oob_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 pdf_op_test_SOURCES = pdf-op-test.c
 pdf_op_test_OBJECTS = pdf-op-test.$(OBJEXT)
 pdf_op_test_LDADD = $(LDADD)
 pdf_op_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 pixel_test_SOURCES = pixel-test.c
 pixel_test_OBJECTS = pixel-test.$(OBJEXT)
 pixel_test_LDADD = $(LDADD)
 pixel_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 prng_test_SOURCES = prng-test.c
 prng_test_OBJECTS = prng-test.$(OBJEXT)
 prng_test_LDADD = $(LDADD)
 prng_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 radial_perf_test_SOURCES = radial-perf-test.c
 radial_perf_test_OBJECTS = radial-perf-test.$(OBJEXT)
 radial_perf_test_LDADD = $(LDADD)
 radial_perf_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 region_contains_test_SOURCES = region-contains-test.c
 region_contains_test_OBJECTS = region-contains-test.$(OBJEXT)
 region_contains_test_LDADD = $(LDADD)
 region_contains_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 region_test_SOURCES = region-test.c
 region_test_OBJECTS = region-test.$(OBJEXT)
 region_test_LDADD = $(LDADD)
 region_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 region_translate_test_SOURCES = region-translate-test.c
 region_translate_test_OBJECTS = region-translate-test.$(OBJEXT)
 region_translate_test_LDADD = $(LDADD)
 region_translate_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 rotate_test_SOURCES = rotate-test.c
 rotate_test_OBJECTS = rotate-test.$(OBJEXT)
 rotate_test_LDADD = $(LDADD)
 rotate_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+scaling_bench_SOURCES = scaling-bench.c
+scaling_bench_OBJECTS = scaling-bench.$(OBJEXT)
+scaling_bench_LDADD = $(LDADD)
+scaling_bench_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 scaling_crash_test_SOURCES = scaling-crash-test.c
 scaling_crash_test_OBJECTS = scaling-crash-test.$(OBJEXT)
 scaling_crash_test_LDADD = $(LDADD)
 scaling_crash_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 scaling_helpers_test_SOURCES = scaling-helpers-test.c
 scaling_helpers_test_OBJECTS = scaling-helpers-test.$(OBJEXT)
 scaling_helpers_test_LDADD = $(LDADD)
 scaling_helpers_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 scaling_test_SOURCES = scaling-test.c
 scaling_test_OBJECTS = scaling-test.$(OBJEXT)
 scaling_test_LDADD = $(LDADD)
 scaling_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 stress_test_SOURCES = stress-test.c
 stress_test_OBJECTS = stress-test.$(OBJEXT)
 stress_test_LDADD = $(LDADD)
 stress_test_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+thread_test_SOURCES = thread-test.c
+thread_test_OBJECTS = thread-test.$(OBJEXT)
+thread_test_LDADD = $(LDADD)
+thread_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 trap_crasher_SOURCES = trap-crasher.c
 trap_crasher_OBJECTS = trap-crasher.$(OBJEXT)
 trap_crasher_LDADD = $(LDADD)
 trap_crasher_DEPENDENCIES = libutils.la \
-	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -276,8 +317,9 @@ SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-test.c \
 	infinite-loop.c lowlevel-blt-bench.c matrix-test.c oob-test.c \
 	pdf-op-test.c pixel-test.c prng-test.c radial-perf-test.c \
 	region-contains-test.c region-test.c region-translate-test.c \
-	rotate-test.c scaling-crash-test.c scaling-helpers-test.c \
-	scaling-test.c stress-test.c trap-crasher.c
+	rotate-test.c scaling-bench.c scaling-crash-test.c \
+	scaling-helpers-test.c scaling-test.c stress-test.c \
+	thread-test.c trap-crasher.c
 DIST_SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-test.c \
 	alpha-loop.c alphamap.c blitters-test.c check-formats.c \
 	combiner-test.c composite.c composite-traps-test.c \
@@ -285,8 +327,9 @@ DIST_SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-test.c \
 	infinite-loop.c lowlevel-blt-bench.c matrix-test.c oob-test.c \
 	pdf-op-test.c pixel-test.c prng-test.c radial-perf-test.c \
 	region-contains-test.c region-test.c region-translate-test.c \
-	rotate-test.c scaling-crash-test.c scaling-helpers-test.c \
-	scaling-test.c stress-test.c trap-crasher.c
+	rotate-test.c scaling-bench.c scaling-crash-test.c \
+	scaling-helpers-test.c scaling-test.c stress-test.c \
+	thread-test.c trap-crasher.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -331,7 +374,7 @@ GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
 HAVE_LIBPNG = @HAVE_LIBPNG@
-HAVE_PTHREAD_SETSPECIFIC = @HAVE_PTHREAD_SETSPECIFIC@
+HAVE_PTHREADS = @HAVE_PTHREADS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -377,6 +420,7 @@ PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PNG_CFLAGS = @PNG_CFLAGS@
 PNG_LIBS = @PNG_LIBS@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LDFLAGS = @PTHREAD_LDFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
@@ -385,6 +429,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SSE2_CFLAGS = @SSE2_CFLAGS@
 SSE2_LDFLAGS = @SSE2_LDFLAGS@
+SSSE3_CFLAGS = @SSSE3_CFLAGS@
 STRIP = @STRIP@
 TESTPROGS_EXTRA_LDFLAGS = @TESTPROGS_EXTRA_LDFLAGS@
 TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR = @TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR@
@@ -459,6 +504,7 @@ TESTPROGRAMS = \
 	infinite-loop		\
 	trap-crasher		\
 	alpha-loop		\
+	thread-test		\
 	scaling-crash-test	\
 	scaling-helpers-test	\
 	gradient-crash-test	\
@@ -480,6 +526,7 @@ OTHERPROGRAMS = \
 	lowlevel-blt-bench	\
 	radial-perf-test	\
         check-formats           \
+	scaling-bench		\
 	$(NULL)
 
 
@@ -494,9 +541,9 @@ libutils_headers = \
 	utils-prng.h		\
 	$(NULL)
 
-AM_CFLAGS = $(OPENMP_CFLAGS)
-AM_LDFLAGS = $(OPENMP_CFLAGS) $(TESTPROGS_EXTRA_LDFLAGS)
-LDADD = libutils.la $(top_builddir)/pixman/libpixman-1.la -lm  $(PNG_LIBS)
+AM_CFLAGS = $(OPENMP_CFLAGS) $(PTHREAD_CFLAGS)
+AM_LDFLAGS = $(OPENMP_CFLAGS) $(TESTPROGS_EXTRA_LDFLAGS) $(PTHREAD_LDFLAGS)
+LDADD = libutils.la $(top_builddir)/pixman/libpixman-1.la -lm  $(PNG_LIBS) $(PTHREAD_LIBS)
 AM_CPPFLAGS = -I$(top_srcdir)/pixman -I$(top_builddir)/pixman $(PNG_CFLAGS)
 libutils_la_SOURCES = $(libutils_sources) $(libutils_headers)
 noinst_LTLIBRARIES = libutils.la
@@ -629,6 +676,9 @@ region-translate-test$(EXEEXT): $(region_translate_test_OBJECTS) $(region_transl
 rotate-test$(EXEEXT): $(rotate_test_OBJECTS) $(rotate_test_DEPENDENCIES) $(EXTRA_rotate_test_DEPENDENCIES) 
 	@rm -f rotate-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(rotate_test_OBJECTS) $(rotate_test_LDADD) $(LIBS)
+scaling-bench$(EXEEXT): $(scaling_bench_OBJECTS) $(scaling_bench_DEPENDENCIES) $(EXTRA_scaling_bench_DEPENDENCIES) 
+	@rm -f scaling-bench$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(scaling_bench_OBJECTS) $(scaling_bench_LDADD) $(LIBS)
 scaling-crash-test$(EXEEXT): $(scaling_crash_test_OBJECTS) $(scaling_crash_test_DEPENDENCIES) $(EXTRA_scaling_crash_test_DEPENDENCIES) 
 	@rm -f scaling-crash-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(scaling_crash_test_OBJECTS) $(scaling_crash_test_LDADD) $(LIBS)
@@ -641,6 +691,9 @@ scaling-test$(EXEEXT): $(scaling_test_OBJECTS) $(scaling_test_DEPENDENCIES) $(EX
 stress-test$(EXEEXT): $(stress_test_OBJECTS) $(stress_test_DEPENDENCIES) $(EXTRA_stress_test_DEPENDENCIES) 
 	@rm -f stress-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(stress_test_OBJECTS) $(stress_test_LDADD) $(LIBS)
+thread-test$(EXEEXT): $(thread_test_OBJECTS) $(thread_test_DEPENDENCIES) $(EXTRA_thread_test_DEPENDENCIES) 
+	@rm -f thread-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(thread_test_OBJECTS) $(thread_test_LDADD) $(LIBS)
 trap-crasher$(EXEEXT): $(trap_crasher_OBJECTS) $(trap_crasher_DEPENDENCIES) $(EXTRA_trap_crasher_DEPENDENCIES) 
 	@rm -f trap-crasher$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(trap_crasher_OBJECTS) $(trap_crasher_LDADD) $(LIBS)
@@ -675,10 +728,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-translate-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rotate-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-bench.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-crash-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-helpers-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stress-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trap-crasher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils-prng.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@

@@ -150,6 +150,12 @@ compute_crc32_for_image_internal (uint32_t        crc32,
     uint32_t mask = 0xffffffff;
     int i;
 
+    if (stride < 0)
+    {
+	data += (stride / 4) * (height - 1);
+	stride = - stride;
+    }
+
     /* mask unused 'x' part */
     if (PIXMAN_FORMAT_BPP (fmt) - PIXMAN_FORMAT_DEPTH (fmt) &&
 	PIXMAN_FORMAT_DEPTH (fmt) != 0)
@@ -238,6 +244,38 @@ compute_crc32_for_image (uint32_t        crc32,
     return crc32;
 }
 
+void
+print_image (pixman_image_t *image)
+{
+    int i, j;
+    int width, height, stride;
+    pixman_format_code_t format;
+    uint8_t *buffer;
+    int s;
+
+    width = pixman_image_get_width (image);
+    height = pixman_image_get_height (image);
+    stride = pixman_image_get_stride (image);
+    format = pixman_image_get_format (image);
+    buffer = (uint8_t *)pixman_image_get_data (image);
+
+    s = (stride >= 0)? stride : - stride;
+    
+    printf ("---\n");
+    for (i = 0; i < height; i++)
+    {
+	for (j = 0; j < s; j++)
+	{
+	    if (j == (width * PIXMAN_FORMAT_BPP (format) + 7) / 8)
+		printf ("| ");
+
+	    printf ("%02X ", *((uint8_t *)buffer + i * stride + j));
+	}
+	printf ("\n");
+    }
+    printf ("---\n");
+}
+
 /* perform endian conversion of pixel data
  */
 void
@@ -259,11 +297,12 @@ image_endian_swap (pixman_image_t *img)
     for (i = 0; i < height; i++)
     {
 	uint8_t *line_data = (uint8_t *)data + stride * i;
-	
+	int s = (stride >= 0)? stride : - stride;
+    	
 	switch (bpp)
 	{
 	case 1:
-	    for (j = 0; j < stride; j++)
+	    for (j = 0; j < s; j++)
 	    {
 		line_data[j] =
 		    ((line_data[j] & 0x80) >> 7) |
@@ -277,13 +316,13 @@ image_endian_swap (pixman_image_t *img)
 	    }
 	    break;
 	case 4:
-	    for (j = 0; j < stride; j++)
+	    for (j = 0; j < s; j++)
 	    {
 		line_data[j] = (line_data[j] >> 4) | (line_data[j] << 4);
 	    }
 	    break;
 	case 16:
-	    for (j = 0; j + 2 <= stride; j += 2)
+	    for (j = 0; j + 2 <= s; j += 2)
 	    {
 		char t1 = line_data[j + 0];
 		char t2 = line_data[j + 1];
@@ -293,7 +332,7 @@ image_endian_swap (pixman_image_t *img)
 	    }
 	    break;
 	case 24:
-	    for (j = 0; j + 3 <= stride; j += 3)
+	    for (j = 0; j + 3 <= s; j += 3)
 	    {
 		char t1 = line_data[j + 0];
 		char t2 = line_data[j + 1];
@@ -305,7 +344,7 @@ image_endian_swap (pixman_image_t *img)
 	    }
 	    break;
 	case 32:
-	    for (j = 0; j + 4 <= stride; j += 4)
+	    for (j = 0; j + 4 <= s; j += 4)
 	    {
 		char t1 = line_data[j + 0];
 		char t2 = line_data[j + 1];
@@ -602,6 +641,32 @@ draw_checkerboard (pixman_image_t *image,
     }
 }
 
+static uint32_t
+call_test_function (uint32_t    (*test_function)(int testnum, int verbose),
+		    int		testnum,
+		    int		verbose)
+{
+    uint32_t retval;
+
+#if defined (__GNUC__) && defined (_WIN32) && (defined (__i386) || defined (__i386__))
+    __asm__ (
+	/* Deliberately avoid aligning the stack to 16 bytes */
+	"pushl	%1\n\t"
+	"pushl	%2\n\t"
+	"call	*%3\n\t"
+	"addl	$8, %%esp\n\t"
+	: "=a" (retval)
+	: "r" (verbose),
+	  "r" (testnum),
+	  "r" (test_function)
+	: "edx", "ecx"); /* caller save registers */
+#else
+    retval = test_function (testnum, verbose);
+#endif
+
+    return retval;
+}
+
 /*
  * A function, which can be used as a core part of the test programs,
  * intended to detect various problems with the help of fuzzing input
@@ -671,7 +736,9 @@ fuzzer_test_main (const char *test_name,
     else if (argc >= 2)
     {
 	n2 = atoi (argv[1]);
-	checksum = test_function (n2, 1);
+
+	checksum = call_test_function (test_function, n2, 1);
+
 	printf ("%d: checksum=%08X\n", n2, checksum);
 	return 0;
     }
@@ -687,7 +754,7 @@ fuzzer_test_main (const char *test_name,
 #endif
     for (i = n1; i <= n2; i++)
     {
-	uint32_t crc = test_function (i, 0);
+	uint32_t crc = call_test_function (test_function, i, 0);
 	if (verbose)
 	    printf ("%d: %08X\n", i, crc);
 	checksum += crc;
