@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.66 2013/06/17 17:11:10 okan Exp $
+ * $OpenBSD: menu.c,v 1.67 2013/12/02 19:49:26 okan Exp $
  */
 
 #include <sys/param.h>
@@ -427,10 +427,8 @@ menu_draw(struct menu_ctx *mc, struct menu_q *menuq, struct menu_q *resultq)
 		xu_xft_draw(sc, text, CWM_COLOR_MENU_FONT, 0, y);
 		n++;
 	}
-	if (mc->hasprompt && n > 1 && (mc->searchstr[0] != '\0')) {
-		mc->entry = 1;
-		menu_draw_entry(mc, resultq, mc->entry, 1);
-	}
+	if (mc->hasprompt && n > 1)
+		menu_draw_entry(mc, resultq, 1, 1);
 }
 
 static void
