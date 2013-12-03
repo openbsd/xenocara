@@ -44,7 +44,7 @@
 ./usr/X11R6/lib/libpciaccess.so.2.0
 ./usr/X11R6/lib/libpixman-1.a
 ./usr/X11R6/lib/libpixman-1.la
-./usr/X11R6/lib/libpixman-1.so.31.0
+./usr/X11R6/lib/libpixman-1.so.32.4
 ./usr/X11R6/lib/libpthread-stubs.so.2.0
 ./usr/X11R6/lib/libxcb-atom.so.2.0
 ./usr/X11R6/lib/libxcb-aux.so.1.0
