@@ -14,7 +14,6 @@
 #define SYSV
 #endif
 #if !defined(SYSV) && !defined(QNX4)
-#include <sys/timeb.h>
 #include <sys/resource.h>
 #endif
 
