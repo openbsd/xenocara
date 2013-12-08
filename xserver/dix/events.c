@@ -262,6 +262,11 @@ InputInfo inputInfo;
 
 EventSyncInfoRec syncEvents;
 
+static struct DeviceEventTime {
+    Bool reset;
+    TimeStamp time;
+} lastDeviceEventTime[MAXDEVICES];
+
 /**
  * The root window the given device is currently on.
  */
@@ -1043,33 +1048,73 @@ XineramaGetCursorScreen(DeviceIntPtr pDev)
 #define TIMESLOP (5 * 60 * 1000)        /* 5 minutes */
 
 static void
-MonthChangedOrBadTime(InternalEvent *ev)
+MonthChangedOrBadTime(CARD32 *ms)
 {
     /* If the ddx/OS is careless about not processing timestamped events from
      * different sources in sorted order, then it's possible for time to go
      * backwards when it should not.  Here we ensure a decent time.
      */
-    if ((currentTime.milliseconds - ev->any.time) > TIMESLOP)
+    if ((currentTime.milliseconds - *ms) > TIMESLOP)
         currentTime.months++;
     else
-        ev->any.time = currentTime.milliseconds;
+        *ms = currentTime.milliseconds;
+}
+
+void
+NoticeTime(const DeviceIntPtr dev, TimeStamp time)
+{
+    lastDeviceEventTime[XIAllDevices].time = currentTime;
+    lastDeviceEventTime[dev->id].time = currentTime;
+
+    LastEventTimeToggleResetFlag(dev->id, TRUE);
+    LastEventTimeToggleResetFlag(XIAllDevices, TRUE);
 }
 
 static void
-NoticeTime(InternalEvent *ev, DeviceIntPtr dev)
+NoticeTimeMillis(const DeviceIntPtr dev, CARD32 *ms)
 {
-    if (ev->any.time < currentTime.milliseconds)
-        MonthChangedOrBadTime(ev);
-    currentTime.milliseconds = ev->any.time;
-    lastDeviceEventTime[XIAllDevices] = currentTime;
-    lastDeviceEventTime[dev->id] = currentTime;
+    TimeStamp time;
+    if (*ms < currentTime.milliseconds)
+        MonthChangedOrBadTime(ms);
+    time.months = currentTime.months;
+    time.milliseconds = *ms;
+    NoticeTime(dev, time);
 }
 
 void
 NoticeEventTime(InternalEvent *ev, DeviceIntPtr dev)
 {
     if (!syncEvents.playingEvents)
-        NoticeTime(ev, dev);
+        NoticeTimeMillis(dev, &ev->any.time);
+}
+
+TimeStamp
+LastEventTime(int deviceid)
+{
+    return lastDeviceEventTime[deviceid].time;
+}
+
+Bool
+LastEventTimeWasReset(int deviceid)
+{
+    return lastDeviceEventTime[deviceid].reset;
+}
+
+void
+LastEventTimeToggleResetFlag(int deviceid, Bool state)
+{
+    lastDeviceEventTime[deviceid].reset = state;
+}
+
+void
+LastEventTimeToggleResetAll(Bool state)
+{
+    DeviceIntPtr dev;
+    nt_list_for_each_entry(dev, inputInfo.devices, next) {
+        LastEventTimeToggleResetFlag(dev->id, FALSE);
+    }
+    LastEventTimeToggleResetFlag(XIAllDevices, FALSE);
+    LastEventTimeToggleResetFlag(XIAllMasterDevices, FALSE);
 }
 
 /**************************************************************************
@@ -1093,7 +1138,7 @@ EnqueueEvent(InternalEvent *ev, DeviceIntPtr device)
     if (!xorg_list_is_empty(&syncEvents.pending))
         tail = xorg_list_last_entry(&syncEvents.pending, QdEventRec, next);
 
-    NoticeTime((InternalEvent *)event, device);
+    NoticeTimeMillis(device, &ev->any.time);
 
     /* Fix for key repeating bug. */
     if (device->key != NULL && device->key->xkbInfo != NULL &&
@@ -2102,6 +2147,7 @@ DeliverEventToInputClients(DeviceIntPtr dev, InputClients * inputclients,
 {
     int attempt;
     enum EventDeliveryState rc = EVENT_NOT_DELIVERED;
+    Bool have_device_button_grab_class_client = FALSE;
 
     for (; inputclients; inputclients = inputclients->next) {
         Mask mask;
@@ -2121,13 +2167,21 @@ DeliverEventToInputClients(DeviceIntPtr dev, InputClients * inputclients,
                                             events, count,
                                             mask, filter, grab))) {
             if (attempt > 0) {
-                rc = EVENT_DELIVERED;
-                *client_return = client;
-                *mask_return = mask;
-                /* Success overrides non-success, so if we've been
-                 * successful on one client, return that */
-            }
-            else if (rc == EVENT_NOT_DELIVERED)
+                /*
+                 * The order of clients is arbitrary therefore if one
+                 * client belongs to DeviceButtonGrabClass make sure to
+                 * catch it.
+                 */
+                if (!have_device_button_grab_class_client) {
+                    rc = EVENT_DELIVERED;
+                    *client_return = client;
+                    *mask_return = mask;
+                    /* Success overrides non-success, so if we've been
+                     * successful on one client, return that */
+                    if (mask & DeviceButtonGrabMask)
+                        have_device_button_grab_class_client = TRUE;
+                }
+            } else if (rc == EVENT_NOT_DELIVERED)
                 rc = EVENT_REJECTED;
         }
     }
@@ -4130,6 +4184,9 @@ DeliverOneGrabbedEvent(InternalEvent *event, DeviceIntPtr dev,
     GrabPtr grab = grabinfo->grab;
     Mask filter;
 
+    if (grab->grabtype != level)
+        return 0;
+
     switch (level) {
     case XI2:
         rc = EventToXI2(event, &xE);
@@ -4241,22 +4298,17 @@ DeliverGrabbedEvent(InternalEvent *event, DeviceIntPtr thisDev,
 
         sendCore = (IsMaster(thisDev) && thisDev->coreEvents);
         /* try core event */
-        if (sendCore && grab->grabtype == CORE) {
-            deliveries = DeliverOneGrabbedEvent(event, thisDev, CORE);
-        }
-
-        if (!deliveries) {
-            deliveries = DeliverOneGrabbedEvent(event, thisDev, XI2);
-        }
-
-        if (!deliveries) {
-            deliveries = DeliverOneGrabbedEvent(event, thisDev, XI);
-        }
+        if ((sendCore && grab->grabtype == CORE) || grab->grabtype != CORE)
+            deliveries = DeliverOneGrabbedEvent(event, thisDev, grab->grabtype);
 
         if (deliveries && (event->any.type == ET_Motion))
             thisDev->valuator->motionHintWindow = grab->window;
     }
-    if (deliveries && !deactivateGrab && event->any.type != ET_Motion) {
+    if (deliveries && !deactivateGrab &&
+        (event->any.type == ET_KeyPress ||
+         event->any.type == ET_KeyRelease ||
+         event->any.type == ET_ButtonPress ||
+         event->any.type == ET_ButtonRelease)) {
         switch (grabinfo->sync.state) {
         case FREEZE_BOTH_NEXT_EVENT:
             dev = GetPairedDevice(thisDev);
@@ -4641,7 +4693,7 @@ DeviceEnterLeaveEvent(DeviceIntPtr mouse,
 
     filter = GetEventFilter(mouse, (xEvent *) event);
 
-    if (grab) {
+    if (grab && grab->type == XI2) {
         Mask mask;
 
         mask = xi2mask_isset(grab->xi2mask, mouse, type);
@@ -5266,8 +5318,12 @@ InitEvents(void)
     inputInfo.pointer = (DeviceIntPtr) NULL;
 
     for (i = 0; i < MAXDEVICES; i++) {
+        DeviceIntRec dummy;
         memcpy(&event_filters[i], default_filter, sizeof(default_filter));
-        lastDeviceEventTime[i] = currentTime;
+
+        dummy.id = i;
+        NoticeTime(&dummy, currentTime);
+        LastEventTimeToggleResetFlag(i, FALSE);
     }
 
     syncEvents.replayDev = (DeviceIntPtr) NULL;

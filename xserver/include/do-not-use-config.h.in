@@ -247,6 +247,9 @@
 /* Define to 1 if you have the <rpcsvc/dbm.h> header file. */
 #undef HAVE_RPCSVC_DBM_H
 
+/* Define to 1 if you have the `seteuid' function. */
+#undef HAVE_SETEUID
+
 /* Use CommonCrypto SHA1 functions */
 #undef HAVE_SHA1_IN_COMMONCRYPTO
 

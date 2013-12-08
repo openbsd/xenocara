@@ -139,6 +139,9 @@
 /* Have X server platform bus support */
 #undef XSERVER_PLATFORM_BUS
 
+/* Define to 1 if you have the `seteuid' function. */
+#undef HAVE_SETEUID
+
 /* Use X server privilege separation */
 #undef X_PRIVSEP
 

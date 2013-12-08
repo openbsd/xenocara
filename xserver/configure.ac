@@ -26,9 +26,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.14.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
-RELEASE_DATE="2013-09-12"
-RELEASE_NAME="September Rain"
+AC_INIT([xorg-server], 1.14.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+RELEASE_DATE="2013-10-31"
+RELEASE_NAME="October Flood"
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
@@ -215,7 +215,7 @@ AC_SUBST(DLOPEN_LIBS)
 dnl Checks for library functions.
 AC_CHECK_FUNCS([backtrace ffs geteuid getuid issetugid getresuid \
 	getdtablesize getifaddrs getpeereid getpeerucred getzoneid \
-	mmap shmctl64 strncasecmp vasprintf vsnprintf walkcontext])
+	mmap seteuid shmctl64 strncasecmp vasprintf vsnprintf walkcontext])
 AC_REPLACE_FUNCS([strcasecmp strcasestr strlcat strlcpy strndup])
 
 dnl Find the math libary, then check for cbrt function in it.
