@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.152 2013/11/27 17:04:35 okan Exp $
+ * $OpenBSD: client.c,v 1.153 2013/12/10 21:27:37 okan Exp $
  */
 
 #include <sys/param.h>
@@ -471,6 +471,7 @@ client_unhide(struct client_ctx *cc)
 	cc->flags &= ~CLIENT_HIDDEN;
 	cc->state = NormalState;
 	xu_set_wm_state(cc->win, cc->state);
+	client_draw_border(cc);
 }
 
 void
