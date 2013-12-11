@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.33 2013/12/08 13:51:38 okan Exp $
+ * $OpenBSD: search.c,v 1.34 2013/12/11 14:09:21 okan Exp $
  */
 
 #include <sys/param.h>
@@ -85,8 +85,8 @@ search_match_client(struct menu_q *menuq, struct menu_q *resultq, char *search)
 		}
 
 		/* Then if there is a match on the window class name. */
-		if (tier < 0 && strsubmatch(search, cc->app_class, 0)) {
-			cc->matchname = cc->app_class;
+		if (tier < 0 && strsubmatch(search, cc->ch.res_class, 0)) {
+			cc->matchname = cc->ch.res_class;
 			tier = 3;
 		}
 
