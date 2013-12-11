@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.95 2013/12/02 14:30:12 okan Exp $
+ * $OpenBSD: xevents.c,v 1.96 2013/12/11 14:16:09 okan Exp $
  */
 
 /*
@@ -99,8 +99,7 @@ xev_handle_unmapnotify(XEvent *ee)
 
 	if ((cc = client_find(e->window)) != NULL) {
 		if (e->send_event) {
-			cc->state = WithdrawnState;
-			xu_set_wm_state(cc->win, cc->state);
+			client_set_wm_state(cc, WithdrawnState);
 		} else {
 			if (!(cc->flags & CLIENT_HIDDEN))
 				client_delete(cc);
