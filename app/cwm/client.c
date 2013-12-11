@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.157 2013/12/11 15:46:47 okan Exp $
+ * $OpenBSD: client.c,v 1.158 2013/12/11 17:23:31 okan Exp $
  */
 
 #include <sys/param.h>
@@ -99,7 +99,6 @@ client_init(Window win, struct screen_ctx *sc, int mapped)
 		if ((cc->wmh) && (cc->wmh->flags & StateHint))
 			client_set_wm_state(cc, cc->wmh->initial_state);
 	}
-	client_draw_border(cc);
 
 	XSelectInput(X_Dpy, cc->win, ColormapChangeMask | EnterWindowMask |
 	    PropertyChangeMask | KeyReleaseMask);
