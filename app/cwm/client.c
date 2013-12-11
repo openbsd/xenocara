@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.155 2013/12/11 14:16:09 okan Exp $
+ * $OpenBSD: client.c,v 1.156 2013/12/11 15:41:11 okan Exp $
  */
 
 #include <sys/param.h>
@@ -77,7 +77,7 @@ client_init(Window win, struct screen_ctx *sc, int mapped)
 	conf_client(cc);
 
 	XGetClassHint(X_Dpy, cc->win, &cc->ch);
-	cc->wmh = XGetWMHints(X_Dpy, cc->win);
+	client_wm_hints(cc);
 	client_getmwmhints(cc);
 	client_wm_protocols(cc);
 	client_getsizehints(cc);
@@ -93,12 +93,6 @@ client_init(Window win, struct screen_ctx *sc, int mapped)
 	cc->geom.h = wattr.height;
 	cc->colormap = wattr.colormap;
 
-	if (cc->wmh != NULL) {
-		if (cc->wmh->flags & InputHint) {
-			if (cc->wmh->input == 1)
-				cc->flags |= CLIENT_INPUT;
-		}
-	}
 	if (wattr.map_state != IsViewable) {
 		client_placecalc(cc);
 		client_move(cc);
@@ -507,6 +501,16 @@ client_wm_protocols(struct client_ctx *cc)
 		}
 		XFree(p);
 	}
+}
+
+void
+client_wm_hints(struct client_ctx *cc)
+{
+	if ((cc->wmh = XGetWMHints(X_Dpy, cc->win)) == NULL)
+		return;
+
+	if ((cc->wmh->flags & InputHint) && (cc->wmh->input))
+		cc->flags |= CLIENT_INPUT;
 }
 
 void
