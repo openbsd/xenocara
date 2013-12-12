@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.80 2013/07/15 14:50:44 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.81 2013/12/12 20:15:07 okan Exp $
  */
 
 #include <sys/param.h>
@@ -37,6 +37,7 @@
 
 char				**cwm_argv;
 Display				*X_Dpy;
+Time				 Last_Event_Time = CurrentTime;
 Atom				 cwmh[CWMH_NITEMS];
 Atom				 ewmh[EWMH_NITEMS];
 
