@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.150 2013/11/27 18:34:34 okan Exp $
+ * $OpenBSD: conf.c,v 1.151 2013/12/13 14:40:52 okan Exp $
  */
 
 #include <sys/param.h>
@@ -88,6 +88,7 @@ conf_ignore(struct conf *c, char *val)
 static char *color_binds[] = {
 	"#CCCCCC",	/* CWM_COLOR_BORDER_ACTIVE */
 	"#666666",	/* CWM_COLOR_BORDER_INACTIVE */
+	"#FC8814",	/* CWM_COLOR_BORDER_URGENCY */
 	"blue",		/* CWM_COLOR_BORDER_GROUP */
 	"red",		/* CWM_COLOR_BORDER_UNGROUP */
 	"black",	/* CWM_COLOR_MENU_FG */
@@ -687,6 +688,7 @@ static char *ewmhints[] = {
 	"_NET_WM_STATE",
 	"_NET_WM_STATE_MAXIMIZED_VERT",
 	"_NET_WM_STATE_MAXIMIZED_HORZ",
+	"_NET_WM_STATE_DEMANDS_ATTENTION",
 };
 
 void

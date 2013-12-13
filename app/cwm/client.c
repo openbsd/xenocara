@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.160 2013/12/12 20:15:07 okan Exp $
+ * $OpenBSD: client.c,v 1.161 2013/12/13 14:40:52 okan Exp $
  */
 
 #include <sys/param.h>
@@ -192,6 +192,7 @@ client_setactive(struct client_ctx *cc)
 
 	_curcc = cc;
 	cc->active = 1;
+	cc->flags &= ~CLIENT_URGENCY;
 	client_draw_border(cc);
 	conf_grab_mouse(cc->win);
 	xu_ewmh_net_active_window(sc, cc->win);
@@ -462,6 +463,12 @@ client_unhide(struct client_ctx *cc)
 }
 
 void
+client_urgency(struct client_ctx *cc)
+{
+	cc->flags |= CLIENT_URGENCY;
+}
+
+void
 client_draw_border(struct client_ctx *cc)
 {
 	struct screen_ctx	*sc = cc->sc;
@@ -481,6 +488,9 @@ client_draw_border(struct client_ctx *cc)
 		}
 	else
 		pixel = sc->xftcolor[CWM_COLOR_BORDER_INACTIVE].pixel;
+
+	if (cc->flags & CLIENT_URGENCY)
+		pixel = sc->xftcolor[CWM_COLOR_BORDER_URGENCY].pixel;
 
 	XSetWindowBorderWidth(X_Dpy, cc->win, cc->bwidth);
 	XSetWindowBorder(X_Dpy, cc->win, pixel);
@@ -511,6 +521,9 @@ client_wm_hints(struct client_ctx *cc)
 
 	if ((cc->wmh->flags & InputHint) && (cc->wmh->input))
 		cc->flags |= CLIENT_INPUT;
+
+	if ((cc->wmh->flags & XUrgencyHint))
+		client_urgency(cc);
 }
 
 void
