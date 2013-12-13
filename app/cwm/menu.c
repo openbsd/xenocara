@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.68 2013/12/02 20:01:19 okan Exp $
+ * $OpenBSD: menu.c,v 1.69 2013/12/13 22:39:13 okan Exp $
  */
 
 #include <sys/param.h>
@@ -380,7 +380,7 @@ menu_draw(struct menu_ctx *mc, struct menu_q *menuq, struct menu_q *resultq)
 		mc->num++;
 	}
 
-	xine = screen_find_xinerama(sc, mc->x, mc->y);
+	xine = screen_find_xinerama(sc, mc->x, mc->y, CWM_GAP);
 	xine.w += xine.x;
 	xine.h += xine.y;
 

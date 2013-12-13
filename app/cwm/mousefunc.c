@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.63 2013/12/13 21:51:56 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.64 2013/12/13 22:39:13 okan Exp $
  */
 
 #include <sys/param.h>
@@ -148,7 +148,7 @@ mousefunc_client_move(struct client_ctx *cc, void *arg)
 
 			xine = screen_find_xinerama(sc,
 			    cc->geom.x + cc->geom.w / 2,
-			    cc->geom.y + cc->geom.h / 2);
+			    cc->geom.y + cc->geom.h / 2, CWM_GAP);
 			cc->geom.x += client_snapcalc(cc->geom.x,
 			    cc->geom.x + cc->geom.w + (cc->bwidth * 2),
 			    xine.x, xine.x + xine.w, sc->snapdist);
