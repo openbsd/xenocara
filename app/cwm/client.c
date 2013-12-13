@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.161 2013/12/13 14:40:52 okan Exp $
+ * $OpenBSD: client.c,v 1.162 2013/12/13 15:56:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -102,6 +102,8 @@ client_init(Window win, struct screen_ctx *sc, int mapped)
 
 	XSelectInput(X_Dpy, cc->win, ColormapChangeMask | EnterWindowMask |
 	    PropertyChangeMask | KeyReleaseMask);
+
+	XAddToSaveSet(X_Dpy, cc->win);
 
 	client_transient(cc);
 
