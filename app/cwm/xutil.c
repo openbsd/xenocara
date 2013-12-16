@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.80 2013/12/13 14:40:52 okan Exp $
+ * $OpenBSD: xutil.c,v 1.81 2013/12/16 19:02:17 okan Exp $
  */
 
 #include <sys/param.h>
@@ -333,6 +333,9 @@ xu_ewmh_handle_net_wm_state_msg(struct client_ctx *cc, int action,
 		{ _NET_WM_STATE_MAXIMIZED_HORZ,
 			CLIENT_HMAXIMIZED,
 			client_hmaximize },
+		{ _NET_WM_STATE_FULLSCREEN,
+			CLIENT_FULLSCREEN,
+			client_fullscreen },
 		{ _NET_WM_STATE_DEMANDS_ATTENTION,
 			CLIENT_URGENCY,
 			client_urgency },
@@ -369,6 +372,8 @@ xu_ewmh_restore_net_wm_state(struct client_ctx *cc)
 			client_hmaximize(cc);
 		if (atoms[i] == ewmh[_NET_WM_STATE_MAXIMIZED_VERT])
 			client_vmaximize(cc);
+		if (atoms[i] == ewmh[_NET_WM_STATE_FULLSCREEN])
+			client_fullscreen(cc);
 		if (atoms[i] == ewmh[_NET_WM_STATE_DEMANDS_ATTENTION])
 			client_urgency(cc);
 	}
@@ -386,14 +391,19 @@ xu_ewmh_set_net_wm_state(struct client_ctx *cc)
 	for (i = j = 0; i < n; i++) {
 		if (oatoms[i] != ewmh[_NET_WM_STATE_MAXIMIZED_HORZ] &&
 		    oatoms[i] != ewmh[_NET_WM_STATE_MAXIMIZED_VERT] &&
+		    oatoms[i] != ewmh[_NET_WM_STATE_FULLSCREEN] &&
 		    oatoms[i] != ewmh[_NET_WM_STATE_DEMANDS_ATTENTION])
 			atoms[j++] = oatoms[i];
 	}
 	free(oatoms);
-	if (cc->flags & CLIENT_HMAXIMIZED)
-		atoms[j++] = ewmh[_NET_WM_STATE_MAXIMIZED_HORZ];
-	if (cc->flags & CLIENT_VMAXIMIZED)
-		atoms[j++] = ewmh[_NET_WM_STATE_MAXIMIZED_VERT];
+	if (cc->flags & CLIENT_FULLSCREEN)
+		atoms[j++] = ewmh[_NET_WM_STATE_FULLSCREEN];
+	else {
+		if (cc->flags & CLIENT_HMAXIMIZED)
+			atoms[j++] = ewmh[_NET_WM_STATE_MAXIMIZED_HORZ];
+		if (cc->flags & CLIENT_VMAXIMIZED)
+			atoms[j++] = ewmh[_NET_WM_STATE_MAXIMIZED_VERT];
+	}
 	if (cc->flags & CLIENT_URGENCY)
 		atoms[j++] = ewmh[_NET_WM_STATE_DEMANDS_ATTENTION];
 	if (j > 0)
