@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xmalloc.c,v 1.11 2012/11/28 14:32:44 okan Exp $
+ * $OpenBSD: xmalloc.c,v 1.12 2013/12/17 16:12:18 okan Exp $
  */
 
 #include <sys/param.h>
@@ -23,6 +23,7 @@
 
 #include <err.h>
 #include <errno.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
