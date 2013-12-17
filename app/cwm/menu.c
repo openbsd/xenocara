@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.69 2013/12/13 22:39:13 okan Exp $
+ * $OpenBSD: menu.c,v 1.70 2013/12/17 16:10:43 okan Exp $
  */
 
 #include <sys/param.h>
@@ -92,7 +92,7 @@ menu_filter(struct screen_ctx *sc, struct menu_q *menuq, char *prompt,
 
 	TAILQ_INIT(&resultq);
 
-	bzero(&mc, sizeof(mc));
+	(void)memset(&mc, 0, sizeof(mc));
 
 	xu_ptr_getpos(sc->rootwin, &mc.x, &mc.y);
 

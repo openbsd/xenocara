@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.164 2013/12/16 19:02:17 okan Exp $
+ * $OpenBSD: client.c,v 1.165 2013/12/17 16:10:43 okan Exp $
  */
 
 #include <sys/param.h>
@@ -408,7 +408,7 @@ client_config(struct client_ctx *cc)
 {
 	XConfigureEvent	 cn;
 
-	bzero(&cn, sizeof(cn));
+	(void)memset(&cn, 0, sizeof(cn));
 	cn.type = ConfigureNotify;
 	cn.event = cc->win;
 	cn.window = cc->win;
@@ -547,7 +547,7 @@ client_msg(struct client_ctx *cc, Atom proto, Time ts)
 {
 	XClientMessageEvent	 cm;
 
-	bzero(&cm, sizeof(cm));
+	(void)memset(&cm, 0, sizeof(cm));
 	cm.type = ClientMessage;
 	cm.window = cc->win;
 	cm.message_type = cwmh[WM_PROTOCOLS];

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.152 2013/12/16 19:02:17 okan Exp $
+ * $OpenBSD: conf.c,v 1.153 2013/12/17 16:10:43 okan Exp $
  */
 
 #include <sys/param.h>
@@ -226,7 +226,7 @@ conf_init(struct conf *c)
 {
 	u_int	i;
 
-	bzero(c, sizeof(*c));
+	(void)memset(c, 0, sizeof(*c));
 
 	c->bwidth = CONF_BWIDTH;
 	c->mamount = CONF_MAMOUNT;

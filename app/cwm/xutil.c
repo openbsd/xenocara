@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.81 2013/12/16 19:02:17 okan Exp $
+ * $OpenBSD: xutil.c,v 1.82 2013/12/17 16:10:43 okan Exp $
  */
 
 #include <sys/param.h>
@@ -311,7 +311,7 @@ xu_ewmh_get_net_wm_state(struct client_ctx *cc, int *n)
 		return (NULL);
 
 	state = xcalloc(*n, sizeof(Atom));
-	memcpy(state, p, *n * sizeof(Atom));
+	(void)memcpy(state, p, *n * sizeof(Atom));
 	XFree((char *)p);
 
 	return (state);
