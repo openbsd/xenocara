@@ -1,16 +1,987 @@
-commit f8a0812b1c4d5a4e24939da5ad6229f5adcafb34
+commit 4b3a66b05ed69507b297ed62574fc97eb9472e1e
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Nov 17 17:46:52 2013 -0800
+
+    Pre-release version bump to 0.32.4
+
+commit 97a655d5cafc07e9185155c885b2d4564986ef85
+Author: Søren Sandmann <ssp@redhat.com>
+Date:   Sat Nov 16 18:57:01 2013 -0500
+
+    test/utils.c: Make the stack unaligned only on 32 bit Windows
+    
+    The call_test_function() contains some assembly that deliberately
+    causes the stack to be aligned to 32 bits rather than 128 bits on
+    x86-32. The intention is to catch bugs that surface when pixman is
+    called from code that only uses a 32 bit alignment.
+    
+    However, recent versions of GCC apparently make the assumption (either
+    accidentally or deliberately) that that the incoming stack is aligned
+    to 128 bits, where older versions only seemed to make this assumption
+    when compiling with -msse2. This causes the vector code in the PRNG to
+    now segfault when called from call_test_function() on x86-32.
+    
+    This patch fixes that by only making the stack unaligned on 32 bit
+    Windows, where it would definitely be incorrect for GCC to assume that
+    the incoming stack is aligned to 128 bits.
+    
+    V2: Put "defined(...)" around __GNUC__
+    
+    Reviewed-and-Tested-by: Matt Turner <mattst88@gmail.com>
+    Bugzilla: https://bugs.gentoo.org/show_bug.cgi?id=491110
+    (cherry picked from commit f473fd1e7553a4e92a0d72bea360f05d005c9a88)
+
+commit 5a313af74e9afe7524909c019daebfded3bef1fa
+Author: Jakub Bogusz <qboosh@pld-linux.org>
+Date:   Tue Nov 12 12:59:42 2013 -0800
+
+    Fix the SSSE3 CPUID detection.
+    
+    SSSE3 is detected by bit 9 of ECX, but we were checking bit 9 of EDX
+    which is APIC leading to SSSE3 routines being called on CPUs without
+    SSSE3.
+    
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    (cherry picked from commit 8487dfbcd056eff066939dc253fcf361b391592a)
+
+commit 917a52003d0705ac0076bd1ed4e390374f56c262
+Author: Søren Sandmann <ssp@redhat.com>
+Date:   Mon Nov 11 19:55:18 2013 -0500
+
+    Post-release version bump to 0.32.3
+
+commit a980f83a6827109aad789d4c8c664f2770d0aaa1
+Author: Søren Sandmann <ssp@redhat.com>
+Date:   Mon Nov 11 19:44:54 2013 -0500
+
+    Pre-release version bump to 0.32.2
+
+commit e2e381702172abfd50b48a73cd183635e138ff99
+Author: Søren Sandmann <ssp@redhat.com>
+Date:   Mon Nov 11 19:13:31 2013 -0500
+
+    demos/Makefile.am: Move EXTRA_DIST outside "if HAVE_GTK"
+    
+    Without this, if tarballs are generated on a system that doesn't have
+    GTK+ 2 development headers available, the files in EXTRA_DIST will not
+    be included, which then causes builds from the tarball to fail on
+    systems that do have GTK+ 2 headers available.
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=71465
+
+commit 950d1310f7c6db202a1a4eaf4761667968b81645
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Mon Nov 11 11:21:23 2013 +0100
+
+    test: Fix the win32 build
+    
+    The win32 build has no config.h, so HAVE_CONFIG_H should be checked
+    before including it, as in utils.h.
+
+commit 7a00965d7aa861da39a781ea2df1b5f54c48dbb7
+Author: Søren Sandmann <ssp@redhat.com>
+Date:   Mon Nov 11 19:07:19 2013 -0500
+
+    Post-release version bump to 0.32.1
+
+commit 895e7e05b7a51a8d578c523bf6c0c6649e06ab5e
+Author: Søren Sandmann <ssp@redhat.com>
+Date:   Sun Nov 10 18:05:47 2013 -0500
+
+    Pre-release version bump to 0.32.0
+
+commit 8cbc7da4e525c96a8e089e4c1baee75dc8315218
 Author: Søren Sandmann Pedersen <ssp@redhat.com>
-Date:   Wed Aug 7 10:07:35 2013 -0400
+Date:   Fri Nov 1 20:52:00 2013 -0400
 
-    Pre-release version bump to 0.30.2
+    Post-release version bump to 0.31.3
 
-commit b5167b8a5439d30bde8a178568cb3fe1c95b509a
+commit 99e8605be08d4fa46eabf76355fc4e953f60b44f
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri Nov 1 20:39:46 2013 -0400
+
+    Pre-release version bump to 0.31.2
+
+commit 5e14da97f16e421d084a9e735be21b1025150f0c
+Author: Ritesh Khadgaray <khadgaray@gmail.com>
+Date:   Wed Oct 23 17:29:07 2013 -0400
+
+    pixman_trapezoid_valid(): Fix underflow when bottom is close to MIN_INT
+    
+    If t->bottom is close to MIN_INT (probably invalid value), subtracting
+    top can lead to underflow which causes crashes.  Attached patch will
+    fix the issue.
+    
+    This fixes bug 67484.
+
+commit 2f876cf86718d3dd9b3b04ae9552530edafe58a1
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Oct 23 17:28:11 2013 -0400
+
+    test/trap-crasher.c: Add trapezoid that demonstrates a crash
+    
+    This trapezoid causes a crash due to an underflow in the
+    pixman_trapezoid_valid().
+    
+    Test case from Ritesh Khadgaray.
+
+commit 8ef7e0d18e00291da14c69d3034896235875d019
+Author: Brad Smith <brad@comstyle.com>
+Date:   Thu Oct 17 23:22:02 2013 -0400
+
+    Fix pixman build with older GCC releases
+    
+    The following patch fixes building pixman with older GCC releases
+    such as GCC 3.3 and older (OpenBSD; some older archs use GCC 3.3.6)
+    by changing the method of detecting the presence of __builtin_clz
+    to utilizing an autoconf check to determine its presence. Compilers
+    that pretend to be GCC, implement __builtin_clz and are already
+    utilizing the intrinsic include LLVM/Clang, Open64, EKOPath and
+    PCC.
+
+commit 3c2f4b651747c1ac484c39d5128cae5483094342
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri Oct 11 00:49:44 2013 -0400
+
+    pixman-glyph.c: Add __force_align_arg_pointer to composite functions
+    
+    The functions pixman_composite_glyphs_no_mask() and
+    pixman_composite_glyphs() can call into code compiled with -msse2,
+    which requires the stack to be aligned to 16 bytes. Since the ABIs on
+    Windows and Linux for x86-32 don't provide this guarantee, we need to
+    use this attribute to make GCC generate a prologue that realigns the
+    stack.
+    
+    This fixes the crash introduced in the previous commit and also
+    
+       https://bugs.freedesktop.org/show_bug.cgi?id=70348
+    
+    and
+    
+       https://bugs.freedesktop.org/show_bug.cgi?id=68300
+
+commit 3dce229772354877ef297dd9979097fe8ebaebf4
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Oct 2 14:38:16 2013 -0400
+
+    utils.c: On x86-32 unalign the stack before calling test_function
+    
+    GCC when compiling with -msse2 and -mssse3 will assume that the stack
+    is aligned to 16 bytes even on x86-32 and accordingly issue movdqa
+    instructions for stack allocated variables.
+    
+    But despite what GCC thinks, the standard ABI on x86-32 only requires
+    a 4-byte aligned stack. This is true at least on Windows, but there
+    also was (and maybe still is) Linux code in the wild that assumed
+    this. When such code calls into pixman and hits something compiled
+    with -msse2, we get a segfault from the unaligned movdqas.
+    
+    Pixman has worked around this issue in the past with the gcc attribute
+    "force_align_arg_pointer" but the problem has resurfaced now in
+    
+        https://bugs.freedesktop.org/show_bug.cgi?id=68300
+    
+    because pixman_composite_glyphs() is missing this attribute.
+    
+    This patch makes fuzzer_test_main() call the test_function through a
+    trampoline, which, on x86-32, has a bit of assembly that deliberately
+    avoids aligning the stack to 16 bytes as GCC normally expects. The
+    result is that glyph-test now crashes.
+    
+    V2: Mark caller-save registers as clobbered, rather than using
+    noinline on the trampoline.
+
+commit 9e81419ed5c0ee490ddacf7bada516a25cae87eb
+Author: Siarhei Siamashka <siarhei.siamashka@gmail.com>
+Date:   Sat Oct 5 22:00:26 2013 +0300
+
+    configure.ac: check and use -Wdeclaration-after-statement GCC option
+    
+    The accidental use of declaration after statement breaks compilation
+    with C89 compilers such as MSVC. Assuming that MSVC is one of the
+    supported compilers, it makes sense to ask GCC to at least report
+    warnings for such problematic code.
+
+commit a863bbcce0924f8d4004a352c670a9f774012463
+Author: Siarhei Siamashka <siarhei.siamashka@gmail.com>
+Date:   Wed Oct 2 00:54:30 2013 +0000
+
+    sse2: bilinear fast path for src_x888_8888
+    
+    Running cairo-perf-trace benchmark on Intel Core2 T7300:
+    
+    Before:
+    [  0]    image    t-firefox-canvas-swscroll    1.989    2.008   0.43%    8/8
+    [  1]    image        firefox-canvas-scroll    4.574    4.609   0.50%    8/8
+    
+    After:
+    [  0]    image    t-firefox-canvas-swscroll    1.404    1.418   0.51%    8/8
+    [  1]    image        firefox-canvas-scroll    4.228    4.259   0.36%    8/8
+
+commit 8f75f638ab03078546cc89edfbec4f6801b77e5e
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Oct 9 22:12:23 2013 -0400
+
+    configure.ac: Add check for pmulhuw assembly
+    
+    Clang 3.0 chokes on the following bit of assembly
+    
+        asm ("pmulhuw %1, %0\n\t"
+            : "+y" (__A)
+            : "y" (__B)
+        );
+    
+    from pixman-mmx.c with this error message:
+    
+        fatal error: error in backend: Unsupported asm: input constraint
+            with a matching output constraint of incompatible type!
+    
+    So add a check in configure to only enable MMX when the compiler can
+    deal with it.
+
+commit 09a62d4dbc9a1a86ef7671c2abc9b7f753b86f64
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Oct 9 22:05:59 2013 -0400
+
+    scale.c: Use int instead of kernel_t for values in named_int_t
+    
+    The 'value' field in the 'named_int_t' struct is used for both
+    pixman_repeat_t and pixman_kernel_t values, so the type should be int,
+    not pixman_kernel_t.
+    
+    Fixes some warnings like this
+    
+    scale.c:124:33: warning: implicit conversion from enumeration
+          type 'pixman_repeat_t' to different enumeration type
+          'pixman_kernel_t' [-Wconversion]
+        { "None",                   PIXMAN_REPEAT_NONE },
+        ~                           ^~~~~~~~~~~~~~~~~~
+    
+    when compiled with clang.
+
+commit 93672438012b63f585dfcd76992099740e0500b8
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri Oct 4 16:45:21 2013 -0400
+
+    pixman-combine32.c: Make Color Burn routine follow the math more closely
+    
+    For superluminescent destinations, the old code could underflow in
+    
+        uint32_t r = (ad - d) * as / s;
+    
+    when (ad - d) was negative. The new code avoids this problem (and
+    therefore causes changes in the checksums of thread-test and
+    blitters-test), but it is likely still buggy due to the use of
+    unsigned variables and other issues in the blend mode code.
+
+commit 105fa74faddcb83e7779c035f8c41ec4924acfd8
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri Oct 4 16:40:17 2013 -0400
+
+    pixman-combine32: Make Color Dodge routine follow the math more closely
+    
+    Change blend_color_dodge() to follow the math in the comment more
+    closely.
+    
+    Note, the new code here is in some sense worse than the old code
+    because it can now underflow the unsigned variables when the source is
+    superluminescent and (as - s) is therefore negative. The old code was
+    careful to clamp to 0.
+    
+    But for superluminescent variables we really need the ability for the
+    blend function to become negative, and so the solution the underflow
+    problem is to just use signed variables. The use of unsigned variables
+    is a general problem in all of the blend mode code that will have to
+    be solved later.
+    
+    The CRC32 values in thread-test and blitters-test are updated to
+    account for the changes in output.
+
+commit 2527a72432adcaa9752a9138272d53063ee7484f
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri Oct 4 16:35:35 2013 -0400
+
+    pixman-combine32: Rename a number of variable from sa/sca to as/s
+    
+    There are no semantic changes, just variables renames. The motivation
+    for these renames is so that the names are shorter and better match
+    the one used in the comments.
+
+commit eaa4778c42557c7cb9f081c861f8c22b24298db8
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri Oct 4 16:27:39 2013 -0400
+
+    pixman-combine32: Improve documentation for blend mode operators
+    
+    This commit overhauls the comments in pixman-comine32.c regarding
+    blend modes:
+    
+    - Add a link to the PDF supplement that clarifies the specification of
+      ColorBurn and ColorDodge
+    
+    - Clarify how the formulas for premultiplied colors are derived form
+      the ones in the PDF specifications
+    
+    - Write out the derivation of the formulas in each blend routine
+
+commit 4bf1502fe81e740cb2bb8f0b538967513dd8e4e5
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri Oct 4 16:40:23 2013 -0400
+
+    pixman-combine32.c: Formatting fixes
+    
+    Fix a bunch of spacing issues.
+    
+    V2: More spacing issues, in the _ca combiners
+
+commit 54be1a52f710b8b4abb05c074c066c389d8f89a8
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Wed Oct 9 18:23:27 2013 +0200
+
+    Fix thread-test on non-OpenMP systems
+    
+    The non-reentrant versions of prng_* functions are thread-safe only in
+    OpenMP-enabled builds.
+    
+    Fixes thread-test failing when compiled with Clang (both on Linux and
+    on MacOS).
+
+commit 0af2fcaebc4835ecf52d6002fcaacb09cbbcbaad
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Thu Sep 26 09:23:41 2013 +0200
+
+    Add support for SSSE3 to the MSVC build system
+    
+    Handle SSSE3 just like MMX and SSE2.
+
+commit e4d9c623d3baee50a5bfbc87cba81b0d2d87ee26
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Thu Sep 26 09:26:17 2013 +0200
+
+    Fix build of check-formats on MSVC
+    
+    Fixes
+    
+    check-formats.obj : error LNK2019: unresolved external symbol
+    _strcasecmp referenced in function _format_from_string
+    
+    check-formats.obj : error LNK2019: unresolved external symbol
+    _snprintf referenced in function _list_operators
+
+commit 96ad6ebd8b8481aaa603d14953edb96504658eb7
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Thu Sep 26 09:12:31 2013 +0200
+
+    Fix building of "other" programs on MSVC
+    
+    In d1434d112ca5cd325e4fb85fc60afd1b9e902786 the benchmarks have been
+    extended to include other programs as well and the variable names have
+    been updated accordingly in the autotools-based build system, but not
+    in the MSVC one.
+
+commit 31ac784f3427a189e34ef6fdc937441b613407b9
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Thu Sep 26 09:16:41 2013 +0200
+
+    Fix build on MSVC
+    
+    After a4c79d695d52c94647b1aff78548e5892d616b70 the MMX and SSE2 code
+    has some declarations after the beginning of a block, which is not
+    allowed by MSVC.
+    
+    Fixes multiple errors like:
+    
+    pixman-mmx.c(3625) : error C2275: '__m64' : illegal use of this type
+    as an expression
+    
+    pixman-sse2.c(5708) : error C2275: '__m128i' : illegal use of this
+    type as an expression
+
+commit c89f4c826695dbb5df0817d84f845dbd3e28b7a7
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Oct 2 17:51:36 2013 -0400
+
+    fast: Swap image and iter flags in generated fast paths
+    
+    The generated fast paths that were moved into the 'fast'
+    implementation in ec0e38cbb746a673f8e989ab8eae356c8c77dac7 had their
+    image and iter flag arguments swapped; as a result, none of the fast
+    paths were ever called.
+
+commit 7d05a7f4dc825f9c778e534fdabb749199c2e439
+Author: Siarhei Siamashka <siarhei.siamashka@gmail.com>
+Date:   Sat Sep 28 04:51:21 2013 +0300
+
+    vmx: there is no need to handle unaligned destination anymore
+    
+    So the redundant variables, memory reads/writes and reshuffles
+    can be safely removed. For example, this makes the inner loop
+    of 'vmx_combine_add_u_no_mask' function much more simple.
+    
+    Before:
+    
+        7a20:7d a8 48 ce lvx     v13,r8,r9
+        7a24:7d 80 48 ce lvx     v12,r0,r9
+        7a28:7d 28 50 ce lvx     v9,r8,r10
+        7a2c:7c 20 50 ce lvx     v1,r0,r10
+        7a30:39 4a 00 10 addi    r10,r10,16
+        7a34:10 0d 62 eb vperm   v0,v13,v12,v11
+        7a38:10 21 4a 2b vperm   v1,v1,v9,v8
+        7a3c:11 2c 6a eb vperm   v9,v12,v13,v11
+        7a40:10 21 4a 00 vaddubs v1,v1,v9
+        7a44:11 a1 02 ab vperm   v13,v1,v0,v10
+        7a48:10 00 0a ab vperm   v0,v0,v1,v10
+        7a4c:7d a8 49 ce stvx    v13,r8,r9
+        7a50:7c 00 49 ce stvx    v0,r0,r9
+        7a54:39 29 00 10 addi    r9,r9,16
+        7a58:42 00 ff c8 bdnz+   7a20 <.vmx_combine_add_u_no_mask+0x120>
+    
+    After:
+    
+        76c0:7c 00 48 ce lvx     v0,r0,r9
+        76c4:7d a8 48 ce lvx     v13,r8,r9
+        76c8:39 29 00 10 addi    r9,r9,16
+        76cc:7c 20 50 ce lvx     v1,r0,r10
+        76d0:10 00 6b 2b vperm   v0,v0,v13,v12
+        76d4:10 00 0a 00 vaddubs v0,v0,v1
+        76d8:7c 00 51 ce stvx    v0,r0,r10
+        76dc:39 4a 00 10 addi    r10,r10,16
+        76e0:42 00 ff e0 bdnz+   76c0 <.vmx_combine_add_u_no_mask+0x120>
+
+commit b6c5ba06f0c5c0bd8d186e7a4879fd3b33e7e13f
+Author: Siarhei Siamashka <siarhei.siamashka@gmail.com>
+Date:   Sat Sep 28 03:48:07 2013 +0300
+
+    vmx: align destination to fix valgrind invalid memory writes
+    
+    The SIMD optimized inner loops in the VMX/Altivec code are trying
+    to emulate unaligned accesses to the destination buffer. For each
+    4 pixels (which fit into a 128-bit register) the current
+    implementation:
+      1. first performs two aligned reads, which cover the needed data
+      2. reshuffles bytes to get the needed data in a single vector register
+      3. does all the necessary calculations
+      4. reshuffles bytes back to their original location in two registers
+      5. performs two aligned writes back to the destination buffer
+    
+    Unfortunately in the case if the destination buffer is unaligned and
+    the width is a perfect multiple of 4 pixels, we may have some writes
+    crossing the boundaries of the destination buffer. In a multithreaded
+    environment this may potentially corrupt the data outside of the
+    destination buffer if it is concurrently read and written by some
+    other thread.
+    
+    The valgrind report for blitters-test is full of:
+    
+    ==23085== Invalid write of size 8
+    ==23085==    at 0x1004B0B4: vmx_combine_add_u (pixman-vmx.c:1089)
+    ==23085==    by 0x100446EF: general_composite_rect (pixman-general.c:214)
+    ==23085==    by 0x10002537: test_composite (blitters-test.c:363)
+    ==23085==    by 0x1000369B: fuzzer_test_main._omp_fn.0 (utils.c:733)
+    ==23085==    by 0x10004943: fuzzer_test_main (utils.c:728)
+    ==23085==    by 0x10002C17: main (blitters-test.c:397)
+    ==23085==  Address 0x5188218 is 0 bytes after a block of size 88 alloc'd
+    ==23085==    at 0x4051DA0: memalign (vg_replace_malloc.c:581)
+    ==23085==    by 0x4051E7B: posix_memalign (vg_replace_malloc.c:709)
+    ==23085==    by 0x10004CFF: aligned_malloc (utils.c:833)
+    ==23085==    by 0x10001DCB: create_random_image (blitters-test.c:47)
+    ==23085==    by 0x10002263: test_composite (blitters-test.c:283)
+    ==23085==    by 0x1000369B: fuzzer_test_main._omp_fn.0 (utils.c:733)
+    ==23085==    by 0x10004943: fuzzer_test_main (utils.c:728)
+    ==23085==    by 0x10002C17: main (blitters-test.c:397)
+    
+    This patch addresses the problem by first aligning the destination
+    buffer at a 16 byte boundary in each combiner function. This trick
+    is borrowed from the pixman SSE2 code.
+    
+    It allows to pass the new thread-test on PowerPC VMX/Altivec systems and
+    also resolves the "make check" failure reported for POWER7 hardware:
+        http://lists.freedesktop.org/archives/pixman/2013-August/002871.html
+
+commit 0438435b9c915b61af21446b2cb2f77a2b98a3b9
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Sat Sep 28 01:10:24 2013 -0400
+
+    test: Add new thread-test program
+    
+    This test program allocates an array of 16 * 7 uint32_ts and spawns 16
+    threads that each use 7 of the allocated uint32_ts as a destination
+    image for a large number of composite operations. Each thread then
+    computes and returns a checksum for the image. Finally, the main
+    thread computes a checksum of the checksums and verifies that it
+    matches expectations.
+    
+    The purpose of this test is catch errors where memory outside images
+    is read and then written back. Such out-of-bounds accesses are broken
+    when multiple threads are involved, because the threads will race to
+    read and write the shared memory.
+    
+    V2:
+    - Incorporate fixes from Siarhei for endianness and undefined behavior
+      regarding argument evaluation
+    - Make the images 7 pixels wide since the bug only happens when the
+      composite width is greater than 4.
+    - Compute a checksum of the checksums so that you don't have to
+      update 16 values if something changes.
+    
+    V3: Remove stray dollar sign
+
+commit 65829504073425362fc56995a1dcc8cc464b751a
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Sat Sep 28 01:03:55 2013 -0400
+
+    Rename HAVE_PTHREAD_SETSPECIFIC to HAVE_PTHREADS
+    
+    The test for pthread_setspecific() can be used as a general test for
+    whether pthreads are available, so rename the variable from
+    HAVE_PTHREAD_SETSPECIFIC to HAVE_PTHREADS and run the test even when
+    better support for thread local variables are available.
+    
+    However, the pthread arguments are still only added to CFLAGS and
+    LDFLAGS when pthread_setspecific() is used for thread local variables.
+    
+    V2: AC_SUBST(PTHREAD_CFLAGS)
+
+commit b513b3dffe979056dbbbdc8e0659f8018c51c5f5
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Sun Sep 29 16:47:53 2013 -0400
+
+    blitters-test: Remove unused variable
+
+commit fa0559eb710ef6252dea5a70ade28a2c167a7a85
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu Sep 26 18:56:07 2013 -0400
+
+    utils.c: Make image_endian_swap() deal with negative strides
+    
+    Use a temporary variable s containing the absolute value of the stride
+    as the upper bound in the inner loops.
+    
+    V2: Do this for the bpp == 16 case as well
+
+commit ff682089ce1128079c06827a80647fa3284ca2a2
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri Sep 20 02:45:32 2013 -0400
+
+    utils.c: Make print_image actually cope with negative strides
+    
+    Commit 4312f077365bf9f59423b1694136089c6da6216b claimed to have made
+    print_image() work with negative strides, but it didn't actually
+    work. When the stride was negative, the image buffer would be accessed
+    as if the stride were positive.
+    
+    Fix the bug by not changing the stride variable and instead using a
+    temporary, s, that contains the absolute value of stride.
+
+commit ec0e38cbb746a673f8e989ab8eae356c8c77dac7
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Sat Aug 31 16:54:51 2013 -0400
+
+    Move generated affine fetchers into pixman-fast-path.c
+    
+    The generated fetchers for NEAREST, BILINEAR, and
+    SEPARABLE_CONVOLUTION filters are fast paths and so they belong in
+    pixman-fast-path.c
+
+commit 96e163d2fd1f8127ad15df3785bb85b4bc7f8e9a
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Sat Aug 31 16:40:43 2013 -0400
+
+    Move bits_image_fetch_bilinear_no_repeat_8888 into pixman-fast-path.c
+    
+    This iterator is really a fast path, so it belongs in the fast path
+    implementation.
+
+commit 8d465c2a5d62affc8bdc54980f7c1de9355d1fd5
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Sep 11 00:24:23 2013 -0400
+
+    fast, ssse3: Simplify logic to fetch lines in the bilinear iterators
+    
+    Instead of having logic to swap the lines around when one of them
+    doesn't match, store the two lines in an array and use the least
+    significant bit of the y coordinate as the index into that
+    array. Since the two lines always have different least significant
+    bits, they will never collide.
+    
+    The effect is that lines corresponding to even y coordinates are
+    stored in info->lines[0] and lines corresponding to odd y coordinates
+    are stored in info->lines[1].
+
+commit aa5c45254eb60ce4c85a25b5343474fb160ffa7c
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Sep 11 22:17:33 2013 -0400
+
+    test: Test negative strides
+    
+    Pixman supports negative strides, but up until now they haven't been
+    tested outside of stress-test. This commit adds testing of negative
+    strides to blitters-test, scaling-test, affine-test, rotate-test, and
+    composite-traps-test.
+
+commit 4312f077365bf9f59423b1694136089c6da6216b
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu Sep 12 12:52:02 2013 -0400
+
+    test: Share the image printing code
+    
+    The affine-test, blitters-test, and scaling-test all have the ability
+    to print out the bytes of the destination image. Share this code by
+    moving it to utils.c.
+    
+    At the same time make the code work correctly with negative strides.
+
+commit 51d71354568a54114ced87d8ae1529c88a53f635
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu Sep 12 12:24:52 2013 -0400
+
+    {scaling,affine,composite-traps}-test: Use compute_crc32_for_image()
+    
+    By using this function instead of compute_crc32() the alpha masking
+    code and the call to image_endian_swap() are not duplicated.
+
+commit 75506e63677208c1ec4364ab1a4b4fb73a0ca6c8
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Tue Sep 10 09:44:40 2013 -0400
+
+    pixman-filter.c: Use 65536, not 65535, for fixed point conversion
+    
+    Converting a double precision number to 16.16 fixed point should be
+    done by multiplying with 65536.0, not 65535.0.
+    
+    The bug could potentially cause certain filters that would otherwise
+    leave the image bit-for-bit unchanged under an identity
+    transformation, to not do so, but the numbers are close enough that
+    there weren't any visual differences.
+
+commit 9899a7bae8a00c6a92ed27d4dc2fe6f178c8acc8
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Tue Sep 10 09:37:38 2013 -0400
+
+    demos/scale.ui: Allow subsample_bits to be 0
+    
+    The separable convolution filter supports a subsample_bits of 0 which
+    corresponds to no subsampling at all, so allow this value to be used
+    in the scale demo.
+
+commit 58a79dfe6d1fd62c2b66c69fdb64f6b8ecf61da5
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu Jun 6 16:15:39 2013 -0400
+
+    ssse3: Add iterator for separable bilinear scaling
+    
+    This new iterator uses the SSSE3 instructions pmaddubsw and pabsw to
+    implement a fast iterator for bilinear scaling.
+    
+    There is a graph here recording the per-pixel time for various
+    bilinear scaling algorithms as reported by scaling-bench:
+    
+        http://people.freedesktop.org/~sandmann/ssse3.v2/ssse3.v2.png
+    
+    As the graph shows, this new iterator is clearly faster than the
+    existing C iterator, and when used with an SSE2 combiner, it is also
+    faster than the existing SSE2 fast paths for upscaling, though not for
+    downscaling.
+    
+    Another graph:
+    
+        http://people.freedesktop.org/~sandmann/ssse3.v2/movdqu.png
+    
+    shows the difference between writing to iter->buffer with movdqa,
+    movdqu on an aligned buffer, and movdqu on a deliberately unaligned
+    buffer. Since the differences are very small, the patch here avoids
+    using movdqa because imposing alignment restrictions on iter->buffer
+    may interfere with other optimizations, such as writing directly to
+    the destination image.
+    
+    The data was measured with scaling-bench on a Sandy Bridge Core
+    i3-2350M @ 2.3GHz and is available in this directory:
+    
+        http://people.freedesktop.org/~sandmann/ssse3.v2/
+    
+    where there is also a Gnumeric spreadsheet ssse3.v2.gnumeric
+    containing the per-pixel values and the graph.
+    
+    V2:
+    - Use uintptr_t instead of unsigned long in the ALIGN macro
+    - Use _mm_storel_epi64 instead of _mm_cvtsi128_si64 as the latter form
+      is not available on x86-32.
+    - Use _mm_storeu_si128() instead of _mm_store_si128() to avoid
+      imposing alignment requirements on iter->buffer
+
+commit f1792b32215d3b62084ee99fca5c448f1c7f8e1d
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu Jun 6 16:32:59 2013 -0400
+
+    Add empty SSSE3 implementation
+    
+    This commit adds a new, empty SSSE3 implementation and the associated
+    build system support.
+    
+    configure.ac:   detect whether the compiler understands SSSE3
+                    intrinsics and set up the required CFLAGS
+    
+    Makefile.am:    Add libpixman-ssse3.la
+    
+    pixman-x86.c:   Add X86_SSSE3 feature flag and detect it in
+                    detect_cpu_features().
+    
+    pixman-ssse3.c: New file with an empty SSSE3 implementation
+    
+    V2: Remove SSSE3_LDFLAGS since it isn't necessary unless Solaris
+    support is added.
+
+commit f10b5449a8b22a26839c58a716b74d6b7a8bcb80
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Aug 28 15:36:13 2013 -0400
+
+    general: Ensure that iter buffers are aligned to 16 bytes
+    
+    At the moment iter buffers are only guaranteed to be aligned to a 4
+    byte boundary. SIMD implementations benefit from the buffers being
+    aligned to 16 bytes, so ensure this is the case.
+    
+    V2:
+    - Use uintptr_t instead of unsigned long
+    - allocate 3 * SCANLINE_BUFFER_LENGTH byte on stack rather than just
+      SCANLINE_BUFFER_LENGTH
+    - use sizeof (stack_scanline_buffer) instead of SCANLINE_BUFFER_LENGTH
+      to determine overflow
+
+commit 700db9d872bdc49399a95565ffe0d345db11717a
+Author: Siarhei Siamashka <siarhei.siamashka@gmail.com>
+Date:   Tue Sep 3 04:39:54 2013 +0300
+
+    sse2: faster bilinear scaling (pack 4 pixels to write with MOVDQA)
+    
+    The loops are already unrolled, so it was just a matter of packing
+    4 pixels into a single XMM register and doing aligned 128-bit
+    writes to memory via MOVDQA instructions for the SRC compositing
+    operator fast path. For the other fast paths, this XMM register
+    is also directly routed to further processing instead of doing
+    extra reshuffling. This replaces "8 PACKSSDW/PACKUSWB + 4 MOVD"
+    instructions with "3 PACKSSDW/PACKUSWB + 1 MOVDQA" per 4 pixels,
+    which results in a clear performance improvement.
+    
+    There are also some other (less important) tweaks:
+    
+    1. Convert 'pixman_fixed_t' to 'intptr_t' before using it as an
+       index for addressing memory. The problem is that 'pixman_fixed_t'
+       is a 32-bit data type and it has to be extended to 64-bit
+       offsets, which needs extra instructions on 64-bit systems.
+    
+    2. Allow to recalculate the horizontal interpolation weights only
+       once per 4 pixels by treating the XMM register as four pairs
+       of 16-bit values. Each of these 16-bit/16-bit pairs can be
+       replicated to fill the whole 128-bit register by using PSHUFD
+       instructions. So we get "3 PADDW/PSRLW + 4 PSHUFD" instructions
+       per 4 pixels instead of "12 PADDW/PSRLW" per 4 pixels
+       (or "3 PADDW/PSRLW" per each pixel).
+    
+       Now a good question is whether replacing "9 PADDW/PSRLW" with
+       "4 PSHUFD" is a favourable exchange. As it turns out, PSHUFD
+       instructions are very fast on new Intel processors (including
+       Atoms), but are rather slow on the first generation of Core2
+       (Merom) and on the other processors from that time or older.
+       A good instructions latency/throughput table, covering all the
+       relevant processors, can be found at:
+            http://www.agner.org/optimize/instruction_tables.pdf
+    
+       Enabling this optimization is controlled by the PSHUFD_IS_FAST
+       define in "pixman-sse2.c".
+    
+    3. One use of PSHUFD instruction (_mm_shuffle_epi32 intrinsic) in
+       the older code has been also replaced by PUNPCKLQDQ equivalent
+       (_mm_unpacklo_epi64 intrinsic) in PSHUFD_IS_FAST=0 configuration.
+       The PUNPCKLQDQ instruction is usually faster on older processors,
+       but has some side effects (instead of fully overwriting the
+       destination register like PSHUFD does, it retains half of the
+       original value, which may inhibit some compiler optimizations).
+    
+    Benchmarks with "lowlevel-blt-bench -b src_8888_8888" using GCC 4.8.1 on
+    x86-64 system and default optimizations. The results are in MPix/s:
+    
+    ====== Intel Core2 T7300 (2GHz) ======
+    
+    old:                     src_8888_8888 =  L1: 128.69  L2: 125.07  M:124.86
+                            over_8888_8888 =  L1:  83.19  L2:  81.73  M: 80.63
+                          over_8888_n_8888 =  L1:  79.56  L2:  78.61  M: 77.85
+                          over_8888_8_8888 =  L1:  77.15  L2:  75.79  M: 74.63
+    
+    new (PSHUFD_IS_FAST=0):  src_8888_8888 =  L1: 168.67  L2: 163.26  M:162.44
+                            over_8888_8888 =  L1: 102.91  L2: 100.43  M: 99.01
+                          over_8888_n_8888 =  L1:  97.40  L2:  95.64  M: 94.24
+                          over_8888_8_8888 =  L1:  98.04  L2:  95.83  M: 94.33
+    
+    new (PSHUFD_IS_FAST=1):  src_8888_8888 =  L1: 154.67  L2: 149.16  M:148.48
+                            over_8888_8888 =  L1:  95.97  L2:  93.90  M: 91.85
+                          over_8888_n_8888 =  L1:  93.18  L2:  91.47  M: 90.15
+                          over_8888_8_8888 =  L1:  95.33  L2:  93.32  M: 91.42
+    
+    ====== Intel Core i7 860 (2.8GHz) ======
+    
+    old:                     src_8888_8888 =  L1: 323.48  L2: 318.86  M:314.81
+                            over_8888_8888 =  L1: 187.38  L2: 186.74  M:182.46
+    
+    new (PSHUFD_IS_FAST=0):  src_8888_8888 =  L1: 373.06  L2: 370.94  M:368.32
+                            over_8888_8888 =  L1: 217.28  L2: 215.57  M:211.32
+    
+    new (PSHUFD_IS_FAST=1):  src_8888_8888 =  L1: 401.98  L2: 397.65  M:395.61
+                            over_8888_8888 =  L1: 218.89  L2: 217.56  M:213.48
+    
+    The most interesting benchmark is "src_8888_8888" (because this code can
+    be reused for a generic non-separable SSE2 bilinear fetch iterator).
+    
+    The results shows that PSHUFD instructions are bad for Intel Core2 T7300
+    (Merom core) and good for Intel Core i7 860 (Nehalem core). Both of these
+    processors support SSSE3 instructions though, so they are not the primary
+    targets for SSE2 code. But without having any other more relevant hardware
+    to test, PSHUFD_IS_FAST=0 seems to be a reasonable default for SSE2 code
+    and old processors (until the runtime CPU features detection becomes
+    clever enough to recognize different microarchitectures).
+    
+    (Rebased on top of patch that removes support for 8-bit bilinear
+     filtering -ssp)
+
+commit e43cc9c9024957dcc7f160f6abe7be218667dfa2
+Author: Siarhei Siamashka <siarhei.siamashka@gmail.com>
+Date:   Thu Sep 5 08:07:52 2013 +0300
+
+    test: safeguard the scaling-bench test against COW
+    
+    The calloc call from pixman_image_create_bits may still
+    rely on http://en.wikipedia.org/wiki/Copy-on-write
+    Explicitly initializing the destination image results in
+    a more predictable behaviour.
+    
+    V2:
+     - allocate 16 bytes aligned buffer with aligned stride instead
+       of delegating this to pixman_image_create_bits
+     - use memset for the allocated buffer instead of pixman solid fill
+     - repeat tests 3 times and select best results in order to filter
+       out even more measurement noise
+
+commit a4c79d695d52c94647b1aff78548e5892d616b70
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Sep 4 22:32:15 2013 -0400
+
+    Drop support for 8-bit precision in bilinear filtering
+    
+    The default has been 7-bit for a while now, and the quality
+    improvement with 8-bit precision is not enough to justify keeping the
+    code around as a compile-time option.
+
+commit 80a232db68fcff6460e8704da6a97ee2e6971e99
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Sat Aug 31 22:59:53 2013 -0400
+
+    Make the first argument to scanline fetchers have type bits_image_t *
+    
+    Scanline fetchers haven't been used for images other than bits for a
+    long time, so by making the type reflect this fact, a bit of casting
+    can be saved in various places.
+
+commit 8ad63f90cd8392a40f115c56b16c54d45012070e
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Jul 30 13:22:29 2013 -0700
+
+    iwmmxt: Disallow if gcc version is < 4.8.
+    
+    Later versions of gcc-4.7.x are capable of generating iwMMXt
+    instructions properly, but gcc-4.8 contains better support and other
+    fixes, including iwMMXt in conjunction with hardfp. The existing 4.5
+    requirement was based on attempts to have OLPC use a patched gcc to
+    build pixman. Let's just require gcc-4.8.
+
+commit 02906e57bd801e20b3094ca348fad563c6b5a922
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Aug 28 00:38:22 2013 -0400
+
+    fast_bilinear_cover_init: Don't install a finalizer on the error path
+    
+    No memory is allocated in the error case, so a finalizer is not
+    necessary, and will cause problems if the data pointer is not
+    initialized to NULL.
+
+commit 3518a0dafa63098d41e466f73d105b7e3e4b12de
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu May 24 02:49:05 2012 -0400
+
+    Add an iterator that can fetch bilinearly scaled images
+    
+    This new iterator works in a separable way; that is, for a destination
+    scaline, it scales the two involved source scanlines and then caches
+    them so that they can be reused for the next destination scanlines.
+    
+    There are two versions of the code, one that uses 64 bit arithmetic,
+    and one that uses 32 bit arithmetic only. The latter version is
+    used on 32 bit systems, where it is expected to be faster.
+    
+    This scheme saves a substantial amount of arithmetic for larger
+    scalings; the per-pixel times for various configurations as reported
+    by scaling-bench are graphed here:
+    
+    	http://people.freedesktop.org/~sandmann/separable.v2/v2.png
+    
+    The "sse2" graph is current default on x86, "mmx" is with sse2
+    disabled, "old c" is with sse2 and mmx disabled. The "new 32" and "new
+    64" graphs show times for the new code. As the graphs show, the 64 bit
+    version of the new code beats the "old c" for all scaling ratios.
+    
+    The data was taken on a Sandy Bridge Core i3-2350M CPU @ 2.0 GHz
+    running in 64 bit mode.
+    
+    The data used to generate the graph is available in this directory:
+    
+        http://people.freedesktop.org/~sandmann/separable.v2/
+    
+    There is also a Gnumeric spreadsheet v2.gnumeric containing the
+    per-pixel values and the graph.
+    
+    V2:
+    - Add error message in the OOM/bad matrix case
+    - Save some shifts by storing the cached scanlines in AGBR order
+    - Special cased version that uses 32 bit arithmetic when sizeof(long) <= 4
+
+commit 146116eff4874500e4499e4bf4954c8e6b9c174a
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Fri May 25 11:38:41 2012 -0400
+
+    Add support for iter finalizers
+    
+    Iterators may sometimes need to allocate auxillary memory. In order to
+    be able to free this memory, optional iterator finalizers are
+    required.
+
+commit 1be9208e0404fcf41b4e83734d8e33437f50c2bd
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed May 22 18:48:08 2013 -0400
+
+    test/scaling-bench.c: New benchmark for bilinear scaling
+    
+    This new benchmark scales a 320 x 240 test a8r8g8b8 image by all
+    ratios from 0.1, 0.2, ... up to 10.0 and reports the time it to took
+    to do each of the scaling operations, and the time spent per
+    destination pixel.
+    
+    The times reported for the scaling operations are given in
+    milliseconds, the times-per-pixel are in nanoseconds.
+    
+    V2: Format output better
+
+commit fedd6b192d4b30dcf4ecabed43a5ddbfe6007629
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Aug 7 10:21:20 2013 -0400
+
+    RELEASING: Add note about changing the topic of the #cairo IRC channel
+
+commit d87601ffc3d1583528ce52448fbb3659d0b1d1b0
 Author: Siarhei Siamashka <siarhei.siamashka@gmail.com>
 Date:   Sat Jul 27 19:25:32 2013 +0300
 
     test: fix matrix-test on big endian systems
 
-commit a82b95a26487344023623ead34f26af235dfd24e
+commit 1e4932933342140402f744631f2a87b867162806
 Author: Andrea Canciani <ranma42@gmail.com>
 Date:   Tue Jul 17 16:14:20 2012 +0200
 
@@ -25,13 +996,7 @@ Date:   Tue Jul 17 16:14:20 2012 +0200
     alpha-loop.c(XX) : error C2275: 'pixman_image_t' : illegal use of this
     type as an expression
 
-commit 4c04a86c684d929ff734170eff8be8fea74b4c51
-Author: Søren Sandmann Pedersen <ssp@redhat.com>
-Date:   Thu Aug 1 07:19:21 2013 -0400
-
-    Version bump to 0.30.1
-
-commit 63004529526db1ba1ba5a95a93522fa0cf385ec5
+commit 279bdcda7ec3af8ac06312f4514b1b082a279544
 Author: Alexander Troosh <trush@yandex.ru>
 Date:   Tue Jun 11 15:55:34 2013 +0400
 
@@ -61,7 +1026,7 @@ Date:   Tue Jun 11 15:55:34 2013 +0400
     version of GTK+. Need do support old GTK+ (rewrite scale.c) or simple
     demand of high version of GTK+, like this:
 
-commit 02869a1229833a3272355f3d9e1206936b430fa1
+commit 889f1189469e139473d0a88742ddfbbcaf485bef
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Sat Jun 8 18:07:20 2013 +0200
 
@@ -70,7 +1035,176 @@ Date:   Sat Jun 8 18:07:20 2013 +0200
     Reviewed-by: Matt Turner <mattst88@gmail.com>
     Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
 
-commit 35da06c828049d90975c08655bb9b77184cdab68
+commit 2acfac5f8e097ee2ae225d986f981b55d65dd152
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed May 22 09:01:36 2013 -0400
+
+    Consolidate all the iter_init_bits_stride functions
+    
+    The SSE2, MMX, and fast implementations all have a copy of the
+    function iter_init_bits_stride that computes an image buffer and
+    stride.
+    
+    Move that function to pixman-utils.c and share it among all the
+    implementations.
+
+commit 533f54430a73199020ce49208d50f448c871a481
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Tue May 21 06:40:59 2013 -0400
+
+    Delete the old src/dest_iter_init() functions
+    
+    Now that we are using the new _pixman_implementation_iter_init(), the
+    old _src/_dest_iter_init() functions are no longer needed, so they can
+    be deleted, and the corresponding fields in pixman_implementation_t
+    can be removed.
+
+commit 125a4fd36f94a06d220bc6709f3ddfd23bdb6ef9
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Tue May 21 08:15:41 2013 -0400
+
+    Add _pixman_implementation_iter_init() and use instead of _src/_dest_init()
+    
+    A new field, 'iter_info', is added to the implementation struct, and
+    all the implementations store a pointer to their iterator tables in
+    it. A new function, _pixman_implementation_iter_init(), is then added
+    that searches those tables, and the new function is called in
+    pixman-general.c and pixman-image.c instead of the old
+    _pixman_implementation_src_init() and _pixman_implementation_dest_init().
+
+commit 245d0090c596eb3ca50294d0dec0fb0933eff0db
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed May 22 08:05:55 2013 -0400
+
+    general: Store the iter initializer in a one-entry pixman_iter_info_t table
+    
+    In preparation for sharing all iterator initialization code from all
+    the implementations, move the general implementation to use a table of
+    pixman_iter_info_t.
+    
+    The existing src_iter_init and dest_iter_init functions are
+    consolidated into one general_iter_init() function that checks the
+    iter_flags for whether it is dealing with a source or destination
+    iterator.
+    
+    Unlike in the other implementations, the general_iter_init() function
+    stores its own get_scanline() and write_back() functions in the
+    iterator, so it relies on the initializer being called after
+    get_scanline and write_back being copied from the struct to the
+    iterator.
+
+commit 9c15afb105ee0c5b166b9bd07c28857927b1aecb
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Tue May 21 03:59:06 2013 -0400
+
+    fast: Replace the fetcher_info_t table with a pixman_iter_info_t table
+    
+    Similar to the SSE2 and MMX patches, this commit replaces a table of
+    fetcher_info_t with a table of pixman_iter_info_t, and similar to the
+    noop patch, both fast_src_iter_init() and fast_dest_iter_init() are
+    now doing exactly the same thing, so their code can be shared in a new
+    function called fast_iter_init_common().
+
+commit 71c2d519d0abb8217b7ddb20148861e2ef71f3e6
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Tue May 21 03:32:32 2013 -0400
+
+    mmx: Replace the fetcher_info_t table with a pixman_iter_info_t table
+    
+    Similar to the SSE2 commit, information about the iterators is stored
+    in a table of pixman_iter_info_t.
+
+commit 78f437d61e20476fa1c2324b14744aa62a232a43
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Tue May 21 03:29:09 2013 -0400
+
+    sse2: Replace the fetcher_info_t table with a pixman_iter_info_t table
+    
+    Similar to the changes to noop, put all the iterators into a table of
+    pixman_iter_info_t and then do a generic search of that table during
+    iterator initialization.
+
+commit c7b0da8a96c9196f751dab2af42adb5560ba6557
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Tue May 21 08:14:44 2013 -0400
+
+    noop: Keep information about iterators in an array of pixman_iter_info_t
+    
+    Instead of having a nest of if statements, store the information about
+    iterators in a table of a new struct type, pixman_iter_info_t, and
+    then walk that table when initializing iterators.
+    
+    The new struct contains a format, a set of image flags, and a set of
+    iter flags, plus a pixman_iter_get_scanline_t, a
+    pixman_iter_write_back_t, and a new function type
+    pixman_iter_initializer_t.
+    
+    If the iterator matches an entry, it is first initialized with the
+    given get_scanline and write_back functions, and then the provided
+    iter_initializer (if present) is run. Running the iter_initializer
+    after setting get_scanline and write_back allows the initializer to
+    override those fields if it wishes.
+    
+    The table contains both source and destination iterators,
+    distinguished based on the recently-added ITER_SRC and ITER_DEST;
+    similarly, wide iterators are recognized with the ITER_WIDE
+    flag. Having both source and destination iterators in the table means
+    the noop_src_iter_init() and noop_dest_iter_init() functions become
+    identical, so this patch factors out their code in a new function
+    noop_iter_init_common() that both calls.
+    
+    The following patches in this series will change all the
+    implementations to use an iterator table, and then move the table
+    search code to pixman-implementation.c.
+
+commit 3b96ee4e77ff01217f7fefc4718babbf68a13147
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Mon May 20 09:44:05 2013 -0400
+
+    Always set the FAST_PATH_NO_ALPHA_MAP flag for non-BITS images
+    
+    We only support alpha maps for BITS images, so it's always to ignore
+    the alpha map for non-BITS image. This makes it possible get rid of
+    the check for SOLID images since it will now be subsumed by the check
+    for FAST_PATH_NO_ALPHA_MAP.
+    
+    Opaque masks are reduced to NULL images in pixman.c, and those can
+    also safely be treated as not having an alpha map, so set the
+    FAST_PATH_NO_ALPHA_MAP bit for those as well.
+
+commit 52ff5f0cd992e0384fa2babcb25780c3182548e6
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu Dec 6 02:25:35 2012 -0500
+
+    Add ITER_WIDE iter flag
+    
+    This will be useful for putting iterators into tables where they can
+    be looked up by iterator flags. Without this flag, wide iterators can
+    only be recognized by the absence of ITER_NARROW, which makes testing
+    for a match difficult.
+
+commit e8a180797c726a8990291158be8db843c26b98d3
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Mon May 20 09:04:22 2013 -0400
+
+    Add ITER_SRC and ITER_DEST iter flags
+    
+    These indicate whether the iterator is for a source or a destination
+    image. Note iterator initializers are allowed to rely on one of these
+    being set, so they can't be left out the way it's generally harmless
+    (aside from potentil performance degradation) to leave out a
+    particular fast path flag.
+
+commit 2320f0520b71c5d30b30125971df6a4245ce5207
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Sat May 18 11:39:34 2013 -0400
+
+    Make use of image flag in noop iterators
+    
+    Similar to c2230fe2aff, simply check against SAMPLES_COVER_CLIP_NEAREST
+    instead of comparing all the x/y/width/height parameters.
+
+commit d77d75cc6e5de14d027d22b70389a4d0c71048b9
 Author: Markos Chandras <markos.chandras@imgtec.com>
 Date:   Wed May 15 09:51:20 2013 -0700
 
@@ -85,13 +1219,28 @@ Date:   Wed May 15 09:51:20 2013 -0700
     Reviewed-by: Matt Turner <mattst88@gmail.com>
     Signed-off-by: Markos Chandras <markos.chandras@imgtec.com>
 
-commit e14f5a739f3ea1a3a6cff9bd5681677f05962314
+commit a74be759a18831c738dc4d1346a3f053ccdb5991
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue May 14 12:40:50 2013 -0700
+
+    mmx: Document implementation(s) of pix_multiply().
+    
+    I look at that function and can never remember what it does or how it
+    manages to do it.
+
+commit cb5d131ff4172a9bb455970cc15d93d8c1d14c4e
 Author: ingmar@irsoft.de <ingmar@irsoft.de>
 Date:   Sat May 11 11:55:04 2013 +0200
 
     Fix broken build when HAVE_CONFIG_H is undefined, e.g. on Win32.
     
     Build fix for platforms without a generated config.h, for example Win32.
+
+commit d70141955e9f85b80f193bf4b453b698f5115734
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed May 8 19:40:12 2013 -0400
+
+    Post-release version bump to 0.31.1
 
 commit 41daf50aaeca71e70bc27aa4bf27ae4812c6eecf
 Author: Søren Sandmann Pedersen <ssp@redhat.com>
@@ -19945,7 +21094,7 @@ commit 9a0639650e276c4c0da5dfe37a8d3ba5a6b81712
 Author: Vladimir Vukicevic <vladimir@pobox.com>
 Date:   Tue Nov 6 16:15:01 2007 -0800
 
-    Remove last CVS $Id: ChangeLog,v 1.7 2013/08/25 17:42:39 matthieu Exp $ tags
+    Remove last CVS $Id: ChangeLog,v 1.8 2013/12/26 16:13:01 matthieu Exp $ tags
 
 commit df964790e893a8b511e9322e7161087d8ba182cc
 Author: Søren Sandmann <sandmann@redhat.com>
