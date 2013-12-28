@@ -166,6 +166,7 @@ struct _rrProvider {
     Bool pendingProperties;
     struct _rrProvider *offload_sink;
     struct _rrProvider *output_source;
+    Bool changed;
 };
 
 #if RANDR_12_INTERFACE
@@ -336,6 +337,7 @@ typedef struct _rrScrPriv {
 
     RRProviderDestroyProcPtr rrProviderDestroy;
 
+    Bool resourcesChanged;      /* screen resources change */
 } rrScrPrivRec, *rrScrPrivPtr;
 
 extern _X_EXPORT DevPrivateKeyRec rrPrivKeyRec;
@@ -485,7 +487,14 @@ extern _X_EXPORT int
 extern _X_EXPORT void
  RRDeliverScreenEvent(ClientPtr client, WindowPtr pWin, ScreenPtr pScreen);
 
+extern _X_EXPORT void
+ RRResourcesChanged(ScreenPtr pScreen);
+
 /* randr.c */
+/* set a screen change on the primary screen */
+extern _X_EXPORT void
+RRSetChanged(ScreenPtr pScreen);
+
 /*
  * Send all pending events
  */
@@ -918,6 +927,9 @@ RRProviderSetCapabilities(RRProviderPtr provider, uint32_t capabilities);
 
 extern _X_EXPORT Bool
 RRProviderLookup(XID id, RRProviderPtr *provider_p);
+
+extern _X_EXPORT void
+RRDeliverProviderEvent(ClientPtr client, WindowPtr pWin, RRProviderPtr provider);
 
 /* rrproviderproperty.c */
 
