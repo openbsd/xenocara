@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2013/09/05 15:12:09 jsg Exp $
+# $OpenBSD: Makefile,v 1.5 2013/12/30 18:32:48 matthieu Exp $
 
 LIB=	mesagallium
 
@@ -12,7 +12,6 @@ CPPFLAGS+= \
 
 SRCS=	${MESAGALLIUM_SOURCES}	\
 	${MESAGALLIUM_CXX_SOURCES} \
-	${ASM_SOURCES} \
-	_atexit.c
+	${ASM_SOURCES}
 
 .include <bsd.xorg.mk>

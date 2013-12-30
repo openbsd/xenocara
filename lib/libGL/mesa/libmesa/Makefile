@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2013/09/05 15:12:09 jsg Exp $
+# $OpenBSD: Makefile,v 1.3 2013/12/30 18:32:48 matthieu Exp $
 
 LIB=	mesa
 
@@ -14,7 +14,6 @@ CPPFLAGS+= \
 
 SRCS=	${MESA_SOURCES}	\
 	${MESA_CXX_SOURCES} \
-	${ASM_SOURCES} \
-	_atexit.c
+	${ASM_SOURCES}
 
 .include <bsd.xorg.mk>
