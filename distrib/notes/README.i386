@@ -38,29 +38,9 @@ Conventions used in this document:
 
    See also Xorg(1), xorg.conf(5).
 
-3.1. Note about Radeon cards.
-
-   OpenBSD provides two versions of the X.Org driver for ATI Radeon cards.
-
-   - radeon(4) is the (almost) current X.Org driver. It has more support for
-     recent hardware, but unfortunately also exposes a few regressions,
-     leading to screen corruption on some hardware, and is known not
-     to work in ZapHod mode. It is selected by default.
-
-   - radeonold(4) is an older version of the driver, which is known to
-     work on most of the Radeon cards, except the newer ones. It is
-     robust and also works in "ZapHod" mode (one X screen per physical
-     screen). It needs to be enabled explicitly by creating a simple
-     /etc/X11/xorg.conf file containing:
-
-     Section "Device"
-             Identifier "Old Radeon card"
-             Driver "radeonold"
-     EndSection
-
 4. With X.Org XOrgVersion, you can use anti-aliased fonts in many applications.
    visit http://www.openbsd.org/faq/truetype.html for more information.
 
 problem_blurb
 
-$OpenBSD: README.i386,v 1.6 2012/11/18 23:32:07 matthieu Exp $
+$OpenBSD: README.i386,v 1.7 2013/12/30 09:16:41 jsg Exp $
