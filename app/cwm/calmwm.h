@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.237 2013/12/16 19:02:17 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.238 2014/01/02 21:17:23 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -247,7 +247,6 @@ struct keybinding {
 	union arg		 argument;
 	u_int			 modmask;
 	KeySym			 keysym;
-	int			 keycode;
 #define KBFLAG_NEEDCLIENT	 0x0001
 	int			 flags;
 	int			 argtype;
