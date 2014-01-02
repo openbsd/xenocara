@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.727 2013/05/27 22:11:11 tom Exp $ */
+/* $XTermId: main.c,v 1.735 2013/11/27 00:41:23 tom Exp $ */
 
 /*
  * Copyright 2002-2012,2013 by Thomas E. Dickey
@@ -456,7 +456,7 @@ static int pty_search(int * /* pty */ );
 
 static int get_pty(int *pty, char *from);
 static void resize_termcap(XtermWidget xw);
-static void set_owner(char *device, uid_t uid, gid_t gid, mode_t mode);
+static void set_owner(char *device, unsigned uid, unsigned gid, unsigned mode);
 
 static Bool added_utmp_entry = False;
 
@@ -883,6 +883,9 @@ static XtResource application_resources[] =
     Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
     Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
 #endif
+#if OPT_REPORT_FONTS
+    Bres("reportFonts", "ReportFonts", reportFonts, False),
+#endif
 #if OPT_SAME_NAME
     Bres("sameName", "SameName", sameName, True),
 #endif
@@ -1017,6 +1020,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"+s",		"*multiScroll",	XrmoptionNoArg,		(XPointer) "off"},
 {"-sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "on"},
 {"+sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "off"},
+#if OPT_REPORT_FONTS
+{"-report-fonts","*reportFonts", XrmoptionNoArg,	(XPointer) "on"},
+#endif
 #ifdef SCROLLBAR_RIGHT
 {"-leftbar",	"*rightScrollBar", XrmoptionNoArg,	(XPointer) "off"},
 {"-rightbar",	"*rightScrollBar", XrmoptionNoArg,	(XPointer) "on"},
@@ -1203,6 +1209,9 @@ static OptionHelp xtermOptions[] = {
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
+#if OPT_REPORT_FONTS
+{ "-report-fonts",         "report fonts as loaded to stdout" },
+#endif
 #ifdef SCROLLBAR_RIGHT
 { "-rightbar",             "force scrollbar right (default left)" },
 { "-leftbar",              "force scrollbar left" },
@@ -1466,7 +1475,7 @@ parseArg(int *num, char **argv, char **valuep)
 
 	TRACE(("parseArg %s\n", option));
 	if ((value = argv[(*num) + 1]) != 0) {
-	    have_value = (Boolean) ! isOption(value);
+	    have_value = (Boolean) !isOption(value);
 	}
 	for (inlist = 0; inlist < limit; ++inlist) {
 	    XrmOptionDescRec *check = ITEM(inlist);
@@ -1503,6 +1512,10 @@ parseArg(int *num, char **argv, char **valuep)
 	    if (test > 0
 		&& ITEM(inlist)->argKind >= XrmoptionSkipArg) {
 		atbest = (int) inlist;
+		if (ITEM(inlist)->argKind == XrmoptionSkipNArgs) {
+		    /* in particular, silence a warning about ambiguity */
+		    exact = 1;
+		}
 		break;
 	    }
 	    if (test > best) {
@@ -1632,7 +1645,7 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
 static void
 DeleteWindow(Widget w,
 	     XEvent * event GCC_UNUSED,
-	     String * params GCC_UNUSED,
+	     String *params GCC_UNUSED,
 	     Cardinal *num_params GCC_UNUSED)
 {
 #if OPT_TEK4014
@@ -1652,7 +1665,7 @@ DeleteWindow(Widget w,
 static void
 KeyboardMapping(Widget w GCC_UNUSED,
 		XEvent * event,
-		String * params GCC_UNUSED,
+		String *params GCC_UNUSED,
 		Cardinal *num_params GCC_UNUSED)
 {
     switch (event->type) {
@@ -1941,7 +1954,7 @@ main(int argc, char *argv[]ENVP_ARG)
     Dimension menu_high;
     TScreen *screen;
     int mode;
-    char *my_class = DEFCLASS;
+    char *my_class = x_strdup(DEFCLASS);
     Window winToEmbedInto = None;
 
     ProgramName = argv[0];
@@ -2024,6 +2037,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		Help();
 		quit = True;
 	    } else if (!strcmp(option_ptr->option, "-class")) {
+		free(my_class);
 		if ((my_class = x_strdup(option_value)) == 0) {
 		    Help();
 		    quit = True;
@@ -2177,6 +2191,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	setEffectiveUser(save_ruid);
 	TRACE_IDS;
 #endif
+	init_colored_cursor();
 
 	toplevel = xtermOpenApplication(&app_con,
 					my_class,
@@ -2722,7 +2737,7 @@ get_pty(int *pty, char *from GCC_UNUSED)
 }
 
 static void
-set_pty_permissions(uid_t uid, gid_t gid, mode_t mode)
+set_pty_permissions(uid_t uid, unsigned gid, unsigned mode)
 {
 #ifdef USE_TTY_GROUP
     struct group *ttygrp;
@@ -3043,7 +3058,7 @@ HsSysError(int error)
 
 #ifndef VMS
 static void
-set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
+set_owner(char *device, unsigned uid, unsigned gid, unsigned mode)
 {
     int why;
 
@@ -3681,8 +3696,7 @@ spawnXTerm(XtermWidget xw)
 		/* we don't need the socket, or the pty master anymore */
 		close(ConnectionNumber(screen->display));
 #ifndef __MVS__
-		if (screen->respond >= 0)
-		    close(screen->respond);
+		close(screen->respond);
 #endif /* __MVS__ */
 
 		/* Now is the time to set up our process group and
@@ -4064,6 +4078,11 @@ spawnXTerm(XtermWidget xw)
 	     * GTK applications.
 	     */
 	    xtermUnsetenv("DESKTOP_STARTUP_ID");
+	    /*
+	     * We set this temporarily to work around poor design of Xcursor.
+	     * Unset it here to avoid confusion.
+	     */
+	    xtermUnsetenv("XCURSOR_PATH");
 
 	    xtermSetenv("TERM", resource.term_name);
 	    if (!resource.term_name)
@@ -4873,6 +4892,8 @@ Exit(int n)
     }
 #endif /* USE_SYSV_UTMP */
 #endif /* HAVE_UTMP */
+
+    cleanup_colored_cursor();
 
     /*
      * Flush pending data before releasing ownership, so nobody else can write

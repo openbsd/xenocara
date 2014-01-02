@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.200 2013/06/23 19:20:22 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.202 2013/11/22 21:42:40 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -62,6 +62,8 @@
 #undef HAVE_LIB_XAW		/* CF_X_ATHENA */
 #undef HAVE_LIB_XAW3D		/* CF_X_ATHENA(--with-Xaw3d) */
 #undef HAVE_LIB_XAWPLUS		/* CF_X_ATHENA(--with-XawPlus) */
+#undef HAVE_LIB_XCURSOR		/* AC_CHECK_LIB(Xcursor) */
+#undef HAVE_MKDTEMP		/* AC_CHECK_FUNCS(mkdtemp) */
 #undef HAVE_NCURSES_CURSES_H	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */

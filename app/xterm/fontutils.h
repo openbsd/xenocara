@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.84 2011/09/11 14:59:37 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.88 2013/09/11 21:19:50 tom Exp $ */
 
 /*
- * Copyright 1998-2010,2011 by Thomas E. Dickey
+ * Copyright 1998-2011,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -57,27 +57,33 @@ extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
 extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsigned /* chrset */);
 #endif
 
-#if OPT_BOX_CHARS
-
 #define FontIsIncomplete(font) \
 	((font)->fs != 0 \
 	 && (font)->fs->per_char != 0 \
 	 && !(font)->fs->all_chars_exist)
 
+#if OPT_BOX_CHARS
+
 #define ForceBoxChars(screen,ch) \
 	(xtermIsDecGraphic(ch) \
 	 && (screen)->force_box_chars)
 
+	 /*
+	  * Keep track of (some) characters to make the check for missing
+	  * characters faster.  If the character is known to be missing,
+	  * the cache value is '2'.  If we have checked the character, the
+	  * cached value is '1'.
+	  */
 #if OPT_WIDE_CHARS
-#define CharKnownMissing(font, ch) \
-	 (((ch) < 256) && ((font)->known_missing[(Char)(ch)] > 1))
+#define CheckedKnownMissing(font, ch) \
+	 (((ch) < KNOWN_MISSING) && ((font)->known_missing[(Char)(ch)] > 0))
 #else
-#define CharKnownMissing(font, ch) \
-	 ((font)->known_missing[(Char)(ch)] > 1)
+#define CheckedKnownMissing(font, ch) \
+	 ((font)->known_missing[(Char)(ch)] > 0)
 #endif
 
 #define IsXtermMissingChar(screen, ch, font) \
-	 (CharKnownMissing(font, ch) \
+	 (CheckedKnownMissing(font, ch) \
 	  ? ((font)->known_missing[(Char)(ch)] > 1) \
 	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
 	   || ForceBoxChars(screen, ch)))

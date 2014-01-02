@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.569 2013/07/05 20:35:30 tom Exp $
+.\" $XTermId: xterm.man,v 1.572 2013/11/23 17:40:11 tom Exp $
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
@@ -815,6 +815,11 @@ Control-G is received.
 This option indicates that the window should not be raised whenever a
 Control-G is received.
 .TP 8
+.B \-report\-fonts
+Print a report to the standard output showing information about fonts
+which are loaded.
+This corresponds to the \fBreportFonts\fP resource.
+.TP 8
 .B \-rightbar
 Force scrollbar to the right side of VT100 screen.
 .TP 8
@@ -1465,6 +1470,11 @@ giving the pseudo-terminal's notion of the screen size.
 The default is \*(``false\*('' on Linux and OS X systems,
 \*(``true\*('' otherwise.
 .TP 8
+.B "reportFonts (\fPclass\fB ReportFonts)"
+If true, \fI\*n\fP will print to the standard output a summary of
+each font's metrics (size, number of glyphs, etc.), as it loads them.
+The default is \*(``false\*(''.
+.TP 8
 .B "sameName (\fPclass\fB SameName)"
 If the value of this resource is \*(``true\*('', \fI\*n\fP does not send
 title and icon name change requests when the request
@@ -1894,6 +1904,16 @@ The default is \*(``false\*(''.
 .B "appkeypadDefault (\fPclass\fB AppkeypadDefault)"
 If \*(``true\*('', the keypad keys are initially in application mode.
 The default is \*(``false\*(''.
+.TP 8
+.B "assumeAllChars (\fPclass\fB AssumeAllChars)"
+If \*(``true\*('', this enables a special case in bitmap fonts to
+allow the font server to choose how to display missing glyphs.
+The default is \*(``true\*(''.
+.IP
+The reason for this resource is to help with 
+certain quasi-automatically generated fonts
+(such as the ISO-10646-1 encoding of Terminus)
+which have incorrect font-metrics.
 .TP 8
 .B "autoWrap (\fPclass\fB AutoWrap)"
 Specifies whether or not auto-wraparound should be enabled.
@@ -3928,7 +3948,7 @@ according to the effective value of the \fButf8\fP resource.
 .B "utf8Latin1 (\fPclass\fB Utf8Latin1)"
 If true,
 allow an ISO-8859-1 \fInormal\fP
-font to be combined with an ISO-10646 font if the latter is given
+font to be combined with an ISO-10646-1 font if the latter is given
 via the \fB\-fw\fP option or its corresponding resource value.
 The default is \*(``false\*(''.
 .TP 8

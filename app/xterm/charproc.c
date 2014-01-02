@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1300 2013/07/04 15:19:32 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1319 2013/11/26 20:38:11 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -137,8 +137,8 @@
 #include <xstrings.h>
 #include <graphics.h>
 
-typedef void (*BitFunc) (unsigned * /* p */ ,
-			 unsigned /* mask */ );
+typedef int (*BitFunc) (unsigned * /* p */ ,
+			unsigned /* mask */ );
 
 static IChar doinput(void);
 static int set_character_class(char * /*s */ );
@@ -157,9 +157,9 @@ static void ToAlternate(XtermWidget /* xw */ ,
 			Bool /* clearFirst */ );
 static void ansi_modes(XtermWidget termw,
 		       BitFunc /* func */ );
-static void bitclr(unsigned *p, unsigned mask);
-static void bitcpy(unsigned *p, unsigned q, unsigned mask);
-static void bitset(unsigned *p, unsigned mask);
+static int bitclr(unsigned *p, unsigned mask);
+static int bitcpy(unsigned *p, unsigned q, unsigned mask);
+static int bitset(unsigned *p, unsigned mask);
 static void dpmodes(XtermWidget /* xw */ ,
 		    BitFunc /* func */ );
 static void restoremodes(XtermWidget /* xw */ );
@@ -557,6 +557,7 @@ static XtResource xterm_resources[] =
     Bres(XtNforceBoxChars, XtCForceBoxChars, screen.force_box_chars, False),
     Bres(XtNforcePackedFont, XtCForcePackedFont, screen.force_packed, True),
     Bres(XtNshowMissingGlyphs, XtCShowMissingGlyphs, screen.force_all_chars, False),
+    Bres(XtNassumeAllChars, XtCAssumeAllChars, screen.assume_all_chars, True),
 #endif
 
 #if OPT_BROKEN_OSC
@@ -885,7 +886,7 @@ xtermAddInput(Widget w)
 #if OPT_ISO_COLORS
 #ifdef EXP_BOGUS_FG
 static Bool
-CheckBogusForeground(TScreen * screen, const char *tag)
+CheckBogusForeground(TScreen *screen, const char *tag)
 {
     int row = -1, col = -1, pass;
     Bool isClear = True;
@@ -1070,14 +1071,14 @@ reset_SGR_Colors(XtermWidget xw)
 #endif /* OPT_ISO_COLORS */
 
 void
-resetCharsets(TScreen * screen)
+resetCharsets(TScreen *screen)
 {
     TRACE(("resetCharsets\n"));
 
-    screen->gsets[0] = 'B';	/* ASCII_G              */
-    screen->gsets[1] = 'B';	/* ASCII_G              */
-    screen->gsets[2] = 'B';	/* ASCII_G              */
-    screen->gsets[3] = 'B';	/* ASCII_G              */
+    screen->gsets[0] = nrc_ASCII;
+    screen->gsets[1] = nrc_ASCII;
+    screen->gsets[2] = nrc_ASCII;
+    screen->gsets[3] = nrc_ASCII;
 
     screen->curgl = 0;		/* G0 => GL.            */
     screen->curgr = 2;		/* G2 => GR.            */
@@ -1089,13 +1090,28 @@ resetCharsets(TScreen * screen)
 #endif
 }
 
+static void
+modified_DECNRCM(XtermWidget xw)
+{
+#if OPT_WIDE_CHARS
+    TScreen *screen = TScreenOf(xw);
+    if (screen->wide_chars && (screen->utf8_mode || screen->utf8_nrc_mode)) {
+	int enabled = ((xw->flags & NATIONAL) != 0);
+	int modefix;
+	EXCHANGE(screen->utf8_nrc_mode, screen->utf8_mode, modefix);
+	switchPtyData(screen, !enabled);
+	TRACE(("UTF8 mode temporarily %s\n", enabled ? "ON" : "OFF"));
+    }
+#endif
+}
+
 /*
  * VT300 and up support three ANSI conformance levels, defined according to
  * the dpANSI X3.134.1 standard.  DEC's manuals equate levels 1 and 2, and
  * are unclear.  This code is written based on the manuals.
  */
 static void
-set_ansi_conformance(TScreen * screen, int level)
+set_ansi_conformance(TScreen *screen, int level)
 {
     TRACE(("set_ansi_conformance(%d) dec_level %d:%d, ansi_level %d\n",
 	   level,
@@ -1107,13 +1123,13 @@ set_ansi_conformance(TScreen * screen, int level)
 	case 1:
 	    /* FALLTHRU */
 	case 2:
-	    screen->gsets[0] = 'B';	/* G0 is ASCII */
-	    screen->gsets[1] = 'B';	/* G1 is ISO Latin-1 */
+	    screen->gsets[0] = nrc_ASCII;	/* G0 is ASCII */
+	    screen->gsets[1] = nrc_ASCII;	/* G1 is ISO Latin-1 */
 	    screen->curgl = 0;
 	    screen->curgr = 1;
 	    break;
 	case 3:
-	    screen->gsets[0] = 'B';	/* G0 is ASCII */
+	    screen->gsets[0] = nrc_ASCII;	/* G0 is ASCII */
 	    screen->curgl = 0;
 	    break;
 	}
@@ -1125,7 +1141,7 @@ set_ansi_conformance(TScreen * screen, int level)
  * different, so we have at least two lines in the scrolling region.
  */
 void
-set_tb_margins(TScreen * screen, int top, int bottom)
+set_tb_margins(TScreen *screen, int top, int bottom)
 {
     TRACE(("set_tb_margins %d..%d, prior %d..%d\n",
 	   top, bottom,
@@ -1142,7 +1158,7 @@ set_tb_margins(TScreen * screen, int top, int bottom)
 }
 
 void
-set_lr_margins(TScreen * screen, int left, int right)
+set_lr_margins(TScreen *screen, int left, int right)
 {
     TRACE(("set_lr_margins %d..%d, prior %d..%d\n",
 	   left, right,
@@ -1162,14 +1178,14 @@ set_lr_margins(TScreen * screen, int left, int right)
 #define reset_lr_margins(screen) set_lr_margins(screen, 0, screen->max_col)
 
 static void
-reset_margins(TScreen * screen)
+reset_margins(TScreen *screen)
 {
     reset_tb_margins(screen);
     reset_lr_margins(screen);
 }
 
 void
-set_max_col(TScreen * screen, int cols)
+set_max_col(TScreen *screen, int cols)
 {
     TRACE(("set_max_col %d, prior %d\n", cols, screen->max_col));
     if (cols < 0)
@@ -1178,7 +1194,7 @@ set_max_col(TScreen * screen, int cols)
 }
 
 void
-set_max_row(TScreen * screen, int rows)
+set_max_row(TScreen *screen, int rows)
 {
     TRACE(("set_max_row %d, prior %d\n", rows, screen->max_row));
     if (rows < 0)
@@ -1256,6 +1272,7 @@ which_table(Const PARSE_T * table)
 #endif
 #if OPT_WIDE_CHARS
     else WHICH_TABLE (esc_pct_table);
+    else WHICH_TABLE (scs_pct_table);
 #endif
 #if OPT_VT52_MODE
     else WHICH_TABLE (vt52_table);
@@ -1350,7 +1367,7 @@ struct ParseState {
 static struct ParseState myState;
 
 static void
-init_groundtable(TScreen * screen, struct ParseState *sp)
+init_groundtable(TScreen *screen, struct ParseState *sp)
 {
     (void) screen;
 
@@ -1367,13 +1384,94 @@ init_groundtable(TScreen * screen, struct ParseState *sp)
 static void
 select_charset(struct ParseState *sp, int type, int size)
 {
-    TRACE(("select_charset %#x %d\n", type, size));
+    TRACE(("select_charset %d %d\n", type, size));
     sp->scstype = type;
     sp->scssize = size;
     if (size == 94) {
 	sp->parsestate = scstable;
     } else {
 	sp->parsestate = scs96table;
+    }
+}
+
+static void
+decode_scs(XtermWidget xw, int which, int prefix, int suffix)
+{
+    /* *INDENT-OFF* */
+    static struct {
+	DECNRCM_codes result;
+	int prefix;
+	int suffix;
+	int min_level;
+	int max_level;
+	int need_nrc;
+    } table[] = {
+	{ nrc_ASCII,             0,   'B', 1, 9, 0 },
+	{ nrc_British,           0,   'A', 1, 9, 0 },
+	{ nrc_DEC_Spec_Graphic,  0,   '0', 1, 9, 0 },
+	{ nrc_DEC_Alt_Chars,     0,   '1', 1, 1, 0 },
+	{ nrc_DEC_Alt_Graphics,  0,   '2', 1, 1, 0 },
+	/* VT2xx */
+	{ nrc_DEC_Supp,          0,   '<', 2, 9, 0 },
+	{ nrc_Dutch,             0,   '4', 2, 9, 1 },
+	{ nrc_Finnish,           0,   '5', 2, 9, 1 },
+	{ nrc_Finnish2,          0,   'C', 2, 9, 1 },
+	{ nrc_French,            0,   'R', 2, 9, 1 },
+	{ nrc_French2,           0,   'f', 2, 9, 1 },
+	{ nrc_French_Canadian,   0,   'Q', 2, 9, 1 },
+	{ nrc_German,            0,   'K', 2, 9, 1 },
+	{ nrc_Italian,           0,   'Y', 2, 9, 1 },
+	{ nrc_Norwegian_Danish2, 0,   'E', 2, 9, 1 },
+	{ nrc_Norwegian_Danish3, 0,   '6', 2, 9, 1 },
+	{ nrc_Spanish,           0,   'Z', 2, 9, 1 },
+	{ nrc_Swedish,           0,   '7', 2, 9, 1 },
+	{ nrc_Swedish2,          0,   'H', 2, 9, 1 },
+	{ nrc_Swiss,             0,   '=', 2, 9, 1 },
+	/* VT3xx */
+	{ nrc_British_Latin_1,   0,   'A', 3, 9, 1 },
+	{ nrc_DEC_Supp_Graphic,  '%', '5', 3, 9, 0 },
+	{ nrc_DEC_Technical,     0,   '>', 3, 9, 0 },
+	{ nrc_French_Canadian2,  0,   '9', 3, 9, 1 },
+	{ nrc_Norwegian_Danish,  0,   '`', 3, 9, 1 },
+	{ nrc_Portugese,         '%', '6', 3, 9, 1 },
+#if 0
+	/* VT5xx (not implemented) */
+	{ nrc_Cyrillic,          '&', '4', 5, 9, 0 },
+	{ nrc_Greek,             '"', '?', 5, 9, 0 },
+	{ nrc_Greek_Supp,        0,   'F', 5, 9, 0 },
+	{ nrc_Hebrew,            '"', '4', 5, 9, 0 },
+	{ nrc_Hebrew2,           '%', '=', 5, 9, 1 },
+	{ nrc_Hebrew_Supp,       0,   'H', 5, 9, 0 },
+	{ nrc_Latin_5_Supp,      0,   'M', 5, 9, 0 },
+	{ nrc_Latin_Cyrillic,    0,   'L', 5, 9, 0 },
+	{ nrc_Russian,           '&', '5', 5, 9, 1 },
+	{ nrc_SCS_NRCS,          '%', '3', 5, 9, 0 },
+	{ nrc_Turkish,           '%', '0', 5, 9, 0 },
+	{ nrc_Turkish2,		 '%', '2', 5, 9, 1 },
+#endif
+    };
+    /* *INDENT-ON* */
+
+    TScreen *screen = TScreenOf(xw);
+    Cardinal n;
+    DECNRCM_codes result = nrc_Unknown;
+
+    suffix &= 0x7f;
+    for (n = 0; n < XtNumber(table); ++n) {
+	if (prefix == table[n].prefix
+	    && suffix == table[n].suffix
+	    && screen->vtXX_level >= table[n].min_level
+	    && screen->vtXX_level <= table[n].max_level
+	    && (table[n].need_nrc == 0 || (xw->flags & NATIONAL) != 0)) {
+	    result = table[n].result;
+	    break;
+	}
+    }
+    if (result != nrc_Unknown) {
+	screen->gsets[which] = result;
+	TRACE(("setting G%d to %s\n", which, visibleScsCode((int) result)));
+    } else {
+	TRACE(("...unknown GSET\n"));
     }
 }
 
@@ -2823,8 +2921,18 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 			: "CPR")));
 		/* CPR */
 		/* DECXCPR (with page=1) */
-		reply.a_param[count++] = (ParmType) (screen->cur_row + 1);
-		reply.a_param[count++] = (ParmType) (screen->cur_col + 1);
+		value = (screen->cur_row + 1);
+		if ((xw->flags & ORIGIN) != 0) {
+		    value -= screen->top_marg;
+		}
+		reply.a_param[count++] = (ParmType) value;
+
+		value = (screen->cur_col + 1);
+		if ((xw->flags & ORIGIN) != 0) {
+		    value -= screen->lft_marg;
+		}
+		reply.a_param[count++] = (ParmType) value;
+
 		if (sp->private_function
 		    && screen->vtXX_level >= 4) {	/* VT420 */
 		    reply.a_param[count++] = 1;
@@ -3031,8 +3139,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_GSETS:
 	    TRACE(("CASE_GSETS(%d) = '%c'\n", sp->scstype, c));
-	    if (screen->vtXX_level != 0)
-		screen->gsets[sp->scstype] = CharOf(c);
+	    decode_scs(xw, sp->scstype, 0, (int) c);
 	    ResetState(sp);
 	    break;
 
@@ -3808,6 +3915,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 #if OPT_WIDE_CHARS
 	case CASE_ESC_PERCENT:
+	    TRACE(("CASE_ESC_PERCENT\n"));
 	    sp->parsestate = esc_pct_table;
 	    break;
 
@@ -3832,6 +3940,17 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		       ? "UTF-8 mode set from command-line"
 		       : "wideChars resource was not set"));
 	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_SCS_PERCENT:
+	    TRACE(("CASE_SCS_PERCENT\n"));
+	    sp->parsestate = scs_pct_table;
+	    break;
+
+	case CASE_GSETS_PERCENT:
+	    TRACE(("CASE_GSETS_PERCENT(%d) = '%c'\n", sp->scstype, c));
+	    decode_scs(xw, sp->scstype, '%', (int) c);
 	    ResetState(sp);
 	    break;
 #endif
@@ -3977,7 +4096,7 @@ static Char *v_bufend;		/* end of physical buffer */
    or generated by us in response to a query ESC sequence. */
 
 void
-v_write(int f, const Char * data, unsigned len)
+v_write(int f, const Char *data, unsigned len)
 {
     int riten;
 
@@ -4140,7 +4259,7 @@ v_write(int f, const Char * data, unsigned len)
 }
 
 static void
-updateCursor(TScreen * screen)
+updateCursor(TScreen *screen)
 {
     if (screen->cursor_set != screen->cursor_state) {
 	if (screen->cursor_set)
@@ -4152,7 +4271,7 @@ updateCursor(TScreen * screen)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void
-reallyStopBlinking(TScreen * screen)
+reallyStopBlinking(TScreen *screen)
 {
     if (screen->cursor_state == BLINKED_OFF) {
 	/* force cursor to display if it is enabled */
@@ -4496,7 +4615,7 @@ WrapLine(XtermWidget xw)
 void
 dotext(XtermWidget xw,
        int charset,
-       IChar * buf,		/* start of characters to process */
+       IChar *buf,		/* start of characters to process */
        Cardinal len)		/* end */
 {
     TScreen *screen = TScreenOf(xw);
@@ -4517,11 +4636,7 @@ dotext(XtermWidget xw,
 	right = screen->max_col;
     }
 #if OPT_WIDE_CHARS
-    /* don't translate if we use UTF-8, and are not handling legacy support
-     * for line-drawing characters.
-     */
-    if ((screen->utf8_mode == uFalse)
-	|| (screen->vt100_graphics))
+    if (screen->vt100_graphics)
 #endif
 	if (!xtermCharSetOut(xw, buf, buf + len, charset))
 	    return;
@@ -4659,7 +4774,7 @@ dotext(XtermWidget xw,
 
 #if OPT_WIDE_CHARS
 unsigned
-visual_width(IChar * str, Cardinal len)
+visual_width(IChar *str, Cardinal len)
 {
     /* returns the visual width of a string (doublewide characters count
        as 2, normalwide characters count as 1) */
@@ -4683,7 +4798,7 @@ static void
 HandleStructNotify(Widget w GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XEvent * event,
-		   Boolean * cont GCC_UNUSED)
+		   Boolean *cont GCC_UNUSED)
 {
     XtermWidget xw = term;
 
@@ -4767,7 +4882,7 @@ HandleStructNotify(Widget w GCC_UNUSED,
 
 #if OPT_BLINK_CURS
 static void
-SetCursorBlink(TScreen * screen, Bool enable)
+SetCursorBlink(TScreen *screen, Bool enable)
 {
     screen->cursor_blink = (Boolean) enable;
     if (DoStartBlinking(screen)) {
@@ -4784,7 +4899,7 @@ SetCursorBlink(TScreen * screen, Bool enable)
 }
 
 void
-ToggleCursorBlink(TScreen * screen)
+ToggleCursorBlink(TScreen *screen)
 {
     SetCursorBlink(screen, (Bool) (!(screen->cursor_blink)));
 }
@@ -4989,7 +5104,11 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    update_cursesemul();
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
-	    (*func) (&xw->flags, NATIONAL);
+	    if (screen->vtXX_level >= 2) {
+		if ((*func) (&xw->flags, NATIONAL)) {
+		    modified_DECNRCM(xw);
+		}
+	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    set_bool_mode(screen->marginbell);
@@ -5067,7 +5186,6 @@ dpmodes(XtermWidget xw, BitFunc func)
 		} else {
 		    reset_lr_margins(screen);
 		}
-		CursorSet(screen, 0, 0, xw->flags);
 	    }
 	    break;
 #if OPT_SIXEL_GRAPHICS
@@ -5336,7 +5454,9 @@ savemodes(XtermWidget xw)
 	    DoSM(DP_X_MORE, screen->curses);
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
-	    DoSM(DP_DECNRCM, xw->flags & NATIONAL);
+	    if (screen->vtXX_level >= 2) {
+		DoSM(DP_DECNRCM, xw->flags & NATIONAL);
+	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    DoSM(DP_X_MARGIN, screen->marginbell);
@@ -5616,7 +5736,10 @@ restoremodes(XtermWidget xw)
 	    update_cursesemul();
 	    break;
 	case srm_DECNRCM:	/* national charset (VT220) */
-	    bitcpy(&xw->flags, screen->save_modes[DP_DECNRCM], NATIONAL);
+	    if (screen->vtXX_level >= 2) {
+		if (bitcpy(&xw->flags, screen->save_modes[DP_DECNRCM], NATIONAL))
+		    modified_DECNRCM(xw);
+	    }
 	    break;
 	case srm_MARGIN_BELL:	/* margin bell                  */
 	    if ((DoRM(DP_X_MARGIN, screen->marginbell)) == 0)
@@ -5668,7 +5791,6 @@ restoremodes(XtermWidget xw)
 	    } else {
 		reset_lr_margins(screen);
 	    }
-	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
 #if OPT_SIXEL_GRAPHICS
 	case srm_DECSDM:	/* sixel scrolling */
@@ -6198,29 +6320,35 @@ window_ops(XtermWidget xw)
 /*
  * set a bit in a word given a pointer to the word and a mask.
  */
-static void
+static int
 bitset(unsigned *p, unsigned mask)
 {
+    unsigned before = *p;
     *p |= mask;
+    return (before != *p);
 }
 
 /*
  * clear a bit in a word given a pointer to the word and a mask.
  */
-static void
+static int
 bitclr(unsigned *p, unsigned mask)
 {
+    unsigned before = *p;
     *p &= ~mask;
+    return (before != *p);
 }
 
 /*
  * Copy bits from one word to another, given a mask
  */
-static void
+static int
 bitcpy(unsigned *p, unsigned q, unsigned mask)
 {
+    unsigned before = *p;
     bitclr(p, mask);
     bitset(p, q & mask);
+    return (before != *p);
 }
 
 void
@@ -6236,7 +6364,7 @@ unparseputc1(XtermWidget xw, int c)
 }
 
 void
-unparseseq(XtermWidget xw, ANSI * ap)
+unparseseq(XtermWidget xw, ANSI *ap)
 {
     int c;
     int i;
@@ -6318,7 +6446,7 @@ unparseputc(XtermWidget xw, int c)
     unsigned len;
 
     if ((screen->unparse_len + 2) >= sizeof(screen->unparse_bfr) / sizeof(IChar))
-	unparse_end(xw);
+	  unparse_end(xw);
 
     len = screen->unparse_len;
 
@@ -6452,7 +6580,7 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
 }
 
 Bool
-CheckBufPtrs(TScreen * screen)
+CheckBufPtrs(TScreen *screen)
 {
     return (screen->visbuf != 0
 #if OPT_SAVE_LINES
@@ -6465,7 +6593,7 @@ CheckBufPtrs(TScreen * screen)
  * Swap buffer line pointers between alternate and regular screens.
  */
 void
-SwitchBufPtrs(TScreen * screen, int toBuf GCC_UNUSED)
+SwitchBufPtrs(TScreen *screen, int toBuf GCC_UNUSED)
 {
     if (CheckBufPtrs(screen)) {
 #if OPT_SAVE_LINES
@@ -6565,7 +6693,7 @@ static void
 VTNonMaskableEvent(Widget w GCC_UNUSED,
 		   XtPointer closure GCC_UNUSED,
 		   XEvent * event,
-		   Boolean * cont GCC_UNUSED)
+		   Boolean *cont GCC_UNUSED)
 {
     switch (event->type) {
     case GraphicsExpose:
@@ -7069,6 +7197,44 @@ set_flags_from_list(char *target,
     }
 }
 
+#if OPT_RENDERFONT
+static void
+trimSizeFromFace(char *face_name, float *face_size)
+{
+    char *first = strstr(face_name, ":size=");
+    if (first == 0) {
+	first = face_name;
+    } else {
+	first++;
+    }
+    if (!strncmp(first, "size=", (size_t) 5)) {
+	char *last = strchr(first, ':');
+	char mark;
+	float value;
+	char extra;
+	if (last == 0)
+	    last = first + strlen(first);
+	mark = *last;
+	*last = '\0';
+	if (sscanf(first, "size=%g%c", &value, &extra) == 1) {
+	    TRACE(("...trimmed size from font: %g\n", value));
+	    if (face_size != 0)
+		*face_size = value;
+	}
+	if (mark) {
+	    while ((*first++ = *++last) != '\0') {
+		;
+	    }
+	} else {
+	    if (first != face_name)
+		--first;
+	    *first = '\0';
+	}
+	TRACE(("...after trimming, font = \"%s\"\n", face_name));
+    }
+}
+#endif
+
 /* ARGSUSED */
 static void
 VTInitialize(Widget wrequest,
@@ -7269,6 +7435,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.force_box_chars);
     init_Bres(screen.force_packed);
     init_Bres(screen.force_all_chars);
+    init_Bres(screen.assume_all_chars);
 #endif
     init_Bres(screen.free_bold_box);
     init_Bres(screen.allowBoldFonts);
@@ -7725,6 +7892,8 @@ VTInitialize(Widget wrequest,
     }
     init_Sres(misc.face_name);
     init_Sres(misc.face_wide_name);
+    trimSizeFromFace(wnew->misc.face_wide_name, (float *) 0);
+    trimSizeFromFace(wnew->misc.face_name, &(wnew->misc.face_size[0]));
     init_Sres(misc.render_font_s);
     wnew->work.render_font =
 	(Boolean) extendedBoolean(wnew->misc.render_font_s,
@@ -8194,7 +8363,7 @@ VTDestroy(Widget w GCC_UNUSED)
 }
 
 static void *
-getProperty(Display * dpy,
+getProperty(Display *dpy,
 	    Window w,
 	    Atom req_type,
 	    const char *prop_name)
@@ -8728,7 +8897,7 @@ VTRealize(Widget w,
 #define USE_XIM_INSTANTIATE_CB
 
 static void
-xim_instantiate_cb(Display * display,
+xim_instantiate_cb(Display *display,
 		   XPointer client_data GCC_UNUSED,
 		   XPointer call_data GCC_UNUSED)
 {
@@ -8795,7 +8964,7 @@ xim_create_fs(XtermWidget xw)
 		xw->misc.xim_fs_ascent = (*fonts)->ascent;
 	}
     }
-    return (Boolean) ! (xw->misc.cannot_im);
+    return (Boolean) !(xw->misc.cannot_im);
 }
 
 static void
@@ -9622,7 +9791,7 @@ HideCursor(void)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
 static void
-StartBlinking(TScreen * screen)
+StartBlinking(TScreen *screen)
 {
     if (screen->blink_timer == 0) {
 	unsigned long interval = (unsigned long) ((screen->cursor_state == ON)
@@ -9638,7 +9807,7 @@ StartBlinking(TScreen * screen)
 }
 
 static void
-StopBlinking(TScreen * screen)
+StopBlinking(TScreen *screen)
 {
     if (screen->blink_timer) {
 	XtRemoveTimeOut(screen->blink_timer);
@@ -9651,7 +9820,7 @@ StopBlinking(TScreen * screen)
 
 #if OPT_BLINK_TEXT
 Bool
-LineHasBlinking(TScreen * screen, LineData * ld)
+LineHasBlinking(TScreen *screen, LineData *ld)
 {
     int col;
     Bool result = False;
@@ -9748,7 +9917,7 @@ HandleBlinking(XtPointer closure, XtIntervalId * id GCC_UNUSED)
 #endif /* OPT_BLINK_CURS || OPT_BLINK_TEXT */
 
 void
-RestartBlinking(TScreen * screen GCC_UNUSED)
+RestartBlinking(TScreen *screen GCC_UNUSED)
 {
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
     if (screen->blink_timer == 0) {
@@ -10050,7 +10219,7 @@ set_character_class(char *s)
 static void
 HandleKeymapChange(Widget w,
 		   XEvent * event GCC_UNUSED,
-		   String * params,
+		   String *params,
 		   Cardinal *param_count)
 {
     static XtTranslations keymap, original;
@@ -10103,7 +10272,7 @@ HandleKeymapChange(Widget w,
 static void
 HandleBell(Widget w GCC_UNUSED,
 	   XEvent * event GCC_UNUSED,
-	   String * params,	/* [0] = volume */
+	   String *params,	/* [0] = volume */
 	   Cardinal *param_count)	/* 0 or 1 */
 {
     int percent = (*param_count) ? atoi(params[0]) : 0;
@@ -10115,7 +10284,7 @@ HandleBell(Widget w GCC_UNUSED,
 static void
 HandleVisualBell(Widget w GCC_UNUSED,
 		 XEvent * event GCC_UNUSED,
-		 String * params GCC_UNUSED,
+		 String *params GCC_UNUSED,
 		 Cardinal *param_count GCC_UNUSED)
 {
     VisualBell();
@@ -10125,7 +10294,7 @@ HandleVisualBell(Widget w GCC_UNUSED,
 static void
 HandleIgnore(Widget w,
 	     XEvent * event,
-	     String * params GCC_UNUSED,
+	     String *params GCC_UNUSED,
 	     Cardinal *param_count GCC_UNUSED)
 {
     XtermWidget xw;

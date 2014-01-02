@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.193 2012/09/07 09:08:44 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.194 2012/09/07 09:08:44 tom Exp $ */
 
 /*
- * Copyright 2001-2010,2011 by Thomas E. Dickey
+ * Copyright 2001-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

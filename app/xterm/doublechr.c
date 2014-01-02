@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.81 2012/04/15 23:39:53 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.83 2013/08/30 21:35:13 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2012 by Thomas E. Dickey
+ * Copyright 1997-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -66,8 +66,8 @@ repaint_line(XtermWidget xw, unsigned newChrSet)
 
 	if (oldChrSet != newChrSet) {
 	    TRACE(("repaint_line(%2d,%2d) (%s -> %s)\n", currow, screen->cur_col,
-		   visibleChrsetName(oldChrSet),
-		   visibleChrsetName(newChrSet)));
+		   visibleDblChrset(oldChrSet),
+		   visibleDblChrset(newChrSet)));
 	    HideCursor();
 
 	    /* If switching from single-width, keep the cursor in the visible part

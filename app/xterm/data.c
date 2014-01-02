@@ -1,7 +1,7 @@
-/* $XTermId: data.c,v 1.92 2011/02/13 19:59:23 tom Exp $ */
+/* $XTermId: data.c,v 1.93 2013/11/22 21:48:08 tom Exp $ */
 
 /*
- * Copyright 2002-2009,2011 by Thomas E. Dickey
+ * Copyright 2002-2011,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -105,6 +105,10 @@ char *ttydev;
 #if HANDLE_STRUCT_NOTIFY
 int mapstate = -1;
 #endif /* HANDLE_STRUCT_NOTIFY */
+
+#ifdef HAVE_LIB_XCURSOR
+char *xterm_cursor_theme;
+#endif
 
 #if OPT_SESSION_MGT
 int ice_fd = -1;

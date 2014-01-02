@@ -63,6 +63,8 @@ authorization.
 #define HAVE_LIB_XAW 1		/* CF_X_ATHENA */
 /* #undef HAVE_LIB_XAW3D */		/* CF_X_ATHENA(--with-Xaw3d) */
 /* #undef HAVE_LIB_XAWPLUS */		/* CF_X_ATHENA(--with-XawPlus) */
+#define HAVE_LIB_XCURSOR 1	/* AC_CHECK_LIB(Xcursor) */
+#define HAVE_MKDTEMP 1		/* AC_CHECK_FUNCS(mkdtemp) */
 /* #undef HAVE_NCURSES_CURSES_H	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 /* #undef HAVE_NCURSES_TERM_H */	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #define HAVE_PATHS_H 1		/* CF_LASTLOG */

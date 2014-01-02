@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.485 2013/07/10 22:52:16 tom Exp $ */
+/* $XTermId: screen.c,v 1.487 2013/08/14 23:22:53 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -974,7 +974,7 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 	   (sb == screen->saveBuf_index) ? "save" : "edit",
 	   where, n, size));
 
-    assert(n != 0);
+    assert((int) n > 0);
     assert(size != 0);
 
     /* save n lines at where */
@@ -1118,7 +1118,7 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
     assert(last >= (int) n);
     assert(last >= where);
 
-    assert(n != 0);
+    assert((int) n > 0);
     assert(size != 0);
 
     /* save n lines at bottom */
@@ -1163,7 +1163,7 @@ ScrnDeleteLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
     assert(where >= 0);
     assert(last >= where + (int) n - 1);
 
-    assert(n != 0);
+    assert((int) n > 0);
     assert(size != 0);
 
     /* move up lines */
@@ -1256,7 +1256,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
-    assert(n > 0);
+    assert((int) n >= 0);
     assert(last >= (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
@@ -1318,7 +1318,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
-    assert(n > 0);
+    assert((int) n >= 0);
     assert(last > (int) n);
 
     if_OPT_WIDE_CHARS(screen, {

@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.9 2013/07/04 23:04:24 tom Exp $
+-- $XTermId: THANKS,v 1.11 2013/08/08 08:24:07 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -81,6 +81,7 @@ H Merijn Brand
 Hasso Tepper
 Holger Veit
 Ilya Zakharevich
+Iwamoto Kouichi
 James Armstrong
 Jason Bacon
 Jason Vas Dias
@@ -149,6 +150,7 @@ Peter Berg Larsen
 Pierre Lombard
 Richard Braakman
 Richard Griswold
+Richard Tollerton
 Rob Braun
 Robert Brady
 Robert Earl

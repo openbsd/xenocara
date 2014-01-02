@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.146 2013/04/21 00:37:00 tom Exp $ */
+/* $XTermId: trace.c,v 1.153 2013/11/26 22:41:44 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -104,6 +104,19 @@ Trace(const char *fmt,...)
 	sprintf(name, "Trace-%s.out", trace_who);
 #endif
 	trace_fp = fopen(name, "w");
+	/*
+	 * Try to put the trace-file in user's home-directory if the current
+	 * directory is not writable.
+	 */
+	if (trace_fp == 0) {
+	    char *home = getenv("HOME");
+	    if (home != 0) {
+		sprintf(name, "%.*s/Trace-%.8s.out",
+			(BUFSIZ - 21), home,
+			trace_who);
+		trace_fp = fopen(name, "w");
+	    }
+	}
 	if (trace_fp != 0) {
 	    fprintf(trace_fp, "%s\n", xtermVersion());
 	    TraceIds(NULL, 0);
@@ -130,7 +143,6 @@ TraceClose(void)
 	(void) fflush(stderr);
 	(void) visibleChars(NULL, 0);
 	(void) visibleIChars(NULL, 0);
-	(void) visibleIChar(NULL, 0);
 	trace_fp = 0;
     }
 }
@@ -184,7 +196,7 @@ formatAscii(char *dst, unsigned value)
 	break;
     default:
 	if (E2A(value) < 32 || (E2A(value) >= 127 && E2A(value) < 160))
-	    sprintf(dst, "\\%03o", value);
+	    sprintf(dst, "\\%03o", value & 0xff);
 	else
 	    sprintf(dst, "%c", CharOf(value));
 	break;
@@ -194,7 +206,7 @@ formatAscii(char *dst, unsigned value)
 #if OPT_DEC_CHRSET
 
 const char *
-visibleChrsetName(unsigned chrset)
+visibleDblChrset(unsigned chrset)
 {
     const char *result = "?";
     switch (chrset) {
@@ -215,8 +227,58 @@ visibleChrsetName(unsigned chrset)
 }
 #endif
 
+const char *
+visibleScsCode(int chrset)
+{
+#define MAP(to,from) case from: result = to; break
+    const char *result = "<ERR>";
+    switch ((DECNRCM_codes) chrset) {
+	MAP("B", nrc_ASCII);
+	MAP("A", nrc_British);
+	MAP("A", nrc_British_Latin_1);
+	MAP("&4", nrc_Cyrillic);
+	MAP("0", nrc_DEC_Spec_Graphic);
+	MAP("1", nrc_DEC_Alt_Chars);
+	MAP("2", nrc_DEC_Alt_Graphics);
+	MAP("<", nrc_DEC_Supp);
+	MAP("%5", nrc_DEC_Supp_Graphic);
+	MAP(">", nrc_DEC_Technical);
+	MAP("4", nrc_Dutch);
+	MAP("5", nrc_Finnish);
+	MAP("C", nrc_Finnish2);
+	MAP("R", nrc_French);
+	MAP("f", nrc_French2);
+	MAP("Q", nrc_French_Canadian);
+	MAP("9", nrc_French_Canadian2);
+	MAP("K", nrc_German);
+	MAP("\"?", nrc_Greek);
+	MAP("F", nrc_Greek_Supp);
+	MAP("\"4", nrc_Hebrew);
+	MAP("%=", nrc_Hebrew2);
+	MAP("H", nrc_Hebrew_Supp);
+	MAP("Y", nrc_Italian);
+	MAP("M", nrc_Latin_5_Supp);
+	MAP("L", nrc_Latin_Cyrillic);
+	MAP("`", nrc_Norwegian_Danish);
+	MAP("E", nrc_Norwegian_Danish2);
+	MAP("6", nrc_Norwegian_Danish3);
+	MAP("%6", nrc_Portugese);
+	MAP("&5", nrc_Russian);
+	MAP("%3", nrc_SCS_NRCS);
+	MAP("Z", nrc_Spanish);
+	MAP("7", nrc_Swedish);
+	MAP("H", nrc_Swedish2);
+	MAP("=", nrc_Swiss);
+	MAP("%0", nrc_Turkish);
+	MAP("%2", nrc_Turkish2);
+	MAP("<UNK>", nrc_Unknown);
+    }
+#undef MAP
+    return result;
+}
+
 char *
-visibleChars(const Char * buf, unsigned len)
+visibleChars(const Char *buf, unsigned len)
 {
     static char *result;
     static unsigned used;
@@ -247,7 +309,7 @@ visibleChars(const Char * buf, unsigned len)
 }
 
 char *
-visibleIChars(IChar * buf, unsigned len)
+visibleIChars(IChar *buf, unsigned len)
 {
     static char *result;
     static unsigned used;
@@ -283,38 +345,11 @@ visibleIChars(IChar * buf, unsigned len)
 }
 
 char *
-visibleIChar(IChar * buf, unsigned len)
+visibleUChar(unsigned chr)
 {
-    static char *result;
-    static unsigned used;
-
-    if (buf != 0) {
-	unsigned limit = ((len + 1) * 8) + 1;
-	char *dst;
-
-	if (limit > used) {
-	    used = limit;
-	    result = XtRealloc(result, used);
-	}
-	if (result != 0) {
-	    dst = result;
-	    while (len--) {
-		unsigned value = *buf++;
-#if OPT_WIDE_CHARS
-		if (value > 255)
-		    sprintf(dst, "\\u+%04X", value);
-		else
-#endif
-		    formatAscii(dst, value);
-		dst += strlen(dst);
-	    }
-	}
-    } else if (result != 0) {
-	free(result);
-	result = 0;
-	used = 0;
-    }
-    return result;
+    IChar buf[1];
+    buf[0] = chr;
+    return visibleIChars(buf, 1);
 }
 
 #define CASETYPE(name) case name: result = #name; break
@@ -408,7 +443,7 @@ visibleNotifyDetail(int code)
 }
 
 const char *
-visibleSelectionTarget(Display * d, Atom a)
+visibleSelectionTarget(Display *d, Atom a)
 {
     const char *result = "?";
 
@@ -463,7 +498,7 @@ visibleXError(int code)
 #define isScrnFlag(flag) ((flag) == LINEWRAPPED)
 
 static char *
-ScrnText(LineData * ld)
+ScrnText(LineData *ld)
 {
     return visibleIChars(ld->charData, ld->lineSize);
 }
@@ -477,7 +512,7 @@ ScrnText(LineData * ld)
 	      ScrnText(ld))
 
 void
-LineClrFlag(LineData * ld, int flag)
+LineClrFlag(LineData *ld, int flag)
 {
     if (ld == 0) {
 	SHOW_BAD_LINE(LineClrFlag, ld);
@@ -490,7 +525,7 @@ LineClrFlag(LineData * ld, int flag)
 }
 
 void
-LineSetFlag(LineData * ld, int flag)
+LineSetFlag(LineData *ld, int flag)
 {
     if (ld == 0) {
 	SHOW_BAD_LINE(LineSetFlag, ld);
@@ -747,7 +782,7 @@ TraceWMSizeHints(XtermWidget xw)
  */
 /* ARGSUSED */
 static int
-no_error(Display * dpy GCC_UNUSED, XErrorEvent * event GCC_UNUSED)
+no_error(Display *dpy GCC_UNUSED, XErrorEvent * event GCC_UNUSED)
 {
     return 1;
 }
@@ -806,8 +841,8 @@ XtGeometryResult
 TraceResizeRequest(const char *fn, int ln, Widget w,
 		   unsigned reqwide,
 		   unsigned reqhigh,
-		   Dimension * gotwide,
-		   Dimension * gothigh)
+		   Dimension *gotwide,
+		   Dimension *gothigh)
 {
     XtGeometryResult rc;
 
@@ -881,6 +916,9 @@ TraceXtermResources(void)
     XRES_B(wait_for_map);
     XRES_B(ptyHandshake);
     XRES_B(ptySttySize);
+#endif
+#if OPT_REPORT_FONTS
+    XRES_B(reportFonts);
 #endif
 #if OPT_SAME_NAME
     XRES_B(sameName);

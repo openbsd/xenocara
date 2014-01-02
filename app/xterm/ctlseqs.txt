@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2013)
-               updated for XTerm Patch #294 (2013/07/05)
+               updated for XTerm Patch #298 (2013/11/10)
 
 
 
@@ -95,7 +95,7 @@ tions, such as the scrollbar or window size.  Where the function is
 specified by DEC or ISO 6429, the code assigned to it is given in paren-
 theses.
 The escape codes to designate and invoke character sets are specified by
-ISO 2022; see that document for a discussion of character sets.
+ISO 2022 (see that document for a discussion of character sets).
 Many of the features are optional; xterm can be configured and built
 without support for them.
 
@@ -133,17 +133,26 @@ ESC % G   Select UTF-8 character set (ISO 2022).
 ESC ( C   Designate G0 Character Set (ISO 2022, VT100).
           Final character C for designating 94-character sets.  In this
           list, 0 , A  and B  apply to VT100 and up, the remainder to
-          VT220 and up:
+          VT220 and up.  The VT220 character sets, together with the
+          Portuguese character set are activated by the National
+          Replacement Character controls.  The A  is a special case,
+          since it is also activated by the VT300-control for British
+          Latin-1 separately from the National Replacement Character
+          controls.
             C = 0  -> DEC Special Character and Line Drawing Set.
+            C = <  -> DEC Supplementary (VT200).
+            C = % 5  -> DEC Supplementary Graphics (VT300).
+            C = >  -> DEC Technical (VT300).
             C = A  -> United Kingdom (UK).
             C = B  -> United States (USASCII).
             C = 4  -> Dutch.
             C = C  or 5  -> Finnish.
-            C = R  -> French.
-            C = Q  -> French Canadian.
+            C = R  or f  -> French.
+            C = Q  or 9  -> French Canadian (VT200, VT300).
             C = K  -> German.
             C = Y  -> Italian.
-            C = E  or 6  -> Norwegian/Danish.
+            C = ` , E  or 6  -> Norwegian/Danish.
+            C = % 6  -> Portuguese (VT300).
             C = Z  -> Spanish.
             C = H  or 7  -> Swedish.
             C = =  -> Swiss.
@@ -298,7 +307,7 @@ CSI Ps c  Send Device Attributes (Primary DA).
             Ps = 2  -> Printer.
             Ps = 6  -> Selective erase.
             Ps = 8  -> User-defined keys.
-            Ps = 9  -> National replacement character sets.
+            Ps = 9  -> National Replacement Character sets.
             Ps = 1 5  -> Technical characters.
             Ps = 1 8  -> User windows.
             Ps = 2 1  -> Horizontal scrolling.
@@ -352,7 +361,7 @@ CSI ? Pm h
             Ps = 7  -> Wraparound Mode (DECAWM).
             Ps = 8  -> Auto-repeat Keys (DECARM).
             Ps = 9  -> Send Mouse X & Y on button press.  See the sec-
-          tion Mouse Tracking.
+          tion Mouse Tracking.  This is the X10 xterm mouse protocol.
             Ps = 1 0  -> Show toolbar (rxvt).
             Ps = 1 2  -> Start Blinking Cursor (att610).
             Ps = 1 8  -> Print form feed (DECPFF).
@@ -363,8 +372,8 @@ CSI ? Pm h
             Ps = 3 8  -> Enter Tektronix Mode (DECTEK).
             Ps = 4 0  -> Allow 80 -> 132 Mode.
             Ps = 4 1  -> more(1) fix (see curses resource).
-            Ps = 4 2  -> Enable Nation Replacement Character sets (DECN-
-          RCM).
+            Ps = 4 2  -> Enable National Replacement Character sets
+          (DECNRCM).
             Ps = 4 4  -> Turn On Margin Bell.
             Ps = 4 5  -> Reverse-wraparound Mode.
             Ps = 4 6  -> Start Logging.  This is normally disabled by a
@@ -378,7 +387,8 @@ CSI ? Pm h
             Ps = 9 5  -> Do not clear screen when DECCOLM is set/reset
           (DECNCSM), VT510 and up.
             Ps = 1 0 0 0  -> Send Mouse X & Y on button press and
-          release.  See the section Mouse Tracking.
+          release.  See the section Mouse Tracking.  This is the X11
+          xterm mouse protocol.
             Ps = 1 0 0 1  -> Use Hilite Mouse Tracking.
             Ps = 1 0 0 2  -> Use Cell Motion Mouse Tracking.
             Ps = 1 0 0 3  -> Use All Motion Mouse Tracking.
@@ -387,8 +397,8 @@ CSI ? Pm h
             Ps = 1 0 0 6  -> Enable SGR Mouse Mode.
             Ps = 1 0 0 7  -> Enable Alternate Scroll Mode.
             Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
-            Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
+            Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 3 4  -> Interpret "meta" key, sets eighth bit.
           (enables the eightBitInput resource).
             Ps = 1 0 3 5  -> Enable special modifiers for Alt and Num-
@@ -460,8 +470,8 @@ CSI ? Pm l
             Ps = 3 5  -> Disable font-shifting functions (rxvt).
             Ps = 4 0  -> Disallow 80 -> 132 Mode.
             Ps = 4 1  -> No more(1) fix (see curses resource).
-            Ps = 4 2  -> Disable Nation Replacement Character sets (DEC-
-          NRCM).
+            Ps = 4 2  -> Disable National Replacement Character sets
+          (DECNRCM).
             Ps = 4 4  -> Turn Off Margin Bell.
             Ps = 4 5  -> No Reverse-wraparound Mode.
             Ps = 4 6  -> Stop Logging.  (This is normally disabled by a
@@ -484,8 +494,8 @@ CSI ? Pm l
             Ps = 1 0 0 7  -> Disable Alternate Scroll Mode.
             Ps = 1 0 1 0  -> Don't scroll to bottom on tty output
           (rxvt).
-            Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).
+            Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
             Ps = 1 0 3 4  -> Don't interpret "meta" key.  (This disables
           the eightBitInput resource).
             Ps = 1 0 3 5  -> Disable special modifiers for Alt and Num-
@@ -1645,7 +1655,7 @@ CSI ? Pm h
             Ps = 8 0  -> SIXEL scrolling.
             Ps = 1 0 7 0  -> use private color registers for each
           graphic.
-DCS Pa; Pb; Ph q  Ps..PsST
+DCS Pa; Pb; Ph q  Ps..Ps ST
           See
 
                http://vt100.net/docs/vt3xx-gp/chapter14.html

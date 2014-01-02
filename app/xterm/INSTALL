@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.148 2013/06/23 20:22:46 tom Exp $
+-- $XTermId: INSTALL,v 1.149 2013/08/04 19:33:14 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2012,2013 by Thomas E. Dickey
 --
@@ -30,23 +30,12 @@
 -------------------------------------------------------------------------------
 
 Xterm was originally built as part of the X Window System source tree, using
-imake to generate a Makefile from Imakefile.  You can also use the configure
-script to generate a Makefile from Makefile.in:
+imake to generate a Makefile from Imakefile.
 
-	+ If you have imake (or xmkmf), then you can use those directly,
-	  or use the configure script, which normally uses those tools
-	  to obtain the special definitions needed to build xterm.
+An example Imakefile is provided for legacy use.
 
-	  Ultimately, imake will not be necessary, since it is possible
-	  to add configure tests that derive the information that imake
-	  would supply.
-
-	+ You need the Athena widgets (or a clone, such as Xaw3d or
-	  neXtaw), to provide the popup menus.
-
-Even if you have imake, the configure script is still convenient because
-it allows you to build different configurations more easily than with
-imake, simply by specifying options to the configure script.
+The preferred method uses the configure script to generate a Makefile from
+Makefile.in
 
 Options:
 -------
@@ -221,6 +210,15 @@ The options (in alphabetic order):
 	tool.  Normally these chunks of memory are retained as long as xterm
 	is running.
 
+  --disable-luit          disable support for luit filter (Unicode translation)
+
+	Luit is a filter that can be run between an arbitrary application and a
+	UTF-8 terminal emulator.  It will convert application output from the
+	locale's encoding into UTF-8, and convert terminal input from UTF-8
+	into the locale's encoding.
+
+	This is normally enabled, relying upon "--enable-wide-chars".
+
   --disable-maximize      disable actions for iconify/deiconify/maximize/restore
 
 	Do not compile-in code that implements runtime 'actions' for
@@ -341,6 +339,12 @@ The options (in alphabetic order):
 
 	A genuine vt100 emulates a vt52.
 
+  --disable-wide-chars    disable wide-character support
+
+  	The wide-character code supports Unicode and UTF-8.
+
+	This is normally enabled.
+
   --disable-ziconbeep     disable -ziconbeep option
 
 	Do not compile-in code that modifies the icon's title and sounds a
@@ -436,15 +440,6 @@ The options (in alphabetic order):
 	Logging was disabled in X11R5 xterm because of security problems.
 	They were addressed in X11R6, but the feature was not reinstated.
 
-  --enable-luit           enable support for luit filter (Unicode translation)
-
-	Luit is a filter that can be run between an arbitrary application and a
-	UTF-8 terminal emulator.  It will convert application output from the
-	locale's encoding into UTF-8, and convert terminal input from UTF-8
-	into the locale's encoding.
-
-	This sets "--enable-wide-chars" as a side-effect.
-
   --enable-meta-sends-esc set default metaSendsEscape resource (default: no)
 
 	This sets the default resource value, which is shown in the manpage.
@@ -522,11 +517,6 @@ The options (in alphabetic order):
 
 	I use this option regularly, and correct all but a few (difficult)
 	problems.
-
-  --enable-wide-chars     enable wide-character support
-
-  	Compile-in code that supports 16-bit characters.  Includes support
-	for UTF-8.
 
   --enable-xmc-glitch     test: enable xmc magic-cookie emulation
 

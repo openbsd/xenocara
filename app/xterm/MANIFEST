@@ -1,4 +1,4 @@
-MANIFEST for xterm-296, version xterm-296
+MANIFEST for xterm-300, version xterm-300
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -48,6 +48,7 @@ fontutils.c                     xterm functions for (re)loading fonts
 fontutils.h                     interface of fontutils.c
 gen-pc-fkeys.pl                 script to generate extended function-key terminfo
 graphics.c                      graphics support functions for 'xterm'
+graphics.h                      interface of graphics.c
 input.c                         VT100 key-symbol and function-key translation
 install-sh                      install-script (needed by configure)
 keysym2ucs.c                    lookup-table for UTF-8 to keysyms

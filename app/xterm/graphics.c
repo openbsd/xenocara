@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.12 2013/07/10 22:35:28 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.17 2013/11/26 22:15:21 tom Exp $ */
 
 /*
  * Copyright 2013 by Ross Combs
@@ -250,15 +250,15 @@ set_sixel(SixelGraphic *graphic, int sixel)
 
 static void
 set_sixel_color_register(ColorRegister *color_registers,
-			 RegisterNum color,
-			 short r,
-			 short g,
-			 short b)
+			 int color,
+			 int r,
+			 int g,
+			 int b)
 {
     ColorRegister *reg = &color_registers[color];
-    reg->r = r;
-    reg->g = g;
-    reg->b = b;
+    reg->r = (short) r;
+    reg->g = (short) g;
+    reg->b = (short) b;
     reg->allocated = 0;
 }
 
@@ -270,7 +270,7 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
 	unsigned int i;
 
 	for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
-	    set_sixel_color_register(color_registers, (RegisterNum) i, 0, 0, 0);
+	    set_sixel_color_register(color_registers, (int) i, 0, 0, 0);
 	}
     }
 
@@ -550,12 +550,12 @@ dump_sixel(SixelGraphic const *graphic)
 }
 
 static void
-set_shared_color_register(RegisterNum color, short r, short g, short b)
+set_shared_color_register(int color, int r, int g, int b)
 {
     SixelGraphic *graphic;
     unsigned int ii;
 
-    assert(color < MAX_COLOR_REGISTERS);
+    assert(color < (int) MAX_COLOR_REGISTERS);
 
     set_sixel_color_register(shared_color_registers, color, r, g, b);
 
@@ -1112,10 +1112,10 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 		}
 		if (graphic->private_colors) {
 		    set_sixel_color_register(graphic->private_color_registers,
-					     (RegisterNum) Pregister,
+					     Pregister,
 					     r, g, b);
 		} else {
-		    set_shared_color_register((RegisterNum) Pregister, r, g, b);
+		    set_shared_color_register(Pregister, r, g, b);
 		}
 		graphic->color_registers_used[Pregister] = 1;
 	    } else if (color_params.a_nparam == 1) {
@@ -1300,7 +1300,7 @@ refresh_displayed_graphics(TScreen const *screen,
 	ordered_graphics[ii] = &sixel_graphics[ii];
     }
     qsort(ordered_graphics,
-	  MAX_SIXEL_GRAPHICS,
+	  (size_t) MAX_SIXEL_GRAPHICS,
 	  sizeof(ordered_graphics[0]),
 	  compare_sixel_ids);
 
@@ -1314,17 +1314,17 @@ refresh_displayed_graphics(TScreen const *screen,
 	w = ncols * FontWidth(screen);
 	h = nrows * FontHeight(screen);
 
-	xbase = (screen->border
+	xbase = (OriginX(screen)
 		 + graphic->charcol * FontWidth(screen));
-	ybase = (screen->border
+	ybase = (OriginY(screen)
 		 + (graphic->charrow - screen->topline) * FontHeight(screen));
 
-	if (xbase + x + w + screen->border > FullWidth(screen))
-	    w = FullWidth(screen) - (xbase + x + screen->border);
-	if (ybase + y + h + screen->border > FullHeight(screen))
-	    h = FullHeight(screen) - (ybase + y + screen->border);
-	else if (ybase + y < screen->border) {
-	    int diff = screen->border - (ybase + y);
+	if (xbase + x + w + OriginX(screen) > FullWidth(screen))
+	    w = FullWidth(screen) - (xbase + x + OriginX(screen));
+	if (ybase + y + h + OriginY(screen) > FullHeight(screen))
+	    h = FullHeight(screen) - (ybase + y + OriginY(screen));
+	else if (ybase + y < OriginY(screen)) {
+	    int diff = OriginY(screen) - (ybase + y);
 	    y += diff;
 	    h -= diff;
 	}
@@ -1368,17 +1368,17 @@ refresh_modified_displayed_graphics(TScreen const *screen)
 	w = ncols * FontWidth(screen);
 	h = nrows * FontHeight(screen);
 
-	xbase = (screen->border
+	xbase = (OriginX(screen)
 		 + graphic->charcol * FontWidth(screen));
-	ybase = (screen->border
+	ybase = (OriginY(screen)
 		 + (graphic->charrow - screen->topline) * FontHeight(screen));
 
-	if (xbase + x + w + screen->border > FullWidth(screen))
-	    w = FullWidth(screen) - (xbase + x + screen->border);
-	if (ybase + y + h + screen->border > FullHeight(screen))
-	    h = FullHeight(screen) - (ybase + y + screen->border);
-	else if (ybase + y < screen->border) {
-	    int diff = screen->border - (ybase + y);
+	if (xbase + x + w + OriginX(screen) > FullWidth(screen))
+	    w = FullWidth(screen) - (xbase + x + OriginX(screen));
+	if (ybase + y + h + OriginY(screen) > FullHeight(screen))
+	    h = FullHeight(screen) - (ybase + y + OriginY(screen));
+	else if (ybase + y < OriginY(screen)) {
+	    int diff = OriginY(screen) - (ybase + y);
 	    y += diff;
 	    h -= diff;
 	}

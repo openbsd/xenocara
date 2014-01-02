@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1366 2013/07/10 23:46:32 tom Exp $
+  $XTermId: xterm.log.html,v 1.1410 2013/12/04 00:16:42 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -69,6 +69,14 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_300">Patch #300 - 2013/12/03</a></li>
+
+    <li><a href="#xterm_299">Patch #299 - 2013/12/01</a></li>
+
+    <li><a href="#xterm_298">Patch #298 - 2013/11/27</a></li>
+
+    <li><a href="#xterm_297">Patch #297 - 2013/09/10</a></li>
+
     <li><a href="#xterm_296">Patch #296 - 2013/07/10</a></li>
 
     <li><a href="#xterm_295">Patch #295 - 2013/07/06</a></li>
@@ -872,6 +880,175 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_300" id="xterm_300">Patch #300 -
+  2013/12/03</a></h1>
+
+  <ul>
+    <li>amend workaround for <code>Xcursor</code> library from
+    <a href="#xterm_298">patch #298</a>; the suggested solution for
+    Debian #466704 fell afoul of a bug in <code>Xcursor</code>
+    which treated an empty value for <code>Inherits=</code> as a
+    valid theme&mdash;and resulted in a stack overflow due to
+    unbounded recursion. Certain environments such as XFCE4 exposed
+    the bug. A related report in Debian #531679 was closed without
+    following the recommendation to limit stack recursion in this
+    library (reported by Sergey V Dyatko, Debian #731269).</li>
+  </ul>
+
+  <h1><a name="xterm_299" id="xterm_299">Patch #299 -
+  2013/12/01</a></h1>
+
+  <ul>
+    <li>fix regression in line-drawing from <a href=
+    "#xterm_297">patch #297</a> changes for NRCS exposed by change
+    to <code>assumeAllChars</code> resource in <a href=
+    "#xterm_298">patch #298</a> (report by Markus Waldeck).</li>
+  </ul>
+
+  <h1><a name="xterm_298" id="xterm_298">Patch #298 -
+  2013/11/27</a></h1>
+
+  <ul>
+    <li>quiet a warning about ambiguity when <code>-h</code>
+    command-line option is parsed, since <code>-help</code> is used
+    rather than the options mentioned in the message. This warning
+    was caused by fixes in <a href="#xterm_272">patch
+    #272</a>.</li>
+
+    <li>remove an extra check for keypad-mode which interfered with
+    the <a href="#xterm_280">patch #280</a>
+    <code>modifyKeyboard</code> feature for the numeric keypad
+    (report by David Conners).</li>
+
+    <li>change default for <code>assumeAllChars</code> resource
+    (Debian #725682). There are unresolved issues with Terminus
+    fonts, e.g., Debian #722017.</li>
+
+    <li>add <code>-report-fonts</code> command-line option and
+    <code>reportFonts</code> resource to optionally report the
+    fonts which are loaded, and their metrics such as the number of
+    missing glyphs.</li>
+
+    <li>work around <code>Xcursor</code> library to make
+    <code>pointerColor</code> resource work as documented (Debian
+    #466704, analysis by Vincent Lef&egrave;vre).</li>
+
+    <li>amend change from <a href="#xterm_297">patch #297</a> for
+    ASCII-equivalents to ensure that missing characters which
+    happen to be double-width are padded to the expected number of
+    columns. Also, correct the choice between normal/wide Xft fonts
+    used when checking for missing characters (reported by WU Yue,
+    Debian #728949, Gentoo #491334).</li>
+
+    <li>modify sixel-graphics drawing to account for scrollbar
+    width (report by Mario Edelmann).</li>
+
+    <li>fix remaining issue with <code>DECNRCM</code>; the British
+    character set was confused with ISO Latin-1 (report by Hayaki
+    Saito).</li>
+
+    <li>build-fix for <code>--disable-boxchars</code> configure
+    option.</li>
+
+    <li>updated configure macros, from ongoing work on lynx and
+    ncurses.</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
+
+  <h1><a name="xterm_297" id="xterm_297">Patch #297 -
+  2013/09/10</a></h1>
+
+  <ul>
+    <li>modify check for missing cells in bitmap font to work
+    around terminus 10646 encoding, which is mostly missing, add
+    <code>assumeAllChars</code> resource to provide the older
+    behavior.</li>
+
+    <li>modify macros used to check for missing cells in bitmap
+    fonts to pick up a long-overlooked improvement made to xfd in
+    XFree86.</li>
+
+    <li>improve workaround for groff versus ASCII-equivalents;
+    <a href="#xterm_185">patch #185</a> had overlooked Xft
+    configuration (reported by anonymous user on Arch Linux
+    forum).</li>
+
+    <li>review/extend <code>DECNRCM</code> support (prompted by
+    report by Hayaki Saito asking about the two "A" codes).
+
+      <ul>
+        <li>make pasting of DECNRCM data work by translating the
+        pasted data into the selected encoding.</li>
+
+        <li>limit mode changes to VT220 and up.</li>
+
+        <li>ignore SCS for National Replacement Characters if
+        <code>DECNRCM</code> is not set.</li>
+
+        <li>add tables and logic to decode SCS controls ending with
+        "%" and one additional character. This expects the parsing
+        of SCS to VT320.</li>
+
+        <li>also added parsing for SCS of DEC Supplemental and DEC
+        Technical, which are for VT2xx and VT3xx respectively.</li>
+
+        <li>implement VT220 Multinational character set "GR" aka
+        "DEC Supplemental Graphic".</li>
+
+        <li>DEC Technical character set based on <a href=
+        "http://www.vt100.net/charsets/technical.html">vt100.net
+        description</a>.</li>
+
+        <li>implement Portuguese NRC.</li>
+
+        <li>provide for temporarily switching to/from NRC mode from
+        UTF-8 mode when <code>DECNRCM</code> is set or reset.</li>
+      </ul>
+    </li>
+
+    <li>minor fix to assert's found while testing examples from
+    <a href="https://gist.github.com/ttdoda">ttdoda's
+    slrm-test1.txt</a>.</li>
+
+    <li>modify <code>DECLRMM</code> to not update the cursor
+    position (report by Iwamoto Kouichi forwarded by Hayaki
+    Saito).</li>
+
+    <li>modify cursor-position report to take origin-mode into
+    account (report by Hayaki Saito, see also <a href=
+    "https://github.com/gnachman/iTerm2/pull/129">iTerm2 pull
+    request 129</a>).</li>
+
+    <li>correct off-by-one comparison in when handling
+    carriage-return at left margin (patch by Iwamoto Kouichi,
+    forwarded by Hayaki Saito).</li>
+
+    <li>improve handling of <code>faceName</code> resource when a
+    "size=" property is embedded in it, by using that size to
+    replace the default <code>faceSize</code> resource. This lets
+    xterm honor the other faceSize resources (report by Jens
+    Schweikhardt).</li>
+
+    <li>improve OSC&nbsp;52 selection-data by setting its timestamp
+    to correspond to the most-recent event received by xterm, to
+    ensure that calls to <code>XtOwnSelect</code> succeed even if
+    the selection is manipulated solely through the keyboard
+    (prompted by patch by Richard Tollerton).</li>
+
+    <li>change configure-script defaults for "luit" and
+    "wide-chars" options to match the values used in the imake
+    configuration, to lessen user surprise if they are accustomed
+    to building xterm using imake(report by Andries E
+    Brouwer).</li>
+
+    <li>improve the imake-related configuration's check if xterm is
+    started in a locale that uses UTF-8 encoding. Before, this
+    checked the locale settings only for "UTF-8", now it checks
+    ignoring case for "UTF-8" and "UTF-8" (report by Andries E
+    Brouwer).</li>
   </ul>
 
   <h1><a name="xterm_296" id="xterm_296">Patch #296 -

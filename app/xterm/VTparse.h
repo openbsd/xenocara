@@ -1,7 +1,7 @@
-/* $XTermId: VTparse.h,v 1.61 2013/06/23 21:12:13 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.62 2013/08/19 00:39:54 tom Exp $ */
 
 /*
- * Copyright 2002-2011,2012 by Thomas E. Dickey
+ * Copyright 2002-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -106,6 +106,7 @@ extern Const PARSE_T vt52_ignore_table[];
 
 #if OPT_WIDE_CHARS
 extern Const PARSE_T esc_pct_table[];
+extern Const PARSE_T scs_pct_table[];
 #endif
 
 /*
@@ -278,5 +279,7 @@ extern Const PARSE_T esc_pct_table[];
 #define CASE_ANSI_SC 156
 #define CASE_ANSI_RC 157
 #define CASE_ESC_COLON 158
+#define CASE_SCS_PERCENT 159
+#define CASE_GSETS_PERCENT 160
 
 #endif /* included_VTparse_h */

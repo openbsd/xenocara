@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.c,v 1.57 2013/02/03 22:11:25 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.58 2013/11/18 01:40:43 tom Exp $ */
 
 /*
  * Copyright 2000-2012,2013 by Thomas E. Dickey
@@ -216,7 +216,7 @@ x_getlogin(uid_t uid, struct passwd *in_out)
  * result via the given pointer.  On failure, wipes the data to prevent use.
  */
 Boolean
-x_getpwnam(const char *name, struct passwd * result)
+x_getpwnam(const char *name, struct passwd *result)
 {
     struct passwd *ptr = getpwnam(name);
     Boolean code;
@@ -236,7 +236,7 @@ x_getpwnam(const char *name, struct passwd * result)
  * result via the given pointer.  On failure, wipes the data to prevent use.
  */
 Boolean
-x_getpwuid(uid_t uid, struct passwd * result)
+x_getpwuid(uid_t uid, struct passwd *result)
 {
     struct passwd *ptr = getpwuid((uid_t) uid);
     Boolean code;
@@ -431,7 +431,7 @@ x_strindex(char *s1, const char *s2)
     char *s3;
     size_t s2len = strlen(s2);
 
-    while ((s3 = strchr(s1, *s2)) != NULL) {
+    while ((s3 = (strchr) (s1, *s2)) != NULL) {
 	if (strncmp(s3, s2, s2len) == 0)
 	    return (s3);
 	s1 = ++s3;

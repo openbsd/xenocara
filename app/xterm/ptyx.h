@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.776 2013/06/23 22:00:58 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.789 2013/11/23 17:04:26 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -316,7 +316,7 @@ typedef Char *UString;
 
 #define IsEmpty(s) ((s) == 0 || *(s) == '\0')
 
-#define CharOf(n) ((unsigned char)(n))
+#define CharOf(n) ((Char)(n))
 
 typedef struct {
     int row;
@@ -657,6 +657,10 @@ typedef struct {
 #endif
 #endif
 
+#ifndef OPT_REPORT_FONTS
+#define OPT_REPORT_FONTS   1 /* provide "-report-fonts" option */
+#endif
+
 #ifndef OPT_SAME_NAME
 #define OPT_SAME_NAME   1 /* suppress redundant updates of title, icon, etc. */
 #endif
@@ -896,6 +900,54 @@ typedef enum {
 #define IsTitleMode(xw,mode) (((xw)->screen.title_modes & mode) != 0)
 
 #include <xcharmouse.h>
+
+/*
+ * For readability...
+ */
+#define nrc_percent   100
+#define nrc_dquote    200
+#define nrc_ampersand 300
+typedef enum {
+    nrc_ASCII = 0
+    ,nrc_British		/* vt100 */
+    ,nrc_British_Latin_1	/* vt3xx */
+    ,nrc_Cyrillic		/* vt5xx */
+    ,nrc_DEC_Spec_Graphic	/* vt100 */
+    ,nrc_DEC_Alt_Chars		/* vt100 */
+    ,nrc_DEC_Alt_Graphics	/* vt100 */
+    ,nrc_DEC_Supp		/* vt2xx */
+    ,nrc_DEC_Supp_Graphic	/* vt3xx */
+    ,nrc_DEC_Technical		/* vt3xx */
+    ,nrc_Dutch			/* vt2xx */
+    ,nrc_Finnish		/* vt2xx */
+    ,nrc_Finnish2		/* vt2xx */
+    ,nrc_French			/* vt2xx */
+    ,nrc_French2		/* vt2xx */
+    ,nrc_French_Canadian	/* vt2xx */
+    ,nrc_French_Canadian2	/* vt3xx */
+    ,nrc_German			/* vt2xx */
+    ,nrc_Greek			/* vt5xx */
+    ,nrc_Greek_Supp		/* vt5xx */
+    ,nrc_Hebrew			/* vt5xx */
+    ,nrc_Hebrew2		/* vt5xx */
+    ,nrc_Hebrew_Supp		/* vt5xx */
+    ,nrc_Italian		/* vt2xx */
+    ,nrc_Latin_5_Supp		/* vt5xx */
+    ,nrc_Latin_Cyrillic		/* vt5xx */
+    ,nrc_Norwegian_Danish	/* vt3xx */
+    ,nrc_Norwegian_Danish2	/* vt2xx */
+    ,nrc_Norwegian_Danish3	/* vt2xx */
+    ,nrc_Portugese		/* vt3xx */
+    ,nrc_Russian		/* vt5xx */
+    ,nrc_SCS_NRCS		/* vt5xx - probably Serbo/Croatian */
+    ,nrc_Spanish		/* vt2xx */
+    ,nrc_Swedish		/* vt2xx */
+    ,nrc_Swedish2		/* vt2xx */
+    ,nrc_Swiss			/* vt2xx */
+    ,nrc_Turkish		/* vt5xx */
+    ,nrc_Turkish2		/* vt5xx */
+    ,nrc_Unknown
+} DECNRCM_codes;
 
 /*
  * Use this enumerated type to check consistency among dpmodes(), savemodes()
@@ -1479,13 +1531,15 @@ typedef struct {
 	Dimension	max_width;	/* maximum cell width */
 } FontMap;
 
+#define KNOWN_MISSING	256
+
 typedef struct {
 	unsigned	chrset;
 	unsigned	flags;
 	XFontStruct *	fs;
 	char *		fn;
 	FontMap		map;
-	Char		known_missing[256];
+	Char		known_missing[KNOWN_MISSING];
 } XTermFonts;
 
 #if OPT_RENDERFONT
@@ -1652,7 +1706,7 @@ typedef struct {
 	unsigned	flags;		/* VTxxx saves graphics rendition */
 	Char		curgl;
 	Char		curgr;
-	Char		gsets[4];
+	int		gsets[4];
 #if OPT_ISO_COLORS
 	int		cur_foreground; /* current foreground color	*/
 	int		cur_background; /* current background color	*/
@@ -1814,6 +1868,7 @@ typedef struct {
 	Boolean		normalized_c;	/* true to precompose to Form C */
 	char *		utf8_mode_s;	/* use UTF-8 decode/encode	*/
 	char *		utf8_fonts_s;	/* use UTF-8 decode/encode	*/
+	int		utf8_nrc_mode;	/* saved UTF-8 mode for DECNRCM */
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
 	int		utf8_fonts;	/* use UTF-8 decode/encode: 0-2	*/
 	int		max_combining;	/* maximum # of combining chars	*/
@@ -1949,6 +2004,7 @@ typedef struct {
 #if OPT_BOX_CHARS
 	Boolean		force_box_chars;/* true if we assume no boxchars */
 	Boolean		force_all_chars;/* true to outline missing chars */
+	Boolean		assume_all_chars;/* true to allow missing chars */
 	Boolean		allow_packing;	/* true to allow packed-fonts	*/
 #endif
 	Dimension	fnt_wide;
@@ -2076,7 +2132,7 @@ typedef struct {
 
 	/* Improved VT100 emulation stuff.				*/
 	String		keyboard_dialect; /* default keyboard dialect	*/
-	Char		gsets[4];	/* G0 through G3.		*/
+	int		gsets[4];	/* G0 through G3.		*/
 	Char		curgl;		/* Current GL setting.		*/
 	Char		curgr;		/* Current GR setting.		*/
 	Char		curss;		/* Current single shift.	*/
@@ -2118,7 +2174,7 @@ typedef struct {
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
-	Char		vt52_save_gsets[4];
+	int		vt52_save_gsets[4];
 #endif
 	/* Testing */
 #if OPT_XMC_GLITCH

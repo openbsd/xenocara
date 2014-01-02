@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.318 2013/06/23 21:39:24 tom Exp $
+dnl $XTermId: configure.in,v 1.321 2013/11/22 21:42:13 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -91,6 +91,7 @@ AC_TYPE_OFF_T
 AC_CHECK_FUNCS( \
 	gethostname \
 	getlogin \
+	mkdtemp \
 	putenv \
 	unsetenv \
 	sched_yield \
@@ -258,6 +259,9 @@ CF_WITH_XPM
 CF_X_ATHENA
 CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
+
+# If we notice Xcursor, there is a workaround needed.
+AC_CHECK_LIB(Xcursor, XcursorGetTheme,[AC_DEFINE(HAVE_LIB_XCURSOR)])
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
@@ -836,33 +840,11 @@ CF_ARG_DISABLE(vt52,
 AC_MSG_RESULT($enable_vt52)
 test "$enable_vt52" = no && AC_DEFINE(OPT_VT52_MODE,0,[Define to 0 to disable VT52 emulation])
 
-AC_MSG_CHECKING(if you want to use mini-luit/Latin9 built-in support)
-CF_ARG_ENABLE(mini-luit,
-	[  --enable-mini-luit      enable mini-luit (built-in Latin9 support)],
-	[enable_mini_luit=yes],
-	[enable_mini_luit=no])
-AC_MSG_RESULT($enable_mini_luit)
-if test "$enable_mini_luit" = yes ; then
-	AC_DEFINE(OPT_MINI_LUIT,1,[Define to 1 to enable mini-luit (built-in Latin9 support)])
-fi
-
-AC_MSG_CHECKING(if you want to use luit)
-CF_ARG_ENABLE(luit,
-	[  --enable-luit           enable luit filter (Unicode translation)],
-	[enable_luit=yes],
-	[enable_luit=$enable_mini_luit])
-AC_MSG_RESULT($enable_luit)
-if test "$enable_luit" = yes ; then
-	AC_DEFINE(OPT_LUIT_PROG,1,[Define to 1 to enable luit filter (Unicode translation)])
-	CF_PATH_PROG(LUIT,xterm-filter,bluit luit)
-fi
-
 AC_MSG_CHECKING(if you want wide-character support)
-CF_ARG_OPTION(wide-chars,
-	[  --enable-wide-chars     enable wide-character support],
-	[enable_wchar=yes],
-	[enable_wchar=$enable_luit],
-	[$enable_luit])
+CF_ARG_DISABLE(wide-chars,
+	[  --disable-wide-chars    disable wide-character support],
+	[enable_wchar=no],
+	[enable_wchar=yes])
 AC_MSG_RESULT($enable_wchar)
 
 AC_MSG_CHECKING(if you want only 16-bit character support)
@@ -878,6 +860,28 @@ if test "$enable_16bit_chars" = yes ; then
 fi
 
 if test "$enable_wchar" = yes ; then
+
+AC_MSG_CHECKING(if you want to use mini-luit/Latin9 built-in support)
+CF_ARG_ENABLE(mini-luit,
+	[  --enable-mini-luit      enable mini-luit (built-in Latin9 support)],
+	[enable_mini_luit=yes],
+	[enable_mini_luit=no])
+AC_MSG_RESULT($enable_mini_luit)
+if test "$enable_mini_luit" = yes ; then
+	AC_DEFINE(OPT_MINI_LUIT,1,[Define to 1 to enable mini-luit (built-in Latin9 support)])
+fi
+
+AC_MSG_CHECKING(if you want to use luit)
+CF_ARG_DISABLE(luit,
+	[  --disable-luit          enable luit filter (Unicode translation)],
+	[enable_luit=no],
+	[enable_luit=yes])
+AC_MSG_RESULT($enable_luit)
+if test "$enable_luit" = yes ; then
+	AC_DEFINE(OPT_LUIT_PROG,1,[Define to 1 to enable luit filter (Unicode translation)])
+	CF_PATH_PROG(LUIT,xterm-filter,bluit luit)
+fi
+
 	AC_DEFINE(OPT_WIDE_CHARS,1,[Define to 1 to enable wide-character support])
 	EXTRAHDRS="$EXTRAHDRS charclass.h precompose.h wcwidth.h"
 	EXTRASRCS="$EXTRASRCS charclass.c precompose.c wcwidth.c"

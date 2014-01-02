@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.458 2013/07/01 00:50:20 tom Exp $ */
+/* $XTermId: button.c,v 1.465 2013/11/27 00:43:43 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -147,24 +147,24 @@ static Time lastButton3DoubleDownTime = 0;
 static CELL lastButton3;	/* At the release time */
 #endif /* OPT_READLINE */
 
-static Char *SaveText(TScreen * screen, int row, int scol, int ecol,
-		      Char * lp, int *eol);
-static int Length(TScreen * screen, int row, int scol, int ecol);
-static void ComputeSelect(XtermWidget xw, CELL * startc, CELL * endc, Bool extend);
+static Char *SaveText(TScreen *screen, int row, int scol, int ecol,
+		      Char *lp, int *eol);
+static int Length(TScreen *screen, int row, int scol, int ecol);
+static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool extend);
 static void EditorButton(XtermWidget xw, XButtonEvent * event);
-static void EndExtend(XtermWidget w, XEvent * event, String * params, Cardinal
+static void EndExtend(XtermWidget w, XEvent * event, String *params, Cardinal
 		      num_params, Bool use_cursor_loc);
-static void ExtendExtend(XtermWidget xw, const CELL * cell);
-static void PointToCELL(TScreen * screen, int y, int x, CELL * cell);
-static void ReHiliteText(XtermWidget xw, CELL * first, CELL * last);
-static void SaltTextAway(XtermWidget xw, CELL * cellc, CELL * cell);
-static void SelectSet(XtermWidget xw, XEvent * event, String * params, Cardinal num_params);
+static void ExtendExtend(XtermWidget xw, const CELL *cell);
+static void PointToCELL(TScreen *screen, int y, int x, CELL *cell);
+static void ReHiliteText(XtermWidget xw, CELL *first, CELL *last);
+static void SaltTextAway(XtermWidget xw, CELL *cellc, CELL *cell);
+static void SelectSet(XtermWidget xw, XEvent * event, String *params, Cardinal num_params);
 static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
-static void StartSelect(XtermWidget xw, const CELL * cell);
+static void StartSelect(XtermWidget xw, const CELL *cell);
 static void TrackDown(XtermWidget xw, XButtonEvent * event);
-static void TrackText(XtermWidget xw, const CELL * first, const CELL * last);
-static void _OwnSelection(XtermWidget xw, String * selections, Cardinal count);
-static void do_select_end(XtermWidget xw, XEvent * event, String * params,
+static void TrackText(XtermWidget xw, const CELL *first, const CELL *last);
+static void _OwnSelection(XtermWidget xw, String *selections, Cardinal count);
+static void do_select_end(XtermWidget xw, XEvent * event, String *params,
 			  Cardinal *num_params, Bool use_cursor_loc);
 
 #define MOUSE_LIMIT (255 - 32)
@@ -174,7 +174,7 @@ static void do_select_end(XtermWidget xw, XEvent * event, String * params,
 #define EXT_MOUSE_START (127 - 32)
 
 static int
-MouseLimit(TScreen * screen)
+MouseLimit(TScreen *screen)
 {
     int mouse_limit;
 
@@ -194,7 +194,7 @@ MouseLimit(TScreen * screen)
 }
 
 static unsigned
-EmitMousePosition(TScreen * screen, Char line[], unsigned count, int value)
+EmitMousePosition(TScreen *screen, Char line[], unsigned count, int value)
 {
     int mouse_limit = MouseLimit(screen);
 
@@ -237,7 +237,7 @@ EmitMousePosition(TScreen * screen, Char line[], unsigned count, int value)
 }
 
 static unsigned
-EmitMousePositionSeparator(TScreen * screen, Char line[], unsigned count)
+EmitMousePositionSeparator(TScreen *screen, Char line[], unsigned count)
 {
     switch (screen->extend_coords) {
     case SET_SGR_EXT_MODE_MOUSE:
@@ -726,7 +726,7 @@ CheckLocatorPosition(XtermWidget xw, XButtonEvent * event)
 
 #if OPT_READLINE
 static int
-isClick1_clean(TScreen * screen, XButtonEvent * event)
+isClick1_clean(TScreen *screen, XButtonEvent * event)
 {
     int delta;
 
@@ -755,7 +755,7 @@ isClick1_clean(TScreen * screen, XButtonEvent * event)
 }
 
 static int
-isDoubleClick3(TScreen * screen, XButtonEvent * event)
+isDoubleClick3(TScreen *screen, XButtonEvent * event)
 {
     int delta;
 
@@ -794,7 +794,7 @@ isDoubleClick3(TScreen * screen, XButtonEvent * event)
 }
 
 static int
-CheckSecondPress3(TScreen * screen, XEvent * event)
+CheckSecondPress3(TScreen *screen, XEvent * event)
 {
     int delta;
 
@@ -833,7 +833,7 @@ CheckSecondPress3(TScreen * screen, XEvent * event)
 }
 
 static int
-rowOnCurrentLine(TScreen * screen,
+rowOnCurrentLine(TScreen *screen,
 		 int line,
 		 int *deltap)	/* must be XButtonEvent */
 {
@@ -863,13 +863,13 @@ rowOnCurrentLine(TScreen * screen,
 }
 
 static int
-eventRow(TScreen * screen, XEvent * event)	/* must be XButtonEvent */
+eventRow(TScreen *screen, XEvent * event)	/* must be XButtonEvent */
 {
     return (event->xbutton.y - screen->border) / FontHeight(screen);
 }
 
 static int
-eventColBetween(TScreen * screen, XEvent * event)	/* must be XButtonEvent */
+eventColBetween(TScreen *screen, XEvent * event)	/* must be XButtonEvent */
 {
     /* Correct by half a width - we are acting on a boundary, not on a cell. */
     return ((event->xbutton.x - OriginX(screen) + (FontWidth(screen) - 1) / 2)
@@ -877,7 +877,7 @@ eventColBetween(TScreen * screen, XEvent * event)	/* must be XButtonEvent */
 }
 
 static int
-ReadLineMovePoint(TScreen * screen, int col, int ldelta)
+ReadLineMovePoint(TScreen *screen, int col, int ldelta)
 {
     Char line[6];
     unsigned count = 0;
@@ -900,7 +900,7 @@ ReadLineMovePoint(TScreen * screen, int col, int ldelta)
 }
 
 static int
-ReadLineDelete(TScreen * screen, CELL * cell1, CELL * cell2)
+ReadLineDelete(TScreen *screen, CELL *cell1, CELL *cell2)
 {
     int del;
 
@@ -913,7 +913,7 @@ ReadLineDelete(TScreen * screen, CELL * cell1, CELL * cell2)
 }
 
 static void
-readlineExtend(TScreen * screen, XEvent * event)
+readlineExtend(TScreen *screen, XEvent * event)
 {
     int ldelta1, ldelta2;
 
@@ -940,7 +940,7 @@ readlineExtend(TScreen * screen, XEvent * event)
 void
 DiredButton(Widget w,
 	    XEvent * event,	/* must be XButtonEvent */
-	    String * params GCC_UNUSED,		/* selections */
+	    String *params GCC_UNUSED,	/* selections */
 	    Cardinal *num_params GCC_UNUSED)
 {
     XtermWidget xw;
@@ -971,7 +971,7 @@ DiredButton(Widget w,
 void
 ReadLineButton(Widget w,
 	       XEvent * event,	/* must be XButtonEvent */
-	       String * params GCC_UNUSED,	/* selections */
+	       String *params GCC_UNUSED,	/* selections */
 	       Cardinal *num_params GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1028,7 +1028,7 @@ ReadLineButton(Widget w,
 void
 ViButton(Widget w,
 	 XEvent * event,	/* must be XButtonEvent */
-	 String * params GCC_UNUSED,	/* selections */
+	 String *params GCC_UNUSED,	/* selections */
 	 Cardinal *num_params GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1067,7 +1067,7 @@ ViButton(Widget w,
 void
 HandleSelectExtend(Widget w,
 		   XEvent * event,	/* must be XMotionEvent */
-		   String * params GCC_UNUSED,
+		   String *params GCC_UNUSED,
 		   Cardinal *num_params GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1076,7 +1076,7 @@ HandleSelectExtend(Widget w,
 	TScreen *screen = TScreenOf(xw);
 	CELL cell;
 
-	TRACE(("HandleSelectExtend\n"));
+	TRACE(("HandleSelectExtend @%ld\n", event->xmotion.time));
 
 	screen->selection_time = event->xmotion.time;
 	switch (screen->eventMode) {
@@ -1103,7 +1103,7 @@ HandleSelectExtend(Widget w,
 void
 HandleKeyboardSelectExtend(Widget w,
 			   XEvent * event GCC_UNUSED,	/* must be XButtonEvent */
-			   String * params GCC_UNUSED,
+			   String *params GCC_UNUSED,
 			   Cardinal *num_params GCC_UNUSED)
 {
     XtermWidget xw;
@@ -1119,13 +1119,14 @@ HandleKeyboardSelectExtend(Widget w,
 static void
 do_select_end(XtermWidget xw,
 	      XEvent * event,	/* must be XButtonEvent */
-	      String * params,	/* selections */
+	      String *params,	/* selections */
 	      Cardinal *num_params,
 	      Bool use_cursor_loc)
 {
     TScreen *screen = TScreenOf(xw);
 
     screen->selection_time = event->xbutton.time;
+    TRACE(("do_select_end @%ld\n", screen->selection_time));
     switch (screen->eventMode) {
     case NORMAL:
 	(void) SendMousePosition(xw, event);
@@ -1143,7 +1144,7 @@ do_select_end(XtermWidget xw,
 void
 HandleSelectEnd(Widget w,
 		XEvent * event,	/* must be XButtonEvent */
-		String * params,	/* selections */
+		String *params,	/* selections */
 		Cardinal *num_params)
 {
     XtermWidget xw;
@@ -1157,7 +1158,7 @@ HandleSelectEnd(Widget w,
 void
 HandleKeyboardSelectEnd(Widget w,
 			XEvent * event,		/* must be XButtonEvent */
-			String * params,	/* selections */
+			String *params,		/* selections */
 			Cardinal *num_params)
 {
     XtermWidget xw;
@@ -1174,7 +1175,7 @@ HandleKeyboardSelectEnd(Widget w,
 void
 HandleCopySelection(Widget w,
 		    XEvent * event,
-		    String * params,	/* list of targets */
+		    String *params,	/* list of targets */
 		    Cardinal *num_params)
 {
     XtermWidget xw;
@@ -1204,7 +1205,7 @@ DECtoASCII(unsigned ch)
 
 #if OPT_WIDE_CHARS
 static Cardinal
-addXtermChar(Char ** buffer, Cardinal *used, Cardinal offset, unsigned value)
+addXtermChar(Char **buffer, Cardinal *used, Cardinal offset, unsigned value)
 {
     if (offset + 1 >= *used) {
 	*used = 1 + (2 * (offset + 1));
@@ -1221,7 +1222,7 @@ addXtermChar(Char ** buffer, Cardinal *used, Cardinal offset, unsigned value)
  * or ASCII/Latin-1 equivalents for special cases.
  */
 static Char *
-UTF8toLatin1(TScreen * screen, Char * s, unsigned long len, unsigned long *result)
+UTF8toLatin1(TScreen *screen, Char *s, unsigned long len, unsigned long *result)
 {
     static Char *buffer;
     static Cardinal used;
@@ -1449,7 +1450,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 
 #if OPT_WIDE_CHARS
 static Atom *
-allocUtf8Targets(Widget w, TScreen * screen)
+allocUtf8Targets(Widget w, TScreen *screen)
 {
     Atom **resultp = &(screen->selection_targets_utf8);
 
@@ -1485,7 +1486,7 @@ allocUtf8Targets(Widget w, TScreen * screen)
 #endif
 
 static Atom *
-alloc8bitTargets(Widget w, TScreen * screen)
+alloc8bitTargets(Widget w, TScreen *screen)
 {
     Atom **resultp = &(screen->selection_targets_8bit);
 
@@ -1569,7 +1570,7 @@ UnmapSelections(XtermWidget xw)
  * call to XmuInternStrings().
  */
 static String *
-MapSelections(XtermWidget xw, String * params, Cardinal num_params)
+MapSelections(XtermWidget xw, String *params, Cardinal num_params)
 {
     String *result = params;
 
@@ -1676,7 +1677,7 @@ static
 void
 xtermGetSelection(Widget w,
 		  Time ev_time,
-		  String * params,	/* selections in precedence order */
+		  String *params,	/* selections in precedence order */
 		  Cardinal num_params,
 		  Atom * targets)
 {
@@ -1691,7 +1692,7 @@ xtermGetSelection(Widget w,
     if ((xw = getXtermWidget(w)) == 0)
 	return;
 
-    TRACE(("xtermGetSelection num_params %d\n", num_params));
+    TRACE(("xtermGetSelection num_params %d @%ld\n", num_params, ev_time));
     params = MapSelections(xw, params, num_params);
 
     XmuInternStrings(XtDisplay(w), params, (Cardinal) 1, &selection);
@@ -1765,7 +1766,7 @@ xtermGetSelection(Widget w,
 
 #if OPT_TRACE && OPT_WIDE_CHARS
 static void
-GettingSelection(Display * dpy, Atom type, Char * line, unsigned long len)
+GettingSelection(Display *dpy, Atom type, Char *line, unsigned long len)
 {
     Char *cp;
     char *name;
@@ -1799,7 +1800,7 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ\
 abcdefghijklmnopqrstuvwxyz\
 0123456789+/";
 static void
-base64_flush(TScreen * screen)
+base64_flush(TScreen *screen)
 {
     Char x;
     switch (screen->base64_count) {
@@ -1824,11 +1825,75 @@ base64_flush(TScreen * screen)
 }
 #endif /* OPT_PASTE64 */
 
+/*
+ * Translate ISO-8859-1 or UTF-8 data to NRCS.
+ */
 static void
-_qWriteSelectionData(XtermWidget xw, Char * lag, unsigned length)
+ToNational(TScreen *screen, Char *buffer, unsigned *length)
+{
+    int gsetL = screen->gsets[screen->curgl];
+    int gsetR = screen->gsets[screen->curgr];
+    unsigned chr, out, gl, gr;
+    Char *p;
+
+#if OPT_WIDE_CHARS
+    if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
+	PtyData *data = TypeXtMallocX(PtyData, *length);
+
+	memset(data, 0, sizeof(*data));
+	data->next = data->buffer;
+	data->last = data->buffer + *length;
+	memcpy(data->buffer, buffer, (size_t) *length);
+	p = buffer;
+	while (data->next < data->last) {
+	    if (!decodeUtf8(data)) {
+		data->utf_size = 1;
+		data->utf_data = data->next[0];
+	    }
+	    data->next += data->utf_size;
+	    chr = data->utf_data;
+	    out = chr;
+	    if ((gl = xtermCharSetIn(screen, chr, gsetL)) != chr) {
+		out = gl;
+	    } else if ((gr = xtermCharSetIn(screen, chr, gsetR)) != chr) {
+		out = gr;
+	    }
+	    *p++ = (Char) ((out < 256) ? out : ' ');
+	}
+	*length = (unsigned) (p - buffer);
+	free(data);
+    } else
+#endif
+    {
+	for (p = buffer; (int) (p - buffer) < (int) *length; ++p) {
+	    chr = *p;
+	    out = chr;
+	    if ((gl = xtermCharSetIn(screen, chr, gsetL)) != chr) {
+		out = gl;
+	    } else if ((gr = xtermCharSetIn(screen, chr, gsetR)) != chr) {
+		out = gr;
+	    }
+	    *p = (Char) out;
+	}
+    }
+}
+
+static void
+_qWriteSelectionData(XtermWidget xw, Char *lag, unsigned length)
 {
     TScreen *screen = TScreenOf(xw);
 
+    /*
+     * If we are pasting into a window which is using NRCS, we want to map
+     * the text from the normal encoding (ISO-8859-1 or UTF-8) into the coding
+     * that an application would use to write characters with NRCS.
+     *
+     * TODO: handle conversion from UTF-8, and adjust length.  This can be done
+     * in the same buffer because the target is always 8-bit.
+     */
+    if ((xw->flags & NATIONAL) && (length != 0)) {
+	ToNational(screen, lag, &length);
+    }
 #if OPT_PASTE64
     if (screen->base64_paste) {
 	/* Send data as base64 */
@@ -1893,7 +1958,7 @@ _qWriteSelectionData(XtermWidget xw, Char * lag, unsigned length)
 }
 
 static void
-_WriteSelectionData(XtermWidget xw, Char * line, size_t length)
+_WriteSelectionData(XtermWidget xw, Char *line, size_t length)
 {
     /* Write data to pty a line at a time. */
     /* Doing this one line at a time may no longer be necessary
@@ -1943,7 +2008,7 @@ _WriteSelectionData(XtermWidget xw, Char * line, size_t length)
 
 #if OPT_READLINE
 static void
-_WriteKey(TScreen * screen, const Char * in)
+_WriteKey(TScreen *screen, const Char *in)
 {
     Char line[16];
     unsigned count = 0;
@@ -1990,7 +2055,7 @@ removeControls(XtermWidget xw, char *value)
 		}
 	    }
 #if OPT_WIDE_CHARS
-	    else if (screen->utf8_inparse)
+	    else if (screen->utf8_inparse || screen->utf8_nrc_mode)
 		++dst;
 #endif
 #if OPT_C1_PRINT || OPT_WIDE_CHARS
@@ -2164,7 +2229,7 @@ SelectionReceived(Widget w,
 void
 HandleInsertSelection(Widget w,
 		      XEvent * event,	/* assumed to be XButtonEvent* */
-		      String * params,	/* selections in precedence order */
+		      String *params,	/* selections in precedence order */
 		      Cardinal *num_params)
 {
     XtermWidget xw;
@@ -2226,7 +2291,7 @@ EvalSelectUnit(XtermWidget xw,
 static void
 do_select_start(XtermWidget xw,
 		XEvent * event,	/* must be XButtonEvent* */
-		CELL * cell)
+		CELL *cell)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -2249,7 +2314,7 @@ do_select_start(XtermWidget xw,
 void
 HandleSelectStart(Widget w,
 		  XEvent * event,	/* must be XButtonEvent* */
-		  String * params GCC_UNUSED,
+		  String *params GCC_UNUSED,
 		  Cardinal *num_params GCC_UNUSED)
 {
     XtermWidget xw;
@@ -2275,7 +2340,7 @@ HandleSelectStart(Widget w,
 void
 HandleKeyboardSelectStart(Widget w,
 			  XEvent * event,	/* must be XButtonEvent* */
-			  String * params GCC_UNUSED,
+			  String *params GCC_UNUSED,
 			  Cardinal *num_params GCC_UNUSED)
 {
     XtermWidget xw;
@@ -2316,7 +2381,7 @@ TrackDown(XtermWidget xw, XButtonEvent * event)
 void
 TrackMouse(XtermWidget xw,
 	   int func,
-	   CELL * start,
+	   CELL *start,
 	   int firstrow,
 	   int lastrow)
 {
@@ -2340,7 +2405,7 @@ TrackMouse(XtermWidget xw,
 }
 
 static void
-StartSelect(XtermWidget xw, const CELL * cell)
+StartSelect(XtermWidget xw, const CELL *cell)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -2367,7 +2432,7 @@ StartSelect(XtermWidget xw, const CELL * cell)
 static void
 EndExtend(XtermWidget xw,
 	  XEvent * event,	/* must be XButtonEvent */
-	  String * params,	/* selections */
+	  String *params,	/* selections */
 	  Cardinal num_params,
 	  Bool use_cursor_loc)
 {
@@ -2460,7 +2525,7 @@ EndExtend(XtermWidget xw,
 void
 HandleSelectSet(Widget w,
 		XEvent * event,
-		String * params,
+		String *params,
 		Cardinal *num_params)
 {
     XtermWidget xw;
@@ -2475,7 +2540,7 @@ HandleSelectSet(Widget w,
 static void
 SelectSet(XtermWidget xw,
 	  XEvent * event GCC_UNUSED,
-	  String * params,
+	  String *params,
 	  Cardinal num_params)
 {
     TScreen *screen = TScreenOf(xw);
@@ -2496,7 +2561,7 @@ SelectSet(XtermWidget xw,
 static void
 do_start_extend(XtermWidget xw,
 		XEvent * event,	/* must be XButtonEvent* */
-		String * params GCC_UNUSED,
+		String *params GCC_UNUSED,
 		Cardinal *num_params GCC_UNUSED,
 		Bool use_cursor_loc)
 {
@@ -2563,7 +2628,7 @@ do_start_extend(XtermWidget xw,
 }
 
 static void
-ExtendExtend(XtermWidget xw, const CELL * cell)
+ExtendExtend(XtermWidget xw, const CELL *cell)
 {
     TScreen *screen = TScreenOf(xw);
     int coord = Coordinate(screen, cell);
@@ -2597,7 +2662,7 @@ ExtendExtend(XtermWidget xw, const CELL * cell)
 void
 HandleStartExtend(Widget w,
 		  XEvent * event,	/* must be XButtonEvent* */
-		  String * params,	/* unused */
+		  String *params,	/* unused */
 		  Cardinal *num_params)		/* unused */
 {
     XtermWidget xw;
@@ -2611,7 +2676,7 @@ HandleStartExtend(Widget w,
 void
 HandleKeyboardStartExtend(Widget w,
 			  XEvent * event,	/* must be XButtonEvent* */
-			  String * params,	/* unused */
+			  String *params,	/* unused */
 			  Cardinal *num_params)		/* unused */
 {
     XtermWidget xw;
@@ -2623,7 +2688,7 @@ HandleKeyboardStartExtend(Widget w,
 }
 
 void
-ScrollSelection(TScreen * screen, int amount, Bool always)
+ScrollSelection(TScreen *screen, int amount, Bool always)
 {
     int minrow = INX2ROW(screen, -screen->savedlines);
     int maxrow = INX2ROW(screen, screen->max_row);
@@ -2677,7 +2742,7 @@ ScrollSelection(TScreen * screen, int amount, Bool always)
 
 /*ARGSUSED*/
 void
-ResizeSelection(TScreen * screen GCC_UNUSED, int rows, int cols)
+ResizeSelection(TScreen *screen GCC_UNUSED, int rows, int cols)
 {
     rows--;			/* decr to get 0-max */
     cols--;
@@ -2716,10 +2781,10 @@ iswide(int i)
 #endif
 
 static void
-PointToCELL(TScreen * screen,
+PointToCELL(TScreen *screen,
 	    int y,
 	    int x,
-	    CELL * cell)
+	    CELL *cell)
 /* Convert pixel coordinates to character coordinates.
    Rows are clipped between firstValidRow and lastValidRow.
    Columns are clipped between to be 0 or greater, but are not clipped to some
@@ -2753,7 +2818,7 @@ PointToCELL(TScreen * screen,
  * Find the last column at which text was drawn on the given row.
  */
 static int
-LastTextCol(TScreen * screen, LineData * ld, int row)
+LastTextCol(TScreen *screen, LineData *ld, int row)
 {
     int i = -1;
     Char *ch;
@@ -2873,7 +2938,7 @@ SetCharacterClassRange(int low,	/* in range of [0..255] */
 #endif
 
 static int
-class_of(LineData * ld, CELL * cell)
+class_of(LineData *ld, CELL *cell)
 {
     CELL temp = *cell;
     int result = 0;
@@ -2904,9 +2969,9 @@ class_of(LineData * ld, CELL * cell)
  * beginning of the next line.
  */
 static Boolean
-okPosition(TScreen * screen,
-	   LineData ** ld,
-	   CELL * cell)
+okPosition(TScreen *screen,
+	   LineData **ld,
+	   CELL *cell)
 {
     Boolean result = True;
 
@@ -2923,9 +2988,9 @@ okPosition(TScreen * screen,
 }
 
 static void
-trimLastLine(TScreen * screen,
-	     LineData ** ld,
-	     CELL * last)
+trimLastLine(TScreen *screen,
+	     LineData **ld,
+	     CELL *last)
 {
     if (screen->cutNewline && last->row < screen->max_row) {
 	last->col = 0;
@@ -2940,7 +3005,7 @@ trimLastLine(TScreen * screen,
  * Returns the first row of a wrapped line.
  */
 static int
-firstRowOfLine(TScreen * screen, int row, Bool visible)
+firstRowOfLine(TScreen *screen, int row, Bool visible)
 {
     LineData *ld = 0;
     int limit = visible ? 0 : -screen->savedlines;
@@ -2957,7 +3022,7 @@ firstRowOfLine(TScreen * screen, int row, Bool visible)
  * Returns the last row of a wrapped line.
  */
 static int
-lastRowOfLine(TScreen * screen, int row)
+lastRowOfLine(TScreen *screen, int row)
 {
     LineData *ld;
 
@@ -2973,7 +3038,7 @@ lastRowOfLine(TScreen * screen, int row)
  * Returns the number of cells on the range of rows.
  */
 static unsigned
-lengthOfLines(TScreen * screen, int firstRow, int lastRow)
+lengthOfLines(TScreen *screen, int firstRow, int lastRow)
 {
     unsigned length = 0;
     int n;
@@ -2993,7 +3058,7 @@ lengthOfLines(TScreen * screen, int firstRow, int lastRow)
  * the line.
  */
 static char *
-make_indexed_text(TScreen * screen, int row, unsigned length, int *indexed)
+make_indexed_text(TScreen *screen, int row, unsigned length, int *indexed)
 {
     Char *result = 0;
     size_t need = (length + 1);
@@ -3079,7 +3144,7 @@ indexToCol(int *indexed, int len, int off)
  * set the cell to the actual row/column values.
  */
 static void
-columnToCell(TScreen * screen, int row, int col, CELL * cell)
+columnToCell(TScreen *screen, int row, int col, CELL *cell)
 {
     while (row < screen->max_row) {
 	LineData *ld = GET_LINEDATA(screen, row);
@@ -3110,7 +3175,7 @@ columnToCell(TScreen * screen, int row, int col, CELL * cell)
  * Given a cell, find the corresponding column offset.
  */
 static int
-cellToColumn(TScreen * screen, CELL * cell)
+cellToColumn(TScreen *screen, CELL *cell)
 {
     LineData *ld = 0;
     int col = cell->col;
@@ -3129,7 +3194,7 @@ cellToColumn(TScreen * screen, CELL * cell)
 }
 
 static void
-do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
+do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 {
     LineData *ld = GET_LINEDATA(screen, startc->row);
     int inx = ((screen->numberOfClicks - 1) % screen->maxClicks);
@@ -3242,8 +3307,8 @@ do_select_regex(TScreen * screen, CELL * startc, CELL * endc)
  */
 static void
 ComputeSelect(XtermWidget xw,
-	      CELL * startc,
-	      CELL * endc,
+	      CELL *startc,
+	      CELL *endc,
 	      Bool extend)
 {
     TScreen *screen = TScreenOf(xw);
@@ -3444,8 +3509,8 @@ ComputeSelect(XtermWidget xw,
 /* Guaranteed (first.row, first.col) <= (last.row, last.col) */
 static void
 TrackText(XtermWidget xw,
-	  const CELL * firstp,
-	  const CELL * lastp)
+	  const CELL *firstp,
+	  const CELL *lastp)
 {
     TScreen *screen = TScreenOf(xw);
     int from, to;
@@ -3497,8 +3562,8 @@ TrackText(XtermWidget xw,
 /* Guaranteed that (first->row, first->col) <= (last->row, last->col) */
 static void
 ReHiliteText(XtermWidget xw,
-	     CELL * firstp,
-	     CELL * lastp)
+	     CELL *firstp,
+	     CELL *lastp)
 {
     TScreen *screen = TScreenOf(xw);
     int i;
@@ -3543,8 +3608,8 @@ ReHiliteText(XtermWidget xw,
  */
 static void
 SaltTextAway(XtermWidget xw,
-	     CELL * cellc,
-	     CELL * cell)
+	     CELL *cellc,
+	     CELL *cell)
 {
     TScreen *screen = TScreenOf(xw);
     int i, j = 0;
@@ -3619,14 +3684,14 @@ SaltTextAway(XtermWidget xw,
 
 #if OPT_PASTE64
 void
-ClearSelectionBuffer(TScreen * screen)
+ClearSelectionBuffer(TScreen *screen)
 {
     screen->selection_length = 0;
     screen->base64_count = 0;
 }
 
 static void
-AppendStrToSelectionBuffer(TScreen * screen, Char * text, size_t len)
+AppendStrToSelectionBuffer(TScreen *screen, Char *text, size_t len)
 {
     if (len != 0) {
 	int j = (int) (screen->selection_length + len);		/* New length */
@@ -3658,7 +3723,7 @@ AppendStrToSelectionBuffer(TScreen * screen, Char * text, size_t len)
 }
 
 void
-AppendToSelectionBuffer(TScreen * screen, unsigned c)
+AppendToSelectionBuffer(TScreen *screen, unsigned c)
 {
     unsigned six;
     Char ch;
@@ -3707,7 +3772,7 @@ AppendToSelectionBuffer(TScreen * screen, unsigned c)
 }
 
 void
-CompleteSelection(XtermWidget xw, String * args, Cardinal len)
+CompleteSelection(XtermWidget xw, String *args, Cardinal len)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -3986,7 +4051,7 @@ SelectionDone(Widget w GCC_UNUSED,
 
 static void
 _OwnSelection(XtermWidget xw,
-	      String * selections,
+	      String *selections,
 	      Cardinal count)
 {
     TScreen *screen = TScreenOf(xw);
@@ -4050,7 +4115,7 @@ _OwnSelection(XtermWidget xw,
 }
 
 static void
-ResetSelectionState(TScreen * screen)
+ResetSelectionState(TScreen *screen)
 {
     screen->selection_count = 0;
     screen->startH = zeroCELL;
@@ -4113,7 +4178,7 @@ UnhiliteSelection(XtermWidget xw)
 /* returns number of chars in line from scol to ecol out */
 /* ARGSUSED */
 static int
-Length(TScreen * screen,
+Length(TScreen *screen,
        int row,
        int scol,
        int ecol)
@@ -4128,11 +4193,11 @@ Length(TScreen * screen,
 
 /* copies text into line, preallocated */
 static Char *
-SaveText(TScreen * screen,
+SaveText(TScreen *screen,
 	 int row,
 	 int scol,
 	 int ecol,
-	 Char * lp,		/* pointer to where to put the text */
+	 Char *lp,		/* pointer to where to put the text */
 	 int *eol)
 {
     LineData *ld;
@@ -4165,7 +4230,7 @@ SaveText(TScreen * screen,
 	    /* Combining characters attached to double-width characters
 	       are in memory attached to the HIDDEN_CHAR */
 	    if_OPT_WIDE_CHARS(screen, {
-		if (screen->utf8_mode != uFalse) {
+		if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
 		    unsigned ch;
 		    size_t off;
 		    for_each_combData(off, ld) {
@@ -4179,7 +4244,7 @@ SaveText(TScreen * screen,
 	    continue;
 	}
 	previous = c;
-	if (screen->utf8_mode != uFalse) {
+	if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
 	    lp = convertToUTF8(lp, (c != 0) ? c : ' ');
 	    if_OPT_WIDE_CHARS(screen, {
 		unsigned ch;
@@ -4252,8 +4317,8 @@ BtnCode(XButtonEvent * event, int button)
 }
 
 static unsigned
-EmitButtonCode(TScreen * screen,
-	       Char * line,
+EmitButtonCode(TScreen *screen,
+	       Char *line,
 	       unsigned count,
 	       XButtonEvent * event,
 	       int button)
@@ -4494,9 +4559,9 @@ static char *
 getSelectionString(XtermWidget xw,
 		   Widget w,
 		   XEvent * event,
-		   String * params,
+		   String *params,
 		   Cardinal *num_params,
-		   CELL * start, CELL * finish)
+		   CELL *start, CELL *finish)
 {
     TScreen *screen = TScreenOf(xw);
 #if OPT_PASTE64
@@ -4541,7 +4606,7 @@ getSelectionString(XtermWidget xw,
 
 /* obtain data from the screen, passing the endpoints to caller's parameters */
 static char *
-getDataFromScreen(XtermWidget xw, String method, CELL * start, CELL * finish)
+getDataFromScreen(XtermWidget xw, String method, CELL *start, CELL *finish)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -4712,7 +4777,7 @@ tokenizeFormat(String format)
 }
 
 static void
-formatVideoAttrs(XtermWidget xw, char *buffer, CELL * cell)
+formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
 {
     TScreen *screen = TScreenOf(xw);
     LineData *ld = GET_LINEDATA(screen, cell->row);
@@ -4773,8 +4838,8 @@ static char *
 expandFormat(XtermWidget xw,
 	     const char *format,
 	     char *data,
-	     CELL * start,
-	     CELL * finish)
+	     CELL *start,
+	     CELL *finish)
 {
     char *result = 0;
     if (!IsEmpty(format)) {
@@ -4908,7 +4973,7 @@ freeArgv(char *blob, char **argv)
 void
 HandleExecFormatted(Widget w,
 		    XEvent * event GCC_UNUSED,
-		    String * params,	/* selections */
+		    String *params,	/* selections */
 		    Cardinal *num_params)
 {
     XtermWidget xw;
@@ -4940,7 +5005,7 @@ HandleExecFormatted(Widget w,
 void
 HandleExecSelectable(Widget w,
 		     XEvent * event GCC_UNUSED,
-		     String * params,	/* selections */
+		     String *params,	/* selections */
 		     Cardinal *num_params)
 {
     XtermWidget xw;
@@ -4975,7 +5040,7 @@ HandleExecSelectable(Widget w,
 void
 HandleInsertFormatted(Widget w,
 		      XEvent * event GCC_UNUSED,
-		      String * params,	/* selections */
+		      String *params,	/* selections */
 		      Cardinal *num_params)
 {
     XtermWidget xw;
@@ -5004,7 +5069,7 @@ HandleInsertFormatted(Widget w,
 void
 HandleInsertSelectable(Widget w,
 		       XEvent * event GCC_UNUSED,
-		       String * params,		/* selections */
+		       String *params,	/* selections */
 		       Cardinal *num_params)
 {
     XtermWidget xw;

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.720 2013/06/23 08:57:13 Ross.Combs Exp $ */
+/* $XTermId: xterm.h,v 1.724 2013/11/23 00:25:35 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -370,6 +370,7 @@ extern char **environ;
 #define XtNanswerbackString	"answerbackString"
 #define XtNappcursorDefault	"appcursorDefault"
 #define XtNappkeypadDefault	"appkeypadDefault"
+#define XtNassumeAllChars	"assumeAllChars"
 #define XtNautoWrap		"autoWrap"
 #define XtNawaitInput		"awaitInput"
 #define XtNbackarrowKey		"backarrowKey"
@@ -479,7 +480,6 @@ extern char **environ;
 #define XtNpointerMode		"pointerMode"
 #define XtNpointerShape		"pointerShape"
 #define XtNpopOnBell		"popOnBell"
-#define XtNprivateColorRegisters "privateColorRegisters"
 #define XtNprecompose		"precompose"
 #define XtNprintAttributes	"printAttributes"
 #define XtNprinterAutoClose	"printerAutoClose"
@@ -488,6 +488,7 @@ extern char **environ;
 #define XtNprinterExtent	"printerExtent"
 #define XtNprinterFormFeed	"printerFormFeed"
 #define XtNprinterNewLine	"printerNewLine"
+#define XtNprivateColorRegisters "privateColorRegisters"
 #define XtNquietGrab		"quietGrab"
 #define XtNrenderFont		"renderFont"
 #define XtNresizeGravity	"resizeGravity"
@@ -557,6 +558,7 @@ extern char **environ;
 #define XtCAnswerbackString	"AnswerbackString"
 #define XtCAppcursorDefault	"AppcursorDefault"
 #define XtCAppkeypadDefault	"AppkeypadDefault"
+#define XtCAssumeAllChars	"AssumeAllChars"
 #define XtCAutoWrap		"AutoWrap"
 #define XtCAwaitInput		"AwaitInput"
 #define XtCBackarrowKey		"BackarrowKey"
@@ -653,7 +655,6 @@ extern char **environ;
 #define XtCOldXtermFKeys	"OldXtermFKeys"
 #define XtCPointerMode		"PointerMode"
 #define XtCPopOnBell		"PopOnBell"
-#define XtCPrivateColorRegisters "PrivateColorRegisters"
 #define XtCPrecompose		"Precompose"
 #define XtCPrintAttributes	"PrintAttributes"
 #define XtCPrinterAutoClose	"PrinterAutoClose"
@@ -662,6 +663,7 @@ extern char **environ;
 #define XtCPrinterExtent	"PrinterExtent"
 #define XtCPrinterFormFeed	"PrinterFormFeed"
 #define XtCPrinterNewLine	"PrinterNewLine"
+#define XtCPrivateColorRegisters "PrivateColorRegisters"
 #define XtCQuietGrab		"QuietGrab"
 #define XtCRenderFont		"RenderFont"
 #define XtCResizeGravity	"ResizeGravity"
@@ -893,7 +895,7 @@ extern void noleaks_charproc (void);
 #endif
 
 /* charsets.c */
-extern unsigned xtermCharSetIn (unsigned  /* code */, int  /* charset */);
+extern unsigned xtermCharSetIn (TScreen * /* screen */, unsigned  /* code */, int  /* charset */);
 extern int xtermCharSetOut (XtermWidget /* xw */, IChar * /* buf */, IChar * /* ptr */, int  /* charset */);
 
 /* cursor.c */
@@ -1032,6 +1034,7 @@ extern void Redraw (void);
 extern void ReverseOldColors (void);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
+extern void cleanup_colored_cursor (void);
 extern void do_dcs (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */);
 extern void do_decrpm (XtermWidget /* xw */, int /* nparam */, int *  /* params */);
 extern void do_osc (XtermWidget /* xw */, Char * /* buf */, size_t  /* len */, int  /* final */);
@@ -1042,6 +1045,7 @@ extern void end_vt_mode (void);
 extern void hide_tek_window (void);
 extern void hide_vt_window (void);
 extern void ice_error (IceConn /* iceConn */);
+extern void init_colored_cursor (void);
 extern void reset_decudk (void);
 extern void set_tek_visibility (Bool  /* on */);
 extern void set_vt_visibility (Bool  /* on */);
