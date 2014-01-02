@@ -709,6 +709,9 @@ init_colored_cursor(void)
     size_t needed;
     FILE *fp;
 
+    if (getenv("XCURSOR_THEME") != NULL)
+        return;
+
     xterm_cursor_theme = 0;
     if ((tmp_dir = getenv("TMPDIR")) == 0)
 	tmp_dir = P_tmpdir;
