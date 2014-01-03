@@ -722,14 +722,14 @@ xf86EloControl(DeviceIntPtr	dev,
 	/* I will map coordinates myself */
 	InitValuatorAxisStruct(dev, 0,
 			       axis_labels[0],
-			       -1, -1,
+			       priv->min_x, priv->max_x,
 			       9500,
 			       0     /* min_res */,
 			       9500  /* max_res */,
 			       Absolute);
 	InitValuatorAxisStruct(dev, 1,
 			       axis_labels[1],
-			       -1, -1,
+			       priv->min_y, priv->max_y,
 			       10500,
 			       0     /* min_res */,
 			       10500 /* max_res */,
@@ -886,7 +886,6 @@ xf86EloAllocate(InputDriverPtr drv, InputInfoPtr pInfo)
   priv->packet_buf_p = 0;
   priv->swap_axes = 0;
 
-  pInfo->flags = 0 /* XI86_NO_OPEN_ON_INIT */;
   pInfo->device_control = xf86EloControl;
   pInfo->read_input   = xf86EloReadInput;
   pInfo->control_proc = NULL;

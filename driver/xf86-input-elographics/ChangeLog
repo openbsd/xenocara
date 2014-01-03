@@ -1,3 +1,35 @@
+commit 9fc73c9d037a751dc2b98d4b07d7580db31b8e3a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 20 11:11:41 2012 +1000
+
+    elographics 1.4.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3f5e8141145b861f978bc1d250f4400915e1fba4
+Author: Søren Holm <sh@mikrofyn.com>
+Date:   Thu Aug 16 13:09:10 2012 +0200
+
+    Added correct scaling of axes.
+    
+    Signed-off-by: Søren Holm <sh@sgh.dk>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 948e472fb1eaa7ed0d733f93d9616ec5b199cd93
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 16 10:23:15 2012 +1000
+
+    Don't force pInfo->flags to 0 (#40870)
+    
+    The server uses the flags to decide if a device comes up as attached or
+    floating slave. Overwriting the flag after the server has processed the
+    CorePointer/AlwaysCore/Floating/etc options results in the device always
+    coming up as floating slave. This again makes the device appear
+    unresponsive.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit c65d8e4c3307add220af82b8db3c75629f96067d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Jul 30 14:03:43 2012 +1000
