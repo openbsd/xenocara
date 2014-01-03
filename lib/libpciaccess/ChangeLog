@@ -85,6 +85,328 @@ Date:   Tue Jan 19 18:37:43 2010 +0100
     
     Signed-off-by: Julien Cristau <jcristau@debian.org>
 
+commit aa7925c4a798b9ed2cd43bd3c99c2df2a1824311
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 15:53:42 2013 -0700
+
+    libpciaccess 0.13.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bdcb46d33c6514278d2209fd00ed58c580da5ff3
+Author: John Martin <John.M.Martin@Oracle.COM>
+Date:   Sat Jul 20 15:49:05 2013 -0700
+
+    Fix Sun bug #7035791: scanpci should report 64 bit registers
+    
+    On a system which has allocated 64-bit device addresses scanpci -v
+    will show entries such as:
+    [...]
+      BASE0     0xce000000 SIZE 16777216  MEM
+      BASE1     0x00000fc1f8000000 SIZE 134217728  MEM64 PREFETCHABLE
+      BASE3     0x00000fc1f6000000 SIZE 33554432  MEM64 PREFETCHABLE
+    [...]
+    instead of:
+    [...]
+      BASE0     0xce000000 SIZE 16777216  MEM
+      BASE1     0xf8000000 SIZE 134217728  MEM PREFETCHABLE
+      BASE3     0xf6000000 SIZE 33554432  MEM PREFETCHABLE
+    [...]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f806b95d029d36c977befed4096734f6461efa08
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 15:00:40 2013 -0700
+
+    Resync COPYING file with copyrights/licenses from code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3bf035fcfd0ad55220f484f7fb5d5f18690bdb10
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 10:09:31 2013 -0700
+
+    pci_device_solx_devfs_probe: implicit conversion changes signedness warnings
+    
+    solx_devfs.c:615:32: warning: implicit conversion changes signedness:
+     'unsigned long' to 'int' [-Wsign-conversion]
+        for (i = 0; i < len; i = i + CELL_NUMS_1275) {
+                               ~ ~~^~~~~~~~~~~~~~~~
+    solx_devfs.c:615:30: warning: implicit conversion changes signedness:
+     'int' to 'unsigned long' [-Wsign-conversion]
+        for (i = 0; i < len; i = i + CELL_NUMS_1275) {
+                                 ^ ~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 883acb4bf30735c7d8f3147341345fa9e3bc76b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 10:00:44 2013 -0700
+
+    Solaris: Remove #defines for Ultra 45 southbridge device ids
+    
+    Workaround for these chipsets was removed in commit d76fb36d9c28be0f7c
+    with the switch of probing methods from the PCI address poking that upset
+    them to using the already collected data from the kernel via devinfo,
+    but the #define to identify them was left behind unused - remove it too.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3773eea8d4e22aaedf675051e5e96af53b925152
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 6 09:56:46 2013 -0700
+
+    pci_device_solx_devfs_read: fix sign conversion/comparison warnings
+    
+    Fixes:
+    solx_devfs.c:824:19: warning: comparison of integers of different signs: 'int' and 'pciaddr_t' (aka 'unsigned long') [-Wsign-compare]
+        for (i = 0; i < size; i += PCITOOL_ACC_ATTR_SIZE(PCITOOL_ACC_ATTR_SIZE_1))
+                    ~ ^ ~~~~
+    solx_devfs.c:826:28: warning: implicit conversion changes signedness: 'int' to 'unsigned long' [-Wsign-conversion]
+            cfg_prg.offset = offset + i;
+                                    ~ ^
+    solx_devfs.c:844:19: warning: implicit conversion changes signedness: 'int' to 'pciaddr_t' (aka 'unsigned long') [-Wsign-conversion]
+        *bytes_read = i;
+                    ~ ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 22f4b45056587f5700b87d09e9fe91bbb0eda4c5
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sat Jun 29 20:49:54 2013 +0200
+
+    Support more pci functions on NetBSD.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9a13ecb8f1462efaf741fed293e29ba38757ff70
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sat Jun 29 20:49:53 2013 +0200
+
+    Fix build on NetBSD-4.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1d364cb2f5b5cb1b18601735f42bada7a521be19
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sat Jun 29 20:49:52 2013 +0200
+
+    Enable boot_vga support only if WSDISPLAYIO_GET_BUSID is defined.
+    
+    Fixes build on NetBSD-5.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7f388e466bd7fbb7f9eba531e494e7efbd3a65dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 21:20:27 2013 -0700
+
+    pci_id_file_open: move variable inside the #ifndef that uses it
+    
+    Clears up gcc warning on Solaris:
+    common_device_name.c: In function 'pci_id_file_open':
+    common_device_name.c:83:17: warning: unused variable 'result' [-Wunused-variable]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a39f054649e773a4b33bf8f52152f7c5139bb90e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 21:09:52 2013 -0700
+
+    Define PCI_MATCH_ANY as an unsigned int
+    
+    Clears a bunch of clang warnings of the forms:
+    
+    common_device_name.c:345:23: warning: comparison of integers of different signs:
+     'const uint32_t' (aka 'const unsigned int') and 'int' [-Wsign-compare]
+        if ( m->vendor_id == PCI_MATCH_ANY ) {
+             ~~~~~~~~~~~~ ^  ~~~~~~~~~~~~~
+    
+    common_device_name.c:498:19: warning: implicit conversion changes signedness:
+     'int' to 'uint32_t' (aka 'unsigned int') [-Wsign-conversion]
+        m.device_id = PCI_MATCH_ANY;
+                    ~ ^~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5aff35d1ef659babd71f44f7963e4e908dcd86c4
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jun 11 11:46:26 2013 +0200
+
+    Update NetBSD support.
+    
+    Signed-off-by: Michael Lorenz <macallan@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c10c86e5856596778cb8322aec8ce663b1f1bea5
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jun 11 11:45:50 2013 +0200
+
+    Move 'const' to correct place, so it has meaning.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 719888a9ec5ef5a45698dea8a9642091c433ff29
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jun 2 22:38:39 2013 +0200
+
+    Protect config.h like usual.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 434cd73d23cf5dc60d2047047378b59cadb0d5bb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 7 20:31:37 2013 -0700
+
+    Bug 63583 - add legacy IO routines for FreeBSD
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=63583
+    
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Jung-uk Kim <jkim@FreeBSD.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d76fb36d9c28be0f7c43e0ca1e961c30a7781bd4
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Thu Jan 10 17:53:09 2013 -0800
+
+    Solaris: probe improvement
+    
+    Remove pcitool dependency in probing phase. Use the data
+    collected from devinfo tree instead in creating pci file
+    system.
+    
+    Signed-off-by: Henry Zhao <henzhao@glory3.(none)>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e17f069682a226c14bb29c802e776c6e39f7e8f
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Tue Dec 18 15:10:46 2012 -0800
+
+    Solaris: Add domain support for sparc platform
+    
+    As a result the code of finding nexus node for a device in sparc is
+    simplified and made the same as x86.
+    
+    Signed-off-by: Henry Zhao <henry.zhao@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 897cad2620ffbd6ecbbaea2a67fb973ec7990198
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit d69019c5b744348d6e5032ef87f4a743f68cb112
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 0ad7b5c548ecf409a1fdd835bde52a8cf5371b7a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Jul 4 07:38:33 2011 +0200
+
+    PCI: set correct mask value when matching for bridges.
+    
+    The mask must not be zero otherwise the matching condition will never
+    be true: ((val & mask) == set).
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Guillem Jover <guillem@hadrons.org>
+
+commit 72e0c0b4d4680b7a7b4b42be525d406635dae40f
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Fri Apr 6 17:26:59 2012 -0700
+
+    scanpci: print meaningful info on BASEROM
+    
+    Signed-off-by: Henry Zhao <henry.zhao@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba53031899611a1653656034a1a3de9b71e5bc85
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Fri Apr 6 16:52:42 2012 -0700
+
+    libpciaccess: sparc rom read fix
+    
+    Get rom address and size from device's "assigned-addresses" property
+    if they exist.
+    
+    Signed-off-by: Henry Zhao <henry.zhao@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2edddd4c4eb4258f4347c40e76bf0d5f1bcf51a7
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Fri Oct 5 12:41:36 2012 -0700
+
+    libpciaccess: implementation of boot_vga in Solaris
+    
+    Signed-off-by: Henry Zhao <henry.zhao@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 630b00a0847df9acf53391e6415bdfcd13fdae68
+Author: Mark Logan <mark.logan@oracle.com>
+Date:   Tue Sep 18 13:28:18 2012 -0700
+
+    libpciaccess: fix memory usage errors
+    
+    This patch fixes memory usage errors that only occur on large SPARC
+    machines with more than 256 PCI devices. In this case, memory is being
+    used after it has been freed by calls to both free() and realloc().
+    This error was introduced by a previous patch:
+    2011-03-30 Solaris support for multiple PCI segments (domains)
+    
+    Signed-off-by: Mark Logan <mark.logan@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 09f5b48f559888339450bb4a79d178c94da34638
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu May 31 20:00:34 2012 +0200
+
+    Implement legacy io & map for x86 backend
+    
+    Add the legacy io and map methods for the x86 backend, using ioperm,
+    in/out, and the existing mmap method.
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit 9f2d95e61896f41adb8087fb805eb37899cce55f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 18 22:17:54 2012 -0700
+
+    Solaris: refactor pci_device_solx_devfs_map_range to reduce code duplication
+    
+    The sparc & x86 cases were doing essentially the same things with
+    different paths, so make the path setup be inside the platform
+    specific #ifdefs, make the open, mmap, & error handling common code.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d50292ca8cbbaa5e0c92627f3d7813194c7c83ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 18 15:30:30 2012 -0700
+
+    Solaris: Implement map_legacy & legacy_io functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jay Cotton <jay.cotton@oracle.com>
+
 commit ebb3c6b69f4e8a844ff95d4e880dde9ede3de347
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Sun Jan 17 14:33:13 2010 +0000

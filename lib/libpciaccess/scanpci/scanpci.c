@@ -47,6 +47,7 @@
 #endif
 
 #include "pciaccess.h"
+#include "pciaccess_private.h"
 
 
 static void
@@ -151,11 +152,13 @@ print_pci_device( struct pci_device * dev, int verbose )
 	pci_device_probe( dev );
 	for ( i = 0 ; i < 6 ; i++ ) {
 	    if ( dev->regions[i].base_addr != 0 ) {
-		printf( "  BASE%u     0x%08"PRIxPTR" SIZE %zu  %s",
+		printf( "  BASE%u     0x%0*"PRIxPTR" SIZE %zu  %s",
 			i,
+			dev->regions[i].is_64 ? 16 : 8,
 			(intptr_t) dev->regions[i].base_addr,
 			(size_t) dev->regions[i].size,
-			(dev->regions[i].is_IO) ? "I/O" : "MEM" );
+			(dev->regions[i].is_IO) ? "I/O" :
+			((dev->regions[i].is_64) ? "MEM64" : "MEM"));
 
 		if ( ! dev->regions[i].is_IO ) {
 		    if ( dev->regions[i].is_prefetchable ) {
@@ -168,8 +171,11 @@ print_pci_device( struct pci_device * dev, int verbose )
 	}
 
 	if ( dev->rom_size ) {
-	    printf( "  BASEROM   0x%08x  addr 0x%08x\n",
-		    0, 0 );
+	    struct pci_device_private *priv =
+		(struct pci_device_private *) dev;
+
+		printf( "  BASEROM   0x%08"PRIxPTR" SIZE %zu\n",
+			(intptr_t) priv->rom_base, (size_t) dev->rom_size);
 	}
 
 	pci_device_cfg_read_u8( dev, & int_pin, 61 );

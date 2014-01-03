@@ -28,7 +28,10 @@
  * with a particular device or vendor.
  */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -77,9 +80,9 @@ typedef FILE * pci_id_file;
 static pci_id_file
 pci_id_file_open(void)
 {
+#ifndef __sun
     pci_id_file result;
 
-#ifndef __sun
     result = fopen(PCIIDS_PATH "/pci.ids", "re");
     if (result)
         return result;

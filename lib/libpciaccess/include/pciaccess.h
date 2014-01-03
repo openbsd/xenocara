@@ -178,7 +178,7 @@ int pci_device_cfg_write_bits(struct pci_device *dev, uint32_t mask,
 /*@}*/
 
 
-#define PCI_MATCH_ANY  (~0)
+#define PCI_MATCH_ANY  (~0U)
 
 /**
  * Compare two PCI ID values (either vendor or device).  This is used

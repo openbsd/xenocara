@@ -146,6 +146,9 @@ struct pci_device_private {
     struct pci_device_mapping *mappings;
     unsigned num_mappings;
     /*@}*/
+#ifdef __sun
+    int is_primary;
+#endif
 };
 
 

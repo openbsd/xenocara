@@ -23,14 +23,13 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libpciaccess],[0.13.1],
+AC_INIT([libpciaccess],[0.13.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess],[libpciaccess])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize libtool
@@ -78,10 +77,10 @@ case $host_os in
 	*netbsd*)
 		case $host in
 		*i386*)
-			PCIACCESS_LIBS="-li386"
+			PCIACCESS_LIBS="-li386 -lpci"
 			;;
 		*x86_64*|*amd64*)
-			PCIACCESS_LIBS="-lx86_64"
+			PCIACCESS_LIBS="-lx86_64 -lpci"
 			;;
 		esac
 		netbsd=yes
@@ -109,7 +108,17 @@ AC_SYS_LARGEFILE
 
 AC_CHECK_HEADERS([err.h])
 
+if test "x$netbsd" = xyes; then
+AC_CHECK_HEADERS([machine/sysarch.h])
+AC_CHECK_HEADERS([machine/mtrr.h], [have_mtrr_h="yes"], [have_mtrr_h="no"],
+[#ifdef HAVE_MACHINE_SYSARCH_H
+#include <sys/types.h>
+#include <machine/sysarch.h>
+#endif
+])
+else
 AC_CHECK_HEADER([asm/mtrr.h], [have_mtrr_h="yes"], [have_mtrr_h="no"])
+fi
 
 if test "x$have_mtrr_h" = xyes; then
     AC_DEFINE(HAVE_MTRR, 1, [Use MTRRs on mappings])

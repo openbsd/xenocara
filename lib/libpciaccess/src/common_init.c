@@ -117,7 +117,6 @@ pci_system_cleanup( void )
 	pci_sys->num_devices = 0;
     }
 
-
     if ( pci_sys->methods->destroy != NULL ) {
 	(*pci_sys->methods->destroy)();
     }

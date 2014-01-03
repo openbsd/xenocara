@@ -23,7 +23,7 @@
 
 noinst_PROGRAMS = scanpci
 
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src
 LDADD =  $(top_builddir)/src/libpciaccess.la
 
 scanpci_SOURCES = scanpci.c
