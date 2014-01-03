@@ -1,3 +1,73 @@
+commit a2e4aa9d2002dad6e976d9e4d3f129ad3127be81
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Tue Jan 15 12:03:28 2013 -0800
+
+    vmmouse release 13.0.0
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
+commit 1b40f1e1f61b5f44836ba5cd5d487cf57f6608ac
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Thu Dec 6 16:37:19 2012 -0500
+
+    vmmouse 12.9.99.901
+    
+    Internal release for QE testing
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
+commit cabf4cb7c0ba3e535068ebb1d80108a26dddddaa
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 21 14:03:55 2012 +1000
+
+    Fix compiler warnings about unused variables
+    
+    vmmouse.c: In function 'MouseCommonOptions':
+    vmmouse.c:732:16: warning: variable 'from' set but not used
+    [-Wunused-but-set-variable]
+    
+    vmmouse.c: In function 'MouseCommonOptions':
+    vmmouse.c:733:8: warning: variable 'origButtons' set but not used
+    [-Wunused-but-set-variable]
+    
+    vmmouse.c: In function 'VMMouseDeviceControl':
+    vmmouse.c:838:19: warning: variable 'mPriv' set but not used
+    [-Wunused-but-set-variable]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 393880d2e6fe7f744e6c701a4fde6116a7278325
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 21 14:03:54 2012 +1000
+
+    Use sigsafe logging in ReadInput path
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit dba73cebb527bb36a3d17d67b1e8e1892852b240
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Aug 5 08:12:15 2012 +1000
+
+    Fetch the udev dir from udev.pc instead of guessing based on prefix
+    
+    Reviewed-by: Gaetan Nadon<memsize@videotron.ca>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 3c8ccf5eec3177ed8976ed5ff04795a20287d2d8
+Author: Stephen Brooks <nightbikeman@gmail.com>
+Date:   Wed May 18 22:48:34 2011 +0100
+
+    Reset ps2buttons to avoid button messages from being discarded.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Stephen Brooks <nightbikeman@gmail.com>
+
 commit 3a828d876772d05577b9372e8f6dc068794f4704
 Author: Jakob Bornecrantz <jakob@vmware.com>
 Date:   Tue May 22 20:14:25 2012 +0200

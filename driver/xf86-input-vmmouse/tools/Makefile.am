@@ -43,7 +43,6 @@ dist_conf_DATA = 50-vmmouse.conf
 endif
 
 if HAS_UDEV_RULES_DIR
-
 udevdir=$(UDEV_RULES_DIR)
 udev_DATA = 69-xorg-vmmouse.rules
 

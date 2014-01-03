@@ -19,7 +19,8 @@
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 # Ensure xorg.conf.d snippets are installed below $(prefix) for distcheck
-DISTCHECK_CONFIGURE_FLAGS = --with-xorg-conf-dir='$${datadir}/X11/xorg.conf.d'
+DISTCHECK_CONFIGURE_FLAGS = --with-xorg-conf-dir='$${datadir}/X11/xorg.conf.d' \
+                            --with-udev-rules-dir='$${libdir}/udev/rules.d'
 
 SUBDIRS = shared src man
 MAINTAINERCLEANFILES = ChangeLog INSTALL

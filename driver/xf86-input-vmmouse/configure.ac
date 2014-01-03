@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-vmmouse],
-        [12.9.0],
+        [13.0.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-vmmouse)
 
@@ -92,19 +92,10 @@ AC_ARG_WITH(hal-fdi-dir,
 HAL_FDI_DIR=${halfdidir}
 AC_SUBST(HAL_FDI_DIR)
 
-case $host_os in
-  linux*)
-    if test "x$prefix" = "xNONE" -o "x$prefix" = "x/usr" -o "x$prefix" = "x/usr/local" ; then
-      slashlibdir=/lib
-    else
-      slashlibdir=$prefix/lib
-    fi
-    UDEV_RULES_DIR=$slashlibdir/udev/rules.d
-    ;;
-  *)
-    UDEV_RULES_DIR=no
-    ;;
-esac
+
+PKG_CHECK_MODULES(UDEV, udev,
+                  [UDEV_RULES_DIR="`$PKG_CONFIG --variable=udevdir udev`/rules.d"],
+                  [UDEV_RULES_DIR=no])
 
 AC_ARG_WITH(udev-rules-dir,
 	    AC_HELP_STRING([--with-udev-rules-dir=DIR],

@@ -73,6 +73,10 @@
 #include "exevents.h"
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 18
+#define LogMessageVerbSigSafe xf86MsgVerb
+#endif
+
 #include "xisb.h"
 #include "mipointer.h"
 
@@ -725,19 +729,14 @@ static void
 MouseCommonOptions(InputInfoPtr pInfo)
 {
    MouseDevPtr pMse;
-   MessageType from = X_DEFAULT;
    char *s;
-   int origButtons;
 
    pMse = pInfo->private;
 
    pMse->buttons = xf86SetIntOption(pInfo->options, "Buttons", 0);
-   from = X_CONFIG;
    if (!pMse->buttons) {
       pMse->buttons = MSE_DFLTBUTTONS;
-      from = X_DEFAULT;
    }
-   origButtons = pMse->buttons;
 
    /*
     * "emulate3Buttons" and "Drag Lock" is not supported
@@ -786,13 +785,6 @@ MouseCommonOptions(InputInfoPtr pInfo)
 		 pInfo->name, s);
       }
    }
-
-   /*
-    * Emulatewheel is not supported
-    */
-   if (origButtons != pMse->buttons)
-      from = X_CONFIG;
-
 }
 
 
@@ -843,7 +835,6 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
 {
    InputInfoPtr pInfo;
    MouseDevPtr pMse;
-   VMMousePrivPtr mPriv;
    unsigned char map[MSE_MAXBUTTONS + 1];
    int i;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -854,7 +845,6 @@ VMMouseDeviceControl(DeviceIntPtr device, int mode)
    pInfo = device->public.devicePrivate;
    pMse = pInfo->private;
    pMse->device = device;
-   mPriv = (VMMousePrivPtr)pMse->mousePriv;
 
    switch (mode){
    case DEVICE_INIT:
@@ -1063,7 +1053,7 @@ VMMouseReadInput(InputInfoPtr pInfo)
        */
       VMMouseClient_RequestAbsolute();
       mPriv->absoluteRequested = TRUE;
-      xf86Msg(X_INFO, "VMWARE(0): vmmouse enable absolute mode\n");
+      LogMessageVerbSigSafe(X_INFO, -1, "VMWARE(0): vmmouse enable absolute mode\n");
    }
 
    /*
@@ -1120,17 +1110,17 @@ GetVMMouseMotionEvent(InputInfoPtr pInfo){
    VMMousePrivPtr mPriv;
    int buttons, dx, dy, dz, dw;
    VMMOUSE_INPUT_DATA  vmmouseInput;
-   int ps2Buttons = 0;
    int numPackets;
 
    pMse = pInfo->private;
    mPriv = (VMMousePrivPtr)pMse->mousePriv;
    while((numPackets = VMMouseClient_GetInput(&vmmouseInput))){
+      int ps2Buttons = 0;
       if (numPackets == VMMOUSE_ERROR) {
          VMMouseClient_Disable();
          VMMouseClient_Enable();
          VMMouseClient_RequestAbsolute();
-         xf86Msg(X_INFO, "VMWARE(0): re-requesting absolute mode after reset\n");
+         LogMessageVerbSigSafe(X_INFO, -1, "VMWARE(0): re-requesting absolute mode after reset\n");
          break;
       }
 
