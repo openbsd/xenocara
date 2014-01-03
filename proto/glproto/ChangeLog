@@ -1,3 +1,51 @@
+commit f84853d97d5749308992412a215fa518b6536eb3
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Dec 10 07:03:55 2013 -0800
+
+    glproto: bump version to 1.4.17 for release
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 7adf6d08b7d9fe1304f8c37f5a9152df97a6344d
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Dec 4 10:20:12 2013 -0800
+
+    Add defines for float renderType bits
+    
+    These were added to mesa's glxext.h, but not duplicated here.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Ian Romanick <ian.d.romanick@intel.com>
+
+commit aacc7a51b6161c765b04524e0d2ab31e5e586834
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 26 09:42:05 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8e3407e02980d088e20041e79bdcdd3737e7827e
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 223af08767d504b32c4852961d70ad3130d2243f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:01:10 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit ec1eec4355ee4a6c5134f2178192f10b6d28a87a
 Author: Dave Airlie <airlied@gmail.com>
 Date:   Thu Jul 12 22:55:53 2012 +1000
