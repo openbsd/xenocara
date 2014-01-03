@@ -1,3 +1,171 @@
+commit 426c3aa3c8a2385f17e37ae73c1e78f072656027
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Jan 16 10:52:12 2013 +0100
+
+    joystick 1.6.2
+    
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit 8f9342484afbbd26296c627497cc278f600098ac
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Jan 16 11:06:39 2013 +0100
+
+    config: warning in default xorg.conf.d snippet: do not enable by default
+    
+    see discussion: https://bugs.gentoo.org/show_bug.cgi?id=403003
+    
+    distributions should not ship the module enabled by default, because a lot
+    of users have the joystick module installed without knowing, resulting in
+    confusion and bad user experience when trying to play games, the more
+    likely usecase when plugging in a joystick.
+    
+    the default configuration only fits for a limited number of users.
+    
+    it does not make much sense to automatically enable hotplugging of the
+    module without explicit user consent and reviewing of the configuration.
+    
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit 819ba33c9d7440cd40e1e54a9b1e073ed89353a7
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Oct 6 18:28:53 2012 +0200
+
+    jast_axis: tune accelerated axis transformation to better work with circular axis fields
+    
+    reference: https://bugs.freedesktop.org/show_bug.cgi?id=42399
+    
+    joysticks with a rectangular field have a
+    corner position of (32768,32768), joysticks with a
+    circular field have (23170,23170).
+    
+    make sure that diagonal movement feels fast. either:
+    1) linear
+    
+      f(32768) ~= f(23170) + f(23170)
+      f(32768) ~= a * f(23170)
+             a  = 2.0
+    
+      on circular joysticks, the time needed for xy movement is
+      exactly the time needed for x + the time for y separately.
+      absolute diagonal travel speed (in cm/s) is 0.707 times as fast,
+      which feels pretty slow.
+    
+      on square joysticks, diagonal travel speed is always 1.41 times
+      faster than orthogonal travel speed. time needed for diagonal
+      movement is always 0.5 times as long as for orthogonal movement.
+    
+      the value of a = 2.0 results in a nice, non-linear acceleration.
+    
+    or
+    2) trigonometric
+    
+      f(32768) ~= sqrt(f(23170)^2 + f(23170)^2))
+      f(32768) ~= a * f(23170)
+      a = 1.414
+    
+    on circular joysticks, the absolute pointer travel speed
+    (in cm/s) is now the same for both linear and diagonal movement,
+    which feels natural. moving diagonally takes 0.707 times the time
+    of moving orthogonally.
+    
+    on square joysticks, values are as in 1)
+    
+    the value of a = 1.414 results in linear acceleration, which feels
+    too slow.
+    
+    to maintain non-linear acceleration, make sure that:
+    
+    a >>= 1.414
+    
+    the following formula achieves results inbetween,
+    so it should feel natural on both devices while maintaining a
+    nice acceleration:
+    
+    f(32768) ~= 1.620 * f(23170)
+
+commit 342057bf38e2da46609ed2fa0d3f5fb46c8ed215
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sat Oct 6 16:18:24 2012 +0200
+
+    backend_evdev: fix scaling overflow for high resolution axes
+    
+    The module scales all axis values from the kernel to the range of
+    -32768 .. 32768, for compatibility with the old joystick kernel module.
+    
+    The current implementation had an integer overflow, if the axis had a high
+    resolution of > 16384, like the popular XBox 360 controller.
+    
+    This commitmakes the scaling use float instead to fix erratic behaviour
+    on high resolution joysticks. The joystick backend was not affected.
+    
+    Fixes bug: https://bugs.freedesktop.org/show_bug.cgi?id=42399
+
+commit 053405f711512959e95d0a882d69b6cba6405e7d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jan 13 10:56:53 2013 -0500
+
+    Replace deprecated Automake INCLUDES variable with AM_CPPFLAGS
+    
+    Excerpt https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+    
+      - Support for the long-deprecated INCLUDES variable will be removed
+        altogether in Automake 1.14.  The AM_CPPFLAGS variable should be
+        used instead.
+    
+    This variable was deprecated in Automake releases prior to 1.10, which is the
+    current minimum level required to build X.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit baa96c22e74b5f617b64d9f5ae21c52a4c4fa190
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 18:53:00 2012 +0200
+
+    configure: enable debug output code by default
+    
+    there are rare cases when disabling debug code gives any benefit but the lack of debugging output,
+    which needs to be enabled anyway with the DebugLevel option
+
+commit b427ad6066e966f63a0da82e4b0ef3344064f6a1
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 18:44:58 2012 +0200
+
+    man: more manpage tuning and polishing
+
+commit 4b0ca090b71e70cc2b5bcd93ed40fc8c40c499fa
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 18:44:06 2012 +0200
+
+    config: mention floating option in xorg.conf.d snippet
+
+commit c473c8bd7985441d8264f8f48537d39dbe0c874e
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 17:39:55 2012 +0200
+
+    man: mention use cases for when to use the module and when not to
+
+commit 56ebbd899f709b3fae7e382ac3429a4c87867c63
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Wed Oct 3 16:32:36 2012 +0200
+
+    man: some typos and grammar fixes
+
+commit 0303d5418ec7a3825433e308f195fc41fecb9ded
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 2 14:40:05 2012 +1000
+
+    man: point out that the joystick module is not a joystick driver
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit acd398ac712689fb5239410d1da706752aa60a33
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Tue Sep 25 10:57:46 2012 +0200
+
+    silence compiler warnings
+
 commit bdf8fd3f650789d2012ec0cc915729dd1e91346d
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
 Date:   Sun Mar 11 11:45:08 2012 +0100

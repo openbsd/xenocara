@@ -417,9 +417,9 @@ jstkInitProperties(DeviceIntPtr pJstk, JoystickDevPtr priv)
 
     /* priv->button[].buttonnumber */
     for (i=0;i<priv->num_buttons;i++) {
-        int index = priv->button[i].buttonnumber;
-        if (index>=0 && index<=MAXBUTTONS)
-            button_values8[i] = (CARD8)index;
+        int idx = priv->button[i].buttonnumber;
+        if (idx>=0 && idx<=MAXBUTTONS)
+            button_values8[i] = (CARD8)idx;
         else button_values8[i] = 0;
     }
     prop_button_buttonnumber = MakeAtom(JSTK_PROP_BUTTON_BUTTONNUMBER, strlen(JSTK_PROP_BUTTON_BUTTONNUMBER), TRUE);

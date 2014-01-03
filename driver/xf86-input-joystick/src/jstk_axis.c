@@ -82,9 +82,62 @@ jstkAxisTimer(OsTimerPtr        timer,
             /* Calculate scale value, so we get a range from 0 to 32768 */
             scale = (32768.0f / (float)(32768 - axis->deadzone));
 
+	    /* NOTE: joysticks with a rectangular field have a
+	     * corner position of (32768,32768), joysticks with a
+	     * circular field have (23170,23170).
+	     *
+	     * make sure that diagonal movement feels fast. either:
+	     * 1) linear
+	     * 
+	     *   f(32768) ~= f(23170) + f(23170)
+	     *   f(32768) ~= a * f(23170)
+	     *          a  = 2.0
+	     *
+	     *   on circular joysticks, the time needed for xy movement is
+	     *   exactly the time needed for x + the time for y separately.
+	     *   absolute diagonal travel speed (in cm/s) is 0.707 times as fast, 
+	     *   which feels pretty slow.
+	     *
+	     *   on square joysticks, diagonal travel speed is always 1.41 times
+	     *   faster than orthogonal travel speed. time needed for diagonal
+	     *   movement is always 0.5 times as long as for orthogonal movement.
+	     * 
+	     *   the value of a = 2.0 results in a nice, non-linear acceleration.
+	     *
+	     * or
+	     * 2) trigonometric
+	     * 
+	     *   f(32768) ~= sqrt(f(23170)^2 + f(23170)^2))
+	     *   f(32768) ~= a * f(23170)
+	     *           a = 1.414
+	     *
+	     *   on circular joysticks, the absolute pointer travel speed
+	     *   (in cm/s) is now the same for both linear and diagonal movement,
+	     *   which feels natural. moving diagonally takes 0.707 times the time
+	     *   of moving orthogonally.
+	     * 
+	     *   on square joysticks, values are as in 1)
+	     * 
+	     *   the value of a = 1.414 results in linear acceleration, which feels
+	     *   too slow.
+	     * 
+	     * to maintain non-linear acceleration, make sure that:
+	     *
+	     *   a >>= 1.414 
+	     *
+	     * the following formula achieves results inbetween,
+	     * so it should feel natural on both devices while maintaining a
+	     * nice acceleration:
+	     * 
+	     *   f(32768) ~= 1.620 * f(23170)
+	     * 
+	     * TODO: make this simpler by using only values -1.0..1.0 and
+	     *       provide acceleration graphs.
+	     */
+
             /* How many pixels should this axis move the cursor */
-            p1 = ((pow((abs((float)axis->value) - (float)axis->deadzone) *
-                  scale / 1700.0f, 3.4f)) + 100.0f) *
+            p1 = (pow((abs((float)axis->value) - (float)axis->deadzone) *
+                  scale / 23, 1.4f) + 100.0f) *
                  ((float)NEXTTIMER / 40000.0f);
             /* How many "pixels" should this axis scroll */
             p2 = ((pow((abs((float)axis->value) - (float)axis->deadzone) *

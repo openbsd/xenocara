@@ -9,7 +9,7 @@ Snipped for xorg.conf.d(5):
 .nf
 .B "Section \*qInputClass\*q"
 .BI "  Identifier \*q" joystick-all \*q
-.BI  "  Driver \*q" joystick \*q
+.BI "  Driver \*q" joystick \*q
 .BI "  Option \*qMatchIsJoystick\*q   \*q" on \*q
 .BI "  Option \*qMatchDevicePath \*q" /dev/input/event* \*q
 \ \ ...
@@ -19,24 +19,49 @@ Snipped for xorg.conf.d(5):
 
 .SH DESCRIPTION
 .B joystick
-is an __xservername__ input driver for Joysticks. There are 3 backends available that are used in the following order, if support was found:
+is an __xservername__ input driver for controlling the pointer with a
+joystick device.
+.TP 3
+Use this driver, if you want to
+- generate 
+.IR "cursor movement" ,
+perform button or key events to control desktop and applications
 
-.nf
-.B - Linux's evdev interface
-.B - Linux's joystick interface
-.B - BSD's usbhid interface
-.fi
+- generate 
+.I "cursor key events"
+for playing legacy games, that have no native joystick support
 
-The driver reports cursor movement
-as well as raw axis values through valuators. 
+.TP 3
+.B Do not use, if you want to
+- play games, that have native joystick support
+
+- use XI2 applications. The evdev(4) driver will suffice for those in most cases.
+
+.PP
+You may mix above scenarios by setting the device 
+.IR floating .
+The driver reports relative cursor movement, button and key events,
+as well as raw axis values through valuators.
 
 .SH SUPPORTED HARDWARE
-In general, every by the kernel supported joystick should be supported through the
+The joystick input module can be used on top of the following kernel devices:
+
+.nf
+.B - Linux's evdev device
+.B - Linux's joystick device
+.B - BSD's usbhid device
+.fi
+
+Every joystick supported by the kernel should be supported by the 
 .B joystick
-driver. The driver assumes that the joystick is calibrated and reports axis values
+input driver. The joystick is assumed to be calibrated and reporting axis values
 between 
 .IR "-32768 " and " 32768" .
-See the Linux kernel documentation for a complete list of supported devices. 
+See the Linux kernel documentation for a complete list of supported devices.
+
+There is no support for
+.B force feedback
+at the moment.
 
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -52,7 +77,7 @@ are supported:
 .BI "Option \*qPath\*q \*q" string \*q
 Specifies the device through which the joystick can be accessed. This option is mandatory and there is no default setting.
 
-For Linux, joysticks are mostly accessible as
+In Linux, joysticks are usually accessible through
 .IR /dev/input/jsX " or " /dev/input/eventX .
 
 In *BSD, joysticks are usually recognized as 
@@ -66,21 +91,22 @@ is the time in milliseconds before a key starts repeating.
 is the number of times a key repeats per second.  Default: Xorg default
 .TP 7
 .BI "Option \*qDebugLevel\*q \*q" integer \*q
-If compiled with debugging information, controls the verbosity of the driver.
-The higher the DebugLevel, the more output is produced.
+Controls the verbosity of the driver for debugging purposes. The higher the DebugLevel, the more output is produced.
 Default: 0
 .TP 7
 .BI "Option \*qMapButton<number>\*q \*q" string \*q
-Sets the mapping of the joystick button to the desired action. Counting of buttons starts with 
+Sets the mapping of a joystick button to the desired action. Button counting starts with 
 .IR 1 ,
 Possible options are:
 .RS 7
 .TP 7
 .B "none"
-This joystick button won't do anything.
+Don't do anything
 .TP 7
 .BI "\*qbutton="<number> \*q
-The joystick button will generate a click with the specified button (starting with 1).
+Generate a pointer button event with button
+.I number
+(starting with 1).
 .TP 7
 .BI "\*qaxis="[<factor>]<axis> \*q
 Where
@@ -92,15 +118,15 @@ and
 .I <factor>
 is an optional amplifier of the axis, like
 .B -, +, -5, 0.4, 1.3, ...
-Use positive and negative values to control the direction. Default: 1.0
+Negative values invert the direction. Default: 1.0
 .TP 7
 .BI "\*qamplify="<factor> \*q
-Amplifies the movement of all axes by the given factor when pressed. Different
+Amplifies the movement of all axes by the given factor when this button is held down. Different
 factors can be combined.
 .TP 7
 .BI "\*qkey="<scancode>[,<scancode>[,<scancode>[,<scancode>]]]
-When button is pressed, a series of keydown events with the specified scancode is
-generated. When the button is released, keyup events in the opposite
+When button is pressed, a series of keydown events with the specified scancodes is
+generated. When the button is released, matching keyup events in the opposite
 order are generated. You can specify up to 4 scancodes per button.
 
 See special section about key events below.
@@ -113,11 +139,15 @@ See special section about key events below.
 Disables either the generation of mouse events, key events or the generation of
 all X events by the driver. Press button again to allow the driver to generate 
 events again.
+
+You may also set the device
+.B floating
+from client space to prevent it from generating core events.
 .RE
 .PP
 .TP 7
 .BI "Option \*qMapAxis<number>\*q \*q" string \*q
-Sets the mapping of the axis to the desired action. Counting of axes starts with
+Sets the mapping of the axis to the desired action. Axis counting starts with
 .IR 1 ,
 the parameter may contain:
 .RS 7
@@ -131,15 +161,17 @@ can be one of:
 
 .TP 7
 .B \*qvaluator\*q
-Send extra valuator events for this axis. The valuators will be numbered ascending, starting with 2 (valuator 0 and 1 are reserved for pointer movement). The range of the valuators is always 
+Send extra valuator events for this axis. The valuators will be numbered ascending, starting with 2 (valuator 0 and 1 are reserved for pointer movement). Please consider using the evdev(4) input driver if you are only interested in XI2 features.
+
+The range of the valuators is always 
 .IR -32767 " to " 32768 .
 Neither
 .B mode
 nor
 .B axis
-needs to be set to generate extra valuator events. The axis will be labelled according to it's physical axis number, beginning with 
+needs to be set to generate extra valuator events. The axis will be labelled according to its physical axis number, beginning with 
 .I 1
-, i.e.
+, e.g.
 .I \*qAxis 1\*q
 for the first axis (being the 3rd valuator).
 Default: not set.
@@ -156,17 +188,17 @@ is an optional amplifier of the axis, like
 .B -, +, -5, 0.4, 1.3, ...
 Negative values will invert the movement. Default: 1.0
 .TP 7
-.BI "\*qkeylow= "<scancode>[,<scancode>[,<scancode>[,<scancode>]]]
+.BI "\*qkeylow="<scancode>[,<scancode>[,<scancode>[,<scancode>]]]
 .TP 7
 .BI "\*qkeyhigh="<scancode>[,<scancode>[,<scancode>[,<scancode>]]]
 When the axis is moved out of the deadzone, a series of keydown events according 
-to the direction of the movement is generated. When the axis is released, keyup 
-events will be generated. You can specify up to 4 scancodes for each direction. 
+to the direction of the movement is generated. When the axis is released, matching keyup 
+events in opposite order will be generated. You can specify up to 4 scancodes for each direction.
 
 .B keylow
-defines the keys to be generated when the axis is moved in negative direction (ie. left or up),
+defines the keys to be generated when the axis is moved in negative direction (left or up),
 .B keyhigh
-defines the keys to be generated when the axis is moved in positive direction (ie. right or down).
+defines the keys to be generated when the axis is moved in positive direction (right or down).
 
 If 
 .B mode
@@ -239,17 +271,17 @@ The default configuration is as follows:
 .SH "ACCELERATED AXIS CONFIGURATION"
 .B Accelerated
 mode should be selected, if the axis is a
-.IR pad ,
-which reports only three states: negative, center, positive. It will produce a smooth acceleration of the movement
-when the axis is deflected. The speed will be affected by the factor of the axis, but not the acceleration speed.
+.IR "directional pad" ,
+which reports only three states: negative, center, positive. It will result in smoothly accelerated movement
+when the axis is deflected. An optional factor will affect the acceleration and final speed.
 
-This example will set up the axis as scrolling vertically inverted, which half of the speed:
+This example will set up the axis as scrolling vertically inverted, with half the speed:
 .nf
 .BI "  Option \*qMapAxis1\*q     \*q" "mode=accelerated axis=-0.5zy" \*q
 .fi
 
-This example maps four buttons to the four half axes, so you can use them like a pad. The movement will get half
-the normal speed:
+This example maps four buttons to the four pointer directions, so you can use the buttons like a d-pad. The movement will be accelerated
+with half the normal speed:
 .nf
 .BI "  Option \*qMapButton1\*q     \*q" "axis=+0.5x" \*q
 .BI "  Option \*qMapButton2\*q     \*q" "axis=-0.5x" \*q
@@ -258,15 +290,11 @@ the normal speed:
 .fi
 
 .SH "ABSOLUTE AXIS CONFIGURATION"
-With the
+In
 .B absolute
-axis mode, the position of the cursor will be fixed to the position, according to the deflection of the axis.
-This fixed position is calculated around the previous position of the cursor. You can specify the range in pixels,
-the cursor can move. The default range is the
-.I width
-of the screen, when mapped to the x-axis and the
-.I height
-of the screen, when mapped to the y-axis. This mode can be combines with the other modes without problems. 
+axis mode, the
+.I position of the cursor will match the
+.I position of the configured axis, but relative to the previous position of the cursor. You can specify the range in which the cursor can move. The default range is the screen size.
 
 In this example the first axis gets a range from left to the right of the screen. The second axis gets a
 total range of 200 pixels, 100 to the top and 100 to the bottom:
@@ -276,15 +304,13 @@ total range of 200 pixels, 100 to the top and 100 to the bottom:
 .fi
 
 .SH "GENERATING KEY EVENTS"
-Providing a \*qkey=<scancode>[,<scancode>[...]]\*q option will generate X Events with the specified scancodes
-when the joystick button is pressed or the axis changed it's position. When the button/axis is released, the keys are released in the reverse order.
+Providing a \*qkey=<scancode>[,<scancode>[...]]\*q option will generate X Events with specified scancodes. When the button/axis is released, the keys will be released in opposite order.
 
-To lookup keycodes for KeySyms, you can use
+If you want a certain KeySym, look up the matching scancode using
 .BR "xmodmap -pk" .
-You can use unused keycodes and map them to a KeySym of your choice using xmodmap(1).
+The scancodes depend on the configured keyboard layout. You can also use unused keycodes and map them to a KeySym of your choice using xmodmap(1).
 
-You can specify up to 4 scancodes per joystick button/axis, which is useful to use modificators. Make sure you use modificators
-that are necessary to get a certain keysym.
+You can specify up to 4 scancodes per joystick button/axis, which can be used for modificators to get the KeySym you want.
 
 Examples:
 .nf
@@ -297,13 +323,15 @@ when the button is pressed.
 .nf
 .BI "  Option \*qMapButton1\*q     \*q" "key=50,40" \*q
 .fi
-will generate a Shift_L+d which will be an uppercase 
+will generate a 
+.I "Shift_L+d"
+which will result in an uppercase 
 .IR d .
 
 .nf
 .BI "  Option \*qMapButton1\*q     \*q" "key=65" \*q
 .fi
-is for the  
+will result in a
 .IR "space " key.
 
 .nf
@@ -316,11 +344,17 @@ will map the first and third axis to the arrow keys
 .IR left " and " right
 and the second and fourth axis to the arrow keys
 .IR up " and " down .
+
 The keys for the first two axes will be generated in an interval according to the value of the axis. The autorepeat speed of the first axis will be half the speed of that of the second axis.
 The keys for the third and fourth axis are generated once when the axis moves out of the deadzone and when it moves back into the deadzone. X.Org will autorepeat those keys according to current keyboard settings.
 
 .SH "XI2 Events"
-If you only care about raw events instead of using the joystick as a mouse replacement, don't forget to unmap and add valuators to all axes and map the remaining buttons:
+If you only care about raw valuator events instead of using the joystick to control the cursor, consider using the evdev(4)
+input driver. If you still use the
+.B joystick
+driver for raw events, make sure to unmap all axes/buttons and add the
+.B valuator
+option to the axes:
 
 .nf
 .BI "  Option  \*qMapAxis1\*q      \*q" "mode=none valuator" \*q
@@ -336,16 +370,23 @@ If you only care about raw events instead of using the joystick as a mouse repla
 \ \ ...
 .fi
 
+Remember, that valuators 0 and 1 are reserved for pointer movement, additional axes will start with valuator 2.
+
 You might also want to set the device "floating" to stop it from reporting core events:
 .nf
 .BI "  Option  \*qFloating\*q      \*q" "true" \*q
 .fi
 
 .SH "NOTES"
+It is not recommended to enable the
+.B joystick
+input driver by default unless explicitely requested by the user.
+
 Configuration through
 .I InputClass
-sections is recommended in X servers 1.8 and later. See xorg.conf.d(5) for more details. An example xorg.conf.d snipped is provided in 
+sections is recommended in X servers 1.8 and later. See xorg.conf.d(5) for more details. An example xorg.conf.d(5) snipped is provided in 
 .I ${sourcecode}/config/50-joystick-all.conf
+
 
 Configuration through hal fdi files is recommended in X servers 1.5,
 1.6 and 1.7. An example hal policy file is still provided in 
@@ -357,6 +398,6 @@ to be placed in
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorg.conf.d(5), Xserver(__appmansuffix__), X(__miscmansuffix__), xmodmap(1)
 .SH AUTHORS
-Sascha Hlusiak (2007-2011),
+Sascha Hlusiak (2007-2012),
 .fi
 Frederic Lepied (1995-1999)

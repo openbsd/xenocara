@@ -454,8 +454,8 @@ jstkCorePreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     char                *s;
     int                 i, j;
 
-    s = xf86CheckStrOption(pInfo->options, "_source", "");
-    if (strcmp(s, "_driver/joystick") == 0)
+    s = xf86CheckStrOption(pInfo->options, "_source", NULL);
+    if (s && strcmp(s, "_driver/joystick") == 0)
         return jstkKeyboardPreInit(drv, pInfo, flags);
 
     pInfo->device_control = jstkDeviceControlProc;

@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-joystick],
-        [1.6.1],
+        [1.6.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-joystick])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -76,9 +76,9 @@ AC_ARG_WITH(sdkdir,
 AC_SUBST(sdkdir)
 
 # Define a configure option to enable code debugging
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],
-                                    [Enable debugging (default: disabled)]),
-                                    [DEBUGGING=$enableval], [DEBUGGING=no])
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--disable-debug],
+                                    [Disable debugging code (default: enabled)]),
+                                    [DEBUGGING=$enableval], [DEBUGGING=yes])
 if test "x$DEBUGGING" = xyes; then
    AC_DEFINE(DEBUG, 1, [Enable debugging code])
 fi
