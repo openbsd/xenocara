@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.53 2013/12/13 22:39:13 okan Exp $
+ * $OpenBSD: screen.c,v 1.54 2014/01/03 15:29:06 okan Exp $
  */
 
 #include <sys/param.h>
@@ -37,7 +37,7 @@ screen_init(int which)
 	Window			*wins, w0, w1;
 	XWindowAttributes	 winattr;
 	XSetWindowAttributes	 rootattr;
-	u_int			 nwins, i;
+	unsigned int		 nwins, i;
 
 	sc = xcalloc(1, sizeof(*sc));
 
@@ -105,7 +105,7 @@ screen_updatestackingorder(struct screen_ctx *sc)
 {
 	Window			*wins, w0, w1;
 	struct client_ctx	*cc;
-	u_int			 nwins, i, s;
+	unsigned int		 nwins, i, s;
 
 	if (!XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins))
 		return;

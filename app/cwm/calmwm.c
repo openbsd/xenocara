@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.81 2013/12/12 20:15:07 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.82 2014/01/03 15:29:06 okan Exp $
  */
 
 #include <sys/param.h>
@@ -165,7 +165,7 @@ x_errorhandler(Display *dpy, XErrorEvent *e)
 	XGetErrorDatabaseText(X_Dpy, "XRequest", number,
 	    "<unknown>", req, sizeof(req));
 
-	warnx("%s(0x%x): %s", req, (u_int)e->resourceid, msg);
+	warnx("%s(0x%x): %s", req, (unsigned int)e->resourceid, msg);
 #endif
 	return (0);
 }

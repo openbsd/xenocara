@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.71 2014/01/02 22:49:10 okan Exp $
+ * $OpenBSD: menu.c,v 1.72 2014/01/03 15:29:06 okan Exp $
  */
 
 #include <sys/param.h>
@@ -522,8 +522,8 @@ menu_calc_entry(struct menu_ctx *mc, int x, int y)
 static int
 menu_keycode(XKeyEvent *ev, enum ctltype *ctl, char *chr)
 {
-	KeySym	 ks;
-	u_int 	 state = ev->state;
+	KeySym		 ks;
+	unsigned int 	 state = ev->state;
 
 	*ctl = CTL_NONE;
 	chr[0] = '\0';
