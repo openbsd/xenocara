@@ -38,7 +38,11 @@ from The Open Group.
 #include <ctype.h>
 #include <errno.h>
 #include <sys/stat.h>
+#ifndef WIN32
 #include <sys/socket.h>
+#else
+#include <X11/Xwinsock.h>
+#endif
 
 #include <signal.h>
 #include <X11/X.h>			/* for Family constants */
@@ -112,6 +116,7 @@ static int do_exit ( const char *inputfilename, int lineno, int argc, const char
 static int do_quit ( const char *inputfilename, int lineno, int argc, const char **argv );
 static int do_source ( const char *inputfilename, int lineno, int argc, const char **argv );
 static int do_generate ( const char *inputfilename, int lineno, int argc, const char **argv );
+static int do_version ( const char *inputfilename, int lineno, int argc, const char **argv );
 
 static CommandTable command_table[] = {	/* table of known commands */
     { "add",      2, 3, do_add,
@@ -140,6 +145,8 @@ static CommandTable command_table[] = {	/* table of known commands */
 	"remove dpyname...              remove entries" },
     { "source",   1, 6, do_source,
 	"source filename                read commands from file" },
+    { "version",  1, 7, do_version,
+	"version                        show version number of xauth" },
     { "?",        1, 1, do_questionmark,
 	"?                              list available commands" },
     { "generate", 1, 8, do_generate,
@@ -244,17 +251,17 @@ skip_nonspace(register char *s)
     return s;
 }
 
-static char **
+static const char **
 split_into_words(char *src, int *argcp)  /* argvify string */
 {
     char *jword;
     char savec;
-    char **argv;
+    const char **argv;
     int cur, total;
 
     *argcp = 0;
 #define WORDSTOALLOC 4			/* most lines are short */
-    argv = (char **) malloc (WORDSTOALLOC * sizeof (char *));
+    argv = malloc (WORDSTOALLOC * sizeof (char *));
     if (!argv) return NULL;
     cur = 0;
     total = WORDSTOALLOC;
@@ -272,7 +279,7 @@ split_into_words(char *src, int *argcp)  /* argvify string */
 	*src = '\0';
 	if (cur == total) {
 	    total += WORDSTOALLOC;
-	    argv = (char **) realloc (argv, total * sizeof (char *));
+	    argv = realloc (argv, total * sizeof (char *));
 	    if (!argv) return NULL;
 	}
 	argv[cur++] = jword;
@@ -633,18 +640,17 @@ static volatile Bool dieing = False;
 #define WRITES(fd, S) (void)write((fd), (S), strlen((S)))
 
 /* ARGSUSED */
-static RETSIGTYPE
+_X_NORETURN
+static void
 die(int sig)
 {
     dieing = True;
     _exit (auth_finalize ());
     /* NOTREACHED */
-#ifdef SIGNALRETURNSINT
-    return -1;				/* for picky compilers */
-#endif
 }
 
-static RETSIGTYPE
+_X_NORETURN
+static void
 catchsig(int sig)
 {
 #ifdef SYSV
@@ -661,9 +667,6 @@ catchsig(int sig)
 #endif
     die (sig);
     /* NOTREACHED */
-#ifdef SIGNALRETURNSINT
-    return -1;				/* for picky compilers */
-#endif
 }
 
 static void
@@ -1066,11 +1069,31 @@ eq_auth(Xauth *a, Xauth *b)
 static int
 match_auth_dpy(register Xauth *a, register Xauth *b)
 {
-    return ((a->family == b->family &&
-	     a->address_length == b->address_length &&
-	     a->number_length == b->number_length &&
-	     memcmp(a->address, b->address, a->address_length) == 0 &&
-	     memcmp(a->number, b->number, a->number_length) == 0) ? 1 : 0);
+    if (a->family != FamilyWild && b->family != FamilyWild) {
+        /* Both "a" and "b" are not FamilyWild, they are "normal" families. */
+	
+	/* Make sure, that both families match: */
+	if (a->family != b->family)
+            return 0;
+	
+	/* By looking at 'man Xsecurity' and the code in
+	 * GetAuthByAddr() and XauGetBestAuthByAddr() in libXau, we
+	 * decided, that the address is only relevant for "normal"
+	 * families and therefore should be ignored for
+	 * "FamilyWild". */
+	if (a->address_length != b->address_length ||
+            memcmp(a->address, b->address, a->address_length) != 0)
+            return 0;
+    }
+    
+    if (a->number_length != 0 && b->number_length != 0) {
+	/* Both "a" and "b" have a number, make sure they match: */
+	if (a->number_length != b->number_length ||
+	    memcmp(a->number, b->number, a->number_length) != 0)
+            return 0;
+    }
+    
+    return 1;
 }
 
 /* return non-zero iff display and authorization type are the same */
@@ -1282,8 +1305,11 @@ remove_entry(const char *inputfilename, int lineno, Xauth *auth, char *data)
     /*
      * unlink the auth we were asked to
      */
-    while (!eq_auth((list = *listp)->auth, auth))
-	listp = &list->next;
+    while (!eq_auth((list = *listp)->auth, auth)) {
+        listp = &list->next;
+        if (!*listp)
+            return 0;
+    }
     *listp = list->next;
     XauDisposeAuth (list->auth);                    /* free the auth */
     free (list);				    /* free the link */
@@ -1300,23 +1326,23 @@ remove_entry(const char *inputfilename, int lineno, Xauth *auth, char *data)
  * help
  */
 int
-print_help(FILE *fp, const char *cmd, const char *prefix)
+print_help(FILE *fp, const char *cmd, const char *line_prefix)
 {
     CommandTable *ct;
     int n = 0;
 
-    if (!prefix) prefix = "";
+    if (!line_prefix) line_prefix = "";
 
     if (!cmd) {				/* if no cmd, print all help */
 	for (ct = command_table; ct->name; ct++) {
-	    fprintf (fp, "%s%s\n", prefix, ct->helptext);
+	    fprintf (fp, "%s%s\n", line_prefix, ct->helptext);
 	    n++;
 	}
     } else {
 	int len = strlen (cmd);
 	for (ct = command_table; ct->name; ct++) {
 	    if (strncmp (cmd, ct->name, len) == 0) {
-		fprintf (fp, "%s%s\n", prefix, ct->helptext);
+		fprintf (fp, "%s%s\n", line_prefix, ct->helptext);
 		n++;
 	    }
 	}
@@ -1385,6 +1411,17 @@ do_questionmark(const char *inputfilename, int lineno, int argc, const char **ar
     }
 
     /* allow bad lines since this is help */
+    return 0;
+}
+
+/*
+ * version
+ */
+/* ARGSUSED */
+static int
+do_version(const char *inputfilename, int lineno, int argc, const char **argv)
+{
+    puts (PACKAGE_VERSION);
     return 0;
 }
 
@@ -1801,6 +1838,7 @@ do_generate(const char *inputfilename, int lineno, int argc, const char **argv)
     int authdatalen = 0;
     const char *hexdata;
     char *authdata = NULL;
+    char *hex;
 
     if (argc < 2 || !argv[1]) {
 	prefix (inputfilename, lineno);
@@ -1891,10 +1929,10 @@ do_generate(const char *inputfilename, int lineno, int argc, const char **argv)
 
     auth_in = XSecurityAllocXauth();
     if (strcmp (protoname, DEFAULT_PROTOCOL_ABBREV) == 0) {
-	 auth_in->name = DEFAULT_PROTOCOL;
+	 auth_in->name = copystring(DEFAULT_PROTOCOL, strlen(DEFAULT_PROTOCOL));
     }
     else
-	auth_in->name = protoname;
+	auth_in->name = copystring (protoname, strlen(protoname));
     auth_in->name_length = strlen(auth_in->name);
     auth_in->data = authdata;
     auth_in->data_length = authdatalen;
@@ -1916,18 +1954,18 @@ do_generate(const char *inputfilename, int lineno, int argc, const char **argv)
 	printf("authorization id is %ld\n", id_return);
 
     /* create a fake input line to give to do_add */
-
+    hex = bintohex(auth_return->data_length, auth_return->data);
     args[0] = "add";
     args[1] = displayname;
     args[2] = auth_in->name;
-    args[3] = bintohex(auth_return->data_length, auth_return->data);
+    args[3] = hex;
 
     status = do_add(inputfilename, lineno, 4, args);
 
     if (authdata) free(authdata);
     XSecurityFreeXauth(auth_in);
     XSecurityFreeXauth(auth_return);
-    free((char *) args[3]); /* hex data */
+    free(hex);
     XCloseDisplay(dpy);
     return status;
 }

@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
 AC_INIT([xauth],
-	[1.0.7],
+	[1.0.8],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	[xauth])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -36,14 +36,12 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AC_TYPE_SIGNAL
-
 AC_CHECK_HEADERS([net/errno.h])
 
 AC_CHECK_FUNCS([strlcpy])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XAUTH, x11 xau xext xmuu)
+PKG_CHECK_MODULES(XAUTH, x11 xau xext xmuu xproto >= 7.0.17)
 
 # Transport selection macro from xtrans.m4
 # Needed to set *CONN defines for gethost.c & parsedpy.c
@@ -53,5 +51,6 @@ XORG_WITH_LINT
 
 AC_CONFIG_FILES([
 	Makefile
+	tests/Makefile
 	man/Makefile])
 AC_OUTPUT

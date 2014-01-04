@@ -56,6 +56,7 @@ static const char *defsource = "(stdin)";
 /*
  * utility routines
  */
+_X_NORETURN
 static void
 usage(void)
 {
@@ -67,6 +68,7 @@ usage(void)
 "    -q                             turn off extra messages",
 "    -i                             ignore locks on authority file",
 "    -b                             break locks on authority file",
+"    -V                             show version number of xauth",
 "",
 "and commands have the following syntax:",
 "",
@@ -111,9 +113,8 @@ main(int argc, const char *argv[])
 
 	if (arg[0] == '-') {
 	    const char *flag;
-
 	    for (flag = (arg + 1); *flag; flag++) {
-		switch (*flag) {
+	        switch (*flag) {
 		  case 'f':		/* -f authfilename */
 		    if (++i >= argc) usage ();
 		    authfilename = argv[i];
@@ -133,9 +134,12 @@ main(int argc, const char *argv[])
 		  case 'n':		/* -n */
 		    no_name_lookups = True;
 		    continue;
+		  case 'V':		/* -V */
+		    puts(PACKAGE_VERSION);
+	   	    exit(0);
 		  default:
 		    usage ();
-		}
+	        }
 	    }
 	} else {
 	    sourcename = "(argv)";

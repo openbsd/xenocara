@@ -1,3 +1,247 @@
+commit 4de4a231f3a718d2af0d2b00443c803f8bddfbc5
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Wed Oct 9 23:45:15 2013 +0200
+
+    Second version bump to 1.0.8
+
+commit f7425f45addce5629d338c051a41ec1a119ea51f
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Wed Oct 9 23:38:15 2013 +0200
+
+    Rewrote test_xauth to C to make automake and "make distclean" happy.
+
+commit c4356e8dc8b9fe039c38104551af93e0583ffbee
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Wed Oct 9 23:33:42 2013 +0200
+
+    Revert version bump back to 1.0.7 to prepare missing commit before 1.0.8
+
+commit d907dda4e5a2584ac15a404c8269b888b61bbf9e
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Tue Oct 8 21:45:06 2013 +0200
+
+    version bump to 1.0.8
+
+commit c6ecc2c8470093ba17ff1cf993df46f9e670173d
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Tue Oct 8 21:41:37 2013 +0200
+
+    Improved README to explain "make check".
+
+commit 4e05bce6da8eeb9eb98624cf868675eaf5816df5
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Tue Oct 8 21:34:49 2013 +0200
+
+    Added command "version" and command line arg "-V" to show version of xauth.
+
+commit e53df261c9ca11435df0c8853350d913b557446b
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Sun Oct 6 16:50:33 2013 +0200
+
+    Fix warning raised by "-Wshadow".
+
+commit 92de3583c7aaaa2040728808add2186348859b98
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Sun Oct 6 15:10:05 2013 +0200
+
+    Rework match_auth_dpy() to be easier to read and maintain (hopefully).
+
+commit 1555fff4ab458d7d4053f1ea6b74c3e14a65ad63
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Aug 14 22:11:06 2013 +0200
+
+    Make matching algorithm mimic XauGet*AuthByAddr
+    
+    Xlib (xcb) uses XauGetBestAuthByAddr() when looking for an
+    authorization. 'xauth [n]list $DISPLAY' used a slightly
+    stricter algorithm which doesn't find a possible authorization
+    for cases where either the family is set to FamilyWild or
+    address the address length is 0.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit 10cbe2ed2a96582e7ee9fa5cfe6f8f69a3a4e4d4
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Sun Oct 6 14:16:59 2013 +0200
+
+    Added black box tests for basic functionality started with "make check".
+
+commit 3be53072f8252962c6df740e64e897b970ae0349
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Oct 1 01:17:09 2013 +0200
+
+    Handle v4-mapped inet6 addresses correctly
+    
+    Handling of v4-mapped inet6 addresses has been introduced
+    with commit 58140dbbd39389ad6af58e201e055f3d4b92d368:
+    
+       Look for FamilyLocal if inet or inet6 address is loopback
+    
+    These adresses should be treated as inet addresses. This patch
+    makes the code consistent with the handling if xcb_auth.c in
+    libxcb.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit 58140dbbd39389ad6af58e201e055f3d4b92d368
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sun Sep 29 08:25:14 2013 -0700
+
+    Look for FamilyLocal if inet or inet6 address is loopback
+    
+    libxcb uses FamilyLocal authorization if the host name or IP in the
+    display string is from the loopback device. This patch adds the same
+    behavior to xauth.
+    This fixes a long standing problem that for ssh tunneled connections
+    a display variable of the form: localhost:<N>.<M> leads to correct
+    authorization when an X client is started but "xauth list $DISPLAY"
+    returns nothing.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 09a9451af29545196cedfc8dcaf32e3f1ccc672b
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Sep 29 07:57:37 2013 -0700
+
+    Silenece lack of noreturn warning
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit a2c8f59f13caf63a642bad1b97d9adf5a9e01bcb
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Sep 29 08:04:39 2013 -0700
+
+    Revert "Look for FamilyLocal if inet or inet6 address is loopback"
+    
+    Also reverts the followup "More fixes for compiler warnings regarding the use of "const"."
+    
+    This reverts commits fb328950ce1156b8228214240b213860b794b4c8 and
+    345c7bf0d09f26183cfde9ad1c812c8de71869a5.
+    
+    Fixes build regression found on darwin tinderbox.
+    
+    Per SUSv4*, IN6_IS_ADDR_LOOPBACK takes a 'const struct in6_addr *', not a
+    'const struct sockaddr_in6 *'.
+    
+    *: http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/netinet_in.h.html
+
+commit fb328950ce1156b8228214240b213860b794b4c8
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Wed Sep 25 09:36:58 2013 +0200
+
+    More fixes for compiler warnings regarding the use of "const".
+
+commit 345c7bf0d09f26183cfde9ad1c812c8de71869a5
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Aug 14 17:08:27 2013 +0200
+
+    Look for FamilyLocal if inet or inet6 address is loopback
+    
+    libxcb uses FamilyLocal authorization if the host name or IP in the
+    display string is from the loopback device. This patch adds the same
+    behavior to xauth.
+    This fixes a long standing problem that for ssh tunneled connections
+    a display variable of the form: localhost:<N>.<M> leads to correct
+    authorization when an X client is started but "xauth list $DISPLAY"
+    returns nothing.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit 289ca779f73840cb5c9d69b919413079d1be3fc2
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Tue Sep 24 11:21:52 2013 +0200
+
+    Fix various compiler warnings raised by modern gcc (4.8.1).
+
+commit 2440a254797cc3655c8743a9232f30a693f6f947
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Thu Jul 11 11:27:15 2013 +0200
+
+    Use copystring to create non-const string.]
+    
+    Hello!
+    
+    I see you're the official xauth maintainer according to
+    http://cgit.freedesktop.org/xorg/doc/xorg-docs/tree/MAINTAINERS#n80
+    
+    Can you please take a look at the attached patch and merge it?
+    
+    Thanks,
+     Thomas
+    
+    ----- Forwarded message from Thomas Klausner <wiz@NetBSD.org> -----
+    
+    Date: Sun, 30 Jun 2013 13:29:44 +0200
+    From: Thomas Klausner <wiz@NetBSD.org>
+    To: xorg-devel@lists.x.org
+    Cc: Thomas Klausner <wiz@NetBSD.org>
+    Subject: [PATCH:xauth] Use copystring to create non-const string.
+    
+    Fixes "error: assignment discards qualifiers from pointer target type"
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit eee471e446405350c02c221f044a70669dac48a2
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Aug 14 17:07:35 2013 +0200
+
+    Don't crash when running past the end of the chain
+    
+    Running past the end of the chain would cause a SEGV.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit 6dda11c17f2fdc47d43f269dccee98ec66cc8c4b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 23 10:13:14 2013 -0800
+
+    Assume signal handlers return void, as C89 requires
+    
+    Drops use of autoconf's obsolete AC_TYPE_SIGNAL and Imake's even more
+    obsolete SIGNALRETURNSINT.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 399dc5d6282f90fee2f6071aadde977280656ffc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 26 23:11:36 2012 -0800
+
+    Remove unused DECnet ("DNETCONN") code from xauth
+    
+    Has never been converted to build in modular builds, so has been unusable
+    since X11R7.0 release in 2005.  DNETCONN support was removed from xtrans
+    back in 2008.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fe46fcc3ae58767960434445a4ea9c3ce0a6724e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 26 23:09:31 2012 -0800
+
+    Remove unused TLI ("STREAMSCONN") code from xauth
+    
+    Has never been converted to build in modular builds, so has been unusable
+    since X11R7.0 release in 2005.  All known platforms with TLI/XTI support
+    that X11R7 & later releases run on also have (and mostly prefer) BSD
+    socket support for their networking API.
+    
+    And as the comment notes, it never worked right in xauth anyway.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ea343d117b5dbb17fc753e08918f44f167207fa9
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Sat Oct 27 18:10:30 2012 +0100
+
+    Include Xwinsock.h rather than sys/socket.h on WIN32
+    
+    For AF_INET6, include Xwinsock.h rather than sys/socket.h on WIN32
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
 commit 374c8c7005200c13299fdcb7b7d1b12f9f4258ae
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 22 21:41:35 2012 -0700
