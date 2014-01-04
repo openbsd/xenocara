@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.281 2014/01/03 15:32:49 matthieu Exp $
+# $OpenBSD: MODULES,v 1.282 2014/01/04 15:54:05 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -28,7 +28,7 @@ app/smproxy		1.0.5	7.7
 app/twm			1.0.8
 app/viewres		1.0.4
 app/x11perf		1.5.4	7.7
-app/xauth		1.0.8	7.7+	needs-update
+app/xauth		1.0.8	7.7+
 app/xbacklight		1.2.1	7.7+	needs-update + xcb update
 app/xbiff		1.0.3
 app/xcalc		1.0.5
@@ -238,7 +238,7 @@ proto/renderproto		0.11.1	7.7
 proto/resourceproto		1.2.0	7.7
 proto/scrnsaverproto		1.2.2	7.7
 proto/videoproto		2.3.2	7.7+
-proto/x11proto			7.0.25	7.7+	needs-update
+proto/x11proto			7.0.25	7.7+
 proto/xcb-proto			1.10	7.7+	needs-update
 proto/xcmiscproto		1.2.2	7.7
 proto/xextproto			7.3.0	7.7+	needs-update
