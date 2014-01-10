@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.54 2013/10/25 18:12:59 miod Exp $
+# $OpenBSD: Makefile,v 1.55 2014/01/10 00:17:54 todd Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -75,8 +75,15 @@ font-cache:
 release:
 	@echo You must set DESTDIR and RELEASEDIR for a release.; exit 255
 .else
-release: release-clean release-install dist
-.ORDER: release-clean release-install dist
+release: sha
+
+sha: release-clean release-install dist hash
+
+hash: dist
+	-cd ${RELEASEDIR}; \
+		sum -a sha256 x*tgz > SHA256
+
+.ORDER: release-clean release-install dist hash
 .endif
 
 release-clean:
