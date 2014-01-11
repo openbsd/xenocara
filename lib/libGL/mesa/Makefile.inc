@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.6 2013/11/24 06:23:35 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.7 2014/01/11 12:39:14 miod Exp $
 
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
 MAPI=		${.CURDIR}/../../../../dist/Mesa/src/mapi
@@ -522,6 +522,7 @@ x86_xform4.so: matypes.h
 .PATH: ${.CURDIR}/../../generated/main
 .PATH: ${.CURDIR}/../../generated/program
 
-.if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
+.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
+    ${MACHINE_ARCH} == "sparc"
 PICFLAG=-fPIC
 .endif

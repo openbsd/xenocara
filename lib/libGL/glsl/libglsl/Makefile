@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2013/09/05 15:12:08 jsg Exp $
+# $OpenBSD: Makefile,v 1.7 2014/01/11 12:39:14 miod Exp $
 .include <bsd.xconf.mk>
 
 MESA=	${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -181,6 +181,7 @@ ${LIB}_pic.a:	${OBJS} $(DPADD)
 .PATH: ${.CURDIR}/../../generated/glsl
 .PATH: ${.CURDIR}/../../generated/glsl/glcpp
 
-.if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
+.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
+    ${MACHINE_ARCH} == "sparc"
 PICFLAG=-fPIC
 .endif

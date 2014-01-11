@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.4 2013/09/05 15:11:59 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.5 2014/01/11 12:39:14 miod Exp $
 .include <bsd.xconf.mk>
 
 CPP=	cpp -notraditional
@@ -60,6 +60,7 @@ LOCALBASE?=	/usr/local
 LDADD+=		${LOCALBASE}/lib/libelf.a
 .endif
 
-.if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
+.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
+    ${MACHINE_ARCH} == "sparc"
 PICFLAG=-fPIC
 .endif

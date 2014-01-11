@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.40 2013/11/24 06:23:35 jsg Exp $
+# $OpenBSD: Makefile,v 1.41 2014/01/11 12:39:14 miod Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
@@ -154,7 +154,8 @@ obj: _xenocara_obj
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-.if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
+.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
+    ${MACHINE_ARCH} == "sparc"
 PICFLAG = -fPIC
 .endif
 
