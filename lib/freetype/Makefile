@@ -1,9 +1,9 @@
-#	$OpenBSD: Makefile,v 1.31 2013/10/10 19:49:34 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.32 2014/01/12 15:08:24 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 16.2.10
+FT_VERSION_INFO= 17.1.11
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
 .ifmake includes
@@ -37,10 +37,10 @@ build:
 	cd ${.CURDIR} && ${SUDO} ${MAKE} install
 
 includes:: _SUBDIRUSE
-	@cmp -s ${DESTDIR}${X11BASE}/include/ft2build.h \
-	  ${.CURDIR}/builds/unix/ft2unix.h || \
-	${INSTALL_DATA} ${.CURDIR}/builds/unix/ft2unix.h \
-	  ${DESTDIR}${X11BASE}/include/ft2build.h
+	@cmp -s ${DESTDIR}${X11BASE}/include/freetype2/ft2build.h \
+	  ${.CURDIR}/include/ft2build.h || \
+	${INSTALL_DATA} ${.CURDIR}/include/ft2build.h \
+	  ${DESTDIR}${X11BASE}/include/freetype2/ft2build.h
 
 depend:	freetype-config freetype2.pc
 
@@ -48,7 +48,7 @@ includes::
 	@cmp -s ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h \
 	  ${.CURDIR}/builds/unix/ftconfig.h || \
 	${INSTALL_DATA} ${.CURDIR}/builds/unix/ftconfig.h \
-	  ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h
+	  ${DESTDIR}${X11BASE}/include/freetype2/config/ftconfig.h
 
 install-pc: freetype2.pc
 	${INSTALL_DATA} freetype2.pc ${DESTDIR}${LIBDIR}/pkgconfig
@@ -68,7 +68,7 @@ freetype-config: freetype-config.in
 	sed -e s,%prefix%,${X11BASE}, -e s,%exec_prefix%,${X11BASE}, \
 		-e s,%includedir%,${INCSDIR}, -e s,%libdir%,${LIBDIR}, \
 		-e s,%LIBZ%,-lz, -e s,%FT2_EXTRA_LIBS%,, \
-		-e s,%LIBBZ2%,, \
+		-e s,%LIBBZ2%,, -e s,%LIBPNG%,, \
 		-e s,%enable_shared%,yes, \
 		-e 's,%hardcode_libdir_flag_spec%,,' \
 		-e 's,%ft_version%,${FT_VERSION_INFO},' -e 's,%wl%,,' \
