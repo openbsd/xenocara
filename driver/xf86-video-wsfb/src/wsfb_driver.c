@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.30 2013/07/15 13:23:17 aoyama Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.31 2014/01/15 11:15:59 aoyama Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -531,6 +531,22 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			   strerror(errno));
 		return FALSE;
 	}
+
+	/* Quirk for LUNA: now X supports 1bpp only, so force to set 1bpp */
+	if (fPtr->wstype == WSDISPLAY_TYPE_LUNA) {
+		struct wsdisplay_gfx_mode gfxmode;
+		gfxmode.width  = fPtr->info.width;
+		gfxmode.height = fPtr->info.height;
+		gfxmode.depth  = fPtr->info.depth = 1;
+		
+		if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, &gfxmode) == -1) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "ioctl WSDISPLAY_SETGFXMODE: %s\n",
+			    strerror(errno));
+			return FALSE;
+		}
+	}
+
 	/*
 	 * Allocate room for saving the colormap.
 	 */
@@ -1334,6 +1350,21 @@ WsfbRestore(ScrnInfoPtr pScrn)
 
 	/* Clear the screen. */
 	memset(fPtr->fbmem, 0, fPtr->fbmem_len);
+
+	/* Quirk for LUNA: Restore default depth. */
+	if (fPtr->wstype == WSDISPLAY_TYPE_LUNA) {
+		struct wsdisplay_gfx_mode gfxmode;
+		gfxmode.width  = fPtr->info.width;
+		gfxmode.height = fPtr->info.height;
+		gfxmode.depth  = 0;	/* set to default depth */
+		
+		if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, &gfxmode) == -1) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			    "ioctl WSDISPLAY_SETGFXMODE: %s\n",
+			    strerror(errno));
+			return FALSE;
+		}
+	}
 
 	/* Restore the text mode. */
 	mode = WSDISPLAYIO_MODE_EMUL;
