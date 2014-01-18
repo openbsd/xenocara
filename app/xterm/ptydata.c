@@ -216,7 +216,7 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData * data)
 		Panic("input: read returned unexpected error (%d)\n", save_err);
 	    size = 0;
 	} else if (size == 0) {
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__OpenBSD__)
 	    NormalExit();
 #else
 	    Panic("input: read returned zero\n", 0);
