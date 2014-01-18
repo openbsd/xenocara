@@ -257,6 +257,8 @@ decode_mi(struct drm_intel_decode *ctx)
 		{ 0x03, 0, 1, 1, "MI_WAIT_FOR_EVENT", decode_MI_WAIT_FOR_EVENT },
 		{ 0x16, 0x7f, 3, 3, "MI_SEMAPHORE_MBOX" },
 		{ 0x26, 0x1f, 3, 4, "MI_FLUSH_DW" },
+		{ 0x28, 0x3f, 3, 3, "MI_REPORT_PERF_COUNT" },
+		{ 0x29, 0xff, 3, 3, "MI_LOAD_REGISTER_MEM" },
 		{ 0x0b, 0, 1, 1, "MI_SUSPEND_FLUSH"},
 	}, *opcode_mi = NULL;
 
@@ -3825,7 +3827,9 @@ drm_intel_decode_context_alloc(uint32_t devid)
 	ctx->devid = devid;
 	ctx->out = stdout;
 
-	if (IS_GEN7(devid))
+	if (IS_GEN8(devid))
+		ctx->gen = 8;
+	else if (IS_GEN7(devid))
 		ctx->gen = 7;
 	else if (IS_GEN6(devid))
 		ctx->gen = 6;
