@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.82 2013/12/11 14:09:21 okan Exp $
+ * $OpenBSD: group.c,v 1.83 2014/01/20 18:58:03 okan Exp $
  */
 
 #include <sys/param.h>
@@ -324,15 +324,8 @@ group_menu(struct screen_ctx *sc)
 		if (TAILQ_EMPTY(&gc->clients))
 			continue;
 
-		mi = xcalloc(1, sizeof(*mi));
-		if (gc->hidden)
-			(void)snprintf(mi->text, sizeof(mi->text), "%d: [%s]",
-			    gc->shortcut, sc->group_names[i]);
-		else
-			(void)snprintf(mi->text, sizeof(mi->text), "%d: %s",
-			    gc->shortcut, sc->group_names[i]);
-		mi->ctx = gc;
-		TAILQ_INSERT_TAIL(&menuq, mi, entry);
+		menuq_add(&menuq, gc, gc->hidden ? "%d: [%s]" : "%d: %s",
+		    gc->shortcut, sc->group_names[i]);
 	}
 
 	if (TAILQ_EMPTY(&menuq))
