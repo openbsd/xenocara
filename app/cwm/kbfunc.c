@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.88 2014/01/20 21:34:32 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.89 2014/01/20 23:18:47 okan Exp $
  */
 
 #include <sys/param.h>
@@ -41,6 +41,7 @@ extern sig_atomic_t	xev_quit;
 void
 kbfunc_client_lower(struct client_ctx *cc, union arg *arg)
 {
+	client_ptrsave(cc);
 	client_lower(cc);
 }
 
