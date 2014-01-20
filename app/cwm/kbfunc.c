@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.87 2014/01/20 18:58:03 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.88 2014/01/20 21:34:32 okan Exp $
  */
 
 #include <sys/param.h>
@@ -178,11 +178,11 @@ kbfunc_menu_search(struct client_ctx *cc, union arg *arg)
 
 	TAILQ_INIT(&menuq);
 	TAILQ_FOREACH(cmd, &Conf.cmdq, entry)
-		menuq_add(&menuq, cmd, "%s", cmd->label);
+		menuq_add(&menuq, cmd, "%s", cmd->name);
 
 	if ((mi = menu_filter(sc, &menuq, "application", NULL, 0,
 	    search_match_text, NULL)) != NULL)
-		u_spawn(((struct cmd *)mi->ctx)->image);
+		u_spawn(((struct cmd *)mi->ctx)->path);
 
 	menuq_clear(&menuq);
 }
