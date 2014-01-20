@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.104 2014/01/03 15:29:06 okan Exp $
+ * $OpenBSD: xevents.c,v 1.105 2014/01/20 23:03:51 okan Exp $
  */
 
 /*
@@ -235,11 +235,11 @@ xev_handle_buttonpress(XEvent *ee)
 
 	if (mb == NULL)
 		return;
-	if (mb->flags == MOUSEBIND_CTX_WIN) {
+	if (mb->flags & CWM_WIN) {
 		if (((cc = client_find(e->window)) == NULL) &&
 		    (cc = client_current()) == NULL)
 			return;
-	} else { /* (mb->flags == MOUSEBIND_CTX_ROOT) */
+	} else {
 		if (e->window != e->root)
 			return;
 		cc = &fakecc;
@@ -287,7 +287,7 @@ xev_handle_keypress(XEvent *ee)
 
 	if (kb == NULL)
 		return;
-	if (kb->flags & KBFLAG_NEEDCLIENT) {
+	if (kb->flags & CWM_WIN) {
 		if (((cc = client_find(e->window)) == NULL) &&
 		    (cc = client_current()) == NULL)
 			return;

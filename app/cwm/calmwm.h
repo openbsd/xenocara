@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.244 2014/01/20 22:31:53 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.245 2014/01/20 23:03:51 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -82,6 +82,8 @@
 
 #define CWM_GAP			0x0001
 #define CWM_NOGAP		0x0002
+
+#define CWM_WIN			0x0001
 
 union arg {
 	char	*c;
@@ -247,7 +249,6 @@ struct keybinding {
 	union arg		 argument;
 	unsigned int		 modmask;
 	KeySym			 keysym;
-#define KBFLAG_NEEDCLIENT	 0x0001
 	int			 flags;
 	int			 argtype;
 };
@@ -259,8 +260,6 @@ struct mousebinding {
 	union arg			argument;
 	unsigned int			modmask;
 	unsigned int		 	button;
-#define MOUSEBIND_CTX_ROOT		0x0001
-#define MOUSEBIND_CTX_WIN		0x0002
 	int				flags;
 };
 TAILQ_HEAD(mousebinding_q, mousebinding);
