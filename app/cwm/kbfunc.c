@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.89 2014/01/20 23:18:47 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.90 2014/01/21 15:42:45 okan Exp $
  */
 
 #include <sys/param.h>
@@ -229,8 +229,9 @@ kbfunc_exec(struct client_ctx *cc, union arg *arg)
 {
 #define NPATHS 256
 	struct screen_ctx	*sc = cc->sc;
-	char			**ap, *paths[NPATHS], *path, *pathcpy, *label;
+	char			**ap, *paths[NPATHS], *path, *pathcpy;
 	char			 tpath[MAXPATHLEN];
+	const char		*label;
 	DIR			*dirp;
 	struct dirent		*dp;
 	struct menu		*mi;

@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.73 2014/01/20 18:58:03 okan Exp $
+ * $OpenBSD: menu.c,v 1.74 2014/01/21 15:42:45 okan Exp $
  */
 
 #include <sys/param.h>
@@ -78,8 +78,8 @@ static struct menu 	*menu_complete_path(struct menu_ctx *);
 static int		 menu_keycode(XKeyEvent *, enum ctltype *, char *);
 
 struct menu *
-menu_filter(struct screen_ctx *sc, struct menu_q *menuq, char *prompt,
-    char *initial, int flags,
+menu_filter(struct screen_ctx *sc, struct menu_q *menuq, const char *prompt,
+    const char *initial, int flags,
     void (*match)(struct menu_q *, struct menu_q *, char *),
     void (*print)(struct menu *, int))
 {

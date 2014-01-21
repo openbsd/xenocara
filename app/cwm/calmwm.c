@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.82 2014/01/03 15:29:06 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.83 2014/01/21 15:42:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -46,7 +46,7 @@ struct client_ctx_q		 Clientq = TAILQ_HEAD_INITIALIZER(Clientq);
 
 int				 HasRandr, Randr_ev;
 struct conf			 Conf;
-char				*homedir;
+const char			*homedir;
 
 static void	sigchld_cb(int);
 static int	x_errorhandler(Display *, XErrorEvent *);

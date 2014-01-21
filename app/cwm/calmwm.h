@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.245 2014/01/20 23:03:51 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.246 2014/01/21 15:42:44 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -325,7 +325,7 @@ extern Time				 Last_Event_Time;
 extern struct screen_ctx_q		 Screenq;
 extern struct client_ctx_q		 Clientq;
 extern struct conf			 Conf;
-extern char				*homedir;
+extern const char			*homedir;
 extern int				 HasRandr, Randr_ev;
 
 enum {
@@ -502,7 +502,7 @@ void			 mousefunc_menu_unhide(struct client_ctx *,
     			    union arg *);
 
 struct menu  		*menu_filter(struct screen_ctx *, struct menu_q *,
-			     char *, char *, int,
+			     const char *, const char *, int,
 			     void (*)(struct menu_q *, struct menu_q *, char *),
 			     void (*)(struct menu *, int));
 void			 menuq_add(struct menu_q *, void *, const char *, ...);
