@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.84 2014/01/22 21:48:27 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.85 2014/01/22 22:14:02 okan Exp $
  */
 
 #include <sys/param.h>
@@ -156,6 +156,25 @@ x_restart(void)
 static void
 x_teardown(void)
 {
+	struct screen_ctx	*sc;
+	unsigned int		 i;
+
+	TAILQ_FOREACH(sc, &Screenq, entry) {
+		for (i = 0; i < CWM_COLOR_NITEMS; i++)
+			XftColorFree(X_Dpy, sc->visual, sc->colormap,
+			    &sc->xftcolor[i]);
+		XftDrawDestroy(sc->xftdraw);
+		XftFontClose(X_Dpy, sc->xftfont);
+		XUnmapWindow(X_Dpy, sc->menuwin);
+		XDestroyWindow(X_Dpy, sc->menuwin);
+		XUngrabKey(X_Dpy, AnyKey, AnyModifier, sc->rootwin);
+	}
+	XUngrabPointer(X_Dpy, CurrentTime);
+	XUngrabKeyboard(X_Dpy, CurrentTime);
+	for (i = 0; i < CF_NITEMS; i++)
+		XFreeCursor(X_Dpy, Conf.cursor[i]);
+	XSync(X_Dpy, False);
+	XSetInputFocus(X_Dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	XCloseDisplay(X_Dpy);
 }
 
