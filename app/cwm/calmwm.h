@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.246 2014/01/21 15:42:44 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.247 2014/01/22 21:48:27 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -84,6 +84,10 @@
 #define CWM_NOGAP		0x0002
 
 #define CWM_WIN			0x0001
+
+#define CWM_QUIT		0x0000
+#define CWM_RUNNING		0x0001
+#define CWM_RESTART		0x0002
 
 union arg {
 	char	*c;
@@ -327,6 +331,7 @@ extern struct client_ctx_q		 Clientq;
 extern struct conf			 Conf;
 extern const char			*homedir;
 extern int				 HasRandr, Randr_ev;
+extern volatile sig_atomic_t		 cwm_status;
 
 enum {
 	WM_STATE,
@@ -473,11 +478,10 @@ void			 kbfunc_client_search(struct client_ctx *, union arg *);
 void			 kbfunc_client_vmaximize(struct client_ctx *,
 			     union arg *);
 void			 kbfunc_cmdexec(struct client_ctx *, union arg *);
+void			 kbfunc_cwm_status(struct client_ctx *, union arg *);
 void			 kbfunc_exec(struct client_ctx *, union arg *);
 void			 kbfunc_lock(struct client_ctx *, union arg *);
 void			 kbfunc_menu_search(struct client_ctx *, union arg *);
-void			 kbfunc_quit_wm(struct client_ctx *, union arg *);
-void			 kbfunc_restart(struct client_ctx *, union arg *);
 void			 kbfunc_ssh(struct client_ctx *, union arg *);
 void			 kbfunc_term(struct client_ctx *, union arg *);
 void 			 kbfunc_tile(struct client_ctx *, union arg *);
@@ -527,7 +531,7 @@ void			 conf_init(struct conf *);
 void			 conf_ignore(struct conf *, const char *);
 void			 conf_screen(struct screen_ctx *);
 
-void			 xev_loop(void);
+void			 xev_process(void);
 
 void			 xu_btn_grab(Window, int, unsigned int);
 void			 xu_btn_ungrab(Window);

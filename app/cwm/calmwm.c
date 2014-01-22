@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.83 2014/01/21 15:42:44 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.84 2014/01/22 21:48:27 okan Exp $
  */
 
 #include <sys/param.h>
@@ -47,10 +47,12 @@ struct client_ctx_q		 Clientq = TAILQ_HEAD_INITIALIZER(Clientq);
 int				 HasRandr, Randr_ev;
 struct conf			 Conf;
 const char			*homedir;
+volatile sig_atomic_t		 cwm_status;
 
 static void	sigchld_cb(int);
 static int	x_errorhandler(Display *, XErrorEvent *);
 static void	x_init(const char *);
+static void	x_restart(void);
 static void	x_teardown(void);
 static int	x_wmerrorhandler(Display *, XErrorEvent *);
 
@@ -111,8 +113,12 @@ main(int argc, char **argv)
 	free(conf_path);
 
 	x_init(display_name);
-	xev_loop();
+	cwm_status = CWM_RUNNING;
+	while (cwm_status == CWM_RUNNING)
+		xev_process();
 	x_teardown();
+	if (cwm_status == CWM_RESTART)
+		x_restart();
 
 	return (0);
 }
@@ -138,6 +144,13 @@ x_init(const char *dpyname)
 
 	for (i = 0; i < ScreenCount(X_Dpy); i++)
 		screen_init(i);
+}
+
+static void
+x_restart(void)
+{
+	(void)setsid();
+	(void)execvp(cwm_argv[0], cwm_argv);
 }
 
 static void
