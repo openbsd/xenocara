@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.161 2014/01/22 21:48:27 okan Exp $
+ * $OpenBSD: conf.c,v 1.162 2014/01/23 17:13:38 okan Exp $
  */
 
 #include <sys/param.h>
@@ -120,7 +120,7 @@ conf_screen(struct screen_ctx *sc)
 			xu_xorcolor(sc->xftcolor[CWM_COLOR_MENU_FONT], xc, &xc);
 			if (!XftColorAllocValue(X_Dpy, sc->visual, sc->colormap,
 			    &xc.color, &sc->xftcolor[CWM_COLOR_MENU_FONT_SEL]))
-				warnx("XftColorAllocValue: '%s'", Conf.color[i]);
+				warnx("XftColorAllocValue: %s", Conf.color[i]);
 			break;
 		}
 		if (XftColorAllocName(X_Dpy, sc->visual, sc->colormap,
@@ -128,7 +128,7 @@ conf_screen(struct screen_ctx *sc)
 			sc->xftcolor[i] = xc;
 			XftColorFree(X_Dpy, sc->visual, sc->colormap, &xc);
 		} else {
-			warnx("XftColorAllocName: '%s'", Conf.color[i]);
+			warnx("XftColorAllocName: %s", Conf.color[i]);
 			XftColorAllocName(X_Dpy, sc->visual, sc->colormap,
 			    color_binds[i], &sc->xftcolor[i]);
 		}
