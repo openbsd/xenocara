@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.92 2014/01/22 22:41:09 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.93 2014/01/23 16:51:28 okan Exp $
  */
 
 #include <sys/param.h>
@@ -354,8 +354,8 @@ kbfunc_ssh(struct client_ctx *cc, union arg *arg)
 	    search_match_exec, NULL)) != NULL) {
 		if (mi->text[0] == '\0')
 			goto out;
-		l = snprintf(cmd, sizeof(cmd), "%s -e ssh %s", Conf.termpath,
-		    mi->text);
+		l = snprintf(cmd, sizeof(cmd), "%s -T '[ssh] %s' -e ssh %s",
+		    Conf.termpath, mi->text, mi->text);
 		if (l != -1 && l < sizeof(cmd))
 			u_spawn(cmd);
 	}
