@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.51 2014/01/20 21:34:32 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.52 2014/01/24 22:38:02 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -116,21 +116,21 @@ main		: FONTNAME STRING		{
 				conf->flags |= CONF_STICKY_GROUPS;
 		}
 		| BORDERWIDTH NUMBER {
-			if ($2 < 0) {
+			if ($2 < 0 || $2 > UINT_MAX) {
 				yyerror("invalid borderwidth: %d", $2);
 				YYERROR;
 			}
 			conf->bwidth = $2;
 		}
 		| MOVEAMOUNT NUMBER {
-			if ($2 < 0) {
+			if ($2 < 0 || $2 > INT_MAX) {
 				yyerror("invalid movemount: %d", $2);
 				YYERROR;
 			}
 			conf->mamount = $2;
 		}
 		| SNAPDIST NUMBER {
-			if ($2 < 0) {
+			if ($2 < 0 || $2 > INT_MAX) {
 				yyerror("invalid snapdist: %d", $2);
 				YYERROR;
 			}
@@ -165,7 +165,10 @@ main		: FONTNAME STRING		{
 			free($3);
 		}
 		| GAP NUMBER NUMBER NUMBER NUMBER {
-			if ($2 < 0 || $3 < 0 || $4 < 0 || $5 < 0) {
+			if ($2 < 0 || $2 > INT_MAX ||
+			    $3 < 0 || $3 > INT_MAX ||
+			    $4 < 0 || $4 > INT_MAX ||
+			    $5 < 0 || $5 > INT_MAX) {
 				yyerror("invalid gap: %d %d %d %d",
 				    $2, $3, $4, $5);
 				YYERROR;
