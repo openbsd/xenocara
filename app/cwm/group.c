@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.83 2014/01/20 18:58:03 okan Exp $
+ * $OpenBSD: group.c,v 1.84 2014/01/24 15:08:06 okan Exp $
  */
 
 #include <sys/param.h>
@@ -105,7 +105,7 @@ group_show(struct screen_ctx *sc, struct group_ctx *gc)
 		if (cc->stackingorder > gc->highstack)
 			gc->highstack = cc->stackingorder;
 	}
-	winlist = (Window *) xcalloc(sizeof(*winlist), (gc->highstack + 1));
+	winlist = xcalloc((gc->highstack + 1), sizeof(*winlist));
 
 	/*
 	 * Invert the stacking order as XRestackWindows() expects them
