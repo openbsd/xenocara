@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.168 2014/01/03 14:23:50 okan Exp $
+ * $OpenBSD: client.c,v 1.169 2014/01/27 15:13:09 okan Exp $
  */
 
 #include <sys/param.h>
@@ -119,7 +119,6 @@ client_init(Window win, struct screen_ctx *sc, int mapped)
 	TAILQ_INSERT_TAIL(&Clientq, cc, entry);
 
 	xu_ewmh_net_client_list(sc);
-
 	xu_ewmh_restore_net_wm_state(cc);
 
 	if (mapped)
