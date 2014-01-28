@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.162 2014/01/23 17:13:38 okan Exp $
+ * $OpenBSD: conf.c,v 1.163 2014/01/28 20:22:21 okan Exp $
  */
 
 #include <sys/param.h>
@@ -73,16 +73,18 @@ conf_autogroup(struct conf *c, int no, const char *val)
 	TAILQ_INSERT_TAIL(&c->autogroupq, aw, entry);
 }
 
-void
+int
 conf_ignore(struct conf *c, const char *val)
 {
 	struct winmatch	*wm;
 
 	wm = xcalloc(1, sizeof(*wm));
 
-	(void)strlcpy(wm->title, val, sizeof(wm->title));
+	if (strlcpy(wm->title, val, sizeof(wm->title)) >= sizeof(wm->title))
+		return (0);
 
 	TAILQ_INSERT_TAIL(&c->ignoreq, wm, entry);
+	return (1);
 }
 
 static const char *color_binds[] = {

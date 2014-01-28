@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.54 2014/01/28 00:42:20 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.55 2014/01/28 20:22:21 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -151,7 +151,11 @@ main		: FONTNAME STRING		{
 			free($3);
 		}
 		| IGNORE STRING {
-			conf_ignore(conf, $2);
+			if (!conf_ignore(conf, $2)) {
+				yyerror("ignore windowname too long");
+				free($2);
+				YYERROR;
+			}
 			free($2);
 		}
 		| BIND STRING string		{
