@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.106 2014/01/22 21:48:27 okan Exp $
+ * $OpenBSD: xevents.c,v 1.107 2014/01/28 13:40:40 okan Exp $
  */
 
 /*
@@ -346,8 +346,17 @@ xev_handle_clientmessage(XEvent *ee)
 		client_ptrwarp(cc);
 	}
 
-	if (e->message_type == ewmh[_NET_WM_DESKTOP] && e->format == 32)
-		group_movetogroup(cc, e->data.l[0]);
+	if (e->message_type == ewmh[_NET_WM_DESKTOP] && e->format == 32) {
+		/*
+		 * The EWMH spec states that if the cardinal returned is
+		 * 0xFFFFFFFF (-1) then the window should appear on all
+		 * desktops, which in our case is assigned to group 0.
+		 */
+		if (e->data.l[0] == (unsigned long)-1)
+			group_movetogroup(cc, 0);
+		else
+			group_movetogroup(cc, e->data.l[0]);
+	}
 
 	if (e->message_type == ewmh[_NET_WM_STATE] && e->format == 32)
 		xu_ewmh_handle_net_wm_state_msg(cc,
