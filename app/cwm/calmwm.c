@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.86 2014/01/22 22:26:05 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.87 2014/01/28 00:42:20 okan Exp $
  */
 
 #include <sys/param.h>
@@ -108,8 +108,11 @@ main(int argc, char **argv)
 	}
 
 	conf_init(&Conf);
-	if (conf_path && (parse_config(conf_path, &Conf) == -1))
+	if (conf_path && (parse_config(conf_path, &Conf) == -1)) {
 		warnx("config file %s has errors, not loading", conf_path);
+		conf_clear(&Conf);
+		conf_init(&Conf);
+	}
 	free(conf_path);
 
 	x_init(display_name);

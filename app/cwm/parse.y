@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.53 2014/01/27 14:49:40 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.54 2014/01/28 00:42:20 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -545,7 +545,7 @@ popfile(void)
 int
 parse_config(const char *filename, struct conf *xconf)
 {
-	int			 errors = 0;
+	int		 errors = 0;
 
 	conf = xconf;
 
@@ -557,11 +557,6 @@ parse_config(const char *filename, struct conf *xconf)
 	yyparse();
 	errors = file->errors;
 	popfile();
-
-	if (errors) {
-		conf_clear(conf);
-		conf_init(conf);
-	}
 
 	return (errors ? -1 : 0);
 }
