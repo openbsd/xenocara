@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.249 2014/01/29 18:34:22 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.250 2014/01/29 21:13:52 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -92,6 +92,11 @@
 union arg {
 	char	*c;
 	int	 i;
+};
+
+union press {
+	KeySym		 keysym;
+	unsigned int	 button;
 };
 
 enum cursor_font {
@@ -247,26 +252,17 @@ struct screen_ctx {
 };
 TAILQ_HEAD(screen_ctx_q, screen_ctx);
 
-struct keybinding {
-	TAILQ_ENTRY(keybinding)	 entry;
+struct binding {
+	TAILQ_ENTRY(binding)	 entry;
 	void			(*callback)(struct client_ctx *, union arg *);
 	union arg		 argument;
 	unsigned int		 modmask;
-	KeySym			 keysym;
+	union press		 press;
 	int			 flags;
 	int			 argtype;
 };
-TAILQ_HEAD(keybinding_q, keybinding);
-
-struct mousebinding {
-	TAILQ_ENTRY(mousebinding)	entry;
-	void			 	(*callback)(struct client_ctx *, union arg *);
-	union arg			argument;
-	unsigned int			modmask;
-	unsigned int		 	button;
-	int				flags;
-};
-TAILQ_HEAD(mousebinding_q, mousebinding);
+TAILQ_HEAD(keybinding_q, binding);
+TAILQ_HEAD(mousebinding_q, binding);
 
 struct cmd {
 	TAILQ_ENTRY(cmd)	entry;
@@ -290,10 +286,10 @@ TAILQ_HEAD(menu_q, menu);
 
 struct conf {
 	struct keybinding_q	 keybindingq;
+	struct mousebinding_q	 mousebindingq;
 	struct autogroupwin_q	 autogroupq;
 	struct winmatch_q	 ignoreq;
 	struct cmd_q		 cmdq;
-	struct mousebinding_q	 mousebindingq;
 #define	CONF_STICKY_GROUPS		0x0001
 	int			 flags;
 #define CONF_BWIDTH			1

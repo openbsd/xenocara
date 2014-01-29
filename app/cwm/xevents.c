@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.107 2014/01/28 13:40:40 okan Exp $
+ * $OpenBSD: xevents.c,v 1.108 2014/01/29 21:13:52 okan Exp $
  */
 
 /*
@@ -224,12 +224,12 @@ xev_handle_buttonpress(XEvent *ee)
 {
 	XButtonEvent		*e = &ee->xbutton;
 	struct client_ctx	*cc, fakecc;
-	struct mousebinding	*mb;
+	struct binding		*mb;
 
 	e->state &= ~IGNOREMODMASK;
 
 	TAILQ_FOREACH(mb, &Conf.mousebindingq, entry) {
-		if (e->button == mb->button && e->state == mb->modmask)
+		if (e->button == mb->press.button && e->state == mb->modmask)
 			break;
 	}
 
@@ -263,7 +263,7 @@ xev_handle_keypress(XEvent *ee)
 {
 	XKeyEvent		*e = &ee->xkey;
 	struct client_ctx	*cc = NULL, fakecc;
-	struct keybinding	*kb;
+	struct binding		*kb;
 	KeySym			 keysym, skeysym;
 	unsigned int		 modshift;
 
@@ -273,7 +273,7 @@ xev_handle_keypress(XEvent *ee)
 	e->state &= ~IGNOREMODMASK;
 
 	TAILQ_FOREACH(kb, &Conf.keybindingq, entry) {
-		if (keysym != kb->keysym && skeysym == kb->keysym)
+		if (keysym != kb->press.keysym && skeysym == kb->press.keysym)
 			modshift = ShiftMask;
 		else
 			modshift = 0;
@@ -281,7 +281,7 @@ xev_handle_keypress(XEvent *ee)
 		if ((kb->modmask | modshift) != e->state)
 			continue;
 
-		if (kb->keysym == (modshift == 0 ? keysym : skeysym))
+		if (kb->press.keysym == (modshift == 0 ? keysym : skeysym))
 			break;
 	}
 
