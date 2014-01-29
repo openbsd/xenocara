@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.93 2014/01/23 16:51:28 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.94 2014/01/29 22:30:00 okan Exp $
  */
 
 #include <sys/param.h>
@@ -167,7 +167,7 @@ kbfunc_client_search(struct client_ctx *cc, union arg *arg)
 }
 
 void
-kbfunc_menu_search(struct client_ctx *cc, union arg *arg)
+kbfunc_menu_cmd(struct client_ctx *cc, union arg *arg)
 {
 	struct screen_ctx	*sc = cc->sc;
 	struct cmd		*cmd;
