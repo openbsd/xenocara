@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.164 2014/01/29 18:34:22 okan Exp $
+ * $OpenBSD: conf.c,v 1.165 2014/01/29 18:43:27 okan Exp $
  */
 
 #include <sys/param.h>
@@ -32,6 +32,7 @@
 #include "calmwm.h"
 
 static const char	*conf_bind_getmask(const char *, unsigned int *);
+static void	 	 conf_cmd_remove(struct conf *, const char *);
 static void	 	 conf_unbind_kbd(struct conf *, struct keybinding *);
 static void	 	 conf_unbind_mouse(struct conf *, struct mousebinding *);
 
@@ -52,6 +53,8 @@ conf_cmd_add(struct conf *c, const char *name, const char *path)
 	} else {
 		cmd = xmalloc(sizeof(*cmd));
 
+		conf_cmd_remove(c, name);
+
 		if (strlcpy(cmd->name, name, sizeof(cmd->name)) >=
 		    sizeof(cmd->name))
 			return (0);
@@ -63,6 +66,18 @@ conf_cmd_add(struct conf *c, const char *name, const char *path)
 	return (1);
 }
 
+static void
+conf_cmd_remove(struct conf *c, const char *name)
+{
+	struct cmd	*cmd = NULL, *cmdnxt;
+
+	TAILQ_FOREACH_SAFE(cmd, &c->cmdq, entry, cmdnxt) {
+		if (strcmp(cmd->name, name) == 0) {
+			TAILQ_REMOVE(&c->cmdq, cmd, entry);
+			free(cmd);
+		}
+	}
+}
 void
 conf_autogroup(struct conf *c, int no, const char *val)
 {
