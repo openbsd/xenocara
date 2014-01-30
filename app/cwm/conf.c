@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.168 2014/01/30 14:40:21 okan Exp $
+ * $OpenBSD: conf.c,v 1.169 2014/01/30 15:43:53 okan Exp $
  */
 
 #include <sys/param.h>
@@ -287,7 +287,7 @@ conf_init(struct conf *c)
 void
 conf_clear(struct conf *c)
 {
-	struct autogroupwin	*ag;
+	struct autogroupwin	*aw;
 	struct binding		*kb, *mb;
 	struct winmatch		*wm;
 	struct cmd		*cmd;
@@ -303,11 +303,11 @@ conf_clear(struct conf *c)
 		free(kb);
 	}
 
-	while ((ag = TAILQ_FIRST(&c->autogroupq)) != NULL) {
-		TAILQ_REMOVE(&c->autogroupq, ag, entry);
-		free(ag->class);
-		free(ag->name);
-		free(ag);
+	while ((aw = TAILQ_FIRST(&c->autogroupq)) != NULL) {
+		TAILQ_REMOVE(&c->autogroupq, aw, entry);
+		free(aw->class);
+		free(aw->name);
+		free(aw);
 	}
 
 	while ((wm = TAILQ_FIRST(&c->ignoreq)) != NULL) {
