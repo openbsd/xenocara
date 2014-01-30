@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.253 2014/01/30 15:41:11 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.254 2014/01/30 22:17:22 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -140,6 +140,7 @@ struct winname {
 	char			*name;
 };
 TAILQ_HEAD(winname_q, winname);
+TAILQ_HEAD(ignore_q, winname);
 
 struct client_ctx {
 	TAILQ_ENTRY(client_ctx) entry;
@@ -198,13 +199,6 @@ struct client_ctx {
 };
 TAILQ_HEAD(client_ctx_q, client_ctx);
 TAILQ_HEAD(cycle_entry_q, client_ctx);
-
-struct winmatch {
-	TAILQ_ENTRY(winmatch)	entry;
-#define WIN_MAXTITLELEN		256
-	char			title[WIN_MAXTITLELEN];
-};
-TAILQ_HEAD(winmatch_q, winmatch);
 
 struct group_ctx {
 	TAILQ_ENTRY(group_ctx)	 entry;
@@ -288,7 +282,7 @@ struct conf {
 	struct keybinding_q	 keybindingq;
 	struct mousebinding_q	 mousebindingq;
 	struct autogroupwin_q	 autogroupq;
-	struct winmatch_q	 ignoreq;
+	struct ignore_q		 ignoreq;
 	struct cmd_q		 cmdq;
 #define	CONF_STICKY_GROUPS		0x0001
 	int			 flags;
@@ -515,7 +509,7 @@ void			 conf_cursor(struct conf *);
 void			 conf_grab_kbd(Window);
 void			 conf_grab_mouse(Window);
 void			 conf_init(struct conf *);
-int			 conf_ignore(struct conf *, const char *);
+void			 conf_ignore(struct conf *, const char *);
 void			 conf_screen(struct screen_ctx *);
 
 void			 xev_process(void);
