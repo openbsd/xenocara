@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.57 2014/01/30 22:17:22 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.58 2014/01/30 22:41:16 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -157,6 +157,7 @@ main		: FONTNAME STRING		{
 		}
 		| IGNORE STRING {
 			conf_ignore(conf, $2);
+			free($2);
 		}
 		| BIND STRING string		{
 			if (!conf_bind_kbd(conf, $2, $3)) {
