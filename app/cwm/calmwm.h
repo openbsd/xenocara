@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.252 2014/01/30 14:40:21 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.253 2014/01/30 15:41:11 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -327,7 +327,6 @@ extern struct client_ctx_q		 Clientq;
 extern struct conf			 Conf;
 extern const char			*homedir;
 extern int				 HasRandr, Randr_ev;
-extern volatile sig_atomic_t		 cwm_status;
 
 enum {
 	WM_STATE,
