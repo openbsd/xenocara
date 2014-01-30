@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.167 2014/01/29 22:30:00 okan Exp $
+ * $OpenBSD: conf.c,v 1.168 2014/01/30 14:40:21 okan Exp $
  */
 
 #include <sys/param.h>
@@ -557,14 +557,14 @@ static const struct {
 	int		 flags;
 	union arg	 argument;
 } name_to_mousefunc[] = {
+	{ "window_lower", kbfunc_client_lower, CWM_WIN, {0} },
+	{ "window_raise", kbfunc_client_raise, CWM_WIN, {0} },
+	{ "window_hide", kbfunc_client_hide, CWM_WIN, {0} },
+	{ "cyclegroup", kbfunc_client_cyclegroup, 0, {.i = CWM_CYCLE} },
+	{ "rcyclegroup", kbfunc_client_cyclegroup, 0, {.i = CWM_RCYCLE} },
 	{ "window_move", mousefunc_client_move, CWM_WIN, {0} },
 	{ "window_resize", mousefunc_client_resize, CWM_WIN, {0} },
 	{ "window_grouptoggle", mousefunc_client_grouptoggle, CWM_WIN, {0} },
-	{ "window_lower", mousefunc_client_lower, CWM_WIN, {0} },
-	{ "window_raise", mousefunc_client_raise, CWM_WIN, {0} },
-	{ "window_hide", mousefunc_client_hide, CWM_WIN, {0} },
-	{ "cyclegroup", mousefunc_client_cyclegroup, 0, {.i = CWM_CYCLE} },
-	{ "rcyclegroup", mousefunc_client_cyclegroup, 0, {.i = CWM_RCYCLE} },
 	{ "menu_group", mousefunc_menu_group, 0, {0} },
 	{ "menu_unhide", mousefunc_menu_unhide, 0, {0} },
 	{ "menu_cmd", mousefunc_menu_cmd, 0, {0} },
