@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.56 2014/02/02 16:13:50 okan Exp $
+ * $OpenBSD: screen.c,v 1.57 2014/02/02 16:29:04 okan Exp $
  */
 
 #include <sys/param.h>
@@ -44,8 +44,6 @@ screen_init(int which)
 	TAILQ_INIT(&sc->mruq);
 
 	sc->which = which;
-	sc->visual = DefaultVisual(X_Dpy, sc->which);
-	sc->colormap = DefaultColormap(X_Dpy, sc->which);
 	sc->rootwin = RootWindow(X_Dpy, sc->which);
 	conf_screen(sc);
 

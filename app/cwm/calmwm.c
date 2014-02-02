@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.88 2014/02/01 00:25:04 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.89 2014/02/02 16:29:04 okan Exp $
  */
 
 #include <sys/param.h>
@@ -162,7 +162,8 @@ x_teardown(void)
 
 	TAILQ_FOREACH(sc, &Screenq, entry) {
 		for (i = 0; i < CWM_COLOR_NITEMS; i++)
-			XftColorFree(X_Dpy, sc->visual, sc->colormap,
+			XftColorFree(X_Dpy, DefaultVisual(X_Dpy, sc->which),
+			    DefaultColormap(X_Dpy, sc->which),
 			    &sc->xftcolor[i]);
 		XftDrawDestroy(sc->xftdraw);
 		XftFontClose(X_Dpy, sc->xftfont);
