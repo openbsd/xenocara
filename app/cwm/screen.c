@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.55 2014/01/27 15:13:09 okan Exp $
+ * $OpenBSD: screen.c,v 1.56 2014/02/02 16:13:50 okan Exp $
  */
 
 #include <sys/param.h>
@@ -65,7 +65,6 @@ screen_init(int which)
 
 	/* Deal with existing clients. */
 	XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins);
-
 	for (i = 0; i < nwins; i++) {
 		XGetWindowAttributes(X_Dpy, wins[i], &winattr);
 		if (winattr.override_redirect ||
@@ -73,7 +72,8 @@ screen_init(int which)
 			continue;
 		(void)client_init(wins[i], sc, winattr.map_state != IsUnmapped);
 	}
-	XFree(wins);
+	if (wins)
+		XFree(wins);
 
 	screen_updatestackingorder(sc);
 
