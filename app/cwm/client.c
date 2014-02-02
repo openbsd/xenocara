@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.169 2014/01/27 15:13:09 okan Exp $
+ * $OpenBSD: client.c,v 1.170 2014/02/02 21:34:05 okan Exp $
  */
 
 #include <sys/param.h>
@@ -63,6 +63,10 @@ client_init(Window win, struct screen_ctx *sc, int mapped)
 
 	if (win == None)
 		return (NULL);
+	if (!XGetWindowAttributes(X_Dpy, win, &wattr))
+		return (NULL);
+	if (sc == NULL)
+		sc = screen_fromroot(wattr.root);
 
 	cc = xcalloc(1, sizeof(*cc));
 
@@ -86,7 +90,6 @@ client_init(Window win, struct screen_ctx *sc, int mapped)
 	cc->ptr.x = -1;
 	cc->ptr.y = -1;
 
-	XGetWindowAttributes(X_Dpy, cc->win, &wattr);
 	cc->geom.x = wattr.x;
 	cc->geom.y = wattr.y;
 	cc->geom.w = wattr.width;
