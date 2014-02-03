@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.170 2014/02/02 21:34:05 okan Exp $
+ * $OpenBSD: client.c,v 1.171 2014/02/03 20:20:39 okan Exp $
  */
 
 #include <sys/param.h>
@@ -55,18 +55,26 @@ client_find(Window win)
 }
 
 struct client_ctx *
-client_init(Window win, struct screen_ctx *sc, int mapped)
+client_init(Window win, struct screen_ctx *sc)
 {
 	struct client_ctx	*cc;
 	XWindowAttributes	 wattr;
 	long			 state;
+	int			 mapped;
 
 	if (win == None)
 		return (NULL);
 	if (!XGetWindowAttributes(X_Dpy, win, &wattr))
 		return (NULL);
-	if (sc == NULL)
+
+	if (sc == NULL) {
 		sc = screen_fromroot(wattr.root);
+		mapped = 1;
+	} else {
+		if (wattr.override_redirect || wattr.map_state != IsViewable)
+			return (NULL);
+		mapped = wattr.map_state != IsUnmapped;
+	}
 
 	cc = xcalloc(1, sizeof(*cc));
 

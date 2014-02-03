@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.57 2014/02/02 16:29:04 okan Exp $
+ * $OpenBSD: screen.c,v 1.58 2014/02/03 20:20:39 okan Exp $
  */
 
 #include <sys/param.h>
@@ -35,7 +35,6 @@ screen_init(int which)
 {
 	struct screen_ctx	*sc;
 	Window			*wins, w0, w1;
-	XWindowAttributes	 winattr;
 	XSetWindowAttributes	 rootattr;
 	unsigned int		 nwins, i;
 
@@ -62,17 +61,12 @@ screen_init(int which)
 	    CWEventMask|CWCursor, &rootattr);
 
 	/* Deal with existing clients. */
-	XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins);
-	for (i = 0; i < nwins; i++) {
-		XGetWindowAttributes(X_Dpy, wins[i], &winattr);
-		if (winattr.override_redirect ||
-		    winattr.map_state != IsViewable)
-			continue;
-		(void)client_init(wins[i], sc, winattr.map_state != IsUnmapped);
-	}
-	if (wins)
-		XFree(wins);
+	if (XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins)) {
+		for (i = 0; i < nwins; i++)
+			(void)client_init(wins[i], sc);
 
+		XFree(wins);
+	}
 	screen_updatestackingorder(sc);
 
 	if (HasRandr)
