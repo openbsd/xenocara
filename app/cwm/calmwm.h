@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.257 2014/02/03 20:20:39 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.258 2014/02/03 21:07:47 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -218,6 +218,13 @@ struct autogroupwin {
 };
 TAILQ_HEAD(autogroupwin_q, autogroupwin);
 
+struct region_ctx {
+	TAILQ_ENTRY(region_ctx)	 entry;
+	int			 num;
+	struct geom		 area;
+};
+TAILQ_HEAD(region_ctx_q, region_ctx);
+
 struct screen_ctx {
 	TAILQ_ENTRY(screen_ctx)	 entry;
 	int			 which;
@@ -229,11 +236,10 @@ struct screen_ctx {
 	struct geom		 work; /* workable area, gap-applied */
 	struct gap		 gap;
 	struct cycle_entry_q	 mruq;
+	struct region_ctx_q	 regionq;
 	XftColor		 xftcolor[CWM_COLOR_NITEMS];
 	XftDraw			*xftdraw;
 	XftFont			*xftfont;
-	int			 xinerama_no;
-	XineramaScreenInfo	*xinerama;
 #define CALMWM_NGROUPS		 10
 	struct group_ctx	 groups[CALMWM_NGROUPS];
 	struct group_ctx_q	 groupq;
