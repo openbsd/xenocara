@@ -1,7 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-#include "xorg-server.h"
-
 /* Builder description */
 #undef BUILDER_DESCRIPTION
 
@@ -17,6 +15,9 @@
 /* Default acceleration method */
 #undef DEFAULT_ACCEL_METHOD
 
+/* Default DRI2 driver path */
+#undef DRI_DRIVER_PATH
+
 /* Enable XvMC support */
 #undef ENABLE_XVMC
 
@@ -25,6 +26,12 @@
 
 /* Enable pixman glyph cache */
 #undef HAS_PIXMAN_GLYPHS
+
+/* Enable pixman triangle rasterisation */
+#undef HAS_PIXMAN_TRIANGLES
+
+/* Enable if your compiler supports the Intel __sync_* atomic primitives */
+#undef HAVE_ATOMIC_PRIMITIVES
 
 /* Define to 1 if you have the <dgaproc.h> header file. */
 #undef HAVE_DGAPROC_H
@@ -35,8 +42,11 @@
 /* Are we in a git checkout? */
 #undef HAVE_DOT_GIT
 
-/* Enable DRI driver support */
+/* Enable DRI1 driver support */
 #undef HAVE_DRI1
+
+/* Enable DRI2 driver support */
+#undef HAVE_DRI2
 
 /* Define to 1 if you have the <dri2.h> header file. */
 #undef HAVE_DRI2_H
@@ -49,6 +59,9 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Enable if you have libatomic-ops-dev installed */
+#undef HAVE_LIB_ATOMIC_OPS
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -68,6 +81,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if `totalram' is a member of `struct sysinfo'. */
+#undef HAVE_STRUCT_SYSINFO_TOTALRAM
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
@@ -86,11 +102,29 @@
 /* Use valgrind intrinsics to suppress false warnings */
 #undef HAVE_VALGRIND
 
+/* Define to 1 if you have the <vgaHW.h> header file. */
+#undef HAVE_VGAHW_H
+
+/* Define to 1 if you have the <X11/extensions/dpmsconst.h> header file. */
+#undef HAVE_X11_EXTENSIONS_DPMSCONST_H
+
+/* Define to 1 if you have the <X11/extensions/shmproto.h> header file. */
+#undef HAVE_X11_EXTENSIONS_SHMPROTO_H
+
+/* Define to 1 if you have the <X11/extensions/shmstr.h> header file. */
+#undef HAVE_X11_EXTENSIONS_SHMSTR_H
+
+/* Define to 1 if you have the <X11/extensions/XShm.h> header file. */
+#undef HAVE_X11_EXTENSIONS_XSHM_H
+
 /* Define to 1 if you have the <xaa.h> header file. */
 #undef HAVE_XAA_H
 
+/* Define to 1 if shared memory segments are released deferred. */
+#undef IPC_RMID_DEFERRED_RELEASE
+
 /* Assume KMS support */
-#undef KMS_ONLY
+#undef KMS
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
@@ -132,14 +166,14 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Assume only UMS (no KMS) support */
-#undef UMS_ONLY
+/* Assume UMS support */
+#undef UMS
 
 /* Assume asynchronous swap support */
 #undef USE_ASYNC_SWAP
 
-/* Assume "fast reloc" support */
-#undef USE_FASTRELOC
+/* Assume "create2" support */
+#undef USE_CREATE2
 
 /* Use automagic builder description */
 #undef USE_GIT_DESCRIBE
@@ -147,13 +181,13 @@
 /* Enable glamor acceleration */
 #undef USE_GLAMOR
 
-/* Assume "handle LUT" support */
-#undef USE_HANDLE_LUT
+/* Assume "rendernode" support */
+#undef USE_RENDERNODE
 
 /* Enable SNA support */
 #undef USE_SNA
 
-/* Assume USERPTR support */
+/* Assume "userptr" support */
 #undef USE_USERPTR
 
 /* Enable UXA support */
@@ -161,11 +195,6 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Enable large inode numbers on Mac OS X 10.5.  */
-#ifndef _DARWIN_USE_64_BIT_INODE
-# define _DARWIN_USE_64_BIT_INODE 1
-#endif
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS

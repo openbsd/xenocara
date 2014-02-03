@@ -2,6 +2,8 @@
 #define TEST_H
 
 #include <stdint.h>
+#include <time.h>
+
 #include <X11/Xlib.h>
 #include <X11/extensions/XShm.h>
 #include <X11/extensions/Xrender.h>
@@ -29,7 +31,7 @@ struct test {
 		Window root;
 		XShmSegmentInfo shm;
 		int max_shm_size;
-		int width, height;
+		int width, height, depth;
 		XRenderPictFormat *format;
 	} real, ref;
 };
@@ -80,7 +82,7 @@ struct test_target {
 	GC gc;
 	XRenderPictFormat *format;
 	Picture picture;
-	int width, height;
+	int width, height, depth;
 	enum target target;
 };
 
@@ -107,6 +109,9 @@ static inline uint32_t color(uint8_t red, uint8_t green, uint8_t blue, uint8_t a
 	return alpha << 24 | ra >> 8 << 16 | ga >> 8 << 8 | ba >> 8;
 }
 
+void test_timer_start(struct test_display *t, struct timespec *tv);
+double test_timer_stop(struct test_display *t, struct timespec *tv);
+
 #ifndef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
@@ -114,5 +119,8 @@ static inline uint32_t color(uint8_t red, uint8_t green, uint8_t blue, uint8_t a
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #endif
+
+#define REPS(I) (1 << (I))
+#define SETS(I) ((I) < 12 ? 1 << (12 - (I)) : 2)
 
 #endif

@@ -174,6 +174,14 @@ INTEL_G7B =				\
 	exa_wm_yuv_rgb.g7b		\
 	$(NULL)
 
+INTEL_G8B =				\
+	exa_wm_src_affine.g8b 		\
+	exa_wm_src_sample_argb.g8b 	\
+	exa_wm_src_sample_planar.g8b 	\
+	exa_wm_write.g8b 		\
+	exa_wm_yuv_rgb.g8b		\
+	$(NULL)
+
 EXTRA_DIST = 		\
 	$(INTEL_G4A)	\
 	$(INTEL_G4I)	\
@@ -185,33 +193,34 @@ EXTRA_DIST = 		\
 	$(INTEL_G6B)	\
 	$(INTEL_G6I)	\
 	$(INTEL_G7A)	\
-	$(INTEL_G7B)
+	$(INTEL_G7B)	\
+	$(INTEL_G8B)
 
 if HAVE_GEN4ASM
 
-SUFFIXES = .g4a .g4b .g5a .g5b .g6a .g6b .g7a .g7b
+SUFFIXES = .g4a .g4b .g5a .g5b .g6a .g6b .g7a .g7b .g8b
 .g4a.g4b:
-	m4 -I$(srcdir) -s $< > $*.g4m && @INTEL_GEN4ASM@ -o $@ $*.g4m && @INTEL_GEN4ASM@ -g 5 -o $@.gen5 $*.g4m && rm $*.g4m
+	$(AM_V_GEN)m4 -I$(srcdir) -s $< > $*.g4m && @INTEL_GEN4ASM@ -o $@ $*.g4m && @INTEL_GEN4ASM@ -g 5 -o $@.gen5 $*.g4m && rm $*.g4m
 
 .g5a.g5b:
-	m4 -I$(srcdir) -s $< > $*.g5m && @INTEL_GEN4ASM@ -g 5 -o $@ $*.g5m && rm $*.g5m
+	$(AM_V_GEN)m4 -I$(srcdir) -s $< > $*.g5m && @INTEL_GEN4ASM@ -g 5 -o $@ $*.g5m && rm $*.g5m
 
 .g6a.g6b:
-	m4 -I$(srcdir) -s $< > $*.g6m && @INTEL_GEN4ASM@ -g 6 -o $@ $*.g6m && rm $*.g6m
+	$(AM_V_GEN)m4 -I$(srcdir) -s $< > $*.g6m && @INTEL_GEN4ASM@ -g 6 -o $@ $*.g6m && rm $*.g6m
 
 .g7a.g7b:
-	m4 -I$(srcdir) -s $< > $*.g7m && @INTEL_GEN4ASM@ -g 7 -o $@ $*.g7m && rm $*.g7m
+	$(AM_V_GEN)m4 -I$(srcdir) -s $< > $*.g7m && @INTEL_GEN4ASM@ -g 7 -o $@ $*.g7m && rm $*.g7m
+.g7a.g8b:
+	$(AM_V_GEN)m4 -I$(srcdir) -s $< > $*.g8m && @INTEL_GEN4ASM@ -g 8 -o $@ $*.g8m && rm $*.g8m
 
-$(INTEL_G4B): $(INTEL_G4I)
-$(INTEL_G5B): $(INTEL_G4I)
-$(INTEL_G6B): $(INTEL_G4I) $(INTEL_G6I)
-$(INTEL_G7B): $(INTEL_G4I) $(INTEL_G6I)
+$(INTEL_G4B): $(INTEL_GEN4ASM) $(INTEL_G4I)
+$(INTEL_G5B): $(INTEL_GEN4ASM) $(INTEL_G4I)
+$(INTEL_G6B): $(INTEL_GEN4ASM) $(INTEL_G4I) $(INTEL_G6I)
+$(INTEL_G7B): $(INTEL_GEN4ASM) $(INTEL_G4I) $(INTEL_G6I)
+$(INTEL_G8B): $(INTEL_GEN4ASM) $(INTEL_G4I) $(INTEL_G6I)
 
-BUILT_SOURCES= $(INTEL_G4B) $(INTEL_G5B) $(INTEL_G6B) $(INTEL_G7B)
+BUILT_SOURCES=$(INTEL_G4B) $(INTEL_G4B_GEN5) $(INTEL_G5B) $(INTEL_G6B) $(INTEL_G7B) $(INTEL_G8B)
 
 clean-local:
-	-rm -f $(INTEL_G4B) $(INTEL_G4B_GEN5)
-	-rm -f $(INTEL_G5B)
-	-rm -f $(INTEL_G6B)
-	-rm -f $(INTEL_G7B)
+	-rm -f $(BUILT_SOURCES)
 endif

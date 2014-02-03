@@ -65,7 +65,7 @@
 
 static inline void memset_volatile(volatile void *b, int c, size_t len)
 {
-    int i;
+    unsigned i;
     
     for (i = 0; i < len; i++)
 	((volatile char *)b)[i] = c;
@@ -74,7 +74,7 @@ static inline void memset_volatile(volatile void *b, int c, size_t len)
 static inline void memcpy_volatile(volatile void *dst, const void *src,
 				   size_t len)
 {
-    int i;
+    unsigned i;
     
     for (i = 0; i < len; i++)
 	((volatile char *)dst)[i] = ((const volatile char *)src)[i];

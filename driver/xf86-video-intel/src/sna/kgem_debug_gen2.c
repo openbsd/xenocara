@@ -34,7 +34,6 @@
 #include <assert.h>
 
 #include "sna.h"
-#include "sna_reg.h"
 
 #include "gen2_render.h"
 

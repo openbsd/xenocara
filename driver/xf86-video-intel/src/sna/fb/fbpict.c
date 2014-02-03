@@ -26,25 +26,19 @@
 #include <string.h>
 
 #include "fb.h"
-
-#include <picturestr.h>
-#include <mipict.h>
 #include "fbpict.h"
 
 static void
 SourceValidateOnePicture(PicturePtr picture)
 {
 	DrawablePtr drawable = picture->pDrawable;
-	ScreenPtr screen;
 
 	if (!drawable)
 		return;
 
-	screen = drawable->pScreen;
-	if (screen->SourceValidate)
-		screen->SourceValidate(drawable,
-				       0, 0, drawable->width, drawable->height,
-				       picture->subWindowMode);
+	SourceValidate(drawable,
+		       0, 0, drawable->width, drawable->height,
+		       picture->subWindowMode);
 }
 
 static void

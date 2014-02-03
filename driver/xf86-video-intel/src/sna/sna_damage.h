@@ -2,7 +2,6 @@
 #define SNA_DAMAGE_H
 
 #include <regionstr.h>
-#include <list.h>
 
 #include "compiler.h"
 
@@ -215,6 +214,19 @@ static inline int sna_damage_contains_box(struct sna_damage *damage,
 		return PIXMAN_REGION_IN;
 
 	return _sna_damage_contains_box(damage, box);
+}
+static inline int sna_damage_contains_box__offset(struct sna_damage *damage,
+						  const BoxRec *box, int dx, int dy)
+{
+	BoxRec b;
+
+	if (DAMAGE_IS_ALL(damage))
+		return PIXMAN_REGION_IN;
+
+	b = *box;
+	b.x1 += dx; b.x2 += dx;
+	b.y1 += dy; b.y2 += dy;
+	return _sna_damage_contains_box(damage, &b);
 }
 bool _sna_damage_contains_box__no_reduce(const struct sna_damage *damage,
 					const BoxRec *box);

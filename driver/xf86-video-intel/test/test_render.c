@@ -31,6 +31,7 @@ void test_target_create_render(struct test_display *dpy,
 	tt->format = dpy->format;
 	tt->width = dpy->width;
 	tt->height = dpy->height;
+	tt->depth = dpy->depth;
 
 	switch (target) {
 	case ROOT:
@@ -56,6 +57,7 @@ void test_target_create_render(struct test_display *dpy,
 		tt->draw = XCreatePixmap(dpy->dpy, tt->draw,
 					 dpy->width, dpy->height,
 					 tt->format->depth);
+		tt->depth = 32;
 		break;
 	}
 

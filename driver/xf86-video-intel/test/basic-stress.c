@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 	test_init(&test, argc, argv);
 
 	for (i = 0; i <= DEFAULT_ITERATIONS; i++) {
-		int iterations = 1 << i;
+		int iterations = REPS(i);
 		rect_tests(&test, iterations, 0);
 		rect_tests(&test, iterations, 1);
 	}

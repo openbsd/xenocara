@@ -6,7 +6,7 @@ NULL:=#
 liblegacy_la_SOURCES = legacy.h
 liblegacy_la_LIBADD =
 
-if ! KMS_ONLY
+if UMS
 SUBDIRS += i810
 liblegacy_la_SOURCES +=
 liblegacy_la_LIBADD += \

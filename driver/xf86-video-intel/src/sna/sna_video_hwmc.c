@@ -81,18 +81,20 @@ static int create_context(XvPortPtr port, XvMCContextPtr ctx,
 		return BadAlloc;
 
 	if (sna->kgem.gen >= 040) {
+		int devid = intel_get_device_id(sna->scrn);
+
 		if (sna->kgem.gen >= 045)
 			priv->type = XVMC_I965_MPEG2_VLD;
 		else
 			priv->type = XVMC_I965_MPEG2_MC;
 		priv->i965.is_g4x = sna->kgem.gen == 045;
-		priv->i965.is_965_q = IS_965_Q(sna);
+		priv->i965.is_965_q = devid == PCI_CHIP_I965_Q;
 		priv->i965.is_igdng = sna->kgem.gen == 050;
 	} else
 		priv->type = XVMC_I915_MPEG2_MC;
 
 	*size = sizeof(*priv) >> 2;
-	*out = priv;
+	*out = (CARD32 *)priv;
 	return Success;
 }
 
@@ -196,80 +198,81 @@ static XvMCSurfaceInfoPtr surface_info_vld[] = {
 };
 
 /* check chip type and load xvmc driver */
-Bool sna_video_xvmc_setup(struct sna *sna,
-			  ScreenPtr screen,
-			  XF86VideoAdaptorPtr target)
+void sna_video_xvmc_setup(struct sna *sna, ScreenPtr screen)
 {
 	XvMCAdaptorRec *adaptors;
-	XvScreenPtr xv;
+	struct pci_device *pci;
 	const char *name;
 	char bus[64];
 	int i;
 
+	pci = xf86GetPciInfoForEntity(sna->pEnt->index);
+	if (pci == NULL)
+		return;
+
+	if (!sna->xv.num_adaptors)
+		return;
+
 	if (!xf86LoaderCheckSymbol("XvMCScreenInit"))
-		return FALSE;
+		return;
 
 	/* Needs KMS support. */
 	if (sna->kgem.gen < 031)
-		return FALSE;
+		return;
 
 	/* Not implemented */
 	if (sna->kgem.gen >= 060)
-		return FALSE;
+		return;
 
-	adaptors = calloc(1, sizeof(XvMCAdaptorRec));
+	adaptors = calloc(sna->xv.num_adaptors, sizeof(XvMCAdaptorRec));
 	if (adaptors == NULL)
-		return FALSE;
+		return;
 
-	xv = dixLookupPrivate(&screen->devPrivates, XF86XvScreenKey);
-	for (i = 0; i< xv->nAdaptors;i++) {
-		if (strcmp(xv->pAdaptors[i].name, target->name) == 0) {
-			adaptors->xv_adaptor = &xv->pAdaptors[i];
-			break;
+	for (i = 0; i< sna->xv.num_adaptors; i++) {
+		adaptors[i].xv_adaptor = &sna->xv.adaptors[i];
+
+		adaptors[i].num_subpictures = 0;
+		adaptors[i].subpictures = NULL;
+		adaptors[i].CreateContext = create_context;
+		adaptors[i].DestroyContext = destroy_context;
+		adaptors[i].CreateSurface = create_surface;
+		adaptors[i].DestroySurface = destroy_surface;
+		adaptors[i].CreateSubpicture = create_subpicture;
+		adaptors[i].DestroySubpicture = destroy_subpicture;
+
+		if (sna->kgem.gen >= 045) {
+			adaptors[i].num_surfaces = ARRAY_SIZE(surface_info_vld);
+			adaptors[i].surfaces = surface_info_vld;
+		} else if (sna->kgem.gen >= 040) {
+			adaptors[i].num_surfaces = ARRAY_SIZE(surface_info_i965);
+			adaptors[i].surfaces = surface_info_i965;
+		} else {
+			adaptors[i].num_surfaces = ARRAY_SIZE(surface_info_i915);
+			adaptors[i].surfaces = surface_info_i915;
 		}
 	}
-	assert(adaptors->xv_adaptor);
 
-	adaptors->num_subpictures = 0;
-	adaptors->subpictures = NULL;
-	adaptors->CreateContext = create_context;
-	adaptors->DestroyContext = destroy_context;
-	adaptors->CreateSurface = create_surface;
-	adaptors->DestroySurface = destroy_surface;
-	adaptors->CreateSubpicture =  create_subpicture;
-	adaptors->DestroySubpicture = destroy_subpicture;
-
-	if (sna->kgem.gen >= 045) {
-		name = "xvmc_vld",
-		adaptors->num_surfaces = ARRAY_SIZE(surface_info_vld);
-		adaptors->surfaces = surface_info_vld;
-	} else if (sna->kgem.gen >= 040) {
-		name = "i965_xvmc",
-		adaptors->num_surfaces = ARRAY_SIZE(surface_info_i965);
-		adaptors->surfaces = surface_info_i965;
-	} else {
-		name = "i915_xvmc",
-		adaptors->num_surfaces = ARRAY_SIZE(surface_info_i915);
-		adaptors->surfaces = surface_info_i915;
-	}
-
-	if (XvMCScreenInit(screen, 1, adaptors) != Success) {
+	if (XvMCScreenInit(screen, i, adaptors) != Success) {
 		xf86DrvMsg(sna->scrn->scrnIndex, X_INFO,
 			   "[XvMC] Failed to initialize XvMC.\n");
 		free(adaptors);
-		return FALSE;
+		return;
 	}
 
 	sprintf(bus, "pci:%04x:%02x:%02x.%d",
-		sna->PciInfo->domain,
-		sna->PciInfo->bus, sna->PciInfo->dev, sna->PciInfo->func);
+		pci->domain, pci->bus, pci->dev, pci->func);
 
-	xf86XvMCRegisterDRInfo(screen, SNA_XVMC_LIBNAME, bus,
+	xf86XvMCRegisterDRInfo(screen, (char *)SNA_XVMC_LIBNAME, bus,
 			       SNA_XVMC_MAJOR, SNA_XVMC_MINOR,
 			       SNA_XVMC_PATCHLEVEL);
 
+	if (sna->kgem.gen >= 045)
+		name = "xvmc_vld";
+	else if (sna->kgem.gen >= 040)
+		name = "i965_xvmc";
+	else
+		name = "i915_xvmc";
 	xf86DrvMsg(sna->scrn->scrnIndex, X_INFO,
 		   "[XvMC] %s driver initialized.\n",
 		   name);
-	return TRUE;
 }

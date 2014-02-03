@@ -73,7 +73,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define BEGIN_LP_RING(n)						\
     unsigned int outring, ringmask, ringused = 0;			\
     volatile unsigned char *virt;					\
-    int needed;								\
+    unsigned needed;								\
     if ((n) & 1)							\
 	ErrorF("BEGIN_LP_RING called with odd argument: %d\n", n);	\
     if ((n) > 2 && (I810_DEBUG&DEBUG_ALWAYS_SYNC))			\

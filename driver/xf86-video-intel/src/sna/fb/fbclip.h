@@ -38,12 +38,17 @@ box_intersect(BoxPtr a, const BoxRec *b)
 		a->x1 = b->x1;
 	if (a->x2 > b->x2)
 		a->x2 = b->x2;
+	if (a->x1 >= a->x2)
+		return false;
+
 	if (a->y1 < b->y1)
 		a->y1 = b->y1;
 	if (a->y2 > b->y2)
 		a->y2 = b->y2;
+	if (a->y1 >= a->y2)
+		return false;
 
-	return a->x1 < a->x2 && a->y1 < a->y2;
+	return true;
 }
 
 #define run_box(b, c) \

@@ -53,8 +53,9 @@ POLYLINE(DrawablePtr drawable, GCPtr gc, int mode, int n_0, DDXPointPtr pt_0)
 
 	fbGetDrawable(drawable, dst, dstStride, dstBpp, dstXoff, dstYoff);
 	bitsStride = dstStride * (sizeof(FbBits) / sizeof(BITS));
-	bitsBase =
-		((BITS *) dst) + (yoff + dstYoff) * bitsStride + (xoff + dstXoff);
+	bitsBase = ((BITS *) dst) + (yoff + dstYoff) * bitsStride + (xoff + dstXoff);
+
+	DBG(("%s: processing %ld clip boxes\n", __FUNCTION__, (long)(last_clip - clip)));
 	do {
 		INT32 *pt = (INT32 *)pt_0;
 		int n = n_0;
@@ -62,6 +63,8 @@ POLYLINE(DrawablePtr drawable, GCPtr gc, int mode, int n_0, DDXPointPtr pt_0)
 
 		INT32 ul = coordToInt(clip->x1 - xoff, clip->y1 - yoff);
 		INT32 lr = coordToInt(clip->x2 - xoff - 1, clip->y2 - yoff - 1);
+
+		DBG(("%s: clip box=(%d, %d), (%d, %d)\n", __FUNCTION__, clip->x1, clip->y1, clip->x2, clip->y2));
 
 		pt1 = *pt++; n--;
 		pt2 = *pt++; n--;
@@ -73,7 +76,7 @@ POLYLINE(DrawablePtr drawable, GCPtr gc, int mode, int n_0, DDXPointPtr pt_0)
 					  intToX(pt2) + xoff, intToY(pt2) + yoff,
 					  n == 0 && gc->capStyle != CapNotLast, &dashoffset);
 				if (!n)
-					return;
+					goto next_clip;
 
 				pt1 = pt2;
 				pt2 = *pt++;
@@ -125,7 +128,7 @@ POLYLINE(DrawablePtr drawable, GCPtr gc, int mode, int n_0, DDXPointPtr pt_0)
 						    pt2 != *((INT32 *)pt_0)) {
 							RROP(bits, and, xor);
 						}
-						return;
+						goto next_clip;
 					}
 					pt1 = pt2;
 					pt2 = *pt++;
@@ -135,6 +138,7 @@ POLYLINE(DrawablePtr drawable, GCPtr gc, int mode, int n_0, DDXPointPtr pt_0)
 				}
 			}
 		}
+next_clip: (void)clip;
 	} while (++clip != last_clip);
 }
 
@@ -167,11 +171,14 @@ POLYSEGMENT(DrawablePtr drawable, GCPtr gc, int n_0, xSegment *seg_0)
 	bitsBase =
 		((BITS *) dst) + (yoff + dstYoff) * bitsStride + (xoff + dstXoff);
 
+	DBG(("%s: processing %ld clip boxes\n", __FUNCTION__, (long)(last_clip - clip)));
 	do {
 		INT32 ul = coordToInt(clip->x1 - xoff, clip->y1 - yoff);
 		INT32 lr = coordToInt(clip->x2 - xoff - 1, clip->y2 - yoff - 1);
 		uint64_t *pt = (uint64_t *)seg_0;
 		int n = n_0;
+
+		DBG(("%s: clip box=(%d, %d), (%d, %d)\n", __FUNCTION__, clip->x1, clip->y1, clip->x2, clip->y2));
 
 		while (n--) {
 			union {

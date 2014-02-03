@@ -57,3 +57,5 @@ brw_test_SOURCES = \
 brw_test_LDADD = \
 	libbrw.la \
 	$(NULL)
+
+AM_CFLAGS += @NOWARNFLAGS@

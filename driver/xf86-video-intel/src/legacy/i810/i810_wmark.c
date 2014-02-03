@@ -34,6 +34,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "config.h"
 #endif
 
+#include "xorg-server.h"
 #include "xf86.h"
 #include "i810.h"
 

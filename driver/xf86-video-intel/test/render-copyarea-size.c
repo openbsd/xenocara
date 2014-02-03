@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
 		printf("size=%d\n", size);
 		for (i = 0; i <= DEFAULT_ITERATIONS; i++) {
-			int reps = 1 << i;
+			int reps = REPS(i);
 			do {
 				int sx = rand() % (2*size) - size;
 				int sy = rand() % (2*size) - size;

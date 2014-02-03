@@ -25,21 +25,50 @@
 
 #include "fb.h"
 
+static Bool region_grow(RegionPtr region)
+{
+	RegDataPtr data;
+	int n;
+
+	n = 16;
+	if (!region->data) {
+		region->data = malloc(RegionSizeof(n));
+		if (!region->data)
+			return RegionBreak(region);
+		region->data->numRects = 1;
+		*RegionBoxptr(region) = region->extents;
+	} else if (!region->data->size) {
+		region->data = malloc(RegionSizeof(n));
+		if (!region->data)
+			return RegionBreak(region);
+		region->data->numRects = 0;
+	} else {
+		n = 2 * region->data->numRects;
+		data = (RegDataPtr) realloc(region->data, RegionSizeof(n));
+		if (!data)
+			return RegionBreak(region);
+		region->data = data;
+	}
+	region->data->size = n;
+	return TRUE;
+}
+
 static inline void add(RegionPtr region,
 		       int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
 	BoxPtr r;
 
-	if (region->data->numRects == region->data->size)
-		RegionRectAlloc(region, 1);
+	if (region->data->numRects == region->data->size &&
+	    !region_grow(region))
+		return;
 
 	r = RegionBoxptr(region) + region->data->numRects++;
 	r->x1 = x1; r->y1 = y1;
 	r->x2 = x2; r->y2 = y2;
 
-	DBG(("%s[%d/%d]: (%d, %d), (%d, %d)\n",
+	DBG(("%s[%ld/%ld]: (%d, %d), (%d, %d)\n",
 	     __FUNCTION__,
-	     region->data->numRects, region->data->size,
+	     (long)region->data->numRects, (long)region->data->size,
 	     x1, y1, x2, y2));
 
 	if (x1 < region->extents.x1)
@@ -149,11 +178,11 @@ fbBitmapToRegion(PixmapPtr pixmap)
 	} else
 		region->extents.x1 = region->extents.x2 = 0;
 
-	DBG(("%s: region extents=(%d, %d), (%d, %d) x %d\n",
+	DBG(("%s: region extents=(%d, %d), (%d, %d) x %ld\n",
 	     __FUNCTION__,
 	     region->extents.x1, region->extents.y1,
 	     region->extents.x2, region->extents.y2,
-	     RegionNumRects(region)));
+	     (long)RegionNumRects(region)));
 
 	return region;
 }

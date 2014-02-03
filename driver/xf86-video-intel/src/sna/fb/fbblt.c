@@ -285,9 +285,9 @@ fbBlt(FbBits *srcLine, FbStride srcStride, int srcX,
 		s += srcX >> 3;
 		d += dstX >> 3;
 
-		DBG(("%s fast blt, src_stride=%d, dst_stride=%d, width=%d (offset=%d)\n",
+		DBG(("%s fast blt, src_stride=%d, dst_stride=%d, width=%d (offset=%ld)\n",
 		     __FUNCTION__,
-		     srcStride, dstStride, width, s - d));
+		     srcStride, dstStride, width, (long)(s - d)));
 
 		if (width == srcStride && width == dstStride) {
 			width *= height;

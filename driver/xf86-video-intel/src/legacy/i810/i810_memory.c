@@ -35,6 +35,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
+#include "xorg-server.h"
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
@@ -72,7 +73,7 @@ I810AllocHigh(I810MemRange * result, I810MemRange * pool, int size)
 int
 I810AllocateGARTMemory(ScrnInfoPtr pScrn)
 {
-   unsigned long size = pScrn->videoRam * 1024;
+   unsigned long size = pScrn->videoRam * 1024UL;
    I810Ptr pI810 = I810PTR(pScrn);
    int key;
    long tom = 0;

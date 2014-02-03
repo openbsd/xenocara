@@ -24,17 +24,24 @@
 #ifndef FBPICT_H
 #define FBPICT_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <xorg-server.h>
+#include <picturestr.h>
+
 #include "sfb.h"
 
 extern void
 fbComposite(CARD8 op,
-            PicturePtr pSrc,
-            PicturePtr pMask,
-            PicturePtr pDst,
-            INT16 xSrc,
-            INT16 ySrc,
-            INT16 xMask,
-            INT16 yMask, INT16 xDst, INT16 yDst, CARD16 width, CARD16 height);
+	    PicturePtr pSrc,
+	    PicturePtr pMask,
+	    PicturePtr pDst,
+	    INT16 xSrc, INT16 ySrc,
+	    INT16 xMask, INT16 yMask,
+	    INT16 xDst, INT16 yDst,
+	    CARD16 width, CARD16 height);
 
 extern pixman_image_t *image_from_pict(PicturePtr pict,
 				       Bool has_clip,

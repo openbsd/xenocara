@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES = libfb.la
 
-libfb_la_CFLAGS = @CWARNFLAGS@ @XORG_CFLAGS@
+libfb_la_CFLAGS = @CWARNFLAGS@ @XORG_CFLAGS@ @NOWARNFLAGS@
 libfb_la_LIBADD = $(PIXMAN_LIBS)
 
 libfb_la_SOURCES = 	\

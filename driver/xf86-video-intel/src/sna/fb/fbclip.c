@@ -85,7 +85,7 @@ fbClipBoxes(const RegionRec *region, const BoxRec *box, const BoxRec **end)
 	}
 
 	DBG(("%s: c0=(%d, %d),(%d, %d) x %ld\n",
-	     __FUNCTION__, c0->x1, c0->y1, c0->x2, c0->y2, c1 - c0));
+	     __FUNCTION__, c0->x1, c0->y1, c0->x2, c0->y2, (long)(c1 - c0)));
 
 	*end = c1;
 	return c0;

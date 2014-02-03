@@ -37,9 +37,6 @@
 #include <X11/extensions/extutil.h>
 #include <X11/extensions/dri2proto.h>
 
-#include <GL/glx.h>
-#include <GL/glxext.h>
-
 #include "dri2.h"
 
 /* Allow the build to work with an older versions of dri2proto.h and

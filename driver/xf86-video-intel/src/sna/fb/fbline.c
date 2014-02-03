@@ -122,8 +122,11 @@ fbPolyLine(DrawablePtr drawable, GCPtr gc, int mode, int n, DDXPointPtr pt)
 {
 	void (*raster)(DrawablePtr, GCPtr, int mode, int n, DDXPointPtr pt);
 
-	DBG(("%s x %d, width=%d, fill=%d, line=%d\n",
-	     __FUNCTION__, n, gc->lineWidth, gc->fillStyle, gc->lineStyle));
+	DBG(("%s x %d, width=%d, fill=%d [solid? %d], line=%d [solid? %d], bpp=%d\n",
+	     __FUNCTION__, n, gc->lineWidth,
+	     gc->fillStyle, gc->fillStyle == FillSolid,
+	     gc->lineStyle, gc->lineStyle == LineSolid,
+	     drawable->bitsPerPixel));
 
 	if (gc->lineWidth == 0) {
 		raster = fbZeroLine;
@@ -154,8 +157,11 @@ fbPolySegment(DrawablePtr drawable, GCPtr gc, int n, xSegment *seg)
 {
 	void (*raster)(DrawablePtr drawable, GCPtr gc, int n, xSegment * seg);
 
-	DBG(("%s x %d, width=%d, fill=%d, line=%d\n",
-	     __FUNCTION__, n, gc->lineWidth, gc->fillStyle, gc->lineStyle));
+	DBG(("%s x %d, width=%d, fill=%d [solid? %d], line=%d [solid? %d], bpp=%d\n",
+	     __FUNCTION__, n, gc->lineWidth,
+	     gc->fillStyle, gc->fillStyle == FillSolid,
+	     gc->lineStyle, gc->lineStyle == LineSolid,
+	     drawable->bitsPerPixel));
 
 	if (gc->lineWidth == 0) {
 		raster = fbZeroSegment;

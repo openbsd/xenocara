@@ -40,9 +40,7 @@
 
 #ifdef _SNA_XVMC_SERVER_
 #include <xf86xvmc.h>
-Bool sna_video_xvmc_setup(struct sna *sna,
-			  ScreenPtr screen,
-			  XF86VideoAdaptorPtr target);
+void sna_video_xvmc_setup(struct sna *sna, ScreenPtr screen);
 #endif
 
 #endif

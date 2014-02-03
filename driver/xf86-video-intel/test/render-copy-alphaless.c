@@ -270,11 +270,7 @@ int main(int argc, char **argv)
 	test_init(&test, argc, argv);
 
 	for (i = 0; i <= DEFAULT_ITERATIONS; i++) {
-		int reps = 1 << i;
-		int sets = 1 << (12 - i);
-
-		if (sets < 2)
-			sets = 2;
+		int reps = REPS(i), sets = SETS(i);
 
 		pixel_tests(&test, reps, sets, PIXMAP);
 		area_tests(&test, reps, sets, PIXMAP);

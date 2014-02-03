@@ -28,24 +28,23 @@
 #include "config.h"
 #endif
 
-#include <unistd.h>
-#include <xf86_OSproc.h>
-#include <xf86Parser.h>
-#include <xf86drm.h>
-#include <xf86drmMode.h>
-#include <i915_drm.h>
-
+#include <xorg-server.h>
 #include <xorgVersion.h>
+
+#include <xf86.h>
+#include <xf86Parser.h>
 
 #if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,6,99,0,0)
 #include <xf86Resources.h>
 #endif
 
-#include "common.h"
 #include "intel_driver.h"
 #include "intel_options.h"
 #include "legacy/legacy.h"
 #include "sna/sna_module.h"
+#include "uxa/uxa_module.h"
+
+#include "i915_pciids.h" /* copied from (kernel) include/drm/i915_pciids.h */
 
 #ifdef XSERVER_PLATFORM_BUS
 #include <xf86platformBus.h>
@@ -104,11 +103,15 @@ static const struct intel_device_info intel_ivybridge_info = {
 };
 
 static const struct intel_device_info intel_valleyview_info = {
-	.gen = 070,
+	.gen = 071,
 };
 
 static const struct intel_device_info intel_haswell_info = {
 	.gen = 075,
+};
+
+static const struct intel_device_info intel_broadwell_info = {
+	.gen = 0100,
 };
 
 static const SymTabRec intel_chipsets[] = {
@@ -145,198 +148,181 @@ static const SymTabRec intel_chipsets[] = {
 	{PCI_CHIP_G41_G,			"G41"},
 	{PCI_CHIP_B43_G,			"B43"},
 	{PCI_CHIP_B43_G1,			"B43"},
-	{PCI_CHIP_IRONLAKE_D_G,			"Clarkdale"},
-	{PCI_CHIP_IRONLAKE_M_G,			"Arrandale"},
-	{PCI_CHIP_SANDYBRIDGE_GT1,		"Sandybridge Desktop (GT1)" },
-	{PCI_CHIP_SANDYBRIDGE_GT2,		"Sandybridge Desktop (GT2)" },
-	{PCI_CHIP_SANDYBRIDGE_GT2_PLUS,		"Sandybridge Desktop (GT2+)" },
-	{PCI_CHIP_SANDYBRIDGE_M_GT1,		"Sandybridge Mobile (GT1)" },
-	{PCI_CHIP_SANDYBRIDGE_M_GT2,		"Sandybridge Mobile (GT2)" },
-	{PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS,	"Sandybridge Mobile (GT2+)" },
-	{PCI_CHIP_SANDYBRIDGE_S_GT,		"Sandybridge Server" },
-	{PCI_CHIP_IVYBRIDGE_M_GT1,		"Ivybridge Mobile (GT1)" },
-	{PCI_CHIP_IVYBRIDGE_M_GT2,		"Ivybridge Mobile (GT2)" },
-	{PCI_CHIP_IVYBRIDGE_D_GT1,		"Ivybridge Desktop (GT1)" },
-	{PCI_CHIP_IVYBRIDGE_D_GT2,		"Ivybridge Desktop (GT2)" },
-	{PCI_CHIP_IVYBRIDGE_S_GT1,		"Ivybridge Server" },
-	{PCI_CHIP_IVYBRIDGE_S_GT2,		"Ivybridge Server (GT2)" },
-	{PCI_CHIP_HASWELL_D_GT1,		"Haswell Desktop (GT1)" },
-	{PCI_CHIP_HASWELL_D_GT2,		"Haswell Desktop (GT2)" },
-	{PCI_CHIP_HASWELL_D_GT2_PLUS,		"Haswell Desktop (GT2+)" },
-	{PCI_CHIP_HASWELL_M_GT1,		"Haswell Mobile (GT1)" },
-	{PCI_CHIP_HASWELL_M_GT2,		"Haswell Mobile (GT2)" },
-	{PCI_CHIP_HASWELL_M_GT2_PLUS,		"Haswell Mobile (GT2+)" },
-	{PCI_CHIP_HASWELL_S_GT1,		"Haswell Server (GT1)" },
-	{PCI_CHIP_HASWELL_S_GT2,		"Haswell Server (GT2)" },
-	{PCI_CHIP_HASWELL_S_GT2_PLUS,		"Haswell Server (GT2+)" },
-	{PCI_CHIP_HASWELL_SDV_D_GT1,		"Haswell SDV Desktop (GT1)" },
-	{PCI_CHIP_HASWELL_SDV_D_GT2,		"Haswell SDV Desktop (GT2)" },
-	{PCI_CHIP_HASWELL_SDV_D_GT2_PLUS,	"Haswell SDV Desktop (GT2+)" },
-	{PCI_CHIP_HASWELL_SDV_M_GT1,		"Haswell SDV Mobile (GT1)" },
-	{PCI_CHIP_HASWELL_SDV_M_GT2,		"Haswell SDV Mobile (GT2)" },
-	{PCI_CHIP_HASWELL_SDV_M_GT2_PLUS,	"Haswell SDV Mobile (GT2+)" },
-	{PCI_CHIP_HASWELL_SDV_S_GT1,		"Haswell SDV Server (GT1)" },
-	{PCI_CHIP_HASWELL_SDV_S_GT2,		"Haswell SDV Server (GT2)" },
-	{PCI_CHIP_HASWELL_SDV_S_GT2_PLUS,	"Haswell SDV Server (GT2+)" },
-	{PCI_CHIP_HASWELL_ULT_D_GT1,		"Haswell ULT Desktop (GT1)" },
-	{PCI_CHIP_HASWELL_ULT_D_GT2,		"Haswell ULT Desktop (GT2)" },
-	{PCI_CHIP_HASWELL_ULT_D_GT2_PLUS,	"Haswell ULT Desktop (GT2+)" },
-	{PCI_CHIP_HASWELL_ULT_M_GT1,		"Haswell ULT Mobile (GT1)" },
-	{PCI_CHIP_HASWELL_ULT_M_GT2,		"Haswell ULT Mobile (GT2)" },
-	{PCI_CHIP_HASWELL_ULT_M_GT2_PLUS,	"Haswell ULT Mobile (GT2+)" },
-	{PCI_CHIP_HASWELL_ULT_S_GT1,		"Haswell ULT Server (GT1)" },
-	{PCI_CHIP_HASWELL_ULT_S_GT2,		"Haswell ULT Server (GT2)" },
-	{PCI_CHIP_HASWELL_ULT_S_GT2_PLUS,	"Haswell ULT Server (GT2+)" },
-	{PCI_CHIP_HASWELL_CRW_D_GT1,		"Haswell CRW Desktop (GT1)" },
-	{PCI_CHIP_HASWELL_CRW_D_GT2,		"Haswell CRW Desktop (GT2)" },
-	{PCI_CHIP_HASWELL_CRW_D_GT2_PLUS,	"Haswell CRW Desktop (GT2+)" },
-	{PCI_CHIP_HASWELL_CRW_M_GT1,		"Haswell CRW Mobile (GT1)" },
-	{PCI_CHIP_HASWELL_CRW_M_GT2,		"Haswell CRW Mobile (GT2)" },
-	{PCI_CHIP_HASWELL_CRW_M_GT2_PLUS,	"Haswell CRW Mobile (GT2+)" },
-	{PCI_CHIP_HASWELL_CRW_S_GT1,		"Haswell CRW Server (GT1)" },
-	{PCI_CHIP_HASWELL_CRW_S_GT2,		"Haswell CRW Server (GT2)" },
-	{PCI_CHIP_HASWELL_CRW_S_GT2_PLUS,	"Haswell CRW Server (GT2+)" },
-	{PCI_CHIP_VALLEYVIEW_PO,		"ValleyView PO board" },
-	{-1,					NULL}
-};
-#define NUM_CHIPSETS (sizeof(intel_chipsets) / sizeof(intel_chipsets[0]))
 
-#define INTEL_DEVICE_MATCH(d,i) \
-    { 0x8086, (d), PCI_MATCH_ANY, PCI_MATCH_ANY, 0x3 << 16, 0xff << 16, (intptr_t)(i) }
+	{0, ""},
+
+	{PCI_CHIP_IRONLAKE_D_G,			"HD Graphics"},
+	{PCI_CHIP_IRONLAKE_M_G,			"HD Graphics"},
+	{PCI_CHIP_SANDYBRIDGE_GT1,		"HD Graphics 2000" },
+	{PCI_CHIP_SANDYBRIDGE_GT2,		"HD Graphics 3000" },
+	{PCI_CHIP_SANDYBRIDGE_GT2_PLUS,		"HD Graphics 3000" },
+	{PCI_CHIP_SANDYBRIDGE_M_GT1,		"HD Graphics 2000" },
+	{PCI_CHIP_SANDYBRIDGE_M_GT2,		"HD Graphics 3000" },
+	{PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS,	"HD Graphics 3000" },
+	{PCI_CHIP_SANDYBRIDGE_S_GT,		"HD Graphics" },
+	{PCI_CHIP_IVYBRIDGE_M_GT1,		"HD Graphics 2500" },
+	{PCI_CHIP_IVYBRIDGE_M_GT2,		"HD Graphics 4000" },
+	{PCI_CHIP_IVYBRIDGE_D_GT1,		"HD Graphics 2500" },
+	{PCI_CHIP_IVYBRIDGE_D_GT2,		"HD Graphics 4000" },
+	{PCI_CHIP_IVYBRIDGE_S_GT1,		"HD Graphics" },
+	{PCI_CHIP_IVYBRIDGE_S_GT2,		"HD Graphics P4000" },
+	{PCI_CHIP_HASWELL_D_GT1,		"HD Graphics" },
+	{PCI_CHIP_HASWELL_D_GT2,		"HD Graphics 4600" },
+	{PCI_CHIP_HASWELL_D_GT3,		"HD Graphics 5000" }, /* ??? */
+	{PCI_CHIP_HASWELL_M_GT1,		"HD Graphics" },
+	{PCI_CHIP_HASWELL_M_GT2,		"HD Graphics 4600" },
+	{PCI_CHIP_HASWELL_M_GT3,		"HD Graphics 5000" }, /* ??? */
+	{PCI_CHIP_HASWELL_S_GT1,		"HD Graphics" },
+	{PCI_CHIP_HASWELL_S_GT2,		"HD Graphics P4600/P4700" },
+	{PCI_CHIP_HASWELL_S_GT3,		"HD Graphics 5000" }, /* ??? */
+	{PCI_CHIP_HASWELL_B_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_B_GT2,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_B_GT3,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_E_GT1,		"HD Graphics" },
+	{PCI_CHIP_HASWELL_E_GT2,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_E_GT3,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_ULT_D_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_ULT_D_GT2,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_ULT_D_GT3,		"Iris(TM) Graphics 5100" },
+	{PCI_CHIP_HASWELL_ULT_M_GT1,		"HD Graphics" },
+	{PCI_CHIP_HASWELL_ULT_M_GT2,		"HD Graphics 4400" },
+	{PCI_CHIP_HASWELL_ULT_M_GT3,		"HD Graphics 5000" },
+	{PCI_CHIP_HASWELL_ULT_S_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_ULT_S_GT2,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_ULT_S_GT3,		"Iris(TM) Graphics 5100" },
+	{PCI_CHIP_HASWELL_ULT_B_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_ULT_B_GT2,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_ULT_B_GT3,		"Iris(TM) Graphics 5100" },
+	{PCI_CHIP_HASWELL_ULT_E_GT1,		"HD Graphics" },
+	{PCI_CHIP_HASWELL_ULT_E_GT2,		"HD Graphics 4200" },
+	{PCI_CHIP_HASWELL_ULT_E_GT3,		"Iris(TM) Graphics 5100" },
+	{PCI_CHIP_HASWELL_CRW_D_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_CRW_D_GT2,		"HD Graphics 4600" },
+	{PCI_CHIP_HASWELL_CRW_D_GT3,		"Iris(TM) Pro Graphics 5200" },
+	{PCI_CHIP_HASWELL_CRW_M_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_CRW_M_GT2,		"HD Graphics 4600" },
+	{PCI_CHIP_HASWELL_CRW_M_GT3,		"Iris(TM) Pro Graphics 5200" },
+	{PCI_CHIP_HASWELL_CRW_S_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_CRW_S_GT2,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_CRW_S_GT3,		"Iris(TM) Pro Graphics 5200" },
+	{PCI_CHIP_HASWELL_CRW_B_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_CRW_B_GT2,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_CRW_B_GT3,		"Iris(TM) Pro Graphics 5200" },
+	{PCI_CHIP_HASWELL_CRW_E_GT1,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_CRW_E_GT2,		"HD Graphics" }, /* ??? */
+	{PCI_CHIP_HASWELL_CRW_E_GT3,		"Iris(TM) Pro Graphics 5200" },
+
+	/* Valleyview (Baytail) */
+	{0x0f30, "HD Graphics"},
+	{0x0f31, "HD Graphics"},
+	{0x0f32, "HD Graphics"},
+	{0x0f33, "HD Graphics"},
+	{0x0155, "HD Graphics"},
+	{0x0157, "HD Graphics"},
+
+	{-1, NULL} /* Sentinel */
+};
 
 static const struct pci_id_match intel_device_match[] = {
-#if !KMS_ONLY
-	INTEL_DEVICE_MATCH (PCI_CHIP_I810, &intel_i81x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I810_DC100, &intel_i81x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I810_E, &intel_i81x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I815, &intel_i81x_info ),
+#if UMS
+	INTEL_VGA_DEVICE(PCI_CHIP_I810, &intel_i81x_info),
+	INTEL_VGA_DEVICE(PCI_CHIP_I810_DC100, &intel_i81x_info),
+	INTEL_VGA_DEVICE(PCI_CHIP_I810_E, &intel_i81x_info),
+	INTEL_VGA_DEVICE(PCI_CHIP_I815, &intel_i81x_info),
 #endif
 
-#if !UMS_ONLY
-	INTEL_DEVICE_MATCH (PCI_CHIP_I830_M, &intel_i830_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_845_G, &intel_i845_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I854, &intel_i855_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I855_GM, &intel_i855_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I865_G, &intel_i865_info ),
+#if KMS
+	INTEL_I830_IDS(&intel_i830_info),
+	INTEL_I845G_IDS(&intel_i830_info),
+	INTEL_I85X_IDS(&intel_i855_info),
+	INTEL_I865G_IDS(&intel_i865_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_I915_G, &intel_i915_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_E7221_G, &intel_i915_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I915_GM, &intel_i915_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I945_G, &intel_i945_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I945_GM, &intel_i945_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I945_GME, &intel_i945_info ),
+	INTEL_I915G_IDS(&intel_i915_info),
+	INTEL_I915GM_IDS(&intel_i915_info),
+	INTEL_I945G_IDS(&intel_i945_info),
+	INTEL_I945GM_IDS(&intel_i945_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_PINEVIEW_M, &intel_g33_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_PINEVIEW_G, &intel_g33_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_G33_G, &intel_g33_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_Q33_G, &intel_g33_info ),
-	/* Another marketing win: Q35 is another g33 device not a gen4 part
-	 * like its G35 brethren.
-	 */
-	INTEL_DEVICE_MATCH (PCI_CHIP_Q35_G, &intel_g33_info ),
+	INTEL_G33_IDS(&intel_g33_info),
+	INTEL_PINEVIEW_IDS(&intel_g33_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_I965_G, &intel_i965_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_G35_G, &intel_i965_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I965_Q, &intel_i965_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I946_GZ, &intel_i965_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I965_GM, &intel_i965_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_I965_GME, &intel_i965_info ),
+	INTEL_I965G_IDS(&intel_i965_info),
+	INTEL_I965GM_IDS(&intel_i965_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_GM45_GM, &intel_g4x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_G45_E_G, &intel_g4x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_G45_G, &intel_g4x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_Q45_G, &intel_g4x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_G41_G, &intel_g4x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_B43_G, &intel_g4x_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_B43_G1, &intel_g4x_info ),
+	INTEL_G45_IDS(&intel_g4x_info),
+	INTEL_GM45_IDS(&intel_g4x_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_IRONLAKE_D_G, &intel_ironlake_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_IRONLAKE_M_G, &intel_ironlake_info ),
+	INTEL_IRONLAKE_D_IDS(&intel_ironlake_info),
+	INTEL_IRONLAKE_M_IDS(&intel_ironlake_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_GT1, &intel_sandybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_GT2, &intel_sandybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_GT2_PLUS, &intel_sandybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_M_GT1, &intel_sandybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_M_GT2, &intel_sandybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS, &intel_sandybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_S_GT, &intel_sandybridge_info ),
+	INTEL_SNB_D_IDS(&intel_sandybridge_info),
+	INTEL_SNB_M_IDS(&intel_sandybridge_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_M_GT1, &intel_ivybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_M_GT2, &intel_ivybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_D_GT1, &intel_ivybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_D_GT2, &intel_ivybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_S_GT1, &intel_ivybridge_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_S_GT2, &intel_ivybridge_info ),
+	INTEL_IVB_D_IDS(&intel_ivybridge_info),
+	INTEL_IVB_M_IDS(&intel_ivybridge_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_D_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_D_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_D_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_M_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_M_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_M_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_S_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_S_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_S_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_D_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_D_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_D_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_M_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_M_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_M_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_S_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_S_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_SDV_S_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_D_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_D_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_D_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_M_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_M_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_M_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_S_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_S_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_ULT_S_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_D_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_D_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_D_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_M_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_M_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_M_GT2_PLUS, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_S_GT1, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_S_GT2, &intel_haswell_info ),
-	INTEL_DEVICE_MATCH (PCI_CHIP_HASWELL_CRW_S_GT2_PLUS, &intel_haswell_info ),
+	INTEL_HSW_D_IDS(&intel_haswell_info),
+	INTEL_HSW_M_IDS(&intel_haswell_info),
 
-	INTEL_DEVICE_MATCH (PCI_CHIP_VALLEYVIEW_PO, &intel_valleyview_info ),
+	INTEL_VLV_D_IDS(&intel_valleyview_info),
+	INTEL_VLV_M_IDS(&intel_valleyview_info),
 
-	INTEL_DEVICE_MATCH (PCI_MATCH_ANY, &intel_generic_info ),
+	INTEL_BDW_D_IDS(&intel_broadwell_info),
+	INTEL_BDW_M_IDS(&intel_broadwell_info),
+
+	INTEL_VGA_DEVICE(PCI_MATCH_ANY, &intel_generic_info),
 #endif
 
 	{ 0, 0, 0 },
 };
 
 void
-intel_detect_chipset(ScrnInfoPtr scrn,
-		     EntityInfoPtr ent,
-		     struct pci_device *pci)
+intel_detect_chipset(ScrnInfoPtr scrn, EntityInfoPtr ent)
 {
 	MessageType from = X_PROBED;
 	const char *name = NULL;
+	int devid;
 	int i;
 
 	if (ent->device->chipID >= 0) {
 		xf86DrvMsg(scrn->scrnIndex, from = X_CONFIG,
 			   "ChipID override: 0x%04X\n",
 			   ent->device->chipID);
-		DEVICE_ID(pci) = ent->device->chipID;
+		devid = ent->device->chipID;
+	} else {
+		struct pci_device *pci;
+
+		pci = xf86GetPciInfoForEntity(ent->index);
+		if (pci != NULL)
+			devid = pci->device_id;
+		else
+			devid = intel_get_device_id(scrn);
 	}
 
 	for (i = 0; intel_chipsets[i].name != NULL; i++) {
-		if (DEVICE_ID(pci) == intel_chipsets[i].token) {
+		if (devid == intel_chipsets[i].token) {
 			name = intel_chipsets[i].name;
 			break;
 		}
 	}
 	if (name == NULL) {
-		xf86DrvMsg(scrn->scrnIndex, X_WARNING, "unknown chipset\n");
+		int gen = 0;
+
+		for (i = 0; intel_device_match[i].device_id != 0; i++) {
+			if (devid == intel_device_match[i].device_id) {
+				const struct intel_device_info *info = (void *)intel_device_match[i].match_data;
+				gen = info->gen >> 3;
+				break;
+			}
+		}
+
+		if (gen) {
+			xf86DrvMsg(scrn->scrnIndex, from,
+				   "gen%d engineering sample\n", gen);
+		} else {
+			xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+				   "Unknown chipset\n");
+		}
+
 		name = "unknown";
 	} else {
 		xf86DrvMsg(scrn->scrnIndex, from,
@@ -344,7 +330,7 @@ intel_detect_chipset(ScrnInfoPtr scrn,
 			   name);
 	}
 
-	scrn->chipset = name;
+	scrn->chipset = (char *)name;
 }
 
 /*
@@ -355,9 +341,63 @@ intel_detect_chipset(ScrnInfoPtr scrn,
  */
 static void intel_identify(int flags)
 {
-	xf86PrintChipsets(INTEL_NAME,
-			  "Driver for Intel Integrated Graphics Chipsets",
-			  intel_chipsets);
+	const SymTabRec *chipset;
+	const char *stack[64], **unique;
+	int i, j, size, len;
+
+	unique = stack;
+	size = sizeof(stack)/sizeof(stack[0]);
+	i = 0;
+
+	xf86Msg(X_INFO, INTEL_NAME ": Driver for Intel(R) Integrated Graphics Chipsets:\n\t");
+	len = 8;
+
+	for (chipset = intel_chipsets; chipset->token; chipset++) {
+		for (j = i; --j >= 0;)
+			if (strcmp(unique[j], chipset->name) == 0)
+				break;
+		if (j < 0) {
+			int name_len = strlen(chipset->name);
+			if (i != 0) {
+				xf86ErrorF(",");
+				len++;
+				if (len + 2 + name_len < 78) {
+					xf86ErrorF(" ");
+					len++;
+				} else {
+					xf86ErrorF("\n\t");
+					len = 8;
+				}
+			}
+			xf86ErrorF("%s", chipset->name);
+			len += name_len;
+
+			if (i == size) {
+				const char **new_unique;
+
+				if (unique == stack)
+					new_unique = malloc(2*sizeof(*unique)*size);
+				else
+					new_unique = realloc(unique, 2*sizeof(*unique)*size);
+				if (new_unique != NULL) {
+					if (unique == stack)
+						memcpy(new_unique, stack,
+						       sizeof(stack));
+					unique = new_unique;
+					size *= 2;
+				}
+			}
+			if (i < size)
+				unique[i++] = chipset->name;
+		}
+	}
+	xf86ErrorF("\n");
+	if (unique != stack)
+		free(unique);
+
+	xf86Msg(X_INFO, INTEL_NAME ": Driver for Intel(R) HD Graphics: 2000-5000\n");
+	xf86Msg(X_INFO, INTEL_NAME ": Driver for Intel(R) Iris(TM) Graphics: 5100\n");
+	xf86Msg(X_INFO, INTEL_NAME ": Driver for Intel(R) Iris(TM) Pro Graphics: 5200\n");
 }
 
 static Bool intel_driver_func(ScrnInfoPtr pScrn,
@@ -369,11 +409,15 @@ static Bool intel_driver_func(ScrnInfoPtr pScrn,
 	switch (op) {
 	case GET_REQUIRED_HW_INTERFACES:
 		flag = (CARD32*)ptr;
-#ifdef KMS_ONLY
 		(*flag) = 0;
-#else
+#if UMS
 		(*flag) = HW_IO | HW_MMIO;
 #endif
+#ifdef HW_SKIP_CONSOLE
+		if (hosted())
+			(*flag) = HW_SKIP_CONSOLE;
+#endif
+
 		return TRUE;
 	default:
 		/* Unknown or deprecated function */
@@ -381,48 +425,7 @@ static Bool intel_driver_func(ScrnInfoPtr pScrn,
 	}
 }
 
-static Bool has_kernel_mode_setting(const struct pci_device *dev)
-{
-	char id[20];
-	int ret, fd;
-
-	snprintf(id, sizeof(id),
-		 "pci:%04x:%02x:%02x.%d",
-		 dev->domain, dev->bus, dev->dev, dev->func);
-
-	ret = drmCheckModesettingSupported(id);
-	if (ret) {
-		if (xf86LoadKernelModule("i915"))
-			ret = drmCheckModesettingSupported(id);
-		if (ret)
-			return FALSE;
-		/* Be nice to the user and load fbcon too */
-		(void)xf86LoadKernelModule("fbcon");
-	}
-
-	/* Confirm that this is a i915.ko device with GEM/KMS enabled */
-	ret = FALSE;
-	fd = drmOpen(NULL, id);
-	if (fd != -1) {
-		drmVersionPtr version = drmGetVersion(fd);
-		if (version) {
-			ret = strcmp ("i915", version->name) == 0;
-			drmFreeVersion(version);
-		}
-		if (ret) {
-			struct drm_i915_getparam gp;
-			gp.param = I915_PARAM_HAS_GEM;
-			gp.value = &ret;
-			if (drmIoctl(fd, DRM_IOCTL_I915_GETPARAM, &gp))
-				ret = FALSE;
-		}
-		close(fd);
-	}
-
-	return ret;
-}
-
-#if !UMS_ONLY
+#if KMS
 extern XF86ConfigPtr xf86configptr;
 
 static XF86ConfDevicePtr
@@ -438,10 +441,13 @@ _xf86findDriver(const char *ident, XF86ConfDevicePtr p)
 	return NULL;
 }
 
-static enum accel_method { UXA, SNA } get_accel_method(void)
+static enum accel_method { SNA, UXA, GLAMOR } get_accel_method(void)
 {
 	enum accel_method accel_method = DEFAULT_ACCEL_METHOD;
 	XF86ConfDevicePtr dev;
+
+	if (hosted())
+		return SNA;
 
 	dev = _xf86findDriver("intel", xf86configptr->conf_device_lst);
 	if (dev && dev->dev_option_lst) {
@@ -454,7 +460,7 @@ static enum accel_method { UXA, SNA } get_accel_method(void)
 			else if (strcasecmp(s, "uxa") == 0)
 				accel_method = UXA;
 			else if (strcasecmp(s, "glamor") == 0)
-				accel_method = UXA;
+				accel_method = GLAMOR;
 		}
 	}
 
@@ -470,13 +476,29 @@ intel_scrn_create(DriverPtr		driver,
 {
 	ScrnInfoPtr scrn;
 
+	if (match_data == 0) {
+		int devid = intel_entity_get_devid(entity_num), i;
+		if (devid == 0)
+			return FALSE;
+
+		for (i = 0; intel_device_match[i].device_id != 0; i++) {
+			if (devid == intel_device_match[i].device_id) {
+				match_data = (intptr_t)&intel_device_match[i];
+				break;
+			}
+		}
+
+		if (match_data == 0)
+			return FALSE;
+	}
+
 	scrn = xf86AllocateScreen(driver, flags);
 	if (scrn == NULL)
 		return FALSE;
 
 	scrn->driverVersion = INTEL_VERSION;
-	scrn->driverName = INTEL_DRIVER_NAME;
-	scrn->name = INTEL_NAME;
+	scrn->driverName = (char *)INTEL_DRIVER_NAME;
+	scrn->name = (char *)INTEL_NAME;
 	scrn->driverPrivate = (void *)(match_data | 1);
 	scrn->Probe = NULL;
 
@@ -484,18 +506,20 @@ intel_scrn_create(DriverPtr		driver,
 		xf86SetEntityShared(entity_num);
 	xf86AddEntityToScreen(scrn, entity_num);
 
-#if !KMS_ONLY
-	if (((struct intel_device_info *)match_data)->gen < 020)
+#if UMS
+	if ((unsigned)((struct intel_device_info *)match_data)->gen < 020)
 		return lg_i810_init(scrn);
 #endif
 
-#if !UMS_ONLY
+#if KMS
 	switch (get_accel_method()) {
 #if USE_SNA
 	case SNA: return sna_init_scrn(scrn, entity_num);
 #endif
 #if USE_UXA
-	case UXA: return intel_init_scrn(scrn);
+	case GLAMOR:
+	case UXA:
+		  return intel_init_scrn(scrn);
 #endif
 
 	default: break;
@@ -514,22 +538,23 @@ intel_scrn_create(DriverPtr		driver,
  */
 static Bool intel_pci_probe(DriverPtr		driver,
 			    int			entity_num,
-			    struct pci_device	*device,
+			    struct pci_device	*pci,
 			    intptr_t		match_data)
 {
-	if (!has_kernel_mode_setting(device)) {
-#if KMS_ONLY
-		return FALSE;
-#else
-		switch (DEVICE_ID(device)) {
+	if (intel_open_device(entity_num, pci, NULL) == -1) {
+#if UMS
+		switch (pci->device_id) {
 		case PCI_CHIP_I810:
 		case PCI_CHIP_I810_DC100:
 		case PCI_CHIP_I810_E:
 		case PCI_CHIP_I815:
-			break;
+			if (!hosted())
+				break;
 		default:
 			return FALSE;
 		}
+#else
+		return FALSE;
 #endif
 	}
 
@@ -545,10 +570,7 @@ intel_platform_probe(DriverPtr driver,
 {
 	unsigned scrn_flags = 0;
 
-	if (!dev->pdev)
-		return FALSE;
-
-	if (!has_kernel_mode_setting(dev->pdev))
+	if (intel_open_device(entity_num, dev->pdev, dev) == -1)
 		return FALSE;
 
 	/* Allow ourselves to act as a slaved output if not primary */
@@ -586,7 +608,7 @@ static const OptionInfoRec *
 intel_available_options(int chipid, int busid)
 {
 	switch (chipid) {
-#if !KMS_ONLY
+#if UMS
 	case PCI_CHIP_I810:
 	case PCI_CHIP_I810_DC100:
 	case PCI_CHIP_I810_E:
@@ -601,7 +623,7 @@ intel_available_options(int chipid, int busid)
 
 static DriverRec intel = {
 	INTEL_VERSION,
-	INTEL_DRIVER_NAME,
+	(char *)INTEL_DRIVER_NAME,
 	intel_identify,
 	NULL,
 	intel_available_options,

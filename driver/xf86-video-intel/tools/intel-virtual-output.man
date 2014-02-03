@@ -1,0 +1,27 @@
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH intel-virtual-output  __drivermansuffix__ __vendorversion__
+.SH NAME
+intel-virtual-output \- Utility for connecting the Integrated Intel GPU to discrete outputs
+.SH SYNOPSIS
+.nf
+.B "intel-virtual-output [<remote display>] <output name>..."
+.fi
+.SH DESCRIPTION
+.B intel-virtual-output
+is a utility for Intel integrated graphics chipsets on hybrid systems.
+The tool connects local VirtualHeads to a remote output, allowing
+the primary display to extend onto the remote outputs.
+
+.SH REPORTING BUGS
+
+The xf86-video-intel driver is part of the X.Org and Freedesktop.org
+umbrella projects.  Details on bug reporting can be found at
+http://www.intellinuxgraphics.org/how_to_report_bug.html.  Mailing
+lists are also commonly used to report experiences and ask questions
+about configuration and other topics.  See lists.freedesktop.org for
+more information (the xorg@lists.freedesktop.org mailing list is the
+most appropriate place to ask X.Org and driver related questions).
+
+.SH "SEE ALSO"
+intel(__drivermansuffix__), __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)

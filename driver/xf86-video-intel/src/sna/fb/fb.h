@@ -33,17 +33,23 @@
 #include <gcstruct.h>
 #include <colormap.h>
 #include <windowstr.h>
+#include <regionstr.h>
 
 #include <stdbool.h>
 #include <pixman.h>
 
 #if HAS_DEBUG_FULL
-#define DBG(x) ErrorF x
+void LogF(const char *f, ...);
+#define DBG(x) LogF x
+#define ERR(x) ErrorF x
 #else
 #define DBG(x)
+#define ERR(x)
 #endif
 
 #include "sfb.h"
+
+#include "../../compat-api.h"
 
 #define WRITE(ptr, val) (*(ptr) = (val))
 #define READ(ptr) (*(ptr))
@@ -294,12 +300,12 @@ extern DevPrivateKeyRec sna_window_key;
 
 static inline FbGCPrivate *fb_gc(GCPtr gc)
 {
-	return dixGetPrivateAddr(&gc->devPrivates, &sna_gc_key);
+	return (FbGCPrivate *)__get_private(gc, sna_gc_key);
 }
 
 static inline PixmapPtr fbGetWindowPixmap(WindowPtr window)
 {
-	return *(PixmapPtr *)dixGetPrivateAddr(&window->devPrivates, &sna_window_key);
+	return *(PixmapPtr *)__get_private(window, sna_window_key);
 }
 
 #ifdef ROOTLESS
@@ -360,8 +366,14 @@ static inline PixmapPtr fbGetWindowPixmap(WindowPtr window)
  * XFree86 empties the root BorderClip when the VT is inactive,
  * here's a macro which uses that to disable GetImage and GetSpans
  */
+
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,10,0,0,0)
 #define fbWindowEnabled(pWin) \
-    RegionNotEmpty(&(pWin)->drawable.pScreen->root->borderClip)
+	RegionNotEmpty(&(pWin)->drawable.pScreen->root->borderClip)
+#else
+#define fbWindowEnabled(pWin) \
+	RegionNotEmpty(&WindowTable[(pWin)->drawable.pScreen->myNum]->borderClip)
+#endif
 #define fbDrawableEnabled(drawable) \
     ((drawable)->type == DRAWABLE_PIXMAP ? \
      TRUE : fbWindowEnabled((WindowPtr) drawable))

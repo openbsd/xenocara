@@ -75,11 +75,11 @@ static void gen6_update_vertex_buffer(struct kgem *kgem, const uint32_t *data)
 	assert(i < kgem->nreloc);
 	reloc = kgem->reloc[i].target_handle;
 
-	if (reloc == 0) {
+	if (reloc == -1) {
 		base = kgem->batch;
 	} else {
 		list_for_each_entry(bo, &kgem->next_request->buffers, request)
-			if (bo->handle == reloc)
+			if (bo->target_handle == reloc)
 				break;
 		assert(&bo->request != &kgem->next_request->buffers);
 		base = kgem_bo_map__debug(kgem, bo);

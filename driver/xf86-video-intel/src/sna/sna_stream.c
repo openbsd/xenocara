@@ -25,6 +25,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "sna.h"
 #include "sna_render.h"
 #include "brw/brw.h"

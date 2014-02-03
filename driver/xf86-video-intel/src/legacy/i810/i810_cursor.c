@@ -39,6 +39,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
+#include "xorg-server.h"
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"
@@ -131,8 +132,8 @@ static void I810LoadCursorARGB (ScrnInfoPtr pScrn, CursorPtr pCurs)
    {
       for (x = 0; x < w; x++)
          *pcurs++ = *image++;
-         for (; x < 64; x++)
-            *pcurs++ = 0;
+      for (; x < 64; x++)
+         *pcurs++ = 0;
    }
 
    for (; y < 64; y++)

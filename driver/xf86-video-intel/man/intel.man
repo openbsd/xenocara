@@ -129,10 +129,40 @@ the GEM driver model. It is in the process of being superseded by \*qSNA\*q
 (Sandybridge's New Acceleration). Until that process is complete, the ability to
 choose which backend to use remains for backwards compatibility.
 In addition, there are a pair of sub-options to limit the acceleration for
-debuging use. Specify \*qoff\*q to disable all acceleration, or \*qblt\*q to
+debugging use. Specify \*qoff\*q to disable all acceleration, or \*qblt\*q to
 disable render acceleration and only use the BLT engine.
 .IP
-Default: use UXA (render acceleration)
+Default: use SNA (render acceleration)
+.TP
+.BI "Option \*qTearFree\*q \*q" boolean \*q
+Disable or enable TearFree updates. This option forces X to perform all
+rendering to a backbuffer prior to updating the actual display. It requires
+an extra memory allocation the same size as a framebuffer, the occasional extra
+copy, and requires Damage tracking. Thus enabling TearFree requires more
+memory and is slower (reduced throughput) and introduces a small amount of
+output latency, but it should not impact input latency. However, the update to
+the screen is then performed synchronously with the vertical refresh of the
+display so that the entire update is completed before the display starts its
+refresh. That is only one frame is ever visible, preventing an unsightly tear
+between two visible and differing frames. Note that this replicates what the
+compositing manager should be doing, so it is not advisable to enable both.
+However, some compositing managers do cause tearing, and if the outputs are
+rotated, there may will still be tearing without TearFree enabled.
+.IP
+Default: TearFree is disabled.
+.TP
+.BI "Option \*qReprobeOutputs\*q \*q" boolean \*q
+Disable or enable rediscovery of connected displays during server startup.
+As the kernel driver loads it scans for connected displays and configures a
+console spanning those outputs. When the X server starts, we then take the
+list of connected displays and framebuffer layout and use that for the
+initial configuration. Sometimes, not all displays are correctly detected by
+the kernel and so it is useful in a few circumstances for X to force the
+kernel to reprobe all displays when it starts. To make the X server recheck
+the status of connected displays, set the \*qReprobeOutputs\*q option to true.
+Please do file a bug for any circumstances which require this workaround.
+.IP
+Default: reprobing is disabled for a faster startup.
 .TP
 .BI "Option \*qVideoKey\*q \*q" integer \*q
 This is the same as the
@@ -183,13 +213,31 @@ i.e. perform synchronous rendering.
 Default: Disabled
 .TP
 .TP
+.BI "Option \*qVSync\*q \*q" boolean \*q
+This option controls the use of commands to synchronise rendering with the
+vertical refresh of the display. Some rendering commands have the option
+to be performed in a "tear-free" fashion by stalling the GPU to wait for
+the display to be outside of the region to be updated. This slows down all
+rendering, and historically has been the source of many GPU hangs.
+.IP
+Default: enabled.
+.TP
+.BI "Option \*qPageFlip\*q \*q" boolean \*q
+This option controls the use of commands to flip the scanout address on a
+VBlank. This is used by glXSwapBuffers to efficiently perform the back-to-front
+exchange at the end of a frame without incurring the penalty of a copy, or
+stalling the render pipeline (the flip is performed asynchronrously to the
+render command stream by the display engine). However, it has historically
+been the source of many GPU hangs.
+.IP
+Default: enabled.
+.TP
 .BI "Option \*qSwapbuffersWait\*q \*q" boolean \*q
 This option controls the behavior of glXSwapBuffers and glXCopySubBufferMESA
 calls by GL applications.  If enabled, the calls will avoid tearing by making
 sure the display scanline is outside of the area to be copied before the copy
 occurs.  If disabled, no scanline synchronization is performed, meaning tearing
-will likely occur.  Note that when enabled, this option can adversely affect
-the framerate of applications that render frames at less than refresh rate.
+will likely occur.
 .IP
 Default: enabled.
 .TP
@@ -247,6 +295,18 @@ This option controls whether the driver automatically notifies
 applications when monitors are connected or disconnected.
 .IP
 Default: enabled.
+.TP
+.BI "Option \*qVirtualheads\*q \*q" integer \*q
+This option controls specifies the number of fake outputs to create in
+addition to the normal outputs detected on your hardware. These outputs
+cannot be assigned to the regular displays attached to the GPU, but do
+otherwise act as any other xrandr output and share a portion of the
+regular framebuffer. One use case for these extra heads is for extending
+your desktop onto a discrete GPU using the Bumblebee project. However,
+the recommendation here is to use PRIME instead to create a single
+Xserver that can addresses and coordinate between multiple GPUs.
+.IP
+Default: 0
 .TP
 .BI "Option \*qZaphodHeads\*q \*q" string \*q
 .IP

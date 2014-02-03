@@ -144,7 +144,7 @@ fbPushImage(DrawablePtr drawable, GCPtr gc,
 	struct fbPushImage data;
 	BoxRec box;
 
-	DBG(("%s (%d, %d)x(%d, %d)", __FUNCTION__, x, y, width, height));
+	DBG(("%s (%d, %d)x(%d, %d)\n", __FUNCTION__, x, y, width, height));
 
 	data.src = src;
 	data.stride = stride;

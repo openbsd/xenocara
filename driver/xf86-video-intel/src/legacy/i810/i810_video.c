@@ -39,6 +39,7 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <string.h>
 
+#include "xorg-server.h"
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"

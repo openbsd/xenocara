@@ -23,7 +23,6 @@
 
 #include "fb.h"
 #include <gcstruct.h>
-#include <migc.h>
 #include <scrnintstr.h>
 
 /*
