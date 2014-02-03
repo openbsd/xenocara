@@ -70,7 +70,7 @@
 #         compiler:		$LTCC
 #         compiler flags:		$LTCFLAGS
 #         linker:		$LD (gnu? $with_gnu_ld)
-#         $progname:	(GNU libtool) 2.4.2 Debian-2.4.2-1ubuntu1
+#         $progname:	(GNU libtool) 2.4.2
 #         automake:	$automake_version
 #         autoconf:	$autoconf_version
 #
@@ -80,7 +80,7 @@
 
 PROGRAM=libtool
 PACKAGE=libtool
-VERSION="2.4.2 Debian-2.4.2-1ubuntu1"
+VERSION=2.4.2
 TIMESTAMP=""
 package_revision=1.3337
 
@@ -2714,51 +2714,6 @@ func_mode_finish ()
     # Exit here if they wanted silent mode.
     $opt_silent && exit $EXIT_SUCCESS
 
-    if test -n "$finish_cmds$finish_eval" && test -n "$libdirs"; then
-      echo "----------------------------------------------------------------------"
-      echo "Libraries have been installed in:"
-      for libdir in $libdirs; do
-	$ECHO "   $libdir"
-      done
-      echo
-      echo "If you ever happen to want to link against installed libraries"
-      echo "in a given directory, LIBDIR, you must either use libtool, and"
-      echo "specify the full pathname of the library, or use the \`-LLIBDIR'"
-      echo "flag during linking and do at least one of the following:"
-      if test -n "$shlibpath_var"; then
-	echo "   - add LIBDIR to the \`$shlibpath_var' environment variable"
-	echo "     during execution"
-      fi
-      if test -n "$runpath_var"; then
-	echo "   - add LIBDIR to the \`$runpath_var' environment variable"
-	echo "     during linking"
-      fi
-      if test -n "$hardcode_libdir_flag_spec"; then
-	libdir=LIBDIR
-	eval flag=\"$hardcode_libdir_flag_spec\"
-
-	$ECHO "   - use the \`$flag' linker flag"
-      fi
-      if test -n "$admincmds"; then
-	$ECHO "   - have your system administrator run these commands:$admincmds"
-      fi
-      if test -f /etc/ld.so.conf; then
-	echo "   - have your system administrator add LIBDIR to \`/etc/ld.so.conf'"
-      fi
-      echo
-
-      echo "See any operating system documentation about shared libraries for"
-      case $host in
-	solaris2.[6789]|solaris2.1[0-9])
-	  echo "more information, such as the ld(1), crle(1) and ld.so(8) manual"
-	  echo "pages."
-	  ;;
-	*)
-	  echo "more information, such as the ld(1) and ld.so(8) manual pages."
-	  ;;
-      esac
-      echo "----------------------------------------------------------------------"
-    fi
     exit $EXIT_SUCCESS
 }
 
@@ -2851,6 +2806,10 @@ func_mode_install ()
       fi
       func_append install_shared_prog " $func_quote_for_eval_result"
     done
+    case " $install_prog " in
+    *[\\\ /]cp\ *) extra_mode=;;
+    *) extra_mode='-m 644';;
+    esac
 
     test -z "$install_prog" && \
       func_fatal_help "you must specify an install program"
@@ -2988,7 +2947,7 @@ func_mode_install ()
 	  test -n "$relink_command" && srcname="$realname"T
 
 	  # Install the shared library and build the symlinks.
-	  func_show_eval "$install_shared_prog $dir/$srcname $destdir/$realname" \
+	  func_show_eval "$install_shared_prog $extra_mode $dir/$srcname $destdir/$realname" \
 	      'exit $?'
 	  tstripme="$stripme"
 	  case $host_os in
@@ -3025,7 +2984,7 @@ func_mode_install ()
 	func_basename "$file"
 	name="$func_basename_result"
 	instname="$dir/$name"i
-	func_show_eval "$install_prog $instname $destdir/$name" 'exit $?'
+	func_show_eval "$install_prog $extra_mode $instname $destdir/$name" 'exit $?'
 
 	# Maybe install the static library, too.
 	test -n "$old_library" && func_append staticlibs " $dir/$old_library"
@@ -3060,14 +3019,14 @@ func_mode_install ()
 
 	# Install the libtool object if requested.
 	test -n "$destfile" && \
-	  func_show_eval "$install_prog $file $destfile" 'exit $?'
+	  func_show_eval "$install_prog $extra_mode $file $destfile" 'exit $?'
 
 	# Install the old object if enabled.
 	if test "$build_old_libs" = yes; then
 	  # Deduce the name of the old-style object file.
 	  func_lo2o "$file"
 	  staticobj=$func_lo2o_result
-	  func_show_eval "$install_prog \$staticobj \$staticdest" 'exit $?'
+	  func_show_eval "$install_prog $extra_mode \$staticobj \$staticdest" 'exit $?'
 	fi
 	exit $EXIT_SUCCESS
 	;;
@@ -5660,6 +5619,7 @@ func_mode_link ()
 	func_append compiler_flags " $arg"
 	func_append compile_command " $arg"
 	func_append finalize_command " $arg"
+	func_append deplibs " $arg"
 	case "$new_inherited_linker_flags " in
 	    *" $arg "*) ;;
 	    * ) func_append new_inherited_linker_flags " $arg" ;;
@@ -6124,10 +6084,7 @@ func_mode_link ()
 	case $pass in
 	dlopen) libs="$dlfiles" ;;
 	dlpreopen) libs="$dlprefiles" ;;
-	link)
-	  libs="$deplibs %DEPLIBS%"
-	  test "X$link_all_deplibs" != Xno && libs="$libs $dependency_libs"
-	  ;;
+	link) libs="$deplibs %DEPLIBS% $dependency_libs" ;;
 	esac
       fi
       if test "$linkmode,$pass" = "lib,dlpreopen"; then
@@ -6170,6 +6127,7 @@ func_mode_link ()
 	    finalize_deplibs="$deplib $finalize_deplibs"
 	  else
 	    func_append compiler_flags " $deplib"
+	    test "$linkmode" = lib && newdependency_libs="$deplib $newdependency_libs"
 	    if test "$linkmode" = lib ; then
 		case "$new_inherited_linker_flags " in
 		    *" $deplib "*) ;;
@@ -6447,19 +6405,19 @@ func_mode_link ()
 	    # It is a libtool convenience library, so add in its objects.
 	    func_append convenience " $ladir/$objdir/$old_library"
 	    func_append old_convenience " $ladir/$objdir/$old_library"
-	    tmp_libs=
-	    for deplib in $dependency_libs; do
-	      deplibs="$deplib $deplibs"
-	      if $opt_preserve_dup_deps ; then
-		case "$tmp_libs " in
-		*" $deplib "*) func_append specialdeplibs " $deplib" ;;
-		esac
-	      fi
-	      func_append tmp_libs " $deplib"
-	    done
 	  elif test "$linkmode" != prog && test "$linkmode" != lib; then
 	    func_fatal_error "\`$lib' is not a convenience library"
 	  fi
+	  tmp_libs=
+	  for deplib in $dependency_libs; do
+	    deplibs="$deplib $deplibs"
+	    if $opt_preserve_dup_deps ; then
+	      case "$tmp_libs " in
+	      *" $deplib "*) func_append specialdeplibs " $deplib" ;;
+	      esac
+	    fi
+	    func_append tmp_libs " $deplib"
+	  done
 	  continue
 	fi # $pass = conv
 
@@ -6700,7 +6658,7 @@ func_mode_link ()
 	  *)
 	    if test "$installed" = no; then
 	      func_append notinst_deplibs " $lib"
-	      need_relink=yes
+	      test -z "$DESTDIR" && need_relink=yes
 	    fi
 	    ;;
 	  esac
@@ -7352,9 +7310,6 @@ func_mode_link ()
 	    revision="$number_minor"
 	    lt_irix_increment=no
 	    ;;
-	  *)
-	    func_fatal_configuration "$modename: unknown library version type \`$version_type'"
-	    ;;
 	  esac
 	  ;;
 	no)
@@ -7527,6 +7482,20 @@ func_mode_link ()
 	  major=
 	  versuffix=
 	  verstring=""
+	else
+	  # XXX
+	  tmp=`echo $libname|sed -e 's,+,_,g' -e 's,-,_,g' -e 's,\.,_,g'`
+	  eval tmp2=\$${tmp}_ltversion
+	  if ! test -z "${SHARED_LIBS_LOG}"; then
+		  if ! test -f ${SHARED_LIBS_LOG}; then
+			  echo "# SHARED_LIBS+=	<libname>      <obsd version> # <orig version>" >${SHARED_LIBS_LOG}
+		  fi
+		  tmp4=`echo $libname|sed -e 's/^lib//'`
+		  printf "SHARED_LIBS +=\t%-20s %-8s # %s\n" "$tmp4" "$tmp2" "$versuffix" >>${SHARED_LIBS_LOG}
+	  fi
+	  if test -n "$versuffix" && test -n "$tmp2"; then
+	    versuffix=".$tmp2"
+	  fi
 	fi
 
 	# Check to see if the archive will have undefined symbols.
