@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.171 2014/02/03 20:20:39 okan Exp $
+ * $OpenBSD: client.c,v 1.172 2014/02/06 20:58:46 okan Exp $
  */
 
 #include <sys/param.h>
@@ -491,7 +491,8 @@ client_unhide(struct client_ctx *cc)
 void
 client_urgency(struct client_ctx *cc)
 {
-	cc->flags |= CLIENT_URGENCY;
+	if (!cc->active)
+		cc->flags |= CLIENT_URGENCY;
 }
 
 void
