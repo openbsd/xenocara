@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.36 2014/01/20 18:58:03 okan Exp $
+ * $OpenBSD: search.c,v 1.37 2014/02/07 21:59:56 okan Exp $
  */
 
 #include <sys/param.h>
@@ -143,7 +143,7 @@ search_print_client(struct menu *mi, int list)
 		cc->matchname = cc->name;
 
 	(void)snprintf(mi->print, sizeof(mi->print), "(%d) %c%s",
-	    cc->group ? cc->group->shortcut : 0, flag, cc->matchname);
+	    cc->group->shortcut, flag, cc->matchname);
 
 	if (!list && cc->matchname != cc->name &&
 	    strlen(mi->print) < sizeof(mi->print) - 1) {
