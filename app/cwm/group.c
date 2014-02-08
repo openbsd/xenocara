@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.86 2014/02/08 02:40:43 okan Exp $
+ * $OpenBSD: group.c,v 1.87 2014/02/08 02:49:30 okan Exp $
  */
 
 #include <sys/param.h>
@@ -146,6 +146,15 @@ group_init(struct screen_ctx *sc)
 	xu_ewmh_net_virtual_roots(sc);
 
 	group_setactive(sc, 1);
+}
+
+void
+group_set_state(struct screen_ctx *sc)
+{
+	struct group_ctx	*gc;
+
+	TAILQ_FOREACH(gc, &sc->groupq, entry)
+		group_fix_hidden_state(gc);
 }
 
 static void
