@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.285 2014/02/03 16:10:48 matthieu Exp $
+# $OpenBSD: MODULES,v 1.286 2014/02/14 19:41:21 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -110,7 +110,7 @@ driver/xf86-video-geode		2.11.15	7.7+	needs-update
 driver/xf86-video-glint		1.2.8	7.7+
 driver/xf86-video-i128		1.3.6	7.7+
 driver/xf86-video-i740		1.3.4
-driver/xf86-video-intel		2.99.909	7.7+
+driver/xf86-video-intel		2.99.910	7.7+
 driver/xf86-video-mach64	6.9.4	7.7+
 driver/xf86-video-mga		1.6.3	7.7+	needs-update
 driver/xf86-video-modesetting	0.8.1		needs-update
