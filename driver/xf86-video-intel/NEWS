@@ -1,3 +1,28 @@
+Snapshot 2.99.910 (2013-02-10)
+==============================
+Another latent bug exposed by recent changes merit another snapshot for
+final testing.
+
+  * Only discard damage when overwriting the dirty CPU bo, instead
+    of discarding damage that will be shown!
+
+  * Reset operation state when switching between glyph caches.
+    https://bugs.freedesktop.org/show_bug.cgi?id=74494
+
+  * Fully reinitialise pixmaps allocated from the freed cache. Fixes
+    a potential issue (crash or misrendering) when using some compositors.
+    https://bugs.freedesktop.org/show_bug.cgi?id=74550
+
+  * Do not expose the TexturedVideo adaptor in UXA when it is disabled
+    either due to a hung GPU or explicitly disabled by the user.
+
+  * Restore the pipe stall when changing CC state on gen6, otherwise
+    the GPU may not flush intermediate results from all EU resulting
+    in render corruption (usually the occasional black box).
+    Regression from 2.99.906
+    https://bugs.freedesktop.org/show_bug.cgi?id=7237
+
+
 Snapshot 2.99.909 (2013-02-01)
 ==============================
 Pass the brown paper bag. Ridiculously stupid bug in last minute coding.

@@ -1862,6 +1862,8 @@ gen8_composite_set_target(struct sna *sna,
 	BoxRec box;
 	unsigned int hint;
 
+	DBG(("%s: (%d, %d)x(%d, %d), partial?=%d\n", __FUNCTION__, x, y, w, h));
+
 	op->dst.pixmap = get_drawable_pixmap(dst->pDrawable);
 	op->dst.format = dst->format;
 	op->dst.width  = op->dst.pixmap->drawable.width;

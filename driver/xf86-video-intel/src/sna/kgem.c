@@ -506,12 +506,13 @@ static void kgem_bo_retire(struct kgem *kgem, struct kgem_bo *bo)
 	if (bo->rq) {
 		__kgem_bo_clear_busy(bo);
 		kgem_retire(kgem);
+		assert_bo_retired(bo);
 	} else {
+		assert(bo->exec == NULL);
+		assert(list_is_empty(&bo->request));
 		assert(!bo->needs_flush);
 		ASSERT_IDLE(kgem, bo->handle);
 	}
-
-	assert_bo_retired(bo);
 }
 
 static void kgem_bo_maybe_retire(struct kgem *kgem, struct kgem_bo *bo)
@@ -6743,13 +6744,18 @@ kgem_replace_bo(struct kgem *kgem,
 	return dst;
 }
 
-bool kgem_bo_convert_to_gpu(struct kgem *kgem, struct kgem_bo *bo)
+bool kgem_bo_convert_to_gpu(struct kgem *kgem,
+			    struct kgem_bo *bo,
+			    unsigned flags)
 {
-	DBG(("%s: converting handle=%d from CPU to GPU\n", __FUNCTION__, bo->handle));
+	DBG(("%s: converting handle=%d from CPU to GPU, flags=%x\n", __FUNCTION__, bo->handle));
 	assert(bo->tiling == I915_TILING_NONE);
 
 	if (kgem->has_llc)
 		return true;
+
+	if (flags & MOVE_ASYNC_HINT && __kgem_bo_is_busy(kgem, bo))
+		return false;
 
 	assert(bo->snoop);
 

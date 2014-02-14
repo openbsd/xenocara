@@ -1,3 +1,198 @@
+commit 2fb2cd092dadba40b5ad2da57943c660a0c9bc14
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Mon Feb 10 09:35:11 2014 +0000
+
+    2.99.910 snapshot
+
+commit 37d8566ee78c67647b159a96ddb2675d1506b967
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sun Feb 9 12:28:27 2014 +0000
+
+    sna/gen6: Restore stall dropped when not flushing instead
+    
+    commit 82e6d41c2f4f343bd1854d3d8ee4b624b5d68971
+    Author: Chris Wilson <chris@chris-wilson.co.uk>
+    Date:   Thu Oct 31 13:35:59 2013 +0000
+    
+        sna/gen6: Tweak flush around CC state changes
+    
+    Replaced the pipeline stall with a flush - but only when the target was
+    dirty. The missing stall however seems to be required as well.
+    
+    v2: Actually emit the stall for all CC state changes [Ilia Mirkin]
+    
+    Reported-by: Ilia Mirkin <imirkin@alum.mit.edu>
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=72375
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 823382d28944a319c207f20ecef25ce1707a8021
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Thu Feb 6 10:13:41 2014 +0000
+
+    sna: And clear drawable->id on reused pixmaps
+    
+    References: https://bugs.freedesktop.org/show_bug.cgi?id=74550
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 6fc46adb18a8410074c12d6e8979ef01813ebdf2
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Thu Feb 6 09:24:17 2014 +0000
+
+    uxa: Do not expose TextureVideo Xv adapters when acceleration is disabled
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 1eadd1d0b1c8bcbf11eb7c0e112d1e424b63c25e
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Thu Feb 6 09:04:30 2014 +0000
+
+    sna: Add some DBG to clarify the source pixmap (for tiles)
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 4d1a2ef9553c663bb97b56adde6f6b41241ff528
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Thu Feb 6 08:29:20 2014 +0000
+
+    sna: Reset composite offsets when reusing freed pixmaps
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=74550
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 79d2f96bdfa0d7ae1567bf4b57b4f86aae424f50
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Wed Feb 5 15:30:30 2014 +0000
+
+    sna: Add some DBG around tiled blts
+    
+    References: https://bugs.freedesktop.org/show_bug.cgi?id=74550
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 02eceefa2909075aca0ba3df7fdba835079aeb78
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Wed Feb 5 11:41:42 2014 +0000
+
+    sna: Pass read hints from move-to-cpu to wait_for_shadow
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit de73c5fd1cd4f948b8bd3582ae788f6f855c5b16
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Tue Feb 4 20:57:24 2014 +0000
+
+    sna: Tweak assert_bo_retired() to be callable on cached bo
+    
+    References: https://bugs.freedesktop.org/show_bug.cgi?id=73406
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 0906769c1b92520351729c4d8f2ab684d3ddf2eb
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Tue Feb 4 17:51:51 2014 +0000
+
+    sna: Rearrange assertion to ease use of substitute cached bo
+    
+    Since we call kgem_bo_submit() along one path when synchronising a
+    cached bo (which is known to be inactive) but still want to keep the
+    assertion on the refcnt, simply rearrange the code to only assert on the
+    active path.
+    
+    References: https://bugs.freedesktop.org/show_bug.cgi?id=73406
+    Reported-by: Matti Hamalainen <ccr@tnsp.org>
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit fc001615ff78df4dab6ee0d5dd966b723326c358
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Tue Feb 4 10:36:21 2014 +0000
+
+    sna/gen4: Disable use of pipecontrol invalidates again
+    
+    One day, just not today, we may make gen4 work correctly, efficiently and
+    fast. Today, we can barely pick one.
+    
+    References: https://bugs.freedesktop.org/show_bug.cgi?id=55500
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit c6a21f0355447d398a8b857ad046cd27141d4744
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Tue Feb 4 08:51:17 2014 +0000
+
+    sna/glyphs: Reset composite state between switching glyph formats
+    
+    One path uses the mask channel, the other does not. We cannot rely on
+    overwriting all reused state in this case, and so we must clear the
+    composite state prior to use each time.
+    
+    Reported-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=74494
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+    Tested-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+
+commit 1cbc59a917e7352fc68aa0e26b1575cbd0ceab0d
+Author: Edward Sheldrake <ejsheldrake@gmail.com>
+Date:   Mon Feb 3 09:34:33 2014 +0000
+
+    sna/gen4,5: Fix setting pipe control cache flush bits
+    
+    Cache flush bits are on dword 0, not 1, on gen4 and gen5. Also texture
+    cache invalidate is only available from Cantiga onwards.
+
+commit 7f08250a8960f90f6bd34de8c4a17870703bfa60
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sun Feb 2 03:52:11 2014 +0000
+
+    sna: Reconstruct damage for the partially replaced discarded CPU bo
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 853588ad5be9407d2123f6055458ca84e72b8eb9
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sat Feb 1 21:55:09 2014 +0000
+
+    sna: If IGNORE_CPU is not set we must mark the move as MOVE_READ
+    
+    Logic reversal in discarding CPU damage. An old bug revealed by the more
+    aggressive attempts to discard CPU damage.
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 8b0748c57ee4c38ea98c4b6ca18cb2b99f8f9ed4
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sat Feb 1 21:54:43 2014 +0000
+
+    sna: Add some more DBG for choosing render targets
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit ed8d4f0ce3bff662d02063528df64d478ac0dc00
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sat Feb 1 21:38:47 2014 +0000
+
+    sna: Skip discarding CPU bo when using as a render target
+    
+    The issue with unwanted serialisation does not affect the async
+    move-to-cpu of a render target.
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 26613b046012f0ad968a15ab6bdfa8f6a6652e77
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sat Feb 1 21:37:41 2014 +0000
+
+    sna: Allow more inplace promotions of CPU to GPU bo
+    
+    If the CPU bo is wholly damaged, then it makes an ideal candidate for
+    simply converting into the GPU bo.
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 699b4fd3139d1d6d02911d6c8f193ead3445f613
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sat Feb 1 20:13:53 2014 +0000
+
+    sna: Undo region translation before returning
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
 commit 2c4b2ed558bec3b71077fb12cc4e008cccc819fa
 Author: Chris Wilson <chris@chris-wilson.co.uk>
 Date:   Sat Feb 1 17:59:29 2014 +0000

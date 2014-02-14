@@ -112,7 +112,7 @@
 #define GEN4_PIPE_CONTROL_DEPTH_STALL   (1 << 13)
 #define GEN4_PIPE_CONTROL_WC_FLUSH      (1 << 12)
 #define GEN4_PIPE_CONTROL_IS_FLUSH      (1 << 11)
-#define GEN4_PIPE_CONTROL_TC_FLUSH      (1 << 10)
+#define GEN4_PIPE_CONTROL_TC_FLUSH      (1 << 10) /* ctg+ */
 #define GEN4_PIPE_CONTROL_NOTIFY_ENABLE (1 << 8)
 #define GEN4_PIPE_CONTROL_GLOBAL_GTT    (1 << 2)
 #define GEN4_PIPE_CONTROL_LOCAL_PGTT    (0 << 2)

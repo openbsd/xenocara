@@ -870,15 +870,16 @@ gen6_emit_state(struct sna *sna,
 
 	assert(op->dst.bo->exec);
 
-	need_flush =
-		gen6_emit_cc(sna, GEN6_BLEND(op->u.gen6.flags)) &&
-		wm_binding_table & 1;
+	need_stall = wm_binding_table & 1;
+	need_flush = false;
+	if (gen6_emit_cc(sna, GEN6_BLEND(op->u.gen6.flags)))
+		need_flush = need_stall;
 	gen6_emit_sampler(sna, GEN6_SAMPLER(op->u.gen6.flags));
 	gen6_emit_sf(sna, GEN6_VERTEX(op->u.gen6.flags) >> 2);
 	gen6_emit_wm(sna, GEN6_KERNEL(op->u.gen6.flags), GEN6_VERTEX(op->u.gen6.flags) >> 2);
 	gen6_emit_vertex_elements(sna, op);
 
-	need_stall = gen6_emit_binding_table(sna, wm_binding_table & ~1);
+	need_stall |= gen6_emit_binding_table(sna, wm_binding_table & ~1);
 	if (gen6_emit_drawing_rectangle(sna, op))
 		need_stall = false;
 	if (need_flush || kgem_bo_is_dirty(op->src.bo) || kgem_bo_is_dirty(op->mask.bo)) {
@@ -1830,6 +1831,8 @@ gen6_composite_set_target(struct sna *sna,
 {
 	BoxRec box;
 	unsigned int hint;
+
+	DBG(("%s: (%d, %d)x(%d, %d), partial?=%d\n", __FUNCTION__, x, y, w, h));
 
 	op->dst.pixmap = get_drawable_pixmap(dst->pDrawable);
 	op->dst.format = dst->format;

@@ -1016,8 +1016,10 @@ inline static void
 gen5_emit_pipe_flush(struct sna *sna)
 {
 #if 0
-	OUT_BATCH(GEN5_PIPE_CONTROL | (4 - 2));
-	OUT_BATCH(GEN5_PIPE_CONTROL_WC_FLUSH);
+	OUT_BATCH(GEN5_PIPE_CONTROL |
+		  GEN5_PIPE_CONTROL_WC_FLUSH |
+		  (4 - 2));
+	OUT_BATCH(0);
 	OUT_BATCH(0);
 	OUT_BATCH(0);
 #else

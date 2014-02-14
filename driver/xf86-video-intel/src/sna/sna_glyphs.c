@@ -1306,7 +1306,6 @@ next_image:
 		if (!clear_pixmap(sna, pixmap))
 			goto err_mask;
 
-		memset(&tmp, 0, sizeof(tmp));
 		glyph_atlas = NULL;
 		do {
 			int n = list->len;
@@ -1346,6 +1345,8 @@ next_image:
 					     __FUNCTION__,
 					     (int)p->atlas->format,
 					     (int)(format->depth << 24 | format->format)));
+
+					memset(&tmp, 0, sizeof(tmp));
 					if (p->atlas->format == (format->depth << 24 | format->format)) {
 						ok = sna->render.composite(sna, PictOpAdd,
 									   p->atlas, NULL, mask,

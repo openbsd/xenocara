@@ -354,7 +354,8 @@ void I830InitVideo(ScreenPtr screen)
 	/* Set up textured video if we can do it at this depth and we are on
 	 * supported hardware.
 	 */
-	if (scrn->bitsPerPixel >= 16 &&
+	if (!intel->force_fallback &&
+	    scrn->bitsPerPixel >= 16 &&
 	    INTEL_INFO(intel)->gen >= 030) {
 		texturedAdaptor = I830SetupImageVideoTextured(screen);
 		if (texturedAdaptor != NULL) {
