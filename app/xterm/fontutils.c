@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.399 2013/11/26 20:12:00 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.400 2013/12/09 12:20:31 tom Exp $ */
 
 /*
  * Copyright 1998-2012,2013 by Thomas E. Dickey
@@ -122,7 +122,7 @@ static void fillInFaceSize(XtermWidget, int);
 static int lookupOneFontSize(XtermWidget, int);
 #endif
 
-#if OPT_WIDE_CHARS
+#if OPT_REPORT_FONTS || OPT_WIDE_CHARS
 static unsigned
 countGlyphs(XFontStruct * fp)
 {
@@ -140,7 +140,9 @@ countGlyphs(XFontStruct * fp)
     }
     return count;
 }
+#endif
 
+#if OPT_WIDE_CHARS
 /*
  * Verify that the wide-bold font is at least a bold font with roughly as many
  * glyphs as the wide font.  The counts should be the same, but settle for
@@ -2307,7 +2309,7 @@ xtermUpdateFontInfo(XtermWidget xw, Bool doresize)
     xtermSetCursorBox(screen);
 }
 
-#if OPT_BOX_CHARS
+#if OPT_BOX_CHARS || OPT_REPORT_FONTS
 
 /*
  * Returns true if the given character is missing from the specified font.
@@ -2344,7 +2346,9 @@ xtermMissingChar(unsigned ch, XTermFonts * font)
     }
     return result;
 }
+#endif
 
+#if OPT_BOX_CHARS
 /*
  * The grid is arbitrary, enough resolution that nothing's lost in
  * initialization.
@@ -2714,6 +2718,7 @@ xtermDrawBoxChar(XtermWidget xw,
 		       font_height - 1);
     }
 }
+#endif /* OPT_BOX_CHARS */
 
 #if OPT_RENDERFONT
 
@@ -2741,9 +2746,7 @@ xtermXftMissing(XtermWidget xw, XftFont * font, unsigned wc)
     }
     return result;
 }
-#endif /* OPT_RENDERFONT && OPT_WIDE_CHARS */
-
-#endif /* OPT_BOX_CHARS */
+#endif /* OPT_RENDERFONT */
 
 #if OPT_WIDE_CHARS
 #define MY_UCS(ucs,dec) case ucs: result = dec; break

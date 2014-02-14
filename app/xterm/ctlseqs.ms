@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.303 2013/11/11 00:23:36 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.305 2014/01/13 23:02:06 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2012,2013 by Thomas E. Dickey
+.\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #298
-.ds RF 2013/11/10
+.ds LF Patch #301
+.ds RF 2014/01/13
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -789,15 +789,19 @@ Repeat the preceding graphic character \*(Ps times (REP).
 Send Device Attributes (Primary DA).
   \*(Ps = \*0 or omitted \(-> request attributes from terminal.
 The response depends on the \fBdecTerminalID\fP resource setting.
-  \(-> \*(Cs\*?\*1\*;\*2\*c (``VT100 with Advanced Video Option'')
-  \(-> \*(Cs\*?\*1\*;\*0\*c (``VT101 with No Options'')
-  \(-> \*(Cs\*?\*6\*c (``VT102'')
-  \(-> \*(Cs\*?\*6\*0\*;\*1\*;\*2\*;\*6\*;\*8\*;\*9\*;\*1\*5\*;\*c (``VT220'')
+  \(->\ \*(Cs\*?\*1\*;\*2\*c (``VT100 with Advanced Video Option'')
+  \(->\ \*(Cs\*?\*1\*;\*0\*c (``VT101 with No Options'')
+  \(->\ \*(Cs\*?\*6\*c (``VT102'')
+  \(->\ \*(Cs\*?\*6\*2\*;\*(Ps\*c (``VT220'')
+  \(->\ \*(Cs\*?\*6\*3\*;\*(Ps\*c (``VT320'')
+  \(->\ \*(Cs\*?\*6\*4\*;\*(Ps\*c (``VT420'')
 .br
 The VT100-style response parameters do not mean anything by themselves.
-VT220 parameters do, telling the host what features the terminal supports:
+VT220 (and higher) parameters do, telling the host what features the terminal supports:
   \*(Ps = \*1 \(-> 132-columns.
   \*(Ps = \*2 \(-> Printer.
+  \*(Ps = \*3 \(-> ReGIS graphics.
+  \*(Ps = \*4 \(-> Sixel graphics.
   \*(Ps = \*6 \(-> Selective erase.
   \*(Ps = \*8 \(-> User-defined keys.
   \*(Ps = \*9 \(-> National Replacement Character sets.
@@ -880,8 +884,8 @@ See the section \fBMouse Tracking\fP.  This is the X10 xterm mouse protocol.
   \*(Ps = \*4\*5 \(-> Reverse-wraparound Mode.
   \*(Ps = \*4\*6 \(-> Start Logging.
 This is normally disabled by a compile-time option.
-  \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer.  (This may be
-disabled by the \fBtiteInhibit\fP resource).
+  \*(Ps = \*4\*7 \(-> Use Alternate Screen Buffer.
+(This may be disabled by the \fBtiteInhibit\fP resource).
   \*(Ps = \*6\*6 \(-> Application keypad (DECNKM).
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM).
   \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
@@ -1687,6 +1691,7 @@ By using \fIxmodmap\fP one may have the modifier assigned to a different key,
 and have "real" alt and meta keys.
 Here is an example:
 .ID
+.ft CW
 ! put meta on mod3 to distinguish it from alt
 keycode 64 = Alt_L
 clear mod1
@@ -1694,6 +1699,7 @@ add mod1 = Alt_L
 keycode 115 = Meta_L
 clear mod3
 add mod3 = Meta_L
+.ft 1
 .DE
 .lP
 The \fBmetaSendsEscape\fP resource
@@ -2095,10 +2101,10 @@ pasted text is bracketed with control sequences
 so that the program can differentiate pasted text from typed-in text.
 When bracketed paste mode is set,
 the program will receive:
-   \*(Es [ 200 ~,
+   \*(Es\*([[\*2\*0\*0\*~,
 .br
 followed by the pasted text, followed by
-   \*(Es [ 201 ~.
+   \*(Es\*([[\*2\*0\*1\*~.
 .
 .Sh "Title Modes"
 .LP
@@ -2165,6 +2171,7 @@ Manifest constants for the parameter values
 are defined in \fBxcharmouse.h\fP as follows:
 .
 .ID
+.ft CW
 #define SET_X10_MOUSE               9
 #define SET_VT200_MOUSE             1000
 #define SET_VT200_HIGHLIGHT_MOUSE   1001
@@ -2178,6 +2185,7 @@ are defined in \fBxcharmouse.h\fP as follows:
 #define SET_URXVT_EXT_MODE_MOUSE    1015
 
 #define SET_ALTERNATE_SCROLL        1007
+.ft 1
 .DE
 .br
 The motion reporting modes are strictly \fIxterm\fP extensions, and are not

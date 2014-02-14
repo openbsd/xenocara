@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.735 2013/11/27 00:41:23 tom Exp $ */
+/* $XTermId: main.c,v 1.741 2014/01/16 02:12:25 tom Exp $ */
 
 /*
- * Copyright 2002-2012,2013 by Thomas E. Dickey
+ * Copyright 2002-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -180,7 +180,6 @@ static void HsSysError(int) GCC_NORETURN;
 #if defined(__GLIBC__) && !defined(linux)
 #define USE_SYSV_PGRP
 #define WTMP
-#define HAS_BSD_GROUPS
 #endif
 
 #if defined(USE_TTY_GROUP) || defined(USE_UTMP_SETGID)
@@ -222,12 +221,7 @@ static void HsSysError(int) GCC_NORETURN;
 /*
  * now get system-specific includes
  */
-#ifdef CRAY
-#define HAS_BSD_GROUPS
-#endif
-
 #ifdef macII
-#define HAS_BSD_GROUPS
 #include <sys/ttychars.h>
 #undef USE_SYSV_ENVVARS
 #undef FIOCLEX
@@ -238,18 +232,15 @@ static void HsSysError(int) GCC_NORETURN;
 #endif
 
 #ifdef __hpux
-#define HAS_BSD_GROUPS
 #include <sys/ptyio.h>
 #endif /* __hpux */
 
 #ifdef __osf__
-#define HAS_BSD_GROUPS
 #undef  USE_SYSV_PGRP
 #define setpgrp setpgid
 #endif
 
 #ifdef __sgi
-#define HAS_BSD_GROUPS
 #include <sys/sysmacros.h>
 #endif /* __sgi */
 
@@ -290,9 +281,6 @@ ttyslot(void)
 #include <resource.h>
 #else
 #include <sys/resource.h>
-#endif
-#ifndef __INTERIX
-#define HAS_BSD_GROUPS
 #endif
 #endif /* !VMS */
 #endif /* !linux */
@@ -3156,6 +3144,60 @@ find_utmp(struct UTMP_STR *tofind)
 #endif
 
 /*
+ * Only set $SHELL for paths found in the standard location.
+ */
+static Boolean
+validShell(const char *pathname)
+{
+    Boolean result = False;
+    const char *ok_shells = "/etc/shells";
+    char *blob;
+    struct stat sb;
+    size_t rc;
+    FILE *fp;
+
+    if (!IsEmpty(pathname)
+	&& access(pathname, X_OK) == 0
+	&& stat(ok_shells, &sb) == 0
+	&& (sb.st_mode & S_IFMT) == S_IFREG
+	&& (sb.st_size != 0)
+	&& (blob = calloc((size_t) sb.st_size + 2, sizeof(char))) != 0) {
+	if ((fp = fopen(ok_shells, "r")) != 0) {
+	    rc = fread(blob, sizeof(char), (size_t) sb.st_size, fp);
+	    if (rc == (size_t) sb.st_size) {
+		char *p = blob;
+		char *q, *r;
+		while (!result && (q = strtok(p, "\n")) != 0) {
+		    if ((r = x_strtrim(q)) != 0) {
+			if (!strcmp(q, pathname)) {
+			    result = True;
+			}
+			free(r);
+		    }
+		    p = 0;
+		}
+	    }
+	    fclose(fp);
+	}
+	free(blob);
+    }
+    TRACE(("validShell %s ->%d\n", NonNull(pathname), result));
+    return result;
+}
+
+static char *
+resetShell(char *oldPath)
+{
+    char *newPath = x_strdup("/bin/sh");
+    char *envPath = getenv("SHELL");
+    if (oldPath != 0)
+	free(oldPath);
+    if (!IsEmpty(envPath))
+	xtermSetenv("SHELL", newPath);
+    return newPath;
+}
+
+/*
  *  Inits pty and tty and forks a login process.
  *  Does not close fd Xsocket.
  *  If slave, the pty named in passedPty is already open for use
@@ -4387,7 +4429,7 @@ spawnXTerm(XtermWidget xw)
 
 	    IGNORE_RC(setgid(screen->gid));
 	    TRACE_IDS;
-#ifdef HAS_BSD_GROUPS
+#ifdef HAVE_INITGROUPS
 	    if (geteuid() == 0 && OkPasswd(&pw)) {
 		if (initgroups(login_name, pw.pw_gid)) {
 		    perror("initgroups failed");
@@ -4518,31 +4560,34 @@ spawnXTerm(XtermWidget xw)
 	    signal(SIGHUP, SIG_DFL);
 
 	    /*
-	     * If we have an explicit program to run, make that set $SHELL.
+	     * If we have an explicit shell to run, make that set $SHELL.
 	     * Otherwise, if $SHELL is not set, determine it from the user's
 	     * password information, if possible.
 	     *
 	     * Incidentally, our setting of $SHELL tells luit to use that
 	     * program rather than choosing between $SHELL and "/bin/sh".
 	     */
-	    if ((shell_path = explicit_shname) == NULL) {
-		if ((shell_path = x_getenv("SHELL")) == NULL) {
-		    if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
-			|| *(shell_path = x_strdup(pw.pw_shell)) == 0) {
-			if (shell_path)
-			    free(shell_path);
-			shell_path = x_strdup("/bin/sh");
-		    } else if (shell_path != 0) {
-			xtermSetenv("SHELL", shell_path);
-		    }
-		}
-	    } else {
+	    if (validShell(explicit_shname)) {
 		xtermSetenv("SHELL", explicit_shname);
+		shell_path = explicit_shname;
+	    } else if (validShell(shell_path = x_getenv("SHELL"))) {
+		;		/* OK */
+	    } else if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
+		       || *(shell_path = x_strdup(pw.pw_shell)) == 0) {
+		shell_path = resetShell(shell_path);
+	    } else if (validShell(shell_path)) {
+		xtermSetenv("SHELL", shell_path);
+	    } else {
+		shell_path = resetShell(shell_path);
 	    }
-	    if (access(shell_path, X_OK) != 0) {
-		xtermPerror("Cannot use '%s' as shell", shell_path);
+
+	    /*
+	     * Set $XTERM_SHELL, which is not necessarily a valid shell, but
+	     * is executable.
+	     */
+	    if (explicit_shname != 0 && access(explicit_shname, X_OK) == 0) {
 		free(shell_path);
-		shell_path = x_strdup("/bin/sh");
+		shell_path = explicit_shname;
 	    }
 	    xtermSetenv("XTERM_SHELL", shell_path);
 

@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2013)
-               updated for XTerm Patch #298 (2013/11/10)
+               updated for XTerm Patch #301 (2014/01/13)
 
 
 
@@ -299,12 +299,16 @@ CSI Ps c  Send Device Attributes (Primary DA).
             -> CSI ? 1 ; 2 c  (``VT100 with Advanced Video Option'')
             -> CSI ? 1 ; 0 c  (``VT101 with No Options'')
             -> CSI ? 6 c  (``VT102'')
-            -> CSI ? 6 0 ; 1 ; 2 ; 6 ; 8 ; 9 ; 1 5 ; c  (``VT220'')
+            -> CSI ? 6 2 ; Psc  (``VT220'')
+            -> CSI ? 6 3 ; Psc  (``VT320'')
+            -> CSI ? 6 4 ; Psc  (``VT420'')
           The VT100-style response parameters do not mean anything by
-          themselves.  VT220 parameters do, telling the host what fea-
-          tures the terminal supports:
+          themselves.  VT220 (and higher) parameters do, telling the
+          host what features the terminal supports:
             Ps = 1  -> 132-columns.
             Ps = 2  -> Printer.
+            Ps = 3  -> ReGIS graphics.
+            Ps = 4  -> Sixel graphics.
             Ps = 6  -> Selective erase.
             Ps = 8  -> User-defined keys.
             Ps = 9  -> National Replacement Character sets.
@@ -1424,9 +1428,9 @@ Bracketed Paste Mode
 When bracketed paste mode is set, pasted text is bracketed with control
 sequences so that the program can differentiate pasted text from typed-
 in text.  When bracketed paste mode is set, the program will receive:
-   ESC  [ 200 ~,
+   ESC [ 2 0 0 ~ ,
 followed by the pasted text, followed by
-   ESC  [ 201 ~.
+   ESC [ 2 0 1 ~ .
 
 Title Modes
 The window- and icon-labels can be set or queried using control

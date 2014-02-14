@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.88 2013/09/11 21:19:50 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.89 2013/12/09 12:18:01 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2013 by Thomas E. Dickey
@@ -88,10 +88,13 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsig
 	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
 	   || ForceBoxChars(screen, ch)))
 
-extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
 extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
 #else
 #define IsXtermMissingChar(screen, ch, font) False
+#endif
+
+#if OPT_BOX_CHARS || OPT_REPORT_FONTS 
+extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
 #endif
 
 #if OPT_LOAD_VTFONTS

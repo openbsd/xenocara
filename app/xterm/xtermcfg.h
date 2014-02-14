@@ -1,36 +1,34 @@
-/* $XTermId: xtermcfg.hin,v 1.200 2013/06/23 19:20:22 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.203 2014/01/16 01:45:00 tom Exp $ */
 
-/************************************************************
-
-Copyright 1997-2009,2010 by Thomas E. Dickey
-
-                        All Rights Reserved
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Except as contained in this notice, the name(s) of the above copyright
-holders shall not be used in advertising or otherwise to promote the
-sale, use or other dealings in this Software without prior written
-authorization.
-
-********************************************************/
+/*
+ * Copyright 1997-2013,2014 by Thomas E. Dickey
+ *
+ *                         All Rights Reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the
+ * sale, use or other dealings in this Software without prior written
+ * authorization.
+ */
 
 #ifndef included_xtermcfg_h
 #define included_xtermcfg_h 1
@@ -54,7 +52,9 @@ authorization.
 /* #undef DISABLE_SETUID */		/* CF_ARG_DISABLE(setuid) */
 #define HAVE_GETHOSTNAME 1		/* AC_CHECK_FUNCS(gethostname) */
 #define HAVE_GETLOGIN 1		/* AC_CHECK_FUNCS(getlogin) */
-/* #undef HAVE_GRANTPT		/* CF_FUNC_GRANTPT */
+/* #undef HAVE_GRANTPT */		/* CF_FUNC_GRANTPT */
+/* #undef HAVE_GRANTPT_PTY_ISATTY */	/* CF_FUNC_GRANTPT */
+#define HAVE_INITGROUPS 1		/* AC_CHECK_FUNCS(initgroups) */
 #define HAVE_LANGINFO_CODESET 1	/* AM_LANGINFO_CODESET */
 /* #undef HAVE_LASTLOG_H */		/* CF_LASTLOG */
 #define HAVE_LIBXPM		/* CF_WITH_XPM */
@@ -69,9 +69,9 @@ authorization.
 /* #undef HAVE_NCURSES_TERM_H */	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #define HAVE_PATHS_H 1		/* CF_LASTLOG */
 /* #undef HAVE_PCREPOSIX_H */		/* CF_WITH_PCRE */
-/* #undef HAVE_POSIX_OPENPT	/* CF_FUNC_GRANTPT */
+/* #undef HAVE_POSIX_OPENPT */	/* CF_FUNC_GRANTPT */
 #define HAVE_POSIX_SAVED_IDS 1	/* CF_POSIX_SAVED_IDS */
-/* #undef HAVE_PTSNAME		/* CF_FUNC_GRANTPT */
+/* #undef HAVE_PTSNAME */		/* CF_FUNC_GRANTPT */
 #define HAVE_PUTENV 1		/* AC_CHECK_FUNCS(putenv) */
 #define HAVE_SCHED_YIELD 1		/* AC_CHECK_FUNCS(sched_yield) */
 #define HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */

@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.619 2013/11/23 13:02:58 tom Exp $ */
+/* $XTermId: util.c,v 1.620 2014/01/15 02:02:14 tom Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3309,11 +3309,11 @@ drawXtermText(XtermWidget xw,
     if (UsingRenderFont(xw)) {
 	VTwin *currentWin = WhichVWin(screen);
 	Display *dpy = screen->display;
-	XftFont *font;
+	XftFont *font, *font0;
 	XGCValues values;
 	int ncells;
 #if OPT_RENDERWIDE
-	XftFont *wfont;
+	XftFont *wfont, *wfont0;
 #endif
 	if (!screen->renderDraw) {
 	    int scr;
@@ -3325,9 +3325,13 @@ drawXtermText(XtermWidget xw,
 	    screen->renderDraw = XftDrawCreate(dpy, draw, visual,
 					       DefaultColormap(dpy, scr));
 	}
+#define IS_BOLD  (flags & BOLDATTR(screen))
+#define NOT_BOLD (flags & ~BOLDATTR(screen))
 	font = getNormXftFont(xw, flags, &did_ul);
+	font0 = IS_BOLD ? getNormXftFont(xw, NOT_BOLD, &did_ul) : font;
 #if OPT_RENDERWIDE
 	wfont = getWideXftFont(xw, flags);
+	wfont0 = IS_BOLD ? getWideXftFont(xw, NOT_BOLD) : wfont;
 #endif
 	values.foreground = getCgsFore(xw, currentWin, gc);
 	values.background = getCgsBack(xw, currentWin, gc);
@@ -3393,15 +3397,22 @@ drawXtermText(XtermWidget xw,
 				ch = part;
 				missing = True;
 			    }
-			} else if (xtermXftMissing(xw, currFont, ch)
-				   && (part = AsciiEquivs(ch)) != ch) {
-			    filler = needed - 1;
-			    ch = part;
-			    replace = True;
+			} else if (xtermXftMissing(xw, currFont, ch)) {
+			    XftFont *test = pickXftFont(needed, font0, wfont0);
+			    if (!xtermXftMissing(xw, test, ch)) {
+				currFont = test;
+				replace = True;
+				filler = needed - 1;
+			    } else if ((part = AsciiEquivs(ch)) != ch) {
+				filler = needed - 1;
+				ch = part;
+				replace = True;
+			    }
 			}
 		    });
 		}
 #else
+		XftFont *currFont = font;
 		if (xtermIsDecGraphic(ch)) {
 		    /*
 		     * Xft generally does not have the line-drawing characters
@@ -3410,7 +3421,7 @@ drawXtermText(XtermWidget xw,
 		     * Unicode position.  Failing that, use our own
 		     * box-characters.
 		     */
-		    if (xtermXftMissing(xw, font, ch)) {
+		    if (xtermXftMissing(xw, currFont, ch)) {
 			missing = 1;
 		    }
 		}
@@ -3424,7 +3435,7 @@ drawXtermText(XtermWidget xw,
 		    if (last > first) {
 			nc = drawClippedXftString(xw,
 						  flags,
-						  font,
+						  currFont,
 						  getXftColor(xw, values.foreground),
 						  curX,
 						  y,
@@ -3448,7 +3459,7 @@ drawXtermText(XtermWidget xw,
 			IChar ch2 = (IChar) ch;
 			nc = drawClippedXftString(xw,
 						  flags,
-						  font,
+						  currFont,
 						  getXftColor(xw, values.foreground),
 						  curX,
 						  y,
@@ -3460,7 +3471,7 @@ drawXtermText(XtermWidget xw,
 			    ch2 = ' ';
 			    nc = drawClippedXftString(xw,
 						      flags,
-						      font,
+						      currFont,
 						      getXftColor(xw, values.foreground),
 						      curX,
 						      y,

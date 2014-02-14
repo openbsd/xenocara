@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.321 2013/11/22 21:42:13 tom Exp $
+dnl $XTermId: configure.in,v 1.322 2014/01/16 01:44:05 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2012,2013 by Thomas E. Dickey
+dnl Copyright 1997-2013,2014 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -91,6 +91,7 @@ AC_TYPE_OFF_T
 AC_CHECK_FUNCS( \
 	gethostname \
 	getlogin \
+	initgroups \
 	mkdtemp \
 	putenv \
 	unsetenv \
