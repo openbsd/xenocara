@@ -1,4 +1,4 @@
-/* $OpenBSD: wsinit.c,v 1.3 2007/12/23 14:28:10 matthieu Exp $ */
+/* $OpenBSD: wsinit.c,v 1.4 2014/02/15 15:00:28 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -28,10 +28,9 @@
 void
 InitCard(char *name)
 {
-	KdCardAttr attr;
 
 	DBG(("InitCard\n"));
-	KdCardInfoAdd(&wsfbFuncs, &attr, 0);
+	KdCardInfoAdd(&wsfbFuncs, 0);
 }
 
 void
@@ -53,6 +52,12 @@ InitInput(int argc, char **argv)
 	KdAddKeyboard(ki);
 
 	KdInitInput();
+}
+
+void
+CloseInput(void)
+{
+	KdCloseInput();
 }
 
 void

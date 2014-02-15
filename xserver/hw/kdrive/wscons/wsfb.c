@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.c,v 1.6 2009/09/06 19:44:25 matthieu Exp $ */
+/* $OpenBSD: wsfb.c,v 1.7 2014/02/15 15:00:28 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -105,20 +105,15 @@ wsfbMapFramebuffer(KdScreenInfo *screen)
 	if (priv->fb == NULL)
 		FatalError("Can't mmap framebuffer\n");
 
-	screen->memory_base = (CARD8 *)(priv->fb);
-	screen->memory_size = len;
 	
 	if (scrPriv->shadow) {
-		if (!KdShadowFbAlloc(screen, 0,
+		if (!KdShadowFbAlloc(screen,
 			scrPriv->randr & (RR_Rotate_90|RR_Rotate_270)))
 			return FALSE;
-		screen->off_screen_base = screen->memory_size;
 	} else {
-		screen->fb[0].byteStride = priv->linebytes;
-		screen->fb[0].pixelStride = priv->linebytes * 8 / priv->bpp;
-		screen->fb[0].frameBuffer = (CARD8 *)(priv->fb);
-		screen->off_screen_base = 
-		    screen->fb[0].byteStride * screen->height;
+		screen->fb.byteStride = priv->linebytes;
+		screen->fb.pixelStride = priv->linebytes * 8 / priv->bpp;
+		screen->fb.frameBuffer = (CARD8 *)(priv->fb);
 	}
 	scrPriv->mapped = TRUE;
 	return TRUE;
@@ -154,12 +149,12 @@ wsfbCardInit(KdCardInfo *card)
 	WsfbPriv *priv;
 
 	DBG(("wsfbCardInit\n"));
-	priv = (WsfbPriv *)xalloc(sizeof(WsfbPriv));
+	priv = (WsfbPriv *)malloc(sizeof(WsfbPriv));
 	if (priv == NULL)
 		return FALSE;
 	bzero(priv, sizeof(WsfbPriv));
 	if (!wsfbInitialize(card, priv)) {
-		xfree(priv);
+		free(priv);
 		return FALSE;
 	}
 	card->driver = priv;
@@ -178,20 +173,20 @@ wsfbScreenInitialize(KdScreenInfo *screen, WsfbScrPriv *scrpriv)
 
 	DBG(("wsfbScreenInitialize\n"));
 	DBG(("  screen dimensions %dx%d\n", screen->width, screen->height));
-	DBG(("  screen depth %d\n", screen->fb[0].depth));
+	DBG(("  screen depth %d\n", screen->fb.depth));
 	DBG(("  randr %d\n", screen->randr));
 	if (screen->width == 0 || screen->height == 0) {
 		ErrorF("wsfbScreenInitialize: forcing 640x480\n");
 		screen->width = 640;
 		screen->height = 480;
 	}
-	if (screen->fb[0].depth == 0) {
+	if (screen->fb.depth == 0) {
 		ErrorF("wsfbScreenInitialize: forcing depth 16\n");
-		depth = screen->fb[0].depth = 16;
+		depth = screen->fb.depth = 16;
 	}
 	DBG(("  wstype: %d\n", priv->wstype));
 	if (priv->wstype == WSDISPLAY_TYPE_PCIVGA) {
-		gfxmode.depth = screen->fb[0].depth;
+		gfxmode.depth = screen->fb.depth;
 		gfxmode.width = screen->width;
 		gfxmode.height = screen->height;
 		if (ioctl(WsconsConsoleFd, WSDISPLAYIO_SETGFXMODE, 
@@ -214,24 +209,24 @@ wsfbScreenInitialize(KdScreenInfo *screen, WsfbScrPriv *scrpriv)
 	}
 	switch (depth) {
 	case 16:
-		screen->fb[0].visuals =  (1 << TrueColor);
-		screen->fb[0].redMask = 0x1f << 11;
-		screen->fb[0].greenMask = 0x3f << 5;
-		screen->fb[0].blueMask = 0x1f;
+		screen->fb.visuals =  (1 << TrueColor);
+		screen->fb.redMask = 0x1f << 11;
+		screen->fb.greenMask = 0x3f << 5;
+		screen->fb.blueMask = 0x1f;
 		break;
 	case 24:
-		screen->fb[0].visuals =  (1 << TrueColor);
-		screen->fb[0].redMask = 0xff0000;
-		screen->fb[0].greenMask = 0x00ff00;
-		screen->fb[0].blueMask = 0x0000ff;
+		screen->fb.visuals =  (1 << TrueColor);
+		screen->fb.redMask = 0xff0000;
+		screen->fb.greenMask = 0x00ff00;
+		screen->fb.blueMask = 0x0000ff;
 		break;
 	default:
-		screen->fb[0].redMask = 0;
-		screen->fb[0].greenMask = 0;
-		screen->fb[0].blueMask = 0;
+		screen->fb.redMask = 0;
+		screen->fb.greenMask = 0;
+		screen->fb.blueMask = 0;
 		break;
 	}
-	screen->fb[0].bitsPerPixel = depth;
+	screen->fb.bitsPerPixel = depth;
 	priv->bpp = depth;	/* XXX */
 	screen->dumb = TRUE;
 	screen->rate = 72;
@@ -246,7 +241,7 @@ wsfbScreenInit(KdScreenInfo *screen)
 	WsfbScrPriv *scrPriv;
 
 	DBG(("wsfbScreenInit\n"));
-	scrPriv = (WsfbScrPriv *)xalloc(sizeof(WsfbScrPriv));
+	scrPriv = (WsfbScrPriv *)malloc(sizeof(WsfbScrPriv));
 	if (scrPriv == NULL)
 		return FALSE;
 	bzero(scrPriv, sizeof(WsfbScrPriv));
@@ -254,7 +249,7 @@ wsfbScreenInit(KdScreenInfo *screen)
 	if (!wsfbScreenInitialize(screen, scrPriv)) {
 		ErrorF("wsfbScreenInitialize: failed to initialize screen\n");
 		screen->driver = NULL;
-		xfree(scrPriv);
+		free(scrPriv);
 		return FALSE;
 	}
 	return TRUE;
@@ -317,10 +312,10 @@ wsfbEnable(ScreenPtr pScreen)
 	(*pScreen->ModifyPixmapHeader) (fbGetScreenPixmap (pScreen),
 					pScreen->width,
 					pScreen->height,
-					screen->fb[0].depth,
-					screen->fb[0].bitsPerPixel,
-					screen->fb[0].byteStride,
-					screen->fb[0].frameBuffer);
+					screen->fb.depth,
+					screen->fb.bitsPerPixel,
+					screen->fb.byteStride,
+					screen->fb.frameBuffer);
 	DBG(("wsfbEnable done.\n"));
 	return TRUE;
 }
@@ -366,7 +361,7 @@ wsfbCardFini(KdCardInfo *card)
 	DBG(("wsfbCardFini\n"));
 	/* unmap framebuffer */
 	/* close fd */
-	xfree(priv);
+	free(priv);
 }
 
 void
@@ -438,7 +433,7 @@ wsfbUnmapFramebuffer(KdScreenInfo *screen)
 	DBG(("wsfbUnmapFramebuffer\n"));
 	if (!scrPriv->mapped)
 		return;
-	KdShadowFbFree(screen, 0);
+	KdShadowFbFree(screen);
 	return;
 }
 
@@ -585,10 +580,10 @@ wsfbRandRSetConfig(ScreenPtr		pScreen,
 	(*pScreen->ModifyPixmapHeader) (fbGetScreenPixmap (pScreen),
 	    pScreen->width,
 	    pScreen->height,
-	    screen->fb[0].depth,
-	    screen->fb[0].bitsPerPixel,
-	    screen->fb[0].byteStride,
-	    screen->fb[0].frameBuffer);
+	    screen->fb.depth,
+	    screen->fb.bitsPerPixel,
+	    screen->fb.byteStride,
+	    screen->fb.frameBuffer);
 	
 	/* set the subpixel order */
 	

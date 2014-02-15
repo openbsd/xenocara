@@ -1,4 +1,4 @@
-/* $OpenBSD: mouse.c,v 1.5 2007/12/23 14:28:10 matthieu Exp $ */
+/* $OpenBSD: mouse.c,v 1.6 2014/02/15 15:00:28 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -91,15 +91,15 @@ int MouseInputType;
 static Status
 wsmouseInit(KdPointerInfo *pi)
 {
-	char *device = "/dev/wsmouse";
+	const char *device = "/dev/wsmouse";
 
 	DBG(("wsmouseInit\n"));
 
 	if (pi->path == NULL)
-		pi->path = KdSaveString(device);
+		pi->path = strdup(device);
 
 	if (pi->name == NULL)
-		pi->name = KdSaveString("Wscons mouse");
+		pi->name = strdup("Wscons mouse");
 	return Success;
 }
 
@@ -121,7 +121,7 @@ wsmouseEnable(KdPointerInfo *pi)
 		close(fd);
 		return BadAlloc;
 	}
-	pi->driverPrivate = (void *)fd;
+	pi->driverPrivate = (void *)(intptr_t)fd;
 	return Success;
 }
 
@@ -129,7 +129,7 @@ static void
 wsmouseDisable(KdPointerInfo *pi)
 {
 	DBG(("wsmouseDisable\n"));
-	KdUnregisterFd(pi, (int)pi->driverPrivate, TRUE);
+	KdUnregisterFd(pi, (int)(intptr_t)pi->driverPrivate, TRUE);
 }
 		
 static void

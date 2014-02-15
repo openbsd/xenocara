@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb.h,v 1.3 2007/05/29 20:14:43 matthieu Exp $ */
+/* $OpenBSD: wsfb.h,v 1.4 2014/02/15 15:00:28 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -48,6 +48,8 @@ typedef struct _wsfbScrPriv {
 } WsfbScrPriv;
 
 extern KdCardFuncs wsfbFuncs;
+extern KdKeyboardDriver WsconsKeyboardDriver;
+extern KdPointerDriver WsconsMouseDriver;
 
 Bool wsfbCardInit(KdCardInfo *);
 Bool wsfbScreenInit(KdScreenInfo *);

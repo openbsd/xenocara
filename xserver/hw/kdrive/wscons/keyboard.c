@@ -1,4 +1,4 @@
-/* $OpenBSD: keyboard.c,v 1.4 2007/12/23 14:28:10 matthieu Exp $ */
+/* $OpenBSD: keyboard.c,v 1.5 2014/02/15 15:00:28 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *
@@ -72,7 +72,7 @@ wskbdEnable(KdKeyboardInfo *ki)
 	DBG(("wskbdEnable\n"));
 	if (ki == NULL) 
 		return !Success;
-	ki->driverPrivate = (void *)fd;
+	ki->driverPrivate = (void *)(intptr_t)fd;
 
 	/* Switch to X mode */
 	if (ioctl(fd, WSKBDIO_SETMODE, &option) == -1) {
@@ -92,7 +92,7 @@ wskbdDisable(KdKeyboardInfo *ki)
 	DBG(("wskbdDisable\n"));
 	if (ki == NULL)
 		return;
-	fd = (int)ki->driverPrivate;
+	fd = (int)(intptr_t)ki->driverPrivate;
 	/* Back to console mode */
 	ioctl(fd, WSKBDIO_SETMODE, &option);
 }
@@ -105,11 +105,11 @@ wskbdInit(KdKeyboardInfo *ki)
 		return !Success;
 
 	if (ki->path)
-		xfree(ki->path);
-	ki->path = KdSaveString("console");
+		free(ki->path);
+	ki->path = strdup("console");
 	if (ki->name)
-		xfree(ki->name);
-	ki->name = KdSaveString("Wscons keyboard");
+		free(ki->name);
+	ki->name = strdup("Wscons keyboard");
 	
 	wskbdLoad();
 	return Success;
