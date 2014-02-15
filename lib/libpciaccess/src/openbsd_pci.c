@@ -599,8 +599,11 @@ pci_system_openbsd_create(void)
 	for (domain = 0; domain < sizeof(pcifd) / sizeof(pcifd[0]); domain++) {
 		snprintf(path, sizeof(path), "/dev/pci%d", domain);
 	        pcifd[domain] = open(path, O_RDWR | O_CLOEXEC);
-		if (pcifd[domain] == -1)
-			break;
+		if (pcifd[domain] == -1) {
+			pcifd[domain] = open(path, O_RDONLY | O_CLOEXEC);
+			if (pcifd[domain] == -1)
+				break;
+		}
 		ndomains++;
 	}
 
