@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.32 2014/01/12 15:08:24 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.33 2014/02/16 08:10:36 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -19,7 +19,7 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	ftgxval.c ftlcdfil.c ftotval.c ftpatent.c \
         ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c ftsynth.c ftsystem.c \
         fttype1.c ftwinfnt.c ftxf86.c autofit.c bdf.c cff.c \
-        type1cid.c ftgzip.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
+        ftgzip.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
         raster.c sfnt.c smooth.c truetype.c type1.c type1cid.c type42.c \
 	winfnt.c
 
