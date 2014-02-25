@@ -1,6 +1,6 @@
 XCOMM!SHELL_CMD
 XCOMM
-XCOMM $OpenBSD: Xsession.cpp,v 1.12 2013/05/19 07:22:53 ajacoutot Exp $
+XCOMM $OpenBSD: Xsession.cpp,v 1.13 2014/02/25 22:16:24 matthieu Exp $
 
 XCOMM redirect errors to a file in user's home directory if we can
 
@@ -44,9 +44,10 @@ id1=$HOME/.ssh/identity
 id2=$HOME/.ssh/id_dsa
 id3=$HOME/.ssh/id_rsa
 id4=$HOME/.ssh/id_ecdsa
+id5=$HOME/.ssh/id_ed25519
 if [ -z "$SSH_AGENT_PID" ];
 then
-	if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 -o -f $id4 ];
+	if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 -o -f $id4 -o -f $id5 ];
 	then
 		eval `ssh-agent -s`
 		ssh-add < /dev/null
