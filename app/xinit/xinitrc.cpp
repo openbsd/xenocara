@@ -1,5 +1,5 @@
 XCOMM!SHELL_CMD
-XCOMM $OpenBSD: xinitrc.cpp,v 1.11 2014/02/25 22:16:24 matthieu Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.12 2014/02/26 14:21:28 matthieu Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
@@ -45,7 +45,7 @@ id1=$HOME/.ssh/identity
 id2=$HOME/.ssh/id_dsa
 id3=$HOME/.ssh/id_rsa
 id4=$HOME/.ssh/id_ecdsa
-id5=$HOME/.ssh/id_id_ed25519
+id5=$HOME/.ssh/id_ed25519
 
 if [ -z "$SSH_AGENT_PID" ];
 then
