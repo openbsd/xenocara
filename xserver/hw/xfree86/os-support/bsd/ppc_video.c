@@ -139,9 +139,7 @@ xf86PrivilegedInit(void)
         xf86Msg(X_PROBED,
                 "no aperture driver access: only wsfb driver useable\n");
     }
-    else {
-        pci_system_init();
-    }
+    pci_system_init();
     xf86OpenConsole();
 }
 #endif
