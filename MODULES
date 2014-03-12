@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.286 2014/02/14 19:41:21 matthieu Exp $
+# $OpenBSD: MODULES,v 1.287 2014/03/12 21:05:13 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -97,7 +97,7 @@ driver/xf86-input-keyboard	1.8.0	7.7+
 driver/xf86-input-mouse		1.9.0	7.7+
 driver/xf86-input-mutouch	1.3.0
 driver/xf86-input-penmount	1.5.0
-driver/xf86-input-synaptics	1.7.3	7.7+	needs-update
+driver/xf86-input-synaptics	1.7.4	7.7+	needs-update
 driver/xf86-input-vmmouse	13.0.0	7.7+
 driver/xf86-input-void		1.4.0	7.7
 driver/xf86-video-apm		1.2.5
@@ -216,7 +216,7 @@ lib/xcb-util-cursor		0.1.0		needs-import
 lib/xcb-util-image		0.3.9		needs-import
 lib/xcb-util-keysyms		0.3.9		needs-import
 lib/xcb-util-renderutil		0.3.8		needs-import
-lib/xcb-util-wm			0.4.0		needs-import
+lib/xcb-util-wm			0.4.1		needs-import
 
 proto/bigreqsproto		1.1.2	7.7
 proto/compositeproto		0.4.2	7.7
