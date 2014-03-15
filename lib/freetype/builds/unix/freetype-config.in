@@ -38,8 +38,6 @@ Options:
   --libtool              display library name for linking with libtool
   --cflags               display flags for compiling with the FreeType
                          library
-  --static               make command line options display flags
-                         for static linking
 EOF
   exit $1
 }
@@ -90,9 +88,6 @@ while test $# -gt 0 ; do
   --libtool)
     echo_libtool=yes
     ;;
-  --static)
-    show_static=yes
-    ;;
   *)
     usage 1 1>&2
     ;;
@@ -142,11 +137,7 @@ if test "$echo_cflags" = "yes" ; then
 fi
 
 if test "$echo_libs" = "yes" ; then
-  libs="%LIBS_CONFIG%"
-  staticlibs="%LIBSSTATIC_CONFIG%"
-  if test "$show_static" = "yes" ; then
-    libs="$staticlibs"
-  fi
+  libs="-lfreetype %LIBZ% %LIBBZ2% %LIBPNG% %FT2_EXTRA_LIBS%"
   if test "${SYSROOT}$libdir" != "/usr/lib"  &&
      test "${SYSROOT}$libdir" != "/usr/lib64"; then
     echo -L${SYSROOT}$libdir $libs
