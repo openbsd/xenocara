@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.35 2014/03/14 20:41:41 dcoppa Exp $
+#	$OpenBSD: Makefile,v 1.36 2014/03/15 18:02:09 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -67,9 +67,8 @@ freetype2.pc: freetype2.in Makefile
 freetype-config: freetype-config.in
 	sed -e s,%prefix%,${X11BASE}, -e s,%exec_prefix%,${X11BASE}, \
 		-e s,%includedir%,${INCSDIR}, -e s,%libdir%,${LIBDIR}, \
-		-e s,%LIBZ%,-lz, -e s,%FT2_EXTRA_LIBS%,, \
-		-e s,%LIBBZ2%,, -e s,%LIBPNG%,, \
-		-e s,%enable_shared%,yes, \
+		-e 's,%LIBS_CONFIG%,-lfreetype -lz,' \
+		-e 's,%LIBSSTATIC_CONFIG%,-lfreetype -lz,' \
 		-e 's,%hardcode_libdir_flag_spec%,,' \
 		-e 's,%ft_version%,${FT_VERSION_INFO},' -e 's,%wl%,,' \
 		-e 's,%build_libtool_libs%,yes,' \
