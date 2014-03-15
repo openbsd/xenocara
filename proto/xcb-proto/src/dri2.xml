@@ -28,26 +28,26 @@ authorization from the authors.
 -->
 
 <xcb header="dri2" extension-xname="DRI2" extension-name="DRI2"
-  major-version="1" minor-version="3">
+  major-version="1" minor-version="4">
   <import>xproto</import>
 
   <enum name="Attachment">
-    <item name="BufferFrontLeft" />
-    <item name="BufferBackLeft" />
-    <item name="BufferFrontRight" />
-    <item name="BufferBackRight" />
-    <item name="BufferDepth" />
-    <item name="BufferStencil" />
-    <item name="BufferAccum" />
-    <item name="BufferFakeFrontLeft" />
-    <item name="BufferFakeFrontRight" />
-    <item name="BufferDepthStencil" />
-    <item name="BufferHiz" />
+    <item name="BufferFrontLeft">      <value>0</value> </item>
+    <item name="BufferBackLeft">       <value>1</value> </item>
+    <item name="BufferFrontRight">     <value>2</value> </item>
+    <item name="BufferBackRight">      <value>3</value> </item>
+    <item name="BufferDepth">          <value>4</value> </item>
+    <item name="BufferStencil">        <value>5</value> </item>
+    <item name="BufferAccum">          <value>6</value> </item>
+    <item name="BufferFakeFrontLeft">  <value>7</value> </item>
+    <item name="BufferFakeFrontRight"> <value>8</value> </item>
+    <item name="BufferDepthStencil">   <value>9</value> </item>
+    <item name="BufferHiz">            <value>10</value> </item>
   </enum>
 
   <enum name="DriverType">
-    <item name="DRI" />
-    <item name="VDPAU" />
+    <item name="DRI">   <value>0</value> </item>
+    <item name="VDPAU"> <value>1</value> </item>
   </enum>
 
   <enum name="EventType">
@@ -239,6 +239,18 @@ authorization from the authors.
   <request name="SwapInterval" opcode="12">
     <field type="DRAWABLE" name="drawable" />
     <field type="CARD32" name="interval" />
+  </request>
+
+  <!-- Version 1.4 -->
+
+  <request name="GetParam" opcode="13">
+    <field type="DRAWABLE" name="drawable" />
+    <field type="CARD32" name="param" />
+    <reply>
+      <field type="BOOL" name="is_param_recognized" />
+      <field type="CARD32" name="value_hi" />
+      <field type="CARD32" name="value_lo" />
+    </reply>
   </request>
 
   <!-- Events -->

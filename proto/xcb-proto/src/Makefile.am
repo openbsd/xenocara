@@ -6,7 +6,10 @@ xcbinclude_HEADERS = \
 	damage.xml \
 	dpms.xml \
 	dri2.xml \
+	dri3.xml \
+	ge.xml \
 	glx.xml \
+	present.xml \
 	randr.xml \
 	record.xml \
 	render.xml \
@@ -18,6 +21,7 @@ xcbinclude_HEADERS = \
 	xc_misc.xml \
 	xevie.xml \
 	xf86dri.xml \
+	xf86vidmode.xml \
 	xfixes.xml \
 	xinerama.xml \
 	xinput.xml \
