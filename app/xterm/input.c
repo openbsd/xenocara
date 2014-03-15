@@ -2004,7 +2004,7 @@ VTInitModifiers(XtermWidget xw)
 		if (theMap[i] == XF86XK_Paste) {
 		    TRACE(("keyboard has XF86XK_Paste\n"));
 		    addTranslation(xw,
-				   "<KeyPress> XF86Paste",
+				   ":<KeyPress> XF86Paste",
 				   "insert-selection(SELECT, CUT_BUFFER0)");
 		}
 #endif
@@ -2012,7 +2012,7 @@ VTInitModifiers(XtermWidget xw)
 		if (theMap[i] == SunXK_Paste) {
 		    TRACE(("keyboard has SunXK_Paste\n"));
 		    addTranslation(xw,
-				   "<KeyPress> SunPaste",
+				   ":<KeyPress> SunPaste",
 				   "insert-selection(SELECT, CUT_BUFFER0)");
 		}
 #endif
