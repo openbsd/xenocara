@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.287 2014/03/12 21:05:13 matthieu Exp $
+# $OpenBSD: MODULES,v 1.288 2014/03/16 18:50:19 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -171,7 +171,7 @@ font/util			1.3.0
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
-lib/libFS			1.0.5	7.7+
+lib/libFS			1.0.6	7.7+	needs-update
 lib/libICE			1.0.8	7.7
 lib/libSM			1.2.2	7.7+
 lib/libX11			1.6.2	7.7+
@@ -212,7 +212,7 @@ lib/libxshmfence		1.1		needs-import
 lib/libxtrans			1.3.3	7.7+	needs-update
 lib/pixman			0.32.4
 lib/xcb-util			0.3.9		needs-update
-lib/xcb-util-cursor		0.1.0		needs-import
+lib/xcb-util-cursor		0.1.1		needs-import
 lib/xcb-util-image		0.3.9		needs-import
 lib/xcb-util-keysyms		0.3.9		needs-import
 lib/xcb-util-renderutil		0.3.8		needs-import
@@ -239,7 +239,7 @@ proto/resourceproto		1.2.0	7.7
 proto/scrnsaverproto		1.2.2	7.7
 proto/videoproto		2.3.2	7.7+
 proto/x11proto			7.0.25	7.7+
-proto/xcb-proto			1.10	7.7+	needs-update
+proto/xcb-proto			1.10	7.7+
 proto/xcmiscproto		1.2.2	7.7
 proto/xextproto			7.3.0	7.7+	needs-update
 proto/xf86bigfontproto		1.2.0	7.7
