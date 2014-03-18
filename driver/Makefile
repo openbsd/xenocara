@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.58 2013/11/17 14:33:05 matthieu Exp $
+# $OpenBSD: Makefile,v 1.59 2014/03/18 22:37:29 miod Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -18,8 +18,6 @@ INPUT_DRV_amd64= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
 
 INPUT_DRV_aviion=
 
-INPUT_DRV_hp300= ${INPUT_DRV_DEFAULT}
-
 INPUT_DRV_hppa= ${INPUT_DRV_DEFAULT}
 
 INPUT_DRV_i386= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
@@ -31,9 +29,6 @@ INPUT_DRV_loongson= ${INPUT_DRV_DEFAULT}
 INPUT_DRV_luna88k= ${INPUT_DRV_DEFAULT}
 
 INPUT_DRV_macppc= ${INPUT_DRV_COMMON}
-
-INPUT_DRV_mvme68k=
-INPUT_DRV_mvme88k=
 
 INPUT_DRV_octeon=
 
@@ -70,9 +65,6 @@ VIDEO_DRV_armish= \
 
 VIDEO_DRV_aviion=
 
-VIDEO_DRV_hp300= \
-	xf86-video-wsfb
-
 VIDEO_DRV_hppa= \
 	xf86-video-wsfb \
 	xf86-video-wsudl
@@ -94,9 +86,6 @@ VIDEO_DRV_luna88k= \
 VIDEO_DRV_macppc= \
 	xf86-video-ati xf86-video-mach64 xf86-video-nv xf86-video-r128 \
 	xf86-video-wsfb xf86-video-wsudl
-
-VIDEO_DRV_mvme68k=
-VIDEO_DRV_mvme88k=
 
 VIDEO_DRV_octeon=
 

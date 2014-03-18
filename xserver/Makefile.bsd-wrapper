@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.50 2013/12/28 16:31:18 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.51 2014/03/18 22:37:29 miod Exp $
 
 .include <bsd.xconf.mk>
 
@@ -6,9 +6,9 @@ DIST= ${.CURDIR}
 
 # Machines for which we don't build the Xorg Xserver
 NO_XORG_MACHINES=	alpha aviion hppa64 landisk  \
-			mvme68k mvme88k octeon solbourne vax
+			octeon solbourne vax
 
-NO_XF86UTIL_MACHINES=	hp300 landisk luna88k mac68k octeon sgi sparc vax
+NO_XF86UTIL_MACHINES=	landisk luna88k mac68k octeon sgi sparc vax
 
 .for M in ${NO_XORG_MACHINES} 
 NO_XORG_${M} = --disable-xorg
