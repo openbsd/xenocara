@@ -3941,7 +3941,10 @@
 ./usr/X11R6/share/xcb/damage.xml
 ./usr/X11R6/share/xcb/dpms.xml
 ./usr/X11R6/share/xcb/dri2.xml
+./usr/X11R6/share/xcb/dri3.xml
+./usr/X11R6/share/xcb/ge.xml
 ./usr/X11R6/share/xcb/glx.xml
+./usr/X11R6/share/xcb/present.xml
 ./usr/X11R6/share/xcb/randr.xml
 ./usr/X11R6/share/xcb/record.xml
 ./usr/X11R6/share/xcb/render.xml
@@ -3953,6 +3956,7 @@
 ./usr/X11R6/share/xcb/xc_misc.xml
 ./usr/X11R6/share/xcb/xevie.xml
 ./usr/X11R6/share/xcb/xf86dri.xml
+./usr/X11R6/share/xcb/xf86vidmode.xml
 ./usr/X11R6/share/xcb/xfixes.xml
 ./usr/X11R6/share/xcb/xinerama.xml
 ./usr/X11R6/share/xcb/xinput.xml
