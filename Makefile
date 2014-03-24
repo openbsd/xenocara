@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.55 2014/01/10 00:17:54 todd Exp $
+# $OpenBSD: Makefile,v 1.56 2014/03/24 20:41:19 sthen Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -81,7 +81,7 @@ sha: release-clean release-install dist hash
 
 hash: dist
 	-cd ${RELEASEDIR}; \
-		sum -a sha256 x*tgz > SHA256
+		cksum -a sha256 x*tgz > SHA256
 
 .ORDER: release-clean release-install dist hash
 .endif
