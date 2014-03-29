@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.288 2014/03/16 18:50:19 matthieu Exp $
+# $OpenBSD: MODULES,v 1.289 2014/03/29 22:00:33 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -71,7 +71,7 @@ app/xmodmap		1.0.8	7.7+
 app/xmore		1.0.2
 app/xpr			1.0.4	7.7
 app/xprop		1.2.2	7.7+
-app/xrandr		1.4.1	7.7+
+app/xrandr		1.4.2	7.7+	needs-update
 app/xrdb		1.1.0	7.7+
 app/xrefresh		1.0.5	7.7+
 app/xset		1.2.3	7.7+
@@ -251,7 +251,7 @@ proto/xineramaproto		1.2.1	7.7
 
 util/cf				1.0.4
 util/gccmakedep			1.0.2
-util/macros			1.18	7.7+	needs-update
+util/macros			1.19	7.7+	needs-update
 util/makedepend			1.0.5	7.7+
 
 xserver				1.15.0	7.7+	needs-update

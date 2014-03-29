@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.186 2014/03/16 18:50:19 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.187 2014/03/29 22:00:33 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -27,7 +27,7 @@ Archive Site:	http://dri.freedesktop.org/
 
 Package:	fontconfig
 Version:	2.10.91
-Current Vers:	2.11.0
+Current Vers:	2.11.1
 Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
 
