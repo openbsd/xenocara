@@ -21,9 +21,9 @@ dnl  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.60])
+AC_PREREQ([2.62])
 AC_INIT([util-macros],
-        [1.17.1],
+        [1.19.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [util-macros])
 AC_CONFIG_SRCDIR([Makefile.am])
