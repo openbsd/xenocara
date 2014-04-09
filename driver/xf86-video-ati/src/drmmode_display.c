@@ -1478,7 +1478,7 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 	ScreenPtr   screen = xf86ScrnToScreen(scrn);
 	uint32_t    old_fb_id;
 	int	    i, pitch, old_width, old_height, old_pitch;
-	int screen_size;
+	uint32_t screen_size;
 	int cpp = info->pixel_bytes;
 	struct radeon_bo *front_bo;
 	struct radeon_surface surface;
@@ -2014,6 +2014,9 @@ void drmmode_uevent_fini(ScrnInfoPtr scrn, drmmode_ptr drmmode)
 		udev_monitor_unref(drmmode->uevent_monitor);
 		udev_unref(u);
 	}
+	if (info->ChipFamily < CHIP_FAMILY_R600 &&
+	    info->r600_shadow_fb && tiling_flags)
+	    tiling_flags |= RADEON_TILING_SURFACE;
 #endif
 }
 

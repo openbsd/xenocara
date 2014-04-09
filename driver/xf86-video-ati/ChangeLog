@@ -1,3 +1,340 @@
+commit 0333f5bda27dc0ec2edc180c7a4dc9a432f13f97
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri Jan 24 10:19:49 2014 -0500
+
+    radeon: bump version for release
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit fc4167f2a85d9cba65078d8fc6f08c7a619ad66e
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri Jan 24 10:17:08 2014 -0500
+
+    Require glamor 0.6.0
+    
+    This is required for Xv support and a number of important
+    performance improvements.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f2a0a5cf6c5a21e2a02280e110a4eb8e6609dace
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jan 22 11:04:42 2014 +0900
+
+    Don't require the glamoregl module to be pre-loaded with xserver >= 1.15
+    
+    The issues with loading it on demand have been fixed in xserver 1.15.
+    
+    Inspired by Jérôme Glisse on IRC.
+
+commit 3213df16d61302148be0088c8f93c6a5a88558f1
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jan 8 11:30:59 2014 +0900
+
+    dri2: Make last_vblank_seq local unsigned to match dpms_last_seq
+    
+    Without this, I was occasionally running into gnome-shell hangs due to
+    wildly off vblank sequence values. Doesn't seem to happen anymore with
+    this change.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit bcc454ea2fb239e13942270faec7801270615b9c
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Mon Jan 6 09:52:50 2014 -0500
+
+    radeon/exa: Always use a scratch surface for UTS to vram
+    
+    If we don't, we may hit a buffer that crosses the
+    visible vram boundary resulting in a sigbus when the
+    CPU accesses the buffer beyond the PCI aperture.
+    This will introduce an extra copy in certain cases.
+    
+    This is based on Michel's patch from bug 44099 updated
+    for all asic families.
+    
+    Bug:
+    https://bugs.freedesktop.org/show_bug.cgi?id=44099
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 04ef035c9315b4a6fbf1b14720be87cee4099a9f
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Dec 24 15:14:35 2013 -0500
+
+    drm/radeon: fix SUMO2 pci id
+    
+    0x9649 is sumo2, not sumo.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit bfbff3b246db509c820df17b8fcf5899882ffcfa
+Author: Robert Millan <rmh@freebsd.org>
+Date:   Fri Dec 20 11:03:14 2013 +0000
+
+    radeon: Restore kernel module load on FreeBSD.
+    
+    Since the introduction of a call to drmCheckModesettingSupported()
+    in radeon_kernel_mode_enabled(), with abort condition if such call
+    fails, the drmOpen() call in radeon_open_drm_master() no longer
+    takes the responsibility of loading the radeon kernel module.
+    
+    However at least on FreeBSD (and GNU/kFreeBSD), X is still relied
+    on to load the modules it needs. This commit restores the old
+    behaviour of loading kernel modules on these systems.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=72852
+    Signed-off-by: Robert Millan <rmh@freebsd.org>
+
+commit 796c9a0cb587f528326bede11fa3f3eb7d3edaf1
+Author: Robert Millan <rmh@freebsd.org>
+Date:   Fri Dec 20 10:55:09 2013 +0000
+
+    radeon: Set first parameter of drmOpen() to NULL
+    
+    Since the introduction of a call to drmCheckModesettingSupported()
+    in radeon_kernel_mode_enabled(), with abort condition if such call
+    fails, the first argument to drmOpen() call in radeon_open_drm_master()
+    has become a no-op red herring.
+    
+    Such argument (a kernel module name) is supposed to result in load
+    of specified kernel module. However, this will never happen. The
+    problem is that if the code containing drmOpen() call is reached, it
+    means that drmCheckModesettingSupported() check has previously
+    succeeded, which implies the module is already loaded.
+    
+    So, drmOpen() will never load a kernel module. But it gives the
+    impression that it will.
+    
+    In order to avoid this confusion, this commit replaces it with NULL,
+    like xf86-video-intel driver does.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=72849
+    Signed-off-by: Robert Millan <rmh@freebsd.org>
+
+commit d571d6af70ef27efd1ed6420eb892bdde963ed7a
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Sep 24 11:39:10 2013 -0400
+
+    radeon/kms: add Hawaii pci ids
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e38a92e00d015a6b80a1f3a16d58c61f084b066f
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Sep 24 11:35:00 2013 -0400
+
+    radeon: add support for Hawaii
+    
+    Disabled by default until the acceleration code stablizes.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e4cd0f4392ea11c93088ad429f36eaaf9bcbf505
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Wed Oct 30 15:21:26 2013 -0400
+
+    radeon: enable tiling on SI by default (v2)
+    
+    Now that mesa 9.2 is out with support for tiling
+    on SI asics, we can enable it here. Tiling improves
+    memory bandwidth utilization.
+    
+    V2: update man page
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 3b38701a72fa1cad1e4610a2f4330b3da4cc6391
+Author: Vadim Girlin <vadimgirlin@gmail.com>
+Date:   Fri Nov 1 10:36:39 2013 -0400
+
+    radeon: disable 2D tiling on buffers < 128 pixels
+    
+    Seems to run into alignment problems with certain
+    card configurations.
+    
+    bug:
+    https://bugs.freedesktop.org/show_bug.cgi?id=70675
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 0c921edf0162fed616cea9d02e168b719243bcd2
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Wed Oct 30 13:01:02 2013 -0400
+
+    radeon/glamor: with new pixmap for dri2 drawable no need to create new texture
+    
+    When creating a new pixmap/bo for dri2 drawable there is no need to create a
+    new texture, instead the texture associated with the new pixmap should be use
+    otherwise there is a missmatch between the bo backing the texture for the
+    drawable and the bo used by dri2 client.
+    
+    Signed-off-by: Jerome Glisse <jglisse@redhat.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit f1dc677e79cd7a88d7379a934ebc7d87a3b18805
+Author: Christopher James Halse Rogers <raof@ubuntu.com>
+Date:   Mon Sep 23 12:25:29 2013 -0700
+
+    EXA/evergreen: Paranoia around linear tiling. (v2)
+    
+    The last two bytes of tiling_mode contain the actual tiling mode; the rest are
+    extra tiling configuration bits. These configuration bits are not necessarily
+    zero for a linear buffer, so mask them out before checking for linearity
+    
+    v2: Also fix up evergreen_textured_videofuncs.c
+    
+    agd5f: remove trailing whitespace
+    
+    Signed-off-by: Christopher James Halse Rogers <raof@ubuntu.com>
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 67fb82a3f0759b171fea21b475a70fa825693570
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Oct 1 09:35:30 2013 -0400
+
+    radeon: fix the non-glamor build harder...
+    
+    I need to stop pushing patches first thing in the morning.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit afc0374fdec3e24ece25805724459463e9a19f5e
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Oct 1 09:32:02 2013 -0400
+
+    drm/radeon: fix non-glamor build
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 2d791370dfc5570eb74d7a1fb3baf4d4c8ecf243
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Sep 23 07:57:15 2013 +0100
+
+    radeon: use glamor Xv support if present.
+    
+    This creates adaptors using glamor if possible.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit cbb99f659ee7b18ded0008a606e41ded38c1a194
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Mon Sep 30 08:55:16 2013 -0400
+
+    Revert "radeon: add glamor Xv support (v2)"
+    
+    This causes problems if glamor doesn't have Xv support
+    enabled.  I just noticed that Dave has a better version,
+    so use that instead.
+    
+    This reverts commit 4fc1fa920584ace2c84d75af82d06962d0c84ec8.
+
+commit 4fc1fa920584ace2c84d75af82d06962d0c84ec8
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Thu Sep 26 11:02:55 2013 -0400
+
+    radeon: add glamor Xv support (v2)
+    
+    v2: guard new glamor Xv bits with USE_GLAMOR
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 41dfe327ac8740ac2cd84def96b5947224e422e7
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Thu Sep 26 11:00:49 2013 -0400
+
+    radeon: fix limit handling for cards with >4G of ram
+    
+    We can overflow the 32-bit limit.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit c45e728107269c6f51599dad4f6a02ccfef703f1
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Sep 18 10:57:52 2013 +0200
+
+    DRI2: Install client callback only once
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=60182
+    Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit b955ddd0d41801e4ca0c30a70a5d0b27c3f366c8
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Mon Sep 16 10:58:22 2013 -0400
+
+    glamor: require 0.5.1 or newer
+    
+    0.5.1 fixes a number of issues.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 282587cd0709850e7bacb1d8307065d95dc2c97d
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Mon Sep 16 09:41:13 2013 -0400
+
+    radeon: enable glamor by default (v4)
+    
+    It's required for newer asics, so enable it by
+    default.
+    
+    v2: update the autoconf help.  Require --disable-glamor
+    to build without glamor support.
+    v3: default to yes rather than auto
+    v4: fix help text
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit fdb7563a5cbc736b09c2864b67a93b475c98b2bd
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Thu Jan 24 21:17:11 2013 -0500
+
+    radeon/kms: add berlin pci ids
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 8927d33f76ee12bc618fecfc59fc7ff1fcedcd5e
+Author: Mark Kettenis <kettenis@openbsd.org>
+Date:   Thu Aug 22 10:32:46 2013 -0400
+
+    Fix shadowfb on big-endian machines
+    
+    For shadowfb, the framebuffer needs to have the RADEON_TILING_SURFACE
+    flag set, otherwise the appropriate byte swapping won't happen.
+    
+    See https://bugs.freedesktop.org/show_bug.cgi?id=66663
+    
+    Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit fa83d3d1636c315bc43dd622d407eb058e3ef976
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Aug 20 09:29:23 2013 -0400
+
+    radeon: disallow glamor on pre-R600 asics
+    
+    I'm not sure they can handle the shaders properly, especially
+    only older parts like r300.
+    
+    This will avoid display corruption problems reported by people
+    using glamor on older asics by falling back to EXA if they try
+    and enable glamor.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit d0323622ee9b97a5f246baffbb2c65930a78ed14
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Wed Aug 7 11:27:07 2013 +0200
+
+    bump version post release
+    
+    Signed-off-by: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+
 commit 9c97cca5c24409ca8447c99f051a12fd2d494e79
 Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
 Date:   Wed Aug 7 10:48:17 2013 +0200

@@ -1538,13 +1538,14 @@ R600UploadToScreenCS(PixmapPtr pDst, int x, int y, int w, int h,
     if (!driver_priv || !driver_priv->bo)
 	return FALSE;
 
-    /* If we know the BO won't be busy, don't bother with a scratch */
+    /* If we know the BO won't be busy / in VRAM, don't bother with a scratch */
     copy_dst = driver_priv->bo;
     copy_pitch = pDst->devKind;
     if (!(driver_priv->tiling_flags & (RADEON_TILING_MACRO | RADEON_TILING_MICRO))) {
 	if (!radeon_bo_is_referenced_by_cs(driver_priv->bo, info->cs)) {
 	    flush = FALSE;
-	    if (!radeon_bo_is_busy(driver_priv->bo, &dst_domain))
+	    if (!radeon_bo_is_busy(driver_priv->bo, &dst_domain) &&
+		!(dst_domain & RADEON_GEM_DOMAIN_VRAM))
 		goto copy;
 	}
 	/* use cpu copy for fast fb access */

@@ -66,6 +66,10 @@
 
 #define FALLBACK_SWAP_DELAY 16
 
+#ifdef USE_GLAMOR
+#include <glamor.h>
+#endif
+
 typedef DRI2BufferPtr BufferPtr;
 
 struct dri2_buffer_priv {
@@ -89,7 +93,6 @@ static PixmapPtr fixup_glamor(DrawablePtr drawable, PixmapPtr pixmap)
 	PixmapPtr old = get_drawable_pixmap(drawable);
 #ifdef USE_GLAMOR
 	ScreenPtr screen = drawable->pScreen;
-	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
 	struct radeon_pixmap *priv = radeon_get_pixmap_private(pixmap);
 	GCPtr gc;
 
@@ -118,20 +121,12 @@ static PixmapPtr fixup_glamor(DrawablePtr drawable, PixmapPtr pixmap)
 	}
 
 	radeon_set_pixmap_private(pixmap, NULL);
-	screen->DestroyPixmap(pixmap);
 
 	/* And redirect the pixmap to the new bo (for 3D). */
+	glamor_egl_exchange_buffers(old, pixmap);
 	radeon_set_pixmap_private(old, priv);
+	screen->DestroyPixmap(pixmap);
 	old->refcnt++;
-
-	/* This creating should not fail, as we already created its
-	 * successfully. But if it happens, we put a warning indicator
-	 * here, and the old pixmap will still be a glamor pixmap, and
-	 * latter the pixmap_flink will get a 0 name, then the X server
-	 * will pass a BadAlloc to the client.*/
-	if (!radeon_glamor_create_textured_pixmap(old))
-		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-			   "Failed to get DRI drawable for glamor pixmap.\n");
 
 	screen->ModifyPixmapHeader(old,
 				   old->drawable.width,
@@ -520,6 +515,8 @@ typedef struct _DRI2ClientEvents {
 
 #if HAS_DEVPRIVATEKEYREC
 
+static int DRI2InfoCnt;
+
 static DevPrivateKeyRec DRI2ClientEventsPrivateKeyRec;
 #define DRI2ClientEventsPrivateKey (&DRI2ClientEventsPrivateKeyRec)
 
@@ -893,7 +890,7 @@ CARD32 radeon_dri2_extrapolate_msc_delay(xf86CrtcPtr crtc, CARD64 *target_msc,
     RADEONInfoPtr info = RADEONPTR(pScrn);
     int nominal_frame_rate = drmmode_crtc->dpms_last_fps;
     CARD64 last_vblank_ust = drmmode_crtc->dpms_last_ust;
-    int last_vblank_seq = drmmode_crtc->dpms_last_seq;
+    uint32_t last_vblank_seq = drmmode_crtc->dpms_last_seq;
     int interpolated_vblanks = drmmode_crtc->interpolated_vblanks;
     int target_seq;
     CARD64 now, target_time, delta_t;
@@ -1543,7 +1540,6 @@ radeon_dri2_screen_init(ScreenPtr pScreen)
     RADEONInfoPtr info = RADEONPTR(pScrn);
     DRI2InfoRec dri2_info = { 0 };
 #ifdef USE_DRI2_SCHEDULING
-    RADEONEntPtr pRADEONEnt   = RADEONEntPriv(pScrn);
     const char *driverNames[2];
     Bool scheduling_works = TRUE;
 #endif
@@ -1607,7 +1603,7 @@ radeon_dri2_screen_init(ScreenPtr pScreen)
         dri2_info.driverNames = driverNames;
         driverNames[0] = driverNames[1] = dri2_info.driverName;
 
-	if (pRADEONEnt->dri2_info_cnt == 0) {
+	if (DRI2InfoCnt == 0) {
 #if HAS_DIXREGISTERPRIVATEKEY
 	    if (!dixRegisterPrivateKey(DRI2ClientEventsPrivateKey,
 				       PRIVATE_CLIENT, sizeof(DRI2ClientEventsRec))) {
@@ -1627,7 +1623,7 @@ radeon_dri2_screen_init(ScreenPtr pScreen)
 	    AddCallback(&ClientStateCallback, radeon_dri2_client_state_changed, 0);
 	}
 
-	pRADEONEnt->dri2_info_cnt++;
+	DRI2InfoCnt++;
     }
 #endif
 
@@ -1646,12 +1642,12 @@ void radeon_dri2_close_screen(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn);
-#ifdef USE_DRI2_SCHEDULING
-    RADEONEntPtr pRADEONEnt   = RADEONEntPriv(pScrn);
 
-    if (--pRADEONEnt->dri2_info_cnt == 0)
+#ifdef USE_DRI2_SCHEDULING
+    if (--DRI2InfoCnt == 0)
     	DeleteCallback(&ClientStateCallback, radeon_dri2_client_state_changed, 0);
 #endif
+
     DRI2CloseScreen(pScreen);
     drmFree(info->dri2.device_name);
 }

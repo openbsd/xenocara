@@ -524,7 +524,7 @@ extern void radeon_cs_flush_indirect(ScrnInfoPtr pScrn);
 extern void radeon_ddx_cs_start(ScrnInfoPtr pScrn,
 				int num, const char *file,
 				const char *func, int line);
-void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, int new_fb_size);
+void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, uint32_t new_fb_size);
 extern RADEONEntPtr RADEONEntPriv(ScrnInfoPtr pScrn);
 
 drmVBlankSeqType radeon_populate_vbl_request_type(xf86CrtcPtr crtc);

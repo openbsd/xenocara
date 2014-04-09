@@ -124,7 +124,7 @@ radeon_alloc_pixmap_bo(ScrnInfoPtr pScrn, int width, int height, int depth,
 			surface.last_level = 0;
 			surface.bpe = cpp;
 			surface.nsamples = 1;
-			if (height < 64) {
+			if (height < 128) {
 				/* disable 2d tiling for small surface to work around
 				 * the fact that ddx align height to 8 pixel for old
 				 * obscure reason i can't remember

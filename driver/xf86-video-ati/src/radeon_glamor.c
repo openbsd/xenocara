@@ -93,18 +93,26 @@ radeon_glamor_pre_init(ScrnInfoPtr scrn)
 	if (s && strcasecmp(s, "glamor") != 0)
 		return FALSE;
 
+	if (info->ChipFamily < CHIP_FAMILY_R600) {
+		xf86DrvMsg(scrn->scrnIndex, s ? X_ERROR : X_WARNING,
+			   "glamor requires R600 or newer GPU, disabling.\n");
+		return FALSE;
+	}
+
 	if (scrn->depth < 24) {
 		xf86DrvMsg(scrn->scrnIndex, s ? X_ERROR : X_WARNING,
 			   "glamor requires depth >= 24, disabling.\n");
 		return FALSE;
 	}
 
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,15,0,0,0)
 	if (!xf86LoaderCheckSymbol("glamor_egl_init")) {
 		xf86DrvMsg(scrn->scrnIndex, s ? X_ERROR : X_WARNING,
 			   "glamor requires Load \"glamoregl\" in "
 			   "Section \"Module\", disabling.\n");
 		return FALSE;
 	}
+#endif
 
 	/* Load glamor module */
 	if ((glamor_module = xf86LoadSubModule(scrn, GLAMOR_EGL_MODULE_NAME))) {
@@ -348,4 +356,9 @@ radeon_glamor_flush(ScrnInfoPtr pScrn)
 
 	if (info->use_glamor)
 		glamor_block_handler(pScrn->pScreen);
+}
+
+XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt)
+{
+	return glamor_xv_init(pScreen, num_adapt);
 }

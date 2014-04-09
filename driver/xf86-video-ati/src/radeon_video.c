@@ -165,7 +165,14 @@ void RADEONInitVideo(ScreenPtr pScreen)
     memcpy(newAdaptors, adaptors, num_adaptors * sizeof(XF86VideoAdaptorPtr));
     adaptors = newAdaptors;
 
-    if ((info->ChipFamily < CHIP_FAMILY_RS400)
+    if (info->use_glamor) {
+        texturedAdaptor = radeon_glamor_xv_init(pScreen, 16);
+	if (texturedAdaptor != NULL) {
+	    adaptors[num_adaptors++] = texturedAdaptor;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Set up textured video (glamor)\n");
+	} else
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Failed to set up textured video (glamor)\n");
+    } else if ((info->ChipFamily < CHIP_FAMILY_RS400)
 	|| (info->directRenderingEnabled)
 	) {
 	texturedAdaptor = RADEONSetupImageTexturedVideo(pScreen);

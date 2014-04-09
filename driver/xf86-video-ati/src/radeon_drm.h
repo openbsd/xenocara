@@ -800,6 +800,8 @@ struct drm_radeon_gem_create {
 	uint32_t	flags;
 };
 
+#define RADEON_TILING_MASK				0xff
+#define RADEON_TILING_LINEAR				0x0
 #define RADEON_TILING_MACRO				0x1
 #define RADEON_TILING_MICRO				0x2
 #define RADEON_TILING_SWAP_16BIT			0x4

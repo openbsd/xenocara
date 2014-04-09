@@ -489,7 +489,8 @@ static Bool RADEONPreInitAccel_KMS(ScrnInfoPtr pScrn)
 	info->is_fast_fb = TRUE;
     }
 
-    if (xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE) ||
+    if (xf86ReturnOptValBool(info->Options, OPTION_NOACCEL,
+			     info->ChipFamily == CHIP_FAMILY_HAWAII) ||
 	(!RADEONIsAccelWorking(pScrn))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "GPU accel disabled or not working, using shadowfb for KMS\n");
@@ -606,7 +607,7 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
 		      dev->domain, dev->bus, dev->dev, dev->func);
 #endif
 
-    info->dri2.drm_fd = drmOpen("radeon", busid);
+    info->dri2.drm_fd = drmOpen(NULL, busid);
     if (info->dri2.drm_fd == -1) {
 
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -860,17 +861,17 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	Bool colorTilingDefault =
 	    xorgGetVersion() >= XORG_VERSION_NUMERIC(1,9,4,901,0) &&
 	    info->ChipFamily >= CHIP_FAMILY_R300 &&
-	    /* this ARUBA check could be removed sometime after a big mesa release
+	    /* this check could be removed sometime after a big mesa release
 	     * with proper bit, in the meantime you need to set tiling option in
 	     * xorg configuration files
 	     */
-	    info->ChipFamily <= CHIP_FAMILY_ARUBA &&
+	    info->ChipFamily <= CHIP_FAMILY_HAINAN &&
 	    !info->is_fast_fb;
 
 	/* 2D color tiling */
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
 		info->allowColorTiling2D = xf86ReturnOptValBool(info->Options, OPTION_COLOR_TILING_2D,
-                                                                info->ChipFamily <= CHIP_FAMILY_ARUBA);
+                                                                info->ChipFamily <= CHIP_FAMILY_HAINAN);
 	}
 
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
@@ -1321,7 +1322,7 @@ Bool RADEONScreenInit_KMS(SCREEN_INIT_ARGS_DECL)
      */
     /* xf86DiDGAInit(pScreen, info->LinearAddr + pScrn->fbOffset); */
 #endif
-    if (!info->use_glamor && info->r600_shadow_fb == FALSE) {
+    if (info->r600_shadow_fb == FALSE) {
         /* Init Xv */
         xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
                        "Initializing Xv\n");
@@ -1450,7 +1451,7 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
     RADEONInfoPtr info = RADEONPTR(pScrn);
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     int cpp = info->pixel_bytes;
-    int screen_size;
+    uint32_t screen_size;
     int pitch, base_align;
     uint32_t tiling_flags = 0;
     struct radeon_surface surface;
@@ -1600,11 +1601,11 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
     return TRUE;
 }
 
-void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, int new_fb_size)
+void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, uint32_t new_fb_size)
 {
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     RADEONInfoPtr info = RADEONPTR(pScrn);
-    int remain_size_bytes;
+    uint64_t remain_size_bytes;
     int c;
 
     for (c = 0; c < xf86_config->num_crtc; c++) {
@@ -1615,9 +1616,13 @@ void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, int new_fb_size)
 
     remain_size_bytes = info->vram_size - new_fb_size;
     remain_size_bytes = (remain_size_bytes / 10) * 9;
-    radeon_cs_set_limit(info->cs, RADEON_GEM_DOMAIN_VRAM, remain_size_bytes);
+    if (remain_size_bytes > 0xffffffff)
+	remain_size_bytes = 0xffffffff;
+    radeon_cs_set_limit(info->cs, RADEON_GEM_DOMAIN_VRAM,
+			(uint32_t)remain_size_bytes);
 
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "VRAM usage limit set to %dK\n", remain_size_bytes / 1024);
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "VRAM usage limit set to %uK\n",
+	       (uint32_t)remain_size_bytes / 1024);
 }
 
 /* Used to disallow modes that are not supported by the hardware */

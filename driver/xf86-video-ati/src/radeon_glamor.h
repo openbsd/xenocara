@@ -27,6 +27,7 @@
 #ifndef RADEON_GLAMOR_H
 #define RADEON_GLAMOR_H
 
+#include "xf86xv.h"
 #ifdef USE_GLAMOR
 
 #include "radeon_surface.h"
@@ -42,6 +43,8 @@ Bool radeon_glamor_create_textured_pixmap(PixmapPtr pixmap);
 void radeon_glamor_exchange_buffers(PixmapPtr src, PixmapPtr dst);
 
 Bool radeon_glamor_pixmap_is_offscreen(PixmapPtr pixmap);
+
+XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt);
 
 struct radeon_pixmap {
 	struct radeon_surface surface;
@@ -88,6 +91,7 @@ static inline Bool radeon_glamor_pixmap_is_offscreen(PixmapPtr pixmap) { return 
 
 static inline struct radeon_pixmap *radeon_get_pixmap_private(PixmapPtr pixmap) { return NULL; }
 
+static inline XF86VideoAdaptorPtr radeon_glamor_xv_init(ScreenPtr pScreen, int num_adapt) { return NULL; }
 #endif
 
 #endif /* RADEON_GLAMOR_H */

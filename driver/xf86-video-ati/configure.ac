@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [7.2.0],
+        [7.3.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-ati])
 
@@ -100,14 +100,14 @@ CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 
 AC_MSG_CHECKING([whether to include GLAMOR support])
 AC_ARG_ENABLE(glamor,
-	      AS_HELP_STRING([--enable-glamor],
-			     [Enable glamor, a new GL-based acceleration [default=no]]),
+	      AS_HELP_STRING([--disable-glamor],
+			     [Disable glamor, a new GL-based acceleration [default=enabled]]),
 	      [GLAMOR="$enableval"],
-	      [GLAMOR=no])
+	      [GLAMOR=yes])
 AC_MSG_RESULT([$GLAMOR])
 AM_CONDITIONAL(GLAMOR, test x$GLAMOR != xno)
 if test "x$GLAMOR" != "xno"; then
-	PKG_CHECK_MODULES(LIBGLAMOR, [glamor >= 0.3.1])
+	PKG_CHECK_MODULES(LIBGLAMOR, [glamor >= 0.6.0])
 	PKG_CHECK_MODULES(LIBGLAMOR_EGL, [glamor-egl])
 	AC_DEFINE(USE_GLAMOR, 1, [Enable glamor acceleration])
 fi

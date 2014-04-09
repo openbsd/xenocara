@@ -246,7 +246,8 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.last_level          = 0;
 	tex_res.perf_modulation     = 0;
 	tex_res.interlaced          = 0;
-	if (accel_state->src_obj[0].tiling_flags == 0)
+	if ((accel_state->src_obj[0].tiling_flags & RADEON_TILING_MASK) ==
+	    RADEON_TILING_LINEAR)
 	    tex_res.array_mode          = 1;
 	evergreen_set_tex_resource(pScrn, &tex_res, accel_state->src_obj[0].domain);
 
@@ -279,7 +280,8 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.base                = pPriv->planev_offset;
 	tex_res.mip_base            = pPriv->planev_offset;
 	tex_res.size                = tex_res.pitch * (pPriv->h >> 1);
-	if (accel_state->src_obj[0].tiling_flags == 0)
+	if ((accel_state->src_obj[0].tiling_flags & RADEON_TILING_MASK) ==
+	    RADEON_TILING_LINEAR)
 	    tex_res.array_mode          = 1;
 	evergreen_set_tex_resource(pScrn, &tex_res, accel_state->src_obj[0].domain);
 
@@ -302,7 +304,8 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.base                = pPriv->planeu_offset;
 	tex_res.mip_base            = pPriv->planeu_offset;
 	tex_res.size                = tex_res.pitch * (pPriv->h >> 1);
-	if (accel_state->src_obj[0].tiling_flags == 0)
+	if ((accel_state->src_obj[0].tiling_flags & RADEON_TILING_MASK) ==
+	    RADEON_TILING_LINEAR)
 	    tex_res.array_mode          = 1;
 	evergreen_set_tex_resource(pScrn, &tex_res, accel_state->src_obj[0].domain);
 
@@ -342,7 +345,8 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.last_level          = 0;
 	tex_res.perf_modulation     = 0;
 	tex_res.interlaced          = 0;
-	if (accel_state->src_obj[0].tiling_flags == 0)
+	if ((accel_state->src_obj[0].tiling_flags & RADEON_TILING_MASK) ==
+	    RADEON_TILING_LINEAR)
 	    tex_res.array_mode          = 1;
 	evergreen_set_tex_resource(pScrn, &tex_res, accel_state->src_obj[0].domain);
 
@@ -397,7 +401,8 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     cb_conf.blend_clamp = 1;
     cb_conf.pmask = 0xf;
     cb_conf.rop = 3;
-    if (accel_state->dst_obj.tiling_flags == 0) {
+    if ((accel_state->dst_obj.tiling_flags & RADEON_TILING_MASK) ==
+	RADEON_TILING_LINEAR) {
 	cb_conf.array_mode = 1;
 	cb_conf.non_disp_tiling = 1;
     }
