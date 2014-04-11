@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.22 2013/03/09 14:45:38 matthieu Exp $
+# $OpenBSD: Makefile,v 1.23 2014/04/11 22:58:12 miod Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -30,10 +30,10 @@ XETC?=		/etc/X11
 
 .if ${MACHINE_ARCH} == "sh"
 charproc.o:	charproc.c
-	${CC} -O1 -c ${CPPFLAGS} ${.CURDIR}/charproc.c
+	${CC} -O1 -fno-stack-protector -c ${CPPFLAGS} ${.CURDIR}/charproc.c
 
 screen.o:	screen.c
-	${CC} -O1 -c ${CPPFLAGS} ${.CURDIR}/screen.c
+	${CC} -O1 -fno-stack-protector -c ${CPPFLAGS} ${.CURDIR}/screen.c
 .endif
 
 .SUFFIXES: .man .1
