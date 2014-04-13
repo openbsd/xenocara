@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.59 2014/03/18 22:37:29 miod Exp $
+# $OpenBSD: Makefile,v 1.60 2014/04/13 10:41:00 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -49,8 +49,8 @@ INPUT_DRV= ${INPUT_DRV_DEFAULT}
 VIDEO_DRV_alpha=
 
 VIDEO_DRV_amd64= \
-	xf86-video-apm xf86-video-ark xf86-video-ati xf86-video-chips \
-	xf86-video-cirrus xf86-video-dummy xf86-video-glint \
+	xf86-video-apm xf86-video-ark xf86-video-ast xf86-video-ati \
+	xf86-video-chips xf86-video-cirrus xf86-video-dummy xf86-video-glint \
 	xf86-video-i128 xf86-video-intel xf86-video-mach64 \
 	xf86-video-mga xf86-video-neomagic \
 	xf86-video-nv xf86-video-openchrome xf86-video-r128 \
