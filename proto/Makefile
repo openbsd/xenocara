@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.12 2011/03/08 20:48:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.13 2014/04/13 11:04:26 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
 SUBDIR= bigreqsproto compositeproto dmxproto damageproto \
 	fixesproto fontcacheproto fontsproto glproto inputproto \
-	kbproto pmproto xineramaproto randrproto \
+	kbproto pmproto xineramaproto presentproto randrproto \
 	recordproto renderproto resourceproto scrnsaverproto \
 	videoproto x11proto xcb-proto xcmiscproto xextproto \
 	xf86bigfontproto xf86dgaproto xf86miscproto \
