@@ -2118,6 +2118,112 @@ TRANS(SocketBytesReadable) (XtransConnInfo ciptr, BytesReadable_t *pend)
 #endif /* WIN32 */
 }
 
+#if XTRANS_SEND_FDS
+
+static void
+appendFd(struct _XtransConnFd **prev, int fd, int do_close)
+{
+    struct _XtransConnFd *cf, *new;
+
+    new = malloc (sizeof (struct _XtransConnFd));
+    if (!new) {
+        /* XXX mark connection as broken */
+        close(fd);
+        return;
+    }
+    new->next = 0;
+    new->fd = fd;
+    new->do_close = do_close;
+    /* search to end of list */
+    for (; (cf = *prev); prev = &(cf->next));
+    *prev = new;
+}
+
+static int
+removeFd(struct _XtransConnFd **prev)
+{
+    struct _XtransConnFd *cf;
+    int fd;
+
+    if ((cf = *prev)) {
+        *prev = cf->next;
+        fd = cf->fd;
+        free(cf);
+    } else
+        fd = -1;
+    return fd;
+}
+
+static void
+discardFd(struct _XtransConnFd **prev, struct _XtransConnFd *upto, int do_close)
+{
+    struct _XtransConnFd *cf, *next;
+
+    for (cf = *prev; cf != upto; cf = next) {
+        next = cf->next;
+        if (do_close || cf->do_close)
+            close(cf->fd);
+        free(cf);
+    }
+    *prev = upto;
+}
+
+static void
+cleanupFds(XtransConnInfo ciptr)
+{
+    /* Clean up the send list but don't close the fds */
+    discardFd(&ciptr->send_fds, NULL, 0);
+    /* Clean up the recv list and *do* close the fds */
+    discardFd(&ciptr->recv_fds, NULL, 1);
+}
+
+static int
+nFd(struct _XtransConnFd **prev)
+{
+    struct _XtransConnFd *cf;
+    int n = 0;
+
+    for (cf = *prev; cf; cf = cf->next)
+        n++;
+    return n;
+}
+
+static int
+TRANS(SocketRecvFd) (XtransConnInfo ciptr)
+{
+    prmsg (2, "SocketRecvFd(%d)\n", ciptr->fd);
+    return removeFd(&ciptr->recv_fds);
+}
+
+static int
+TRANS(SocketSendFd) (XtransConnInfo ciptr, int fd, int do_close)
+{
+    appendFd(&ciptr->send_fds, fd, do_close);
+    return 0;
+}
+
+static int
+TRANS(SocketRecvFdInvalid)(XtransConnInfo ciptr)
+{
+    errno = EINVAL;
+    return -1;
+}
+
+static int
+TRANS(SocketSendFdInvalid)(XtransConnInfo ciptr, int fd, int do_close)
+{
+    errno = EINVAL;
+    return -1;
+}
+
+#define MAX_FDS		128
+
+union fd_pass {
+	struct cmsghdr	cmsghdr;
+	char		buf[CMSG_SPACE(MAX_FDS * sizeof(int))];
+};
+
+#endif /* XTRANS_SEND_FDS */
 
 static int
 TRANS(SocketRead) (XtransConnInfo ciptr, char *buf, int size)
@@ -2134,8 +2240,128 @@ TRANS(SocketRead) (XtransConnInfo ciptr, char *buf, int size)
 	return ret;
     }
 #else
-    return read (ciptr->fd, buf, size);
+#if XTRANS_SEND_FDS
+    {
+        struct iovec    iov = {
+            .iov_base = buf,
+            .iov_len = size
+        };
+        union fd_pass   cmsgbuf;
+        struct msghdr   msg = {
+            .msg_name = NULL,
+            .msg_namelen = 0,
+            .msg_iov = &iov,
+            .msg_iovlen = 1,
+            .msg_control = cmsgbuf.buf,
+            .msg_controllen = CMSG_LEN(MAX_FDS * sizeof(int))
+        };
+
+        size = recvmsg(ciptr->fd, &msg, 0);
+        if (size >= 0) {
+            struct cmsghdr *hdr;
+
+            for (hdr = CMSG_FIRSTHDR(&msg); hdr; hdr = CMSG_NXTHDR(&msg, hdr)) {
+                if (hdr->cmsg_level == SOL_SOCKET && hdr->cmsg_type == SCM_RIGHTS) {
+                    int nfd = (hdr->cmsg_len - CMSG_LEN(0)) / sizeof (int);
+                    int i;
+                    int *fd = (int *) CMSG_DATA(hdr);
+
+                    for (i = 0; i < nfd; i++)
+                        appendFd(&ciptr->recv_fds, fd[i], 0);
+                }
+            }
+        }
+        return size;
+    }
+#else
+    return read(ciptr->fd, buf, size);
+#endif /* XTRANS_SEND_FDS */
 #endif /* WIN32 */
+}
+
+static int
+TRANS(SocketReadv) (XtransConnInfo ciptr, struct iovec *buf, int size)
+
+{
+    prmsg (2,"SocketReadv(%d,%p,%d)\n", ciptr->fd, buf, size);
+
+#if XTRANS_SEND_FDS
+    {
+        union fd_pass   cmsgbuf;
+        struct msghdr   msg = {
+            .msg_name = NULL,
+            .msg_namelen = 0,
+            .msg_iov = buf,
+            .msg_iovlen = size,
+            .msg_control = cmsgbuf.buf,
+            .msg_controllen = CMSG_LEN(MAX_FDS * sizeof(int))
+        };
+
+        size = recvmsg(ciptr->fd, &msg, 0);
+        if (size >= 0) {
+            struct cmsghdr *hdr;
+
+            for (hdr = CMSG_FIRSTHDR(&msg); hdr; hdr = CMSG_NXTHDR(&msg, hdr)) {
+                if (hdr->cmsg_level == SOL_SOCKET && hdr->cmsg_type == SCM_RIGHTS) {
+                    int nfd = (hdr->cmsg_len - CMSG_LEN(0)) / sizeof (int);
+                    int i;
+                    int *fd = (int *) CMSG_DATA(hdr);
+
+                    for (i = 0; i < nfd; i++)
+                        appendFd(&ciptr->recv_fds, fd[i], 0);
+                }
+            }
+        }
+        return size;
+    }
+#else
+    return READV (ciptr, buf, size);
+#endif
+}
+
+
+static int
+TRANS(SocketWritev) (XtransConnInfo ciptr, struct iovec *buf, int size)
+
+{
+    prmsg (2,"SocketWritev(%d,%p,%d)\n", ciptr->fd, buf, size);
+
+#if XTRANS_SEND_FDS
+    if (ciptr->send_fds)
+    {
+        union fd_pass           cmsgbuf;
+        int                     nfd = nFd(&ciptr->send_fds);
+        struct _XtransConnFd    *cf = ciptr->send_fds;
+        struct msghdr           msg = {
+            .msg_name = NULL,
+            .msg_namelen = 0,
+            .msg_iov = buf,
+            .msg_iovlen = size,
+            .msg_control = cmsgbuf.buf,
+            .msg_controllen = CMSG_LEN(nfd * sizeof(int))
+        };
+        struct cmsghdr          *hdr = CMSG_FIRSTHDR(&msg);
+        int                     i;
+        int                     *fds;
+
+        hdr->cmsg_len = msg.msg_controllen;
+        hdr->cmsg_level = SOL_SOCKET;
+        hdr->cmsg_type = SCM_RIGHTS;
+
+        fds = (int *) CMSG_DATA(hdr);
+        /* Set up fds */
+        for (i = 0; i < nfd; i++) {
+            fds[i] = cf->fd;
+            cf = cf->next;
+        }
+
+        i = sendmsg(ciptr->fd, &msg, 0);
+        if (i > 0)
+            discardFd(&ciptr->send_fds, cf, 0);
+        return i;
+    }
+#endif
+    return WRITEV (ciptr, buf, size);
 }
 
 
@@ -2154,30 +2380,19 @@ TRANS(SocketWrite) (XtransConnInfo ciptr, char *buf, int size)
 	return ret;
     }
 #else
+#if XTRANS_SEND_FDS
+    if (ciptr->send_fds)
+    {
+        struct iovec            iov;
+
+        iov.iov_base = buf;
+        iov.iov_len = size;
+        return TRANS(SocketWritev)(ciptr, &iov, 1);
+    }
+#endif /* XTRANS_SEND_FDS */
     return write (ciptr->fd, buf, size);
 #endif /* WIN32 */
 }
-
-
-static int
-TRANS(SocketReadv) (XtransConnInfo ciptr, struct iovec *buf, int size)
-
-{
-    prmsg (2,"SocketReadv(%d,%p,%d)\n", ciptr->fd, buf, size);
-
-    return READV (ciptr, buf, size);
-}
-
-
-static int
-TRANS(SocketWritev) (XtransConnInfo ciptr, struct iovec *buf, int size)
-
-{
-    prmsg (2,"SocketWritev(%d,%p,%d)\n", ciptr->fd, buf, size);
-
-    return WRITEV (ciptr, buf, size);
-}
-
 
 static int
 TRANS(SocketDisconnect) (XtransConnInfo ciptr)
@@ -2232,6 +2447,9 @@ TRANS(SocketUNIXClose) (XtransConnInfo ciptr)
 
     prmsg (2,"SocketUNIXClose(%p,%d)\n", ciptr, ciptr->fd);
 
+#if XTRANS_SEND_FDS
+    cleanupFds(ciptr);
+#endif
     ret = close(ciptr->fd);
 
     if (ciptr->flags
@@ -2260,6 +2478,9 @@ TRANS(SocketUNIXCloseForCloning) (XtransConnInfo ciptr)
     prmsg (2,"SocketUNIXCloseForCloning(%p,%d)\n",
 	ciptr, ciptr->fd);
 
+#if XTRANS_SEND_FDS
+    cleanupFds(ciptr);
+#endif
     ret = close(ciptr->fd);
 
     return ret;
@@ -2314,6 +2535,10 @@ Xtransport	TRANS(SocketTCPFuncs) = {
 	TRANS(SocketWrite),
 	TRANS(SocketReadv),
 	TRANS(SocketWritev),
+#if XTRANS_SEND_FDS
+        TRANS(SocketSendFdInvalid),
+        TRANS(SocketRecvFdInvalid),
+#endif
 	TRANS(SocketDisconnect),
 	TRANS(SocketINETClose),
 	TRANS(SocketINETClose),
@@ -2354,6 +2579,10 @@ Xtransport	TRANS(SocketINETFuncs) = {
 	TRANS(SocketWrite),
 	TRANS(SocketReadv),
 	TRANS(SocketWritev),
+#if XTRANS_SEND_FDS
+        TRANS(SocketSendFdInvalid),
+        TRANS(SocketRecvFdInvalid),
+#endif
 	TRANS(SocketDisconnect),
 	TRANS(SocketINETClose),
 	TRANS(SocketINETClose),
@@ -2395,6 +2624,10 @@ Xtransport     TRANS(SocketINET6Funcs) = {
 	TRANS(SocketWrite),
 	TRANS(SocketReadv),
 	TRANS(SocketWritev),
+#if XTRANS_SEND_FDS
+        TRANS(SocketSendFdInvalid),
+        TRANS(SocketRecvFdInvalid),
+#endif
 	TRANS(SocketDisconnect),
 	TRANS(SocketINETClose),
 	TRANS(SocketINETClose),
@@ -2443,6 +2676,10 @@ Xtransport	TRANS(SocketLocalFuncs) = {
 	TRANS(SocketWrite),
 	TRANS(SocketReadv),
 	TRANS(SocketWritev),
+#if XTRANS_SEND_FDS
+        TRANS(SocketSendFd),
+        TRANS(SocketRecvFd),
+#endif
 	TRANS(SocketDisconnect),
 	TRANS(SocketUNIXClose),
 	TRANS(SocketUNIXCloseForCloning),
@@ -2450,7 +2687,7 @@ Xtransport	TRANS(SocketLocalFuncs) = {
 #endif /* !LOCALCONN */
 # ifdef TRANS_SERVER
 #  if !defined(LOCALCONN)
-static char* unix_nolisten[] = { "local" , NULL };
+static const char* unix_nolisten[] = { "local" , NULL };
 #  endif
 # endif
 
@@ -2497,6 +2734,10 @@ Xtransport	TRANS(SocketUNIXFuncs) = {
 	TRANS(SocketWrite),
 	TRANS(SocketReadv),
 	TRANS(SocketWritev),
+#if XTRANS_SEND_FDS
+        TRANS(SocketSendFd),
+        TRANS(SocketRecvFd),
+#endif
 	TRANS(SocketDisconnect),
 	TRANS(SocketUNIXClose),
 	TRANS(SocketUNIXCloseForCloning),

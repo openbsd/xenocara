@@ -303,7 +303,15 @@ int TRANS(CreateListener)(
     unsigned int	/* flags */
 );
 
+int TRANS(Received) (
+    const char*         /* protocol*/
+);
+
 int TRANS(NoListen) (
+    const char*         /* protocol*/
+);
+
+int TRANS(IsListening) (
     const char*         /* protocol*/
 );
 
@@ -355,6 +363,10 @@ int TRANS(Writev)(
     struct iovec *,	/* buf */
     int			/* size */
 );
+
+int TRANS(SendFd) (XtransConnInfo ciptr, int fd, int do_close);
+
+int TRANS(RecvFd) (XtransConnInfo ciptr);
 
 int TRANS(Disconnect)(
     XtransConnInfo	/* ciptr */

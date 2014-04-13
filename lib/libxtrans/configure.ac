@@ -21,13 +21,12 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xtrans], [1.2.7],
+AC_INIT([xtrans], [1.3.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xtrans])
 AC_CONFIG_SRCDIR([Makefile.am])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require xorg-macros minimum of 1.12 for DocBook external references
 m4_ifndef([XORG_MACROS_VERSION],

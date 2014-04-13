@@ -95,7 +95,7 @@ TRANS(ConvertAddress)(int *familyp, int *addrlenp, Xtransaddr **addrp)
 
     switch( *familyp )
     {
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
     case AF_INET:
     {
 	/*
@@ -158,7 +158,7 @@ TRANS(ConvertAddress)(int *familyp, int *addrlenp, Xtransaddr **addrp)
 	break;
     }
 #endif /* IPv6 */
-#endif /* defined(TCPCONN) || defined(STREAMSCONN) */
+#endif /* defined(TCPCONN) */
 
 
 #if defined(UNIXCONN) || defined(LOCALCONN)
@@ -252,7 +252,7 @@ TRANS(GetMyNetworkId) (XtransConnInfo ciptr)
 
     switch (family)
     {
-#if defined(UNIXCONN) || defined(STREAMSCONN) || defined(LOCALCONN) 
+#if defined(UNIXCONN) || defined(LOCALCONN)
     case AF_UNIX:
     {
 	struct sockaddr_un *saddr = (struct sockaddr_un *) addr;
@@ -263,9 +263,9 @@ TRANS(GetMyNetworkId) (XtransConnInfo ciptr)
 	    hostnamebuf, saddr->sun_path);
 	break;
     }
-#endif /* defined(UNIXCONN) || defined(STREAMSCONN) || defined(LOCALCONN) */
+#endif /* defined(UNIXCONN) || defined(LOCALCONN) */
 
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
     case AF_INET:
 #if defined(IPv6) && defined(AF_INET6)
     case AF_INET6:
@@ -294,7 +294,7 @@ TRANS(GetMyNetworkId) (XtransConnInfo ciptr)
 	    portnumbuf);
 	break;
     }
-#endif /* defined(TCPCONN) || defined(STREAMSCONN) */
+#endif /* defined(TCPCONN) */
 
     default:
 	break;
@@ -309,24 +309,12 @@ static jmp_buf env;
 #ifdef SIGALRM
 static volatile int nameserver_timedout = 0;
 
-static
-#ifdef RETSIGTYPE /* set by autoconf AC_TYPE_SIGNAL */
-RETSIGTYPE
-#else /* Imake */
-#ifdef SIGNALRETURNSINT
-int
-#else
-void
-#endif
-#endif
+static void
 nameserver_lost(int sig _X_UNUSED)
 {
   nameserver_timedout = 1;
   longjmp (env, -1);
   /* NOTREACHED */
-#ifdef SIGNALRETURNSINT
-  return -1;				/* for picky compilers */
-#endif
 }
 #endif /* SIGALARM */
 
@@ -345,16 +333,16 @@ TRANS(GetPeerNetworkId) (XtransConnInfo ciptr)
     switch (family)
     {
     case AF_UNSPEC:
-#if defined(UNIXCONN) || defined(STREAMSCONN) || defined(LOCALCONN)
+#if defined(UNIXCONN) || defined(LOCALCONN)
     case AF_UNIX:
     {
 	if (gethostname (addrbuf, sizeof (addrbuf)) == 0)
 	    addr = addrbuf;
 	break;
     }
-#endif /* defined(UNIXCONN) || defined(STREAMSCONN) || defined(LOCALCONN) */
+#endif /* defined(UNIXCONN) || defined(LOCALCONN) */
 
-#if defined(TCPCONN) || defined(STREAMSCONN)
+#if defined(TCPCONN)
     case AF_INET:
 #if defined(IPv6) && defined(AF_INET6)
     case AF_INET6:
@@ -414,7 +402,7 @@ TRANS(GetPeerNetworkId) (XtransConnInfo ciptr)
 	break;
     }
 
-#endif /* defined(TCPCONN) || defined(STREAMSCONN) */
+#endif /* defined(TCPCONN) */
 
     default:
 	return (NULL);
