@@ -1,0 +1,112 @@
+commit 584d8b87e245e900a3a7ee448d51ba6f3c74ce2b
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Oct 31 17:38:27 2013 -0700
+
+    Update to version 1.0
+    
+    Add presentproto.h updates for current protocol.
+    Finish encoding specification.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 32f17e1d4411f784a9b76bad8288f7e657134732
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Oct 29 10:42:33 2013 -0700
+
+    Clarify when pixmaps are assured of being idle
+    
+    Pixmaps will definitely be idle after the next PresentPixmap operation
+    completes; the original text was vague about whether it was the
+    execution of the request or the completion of the operation.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit b32994fac679ee53362d457e834dca539d5a1ff8
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Oct 19 20:48:04 2013 -0700
+
+    Clarify role and responsibility for client and server regarding fences
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 843b6a31180641504228c9603c8a771284a854d1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Oct 19 20:47:58 2013 -0700
+
+    Add .gitignore
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 5d11236c1951d6f2618eb420702f20455f165a0b
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Oct 18 16:42:20 2013 -0700
+
+    PresentRegion->PresentPixmap, define options, add UST mode
+    
+    Changes the name of the PresentPixmap request from PresentRegion in
+    anticipation of future additions of non-pixmap sourced updates (YUV
+    images in particular).
+    
+    Adds definitions for all of the new PresentPixmap options.
+    
+    Adds PresentQueryCapabilities to provide applications the ability to
+    learn what the underlying hardware can support. One requirement for
+    any capability is that the X server must do something sensible even if
+    the client behaves as if a capability is supported when it is not.
+    
+    Adds IdleNotify events. As pixmaps can go idle in any order, it's
+    important for applications to know which pixmap to use next. We cannot
+    use fences as the fence itself may not be signaled for some time after
+    the X server has figured out which pixmap to idle.
+    
+    Note that the encoding and header files are not entirely up to date now.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit f15c4568f2b4e50e80bf5cf650bde13441bb0b72
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Jul 24 21:07:20 2013 -0700
+
+    Start reworking for present redirection.
+    
+    In PresentRegion, add the PresentNotify list, add explicit CRTC.
+    In PresentRedirectNotify, add CRTC and update_window values
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit ec9db7408ff742312677e40b0b9a0239a07ab43c
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Jul 15 10:55:48 2013 -0700
+
+    Remove SBC, use CompleteNotify for both Region and NotifyMSC
+    
+    SBC is entire a client-side notion, so remove it from the protocol.
+    No need to have two events with the same content, but we do need to
+    tell which request generated the event so stick a new field in some
+    spare bytes
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit f1950e6f10a61318f22083900602d9c920d00667
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Jul 13 02:40:11 2013 -0700
+
+    Add NotifyMSC. Add serial numbers to Complete and MSC events
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 5e7ebeb7e29be01b8046f30e93891180187e59c2
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Jul 12 11:14:46 2013 -0700
+
+    Document how target-msc, divisor and remainder work
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 921029e55ec3ff90d42905df258046e6f83fa4b6
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Jul 11 15:52:50 2013 -0700
+
+    Initial Present protocol specification
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
