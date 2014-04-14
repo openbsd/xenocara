@@ -202,11 +202,13 @@ xcb_dri2_connect_sizeof (const void  *_buffer  /**< */)
     unsigned int xcb_buffer_len = 0;
     unsigned int xcb_block_len = 0;
     unsigned int xcb_pad = 0;
-    unsigned int xcb_align_to;
+    unsigned int xcb_align_to = 0;
 
 
     xcb_block_len += sizeof(xcb_dri2_connect_reply_t);
     xcb_tmp += xcb_block_len;
+    xcb_buffer_len += xcb_block_len;
+    xcb_block_len = 0;
     /* driver_name */
     xcb_block_len += _aux->driver_name_length * sizeof(char);
     xcb_tmp += xcb_block_len;
@@ -763,11 +765,13 @@ xcb_dri2_get_buffers_sizeof (const void  *_buffer  /**< */,
     unsigned int xcb_buffer_len = 0;
     unsigned int xcb_block_len = 0;
     unsigned int xcb_pad = 0;
-    unsigned int xcb_align_to;
+    unsigned int xcb_align_to = 0;
 
 
     xcb_block_len += sizeof(xcb_dri2_get_buffers_request_t);
     xcb_tmp += xcb_block_len;
+    xcb_buffer_len += xcb_block_len;
+    xcb_block_len = 0;
     /* attachments */
     xcb_block_len += attachments_len * sizeof(uint32_t);
     xcb_tmp += xcb_block_len;
@@ -1074,11 +1078,13 @@ xcb_dri2_get_buffers_with_format_sizeof (const void  *_buffer  /**< */,
     unsigned int xcb_buffer_len = 0;
     unsigned int xcb_block_len = 0;
     unsigned int xcb_pad = 0;
-    unsigned int xcb_align_to;
+    unsigned int xcb_align_to = 0;
 
 
     xcb_block_len += sizeof(xcb_dri2_get_buffers_with_format_request_t);
     xcb_tmp += xcb_block_len;
+    xcb_buffer_len += xcb_block_len;
+    xcb_block_len = 0;
     /* attachments */
     xcb_block_len += attachments_len * sizeof(xcb_dri2_attach_format_t);
     xcb_tmp += xcb_block_len;
@@ -1803,5 +1809,105 @@ xcb_dri2_swap_interval (xcb_connection_t *c  /**< */,
     
     xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
     return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_dri2_get_param_cookie_t xcb_dri2_get_param
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_drawable_t    drawable
+ ** @param uint32_t          param
+ ** @returns xcb_dri2_get_param_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_dri2_get_param_cookie_t
+xcb_dri2_get_param (xcb_connection_t *c  /**< */,
+                    xcb_drawable_t    drawable  /**< */,
+                    uint32_t          param  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_dri2_id,
+        /* opcode */ XCB_DRI2_GET_PARAM,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_dri2_get_param_cookie_t xcb_ret;
+    xcb_dri2_get_param_request_t xcb_out;
+    
+    xcb_out.drawable = drawable;
+    xcb_out.param = param;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_dri2_get_param_cookie_t xcb_dri2_get_param_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_drawable_t    drawable
+ ** @param uint32_t          param
+ ** @returns xcb_dri2_get_param_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_dri2_get_param_cookie_t
+xcb_dri2_get_param_unchecked (xcb_connection_t *c  /**< */,
+                              xcb_drawable_t    drawable  /**< */,
+                              uint32_t          param  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_dri2_id,
+        /* opcode */ XCB_DRI2_GET_PARAM,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_dri2_get_param_cookie_t xcb_ret;
+    xcb_dri2_get_param_request_t xcb_out;
+    
+    xcb_out.drawable = drawable;
+    xcb_out.param = param;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_dri2_get_param_reply_t * xcb_dri2_get_param_reply
+ ** 
+ ** @param xcb_connection_t             *c
+ ** @param xcb_dri2_get_param_cookie_t   cookie
+ ** @param xcb_generic_error_t         **e
+ ** @returns xcb_dri2_get_param_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_dri2_get_param_reply_t *
+xcb_dri2_get_param_reply (xcb_connection_t             *c  /**< */,
+                          xcb_dri2_get_param_cookie_t   cookie  /**< */,
+                          xcb_generic_error_t         **e  /**< */)
+{
+    return (xcb_dri2_get_param_reply_t *) xcb_wait_for_reply(c, cookie.sequence, e);
 }
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2012/11/22 20:31:32 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2014/04/14 19:20:17 matthieu Exp $
 
 DATADIR=	${X11BASE}/share
 PYTHON=		python${PYTHON_VERSION}
@@ -10,7 +10,9 @@ SRCS= \
 	damage.c \
 	dpms.c \
 	dri2.c \
+	dri3.c \
 	glx.c \
+	present.c \
 	randr.c \
 	record.c \
 	render.c \
@@ -25,6 +27,7 @@ SRCS= \
 	xfixes.c \
 	xinerama.c \
 	xinput.c \
+	xkb.c \
 	xprint.c \
 	xproto.c \
 	xselinux.c \

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2010/04/18 20:06:18 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2014/04/14 19:20:17 matthieu Exp $
 
 SUBDIR=\
 	libxcb \
@@ -6,7 +6,9 @@ SUBDIR=\
 	libxcb-damage \
 	libxcb-dpms \
 	libxcb-dri2 \
+	libxcb-dri3 \
 	libxcb-glx \
+	libxcb-present \
 	libxcb-randr \
 	libxcb-record \
 	libxcb-render \
@@ -19,6 +21,7 @@ SUBDIR=\
 	libxcb-xf86dri \
 	libxcb-xfixes \
 	libxcb-xinerama \
+	libxcb-xkb \
 	libxcb-xprint \
 	libxcb-xtest \
 	libxcb-xv \

@@ -20,27 +20,27 @@ extern "C" {
 #endif
 
 #define XCB_DRI2_MAJOR_VERSION 1
-#define XCB_DRI2_MINOR_VERSION 3
+#define XCB_DRI2_MINOR_VERSION 4
   
 extern xcb_extension_t xcb_dri2_id;
 
 typedef enum xcb_dri2_attachment_t {
-    XCB_DRI2_ATTACHMENT_BUFFER_FRONT_LEFT,
-    XCB_DRI2_ATTACHMENT_BUFFER_BACK_LEFT,
-    XCB_DRI2_ATTACHMENT_BUFFER_FRONT_RIGHT,
-    XCB_DRI2_ATTACHMENT_BUFFER_BACK_RIGHT,
-    XCB_DRI2_ATTACHMENT_BUFFER_DEPTH,
-    XCB_DRI2_ATTACHMENT_BUFFER_STENCIL,
-    XCB_DRI2_ATTACHMENT_BUFFER_ACCUM,
-    XCB_DRI2_ATTACHMENT_BUFFER_FAKE_FRONT_LEFT,
-    XCB_DRI2_ATTACHMENT_BUFFER_FAKE_FRONT_RIGHT,
-    XCB_DRI2_ATTACHMENT_BUFFER_DEPTH_STENCIL,
-    XCB_DRI2_ATTACHMENT_BUFFER_HIZ
+    XCB_DRI2_ATTACHMENT_BUFFER_FRONT_LEFT = 0,
+    XCB_DRI2_ATTACHMENT_BUFFER_BACK_LEFT = 1,
+    XCB_DRI2_ATTACHMENT_BUFFER_FRONT_RIGHT = 2,
+    XCB_DRI2_ATTACHMENT_BUFFER_BACK_RIGHT = 3,
+    XCB_DRI2_ATTACHMENT_BUFFER_DEPTH = 4,
+    XCB_DRI2_ATTACHMENT_BUFFER_STENCIL = 5,
+    XCB_DRI2_ATTACHMENT_BUFFER_ACCUM = 6,
+    XCB_DRI2_ATTACHMENT_BUFFER_FAKE_FRONT_LEFT = 7,
+    XCB_DRI2_ATTACHMENT_BUFFER_FAKE_FRONT_RIGHT = 8,
+    XCB_DRI2_ATTACHMENT_BUFFER_DEPTH_STENCIL = 9,
+    XCB_DRI2_ATTACHMENT_BUFFER_HIZ = 10
 } xcb_dri2_attachment_t;
 
 typedef enum xcb_dri2_driver_type_t {
-    XCB_DRI2_DRIVER_TYPE_DRI,
-    XCB_DRI2_DRIVER_TYPE_VDPAU
+    XCB_DRI2_DRIVER_TYPE_DRI = 0,
+    XCB_DRI2_DRIVER_TYPE_VDPAU = 1
 } xcb_dri2_driver_type_t;
 
 typedef enum xcb_dri2_event_type_t {
@@ -481,6 +481,39 @@ typedef struct xcb_dri2_swap_interval_request_t {
     xcb_drawable_t drawable; /**<  */
     uint32_t       interval; /**<  */
 } xcb_dri2_swap_interval_request_t;
+
+/**
+ * @brief xcb_dri2_get_param_cookie_t
+ **/
+typedef struct xcb_dri2_get_param_cookie_t {
+    unsigned int sequence; /**<  */
+} xcb_dri2_get_param_cookie_t;
+
+/** Opcode for xcb_dri2_get_param. */
+#define XCB_DRI2_GET_PARAM 13
+
+/**
+ * @brief xcb_dri2_get_param_request_t
+ **/
+typedef struct xcb_dri2_get_param_request_t {
+    uint8_t        major_opcode; /**<  */
+    uint8_t        minor_opcode; /**<  */
+    uint16_t       length; /**<  */
+    xcb_drawable_t drawable; /**<  */
+    uint32_t       param; /**<  */
+} xcb_dri2_get_param_request_t;
+
+/**
+ * @brief xcb_dri2_get_param_reply_t
+ **/
+typedef struct xcb_dri2_get_param_reply_t {
+    uint8_t  response_type; /**<  */
+    uint8_t  is_param_recognized; /**<  */
+    uint16_t sequence; /**<  */
+    uint32_t length; /**<  */
+    uint32_t value_hi; /**<  */
+    uint32_t value_lo; /**<  */
+} xcb_dri2_get_param_reply_t;
 
 /** Opcode for xcb_dri2_buffer_swap_complete. */
 #define XCB_DRI2_BUFFER_SWAP_COMPLETE 0
@@ -1861,6 +1894,90 @@ xcb_void_cookie_t
 xcb_dri2_swap_interval (xcb_connection_t *c  /**< */,
                         xcb_drawable_t    drawable  /**< */,
                         uint32_t          interval  /**< */);
+
+/**
+ *
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_dri2_get_param_cookie_t xcb_dri2_get_param
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_drawable_t    drawable
+ ** @param uint32_t          param
+ ** @returns xcb_dri2_get_param_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_dri2_get_param_cookie_t
+xcb_dri2_get_param (xcb_connection_t *c  /**< */,
+                    xcb_drawable_t    drawable  /**< */,
+                    uint32_t          param  /**< */);
+
+/**
+ *
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will cause
+ * a reply to be generated. Any returned error will be
+ * placed in the event queue.
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_dri2_get_param_cookie_t xcb_dri2_get_param_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_drawable_t    drawable
+ ** @param uint32_t          param
+ ** @returns xcb_dri2_get_param_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_dri2_get_param_cookie_t
+xcb_dri2_get_param_unchecked (xcb_connection_t *c  /**< */,
+                              xcb_drawable_t    drawable  /**< */,
+                              uint32_t          param  /**< */);
+
+/**
+ * Return the reply
+ * @param c      The connection
+ * @param cookie The cookie
+ * @param e      The xcb_generic_error_t supplied
+ *
+ * Returns the reply of the request asked by
+ * 
+ * The parameter @p e supplied to this function must be NULL if
+ * xcb_dri2_get_param_unchecked(). is used.
+ * Otherwise, it stores the error if any.
+ *
+ * The returned value must be freed by the caller using free().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_dri2_get_param_reply_t * xcb_dri2_get_param_reply
+ ** 
+ ** @param xcb_connection_t             *c
+ ** @param xcb_dri2_get_param_cookie_t   cookie
+ ** @param xcb_generic_error_t         **e
+ ** @returns xcb_dri2_get_param_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_dri2_get_param_reply_t *
+xcb_dri2_get_param_reply (xcb_connection_t             *c  /**< */,
+                          xcb_dri2_get_param_cookie_t   cookie  /**< */,
+                          xcb_generic_error_t         **e  /**< */);
 
 
 #ifdef __cplusplus
