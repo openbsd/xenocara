@@ -1,3 +1,5 @@
+ACLOCAL_AMFLAGS=-I m4
+
 SUBDIRS=src tests doc
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -16,8 +18,14 @@ endif
 if BUILD_DRI2
 pkgconfig_DATA += xcb-dri2.pc
 endif
+if BUILD_DRI3
+pkgconfig_DATA += xcb-dri3.pc
+endif
 if BUILD_GLX
 pkgconfig_DATA += xcb-glx.pc
+endif
+if BUILD_PRESENT
+pkgconfig_DATA += xcb-present.pc
 endif
 if BUILD_RANDR
 pkgconfig_DATA += xcb-randr.pc

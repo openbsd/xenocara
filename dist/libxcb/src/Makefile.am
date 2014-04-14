@@ -56,6 +56,22 @@ libxcb_dri2_la_LIBADD = $(XCB_LIBS)
 nodist_libxcb_dri2_la_SOURCES = dri2.c dri2.h
 endif
 
+EXTSOURCES += dri3.c
+if BUILD_DRI3
+lib_LTLIBRARIES += libxcb-dri3.la
+libxcb_dri3_la_LDFLAGS = -version-info 0:0:0 -no-undefined @lt_enable_auto_import@
+libxcb_dri3_la_LIBADD = $(XCB_LIBS)
+nodist_libxcb_dri3_la_SOURCES = dri3.c dri3.h
+endif
+
+EXTSOURCES += present.c
+if BUILD_PRESENT
+lib_LTLIBRARIES += libxcb-present.la
+libxcb_present_la_LDFLAGS = -version-info 0:0:0 -no-undefined @lt_enable_auto_import@
+libxcb_present_la_LIBADD = $(XCB_LIBS)
+nodist_libxcb_present_la_SOURCES = present.c present.h
+endif
+
 EXTSOURCES += glx.c
 if BUILD_GLX
 lib_LTLIBRARIES += libxcb-glx.la
@@ -123,7 +139,7 @@ endif
 EXTSOURCES += sync.c
 if BUILD_SYNC
 lib_LTLIBRARIES += libxcb-sync.la
-libxcb_sync_la_LDFLAGS = -version-info 0:0:0 -no-undefined @lt_enable_auto_import@
+libxcb_sync_la_LDFLAGS = -version-info 1:0:0 -no-undefined @lt_enable_auto_import@
 libxcb_sync_la_LIBADD = $(XCB_LIBS)
 nodist_libxcb_sync_la_SOURCES = sync.c sync.h
 endif
@@ -163,7 +179,7 @@ endif
 EXTSOURCES += xinput.c
 if BUILD_XINPUT
 lib_LTLIBRARIES += libxcb-xinput.la
-libxcb_xinput_la_LDFLAGS = -version-info 0:0:0 -no-undefined @lt_enable_auto_import@
+libxcb_xinput_la_LDFLAGS = -version-info 1:0:1 -no-undefined @lt_enable_auto_import@
 libxcb_xinput_la_LIBADD = $(XCB_LIBS)
 nodist_libxcb_xinput_la_SOURCES = xinput.c xinput.h
 endif
@@ -171,7 +187,7 @@ endif
 EXTSOURCES += xkb.c
 if BUILD_XKB
 lib_LTLIBRARIES += libxcb-xkb.la
-libxcb_xkb_la_LDFLAGS = -version-info 0:0:0 -no-undefined
+libxcb_xkb_la_LDFLAGS = -version-info 1:0:0 -no-undefined
 libxcb_xkb_la_LIBADD = $(XCB_LIBS)
 nodist_libxcb_xkb_la_SOURCES = xkb.c xkb.h
 endif
@@ -233,7 +249,7 @@ EXTRA_DIST = $(STATIC_MANS)
 BUILT_SOURCES = $(EXTSOURCES) $(BUILT_MANS)
 CLEANFILES = $(EXTSOURCES) $(EXTHEADERS) $(BUILT_MANS)
 
-$(EXTSOURCES): c_client.py
+$(EXTSOURCES): c_client.py $(XCBPROTO_XCBINCLUDEDIR)/$(@:.c=.xml)
 	$(PYTHON) $(srcdir)/c_client.py -p $(XCBPROTO_XCBPYTHONDIR) $(XCBPROTO_XCBINCLUDEDIR)/$(@:.c=.xml)
 
 $(man_MANS): $(EXTSOURCES)

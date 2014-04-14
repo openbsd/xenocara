@@ -2,19 +2,22 @@
 # Process this file with autoconf to produce a configure script.
 
 # Initialize Autoconf
-AC_PREREQ(2.57)
+AC_PREREQ([2.60])
 AC_INIT([libxcb],
-        1.9.1,
+        1.10,
         [xcb@lists.freedesktop.org])
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([xcb.pc.in])
-# Set common system defines for POSIX extensions, such as _GNU_SOURCE
-# Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
-# to avoid autoconf errors.
-AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
+# Set common system defines for POSIX extensions, such as _GNU_SOURCE
+# Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
+# to avoid autoconf errors.
+AC_USE_SYSTEM_EXTENSIONS
 
 AM_PATH_PYTHON([2.6])
 
@@ -27,21 +30,18 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_CC
 
-AC_PATH_PROG(XSLTPROC, xsltproc, no)
-if test "$XSLTPROC" = "no"; then
-   AC_MSG_ERROR([XCB requires xsltproc.])
-fi
-
-HTML_CHECK_RESULT=false
+XSLTPROC=no
+HTML_CHECK_RESULT=no
 if test x"$HAVE_CHECK" = xyes; then
+	AC_PATH_PROG(XSLTPROC, xsltproc, no)
 	if test x"$XSLTPROC" != xno; then
-		HTML_CHECK_RESULT=true
+		HTML_CHECK_RESULT=yes
 	fi
 fi
 AC_SUBST(HTML_CHECK_RESULT)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.7)
+PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.10)
 NEEDED="pthread-stubs xau >= 0.99.2"
 PKG_CHECK_MODULES(NEEDED, $NEEDED)
 
@@ -80,6 +80,55 @@ AC_SUBST(XCBPROTO_XCBPYTHONDIR)
 AC_HEADER_STDC
 AC_SEARCH_LIBS(getaddrinfo, socket)
 AC_SEARCH_LIBS(connect, socket)
+
+AC_ARG_ENABLE(sendfds, AS_HELP_STRING([--disable-sendfds], [Support FD passing (default: auto)]),
+	      [sendfds=$enableval], [sendfds=auto])
+
+case x$sendfds in
+xauto)
+	AC_SEARCH_LIBS(sendmsg, socket, [sendfds="yes"], [sendfds="no"])
+	;;
+esac
+
+# XPG4v2/UNIX95 added msg_control - check to see if we need to define
+# _XOPEN_SOURCE to get it (such as on Solaris)
+AC_CHECK_MEMBER([struct msghdr.msg_control], [], [],
+                 [
+AC_INCLUDES_DEFAULT
+#include <sys/socket.h>
+                 ])
+# First try for Solaris in C99 compliant mode, which requires XPG6/UNIX03
+if test "x$ac_cv_member_struct_msghdr_msg_control" = xno; then
+    unset ac_cv_member_struct_msghdr_msg_control
+    AC_MSG_NOTICE([trying again with _XOPEN_SOURCE=600])
+    AC_CHECK_MEMBER([struct msghdr.msg_control],
+                    [AC_DEFINE([_XOPEN_SOURCE], [600],
+                       [Defined if needed to expose struct msghdr.msg_control])
+                    ], [], [
+#define _XOPEN_SOURCE 600
+AC_INCLUDES_DEFAULT
+#include <sys/socket.h>
+                     ])
+fi
+# If that didn't work, fall back to XPG5/UNIX98 with C89
+if test "x$ac_cv_member_struct_msghdr_msg_control" = xno; then
+    unset ac_cv_member_struct_msghdr_msg_control
+    AC_MSG_NOTICE([trying again with _XOPEN_SOURCE=500])
+    AC_CHECK_MEMBER([struct msghdr.msg_control],
+                    [AC_DEFINE([_XOPEN_SOURCE], [500],
+                       [Defined if needed to expose struct msghdr.msg_control])
+                    ], [sendfds="no"], [
+#define _XOPEN_SOURCE 500
+AC_INCLUDES_DEFAULT
+#include <sys/socket.h>
+                     ])
+fi
+
+case x$sendfds in
+xyes)
+        AC_DEFINE([HAVE_SENDMSG],1,[Define if your platform supports sendmsg])
+        ;;
+esac
 
 have_win32="no"
 lt_enable_auto_import=""
@@ -128,24 +177,17 @@ xcbincludedir='${includedir}/xcb'
 AC_SUBST(xcbincludedir)
 
 if  test "x$GCC" = xyes ; then
-    CWARNFLAGS="-Wall -pedantic -Wpointer-arith \
+    CWARNFLAGS="-Wall -Wpointer-arith -Wold-style-definition \
 		-Wstrict-prototypes -Wmissing-declarations -Wnested-externs"
 else
     AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
     if test "x$SUNCC" = "xyes"; then
-	CWARNFLAGS="-v"
+	CWARNFLAGS="-v -fd"
     fi
 fi
 AC_SUBST(CWARNFLAGS)
 
 XCB_CHECK_VISIBILITY()
-
-# htmldir is not defined prior to autoconf 2.59c, so on earlier versions
-# set an equivalent value.
-AC_PREREQ([2.59c], [], [AC_SUBST([htmldir], [m4_ifset([AC_PACKAGE_TARNAME],
-	  ['${datadir}/doc/${PACKAGE_TARNAME}'],
-	  ['${datadir}/doc/${PACKAGE}'])
-])])
 
 XCB_CHECK_DOXYGEN()
 
@@ -178,7 +220,9 @@ XCB_EXTENSION(Composite, "yes")
 XCB_EXTENSION(Damage, "yes")
 XCB_EXTENSION(DPMS, "yes")
 XCB_EXTENSION(DRI2, "yes")
+XCB_EXTENSION(DRI3, "$sendfds")
 XCB_EXTENSION(GLX, "yes")
+XCB_EXTENSION(Present, "yes")
 XCB_EXTENSION(RandR, "yes")
 XCB_EXTENSION(Record, "yes")
 XCB_EXTENSION(Render, "yes")
@@ -192,7 +236,7 @@ XCB_EXTENSION(XFixes, "yes")
 XCB_EXTENSION(XFree86-DRI, "yes")
 XCB_EXTENSION(Xinerama, "yes")
 XCB_EXTENSION(XInput, "no")
-XCB_EXTENSION(XKB, "no")
+XCB_EXTENSION(XKB, "yes")
 XCB_EXTENSION(Xprint, "yes")
 XCB_EXTENSION(SELinux, "no")
 XCB_EXTENSION(XTest, "yes")
@@ -222,7 +266,9 @@ xcb-composite.pc
 xcb-damage.pc
 xcb-dpms.pc
 xcb-dri2.pc
+xcb-dri3.pc
 xcb-glx.pc
+xcb-present.pc
 xcb-randr.pc
 xcb-record.pc
 xcb-render.pc
@@ -257,7 +303,9 @@ echo "  Package: ${PACKAGE_NAME} ${PACKAGE_VERSION}"
 echo ""
 echo "  Configuration"
 echo "    XDM support.........: ${have_xdmcp}"
+echo "    sendmsg fd passing..: ${sendfds}"
 echo "    Build unit tests....: ${HAVE_CHECK}"
+echo "      with html results.: ${HTML_CHECK_RESULT}"
 echo "    XCB buffer size.....: ${xcb_queue_buffer_size}"
 echo ""
 echo "  X11 extensions"
@@ -265,6 +313,7 @@ echo "    Composite...........: ${BUILD_COMPOSITE}"
 echo "    Damage..............: ${BUILD_DAMAGE}"
 echo "    Dpms................: ${BUILD_DPMS}"
 echo "    Dri2................: ${BUILD_DRI2}"
+echo "    Dri3................: ${BUILD_DRI3}"
 echo "    Glx.................: ${BUILD_GLX}"
 echo "    Randr...............: ${BUILD_RANDR}"
 echo "    Record..............: ${BUILD_RECORD}"
