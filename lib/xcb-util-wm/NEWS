@@ -1,0 +1,36 @@
+Release 0.4.1 (2014-02-19)
+==========================
+
+- xcb-proto should have never been required as xcb provides the Atoms.
+- Do not distribute ewmh C source file as they are generated with M4.
+- config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES.
+- config: use AC_CONFIG_HEADERS to create a config.h file.
+- make: implement the silent rules for m4 generated files.
+- make: compile the library with standard xorg warning flags.
+  - Bump required xorg-macros version to >= 1.16.0.
+  
+Release 0.4.0 (2014-01-19)
+==========================
+
+- Set EWMH ClientMessage window to the Root, not mandated but expected by some WMs.
+
+Release 0.3.9 (2012-05-30)
+==========================
+
+- Replacing c++ class keyword in interface header.
+- Fix incomplete implementation of _NET_SUPPORTING_WM_CHECK.
+
+Release 0.3.8 (2010-04-25)
+==========================
+
+- Add EWMH library.
+- Split up icccm and ewmh into their own repository.
+- Prefix all ICCCM public functions, types and macros by 'icccm'.
+- Add missing setters for WM_CLASS and WM_TRANSIENT_FOR properties.
+- Allow to set the encoding format for TEXT properties.
+- Add WM_COLORMAP_WINDOWS.
+- Delete callback-based APIs for events, properties, and replies.
+- Link with -no-undefined.
+- Validate size of wm_hints and wm_size_hints.
+- Ensure get_wm_class_from_reply returns a valid C-string.
+- Add AM_MAINTAINER_MODE for vendors.
