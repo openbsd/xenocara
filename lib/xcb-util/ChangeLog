@@ -1,0 +1,894 @@
+commit aa48ef789187a9a8bbad605c299ce1622cce1783
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed May 30 21:03:46 2012 +0900
+
+    Release 0.3.9
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit bc0d8bcc9f31ea157f2f206fcf184ad7ed661018
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon May 21 11:09:49 2012 +0900
+
+    Add autogen.sh to EXTRA_DIST.
+
+commit 69fd3c5ec820dedfa743ea677d0618c63fe292de
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed May 25 14:08:58 2011 +0900
+
+    Do not rely anymore on gperf and m4 following removal of deprecated atoms.
+    
+    As atoms were deprecated by 0a5c59f, gperf and m4 are not needed anymore, thus
+    rename files accordingly and downgrade minimum required version of autoconf
+    (2.62 was only needed to check for M4 in M4 util macro).
+    
+    Also, remove xcb_atom_get_predefined() and xcb_atom_get_name_predefined()
+    which were only meaningful for those atoms and bump the SONAME accordingly.
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit a6a6874234da8759e37560245b0a22ce5702eedd
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sun May 1 22:18:58 2011 +0900
+
+    Remove xcb_bitops.h.
+    
+    This header file is now part of util-image and not being used in this library.
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 8120792a02898625ed344828ad378b54b308e029
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue Apr 26 01:30:17 2011 +0900
+
+    Release 0.3.8
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 9c9d66a4dbe71328b9e38dc6d45b99eb06d19553
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue Apr 26 01:30:13 2011 +0900
+
+    Fix package name
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit eb0b55aa4ea037ebbe76c5820c3b1f4be30fcd33
+Author: Dirk Wallenstein <halsmit@t-online.de>
+Date:   Tue Apr 5 09:58:28 2011 +0200
+
+    Use an absolute URL for the m4 submodule
+    
+    A relative submodule URL requires m4 duplicates relative to every fork or local
+    mirror of this module.  To select a different protocol with an absolute
+    submodule URL, the url.<base>.insteadOf configuration option can be used.
+    
+    Signed-off-by: Dirk Wallenstein <halsmit@t-online.de>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4824b7dc328751dcfc48a3c2ae0f2be3df217ebd
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Mar 22 15:34:46 2011 +0000
+
+    Link with -no-undefined
+    
+    Use -no-undefined to assure libtool that the library has no unresolved
+    symbols at link time, so that libtool will build a shared library for
+    platforms require that all symbols are resolved when the library is linked.
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit fd626329982cc2766e5a85a75ea2800b7aa3f114
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 10 19:50:36 2011 -0500
+
+    pkg-config files: remove LIBS which is unrequired and undesirable
+    
+    LIBS is not supplied by the package configuration, it may be anything
+    the builder sets through the command line. Only -lxcb-util is needed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 363622a64830c75ee1c014f49f72c698a390f24d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 10 19:50:35 2011 -0500
+
+    Remove the Doxyfile which is unused, out dated and wrong.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit ca5b57231c0e9a3d4eda3530c4973323ed7f6977
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Mar 10 19:50:35 2011 -0500
+
+    Fix distcheck due to xcb_atom.h
+    
+    Make does not see this target as being located in the builddir.
+    The main issue is that "built source" is not build in the directory.
+    
+    Rather than investing efforts in workarounds, this patch
+    builds the library the same way all other xorg libraries are built.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 0de786c46a81fa10e07ad77ff0992a44abe4ac2b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 17:52:44 2011 -0500
+
+    config: generate ChangeLog and INSTALL
+    
+    By copying a snippet of Makefile for xorg modules.
+    One side-effect is that Makefile.in is no longer
+    deleted on maintainer clean. This should never be done as
+    it leaves your configuration in a half-broken state.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Arnaud Fontaine <arnau@mini-dweeb.org>
+
+commit 14747e0ef8dfb6668e2bb2e8a6b0c9ef2dace7b3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 17:52:43 2011 -0500
+
+    config: use the default xorg .gitignore file
+    
+    This will save future maintenance when module structure/tools change.
+    This patch depends on the util-common-m4 submodule patch in the m4 path
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Arnaud Fontaine <arnau@mini-dweeb.org>
+
+commit 02289cab0b802a1d21fc9d480176e83b36e566b7
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 17:42:12 2010 +0100
+
+    Bump version to 0.3.8
+
+commit 4010e925c7afe0c38dc20a364bf6fc41c99f6da1
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 17:27:52 2010 +0100
+
+    Remove useless xcb_atom_get_fast*() and xcb_atom_get_name().
+    
+    These functions and their types would require to write their unchecked
+    equivalent however it's not worth the effort when considering that
+    they only hide InternAtom request/reply and nothing else.
+
+commit 00a192d88d96bc838366e1541eab80fa9ecd23b3
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 17:20:55 2010 +0100
+
+    Remove synchronous xcb_atom_get()
+
+commit 2f0334b3eb49fa3a0d6daf6b9dde10e480a5c59f
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 17:18:02 2010 +0100
+
+    Remove deprecated atoms.
+    
+    Atoms defined in this library has been moved to xproto and marked as
+    deprecated almost one year ago.
+
+commit 118a3c86b3d3b2fab20f365e4a5703e40ad2e1b1
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Aug 9 15:47:02 2010 -0500
+
+    Create a single shared library and header file and reset SONAME
+
+commit d57825bee26d57625fe6629b44b33506894b9b6d
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 13:15:42 2010 +0100
+
+    Split up atom, aux event into their own repository
+
+commit 81c62e7a04213abefa1ea82819887aaaa3c31a74
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Thu Jun 24 10:48:35 2010 -0700
+
+    Delete callback-based APIs for events, properties, and replies.
+    
+    They are poorly designed and not terribly useful. I wrote the original
+    versions of these libraries for demonstration purposes and would like to
+    actively discourage anyone from actually using them.
+    
+    After deleting the callback-based APIs, there was nothing interesting
+    left in property or reply, so those libraries are deleted outright. The
+    event library is no longer particularly related to event handling, but
+    that's a problem for another commit.
+    
+    The icccm library had some simple hooks for integrating with the
+    property library, which are precisely as useful as the property library
+    itself, so I deleted them too. (Arnaud suggested this in
+    <sa5ocib84hf.fsf@Orfeo.duckcorp.org>.)
+    
+    Since the icccm and event libraries have changed interfaces, this commit
+    bumps their SONAME versions.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Josh Triplett <josh@joshtriplett.org>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+
+commit 16dd0d5a26b6efc8ed49daa56c9006a0abcc3f53
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Thu Jun 24 11:06:48 2010 -0700
+
+    Delete redundant core-protocol error codes.
+    
+    XCB already defines the error codes, though with unfortunate names. The
+    following sed replacements should correct any code that was using these
+    definitions:
+    
+        s/\<XCB_EVENT_ERROR_SUCCESS\>/0/g
+        s/\<XCB_EVENT_ERROR_BAD_COLOR\>/XCB_COLORMAP/g
+        s/\<XCB_EVENT_ERROR_BAD_GC\>/XCB_G_CONTEXT/g
+        s/\<XCB_EVENT_ERROR_BAD_/XCB_/g
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 9139e56dfc3d9a66ab41df2032652aca58f32a77
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 14 13:49:09 2010 -0700
+
+    Rename XCB_EVENT_ERROR_SUCESS to XCB_EVENT_ERROR_SUCCESS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 7a5ec0c175043d2b6c7a5e8fb381754884c141a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 14 13:49:08 2010 -0700
+
+    Fix typos in various header comments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 2cbc3fcce36c2f5b2c5baec39bea26744bedd4fa
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Thu Feb 11 14:45:11 2010 +0000
+
+    Add AM_MAINTAINER_MODE for vendors
+
+commit bb143c54e578f69f33dab39fbdc62d2e9bb806cc
+Author: Peter Harris <pharris@opentext.com>
+Date:   Fri Nov 6 15:52:42 2009 -0500
+
+    Deprecate namespaceless pre-defined atoms
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+
+commit 2ac7acd95bc775af21f65d8c5426e92d28780ab8
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Oct 20 18:17:46 2009 +0100
+
+    Update autogen.sh to one that does builddir != srcdir
+
+commit ee40bb3b6a7c5c69c8693a573a459484a24a49d1
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Fri Sep 25 13:08:15 2009 +0100
+
+    Bump version to 0.3.7
+
+commit 60766d8a99cc67df7aa84d6e242f738d38c21938
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Aug 3 17:18:41 2009 +0200
+
+    Bump version to 0.3.6
+
+commit 9ce2a1868f4992b3854400348dfd1dc59a3acf11
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Jul 15 16:26:56 2009 +0100
+
+    event: fix compiler warning due to missing include for memset
+
+commit 17cfe28823085af5d7e174e77482e9157bdbe6d9
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Jul 15 16:23:41 2009 +0100
+
+    event: update to libxcb 1.4
+    
+    Remove useless macros to get error information because libxcb 1.4 now
+    provides additional fields (major_opcode, minor_opcode and
+    resource_id) like Xlib.
+
+commit 5755a6ea3f5d0b92ddfccd2439d802ea0af70dc8
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Jun 3 20:50:32 2009 +0900
+
+    Check for ssize_t in configure for xcb-util-common.h
+
+commit 214afd4127898d047d2c2c66c974ec9b1d50b6e4
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Sat May 30 17:10:35 2009 +0700
+
+    Typo in configure.ac
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit fbc320ee434b45c37f7501e1cb31c9e51369e79a
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri May 29 08:34:20 2009 +0200
+
+    Release xcb-util 0.3.5
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit dc9c1424ac0fe8543904bbe8365462246d703f39
+Author: Bob Ham <rah@bash.sh>
+Date:   Mon May 25 12:22:13 2009 +0200
+
+    Add a check on xproto version libxcb was compiled with
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 5e88d1fa0a4bdd2b19c7d9b5fdfb2d70a7fdc2ae
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Thu May 21 10:44:47 2009 -0700
+
+    wrapped xcb_atom.h for C++ per bug report of <comick@autistici.org>
+
+commit 04003178b1f9bc0c69a6ced184fbf81e5ee7b5ad
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Sat May 16 02:08:46 2009 +0700
+
+    Zero out handlers list in xcb_event_handlers_init
+    
+    xcb_event_handle relies on the fact that handler for non-handled
+    event is NULL. Initialize handlers in xcb_event_handlers_init
+    to avoid calling function by uninitialized pointer.
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+
+commit 9002b649f3abb48337f16480cec2cc6f5eedef70
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Apr 21 15:27:24 2009 -0700
+
+    Make sure m4 supports -I flag, if not, try finding gnu m4
+    
+    Solaris m4 does not support -I flag, but gnu m4 is included in
+    recent Solaris & OpenSolaris releases (and must already be installed
+    on any machine that runs autoconf to generate configure scripts)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 296a3d0a11f0ed609fe5c5c9036d353fe9e715cd
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Sun Apr 19 20:01:00 2009 +0700
+
+    Add xcb_aux_change_window_attributes_checked
+    
+    There is xcb_aux_change_window_attributes, add the matching checked
+    function.
+    
+    Signed-off-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 6b36dc016a6d51df63324079ef3178599e8f802b
+Author: Julien Danjou <julien@danjou.info>
+Date:   Wed Apr 15 15:21:21 2009 +0200
+
+    bump version to 0.3.4
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 02c8c43a95bad0a390764c8aafe0699b69e6ee40
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Apr 14 11:44:06 2009 +0200
+
+    event: add define to get request and error types
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit bd40d52032e2fe7307171dc090754550cb4a302d
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Apr 14 11:24:00 2009 +0200
+
+    event: add error values
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 59b946a9429137cd9880e592e19f8db470dca049
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Apr 14 11:16:52 2009 +0200
+
+    event: simplify proto
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 94a25d209e1cdfcdaf8e4bfd2cdb1bcb82042d84
+Author: Julien Danjou <julien@danjou.info>
+Date:   Thu Apr 2 12:11:01 2009 +0200
+
+    event: add functions to convert event/errors to labels
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 55ad587c67fe7890c71ef151ad15868d9929f2e1
+Author: Julien Danjou <julien@danjou.info>
+Date:   Sat Jan 31 15:08:44 2009 +0100
+
+    Release xcb-util 0.3.3
+
+commit ca5debb213cd7f650c3ce80261e08c72620831a3
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Dec 16 14:14:50 2008 +0100
+
+    Release xcb-util 0.3.2
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 3ea3d2816452896dc62d0e6838e8c421805a533d
+Author: Peter Harris <peter.harris@hummingbird.com>
+Date:   Sat Nov 29 12:26:46 2008 -0500
+
+    Don't call exit() in xcb_aux_get_depth; return 0 instead.
+
+commit b73811ede8e84896a202cd15121e0ed62d7143d0
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Nov 21 10:49:09 2008 +0100
+
+    build: add check for xproto >= 7.0.8
+    
+    This is needed to have _X_INLINE.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit c335374c92f231365630708d028ffa7c927459f4
+Author: Jonathan Landis <landijk-dev@yahoo.com>
+Date:   Fri Nov 21 10:10:15 2008 +0100
+
+    Fix copyright statement
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 887d528bfa11fafc81431e41fe5e8655464a5195
+Author: Julien Danjou <julien@danjou.info>
+Date:   Thu Nov 20 15:34:54 2008 +0100
+
+    Release xcb-util 0.3.1
+
+commit 5f491f9e612ff143a3e559820c5494b061be2433
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Nov 7 11:02:08 2008 +0100
+
+    configure: stop if m4 is not found
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit e96984a40f43114b8ff7640a2c017442105ab28a
+Author: Ulrich Eckhardt <doomster@knuut.de>
+Date:   Mon Sep 29 16:35:10 2008 -0700
+
+    "Clean up" magic structure stuff for C++.
+    
+    Signed-off-by: Bart Massey <bart@cs.pdx.edu>
+
+commit 1b81ef7e1abffb9a244183d6fbf4a1e6e2cb11e1
+Author: Henning Sten <henning.sten@yahoo.com>
+Date:   Wed Sep 17 20:59:23 2008 +0200
+
+    introduce function xcb_atom_get (essentially a synchronous xcb_intern_atom, use it only on non-performance critical execution paths)
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 68c0ed4b85a526ff70e5363d6468ee9603f448d1
+Author: Henning Sten <henning.sten@yahoo.com>
+Date:   Tue Sep 16 20:28:13 2008 +0200
+
+    add doxygen documentation markup for XCB_EVENT_RESPONSE_TYPE_MASK macro
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 23b1626b4972c234a12200c46aa416846d8f9fb7
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 17:11:40 2008 +0200
+
+    doc: enable doxygen doc in various submodule
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 612dc375bfbf5d92da31b0d4e24bd96a539be0f0
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 17:11:14 2008 +0200
+
+    doc: add various authors, remove old todo item
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 06fe4ed34220807e0f0e7c75ad6d542b157e4ea4
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 15:27:49 2008 +0200
+
+    event: define XCB_EVENT_RESPONSE_TYPE_MASK
+    
+    And use it.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit cb96efd21d7cfaa2e99d618fe6fac120d34aed02
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 15:23:24 2008 +0200
+
+    event: rework, rename and add some documentation
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 38a56fc80ebbd683818231fe2f8253ef93071839
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 11:03:23 2008 +0200
+
+    atom: include xcb headers
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit f33cf7f649e14be9658e46d0978e687a76c4ea1c
+Author: Julien Danjou <julien@danjou.info>
+Date:   Mon Sep 15 21:00:24 2008 +0200
+
+    atom: bump version info
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 40a1102d1329e452a837bfe559fbd0a9cf3767b6
+Author: Julien Danjou <julien@danjou.info>
+Date:   Mon Sep 15 20:59:12 2008 +0200
+
+    atom: prefix functions and types
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit c607afb79b0a16b6f41d8999cb61e52a89241fac
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Sep 8 17:46:42 2008 +0200
+
+    [icccm] Bump library version number to 0.3.0.
+
+commit 5f8dfed11b3fb485f952ab42971d05cf75a305b8
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Thu Sep 11 19:06:57 2008 +0200
+
+    [atom] Move '*discriminated_atom*' functions from icccm to atom
+
+commit 8a4dfb917f12b4e3ef36d135081379927c1ca1db
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Sep 7 21:46:45 2008 -0700
+
+    xcb_mask must not be zero when n == 32.
+    
+    left shift of a 32-bit value by 32 is undefined, don't try to use it.
+
+commit 07385216de016e272a7d65978e8c2a86782a62e3
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Aug 1 11:43:26 2008 +0200
+
+    prepare 0.2.1 release
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 428778df9148a070aaac067d8b9cccf7b6fa9406
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Wed Mar 5 13:27:07 2008 -0800
+
+    fixed missed reference in previous patch
+
+commit 0f9f33d9419d6bbb79af81775f7ec5e8ba5f5e0a
+Author: Arnaud Fontaine <arnaud@andesi.org>
+Date:   Mon Jan 28 14:26:05 2008 -0800
+
+    Add xcb_poll_for_event_loop and rename xcb_event_loop to match.
+    
+    I'm currently porting Awesome[0] from Xlib to XCB as a school project for
+    my bachelor. I discussed with Vincent about adding a non-blocking
+    xcb_event_loop on IRC because I had to write one for Awesome and wondered
+    if this kind of function could be added to xcb-util.
+    
+    [0] http://awesome.naquadah.org
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 3ce9210fe2a5597699b8e4fec8fc030999be51e7
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Wed Mar 5 13:24:34 2008 -0800
+
+    made xcb_handle_event() externally visible
+
+commit ef27e7f190e9840efa000019b29fbdd7a865caeb
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Mon Dec 17 09:10:59 2007 -0800
+
+    re-fixed my stupid visual_class typo; thanks to Thomas Hunger for the report
+
+commit 5d22c197f90f5be91cb247b04581962f4426ef08
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sat Dec 8 15:27:04 2007 -0800
+
+    fixed existing roundups, added rounddowns
+
+commit 8b825188a070abef9767bc199868ae5bfc79068c
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sat Dec 8 13:29:19 2007 -0800
+
+    added aux_clear_window() for xlib compatibility, in spite of misgivings
+
+commit 08e3c71b1ad0b75bd4231c23bb143e81b4d64473
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:51:31 2007 -0800
+
+    fixed xcb_params_gc_t so that tile_stipple_origin members had reasonable naming
+
+commit de72d4184249afb381a6761cc369f2e7cfc16d3d
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:48:25 2007 -0800
+
+    used doxygen -u to create a much more elaborate doxyfile
+
+commit ed9113c3e79bd951ad3a36f64fc6a1fd6fca0648
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:30:32 2007 -0800
+
+    added fast inline bitops xcb_bitops.h
+
+commit 78accd46db65b88e1e2c0e3d714038e7ba679533
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:27:52 2007 -0800
+
+    added aux_set_line_attributes_checked
+
+commit 3bf56c9d1d1e8b2af7869e02a4a0d3804fca8212
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:24:57 2007 -0800
+
+    added PARAM macros
+
+commit 5d00736869e46a5e142867c08d2727b2d30a6156
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:22:51 2007 -0800
+
+    xcb_aux_parse_color()
+
+commit adc7f0f474cda01de0b26b0bc4dc7aa3960458c6
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:20:11 2007 -0800
+
+    added checked version of aux_change_gc function
+
+commit 47ec324d913bc4e11b0db399ac28f1e106bc7037
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:18:10 2007 -0800
+
+    added checked versions of aux_create_window and aux_create_gc functions
+
+commit 71f52d1a1807c471b713064adf249c90d73f3b3f
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:14:29 2007 -0800
+
+    added xcb_aux_find_visual functions
+
+commit 1e170eafd033687165d4c4c0b77358c35d6c30de
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:11:41 2007 -0800
+
+    added xcb_aux_get_depth_by_visual_id()
+
+commit e15f40b9758942568e09855e0a041654d53a3842
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Nov 6 17:37:07 2007 -0800
+
+    All util libraries require the XCB 1.0 API; check for it in configure.
+
+commit 0f1f1e2b85a2b867e9c50ad548475bbc3a8158f8
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Fri May 11 18:16:25 2007 +0200
+
+    atom: Replace 'char *atom_names[]' with one big string and array of offsets.
+    
+    This reduces the memory footprint of libxcb-atom.so, and the number of
+    relocations that have to be performed on load.
+    
+    before:
+    
+       atom/.libs/libxcb-atom.so: 73 relocations
+    
+       text    data     bss     dec     hex filename
+       9587     588     132   10307    2843 atom/.libs/libxcb-atom.so
+    
+    after:
+    
+       atom/.libs/libxcb-atom.so: 5 relocations
+    
+       text    data     bss     dec     hex filename
+       9183     316     132    9631    259f atom/.libs/libxcb-atom.so
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit c7ce8e2377241dc436ea1623313178dec3acf2ad
+Author: Tilman Sauerbeck <tilman@code-monkey.de>
+Date:   Sun May 6 22:35:26 2007 +0200
+
+    Bug #10877: Fixed the atom values that are written to the hash table.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit c452816e77aa49b9b3564dae5ec2285a3249c7e2
+Author: TORRI Vincent <torri@alf94-3-82-66-248-160.fbx.proxad.net>
+Date:   Fri Apr 6 17:54:52 2007 +0200
+
+     event/events.c
+     event/xcb_event.h
+     icccm/icccm.c
+     icccm/xcb_icccm.h
+     property/prop.c
+     property/xcb_property.h
+     wm/manage.c
+     wm/xcb_wm.h
+     wm/xcbwm-test.c
+    
+    xcb namespace added, _t sufix added for some types, formatting
+
+commit 4a7f5c495cc0135d669f79fa22a965986fa6c35e
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Mar 2 17:36:29 2007 -0800
+
+    Release xcb-util 0.2
+
+commit 64e01af41f2056270537e43d26e46db6a1696b39
+Author: TORRI Vincent <torri@alf94-3-82-66-248-160.fbx.proxad.net>
+Date:   Wed Feb 21 20:27:07 2007 +0100
+
+    rename the libraries from libXCBFoo.* to libxcb-foo.*. Use foo_CPPFLAGS instead of foo_CFLAGS (*_CFLAGS variables store preprocessor options)
+
+commit a4d35e5dd8bff5c381594304a9d03de0c0a655f6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 7 12:06:00 2006 -0700
+
+    Bug #7150: Rename "len" to "namelen" to avoid m4 substitution
+    
+    This is the second of two fixes needed to get xcb-util building on
+    Solaris.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 7addcb94f4fb814d312bec27bcd7e30486d4061e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 7 12:06:00 2006 -0700
+
+    Bug #7150: Check for gcc & Sun cc in configure.ac and use correct flags to turn on more warnings for each
+    
+    This is the first of two fixes needed to get xcb-util building on
+    Solaris.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 7c3ea033e51c0e00e68325ec53dca5ba3717b610
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Nov 12 17:48:28 2006 -0800
+
+    Clean up built sources. Makes `distcheck` pass.
+
+commit 809f0deeecf381d9350fa9dc0eed62a01ddc2abe
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sun Nov 12 17:30:00 2006 -0800
+
+    Bug #6781: make util compile with srcdir != builddir.
+
+commit dd3f8dd5828eecd8395fc3ec1da8e21f57da3b6c
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sat Oct 7 11:45:07 2006 -0700
+
+    Adapt xcb/util libraries for removal of XID structures.
+
+commit 76940f795615b5315690bec277b011046cc14f2d
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Tue Sep 26 08:36:01 2006 -0700
+
+    Install headers to "xcb", not "X11/XCB".
+
+commit 7d775611f0da257663b8b9bb865389908573b16e
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Tue Sep 26 08:21:26 2006 -0700
+
+    Naming changes must go into m4 files.
+
+commit c0ca7a3e22afa03ba8b1a11e97aa8e56d45ee3e3
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Sep 25 04:13:01 2006 -0700
+
+    libxcb now installs header files in <xcb>, not <X11/XCB>.
+
+commit 817d5a1b72d1e2822b8dc4706a276f3b025a464f
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sun Sep 24 13:34:03 2006 -0700
+
+    All xcb-util libraries compile after the Great Renaming.
+    
+    Many of the exported library functions still need to follow the new convention.
+
+commit ed0e9f4ed98188a80462c5c2964f7383faec2b4f
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sun Sep 24 03:15:39 2006 -0700
+
+    Integrate top-level .gitignore into .gitignore for each subdirectory
+    
+    In preparation for the repository split, move the relevant contents of the
+    top-level .gitignore into the .gitignore for each immediate subdirectory.
+
+commit 2ed2cfbb967c9a3a983c90514f8ff6784e5d47e0
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Tue Sep 12 02:02:47 2006 -0700
+
+    Removed GNU make constructs from Makefile.
+    Prepared for repair of "make distcheck".
+
+commit d510a2e18805f33a19afd0bf5c45b32d56b40359
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Fri Jul 28 09:00:37 2006 +0200
+
+    use XCBNone instead of None
+
+commit 66f8cf96ded8de4180b8955a83e0c0fce16fe579
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Thu Jun 8 07:02:15 2006 +0200
+
+    fix compilation with c++ compilers. Remove some trailing spaces
+
+commit bad580c5803d918dedc2afbd96c2b3701bccfdf8
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Sun May 7 20:32:32 2006 -0700
+
+    Add correct dependencies in xcb-util.
+
+commit f42905de7b4cdea9aea3f9168d81f966f89ce2e6
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Fri Apr 28 16:00:37 2006 -0700
+
+    Add m4 files to EXTRA_DIST.
+
+commit 43afb8c92626370dd07615d234ad86d2b3e70b05
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Fri Apr 28 20:50:19 2006 +0200
+
+    Merge branch 'master' of git+ssh://doursse@git.freedesktop.org/git/xcb
+
+commit 93c472fdbf8db1badc7ab093fe198f944ceaf058
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 11:25:28 2006 -0700
+
+    Set all package bugreporting addresses to xcb@lists.freedesktop.org
+
+commit 122cc67f76886e1f996645cd402c0d473d85f408
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 01:06:46 2006 -0700
+
+    Fix xcb-util library dependencies, including both the new dependency libXCBImage needs on libXCBShm, as well as many other issues discovered in the process.  These include using automake variables appropriately in order to actually link shared libraries against each other and ensure libraries have NEEDED entries for the libraries they depend on, consequently needing to reorder the top-level SUBDIRS to build property before icccm, adding dependencies to .pc.in files, fixing .pc.in files to not all use the name and description for XCBImage, and adding appropriate library dependencies to test programs.
+
+commit c88fa5935eeee20481bfe466cc18e3870bb96b18
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Wed Mar 8 22:49:59 2006 -0800
+
+    Unify autofoo .gitignore bits into one top-level file, and remove resulting redundancies.
+
+commit 9dca188b7f1d048d75cc7a13199cb4d0d436f274
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Feb 18 23:57:14 2006 -0800
+
+    Update .gitignores for .o files and autofoo stuff.
+
+commit f4b4cbd6a661cb06ff993365f3b9ec17a81e3c3f
+Author: Eric Anholt <anholt@FreeBSD.org>
+Date:   Sat Feb 18 22:56:03 2006 -0800
+
+    Move .cvsignore to .gitignore.
+
+commit 7944b54ff8d97e29dad9947aac05780e5c389737
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sat Feb 18 16:49:41 2006 -0800
+
+    Remove xcl and CVSROOT.

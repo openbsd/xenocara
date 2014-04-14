@@ -1,0 +1,5 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2014/04/14 19:26:35 matthieu Exp $
+
+SHARED_LIBS=	xcb-util 0.0
+
+.include <bsd.xorg.mk>

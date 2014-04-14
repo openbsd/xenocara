@@ -1,0 +1,18 @@
+Release 0.3.9 (2012-05-30)
+==========================
+
+- Remove xcb_bitops.h.
+- Do not rely anymore on gperf and m4 following removal of deprecated atoms.
+
+Release 0.3.8 (2010-04-25)
+==========================
+
+- Split up atom, aux event into their own repository.
+- Create a single shared library and header file.
+- Remove namespaceless pre-defined atoms.
+- Remove synchronous xcb_atom_get().
+- Remove useless xcb_atom_get_fast*() and xcb_atom_get_name().
+- Delete redundant core-protocol error codes.
+- Delete callback-based APIs for events, properties, and replies.
+- Link with -no-undefined.
+- Add AM_MAINTAINER_MODE for vendors.
