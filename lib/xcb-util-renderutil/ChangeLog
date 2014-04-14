@@ -1,0 +1,411 @@
+commit 79e2b469eb595b6a840a96c0e1d957f2346a0b3a
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue Apr 26 01:11:02 2011 +0900
+
+    Release 0.3.8
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit a6d31c741cc9178972f7155e5364ab552229638c
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue Apr 26 01:05:42 2011 +0900
+
+    Fix package name
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 6dd12d51c82b18aa7570a12e5afea81abc1c9311
+Author: Dirk Wallenstein <halsmit@t-online.de>
+Date:   Tue Apr 5 09:58:28 2011 +0200
+
+    Use an absolute URL for the m4 submodule
+    
+    A relative submodule URL requires m4 duplicates relative to every fork or local
+    mirror of this module.  To select a different protocol with an absolute
+    submodule URL, the url.<base>.insteadOf configuration option can be used.
+    
+    Signed-off-by: Dirk Wallenstein <halsmit@t-online.de>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d48d0219e5e2451cd2803976be8a9bb903f2fb12
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Mar 22 15:34:49 2011 +0000
+
+    Link with -no-undefined
+    
+    Use -no-undefined to assure libtool that the library has no unresolved
+    symbols at link time, so that libtool will build a shared library for
+    platforms require that all symbols are resolved when the library is linked.
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 9b9d682d42c17727bf2905a35cc93a017af9ee15
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 17:52:44 2011 -0500
+
+    config: generate ChangeLog and INSTALL
+    
+    By copying a snippet of Makefile for xorg modules.
+    One side-effect is that Makefile.in is no longer
+    deleted on maintainer clean. This should never be done as
+    it leaves your configuration in a half-broken state.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 9d0425b633847b681f875fe35f50eea2a8f2e60f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 17:52:43 2011 -0500
+
+    config: use the default xorg .gitignore file
+    
+    This will save future maintenance when module structure/tools change.
+    This patch depends on the util-common-m4 submodule patch in the m4 path
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit bfad849f198eea2aeaf75c0ada348b368999fa7e
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 04:05:56 2010 +0100
+
+    Bump version to 0.3.8
+
+commit 972d4d991eb927d4de57a517aed51cf2de343ce0
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 13:19:40 2010 +0100
+
+    Split up renderutil into its own repository
+
+commit 4ea7bddd0583445ae57c64b83d9964526b164b11
+Author: Joshua Phillips <jp.sittingduck@gmail.com>
+Date:   Fri Oct 8 19:10:05 2010 +0100
+
+    Check for malloc failure in xcb_render_util_composite_text_stream.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit e7f60a657ea2f235a792bfe14b888eef522c7e06
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Thu Feb 11 14:45:11 2010 +0000
+
+    Add AM_MAINTAINER_MODE for vendors
+
+commit e5c45a7d61119f9e16e10cf4b1abf666f3713157
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Oct 20 18:17:46 2009 +0100
+
+    Update autogen.sh to one that does builddir != srcdir
+
+commit ec6de45dafd4db7785526d1340c85cb1d38a662b
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Fri Sep 25 13:08:15 2009 +0100
+
+    Bump version to 0.3.7
+
+commit f45aea44f8f823444151b396f7a9ebf1763ff658
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Aug 3 17:18:41 2009 +0200
+
+    Bump version to 0.3.6
+
+commit 1cd53444abe39f37423bb7cd4b7cb43687ab914b
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Jun 3 20:50:32 2009 +0900
+
+    Check for ssize_t in configure for xcb-util-common.h
+
+commit 0e73e8587f1c7bed0cc908d304e31d1c3759ca24
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Sat May 30 17:10:35 2009 +0700
+
+    Typo in configure.ac
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 1c2431808339743980cfbc17533123388511fd50
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri May 29 08:34:20 2009 +0200
+
+    Release xcb-util 0.3.5
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 9e868ede4ab0bc5aa85b72f8d3dc4ca52c0f0d81
+Author: Bob Ham <rah@bash.sh>
+Date:   Mon May 25 12:22:13 2009 +0200
+
+    Add a check on xproto version libxcb was compiled with
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit f510466a106dd0f4bc40e3604b44e84c3ac08d56
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Apr 21 15:27:24 2009 -0700
+
+    Make sure m4 supports -I flag, if not, try finding gnu m4
+    
+    Solaris m4 does not support -I flag, but gnu m4 is included in
+    recent Solaris & OpenSolaris releases (and must already be installed
+    on any machine that runs autoconf to generate configure scripts)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 8d098e77020b6f4aef51802d0e4cd59784280de6
+Author: Julien Danjou <julien@danjou.info>
+Date:   Wed Apr 15 15:21:21 2009 +0200
+
+    bump version to 0.3.4
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 89dc116d0407634add2eb6c55d863a5b79bb4163
+Author: Julien Danjou <julien@danjou.info>
+Date:   Sat Jan 31 15:08:44 2009 +0100
+
+    Release xcb-util 0.3.3
+
+commit 3f82523d21a7492875abbba7dd798a0a12955a44
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Dec 16 14:14:50 2008 +0100
+
+    Release xcb-util 0.3.2
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit b933ff3caad3a03e2ec86a4f5708bbc3bc0412fc
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Nov 21 10:49:09 2008 +0100
+
+    build: add check for xproto >= 7.0.8
+    
+    This is needed to have _X_INLINE.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 22c31a336a54bda908d4c8d8c1fb5b03dbcdb654
+Author: Julien Danjou <julien@danjou.info>
+Date:   Thu Nov 20 15:34:54 2008 +0100
+
+    Release xcb-util 0.3.1
+
+commit 554226858cc33d9e357a3e98f95646fdcd5d614b
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Nov 7 11:02:08 2008 +0100
+
+    configure: stop if m4 is not found
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit b10517efee0cc6b2cd692f4537131cb0d7d5ae83
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 17:11:40 2008 +0200
+
+    doc: enable doxygen doc in various submodule
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit d6f83879418f0aa414d1113783ec3c458d517808
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 17:11:14 2008 +0200
+
+    doc: add various authors, remove old todo item
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 9b23cf8929cde7bb2df53e0deebd78d97f518767
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Sep 8 17:46:42 2008 +0200
+
+    [icccm] Bump library version number to 0.3.0.
+
+commit 95f1816ff8ac7ae877613f425c28e6506e0bd571
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Aug 1 11:43:26 2008 +0200
+
+    prepare 0.2.1 release
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 7fd3bee96c47c49fa2546b69527b9cf83a3c4685
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:48:25 2007 -0800
+
+    used doxygen -u to create a much more elaborate doxyfile
+
+commit e211e66f49b323cdef9fe80caac3735d2d4d5c7a
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Nov 6 17:37:07 2007 -0800
+
+    All util libraries require the XCB 1.0 API; check for it in configure.
+
+commit 7c9dfe62e031e41a7d3ad6a64e98c8fb19d126f4
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Mar 2 17:36:29 2007 -0800
+
+    Release xcb-util 0.2
+
+commit def76c11d60d6487f5902bd8a713e77a544ba088
+Author: TORRI Vincent <torri@alf94-3-82-66-248-160.fbx.proxad.net>
+Date:   Wed Feb 21 20:33:49 2007 +0100
+
+    and rename renderUtil to render-util
+
+commit f82a373675eb09985ff205d1b8753cbf59169009
+Author: TORRI Vincent <torri@alf94-3-82-66-248-160.fbx.proxad.net>
+Date:   Wed Feb 21 20:27:07 2007 +0100
+
+    rename the libraries from libXCBFoo.* to libxcb-foo.*. Use foo_CPPFLAGS instead of foo_CFLAGS (*_CFLAGS variables store preprocessor options)
+
+commit 58225e88ec56c78dbf5a2235f9031e449ddd3e4a
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 7 12:06:00 2006 -0700
+
+    Bug #7150: Check for gcc & Sun cc in configure.ac and use correct flags to turn on more warnings for each
+    
+    This is the first of two fixes needed to get xcb-util building on
+    Solaris.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit ede59ea93c8ee8b5340fc3b862d67820e2eeb6f1
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Wed Oct 18 07:34:50 2006 -0700
+
+    Rename enumerations to coding standard.
+    
+    Make find_standard_format require the new enum.
+
+commit 5d6fee1cc806d7197ced2ad154cce5336ae7e914
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sun Oct 15 07:15:25 2006 -0700
+
+    Oops, glyphcmds aren't in network byte order.
+
+commit e09eb3ae2f7f98255ee722cc1c7555ff6f8c7b8b
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Oct 14 19:05:52 2006 -0700
+
+    Simplify xcb_render_util_composite_text, add xcb_render_util_composite_text_checked.
+
+commit e8cc999b0433aa5b227c5fcc93413ec017d0db8a
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sat Oct 14 16:26:44 2006 -0700
+
+    Const correctness.
+
+commit 852850c2b60099e571a3a6b424eda2d7c62b1d32
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sat Oct 14 16:09:49 2006 -0700
+
+    Implement a prototype API for xcb_render_util_composite_text
+    
+    This API wraps xcb_render_composite_glyphs_8/16/32, making them usable.
+    This currently has the limitation of not supporting lists of glyphs
+    longer than 252 for text_8 or 254 otherwise.
+    Currently untested; work into cairo or demo/rendertest.
+
+commit c5e426aca517799246f53d1f8ed5d4c5a1e997b7
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sat Oct 7 11:45:07 2006 -0700
+
+    Adapt xcb/util libraries for removal of XID structures.
+
+commit 36b5af8bba93439c464553a9f759d97a485a8cde
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Tue Sep 26 08:36:01 2006 -0700
+
+    Install headers to "xcb", not "X11/XCB".
+
+commit 94375e7800dcde45abe9816ecd2837277c4b105c
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Sep 25 04:13:01 2006 -0700
+
+    libxcb now installs header files in <xcb>, not <X11/XCB>.
+
+commit 34a6db1bd10125c0c3b5cbc416e7ad496fc3231f
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sun Sep 24 13:34:03 2006 -0700
+
+    All xcb-util libraries compile after the Great Renaming.
+    
+    Many of the exported library functions still need to follow the new convention.
+
+commit ed37bd716d5d2669e13d81068618f749b94d5e19
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sun Sep 24 03:15:39 2006 -0700
+
+    Integrate top-level .gitignore into .gitignore for each subdirectory
+    
+    In preparation for the repository split, move the relevant contents of the
+    top-level .gitignore into the .gitignore for each immediate subdirectory.
+
+commit 4410d59a0c46adb198506afb7a8413245b66ca99
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Jul 31 09:48:44 2006 -0700
+
+    The formats argument of XCBRenderUtilFindVisualFormat must be const.
+
+commit 5fceffa1f57d7919cc47c535c50d3f648acb199f
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Jul 31 09:48:04 2006 -0700
+
+    Plan 7 has been implemented, so xcb_renderutil compiles without faked prototypes.
+
+commit 66c0d8ad5fc7a22c5c964121462ddae4a27c60f3
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Jun 12 03:28:10 2006 -0700
+
+    New utility library: port of libXrender utility functions.
+
+commit 97fc9d036b0e60d69edc4b4bb0548c64ac567cb8
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Sun May 7 20:32:32 2006 -0700
+
+    Add correct dependencies in xcb-util.
+
+commit 7b11253bb68ce0df07cf34f9a1f62a0292a0558b
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Fri Apr 28 20:50:19 2006 +0200
+
+    Merge branch 'master' of git+ssh://doursse@git.freedesktop.org/git/xcb
+
+commit b72548f1e2ef1f89d319c6bc1c23da2d20d0c6e9
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 11:25:28 2006 -0700
+
+    Set all package bugreporting addresses to xcb@lists.freedesktop.org
+
+commit 04c0961b9df6a372a149a3c67823a7c1aaca2068
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 01:06:46 2006 -0700
+
+    Fix xcb-util library dependencies, including both the new dependency libXCBImage needs on libXCBShm, as well as many other issues discovered in the process.  These include using automake variables appropriately in order to actually link shared libraries against each other and ensure libraries have NEEDED entries for the libraries they depend on, consequently needing to reorder the top-level SUBDIRS to build property before icccm, adding dependencies to .pc.in files, fixing .pc.in files to not all use the name and description for XCBImage, and adding appropriate library dependencies to test programs.
+
+commit 93fc1b32e6bc2febf363f92c5d4bbe9a5ed070bb
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Wed Mar 8 22:49:59 2006 -0800
+
+    Unify autofoo .gitignore bits into one top-level file, and remove resulting redundancies.
+
+commit 93655fc04daedbac58ad7b19f351b19f607c82ce
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Feb 18 23:57:14 2006 -0800
+
+    Update .gitignores for .o files and autofoo stuff.
+
+commit 3ad93fb6480c8491b6c9edc80aa9c647987d3aa5
+Author: Eric Anholt <anholt@FreeBSD.org>
+Date:   Sat Feb 18 22:56:03 2006 -0800
+
+    Move .cvsignore to .gitignore.
+
+commit d2445f8446163145e0a6f75bff698842ed3b7f25
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sat Feb 18 16:49:41 2006 -0800
+
+    Remove xcl and CVSROOT.

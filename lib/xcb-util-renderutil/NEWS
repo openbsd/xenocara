@@ -1,0 +1,7 @@
+Release 0.3.8 (2010-04-25)
+==========================
+
+- Split up renderutil into its own repository.
+- Check for malloc failure in xcb_render_util_composite_text_stream.
+- Link with -no-undefined.
+- Add AM_MAINTAINER_MODE for vendors.
