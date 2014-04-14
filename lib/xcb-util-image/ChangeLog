@@ -1,0 +1,693 @@
+commit 155d4c90d7ddb599fcff34dfc403b223c3a35ce8
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed May 30 14:23:19 2012 +0900
+
+    Release 0.3.9
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 22d62378f721555970d5f6a9a1f9fde233fd226c
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue May 22 17:22:15 2012 +0900
+
+    Fix GCC warning in test_formats.
+
+commit f7921a5f1b4524300f297c41200623d7b7fbf17a
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Thu Jan 5 21:01:51 2012 +0000
+
+    Use rand() instead of random(), being part of the C standard library,
+    it is more portable (for example, to MinGW)
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 98ca67376f87854b1b9308ac948d16a890e5088b
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Thu Jan 5 21:01:50 2012 +0000
+
+    Don't try to build test_xcb_image_shm if SHM isn't available (for example, on MinGW)
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 51ba72634a3fdaaddacf917373cc44b1bf53829d
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon May 21 11:06:59 2012 +0900
+
+    Add autogen.sh to EXTRA_DIST.
+
+commit 8b31d4b184a03d6de95d50275e237958909aebcd
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon May 21 11:06:53 2012 +0900
+
+    Remove Doxyfile which is unused, out dated and wrong.
+
+commit 46842004b8a9419dec49caf95e516f801bcda5b0
+Author: Roberto Branciforti <rbbrnc@gmail.com>
+Date:   Mon May 2 17:40:42 2011 +0200
+
+    Fix xcb_bitops.h include path
+    
+    This patch fix the include path of the xcb_bitops.h file.
+    
+    Signed-off-by: rbbrnc <rbbrnci@gmail.com>
+
+commit 97e6f64dfee62a65758c0667a4ee208d7e9ab44a
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sun May 1 22:24:41 2011 +0900
+
+    Add missing xcb_bitops.h.
+    
+    Following the split up of xcb-util, this header was incorrectly put into util,
+    which doesn't actually use it, whereas it should have always been in
+    util-image.
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 6b69004b6c88502734a798a1c0b69a1592d04fc7
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue Apr 26 00:57:22 2011 +0900
+
+    Release 0.3.8
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 8d383b5ca77df0c76696ea112dcc266113cf96b4
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue Apr 26 00:53:17 2011 +0900
+
+    Fix package name
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 676d716b1dac772b2808d36d6cf1baccf4b844e4
+Author: Dirk Wallenstein <halsmit@t-online.de>
+Date:   Tue Apr 5 09:58:28 2011 +0200
+
+    Use an absolute URL for the m4 submodule
+    
+    A relative submodule URL requires m4 duplicates relative to every fork or local
+    mirror of this module.  To select a different protocol with an absolute
+    submodule URL, the url.<base>.insteadOf configuration option can be used.
+    
+    Signed-off-by: Dirk Wallenstein <halsmit@t-online.de>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1dd3f8df211efcbce98cbe768d18044a78ff2451
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Mar 22 15:34:47 2011 +0000
+
+    Link with -no-undefined
+    
+    Use -no-undefined to assure libtool that the library has no unresolved
+    symbols at link time, so that libtool will build a shared library for
+    platforms require that all symbols are resolved when the library is linked.
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit a11f24ba0b7cc1a0b99c01d0289a4f8420c698ec
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 17:52:44 2011 -0500
+
+    config: generate ChangeLog and INSTALL
+    
+    By copying a snippet of Makefile for xorg modules.
+    One side-effect is that Makefile.in is no longer
+    deleted on maintainer clean. This should never be done as
+    it leaves your configuration in a half-broken state.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Arnaud Fontaine <arnau@mini-dweeb.org>
+
+commit e5cb2b9793be1bc32994ad07ba0415684fabe8e0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 17:52:43 2011 -0500
+
+    config: use the default xorg .gitignore file
+    
+    This will save future maintenance when module structure/tools change.
+    This patch depends on the util-common-m4 submodule patch in the m4 path
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Arnaud Fontaine <arnau@mini-dweeb.org>
+
+commit 4da5be0320662f4bc638f65c592103f158a7df1c
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Thu Dec 23 11:56:36 2010 +0900
+
+    Bump version to 0.3.8
+
+commit 38cbc1356ac8453a39064ee89774d2f45d33243e
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Dec 20 00:14:16 2010 +0900
+
+    Fix GCC warnings due to functions not being declared as static and
+    random() being declared as extern
+
+commit 25965db002825ccc3295df6ae0c931d296f2ba2a
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Dec 20 00:12:52 2010 +0900
+
+    Check whether tmp_image is not NULL before trying to dereference it
+
+commit d53090fd635bf14523b11e6acbc385fd6e7d8823
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 23:40:46 2010 +0100
+
+    Split image up into its own repository
+
+commit 6b1784bf03c76be300bb67685ac73de87ef34652
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Thu Jun 24 13:51:47 2010 -0700
+
+    test.xbm is part of the source code for test_bitmap.c.
+    
+    This fixes distcheck.
+    
+    Reported-by: Chris Ball <cjb@laptop.org>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 2d382ace389714e0b85cf83f1498dd6491666e1b
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Thu Jun 24 11:02:13 2010 -0700
+
+    Ensure that xcb-image sample apps get built.
+    
+    Otherwise nobody will notice if they bitrot.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit d849564d47fcef7f3d3308e6836b6395ace2da2c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 14 13:49:08 2010 -0700
+
+    Fix typos in various header comments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit d2b610518a8e0ac853aca2ea7c07b052b786ea60
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Thu Feb 11 14:45:11 2010 +0000
+
+    Add AM_MAINTAINER_MODE for vendors
+
+commit 90a18af83653894b651c4399965ee0361cc19224
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Oct 20 18:17:46 2009 +0100
+
+    Update autogen.sh to one that does builddir != srcdir
+
+commit 56fe1c2f1be00377ab0def864aefb2443a096f96
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Fri Sep 25 13:08:15 2009 +0100
+
+    Bump version to 0.3.7
+
+commit c50e9acbd49c3343d125b51f9d414c3c223ccc1a
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Aug 3 17:18:41 2009 +0200
+
+    Bump version to 0.3.6
+
+commit e2895a93a0b298a1f8e6022f758132c538e14ab5
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Jun 3 20:50:32 2009 +0900
+
+    Check for ssize_t in configure for xcb-util-common.h
+
+commit bd20761dfe7fdab409ba11b6310277a7be8451f7
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Sat May 30 17:10:35 2009 +0700
+
+    Typo in configure.ac
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit a960df2fdc20305f6927c8248f6fd3b01fa35093
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri May 29 08:34:20 2009 +0200
+
+    Release xcb-util 0.3.5
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 336b19984d8d8e096a0d921bdbb7a9988412c235
+Author: Bob Ham <rah@bash.sh>
+Date:   Mon May 25 12:22:13 2009 +0200
+
+    Add a check on xproto version libxcb was compiled with
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit d952d04cd3edfe0d2e019b753a79068502b2df0d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Apr 21 15:27:24 2009 -0700
+
+    Make sure m4 supports -I flag, if not, try finding gnu m4
+    
+    Solaris m4 does not support -I flag, but gnu m4 is included in
+    recent Solaris & OpenSolaris releases (and must already be installed
+    on any machine that runs autoconf to generate configure scripts)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 8caba4c5f647972eab7a8eb43ce0aa2db66ae94b
+Author: Julien Danjou <julien@danjou.info>
+Date:   Wed Apr 15 15:21:21 2009 +0200
+
+    bump version to 0.3.4
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit c3f438ab50624fc62b4a077fa04e0d5f3e0c8958
+Author: Julien Danjou <julien@danjou.info>
+Date:   Sat Jan 31 15:08:44 2009 +0100
+
+    Release xcb-util 0.3.3
+
+commit c921a762f789907e7509fbbc07815362e038dd41
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Dec 16 14:14:50 2008 +0100
+
+    Release xcb-util 0.3.2
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit d26bc15b8746575a68cdffdd433efad424a2d49b
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Nov 21 10:49:09 2008 +0100
+
+    build: add check for xproto >= 7.0.8
+    
+    This is needed to have _X_INLINE.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit c362054f8f531f83e0824dd3c7eea4ad54c10ddf
+Author: Jonathan Landis <landijk-dev@yahoo.com>
+Date:   Fri Nov 21 10:10:15 2008 +0100
+
+    Fix copyright statement
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 92347e66974621873e463526f6f6d9e9614930c6
+Author: Julien Danjou <julien@danjou.info>
+Date:   Thu Nov 20 15:34:54 2008 +0100
+
+    Release xcb-util 0.3.1
+
+commit 537d47bea3ec70bbbc7f53399590bd0e55b7e317
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Nov 7 11:02:08 2008 +0100
+
+    configure: stop if m4 is not found
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 5c26e6345f53ff957a908a1cc5623d5ec3800bf5
+Author: Ulrich Eckhardt <doomster@knuut.de>
+Date:   Mon Oct 6 14:02:24 2008 -0700
+
+    Do not cast the return value of malloc() in modern C.
+    
+    Signed-off-by: Bart Massey <bart@cs.pdx.edu>
+
+commit 0419234f8f4412ed3487a509fc07dd28e6a626fa
+Author: Peter Harris <peter.harris@hummingbird.com>
+Date:   Wed Oct 1 23:27:28 2008 -0700
+
+    more endianness patches
+    
+    Signed-off-by: Bart Massey <bart@cs.pdx.edu>
+
+commit ae699cc98b77cd6cb3ad453be24e963a5fa6414a
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 17:11:40 2008 +0200
+
+    doc: enable doxygen doc in various submodule
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 3909a8e5367ba9903ec6445e2af2e5515517aa9c
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 17:11:14 2008 +0200
+
+    doc: add various authors, remove old todo item
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 946881a36c4e1d2d0a7ceaef6f99483390fbb610
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 15:27:49 2008 +0200
+
+    event: define XCB_EVENT_RESPONSE_TYPE_MASK
+    
+    And use it.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit eed500fcc0566624ba3256998f2129f53cac0dcc
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Sep 8 17:46:42 2008 +0200
+
+    [icccm] Bump library version number to 0.3.0.
+
+commit 54672acc037d00c67141cab5d8f8a7dae69e6343
+Author: Henning Sten <henning.sten@yahoo.com>
+Date:   Sun Sep 14 17:32:28 2008 +0200
+
+    return on error to avoid null dereference in assert
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit e1b8f9be7984d07e3f7ed2acce3026d77154f2e6
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Sep 7 21:50:49 2008 -0700
+
+    Add test_swap to image/.gitignore
+
+commit 282d80ae0053582eb425b485cd7f5ac92fcb19c2
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Sep 7 21:48:41 2008 -0700
+
+    Rework image format conversion code to pass test_swap test case.
+    
+    Numerous bugs were uncovered with the new test case, this fixes all of them.
+    Perhaps this code will work on MSB machines now?
+
+commit 6abeef9393ab31ddb7275ebc0c435400431178ab
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Sep 7 21:45:50 2008 -0700
+
+    Add image conversion test case for 'make check'
+    
+    test_swap converts between most possible image formats, checking results
+    against a fixed image.
+
+commit 3f685d4beb6aab0d3d01102ff82bc24d60d4dda3
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Aug 1 11:43:26 2008 +0200
+
+    prepare 0.2.1 release
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 33704890ddca85d6ca3453d234481a83920b892b
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sun Mar 9 11:31:09 2008 -0700
+
+    added some gratuitous but harmless image pointer zeroing at the suggestion of Vincent Torri
+
+commit b3fade06934526c44fd3ecb3501e2f9797ede0df
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sun Jan 27 12:06:51 2008 -0800
+
+    added test.xbm to image
+
+commit 6736ced97d2970621fe38b38c77996870eae2c8f
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sun Jan 27 11:57:36 2008 -0800
+
+    made image tests compile when not installed; fixed regression in test_formats.c
+
+commit b7c1351bf0a8c1f663669cd677807bbfca4615dc
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sun Jan 27 11:49:46 2008 -0800
+
+    stopped image test programs from being built by default
+
+commit b6f9da03985859360a8ac30c4184e7b84f479f79
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sun Jan 27 11:41:01 2008 -0800
+
+    sorted out dependencies for building while uninstalled---includes horrible kludges
+
+commit 48804b045477e730027cd8c4b4f53bca24566a34
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sat Dec 8 19:03:49 2007 -0800
+
+    fixed check for SHM in test_xcb_image_shm
+
+commit 5bd50f856c0fe5013b8554dfe82085b66149d79e
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sat Dec 8 18:12:27 2007 -0800
+
+    added INSET argument to test_bitmap and cleaned up subimage stuff
+
+commit aa4e6db33291fd00a14277456c43c73e6fc4f2a2
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sat Dec 8 18:11:43 2007 -0800
+
+    took out clever code for subimage copying and left_shift for now, as it was too broken
+
+commit f7a999d54bf155ec36d3a0935e684ba3d27563e5
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sat Dec 8 17:13:55 2007 -0800
+
+    extended test_bitmap to handle subimage test
+
+commit 9486c56b780b8b62641f552ada5059f7208d7320
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sat Dec 8 16:45:26 2007 -0800
+
+    added create_image_from_bitmap_data(), adapted create_pixmap_from_bitmap_data() to use
+
+commit c699affc7de4946c1f9cb8856b83936e53d72bb6
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Sat Dec 8 16:36:39 2007 -0800
+
+    added xcb_image_subimage()
+
+commit 43c752df3d1f7b0c329307f748269a2eb32af976
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:48:25 2007 -0800
+
+    used doxygen -u to create a much more elaborate doxyfile
+
+commit 9a2112a0e87a6df14131fb30351d765a74edc34a
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:44:11 2007 -0800
+
+    ...and in with the new image library
+
+commit faf8581a48f1a12ee7287a66d0433a28aa394eef
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:34:23 2007 -0800
+
+    out with the old image library...
+
+commit 394cc33cba2ff9f03422f4fb969cb7e91031c648
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Nov 6 17:37:07 2007 -0800
+
+    All util libraries require the XCB 1.0 API; check for it in configure.
+
+commit 49c4ba1ba12cb7e22c239ddf3a57e7a4e730c7c8
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Mar 2 17:36:29 2007 -0800
+
+    Release xcb-util 0.2
+
+commit 9ef66ccf5a535cdfe0613b9dbed593a6fb0ab63d
+Author: TORRI Vincent <torri@alf94-3-82-66-248-160.fbx.proxad.net>
+Date:   Wed Feb 21 20:27:07 2007 +0100
+
+    rename the libraries from libXCBFoo.* to libxcb-foo.*. Use foo_CPPFLAGS instead of foo_CFLAGS (*_CFLAGS variables store preprocessor options)
+
+commit 1e86efa3731d285735a51b93bef8dbfd749ca559
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 7 12:06:00 2006 -0700
+
+    Bug #7150: Check for gcc & Sun cc in configure.ac and use correct flags to turn on more warnings for each
+    
+    This is the first of two fixes needed to get xcb-util building on
+    Solaris.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 0a291d455065ee1833b6aed69bfbbfb66d8b41af
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sat Oct 7 11:45:07 2006 -0700
+
+    Adapt xcb/util libraries for removal of XID structures.
+
+commit 754f9a648068e0467c4036478666ad9439e58932
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Tue Sep 26 08:36:01 2006 -0700
+
+    Install headers to "xcb", not "X11/XCB".
+
+commit c404219c36508705a5927815371c8fca3b4fd19a
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Sep 25 04:13:01 2006 -0700
+
+    libxcb now installs header files in <xcb>, not <X11/XCB>.
+
+commit 398b7d64c731caf696646e363dfc3678f3b9f8d9
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sun Sep 24 13:34:03 2006 -0700
+
+    All xcb-util libraries compile after the Great Renaming.
+    
+    Many of the exported library functions still need to follow the new convention.
+
+commit 1497bde7ecb7ae96c6bb3e1fffc1b85564990ebb
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sun Sep 24 03:15:39 2006 -0700
+
+    Integrate top-level .gitignore into .gitignore for each subdirectory
+    
+    In preparation for the repository split, move the relevant contents of the
+    top-level .gitignore into the .gitignore for each immediate subdirectory.
+
+commit f11dc2d365a1a606a6104f6889c3667feb9835ea
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sat Jul 1 00:55:08 2006 -0700
+
+    Finally remove X.h from xcb.h, fix broken image tests.
+
+commit 93c971602ebb461db5b618b11acf5e7be1e6634b
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Thu Jun 8 07:05:51 2006 +0200
+
+    XCBImagePut returns 1 when no problem occurs
+
+commit beac19d9b23d0b603c22522ec0de9f5c84f98cbf
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Thu Jun 8 07:02:15 2006 +0200
+
+    fix compilation with c++ compilers. Remove some trailing spaces
+
+commit ee30f2ed8eda9a020f55d71ea0c7db8851e9c555
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Sun May 7 20:32:32 2006 -0700
+
+    Add correct dependencies in xcb-util.
+
+commit 4f7e101f77519e2b5ba83f18b5de95efce317da1
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Tue May 2 23:54:53 2006 +0200
+
+    I did'nt see that XCBAllPlanes already exists... Use CARD32 instead of unsigned long because plane_mask is a CARD32
+
+commit 59eba74f66a69a43b6a4d29120b24cb39322f8d4
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Tue May 2 22:24:42 2006 +0200
+
+    add XCBImageAllPlanes constant
+
+commit 616c2664fb58e5b9b7337d1f297c66c4b43d4319
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sat Apr 29 09:39:35 2006 -0700
+
+    Add some error checking
+
+commit 45ce2d87538619442dd1a1646429573d97f8d408
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Fri Apr 28 20:49:15 2006 +0200
+
+    leak fixed
+
+commit cada5947575ff5b440a39897a83a251d701fafac
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Fri Apr 28 11:19:36 2006 -0700
+
+    Make xcb_image.h self-contained by including the xcb.h and shm.h headers.  Remove unused headers from the libXCBImage test programs.  Change Makefile.am to match the headers and libraries actually used by the test programs.
+
+commit 74fc9ffed770067a977553f26f7fee962056fc31
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Fri Apr 28 11:10:21 2006 -0700
+
+    s/HACKMEM/HAKMEM/ in a comment.
+
+commit cee10d3a0bd8b7b12f7c57464cf1c448f45d87c3
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Fri Apr 28 08:29:36 2006 +0200
+
+    my bad. bad fix. This should be better
+
+commit 55ee817b88947f39509d240d8c964f1a3a197dc2
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Fri Apr 28 08:04:06 2006 +0200
+
+    missing flags
+
+commit 1f0d87265cfbb068958fbe5b9ef32d7ec4f1573f
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 16:26:04 2006 -0700
+
+    Fix use of deprecated name XCBConnSetupSucessRep in comment to use XCBSetup.
+
+commit fa2296a4973aa8abe2af8a774ef4dbafb98935cb
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 11:25:28 2006 -0700
+
+    Set all package bugreporting addresses to xcb@lists.freedesktop.org
+
+commit 7591cce82d169306657fc9465d8ff5919aa38e99
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Thu Apr 27 10:35:54 2006 -0700
+
+    Update xcb-util for ConnSetup renaming and constness fixes.
+
+commit eea88fd19ac02db817faf333acb1b7a321553a70
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 01:06:46 2006 -0700
+
+    Fix xcb-util library dependencies, including both the new dependency libXCBImage needs on libXCBShm, as well as many other issues discovered in the process.  These include using automake variables appropriately in order to actually link shared libraries against each other and ensure libraries have NEEDED entries for the libraries they depend on, consequently needing to reorder the top-level SUBDIRS to build property before icccm, adding dependencies to .pc.in files, fixing .pc.in files to not all use the name and description for XCBImage, and adding appropriate library dependencies to test programs.
+
+commit 8fac8c35e99f3291c8f15a7c39ee21af99ddc450
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Thu Apr 20 15:38:41 2006 -0700
+
+    Add the test app I wrote for trying different pixmap formats. It does not work for XYPixmaps.
+
+commit 77d9b5e3ef7f9d5fc5038056e05b5a1be1df2c33
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Thu Apr 20 09:59:43 2006 +0200
+
+    fix some warnings
+
+commit 01f928e42bc4a086ee7028052b169aa02fe8a0ea
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sun Mar 19 21:47:12 2006 -0800
+
+    Remove xcb_image dependency on X11/Xlib.h
+
+commit 9483b47d65eadaafef85d4e7669cdaabf8e3afb6
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Tue Mar 14 18:23:37 2006 -0800
+
+    Remove xcb-util dependency on proto/X11
+    by moving many defs from X.h to <enum>s in xproto.xml
+
+commit b67f198779a30d2d629eaebd64b7bd0dac703b8f
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Wed Mar 8 22:49:59 2006 -0800
+
+    Unify autofoo .gitignore bits into one top-level file, and remove resulting redundancies.
+
+commit 9df6dcc685de1a518fdbf2351b04f08b16e19370
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Feb 18 23:57:14 2006 -0800
+
+    Update .gitignores for .o files and autofoo stuff.
+
+commit c4537db67c402309e60c081987998f41386d161a
+Author: Eric Anholt <anholt@FreeBSD.org>
+Date:   Sat Feb 18 22:56:03 2006 -0800
+
+    Move .cvsignore to .gitignore.
+
+commit 3c5f2692aa03d5dfd32fc1f52ab3ee196617b26b
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sat Feb 18 16:49:41 2006 -0800
+
+    Remove xcl and CVSROOT.

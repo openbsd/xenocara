@@ -1,0 +1,7 @@
+#	$OpenBSD: Makefile.bsd-wrapper,v 1.1.1.1 2014/04/14 19:29:35 matthieu Exp $
+
+SHARED_LIBS=	xcb-image 2.0
+
+CONFIGURE_ARGS=		   --without-doxygen
+
+.include <bsd.xorg.mk>

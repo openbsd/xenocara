@@ -1,0 +1,16 @@
+Release 0.3.9 (2012-05-30)
+==========================
+
+- Add missing xcb_bitops.h.
+- Don't try to build test_xcb_image_shm if SHM isn't available (for example on MinGW).
+- Use rand() instead of random() (more portable, for example to MinGW).
+
+Release 0.3.8 (2010-04-25)
+==========================
+
+- Split image up into its own repository.
+- Check whether tmp_image is not NULL before trying to dereference it.
+- Ensure that xcb-image sample apps get built.
+- test.xbm is part of the source code for test_bitmap.c.
+- Link with -no-undefined
+- Add AM_MAINTAINER_MODE for vendors.
