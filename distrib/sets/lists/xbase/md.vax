@@ -1,5 +1,6 @@
 ./usr/X11R6/bin/ucs2any
 ./usr/X11R6/include/xorg
+./usr/X11R6/lib/pkgconfig/presentproto.pc
 ./usr/X11R6/man/man1/bdftruncate.1
 ./usr/X11R6/man/man1/dga.1
 ./usr/X11R6/man/man1/ucs2any.1

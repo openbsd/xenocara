@@ -80,6 +80,7 @@
 ./usr/X11R6/lib/libxkbfile.so.6.0
 ./usr/X11R6/lib/libxkbui.so.5.0
 ./usr/X11R6/lib/pkgconfig/pixman-1.pc
+./usr/X11R6/lib/pkgconfig/presentproto.pc
 ./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man/man1/bdftruncate.1
 ./usr/X11R6/man/man1/dga.1

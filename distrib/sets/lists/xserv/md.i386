@@ -157,6 +157,8 @@
 ./usr/X11R6/lib/modules/drivers/apm_drv.so
 ./usr/X11R6/lib/modules/drivers/ark_drv.la
 ./usr/X11R6/lib/modules/drivers/ark_drv.so
+./usr/X11R6/lib/modules/drivers/ast_drv.la
+./usr/X11R6/lib/modules/drivers/ast_drv.so
 ./usr/X11R6/lib/modules/drivers/ati_drv.la
 ./usr/X11R6/lib/modules/drivers/ati_drv.so
 ./usr/X11R6/lib/modules/drivers/chips_drv.la

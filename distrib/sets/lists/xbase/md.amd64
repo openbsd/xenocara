@@ -194,6 +194,7 @@
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
 ./usr/X11R6/lib/pkgconfig/libdrm_intel.pc
 ./usr/X11R6/lib/pkgconfig/pixman-1.pc
+./usr/X11R6/lib/pkgconfig/presentproto.pc
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/lib/pkgconfig/xorg-joystick.pc
 ./usr/X11R6/lib/xorg/protocol.txt
