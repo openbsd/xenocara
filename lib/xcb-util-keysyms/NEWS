@@ -1,0 +1,12 @@
+Release 0.3.9 (2012-05-30)
+==========================
+
+- Recognise ISO_Level5-keysyms as modifiers in xcb_is_modifier_key #39177.
+
+Release 0.3.8 (2010-04-25)
+==========================
+
+- Split up keysyms into its own repository.
+- Check for malloc failure in xcb_key_symbols_alloc.
+- Link with -no-undefined.
+- Add AM_MAINTAINER_MODE for vendors.

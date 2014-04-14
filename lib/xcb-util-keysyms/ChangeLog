@@ -1,0 +1,470 @@
+commit 12fc61fbbdf1ca2df25281a7d8e00f2dab75d1c2
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed May 30 21:07:38 2012 +0900
+
+    Release 0.3.9
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 5a3906f700a975653da7f64a2d66ebdbea8b8b34
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon May 21 11:11:12 2012 +0900
+
+    Add autogen.sh to EXTRA_DIST.
+
+commit 2b3188d700bac5b8d32fffd8d1090ef4bb8707c3
+Author: Andreas Wettstein <wettstein509@solnet.ch>
+Date:   Sun Aug 7 19:33:21 2011 +0000
+
+    Recognise ISO_Level5-keysyms as modifiers in xcb_is_modifier_key #39177
+    
+    xcb_is_modifier_key did not regecognise ISO_Level5_Shift,
+    ISO_Level5_Latch, and ISO_Level5_Lock as modifiers.  See bug
+    39177, https://bugs.freedesktop.org/show_bug.cgi?id=39177
+    
+    Signed-off-by: Andreas Wettstein <wettstein509@solnet.ch>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 162b5f45e2efbb45c8f04951bdb8099594a41c09
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue Apr 26 01:05:17 2011 +0900
+
+    Release 0.3.8
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 8c6d2b1bdbc9c8c25ca7dc3f0f4cf0816c46564f
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Tue Apr 26 01:00:11 2011 +0900
+
+    Fix package name
+    
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit ff28ebec5fa57927b059f475759a72265e5691ea
+Author: Dirk Wallenstein <halsmit@t-online.de>
+Date:   Tue Apr 5 09:58:28 2011 +0200
+
+    Use an absolute URL for the m4 submodule
+    
+    A relative submodule URL requires m4 duplicates relative to every fork or local
+    mirror of this module.  To select a different protocol with an absolute
+    submodule URL, the url.<base>.insteadOf configuration option can be used.
+    
+    Signed-off-by: Dirk Wallenstein <halsmit@t-online.de>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 61f9880dfaff31e98261fd24bec2e3e0c188e3d9
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Mar 22 15:34:48 2011 +0000
+
+    Link with -no-undefined
+    
+    Use -no-undefined to assure libtool that the library has no unresolved
+    symbols at link time, so that libtool will build a shared library for
+    platforms require that all symbols are resolved when the library is linked.
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 325ef8ea2e1093915216f6ad69c7b0fe3a0c738f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 17:52:44 2011 -0500
+
+    config: generate ChangeLog and INSTALL
+    
+    By copying a snippet of Makefile for xorg modules.
+    One side-effect is that Makefile.in is no longer
+    deleted on maintainer clean. This should never be done as
+    it leaves your configuration in a half-broken state.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit ca109d346113dde40d39866e57a4b7e52b56b9b0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 6 17:52:43 2011 -0500
+
+    config: use the default xorg .gitignore file
+    
+    This will save future maintenance when module structure/tools change.
+    This patch depends on the util-common-m4 submodule patch in the m4 path
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 3fcbe35577b6bcf7e693b2abf11343525397cbc1
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Thu Dec 23 15:31:03 2010 +0900
+
+    Bump version to 0.3.8
+
+commit ccb0b5ceb2eab5876af76ec26a3a118988826601
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Thu Dec 23 15:29:33 2010 +0900
+
+    Check whether realloc doesn't fail (reported by cppcheck)
+
+commit 18b9b7d8dd7ad61b62936c8761ba94f4357e2e50
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Sat Sep 4 13:18:38 2010 +0100
+
+    Split up keysyms into its own repository
+
+commit 04a13b2bd3b575e97b76c2f55853283aa0dfa1c9
+Author: Joshua Phillips <jp.sittingduck@gmail.com>
+Date:   Fri Oct 8 19:10:05 2010 +0100
+
+    Check for malloc failure in xcb_key_symbols_alloc.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 96b27aff93b784ed6616aa0395a46ef0e46eef26
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Thu Feb 11 14:45:11 2010 +0000
+
+    Add AM_MAINTAINER_MODE for vendors
+
+commit 0928bd0a482908305f8a5e9831cc84c4e4e3b67a
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Oct 20 18:17:46 2009 +0100
+
+    Update autogen.sh to one that does builddir != srcdir
+
+commit e8ed0395856b641e0888421695ecee3085ff2c9c
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Fri Sep 25 13:08:15 2009 +0100
+
+    Bump version to 0.3.7
+
+commit 06080db4407d70cc155563b36772e1b743bc3e6c
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Aug 3 17:18:41 2009 +0200
+
+    Bump version to 0.3.6
+
+commit ba13a253104e4ce4643c51c1bc689879930b0653
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Jun 3 20:50:32 2009 +0900
+
+    Check for ssize_t in configure for xcb-util-common.h
+
+commit b434b5dfde90eb5edbd0532500a1ad0d762e7745
+Author: Mikhail Gusarov <dottedmag@dottedmag.net>
+Date:   Sat May 30 17:10:35 2009 +0700
+
+    Typo in configure.ac
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit f39d97f65a6ad01dc7c392b97804b0046a9cdb6b
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri May 29 08:34:20 2009 +0200
+
+    Release xcb-util 0.3.5
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit da348ef186ef7de346ab3970be33094f6a7ca849
+Author: Bob Ham <rah@bash.sh>
+Date:   Mon May 25 12:22:13 2009 +0200
+
+    Add a check on xproto version libxcb was compiled with
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 88bec69a155dc8356cec00c3c75700368f790674
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Apr 21 15:27:24 2009 -0700
+
+    Make sure m4 supports -I flag, if not, try finding gnu m4
+    
+    Solaris m4 does not support -I flag, but gnu m4 is included in
+    recent Solaris & OpenSolaris releases (and must already be installed
+    on any machine that runs autoconf to generate configure scripts)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit e4b1174de20765a1140b725350650feed3392528
+Author: Julien Danjou <julien@danjou.info>
+Date:   Wed Apr 15 15:21:21 2009 +0200
+
+    bump version to 0.3.4
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit b5981920e98948a81ed59a57488daa4baff9858c
+Author: Julien Danjou <julien@danjou.info>
+Date:   Sun Apr 12 21:55:21 2009 +0200
+
+    keysyms: bump version
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 65857416ff4db8c97900f5f9df4ee7517d1602e9
+Author: Julien Danjou <julien@danjou.info>
+Date:   Sat Apr 11 19:02:55 2009 +0200
+
+    keysyms: fix xcb_key_symbols_get_keycode() API
+    
+    xcb_key_symbols_get_keycode() returned a keycode.
+    That's wrong, since actually a keysym can have multiple keycode. And we
+    usually need all this keycodes to correctly grab a keysym.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit b72f53aaf670463b94b8461d69437dfcc09ba92b
+Author: Julien Danjou <julien@danjou.info>
+Date:   Sat Jan 31 15:08:44 2009 +0100
+
+    Release xcb-util 0.3.3
+
+commit a3d3df6a4f05d18dc6c46ef68139bffb00fe9ab0
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Dec 16 18:22:06 2008 +0100
+
+    xcb_keysyms: remove xcb_lookup_t
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit d64588ce9ac3ee2bd77d28ee43cef73fedaf619e
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Dec 16 18:21:41 2008 +0100
+
+    Revert "keysyms: use xcb_key_lookup_t type for col paramter"
+    
+    This reverts commit 24da2934459c7811f77713a3c7aaa6691ad203f2.
+
+commit b005b96811f6e3150d4df9f14f6a69fbd770a687
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Dec 16 14:14:50 2008 +0100
+
+    Release xcb-util 0.3.2
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 552902dd52d4ba333019c0ae08cff0250e30672e
+Author: Julien Danjou <julien@danjou.info>
+Date:   Mon Dec 8 14:25:18 2008 +0100
+
+    keysyms: use xcb_key_lookup_t type for col paramter
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 0ae27336abed91567037d4d85681815acfe343ab
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Nov 21 10:49:09 2008 +0100
+
+    build: add check for xproto >= 7.0.8
+    
+    This is needed to have _X_INLINE.
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 7ae48a0a818437ac58c6ed532dd3b6ed00e7b15c
+Author: Jonathan Landis <landijk-dev@yahoo.com>
+Date:   Fri Nov 21 10:10:15 2008 +0100
+
+    Fix copyright statement
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 2ac073c38f9bea76d52a96ef1f49384d788602ab
+Author: Julien Danjou <julien@danjou.info>
+Date:   Thu Nov 20 15:34:54 2008 +0100
+
+    Release xcb-util 0.3.1
+
+commit f6666bd9e0f98b38bc94832380dcf8b8b6ec0504
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Nov 7 11:02:08 2008 +0100
+
+    configure: stop if m4 is not found
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 16896bf416a1c3927e75ff5abbdb934b8a048c3e
+Author: Ulrich Eckhardt <doomster@knuut.de>
+Date:   Mon Oct 6 14:02:24 2008 -0700
+
+    Do not cast the return value of malloc() in modern C.
+    
+    Signed-off-by: Bart Massey <bart@cs.pdx.edu>
+
+commit 4fbcc0051de74b79630060497525d5d96ed96a90
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 17:11:40 2008 +0200
+
+    doc: enable doxygen doc in various submodule
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 120fdcc24dff7a9f2a2e511d7b104dac83dfb9c9
+Author: Julien Danjou <julien@danjou.info>
+Date:   Tue Sep 16 17:11:14 2008 +0200
+
+    doc: add various authors, remove old todo item
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 0eae8fda5892d4d5d3f4bc6a48c5a808bf9a4681
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Sep 8 17:46:42 2008 +0200
+
+    [icccm] Bump library version number to 0.3.0.
+
+commit 5731ab9cfdf18b37a035f983fbb5a0253d408c82
+Author: Julien Danjou <julien@danjou.info>
+Date:   Fri Aug 1 11:43:26 2008 +0200
+
+    prepare 0.2.1 release
+    
+    Signed-off-by: Julien Danjou <julien@danjou.info>
+
+commit 27a62c067a0edbf78706cdc878cbb36edb6fa7a0
+Author: Bart Massey <bart@cs.pdx.edu>
+Date:   Fri Dec 7 00:48:25 2007 -0800
+
+    used doxygen -u to create a much more elaborate doxyfile
+
+commit 57a54ab55498ca70ad972ffd45885d0644019a36
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Tue Nov 6 17:37:07 2007 -0800
+
+    All util libraries require the XCB 1.0 API; check for it in configure.
+
+commit 91b19a3fdcb4369aae56b200da418a04de94ac62
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Mar 2 17:36:29 2007 -0800
+
+    Release xcb-util 0.2
+
+commit f951de81c9f2e729dda5194d32f947f615879ff2
+Author: TORRI Vincent <torri@alf94-3-82-66-248-160.fbx.proxad.net>
+Date:   Wed Feb 21 20:27:07 2007 +0100
+
+    rename the libraries from libXCBFoo.* to libxcb-foo.*. Use foo_CPPFLAGS instead of foo_CFLAGS (*_CFLAGS variables store preprocessor options)
+
+commit 378d9e50af2040dbaa9837353e55aa054431b640
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Jun 7 12:06:00 2006 -0700
+
+    Bug #7150: Check for gcc & Sun cc in configure.ac and use correct flags to turn on more warnings for each
+    
+    This is the first of two fixes needed to get xcb-util building on
+    Solaris.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit a3695ff0c46f2a906425281b1dd2f59f9dce60c7
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sat Oct 7 11:45:07 2006 -0700
+
+    Adapt xcb/util libraries for removal of XID structures.
+
+commit 40a1a32d3522703bfa70322478fee46fc00dd1ca
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Tue Sep 26 08:36:01 2006 -0700
+
+    Install headers to "xcb", not "X11/XCB".
+
+commit 75240e73c3819c13755a888a606156a0fa29a234
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Mon Sep 25 04:13:01 2006 -0700
+
+    libxcb now installs header files in <xcb>, not <X11/XCB>.
+
+commit 613e4e5c17b9a00c3b0e10be5450bebfea141664
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Sun Sep 24 13:34:03 2006 -0700
+
+    All xcb-util libraries compile after the Great Renaming.
+    
+    Many of the exported library functions still need to follow the new convention.
+
+commit 6f9a66485a0720d46b0a6e66b71cb8e2942bb388
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sun Sep 24 03:15:39 2006 -0700
+
+    Integrate top-level .gitignore into .gitignore for each subdirectory
+    
+    In preparation for the repository split, move the relevant contents of the
+    top-level .gitignore into the .gitignore for each immediate subdirectory.
+
+commit 3c58b68de9f630ac00712bc2bb6d52fb7a481e46
+Author: TORRI Vincent <torri@doursse.(none)>
+Date:   Thu Jun 8 07:02:15 2006 +0200
+
+    fix compilation with c++ compilers. Remove some trailing spaces
+
+commit 869c07c79ed5bca315ed0576380024508a69445f
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Sun May 7 20:32:32 2006 -0700
+
+    Add correct dependencies in xcb-util.
+
+commit e48f913081682da738730748015c11f831c7930c
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Fri Apr 28 11:38:41 2006 -0700
+
+    Make xcb_keysyms.h self-contained by including xcb.h
+
+commit 68b60a2c600be35e5f60680e5652d085761be542
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 11:25:28 2006 -0700
+
+    Set all package bugreporting addresses to xcb@lists.freedesktop.org
+
+commit c6e2da5ed7d81a8b67f3d38393e10b112a2caf85
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Thu Apr 27 01:06:46 2006 -0700
+
+    Fix xcb-util library dependencies, including both the new dependency libXCBImage needs on libXCBShm, as well as many other issues discovered in the process.  These include using automake variables appropriately in order to actually link shared libraries against each other and ensure libraries have NEEDED entries for the libraries they depend on, consequently needing to reorder the top-level SUBDIRS to build property before icccm, adding dependencies to .pc.in files, fixing .pc.in files to not all use the name and description for XCBImage, and adding appropriate library dependencies to test programs.
+
+commit a20729144675a519486baed2cdae8e3cb9a446a4
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Wed Apr 19 20:42:46 2006 -0700
+
+    Enumeration and documentation for col parameter
+
+commit f7c85b0533a9c8a9021110ab507c46b10924bf0d
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Tue Mar 14 18:23:37 2006 -0800
+
+    Remove xcb-util dependency on proto/X11
+    by moving many defs from X.h to <enum>s in xproto.xml
+
+commit eae69903300eec7644cf0372fccbda3d17e12d9f
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Wed Mar 8 22:49:59 2006 -0800
+
+    Unify autofoo .gitignore bits into one top-level file, and remove resulting redundancies.
+
+commit c0cd94ecfe189e4a76b3e844f7bfdfa6adb5e7c4
+Author: Ian Osgood <iano@quirkster.com>
+Date:   Fri Mar 3 15:03:17 2006 -0800
+
+    Portability fix: include stdlib.h, not malloc.h.
+
+commit 867900644c19c2c2c81a3cb9f59b111559443bb5
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Sat Feb 18 23:57:14 2006 -0800
+
+    Update .gitignores for .o files and autofoo stuff.
+
+commit 61a146f489872de6cb97c702dfb49d14900af60f
+Author: Eric Anholt <anholt@FreeBSD.org>
+Date:   Sat Feb 18 22:56:03 2006 -0800
+
+    Move .cvsignore to .gitignore.
+
+commit d9709cda9f028b11fb0f6a9cef792a90222d3219
+Author: Josh Triplett <josh@freedesktop.org>
+Date:   Sat Feb 18 16:49:41 2006 -0800
+
+    Remove xcl and CVSROOT.

@@ -1,0 +1,17 @@
+ACLOCAL_AMFLAGS = -I m4
+
+MAINTAINERCLEANFILES = ChangeLog INSTALL
+
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)  
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog INSTALL
+
+SUBDIRS = keysyms
+
+EXTRA_DIST = autogen.sh
