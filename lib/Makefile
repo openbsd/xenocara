@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.24 2013/09/05 15:11:54 jsg Exp $
+# $OpenBSD: Makefile,v 1.25 2014/04/14 19:33:09 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -8,7 +8,9 @@ XCB_LIBS= \
 	libxcb/libxcb-damage \
 	libxcb/libxcb-dpms \
 	libxcb/libxcb-dri2 \
+	libxcb/libxcb-dri3 \
 	libxcb/libxcb-glx \
+	libxcb/libxcb-present \
 	libxcb/libxcb-randr \
 	libxcb/libxcb-record \
 	libxcb/libxcb-render \
@@ -21,19 +23,17 @@ XCB_LIBS= \
 	libxcb/libxcb-xf86dri \
 	libxcb/libxcb-xfixes \
 	libxcb/libxcb-xinerama \
+	libxcb/libxcb-xkb \
 	libxcb/libxcb-xprint \
 	libxcb/libxcb-xtest \
 	libxcb/libxcb-xv \
 	libxcb/libxcb-xvmc \
-	xcb-util/atom \
-	xcb-util/aux \
-	xcb-util/event \
-	xcb-util/property \
-	xcb-util/icccm \
-	xcb-util/image \
-	xcb-util/keysyms \
-	xcb-util/renderutil \
-	xcb-util/reply
+	xcb-util \
+	xcb-util-image \
+	xcb-util-renderutil \
+	xcb-util-cursor \
+	xcb-util-keysyms \
+	xcb-util-wm 
 
 SUBDIR= libpthread-stubs \
 	freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
