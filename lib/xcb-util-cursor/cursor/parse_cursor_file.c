@@ -42,6 +42,9 @@
 #endif
 #ifdef HAVE_SYS_ENDIAN_H
 #include <sys/endian.h>
+# ifndef HAVE_LE32TOH
+#  define le32toh(x) letoh32(x)
+# endif
 #endif
 #ifdef HAVE_SYS_BYTEORDER_H
 #include <sys/byteorder.h>
