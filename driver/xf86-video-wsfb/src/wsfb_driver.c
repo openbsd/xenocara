@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.31 2014/01/15 11:15:59 aoyama Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.32 2014/04/15 05:48:38 matthieu Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -1362,7 +1362,7 @@ WsfbRestore(ScrnInfoPtr pScrn)
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			    "ioctl WSDISPLAY_SETGFXMODE: %s\n",
 			    strerror(errno));
-			return FALSE;
+			return;
 		}
 	}
 
