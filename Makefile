@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.56 2014/03/24 20:41:19 sthen Exp $
+# $OpenBSD: Makefile,v 1.57 2014/04/18 10:02:45 schwarze Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -52,7 +52,7 @@ beforeinstall beforebuild:
 
 afterinstall afterbuild:
 	exec ${MAKE} fix-appd
-	/usr/libexec/makewhatis -v ${DESTDIR}/usr/X11R6/man
+	/usr/sbin/makewhatis -Qv ${DESTDIR}/usr/X11R6/man
 
 install-mk:
 	cd share/mk && exec ${MAKE} X11BASE=${X11BASE} install
