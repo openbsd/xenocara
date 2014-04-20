@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.5 2014/01/11 12:39:14 miod Exp $
+# $OpenBSD: Makefile.inc,v 1.6 2014/04/20 10:58:20 jsg Exp $
 .include <bsd.xconf.mk>
 
 CPP=	cpp -notraditional
@@ -32,7 +32,7 @@ lib${LIB}_pic.a: ${OBJS} ${DPADD}
 .if ${XENOCARA_BUILD_GALLIUM} == "llvm"
 
 # Remember to keep in sync with LLVM port's version.
-LLVM_VERSION=	0x303	# 3.3 
+LLVM_VERSION=	0x305	# 3.5
 LLVM_CONFIG?=	/usr/local/bin/llvm-config
 
 # ugh...
