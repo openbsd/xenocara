@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.172 2014/02/02 16:29:04 okan Exp $
+ * $OpenBSD: conf.c,v 1.173 2014/04/21 12:52:14 okan Exp $
  */
 
 #include <sys/param.h>
@@ -309,6 +309,7 @@ conf_clear(struct conf *c)
 
 	while ((wn = TAILQ_FIRST(&c->ignoreq)) != NULL) {
 		TAILQ_REMOVE(&c->ignoreq, wn, entry);
+		free(wn->name);
 		free(wn);
 	}
 
