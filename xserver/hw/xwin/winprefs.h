@@ -150,19 +150,19 @@ void
  LoadPreferences(void);
 
 void
- SetupRootMenu(unsigned long hmenuRoot);
+ SetupRootMenu(HMENU root);
 
 void
- SetupSysMenu(unsigned long hwndIn);
+ SetupSysMenu(HWND hwnd);
 
 void
- HandleCustomWM_INITMENU(unsigned long hwndIn, unsigned long hmenuIn);
+ HandleCustomWM_INITMENU(HWND hwnd, HMENU hmenu);
 
 Bool
- HandleCustomWM_COMMAND(unsigned long hwndIn, int command);
+ HandleCustomWM_COMMAND(HWND hwnd, int command);
 
 int
- winIconIsOverride(unsigned hiconIn);
+ winIconIsOverride(HICON hicon);
 
 HICON winOverrideIcon(char *res_name, char *res_class, char *wmName);
 

@@ -43,6 +43,7 @@ SOFTWARE.
 #include "xvdix.h"
 #ifdef MITSHM
 #include <X11/extensions/shmproto.h>
+#include "shmint.h"
 #endif
 
 #include "xvdisp.h"
@@ -702,7 +703,7 @@ ProcXvUngrabPort(ClientPtr client)
 static int
 ProcXvStopVideo(ClientPtr client)
 {
-    int status, rc;
+    int status, ret;
     DrawablePtr pDraw;
     XvPortPtr pPort;
 
@@ -716,9 +717,9 @@ ProcXvStopVideo(ClientPtr client)
         return status;
     }
 
-    rc = dixLookupDrawable(&pDraw, stuff->drawable, client, 0, DixWriteAccess);
-    if (rc != Success)
-        return rc;
+    ret = dixLookupDrawable(&pDraw, stuff->drawable, client, 0, DixWriteAccess);
+    if (ret != Success)
+        return ret;
 
     return XvdiStopVideo(client, pPort, pDraw);
 }
@@ -949,18 +950,6 @@ ProcXvPutImage(ClientPtr client)
 }
 
 #ifdef MITSHM
-/* redefined here since it's not in any header file */
-typedef struct _ShmDesc {
-    struct _ShmDesc *next;
-    int shmid;
-    int refcnt;
-    char *addr;
-    Bool writable;
-    unsigned long size;
-} ShmDescRec, *ShmDescPtr;
-
-extern RESTYPE ShmSegType;
-extern int ShmCompletionCode;
 
 static int
 ProcXvShmPutImage(ClientPtr client)

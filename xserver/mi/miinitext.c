@@ -86,7 +86,6 @@ SOFTWARE.
 #undef DBE
 #undef SCREENSAVER
 #undef RANDR
-#undef XFIXES
 #undef DAMAGE
 #undef COMPOSITE
 #undef MITSHM
@@ -168,9 +167,7 @@ static ExtensionToggle ExtensionToggleList[] = {
     {"XFree86-VidModeExtension", &noXFree86VidModeExtension},
 #endif
 #endif
-#ifdef XFIXES
     {"XFIXES", &noXFixesExtension},
-#endif
 #ifdef PANORAMIX
     {"XINERAMA", &noPanoramiXExtension},
 #endif
@@ -263,10 +260,8 @@ static ExtensionModule staticExtensions[] = {
      */
     {PseudoramiXExtensionInit, "PseudoramiX", &noPseudoramiXExtension},
 #endif
-#ifdef XFIXES
     /* must be before Render to layer DisplayCursor correctly */
     {XFixesExtensionInit, "XFIXES", &noXFixesExtension},
-#endif
 #ifdef XF86BIGFONT
     {XFree86BigfontExtensionInit, XF86BIGFONTNAME, &noXFree86BigfontExtension},
 #endif
@@ -291,6 +286,12 @@ static ExtensionModule staticExtensions[] = {
 #endif
 #ifdef DPMSExtension
     {DPMSExtensionInit, DPMSExtensionName, &noDPMSExtension},
+#endif
+#ifdef PRESENT
+    {present_extension_init, PRESENT_NAME, NULL},
+#endif
+#ifdef DRI3
+    {dri3_extension_init, DRI3_NAME, NULL},
 #endif
 #ifdef RES
     {ResExtensionInit, XRES_NAME, &noResExtension},

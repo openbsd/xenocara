@@ -37,6 +37,7 @@ in this Software without prior written authorization from The Open Group.
 #include <sys/shm.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <X11/X.h>
 #include <X11/Xproto.h>
 #include "misc.h"
@@ -53,7 +54,9 @@ in this Software without prior written authorization from The Open Group.
 #include "xace.h"
 #include <X11/extensions/shmproto.h>
 #include <X11/Xfuncproto.h>
+#include <sys/mman.h>
 #include "protocol-versions.h"
+#include "busfault.h"
 
 /* Needed for Solaris cross-zone shared memory extension */
 #ifdef HAVE_SHMCTL64
@@ -88,15 +91,6 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 #include "extinit.h"
-
-typedef struct _ShmDesc {
-    struct _ShmDesc *next;
-    int shmid;
-    int refcnt;
-    char *addr;
-    Bool writable;
-    unsigned long size;
-} ShmDescRec, *ShmDescPtr;
 
 typedef struct _ShmScrPrivateRec {
     CloseScreenProcPtr CloseScreen;
@@ -391,8 +385,10 @@ ProcShmAttach(ClientPtr client)
         client->errorValue = stuff->readOnly;
         return BadValue;
     }
-    for (shmdesc = Shmsegs;
-         shmdesc && (shmdesc->shmid != stuff->shmid); shmdesc = shmdesc->next);
+    for (shmdesc = Shmsegs; shmdesc; shmdesc = shmdesc->next) {
+        if (!SHMDESC_IS_FD(shmdesc) && shmdesc->shmid == stuff->shmid)
+            break;
+    }
     if (shmdesc) {
         if (!stuff->readOnly && !shmdesc->writable)
             return BadAccess;
@@ -402,6 +398,9 @@ ProcShmAttach(ClientPtr client)
         shmdesc = malloc(sizeof(ShmDescRec));
         if (!shmdesc)
             return BadAlloc;
+#ifdef SHM_FD_PASSING
+        shmdesc->is_fd = FALSE;
+#endif
         shmdesc->addr = shmat(stuff->shmid, 0,
                               stuff->readOnly ? SHM_RDONLY : 0);
         if ((shmdesc->addr == ((char *) -1)) || SHMSTAT(stuff->shmid, &buf)) {
@@ -440,7 +439,14 @@ ShmDetachSegment(pointer value, /* must conform to DeleteType */
 
     if (--shmdesc->refcnt)
         return TRUE;
-    shmdt(shmdesc->addr);
+#if SHM_FD_PASSING
+    if (shmdesc->is_fd) {
+        if (shmdesc->busfault)
+            busfault_unregister(shmdesc->busfault);
+        munmap(shmdesc->addr, shmdesc->size);
+    } else
+#endif
+        shmdt(shmdesc->addr);
     for (prev = &Shmsegs; *prev != shmdesc; prev = &(*prev)->next);
     *prev = shmdesc->next;
     free(shmdesc);
@@ -1096,6 +1102,182 @@ ProcShmCreatePixmap(ClientPtr client)
     return BadAlloc;
 }
 
+#ifdef SHM_FD_PASSING
+
+static void
+ShmBusfaultNotify(void *context)
+{
+    ShmDescPtr shmdesc = context;
+
+    ErrorF("shared memory 0x%x truncated by client\n",
+           (unsigned int) shmdesc->resource);
+    busfault_unregister(shmdesc->busfault);
+    shmdesc->busfault = NULL;
+    FreeResource (shmdesc->resource, RT_NONE);
+}
+
+static int
+ProcShmAttachFd(ClientPtr client)
+{
+    int fd;
+    ShmDescPtr shmdesc;
+    REQUEST(xShmAttachFdReq);
+    struct stat statb;
+
+    SetReqFds(client, 1);
+    REQUEST_SIZE_MATCH(xShmAttachFdReq);
+    LEGAL_NEW_RESOURCE(stuff->shmseg, client);
+    if ((stuff->readOnly != xTrue) && (stuff->readOnly != xFalse)) {
+        client->errorValue = stuff->readOnly;
+        return BadValue;
+    }
+    fd = ReadFdFromClient(client);
+    if (fd < 0)
+        return BadMatch;
+
+    if (fstat(fd, &statb) < 0 || statb.st_size == 0) {
+        close(fd);
+        return BadMatch;
+    }
+
+    shmdesc = malloc(sizeof(ShmDescRec));
+    if (!shmdesc) {
+        close(fd);
+        return BadAlloc;
+    }
+    shmdesc->is_fd = TRUE;
+    shmdesc->addr = mmap(NULL, statb.st_size,
+                         stuff->readOnly ? PROT_READ : PROT_READ|PROT_WRITE,
+                         MAP_SHARED,
+                         fd, 0);
+
+    close(fd);
+    if ((shmdesc->addr == ((char *) -1))) {
+        free(shmdesc);
+        return BadAccess;
+    }
+
+    shmdesc->refcnt = 1;
+    shmdesc->writable = !stuff->readOnly;
+    shmdesc->size = statb.st_size;
+    shmdesc->resource = stuff->shmseg;
+
+    shmdesc->busfault = busfault_register_mmap(shmdesc->addr, shmdesc->size, ShmBusfaultNotify, shmdesc);
+    if (!shmdesc->busfault) {
+        munmap(shmdesc->addr, shmdesc->size);
+        free(shmdesc);
+        return BadAlloc;
+    }
+
+    shmdesc->next = Shmsegs;
+    Shmsegs = shmdesc;
+
+    if (!AddResource(stuff->shmseg, ShmSegType, (pointer) shmdesc))
+        return BadAlloc;
+    return Success;
+}
+
+static int
+shm_tmpfile(void)
+{
+#ifdef SHMDIR
+	int	fd;
+	int	flags;
+	char	template[] = SHMDIR "/shmfd-XXXXXX";
+#ifdef O_TMPFILE
+	fd = open(SHMDIR, O_TMPFILE|O_RDWR|O_CLOEXEC|O_EXCL, 0666);
+	if (fd >= 0) {
+		ErrorF ("Using O_TMPFILE\n");
+		return fd;
+	}
+	ErrorF ("Not using O_TMPFILE\n");
+#endif
+	fd = mkstemp(template);
+	if (fd < 0)
+		return -1;
+	unlink(template);
+	if (fcntl(fd, F_GETFD, &flags) >= 0) {
+		flags |= FD_CLOEXEC;
+		(void) fcntl(fd, F_SETFD, &flags);
+	}
+	return fd;
+#else
+        return -1;
+#endif
+}
+
+static int
+ProcShmCreateSegment(ClientPtr client)
+{
+    int fd;
+    ShmDescPtr shmdesc;
+    REQUEST(xShmCreateSegmentReq);
+    xShmCreateSegmentReply rep = {
+        .type = X_Reply,
+        .nfd = 1,
+        .sequenceNumber = client->sequence,
+        .length = 0,
+    };
+
+    REQUEST_SIZE_MATCH(xShmCreateSegmentReq);
+    if ((stuff->readOnly != xTrue) && (stuff->readOnly != xFalse)) {
+        client->errorValue = stuff->readOnly;
+        return BadValue;
+    }
+    fd = shm_tmpfile();
+    if (fd < 0)
+        return BadAlloc;
+    if (ftruncate(fd, stuff->size) < 0) {
+        close(fd);
+        return BadAlloc;
+    }
+    shmdesc = malloc(sizeof(ShmDescRec));
+    if (!shmdesc) {
+        close(fd);
+        return BadAlloc;
+    }
+    shmdesc->is_fd = TRUE;
+    shmdesc->addr = mmap(NULL, stuff->size,
+                         stuff->readOnly ? PROT_READ : PROT_READ|PROT_WRITE,
+                         MAP_SHARED,
+                         fd, 0);
+
+    if ((shmdesc->addr == ((char *) -1))) {
+        close(fd);
+        free(shmdesc);
+        return BadAccess;
+    }
+
+    shmdesc->refcnt = 1;
+    shmdesc->writable = !stuff->readOnly;
+    shmdesc->size = stuff->size;
+
+    shmdesc->busfault = busfault_register_mmap(shmdesc->addr, shmdesc->size, ShmBusfaultNotify, shmdesc);
+    if (!shmdesc->busfault) {
+        close(fd);
+        munmap(shmdesc->addr, shmdesc->size);
+        free(shmdesc);
+        return BadAlloc;
+    }
+
+    shmdesc->next = Shmsegs;
+    Shmsegs = shmdesc;
+
+    if (!AddResource(stuff->shmseg, ShmSegType, (pointer) shmdesc)) {
+        close(fd);
+        return BadAlloc;
+    }
+
+    if (WriteFdToClient(client, fd, TRUE) < 0) {
+        FreeResource(stuff->shmseg, RT_NONE);
+        close(fd);
+        return BadAlloc;
+    }
+    WriteToClient(client, sizeof (xShmCreateSegmentReply), &rep);
+    return Success;
+}
+#endif /* SHM_FD_PASSING */
+
 static int
 ProcShmDispatch(ClientPtr client)
 {
@@ -1125,6 +1307,12 @@ ProcShmDispatch(ClientPtr client)
             return ProcPanoramiXShmCreatePixmap(client);
 #endif
         return ProcShmCreatePixmap(client);
+#ifdef SHM_FD_PASSING
+    case X_ShmAttachFd:
+        return ProcShmAttachFd(client);
+    case X_ShmCreateSegment:
+        return ProcShmCreateSegment(client);
+#endif
     default:
         return BadRequest;
     }
@@ -1225,6 +1413,30 @@ SProcShmCreatePixmap(ClientPtr client)
     return ProcShmCreatePixmap(client);
 }
 
+#ifdef SHM_FD_PASSING
+static int
+SProcShmAttachFd(ClientPtr client)
+{
+    REQUEST(xShmAttachFdReq);
+    SetReqFds(client, 1);
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xShmAttachFdReq);
+    swapl(&stuff->shmseg);
+    return ProcShmAttachFd(client);
+}
+
+static int
+SProcShmCreateSegment(ClientPtr client)
+{
+    REQUEST(xShmCreateSegmentReq);
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xShmCreateSegmentReq);
+    swapl(&stuff->shmseg);
+    swapl(&stuff->size);
+    return ProcShmCreateSegment(client);
+}
+#endif  /* SHM_FD_PASSING */
+
 static int
 SProcShmDispatch(ClientPtr client)
 {
@@ -1242,6 +1454,12 @@ SProcShmDispatch(ClientPtr client)
         return SProcShmGetImage(client);
     case X_ShmCreatePixmap:
         return SProcShmCreatePixmap(client);
+#ifdef SHM_FD_PASSING
+    case X_ShmAttachFd:
+        return SProcShmAttachFd(client);
+    case X_ShmCreateSegment:
+        return SProcShmCreateSegment(client);
+#endif
     default:
         return BadRequest;
     }

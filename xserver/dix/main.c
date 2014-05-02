@@ -125,14 +125,10 @@ BOOL serverRunning = FALSE;
 pthread_mutex_t serverRunningMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t serverRunningCond = PTHREAD_COND_INITIALIZER;
 
-int dix_main(int argc, char *argv[], char *envp[]);
+#endif
 
 int
 dix_main(int argc, char *argv[], char *envp[])
-#else
-int
-main(int argc, char *argv[], char *envp[])
-#endif
 {
     int i;
     HWEventQueueType alwaysCheckForInput[2];
@@ -358,9 +354,15 @@ main(int argc, char *argv[], char *envp[])
         dixFreePrivates(serverClient->devPrivates, PRIVATE_CLIENT);
         serverClient->devPrivates = NULL;
 
+	dixFreeRegistry();
+
         FreeFonts();
 
+        FreeAllAtoms();
+
         FreeAuditTimer();
+
+        DeleteCallbackManager();
 
         if (dispatchException & DE_TERMINATE) {
             CloseWellKnownConnections();

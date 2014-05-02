@@ -7,6 +7,8 @@
 #include <xf86drm.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
+#include <string.h>
 
 /* Linux platform device support */
 #include "xf86_OSproc.h"
@@ -23,6 +25,7 @@ get_drm_info(struct OdevAttributes *attribs, char *path, int delayed_index)
     drmSetVersion sv;
     char *buf;
     int fd;
+    int err = 0;
 
     fd = open(path, O_RDWR, O_CLOEXEC);
     if (fd == -1)
@@ -32,9 +35,11 @@ get_drm_info(struct OdevAttributes *attribs, char *path, int delayed_index)
     sv.drm_di_minor = 4;
     sv.drm_dd_major = -1;       /* Don't care */
     sv.drm_dd_minor = -1;       /* Don't care */
-    if (drmSetInterfaceVersion(fd, &sv)) {
-        ErrorF("setversion 1.4 failed\n");
-        return FALSE;
+
+    err = drmSetInterfaceVersion(fd, &sv);
+    if (err) {
+        ErrorF("setversion 1.4 failed: %s\n", strerror(-err));
+	goto out;
     }
 
     /* for a delayed probe we've already added the device */
@@ -47,8 +52,9 @@ get_drm_info(struct OdevAttributes *attribs, char *path, int delayed_index)
     xf86_add_platform_device_attrib(delayed_index,
                                     ODEV_ATTRIB_BUSID, buf);
     drmFreeBusid(buf);
+out:
     close(fd);
-    return TRUE;
+    return (err == 0);
 }
 
 Bool

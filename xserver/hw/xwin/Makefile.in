@@ -81,13 +81,13 @@ am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
 	winauth.c winblock.c wincmap.c winconfig.c wincreatewnd.c \
 	wincursor.c windialogs.c winengine.c winerror.c winglobals.c \
 	winkeybd.c winkeyhook.c winmisc.c winmonitors.c winmouse.c \
-	winmsg.c winmultiwindowclass.c winmultiwindowicons.c \
-	winprefs.c winprefsyacc.y winprefslex.l winprocarg.c \
-	winscrinit.c winshaddd.c winshadddnl.c winshadgdi.c \
-	wintaskbar.c wintrayicon.c winvalargs.c winwakeup.c \
-	winwindow.c winwndproc.c ddraw.h winclipboard.h winconfig.h \
-	win.h winglobals.h winkeybd.h winkeynames.h winlayouts.h \
-	winmessages.h winmonitors.h winmsg.h winms.h \
+	winmsg.c winmsgwindow.c winmultiwindowclass.c \
+	winmultiwindowicons.c winprefs.c winprefsyacc.y winprefslex.l \
+	winprocarg.c winscrinit.c winshaddd.c winshadddnl.c \
+	winshadgdi.c wintaskbar.c wintrayicon.c winvalargs.c \
+	winwakeup.c winwindow.c winwndproc.c ddraw.h winclipboard.h \
+	winconfig.h win.h winglobals.h winkeybd.h winkeynames.h \
+	winlayouts.h winmessages.h winmonitors.h winmsg.h winms.h \
 	winmultiwindowclass.h winmultiwindowicons.h winprefs.h \
 	winresource.h winwindow.h XWin.rc \
 	$(top_srcdir)/Xext/dpmsstubs.c $(top_srcdir)/Xi/stubs.c \
@@ -133,7 +133,7 @@ am__objects_8 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	wincursor.$(OBJEXT) windialogs.$(OBJEXT) winengine.$(OBJEXT) \
 	winerror.$(OBJEXT) winglobals.$(OBJEXT) winkeybd.$(OBJEXT) \
 	winkeyhook.$(OBJEXT) winmisc.$(OBJEXT) winmonitors.$(OBJEXT) \
-	winmouse.$(OBJEXT) winmsg.$(OBJEXT) \
+	winmouse.$(OBJEXT) winmsg.$(OBJEXT) winmsgwindow.$(OBJEXT) \
 	winmultiwindowclass.$(OBJEXT) winmultiwindowicons.$(OBJEXT) \
 	winprefs.$(OBJEXT) winprefsyacc.$(OBJEXT) \
 	winprefslex.$(OBJEXT) winprocarg.$(OBJEXT) \
@@ -148,6 +148,7 @@ am__objects_8 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 am_XWin_OBJECTS = $(am__objects_8)
 XWin_OBJECTS = $(am_XWin_OBJECTS)
 am__DEPENDENCIES_1 =
+am__DEPENDENCIES_2 = $(top_builddir)/pseudoramiX/libPseudoramiX.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -343,9 +344,12 @@ DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
 DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
 DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
 DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
+DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
+DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
@@ -377,6 +381,7 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
+HAVE_DOT = @HAVE_DOT@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -406,6 +411,8 @@ LIBS = @LIBS@
 LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
 LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -449,6 +456,7 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -462,12 +470,12 @@ SET_MAKE = @SET_MAKE@
 SHA1_CFLAGS = @SHA1_CFLAGS@
 SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
-SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
@@ -533,6 +541,8 @@ XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
+XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
@@ -541,7 +551,7 @@ XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
-XWIN_LIBS = @XWIN_LIBS@
+XWIN_LIBS = @XWIN_LIBS@ $(top_builddir)/pseudoramiX/libPseudoramiX.la
 XWIN_SERVER_NAME = @XWIN_SERVER_NAME@
 XWIN_SYS_LIBS = @XWIN_SYS_LIBS@ -ldxguid
 YACC = @YACC@
@@ -686,6 +696,7 @@ SRCS = InitInput.c \
 	winmonitors.c \
 	winmouse.c \
 	winmsg.c \
+	winmsgwindow.c \
 	winmultiwindowclass.c \
 	winmultiwindowicons.c \
 	winprefs.c \
@@ -733,10 +744,10 @@ SRCS = InitInput.c \
 	$(SRCS_XV)
 
 XWin_SOURCES = $(SRCS)
-INCLUDES = -I$(top_srcdir)/miext/rootless
-XWin_DEPENDENCIES = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS)
+AM_CPPFLAGS = -I$(top_srcdir)/miext/rootless
+XWin_DEPENDENCIES = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_LIBS) $(XSERVER_LIBS)
 XWin_LDADD = $(MULTIWINDOW_LIBS) $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_GLX_LINK_FLAGS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
-XWin_LDFLAGS = -mwindows -static
+XWin_LDFLAGS = -mwindows -static -Wl,--disable-stdcall-fixup
 BUILT_SOURCES = winprefsyacc.h winprefsyacc.c winprefslex.c
 CLEANFILES = $(BUILT_SOURCES)
 AM_YFLAGS = -d
@@ -882,6 +893,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmonitors.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmouse.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmsg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmsgwindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowclass.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowicons.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowshape.Po@am__quote@
@@ -1346,6 +1358,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-xwinconfigDATA
 
 .rc.o:
 	$(AM_V_GEN)$(WINDRES) --use-temp-file -i $< --input-format=rc -o $@ -O coff -I $(top_builddir)/include
+
+XWin.o: XWin.rc XWin.exe.manifest X.ico
 
 winprefsyacc.h: winprefsyacc.c
 winprefslex.c: winprefslex.l winprefsyacc.c winprefsyacc.h

@@ -51,10 +51,6 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = Xorg$(EXEEXT)
-
-# Needs to be built before any files are compiled when using Sun compilers
-# so in*/out* inline definitions are properly processed.
-@SOLARIS_ASM_INLINE_TRUE@am__append_1 = os-support/solaris/solaris-@SOLARIS_INOUT_ARCH@.il
 subdir = hw/xfree86
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -88,8 +84,8 @@ am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	dixmods/libdixmods.la modes/libxf86modes.la \
 	ramdac/libramdac.la ddc/libddc.la i2c/libi2c.la \
 	$(am__DEPENDENCIES_1) dixmods/libxorgxkb.la $(DRI_LIB) \
-	$(DRI2_LIB) $(top_builddir)/mi/libmi.la \
-	$(top_builddir)/os/libos.la
+	$(DRI2_LIB) $(DRI3_LIB) $(top_builddir)/miext/sync/libsync.la \
+	$(top_builddir)/mi/libmi.la $(top_builddir)/os/libos.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -232,9 +228,12 @@ DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
 DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
 DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
 DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
+DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
+DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
@@ -266,6 +265,7 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
+HAVE_DOT = @HAVE_DOT@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -295,6 +295,8 @@ LIBS = @LIBS@
 LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
 LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -338,6 +340,7 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -351,12 +354,12 @@ SET_MAKE = @SET_MAKE@
 SHA1_CFLAGS = @SHA1_CFLAGS@
 SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
-SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
@@ -422,6 +425,8 @@ XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
+XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
@@ -504,6 +509,8 @@ top_srcdir = @top_srcdir@
 @DRI_TRUE@DRI_LIB = dri/libdri.la
 @DRI2_TRUE@DRI2_SUBDIR = dri2
 @DRI2_TRUE@DRI2_LIB = dri2/libdri2.la
+@DRI3_TRUE@DRI3_BUILDDIR = $(top_builddir)/dri3
+@DRI3_TRUE@DRI3_LIB = $(DRI3_BUILDDIR)/libdri3.la
 @XF86UTILS_TRUE@XF86UTILS_SUBDIR = utils
 @VGAHW_TRUE@VGAHW_SUBDIR = vgahw
 @VBE_TRUE@VBE_SUBDIR = vbe
@@ -520,9 +527,9 @@ DIST_SUBDIRS = common ddc i2c x86emu int10 fbdevhw os-support \
 
 nodist_Xorg_SOURCES = sdksyms.c
 AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
-INCLUDES = $(XORG_INCS) -I$(srcdir)/parser -I$(top_srcdir)/miext/cw \
+AM_CPPFLAGS = $(XORG_INCS) -I$(srcdir)/parser -I$(top_srcdir)/miext/cw \
 	-I$(srcdir)/ddc -I$(srcdir)/i2c -I$(srcdir)/modes -I$(srcdir)/ramdac \
-	-I$(srcdir)/dri -I$(srcdir)/dri2
+	-I$(srcdir)/dri -I$(srcdir)/dri2 -I$(top_srcdir)/dri3
 
 LOCAL_LIBS = \
             $(MAIN_LIB) \
@@ -540,6 +547,8 @@ LOCAL_LIBS = \
             dixmods/libxorgxkb.la \
             $(DRI_LIB) \
             $(DRI2_LIB) \
+	    $(DRI3_LIB) \
+	    $(top_builddir)/miext/sync/libsync.la \
             $(top_builddir)/mi/libmi.la \
             $(top_builddir)/os/libos.la
 
@@ -550,7 +559,7 @@ Xorg_LDADD = \
 
 Xorg_DEPENDENCIES = $(LOCAL_LIBS)
 Xorg_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
-BUILT_SOURCES = xorg.conf.example $(am__append_1)
+BUILT_SOURCES = xorg.conf.example
 DISTCLEANFILES = xorg.conf.example
 EXTRA_DIST = xorgconf.cpp sdksyms.sh
 
@@ -934,8 +943,9 @@ install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS install-exec-local
-
+install-exec-am: install-binPROGRAMS
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-recursive
 
 install-html-am:
@@ -974,11 +984,12 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS
-
+uninstall-am: uninstall-binPROGRAMS uninstall-local
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all check \
 	cscopelist-recursive ctags-recursive install install-am \
-	install-strip tags-recursive
+	install-exec-am install-strip tags-recursive uninstall-am
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-am clean clean-binPROGRAMS \
@@ -988,29 +999,31 @@ uninstall-am: uninstall-binPROGRAMS
 	dvi-am html html-am info info-am install install-am \
 	install-binPROGRAMS install-data install-data-am \
 	install-data-local install-dvi install-dvi-am install-exec \
-	install-exec-am install-exec-local install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-binPROGRAMS
+	install-exec-am install-exec-hook install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs installdirs-am \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-hook uninstall-local
 
 
-@SOLARIS_ASM_INLINE_TRUE@os-support/solaris/solaris-@SOLARIS_INOUT_ARCH@.il:
-@SOLARIS_ASM_INLINE_TRUE@	cd os-support/solaris ; \
-@SOLARIS_ASM_INLINE_TRUE@	 $(MAKE) $(AM_MAKEFLAGS) solaris-@SOLARIS_INOUT_ARCH@.il
-
-# do not use $(mkdir_p) if you want automake 1.7 to work
+# Without logdir, X will post an error on the terminal and will not start
 install-data-local:
-	mkdir -p $(DESTDIR)$(logdir)
+	$(AM_V_GEN)$(MKDIR_P) $(DESTDIR)$(logdir)
+@CYGWIN_TRUE@	$(INSTALL_DATA) libXorg.exe.a $(DESTDIR)$(libdir)/libXorg.exe.a
 
-install-exec-local: install-binPROGRAMS
-	(cd $(DESTDIR)$(bindir) && rm -f X && ln -s Xorg X)
+install-exec-hook:
+	(cd $(DESTDIR)$(bindir) && rm -f X && $(LN_S) Xorg$(EXEEXT) X)
 @INSTALL_SETUID_TRUE@	chown root $(DESTDIR)$(bindir)/Xorg
 @INSTALL_SETUID_TRUE@	chmod u+s $(DESTDIR)$(bindir)/Xorg
-@CYGWIN_TRUE@	$(INSTALL_DATA) libXorg.exe.a $(DESTDIR)$(libdir)/libXorg.exe.a
+
+uninstall-local:
+@CYGWIN_TRUE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXorg.exe.a
+
+uninstall-hook:
+	$(AM_V_at)rm -f $(DESTDIR)$(bindir)/X
 
 xorg.conf.example: xorgconf.cpp
 	$(AM_V_GEN)$(SED) $(CONF_SUBSTS) < $(srcdir)/xorgconf.cpp > $@
@@ -1019,7 +1032,7 @@ relink:
 	$(AM_V_at)rm -f Xorg$(EXEEXT) && $(MAKE) Xorg$(EXEEXT)
 
 sdksyms.dep sdksyms.c: sdksyms.sh
-	$(AM_V_GEN)CPP='$(CPP)' AWK='$(AWK)' $(SHELL) $(srcdir)/sdksyms.sh $(top_srcdir) $(CFLAGS) $(AM_CFLAGS) $(INCLUDES)
+	$(AM_V_GEN)CPP='$(CPP)' AWK='$(AWK)' $(SHELL) $(srcdir)/sdksyms.sh $(top_srcdir) $(CFLAGS) $(AM_CFLAGS) $(AM_CPPFLAGS)
 include $(SDKSYMS_DEP)
 
 i2c/libi2c.la:

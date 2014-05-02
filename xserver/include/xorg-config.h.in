@@ -142,6 +142,9 @@
 /* Define to 1 if you have the `seteuid' function. */
 #undef HAVE_SETEUID
 
+/* Support APM/ACPI power management in the server */
+#undef XF86PM
+
 /* Use X server privilege separation */
 #undef X_PRIVSEP
 

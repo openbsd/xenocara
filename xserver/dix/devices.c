@@ -1052,6 +1052,7 @@ CloseDownDevices(void)
     inputInfo.pointer = NULL;
 
     XkbDeleteRulesDflts();
+    XkbDeleteRulesUsed();
 
     OsReleaseSignals();
 }
@@ -1276,6 +1277,10 @@ InitButtonClassDeviceStruct(DeviceIntPtr dev, int numButtons, Atom *labels,
     ButtonClassPtr butc;
     int i;
 
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->button != NULL, FALSE);
+    BUG_RETURN_VAL(numButtons >= MAX_BUTTONS, FALSE);
+
     butc = calloc(1, sizeof(ButtonClassRec));
     if (!butc)
         return FALSE;
@@ -1336,8 +1341,7 @@ InitValuatorClassDeviceStruct(DeviceIntPtr dev, int numAxes, Atom *labels,
     int i;
     ValuatorClassPtr valc;
 
-    if (!dev)
-        return FALSE;
+    BUG_RETURN_VAL(dev == NULL, FALSE);
 
     if (numAxes > MAX_VALUATORS) {
         LogMessage(X_WARNING,
@@ -1446,6 +1450,9 @@ InitFocusClassDeviceStruct(DeviceIntPtr dev)
 {
     FocusClassPtr focc;
 
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->focus != NULL, FALSE);
+
     focc = malloc(sizeof(FocusClassRec));
     if (!focc)
         return FALSE;
@@ -1464,6 +1471,9 @@ Bool
 InitPtrFeedbackClassDeviceStruct(DeviceIntPtr dev, PtrCtrlProcPtr controlProc)
 {
     PtrFeedbackPtr feedc;
+
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->ptrfeed != NULL, FALSE);
 
     feedc = malloc(sizeof(PtrFeedbackClassRec));
     if (!feedc)
@@ -1506,6 +1516,9 @@ InitStringFeedbackClassDeviceStruct(DeviceIntPtr dev,
     int i;
     StringFeedbackPtr feedc;
 
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->stringfeed != NULL, FALSE);
+
     feedc = malloc(sizeof(StringFeedbackClassRec));
     if (!feedc)
         return FALSE;
@@ -1540,6 +1553,9 @@ InitBellFeedbackClassDeviceStruct(DeviceIntPtr dev, BellProcPtr bellProc,
 {
     BellFeedbackPtr feedc;
 
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->bell != NULL, FALSE);
+
     feedc = malloc(sizeof(BellFeedbackClassRec));
     if (!feedc)
         return FALSE;
@@ -1558,6 +1574,9 @@ Bool
 InitLedFeedbackClassDeviceStruct(DeviceIntPtr dev, LedCtrlProcPtr controlProc)
 {
     LedFeedbackPtr feedc;
+
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->leds != NULL, FALSE);
 
     feedc = malloc(sizeof(LedFeedbackClassRec));
     if (!feedc)
@@ -1579,6 +1598,9 @@ InitIntegerFeedbackClassDeviceStruct(DeviceIntPtr dev,
 {
     IntegerFeedbackPtr feedc;
 
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->intfeed != NULL, FALSE);
+
     feedc = malloc(sizeof(IntegerFeedbackClassRec));
     if (!feedc)
         return FALSE;
@@ -1598,6 +1620,11 @@ InitPointerDeviceStruct(DevicePtr device, CARD8 *map, int numButtons,
                         int numMotionEvents, int numAxes, Atom *axes_labels)
 {
     DeviceIntPtr dev = (DeviceIntPtr) device;
+
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->button != NULL, FALSE);
+    BUG_RETURN_VAL(dev->valuator != NULL, FALSE);
+    BUG_RETURN_VAL(dev->ptrfeed != NULL, FALSE);
 
     return (InitButtonClassDeviceStruct(dev, numButtons, btn_labels, map) &&
             InitValuatorClassDeviceStruct(dev, numAxes, axes_labels,
@@ -1619,14 +1646,13 @@ InitTouchClassDeviceStruct(DeviceIntPtr device, unsigned int max_touches,
     TouchClassPtr touch;
     int i;
 
-    if (device->touch || !device->valuator)
-        return FALSE;
+    BUG_RETURN_VAL(device == NULL, FALSE);
+    BUG_RETURN_VAL(device->touch != NULL, FALSE);
+    BUG_RETURN_VAL(device->valuator == NULL, FALSE);
 
     /* Check the mode is valid, and at least X and Y axes. */
-    if (mode != XIDirectTouch && mode != XIDependentTouch)
-        return FALSE;
-    if (num_axes < 2)
-        return FALSE;
+    BUG_RETURN_VAL(mode != XIDirectTouch && mode != XIDependentTouch, FALSE);
+    BUG_RETURN_VAL(num_axes < 2, FALSE);
 
     if (num_axes > MAX_VALUATORS) {
         LogMessage(X_WARNING,
@@ -2767,9 +2793,10 @@ AllocDevicePair(ClientPtr client, const char *name,
     keyboard->type = (master) ? MASTER_KEYBOARD : SLAVE;
 
     /* The ClassesRec stores the device classes currently not used. */
-    pointer->unused_classes = calloc(1, sizeof(ClassesRec));
-
-    keyboard->unused_classes = calloc(1, sizeof(ClassesRec));
+    if (IsMaster(pointer)) {
+        pointer->unused_classes = calloc(1, sizeof(ClassesRec));
+        keyboard->unused_classes = calloc(1, sizeof(ClassesRec));
+    }
 
     *ptr = pointer;
 

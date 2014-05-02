@@ -174,7 +174,7 @@ typedef enum _kdPointerState {
 typedef struct _KdPointerInfo KdPointerInfo;
 
 typedef struct _KdPointerDriver {
-    char *name;
+    const char *name;
      Status(*Init) (KdPointerInfo *);
      Status(*Enable) (KdPointerInfo *);
     void (*Disable) (KdPointerInfo *);
@@ -243,7 +243,7 @@ typedef struct {
 typedef struct _KdKeyboardInfo KdKeyboardInfo;
 
 typedef struct _KdKeyboardDriver {
-    char *name;
+    const char *name;
     Bool (*Init) (KdKeyboardInfo *);
     Bool (*Enable) (KdKeyboardInfo *);
     void (*Leds) (KdKeyboardInfo *, int);
@@ -411,13 +411,14 @@ Rotation KdAddRotation(Rotation a, Rotation b);
 Rotation KdSubRotation(Rotation a, Rotation b);
 
 void
- KdParseScreen(KdScreenInfo * screen, char *arg);
+ KdParseScreen(KdScreenInfo * screen, const char *arg);
 
-KdPointerInfo *KdParsePointer(char *arg);
+KdPointerInfo *KdParsePointer(const char *arg);
 
-KdKeyboardInfo *KdParseKeyboard(char *arg);
+KdKeyboardInfo *KdParseKeyboard(const char *arg);
 
-char *KdParseFindNext(char *cur, const char *delim, char *save, char *last);
+const char *
+KdParseFindNext(const char *cur, const char *delim, char *save, char *last);
 
 void
  KdParseRgba(char *rgba);
@@ -505,6 +506,7 @@ KdEnqueueKeyboardEvent(KdKeyboardInfo * ki, unsigned char scan_code,
 #define KD_BUTTON_4	0x08
 #define KD_BUTTON_5	0x10
 #define KD_BUTTON_8	0x80
+#define KD_POINTER_DESKTOP 0x40000000
 #define KD_MOUSE_DELTA	0x80000000
 
 void

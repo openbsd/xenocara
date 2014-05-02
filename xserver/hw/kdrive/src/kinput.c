@@ -308,20 +308,21 @@ KdEnableInput(void)
 
     kdInputEnabled = TRUE;
 
+    ev.any.time = GetTimeInMillis();
+
     for (ki = kdKeyboards; ki; ki = ki->next) {
         if (ki->driver && ki->driver->Enable)
             (*ki->driver->Enable) (ki);
+        /* reset screen saver */
+        NoticeEventTime (&ev, ki->dixdev);
     }
 
     for (pi = kdPointers; pi; pi = pi->next) {
         if (pi->driver && pi->driver->Enable)
             (*pi->driver->Enable) (pi);
+        /* reset screen saver */
+        NoticeEventTime (&ev, pi->dixdev);
     }
-
-    /* reset screen saver */
-    ev.any.time = GetTimeInMillis();
-    NoticeEventTime(&ev, pi->dixdev);
-    NoticeEventTime(&ev, ki->dixdev);
 
     OsReleaseSIGIO();
 }
@@ -1086,7 +1087,7 @@ KdParseKbdOptions(KdKeyboardInfo * ki)
 }
 
 KdKeyboardInfo *
-KdParseKeyboard(char *arg)
+KdParseKeyboard(const char *arg)
 {
     char save[1024];
     char delim;
@@ -1178,7 +1179,7 @@ KdParsePointerOptions(KdPointerInfo * pi)
 }
 
 KdPointerInfo *
-KdParsePointer(char *arg)
+KdParsePointer(const char *arg)
 {
     char save[1024];
     char delim;
@@ -1675,13 +1676,6 @@ char *kdActionNames[] = {
 };
 #endif                          /* DEBUG */
 
-static void
-KdQueueEvent(DeviceIntPtr pDev, InternalEvent *ev)
-{
-    KdAssertSigioBlocked("KdQueueEvent");
-    mieqEnqueue(pDev, ev);
-}
-
 /* We return true if we're stealing the event. */
 static Bool
 KdRunMouseMachine(KdPointerInfo * pi, KdInputClass c, int type, int x, int y,
@@ -1821,15 +1815,10 @@ KdEnqueueKeyboardEvent(KdKeyboardInfo * ki,
                        unsigned char scan_code, unsigned char is_up)
 {
     unsigned char key_code;
-    KeyClassPtr keyc = NULL;
-    KeybdCtrl *ctrl = NULL;
     int type;
 
     if (!ki || !ki->dixdev || !ki->dixdev->kbdfeed || !ki->dixdev->key)
         return;
-
-    keyc = ki->dixdev->key;
-    ctrl = &ki->dixdev->kbdfeed->ctrl;
 
     if (scan_code >= ki->minScanCode && scan_code <= ki->maxScanCode) {
         key_code = scan_code + KD_MIN_KEYCODE - ki->minScanCode;
@@ -1864,7 +1853,6 @@ void
 KdEnqueuePointerEvent(KdPointerInfo * pi, unsigned long flags, int rx, int ry,
                       int rz)
 {
-    CARD32 ms;
     unsigned char buttons;
     int x, y, z;
     int (*matrix)[3] = kdPointerMatrix.matrix;
@@ -1874,8 +1862,6 @@ KdEnqueuePointerEvent(KdPointerInfo * pi, unsigned long flags, int rx, int ry,
 
     if (!pi)
         return;
-
-    ms = GetTimeInMillis();
 
     /* we don't need to transform z, so we don't. */
     if (flags & KD_MOUSE_DELTA) {
@@ -1909,6 +1895,8 @@ KdEnqueuePointerEvent(KdPointerInfo * pi, unsigned long flags, int rx, int ry,
     }
     else {
         dixflags = POINTER_ABSOLUTE;
+        if (flags & KD_POINTER_DESKTOP)
+            dixflags |= POINTER_DESKTOP;
         if (x != pi->dixdev->last.valuators[0] ||
             y != pi->dixdev->last.valuators[1])
             _KdEnqueuePointerEvent(pi, MotionNotify, x, y, z, 0, dixflags,
@@ -2042,25 +2030,25 @@ KdCursorOffScreen(ScreenPtr *ppScreen, int *x, int *y)
         dx = KdScreenOrigin(pNewScreen)->x - KdScreenOrigin(pScreen)->x;
         dy = KdScreenOrigin(pNewScreen)->y - KdScreenOrigin(pScreen)->y;
         if (*x < 0) {
-            if (dx <= 0 && -dx < best_x) {
+            if (dx < 0 && -dx < best_x) {
                 best_x = -dx;
                 n_best_x = n;
             }
         }
         else if (*x >= pScreen->width) {
-            if (dx >= 0 && dx < best_x) {
+            if (dx > 0 && dx < best_x) {
                 best_x = dx;
                 n_best_x = n;
             }
         }
         if (*y < 0) {
-            if (dy <= 0 && -dy < best_y) {
+            if (dy < 0 && -dy < best_y) {
                 best_y = -dy;
                 n_best_y = n;
             }
         }
         else if (*y >= pScreen->height) {
-            if (dy >= 0 && dy < best_y) {
+            if (dy > 0 && dy < best_y) {
                 best_y = dy;
                 n_best_y = n;
             }

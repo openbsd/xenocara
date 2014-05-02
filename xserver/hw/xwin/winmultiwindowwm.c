@@ -488,7 +488,7 @@ getHwnd(WMInfoPtr pWMInfo, Window iWindow)
                            iWindow,
                            pWMInfo->atmPrivMap,
                            0,
-                           1,
+                           sizeof(HWND)/4,
                            False,
                            XA_INTEGER,
                            &atmType,
@@ -747,10 +747,10 @@ winMultiWindowWMProc(void *pArg)
             ErrorF("\tWM_WM_MAP\n");
 #endif
             /* Put a note as to the HWND associated with this Window */
-            XChangeProperty(pWMInfo->pDisplay, pNode->msg.iWindow, pWMInfo->atmPrivMap, XA_INTEGER,     //pWMInfo->atmPrivMap,
+            XChangeProperty(pWMInfo->pDisplay, pNode->msg.iWindow, pWMInfo->atmPrivMap, XA_INTEGER,
                             32,
                             PropModeReplace,
-                            (unsigned char *) &(pNode->msg.hwndWindow), 1);
+                            (unsigned char *) &(pNode->msg.hwndWindow), sizeof(HWND)/4);
             UpdateName(pWMInfo, pNode->msg.iWindow);
             UpdateIcon(pWMInfo, pNode->msg.iWindow);
             break;
@@ -759,10 +759,10 @@ winMultiWindowWMProc(void *pArg)
 #if CYGMULTIWINDOW_DEBUG
             ErrorF("\tWM_WM_MAP2\n");
 #endif
-            XChangeProperty(pWMInfo->pDisplay, pNode->msg.iWindow, pWMInfo->atmPrivMap, XA_INTEGER,     //pWMInfo->atmPrivMap,
+            XChangeProperty(pWMInfo->pDisplay, pNode->msg.iWindow, pWMInfo->atmPrivMap, XA_INTEGER,
                             32,
                             PropModeReplace,
-                            (unsigned char *) &(pNode->msg.hwndWindow), 1);
+                            (unsigned char *) &(pNode->msg.hwndWindow), sizeof(HWND)/4);
             break;
 
         case WM_WM_MAP3:
@@ -770,10 +770,10 @@ winMultiWindowWMProc(void *pArg)
             ErrorF("\tWM_WM_MAP3\n");
 #endif
             /* Put a note as to the HWND associated with this Window */
-            XChangeProperty(pWMInfo->pDisplay, pNode->msg.iWindow, pWMInfo->atmPrivMap, XA_INTEGER,     //pWMInfo->atmPrivMap,
+            XChangeProperty(pWMInfo->pDisplay, pNode->msg.iWindow, pWMInfo->atmPrivMap, XA_INTEGER,
                             32,
                             PropModeReplace,
-                            (unsigned char *) &(pNode->msg.hwndWindow), 1);
+                            (unsigned char *) &(pNode->msg.hwndWindow), sizeof(HWND)/4);
             UpdateName(pWMInfo, pNode->msg.iWindow);
             UpdateIcon(pWMInfo, pNode->msg.iWindow);
             UpdateStyle(pWMInfo, pNode->msg.iWindow);
@@ -1061,15 +1061,13 @@ winMultiWindowXMsgProc(void *pArg)
                 (pProcArg->pDisplay, pProcArg->dwScreen, TRUE)) {
                 if (!g_fAnotherWMRunning) {
                     g_fAnotherWMRunning = TRUE;
-                    SendMessage(*(HWND *) pProcArg->hwndScreen, WM_UNMANAGE, 0,
-                                0);
+                    SendMessage(pProcArg->hwndScreen, WM_UNMANAGE, 0, 0);
                 }
             }
             else {
                 if (g_fAnotherWMRunning) {
                     g_fAnotherWMRunning = FALSE;
-                    SendMessage(*(HWND *) pProcArg->hwndScreen, WM_MANAGE, 0,
-                                0);
+                    SendMessage(pProcArg->hwndScreen, WM_MANAGE, 0, 0);
                 }
             }
             Sleep(500);
@@ -1470,7 +1468,7 @@ winMultiWindowWMErrorHandler(Display * pDisplay, XErrorEvent * pErr)
 static int
 winMultiWindowWMIOErrorHandler(Display * pDisplay)
 {
-    ErrorF("winMultiWindowWMIOErrorHandler!\n\n");
+    ErrorF("winMultiWindowWMIOErrorHandler!\n");
 
     if (pthread_equal(pthread_self(), g_winMultiWindowWMThread)) {
         if (g_shutdown)
@@ -1510,7 +1508,7 @@ winMultiWindowXMsgProcErrorHandler(Display * pDisplay, XErrorEvent * pErr)
 static int
 winMultiWindowXMsgProcIOErrorHandler(Display * pDisplay)
 {
-    ErrorF("winMultiWindowXMsgProcIOErrorHandler!\n\n");
+    ErrorF("winMultiWindowXMsgProcIOErrorHandler!\n");
 
     if (pthread_equal(pthread_self(), g_winMultiWindowXMsgProcThread)) {
         /* Restart at the main entry point */
@@ -1626,23 +1624,27 @@ winApplyHints(Display * pDisplay, Window iWindow, HWND hWnd, HWND * zstyle)
     }
 
     if (XGetWindowProperty(pDisplay, iWindow, windowState, 0L,
-                           1L, False, XA_ATOM, &type, &format,
+                           MAXINT, False, XA_ATOM, &type, &format,
                            &nitems, &left,
                            (unsigned char **) &pAtom) == Success) {
-        if (pAtom && nitems == 1) {
-            if (*pAtom == skiptaskbarState)
-                hint |= HINT_SKIPTASKBAR;
-            if (*pAtom == hiddenState)
-                maxmin |= HINT_MIN;
-            else if (*pAtom == fullscreenState)
-                maxmin |= HINT_MAX;
-            if (*pAtom == belowState)
-                *zstyle = HWND_BOTTOM;
-            else if (*pAtom == aboveState)
-                *zstyle = HWND_TOPMOST;
-        }
-        if (pAtom)
+        if (pAtom ) {
+            unsigned long i;
+
+            for (i = 0; i < nitems; i++) {
+                if (pAtom[i] == skiptaskbarState)
+                    hint |= HINT_SKIPTASKBAR;
+                if (pAtom[i] == hiddenState)
+                    maxmin |= HINT_MIN;
+                else if (pAtom[i] == fullscreenState)
+                    maxmin |= HINT_MAX;
+                if (pAtom[i] == belowState)
+                    *zstyle = HWND_BOTTOM;
+                else if (pAtom[i] == aboveState)
+                    *zstyle = HWND_TOPMOST;
+            }
+
             XFree(pAtom);
+        }
     }
 
     nitems = left = 0;

@@ -30,6 +30,8 @@
 #include <xwin-config.h>
 #endif
 
+#include <pthread.h>
+
 /*
  * References to external symbols
  */
@@ -69,7 +71,6 @@ typedef int (*winDispatchProcPtr) (ClientPtr);
  * Wrapped DIX functions
  */
 extern winDispatchProcPtr winProcEstablishConnectionOrig;
-extern winDispatchProcPtr winProcQueryTreeOrig;
 extern winDispatchProcPtr winProcSetSelectionOwnerOrig;
 #endif
 
@@ -89,5 +90,7 @@ extern Bool g_fButton[3];
 #ifdef XWIN_MULTIWINDOWEXTWM
 extern Bool g_fNoConfigureWindow;
 #endif
+
+extern pthread_mutex_t g_pmTerminating;
 
 #endif                          /* WINGLOBALS_H */

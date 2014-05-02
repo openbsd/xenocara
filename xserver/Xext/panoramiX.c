@@ -53,9 +53,8 @@ Equipment Corporation.
 #include "servermd.h"
 #include "resource.h"
 #include "picturestr.h"
-#ifdef XFIXES
 #include "xfixesint.h"
-#endif
+#include "damageextint.h"
 #ifdef COMPOSITE
 #include "compint.h"
 #endif
@@ -75,7 +74,7 @@ int PanoramiXPixWidth = 0;
 int PanoramiXPixHeight = 0;
 int PanoramiXNumScreens = 0;
 
-static RegionRec PanoramiXScreenRegion = { {0, 0, 0, 0}, NULL };
+_X_EXPORT RegionRec PanoramiXScreenRegion = { {0, 0, 0, 0}, NULL };
 
 static int PanoramiXNumDepths;
 static DepthPtr PanoramiXDepths;
@@ -583,9 +582,8 @@ PanoramiXExtensionInit(void)
     ProcVector[X_StoreNamedColor] = PanoramiXStoreNamedColor;
 
     PanoramiXRenderInit();
-#ifdef XFIXES
     PanoramiXFixesInit();
-#endif
+    PanoramiXDamageInit();
 #ifdef COMPOSITE
     PanoramiXCompositeInit();
 #endif
@@ -596,7 +594,7 @@ Bool
 PanoramiXCreateConnectionBlock(void)
 {
     int i, j, length;
-    Bool disableBackingStore = FALSE;
+    Bool disable_backing_store = FALSE;
     int old_width, old_height;
     float width_mult, height_mult;
     xWindowRoot *root;
@@ -622,10 +620,10 @@ PanoramiXCreateConnectionBlock(void)
         }
         if (pScreen->backingStoreSupport !=
             screenInfo.screens[0]->backingStoreSupport)
-            disableBackingStore = TRUE;
+            disable_backing_store = TRUE;
     }
 
-    if (disableBackingStore) {
+    if (disable_backing_store) {
         for (i = 0; i < screenInfo.numScreens; i++) {
             pScreen = screenInfo.screens[i];
             pScreen->backingStoreSupport = NotUseful;
@@ -831,15 +829,15 @@ PanoramiXConsolidate(void)
     saver->type = XRT_WINDOW;
 
     FOR_NSCREENS(i) {
-        ScreenPtr pScreen = screenInfo.screens[i];
+        ScreenPtr scr = screenInfo.screens[i];
 
-        root->info[i].id = pScreen->root->drawable.id;
+        root->info[i].id = scr->root->drawable.id;
         root->u.win.class = InputOutput;
         root->u.win.root = TRUE;
-        saver->info[i].id = pScreen->screensaver.wid;
+        saver->info[i].id = scr->screensaver.wid;
         saver->u.win.class = InputOutput;
         saver->u.win.root = TRUE;
-        defmap->info[i].id = pScreen->defColormap;
+        defmap->info[i].id = scr->defColormap;
     }
 
     AddResource(root->info[0].id, XRT_WINDOW, root);
@@ -890,9 +888,8 @@ PanoramiXResetProc(ExtensionEntry * extEntry)
     int i;
 
     PanoramiXRenderReset();
-#ifdef XFIXES
     PanoramiXFixesReset();
-#endif
+    PanoramiXDamageReset();
 #ifdef COMPOSITE
     PanoramiXCompositeReset ();
 #endif

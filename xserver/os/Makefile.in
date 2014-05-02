@@ -53,7 +53,10 @@ build_triplet = @build@
 host_triplet = @host@
 @SECURE_RPC_TRUE@am__append_1 = $(SECURERPC_SRCS)
 @XDMCP_TRUE@am__append_2 = $(XDMCP_SRCS)
-@X_PRIVSEP_TRUE@am__append_3 = $(PRIVSEP_SRCS)
+@HAVE_LIBUNWIND_TRUE@am__append_3 = $(LIBUNWIND_CFLAGS)
+@HAVE_LIBUNWIND_TRUE@am__append_4 = $(LIBUNWIND_LIBS)
+@BUSFAULT_TRUE@am__append_5 = $(BUSFAULT_SRCS)
+@X_PRIVSEP_TRUE@am__append_6 = $(PRIVSEP_SRCS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@noinst_PROGRAMS = os.O$(EXEEXT)
 subdir = os
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -80,23 +83,27 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libos_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(LTLIBOBJS)
+@HAVE_LIBUNWIND_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+libos_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(LTLIBOBJS) \
+	$(am__DEPENDENCIES_2)
 am__libos_la_SOURCES_DIST = WaitFor.c access.c auth.c backtrace.c \
 	client.c connection.c io.c mitauth.c oscolor.c osdep.h \
 	osinit.c utils.c xdmauth.c xsha1.c xstrans.c xprintf.c log.c \
-	rpcauth.c xdmcp.c privsep.c
+	rpcauth.c xdmcp.c busfault.c privsep.c
 am__objects_1 = log.lo
 am__objects_2 = rpcauth.lo
 @SECURE_RPC_TRUE@am__objects_3 = $(am__objects_2)
 am__objects_4 = xdmcp.lo
 @XDMCP_TRUE@am__objects_5 = $(am__objects_4)
-am__objects_6 = privsep.lo
-@X_PRIVSEP_TRUE@am__objects_7 = $(am__objects_6)
+am__objects_6 = busfault.lo
+@BUSFAULT_TRUE@am__objects_7 = $(am__objects_6)
+am__objects_8 = privsep.lo
+@X_PRIVSEP_TRUE@am__objects_9 = $(am__objects_8)
 am_libos_la_OBJECTS = WaitFor.lo access.lo auth.lo backtrace.lo \
 	client.lo connection.lo io.lo mitauth.lo oscolor.lo osinit.lo \
 	utils.lo xdmauth.lo xsha1.lo xstrans.lo xprintf.lo \
 	$(am__objects_1) $(am__objects_3) $(am__objects_5) \
-	$(am__objects_7)
+	$(am__objects_7) $(am__objects_9)
 libos_la_OBJECTS = $(am_libos_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -204,9 +211,12 @@ DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
 DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
 DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
 DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
+DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
+DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
@@ -238,6 +248,7 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
+HAVE_DOT = @HAVE_DOT@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -267,6 +278,8 @@ LIBS = @LIBS@
 LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
 LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -310,6 +323,7 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -323,12 +337,12 @@ SET_MAKE = @SET_MAKE@
 SHA1_CFLAGS = @SHA1_CFLAGS@
 SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
-SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
@@ -394,6 +408,8 @@ XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
+XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
@@ -473,16 +489,19 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libos.la
-AM_CFLAGS = $(DIX_CFLAGS) $(SHA1_CFLAGS)
+AM_CFLAGS = $(DIX_CFLAGS) $(SHA1_CFLAGS) $(am__append_3)
 SECURERPC_SRCS = rpcauth.c
 XDMCP_SRCS = xdmcp.c
 PRIVSEP_SRCS = privsep.c
 XORG_SRCS = log.c
+BUSFAULT_SRCS = busfault.c
 libos_la_SOURCES = WaitFor.c access.c auth.c backtrace.c client.c \
 	connection.c io.c mitauth.c oscolor.c osdep.h osinit.c utils.c \
 	xdmauth.c xsha1.c xstrans.c xprintf.c $(XORG_SRCS) \
-	$(am__append_1) $(am__append_2) $(am__append_3)
-libos_la_LIBADD = @SHA1_LIBS@ $(DLOPEN_LIBS) $(LTLIBOBJS)
+	$(am__append_1) $(am__append_2) $(am__append_5) \
+	$(am__append_6)
+libos_la_LIBADD = @SHA1_LIBS@ $(DLOPEN_LIBS) $(LTLIBOBJS) \
+	$(am__append_4)
 EXTRA_DIST = $(SECURERPC_SRCS) $(XDMCP_SRCS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@os_O_SOURCES = 
 all: all-am
@@ -560,6 +579,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backtrace.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/busfault.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io.Plo@am__quote@

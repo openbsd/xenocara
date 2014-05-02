@@ -141,7 +141,7 @@ SyncCheckWarnIsCounter(const SyncObject * pSync, const char *warning)
  *  interested in the counter.  The two functions below are used to
  *  delete and add triggers on this list.
  */
-static void
+void
 SyncDeleteTriggerFromSyncObject(SyncTrigger * pTrigger)
 {
     SyncTriggerList *pCur;
@@ -184,7 +184,7 @@ SyncDeleteTriggerFromSyncObject(SyncTrigger * pTrigger)
     }
 }
 
-static int
+int
 SyncAddTriggerToSyncObject(SyncTrigger * pTrigger)
 {
     SyncTriggerList *pCur;
@@ -914,6 +914,42 @@ SyncCreate(ClientPtr client, XID id, unsigned char type)
     pSync->type = type;
 
     return pSync;
+}
+
+int
+SyncCreateFenceFromFD(ClientPtr client, DrawablePtr pDraw, XID id, int fd, BOOL initially_triggered)
+{
+#if HAVE_XSHMFENCE
+    SyncFence  *pFence;
+    int         status;
+
+    pFence = (SyncFence *) SyncCreate(client, id, SYNC_FENCE);
+    if (!pFence)
+        return BadAlloc;
+
+    status = miSyncInitFenceFromFD(pDraw, pFence, fd, initially_triggered);
+    if (status != Success) {
+        dixFreeObjectWithPrivates(pFence, PRIVATE_SYNC_FENCE);
+        return status;
+    }
+
+    if (!AddResource(id, RTFence, (pointer) pFence))
+        return BadAlloc;
+
+    return Success;
+#else
+    return BadImplementation;
+#endif
+}
+
+int
+SyncFDFromFence(ClientPtr client, DrawablePtr pDraw, SyncFence *pFence)
+{
+#if HAVE_XSHMFENCE
+    return miSyncFDFromFence(pDraw, pFence);
+#else
+    return BadImplementation;
+#endif
 }
 
 static SyncCounter *
@@ -2794,7 +2830,6 @@ init_system_idle_counter(const char *name, int deviceid)
 {
     CARD64 resolution;
     XSyncValue idle;
-    IdleCounterPriv *priv = malloc(sizeof(IdleCounterPriv));
     SyncCounter *idle_time_counter;
 
     IdleTimeQueryValue(NULL, &idle);
@@ -2805,10 +2840,14 @@ init_system_idle_counter(const char *name, int deviceid)
                                                 IdleTimeQueryValue,
                                                 IdleTimeBracketValues);
 
-    priv->deviceid = deviceid;
-    priv->value_less = priv->value_greater = NULL;
+    if (idle_time_counter != NULL) {
+        IdleCounterPriv *priv = malloc(sizeof(IdleCounterPriv));
 
-    idle_time_counter->pSysCounterInfo->private = priv;
+        priv->value_less = priv->value_greater = NULL;
+        priv->deviceid = deviceid;
+
+        idle_time_counter->pSysCounterInfo->private = priv;
+    }
 
     return idle_time_counter;
 }
@@ -2833,6 +2872,6 @@ void SyncRemoveDeviceIdleTime(SyncCounter *counter)
     /* FreeAllResources() frees all system counters before the devices are
        shut down, check if there are any left before freeing the device's
        counter */
-    if (!xorg_list_is_empty(&SysCounterList))
+    if (counter && !xorg_list_is_empty(&SysCounterList))
         xorg_list_del(&counter->pSysCounterInfo->entry);
 }

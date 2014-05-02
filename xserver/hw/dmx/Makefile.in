@@ -82,11 +82,11 @@ am__Xdmx_SOURCES_DIST = dmx.c dmxcb.c dmxcb.h dmxclient.h dmxcmap.c \
 	dmxgc.c dmxgc.h dmxgcops.c dmxgcops.h dmx.h dmxinit.c \
 	dmxinit.h dmxinput.c dmxinput.h dmxlog.c dmxlog.h dmxpict.c \
 	dmxpict.h dmxpixmap.c dmxpixmap.h dmxprop.c dmxprop.h \
-	dmxscrinit.c dmxscrinit.h dmxshadow.c dmxshadow.h dmxstat.c \
-	dmxstat.h dmxsync.c dmxsync.h dmxvisual.c dmxvisual.h \
-	dmxwindow.c dmxwindow.h $(top_srcdir)/mi/miinitext.c \
-	$(top_srcdir)/fb/fbcmap_mi.c $(top_srcdir)/Xext/panoramiX.c \
-	dmx_glxvisuals.c dmx_glxvisuals.h
+	dmxscrinit.c dmxscrinit.h dmxstat.c dmxstat.h dmxsync.c \
+	dmxsync.h dmxvisual.c dmxvisual.h dmxwindow.c dmxwindow.h \
+	$(top_srcdir)/mi/miinitext.c $(top_srcdir)/fb/fbcmap_mi.c \
+	$(top_srcdir)/Xext/panoramiX.c dmx_glxvisuals.c \
+	dmx_glxvisuals.h
 @XINERAMA_TRUE@am__objects_1 = panoramiX.$(OBJEXT)
 @GLX_TRUE@am__objects_2 = $(am__objects_1) dmx_glxvisuals.$(OBJEXT)
 am_Xdmx_OBJECTS = dmx.$(OBJEXT) dmxcb.$(OBJEXT) dmxcmap.$(OBJEXT) \
@@ -94,9 +94,9 @@ am_Xdmx_OBJECTS = dmx.$(OBJEXT) dmxcb.$(OBJEXT) dmxcmap.$(OBJEXT) \
 	dmxfont.$(OBJEXT) dmxgc.$(OBJEXT) dmxgcops.$(OBJEXT) \
 	dmxinit.$(OBJEXT) dmxinput.$(OBJEXT) dmxlog.$(OBJEXT) \
 	dmxpict.$(OBJEXT) dmxpixmap.$(OBJEXT) dmxprop.$(OBJEXT) \
-	dmxscrinit.$(OBJEXT) dmxshadow.$(OBJEXT) dmxstat.$(OBJEXT) \
-	dmxsync.$(OBJEXT) dmxvisual.$(OBJEXT) dmxwindow.$(OBJEXT) \
-	miinitext.$(OBJEXT) fbcmap_mi.$(OBJEXT) $(am__objects_2)
+	dmxscrinit.$(OBJEXT) dmxstat.$(OBJEXT) dmxsync.$(OBJEXT) \
+	dmxvisual.$(OBJEXT) dmxwindow.$(OBJEXT) miinitext.$(OBJEXT) \
+	fbcmap_mi.$(OBJEXT) $(am__objects_2)
 Xdmx_OBJECTS = $(am_Xdmx_OBJECTS)
 am__DEPENDENCIES_1 = $(GLX_LIBS) input/libdmxinput.a \
 	config/libdmxconfig.a
@@ -244,9 +244,12 @@ DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
 DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
 DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
 DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
+DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
+DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
@@ -278,6 +281,7 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
+HAVE_DOT = @HAVE_DOT@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -307,6 +311,8 @@ LIBS = @LIBS@
 LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
 LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -350,6 +356,7 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -363,12 +370,12 @@ SET_MAKE = @SET_MAKE@
 SHA1_CFLAGS = @SHA1_CFLAGS@
 SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
-SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
@@ -443,6 +450,8 @@ XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
+XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
@@ -569,8 +578,6 @@ Xdmx_SOURCES = dmx.c \
                dmxprop.h \
                dmxscrinit.c \
                dmxscrinit.h \
-               dmxshadow.c \
-               dmxshadow.h \
                dmxstat.c \
                dmxstat.h \
                dmxsync.c \
@@ -693,7 +700,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxpixmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxprop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxscrinit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxshadow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxstat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxsync.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxvisual.Po@am__quote@

@@ -39,6 +39,9 @@
 /* Build DPMS extension */
 #undef DPMSExtension
 
+/* Build DRI3 extension */
+#undef DRI3
+
 /* Build GLX extension */
 #undef GLXEXT
 
@@ -59,6 +62,9 @@
 
 /* Has backtrace support */
 #undef HAVE_BACKTRACE
+
+/* Has libunwind support */
+#undef HAVE_LIBUNWIND
 
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
@@ -248,6 +254,9 @@
 
 /* Internal define for Xinerama */
 #undef PANORAMIX
+
+/* Support Present extension */
+#undef PRESENT
 
 /* Overall prefix */
 #undef PROJECTROOT
@@ -445,5 +454,25 @@
 #ifdef __APPLE__
 #include "dix-config-apple-verbatim.h"
 #endif
+
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# undef __EXTENSIONS__
+#endif
+
+/* Defined if needed to expose struct msghdr.msg_control */
+#undef _XOPEN_SOURCE
+
+/* Have support for X shared memory fence library (xshmfence) */
+#undef HAVE_XSHMFENCE
+
+/* Use XTrans FD passing support */
+#undef XTRANS_SEND_FDS
+
+/* Wrap SIGBUS to catch MIT-SHM faults */
+#undef BUSFAULT
+
+/* Directory for shared memory temp files */
+#undef SHMDIR
 
 #endif /* _DIX_CONFIG_H_ */

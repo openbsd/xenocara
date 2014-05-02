@@ -140,11 +140,8 @@ __GLXconfig *__glXAquaCreateVisualConfigs(int *numConfigsPtr, int screenNumber) 
                                         c->visualType = GLX_TRUE_COLOR;
                                         c->next = c + 1;
 
-                                        c->screen = screenNumber;
-
                                         c->level = 0;
                                         c->indexBits = 0;
-                                        c->pixmapMode = 0; // TODO: What should this be?
 
                                         if(conf->accelerated) {
                                             c->visualRating = GLX_NONE;
@@ -261,6 +258,9 @@ __GLXconfig *__glXAquaCreateVisualConfigs(int *numConfigsPtr, int screenNumber) 
                                         c->bindToMipmapTexture = 0;
                                         c->bindToTextureTargets = 0;
                                         c->yInverted = 0;
+
+                                        /* EXT_framebuffer_sRGB */
+                                        c->sRGBCapable = GL_FALSE;
 
                                         c = c->next;
                                     }

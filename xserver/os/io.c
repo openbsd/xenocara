@@ -206,6 +206,32 @@ YieldControlDeath(void)
     timesThisConnection = 0;
 }
 
+/* If an input buffer was empty, either free it if it is too big or link it
+ * into our list of free input buffers.  This means that different clients can
+ * share the same input buffer (at different times).  This was done to save
+ * memory.
+ */
+static void
+NextAvailableInput(OsCommPtr oc)
+{
+    if (AvailableInput) {
+        if (AvailableInput != oc) {
+            ConnectionInputPtr aci = AvailableInput->input;
+
+            if (aci->size > BUFWATERMARK) {
+                free(aci->buffer);
+                free(aci);
+            }
+            else {
+                aci->next = FreeInputs;
+                FreeInputs = aci;
+            }
+            AvailableInput->input = NULL;
+        }
+        AvailableInput = NULL;
+    }
+}
+
 int
 ReadRequestFromClient(ClientPtr client)
 {
@@ -218,28 +244,7 @@ ReadRequestFromClient(ClientPtr client)
     Bool need_header;
     Bool move_header;
 
-    /* If an input buffer was empty, either free it if it is too big
-     * or link it into our list of free input buffers.  This means that
-     * different clients can share the same input buffer (at different
-     * times).  This was done to save memory.
-     */
-
-    if (AvailableInput) {
-        if (AvailableInput != oc) {
-            register ConnectionInputPtr aci = AvailableInput->input;
-
-            if (aci->size > BUFWATERMARK) {
-                free(aci->buffer);
-                free(aci);
-            }
-            else {
-                aci->next = FreeInputs;
-                FreeInputs = aci;
-            }
-            AvailableInput->input = (ConnectionInputPtr) NULL;
-        }
-        AvailableInput = (OsCommPtr) NULL;
-    }
+    NextAvailableInput(oc);
 
     /* make sure we have an input buffer */
 
@@ -254,6 +259,14 @@ ReadRequestFromClient(ClientPtr client)
         oc->input = oci;
     }
 
+#if XTRANS_SEND_FDS
+    /* Discard any unused file descriptors */
+    while (client->req_fds > 0) {
+        int req_fd = ReadFdFromClient(client);
+        if (req_fd >= 0)
+            close(req_fd);
+    }
+#endif
     /* advance to start of next request */
 
     oci->bufptr += oci->lenLastReq;
@@ -480,6 +493,31 @@ ReadRequestFromClient(ClientPtr client)
     return needed;
 }
 
+#if XTRANS_SEND_FDS
+int
+ReadFdFromClient(ClientPtr client)
+{
+    int fd = -1;
+
+    if (client->req_fds > 0) {
+        OsCommPtr oc = (OsCommPtr) client->osPrivate;
+
+        --client->req_fds;
+        fd = _XSERVTransRecvFd(oc->trans_conn);
+    } else
+        LogMessage(X_ERROR, "Request asks for FD without setting req_fds\n");
+    return fd;
+}
+
+int
+WriteFdToClient(ClientPtr client, int fd, Bool do_close)
+{
+    OsCommPtr oc = (OsCommPtr) client->osPrivate;
+
+    return _XSERVTransSendFd(oc->trans_conn, fd, do_close);
+}
+#endif
+
 /*****************************************************************
  * InsertFakeRequest
  *    Splice a consed up (possibly partial) request in as the next request.
@@ -494,22 +532,8 @@ InsertFakeRequest(ClientPtr client, char *data, int count)
     int fd = oc->fd;
     int gotnow, moveup;
 
-    if (AvailableInput) {
-        if (AvailableInput != oc) {
-            ConnectionInputPtr aci = AvailableInput->input;
+    NextAvailableInput(oc);
 
-            if (aci->size > BUFWATERMARK) {
-                free(aci->buffer);
-                free(aci);
-            }
-            else {
-                aci->next = FreeInputs;
-                FreeInputs = aci;
-            }
-            AvailableInput->input = (ConnectionInputPtr) NULL;
-        }
-        AvailableInput = (OsCommPtr) NULL;
-    }
     if (!oci) {
         if ((oci = FreeInputs))
             FreeInputs = oci->next;
@@ -814,7 +838,7 @@ WriteToClient(ClientPtr who, int count, const void *__buf)
         }
     }
 #endif
-    if (oco->count + count + padBytes > oco->size) {
+    if (oco->count == 0 || oco->count + count + padBytes > oco->size) {
         FD_CLR(oc->fd, &OutputPending);
         if (!XFD_ANYSET(&OutputPending)) {
             CriticalOutputPending = FALSE;

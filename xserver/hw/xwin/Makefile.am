@@ -92,6 +92,7 @@ SRCS =	InitInput.c \
 	winmonitors.c \
 	winmouse.c \
 	winmsg.c \
+	winmsgwindow.c \
 	winmultiwindowclass.c \
 	winmultiwindowicons.c \
 	winprefs.c \
@@ -149,16 +150,19 @@ SRCS =	InitInput.c \
 
 XWin_SOURCES = $(SRCS)
 
-INCLUDES = -I$(top_srcdir)/miext/rootless
+AM_CPPFLAGS = -I$(top_srcdir)/miext/rootless
 
 XWIN_SYS_LIBS += -ldxguid
+XWIN_LIBS += 	$(top_builddir)/pseudoramiX/libPseudoramiX.la
 
-XWin_DEPENDENCIES = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS)
+XWin_DEPENDENCIES = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_LIBS) $(XSERVER_LIBS)
 XWin_LDADD = $(MULTIWINDOW_LIBS) $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_GLX_LINK_FLAGS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
-XWin_LDFLAGS = -mwindows -static
+XWin_LDFLAGS = -mwindows -static -Wl,--disable-stdcall-fixup
 
 .rc.o:
 	$(AM_V_GEN)$(WINDRES) --use-temp-file -i $< --input-format=rc -o $@ -O coff -I $(top_builddir)/include
+
+XWin.o: XWin.rc XWin.exe.manifest X.ico
 
 winprefsyacc.h: winprefsyacc.c
 winprefslex.c: winprefslex.l winprefsyacc.c winprefsyacc.h

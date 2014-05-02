@@ -220,8 +220,9 @@ UpdateCurrentTimeIf(void)
 
 #undef SMART_DEBUG
 
-#define SMART_SCHEDULE_DEFAULT_INTERVAL	20      /* ms */
-#define SMART_SCHEDULE_MAX_SLICE	200     /* ms */
+/* in milliseconds */
+#define SMART_SCHEDULE_DEFAULT_INTERVAL	5
+#define SMART_SCHEDULE_MAX_SLICE	15
 
 #if defined(WIN32) && !defined(__CYGWIN__)
 Bool SmartScheduleDisable = TRUE;
@@ -465,6 +466,7 @@ Dispatch(void)
     free(clientReady);
     dispatchException &= ~DE_RESET;
     SmartScheduleLatencyLimited = 0;
+    ResetOsBuffers();
 }
 
 static int VendorRelease = VENDOR_RELEASE;
@@ -1973,7 +1975,7 @@ ProcPutImage(ClientPtr client)
 static int
 DoGetImage(ClientPtr client, int format, Drawable drawable,
            int x, int y, int width, int height,
-           Mask planemask, xGetImageReply ** im_return)
+           Mask planemask)
 {
     DrawablePtr pDraw, pBoundingDraw;
     int nlines, linesPerBuf, rc;
@@ -2073,46 +2075,32 @@ DoGetImage(ClientPtr client, int format, Drawable drawable,
 
     xgi.length = length;
 
-    if (im_return) {
-        pBuf = calloc(1, sz_xGetImageReply + length);
-        if (!pBuf)
-            return BadAlloc;
-        if (widthBytesLine == 0)
-            linesPerBuf = 0;
-        else
-            linesPerBuf = height;
-        *im_return = (xGetImageReply *) pBuf;
-        *(xGetImageReply *) pBuf = xgi;
-        pBuf += sz_xGetImageReply;
-    }
+    xgi.length = bytes_to_int32(xgi.length);
+    if (widthBytesLine == 0 || height == 0)
+        linesPerBuf = 0;
+    else if (widthBytesLine >= IMAGE_BUFSIZE)
+        linesPerBuf = 1;
     else {
-        xgi.length = bytes_to_int32(xgi.length);
-        if (widthBytesLine == 0 || height == 0)
-            linesPerBuf = 0;
-        else if (widthBytesLine >= IMAGE_BUFSIZE)
-            linesPerBuf = 1;
-        else {
-            linesPerBuf = IMAGE_BUFSIZE / widthBytesLine;
-            if (linesPerBuf > height)
-                linesPerBuf = height;
-        }
-        length = linesPerBuf * widthBytesLine;
-        if (linesPerBuf < height) {
-            /* we have to make sure intermediate buffers don't need padding */
-            while ((linesPerBuf > 1) &&
-                   (length & ((1L << LOG2_BYTES_PER_SCANLINE_PAD) - 1))) {
-                linesPerBuf--;
-                length -= widthBytesLine;
-            }
-            while (length & ((1L << LOG2_BYTES_PER_SCANLINE_PAD) - 1)) {
-                linesPerBuf++;
-                length += widthBytesLine;
-            }
-        }
-        if (!(pBuf = calloc(1, length)))
-            return BadAlloc;
-        WriteReplyToClient(client, sizeof(xGetImageReply), &xgi);
+        linesPerBuf = IMAGE_BUFSIZE / widthBytesLine;
+        if (linesPerBuf > height)
+            linesPerBuf = height;
     }
+    length = linesPerBuf * widthBytesLine;
+    if (linesPerBuf < height) {
+        /* we have to make sure intermediate buffers don't need padding */
+        while ((linesPerBuf > 1) &&
+               (length & ((1L << LOG2_BYTES_PER_SCANLINE_PAD) - 1))) {
+            linesPerBuf--;
+            length -= widthBytesLine;
+        }
+        while (length & ((1L << LOG2_BYTES_PER_SCANLINE_PAD) - 1)) {
+            linesPerBuf++;
+            length += widthBytesLine;
+        }
+    }
+    if (!(pBuf = calloc(1, length)))
+        return BadAlloc;
+    WriteReplyToClient(client, sizeof(xGetImageReply), &xgi);
 
     if (pDraw->type == DRAWABLE_WINDOW) {
         pVisibleRegion = NotClippedByChildren((WindowPtr) pDraw);
@@ -2141,13 +2129,10 @@ DoGetImage(ClientPtr client, int format, Drawable drawable,
 
             /* Note that this is NOT a call to WriteSwappedDataToClient,
                as we do NOT byte swap */
-            if (!im_return) {
-                ReformatImage(pBuf, (int) (nlines * widthBytesLine),
-                              BitsPerPixel(pDraw->depth), ClientOrder(client));
+            ReformatImage(pBuf, (int) (nlines * widthBytesLine),
+                          BitsPerPixel(pDraw->depth), ClientOrder(client));
 
-/* Don't split me, gcc pukes when you do */
-                WriteToClient(client, (int) (nlines * widthBytesLine), pBuf);
-            }
+            WriteToClient(client, (int) (nlines * widthBytesLine), pBuf);
             linesDone += nlines;
         }
     }
@@ -2172,18 +2157,10 @@ DoGetImage(ClientPtr client, int format, Drawable drawable,
 
                     /* Note: NOT a call to WriteSwappedDataToClient,
                        as we do NOT byte swap */
-                    if (im_return) {
-                        pBuf += nlines * widthBytesLine;
-                    }
-                    else {
-                        ReformatImage(pBuf,
-                                      (int) (nlines * widthBytesLine),
-                                      1, ClientOrder(client));
+                    ReformatImage(pBuf, (int) (nlines * widthBytesLine),
+                                  1, ClientOrder(client));
 
-/* Don't split me, gcc pukes when you do */
-                        WriteToClient(client, (int) (nlines * widthBytesLine),
-				      pBuf);
-                    }
+                    WriteToClient(client, (int)(nlines * widthBytesLine), pBuf);
                     linesDone += nlines;
                 }
             }
@@ -2191,8 +2168,7 @@ DoGetImage(ClientPtr client, int format, Drawable drawable,
     }
     if (pVisibleRegion)
         RegionDestroy(pVisibleRegion);
-    if (!im_return)
-        free(pBuf);
+    free(pBuf);
     return Success;
 }
 
@@ -2206,7 +2182,7 @@ ProcGetImage(ClientPtr client)
     return DoGetImage(client, stuff->format, stuff->drawable,
                       stuff->x, stuff->y,
                       (int) stuff->width, (int) stuff->height,
-                      stuff->planeMask, (xGetImageReply **) NULL);
+                      stuff->planeMask);
 }
 
 int
@@ -2863,18 +2839,25 @@ ProcCreateCursor(ClientPtr client)
         return rc;
     }
 
-    rc = dixLookupResourceByType((pointer *) &msk, stuff->mask, RT_PIXMAP,
-                                 client, DixReadAccess);
-    if (rc != Success) {
-        if (stuff->mask != None) {
+    if (src->drawable.depth != 1)
+        return (BadMatch);
+
+    /* Find and validate cursor mask pixmap, if one is provided */
+    if (stuff->mask != None) {
+        rc = dixLookupResourceByType((pointer *) &msk, stuff->mask, RT_PIXMAP,
+                                     client, DixReadAccess);
+        if (rc != Success) {
             client->errorValue = stuff->mask;
             return rc;
         }
+
+        if (src->drawable.width != msk->drawable.width
+            || src->drawable.height != msk->drawable.height
+            || src->drawable.depth != 1 || msk->drawable.depth != 1)
+            return BadMatch;
     }
-    else if (src->drawable.width != msk->drawable.width
-             || src->drawable.height != msk->drawable.height
-             || src->drawable.depth != 1 || msk->drawable.depth != 1)
-        return BadMatch;
+    else
+        msk = NULL;
 
     width = src->drawable.width;
     height = src->drawable.height;

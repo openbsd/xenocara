@@ -49,16 +49,11 @@
 #include "glxdricommon.h"
 #include <GL/glxtokens.h>
 
-#include "glapitable.h"
-#include "glapi.h"
-#include "glthread.h"
-#include "dispatch.h"
 #include "extension_string.h"
 
 typedef struct __GLXDRIscreen __GLXDRIscreen;
 typedef struct __GLXDRIcontext __GLXDRIcontext;
 typedef struct __GLXDRIdrawable __GLXDRIdrawable;
-
 
 #ifdef __DRI2_ROBUSTNESS
 #define ALL_DRI_CTX_FLAGS (__DRI_CTX_FLAG_DEBUG                         \
@@ -181,36 +176,25 @@ __glXdriSwapEvent(ClientPtr client, void *data, int type, CARD64 ust,
                   CARD64 msc, CARD32 sbc)
 {
     __GLXdrawable *drawable = data;
-    xGLXBufferSwapComplete2 wire =  {
-        .type = __glXEventBase + GLX_BufferSwapComplete
-    };
-
-    if (!(drawable->eventMask & GLX_BUFFER_SWAP_COMPLETE_INTEL_MASK))
-        return;
-
+    int glx_type;
     switch (type) {
     case DRI2_EXCHANGE_COMPLETE:
-        wire.event_type = GLX_EXCHANGE_COMPLETE_INTEL;
-        break;
-    case DRI2_BLIT_COMPLETE:
-        wire.event_type = GLX_BLIT_COMPLETE_INTEL;
-        break;
-    case DRI2_FLIP_COMPLETE:
-        wire.event_type = GLX_FLIP_COMPLETE_INTEL;
+        glx_type = GLX_EXCHANGE_COMPLETE_INTEL;
         break;
     default:
-        /* unknown swap completion type */
-        wire.event_type = 0;
+        /* unknown swap completion type,
+         * BLIT is a reasonable default, so
+         * fall through ...
+         */
+    case DRI2_BLIT_COMPLETE:
+        glx_type = GLX_BLIT_COMPLETE_INTEL;
+        break;
+    case DRI2_FLIP_COMPLETE:
+        glx_type = GLX_FLIP_COMPLETE_INTEL;
         break;
     }
-    wire.drawable = drawable->drawId;
-    wire.ust_hi = ust >> 32;
-    wire.ust_lo = ust & 0xffffffff;
-    wire.msc_hi = msc >> 32;
-    wire.msc_lo = msc & 0xffffffff;
-    wire.sbc = sbc;
-
-    WriteEventsToClient(client, 1, (xEvent *) &wire);
+    
+    __glXsendSwapEvent(drawable, glx_type, ust, msc, sbc);
 }
 
 /*
@@ -375,6 +359,7 @@ __glXDRIscreenDestroy(__GLXscreen * baseScreen)
 {
     int i;
 
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(baseScreen->pScreen);
     __GLXDRIscreen *screen = (__GLXDRIscreen *) baseScreen;
 
     (*screen->core->destroyScreen) (screen->driScreen);
@@ -388,6 +373,9 @@ __glXDRIscreenDestroy(__GLXscreen * baseScreen)
             free((__DRIconfig **) screen->driConfigs[i]);
         free(screen->driConfigs);
     }
+
+    pScrn->EnterVT = screen->enterVT;
+    pScrn->LeaveVT = screen->leaveVT;
 
     free(screen);
 }
@@ -784,7 +772,7 @@ dri2FlushFrontBuffer(__DRIdrawable * driDrawable, void *loaderPrivate)
 }
 
 static const __DRIdri2LoaderExtension loaderExtension = {
-    {__DRI_DRI2_LOADER, __DRI_DRI2_LOADER_VERSION},
+    {__DRI_DRI2_LOADER, 3},
     dri2GetBuffers,
     dri2FlushFrontBuffer,
     dri2GetBuffersWithFormat,
@@ -792,7 +780,7 @@ static const __DRIdri2LoaderExtension loaderExtension = {
 
 #ifdef __DRI_USE_INVALIDATE
 static const __DRIuseInvalidateExtension dri2UseInvalidate = {
-    {__DRI_USE_INVALIDATE, __DRI_USE_INVALIDATE_VERSION}
+    {__DRI_USE_INVALIDATE, 1}
 };
 #endif
 
@@ -845,6 +833,11 @@ glxDRILeaveVT(ScrnInfoPtr scrn)
     scrn->LeaveVT = glxDRILeaveVT;
 }
 
+/**
+ * Initialize extension flags in glx_enable_bits when a new screen is created
+ *
+ * @param screen The screen where glx_enable_bits are to be set.
+ */
 static void
 initializeExtensions(__GLXDRIscreen * screen)
 {
@@ -857,8 +850,6 @@ initializeExtensions(__GLXDRIscreen * screen)
     __glXEnableExtension(screen->glx_enable_bits, "GLX_MESA_copy_sub_buffer");
     LogMessage(X_INFO, "AIGLX: enabled GLX_MESA_copy_sub_buffer\n");
 
-    __glXEnableExtension(screen->glx_enable_bits, "GLX_INTEL_swap_event");
-    LogMessage(X_INFO, "AIGLX: enabled GLX_INTEL_swap_event\n");
 
 #if __DRI_DRI2_VERSION >= 3
     if (screen->dri2->base.version >= 3) {
@@ -876,10 +867,25 @@ initializeExtensions(__GLXDRIscreen * screen)
 #endif
 
     if (DRI2HasSwapControl(pScreen)) {
+        __glXEnableExtension(screen->glx_enable_bits, "GLX_INTEL_swap_event");
         __glXEnableExtension(screen->glx_enable_bits, "GLX_SGI_swap_control");
         __glXEnableExtension(screen->glx_enable_bits, "GLX_MESA_swap_control");
+        LogMessage(X_INFO, "AIGLX: enabled GLX_INTEL_swap_event\n");
         LogMessage(X_INFO,
                    "AIGLX: enabled GLX_SGI_swap_control and GLX_MESA_swap_control\n");
+    }
+
+    /* enable EXT_framebuffer_sRGB extension (even if there are no sRGB capable fbconfigs) */
+    {
+        __glXEnableExtension(screen->glx_enable_bits,
+                 "GLX_EXT_framebuffer_sRGB");
+        LogMessage(X_INFO, "AIGLX: enabled GLX_EXT_framebuffer_sRGB\n");
+    }
+
+    /* enable ARB_fbconfig_float extension (even if there are no float fbconfigs) */
+    {
+        __glXEnableExtension(screen->glx_enable_bits, "GLX_ARB_fbconfig_float");
+        LogMessage(X_INFO, "AIGLX: enabled GLX_ARB_fbconfig_float\n");
     }
 
     for (i = 0; extensions[i]; i++) {
@@ -922,6 +928,9 @@ initializeExtensions(__GLXDRIscreen * screen)
     }
 }
 
+/* white lie */
+extern glx_func_ptr glXGetProcAddressARB(const char *);
+
 static __GLXscreen *
 __glXDRIscreenProbe(ScreenPtr pScreen)
 {
@@ -934,12 +943,11 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
     if (screen == NULL)
         return NULL;
 
-    if (!xf86LoaderCheckSymbol("DRI2Connect") ||
-        !DRI2Connect(serverClient, pScreen, DRI2DriverDRI,
+    if (!DRI2Connect(serverClient, pScreen, DRI2DriverDRI,
                      &screen->fd, &driverName, &deviceName)) {
         LogMessage(X_INFO,
                    "AIGLX: Screen %d is not DRI2 capable\n", pScreen->myNum);
-        return NULL;
+        goto handle_error;
     }
 
     screen->base.destroy = __glXDRIscreenDestroy;
@@ -1006,6 +1014,8 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
     pScrn->EnterVT = glxDRIEnterVT;
     screen->leaveVT = pScrn->LeaveVT;
     pScrn->LeaveVT = glxDRILeaveVT;
+
+    __glXsetGetProcAddress(glXGetProcAddressARB);
 
     LogMessage(X_INFO, "AIGLX: Loaded and initialized %s\n", driverName);
 

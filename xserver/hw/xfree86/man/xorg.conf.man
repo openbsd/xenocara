@@ -668,6 +668,10 @@ DevicePresenceNotify event sent), but not enabled, thus leaving policy up
 to the client.
 Enabled by default.
 .TP 7
+.BI "Option \*qAutoAddGPU\*q \*q" boolean \*q
+If this option is disabled, then no GPU devices will be added from the udev
+backend. Enabled by default. (May need to be disabled to setup Xinerama).
+.TP 7
 .BI "Option \*qLog\*q \*q" string \*q
 This option controls whether the log is flushed and/or synced to disk after
 each message.
@@ -972,7 +976,8 @@ is constructed. This is mainly a matter of personal preference.
 .BI "Option \*qConstantDeceleration\*q  \*q" real \*q
 Makes the pointer go
 .B deceleration
-times slower than normal. Most useful for high-resolution devices.
+times slower than normal. Most useful for high-resolution devices. A value
+between 0 and 1 will speed up the pointer.
 .TP 7
 .BI "Option \*qAdaptiveDeceleration\*q  \*q" real \*q
 Allows to actually decelerate the pointer when going slow. At most, it will be
@@ -1674,6 +1679,17 @@ monitor. (RandR 1.2-supporting drivers only)
 .BI "Option \*qPreferredMode\*q \*q" name \*q
 This optional entry specifies a mode to be marked as the preferred initial mode
 of the monitor.
+(RandR 1.2-supporting drivers only)
+.TP 7
+.BI "Option \*qZoomModes\*q \*q" name " " name " " ... \*q
+This optional entry specifies modes to be marked as zoom modes.
+It is possible to switch to the next and previous mode via
+.BR Ctrl+Alt+Keypad\-Plus " and " Ctrl+Alt+Keypad\-Minus .
+All these keypad available modes are selected from the screen mode list.
+This list is a copy of the compatibility output monitor mode list.
+Since this output is the output connected to the lowest
+dot-area monitor, as determined from its largest size mode, that
+monitor defines the available zoom modes.
 (RandR 1.2-supporting drivers only)
 .TP 7
 .BI "Option \*qPosition\*q \*q" x " " y \*q

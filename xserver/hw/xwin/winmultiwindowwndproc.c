@@ -343,7 +343,7 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         /* */
         wmMsg.msg = 0;
         wmMsg.hwndWindow = hwnd;
-        wmMsg.iWindow = (Window) GetProp(hwnd, WIN_WID_PROP);
+        wmMsg.iWindow = (Window) (INT_PTR) GetProp(hwnd, WIN_WID_PROP);
 
         wmMsg.iX = pDraw->x;
         wmMsg.iY = pDraw->y;
@@ -391,8 +391,8 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         /* */
         SetProp(hwnd,
                 WIN_WID_PROP,
-                (HANDLE) winGetWindowID(((LPCREATESTRUCT) lParam)->
-                                        lpCreateParams));
+                (HANDLE) (INT_PTR) winGetWindowID(((LPCREATESTRUCT) lParam)->
+                                                  lpCreateParams));
 
         /*
          * Make X windows' Z orders sync with Windows windows because
@@ -420,14 +420,14 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         /*
          * Add whatever the setup file wants to for this window
          */
-        SetupSysMenu((unsigned long) hwnd);
+        SetupSysMenu(hwnd);
         return 0;
 
     case WM_SYSCOMMAND:
         /*
          * Any window menu items go through here
          */
-        if (HandleCustomWM_COMMAND((unsigned long) hwnd, LOWORD(wParam))) {
+        if (HandleCustomWM_COMMAND(hwnd, LOWORD(wParam))) {
             /* Don't pass customized menus to DefWindowProc */
             return 0;
         }
@@ -443,7 +443,7 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_INITMENU:
         /* Checks/Unchecks any menu items before they are displayed */
-        HandleCustomWM_INITMENU((unsigned long) hwnd, wParam);
+        HandleCustomWM_INITMENU(hwnd, (HMENU)wParam);
         break;
 
     case WM_ERASEBKGND:
@@ -661,7 +661,7 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
             break;
         SetCapture(hwnd);
-        return winMouseButtonsHandle(s_pScreen, ButtonPress, HIWORD(wParam) + 5,
+        return winMouseButtonsHandle(s_pScreen, ButtonPress, HIWORD(wParam) + 7,
                                      wParam);
 
     case WM_XBUTTONUP:
@@ -670,9 +670,21 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         ReleaseCapture();
         winStartMousePolling(s_pScreenPriv);
         return winMouseButtonsHandle(s_pScreen, ButtonRelease,
-                                     HIWORD(wParam) + 5, wParam);
+                                     HIWORD(wParam) + 7, wParam);
 
     case WM_MOUSEWHEEL:
+        if (SendMessage
+            (hwnd, WM_NCHITTEST, 0,
+             MAKELONG(GET_X_LPARAM(lParam),
+                      GET_Y_LPARAM(lParam))) == HTCLIENT) {
+            /* Pass the message to the root window */
+            SendMessage(hwndScreen, message, wParam, lParam);
+            return 0;
+        }
+        else
+            break;
+
+    case WM_MOUSEHWHEEL:
         if (SendMessage
             (hwnd, WM_NCHITTEST, 0,
              MAKELONG(GET_X_LPARAM(lParam),
@@ -813,7 +825,7 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         /* Prevent the mouse wheel from stalling when another window is minimized */
         if (HIWORD(wParam) == 0 && LOWORD(wParam) == WA_ACTIVE &&
-            (HWND) lParam != NULL && (HWND) lParam != (HWND) GetParent(hwnd))
+            (HWND) lParam != NULL && (HWND) lParam != GetParent(hwnd))
             SetFocus(hwnd);
         return 0;
 

@@ -24,6 +24,9 @@
 /* Prefix to use for bundle identifiers */
 #undef BUNDLE_ID_PREFIX
 
+/* Include busfault OS API */
+#undef BUSFAULT
+
 /* Support client ID tracking */
 #undef CLIENTIDS
 
@@ -101,6 +104,9 @@
 
 /* Build DRI2 AIGLX loader */
 #undef DRI2_AIGLX
+
+/* Build DRI3 extension */
+#undef DRI3
 
 /* Default DRI driver path */
 #undef DRI_DRIVER_PATH
@@ -217,6 +223,9 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
+/* Have libunwind support */
+#undef HAVE_LIBUNWIND
+
 /* Define to 1 if you have the `ws2_32' library (-lws2_32). */
 #undef HAVE_LIBWS2_32
 
@@ -273,6 +282,9 @@
 
 /* Define to 1 if you have the `shmctl64' function. */
 #undef HAVE_SHMCTL64
+
+/* Have sigaction function */
+#undef HAVE_SIGACTION
 
 /* Define to 1 if the system has the type `socklen_t'. */
 #undef HAVE_SOCKLEN_T
@@ -370,6 +382,9 @@
 /* Define to 1 if you have the `walkcontext' function. */
 #undef HAVE_WALKCONTEXT
 
+/* Have X Shared Memory Fence library */
+#undef HAVE_XSHMFENCE
+
 /* Support IPv6 for TCP connections */
 #undef IPv6
 
@@ -461,6 +476,9 @@
 /* System has PC console */
 #undef PCVT_SUPPORT
 
+/* Support Present extension */
+#undef PRESENT
+
 /* Overall prefix */
 #undef PROJECTROOT
 
@@ -476,9 +494,6 @@
 /* Support X resource extension */
 #undef RES
 
-/* Define as the return type of signal handlers (`int' or `void'). */
-#undef RETSIGTYPE
-
 /* Build Rootless code */
 #undef ROOTLESS
 
@@ -493,6 +508,9 @@
 
 /* Support SHAPE extension */
 #undef SHAPE
+
+/* Directory for shared memory temp files */
+#undef SHMDIR
 
 /* The size of `unsigned long', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG
@@ -539,6 +557,28 @@
 
 /* Use SIGIO handlers for input device events by default */
 #undef USE_SIGIO_BY_DEFAULT
+
+/* Enable extensions on AIX 3, Interix.  */
+#ifndef _ALL_SOURCE
+# undef _ALL_SOURCE
+#endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# undef _GNU_SOURCE
+#endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# undef _POSIX_PTHREAD_SEMANTICS
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# undef _TANDEM_SOURCE
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# undef __EXTENSIONS__
+#endif
+
 
 /* Define to use byteswap macros from <sys/endian.h> */
 #undef USE_SYS_ENDIAN_H
@@ -599,6 +639,9 @@
 
 /* Build DRI extension */
 #undef XF86DRI
+
+/* Support APM/ACPI power management in the server */
+#undef XF86PM
 
 /* Support XFree86 Video Mode extension */
 #undef XF86VIDMODE
@@ -687,6 +730,9 @@
 /* Support XTest extension */
 #undef XTEST
 
+/* Enable xtrans fd passing support */
+#undef XTRANS_SEND_FDS
+
 /* Support Xv extension */
 #undef XV
 
@@ -722,6 +768,19 @@
 
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
+
+/* Define to 1 if on MINIX. */
+#undef _MINIX
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+#undef _POSIX_1_SOURCE
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+#undef _POSIX_SOURCE
+
+/* Defined if needed to expose struct msghdr.msg_control */
+#undef _XOPEN_SOURCE
 
 /* Define to 1 if unsigned long is 64 bits. */
 #undef _XSERVER64

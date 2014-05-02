@@ -257,6 +257,10 @@ NetWMToWinIconAlpha(uint32_t * icon)
                                    DIB_RGB_COLORS, (void **) &DIB_pixels, NULL,
                                    0);
     ReleaseDC(NULL, hdc);
+
+    if (!ii.hbmColor)
+      return NULL;
+
     ii.hbmMask = CreateBitmap(width, height, 1, 1, NULL);
     memcpy(DIB_pixels, pixels, height * width * 4);
 
@@ -624,7 +628,7 @@ winDestroyIcon(HICON hIcon)
     /* Delete the icon if its not one of the application defaults or an override */
     if (hIcon &&
         hIcon != g_hIconX &&
-        hIcon != g_hSmallIconX && !winIconIsOverride((unsigned long) hIcon))
+        hIcon != g_hSmallIconX && !winIconIsOverride(hIcon))
         DestroyIcon(hIcon);
 }
 #endif

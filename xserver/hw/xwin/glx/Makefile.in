@@ -72,15 +72,50 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-LTLIBRARIES = $(noinst_LTLIBRARIES)
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__uninstall_files_from_dir = { \
+  test -z "$$files" \
+    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
+    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
+         $(am__cd) "$$dir" && rm -f $$files; }; \
+  }
+am__installdirs = "$(DESTDIR)$(libdir)"
+LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libXwinGLX_la_LIBADD =
-am_libXwinGLX_la_OBJECTS = winpriv.lo glwrap.lo indirect.lo \
+am_libXwinGLX_la_OBJECTS = winpriv.lo glshim.lo indirect.lo \
 	wgl_ext_api.lo
 libXwinGLX_la_OBJECTS = $(am_libXwinGLX_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+libnativeGLthunk_la_LIBADD =
+am_libnativeGLthunk_la_OBJECTS = libnativeGLthunk_la-glthunk.lo
+libnativeGLthunk_la_OBJECTS = $(am_libnativeGLthunk_la_OBJECTS)
+libnativeGLthunk_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libnativeGLthunk_la_CFLAGS) $(CFLAGS) \
+	$(libnativeGLthunk_la_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -115,8 +150,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libXwinGLX_la_SOURCES)
-DIST_SOURCES = $(libXwinGLX_la_SOURCES)
+SOURCES = $(libXwinGLX_la_SOURCES) $(libnativeGLthunk_la_SOURCES)
+DIST_SOURCES = $(libXwinGLX_la_SOURCES) $(libnativeGLthunk_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -179,9 +214,12 @@ DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
 DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
 DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
 DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
+DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
+DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
@@ -213,6 +251,7 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
+HAVE_DOT = @HAVE_DOT@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -242,6 +281,8 @@ LIBS = @LIBS@
 LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
 LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -285,6 +326,7 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -298,12 +340,12 @@ SET_MAKE = @SET_MAKE@
 SHA1_CFLAGS = @SHA1_CFLAGS@
 SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
-SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
@@ -369,6 +411,8 @@ XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
+XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
@@ -448,25 +492,34 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libXwinGLX.la
+lib_LTLIBRARIES = libnativeGLthunk.la
 libXwinGLX_la_SOURCES = \
 	winpriv.c \
 	winpriv.h \
 	glwindows.h \
-	glwrap.c \
+	glshim.c \
 	indirect.c \
 	wgl_ext_api.c \
 	wgl_ext_api.h
 
+libnativeGLthunk_la_SOURCES = \
+	glthunk.c
+
 @XWIN_MULTIWINDOW_TRUE@DEFS_MULTIWINDOW = -DXWIN_MULTIWINDOW
 @XWIN_MULTIWINDOWEXTWM_TRUE@DEFS_MULTIWINDOWEXTWM = -DXWIN_MULTIWINDOWEXTWM
 @XWIN_GLX_WINDOWS_TRUE@DEFS_GLX_WINDOWS = -DXWIN_GLX_WINDOWS
-INCLUDES = -I$(top_srcdir)/miext/rootless
+AM_CPPFLAGS = -I$(top_srcdir)/miext/rootless
 AM_CFLAGS = -DHAVE_XWIN_CONFIG_H $(DIX_CFLAGS) \
             $(XWINMODULES_CFLAGS) \
             -I$(top_srcdir) \
             -I$(top_srcdir)/hw/xwin/
 
-BUILT_SOURCES = generated_gl_wrappers.c generated_wgl_wrappers.c
+libnativeGLthunk_la_CFLAGS = $(AM_CFLAGS) -Wno-unused-function -Wno-missing-prototypes -Wno-missing-declarations
+libnativeGLthunk_la_LDFLAGS = -shared -no-undefined -avoid-version -lopengl32 -export-symbols generated_gl_thunks.def
+EXTRA_libnativeGLthunk_la_DEPENDENCIES = generated_gl_thunks.def
+@DEBUG_FALSE@@XWIN_GLX_WINDOWS_TRUE@GENGLWRAPPERSOPTS = "-nodebug"
+@DEBUG_TRUE@@XWIN_GLX_WINDOWS_TRUE@GENGLWRAPPERSOPTS = ""
+BUILT_SOURCES = generated_gl_shim.c generated_gl_thunks.c generated_gl_thunks.def generated_wgl_wrappers.c
 CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = gen_gl_wrappers.py
 all: $(BUILT_SOURCES)
@@ -504,6 +557,40 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	list2=; for p in $$list; do \
+	  if test -f $$p; then \
+	    list2="$$list2 $$p"; \
+	  else :; fi; \
+	done; \
+	test -z "$$list2" || { \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
+	}
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
 
 clean-noinstLTLIBRARIES:
 	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
@@ -517,6 +604,8 @@ clean-noinstLTLIBRARIES:
 	}
 libXwinGLX.la: $(libXwinGLX_la_OBJECTS) $(libXwinGLX_la_DEPENDENCIES) $(EXTRA_libXwinGLX_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libXwinGLX_la_OBJECTS) $(libXwinGLX_la_LIBADD) $(LIBS)
+libnativeGLthunk.la: $(libnativeGLthunk_la_OBJECTS) $(libnativeGLthunk_la_DEPENDENCIES) $(EXTRA_libnativeGLthunk_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libnativeGLthunk_la_LINK) -rpath $(libdir) $(libnativeGLthunk_la_OBJECTS) $(libnativeGLthunk_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -524,8 +613,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glwrap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glshim.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/indirect.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libnativeGLthunk_la-glthunk.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wgl_ext_api.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winpriv.Plo@am__quote@
 
@@ -549,6 +639,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+libnativeGLthunk_la-glthunk.lo: glthunk.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnativeGLthunk_la_CFLAGS) $(CFLAGS) -MT libnativeGLthunk_la-glthunk.lo -MD -MP -MF $(DEPDIR)/libnativeGLthunk_la-glthunk.Tpo -c -o libnativeGLthunk_la-glthunk.lo `test -f 'glthunk.c' || echo '$(srcdir)/'`glthunk.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libnativeGLthunk_la-glthunk.Tpo $(DEPDIR)/libnativeGLthunk_la-glthunk.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='glthunk.c' object='libnativeGLthunk_la-glthunk.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libnativeGLthunk_la_CFLAGS) $(CFLAGS) -c -o libnativeGLthunk_la-glthunk.lo `test -f 'glthunk.c' || echo '$(srcdir)/'`glthunk.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -657,6 +754,9 @@ check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
+	for dir in "$(DESTDIR)$(libdir)"; do \
+	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
+	done
 install: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
@@ -692,8 +792,8 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
-	mostlyclean-am
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -719,7 +819,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am:
+install-exec-am: install-libLTLIBRARIES
 
 install-html: install-html-am
 
@@ -759,30 +859,36 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am:
+uninstall-am: uninstall-libLTLIBRARIES
 
 .MAKE: all check install install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstLTLIBRARIES cscopelist ctags \
-	distclean distclean-compile distclean-generic \
+	clean-libLTLIBRARIES clean-libtool clean-noinstLTLIBRARIES \
+	cscopelist ctags distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-info-am install-libLTLIBRARIES install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am
+	tags uninstall uninstall-am uninstall-libLTLIBRARIES
 
 
-@XWIN_GLX_WINDOWS_TRUE@generated_gl_wrappers.c: gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.spec $(KHRONOS_SPEC_DIR)/gl.tm
-@XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)$(srcdir)/gen_gl_wrappers.py --spec=$(KHRONOS_SPEC_DIR)/gl.spec --typemap=$(KHRONOS_SPEC_DIR)/gl.tm --dispatch-header=$(top_srcdir)/glx/dispatch.h --staticwrappers >generated_gl_wrappers.c
+@XWIN_GLX_WINDOWS_TRUE@generated_wgl_wrappers.c: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/wgl.xml $(KHRONOS_SPEC_DIR)/reg.py
+@XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)PYTHONPATH=$(KHRONOS_SPEC_DIR) $(PYTHON3) $(srcdir)/gen_gl_wrappers.py -registry $(KHRONOS_SPEC_DIR)/wgl.xml -prefix wgl -wrapper -preresolve $(GENGLWRAPPERSOPTS) -outfile $@
 
-@XWIN_GLX_WINDOWS_TRUE@generated_wgl_wrappers.c: gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/wglext.spec $(KHRONOS_SPEC_DIR)/wgl.tm
-@XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)$(srcdir)/gen_gl_wrappers.py --spec=$(KHRONOS_SPEC_DIR)/wglext.spec --typemap=$(KHRONOS_SPEC_DIR)/wgl.tm --prefix=wgl --preresolve >generated_wgl_wrappers.c
+@XWIN_GLX_WINDOWS_TRUE@generated_gl_shim.c: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.xml $(KHRONOS_SPEC_DIR)/reg.py
+@XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)PYTHONPATH=$(KHRONOS_SPEC_DIR) $(PYTHON3) $(srcdir)/gen_gl_wrappers.py -registry $(KHRONOS_SPEC_DIR)/gl.xml -shim $(GENGLWRAPPERSOPTS) -outfile $@
+
+@XWIN_GLX_WINDOWS_TRUE@generated_gl_thunks.c: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.xml $(KHRONOS_SPEC_DIR)/reg.py
+@XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)PYTHONPATH=$(KHRONOS_SPEC_DIR) $(PYTHON3) $(srcdir)/gen_gl_wrappers.py -registry $(KHRONOS_SPEC_DIR)/gl.xml -thunk $(GENGLWRAPPERSOPTS) -outfile $@
+
+@XWIN_GLX_WINDOWS_TRUE@generated_gl_thunks.def: $(srcdir)/gen_gl_wrappers.py $(KHRONOS_SPEC_DIR)/gl.xml $(KHRONOS_SPEC_DIR)/reg.py
+@XWIN_GLX_WINDOWS_TRUE@	$(AM_V_GEN)PYTHONPATH=$(KHRONOS_SPEC_DIR) $(PYTHON3) $(srcdir)/gen_gl_wrappers.py -registry $(KHRONOS_SPEC_DIR)/gl.xml -thunkdefs $(GENGLWRAPPERSOPTS) -outfile $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -164,9 +164,9 @@ struct _rrProvider {
     int nameLength;
     RRPropertyPtr properties;
     Bool pendingProperties;
+    Bool changed;
     struct _rrProvider *offload_sink;
     struct _rrProvider *output_source;
-    Bool changed;
 };
 
 #if RANDR_12_INTERFACE
@@ -301,6 +301,7 @@ typedef struct _rrScrPriv {
     Bool changed;               /* some config changed */
     Bool configChanged;         /* configuration changed */
     Bool layoutChanged;         /* screen layout changed */
+    Bool resourcesChanged;      /* screen resources change */
 
     CARD16 minWidth, minHeight;
     CARD16 maxWidth, maxHeight;
@@ -337,7 +338,6 @@ typedef struct _rrScrPriv {
 
     RRProviderDestroyProcPtr rrProviderDestroy;
 
-    Bool resourcesChanged;      /* screen resources change */
 } rrScrPrivRec, *rrScrPrivPtr;
 
 extern _X_EXPORT DevPrivateKeyRec rrPrivKeyRec;

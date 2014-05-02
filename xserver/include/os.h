@@ -98,6 +98,12 @@ extern _X_EXPORT int WaitForSomething(int *     /*pClientsReady */
 
 extern _X_EXPORT int ReadRequestFromClient(ClientPtr /*client */ );
 
+#if XTRANS_SEND_FDS
+extern _X_EXPORT int ReadFdFromClient(ClientPtr client);
+
+extern _X_EXPORT int WriteFdToClient(ClientPtr client, int fd, Bool do_close);
+#endif
+
 extern _X_EXPORT Bool InsertFakeRequest(ClientPtr /*client */ ,
                                         char * /*data */ ,
                                         int /*count */ );
@@ -165,6 +171,7 @@ extern void ListenOnOpenFD(int /* fd */ , int /* noxauth */ );
 #endif
 
 extern _X_EXPORT CARD32 GetTimeInMillis(void);
+extern _X_EXPORT CARD64 GetTimeInMicros(void);
 
 extern _X_EXPORT void AdjustWaitForDelay(pointer /*waitTime */ ,
                                          unsigned long /*newdelay */ );
@@ -685,5 +692,8 @@ LogPrintMarkers(void);
 
 extern _X_EXPORT void
 xorg_backtrace(void);
+
+extern _X_EXPORT int
+os_move_fd(int fd);
 
 #endif                          /* OS_H */

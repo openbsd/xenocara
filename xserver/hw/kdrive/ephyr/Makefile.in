@@ -14,6 +14,26 @@
 
 @SET_MAKE@
 
+# Copyright © 2013 Intel Corporation
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
 
 VPATH = @srcdir@
 am__make_dryrun = \
@@ -74,39 +94,23 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-LTLIBRARIES = $(noinst_LTLIBRARIES)
-libxephyr_hostdri_la_LIBADD =
-am__libxephyr_hostdri_la_SOURCES_DIST = ephyrdriext.c ephyrdriext.h \
-	ephyrdri.c ephyrdri.h XF86dri.c xf86dri.h ephyrglxext.c \
+am__installdirs = "$(DESTDIR)$(bindir)"
+PROGRAMS = $(bin_PROGRAMS)
+am__Xephyr_SOURCES_DIST = ephyr.c ephyr.h ephyrlog.h ephyr_draw.c os.c \
+	ephyrinit.c hostx.c hostx.h ephyrvideo.c ephyrdriext.c \
+	ephyrdriext.h ephyrdri.c ephyrdri.h ephyrglxext.c \
 	ephyrglxext.h ephyrhostglx.c ephyrhostglx.h
-am__objects_1 = ephyrdriext.lo ephyrdri.lo XF86dri.lo ephyrglxext.lo \
-	ephyrhostglx.lo
-@DRI_TRUE@am_libxephyr_hostdri_la_OBJECTS = $(am__objects_1)
-libxephyr_hostdri_la_OBJECTS = $(am_libxephyr_hostdri_la_OBJECTS)
+@XV_TRUE@am__objects_1 = ephyrvideo.$(OBJEXT)
+@DRI_TRUE@am__objects_2 = ephyrdriext.$(OBJEXT) ephyrdri.$(OBJEXT) \
+@DRI_TRUE@	ephyrglxext.$(OBJEXT) ephyrhostglx.$(OBJEXT)
+am_Xephyr_OBJECTS = ephyr.$(OBJEXT) ephyr_draw.$(OBJEXT) os.$(OBJEXT) \
+	ephyrinit.$(OBJEXT) hostx.$(OBJEXT) $(am__objects_1) \
+	$(am__objects_2)
+Xephyr_OBJECTS = $(am_Xephyr_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-@DRI_TRUE@am_libxephyr_hostdri_la_rpath =
-libxephyr_hostx_la_LIBADD =
-am__objects_2 = hostx.lo
-am_libxephyr_hostx_la_OBJECTS = $(am__objects_2)
-libxephyr_hostx_la_OBJECTS = $(am_libxephyr_hostx_la_OBJECTS)
-libxephyr_hostxv_la_LIBADD =
-am__libxephyr_hostxv_la_SOURCES_DIST = ephyrvideo.c ephyrhostvideo.c \
-	ephyrhostvideo.h
-am__objects_3 = ephyrvideo.lo ephyrhostvideo.lo
-@XV_TRUE@am_libxephyr_hostxv_la_OBJECTS = $(am__objects_3)
-libxephyr_hostxv_la_OBJECTS = $(am_libxephyr_hostxv_la_OBJECTS)
-@XV_TRUE@am_libxephyr_hostxv_la_rpath =
-libxephyr_la_LIBADD =
-am__objects_4 = ephyr.lo ephyr_draw.lo os.lo
-am_libxephyr_la_OBJECTS = $(am__objects_4)
-libxephyr_la_OBJECTS = $(am_libxephyr_la_OBJECTS)
-am__installdirs = "$(DESTDIR)$(bindir)"
-PROGRAMS = $(bin_PROGRAMS)
-am_Xephyr_OBJECTS = ephyrinit.$(OBJEXT)
-Xephyr_OBJECTS = $(am_Xephyr_OBJECTS)
 Xephyr_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(Xephyr_LDFLAGS) $(LDFLAGS) -o $@
@@ -144,13 +148,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libxephyr_hostdri_la_SOURCES) \
-	$(libxephyr_hostx_la_SOURCES) $(libxephyr_hostxv_la_SOURCES) \
-	$(libxephyr_la_SOURCES) $(Xephyr_SOURCES)
-DIST_SOURCES = $(am__libxephyr_hostdri_la_SOURCES_DIST) \
-	$(libxephyr_hostx_la_SOURCES) \
-	$(am__libxephyr_hostxv_la_SOURCES_DIST) \
-	$(libxephyr_la_SOURCES) $(Xephyr_SOURCES)
+SOURCES = $(Xephyr_SOURCES)
+DIST_SOURCES = $(am__Xephyr_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -251,9 +250,12 @@ DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
 DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
 DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
 DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
+DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
+DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
@@ -285,6 +287,7 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
+HAVE_DOT = @HAVE_DOT@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -314,6 +317,8 @@ LIBS = @LIBS@
 LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
 LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -357,6 +362,7 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -370,12 +376,12 @@ SET_MAKE = @SET_MAKE@
 SHA1_CFLAGS = @SHA1_CFLAGS@
 SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
-SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
@@ -441,6 +447,8 @@ XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
+XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
@@ -520,7 +528,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
-INCLUDES = \
+AM_CPPFLAGS = \
 	@KDRIVE_INCS@		\
 	@KDRIVE_CFLAGS@		\
 	@XEPHYR_INCS@		\
@@ -528,65 +536,38 @@ INCLUDES = \
 	-I$(top_srcdir)		\
 	-I$(top_srcdir)/exa
 
-@XV_TRUE@LIBXEPHYR_HOSTXV = libxephyr-hostxv.la
-@DRI_TRUE@LIBXEPHYR_HOSTDRI = libxephyr-hostdri.la
-noinst_LTLIBRARIES = libxephyr-hostx.la $(LIBXEPHYR_HOSTXV) $(LIBXEPHYR_HOSTDRI) libxephyr.la
-HOSTX_SRCS = \
-	hostx.c			\
-	hostx.h
+@XV_TRUE@XV_SRCS = ephyrvideo.c
+@DRI_TRUE@DRI_SRCS = \
+@DRI_TRUE@	ephyrdriext.c		\
+@DRI_TRUE@	ephyrdriext.h		\
+@DRI_TRUE@	ephyrdri.c		\
+@DRI_TRUE@	ephyrdri.h		\
+@DRI_TRUE@	ephyrglxext.c		\
+@DRI_TRUE@	ephyrglxext.h		\
+@DRI_TRUE@	ephyrhostglx.c		\
+@DRI_TRUE@	ephyrhostglx.h		\
+@DRI_TRUE@	$()
 
-HOSTVIDEO_SRCS = \
-	ephyrvideo.c		\
-	ephyrhostvideo.c	\
-	ephyrhostvideo.h
-
-HOSTDRI_SRCS = \
-	ephyrdriext.c		\
-	ephyrdriext.h		\
-	ephyrdri.c		\
-	ephyrdri.h		\
-	XF86dri.c		\
-	xf86dri.h		\
-	ephyrglxext.c		\
-	ephyrglxext.h		\
-	ephyrhostglx.c		\
-	ephyrhostglx.h
-
-XEPHYR_SRCS = \
-	ephyr.c			\
-	ephyr.h			\
-	ephyrlog.h		\
-	ephyr_draw.c		\
-	os.c
-
-libxephyr_hostx_la_SOURCES = $(HOSTX_SRCS)
-@XV_TRUE@libxephyr_hostxv_la_SOURCES = $(HOSTVIDEO_SRCS)
-@DRI_TRUE@libxephyr_hostdri_la_SOURCES = $(HOSTDRI_SRCS)
-libxephyr_la_SOURCES = $(XEPHYR_SRCS)
 Xephyr_SOURCES = \
-	ephyrinit.c
+	ephyr.c \
+	ephyr.h \
+	ephyrlog.h \
+	ephyr_draw.c \
+	os.c \
+	ephyrinit.c \
+	hostx.c \
+	hostx.h \
+	$(XV_SRCS) \
+	$(DRI_SRCS) \
+	$()
 
 Xephyr_LDADD = \
-	libxephyr.la					\
-	libxephyr-hostx.la				\
-	$(LIBXEPHYR_HOSTXV)				\
-	$(LIBXEPHYR_HOSTDRI)				\
 	$(top_builddir)/exa/libexa.la			\
 	@KDRIVE_LIBS@					\
 	@XEPHYR_LIBS@
 
-Xephyr_DEPENDENCIES = \
-	libxephyr.la					\
-	libxephyr-hostx.la				\
-	$(LIBXEPHYR_HOSTXV)				\
-	$(LIBXEPHYR_HOSTDRI)				\
-	@KDRIVE_LOCAL_LIBS@
-
+Xephyr_DEPENDENCIES = @KDRIVE_LOCAL_LIBS@
 Xephyr_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
-EXTRA_DIST = \
-	$(HOSTVIDEO_SRCS) \
-	$(HOSTDRI_SRCS)
-
 all: all-recursive
 
 .SUFFIXES:
@@ -621,25 +602,6 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-
-clean-noinstLTLIBRARIES:
-	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
-	@list='$(noinst_LTLIBRARIES)'; \
-	locs=`for p in $$list; do echo $$p; done | \
-	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
-	      sort -u`; \
-	test -z "$$locs" || { \
-	  echo rm -f $${locs}; \
-	  rm -f $${locs}; \
-	}
-libxephyr-hostdri.la: $(libxephyr_hostdri_la_OBJECTS) $(libxephyr_hostdri_la_DEPENDENCIES) $(EXTRA_libxephyr_hostdri_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) $(am_libxephyr_hostdri_la_rpath) $(libxephyr_hostdri_la_OBJECTS) $(libxephyr_hostdri_la_LIBADD) $(LIBS)
-libxephyr-hostx.la: $(libxephyr_hostx_la_OBJECTS) $(libxephyr_hostx_la_DEPENDENCIES) $(EXTRA_libxephyr_hostx_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libxephyr_hostx_la_OBJECTS) $(libxephyr_hostx_la_LIBADD) $(LIBS)
-libxephyr-hostxv.la: $(libxephyr_hostxv_la_OBJECTS) $(libxephyr_hostxv_la_DEPENDENCIES) $(EXTRA_libxephyr_hostxv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) $(am_libxephyr_hostxv_la_rpath) $(libxephyr_hostxv_la_OBJECTS) $(libxephyr_hostxv_la_LIBADD) $(LIBS)
-libxephyr.la: $(libxephyr_la_OBJECTS) $(libxephyr_la_DEPENDENCIES) $(EXTRA_libxephyr_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libxephyr_la_OBJECTS) $(libxephyr_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
@@ -696,18 +658,16 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XF86dri.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_draw.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdri.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdriext.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrglxext.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrhostglx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrhostvideo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_draw.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdri.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdriext.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrglxext.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrhostglx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrinit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrvideo.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hostx.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrvideo.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hostx.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -919,7 +879,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
+all-am: Makefile $(PROGRAMS)
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)"; do \
@@ -957,8 +917,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic clean-libtool \
-	clean-noinstLTLIBRARIES mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -1032,20 +991,19 @@ uninstall-am: uninstall-binPROGRAMS
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic clean-libtool clean-noinstLTLIBRARIES cscopelist \
-	cscopelist-recursive ctags ctags-recursive distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS
+	clean-generic clean-libtool cscopelist cscopelist-recursive \
+	ctags ctags-recursive distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-binPROGRAMS
 
 
 relink:

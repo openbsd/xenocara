@@ -63,7 +63,7 @@ SProcXIPassiveGrabDevice(ClientPtr client)
     swaps(&stuff->mask_len);
     swaps(&stuff->num_modifiers);
 
-    mods = (uint32_t *) &stuff[1];
+    mods = (uint32_t *) &stuff[1] + stuff->mask_len;
 
     for (i = 0; i < stuff->num_modifiers; i++, mods++) {
         swapl(mods);
@@ -189,6 +189,10 @@ ProcXIPassiveGrabDevice(ClientPtr client)
         uint8_t status = Success;
 
         param.modifiers = *modifiers;
+        ret = CheckGrabValues(client, &param);
+        if (ret != Success)
+            goto out;
+
         switch (stuff->grab_type) {
         case XIGrabtypeButton:
             status = GrabButton(client, dev, mod_dev, stuff->detail,

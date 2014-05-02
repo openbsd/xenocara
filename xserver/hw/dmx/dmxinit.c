@@ -82,8 +82,6 @@ DMXScreenInfo *dmxScreens;
 int dmxNumInputs;
 DMXInputInfo *dmxInputs;
 
-int dmxShadowFB = FALSE;
-
 XErrorEvent dmxLastErrorEvent;
 Bool dmxErrorOccurred = FALSE;
 
@@ -110,6 +108,8 @@ Bool dmxGLXSyncSwap = FALSE;
 
 Bool dmxGLXFinishSwap = FALSE;
 #endif
+
+RESTYPE RRProviderType = 0;
 
 Bool dmxIgnoreBadFontPaths = FALSE;
 
@@ -612,6 +612,8 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
 
 #ifdef GLXEXT
     static Bool glxSupported = TRUE;
+#else
+    const Bool glxSupported = FALSE;
 #endif
 
     if (dmxGeneration != serverGeneration) {
@@ -740,10 +742,10 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
     /* Check if GLX extension exists on all back-end servers */
     for (i = 0; i < dmxNumScreens; i++)
         glxSupported &= (dmxScreens[i].glxMajorOpcode > 0);
+#endif
 
     if (serverGeneration == 1)
         dmxAddExtensions(glxSupported);
-#endif
 
     /* Tell dix layer about the backend displays */
     for (i = 0; i < dmxNumScreens; i++) {
@@ -854,9 +856,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
     /* Initialized things that need timer hooks */
     dmxStatInit();
     dmxSyncInit();              /* Calls RegisterBlockAndWakeupHandlers */
-
-    dmxLog(dmxInfo, "Shadow framebuffer support %s\n",
-           dmxShadowFB ? "enabled" : "disabled");
 }
 
 /* RATS: Assuming the fp string (which comes from the command-line argv
@@ -951,10 +950,6 @@ ddxProcessArgument(int argc, char *argv[], int i)
         retval = 2;
     }
     else if (!strcmp(argv[i], "-noshadowfb")) {
-        dmxLog(dmxWarning,
-               "-noshadowfb has been deprecated "
-               "since it is now the default\n");
-        dmxShadowFB = FALSE;
         retval = 1;
     }
     else if (!strcmp(argv[i], "-nomulticursor")) {
@@ -962,7 +957,6 @@ ddxProcessArgument(int argc, char *argv[], int i)
         retval = 1;
     }
     else if (!strcmp(argv[i], "-shadowfb")) {
-        dmxShadowFB = TRUE;
         retval = 1;
     }
     else if (!strcmp(argv[i], "-configfile")) {

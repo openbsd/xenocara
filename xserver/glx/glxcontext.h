@@ -55,7 +55,6 @@ struct __GLXcontext {
     /*
      ** list of context structs
      */
-    __GLXcontext *last;
     __GLXcontext *next;
 
     /*
@@ -68,6 +67,11 @@ struct __GLXcontext {
      ** when the context is created.
      */
     __GLXscreen *pGlxScreen;
+
+    /*
+     ** If this context is current for a client, this will be that client
+     */
+    ClientPtr currentClient;
 
     /*
      ** The XID of this context.
@@ -83,11 +87,6 @@ struct __GLXcontext {
      ** Whether this context's ID still exists.
      */
     GLboolean idExists;
-
-    /*
-     ** Whether this context is current for some client.
-     */
-    GLboolean isCurrent;
 
     /*
      ** Whether this context is a direct rendering context.

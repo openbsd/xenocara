@@ -61,7 +61,6 @@ typedef enum { ClientStateInitial,
     ClientStateGone
 } ClientState;
 
-#ifdef XFIXES
 typedef struct _saveSet {
     struct _Window *windowPtr;
     Bool toRoot;
@@ -73,16 +72,6 @@ typedef struct _saveSet {
 #define SaveSetAssignWindow(ss,w)   ((ss).windowPtr = (w))
 #define SaveSetAssignToRoot(ss,tr)  ((ss).toRoot = (tr))
 #define SaveSetAssignMap(ss,m)      ((ss).map = (m))
-#else
-typedef struct _Window *SaveSetElt;
-
-#define SaveSetWindow(ss)   (ss)
-#define SaveSetToRoot(ss)   FALSE
-#define SaveSetShouldMap(ss)	    TRUE
-#define SaveSetAssignWindow(ss,w)   ((ss) = (w))
-#define SaveSetAssignToRoot(ss,tr)
-#define SaveSetAssignMap(ss,m)
-#endif
 
 typedef struct _Client {
     pointer requestBuffer;
@@ -121,7 +110,19 @@ typedef struct _Client {
 
     DeviceIntPtr clientPtr;
     ClientIdPtr clientIds;
+#if XTRANS_SEND_FDS
+    int req_fds;
+#endif
 } ClientRec;
+
+#if XTRANS_SEND_FDS
+static inline void
+SetReqFds(ClientPtr client, int req_fds) {
+    if (client->req_fds != 0 && req_fds != client->req_fds)
+        LogMessage(X_ERROR, "Mismatching number of request fds %d != %d\n", req_fds, client->req_fds);
+    client->req_fds = req_fds;
+}
+#endif
 
 /*
  * Scheduling interface

@@ -169,9 +169,7 @@ Bool noXFree86DRIExtension = FALSE;
 #ifdef XF86VIDMODE
 Bool noXFree86VidModeExtension = FALSE;
 #endif
-#ifdef XFIXES
 Bool noXFixesExtension = FALSE;
-#endif
 #ifdef PANORAMIX
 /* Xinerama is disabled by default unless enabled via +xinerama */
 Bool noPanoramiXExtension = TRUE;
@@ -444,6 +442,11 @@ GetTimeInMillis(void)
 {
     return GetTickCount();
 }
+CARD64
+GetTimeInMicros(void)
+{
+    return (CARD64) GetTickCount() * 1000;
+}
 #else
 CARD32
 GetTimeInMillis(void)
@@ -473,6 +476,28 @@ GetTimeInMillis(void)
 
     X_GETTIMEOFDAY(&tv);
     return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+}
+
+CARD64
+GetTimeInMicros(void)
+{
+    struct timeval tv;
+#ifdef MONOTONIC_CLOCK
+    struct timespec tp;
+    static clockid_t clockid;
+
+    if (!clockid) {
+        if (clock_gettime(CLOCK_MONOTONIC, &tp) == 0)
+            clockid = CLOCK_MONOTONIC;
+        else
+            clockid = ~0L;
+    }
+    if (clockid != ~0L && clock_gettime(clockid, &tp) == 0)
+        return (CARD64) tp.tv_sec * (CARD64)1000000 + tp.tv_nsec / 1000;
+#endif
+
+    X_GETTIMEOFDAY(&tv);
+    return (CARD64) tv.tv_sec * (CARD64)1000000000 + (CARD64) tv.tv_usec * 1000;
 }
 #endif
 
@@ -591,6 +616,10 @@ UseMsg(void)
 static int
 VerifyDisplayName(const char *d)
 {
+    int i;
+    int period_found = FALSE;
+    int after_period = 0;
+
     if (d == (char *) 0)
         return 0;               /*  null  */
     if (*d == '\0')
@@ -601,6 +630,29 @@ VerifyDisplayName(const char *d)
         return 0;               /*  must not equal "." or ".."  */
     if (strchr(d, '/') != (char *) 0)
         return 0;               /*  very important!!!  */
+
+    /* Since we run atoi() on the display later, only allow
+       for digits, or exception of :0.0 and similar (two decimal points max)
+       */
+    for (i = 0; i < strlen(d); i++) {
+        if (!isdigit(d[i])) {
+            if (d[i] != '.' || period_found)
+                return 0;
+            period_found = TRUE;
+        } else if (period_found)
+            after_period++;
+
+        if (after_period > 2)
+            return 0;
+    }
+
+    /* don't allow for :0. */
+    if (period_found && after_period == 0)
+        return 0;
+
+    if (atol(d) > INT_MAX)
+        return 0;
+
     return 1;
 }
 
@@ -2066,4 +2118,28 @@ FormatUInt64Hex(uint64_t num, char *string)
     }
 
     string[len] = '\0';
+}
+
+/* Move a file descriptor out of the way of our select mask; this
+ * is useful for file descriptors which will never appear in the
+ * select mask to avoid reducing the number of clients that can
+ * connect to the server
+ */
+int
+os_move_fd(int fd)
+{
+    int newfd;
+
+#ifdef F_DUPFD_CLOEXEC
+    newfd = fcntl(fd, F_DUPFD_CLOEXEC, MAXCLIENTS);
+#else
+    newfd = fcntl(fd, F_DUPFD, MAXCLIENTS);
+#endif
+    if (newfd < 0)
+        return fd;
+#ifndef F_DUPFD_CLOEXEC
+    fcntl(newfd, F_SETFD, FD_CLOEXEC);
+#endif
+    close(fd);
+    return newfd;
 }

@@ -386,7 +386,9 @@ fbConfigsDump(unsigned int n, __GLXconfig * c)
                c->accumAlphaBits, c->sampleBuffers, c->samples,
                (c->drawableType & GLX_WINDOW_BIT) ? "y" : ".",
                (c->drawableType & GLX_PIXMAP_BIT) ? "y" : ".",
-               (c->drawableType & GLX_PBUFFER_BIT) ? "y" : ".", ".",
+               (c->drawableType & GLX_PBUFFER_BIT) ? "y" : ".",
+               (c->renderType & (GLX_RGBA_FLOAT_BIT_ARB |
+                   GLX_RGBA_UNSIGNED_FLOAT_BIT_EXT)) ? "y" : ".",
                (c->transparentPixel != GLX_NONE_EXT) ? "y" : ".",
                c->visualSelectGroup,
                (c->visualRating == GLX_SLOW_VISUAL_EXT) ? "*" : " ");
@@ -548,7 +550,9 @@ glxWinScreenProbe(ScreenPtr pScreen)
     if (NULL == screen)
         return NULL;
 
-    /* Dump out some useful information about the native renderer */
+    // Select the native GL implementation (WGL)
+    if (glWinSelectImplementation(1))
+        return NULL;
 
     // create window class
 #define WIN_GL_TEST_WINDOW_CLASS "XWinGLTest"
@@ -595,11 +599,12 @@ glxWinScreenProbe(ScreenPtr pScreen)
     // (but we need to have a current context for them to be resolvable)
     wglResolveExtensionProcs();
 
-    ErrorF("GL_VERSION:     %s\n", glGetStringWrapperNonstatic(GL_VERSION));
-    ErrorF("GL_VENDOR:      %s\n", glGetStringWrapperNonstatic(GL_VENDOR));
-    gl_renderer = (const char *) glGetStringWrapperNonstatic(GL_RENDERER);
+    /* Dump out some useful information about the native renderer */
+    ErrorF("GL_VERSION:     %s\n", glGetString(GL_VERSION));
+    ErrorF("GL_VENDOR:      %s\n", glGetString(GL_VENDOR));
+    gl_renderer = (const char *) glGetString(GL_RENDERER);
     ErrorF("GL_RENDERER:    %s\n", gl_renderer);
-    gl_extensions = (const char *) glGetStringWrapperNonstatic(GL_EXTENSIONS);
+    gl_extensions = (const char *) glGetString(GL_EXTENSIONS);
     wgl_extensions = wglGetExtensionsStringARBWrapper(hdc);
     if (!wgl_extensions)
         wgl_extensions = "";
@@ -613,7 +618,7 @@ glxWinScreenProbe(ScreenPtr pScreen)
         free(screen);
         LogMessage(X_ERROR,
                    "AIGLX: Won't use generic native renderer as it is not accelerated\n");
-        return NULL;
+        goto error;
     }
 
     // Can you see the problem here?  The extensions string is DC specific
@@ -724,7 +729,7 @@ glxWinScreenProbe(ScreenPtr pScreen)
             free(screen);
             LogMessage(X_ERROR,
                        "AIGLX: No fbConfigs could be made from native OpenGL pixel formats\n");
-            return NULL;
+            goto error;
         }
 
         /* These will be set by __glXScreenInit */
@@ -787,6 +792,13 @@ glxWinScreenProbe(ScreenPtr pScreen)
     pScreen->CopyWindow = glxWinCopyWindow;
 
     return &screen->base;
+
+ error:
+    // Something went wrong and we can't use the native GL implementation
+    // so make sure the mesa GL implementation is selected instead
+    glWinSelectImplementation(0);
+
+    return NULL;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -908,7 +920,7 @@ static void
 glxWinDrawableCopySubBuffer(__GLXdrawable * drawable,
                             int x, int y, int w, int h)
 {
-    glAddSwapHintRectWINWrapperNonstatic(x, y, w, h);
+    glAddSwapHintRectWINWrapper(x, y, w, h);
     glxWinDrawableSwapBuffers(NULL, drawable);
 }
 
@@ -1456,7 +1468,6 @@ glxWinContextMakeCurrent(__GLXcontext * base)
 
     GLWIN_TRACE_MSG("glxWinContextMakeCurrent context %p (native ctx %p)", gc,
                     gc->ctx);
-    glWinCallDelta();
 
     /* Keep a note of the last active context in the drawable */
     drawPriv = gc->base.drawPriv;
@@ -1526,7 +1537,6 @@ glxWinContextLoseCurrent(__GLXcontext * base)
 
     GLWIN_TRACE_MSG("glxWinContextLoseCurrent context %p (native ctx %p)", gc,
                     gc->ctx);
-    glWinCallDelta();
 
     /*
        An error seems to be reported if we try to make no context current
@@ -1621,8 +1631,6 @@ glxWinCreateContext(__GLXscreen * screen,
     context->ctx = NULL;
     context->shareContext = shareContext;
 
-    glWinSetupDispatchTable();
-
     GLWIN_DEBUG_MSG("GLXcontext %p created", context);
 
     return &(context->base);
@@ -1715,7 +1723,6 @@ fbConfigToPixelFormat(__GLXconfig * mode, PIXELFORMATDESCRIPTOR * pfdret,
     pfd.cAuxBuffers = mode->numAuxBuffers;
 
     /* mode->level ? */
-    /* mode->pixmapMode ? */
 
     *pfdret = pfd;
 
@@ -1925,7 +1932,6 @@ glxWinCreateConfigs(HDC hdc, glxWinScreen * screen)
         // pfd.dwLayerMask; // ignored
         // pfd.dwDamageMask;  // ignored
 
-        c->base.pixmapMode = 0;
         c->base.visualID = -1;  // will be set by __glXScreenInit()
 
         /* EXT_visual_rating / GLX 1.2 */
@@ -2016,15 +2022,13 @@ glxWinCreateConfigs(HDC hdc, glxWinScreen * screen)
         else
             c->base.swapMethod = GLX_SWAP_UNDEFINED_OML;
 
-        /* EXT_import_context */
-        c->base.screen = screen->base.pScreen->myNum;
-
         /* EXT_texture_from_pixmap */
         c->base.bindToTextureRgb = -1;
         c->base.bindToTextureRgba = -1;
         c->base.bindToMipmapTexture = -1;
         c->base.bindToTextureTargets = -1;
         c->base.yInverted = -1;
+        c->base.sRGBCapable = 0;
 
         n++;
 
@@ -2262,7 +2266,6 @@ glxWinCreateConfigsExt(HDC hdc, glxWinScreen * screen)
         }
         c->base.level = 0;
 
-        c->base.pixmapMode = 0; // ???
         c->base.visualID = -1;  // will be set by __glXScreenInit()
 
         /* EXT_visual_rating / GLX 1.2 */
@@ -2395,9 +2398,6 @@ glxWinCreateConfigsExt(HDC hdc, glxWinScreen * screen)
             c->base.swapMethod = GLX_SWAP_UNDEFINED_OML;
         }
 
-        /* EXT_import_context */
-        c->base.screen = screen->base.pScreen->myNum;
-
         /* EXT_texture_from_pixmap */
         /*
            Mesa's DRI configs always have bindToTextureRgb/Rgba TRUE (see driCreateConfigs(), so setting
@@ -2419,6 +2419,7 @@ glxWinCreateConfigsExt(HDC hdc, glxWinScreen * screen)
             GLX_TEXTURE_1D_BIT_EXT | GLX_TEXTURE_2D_BIT_EXT |
             GLX_TEXTURE_RECTANGLE_BIT_EXT;
         c->base.yInverted = -1;
+        c->base.sRGBCapable = 0;
 
         n++;
 

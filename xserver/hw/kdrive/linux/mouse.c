@@ -193,7 +193,7 @@ MouseWriteBytes(int fd, unsigned char *c, int n, int timeout)
 #define MAX_VALID   4           /* number of valid packets before accepting */
 
 typedef struct _kmouseProt {
-    char *name;
+    const char *name;
     Bool (*Complete) (KdPointerInfo * pi, unsigned char *ev, int ne);
     int (*Valid) (KdPointerInfo * pi, unsigned char *ev, int ne);
     Bool (*Parse) (KdPointerInfo * pi, unsigned char *ev, int ne);
@@ -441,10 +441,8 @@ ps2SkipInit(KdPointerInfo * pi, int ninit, Bool ret_next)
 {
     Kmouse *km = pi->driverPrivate;
     int c = -1;
-    int skipping;
     Bool waiting;
 
-    skipping = 0;
     waiting = FALSE;
     while (ninit || ret_next) {
         c = MouseReadByte(&km->iob, MOUSE_TIMEOUT);
@@ -469,8 +467,6 @@ static Bool
 ps2Init(KdPointerInfo * pi)
 {
     Kmouse *km = pi->driverPrivate;
-    int skipping;
-    Bool waiting;
     int id;
     unsigned char *init;
     int ninit;
@@ -483,8 +479,6 @@ ps2Init(KdPointerInfo * pi)
      */
     if (!MouseWriteByte(km->iob.fd, PSMC_SEND_DEV_ID, 100))
         return FALSE;
-    skipping = 0;
-    waiting = FALSE;
     id = ps2SkipInit(pi, 0, TRUE);
     switch (id) {
     case 3:
@@ -744,7 +738,7 @@ MouseInitProtocol(Kmouse * km)
 }
 
 static void
-MouseFirstProtocol(Kmouse * km, char *prot)
+MouseFirstProtocol(Kmouse * km, const char *prot)
 {
     if (prot) {
         for (km->i_prot = 0; km->i_prot < NUM_PROT; km->i_prot++)
@@ -893,7 +887,7 @@ MouseRead(int mousePort, void *closure)
 
 int MouseInputType;
 
-char *kdefaultMouse[] = {
+const char *kdefaultMouse[] = {
     "/dev/input/mice",
     "/dev/mouse",
     "/dev/psaux",

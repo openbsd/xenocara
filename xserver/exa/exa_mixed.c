@@ -106,10 +106,13 @@ exaCreatePixmap_mixed(ScreenPtr pScreen, int w, int h, int depth,
                                                pPixmap->drawable.pScreen,
                                                pPixmap);
 
-            DamageRegister(&pPixmap->drawable, pExaPixmap->pDamage);
-            /* This ensures that pending damage reflects the current operation. */
-            /* This is used by exa to optimize migration. */
-            DamageSetReportAfterOp(pExaPixmap->pDamage, TRUE);
+            if (pExaPixmap->pDamage) {
+                DamageRegister(&pPixmap->drawable, pExaPixmap->pDamage);
+                /* This ensures that pending damage reflects the current
+                 * operation. This is used by exa to optimize migration.
+                 */
+                DamageSetReportAfterOp(pExaPixmap->pDamage, TRUE);
+            }
         }
     }
 
@@ -139,7 +142,6 @@ exaModifyPixmapHeader_mixed(PixmapPtr pPixmap, int width, int height, int depth,
     if (pPixData) {
         if (pExaPixmap->driverPriv) {
             if (pExaPixmap->pDamage) {
-                DamageUnregister(&pPixmap->drawable, pExaPixmap->pDamage);
                 DamageDestroy(pExaPixmap->pDamage);
                 pExaPixmap->pDamage = NULL;
             }
@@ -189,7 +191,6 @@ exaModifyPixmapHeader_mixed(PixmapPtr pPixmap, int width, int height, int depth,
             if (pExaPixmap->sys_ptr) {
                 free(pExaPixmap->sys_ptr);
                 pExaPixmap->sys_ptr = NULL;
-                DamageUnregister(&pPixmap->drawable, pExaPixmap->pDamage);
                 DamageDestroy(pExaPixmap->pDamage);
                 pExaPixmap->pDamage = NULL;
                 RegionEmpty(&pExaPixmap->validSys);

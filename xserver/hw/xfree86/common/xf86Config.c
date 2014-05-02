@@ -52,6 +52,7 @@
 #endif
 
 #include "xf86.h"
+#include "xf86Modes.h"
 #include "xf86Parser.h"
 #include "xf86tokens.h"
 #include "xf86Config.h"
@@ -506,9 +507,8 @@ xf86InputDriverlistFromConfig(void)
 static void
 fixup_video_driver_list(char **drivers)
 {
-    static const char *fallback[4] = { "vesa", "fbdev", "wsfb", NULL };
-    static const char *blacklist[] = { "radeonhd", "radeonold", NULL };
-    char **end, **drv, **d;
+    static const char *fallback[4] = { "fbdev", "vesa", "wsfb", NULL };
+    char **end, **drv;
     char *x;
     int i;
 
@@ -527,16 +527,6 @@ fixup_video_driver_list(char **drivers)
                 *end = x;
                 end--;
                 break;
-            }
-        }
-    }
-    /* Remove blacklisted drivers */
-    for (i = 0; blacklist[i]; i++) {
-        for (drv = drivers; drv != end; drv++) {
-            if (strcmp(*drv, blacklist[i]) == 0) {
-                end--;
-                for (d = drv; d != end; d++)
-                    *d = *(d+1);
             }
         }
     }

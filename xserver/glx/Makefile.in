@@ -51,8 +51,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @DRI2_AIGLX_TRUE@am__append_1 = -I$(top_srcdir)/hw/xfree86/dri2
-@DRI_TRUE@am__append_2 = glxdri.c
-@DRI2_AIGLX_TRUE@am__append_3 = glxdri2.c
+@DRI2_AIGLX_TRUE@am__append_2 = glxdri2.c
 subdir = glx
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -79,8 +78,7 @@ LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libglx_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = indirect_dispatch.lo indirect_dispatch_swap.lo \
-	indirect_reqsize.lo indirect_size_get.lo indirect_table.lo \
-	glapi.lo glapi_gentable.lo glthread.lo
+	indirect_reqsize.lo indirect_size_get.lo indirect_table.lo
 am_libglx_la_OBJECTS = $(am__objects_1) clientinfo.lo createcontext.lo \
 	extension_string.lo indirect_util.lo indirect_program.lo \
 	indirect_texture_compression.lo glxcmds.lo glxcmdsswap.lo \
@@ -94,10 +92,9 @@ am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
 libglxdri_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__libglxdri_la_SOURCES_DIST = glxdri.c glxdri2.c
-@DRI_TRUE@am__objects_2 = glxdri.lo
-@DRI2_AIGLX_TRUE@am__objects_3 = glxdri2.lo
-am_libglxdri_la_OBJECTS = $(am__objects_2) $(am__objects_3)
+am__libglxdri_la_SOURCES_DIST = glxdri2.c
+@DRI2_AIGLX_TRUE@am__objects_2 = glxdri2.lo
+am_libglxdri_la_OBJECTS = $(am__objects_2)
 libglxdri_la_OBJECTS = $(am_libglxdri_la_OBJECTS)
 @AIGLX_DRI_LOADER_TRUE@am_libglxdri_la_rpath =
 AM_V_P = $(am__v_P_@AM_V@)
@@ -198,9 +195,12 @@ DMXXIEXAMPLES_DEP_CFLAGS = @DMXXIEXAMPLES_DEP_CFLAGS@
 DMXXIEXAMPLES_DEP_LIBS = @DMXXIEXAMPLES_DEP_LIBS@
 DMXXMUEXAMPLES_DEP_CFLAGS = @DMXXMUEXAMPLES_DEP_CFLAGS@
 DMXXMUEXAMPLES_DEP_LIBS = @DMXXMUEXAMPLES_DEP_LIBS@
+DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRI2PROTO_CFLAGS = @DRI2PROTO_CFLAGS@
 DRI2PROTO_LIBS = @DRI2PROTO_LIBS@
+DRI3PROTO_CFLAGS = @DRI3PROTO_CFLAGS@
+DRI3PROTO_LIBS = @DRI3PROTO_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
@@ -232,6 +232,7 @@ GL_LIBS = @GL_LIBS@
 GREP = @GREP@
 HAL_CFLAGS = @HAL_CFLAGS@
 HAL_LIBS = @HAL_LIBS@
+HAVE_DOT = @HAVE_DOT@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -261,6 +262,8 @@ LIBS = @LIBS@
 LIBSHA1_CFLAGS = @LIBSHA1_CFLAGS@
 LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
+LIBUNWIND_CFLAGS = @LIBUNWIND_CFLAGS@
+LIBUNWIND_LIBS = @LIBUNWIND_LIBS@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
@@ -304,6 +307,7 @@ PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 PROJECTROOT = @PROJECTROOT@
+PYTHON3 = @PYTHON3@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -317,12 +321,12 @@ SET_MAKE = @SET_MAKE@
 SHA1_CFLAGS = @SHA1_CFLAGS@
 SHA1_LIBS = @SHA1_LIBS@
 SHELL = @SHELL@
-SOLARIS_ASM_CFLAGS = @SOLARIS_ASM_CFLAGS@
 SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
@@ -388,6 +392,8 @@ XSERVERLIBS_CFLAGS = @XSERVERLIBS_CFLAGS@
 XSERVERLIBS_LIBS = @XSERVERLIBS_LIBS@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSHMFENCE_CFLAGS = @XSHMFENCE_CFLAGS@
+XSHMFENCE_LIBS = @XSHMFENCE_LIBS@
 XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
@@ -479,12 +485,12 @@ AM_CFLAGS = \
 
 # none yet
 #sdk_HEADERS =
-INCLUDES = -I$(top_srcdir)/hw/xfree86/os-support \
+AM_CPPFLAGS = -I$(top_srcdir)/hw/xfree86/os-support \
 	-I$(top_srcdir)/hw/xfree86/os-support/bus \
 	-I$(top_srcdir)/hw/xfree86/common \
 	-I$(top_srcdir)/hw/xfree86/dri -I$(top_srcdir)/mi \
-	$(am__append_1)
-glapi_sources = \
+	-I$(top_srcdir)/present $(am__append_1)
+indirect_sources = \
 	indirect_dispatch.c			\
 	indirect_dispatch.h			\
 	indirect_dispatch_swap.c		\
@@ -493,21 +499,12 @@ glapi_sources = \
 	indirect_size.h				\
 	indirect_size_get.c			\
 	indirect_size_get.h			\
-	indirect_table.c			\
-	dispatch.h				\
-	glapitable.h				\
-	glapi.c					\
-	glapi.h					\
-	glapi_gentable.c			\
-	glprocs.h				\
-	glthread.c				\
-	glthread.h
+	indirect_table.c
 
-libglxdri_la_SOURCES = $(am__append_2) $(am__append_3)
+libglxdri_la_SOURCES = $(am__append_2)
 libglxdri_la_LIBADD = $(DLOPEN_LIBS)
 libglx_la_SOURCES = \
 	$(indirect_sources) \
-	$(glapi_sources) \
 	clientinfo.c \
 	createcontext.c \
 	extension_string.c \
@@ -606,12 +603,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clientinfo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/createcontext.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extension_string.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glapi.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glapi_gentable.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glthread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glxcmds.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glxcmdsswap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glxdri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glxdri2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glxdricommon.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glxdriswrast.Plo@am__quote@

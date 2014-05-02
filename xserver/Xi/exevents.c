@@ -1413,7 +1413,8 @@ DeliverTouchEmulatedEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
                 !(ev->device_event.flags & TOUCH_CLIENT_ID))
                 TouchListenerAcceptReject(dev, ti, 0, XIAcceptTouch);
 
-            if (deliveries && ev->any.type == ET_TouchEnd &&
+            if (ev->any.type == ET_TouchEnd &&
+                ti->num_listeners == 1 &&
                 !dev->button->buttonsDown &&
                 dev->deviceGrab.fromPassiveGrab && GrabIsPointerGrab(grab)) {
                 (*dev->deviceGrab.DeactivateGrab) (dev);
@@ -1476,7 +1477,7 @@ DeliverEmulatedMotionEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
         GrabPtr grab;
         XI2Mask *mask;
 
-        if (ti->listeners[0].type != LISTENER_POINTER_REGULAR ||
+        if (ti->listeners[0].type != LISTENER_POINTER_REGULAR &&
             ti->listeners[0].type != LISTENER_POINTER_GRAB)
             return;
 
@@ -1782,8 +1783,25 @@ ProcessDeviceEvent(InternalEvent *ev, DeviceIntPtr device)
         DeliverDeviceEvents(GetSpriteWindow(device), (InternalEvent *) event,
                             NullGrab, NullWindow, device);
 
-    if (deactivateDeviceGrab == TRUE)
+    if (deactivateDeviceGrab == TRUE) {
         (*device->deviceGrab.DeactivateGrab) (device);
+
+        if (!IsMaster (device) && !IsFloating (device)) {
+            int flags, num_events = 0;
+            InternalEvent dce;
+
+            flags = (IsPointerDevice (device)) ?
+                DEVCHANGE_POINTER_EVENT : DEVCHANGE_KEYBOARD_EVENT;
+            UpdateFromMaster (&dce, device, flags, &num_events);
+            BUG_WARN(num_events > 1);
+
+            if (num_events == 1)
+                ChangeMasterDeviceClasses(GetMaster (device, MASTER_ATTACHED),
+                                          &dce.changed_event);
+        }
+
+    }
+
     event->detail.key = key;
 }
 
@@ -1845,7 +1863,8 @@ DeliverTouchBeginEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
         if (rc == Success) {
             listener->state = LISTENER_IS_OWNER;
             /* async grabs cannot replay, so automatically accept this touch */
-            if (dev->deviceGrab.grab &&
+            if (listener->type == LISTENER_POINTER_GRAB &&
+                dev->deviceGrab.grab &&
                 dev->deviceGrab.fromPassiveGrab &&
                 dev->deviceGrab.grab->pointerMode == GrabModeAsync)
                 ActivateEarlyAccept(dev, ti);
@@ -1914,7 +1933,9 @@ DeliverTouchEndEvent(DeviceIntPtr dev, TouchPointInfoPtr ti, InternalEvent *ev,
     }
 
     /* Event in response to reject */
-    if (ev->device_event.flags & TOUCH_REJECT) {
+    if (ev->device_event.flags & TOUCH_REJECT ||
+        (ev->device_event.flags & TOUCH_ACCEPT && !TouchResourceIsOwner(ti, listener->listener))) {
+        /* Touch has been rejected, or accepted by its owner which is not this listener */
         if (listener->state != LISTENER_HAS_END)
             rc = DeliverOneTouchEvent(client, dev, ti, grab, win, ev);
         listener->state = LISTENER_HAS_END;
@@ -1936,12 +1957,6 @@ DeliverTouchEndEvent(DeviceIntPtr dev, TouchPointInfoPtr ti, InternalEvent *ev,
 
         if (normal_end)
             listener->state = LISTENER_HAS_END;
-    }
-    else if (ev->device_event.flags & TOUCH_ACCEPT) {
-        /* Touch has been accepted by its owner, which is not this listener */
-        if (listener->state != LISTENER_HAS_END)
-            rc = DeliverOneTouchEvent(client, dev, ti, grab, win, ev);
-        listener->state = LISTENER_HAS_END;
     }
 
  out:
@@ -2034,6 +2049,9 @@ InitProximityClassDeviceStruct(DeviceIntPtr dev)
 {
     ProximityClassPtr proxc;
 
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->proximity != NULL, FALSE);
+
     proxc = (ProximityClassPtr) malloc(sizeof(ProximityClassRec));
     if (!proxc)
         return FALSE;
@@ -2059,10 +2077,10 @@ InitValuatorAxisStruct(DeviceIntPtr dev, int axnum, Atom label, int minval,
 {
     AxisInfoPtr ax;
 
-    if (!dev || !dev->valuator || (minval > maxval && mode == Absolute))
-        return FALSE;
-    if (axnum >= dev->valuator->numAxes)
-        return FALSE;
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->valuator == NULL, FALSE);
+    BUG_RETURN_VAL(axnum >= dev->valuator->numAxes, FALSE);
+    BUG_RETURN_VAL(minval > maxval && mode == Absolute, FALSE);
 
     ax = dev->valuator->axes + axnum;
 
@@ -2092,8 +2110,9 @@ SetScrollValuator(DeviceIntPtr dev, int axnum, enum ScrollType type,
     InternalEvent dce;
     DeviceIntPtr master;
 
-    if (!dev || !dev->valuator || axnum >= dev->valuator->numAxes)
-        return FALSE;
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->valuator == NULL, FALSE);
+    BUG_RETURN_VAL(axnum >= dev->valuator->numAxes, FALSE);
 
     switch (type) {
     case SCROLL_TYPE_VERTICAL:
@@ -2164,7 +2183,8 @@ CheckGrabValues(ClientPtr client, GrabParameters *param)
         return BadValue;
     }
 
-    if (param->grabtype != XI2 && (param->modifiers != AnyModifier) &&
+    if (param->modifiers != AnyModifier &&
+        param->modifiers != XIAnyModifier &&
         (param->modifiers & ~AllModifiersMask)) {
         client->errorValue = param->modifiers;
         return BadValue;
@@ -2233,8 +2253,7 @@ GrabButton(ClientPtr client, DeviceIntPtr dev, DeviceIntPtr modifier_device,
 }
 
 /**
- * Grab the given key. If grabtype is XI, the key is a keycode. If
- * grabtype is XI2, the key is a keysym.
+ * Grab the given key.
  */
 int
 GrabKey(ClientPtr client, DeviceIntPtr dev, DeviceIntPtr modifier_device,

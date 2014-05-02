@@ -130,10 +130,6 @@ device_added(struct udev_device *udev_device)
             LOG_PROPERTY(ppath, "NAME", name);
         }
 
-        if (pnp_id)
-            attrs.pnp_id = strdup(pnp_id);
-        LOG_SYSATTR(ppath, "id", pnp_id);
-
         /* construct USB ID in lowercase hex - "0000:ffff" */
         if (product &&
             sscanf(product, "%*x/%4x/%4x/%*x", &usb_vendor, &usb_model) == 2) {
@@ -143,6 +139,17 @@ device_added(struct udev_device *udev_device)
             else
                 LOG_PROPERTY(ppath, "PRODUCT", product);
         }
+
+        while (!pnp_id && (parent = udev_device_get_parent(parent))) {
+            pnp_id = udev_device_get_sysattr_value(parent, "id");
+            if (!pnp_id)
+                continue;
+
+            attrs.pnp_id = strdup(pnp_id);
+            ppath = udev_device_get_devnode(parent);
+            LOG_SYSATTR(ppath, "id", pnp_id);
+        }
+
     }
     if (!name)
         name = "(unnamed)";
@@ -225,6 +232,10 @@ device_added(struct udev_device *udev_device)
     }
 
     input_options = input_option_new(input_options, "config_info", config_info);
+
+    /* Default setting needed for non-seat0 seats */
+    if (ServerIsNotSeat0())
+        input_options = input_option_new(input_options, "GrabDevice", "on");
 
     LogMessage(X_INFO, "config/udev: Adding input device %s (%s)\n",
                name, path);

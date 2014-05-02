@@ -33,9 +33,6 @@
 #include <xwin-config.h>
 #endif
 #include "win.h"
-#ifdef __CYGWIN__
-#include <sys/cygwin.h>
-#endif
 #include <shellapi.h>
 #include "winprefs.h"
 
@@ -50,13 +47,13 @@ extern Bool g_fClipboardStarted;
  * Local function prototypes
  */
 
-static wBOOL CALLBACK
+static INT_PTR CALLBACK
 winExitDlgProc(HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam);
 
-static wBOOL CALLBACK
+static INT_PTR CALLBACK
 winChangeDepthDlgProc(HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam);
 
-static wBOOL CALLBACK
+static INT_PTR CALLBACK
 winAboutDlgProc(HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam);
 
 static void
@@ -288,7 +285,7 @@ winDisplayExitDialog(winPrivScreenPtr pScreenPriv)
     g_hDlgExit = CreateDialogParam(g_hInstance,
                                    "EXIT_DIALOG",
                                    pScreenPriv->hwndScreen,
-                                   winExitDlgProc, (int) pScreenPriv);
+                                   winExitDlgProc, (LPARAM) pScreenPriv);
 
     /* Show the dialog box */
     ShowWindow(g_hDlgExit, SW_SHOW);
@@ -307,7 +304,7 @@ winDisplayExitDialog(winPrivScreenPtr pScreenPriv)
  * Exit dialog window procedure
  */
 
-static wBOOL CALLBACK
+static INT_PTR CALLBACK
 winExitDlgProc(HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static winPrivScreenPtr s_pScreenPriv = NULL;
@@ -407,14 +404,13 @@ winDisplayDepthChangeDialog(winPrivScreenPtr pScreenPriv)
                                           "DEPTH_CHANGE_BOX",
                                           pScreenPriv->hwndScreen,
                                           winChangeDepthDlgProc,
-                                          (int) pScreenPriv);
+                                          (LPARAM) pScreenPriv);
     /* Show the dialog box */
     ShowWindow(g_hDlgDepthChange, SW_SHOW);
 
-    ErrorF("winDisplayDepthChangeDialog - DialogBox returned: %d\n",
-           (int) g_hDlgDepthChange);
-    ErrorF("winDisplayDepthChangeDialog - GetLastError: %d\n",
-           (int) GetLastError());
+    if (!g_hDlgDepthChange)
+        ErrorF("winDisplayDepthChangeDialog - GetLastError: %d\n",
+                (int) GetLastError());
 
     /* Minimize the display window */
     ShowWindow(pScreenPriv->hwndScreen, SW_MINIMIZE);
@@ -425,13 +421,12 @@ winDisplayDepthChangeDialog(winPrivScreenPtr pScreenPriv)
  * disruptive screen depth changes. 
  */
 
-static wBOOL CALLBACK
+static INT_PTR CALLBACK
 winChangeDepthDlgProc(HWND hwndDialog, UINT message,
                       WPARAM wParam, LPARAM lParam)
 {
     static winPrivScreenPtr s_pScreenPriv = NULL;
     static winScreenInfo *s_pScreenInfo = NULL;
-    static ScreenPtr s_pScreen = NULL;
 
 #if CYGDEBUG
     winDebug("winChangeDepthDlgProc\n");
@@ -447,12 +442,11 @@ winChangeDepthDlgProc(HWND hwndDialog, UINT message,
         /* Store pointers to private structures for future use */
         s_pScreenPriv = (winPrivScreenPtr) lParam;
         s_pScreenInfo = s_pScreenPriv->pScreenInfo;
-        s_pScreen = s_pScreenInfo->pScreen;
 
 #if CYGDEBUG
         winDebug("winChangeDepthDlgProc - WM_INITDIALOG - s_pScreenPriv: %08x, "
-                 "s_pScreenInfo: %08x, s_pScreen: %08x\n",
-                 s_pScreenPriv, s_pScreenInfo, s_pScreen);
+                 "s_pScreenInfo: %08x\n",
+                 s_pScreenPriv, s_pScreenInfo);
 #endif
 
 #if CYGDEBUG
@@ -541,7 +535,7 @@ winDisplayAboutDialog(winPrivScreenPtr pScreenPriv)
     g_hDlgAbout = CreateDialogParam(g_hInstance,
                                     "ABOUT_BOX",
                                     pScreenPriv->hwndScreen,
-                                    winAboutDlgProc, (int) pScreenPriv);
+                                    winAboutDlgProc, (LPARAM) pScreenPriv);
 
     /* Show the dialog box */
     ShowWindow(g_hDlgAbout, SW_SHOW);
@@ -558,12 +552,10 @@ winDisplayAboutDialog(winPrivScreenPtr pScreenPriv)
  * Process messages for the about dialog.
  */
 
-static wBOOL CALLBACK
+static INT_PTR CALLBACK
 winAboutDlgProc(HWND hwndDialog, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static winPrivScreenPtr s_pScreenPriv = NULL;
-    static winScreenInfo *s_pScreenInfo = NULL;
-    static ScreenPtr s_pScreen = NULL;
 
 #if CYGDEBUG
     winDebug("winAboutDlgProc\n");
@@ -576,10 +568,8 @@ winAboutDlgProc(HWND hwndDialog, UINT message, WPARAM wParam, LPARAM lParam)
         winDebug("winAboutDlgProc - WM_INITDIALOG\n");
 #endif
 
-        /* Store pointers to private structures for future use */
+        /* Store pointer to private structure for future use */
         s_pScreenPriv = (winPrivScreenPtr) lParam;
-        s_pScreenInfo = s_pScreenPriv->pScreenInfo;
-        s_pScreen = s_pScreenInfo->pScreen;
 
         winInitDialog(hwndDialog);
 
@@ -627,26 +617,17 @@ winAboutDlgProc(HWND hwndDialog, UINT message, WPARAM wParam, LPARAM lParam)
 
         case ID_ABOUT_CHANGELOG:
         {
-            int iReturn;
+            INT_PTR iReturn;
 
-#ifdef __CYGWIN__
-            const char *pszCygPath = "/usr/X11R6/share/doc/"
-                "xorg-x11-xwin/changelog.html";
-            char pszWinPath[MAX_PATH + 1];
-
-            /* Convert the POSIX path to a Win32 path */
-            cygwin_conv_to_win32_path(pszCygPath, pszWinPath);
-#else
             const char *pszWinPath = "http://x.cygwin.com/"
                 "devel/server/changelog.html";
-#endif
 
-            iReturn = (int) ShellExecute(NULL,
+            iReturn = (INT_PTR) ShellExecute(NULL,
                                          "open",
                                          pszWinPath, NULL, NULL, SW_MAXIMIZE);
             if (iReturn < 32) {
                 ErrorF("winAboutDlgProc - WM_COMMAND - ID_ABOUT_CHANGELOG - "
-                       "ShellExecute failed: %d\n", iReturn);
+                       "ShellExecute failed: %d\n", (int)iReturn);
             }
         }
             return TRUE;
@@ -654,14 +635,15 @@ winAboutDlgProc(HWND hwndDialog, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_ABOUT_WEBSITE:
         {
             const char *pszPath = __VENDORDWEBSUPPORT__;
-            int iReturn;
+            INT_PTR iReturn;
 
-            iReturn = (int) ShellExecute(NULL,
+            iReturn = (INT_PTR) ShellExecute(NULL,
                                          "open",
                                          pszPath, NULL, NULL, SW_MAXIMIZE);
             if (iReturn < 32) {
                 ErrorF("winAboutDlgProc - WM_COMMAND - ID_ABOUT_WEBSITE - "
-                       "ShellExecute failed: %d\n", iReturn);
+                       "ShellExecute failed: %d\n", (int)iReturn);
+
             }
         }
             return TRUE;
@@ -669,14 +651,14 @@ winAboutDlgProc(HWND hwndDialog, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_ABOUT_UG:
         {
             const char *pszPath = "http://x.cygwin.com/docs/ug/";
-            int iReturn;
+            INT_PTR iReturn;
 
-            iReturn = (int) ShellExecute(NULL,
+            iReturn = (INT_PTR) ShellExecute(NULL,
                                          "open",
                                          pszPath, NULL, NULL, SW_MAXIMIZE);
             if (iReturn < 32) {
                 ErrorF("winAboutDlgProc - WM_COMMAND - ID_ABOUT_UG - "
-                       "ShellExecute failed: %d\n", iReturn);
+                       "ShellExecute failed: %d\n", (int)iReturn);
             }
         }
             return TRUE;
@@ -684,14 +666,14 @@ winAboutDlgProc(HWND hwndDialog, UINT message, WPARAM wParam, LPARAM lParam)
         case ID_ABOUT_FAQ:
         {
             const char *pszPath = "http://x.cygwin.com/docs/faq/";
-            int iReturn;
+            INT_PTR iReturn;
 
-            iReturn = (int) ShellExecute(NULL,
+            iReturn = (INT_PTR) ShellExecute(NULL,
                                          "open",
                                          pszPath, NULL, NULL, SW_MAXIMIZE);
             if (iReturn < 32) {
                 ErrorF("winAboutDlgProc - WM_COMMAND - ID_ABOUT_FAQ - "
-                       "ShellExecute failed: %d\n", iReturn);
+                       "ShellExecute failed: %d\n", (int)iReturn);
             }
         }
             return TRUE;

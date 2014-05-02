@@ -83,7 +83,7 @@ static int
 void *
 winClipboardProc(void *pvNotUsed)
 {
-    Atom atomClipboard, atomClipboardManager;
+    Atom atomClipboard;
     int iReturn;
     HWND hwnd = NULL;
     int iConnectionNumber = 0;
@@ -206,9 +206,8 @@ winClipboardProc(void *pvNotUsed)
     iMaxDescriptor = iConnectionNumber + 1;
 #endif
 
-    /* Create atoms */
+    /* Create atom */
     atomClipboard = XInternAtom(pDisplay, "CLIPBOARD", False);
-    atomClipboardManager = XInternAtom(pDisplay, "CLIPBOARD_MANAGER", False);
 
     /* Create a messaging window */
     iWindow = XCreateSimpleWindow(pDisplay,
@@ -326,14 +325,7 @@ winClipboardProc(void *pvNotUsed)
         /* Branch on which descriptor became active */
         if (FD_ISSET(iConnectionNumber, &fdsRead)) {
             /* Process X events */
-            /* Exit when we see that server is shutting down */
-            iReturn = winClipboardFlushXEvents(hwnd,
-                                               iWindow, pDisplay, fUseUnicode);
-            if (WIN_XEVENTS_SHUTDOWN == iReturn) {
-                ErrorF("winClipboardProc - winClipboardFlushXEvents "
-                       "trapped shutdown event, exiting main loop.\n");
-                break;
-            }
+            winClipboardFlushXEvents(hwnd, iWindow, pDisplay, fUseUnicode);
         }
 
 #ifdef HAS_DEVWINDOWS
@@ -461,7 +453,7 @@ winClipboardErrorHandler(Display * pDisplay, XErrorEvent * pErr)
 static int
 winClipboardIOErrorHandler(Display * pDisplay)
 {
-    ErrorF("winClipboardIOErrorHandler!\n\n");
+    ErrorF("winClipboardIOErrorHandler!\n");
 
     if (pthread_equal(pthread_self(), g_winClipboardProcThread)) {
         /* Restart at the main entry point */

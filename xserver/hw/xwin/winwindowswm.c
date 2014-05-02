@@ -66,18 +66,6 @@ typedef struct _WMEvent {
     unsigned int mask;
 } WMEventRec;
 
-static inline BoxRec
-make_box(int x, int y, int w, int h)
-{
-    BoxRec r;
-
-    r.x1 = x;
-    r.y1 = y;
-    r.x2 = x + w;
-    r.y2 = y + h;
-    return r;
-}
-
 static int
 ProcWindowsWMQueryVersion(ClientPtr client)
 {
@@ -258,7 +246,7 @@ winWindowsWMSendEvent(int type, unsigned int mask, int which, int arg,
     for (pEvent = *pHead; pEvent; pEvent = pEvent->next) {
         client = pEvent->client;
 #if CYGMULTIWINDOW_DEBUG
-        ErrorF("winWindowsWMSendEvent - x%08x\n", (int) client);
+        ErrorF("winWindowsWMSendEvent - %p\n", client);
 #endif
         if ((pEvent->mask & mask) == 0) {
             continue;
@@ -319,7 +307,6 @@ static int
 ProcWindowsWMFrameGetRect(ClientPtr client)
 {
     xWindowsWMFrameGetRectReply rep;
-    BoxRec ir;
     RECT rcNew;
 
     REQUEST(xWindowsWMFrameGetRectReq);
@@ -333,8 +320,6 @@ ProcWindowsWMFrameGetRect(ClientPtr client)
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
-
-    ir = make_box(stuff->ix, stuff->iy, stuff->iw, stuff->ih);
 
     if (stuff->frame_rect != 0) {
         ErrorF("ProcWindowsWMFrameGetRect - stuff->frame_rect != 0\n");
@@ -396,8 +381,8 @@ ProcWindowsWMFrameDraw(ClientPtr client)
         return BadWindow;
 
 #if CYGMULTIWINDOW_DEBUG
-    ErrorF("ProcWindowsWMFrameDraw - HWND 0x%08x 0x%08x 0x%08x\n",
-           (int) pRLWinPriv->hWnd, (int) stuff->frame_style,
+    ErrorF("ProcWindowsWMFrameDraw - HWND %p 0x%08x 0x%08x\n",
+           pRLWinPriv->hWnd, (int) stuff->frame_style,
            (int) stuff->frame_style_ex);
     ErrorF("ProcWindowsWMFrameDraw - %d %d %d %d\n",
            stuff->ix, stuff->iy, stuff->iw, stuff->ih);

@@ -251,6 +251,21 @@ XkbSetRulesDflts(XkbRMLVOSet * rmlvo)
 }
 
 void
+XkbDeleteRulesUsed(void)
+{
+    free(XkbRulesUsed);
+    XkbRulesUsed = NULL;
+    free(XkbModelUsed);
+    XkbModelUsed = NULL;
+    free(XkbLayoutUsed);
+    XkbLayoutUsed = NULL;
+    free(XkbVariantUsed);
+    XkbVariantUsed = NULL;
+    free(XkbOptionsUsed);
+    XkbOptionsUsed = NULL;
+}
+
+void
 XkbDeleteRulesDflts(void)
 {
     free(XkbRulesDflt);
@@ -488,8 +503,9 @@ InitKeyboardDeviceStruct(DeviceIntPtr dev, XkbRMLVOSet * rmlvo,
     XkbEventCauseRec cause;
     XkbRMLVOSet rmlvo_dflts = { NULL };
 
-    if (dev->key || dev->kbdfeed)
-        return FALSE;
+    BUG_RETURN_VAL(dev == NULL, FALSE);
+    BUG_RETURN_VAL(dev->key != NULL, FALSE);
+    BUG_RETURN_VAL(dev->kbdfeed != NULL, FALSE);
 
     if (!rmlvo) {
         rmlvo = &rmlvo_dflts;
@@ -743,13 +759,15 @@ XkbProcessArguments(int argc, char *argv[], int i)
     if ((strcmp(argv[i], "-ardelay") == 0) || (strcmp(argv[i], "-ar1") == 0)) { /* -ardelay int */
         if (++i >= argc)
             UseMsg();
-        XkbDfltRepeatDelay = (long) atoi(argv[i]);
+        else
+            XkbDfltRepeatDelay = (long) atoi(argv[i]);
         return 2;
     }
     if ((strcmp(argv[i], "-arinterval") == 0) || (strcmp(argv[i], "-ar2") == 0)) {      /* -arinterval int */
         if (++i >= argc)
             UseMsg();
-        XkbDfltRepeatInterval = (long) atoi(argv[i]);
+        else
+            XkbDfltRepeatInterval = (long) atoi(argv[i]);
         return 2;
     }
     return 0;

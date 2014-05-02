@@ -140,10 +140,8 @@ extern void XFree86BigfontExtensionInit(void);
 
 extern void BigReqExtensionInit(void);
 
-#ifdef XFIXES
 extern _X_EXPORT Bool noXFixesExtension;
 extern void XFixesExtensionInit(void);
-#endif
 
 extern void XInputExtensionInit(void);
 extern _X_EXPORT void AssignTypeAndName(DeviceIntPtr dev,
@@ -176,6 +174,16 @@ extern void PseudoramiXExtensionInit(void);
 extern _X_EXPORT Bool noXvExtension;
 extern void XvExtensionInit(void);
 extern void XvMCExtensionInit(void);
+#endif
+
+#if defined(DRI3)
+#include <X11/extensions/dri3proto.h>
+extern void dri3_extension_init(void);
+#endif
+
+#if defined(PRESENT)
+#include <X11/extensions/presentproto.h>
+#include "presentext.h"
 #endif
 
 #endif
