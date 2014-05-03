@@ -101,7 +101,7 @@ static entry drivers[] =
       set_clientpointer
     },
     { "test-xi2",
-      "<device>",
+      "[--root] <device>",
       test_xi2,
     },
     { "map-to-output",
@@ -202,14 +202,25 @@ xinput_version(Display	*display)
     /* Announce our supported version so the server treats us correctly. */
     if (vers >= XI_2_Major)
     {
+        const char *forced_version;
         int maj = 2,
             min = 0;
 
-#if HAVE_XI21
-        min = 1;
-#elif HAVE_XI22
+#if HAVE_XI22
         min = 2;
+#elif HAVE_XI21
+        min = 1;
 #endif
+
+        forced_version = getenv("XINPUT_XI2_VERSION");
+        if (forced_version) {
+            if (sscanf(forced_version, "%d.%d", &maj, &min) != 2) {
+                fprintf(stderr, "Invalid format of XINPUT_XI2_VERSION "
+                                "environment variable. Need major.minor\n");
+                exit(1);
+            }
+            printf("Overriding XI2 version to: %d.%d\n", maj, min);
+        }
 
         XIQueryVersion(display, &maj, &min);
     }

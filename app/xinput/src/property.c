@@ -60,6 +60,7 @@ print_property(Display *dpy, XDevice* dev, Atom property)
 
     name = XGetAtomName(dpy, property);
     printf("\t%s (%ld):\t", name, property);
+    XFree(name);
 
     if (XGetDeviceProperty(dpy, dev, property, 0, 1000, False,
                            AnyPropertyType, &act_type, &act_format,
@@ -127,9 +128,9 @@ print_property(Display *dpy, XDevice* dev, Atom property)
                 case XA_ATOM:
                     {
                         Atom a = *(Atom*)ptr;
-                        printf("\"%s\" (%d)",
-                                (a) ? XGetAtomName(dpy, a) : "None",
-                                (int)a);
+                        name = (a) ? XGetAtomName(dpy, a) : NULL;
+                        printf("\"%s\" (%d)", name ? name : "None", (int)a);
+                        XFree(name);
                         break;
                     }
                 default:
@@ -139,8 +140,9 @@ print_property(Display *dpy, XDevice* dev, Atom property)
                         break;
                     }
 
-                    printf("\t... of unknown type '%s'\n",
-                            XGetAtomName(dpy, act_type));
+                    name = XGetAtomName(dpy, act_type);
+                    printf("\t... of unknown type '%s'\n", name);
+                    XFree(name);
                     done = True;
                     break;
             }
@@ -250,6 +252,7 @@ int watch_props(Display *dpy, int argc, char** argv, char* n, char *desc)
 
         name = XGetAtomName(dpy, dpev->atom);
         printf("Property '%s' changed.\n", name);
+        XFree(name);
         print_property(dpy, dev, dpev->atom);
     }
 
@@ -427,6 +430,7 @@ print_property_xi2(Display *dpy, int deviceid, Atom property)
 
     name = XGetAtomName(dpy, property);
     printf("\t%s (%ld):\t", name, property);
+    XFree(name);
 
     if (XIGetProperty(dpy, deviceid, property, 0, 1000, False,
                            AnyPropertyType, &act_type, &act_format,
@@ -487,9 +491,9 @@ print_property_xi2(Display *dpy, int deviceid, Atom property)
                 case XA_ATOM:
                     {
                         Atom a = *(uint32_t*)ptr;
-                        printf("\"%s\" (%ld)",
-                                (a) ? XGetAtomName(dpy, a) : "None",
-                                a);
+                        name = (a) ? XGetAtomName(dpy, a) : NULL;
+                        printf("\"%s\" (%ld)", name ? name : "None", a);
+                        XFree(name);
                         break;
                     }
                     break;
@@ -500,8 +504,9 @@ print_property_xi2(Display *dpy, int deviceid, Atom property)
                         break;
                     }
 
-                    printf("\t... of unknown type %s\n",
-                            XGetAtomName(dpy, act_type));
+                    name = XGetAtomName(dpy, act_type);
+                    printf("\t... of unknown type %s\n", name);
+                    XFree(name);
                     done = True;
                     break;
             }

@@ -104,9 +104,11 @@ loop displaying events received. If the -proximity is given, ProximityIn
 and ProximityOut are registered.
 .PP
 .TP 8
-.B --test-xi2 [\fIdevice\fP]
+.B --test-xi2 [--root] [\fIdevice\fP]
 Register for a number of XI2 events and display them. If a device is given,
-only events on this device are displayed.
+only events on this device are displayed. If --root is given, events are
+selected on the root window only. Otherwise, a new client window is created
+(similar to xev).
 .PP
 .TP 8
 .B --create-master \fIprefix\fP [sendCore] [enable]

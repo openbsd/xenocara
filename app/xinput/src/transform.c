@@ -107,10 +107,30 @@ apply_matrix(Display *dpy, int deviceid, Matrix *m)
 }
 
 static void
-set_transformation_matrix(Display *dpy, Matrix *m, int offset_x, int offset_y,
-                                int screen_width, int screen_height)
+matrix_s4(Matrix *m, float x02, float x12, float d1, float d2, int main_diag)
 {
-    /* offset */
+    matrix_set(m, 0, 2, x02);
+    matrix_set(m, 1, 2, x12);
+
+    if (main_diag) {
+        matrix_set(m, 0, 0, d1);
+        matrix_set(m, 1, 1, d2);
+    } else {
+        matrix_set(m, 0, 0, 0);
+        matrix_set(m, 1, 1, 0);
+        matrix_set(m, 0, 1, d1);
+        matrix_set(m, 1, 0, d2);
+    }
+}
+
+#define RR_Reflect_All	(RR_Reflect_X|RR_Reflect_Y)
+
+static void
+set_transformation_matrix(Display *dpy, Matrix *m, int offset_x, int offset_y,
+                          int screen_width, int screen_height,
+                          int rotation)
+{
+    /* total display size */
     int width = DisplayWidth(dpy, DefaultScreen(dpy));
     int height = DisplayHeight(dpy, DefaultScreen(dpy));
 
@@ -124,11 +144,49 @@ set_transformation_matrix(Display *dpy, Matrix *m, int offset_x, int offset_y,
 
     matrix_set_unity(m);
 
-    matrix_set(m, 0, 2, x);
-    matrix_set(m, 1, 2, y);
-
-    matrix_set(m, 0, 0, w);
-    matrix_set(m, 1, 1, h);
+    /*
+     * There are 16 cases:
+     * Rotation X Reflection
+     * Rotation: 0 | 90 | 180 | 270
+     * Reflection: None | X | Y | XY
+     *
+     * They are spelled out instead of doing matrix multiplication to avoid
+     * any floating point errors.
+     */
+    switch (rotation) {
+    case RR_Rotate_0:
+    case RR_Rotate_180 | RR_Reflect_All:
+        matrix_s4(m, x, y, w, h, 1);
+        break;
+    case RR_Reflect_X|RR_Rotate_0:
+    case RR_Reflect_Y|RR_Rotate_180:
+        matrix_s4(m, x + w, y, -w, h, 1);
+        break;
+    case RR_Reflect_Y|RR_Rotate_0:
+    case RR_Reflect_X|RR_Rotate_180:
+        matrix_s4(m, x, y + h, w, -h, 1);
+        break;
+    case RR_Rotate_90:
+    case RR_Rotate_270 | RR_Reflect_All: /* left limited - correct in working zone. */
+        matrix_s4(m, x + w, y, -w, h, 0);
+        break;
+    case RR_Rotate_270:
+    case RR_Rotate_90 | RR_Reflect_All: /* left limited - correct in working zone. */
+        matrix_s4(m, x, y + h, w, -h, 0);
+        break;
+    case RR_Rotate_90 | RR_Reflect_X: /* left limited - correct in working zone. */
+    case RR_Rotate_270 | RR_Reflect_Y: /* left limited - correct in working zone. */
+        matrix_s4(m, x, y, w, h, 0);
+        break;
+    case RR_Rotate_90 | RR_Reflect_Y: /* right limited - correct in working zone. */
+    case RR_Rotate_270 | RR_Reflect_X: /* right limited - correct in working zone. */
+        matrix_s4(m, x + w, y + h, -w, -h, 0);
+        break;
+    case RR_Rotate_180:
+    case RR_Reflect_All|RR_Rotate_0:
+        matrix_s4(m, x + w, y + h, -w, -h, 1);
+        break;
+    }
 
 #if DEBUG
     matrix_print(m);
@@ -186,7 +244,8 @@ map_output_xrandr(Display *dpy, int deviceid, const char *output_name)
         matrix_set_unity(&m);
         crtc_info = XRRGetCrtcInfo (dpy, res, output_info->crtc);
         set_transformation_matrix(dpy, &m, crtc_info->x, crtc_info->y,
-                                  crtc_info->width, crtc_info->height);
+                                  crtc_info->width, crtc_info->height,
+                                  crtc_info->rotation);
         rc = apply_matrix(dpy, deviceid, &m);
         XRRFreeCrtcInfo(crtc_info);
         XRRFreeOutputInfo(output_info);
@@ -242,7 +301,8 @@ map_output_xinerama(Display *dpy, int deviceid, const char *output_name)
     matrix_set_unity(&m);
     set_transformation_matrix(dpy, &m,
                               screens[head].x_org, screens[head].y_org,
-                              screens[head].width, screens[head].height);
+                              screens[head].width, screens[head].height,
+                              RR_Rotate_0);
     rc = apply_matrix(dpy, deviceid, &m);
 
 out:

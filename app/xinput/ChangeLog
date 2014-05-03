@@ -1,3 +1,156 @@
+commit 82f1902fef60569680f3a27bf6d0c8da5bafc8a6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 16 09:02:05 2013 +1000
+
+    xinput 1.6.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 157d147fe10dd31d7c6a286c046348b8699ba9ea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 8 09:55:18 2013 +1000
+
+    Fix version selection condition
+    
+    If XI22 is true, XI21 is set too so we'd never actually register for XI 2.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 39ac9d85f464ca3195e8b3b2d3f6c3188f83e25e
+Merge: a10f48d 852ed7c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 15 15:02:55 2013 +1000
+
+    Merge branch 'test-root-flag'
+
+commit 852ed7c7064be60acb25a574563e95b4c5800205
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 10 15:22:25 2013 +1000
+
+    test-xi2: add support for test-xi2 --root
+    
+    Select on the root window instead of a newly created one
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d08c42788cc711a7abfc51279d450847684cad7c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 10 15:07:17 2013 +1000
+
+    test-xi2: group event selection down
+    
+    No real functional changes, just group the two selection requests together.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit cac73b0cddc5a3d9a97e1698a5498c26fd1b5e0f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 10 15:02:18 2013 +1000
+
+    test-xi2: allocate both masks at the same time
+    
+    no functional changes for now, prep work for the --root flag
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 11e355174ee28892ec028559ee85d327ef3a2325
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 10 15:03:35 2013 +1000
+
+    test-xi2: drop unused grab code
+    
+    Not sure why this code is still here
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a10f48d2dcd24fc4211d69b388f499398891c577
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Mon Jul 1 18:36:28 2013 +0100
+
+    Use setvbuf() instead of setlinebuf()
+    
+    setlinebuf() added in commit bcfa9123b41da8048450ed27aaeffff17b8eee99 is not in
+    SuS v3, use the exactly equivalent C89 setvbuf() invocation for portability
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5dce5636d23f366d72f88c341ca1ff9da4427f66
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sun Mar 10 15:25:38 2013 +1000
+
+    Add support for XINPUT_XI2_VERSION environment variable to override version
+    
+    By default, xinput announces whatever version it was built against. For
+    debugging it can be useful to set this version on-the-fly.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bcfa9123b41da8048450ed27aaeffff17b8eee99
+Author: Nikolai Kondrashov <spbnick@gmail.com>
+Date:   Fri Aug 17 13:29:10 2012 +0300
+
+    Increase interactiveness of test* output
+    
+    Force line buffering for test and test_xi2 to increase interactiveness and
+    avoid losing data with non-terminal stdout. This fixes capturing xinput
+    test* output into a file.
+    
+    Signed-off-by: Nikolai Kondrashov <spbnick@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9071787a1d22b256c5871897f9421ba6ea2f4f76
+Author: Alon Levy <alevy@redhat.com>
+Date:   Sat Jun 9 17:23:37 2012 +0300
+
+    map-to-output: implement reflections and rotations
+    
+    Uses the rotation & translation currently set according to RandR.
+    
+    Signed-off-by: Alon Levy <alevy@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 15f5811753c0be8d7e38c44dc1798740071ba5c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 31 22:35:35 2012 -0700
+
+    Free strings allocated by GetAtomName instead of letting them leak
+    
+    Fixes errors reported by Parfait 0.5.0.1 bug checking tool:
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer '<unknown>' allocated with XGetAtomName(dpy, info->type)
+            at line 122 of src/list.c in function 'print_info'.
+              pointer allocated at line 84 with XGetAtomName(dpy, info->type).
+              <unknown> leaks when i >= info->num_classes at line 88.
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer '<unknown>' allocated with XGetAtomName(dpy, a)
+            at line 160 of src/property.c in function 'print_property'.
+              pointer allocated at line 131 with XGetAtomName(dpy, a).
+       Memory leak of pointer '<unknown>' allocated with XGetAtomName(dpy, act_type)
+            at line 160 of src/property.c in function 'print_property'.
+              pointer allocated at line 143 with XGetAtomName(dpy, act_type).
+       Memory leak of pointer 'name' allocated with XGetAtomName(dpy, property)
+            at line 160 of src/property.c in function 'print_property'.
+              'name' allocated at line 61 with XGetAtomName(dpy, property).
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer '<unknown>' allocated with XGetAtomName(dpy, a)
+            at line 521 of src/property.c in function 'print_property_xi2'.
+              pointer allocated at line 491 with XGetAtomName(dpy, a).
+       Memory leak of pointer '<unknown>' allocated with XGetAtomName(dpy, act_type)
+            at line 521 of src/property.c in function 'print_property_xi2'.
+              pointer allocated at line 504 with XGetAtomName(dpy, act_type).
+       Memory leak of pointer 'name' allocated with XGetAtomName(dpy, property)
+            at line 521 of src/property.c in function 'print_property_xi2'.
+              'name' allocated at line 428 with XGetAtomName(dpy, property).
+    
+    Confirmed with Solaris Studio runtime checker that "list-props" now has
+    fewer leaks than before and "watch-props" no longer leaks a string every
+    time a property changes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 60fe84e83b14576fb70d79c5d39755a281906607
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue May 15 15:47:45 2012 +1000

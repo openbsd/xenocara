@@ -321,84 +321,87 @@ test_xi2(Display	*display,
          char	*name,
          char	*desc)
 {
-    XIEventMask mask;
+    XIEventMask mask[2];
+    XIEventMask *m;
     Window win;
     int deviceid = -1;
+    int use_root = 0;
     int rc;
+
+    setvbuf(stdout, NULL, _IOLBF, 0);
+
+    if (argc >= 1 && strcmp(argv[0], "--root") == 0) {
+        use_root = 1;
+
+        argc--;
+        argv++;
+    }
 
     rc = list(display, argc, argv, name, desc);
     if (rc != EXIT_SUCCESS)
         return rc;
+
+    if (use_root)
+        win = DefaultRootWindow(display);
+    else
+        win = create_win(display);
 
     if (argc >= 1) {
         XIDeviceInfo *info;
         info = xi2_find_device_info(display, argv[0]);
         deviceid = info->deviceid;
     }
-    win = create_win(display);
 
     /* Select for motion events */
-    mask.deviceid = (deviceid == -1) ? XIAllDevices : deviceid;
-    mask.mask_len = XIMaskLen(XI_LASTEVENT);
-    mask.mask = calloc(mask.mask_len, sizeof(char));
-    XISetMask(mask.mask, XI_ButtonPress);
-    XISetMask(mask.mask, XI_ButtonRelease);
-    XISetMask(mask.mask, XI_KeyPress);
-    XISetMask(mask.mask, XI_KeyRelease);
-    XISetMask(mask.mask, XI_Motion);
-    XISetMask(mask.mask, XI_DeviceChanged);
-    XISetMask(mask.mask, XI_Enter);
-    XISetMask(mask.mask, XI_Leave);
-    XISetMask(mask.mask, XI_FocusIn);
-    XISetMask(mask.mask, XI_FocusOut);
+    m = &mask[0];
+    m->deviceid = (deviceid == -1) ? XIAllDevices : deviceid;
+    m->mask_len = XIMaskLen(XI_LASTEVENT);
+    m->mask = calloc(m->mask_len, sizeof(char));
+    XISetMask(m->mask, XI_ButtonPress);
+    XISetMask(m->mask, XI_ButtonRelease);
+    XISetMask(m->mask, XI_KeyPress);
+    XISetMask(m->mask, XI_KeyRelease);
+    XISetMask(m->mask, XI_Motion);
+    XISetMask(m->mask, XI_DeviceChanged);
+    XISetMask(m->mask, XI_Enter);
+    XISetMask(m->mask, XI_Leave);
+    XISetMask(m->mask, XI_FocusIn);
+    XISetMask(m->mask, XI_FocusOut);
 #ifdef HAVE_XI22
-    XISetMask(mask.mask, XI_TouchBegin);
-    XISetMask(mask.mask, XI_TouchUpdate);
-    XISetMask(mask.mask, XI_TouchEnd);
+    XISetMask(m->mask, XI_TouchBegin);
+    XISetMask(m->mask, XI_TouchUpdate);
+    XISetMask(m->mask, XI_TouchEnd);
 #endif
-    if (mask.deviceid == XIAllDevices)
-        XISetMask(mask.mask, XI_HierarchyChanged);
-    XISetMask(mask.mask, XI_PropertyEvent);
-    XISelectEvents(display, win, &mask, 1);
-    XMapWindow(display, win);
+    if (m->deviceid == XIAllDevices)
+        XISetMask(m->mask, XI_HierarchyChanged);
+    XISetMask(m->mask, XI_PropertyEvent);
+
+    m = &mask[1];
+    m->deviceid = (deviceid == -1) ? XIAllMasterDevices : deviceid;
+    m->mask_len = XIMaskLen(XI_LASTEVENT);
+    m->mask = calloc(m->mask_len, sizeof(char));
+    XISetMask(m->mask, XI_RawKeyPress);
+    XISetMask(m->mask, XI_RawKeyRelease);
+    XISetMask(m->mask, XI_RawButtonPress);
+    XISetMask(m->mask, XI_RawButtonRelease);
+    XISetMask(m->mask, XI_RawMotion);
+#ifdef HAVE_XI22
+    XISetMask(m->mask, XI_RawTouchBegin);
+    XISetMask(m->mask, XI_RawTouchUpdate);
+    XISetMask(m->mask, XI_RawTouchEnd);
+#endif
+
+    XISelectEvents(display, win, &mask[0], use_root ? 2 : 1);
+    if (!use_root) {
+        XISelectEvents(display, DefaultRootWindow(display), &mask[1], 1);
+        XMapWindow(display, win);
+    }
     XSync(display, False);
 
-    {
-        XIGrabModifiers modifiers[] = {{0, 0}, {0, 0x10}, {0, 0x1}, {0, 0x11}};
-        int nmods = sizeof(modifiers)/sizeof(modifiers[0]);
+    free(mask[0].mask);
+    free(mask[1].mask);
 
-        mask.deviceid = 2;
-        memset(mask.mask, 0, mask.mask_len);
-        XISetMask(mask.mask, XI_KeyPress);
-        XISetMask(mask.mask, XI_KeyRelease);
-        XISetMask(mask.mask, XI_ButtonPress);
-        XISetMask(mask.mask, XI_ButtonRelease);
-        XISetMask(mask.mask, XI_Motion);
-        XIGrabButton(display, 2, 1, win, None, GrabModeAsync, GrabModeAsync,
-                False, &mask, nmods, modifiers);
-        XIGrabKeycode(display, 3, 24 /* q */, win, GrabModeAsync, GrabModeAsync,
-                False, &mask, nmods, modifiers);
-        XIUngrabButton(display, 3, 1, win, nmods - 2, &modifiers[2]);
-        XIUngrabKeycode(display, 3, 24 /* q */, win, nmods - 2, &modifiers[2]);
-    }
-
-    mask.deviceid = (deviceid == -1) ? XIAllMasterDevices : deviceid;
-    memset(mask.mask, 0, mask.mask_len);
-    XISetMask(mask.mask, XI_RawKeyPress);
-    XISetMask(mask.mask, XI_RawKeyRelease);
-    XISetMask(mask.mask, XI_RawButtonPress);
-    XISetMask(mask.mask, XI_RawButtonRelease);
-    XISetMask(mask.mask, XI_RawMotion);
-#ifdef HAVE_XI22
-    XISetMask(mask.mask, XI_RawTouchBegin);
-    XISetMask(mask.mask, XI_RawTouchUpdate);
-    XISetMask(mask.mask, XI_RawTouchEnd);
-#endif
-    XISelectEvents(display, DefaultRootWindow(display), &mask, 1);
-
-    free(mask.mask);
-
-    {
+    if (!use_root) {
         XEvent event;
         XMaskEvent(display, ExposureMask, &event);
         XSelectInput(display, win, 0);

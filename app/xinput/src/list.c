@@ -80,8 +80,11 @@ print_info(Display* dpy, XDeviceInfo	*info, enum print_format format)
     if (format == FORMAT_SHORT)
         return;
 
-    if(info->type != None)
-	printf("\tType is %s\n", XGetAtomName(dpy, info->type));
+    if (info->type != None) {
+	char *type = XGetAtomName(dpy, info->type);
+	printf("\tType is %s\n", type);
+	XFree(type);
+    }
 
     if (info->num_classes > 0) {
 	any = (XAnyClassPtr) (info->inputclassinfo);
