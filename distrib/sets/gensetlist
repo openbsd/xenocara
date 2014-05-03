@@ -1,11 +1,10 @@
 #!/bin/sh
-#	$OpenBSD: gensetlist,v 1.2 2006/11/29 16:36:46 matthieu Exp $
+#	$OpenBSD: gensetlist,v 1.3 2014/05/03 15:18:26 todd Exp $
 
 arch=$MACHINE
 listsdir=`pwd`/lists
 
 setname=$1
-Release=$2
 
 if [ "$setname" = "xfont" ]; then
         arch=x11r7

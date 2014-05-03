@@ -1,10 +1,8 @@
 #!/bin/sh
-#	$OpenBSD: maketars,v 1.4 2008/12/24 00:15:24 todd Exp $
+#	$OpenBSD: maketars,v 1.5 2014/05/03 15:18:26 todd Exp $
 
 # xy
 RELEASE=$1
-Release=$2
-# x.y
 
 if [ "X${RELEASE}" = "X" ]; then
 	echo "Usage: `basename $0` <OSREVISION>"
@@ -37,7 +35,7 @@ cd $DESTDIR
 
 for setname in $lists; do
 	echo -n "${setname}: "
-	(cd $pwd; sh gensetlist $setname $Release) | sort > $TMP1
+	(cd $pwd; sh gensetlist $setname) | sort > $TMP1
 	sed -n  '/^\.\/usr\/X11R6\/lib\/lib.*\.so\..*/{p;}' $TMP1 > $TMP2
 	sed     '/^\.\/usr\/X11R6\/lib\/lib.*\.so\..*/d'    $TMP1 >> $TMP2
 	pax -w -d < $TMP2 | gzip -9 > ${tardir}/${setname}${RELEASE}.tgz

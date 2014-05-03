@@ -1,5 +1,5 @@
 #!/bin/sh -x
-#	$OpenBSD: checkflist,v 1.1.1.1 2006/11/27 11:25:45 matthieu Exp $
+#	$OpenBSD: checkflist,v 1.2 2014/05/03 15:18:26 todd Exp $
 #
 # Copyright (c) 2001 Theo de Raadt
 # All rights reserved.
@@ -29,12 +29,15 @@ if [ "X${DESTDIR}" = "X" ]; then
 	exit 1
 fi
 
-Release=$1
+diffarg=""
+if [ "$1" = "-u" ]; then
+	diffarg="-u"
+	shift
+fi
 
+TMP=`mktemp /tmp/_xckr.XXXXXXXXXX` || exit 1
+trap 'rm -f $TMP' 0 1 15
 
-TMP=`mktemp -d /tmp/_xckr.XXXXXXXXXX` || exit 1
-trap 'rm -rf $TMP' 0 1 15
-
-sh makeflist $Release > $TMP/_CHECK
+sh makeflist > $TMP
 ( cd $DESTDIR ; find . \( -type d -o -type f -o -type l \) ) | \
-    grep -v -e '^\.$' | sort -H | diff -u $TMP/_CHECK -
+    grep -v -e '^\.$' | sort -H | diff $diffarg $TMP -
