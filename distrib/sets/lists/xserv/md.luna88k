@@ -76,6 +76,8 @@
 ./usr/X11R6/include/xorg/mispans.h
 ./usr/X11R6/include/xorg/mistruct.h
 ./usr/X11R6/include/xorg/misync.h
+./usr/X11R6/include/xorg/misyncfd.h
+./usr/X11R6/include/xorg/misyncshm.h
 ./usr/X11R6/include/xorg/misyncstr.h
 ./usr/X11R6/include/xorg/miwideline.h
 ./usr/X11R6/include/xorg/mizerarc.h
@@ -89,6 +91,8 @@
 ./usr/X11R6/include/xorg/picturestr.h
 ./usr/X11R6/include/xorg/pixmap.h
 ./usr/X11R6/include/xorg/pixmapstr.h
+./usr/X11R6/include/xorg/present.h
+./usr/X11R6/include/xorg/presentext.h
 ./usr/X11R6/include/xorg/privates.h
 ./usr/X11R6/include/xorg/property.h
 ./usr/X11R6/include/xorg/propertyst.h
@@ -145,7 +149,6 @@
 ./usr/X11R6/include/xorg/xf86Privstr.h
 ./usr/X11R6/include/xorg/xf86RamDac.h
 ./usr/X11R6/include/xorg/xf86RandR12.h
-./usr/X11R6/include/xorg/xf86Rename.h
 ./usr/X11R6/include/xorg/xf86VGAarbiter.h
 ./usr/X11R6/include/xorg/xf86Xinput.h
 ./usr/X11R6/include/xorg/xf86_OSlib.h

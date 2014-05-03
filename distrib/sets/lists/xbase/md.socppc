@@ -70,7 +70,6 @@
 ./usr/X11R6/include/xorg/xf86Optrec.h
 ./usr/X11R6/include/xorg/xf86Parser.h
 ./usr/X11R6/include/xorg/xf86RandR12.h
-./usr/X11R6/include/xorg/xf86Rename.h
 ./usr/X11R6/include/xorg/xf86VGAarbiter.h
 ./usr/X11R6/include/xorg/xfixes.h
 ./usr/X11R6/include/xorg/xkbfile.h
