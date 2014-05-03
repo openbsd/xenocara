@@ -21,6 +21,7 @@
 
 AUTOMAKE_OPTIONS = foreign
 
+SUBDIRS = man
 bin_PROGRAMS = xbacklight
 
 AM_CFLAGS = $(CWARNFLAGS) $(XRANDR_CFLAGS)
@@ -29,23 +30,7 @@ xbacklight_LDADD = $(XRANDR_LIBS)
 xbacklight_SOURCES =	\
         xbacklight.c
 
-appman_PRE = \
-        xbacklight.man
-
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST = $(appman_PRE) COPYING
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = $(appman_DATA)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
 
 .PHONY: ChangeLog INSTALL
 

@@ -1,3 +1,109 @@
+commit 8e0f47c1971f17ac37c89fb49a8f1807d25923a5
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Oct 7 20:43:34 2013 -0700
+
+    xbacklight 1.2.1
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit a4c00b2662a4c7291627899021f10c6a6d4716f3
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu Jul 11 12:03:40 2013 +0200
+
+    man: replace hyphens with minus signs
+    
+    Reported-by: Gianfranco Costamagna <costamagnagianfranco@yahoo.it>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 5d7642ffd0de1d6037f6f98b8733e8a8161e24d3
+Author: Edward Sheldrake <ejsheldrake@gmail.com>
+Date:   Sat Apr 6 13:39:38 2013 +0100
+
+    Fix reading backlight level on 64-bit systems (bug 63205)
+    
+    obviously incorrect output of "xbacklight -get":
+    51671552015166906368.000000
+    
+    valgrind reports an invalid read of size 8 at xbacklight.c:91
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=63205
+    
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 36ffc5e0eb50fdda93af3dd7dc3899622e80d3be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 6 09:45:22 2013 -0700
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc2a24b51637e8f21c9c0aed73394db67a965b62
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 6 09:40:53 2013 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 059c60e7a6ae7f6cdcf51b06ac733bb2392c2ec2
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Sep 11 14:37:18 2012 -0700
+
+    xbacklight 1.2.0
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 6f2668f2cede3598bad3feb1cae9e8de473d2531
+Author: Jon Lund Steffensen <jonlst@gmail.com>
+Date:   Sun Aug 12 10:04:08 2012 -0700
+
+    Port xbacklight to XCB
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit a18911abb94ef0cfa55282b96027f501a82652a6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8bc2e5a8888de4d457870986f442b628e4795364
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ae1445b4ce52ecc739faee1e69ab9f51d0ad90f3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 3d55286af9f597d81099f58c7236a920d02c7519
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Apr 5 20:42:20 2010 -0400
+
+    config: the file COPYING in EXTRA_DIST is redundant
+    
+    COPYING is a filename known to Automake and does not
+    need to be on EXTRA_DIST.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 30ed7c0b3f2dc131e9fa4bb53ba702b65b05b46a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 23:36:28 2010 -0700
