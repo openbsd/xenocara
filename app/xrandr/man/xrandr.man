@@ -126,10 +126,14 @@ Report information about the providers available.
 Set \fIsource\fP as the source of display output images for \fIprovider\fP.
 This is only possible if \fIsource\fP and \fIprovider\fP have the \fBSource
 Output\fR and \fBSink Output\fR capabilities, respectively.
+If \fIsource\fP is \fB0x0\fP, then \fIprovider\fP is disconnected from its
+current output source.
 .IP "\-\-setprovideroffloadsink \fIprovider\fP \fIsink\fP"
 Set \fIprovider\fP as a render offload device for \fIsink\fP.
 This is only possible if \fIprovider\fP and \fIsink\fP have the \fBSource
 Offload\fR and \fBSink Offload\fR capabilities, respectively.
+If \fIsink\fP is \fB0x0\fP, then \fIprovider\fP is disconnected from its current
+render offload sink.
 .PP
 .SH "RandR version 1.3 options"
 .PP

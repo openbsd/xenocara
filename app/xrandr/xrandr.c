@@ -543,7 +543,7 @@ static double
 mode_refresh (XRRModeInfo *mode_info)
 {
     double rate;
-    unsigned int vTotal = mode_info->vTotal;
+    double vTotal = mode_info->vTotal;
 
     if (mode_info->modeFlags & RR_DoubleScan) {
 	/* doublescan doubles the number of lines */
@@ -1566,7 +1566,7 @@ crtc_apply (crtc_t *crtc)
 	rr_outputs[o] = crtc->outputs[o]->output.xid;
     mode = crtc->mode_info->id;
     if (verbose) {
-	printf ("crtc %d: %12s %6.1f +%d+%d", crtc->crtc.index,
+	printf ("crtc %d: %12s %6.2f +%d+%d", crtc->crtc.index,
 		crtc->mode_info->name, mode_refresh (crtc->mode_info),
 		crtc->x, crtc->y);
 	for (o = 0; o < crtc->noutput; o++)
@@ -2342,19 +2342,10 @@ property_values_from_string(const char *str, const Atom type, const int format,
 
 
 static void
-print_output_property_value(Bool is_edid,
-                            int value_format, /* 8, 16, 32 */
+print_output_property_value(int value_format, /* 8, 16, 32 */
                             Atom value_type,  /* XA_{ATOM,INTEGER,CARDINAL} */
                             const void *value_bytes)
 {
-    /* special-case the EDID */
-    if (is_edid && value_format == 8)
-    {
-	const uint8_t *val = value_bytes;
-	printf ("%02" PRIx8, *val);
-	return;
-    }
-
     if (value_type == XA_ATOM && value_format == 32)
     {
 	const Atom *val = value_bytes;
@@ -2415,6 +2406,88 @@ print_output_property_value(Bool is_edid,
 }
 
 static void
+print_edid(int nitems, const unsigned char *prop)
+{
+    int k;
+
+    printf ("\n\t\t");
+
+    for (k = 0; k < nitems; k++)
+    {
+	if (k != 0 && (k % 16) == 0)
+	{
+	    printf ("\n\t\t");
+	}
+
+	printf("%02" PRIx8, prop[k]);
+    }
+
+    printf("\n");
+}
+
+static void
+print_guid(const unsigned char *prop)
+{
+    int k;
+
+    printf("{");
+
+    for (k = 0; k < 16; k++)
+    {
+	printf("%02" PRIX8, prop[k]);
+	if (k == 3 || k == 5 || k == 7 || k == 9)
+	{
+	    printf("-");
+	}
+    }
+
+    printf("}\n");
+}
+
+static void
+print_output_property(const char *atom_name,
+                      int value_format,
+                      Atom value_type,
+                      int nitems,
+                      const unsigned char *prop)
+{
+    int bytes_per_item = value_format / 8;
+    int k;
+
+    /*
+     * Check for properties that need special formatting.
+     */
+    if (strcmp (atom_name, "EDID") == 0 && value_format == 8 &&
+	value_type == XA_INTEGER)
+    {
+	print_edid (nitems, prop);
+	return;
+    }
+    else if (strcmp (atom_name, "GUID") == 0 && value_format == 8 &&
+	     value_type == XA_INTEGER && nitems == 16)
+    {
+	print_guid (prop);
+	return;
+    }
+
+    for (k = 0; k < nitems; k++)
+    {
+	if (k != 0)
+	{
+	    if ((k % 16) == 0)
+	    {
+		printf ("\n\t\t");
+	    }
+	}
+	print_output_property_value (value_format, value_type,
+				     prop + (k * bytes_per_item));
+	printf (" ");
+    }
+
+    printf ("\n");
+}
+
+static void
 get_providers (void)
 {
     XRRProviderResources *pr;
@@ -2448,6 +2521,8 @@ find_provider (name_t *name)
 {
     int i;
 
+    if ((name->kind & name_xid) && name->xid == 0)
+	return NULL;
     for (i = 0; i < num_providers; i++) {
 	provider_t *p = &providers[i];
 	name_kind_t common = name->kind & p->provider.kind;
@@ -3231,7 +3306,7 @@ main (int argc, char **argv)
 	provider = find_provider (&provider_name);
 	source = find_provider(&output_source_provider_name);
 
-	XRRSetProviderOutputSource(dpy, provider->provider.xid, source->provider.xid);
+	XRRSetProviderOutputSource(dpy, provider->provider.xid, source ? source->provider.xid : 0);
     }
     if (provsetoffsink)
     {
@@ -3246,7 +3321,7 @@ main (int argc, char **argv)
 	provider = find_provider (&provider_name);
 	sink = find_provider(&offload_sink_provider_name);
 
-	XRRSetProviderOffloadSink(dpy, provider->provider.xid, sink->provider.xid);
+	XRRSetProviderOffloadSink(dpy, provider->provider.xid, sink ? sink->provider.xid : 0);
     }
     if (setit_1_2)
     {
@@ -3510,8 +3585,7 @@ main (int argc, char **argv)
 		    Atom actual_type;
 		    XRRPropertyInfo *propinfo;
 		    char *atom_name = XGetAtomName (dpy, props[j]);
-		    Bool is_edid = strcmp (atom_name, "EDID") == 0;
-		    int bytes_per_item, k;
+		    int k;
 
 		    XRRGetOutputProperty (dpy, output->output.xid, props[j],
 					  0, 100, False, False,
@@ -3522,33 +3596,10 @@ main (int argc, char **argv)
 		    propinfo = XRRQueryOutputProperty(dpy, output->output.xid,
 						      props[j]);
 
-		    bytes_per_item = actual_format / 8;
-
 		    printf ("\t%s: ", atom_name);
 
-		    if (is_edid)
-		    {
-			printf ("\n\t\t");
-		    }
-
-		    for (k = 0; k < nitems; k++)
-		    {
-			if (k != 0)
-			{
-			    if ((k % 16) == 0)
-			    {
-				printf ("\n\t\t");
-			    }
-			}
-			print_output_property_value (is_edid, actual_format,
-						     actual_type,
-						     prop + (k * bytes_per_item));
-			if (!is_edid)
-			{
-			    printf (" ");
-			}
-		    }
-		    printf ("\n");
+		    print_output_property(atom_name, actual_format,
+					  actual_type, nitems, prop);
 
 		    if (propinfo->range && propinfo->num_values > 0)
 		    {
@@ -3557,10 +3608,10 @@ main (int argc, char **argv)
 			for (k = 0; k < propinfo->num_values / 2; k++)
 			{
 			    printf ("(");
-			    print_output_property_value (False, 32, actual_type,
+			    print_output_property_value (32, actual_type,
 							 (unsigned char *) &(propinfo->values[k * 2]));
 			    printf (", ");
-			    print_output_property_value (False, 32, actual_type,
+			    print_output_property_value (32, actual_type,
 							 (unsigned char *) &(propinfo->values[k * 2 + 1]));
 			    printf (")");
 			    if (k < propinfo->num_values / 2 - 1)
@@ -3573,7 +3624,7 @@ main (int argc, char **argv)
 			printf ("\t\tsupported: ");
 			for (k = 0; k < propinfo->num_values; k++)
 			{
-			    print_output_property_value (False, 32, actual_type,
+			    print_output_property_value (32, actual_type,
 							 (unsigned char *) &(propinfo->values[k]));
 			    if (k < propinfo->num_values - 1)
 				printf (", ");
@@ -3592,7 +3643,7 @@ main (int argc, char **argv)
 		    XRRModeInfo	*mode = find_mode_by_xid (output_info->modes[j]);
 		    int		f;
 		    
-		    printf ("  %s (0x%x) %6.1fMHz",
+		    printf ("  %s (0x%x) %6.3fMHz",
 			    mode->name, (int)mode->id,
 			    (double)mode->dotClock / 1000000.0);
 		    for (f = 0; mode_flags[f].flag; f++)
@@ -3603,10 +3654,10 @@ main (int argc, char **argv)
 		    if (j < output_info->npreferred)
 			printf (" +preferred");
 		    printf ("\n");
-		    printf ("        h: width  %4d start %4d end %4d total %4d skew %4d clock %6.1fKHz\n",
+		    printf ("        h: width  %4d start %4d end %4d total %4d skew %4d clock %6.2fKHz\n",
 			    mode->width, mode->hSyncStart, mode->hSyncEnd,
 			    mode->hTotal, mode->hSkew, mode_hsync (mode) / 1000);
-		    printf ("        v: height %4d start %4d end %4d total %4d           clock %6.1fHz\n",
+		    printf ("        v: height %4d start %4d end %4d total %4d           clock %6.2fHz\n",
 			    mode->height, mode->vSyncStart, mode->vSyncEnd, mode->vTotal,
 			    mode_refresh (mode));
 		    mode->modeFlags |= ModeShown;
@@ -3633,7 +3684,7 @@ main (int argc, char **argv)
 			if (strcmp (jmode->name, kmode->name) != 0) continue;
 			mode_shown[k] = True;
 			kmode->modeFlags |= ModeShown;
-			printf (" %6.1f", mode_refresh (kmode));
+			printf (" %6.2f", mode_refresh (kmode));
 			if (kmode == output->mode_info)
 			    printf ("*");
 			else
@@ -3654,13 +3705,13 @@ main (int argc, char **argv)
 
 	    if (!(mode->modeFlags & ModeShown))
 	    {
-		printf ("  %s (0x%x) %6.1fMHz\n",
+		printf ("  %s (0x%x) %6.3fMHz\n",
 			mode->name, (int)mode->id,
 			(double)mode->dotClock / 1000000.0);
-		printf ("        h: width  %4d start %4d end %4d total %4d skew %4d clock %6.1fKHz\n",
+		printf ("        h: width  %4d start %4d end %4d total %4d skew %4d clock %6.2fKHz\n",
 			mode->width, mode->hSyncStart, mode->hSyncEnd,
 			mode->hTotal, mode->hSkew, mode_hsync (mode) / 1000);
-		printf ("        v: height %4d start %4d end %4d total %4d           clock %6.1fHz\n",
+		printf ("        v: height %4d start %4d end %4d total %4d           clock %6.2fHz\n",
 			mode->height, mode->vSyncStart, mode->vSyncEnd, mode->vTotal,
 			mode_refresh (mode));
 	    }
@@ -3750,7 +3801,7 @@ main (int argc, char **argv)
 	    if (rate == rates[i])
 		break;
 	if (i == nrate) {
-	    fprintf (stderr, "Rate %.1f Hz not available for this size\n", rate);
+	    fprintf (stderr, "Rate %.2f Hz not available for this size\n", rate);
 	    exit (1);
 	}
     }

@@ -1,3 +1,105 @@
+commit 31f5fa6a47db154abb47cf16e9f6cc4d983ad371
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Mar 27 11:37:07 2014 -0700
+
+    xrandr 1.4.2
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 934a424a05a296c0b8af015476e11b191d55eba3
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Mar 21 10:35:56 2014 -0700
+
+    xrandr: document how to disconnect RandR 1.4 providers
+    
+    Commit a6217be2d5a93a4c7b48f4081a4a8e14c3c97014 restored the ability to
+    disconnect RandR 1.4 providers from each other, but it's not clear from the
+    documentation how to actually do that.  Try to clarify by mentioning it in the
+    man page.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit a6217be2d5a93a4c7b48f4081a4a8e14c3c97014
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Fri May 3 10:05:04 2013 +1000
+
+    xrandr: allow disconnecting of offload and outputs
+    
+    Before the lookup code passing a 0 XID would disconnect,
+    this fixes it backup.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Tested-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 00c795e99fe29ecd56e05e915e508c7af0ac39ad
+Author: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Date:   Fri May 31 17:01:54 2013 +0300
+
+    xrandr: Use floating point for VTotal when calculating refresh rate
+    
+    Interlaced modes generally have an odd VTotal, so we lose half a line
+    from VTotal when we divide by two. That causes the final refresh rate
+    to be slightly off. Make VTotal a double to avoid the problem.
+    
+    Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 8f9b993342fddfceaa1afbec2996ce10038f10d7
+Author: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Date:   Fri May 31 17:01:53 2013 +0300
+
+    xrandr: Use more decimal places when printing various rates
+    
+    Using just one decimal place for dotclock and refresh rates loses quite
+    a bit of information. When dealing with 60Hz vs. 59.94Hz refresh rate
+    modes for example, it's useful to see at least two decimal places. For
+    the dotclock in similar cases, three decimal places seems quite a bit
+    better than just one.
+    
+    Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 7ede207f9064fd88427026e38818819c2c8422bb
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jan 3 05:48:17 2014 -0800
+
+    Special-case printing of the GUID property
+    
+    Rather than printing GUIDs as 16 signed decimal integers, print them in
+    {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} format.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e7a19c8b5a26c8bfd76a7399a1a15eac01184261
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jan 3 05:22:02 2014 -0800
+
+    Move EDID printing into a helper function
+    
+    Localize the specialness of EDID printing by moving it into a single function,
+    print_edid, which prints the binary EDID data.  Remove the is_edid parameter
+    from everything else.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit a29728ca9599fd08da1243e9b422ac26a24cc05b
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Jan 3 05:14:35 2014 -0800
+
+    Split output property printing into a helper function
+    
+    Move the body of the code that prints the actual output property values into a
+    helper function.  This will make it easier for this function to select
+    special-case property printers for properties that need special formatting.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit c5334bb4137d6ea7b8c8b10d51131b9450d1106b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 16 23:30:27 2013 -0700
@@ -104,7 +206,7 @@ Date:   Tue Feb 12 13:24:38 2013 -0800
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 3e5f160c4198a5160be5e9a3f21ba3f4130d4318
-Merge: dac72db bd16618
+Merge: dac72dbbc750 bd166184f6c1
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Feb 12 12:30:20 2013 -0800
 
@@ -1370,7 +1472,7 @@ Date:   Mon Dec 1 21:45:47 2008 +0100
     Fix build outside of the source dir
 
 commit 63ba316bcbe8ad61ba63d9fe62c82e7d56dcc399
-Merge: a813c4d 1b95e32
+Merge: a813c4da7f0b 1b95e32b4b0a
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Mon Dec 1 21:33:35 2008 +0100
 
@@ -1848,7 +1950,7 @@ Date:   Sun Feb 18 21:27:55 2007 -0800
     Update version number to 1.2.0 for release.
 
 commit 13cef2baa884039e96f5dfd9245bb949aed99448
-Merge: 065f09c a175972
+Merge: 065f09cc304d a175972de6fb
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Sun Feb 18 21:26:50 2007 -0800
 
@@ -1890,7 +1992,7 @@ Date:   Sat Feb 10 16:14:58 2007 -0800
     Display set of available CRTCs per output in --verbose mode.
 
 commit 067cafb5cda0aa6e34773e888fd469ff657760c2
-Merge: 7c25c24 b0a00df
+Merge: 7c25c245bceb b0a00df69f83
 Author: Keith Packard <keithp@guitar.keithp.com>
 Date:   Wed Jan 31 15:25:35 2007 -0800
 
@@ -2049,7 +2151,7 @@ Date:   Tue Dec 19 16:27:46 2006 -0800
     Actually respect the --fb option
 
 commit 7b32611632ab08b6a123db5df1c2b919b3a12104
-Merge: a0df3aa 4bb1a9c
+Merge: a0df3aa81205 4bb1a9cd6f9c
 Author: Keith Packard <keithp@guitar.keithp.com>
 Date:   Tue Dec 19 15:58:38 2006 -0800
 
@@ -2062,7 +2164,7 @@ Date:   Tue Dec 19 15:58:21 2006 -0800
     Correct format for sscanf to double variable "dpi"
 
 commit 4bb1a9cd6f9cc3ed61d7913528afa3f573092833
-Merge: b6c0382 6ef400f
+Merge: b6c03827bae7 6ef400f35d7d
 Author: Keith Packard <keithp@bouzouki.jf.intel.com>
 Date:   Wed Dec 13 11:36:36 2006 -0800
 
