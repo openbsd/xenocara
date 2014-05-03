@@ -82,20 +82,16 @@ extern int _FSReply ( FSServer *svr, fsReply *rep, int extra, int discard );
 extern XtransConnInfo _FSConnectServer ( char *server_name );
 extern void _FSDisconnectServer ( XtransConnInfo trans_conn );
 extern void _FSSendClientPrefix ( FSServer *svr, fsConnClientPrefix *client );
-extern int _FSEventsQueued ( FSServer *svr, int mode );
 extern unsigned long _FSSetLastRequestRead ( FSServer *svr,
 					     fsGenericReply *rep );
 extern int _FSUnknownWireEvent ( FSServer *svr, FSEvent *re, fsEvent *event );
 extern int _FSUnknownNativeEvent ( FSServer *svr, FSEvent *re,
 				   fsEvent *event );
-extern int _FSWireToEvent ( FSServer *svr, FSEvent *re, fsEvent *event );
 extern int _FSDefaultIOError ( FSServer *svr ) _X_NORETURN;
 extern int _FSPrintDefaultError ( FSServer *svr, FSErrorEvent *event,
 				  FILE *fp );
 extern int _FSDefaultError ( FSServer *svr, FSErrorEvent *event );
-extern char * _FSAllocScratch ( FSServer *svr, unsigned long nbytes );
 extern void _FSFreeQ ( void );
-extern int _FSGetHostname ( char *buf, int maxlen );
 
 extern FSErrorHandler  FSSetErrorHandler ( FSErrorHandler handler );
 extern FSIOErrorHandler FSSetIOErrorHandler ( FSIOErrorHandler handler );
@@ -113,30 +109,9 @@ extern FSServer *_FSHeadOfServerList;
 #define	FSlibServerIOError	(1L << 0)
 #define	FSlibServerClosing	(1L << 1)
 
-/*   Need to start requests on 64 bit word boundries
- *   on a CRAY computer so add a NoOp (127) if needed.
- *   A character pointer on a CRAY computer will be non-zero
- *   after shifting right 61 bits of it is not pointing to
- *   a word boundary.
- */
-
-#ifdef WORD64
-#define WORD64ALIGN if ((long)svr->bufptr >> 61) {\
-           svr->last_req = svr->bufptr;\
-           *(svr->bufptr)   = FS_Noop;\
-           *(svr->bufptr+1) =  0;\
-           *(svr->bufptr+2) =  0;\
-           *(svr->bufptr+3) =  1;\
-             svr->request += 1;\
-             svr->bufptr += 4;\
-         }
-#else				/* else does not require alignment on 64-bit
-				 * boundaries */
-#define WORD64ALIGN
-#endif				/* WORD64 */
 
 /*
- * GetReq - Get the next avilable FS request packet in the buffer and
+ * GetReq - Get the next available FS request packet in the buffer and
  * return it.
  *
  * "name" is the name of the request, e.g. InternAtom, OpenFont, etc.
@@ -144,9 +119,7 @@ extern FSServer *_FSHeadOfServerList;
  *
  */
 
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define GetReq(name, req) \
-        WORD64ALIGN\
 	if ((svr->bufptr + SIZEOF(fs##name##Req)) > svr->bufmax)\
 		_FSFlush(svr);\
 	req = (fs##name##Req *)(svr->last_req = svr->bufptr);\
@@ -155,25 +128,10 @@ extern FSServer *_FSHeadOfServerList;
 	svr->bufptr += SIZEOF(fs##name##Req);\
 	svr->request++
 
-#else				/* non-ANSI C uses empty comment instead of
-				 * "##" for token concatenation */
-#define GetReq(name, req) \
-        WORD64ALIGN\
-	if ((svr->bufptr + SIZEOF(fs/**/name/**/Req)) > svr->bufmax)\
-		_FSFlush(svr);\
-	req = (fs/**/name/**/Req *)(svr->last_req = svr->bufptr);\
-	req->reqType = FS_/**/name;\
-	req->length = (SIZEOF(fs/**/name/**/Req))>>2;\
-	svr->bufptr += SIZEOF(fs/**/name/**/Req);\
-	svr->request++
-#endif
-
 /* GetReqExtra is the same as GetReq, but allocates "n" additional
    bytes after the request. "n" must be a multiple of 4!  */
 
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define GetReqExtra(name, n, req) \
-        WORD64ALIGN\
 	if ((svr->bufptr + SIZEOF(fs##name##Req) + n) > svr->bufmax)\
 		_FSFlush(svr);\
 	req = (fs##name##Req *)(svr->last_req = svr->bufptr);\
@@ -181,18 +139,6 @@ extern FSServer *_FSHeadOfServerList;
 	req->length = (SIZEOF(fs##name##Req) + n)>>2;\
 	svr->bufptr += SIZEOF(fs##name##Req) + n;\
 	svr->request++
-#else
-#define GetReqExtra(name, n, req) \
-        WORD64ALIGN\
-	if ((svr->bufptr + SIZEOF(fs/**/name/**/Req) + n) > svr->bufmax)\
-		_FSFlush(svr);\
-	req = (fs/**/name/**/Req *)(svr->last_req = svr->bufptr);\
-	req->reqType = FS_/**/name;\
-	req->length = (SIZEOF(fs/**/name/**/Req) + n)>>2;\
-	svr->bufptr += SIZEOF(fs/**/name/**/Req) + n;\
-	svr->request++
-#endif
-
 
 /*
  * GetResReq is for those requests that have a resource ID
@@ -200,9 +146,7 @@ extern FSServer *_FSHeadOfServerList;
  * "rid" is the name of the resource.
  */
 
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define GetResReq(name, rid, req) \
-        WORD64ALIGN\
 	if ((svr->bufptr + SIZEOF(fsResourceReq)) > svr->bufmax)\
 	    _FSFlush(svr);\
 	req = (fsResourceReq *) (svr->last_req = svr->bufptr);\
@@ -211,27 +155,13 @@ extern FSServer *_FSHeadOfServerList;
 	req->id = (rid);\
 	svr->bufptr += SIZEOF(fsResourceReq);\
 	svr->request++
-#else
-#define GetResReq(name, rid, req) \
-        WORD64ALIGN\
-	if ((svr->bufptr + SIZEOF(fsResourceReq)) > svr->bufmax)\
-	    _FSFlush(svr);\
-	req = (fsResourceReq *) (svr->last_req = svr->bufptr);\
-	req->reqType = FS_/**/name;\
-	req->length = 2;\
-	req->id = (rid);\
-	svr->bufptr += SIZEOF(fsResourceReq);\
-	svr->request++
-#endif
 
 /*
  * GetEmptyReq is for those requests that have no arguments
  * at all.
  */
 
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define GetEmptyReq(name, req) \
-        WORD64ALIGN\
 	if ((svr->bufptr + SIZEOF(fsReq)) > svr->bufmax)\
 	    _FSFlush(svr);\
 	req = (fsReq *) (svr->last_req = svr->bufptr);\
@@ -239,17 +169,6 @@ extern FSServer *_FSHeadOfServerList;
 	req->length = 1;\
 	svr->bufptr += SIZEOF(fsReq);\
 	svr->request++
-#else
-#define GetEmptyReq(name, req) \
-        WORD64ALIGN\
-	if ((svr->bufptr + SIZEOF(fsReq)) > svr->bufmax)\
-	    _FSFlush(svr);\
-	req = (fsReq *) (svr->last_req = svr->bufptr);\
-	req->reqType = FS_/**/name;\
-	req->length = 1;\
-	svr->bufptr += SIZEOF(fsReq);\
-	svr->request++
-#endif
 
 #define	SyncHandle()	\
 	if (svr->synchandler) (*svr->synchandler)(svr)
@@ -300,33 +219,17 @@ extern void Data();
 /*
  * provide emulation routines for smaller architectures
  */
-#ifndef WORD64
 #define Data16(dpy, data, len) Data((dpy), (char *)(data), (len))
 #define Data32(dpy, data, len) Data((dpy), (char *)(data), (len))
 #define _FSRead16Pad(dpy, data, len) _FSReadPad((dpy), (char *)(data), (len))
 #define _FSRead16(dpy, data, len) _FSRead((dpy), (char *)(data), (len))
 #define _FSRead32(dpy, data, len) _FSRead((dpy), (char *)(data), (len))
-#endif /* not WORD64 */
 
 #define PackData16(dpy,data,len) Data16 (dpy, data, len)
 #define PackData32(dpy,data,len) Data32 (dpy, data, len)
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #define max(a,b) (((a) > (b)) ? (a) : (b))
-
-#ifdef MUSTCOPY
-/* a little bit of magic */
-#define OneDataCard32(svr,dstaddr,srcvar) \
-  { svr->bufptr -= 4; Data32 (svr, (char *) &(srcvar), 4); }
-
-#define STARTITERATE(tpvar,type,start,endcond,decr) \
-  { register char *cpvar; \
-  for (cpvar = (char *) start; endcond; cpvar = NEXTPTR(cpvar,type), decr) { \
-    type dummy; memmove ((char *) &dummy, cpvar, SIZEOF(type)); \
-    tpvar = (type *) cpvar;
-#define ENDITERATE }}
-
-#else
 
 /* srcvar must be a variable for large architecture version */
 #define OneDataCard32(svr,dstaddr,srcvar) \
@@ -335,15 +238,9 @@ extern void Data();
 #define STARTITERATE(tpvar,type,start,endcond,decr) \
   for (tpvar = (type *) start; endcond; tpvar++, decr) {
 #define ENDITERATE }
-#endif				/* MUSTCOPY - used machines whose C structs
-				 * don't line up with proto */
 
 
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define FSCat(x,y) x##_##y
-#else
-#define FSCat(x,y) x/**/_/**/y
-#endif
 
 /* copy XCharInfo parts of a protocol reply into a FSXCharInfo */
 

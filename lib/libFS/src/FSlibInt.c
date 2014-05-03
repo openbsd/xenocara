@@ -58,6 +58,7 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include <stdio.h>
 #include "FSlibint.h"
+#include <X11/Xtrans/Xtransint.h>
 #include <X11/Xos.h>
 
 static void _EatData32 ( FSServer *svr, unsigned long n );
@@ -65,11 +66,14 @@ static const char * _SysErrorMsg ( int n );
 
 /* check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
  * systems are broken and return EWOULDBLOCK when they should return EAGAIN
+ *
+ * Solaris defines EWOULDBLOCK to be EAGAIN, so don't need to check twice
+ * for it.
  */
 #ifdef WIN32
 #define ETEST() (WSAGetLastError() == WSAEWOULDBLOCK)
 #else
-#if defined(EAGAIN) && defined(EWOULDBLOCK)
+#if defined(EAGAIN) && defined(EWOULDBLOCK) && (EAGAIN != EWOULDBLOCK)
 #define ETEST() (errno == EAGAIN || errno == EWOULDBLOCK)
 #else
 #ifdef EAGAIN
@@ -170,42 +174,6 @@ _FSFlush(register FSServer *svr)
 	}
     }
     svr->last_req = (char *) &_dummy_request;
-}
-
-int
-_FSEventsQueued(
-    register FSServer	*svr,
-    int			 mode)
-{
-    register BytesReadable_t len;
-    BytesReadable_t pend;
-    char        buf[BUFSIZE];
-    register fsReply *rep;
-
-    if (mode == QueuedAfterFlush) {
-	_FSFlush(svr);
-	if (svr->qlen)
-	    return (svr->qlen);
-    }
-    if (_FSTransBytesReadable(svr->trans_conn, &pend) < 0)
-	(*_FSIOErrorFunction) (svr);
-    if ((len = pend) < SIZEOF(fsReply))
-	return (svr->qlen);	/* _FSFlush can enqueue events */
-    else if (len > BUFSIZE)
-	len = BUFSIZE;
-    len /= SIZEOF(fsReply);
-    pend = len * SIZEOF(fsReply);
-    _FSRead(svr, buf, (long) pend);
-
-    /* no space between comma and type or else macro will die */
-    STARTITERATE(rep, fsReply, buf, (len > 0), len--) {
-	if (rep->generic.type == FS_Error)
-	    _FSError(svr, (fsError *) rep);
-	else			/* must be an event packet */
-	    _FSEnq(svr, (fsEvent *) rep);
-    }
-    ENDITERATE
-	return (svr->qlen);
 }
 
 /* _FSReadEvents - Flush the output queue,
@@ -330,137 +298,6 @@ _FSRead(
     }
 }
 
-#ifdef WORD64
-/*
- * XXX This is a *really* stupid way of doing this....
- */
-
-#define PACKBUFFERSIZE 4096
-
-
-/*
- * _FSRead32 - Read bytes from the socket unpacking each 32 bits
- *            into a long (64 bits on a CRAY computer).
- *
- */
-static void
-_doFSRead32(
-    register FSServer	*svr,
-    register long	*data,
-    register long	 size,
-    register char	*packbuffer)
-{
-    long       *lpack,
-               *lp;
-    long        mask32 = 0x00000000ffffffff;
-    long        maskw,
-                nwords,
-                i,
-                bits;
-
-    _FSReadPad(svr, packbuffer, size);
-
-    lp = data;
-    lpack = (long *) packbuffer;
-    nwords = size >> 2;
-    bits = 32;
-
-    for (i = 0; i < nwords; i++) {
-	maskw = mask32 << bits;
-	*lp++ = (*lpack & maskw) >> bits;
-	bits = bits ^ 32;
-	if (bits) {
-	    lpack++;
-	}
-    }
-}
-
-void
-_FSRead32(
-    FSServer	*svr,
-    long	*data,
-    long	 len)
-{
-    char        packbuffer[PACKBUFFERSIZE];
-    unsigned    nwords = (PACKBUFFERSIZE >> 2);	/* bytes to CARD32 */
-
-    for (; len > nwords; len -= nwords, data += nwords) {
-	_doFSRead32(svr, data, nwords, packbuffer);
-    }
-    _doFSRead32(svr, data, len, packbuffer);
-}
-
-
-
-/*
- * _FSRead16 - Read bytes from the socket unpacking each 16 bits
- *            into a long (64 bits on a CRAY computer).
- *
- */
-static void
-_doFSRead16(
-    register FSServer	*svr,
-    register short	*data,
-    register long	 size,
-    char		*packbuffer)
-{
-    long       *lpack,
-               *lp;
-    long        mask16 = 0x000000000000ffff;
-    long        maskw,
-                nwords,
-                i,
-                bits;
-
-    _FSRead(svr, packbuffer, size);	/* don't do a padded read... */
-
-    lp = (long *) data;
-    lpack = (long *) packbuffer;
-    nwords = size >> 1;		/* number of 16 bit words to be unpacked */
-    bits = 48;
-    for (i = 0; i < nwords; i++) {
-	maskw = mask16 << bits;
-	*lp++ = (*lpack & maskw) >> bits;
-	bits -= 16;
-	if (bits < 0) {
-	    lpack++;
-	    bits = 48;
-	}
-    }
-}
-
-void
-_FSRead16(
-    FSServer	*svr,
-    short	*data,
-    long	 len)
-{
-    char        packbuffer[PACKBUFFERSIZE];
-    unsigned    nwords = (PACKBUFFERSIZE >> 1);	/* bytes to CARD16 */
-
-    for (; len > nwords; len -= nwords, data += nwords) {
-	_doFSRead16(svr, data, nwords, packbuffer);
-    }
-    _doFSRead16(svr, data, len, packbuffer);
-}
-
-void
-_FSRead16Pad(
-    FSServer	*svr,
-    short	*data,
-    long	 size)
-{
-    int         slop = (size & 3);
-    short       slopbuf[3];
-
-    _FSRead16(svr, data, size);
-    if (slop > 0) {
-	_FSRead16(svr, slopbuf, 4 - slop);
-    }
-}
-
-#endif				/* WORD64 */
-
 
 /*
  * _FSReadPad - Read bytes from the socket taking into account incomplete
@@ -491,7 +328,7 @@ _FSReadPad(
     size += iov[1].iov_len;
 
     ESET(0);
-    while ((bytes_read = _FSTransReadv(svr->trans_conn, iov, 2)) != size) {
+    while ((bytes_read = readv(svr->trans_conn->fd, iov, 2)) != size) {
 
 	if (bytes_read > 0) {
 	    size -= bytes_read;
@@ -683,7 +520,7 @@ _FSReply(
     register fsReply	*rep,
     int			 extra,	 /* number of 32-bit words expected after the
 				  * reply */
-    Bool		 discard)/* should I discard data followind "extra"
+    Bool		 discard)/* should I discard data following "extra"
 				  * words? */
 {
     /*
@@ -909,35 +746,6 @@ _FSUnknownNativeEvent(
     return (0);
 }
 
-/*
- * reformat a wire event into an FSEvent structure of the right type.
- */
-Bool
-_FSWireToEvent(
-    register FSServer	*svr,	/* pointer to display structure */
-    register FSEvent	*re,	/* pointer to where event should be
-				 * reformatted */
-    register fsEvent	*event)	/* wire protocol event */
-{
-
-    re->type = event->type & 0x7f;
-    ((FSAnyEvent *) re)->serial = _FSSetLastRequestRead(svr,
-						   (fsGenericReply *) event);
-    ((FSAnyEvent *) re)->send_event = ((event->type & 0x80) != 0);
-    ((FSAnyEvent *) re)->server = svr;
-
-    /*
-     * Ignore the leading bit of the event type since it is set when a client
-     * sends an event rather than the server.
-     */
-
-    switch (event->type & 0177) {
-    default:
-	return (_FSUnknownWireEvent(svr, re, event));
-    }
-}
-
-
 static const char *
 _SysErrorMsg(int n)
 {
@@ -1042,7 +850,11 @@ _FSPrintDefaultError(
 		ext && (ext->codes.major_opcode != event->request_code);
 		ext = ext->next);
 	if (ext)
+#ifdef HAVE_STRLCPY
+	    strlcpy(buffer, ext->name, sizeof(buffer));
+#else
 	    strcpy(buffer, ext->name);
+#endif
 	else
 	    buffer[0] = '\0';
     }
@@ -1091,25 +903,6 @@ _FSDefaultError(
 FSIOErrorHandler _FSIOErrorFunction = _FSDefaultIOError;
 FSErrorHandler _FSErrorFunction = _FSDefaultError;
 
-/*
- * This routine can be used to (cheaply) get some memory within a single
- * Xlib routine for scratch space.  It is reallocated from the same place
- * each time, unless the library needs a large scratch space.
- */
-char       *
-_FSAllocScratch(
-    register FSServer	*svr,
-    unsigned long	 nbytes)
-{
-    if (nbytes > svr->scratch_length) {
-	if (svr->scratch_buffer != NULL)
-	    FSfree(svr->scratch_buffer);
-	return (svr->scratch_length = nbytes,
-		svr->scratch_buffer = FSmalloc(nbytes));
-    }
-    return (svr->scratch_buffer);
-}
-
 int
 FSFree(char *data)
 {
@@ -1141,138 +934,6 @@ Data(
 #endif				/* DataRoutineIsProcedure */
 
 
-#ifdef WORD64
-/*
- * XXX This is a *really* stupid way of doing this.  It should just use
- * svr->bufptr directly, taking into account where in the word it is.
- */
-
-/*
- * Data16 - Place 16 bit data in the buffer.
- *
- * "svr" is a pointer to a FSServer.
- * "data" is a pointer to the data.
- * "len" is the length in bytes of the data.
- */
-
-static void
-doData16(
-    register FSServer	*svr,
-    short		 *data,
-    unsigned		 len,
-    char		*packbuffer)
-{
-    long       *lp,
-               *lpack;
-    long        i,
-                nwords,
-                bits;
-    long        mask16 = 0x000000000000ffff;
-
-    lp = (long *) data;
-    lpack = (long *) packbuffer;
-    *lpack = 0;
-
-/*  nwords is the number of 16 bit values to be packed,
- *  the low order 16 bits of each word will be packed
- *  into 64 bit words
- */
-    nwords = len >> 1;
-    bits = 48;
-
-    for (i = 0; i < nwords; i++) {
-	*lpack ^= (*lp & mask16) << bits;
-	bits -= 16;
-	lp++;
-	if (bits < 0) {
-	    lpack++;
-	    *lpack = 0;
-	    bits = 48;
-	}
-    }
-    Data(svr, packbuffer, len);
-}
-
-void
-Data16(
-    FSServer	*svr,
-    short	*data,
-    unsigned	 len)
-{
-    char        packbuffer[PACKBUFFERSIZE];
-    unsigned    nwords = (PACKBUFFERSIZE >> 1);	/* bytes to CARD16 */
-
-    for (; len > nwords; len -= nwords, data += nwords) {
-	doData16(svr, data, nwords, packbuffer);
-    }
-    doData16(svr, data, len, packbuffer);
-}
-
-/*
- * Data32 - Place 32 bit data in the buffer.
- *
- * "svr" is a pointer to a FSServer.
- * "data" is a pointer to the data.
- * "len" is the length in bytes of the data.
- */
-
-static
-doData32(
-    register FSServer	*svr,
-    long		*data,
-    unsigned		 len,
-    char		*packbuffer)
-{
-    long       *lp,
-               *lpack;
-    long        i,
-                bits,
-                nwords;
-    long        mask32 = 0x00000000ffffffff;
-
-    lpack = (long *) packbuffer;
-    lp = data;
-
-    *lpack = 0;
-
-/*  nwords is the number of 32 bit values to be packed
- *  the low order 32 bits of each word will be packed
- *  into 64 bit words
- */
-    nwords = len >> 2;
-    bits = 32;
-
-    for (i = 0; i < nwords; i++) {
-	*lpack ^= (*lp & mask32) << bits;
-	bits = bits ^ 32;
-	lp++;
-	if (bits) {
-	    lpack++;
-	    *lpack = 0;
-	}
-    }
-    Data(svr, packbuffer, len);
-}
-
-void
-Data32(
-    FSServer	*svr,
-    short	*data,
-    unsigned	 len)
-{
-    char        packbuffer[PACKBUFFERSIZE];
-    unsigned    nwords = (PACKBUFFERSIZE >> 2);	/* bytes to CARD32 */
-
-    for (; len > nwords; len -= nwords, data += nwords) {
-	doData32(svr, data, nwords, packbuffer);
-    }
-    doData32(svr, data, len, packbuffer);
-}
-
-#endif				/* WORD64 */
-
-
-
 /*
  * _FSFreeQ - free the queue of events, called by XCloseServer when there are
  * no more displays left on the display list
@@ -1291,57 +952,6 @@ _FSFreeQ(void)
     }
     _FSqfree = NULL;
     return;
-}
-
-#ifdef _POSIX_SOURCE                     /* stupid makedepend [need if] */
-#ifndef __QNX__ /* QNX's uname nodename entry is not same as tcpip hostname */
-#define NEED_UTSNAME
-#endif
-#endif
-#ifdef hpux
-#define NEED_UTSNAME
-#endif
-#ifdef SVR4
-#ifndef _SEQUENT_
-#define NEED_UTSNAME
-#endif
-#endif
-
-#ifdef NEED_UTSNAME
-#include <sys/utsname.h>
-#endif
-
-
-/*
- * _FSGetHostname - similar to gethostname but allows special processing.
- */
-int
-_FSGetHostname(
-    char	*buf,
-    int		 maxlen)
-{
-    int         len;
-
-#ifdef NEED_UTSNAME
-    /*
-     * same host name crock as in server and xinit.
-     */
-    struct utsname name;
-
-    uname(&name);
-    len = strlen(name.nodename);
-    if (len >= maxlen)
-	len = maxlen - 1;
-    strncpy(buf, name.nodename, len);
-    buf[len] = '\0';
-#else
-    buf[0] = '\0';
-    (void) gethostname(buf, maxlen);
-    buf[maxlen - 1] = '\0';
-    len = strlen(buf);
-#endif				/* NEED_UTSNAME */
-
-    return len;
 }
 
 #ifndef _FSANYSET

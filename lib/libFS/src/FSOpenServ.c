@@ -66,7 +66,7 @@ static fsReq _dummy_request = {
     0, 0, 0
 };
 
-static void OutOfMemory ( FSServer *svr, char *setup );
+static void OutOfMemory ( FSServer *svr );
 
 FSServer   *_FSHeadOfServerList = NULL;
 
@@ -85,13 +85,11 @@ void _FSFreeServerStructure(FSServer *svr)
 
 static
 void OutOfMemory(
-    FSServer	*svr,
-    char	*setup)
+    FSServer	*svr)
 {
     if (svr->trans_conn)
 	_FSDisconnectServer(svr->trans_conn);
     _FSFreeServerStructure(svr);
-    FSfree(setup);
     errno = ENOMEM;
 }
 
@@ -129,10 +127,9 @@ FSOpenServer(const char *server)
 	return (FSServer *) NULL;
     }
 
-    if ((svr->server_name = FSmalloc(strlen(server) + 1)) == NULL) {
+    if ((svr->server_name = strdup(server)) == NULL) {
 	goto fail;
     }
-    (void) strcpy(svr->server_name, server);
 
     if ((svr->trans_conn = _FSConnectServer(svr->server_name)) == NULL) {
 	goto fail;
@@ -179,7 +176,7 @@ FSOpenServer(const char *server)
 	altlen = (unsigned int) *ad++;
 	alts[i].name = FSmalloc(altlen + 1);
 	if (!alts[i].name) {
-	    while (--i) {
+	    while (--i >= 0) {
 		FSfree(alts[i].name);
 	    }
 	    goto fail;
@@ -263,7 +260,7 @@ FSOpenServer(const char *server)
     FSfree(alts);
     FSfree(alt_data);
     FSfree(auth_data);
-    OutOfMemory(svr, setup);
+    OutOfMemory(svr);
     return (FSServer *) NULL;
 
 }

@@ -129,12 +129,7 @@ in this Software without prior written authorization from The Open Group.
 #undef dirty
 #endif
 
-#ifdef WORD64
-#define NMSKBITS 64
-#else
 #define NMSKBITS 32
-#endif
-
 #define MSKCNT ((FS_OPEN_MAX + NMSKBITS - 1) / NMSKBITS)
 
 #ifdef LONG64

@@ -1,3 +1,220 @@
+commit 88be5c37c40070305e64c4b8dc0a1c1f6ca80440
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 16 10:44:14 2014 -0700
+
+    libFS 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e5be46eceee9c0c0d5f0363d3e08b19f86f85fcb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 23:07:12 2014 -0800
+
+    Use strlcpy instead of strcpy/strncpy if it is available
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e831ef9246684298c147f9b26de0810b8218c3cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 21:33:10 2014 -0800
+
+    Replace malloc(strlen + 1); strcpy() with strdup()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit 980cf8ac0c636ff7ef1fccb9e74f116ac5ea34ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 21:13:30 2014 -0800
+
+    Remove unused internal helper _FSWireToEvent
+    
+    Since we build with -export-symbols-regex '^FS.*', it wasn't available
+    to callers outside libFS, and was never called by anything inside libFS.
+    
+    Seems to have been imported from XlibInt.c without ever being used.
+    
+    Flagged by cppcheck 1.62:
+    [FSlibInt.c:753]: (style) The function '_FSWireToEvent' is never used.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit b9f27dc863c3ca01bb231ee48e84bc60b39d4f1f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 20:55:33 2014 -0800
+
+    Remove unused internal helper _FSEventsQueued
+    
+    Since we build with -export-symbols-regex '^FS.*', it wasn't available
+    to callers outside libFS, and was never called by anything inside libFS.
+    
+    Seems to have been imported from XlibInt.c without ever being used.
+    
+    Flagged by cppcheck 1.62:
+    [FSlibInt.c:180]: (style) The function '_FSEventsQueued' is never used.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit 37772516acb95b3c9934252994b7dfdc147dfd23
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 20:50:32 2014 -0800
+
+    Remove unused internal helper _FSAllocScratch
+    
+    Since we build with -export-symbols-regex '^FS.*', it wasn't available
+    to callers outside libFS, and was never called by anything inside libFS.
+    
+    Seems to have been imported from XlibInt.c without ever being used.
+    The _FSserver fields that it used (and nothing else did) are replaced
+    with "unused" placeholders to maintain struct layout/size.
+    
+    Flagged by cppcheck 1.62:
+    [FSlibInt.c:973]: (style) The function '_FSAllocScratch' is never used.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit ac1eb6e3ea54724cf3ab3ad1ccf0595df9e34786
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 20:46:48 2014 -0800
+
+    Remove unused internal helper _FSGetHostname
+    
+    Since we build with -export-symbols-regex '^FS.*', it wasn't available
+    to callers outside libFS, and was never called by anything inside libFS.
+    
+    Xtrans provides it's own exact copy of this function, which gets
+    the name _FSTransGetHostname when built in libFS, nothing in libFS
+    outside the Xtrans code calls a gethostname() function.
+    
+    Flagged by cppcheck 1.62:
+    [FSlibInt.c:1060]: (style) The function '_FSGetHostname' is never used.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit a4c12fe0ca5cb359bffe08b26a92ddcf8e194441
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 20:04:33 2014 -0800
+
+    If EAGAIN == EWOULDBLOCK, only need to check errno for one of them
+    
+    Solaris <sys/errno.h> has:
+     #define EWOULDBLOCK       EAGAIN
+    so checking (errno == EAGAIN || errno == EWOULDBLOCK) is overkill.
+    
+    This leads cppcheck 1.62 to complain:
+    [FSlibInt.c:153] -> [FSlibInt.c:153]: (style) Same expression on both sides of '||'.
+    [FSlibInt.c:301] -> [FSlibInt.c:301]: (style) Same expression on both sides of '||'.
+    [FSlibInt.c:379] -> [FSlibInt.c:379]: (style) Same expression on both sides of '||'.
+    [FSlibInt.c:472] -> [FSlibInt.c:472]: (style) Same expression on both sides of '||'.
+    
+    This quiets it, and reduces the number of calls Solaris Studio cc
+    generates to the __errno() function to get the thread-specific errno value.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit b6885f7aedc3b6eba62ffa1edac1e8488d938cea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 19:57:09 2014 -0800
+
+    Reduce scope & remove unneeded assignment of defaultp in FSGetErrorText()
+    
+    Suggested by cppcheck 1.62
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dcb6c39feb63dcf7e843bd2394a2544fd4e79f9f
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Jan 2 01:03:49 2014 -0800
+
+    FSOpenServer: Fix double-free in error path
+    
+    FSOpenServ.c:266:5: warning: Use of memory after it is freed
+        OutOfMemory(svr, setup);
+        ^~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 4b0b74f953619164dc2863ee2cd3f09d15c65a51
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Jan 2 00:49:27 2014 -0800
+
+    Update error loop to correctly handle error in i==0 case
+    
+    FSOpenServ.c:183:3: warning: Function call argument is an uninitialized value
+                    FSfree(alts[i].name);
+                    ^~~~~~~~~~~~~~~~~~~~
+    ./FSlibos.h:273:21: note: expanded from macro 'FSfree'
+                        ^~~~~~~~~~~
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 5ed8b4cf1f1c35ef35a3c94350e6b96646a2a0b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 27 11:01:35 2013 -0800
+
+    Add AC_USE_SYSTEM_EXTENSIONS to expose non-standard extensions
+    
+    Required on Solaris to expose fd_mask in <sys/select.h> now that
+    xtrans 1.3 defines _XOPEN_SOURCE to 600 on Solaris, since fd_mask
+    is not defined in that version of the XPG standards.
+    
+    Fixes build failure:
+    ../../src/FSConnServ.c: In function '_FSWaitForWritable':
+    ../../src/FSConnServ.c:166:6: error: 'fd_mask' undeclared (first use in this function)
+    ../../src/FSConnServ.c:166:6: note: each undeclared identifier is reported only once for each function it appears in
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 19ca53de0aae67b1f23085c832b445576c6a0b25
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Nov 1 11:14:58 2013 -0400
+
+    Fix build with xtrans 1.3
+    
+    ->Readv was in fact being used, oops.  Just call straight down to
+    readv() instead.
+    
+    Reviewed-by: Peter Harris <pharris@opentext.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 96243bfec19d0f543de3ef590a482f7f6dcdaa3d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 22:52:09 2013 -0700
+
+    Drop Cray (WORD64/MUSTCOPY) support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d30a927b79ee0faa5f4547d5d60570f8fcd11fc2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 22:46:52 2013 -0700
+
+    Fix a couple comment typos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 665fb8c34183bbaba5c7deb045863090082f814b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 22:42:56 2013 -0700
+
+    Require ANSI C89 pre-processor, drop pre-C89 token pasting support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 279fbcc23d6cd462e034dec6a9d1378cb86247e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 28 17:42:06 2013 -0700
+
+    Fix typo in readme ("xfslsfonts" should be "fslsfonts")
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 9d1458e02fe8dcac68b32917c9b10fa49d7161e7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue May 28 17:17:40 2013 -0700
