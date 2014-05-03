@@ -1,3 +1,84 @@
+commit 0b120e37be8ed44188b3497bf02db48e9cf638bc
+Author: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+Date:   Wed Apr 2 20:02:00 2014 +0200
+
+    Third version bump to 1.0.9.
+    
+    Minor change in README to include 1.0.9 in diff so that release.sh
+    is happy.
+    
+    Signed-off-by: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+
+commit e204395a7ccf403999ffa2515379784b641745d1
+Author: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+Date:   Wed Apr 2 19:52:43 2014 +0200
+
+    Second version bump to 1.0.9.
+    
+    Minor change in README to push the version bump.
+    
+    Signed-off-by: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+
+commit c36e9838294a6042eb7ae61fc476cbc3280aef2d
+Author: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+Date:   Wed Apr 2 19:44:37 2014 +0200
+
+    Fixed missing EXTRA_DIST in tests. Extended README for releasing.
+    
+    The tests/Makefile.am missed the EXTRA_DIST definition which resulted in
+    missing files for the test done with "make check". This was fixed.
+    README was extended to describe howto release a new version of this
+    software and to clarify something from ReleaseHOWTO of x.org.
+    Prepare anything for releasing 1.0.9.
+    
+    Signed-off-by: Dr. Tilmann Bubeck <tilmann@bubecks.de>
+
+commit ce4bfd951160eabdb28f5534c34aa7549dba7fba
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Mon Mar 31 23:21:12 2014 +0200
+
+    version bump to 1.0.9
+    
+    Prepare for a new version 1.0.9 of xauth.
+    
+    Signed-off-by: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+
+commit ccf30deb585297823ea03fc68805a1c825e335fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 27 11:01:35 2013 -0800
+
+    Add AC_USE_SYSTEM_EXTENSIONS to expose non-standard extensions
+    
+    Required on Solaris to expose definitions in system headers that
+    are not defined in the XPG standards now that xtrans 1.3 defines
+    _XOPEN_SOURCE to 600 on Solaris.
+    
+    Fixes build failures:
+    gethost.c: In function ‘get_hostname’:
+    gethost.c:97:21: error: ‘INET6_ADDRSTRLEN’ undeclared (first use in this function)
+    gethost.c:97:21: note: each undeclared identifier is reported only once for each function it appears in
+    gethost.c:97:16: warning: unused variable ‘addr’ [-Wunused-variable]
+    gethost.c: In function ‘get_address_info’:
+    gethost.c:196:9: error: implicit declaration of function ‘strlcpy’ [-Werror=implicit-function-declaration]
+    gethost.c:196:9: warning: nested extern declaration of ‘strlcpy’ [-Wnested-externs]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit afeb2c22ba1f7193acf814954e66f40cfd699c17
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Sun Oct 13 21:38:10 2013 +0200
+
+    Fix warning about warn_unused_result triggered by WRITES.
+
+commit 2eb4ef59d7c27ac7972954d406ad9c2fa8123672
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Sun Oct 13 17:57:49 2013 +0200
+
+    * Do not install test_xauth during "make install" as it is
+      only used during "make check".
+    * perror out, if test_xauth does not find "cmdtest".
+
 commit 4de4a231f3a718d2af0d2b00443c803f8bddfbc5
 Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
 Date:   Wed Oct 9 23:45:15 2013 +0200

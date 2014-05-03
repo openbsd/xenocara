@@ -636,8 +636,9 @@ static const char *xauth_filename = NULL;
 static volatile Bool dieing = False;
 
 
-/* poor man's puts(), for under signal handlers */
-#define WRITES(fd, S) (void)write((fd), (S), strlen((S)))
+/* poor man's puts(), for under signal handlers, 
+   extended to ignore warn_unused_result */
+#define WRITES(fd, S) {if(write((fd), (S), strlen((S))));}
 
 /* ARGSUSED */
 _X_NORETURN
