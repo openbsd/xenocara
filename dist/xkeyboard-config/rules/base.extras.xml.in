@@ -277,6 +277,12 @@
             <_description>English (US, Sun Type 6/7)</_description>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>norman</name>
+            <_description>English (Norman)</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -679,16 +685,16 @@
         <name>se</name>
         <_shortDescription>sv</_shortDescription>
         <_description>Swedish</_description>
-	  </configItem>
-	  <variantList>
+      </configItem>
+      <variantList>
         <variant>
           <configItem>
             <name>sun_type6</name>
             <_description>Swedish (Sun Type 6/7)</_description>
           </configItem>
         </variant>
-	  </variantList>
-	</layout>
+      </variantList>
+    </layout>
     <layout>
       <configItem>
         <name>ch</name>

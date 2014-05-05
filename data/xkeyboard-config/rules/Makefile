@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2014/03/29 14:27:12 ajacoutot Exp $
+#	$OpenBSD: Makefile,v 1.10 2014/05/05 18:05:33 shadchin Exp $
 
 SUBDIR=		compat
 
@@ -7,6 +7,7 @@ XKB_SUBDIR=	rules
 DATA=		xkb.dtd README
 
 BASE_PARTS=	base.hdr.part base.lists.part \
+		base.lists.base.part \
 		compat/base.lists.part \
 		HDR base.m_k.part \
 		HDR base.l1_k.part \
@@ -25,6 +26,7 @@ BASE_PARTS=	base.hdr.part base.lists.part \
 		HDR compat/base.ml3v3_s.part \
 		HDR compat/base.ml4v4_s.part \
 		HDR base.m_s.part \
+		HDR base.ml_s1.part \
 		HDR compat/base.lv_c.part   \
 		HDR compat/base.l1v1_c.part \
 		HDR compat/base.l2v2_c.part \
@@ -43,6 +45,7 @@ BASE_PARTS=	base.hdr.part base.lists.part \
 		HDR base.o_t.part
 
 EVDEV_PARTS=	base.hdr.part base.lists.part \
+		evdev.lists.part \
 		compat/base.lists.part \
 		HDR evdev.m_k.part \
 		HDR base.l1_k.part \
@@ -61,6 +64,7 @@ EVDEV_PARTS=	base.hdr.part base.lists.part \
 		HDR compat/base.ml3v3_s.part  \
 		HDR compat/base.ml4v4_s.part  \
 		HDR evdev.m_s.part \
+		HDR \
 		HDR compat/base.lv_c.part   \
 		HDR compat/base.l1v1_c.part \
 		HDR compat/base.l2v2_c.part \

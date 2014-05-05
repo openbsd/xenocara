@@ -81,7 +81,12 @@ host_triplet = @host@
 subdir = rules
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am README
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
+	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
+	$(top_srcdir)/m4/lib-ld.m4 $(top_srcdir)/m4/lib-link.m4 \
+	$(top_srcdir)/m4/lib-prefix.m4 $(top_srcdir)/m4/nls.m4 \
+	$(top_srcdir)/m4/po.m4 $(top_srcdir)/m4/progtest.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -348,6 +353,7 @@ xkb_base = @xkb_base@
 xkb_rules_symlink = @xkb_rules_symlink@
 SUBDIRS = bin compat
 @USE_COMPAT_RULES_FALSE@base_parts = base.hdr.part base.lists.part \
+@USE_COMPAT_RULES_FALSE@base.lists.base.part \
 @USE_COMPAT_RULES_FALSE@HDR base.m_k.part \
 @USE_COMPAT_RULES_FALSE@HDR base.l1_k.part \
 @USE_COMPAT_RULES_FALSE@HDR base.l_k.part \
@@ -365,6 +371,7 @@ SUBDIRS = bin compat
 @USE_COMPAT_RULES_FALSE@HDR \
 @USE_COMPAT_RULES_FALSE@HDR \
 @USE_COMPAT_RULES_FALSE@HDR base.m_s.part \
+@USE_COMPAT_RULES_FALSE@HDR base.ml_s1.part \
 @USE_COMPAT_RULES_FALSE@HDR \
 @USE_COMPAT_RULES_FALSE@HDR \
 @USE_COMPAT_RULES_FALSE@HDR \
@@ -383,6 +390,7 @@ SUBDIRS = bin compat
 @USE_COMPAT_RULES_FALSE@HDR base.o_t.part
 
 @USE_COMPAT_RULES_TRUE@base_parts = base.hdr.part base.lists.part \
+@USE_COMPAT_RULES_TRUE@base.lists.base.part \
 @USE_COMPAT_RULES_TRUE@compat/base.lists.part \
 @USE_COMPAT_RULES_TRUE@HDR base.m_k.part \
 @USE_COMPAT_RULES_TRUE@HDR base.l1_k.part \
@@ -401,6 +409,7 @@ SUBDIRS = bin compat
 @USE_COMPAT_RULES_TRUE@HDR compat/base.ml3v3_s.part  \
 @USE_COMPAT_RULES_TRUE@HDR compat/base.ml4v4_s.part  \
 @USE_COMPAT_RULES_TRUE@HDR base.m_s.part \
+@USE_COMPAT_RULES_TRUE@HDR base.ml_s1.part \
 @USE_COMPAT_RULES_TRUE@HDR compat/base.lv_c.part   \
 @USE_COMPAT_RULES_TRUE@HDR compat/base.l1v1_c.part \
 @USE_COMPAT_RULES_TRUE@HDR compat/base.l2v2_c.part \
@@ -419,6 +428,7 @@ SUBDIRS = bin compat
 @USE_COMPAT_RULES_TRUE@HDR base.o_t.part
 
 @USE_COMPAT_RULES_FALSE@evdev_parts = base.hdr.part base.lists.part \
+@USE_COMPAT_RULES_FALSE@evdev.lists.part \
 @USE_COMPAT_RULES_FALSE@HDR evdev.m_k.part \
 @USE_COMPAT_RULES_FALSE@HDR base.l1_k.part \
 @USE_COMPAT_RULES_FALSE@HDR base.l_k.part  \
@@ -441,6 +451,7 @@ SUBDIRS = bin compat
 @USE_COMPAT_RULES_FALSE@HDR \
 @USE_COMPAT_RULES_FALSE@HDR \
 @USE_COMPAT_RULES_FALSE@HDR \
+@USE_COMPAT_RULES_FALSE@HDR \
 @USE_COMPAT_RULES_FALSE@HDR base.ml_c.part \
 @USE_COMPAT_RULES_FALSE@HDR base.ml1_c.part \
 @USE_COMPAT_RULES_FALSE@HDR base.m_t.part \
@@ -454,6 +465,7 @@ SUBDIRS = bin compat
 @USE_COMPAT_RULES_FALSE@HDR base.o_t.part
 
 @USE_COMPAT_RULES_TRUE@evdev_parts = base.hdr.part base.lists.part \
+@USE_COMPAT_RULES_TRUE@evdev.lists.part \
 @USE_COMPAT_RULES_TRUE@compat/base.lists.part \
 @USE_COMPAT_RULES_TRUE@HDR evdev.m_k.part \
 @USE_COMPAT_RULES_TRUE@HDR base.l1_k.part \
@@ -472,6 +484,7 @@ SUBDIRS = bin compat
 @USE_COMPAT_RULES_TRUE@HDR compat/base.ml3v3_s.part  \
 @USE_COMPAT_RULES_TRUE@HDR compat/base.ml4v4_s.part  \
 @USE_COMPAT_RULES_TRUE@HDR evdev.m_s.part \
+@USE_COMPAT_RULES_TRUE@HDR \
 @USE_COMPAT_RULES_TRUE@HDR compat/base.lv_c.part   \
 @USE_COMPAT_RULES_TRUE@HDR compat/base.l1v1_c.part \
 @USE_COMPAT_RULES_TRUE@HDR compat/base.l2v2_c.part \
@@ -491,6 +504,8 @@ SUBDIRS = bin compat
 
 all_parts_dist = HDR base.hdr.part \
 base.lists.part \
+base.lists.base.part \
+evdev.lists.part \
 base.m_k.part \
 base.l1_k.part \
 base.l_k.part \
@@ -504,6 +519,7 @@ base.ml2_s.part \
 base.ml3_s.part \
 base.ml4_s.part \
 base.m_s.part \
+base.ml_s1.part \
 base.ml_c.part \
 base.ml1_c.part \
 base.m_t.part \

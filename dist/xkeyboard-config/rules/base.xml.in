@@ -1762,9 +1762,9 @@
     <layout>
       <configItem>
         <name>bd</name>
-        <!-- Keyboard indicator for Bengali layouts -->
+        <!-- Keyboard indicator for Bangla layouts -->
         <_shortDescription>bn</_shortDescription>
-        <_description>Bengali</_description>
+        <_description>Bangla</_description>
         <languageList>
           <iso639Id>ben</iso639Id>
         </languageList>
@@ -1773,7 +1773,7 @@
         <variant>
           <configItem>
             <name>probhat</name>
-            <_description>Bengali (Probhat)</_description>
+            <_description>Bangla (Probhat)</_description>
           </configItem>
         </variant>
       </variantList>
@@ -1789,9 +1789,9 @@
         <variant>
           <configItem>
             <name>ben</name>
-            <!-- Keyboard indicator for Bengali layouts -->
+            <!-- Keyboard indicator for Bangla layouts -->
             <_shortDescription>bn</_shortDescription>
-            <_description>Bengali (India)</_description>
+            <_description>Bangla (India)</_description>
             <languageList>
               <iso639Id>ben</iso639Id>
             </languageList>
@@ -1800,9 +1800,9 @@
         <variant>
           <configItem>
             <name>ben_probhat</name>
-            <!-- Keyboard indicator for Bengali layouts -->
+            <!-- Keyboard indicator for Bangla layouts -->
             <_shortDescription>bn</_shortDescription>
-            <_description>Bengali (India, Probhat)</_description>
+            <_description>Bangla (India, Probhat)</_description>
             <languageList>
               <iso639Id>ben</iso639Id>
             </languageList>
@@ -1811,29 +1811,36 @@
         <variant>
           <configItem>
             <name>ben_baishakhi</name>
-            <_description>Bengali (India, Baishakhi)</_description>
+            <_description>Bangla (India, Baishakhi)</_description>
             <languageList><iso639Id>ben</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>ben_bornona</name>
-            <_description>Bengali (India, Bornona)</_description>
+            <_description>Bangla (India, Bornona)</_description>
             <languageList><iso639Id>ben</iso639Id></languageList>
             </configItem>
         </variant>
          <variant>
           <configItem>
             <name>ben_gitanjali</name>
-            <_description>Bengali (India, Uni Gitanjali)</_description>
+            <_description>Bangla (India, Uni Gitanjali)</_description>
             <languageList><iso639Id>ben</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>ben_inscript</name>
-            <_description>Bengali (India, Baishakhi Inscript)</_description>
+            <_description>Bangla (India, Baishakhi Inscript)</_description>
             <languageList><iso639Id>ben</iso639Id></languageList>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>eeyek</name>
+            <description>Manipuri (Eeyek)</description>
+            <languageList><iso639Id>mni</iso639Id></languageList>
           </configItem>
         </variant>
         <variant>
@@ -2174,19 +2181,19 @@
         <variant>
           <configItem>
             <name>nativo</name>
-            <_description>Portuguese (Brazil, nativo)</_description>
+            <_description>Portuguese (Brazil, Nativo)</_description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>nativo-us</name>
-            <_description>Portuguese (Brazil, nativo for US keyboards)</_description>
+            <_description>Portuguese (Brazil, Nativo for US keyboards)</_description>
           </configItem>
         </variant>
         <variant>
           <configItem>
             <name>nativo-epo</name>
-            <_description>Portuguese (Brazil, nativo for Esperanto)</_description>
+            <_description>Esperanto (Brazil, Nativo)</_description>
             <languageList>
               <iso639Id>epo</iso639Id>
             </languageList>
@@ -2528,10 +2535,11 @@
         </variant>
         <variant>
           <configItem>
-            <name>uig</name>
+            <name>ug</name>
+            <_shortDescription>ug</_shortDescription>
             <_description>Uyghur</_description>
             <languageList>
-              <iso639Id>uig</iso639Id>
+              <iso639Id>ug</iso639Id>
             </languageList>
           </configItem>
         </variant>
@@ -3963,6 +3971,8 @@
         <_description>Norwegian</_description>
         <languageList>
           <iso639Id>nor</iso639Id>
+          <iso639Id>nob</iso639Id>
+          <iso639Id>nno</iso639Id>
         </languageList>
       </configItem>
       <variantList>
@@ -4411,7 +4421,7 @@
         <variant>
           <configItem>
             <name>rue</name>
-            <_description>Pannonian Rusyn (homophonic)</_description>
+            <_description>Pannonian Rusyn</_description>
             <languageList>
               <iso639Id>rue</iso639Id>
             </languageList>
@@ -6030,6 +6040,24 @@
           <_description>Right Alt as Right Ctrl</_description>
         </configItem>
       </option>
+      <option>
+        <configItem>
+          <name>ctrl:swap_lalt_lctl</name>
+          <_description>Swap Left Alt key with Left Ctrl key</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>ctrl:swap_lwin_lctl</name>
+          <_description>Swap Left Win key with Left Ctrl key</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>ctrl:swap_lalt_lctl_lwin</name>
+          <_description>Left Alt as Ctrl, Left Ctrl as Win, Left Win as Alt</_description>
+        </configItem>
+      </option>
     </group>
     <group allowMultipleSelection="true">
       <!-- Using startard LEDs to indicate the alternative (not first) group(s) -->
@@ -6527,6 +6555,12 @@
         <configItem>
           <name>grab:break_actions</name>
           <_description>Allow breaking grabs with keyboard actions (warning: security risk)</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>grab:debug_actions</name>
+          <_description>Allow grab and window tree logging</_description>
         </configItem>
       </option>
     </group>
