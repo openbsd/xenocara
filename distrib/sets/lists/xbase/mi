@@ -61,7 +61,6 @@
 ./usr/X11R6/bin/smproxy
 ./usr/X11R6/bin/ssh-askpass
 ./usr/X11R6/bin/sxpm
-./usr/X11R6/bin/test_xauth
 ./usr/X11R6/bin/twm
 ./usr/X11R6/bin/uxterm
 ./usr/X11R6/bin/video
