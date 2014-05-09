@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.295 2014/05/03 19:38:15 matthieu Exp $
+# $OpenBSD: MODULES,v 1.296 2014/05/09 20:02:18 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -172,7 +172,7 @@ font/util			1.3.0
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
-lib/libFS			1.0.6	7.7+	needs-update
+lib/libFS			1.0.6	7.7+
 lib/libICE			1.0.8	7.7
 lib/libSM			1.2.2	7.7+
 lib/libX11			1.6.2	7.7+
@@ -188,7 +188,7 @@ lib/libXfixes			5.0.1	7.7+
 lib/libXfont			1.4.7	7.7+
 lib/libXfontcache		1.0.5
 lib/libXft			2.3.1	7.7
-lib/libXi			1.7.2	7.7+	needs-update
+lib/libXi			1.7.2	7.7+
 lib/libXinerama			1.1.3	7.7+
 lib/libXmu			1.1.2	7.7+
 lib/libXpm			3.5.11	7.7+
