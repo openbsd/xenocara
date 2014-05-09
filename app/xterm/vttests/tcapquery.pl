@@ -1,9 +1,9 @@
-#!/usr/bin/perl -w
-# $XTermId: tcapquery.pl,v 1.18 2010/01/04 09:43:46 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: tcapquery.pl,v 1.19 2014/02/26 20:15:12 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2004-2008,2010 by Thomas E. Dickey
+# Copyright 2004-2010,2014 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -34,6 +34,7 @@
 # Test the tcap-query option of xterm.
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use IO::Handle;

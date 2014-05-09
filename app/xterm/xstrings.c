@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.58 2013/11/18 01:40:43 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.60 2014/05/03 12:46:53 tom Exp $ */
 
 /*
- * Copyright 2000-2012,2013 by Thomas E. Dickey
+ * Copyright 2000-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -289,7 +289,7 @@ x_nonempty(String s)
 String
 x_skip_blanks(String s)
 {
-    while (isspace(CharOf(*s)))
+    while (IsSpace(CharOf(*s)))
 	++s;
     return s;
 }
@@ -297,7 +297,7 @@ x_skip_blanks(String s)
 String
 x_skip_nonblanks(String s)
 {
-    while (*s != '\0' && !isspace(CharOf(*s)))
+    while (*s != '\0' && !IsSpace(CharOf(*s)))
 	++s;
     return s;
 }
@@ -305,7 +305,7 @@ x_skip_nonblanks(String s)
 static const char *
 skip_blanks(const char *s)
 {
-    while (isspace(CharOf(*s)))
+    while (IsSpace(CharOf(*s)))
 	++s;
     return s;
 }
@@ -331,7 +331,7 @@ x_splitargs(const char *command)
 		for (n = count = 0, state = 0; first[n] != '\0'; ++n) {
 		    switch (state) {
 		    case 0:
-			if (!isspace(CharOf(first[n]))) {
+			if (!IsSpace(CharOf(first[n]))) {
 			    state = 1;
 			    if (pass)
 				result[count] = blob + n;
@@ -341,7 +341,7 @@ x_splitargs(const char *command)
 			}
 			break;
 		    case 1:
-			if (isspace(CharOf(first[n]))) {
+			if (IsSpace(CharOf(first[n]))) {
 			    blob[n] = '\0';
 			    state = 0;
 			}
@@ -454,14 +454,14 @@ x_strtrim(const char *source)
 	if (t != 0) {
 	    s = t;
 	    d = s;
-	    while (isspace(CharOf(*s)))
+	    while (IsSpace(CharOf(*s)))
 		++s;
 	    while ((*d++ = *s++) != '\0') {
 		;
 	    }
 	    if (*t != '\0') {
 		s = t + strlen(t);
-		while (s != t && isspace(CharOf(s[-1]))) {
+		while (s != t && IsSpace(CharOf(s[-1]))) {
 		    *--s = '\0';
 		}
 	    }

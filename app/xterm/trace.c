@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.153 2013/11/26 22:41:44 tom Exp $ */
+/* $XTermId: trace.c,v 1.155 2014/04/25 21:30:23 Ross.Combs Exp $ */
 
 /*
- * Copyright 1997-2012,2013 by Thomas E. Dickey
+ * Copyright 1997-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
@@ -86,7 +87,7 @@ Trace(const char *fmt,...)
     trace_out = trace_who;
 
     if (!trace_fp) {
-	unsigned oldmask = umask(077);
+	unsigned oldmask = (unsigned) umask(077);
 	char name[BUFSIZ];
 #if 0				/* usually I do not want unique names */
 	int unique;
@@ -916,6 +917,9 @@ TraceXtermResources(void)
     XRES_B(wait_for_map);
     XRES_B(ptyHandshake);
     XRES_B(ptySttySize);
+#endif
+#if OPT_REPORT_COLORS
+    XRES_B(reportColors);
 #endif
 #if OPT_REPORT_FONTS
     XRES_B(reportFonts);

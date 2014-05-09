@@ -1,9 +1,9 @@
-#!/usr/bin/perl
-# $XTermId: resize.pl,v 1.3 2004/03/04 02:21:58 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: resize.pl,v 1.4 2014/02/26 20:20:29 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2004 by Thomas E. Dickey
+# Copyright 2004,2014 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -34,6 +34,9 @@
 # resize.sh rewritten into Perl for comparison.
 # See also Term::ReadKey.
 
+use strict;
+use warnings;
+
 use IO::Handle;
 
 sub write_tty {
@@ -46,7 +49,7 @@ sub write_tty {
 sub get_reply {
 	open TTY, "+</dev/tty" or die("Cannot open /dev/tty\n");
 	autoflush TTY 1;
-	$old=`stty -g`;
+	my $old=`stty -g`;
 	system "stty raw -echo min 0 time 5";
 
 	print TTY @_;
@@ -57,8 +60,8 @@ sub get_reply {
 }
 
 sub csi_field {
-	my $first = @_[0];
-	my $second = @_[1];
+	my $first = $_[0];
+	my $second = $_[1];
 	$first =~ s/^[^0-9]+//;
 	while ( --$second > 0 ) {
 		$first =~ s/^[\d]+//;
@@ -68,7 +71,10 @@ sub csi_field {
 	return $first;
 }
 
-$original=get_reply("\x1b[18t");
+our $original=get_reply("\x1b[18t");
+our $high;
+our $wide;
+
 if ( $original =~ /\x1b\[8;\d+;\d+t/ ) {
 	$high=csi_field($original,2);
 	$wide=csi_field($original,3);
@@ -77,7 +83,10 @@ if ( $original =~ /\x1b\[8;\d+;\d+t/ ) {
 	die "Cannot get terminal size via escape sequence\n";
 }
 #
-$maximize=get_reply("\x1b[19t");
+our $maximize=get_reply("\x1b[19t");
+our $maxhigh;
+our $maxwide;
+
 if ( $maximize =~ /\x1b\[9;\d+;\d+t/ ) {
 	$maxhigh=csi_field($maximize,2);
 	$maxwide=csi_field($maximize,3);
@@ -87,6 +96,9 @@ if ( $maximize =~ /\x1b\[9;\d+;\d+t/ ) {
 } else {
 	die "Cannot get terminal size via escape sequence\n";
 }
+
+our $zapped;
+our ( $w, $h, $a );
 
 sub catch_zap {
 	$zapped++;

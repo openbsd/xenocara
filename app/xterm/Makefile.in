@@ -1,25 +1,35 @@
-## $XTermId: Makefile.in,v 1.155 2008/01/05 14:26:52 tom Exp $
-##
-## Copyright 2002-2006,2007 by Thomas E. Dickey
-##
-##                         All Rights Reserved
-##
-## Permission to use, copy, modify, and distribute this software and its
-## documentation for any purpose and without fee is hereby granted,
-## provided that the above copyright notice appear in all copies and that
-## both that copyright notice and this permission notice appear in
-## supporting documentation, and that the name of the above listed
-## copyright holder(s) not be used in advertising or publicity pertaining
-## to distribution of the software without specific, written prior
-## permission.
-##
-## THE ABOVE LISTED COPYRIGHT HOLDER(S) DISCLAIM ALL WARRANTIES WITH REGARD
-## TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-## AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE
-## LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-## WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-## ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-## OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+## $XTermId: Makefile.in,v 1.225 2014/03/01 15:15:26 tom Exp $
+# -----------------------------------------------------------------------------
+# this file is part of xterm
+#
+# Copyright 1997-2013,2014 by Thomas E. Dickey
+#
+#                         All Rights Reserved
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+# Except as contained in this notice, the name(s) of the above copyright
+# holders shall not be used in advertising or otherwise to promote the
+# sale, use or other dealings in this Software without prior written
+# authorization.
+# -----------------------------------------------------------------------------
 
 SHELL		= /bin/sh
 
@@ -36,6 +46,9 @@ CPP		= @CPP@
 AWK		= @AWK@
 LINK		= $(CC) $(CFLAGS)
 
+CTAGS		= @CTAGS@
+ETAGS		= @ETAGS@
+
 LN_S		= @LN_S@
 RM              = rm -f
 LINT		= @LINT@
@@ -50,93 +63,110 @@ EXTRA_CFLAGS	= @EXTRA_CFLAGS@
 EXTRA_CPPFLAGS	= @EXTRA_CPPFLAGS@
 EXTRA_LOADFLAGS	= @IMAKE_LOADFLAGS@
 
-CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ $(EXTRA_CPPFLAGS)
+CPPFLAGS	= -I. -I$(srcdir) -DHAVE_CONFIG_H @CPPFLAGS@ -DDEFCLASS=\"@APP_CLASS@\" $(EXTRA_CPPFLAGS)
 CFLAGS		= @CFLAGS@ $(EXTRA_CFLAGS)
-LDFLAGS		= @LDFLAGS@
+LDFLAGS		= @LDFLAGS@ @EXTRA_LDFLAGS@
 LIBS		= @LIBS@
 
 prefix		= @prefix@
 exec_prefix	= @exec_prefix@
+datarootdir	= @datarootdir@
+datadir		= @datadir@
 
 manext		= 1
 bindir		= @bindir@
 libdir		= @libdir@
 mandir		= @mandir@/man$(manext)
-appsdir		= @appsdir@
-icondir		= @icondir@
+appsdir		= @APPSDIR@
+icondir		= @ICONDIR@
+pixmapdir	= @PIXMAPDIR@
 
 #### End of system configuration section. ####
 
-DESTDIR		?=
+ICON_NAME	= @ICON_NAME@
+ICON_SYMLINK	= @ICON_SYMLINK@
+
+DESTDIR		=
 BINDIR		= $(DESTDIR)$(bindir)
 LIBDIR		= $(DESTDIR)$(libdir)
 MANDIR		= $(DESTDIR)$(mandir)
 APPSDIR		= $(DESTDIR)$(appsdir)
-ICONDIR		= $(DESTDIR)$(icondir)
 
-INSTALL_DIRS    = $(BINDIR) $(APPSDIR) $(ICONDIR) $(MANDIR)
+@no_icondir@ICONDIR		= $(DESTDIR)$(icondir)
+@no_pixmapdir@PIXMAPDIR	= $(DESTDIR)$(pixmapdir)
 
-CLASS		= XTerm
+INSTALL_DIRS    = $(BINDIR) $(APPSDIR) $(ICONDIR) $(PIXMAPDIR) $(MANDIR)
+
+CLASS		= @APP_CLASS@
 EXTRAHDR	= @EXTRAHDRS@
 EXTRASRC	= @EXTRASRCS@
 EXTRAOBJ	= @EXTRAOBJS@
 
           SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 	  	  data.c doublechr.c fontutils.c input.c \
-		  $(MAINSRC) menu.c misc.c print.c ptydata.c \
-		  screen.c scrollbar.c tabs.c util.c xstrings.c xtermcap.c \
-		  VTPrsTbl.c $(EXTRASRC)
+		  linedata.c main.c menu.c misc.c \
+		  print.c ptydata.c scrollback.c \
+		  screen.c scrollbar.c tabs.c util.c version.c xstrings.c \
+		  xtermcap.c VTPrsTbl.c $(EXTRASRC)
           OBJS1 = button$o cachedGCs$o charproc$o charsets$o cursor$o \
 	  	  data$o doublechr$o fontutils$o input$o \
-		  main$o menu$o misc$o print$o ptydata$o \
-		  screen$o scrollbar$o tabs$o util$o xstrings$o xtermcap$o \
-		  VTPrsTbl$o $(EXTRAOBJ)
-          SRCS2 = resize.c xstrings.c
-          OBJS2 = resize$o xstrings$o
+		  linedata$o main$o menu$o misc$o \
+		  print$o ptydata$o scrollback$o \
+		  screen$o scrollbar$o tabs$o util$o version$o xstrings$o \
+		  xtermcap$o VTPrsTbl$o $(EXTRAOBJ)
+          SRCS2 = resize.c version.c xstrings.c
+          OBJS2 = resize$o version$o xstrings$o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
-           HDRS = VTparse.h data.h error.h main.h menu.h proto.h \
+           HDRS = VTparse.h data.h error.h main.h menu.h \
                   ptyx.h version.h xstrings.h xterm.h xtermcap.h $(EXTRAHDR)
        PROGRAMS = xterm$x resize$x
 
 all :	$(PROGRAMS)
 ################################################################################
-.SUFFIXES : .i .def .hin .html .$(manext) .ms .man .ps .pdf .txt
+.SUFFIXES : .i .def .hin .$(manext) .ms .man .txt @GROFF_NOTE@ .html .ps .pdf
 
 .c$o :
-@RULE_CC@
+	@RULE_CC@
 	@ECHO_CC@$(CC) $(CPPFLAGS) $(CFLAGS) -c $(srcdir)/$*.c
 
 .c.i :
-@RULE_CC@
+	@RULE_CC@
 	@ECHO_CC@$(CPP) -C $(CPPFLAGS) $*.c >$@
 
 .def.hin :
 	grep '^CASE_' $< | $(AWK) '{printf "#define %s %d\n", $$1, n++}' >$@
 
 .man.$(manext) :
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man $@ $(appsdir)
+	$(SHELL) ./minstall "$(INSTALL_DATA)" $< $@ $(appsdir) $(CLASS) $* $* $(pixmapdir)
 
-.$(manext).html :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Thtml -man" >$@
+@NROFF_NOTE@.$(manext).txt :
+@NROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | nroff -man | col -bx" >$@
+@NROFF_NOTE@
+@NROFF_NOTE@.ms.txt :
+@NROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | nroff -ms | col -bx" >$@
+@NROFF_NOTE@
 
-.$(manext).ps :
-	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
-
-.$(manext).txt :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | nroff -Tascii -man | col -bx" >$@
-
-.ms.html :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.ms | groff -Thtml -ms" >$@
-
-.ms.ps :
-	$(SHELL) -c "tbl $*.ms | groff -ms" >$@
-
-.ms.txt :
-	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.ms | nroff -Tascii -ms | col -bx" >$@
-
-.ps.pdf :
-	ps2pdf $*.ps
+@GROFF_NOTE@.$(manext).html :
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -P -o0 -I$*_ -Thtml -man" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.$(manext).ps :
+@GROFF_NOTE@	$(SHELL) -c "tbl $*.$(manext) | groff -man" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.$(manext).txt :
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $*.$(manext) | groff -Tascii -man | col -bx" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.ms.html :
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -P -o0 -I$*_ -Thtml -ms" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.ms.ps :
+@GROFF_NOTE@	$(SHELL) -c "tbl $< | groff -ms" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.ms.txt :
+@GROFF_NOTE@	GROFF_NO_SGR=stupid $(SHELL) -c "tbl $< | groff -Tascii -ms | col -bx" >$@
+@GROFF_NOTE@
+@GROFF_NOTE@.ps.pdf :
+@GROFF_NOTE@	ps2pdf $*.ps
 ################################################################################
 main$o : main.h
 misc$o : version.h
@@ -145,7 +175,7 @@ $(OBJS1) : xterm.h ptyx.h xtermcfg.h
 main$o resize$o screen$o : xterm_io.h
 
 xterm$x : $(OBJS1)
-	@ECHO_LD@$(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
+	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS1) $(LIBS) $(EXTRA_LOADFLAGS)
 
 resize$x : $(OBJS2)
 	@ECHO_LD@$(SHELL) $(srcdir)/plink.sh $(LINK) $(LDFLAGS) -o $@ $(OBJS2) $(LIBS)
@@ -159,6 +189,21 @@ resize$x : $(OBJS2)
 	perl $(srcdir)/88colres.pl > $@
 
 charproc$o : main.h @CHARPROC_DEPS@
+
+misc$o : builtin_icons.h
+
+# do this to quiet gcc -Wcast-qual warnings 
+builtin_icons.h :
+	@echo "#if OPT_BUILTIN_XPMS" >$@
+	@echo "#include <icons/mini.xterm.xpms>" >>$@
+	@echo "#include <icons/filled-xterm.xpms>" >>$@
+	@echo "#include <icons/xterm.xpms>" >>$@
+	@echo "#include <icons/xterm-color.xpms>" >>$@
+	@echo "#else" >>$@
+	@sed -e 's/static char \* /static const char * /' $(srcdir)/icons/mini.xterm_48x48.xpm >>$@
+	@echo "#endif" >>$@
+	@echo "made $@"
+
 ################################################################################
 actual_xterm  = `echo xterm|        sed '$(transform)'`
 actual_resize = `echo resize|       sed '$(transform)'`
@@ -176,65 +221,122 @@ install-full :: xterm$x resize$x $(BINDIR)
 @MAY_SETUID@	$(SHELL) $(srcdir)/sinstall.sh @SINSTALL_OPTS@ "$(INSTALL_PROGRAM)" xterm$x  @XTERM_PATH@ $(BINDIR)/$(binary_xterm)
 @NOT_SETUID@	$(INSTALL_PROGRAM) xterm$x $(BINDIR)/$(binary_xterm)
 	$(INSTALL_PROGRAM) -m  755 resize$x $(BINDIR)/$(binary_resize)
-	@$(SHELL) -c 'echo "... installing $(BINDIR)/$(binary_uxterm)"; \
-		if test "$(binary_xterm)" != "xterm"; then \
-			name="$(binary_xterm)"; \
-			sed -e "s,=xterm,=$$name," $(srcdir)/uxterm >uxterm.tmp; \
-			$(INSTALL_SCRIPT) -m  755 uxterm.tmp $(BINDIR)/$(binary_uxterm); \
-			rm -f uxterm.tmp; \
-		else \
-			$(INSTALL_SCRIPT) -m  755 $(srcdir)/uxterm $(BINDIR)/$(binary_uxterm); \
-		fi'
-	@$(SHELL) -c 'echo "... installing $(BINDIR)/$(binary_k8term)"; \
-		if test "$(binary_xterm)" != "xterm"; then \
-			name="$(binary_xterm)"; \
-			sed -e "s,=xterm,=$$name," $(srcdir)/koi8rxterm >k8term.tmp; \
-			$(INSTALL_SCRIPT) -m  755 k8term.tmp $(BINDIR)/$(binary_k8term); \
-			rm -f k8term.tmp; \
-		else \
-			$(INSTALL_SCRIPT) -m  755 $(srcdir)/koi8rxterm $(BINDIR)/$(binary_k8term); \
-		fi'
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@ ; fi"
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && $(LN_S) $(binary_xterm) @XTERM_SYMLINK@ ; fi"
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && echo '... created symbolic link:' && ls -l $(binary_xterm) @XTERM_SYMLINK@ ; fi"
+
+EDIT_SCRIPT = sed -e s,=xterm,=\$$name, -e s,XTerm,$(CLASS),
+
+install \
+install-bin \
+install-scripts \
+install-full ::
+	@$(SHELL) -c "name=\"$(binary_xterm)\"; \
+		dest=\"$(binary_uxterm)\"; \
+		echo \"... installing $(BINDIR)/\$$dest\"; \
+		$(EDIT_SCRIPT) $(srcdir)/uxterm >uxterm.tmp; \
+		$(INSTALL_SCRIPT) -m  755 uxterm.tmp $(BINDIR)/\$$dest; \
+		rm -f uxterm.tmp"
+	@$(SHELL) -c "name=\"$(binary_xterm)\"; \
+		dest=\"$(binary_k8term)\"; \
+		echo \"... installing $(BINDIR)/\$$dest\"; \
+		$(EDIT_SCRIPT) $(srcdir)/koi8rxterm >k8term.tmp; \
+		$(INSTALL_SCRIPT) -m  755 k8term.tmp $(BINDIR)/\$$dest; \
+		rm -f k8term.tmp"
+	@-$(SHELL) -c "name=\"$(binary_xterm)\"; \
+		if test @XTERM_SYMLINK@ != NONE ; then \
+		cd $(BINDIR) && ( \
+			rm -f @XTERM_SYMLINK@ ; \
+			$(LN_S) \$$name @XTERM_SYMLINK@ ; \
+			echo \"... created symbolic link:\" ; \
+			ls -l \$$name @XTERM_SYMLINK@ ) ; \
+		fi"
 
 install \
 install-man \
 install-full :: $(MANDIR)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/xterm.man    $(MANDIR)/$(actual_xterm).$(manext)  $(appsdir)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/resize.man   $(MANDIR)/$(actual_resize).$(manext) $(appsdir)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/uxterm.man   $(MANDIR)/$(actual_uxterm).$(manext) $(appsdir)
-	$(SHELL) $(srcdir)/minstall.sh "$(INSTALL_DATA)" $(srcdir)/koi8rxterm.man   $(MANDIR)/$(actual_k8term).$(manext) $(appsdir)
+	@-$(SHELL) -c "for app in xterm resize uxterm koi8rxterm ; \
+		do \
+			actual=\`echo \"\$$app\" | sed '@program_transform_name@'\`; \
+			$(SHELL) ./minstall \"$(INSTALL_DATA)\" $(srcdir)/\$$app.man  $(MANDIR)/\$$actual.$(manext) $(appsdir) $(CLASS) \$$app \$$actual $(pixmapdir); \
+		done"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && rm -f @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && $(LN_S) $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(MANDIR) && echo '... created symbolic link:' && ls -l $(actual_xterm).$(manext) @XTERM_SYMLINK@.$(manext) ; fi"
 
+APP_NAMES = XTerm UXTerm KOI8RXTerm
+
 @no_appsdir@install \
 @no_appsdir@install-app \
 @no_appsdir@install-full :: $(APPSDIR)
-@no_appsdir@	@echo installing $(APPSDIR)/$(CLASS)
-@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm.ad >XTerm.tmp
-@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)
-@no_appsdir@	@echo installing $(APPSDIR)/$(CLASS)-color
-@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/XTerm-col.ad >XTerm.tmp
-@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$(CLASS)-color
-@no_appsdir@	@echo installing $(APPSDIR)/UXTerm
-@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/UXTerm.ad >XTerm.tmp
-@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/UXTerm
-@no_appsdir@	@echo installing $(APPSDIR)/KOI8RXTerm
-@no_appsdir@	@sed -e s/XTerm/$(CLASS)/ $(srcdir)/KOI8RXTerm.ad >XTerm.tmp
-@no_appsdir@	@$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/KOI8RXTerm
+@no_appsdir@	@-$(SHELL) -c 'for s in $(APP_NAMES); \
+@no_appsdir@	do \
+@no_appsdir@		echo "** $$s"; \
+@no_appsdir@		d=`echo $$s | sed -e s/XTerm/$(CLASS)/`; \
+@no_appsdir@		echo installing $(APPSDIR)/$$d; \
+@no_appsdir@		sed -e s/XTerm/$(CLASS)/ $(srcdir)/$$s.ad >XTerm.tmp; \
+@no_appsdir@		$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$$d; \
+@no_appsdir@		echo installing $(APPSDIR)/$$d-color; \
+@no_appsdir@		sed -e s/XTerm/$$d/ $(srcdir)/XTerm-col.ad >XTerm.tmp; \
+@no_appsdir@		$(INSTALL_DATA) XTerm.tmp $(APPSDIR)/$$d-color; \
+@no_appsdir@	done'
 @no_appsdir@	@rm -f XTerm.tmp
 @no_icondir@	@echo "... installed app-defaults"
 
+@no_icondir@ICON_LIST = @ICON_LIST@
+@no_icondir@ICON_THEME = @ICON_THEME@
 @no_icondir@install \
 @no_icondir@install-icon \
 @no_icondir@install-full :: $(ICONDIR)
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_32x32.xpm $(ICONDIR)
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm-color_48x48.xpm $(ICONDIR)
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_32x32.xpm $(ICONDIR)
-@no_icondir@	@$(INSTALL_DATA) $(srcdir)/icons/xterm_48x48.xpm $(ICONDIR)
+@no_icondir@	ACTUAL_XTERM=$(actual_xterm) \
+@no_icondir@	$(SHELL) -c '\
+@no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
+@no_icondir@		for n in $(ICON_LIST); \
+@no_icondir@		do \
+@no_icondir@			x=$$ACTUAL_XTERM; \
+@no_icondir@			l=`echo "$$n" | cut -f1 -d:`; \
+@no_icondir@			r=`echo "$$n" | cut -f2 -d: |sed -e s,$(ICON_NAME),$$x-color,`; \
+@no_icondir@			test -z "$$r" && continue; \
+@no_icondir@			d=$$h/`echo "$$r" | sed -e "s,/[^/]*$$,,"`; \
+@no_icondir@			test -d "$$d" || mkdir -p "$$d"; \
+@no_icondir@			echo "installing icon $$h/$$r"; \
+@no_icondir@			$(INSTALL_DATA) $$l $$h/$$r; \
+@no_icondir@			s=`echo "$$r" | sed -e '"'s,^.*\.,.,'"'`; \
+@no_icondir@			t=$(ICON_SYMLINK)$$s; \
+@no_icondir@			b=`basename $$n $$s | sed -e "s,_[1-9][0-9]*x.*,,"`; \
+@no_icondir@			if test "$(ICON_SYMLINK)" != NONE ; then \
+@no_icondir@				if test "$$r" != "$$t" ; then \
+@no_icondir@					if test "x$$b" = "x$(ICON_NAME)" ; then \
+@no_icondir@						echo "linking $$r -> $$t"; \
+@no_icondir@						( cd $$h; rm -f $$t; $(LN_S) $$r $$t; ) \
+@no_icondir@					fi \
+@no_icondir@				fi \
+@no_icondir@			fi \
+@no_icondir@		done'
 @no_icondir@	@echo "... installed icons"
+
+@no_pixmapdir@install \
+@no_pixmapdir@install-icon \
+@no_pixmapdir@install-full :: $(PIXMAPDIR)
+@no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
+@no_pixmapdir@	$(SHELL) -c '\
+@no_pixmapdir@		h=$(PIXMAPDIR); \
+@no_pixmapdir@		for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@		do \
+@no_pixmapdir@			l=`basename $$n`; \
+@no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
+@no_pixmapdir@			echo "installing pixmap $$h/$$r"; \
+@no_pixmapdir@			$(INSTALL_DATA) $(srcdir)/icons/$$l $$h/$$r; \
+@no_pixmapdir@			s=`echo "$$r" | sed -e '"'s,^.*\.,.,'"'`; \
+@no_pixmapdir@			t=$(ICON_SYMLINK)$$s; \
+@no_pixmapdir@			b=`basename $$n $$s | sed -e "s,_[1-9][0-9]*x.*,,"`; \
+@no_pixmapdir@			if test "$(ICON_SYMLINK)" != NONE ; then \
+@no_pixmapdir@				if test "x$$r" != "$$t" ; then \
+@no_pixmapdir@					if test "x$$b" = "x$(ICON_NAME)" ; then \
+@no_pixmapdir@						echo "linking $$r -> $$t"; \
+@no_pixmapdir@						( cd $$h; rm -f $$t; $(LN_S) $$r $$t; ) \
+@no_pixmapdir@					fi \
+@no_pixmapdir@				fi \
+@no_pixmapdir@			fi \
+@no_pixmapdir@		done'
+@no_pixmapdir@	@echo "... installed icons"
 
 install ::
 	@echo 'Completed installation of executables and documentation.'
@@ -243,10 +345,10 @@ install ::
 TERMINFO_DIR = @TERMINFO_DIR@
 SET_TERMINFO = @SET_TERMINFO@
 
-install-full \
-install-ti :: $(TERMINFO_DIR)
-	@$(SHELL) -c "$(SET_TERMINFO) $(srcdir)/run-tic.sh $(srcdir)/terminfo"
-	@echo 'Completed installation of terminfo description.'
+@no_ticprog@install-full \
+@no_ticprog@install-ti :: $(TERMINFO_DIR)
+@no_ticprog@	@$(SHELL) -c "$(SET_TERMINFO) $(srcdir)/run-tic.sh $(srcdir)/terminfo"
+@no_ticprog@	@echo 'Completed installation of terminfo description.'
 
 install-full \
 install-tc ::
@@ -259,9 +361,14 @@ uninstall-bin \
 uninstall-full ::
 	-$(RM) $(BINDIR)/$(binary_xterm)
 	-$(RM) $(BINDIR)/$(binary_resize)
+	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@; fi"
+
+uninstall \
+uninstall-bin \
+uninstall-scripts \
+uninstall-full ::
 	-$(RM) $(BINDIR)/$(binary_uxterm)
 	-$(RM) $(BINDIR)/$(binary_k8term)
-	@-$(SHELL) -c "if test @XTERM_SYMLINK@ != NONE ; then cd $(BINDIR) && rm -f @XTERM_SYMLINK@; fi"
 
 uninstall \
 uninstall-man \
@@ -275,35 +382,70 @@ uninstall-full ::
 @no_appsdir@uninstall \
 @no_appsdir@uninstall-app \
 @no_appsdir@uninstall-full ::
-@no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)
-@no_appsdir@	-$(RM) $(APPSDIR)/$(CLASS)-color
-@no_appsdir@	-$(RM) $(APPSDIR)/UXTerm
+@no_appsdir@	@-$(SHELL) -c 'for s in $(APP_NAMES); \
+@no_appsdir@	do \
+@no_appsdir@		echo "** $$s"; \
+@no_appsdir@		d=`echo $$s | sed -e s/XTerm/$(CLASS)/`; \
+@no_appsdir@		echo uninstalling $(APPSDIR)/$$d; \
+@no_appsdir@		$(RM) $(APPSDIR)/$$d; \
+@no_appsdir@		echo uninstalling $(APPSDIR)/$$d-color; \
+@no_appsdir@		$(RM) $(APPSDIR)/$$d-color; \
+@no_appsdir@	done'
 
 @no_icondir@uninstall \
 @no_icondir@uninstall-icon \
 @no_icondir@uninstall-full ::
-@no_icondir@	-$(RM) $(ICONDIR)/xterm-color_32x32.xpm
-@no_icondir@	-$(RM) $(ICONDIR)/xterm_32x32.xpm
-@no_icondir@	-$(RM) $(ICONDIR)/xterm-color_48x48.xpm
-@no_icondir@	-$(RM) $(ICONDIR)/xterm_48x48.xpm
+@no_icondir@	-@$(SHELL) -c 'for n in $(ICON_LIST); \
+@no_icondir@		do \
+@no_icondir@		x=$(actual_xterm); \
+@no_icondir@		r=`echo "$$n" | sed -e s,\^.\*:,, -e s,xterm,$$x,`; \
+@no_icondir@		test -z "$$r" && continue; \
+@no_icondir@		h=$(ICONDIR)/$(ICON_THEME); \
+@no_icondir@		echo removing $$h/$$r; \
+@no_icondir@		$(RM) $$h/$$r; \
+@no_icondir@		done'
+@no_icondir@	@echo "... removed icons"
+
+@no_pixmapdir@uninstall \
+@no_pixmapdir@uninstall-icon \
+@no_pixmapdir@uninstall-full ::
+@no_pixmapdir@	ACTUAL_XTERM=$(actual_xterm) \
+@no_pixmapdir@	$(SHELL) -c 'for n in $(srcdir)/icons/*xterm*_32x32.xpm $(srcdir)/icons/*xterm*_48x48.xpm; \
+@no_pixmapdir@		do \
+@no_pixmapdir@			l=`basename $$n`; \
+@no_pixmapdir@			r=`echo "$$l" | sed -e "s,xterm,$$ACTUAL_XTERM,"`; \
+@no_pixmapdir@			echo removing $(PIXMAPDIR)/$$r; \
+@no_pixmapdir@			$(RM) $(PIXMAPDIR)/$$r; \
+@no_pixmapdir@		done'
+@no_pixmapdir@	@echo "... removed icons"
 ################################################################################
 # Desktop-utils does not provide an uninstall, and is not uniformly available.
+@desktop_utils@DESKTOP_FILES = $(srcdir)/xterm.desktop $(srcdir)/uxterm.desktop
 @desktop_utils@DESKTOP_FLAGS = @DESKTOP_FLAGS@
 @desktop_utils@install-desktop \
 @desktop_utils@install-full ::
-@desktop_utils@	desktop-file-install $(DESKTOP_FLAGS) xterm.desktop
-@desktop_utils@	desktop-file-install $(DESKTOP_FLAGS) uxterm.desktop
+@desktop_utils@	ACTUAL_XTERM=$(actual_xterm) \
+@desktop_utils@	$(SHELL) -c 'for n in $(DESKTOP_FILES); \
+@desktop_utils@		do $(SHELL) df-install $$ACTUAL_XTERM $(DESKTOP_FLAGS) $$n; \
+@desktop_utils@		done'
 ################################################################################
 mostlyclean :
 	-$(RM) *$o *.[is] XtermLog.* .pure core *~ *.bak *.BAK *.out *.tmp
 
 clean : mostlyclean
-	-$(RM) $(PROGRAMS)
+	-$(RM) $(PROGRAMS) builtin_icons.h 
 
-distclean : clean
+distclean :: clean
 	-$(RM) Makefile config.status config.cache config.log xtermcfg.h
+	-$(RM) df-install minstall
+
+distclean \
+docs-clean ::
 	-$(RM) *.ps *.pdf *.png
-	-$(RM) xterm.html xterm.$(manext) xterm.txt
+	-$(SHELL) -c 'for p in xterm resize uxterm koi8rxterm; \
+	do \
+		$(RM) $$p.html $$p.$(manext) $$p.txt; \
+	done'
 	-$(RM) ctlseqs.html ctlseqs.$(manext)
 
 realclean : distclean
@@ -315,28 +457,58 @@ maintainer-clean : realclean
 terminfo.out : terminfo		; tic -a -I -1 terminfo >$@
 termcap.out : termcap		; tic -a -C -U termcap >$@
 ################################################################################
-ctlseqs.html : ctlseqs.ms
+docs-ctlseqs \
+docs :: \
+	$(srcdir)/ctlseqs.txt \
+@GROFF_NOTE@	ctlseqs.html \
+@GROFF_NOTE@	ctlseqs.pdf \
+@GROFF_NOTE@	ctlseqs.ps
+
+ctlseqs.html : $(srcdir)/ctlseqs.ms
 ctlseqs.pdf : ctlseqs.ps
-ctlseqs.ps : ctlseqs.ms
-ctlseqs.txt : ctlseqs.ms
+ctlseqs.ps : $(srcdir)/ctlseqs.ms
+ctlseqs.txt : $(srcdir)/ctlseqs.ms
 ################################################################################
+docs-resize \
+docs ::  resize.txt @GROFF_NOTE@ resize.html resize.pdf resize.ps
+resize.html : resize.$(manext)
+resize.pdf : resize.ps
+resize.ps : resize.$(manext)
+resize.txt : resize.$(manext)
+################################################################################
+docs-xterm \
+docs ::  xterm.txt @GROFF_NOTE@ xterm.html xterm.pdf xterm.ps
 xterm.html : xterm.$(manext)
 xterm.pdf : xterm.ps
 xterm.ps : xterm.$(manext)
 xterm.txt : xterm.$(manext)
+################################################################################
+docs-uxterm \
+docs ::  uxterm.txt @GROFF_NOTE@ uxterm.html uxterm.pdf uxterm.ps
+uxterm.html : uxterm.$(manext)
+uxterm.pdf : uxterm.ps
+uxterm.ps : uxterm.$(manext)
+uxterm.txt : uxterm.$(manext)
+################################################################################
+docs-koi8rxterm \
+docs ::  koi8rxterm.txt @GROFF_NOTE@ koi8rxterm.html koi8rxterm.pdf koi8rxterm.ps
+koi8rxterm.html : koi8rxterm.$(manext)
+koi8rxterm.pdf : koi8rxterm.ps
+koi8rxterm.ps : koi8rxterm.$(manext)
+koi8rxterm.txt : koi8rxterm.$(manext)
 ################################################################################
 lint :
 	$(LINT) $(CPPFLAGS) $(SRCS1)
 	$(LINT) $(CPPFLAGS) $(SRCS2)
 
 tags :
-	ctags $(SRCS) $(HDRS)
+	$(CTAGS) $(SRCS) $(HDRS)
 
 TAGS :
-	etags $(SRCS) $(HDRS)
+	$(ETAGS) $(SRCS) $(HDRS)
 
 $(TERMINFO_DIR) $(INSTALL_DIRS) :
-	$(SHELL) ${srcdir}/mkdirs.sh $@
+	mkdir -p $@
 
 ALWAYS :
 

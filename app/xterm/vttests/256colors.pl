@@ -1,9 +1,9 @@
-#!/usr/bin/perl
-# $XTermId: 256colors.pl,v 1.4 2006/09/29 21:49:03 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: 256colors.pl,v 1.5 2014/02/26 20:16:12 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999,2006 by Thomas E. Dickey
+# Copyright 1999-2006,2014 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -31,9 +31,14 @@
 # sale, use or other dealings in this Software without prior written
 # authorization.
 # -----------------------------------------------------------------------------
-#
+
+use strict;
+use warnings;
+
 # This uses 33 print-lines on an 80-column display.  Printing the numbers in
 # hexadecimal would make it compact enough for 24x80, but less readable.
+
+our ($bg, $fg);
 
 for ($bg = 0; $bg < 256; $bg++) {
     # print "\x1b[9;1H\x1b[2J";

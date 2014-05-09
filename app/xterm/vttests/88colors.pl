@@ -1,9 +1,9 @@
-#!/usr/bin/perl
-# $XTermId: 88colors.pl,v 1.3 1999/09/27 20:12:18 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: 88colors.pl,v 1.4 2014/02/26 20:16:26 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999 by Thomas E. Dickey
+# Copyright 1999,2014 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -32,6 +32,11 @@
 # authorization.
 # -----------------------------------------------------------------------------
 # Made from 256colors.pl
+
+use strict;
+use warnings;
+
+our ($bg, $fg);
 
 for ($bg = 0; $bg < 88; $bg++) {
     print "\x1b[9;1H\x1b[48;5;${bg}m\x1b[2J";

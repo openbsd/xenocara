@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.20 2013/04/21 18:58:54 tom Exp $
+# $XTermId: minstall.in,v 1.21 2014/02/27 23:43:50 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2012,2013 by Thomas E. Dickey
+# Copyright 2001-2013,2014 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -116,8 +116,10 @@ done
 WTMP_PATH=$WTMP_PATH/$WTMP_NAME
 
 # "X" is usually in the miscellaneous section, along with "undocumented".
-# Use that to guess an appropriate section.
-X_MANSECT=`man X 2>&1 | tr '\012' '\020' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
+# Use that to guess an appropriate section.  This relies on having the manpage
+# installed.
+X_MANPAGE=X
+X_MANSECT=`man $X_MANPAGE 2>&1 | grep $X_MANPAGE'([^)]*)' | head -n 1 | tr '\012' '\040' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
 test -z "$X_MANSECT" && X_MANSECT=$suffix
 
 VERSION_H=`echo "$OLD_FILE" | sed -e 's,/[^/]*$,/version.h,' -e s',^[^/]*$,version.h,'`

@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.348 2013/11/26 00:12:10 tom Exp $ */
+/* $XTermId: input.c,v 1.351 2014/04/27 23:50:36 Matthieu.Herrb Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1142,7 +1142,7 @@ Input(XtermWidget xw,
 #if OPT_SUNPC_KBD
 	    && keyboard->type == keyboardIsVT220
 #endif
-	    && ((string = (Char *) udk_lookup(dec_code, &kd.nbytes)) != 0)) {
+	    && ((string = (Char *) udk_lookup(xw, dec_code, &kd.nbytes)) != 0)) {
 	    UIntClr(evt_state, ShiftMask);
 	    while (kd.nbytes-- > 0)
 		unparseputc(xw, CharOf(*string++));

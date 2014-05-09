@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.109 2013/06/23 22:32:37 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.110 2014/04/11 19:36:41 Ross.Combs Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -165,6 +165,9 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
 #if !HasPutenv
       PUTENVDEF = -DNOPUTENV
 #endif
+#ifdef RegisXTerm
+       SIXELDEF = -DOPT_REGIS_GRAPHICS=1
+#endif
 #ifdef SixelXTerm
        SIXELDEF = -DOPT_SIXEL_GRAPHICS=1
 #endif
@@ -182,9 +185,13 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
 
         MAINSRC = main.c
         MAINOBJ = main.o
+#ifdef RegisXTerm
+       SIXELSRC = graphics_regis.c
+       SIXELOBJ = graphics_regis.o
+#endif
 #ifdef SixelXTerm
-       SIXELSRC = graphics.c
-       SIXELOBJ = graphics.o
+       SIXELSRC = graphics_sixel.c
+       SIXELOBJ = graphics_sixel.o
 #endif
 #ifdef TraceXTerm
        TRACESRC = trace.c

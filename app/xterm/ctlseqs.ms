@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.305 2014/01/13 23:02:06 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.310 2014/05/03 00:27:29 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #301
-.ds RF 2014/01/13
+.ds LF Patch #304
+.ds RF 2014/05/02
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -750,6 +750,24 @@ Delete \*(Ps Character(s) (default = 1) (DCH).
 .
 .IP \\*(Cs\\*(Ps\\*s\\*S
 Scroll up \*(Ps lines (default = 1) (SU).
+.
+.IP \\*(Cs\\*?\\*(Pi\\*;\\*(Pa\\*;\\*(Pv\\*s\\*S
+If configured to support either \fBSixel Graphics\fP or \fBReGIS Graphics\fP,
+\fIxterm\fP accepts a three-parameter control sequence, where \*(Pi,
+\*(Pa and \*(Pv are the \fIitem\fP, \fIaction\fP and \fIvalue\fP.
+  \*(Pi = \*1 \(-> item (color registers)
+  \*(Pa = \*1 \(-> read the number of color registers
+  \*(Pa = \*2 \(-> reset the number of color registers
+  \*(Pa = \*3 \(-> set the number of color registers to the value \*(Pv
+.br
+The control sequence returns a response using the same form:
+.ID
+\*(Cs\*?\*(Pi\*;\*(Ps\*;\*(Pv\*s\*S
+.DE
+.br
+where \*(Ps is the status:
+  \*(Ps = \*0 \(-> success
+  \*(Ps = \*3 \(-> failure
 .
 .IP \\*(Cs\\*(Ps\\*s\\*T
 Scroll down \*(Ps lines (default = 1) (SD).
@@ -1673,6 +1691,7 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*6 \(-> Reset Tektronix background color.
   \*(Ps = \*1\*1\*7 \(-> Reset highlight color.
   \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
+  \*(Ps = \*1\*1\*9 \(-> Reset highlight foreground color.
 .
 .St
 .Ss Privacy Message
@@ -1902,7 +1921,7 @@ c | l .
 13	Meta + Ctrl
 14	Meta + Ctrl + Shift
 15	Meta + Ctrl + Alt
-16	Meta + Ctrl +Alt + Shift
+16	Meta + Ctrl + Alt + Shift
 _
 .TE
 For example, shift-F5 would be sent as
@@ -2367,7 +2386,7 @@ and \*m for button release.
 .RS
 .bP
 The encoded button value in this case does not add 32 since
-that was useful only in the X10 scheme for ensuring that the 
+that was useful only in the X10 scheme for ensuring that the
 byte containing the button value is a printable code.
 .bP
 The modifiers are encoded in the same way.
@@ -2398,20 +2417,22 @@ it is not an improvement over 1005.
 If \fI\*(xt\fP is configured as
 VT240,
 VT241,
-VT330 or
-VT340
+VT330,
+VT340 or
+VT382
 using the \fBdecTerminalID\fP resource,
-it supports Sixel Graphics controls, a subset of ReGIS graphics.
+it supports Sixel Graphics controls, a palleted bitmap graphics system
+using sets of six vertical pixels as the basic element.
 .St
 .IP \\*(Cs\\*(Ps\\*s\\*c
 \fI\*(xt\fP responds to Send Device Attributes (Primary DA) with these
 additional codes:
-  \*(Ps = \*3 \(-> ReGIS graphics.
-  \*(Ps = \*4 \(-> SIXEL graphics.
+  \*(Ps = \*4 \(-> Sixel graphics.
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*h
 \fI\*(xt\fP has these additional private Set Mode values:
-  \*(Ps = \*8\*0 \(-> SIXEL scrolling.
+  \*(Ps = \*8\*0 \(-> Sixel scrolling.
   \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic.
+  \*(Ps = \*8\*4\*5\*2 \(-> Sixel scrolling leaves cursor to right of graphic.
 .IP \\*(Dc\\*(Pa\\*;\\*(Pb\\*;\\*(Ph\\*s\\*q\\*s\\*(Ps..\\*(Ps\fP\\*s\\*(ST
 See
 .ID
@@ -2423,6 +2444,37 @@ following the \*q with sixel data.
   \*(Pb \(-> background color option
   \*(Ph \(-> horizontal grid size (ignored).
   \*(Ps \(-> sixel data
+.Ed
+.
+.Sh "ReGIS Graphics"
+.LP
+If \fI\*(xt\fP is configured as
+VT125,
+VT240,
+VT241,
+VT330 or
+VT340
+using the \fBdecTerminalID\fP resource,
+it supports Remote Graphic Instruction Set, a graphics description language.
+.St
+.IP \\*(Cs\\*(Ps\\*s\\*c
+\fI\*(xt\fP responds to Send Device Attributes (Primary DA) with these
+additional codes:
+  \*(Ps = \*3 \(-> ReGIS graphics.
+.IP \\*(Cs\\*?\\*(Pm\\*s\\*h
+\fI\*(xt\fP has these additional private Set Mode values:
+  \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic.
+.IP \\*(Dc\\*(Pm\\*s\\*p\\*(Pr..\\*(Pr\fP\\*s\\*(ST
+See
+.ID
+http://vt100.net/docs/vt3xx-gp/chapter1.html
+.DE
+The ReGIS data device control string has one positional parameter
+with four possible values:
+  \*(Pm = 0 \(-> resume command, use fullscreen mode
+  \*(Pm = 1 \(-> start new command, use fullscreen mode
+  \*(Pm = 2 \(-> resume command, use command display mode
+  \*(Pm = 3 \(-> start new command, use command display mode
 .Ed
 .
 .Sh "Tektronix 4014 Mode"

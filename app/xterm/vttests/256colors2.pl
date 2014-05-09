@@ -1,9 +1,9 @@
-#!/usr/bin/perl
-# $XTermId: 256colors2.pl,v 1.15 2012/09/19 23:32:48 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: 256colors2.pl,v 1.16 2014/02/26 20:21:48 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2009,2012 by Thomas E. Dickey
+# Copyright 1999-2012,2014 by Thomas E. Dickey
 # Copyright 2002 by Steve Wall
 # Copyright 1999 by Todd Larason
 # 
@@ -39,6 +39,7 @@
 # pleasing shades
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use Encode 'encode_utf8';
@@ -128,9 +129,9 @@ for ($red = 0; $red < $cube; $red++) {
 	for ($blue = 0; $blue < $cube; $blue++) {
 	    &define_color(
 		   16 + (map_cube($red) * $cube * $cube) + (map_cube($green) * $cube) + map_cube($blue),
-		   int (@steps[$red]),
-		   int (@steps[$green]),
-		   int (@steps[$blue]));
+		   int ($steps[$red]),
+		   int ($steps[$green]),
+		   int ($steps[$blue]));
 	}
     }
 }

@@ -1,9 +1,9 @@
-#!/usr/bin/perl -w
-# $XTermId: query-color.pl,v 1.3 2012/10/22 11:45:58 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: query-color.pl,v 1.4 2014/02/26 20:14:40 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2012 by Thomas E. Dickey
+# Copyright 2012,2014 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -37,6 +37,7 @@
 # TODO: show result in #rrggbb format.
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use IO::Handle;

@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.73 2013/08/21 23:50:44 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.79 2014/05/02 23:32:27 tom Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1946,8 +1946,8 @@ CASE_CSI_IGNORE,
 CASE_CSI_IGNORE,
 CASE_CSI_IGNORE,
 /*      Agrave          Aacute          Acircumflex     Atilde          */
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_SL,
+CASE_SR,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Adiaeresis      Aring           AE              Ccedilla        */
@@ -3110,7 +3110,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GRAPHICS_ATTRIBUTES,
 /*	T		U		V		W	*/
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -3270,7 +3270,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GRAPHICS_ATTRIBUTES,
 /*      Ocircumflex     Otilde          Odiaeresis      multiply        */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -3917,12 +3917,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Eth             Ntilde          Ograve          Oacute          */
-CASE_RM_TITLE,
+CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Ocircumflex     Otilde          Odiaeresis      multiply        */
-CASE_GROUND_STATE,
+CASE_RM_TITLE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
@@ -7446,14 +7446,14 @@ CASE_ESC_IGNORE,
 CASE_ESC_IGNORE,
 CASE_ESC_IGNORE,
 /*      degree          plusminus       twosuperior     threesuperior   */
+CASE_GSETS_PERCENT,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS_PERCENT,
+CASE_GSETS_PERCENT,
 /*      acute           mu              paragraph       periodcentered  */
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS_PERCENT,
+CASE_GSETS_PERCENT,
 CASE_GROUND_STATE,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_GROUND_STATE,
@@ -7462,18 +7462,18 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_GSETS_PERCENT,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Agrave          Aacute          Acircumflex     Atilde          */
-CASE_GSETS_PERCENT,
 CASE_GROUND_STATE,
-CASE_GSETS_PERCENT,
+CASE_GROUND_STATE,
+CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Adiaeresis      Aring           AE              Ccedilla        */
 CASE_GROUND_STATE,
-CASE_GSETS_PERCENT,
-CASE_GSETS_PERCENT,
+CASE_GROUND_STATE,
+CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Egrave          Eacute          Ecircumflex     Ediaeresis      */
 CASE_GROUND_STATE,
@@ -7482,7 +7482,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Igrave          Iacute          Icircumflex     Idiaeresis      */
 CASE_GROUND_STATE,
-CASE_GSETS_PERCENT,
+CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      Eth             Ntilde          Ograve          Oacute          */

@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.132 2013/06/23 20:52:38 tom Exp $ */
+/* $XTermId: menu.h,v 1.133 2014/04/12 00:03:12 Ross.Combs Exp $ */
 
 /*
- * Copyright 1999-2011,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -259,6 +259,8 @@ typedef enum {
     vtMenu_altscreen,
 #if OPT_SIXEL_GRAPHICS
     vtMenu_sixelscrolling,
+#endif
+#if OPT_GRAPHICS
     vtMenu_privatecolorregisters,
 #endif
     vtMenu_LAST
@@ -487,9 +489,13 @@ extern void update_font_packed(void);
 
 #if OPT_SIXEL_GRAPHICS
 extern void update_decsdm(void);
-extern void update_privatecolorregisters(void);
 #else
 #define update_decsdm() /* nothing */
+#endif
+
+#if OPT_GRAPHICS
+extern void update_privatecolorregisters(void);
+#else
 #define update_privatecolorregisters() /* nothing */
 #endif
 

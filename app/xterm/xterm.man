@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.576 2014/01/16 01:19:19 tom Exp $
+.\" $XTermId: xterm.man,v 1.581 2014/04/14 18:42:54 Ross.Combs Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -123,21 +123,29 @@ autorepeat.
 Double-size characters are displayed properly if your font server supports
 scalable fonts.
 The VT220 emulation does not support soft fonts, it is otherwise complete.
-.IR Termcap (5)
-entries that work with
-.I \*n
-include
+.PP
+Terminal database (\fIterminfo\fP (5) or \fItermcap\fP (5))
+entries that work with \fI\*n\fP include
+.IP
 an optional platform-specific entry (\*(``__default_termname__\*(''),
+.br
 \*(``xterm\*('',
+.br
 \*(``vt102\*('',
+.br
 \*(``vt100\*('',
+.br
 \*(``ansi\*('' and
-\*(``dumb\*(''.
-.I \*n
-automatically searches the termcap file in this order for these entries and then
+.br
+\*(``dumb\*(''
+.PP
+\fI\*N\fP automatically searches the
+terminal database in this order for these entries and then
 sets the \*(``TERM\*('' and the \*(``TERMCAP\*('' environment variables.
 You may also use \*(``vt220\*('',  but must set the terminal emulation level
 with the \fBdecTerminalID\fP resource.
+On most systems, \fI\*n\fP will use the terminfo database.
+Some older systems use termcap.
 (The \*(``TERMCAP\*('' environment variable is not set if \fI\*n\fP is linked
 against a terminfo library, since the requisite information is not provided
 by the termcap emulation of terminfo libraries).
@@ -200,11 +208,7 @@ When activated, the current screen is saved and replaced with the alternate
 screen.
 Saving of lines scrolled off the top of the window is disabled until the
 normal screen is restored.
-The
-.IR termcap (5)
-entry for
-.I \*n
-allows the visual editor
+The usual terminal description for \fI\*n\fP allows the visual editor
 .IR vi (1)
 to switch to the alternate screen for editing and to restore the screen
 on exit.
@@ -314,22 +318,42 @@ well with \fI\*n\fP.
 This happens with the color (\fB\-fg\fP, \fB\-B\fP) and reverse (\fB\-rv\fP)
 options.
 \fI\*N\fP makes a special case of these and
-adjusts its sense of \*(``reverse\*('' 
+adjusts its sense of \*(``reverse\*(''
 to lessen user surprise.
 .\" ***************************************************************************
 .PP
 One parameter (after all options) may be given.
-That overrides \fI\*n\fP's built-in choice of shell program.
-Normally \fI\*n\fP checks the \*(``SHELL\*('' variable.
-If that is not set, \fI\*n\fP tries to use the shell program specified
-in the password file.
-If that is not set, \fI\*n\fP uses \fI/bin/sh\fP.
+That overrides \fI\*n\fP's built-in choice of shell program:
+.bP
 If the parameter is not a relative path, i.e.,
 beginning with \*(``./\*('' or \*(``../\*('',
 \fI\*n\fP looks for the file in the user's PATH.
-In either case, it constructs an absolute path.
+In either case, this check fails
+if \fI\*n\fP cannot construct an absolute path.
+.bP
+If that check fails (or if no such parameter is given),
+\fI\*n\fP next checks the \*(``SHELL\*('' variable.
+If that specifies an executable file,
+\fI\*n\fP will attempt to start that.
+However, \fI\*n\fP additionally checks if it is a valid shell,
+and will unset \*(``SHELL\*('' if it is not.
+.bP
+If \*(``SHELL\*('' is not set to an executable file,
+\fI\*n\fP tries to use the shell program specified
+in the user's password file entry.
+As before, \fI\*n\fP verifies if this is a valid shell.
+.bP
+Finally, if the password file entry does not specify a valid shell,
+\fI\*n\fP uses \fI/bin/sh\fP.
+.PP
 The \fB\-e\fP option cannot be used with this parameter since
 it uses all parameters following the option.
+.PP
+\fI\*N\fP validates shell programs by finding their pathname in
+the text file \fB/etc/shells\fP.
+It treats the environment variable \*(``SHELL\*('' specially because
+(like \*(``TERM\*(''), \fI\*n\fP both reads and updates the variable,
+and because the program started by \fI\*n\fP is not necessarily a shell.
 .\" ***************************************************************************
 .PP
 The other options are used to control the appearance and behavior.
@@ -869,6 +893,11 @@ Control-G is received.
 This option indicates that the window should not be raised whenever a
 Control-G is received.
 .TP 8
+.B \-report\-colors
+Print a report to the standard output showing information about colors
+as \fI\*n\fP allocates them.
+This corresponds to the \fBreportColors\fP resource.
+.TP 8
 .B \-report\-fonts
 Print a report to the standard output showing information about fonts
 which are loaded.
@@ -998,17 +1027,24 @@ This option indicates that \fI\*n\fP should start in Tektronix mode, rather
 than in VT102 mode.
 Switching between the two windows is done using the
 \*(``Options\*('' menus.
-.IR Termcap (5)
-entries that work with
-.I \*n
+.IP
+Terminal database (\fIterminfo\fP (5) or \fItermcap\fP (5))
+entries that work with \fI\*n\fR are:
+.IP
 \*(``tek4014\*('',
+.br
 \*(``tek4015\*('',
+.br
 \*(``tek4012\*('',
+.br
 \*(``tek4013\*('',
+.br
 \*(``tek4010\*('', and
+.br
 \*(``dumb\*(''.
+.IP
 .I \*n
-automatically searches the termcap file in this order for these entries and then
+automatically searches the terminal database in this order for these entries and then
 sets the \*(``TERM\*('' and the \*(``TERMCAP\*('' environment variables.
 .TP 8
 .B +t
@@ -1059,7 +1095,9 @@ This option sets the \fButf8\fP resource.
 When \fButf8\fP is set, \fI\*n\fP interprets incoming data as UTF-8.
 This sets the \fBwideChars\fP resource as a side-effect,
 but the UTF-8 mode set by this option prevents it from being turned off.
-If you must turn it on and off, use the \fBwideChars\fP resource.
+If you must turn UTF-8 encoding on and off,
+use the \fB\-wc\fP option or the corresponding \fBwideChars\fP resource,
+rather than the \fB\-u8\fP option.
 .IP
 This option and the \fButf8\fR resource are overridden by
 the \fB\-lc\fP and \fB\-en\fP options and \fBlocale\fR resource.
@@ -1117,10 +1155,15 @@ This option indicates that a visual bell should not be used.
 .TP 8
 .B \-wc
 This option sets the \fBwideChars\fP resource.
-When \fBwideChars\fP is set, \fI\*n\fP maintains internal structures for 16-bit
-characters.
-If you do not set this resource to \*(``true\*('',
-\fI\*n\fP will ignore the escape sequence which turns UTF-8 mode on and off.
+.IP
+When \fBwideChars\fP is set,
+\fI\*n\fP maintains internal structures for 16-bit characters.
+If \fI\*n\fP is not started in UTF-8 mode (or if this resource is not set),
+initially it maintains those structures to support 8-bit characters.
+\fI\*N\fP can later be switched,
+using a menu entry or control sequence,
+causing it to reallocate those structures to support 16-bit characters.
+.IP
 The default is \*(``false\*(''.
 .TP 8
 .B +wc
@@ -1964,7 +2007,7 @@ If \*(``true\*('', this enables a special case in bitmap fonts to
 allow the font server to choose how to display missing glyphs.
 The default is \*(``true\*(''.
 .IP
-The reason for this resource is to help with 
+The reason for this resource is to help with
 certain quasi-automatically generated fonts
 (such as the ISO-10646-1 encoding of Terminus)
 which have incorrect font-metrics.
@@ -5002,11 +5045,11 @@ Sixel Scrolling (sixelScrolling)
 When enabled,
 sixel graphics are positioned at the current text cursor location, scroll
 the image vertically if larger than the screen, and leave the text cursor
-after the image when returning to text mode.
+at the start of the next complete line after the image when returning to text
+mode (this is the default).
 When disabled,
 sixel graphics are positioned at the upper left of the screen, are
-cropped to fit the screen, and do not affect the text cursor location
-(this is the default).
+cropped to fit the screen, and do not affect the text cursor location.
 This corresponds to the
 .B sixelScrolling
 resource.
@@ -6394,8 +6437,13 @@ is the display name,
 pointing to the X server (see \fBDISPLAY NAMES\fP in X(__miscmansuffix__)).
 .TP 5
 TERM
-is set according to the termcap (or terminfo) entry which it is using as
+is set according to the terminfo (or termcap) entry which it is using as
 a reference.
+.IP
+On some systems, you may encounter situations where the shell which you
+use and \fI\*n\fP are built using libraries with different terminal databases.
+In that situation, \fI\*n\fP may choose a terminal description not known
+to the shell.
 .TP 5
 WINDOWID
 is set to the X window id number of the \fI\*n\fP window.
@@ -6440,7 +6488,14 @@ when \fI\*n\fP is configured to update utmp.
 .TP 5
 SHELL
 when \fI\*n\fP is configured to update utmp.
-It is also set if you provide the shell name as the optional parameter.
+It is also set if you provide a valid shell name as the optional parameter.
+.IP
+\fI\*N\fP sets this to an absolute pathname.
+If you have set the variable to a relative pathname,
+\fI\*n\fP may set it to a different shell pathname.
+.IP
+If you have set this to an pathname which does not correspond to a valid
+shell, \fI\*n\fP may unset it, to avoid confusion.
 .TP 5
 TERMCAP
 the contents of the termcap entry corresponding to $TERM,
@@ -6454,6 +6509,11 @@ may be defined to a nonstandard location in the configure script.
 .
 .SH FILES
 The actual pathnames given may differ on your system.
+.TP 5
+\fI/etc/shells\fP
+contains a list of valid shell programs,
+used by \fI\*n\fP to decide if the \*(``SHELL\*('' environment
+variable should be set for the process started by \fI\*n\fP.
 .TP 5
 \fI/etc/utmp\fP
 the system logfile, which records user logins.

@@ -1,9 +1,9 @@
-#!/usr/bin/perl -w
-# $XTermId: query-fonts.pl,v 1.5 2010/05/24 09:01:30 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: query-fonts.pl,v 1.6 2014/02/26 20:14:50 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2010 by Thomas E. Dickey
+# Copyright 2010,2014 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -42,6 +42,7 @@
 # extend "CSI > Ps; Ps T" to query fontname in hex
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use IO::Handle;

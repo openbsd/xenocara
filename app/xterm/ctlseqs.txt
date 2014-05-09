@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2013)
-               updated for XTerm Patch #301 (2014/01/13)
+               updated for XTerm Patch #304 (2014/05/02)
 
 
 
@@ -270,6 +270,21 @@ CSI Ps L  Insert Ps Line(s) (default = 1) (IL).
 CSI Ps M  Delete Ps Line(s) (default = 1) (DL).
 CSI Ps P  Delete Ps Character(s) (default = 1) (DCH).
 CSI Ps S  Scroll up Ps lines (default = 1) (SU).
+CSI ? Pi; Pa; Pv S
+          If configured to support either Sixel Graphics or ReGIS Graph-
+          ics, xterm accepts a three-parameter control sequence, where
+          Pi, Pa and Pv are the item, action and value.
+            Pi = 1  -> item (color registers)
+            Pa = 1  -> read the number of color registers
+            Pa = 2  -> reset the number of color registers
+            Pa = 3  -> set the number of color registers to the value Pv
+          The control sequence returns a response using the same form:
+
+               CSI ? Pi; Ps; Pv S
+
+          where Ps is the status:
+            Ps = 0  -> success
+            Ps = 3  -> failure
 CSI Ps T  Scroll down Ps lines (default = 1) (SD).
 CSI Ps ; Ps ; Ps ; Ps ; Ps T
           Initiate highlight mouse tracking.  Parameters are
@@ -1091,6 +1106,7 @@ OSC Ps ; Pt BEL
             Ps = 1 1 6  -> Reset Tektronix background color.
             Ps = 1 1 7  -> Reset highlight color.
             Ps = 1 1 8  -> Reset Tektronix cursor color.
+            Ps = 1 1 9  -> Reset highlight foreground color.
 
 Privacy Message
 PM Pt ST  xterm implements no PM  functions; Pt is ignored.  Pt need not
@@ -1251,24 +1267,24 @@ In normal mode, i.e., a Sun/PC keyboard when the sunKeyboard resource is
 false, xterm recognizes function key modifiers which are parameters
 appended before the final character of the control sequence.
 
-                     Code     Modifiers
-                   ---------+--------------------------
-                      2     | Shift
-                      3     | Alt
-                      4     | Shift + Alt
-                      5     | Control
-                      6     | Shift + Control
-                      7     | Alt + Control
-                      8     | Shift + Alt + Control
-                      9     | Meta
-                      10    | Meta + Shift
-                      11    | Meta + Alt
-                      12    | Meta + Alt + Shift
-                      13    | Meta + Ctrl
-                      14    | Meta + Ctrl + Shift
-                      15    | Meta + Ctrl + Alt
-                      16    | Meta + Ctrl +Alt + Shift
-                   ---------+--------------------------
+                    Code     Modifiers
+                  ---------+---------------------------
+                     2     | Shift
+                     3     | Alt
+                     4     | Shift + Alt
+                     5     | Control
+                     6     | Shift + Control
+                     7     | Alt + Control
+                     8     | Shift + Alt + Control
+                     9     | Meta
+                     10    | Meta + Shift
+                     11    | Meta + Alt
+                     12    | Meta + Alt + Shift
+                     13    | Meta + Ctrl
+                     14    | Meta + Ctrl + Shift
+                     15    | Meta + Ctrl + Alt
+                     16    | Meta + Ctrl + Alt + Shift
+                  ---------+---------------------------
 
 For example, shift-F5 would be sent as CSI 1 5 ; 2 ~
 
@@ -1646,18 +1662,20 @@ URXVT (1015)
           improvement over 1005.
 
 Sixel Graphics
-If xterm is configured as VT240, VT241, VT330 or VT340 using the decTer-
-minalID resource, it supports Sixel Graphics controls, a subset of ReGIS
-graphics.
+If xterm is configured as VT240, VT241, VT330, VT340 or VT382 using the
+decTerminalID resource, it supports Sixel Graphics controls, a palleted
+bitmap graphics system using sets of six vertical pixels as the basic
+element.
 
 CSI Ps c  xterm responds to Send Device Attributes (Primary DA) with
           these additional codes:
-            Ps = 3  -> ReGIS graphics.
-            Ps = 4  -> SIXEL graphics.
+            Ps = 4  -> Sixel graphics.
 CSI ? Pm h
           xterm has these additional private Set Mode values:
-            Ps = 8 0  -> SIXEL scrolling.
+            Ps = 8 0  -> Sixel scrolling.
             Ps = 1 0 7 0  -> use private color registers for each
+          graphic.
+            Ps = 8 4 5 2  -> Sixel scrolling leaves cursor to right of
           graphic.
 DCS Pa; Pb; Ph q  Ps..Ps ST
           See
@@ -1670,6 +1688,30 @@ DCS Pa; Pb; Ph q  Ps..Ps ST
             Pb -> background color option
             Ph -> horizontal grid size (ignored).
             Ps -> sixel data
+
+ReGIS Graphics
+If xterm is configured as VT125, VT240, VT241, VT330 or VT340 using the
+decTerminalID resource, it supports Remote Graphic Instruction Set, a
+graphics description language.
+
+CSI Ps c  xterm responds to Send Device Attributes (Primary DA) with
+          these additional codes:
+            Ps = 3  -> ReGIS graphics.
+CSI ? Pm h
+          xterm has these additional private Set Mode values:
+            Ps = 1 0 7 0  -> use private color registers for each
+          graphic.
+DCS Pm p Pr..Pr ST
+          See
+
+               http://vt100.net/docs/vt3xx-gp/chapter1.html
+
+          The ReGIS data device control string has one positional param-
+          eter with four possible values:
+            Pm = 0 -> resume command, use fullscreen mode
+            Pm = 1 -> start new command, use fullscreen mode
+            Pm = 2 -> resume command, use command display mode
+            Pm = 3 -> start new command, use command display mode
 
 Tektronix 4014 Mode
 Most of these sequences are standard Tektronix 4014 control sequences.

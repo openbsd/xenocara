@@ -1,3 +1,21 @@
+xterm-dev (304) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 09 Apr 2014 20:27:40 -0400
+
+xterm-dev (303) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 04 Mar 2014 17:46:25 -0500
+
+xterm-dev (302) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sat, 15 Feb 2014 16:19:35 -0500
+
 xterm-dev (301) unstable; urgency=high
 
   * miscellaneous fixes

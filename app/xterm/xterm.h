@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.727 2014/01/16 19:34:54 tom Exp $ */
+/* $XTermId: xterm.h,v 1.737 2014/05/03 19:30:17 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -103,6 +103,17 @@
 #define USE_POSIX_TERMIOS 1
 #endif
 
+#ifdef __FreeBSD__
+#if __FreeBSD_version >= 900000	
+#define USE_SYSV_UTMP 1
+#define UTMPX_FOR_UTMP 1
+#define HAVE_UTMP_UT_HOST 1
+#define HAVE_UTMP_UT_XTIME 1
+#define ut_name ut_user
+#define ut_xtime ut_tv.tv_sec
+#endif
+#endif
+
 #ifdef __NetBSD__
 #if __NetBSD_Version__ >= 106030000	/* 1.6C */
 #define BSD_UTMPX 1
@@ -139,11 +150,11 @@
 #define HAVE_UTMP_UT_HOST 1
 #endif
 
-#if defined(UTMPX_FOR_UTMP) && !(defined(__MVS__) || defined(__hpux))
+#if defined(UTMPX_FOR_UTMP) && !(defined(__MVS__) || defined(__hpux) || defined(__FreeBSD__))
 #define HAVE_UTMP_UT_SESSION 1
 #endif
 
-#if !(defined(linux) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4)
+#if !(defined(linux) && (!defined(__GLIBC__) || (__GLIBC__ < 2))) && !defined(SVR4) && !defined(__FreeBSD__)
 #define ut_xstatus ut_exit.e_exit
 #endif
 
@@ -158,6 +169,7 @@
 #elif defined(BSD) && (BSD >= 199103)
 #ifdef BSD_UTMPX
 #define USE_LASTLOGX
+#elif defined(USE_SYSV_UTMP)
 #else
 #define USE_LASTLOG
 #define USE_STRUCT_LASTLOG
@@ -349,6 +361,10 @@ extern int errno;
 extern char **environ;
 #endif
 
+#ifndef _Xconst
+#define _Xconst const		/* Solaris 7 workaround */
+#endif /* _Xconst */
+
 #define XK_Fn(n)	(XK_F1 + (n) - 1)
 
 #define Maybe		2
@@ -477,6 +493,7 @@ extern char **environ;
 #define XtNmultiClickTime	"multiClickTime"
 #define XtNmultiScroll		"multiScroll"
 #define XtNnMarginBell		"nMarginBell"
+#define XtNnumColorRegisters	"numColorRegisters"
 #define XtNnumLock		"numLock"
 #define XtNoldXtermFKeys	"oldXtermFKeys"
 #define XtNpointerColor		"pointerColor"
@@ -514,6 +531,7 @@ extern char **environ;
 #define XtNshowWrapMarks	"showWrapMarks"
 #define XtNsignalInhibit	"signalInhibit"
 #define XtNsixelScrolling	"sixelScrolling"
+#define XtNsixelScrollsRight	"sixelScrollsRight"
 #define XtNtekGeometry		"tekGeometry"
 #define XtNtekInhibit		"tekInhibit"
 #define XtNtekSmall		"tekSmall"
@@ -655,6 +673,7 @@ extern char **environ;
 #define XtCModifyStringKeys	"ModifyStringKeys"
 #define XtCMultiClickTime	"MultiClickTime"
 #define XtCMultiScroll		"MultiScroll"
+#define XtCNumColorRegisters	"NumColorRegisters"
 #define XtCNumLock		"NumLock"
 #define XtCOldXtermFKeys	"OldXtermFKeys"
 #define XtCPointerMode		"PointerMode"
@@ -688,6 +707,7 @@ extern char **environ;
 #define XtCShowWrapMarks	"ShowWrapMarks"
 #define XtCSignalInhibit	"SignalInhibit"
 #define XtCSixelScrolling	"SixelScrolling"
+#define XtCSixelScrollsRight	"SixelScrollsRight"
 #define XtCTekInhibit		"TekInhibit"
 #define XtCTekSmall		"TekSmall"
 #define XtCTekStartup		"TekStartup"
@@ -1002,16 +1022,18 @@ extern Window WMFrameWindow (XtermWidget /* termw */);
 extern XtInputMask xtermAppPending (void);
 extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
-extern char *udk_lookup (int /* keycode */, int * /* len */);
+extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool  /* warning */);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
 extern Boolean allocateBestRGB(XtermWidget /* xw */, XColor * /* def */);
+extern Boolean validProgram(const char * /* pathname */);
 extern int ResetAnsiColorRequest (XtermWidget, char *, int);
 extern int XStrCmp (char * /* s1 */, char * /* s2 */);
 extern int creat_as (uid_t  /* uid */, gid_t  /* gid */, Bool  /* append */, char * /* pathname */, unsigned  /* mode */);
 extern int getVisualDepth (XtermWidget /* xw */);
+extern int getVisualInfo (XtermWidget /* xw */);
 extern int open_userfile (uid_t  /* uid */, gid_t  /* gid */, char * /* path */, Bool  /* append */);
 extern int xerror (Display * /* d */, XErrorEvent * /* ev */);
 extern int xioerror (Display * /* dpy */);
@@ -1035,7 +1057,7 @@ extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
 extern void NormalExit (void);
 extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
-extern void ReverseOldColors (void);
+extern void ReverseOldColors (XtermWidget /* xw */);
 extern void SysError (int /* i */) GCC_NORETURN;
 extern void VisualBell (void);
 extern void cleanup_colored_cursor (void);
@@ -1050,7 +1072,7 @@ extern void hide_tek_window (void);
 extern void hide_vt_window (void);
 extern void ice_error (IceConn /* iceConn */);
 extern void init_colored_cursor (void);
-extern void reset_decudk (void);
+extern void reset_decudk (XtermWidget /* xw */);
 extern void set_tek_visibility (Bool  /* on */);
 extern void set_vt_visibility (Bool  /* on */);
 extern void switch_modes (Bool  /* tovt */);
@@ -1314,7 +1336,7 @@ extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsi
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
 extern int drawXtermText (XtermWidget /* xw */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
-extern int extendedBoolean(const char * /* value */, FlagList * /* table */, Cardinal /* limit */);
+extern int extendedBoolean(const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
 extern void ClearScreen (XtermWidget /* xw */);
@@ -1415,12 +1437,12 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 		    VDrawable(TScreenOf(xw)), \
 		    CursorX2(TScreenOf(xw), left, fw), \
 		    CursorY(TScreenOf(xw), top), \
-		    width * fw, \
-		    height * FontHeight(TScreenOf(xw)), \
+		    ((width) * (unsigned) fw), \
+		    ((height) * (unsigned) FontHeight(TScreenOf(xw))), \
 		    False)
 
-#define extract_fg(xw, color, flags) (xw)->cur_foreground
-#define extract_bg(xw, color, flags) (xw)->cur_background
+#define extract_fg(xw, color, flags) (unsigned) (xw)->cur_foreground
+#define extract_bg(xw, color, flags) (unsigned) (xw)->cur_background
 
 		/* FIXME: Reverse-Video? */
 #define T_COLOR(v,n) (v)->Tcolors[n]

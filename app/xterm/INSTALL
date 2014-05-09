@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.149 2013/08/04 19:33:14 tom Exp $
+-- $XTermId: INSTALL,v 1.150 2014/04/11 19:36:41 Ross.Combs Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2012,2013 by Thomas E. Dickey
 --
@@ -481,6 +481,10 @@ The options (in alphabetic order):
   --enable-sco-fkeys      enable support for SCO-style function keys
 
   	Compile-in code to support SCO-style function keys.
+
+  --enable-regis-graphics enable support for ReGIS graphics
+
+  	Compile-in code to support experimental ReGIS graphics
 
   --enable-sixel-graphics enable support for sixel-graphics
 

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.23 2014/04/11 22:58:12 miod Exp $
+# $OpenBSD: Makefile,v 1.24 2014/05/09 19:56:40 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -9,7 +9,7 @@ MAN=	xterm.1 uxterm.1 koi8rxterm.1
 BINGRP=		utmp
 BINMODE=	2755
 
-CPPFLAGS+=	-I${.CURDIR} -I${X11BASE}/include \
+CPPFLAGS+=	-I. -I${.CURDIR} -I${X11BASE}/include \
 		-I${X11BASE}/include/freetype2 \
 		-DHAVE_CONFIG_H -DCSRG_BASED \
 		-DFUNCPROTO=15 -DNARROWPROTO -DXFREE86_FT2 -DUTMP \
@@ -36,6 +36,22 @@ screen.o:	screen.c
 	${CC} -O1 -fno-stack-protector -c ${CPPFLAGS} ${.CURDIR}/screen.c
 .endif
 
+misc.o:	builtin_icons.h
+
+# do this to quiet gcc -Wcast-qual warnings 
+builtin_icons.h :
+	@echo "#if OPT_BUILTIN_XPMS" >$@
+	@echo "#include <icons/mini.xterm.xpms>" >>$@
+	@echo "#include <icons/filled-xterm.xpms>" >>$@
+	@echo "#include <icons/xterm.xpms>" >>$@
+	@echo "#include <icons/xterm-color.xpms>" >>$@
+	@echo "#else" >>$@
+	@sed -e 's/static char \* /static const char * /' $(.CURDIR)/icons/mini.xterm_48x48.xpm >>$@
+	@echo "#endif" >>$@
+	@echo "made $@"
+
+beforedepend: builtin_icons.h
+
 .SUFFIXES: .man .1
 
 .man.1:
@@ -45,7 +61,7 @@ screen.o:	screen.c
 	    -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
 	    < $< > $@
 
-CLEANFILES+=	${MAN}
+CLEANFILES+=	${MAN} builtin_icons.h
 
 afterinstall:
 	${INSTALL} ${INSTALL_COPY} -m 755 ${.CURDIR}/uxterm \
@@ -60,6 +76,7 @@ afterinstall:
 		${DESTDIR}${XETC}/app-defaults/UXTerm
 	${INSTALL_DATA} ${.CURDIR}/KOI8RXTerm.ad \
 		${DESTDIR}${XETC}/app-defaults/KOI8RXTerm
+
 
 obj: _xenocara_obj
 

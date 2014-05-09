@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1420 2014/01/19 20:57:30 tom Exp $
+  $XTermId: xterm.log.html,v 1.1457 2014/05/03 21:01:31 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -43,6 +43,9 @@
   <link rev="MADE" href="mailto:dickey@invisible-island.net">
   <meta http-equiv="Content-Type" content=
   "text/html; charset=us-ascii">
+  <meta name="keywords" content="xterm, change log">
+  <meta name="description" content=
+  "This is the xterm change-log, distributed with xterm, with items listed by patch-number and date">
   <link rel="SHORTCUT ICON" href="/img/icons/xterm.ico" type=
   "image/x-icon">
 </head>
@@ -69,6 +72,12 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_304">Patch #304 - 2014/05/03</a></li>
+
+    <li><a href="#xterm_303">Patch #303 - 2014/03/06</a></li>
+
+    <li><a href="#xterm_302">Patch #302 - 2014/03/02</a></li>
+
     <li><a href="#xterm_301">Patch #301 - 2014/01/19</a></li>
 
     <li><a href="#xterm_300">Patch #300 - 2013/12/03</a></li>
@@ -882,6 +891,143 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_304" id="xterm_304">Patch #304 -
+  2014/05/03</a></h1>
+
+  <ul>
+    <li>add debugging check for parsing table entries, fixed a few
+    inconsistencies.</li>
+
+    <li>handle utmp/utmpx strings consistently with new function
+    that null-pads unused locations.</li>
+
+    <li>build-fix for imake configuration with FreeBSD 9 and later,
+    to account for replacing <code>utmp</code> with
+    <code>utmpx</code>.</li>
+
+    <li>improve handling of the <code>fontsel</code>
+    (font-selection) menu item:
+
+      <ul>
+        <li>initialize the menu entry differently if the toolbar
+        configuration is used, i.e., enabling it without attempting
+        to use the current selection as a font name. Because of the
+        way in which the toolbar is setup, this attempt usually
+        failed, and would result in a warning.</li>
+
+        <li>if the menu action fails, e.g., no font can be loaded
+        for the given selected name, then recover by resuming with
+        the current font. Before, the recovery went to the default
+        font. That was done to work around missing bitmap font in
+        <a href="#xterm_276">patch #276</a>.</li>
+      </ul>
+    </li>
+
+    <li>document OSC&nbsp;119 in the control sequences listing
+    (report by Egmont Koblinger).</li>
+
+    <li>modify special handling of <code>XF86Paste</code> or
+    <code>SunPaste</code> keysyms (see <a href="#xterm_227">patch
+    #227</a>) to use the standard shift/lock modifiers in case
+    those are, for example, used in level 3 in an XKB file (patch
+    by Matthieu Herrb).</li>
+
+    <li>configure macro updates:
+
+      <ul>
+        <li>drop the <code>-no-gcc</code> option from
+        CF_INTEL_COMPILER</li>
+
+        <li>modify CF_XOPEN_SOURCE to suppress the check for
+        defining _XOPEN_SOURCE on Solaris</li>
+      </ul>
+    </li>
+
+    <li>reduce bss storage used for ReGIS/Sixel modules, as well as
+    cleanup storage usage in other modules.</li>
+
+    <li>initial changes for ReGIS support (patch by Ross Combs):
+
+      <ul>
+        <li>document control-sequences</li>
+
+        <li>separate ifdef's for sixel and color-register
+        features</li>
+
+        <li>add configuration for VT382</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h1><a name="xterm_303" id="xterm_303">Patch #303 -
+  2014/03/06</a></h1>
+
+  <ul>
+    <li>improve check for <code>/etc/shells</code> to allow its
+    entries to be symbolic links.</li>
+
+    <li>fix a regression in <a href="#xterm_302">patch #302</a>
+    fixes relating to interaction of <code>SHELL</code> and
+    <code>XTERM_SHELL</code> variables (Debian #740919).</li>
+
+    <li>improve manpage discussion of use of
+    <code>/etc/shells</code> for validating the <code>SHELL</code>
+    environment variable.</li>
+
+    <li>further improve the approximation for color map by ignoring
+    bits which would not be applied by the rgb masks for the
+    current visual (report by Joe Peterson).</li>
+
+    <li>add <code>-report-colors</code> to usage-message (report by
+    Joe Peterson).</li>
+  </ul>
+
+  <h1><a name="xterm_302" id="xterm_302">Patch #302 -
+  2014/03/02</a></h1>
+
+  <ul>
+    <li>amend approximation for color map introduced in <a href=
+    "#xterm_277">patch #277</a> to make that apply only to
+    <code>TrueColor</code> (adapted from patch by Joe
+    Peterson).</li>
+
+    <li>add <code>-report-colors</code> option, to show colors as
+    they are allocated.</li>
+
+    <li>fix some gcc <code>-Wcast-qual</code> warnings.</li>
+
+    <li>correct app-defaults location for CentOS-4 in
+    xterm.spec</li>
+
+    <li>improve check in <code>minstall.sh</code> for X manpage's
+    section number; add sample dependencies for the relevant
+    documentation package to packaging test-scripts (prompted by
+    Novell #779474).</li>
+
+    <li>modify sample build-scripts for dpkg and rpm to ensure that
+    <code>vttests</code> scripts are uncompressed and
+    executable.</li>
+
+    <li>modify Perl scripts in <code>vttests</code> to use
+    <code>env</code> to find Perl rather than relying on
+    <code>/usr/bin/perl</code> This makes the sample scripts usable
+    with NetBSD and other systems using <em>pkgsrc</em>.</li>
+
+    <li>amend check from <a href="#xterm_301">patch #301</a> for
+    valid shell to permit existing <code>SHELL</code> value to
+    specify the shell; clarify the behavior in the manpage (report
+    by Emmanuel Thom&eacute;).</li>
+
+    <li>amend change to wide-character processing from <a href=
+    "#xterm_257">patch #257</a> to allow switching to/from UTF-8
+    encoding if the <code>utf8</code> resource was not set to
+    &ldquo;always&rdquo; (report by Honza Maly).</li>
+
+    <li>fix incorrect free from <a href="#xterm_301">patch #301</a>
+    changes, if explicit program without <code>-e</code> option is
+    a valid shell (patch by Romain Francoise).</li>
   </ul>
 
   <h1><a name="xterm_301" id="xterm_301">Patch #301 -

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.322 2014/01/16 01:44:05 tom Exp $
+dnl $XTermId: configure.in,v 1.324 2014/04/14 19:17:15 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -33,8 +33,9 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.52.20030208)
-AC_INIT(charproc.c)
+AC_PREREQ(2.52.20121002)
+AC_INIT
+AC_CONFIG_SRCDIR([charproc.c])
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
 CF_CHECK_CACHE
 
@@ -909,6 +910,20 @@ if test "$enable_dec_locator" = yes ; then
 	AC_DEFINE(OPT_DEC_LOCATOR,1,[Define to 1 to enable DECterm Locator support])
 fi
 
+AC_MSG_CHECKING(if you want ReGIS graphics support)
+CF_ARG_ENABLE(regis-graphics,
+	[  --enable-regis-graphics enable ReGIS graphics support],
+	[enable_regis_graphics=yes],
+	[enable_regis_graphics=no])
+AC_MSG_RESULT($enable_regis_graphics)
+if test "$enable_regis_graphics" = yes ; then
+	AC_DEFINE(OPT_REGIS_GRAPHICS,1,[Define to 1 to enable ReGIS graphics support])
+	EXTRAHDRS="$EXTRAHDRS graphics_regis.h"
+	EXTRASRCS="$EXTRASRCS graphics_regis.c"
+	EXTRAOBJS="$EXTRAOBJS graphics_regis.o"
+	CF_MATH_LIB
+fi
+
 AC_MSG_CHECKING(if you want sixel graphics support)
 CF_ARG_ENABLE(sixel-graphics,
 	[  --enable-sixel-graphics enable sixel graphics support],
@@ -917,6 +932,13 @@ CF_ARG_ENABLE(sixel-graphics,
 AC_MSG_RESULT($enable_sixel_graphics)
 if test "$enable_sixel_graphics" = yes ; then
 	AC_DEFINE(OPT_SIXEL_GRAPHICS,1,[Define to 1 to enable sixel graphics support])
+	EXTRAHDRS="$EXTRAHDRS graphics_sixel.h"
+	EXTRASRCS="$EXTRASRCS graphics_sixel.c"
+	EXTRAOBJS="$EXTRAOBJS graphics_sixel.o"
+fi
+
+if test "$enable_regis_graphics" = yes || test "$enable_sixel_graphics" = yes ; then
+	AC_DEFINE(OPT_GRAPHICS,1,[Defined to 1 to if any graphics mode is enabled])
 	EXTRAHDRS="$EXTRAHDRS graphics.h"
 	EXTRASRCS="$EXTRASRCS graphics.c"
 	EXTRAOBJS="$EXTRAOBJS graphics.o"
@@ -1042,4 +1064,5 @@ then
 fi
 
 ###	output xtermcfg.h, etc
-AC_OUTPUT(Makefile df-install minstall:minstall.in)
+AC_CONFIG_FILES([Makefile df-install minstall:minstall.in])
+AC_OUTPUT

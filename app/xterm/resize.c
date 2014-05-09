@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.129 2013/01/06 19:42:20 tom Exp $ */
+/* $XTermId: resize.c,v 1.130 2014/04/25 23:39:42 tom Exp $ */
 
 /*
- * Copyright 2003-2012,2013 by Thomas E. Dickey
+ * Copyright 2003-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -551,7 +551,7 @@ main(int argc, char **argv ENVP_ARG)
 	    exit(EXIT_FAILURE);
 	}
 
-	i = ptr - termcap + 3;
+	i = (int) (ptr - termcap) + 3;
 	strncpy(newtc, termcap, (size_t) i);
 	sprintf(newtc + i, "%d", cols);
 	ptr = strchr(ptr, ':');
@@ -563,7 +563,7 @@ main(int argc, char **argv ENVP_ARG)
 	    exit(EXIT_FAILURE);
 	}
 
-	i = ptr - newtc + 3;
+	i = (int) (ptr - newtc) + 3;
 	strncpy(termcap, newtc, (size_t) i);
 	sprintf(termcap + i, "%d", rows);
 	ptr = strchr(ptr, ':');

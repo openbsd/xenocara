@@ -1,9 +1,9 @@
-#!/usr/bin/perl -w
-# $XTermId: paste64.pl,v 1.10 2006/03/13 01:28:02 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: paste64.pl,v 1.11 2014/02/26 20:14:32 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2006 by Thomas E. Dickey
+# Copyright 2006,2014 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -34,6 +34,8 @@
 # Test the paste64 option of xterm.
 
 use strict;
+use warnings;
+
 
 use Term::ReadKey;
 use IO::Handle;

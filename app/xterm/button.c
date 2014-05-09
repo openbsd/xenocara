@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.465 2013/11/27 00:43:43 tom Exp $ */
+/* $XTermId: button.c,v 1.467 2014/04/22 00:50:10 tom Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -134,8 +134,8 @@ static const CELL zeroCELL =
 {0, 0};
 
 #if OPT_DEC_LOCATOR
-static Bool SendLocatorPosition(XtermWidget xw, XButtonEvent * event);
-static void CheckLocatorPosition(XtermWidget xw, XButtonEvent * event);
+static Bool SendLocatorPosition(XtermWidget xw, XButtonEvent *event);
+static void CheckLocatorPosition(XtermWidget xw, XButtonEvent *event);
 #endif /* OPT_DEC_LOCATOR */
 
 /* Multi-click handling */
@@ -151,20 +151,20 @@ static Char *SaveText(TScreen *screen, int row, int scol, int ecol,
 		      Char *lp, int *eol);
 static int Length(TScreen *screen, int row, int scol, int ecol);
 static void ComputeSelect(XtermWidget xw, CELL *startc, CELL *endc, Bool extend);
-static void EditorButton(XtermWidget xw, XButtonEvent * event);
-static void EndExtend(XtermWidget w, XEvent * event, String *params, Cardinal
+static void EditorButton(XtermWidget xw, XButtonEvent *event);
+static void EndExtend(XtermWidget w, XEvent *event, String *params, Cardinal
 		      num_params, Bool use_cursor_loc);
 static void ExtendExtend(XtermWidget xw, const CELL *cell);
 static void PointToCELL(TScreen *screen, int y, int x, CELL *cell);
 static void ReHiliteText(XtermWidget xw, CELL *first, CELL *last);
 static void SaltTextAway(XtermWidget xw, CELL *cellc, CELL *cell);
-static void SelectSet(XtermWidget xw, XEvent * event, String *params, Cardinal num_params);
+static void SelectSet(XtermWidget xw, XEvent *event, String *params, Cardinal num_params);
 static void SelectionReceived PROTO_XT_SEL_CB_ARGS;
 static void StartSelect(XtermWidget xw, const CELL *cell);
-static void TrackDown(XtermWidget xw, XButtonEvent * event);
+static void TrackDown(XtermWidget xw, XButtonEvent *event);
 static void TrackText(XtermWidget xw, const CELL *first, const CELL *last);
 static void _OwnSelection(XtermWidget xw, String *selections, Cardinal count);
-static void do_select_end(XtermWidget xw, XEvent * event, String *params,
+static void do_select_end(XtermWidget xw, XEvent *event, String *params,
 			  Cardinal *num_params, Bool use_cursor_loc);
 
 #define MOUSE_LIMIT (255 - 32)
@@ -249,7 +249,7 @@ EmitMousePositionSeparator(TScreen *screen, Char line[], unsigned count)
 }
 
 Bool
-SendMousePosition(XtermWidget xw, XEvent * event)
+SendMousePosition(XtermWidget xw, XEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
     XButtonEvent *my_event = (XButtonEvent *) event;
@@ -352,7 +352,7 @@ SendMousePosition(XtermWidget xw, XEvent * event)
     }
 
 static Bool
-SendLocatorPosition(XtermWidget xw, XButtonEvent * event)
+SendLocatorPosition(XtermWidget xw, XButtonEvent *event)
 {
     ANSI reply;
     TScreen *screen = TScreenOf(xw);
@@ -673,7 +673,7 @@ InitLocatorFilter(XtermWidget xw)
 }
 
 static void
-CheckLocatorPosition(XtermWidget xw, XButtonEvent * event)
+CheckLocatorPosition(XtermWidget xw, XButtonEvent *event)
 {
     ANSI reply;
     TScreen *screen = TScreenOf(xw);
@@ -726,7 +726,7 @@ CheckLocatorPosition(XtermWidget xw, XButtonEvent * event)
 
 #if OPT_READLINE
 static int
-isClick1_clean(TScreen *screen, XButtonEvent * event)
+isClick1_clean(TScreen *screen, XButtonEvent *event)
 {
     int delta;
 
@@ -755,7 +755,7 @@ isClick1_clean(TScreen *screen, XButtonEvent * event)
 }
 
 static int
-isDoubleClick3(TScreen *screen, XButtonEvent * event)
+isDoubleClick3(TScreen *screen, XButtonEvent *event)
 {
     int delta;
 
@@ -794,7 +794,7 @@ isDoubleClick3(TScreen *screen, XButtonEvent * event)
 }
 
 static int
-CheckSecondPress3(TScreen *screen, XEvent * event)
+CheckSecondPress3(TScreen *screen, XEvent *event)
 {
     int delta;
 
@@ -863,13 +863,13 @@ rowOnCurrentLine(TScreen *screen,
 }
 
 static int
-eventRow(TScreen *screen, XEvent * event)	/* must be XButtonEvent */
+eventRow(TScreen *screen, XEvent *event)	/* must be XButtonEvent */
 {
     return (event->xbutton.y - screen->border) / FontHeight(screen);
 }
 
 static int
-eventColBetween(TScreen *screen, XEvent * event)	/* must be XButtonEvent */
+eventColBetween(TScreen *screen, XEvent *event)		/* must be XButtonEvent */
 {
     /* Correct by half a width - we are acting on a boundary, not on a cell. */
     return ((event->xbutton.x - OriginX(screen) + (FontWidth(screen) - 1) / 2)
@@ -913,7 +913,7 @@ ReadLineDelete(TScreen *screen, CELL *cell1, CELL *cell2)
 }
 
 static void
-readlineExtend(TScreen *screen, XEvent * event)
+readlineExtend(TScreen *screen, XEvent *event)
 {
     int ldelta1, ldelta2;
 
@@ -939,7 +939,7 @@ readlineExtend(TScreen *screen, XEvent * event)
 /* ^XM-G<line+' '><col+' '> */
 void
 DiredButton(Widget w,
-	    XEvent * event,	/* must be XButtonEvent */
+	    XEvent *event,	/* must be XButtonEvent */
 	    String *params GCC_UNUSED,	/* selections */
 	    Cardinal *num_params GCC_UNUSED)
 {
@@ -970,7 +970,7 @@ DiredButton(Widget w,
 #if OPT_READLINE
 void
 ReadLineButton(Widget w,
-	       XEvent * event,	/* must be XButtonEvent */
+	       XEvent *event,	/* must be XButtonEvent */
 	       String *params GCC_UNUSED,	/* selections */
 	       Cardinal *num_params GCC_UNUSED)
 {
@@ -1027,7 +1027,7 @@ ReadLineButton(Widget w,
 /* repeats <ESC>n or <ESC>p */
 void
 ViButton(Widget w,
-	 XEvent * event,	/* must be XButtonEvent */
+	 XEvent *event,		/* must be XButtonEvent */
 	 String *params GCC_UNUSED,	/* selections */
 	 Cardinal *num_params GCC_UNUSED)
 {
@@ -1066,7 +1066,7 @@ ViButton(Widget w,
 /*ARGSUSED*/
 void
 HandleSelectExtend(Widget w,
-		   XEvent * event,	/* must be XMotionEvent */
+		   XEvent *event,	/* must be XMotionEvent */
 		   String *params GCC_UNUSED,
 		   Cardinal *num_params GCC_UNUSED)
 {
@@ -1102,7 +1102,7 @@ HandleSelectExtend(Widget w,
 
 void
 HandleKeyboardSelectExtend(Widget w,
-			   XEvent * event GCC_UNUSED,	/* must be XButtonEvent */
+			   XEvent *event GCC_UNUSED,	/* must be XButtonEvent */
 			   String *params GCC_UNUSED,
 			   Cardinal *num_params GCC_UNUSED)
 {
@@ -1118,7 +1118,7 @@ HandleKeyboardSelectExtend(Widget w,
 
 static void
 do_select_end(XtermWidget xw,
-	      XEvent * event,	/* must be XButtonEvent */
+	      XEvent *event,	/* must be XButtonEvent */
 	      String *params,	/* selections */
 	      Cardinal *num_params,
 	      Bool use_cursor_loc)
@@ -1143,7 +1143,7 @@ do_select_end(XtermWidget xw,
 
 void
 HandleSelectEnd(Widget w,
-		XEvent * event,	/* must be XButtonEvent */
+		XEvent *event,	/* must be XButtonEvent */
 		String *params,	/* selections */
 		Cardinal *num_params)
 {
@@ -1157,7 +1157,7 @@ HandleSelectEnd(Widget w,
 
 void
 HandleKeyboardSelectEnd(Widget w,
-			XEvent * event,		/* must be XButtonEvent */
+			XEvent *event,	/* must be XButtonEvent */
 			String *params,		/* selections */
 			Cardinal *num_params)
 {
@@ -1174,7 +1174,7 @@ HandleKeyboardSelectEnd(Widget w,
  */
 void
 HandleCopySelection(Widget w,
-		    XEvent * event,
+		    XEvent *event,
 		    String *params,	/* list of targets */
 		    Cardinal *num_params)
 {
@@ -1375,7 +1375,7 @@ sameItem(const char *actual, const char *wanted)
  * Handle the eightBitSelectTypes or utf8SelectTypes resource values.
  */
 static Bool
-overrideTargets(Widget w, String value, Atom ** resultp)
+overrideTargets(Widget w, String value, Atom **resultp)
 {
     Bool override = False;
     XtermWidget xw;
@@ -1679,7 +1679,7 @@ xtermGetSelection(Widget w,
 		  Time ev_time,
 		  String *params,	/* selections in precedence order */
 		  Cardinal num_params,
-		  Atom * targets)
+		  Atom *targets)
 {
     Atom selection;
     int cutbuffer;
@@ -2077,8 +2077,8 @@ removeControls(XtermWidget xw, char *value)
 static void
 SelectionReceived(Widget w,
 		  XtPointer client_data,
-		  Atom * selection GCC_UNUSED,
-		  Atom * type,
+		  Atom *selection GCC_UNUSED,
+		  Atom *type,
 		  XtPointer value,
 		  unsigned long *length,
 		  int *format)
@@ -2228,7 +2228,7 @@ SelectionReceived(Widget w,
 
 void
 HandleInsertSelection(Widget w,
-		      XEvent * event,	/* assumed to be XButtonEvent* */
+		      XEvent *event,	/* assumed to be XButtonEvent* */
 		      String *params,	/* selections in precedence order */
 		      Cardinal *num_params)
 {
@@ -2290,7 +2290,7 @@ EvalSelectUnit(XtermWidget xw,
 
 static void
 do_select_start(XtermWidget xw,
-		XEvent * event,	/* must be XButtonEvent* */
+		XEvent *event,	/* must be XButtonEvent* */
 		CELL *cell)
 {
     TScreen *screen = TScreenOf(xw);
@@ -2313,7 +2313,7 @@ do_select_start(XtermWidget xw,
 /* ARGSUSED */
 void
 HandleSelectStart(Widget w,
-		  XEvent * event,	/* must be XButtonEvent* */
+		  XEvent *event,	/* must be XButtonEvent* */
 		  String *params GCC_UNUSED,
 		  Cardinal *num_params GCC_UNUSED)
 {
@@ -2339,7 +2339,7 @@ HandleSelectStart(Widget w,
 /* ARGSUSED */
 void
 HandleKeyboardSelectStart(Widget w,
-			  XEvent * event,	/* must be XButtonEvent* */
+			  XEvent *event,	/* must be XButtonEvent* */
 			  String *params GCC_UNUSED,
 			  Cardinal *num_params GCC_UNUSED)
 {
@@ -2354,7 +2354,7 @@ HandleKeyboardSelectStart(Widget w,
 }
 
 static void
-TrackDown(XtermWidget xw, XButtonEvent * event)
+TrackDown(XtermWidget xw, XButtonEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
     CELL cell;
@@ -2431,7 +2431,7 @@ StartSelect(XtermWidget xw, const CELL *cell)
 
 static void
 EndExtend(XtermWidget xw,
-	  XEvent * event,	/* must be XButtonEvent */
+	  XEvent *event,	/* must be XButtonEvent */
 	  String *params,	/* selections */
 	  Cardinal num_params,
 	  Bool use_cursor_loc)
@@ -2524,7 +2524,7 @@ EndExtend(XtermWidget xw,
 
 void
 HandleSelectSet(Widget w,
-		XEvent * event,
+		XEvent *event,
 		String *params,
 		Cardinal *num_params)
 {
@@ -2539,7 +2539,7 @@ HandleSelectSet(Widget w,
 /* ARGSUSED */
 static void
 SelectSet(XtermWidget xw,
-	  XEvent * event GCC_UNUSED,
+	  XEvent *event GCC_UNUSED,
 	  String *params,
 	  Cardinal num_params)
 {
@@ -2560,7 +2560,7 @@ SelectSet(XtermWidget xw,
 /* ARGSUSED */
 static void
 do_start_extend(XtermWidget xw,
-		XEvent * event,	/* must be XButtonEvent* */
+		XEvent *event,	/* must be XButtonEvent* */
 		String *params GCC_UNUSED,
 		Cardinal *num_params GCC_UNUSED,
 		Bool use_cursor_loc)
@@ -2661,7 +2661,7 @@ ExtendExtend(XtermWidget xw, const CELL *cell)
 
 void
 HandleStartExtend(Widget w,
-		  XEvent * event,	/* must be XButtonEvent* */
+		  XEvent *event,	/* must be XButtonEvent* */
 		  String *params,	/* unused */
 		  Cardinal *num_params)		/* unused */
 {
@@ -2675,7 +2675,7 @@ HandleStartExtend(Widget w,
 
 void
 HandleKeyboardStartExtend(Widget w,
-			  XEvent * event,	/* must be XButtonEvent* */
+			  XEvent *event,	/* must be XButtonEvent* */
 			  String *params,	/* unused */
 			  Cardinal *num_params)		/* unused */
 {
@@ -3784,7 +3784,7 @@ CompleteSelection(XtermWidget xw, String *args, Cardinal len)
 
 static Bool
 _ConvertSelectionHelper(Widget w,
-			Atom * type,
+			Atom *type,
 			XtPointer *value,
 			unsigned long *length,
 			int *format,
@@ -3842,9 +3842,9 @@ SaveConvertedLength(XtPointer *target, unsigned long source)
 
 static Boolean
 ConvertSelection(Widget w,
-		 Atom * selection,
-		 Atom * target,
-		 Atom * type,
+		 Atom *selection,
+		 Atom *target,
+		 Atom *type,
 		 XtPointer *value,
 		 unsigned long *length,
 		 int *format)
@@ -4002,7 +4002,7 @@ ConvertSelection(Widget w,
 }
 
 static void
-LoseSelection(Widget w, Atom * selection)
+LoseSelection(Widget w, Atom *selection)
 {
     TScreen *screen;
     Atom *atomP;
@@ -4043,8 +4043,8 @@ LoseSelection(Widget w, Atom * selection)
 /* ARGSUSED */
 static void
 SelectionDone(Widget w GCC_UNUSED,
-	      Atom * selection GCC_UNUSED,
-	      Atom * target GCC_UNUSED)
+	      Atom *selection GCC_UNUSED,
+	      Atom *target GCC_UNUSED)
 {
     /* empty proc so Intrinsics know we want to keep storage */
 }
@@ -4294,7 +4294,7 @@ SaveText(TScreen *screen,
 
 /* Position: 32 - 255. */
 static int
-BtnCode(XButtonEvent * event, int button)
+BtnCode(XButtonEvent *event, int button)
 {
     int result = (int) (32 + (KeyState(event->state) << 2));
 
@@ -4320,7 +4320,7 @@ static unsigned
 EmitButtonCode(TScreen *screen,
 	       Char *line,
 	       unsigned count,
-	       XButtonEvent * event,
+	       XButtonEvent *event,
 	       int button)
 {
     int value;
@@ -4372,7 +4372,7 @@ FirstBitN(int bits)
 #define EMIT_BUTTON(button) EmitButtonCode(screen, line, count, event, button)
 
 static void
-EditorButton(XtermWidget xw, XButtonEvent * event)
+EditorButton(XtermWidget xw, XButtonEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
     int pty = screen->respond;
@@ -4512,7 +4512,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 
 #if OPT_FOCUS_EVENT
 void
-SendFocusButton(XtermWidget xw, XFocusChangeEvent * event)
+SendFocusButton(XtermWidget xw, XFocusChangeEvent *event)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -4539,7 +4539,7 @@ SendFocusButton(XtermWidget xw, XFocusChangeEvent * event)
  * Get the event-time, needed to process selections.
  */
 static Time
-getEventTime(XEvent * event)
+getEventTime(XEvent *event)
 {
     Time result;
 
@@ -4558,7 +4558,7 @@ getEventTime(XEvent * event)
 static char *
 getSelectionString(XtermWidget xw,
 		   Widget w,
-		   XEvent * event,
+		   XEvent *event,
 		   String *params,
 		   Cardinal *num_params,
 		   CELL *start, CELL *finish)
@@ -4972,7 +4972,7 @@ freeArgv(char *blob, char **argv)
 
 void
 HandleExecFormatted(Widget w,
-		    XEvent * event GCC_UNUSED,
+		    XEvent *event GCC_UNUSED,
 		    String *params,	/* selections */
 		    Cardinal *num_params)
 {
@@ -5004,7 +5004,7 @@ HandleExecFormatted(Widget w,
 
 void
 HandleExecSelectable(Widget w,
-		     XEvent * event GCC_UNUSED,
+		     XEvent *event GCC_UNUSED,
 		     String *params,	/* selections */
 		     Cardinal *num_params)
 {
@@ -5030,8 +5030,8 @@ HandleExecSelectable(Widget w,
 		    }
 		    executeCommand(argv);
 		    freeArgv(blob, argv);
-		    free(data);
 		}
+		free(data);
 	    }
 	}
     }
@@ -5039,7 +5039,7 @@ HandleExecSelectable(Widget w,
 
 void
 HandleInsertFormatted(Widget w,
-		      XEvent * event GCC_UNUSED,
+		      XEvent *event GCC_UNUSED,
 		      String *params,	/* selections */
 		      Cardinal *num_params)
 {
@@ -5068,7 +5068,7 @@ HandleInsertFormatted(Widget w,
 
 void
 HandleInsertSelectable(Widget w,
-		       XEvent * event GCC_UNUSED,
+		       XEvent *event GCC_UNUSED,
 		       String *params,	/* selections */
 		       Cardinal *num_params)
 {

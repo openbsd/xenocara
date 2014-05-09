@@ -1,7 +1,7 @@
-/* $XTermId: VTparse.h,v 1.62 2013/08/19 00:39:54 tom Exp $ */
+/* $XTermId: VTparse.h,v 1.64 2014/04/25 21:37:35 tom Exp $ */
 
 /*
- * Copyright 2002-2012,2013 by Thomas E. Dickey
+ * Copyright 2002-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -281,5 +281,6 @@ extern Const PARSE_T scs_pct_table[];
 #define CASE_ESC_COLON 158
 #define CASE_SCS_PERCENT 159
 #define CASE_GSETS_PERCENT 160
+#define CASE_GRAPHICS_ATTRIBUTES 161
 
 #endif /* included_VTparse_h */

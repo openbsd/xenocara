@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.47 2011/07/11 00:31:26 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.48 2014/05/03 12:43:20 tom Exp $ */
 
 /*
- * Copyright 2007-2010,2011 by Thomas E. Dickey
+ * Copyright 2007-2011,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -217,9 +217,11 @@ static const TCAPINFO table[] = {
 /* *INDENT-ON* */
 
 #if OPT_TCAP_FKEYS
-static void
-loadTermcapStrings(TScreen * screen)
+static Boolean
+loadTermcapStrings(TScreen *screen)
 {
+    Boolean result = True;
+
     if (screen->tcap_fkeys == 0) {
 	char name[80];
 	Cardinal want = XtNumber(table);
@@ -243,8 +245,11 @@ loadTermcapStrings(TScreen * screen)
 		    screen->tcap_fkeys[have] = NO_STRING;
 		}
 	    }
+	} else {
+	    result = False;
 	}
     }
+    return result;
 }
 #endif
 
@@ -262,8 +267,8 @@ keyIsDistinct(XtermWidget xw, int which)
 	    Cardinal k;
 	    char *fkey;
 
-	    loadTermcapStrings(screen);
-	    if (screen->tcap_fkeys[which] != NO_STRING) {
+	    if (loadTermcapStrings(screen)
+		&& screen->tcap_fkeys[which] != NO_STRING) {
 		for (k = 0; k < XtNumber(table); k++) {
 		    if (table[k].code == table[which].code
 			&& table[k].param == 0) {
@@ -343,7 +348,7 @@ lookupTcapByName(const char *name)
  * and bypass the lookup of keysym altogether.
  */
 int
-xtermcapKeycode(XtermWidget xw, const char **params, unsigned *state, Bool * fkey)
+xtermcapKeycode(XtermWidget xw, const char **params, unsigned *state, Bool *fkey)
 {
     const TCAPINFO *data;
     int which;
@@ -451,8 +456,7 @@ xtermcapString(XtermWidget xw, int keycode, unsigned mask)
 	TScreen *screen = TScreenOf(xw);
 	char *fkey;
 
-	loadTermcapStrings(screen);
-	if (screen->tcap_fkeys != 0) {
+	if (loadTermcapStrings(screen)) {
 	    do {
 		if ((fkey = screen->tcap_fkeys[which]) != NO_STRING) {
 		    StringInput(xw, (Char *) fkey, strlen(fkey));

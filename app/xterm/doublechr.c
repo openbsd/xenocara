@@ -1,7 +1,7 @@
-/* $XTermId: doublechr.c,v 1.83 2013/08/30 21:35:13 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.84 2014/04/25 23:41:42 tom Exp $ */
 
 /*
- * Copyright 1997-2012,2013 by Thomas E. Dickey
+ * Copyright 1997-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -161,6 +161,8 @@ xterm_ResetDouble(XtermWidget xw)
     if (changed) {
 	xtermRepaint(xw);
     }
+#else
+    (void) xw;
 #endif
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.741 2014/01/16 02:12:25 tom Exp $ */
+/* $XTermId: main.c,v 1.757 2014/05/03 17:17:00 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -91,6 +91,7 @@
 
 #include <xterm.h>
 #include <version.h>
+#include <graphics.h>
 
 #include <X11/cursorfont.h>
 #include <X11/Xlocale.h>
@@ -804,7 +805,7 @@ static sigjmp_buf env;
 		    *endptr = '\0'; \
 		} \
 	    } \
-	    strncpy(dst, host, sizeof(dst)); \
+	    copy_filled(dst, host, sizeof(dst)); \
 	}
 
 #ifdef HAVE_UTMP_UT_SYSLEN
@@ -870,6 +871,9 @@ static XtResource application_resources[] =
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
     Bres("ptyHandshake", "PtyHandshake", ptyHandshake, True),
     Bres("ptySttySize", "PtySttySize", ptySttySize, DEF_PTY_STTY_SIZE),
+#endif
+#if OPT_REPORT_COLORS
+    Bres("reportColors", "ReportColors", reportColors, False),
 #endif
 #if OPT_REPORT_FONTS
     Bres("reportFonts", "ReportFonts", reportFonts, False),
@@ -1008,6 +1012,9 @@ static XrmOptionDescRec optionDescList[] = {
 {"+s",		"*multiScroll",	XrmoptionNoArg,		(XPointer) "off"},
 {"-sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "on"},
 {"+sb",		"*scrollBar",	XrmoptionNoArg,		(XPointer) "off"},
+#if OPT_REPORT_COLORS
+{"-report-colors","*reportColors", XrmoptionNoArg,	(XPointer) "on"},
+#endif
 #if OPT_REPORT_FONTS
 {"-report-fonts","*reportFonts", XrmoptionNoArg,	(XPointer) "on"},
 #endif
@@ -1197,6 +1204,9 @@ static OptionHelp xtermOptions[] = {
 { "-/+rw",                 "turn on/off reverse wraparound" },
 { "-/+s",                  "turn on/off multiscroll" },
 { "-/+sb",                 "turn on/off scrollbar" },
+#if OPT_REPORT_COLORS
+{ "-report-colors",        "report colors as they are allocated" },
+#endif
 #if OPT_REPORT_FONTS
 { "-report-fonts",         "report fonts as loaded to stdout" },
 #endif
@@ -1614,9 +1624,9 @@ Help(void)
 /* ARGSUSED */
 static Boolean
 ConvertConsoleSelection(Widget w GCC_UNUSED,
-			Atom * selection GCC_UNUSED,
-			Atom * target GCC_UNUSED,
-			Atom * type GCC_UNUSED,
+			Atom *selection GCC_UNUSED,
+			Atom *target GCC_UNUSED,
+			Atom *type GCC_UNUSED,
 			XtPointer *value GCC_UNUSED,
 			unsigned long *length GCC_UNUSED,
 			int *format GCC_UNUSED)
@@ -1632,7 +1642,7 @@ ConvertConsoleSelection(Widget w GCC_UNUSED,
 /* ARGSUSED */
 static void
 DeleteWindow(Widget w,
-	     XEvent * event GCC_UNUSED,
+	     XEvent *event GCC_UNUSED,
 	     String *params GCC_UNUSED,
 	     Cardinal *num_params GCC_UNUSED)
 {
@@ -1652,7 +1662,7 @@ DeleteWindow(Widget w,
 /* ARGSUSED */
 static void
 KeyboardMapping(Widget w GCC_UNUSED,
-		XEvent * event,
+		XEvent *event,
 		String *params GCC_UNUSED,
 		Cardinal *num_params GCC_UNUSED)
 {
@@ -3082,6 +3092,24 @@ set_owner(char *device, unsigned uid, unsigned gid, unsigned mode)
     }
 }
 
+/*
+ * utmp data may not be null-terminated; even if it is, there may be garbage
+ * after the null.  This fills the unused part of the result with nulls.
+ */
+static void
+copy_filled(char *target, const char *source, size_t len)
+{
+    size_t used = 0;
+    while (used < len) {
+	if ((target[used] = source[used]) == 0)
+	    break;
+	++used;
+    }
+    while (used < len) {
+	target[used++] = '\0';
+    }
+}
+
 #if defined(HAVE_UTMP) && defined(USE_SYSV_UTMP) && !defined(USE_UTEMPTER)
 /*
  * getutid() only looks at ut_type and ut_id.
@@ -3092,8 +3120,8 @@ init_utmp(int type, struct UTMP_STR *tofind)
 {
     memset(tofind, 0, sizeof(*tofind));
     tofind->ut_type = type;
-    (void) strncpy(tofind->ut_id, my_utmp_id(ttydev), sizeof(tofind->ut_id));
-    (void) strncpy(tofind->ut_line, my_pty_name(ttydev), sizeof(tofind->ut_line));
+    copy_filled(tofind->ut_id, my_utmp_id(ttydev), sizeof(tofind->ut_id));
+    copy_filled(tofind->ut_line, my_pty_name(ttydev), sizeof(tofind->ut_line));
 }
 
 /*
@@ -3109,19 +3137,13 @@ find_utmp(struct UTMP_STR *tofind)
     for (;;) {
 	memset(&working, 0, sizeof(working));
 	working.ut_type = tofind->ut_type;
-	strncpy(working.ut_id, tofind->ut_id, sizeof(tofind->ut_id));
+	copy_filled(working.ut_id, tofind->ut_id, sizeof(tofind->ut_id));
 #if defined(__digital__) && defined(__unix__) && (defined(OSMAJORVERSION) && OSMAJORVERSION < 5)
 	working.ut_type = 0;
 #endif
 	if ((result = call_getutid(&working)) == 0)
 	    break;
-	/*
-	 * ut_line may not be null-terminated, but if it is, there may be
-	 * garbage after the null.  Use strncpy to ensure that the value
-	 * we check is null-terminated (if there is enough space in the
-	 * buffer), and that unused space is nulled.
-	 */
-	strncpy(limited.ut_line, result->ut_line, sizeof(result->ut_line));
+	copy_filled(limited.ut_line, result->ut_line, sizeof(result->ut_line));
 	if (!memcmp(limited.ut_line, tofind->ut_line, sizeof(limited.ut_line)))
 	    break;
 	/*
@@ -3143,6 +3165,35 @@ find_utmp(struct UTMP_STR *tofind)
 #define USE_NO_DEV_TTY 0
 #endif
 
+static int
+same_leaf(char *a, char *b)
+{
+    char *p = x_basename(a);
+    char *q = x_basename(b);
+    return !strcmp(p, q);
+}
+
+/*
+ * "good enough" (inode wouldn't port to Cygwin)
+ */
+static int
+same_file(const char *a, const char *b)
+{
+    struct stat asb;
+    struct stat bsb;
+    int result = 0;
+
+    if ((stat(a, &asb) == 0)
+	&& (stat(b, &bsb) == 0)
+	&& ((asb.st_mode & S_IFMT) == S_IFREG)
+	&& ((bsb.st_mode & S_IFMT) == S_IFREG)
+	&& (asb.st_mtime == bsb.st_mtime)
+	&& (asb.st_size == bsb.st_size)) {
+	result = 1;
+    }
+    return result;
+}
+
 /*
  * Only set $SHELL for paths found in the standard location.
  */
@@ -3156,8 +3207,7 @@ validShell(const char *pathname)
     size_t rc;
     FILE *fp;
 
-    if (!IsEmpty(pathname)
-	&& access(pathname, X_OK) == 0
+    if (validProgram(pathname)
 	&& stat(ok_shells, &sb) == 0
 	&& (sb.st_mode & S_IFMT) == S_IFREG
 	&& (sb.st_size != 0)
@@ -3167,9 +3217,14 @@ validShell(const char *pathname)
 	    if (rc == (size_t) sb.st_size) {
 		char *p = blob;
 		char *q, *r;
+		blob[rc] = '\0';
 		while (!result && (q = strtok(p, "\n")) != 0) {
 		    if ((r = x_strtrim(q)) != 0) {
+			TRACE(("...test \"%s\"\n", q));
 			if (!strcmp(q, pathname)) {
+			    result = True;
+			} else if (same_leaf(q, (char *) pathname) &&
+				   same_file(q, pathname)) {
 			    result = True;
 			}
 			free(r);
@@ -3738,7 +3793,8 @@ spawnXTerm(XtermWidget xw)
 		/* we don't need the socket, or the pty master anymore */
 		close(ConnectionNumber(screen->display));
 #ifndef __MVS__
-		close(screen->respond);
+		if (screen->respond >= 0)
+		    close(screen->respond);
 #endif /* __MVS__ */
 
 		/* Now is the time to set up our process group and
@@ -4261,13 +4317,13 @@ spawnXTerm(XtermWidget xw)
 #ifdef HAVE_UTMP_UT_XSTATUS
 	    utmp.ut_xstatus = 2;
 #endif
-	    (void) strncpy(utmp.ut_user,
-			   (login_name != NULL) ? login_name : "????",
-			   sizeof(utmp.ut_user));
+	    copy_filled(utmp.ut_user,
+			(login_name != NULL) ? login_name : "????",
+			sizeof(utmp.ut_user));
 	    /* why are we copying this string again?  (see above) */
-	    (void) strncpy(utmp.ut_id, my_utmp_id(ttydev), sizeof(utmp.ut_id));
-	    (void) strncpy(utmp.ut_line,
-			   my_pty_name(ttydev), sizeof(utmp.ut_line));
+	    copy_filled(utmp.ut_id, my_utmp_id(ttydev), sizeof(utmp.ut_id));
+	    copy_filled(utmp.ut_line,
+			my_pty_name(ttydev), sizeof(utmp.ut_line));
 
 #ifdef HAVE_UTMP_UT_HOST
 	    SetUtmpHost(utmp.ut_host, screen);
@@ -4276,9 +4332,9 @@ spawnXTerm(XtermWidget xw)
 	    SetUtmpSysLen(utmp);
 #endif
 
-	    (void) strncpy(utmp.ut_name,
-			   (login_name) ? login_name : "????",
-			   sizeof(utmp.ut_name));
+	    copy_filled(utmp.ut_name,
+			(login_name) ? login_name : "????",
+			sizeof(utmp.ut_name));
 
 	    utmp.ut_pid = getpid();
 #if defined(HAVE_UTMP_UT_XTIME)
@@ -4329,11 +4385,11 @@ spawnXTerm(XtermWidget xw)
 		if (tslot > 0 && OkPasswd(&pw) && !resource.utmpInhibit &&
 		    (i = open(etc_utmp, O_WRONLY)) >= 0) {
 		    memset(&utmp, 0, sizeof(utmp));
-		    (void) strncpy(utmp.ut_line,
-				   my_pty_name(ttydev),
-				   sizeof(utmp.ut_line));
-		    (void) strncpy(utmp.ut_name, login_name,
-				   sizeof(utmp.ut_name));
+		    copy_filled(utmp.ut_line,
+				my_pty_name(ttydev),
+				sizeof(utmp.ut_line));
+		    copy_filled(utmp.ut_name, login_name,
+				sizeof(utmp.ut_name));
 #ifdef HAVE_UTMP_UT_HOST
 		    SetUtmpHost(utmp.ut_host, screen);
 #endif
@@ -4561,6 +4617,7 @@ spawnXTerm(XtermWidget xw)
 
 	    /*
 	     * If we have an explicit shell to run, make that set $SHELL.
+	     * Next, allow an existing setting of $SHELL, for absolute paths.
 	     * Otherwise, if $SHELL is not set, determine it from the user's
 	     * password information, if possible.
 	     *
@@ -4569,9 +4626,10 @@ spawnXTerm(XtermWidget xw)
 	     */
 	    if (validShell(explicit_shname)) {
 		xtermSetenv("SHELL", explicit_shname);
-		shell_path = explicit_shname;
-	    } else if (validShell(shell_path = x_getenv("SHELL"))) {
-		;		/* OK */
+	    } else if (validProgram(shell_path = x_getenv("SHELL"))) {
+		if (!validShell(shell_path)) {
+		    xtermUnsetenv("SHELL");
+		}
 	    } else if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
 		       || *(shell_path = x_strdup(pw.pw_shell)) == 0) {
 		shell_path = resetShell(shell_path);
@@ -4585,9 +4643,11 @@ spawnXTerm(XtermWidget xw)
 	     * Set $XTERM_SHELL, which is not necessarily a valid shell, but
 	     * is executable.
 	     */
-	    if (explicit_shname != 0 && access(explicit_shname, X_OK) == 0) {
-		free(shell_path);
+	    if (validProgram(explicit_shname)) {
 		shell_path = explicit_shname;
+	    } else if (shell_path == 0) {
+		/* this could happen if the explicit shname lost a race */
+		shell_path = resetShell(shell_path);
 	    }
 	    xtermSetenv("XTERM_SHELL", shell_path);
 
@@ -4878,7 +4938,7 @@ Exit(int n)
 		if (xw->misc.login_shell)
 		    updwtmpx(WTMPX_FILE, utptr);
 #elif defined(linux) && defined(__GLIBC__) && (__GLIBC__ >= 2) && !(defined(__powerpc__) && (__GLIBC__ == 2) && (__GLIBC_MINOR__ == 0))
-		strncpy(utmp.ut_line, utptr->ut_line, sizeof(utmp.ut_line));
+		copy_filled(utmp.ut_line, utptr->ut_line, sizeof(utmp.ut_line));
 		if (xw->misc.login_shell)
 		    call_updwtmp(etc_wtmp, utptr);
 #else
@@ -4922,9 +4982,9 @@ Exit(int n)
 #ifdef WTMP
 	if (xw->misc.login_shell &&
 	    (wfd = open(etc_wtmp, O_WRONLY | O_APPEND)) >= 0) {
-	    (void) strncpy(utmp.ut_line,
-			   my_pty_name(ttydev),
-			   sizeof(utmp.ut_line));
+	    copy_filled(utmp.ut_line,
+			my_pty_name(ttydev),
+			sizeof(utmp.ut_line));
 	    utmp.ut_time = time((time_t *) 0);
 	    IGNORE_RC(write(wfd, (char *) &utmp, sizeof(utmp)));
 	    close(wfd);
@@ -4982,6 +5042,9 @@ Exit(int n)
 	sortedOpts(0, 0, 0);
 	noleaks_charproc();
 	noleaks_ptydata();
+#if OPT_GRAPHICS
+	noleaks_graphics();
+#endif
 #if OPT_WIDE_CHARS
 	noleaks_CharacterClass();
 #endif

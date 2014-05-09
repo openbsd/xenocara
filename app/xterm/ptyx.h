@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.789 2013/11/23 17:04:26 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.802 2014/05/03 12:58:37 tom Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -79,6 +79,13 @@
 #endif
 
 #include <stdio.h>
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#define DECONST(type,s) ((type *)(intptr_t)(const type *)(s))
+#else
+#define DECONST(type,s) ((type *)(s))
+#endif
 
 /* adapted from IntrinsicI.h */
 #define MyStackAlloc(size, stack_cache_array)     \
@@ -315,6 +322,7 @@ typedef Char *UString;
 #endif
 
 #define IsEmpty(s) ((s) == 0 || *(s) == '\0')
+#define IsSpace(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
 
 #define CharOf(n) ((Char)(n))
 
@@ -518,7 +526,15 @@ typedef struct {
 #endif
 
 #ifndef OPT_SIXEL_GRAPHICS
-#define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT220-style sixel graphics */
+#define OPT_SIXEL_GRAPHICS 0 /* true if xterm supports VT240-style sixel graphics */
+#endif
+
+#ifndef OPT_REGIS_GRAPHICS
+#define OPT_REGIS_GRAPHICS 0 /* true if xterm supports VT125/VT240/VT330 ReGIS graphics */
+#endif
+
+#ifndef OPT_GRAPHICS
+#define OPT_GRAPHICS 0 /* true if xterm is configured for any type of graphics */
 #endif
 
 #ifndef OPT_DEC_SOFTFONT
@@ -655,6 +671,10 @@ typedef struct {
 #else
 #define OPT_RENDERWIDE 0
 #endif
+#endif
+
+#ifndef OPT_REPORT_COLORS
+#define OPT_REPORT_COLORS  1 /* provide "-report-colors" option */
 #endif
 
 #ifndef OPT_REPORT_FONTS
@@ -1040,7 +1060,7 @@ typedef enum {
 #if OPT_SUNPC_KBD
     ,srm_VT220_FKEYS = 1061
 #endif
-#if OPT_SIXEL_GRAPHICS
+#if OPT_GRAPHICS
     ,srm_PRIVATE_COLOR_REGISTERS = 1070
 #endif
 #if OPT_READLINE
@@ -1051,6 +1071,9 @@ typedef enum {
     ,srm_PASTE_QUOTE = SET_PASTE_QUOTE
     ,srm_PASTE_LITERAL_NL = SET_PASTE_LITERAL_NL
 #endif				/* OPT_READLINE */
+#if OPT_SIXEL_GRAPHICS
+    ,srm_SIXEL_SCROLLS_RIGHT = 8452
+#endif
 } DECSET_codes;
 
 /* indices for mapping multiple clicks to selection types */
@@ -1387,14 +1410,14 @@ typedef unsigned char IChar;	/* for 8-bit characters */
 
 #define Cres(name, class, offset, dftvalue) \
 	{RES_NAME(name), RES_CLASS(class), XtRPixel, sizeof(Pixel), \
-	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
+	 RES_OFFSET(offset), XtRString, DECONST(char,dftvalue)}
 
 #define Tres(name, class, offset, dftvalue) \
 	COLOR_RES2(name, class, screen.Tcolors[offset], dftvalue) \
 
 #define Fres(name, class, offset, dftvalue) \
 	{RES_NAME(name), RES_CLASS(class), XtRFontStruct, sizeof(XFontStruct *), \
-	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
+	 RES_OFFSET(offset), XtRString, DECONST(char,dftvalue)}
 
 #define Ires(name, class, offset, dftvalue) \
 	{RES_NAME(name), RES_CLASS(class), XtRInt, sizeof(int), \
@@ -1402,11 +1425,11 @@ typedef unsigned char IChar;	/* for 8-bit characters */
 
 #define Dres(name, class, offset, dftvalue) \
 	{RES_NAME(name), RES_CLASS(class), XtRFloat, sizeof(float), \
-	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
+	 RES_OFFSET(offset), XtRString, DECONST(char,dftvalue)}
 
 #define Sres(name, class, offset, dftvalue) \
 	{RES_NAME(name), RES_CLASS(class), XtRString, sizeof(char *), \
-	 RES_OFFSET(offset), XtRString, (XtPointer) dftvalue}
+	 RES_OFFSET(offset), XtRString, DECONST(char,dftvalue)}
 
 #define Wres(name, class, offset, dftvalue) \
 	{RES_NAME(name), RES_CLASS(class), XtRWidget, sizeof(Widget), \
@@ -1441,7 +1464,7 @@ typedef unsigned short CellColor;
 typedef Char CellColor;
 #endif
 #else
-typedef int CellColor;
+typedef unsigned CellColor;
 #endif
 
 #define BITS2MASK(b)          ((1 << b) - 1)
@@ -1632,6 +1655,9 @@ typedef enum {
 	DP_TOOLBAR,
 #endif
 	DP_X_PRIVATE_COLOR_REGISTERS,
+#if OPT_SIXEL_GRAPHICS
+	DP_SIXEL_SCROLLS_RIGHT,
+#endif
 	DP_LAST
 } SaveModes;
 
@@ -1869,6 +1895,7 @@ typedef struct {
 	char *		utf8_mode_s;	/* use UTF-8 decode/encode	*/
 	char *		utf8_fonts_s;	/* use UTF-8 decode/encode	*/
 	int		utf8_nrc_mode;	/* saved UTF-8 mode for DECNRCM */
+	Boolean		utf8_always;	/* special case for wideChars	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
 	int		utf8_fonts;	/* use UTF-8 decode/encode: 0-2	*/
 	int		max_combining;	/* maximum # of combining chars	*/
@@ -2167,6 +2194,11 @@ typedef struct {
 
 #if OPT_SIXEL_GRAPHICS
 	Boolean		sixel_scrolling; /* sixel scrolling             */
+	Boolean		sixel_scrolls_right; /* sixel scrolling moves cursor to right */
+#endif
+
+#if OPT_GRAPHICS
+	int		numcolorregisters; /* number of supported color registers */
 	Boolean		privatecolorregisters; /* private color registers for each graphic */
 #endif
 
@@ -2581,6 +2613,15 @@ typedef struct _Misc {
 
 typedef struct _Work {
     int dummy;
+#ifdef SunXK_F36
+#define MAX_UDK 37
+#else
+#define MAX_UDK 35
+#endif
+    struct {
+	char *str;
+	int len;
+    } user_keys[MAX_UDK];
 #ifndef NO_ACTIVE_ICON
     int active_icon;		/* use application icon window  */
 #endif /* NO_ACTIVE_ICON */
@@ -2601,6 +2642,11 @@ typedef struct _Work {
 #if OPT_RENDERFONT
     Boolean render_font;
 #endif
+#if OPT_DABBREV
+#define MAX_DABBREV	1024	/* maximum word length as in tcsh */
+    char dabbrev_data[MAX_DABBREV];
+#endif
+    ScrnColors *oldColors;
 } Work;
 
 typedef struct {int foo;} XtermClassPart, TekClassPart;
@@ -2634,7 +2680,6 @@ extern WidgetClass tekWidgetClass;
 #define MODE_DECBKM	xBIT(4)	/* private mode 67: backarrow */
 #define MODE_DECSDM	xBIT(5)	/* private mode 80: sixel scrolling mode */
 
-
 #define N_MARGINBELL	10
 
 #define TAB_BITS_SHIFT	5	/* FIXME: 2**5 == 32 (should derive) */
@@ -2647,6 +2692,8 @@ typedef unsigned Tabs [TAB_ARRAY_SIZE];
 typedef struct _XtermWidgetRec {
     CorePart	core;
     XSizeHints	hints;
+    XVisualInfo *visInfo;
+    int		numVisuals;
     Bool	init_menu;
     TKeyboard	keyboard;	/* terminal keyboard		*/
     TScreen	screen;		/* terminal screen		*/

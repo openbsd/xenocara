@@ -1,9 +1,9 @@
-#!/usr/bin/perl -w
-# $XTermId: dynamic.pl,v 1.2 2011/07/05 09:32:53 tom Exp $
+#!/usr/bin/env perl
+# $XTermId: dynamic.pl,v 1.3 2014/02/26 20:17:07 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2011 by Thomas E. Dickey
+# Copyright 2011,2014 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -35,6 +35,7 @@
 # The programs xtermcontrol and xtermset provide more options.
 
 use strict;
+use warnings;
 
 use Getopt::Std;
 use IO::Handle;

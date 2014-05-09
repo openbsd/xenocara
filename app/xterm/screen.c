@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.487 2013/08/14 23:22:53 tom Exp $ */
+/* $XTermId: screen.c,v 1.488 2014/05/03 19:32:51 tom Exp $ */
 
 /*
- * Copyright 1999-2012,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -70,10 +70,6 @@
 
 #include <assert.h>
 #include <signal.h>
-
-#ifndef _Xconst
-#define _Xconst const		/* Solaris 7 workaround */
-#endif /* _Xconst */
 
 #include <graphics.h>
 
@@ -2311,7 +2307,7 @@ limitedParseCol(XtermWidget xw, int col)
  * needed.
  */
 void
-xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect * target)
+xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect *target)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -2328,7 +2324,7 @@ xtermParseRect(XtermWidget xw, int nparams, int *params, XTermRect * target)
 }
 
 static Bool
-validRect(XtermWidget xw, XTermRect * target)
+validRect(XtermWidget xw, XTermRect *target)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -2350,7 +2346,7 @@ validRect(XtermWidget xw, XTermRect * target)
  */
 void
 ScrnFillRectangle(XtermWidget xw,
-		  XTermRect * target,
+		  XTermRect *target,
 		  int value,
 		  unsigned flags,
 		  Bool keepColors)
@@ -2425,7 +2421,7 @@ ScrnFillRectangle(XtermWidget xw,
  * the target from that.
  */
 void
-ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
+ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -2518,7 +2514,7 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
  */
 void
 ScrnMarkRectangle(XtermWidget xw,
-		  XTermRect * target,
+		  XTermRect *target,
 		  Bool reverse,
 		  int nparam,
 		  int *params)
@@ -2639,7 +2635,7 @@ ScrnMarkRectangle(XtermWidget xw,
  */
 void
 ScrnWipeRectangle(XtermWidget xw,
-		  XTermRect * target)
+		  XTermRect *target)
 {
     TScreen *screen = TScreenOf(xw);
 
