@@ -107,7 +107,7 @@ SizeClassInfo(xAnyClassPtr *any, int num_classes)
 static void
 ParseClassInfo(xAnyClassPtr *any, XAnyClassPtr *Any, int num_classes)
 {
-    int j, k;
+    int j;
 
     for (j = 0; j < num_classes; j++) {
         switch ((*any)->class) {
@@ -135,6 +135,7 @@ ParseClassInfo(xAnyClassPtr *any, XAnyClassPtr *Any, int num_classes)
                 }
             case ValuatorClass:
                 {
+                    int k;
                     XValuatorInfoPtr V = (XValuatorInfoPtr) *Any;
                     xValuatorInfoPtr v = (xValuatorInfoPtr) *any;
                     XAxisInfoPtr A;

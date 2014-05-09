@@ -98,7 +98,7 @@ am__objects_1 = XIAllowEvents.lo XIGrabDevice.lo XIQueryVersion.lo \
 	XIQueryDevice.lo XISetDevFocus.lo XIGetDevFocus.lo \
 	XIPassiveGrab.lo XIProperties.lo XISelEv.lo XISetCPtr.lo \
 	XIWarpPointer.lo XIHierarchy.lo XIDefineCursor.lo \
-	XIQueryPointer.lo
+	XIQueryPointer.lo XIBarrier.lo
 am_libXi_la_OBJECTS = XAllowDv.lo XChDProp.lo XChgDCtl.lo XChgFCtl.lo \
 	XChgKbd.lo XChgKMap.lo XChgPnt.lo XChgProp.lo XCloseDev.lo \
 	XDelDProp.lo XDevBell.lo XExtToWire.lo XGetBMap.lo XGetCPtr.lo \
@@ -216,7 +216,6 @@ LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
 MANIFEST_TOOL = @MANIFEST_TOOL@
@@ -239,6 +238,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -247,6 +248,8 @@ STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 VERSION = @VERSION@
+XFIXES_CFLAGS = @XFIXES_CFLAGS@
+XFIXES_LIBS = @XFIXES_LIBS@
 XI_CFLAGS = @XI_CFLAGS@
 XI_LIBS = @XI_LIBS@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
@@ -322,7 +325,8 @@ XI2_sources = XIAllowEvents.c \
 		  XIWarpPointer.c \
 		  XIHierarchy.c \
 		  XIDefineCursor.c \
-		  XIQueryPointer.c
+		  XIQueryPointer.c \
+		  XIBarrier.c
 
 libXi_la_SOURCES = \
 		  XAllowDv.c \
@@ -376,6 +380,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include \
               -I$(top_srcdir)/include/X11/extensions
 
 AM_CFLAGS = $(XI_CFLAGS) \
+            $(XFIXES_CFLAGS) \
             $(MALLOC_ZERO_CFLAGS) \
             $(CWARNFLAGS)
 
@@ -390,7 +395,7 @@ all: config.h
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -415,9 +420,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
+$(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
+$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 
@@ -428,7 +433,7 @@ config.h: stamp-h1
 stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status src/config.h
-$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
+$(srcdir)/config.h.in:  $(am__configure_deps) 
 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
 	rm -f stamp-h1
 	touch $@
@@ -507,6 +512,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGtFocus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XGtSelect.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIAllowEvents.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIBarrier.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIDefineCursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIGetDevFocus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XIGrabDevice.Plo@am__quote@

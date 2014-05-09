@@ -31,6 +31,7 @@
 #include <X11/extensions/XI2proto.h>
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/extutil.h>
+#include <limits.h>
 #include "XIint.h"
 
 
@@ -50,6 +51,17 @@ XIGrabDevice(Display* dpy, int deviceid, Window grab_window, Time time,
     if (_XiCheckExtInit(dpy, XInput_2_0, extinfo) == -1)
 	return (NoSuchExtension);
 
+    if (mask->mask_len > INT_MAX - 3 ||
+        (mask->mask_len + 3)/4 >= 0xffff)
+        return BadValue;
+
+    /* mask->mask_len is in bytes, but we need 4-byte units on the wire,
+     * and they need to be padded with 0 */
+    len = (mask->mask_len + 3)/4;
+    buff = calloc(4, len);
+    if (!buff)
+        return BadAlloc;
+
     GetReq(XIGrabDevice, req);
     req->reqType  = extinfo->codes->major_opcode;
     req->ReqType  = X_XIGrabDevice;
@@ -59,14 +71,9 @@ XIGrabDevice(Display* dpy, int deviceid, Window grab_window, Time time,
     req->grab_mode = grab_mode;
     req->paired_device_mode = paired_device_mode;
     req->owner_events = owner_events;
-    req->mask_len = (mask->mask_len + 3)/4;
+    req->mask_len = len;
     req->cursor = cursor;
 
-
-    /* mask->mask_len is in bytes, but we need 4-byte units on the wire,
-     * and they need to be padded with 0 */
-    len = req->mask_len;
-    buff = calloc(1, len * 4);
     memcpy(buff, mask->mask, mask->mask_len);
 
     SetReqLen(req, len, len);

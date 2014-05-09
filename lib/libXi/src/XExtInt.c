@@ -73,40 +73,11 @@ SOFTWARE.
 #define DONT_ENQUEUE	False
 #define FP1616toDBL(x) ((x) * 1.0 / (1 << 16))
 
-extern void _xibaddevice(
-    Display *		/* dpy */,
-    int *		/* error */
-);
-
-extern void _xibadclass(
-    Display *		/* dpy */,
-    int *		/* error */
-);
-
-extern void _xibadevent(
-    Display *		/* dpy */,
-    int *		/* error */
-);
-
-extern void _xibadmode(
-    Display *		/* dpy */,
-    int *		/* error */
-);
-
-extern void _xidevicebusy(
-    Display *		/* dpy */,
-    int *		/* error */
-);
-
-extern int _XiGetDevicePresenceNotifyEvent(
-    Display *		/* dpy */
-);
-
 int copy_classes(XIDeviceInfo *to, xXIAnyInfo* from, int *nclasses);
 int size_classes(xXIAnyInfo* from, int nclasses);
 
 static XExtensionInfo *xinput_info;
-static /* const */ char *xinput_extension_name = INAME;
+static const char *xinput_extension_name = INAME;
 
 static int XInputClose(
     Display *		/* dpy */,
@@ -153,6 +124,9 @@ wireToPropertyEvent(xXIPropertyEvent *in, XGenericEventCookie *cookie);
 static int
 wireToTouchOwnershipEvent(xXITouchOwnershipEvent *in,
                           XGenericEventCookie *cookie);
+static int
+wireToBarrierEvent(xXIBarrierEvent *in,
+                   XGenericEventCookie *cookie);
 
 static /* const */ XEvent emptyevent;
 
@@ -172,7 +146,7 @@ static /* const */ XExtensionHooks xinput_extension_hooks = {
     XInputError,	/* error_string */
 };
 
-static char *XInputErrorList[] = {
+static const char *XInputErrorList[] = {
     "BadDevice, invalid or uninitialized input device",	/* BadDevice */
     "BadEvent, invalid event type",	/* BadEvent */
     "BadMode, invalid mode parameter",	/* BadMode  */
@@ -496,7 +470,6 @@ XInputWireToEvent(
     xEvent	*event)
 {
     unsigned int type, reltype;
-    unsigned int i, j;
     XExtDisplayInfo *info = XInput_find_display(dpy);
     XEvent *save = (XEvent *) info->data;
 
@@ -621,6 +594,7 @@ XInputWireToEvent(
                 {
                     deviceValuator *xev = (deviceValuator *) event;
                     int save_type = save->type - info->codes->first_event;
+                    int i;
 
                     if (save_type == XI_DeviceKeyPress || save_type == XI_DeviceKeyRelease) {
                         XDeviceKeyEvent *kev = (XDeviceKeyEvent *) save;
@@ -716,6 +690,7 @@ XInputWireToEvent(
                                 pev->axis_data[0] = xev->valuator0;
                         }
                     } else if (save_type == XI_DeviceStateNotify) {
+                        int j;
                         XDeviceStateNotifyEvent *sev = (XDeviceStateNotifyEvent *) save;
                         XInputClass *any = (XInputClass *) & sev->data[0];
                         XValuatorStatus *v;
@@ -760,6 +735,7 @@ XInputWireToEvent(
                 break;
             case XI_DeviceStateNotify:
                 {
+                    int j;
                     XDeviceStateNotifyEvent *stev = (XDeviceStateNotifyEvent *) save;
                     deviceStateNotify *sev = (deviceStateNotify *) event;
                     char *data;
@@ -1043,6 +1019,16 @@ XInputWireToCookie(
         case XI_PropertyEvent:
             *cookie = *(XGenericEventCookie*)save;
             if (!wireToPropertyEvent((xXIPropertyEvent*)event, cookie))
+            {
+                printf("XInputWireToCookie: CONVERSION FAILURE!  evtype=%d\n",
+                        ge->evtype);
+                break;
+            }
+            return ENQUEUE_EVENT;
+        case XI_BarrierHit:
+        case XI_BarrierLeave:
+            *cookie = *(XGenericEventCookie*)save;
+            if (!wireToBarrierEvent((xXIBarrierEvent*)event, cookie))
             {
                 printf("XInputWireToCookie: CONVERSION FAILURE!  evtype=%d\n",
                         ge->evtype);
@@ -1430,7 +1416,21 @@ copyRawEvent(XGenericEventCookie *cookie_in,
     return True;
 }
 
+static Bool
+copyBarrierEvent(XGenericEventCookie *in_cookie,
+                 XGenericEventCookie *out_cookie)
+{
+    XIBarrierEvent *in, *out;
 
+    in = in_cookie->data;
+
+    out = out_cookie->data = calloc(1, sizeof(XIBarrierEvent));
+    if (!out)
+        return False;
+    *out = *in;
+
+    return True;
+}
 
 static Bool
 XInputCopyCookie(Display *dpy, XGenericEventCookie *in, XGenericEventCookie *out)
@@ -1488,6 +1488,10 @@ XInputCopyCookie(Display *dpy, XGenericEventCookie *in, XGenericEventCookie *out
         case XI_RawTouchUpdate:
         case XI_RawTouchEnd:
             ret = copyRawEvent(in, out);
+            break;
+        case XI_BarrierHit:
+        case XI_BarrierLeave:
+            ret = copyBarrierEvent(in, out);
             break;
         default:
             printf("XInputCopyCookie: unknown evtype %d\n", in->evtype);
@@ -1992,6 +1996,38 @@ wireToTouchOwnershipEvent(xXITouchOwnershipEvent *in,
     out->event          = in->event;
     out->child          = in->child;
     out->flags          = in->flags;
+
+    return 1;
+}
+
+#define FP3232_TO_DOUBLE(x) ((double) (x).integral + (x).frac / (1ULL << 32))
+
+static int
+wireToBarrierEvent(xXIBarrierEvent *in, XGenericEventCookie *cookie)
+{
+    XIBarrierEvent *out = malloc(sizeof(XIBarrierEvent));
+
+    cookie->data = out;
+
+    out->display    = cookie->display;
+    out->type       = in->type;
+    out->serial     = in->sequenceNumber;
+    out->extension  = in->extension;
+    out->evtype     = in->evtype;
+    out->send_event = ((in->type & 0x80) != 0);
+    out->time       = in->time;
+    out->deviceid   = in->deviceid;
+    out->sourceid   = in->sourceid;
+    out->event      = in->event;
+    out->root       = in->root;
+    out->root_x     = FP1616toDBL(in->root_x);
+    out->root_y     = FP1616toDBL(in->root_y);
+    out->dx         = FP3232_TO_DOUBLE (in->dx);
+    out->dy         = FP3232_TO_DOUBLE (in->dy);
+    out->dtime      = in->dtime;
+    out->flags      = in->flags;
+    out->barrier    = in->barrier;
+    out->eventid    = in->eventid;
 
     return 1;
 }

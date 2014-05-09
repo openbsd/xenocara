@@ -22,7 +22,6 @@
  *
  */
 
-
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -34,57 +33,49 @@
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
 
-Status
-XIQueryVersion(Display *dpy, int *major_inout, int *minor_inout)
+void
+XIBarrierReleasePointers(Display *dpy,
+                         XIBarrierReleasePointerInfo *barriers,
+                         int num_barriers)
 {
-    int rc = Success;
+    XExtDisplayInfo	        *info = XInput_find_display(dpy);
+    xXIBarrierReleasePointerReq *req;
+    int extra = 0;
+    int i;
+    xXIBarrierReleasePointerInfo *b;
 
-    XExtDisplayInfo *info = XInput_find_display(dpy);
+    if (!num_barriers)
+        return;
 
-    LockDisplay(dpy);
-    rc = _xiQueryVersion(dpy, major_inout, minor_inout, info);
+    extra = (num_barriers * sizeof(xXIBarrierReleasePointerInfo));
 
-    UnlockDisplay(dpy);
-    SyncHandle();
-    return rc;
+    LockDisplay (dpy);
+    GetReqExtra (XIBarrierReleasePointer, extra, req);
+    req->reqType = info->codes->major_opcode;
+    req->ReqType = X_XIBarrierReleasePointer;
+    req->num_barriers = num_barriers;
+
+    b = (xXIBarrierReleasePointerInfo *) &req[1];
+    for (i = 0; i < num_barriers; i++, b++) {
+        b->deviceid = barriers[i].deviceid;
+        b->eventid = barriers[i].eventid;
+        b->barrier = barriers[i].barrier;
+    }
+
+    UnlockDisplay (dpy);
+    SyncHandle ();
 }
 
-_X_HIDDEN Status
-_xiQueryVersion(Display * dpy, int *major, int *minor, XExtDisplayInfo *info)
+void
+XIBarrierReleasePointer(Display *dpy,
+                        int            deviceid,
+                        PointerBarrier barrier,
+                        BarrierEventID eventid)
 {
-    xXIQueryVersionReq *req;
-    xXIQueryVersionReply rep;
+    XIBarrierReleasePointerInfo info;
+    info.deviceid = deviceid;
+    info.barrier = barrier;
+    info.eventid = eventid;
 
-    /* This could mean either a malloc problem, or supported
-        version < XInput_2_0 */
-    if (_XiCheckExtInit(dpy, XInput_2_0, info) == -1)
-    {
-        XExtensionVersion *ext;
-        XExtDisplayInfo *extinfo = XInput_find_display(dpy);
-
-        if (!extinfo || !extinfo->data) {
-            *major = 0;
-            *minor = 0;
-            return BadRequest;
-        }
-
-        ext = ((XInputData*)extinfo->data)->vers;
-
-        *major = ext->major_version;
-        *minor = ext->minor_version;
-	return BadRequest;
-    }
-
-    GetReq(XIQueryVersion, req);
-    req->reqType = info->codes->major_opcode;
-    req->ReqType = X_XIQueryVersion;
-    req->major_version = *major;
-    req->minor_version = *minor;
-
-    if (!_XReply(dpy, (xReply*)&rep, 0, xTrue)) {
-	return BadImplementation;
-    }
-    *major = rep.major_version;
-    *minor = rep.minor_version;
-    return Success;
+    XIBarrierReleasePointers(dpy, &info, 1);
 }

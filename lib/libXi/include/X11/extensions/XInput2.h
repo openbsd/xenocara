@@ -30,6 +30,7 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/XI2.h>
 #include <X11/extensions/Xge.h>
+#include <X11/extensions/Xfixes.h> /* PointerBarrier */
 
 /*******************************************************************
  *
@@ -168,6 +169,15 @@ typedef struct
     int                 modifiers;
     int                 status;
 } XIGrabModifiers;
+
+typedef unsigned int BarrierEventID;
+
+typedef struct
+{
+    int                 deviceid;
+    PointerBarrier      barrier;
+    BarrierEventID      eventid;
+} XIBarrierReleasePointerInfo;
 
 /**
  * Generic XI2 event. All XI2 events have the same header.
@@ -327,6 +337,28 @@ typedef struct {
     Window        child;
     int           flags;
 } XITouchOwnershipEvent;
+
+typedef struct {
+    int           type;         /* GenericEvent */
+    unsigned long serial;       /* # of last request processed by server */
+    Bool          send_event;   /* true if this came from a SendEvent request */
+    Display       *display;     /* Display the event was read from */
+    int           extension;    /* XI extension offset */
+    int           evtype;
+    Time          time;
+    int           deviceid;
+    int           sourceid;
+    Window        event;
+    Window        root;
+    double        root_x;
+    double        root_y;
+    double        dx;
+    double        dy;
+    int           dtime;
+    int           flags;
+    PointerBarrier barrier;
+    BarrierEventID eventid;
+} XIBarrierEvent;
 
 _XFUNCPROTOBEGIN
 
@@ -601,6 +633,21 @@ XIGetProperty(
     unsigned long       *num_items_return,
     unsigned long       *bytes_after_return,
     unsigned char       **data
+);
+
+extern void
+XIBarrierReleasePointers(
+    Display*                    display,
+    XIBarrierReleasePointerInfo *barriers,
+    int                         num_barriers
+);
+
+extern void
+XIBarrierReleasePointer(
+    Display*                    display,
+    int                         deviceid,
+    PointerBarrier              barrier,
+    BarrierEventID              eventid
 );
 
 extern void XIFreeDeviceInfo(XIDeviceInfo       *info);

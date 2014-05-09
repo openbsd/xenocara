@@ -30,6 +30,7 @@
 #include <X11/extensions/XI2proto.h>
 #include <X11/extensions/XInput2.h>
 #include <X11/extensions/extutil.h>
+#include <limits.h>
 #include "XIint.h"
 
 static int
@@ -51,6 +52,14 @@ _XIPassiveGrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
     if (_XiCheckExtInit(dpy, XInput_2_0, extinfo) == -1)
 	return -1;
 
+    if (mask->mask_len > INT_MAX - 3 ||
+        (mask->mask_len + 3)/4 >= 0xffff)
+        return -1;
+
+    buff = calloc(4, (mask->mask_len + 3)/4);
+    if (!buff)
+        return -1;
+
     GetReq(XIPassiveGrabDevice, req);
     req->reqType = extinfo->codes->major_opcode;
     req->ReqType = X_XIPassiveGrabDevice;
@@ -68,7 +77,6 @@ _XIPassiveGrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
     len = req->mask_len + num_modifiers;
     SetReqLen(req, len, len);
 
-    buff = calloc(4, req->mask_len);
     memcpy(buff, mask->mask, mask->mask_len);
     Data(dpy, buff, req->mask_len * 4);
     for (i = 0; i < num_modifiers; i++)

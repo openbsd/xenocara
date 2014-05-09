@@ -7,6 +7,6 @@ Name: Xi
 Description: X Input Extension Library
 Version: @VERSION@
 Requires: inputproto
-Requires.private: x11 xext
+Requires.private: x11 xext xfixes
 Cflags: -I${includedir}
 Libs: -L${libdir} -lXi

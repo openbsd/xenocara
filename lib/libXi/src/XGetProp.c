@@ -104,8 +104,10 @@ XGetDeviceDontPropagateList(
 		_XRead(dpy, (char *)(&ec), sizeof(CARD32));
 		list[i] = (XEventClass) ec;
 	    }
-	} else
+	} else {
+            *count = 0;
 	    _XEatDataWords(dpy, rep.length);
+        }
     }
 
     UnlockDisplay(dpy);

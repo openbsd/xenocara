@@ -1,3 +1,87 @@
+commit b6553cdb36c1bd7071d3bf0493216c5483325716
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 3 10:28:10 2013 +1000
+
+    libXi 1.7.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d804af99e2dfaf20b99822066a37d586f12c8a5f
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Thu Jun 27 17:16:38 2013 +0200
+
+    Remove check that can never be true.
+    
+    clang warns:
+    warning: comparison of constant 268435455 with expression of type
+    'CARD16' (aka 'unsigned short') is always false
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 957a9d64afd76f878ce6c5570f369e2a7fc1e772
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 27 08:47:16 2013 +1000
+
+    libXi 1.7.1.901
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 62033a9c83bcdc75b9f1452ce24729eefa8f4dc0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 27 06:25:02 2013 +1000
+
+    Include limits.h to prevent build error: missing INT_MAX
+    
+    Introduced in 4c8e9bcab459ea5f870d3e56eff15f931807f9b7.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0f3f5a36d5fc6dc53f69f48a0c83aef6a1fcf381
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 28 15:52:34 2013 +1000
+
+    If the XGetDeviceDontPropagateList reply has an invalid length, return 0
+    
+    If we skip over the reply data, return 0 as number of event classes.
+    
+    Follow-up to 6dd6dc51a2935c72774be81e5cc2ba2c30e9feff.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 35ae16dc2f16b24a22625b2d9f76a2128b673a6c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 28 15:52:33 2013 +1000
+
+    Change size += to size = in XGetDeviceControl
+    
+    size += blah is technically correct but it implies that we're looping or
+    otherwise incrementing the size. Which we don't, it's only ever set once.
+    
+    Change this to avoid reviewer confusion.
+    
+    Reported-by: Dave "color-me-confused" Airlie <airlied@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4c8e9bcab459ea5f870d3e56eff15f931807f9b7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 28 15:52:32 2013 +1000
+
+    Fix potential corruption in mask_len handling
+    
+    First: check for allocation failure on the mask.
+    XI2 requires that the mask is zeroed, so we can't just Data() the mask
+    provided by the client (it will pad) - we need a tmp buffer. Make sure that
+    doesn't fail.
+    
+    Second:
+    req->mask_len is a uint16_t, so check against malicious mask_lens that would
+    cause us to corrupt memory on copy, as the code always allocates
+    req->mask_len * 4, but copies mask->mask_len bytes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 661c45ca17c434dbd342a46fd3fb813852ae0ca9
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue May 21 12:23:05 2013 +1000

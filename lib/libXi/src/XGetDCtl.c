@@ -122,34 +122,34 @@ XGetDeviceControl(
 	    val_size = 3 * sizeof(int) * r->num_valuators;
 	    if ((sizeof(xDeviceResolutionState) + val_size) > nbytes)
 		goto out;
-	    size += sizeof(XDeviceResolutionState) + val_size;
+	    size = sizeof(XDeviceResolutionState) + val_size;
 	    break;
 	}
         case DEVICE_ABS_CALIB:
         {
             if (sizeof(xDeviceAbsCalibState) > nbytes)
                 goto out;
-            size += sizeof(XDeviceAbsCalibState);
+            size = sizeof(XDeviceAbsCalibState);
             break;
         }
         case DEVICE_ABS_AREA:
         {
             if (sizeof(xDeviceAbsAreaState) > nbytes)
                 goto out;
-            size += sizeof(XDeviceAbsAreaState);
+            size = sizeof(XDeviceAbsAreaState);
             break;
         }
         case DEVICE_CORE:
         {
             if (sizeof(xDeviceCoreState) > nbytes)
                 goto out;
-            size += sizeof(XDeviceCoreState);
+            size = sizeof(XDeviceCoreState);
             break;
         }
 	default:
 	    if (d->length > nbytes)
 		goto out;
-	    size += d->length;
+	    size = d->length;
 	    break;
 	}
 

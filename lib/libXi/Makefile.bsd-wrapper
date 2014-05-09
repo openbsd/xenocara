@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.8 2013/08/13 07:07:16 guenther Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.9 2014/05/09 19:55:33 matthieu Exp $
 
-SHARED_LIBS=	Xi 12.0
+SHARED_LIBS=	Xi 12.1
 
 CONFIGURE_ARGS+=	--without-xmlto --without-asciidoc --without-fop \
 			--disable-specs

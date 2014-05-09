@@ -25,6 +25,7 @@ libmandir = $(LIB_MAN_DIR)
 
 # Source files for X Input v2 man pages
 XI2_txt = 					\
+	XIBarrierReleasePointer.txt 		\
 	XIChangeHierarchy.txt			\
 	XIDefineCursor.txt			\
 	XIGrabButton.txt			\
@@ -76,6 +77,7 @@ libman_xml = $(libman_txt:.txt=.xml)
 # They are created by the xmlto command when generating man pages from DocBook
 # The shadow man page contains a gtroff .so request to include the main man page
 XI2_shadows = 					\
+	XIBarrierReleasePointers.man 		\
 	XIUndefineCursor.man			\
 	XIUngrabButton.man			\
 	XIGrabKeycode.man			\
@@ -153,6 +155,7 @@ XIDeleteProperty.man: XIChangeProperty.man
 XIUngrabEnter.man XIGrabFocusIn.man XIUngrabFocusIn.man: XIGrabEnter.man
 XIGetSelectedEvents.man: XISelectEvents.man
 XIFreeDeviceInfo.man: XIQueryDevice.man
+XIBarrierReleasePointers.man: XIBarrierReleasePointer.man
 endif
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
