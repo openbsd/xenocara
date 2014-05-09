@@ -198,6 +198,41 @@ Default: 0.5 percent of the diagonal or (in case of evdev) the appropriate
 The minimum vertical HW distance required to generate motion events. See
 \fBHorizHysteresis\fR.
 .TP
+.BI "Option \*qUpDownScrolling\*q \*q" boolean \*q
+If on, the up/down buttons generate button 4/5 events.
+.
+If off, the up button generates a double click and the down button
+generates a button 2 event. This option is only available for touchpads with
+physical scroll buttons.
+Property: "Synaptics Button Scrolling"
+.TP
+.BI "Option \*qLeftRightScrolling\*q \*q" boolean \*q
+If on, the left/right buttons generate button 6/7 events.
+.
+If off, the left/right buttons both generate button 2 events.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling"
+.TP
+.BI "Option \*qUpDownScrollRepeat\*q \*q" boolean \*q
+If on, and the up/down buttons are used for scrolling
+(\fBUpDownScrolling\fR), these buttons will send auto-repeating 4/5 events,
+with the delay between repeats determined by \fBScrollButtonRepeat\fR.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling Repeat"
+.TP
+.BI "Option \*qLeftRightScrollRepeat\*q \*q" boolean \*q
+If on, and the left/right buttons are used for scrolling
+(\fBLeftRightScrolling\fR), these buttons will send auto-repeating 6/7 events,
+with the delay between repeats determined by \fBScrollButtonRepeat\fR.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling Repeat"
+.TP
+.BI "Option \*qScrollButtonRepeat\*q \*q" integer \*q
+The number of milliseconds between repeats of button events 4-7 from the
+up/down/left/right scroll buttons.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling Time"
+.TP
 .BI "Option \*qEmulateMidButtonTime\*q \*q" integer \*q
 Maximum time (in milliseconds) for middle button emulation. Property:
 "Synaptics Middle Button Timeout"
@@ -315,6 +350,13 @@ l l.
 8	Top Left Corner
 .TE
 Property: "Synaptics Circular Scrolling Trigger"
+.TP
+.BI "Option \*qCircularPad\*q \*q" boolean \*q
+.
+Instead of being a rectangle, the edge is the ellipse enclosed by the
+Left/Right/Top/BottomEdge parameters.
+.
+For circular touchpads. Property: "Synaptics Circular Pad"
 .TP
 .BI "Option \*qPalmDetect\*q \*q" boolean \*q
 If palm detection should be enabled.
@@ -543,9 +585,6 @@ effect on scrolling speed.
 Scrolling speed is determined solely from the VertScrollDelta and
 HorizScrollDelta parameters.
 .
-To disable vertical or horizontal scrolling, set VertScrollDelta or
-HorizScrollDelta to zero.
-.
 To invert the direction of vertical or horizontal scrolling, set
 VertScrollDelta or HorizScrollDelta to a negative value.
 .
@@ -733,6 +772,10 @@ FLOAT, 4 values, min, max, accel, <deprecated>
 8 bit (BOOL), 2 values, updown, leftright.
 
 .TP 7
+.BI "Synaptics Button Scrolling Repeat"
+8 bit (BOOL), 2 values, updown, leftright.
+
+.TP 7
 .BI "Synaptics Button Scrolling Time"
 32 bit.
 
@@ -894,17 +937,6 @@ The following options are no longer part of the driver configuration:
 .TP
 .BI "Option \*qEdgeMotionUseAlways\*q \*q" boolean \*q
 .TP
-.BI "Option \*qUpDownScrolling\*q \*q" boolean \*q
-.TP
-.BI "Option \*qLeftRightScrolling\*q \*q" boolean \*q
-.TP
-.BI "Option \*qUpDownScrollRepeat\*q \*q" boolean \*q
-.TP
-.BI "Option \*qLeftRightScrollRepeat\*q \*q" boolean \*q
-.TP
-.BI "Option \*qScrollButtonRepeat\*q \*q" integer \*q
-.TP
-.BI "Option \*qCircularPad\*q \*q" boolean \*q
 
 .SH "AUTHORS"
 .LP

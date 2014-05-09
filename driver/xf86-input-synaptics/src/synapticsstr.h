@@ -28,6 +28,14 @@
 #define LogMessageVerbSigSafe xf86MsgVerb
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 19
+#define NO_DRIVER_SCALING 1
+#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 19 && GET_ABI_MINOR(ABI_XINPUT_VERSION) >= 2
+/* as of 19.2, the server takes device resolution into account when scaling
+   relative events from abs device, so we must not scale in synaptics. */
+#define NO_DRIVER_SCALING 1
+#endif
+
 #ifdef DBG
 #undef DBG
 #endif
@@ -46,6 +54,10 @@
 #define SYNAPTICS_MOVE_HISTORY	5
 #define SYNAPTICS_MAX_TOUCHES	10
 #define SYN_MAX_BUTTONS 12      /* Max number of mouse buttons */
+
+/* Minimum and maximum values for scroll_button_repeat */
+#define SBR_MIN 10
+#define SBR_MAX 1000
 
 enum OffState {
     TOUCHPAD_ON = 0,
@@ -160,6 +172,12 @@ typedef struct _SynapticsParameters {
     Bool scroll_twofinger_horiz;        /* Enable/disable horizontal two-finger scrolling */
     double min_speed, max_speed, accl;  /* movement parameters */
 
+    Bool updown_button_scrolling;       /* Up/Down-Button scrolling or middle/double-click */
+    Bool leftright_button_scrolling;    /* Left/right-button scrolling, or two lots of middle button */
+    Bool updown_button_repeat;  /* If up/down button being used to scroll, auto-repeat? */
+    Bool leftright_button_repeat;       /* If left/right button being used to scroll, auto-repeat? */
+    int scroll_button_repeat;   /* time, in milliseconds, between scroll events being
+                                 * sent when holding down scroll buttons */
     int touchpad_off;           /* Switches the touchpad off
                                  * 0 : Not off
                                  * 1 : Off
@@ -172,6 +190,7 @@ typedef struct _SynapticsParameters {
     Bool circular_scrolling;    /* Enable circular scrolling */
     double scroll_dist_circ;    /* Scrolling angle radians */
     int circular_trigger;       /* Trigger area for circular scrolling */
+    Bool circular_pad;          /* Edge has an oval or circular shape */
     Bool palm_detect;           /* Enable Palm Detection */
     int palm_min_width;         /* Palm detection width */
     int palm_min_z;             /* Palm detection depth */
@@ -201,7 +220,7 @@ struct _SynapticsPrivateRec {
 
     const char *device;         /* device node */
     CARD32 timer_time;          /* when timer last fired */
-    OsTimerPtr timer;           /* for tap processing, etc */
+    OsTimerPtr timer;           /* for up/down-button repeat, tap processing, etc */
 
     struct CommData comm;
 
@@ -246,12 +265,16 @@ struct _SynapticsPrivateRec {
                                    False: Generate horizontal events */
     double frac_x, frac_y;      /* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
+    int repeatButtons;          /* buttons for repeat */
+    int nextRepeat;             /* Time when to trigger next auto repeat event */
     int lastButtons;            /* last state of the buttons */
     int prev_z;                 /* previous z value, for palm detection */
     int prevFingers;            /* previous numFingers, for transition detection */
     int avg_width;              /* weighted average of previous fingerWidth values */
+#ifndef NO_DRIVER_SCALING
     double horiz_coeff;         /* normalization factor for x coordintes */
     double vert_coeff;          /* normalization factor for y coordintes */
+#endif
 
     int minx, maxx, miny, maxy; /* min/max dimensions as detected */
     int minp, maxp, minw, maxw; /* min/max pressure and finger width as detected */

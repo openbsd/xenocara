@@ -76,6 +76,7 @@ struct eventcomm_proto_data {
     int cur_slot;
     ValuatorMask **last_mt_vals;
     int num_touches;
+    int *tracking_ids;
 };
 
 struct eventcomm_proto_data *
@@ -98,7 +99,7 @@ last_mt_vals_slot(const SynapticsPrivate * priv)
 {
     struct eventcomm_proto_data *proto_data =
         (struct eventcomm_proto_data *) priv->proto_data;
-    int value = proto_data->cur_slot - proto_data->mtdev->caps.slot.minimum;
+    int value = proto_data->cur_slot;
 
     return value < priv->num_slots ? value : -1;
 }
@@ -125,6 +126,9 @@ UninitializeTouch(InputInfoPtr pInfo)
     mtdev_close_delete(proto_data->mtdev);
     proto_data->mtdev = NULL;
     proto_data->num_touches = 0;
+
+    free(proto_data->tracking_ids);
+    proto_data->tracking_ids = NULL;
 }
 
 static void
@@ -156,8 +160,17 @@ InitializeTouch(InputInfoPtr pInfo)
         return;
     }
 
+    proto_data->tracking_ids = calloc(priv->num_slots, sizeof(int));
+    if (!proto_data->tracking_ids) {
+        xf86IDrvMsg(pInfo, X_WARNING, "failed to allocate tracking ID array\n");
+        UninitializeTouch(pInfo);
+        return;
+    }
+
     for (i = 0; i < priv->num_slots; i++) {
         int j;
+
+        proto_data->tracking_ids[i] = -1;
 
         proto_data->last_mt_vals[i] = valuator_mask_new(4 + priv->num_mt_axes);
         if (!proto_data->last_mt_vals[i]) {
@@ -206,6 +219,7 @@ static Bool
 EventDeviceOffHook(InputInfoPtr pInfo)
 {
     UninitializeTouch(pInfo);
+    SYSCALL(ioctl(pInfo->fd, EVIOCGRAB, (pointer) 0));
 
     return Success;
 }
@@ -554,7 +568,24 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
         if (hw->slot_state[slot_index] == SLOTSTATE_OPEN_EMPTY)
             hw->slot_state[slot_index] = SLOTSTATE_UPDATE;
         if (ev->code == ABS_MT_TRACKING_ID) {
-            if (ev->value >= 0) {
+            int old_tracking_id = proto_data->tracking_ids[slot_index];
+
+            /* We don't have proper SYN_DROPPED handling in
+               synaptics < 1.8. This is a poor man's version that covers the
+               worst bug we're seeing: touch points starting/stopping during
+               SYN_DROPPED. There can only be one touchpoint per slot,
+               identified by the tracking ID. Make sure that we only ever
+               have a single touch point open per slot.
+             */
+            if (ev->value != -1 && old_tracking_id != -1) {
+                /* Our touch terminated during SYN_DROPPED, now we have a
+                   new touch starting in the same slot but ours is still
+                   open. Do nothing, just continue with the old touch */
+            } else if (ev->value == -1 && old_tracking_id == -1) {
+                /* A new touch started during SYN_DROPPED, now we have that
+                   touch terminating. Do nothing, we don't have that touch
+                   open */
+            } else if (ev->value >= 0) {
                 hw->slot_state[slot_index] = SLOTSTATE_OPEN;
                 proto_data->num_touches++;
                 valuator_mask_copy(hw->mt_mask[slot_index],
@@ -564,6 +595,8 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                 hw->slot_state[slot_index] = SLOTSTATE_CLOSE;
                 proto_data->num_touches--;
             }
+
+            proto_data->tracking_ids[slot_index] = ev->value;
         }
         else {
             ValuatorMask *mask = proto_data->last_mt_vals[slot_index];
@@ -807,8 +840,7 @@ event_query_touch(InputInfoPtr pInfo)
         };
 
         if (mtdev->caps.slot.maximum > 0)
-            priv->max_touches = mtdev->caps.slot.maximum -
-                mtdev->caps.slot.minimum + 1;
+            priv->max_touches = mtdev->caps.slot.maximum + 1;
 
         priv->touch_axes = malloc(priv->num_mt_axes *
                                   sizeof(SynapticsTouchAxisRec));

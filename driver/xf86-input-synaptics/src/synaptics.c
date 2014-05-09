@@ -133,9 +133,11 @@ static int DeviceOff(DeviceIntPtr);
 static int DeviceClose(DeviceIntPtr);
 static Bool QueryHardware(InputInfoPtr);
 static void ReadDevDimensions(InputInfoPtr);
+#ifndef NO_DRIVER_SCALING
 static void ScaleCoordinates(SynapticsPrivate * priv,
                              struct SynapticsHwState *hw);
 static void CalculateScalingCoeffs(SynapticsPrivate * priv);
+#endif
 static void SanitizeDimensions(InputInfoPtr pInfo);
 
 void InitDeviceProperties(InputInfoPtr pInfo);
@@ -670,6 +672,20 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->scroll_twofinger_horiz =
         xf86SetBoolOption(opts, "HorizTwoFingerScroll", horizTwoFingerScroll);
     pars->touchpad_off = xf86SetIntOption(opts, "TouchpadOff", TOUCHPAD_ON);
+
+    if (priv->has_scrollbuttons) {
+        pars->updown_button_scrolling =
+            xf86SetBoolOption(opts, "UpDownScrolling", TRUE);
+        pars->leftright_button_scrolling =
+            xf86SetBoolOption(opts, "LeftRightScrolling", TRUE);
+        pars->updown_button_repeat =
+            xf86SetBoolOption(opts, "UpDownScrollRepeat", TRUE);
+        pars->leftright_button_repeat =
+            xf86SetBoolOption(opts, "LeftRightScrollRepeat", TRUE);
+    }
+    pars->scroll_button_repeat =
+        xf86SetIntOption(opts, "ScrollButtonRepeat", 100);
+
     pars->locked_drags = xf86SetBoolOption(opts, "LockedDrags", FALSE);
     pars->locked_drag_time = xf86SetIntOption(opts, "LockedDragTimeout", 5000);
     pars->tap_action[RT_TAP] = xf86SetIntOption(opts, "RTCornerButton", 0);
@@ -688,6 +704,7 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->circular_scrolling =
         xf86SetBoolOption(opts, "CircularScrolling", FALSE);
     pars->circular_trigger = xf86SetIntOption(opts, "CircScrollTrigger", 0);
+    pars->circular_pad = xf86SetBoolOption(opts, "CircularPad", FALSE);
     pars->palm_detect = xf86SetBoolOption(opts, "PalmDetect", FALSE);
     pars->palm_min_width = xf86SetIntOption(opts, "PalmMinWidth", palmMinWidth);
     pars->palm_min_z = xf86SetIntOption(opts, "PalmMinZ", palmMinZ);
@@ -819,6 +836,8 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     xf86ErrorFVerb(6, "port opened successfully\n");
 
     /* initialize variables */
+    priv->repeatButtons = 0;
+    priv->nextRepeat = 0;
     priv->count_packet_finger = 0;
     priv->tap_state = TS_START;
     priv->tap_button = 0;
@@ -832,7 +851,10 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     set_default_parameters(pInfo);
 
+#ifndef NO_DRIVER_SCALING
     CalculateScalingCoeffs(priv);
+#endif
+
 
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
 
@@ -940,8 +962,10 @@ DeviceOn(DeviceIntPtr dev)
     }
 
     if (priv->proto_ops->DeviceOnHook &&
-        !priv->proto_ops->DeviceOnHook(pInfo, &priv->synpara))
+        !priv->proto_ops->DeviceOnHook(pInfo, &priv->synpara)) {
+        xf86CloseSerial(pInfo->fd);
         return !Success;
+    }
 
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
     if (!priv->comm.buffer) {
@@ -993,6 +1017,7 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->circ_scroll_on = FALSE;
     priv->circ_scroll_vert = FALSE;
     priv->mid_emu_state = MBE_OFF;
+    priv->nextRepeat = 0;
     priv->lastButtons = 0;
     priv->prev_z = 0;
     priv->prevFingers = 0;
@@ -1309,6 +1334,32 @@ DeviceInit(DeviceIntPtr dev)
     return !Success;
 }
 
+/*
+ * Convert from absolute X/Y coordinates to a coordinate system where
+ * -1 corresponds to the left/upper edge and +1 corresponds to the
+ * right/lower edge.
+ */
+static void
+relative_coords(SynapticsPrivate * priv, int x, int y,
+                double *relX, double *relY)
+{
+    int minX = priv->synpara.left_edge;
+    int maxX = priv->synpara.right_edge;
+    int minY = priv->synpara.top_edge;
+    int maxY = priv->synpara.bottom_edge;
+    double xCenter = (minX + maxX) / 2.0;
+    double yCenter = (minY + maxY) / 2.0;
+
+    if ((maxX - xCenter > 0) && (maxY - yCenter > 0)) {
+        *relX = (x - xCenter) / (maxX - xCenter);
+        *relY = (y - yCenter) / (maxY - yCenter);
+    }
+    else {
+        *relX = 0;
+        *relY = 0;
+    }
+}
+
 /* return angle of point relative to center */
 static double
 angle(SynapticsPrivate * priv, int x, int y)
@@ -1333,9 +1384,37 @@ diffa(double a1, double a2)
 }
 
 static enum EdgeType
+circular_edge_detection(SynapticsPrivate * priv, int x, int y)
+{
+    enum EdgeType edge = 0;
+    double relX, relY, relR;
+
+    relative_coords(priv, x, y, &relX, &relY);
+    relR = SQR(relX) + SQR(relY);
+
+    if (relR > 1) {
+        /* we are outside the ellipse enclosed by the edge parameters */
+        if (relX > M_SQRT1_2)
+            edge |= RIGHT_EDGE;
+        else if (relX < -M_SQRT1_2)
+            edge |= LEFT_EDGE;
+
+        if (relY < -M_SQRT1_2)
+            edge |= TOP_EDGE;
+        else if (relY > M_SQRT1_2)
+            edge |= BOTTOM_EDGE;
+    }
+
+    return edge;
+}
+
+static enum EdgeType
 edge_detection(SynapticsPrivate * priv, int x, int y)
 {
     enum EdgeType edge = NO_EDGE;
+
+    if (priv->synpara.circular_pad)
+        return circular_edge_detection(priv, x, y);
 
     if (x > priv->synpara.right_edge)
         edge |= RIGHT_EDGE;
@@ -2553,6 +2632,46 @@ handle_clickfinger(SynapticsPrivate * priv, struct SynapticsHwState *hw)
     }
 }
 
+/* Adjust the hardware state according to the extra buttons (if the touchpad
+ * has any and not many touchpads do these days). These buttons are up/down
+ * tilt buttons and/or left/right buttons that then map into a specific
+ * function (or scrolling into).
+ */
+static Bool
+adjust_state_from_scrollbuttons(const InputInfoPtr pInfo,
+                                struct SynapticsHwState *hw)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
+    SynapticsParameters *para = &priv->synpara;
+    Bool double_click = FALSE;
+
+    if (!para->updown_button_scrolling) {
+        if (hw->down) {         /* map down button to middle button */
+            hw->middle = TRUE;
+        }
+
+        if (hw->up) {           /* up button generates double click */
+            if (!priv->prev_up)
+                double_click = TRUE;
+        }
+        priv->prev_up = hw->up;
+
+        /* reset up/down button events */
+        hw->up = hw->down = FALSE;
+    }
+
+    /* Left/right button scrolling, or middle clicks */
+    if (!para->leftright_button_scrolling) {
+        if (hw->multi[2] || hw->multi[3])
+            hw->middle = TRUE;
+
+        /* reset left/right button events */
+        hw->multi[2] = hw->multi[3] = FALSE;
+    }
+
+    return double_click;
+}
+
 static void
 update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
                        struct SynapticsHwState *old, CARD32 now, int *delay)
@@ -2630,6 +2749,66 @@ post_scroll_events(const InputInfoPtr pInfo)
     }
     if (valuator_mask_num_valuators(priv->scroll_events_mask))
         xf86PostMotionEventM(pInfo->dev, FALSE, priv->scroll_events_mask);
+}
+
+static inline int
+repeat_scrollbuttons(const InputInfoPtr pInfo,
+                     const struct SynapticsHwState *hw,
+                     int buttons, CARD32 now, int delay)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
+    SynapticsParameters *para = &priv->synpara;
+    int repeat_delay, timeleft;
+    int rep_buttons = 0;
+
+    if (para->updown_button_repeat)
+        rep_buttons |= (1 << (4 - 1)) | (1 << (5 - 1));
+    if (para->leftright_button_repeat)
+        rep_buttons |= (1 << (6 - 1)) | (1 << (7 - 1));
+
+    /* Handle auto repeat buttons */
+    repeat_delay = clamp(para->scroll_button_repeat, SBR_MIN, SBR_MAX);
+    if (((hw->up || hw->down) && para->updown_button_repeat &&
+         para->updown_button_scrolling) ||
+        ((hw->multi[2] || hw->multi[3]) && para->leftright_button_repeat &&
+         para->leftright_button_scrolling)) {
+        priv->repeatButtons = buttons & rep_buttons;
+        if (!priv->nextRepeat) {
+            priv->nextRepeat = now + repeat_delay * 2;
+        }
+    }
+    else {
+        priv->repeatButtons = 0;
+        priv->nextRepeat = 0;
+    }
+
+    if (priv->repeatButtons) {
+        timeleft = TIME_DIFF(priv->nextRepeat, now);
+        if (timeleft > 0)
+            delay = MIN(delay, timeleft);
+        if (timeleft <= 0) {
+            int change, id;
+
+            change = priv->repeatButtons;
+            while (change) {
+                id = ffs(change);
+                change &= ~(1 << (id - 1));
+                if (id == 4)
+                    priv->scroll.delta_y -= para->scroll_dist_vert;
+                else if (id == 5)
+                    priv->scroll.delta_y += para->scroll_dist_vert;
+                else if (id == 6)
+                    priv->scroll.delta_x -= para->scroll_dist_horiz;
+                else if (id == 7)
+                    priv->scroll.delta_x += para->scroll_dist_horiz;
+            }
+
+            priv->nextRepeat = now + repeat_delay;
+            delay = MIN(delay, repeat_delay);
+        }
+    }
+
+    return delay;
 }
 
 /* Update the open slots and number of active touches */
@@ -2828,6 +3007,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 
     /* these two just update hw->left, right, etc. */
     update_hw_button_state(pInfo, hw, priv->old_hw_state, now, &delay);
+    if (priv->has_scrollbuttons)
+        double_click = adjust_state_from_scrollbuttons(pInfo, hw);
 
     /* now we know that these _coordinates_ aren't in the area.
        invalid are: x, y, z, numFingers, fingerWidth
@@ -2866,7 +3047,9 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
          * calculations that require unadjusted coordinates, for example edge
          * detection.
          */
+#ifndef NO_DRIVER_SCALING
         ScaleCoordinates(priv, hw);
+#endif
     }
 
     dx = dy = 0;
@@ -2916,6 +3099,9 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
         xf86PostButtonEvent(pInfo->dev, FALSE, id, (buttons & (1 << (id - 1))),
                             0, 0);
     }
+
+    if (priv->has_scrollbuttons)
+        delay = repeat_scrollbuttons(pInfo, hw, buttons, now, delay);
 
     /* Process scroll events only if coordinates are
      * in the Synaptics Area
@@ -2990,6 +3176,7 @@ QueryHardware(InputInfoPtr pInfo)
     return TRUE;
 }
 
+#ifndef NO_DRIVER_SCALING
 static void
 ScaleCoordinates(SynapticsPrivate * priv, struct SynapticsHwState *hw)
 {
@@ -3019,3 +3206,4 @@ CalculateScalingCoeffs(SynapticsPrivate * priv)
         priv->vert_coeff = 1;
     }
 }
+#endif

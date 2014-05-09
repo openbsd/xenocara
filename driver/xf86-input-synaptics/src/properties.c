@@ -68,6 +68,9 @@ Atom prop_speed = 0;
 Atom prop_edgemotion_pressure = 0;
 Atom prop_edgemotion_speed = 0;
 Atom prop_edgemotion_always = 0;
+Atom prop_buttonscroll = 0;
+Atom prop_buttonscroll_repeat = 0;
+Atom prop_buttonscroll_time = 0;
 Atom prop_off = 0;
 Atom prop_lockdrags = 0;
 Atom prop_lockdrags_time = 0;
@@ -247,6 +250,22 @@ InitDeviceProperties(InputInfoPtr pInfo)
     fvalues[3] = 0;
     prop_speed = InitFloatAtom(pInfo->dev, SYNAPTICS_PROP_SPEED, 4, fvalues);
 
+    if (priv->has_scrollbuttons) {
+        values[0] = para->updown_button_scrolling;
+        values[1] = para->leftright_button_scrolling;
+        prop_buttonscroll =
+            InitAtom(pInfo->dev, SYNAPTICS_PROP_BUTTONSCROLLING, 8, 2, values);
+
+        values[0] = para->updown_button_repeat;
+        values[1] = para->leftright_button_repeat;
+        prop_buttonscroll_repeat =
+            InitAtom(pInfo->dev, SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT, 8, 2,
+                     values);
+        prop_buttonscroll_time =
+            InitAtom(pInfo->dev, SYNAPTICS_PROP_BUTTONSCROLLING_TIME, 32, 1,
+                     &para->scroll_button_repeat);
+    }
+
     prop_off =
         InitAtom(pInfo->dev, SYNAPTICS_PROP_OFF, 8, 1, &para->touchpad_off);
     prop_lockdrags =
@@ -276,6 +295,9 @@ InitDeviceProperties(InputInfoPtr pInfo)
     prop_circscroll_trigger =
         InitAtom(pInfo->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER, 8, 1,
                  &para->circular_trigger);
+    prop_circpad =
+        InitAtom(pInfo->dev, SYNAPTICS_PROP_CIRCULAR_PAD, 8, 1,
+                 &para->circular_pad);
     prop_palm =
         InitAtom(pInfo->dev, SYNAPTICS_PROP_PALM_DETECT, 8, 1,
                  &para->palm_detect);
@@ -518,6 +540,43 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->max_speed = speed[1];
         para->accl = speed[2];
     }
+    else if (property == prop_buttonscroll) {
+        BOOL *scroll;
+
+        if (!priv->has_scrollbuttons)
+            return BadMatch;
+
+        if (prop->size != 2 || prop->format != 8 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        scroll = (BOOL *) prop->data;
+        para->updown_button_scrolling = scroll[0];
+        para->leftright_button_scrolling = scroll[1];
+
+    }
+    else if (property == prop_buttonscroll_repeat) {
+        BOOL *repeat;
+
+        if (!priv->has_scrollbuttons)
+            return BadMatch;
+
+        if (prop->size != 2 || prop->format != 8 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        repeat = (BOOL *) prop->data;
+        para->updown_button_repeat = repeat[0];
+        para->leftright_button_repeat = repeat[1];
+    }
+    else if (property == prop_buttonscroll_time) {
+        if (!priv->has_scrollbuttons)
+            return BadMatch;
+
+        if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        para->scroll_button_repeat = *(INT32 *) prop->data;
+
+    }
     else if (property == prop_off) {
         CARD8 off;
 
@@ -610,6 +669,12 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->circular_trigger = trigger;
 
     }
+    else if (property == prop_circpad) {
+        if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        para->circular_pad = *(BOOL *) prop->data;
+    }
     else if (property == prop_palm) {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
             return BadMatch;
@@ -649,6 +714,19 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
         para->press_motion_min_z = press[0];
         para->press_motion_max_z = press[1];
+    }
+    else if (property == prop_pressuremotion_factor) {
+        float *press;
+
+        if (prop->size != 2 || prop->format != 32 || prop->type != float_type)
+            return BadMatch;
+
+        press = (float *) prop->data;
+        if (press[0] > press[1])
+            return BadValue;
+
+        para->press_motion_min_factor = press[0];
+        para->press_motion_max_factor = press[1];
     }
     else if (property == prop_grab) {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)

@@ -1,3 +1,194 @@
+commit baca0fde5958d9dc17a9b13372cc8819170e2f74
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 29 14:27:30 2014 +1000
+
+    synaptics 1.7.5
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bbaf4d646ebf4393a1ee0eb9bcc569054ed878f9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 20 11:51:17 2014 +1000
+
+    Avoid erroneously handling two touchpoints in the same slot
+    
+    If a slot's ABS_MT_TRACKING_ID event was received during SYN_DROPPED, the
+    driver isn't aware that a touchpoint has started or ended in that slot. When
+    the next ABS_MT_TRACKING_ID event arrives, the driver would unconditionally
+    close or open a new touchpoint. This could lead to two or more touchpoints
+    being opened in the same slot, the first of which is never terminated.
+    Or it could lead to a touchpoint being terminated that was never opened.
+    
+    The event sequences that trigger this are:
+        ABS_MT_TRACKING_ID 83
+        ABS_MT_TRACKING_ID -1
+        SYN_DROPPED             // new touchpoint started here
+        ABS_MT_TRACKING_ID -1
+    
+    and
+    
+        ABS_MT_TRACKING_ID 83
+        SYN_DROPPED             // touchpoint ended here
+        ABS_MT_TRACKING_ID 84
+        ABS_MT_TRACKING_ID -1
+    
+    We don't properly handle SYN_DROPPED, but we can avoid this by only starting a
+    new touchpoint when we transition between -1 and a valid tracking ID.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a21b3bd602b31ee995b391a7b917282e7b0a1c33
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 20 10:58:53 2014 +1000
+
+    eventcomm: drop assumption of non-zero slot offset
+    
+    The kernel guarantees this is always 0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 91cc1e82143b939bfb4fce97429b07105333e146
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 10 16:42:34 2014 +1000
+
+    eventcomm: drop calculation of slot offset
+    
+    The kernel guarantees slots start at 0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+    (cherry picked from commit 5b7e1726369d4973859996f225bec743c2e21288)
+
+commit 8a5533aaa7e6e57bca7674de4cd25b3a18217d44
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 12 09:42:38 2014 +1000
+
+    synaptics 1.7.4
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c189854a688465c820d5ef5767e00b69394a1601
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Feb 22 01:44:37 2014 -0800
+
+    Close device if DeviceOnHook fails
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 22fe8bdc6668e78853768c62f4d1331114c7eca0)
+
+commit 503082bf17dfc4cb3d4b794ea514ac6f413c07f2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 18 10:14:37 2014 +1000
+
+    man: setting scroll deltas to 0 doesn't work (#75074)
+    
+    6d47d33 disallows a zero value for horizontal/vertical scroll deltas but the
+    man page wasn't updated. We've added separate toggles to enable/disable
+    scrolling a few years ago, setting the distance to 0 is not recommended.
+    
+    X.Org Bug 75074 <http://bugs.freedesktop.org/show_bug.cgi?id=75074>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 2ea76fad6545a712713de1a09965158805e83c55)
+
+commit 0b70c76eab57822526585bbd11a1408bd115f26b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Feb 13 14:55:12 2014 +1000
+
+    Revert "Drop circular pad support"
+    
+    This reverts commit 3b02e7fd81da4b100fb9ac32378f6d50f54cf0e2.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    
+    Conflicts:
+    	man/synaptics.man
+    	src/synaptics.c
+    
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit 4f543ce1d6ae9ca11086a3009d149505590584a8)
+
+commit 1bd4ca3b5af6e5ee98c7d7f153fd4ee643c29e1a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jan 17 08:24:35 2014 +1000
+
+    Revert "Purge scrollbuttons (repeat)"
+    
+    This reverts commit 0903d99ada1755f11a2a5cbf89a345de896e18ec.
+    
+    Scroll buttons are still present in some modern devices, e.g. the Fujitsu
+    Lifebook E782 and others in the series.
+    
+    Conflicts:
+    	include/synaptics.h
+    	man/synaptics.man
+    	src/synaptics.c
+    
+    (cherry picked from commit e0069c154440305ece6def92a9813a9f8004b2fb)
+
+commit 90d93891be0dcc55d87c349ab438144ead818402
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 13 15:14:06 2014 +1000
+
+    synaptics 1.7.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b227ca373de79fe6852ac09e71465c048790cd5b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jan 3 11:23:22 2014 +1000
+
+    Fix ABI detection for in-driver scaling
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 49fe70e99d1b0932ab915824c78f952a0fdb3ee7)
+
+commit 88d926d12a1f5c06ee2825de5bc4b2222ec29c78
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 9 11:28:23 2013 +1000
+
+    synaptics 1.7.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 61243ada3e1e10f6d32a899a6cc595efa244eb25
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 4 07:58:26 2013 +1000
+
+    eventcomm: ungrab the device on DeviceOff
+    
+    For symmetry, the kernel should ungrab when we close the fd.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    
+    [modified for the 1.7 branch which isn't using libevdev yet]
+    
+    (cherry picked from commit 5d391e352f4e502ada6444a7ce860683e3480fbf)
+
+commit 09ac39309fbee01aa047dab1b0f577dc2571cdd1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 5 09:31:11 2013 +1000
+
+    Add missing property handler for the pressure motion factor
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 29318c1d94510cfb6d5d712e912af111f99edb42)
+
+commit f4ddbde165843924195b08551d7d6d6200c44b23
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 19 11:08:43 2013 +1000
+
+    Disable driver scaling for input ABI 19.2
+    
+    For absolute devices in relative mode, i.e. touchpads, the server now takes
+    device resolution into account. Doing so means that the driver mustn't
+    scale, so we deactivate those bits in the driver.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 0fb59b3487d57523a03f078a2061e2ea0cacbc7c)
+
 commit 96cf04dce19e7c90bc05b8b3b192b5bfb97381d2
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon May 13 10:03:48 2013 +1000
