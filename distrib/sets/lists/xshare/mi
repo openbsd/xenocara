@@ -1457,6 +1457,8 @@
 ./usr/X11R6/man/man3/XGraphicsExposeEvent.3
 ./usr/X11R6/man/man3/XGravityEvent.3
 ./usr/X11R6/man/man3/XHostAddress.3
+./usr/X11R6/man/man3/XIBarrierReleasePointer.3
+./usr/X11R6/man/man3/XIBarrierReleasePointers.3
 ./usr/X11R6/man/man3/XIChangeHierarchy.3
 ./usr/X11R6/man/man3/XIChangeProperty.3
 ./usr/X11R6/man/man3/XIDefineCursor.3
