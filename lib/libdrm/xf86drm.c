@@ -100,12 +100,16 @@ void drmSetServerInfo(drmServerInfoPtr info)
  * This function is a wrapper around vfprintf().
  */
 
-static int drmDebugPrint(const char *format, va_list ap)
+static int DRM_PRINTFLIKE(1, 0)
+drmDebugPrint(const char *format, va_list ap)
 {
     return vfprintf(stderr, format, ap);
 }
 
-static int (*drm_debug_print)(const char *format, va_list ap) = drmDebugPrint;
+typedef int DRM_PRINTFLIKE(1, 0) (*debug_msg_func_t)(const char *format,
+						     va_list ap);
+
+static debug_msg_func_t drm_debug_print = drmDebugPrint;
 
 void
 drmMsg(const char *format, ...)
@@ -125,7 +129,7 @@ drmMsg(const char *format, ...)
 }
 
 void
-drmSetDebugMsgFunction(int (*debug_msg_ptr)(const char *format, va_list ap))
+drmSetDebugMsgFunction(debug_msg_func_t debug_msg_ptr)
 {
     drm_debug_print = debug_msg_ptr;
 }
@@ -506,7 +510,7 @@ static int drmOpenByBusid(const char *busid)
 		sv.drm_di_minor = 1;
 		sv.drm_dd_major = -1;       /* Don't care */
 		sv.drm_dd_minor = -1;       /* Don't care */
-		drmMsg("drmOpenByBusid: Interface 1.4 failed, trying 1.1\n",fd);
+		drmMsg("drmOpenByBusid: Interface 1.4 failed, trying 1.1\n");
 		drmSetInterfaceVersion(fd, &sv);
 	    }
 	    buf = drmGetBusid(fd);
