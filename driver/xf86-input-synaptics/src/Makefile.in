@@ -77,10 +77,11 @@ host_triplet = @host@
 @BUILD_EVENTCOMM_TRUE@am__append_2 = \
 @BUILD_EVENTCOMM_TRUE@	eventcomm.c eventcomm.h
 
-@BUILD_PSMCOMM_TRUE@am__append_3 = \
+@BUILD_EVENTCOMM_TRUE@am__append_3 = $(LIBEVDEV_CFLAGS)
+@BUILD_PSMCOMM_TRUE@am__append_4 = \
 @BUILD_PSMCOMM_TRUE@	psmcomm.c
 
-@BUILD_WSCONSCOMM_TRUE@am__append_4 = \
+@BUILD_WSCONSCOMM_TRUE@am__append_5 = \
 @BUILD_WSCONSCOMM_TRUE@	wsconscomm.c
 
 subdir = src
@@ -234,6 +235,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEVDEV_CFLAGS = @LIBEVDEV_CFLAGS@
+LIBEVDEV_LIBS = @LIBEVDEV_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -242,15 +245,12 @@ LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKDIR_P = @MKDIR_P@
-MTDEV_CFLAGS = @MTDEV_CFLAGS@
-MTDEV_LIBS = @MTDEV_LIBS@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
@@ -347,19 +347,19 @@ top_srcdir = @top_srcdir@
 synaptics_drv_la_LTLIBRARIES = synaptics_drv.la
 synaptics_drv_la_LDFLAGS = -module -avoid-version
 synaptics_drv_ladir = @inputdir@
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include $(am__append_3)
 AM_CFLAGS = $(XORG_CFLAGS)
 synaptics_drv_la_SOURCES = synaptics.c synapticsstr.h synproto.c \
 	synproto.h properties.c $(am__append_1) $(am__append_2) \
-	$(am__append_3) $(am__append_4)
+	$(am__append_4) $(am__append_5)
 @BUILD_EVENTCOMM_TRUE@synaptics_drv_la_LIBADD = \
-@BUILD_EVENTCOMM_TRUE@	$(MTDEV_LIBS)
+@BUILD_EVENTCOMM_TRUE@	$(LIBEVDEV_LIBS)
 
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -384,9 +384,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
+$(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
+$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 install-synaptics_drv_laLTLIBRARIES: $(synaptics_drv_la_LTLIBRARIES)

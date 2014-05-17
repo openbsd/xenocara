@@ -36,15 +36,19 @@
 #include <xf86Xinput.h>
 #include <xisb.h>
 
+#ifndef XI86_SERVER_FD
+#define XI86_SERVER_FD 0x20
+#endif
+
 struct _SynapticsPrivateRec;
 typedef struct _SynapticsPrivateRec SynapticsPrivate;
 
 enum SynapticsSlotState {
-    SLOTSTATE_EMPTY = 0,
-    SLOTSTATE_OPEN,
-    SLOTSTATE_CLOSE,
-    SLOTSTATE_OPEN_EMPTY,
-    SLOTSTATE_UPDATE,
+    SLOTSTATE_EMPTY = 0,        /* no slot in this cycle */
+    SLOTSTATE_OPEN,             /* tracking ID received */
+    SLOTSTATE_CLOSE,            /* tracking ID -1 received */
+    SLOTSTATE_OPEN_EMPTY,       /* previously had tracking id, no events in this read cycle */
+    SLOTSTATE_UPDATE,           /* had tracking id, other events in this cycle */
 };
 
 /* used to mark emulated hw button state */

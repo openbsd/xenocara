@@ -261,9 +261,14 @@ Valid values are:
 .TS
 l l.
 0	Touchpad is enabled
-1	Touchpad is switched off
+1	Touchpad is switched off (physical clicks still work)
 2	Only tapping and scrolling is switched off
 .TE
+When the touchpad is switched off, button events caused by a physical
+button press are still interpreted. On a ClickPad, this includes
+software-emulated middle and right buttons as defined by
+the SoftButtonAreas setting.
+.TP
 Property: "Synaptics Off"
 .TP
 .BI "Option \*qLockedDrags\*q \*q" boolean \*q
@@ -441,7 +446,7 @@ Property: "Synaptics Pad Resolution"
 .
 .TP
 .BI "Option \*qAreaLeftEdge\*q \*q" integer \*q
-Ignore movements, scrolling and tapping which take place left of this edge.
+Ignore movements, scrolling and tapping which start left of this edge.
 .
 The option is disabled by default and can be enabled by setting the
 AreaLeftEdge option to any integer value other than zero. If supported by the
@@ -450,7 +455,7 @@ the total width of the touchpad. Property: "Synaptics Area"
 .
 .TP
 .BI "Option \*qAreaRightEdge\*q \*q" integer \*q
-Ignore movements, scrolling and tapping which take place right of this edge.
+Ignore movements, scrolling and tapping which start right of this edge.
 .
 The option is disabled by default and can be enabled by setting the
 AreaRightEdge option to any integer value other than zero. If supported by the
@@ -459,7 +464,7 @@ the total width of the touchpad. Property: "Synaptics Area"
 .
 .TP
 .BI "Option \*qAreaTopEdge\*q \*q" integer \*q
-Ignore movements, scrolling and tapping which take place above this edge.
+Ignore movements, scrolling and tapping which start above this edge.
 .
 The option is disabled by default and can be enabled by setting the
 AreaTopEdge option to any integer value other than zero. If supported by the
@@ -468,7 +473,7 @@ the total height of the touchpad. Property: "Synaptics Area"
 .
 .TP
 .BI "Option \*qAreaBottomEdge\*q \*q" integer \*q
-Ignore movements, scrolling and tapping which take place below this edge.
+Ignore movements, scrolling and tapping which start below this edge.
 .
 The option is disabled by default and can be enabled by setting the
 AreaBottomEdge option to any integer value other than zero. If supported by the
@@ -488,6 +493,30 @@ infinity in the given direction. Setting all values to 0 (not 0%) disables
 soft button areas. Button areas may not overlap, however it is permitted for two
 buttons to share an edge value.
 Property: "Synaptics Soft Button Areas"
+.
+.TP
+.BI "Option \*qHasSecondarySoftButtons\*q \*q" boolean \*q
+This option is only available on ClickPad devices.
+Enable the secondary software button area support. The exact area must be
+set in option \*qSecondarySoftButtonAreas\*q.  See
+.B ClickPad support
+for more details.
+.
+.TP
+.BI "Option \*qSecondarySoftButtonAreas\*q \*q" "RBL RBR RBT RBB MBL MBR MBT MBB" \*q
+This option is only available on ClickPad devices and only if
+.B Option \*qHasSecondarySoftButtons\*q
+is enabled.
+Define the secondary soft button click areas on ClickPad devices (usually on
+top of the device).
+For the allowed values for this option, see
+.B Option \*qSoftButtonAreas\*q.
+Primary and secondary soft button areas must not overlap each other. If they do,
+the behavior of the driver is undefined.
+Property: "Synaptics Secondary Soft Button Areas". This property is only
+initialized if 
+.B Option \*qHasSecondarySoftButtons\*q 
+is enabled and this option is set in the __xconfigfile__(__filemansuffix__).
 .
 
 .SH CONFIGURATION DETAILS
@@ -532,9 +561,10 @@ the touchpad.
 .PP
 The perceived physical edges may be adjusted with the AreaLeftEdge,
 AreaRightEdge, AreaTopEdge, and AreaBottomEdge options. If these values are
-set to something other than the physical edges, input in the space between
-the area edge and the respective physical edge is ignored. Note that this
-reduces the available space on the touchpad.
+set to something other than the physical edges, input that starts in the
+space between the area edge and the respective physical edge is ignored.
+Note that this reduces the available space on the touchpad to start motions
+in.
 .SS Tapping
 A tap event happens when the finger is touched and released in a time
 interval shorter than MaxTapTime, and the touch and release
@@ -703,10 +733,22 @@ support at runime, the user must also set the middle mouse button timeout to
 driver.
 .LP
 ClickPads provide software emulated buttons through 
-.B Option SoftButtonAreas.
+.B Option \*qSoftButtonAreas\*q.
 These buttons enable areas on the touchpad to perform as right or middle
 mouse button. When the user performs a click within a defined soft button
 area, a right or middle click is performed.
+.LP
+Some laptops, most notably the Lenovo T440, T540 and x240 series, provide a
+pointing stick without physical buttons. On those laptops, the top of the
+touchpad acts as software-emulated button area. This area can be enabled
+with
+.B Option \*qHasSecondarySoftButtons\*q
+and configured
+with
+.B Option \*qSecondarySoftButtonAreas\*q.
+On some platforms, this option
+will be set automatically if the kernel detects a matching device. On Linux,
+the device must have the INPUT_PROP_TOPBUTTONPAD property set.
 
 .SH "DEVICE PROPERTIES"
 Synaptics 1.0 and higher support input device properties if the driver is
