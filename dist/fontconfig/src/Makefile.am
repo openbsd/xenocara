@@ -31,8 +31,9 @@ fontconfig_def_dependency = fontconfig.def
 
 # gcc import library install/uninstall
 
-install-libtool-import-lib: 
-	$(INSTALL) .libs/libfontconfig.dll.a $(DESTDIR)$(libdir)
+install-libtool-import-lib: libfontconfig.la
+	$(MKDIR_P) $(DESTDIR)$(libdir)
+	$(INSTALL) .libs/libfontconfig.dll.a $(DESTDIR)$(libdir)/libfontconfig.dll.a
 	$(INSTALL) fontconfig.def $(DESTDIR)$(libdir)/fontconfig.def
 
 uninstall-libtool-import-lib:
@@ -69,7 +70,7 @@ uninstall-ms-import-lib:
 
 endif
 
-INCLUDES = 						\
+AM_CPPFLAGS = 						\
 	-I$(top_srcdir)					\
 	-I$(top_srcdir)/src				\
 	$(FREETYPE_CFLAGS)				\
@@ -115,7 +116,7 @@ fcobjshash.gperf: fcobjshash.gperf.h fcobjs.h
 	mv -f $@.tmp $@ || ( $(RM) $@.tmp && false )
 
 fcobjshash.h: fcobjshash.gperf
-	$(AM_V_GEN) $(top_srcdir)/missing --run gperf -m 100 $< > $@.tmp && \
+	$(AM_V_GEN) $(GPERF) -m 100 $< > $@.tmp && \
 	mv -f $@.tmp $@ || ( $(RM) $@.tmp && false )
 
 EXTRA_DIST += \
@@ -138,6 +139,7 @@ libfontconfig_la_SOURCES = \
 	fcformat.c \
 	fcfreetype.c \
 	fcfs.c \
+	fchash.c \
 	fcinit.c \
 	fclang.c \
 	fclist.c \

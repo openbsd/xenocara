@@ -35,9 +35,6 @@
 /* Define to 1 if you have the `arc4random' function. */
 #define HAVE_ARC4RANDOM 1
 
-/* Define to 1 if you have the `chsize' function. */
-/* #undef HAVE_CHSIZE */
-
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #define HAVE_DIRENT_H 1
@@ -56,9 +53,6 @@
 
 /* Define to 1 if you have the `fstatvfs' function. */
 #define HAVE_FSTATVFS 1
-
-/* Define to 1 if you have the `ftruncate' function. */
-#define HAVE_FTRUNCATE 1
 
 /* FT_Bitmap_Size structure includes y_ppem field */
 #define HAVE_FT_BITMAP_SIZE_Y_PPEM 1
@@ -81,8 +75,8 @@
 /* Define to 1 if you have the `FT_Select_Size' function. */
 #define HAVE_FT_SELECT_SIZE 1
 
-/* Define to 1 if you have the `geteuid' function. */
-#define HAVE_GETEUID 1
+/* Define to 1 if you have the `getexecname' function. */
+/* #undef HAVE_GETEXECNAME */
 
 /* Define to 1 if you have the `getopt' function. */
 #define HAVE_GETOPT 1
@@ -93,8 +87,8 @@
 /* Define to 1 if you have the `getpagesize' function. */
 #define HAVE_GETPAGESIZE 1
 
-/* Define to 1 if you have the `getuid' function. */
-#define HAVE_GETUID 1
+/* Define to 1 if you have the `getprogname' function. */
+#define HAVE_GETPROGNAME 1
 
 /* Have Intel __sync_* atomic primitives */
 /* #undef HAVE_INTEL_ATOMIC_PRIMITIVES 1 */
@@ -111,14 +105,11 @@
 /* Define to 1 if you have the `lstat' function. */
 #define HAVE_LSTAT 1
 
-/* Define to 1 if you have the `memmove' function. */
-#define HAVE_MEMMOVE 1
-
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
-/* Define to 1 if you have the `memset' function. */
-#define HAVE_MEMSET 1
+/* Define to 1 if you have the `mkdtemp' function. */
+#define HAVE_MKDTEMP 1
 
 /* Define to 1 if you have the `mkostemp' function. */
 /* #undef HAVE_MKOSTEMP */
@@ -153,6 +144,9 @@
 /* Define to 1 if you have the `rand_r' function. */
 #define HAVE_RAND_R 1
 
+/* Define to 1 if you have the `readlink' function. */
+#define HAVE_READLINK 1
+
 /* Define to 1 if you have the `regcomp' function. */
 #define HAVE_REGCOMP 1
 
@@ -167,6 +161,13 @@
 
 /* Define to 1 if you have the `regfree' function. */
 #define HAVE_REGFREE 1
+
+/* Define to 1 if you have the 'scandir' function. */
+#define HAVE_SCANDIR 1
+
+/* Define to 1 if you have the 'scandir' function with int (* compar)(const
+   void *, const void *) */
+/* #undef HAVE_SCANDIR_VOID_P */
 
 /* Define to 1 if you have the <sched.h> header file. */
 /* #undef HAVE_SCHED_H */
@@ -183,20 +184,11 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
 
-/* Define to 1 if you have the `strchr' function. */
-#define HAVE_STRCHR 1
-
 /* Define to 1 if you have the <strings.h> header file. */
 #define HAVE_STRINGS_H 1
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
-
-/* Define to 1 if you have the `strrchr' function. */
-#define HAVE_STRRCHR 1
-
-/* Define to 1 if you have the `strtol' function. */
-#define HAVE_STRTOL 1
 
 /* Define to 1 if `d_type' is a member of `struct dirent'. */
 #define HAVE_STRUCT_DIRENT_D_TYPE 1
@@ -212,9 +204,6 @@
 
 /* Define to 1 if `f_fstypename' is a member of `struct statvfs'. */
 /* #undef HAVE_STRUCT_STATVFS_F_FSTYPENAME */
-
-/* Define to 1 if you have the `sysconf' function. */
-#define HAVE_SYSCONF 1
 
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
@@ -232,6 +221,9 @@
 
 /* Define to 1 if you have the <sys/statfs.h> header file. */
 /* #undef HAVE_SYS_STATFS_H */
+
+/* Define to 1 if you have the <sys/statvfs.h> header file. */
+#define HAVE_SYS_STATVFS_H 1
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1

@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcNameRegisterConstants</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameRegisterConstants</refname>
@@ -45,11 +46,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 Deprecated.  Does nothing.  Returns FcFalse.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -80,6 +76,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcNameUnregisterConstants</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameUnregisterConstants</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Deprecated.  Does nothing.  Returns FcFalse.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcNameGetConstant</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameGetConstant</refname>
@@ -154,11 +147,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Return the FcConstant structure related to symbolic constant <parameter>string</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -189,6 +177,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcNameConstant</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameConstant</refname>
@@ -210,11 +199,6 @@ Fontconfig version &version;
 	    <para>
 Returns whether a symbolic constant with name <parameter>string</parameter> is registered,
 placing the value of the constant in <parameter>result</parameter> if present.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

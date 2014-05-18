@@ -51,8 +51,8 @@ typedef int		FcBool;
  */
 
 #define FC_MAJOR	2
-#define FC_MINOR	10
-#define FC_REVISION	91
+#define FC_MINOR	11
+#define FC_REVISION	1
 
 #define FC_VERSION	((FC_MAJOR * 10000) + (FC_MINOR * 100) + (FC_REVISION))
 
@@ -66,7 +66,7 @@ typedef int		FcBool;
  * it means multiple copies of the font information.
  */
 
-#define FC_CACHE_VERSION    "3"
+#define FC_CACHE_VERSION    "4"
 
 #define FcTrue		1
 #define FcFalse		0
@@ -91,7 +91,7 @@ typedef int		FcBool;
 #define FC_FILE		    "file"		/* String */
 #define FC_INDEX	    "index"		/* Int */
 #define FC_FT_FACE	    "ftface"		/* FT_Face */
-#define FC_RASTERIZER	    "rasterizer"	/* String */
+#define FC_RASTERIZER	    "rasterizer"	/* String (deprecated) */
 #define FC_OUTLINE	    "outline"		/* Bool */
 #define FC_SCALABLE	    "scalable"		/* Bool */
 #define FC_SCALE	    "scale"		/* double */
@@ -112,7 +112,11 @@ typedef int		FcBool;
 #define FC_EMBEDDED_BITMAP  "embeddedbitmap"	/* Bool - true to enable embedded bitmaps */
 #define FC_DECORATIVE	    "decorative"	/* Bool - true if style is a decorative variant */
 #define FC_LCD_FILTER	    "lcdfilter"		/* Int */
+#define FC_FONT_FEATURES    "fontfeatures"	/* String */
 #define FC_NAMELANG	    "namelang"		/* String RFC 3866 langs */
+#define FC_PRGNAME	    "prgname"		/* String */
+#define FC_HASH		    "hash"		/* String */
+#define FC_POSTSCRIPT_NAME  "postscriptname"	/* String */
 
 #define FC_CACHE_SUFFIX		    ".cache-" FC_CACHE_VERSION
 #define FC_DIR_CACHE_FILE	    "fonts.cache-" FC_CACHE_VERSION
@@ -181,6 +185,7 @@ typedef int		FcBool;
 #define FC_LCD_LEGACY	    3
 
 typedef enum _FcType {
+    FcTypeUnknown = -1,
     FcTypeVoid,
     FcTypeInteger,
     FcTypeDouble,
@@ -417,6 +422,13 @@ FcConfigSubstitute (FcConfig	*config,
 		    FcPattern	*p,
 		    FcMatchKind	kind);
 
+FcPublic const FcChar8 *
+FcConfigGetSysRoot (const FcConfig *config);
+
+FcPublic void
+FcConfigSetSysRoot (FcConfig      *config,
+		    const FcChar8 *sysroot);
+
 /* fccharset.c */
 FcPublic FcCharSet*
 FcCharSetCreate (void);
@@ -529,6 +541,9 @@ FcDirSave (FcFontSet *set, FcStrSet *dirs, const FcChar8 *dir);
 
 FcPublic FcCache *
 FcDirCacheLoad (const FcChar8 *dir, FcConfig *config, FcChar8 **cache_file);
+
+FcPublic FcCache *
+FcDirCacheRescan (const FcChar8 *dir, FcConfig *config);
     
 FcPublic FcCache *
 FcDirCacheRead (const FcChar8 *dir, FcBool force, FcConfig *config);
@@ -961,6 +976,9 @@ FcStrSetDestroy (FcStrSet *set);
 
 FcPublic FcStrList *
 FcStrListCreate (FcStrSet *set);
+
+FcPublic void
+FcStrListFirst (FcStrList *list);
 
 FcPublic FcChar8 *
 FcStrListNext (FcStrList *list);

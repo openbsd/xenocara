@@ -30,6 +30,9 @@ static void
 _FcValuePrintFile (FILE *f, const FcValue v)
 {
     switch (v.type) {
+    case FcTypeUnknown:
+	fprintf (f, "<unknown>");
+	break;
     case FcTypeVoid:
 	fprintf (f, "<void>");
 	break;
@@ -79,7 +82,7 @@ void
 FcValuePrintWithPosition (const FcValue v, FcBool show_pos_mark)
 {
     if (show_pos_mark)
-	printf (" [insert here] ");
+	printf (" [marker] ");
     else
 	printf (" ");
     _FcValuePrintFile (stdout, v);
@@ -98,6 +101,10 @@ FcValueBindingPrint (const FcValueListPtr l)
     case FcValueBindingSame:
 	printf ("(=)");
 	break;
+    default:
+	/* shouldn't be reached */
+	printf ("(?)");
+	break;
     }
 }
 
@@ -110,7 +117,7 @@ FcValueListPrintWithPosition (FcValueListPtr l, const FcValueListPtr pos)
 	FcValueBindingPrint (l);
     }
     if (!pos)
-	printf (" [insert here]");
+	printf (" [marker]");
 }
 
 void
@@ -222,6 +229,8 @@ FcOpPrint (FcOp op_)
     case FcOpPrependFirst: printf ("PrependFirst"); break;
     case FcOpAppend: printf ("Append"); break;
     case FcOpAppendLast: printf ("AppendLast"); break;
+    case FcOpDelete: printf ("Delete"); break;
+    case FcOpDeleteAll: printf ("DeleteAll"); break;
     case FcOpQuest: printf ("Quest"); break;
     case FcOpOr: printf ("Or"); break;
     case FcOpAnd: printf ("And"); break;
@@ -418,21 +427,38 @@ FcEditPrint (const FcEdit *edit)
 void
 FcSubstPrint (const FcSubst *subst)
 {
-    FcEdit	*e;
-    FcTest	*t;
+    FcRule *r;
+    FcRuleType last_type = FcRuleUnknown;
 
     printf ("match\n");
-    for (t = subst->test; t; t = t->next)
+    for (r = subst->rule; r; r = r->next)
     {
+	if (last_type != r->type)
+	{
+	    switch (r->type) {
+	    case FcRuleTest:
+		printf ("[test]\n");
+		break;
+	    case FcRuleEdit:
+		printf ("[edit]\n");
+		break;
+	    default:
+		break;
+	    }
+	    last_type = r->type;
+	}
 	printf ("\t");
-	FcTestPrint (t);
-    }
-    printf ("edit\n");
-    for (e = subst->edit; e; e = e->next)
-    {
-	printf ("\t");
-	FcEditPrint (e);
-	printf (";\n");
+	switch (r->type) {
+	case FcRuleTest:
+	    FcTestPrint (r->u.test);
+	    break;
+	case FcRuleEdit:
+	    FcEditPrint (r->u.edit);
+	    printf (";\n");
+	    break;
+	default:
+	    break;
+	}
     }
     printf ("\n");
 }

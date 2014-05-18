@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcConfigCreate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigCreate</refname>
@@ -44,11 +45,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 Creates an empty configuration.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -79,6 +75,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigReference</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigReference</refname>
@@ -103,11 +100,6 @@ If <parameter>config</parameter> is NULL, the current configuration is used.
 In that case this function will be similar to FcConfigGetCurrent() except that
 it increments the reference count before returning and the user is responsible
 for destroying the configuration when not needed anymore.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -138,6 +130,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigDestroy</refname>
@@ -160,11 +153,6 @@ Decrements the config reference count. If all references are gone, destroys
 the configuration and any data associated with it.
 Note that calling this function with the return from FcConfigGetCurrent will
 cause a new configuration to be created for use as current configuration.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -195,6 +183,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigSetCurrent</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigSetCurrent</refname>
@@ -215,11 +204,6 @@ Fontconfig version &version;
 	    <para>
 Sets the current default configuration to <parameter>config</parameter>.  Implicitly calls
 FcConfigBuildFonts if necessary, returning FcFalse if that call fails.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -250,6 +234,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetCurrent</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetCurrent</refname>
@@ -269,11 +254,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns the current default configuration.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -304,6 +284,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigUptoDate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigUptoDate</refname>
@@ -325,11 +306,6 @@ Fontconfig version &version;
 Checks all of the files related to <parameter>config</parameter> and returns
 whether any of them has been modified since the configuration was created.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -360,6 +336,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigHome</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigHome</refname>
@@ -381,11 +358,6 @@ Fontconfig version &version;
 Return the current user's home directory, if it is available, and if using it
 is enabled, and NULL otherwise.
 See also <function>FcConfigEnableHome</function>).
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -416,6 +388,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigEnableHome</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigEnableHome</refname>
@@ -439,11 +412,6 @@ files which are specified relative to the user's home directory (using the ~
 notation in the configuration). When <parameter>enable</parameter> is
 FcFalse, then all use of the home directory in these contexts will be
 disabled. The previous setting of the value is returned.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -474,6 +442,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigBuildFonts</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigBuildFonts</refname>
@@ -496,11 +465,6 @@ Builds the set of available fonts for the given configuration.  Note that
 any changes to the configuration after this call have indeterminate effects.
 Returns FcFalse if this operation runs out of memory.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -531,6 +495,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetConfigDirs</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetConfigDirs</refname>
@@ -552,11 +517,6 @@ Fontconfig version &version;
 Returns the list of font directories specified in the configuration files
 for <parameter>config</parameter>.  Does not include any subdirectories.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -587,6 +547,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetFontDirs</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetFontDirs</refname>
@@ -609,11 +570,6 @@ Returns the list of font directories in <parameter>config</parameter>. This incl
 configured font directories along with any directories below those in the
 filesystem.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -644,6 +600,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetConfigFiles</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetConfigFiles</refname>
@@ -664,11 +621,6 @@ Fontconfig version &version;
 	    <para>
 Returns the list of known configuration files used to generate <parameter>config</parameter>.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -699,6 +651,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetCache</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetCache</refname>
@@ -719,11 +672,6 @@ Fontconfig version &version;
 	    <para>
 With fontconfig no longer using per-user cache files, this function now
 simply returns NULL to indicate that no per-user file exists.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -754,6 +702,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetCacheDirs</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetCacheDirs</refname>
@@ -776,11 +725,6 @@ Fontconfig version &version;
 all of the directories that fontconfig will search when attempting to load a
 cache file for a font directory.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -811,6 +755,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetFonts</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetFonts</refname>
@@ -834,11 +779,6 @@ Returns one of the two sets of fonts from the configuration as specified
 by <parameter>set</parameter>. This font set is owned by the library and must
 not be modified or freed.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -869,6 +809,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetBlanks</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetBlanks</refname>
@@ -892,11 +833,6 @@ blanks were present in the configuration, this function will return 0.
 The returned FcBlanks object if not NULL, is valid as long as the owning
 FcConfig is alive.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -927,6 +863,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigGetRescanInterval</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigGetRescanInterval</refname>
@@ -950,11 +887,6 @@ seconds) specified in <parameter>config</parameter>.  The configuration is check
 a call to FcFontList when this interval has passed since the last check.
 An interval setting of zero disables automatic checks.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -985,6 +917,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigSetRescanInterval</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigSetRescanInterval</refname>
@@ -1008,11 +941,6 @@ Sets the rescan interval. Returns FcFalse if the interval cannot be set (due
 to allocation failure). Otherwise returns FcTrue.
 An interval setting of zero disables automatic checks.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1043,6 +971,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigAppFontAddFile</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigAppFontAddFile</refname>
@@ -1065,11 +994,6 @@ Fontconfig version &version;
 Adds an application-specific font to the configuration. Returns FcFalse
 if the fonts cannot be added (due to allocation failure). Otherwise returns FcTrue.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1100,6 +1024,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigAppFontAddDir</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigAppFontAddDir</refname>
@@ -1123,11 +1048,6 @@ Scans the specified directory for fonts, adding each one found to the
 application-specific set of fonts. Returns FcFalse
 if the fonts cannot be added (due to allocation failure). Otherwise returns FcTrue.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1158,6 +1078,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigAppFontClear</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigAppFontClear</refname>
@@ -1178,11 +1099,6 @@ Fontconfig version &version;
 	    <para>
 Clears the set of application-specific fonts.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1213,6 +1129,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigSubstituteWithPat</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigSubstituteWithPat</refname>
@@ -1240,11 +1157,6 @@ if <parameter>kind</parameter> is FcMatchFont, those tagged as font operations a
 p_pat is used for &lt;test&gt; elements with target=pattern. Returns FcFalse
 if the substitution cannot be performed (due to allocation failure). Otherwise returns FcTrue.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1275,6 +1187,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigSubstitute</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigSubstitute</refname>
@@ -1298,11 +1211,6 @@ Fontconfig version &version;
 Calls FcConfigSubstituteWithPat setting p_pat to NULL. Returns FcFalse
 if the substitution cannot be performed (due to allocation failure). Otherwise returns FcTrue.
 If <parameter>config</parameter> is NULL, the current configuration is used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1333,6 +1241,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontMatch</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontMatch</refname>
@@ -1363,11 +1272,6 @@ pattern. This function should be called only after
 If <parameter>config</parameter> is NULL, the current configuration is used.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -1396,6 +1300,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontSort</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSort</refname>
@@ -1434,11 +1339,6 @@ The FcFontSet returned by FcFontSort is destroyed by calling FcFontSetDestroy.
 If <parameter>config</parameter> is NULL, the current configuration is used.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -1467,6 +1367,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontRenderPrepare</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontRenderPrepare</refname>
@@ -1491,11 +1392,6 @@ Creates a new pattern consisting of elements of <parameter>font</parameter> not 
 in <parameter>pat</parameter>, elements of <parameter>pat</parameter> not appearing in <parameter>font</parameter> and the best matching
 value from <parameter>pat</parameter> for elements appearing in both.  The result is passed to
 FcConfigSubstituteWithPat with <parameter>kind</parameter> FcMatchFont and then returned.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1526,6 +1422,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontList</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontList</refname>
@@ -1550,11 +1447,6 @@ Selects fonts matching <parameter>p</parameter>, creates patterns from those fon
 only the objects in <parameter>os</parameter> and returns the set of unique such patterns.
 If <parameter>config</parameter> is NULL, the default configuration is checked
 to be up to date, and used.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1585,6 +1477,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigFilename</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigFilename</refname>
@@ -1616,11 +1509,6 @@ directory; the built-in default directory can be overridden with the
 FONTCONFIG_PATH environment variable.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -1649,6 +1537,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcConfigParseAndLoad</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcConfigParseAndLoad</refname>
@@ -1677,9 +1566,114 @@ Returns FcFalse if some error occurred while loading the file, either a
 parse error, semantic error or allocation failure. Otherwise returns FcTrue.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
+    </refentry>
+<!--
+   fontconfig/doc/func.sgml
+  
+   Copyright © 2003 Keith Packard
+  
+   Permission to use, copy, modify, distribute, and sell this software and its
+   documentation for any purpose is hereby granted without fee, provided that
+   the above copyright notice appear in all copies and that both that
+   copyright notice and this permission notice appear in supporting
+   documentation, and that the name of the author(s) not be used in
+   advertising or publicity pertaining to distribution of the software without
+   specific, written prior permission.  The authors make no
+   representations about the suitability of this software for any purpose.  It
+   is provided "as is" without express or implied warranty.
+  
+   THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+   INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+   EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+   CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+   DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
+ -->
+    <refentry id="FcConfigGetSysRoot">
+	<refmeta>
+	    <refentrytitle>FcConfigGetSysRoot</refentrytitle>
+	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
+	</refmeta>
+	<refnamediv>
+	    <refname>FcConfigGetSysRoot</refname>
+	    <refpurpose>Obtain the system root directory</refpurpose>
+	</refnamediv>
+	<refsynopsisdiv>
+	<funcsynopsis>
+	<funcsynopsisinfo>
+#include &lt;fontconfig/fontconfig.h&gt;
+	</funcsynopsisinfo>
+	<funcprototype>
+	    <funcdef>const FcChar8 * <function>FcConfigGetSysRoot</function></funcdef>
+		<paramdef>const FcConfig *<parameter>config</parameter></paramdef>
+	</funcprototype>
+	</funcsynopsis>
+	</refsynopsisdiv>
+	<refsect1><title>Description</title>
 	    <para>
-Fontconfig version &version;
+Obtrains the system root directory in 'config' if available.
 	    </para>
+	</refsect1>
+	<refsect1><title>Since</title>
+	    <para>version 2.10.92</para>
+	</refsect1>
+    </refentry>
+<!--
+   fontconfig/doc/func.sgml
+  
+   Copyright © 2003 Keith Packard
+  
+   Permission to use, copy, modify, distribute, and sell this software and its
+   documentation for any purpose is hereby granted without fee, provided that
+   the above copyright notice appear in all copies and that both that
+   copyright notice and this permission notice appear in supporting
+   documentation, and that the name of the author(s) not be used in
+   advertising or publicity pertaining to distribution of the software without
+   specific, written prior permission.  The authors make no
+   representations about the suitability of this software for any purpose.  It
+   is provided "as is" without express or implied warranty.
+  
+   THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+   INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+   EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+   CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+   DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
+ -->
+    <refentry id="FcConfigSetSysRoot">
+	<refmeta>
+	    <refentrytitle>FcConfigSetSysRoot</refentrytitle>
+	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
+	</refmeta>
+	<refnamediv>
+	    <refname>FcConfigSetSysRoot</refname>
+	    <refpurpose>Set the system root directory</refpurpose>
+	</refnamediv>
+	<refsynopsisdiv>
+	<funcsynopsis>
+	<funcsynopsisinfo>
+#include &lt;fontconfig/fontconfig.h&gt;
+	</funcsynopsisinfo>
+	<funcprototype>
+	    <funcdef>void <function>FcConfigSetSysRoot</function></funcdef>
+		<paramdef>FcConfig *<parameter>config</parameter></paramdef>
+		<paramdef>const FcChar8 *<parameter>sysroot</parameter></paramdef>
+	</funcprototype>
+	</funcsynopsis>
+	</refsynopsisdiv>
+	<refsect1><title>Description</title>
+	    <para>
+Set 'sysroot' as the system root directory. fontconfig prepend 'sysroot'
+to the cache directories in order to allow people to generate caches at
+the build time. Note that this causes changing current config. i.e.
+this function calls FcConfigSetCurrent() internally.
+	    </para>
+	</refsect1>
+	<refsect1><title>Since</title>
+	    <para>version 2.10.92</para>
 	</refsect1>
     </refentry>

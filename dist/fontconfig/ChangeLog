@@ -1,18 +1,827 @@
+commit f6244d2cf231e1dc756f3e941e61b9bf124879bb
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Wed May 8 11:57:49 2013 +0900
+
+    Use the glob matching for filename
+
+    Regex is expensive to compare filenames. we already have the glob
+    matching
+    and it works enough in this case.
+
+    Prior to this change, renaming FcConfigGlobMatch() to FcStrGlobMatch()
+    and moving to fcstr.c
+
+ src/fccfg.c   | 46 +---------------------------------------------
+ src/fcint.h   |  4 ++++
+ src/fcmatch.c |  6 ++----
+ src/fcstr.c   | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 51 insertions(+), 49 deletions(-)
+
+commit 03216ccf4ca0808f9c7b9513efcaeb7f4058b575
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Wed Apr 10 18:41:22 2013 +0900
+
+    Bug 63329 - make check fails: .. contents:: :depth: 2
+
+    Add back FcHashGetSHA256DigestFromFile() and fall back to it
+    when font isn't SFNT-based font because FT_Load_Sfnt_Table
+    fails with FT_Err_Invalid_Face_Handle.
+
+ src/fcfreetype.c | 32 ++++++++++++++++++++---------
+ src/fchash.c     | 62
+ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/fcint.h      |  4 ++++
+ 3 files changed, 88 insertions(+), 10 deletions(-)
+
+commit 77419a4dfdf41ed34dd03e74d0e4e6f89dbc65e1
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Wed Apr 10 11:14:39 2013 +0900
+
+    documented FC_HASH and FC_POSTSCRIPT_NAME
+
+ doc/fontconfig-devel.sgml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit fc5a589abad0e8285f7d95007ebda76536e8fa7d
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Tue Apr 9 17:18:43 2013 +0900
+
+    Revert the previous change and rework to not export freetype API
+    outside fcfreetype.c
+
+ src/fcfreetype.c | 23 ++++++++++++++++++++---
+ src/fchash.c     | 47 ++++++++++++-----------------------------------
+ src/fcint.h      |  5 ++---
+ 3 files changed, 34 insertions(+), 41 deletions(-)
+
+commit c93a8b8b54afe33e5ecf9870723543cb4058fa94
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Tue Apr 9 12:46:30 2013 +0900
+
+    Obtain fonts data via FT_Face instead of opening a file directly
+
+ src/fcfreetype.c |  2 +-
+ src/fchash.c     | 50 +++++++++++++++++++++++++++++++++-----------------
+ src/fcint.h      |  4 +++-
+ 3 files changed, 37 insertions(+), 19 deletions(-)
+
+commit 9299155b5247255d6b6687448173056c3ca8d09b
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Tue Apr 9 11:34:35 2013 +0900
+
+    Ensure closing fp on error
+
+ src/fchash.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 18bf57c70aafcad031c0b43756b754dcaf6a756a
+Author: Sebastian Freundt <hroptatyr@fresse.org>
+Date:   Sun Apr 7 00:02:58 2013 +0000
+
+    build-chain, replace INCLUDES directive by AM_CPPFLAGS
+
+    As of automake-13.1 the INCLUDES directive is no longer supported.
+    An automake run will return with an error.
+
+    This changeset simply follows automake's advice to replace INCLUDES
+    by AM_CPPFLAGS.
+
+ Tools.mk                | 4 ++--
+ fc-cache/Makefile.am    | 2 +-
+ fc-cat/Makefile.am      | 2 +-
+ fc-list/Makefile.am     | 2 +-
+ fc-match/Makefile.am    | 2 +-
+ fc-pattern/Makefile.am  | 2 +-
+ fc-query/Makefile.am    | 2 +-
+ fc-scan/Makefile.am     | 2 +-
+ fc-validate/Makefile.am | 2 +-
+ src/Makefile.am         | 2 +-
+ 10 files changed, 11 insertions(+), 11 deletions(-)
+
+commit 8fd0ed60a62cb7f36b2ade1bd16a66671eaf79da
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Mon Apr 1 18:16:28 2013 +0900
+
+    Bug 62980 - matching native fonts with even :lang=en
+
+    Fix the matcher modified by 4eab908c8679a797ac7016b77a93ee41bb11b0fc
+    to deal with both strong and weak of FC_LANG as the same location
+    in the score
+
+ src/fcmatch.c | 23 +++++++----------------
+ 1 file changed, 7 insertions(+), 16 deletions(-)
+
+commit 73fa326d1e791b587da93b795f962c3405b7a96d
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Mar 29 16:10:15 2013 +0900
+
+    Bump version to 2.10.92
+
+ README                  | 65
+ +++++++++++++++++++++++++++++++++++++++++++++++--
+ configure.ac            |  2 +-
+ fontconfig/fontconfig.h |  2 +-
+ 3 files changed, 65 insertions(+), 4 deletions(-)
+
+commit c842412c079e781d53f023616d9758223fb68323
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Mar 29 16:07:30 2013 +0900
+
+    Minor fix
+
+ new-version.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit b3b435b87f1aec1b2779fd7edbbff5571c3c61a2
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Mar 29 16:02:34 2013 +0900
+
+    Bump libtool revision
+
+ configure.ac | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit 3fc22cfe756fcb2d6c5a64aa305957c417c6cecd
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Mar 29 12:46:04 2013 +0900
+
+    Minor cleanup
+
+ Makefile.am | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit b561ff2016ce84eef3c81f16dfb0481be6a13f9b
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Jan 18 11:30:10 2013 +0900
+
+    Bug 38737 - Wishlist: support FC_POSTSCRIPT_NAME
+
+    Add the PostScript name into the cache and the matcher.
+    Scoring the better font against the PostScript name by
+    the forward-matching.
+
+ fontconfig/fontconfig.h |  1 +
+ src/fcfreetype.c        | 49 +++++++++++++++++++++++++++-
+ src/fcint.h             |  6 ++++
+ src/fcmatch.c           | 21 ++++++++++++
+ src/fcobjs.h            |  1 +
+ src/fcstr.c             | 85
+ ++++++++++++++++++++++++++++---------------------
+ 6 files changed, 125 insertions(+), 38 deletions(-)
+
+commit c758206e8c0e5b572bd34183b184ef4361745333
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Thu Mar 21 11:58:06 2013 +0900
+
+    Fix a SIGSEGV on FcPatternGet* with NULL pattern
+
+ src/fcpat.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit bdf1581e3de5528f397f19bfd4ca9caaf9e7fe4a
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:   Fri Mar 8 05:53:27 2013 -0500
+
+    Fix crash with FcConfigSetCurrent(NULL)
+
+ src/fccfg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit aad4d6f6c68d06415333f5d0d3e4b4870114f11d
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Thu Mar 7 13:19:50 2013 +0900
+
+    Do not copy FC_*LANG_OBJECT even if it's not available on the pattern
+
+    those objects are linked to the corresponding string objects.
+    this may causes inconsistency that those objects has more values
+    than them.
+
+ src/fcmatch.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+commit e96d7760886a3781a46b3271c76af99e15cb0146
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Wed Feb 6 19:35:30 2013 +0900
+
+    Bug 59456 - Adding a --sysroot like option to fc-cache
+
+    Add an ability to set the system root to generate the caches.
+    In order to do this, new APIs, FcConfigGetSysRoot() and
+    FcConfigSetSysRoot() is available.
+
+ doc/fcconfig.fncs       | 21 +++++++++++
+ fc-cache/fc-cache.c     | 38 +++++++++++++------
+ fontconfig/fontconfig.h |  7 ++++
+ src/fccache.c           | 99
+ +++++++++++++++++++++++++++++++++----------------
+ src/fccfg.c             | 57 ++++++++++++++++++++++++++++
+ src/fcinit.c            | 30 ++++++++++-----
+ src/fcint.h             | 15 +++++++-
+ src/fcstr.c             | 62 ++++++++++++++++++++++++++++++-
+ 8 files changed, 275 insertions(+), 54 deletions(-)
+
+commit 569657a24ca11aedfd3b588984344d7ab97fe09f
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Tue Mar 5 12:46:01 2013 +0900
+
+    Fix a memory leak
+
+ src/fclang.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+commit 612ee2a5c91b8929b2cc5abce4af84d8d7e66bd0
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Mar 1 22:21:25 2013 +0900
+
+    Fix broken sort order with FcFontSort()
+
+    which was introduced by 4eab908c8679a797ac7016b77a93ee41bb11b0fc
+
+ src/fcmatch.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+commit ea4ebd59377d3dff3616bd20381f308a92781ae6
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Mar 1 19:38:21 2013 +0900
+
+    Fix a crash when the object is non-builtin object
+
+ src/fcmatch.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 10230497675fa4fcbb427efe8dd2883839ddaec0
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Mar 1 18:41:27 2013 +0900
+
+    Fix a typo
+
+ conf.d/30-metric-aliases.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit db69bf6ecd0da4d23bdfe38652bb53d2daa655a2
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Fri Mar 1 18:31:01 2013 +0900
+
+    Bug 60783 - Add Liberation Sans Narrow to 30-metric-aliases.conf
+
+    Add Liberation Sans Narrow as an alias for Arial Narrow
+
+ conf.d/30-metric-aliases.conf | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+commit 2c696255749683e9a084f797eb033d222510a275
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Mon Feb 18 13:17:53 2013 +0900
+
+    Bug 60748 - broken conf.d/10-autohint.conf and conf.d/10-unhinted.conf
+
+    Move the target of recipes to the "pattern" from the "font".
+    This is to ensure the targeted objects is updated by them
+    prior to FcDefaultSubstitute() so that it can adds the default
+    values properly.
+
+ conf.d/10-autohint.conf          | 2 +-
+ conf.d/10-no-sub-pixel.conf      | 2 +-
+ conf.d/10-sub-pixel-bgr.conf     | 2 +-
+ conf.d/10-sub-pixel-rgb.conf     | 2 +-
+ conf.d/10-sub-pixel-vbgr.conf    | 2 +-
+ conf.d/10-sub-pixel-vrgb.conf    | 2 +-
+ conf.d/10-unhinted.conf          | 2 +-
+ conf.d/11-lcdfilter-default.conf | 2 +-
+ conf.d/11-lcdfilter-legacy.conf  | 2 +-
+ conf.d/11-lcdfilter-light.conf   | 2 +-
+ 10 files changed, 10 insertions(+), 10 deletions(-)
+
+commit 83f679ce558de736ef1a095a362397da0ac3417f
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:   Fri Feb 15 09:48:38 2013 -0500
+
+    Accept digits as part of OpenType script tags
+
+    They've been used since 2005.
+
+ src/fcfreetype.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+commit 72b0480a21958f0f8c115d8e0a5bfbd8d358b5c3
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Thu Feb 7 17:56:17 2013 +0900
+
+    Add Culmus foundry to the vendor list
+
+    Maps fonts produced by the Culmus project
+    <http://culmus.sourceforge.net>
+    to the XLFD foundry name culmus.
+
+    For TrueType fonts, maps the vendor code CLM from the TrueType vendor
+    id field.
+
+    For Type1 fonts, which use heuristics to guess mappings to XLFD
+    foundries from
+    words in the copyright notice, add the names of the main contributors
+    to
+    the Culmus product to recognize the fonts under their copyright.
+
+    Patch from Maxim Iorsh
+
+ src/fcfreetype.c | 67
+ +++++++++++++++++++-------------------------------------
+ 1 file changed, 23 insertions(+), 44 deletions(-)
+
+commit 96220a5ed9d1d761b14a7ac516ac6786c132f280
+Author: Quentin Glidic <sardemff7+git@sardemff7.net>
+Date:   Sat Feb 2 17:01:07 2013 +0100
+
+    Use LOG_COMPILER and AM_TESTS_ENVIRONMENT
+
+    TESTS_ENVIRONMENT is deprecated and should be reserved to the user to
+    override the test environment
+
+    <ext>_LOG_COMPILER is meant to contain the program that runs the test
+    with <ext> extension
+    LOG_COMPILER is for extensionless tests
+    AM_TESTS_ENVIRONMENT is meant to set the environment for the tests
+
+      https://bugs.freedesktop.org/show_bug.cgi?id=60192
+
+    Signed-off-by: Quentin Glidic <sardemff7+git@sardemff7.net>
+
+ Makefile.am      |  1 -
+ configure.ac     |  2 +-
+ doc/Makefile.am  |  5 ++++-
+ test/Makefile.am | 12 +++++++++++-
+ 4 files changed, 16 insertions(+), 4 deletions(-)
+
+commit 62b7d764ce994bb32e7614337fdfa0854445c380
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Wed Feb 6 19:14:51 2013 +0900
+
+    Bump the cache version to 4
+
+ fontconfig/fontconfig.h | 2 +-
+ src/fcint.h             | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 4eab908c8679a797ac7016b77a93ee41bb11b0fc
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Wed Feb 6 19:02:07 2013 +0900
+
+    Update _FcMatchers definition logic
+
+    to make it easier to maintain. also added FC_HASH_OBJECT to be matched
+    in the pattern, prior to FC_FILE_OBJECT.
+
+ src/fcint.h            |   2 +-
+ src/fcmatch.c          | 184
+ +++++++++++++++++++++++--------------------------
+ src/fcname.c           |   2 +-
+ src/fcobjs.h           |  90 ++++++++++++------------
+ src/fcobjshash.gperf.h |   2 +-
+ 5 files changed, 134 insertions(+), 146 deletions(-)
+
+commit 52b2b5c99268d5ad28dc0972c5f136720d55f21b
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Tue Feb 5 20:44:18 2013 +0900
+
+    Bug 60312 - DIST_SUBDIRS should never appear in a conditional
+
+    As it is documented like this:
+
+    If SUBDIRS is defined conditionally using Automake conditionals,
+    Automake will define DIST_SUBDIRS automatically from the possible
+    values of SUBDIRS in all conditions.
+
+    So we don't need to re-define DIST_SUBDIRS in Makefile.am unless
+    we use AC_SUBST to define SUBDIRS.
+
+    Patch from Quentin Glidic
+
+ Makefile.am | 3 ---
+ 1 file changed, 3 deletions(-)
+
+commit 95af7447dba7c54ed162b667c0bb2ea6500e8f32
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Mon Feb 4 16:03:29 2013 +0900
+
+    Bug 50733 - Add font-file hash?
+
+    Add "hash" object which contains SHA256 hash value (so far) computed
+    from the font file.
+
+ fontconfig/fontconfig.h |   1 +
+ src/Makefile.am         |   1 +
+ src/fcfreetype.c        |   9 ++
+ src/fchash.c            | 265
+ ++++++++++++++++++++++++++++++++++++++++++++++++
+ src/fcint.h             |   7 ++
+ src/fcobjs.h            |   1 +
+ 6 files changed, 284 insertions(+)
+
+commit d34643894f2dff7eec35345e8e9b32a9a32fa113
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Tue Feb 5 14:17:16 2013 +0900
+
+    Use AM_MISSING_PROG instead of hardcoding missing
+
+ Makefile.am  | 2 +-
+ configure.ac | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+commit 241cd53ff62599ecf557c6a4f975fc427dad9700
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Tue Feb 5 11:33:47 2013 +0900
+
+    Revert "test: Use SH_LOG_COMPILER and AM_TESTS_ENVIRONMENT"
+
+    This reverts commit 2146b0307a3476892723104481f27f8484451c52.
+
+    That change introduces incompatibility and seems not working with
+    older releases of automake, including automake 1.12.2.
+
+ test/Makefile.am | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+commit 2146b0307a3476892723104481f27f8484451c52
+Author: Quentin Glidic <sardemff7+git@sardemff7.net>
+Date:   Sat Feb 2 17:01:07 2013 +0100
+
+    test: Use SH_LOG_COMPILER and AM_TESTS_ENVIRONMENT
+
+    TESTS_ENVIRONMENT is deprecated and should be reserved to the user to
+    override the test environment
+
+    <ext>_LOG_COMPILER is meant to contain the program that runs the test
+    with <ext> extension
+    AM_TESTS_ENVIRONMENT is meant to set the environment for the tests
+
+      https://bugs.freedesktop.org/show_bug.cgi?id=60192
+
+    Signed-off-by: Quentin Glidic <sardemff7+git@sardemff7.net>
+
+ test/Makefile.am | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+commit da0946721af3ab2dff3cd903065336b93592d067
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Mon Feb 4 17:57:00 2013 +0900
+
+    Use AM_MISSING_PROG instead of hardcoding missing
+
+ configure.ac    | 2 ++
+ src/Makefile.am | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+commit 786ead52015573e7b60a53d79abc26d611f1fe93
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Mon Feb 4 17:20:03 2013 +0900
+
+    Modernize configure.ac
+
+ configure.ac | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+commit 20191810d1fea7c2f49b65ffee3e4d5e2bc0bac3
+Author: Akira TAGOH <akira@tagoh.org>
+Date:   Tue Jan 29 20:19:36 2013 +0900
+
+    Bug 23757 - Add mode="delete" to <edit>
+
+    Add two edit mode, "delete" and "delete_all".
+    what values are being deleted depends on <test> as documented.
+    if the target object is same to what is tested, matching value there
+    will be deleted. otherwise all of values in the object will be
+    deleted.
+    so this would means both edit mode will not take any expressions.
+
+    e.g.
+
+    Given that the testing is always true here, the following rules:
+
+      <match>
+        <test name="foo" compare="eq">
+          <string>bar</string>
+        </test>
+        <edit name="foo" mode="delete"/>
+      </match>
+
+    will removes "bar" string from "foo" object. and:
+
+      <match>
+        <test name="foo" compare="eq">
+          <string>foo</string>
+        </test>
+        <edit name="bar" mode="delete"/>
+      </match>
+
+    will removes all of values in "bar" object.
+
+ doc/fontconfig-user.sgml |  2 ++
+ fonts.dtd                |  2 +-
+ src/fccfg.c              | 10 ++++++++++
+ src/fcdbg.c              |  6 ++++--
+ src/fcint.h              |  1 +
+ src/fcxml.c              | 11 +++++++++++
+ 6 files changed, 29 insertions(+), 3 deletions(-)
+
+commit c1d9588890798e389d0f0ba633b704dee1ea8bf5
+Author: Colin Walters <walters@verbum.org>
+Date:   Thu Jan 31 21:32:46 2013 -0500
+
+    build: Only use PKG_INSTALLDIR if available
+
+    It's only in pkg-config 0.27 or newer, but 0.25 at least is still
+    fairly widespread.
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit e11f15628cff04c4a742f88abee22f440edcce52
+Author: Christoph J. Thompson <cjsthompson@gmail.com>
+Date:   Fri Feb 1 02:27:32 2013 +0100
+
+    Use the PKG_INSTALLDIR macro.
+
+	modified:   Makefile.am
+	modified:   configure.ac
+
+ Makefile.am  | 1 -
+ configure.ac | 1 +
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+
+commit d26fb23c41abd87422778bb38eea39f25ba3dc4a
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Fri Jan 25 20:01:24 2013 +0900
+
+    Bug 59385 - Do the right thing for intermixed edit and test elements
+
+    This changes allows to have multiple mathcing rules in one <match>
+    block
+    in the same order.
+    After this changes, the following thing will works as two matching
+    rules:
+
+	<match>
+		<!-- rule 1 -->
+		<test name="family" compare="eq">
+			<string>foo</string>
+		</test>
+		<edit name="foo" mode="append">
+			<string>foo</string>
+		</edit>
+		<!-- rule 2 -->
+		<test name="foo" compare="eq">
+			<string>foo</string>
+		</test>
+		<edit name="foo" mode="append">
+			<string>bar</string>
+		</edit>
+	</match>
+
+ fonts.dtd   |	2 +-
+ src/fcxml.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+), 1 deletion(-)
+
+commit fb3b410998aba8835999e2ca7003a180431cfaf4
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Wed Jan 23 12:37:51 2013 +0900
+
+    remove the unnecessary code
+
+ src/fccompat.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+commit 5400bb4fb43dc811b813f11d5b0c023db727f543
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Wed Jan 23 12:32:37 2013 +0900
+
+    Add another approach to FC_PRGNAME for Solaris 10 or before
+
+    Patch from Raimund Steger
+
+ configure.ac	 | 2 +-
+ src/fcdefault.c | 5 ++++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+commit 000ca9ccb03013a5b151f0d21148ab0ca4c2f2de
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Tue Jan 22 12:11:56 2013 +0900
+
+    Fix installation on MinGW32
+
+    Patch from LRN
+
+ src/Makefile.am | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+commit 6363193a0575cf6f58baf7f0a772ad8f92b7b904
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Tue Jan 22 12:03:28 2013 +0900
+
+    Fix mkstemp absence for some platform
+
+    Patch from LRN and modified to make more generic.
+
+ src/fccache.c	|  57 ----------------------------
+ src/fccompat.c | 116
+ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/fcint.h	|   3 ++
+ 3 files changed, 119 insertions(+), 57 deletions(-)
+
+commit 9dbc282796e9a4d5a2a8cc7d1c8e29b9154e91c0
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Tue Jan 22 10:26:41 2013 +0900
+
+    Add missing file descriptor to F_DUPFD_CLOEXEC
+
+    Patch from Matthieu Herrb
+
+ src/fccompat.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 6118781f7f5dba672d19a841cc231661bf5fb59d
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Thu Jan 17 19:27:20 2013 -0600
+
+    Fix readlink failure
+
+    As reported by Raimund Steger.
+
+ src/fcdefault.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 671bcb34e23ed03b1f564af35560db81f8b12b96
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Thu Jan 17 12:49:16 2013 +0900
+
+    Better fix for 2fe5ddfd
+
+    Drop realpath() and fix breakage on Win32
+
+ configure.ac	 |  2 +-
+ src/fcdefault.c | 14 +++++++-------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
+
+commit 2fe5ddfdae6be80db5b7e622ab6c1ab985377542
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Wed Jan 16 21:01:28 2013 -0600
+
+    Fix FC_PRGNAME default
+
+    As reported by Raimund Steger.
+
+ src/fcdefault.c | 36 +++++++++++++++++++-----------------
+ 1 file changed, 19 insertions(+), 17 deletions(-)
+
+commit 55d39bcad0737e92e1207fabbd8c65fa9e5e0482
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Wed Jan 16 07:30:44 2013 -0600
+
+    Fix fc-cache crash caused by looking up NULL object incorrectly
+
+    We were returning a skiplist node when looking up NULL!
+
+ src/fccache.c | 7 +++++--
+ src/fccfg.c   | 4 ++--
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+commit 106c4f73119e00a7804ef79ee556f1111d680e32
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Wed Jan 16 07:05:07 2013 -0600
+
+    Minor
+
+ src/fcfreetype.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 1a5d0daea0173e2cc47d76d2022467f0dbd423f0
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Wed Jan 16 04:52:06 2013 -0600
+
+    Remove unused checks for common functions
+
+    The check results of these were never actually used.
+
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit f9ac4c84c90cbb57afbf1fa3a5c9ff3bfc4f537e
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Wed Jan 16 16:35:28 2013 +0900
+
+    Improve FcGetPrgname() to work on BSD
+
+ configure.ac	 |  2 +-
+ src/fcdefault.c | 10 ++++++++++
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+commit ec5ca08c807585a9230f83c95f7cca6b7065b142
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Tue Jan 15 20:41:26 2013 -0600
+
+    Bug 59379 - FC_PRGNAME
+
+    Can be used for per-application configuration.
+
+ configure.ac		   |  2 +-
+ doc/fontconfig-devel.sgml |  3 +-
+ doc/fontconfig-user.sgml  |  1 +
+ fontconfig/fontconfig.h   |  1 +
+ src/fccfg.c		   |  7 ++++
+ src/fcdefault.c	   | 85
+ +++++++++++++++++++++++++++++++++++++++++++++--
+ src/fcint.h		   |  3 ++
+ src/fcobjs.h		   |  1 +
+ 8 files changed, 99 insertions(+), 4 deletions(-)
+
+commit 3f84695104b169fe25742ba3b91d04467f5debc4
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Tue Sep 4 12:39:48 2012 +0900
+
+    Bug 50497 - RFE: Add OpenType feature tags support
+
+    Add FC_FONT_FEATURES to store the feature tags to be enabled.
+
+ doc/fontconfig-devel.sgml | 2 ++
+ doc/fontconfig-user.sgml  | 1 +
+ fontconfig/fontconfig.h   | 1 +
+ src/fcobjs.h		   | 1 +
+ 4 files changed, 5 insertions(+)
+
+commit dffb69ed8c7cf2e707bc692f94b51108b772d9d8
+Author: Akira TAGOH <akira@tagoh.org>
+Date:	Tue Jan 15 17:26:27 2013 +0900
+
+    Fix the build fail on MinGW
+
+    Reported at
+    http://lists.freedesktop.org/archives/fontconfig/2013-January/004601.html
+
+    just warn at the runtime instead of the compile time. it somewhat
+    works
+    on even MinGW since FcMakeTempfile() isn't used on Win32 so far.
+
+ src/fccompat.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+commit 8b8f0d21534aa9b82276815c84429ffca8941d2a
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Mon Jan 14 14:39:12 2013 -0600
+
+    Minor
+
+ src/fcmatch.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 8828fffd93c6b19bcfd7626ddc472aa8f055d034
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Mon Jan 14 14:36:38 2013 -0600
+
+    Copy all values from pattern to font if the font doesn't have
+    the element
+
+    Bug 59376 - FcFontRenderPrepare enhancement
+
+ src/fcmatch.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+commit 0831c1770e4bac7269a190936bbb0529d747e233
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Thu Jan 10 09:01:52 2013 -0600
+
+    Ensure we find the uninstalled fontconfig header
+
+    Patch from Colin Walters.
+
+ test/Makefile.am | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit 1527c395cbe0bbab9e66a42213ef3ac5ce1c0383
+Author: Behdad Esfahbod <behdad@behdad.org>
+Date:	Thu Jan 10 09:00:18 2013 -0600
+
+    Resepct $NOCONFIGURE
+
+    Patch from Colin Walters.
+
+ autogen.sh | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
 commit fcc3567847949ec422157d331c9640cd0453e169
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Thu Jan 10 17:57:12 2013 +0900
+Date:	Thu Jan 10 17:57:12 2013 +0900
 
     Bump version to 2.10.91
 
- README                  | 105
+ README			 | 105
  +++++++++++++++++++++++++++++++++++++++++++++++-
- configure.ac            |   2 +-
+ configure.ac		 |   2 +-
  fontconfig/fontconfig.h |   2 +-
  3 files changed, 105 insertions(+), 4 deletions(-)
 
 commit 98352247f2ab01046c330485f73fd26eb15a08a4
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Thu Jan 10 17:56:51 2013 +0900
+Date:	Thu Jan 10 17:56:51 2013 +0900
 
     Update the date in README properly
 
@@ -21,7 +830,7 @@ Date:   Thu Jan 10 17:56:51 2013 +0900
 
 commit 9066fbe7855674ff51053b78f1d0d179486e22ea
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Thu Jan 10 01:23:07 2013 -0600
+Date:	Thu Jan 10 01:23:07 2013 -0600
 
     Make linker happy
 
@@ -30,39 +839,39 @@ Date:   Thu Jan 10 01:23:07 2013 -0600
 
 commit 98efed3bcafc92b573b193b5b38039aa717617d3
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Thu Jan 10 01:17:02 2013 -0600
+Date:	Thu Jan 10 01:17:02 2013 -0600
 
     Add atomic ops for Solaris
 
     Patch from Raimund Steger.
 
- configure.ac   | 22 ++++++++++++++++++++--
+ configure.ac	| 22 ++++++++++++++++++++--
  src/fcatomic.h | 12 ++++++++++++
  2 files changed, 32 insertions(+), 2 deletions(-)
 
 commit 8e8a99ae8a1c2e56c42093bee577d6de66248366
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Mon Sep 10 16:09:04 2012 +0900
+Date:	Mon Sep 10 16:09:04 2012 +0900
 
     Bug 29312 - RFE: feature to indicate which characters are missing
     to satisfy the language support
 
     Add fc-validate to check the language coverage in a font.
 
- Makefile.am                  |   2 +-
- configure.ac                 |   1 +
- doc/fclangset.fncs           |   8 ++
+ Makefile.am		      |   2 +-
+ configure.ac		      |   1 +
+ doc/fclangset.fncs	      |   8 ++
  fc-validate/Makefile.am      |  60 +++++++++++
  fc-validate/fc-validate.c    | 242
  +++++++++++++++++++++++++++++++++++++++++++
  fc-validate/fc-validate.sgml | 182 ++++++++++++++++++++++++++++++++
  fontconfig/fontconfig.h      |   3 +
- src/fcint.h                  |   3 -
+ src/fcint.h		      |   3 -
  8 files changed, 497 insertions(+), 4 deletions(-)
 
 commit 16fd965171808c10f87d097f678ee9e10771be72
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Wed Jan 9 11:26:56 2013 +0900
+Date:	Wed Jan 9 11:26:56 2013 +0900
 
     Fix a typo in the manpages template
 
@@ -71,20 +880,20 @@ Date:   Wed Jan 9 11:26:56 2013 +0900
 
 commit 7680e9ee891a74f0e428e30604a5d0ff0e2e9383
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 8 14:51:00 2013 -0600
+Date:	Tue Jan 8 14:51:00 2013 -0600
 
     Add pthread test
 
     Not enabled by default since it requires config and fonts.
 
- test/Makefile.am    |  9 ++++++
+ test/Makefile.am    |	9 ++++++
  test/test-pthread.c | 79
  +++++++++++++++++++++++++++++++++++++++++++++++++++++
  2 files changed, 88 insertions(+)
 
 commit dc21ed28d69df279c6068d9cae862e02af72815f
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 8 13:01:48 2013 -0600
+Date:	Tue Jan 8 13:01:48 2013 -0600
 
     Fix memory corruption!
 
@@ -97,22 +906,22 @@ Date:   Tue Jan 8 13:01:48 2013 -0600
     running to catch:
 
     ==4464== Invalid read of size 4
-    ==4464==    at 0x4E58FF3: FcStrListNext (fcstr.c:1256)
-    ==4464==    by 0x4E3F11D: FcConfigSubstituteWithPat (fccfg.c:1508)
-    ==4464==    by 0x4E3F8F4: FcConfigSubstitute (fccfg.c:1729)
-    ==4464==    by 0x4009FA: test_match (simple-pthread-test.c:53)
-    ==4464==    by 0x400A6E: run_test_in_thread (simple-pthread-test.c:68)
-    ==4464==    by 0x507EE99: start_thread (pthread_create.c:308)
+    ==4464==	at 0x4E58FF3: FcStrListNext (fcstr.c:1256)
+    ==4464==	by 0x4E3F11D: FcConfigSubstituteWithPat (fccfg.c:1508)
+    ==4464==	by 0x4E3F8F4: FcConfigSubstitute (fccfg.c:1729)
+    ==4464==	by 0x4009FA: test_match (simple-pthread-test.c:53)
+    ==4464==	by 0x400A6E: run_test_in_thread (simple-pthread-test.c:68)
+    ==4464==	by 0x507EE99: start_thread (pthread_create.c:308)
     ==4464==  Address 0x6bc0b44 is 4 bytes inside a block of size
     24 free'd
-    ==4464==    at 0x4C2A82E: free (in
+    ==4464==	at 0x4C2A82E: free (in
     /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
-    ==4464==    by 0x4E58F84: FcStrSetDestroy (fcstr.c:1236)
-    ==4464==    by 0x4E3F0C6: FcConfigSubstituteWithPat (fccfg.c:1507)
-    ==4464==    by 0x4E3F8F4: FcConfigSubstitute (fccfg.c:1729)
-    ==4464==    by 0x4009FA: test_match (simple-pthread-test.c:53)
-    ==4464==    by 0x400A6E: run_test_in_thread (simple-pthread-test.c:68)
-    ==4464==    by 0x507EE99: start_thread (pthread_create.c:308)
+    ==4464==	by 0x4E58F84: FcStrSetDestroy (fcstr.c:1236)
+    ==4464==	by 0x4E3F0C6: FcConfigSubstituteWithPat (fccfg.c:1507)
+    ==4464==	by 0x4E3F8F4: FcConfigSubstitute (fccfg.c:1729)
+    ==4464==	by 0x4009FA: test_match (simple-pthread-test.c:53)
+    ==4464==	by 0x400A6E: run_test_in_thread (simple-pthread-test.c:68)
+    ==4464==	by 0x507EE99: start_thread (pthread_create.c:308)
 
     Thread test is running happily now.  Will add the test in a moment.
 
@@ -121,19 +930,19 @@ Date:   Tue Jan 8 13:01:48 2013 -0600
 
 commit 4e6c7d0827c5b3b20205521bf9bd2e94e704b36d
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Tue Jan 8 16:20:28 2013 +0900
+Date:	Tue Jan 8 16:20:28 2013 +0900
 
     Fix a build fail on mingw
 
     Regarding the change of 596931c8b4a7a35cbff9c33437d3cd44395d9c3f
 
- configure.ac   | 2 +-
+ configure.ac	| 2 +-
  src/fccompat.c | 4 ++++
  2 files changed, 5 insertions(+), 1 deletion(-)
 
 commit d837a7a584bc1e908bc4370d337cd10ecc781fad
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Tue Jan 8 16:18:32 2013 +0900
+Date:	Tue Jan 8 16:18:32 2013 +0900
 
     missing header file to declare _mkdir
 
@@ -142,24 +951,24 @@ Date:   Tue Jan 8 16:18:32 2013 +0900
 
 commit 596931c8b4a7a35cbff9c33437d3cd44395d9c3f
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Thu Dec 6 20:01:52 2012 +0900
+Date:	Thu Dec 6 20:01:52 2012 +0900
 
     Bug 47705 - Using O_CLOEXEC
 
- configure.ac    |   4 ++-
+ configure.ac	 |   4 ++-
  src/Makefile.am |   1 +
  src/fcatomic.c  |   3 +-
- src/fccache.c   |   6 ++--
+ src/fccache.c	 |   6 ++--
  src/fccompat.c  | 103
  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- src/fcint.h     |   7 ++++
- src/fcstat.c    |   2 +-
- src/fcxml.c     |   2 +-
+ src/fcint.h	 |   7 ++++
+ src/fcstat.c	 |   2 +-
+ src/fcxml.c	 |   2 +-
  8 files changed, 120 insertions(+), 8 deletions(-)
 
 commit d7de1b5c6d4b8800825913ac40a9cea00824f2f8
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Jan 7 20:10:14 2013 -0600
+Date:	Mon Jan 7 20:10:14 2013 -0600
 
     Fix pthreads setup
 
@@ -170,7 +979,7 @@ Date:   Mon Jan 7 20:10:14 2013 -0600
 
 commit 1c4c4978adb0fa59767ac7d8c7f98a86928b2fdc
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Jan 7 17:59:17 2013 -0600
+Date:	Mon Jan 7 17:59:17 2013 -0600
 
     Oops, add the actual file
 
@@ -180,7 +989,7 @@ Date:   Mon Jan 7 17:59:17 2013 -0600
 
 commit dc11dd581f228623f0f14b3a6a1e4beaa659266b
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Jan 7 16:41:29 2013 -0600
+Date:	Mon Jan 7 16:41:29 2013 -0600
 
     Add 10-scale-bitmap-fonts.conf and enable by default
 
@@ -189,7 +998,7 @@ Date:   Mon Jan 7 16:41:29 2013 -0600
 
 commit ea3a35306617eec068ed961439cf76cdbcb10c28
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Mon Jan 7 17:55:04 2013 +0900
+Date:	Mon Jan 7 17:55:04 2013 +0900
 
     Clean up the unused variable
 
@@ -198,7 +1007,7 @@ Date:   Mon Jan 7 17:55:04 2013 +0900
 
 commit 17eda89ed2e24a3fc5f68538dd7fd9ada8efb087
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Thu Jan 3 20:33:34 2013 -0600
+Date:	Thu Jan 3 20:33:34 2013 -0600
 
     Remove FcInit() calls from tools
 
@@ -206,16 +1015,16 @@ Date:   Thu Jan 3 20:33:34 2013 -0600
     doesn't,
     it's a bug.
 
- fc-list/fc-list.c       | 5 -----
- fc-match/fc-match.c     | 5 -----
+ fc-list/fc-list.c	 | 5 -----
+ fc-match/fc-match.c	 | 5 -----
  fc-pattern/fc-pattern.c | 5 -----
- fc-query/fc-query.c     | 6 ------
- fc-scan/fc-scan.c       | 6 ------
+ fc-query/fc-query.c	 | 6 ------
+ fc-scan/fc-scan.c	 | 6 ------
  5 files changed, 27 deletions(-)
 
 commit 102a4344dd7f668cf03b9665c718505050e0ae78
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Thu Jan 3 20:31:22 2013 -0600
+Date:	Thu Jan 3 20:31:22 2013 -0600
 
     Don't use blanks for fc-query
 
@@ -226,7 +1035,7 @@ Date:   Thu Jan 3 20:31:22 2013 -0600
 
 commit b6b678e71eb0ba2b53335b7df0804058f6bd006d
 Author: Akira TAGOH <akira@tagoh.org>
-Date:   Fri Jan 4 11:29:50 2013 +0900
+Date:	Fri Jan 4 11:29:50 2013 +0900
 
     Missing header file for _mkdir declaration
 
@@ -235,7 +1044,7 @@ Date:   Fri Jan 4 11:29:50 2013 +0900
 
 commit 8e143b4ec447a7ee6c501e7488a3c94db7e6a035
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Thu Jan 3 04:19:12 2013 -0600
+Date:	Thu Jan 3 04:19:12 2013 -0600
 
     Minor
 
@@ -244,7 +1053,7 @@ Date:   Thu Jan 3 04:19:12 2013 -0600
 
 commit 16ddb9ff31a7d45ae477f5274c704523b2ec7330
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 22:37:33 2013 -0600
+Date:	Wed Jan 2 22:37:33 2013 -0600
 
     Ugh, add Tools.mk
 
@@ -254,7 +1063,7 @@ Date:   Wed Jan 2 22:37:33 2013 -0600
 
 commit 86e3255118e943bcc5c16cf1628ca381470ca34d
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 20:16:55 2013 -0600
+Date:	Wed Jan 2 20:16:55 2013 -0600
 
     Second try to make Sun CPP happy
 
@@ -263,23 +1072,23 @@ Date:   Wed Jan 2 20:16:55 2013 -0600
 
 commit bc62c40597c3d95edfdc6a93b39d0bb3837d1d34
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 20:08:40 2013 -0600
+Date:	Wed Jan 2 20:08:40 2013 -0600
 
     Really fix cross-compiling and building of tools this time
 
- configure.ac                |  1 +
- fc-case/Makefile.am         | 47 +++++----------------------
+ configure.ac		     |	1 +
+ fc-case/Makefile.am	     | 47 +++++----------------------
  fc-glyphname/Makefile.am    | 47 +++++----------------------
- fc-glyphname/fc-glyphname.c |  2 +-
- fc-lang/Makefile.am         | 44 +++++---------------------
- fc-lang/fc-lang.c           |  8 ++---
- m4/ax_cc_for_build.m4       | 77
+ fc-glyphname/fc-glyphname.c |	2 +-
+ fc-lang/Makefile.am	     | 44 +++++---------------------
+ fc-lang/fc-lang.c	     |	8 ++---
+ m4/ax_cc_for_build.m4	     | 77
  +++++++++++++++++++++++++++++++++++++++++++++
  7 files changed, 107 insertions(+), 119 deletions(-)
 
 commit 32c1d32cbd54686804481fedaa1881d4f3043f1b
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 19:04:17 2013 -0600
+Date:	Wed Jan 2 19:04:17 2013 -0600
 
     Work around Sun CPP
 
@@ -338,12 +1147,12 @@ Date:   Wed Jan 2 19:04:17 2013 -0600
 
     [...]
     fcobjshash.gperf: fcobjshash.gperf.h fcobjs.h
-        $(AM_V_GEN) $(CPP) -I$(top_srcdir) $< | \
-        $(SED) 's/^\s*//;s/\s*,\s*/,/;' | \
-        $(GREP) '^[^#]' | \
-        $(AWK) '/CUT_OUT_BEGIN/,/CUT_OUT_END/ { next; }; { print; };' \
-        > $@.tmp && \
-        mv -f $@.tmp $@
+	$(AM_V_GEN) $(CPP) -I$(top_srcdir) $< | \
+	$(SED) 's/^\s*//;s/\s*,\s*/,/;' | \
+	$(GREP) '^[^#]' | \
+	$(AWK) '/CUT_OUT_BEGIN/,/CUT_OUT_END/ { next; }; { print; };' \
+	> $@.tmp && \
+	mv -f $@.tmp $@
     [...]
 
     though I'm not sure what kind of guarantee CPP can give us/what
@@ -354,17 +1163,17 @@ Date:   Wed Jan 2 19:04:17 2013 -0600
 
 commit b1510145e7a38802bd544de6035fabf9f81f9710
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 18:57:47 2013 -0600
+Date:	Wed Jan 2 18:57:47 2013 -0600
 
     Fix build around true/false
 
  src/fcatomic.h |  4 ++--
- src/fcinit.c   | 10 ++++++++++
+ src/fcinit.c	| 10 ++++++++++
  2 files changed, 12 insertions(+), 2 deletions(-)
 
 commit 538f1579e86fdcf471cea58945bf8c674d5b91e7
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 18:07:13 2013 -0600
+Date:	Wed Jan 2 18:07:13 2013 -0600
 
     Trying to fix distcheck
 
@@ -372,26 +1181,26 @@ Date:   Wed Jan 2 18:07:13 2013 -0600
 
     At least, if docbook is present, distcheck passes now.
 
- Makefile.am     | 11 +++++++++--
- configure.ac    |  4 ----
+ Makefile.am	 | 11 +++++++++--
+ configure.ac	 |  4 ----
  doc/Makefile.am |  8 ++++++++
  3 files changed, 17 insertions(+), 6 deletions(-)
 
 commit 46ab96b8fa029fbc8ccf69a6f2fda89866e3ac9c
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 17:52:00 2013 -0600
+Date:	Wed Jan 2 17:52:00 2013 -0600
 
     Fix more warnings.
 
     Linux build and mingw32 cross build warning-free now.
 
- src/fcobjs.c           | 10 ++++++++--
+ src/fcobjs.c		| 10 ++++++++--
  src/fcobjshash.gperf.h |  2 +-
  2 files changed, 9 insertions(+), 3 deletions(-)
 
 commit 558b3c65f91b4b2dd65ce2242e1a21ace621e44b
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 17:49:41 2013 -0600
+Date:	Wed Jan 2 17:49:41 2013 -0600
 
     Use CC_FOR_BUILD to generate source files
 
@@ -401,36 +1210,36 @@ Date:   Wed Jan 2 17:49:41 2013 -0600
 
     One caveat: the fix is not fully correct since config.h is being
     included in the files built with CC_FOR_BUILD, but config.h has config
-    for the host system, not the build system.  Should be fine though.
+    for the host system, not the build system.	Should be fine though.
 
- configure.ac             | 1 +
- doc/Makefile.am          | 6 +-----
- fc-case/Makefile.am      | 8 +-------
+ configure.ac		  | 1 +
+ doc/Makefile.am	  | 6 +-----
+ fc-case/Makefile.am	  | 8 +-------
  fc-glyphname/Makefile.am | 9 ++++-----
- fc-lang/Makefile.am      | 9 +++------
+ fc-lang/Makefile.am	  | 9 +++------
  5 files changed, 10 insertions(+), 23 deletions(-)
 
 commit ec8a40d2381014ad2e72b5da0e6357a85f078f9f
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 17:35:56 2013 -0600
+Date:	Wed Jan 2 17:35:56 2013 -0600
 
     Fix build and warnings on win32
 
  src/Makefile.am |  1 +
  src/fcatomic.h  |  9 +++------
- src/fccache.c   |  2 +-
- src/fccfg.c     | 17 ++++++-----------
- src/fcint.h     |  7 +------
- src/fcmutex.h   |  5 ++---
- src/fcstat.c    |  3 ---
- src/fcstr.c     |  3 ---
+ src/fccache.c	 |  2 +-
+ src/fccfg.c	 | 17 ++++++-----------
+ src/fcint.h	 |  7 +------
+ src/fcmutex.h	 |  5 ++---
+ src/fcstat.c	 |  3 ---
+ src/fcstr.c	 |  3 ---
  src/fcwindows.h | 44 ++++++++++++++++++++++++++++++++++++++++++++
- src/fcxml.c     | 18 +++++++++---------
+ src/fcxml.c	 | 18 +++++++++---------
  10 files changed, 67 insertions(+), 42 deletions(-)
 
 commit 5c0a4f2726fd1440bf3ec4bb375e5e4d146bd989
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 02:27:57 2013 -0600
+Date:	Wed Jan 2 02:27:57 2013 -0600
 
     Minor
 
@@ -440,7 +1249,7 @@ Date:   Wed Jan 2 02:27:57 2013 -0600
 
 commit 766bed901f7f4c648387fb403ef6e253be1c45e9
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 02:19:04 2013 -0600
+Date:	Wed Jan 2 02:19:04 2013 -0600
 
     Fix compiler warnings
 
@@ -449,24 +1258,24 @@ Date:   Wed Jan 2 02:19:04 2013 -0600
 
 commit 93fb1d4bab5fefb73393141bb3e96c9dc279e615
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 02:06:15 2013 -0600
+Date:	Wed Jan 2 02:06:15 2013 -0600
 
     Remove FcSharedStr*
 
- src/fccfg.c     |  2 +-
+ src/fccfg.c	 |  2 +-
  src/fcdefault.c |  6 +++---
- src/fcint.h     |  9 +++------
- src/fclist.c    |  6 +++---
- src/fcname.c    |  2 +-
- src/fcobjs.c    |  2 +-
- src/fcpat.c     | 25 +++----------------------
- src/fcstr.c     | 11 +----------
- src/fcxml.c     | 10 +++++-----
+ src/fcint.h	 |  9 +++------
+ src/fclist.c	 |  6 +++---
+ src/fcname.c	 |  2 +-
+ src/fcobjs.c	 |  2 +-
+ src/fcpat.c	 | 25 +++----------------------
+ src/fcstr.c	 | 11 +----------
+ src/fcxml.c	 | 10 +++++-----
  9 files changed, 21 insertions(+), 52 deletions(-)
 
 commit 6b143781073cf395fd6211c75bbdc9f5b5a54936
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 01:54:38 2013 -0600
+Date:	Wed Jan 2 01:54:38 2013 -0600
 
     Fixup fcobjs.c
 
@@ -477,7 +1286,7 @@ Date:   Wed Jan 2 01:54:38 2013 -0600
 
 commit 6047ce7b9fb793da4e693e3777bbd3e1baf3146e
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 01:31:34 2013 -0600
+Date:	Wed Jan 2 01:31:34 2013 -0600
 
     Warn about undefined/invalid attributes during config parsing
 
@@ -486,7 +1295,7 @@ Date:   Wed Jan 2 01:31:34 2013 -0600
 
 commit b604f10c0c31a56ae16154dfe6a2f13b795aaabf
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Jan 2 01:09:20 2013 -0600
+Date:	Wed Jan 2 01:09:20 2013 -0600
 
     Make fcobjs.c thread-safe
 
@@ -498,7 +1307,7 @@ Date:   Wed Jan 2 01:09:20 2013 -0600
 
 commit 2ae07bbcd2a7650f2711b45e78e65e2ca1c4a17a
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Oct 15 19:35:03 2012 -0500
+Date:	Mon Oct 15 19:35:03 2012 -0500
 
     Make FcDirCacheDispose() threadsafe
 
@@ -507,7 +1316,7 @@ Date:   Mon Oct 15 19:35:03 2012 -0500
 
 commit 68b8ae9af8b0f86dade6135b01aaf0b2f2077fb5
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Wed Oct 10 15:24:31 2012 -0400
+Date:	Wed Oct 10 15:24:31 2012 -0400
 
     Make cache hash threadsafe
 
@@ -519,7 +1328,7 @@ Date:   Wed Oct 10 15:24:31 2012 -0400
 
 commit adb03b730de5d090855f45bc23b934a65ef2399c
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Oct 8 20:03:35 2012 -0400
+Date:	Mon Oct 8 20:03:35 2012 -0400
 
     Make random-state initialization threadsafe
 
@@ -528,7 +1337,7 @@ Date:   Mon Oct 8 20:03:35 2012 -0400
 
 commit 91dd7d28ffc397fb1389f76ac55b397e55da809d
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Oct 8 20:02:05 2012 -0400
+Date:	Mon Oct 8 20:02:05 2012 -0400
 
     Add a big cache lock
 
@@ -539,17 +1348,17 @@ Date:   Mon Oct 8 20:02:05 2012 -0400
 
 commit 8d2bbb193ae49ea6abd5a9b4d28d3d88ac97d7a2
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 21:03:58 2012 -0400
+Date:	Sun Oct 7 21:03:58 2012 -0400
 
     Make cache refcounting threadsafe
 
  src/fcatomic.h |  1 +
- src/fccache.c  | 13 ++++++-------
+ src/fccache.c	| 13 ++++++-------
  2 files changed, 7 insertions(+), 7 deletions(-)
 
 commit 31ee38e541180db6d7bc58d5abde83136352e7ce
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 17:46:12 2012 -0400
+Date:	Sun Oct 7 17:46:12 2012 -0400
 
     Minor
 
@@ -558,7 +1367,7 @@ Date:   Sun Oct 7 17:46:12 2012 -0400
 
 commit b8f238e49d7b7e1cff787c518cd4490b32039cca
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 17:42:18 2012 -0400
+Date:	Sun Oct 7 17:42:18 2012 -0400
 
     Make FcCacheIsMmapSafe() threadsafe
 
@@ -567,7 +1376,7 @@ Date:   Sun Oct 7 17:42:18 2012 -0400
 
 commit b27a22aae9902d409c21e5bb19a97dcc5966ea24
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 17:29:45 2012 -0400
+Date:	Sun Oct 7 17:29:45 2012 -0400
 
     Minor
 
@@ -576,18 +1385,18 @@ Date:   Sun Oct 7 17:29:45 2012 -0400
 
 commit 0552f26016865b8a76819cf342fa0cf13afdc5e8
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 17:02:50 2012 -0400
+Date:	Sun Oct 7 17:02:50 2012 -0400
 
     Make default-FcConfig threadsafe
 
- src/fccfg.c     | 60
+ src/fccfg.c	 | 60
  +++++++++++++++++++++++++++++++++++++--------------------
  src/fcdefault.c |  3 +--
  2 files changed, 40 insertions(+), 23 deletions(-)
 
 commit e53f5da54f066f73a53eba1f82f54521fa3f7ea2
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 16:42:36 2012 -0400
+Date:	Sun Oct 7 16:42:36 2012 -0400
 
     Minor
 
@@ -596,7 +1405,7 @@ Date:   Sun Oct 7 16:42:36 2012 -0400
 
 commit 7ae24b4554a8543d8cd41a83b6114e0143982758
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 16:37:03 2012 -0400
+Date:	Sun Oct 7 16:37:03 2012 -0400
 
     Refactor; contain default config in fccfg.c
 
@@ -608,7 +1417,7 @@ Date:   Sun Oct 7 16:37:03 2012 -0400
 
 commit 32b0d88923524c24f4be36733ebef5872b57b95a
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 16:26:53 2012 -0400
+Date:	Sun Oct 7 16:26:53 2012 -0400
 
     Make FcDefaultFini() threadsafe
 
@@ -617,7 +1426,7 @@ Date:   Sun Oct 7 16:26:53 2012 -0400
 
 commit 7019896c99872b23d89b1404b02754cbc4ea1456
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 16:09:35 2012 -0400
+Date:	Sun Oct 7 16:09:35 2012 -0400
 
     Make FcInitDebug() idempotent
 
@@ -626,66 +1435,66 @@ Date:   Sun Oct 7 16:09:35 2012 -0400
 
 commit b97ab0c94938448dc2b780b8f0f60fb68884899f
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 15:52:25 2012 -0400
+Date:	Sun Oct 7 15:52:25 2012 -0400
 
     Make FcGetDefaultLang and FcGetDefaultLangs thread-safe
 
  src/fcdefault.c | 83
  +++++++++++++++++++++++++++++++++++++++++----------------
- src/fcinit.c    |  1 +
- src/fcint.h     |  3 +++
- src/fcstr.c     |  4 +++
+ src/fcinit.c	 |  1 +
+ src/fcint.h	 |  3 +++
+ src/fcstr.c	 |  4 +++
  4 files changed, 68 insertions(+), 23 deletions(-)
 
 commit 64af9e1917114c789ad74dd28b3248f8c0525f45
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 14:41:38 2012 -0400
+Date:	Sun Oct 7 14:41:38 2012 -0400
 
     Make refcounts, patterns, charsets, strings, and FcLang thread-safe
 
  src/fcatomic.h  | 18 +++++++++---------
- src/fccfg.c     | 29 +++++++++++++++--------------
+ src/fccfg.c	 | 29 +++++++++++++++--------------
  src/fccharset.c | 24 ++++++++++++------------
  src/fcdefault.c |  2 +-
- src/fcint.h     | 26 ++++++++++++++++++++------
- src/fclang.c    | 43 ++++++++++++++++++++++++-------------------
- src/fcmatch.c   |  4 ----
- src/fcmutex.h   |  2 ++
- src/fcpat.c     | 25 ++++++++++++-------------
- src/fcstr.c     | 24 +++++++++++++-----------
+ src/fcint.h	 | 26 ++++++++++++++++++++------
+ src/fclang.c	 | 43 ++++++++++++++++++++++++-------------------
+ src/fcmatch.c	 |  4 ----
+ src/fcmutex.h	 |  2 ++
+ src/fcpat.c	 | 25 ++++++++++++-------------
+ src/fcstr.c	 | 24 +++++++++++++-----------
  10 files changed, 108 insertions(+), 89 deletions(-)
 
 commit 814871b2aaa3a22ef711ca4656507fb69c952156
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 14:24:28 2012 -0400
+Date:	Sun Oct 7 14:24:28 2012 -0400
 
     Add thread-safety primitives
 
- COPYING         |   1 +
+ COPYING	 |   1 +
  src/Makefile.am |   2 +
  src/fcatomic.h  | 123
  ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- src/fcint.h     |   4 +-
- src/fcmutex.h   | 126
+ src/fcint.h	 |   4 +-
+ src/fcmutex.h	 | 126
  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  5 files changed, 254 insertions(+), 2 deletions(-)
 
 commit f6d8306e566dd1a4b8a13f433d2bc1ffbe667db7
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sun Oct 7 13:49:45 2012 -0400
+Date:	Sun Oct 7 13:49:45 2012 -0400
 
     Add build stuff for threadsafety primitives
 
     Copied over from HarfBuzz.
 
- configure.ac     |  38 ++++++-
+ configure.ac	  |  38 ++++++-
  m4/ax_pthread.m4 | 309
  +++++++++++++++++++++++++++++++++++++++++++++++++++++++
  2 files changed, 346 insertions(+), 1 deletion(-)
 
 commit b53744383dbefb3f80fb8a7365487669a499ad76
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sat Oct 6 18:15:58 2012 -0400
+Date:	Sat Oct 6 18:15:58 2012 -0400
 
     Fix build stuff
 
@@ -694,11 +1503,11 @@ Date:   Sat Oct 6 18:15:58 2012 -0400
 
 commit db6d86a6c1b5bb15511e4e4015af889d4206be1d
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sat Oct 6 18:12:19 2012 -0400
+Date:	Sat Oct 6 18:12:19 2012 -0400
 
     Remove shared-str pool
 
-    We used to have a shared-str pool.  Removed to make thread-safety
+    We used to have a shared-str pool.	Removed to make thread-safety
     work easier.  My measurements show that the extra overhead is not
     significant by any means.
 
@@ -708,34 +1517,34 @@ Date:   Sat Oct 6 18:12:19 2012 -0400
 
 commit ed41b237658ba290d86795904701ace09b46f6c4
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Sat Oct 6 17:52:39 2012 -0400
+Date:	Sat Oct 6 17:52:39 2012 -0400
 
     Switch .gitignore to git.mk
 
- .gitignore               | 100 ---------------------
- Makefile.am              |   2 +
- conf.d/Makefile.am       |   2 +
- doc/Makefile.am          |   2 +
- fc-cache/Makefile.am     |   2 +
- fc-case/Makefile.am      |   2 +
- fc-cat/Makefile.am       |   2 +
+ .gitignore		  | 100 ---------------------
+ Makefile.am		  |   2 +
+ conf.d/Makefile.am	  |   2 +
+ doc/Makefile.am	  |   2 +
+ fc-cache/Makefile.am	  |   2 +
+ fc-case/Makefile.am	  |   2 +
+ fc-cat/Makefile.am	  |   2 +
  fc-glyphname/Makefile.am |   2 +
- fc-lang/Makefile.am      |   2 +
- fc-list/Makefile.am      |   2 +
- fc-match/Makefile.am     |   2 +
+ fc-lang/Makefile.am	  |   2 +
+ fc-list/Makefile.am	  |   2 +
+ fc-match/Makefile.am	  |   2 +
  fc-pattern/Makefile.am   |   2 +
- fc-query/Makefile.am     |   2 +
- fc-scan/Makefile.am      |   2 +
+ fc-query/Makefile.am	  |   2 +
+ fc-scan/Makefile.am	  |   2 +
  fontconfig/Makefile.am   |   2 +
- git.mk                   | 227
+ git.mk			  | 227
  +++++++++++++++++++++++++++++++++++++++++++++++
- src/Makefile.am          |   2 +
- test/Makefile.am         |   2 +
+ src/Makefile.am	  |   2 +
+ test/Makefile.am	  |   2 +
  18 files changed, 259 insertions(+), 100 deletions(-)
 
 commit d58c31e6dcfd8c5e6fe3ead4a69216b059558223
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Thu Sep 20 14:42:31 2012 -0400
+Date:	Thu Sep 20 14:42:31 2012 -0400
 
     Use a static perfect hash table for object-name lookup
 
@@ -745,19 +1554,19 @@ Date:   Thu Sep 20 14:42:31 2012 -0400
 
     A bit clumsy, but I think I got it right.
 
- src/Makefile.am        |  26 +++-
- src/fcinit.c           |   1 -
- src/fcint.h            |  79 ++++---------
- src/fcname.c           | 315
+ src/Makefile.am	|  26 +++-
+ src/fcinit.c		|   1 -
+ src/fcint.h		|  79 ++++---------
+ src/fcname.c		| 315
  +++++++------------------------------------------
- src/fcobjs.c           | 130 ++++++++++++++++++++
- src/fcobjs.h           |  44 +++++++
+ src/fcobjs.c		| 130 ++++++++++++++++++++
+ src/fcobjs.h		|  44 +++++++
  src/fcobjshash.gperf.h |  26 ++++
  7 files changed, 291 insertions(+), 330 deletions(-)
 
 commit 7c0f79c5fe9db50b55112a1048a8f1c6a80e96fa
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Thu Sep 20 14:01:47 2012 -0400
+Date:	Thu Sep 20 14:01:47 2012 -0400
 
     Deprecate FcName(Un)RegisterObjectTypes / FcName(Un)RegisterConstants
 
@@ -772,16 +1581,16 @@ Date:   Thu Sep 20 14:01:47 2012 -0400
     One inch closer to thread-safety since we can fix the object-type hash
     table at compile time.
 
- doc/fcconstant.fncs     |   8 +---
- doc/fcobjecttype.fncs   |   6 +--
+ doc/fcconstant.fncs	 |   8 +---
+ doc/fcobjecttype.fncs	 |   6 +--
  fontconfig/fontconfig.h |  10 +++--
- src/fcname.c            | 100
+ src/fcname.c		 | 100
  ++++++------------------------------------------
  4 files changed, 23 insertions(+), 101 deletions(-)
 
 commit 1e2c0d70527c39f761c5770d93a5c1f8e87522bc
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 1 20:28:08 2013 -0600
+Date:	Tue Jan 1 20:28:08 2013 -0600
 
     Whitespace
 
@@ -790,7 +1599,7 @@ Date:   Tue Jan 1 20:28:08 2013 -0600
 
 commit a498f2f717a73c3fff9784dd92173583fb37a596
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 1 20:27:54 2013 -0600
+Date:	Tue Jan 1 20:27:54 2013 -0600
 
     Minor
 
@@ -799,7 +1608,7 @@ Date:   Tue Jan 1 20:27:54 2013 -0600
 
 commit 8198127b2525084bfe2378b83c185fa0da7f583b
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 1 20:20:31 2013 -0600
+Date:	Tue Jan 1 20:20:31 2013 -0600
 
     Don't crash in FcPatternFormat() with NULL pattern
 
@@ -808,7 +1617,7 @@ Date:   Tue Jan 1 20:20:31 2013 -0600
 
 commit c9581b47c4409612e8f2d4f67a402c566ba8330e
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 1 20:20:12 2013 -0600
+Date:	Tue Jan 1 20:20:12 2013 -0600
 
     Don't crash in FcPatternDestroy with NULL pattern
 
@@ -817,7 +1626,7 @@ Date:   Tue Jan 1 20:20:12 2013 -0600
 
 commit e7d3e2163280ffb970b60c6ed18e26325d0241e4
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 1 20:10:18 2013 -0600
+Date:	Tue Jan 1 20:10:18 2013 -0600
 
     Add NULL check
 
@@ -826,7 +1635,7 @@ Date:   Tue Jan 1 20:10:18 2013 -0600
 
 commit 5bb5da4c4a34ca7c0a7c513e38829f69654f9962
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 1 20:09:08 2013 -0600
+Date:	Tue Jan 1 20:09:08 2013 -0600
 
     Refuse to set value to unsupported types during config too
 
@@ -835,20 +1644,20 @@ Date:   Tue Jan 1 20:09:08 2013 -0600
 
 commit 3878a125410d1dd461aee1e40f9ac00d68be71f2
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Tue Jan 1 19:52:14 2013 -0600
+Date:	Tue Jan 1 19:52:14 2013 -0600
 
     Make FC_DBG_OBJTYPES debug messages into warnings
 
     And remove FC_DBG_OBJTYPES since it has no use now.
 
  src/fcdbg.c | 30 +++++++++++++++++++-----------
- src/fcint.h |  5 ++++-
+ src/fcint.h |	5 ++++-
  src/fcpat.c | 21 +++++++++------------
  3 files changed, 32 insertions(+), 24 deletions(-)
 
 commit 209750a4e0a3e1d7b8c5c971e9e2cbd5770d959f
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Dec 31 20:11:12 2012 -0600
+Date:	Mon Dec 31 20:11:12 2012 -0600
 
     Warn if <name target="font"> appears in <match target="pattern">
 
@@ -857,7 +1666,7 @@ Date:   Mon Dec 31 20:11:12 2012 -0600
 
 commit 424cfa1684f8af8bb6ecb01dc83bfc3d0a14f20a
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Dec 31 20:00:17 2012 -0600
+Date:	Mon Dec 31 20:00:17 2012 -0600
 
     Adjust docs for recent changes
 
@@ -866,7 +1675,7 @@ Date:   Mon Dec 31 20:00:17 2012 -0600
 
 commit 31ce352bb350a10c6ae08f1415d348458b64bf61
 Author: Behdad Esfahbod <behdad@behdad.org>
-Date:   Mon Dec 31 19:55:37 2012 -0600
+Date:	Mon Dec 31 19:55:37 2012 -0600
 
     Initialize matrix during name parsing
 
@@ -1353,7 +2162,8 @@ Date:	Tue Oct 30 09:56:24 2012 +0900
 
     Keep m4 directory in git.
 
- 0 files changed
+ m4/.gitkeep | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
 
 commit 038aa930ae2c3b7972eefe334917e7222fe478ec
 Author: Akira TAGOH <akira@tagoh.org>
@@ -7417,7 +8227,7 @@ commit e690fbb20ec41ef018a32ac01118a41103c01289
 Author: Behdad Esfahbod <behdad@behdad.org>
 Date:	Wed Aug 13 03:30:23 2008 -0400
 
-    Get rid of $Id: ChangeLog,v 1.1.1.1 2013/03/09 13:33:55 matthieu Exp $ tags
+    Get rid of $Id: ChangeLog,v 1.2 2014/05/18 10:33:03 matthieu Exp $ tags
 
  COPYING			 | 2 +-
  Makefile.am			 | 2 +-
@@ -21540,8 +22350,10 @@ Date:	Thu Feb 14 23:34:13 2002 +0000
 
  AUTHORS		 |    1 +
  COPYING		 |   22 +
+ ChangeLog		 |    0
  INSTALL		 |    3 +
  Imakefile		 |   25 +
+ NEWS			 |    0
  README			 |    2 +
  acconfig.h		 |    2 +
  configure.in		 |  202 +++++++
@@ -21583,4 +22395,4 @@ Date:	Thu Feb 14 23:34:13 2002 +0000
  src/fcstr.c		 |  188 ++++++
  src/fcxml.c		 | 1032 ++++++++++++++++++++++++++++++++
  src/fontconfig.man	 | 1113 ++++++++++++++++++++++++++++++++++
- 44 files changed, 11349 insertions(+)
+ 46 files changed, 11349 insertions(+)

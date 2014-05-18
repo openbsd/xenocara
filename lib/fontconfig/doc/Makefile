@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2013/03/16 14:57:18 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2014/05/18 10:33:05 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 
@@ -56,11 +56,13 @@ MAN = FcAtomicCreate.3 \
 	FcConfigGetFontDirs.3 \
 	FcConfigGetFonts.3 \
 	FcConfigGetRescanInterval.3 \
+	FcConfigGetSysRoot.3 \
 	FcConfigHome.3 \
 	FcConfigParseAndLoad.3 \
 	FcConfigReference.3 \
 	FcConfigSetCurrent.3 \
 	FcConfigSetRescanInterval.3 \
+	FcConfigSetSysRoot.3 \
 	FcConfigSubstitute.3 \
 	FcConfigSubstituteWithPat.3 \
 	FcConfigUptoDate.3 \
@@ -69,6 +71,7 @@ MAN = FcAtomicCreate.3 \
 	FcDirCacheLoad.3 \
 	FcDirCacheLoadFile.3 \
 	FcDirCacheRead.3 \
+	FcDirCacheRescan.3 \
 	FcDirCacheUnlink.3 \
 	FcDirCacheUnload.3 \
 	FcDirCacheValid.3 \
@@ -114,6 +117,7 @@ MAN = FcAtomicCreate.3 \
 	FcLangSetDel.3 \
 	FcLangSetDestroy.3 \
 	FcLangSetEqual.3 \
+	FcLangSetGetLangs.3 \
 	FcLangSetHasLang.3 \
 	FcLangSetHash.3 \
 	FcLangSetSubtract.3 \
@@ -166,6 +170,7 @@ MAN = FcAtomicCreate.3 \
 	FcStrFree.3 \
 	FcStrListCreate.3 \
 	FcStrListDone.3 \
+	FcStrListFirst.3 \
 	FcStrListNext.3 \
 	FcStrPlus.3 \
 	FcStrSetAdd.3 \
@@ -246,11 +251,13 @@ HTML_DEVEL_FILES = \
 	fcconfiggetfontdirs.html \
 	fcconfiggetfonts.html \
 	fcconfiggetrescaninterval.html \
+	fcconfiggetsysroot.html \
 	fcconfighome.html \
 	fcconfigparseandload.html \
 	fcconfigreference.html \
 	fcconfigsetcurrent.html \
 	fcconfigsetrescaninterval.html \
+	fcconfigsetsysroot.html \
 	fcconfigsubstitute.html \
 	fcconfigsubstitutewithpat.html \
 	fcconfiguptodate.html \
@@ -259,6 +266,7 @@ HTML_DEVEL_FILES = \
 	fcdircacheload.html \
 	fcdircacheloadfile.html \
 	fcdircacheread.html \
+	fcdircacherescan.html \
 	fcdircacheunlink.html \
 	fcdircacheunload.html \
 	fcdircachevalid.html \
@@ -304,6 +312,7 @@ HTML_DEVEL_FILES = \
 	fclangsetdel.html \
 	fclangsetdestroy.html \
 	fclangsetequal.html \
+	fclangsetgetlangs.html \
 	fclangsethash.html \
 	fclangsethaslang.html \
 	fclangsetsubtract.html \
@@ -356,6 +365,7 @@ HTML_DEVEL_FILES = \
 	fcstrfree.html \
 	fcstrlistcreate.html \
 	fcstrlistdone.html \
+	fcstrlistfirst.html \
 	fcstrlistnext.html \
 	fcstrplus.html \
 	fcstrsetadd.html \

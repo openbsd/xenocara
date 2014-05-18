@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcPatternCreate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternCreate</refname>
@@ -44,11 +45,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 Creates a pattern with no properties; used to build patterns from scratch.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -79,6 +75,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternDuplicate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternDuplicate</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 Copy a pattern, returning a new pattern that matches
 <parameter>p</parameter>. Each pattern may be modified without affecting the
 other.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternReference</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternReference</refname>
@@ -155,11 +148,6 @@ Fontconfig version &version;
 	    <para>
 Add another reference to <parameter>p</parameter>. Patterns are freed only
 when the reference count reaches zero.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -190,6 +178,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternDestroy</refname>
@@ -210,11 +199,6 @@ Fontconfig version &version;
 	    <para>
 Decrement the pattern reference count. If all references are gone, destroys
 the pattern, in the process destroying all related values.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -245,6 +229,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternEqual</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternEqual</refname>
@@ -265,11 +250,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns whether <parameter>pa</parameter> and <parameter>pb</parameter> are exactly alike.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -300,6 +280,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternEqualSubset</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternEqualSubset</refname>
@@ -322,11 +303,6 @@ Fontconfig version &version;
 	    <para>
 Returns whether <parameter>pa</parameter> and <parameter>pb</parameter> have exactly the same values for all of the
 objects in <parameter>os</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -357,6 +333,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternFilter</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternFilter</refname>
@@ -380,11 +357,6 @@ Returns a new pattern that only has those objects from
 <parameter>p</parameter> that are in <parameter>os</parameter>.
 If <parameter>os</parameter> is NULL, a duplicate of
 <parameter>p</parameter> is returned.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -415,6 +387,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternHash</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternHash</refname>
@@ -435,11 +408,6 @@ Fontconfig version &version;
 	    <para>
 Returns a 32-bit number which is the same for any two patterns which are
 equal.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -470,6 +438,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternAdd</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternAdd</refname>
@@ -496,11 +465,6 @@ Adds a single value to the list of values associated with the property named
 existing list, otherwise it is inserted at the beginning.  `value' is saved
 (with FcValueSave) when inserted into the pattern so that the library
 retains no reference to any application-supplied data structure.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -531,6 +495,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternAddWeak</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternAddWeak</refname>
@@ -554,11 +519,6 @@ Fontconfig version &version;
 	    <para>
 FcPatternAddWeak is essentially the same as FcPatternAdd except that any
 values added to the list have binding <parameter>weak</parameter> instead of <parameter>strong</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -589,6 +549,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternAdd-Type</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternAddInteger</refname>
@@ -664,11 +625,6 @@ will provide compile-time typechecking.  These all append values to
 any existing list of values.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -697,6 +653,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternGet</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternGet</refname>
@@ -722,11 +679,6 @@ Returns in <parameter>v</parameter> the <parameter>id</parameter>'th value
 associated with the property <parameter>object</parameter>.
 The value returned is not a copy, but rather refers to the data stored
 within the pattern directly.  Applications must not free this value.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -757,6 +709,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternGet-Type</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternGetInteger</refname>
@@ -839,11 +792,6 @@ copy of any data structure referenced by the return value.  Use these
 in preference to FcPatternGet to provide compile-time typechecking.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -872,6 +820,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternBuild</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternBuild</refname>
@@ -934,11 +883,6 @@ which returns its result directly in the <parameter>result</parameter>
 variable.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -967,6 +911,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternDel</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternDel</refname>
@@ -988,11 +933,6 @@ Fontconfig version &version;
 	    <para>
 Deletes all values associated with the property `object', returning 
 whether the property existed or not.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1023,6 +963,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternRemove</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternRemove</refname>
@@ -1045,11 +986,6 @@ Fontconfig version &version;
 	    <para>
 Removes the value associated with the property `object' at position `id', returning 
 whether the property existed and had a value at that position or not.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1080,6 +1016,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcPatternPrint</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternPrint</refname>
@@ -1101,11 +1038,6 @@ Fontconfig version &version;
 Prints an easily readable version of the pattern to stdout.  There is
 no provision for reparsing data in this format, it's just for diagnostics
 and debugging.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1136,6 +1068,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcDefaultSubstitute</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcDefaultSubstitute</refname>
@@ -1169,11 +1102,6 @@ specified point size (default 12), dpi (default 75) and scale (default 1).
 </itemizedlist>
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -1202,6 +1130,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcNameParse</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameParse</refname>
@@ -1221,11 +1150,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Converts <parameter>name</parameter> from the standard text format described above into a pattern.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1256,6 +1180,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcNameUnparse</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameUnparse</refname>
@@ -1277,11 +1202,6 @@ Fontconfig version &version;
 Converts the given pattern into the standard text format described above.
 The return value is not static, but instead refers to newly allocated memory
 which should be freed by the caller using free().
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

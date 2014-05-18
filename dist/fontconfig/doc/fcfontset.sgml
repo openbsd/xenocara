@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcFontSetCreate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSetCreate</refname>
@@ -44,11 +45,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 Creates an empty font set.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -79,6 +75,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontSetDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSetDestroy</refname>
@@ -99,11 +96,6 @@ Fontconfig version &version;
 	    <para>
 Destroys a font set.  Note that this destroys any referenced patterns as
 well.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -134,6 +126,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontSetAdd</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSetAdd</refname>
@@ -156,11 +149,6 @@ Fontconfig version &version;
 Adds a pattern to a font set.  Note that the pattern is not copied before
 being inserted into the set. Returns FcFalse if the pattern cannot be
 inserted into the set (due to allocation failure). Otherwise returns FcTrue.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -191,6 +179,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontSetList</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSetList</refname>
@@ -221,11 +210,6 @@ If <parameter>config</parameter> is NULL, the default configuration is checked
 to be up to date, and used.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -254,6 +238,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontSetMatch</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSetMatch</refname>
@@ -287,11 +272,6 @@ If <parameter>config</parameter> is NULL, the current configuration is used.
 Returns NULL if an error occurs during this process.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -320,6 +300,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontSetPrint</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSetPrint</refname>
@@ -342,11 +323,6 @@ This function is useful for diagnosing font related issues, printing the
 complete contents of every pattern in <parameter>set</parameter>. The format
 of the output is designed to be of help to users and developers, and may
 change at any time.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -377,6 +353,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontSetSort</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSetSort</refname>
@@ -421,11 +398,6 @@ modify these patterns.  Instead, they should be passed, along with
 The FcFontSet returned by FcFontSetSort is destroyed by calling FcFontSetDestroy.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -454,6 +426,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFontSetSortDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFontSetSortDestroy</refname>
@@ -476,11 +449,6 @@ This function is DEPRECATED. <function>FcFontSetSortDestroy</function>
 destroys <parameter>set</parameter> by calling
 <function>FcFontSetDestroy</function>. Applications should use
 <function>FcFontSetDestroy</function> directly instead.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

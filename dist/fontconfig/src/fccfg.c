@@ -123,6 +123,8 @@ FcConfigCreate (void)
 
     config->expr_pool = NULL;
 
+    config->sysRoot = NULL;
+
     FcRefInit (&config->ref, 1);
 
     return config;
@@ -212,10 +214,8 @@ FcSubstDestroy (FcSubst *s)
     while (s)
     {
 	n = s->next;
-	if (s->test)
-	    FcTestDestroy (s->test);
-	if (s->edit)
-	    FcEditDestroy (s->edit);
+	if (s->rule)
+	    FcRuleDestroy (s->rule);
 	free (s);
 	s = n;
     }
@@ -224,20 +224,20 @@ FcSubstDestroy (FcSubst *s)
 FcExpr *
 FcConfigAllocExpr (FcConfig *config)
 {
-  if (!config->expr_pool || config->expr_pool->next == config->expr_pool->end)
-  {
-    FcExprPage *new_page;
+    if (!config->expr_pool || config->expr_pool->next == config->expr_pool->end)
+    {
+	FcExprPage *new_page;
 
-    new_page = malloc (sizeof (FcExprPage));
-    if (!new_page)
-      return 0;
+	new_page = malloc (sizeof (FcExprPage));
+	if (!new_page)
+	    return 0;
 
-    new_page->next_page = config->expr_pool;
-    new_page->next = new_page->exprs;
-    config->expr_pool = new_page;
-  }
+	new_page->next_page = config->expr_pool;
+	new_page->next = new_page->exprs;
+	config->expr_pool = new_page;
+    }
 
-  return config->expr_pool->next++;
+    return config->expr_pool->next++;
 }
 
 FcConfig *
@@ -292,6 +292,8 @@ FcConfigDestroy (FcConfig *config)
       free (page);
       page = next;
     }
+    if (config->sysRoot)
+	FcStrFree (config->sysRoot);
 
     free (config);
 }
@@ -425,7 +427,7 @@ retry:
     if (config == cfg)
 	return FcTrue;
 
-    if (!config->fonts[FcSetSystem])
+    if (config && !config->fonts[FcSetSystem])
 	if (!FcConfigBuildFonts (config))
 	    return FcFalse;
 
@@ -640,17 +642,17 @@ FcConfigSetRescanInverval (FcConfig *config, int rescanInterval)
     return FcConfigSetRescanInterval (config, rescanInterval);
 }
 
-
 FcBool
-FcConfigAddEdit (FcConfig	*config,
-		 FcTest		*test,
-		 FcEdit		*edit,
+FcConfigAddRule (FcConfig	*config,
+		 FcRule		*rule,
 		 FcMatchKind	kind)
 {
     FcSubst	*subst, **prev;
-    FcTest	*t;
-    int		num;
+    FcRule	*r;
+    int		n = 0;
 
+    if (!rule)
+	return FcFalse;
     switch (kind) {
     case FcMatchPattern:
 	prev = &config->substPattern;
@@ -669,18 +671,31 @@ FcConfigAddEdit (FcConfig	*config,
 	return FcFalse;
     for (; *prev; prev = &(*prev)->next);
     *prev = subst;
-    subst->next = 0;
-    subst->test = test;
-    subst->edit = edit;
-    num = 0;
-    for (t = test; t; t = t->next)
+    subst->next = NULL;
+    subst->rule = rule;
+    for (r = rule; r; r = r->next)
     {
-	if (t->kind == FcMatchDefault)
-	    t->kind = kind;
-	num++;
+	switch (r->type)
+	{
+	case FcRuleTest:
+	    if (r->u.test &&
+		r->u.test->kind == FcMatchDefault)
+		r->u.test->kind = kind;
+
+	    if (n < r->u.test->object)
+		n = r->u.test->object;
+	    break;
+	case FcRuleEdit:
+	    if (n < r->u.edit->object)
+		n = r->u.edit->object;
+	    break;
+	default:
+	    break;
+	}
     }
-    if (config->maxObjects < num)
-	config->maxObjects = num;
+    n = FC_OBJ_ID (n) - FC_MAX_BASE_OBJECT;
+    if (config->maxObjects < n)
+	config->maxObjects = n;
     if (FcDebug () & FC_DBG_EDIT)
     {
 	printf ("Add Subst ");
@@ -688,11 +703,6 @@ FcConfigAddEdit (FcConfig	*config,
     }
     return FcTrue;
 }
-
-typedef struct _FcSubState {
-    FcPatternElt   *elt;
-    FcValueList    *value;
-} FcSubState;
 
 static FcValue
 FcConfigPromote (FcValue v, FcValue u, FcValuePromotionBuffer *buf)
@@ -717,7 +727,7 @@ FcConfigPromote (FcValue v, FcValue u, FcValuePromotionBuffer *buf)
 
 FcBool
 FcConfigCompareValue (const FcValue	*left_o,
-		      FcOp		op_,
+		      unsigned int      op_,
 		      const FcValue	*right_o)
 {
     FcValue	left = FcValueCanonicalize(left_o);
@@ -732,6 +742,8 @@ FcConfigCompareValue (const FcValue	*left_o,
     if (left.type == right.type)
     {
 	switch (left.type) {
+	case FcTypeUnknown:
+	    break;	/* No way to guess how to compare for this object */
 	case FcTypeInteger:
 	    break;	/* FcConfigPromote prevents this from happening */
 	case FcTypeDouble:
@@ -1478,14 +1490,17 @@ FcConfigSubstituteWithPat (FcConfig    *config,
 			   FcPattern   *p_pat,
 			   FcMatchKind kind)
 {
+    FcValue v;
     FcSubst	    *s;
-    FcSubState	    *st;
-    int		    i;
-    FcTest	    *t;
-    FcEdit	    *e;
-    FcValueList	    *l;
+    FcRule          *r;
+    FcValueList	    *l, **value = NULL, *vl;
     FcPattern	    *m;
     FcStrSet	    *strs;
+    FcObject	    object = FC_INVALID_OBJECT;
+    FcPatternElt    **elt = NULL, *e;
+    int		    i, nobjs;
+    FcBool	    retval = FcTrue;
+    FcTest	    **tst = NULL;
 
     if (!config)
     {
@@ -1513,6 +1528,12 @@ FcConfigSubstituteWithPat (FcConfig    *config,
 	    }
 	    FcStrListDone (l);
 	}
+	if (FcPatternObjectGet (p, FC_PRGNAME_OBJECT, 0, &v) == FcResultNoMatch)
+	{
+	    FcChar8 *prgname = FcGetPrgname ();
+	    if (prgname)
+		FcPatternObjectAddString (p, FC_PRGNAME_OBJECT, prgname);
+	}
 	break;
     case FcMatchFont:
 	s = config->substFont;
@@ -1524,9 +1545,25 @@ FcConfigSubstituteWithPat (FcConfig    *config,
 	return FcFalse;
     }
 
-    st = (FcSubState *) malloc (config->maxObjects * sizeof (FcSubState));
-    if (!st && config->maxObjects)
-	return FcFalse;
+    nobjs = FC_MAX_BASE_OBJECT + config->maxObjects + 2;
+    value = (FcValueList **) malloc (SIZEOF_VOID_P * nobjs);
+    if (!value)
+    {
+	retval = FcFalse;
+	goto bail1;
+    }
+    elt = (FcPatternElt **) malloc (SIZEOF_VOID_P * nobjs);
+    if (!elt)
+    {
+	retval = FcFalse;
+	goto bail1;
+    }
+    tst = (FcTest **) malloc (SIZEOF_VOID_P * nobjs);
+    if (!tst)
+    {
+	retval = FcFalse;
+	goto bail1;
+    }
 
     if (FcDebug () & FC_DBG_EDIT)
     {
@@ -1535,190 +1572,199 @@ FcConfigSubstituteWithPat (FcConfig    *config,
     }
     for (; s; s = s->next)
     {
-	/*
-	 * Check the tests to see if
-	 * they all match the pattern
-	 */
-	for (t = s->test, i = 0; t; t = t->next, i++)
+	r = s->rule;
+	for (i = 0; i < nobjs; i++)
 	{
-	    if (FcDebug () & FC_DBG_EDIT)
-	    {
-		printf ("FcConfigSubstitute test ");
-		FcTestPrint (t);
-	    }
-	    st[i].elt = 0;
-	    if (kind == FcMatchFont && t->kind == FcMatchPattern)
-		m = p_pat;
-	    else
-		m = p;
-	    if (m)
-		st[i].elt = FcPatternObjectFindElt (m, t->object);
-	    else
-		st[i].elt = 0;
-	    /*
-	     * If there's no such field in the font,
-	     * then FcQualAll matches while FcQualAny does not
-	     */
-	    if (!st[i].elt)
-	    {
-		if (t->qual == FcQualAll)
+	    elt[i] = NULL;
+	    value[i] = NULL;
+	    tst[i] = NULL;
+	}
+	for (; r; r = r->next)
+	{
+	    switch (r->type) {
+	    case FcRuleUnknown:
+		/* shouldn't be reached */
+		break;
+	    case FcRuleTest:
+		object = FC_OBJ_ID (r->u.test->object);
+		/*
+		 * Check the tests to see if
+		 * they all match the pattern
+		 */
+		if (FcDebug () & FC_DBG_EDIT)
 		{
-		    st[i].value = 0;
-		    continue;
+		    printf ("FcConfigSubstitute test ");
+		    FcTestPrint (r->u.test);
 		}
+		if (kind == FcMatchFont && r->u.test->kind == FcMatchPattern)
+		    m = p_pat;
 		else
-		    break;
-	    }
-	    /*
-	     * Check to see if there is a match, mark the location
-	     * to apply match-relative edits
-	     */
-	    st[i].value = FcConfigMatchValueList (m, p_pat, kind, t, st[i].elt->values);
-	    if (!st[i].value)
-		break;
-	    if (t->qual == FcQualFirst && st[i].value != st[i].elt->values)
-		break;
-	    if (t->qual == FcQualNotFirst && st[i].value == st[i].elt->values)
-		break;
-	}
-	if (t)
-	{
-	    if (FcDebug () & FC_DBG_EDIT)
-		printf ("No match\n");
-	    continue;
-	}
-	if (FcDebug () & FC_DBG_EDIT)
-	{
-	    printf ("Substitute ");
-	    FcSubstPrint (s);
-	}
-	for (e = s->edit; e; e = e->next)
-	{
-	    /*
-	     * Evaluate the list of expressions
-	     */
-	    l = FcConfigValues (p, p_pat,kind,  e->expr, e->binding);
-	    /*
-	     * Locate any test associated with this field, skipping
-	     * tests associated with the pattern when substituting in
-	     * the font
-	     */
-	    for (t = s->test, i = 0; t; t = t->next, i++)
-	    {
-		if ((t->kind == FcMatchFont || kind == FcMatchPattern) &&
-		    t->object == e->object)
+		    m = p;
+		if (m)
+		    e = FcPatternObjectFindElt (m, r->u.test->object);
+		else
+		    e = NULL;
+		/* different 'kind' won't be the target of edit */
+		if (!elt[object] && kind == r->u.test->kind)
 		{
-		    /*
-		     * KLUDGE - the pattern may have been reallocated or
-		     * things may have been inserted or deleted above
-		     * this element by other edits.  Go back and find
-		     * the element again
-		     */
-		    if (e != s->edit && st[i].elt)
-			st[i].elt = FcPatternObjectFindElt (p, t->object);
-		    if (!st[i].elt)
-			t = 0;
-		    break;
+		    elt[object] = e;
+		    tst[object] = r->u.test;
 		}
-	    }
-	    switch (FC_OP_GET_OP (e->op)) {
-	    case FcOpAssign:
 		/*
-		 * If there was a test, then replace the matched
-		 * value with the new list of values
+		 * If there's no such field in the font,
+		 * then FcQualAll matches while FcQualAny does not
 		 */
-		if (t)
+		if (!e)
 		{
-		    FcValueList	*thisValue = st[i].value;
-		    FcValueList	*nextValue = thisValue;
-		
-		    /*
-		     * Append the new list of values after the current value
-		     */
-		    FcConfigAdd (&st[i].elt->values, thisValue, FcTrue, l, e->object);
-		    /*
-		     * Delete the marked value
-		     */
-                    if (thisValue)
-			FcConfigDel (&st[i].elt->values, thisValue);
-		    /*
-		     * Adjust any pointers into the value list to ensure
-		     * future edits occur at the same place
-		     */
-		    for (t = s->test, i = 0; t; t = t->next, i++)
+		    if (r->u.test->qual == FcQualAll)
 		    {
-			if (st[i].value == thisValue)
-			    st[i].value = nextValue;
+			value[object] = NULL;
+			continue;
 		    }
-		    break;
-		}
-		/* fall through ... */
-	    case FcOpAssignReplace:
-		/*
-		 * Delete all of the values and insert
-		 * the new set
-		 */
-		FcConfigPatternDel (p, e->object);
-		FcConfigPatternAdd (p, e->object, l, FcTrue);
-		/*
-		 * Adjust any pointers into the value list as they no
-		 * longer point to anything valid
-		 */
-		if (t)
-		{
-		    FcPatternElt    *thisElt = st[i].elt;
-		    for (t = s->test, i = 0; t; t = t->next, i++)
+		    else
 		    {
-			if (st[i].elt == thisElt)
-			    st[i].value = 0;
+			if (FcDebug () & FC_DBG_EDIT)
+			    printf ("No match\n");
+			goto bail;
 		    }
 		}
-		break;
-	    case FcOpPrepend:
-		if (t)
+		/*
+		 * Check to see if there is a match, mark the location
+		 * to apply match-relative edits
+		 */
+		vl = FcConfigMatchValueList (m, p_pat, kind, r->u.test, e->values);
+		/* different 'kind' won't be the target of edit */
+		if (!value[object] && kind == r->u.test->kind)
+		    value[object] = vl;
+		if (!vl ||
+		    (r->u.test->qual == FcQualFirst && vl != e->values) ||
+		    (r->u.test->qual == FcQualNotFirst && vl == e->values))
 		{
-		    FcConfigAdd (&st[i].elt->values, st[i].value, FcFalse, l, e->object);
-		    break;
+		    if (FcDebug () & FC_DBG_EDIT)
+			printf ("No match\n");
+		    goto bail;
 		}
-		/* fall through ... */
-	    case FcOpPrependFirst:
-		FcConfigPatternAdd (p, e->object, l, FcFalse);
 		break;
-	    case FcOpAppend:
-		if (t)
+	    case FcRuleEdit:
+		object = FC_OBJ_ID (r->u.edit->object);
+		if (FcDebug () & FC_DBG_EDIT)
 		{
-		    FcConfigAdd (&st[i].elt->values, st[i].value, FcTrue, l, e->object);
-		    break;
+		    printf ("Substitute ");
+		    FcEditPrint (r->u.edit);
+		    printf ("\n\n");
 		}
-		/* fall through ... */
-	    case FcOpAppendLast:
-		FcConfigPatternAdd (p, e->object, l, FcTrue);
-		break;
-	    default:
-                FcValueListDestroy (l);
-		break;
-	    }
-	}
-	/*
-	 * Now go through the pattern and eliminate
-	 * any properties without data
-	 */
-	for (e = s->edit; e; e = e->next)
-	    FcConfigPatternCanon (p, e->object);
+		/*
+		 * Evaluate the list of expressions
+		 */
+		l = FcConfigValues (p, p_pat,kind,  r->u.edit->expr, r->u.edit->binding);
+		if (tst[object] && (tst[object]->kind == FcMatchFont || kind == FcMatchPattern))
+		    elt[object] = FcPatternObjectFindElt (p, tst[object]->object);
 
-	if (FcDebug () & FC_DBG_EDIT)
-	{
-	    printf ("FcConfigSubstitute edit");
-	    FcPatternPrint (p);
+		switch (FC_OP_GET_OP (r->u.edit->op)) {
+		case FcOpAssign:
+		    /*
+		     * If there was a test, then replace the matched
+		     * value with the new list of values
+		     */
+		    if (value[object])
+		    {
+			FcValueList	*thisValue = value[object];
+			FcValueList	*nextValue = l;
+
+			/*
+			 * Append the new list of values after the current value
+			 */
+			FcConfigAdd (&elt[object]->values, thisValue, FcTrue, l, r->u.edit->object);
+			/*
+			 * Delete the marked value
+			 */
+			if (thisValue)
+			    FcConfigDel (&elt[object]->values, thisValue);
+			/*
+			 * Adjust a pointer into the value list to ensure
+			 * future edits occur at the same place
+			 */
+			value[object] = nextValue;
+			break;
+		    }
+		    /* fall through ... */
+		case FcOpAssignReplace:
+		    /*
+		     * Delete all of the values and insert
+		     * the new set
+		     */
+		    FcConfigPatternDel (p, r->u.edit->object);
+		    FcConfigPatternAdd (p, r->u.edit->object, l, FcTrue);
+		    /*
+		     * Adjust a pointer into the value list as they no
+		     * longer point to anything valid
+		     */
+		    value[object] = NULL;
+		    break;
+		case FcOpPrepend:
+		    if (value[object])
+		    {
+			FcConfigAdd (&elt[object]->values, value[object], FcFalse, l, r->u.edit->object);
+			break;
+		    }
+		    /* fall through ... */
+		case FcOpPrependFirst:
+		    FcConfigPatternAdd (p, r->u.edit->object, l, FcFalse);
+		    break;
+		case FcOpAppend:
+		    if (value[object])
+		    {
+			FcConfigAdd (&elt[object]->values, value[object], FcTrue, l, r->u.edit->object);
+			break;
+		    }
+		    /* fall through ... */
+		case FcOpAppendLast:
+		    FcConfigPatternAdd (p, r->u.edit->object, l, FcTrue);
+		    break;
+		case FcOpDelete:
+		    if (value[object])
+		    {
+			FcConfigDel (&elt[object]->values, value[object]);
+			break;
+		    }
+		    /* fall through ... */
+		case FcOpDeleteAll:
+		    FcConfigPatternDel (p, r->u.edit->object);
+		    break;
+		default:
+		    FcValueListDestroy (l);
+		    break;
+		}
+		/*
+		 * Now go through the pattern and eliminate
+		 * any properties without data
+		 */
+		FcConfigPatternCanon (p, r->u.edit->object);
+
+		if (FcDebug () & FC_DBG_EDIT)
+		{
+		    printf ("FcConfigSubstitute edit");
+		    FcPatternPrint (p);
+		}
+		break;
+	    }
 	}
+    bail:;
     }
-    free (st);
     if (FcDebug () & FC_DBG_EDIT)
     {
 	printf ("FcConfigSubstitute done");
 	FcPatternPrint (p);
     }
-    return FcTrue;
+bail1:
+    if (elt)
+	free (elt);
+    if (value)
+	free (value);
+    if (tst)
+	free (tst);
+
+    return retval;
 }
 
 FcBool
@@ -2190,57 +2236,13 @@ FcConfigGlobAdd (FcConfig	*config,
 }
 
 static FcBool
-FcConfigGlobMatch (const FcChar8    *glob,
-		   const FcChar8    *string)
-{
-    FcChar8	c;
-
-    while ((c = *glob++))
-    {
-	switch (c) {
-	case '*':
-	    /* short circuit common case */
-	    if (!*glob)
-		return FcTrue;
-	    /* short circuit another common case */
-	    if (strchr ((char *) glob, '*') == 0)
-	    {
-		size_t l1, l2;
-
-		l1 = strlen ((char *) string);
-		l2 = strlen ((char *) glob);
-		if (l1 < l2)
-		    return FcFalse;
-		string += (l1 - l2);
-	    }
-	    while (*string)
-	    {
-		if (FcConfigGlobMatch (glob, string))
-		    return FcTrue;
-		string++;
-	    }
-	    return FcFalse;
-	case '?':
-	    if (*string++ == '\0')
-		return FcFalse;
-	    break;
-	default:
-	    if (*string++ != c)
-		return FcFalse;
-	    break;
-	}
-    }
-    return *string == '\0';
-}
-
-static FcBool
 FcConfigGlobsMatch (const FcStrSet	*globs,
 		    const FcChar8	*string)
 {
     int	i;
 
     for (i = 0; i < globs->num; i++)
-	if (FcConfigGlobMatch (globs->strs[i], string))
+	if (FcStrGlobMatch (globs->strs[i], string))
 	    return FcTrue;
     return FcFalse;
 }
@@ -2292,6 +2294,59 @@ FcConfigAcceptFont (FcConfig	    *config,
 	return FcFalse;
     return FcTrue;
 }
+
+const FcChar8 *
+FcConfigGetSysRoot (const FcConfig *config)
+{
+    if (!config)
+    {
+	config = FcConfigGetCurrent ();
+	if (!config)
+	    return NULL;
+    }
+
+    return config->sysRoot;
+}
+
+void
+FcConfigSetSysRoot (FcConfig      *config,
+		    const FcChar8 *sysroot)
+{
+    FcChar8 *s;
+    FcBool init = FcFalse;
+
+    if (!config)
+    {
+	/* We can't use FcConfigGetCurrent() here to ensure
+	 * the sysroot is set prior to initialize FcConfig,
+	 * to avoid loading caches from non-sysroot dirs.
+	 * So postpone the initialization later.
+	 */
+	config = fc_atomic_ptr_get (&_fcConfig);
+	if (!config)
+	{
+	    config = FcConfigCreate ();
+	    if (!config)
+		return;
+	    init = FcTrue;
+	}
+    }
+
+    s = FcStrCopyFilename (sysroot);
+    if (!s)
+	return;
+
+    if (config->sysRoot)
+	FcStrFree (config->sysRoot);
+
+    config->sysRoot = s;
+    if (init)
+    {
+	config = FcInitLoadOwnConfigAndFonts (config);
+	FcConfigSetCurrent (config);
+    }
+}
+
 #define __fccfg__
 #include "fcaliastail.h"
 #undef __fccfg__

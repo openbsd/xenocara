@@ -175,7 +175,7 @@ CLASS="PROGRAMLISTING"
                                                   the file
     ftface         FC_FT_FACE             FT_Face Use the specified FreeType
                                                   face object
-    rasterizer     FC_RASTERIZER          String  Which rasterizer is in use
+    rasterizer     FC_RASTERIZER          String  Which rasterizer is in use (deprecated)
     outline        FC_OUTLINE             Bool    Whether the glyphs are outlines
     scalable       FC_SCALABLE            Bool    Whether glyphs can be scaled
     scale          FC_SCALE               Double  Scale factor for point-&#62;pixel
@@ -195,9 +195,15 @@ CLASS="PROGRAMLISTING"
                                                   the font
     embolden       FC_EMBOLDEN            Bool    Rasterizer should
                                                   synthetically embolden the font
+    fontfeatures   FC_FONT_FEATURES       String  List of extra feature tags in
+                                                  OpenType to be enabled
     namelang       FC_NAMELANG            String  Language name to be used for the
                                                   default value of familylang,
                                                   stylelang and fullnamelang
+    prgname        FC_PRGNAME             String  Name of the running program
+    hash           FC_HASH                String  SHA256 hash value of the font data
+                                                  with "sha256:" prefix.
+    postscriptname FC_POSTSCRIPT_NAME     String  Font name in PostScript
     </PRE
 ></TD
 ></TR

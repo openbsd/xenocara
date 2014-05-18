@@ -30,6 +30,7 @@
 #include <regex.h>
 #endif
 
+
 /* Objects MT-safe for readonly access. */
 
 FcChar8 *
@@ -136,27 +137,7 @@ FcStrCaseWalkerLong (FcCaseWalker *w, FcChar8 r)
 }
 
 static FcChar8
-FcStrCaseWalkerNext (FcCaseWalker *w)
-{
-    FcChar8	r;
-
-    if (w->read)
-    {
-	if ((r = *w->read++))
-	    return r;
-	w->read = 0;
-    }
-    r = *w->src++;
-
-    if ((r & 0xc0) == 0xc0)
-	return FcStrCaseWalkerLong (w, r);
-    if ('A' <= r && r <= 'Z')
-        r = r - 'A' + 'a';
-    return r;
-}
-
-static FcChar8
-FcStrCaseWalkerNextIgnoreBlanks (FcCaseWalker *w)
+FcStrCaseWalkerNext (FcCaseWalker *w, const char *delims)
 {
     FcChar8	r;
 
@@ -169,7 +150,7 @@ FcStrCaseWalkerNextIgnoreBlanks (FcCaseWalker *w)
     do
     {
 	r = *w->src++;
-    } while (r == ' ');
+    } while (r != 0 && delims && strchr (delims, r));
 
     if ((r & 0xc0) == 0xc0)
 	return FcStrCaseWalkerLong (w, r);
@@ -186,13 +167,13 @@ FcStrDowncase (const FcChar8 *s)
     FcChar8	    *dst, *d;
 
     FcStrCaseWalkerInit (s, &w);
-    while (FcStrCaseWalkerNext (&w))
+    while (FcStrCaseWalkerNext (&w, NULL))
 	len++;
     d = dst = malloc (len + 1);
     if (!d)
 	return 0;
     FcStrCaseWalkerInit (s, &w);
-    while ((*d++ = FcStrCaseWalkerNext (&w)));
+    while ((*d++ = FcStrCaseWalkerNext (&w, NULL)));
     return dst;
 }
 
@@ -209,8 +190,8 @@ FcStrCmpIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNext (&w1);
-	c2 = FcStrCaseWalkerNext (&w2);
+	c1 = FcStrCaseWalkerNext (&w1, NULL);
+	c2 = FcStrCaseWalkerNext (&w2, NULL);
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -219,6 +200,12 @@ FcStrCmpIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 
 int
 FcStrCmpIgnoreBlanksAndCase (const FcChar8 *s1, const FcChar8 *s2)
+{
+    return FcStrCmpIgnoreCaseAndDelims (s1, s2, (const FcChar8 *)" ");
+}
+
+int
+FcStrCmpIgnoreCaseAndDelims (const FcChar8 *s1, const FcChar8 *s2, const FcChar8 *delims)
 {
     FcCaseWalker    w1, w2;
     FcChar8	    c1, c2;
@@ -230,8 +217,8 @@ FcStrCmpIgnoreBlanksAndCase (const FcChar8 *s1, const FcChar8 *s2)
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNextIgnoreBlanks (&w1);
-	c2 = FcStrCaseWalkerNextIgnoreBlanks (&w2);
+	c1 = FcStrCaseWalkerNext (&w1, (const char *)delims);
+	c2 = FcStrCaseWalkerNext (&w2, (const char *)delims);
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -316,7 +303,7 @@ FcStrHashIgnoreCase (const FcChar8 *s)
     FcChar8	    c;
 
     FcStrCaseWalkerInit (s, &w);
-    while ((c = FcStrCaseWalkerNext (&w)))
+    while ((c = FcStrCaseWalkerNext (&w, NULL)))
 	h = ((h << 3) ^ (h >> 3)) ^ c;
     return h;
 }
@@ -336,8 +323,8 @@ FcStrIsAtIgnoreBlanksAndCase (const FcChar8 *s1, const FcChar8 *s2)
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNextIgnoreBlanks (&w1);
-	c2 = FcStrCaseWalkerNextIgnoreBlanks (&w2);
+	c1 = FcStrCaseWalkerNext (&w1, " ");
+	c2 = FcStrCaseWalkerNext (&w2, " ");
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -395,8 +382,8 @@ FcStrIsAtIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 
     for (;;)
     {
-	c1 = FcStrCaseWalkerNext (&w1);
-	c2 = FcStrCaseWalkerNext (&w2);
+	c1 = FcStrCaseWalkerNext (&w1, NULL);
+	c2 = FcStrCaseWalkerNext (&w2, NULL);
 	if (!c1 || (c1 != c2))
 	    break;
     }
@@ -447,6 +434,75 @@ FcStrContainsWord (const FcChar8 *s1, const FcChar8 *s2)
     return 0;
 }
 
+/*
+ * returns the number of strings (ignoring delimitors and case) being matched
+ */
+
+int
+FcStrMatchIgnoreCaseAndDelims (const FcChar8 *s1, const FcChar8 *s2, const FcChar8 *delims)
+{
+    FcCaseWalker    w1, w2;
+    FcChar8	    c1, c2;
+
+    if (s1 == s2) return 0;
+
+    FcStrCaseWalkerInit (s1, &w1);
+    FcStrCaseWalkerInit (s2, &w2);
+
+    for (;;)
+    {
+	c1 = FcStrCaseWalkerNext (&w1, (const char *)delims);
+	c2 = FcStrCaseWalkerNext (&w2, (const char *)delims);
+	if (!c1 || (c1 != c2))
+	    break;
+    }
+    return w1.src - s1 - 1;
+}
+
+FcBool
+FcStrGlobMatch (const FcChar8 *glob,
+		const FcChar8 *string)
+{
+    FcChar8	c;
+
+    while ((c = *glob++))
+    {
+	switch (c) {
+	case '*':
+	    /* short circuit common case */
+	    if (!*glob)
+		return FcTrue;
+	    /* short circuit another common case */
+	    if (strchr ((char *) glob, '*') == 0)
+	    {
+		size_t l1, l2;
+
+		l1 = strlen ((char *) string);
+		l2 = strlen ((char *) glob);
+		if (l1 < l2)
+		    return FcFalse;
+		string += (l1 - l2);
+	    }
+	    while (*string)
+	    {
+		if (FcStrGlobMatch (glob, string))
+		    return FcTrue;
+		string++;
+	    }
+	    return FcFalse;
+	case '?':
+	    if (*string++ == '\0')
+		return FcFalse;
+	    break;
+	default:
+	    if (*string++ != c)
+		return FcFalse;
+	    break;
+	}
+    }
+    return *string == '\0';
+}
+
 const FcChar8 *
 FcStrStrIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 {
@@ -463,12 +519,12 @@ FcStrStrIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
     FcStrCaseWalkerInit (s1, &w1);
     FcStrCaseWalkerInit (s2, &w2);
 
-    c2 = FcStrCaseWalkerNext (&w2);
+    c2 = FcStrCaseWalkerNext (&w2, NULL);
 
     for (;;)
     {
 	cur = w1.src;
-	c1 = FcStrCaseWalkerNext (&w1);
+	c1 = FcStrCaseWalkerNext (&w1, NULL);
 	if (!c1)
 	    break;
 	if (c1 == c2)
@@ -479,8 +535,8 @@ FcStrStrIgnoreCase (const FcChar8 *s1, const FcChar8 *s2)
 
 	    for (;;)
 	    {
-		c1t = FcStrCaseWalkerNext (&w1t);
-		c2t = FcStrCaseWalkerNext (&w2t);
+		c1t = FcStrCaseWalkerNext (&w1t, NULL);
+		c2t = FcStrCaseWalkerNext (&w2t, NULL);
 
 		if (!c2t)
 		    return cur;
@@ -864,6 +920,68 @@ FcStrUsesHome (const FcChar8 *s)
 }
 
 FcChar8 *
+FcStrBuildFilename (const FcChar8 *path,
+		    ...)
+{
+    va_list ap;
+    FcStrSet *sset;
+    FcStrList *list;
+    FcChar8 *s, *ret = NULL, *p;
+    size_t len = 0;
+
+    if (!path)
+	return NULL;
+
+    sset = FcStrSetCreate ();
+    if (!sset)
+	return NULL;
+
+    if (!FcStrSetAdd (sset, path))
+	goto bail0;
+
+    va_start (ap, path);
+    while (1)
+    {
+	s = (FcChar8 *)va_arg (ap, FcChar8 *);
+	if (!s)
+	    break;
+	if (!FcStrSetAdd (sset, s))
+	    goto bail1;
+    }
+    list = FcStrListCreate (sset);
+    while ((s = FcStrListNext (list)))
+    {
+	len += strlen ((const char *)s) + 1;
+    }
+    list->n = 0;
+    ret = malloc (sizeof (FcChar8) * (len + 1));
+    if (!ret)
+	goto bail2;
+    p = ret;
+    while ((s = FcStrListNext (list)))
+    {
+	if (p != ret)
+	{
+	    p[0] = FC_DIR_SEPARATOR;
+	    p++;
+	}
+	len = strlen ((const char *)s);
+	memcpy (p, s, len);
+	p += len;
+    }
+    *p = 0;
+
+bail2:
+    FcStrListDone (list);
+bail1:
+    va_end (ap);
+bail0:
+    FcStrSetDestroy (sset);
+
+    return ret;
+}
+
+FcChar8 *
 FcStrCopyFilename (const FcChar8 *s)
 {
     FcChar8 *new;
@@ -1052,8 +1170,7 @@ FcStrCanonFilename (const FcChar8 *s)
 	FcChar8	cwd[FC_MAX_FILE_LEN + 2];
 	if (getcwd ((char *) cwd, FC_MAX_FILE_LEN) == NULL)
 	    return NULL;
-	strcat ((char *) cwd, "/");
-	full = FcStrPlus (cwd, s);
+	full = FcStrBuildFilename (cwd, s, NULL);
 	file = FcStrCanonAbsoluteFilename (full);
 	FcStrFree (full);
 	return file;
@@ -1259,6 +1376,12 @@ FcStrListCreate (FcStrSet *set)
     FcStrSetReference (set);
     list->n = 0;
     return list;
+}
+
+void
+FcStrListFirst (FcStrList *list)
+{
+    list->n = 0;
 }
 
 FcChar8 *

@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcValueDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcValueDestroy</refname>
@@ -45,11 +46,6 @@
 	    <para>
 Frees any memory referenced by <parameter>v</parameter>.  Values of type FcTypeString,
 FcTypeMatrix and FcTypeCharSet reference memory, the other types do not.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -80,6 +76,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcValueSave</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcValueSave</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 	    <para>
 Returns a copy of <parameter>v</parameter> duplicating any object referenced by it so that <parameter>v</parameter>
 may be safely destroyed without harming the new value.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcValuePrint</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcValuePrint</refname>
@@ -156,11 +149,6 @@ Fontconfig version &version;
 Prints a human-readable representation of <parameter>v</parameter> to
 stdout. The format should not be considered part of the library
 specification as it may change in the future.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -191,6 +179,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcValueEqual</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcValueEqual</refname>
@@ -213,11 +202,6 @@ Fontconfig version &version;
 Compares two values. Integers and Doubles are compared as numbers; otherwise
 the two values have to be the same type to be considered equal. Strings are
 compared ignoring case.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

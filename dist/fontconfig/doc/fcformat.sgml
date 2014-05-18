@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcPatternFormat</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcPatternFormat</refname>
@@ -321,9 +322,7 @@ to the values of the family element in <parameter>pattern</parameter>,
 lower-cased and with spaces removed.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
+	<refsect1><title>Since</title>
+	    <para>version 2.9.0</para>
 	</refsect1>
     </refentry>

@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcNameRegisterObjectTypes</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameRegisterObjectTypes</refname>
@@ -45,11 +46,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 Deprecated.  Does nothing.  Returns FcFalse.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -80,6 +76,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcNameUnregisterObjectTypes</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameUnregisterObjectTypes</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Deprecated.  Does nothing.  Returns FcFalse.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcNameGetObjectType</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcNameGetObjectType</refname>
@@ -154,11 +147,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Return the object type for the pattern element named <parameter>object</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

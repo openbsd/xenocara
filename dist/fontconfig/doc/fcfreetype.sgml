@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcFreeTypeCharIndex</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFreeTypeCharIndex</refname>
@@ -50,11 +51,6 @@ several possible underlying encoding tables to work around broken fonts.
 As a result, this function isn't designed to be used in performance
 sensitive areas; results from this function are intended to be cached by
 higher level functions.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -85,6 +81,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFreeTypeCharSet</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFreeTypeCharSet</refname>
@@ -109,11 +106,6 @@ Scans a FreeType face and returns the set of encoded Unicode chars.  This scans
 several encoding tables to build as complete a list as possible.  
 If 'blanks' is not 0, the glyphs in the font are examined and any blank glyphs
 not in 'blanks' are not placed in the returned FcCharSet.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -144,6 +136,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFreeTypeCharSetAndSpacing</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFreeTypeCharSetAndSpacing</refname>
@@ -177,11 +170,6 @@ wide as the other, or FC_PROPORTIONAL where the font has glyphs of many
 widths.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -210,6 +198,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFreeTypeQuery</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFreeTypeQuery</refname>
@@ -234,11 +223,6 @@ Fontconfig version &version;
 	    <para>
 Constructs a pattern representing the 'id'th font in 'file'.  The number
 of fonts in 'file' is returned in 'count'.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -269,6 +253,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFreeTypeQueryFace</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFreeTypeQueryFace</refname>
@@ -293,11 +278,6 @@ Fontconfig version &version;
 	    <para>
 Constructs a pattern representing 'face'. 'file' and 'id' are used solely as
 data for pattern elements (FC_FILE, FC_INDEX and sometimes FC_FAMILY).
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

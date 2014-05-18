@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcMatrixInit</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcMatrixInit</refname>
@@ -45,11 +46,6 @@
 	    <para>
 <function>FcMatrixInit</function> initializes <parameter>matrix</parameter>
 to the identity matrix.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -80,6 +76,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcMatrixCopy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcMatrixCopy</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 	    <para>
 <function>FcMatrixCopy</function> allocates a new FcMatrix
 and copies <parameter>mat</parameter> into it.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcMatrixEqual</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcMatrixEqual</refname>
@@ -157,11 +150,6 @@ Fontconfig version &version;
 <function>FcMatrixEqual</function> compares <parameter>matrix1</parameter>
 and <parameter>matrix2</parameter> returning FcTrue when they are equal and
 FcFalse when they are not.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -192,6 +180,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcMatrixMultiply</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcMatrixMultiply</refname>
@@ -215,11 +204,6 @@ Fontconfig version &version;
 <function>FcMatrixMultiply</function> multiplies
 <parameter>matrix1</parameter> and <parameter>matrix2</parameter> storing
 the result in <parameter>result</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -250,6 +234,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcMatrixRotate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcMatrixRotate</refname>
@@ -280,11 +265,6 @@ matrix:
 </programlisting>
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -313,6 +293,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcMatrixScale</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcMatrixScale</refname>
@@ -343,11 +324,6 @@ the matrix:
 </programlisting>
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -376,6 +352,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcMatrixShear</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcMatrixShear</refname>
@@ -404,11 +381,6 @@ the matrix:
   1  sh
   sv  1
 </programlisting>
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

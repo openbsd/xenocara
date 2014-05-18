@@ -26,12 +26,8 @@ SUBDIRS=fontconfig fc-case fc-lang fc-glyphname src \
 	fc-validate conf.d test
 if ENABLE_DOCS
 SUBDIRS += doc
-DIST_SUBDIRS = $(SUBDIRS)
-else
-DIST_SUBDIRS = $(SUBDIRS) doc
 endif
 
-AUTOMAKE_OPTIONS = dist-bzip2
 ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST = \
@@ -57,9 +53,9 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/ltmain.sh \
 	$(srcdir)/missing \
 	$(srcdir)/mkinstalldirs \
+	$(srcdir)/test-driver \
 	`find "$(srcdir)" -type f -name Makefile.in -print`
 
-pkgconfigdir=$(libdir)/pkgconfig
 pkgconfig_DATA = fontconfig.pc
 
 baseconfigdir = $(BASECONFIGDIR)
@@ -81,7 +77,7 @@ EXTRA_DIST += ChangeLog
 ChangeLog: $(srcdir)/ChangeLog
 $(srcdir)/ChangeLog:
 	if test -d "$(srcdir)/.git"; then \
-	  (GIT_DIR=$(top_srcdir)/.git ./missing --run git log --stat) | fmt --split-only > $@.tmp \
+	  (GIT_DIR=$(top_srcdir)/.git $(GIT) log --stat) | fmt --split-only > $@.tmp \
 	  && mv -f $@.tmp $@ \
 	  || ($(RM) $@.tmp; \
 	      echo Failed to generate ChangeLog, your ChangeLog may be outdated >&2; \
@@ -94,12 +90,14 @@ $(srcdir)/ChangeLog:
 
 .PHONY: ChangeLog
 
+FC_CONFIGDIR = $(subst $(BASECONFIGDIR)/,,$(CONFIGDIR))
+
 fonts.conf: fonts.conf.in Makefile
 	sed \
 		-e 's,@FC_CACHEDIR\@,$(FC_CACHEDIR),g' \
 		-e 's,@FC_DEFAULT_FONTS\@,$(FC_DEFAULT_FONTS),g' \
 		-e 's,@FC_FONTPATH\@,$(FC_FONTPATH),g' \
-		-e 's,@CONFIGDIR\@,$(CONFIGDIR),g' \
+		-e 's,@CONFIGDIR\@,$(FC_CONFIGDIR),g' \
 		-e 's,@PACKAGE\@,$(PACKAGE),g' \
 		-e 's,@VERSION\@,$(VERSION),g' \
 		$(srcdir)/$@.in > $@.tmp && \

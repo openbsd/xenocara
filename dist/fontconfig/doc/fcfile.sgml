@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcFileScan</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFileScan</refname>
@@ -61,11 +62,6 @@ contents of the font file itself. Returns FcFalse if any of the fonts cannot be
 added (due to allocation failure). Otherwise returns FcTrue.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -94,6 +90,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFileIsDir</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFileIsDir</refname>
@@ -114,11 +111,6 @@ Fontconfig version &version;
 	    <para>
 Returns FcTrue if <parameter>file</parameter> is a directory, otherwise
 returns FcFalse.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -149,6 +141,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcDirScan</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcDirScan</refname>
@@ -180,11 +173,6 @@ this function does not create any cache files.  Use FcDirCacheRead() if
 caching is desired.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
-	</refsect1>
     </refentry>
 <!--
    fontconfig/doc/func.sgml
@@ -213,6 +201,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcDirSave</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcDirSave</refname>
@@ -238,11 +227,6 @@ per-directory cache file for <parameter>dir</parameter> and populates it
 with the fonts in <parameter>set</parameter> and subdirectories in
 <parameter>dirs</parameter>. All of this functionality is now automatically
 managed by FcDirCacheLoad and FcDirCacheRead.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

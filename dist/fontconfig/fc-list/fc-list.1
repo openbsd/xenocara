@@ -4,7 +4,7 @@
 fc-list \- list available fonts
 .SH SYNOPSIS
 .sp
-\fBfc-list\fR [ \fB-vVh\fR ]  [ \fB--verbose\fR ]  [ \fB [ -f \fIformat\fB ]  [ --format \fIformat\fB ] \fR ]  [ \fB--version\fR ]  [ \fB--help\fR ] 
+\fBfc-list\fR [ \fB-vVh\fR ]  [ \fB--verbose\fR ]  [ \fB [ -f \fIformat\fB ]  [ --format \fIformat\fB ] \fR ]  [ \fB [ -q ]  [ --quiet ] \fR ]  [ \fB--version\fR ]  [ \fB--help\fR ] 
 
  [ \fB\fIpattern\fB  [ \fIelement\fB\fI...\fB ]  \fR ] 
 .SH "DESCRIPTION"
@@ -28,6 +28,9 @@ provided.
 \fB-f\fR
 Format output according to the format specifier
 \fIformat\fR\&.
+.TP
+\fB-q\fR
+Suppress all normal output. returns 1 as the error code if no fonts matched.
 .TP
 \fB-V\fR
 Show version of the program and exit.

@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 static const FcObjectType FcObjects[] = {
-#define FC_OBJECT(NAME, Type) { FC_##NAME, Type },
+#define FC_OBJECT(NAME, Type, Cmp) { FC_##NAME, Type },
 #include "fcobjs.h"
 #undef FC_OBJECT
 };
@@ -76,6 +76,8 @@ FcObjectValidType (FcObject object, FcType type)
 
     if (t) {
 	switch ((int) t->type) {
+	case FcTypeUnknown:
+	    return FcTrue;
 	case FcTypeDouble:
 	case FcTypeInteger:
 	    if (type == FcTypeDouble || type == FcTypeInteger)
@@ -86,7 +88,7 @@ FcObjectValidType (FcObject object, FcType type)
 		return FcTrue;
 	    break;
 	default:
-	    if (t->type == (unsigned int) -1 || type == t->type)
+	    if (type == t->type)
 		return FcTrue;
 	    break;
 	}
@@ -318,6 +320,12 @@ FcNameFindNext (const FcChar8 *cur, const char *delim, FcChar8 *save, FcChar8 *l
 
     while ((c = *cur))
     {
+	if (!isspace (c))
+	    break;
+	++cur;
+    }
+    while ((c = *cur))
+    {
 	if (c == '\\')
 	{
 	    ++cur;
@@ -412,6 +420,8 @@ FcNameParse (const FcChar8 *name)
 		if ((c = FcNameGetConstant (save)))
 		{
 		    t = FcNameGetObjectType ((char *) c->object);
+		    if (t == NULL)
+			goto bail2;
 		    switch ((int) t->type) {
 		    case FcTypeInteger:
 		    case FcTypeDouble:
@@ -468,6 +478,7 @@ FcNameUnparseValue (FcStrBuf	*buf,
     FcValue v = FcValueCanonicalize(v0);
 
     switch (v.type) {
+    case FcTypeUnknown:
     case FcTypeVoid:
 	return FcTrue;
     case FcTypeInteger:

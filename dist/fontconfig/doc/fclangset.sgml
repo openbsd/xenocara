@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcLangSetCreate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetCreate</refname>
@@ -44,11 +45,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 <function>FcLangSetCreate</function> creates a new FcLangSet object.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -79,6 +75,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetDestroy</refname>
@@ -99,11 +96,6 @@ Fontconfig version &version;
 	    <para>
 <function>FcLangSetDestroy</function> destroys a FcLangSet object, freeing
 all memory associated with it.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -134,6 +126,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetCopy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetCopy</refname>
@@ -154,11 +147,6 @@ Fontconfig version &version;
 	    <para>
 <function>FcLangSetCopy</function> creates a new FcLangSet object and
 populates it with the contents of <parameter>ls</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -189,6 +177,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetAdd</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetAdd</refname>
@@ -212,11 +201,6 @@ Fontconfig version &version;
 <parameter>lang</parameter> should be of the form Ll-Tt where Ll is a
 two or three letter language from ISO 639 and Tt is a territory from ISO
 3166.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -247,6 +231,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetDel</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetDel</refname>
@@ -272,10 +257,8 @@ two or three letter language from ISO 639 and Tt is a territory from ISO
 3166.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
+	<refsect1><title>Since</title>
+	    <para>version 2.9.0</para>
 	</refsect1>
     </refentry>
 <!--
@@ -305,6 +288,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetUnion</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetUnion</refname>
@@ -327,10 +311,8 @@ Fontconfig version &version;
 Returns a set including only those languages found in either <parameter>ls_a</parameter> or <parameter>ls_b</parameter>.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
+	<refsect1><title>Since</title>
+	    <para>version 2.9.0</para>
 	</refsect1>
     </refentry>
 <!--
@@ -360,6 +342,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetSubtract</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetSubtract</refname>
@@ -382,10 +365,8 @@ Fontconfig version &version;
 Returns a set including only those languages found in <parameter>ls_a</parameter> but not in <parameter>ls_b</parameter>.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
+	<refsect1><title>Since</title>
+	    <para>version 2.9.0</para>
 	</refsect1>
     </refentry>
 <!--
@@ -415,6 +396,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetCompare</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetCompare</refname>
@@ -440,11 +422,6 @@ any language and territory pair, this function returns FcLangEqual. If they
 share a language but differ in which territory that language is for, this
 function returns FcLangDifferentTerritory. If they share no languages in
 common, this function returns FcLangDifferentLang.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -475,6 +452,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetContains</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetContains</refname>
@@ -500,11 +478,6 @@ Fontconfig version &version;
 language from <parameter>ls_b</parameter> if <parameter>ls_a</parameter>
 has exactly the language, or either the language or
 <parameter>ls_a</parameter> has no territory.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -535,6 +508,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetEqual</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetEqual</refname>
@@ -556,11 +530,6 @@ Fontconfig version &version;
 	    <para>
 Returns FcTrue if and only if <parameter>ls_a</parameter> supports precisely
 the same language and territory combinations as <parameter>ls_b</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -591,6 +560,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetHash</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetHash</refname>
@@ -614,11 +584,6 @@ supported by <parameter>ls</parameter>. Any language which equals
 <parameter>ls</parameter> will have the same result from
 <function>FcLangSetHash</function>. However, two langsets with the same hash
 value may not be equal.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -649,6 +614,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangSetHasLang</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangSetHasLang</refname>
@@ -675,11 +641,6 @@ this function returns FcLangEqual. If <parameter>ls</parameter> has
 a matching language but differs in which territory that language is for, this
 function returns FcLangDifferentTerritory. If <parameter>ls</parameter> 
 has no matching language, this function returns FcLangDifferentLang.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -710,6 +671,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcGetDefaultLangs</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcGetDefaultLangs</refname>
@@ -722,7 +684,7 @@ Fontconfig version &version;
 	</funcsynopsisinfo>
 	<funcprototype>
 	    <funcdef>FcStrSet * <function>FcGetDefaultLangs</function></funcdef>
-		<paramdef>void<parameter>ls</parameter></paramdef>
+		<paramdef>void<parameter></parameter></paramdef>
 	</funcprototype>
 	</funcsynopsis>
 	</refsynopsisdiv>
@@ -733,9 +695,57 @@ This function looks for them in order of FC_LANG, LC_ALL, LC_CTYPE and LANG then
 If there are no valid values in those environment variables, "en" will be set as fallback.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
+	<refsect1><title>Since</title>
+	    <para>version 2.9.91</para>
+	</refsect1>
+    </refentry>
+<!--
+   fontconfig/doc/func.sgml
+  
+   Copyright © 2003 Keith Packard
+  
+   Permission to use, copy, modify, distribute, and sell this software and its
+   documentation for any purpose is hereby granted without fee, provided that
+   the above copyright notice appear in all copies and that both that
+   copyright notice and this permission notice appear in supporting
+   documentation, and that the name of the author(s) not be used in
+   advertising or publicity pertaining to distribution of the software without
+   specific, written prior permission.  The authors make no
+   representations about the suitability of this software for any purpose.  It
+   is provided "as is" without express or implied warranty.
+  
+   THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+   INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+   EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+   CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+   DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
+ -->
+    <refentry id="FcLangSetGetLangs">
+	<refmeta>
+	    <refentrytitle>FcLangSetGetLangs</refentrytitle>
+	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
+	</refmeta>
+	<refnamediv>
+	    <refname>FcLangSetGetLangs</refname>
+	    <refpurpose>get the list of languages in the langset</refpurpose>
+	</refnamediv>
+	<refsynopsisdiv>
+	<funcsynopsis>
+	<funcsynopsisinfo>
+#include &lt;fontconfig/fontconfig.h&gt;
+	</funcsynopsisinfo>
+	<funcprototype>
+	    <funcdef>FcStrSet * <function>FcLangSetGetLangs</function></funcdef>
+		<paramdef>const FcLangSet *<parameter>ls</parameter></paramdef>
+	</funcprototype>
+	</funcsynopsis>
+	</refsynopsisdiv>
+	<refsect1><title>Description</title>
 	    <para>
-Fontconfig version &version;
+Returns a string set of all languages in <parameter>langset</parameter>.
 	    </para>
 	</refsect1>
     </refentry>
@@ -766,6 +776,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcGetLangs</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcGetLangs</refname>
@@ -785,11 +796,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns a string set of all known languages.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -820,6 +826,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangNormalize</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangNormalize</refname>
@@ -841,10 +848,8 @@ Fontconfig version &version;
 Returns a string to make <parameter>lang</parameter> suitable on fontconfig.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
+	<refsect1><title>Since</title>
+	    <para>version 2.10.91</para>
 	</refsect1>
     </refentry>
 <!--
@@ -874,6 +879,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcLangGetCharSet</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcLangGetCharSet</refname>
@@ -893,11 +899,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns the FcCharMap for a language.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

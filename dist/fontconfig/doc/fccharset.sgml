@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcCharSetCreate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetCreate</refname>
@@ -45,11 +46,6 @@
 	    <para>
 <function>FcCharSetCreate</function> allocates and initializes a new empty
 character set object.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -80,6 +76,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetDestroy</refname>
@@ -101,11 +98,6 @@ Fontconfig version &version;
 <function>FcCharSetDestroy</function> decrements the reference count 
 <parameter>fcs</parameter>.  If the reference count becomes zero, all
 memory referenced is freed.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -136,6 +128,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetAddChar</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetAddChar</refname>
@@ -158,11 +151,6 @@ Fontconfig version &version;
 <function>FcCharSetAddChar</function> adds a single Unicode char to the set,
 returning FcFalse on failure, either as a result of a constant set or from
 running out of memory.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -193,6 +181,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetDelChar</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetDelChar</refname>
@@ -217,10 +206,8 @@ returning FcFalse on failure, either as a result of a constant set or from
 running out of memory.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
+	<refsect1><title>Since</title>
+	    <para>version 2.9.0</para>
 	</refsect1>
     </refentry>
 <!--
@@ -250,6 +237,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetCopy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetCopy</refname>
@@ -270,11 +258,6 @@ Fontconfig version &version;
 	    <para>
 Makes a copy of <parameter>src</parameter>; note that this may not actually do anything more
 than increment the reference count on <parameter>src</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -305,6 +288,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetEqual</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetEqual</refname>
@@ -326,11 +310,6 @@ Fontconfig version &version;
 	    <para>
 Returns whether <parameter>a</parameter> and <parameter>b</parameter>
 contain the same set of Unicode chars.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -361,6 +340,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetIntersect</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetIntersect</refname>
@@ -382,11 +362,6 @@ Fontconfig version &version;
 	    <para>
 Returns a set including only those chars found in both
 <parameter>a</parameter> and <parameter>b</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -417,6 +392,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetUnion</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetUnion</refname>
@@ -437,11 +413,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns a set including only those chars found in either <parameter>a</parameter> or <parameter>b</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -472,6 +443,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetSubtract</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetSubtract</refname>
@@ -492,11 +464,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns a set including only those chars found in <parameter>a</parameter> but not <parameter>b</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -527,6 +494,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetMerge</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetMerge</refname>
@@ -553,11 +521,6 @@ If <parameter>changed</parameter> is not NULL, then it returns whether any new
 chars from <parameter>b</parameter> were added to <parameter>a</parameter>.
 Returns FcFalse on failure, either when <parameter>a</parameter> is a constant
 set or from running out of memory.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -588,6 +551,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetHasChar</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetHasChar</refname>
@@ -608,11 +572,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns whether <parameter>fcs</parameter> contains the char <parameter>ucs4</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -643,6 +602,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetCount</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetCount</refname>
@@ -662,11 +622,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns the total number of Unicode chars in <parameter>a</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -697,6 +652,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetIntersectCount</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetIntersectCount</refname>
@@ -717,11 +673,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns the number of chars that are in both <parameter>a</parameter> and <parameter>b</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -752,6 +703,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetSubtractCount</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetSubtractCount</refname>
@@ -772,11 +724,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns the number of chars that are in <parameter>a</parameter> but not in <parameter>b</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -807,6 +754,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetIsSubset</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetIsSubset</refname>
@@ -827,11 +775,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns whether <parameter>a</parameter> is a subset of <parameter>b</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -862,6 +805,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetFirstPage</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetFirstPage</refname>
@@ -882,14 +826,27 @@ Fontconfig version &version;
 	</refsynopsisdiv>
 	<refsect1><title>Description</title>
 	    <para>
-Builds an array of bits marking the first page of Unicode coverage of
-<parameter>a</parameter>. Returns the base of the array. <parameter>next</parameter> contains the next page in the
-font.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
+Builds an array of bits in <parameter>map</parameter> marking the
+first page of Unicode coverage of <parameter>a</parameter>.
+<parameter>*next</parameter> is set to contains the base code point
+for the next page in <parameter>a</parameter>.  Returns the base code
+point for the page, or <constant>FC_CHARSET_DONE</constant> if
+<parameter>a</parameter> contains no pages.  As an example, if
+<function>FcCharSetFirstPage</function> returns
+<literal>0x300</literal> and fills <parameter>map</parameter> with
+<literallayout class="monospaced">
+0xffffffff 0xffffffff 0x01000008 0x44300002 0xffffd7f0 0xfffffffb 0xffff7fff 0xffff0003
+</literallayout>
+Then the page contains code points <literal>0x300</literal> through
+<literal>0x33f</literal> (the first 64 code points on the page)
+because <parameter>map[0]</parameter> and
+<parameter>map[1]</parameter> both have all their bits set.  It also
+contains code points <literal>0x343</literal> (<parameter>0x300 + 32*2
++ (4-1)</parameter>) and <literal>0x35e</literal> (<parameter>0x300 +
+32*2 + (31-1)</parameter>) because <parameter>map[2]</parameter> has
+the 4th and 31st bits set.  The code points represented by
+<literal>map[3]</literal> and later are left as an excercise for the
+reader ;).
 	    </para>
 	</refsect1>
     </refentry>
@@ -920,6 +877,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetNextPage</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetNextPage</refname>
@@ -940,14 +898,15 @@ Fontconfig version &version;
 	</refsynopsisdiv>
 	<refsect1><title>Description</title>
 	    <para>
-Builds an array of bits marking the Unicode coverage of <parameter>a</parameter> for page
-<parameter>*next</parameter>. Returns the base of the array. <parameter>next</parameter> contains the next page in
-the font.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
+Builds an array of bits in <parameter>map</parameter> marking the
+Unicode coverage of <parameter>a</parameter> for page containing
+<parameter>*next</parameter> (see the
+<function>FcCharSetFirstPage</function> description for details).
+<parameter>*next</parameter> is set to contains the base code point
+for the next page in <parameter>a</parameter>.  Returns the base of
+code point for the page, or <constant>FC_CHARSET_DONE</constant> if
+<parameter>a</parameter> does not contain
+<parameter>*next</parameter>.
 	    </para>
 	</refsect1>
     </refentry>
@@ -978,6 +937,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetCoverage</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetCoverage</refname>
@@ -1004,11 +964,6 @@ indicates which code points in
 <parameter>page</parameter> are included in <parameter>a</parameter>.
 <function>FcCharSetCoverage</function> returns the next page in the charset which has any
 coverage.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -1039,6 +994,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCharSetNew</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCharSetNew</refname>
@@ -1058,11 +1014,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 <function>FcCharSetNew</function> is a DEPRECATED alias for FcCharSetCreate.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

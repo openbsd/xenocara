@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcCacheDir</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCacheDir</refname>
@@ -44,11 +45,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 This function returns the directory from which the cache was constructed.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -79,6 +75,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCacheCopySet</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCacheCopySet</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 The returned fontset contains each of the font patterns from
 <parameter>cache</parameter>. This fontset may be modified, but the patterns
 from the cache are read-only.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCacheSubdir</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCacheSubdir</refname>
@@ -158,11 +151,6 @@ The set of subdirectories stored in a cache file are indexed by this
 function, <parameter>i</parameter> should range from 0 to
 <parameter>n</parameter>-1, where <parameter>n</parameter> is the return
 value from FcCacheNumSubdir.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -193,6 +181,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCacheNumSubdir</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCacheNumSubdir</refname>
@@ -212,11 +201,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 This returns the total number of subdirectories in the cache.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -247,6 +231,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCacheNumFont</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCacheNumFont</refname>
@@ -267,11 +252,6 @@ Fontconfig version &version;
 	    <para>
 This returns the number of fonts which would be included in the return from
 FcCacheCopySet.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -302,6 +282,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcDirCacheClean</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcDirCacheClean</refname>
@@ -325,10 +306,8 @@ This returns FcTrue if the operation is successfully complete. otherwise FcFalse
 
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
+	<refsect1><title>Since</title>
+	    <para>version 2.9.91</para>
 	</refsect1>
     </refentry>
 <!--
@@ -358,6 +337,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcCacheCreateTagFile</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcCacheCreateTagFile</refname>
@@ -380,9 +360,7 @@ This tries to create CACHEDIR.TAG file at the cache directory registered
 to <parameter>config</parameter>.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
-	    </para>
+	<refsect1><title>Since</title>
+	    <para>version 2.9.91</para>
 	</refsect1>
     </refentry>

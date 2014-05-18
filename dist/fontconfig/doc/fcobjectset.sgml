@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcObjectSetCreate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcObjectSetCreate</refname>
@@ -44,11 +45,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 Creates an empty set.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -79,6 +75,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcObjectSetAdd</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcObjectSetAdd</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 	    <para>
 Adds a property name to the set. Returns FcFalse if the property name cannot be
 inserted into the set (due to allocation failure). Otherwise returns FcTrue.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcObjectSetDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcObjectSetDestroy</refname>
@@ -154,11 +147,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Destroys an object set.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -189,6 +177,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcObjectSetBuild</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcObjectSetBuild</refname>
@@ -224,11 +213,6 @@ Fontconfig version &version;
 These build an object set from a null-terminated list of property names.
 FcObjectSetVapBuild is a macro version of FcObjectSetVaBuild which returns
 the result in the <parameter>result</parameter> variable directly.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

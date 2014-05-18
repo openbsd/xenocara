@@ -10,7 +10,7 @@ REL="HOME"
 HREF="t1.html"><LINK
 REL="UP"
 TITLE="FcCharSet"
-HREF="x102.html#AEN1616"><LINK
+HREF="x102.html#AEN1521"><LINK
 REL="PREVIOUS"
 TITLE="FcCharSetIsSubset"
 HREF="fccharsetissubset.html"><LINK
@@ -75,7 +75,7 @@ NAME="FCCHARSETFIRSTPAGE"
 ><DIV
 CLASS="REFNAMEDIV"
 ><A
-NAME="AEN1992"
+NAME="AEN1871"
 ></A
 ><H2
 >Name</H2
@@ -83,7 +83,7 @@ NAME="AEN1992"
 ><DIV
 CLASS="REFSYNOPSISDIV"
 ><A
-NAME="AEN1995"
+NAME="AEN1874"
 ></A
 ><H2
 >Synopsis</H2
@@ -92,7 +92,7 @@ CLASS="FUNCSYNOPSIS"
 ><P
 ></P
 ><A
-NAME="AEN1996"
+NAME="AEN1875"
 ></A
 ><TABLE
 BORDER="0"
@@ -139,36 +139,121 @@ CLASS="PARAMETER"
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN2007"
+NAME="AEN1886"
 ></A
 ><H2
 >Description</H2
 ><P
->Builds an array of bits marking the first page of Unicode coverage of
+>Builds an array of bits in <TT
+CLASS="PARAMETER"
+><I
+>map</I
+></TT
+> marking the
+first page of Unicode coverage of <TT
+CLASS="PARAMETER"
+><I
+>a</I
+></TT
+>.
+<TT
+CLASS="PARAMETER"
+><I
+>*next</I
+></TT
+> is set to contains the base code point
+for the next page in <TT
+CLASS="PARAMETER"
+><I
+>a</I
+></TT
+>.  Returns the base code
+point for the page, or <CODE
+CLASS="CONSTANT"
+>FC_CHARSET_DONE</CODE
+> if
 <TT
 CLASS="PARAMETER"
 ><I
 >a</I
 ></TT
->. Returns the base of the array. <TT
+> contains no pages.  As an example, if
+<TT
+CLASS="FUNCTION"
+>FcCharSetFirstPage</TT
+> returns
+<TT
+CLASS="LITERAL"
+>0x300</TT
+> and fills <TT
 CLASS="PARAMETER"
 ><I
->next</I
+>map</I
 ></TT
-> contains the next page in the
-font.
-	    </P
-></DIV
-><DIV
-CLASS="REFSECT1"
-><A
-NAME="AEN2012"
-></A
-><H2
->Version</H2
-><P
->Fontconfig version 2.10.91
-
+> with
+<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="LITERALLAYOUT"
+>0xffffffff 0xffffffff 0x01000008 0x44300002 0xffffd7f0 0xfffffffb 0xffff7fff 0xffff0003</PRE
+></TD
+></TR
+></TABLE
+>
+Then the page contains code points <TT
+CLASS="LITERAL"
+>0x300</TT
+> through
+<TT
+CLASS="LITERAL"
+>0x33f</TT
+> (the first 64 code points on the page)
+because <TT
+CLASS="PARAMETER"
+><I
+>map[0]</I
+></TT
+> and
+<TT
+CLASS="PARAMETER"
+><I
+>map[1]</I
+></TT
+> both have all their bits set.  It also
+contains code points <TT
+CLASS="LITERAL"
+>0x343</TT
+> (<TT
+CLASS="PARAMETER"
+><I
+>0x300 + 32*2
++ (4-1)</I
+></TT
+>) and <TT
+CLASS="LITERAL"
+>0x35e</TT
+> (<TT
+CLASS="PARAMETER"
+><I
+>0x300 +
+32*2 + (31-1)</I
+></TT
+>) because <TT
+CLASS="PARAMETER"
+><I
+>map[2]</I
+></TT
+> has
+the 4th and 31st bits set.  The code points represented by
+<TT
+CLASS="LITERAL"
+>map[3]</TT
+> and later are left as an excercise for the
+reader ;).
 	    </P
 ></DIV
 ><DIV
@@ -221,7 +306,7 @@ WIDTH="34%"
 ALIGN="center"
 VALIGN="top"
 ><A
-HREF="x102.html#AEN1616"
+HREF="x102.html#AEN1521"
 ACCESSKEY="U"
 >Up</A
 ></TD

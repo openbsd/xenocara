@@ -24,7 +24,6 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.61)
-AC_INIT(fonts.dtd)
 
 dnl ==========================================================================
 dnl                               Versioning              
@@ -34,25 +33,9 @@ dnl This is the package version number, not the shared library
 dnl version.  This same version number must appear in fontconfig/fontconfig.h
 dnl Yes, it is a pain to synchronize version numbers.  Unfortunately, it's
 dnl not possible to extract the version number here from fontconfig.h
-AM_INIT_AUTOMAKE(fontconfig, 2.10.91)
+AC_INIT([fontconfig], [2.11.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=fontconfig])
+AM_INIT_AUTOMAKE([1.11 parallel-tests dist-bzip2])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
-
-dnl libtool versioning
-
-dnl bump revision when fixing bugs
-dnl bump current and age, reset revision to zero when adding APIs
-dnl bump current, leave age, reset revision to zero when changing/removing APIS
-LIBT_CURRENT=7
-LIBT_REVISION=2
-AC_SUBST(LIBT_CURRENT)
-AC_SUBST(LIBT_REVISION)
-LIBT_AGE=6
-
-LIBT_VERSION_INFO="$LIBT_CURRENT:$LIBT_REVISION:$LIBT_AGE"
-AC_SUBST(LIBT_VERSION_INFO)
-
-LIBT_CURRENT_MINUS_AGE=`expr $LIBT_CURRENT - $LIBT_AGE`
-AC_SUBST(LIBT_CURRENT_MINUS_AGE)
 
 dnl ==========================================================================
 
@@ -64,10 +47,12 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_LIBTOOL_WIN32_DLL
-AM_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 PKG_PROG_PKG_CONFIG
+m4_ifdef([PKG_INSTALLDIR], [PKG_INSTALLDIR], AC_SUBST([pkgconfigdir], ${libdir}/pkgconfig))
+
+AM_MISSING_PROG([GIT], [git])
+AM_MISSING_PROG([GPERF], [gperf])
 
 AC_MSG_CHECKING([for RM macro])
 _predefined_rm=`make -p -f /dev/null 2>/dev/null|grep '^RM ='|sed -e 's/^RM = //'`
@@ -77,6 +62,30 @@ if test "x$_predefined_rm" = "x"; then
 else
 	AC_MSG_RESULT($_predefined_rm)
 fi
+
+dnl Initialize libtool
+LT_PREREQ([2.2])
+LT_INIT([disable-static win32-dll])
+
+dnl libtool versioning
+
+dnl bump revision when fixing bugs
+dnl bump current and age, reset revision to zero when adding APIs
+dnl bump current, leave age, reset revision to zero when changing/removing APIS
+LIBT_CURRENT=9
+LIBT_REVISION=0
+AC_SUBST(LIBT_CURRENT)
+AC_SUBST(LIBT_REVISION)
+LIBT_AGE=8
+
+LIBT_VERSION_INFO="$LIBT_CURRENT:$LIBT_REVISION:$LIBT_AGE"
+AC_SUBST(LIBT_VERSION_INFO)
+
+LIBT_CURRENT_MINUS_AGE=`expr $LIBT_CURRENT - $LIBT_AGE`
+AC_SUBST(LIBT_CURRENT_MINUS_AGE)
+
+PKGCONFIG_REQUIRES=
+PKGCONFIG_REQUIRES_PRIVATELY=
 
 dnl ==========================================================================
 
@@ -129,7 +138,7 @@ dnl ==========================================================================
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h regex.h stdlib.h string.h unistd.h sys/vfs.h sys/statfs.h sys/param.h sys/mount.h])
+AC_CHECK_HEADERS([fcntl.h regex.h stdlib.h string.h unistd.h sys/statvfs.h sys/vfs.h sys/statfs.h sys/param.h sys/mount.h])
 AX_CREATE_STDINT_H([src/fcstdint.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -141,22 +150,43 @@ AC_TYPE_PID_T
 # Checks for library functions.
 AC_FUNC_VPRINTF
 AC_FUNC_MMAP
-AC_CHECK_FUNCS([geteuid getuid link memmove memset mkstemp mkostemp _mktemp_s strchr strrchr strtol getopt getopt_long sysconf ftruncate chsize arc4random rand random lrand48 random_r rand_r regcomp regerror regexec regfree fstatvfs fstatfs lstat])
+AC_CHECK_FUNCS([link mkstemp mkostemp _mktemp_s mkdtemp getopt getopt_long getprogname getexecname arc4random rand random lrand48 random_r rand_r readlink regcomp regerror regexec regfree fstatvfs fstatfs lstat])
 
 dnl AC_CHECK_FUNCS doesn't check for header files.
 dnl posix_fadvise() may be not available in older libc.
-fc_saved_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS $WARN_CFLAGS -Werror"
-AC_MSG_CHECKING([for posix_fadvise])
-AC_LINK_IFELSE([AC_LANG_SOURCE([[
-	#include <fcntl.h>
-	int main(void) {
-	    return posix_fadvise(0, 0, 0, 0);
-	}
-	]])],[
+AC_CHECK_SYMBOL([posix_fadvise], [fcntl.h], [fc_func_posix_fadvise=1], [fc_func_posix_fadvise=0])
+AC_DEFINE_UNQUOTED([HAVE_POSIX_FADVISE], [$fc_func_posix_fadvise], [Define to 1 if you have the 'posix_fadivse' function.])
+if test "$os_win32" = "no"; then
+	AC_MSG_CHECKING([for scandir])
+	fc_saved_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS $WARN_CFLAGS -Werror"
+	AC_TRY_COMPILE([
+		#include <dirent.h>
+		int main(void);
+	], [
+		int (* comp) (const struct dirent **, const struct dirent **) = 0;
+		struct dirent **d;
+		return scandir(".", &d, 0, comp) >= 0;
+	], [
 		AC_MSG_RESULT([yes])
-		AC_DEFINE([HAVE_POSIX_FADVISE], [1], [Define to 1 if you have the 'posix_fadvise' function.])
-	],[AC_MSG_RESULT([no])])
+		AC_DEFINE([HAVE_SCANDIR], [1], [Define to 1 if you have the 'scandir' function.])
+	], [
+		AC_TRY_COMPILE([
+			#include <dirent.h>
+			int main(void);
+		], [
+			int (* comp) (const void *, const void *) = 0;
+			struct dirent **d;
+			return scandir(".", &d, 0, comp) >= 0;
+		], [
+			AC_MSG_RESULT([yes])
+			AC_DEFINE([HAVE_SCANDIR_VOID_P], [1], [Define to 1 if you have the 'scandir' function with int (* compar)(const void *, const void *)])
+		],[
+			AC_MSG_ERROR([
+*** No scandir function available.])
+		])
+	])
+fi
 CFLAGS="$fc_saved_CFLAGS"
 
 #
@@ -247,13 +277,14 @@ if test "x$enable_iconv" != "xno"; then
 		AC_TRY_LINK([#include <iconv.h>],
 			[iconv_open ("from", "to");],
 			[iconv_type="libiconv"
-			 use_iconv=1],
+			 use_iconv=1
+			 ICONV_CFLAGS="$libiconv_cflags"
+			 ICONV_LIBS="$libiconv_libs"
+			 ],
 			[use_iconv=0])
 
 		CFLAGS="$iconvsaved_CFLAGS"
 		LIBS="$iconvsaved_LIBS"
-		ICONV_CFLAGS="$libiconv_cflags"
-		ICONV_LIBS="$libiconv_libs"
 	fi
 	if test "x$use_iconv" = "x0"; then
 		AC_TRY_LINK([#include <iconv.h>],
@@ -273,6 +304,7 @@ AC_DEFINE_UNQUOTED(USE_ICONV,$use_iconv,[Use iconv.])
 # Checks for FreeType
 #
 PKG_CHECK_MODULES(FREETYPE, freetype2)
+PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES freetype2"
 
 AC_SUBST(FREETYPE_LIBS)
 AC_SUBST(FREETYPE_CFLAGS)
@@ -332,6 +364,8 @@ if test "$enable_libxml2" != "yes"; then
 		else
 			EXPAT_LIBS="-lexpat"
 		fi
+	else
+		PKGCONFIG_REQUIRES_PRIVATELY="$PKGCONFIG_REQUIRES_PRIVATELY expat"
 	fi
 
 	expatsaved_CPPFLAGS="$CPPFLAGS"
@@ -373,6 +407,7 @@ AC_ARG_ENABLE(libxml2,
 
 if test "$enable_libxml2" = "yes"; then
     PKG_CHECK_MODULES([LIBXML2], [libxml-2.0 >= 2.6])
+    PKGCONFIG_REQUIRES_PRIVATELY="$PKGCONFIG_REQUIRES_PRIVATELY libxml-2.0"
     AC_DEFINE_UNQUOTED(ENABLE_LIBXML2,1,[Use libxml2 instead of Expat])
 
     AC_SUBST(LIBXML2_CFLAGS)
@@ -488,7 +523,7 @@ AC_ARG_WITH(cache-dir,
 case $fc_cachedir in
 no|yes)
 	if test "$os_win32" = "yes"; then
-		fc_cachedir="WINDOWSTEMPDIR_FONTCONFIG_CACHE"
+		fc_cachedir="LOCAL_APPDATA_FONTCONFIG_CACHE"
 	else
 		fc_cachedir='${localstatedir}/cache/${PACKAGE}'
 	fi
@@ -545,7 +580,7 @@ no|yes)
 esac
 case "$configdir" in
 no|yes)
-	configdir='${baseconfigdir}'/conf.d
+	configdir='${BASECONFIGDIR}'/conf.d
 	;;
 *)
 	;;
@@ -562,13 +597,9 @@ TEMPLATEDIR=${templatedir}
 BASECONFIGDIR=${baseconfigdir}
 CONFIGDIR=${configdir}
 XMLDIR=${xmldir}
-AC_SUBST(templatedir)
 AC_SUBST(TEMPLATEDIR)
-AC_SUBST(baseconfigdir)
 AC_SUBST(BASECONFIGDIR)
-AC_SUBST(configdir)
 AC_SUBST(CONFIGDIR)
-AC_SUBST(xmldir)
 AC_SUBST(XMLDIR)
 
 
@@ -680,7 +711,13 @@ dnl include the header file for workaround of miscalculating size on autoconf
 dnl particularly for fat binaries
 AH_BOTTOM([#include "config-fixups.h"])
 
-AC_OUTPUT([
+dnl
+dnl
+AC_SUBST(PKGCONFIG_REQUIRES)
+AC_SUBST(PKGCONFIG_REQUIRES_PRIVATELY)
+
+dnl
+AC_CONFIG_FILES([
 Makefile
 fontconfig/Makefile
 fc-lang/Makefile
@@ -703,3 +740,4 @@ fontconfig.spec
 fontconfig.pc
 fontconfig-zip
 ])
+AC_OUTPUT

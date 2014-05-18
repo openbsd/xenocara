@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcStrSetCreate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrSetCreate</refname>
@@ -44,11 +45,6 @@
 	<refsect1><title>Description</title>
 	    <para>
 Create an empty set.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -79,6 +75,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrSetMember</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrSetMember</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 	    <para>
 Returns whether <parameter>s</parameter> is a member of
 <parameter>set</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrSetEqual</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrSetEqual</refname>
@@ -157,11 +150,6 @@ Fontconfig version &version;
 Returns whether <parameter>set_a</parameter> contains precisely the same
 strings as <parameter>set_b</parameter>. Ordering of strings within the two
 sets is not considered.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -192,6 +180,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrSetAdd</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrSetAdd</refname>
@@ -212,11 +201,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Adds a copy of <parameter>s</parameter> to <parameter>set</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -247,6 +231,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrSetAddFilename</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrSetAddFilename</refname>
@@ -269,11 +254,6 @@ Fontconfig version &version;
 Adds a copy <parameter>s</parameter> to <parameter>set</parameter>, The copy
 is created with FcStrCopyFilename so that leading '~' values are replaced
 with the value of the HOME environment variable.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -304,6 +284,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrSetDel</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrSetDel</refname>
@@ -325,11 +306,6 @@ Fontconfig version &version;
 	    <para>
 Removes <parameter>s</parameter> from <parameter>set</parameter>, returning
 FcTrue if <parameter>s</parameter> was a member else FcFalse.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -360,6 +336,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrSetDestroy</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrSetDestroy</refname>
@@ -379,11 +356,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Destroys <parameter>set</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -414,6 +386,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrListCreate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrListCreate</refname>
@@ -435,10 +408,58 @@ Fontconfig version &version;
 Creates an iterator to list the strings in <parameter>set</parameter>.
 	    </para>
 	</refsect1>
-	<refsect1><title>Version</title>
+    </refentry>
+<!--
+   fontconfig/doc/func.sgml
+  
+   Copyright © 2003 Keith Packard
+  
+   Permission to use, copy, modify, distribute, and sell this software and its
+   documentation for any purpose is hereby granted without fee, provided that
+   the above copyright notice appear in all copies and that both that
+   copyright notice and this permission notice appear in supporting
+   documentation, and that the name of the author(s) not be used in
+   advertising or publicity pertaining to distribution of the software without
+   specific, written prior permission.  The authors make no
+   representations about the suitability of this software for any purpose.  It
+   is provided "as is" without express or implied warranty.
+  
+   THE AUTHOR(S) DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+   INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+   EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+   CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+   DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+   TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
+ -->
+    <refentry id="FcStrListFirst">
+	<refmeta>
+	    <refentrytitle>FcStrListFirst</refentrytitle>
+	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
+	</refmeta>
+	<refnamediv>
+	    <refname>FcStrListFirst</refname>
+	    <refpurpose>get first string in iteration</refpurpose>
+	</refnamediv>
+	<refsynopsisdiv>
+	<funcsynopsis>
+	<funcsynopsisinfo>
+#include &lt;fontconfig/fontconfig.h&gt;
+	</funcsynopsisinfo>
+	<funcprototype>
+	    <funcdef>void <function>FcStrListFirst</function></funcdef>
+		<paramdef>FcStrList *<parameter>list</parameter></paramdef>
+	</funcprototype>
+	</funcsynopsis>
+	</refsynopsisdiv>
+	<refsect1><title>Description</title>
 	    <para>
-Fontconfig version &version;
+Returns the first string in <parameter>list</parameter>.
 	    </para>
+	</refsect1>
+	<refsect1><title>Since</title>
+	    <para>version 2.11.0</para>
 	</refsect1>
     </refentry>
 <!--
@@ -468,6 +489,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrListNext</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrListNext</refname>
@@ -486,12 +508,7 @@ Fontconfig version &version;
 	</refsynopsisdiv>
 	<refsect1><title>Description</title>
 	    <para>
-Returns the next string in <parameter>set</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
+Returns the next string in <parameter>list</parameter>.
 	    </para>
 	</refsect1>
     </refentry>
@@ -522,6 +539,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcStrListDone</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcStrListDone</refname>
@@ -541,11 +559,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Destroys the enumerator <parameter>list</parameter>.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

@@ -20,9 +20,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 #include "fcint.h"
 #include "fcarch.h"
 #include <dirent.h>
@@ -32,6 +29,9 @@
 #include <fcntl.h>
 #ifdef HAVE_SYS_VFS_H
 #include <sys/vfs.h>
+#endif
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
 #endif
 #ifdef HAVE_SYS_STATFS_H
 #include <sys/statfs.h>
@@ -164,11 +164,21 @@ FcDirChecksumScandirFilter(const struct dirent *entry)
 }
 #endif
 
+#ifdef HAVE_SCANDIR
 static int
 FcDirChecksumScandirSorter(const struct dirent **lhs, const struct dirent **rhs)
 {
     return strcmp((*lhs)->d_name, (*rhs)->d_name);
 }
+#elif HAVE_SCANDIR_VOID_P
+static int
+FcDirChecksumScandirSorter(const void *a, const void *b)
+{
+    const struct dirent *lhs = a, *rhs = b;
+
+    return strcmp(lhs->d_name, rhs->d_name);
+}
+#endif
 
 static int
 FcDirChecksum (const FcChar8 *dir, time_t *checksum)
@@ -176,10 +186,8 @@ FcDirChecksum (const FcChar8 *dir, time_t *checksum)
     struct Adler32 ctx;
     struct dirent **files;
     int n;
-#ifndef HAVE_STRUCT_DIRENT_D_TYPE
     int ret = 0;
     size_t len = strlen ((const char *)dir);
-#endif
 
     Adler32Init (&ctx);
 
@@ -200,7 +208,9 @@ FcDirChecksum (const FcChar8 *dir, time_t *checksum)
 
 #ifdef HAVE_STRUCT_DIRENT_D_TYPE
 	dtype = files[n]->d_type;
-#else
+	if (dtype == DT_UNKNOWN)
+	{
+#endif
 	struct stat statb;
 	char f[PATH_MAX + 1];
 
@@ -217,20 +227,18 @@ FcDirChecksum (const FcChar8 *dir, time_t *checksum)
 	    goto bail;
 
 	dtype = statb.st_mode;
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
+	}
 #endif
 	Adler32Update (&ctx, files[n]->d_name, dlen + 1);
 	Adler32Update (&ctx, (char *)&dtype, sizeof (int));
 
-#ifndef HAVE_STRUCT_DIRENT_D_TYPE
       bail:
-#endif
 	free (files[n]);
     }
     free (files);
-#ifndef HAVE_STRUCT_DIRENT_D_TYPE
     if (ret == -1)
 	return -1;
-#endif
 
     *checksum = Adler32Finish (&ctx);
 

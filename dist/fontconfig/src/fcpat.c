@@ -33,6 +33,7 @@ FcPatternCreate (void)
     p = (FcPattern *) malloc (sizeof (FcPattern));
     if (!p)
 	return 0;
+    memset (p, 0, sizeof (FcPattern));
     p->num = 0;
     p->size = 0;
     p->elts_offset = FcPtrToOffset (p, NULL);
@@ -246,6 +247,8 @@ FcValueEqual (FcValue va, FcValue vb)
 	    return FcFalse;
     }
     switch (va.type) {
+    case FcTypeUnknown:
+	return FcFalse;	/* don't know how to compare this object */
     case FcTypeVoid:
 	return FcTrue;
     case FcTypeInteger:
@@ -294,6 +297,7 @@ static FcChar32
 FcValueHash (const FcValue *v)
 {
     switch (v->type) {
+    case FcTypeUnknown:
     case FcTypeVoid:
 	return 0;
     case FcTypeInteger:
@@ -317,7 +321,7 @@ FcValueHash (const FcValue *v)
     case FcTypeLangSet:
 	return FcLangSetHash (FcValueLangSet(v));
     }
-    return FcFalse;
+    return 0;
 }
 
 static FcBool
@@ -843,6 +847,8 @@ FcPatternObjectGet (const FcPattern *p, FcObject object, int id, FcValue *v)
     FcPatternElt   *e;
     FcValueListPtr l;
 
+    if (!p)
+	return FcResultNoMatch;
     e = FcPatternObjectFindElt (p, object);
     if (!e)
 	return FcResultNoMatch;
@@ -1305,6 +1311,7 @@ FcValueListSerialize (FcSerialize *serialize, const FcValueList *vl)
     }
     return head_serialized;
 }
+
 #define __fcpat__
 #include "fcaliastail.h"
 #include "fcftaliastail.h"

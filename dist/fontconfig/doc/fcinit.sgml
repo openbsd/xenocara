@@ -25,6 +25,7 @@
 	<refmeta>
 	    <refentrytitle>FcInitLoadConfig</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcInitLoadConfig</refname>
@@ -45,11 +46,6 @@
 	    <para>
 Loads the default configuration file and returns the resulting configuration.
 Does not load any font information.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -80,6 +76,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcInitLoadConfigAndFonts</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcInitLoadConfigAndFonts</refname>
@@ -100,11 +97,6 @@ Fontconfig version &version;
 	    <para>
 Loads the default configuration file and builds information about the
 available fonts.  Returns the resulting configuration.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -135,6 +127,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcInit</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcInit</refname>
@@ -157,11 +150,6 @@ Loads the default configuration file and the fonts referenced therein and
 sets the default configuration to that result.  Returns whether this
 process succeeded or not.  If the default configuration has already
 been loaded, this routine does nothing and returns FcTrue.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -192,6 +180,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcFini</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcFini</refname>
@@ -214,11 +203,6 @@ Frees all data structures allocated by previous calls to fontconfig
 functions. Fontconfig returns to an uninitialized state, requiring a
 new call to one of the FcInit functions before any other fontconfig
 function may be called.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -249,6 +233,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcGetVersion</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcGetVersion</refname>
@@ -268,11 +253,6 @@ Fontconfig version &version;
 	<refsect1><title>Description</title>
 	    <para>
 Returns the version number of the library.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -303,6 +283,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcInitReinitialize</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcInitReinitialize</refname>
@@ -325,11 +306,6 @@ Forces the default configuration file to be reloaded and resets the default
 configuration. Returns FcFalse if the configuration cannot be reloaded (due
 to configuration file errors, allocation failures or other issues) and leaves the
 existing configuration unchanged. Otherwise returns FcTrue.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>
@@ -360,6 +336,7 @@ Fontconfig version &version;
 	<refmeta>
 	    <refentrytitle>FcInitBringUptoDate</refentrytitle>
 	    <manvolnum>3</manvolnum>
+	    <refmiscinfo class="software">Fontconfig &version;</refmiscinfo>
 	</refmeta>
 	<refnamediv>
 	    <refname>FcInitBringUptoDate</refname>
@@ -382,11 +359,6 @@ Checks the rescan interval in the default configuration, checking the
 configuration if the interval has passed and reloading the configuration if
 when any changes are detected. Returns FcFalse if the configuration cannot
 be reloaded (see FcInitReinitialize). Otherwise returns FcTrue.
-	    </para>
-	</refsect1>
-	<refsect1><title>Version</title>
-	    <para>
-Fontconfig version &version;
 	    </para>
 	</refsect1>
     </refentry>

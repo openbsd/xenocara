@@ -21,8 +21,9 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
-DOC_FILES= \
-	README
+BUILT_SOURCES = README
+DOC_SOURCES = README.in
+DOC_FILES = $(DOC_SOURCES:.in=)
 
 CONF_LINKS = \
 	10-scale-bitmap-fonts.conf \
@@ -41,9 +42,10 @@ CONF_LINKS = \
 	80-delicious.conf \
 	90-synthetic.conf
 
-EXTRA_DIST = $(template_DATA) $(DOC_FILES)
+EXTRA_DIST = $(template_DATA) $(DOC_SOURCES)
+CLEANFILES = $(DOC_FILES)
 
-configdir=$(CONFIGDIR)
+configdir = $(CONFIGDIR)
 config_DATA = $(DOC_FILES)
 
 templatedir = $(TEMPLATEDIR)
@@ -77,6 +79,9 @@ template_DATA =				\
 	70-yes-bitmaps.conf		\
 	80-delicious.conf		\
 	90-synthetic.conf
+
+README: $(srcdir)/README.in
+	sed "s|\@TEMPLATEDIR\@|$(templatedir)|" $< > $@
 
 install-data-hook:
 	mkdir -p $(DESTDIR)$(configdir)

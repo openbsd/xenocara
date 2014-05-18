@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2013/04/25 06:53:38 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.6 2014/05/18 10:33:05 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -19,6 +19,7 @@ SRCS = \
 	fcformat.c \
 	fcfreetype.c \
 	fcfs.c \
+	fchash.c \
 	fcinit.c \
 	fclang.c \
 	fclist.c \

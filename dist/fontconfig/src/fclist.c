@@ -212,6 +212,8 @@ FcListPatternMatchAny (const FcPattern *p,
 {
     int		    i;
 
+    if (!p)
+	return FcFalse;
     for (i = 0; i < p->num; i++)
     {
 	FcPatternElt	*pe = &FcPatternElts(p)[i];
@@ -252,6 +254,7 @@ FcListValueHash (FcValue    *value)
 {
     FcValue v = FcValueCanonicalize(value);
     switch (v.type) {
+    case FcTypeUnknown:
     case FcTypeVoid:
 	return 0;
     case FcTypeInteger:
