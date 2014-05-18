@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.297 2014/05/17 17:20:09 shadchin Exp $
+# $OpenBSD: MODULES,v 1.298 2014/05/18 12:15:06 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -185,7 +185,7 @@ lib/libXdamage			1.1.4	7.7+
 lib/libXdmcp			1.1.1	7.7
 lib/libXext			1.3.2	7.7+
 lib/libXfixes			5.0.1	7.7+
-lib/libXfont			1.4.7	7.7+
+lib/libXfont			1.4.8	7.7+
 lib/libXfontcache		1.0.5
 lib/libXft			2.3.1	7.7
 lib/libXi			1.7.2	7.7+
