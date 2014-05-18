@@ -1,8 +1,8 @@
-# $OpenBSD: 3RDPARTY,v 1.193 2014/05/13 05:45:35 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.194 2014/05/18 10:33:46 matthieu Exp $
 #
 
 Package: 	Freetype
-Version:	2.5.2
+Version:	2.5.3
 Current Vers:	2.5.3
 Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
@@ -26,7 +26,7 @@ Maintainer:	Eric Anholt
 Archive Site:	http://dri.freedesktop.org/
 
 Package:	fontconfig
-Version:	2.10.91
+Version:	2.11.1
 Current Vers:	2.11.1
 Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
