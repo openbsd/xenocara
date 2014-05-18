@@ -137,7 +137,7 @@
 ./usr/X11R6/lib/libdrm.so.5.0
 ./usr/X11R6/lib/libdrm_intel.a
 ./usr/X11R6/lib/libdrm_intel.so.3.1
-./usr/X11R6/lib/libfontconfig.so.9.0
+./usr/X11R6/lib/libfontconfig.so.9.1
 ./usr/X11R6/lib/libfontenc.so.4.0
 ./usr/X11R6/lib/libfreetype.so.22.0
 ./usr/X11R6/lib/libglapi.a
