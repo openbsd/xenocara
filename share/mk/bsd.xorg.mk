@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.49 2013/11/22 15:44:48 espie Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.50 2014/05/18 10:29:01 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -35,7 +35,7 @@ LIBDIR=			${X11BASE}/lib
 INCSDIR=		${X11BASE}/include
 MANDIR=			${X11BASE}/man/man
 
-PKG_CONFIG_LIBDIR=	${X11BASE}/lib/pkgconfig
+PKG_CONFIG_LIBDIR=	/usr/lib/pkgconfig:${X11BASE}/lib/pkgconfig
 
 # A few aliases for *-install targets
 INSTALL_DATA = \
