@@ -1,4 +1,4 @@
-# $OpenBSD: automake.dep,v 1.1 2007/03/17 19:32:42 matthieu Exp $
+# $OpenBSD: automake.dep,v 1.2 2014/05/19 21:09:08 matthieu Exp $
 configure configure.ac
 configure configure.in
 /Makefile.in /Makefile.am
@@ -11,6 +11,8 @@ aclocal.m4 acinclude.m4
 /config.h.in configure.in
 /config.h.in configure.ac
 /config.h.in aclocal.m4
+/do-not-use-config.h.in  configure.ac
+/do-not-use-config.h.in  aclocal.m4
 configure configure.in
 configure configure.ac
 configure aclocal.m4
