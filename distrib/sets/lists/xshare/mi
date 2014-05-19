@@ -1033,11 +1033,13 @@
 ./usr/X11R6/man/man3/FcConfigGetFontDirs.3
 ./usr/X11R6/man/man3/FcConfigGetFonts.3
 ./usr/X11R6/man/man3/FcConfigGetRescanInterval.3
+./usr/X11R6/man/man3/FcConfigGetSysRoot.3
 ./usr/X11R6/man/man3/FcConfigHome.3
 ./usr/X11R6/man/man3/FcConfigParseAndLoad.3
 ./usr/X11R6/man/man3/FcConfigReference.3
 ./usr/X11R6/man/man3/FcConfigSetCurrent.3
 ./usr/X11R6/man/man3/FcConfigSetRescanInterval.3
+./usr/X11R6/man/man3/FcConfigSetSysRoot.3
 ./usr/X11R6/man/man3/FcConfigSubstitute.3
 ./usr/X11R6/man/man3/FcConfigSubstituteWithPat.3
 ./usr/X11R6/man/man3/FcConfigUptoDate.3
@@ -1046,6 +1048,7 @@
 ./usr/X11R6/man/man3/FcDirCacheLoad.3
 ./usr/X11R6/man/man3/FcDirCacheLoadFile.3
 ./usr/X11R6/man/man3/FcDirCacheRead.3
+./usr/X11R6/man/man3/FcDirCacheRescan.3
 ./usr/X11R6/man/man3/FcDirCacheUnlink.3
 ./usr/X11R6/man/man3/FcDirCacheUnload.3
 ./usr/X11R6/man/man3/FcDirCacheValid.3
@@ -1091,6 +1094,7 @@
 ./usr/X11R6/man/man3/FcLangSetDel.3
 ./usr/X11R6/man/man3/FcLangSetDestroy.3
 ./usr/X11R6/man/man3/FcLangSetEqual.3
+./usr/X11R6/man/man3/FcLangSetGetLangs.3
 ./usr/X11R6/man/man3/FcLangSetHasLang.3
 ./usr/X11R6/man/man3/FcLangSetHash.3
 ./usr/X11R6/man/man3/FcLangSetSubtract.3
@@ -1143,6 +1147,7 @@
 ./usr/X11R6/man/man3/FcStrFree.3
 ./usr/X11R6/man/man3/FcStrListCreate.3
 ./usr/X11R6/man/man3/FcStrListDone.3
+./usr/X11R6/man/man3/FcStrListFirst.3
 ./usr/X11R6/man/man3/FcStrListNext.3
 ./usr/X11R6/man/man3/FcStrPlus.3
 ./usr/X11R6/man/man3/FcStrSetAdd.3
@@ -3627,11 +3632,13 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfiggetfontdirs.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfiggetfonts.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfiggetrescaninterval.html
+./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfiggetsysroot.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfighome.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfigparseandload.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfigreference.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfigsetcurrent.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfigsetrescaninterval.html
+./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfigsetsysroot.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfigsubstitute.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfigsubstitutewithpat.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcconfiguptodate.html
@@ -3640,6 +3647,7 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcdircacheload.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcdircacheloadfile.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcdircacheread.html
+./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcdircacherescan.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcdircacheunlink.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcdircacheunload.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcdircachevalid.html
@@ -3685,6 +3693,7 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fclangsetdel.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fclangsetdestroy.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fclangsetequal.html
+./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fclangsetgetlangs.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fclangsethash.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fclangsethaslang.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fclangsetsubtract.html
@@ -3737,6 +3746,7 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcstrfree.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcstrlistcreate.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcstrlistdone.html
+./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcstrlistfirst.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcstrlistnext.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcstrplus.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcstrsetadd.html
