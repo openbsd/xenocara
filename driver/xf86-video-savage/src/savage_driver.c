@@ -54,6 +54,7 @@
 
 
 #include "xf86xv.h"
+#include "xf86Modes.h"
 
 #include "savage_driver.h"
 #include "savage_pciids.h"

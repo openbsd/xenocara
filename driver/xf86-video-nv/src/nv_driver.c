@@ -32,6 +32,7 @@
 
 #include "xf86int10.h"
 #include "vbeModes.h"
+#include "xf86Modes.h"
 
 const   OptionInfoRec * RivaAvailableOptions(int chipid, int busid);
 Bool    RivaGetScrnInfoRec(PciChipsets *chips, int chip);
