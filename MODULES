@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.298 2014/05/18 12:15:06 matthieu Exp $
+# $OpenBSD: MODULES,v 1.299 2014/06/07 20:17:06 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -132,7 +132,7 @@ driver/xf86-video-tseng		1.2.5
 driver/xf86-video-vesa		2.3.3	7.7+
 driver/xf86-video-vmware	13.0.1	7.7+	needs-update
 driver/xf86-video-voodoo	1.2.5	7.7+
-driver/xf86-video-wsfb		0.4.0	7.7
+driver/xf86-video-wsfb		0.4.1	7.7
 
 font/encodings 			1.0.4
 font/adobe-100dpi		1.0.3
@@ -173,7 +173,7 @@ font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
 lib/libFS			1.0.6	7.7+
-lib/libICE			1.0.8	7.7
+lib/libICE			1.0.9	7.7+	needs-update
 lib/libSM			1.2.2	7.7+
 lib/libX11			1.6.2	7.7+
 lib/libXScrnSaver		1.2.2	7.7
@@ -187,7 +187,7 @@ lib/libXext			1.3.2	7.7+
 lib/libXfixes			5.0.1	7.7+
 lib/libXfont			1.4.8	7.7+
 lib/libXfontcache		1.0.5
-lib/libXft			2.3.1	7.7
+lib/libXft			2.3.2	7.7+	needs-update
 lib/libXi			1.7.2	7.7+
 lib/libXinerama			1.1.3	7.7+
 lib/libXmu			1.1.2	7.7+
@@ -229,7 +229,7 @@ proto/fixesproto		5.0	7.7
 proto/fontcacheproto		0.1.3
 proto/fontsproto		2.1.3	7.7	needs-update
 proto/glproto			1.4.17	7.7+
-proto/inputproto		2.3	7.7+
+proto/inputproto		2.3.1	7.7+	needs-update
 proto/kbproto			1.0.6	7.7
 proto/pmproto			1.0.3		deprecated
 proto/presentproto		1.0	7.7+
@@ -251,7 +251,7 @@ proto/xf86vidmodeproto		2.3.1	7.7
 proto/xineramaproto		1.2.1	7.7
 
 util/cf				1.0.4
-util/gccmakedep			1.0.2
+util/gccmakedep			1.0.3		needs-update
 util/macros			1.19.0	7.7+
 util/makedepend			1.0.5	7.7+
 
