@@ -21,16 +21,17 @@
 # Process this file with autoconf to produce a configure script
 
 # Initialize Autoconf
-AC_PREREQ(2.59)
+AC_PREREQ(2.60)
 AC_INIT([xf86-video-geode],
-        [2.11.14],
+        [2.11.15],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode],
         [xf86-video-geode],
-	[http://www.x.org/wiki/GeodeDriver])
+        [http://www.x.org/wiki/GeodeDriver])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_AUX_DIR(.)
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])

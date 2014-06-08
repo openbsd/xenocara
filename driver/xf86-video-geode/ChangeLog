@@ -1,3 +1,61 @@
+commit c2d956a1e9bba7fa7877544f8e036ae78faa441f
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Wed Oct 9 14:48:45 2013 +0300
+
+    Geode 2.11.15
+    
+    This release restores compatibility with xserver-1.14 by removing
+    mibstore.h includes and miInitializeBackingStore() functions.
+    Since Nov.2010 (commit c4c4676) the only purpose of mibstore.h
+    was to define an empty function for backward compatibility.
+    
+    Build helpers migrate to contemporary [build-aux] and [m4].
+    
+    VALIDATION PLATFORM
+     * Debian (X server 1.14.3) on FIC ION603A (Geode LX800).
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit 69a8eedfe62d0df9037d86b47f2a6e34ba3c40a8
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Thu Oct 3 01:29:35 2013 +0300
+
+    Migrate AC_CONFIG_AUX_DIR to [build-aux]
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit b57f56b311d7f9702459f2bfd5330141f6b2bcff
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Wed Oct 2 22:39:49 2013 +0300
+
+    Fix whitespace in AC_INIT
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit 7d9f923e15eca509cd61f4f01ebbb0b2bf49d73c
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Wed Oct 2 22:35:12 2013 +0300
+
+    Bump AC_PREREQ to 2.60 as suggested by Gaetan Nadon
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit cb36826843017583aecbc77c4dbeb8ec5198c016
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Wed Oct 2 22:18:42 2013 +0300
+
+    libtool upgrade to include m4 directory
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit ed0b153f320a95a11bd561726d2405823573500e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 9 22:16:26 2013 -0500
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit a96a4e28a079499b18b441f0b6c05c50dd86ead6
 Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
 Date:   Sun Nov 25 11:12:58 2012 +0200

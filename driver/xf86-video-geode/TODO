@@ -8,7 +8,6 @@ GX:
 * Fix the options so they are sane (i.e eliminate one of SWCursor or HWCursor)
 * TV support
 * Fix the rotate text strings (CCW?)
-* Whitespace / indenting
 * Don't crash when rotating when playing video
 
 LX:

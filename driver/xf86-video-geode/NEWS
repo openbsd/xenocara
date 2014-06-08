@@ -1,3 +1,14 @@
+Geode 2.11.15 (2013-10-09)
+==========================
+No user-visible change:
+
+ * This release restores compatibility with xserver-1.14 by removing
+   mibstore.h includes and miInitializeBackingStore() functions.
+   Since Nov.2010 (commit c4c4676) the only purpose of mibstore.h
+   was to define an empty function for backward compatibility.
+
+ * Build helpers migrate to contemporary [build-aux] and [m4].
+
 Geode 2.11.14 (2012-11-25)
 ==========================
 Better compatibility with xserver-1.13, cairo-1.12 and gtk3:
