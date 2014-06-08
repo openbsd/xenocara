@@ -534,18 +534,28 @@ drmmode_set_scanout_pixmap(xf86CrtcPtr crtc, PixmapPtr ppix)
 	DamageRegister(&ppix->drawable, drmmode_crtc->slave_damage);
 
 	if (ppriv->fb_id == 0) {
-		int r;
-		r = drmModeAddFB(drmmode->fd, ppix->drawable.width,
-				 ppix->drawable.height,
-				 ppix->drawable.depth,
-				 ppix->drawable.bitsPerPixel,
-				 ppix->devKind,
-				 ppriv->backing_bo->handle,
-				 &ppriv->fb_id);
+                drmModeAddFB(drmmode->fd, ppix->drawable.width,
+                             ppix->drawable.height,
+                             ppix->drawable.depth,
+                             ppix->drawable.bitsPerPixel,
+                             ppix->devKind,
+                             ppriv->backing_bo->handle,
+                             &ppriv->fb_id);
 	}
 	return TRUE;
 }
 #endif
+
+static void *drmmode_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
+{
+	return NULL;
+}
+
+static PixmapPtr drmmode_shadow_create(xf86CrtcPtr crtc, void *data, int width,
+				       int height)
+{
+	return NULL;
+}
 
 static const xf86CrtcFuncsRec drmmode_crtc_funcs = {
     .dpms = drmmode_crtc_dpms,
@@ -561,6 +571,8 @@ static const xf86CrtcFuncsRec drmmode_crtc_funcs = {
 #ifdef MODESETTING_OUTPUT_SLAVE_SUPPORT
     .set_scanout_pixmap = drmmode_set_scanout_pixmap,
 #endif
+    .shadow_allocate = drmmode_shadow_allocate,
+    .shadow_create = drmmode_shadow_create,
 };
 
 static void
@@ -613,6 +625,78 @@ drmmode_output_mode_valid(xf86OutputPtr output, DisplayModePtr pModes)
 	return MODE_OK;
 }
 
+static Bool
+has_panel_fitter(xf86OutputPtr output)
+{
+	drmmode_output_private_ptr drmmode_output = output->driver_private;
+	drmModeConnectorPtr koutput = drmmode_output->mode_output;
+	drmmode_ptr drmmode = drmmode_output->drmmode;
+	int i;
+
+	/* Presume that if the output supports scaling, then we have a
+	 * panel fitter capable of adjust any mode to suit.
+	 */
+	for (i = 0; i < koutput->count_props; i++) {
+		drmModePropertyPtr props;
+		Bool found = FALSE;
+
+		props = drmModeGetProperty(drmmode->fd, koutput->props[i]);
+		if (props) {
+			found = strcmp(props->name, "scaling mode") == 0;
+			drmModeFreeProperty(props);
+		}
+
+		if (found)
+			return TRUE;
+	}
+
+	return FALSE;
+}
+
+static DisplayModePtr
+drmmode_output_add_gtf_modes(xf86OutputPtr output,
+			     DisplayModePtr Modes)
+{
+	xf86MonPtr mon = output->MonInfo;
+	DisplayModePtr i, m, preferred = NULL;
+	int max_x = 0, max_y = 0;
+	float max_vrefresh = 0.0;
+
+	if (mon && GTF_SUPPORTED(mon->features.msc))
+		return Modes;
+
+	if (!has_panel_fitter(output))
+		return Modes;
+
+	for (m = Modes; m; m = m->next) {
+		if (m->type & M_T_PREFERRED)
+			preferred = m;
+		max_x = max(max_x, m->HDisplay);
+		max_y = max(max_y, m->VDisplay);
+		max_vrefresh = max(max_vrefresh, xf86ModeVRefresh(m));
+	}
+
+	max_vrefresh = max(max_vrefresh, 60.0);
+	max_vrefresh *= (1 + SYNC_TOLERANCE);
+
+	m = xf86GetDefaultModes();
+	xf86ValidateModesSize(output->scrn, m, max_x, max_y, 0);
+
+	for (i = m; i; i = i->next) {
+		if (xf86ModeVRefresh(i) > max_vrefresh)
+			i->status = MODE_VSYNC;
+		if (preferred &&
+		    i->HDisplay >= preferred->HDisplay &&
+		    i->VDisplay >= preferred->VDisplay &&
+		    xf86ModeVRefresh(i) >= xf86ModeVRefresh(preferred))
+			i->status = MODE_VSYNC;
+	}
+
+	xf86PruneInvalidModes(output->scrn, &m, FALSE);
+
+	return xf86ModesAdd(Modes, m);
+}
+
 static DisplayModePtr
 drmmode_output_get_modes(xf86OutputPtr output)
 {
@@ -623,6 +707,9 @@ drmmode_output_get_modes(xf86OutputPtr output)
 	DisplayModePtr Modes = NULL, Mode;
 	drmModePropertyPtr props;
 	xf86MonPtr mon = NULL;
+
+	if (!koutput)
+		return NULL;
 
 	/* look for an EDID property */
 	for (i = 0; i < koutput->count_props; i++) {
@@ -653,7 +740,8 @@ drmmode_output_get_modes(xf86OutputPtr output)
 		Modes = xf86ModesAdd(Modes, Mode);
 
 	}
-	return Modes;
+
+	return drmmode_output_add_gtf_modes(output, Modes);
 }
 
 static void
@@ -741,7 +829,7 @@ drmmode_output_create_resources(xf86OutputPtr output)
 	drmmode_prop = p->mode_prop;
 
 	if (drmmode_prop->flags & DRM_MODE_PROP_RANGE) {
-	    INT32 range[2];
+	    INT32 prop_range[2];
 	    INT32 value = p->value;
 
 	    p->num_atoms = 1;
@@ -749,12 +837,12 @@ drmmode_output_create_resources(xf86OutputPtr output)
 	    if (!p->atoms)
 		continue;
 	    p->atoms[0] = MakeAtom(drmmode_prop->name, strlen(drmmode_prop->name), TRUE);
-	    range[0] = drmmode_prop->values[0];
-	    range[1] = drmmode_prop->values[1];
+	    prop_range[0] = drmmode_prop->values[0];
+	    prop_range[1] = drmmode_prop->values[1];
 	    err = RRConfigureOutputProperty(output->randr_output, p->atoms[0],
 		    FALSE, TRUE,
 		    drmmode_prop->flags & DRM_MODE_PROP_IMMUTABLE ? TRUE : FALSE,
-		    2, range);
+		    2, prop_range);
 	    if (err != 0) {
 		xf86DrvMsg(output->scrn->scrnIndex, X_ERROR,
 			"RRConfigureOutputProperty error, %d\n", err);
@@ -873,22 +961,23 @@ static int subpixel_conv_table[7] = { 0, SubPixelUnknown,
 				      SubPixelVerticalBGR,
 				      SubPixelNone };
 
-const char *output_names[] = { "None",
-			       "VGA",
-			       "DVI",
-			       "DVI",
-			       "DVI",
-			       "Composite",
-			       "S-video",
-			       "LVDS",
-			       "CTV",
-			       "DIN",
-			       "DisplayPort",
-			       "HDMI",
-			       "HDMI",
-			       "TV",
-			       "eDP",
-			       "Virtual"
+static const char * const output_names[] = { "None",
+					     "VGA",
+					     "DVI",
+					     "DVI",
+					     "DVI",
+					     "Composite",
+					     "S-video",
+					     "LVDS",
+					     "CTV",
+					     "DIN",
+					     "DisplayPort",
+					     "HDMI",
+					     "HDMI",
+					     "TV",
+					     "eDP",
+					     "Virtual",
+					     "DSI",
 };
 
 static void
@@ -921,6 +1010,10 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num, int *num_dv
 	/* need to do smart conversion here for compat with non-kms ATI driver */
 	if (koutput->connector_type >= MS_ARRAY_SIZE(output_names))
 		snprintf(name, 32, "Unknown-%d", koutput->connector_type_id - 1);
+#ifdef MODESETTING_OUTPUT_SLAVE_SUPPORT
+	else if (pScrn->is_gpu)
+		snprintf(name, 32, "%s-%d-%d", output_names[koutput->connector_type], pScrn->scrnIndex - GPU_SCREEN_OFFSET + 1, koutput->connector_type_id - 1);
+#endif
 	else
 		snprintf(name, 32, "%s-%d", output_names[koutput->connector_type], koutput->connector_type_id - 1);
 
@@ -1178,7 +1271,7 @@ Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 	return TRUE;
 }
 
-void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y, int flags)
+void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y)
 {
 	xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(pScrn);
 	xf86OutputPtr  output = config->output[config->compat_output];

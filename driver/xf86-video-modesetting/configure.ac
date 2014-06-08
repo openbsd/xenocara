@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-modesetting],
-        [0.6.0],
+        [0.8.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-modesetting])
 AC_CONFIG_SRCDIR([Makefile.am])

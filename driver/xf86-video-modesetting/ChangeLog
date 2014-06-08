@@ -1,3 +1,186 @@
+commit da64ee70f96fcac32c08128559b293732b318a00
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Tue Dec 3 17:01:28 2013 +0100
+
+    bump to 0.8.1
+
+commit c9f899bf34530d54eb96dda9f5e7d9135967fc11
+Author: Thierry Reding <thierry.reding@gmail.com>
+Date:   Tue Nov 26 17:08:03 2013 +0100
+
+    Properly identify DSI outputs
+    
+    Newer Linux kernels support DSI outputs. To be able to identify them
+    properly, add DSI to the list of output names.
+    
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Thierry Reding <treding@nvidia.com>
+
+commit d2403d5a1fb17f925e907296398ba14e8b104e89
+Author: Thierry Reding <thierry.reding@gmail.com>
+Date:   Tue Nov 26 17:08:02 2013 +0100
+
+    Staticise and constify output names
+    
+    This array isn't used anywhere outside this file, so it can be made
+    static. While at it, make the array const as well.
+    
+    Signed-off-by: Thierry Reding <treding@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit beca4dfb0e4d11d3729214967a1fe56ee5669831
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Nov 15 13:39:52 2013 +0900
+
+    Handle new DamageUnregister API which has only one argument
+    
+    API change in 1.15
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 75e6ae5de483bad6bfdea0ec1d9030bb44af335f
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Nov 15 13:26:36 2013 +0900
+
+    Clean up compiler warnings.
+    
+    Add const to any immutable string pointers.
+    Rename 'range' to 'prop_range' to avoid redefined warning.
+    Eliminate some unused return values.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit e8bd7c2dc3329fa0da3078b6d2cc0ffa43b428e5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jul 31 11:24:48 2013 +1000
+
+    modesetting: change output names for secondary GPUs
+    
+    if we are a secondary GPU modify the output name to avoid clashes.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 58d3dc53a89c5aa2acfc93e4ae5719dd92b785b9
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Wed Jun 12 14:11:53 2013 +0200
+
+    bump to 0.8.0
+    
+    Signed-off-by: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+
+commit a299400b8404f935e5e2bc6a5b9c17821844bd0d
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Wed Jun 12 14:05:19 2013 +0200
+
+    modesetting: probe only succeeds if connectors are detected
+    
+    This will prevent modesetting being used for outputless intel or nvidia cards.
+    
+    Signed-off-by: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+
+commit a62d5e60896166be88fcf3778921b8d10baec2c1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jun 11 10:29:25 2013 +1000
+
+    modesetting: fix adjust frame crash
+    
+    When SDL called this it was totally broken, actually hook
+    up to the underlying drmmode function.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=64808
+    
+    Thanks to Peter Wu <lekensteyn@gmail.com> for harassing me.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit cba29fd8c2f605ed66718aa3a6b5833deb5d4cf9
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Wed Apr 3 12:08:44 2013 +0200
+
+    support 32 bpp pixmaps when 24 bpp fb is used.
+    
+    Fixes background corruption in ubuntu.
+    
+    Signed-off-by: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+
+commit 332fbe8e13502c11bf32353123cba5e1e1bf3796
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Wed Mar 27 10:33:46 2013 +0100
+
+    bump version to 0.7.0
+
+commit 3c631228a9f57e73ee693d5283894db1a460e0a4
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Tue Mar 26 15:19:52 2013 +0100
+
+    modesetting: return null for get_modes if output could not be retrieved
+    
+    Signed-off-by: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+
+commit e5b5297ac449fb4ac62cc6471f933ae2265778a2
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Tue Mar 26 15:19:33 2013 +0100
+
+    modesetting: clean up leaks
+    
+    Signed-off-by: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+
+commit 1e571934629280053caeb155e418acbdca609e36
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Feb 20 17:27:16 2013 -0800
+
+    modesetting: match PCI class 3, any subclass
+    
+    If a device is not primary, the PCI device match fails because the
+    xf86-video-modesetting driver looks specifically for a PCI class match of
+    0x30000 with a mask of 0xffffff.  This fails to match, for example, a
+    non-primary Intel VGA device, because it is reported as having a class of
+    0x38000.
+    
+    Fix that by ignoring the low 16 bits of the class in the pci_id_match table.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed on IRC by Adam Jackson <ajax@redhat.com>
+
+commit 8dd5b22ea4469515b4218fad0deaf76cc98e3b9c
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 22:37:06 2012 +0000
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 06618a9b3d9585508b0debd18d5b981636f98c54
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Mon Dec 3 13:25:19 2012 +0000
+
+    Add missing GTF modes
+    
+    A fixed-mode output device like a panel will often only inform of its
+    preferred mode through its EDID. However, the driver will adjust user
+    specified modes for display through use of a panel-fitter allowing
+    greater flexibility in upscaling. This is often used by games to set a
+    low resolution for performance and use the panel fitter to fill the
+    screen.
+    
+    v2: Use the presence of the 'scaling mode' connector property as an
+    indication that a panel fitter is attached to that pipe.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=55564
+
+commit acb90bc34ad99a7c4de8c69a26ff09a65cd0281d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Feb 7 12:24:20 2013 +1000
+
+    modesetting: provide dummy hooks for shadow
+    
+    Since in some wierd cases the server can call these without checking they
+    exist.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 404b5e2b53578d8b78471da5aaaaa80a85c6acc4
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Wed Jan 9 13:04:00 2013 +1000

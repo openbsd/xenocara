@@ -92,7 +92,7 @@ static Bool ms_driver_func(ScrnInfoPtr scrn, xorgDriverFuncOp op,
 static const struct pci_id_match ms_device_match[] = {
     {
 	PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY,
-	0x00030000, 0x00ffffff, 0
+	0x00030000, 0x00ff0000, 0
     },
 
     { 0, 0, 0 },
@@ -189,7 +189,7 @@ Identify(int flags)
 		      Chipsets);
 }
 
-static int open_hw(char *dev)
+static int open_hw(const char *dev)
 {
     int fd;
     if (dev)
@@ -207,12 +207,25 @@ static int open_hw(char *dev)
     return fd;
 }
 
-static Bool probe_hw(char *dev)
+static int check_outputs(int fd)
+{
+    drmModeResPtr res = drmModeGetResources(fd);
+    int ret;
+
+    if (!res)
+        return FALSE;
+    ret = res->count_connectors > 0;
+    drmModeFreeResources(res);
+    return ret;
+}
+
+static Bool probe_hw(const char *dev)
 {
     int fd = open_hw(dev);
     if (fd != -1) {
+        int ret = check_outputs(fd);
         close(fd);
-	return TRUE;
+        return ret;
     }
     return FALSE;
 }
@@ -230,9 +243,9 @@ ms_DRICreatePCIBusID(const struct pci_device *dev)
 }
 
 
-static Bool probe_hw_pci(char *dev, struct pci_device *pdev)
+static Bool probe_hw_pci(const char *dev, struct pci_device *pdev)
 {
-    int fd = open_hw(dev);
+    int ret = FALSE, fd = open_hw(dev);
     char *id, *devid;
     drmSetVersion sv;
 
@@ -253,13 +266,12 @@ static Bool probe_hw_pci(char *dev, struct pci_device *pdev)
     devid = ms_DRICreatePCIBusID(pdev);
     close(fd);
 
-    if (!id || !devid)
-	return FALSE;
+    if (id && devid && !strcmp(id, devid))
+        ret = check_outputs(fd);
 
-    if (!strcmp(id, devid))
-	return TRUE;
-
-    return FALSE;
+    free(id);
+    free(devid);
+    return ret;
 }
 static const OptionInfoRec *
 AvailableOptions(int chipid, int busid)
@@ -292,7 +304,7 @@ ms_pci_probe(DriverPtr driver,
     scrn = xf86ConfigPciEntity(scrn, 0, entity_num, NULL,
 			       NULL, NULL, NULL, NULL, NULL);
     if (scrn) {
-	char *devpath;
+	const char *devpath;
 	GDevPtr devSection = xf86GetDevFromEntity(scrn->entityList[0],
 						  scrn->entityInstanceList[0]);
 
@@ -329,7 +341,7 @@ ms_platform_probe(DriverPtr driver,
               int entity_num, int flags, struct xf86_platform_device *dev, intptr_t match_data)
 {
     ScrnInfoPtr scrn = NULL;
-    char *path = xf86_get_platform_device_attrib(dev, ODEV_ATTRIB_PATH);
+    const char *path = xf86_get_platform_device_attrib(dev, ODEV_ATTRIB_PATH);
     int scr_flags = 0;
 
     if (flags & PLATFORM_PROBE_GPU_SCREEN)
@@ -363,7 +375,7 @@ Probe(DriverPtr drv, int flags)
     int i, numDevSections;
     GDevPtr *devSections;
     Bool foundScreen = FALSE;
-    char *dev;
+    const char *dev;
     ScrnInfoPtr scrn = NULL;
 
     /* For now, just bail out for PROBE_DETECT. */
@@ -536,15 +548,28 @@ static void msBlockHandler(BLOCKHANDLER_ARGS_DECL)
 static void
 FreeRec(ScrnInfoPtr pScrn)
 {
+    modesettingPtr ms;
+
     if (!pScrn)
-	return;
+        return;
 
-    if (!pScrn->driverPrivate)
-	return;
-
-    free(pScrn->driverPrivate);
-
+    ms = modesettingPTR(pScrn);
+    if (!ms)
+        return;
     pScrn->driverPrivate = NULL;
+
+    if (ms->fd > 0) {
+        int ret;
+
+        if (ms->pEnt->location.type == BUS_PCI)
+            ret = drmClose(ms->fd);
+        else
+            ret = close(ms->fd);
+        (void) ret;
+    }
+    free(ms->Options);
+    free(ms);
+
 }
 
 static Bool
@@ -554,7 +579,8 @@ PreInit(ScrnInfoPtr pScrn, int flags)
     rgb defaultWeight = { 0, 0, 0 };
     EntityInfoPtr pEnt;
     EntPtr msEnt = NULL;
-    char *BusID = NULL, *devicename;
+    char *BusID = NULL;
+    const char *devicename;
     Bool prefer_shadow = TRUE;
     uint64_t value = 0;
     int ret;
@@ -602,8 +628,8 @@ PreInit(ScrnInfoPtr pScrn, int flags)
 
 #if XSERVER_PLATFORM_BUS
     if (pEnt->location.type == BUS_PLATFORM) {
-            char *path = xf86_get_platform_device_attrib(pEnt->location.id.plat, ODEV_ATTRIB_PATH);
-            ms->fd = open_hw(path);
+        char *path = xf86_get_platform_device_attrib(pEnt->location.id.plat, ODEV_ATTRIB_PATH);
+        ms->fd = open_hw(path);
     }
     else 
 #endif
@@ -644,7 +670,7 @@ PreInit(ScrnInfoPtr pScrn, int flags)
 #endif
     drmmode_get_default_bpp(pScrn, &ms->drmmode, &defaultdepth, &defaultbpp);
     if (defaultdepth == 24 && defaultbpp == 24)
-	    bppflags = Support24bppFb;
+	    bppflags = SupportConvert32to24 | Support24bppFb;
     else
 	    bppflags = PreferConvert24to32 | SupportConvert24to32 | Support32bppFb;
     
@@ -950,16 +976,9 @@ static void
 AdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
     SCRN_INFO_PTR(arg);
-    xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
-    xf86OutputPtr output = config->output[config->compat_output];
-    xf86CrtcPtr crtc = output->crtc;
+    modesettingPtr ms = modesettingPTR(pScrn);
 
-    if (crtc && crtc->enabled) {
-	crtc->funcs->mode_set(crtc, pScrn->currentMode, pScrn->currentMode, x,
-			      y);
-	crtc->x = output->initial_x + x;
-	crtc->y = output->initial_y + y;
-    }
+    drmmode_adjust_frame(pScrn, &ms->drmmode, x, y);
 }
 
 static void
