@@ -13,3 +13,5 @@ ChangeLog:
 dist-hook: ChangeLog INSTALL
 
 SUBDIRS = renderutil
+
+EXTRA_DIST = autogen.sh

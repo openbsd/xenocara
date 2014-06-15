@@ -1,3 +1,12 @@
+Release 0.3.9 (2014-06-11)
+==========================
+
+- Mark DEPTH_MASK as Unsigned int.
+- config: add bug URL to AC_INIT.
+- config: add missing COPYING file.
+- compile the library with standard xorg warning flags.
+- Fix compilation and linking issues with C++.
+
 Release 0.3.8 (2010-04-25)
 ==========================
 

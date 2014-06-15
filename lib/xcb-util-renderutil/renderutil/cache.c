@@ -48,7 +48,7 @@ static struct {
  * any screen, tell the application that Render is not present.
  */
 
-#define DEPTH_MASK(d)	(1 << ((d) - 1))
+#define DEPTH_MASK(d)	(1U << ((d) - 1))
     
 /*
  * Render requires support for depth 1, 4, 8, 24 and 32 pixmaps
