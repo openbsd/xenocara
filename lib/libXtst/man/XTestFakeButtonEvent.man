@@ -1,1 +1,1 @@
-.so XTestQueryExtension.__libmansuffix__
+.so man3/XTestQueryExtension.__libmansuffix__
