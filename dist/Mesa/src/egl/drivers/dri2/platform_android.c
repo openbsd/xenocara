@@ -34,12 +34,9 @@
 #include <sync/sync.h>
 #endif
 
-/* for droid_get_pci_id */
-#include <xf86drm.h>
-#include <i915_drm.h>
-#include <radeon_drm.h>
-
+#include "loader.h"
 #include "egl_dri2.h"
+#include "egl_dri2_fallbacks.h"
 #include "gralloc_drm.h"
 
 static int
@@ -197,12 +194,14 @@ droid_free_local_buffers(struct dri2_egl_surface *dri2_surf)
 
 static _EGLSurface *
 droid_create_surface(_EGLDriver *drv, _EGLDisplay *disp, EGLint type,
-		    _EGLConfig *conf, EGLNativeWindowType window,
+		    _EGLConfig *conf, void *native_window,
 		    const EGLint *attrib_list)
 {
    struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
    struct dri2_egl_config *dri2_conf = dri2_egl_config(conf);
    struct dri2_egl_surface *dri2_surf;
+   struct ANativeWindow *window = native_window;
+
    dri2_surf = calloc(1, sizeof *dri2_surf);
    if (!dri2_surf) {
       _eglError(EGL_BAD_ALLOC, "droid_create_surface");
@@ -257,19 +256,11 @@ cleanup_surface:
 
 static _EGLSurface *
 droid_create_window_surface(_EGLDriver *drv, _EGLDisplay *disp,
-			   _EGLConfig *conf, EGLNativeWindowType window,
-			   const EGLint *attrib_list)
+                            _EGLConfig *conf, void *native_window,
+                            const EGLint *attrib_list)
 {
    return droid_create_surface(drv, disp, EGL_WINDOW_BIT, conf,
-			      window, attrib_list);
-}
-
-static _EGLSurface *
-droid_create_pixmap_surface(_EGLDriver *drv, _EGLDisplay *disp,
-			   _EGLConfig *conf, EGLNativePixmapType pixmap,
-			   const EGLint *attrib_list)
-{
-   return NULL;
+                               native_window, attrib_list);
 }
 
 static _EGLSurface *
@@ -432,18 +423,6 @@ droid_create_image_khr(_EGLDriver *drv, _EGLDisplay *disp,
 }
 
 static void
-droid_init_driver_functions(_EGLDriver *drv)
-{
-   drv->API.CreateWindowSurface = droid_create_window_surface;
-   drv->API.CreatePixmapSurface = droid_create_pixmap_surface;
-   drv->API.CreatePbufferSurface = droid_create_pbuffer_surface;
-   drv->API.DestroySurface = droid_destroy_surface;
-   drv->API.SwapBuffers = droid_swap_buffers;
-
-   drv->API.CreateImageKHR = droid_create_image_khr;
-}
-
-static void
 droid_flush_front_buffer(__DRIdrawable * driDrawable, void *loaderPrivate)
 {
 }
@@ -547,14 +526,13 @@ droid_add_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *dpy)
    struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
    const struct {
       int format;
-      int size;
       unsigned int rgba_masks[4];
    } visuals[] = {
-      { HAL_PIXEL_FORMAT_RGBA_8888, 32, { 0xff, 0xff00, 0xff0000, 0xff000000 } },
-      { HAL_PIXEL_FORMAT_RGBX_8888, 32, { 0xff, 0xff00, 0xff0000, 0x0 } },
-      { HAL_PIXEL_FORMAT_RGB_888,   24, { 0xff, 0xff00, 0xff0000, 0x0 } },
-      { HAL_PIXEL_FORMAT_RGB_565,   16, { 0xf800, 0x7e0, 0x1f, 0x0 } },
-      { HAL_PIXEL_FORMAT_BGRA_8888, 32, { 0xff0000, 0xff00, 0xff, 0xff000000 } },
+      { HAL_PIXEL_FORMAT_RGBA_8888, { 0xff, 0xff00, 0xff0000, 0xff000000 } },
+      { HAL_PIXEL_FORMAT_RGBX_8888, { 0xff, 0xff00, 0xff0000, 0x0 } },
+      { HAL_PIXEL_FORMAT_RGB_888,   { 0xff, 0xff00, 0xff0000, 0x0 } },
+      { HAL_PIXEL_FORMAT_RGB_565,   { 0xf800, 0x7e0, 0x1f, 0x0 } },
+      { HAL_PIXEL_FORMAT_BGRA_8888, { 0xff0000, 0xff00, 0xff, 0xff000000 } },
       { 0, 0, { 0, 0, 0, 0 } }
    };
    int count, i, j;
@@ -576,8 +554,7 @@ droid_add_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *dpy)
             continue;
 
          dri2_conf = dri2_add_config(dpy, dri2_dpy->driver_configs[j],
-               count + 1, visuals[i].size, surface_type, NULL,
-               visuals[i].rgba_masks);
+               count + 1, surface_type, NULL, visuals[i].rgba_masks);
          if (dri2_conf) {
             dri2_conf->base.NativeVisualID = visuals[i].format;
             dri2_conf->base.NativeVisualType = visuals[i].format;
@@ -602,103 +579,6 @@ droid_add_configs_for_visuals(_EGLDriver *drv, _EGLDisplay *dpy)
    }
 
    return (count != 0);
-}
-
-static EGLBoolean
-droid_get_pci_id(int fd, int *vendor_id, int *chip_id)
-{
-   drmVersionPtr version;
-
-   *chip_id = -1;
-
-   version = drmGetVersion(fd);
-   if (!version) {
-      _eglLog(_EGL_WARNING, "invalid drm fd");
-      return EGL_FALSE;
-   }
-   if (!version->name) {
-      _eglLog(_EGL_WARNING, "unable to determine the driver name");
-      drmFreeVersion(version);
-      return EGL_FALSE;
-   }
-
-   if (strcmp(version->name, "i915") == 0) {
-      struct drm_i915_getparam gp;
-      int ret;
-
-      *vendor_id = 0x8086;
-
-      memset(&gp, 0, sizeof(gp));
-      gp.param = I915_PARAM_CHIPSET_ID;
-      gp.value = chip_id;
-      ret = drmCommandWriteRead(fd, DRM_I915_GETPARAM, &gp, sizeof(gp));
-      if (ret) {
-         _eglLog(_EGL_WARNING, "failed to get param for i915");
-	 *chip_id = -1;
-      }
-   }
-   else if (strcmp(version->name, "radeon") == 0) {
-      struct drm_radeon_info info;
-      int ret;
-
-      *vendor_id = 0x1002;
-
-      memset(&info, 0, sizeof(info));
-      info.request = RADEON_INFO_DEVICE_ID;
-      info.value = (unsigned long) chip_id;
-      ret = drmCommandWriteRead(fd, DRM_RADEON_INFO, &info, sizeof(info));
-      if (ret) {
-         _eglLog(_EGL_WARNING, "failed to get info for radeon");
-	 *chip_id = -1;
-      }
-   }
-   else if (strcmp(version->name, "nouveau") == 0) {
-      *vendor_id = 0x10de;
-      /* not used */
-      *chip_id = 0;
-   }
-   else if (strcmp(version->name, "vmwgfx") == 0) {
-      *vendor_id = 0x15ad;
-      /* assume SVGA II */
-      *chip_id = 0x0405;
-   }
-
-   drmFreeVersion(version);
-
-   return (*chip_id >= 0);
-}
-
-#define DRIVER_MAP_DRI2_ONLY
-#include "pci_ids/pci_id_driver_map.h"
-static const char *
-droid_get_driver_name(int fd)
-{
-   int vendor_id = -1, chip_id = -1;
-   int idx, i;
-   char *name;
-
-   if (!droid_get_pci_id(fd, &vendor_id, &chip_id))
-      return NULL;
-
-   for (idx = 0; driver_map[idx].driver; idx++) {
-      if (vendor_id != driver_map[idx].vendor_id)
-         continue;
-
-      if (driver_map[idx].num_chips_ids == -1)
-         break;
-
-      for (i = 0; i < driver_map[idx].num_chips_ids; i++) {
-         if (driver_map[idx].chip_ids[i] == chip_id)
-            break;
-      }
-      if (i < driver_map[idx].num_chips_ids)
-	      break;
-   }
-
-   _eglLog(_EGL_INFO, "pci id for fd %d: %04x:%04x, driver %s",
-         fd, vendor_id, chip_id, driver_map[idx].driver);
-
-   return driver_map[idx].driver;
 }
 
 static int
@@ -755,6 +635,23 @@ droid_log(EGLint level, const char *msg)
    }
 }
 
+static struct dri2_egl_display_vtbl droid_display_vtbl = {
+   .authenticate = NULL,
+   .create_window_surface = droid_create_window_surface,
+   .create_pixmap_surface = dri2_fallback_create_pixmap_surface,
+   .create_pbuffer_surface = droid_create_pbuffer_surface,
+   .destroy_surface = droid_destroy_surface,
+   .create_image = droid_create_image_khr,
+   .swap_interval = dri2_fallback_swap_interval,
+   .swap_buffers = droid_swap_buffers,
+   .swap_buffers_with_damage = dri2_fallback_swap_buffers_with_damage,
+   .swap_buffers_region = dri2_fallback_swap_buffers_region,
+   .post_sub_buffer = dri2_fallback_post_sub_buffer,
+   .copy_buffers = dri2_fallback_copy_buffers,
+   .query_buffer_age = dri2_fallback_query_buffer_age,
+   .create_wayland_buffer_from_image = dri2_fallback_create_wayland_buffer_from_image,
+};
+
 EGLBoolean
 dri2_initialize_android(_EGLDriver *drv, _EGLDisplay *dpy)
 {
@@ -762,6 +659,8 @@ dri2_initialize_android(_EGLDriver *drv, _EGLDisplay *dpy)
    const char *err;
 
    _eglSetLogProc(droid_log);
+
+   loader_set_logger(_eglLog);
 
    dri2_dpy = calloc(1, sizeof(*dri2_dpy));
    if (!dri2_dpy)
@@ -775,7 +674,7 @@ dri2_initialize_android(_EGLDriver *drv, _EGLDisplay *dpy)
       goto cleanup_display;
    }
 
-   dri2_dpy->driver_name = (char *) droid_get_driver_name(dri2_dpy->fd);
+   dri2_dpy->driver_name = loader_get_driver_for_fd(dri2_dpy->fd, 0);
    if (dri2_dpy->driver_name == NULL) {
       err = "DRI2: failed to get driver name";
       goto cleanup_device;
@@ -783,7 +682,7 @@ dri2_initialize_android(_EGLDriver *drv, _EGLDisplay *dpy)
 
    if (!dri2_load_driver(dpy)) {
       err = "DRI2: failed to load driver";
-      goto cleanup_device;
+      goto cleanup_driver_name;
    }
 
    dri2_dpy->dri2_loader_extension.base.name = __DRI_DRI2_LOADER;
@@ -815,7 +714,10 @@ dri2_initialize_android(_EGLDriver *drv, _EGLDisplay *dpy)
    dpy->VersionMajor = 1;
    dpy->VersionMinor = 4;
 
-   droid_init_driver_functions(drv);
+   /* Fill vtbl last to prevent accidentally calling virtual function during
+    * initialization.
+    */
+   dri2_dpy->vtbl = &droid_display_vtbl;
 
    return EGL_TRUE;
 
@@ -823,6 +725,8 @@ cleanup_screen:
    dri2_dpy->core->destroyScreen(dri2_dpy->dri_screen);
 cleanup_driver:
    dlclose(dri2_dpy->driver);
+cleanup_driver_name:
+   free(dri2_dpy->driver_name);
 cleanup_device:
    close(dri2_dpy->fd);
 cleanup_display:

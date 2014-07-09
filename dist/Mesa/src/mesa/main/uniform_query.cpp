@@ -40,9 +40,9 @@
 
 
 extern "C" void GLAPIENTRY
-_mesa_GetActiveUniform(GLhandleARB program, GLuint index,
-                          GLsizei maxLength, GLsizei *length, GLint *size,
-                          GLenum *type, GLcharARB *nameOut)
+_mesa_GetActiveUniform(GLuint program, GLuint index,
+                       GLsizei maxLength, GLsizei *length, GLint *size,
+                       GLenum *type, GLcharARB *nameOut)
 {
    GET_CURRENT_CONTEXT(ctx);
    struct gl_shader_program *shProg =
@@ -154,11 +154,21 @@ _mesa_GetActiveUniformsiv(GLuint program,
 	 params[i] = uni->row_major;
 	 break;
 
+      case GL_UNIFORM_ATOMIC_COUNTER_BUFFER_INDEX:
+         if (!ctx->Extensions.ARB_shader_atomic_counters)
+            goto invalid_enum;
+         params[i] = uni->atomic_buffer_index;
+         break;
+
       default:
-	 _mesa_error(ctx, GL_INVALID_ENUM, "glGetActiveUniformsiv(pname)");
-	 return;
+         goto invalid_enum;
       }
    }
+
+   return;
+
+ invalid_enum:
+   _mesa_error(ctx, GL_INVALID_ENUM, "glGetActiveUniformsiv(pname)");
 }
 
 static bool
@@ -236,13 +246,14 @@ validate_uniform_parameters(struct gl_context *ctx,
       return false;
    }
 
-   _mesa_uniform_split_location_offset(shProg, location, loc, array_index);
-
-   if (*loc >= shProg->NumUserUniformStorage) {
+   /* Check that the given location is in bounds of uniform remap table. */
+   if (location >= (GLint) shProg->NumUniformRemapTable) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "%s(location=%d)",
 		  caller, location);
       return false;
    }
+
+   _mesa_uniform_split_location_offset(shProg, location, loc, array_index);
 
    if (shProg->UniformStorage[*loc].array_elements == 0 && count > 1) {
       _mesa_error(ctx, GL_INVALID_OPERATION,
@@ -435,14 +446,14 @@ log_uniform(const void *values, enum glsl_base_type basicType,
 static void
 log_program_parameters(const struct gl_shader_program *shProg)
 {
-   for (unsigned i = 0; i < MESA_SHADER_TYPES; i++) {
+   for (unsigned i = 0; i < MESA_SHADER_STAGES; i++) {
       if (shProg->_LinkedShaders[i] == NULL)
 	 continue;
 
       const struct gl_program *const prog = shProg->_LinkedShaders[i]->Program;
 
       printf("Program %d %s shader parameters:\n",
-             shProg->Name, _mesa_glsl_shader_target_name(prog->Target));
+             shProg->Name, _mesa_shader_stage_to_string(i));
       for (unsigned j = 0; j < prog->Parameters->NumParameters; j++) {
 	 printf("%s: %p %f %f %f %f\n",
 		prog->Parameters->Parameters[j].Name,
@@ -674,6 +685,7 @@ _mesa_uniform(struct gl_context *ctx, struct gl_shader_program *shProg,
       match = true;
       break;
    case GLSL_TYPE_SAMPLER:
+   case GLSL_TYPE_IMAGE:
       match = (basicType == GLSL_TYPE_INT);
       break;
    default:
@@ -686,7 +698,7 @@ _mesa_uniform(struct gl_context *ctx, struct gl_shader_program *shProg,
       return;
    }
 
-   if (ctx->Shader.Flags & GLSL_UNIFORMS) {
+   if (ctx->_Shader->Flags & GLSL_UNIFORMS) {
       log_uniform(values, basicType, components, 1, count,
 		  false, shProg, location, uni);
    }
@@ -719,6 +731,22 @@ _mesa_uniform(struct gl_context *ctx, struct gl_shader_program *shProg,
             _mesa_error(ctx, GL_INVALID_VALUE,
                         "glUniform1i(invalid sampler/tex unit index for "
 			"uniform %d)",
+                        location);
+            return;
+         }
+      }
+   }
+
+   if (uni->type->is_image()) {
+      int i;
+
+      for (i = 0; i < count; i++) {
+         const int unit = ((GLint *) values)[i];
+
+         /* check that the image unit is legal */
+         if (unit < 0 || unit >= (int)ctx->Const.MaxImageUnits) {
+            _mesa_error(ctx, GL_INVALID_VALUE,
+                        "glUniform1i(invalid image unit index for uniform %d)",
                         location);
             return;
          }
@@ -774,7 +802,7 @@ _mesa_uniform(struct gl_context *ctx, struct gl_shader_program *shProg,
       int i;
 
       bool flushed = false;
-      for (i = 0; i < MESA_SHADER_TYPES; i++) {
+      for (i = 0; i < MESA_SHADER_STAGES; i++) {
 	 struct gl_shader *const sh = shProg->_LinkedShaders[i];
          int j;
 
@@ -819,6 +847,25 @@ _mesa_uniform(struct gl_context *ctx, struct gl_shader_program *shProg,
 	       ctx->Driver.SamplerUniformChange(ctx, prog->Target, prog);
 	 }
       }
+   }
+
+   /* If the uniform is an image, update the mapping from image
+    * uniforms to image units present in the shader data structure.
+    */
+   if (uni->type->is_image()) {
+      int i, j;
+
+      for (i = 0; i < MESA_SHADER_STAGES; i++) {
+	 if (uni->image[i].active) {
+            struct gl_shader *sh = shProg->_LinkedShaders[i];
+
+            for (j = 0; j < count; j++)
+               sh->ImageUnits[uni->image[i].index + offset + j] =
+                  ((GLint *) values)[j];
+         }
+      }
+
+      ctx->NewDriverState |= ctx->DriverFlags.NewImageUnits;
    }
 }
 
@@ -873,7 +920,7 @@ _mesa_uniform_matrix(struct gl_context *ctx, struct gl_shader_program *shProg,
       }
    }
 
-   if (ctx->Shader.Flags & GLSL_UNIFORMS) {
+   if (ctx->_Shader->Flags & GLSL_UNIFORMS) {
       log_uniform(values, GLSL_TYPE_FLOAT, components, vectors, count,
 		  bool(transpose), shProg, location, uni);
    }
@@ -1038,6 +1085,83 @@ _mesa_sampler_uniforms_are_valid(const struct gl_shader_program *shProg,
 	    return false;
 	 }
       }
+   }
+
+   return true;
+}
+
+extern "C" bool
+_mesa_sampler_uniforms_pipeline_are_valid(struct gl_pipeline_object *pipeline)
+{
+   /* Section 2.11.11 (Shader Execution), subheading "Validation," of the
+    * OpenGL 4.1 spec says:
+    *
+    *     "[INVALID_OPERATION] is generated by any command that transfers
+    *     vertices to the GL if:
+    *
+    *         ...
+    *
+    *         - Any two active samplers in the current program object are of
+    *           different types, but refer to the same texture image unit.
+    *
+    *         - The number of active samplers in the program exceeds the
+    *           maximum number of texture image units allowed."
+    */
+   unsigned active_samplers = 0;
+   const struct gl_shader_program **shProg =
+      (const struct gl_shader_program **) pipeline->CurrentProgram;
+
+   const glsl_type *unit_types[MAX_COMBINED_TEXTURE_IMAGE_UNITS];
+   memset(unit_types, 0, sizeof(unit_types));
+
+   for (unsigned idx = 0; idx < ARRAY_SIZE(pipeline->CurrentProgram); idx++) {
+      if (!shProg[idx])
+         continue;
+
+      for (unsigned i = 0; i < shProg[idx]->NumUserUniformStorage; i++) {
+         const struct gl_uniform_storage *const storage =
+            &shProg[idx]->UniformStorage[i];
+         const glsl_type *const t = (storage->type->is_array())
+            ? storage->type->fields.array : storage->type;
+
+         if (!t->is_sampler())
+            continue;
+
+         active_samplers++;
+
+         const unsigned count = MAX2(1, storage->type->array_size());
+         for (unsigned j = 0; j < count; j++) {
+            const unsigned unit = storage->storage[j].i;
+
+            /* The types of the samplers associated with a particular texture
+             * unit must be an exact match.  Page 74 (page 89 of the PDF) of
+             * the OpenGL 3.3 core spec says:
+             *
+             *     "It is not allowed to have variables of different sampler
+             *     types pointing to the same texture image unit within a
+             *     program object."
+             */
+            if (unit_types[unit] == NULL) {
+               unit_types[unit] = t;
+            } else if (unit_types[unit] != t) {
+               pipeline->InfoLog =
+                  ralloc_asprintf(pipeline,
+                                  "Texture unit %d is accessed both as %s "
+                                  "and %s",
+                                  unit, unit_types[unit]->name, t->name);
+               return false;
+            }
+         }
+      }
+   }
+
+   if (active_samplers > MAX_COMBINED_TEXTURE_IMAGE_UNITS) {
+      pipeline->InfoLog =
+         ralloc_asprintf(pipeline,
+                         "the number of active samplers %d exceed the "
+                         "maximum %d",
+                         active_samplers, MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+      return false;
    }
 
    return true;

@@ -55,7 +55,6 @@ public:
    {
       this->var = var;
       this->whole_vector_access = 0;
-      this->declaration = false;
       this->mem_ctx = NULL;
    }
 
@@ -63,8 +62,6 @@ public:
 
    /** Number of times the variable is referenced, including assignments. */
    unsigned whole_vector_access;
-
-   bool declaration; /* If the variable had a decl in the instruction stream */
 
    ir_variable *components[4];
 
@@ -107,10 +104,11 @@ ir_vector_reference_visitor::get_variable_entry(ir_variable *var)
    if (!var->type->is_vector())
       return NULL;
 
-   switch (var->mode) {
+   switch (var->data.mode) {
    case ir_var_uniform:
    case ir_var_shader_in:
    case ir_var_shader_out:
+   case ir_var_system_value:
    case ir_var_function_in:
    case ir_var_function_out:
    case ir_var_function_inout:
@@ -138,10 +136,8 @@ ir_vector_reference_visitor::get_variable_entry(ir_variable *var)
 ir_visitor_status
 ir_vector_reference_visitor::visit(ir_variable *ir)
 {
-   variable_entry *entry = this->get_variable_entry(ir);
-
-   if (entry)
-      entry->declaration = true;
+   /* Make sure splitting looks at splitting this variable */
+   (void)this->get_variable_entry(ir);
 
    return visit_continue;
 }
@@ -317,7 +313,7 @@ ir_vector_splitting_visitor::visit_leave(ir_assignment *ir)
 	 elem = 3;
 	 break;
       default:
-	 ir->print();
+	 ir->fprint(stderr);
 	 assert(!"not reached: non-channelwise dereference of LHS.");
       }
 
@@ -346,12 +342,12 @@ brw_do_vector_splitting(exec_list *instructions)
       variable_entry *entry = (variable_entry *)node;
 
       if (debug) {
-	 printf("vector %s@%p: decl %d, whole_access %d\n",
-		entry->var->name, (void *) entry->var, entry->declaration,
-		entry->whole_vector_access);
+	 fprintf(stderr, "vector %s@%p: whole_access %d\n",
+                 entry->var->name, (void *) entry->var,
+                 entry->whole_vector_access);
       }
 
-      if (!entry->declaration || entry->whole_vector_access) {
+      if (entry->whole_vector_access) {
 	 entry->remove();
       }
    }

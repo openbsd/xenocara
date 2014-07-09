@@ -34,32 +34,12 @@ struct enum_info {
 };
 
 extern const struct enum_info everything[];
-extern const struct enum_info alternate_names[];
 
 TEST(EnumStrings, LookUpByNumber)
 {
    for (unsigned i = 0; everything[i].name != NULL; i++) {
       EXPECT_STREQ(everything[i].name,
 		   _mesa_lookup_enum_by_nr(everything[i].value));
-   }
-}
-
-TEST(EnumStrings, LookUpByName)
-{
-   for (unsigned i = 0; everything[i].name != NULL; i++) {
-      EXPECT_EQ(everything[i].value,
-		_mesa_lookup_enum_by_name(everything[i].name));
-   }
-}
-
-TEST(EnumStrings, LookUpByDuplicateName)
-{
-   /* Some enum values have multiple names.  Try to find some values
-    * by alternate names.
-    */
-   for (unsigned i = 0; alternate_names[i].name != NULL; i++) {
-      EXPECT_EQ(alternate_names[i].value,
-		_mesa_lookup_enum_by_name(alternate_names[i].name));
    }
 }
 
@@ -827,6 +807,9 @@ const struct enum_info everything[] = {
    { 0x83F1, "GL_COMPRESSED_RGBA_S3TC_DXT1_EXT" },
    { 0x83F2, "GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE" },
    { 0x83F3, "GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE" },
+   { 0x83F9, "GL_PERFQUERY_DONOT_FLUSH_INTEL" },
+   { 0x83FA, "GL_PERFQUERY_FLUSH_INTEL" },
+   { 0x83FB, "GL_PERFQUERY_WAIT_INTEL" },
    { 0x844D, "GL_NEAREST_CLIPMAP_NEAREST_SGIX" },
    { 0x844E, "GL_NEAREST_CLIPMAP_LINEAR_SGIX" },
    { 0x844F, "GL_LINEAR_CLIPMAP_NEAREST_SGIX" },
@@ -1130,9 +1113,6 @@ const struct enum_info everything[] = {
    { 0x8746, "GL_MODULATE_SUBTRACT_ATI" },
    { 0x8757, "GL_YCBCR_MESA" },
    { 0x8758, "GL_PACK_INVERT_MESA" },
-   { 0x8759, "GL_DEBUG_OBJECT_MESA" },
-   { 0x875A, "GL_DEBUG_PRINT_MESA" },
-   { 0x875B, "GL_DEBUG_ASSERT_MESA" },
    { 0x8764, "GL_BUFFER_SIZE" },
    { 0x8765, "GL_BUFFER_USAGE" },
    { 0x8775, "GL_BUMP_ROT_MATRIX_ATI" },
@@ -1790,6 +1770,8 @@ const struct enum_info everything[] = {
    { 0x8E51, "GL_SAMPLE_MASK" },
    { 0x8E52, "GL_SAMPLE_MASK_VALUE" },
    { 0x8E59, "GL_MAX_SAMPLE_MASK_WORDS" },
+   { 0x8E5E, "GL_MIN_PROGRAM_TEXTURE_GATHER_OFFSET" },
+   { 0x8E5F, "GL_MAX_PROGRAM_TEXTURE_GATHER_OFFSET" },
    { 0x8F36, "GL_COPY_READ_BUFFER" },
    { 0x8F37, "GL_COPY_WRITE_BUFFER" },
    { 0x8F90, "GL_RED_SNORM" },
@@ -1807,6 +1789,7 @@ const struct enum_info everything[] = {
    { 0x8F9C, "GL_SIGNED_NORMALIZED" },
    { 0x8F9D, "GL_PRIMITIVE_RESTART" },
    { 0x8F9E, "GL_PRIMITIVE_RESTART_INDEX" },
+   { 0x8F9F, "GL_MAX_PROGRAM_TEXTURE_GATHER_COMPONENTS_ARB" },
    { 0x906F, "GL_RGB10_A2UI" },
    { 0x9100, "GL_TEXTURE_2D_MULTISAMPLE" },
    { 0x9101, "GL_PROXY_TEXTURE_2D_MULTISAMPLE" },
@@ -1863,18 +1846,21 @@ const struct enum_info everything[] = {
    { 0x9271, "GL_COMPRESSED_SIGNED_R11_EAC" },
    { 0x9272, "GL_COMPRESSED_RG11_EAC" },
    { 0x9273, "GL_COMPRESSED_SIGNED_RG11_EAC" },
+   { 0x94F0, "GL_PERFQUERY_COUNTER_EVENT_INTEL" },
+   { 0x94F1, "GL_PERFQUERY_COUNTER_DURATION_NORM_INTEL" },
+   { 0x94F2, "GL_PERFQUERY_COUNTER_DURATION_RAW_INTEL" },
+   { 0x94F3, "GL_PERFQUERY_COUNTER_THROUGHPUT_INTEL" },
+   { 0x94F4, "GL_PERFQUERY_COUNTER_RAW_INTEL" },
+   { 0x94F5, "GL_PERFQUERY_COUNTER_TIMESTAMP_INTEL" },
+   { 0x94F8, "GL_PERFQUERY_COUNTER_DATA_UINT32_INTEL" },
+   { 0x94F9, "GL_PERFQUERY_COUNTER_DATA_UINT64_INTEL" },
+   { 0x94FA, "GL_PERFQUERY_COUNTER_DATA_FLOAT_INTEL" },
+   { 0x94FB, "GL_PERFQUERY_COUNTER_DATA_DOUBLE_INTEL" },
+   { 0x94FC, "GL_PERFQUERY_COUNTER_DATA_BOOL32_INTEL" },
+   { 0x94FD, "GL_PERFQUERY_QUERY_NAME_LENGTH_MAX_INTEL" },
+   { 0x94FE, "GL_PERFQUERY_COUNTER_NAME_LENGTH_MAX_INTEL" },
+   { 0x94FF, "GL_PERFQUERY_COUNTER_DESC_LENGTH_MAX_INTEL" },
+   { 0x9500, "GL_PERFQUERY_GPA_EXTENDED_COUNTERS_INTEL" },
    { 0x19262, "GL_RASTER_POSITION_UNCLIPPED_IBM" },
-   { 0, NULL }
-};
-
-const struct enum_info alternate_names[] = {
-   { 0x8513, "GL_TEXTURE_CUBE_MAP_ARB" },
-   { 0x8514, "GL_TEXTURE_BINDING_CUBE_MAP_ARB" },
-   { 0x8515, "GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB" },
-   { 0x8516, "GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB" },
-   { 0x8517, "GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB" },
-   { 0x8518, "GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB" },
-   { 0x8519, "GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB" },
-   { 0x851A, "GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB" },
    { 0, NULL }
 };

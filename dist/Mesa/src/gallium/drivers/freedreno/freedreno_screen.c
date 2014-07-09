@@ -47,6 +47,7 @@
 #include "freedreno_screen.h"
 #include "freedreno_resource.h"
 #include "freedreno_fence.h"
+#include "freedreno_query.h"
 #include "freedreno_util.h"
 
 #include "fd2_screen.h"
@@ -61,12 +62,20 @@ static const struct debug_named_value debug_options[] = {
 		{"dclear",    FD_DBG_DCLEAR, "Mark all state dirty after clear"},
 		{"dgmem",     FD_DBG_DGMEM,  "Mark all state dirty after GMEM tile pass"},
 		{"dscis",     FD_DBG_DSCIS,  "Disable scissor optimization"},
+		{"direct",    FD_DBG_DIRECT, "Force inline (SS_DIRECT) state loads"},
+		{"dbypass",   FD_DBG_DBYPASS,"Disable GMEM bypass"},
+		{"fraghalf",  FD_DBG_FRAGHALF, "Use half-precision in fragment shader"},
+		{"nobin",     FD_DBG_NOBIN,  "Disable hw binning"},
+		{"noopt",     FD_DBG_NOOPT , "Disable optimization passes in compiler"},
+		{"optmsgs",   FD_DBG_OPTMSGS,"Enable optimizater debug messages"},
+		{"optdump",   FD_DBG_OPTDUMP,"Dump shader DAG to .dot files"},
 		DEBUG_NAMED_VALUE_END
 };
 
 DEBUG_GET_ONCE_FLAGS_OPTION(fd_mesa_debug, "FD_MESA_DEBUG", debug_options, 0)
 
 int fd_mesa_debug = 0;
+bool fd_binning_enabled = true;
 
 static const char *
 fd_screen_get_name(struct pipe_screen *pscreen)
@@ -134,10 +143,13 @@ tables for things that differ if the delta is not too much..
 static int
 fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 {
+	struct fd_screen *screen = fd_screen(pscreen);
+
 	/* this is probably not totally correct.. but it's a start: */
 	switch (param) {
 	/* Supported features (boolean caps). */
 	case PIPE_CAP_NPOT_TEXTURES:
+	case PIPE_CAP_MIXED_FRAMEBUFFER_SIZES:
 	case PIPE_CAP_TWO_SIDED_STENCIL:
 	case PIPE_CAP_ANISOTROPIC_FILTER:
 	case PIPE_CAP_POINT_SPRITE:
@@ -145,16 +157,11 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 	case PIPE_CAP_TEXTURE_MIRROR_CLAMP:
 	case PIPE_CAP_BLEND_EQUATION_SEPARATE:
 	case PIPE_CAP_TEXTURE_SWIZZLE:
-	case PIPE_CAP_SHADER_STENCIL_EXPORT:
 	case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
 	case PIPE_CAP_MIXED_COLORBUFFER_FORMATS:
 	case PIPE_CAP_TGSI_FS_COORD_ORIGIN_UPPER_LEFT:
 	case PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_HALF_INTEGER:
-	case PIPE_CAP_SM3:
 	case PIPE_CAP_SEAMLESS_CUBE_MAP:
-	case PIPE_CAP_PRIMITIVE_RESTART:
-	case PIPE_CAP_CONDITIONAL_RENDER:
-	case PIPE_CAP_TEXTURE_BARRIER:
 	case PIPE_CAP_VERTEX_COLOR_UNCLAMPED:
 	case PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION:
 	case PIPE_CAP_TGSI_INSTANCEID:
@@ -164,12 +171,18 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 	case PIPE_CAP_COMPUTE:
 	case PIPE_CAP_START_INSTANCE:
 	case PIPE_CAP_MAX_DUAL_SOURCE_RENDER_TARGETS:
-	case PIPE_CAP_TEXTURE_MULTISAMPLE:
 	case PIPE_CAP_USER_CONSTANT_BUFFERS:
+	case PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT:
 		return 1;
 
+	case PIPE_CAP_SHADER_STENCIL_EXPORT:
 	case PIPE_CAP_TGSI_TEXCOORD:
 	case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
+	case PIPE_CAP_CONDITIONAL_RENDER:
+	case PIPE_CAP_PRIMITIVE_RESTART:
+	case PIPE_CAP_TEXTURE_MULTISAMPLE:
+	case PIPE_CAP_TEXTURE_BARRIER:
+	case PIPE_CAP_SM3:
 		return 0;
 
 	case PIPE_CAP_CONSTANT_BUFFER_OFFSET_ALIGNMENT:
@@ -185,7 +198,6 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 	case PIPE_CAP_SEAMLESS_CUBE_MAP_PER_TEXTURE:
 	case PIPE_CAP_TGSI_FS_COORD_ORIGIN_LOWER_LEFT:
 	case PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_INTEGER:
-	case PIPE_CAP_SCALED_RESOLVE:
 	case PIPE_CAP_TGSI_CAN_COMPACT_CONSTANTS:
 	case PIPE_CAP_FRAGMENT_COLOR_CLAMPED:
 	case PIPE_CAP_VERTEX_COLOR_CLAMPED:
@@ -193,6 +205,12 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 	case PIPE_CAP_USER_INDEX_BUFFERS:
 	case PIPE_CAP_QUERY_PIPELINE_STATISTICS:
 	case PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK:
+        case PIPE_CAP_TGSI_VS_LAYER:
+	case PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS:
+	case PIPE_CAP_TEXTURE_GATHER_SM5:
+        case PIPE_CAP_FAKE_SW_MSAA:
+	case PIPE_CAP_TEXTURE_QUERY_LOD:
+        case PIPE_CAP_SAMPLE_SHADING:
 		return 0;
 
 	/* Stream output. */
@@ -202,34 +220,43 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 	case PIPE_CAP_MAX_STREAM_OUTPUT_INTERLEAVED_COMPONENTS:
 		return 0;
 
+	/* Geometry shader output, unsupported. */
+	case PIPE_CAP_MAX_GEOMETRY_OUTPUT_VERTICES:
+	case PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS:
+		return 0;
+
 	/* Texturing. */
 	case PIPE_CAP_MAX_TEXTURE_2D_LEVELS:
 	case PIPE_CAP_MAX_TEXTURE_3D_LEVELS:
 	case PIPE_CAP_MAX_TEXTURE_CUBE_LEVELS:
-		return 14;
+		return MAX_MIP_LEVELS;
 	case PIPE_CAP_MAX_TEXTURE_ARRAY_LAYERS:
-		return 9192;
-	case PIPE_CAP_MAX_COMBINED_SAMPLERS:
-		return 20;
+		return 0;  /* TODO: a3xx+ should support (required in gles3) */
 
 	/* Render targets. */
 	case PIPE_CAP_MAX_RENDER_TARGETS:
 		return 1;
 
-	/* Timer queries. */
+	/* Queries. */
 	case PIPE_CAP_QUERY_TIME_ELAPSED:
-	case PIPE_CAP_OCCLUSION_QUERY:
 	case PIPE_CAP_QUERY_TIMESTAMP:
 		return 0;
+	case PIPE_CAP_OCCLUSION_QUERY:
+		return (screen->gpu_id >= 300) ? 1: 0;
 
+	case PIPE_CAP_MIN_TEXTURE_GATHER_OFFSET:
 	case PIPE_CAP_MIN_TEXEL_OFFSET:
 		return -8;
 
+	case PIPE_CAP_MAX_TEXTURE_GATHER_OFFSET:
 	case PIPE_CAP_MAX_TEXEL_OFFSET:
 		return 7;
 
 	case PIPE_CAP_ENDIANNESS:
 		return PIPE_ENDIAN_LITTLE;
+
+	case PIPE_CAP_MIN_MAP_BUFFER_ALIGNMENT:
+		return 64;
 
 	default:
 		DBG("unknown param %d", param);
@@ -265,6 +292,8 @@ static int
 fd_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
 		enum pipe_shader_cap param)
 {
+	struct fd_screen *screen = fd_screen(pscreen);
+
 	switch(shader)
 	{
 	case PIPE_SHADER_FRAGMENT:
@@ -289,15 +318,15 @@ fd_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
 	case PIPE_SHADER_CAP_MAX_CONTROL_FLOW_DEPTH:
 		return 8; /* XXX */
 	case PIPE_SHADER_CAP_MAX_INPUTS:
-		return 32;
+		return 16;
 	case PIPE_SHADER_CAP_MAX_TEMPS:
-		return 256; /* Max native temporaries. */
+		return 64; /* Max native temporaries. */
 	case PIPE_SHADER_CAP_MAX_ADDRS:
-		/* XXX Isn't this equal to TEMPS? */
 		return 1; /* Max native address registers */
 	case PIPE_SHADER_CAP_MAX_CONSTS:
+		return (screen->gpu_id >= 300) ? 1024 : 64;
 	case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
-		return 64;
+		return 1;
 	case PIPE_SHADER_CAP_MAX_PREDS:
 		return 0; /* nothing uses this */
 	case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
@@ -310,9 +339,14 @@ fd_screen_get_shader_param(struct pipe_screen *pscreen, unsigned shader,
 	case PIPE_SHADER_CAP_SUBROUTINES:
 		return 0;
 	case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
+		return 1;
 	case PIPE_SHADER_CAP_INTEGERS:
+		/* we should be able to support this on a3xx, but not
+		 * implemented yet:
+		 */
 		return 0;
 	case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
+	case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
 		return 16;
 	case PIPE_SHADER_CAP_PREFERRED_IR:
 		return PIPE_SHADER_IR_TGSI;
@@ -349,6 +383,11 @@ fd_screen_bo_from_handle(struct pipe_screen *pscreen,
 	struct fd_screen *screen = fd_screen(pscreen);
 	struct fd_bo *bo;
 
+	if (whandle->type != DRM_API_HANDLE_TYPE_SHARED) {
+		DBG("Attempt to import unsupported handle type %d", whandle->type);
+		return NULL;
+	}
+
 	bo = fd_bo_from_name(screen->dev, whandle->handle);
 	if (!bo) {
 		DBG("ref name 0x%08x failed", whandle->handle);
@@ -368,6 +407,9 @@ fd_screen_create(struct fd_device *dev)
 	uint64_t val;
 
 	fd_mesa_debug = debug_get_option_fd_mesa_debug();
+
+	if (fd_mesa_debug & FD_DBG_NOBIN)
+		fd_binning_enabled = false;
 
 	if (!screen)
 		return NULL;
@@ -417,6 +459,7 @@ fd_screen_create(struct fd_device *dev)
 		fd2_screen_init(pscreen);
 		break;
 	case 320:
+	case 330:
 		fd3_screen_init(pscreen);
 		break;
 	default:
@@ -430,6 +473,7 @@ fd_screen_create(struct fd_device *dev)
 	pscreen->get_shader_param = fd_screen_get_shader_param;
 
 	fd_resource_screen_init(pscreen);
+	fd_query_screen_init(pscreen);
 
 	pscreen->get_name = fd_screen_get_name;
 	pscreen->get_vendor = fd_screen_get_vendor;

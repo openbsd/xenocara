@@ -40,7 +40,7 @@ LOCAL_C_INCLUDES := \
     $(intermediates) \
     $(MESA_DRI_C_INCLUDES)
 
-LOCAL_SRC_FILES := $(mesa_dri_common_SOURCES)
+LOCAL_SRC_FILES := $(DRI_COMMON_FILES)
 
 LOCAL_GENERATED_SOURCES := \
     $(intermediates)/xmlpool/options.h
@@ -83,6 +83,23 @@ $(intermediates)/xmlpool/options.h: $$(PRIVATE_SCRIPT) $$(PRIVATE_TEMPLATE_HEADE
 	mkdir -p $(PRIVATE_LOCALEDIR)
 	$(MESA_PYTHON2) $(PRIVATE_SCRIPT) $(PRIVATE_TEMPLATE_HEADER) \
 		$(PRIVATE_LOCALEDIR) $(MESA_DRI_OPTIONS_LANGS) > $@
+
+include $(MESA_COMMON_MK)
+include $(BUILD_STATIC_LIBRARY)
+
+#
+# Build libmegadriver_stub
+#
+
+include $(CLEAR_VARS)
+include $(LOCAL_PATH)/Makefile.sources
+
+LOCAL_MODULE := libmegadriver_stub
+LOCAL_MODULE_CLASS := STATIC_LIBRARIES
+LOCAL_C_INCLUDES := \
+    $(MESA_DRI_C_INCLUDES)
+
+LOCAL_SRC_FILES := $(megadriver_stub_FILES)
 
 include $(MESA_COMMON_MK)
 include $(BUILD_STATIC_LIBRARY)

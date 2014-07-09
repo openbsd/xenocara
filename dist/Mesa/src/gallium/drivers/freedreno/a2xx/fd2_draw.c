@@ -101,15 +101,14 @@ fd2_draw(struct fd_context *ctx, const struct pipe_draw_info *info)
 	OUT_PKT0(ring, REG_A2XX_TC_CNTL_STATUS, 1);
 	OUT_RING(ring, A2XX_TC_CNTL_STATUS_L2_INVALIDATE);
 
-	OUT_PKT3(ring, CP_WAIT_FOR_IDLE, 1);
-	OUT_RING(ring, 0x0000000);
+	OUT_WFI (ring);
 
 	OUT_PKT3(ring, CP_SET_CONSTANT, 3);
 	OUT_RING(ring, CP_REG(REG_A2XX_VGT_MAX_VTX_INDX));
 	OUT_RING(ring, info->max_index);        /* VGT_MAX_VTX_INDX */
 	OUT_RING(ring, info->min_index);        /* VGT_MIN_VTX_INDX */
 
-	fd_draw_emit(ctx, info);
+	fd_draw_emit(ctx, ring, IGNORE_VISIBILITY, info);
 
 	OUT_PKT3(ring, CP_SET_CONSTANT, 2);
 	OUT_RING(ring, CP_REG(REG_A2XX_UNKNOWN_2010));
@@ -124,7 +123,7 @@ pack_rgba(enum pipe_format format, const float *rgba)
 {
 	union util_color uc;
 	util_pack_color(rgba, format, &uc);
-	return uc.ui;
+	return uc.ui[0];
 }
 
 static void
@@ -270,11 +269,8 @@ fd2_clear(struct fd_context *ctx, unsigned buffers,
 	OUT_RING(ring, 3);                 /* VGT_MAX_VTX_INDX */
 	OUT_RING(ring, 0);                 /* VGT_MIN_VTX_INDX */
 
-	OUT_PKT3(ring, CP_DRAW_INDX, 3);
-	OUT_RING(ring, 0x00000000);
-	OUT_RING(ring, DRAW(DI_PT_RECTLIST, DI_SRC_SEL_AUTO_INDEX,
-			INDEX_SIZE_IGN, IGNORE_VISIBILITY));
-	OUT_RING(ring, 3);					/* NumIndices */
+	fd_draw(ctx, ring, DI_PT_RECTLIST, IGNORE_VISIBILITY,
+			DI_SRC_SEL_AUTO_INDEX, 3, INDEX_SIZE_IGN, 0, 0, NULL);
 
 	OUT_PKT3(ring, CP_SET_CONSTANT, 2);
 	OUT_RING(ring, CP_REG(REG_A2XX_A220_RB_LRZ_VSC_CONTROL));

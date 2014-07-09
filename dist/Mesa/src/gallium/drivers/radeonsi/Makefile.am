@@ -23,14 +23,13 @@
 include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
-noinst_LTLIBRARIES = libradeonsi.la
-
-AM_CPPFLAGS = \
+AM_CFLAGS = \
 	-I$(top_srcdir)/src/gallium/drivers/radeon \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/include \
-	$(GALLIUM_CFLAGS)
-AM_CFLAGS = $(LLVM_CFLAGS)
+	$(GALLIUM_DRIVER_CFLAGS) \
+	$(RADEON_CFLAGS) \
+	$(LLVM_CFLAGS)
+
+noinst_LTLIBRARIES = libradeonsi.la
 
 libradeonsi_la_SOURCES = $(C_SOURCES)
 libradeonsi_la_LIBADD = \

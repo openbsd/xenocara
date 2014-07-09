@@ -34,6 +34,9 @@
 #ifndef RADEON_UVD_H
 #define RADEON_UVD_H
 
+#include "../../winsys/radeon/drm/radeon_winsys.h"
+#include "vl/vl_video_buffer.h"
+
 /* UVD uses PM4 packet type 0 and 2 */
 #define RUVD_PKT_TYPE_S(x)		(((x) & 0x3) << 30)
 #define RUVD_PKT_TYPE_G(x)		(((x) >> 30) & 0x3)
@@ -345,33 +348,11 @@ typedef struct radeon_winsys_cs_handle* (*ruvd_set_dtb)
 (struct ruvd_msg* msg, struct vl_video_buffer *vb);
 
 /* create an UVD decode */
-struct pipe_video_decoder *ruvd_create_decoder(struct pipe_context *context,
-					       enum pipe_video_profile profile,
-					       enum pipe_video_entrypoint entrypoint,
-					       enum pipe_video_chroma_format chroma_format,
-					       unsigned width, unsigned height,
-					       unsigned max_references, bool expect_chunked_decode,
-					       struct radeon_winsys* ws,
-					       ruvd_set_dtb set_dtb);
-
-/* join surfaces into the same buffer with identical tiling params
-   sumup their sizes and replace the backend buffers with a single bo */
-void ruvd_join_surfaces(struct radeon_winsys* ws, unsigned bind,
-			struct pb_buffer** buffers[VL_NUM_COMPONENTS],
-			struct radeon_surface *surfaces[VL_NUM_COMPONENTS]);
+struct pipe_video_codec *ruvd_create_decoder(struct pipe_context *context,
+					     const struct pipe_video_codec *templat,
+					     ruvd_set_dtb set_dtb);
 
 /* fill decoding target field from the luma and chroma surfaces */
 void ruvd_set_dt_surfaces(struct ruvd_msg *msg, struct radeon_surface *luma,
 			  struct radeon_surface *chroma);
-
-/* returns supported codecs and other parameters */
-int ruvd_get_video_param(struct pipe_screen *screen,
-			 enum pipe_video_profile profile,
-			 enum pipe_video_cap param);
-
-/* the hardware only supports NV12 */
-boolean ruvd_is_format_supported(struct pipe_screen *screen,
-				 enum pipe_format format,
-				 enum pipe_video_profile profile);
-
 #endif

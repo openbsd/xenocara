@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -165,8 +165,12 @@ int main(int argc, char **argv)
 		assert(subpicture.xvimage_id == subpics[i].id);
 		/* Test width & height assigned and correct */
 		assert(subpicture.width == width && subpicture.height == height);
-		/* Test no palette support */
-		assert(subpicture.num_palette_entries == 0 && subpicture.entry_bytes == 0);
+		if (subpics[i].type == XvRGB)
+			/* Test no palette support */
+			assert(subpicture.num_palette_entries == 0 && subpicture.entry_bytes == 0);
+		else
+			/* Test palette support */
+			assert(subpicture.num_palette_entries == 16 && subpicture.entry_bytes == 4);
 		/* Test valid params */
 		assert(XvMCDestroySubpicture(display, &subpicture) == Success);
 	}

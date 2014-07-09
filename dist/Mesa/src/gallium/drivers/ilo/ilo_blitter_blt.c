@@ -25,22 +25,22 @@
  *    Chia-I Wu <olv@lunarg.com>
  */
 
+#include "genhw/genhw.h"
 #include "util/u_pack_color.h"
-#include "intel_reg.h"
 
 #include "ilo_3d.h"
 #include "ilo_context.h"
 #include "ilo_cp.h"
+#include "ilo_blit.h"
 #include "ilo_resource.h"
 #include "ilo_blitter.h"
 
-#ifndef COLOR_BLT_CMD
-#define COLOR_BLT_CMD (CMD_2D | (0x40 << 22))
-#endif
-
-#ifndef SRC_COPY_BLT_CMD
-#define SRC_COPY_BLT_CMD (CMD_2D | (0x43 << 22))
-#endif
+#define MI_FLUSH_DW           GEN_MI_CMD(MI_FLUSH_DW)
+#define MI_LOAD_REGISTER_IMM  GEN_MI_CMD(MI_LOAD_REGISTER_IMM)
+#define COLOR_BLT             GEN_BLITTER_CMD(COLOR_BLT)
+#define XY_COLOR_BLT          GEN_BLITTER_CMD(XY_COLOR_BLT)
+#define SRC_COPY_BLT          GEN_BLITTER_CMD(SRC_COPY_BLT)
+#define XY_SRC_COPY_BLT       GEN_BLITTER_CMD(XY_SRC_COPY_BLT)
 
 enum gen6_blt_mask {
    GEN6_BLT_MASK_8,
@@ -94,9 +94,9 @@ static uint32_t
 gen6_translate_blt_value_mask(enum gen6_blt_mask value_mask)
 {
    switch (value_mask) {
-   case GEN6_BLT_MASK_8:  return BR13_8;
-   case GEN6_BLT_MASK_16: return BR13_565;
-   default:               return BR13_8888;
+   case GEN6_BLT_MASK_8:  return GEN6_BLITTER_BR13_FORMAT_8;
+   case GEN6_BLT_MASK_16: return GEN6_BLITTER_BR13_FORMAT_565;
+   default:               return GEN6_BLITTER_BR13_FORMAT_8888;
    }
 }
 
@@ -104,10 +104,10 @@ static uint32_t
 gen6_translate_blt_write_mask(enum gen6_blt_mask write_mask)
 {
    switch (write_mask) {
-   case GEN6_BLT_MASK_32:    return XY_BLT_WRITE_RGB |
-                                    XY_BLT_WRITE_ALPHA;
-   case GEN6_BLT_MASK_32_LO: return XY_BLT_WRITE_RGB;
-   case GEN6_BLT_MASK_32_HI: return XY_BLT_WRITE_ALPHA;
+   case GEN6_BLT_MASK_32:    return GEN6_BLITTER_BR00_WRITE_RGB |
+                                    GEN6_BLITTER_BR00_WRITE_A;
+   case GEN6_BLT_MASK_32_LO: return GEN6_BLITTER_BR00_WRITE_RGB;
+   case GEN6_BLT_MASK_32_HI: return GEN6_BLITTER_BR00_WRITE_A;
    default:                  return 0;
    }
 }
@@ -136,7 +136,7 @@ gen6_emit_COLOR_BLT(struct ilo_dev_info *dev,
    const int cpp = gen6_translate_blt_cpp(value_mask);
    uint32_t dw0, dw1;
 
-   dw0 = COLOR_BLT_CMD |
+   dw0 = COLOR_BLT |
          gen6_translate_blt_write_mask(write_mask) |
          (cmd_len - 2);
 
@@ -145,7 +145,7 @@ gen6_emit_COLOR_BLT(struct ilo_dev_info *dev,
    /* offsets are naturally aligned and pitches are dword-aligned */
    assert(dst_offset % cpp == 0 && dst_pitch % 4 == 0);
 
-   dw1 = rop << 16 |
+   dw1 = rop << GEN6_BLITTER_BR13_ROP__SHIFT |
          gen6_translate_blt_value_mask(value_mask) |
          dst_pitch;
 
@@ -175,7 +175,7 @@ gen6_emit_XY_COLOR_BLT(struct ilo_dev_info *dev,
    int dst_align, dst_pitch_shift;
    uint32_t dw0, dw1;
 
-   dw0 = XY_COLOR_BLT_CMD |
+   dw0 = XY_COLOR_BLT |
          gen6_translate_blt_write_mask(write_mask) |
          (cmd_len - 2);
 
@@ -184,7 +184,7 @@ gen6_emit_XY_COLOR_BLT(struct ilo_dev_info *dev,
       dst_pitch_shift = 0;
    }
    else {
-      dw0 |= XY_DST_TILED;
+      dw0 |= GEN6_BLITTER_BR00_DST_TILED;
 
       dst_align = (dst_tiling == INTEL_TILING_Y) ? 128 : 512;
       /* in dwords when tiled */
@@ -195,7 +195,7 @@ gen6_emit_XY_COLOR_BLT(struct ilo_dev_info *dev,
    assert(y2 - y1 < gen6_max_scanlines);
    assert(dst_offset % dst_align == 0 && dst_pitch % dst_align == 0);
 
-   dw1 = rop << 16 |
+   dw1 = rop << GEN6_BLITTER_BR13_ROP__SHIFT |
          gen6_translate_blt_value_mask(value_mask) |
          dst_pitch >> dst_pitch_shift;
 
@@ -226,7 +226,7 @@ gen6_emit_SRC_COPY_BLT(struct ilo_dev_info *dev,
    const int cpp = gen6_translate_blt_cpp(value_mask);
    uint32_t dw0, dw1;
 
-   dw0 = SRC_COPY_BLT_CMD |
+   dw0 = SRC_COPY_BLT |
          gen6_translate_blt_write_mask(write_mask) |
          (cmd_len - 2);
 
@@ -236,12 +236,12 @@ gen6_emit_SRC_COPY_BLT(struct ilo_dev_info *dev,
    assert(dst_offset % cpp == 0 && dst_pitch % 4 == 0);
    assert(src_offset % cpp == 0 && src_pitch % 4 == 0);
 
-   dw1 = rop << 16 |
+   dw1 = rop << GEN6_BLITTER_BR13_ROP__SHIFT |
          gen6_translate_blt_value_mask(value_mask) |
          dst_pitch;
 
    if (dir_rtl)
-      dw1 |= 1 << 30;
+      dw1 |= GEN6_BLITTER_BR13_DIR_RTL;
 
    ilo_cp_begin(cp, cmd_len);
    ilo_cp_write(cp, dw0);
@@ -274,7 +274,7 @@ gen6_emit_XY_SRC_COPY_BLT(struct ilo_dev_info *dev,
    int src_align, src_pitch_shift;
    uint32_t dw0, dw1;
 
-   dw0 = XY_SRC_COPY_BLT_CMD |
+   dw0 = XY_SRC_COPY_BLT |
          gen6_translate_blt_write_mask(write_mask) |
          (cmd_len - 2);
 
@@ -283,7 +283,7 @@ gen6_emit_XY_SRC_COPY_BLT(struct ilo_dev_info *dev,
       dst_pitch_shift = 0;
    }
    else {
-      dw0 |= XY_DST_TILED;
+      dw0 |= GEN6_BLITTER_BR00_DST_TILED;
 
       dst_align = (dst_tiling == INTEL_TILING_Y) ? 128 : 512;
       /* in dwords when tiled */
@@ -295,7 +295,7 @@ gen6_emit_XY_SRC_COPY_BLT(struct ilo_dev_info *dev,
       src_pitch_shift = 0;
    }
    else {
-      dw0 |= XY_SRC_TILED;
+      dw0 |= GEN6_BLITTER_BR00_SRC_TILED;
 
       src_align = (src_tiling == INTEL_TILING_Y) ? 128 : 512;
       /* in dwords when tiled */
@@ -307,7 +307,7 @@ gen6_emit_XY_SRC_COPY_BLT(struct ilo_dev_info *dev,
    assert(dst_offset % dst_align == 0 && dst_pitch % dst_align == 0);
    assert(src_offset % src_align == 0 && src_pitch % src_align == 0);
 
-   dw1 = rop << 16 |
+   dw1 = rop << GEN6_BLITTER_BR13_ROP__SHIFT |
          gen6_translate_blt_value_mask(value_mask) |
          dst_pitch >> dst_pitch_shift;
 
@@ -335,7 +335,7 @@ ilo_blitter_blt_begin(struct ilo_blitter *blitter, int max_cmd_size,
    uint32_t swctrl;
 
    /* change ring */
-   ilo_cp_set_ring(ilo->cp, ILO_CP_RING_BLT);
+   ilo_cp_set_ring(ilo->cp, INTEL_RING_BLT);
    ilo_cp_set_owner(ilo->cp, NULL, 0);
 
    /* check aperture space */
@@ -348,20 +348,20 @@ ilo_blitter_blt_begin(struct ilo_blitter *blitter, int max_cmd_size,
       count++;
    }
 
-   if (intel_winsys_check_aperture_space(ilo->winsys, aper_check, count))
-      ilo_cp_flush(ilo->cp);
+   if (!intel_winsys_can_submit_bo(ilo->winsys, aper_check, count))
+      ilo_cp_flush(ilo->cp, "out of aperture");
 
    /* set BCS_SWCTRL */
    swctrl = 0x0;
 
    if (dst_tiling == INTEL_TILING_Y) {
-      swctrl |= BCS_SWCTRL_DST_Y << 16 |
-                BCS_SWCTRL_DST_Y;
+      swctrl |= GEN6_REG_BCS_SWCTRL_DST_TILING_Y << 16 |
+                GEN6_REG_BCS_SWCTRL_DST_TILING_Y;
    }
 
    if (src && src_tiling == INTEL_TILING_Y) {
-      swctrl |= BCS_SWCTRL_SRC_Y << 16 |
-                BCS_SWCTRL_SRC_Y;
+      swctrl |= GEN6_REG_BCS_SWCTRL_SRC_TILING_Y << 16 |
+                GEN6_REG_BCS_SWCTRL_SRC_TILING_Y;
    }
 
    if (swctrl) {
@@ -371,7 +371,7 @@ ilo_blitter_blt_begin(struct ilo_blitter *blitter, int max_cmd_size,
        * batch buffer.
        */
       if (ilo_cp_space(ilo->cp) < (4 + 3) * 2 + max_cmd_size)
-         ilo_cp_flush(ilo->cp);
+         ilo_cp_flush(ilo->cp, "out of space");
 
       ilo_cp_assert_no_implicit_flush(ilo->cp, true);
 
@@ -382,9 +382,11 @@ ilo_blitter_blt_begin(struct ilo_blitter *blitter, int max_cmd_size,
        *      this bit (Tile Y Destination/Source)."
        */
       gen6_emit_MI_FLUSH_DW(ilo->dev, ilo->cp);
-      gen6_emit_MI_LOAD_REGISTER_IMM(ilo->dev, BCS_SWCTRL, swctrl, ilo->cp);
+      gen6_emit_MI_LOAD_REGISTER_IMM(ilo->dev,
+            GEN6_REG_BCS_SWCTRL, swctrl, ilo->cp);
 
-      swctrl &= ~(BCS_SWCTRL_DST_Y | BCS_SWCTRL_SRC_Y);
+      swctrl &= ~(GEN6_REG_BCS_SWCTRL_DST_TILING_Y |
+                  GEN6_REG_BCS_SWCTRL_SRC_TILING_Y);
    }
 
    return swctrl;
@@ -398,7 +400,7 @@ ilo_blitter_blt_end(struct ilo_blitter *blitter, uint32_t swctrl)
    /* set BCS_SWCTRL back */
    if (swctrl) {
       gen6_emit_MI_FLUSH_DW(ilo->dev, ilo->cp);
-      gen6_emit_MI_LOAD_REGISTER_IMM(ilo->dev, BCS_SWCTRL, swctrl, ilo->cp);
+      gen6_emit_MI_LOAD_REGISTER_IMM(ilo->dev, GEN6_REG_BCS_SWCTRL, swctrl, ilo->cp);
 
       ilo_cp_assert_no_implicit_flush(ilo->cp, false);
    }
@@ -527,7 +529,7 @@ tex_clear_region(struct ilo_blitter *blitter,
 
    for (slice = 0; slice < dst_box->depth; slice++) {
       const struct ilo_texture_slice *dst_slice =
-         &dst->slice_offsets[dst_level][dst_box->z + slice];
+         ilo_texture_get_slice(dst, dst_level, dst_box->z + slice);
       unsigned x1, y1, x2, y2;
 
       x1 = dst_slice->x + dst_box->x;
@@ -607,9 +609,9 @@ tex_copy_region(struct ilo_blitter *blitter,
 
    for (slice = 0; slice < src_box->depth; slice++) {
       const struct ilo_texture_slice *dst_slice =
-         &dst->slice_offsets[dst_level][dst_z + slice];
+         ilo_texture_get_slice(dst, dst_level, dst_z + slice);
       const struct ilo_texture_slice *src_slice =
-         &src->slice_offsets[src_level][src_box->z + slice];
+         ilo_texture_get_slice(src, src_level, src_box->z + slice);
       unsigned x1, y1, x2, y2, src_x, src_y;
 
       x1 = (dst_slice->x + dst_x) * xscale;
@@ -653,6 +655,11 @@ ilo_blitter_blt_copy_resource(struct ilo_blitter *blitter,
                               const struct pipe_box *src_box)
 {
    bool success;
+
+   ilo_blit_resolve_slices(blitter->ilo, src, src_level,
+         src_box->z, src_box->depth, ILO_TEXTURE_BLT_READ);
+   ilo_blit_resolve_slices(blitter->ilo, dst, dst_level,
+         dst_z, src_box->depth, ILO_TEXTURE_BLT_WRITE);
 
    if (dst->target == PIPE_BUFFER && src->target == PIPE_BUFFER) {
       const unsigned dst_offset = dst_x;
@@ -715,6 +722,8 @@ ilo_blitter_blt_clear_rt(struct ilo_blitter *blitter,
        util_format_is_compressed(rt->format))
       return false;
 
+   ilo_blit_resolve_surface(blitter->ilo, rt, ILO_TEXTURE_BLT_WRITE);
+
    util_pack_color(color->f, rt->format, &packed);
 
    if (rt->texture->target == PIPE_BUFFER) {
@@ -730,7 +739,7 @@ ilo_blitter_blt_clear_rt(struct ilo_blitter *blitter,
          size = end - offset;
 
       success = buf_clear_region(blitter, ilo_buffer(rt->texture),
-            offset, size, packed.ui, mask, mask);
+            offset, size, packed.ui[0], mask, mask);
    }
    else {
       struct pipe_box box;
@@ -739,7 +748,7 @@ ilo_blitter_blt_clear_rt(struct ilo_blitter *blitter,
             rt->u.tex.last_layer - rt->u.tex.first_layer + 1, &box);
 
       success = tex_clear_region(blitter, ilo_texture(rt->texture),
-            rt->u.tex.level, &box, packed.ui, mask, mask);
+            rt->u.tex.level, &box, packed.ui[0], mask, mask);
    }
 
    return success;
@@ -799,6 +808,8 @@ ilo_blitter_blt_clear_zs(struct ilo_blitter *blitter,
       return false;
       break;
    }
+
+   ilo_blit_resolve_surface(blitter->ilo, zs, ILO_TEXTURE_BLT_WRITE);
 
    val = util_pack_z_stencil(zs->format, depth, stencil);
 

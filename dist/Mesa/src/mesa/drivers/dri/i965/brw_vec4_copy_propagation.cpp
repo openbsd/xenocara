@@ -58,6 +58,21 @@ is_dominated_by_previous_instruction(vec4_instruction *inst)
 }
 
 static bool
+is_channel_updated(vec4_instruction *inst, src_reg *values[4], int ch)
+{
+   const src_reg *src = values[ch];
+
+   /* consider GRF only */
+   assert(inst->dst.file == GRF);
+   if (!src || src->file != GRF)
+      return false;
+
+   return (src->reg == inst->dst.reg &&
+	   src->reg_offset == inst->dst.reg_offset &&
+	   inst->dst.writemask & (1 << BRW_GET_SWZ(src->swizzle, ch)));
+}
+
+static bool
 try_constant_propagation(vec4_instruction *inst, int arg, src_reg *values[4])
 {
    /* For constant propagation, we only handle the same constant
@@ -95,9 +110,28 @@ try_constant_propagation(vec4_instruction *inst, int arg, src_reg *values[4])
       inst->src[arg] = value;
       return true;
 
+   case BRW_OPCODE_DP2:
+   case BRW_OPCODE_DP3:
+   case BRW_OPCODE_DP4:
+   case BRW_OPCODE_DPH:
+   case BRW_OPCODE_BFI1:
+   case BRW_OPCODE_ASR:
+   case BRW_OPCODE_SHL:
+   case BRW_OPCODE_SHR:
+   case BRW_OPCODE_SUBB:
+      if (arg == 1) {
+         inst->src[arg] = value;
+         return true;
+      }
+      break;
+
    case BRW_OPCODE_MACH:
    case BRW_OPCODE_MUL:
    case BRW_OPCODE_ADD:
+   case BRW_OPCODE_OR:
+   case BRW_OPCODE_AND:
+   case BRW_OPCODE_XOR:
+   case BRW_OPCODE_ADDC:
       if (arg == 1) {
 	 inst->src[arg] = value;
 	 return true;
@@ -225,6 +259,9 @@ vec4_visitor::try_copy_propagation(vec4_instruction *inst, int arg,
    if (is_3src_inst && value.file == UNIFORM)
       return false;
 
+   if (inst->is_send_from_grf())
+      return false;
+
    /* We can't copy-propagate a UD negation into a condmod
     * instruction, because the condmod ends up looking at the 33-bit
     * signed accumulator value instead of the 32-bit value we wanted
@@ -335,11 +372,7 @@ vec4_visitor::opt_copy_propagation()
 	 else {
 	    for (int i = 0; i < virtual_grf_reg_count; i++) {
 	       for (int j = 0; j < 4; j++) {
-		  if (inst->dst.writemask & (1 << j) &&
-		      cur_value[i][j] &&
-		      cur_value[i][j]->file == GRF &&
-		      cur_value[i][j]->reg == inst->dst.reg &&
-		      cur_value[i][j]->reg_offset == inst->dst.reg_offset) {
+		  if (is_channel_updated(inst, cur_value[i], j)){
 		     cur_value[i][j] = NULL;
 		  }
 	       }
@@ -349,7 +382,7 @@ vec4_visitor::opt_copy_propagation()
    }
 
    if (progress)
-      live_intervals_valid = false;
+      invalidate_live_intervals();
 
    return progress;
 }

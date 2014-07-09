@@ -28,33 +28,62 @@
 
 #include "freedreno_context.h"
 #include "freedreno_draw.h"
+#include "freedreno_program.h"
 #include "freedreno_resource.h"
 #include "freedreno_texture.h"
 #include "freedreno_state.h"
 #include "freedreno_gmem.h"
+#include "freedreno_query.h"
+#include "freedreno_query_hw.h"
 #include "freedreno_util.h"
 
-/* there are two cases where we currently need to wait for render complete:
- * 1) pctx->flush() .. since at the moment we have no way for DDX to sync
- *    the presentation blit with the 3d core
- * 2) wrap-around for ringbuffer.. possibly we can do something more
- *    Intelligent here.  Right now we need to ensure there is enough room
- *    at the end of the drawcmds in the cmdstream buffer for all the per-
- *    tile cmds.  We do this the lamest way possible, by making the ringbuffer
- *    big, and flushing and resetting back to the beginning if we get too
- *    close to the end.
- */
+static struct fd_ringbuffer *next_rb(struct fd_context *ctx)
+{
+	struct fd_ringbuffer *ring;
+	uint32_t ts;
+
+	/* grab next ringbuffer: */
+	ring = ctx->rings[(ctx->rings_idx++) % ARRAY_SIZE(ctx->rings)];
+
+	/* wait for new rb to be idle: */
+	ts = fd_ringbuffer_timestamp(ring);
+	if (ts) {
+		DBG("wait: %u", ts);
+		fd_pipe_wait(ctx->screen->pipe, ts);
+	}
+
+	fd_ringbuffer_reset(ring);
+
+	return ring;
+}
+
 static void
-fd_context_wait(struct pipe_context *pctx)
+fd_context_next_rb(struct pipe_context *pctx)
 {
 	struct fd_context *ctx = fd_context(pctx);
-	uint32_t ts = fd_ringbuffer_timestamp(ctx->ring);
+	struct fd_ringbuffer *ring;
 
-	DBG("wait: %u", ts);
+	fd_ringmarker_del(ctx->draw_start);
+	fd_ringmarker_del(ctx->draw_end);
 
-	fd_pipe_wait(ctx->screen->pipe, ts);
-	fd_ringbuffer_reset(ctx->ring);
-	fd_ringmarker_mark(ctx->draw_start);
+	ring = next_rb(ctx);
+
+	ctx->draw_start = fd_ringmarker_new(ring);
+	ctx->draw_end = fd_ringmarker_new(ring);
+
+	fd_ringbuffer_set_parent(ring, NULL);
+	ctx->ring = ring;
+
+	fd_ringmarker_del(ctx->binning_start);
+	fd_ringmarker_del(ctx->binning_end);
+
+	ring = next_rb(ctx);
+
+	ctx->binning_start = fd_ringmarker_new(ring);
+	ctx->binning_end = fd_ringmarker_new(ring);
+
+	fd_ringbuffer_set_parent(ring, ctx->ring);
+	ctx->binning_ring = ring;
 }
 
 /* emit accumulated render cmds, needed for example if render target has
@@ -79,7 +108,7 @@ fd_context_render(struct pipe_context *pctx)
 	 * wrap around:
 	 */
 	if ((ctx->ring->cur - ctx->ring->start) > ctx->ring->size/8)
-		fd_context_wait(pctx);
+		fd_context_next_rb(pctx);
 
 	ctx->needs_flush = false;
 	ctx->cleared = ctx->restore = ctx->resolve = 0;
@@ -112,27 +141,58 @@ void
 fd_context_destroy(struct pipe_context *pctx)
 {
 	struct fd_context *ctx = fd_context(pctx);
+	unsigned i;
 
 	DBG("");
+
+	fd_prog_fini(pctx);
+	fd_hw_query_fini(pctx);
+
+	util_slab_destroy(&ctx->transfer_pool);
+
+	util_dynarray_fini(&ctx->draw_patches);
 
 	if (ctx->blitter)
 		util_blitter_destroy(ctx->blitter);
 
+	if (ctx->primconvert)
+		util_primconvert_destroy(ctx->primconvert);
+
 	fd_ringmarker_del(ctx->draw_start);
 	fd_ringmarker_del(ctx->draw_end);
-	fd_ringbuffer_del(ctx->ring);
+	fd_ringmarker_del(ctx->binning_start);
+	fd_ringmarker_del(ctx->binning_end);
+
+	for (i = 0; i < ARRAY_SIZE(ctx->rings); i++)
+		fd_ringbuffer_del(ctx->rings[i]);
+
+	for (i = 0; i < ARRAY_SIZE(ctx->pipe); i++) {
+		struct fd_vsc_pipe *pipe = &ctx->pipe[i];
+		if (!pipe->bo)
+			break;
+		fd_bo_del(pipe->bo);
+	}
+
+	fd_device_del(ctx->dev);
 
 	FREE(ctx);
 }
 
 struct pipe_context *
-fd_context_init(struct fd_context *ctx,
-		struct pipe_screen *pscreen, void *priv)
+fd_context_init(struct fd_context *ctx, struct pipe_screen *pscreen,
+		const uint8_t *primtypes, void *priv)
 {
 	struct fd_screen *screen = fd_screen(pscreen);
 	struct pipe_context *pctx;
+	int i;
 
 	ctx->screen = screen;
+
+	ctx->primtypes = primtypes;
+	ctx->primtype_mask = 0;
+	for (i = 0; i < PIPE_PRIM_MAX; i++)
+		if (primtypes[i])
+			ctx->primtype_mask |= (1 << i);
 
 	/* need some sane default in case state tracker doesn't
 	 * set some state:
@@ -144,25 +204,34 @@ fd_context_init(struct fd_context *ctx,
 	pctx->priv = priv;
 	pctx->flush = fd_context_flush;
 
-	ctx->ring = fd_ringbuffer_new(screen->pipe, 0x100000);
-	if (!ctx->ring)
-		goto fail;
+	for (i = 0; i < ARRAY_SIZE(ctx->rings); i++) {
+		ctx->rings[i] = fd_ringbuffer_new(screen->pipe, 0x100000);
+		if (!ctx->rings[i])
+			goto fail;
+	}
 
-	ctx->draw_start = fd_ringmarker_new(ctx->ring);
-	ctx->draw_end = fd_ringmarker_new(ctx->ring);
+	fd_context_next_rb(pctx);
+	fd_reset_wfi(ctx);
+
+	util_dynarray_init(&ctx->draw_patches);
 
 	util_slab_create(&ctx->transfer_pool, sizeof(struct pipe_transfer),
 			16, UTIL_SLAB_SINGLETHREADED);
 
 	fd_draw_init(pctx);
 	fd_resource_context_init(pctx);
+	fd_query_context_init(pctx);
 	fd_texture_init(pctx);
 	fd_state_init(pctx);
+	fd_hw_query_init(pctx);
 
 	ctx->blitter = util_blitter_create(pctx);
 	if (!ctx->blitter)
 		goto fail;
 
+	ctx->primconvert = util_primconvert_create(pctx, ctx->primtype_mask);
+	if (!ctx->primconvert)
+		goto fail;
 
 	return pctx;
 

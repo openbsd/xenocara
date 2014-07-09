@@ -20,16 +20,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+AUTOMAKE_OPTIONS = subdir-objects
+
 include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
+AM_CPPFLAGS = \
+	$(GALLIUM_DRIVER_CFLAGS) \
+	$(LIBDRM_CFLAGS) \
+	$(NOUVEAU_CFLAGS)
+
 noinst_LTLIBRARIES = libnouveau.la
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir)/src/gallium/drivers/nouveau/include \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/include \
-	$(GALLIUM_CFLAGS) \
-	$(LIBDRM_CFLAGS)
+libnouveau_la_SOURCES = \
+	$(C_SOURCES) \
+	$(NV30_C_SOURCES) \
+	$(NV50_CODEGEN_SOURCES) \
+	$(NV50_C_SOURCES) \
+	$(NVC0_CODEGEN_SOURCES) \
+	$(NVC0_C_SOURCES)
 
-libnouveau_la_SOURCES = $(C_SOURCES)
+noinst_PROGRAMS = nouveau_compiler
+
+nodist_EXTRA_nouveau_compiler_SOURCES = dummy.cpp
+nouveau_compiler_SOURCES = \
+	nouveau_compiler.c
+
+nouveau_compiler_LDADD = \
+	libnouveau.la \
+	../../auxiliary/libgallium.la \
+	$(GALLIUM_COMMON_LIB_DEPS)

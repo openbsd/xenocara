@@ -27,10 +27,13 @@
 
 
 #include "st_context.h"
+#include "pipe/p_screen.h"
 #include "pipe/p_context.h"
 #include "st_atom.h"
+#include "st_program.h"
 
 #include "cso_cache/cso_context.h"
+#include "util/u_framebuffer.h"
 
 
 /* Second state atom for user clip planes:
@@ -38,14 +41,9 @@
 static void update_sample_mask( struct st_context *st )
 {
    unsigned sample_mask = 0xffffffff;
-   unsigned sample_count = 1;
    struct pipe_framebuffer_state *framebuffer = &st->state.framebuffer;
-
    /* dependency here on bound surface (or rather, sample count) is worrying */
-   if (framebuffer->zsbuf)
-      sample_count = framebuffer->zsbuf->texture->nr_samples;
-   else if (framebuffer->cbufs[0])
-      sample_count = framebuffer->cbufs[0]->texture->nr_samples;
+   unsigned sample_count = util_framebuffer_get_num_samples(framebuffer);
 
    if (st->ctx->Multisample.Enabled && sample_count > 1) {
    /* unlike in gallium/d3d10 the mask is only active if msaa is enabled */
@@ -74,6 +72,18 @@ static void update_sample_mask( struct st_context *st )
    }
 }
 
+static void update_sample_shading( struct st_context *st )
+{
+   if (!st->fp)
+      return;
+
+   if (!st->ctx->Extensions.ARB_sample_shading)
+      return;
+
+   cso_set_min_samples(
+	 st->cso_context,
+         _mesa_get_min_invocations_per_fragment(st->ctx, &st->fp->Base, false));
+}
 
 const struct st_tracked_state st_update_msaa = {
    "st_update_msaa",					/* name */
@@ -82,4 +92,13 @@ const struct st_tracked_state st_update_msaa = {
       ST_NEW_FRAMEBUFFER,				/* st */
    },
    update_sample_mask					/* update */
+};
+
+const struct st_tracked_state st_update_sample_shading = {
+   "st_update_sample_shading",				/* name */
+   {							/* dirty */
+      (_NEW_MULTISAMPLE | _NEW_PROGRAM | _NEW_BUFFERS),	/* mesa */
+      ST_NEW_FRAGMENT_PROGRAM | ST_NEW_FRAMEBUFFER,	/* st */
+   },
+   update_sample_shading				/* update */
 };

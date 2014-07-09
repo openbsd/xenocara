@@ -26,12 +26,14 @@
  **************************************************************************/
 
 #include "postprocess.h"
-
 #include "postprocess/pp_filters.h"
+#include "postprocess/pp_private.h"
+
 #include "util/u_inlines.h"
 #include "util/u_sampler.h"
 
 #include "tgsi/tgsi_parse.h"
+
 
 void
 pp_blit(struct pipe_context *pipe,
@@ -120,6 +122,7 @@ pp_run(struct pp_queue_t *ppq, struct pipe_resource *in,
    cso_save_geometry_shader(cso);
    cso_save_rasterizer(cso);
    cso_save_sample_mask(cso);
+   cso_save_min_samples(cso);
    cso_save_samplers(cso, PIPE_SHADER_FRAGMENT);
    cso_save_sampler_views(cso, PIPE_SHADER_FRAGMENT);
    cso_save_stencil_ref(cso);
@@ -134,7 +137,8 @@ pp_run(struct pp_queue_t *ppq, struct pipe_resource *in,
 
    /* set default state */
    cso_set_sample_mask(cso, ~0);
-   cso_set_stream_outputs(cso, 0, NULL, 0);
+   cso_set_min_samples(cso, 1);
+   cso_set_stream_outputs(cso, 0, NULL, NULL);
    cso_set_geometry_shader_handle(cso, NULL);
    cso_set_render_condition(cso, NULL, FALSE, 0);
 
@@ -185,6 +189,7 @@ pp_run(struct pp_queue_t *ppq, struct pipe_resource *in,
    cso_restore_geometry_shader(cso);
    cso_restore_rasterizer(cso);
    cso_restore_sample_mask(cso);
+   cso_restore_min_samples(cso);
    cso_restore_samplers(cso, PIPE_SHADER_FRAGMENT);
    cso_restore_sampler_views(cso, PIPE_SHADER_FRAGMENT);
    cso_restore_stencil_ref(cso);
@@ -208,7 +213,7 @@ pp_run(struct pp_queue_t *ppq, struct pipe_resource *in,
 
 /** Setup this resource as the filter input. */
 void
-pp_filter_setup_in(struct program *p, struct pipe_resource *in)
+pp_filter_setup_in(struct pp_program *p, struct pipe_resource *in)
 {
    struct pipe_sampler_view v_tmp;
    u_sampler_view_default_template(&v_tmp, in, in->format);
@@ -217,7 +222,7 @@ pp_filter_setup_in(struct program *p, struct pipe_resource *in)
 
 /** Setup this resource as the filter output. */
 void
-pp_filter_setup_out(struct program *p, struct pipe_resource *out)
+pp_filter_setup_out(struct pp_program *p, struct pipe_resource *out)
 {
    p->surf.format = out->format;
 
@@ -226,7 +231,7 @@ pp_filter_setup_out(struct program *p, struct pipe_resource *out)
 
 /** Clean up the input and output set with the above. */
 void
-pp_filter_end_pass(struct program *p)
+pp_filter_end_pass(struct pp_program *p)
 {
    pipe_surface_reference(&p->framebuffer.cbufs[0], NULL);
    pipe_sampler_view_reference(&p->view, NULL);
@@ -277,7 +282,7 @@ pp_tgsi_to_state(struct pipe_context *pipe, const char *text, bool isvs,
 
 /** Setup misc state for the filter. */
 void
-pp_filter_misc_state(struct program *p)
+pp_filter_misc_state(struct pp_program *p)
 {
    cso_set_blend(p->cso, &p->blend);
    cso_set_depth_stencil_alpha(p->cso, &p->depthstencil);
@@ -289,7 +294,7 @@ pp_filter_misc_state(struct program *p)
 
 /** Draw with the filter to the set output. */
 void
-pp_filter_draw(struct program *p)
+pp_filter_draw(struct pp_program *p)
 {
    util_draw_vertex_buffer(p->pipe, p->cso, p->vbuf, 0, 0,
                            PIPE_PRIM_QUADS, 4, 2);
@@ -297,15 +302,15 @@ pp_filter_draw(struct program *p)
 
 /** Set the framebuffer as active. */
 void
-pp_filter_set_fb(struct program *p)
+pp_filter_set_fb(struct pp_program *p)
 {
    cso_set_framebuffer(p->cso, &p->framebuffer);
 }
 
 /** Set the framebuffer as active and clear it. */
 void
-pp_filter_set_clear_fb(struct program *p)
+pp_filter_set_clear_fb(struct pp_program *p)
 {
    cso_set_framebuffer(p->cso, &p->framebuffer);
-   p->pipe->clear(p->pipe, PIPE_CLEAR_COLOR, &p->clear_color, 0, 0);
+   p->pipe->clear(p->pipe, PIPE_CLEAR_COLOR0, &p->clear_color, 0, 0);
 }

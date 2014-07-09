@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -34,14 +34,18 @@
 #include <vdpau/vdpau_x11.h>
 
 #include "pipe/p_compiler.h"
-#include "pipe/p_video_decoder.h"
+#include "pipe/p_video_codec.h"
+
+#include "state_tracker/vdpau_interop.h"
 
 #include "util/u_debug.h"
 #include "util/u_rect.h"
 #include "os/os_thread.h"
 
+#include "vl/vl_video_buffer.h"
 #include "vl/vl_compositor.h"
 #include "vl/vl_csc.h"
+#include "vl/vl_deint_filter.h"
 #include "vl/vl_matrix_filter.h"
 #include "vl/vl_median_filter.h"
 #include "vl/vl_winsys.h"
@@ -87,6 +91,29 @@ PipeToChroma(enum pipe_video_chroma_format pipe_type)
    }
 
    return -1;
+}
+
+static inline enum pipe_video_chroma_format
+FormatYCBCRToPipeChroma(VdpYCbCrFormat vdpau_format)
+{
+   switch (vdpau_format) {
+      case VDP_YCBCR_FORMAT_NV12:
+         return PIPE_VIDEO_CHROMA_FORMAT_420;
+      case VDP_YCBCR_FORMAT_YV12:
+         return PIPE_VIDEO_CHROMA_FORMAT_420;
+      case VDP_YCBCR_FORMAT_UYVY:
+         return PIPE_VIDEO_CHROMA_FORMAT_422;
+      case VDP_YCBCR_FORMAT_YUYV:
+         return PIPE_VIDEO_CHROMA_FORMAT_422;
+      case VDP_YCBCR_FORMAT_Y8U8V8A8:
+         return PIPE_VIDEO_CHROMA_FORMAT_444;
+      case VDP_YCBCR_FORMAT_V8U8Y8A8:
+         return PIPE_VIDEO_CHROMA_FORMAT_444;
+      default:
+         assert(0);
+   }
+
+   return PIPE_FORMAT_NONE;
 }
 
 static inline enum pipe_format
@@ -182,9 +209,9 @@ FormatIndexedToPipe(VdpRGBAFormat vdpau_format)
 {
    switch (vdpau_format) {
       case VDP_INDEXED_FORMAT_A4I4:
-         return PIPE_FORMAT_A4R4_UNORM;
-      case VDP_INDEXED_FORMAT_I4A4:
          return PIPE_FORMAT_R4A4_UNORM;
+      case VDP_INDEXED_FORMAT_I4A4:
+         return PIPE_FORMAT_A4R4_UNORM;
       case VDP_INDEXED_FORMAT_A8I8:
          return PIPE_FORMAT_A8R8_UNORM;
       case VDP_INDEXED_FORMAT_I8A8:
@@ -307,6 +334,14 @@ RectToPipeBox(const VdpRect *rect, struct pipe_resource *res)
    return box;
 }
 
+static inline bool
+CheckSurfaceParams(struct pipe_screen *screen,
+                   const struct pipe_resource *templ)
+{
+   return screen->is_format_supported(
+         screen, templ->format, templ->target, templ->nr_samples, templ->bind);
+}
+
 typedef struct
 {
    struct vl_screen *vscreen;
@@ -324,6 +359,11 @@ typedef struct
 {
    vlVdpDevice *device;
    struct vl_compositor_state cstate;
+
+   struct {
+	  bool supported, enabled, spatial;
+	  struct vl_deint_filter *filter;
+   } deint;
 
    struct {
       bool supported, enabled;
@@ -387,7 +427,8 @@ typedef struct
 typedef struct
 {
    vlVdpDevice *device;
-   struct pipe_video_decoder *decoder;
+   pipe_mutex mutex;
+   struct pipe_video_codec *decoder;
 } vlVdpDecoder;
 
 typedef uint32_t vlHandle;
@@ -402,7 +443,6 @@ boolean vlGetFuncFTAB(VdpFuncId function_id, void **func);
 
 /* Public functions */
 VdpDeviceCreateX11 vdp_imp_device_create_x11;
-VdpPresentationQueueTargetCreateX11 vlVdpPresentationQueueTargetCreateX11;
 
 void vlVdpDefaultSamplerViewTemplate(struct pipe_sampler_view *templ, struct pipe_resource *res);
 
@@ -473,6 +513,13 @@ VdpVideoMixerGetParameterValues vlVdpVideoMixerGetParameterValues;
 VdpVideoMixerGetAttributeValues vlVdpVideoMixerGetAttributeValues;
 VdpVideoMixerDestroy vlVdpVideoMixerDestroy;
 VdpGenerateCSCMatrix vlVdpGenerateCSCMatrix;
+/* Winsys specific internal function pointers */
+VdpPresentationQueueTargetCreateX11 vlVdpPresentationQueueTargetCreateX11;
+
+
+/* interop to mesa state tracker */
+VdpVideoSurfaceGallium vlVdpVideoSurfaceGallium;
+VdpOutputSurfaceGallium vlVdpOutputSurfaceGallium;
 
 #define VDPAU_OUT   0
 #define VDPAU_ERR   1

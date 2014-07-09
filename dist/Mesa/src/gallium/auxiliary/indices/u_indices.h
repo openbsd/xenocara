@@ -16,7 +16,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
- * TUNGSTEN GRAPHICS AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
+ * VMWARE AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -31,11 +31,30 @@
 #define PV_LAST       1
 #define PV_COUNT      2
 
+/**
+ * Index translator function (for glDrawElements() case)
+ *
+ * \param in     the input index buffer
+ * \param start  the index of the first vertex (pipe_draw_info::start)
+ * \param nr     the number of vertices (pipe_draw_info::count)
+ * \param out    output buffer big enough or nr vertices (of
+ *    @out_index_size bytes each)
+ */
 typedef void (*u_translate_func)( const void *in,
+                                  unsigned start,
                                   unsigned nr,
                                   void *out );
 
-typedef void (*u_generate_func)( unsigned nr,
+/**
+ * Index generator function (for glDrawArrays() case)
+ *
+ * \param start  the index of the first vertex (pipe_draw_info::start)
+ * \param nr     the number of vertices (pipe_draw_info::count)
+ * \param out    output buffer big enough or nr vertices (of
+ *    @out_index_size bytes each)
+ */
+typedef void (*u_generate_func)( unsigned start,
+                                 unsigned nr,
                                  void *out );
 
 

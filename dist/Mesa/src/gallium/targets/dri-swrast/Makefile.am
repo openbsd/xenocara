@@ -23,15 +23,11 @@
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
-	$(GALLIUM_CFLAGS) \
-	$(PTHREAD_CFLAGS) \
-	$(LIBDRM_CFLAGS)
+	$(EXPAT_CFLAGS) \
+	$(GALLIUM_DRI_CFLAGS)
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src/gallium/winsys/sw/dri \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/src/gallium/winsys \
-	-I$(top_srcdir)/src/mesa \
-	-I$(top_srcdir)/src/mapi \
+	-I$(top_builddir)/src/mesa/drivers/dri/common \
 	-DGALLIUM_RBUG \
 	-DGALLIUM_TRACE \
 	-DGALLIUM_SOFTPIPE \
@@ -40,17 +36,16 @@ AM_CPPFLAGS = \
 dridir = $(DRI_DRIVER_INSTALL_DIR)
 dri_LTLIBRARIES = swrast_dri.la
 
+nodist_EXTRA_swrast_dri_la_SOURCES = dummy.cpp
 swrast_dri_la_SOURCES = \
 	swrast_drm_api.c \
 	$(top_srcdir)/src/mesa/drivers/dri/common/utils.c \
-	$(top_srcdir)/src/mesa/drivers/dri/common/drisw_util.c \
+	$(top_srcdir)/src/mesa/drivers/dri/common/dri_util.c \
 	$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c
 
-swrast_dri_la_LDFLAGS = -module -avoid-version -shared -no-undefined
+swrast_dri_la_LDFLAGS = $(GALLIUM_DRI_LINKER_FLAGS)
 
 swrast_dri_la_LIBADD = \
-	$(top_builddir)/src/mesa/libmesagallium.la \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/gallium/state_trackers/dri/sw/libdrisw.la \
 	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la \
 	$(top_builddir)/src/gallium/drivers/softpipe/libsoftpipe.la \
@@ -58,16 +53,9 @@ swrast_dri_la_LIBADD = \
 	$(top_builddir)/src/gallium/drivers/rbug/librbug.la \
 	$(GALLIUM_DRI_LIB_DEPS)
 
-nodist_EXTRA_swrast_dri_la_SOURCES = dummy.cpp
-
 if HAVE_MESA_LLVM
 AM_CPPFLAGS += -DGALLIUM_LLVMPIPE
-swrast_dri_la_LDFLAGS += $(LLVM_LDFLAGS)
-swrast_dri_la_LIBADD += $(top_builddir)/src/gallium/drivers/llvmpipe/libllvmpipe.la $(LLVM_LIBS)
+swrast_dri_la_LIBADD += $(top_builddir)/src/gallium/drivers/llvmpipe/libllvmpipe.la
 endif
 
-# Provide compatibility with scripts for the old Mesa build system for
-# a while by putting a link to the driver into /lib of the build tree.
-all-local: swrast_dri.la
-	$(MKDIR_P) $(top_builddir)/$(LIB_DIR)/gallium
-	ln -f .libs/swrast_dri.so $(top_builddir)/$(LIB_DIR)/gallium/swrast_dri.so
+include $(top_srcdir)/install-gallium-links.mk

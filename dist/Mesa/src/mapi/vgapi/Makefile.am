@@ -21,6 +21,7 @@
 
 AM_CPPFLAGS = \
 	$(DEFINES) \
+	$(SELINUX_CFLAGS) \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/mapi \
 	-DMAPI_ABI_HEADER=\"vgapi_tmp.h\"
@@ -43,7 +44,11 @@ TOP=$(top_srcdir)
 include ../Makefile.sources
 libOpenVG_la_SOURCES = $(MAPI_FILES) vgapi_tmp.h
 libOpenVG_la_LIBADD = $(VG_LIB_DEPS)
-libOpenVG_la_LDFLAGS = -version-number 1 -no-undefined
+libOpenVG_la_LDFLAGS = \
+	-no-undefined \
+	-version-number 1 \
+	$(GC_SECTIONS) \
+	$(LD_NO_UNDEFINED)
 
 vgapi_tmp.h: $(srcdir)/vgapi.csv $(top_srcdir)/src/mapi/mapi_abi.py
 	$(AM_V_GEN) $(PYTHON2) $(PYTHON_FLAGS) $(top_srcdir)/src/mapi/mapi_abi.py \
@@ -52,10 +57,4 @@ vgapi_tmp.h: $(srcdir)/vgapi.csv $(top_srcdir)/src/mapi/mapi_abi.py
 BUILT_SOURCES = vgapi_tmp.h
 CLEANFILES = $(BUILT_SOURCES)
 
-# Provide compatibility with scripts for the old Mesa build system for
-# a while by putting a link to the driver into /lib of the build tree.
-all-local: libOpenVG.la
-	$(MKDIR_P) $(top_builddir)/$(LIB_DIR);
-	ln -f .libs/libOpenVG.so $(top_builddir)/$(LIB_DIR)/libOpenVG.so
-	ln -f .libs/libOpenVG.so.1 $(top_builddir)/$(LIB_DIR)/libOpenVG.so.1
-	ln -f .libs/libOpenVG.so.1.0.0 $(top_builddir)/$(LIB_DIR)/libOpenVG.so.1.0.0
+include $(top_srcdir)/install-lib-links.mk

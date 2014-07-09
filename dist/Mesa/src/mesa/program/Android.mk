@@ -47,8 +47,6 @@ LOCAL_MODULE_CLASS := STATIC_LIBRARIES
 
 intermediates := $(call local-intermediates-dir)
 
-MESA_ENABLED_APIS := ES1 ES2
-
 # TODO(chadv): In Makefile.sources, move these vars to a different list so we can
 # remove this kludge.
 generated_sources_basenames := \
@@ -70,9 +68,6 @@ $(intermediates)/program/program_parse.tab.h: $(intermediates)/program/program_p
 
 $(intermediates)/program/lex.yy.c: $(LOCAL_PATH)/program_lexer.l
 	$(local-l-to-c)
-
-LOCAL_CFLAGS := \
-	$(patsubst %,-DFEATURE_%=1,$(MESA_ENABLED_APIS))
 
 LOCAL_C_INCLUDES := \
 	$(intermediates) \

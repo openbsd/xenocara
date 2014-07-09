@@ -30,18 +30,21 @@
 #include "program/prog_statevars.h"
 #include "program/prog_instruction.h"
 
+static const struct gl_builtin_uniform_element gl_NumSamples_elements[] = {
+   {NULL, {STATE_NUM_SAMPLES, 0, 0}, SWIZZLE_XXXX}
+};
 
-static struct gl_builtin_uniform_element gl_DepthRange_elements[] = {
+static const struct gl_builtin_uniform_element gl_DepthRange_elements[] = {
    {"near", {STATE_DEPTH_RANGE, 0, 0}, SWIZZLE_XXXX},
    {"far", {STATE_DEPTH_RANGE, 0, 0}, SWIZZLE_YYYY},
    {"diff", {STATE_DEPTH_RANGE, 0, 0}, SWIZZLE_ZZZZ},
 };
 
-static struct gl_builtin_uniform_element gl_ClipPlane_elements[] = {
+static const struct gl_builtin_uniform_element gl_ClipPlane_elements[] = {
    {NULL, {STATE_CLIPPLANE, 0, 0}, SWIZZLE_XYZW}
 };
 
-static struct gl_builtin_uniform_element gl_Point_elements[] = {
+static const struct gl_builtin_uniform_element gl_Point_elements[] = {
    {"size", {STATE_POINT_SIZE}, SWIZZLE_XXXX},
    {"sizeMin", {STATE_POINT_SIZE}, SWIZZLE_YYYY},
    {"sizeMax", {STATE_POINT_SIZE}, SWIZZLE_ZZZZ},
@@ -51,7 +54,7 @@ static struct gl_builtin_uniform_element gl_Point_elements[] = {
    {"distanceQuadraticAttenuation", {STATE_POINT_ATTENUATION}, SWIZZLE_ZZZZ},
 };
 
-static struct gl_builtin_uniform_element gl_FrontMaterial_elements[] = {
+static const struct gl_builtin_uniform_element gl_FrontMaterial_elements[] = {
    {"emission", {STATE_MATERIAL, 0, STATE_EMISSION}, SWIZZLE_XYZW},
    {"ambient", {STATE_MATERIAL, 0, STATE_AMBIENT}, SWIZZLE_XYZW},
    {"diffuse", {STATE_MATERIAL, 0, STATE_DIFFUSE}, SWIZZLE_XYZW},
@@ -59,7 +62,7 @@ static struct gl_builtin_uniform_element gl_FrontMaterial_elements[] = {
    {"shininess", {STATE_MATERIAL, 0, STATE_SHININESS}, SWIZZLE_XXXX},
 };
 
-static struct gl_builtin_uniform_element gl_BackMaterial_elements[] = {
+static const struct gl_builtin_uniform_element gl_BackMaterial_elements[] = {
    {"emission", {STATE_MATERIAL, 1, STATE_EMISSION}, SWIZZLE_XYZW},
    {"ambient", {STATE_MATERIAL, 1, STATE_AMBIENT}, SWIZZLE_XYZW},
    {"diffuse", {STATE_MATERIAL, 1, STATE_DIFFUSE}, SWIZZLE_XYZW},
@@ -67,7 +70,7 @@ static struct gl_builtin_uniform_element gl_BackMaterial_elements[] = {
    {"shininess", {STATE_MATERIAL, 1, STATE_SHININESS}, SWIZZLE_XXXX},
 };
 
-static struct gl_builtin_uniform_element gl_LightSource_elements[] = {
+static const struct gl_builtin_uniform_element gl_LightSource_elements[] = {
    {"ambient", {STATE_LIGHT, 0, STATE_AMBIENT}, SWIZZLE_XYZW},
    {"diffuse", {STATE_LIGHT, 0, STATE_DIFFUSE}, SWIZZLE_XYZW},
    {"specular", {STATE_LIGHT, 0, STATE_SPECULAR}, SWIZZLE_XYZW},
@@ -86,67 +89,67 @@ static struct gl_builtin_uniform_element gl_LightSource_elements[] = {
    {"quadraticAttenuation", {STATE_LIGHT, 0, STATE_ATTENUATION}, SWIZZLE_ZZZZ},
 };
 
-static struct gl_builtin_uniform_element gl_LightModel_elements[] = {
+static const struct gl_builtin_uniform_element gl_LightModel_elements[] = {
    {"ambient", {STATE_LIGHTMODEL_AMBIENT, 0}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_FrontLightModelProduct_elements[] = {
+static const struct gl_builtin_uniform_element gl_FrontLightModelProduct_elements[] = {
    {"sceneColor", {STATE_LIGHTMODEL_SCENECOLOR, 0}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_BackLightModelProduct_elements[] = {
+static const struct gl_builtin_uniform_element gl_BackLightModelProduct_elements[] = {
    {"sceneColor", {STATE_LIGHTMODEL_SCENECOLOR, 1}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_FrontLightProduct_elements[] = {
+static const struct gl_builtin_uniform_element gl_FrontLightProduct_elements[] = {
    {"ambient", {STATE_LIGHTPROD, 0, 0, STATE_AMBIENT}, SWIZZLE_XYZW},
    {"diffuse", {STATE_LIGHTPROD, 0, 0, STATE_DIFFUSE}, SWIZZLE_XYZW},
    {"specular", {STATE_LIGHTPROD, 0, 0, STATE_SPECULAR}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_BackLightProduct_elements[] = {
+static const struct gl_builtin_uniform_element gl_BackLightProduct_elements[] = {
    {"ambient", {STATE_LIGHTPROD, 0, 1, STATE_AMBIENT}, SWIZZLE_XYZW},
    {"diffuse", {STATE_LIGHTPROD, 0, 1, STATE_DIFFUSE}, SWIZZLE_XYZW},
    {"specular", {STATE_LIGHTPROD, 0, 1, STATE_SPECULAR}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_TextureEnvColor_elements[] = {
+static const struct gl_builtin_uniform_element gl_TextureEnvColor_elements[] = {
    {NULL, {STATE_TEXENV_COLOR, 0}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_EyePlaneS_elements[] = {
+static const struct gl_builtin_uniform_element gl_EyePlaneS_elements[] = {
    {NULL, {STATE_TEXGEN, 0, STATE_TEXGEN_EYE_S}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_EyePlaneT_elements[] = {
+static const struct gl_builtin_uniform_element gl_EyePlaneT_elements[] = {
    {NULL, {STATE_TEXGEN, 0, STATE_TEXGEN_EYE_T}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_EyePlaneR_elements[] = {
+static const struct gl_builtin_uniform_element gl_EyePlaneR_elements[] = {
    {NULL, {STATE_TEXGEN, 0, STATE_TEXGEN_EYE_R}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_EyePlaneQ_elements[] = {
+static const struct gl_builtin_uniform_element gl_EyePlaneQ_elements[] = {
    {NULL, {STATE_TEXGEN, 0, STATE_TEXGEN_EYE_Q}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_ObjectPlaneS_elements[] = {
+static const struct gl_builtin_uniform_element gl_ObjectPlaneS_elements[] = {
    {NULL, {STATE_TEXGEN, 0, STATE_TEXGEN_OBJECT_S}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_ObjectPlaneT_elements[] = {
+static const struct gl_builtin_uniform_element gl_ObjectPlaneT_elements[] = {
    {NULL, {STATE_TEXGEN, 0, STATE_TEXGEN_OBJECT_T}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_ObjectPlaneR_elements[] = {
+static const struct gl_builtin_uniform_element gl_ObjectPlaneR_elements[] = {
    {NULL, {STATE_TEXGEN, 0, STATE_TEXGEN_OBJECT_R}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_ObjectPlaneQ_elements[] = {
+static const struct gl_builtin_uniform_element gl_ObjectPlaneQ_elements[] = {
    {NULL, {STATE_TEXGEN, 0, STATE_TEXGEN_OBJECT_Q}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_Fog_elements[] = {
+static const struct gl_builtin_uniform_element gl_Fog_elements[] = {
    {"color", {STATE_FOG_COLOR}, SWIZZLE_XYZW},
    {"density", {STATE_FOG_PARAMS}, SWIZZLE_XXXX},
    {"start", {STATE_FOG_PARAMS}, SWIZZLE_YYYY},
@@ -154,32 +157,32 @@ static struct gl_builtin_uniform_element gl_Fog_elements[] = {
    {"scale", {STATE_FOG_PARAMS}, SWIZZLE_WWWW},
 };
 
-static struct gl_builtin_uniform_element gl_NormalScale_elements[] = {
+static const struct gl_builtin_uniform_element gl_NormalScale_elements[] = {
    {NULL, {STATE_NORMAL_SCALE}, SWIZZLE_XXXX},
 };
 
-static struct gl_builtin_uniform_element gl_BumpRotMatrix0MESA_elements[] = {
+static const struct gl_builtin_uniform_element gl_BumpRotMatrix0MESA_elements[] = {
    {NULL, {STATE_INTERNAL, STATE_ROT_MATRIX_0}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_BumpRotMatrix1MESA_elements[] = {
+static const struct gl_builtin_uniform_element gl_BumpRotMatrix1MESA_elements[] = {
    {NULL, {STATE_INTERNAL, STATE_ROT_MATRIX_1}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_FogParamsOptimizedMESA_elements[] = {
+static const struct gl_builtin_uniform_element gl_FogParamsOptimizedMESA_elements[] = {
    {NULL, {STATE_INTERNAL, STATE_FOG_PARAMS_OPTIMIZED}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_CurrentAttribVertMESA_elements[] = {
+static const struct gl_builtin_uniform_element gl_CurrentAttribVertMESA_elements[] = {
    {NULL, {STATE_INTERNAL, STATE_CURRENT_ATTRIB, 0}, SWIZZLE_XYZW},
 };
 
-static struct gl_builtin_uniform_element gl_CurrentAttribFragMESA_elements[] = {
+static const struct gl_builtin_uniform_element gl_CurrentAttribFragMESA_elements[] = {
    {NULL, {STATE_INTERNAL, STATE_CURRENT_ATTRIB_MAYBE_VP_CLAMPED, 0}, SWIZZLE_XYZW},
 };
 
 #define MATRIX(name, statevar, modifier)				\
-   static struct gl_builtin_uniform_element name ## _elements[] = {	\
+   static const struct gl_builtin_uniform_element name ## _elements[] = { \
       { NULL, { statevar, 0, 0, 0, modifier}, SWIZZLE_XYZW },		\
       { NULL, { statevar, 0, 1, 1, modifier}, SWIZZLE_XYZW },		\
       { NULL, { statevar, 0, 2, 2, modifier}, SWIZZLE_XYZW },		\
@@ -222,7 +225,7 @@ MATRIX(gl_TextureMatrixTranspose,
 MATRIX(gl_TextureMatrixInverseTranspose,
        STATE_TEXTURE_MATRIX, STATE_MATRIX_INVERSE);
 
-static struct gl_builtin_uniform_element gl_NormalMatrix_elements[] = {
+static const struct gl_builtin_uniform_element gl_NormalMatrix_elements[] = {
    { NULL, { STATE_MODELVIEW_MATRIX, 0, 0, 0, STATE_MATRIX_INVERSE},
      MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_Z) },
    { NULL, { STATE_MODELVIEW_MATRIX, 0, 1, 1, STATE_MATRIX_INVERSE},
@@ -236,6 +239,7 @@ static struct gl_builtin_uniform_element gl_NormalMatrix_elements[] = {
 #define STATEVAR(name) {#name, name ## _elements, Elements(name ## _elements)}
 
 static const struct gl_builtin_uniform_desc _mesa_builtin_uniform_desc[] = {
+   STATEVAR(gl_NumSamples),
    STATEVAR(gl_DepthRange),
    STATEVAR(gl_ClipPlane),
    STATEVAR(gl_Point),
@@ -293,6 +297,55 @@ static const struct gl_builtin_uniform_desc _mesa_builtin_uniform_desc[] = {
 
 namespace {
 
+/**
+ * Data structure that accumulates fields for the gl_PerVertex interface
+ * block.
+ */
+class per_vertex_accumulator
+{
+public:
+   per_vertex_accumulator();
+   void add_field(int slot, const glsl_type *type, const char *name);
+   const glsl_type *construct_interface_instance() const;
+
+private:
+   glsl_struct_field fields[10];
+   unsigned num_fields;
+};
+
+
+per_vertex_accumulator::per_vertex_accumulator()
+   : fields(),
+     num_fields(0)
+{
+}
+
+
+void
+per_vertex_accumulator::add_field(int slot, const glsl_type *type,
+                                  const char *name)
+{
+   assert(this->num_fields < ARRAY_SIZE(this->fields));
+   this->fields[this->num_fields].type = type;
+   this->fields[this->num_fields].name = name;
+   this->fields[this->num_fields].row_major = false;
+   this->fields[this->num_fields].location = slot;
+   this->fields[this->num_fields].interpolation = INTERP_QUALIFIER_NONE;
+   this->fields[this->num_fields].centroid = 0;
+   this->fields[this->num_fields].sample = 0;
+   this->num_fields++;
+}
+
+
+const glsl_type *
+per_vertex_accumulator::construct_interface_instance() const
+{
+   return glsl_type::get_interface_instance(this->fields, this->num_fields,
+                                            GLSL_INTERFACE_PACKING_STD140,
+                                            "gl_PerVertex");
+}
+
+
 class builtin_variable_generator
 {
 public:
@@ -303,6 +356,7 @@ public:
    void generate_vs_special_vars();
    void generate_gs_special_vars();
    void generate_fs_special_vars();
+   void generate_cs_special_vars();
    void generate_varyings();
 
 private:
@@ -336,6 +390,7 @@ private:
                              enum ir_variable_mode mode, int slot);
    ir_variable *add_uniform(const glsl_type *type, const char *name);
    ir_variable *add_const(const char *name, int value);
+   ir_variable *add_const_ivec3(const char *name, int x, int y, int z);
    void add_varying(int slot, const glsl_type *type, const char *name,
                     const char *name_as_gs_input);
 
@@ -358,6 +413,9 @@ private:
    const glsl_type * const vec4_t;
    const glsl_type * const mat3_t;
    const glsl_type * const mat4_t;
+
+   per_vertex_accumulator per_vertex_in;
+   per_vertex_accumulator per_vertex_out;
 };
 
 
@@ -379,13 +437,14 @@ builtin_variable_generator::add_variable(const char *name,
                                          enum ir_variable_mode mode, int slot)
 {
    ir_variable *var = new(symtab) ir_variable(type, name, mode);
+   var->data.how_declared = ir_var_declared_implicitly;
 
-   switch (var->mode) {
+   switch (var->data.mode) {
    case ir_var_auto:
    case ir_var_shader_in:
    case ir_var_uniform:
    case ir_var_system_value:
-      var->read_only = true;
+      var->data.read_only = true;
       break;
    case ir_var_shader_out:
       break;
@@ -398,9 +457,9 @@ builtin_variable_generator::add_variable(const char *name,
       break;
    }
 
-   var->location = slot;
-   var->explicit_location = (slot >= 0);
-   var->explicit_index = 0;
+   var->data.location = slot;
+   var->data.explicit_location = (slot >= 0);
+   var->data.explicit_index = 0;
 
    /* Once the variable is created an initialized, add it to the symbol table
     * and add the declaration to the IR stream.
@@ -439,7 +498,8 @@ builtin_variable_generator::add_uniform(const glsl_type *type,
 
    for (unsigned a = 0; a < array_count; a++) {
       for (unsigned j = 0; j < statevar->num_elements; j++) {
-	 struct gl_builtin_uniform_element *element = &statevar->elements[j];
+	 const struct gl_builtin_uniform_element *element =
+	    &statevar->elements[j];
 
 	 memcpy(slots->tokens, element->tokens, sizeof(element->tokens));
 	 if (type->is_array()) {
@@ -467,7 +527,26 @@ builtin_variable_generator::add_const(const char *name, int value)
 					 ir_var_auto, -1);
    var->constant_value = new(var) ir_constant(value);
    var->constant_initializer = new(var) ir_constant(value);
-   var->has_initializer = true;
+   var->data.has_initializer = true;
+   return var;
+}
+
+
+ir_variable *
+builtin_variable_generator::add_const_ivec3(const char *name, int x, int y,
+                                            int z)
+{
+   ir_variable *const var = add_variable(name, glsl_type::ivec3_type,
+                                         ir_var_auto, -1);
+   ir_constant_data data;
+   memset(&data, 0, sizeof(data));
+   data.i[0] = x;
+   data.i[1] = y;
+   data.i[2] = z;
+   var->constant_value = new(var) ir_constant(glsl_type::ivec3_type, &data);
+   var->constant_initializer =
+      new(var) ir_constant(glsl_type::ivec3_type, &data);
+   var->data.has_initializer = true;
    return var;
 }
 
@@ -497,11 +576,12 @@ builtin_variable_generator::generate_constants()
        */
       if (state->is_version(0, 300)) {
          add_const("gl_MaxVertexOutputVectors",
-                   state->Const.MaxVaryingFloats / 4);
+                   state->ctx->Const.Program[MESA_SHADER_VERTEX].MaxOutputComponents / 4);
          add_const("gl_MaxFragmentInputVectors",
-                   state->Const.MaxVaryingFloats / 4);
+                   state->ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxInputComponents / 4);
       } else {
-         add_const("gl_MaxVaryingVectors", state->Const.MaxVaryingFloats / 4);
+         add_const("gl_MaxVaryingVectors",
+                   state->ctx->Const.MaxVarying);
       }
    } else {
       add_const("gl_MaxVertexUniformComponents",
@@ -510,7 +590,7 @@ builtin_variable_generator::generate_constants()
       /* Note: gl_MaxVaryingFloats was deprecated in GLSL 1.30+, but not
        * removed
        */
-      add_const("gl_MaxVaryingFloats", state->Const.MaxVaryingFloats);
+      add_const("gl_MaxVaryingFloats", state->ctx->Const.MaxVarying * 4);
 
       add_const("gl_MaxFragmentUniformComponents",
                 state->Const.MaxFragmentUniformComponents);
@@ -531,7 +611,38 @@ builtin_variable_generator::generate_constants()
 
    if (state->is_version(130, 0)) {
       add_const("gl_MaxClipDistances", state->Const.MaxClipPlanes);
-      add_const("gl_MaxVaryingComponents", state->Const.MaxVaryingFloats);
+      add_const("gl_MaxVaryingComponents", state->ctx->Const.MaxVarying * 4);
+   }
+
+   if (state->is_version(150, 0)) {
+      add_const("gl_MaxVertexOutputComponents",
+                state->Const.MaxVertexOutputComponents);
+      add_const("gl_MaxGeometryInputComponents",
+                state->Const.MaxGeometryInputComponents);
+      add_const("gl_MaxGeometryOutputComponents",
+                state->Const.MaxGeometryOutputComponents);
+      add_const("gl_MaxFragmentInputComponents",
+                state->Const.MaxFragmentInputComponents);
+      add_const("gl_MaxGeometryTextureImageUnits",
+                state->Const.MaxGeometryTextureImageUnits);
+      add_const("gl_MaxGeometryOutputVertices",
+                state->Const.MaxGeometryOutputVertices);
+      add_const("gl_MaxGeometryTotalOutputComponents",
+                state->Const.MaxGeometryTotalOutputComponents);
+      add_const("gl_MaxGeometryUniformComponents",
+                state->Const.MaxGeometryUniformComponents);
+
+      /* Note: the GLSL 1.50-4.40 specs require
+       * gl_MaxGeometryVaryingComponents to be present, and to be at least 64.
+       * But they do not define what it means (and there does not appear to be
+       * any corresponding constant in the GL specs).  However,
+       * ARB_geometry_shader4 defines MAX_GEOMETRY_VARYING_COMPONENTS_ARB to
+       * be the maximum number of components available for use as geometry
+       * outputs.  So we assume this is a synonym for
+       * gl_MaxGeometryOutputComponents.
+       */
+      add_const("gl_MaxGeometryVaryingComponents",
+                state->Const.MaxGeometryOutputComponents);
    }
 
    if (compatibility) {
@@ -555,6 +666,72 @@ builtin_variable_generator::generate_constants()
        */
       add_const("gl_MaxTextureCoords", state->Const.MaxTextureCoords);
    }
+
+   if (state->ARB_shader_atomic_counters_enable) {
+      add_const("gl_MaxVertexAtomicCounters",
+                state->Const.MaxVertexAtomicCounters);
+      add_const("gl_MaxGeometryAtomicCounters",
+                state->Const.MaxGeometryAtomicCounters);
+      add_const("gl_MaxFragmentAtomicCounters",
+                state->Const.MaxFragmentAtomicCounters);
+      add_const("gl_MaxCombinedAtomicCounters",
+                state->Const.MaxCombinedAtomicCounters);
+      add_const("gl_MaxAtomicCounterBindings",
+                state->Const.MaxAtomicBufferBindings);
+      add_const("gl_MaxTessControlAtomicCounters", 0);
+      add_const("gl_MaxTessEvaluationAtomicCounters", 0);
+   }
+
+   if (state->is_version(430, 0) || state->ARB_compute_shader_enable) {
+      add_const_ivec3("gl_MaxComputeWorkGroupCount",
+                      state->Const.MaxComputeWorkGroupCount[0],
+                      state->Const.MaxComputeWorkGroupCount[1],
+                      state->Const.MaxComputeWorkGroupCount[2]);
+      add_const_ivec3("gl_MaxComputeWorkGroupSize",
+                      state->Const.MaxComputeWorkGroupSize[0],
+                      state->Const.MaxComputeWorkGroupSize[1],
+                      state->Const.MaxComputeWorkGroupSize[2]);
+
+      /* From the GLSL 4.40 spec, section 7.1 (Built-In Language Variables):
+       *
+       *     The built-in constant gl_WorkGroupSize is a compute-shader
+       *     constant containing the local work-group size of the shader.  The
+       *     size of the work group in the X, Y, and Z dimensions is stored in
+       *     the x, y, and z components.  The constants values in
+       *     gl_WorkGroupSize will match those specified in the required
+       *     local_size_x, local_size_y, and local_size_z layout qualifiers
+       *     for the current shader.  This is a constant so that it can be
+       *     used to size arrays of memory that can be shared within the local
+       *     work group.  It is a compile-time error to use gl_WorkGroupSize
+       *     in a shader that does not declare a fixed local group size, or
+       *     before that shader has declared a fixed local group size, using
+       *     local_size_x, local_size_y, and local_size_z.
+       *
+       * To prevent the shader from trying to refer to gl_WorkGroupSize before
+       * the layout declaration, we don't define it here.  Intead we define it
+       * in ast_cs_input_layout::hir().
+       */
+   }
+
+   if (state->is_version(420, 0) ||
+       state->ARB_shader_image_load_store_enable) {
+      add_const("gl_MaxImageUnits",
+                state->Const.MaxImageUnits);
+      add_const("gl_MaxCombinedImageUnitsAndFragmentOutputs",
+                state->Const.MaxCombinedImageUnitsAndFragmentOutputs);
+      add_const("gl_MaxImageSamples",
+                state->Const.MaxImageSamples);
+      add_const("gl_MaxVertexImageUniforms",
+                state->Const.MaxVertexImageUniforms);
+      add_const("gl_MaxTessControlImageUniforms", 0);
+      add_const("gl_MaxTessEvaluationImageUniforms", 0);
+      add_const("gl_MaxGeometryImageUniforms",
+                state->Const.MaxGeometryImageUniforms);
+      add_const("gl_MaxFragmentImageUniforms",
+                state->Const.MaxFragmentImageUniforms);
+      add_const("gl_MaxCombinedImageUniforms",
+                state->Const.MaxCombinedImageUniforms);
+   }
 }
 
 
@@ -564,6 +741,7 @@ builtin_variable_generator::generate_constants()
 void
 builtin_variable_generator::generate_uniforms()
 {
+   add_uniform(int_t, "gl_NumSamples");
    add_uniform(type("gl_DepthRangeParameters"), "gl_DepthRange");
    add_uniform(array(vec4_t, VERT_ATTRIB_MAX), "gl_CurrentAttribVertMESA");
    add_uniform(array(vec4_t, VARYING_SLOT_MAX), "gl_CurrentAttribFragMESA");
@@ -675,6 +853,10 @@ void
 builtin_variable_generator::generate_gs_special_vars()
 {
    add_output(VARYING_SLOT_LAYER, int_t, "gl_Layer");
+   if (state->ARB_viewport_array_enable)
+      add_output(VARYING_SLOT_VIEWPORT, int_t, "gl_ViewportIndex");
+   if (state->ARB_gpu_shader5_enable)
+      add_system_value(SYSTEM_VALUE_INVOCATION_ID, int_t, "gl_InvocationID");
 
    /* Although gl_PrimitiveID appears in tessellation control and tessellation
     * evaluation shaders, it has a different function there than it has in
@@ -686,8 +868,11 @@ builtin_variable_generator::generate_gs_special_vars()
     * the specific case of gl_PrimitiveIDIn.  So we don't need to treat
     * gl_PrimitiveIDIn as an {ARB,EXT}_geometry_shader4-only variable.
     */
-   add_input(VARYING_SLOT_PRIMITIVE_ID, int_t, "gl_PrimitiveIDIn");
-   add_output(VARYING_SLOT_PRIMITIVE_ID, int_t, "gl_PrimitiveID");
+   ir_variable *var;
+   var = add_input(VARYING_SLOT_PRIMITIVE_ID, int_t, "gl_PrimitiveIDIn");
+   var->data.interpolation = INTERP_QUALIFIER_FLAT;
+   var = add_output(VARYING_SLOT_PRIMITIVE_ID, int_t, "gl_PrimitiveID");
+   var->data.interpolation = INTERP_QUALIFIER_FLAT;
 }
 
 
@@ -701,6 +886,12 @@ builtin_variable_generator::generate_fs_special_vars()
    add_input(VARYING_SLOT_FACE, bool_t, "gl_FrontFacing");
    if (state->is_version(120, 100))
       add_input(VARYING_SLOT_PNTC, vec2_t, "gl_PointCoord");
+
+   if (state->is_version(150, 0)) {
+      ir_variable *var =
+         add_input(VARYING_SLOT_PRIMITIVE_ID, int_t, "gl_PrimitiveID");
+      var->data.interpolation = INTERP_QUALIFIER_FLAT;
+   }
 
    /* gl_FragColor and gl_FragData were deprecated starting in desktop GLSL
     * 1.30, and were relegated to the compatibility profile in GLSL 4.20.
@@ -731,6 +922,33 @@ builtin_variable_generator::generate_fs_special_vars()
       if (state->AMD_shader_stencil_export_warn)
          var->warn_extension = "GL_AMD_shader_stencil_export";
    }
+
+   if (state->ARB_sample_shading_enable) {
+      add_system_value(SYSTEM_VALUE_SAMPLE_ID, int_t, "gl_SampleID");
+      add_system_value(SYSTEM_VALUE_SAMPLE_POS, vec2_t, "gl_SamplePosition");
+      /* From the ARB_sample_shading specification:
+       *    "The number of elements in the array is ceil(<s>/32), where
+       *    <s> is the maximum number of color samples supported by the
+       *    implementation."
+       * Since no drivers expose more than 32x MSAA, we can simply set
+       * the array size to 1 rather than computing it.
+       */
+      add_output(FRAG_RESULT_SAMPLE_MASK, array(int_t, 1), "gl_SampleMask");
+   }
+
+   if (state->ARB_gpu_shader5_enable) {
+      add_system_value(SYSTEM_VALUE_SAMPLE_MASK_IN, array(int_t, 1), "gl_SampleMaskIn");
+   }
+}
+
+
+/**
+ * Generate variables which only exist in compute shaders.
+ */
+void
+builtin_variable_generator::generate_cs_special_vars()
+{
+   /* TODO: finish this. */
 }
 
 
@@ -745,15 +963,18 @@ builtin_variable_generator::add_varying(int slot, const glsl_type *type,
                                         const char *name,
                                         const char *name_as_gs_input)
 {
-   switch (state->target) {
-   case geometry_shader:
-      add_input(slot, array(type, 0), name_as_gs_input);
+   switch (state->stage) {
+   case MESA_SHADER_GEOMETRY:
+      this->per_vertex_in.add_field(slot, type, name);
       /* FALLTHROUGH */
-   case vertex_shader:
-      add_output(slot, type, name);
+   case MESA_SHADER_VERTEX:
+      this->per_vertex_out.add_field(slot, type, name);
       break;
-   case fragment_shader:
+   case MESA_SHADER_FRAGMENT:
       add_input(slot, type, name);
+      break;
+   case MESA_SHADER_COMPUTE:
+      /* Compute shaders don't have varyings. */
       break;
    }
 }
@@ -770,7 +991,7 @@ builtin_variable_generator::generate_varyings()
    add_varying(loc, type, name, name "In")
 
    /* gl_Position and gl_PointSize are not visible from fragment shaders. */
-   if (state->target != fragment_shader) {
+   if (state->stage != MESA_SHADER_FRAGMENT) {
       ADD_VARYING(VARYING_SLOT_POS, vec4_t, "gl_Position");
       ADD_VARYING(VARYING_SLOT_PSIZ, float_t, "gl_PointSize");
    }
@@ -783,7 +1004,7 @@ builtin_variable_generator::generate_varyings()
    if (compatibility) {
       ADD_VARYING(VARYING_SLOT_TEX0, array(vec4_t, 0), "gl_TexCoord");
       ADD_VARYING(VARYING_SLOT_FOGC, float_t, "gl_FogFragCoord");
-      if (state->target == fragment_shader) {
+      if (state->stage == MESA_SHADER_FRAGMENT) {
          ADD_VARYING(VARYING_SLOT_COL0, vec4_t, "gl_Color");
          ADD_VARYING(VARYING_SLOT_COL1, vec4_t, "gl_SecondaryColor");
       } else {
@@ -792,6 +1013,27 @@ builtin_variable_generator::generate_varyings()
          ADD_VARYING(VARYING_SLOT_BFC0, vec4_t, "gl_BackColor");
          ADD_VARYING(VARYING_SLOT_COL1, vec4_t, "gl_FrontSecondaryColor");
          ADD_VARYING(VARYING_SLOT_BFC1, vec4_t, "gl_BackSecondaryColor");
+      }
+   }
+
+   if (state->stage == MESA_SHADER_GEOMETRY) {
+      const glsl_type *per_vertex_in_type =
+         this->per_vertex_in.construct_interface_instance();
+      add_variable("gl_in", array(per_vertex_in_type, 0),
+                   ir_var_shader_in, -1);
+   }
+   if (state->stage == MESA_SHADER_VERTEX || state->stage == MESA_SHADER_GEOMETRY) {
+      const glsl_type *per_vertex_out_type =
+         this->per_vertex_out.construct_interface_instance();
+      const glsl_struct_field *fields = per_vertex_out_type->fields.structure;
+      for (unsigned i = 0; i < per_vertex_out_type->length; i++) {
+         ir_variable *var =
+            add_variable(fields[i].name, fields[i].type, ir_var_shader_out,
+                         fields[i].location);
+         var->data.interpolation = fields[i].interpolation;
+         var->data.centroid = fields[i].centroid;
+         var->data.sample = fields[i].sample;
+         var->init_interface_type(per_vertex_out_type);
       }
    }
 }
@@ -811,15 +1053,18 @@ _mesa_glsl_initialize_variables(exec_list *instructions,
 
    gen.generate_varyings();
 
-   switch (state->target) {
-   case vertex_shader:
+   switch (state->stage) {
+   case MESA_SHADER_VERTEX:
       gen.generate_vs_special_vars();
       break;
-   case geometry_shader:
+   case MESA_SHADER_GEOMETRY:
       gen.generate_gs_special_vars();
       break;
-   case fragment_shader:
+   case MESA_SHADER_FRAGMENT:
       gen.generate_fs_special_vars();
+      break;
+   case MESA_SHADER_COMPUTE:
+      gen.generate_cs_special_vars();
       break;
    }
 }

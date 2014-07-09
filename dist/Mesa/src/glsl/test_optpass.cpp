@@ -62,11 +62,10 @@ do_optimization(struct exec_list *ir, const char *optimization,
    int int_3;
    int int_4;
 
-   if (sscanf(optimization, "do_common_optimization ( %d , %d ) ",
-              &int_0, &int_1) == 2) {
-      return do_common_optimization(ir, int_0 != 0, false, int_1, options);
+   if (sscanf(optimization, "do_common_optimization ( %d ) ", &int_0) == 1) {
+      return do_common_optimization(ir, int_0 != 0, false, options, true);
    } else if (strcmp(optimization, "do_algebraic") == 0) {
-      return do_algebraic(ir);
+      return do_algebraic(ir, true);
    } else if (strcmp(optimization, "do_constant_folding") == 0) {
       return do_constant_folding(ir);
    } else if (strcmp(optimization, "do_constant_variable") == 0) {
@@ -204,11 +203,12 @@ int test_optpass(int argc, char **argv)
 
    struct gl_shader *shader = rzalloc(NULL, struct gl_shader);
    shader->Type = shader_type;
+   shader->Stage = _mesa_shader_enum_to_shader_stage(shader_type);
 
    string input = read_stdin_to_eof();
 
    struct _mesa_glsl_parse_state *state
-      = new(shader) _mesa_glsl_parse_state(ctx, shader->Type, shader);
+      = new(shader) _mesa_glsl_parse_state(ctx, shader->Stage, shader);
 
    if (input_format_ir) {
       shader->ir = new(shader) exec_list;
@@ -234,7 +234,7 @@ int test_optpass(int argc, char **argv)
    /* Print out the initial IR */
    if (!state->error && !quiet) {
       printf("*** pre-optimization IR:\n");
-      _mesa_print_ir(shader->ir, state);
+      _mesa_print_ir(stdout, shader->ir, state);
       printf("\n--\n");
    }
 
@@ -242,7 +242,7 @@ int test_optpass(int argc, char **argv)
    if (!state->error) {
       GLboolean progress;
       const struct gl_shader_compiler_options *options =
-         &ctx->ShaderCompilerOptions[_mesa_shader_type_to_index(shader_type)];
+         &ctx->ShaderCompilerOptions[_mesa_shader_enum_to_shader_stage(shader_type)];
       do {
          progress = do_optimization_passes(shader->ir, &argv[optind],
                                            argc - optind, quiet != 0, options);
@@ -254,7 +254,7 @@ int test_optpass(int argc, char **argv)
       if (!quiet) {
          printf("*** resulting IR:\n");
       }
-      _mesa_print_ir(shader->ir, state);
+      _mesa_print_ir(stdout, shader->ir, state);
       if (!quiet) {
          printf("\n--\n");
       }

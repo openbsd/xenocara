@@ -23,6 +23,8 @@
 #define CONSTANT_BUFFER_0_ADDR_SPACE 8
 #define CONSTANT_BUFFER_1_ADDR_SPACE (CONSTANT_BUFFER_0_ADDR_SPACE + R600_UCP_CONST_BUFFER)
 #define CONSTANT_TXQ_BUFFER (CONSTANT_BUFFER_0_ADDR_SPACE + R600_TXQ_CONST_BUFFER)
+#define LLVM_R600_BUFFER_INFO_CONST_BUFFER \
+	(CONSTANT_BUFFER_0_ADDR_SPACE + R600_BUFFER_INFO_CONST_BUFFER)
 
 static LLVMValueRef llvm_load_const_buffer(
 	struct lp_build_tgsi_context * bld_base,
@@ -75,6 +77,11 @@ static void llvm_load_system_value(
 	default: assert(!"unknown system value");
 	}
 
+#if HAVE_LLVM >= 0x0304
+	ctx->system_values[index] = LLVMBuildExtractElement(ctx->gallivm.builder,
+		LLVMGetParam(ctx->main_fn, 0), lp_build_const_int32(&(ctx->gallivm), chan),
+		"");
+#else
 	LLVMValueRef reg = lp_build_const_int32(
 			ctx->soa.bld_base.base.gallivm, chan);
 	ctx->system_values[index] = build_intrinsic(
@@ -82,8 +89,49 @@ static void llvm_load_system_value(
 			"llvm.R600.load.input",
 			ctx->soa.bld_base.base.elem_type, &reg, 1,
 			LLVMReadNoneAttribute);
+#endif
 }
 
+#if HAVE_LLVM >= 0x0304
+static LLVMValueRef
+llvm_load_input_vector(
+	struct radeon_llvm_context * ctx, unsigned location, unsigned ijregs,
+	boolean interp)
+{
+		LLVMTypeRef VecType;
+		LLVMValueRef Args[3] = {
+			lp_build_const_int32(&(ctx->gallivm), location)
+		};
+		unsigned ArgCount = 1;
+		if (interp) {
+			VecType = LLVMVectorType(ctx->soa.bld_base.base.elem_type, 2);
+			LLVMValueRef IJIndex = LLVMGetParam(ctx->main_fn, ijregs / 2);
+			Args[ArgCount++] = LLVMBuildExtractElement(ctx->gallivm.builder, IJIndex,
+				lp_build_const_int32(&(ctx->gallivm), 2 * (ijregs % 2)), "");
+			Args[ArgCount++] = LLVMBuildExtractElement(ctx->gallivm.builder, IJIndex,
+				lp_build_const_int32(&(ctx->gallivm), 2 * (ijregs % 2) + 1), "");
+			LLVMValueRef HalfVec[2] = {
+				build_intrinsic(ctx->gallivm.builder, "llvm.R600.interp.xy",
+					VecType, Args, ArgCount, LLVMReadNoneAttribute),
+				build_intrinsic(ctx->gallivm.builder, "llvm.R600.interp.zw",
+					VecType, Args, ArgCount, LLVMReadNoneAttribute)
+			};
+			LLVMValueRef MaskInputs[4] = {
+				lp_build_const_int32(&(ctx->gallivm), 0),
+				lp_build_const_int32(&(ctx->gallivm), 1),
+				lp_build_const_int32(&(ctx->gallivm), 2),
+				lp_build_const_int32(&(ctx->gallivm), 3)
+			};
+			LLVMValueRef Mask = LLVMConstVector(MaskInputs, 4);
+			return LLVMBuildShuffleVector(ctx->gallivm.builder, HalfVec[0], HalfVec[1],
+				Mask, "");
+		} else {
+			VecType = LLVMVectorType(ctx->soa.bld_base.base.elem_type, 4);
+			return build_intrinsic(ctx->gallivm.builder, "llvm.R600.interp.const",
+				VecType, Args, ArgCount, LLVMReadNoneAttribute);
+		}
+}
+#else
 static LLVMValueRef
 llvm_load_input_helper(
 	struct radeon_llvm_context * ctx,
@@ -108,7 +156,22 @@ llvm_load_input_helper(
 	return build_intrinsic(bb->gallivm->builder, intrinsic,
 		bb->elem_type, &arg[0], arg_count, LLVMReadNoneAttribute);
 }
+#endif
 
+#if HAVE_LLVM >= 0x0304
+static LLVMValueRef
+llvm_face_select_helper(
+	struct radeon_llvm_context * ctx,
+	LLVMValueRef face, LLVMValueRef front_color, LLVMValueRef back_color)
+{
+	const struct lp_build_context * bb = &ctx->soa.bld_base.base;
+	LLVMValueRef is_front = LLVMBuildFCmp(
+		bb->gallivm->builder, LLVMRealUGT, face,
+		lp_build_const_float(bb->gallivm, 0.0f),	"");
+	return LLVMBuildSelect(bb->gallivm->builder, is_front,
+		front_color, back_color, "");
+}
+#else
 static LLVMValueRef
 llvm_face_select_helper(
 	struct radeon_llvm_context * ctx,
@@ -122,6 +185,7 @@ llvm_face_select_helper(
 	return LLVMBuildSelect(bb->gallivm->builder, is_front,
 		front_color, back_color, "");
 }
+#endif
 
 static void llvm_load_input(
 	struct radeon_llvm_context * ctx,
@@ -130,11 +194,55 @@ static void llvm_load_input(
 {
 	const struct r600_shader_io * input = &ctx->r600_inputs[input_index];
 	unsigned chan;
+#if HAVE_LLVM < 0x0304
 	unsigned interp = 0;
 	int ij_index;
+#endif
 	int two_side = (ctx->two_side && input->name == TGSI_SEMANTIC_COLOR);
 	LLVMValueRef v;
+#if HAVE_LLVM >= 0x0304
+	boolean require_interp_intrinsic = ctx->chip_class >= EVERGREEN &&
+		ctx->type == TGSI_PROCESSOR_FRAGMENT;
+#endif
 
+#if HAVE_LLVM >= 0x0304
+	if (require_interp_intrinsic && input->spi_sid) {
+		v = llvm_load_input_vector(ctx, input->lds_pos, input->ij_index,
+			(input->interpolate > 0));
+	} else
+		v = LLVMGetParam(ctx->main_fn, input->gpr);
+
+	if (two_side) {
+		struct r600_shader_io * back_input =
+			&ctx->r600_inputs[input->back_color_input];
+		LLVMValueRef v2;
+		LLVMValueRef face = LLVMGetParam(ctx->main_fn, ctx->face_gpr);
+		face = LLVMBuildExtractElement(ctx->gallivm.builder, face,
+			lp_build_const_int32(&(ctx->gallivm), 0), "");
+
+		if (require_interp_intrinsic && back_input->spi_sid)
+			v2 = llvm_load_input_vector(ctx, back_input->lds_pos,
+				back_input->ij_index, (back_input->interpolate > 0));
+		else
+			v2 = LLVMGetParam(ctx->main_fn, back_input->gpr);
+		v = llvm_face_select_helper(ctx, face, v, v2);
+	}
+
+	for (chan = 0; chan < 4; chan++) {
+		unsigned soa_index = radeon_llvm_reg_index_soa(input_index, chan);
+
+		ctx->inputs[soa_index] = LLVMBuildExtractElement(ctx->gallivm.builder, v,
+			lp_build_const_int32(&(ctx->gallivm), chan), "");
+
+		if (input->name == TGSI_SEMANTIC_POSITION &&
+				ctx->type == TGSI_PROCESSOR_FRAGMENT && chan == 3) {
+		/* RCP for fragcoord.w */
+		ctx->inputs[soa_index] = LLVMBuildFDiv(ctx->gallivm.builder,
+				lp_build_const_float(&(ctx->gallivm), 1.0f),
+				ctx->inputs[soa_index], "");
+	}
+}
+#else
 	if (ctx->chip_class >= EVERGREEN && ctx->type == TGSI_PROCESSOR_FRAGMENT &&
 			input->spi_sid) {
 		interp = 1;
@@ -175,6 +283,7 @@ static void llvm_load_input(
 
 		ctx->inputs[soa_index] = v;
 	}
+#endif
 }
 
 static void llvm_emit_prologue(struct lp_build_tgsi_context * bld_base)
@@ -404,14 +513,31 @@ static void llvm_emit_tex(
 	struct lp_build_emit_data * emit_data)
 {
 	struct gallivm_state * gallivm = bld_base->base.gallivm;
-	LLVMValueRef args[6];
+	LLVMValueRef args[7];
 	unsigned c, sampler_src;
+	struct radeon_llvm_context * ctx = radeon_llvm_context(bld_base);
 
 	if (emit_data->inst->Texture.Texture == TGSI_TEXTURE_BUFFER) {
 		switch (emit_data->inst->Instruction.Opcode) {
 		case TGSI_OPCODE_TXQ: {
-			LLVMValueRef offset = lp_build_const_int32(bld_base->base.gallivm, 1);
-			LLVMValueRef cvecval = llvm_load_const_buffer(bld_base, offset, R600_BUFFER_INFO_CONST_BUFFER);
+			struct radeon_llvm_context * ctx = radeon_llvm_context(bld_base);
+			ctx->uses_tex_buffers = true;
+			bool isEgPlus = (ctx->chip_class >= EVERGREEN);
+			LLVMValueRef offset = lp_build_const_int32(bld_base->base.gallivm,
+				isEgPlus ? 0 : 1);
+			LLVMValueRef cvecval = llvm_load_const_buffer(bld_base, offset,
+				LLVM_R600_BUFFER_INFO_CONST_BUFFER);
+			if (!isEgPlus) {
+				LLVMValueRef maskval[4] = {
+					lp_build_const_int32(gallivm, 1),
+					lp_build_const_int32(gallivm, 2),
+					lp_build_const_int32(gallivm, 3),
+					lp_build_const_int32(gallivm, 0),
+				};
+				LLVMValueRef mask = LLVMConstVector(maskval, 4);
+				cvecval = LLVMBuildShuffleVector(gallivm->builder, cvecval, cvecval,
+					mask, "");
+			}
 			emit_data->output[0] = cvecval;
 			return;
 		}
@@ -421,6 +547,35 @@ static void llvm_emit_tex(
 			emit_data->output[0] = build_intrinsic(gallivm->builder,
 							"llvm.R600.load.texbuf",
 							emit_data->dst_type, args, 2, LLVMReadNoneAttribute);
+			if (ctx->chip_class >= EVERGREEN)
+				return;
+			ctx->uses_tex_buffers = true;
+			LLVMDumpValue(emit_data->output[0]);
+			emit_data->output[0] = LLVMBuildBitCast(gallivm->builder,
+				emit_data->output[0], LLVMVectorType(bld_base->base.int_elem_type, 4),
+				"");
+			LLVMValueRef Mask = llvm_load_const_buffer(bld_base,
+				lp_build_const_int32(gallivm, 0),
+				LLVM_R600_BUFFER_INFO_CONST_BUFFER);
+			Mask = LLVMBuildBitCast(gallivm->builder, Mask,
+				LLVMVectorType(bld_base->base.int_elem_type, 4), "");
+			emit_data->output[0] = lp_build_emit_llvm_binary(bld_base, TGSI_OPCODE_AND,
+				emit_data->output[0],
+				Mask);
+			LLVMValueRef WComponent = LLVMBuildExtractElement(gallivm->builder,
+				emit_data->output[0], lp_build_const_int32(gallivm, 3), "");
+			Mask = llvm_load_const_buffer(bld_base, lp_build_const_int32(gallivm, 1),
+				LLVM_R600_BUFFER_INFO_CONST_BUFFER);
+			Mask = LLVMBuildExtractElement(gallivm->builder, Mask,
+				lp_build_const_int32(gallivm, 0), "");
+			Mask = LLVMBuildBitCast(gallivm->builder, Mask,
+				bld_base->base.int_elem_type, "");
+			WComponent = lp_build_emit_llvm_binary(bld_base, TGSI_OPCODE_OR,
+				WComponent, Mask);
+			emit_data->output[0] = LLVMBuildInsertElement(gallivm->builder,
+				emit_data->output[0], WComponent, lp_build_const_int32(gallivm, 3), "");
+			emit_data->output[0] = LLVMBuildBitCast(gallivm->builder,
+				emit_data->output[0], LLVMVectorType(bld_base->base.elem_type, 4), "");
 		}
 			return;
 		default:
@@ -428,7 +583,8 @@ static void llvm_emit_tex(
 		}
 	}
 
-	if (emit_data->inst->Instruction.Opcode == TGSI_OPCODE_TEX) {
+	if (emit_data->inst->Instruction.Opcode == TGSI_OPCODE_TEX ||
+		emit_data->inst->Instruction.Opcode == TGSI_OPCODE_TXP) {
 		LLVMValueRef Vector[4] = {
 			LLVMBuildExtractElement(gallivm->builder, emit_data->args[0],
 				lp_build_const_int32(gallivm, 0), ""),
@@ -474,6 +630,55 @@ static void llvm_emit_tex(
 					emit_data->inst->Src[sampler_src].Register.Index);
 	args[c++] = lp_build_const_int32(gallivm,
 					emit_data->inst->Texture.Texture);
+
+	if (emit_data->inst->Instruction.Opcode == TGSI_OPCODE_TXF &&
+		(emit_data->inst->Texture.Texture == TGSI_TEXTURE_2D_MSAA ||
+		emit_data->inst->Texture.Texture == TGSI_TEXTURE_2D_ARRAY_MSAA)) {
+
+		switch (emit_data->inst->Texture.Texture) {
+		case TGSI_TEXTURE_2D_MSAA:
+			args[6] = lp_build_const_int32(gallivm, TGSI_TEXTURE_2D);
+			break;
+		case TGSI_TEXTURE_2D_ARRAY_MSAA:
+			args[6] = lp_build_const_int32(gallivm, TGSI_TEXTURE_2D_ARRAY);
+			break;
+		default:
+			break;
+		}
+
+		if (ctx->has_compressed_msaa_texturing) {
+			LLVMValueRef ldptr_args[10] = {
+				args[0], // Coord
+				args[1], // Offset X
+				args[2], // Offset Y
+				args[3], // Offset Z
+				args[4],
+				args[5],
+				lp_build_const_int32(gallivm, 1),
+				lp_build_const_int32(gallivm, 1),
+				lp_build_const_int32(gallivm, 1),
+				lp_build_const_int32(gallivm, 1)
+			};
+			LLVMValueRef ptr = build_intrinsic(gallivm->builder,
+				"llvm.R600.ldptr",
+				emit_data->dst_type, ldptr_args, 10, LLVMReadNoneAttribute);
+			LLVMValueRef Tmp = LLVMBuildExtractElement(gallivm->builder, args[0],
+				lp_build_const_int32(gallivm, 3), "");
+			Tmp = LLVMBuildMul(gallivm->builder, Tmp,
+				lp_build_const_int32(gallivm, 4), "");
+			LLVMValueRef ResX = LLVMBuildExtractElement(gallivm->builder, ptr,
+				lp_build_const_int32(gallivm, 0), "");
+			ResX = LLVMBuildBitCast(gallivm->builder, ResX,
+				bld_base->base.int_elem_type, "");
+			Tmp = LLVMBuildLShr(gallivm->builder, ResX, Tmp, "");
+			Tmp = LLVMBuildAnd(gallivm->builder, Tmp,
+				lp_build_const_int32(gallivm, 0xF), "");
+			args[0] = LLVMBuildInsertElement(gallivm->builder, args[0], Tmp,
+				lp_build_const_int32(gallivm, 3), "");
+			args[c++] = lp_build_const_int32(gallivm,
+				emit_data->inst->Texture.Texture);
+		}
+	}
 
 	emit_data->output[0] = build_intrinsic(gallivm->builder,
 					action->intr_name,
@@ -559,7 +764,19 @@ LLVMModuleRef r600_tgsi_llvm(
 	struct tgsi_shader_info shader_info;
 	struct lp_build_tgsi_context * bld_base = &ctx->soa.bld_base;
 	radeon_llvm_context_init(ctx);
+#if HAVE_LLVM >= 0x0304
+	LLVMTypeRef Arguments[32];
+	unsigned ArgumentsCount = 0;
+	for (unsigned i = 0; i < ctx->inputs_count; i++)
+		Arguments[ArgumentsCount++] = LLVMVectorType(bld_base->base.elem_type, 4);
+	radeon_llvm_create_func(ctx, Arguments, ArgumentsCount);
+	for (unsigned i = 0; i < ctx->inputs_count; i++) {
+		LLVMValueRef P = LLVMGetParam(ctx->main_fn, i);
+		LLVMAddAttribute(P, LLVMInRegAttribute);
+	}
+#else
 	radeon_llvm_create_func(ctx, NULL, 0);
+#endif
 	tgsi_scan_shader(tokens, &shader_info);
 
 	bld_base->info = &shader_info;
@@ -610,10 +827,11 @@ unsigned r600_llvm_compile(
 	unsigned dump)
 {
 	unsigned r;
-	struct radeon_llvm_binary binary;
-	const char * gpu_family = r600_llvm_gpu_string(family);
+	struct radeon_shader_binary binary;
+	const char * gpu_family = r600_get_llvm_processor_name(family);
 	unsigned i;
 
+	memset(&binary, 0, sizeof(struct radeon_shader_binary));
 	r = radeon_llvm_compile(mod, &binary, gpu_family, dump);
 
 	assert(binary.code_size % 4 == 0);
@@ -645,6 +863,9 @@ unsigned r600_llvm_compile(
 			break;
 		}
 	}
+
+	FREE(binary.code);
+	FREE(binary.config);
 
 	return r;
 }

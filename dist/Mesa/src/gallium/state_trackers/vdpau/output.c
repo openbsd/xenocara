@@ -19,7 +19,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -32,6 +32,7 @@
 #include "util/u_memory.h"
 #include "util/u_sampler.h"
 #include "util/u_format.h"
+#include "util/u_surface.h"
 
 #include "vl/vl_csc.h"
 
@@ -79,44 +80,32 @@ vlVdpOutputSurfaceCreate(VdpDevice device,
    res_tmpl.depth0 = 1;
    res_tmpl.array_size = 1;
    res_tmpl.bind = PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_RENDER_TARGET;
-   res_tmpl.usage = PIPE_USAGE_STATIC;
+   res_tmpl.usage = PIPE_USAGE_DEFAULT;
 
    pipe_mutex_lock(dev->mutex);
+
+   if (!CheckSurfaceParams(pipe->screen, &res_tmpl))
+      goto err_unlock;
+
    res = pipe->screen->resource_create(pipe->screen, &res_tmpl);
-   if (!res) {
-      pipe_mutex_unlock(dev->mutex);
-      FREE(dev);
-      FREE(vlsurface);
-      return VDP_STATUS_ERROR;
-   }
+   if (!res)
+      goto err_unlock;
 
    vlVdpDefaultSamplerViewTemplate(&sv_templ, res);
    vlsurface->sampler_view = pipe->create_sampler_view(pipe, res, &sv_templ);
-   if (!vlsurface->sampler_view) {
-      pipe_resource_reference(&res, NULL);
-      pipe_mutex_unlock(dev->mutex);
-      FREE(dev);
-      return VDP_STATUS_ERROR;
-   }
+   if (!vlsurface->sampler_view)
+      goto err_resource;
 
    memset(&surf_templ, 0, sizeof(surf_templ));
    surf_templ.format = res->format;
    vlsurface->surface = pipe->create_surface(pipe, res, &surf_templ);
-   if (!vlsurface->surface) {
-      pipe_resource_reference(&res, NULL);
-      pipe_mutex_unlock(dev->mutex);
-      FREE(dev);
-      return VDP_STATUS_ERROR;
-   }
+   if (!vlsurface->surface)
+      goto err_resource;
 
    *surface = vlAddDataHTAB(vlsurface);
-   if (*surface == 0) {
-      pipe_resource_reference(&res, NULL);
-      pipe_mutex_unlock(dev->mutex);
-      FREE(dev);
-      return VDP_STATUS_ERROR;
-   }
-   
+   if (*surface == 0)
+      goto err_resource;
+
    pipe_resource_reference(&res, NULL);
 
    vl_compositor_init_state(&vlsurface->cstate, pipe);
@@ -124,6 +113,15 @@ vlVdpOutputSurfaceCreate(VdpDevice device,
    pipe_mutex_unlock(dev->mutex);
 
    return VDP_STATUS_OK;
+
+err_resource:
+   pipe_sampler_view_reference(&vlsurface->sampler_view, NULL);
+   pipe_surface_reference(&vlsurface->surface, NULL);
+   pipe_resource_reference(&res, NULL);
+err_unlock:
+   pipe_mutex_unlock(dev->mutex);
+   FREE(vlsurface);
+   return VDP_STATUS_ERROR;
 }
 
 /**
@@ -325,6 +323,9 @@ vlVdpOutputSurfacePutBitsIndexed(VdpOutputSurface surface,
    pipe_mutex_lock(vlsurface->device->mutex);
    vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
 
+   if (!CheckSurfaceParams(context->screen, &res_tmpl))
+      goto error_resource;
+
    res = context->screen->resource_create(context->screen, &res_tmpl);
    if (!res)
       goto error_resource;
@@ -441,7 +442,7 @@ vlVdpOutputSurfacePutBitsYCbCr(VdpOutputSurface surface,
    vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
    memset(&vtmpl, 0, sizeof(vtmpl));
    vtmpl.buffer_format = format;
-   vtmpl.chroma_format = PIPE_VIDEO_CHROMA_FORMAT_420;
+   vtmpl.chroma_format = FormatYCBCRToPipeChroma(source_ycbcr_format);
 
    if (destination_rect) {
       vtmpl.width = abs(destination_rect->x0-destination_rect->x1);
@@ -657,6 +658,11 @@ vlVdpOutputSurfaceRenderOutputSurface(VdpOutputSurface destination_surface,
    vl_compositor_set_rgba_layer(cstate, compositor, 0, src_vlsurface->sampler_view,
                                 RectToPipe(source_rect, &src_rect), NULL,
                                 ColorsToPipe(colors, flags, vlcolors));
+   STATIC_ASSERT(VL_COMPOSITOR_ROTATE_0 == VDP_OUTPUT_SURFACE_RENDER_ROTATE_0);
+   STATIC_ASSERT(VL_COMPOSITOR_ROTATE_90 == VDP_OUTPUT_SURFACE_RENDER_ROTATE_90);
+   STATIC_ASSERT(VL_COMPOSITOR_ROTATE_180 == VDP_OUTPUT_SURFACE_RENDER_ROTATE_180);
+   STATIC_ASSERT(VL_COMPOSITOR_ROTATE_270 == VDP_OUTPUT_SURFACE_RENDER_ROTATE_270);
+   vl_compositor_set_layer_rotation(cstate, 0, flags & 3);
    vl_compositor_set_layer_dst_area(cstate, 0, RectToPipe(destination_rect, &dst_rect));
    vl_compositor_render(cstate, compositor, dst_vlsurface->surface, &dst_vlsurface->dirty_area, false);
 
@@ -716,6 +722,7 @@ vlVdpOutputSurfaceRenderBitmapSurface(VdpOutputSurface destination_surface,
    vl_compositor_set_rgba_layer(cstate, compositor, 0, src_vlsurface->sampler_view,
                                 RectToPipe(source_rect, &src_rect), NULL,
                                 ColorsToPipe(colors, flags, vlcolors));
+   vl_compositor_set_layer_rotation(cstate, 0, flags & 3);
    vl_compositor_set_layer_dst_area(cstate, 0, RectToPipe(destination_rect, &dst_rect));
    vl_compositor_render(cstate, compositor, dst_vlsurface->surface, &dst_vlsurface->dirty_area, false);
 
@@ -723,4 +730,20 @@ vlVdpOutputSurfaceRenderBitmapSurface(VdpOutputSurface destination_surface,
    pipe_mutex_unlock(dst_vlsurface->device->mutex);
 
    return VDP_STATUS_OK;
+}
+
+struct pipe_resource *vlVdpOutputSurfaceGallium(VdpOutputSurface surface)
+{
+   vlVdpOutputSurface *vlsurface;
+
+   vlsurface = vlGetDataHTAB(surface);
+   if (!vlsurface || !vlsurface->surface)
+      return NULL;
+
+   pipe_mutex_lock(vlsurface->device->mutex);
+   vlVdpResolveDelayedRendering(vlsurface->device, NULL, NULL);
+   vlsurface->device->context->flush(vlsurface->device->context, NULL, 0);
+   pipe_mutex_unlock(vlsurface->device->mutex);
+
+   return vlsurface->surface->texture;
 }

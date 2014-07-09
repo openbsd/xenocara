@@ -41,7 +41,7 @@
 # - info gettext
 
 # The set of supported languages. Add languages as needed.
-POS=de.po es.po nl.po fr.po sv.po
+POS=ca.po de.po es.po nl.po fr.po sv.po
 
 #
 # Don't change anything below, unless you know what you're doing.
@@ -69,7 +69,7 @@ options.h: t_options.h $(MOS)
 	@mo="$@"; \
 	lang=$${mo%%/*}; \
 	echo "Updating ($$lang) $@ from $?."; \
-	mkdir -p $$lang/LC_MESSAGES; \
+	$(MKDIR_P) $$lang/LC_MESSAGES; \
 	msgfmt -o $@ $?
 
 # Use this target to create or update .po files with new messages in

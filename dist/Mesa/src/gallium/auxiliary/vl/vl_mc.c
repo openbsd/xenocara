@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -613,8 +613,10 @@ vl_mc_render_ref(struct vl_mc *renderer, struct vl_mc_buffer *buffer, struct pip
    renderer->pipe->bind_vs_state(renderer->pipe, renderer->vs_ref);
    renderer->pipe->bind_fs_state(renderer->pipe, renderer->fs_ref);
 
-   renderer->pipe->set_fragment_sampler_views(renderer->pipe, 1, &ref);
-   renderer->pipe->bind_fragment_sampler_states(renderer->pipe, 1, &renderer->sampler_ref);
+   renderer->pipe->set_sampler_views(renderer->pipe, PIPE_SHADER_FRAGMENT,
+                                     0, 1, &ref);
+   renderer->pipe->bind_sampler_states(renderer->pipe, PIPE_SHADER_FRAGMENT,
+                                       0, 1, &renderer->sampler_ref);
 
    util_draw_arrays_instanced(renderer->pipe, PIPE_PRIM_QUADS, 0, 4, 0,
                               renderer->buffer_width / VL_MACROBLOCK_WIDTH *

@@ -44,11 +44,11 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
                         float src_x1, float src_y1,
                         float dst_x0, float dst_y0,
                         float dst_x1, float dst_y1,
-                        bool mirror_x, bool mirror_y);
+                        GLenum filter, bool mirror_x, bool mirror_y);
 
 bool
 brw_blorp_clear_color(struct brw_context *brw, struct gl_framebuffer *fb,
-                      bool partial_clear);
+                      GLbitfield mask, bool partial_clear);
 
 void
 brw_blorp_resolve_color(struct brw_context *brw,
@@ -85,6 +85,11 @@ public:
    /**
     * The 2D layer within the miplevel. Combined, level and layer define the
     * 2D miptree slice to use.
+    *
+    * Note: if mt is a 2D multisample array texture on Gen7+ using
+    * INTEL_MSAA_LAYOUT_UMS or INTEL_MSAA_LAYOUT_CMS, layer is the physical
+    * layer holding sample 0.  So, for example, if mt->num_samples == 4, then
+    * logical layer n corresponds to layer == 4*n.
     */
    uint32_t layer;
 
@@ -122,17 +127,18 @@ public:
 
    void set(struct brw_context *brw,
             struct intel_mipmap_tree *mt,
-            unsigned int level, unsigned int layer);
+            unsigned int level, unsigned int layer,
+            bool is_render_target);
 
    uint32_t compute_tile_offsets(uint32_t *tile_x, uint32_t *tile_y) const;
 
    /* Setting this flag indicates that the buffer's contents are W-tiled
     * stencil data, but the surface state should be set up for Y tiled
-    * MESA_FORMAT_R8 data (this is necessary because surface states don't
+    * MESA_FORMAT_R_UNORM8 data (this is necessary because surface states don't
     * support W tiling).
     *
     * Since W tiles are 64 pixels wide by 64 pixels high, whereas Y tiles of
-    * MESA_FORMAT_R8 data are 128 pixels wide by 32 pixels high, the width and
+    * MESA_FORMAT_R_UNORM8 data are 128 pixels wide by 32 pixels high, the width and
     * pitch stored in the surface state will be multiplied by 2, and the
     * height will be halved.  Also, since W and Y tiles store their data in a
     * different order, the width and height will be rounded up to a multiple
@@ -178,11 +184,9 @@ struct brw_blorp_wm_push_constants
    uint32_t dst_x1;
    uint32_t dst_y0;
    uint32_t dst_y1;
-   /* Top right coordinates of the rectangular sample grid used for
-    * multisample scaled blitting.
-    */
-   float sample_grid_x1;
-   float sample_grid_y1;
+   /* Top right coordinates of the rectangular grid used for scaled blitting */
+   float rect_grid_x1;
+   float rect_grid_y1;
    brw_blorp_coord_transform_params x_transform;
    brw_blorp_coord_transform_params y_transform;
    /* Pad out to an integral number of registers */
@@ -230,7 +234,6 @@ public:
    brw_blorp_surface_info dst;
    enum gen6_hiz_op hiz_op;
    enum gen7_fast_clear_op fast_clear_op;
-   unsigned num_samples;
    bool use_wm_prog;
    brw_blorp_wm_push_constants wm_push_consts;
    bool color_write_disable[4];
@@ -335,6 +338,9 @@ struct brw_blorp_blit_prog_key
     */
    float x_scale;
    float y_scale;
+
+   /* True for blits with filter = GL_LINEAR. */
+   bool bilinear_filter;
 };
 
 class brw_blorp_blit_params : public brw_blorp_params
@@ -349,7 +355,7 @@ public:
                          GLfloat src_x1, GLfloat src_y1,
                          GLfloat dst_x0, GLfloat dst_y0,
                          GLfloat dst_x1, GLfloat dst_y1,
-                         bool mirror_x, bool mirror_y);
+                         GLenum filter, bool mirror_x, bool mirror_y);
 
    virtual uint32_t get_wm_prog(struct brw_context *brw,
                                 brw_blorp_prog_data **prog_data) const;
@@ -367,10 +373,6 @@ private:
 
 void
 gen6_blorp_init(struct brw_context *brw);
-
-void
-gen6_blorp_emit_batch_head(struct brw_context *brw,
-                           const brw_blorp_params *params);
 
 void
 gen6_blorp_emit_state_base_address(struct brw_context *brw,

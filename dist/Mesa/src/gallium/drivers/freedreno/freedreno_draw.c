@@ -36,27 +36,9 @@
 #include "freedreno_context.h"
 #include "freedreno_state.h"
 #include "freedreno_resource.h"
+#include "freedreno_query_hw.h"
 #include "freedreno_util.h"
 
-
-static enum pc_di_primtype
-mode2primtype(unsigned mode)
-{
-	switch (mode) {
-	case PIPE_PRIM_POINTS:         return DI_PT_POINTLIST;
-	case PIPE_PRIM_LINES:          return DI_PT_LINELIST;
-	case PIPE_PRIM_LINE_STRIP:     return DI_PT_LINESTRIP;
-	case PIPE_PRIM_TRIANGLES:      return DI_PT_TRILIST;
-	case PIPE_PRIM_TRIANGLE_STRIP: return DI_PT_TRISTRIP;
-	case PIPE_PRIM_TRIANGLE_FAN:   return DI_PT_TRIFAN;
-	case PIPE_PRIM_QUADS:          return DI_PT_QUADLIST;
-	case PIPE_PRIM_QUAD_STRIP:     return DI_PT_QUADSTRIP;
-	case PIPE_PRIM_POLYGON:        return DI_PT_POLYGON;
-	}
-	DBG("unsupported mode: (%s) %d", u_prim_name(mode), mode);
-	assert(0);
-	return DI_PT_NONE;
-}
 
 static enum pc_di_index_size
 size2indextype(unsigned index_size)
@@ -73,9 +55,10 @@ size2indextype(unsigned index_size)
 
 /* this is same for a2xx/a3xx, so split into helper: */
 void
-fd_draw_emit(struct fd_context *ctx, const struct pipe_draw_info *info)
+fd_draw_emit(struct fd_context *ctx, struct fd_ringbuffer *ring,
+		enum pc_di_vis_cull_mode vismode,
+		const struct pipe_draw_info *info)
 {
-	struct fd_ringbuffer *ring = ctx->ring;
 	struct pipe_index_buffer *idx = &ctx->indexbuf;
 	struct fd_bo *idx_bo = NULL;
 	enum pc_di_index_size idx_type = INDEX_SIZE_IGN;
@@ -88,7 +71,7 @@ fd_draw_emit(struct fd_context *ctx, const struct pipe_draw_info *info)
 		idx_bo = fd_resource(idx->buffer)->bo;
 		idx_type = size2indextype(idx->index_size);
 		idx_size = idx->index_size * info->count;
-		idx_offset = idx->offset;
+		idx_offset = idx->offset + (info->start * idx->index_size);
 		src_sel = DI_SRC_SEL_DMA;
 	} else {
 		idx_bo = NULL;
@@ -98,15 +81,8 @@ fd_draw_emit(struct fd_context *ctx, const struct pipe_draw_info *info)
 		src_sel = DI_SRC_SEL_AUTO_INDEX;
 	}
 
-	OUT_PKT3(ring, CP_DRAW_INDX, info->indexed ? 5 : 3);
-	OUT_RING(ring, 0x00000000);        /* viz query info. */
-	OUT_RING(ring, DRAW(mode2primtype(info->mode),
-			src_sel, idx_type, IGNORE_VISIBILITY));
-	OUT_RING(ring, info->count);       /* NumIndices */
-	if (info->indexed) {
-		OUT_RELOC(ring, idx_bo, idx_offset, 0, 0);
-		OUT_RING (ring, idx_size);
-	}
+	fd_draw(ctx, ring, ctx->primtypes[info->mode], vismode, src_sel,
+			info->count, idx_type, idx_size, idx_offset, idx_bo);
 }
 
 static void
@@ -120,6 +96,14 @@ fd_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info)
 	/* if we supported transform feedback, we'd have to disable this: */
 	if (((scissor->maxx - scissor->minx) *
 			(scissor->maxy - scissor->miny)) == 0) {
+		return;
+	}
+
+	/* emulate unsupported primitives: */
+	if (!fd_supported_prim(ctx, info->mode)) {
+		util_primconvert_save_index_buffer(ctx->primconvert, &ctx->indexbuf);
+		util_primconvert_save_rasterizer_state(ctx->primconvert, ctx->rasterizer);
+		util_primconvert_draw_vbo(ctx->primconvert, info);
 		return;
 	}
 
@@ -145,7 +129,12 @@ fd_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info)
 		ctx->gmem_reason |= FD_GMEM_LOGICOP_ENABLED;
 
 	for (i = 0; i < pfb->nr_cbufs; i++) {
-		struct pipe_resource *surf = pfb->cbufs[i]->texture;
+		struct pipe_resource *surf;
+
+		if (!pfb->cbufs[i])
+			continue;
+
+		surf = pfb->cbufs[i]->texture;
 
 		fd_resource(surf)->dirty = true;
 		buffers |= FD_BUFFER_COLOR;
@@ -159,11 +148,16 @@ fd_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info)
 
 	ctx->num_draws++;
 
+	ctx->stats.draw_calls++;
+	ctx->stats.prims_emitted +=
+		u_reduced_prims_for_vertices(info->mode, info->count);
+
 	/* any buffers that haven't been cleared, we need to restore: */
 	ctx->restore |= buffers & (FD_BUFFER_ALL & ~ctx->cleared);
 	/* and any buffers used, need to be resolved: */
 	ctx->resolve |= buffers;
 
+	fd_hw_query_set_stage(ctx, ctx->ring, FD_STAGE_DRAW);
 	ctx->draw(ctx, info);
 }
 
@@ -196,9 +190,12 @@ fd_clear(struct pipe_context *pctx, unsigned buffers,
 		util_format_short_name(pipe_surface_format(pfb->cbufs[0])),
 		util_format_short_name(pipe_surface_format(pfb->zsbuf)));
 
+	fd_hw_query_set_stage(ctx, ctx->ring, FD_STAGE_CLEAR);
+
 	ctx->clear(ctx, buffers, color, depth, stencil);
 
 	ctx->dirty |= FD_DIRTY_ZSA |
+			FD_DIRTY_VIEWPORT |
 			FD_DIRTY_RASTERIZER |
 			FD_DIRTY_SAMPLE_MASK |
 			FD_DIRTY_PROG |

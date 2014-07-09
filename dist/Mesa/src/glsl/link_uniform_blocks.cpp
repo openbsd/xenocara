@@ -29,6 +29,8 @@
 #include "main/hash_table.h"
 #include "program.h"
 
+namespace {
+
 class ubo_visitor : public program_resource_visitor {
 public:
    ubo_visitor(void *mem_ctx, gl_uniform_buffer_variable *variables,
@@ -147,12 +149,14 @@ private:
    }
 };
 
+} /* anonymous namespace */
+
 struct block {
    const glsl_type *type;
    bool has_instance_name;
 };
 
-int
+unsigned
 link_uniform_blocks(void *mem_ctx,
                     struct gl_shader_program *prog,
                     struct gl_shader **shader_list,
@@ -247,7 +251,17 @@ link_uniform_blocks(void *mem_ctx,
             blocks[i].Name = ralloc_asprintf(blocks, "%s[%u]", name,
                                              b->array_elements[j]);
             blocks[i].Uniforms = &variables[parcel.index];
-            blocks[i].Binding = 0;
+
+            /* The GL_ARB_shading_language_420pack spec says:
+             *
+             *     "If the binding identifier is used with a uniform block
+             *     instanced as an array then the first element of the array
+             *     takes the specified block binding and each subsequent
+             *     element takes the next consecutive uniform block binding
+             *     point."
+             */
+            blocks[i].Binding = (b->has_binding) ? b->binding + j : 0;
+
             blocks[i].UniformBufferSize = 0;
             blocks[i]._Packing =
                gl_uniform_block_packing(block_type->interface_packing);
@@ -265,7 +279,7 @@ link_uniform_blocks(void *mem_ctx,
       } else {
          blocks[i].Name = ralloc_strdup(blocks, block_type->name);
          blocks[i].Uniforms = &variables[parcel.index];
-         blocks[i].Binding = 0;
+         blocks[i].Binding = (b->has_binding) ? b->binding : 0;
          blocks[i].UniformBufferSize = 0;
          blocks[i]._Packing =
             gl_uniform_block_packing(block_type->interface_packing);

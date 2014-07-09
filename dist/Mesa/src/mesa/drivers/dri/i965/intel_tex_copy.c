@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ *
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,19 +10,19 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 #include "main/mtypes.h"
@@ -36,7 +36,6 @@
 
 #include "intel_screen.h"
 #include "intel_mipmap_tree.h"
-#include "intel_regions.h"
 #include "intel_fbo.h"
 #include "intel_tex.h"
 #include "intel_blit.h"
@@ -74,12 +73,17 @@ intel_copy_texsubimage(struct brw_context *brw,
       return false;
    }
 
+   /* account for view parameters and face index */
+   int dst_level = intelImage->base.Base.Level +
+                   intelImage->base.Base.TexObject->MinLevel;
+   int dst_slice = slice + intelImage->base.Base.Face +
+                   intelImage->base.Base.TexObject->MinLayer;
+
    /* blit from src buffer to texture */
    if (!intel_miptree_blit(brw,
                            irb->mt, irb->mt_level, irb->mt_layer,
                            x, y, irb->Base.Base.Name == 0,
-                           intelImage->mt, intelImage->base.Base.Level,
-                           intelImage->base.Base.Face + slice,
+                           intelImage->mt, dst_level, dst_slice,
                            dstx, dsty, false,
                            width, height, GL_COPY)) {
       return false;

@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -29,9 +29,14 @@
 
 #include "util/u_memory.h"
 #include "util/u_dl.h"
+#include "sw/dri/dri_sw_winsys.h"
 #include "sw/null/null_sw_winsys.h"
+#ifdef HAVE_PIPE_LOADER_XLIB
+/* Explicitly wrap the header to ease build without X11 headers */
+#include "sw/xlib/xlib_sw_winsys.h"
+#endif
 #include "target-helpers/inline_sw_helper.h"
-#include "state_tracker/xlib_sw_winsys.h"
+#include "state_tracker/drisw_api.h"
 
 struct pipe_loader_sw_device {
    struct pipe_loader_device base;
@@ -44,11 +49,75 @@ struct pipe_loader_sw_device {
 static struct pipe_loader_ops pipe_loader_sw_ops;
 
 static struct sw_winsys *(*backends[])() = {
-#ifdef HAVE_WINSYS_XLIB
-   x11_sw_create,
-#endif
    null_sw_create
 };
+
+#ifdef HAVE_PIPE_LOADER_XLIB
+bool
+pipe_loader_sw_probe_xlib(struct pipe_loader_device **devs, Display *display)
+{
+   struct pipe_loader_sw_device *sdev = CALLOC_STRUCT(pipe_loader_sw_device);
+
+   if (!sdev)
+      return false;
+
+   sdev->base.type = PIPE_LOADER_DEVICE_SOFTWARE;
+   sdev->base.driver_name = "swrast";
+   sdev->base.ops = &pipe_loader_sw_ops;
+   sdev->ws = xlib_create_sw_winsys(display);
+   if (!sdev->ws) {
+      FREE(sdev);
+      return false;
+   }
+   *devs = &sdev->base;
+
+   return true;
+}
+#endif
+
+#ifdef HAVE_PIPE_LOADER_DRI
+bool
+pipe_loader_sw_probe_dri(struct pipe_loader_device **devs, struct drisw_loader_funcs *drisw_lf)
+{
+   struct pipe_loader_sw_device *sdev = CALLOC_STRUCT(pipe_loader_sw_device);
+
+   if (!sdev)
+      return false;
+
+   sdev->base.type = PIPE_LOADER_DEVICE_SOFTWARE;
+   sdev->base.driver_name = "swrast";
+   sdev->base.ops = &pipe_loader_sw_ops;
+   sdev->ws = dri_create_sw_winsys(drisw_lf);
+   if (!sdev->ws) {
+      FREE(sdev);
+      return false;
+   }
+   *devs = &sdev->base;
+
+   return true;
+}
+#endif
+
+bool
+pipe_loader_sw_probe_null(struct pipe_loader_device **devs)
+{
+   struct pipe_loader_sw_device *sdev = CALLOC_STRUCT(pipe_loader_sw_device);
+
+   if (!sdev)
+      return false;
+
+   sdev->base.type = PIPE_LOADER_DEVICE_SOFTWARE;
+   sdev->base.driver_name = "swrast";
+   sdev->base.ops = &pipe_loader_sw_ops;
+   sdev->ws = null_sw_create();
+   if (!sdev->ws) {
+      FREE(sdev);
+      return false;
+   }
+   *devs = &sdev->base;
+
+   return true;
+}
 
 int
 pipe_loader_sw_probe(struct pipe_loader_device **devs, int ndev)
@@ -58,6 +127,7 @@ pipe_loader_sw_probe(struct pipe_loader_device **devs, int ndev)
    for (i = 0; i < Elements(backends); i++) {
       if (i < ndev) {
          struct pipe_loader_sw_device *sdev = CALLOC_STRUCT(pipe_loader_sw_device);
+	 /* TODO: handle CALLOC_STRUCT failure */
 
          sdev->base.type = PIPE_LOADER_DEVICE_SOFTWARE;
          sdev->base.driver_name = "swrast";
@@ -95,8 +165,11 @@ pipe_loader_sw_create_screen(struct pipe_loader_device *dev,
       return NULL;
 
    init = (void *)util_dl_get_proc_address(sdev->lib, "swrast_create_screen");
-   if (!init)
+   if (!init){
+      util_dl_close(sdev->lib);
+      sdev->lib = NULL;
       return NULL;
+   }
 
    return init(sdev->ws);
 }

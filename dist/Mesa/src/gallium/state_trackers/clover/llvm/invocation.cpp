@@ -26,9 +26,14 @@
 #include <clang/Frontend/TextDiagnosticBuffer.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 #include <clang/CodeGen/CodeGenAction.h>
+#include <clang/Basic/TargetInfo.h>
 #include <llvm/Bitcode/BitstreamWriter.h>
 #include <llvm/Bitcode/ReaderWriter.h>
+#if HAVE_LLVM < 0x0305
 #include <llvm/Linker.h>
+#else
+#include <llvm/Linker/Linker.h>
+#endif
 #if HAVE_LLVM < 0x0303
 #include <llvm/DerivedTypes.h>
 #include <llvm/LLVMContext.h>
@@ -59,6 +64,7 @@
 
 #include "pipe/p_state.h"
 #include "util/u_memory.h"
+#include "util/u_math.h"
 
 #include <iostream>
 #include <iomanip>
@@ -111,15 +117,17 @@ namespace {
 #endif
 
    llvm::Module *
-   compile(const std::string &source, const std::string &name,
-           const std::string &triple, const std::string &processor,
-           const std::string &opts) {
+   compile(llvm::LLVMContext &llvm_ctx, const std::string &source,
+           const std::string &name, const std::string &triple,
+           const std::string &processor, const std::string &opts,
+           clang::LangAS::Map& address_spaces) {
 
       clang::CompilerInstance c;
-      clang::CompilerInvocation invocation;
-      clang::EmitLLVMOnlyAction act(&llvm::getGlobalContext());
+      clang::EmitLLVMOnlyAction act(&llvm_ctx);
       std::string log;
       llvm::raw_string_ostream s_log(log);
+      std::string libclc_path = LIBCLC_LIBEXECDIR + processor + "-"
+                                                  + triple + ".bc";
 
       // Parse the compiler options:
       std::vector<std::string> opts_array;
@@ -154,7 +162,7 @@ namespace {
                                         opts_carray.data() + opts_carray.size(),
                                         Diags);
       if (!Success) {
-         throw invalid_option_error();
+         throw error(CL_INVALID_BUILD_OPTIONS);
       }
       c.getFrontendOpts().ProgramAction = clang::frontend::EmitLLVMOnly;
       c.getHeaderSearchOpts().UseBuiltinIncludes = true;
@@ -175,10 +183,16 @@ namespace {
 
       // clc.h requires that this macro be defined:
       c.getPreprocessorOpts().addMacroDef("cl_clang_storage_class_specifiers");
+      c.getPreprocessorOpts().addMacroDef("cl_khr_fp64");
 
       c.getLangOpts().NoBuiltin = true;
       c.getTargetOpts().Triple = triple;
       c.getTargetOpts().CPU = processor;
+
+      // This is a workaround for a Clang bug which causes the number
+      // of warnings and errors to be printed to stderr.
+      // http://www.llvm.org/bugs/show_bug.cgi?id=19735
+      c.getDiagnosticOpts().ShowCarets = false;
 #if HAVE_LLVM <= 0x0301
       c.getInvocation().setLangDefaults(clang::IK_OpenCL);
 #else
@@ -200,9 +214,22 @@ namespace {
       c.getPreprocessorOpts().addRemappedFile(name,
                                       llvm::MemoryBuffer::getMemBuffer(source));
 
+      // Setting this attribute tells clang to link this file before
+      // performing any optimizations.  This is required so that
+      // we can replace calls to the OpenCL C barrier() builtin
+      // with calls to target intrinsics that have the noduplicate
+      // attribute.  This attribute will prevent Clang from creating
+      // illegal uses of barrier() (e.g. Moving barrier() inside a conditional
+      // that is no executed by all threads) during its optimizaton passes.
+      c.getCodeGenOpts().LinkBitcodeFile = libclc_path;
+
       // Compile the code
       if (!c.ExecuteAction(act))
          throw build_error(log);
+
+      // Get address spaces map to be able to find kernel argument address space
+      memcpy(address_spaces, c.getTarget().getAddressSpaceMap(), 
+                                                        sizeof(address_spaces));
 
       return act.takeModule();
    }
@@ -225,32 +252,10 @@ namespace {
    }
 
    void
-   link(llvm::Module *mod, const std::string &triple,
-        const std::string &processor,
+   internalize_functions(llvm::Module *mod,
         const std::vector<llvm::Function *> &kernels) {
 
       llvm::PassManager PM;
-      llvm::PassManagerBuilder Builder;
-      std::string libclc_path = LIBCLC_LIBEXECDIR + processor + "-"
-                                                  + triple + ".bc";
-      // Link the kernel with libclc
-#if HAVE_LLVM < 0x0303
-      bool isNative;
-      llvm::Linker linker("clover", mod);
-      linker.LinkInFile(llvm::sys::Path(libclc_path), isNative);
-      mod = linker.releaseModule();
-#else
-      std::string err_str;
-      llvm::SMDiagnostic err;
-      llvm::Module *libclc_mod = llvm::ParseIRFile(libclc_path, err,
-                                                   mod->getContext());
-      if (llvm::Linker::LinkModules(mod, libclc_mod,
-                                    llvm::Linker::DestroySource,
-                                    &err_str)) {
-         throw build_error(err_str);
-      }
-#endif
-
       // Add a function internalizer pass.
       //
       // By default, the function internalizer pass will look for a function
@@ -273,16 +278,13 @@ namespace {
          export_list.push_back(kernel->getName().data());
       }
       PM.add(llvm::createInternalizePass(export_list));
-
-      // Run link time optimizations
-      Builder.OptLevel = 2;
-      Builder.populateLTOPassManager(PM, false, true);
       PM.run(*mod);
    }
 
    module
    build_module_llvm(llvm::Module *mod,
-                     const std::vector<llvm::Function *> &kernels) {
+                     const std::vector<llvm::Function *> &kernels,
+                     clang::LangAS::Map& address_spaces) {
 
       module m;
       struct pipe_llvm_program_header header;
@@ -306,16 +308,26 @@ namespace {
             llvm::Argument &arg = *I;
 #if HAVE_LLVM < 0x0302
             llvm::TargetData TD(kernel_func->getParent());
-#else
+#elif HAVE_LLVM < 0x0305
             llvm::DataLayout TD(kernel_func->getParent()->getDataLayout());
+#else
+            llvm::DataLayout TD(mod);
 #endif
 
             llvm::Type *arg_type = arg.getType();
-            unsigned arg_size = TD.getTypeStoreSize(arg_type);
+            const unsigned arg_store_size = TD.getTypeStoreSize(arg_type);
+
+            // OpenCL 1.2 specification, Ch. 6.1.5: "A built-in data
+            // type that is not a power of two bytes in size must be
+            // aligned to the next larger power of two".  We need this
+            // alignment for three element vectors, which have
+            // non-power-of-2 store size.
+            const unsigned arg_api_size =
+               util_next_power_of_two(arg_store_size);
 
             llvm::Type *target_type = arg_type->isIntegerTy() ?
-               TD.getSmallestLegalIntType(mod->getContext(), arg_size * 8) :
-               arg_type;
+               TD.getSmallestLegalIntType(mod->getContext(), arg_store_size * 8)
+               : arg_type;
             unsigned target_size = TD.getTypeStoreSize(target_type);
             unsigned target_align = TD.getABITypeAlignment(target_type);
 
@@ -325,18 +337,26 @@ namespace {
             }
 
             if (arg_type->isPointerTy()) {
-               // XXX: Figure out LLVM->OpenCL address space mappings for each
-               // target.  I think we need to ask clang what these are.  For now,
-               // pretend everything is in the global address space.
                unsigned address_space = llvm::cast<llvm::PointerType>(arg_type)->getAddressSpace();
-               switch (address_space) {
-                  default:
-                     args.push_back(
-                        module::argument(module::argument::global, arg_size,
-                                         target_size, target_align,
-                                         module::argument::zero_ext));
-                     break;
-               }
+               if (address_space == address_spaces[clang::LangAS::opencl_local
+                                                     - clang::LangAS::Offset]) {
+                  args.push_back(module::argument(module::argument::local,
+                                                  arg_api_size, target_size,
+                                                  target_align,
+                                                  module::argument::zero_ext));
+               } else {
+                  // XXX: Correctly handle constant address space.  There is no
+                  // way for r600g to pass a handle for constant buffers back
+                  // to clover like it can for global buffers, so
+                  // creating constant arguments will break r600g.  For now,
+                  // continue treating constant buffers as global buffers
+                  // until we can come up with a way to create handles for
+                  // constant buffers.
+                  args.push_back(module::argument(module::argument::global,
+                                                  arg_api_size, target_size,
+                                                  target_align,
+                                                  module::argument::zero_ext));
+              }
 
             } else {
                llvm::AttributeSet attrs = kernel_func->getAttributes();
@@ -347,7 +367,7 @@ namespace {
                    module::argument::zero_ext);
 
                args.push_back(
-                  module::argument(module::argument::scalar, arg_size,
+                  module::argument(module::argument::scalar, arg_api_size,
                                    target_size, target_align, ext_type));
             }
          }
@@ -378,14 +398,18 @@ clover::compile_program_llvm(const compat::string &source,
    std::string processor(target.begin(), 0, processor_str_len);
    std::string triple(target.begin(), processor_str_len + 1,
                       target.size() - processor_str_len - 1);
+   clang::LangAS::Map address_spaces;
+
+   llvm::LLVMContext llvm_ctx;
 
    // The input file name must have the .cl extension in order for the
    // CompilerInvocation class to recognize it as an OpenCL source file.
-   llvm::Module *mod = compile(source, "input.cl", triple, processor, opts);
+   llvm::Module *mod = compile(llvm_ctx, source, "input.cl", triple, processor,
+                               opts, address_spaces);
 
    find_kernels(mod, kernels);
 
-   link(mod, triple, processor, kernels);
+   internalize_functions(mod, kernels);
 
    // Build the clover::module
    switch (ir) {
@@ -394,6 +418,6 @@ clover::compile_program_llvm(const compat::string &source,
          assert(0);
          return module();
       default:
-         return build_module_llvm(mod, kernels);
+         return build_module_llvm(mod, kernels, address_spaces);
    }
 }

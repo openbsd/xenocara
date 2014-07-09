@@ -39,6 +39,7 @@
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
 #include "state_tracker/st_api.h"
+#include "postprocess/filters.h"
 
 struct dri_context;
 struct dri_drawable;
@@ -62,6 +63,9 @@ struct dri_screen
 
    /** The screen's effective configuration options */
    driOptionCache optionCache;
+
+   /* Which postprocessing filters are enabled. */
+   unsigned pp_enabled[PP_FILTERS];
 
    /* drm */
    int fd;
@@ -91,6 +95,15 @@ struct __DRIimageRec {
    uint32_t dri_components;
 
    void *loader_private;
+
+   /**
+    * Provided by EGL_EXT_image_dma_buf_import.
+    */
+   enum __DRIYUVColorSpace yuv_color_space;
+   enum __DRISampleRange sample_range;
+   enum __DRIChromaSiting horizontal_siting;
+   enum __DRIChromaSiting vertical_siting;
+
 };
 
 #ifndef __NOT_HAVE_DRM_H
@@ -128,6 +141,8 @@ dri_destroy_screen_helper(struct dri_screen * screen);
 
 void
 dri_destroy_screen(__DRIscreen * sPriv);
+
+extern const __DRIconfigOptionsExtension gallium_config_options;
 
 #endif
 

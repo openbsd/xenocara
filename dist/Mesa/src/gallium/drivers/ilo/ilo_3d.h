@@ -60,6 +60,7 @@ struct ilo_3d {
    struct list_head time_elapsed_queries;
    struct list_head prim_generated_queries;
    struct list_head prim_emitted_queries;
+   struct list_head pipeline_statistics_queries;
 
    struct ilo_3d_pipeline *pipeline;
 };
@@ -72,6 +73,9 @@ ilo_3d_destroy(struct ilo_3d *hw3d);
 
 void
 ilo_3d_cp_flushed(struct ilo_3d *hw3d);
+
+void
+ilo_3d_own_render_ring(struct ilo_3d *hw3d);
 
 void
 ilo_3d_begin_query(struct ilo_context *ilo, struct ilo_query *q);

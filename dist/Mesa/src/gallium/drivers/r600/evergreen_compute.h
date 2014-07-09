@@ -26,10 +26,17 @@
 
 #ifndef EVERGREEN_COMPUTE_H
 #define EVERGREEN_COMPUTE_H
+
 #include "r600_pipe.h"
 
 struct r600_atom;
 struct evergreen_compute_resource;
+struct compute_memory_item;
+
+struct r600_resource_global {
+	struct r600_resource base;
+	struct compute_memory_item *chunk;
+};
 
 void *evergreen_create_compute_state(struct pipe_context *ctx, const struct pipe_compute_state *cso);
 void evergreen_delete_compute_state(struct pipe_context *ctx, void *state);
@@ -55,7 +62,7 @@ void r600_compute_global_transfer_inline_write( struct pipe_context *, struct pi
 
 static inline void COMPUTE_DBG(struct r600_screen *rscreen, const char *fmt, ...)
 {
-	if (!(rscreen->debug_flags & DBG_COMPUTE)) {
+	if (!(rscreen->b.debug_flags & DBG_COMPUTE)) {
 		return;
 	}
 

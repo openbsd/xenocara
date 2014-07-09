@@ -19,7 +19,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -29,23 +29,26 @@
 #ifndef vl_decoder_h
 #define vl_decoder_h
 
-#include "pipe/p_video_decoder.h"
+#include "pipe/p_video_codec.h"
 
 /**
  * check if a given profile is supported with shader based decoding
  */
 bool
-vl_profile_supported(struct pipe_screen *screen, enum pipe_video_profile profile);
+vl_profile_supported(struct pipe_screen *screen, enum pipe_video_profile profile,
+                     enum pipe_video_entrypoint entrypoint);
 
 /**
- * standard implementation of pipe->create_video_decoder
+ * get the maximum supported level for the given profile with shader based decoding
  */
-struct pipe_video_decoder *
+int
+vl_level_supported(struct pipe_screen *screen, enum pipe_video_profile profile);
+
+/**
+ * standard implementation of pipe->create_video_codec
+ */
+struct pipe_video_codec *
 vl_create_decoder(struct pipe_context *pipe,
-                  enum pipe_video_profile profile,
-                  enum pipe_video_entrypoint entrypoint,
-                  enum pipe_video_chroma_format chroma_format,
-                  unsigned width, unsigned height, unsigned max_references,
-                  bool expect_chunked_decode);
+                  const struct pipe_video_codec *templat);
 
 #endif /* vl_decoder_h */

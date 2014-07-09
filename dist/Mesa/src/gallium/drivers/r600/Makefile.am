@@ -1,22 +1,17 @@
+AUTOMAKE_OPTIONS = subdir-objects
+
 include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
-noinst_LTLIBRARIES = libr600.la
-
 AM_CFLAGS = \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/include \
-	$(GALLIUM_CFLAGS) \
-	$(RADEON_CFLAGS) \
-	$(VISIBILITY_CFLAGS)
+	$(GALLIUM_DRIVER_CFLAGS) \
+	$(RADEON_CFLAGS)
 
 AM_CXXFLAGS = \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/gallium/include \
-	-I$(top_srcdir)/src/gallium/auxiliary \
-	$(RADEON_CFLAGS) \
-	$(DEFINES)
+	$(GALLIUM_DRIVER_CXXFLAGS) \
+	$(RADEON_CFLAGS)
+
+noinst_LTLIBRARIES = libr600.la
 
 libr600_la_SOURCES = \
 	$(C_SOURCES) \
@@ -24,16 +19,16 @@ libr600_la_SOURCES = \
 
 libr600_la_LIBADD = ../radeon/libradeon.la
 
-if R600_NEED_RADEON_GALLIUM
+if NEED_RADEON_LLVM
+
+AM_CFLAGS += \
+	$(LLVM_CFLAGS) \
+	-I$(top_srcdir)/src/gallium/drivers/radeon/
 
 libr600_la_SOURCES += \
 	$(LLVM_C_SOURCES)
 
 libr600_la_LIBADD += ../radeon/libllvmradeon.la
-
-AM_CFLAGS += \
-	$(LLVM_CFLAGS) \
-	-I$(top_srcdir)/src/gallium/drivers/radeon/
 
 endif
 

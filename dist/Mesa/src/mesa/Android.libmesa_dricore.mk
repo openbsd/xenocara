@@ -38,8 +38,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libmesa_dricore
 LOCAL_MODULE_CLASS := STATIC_LIBRARIES
 
-MESA_ENABLED_APIS := ES1 ES2 GL
-
 LOCAL_SRC_FILES := \
 	$(MESA_FILES)
 
@@ -49,13 +47,16 @@ ifeq ($(TARGET_ARCH),x86)
 endif # x86
 endif # MESA_ENABLE_ASM
 
-LOCAL_CFLAGS := \
-   $(patsubst %,-DFEATURE_%=1,$(MESA_ENABLED_APIS))
+ifeq ($(ARCH_X86_HAVE_SSE4_1),true)
+LOCAL_SRC_FILES += \
+	$(SRCDIR)main/streaming-load-memcpy.c
+endif
 
 LOCAL_C_INCLUDES := \
 	$(call intermediates-dir-for STATIC_LIBRARIES,libmesa_program,,) \
 	$(MESA_TOP)/src/mapi \
-	$(MESA_TOP)/src/glsl
+	$(MESA_TOP)/src/glsl \
+	$(MESA_TOP)/src/gallium/auxiliary
 
 LOCAL_WHOLE_STATIC_LIBRARIES := \
 	libmesa_program

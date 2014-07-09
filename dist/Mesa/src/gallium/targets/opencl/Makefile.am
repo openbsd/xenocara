@@ -1,17 +1,22 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
-lib_LTLIBRARIES = libOpenCL.la
+lib_LTLIBRARIES = lib@OPENCL_LIBNAME@.la
 
-libOpenCL_la_LDFLAGS = \
+lib@OPENCL_LIBNAME@_la_LDFLAGS = \
 	$(LLVM_LDFLAGS) \
-	-version-number 1:0
+	-no-undefined \
+	-version-number 1:0 \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/opencl/opencl.sym \
+	$(GC_SECTIONS) \
+	$(LD_NO_UNDEFINED)
 
-libOpenCL_la_LIBADD = \
-	$(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader.la \
+
+lib@OPENCL_LIBNAME@_la_LIBADD = \
+	$(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader_client.la \
 	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/state_trackers/clover/libclover.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(GALLIUM_PIPE_LOADER_LIBS) $(LIBUDEV_LIBS) \
+	$(GALLIUM_PIPE_LOADER_CLIENT_LIBS) \
 	-ldl \
 	-lclangCodeGen \
 	-lclangFrontendTool \
@@ -28,14 +33,25 @@ libOpenCL_la_LIBADD = \
 	-lclangBasic \
 	$(LLVM_LIBS)
 
+if HAVE_DRI
+lib@OPENCL_LIBNAME@_la_LIBADD += \
+	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
+endif
 
-libOpenCL_la_SOURCES =
+if NEED_WINSYS_XLIB
+lib@OPENCL_LIBNAME@_la_LIBADD += \
+	$(top_builddir)/src/gallium/winsys/sw/xlib/libws_xlib.la \
+	-lX11 -lXext -lXfixes \
+	$(LIBDRM_LIBS)
+endif
 
-# Force usage of a C++ linker
-nodist_EXTRA_libOpenCL_la_SOURCES = dummy.cpp
+nodist_EXTRA_lib@OPENCL_LIBNAME@_la_SOURCES = dummy.cpp
+lib@OPENCL_LIBNAME@_la_SOURCES =
 
-# Provide compatibility with scripts for the old Mesa build system for
-# a while by putting a link to the driver into /lib of the build tree.
-all-local: libOpenCL.la
-	$(MKDIR_P) $(top_builddir)/$(LIB_DIR)
-	ln -f .libs/libOpenCL.so* $(top_builddir)/$(LIB_DIR)/
+
+if HAVE_CLOVER_ICD
+icddir = /etc/OpenCL/vendors/
+icd_DATA = mesa.icd
+endif
+
+include $(top_srcdir)/install-gallium-links.mk

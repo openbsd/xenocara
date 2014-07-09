@@ -1,7 +1,7 @@
 /**************************************************************************
 
 Copyright 2000, 2001 ATI Technologies Inc., Ontario, Canada, and
-                     Tungsten Graphics Inc., Austin, Texas.
+                     VMware, Inc.
 
 All Rights Reserved.
 
@@ -29,7 +29,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /*
  * Authors:
- *   Keith Whitwell <keith@tungstengraphics.com>
+ *   Keith Whitwell <keithw@vmware.com>
  */
 
 #include "main/glheader.h"
@@ -39,6 +39,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/enums.h"
 #include "main/macros.h"
 
+#include "radeon_screen.h"
 #include "radeon_fog.h"
 
 /**********************************************************************/

@@ -412,6 +412,7 @@ hud_draw(struct hud_context *hud, struct pipe_resource *tex)
 
    cso_save_framebuffer(cso);
    cso_save_sample_mask(cso);
+   cso_save_min_samples(cso);
    cso_save_blend(cso);
    cso_save_depth_stencil_alpha(cso);
    cso_save_fragment_shader(cso);
@@ -450,11 +451,12 @@ hud_draw(struct hud_context *hud, struct pipe_resource *tex)
 
    cso_set_framebuffer(cso, &fb);
    cso_set_sample_mask(cso, ~0);
+   cso_set_min_samples(cso, 1);
    cso_set_blend(cso, &hud->alpha_blend);
    cso_set_depth_stencil_alpha(cso, &hud->dsa);
    cso_set_rasterizer(cso, &hud->rasterizer);
    cso_set_viewport(cso, &viewport);
-   cso_set_stream_outputs(cso, 0, NULL, 0);
+   cso_set_stream_outputs(cso, 0, NULL, NULL);
    cso_set_geometry_shader_handle(cso, NULL);
    cso_set_vertex_shader_handle(cso, hud->vs);
    cso_set_vertex_elements(cso, 2, hud->velems);
@@ -479,7 +481,7 @@ hud_draw(struct hud_context *hud, struct pipe_resource *tex)
    }
 
    /* unmap the uploader's vertex buffer before drawing */
-   u_upload_flush(hud->uploader);
+   u_upload_unmap(hud->uploader);
 
    /* draw accumulated vertices for background quads */
    cso_set_fragment_shader_handle(hud->cso, hud->fs_color);
@@ -538,6 +540,7 @@ hud_draw(struct hud_context *hud, struct pipe_resource *tex)
    /* restore states */
    cso_restore_framebuffer(cso);
    cso_restore_sample_mask(cso);
+   cso_restore_min_samples(cso);
    cso_restore_blend(cso);
    cso_restore_depth_stencil_alpha(cso);
    cso_restore_fragment_shader(cso);

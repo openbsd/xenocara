@@ -20,32 +20,43 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 //
 
-#ifndef __CORE_CONTEXT_HPP__
-#define __CORE_CONTEXT_HPP__
+#ifndef CLOVER_CORE_CONTEXT_HPP
+#define CLOVER_CORE_CONTEXT_HPP
 
-#include "core/base.hpp"
+#include "core/object.hpp"
 #include "core/device.hpp"
+#include "core/property.hpp"
 
 namespace clover {
-   typedef struct _cl_context context;
+   class context : public ref_counter, public _cl_context {
+   private:
+      typedef adaptor_range<
+            evals, const std::vector<intrusive_ref<device>> &
+         > device_range;
+      typedef clover::property_list<cl_context_properties> property_list;
+
+   public:
+      context(const property_list &props, const ref_vector<device> &devs);
+
+      context(const context &ctx) = delete;
+      context &
+      operator=(const context &ctx) = delete;
+
+      bool
+      operator==(const context &ctx) const;
+      bool
+      operator!=(const context &ctx) const;
+
+      const property_list &
+      properties() const;
+
+      device_range
+      devices() const;
+
+   private:
+      property_list props;
+      const std::vector<intrusive_ref<device>> devs;
+   };
 }
-
-struct _cl_context : public clover::ref_counter {
-public:
-   _cl_context(const std::vector<cl_context_properties> &props,
-               const std::vector<clover::device *> &devs);
-   _cl_context(const _cl_context &ctx) = delete;
-
-   bool has_device(clover::device *dev) const;
-
-   const std::vector<cl_context_properties> &props() const {
-      return __props;
-   }
-
-   const std::vector<clover::device *> devs;
-
-private:
-   std::vector<cl_context_properties> __props;
-};
 
 #endif

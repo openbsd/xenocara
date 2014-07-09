@@ -53,64 +53,64 @@
       &glsl_type::_struct_##NAME##_type;
 
 static const struct glsl_struct_field gl_DepthRangeParameters_fields[] = {
-   { glsl_type::float_type, "near", false },
-   { glsl_type::float_type, "far",  false },
-   { glsl_type::float_type, "diff", false },
+   { glsl_type::float_type, "near", false, -1 },
+   { glsl_type::float_type, "far",  false, -1 },
+   { glsl_type::float_type, "diff", false, -1 },
 };
 
 static const struct glsl_struct_field gl_PointParameters_fields[] = {
-   { glsl_type::float_type, "size", false },
-   { glsl_type::float_type, "sizeMin", false },
-   { glsl_type::float_type, "sizeMax", false },
-   { glsl_type::float_type, "fadeThresholdSize", false },
-   { glsl_type::float_type, "distanceConstantAttenuation", false },
-   { glsl_type::float_type, "distanceLinearAttenuation", false },
-   { glsl_type::float_type, "distanceQuadraticAttenuation", false },
+   { glsl_type::float_type, "size", false, -1 },
+   { glsl_type::float_type, "sizeMin", false, -1 },
+   { glsl_type::float_type, "sizeMax", false, -1 },
+   { glsl_type::float_type, "fadeThresholdSize", false, -1 },
+   { glsl_type::float_type, "distanceConstantAttenuation", false, -1 },
+   { glsl_type::float_type, "distanceLinearAttenuation", false, -1 },
+   { glsl_type::float_type, "distanceQuadraticAttenuation", false, -1 },
 };
 
 static const struct glsl_struct_field gl_MaterialParameters_fields[] = {
-   { glsl_type::vec4_type, "emission", false },
-   { glsl_type::vec4_type, "ambient", false },
-   { glsl_type::vec4_type, "diffuse", false },
-   { glsl_type::vec4_type, "specular", false },
-   { glsl_type::float_type, "shininess", false },
+   { glsl_type::vec4_type, "emission", false, -1 },
+   { glsl_type::vec4_type, "ambient", false, -1 },
+   { glsl_type::vec4_type, "diffuse", false, -1 },
+   { glsl_type::vec4_type, "specular", false, -1 },
+   { glsl_type::float_type, "shininess", false, -1 },
 };
 
 static const struct glsl_struct_field gl_LightSourceParameters_fields[] = {
-   { glsl_type::vec4_type, "ambient", false },
-   { glsl_type::vec4_type, "diffuse", false },
-   { glsl_type::vec4_type, "specular", false },
-   { glsl_type::vec4_type, "position", false },
-   { glsl_type::vec4_type, "halfVector", false },
-   { glsl_type::vec3_type, "spotDirection", false },
-   { glsl_type::float_type, "spotExponent", false },
-   { glsl_type::float_type, "spotCutoff", false },
-   { glsl_type::float_type, "spotCosCutoff", false },
-   { glsl_type::float_type, "constantAttenuation", false },
-   { glsl_type::float_type, "linearAttenuation", false },
-   { glsl_type::float_type, "quadraticAttenuation", false },
+   { glsl_type::vec4_type, "ambient", false, -1 },
+   { glsl_type::vec4_type, "diffuse", false, -1 },
+   { glsl_type::vec4_type, "specular", false, -1 },
+   { glsl_type::vec4_type, "position", false, -1 },
+   { glsl_type::vec4_type, "halfVector", false, -1 },
+   { glsl_type::vec3_type, "spotDirection", false, -1 },
+   { glsl_type::float_type, "spotExponent", false, -1 },
+   { glsl_type::float_type, "spotCutoff", false, -1 },
+   { glsl_type::float_type, "spotCosCutoff", false, -1 },
+   { glsl_type::float_type, "constantAttenuation", false, -1 },
+   { glsl_type::float_type, "linearAttenuation", false, -1 },
+   { glsl_type::float_type, "quadraticAttenuation", false, -1 },
 };
 
 static const struct glsl_struct_field gl_LightModelParameters_fields[] = {
-   { glsl_type::vec4_type, "ambient", false },
+   { glsl_type::vec4_type, "ambient", false, -1 },
 };
 
 static const struct glsl_struct_field gl_LightModelProducts_fields[] = {
-   { glsl_type::vec4_type, "sceneColor", false },
+   { glsl_type::vec4_type, "sceneColor", false, -1 },
 };
 
 static const struct glsl_struct_field gl_LightProducts_fields[] = {
-   { glsl_type::vec4_type, "ambient", false },
-   { glsl_type::vec4_type, "diffuse", false },
-   { glsl_type::vec4_type, "specular", false },
+   { glsl_type::vec4_type, "ambient", false, -1 },
+   { glsl_type::vec4_type, "diffuse", false, -1 },
+   { glsl_type::vec4_type, "specular", false, -1 },
 };
 
 static const struct glsl_struct_field gl_FogParameters_fields[] = {
-   { glsl_type::vec4_type, "color", false },
-   { glsl_type::float_type, "density", false },
-   { glsl_type::float_type, "start", false },
-   { glsl_type::float_type, "end", false },
-   { glsl_type::float_type, "scale", false },
+   { glsl_type::vec4_type, "color", false, -1 },
+   { glsl_type::float_type, "density", false, -1 },
+   { glsl_type::float_type, "start", false, -1 },
+   { glsl_type::float_type, "end", false, -1 },
+   { glsl_type::float_type, "scale", false, -1 },
 };
 
 #include "builtin_type_macros.h"
@@ -203,9 +203,45 @@ const static struct builtin_type_versions {
    T(sampler2DRectShadow,             140, 999)
 
    T(struct_gl_DepthRangeParameters,  110, 100)
+
+   T(image1D,                         420, 999)
+   T(image2D,                         420, 999)
+   T(image3D,                         420, 999)
+   T(image2DRect,                     420, 999)
+   T(imageCube,                       420, 999)
+   T(imageBuffer,                     420, 999)
+   T(image1DArray,                    420, 999)
+   T(image2DArray,                    420, 999)
+   T(imageCubeArray,                  420, 999)
+   T(image2DMS,                       420, 999)
+   T(image2DMSArray,                  420, 999)
+   T(iimage1D,                        420, 999)
+   T(iimage2D,                        420, 999)
+   T(iimage3D,                        420, 999)
+   T(iimage2DRect,                    420, 999)
+   T(iimageCube,                      420, 999)
+   T(iimageBuffer,                    420, 999)
+   T(iimage1DArray,                   420, 999)
+   T(iimage2DArray,                   420, 999)
+   T(iimageCubeArray,                 420, 999)
+   T(iimage2DMS,                      420, 999)
+   T(iimage2DMSArray,                 420, 999)
+   T(uimage1D,                        420, 999)
+   T(uimage2D,                        420, 999)
+   T(uimage3D,                        420, 999)
+   T(uimage2DRect,                    420, 999)
+   T(uimageCube,                      420, 999)
+   T(uimageBuffer,                    420, 999)
+   T(uimage1DArray,                   420, 999)
+   T(uimage2DArray,                   420, 999)
+   T(uimageCubeArray,                 420, 999)
+   T(uimage2DMS,                      420, 999)
+   T(uimage2DMSArray,                 420, 999)
+
+   T(atomic_uint,                     420, 999)
 };
 
-const glsl_type *const deprecated_types[] = {
+static const glsl_type *const deprecated_types[] = {
    glsl_type::struct_gl_PointParameters_type,
    glsl_type::struct_gl_MaterialParameters_type,
    glsl_type::struct_gl_LightSourceParameters_type,
@@ -283,6 +319,46 @@ _mesa_glsl_initialize_types(struct _mesa_glsl_parse_state *state)
 
    if (state->OES_texture_3D_enable) {
       add_type(symbols, glsl_type::sampler3D_type);
+   }
+
+   if (state->ARB_shader_image_load_store_enable) {
+      add_type(symbols, glsl_type::image1D_type);
+      add_type(symbols, glsl_type::image2D_type);
+      add_type(symbols, glsl_type::image3D_type);
+      add_type(symbols, glsl_type::image2DRect_type);
+      add_type(symbols, glsl_type::imageCube_type);
+      add_type(symbols, glsl_type::imageBuffer_type);
+      add_type(symbols, glsl_type::image1DArray_type);
+      add_type(symbols, glsl_type::image2DArray_type);
+      add_type(symbols, glsl_type::imageCubeArray_type);
+      add_type(symbols, glsl_type::image2DMS_type);
+      add_type(symbols, glsl_type::image2DMSArray_type);
+      add_type(symbols, glsl_type::iimage1D_type);
+      add_type(symbols, glsl_type::iimage2D_type);
+      add_type(symbols, glsl_type::iimage3D_type);
+      add_type(symbols, glsl_type::iimage2DRect_type);
+      add_type(symbols, glsl_type::iimageCube_type);
+      add_type(symbols, glsl_type::iimageBuffer_type);
+      add_type(symbols, glsl_type::iimage1DArray_type);
+      add_type(symbols, glsl_type::iimage2DArray_type);
+      add_type(symbols, glsl_type::iimageCubeArray_type);
+      add_type(symbols, glsl_type::iimage2DMS_type);
+      add_type(symbols, glsl_type::iimage2DMSArray_type);
+      add_type(symbols, glsl_type::uimage1D_type);
+      add_type(symbols, glsl_type::uimage2D_type);
+      add_type(symbols, glsl_type::uimage3D_type);
+      add_type(symbols, glsl_type::uimage2DRect_type);
+      add_type(symbols, glsl_type::uimageCube_type);
+      add_type(symbols, glsl_type::uimageBuffer_type);
+      add_type(symbols, glsl_type::uimage1DArray_type);
+      add_type(symbols, glsl_type::uimage2DArray_type);
+      add_type(symbols, glsl_type::uimageCubeArray_type);
+      add_type(symbols, glsl_type::uimage2DMS_type);
+      add_type(symbols, glsl_type::uimage2DMSArray_type);
+   }
+
+   if (state->ARB_shader_atomic_counters_enable) {
+      add_type(symbols, glsl_type::atomic_uint_type);
    }
 }
 /** @} */

@@ -76,6 +76,7 @@ struct lp_fragment_shader_variant_key
    unsigned flatshade:1;
    unsigned occlusion_count:1;
    unsigned resource_1d:1;
+   unsigned depth_clamp:1;
 
    enum pipe_format zsbuf_format;
    enum pipe_format cbuf_format[PIPE_MAX_COLOR_BUFS];
@@ -97,6 +98,7 @@ struct lp_fragment_shader_variant
    struct lp_fragment_shader_variant_key key;
 
    boolean opaque;
+   uint8_t ps_inv_multiplier;
 
    struct gallivm_state *gallivm;
 
@@ -147,6 +149,9 @@ lp_debug_fs_variant(const struct lp_fragment_shader_variant *variant);
 void
 llvmpipe_remove_shader_variant(struct llvmpipe_context *lp,
                                struct lp_fragment_shader_variant *variant);
+
+boolean
+llvmpipe_rasterization_disabled(struct llvmpipe_context *lp);
 
 
 #endif /* LP_STATE_FS_H_ */

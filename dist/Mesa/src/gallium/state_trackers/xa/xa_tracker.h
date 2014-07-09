@@ -36,16 +36,20 @@
 
 #include <stdint.h>
 
-#define XA_TRACKER_VERSION_MAJOR 1
-#define XA_TRACKER_VERSION_MINOR 0
+#define XA_TRACKER_VERSION_MAJOR 2
+#define XA_TRACKER_VERSION_MINOR 2
 #define XA_TRACKER_VERSION_PATCH 0
 
 #define XA_FLAG_SHARED         (1 << 0)
 #define XA_FLAG_RENDER_TARGET  (1 << 1)
 #define XA_FLAG_SCANOUT        (1 << 2)
 
-#define XA_MAP_READ            (1 << 0)
-#define XA_MAP_WRITE           (1 << 1)
+#define XA_MAP_READ                     (1 << 0)
+#define XA_MAP_WRITE                    (1 << 1)
+#define XA_MAP_MAP_DIRECTLY             (1 << 2)
+#define XA_MAP_UNSYNCHRONIZED           (1 << 3)
+#define XA_MAP_DONTBLOCK                (1 << 4)
+#define XA_MAP_DISCARD_WHOLE_RESOURCE   (1 << 5)
 
 #define XA_ERR_NONE            0
 #define XA_ERR_NORES           1
@@ -142,6 +146,11 @@ struct xa_box {
     uint16_t x1, y1, x2, y2;
 };
 
+enum xa_handle_type {
+    xa_handle_type_shared,
+    xa_handle_type_kms,
+};
+
 extern void xa_tracker_version(int *major, int *minor, int *patch);
 
 extern struct xa_tracker *xa_tracker_create(int drm_fd);
@@ -160,9 +169,19 @@ extern struct xa_surface *xa_surface_create(struct xa_tracker *xa,
 					    enum xa_formats pform,
 					    unsigned int flags);
 
+extern struct xa_surface * xa_surface_from_handle(struct xa_tracker *xa,
+					    int width,
+					    int height,
+					    int depth,
+					    enum xa_surface_type stype,
+					    enum xa_formats pform,
+					    unsigned int flags,
+					    uint32_t handle, uint32_t stride);
+
 enum xa_formats xa_surface_format(const struct xa_surface *srf);
 
-extern void xa_surface_destroy(struct xa_surface *srf);
+extern struct xa_surface *xa_surface_ref(struct xa_surface *srf);
+extern void xa_surface_unref(struct xa_surface *srf);
 
 extern int xa_surface_redefine(struct xa_surface *srf,
 			       int width,
@@ -174,6 +193,8 @@ extern int xa_surface_redefine(struct xa_surface *srf,
 			       int copy_contents);
 
 extern int xa_surface_handle(struct xa_surface *srf,
-			     uint32_t * handle, unsigned int *byte_stride);
+			     enum xa_handle_type type,
+			     uint32_t * handle,
+			     unsigned int *byte_stride);
 
 #endif

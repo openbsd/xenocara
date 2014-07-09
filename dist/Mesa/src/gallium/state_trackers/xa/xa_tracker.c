@@ -26,10 +26,12 @@
  * Thomas Hellstrom <thellstrom-at-vmware-dot-com>
  */
 
+#include <unistd.h>
 #include "xa_tracker.h"
 #include "xa_priv.h"
 #include "pipe/p_state.h"
 #include "pipe/p_format.h"
+#include "pipe-loader/pipe_loader.h"
 #include "state_tracker/drm_driver.h"
 #include "util/u_inlines.h"
 
@@ -139,11 +141,16 @@ xa_tracker_create(int drm_fd)
     struct xa_tracker *xa = calloc(1, sizeof(struct xa_tracker));
     enum xa_surface_type stype;
     unsigned int num_formats;
+    int loader_fd;
 
     if (!xa)
 	return NULL;
 
-    xa->screen = driver_descriptor.create_screen(drm_fd);
+    loader_fd = dup(drm_fd);
+    if (loader_fd == -1)
+        return NULL;
+    if (pipe_loader_drm_probe_fd(&xa->dev, loader_fd, false))
+	xa->screen = pipe_loader_create_screen(xa->dev, PIPE_SEARCH_DIR);
     if (!xa->screen)
 	goto out_no_screen;
 
@@ -190,6 +197,8 @@ xa_tracker_create(int drm_fd)
  out_no_pipe:
     xa->screen->destroy(xa->screen);
  out_no_screen:
+    if (xa->dev)
+	pipe_loader_release(&xa->dev, 1);
     free(xa);
     return NULL;
 }
@@ -200,6 +209,7 @@ xa_tracker_destroy(struct xa_tracker *xa)
     free(xa->supported_formats);
     xa_context_destroy(xa->default_ctx);
     xa->screen->destroy(xa->screen);
+    pipe_loader_release(&xa->dev, 1);
     free(xa);
 }
 
@@ -279,13 +289,14 @@ xa_format_check_supported(struct xa_tracker *xa,
     return XA_ERR_NONE;
 }
 
-XA_EXPORT struct xa_surface *
-xa_surface_create(struct xa_tracker *xa,
+static struct xa_surface *
+surface_create(struct xa_tracker *xa,
 		  int width,
 		  int height,
 		  int depth,
 		  enum xa_surface_type stype,
-		  enum xa_formats xa_format, unsigned int flags)
+		  enum xa_formats xa_format, unsigned int flags,
+		  struct winsys_handle *whandle)
 {
     struct pipe_resource *template;
     struct xa_surface *srf;
@@ -320,10 +331,14 @@ xa_surface_create(struct xa_tracker *xa,
     if (flags & XA_FLAG_SCANOUT)
 	template->bind |= PIPE_BIND_SCANOUT;
 
-    srf->tex = xa->screen->resource_create(xa->screen, template);
+    if (whandle)
+	srf->tex = xa->screen->resource_from_handle(xa->screen, template, whandle);
+    else
+	srf->tex = xa->screen->resource_create(xa->screen, template);
     if (!srf->tex)
 	goto out_no_tex;
 
+    srf->refcount = 1;
     srf->xa = xa;
     srf->flags = flags;
     srf->fdesc = fdesc;
@@ -332,6 +347,36 @@ xa_surface_create(struct xa_tracker *xa,
  out_no_tex:
     free(srf);
     return NULL;
+}
+
+
+XA_EXPORT struct xa_surface *
+xa_surface_create(struct xa_tracker *xa,
+		  int width,
+		  int height,
+		  int depth,
+		  enum xa_surface_type stype,
+		  enum xa_formats xa_format, unsigned int flags)
+{
+    return surface_create(xa, width, height, depth, stype, xa_format, flags, NULL);
+}
+
+
+XA_EXPORT struct xa_surface *
+xa_surface_from_handle(struct xa_tracker *xa,
+		  int width,
+		  int height,
+		  int depth,
+		  enum xa_surface_type stype,
+		  enum xa_formats xa_format, unsigned int flags,
+		  uint32_t handle, uint32_t stride)
+{
+    struct winsys_handle whandle;
+    memset(&whandle, 0, sizeof(whandle));
+    whandle.type = DRM_API_HANDLE_TYPE_SHARED;
+    whandle.handle = handle;
+    whandle.stride = stride;
+    return surface_create(xa, width, height, depth, stype, xa_format, flags, &whandle);
 }
 
 XA_EXPORT int
@@ -418,9 +463,22 @@ xa_surface_redefine(struct xa_surface *srf,
     return XA_ERR_NONE;
 }
 
-XA_EXPORT void
-xa_surface_destroy(struct xa_surface *srf)
+XA_EXPORT struct xa_surface*
+xa_surface_ref(struct xa_surface *srf)
 {
+    if (srf == NULL) {
+	return NULL;
+    }
+    srf->refcount++;
+    return srf;
+}
+
+XA_EXPORT void
+xa_surface_unref(struct xa_surface *srf)
+{
+    if (srf == NULL || --srf->refcount) {
+	return;
+    }
     pipe_resource_reference(&srf->tex, NULL);
     free(srf);
 }
@@ -435,6 +493,7 @@ xa_tracker_version(int *major, int *minor, int *patch)
 
 XA_EXPORT int
 xa_surface_handle(struct xa_surface *srf,
+		  enum xa_handle_type type,
 		  uint32_t * handle, unsigned int *stride)
 {
     struct winsys_handle whandle;
@@ -443,7 +502,15 @@ xa_surface_handle(struct xa_surface *srf,
     boolean res;
 
     memset(&whandle, 0, sizeof(whandle));
-    whandle.type = DRM_API_HANDLE_TYPE_SHARED;
+    switch (type) {
+    case xa_handle_type_kms:
+	whandle.type = DRM_API_HANDLE_TYPE_KMS;
+	break;
+    case xa_handle_type_shared:
+    default:
+	whandle.type = DRM_API_HANDLE_TYPE_SHARED;
+	break;
+    }
     res = screen->resource_get_handle(screen, srf->tex, &whandle);
     if (!res)
 	return -XA_ERR_INVAL;

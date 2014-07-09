@@ -22,37 +22,27 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
+include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = $(GALLIUM_CFLAGS)
 AM_CPPFLAGS = \
+	$(VISIBILITY_CFLAGS) \
 	-I$(top_srcdir)/src/egl/main \
 	-I$(top_builddir)/src/egl/wayland/wayland-drm/ \
 	-I$(top_srcdir)/include
 
 noinst_LTLIBRARIES = libegl.la
-libegl_la_SOURCES = \
-	common/egl_g3d_api.c \
-	common/egl_g3d.c \
-	common/egl_g3d_image.c \
-	common/egl_g3d_st.c \
-	common/egl_g3d_sync.c \
-	common/native_helper.c \
-	common/native_wayland_drm_bufmgr_helper.c
+libegl_la_SOURCES = $(common_FILES)
 
 if HAVE_EGL_PLATFORM_X11
-libegl_la_SOURCES += \
-	x11/glxinit.c \
-	x11/native_dri2.c \
-	x11/native_x11.c \
-	x11/native_ximage.c \
-	x11/x11_screen.c \
-	x11/dri2.c
+libegl_la_SOURCES += $(x11_FILES) $(x11_drm_FILES)
 AM_CFLAGS += \
-	$(X11_CFLAGS) \
+	$(X11_INCLUDES) \
 	$(LIBDRM_CFLAGS) \
 	$(DRI2PROTO_CFLAGS)
 AM_CPPFLAGS += \
+	-I$(top_srcdir)/src/gallium/winsys \
 	-I$(top_srcdir)/src/gallium/drivers \
 	-I$(top_srcdir)/src/glx \
 	-I$(top_srcdir)/src/mapi \
@@ -61,10 +51,7 @@ AM_CPPFLAGS += \
 endif
 
 if HAVE_EGL_PLATFORM_WAYLAND
-libegl_la_SOURCES += \
-	wayland/native_drm.c \
-	wayland/native_shm.c \
-	wayland/native_wayland.c
+libegl_la_SOURCES += $(wayland_FILES)
 AM_CFLAGS += \
 	$(LIBDRM_CFLAGS) \
 	$(WAYLAND_CFLAGS)
@@ -77,12 +64,12 @@ AM_CPPFLAGS += \
 endif
 
 if HAVE_EGL_PLATFORM_DRM
-libegl_la_SOURCES += \
-	drm/modeset.c \
-	drm/native_drm.c
+libegl_la_SOURCES += $(drm_FILES)
+libegl_la_LIBADD = $(top_builddir)/src/loader/libloader.la
 AM_CFLAGS += \
 	$(LIBDRM_CFLAGS)
 AM_CPPFLAGS += \
+	-I$(top_srcdir)/src/loader \
 	-I$(top_srcdir)/src/gallium/winsys \
 	-I$(top_srcdir)/src/gbm/main \
 	-I$(top_srcdir)/src/gallium/state_trackers/gbm \
@@ -90,14 +77,14 @@ AM_CPPFLAGS += \
 endif
 
 if HAVE_EGL_PLATFORM_FBDEV
-libegl_la_SOURCES += fbdev/native_fbdev.c
+libegl_la_SOURCES += $(fbdev_FILES)
 AM_CPPFLAGS += \
 	-I$(top_srcdir)/src/gallium/winsys/sw \
 	-DHAVE_FBDEV_BACKEND
 endif
 
 if HAVE_EGL_PLATFORM_NULL
-libegl_la_SOURCES += null/native_null.c
+libegl_la_SOURCES += $(null_FILES)
 AM_CPPFLAGS += \
 	-I$(top_srcdir)/src/gallium/winsys/sw \
 	-DHAVE_NULL_BACKEND

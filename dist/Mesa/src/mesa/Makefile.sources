@@ -18,11 +18,13 @@ MAIN_FILES = \
 	$(SRCDIR)main/attrib.c \
 	$(SRCDIR)main/arrayobj.c \
 	$(SRCDIR)main/blend.c \
+	$(SRCDIR)main/blit.c \
 	$(SRCDIR)main/bufferobj.c \
 	$(SRCDIR)main/buffers.c \
 	$(SRCDIR)main/clear.c \
 	$(SRCDIR)main/clip.c \
 	$(SRCDIR)main/colortab.c \
+	$(SRCDIR)main/compute.c \
 	$(SRCDIR)main/condrender.c \
 	$(SRCDIR)main/context.c \
 	$(SRCDIR)main/convolve.c \
@@ -48,6 +50,7 @@ MAIN_FILES = \
 	$(SRCDIR)main/format_unpack.c \
 	$(SRCDIR)main/framebuffer.c \
 	$(SRCDIR)main/get.c \
+	$(SRCDIR)main/genmipmap.c \
 	$(SRCDIR)main/getstring.c \
 	$(SRCDIR)main/glformats.c \
 	$(SRCDIR)main/hash.c \
@@ -62,8 +65,11 @@ MAIN_FILES = \
 	$(SRCDIR)main/mipmap.c \
 	$(SRCDIR)main/mm.c \
 	$(SRCDIR)main/multisample.c \
+        $(SRCDIR)main/objectlabel.c \
 	$(SRCDIR)main/pack.c \
 	$(SRCDIR)main/pbo.c \
+	$(SRCDIR)main/performance_monitor.c \
+	$(SRCDIR)main/pipelineobj.c \
 	$(SRCDIR)main/pixel.c \
 	$(SRCDIR)main/pixelstore.c \
 	$(SRCDIR)main/pixeltransfer.c \
@@ -79,6 +85,7 @@ MAIN_FILES = \
 	$(SRCDIR)main/scissor.c \
 	$(SRCDIR)main/set.c \
 	$(SRCDIR)main/shaderapi.c \
+	$(SRCDIR)main/shaderimage.c \
 	$(SRCDIR)main/shaderobj.c \
 	$(SRCDIR)main/shader_query.cpp \
 	$(SRCDIR)main/shared.c \
@@ -101,11 +108,13 @@ MAIN_FILES = \
 	$(SRCDIR)main/texstate.c \
 	$(SRCDIR)main/texstorage.c \
 	$(SRCDIR)main/texstore.c \
+        $(SRCDIR)main/textureview.c \
 	$(SRCDIR)main/texturebarrier.c \
 	$(SRCDIR)main/transformfeedback.c \
 	$(SRCDIR)main/uniforms.c \
 	$(SRCDIR)main/uniform_query.cpp \
 	$(SRCDIR)main/varray.c \
+	$(SRCDIR)main/vdpau.c \
 	$(SRCDIR)main/version.c \
 	$(SRCDIR)main/viewport.c \
 	$(SRCDIR)main/vtxfmt.c \
@@ -246,7 +255,8 @@ STATETRACKER_FILES = \
 	$(SRCDIR)state_tracker/st_manager.c \
 	$(SRCDIR)state_tracker/st_mesa_to_tgsi.c \
 	$(SRCDIR)state_tracker/st_program.c \
-	$(SRCDIR)state_tracker/st_texture.c
+	$(SRCDIR)state_tracker/st_texture.c \
+	$(SRCDIR)state_tracker/st_vdpau.c
 
 PROGRAM_FILES = \
 	$(SRCDIR)program/arbprogparse.c \
@@ -310,6 +320,8 @@ SPARC_FILES =			\
 
 COMMON_DRIVER_FILES =			\
 	$(SRCDIR)drivers/common/driverfuncs.c	\
+	$(SRCDIR)drivers/common/meta_blit.c	\
+	$(SRCDIR)drivers/common/meta_generate_mipmap.c	\
 	$(SRCDIR)drivers/common/meta.c
 
 

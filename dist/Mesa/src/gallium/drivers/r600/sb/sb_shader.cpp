@@ -39,7 +39,8 @@ shader::shader(sb_context &sctx, shader_target t, unsigned id)
   coal(*this), bbs(),
   target(t), vt(ex), ex(*this), root(),
   compute_interferences(),
-  has_alu_predication(), uses_gradients(), safe_math(), ngpr(), nstack() {}
+  has_alu_predication(),
+  uses_gradients(), safe_math(), ngpr(), nstack(), dce_flags() {}
 
 bool shader::assign_slot(alu_node* n, alu_node *slots[5]) {
 
@@ -214,7 +215,7 @@ void shader::init() {
 void shader::init_call_fs(cf_node* cf) {
 	unsigned gpr = 0;
 
-	assert(target == TARGET_VS);
+	assert(target == TARGET_VS || target == TARGET_ES);
 
 	for(inputs_vec::const_iterator I = inputs.begin(),
 			E = inputs.end(); I != E; ++I, ++gpr) {
@@ -260,7 +261,6 @@ node* shader::create_node(node_type nt, node_subtype nst, node_flags flags) {
 
 alu_node* shader::create_alu() {
 	alu_node* n = new (pool.allocate(sizeof(alu_node))) alu_node();
-	memset(&n->bc, 0, sizeof(bc_alu));
 	all_nodes.push_back(n);
 	return n;
 }
@@ -281,7 +281,6 @@ alu_packed_node* shader::create_alu_packed() {
 
 cf_node* shader::create_cf() {
 	cf_node* n = new (pool.allocate(sizeof(cf_node))) cf_node();
-	memset(&n->bc, 0, sizeof(bc_cf));
 	n->bc.barrier = 1;
 	all_nodes.push_back(n);
 	return n;
@@ -289,7 +288,6 @@ cf_node* shader::create_cf() {
 
 fetch_node* shader::create_fetch() {
 	fetch_node* n = new (pool.allocate(sizeof(fetch_node))) fetch_node();
-	memset(&n->bc, 0, sizeof(bc_fetch));
 	all_nodes.push_back(n);
 	return n;
 }
@@ -435,6 +433,7 @@ std::string shader::get_full_target_name() {
 const char* shader::get_shader_target_name() {
 	switch (target) {
 		case TARGET_VS: return "VS";
+		case TARGET_ES: return "ES";
 		case TARGET_PS: return "PS";
 		case TARGET_GS: return "GS";
 		case TARGET_COMPUTE: return "COMPUTE";

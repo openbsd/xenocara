@@ -31,6 +31,8 @@
 
 #include "freedreno_util.h"
 
+unsigned marker_cnt;
+
 enum adreno_rb_depth_format
 fd_pipe2depth(enum pipe_format format)
 {
@@ -105,26 +107,6 @@ fd_blend_factor(unsigned factor)
 		/* I don't think these are supported */
 	default:
 		DBG("invalid blend factor: %x", factor);
-		return 0;
-	}
-}
-
-enum adreno_rb_blend_opcode
-fd_blend_func(unsigned func)
-{
-	switch (func) {
-	case PIPE_BLEND_ADD:
-		return BLEND_DST_PLUS_SRC;
-	case PIPE_BLEND_MIN:
-		return BLEND_MIN_DST_SRC;
-	case PIPE_BLEND_MAX:
-		return BLEND_MAX_DST_SRC;
-	case PIPE_BLEND_SUBTRACT:
-		return BLEND_SRC_MINUS_DST;
-	case PIPE_BLEND_REVERSE_SUBTRACT:
-		return BLEND_DST_MINUS_SRC;
-	default:
-		DBG("invalid blend func: %x", func);
 		return 0;
 	}
 }

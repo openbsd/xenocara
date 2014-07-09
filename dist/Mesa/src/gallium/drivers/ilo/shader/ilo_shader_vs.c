@@ -41,12 +41,13 @@ struct vs_compile_context {
 
    struct toy_compiler tc;
    struct toy_tgsi tgsi;
-   enum brw_message_target const_cache;
+   int const_cache;
 
    int output_map[PIPE_MAX_SHADER_OUTPUTS];
 
    int num_grf_per_vrf;
    int first_const_grf;
+   int first_ucp_grf;
    int first_vue_grf;
    int first_free_grf;
    int last_free_grf;
@@ -79,6 +80,27 @@ vs_lower_opcode_tgsi_in(struct vs_compile_context *vcc,
    }
 }
 
+static bool
+vs_lower_opcode_tgsi_const_pcb(struct vs_compile_context *vcc,
+                               struct toy_dst dst, int dim,
+                               struct toy_src idx)
+{
+   const int i = idx.val32;
+   const int grf = vcc->first_const_grf + i / 2;
+   const int grf_subreg = (i & 1) * 16;
+   struct toy_src src;
+
+   if (!vcc->variant->use_pcb || dim != 0 || idx.file != TOY_FILE_IMM ||
+       grf >= vcc->first_ucp_grf)
+      return false;
+
+
+   src = tsrc_rect(tsrc(TOY_FILE_GRF, grf, grf_subreg), TOY_RECT_041);
+   tc_MOV(&vcc->tc, dst, src);
+
+   return true;
+}
+
 static void
 vs_lower_opcode_tgsi_const_gen6(struct vs_compile_context *vcc,
                                 struct toy_dst dst, int dim,
@@ -94,15 +116,18 @@ vs_lower_opcode_tgsi_const_gen6(struct vs_compile_context *vcc,
    struct toy_inst *inst;
    struct toy_src desc;
 
+   if (vs_lower_opcode_tgsi_const_pcb(vcc, dst, dim, idx))
+      return;
+
    /* set message header */
    inst = tc_MOV(tc, header, r0);
-   inst->mask_ctrl = BRW_MASK_DISABLE;
+   inst->mask_ctrl = GEN6_MASKCTRL_NOMASK;
 
    /* set block offsets */
    tc_MOV(tc, block_offsets, idx);
 
-   msg_type = GEN6_DATAPORT_READ_MESSAGE_OWORD_DUAL_BLOCK_READ;
-   msg_ctrl = BRW_DATAPORT_OWORD_DUAL_BLOCK_1OWORD << 8;;
+   msg_type = GEN6_MSG_DP_OWORD_DUAL_BLOCK_READ;
+   msg_ctrl = GEN6_MSG_DP_OWORD_DUAL_BLOCK_SIZE_1;;
    msg_len = 2;
 
    desc = tsrc_imm_mdesc_data_port(tc, false, msg_len, 1, true, false,
@@ -121,6 +146,9 @@ vs_lower_opcode_tgsi_const_gen7(struct vs_compile_context *vcc,
       tdst_ud(tdst(TOY_FILE_MRF, vcc->first_free_mrf, 0));
    struct toy_src desc;
 
+   if (vs_lower_opcode_tgsi_const_pcb(vcc, dst, dim, idx))
+      return;
+
    /*
     * In 259b65e2e7938de4aab323033cfe2b33369ddb07, pull constant load was
     * changed from OWord Dual Block Read to ld to increase performance in the
@@ -132,12 +160,12 @@ vs_lower_opcode_tgsi_const_gen7(struct vs_compile_context *vcc,
    tc_MOV(tc, offset, idx);
 
    desc = tsrc_imm_mdesc_sampler(tc, 1, 1, false,
-         BRW_SAMPLER_SIMD_MODE_SIMD4X2,
-         GEN5_SAMPLER_MESSAGE_SAMPLE_LD,
+         GEN6_MSG_SAMPLER_SIMD4X2,
+         GEN6_MSG_SAMPLER_LD,
          0,
          ILO_VS_CONST_SURFACE(dim));
 
-   tc_SEND(tc, dst, tsrc_from(offset), desc, BRW_SFID_SAMPLER);
+   tc_SEND(tc, dst, tsrc_from(offset), desc, GEN6_SFID_SAMPLER);
 }
 
 static void
@@ -306,12 +334,12 @@ vs_add_sampler_params(struct toy_compiler *tc, int msg_type, int base_mrf,
       m[i] = tdst(TOY_FILE_MRF, base_mrf + i, 0);
 
    switch (msg_type) {
-   case GEN5_SAMPLER_MESSAGE_SAMPLE_LOD:
+   case GEN6_MSG_SAMPLER_SAMPLE_L:
       tc_MOV(tc, tdst_writemask(m[0], coords_writemask), coords);
       tc_MOV(tc, tdst_writemask(m[1], TOY_WRITEMASK_X), bias_or_lod);
       num_params = 5;
       break;
-   case GEN5_SAMPLER_MESSAGE_SAMPLE_DERIVS:
+   case GEN6_MSG_SAMPLER_SAMPLE_D:
       tc_MOV(tc, tdst_writemask(m[0], coords_writemask), coords);
       tc_MOV(tc, tdst_writemask(m[1], TOY_WRITEMASK_XZ),
             tsrc_swizzle(ddx, 0, 0, 1, 1));
@@ -325,13 +353,13 @@ vs_add_sampler_params(struct toy_compiler *tc, int msg_type, int base_mrf,
       }
       num_params = 4 + num_derivs * 2;
       break;
-   case GEN5_SAMPLER_MESSAGE_SAMPLE_LOD_COMPARE:
+   case GEN6_MSG_SAMPLER_SAMPLE_L_C:
       tc_MOV(tc, tdst_writemask(m[0], coords_writemask), coords);
       tc_MOV(tc, tdst_writemask(m[1], TOY_WRITEMASK_X), ref_or_si);
       tc_MOV(tc, tdst_writemask(m[1], TOY_WRITEMASK_Y), bias_or_lod);
       num_params = 6;
       break;
-   case GEN5_SAMPLER_MESSAGE_SAMPLE_LD:
+   case GEN6_MSG_SAMPLER_LD:
       assert(num_coords <= 3);
       tc_MOV(tc, tdst_writemask(tdst_d(m[0]), coords_writemask), coords);
       tc_MOV(tc, tdst_writemask(tdst_d(m[0]), TOY_WRITEMASK_W), bias_or_lod);
@@ -343,7 +371,7 @@ vs_add_sampler_params(struct toy_compiler *tc, int msg_type, int base_mrf,
          num_params = 5;
       }
       break;
-   case GEN5_SAMPLER_MESSAGE_SAMPLE_RESINFO:
+   case GEN6_MSG_SAMPLER_RESINFO:
       tc_MOV(tc, tdst_writemask(tdst_d(m[0]), TOY_WRITEMASK_X), bias_or_lod);
       num_params = 1;
       break;
@@ -368,7 +396,7 @@ vs_prepare_tgsi_sampling(struct toy_compiler *tc, const struct toy_inst *inst,
    int num_coords, ref_pos, num_derivs;
    int sampler_src;
 
-   simd_mode = BRW_SAMPLER_SIMD_MODE_SIMD4X2;
+   simd_mode = GEN6_MSG_SAMPLER_SIMD4X2;
 
    coords = inst->src[0];
    ddx = tsrc_null();
@@ -383,10 +411,19 @@ vs_prepare_tgsi_sampling(struct toy_compiler *tc, const struct toy_inst *inst,
    /* extract the parameters */
    switch (inst->opcode) {
    case TOY_OPCODE_TGSI_TXD:
-      if (ref_pos >= 0)
-         tc_fail(tc, "TXD with shadow sampler not supported");
+      if (ref_pos >= 0) {
+         assert(ref_pos < 4);
 
-      msg_type = GEN5_SAMPLER_MESSAGE_SAMPLE_DERIVS;
+         msg_type = GEN7_MSG_SAMPLER_SAMPLE_D_C;
+         ref_or_si = tsrc_swizzle1(coords, ref_pos);
+
+         if (tc->dev->gen < ILO_GEN(7.5))
+            tc_fail(tc, "TXD with shadow sampler not supported");
+      }
+      else {
+         msg_type = GEN6_MSG_SAMPLER_SAMPLE_D;
+      }
+
       ddx = inst->src[1];
       ddy = inst->src[2];
       num_derivs = num_coords;
@@ -396,17 +433,17 @@ vs_prepare_tgsi_sampling(struct toy_compiler *tc, const struct toy_inst *inst,
       if (ref_pos >= 0) {
          assert(ref_pos < 3);
 
-         msg_type = GEN5_SAMPLER_MESSAGE_SAMPLE_LOD_COMPARE;
+         msg_type = GEN6_MSG_SAMPLER_SAMPLE_L_C;
          ref_or_si = tsrc_swizzle1(coords, ref_pos);
       }
       else {
-         msg_type = GEN5_SAMPLER_MESSAGE_SAMPLE_LOD;
+         msg_type = GEN6_MSG_SAMPLER_SAMPLE_L;
       }
 
       bias_or_lod = tsrc_swizzle1(coords, TOY_SWIZZLE_W);
       break;
    case TOY_OPCODE_TGSI_TXF:
-      msg_type = GEN5_SAMPLER_MESSAGE_SAMPLE_LD;
+      msg_type = GEN6_MSG_SAMPLER_LD;
 
       switch (inst->tex.target) {
       case TGSI_TEXTURE_2D_MSAA:
@@ -433,12 +470,12 @@ vs_prepare_tgsi_sampling(struct toy_compiler *tc, const struct toy_inst *inst,
       sampler_src = 1;
       break;
    case TOY_OPCODE_TGSI_TXQ:
-      msg_type = GEN5_SAMPLER_MESSAGE_SAMPLE_RESINFO;
+      msg_type = GEN6_MSG_SAMPLER_RESINFO;
       num_coords = 0;
       bias_or_lod = tsrc_swizzle1(coords, TOY_SWIZZLE_X);
       break;
    case TOY_OPCODE_TGSI_TXQ_LZ:
-      msg_type = GEN5_SAMPLER_MESSAGE_SAMPLE_RESINFO;
+      msg_type = GEN6_MSG_SAMPLER_RESINFO;
       num_coords = 0;
       sampler_src = 0;
       break;
@@ -446,11 +483,11 @@ vs_prepare_tgsi_sampling(struct toy_compiler *tc, const struct toy_inst *inst,
       if (ref_pos >= 0) {
          assert(ref_pos < 4);
 
-         msg_type = GEN5_SAMPLER_MESSAGE_SAMPLE_LOD_COMPARE;
+         msg_type = GEN6_MSG_SAMPLER_SAMPLE_L_C;
          ref_or_si = tsrc_swizzle1(coords, ref_pos);
       }
       else {
-         msg_type = GEN5_SAMPLER_MESSAGE_SAMPLE_LOD;
+         msg_type = GEN6_MSG_SAMPLER_SAMPLE_L;
       }
 
       bias_or_lod = tsrc_swizzle1(inst->src[1], TOY_SWIZZLE_X);
@@ -492,8 +529,8 @@ vs_prepare_tgsi_sampling(struct toy_compiler *tc, const struct toy_inst *inst,
          for (i = 0; i < 3; i++)
             abs_coords[i] = tsrc_absolute(tsrc_swizzle1(coords, i));
 
-         tc_SEL(tc, max, abs_coords[0], abs_coords[0], BRW_CONDITIONAL_GE);
-         tc_SEL(tc, max, tsrc_from(max), abs_coords[0], BRW_CONDITIONAL_GE);
+         tc_SEL(tc, max, abs_coords[0], abs_coords[0], GEN6_COND_GE);
+         tc_SEL(tc, max, tsrc_from(max), abs_coords[0], GEN6_COND_GE);
          tc_INV(tc, max, tsrc_from(max));
 
          for (i = 0; i < 3; i++)
@@ -551,7 +588,7 @@ vs_lower_opcode_tgsi_sampling(struct vs_compile_context *vcc,
       break;
    }
 
-   toy_compiler_lower_to_send(tc, inst, false, BRW_SFID_SAMPLER);
+   toy_compiler_lower_to_send(tc, inst, false, GEN6_SFID_SAMPLER);
    inst->src[0] = tsrc(TOY_FILE_MRF, vcc->first_free_mrf, 0);
    inst->src[1] = desc;
 
@@ -612,7 +649,7 @@ static void
 vs_lower_opcode_urb_write(struct toy_compiler *tc, struct toy_inst *inst)
 {
    /* vs_write_vue() has set up the message registers */
-   toy_compiler_lower_to_send(tc, inst, false, BRW_SFID_URB);
+   toy_compiler_lower_to_send(tc, inst, false, GEN6_SFID_URB);
 }
 
 static void
@@ -835,7 +872,7 @@ vs_collect_outputs(struct vs_compile_context *vcc, struct toy_src *outs)
                }
 
                for (j = first_ucp; j <= last_ucp; j++) {
-                  const int plane_grf = vcc->first_const_grf + j / 2;
+                  const int plane_grf = vcc->first_ucp_grf + j / 2;
                   const int plane_subreg = (j & 1) * 16;
                   const struct toy_src plane = tsrc_rect(tsrc(TOY_FILE_GRF,
                            plane_grf, plane_subreg), TOY_RECT_041);
@@ -878,15 +915,15 @@ vs_write_vue(struct vs_compile_context *vcc)
    header = tdst_ud(tdst(TOY_FILE_MRF, vcc->first_free_mrf, 0));
    r0 = tsrc_ud(tsrc(TOY_FILE_GRF, 0, 0));
    inst = tc_MOV(tc, header, r0);
-   inst->mask_ctrl = BRW_MASK_DISABLE;
+   inst->mask_ctrl = GEN6_MASKCTRL_NOMASK;
 
    if (tc->dev->gen >= ILO_GEN(7)) {
       inst = tc_OR(tc, tdst_offset(header, 0, 5),
             tsrc_rect(tsrc_offset(r0, 0, 5), TOY_RECT_010),
             tsrc_rect(tsrc_imm_ud(0xff00), TOY_RECT_010));
-      inst->exec_size = BRW_EXECUTE_1;
-      inst->access_mode = BRW_ALIGN_1;
-      inst->mask_ctrl = BRW_MASK_DISABLE;
+      inst->exec_size = GEN6_EXECSIZE_1;
+      inst->access_mode = GEN6_ALIGN_1;
+      inst->mask_ctrl = GEN6_MASKCTRL_NOMASK;
    }
 
    total_attrs = vs_collect_outputs(vcc, outs);
@@ -949,7 +986,7 @@ vs_write_vue(struct vs_compile_context *vcc)
 
       assert(sent_attrs % 2 == 0);
       desc = tsrc_imm_mdesc_urb(tc, eot, msg_len, 0,
-            eot, true, false, BRW_URB_SWIZZLE_INTERLEAVE, sent_attrs / 2, 0);
+            eot, true, false, true, sent_attrs / 2, 0);
 
       tc_add2(tc, TOY_OPCODE_URB_WRITE, tdst_null(), tsrc_from(header), desc);
 
@@ -1179,15 +1216,15 @@ vs_setup(struct vs_compile_context *vcc,
    vcc->variant = variant;
 
    toy_compiler_init(&vcc->tc, state->info.dev);
-   vcc->tc.templ.access_mode = BRW_ALIGN_16;
-   vcc->tc.templ.exec_size = BRW_EXECUTE_8;
+   vcc->tc.templ.access_mode = GEN6_ALIGN_16;
+   vcc->tc.templ.exec_size = GEN6_EXECSIZE_8;
    vcc->tc.rect_linear_width = 4;
 
    /*
     * The classic driver uses the sampler cache (gen6) or the data cache
     * (gen7).  Why?
     */
-   vcc->const_cache = GEN6_SFID_DATAPORT_CONSTANT_CACHE;
+   vcc->const_cache = GEN6_SFID_DP_CC;
 
    if (!vs_setup_tgsi(&vcc->tc, state->info.tokens, &vcc->tgsi)) {
       toy_compiler_cleanup(&vcc->tc);
@@ -1199,12 +1236,34 @@ vs_setup(struct vs_compile_context *vcc,
    vs_setup_shader_out(vcc->shader, &vcc->tgsi,
          (vcc->variant->u.vs.num_ucps > 0), vcc->output_map);
 
-   /* fit each pair of user clip planes into a register */
-   num_consts = (vcc->variant->u.vs.num_ucps + 1) / 2;
+   if (vcc->variant->use_pcb && !vcc->tgsi.const_indirect) {
+      num_consts = (vcc->tgsi.const_count + 1) / 2;
+
+      /*
+       * From the Sandy Bridge PRM, volume 2 part 1, page 138:
+       *
+       *     "The sum of all four read length fields (each incremented to
+       *      represent the actual read length) must be less than or equal to
+       *      32"
+       */
+      if (num_consts > 32)
+         num_consts = 0;
+   }
+   else {
+      num_consts = 0;
+   }
+
+   vcc->shader->skip_cbuf0_upload = (!vcc->tgsi.const_count || num_consts);
+   vcc->shader->pcb.cbuf0_size = num_consts * (sizeof(float) * 8);
 
    /* r0 is reserved for payload header */
    vcc->first_const_grf = 1;
-   vcc->first_vue_grf = vcc->first_const_grf + num_consts;
+   vcc->first_ucp_grf = vcc->first_const_grf + num_consts;
+
+   /* fit each pair of user clip planes into a register */
+   vcc->first_vue_grf = vcc->first_ucp_grf +
+      (vcc->variant->u.vs.num_ucps + 1) / 2;
+
    vcc->first_free_grf = vcc->first_vue_grf + vcc->shader->in.count;
    vcc->last_free_grf = 127;
 

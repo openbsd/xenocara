@@ -132,7 +132,8 @@ lower_ubo_reference_visitor::handle_rvalue(ir_rvalue **rvalue)
    mem_ctx = ralloc_parent(*rvalue);
 
    const char *const field_name =
-      interface_field_name(mem_ctx, (char *) var->interface_type->name, deref);
+      interface_field_name(mem_ctx, (char *) var->get_interface_type()->name,
+                           deref);
 
    this->uniform_block = -1;
    for (unsigned i = 0; i < shader->NumUniformBlocks; i++) {
@@ -142,7 +143,7 @@ lower_ubo_reference_visitor::handle_rvalue(ir_rvalue **rvalue)
          struct gl_uniform_block *block = &shader->UniformBlocks[i];
 
          this->ubo_var = var->is_interface_instance()
-            ? &block->Uniforms[0] : &block->Uniforms[var->location];
+            ? &block->Uniforms[0] : &block->Uniforms[var->data.location];
 
          break;
       }
@@ -193,12 +194,16 @@ lower_ubo_reference_visitor::handle_rvalue(ir_rvalue **rvalue)
 	    array_stride = glsl_align(array_stride, 16);
 	 }
 
-	 ir_constant *const_index = deref_array->array_index->as_constant();
+         ir_rvalue *array_index = deref_array->array_index;
+         if (array_index->type->base_type == GLSL_TYPE_INT)
+            array_index = i2u(array_index);
+
+	 ir_constant *const_index = array_index->as_constant();
 	 if (const_index) {
-	    const_offset += array_stride * const_index->value.i[0];
+	    const_offset += array_stride * const_index->value.u[0];
 	 } else {
 	    offset = add(offset,
-			 mul(deref_array->array_index,
+			 mul(array_index,
 			     new(mem_ctx) ir_constant(array_stride)));
 	 }
 	 deref = deref_array->array->as_dereference();

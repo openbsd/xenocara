@@ -60,6 +60,7 @@ struct radeon_llvm_context {
 	unsigned face_gpr;
 	unsigned two_side;
 	unsigned clip_vertex;
+	unsigned inputs_count;
 	struct r600_shader_io * r600_inputs;
 	struct r600_shader_io * r600_outputs;
 	struct pipe_stream_output_info *stream_outputs;
@@ -67,6 +68,8 @@ struct radeon_llvm_context {
 	unsigned fs_color_all;
 	unsigned alpha_to_one;
 	unsigned has_txq_cube_array_z_comp;
+	unsigned uses_tex_buffers;
+	unsigned has_compressed_msaa_texturing;
 
 	/*=== Front end configuration ===*/
 
@@ -109,6 +112,12 @@ struct radeon_llvm_context {
 	LLVMValueRef outputs[RADEON_LLVM_MAX_OUTPUTS][TGSI_NUM_CHANNELS];
 	unsigned output_reg_count;
 
+	/** This pointer is used to contain the temporary values.
+	  * The amount of temporary used in tgsi can't be bound to a max value and
+	  * thus we must allocate this array at runtime.
+	  */
+	LLVMValueRef *temps;
+	unsigned temps_count;
 	LLVMValueRef system_values[RADEON_LLVM_MAX_SYSTEM_VALUES];
 
 	/*=== Private Members ===*/

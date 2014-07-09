@@ -25,12 +25,6 @@ AM_CXXFLAGS += \
 	$(GALLIUM_CFLAGS) \
 	$(LLVM_CXXFLAGS)
 
-if LLVM_NEEDS_FNORTTI
-
-AM_CXXFLAGS += -fno-rtti
-
-endif
-
 libgallium_la_SOURCES += \
 	$(GALLIVM_SOURCES) \
 	$(GALLIVM_CPP_SOURCES)
@@ -38,17 +32,17 @@ libgallium_la_SOURCES += \
 endif
 
 indices/u_indices_gen.c: $(srcdir)/indices/u_indices_gen.py
-	$(MKDIR_P) indices
+	$(AM_V_at)$(MKDIR_P) indices
 	$(AM_V_GEN) $(PYTHON2) $< > $@
 
 indices/u_unfilled_gen.c: $(srcdir)/indices/u_unfilled_gen.py
-	$(MKDIR_P) indices
+	$(AM_V_at)$(MKDIR_P) indices
 	$(AM_V_GEN) $(PYTHON2) $< > $@
 
 util/u_format_srgb.c: $(srcdir)/util/u_format_srgb.py
-	$(MKDIR_P) util
+	$(AM_V_at)$(MKDIR_P) util
 	$(AM_V_GEN) $(PYTHON2) $< > $@
 
 util/u_format_table.c: $(srcdir)/util/u_format_table.py $(srcdir)/util/u_format_pack.py $(srcdir)/util/u_format_parse.py $(srcdir)/util/u_format.csv
-	$(MKDIR_P) util
+	$(AM_V_at)$(MKDIR_P) util
 	$(AM_V_GEN) $(PYTHON2) $(srcdir)/util/u_format_table.py $(srcdir)/util/u_format.csv > $@

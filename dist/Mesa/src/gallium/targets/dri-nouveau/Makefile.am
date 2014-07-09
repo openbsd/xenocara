@@ -23,15 +23,8 @@
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
-	$(GALLIUM_CFLAGS) \
-	$(PTHREAD_CFLAGS) \
-	$(LIBDRM_CFLAGS)
+	$(GALLIUM_DRI_CFLAGS)
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/src/gallium/winsys \
-	-I$(top_srcdir)/src/mesa \
-	-I$(top_srcdir)/src/mapi \
-	-I$(top_builddir)/src/mesa/drivers/dri/common \
 	-DGALLIUM_RBUG \
 	-DGALLIUM_TRACE
 
@@ -39,36 +32,21 @@ dridir = $(DRI_DRIVER_INSTALL_DIR)
 dri_LTLIBRARIES = nouveau_dri.la
 
 nodist_EXTRA_nouveau_dri_la_SOURCES = dummy.cpp
-nouveau_dri_la_SOURCES = \
-	target.c \
-	$(top_srcdir)/src/mesa/drivers/dri/common/utils.c \
-	$(top_srcdir)/src/mesa/drivers/dri/common/dri_util.c \
-	$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c
+nouveau_dri_la_SOURCES = target.c
 
-nouveau_dri_la_LDFLAGS = -module -avoid-version -shared -no-undefined
+nouveau_dri_la_LDFLAGS = \
+	$(GALLIUM_DRI_LINKER_FLAGS) \
+	-Wl,--dynamic-list=$(srcdir)/nouveau_dri.dyn
 
 nouveau_dri_la_LIBADD = \
-	$(top_builddir)/src/mesa/libmesagallium.la \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(top_builddir)/src/mesa/drivers/dri/common/libdricommon.la \
 	$(top_builddir)/src/gallium/state_trackers/dri/drm/libdridrm.la \
 	$(top_builddir)/src/gallium/winsys/nouveau/drm/libnouveaudrm.la \
 	$(top_builddir)/src/gallium/drivers/trace/libtrace.la \
 	$(top_builddir)/src/gallium/drivers/rbug/librbug.la \
-	$(top_builddir)/src/gallium/drivers/nv30/libnv30.la \
-	$(top_builddir)/src/gallium/drivers/nv50/libnv50.la \
-	$(top_builddir)/src/gallium/drivers/nvc0/libnvc0.la \
 	$(top_builddir)/src/gallium/drivers/nouveau/libnouveau.la \
 	$(GALLIUM_DRI_LIB_DEPS) \
 	$(LIBDRM_LIBS) \
 	$(NOUVEAU_LIBS)
 
-if HAVE_MESA_LLVM
-nouveau_dri_la_LDFLAGS += $(LLVM_LDFLAGS)
-nouveau_dri_la_LIBADD += $(LLVM_LIBS)
-endif
-
-# Provide compatibility with scripts for the old Mesa build system for
-# a while by putting a link to the driver into /lib of the build tree.
-all-local: nouveau_dri.la
-	$(MKDIR_P) $(top_builddir)/$(LIB_DIR)/gallium
-	ln -f .libs/nouveau_dri.so $(top_builddir)/$(LIB_DIR)/gallium/nouveau_dri.so
+include $(top_srcdir)/install-gallium-links.mk

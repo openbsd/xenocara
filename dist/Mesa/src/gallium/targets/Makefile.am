@@ -34,6 +34,10 @@ if HAVE_GALLIUM_GBM
 SUBDIRS += gbm
 endif
 
+if HAVE_ST_XA
+SUBDIRS += xa
+endif
+
 if HAVE_CLOVER
 SUBDIRS += opencl
 endif
@@ -41,10 +45,6 @@ endif
 if HAVE_GALLIUM_SVGA
 if HAVE_DRI
 SUBDIRS += dri-vmwgfx
-endif
-
-if HAVE_ST_XA
-SUBDIRS += xa-vmwgfx
 endif
 endif
 
@@ -58,10 +58,6 @@ if HAVE_GALLIUM_I915
 if HAVE_DRI
 SUBDIRS += dri-i915
 endif
-
-if HAVE_ST_XORG
-SUBDIRS += xorg-i915
-endif
 endif
 
 if HAVE_GALLIUM_ILO
@@ -72,57 +68,45 @@ endif
 
 if HAVE_GALLIUM_R300
 if HAVE_DRI
-SUBDIRS += dri-r300
-endif
-
-if HAVE_ST_XVMC
-SUBDIRS += xvmc-r300
-endif
-
-if HAVE_ST_VDPAU
-SUBDIRS += vdpau-r300
+SUBDIRS += r300/dri
 endif
 endif
 
 if HAVE_GALLIUM_R600
 if HAVE_DRI
-SUBDIRS += dri-r600
-endif
-
-if HAVE_ST_XORG
-SUBDIRS += xorg-r600
+SUBDIRS += r600/dri
 endif
 
 if HAVE_ST_XVMC
-SUBDIRS += xvmc-r600
+SUBDIRS += r600/xvmc
 endif
 
 if HAVE_ST_VDPAU
-SUBDIRS += vdpau-r600
+SUBDIRS += r600/vdpau
+endif
+
+if HAVE_ST_OMX
+SUBDIRS += r600/omx
 endif
 endif
 
 if HAVE_GALLIUM_RADEONSI
 if HAVE_DRI
-SUBDIRS += dri-radeonsi
-endif
-
-if HAVE_ST_XORG
-SUBDIRS += xorg-radeonsi
+SUBDIRS += radeonsi/dri
 endif
 
 if HAVE_ST_VDPAU
-SUBDIRS += vdpau-radeonsi
+SUBDIRS += radeonsi/vdpau
+endif
+
+if HAVE_ST_OMX
+SUBDIRS += radeonsi/omx
 endif
 endif
 
 if HAVE_GALLIUM_NOUVEAU
 if HAVE_DRI
 SUBDIRS += dri-nouveau
-endif
-
-if HAVE_ST_XORG
-SUBDIRS += xorg-nouveau
 endif
 
 if HAVE_ST_XVMC
@@ -132,19 +116,15 @@ endif
 if HAVE_ST_VDPAU
 SUBDIRS += vdpau-nouveau
 endif
+
+if HAVE_ST_OMX
+SUBDIRS += omx-nouveau
+endif
 endif
 
 if HAVE_GALLIUM_SOFTPIPE
 if HAVE_DRI
 SUBDIRS += dri-swrast
-endif
-
-if HAVE_ST_XVMC
-SUBDIRS += xvmc-softpipe
-endif
-
-if HAVE_ST_VDPAU
-SUBDIRS += vdpau-softpipe
 endif
 endif
 

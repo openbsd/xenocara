@@ -35,7 +35,7 @@ using namespace brw;
  * Support for computing at the basic block level which variables
  * (virtual GRFs in our case) are live at entry and exit.
  *
- * See Muchnik's Advanced Compiler Design and Implementation, section
+ * See Muchnick's Advanced Compiler Design and Implementation, section
  * 14.1 (p444).
  */
 
@@ -83,8 +83,8 @@ vec4_live_variables::setup_def_use()
 
                for (int j = 0; j < 4; j++) {
                   int c = BRW_GET_SWZ(inst->src[i].swizzle, j);
-                  if (!bd[b].def[reg * 4 + c])
-                     bd[b].use[reg * 4 + c] = true;
+                  if (!BITSET_TEST(bd[b].def, reg * 4 + c))
+                     BITSET_SET(bd[b].use, reg * 4 + c);
                }
 	    }
 	 }
@@ -99,8 +99,8 @@ vec4_live_variables::setup_def_use()
             for (int c = 0; c < 4; c++) {
                if (inst->dst.writemask & (1 << c)) {
                   int reg = inst->dst.reg;
-                  if (!bd[b].use[reg * 4 + c])
-                     bd[b].def[reg * 4 + c] = true;
+                  if (!BITSET_TEST(bd[b].use, reg * 4 + c))
+                     BITSET_SET(bd[b].def, reg * 4 + c);
                }
             }
          }
@@ -126,12 +126,12 @@ vec4_live_variables::compute_live_variables()
 
       for (int b = 0; b < cfg->num_blocks; b++) {
 	 /* Update livein */
-	 for (int i = 0; i < num_vars; i++) {
-	    if (bd[b].use[i] || (bd[b].liveout[i] && !bd[b].def[i])) {
-	       if (!bd[b].livein[i]) {
-		  bd[b].livein[i] = true;
-		  cont = true;
-	       }
+	 for (int i = 0; i < bitset_words; i++) {
+            BITSET_WORD new_livein = (bd[b].use[i] |
+                                      (bd[b].liveout[i] & ~bd[b].def[i]));
+            if (new_livein & ~bd[b].livein[i]) {
+               bd[b].livein[i] |= new_livein;
+               cont = true;
 	    }
 	 }
 
@@ -140,9 +140,11 @@ vec4_live_variables::compute_live_variables()
 	    bblock_link *link = (bblock_link *)block_node;
 	    bblock_t *block = link->block;
 
-	    for (int i = 0; i < num_vars; i++) {
-	       if (bd[block->block_num].livein[i] && !bd[b].liveout[i]) {
-		  bd[b].liveout[i] = true;
+	    for (int i = 0; i < bitset_words; i++) {
+               BITSET_WORD new_liveout = (bd[block->block_num].livein[i] &
+                                          ~bd[b].liveout[i]);
+               if (new_liveout) {
+                  bd[b].liveout[i] |= new_liveout;
 		  cont = true;
 	       }
 	    }
@@ -154,16 +156,17 @@ vec4_live_variables::compute_live_variables()
 vec4_live_variables::vec4_live_variables(vec4_visitor *v, cfg_t *cfg)
    : v(v), cfg(cfg)
 {
-   mem_ctx = ralloc_context(cfg->mem_ctx);
+   mem_ctx = ralloc_context(NULL);
 
    num_vars = v->virtual_grf_count * 4;
    bd = rzalloc_array(mem_ctx, struct block_data, cfg->num_blocks);
 
+   bitset_words = BITSET_WORDS(num_vars);
    for (int i = 0; i < cfg->num_blocks; i++) {
-      bd[i].def = rzalloc_array(mem_ctx, bool, num_vars);
-      bd[i].use = rzalloc_array(mem_ctx, bool, num_vars);
-      bd[i].livein = rzalloc_array(mem_ctx, bool, num_vars);
-      bd[i].liveout = rzalloc_array(mem_ctx, bool, num_vars);
+      bd[i].def = rzalloc_array(mem_ctx, BITSET_WORD, bitset_words);
+      bd[i].use = rzalloc_array(mem_ctx, BITSET_WORD, bitset_words);
+      bd[i].livein = rzalloc_array(mem_ctx, BITSET_WORD, bitset_words);
+      bd[i].liveout = rzalloc_array(mem_ctx, BITSET_WORD, bitset_words);
    }
 
    setup_def_use();
@@ -200,14 +203,14 @@ vec4_visitor::calculate_live_intervals()
    if (this->live_intervals_valid)
       return;
 
-   int *start = ralloc_array(mem_ctx, int, this->virtual_grf_count);
-   int *end = ralloc_array(mem_ctx, int, this->virtual_grf_count);
+   int *start = ralloc_array(mem_ctx, int, this->virtual_grf_count * 4);
+   int *end = ralloc_array(mem_ctx, int, this->virtual_grf_count * 4);
    ralloc_free(this->virtual_grf_start);
    ralloc_free(this->virtual_grf_end);
    this->virtual_grf_start = start;
    this->virtual_grf_end = end;
 
-   for (int i = 0; i < this->virtual_grf_count; i++) {
+   for (int i = 0; i < this->virtual_grf_count * 4; i++) {
       start[i] = MAX_INSTRUCTION;
       end[i] = -1;
    }
@@ -223,16 +226,24 @@ vec4_visitor::calculate_live_intervals()
 	 if (inst->src[i].file == GRF) {
 	    int reg = inst->src[i].reg;
 
-            start[reg] = MIN2(start[reg], ip);
-            end[reg] = ip;
+            for (int j = 0; j < 4; j++) {
+               int c = BRW_GET_SWZ(inst->src[i].swizzle, j);
+
+               start[reg * 4 + c] = MIN2(start[reg * 4 + c], ip);
+               end[reg * 4 + c] = ip;
+            }
 	 }
       }
 
       if (inst->dst.file == GRF) {
          int reg = inst->dst.reg;
 
-         start[reg] = MIN2(start[reg], ip);
-         end[reg] = ip;
+         for (int c = 0; c < 4; c++) {
+            if (inst->dst.writemask & (1 << c)) {
+               start[reg * 4 + c] = MIN2(start[reg * 4 + c], ip);
+               end[reg * 4 + c] = ip;
+            }
+         }
       }
 
       ip++;
@@ -243,19 +254,19 @@ vec4_visitor::calculate_live_intervals()
     * The control flow-aware analysis was done at a channel level, while at
     * this point we're distilling it down to vgrfs.
     */
-   cfg_t cfg(this);
+   cfg_t cfg(&instructions);
    vec4_live_variables livevars(this, &cfg);
 
    for (int b = 0; b < cfg.num_blocks; b++) {
       for (int i = 0; i < livevars.num_vars; i++) {
-	 if (livevars.bd[b].livein[i]) {
-	    start[i / 4] = MIN2(start[i / 4], cfg.blocks[b]->start_ip);
-	    end[i / 4] = MAX2(end[i / 4], cfg.blocks[b]->start_ip);
+	 if (BITSET_TEST(livevars.bd[b].livein, i)) {
+	    start[i] = MIN2(start[i], cfg.blocks[b]->start_ip);
+	    end[i] = MAX2(end[i], cfg.blocks[b]->start_ip);
 	 }
 
-	 if (livevars.bd[b].liveout[i]) {
-	    start[i / 4] = MIN2(start[i / 4], cfg.blocks[b]->end_ip);
-	    end[i / 4] = MAX2(end[i / 4], cfg.blocks[b]->end_ip);
+	 if (BITSET_TEST(livevars.bd[b].liveout, i)) {
+	    start[i] = MIN2(start[i], cfg.blocks[b]->end_ip);
+	    end[i] = MAX2(end[i], cfg.blocks[b]->end_ip);
 	 }
       }
    }
@@ -263,9 +274,31 @@ vec4_visitor::calculate_live_intervals()
    this->live_intervals_valid = true;
 }
 
+void
+vec4_visitor::invalidate_live_intervals()
+{
+   live_intervals_valid = false;
+}
+
 bool
 vec4_visitor::virtual_grf_interferes(int a, int b)
 {
-   return !(virtual_grf_end[a] <= virtual_grf_start[b] ||
-            virtual_grf_end[b] <= virtual_grf_start[a]);
+   int start_a = MIN2(MIN2(virtual_grf_start[a * 4 + 0],
+                           virtual_grf_start[a * 4 + 1]),
+                      MIN2(virtual_grf_start[a * 4 + 2],
+                           virtual_grf_start[a * 4 + 3]));
+   int start_b = MIN2(MIN2(virtual_grf_start[b * 4 + 0],
+                           virtual_grf_start[b * 4 + 1]),
+                      MIN2(virtual_grf_start[b * 4 + 2],
+                           virtual_grf_start[b * 4 + 3]));
+   int end_a = MAX2(MAX2(virtual_grf_end[a * 4 + 0],
+                         virtual_grf_end[a * 4 + 1]),
+                    MAX2(virtual_grf_end[a * 4 + 2],
+                         virtual_grf_end[a * 4 + 3]));
+   int end_b = MAX2(MAX2(virtual_grf_end[b * 4 + 0],
+                         virtual_grf_end[b * 4 + 1]),
+                    MAX2(virtual_grf_end[b * 4 + 2],
+                         virtual_grf_end[b * 4 + 3]));
+   return !(end_a <= start_b ||
+            end_b <= start_a);
 }

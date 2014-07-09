@@ -34,6 +34,11 @@
 #include "util/u_surface.h"
 #include "pipe/p_context.h"
 
+XA_EXPORT void
+xa_context_flush(struct xa_context *ctx)
+{
+	ctx->pipe->flush(ctx->pipe, &ctx->last_fence, 0);
+}
 
 XA_EXPORT struct xa_context *
 xa_context_default(struct xa_tracker *xa)
@@ -73,6 +78,8 @@ xa_context_destroy(struct xa_context *r)
     }
 
     xa_ctx_sampler_views_destroy(r);
+    if (r->srf)
+        pipe_surface_reference(&r->srf, NULL);
 
     if (r->cso) {
 	cso_release_all(r->cso);
@@ -118,8 +125,6 @@ xa_surface_dma(struct xa_context *ctx,
 			   0);
 	}
 	pipe->transfer_unmap(pipe, transfer);
-	if (to_surface)
-	    pipe->flush(pipe, &ctx->last_fence, 0);
     }
     return XA_ERR_NONE;
 }
@@ -129,7 +134,7 @@ xa_surface_map(struct xa_context *ctx,
 	       struct xa_surface *srf, unsigned int usage)
 {
     void *map;
-    unsigned int transfer_direction = 0;
+    unsigned int gallium_usage = 0;
     struct pipe_context *pipe = ctx->pipe;
 
     /*
@@ -139,15 +144,23 @@ xa_surface_map(struct xa_context *ctx,
 	return NULL;
 
     if (usage & XA_MAP_READ)
-	transfer_direction = PIPE_TRANSFER_READ;
+	gallium_usage |= PIPE_TRANSFER_READ;
     if (usage & XA_MAP_WRITE)
-	transfer_direction = PIPE_TRANSFER_WRITE;
+	gallium_usage |= PIPE_TRANSFER_WRITE;
+    if (usage & XA_MAP_MAP_DIRECTLY)
+	gallium_usage |= PIPE_TRANSFER_MAP_DIRECTLY;
+    if (usage & XA_MAP_UNSYNCHRONIZED)
+	gallium_usage |= PIPE_TRANSFER_UNSYNCHRONIZED;
+    if (usage & XA_MAP_DONTBLOCK)
+	gallium_usage |= PIPE_TRANSFER_DONTBLOCK;
+    if (usage & XA_MAP_DISCARD_WHOLE_RESOURCE)
+	gallium_usage |= PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE;
 
-    if (!transfer_direction)
+    if (!(gallium_usage & (PIPE_TRANSFER_READ_WRITE)))
 	return NULL;
 
     map = pipe_transfer_map(pipe, srf->tex, 0, 0,
-                            transfer_direction, 0, 0,
+                            gallium_usage, 0, 0,
                             srf->tex->width0, srf->tex->height0,
                             &srf->transfer);
     if (!map)
@@ -174,8 +187,15 @@ xa_ctx_srf_create(struct xa_context *ctx, struct xa_surface *dst)
     struct pipe_screen *screen = ctx->pipe->screen;
     struct pipe_surface srf_templ;
 
-    if (ctx->srf)
-	return -XA_ERR_INVAL;
+    /*
+     * Cache surfaces unless we change render target
+     */
+    if (ctx->srf) {
+        if (ctx->srf->texture == dst->tex)
+            return XA_ERR_NONE;
+
+        pipe_surface_reference(&ctx->srf, NULL);
+    }
 
     if (!screen->is_format_supported(screen,  dst->tex->format,
 				     PIPE_TEXTURE_2D, 0,
@@ -193,14 +213,17 @@ xa_ctx_srf_create(struct xa_context *ctx, struct xa_surface *dst)
 void
 xa_ctx_srf_destroy(struct xa_context *ctx)
 {
-    pipe_surface_reference(&ctx->srf, NULL);
+    /*
+     * Cache surfaces unless we change render target.
+     * Final destruction on context destroy.
+     */
 }
 
 XA_EXPORT int
 xa_copy_prepare(struct xa_context *ctx,
 		struct xa_surface *dst, struct xa_surface *src)
 {
-    if (src == dst || ctx->srf != NULL)
+    if (src == dst)
 	return -XA_ERR_INVAL;
 
     if (src->tex->format != dst->tex->format) {
@@ -227,6 +250,8 @@ xa_copy(struct xa_context *ctx,
 {
     struct pipe_box src_box;
 
+    xa_scissor_update(ctx, dx, dy, dx + width, dy + height);
+
     if (ctx->simple_copy) {
 	u_box_2d(sx, sy, width, height, &src_box);
 	ctx->pipe->resource_copy_region(ctx->pipe,
@@ -243,10 +268,8 @@ XA_EXPORT void
 xa_copy_done(struct xa_context *ctx)
 {
     if (!ctx->simple_copy) {
-	   renderer_draw_flush(ctx);
-	   ctx->pipe->flush(ctx->pipe, &ctx->last_fence, 0);
-    } else
-	ctx->pipe->flush(ctx->pipe, &ctx->last_fence, 0);
+	renderer_draw_flush(ctx);
+    }
 }
 
 static void
@@ -272,7 +295,6 @@ xa_solid_prepare(struct xa_context *ctx, struct xa_surface *dst,
 {
     unsigned vs_traits, fs_traits;
     struct xa_shader shader;
-    int width, height;
     int ret;
 
     ret = xa_ctx_srf_create(ctx, dst);
@@ -286,8 +308,6 @@ xa_solid_prepare(struct xa_context *ctx, struct xa_surface *dst,
     ctx->has_solid_color = 1;
 
     ctx->dst = dst;
-    width = ctx->srf->width;
-    height = ctx->srf->height;
 
 #if 0
     debug_printf("Color Pixel=(%d, %d, %d, %d), RGBA=(%f, %f, %f, %f)\n",
@@ -300,7 +320,7 @@ xa_solid_prepare(struct xa_context *ctx, struct xa_surface *dst,
     vs_traits = VS_SOLID_FILL;
     fs_traits = FS_SOLID_FILL;
 
-    renderer_bind_destination(ctx, ctx->srf, width, height);
+    renderer_bind_destination(ctx, ctx->srf);
     bind_solid_blend_state(ctx);
     cso_set_samplers(ctx->cso, PIPE_SHADER_FRAGMENT, 0, NULL);
     cso_set_sampler_views(ctx->cso, PIPE_SHADER_FRAGMENT, 0, NULL);
@@ -318,6 +338,7 @@ xa_solid_prepare(struct xa_context *ctx, struct xa_surface *dst,
 XA_EXPORT void
 xa_solid(struct xa_context *ctx, int x, int y, int width, int height)
 {
+    xa_scissor_update(ctx, x, y, x + width, y + height);
     renderer_solid(ctx, x, y, x + width, y + height, ctx->solid_color);
 }
 
@@ -325,8 +346,6 @@ XA_EXPORT void
 xa_solid_done(struct xa_context *ctx)
 {
     renderer_draw_flush(ctx);
-    ctx->pipe->flush(ctx->pipe, &ctx->last_fence, 0);
-
     ctx->comp = NULL;
     ctx->has_solid_color = FALSE;
     ctx->num_bound_samplers = 0;

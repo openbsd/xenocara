@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -47,7 +47,6 @@ intelInitExtensions(struct gl_context *ctx)
    ctx->Extensions.ARB_draw_elements_base_vertex = true;
    ctx->Extensions.ARB_explicit_attrib_location = true;
    ctx->Extensions.ARB_framebuffer_object = true;
-   ctx->Extensions.ARB_half_float_pixel = true;
    ctx->Extensions.ARB_internalformat_query = true;
    ctx->Extensions.ARB_map_buffer_range = true;
    ctx->Extensions.ARB_point_sprite = true;
@@ -63,13 +62,10 @@ intelInitExtensions(struct gl_context *ctx)
    ctx->Extensions.EXT_blend_equation_separate = true;
    ctx->Extensions.EXT_blend_func_separate = true;
    ctx->Extensions.EXT_blend_minmax = true;
-   ctx->Extensions.EXT_framebuffer_blit = true;
    ctx->Extensions.EXT_gpu_program_parameters = true;
-   ctx->Extensions.EXT_packed_depth_stencil = true;
    ctx->Extensions.EXT_pixel_buffer_object = true;
    ctx->Extensions.EXT_point_parameters = true;
    ctx->Extensions.EXT_provoking_vertex = true;
-   ctx->Extensions.EXT_separate_shader_objects = true;
    ctx->Extensions.EXT_texture_env_dot3 = true;
    ctx->Extensions.EXT_texture_filter_anisotropic = true;
    ctx->Extensions.APPLE_object_purgeable = true;

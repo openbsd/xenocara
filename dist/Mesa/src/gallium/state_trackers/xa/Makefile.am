@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
@@ -28,6 +29,9 @@ AM_CFLAGS = \
 	$(VISIBILITY_CFLAGS)
 
 AM_CPPFLAGS = \
+	$(GALLIUM_PIPE_LOADER_DEFINES) \
+	-DPIPE_SEARCH_DIR=\"$(libdir)/gallium-pipe\" \
+	-I$(top_srcdir)/src/gallium/targets/xa \
 	-I$(top_srcdir)/src/gallium/ \
 	-I$(top_srcdir)/src/gallium/winsys \
 	-I$(top_srcdir)/src/gallium/drivers
@@ -40,10 +44,4 @@ xa_include_HEADERS = \
 
 noinst_LTLIBRARIES = libxatracker.la
 
-libxatracker_la_SOURCES = \
-	xa_tracker.c \
-	xa_context.c \
-	xa_renderer.c \
-	xa_tgsi.c \
-	xa_yuv.c \
-	xa_composite.c
+libxatracker_la_SOURCES = $(C_SOURCES)

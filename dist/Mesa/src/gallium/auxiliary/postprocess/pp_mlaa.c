@@ -43,6 +43,8 @@
 #include "postprocess/postprocess.h"
 #include "postprocess/pp_mlaa.h"
 #include "postprocess/pp_filters.h"
+#include "postprocess/pp_private.h"
+
 #include "util/u_box.h"
 #include "util/u_sampler.h"
 #include "util/u_inlines.h"
@@ -75,7 +77,7 @@ pp_jimenezmlaa_run(struct pp_queue_t *ppq, struct pipe_resource *in,
                    struct pipe_resource *out, unsigned int n, bool iscolor)
 {
 
-   struct program *p = ppq->p;
+   struct pp_program *p = ppq->p;
 
    struct pipe_depth_stencil_alpha_state mstencil;
    struct pipe_sampler_view v_tmp, *arr[3];
@@ -136,7 +138,7 @@ pp_jimenezmlaa_run(struct pp_queue_t *ppq, struct pipe_resource *in,
    pp_filter_set_fb(p);
    pp_filter_misc_state(p);
    cso_set_depth_stencil_alpha(p->cso, &mstencil);
-   p->pipe->clear(p->pipe, PIPE_CLEAR_STENCIL | PIPE_CLEAR_COLOR,
+   p->pipe->clear(p->pipe, PIPE_CLEAR_STENCIL | PIPE_CLEAR_COLOR0,
                   &p->clear_color, 0, 0);
 
    cso_single_sampler(p->cso, PIPE_SHADER_FRAGMENT, 0, &p->sampler_point);
@@ -238,7 +240,7 @@ pp_jimenezmlaa_init_run(struct pp_queue_t *ppq, unsigned int n,
 
    ppq->constbuf = pipe_buffer_create(ppq->p->screen,
                                       PIPE_BIND_CONSTANT_BUFFER,
-                                      PIPE_USAGE_STATIC,
+                                      PIPE_USAGE_DEFAULT,
                                       sizeof(constants));
    if (ppq->constbuf == NULL) {
       pp_debug("Failed to allocate constant buffer\n");
@@ -257,7 +259,7 @@ pp_jimenezmlaa_init_run(struct pp_queue_t *ppq, unsigned int n,
    res.format = PIPE_FORMAT_R8G8_UNORM;
    res.width0 = res.height0 = 165;
    res.bind = PIPE_BIND_SAMPLER_VIEW;
-   res.usage = PIPE_USAGE_STATIC;
+   res.usage = PIPE_USAGE_DEFAULT;
    res.depth0 = res.array_size = res.nr_samples = 1;
 
    if (!ppq->p->screen->is_format_supported(ppq->p->screen, res.format,

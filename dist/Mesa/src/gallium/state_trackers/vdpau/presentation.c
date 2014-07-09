@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -269,7 +269,7 @@ vlVdpPresentationQueueDisplay(VdpPresentationQueue presentation_queue,
    pipe->screen->flush_frontbuffer
    (
       pipe->screen, tex, 0, 0,
-      vl_screen_get_private(pq->device->vscreen)
+      vl_screen_get_private(pq->device->vscreen), NULL
    );
 
    pipe->screen->fence_reference(pipe->screen, &surf->fence, NULL);
@@ -325,7 +325,8 @@ vlVdpPresentationQueueBlockUntilSurfaceIdle(VdpPresentationQueue presentation_qu
    pipe_mutex_lock(pq->device->mutex);
    if (surf->fence) {
       screen = pq->device->vscreen->pscreen;
-      screen->fence_finish(screen, surf->fence, 0);
+      screen->fence_finish(screen, surf->fence, PIPE_TIMEOUT_INFINITE);
+      screen->fence_reference(screen, &surf->fence, NULL);
    }
    pipe_mutex_unlock(pq->device->mutex);
 

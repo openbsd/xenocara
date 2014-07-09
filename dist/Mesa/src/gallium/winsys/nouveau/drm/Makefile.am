@@ -20,14 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
-	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/drivers \
-	$(GALLIUM_CFLAGS) \
+	$(GALLIUM_WINSYS_CFLAGS) \
 	$(NOUVEAU_CFLAGS)
 
 noinst_LTLIBRARIES = libnouveaudrm.la
 
-libnouveaudrm_la_SOURCES = nouveau_drm_winsys.c
+libnouveaudrm_la_SOURCES = $(C_SOURCES)

@@ -20,6 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+AUTOMAKE_OPTIONS = subdir-objects
+include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
@@ -28,12 +30,7 @@ AM_CFLAGS = \
 
 noinst_LTLIBRARIES = libxvmctracker.la
 
-libxvmctracker_la_SOURCES = \
-	block.c \
-	surface.c \
-	context.c \
-	subpicture.c \
-	attributes.c
+libxvmctracker_la_SOURCES = $(C_SOURCES)
 
 check_PROGRAMS = \
 	tests/test_context \

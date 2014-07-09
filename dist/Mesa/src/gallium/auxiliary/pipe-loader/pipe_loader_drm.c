@@ -19,7 +19,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -32,7 +32,6 @@
 
 #include <fcntl.h>
 #include <stdio.h>
-#include <libudev.h>
 #include <xf86drm.h>
 
 #ifdef HAVE_PIPE_LOADER_XCB
@@ -41,6 +40,7 @@
 
 #endif
 
+#include "loader.h"
 #include "state_tracker/drm_driver.h"
 #include "pipe_loader_priv.h"
 
@@ -48,8 +48,10 @@
 #include "util/u_dl.h"
 #include "util/u_debug.h"
 
-#define DRIVER_MAP_GALLIUM_ONLY
-#include "pci_ids/pci_id_driver_map.h"
+#define DRM_RENDER_NODE_DEV_NAME_FORMAT "%s/renderD%d"
+#define DRM_RENDER_NODE_MAX_NODES 63
+#define DRM_RENDER_NODE_MIN_MINOR 128
+#define DRM_RENDER_NODE_MAX_MINOR (DRM_RENDER_NODE_MIN_MINOR + DRM_RENDER_NODE_MAX_NODES)
 
 struct pipe_loader_drm_device {
    struct pipe_loader_device base;
@@ -59,81 +61,12 @@ struct pipe_loader_drm_device {
 
 #define pipe_loader_drm_device(dev) ((struct pipe_loader_drm_device *)dev)
 
-static boolean
-find_drm_pci_id(struct pipe_loader_drm_device *ddev)
-{
-   struct udev *udev = NULL;
-   struct udev_device *parent, *device = NULL;
-   struct stat stat;
-   const char *pci_id;
-
-   if (fstat(ddev->fd, &stat) < 0)
-      goto fail;
-
-   udev = udev_new();
-   if (!udev)
-      goto fail;
-
-   device = udev_device_new_from_devnum(udev, 'c', stat.st_rdev);
-   if (!device)
-      goto fail;
-
-   parent = udev_device_get_parent(device);
-   if (!parent)
-      goto fail;
-
-   pci_id = udev_device_get_property_value(parent, "PCI_ID");
-   if (!pci_id ||
-       sscanf(pci_id, "%x:%x", &ddev->base.u.pci.vendor_id,
-              &ddev->base.u.pci.chip_id) != 2)
-      goto fail;
-
-   return TRUE;
-
-  fail:
-   if (device)
-      udev_device_unref(device);
-   if (udev)
-      udev_unref(udev);
-
-   return FALSE;
-}
-
-static boolean
-find_drm_driver_name(struct pipe_loader_drm_device *ddev)
-{
-   struct pipe_loader_device *dev = &ddev->base;
-   int i, j;
-
-   for (i = 0; driver_map[i].driver; i++) {
-      if (dev->u.pci.vendor_id != driver_map[i].vendor_id)
-         continue;
-
-      if (driver_map[i].num_chips_ids == -1) {
-         dev->driver_name = driver_map[i].driver;
-         goto found;
-      }
-
-      for (j = 0; j < driver_map[i].num_chips_ids; j++) {
-         if (dev->u.pci.chip_id == driver_map[i].chip_ids[j]) {
-            dev->driver_name = driver_map[i].driver;
-            goto found;
-         }
-      }
-   }
-
-   return FALSE;
-
-  found:
-   return TRUE;
-}
-
 static struct pipe_loader_ops pipe_loader_drm_ops;
 
 static void
 pipe_loader_drm_x_auth(int fd)
 {
-#if HAVE_PIPE_LOADER_XCB
+#ifdef HAVE_PIPE_LOADER_XCB
    /* Try authenticate with the X server to give us access to devices that X
     * is running on. */
    xcb_connection_t *xcb_conn;
@@ -183,29 +116,39 @@ disconnect:
 #endif
 }
 
-boolean
-pipe_loader_drm_probe_fd(struct pipe_loader_device **dev, int fd)
+bool
+pipe_loader_drm_probe_fd(struct pipe_loader_device **dev, int fd,
+                         boolean auth_x)
 {
    struct pipe_loader_drm_device *ddev = CALLOC_STRUCT(pipe_loader_drm_device);
+   int vendor_id, chip_id;
 
-   ddev->base.type = PIPE_LOADER_DEVICE_PCI;
+   if (!ddev)
+      return false;
+
+   if (loader_get_pci_id_for_fd(fd, &vendor_id, &chip_id)) {
+      ddev->base.type = PIPE_LOADER_DEVICE_PCI;
+      ddev->base.u.pci.vendor_id = vendor_id;
+      ddev->base.u.pci.chip_id = chip_id;
+   } else {
+      ddev->base.type = PIPE_LOADER_DEVICE_PLATFORM;
+   }
    ddev->base.ops = &pipe_loader_drm_ops;
    ddev->fd = fd;
 
-   pipe_loader_drm_x_auth(fd);
+   if (auth_x)
+      pipe_loader_drm_x_auth(fd);
 
-   if (!find_drm_pci_id(ddev))
-      goto fail;
-
-   if (!find_drm_driver_name(ddev))
+   ddev->base.driver_name = loader_get_driver_for_fd(fd, _LOADER_GALLIUM);
+   if (!ddev->base.driver_name)
       goto fail;
 
    *dev = &ddev->base;
-   return TRUE;
+   return true;
 
   fail:
    FREE(ddev);
-   return FALSE;
+   return false;
 }
 
 static int
@@ -216,18 +159,87 @@ open_drm_minor(int minor)
    return open(path, O_RDWR, 0);
 }
 
+static int
+open_drm_render_node_minor(int minor)
+{
+   char path[PATH_MAX];
+   snprintf(path, sizeof(path), DRM_RENDER_NODE_DEV_NAME_FORMAT, DRM_DIR_NAME,
+            minor);
+   return open(path, O_RDWR, 0);
+}
+
 int
 pipe_loader_drm_probe(struct pipe_loader_device **devs, int ndev)
 {
-   int i, j, fd;
+   int i, k, fd, num_render_node_devs;
+   int j = 0;
 
-   for (i = 0, j = 0; i < DRM_MAX_MINOR; i++) {
+   struct {
+      unsigned vendor_id;
+      unsigned chip_id;
+   } render_node_devs[DRM_RENDER_NODE_MAX_NODES];
+
+   /* Look for render nodes first */
+   for (i = DRM_RENDER_NODE_MIN_MINOR, j = 0;
+        i <= DRM_RENDER_NODE_MAX_MINOR; i++) {
+      fd = open_drm_render_node_minor(i);
+      struct pipe_loader_device *dev;
+      if (fd < 0)
+         continue;
+
+      if (!pipe_loader_drm_probe_fd(&dev, fd, false)) {
+         close(fd);
+         continue;
+      }
+
+      render_node_devs[j].vendor_id = dev->u.pci.vendor_id;
+      render_node_devs[j].chip_id = dev->u.pci.chip_id;
+
+      if (j < ndev) {
+         devs[j] = dev;
+      } else {
+         close(fd);
+         dev->ops->release(&dev);
+      }
+      j++;
+   }
+
+   num_render_node_devs = j;
+
+   /* Next look for drm devices. */
+   for (i = 0; i < DRM_MAX_MINOR; i++) {
+      struct pipe_loader_device *dev;
+      boolean duplicate = FALSE;
       fd = open_drm_minor(i);
       if (fd < 0)
          continue;
 
-      if (j >= ndev || !pipe_loader_drm_probe_fd(&devs[j], fd))
+      if (!pipe_loader_drm_probe_fd(&dev, fd, true)) {
          close(fd);
+         continue;
+      }
+
+      /* Check to make sure we aren't already accessing this device via
+       * render nodes.
+       */
+      for (k = 0; k < num_render_node_devs; k++) {
+         if (dev->u.pci.vendor_id == render_node_devs[k].vendor_id &&
+             dev->u.pci.chip_id == render_node_devs[k].chip_id) {
+            close(fd);
+            dev->ops->release(&dev);
+            duplicate = TRUE;
+            break;
+         }
+      }
+
+      if (duplicate)
+         continue;
+
+      if (j < ndev) {
+         devs[j] = dev;
+      } else {
+         dev->ops->release(&dev);
+      }
 
       j++;
    }

@@ -45,19 +45,6 @@
                              * sizeof(float))
 /** \} */
 
-void
-gen6_blorp_emit_batch_head(struct brw_context *brw,
-                           const brw_blorp_params *params)
-{
-   struct gl_context *ctx = &brw->ctx;
-
-   /* To ensure that the batch contains only the resolve, flush the batch
-    * before beginning and after finishing emitting the resolve packets.
-    */
-   intel_flush(ctx);
-}
-
-
 /**
  * CMD_STATE_BASE_ADDRESS
  *
@@ -74,9 +61,14 @@ void
 gen6_blorp_emit_state_base_address(struct brw_context *brw,
                                    const brw_blorp_params *params)
 {
+   uint8_t mocs = brw->gen == 7 ? GEN7_MOCS_L3 : 0;
+
    BEGIN_BATCH(10);
    OUT_BATCH(CMD_STATE_BASE_ADDRESS << 16 | (10 - 2));
-   OUT_BATCH(1); /* GeneralStateBaseAddressModifyEnable */
+   OUT_BATCH(mocs << 8 | /* GeneralStateMemoryObjectControlState */
+             mocs << 4 | /* StatelessDataPortAccessMemoryObjectControlState */
+             1); /* GeneralStateBaseAddressModifyEnable */
+
    /* SurfaceStateBaseAddress */
    OUT_RELOC(brw->batch.bo, I915_GEM_DOMAIN_SAMPLER, 0, 1);
    /* DynamicStateBaseAddress */
@@ -163,7 +155,7 @@ gen6_blorp_emit_vertices(struct brw_context *brw,
       if (brw->gen >= 7)
          dw0 |= GEN7_VB0_ADDRESS_MODIFYENABLE;
 
-      if (brw->is_haswell)
+      if (brw->gen == 7)
          dw0 |= GEN7_MOCS_L3 << 16;
 
       BEGIN_BATCH(batch_length);
@@ -261,26 +253,6 @@ gen6_blorp_emit_blend_state(struct brw_context *brw,
    blend->blend1.write_disable_g = params->color_write_disable[1];
    blend->blend1.write_disable_b = params->color_write_disable[2];
    blend->blend1.write_disable_a = params->color_write_disable[3];
-
-   /* When blitting from an XRGB source to a ARGB destination, we need to
-    * interpret the missing channel as 1.0.  Blending can do that for us:
-    * we simply use the RGB values from the fragment shader ("source RGB"),
-    * but smash the alpha channel to 1.
-    */
-   if (params->src.mt &&
-       _mesa_get_format_bits(params->dst.mt->format, GL_ALPHA_BITS) > 0 &&
-       _mesa_get_format_bits(params->src.mt->format, GL_ALPHA_BITS) == 0) {
-      blend->blend0.blend_enable = 1;
-      blend->blend0.ia_blend_enable = 1;
-
-      blend->blend0.blend_func = BRW_BLENDFUNCTION_ADD;
-      blend->blend0.ia_blend_func = BRW_BLENDFUNCTION_ADD;
-
-      blend->blend0.source_blend_factor = BRW_BLENDFACTOR_SRC_COLOR;
-      blend->blend0.dest_blend_factor = BRW_BLENDFACTOR_ZERO;
-      blend->blend0.ia_source_blend_factor = BRW_BLENDFACTOR_ONE;
-      blend->blend0.ia_dest_blend_factor = BRW_BLENDFACTOR_ZERO;
-   }
 
    return cc_blend_state_offset;
 }
@@ -395,7 +367,7 @@ gen6_blorp_emit_surface_state(struct brw_context *brw,
       width /= 2;
       height /= 2;
    }
-   struct intel_region *region = surface->mt->region;
+   struct intel_mipmap_tree *mt = surface->mt;
    uint32_t tile_x, tile_y;
 
    uint32_t *surf = (uint32_t *)
@@ -409,7 +381,7 @@ gen6_blorp_emit_surface_state(struct brw_context *brw,
 
    /* reloc */
    surf[1] = (surface->compute_tile_offsets(&tile_x, &tile_y) +
-              region->bo->offset);
+              mt->bo->offset64);
 
    surf[2] = (0 << BRW_SURFACE_LOD_SHIFT |
               (width - 1) << BRW_SURFACE_WIDTH_SHIFT |
@@ -417,8 +389,8 @@ gen6_blorp_emit_surface_state(struct brw_context *brw,
 
    uint32_t tiling = surface->map_stencil_as_y_tiled
       ? BRW_SURFACE_TILED | BRW_SURFACE_TILED_Y
-      : brw_get_surface_tiling_bits(region->tiling);
-   uint32_t pitch_bytes = region->pitch;
+      : brw_get_surface_tiling_bits(mt->tiling);
+   uint32_t pitch_bytes = mt->pitch;
    if (surface->map_stencil_as_y_tiled)
       pitch_bytes *= 2;
    surf[3] = (tiling |
@@ -440,8 +412,8 @@ gen6_blorp_emit_surface_state(struct brw_context *brw,
    /* Emit relocation to surface contents */
    drm_intel_bo_emit_reloc(brw->batch.bo,
                            wm_surf_offset + 4,
-                           region->bo,
-                           surf[1] - region->bo->offset,
+                           mt->bo,
+                           surf[1] - mt->bo->offset64,
                            read_domains, write_domain);
 
    return wm_surf_offset;
@@ -495,14 +467,14 @@ gen6_blorp_emit_sampler_state(struct brw_context *brw,
 
    sampler->ss0.min_mag_neq = 1;
 
-   /* Set LOD bias: 
+   /* Set LOD bias:
     */
    sampler->ss0.lod_bias = 0;
 
    sampler->ss0.lod_preclamp = 1; /* OpenGL mode */
    sampler->ss0.default_color_mode = 0; /* OpenGL/DX10 mode */
 
-   /* Set BaseMipLevel, MaxLOD, MinLOD: 
+   /* Set BaseMipLevel, MaxLOD, MinLOD:
     *
     * XXX: I don't think that using firstLevel, lastLevel works,
     * because we always setup the surface state as if firstLevel ==
@@ -672,7 +644,7 @@ gen6_blorp_emit_sf_config(struct brw_context *brw,
              1 << GEN6_SF_URB_ENTRY_READ_LENGTH_SHIFT |
              0 << GEN6_SF_URB_ENTRY_READ_OFFSET_SHIFT);
    OUT_BATCH(0); /* dw2 */
-   OUT_BATCH(params->num_samples > 1 ? GEN6_SF_MSRAST_ON_PATTERN : 0);
+   OUT_BATCH(params->dst.num_samples > 1 ? GEN6_SF_MSRAST_ON_PATTERN : 0);
    for (int i = 0; i < 16; ++i)
       OUT_BATCH(0);
    ADVANCE_BATCH();
@@ -729,7 +701,7 @@ gen6_blorp_emit_wm_config(struct brw_context *brw,
       dw5 |= GEN6_WM_DISPATCH_ENABLE; /* We are rendering */
    }
 
-   if (params->num_samples > 1) {
+   if (params->dst.num_samples > 1) {
       dw6 |= GEN6_WM_MSRAST_ON_PATTERN;
       if (prog_data && prog_data->persample_msaa_dispatch)
          dw6 |= GEN6_WM_MSDISPMODE_PERSAMPLE;
@@ -832,9 +804,9 @@ gen6_blorp_emit_depth_stencil_config(struct brw_context *brw,
       uint32_t tile_x = draw_x & tile_mask_x;
       uint32_t tile_y = draw_y & tile_mask_y;
       uint32_t offset =
-         intel_region_get_aligned_offset(params->depth.mt->region,
-                                         draw_x & ~tile_mask_x,
-                                         draw_y & ~tile_mask_y, false);
+         intel_miptree_get_aligned_offset(params->depth.mt,
+                                          draw_x & ~tile_mask_x,
+                                          draw_y & ~tile_mask_y, false);
 
       /* According to the Sandy Bridge PRM, volume 2 part 1, pp326-327
        * (3DSTATE_DEPTH_BUFFER dw5), in the documentation for "Depth
@@ -862,14 +834,14 @@ gen6_blorp_emit_depth_stencil_config(struct brw_context *brw,
 
       BEGIN_BATCH(7);
       OUT_BATCH(_3DSTATE_DEPTH_BUFFER << 16 | (7 - 2));
-      OUT_BATCH((params->depth.mt->region->pitch - 1) |
+      OUT_BATCH((params->depth.mt->pitch - 1) |
                 params->depth_format << 18 |
                 1 << 21 | /* separate stencil enable */
                 1 << 22 | /* hiz enable */
                 BRW_TILEWALK_YMAJOR << 26 |
                 1 << 27 | /* y-tiled */
                 BRW_SURFACE_2D << 29);
-      OUT_RELOC(params->depth.mt->region->bo,
+      OUT_RELOC(params->depth.mt->bo,
                 I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
                 offset);
       OUT_BATCH(BRW_SURFACE_MIPMAPLAYOUT_BELOW << 1 |
@@ -884,16 +856,16 @@ gen6_blorp_emit_depth_stencil_config(struct brw_context *brw,
 
    /* 3DSTATE_HIER_DEPTH_BUFFER */
    {
-      struct intel_region *hiz_region = params->depth.mt->hiz_mt->region;
+      struct intel_mipmap_tree *hiz_mt = params->depth.mt->hiz_mt;
       uint32_t hiz_offset =
-         intel_region_get_aligned_offset(hiz_region,
-                                         draw_x & ~tile_mask_x,
-                                         (draw_y & ~tile_mask_y) / 2, false);
+         intel_miptree_get_aligned_offset(hiz_mt,
+                                          draw_x & ~tile_mask_x,
+                                          (draw_y & ~tile_mask_y) / 2, false);
 
       BEGIN_BATCH(3);
       OUT_BATCH((_3DSTATE_HIER_DEPTH_BUFFER << 16) | (3 - 2));
-      OUT_BATCH(hiz_region->pitch - 1);
-      OUT_RELOC(hiz_region->bo,
+      OUT_BATCH(hiz_mt->pitch - 1);
+      OUT_RELOC(hiz_mt->bo,
                 I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
                 hiz_offset);
       ADVANCE_BATCH();
@@ -914,6 +886,9 @@ static void
 gen6_blorp_emit_depth_disable(struct brw_context *brw,
                               const brw_blorp_params *params)
 {
+   intel_emit_post_sync_nonzero_flush(brw);
+   intel_emit_depth_stall_flushes(brw);
+
    BEGIN_BATCH(7);
    OUT_BATCH(_3DSTATE_DEPTH_BUFFER << 16 | (7 - 2));
    OUT_BATCH((BRW_DEPTHFORMAT_D32_FLOAT << 18) |
@@ -1015,8 +990,10 @@ gen6_blorp_emit_primitive(struct brw_context *brw,
    OUT_BATCH(0);
    OUT_BATCH(0);
    ADVANCE_BATCH();
-}
 
+   /* Only used on Sandybridge; harmless to set elsewhere. */
+   brw->batch.need_workaround_flush = true;
+}
 
 /**
  * \brief Execute a blit or render pass operation.
@@ -1039,9 +1016,14 @@ gen6_blorp_exec(struct brw_context *brw,
    uint32_t wm_bind_bo_offset = 0;
 
    uint32_t prog_offset = params->get_wm_prog(brw, &prog_data);
-   gen6_blorp_emit_batch_head(brw, params);
-   gen6_emit_3dstate_multisample(brw, params->num_samples);
-   gen6_emit_3dstate_sample_mask(brw, params->num_samples, 1.0, false, ~0u);
+
+   /* Emit workaround flushes when we switch from drawing to blorping. */
+   brw->batch.need_workaround_flush = true;
+
+   gen6_emit_3dstate_multisample(brw, params->dst.num_samples);
+   gen6_emit_3dstate_sample_mask(brw,
+                                 params->dst.num_samples > 1 ?
+                                 (1 << params->dst.num_samples) - 1 : 1);
    gen6_blorp_emit_state_base_address(brw, params);
    gen6_blorp_emit_vertices(brw, params);
    gen6_blorp_emit_urb_config(brw, params);

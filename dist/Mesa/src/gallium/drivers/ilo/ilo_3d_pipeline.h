@@ -29,11 +29,10 @@
 #define ILO_3D_PIPELINE_H
 
 #include "ilo_common.h"
-#include "ilo_context.h"
-#include "ilo_gpe_gen6.h"
-#include "ilo_gpe_gen7.h"
+#include "ilo_gpe.h"
 
 struct intel_bo;
+struct ilo_blitter;
 struct ilo_cp;
 struct ilo_context;
 
@@ -51,6 +50,8 @@ enum ilo_3d_pipeline_action {
    ILO_3D_PIPELINE_FLUSH,
    ILO_3D_PIPELINE_WRITE_TIMESTAMP,
    ILO_3D_PIPELINE_WRITE_DEPTH_COUNT,
+   ILO_3D_PIPELINE_WRITE_STATISTICS,
+   ILO_3D_PIPELINE_RECTLIST,
 };
 
 /**
@@ -83,103 +84,11 @@ struct ilo_3d_pipeline {
    void (*emit_write_depth_count)(struct ilo_3d_pipeline *pipeline,
                                   struct intel_bo *bo, int index);
 
-   /**
-    * all GPE functions of all GENs
-    */
-#define GEN6_EMIT(name) ilo_gpe_gen6_ ## name gen6_ ## name
-   GEN6_EMIT(STATE_BASE_ADDRESS);
-   GEN6_EMIT(STATE_SIP);
-   GEN6_EMIT(PIPELINE_SELECT);
-   GEN6_EMIT(3DSTATE_BINDING_TABLE_POINTERS);
-   GEN6_EMIT(3DSTATE_SAMPLER_STATE_POINTERS);
-   GEN6_EMIT(3DSTATE_URB);
-   GEN6_EMIT(3DSTATE_VERTEX_BUFFERS);
-   GEN6_EMIT(3DSTATE_VERTEX_ELEMENTS);
-   GEN6_EMIT(3DSTATE_INDEX_BUFFER);
-   GEN6_EMIT(3DSTATE_VF_STATISTICS);
-   GEN6_EMIT(3DSTATE_VIEWPORT_STATE_POINTERS);
-   GEN6_EMIT(3DSTATE_CC_STATE_POINTERS);
-   GEN6_EMIT(3DSTATE_SCISSOR_STATE_POINTERS);
-   GEN6_EMIT(3DSTATE_VS);
-   GEN6_EMIT(3DSTATE_GS);
-   GEN6_EMIT(3DSTATE_CLIP);
-   GEN6_EMIT(3DSTATE_SF);
-   GEN6_EMIT(3DSTATE_WM);
-   GEN6_EMIT(3DSTATE_CONSTANT_VS);
-   GEN6_EMIT(3DSTATE_CONSTANT_GS);
-   GEN6_EMIT(3DSTATE_CONSTANT_PS);
-   GEN6_EMIT(3DSTATE_SAMPLE_MASK);
-   GEN6_EMIT(3DSTATE_DRAWING_RECTANGLE);
-   GEN6_EMIT(3DSTATE_DEPTH_BUFFER);
-   GEN6_EMIT(3DSTATE_POLY_STIPPLE_OFFSET);
-   GEN6_EMIT(3DSTATE_POLY_STIPPLE_PATTERN);
-   GEN6_EMIT(3DSTATE_LINE_STIPPLE);
-   GEN6_EMIT(3DSTATE_AA_LINE_PARAMETERS);
-   GEN6_EMIT(3DSTATE_GS_SVB_INDEX);
-   GEN6_EMIT(3DSTATE_MULTISAMPLE);
-   GEN6_EMIT(3DSTATE_STENCIL_BUFFER);
-   GEN6_EMIT(3DSTATE_HIER_DEPTH_BUFFER);
-   GEN6_EMIT(3DSTATE_CLEAR_PARAMS);
-   GEN6_EMIT(PIPE_CONTROL);
-   GEN6_EMIT(3DPRIMITIVE);
-   GEN6_EMIT(INTERFACE_DESCRIPTOR_DATA);
-   GEN6_EMIT(SF_VIEWPORT);
-   GEN6_EMIT(CLIP_VIEWPORT);
-   GEN6_EMIT(CC_VIEWPORT);
-   GEN6_EMIT(COLOR_CALC_STATE);
-   GEN6_EMIT(BLEND_STATE);
-   GEN6_EMIT(DEPTH_STENCIL_STATE);
-   GEN6_EMIT(SCISSOR_RECT);
-   GEN6_EMIT(BINDING_TABLE_STATE);
-   GEN6_EMIT(SURFACE_STATE);
-   GEN6_EMIT(so_SURFACE_STATE);
-   GEN6_EMIT(SAMPLER_STATE);
-   GEN6_EMIT(SAMPLER_BORDER_COLOR_STATE);
-   GEN6_EMIT(push_constant_buffer);
-#undef GEN6_EMIT
+   void (*emit_write_statistics)(struct ilo_3d_pipeline *pipeline,
+                                 struct intel_bo *bo, int index);
 
-#define GEN7_EMIT(name) ilo_gpe_gen7_ ## name gen7_ ## name
-   GEN7_EMIT(3DSTATE_DEPTH_BUFFER);
-   GEN7_EMIT(3DSTATE_CC_STATE_POINTERS);
-   GEN7_EMIT(3DSTATE_GS);
-   GEN7_EMIT(3DSTATE_SF);
-   GEN7_EMIT(3DSTATE_WM);
-   GEN7_EMIT(3DSTATE_SAMPLE_MASK);
-   GEN7_EMIT(3DSTATE_CONSTANT_HS);
-   GEN7_EMIT(3DSTATE_CONSTANT_DS);
-   GEN7_EMIT(3DSTATE_HS);
-   GEN7_EMIT(3DSTATE_TE);
-   GEN7_EMIT(3DSTATE_DS);
-   GEN7_EMIT(3DSTATE_STREAMOUT);
-   GEN7_EMIT(3DSTATE_SBE);
-   GEN7_EMIT(3DSTATE_PS);
-   GEN7_EMIT(3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP);
-   GEN7_EMIT(3DSTATE_VIEWPORT_STATE_POINTERS_CC);
-   GEN7_EMIT(3DSTATE_BLEND_STATE_POINTERS);
-   GEN7_EMIT(3DSTATE_DEPTH_STENCIL_STATE_POINTERS);
-   GEN7_EMIT(3DSTATE_BINDING_TABLE_POINTERS_VS);
-   GEN7_EMIT(3DSTATE_BINDING_TABLE_POINTERS_HS);
-   GEN7_EMIT(3DSTATE_BINDING_TABLE_POINTERS_DS);
-   GEN7_EMIT(3DSTATE_BINDING_TABLE_POINTERS_GS);
-   GEN7_EMIT(3DSTATE_BINDING_TABLE_POINTERS_PS);
-   GEN7_EMIT(3DSTATE_SAMPLER_STATE_POINTERS_VS);
-   GEN7_EMIT(3DSTATE_SAMPLER_STATE_POINTERS_HS);
-   GEN7_EMIT(3DSTATE_SAMPLER_STATE_POINTERS_DS);
-   GEN7_EMIT(3DSTATE_SAMPLER_STATE_POINTERS_GS);
-   GEN7_EMIT(3DSTATE_SAMPLER_STATE_POINTERS_PS);
-   GEN7_EMIT(3DSTATE_URB_VS);
-   GEN7_EMIT(3DSTATE_URB_HS);
-   GEN7_EMIT(3DSTATE_URB_DS);
-   GEN7_EMIT(3DSTATE_URB_GS);
-   GEN7_EMIT(3DSTATE_PUSH_CONSTANT_ALLOC_VS);
-   GEN7_EMIT(3DSTATE_PUSH_CONSTANT_ALLOC_HS);
-   GEN7_EMIT(3DSTATE_PUSH_CONSTANT_ALLOC_DS);
-   GEN7_EMIT(3DSTATE_PUSH_CONSTANT_ALLOC_GS);
-   GEN7_EMIT(3DSTATE_PUSH_CONSTANT_ALLOC_PS);
-   GEN7_EMIT(3DSTATE_SO_DECL_LIST);
-   GEN7_EMIT(3DSTATE_SO_BUFFER);
-   GEN7_EMIT(SF_CLIP_VIEWPORT);
-#undef GEN7_EMIT
+   void (*emit_rectlist)(struct ilo_3d_pipeline *pipeline,
+                         const struct ilo_blitter *blitter);
 
    /**
     * HW states.
@@ -225,6 +134,8 @@ struct ilo_3d_pipeline {
          uint32_t SURFACE_STATE[ILO_MAX_WM_SURFACES];
          uint32_t SAMPLER_STATE;
          uint32_t SAMPLER_BORDER_COLOR_STATE[ILO_MAX_SAMPLERS];
+         uint32_t PUSH_CONSTANT_BUFFER;
+         int PUSH_CONSTANT_BUFFER_size;
       } wm;
    } state;
 };
@@ -268,6 +179,14 @@ ilo_3d_pipeline_emit_write_timestamp(struct ilo_3d_pipeline *p,
 void
 ilo_3d_pipeline_emit_write_depth_count(struct ilo_3d_pipeline *p,
                                        struct intel_bo *bo, int index);
+
+void
+ilo_3d_pipeline_emit_write_statistics(struct ilo_3d_pipeline *p,
+                                      struct intel_bo *bo, int index);
+
+void
+ilo_3d_pipeline_emit_rectlist(struct ilo_3d_pipeline *p,
+                              const struct ilo_blitter *blitter);
 
 void
 ilo_3d_pipeline_get_sample_position(struct ilo_3d_pipeline *p,

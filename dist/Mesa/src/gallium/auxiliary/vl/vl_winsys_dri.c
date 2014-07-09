@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -115,7 +115,7 @@ static void
 vl_dri2_flush_frontbuffer(struct pipe_screen *screen,
                           struct pipe_resource *resource,
                           unsigned level, unsigned layer,
-                          void *context_private)
+                          void *context_private, struct pipe_box *sub_box)
 {
    struct vl_dri_screen *scrn = (struct vl_dri_screen*)context_private;
    uint32_t msc_hi, msc_lo;
@@ -234,7 +234,7 @@ vl_screen_texture_from_drawable(struct vl_screen *vscreen, Drawable drawable)
    template.height0 = reply->height;
    template.depth0 = 1;
    template.array_size = 1;
-   template.usage = PIPE_USAGE_STATIC;
+   template.usage = PIPE_USAGE_DEFAULT;
    template.bind = PIPE_BIND_RENDER_TARGET;
    template.flags = 0;
 
@@ -330,7 +330,7 @@ vl_screen_create(Display *display, int screen)
    dri2_query_cookie = xcb_dri2_query_version (scrn->conn, XCB_DRI2_MAJOR_VERSION, XCB_DRI2_MINOR_VERSION);
    dri2_query = xcb_dri2_query_version_reply (scrn->conn, dri2_query_cookie, &error);
    if (dri2_query == NULL || error != NULL || dri2_query->minor_version < 2)
-      goto free_screen;
+      goto free_query;
 
    s = xcb_setup_roots_iterator(xcb_get_setup(scrn->conn));
    while (screen--)
@@ -353,48 +353,54 @@ vl_screen_create(Display *display, int screen)
    connect_cookie = xcb_dri2_connect_unchecked(scrn->conn, s.data->root, driverType);
    connect = xcb_dri2_connect_reply(scrn->conn, connect_cookie, NULL);
    if (connect == NULL || connect->driver_name_length + connect->device_name_length == 0)
-      goto free_screen;
+      goto free_connect;
 
    device_name_length = xcb_dri2_connect_device_name_length(connect);
    device_name = CALLOC(1, device_name_length + 1);
+   if (!device_name)
+      goto free_connect;
    memcpy(device_name, xcb_dri2_connect_device_name(connect), device_name_length);
    fd = open(device_name, O_RDWR);
    free(device_name);
 
    if (fd < 0)
-      goto free_screen;
+      goto free_connect;
 
    if (drmGetMagic(fd, &magic))
-      goto free_screen;
+      goto free_connect;
 
    authenticate_cookie = xcb_dri2_authenticate_unchecked(scrn->conn, s.data->root, magic);
    authenticate = xcb_dri2_authenticate_reply(scrn->conn, authenticate_cookie, NULL);
 
    if (authenticate == NULL || !authenticate->authenticated)
-      goto free_screen;
+      goto free_authenticate;
 
    scrn->base.pscreen = driver_descriptor.create_screen(fd);
+
    if (!scrn->base.pscreen)
-      goto free_screen;
+      goto free_authenticate;
 
    scrn->base.pscreen->flush_frontbuffer = vl_dri2_flush_frontbuffer;
    vl_compositor_reset_dirty_area(&scrn->dirty_areas[0]);
    vl_compositor_reset_dirty_area(&scrn->dirty_areas[1]);
 
-   free(dri2_query);
-   free(connect);
    free(authenticate);
+   free(connect);
+   free(dri2_query);
+   free(error);
 
    return &scrn->base;
 
-free_screen:
-   FREE(scrn);
-
-   free(dri2_query);
-   free(connect);
+free_authenticate:
    free(authenticate);
+free_connect:
+   free(connect);
+free_query:
+   free(dri2_query);
    free(error);
 
+free_screen:
+   FREE(scrn);
    return NULL;
 }
 

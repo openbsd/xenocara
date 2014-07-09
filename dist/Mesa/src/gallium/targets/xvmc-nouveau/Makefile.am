@@ -23,12 +23,7 @@
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
-	$(GALLIUM_CFLAGS) \
-	$(PTHREAD_CFLAGS) \
-	$(LIBDRM_CFLAGS)
-AM_CPPFLAGS = \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/src/gallium/winsys
+	$(GALLIUM_VIDEO_CFLAGS)
 
 xvmcdir = $(XVMC_LIB_INSTALL_DIR)
 xvmc_LTLIBRARIES = libXvMCnouveau.la
@@ -39,32 +34,10 @@ libXvMCnouveau_la_SOURCES = \
 	$(top_srcdir)/src/gallium/auxiliary/vl/vl_winsys_dri.c
 
 libXvMCnouveau_la_LDFLAGS = \
-	-module \
-	-version-number $(XVMC_MAJOR):$(XVMC_MINOR)
-	-shared \
-	-no-undefined
+	$(GALLIUM_XVMC_LINKER_FLAGS)
 
 libXvMCnouveau_la_LIBADD = \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/gallium/state_trackers/xvmc/libxvmctracker.la \
 	$(top_builddir)/src/gallium/winsys/nouveau/drm/libnouveaudrm.la \
-	$(top_builddir)/src/gallium/drivers/nv30/libnv30.la \
-	$(top_builddir)/src/gallium/drivers/nv50/libnv50.la \
-	$(top_builddir)/src/gallium/drivers/nvc0/libnvc0.la \
 	$(top_builddir)/src/gallium/drivers/nouveau/libnouveau.la \
-	$(top_builddir)/src/gallium/drivers/trace/libtrace.la \
-	$(GALLIUM_DRI_LIB_DEPS) \
-	$(XVMC_LIBS) \
-	$(LIBDRM_LIBS) \
+	$(GALLIUM_XVMC_LIB_DEPS) \
 	$(NOUVEAU_LIBS)
-
-if HAVE_MESA_LLVM
-libXvMCnouveau_la_LDFLAGS += $(LLVM_LDFLAGS)
-libXvMCnouveau_la_LIBADD += $(LLVM_LIBS)
-endif
-
-# Provide compatibility with scripts for the old Mesa build system for
-# a while by putting a link to the driver into /lib of the build tree.
-all-local: libXvMCnouveau.la
-	$(MKDIR_P) $(top_builddir)/$(LIB_DIR)/gallium
-	ln -f .libs/libXvMCnouveau.so* $(top_builddir)/$(LIB_DIR)/gallium/

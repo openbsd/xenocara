@@ -48,7 +48,6 @@ struct pt_so_emit {
    boolean use_pre_clip_pos;
    int pos_idx;
    unsigned emitted_primitives;
-   unsigned emitted_vertices;
    unsigned generated_primitives;
 };
 
@@ -163,7 +162,7 @@ static void so_emit_prim(struct pt_so_emit *so,
    for (i = 0; i < num_vertices; ++i) {
       const float (*input)[4];
       const float *pre_clip_pos = NULL;
-      int ob;
+      unsigned  ob;
 
       input = (const float (*)[4])(
          (const char *)input_ptr + (indices[i] * input_vertex_stride));
@@ -195,7 +194,7 @@ static void so_emit_prim(struct pt_so_emit *so,
          {
             int j;
             debug_printf("VERT[%d], offset = %d, slot[%d] sc = %d, num_c = %d, idx = %d = [",
-                         i + draw->so.targets[ob]->emitted_vertices,
+                         i,
                          draw->so.targets[ob]->internal_offset,
                          slot, start_comp, num_comps, idx);
             for (j = 0; j < num_comps; ++j) {
@@ -210,11 +209,9 @@ static void so_emit_prim(struct pt_so_emit *so,
          struct draw_so_target *target = draw->so.targets[ob];
          if (target && buffer_written[ob]) {
             target->internal_offset += state->stride[ob] * sizeof(float);
-            target->emitted_vertices += 1;
          }
       }
    }
-   so->emitted_vertices += num_vertices;
    ++so->emitted_primitives;
 }
 
@@ -274,7 +271,6 @@ void draw_pt_so_emit( struct pt_so_emit *emit,
    if (!draw->so.num_targets)
       return;
 
-   emit->emitted_vertices = 0;
    emit->emitted_primitives = 0;
    emit->generated_primitives = 0;
    emit->input_vertex_stride = input_verts->stride;
@@ -302,7 +298,6 @@ void draw_pt_so_emit( struct pt_so_emit *emit,
 
    render->set_stream_output_info(render,
                                   emit->emitted_primitives,
-                                  emit->emitted_vertices,
                                   emit->generated_primitives);
 }
 

@@ -73,6 +73,12 @@ struct gen6_pipeline_session {
    int num_surfaces[PIPE_SHADER_TYPES];
 };
 
+struct gen6_rectlist_session {
+   uint32_t DEPTH_STENCIL_STATE;
+   uint32_t COLOR_CALC_STATE;
+   uint32_t CC_VIEWPORT;
+};
+
 void
 gen6_pipeline_prepare(const struct ilo_3d_pipeline *p,
                       const struct ilo_context *ilo,
@@ -114,11 +120,6 @@ gen6_pipeline_vf_statistics(struct ilo_3d_pipeline *p,
                             struct gen6_pipeline_session *session);
 
 void
-gen6_pipeline_vf_draw(struct ilo_3d_pipeline *p,
-                      const struct ilo_context *ilo,
-                      struct gen6_pipeline_session *session);
-
-void
 gen6_pipeline_vs(struct ilo_3d_pipeline *p,
                  const struct ilo_context *ilo,
                  struct gen6_pipeline_session *session);
@@ -148,6 +149,10 @@ gen6_pipeline_update_max_svbi(struct ilo_3d_pipeline *p,
                               const struct ilo_context *ilo,
                               struct gen6_pipeline_session *session);
 
+int
+gen6_pipeline_estimate_state_size(const struct ilo_3d_pipeline *p,
+                                  const struct ilo_context *ilo);
+
 void
 ilo_3d_pipeline_emit_flush_gen6(struct ilo_3d_pipeline *p);
 
@@ -158,6 +163,10 @@ ilo_3d_pipeline_emit_write_timestamp_gen6(struct ilo_3d_pipeline *p,
 void
 ilo_3d_pipeline_emit_write_depth_count_gen6(struct ilo_3d_pipeline *p,
                                             struct intel_bo *bo, int index);
+
+void
+ilo_3d_pipeline_emit_write_statistics_gen6(struct ilo_3d_pipeline *p,
+                                           struct intel_bo *bo, int index);
 
 void
 ilo_3d_pipeline_init_gen6(struct ilo_3d_pipeline *p);

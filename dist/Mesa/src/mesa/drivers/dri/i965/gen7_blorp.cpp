@@ -51,14 +51,22 @@ static void
 gen7_blorp_emit_urb_config(struct brw_context *brw,
                            const brw_blorp_params *params)
 {
-   /* The minimum valid value is 32. See 3DSTATE_URB_VS,
-    * Dword 1.15:0 "VS Number of URB Entries".
-    */
-   int num_vs_entries = 32;
-   int vs_size = 2;
-   int vs_start = 2; /* skip over push constants */
+   unsigned urb_size = (brw->is_haswell && brw->gt == 3) ? 32 : 16;
+   gen7_emit_push_constant_state(brw,
+                                 urb_size / 2 /* vs_size */,
+                                 0 /* gs_size */,
+                                 urb_size / 2 /* fs_size */);
 
-   gen7_emit_urb_state(brw, num_vs_entries, vs_size, vs_start);
+   /* The minimum valid number of VS entries is 32. See 3DSTATE_URB_VS, Dword
+    * 1.15:0 "VS Number of URB Entries".
+    */
+   gen7_emit_urb_state(brw,
+                       32 /* num_vs_entries */,
+                       2 /* vs_size */,
+                       2 /* vs_start */,
+                       0 /* num_gs_entries */,
+                       1 /* gs_size */,
+                       2 /* gs_start */);
 }
 
 
@@ -141,12 +149,12 @@ gen7_blorp_emit_surface_state(struct brw_context *brw,
     * to divide them by 2 as we do for Gen6 (see
     * gen6_blorp_emit_surface_state).
     */
-   struct intel_region *region = surface->mt->region;
+   struct intel_mipmap_tree *mt = surface->mt;
    uint32_t tile_x, tile_y;
-   uint8_t mocs = brw->is_haswell ? GEN7_MOCS_L3 : 0;
+   const uint8_t mocs = GEN7_MOCS_L3;
 
    uint32_t tiling = surface->map_stencil_as_y_tiled
-      ? I915_TILING_Y : region->tiling;
+      ? I915_TILING_Y : mt->tiling;
 
    uint32_t *surf = (uint32_t *)
       brw_state_batch(brw, AUB_TRACE_SURFACE_STATE, 8 * 4, 32, &wm_surf_offset);
@@ -168,7 +176,7 @@ gen7_blorp_emit_surface_state(struct brw_context *brw,
 
    /* reloc */
    surf[1] =
-      surface->compute_tile_offsets(&tile_x, &tile_y) + region->bo->offset;
+      surface->compute_tile_offsets(&tile_x, &tile_y) + mt->bo->offset64;
 
    /* Note that the low bits of these fields are missing, so
     * there's the possibility of getting in trouble.
@@ -182,7 +190,7 @@ gen7_blorp_emit_surface_state(struct brw_context *brw,
    surf[2] = SET_FIELD(width - 1, GEN7_SURFACE_WIDTH) |
              SET_FIELD(height - 1, GEN7_SURFACE_HEIGHT);
 
-   uint32_t pitch_bytes = region->pitch;
+   uint32_t pitch_bytes = mt->pitch;
    if (surface->map_stencil_as_y_tiled)
       pitch_bytes *= 2;
    surf[3] = pitch_bytes - 1;
@@ -205,8 +213,8 @@ gen7_blorp_emit_surface_state(struct brw_context *brw,
    /* Emit relocation to surface contents */
    drm_intel_bo_emit_reloc(brw->batch.bo,
                            wm_surf_offset + 4,
-                           region->bo,
-                           surf[1] - region->bo->offset,
+                           mt->bo,
+                           surf[1] - mt->bo->offset64,
                            read_domains, write_domain);
 
    gen7_check_surface_setup(surf, is_render_target);
@@ -240,14 +248,14 @@ gen7_blorp_emit_sampler_state(struct brw_context *brw,
 
    //   sampler->ss0.min_mag_neq = 1;
 
-   /* Set LOD bias: 
+   /* Set LOD bias:
     */
    sampler->ss0.lod_bias = 0;
 
    sampler->ss0.lod_preclamp = 1; /* OpenGL mode */
    sampler->ss0.default_color_mode = 0; /* OpenGL/DX10 mode */
 
-   /* Set BaseMipLevel, MaxLOD, MinLOD: 
+   /* Set BaseMipLevel, MaxLOD, MinLOD:
     *
     * XXX: I don't think that using firstLevel, lastLevel works,
     * because we always setup the surface state as if firstLevel ==
@@ -394,6 +402,21 @@ gen7_blorp_emit_gs_disable(struct brw_context *brw,
    OUT_BATCH(0);
    ADVANCE_BATCH();
 
+   /**
+    * From Graphics BSpec: 3D-Media-GPGPU Engine > 3D Pipeline Stages >
+    * Geometry > Geometry Shader > State:
+    *
+    *     "Note: Because of corruption in IVB:GT2, software needs to flush the
+    *     whole fixed function pipeline when the GS enable changes value in
+    *     the 3DSTATE_GS."
+    *
+    * The hardware architects have clarified that in this context "flush the
+    * whole fixed function pipeline" means to emit a PIPE_CONTROL with the "CS
+    * Stall" bit set.
+    */
+   if (!brw->is_haswell && brw->gt == 2 && brw->gs.enabled)
+      gen7_emit_cs_stall_flush(brw);
+
    BEGIN_BATCH(7);
    OUT_BATCH(_3DSTATE_GS << 16 | (7 - 2));
    OUT_BATCH(0);
@@ -403,6 +426,7 @@ gen7_blorp_emit_gs_disable(struct brw_context *brw,
    OUT_BATCH(0);
    OUT_BATCH(0);
    ADVANCE_BATCH();
+   brw->gs.enabled = false;
 }
 
 /* 3DSTATE_STREAMOUT
@@ -448,7 +472,7 @@ gen7_blorp_emit_sf_config(struct brw_context *brw,
       OUT_BATCH(_3DSTATE_SF << 16 | (7 - 2));
       OUT_BATCH(params->depth_format <<
                 GEN7_SF_DEPTH_BUFFER_SURFACE_FORMAT_SHIFT);
-      OUT_BATCH(params->num_samples > 1 ? GEN6_SF_MSRAST_ON_PATTERN : 0);
+      OUT_BATCH(params->dst.num_samples > 1 ? GEN6_SF_MSRAST_ON_PATTERN : 0);
       OUT_BATCH(0);
       OUT_BATCH(0);
       OUT_BATCH(0);
@@ -504,7 +528,7 @@ gen7_blorp_emit_wm_config(struct brw_context *brw,
       dw1 |= GEN7_WM_DISPATCH_ENABLE; /* We are rendering */
    }
 
-      if (params->num_samples > 1) {
+      if (params->dst.num_samples > 1) {
          dw1 |= GEN7_WM_MSRAST_ON_PATTERN;
          if (prog_data && prog_data->persample_msaa_dispatch)
             dw2 |= GEN7_WM_MSDISPMODE_PERSAMPLE;
@@ -616,7 +640,7 @@ gen7_blorp_emit_constant_ps(struct brw_context *brw,
                             const brw_blorp_params *params,
                             uint32_t wm_push_const_offset)
 {
-   uint8_t mocs = brw->is_haswell ? GEN7_MOCS_L3 : 0;
+   const uint8_t mocs = GEN7_MOCS_L3;
 
    /* Make sure the push constants fill an exact integer number of
     * registers.
@@ -658,84 +682,86 @@ static void
 gen7_blorp_emit_depth_stencil_config(struct brw_context *brw,
                                      const brw_blorp_params *params)
 {
-   struct gl_context *ctx = &brw->ctx;
-   uint32_t draw_x = params->depth.x_offset;
-   uint32_t draw_y = params->depth.y_offset;
-   uint32_t tile_mask_x, tile_mask_y;
-   uint8_t mocs = brw->is_haswell ? GEN7_MOCS_L3 : 0;
+   const uint8_t mocs = GEN7_MOCS_L3;
+   uint32_t surfwidth, surfheight;
+   uint32_t surftype;
+   unsigned int depth = MAX2(params->depth.mt->logical_depth0, 1);
+   unsigned int min_array_element;
+   GLenum gl_target = params->depth.mt->target;
+   unsigned int lod;
 
-   brw_get_depthstencil_tile_masks(params->depth.mt,
-                                   params->depth.level,
-                                   params->depth.layer,
-                                   NULL,
-                                   &tile_mask_x, &tile_mask_y);
+   switch (gl_target) {
+   case GL_TEXTURE_CUBE_MAP_ARRAY:
+   case GL_TEXTURE_CUBE_MAP:
+      /* The PRM claims that we should use BRW_SURFACE_CUBE for this
+       * situation, but experiments show that gl_Layer doesn't work when we do
+       * this.  So we use BRW_SURFACE_2D, since for rendering purposes this is
+       * equivalent.
+       */
+      surftype = BRW_SURFACE_2D;
+      depth *= 6;
+      break;
+   default:
+      surftype = translate_tex_target(gl_target);
+      break;
+   }
+
+   min_array_element = params->depth.layer;
+   if (params->depth.mt->num_samples > 1) {
+      /* Convert physical layer to logical layer. */
+      min_array_element /= params->depth.mt->num_samples;
+   }
+
+   lod = params->depth.level - params->depth.mt->first_level;
+
+   if (params->hiz_op != GEN6_HIZ_OP_NONE && lod == 0) {
+      /* HIZ ops for lod 0 may set the width & height a little
+       * larger to allow the fast depth clear to fit the hardware
+       * alignment requirements. (8x4)
+       */
+      surfwidth = params->depth.width;
+      surfheight = params->depth.height;
+   } else {
+      surfwidth = params->depth.mt->logical_width0;
+      surfheight = params->depth.mt->logical_height0;
+   }
 
    /* 3DSTATE_DEPTH_BUFFER */
    {
-      uint32_t tile_x = draw_x & tile_mask_x;
-      uint32_t tile_y = draw_y & tile_mask_y;
-      uint32_t offset =
-         intel_region_get_aligned_offset(params->depth.mt->region,
-                                         draw_x & ~tile_mask_x,
-                                         draw_y & ~tile_mask_y, false);
-
-      /* According to the Sandy Bridge PRM, volume 2 part 1, pp326-327
-       * (3DSTATE_DEPTH_BUFFER dw5), in the documentation for "Depth
-       * Coordinate Offset X/Y":
-       *
-       *   "The 3 LSBs of both offsets must be zero to ensure correct
-       *   alignment"
-       *
-       * We have no guarantee that tile_x and tile_y are correctly aligned,
-       * since they are determined by the mipmap layout, which is only aligned
-       * to multiples of 4.
-       *
-       * So, to avoid hanging the GPU, just smash the low order 3 bits of
-       * tile_x and tile_y to 0.  This is a temporary workaround until we come
-       * up with a better solution.
-       */
-      WARN_ONCE((tile_x & 7) || (tile_y & 7),
-                "Depth/stencil buffer needs alignment to 8-pixel boundaries.\n"
-                "Truncating offset, bad rendering may occur.\n");
-      tile_x &= ~7;
-      tile_y &= ~7;
-
       intel_emit_depth_stall_flushes(brw);
 
       BEGIN_BATCH(7);
       OUT_BATCH(GEN7_3DSTATE_DEPTH_BUFFER << 16 | (7 - 2));
-      OUT_BATCH((params->depth.mt->region->pitch - 1) |
+      OUT_BATCH((params->depth.mt->pitch - 1) |
                 params->depth_format << 18 |
                 1 << 22 | /* hiz enable */
                 1 << 28 | /* depth write */
-                BRW_SURFACE_2D << 29);
-      OUT_RELOC(params->depth.mt->region->bo,
+                surftype << 29);
+      OUT_RELOC(params->depth.mt->bo,
                 I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
-                offset);
-      OUT_BATCH((params->depth.width + tile_x - 1) << 4 |
-                (params->depth.height + tile_y - 1) << 18);
-      OUT_BATCH(mocs);
-      OUT_BATCH(tile_x |
-                tile_y << 16);
+                0);
+      OUT_BATCH((surfwidth - 1) << 4 |
+                (surfheight - 1) << 18 |
+                lod);
+      OUT_BATCH(((depth - 1) << 21) |
+                (min_array_element << 10) |
+                mocs);
       OUT_BATCH(0);
+      OUT_BATCH((depth - 1) << 21);
       ADVANCE_BATCH();
    }
 
    /* 3DSTATE_HIER_DEPTH_BUFFER */
    {
-      struct intel_region *hiz_region = params->depth.mt->hiz_mt->region;
-      uint32_t hiz_offset =
-         intel_region_get_aligned_offset(hiz_region,
-                                         draw_x & ~tile_mask_x,
-                                         (draw_y & ~tile_mask_y) / 2, false);
+      struct intel_mipmap_tree *hiz_mt = params->depth.mt->hiz_mt;
 
       BEGIN_BATCH(3);
       OUT_BATCH((GEN7_3DSTATE_HIER_DEPTH_BUFFER << 16) | (3 - 2));
       OUT_BATCH((mocs << 25) |
-                (hiz_region->pitch - 1));
-      OUT_RELOC(hiz_region->bo,
+                (hiz_mt->pitch - 1));
+      OUT_RELOC(hiz_mt->bo,
                 I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
-                hiz_offset);
+                0);
       ADVANCE_BATCH();
    }
 
@@ -754,6 +780,8 @@ static void
 gen7_blorp_emit_depth_disable(struct brw_context *brw,
                               const brw_blorp_params *params)
 {
+   intel_emit_depth_stall_flushes(brw);
+
    BEGIN_BATCH(7);
    OUT_BATCH(GEN7_3DSTATE_DEPTH_BUFFER << 16 | (7 - 2));
    OUT_BATCH(BRW_DEPTHFORMAT_D32_FLOAT << 18 | (BRW_SURFACE_NULL << 29));
@@ -823,6 +851,9 @@ void
 gen7_blorp_exec(struct brw_context *brw,
                 const brw_blorp_params *params)
 {
+   if (brw->gen >= 8)
+      return;
+
    brw_blorp_prog_data *prog_data = NULL;
    uint32_t cc_blend_state_offset = 0;
    uint32_t cc_state_offset = 0;
@@ -832,9 +863,10 @@ gen7_blorp_exec(struct brw_context *brw,
    uint32_t sampler_offset = 0;
 
    uint32_t prog_offset = params->get_wm_prog(brw, &prog_data);
-   gen6_blorp_emit_batch_head(brw, params);
-   gen6_emit_3dstate_multisample(brw, params->num_samples);
-   gen6_emit_3dstate_sample_mask(brw, params->num_samples, 1.0, false, ~0u);
+   gen6_emit_3dstate_multisample(brw, params->dst.num_samples);
+   gen6_emit_3dstate_sample_mask(brw,
+                                 params->dst.num_samples > 1 ?
+                                 (1 << params->dst.num_samples) - 1 : 1);
    gen6_blorp_emit_state_base_address(brw, params);
    gen6_blorp_emit_vertices(brw, params);
    gen7_blorp_emit_urb_config(brw, params);

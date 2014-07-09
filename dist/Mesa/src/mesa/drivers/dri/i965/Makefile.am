@@ -23,8 +23,6 @@
 
 include Makefile.sources
 
-if HAVE_I965_DRI
-
 AM_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/ \
@@ -38,45 +36,29 @@ AM_CFLAGS = \
 	$(VISIBILITY_CFLAGS) \
 	$(INTEL_CFLAGS)
 
-if HAVE_OPENGL_ES1
-AM_CFLAGS += \
-	-DFEATURE_ES1=1
-endif
-
-if HAVE_OPENGL_ES2
-AM_CFLAGS += \
-	-DFEATURE_ES2=1
-endif
-
 AM_CXXFLAGS = $(AM_CFLAGS)
 
-dridir = $(DRI_DRIVER_INSTALL_DIR)
+gen8_instruction_CFLAGS = $(AM_CFLAGS) -fkeep-inline-functions
 
 noinst_LTLIBRARIES = libi965_dri.la
-dri_LTLIBRARIES = i965_dri.la
-
 libi965_dri_la_SOURCES = $(i965_FILES)
-
-# list of libs to be linked against by i965_dri.so and i965 test programs.
-COMMON_LIBS = \
-	libi965_dri.la \
-	../common/libdricommon.la \
-	$(DRI_LIB_DEPS) \
-	$(INTEL_LIBS)
+libi965_dri_la_LIBADD = $(INTEL_LIBS)
 
 TEST_LIBS = \
-	$(COMMON_LIBS) \
-        -lrt \
+	libi965_dri.la \
+	../common/libdricommon.la \
+	../common/libmegadriver_stub.la \
+        ../../../libmesa.la \
+	$(DRI_LIB_DEPS) \
+        $(CLOCK_LIB) \
 	../common/libdri_test_stubs.la
-
-i965_dri_la_SOURCES =
-nodist_EXTRA_i965_dri_la_SOURCES = dummy2.cpp
-i965_dri_la_LIBADD = $(COMMON_LIBS)
-i965_dri_la_LDFLAGS = -module -avoid-version -shared
 
 TESTS = \
         test_eu_compact \
-        test_vec4_register_coalesce
+        test_vec4_copy_propagation \
+        test_vec4_register_coalesce \
+        test_blorp_blit_eu_gen
+
 check_PROGRAMS = $(TESTS)
 
 test_vec4_register_coalesce_SOURCES = \
@@ -85,15 +67,17 @@ test_vec4_register_coalesce_LDADD = \
         $(TEST_LIBS) \
         $(top_builddir)/src/gtest/libgtest.la
 
+test_vec4_copy_propagation_SOURCES = \
+	test_vec4_copy_propagation.cpp
+test_vec4_copy_propagation_LDADD = \
+        $(TEST_LIBS) \
+        $(top_builddir)/src/gtest/libgtest.la
+
 test_eu_compact_SOURCES = \
 	test_eu_compact.c
 nodist_EXTRA_test_eu_compact_SOURCES = dummy.cpp
 test_eu_compact_LDADD = $(TEST_LIBS)
 
-# Provide compatibility with scripts for the old Mesa build system for
-# a while by putting a link to the driver into /lib of the build tree.
-all-local: i965_dri.la
-	$(MKDIR_P) $(top_builddir)/$(LIB_DIR);
-	ln -f .libs/i965_dri.so $(top_builddir)/$(LIB_DIR)/i965_dri.so;
-
-endif
+test_blorp_blit_eu_gen_SOURCES = \
+        test_blorp_blit_eu_gen.cpp
+test_blorp_blit_eu_gen_LDADD = $(TEST_LIBS)

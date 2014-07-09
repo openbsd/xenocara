@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 VDPAU_MAJOR = 1
@@ -27,6 +28,7 @@ VDPAU_MINOR = 0
 
 AM_CFLAGS = \
 	$(GALLIUM_CFLAGS) \
+	$(VISIBILITY_CFLAGS) \
 	$(VDPAU_CFLAGS)
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
@@ -35,15 +37,4 @@ AM_CPPFLAGS = \
 
 noinst_LTLIBRARIES = libvdpautracker.la
 
-libvdpautracker_la_SOURCES = \
-	htab.c \
-	ftab.c \
-	device.c \
-	query.c \
-	surface.c \
-	decode.c \
-	presentation.c \
-	bitmap.c \
-	output.c \
-	preemption.c \
-	mixer.c
+libvdpautracker_la_SOURCES = $(C_SOURCES)

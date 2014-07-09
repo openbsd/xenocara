@@ -29,6 +29,7 @@
 #include "util/u_transfer.h"
 #include "util/u_format_etc.h"
 
+#include "ilo_blit.h"
 #include "ilo_cp.h"
 #include "ilo_context.h"
 #include "ilo_resource.h"
@@ -38,7 +39,7 @@
 static bool
 is_bo_busy(struct ilo_context *ilo, struct intel_bo *bo, bool *need_flush)
 {
-   const bool referenced = intel_bo_references(ilo->cp->bo, bo);
+   const bool referenced = intel_bo_has_reloc(ilo->cp->bo, bo);
 
    if (need_flush)
       *need_flush = referenced;
@@ -49,29 +50,29 @@ is_bo_busy(struct ilo_context *ilo, struct intel_bo *bo, bool *need_flush)
    return intel_bo_is_busy(bo);
 }
 
-static bool
+static void *
 map_bo_for_transfer(struct ilo_context *ilo, struct intel_bo *bo,
                     const struct ilo_transfer *xfer)
 {
-   int err;
+   void *ptr;
 
    switch (xfer->method) {
    case ILO_TRANSFER_MAP_CPU:
-      err = intel_bo_map(bo, (xfer->base.usage & PIPE_TRANSFER_WRITE));
+      ptr = intel_bo_map(bo, (xfer->base.usage & PIPE_TRANSFER_WRITE));
       break;
    case ILO_TRANSFER_MAP_GTT:
-      err = intel_bo_map_gtt(bo);
+      ptr = intel_bo_map_gtt(bo);
       break;
    case ILO_TRANSFER_MAP_UNSYNC:
-      err = intel_bo_map_unsynchronized(bo);
+      ptr = intel_bo_map_unsynchronized(bo);
       break;
    default:
       assert(!"unknown mapping method");
-      err = -1;
+      ptr = NULL;
       break;
    }
 
-   return !err;
+   return ptr;
 }
 
 /**
@@ -165,7 +166,7 @@ choose_transfer_method(struct ilo_context *ilo, struct ilo_transfer *xfer)
 
          /* flush to make bo busy (so that map() stalls as it should be) */
          if (need_flush)
-            ilo_cp_flush(ilo->cp);
+            ilo_cp_flush(ilo->cp, "syncing for transfers");
       }
    }
 
@@ -186,10 +187,12 @@ tex_get_box_origin(const struct ilo_texture *tex,
                    const struct pipe_box *box,
                    unsigned *mem_x, unsigned *mem_y)
 {
+   const struct ilo_texture_slice *s =
+      ilo_texture_get_slice(tex, level, slice + box->z);
    unsigned x, y;
 
-   x = tex->slice_offsets[level][slice + box->z].x + box->x;
-   y = tex->slice_offsets[level][slice + box->z].y + box->y;
+   x = s->x + box->x;
+   y = s->y + box->y;
 
    assert(x % tex->block_width == 0 && y % tex->block_height == 0);
 
@@ -211,6 +214,7 @@ tex_get_box_offset(const struct ilo_texture *tex, unsigned level,
 static unsigned
 tex_get_slice_stride(const struct ilo_texture *tex, unsigned level)
 {
+   const struct ilo_texture_slice *s0, *s1;
    unsigned qpitch;
 
    /* there is no 3D array texture */
@@ -228,7 +232,9 @@ tex_get_slice_stride(const struct ilo_texture *tex, unsigned level)
       }
    }
 
-   qpitch = tex->slice_offsets[level][1].y - tex->slice_offsets[level][0].y;
+   s0 = ilo_texture_get_slice(tex, level, 0);
+   s1 = ilo_texture_get_slice(tex, level, 1);
+   qpitch = s1->y - s0->y;
    assert(qpitch % tex->block_height == 0);
 
    return (qpitch / tex->block_height) * tex->bo_stride;
@@ -400,17 +406,44 @@ tex_tile_choose_offset_func(const struct ilo_texture *tex,
    }
 }
 
+static void *
+tex_staging_sys_map_bo(const struct ilo_context *ilo,
+                       struct ilo_texture *tex,
+                       bool for_read_back, bool linear_view)
+{
+   const bool prefer_cpu = (ilo->dev->has_llc || for_read_back);
+   void *ptr;
+
+   if (prefer_cpu && (tex->tiling == INTEL_TILING_NONE || !linear_view))
+      ptr = intel_bo_map(tex->bo, !for_read_back);
+   else
+      ptr = intel_bo_map_gtt(tex->bo);
+
+   return ptr;
+}
+
 static void
+tex_staging_sys_unmap_bo(const struct ilo_context *ilo,
+                         const struct ilo_texture *tex)
+{
+   intel_bo_unmap(tex->bo);
+}
+
+static bool
 tex_staging_sys_zs_read(struct ilo_context *ilo,
                         struct ilo_texture *tex,
                         const struct ilo_transfer *xfer)
 {
    const bool swizzle = ilo->dev->has_address_swizzling;
    const struct pipe_box *box = &xfer->base.box;
-   const uint8_t *src = intel_bo_get_virtual(tex->bo);
+   const uint8_t *src;
    tex_tile_offset_func tile_offset;
    unsigned tiles_per_row;
    int slice;
+
+   src = tex_staging_sys_map_bo(ilo, tex, true, false);
+   if (!src)
+      return false;
 
    tile_offset = tex_tile_choose_offset_func(tex, &tiles_per_row);
 
@@ -418,10 +451,16 @@ tex_staging_sys_zs_read(struct ilo_context *ilo,
 
    if (tex->separate_s8) {
       struct ilo_texture *s8_tex = tex->separate_s8;
-      const uint8_t *s8_src = intel_bo_get_virtual(s8_tex->bo);
+      const uint8_t *s8_src;
       tex_tile_offset_func s8_tile_offset;
       unsigned s8_tiles_per_row;
       int dst_cpp, dst_s8_pos, src_cpp_used;
+
+      s8_src = tex_staging_sys_map_bo(ilo, s8_tex, true, false);
+      if (!s8_src) {
+         tex_staging_sys_unmap_bo(ilo, tex);
+         return false;
+      }
 
       s8_tile_offset = tex_tile_choose_offset_func(s8_tex, &s8_tiles_per_row);
 
@@ -476,6 +515,8 @@ tex_staging_sys_zs_read(struct ilo_context *ilo,
             s8_mem_y++;
          }
       }
+
+      tex_staging_sys_unmap_bo(ilo, s8_tex);
    }
    else {
       assert(tex->bo_format == PIPE_FORMAT_S8_UINT);
@@ -509,19 +550,27 @@ tex_staging_sys_zs_read(struct ilo_context *ilo,
          }
       }
    }
+
+   tex_staging_sys_unmap_bo(ilo, tex);
+
+   return true;
 }
 
-static void
+static bool
 tex_staging_sys_zs_write(struct ilo_context *ilo,
                          struct ilo_texture *tex,
                          const struct ilo_transfer *xfer)
 {
    const bool swizzle = ilo->dev->has_address_swizzling;
    const struct pipe_box *box = &xfer->base.box;
-   uint8_t *dst = intel_bo_get_virtual(tex->bo);
+   uint8_t *dst;
    tex_tile_offset_func tile_offset;
    unsigned tiles_per_row;
    int slice;
+
+   dst = tex_staging_sys_map_bo(ilo, tex, false, false);
+   if (!dst)
+      return false;
 
    tile_offset = tex_tile_choose_offset_func(tex, &tiles_per_row);
 
@@ -529,10 +578,16 @@ tex_staging_sys_zs_write(struct ilo_context *ilo,
 
    if (tex->separate_s8) {
       struct ilo_texture *s8_tex = tex->separate_s8;
-      uint8_t *s8_dst = intel_bo_get_virtual(s8_tex->bo);
+      uint8_t *s8_dst;
       tex_tile_offset_func s8_tile_offset;
       unsigned s8_tiles_per_row;
       int src_cpp, src_s8_pos, dst_cpp_used;
+
+      s8_dst = tex_staging_sys_map_bo(ilo, s8_tex, false, false);
+      if (!s8_dst) {
+         tex_staging_sys_unmap_bo(ilo, s8_tex);
+         return false;
+      }
 
       s8_tile_offset = tex_tile_choose_offset_func(s8_tex, &s8_tiles_per_row);
 
@@ -587,6 +642,8 @@ tex_staging_sys_zs_write(struct ilo_context *ilo,
             s8_mem_y++;
          }
       }
+
+      tex_staging_sys_unmap_bo(ilo, s8_tex);
    }
    else {
       assert(tex->bo_format == PIPE_FORMAT_S8_UINT);
@@ -620,9 +677,13 @@ tex_staging_sys_zs_write(struct ilo_context *ilo,
          }
       }
    }
+
+   tex_staging_sys_unmap_bo(ilo, tex);
+
+   return true;
 }
 
-static void
+static bool
 tex_staging_sys_convert_write(struct ilo_context *ilo,
                               struct ilo_texture *tex,
                               const struct ilo_transfer *xfer)
@@ -632,7 +693,10 @@ tex_staging_sys_convert_write(struct ilo_context *ilo,
    void *dst;
    int slice;
 
-   dst = intel_bo_get_virtual(tex->bo);
+   dst = tex_staging_sys_map_bo(ilo, tex, false, true);
+   if (!dst)
+      return false;
+
    dst += tex_get_box_offset(tex, xfer->base.level, box);
 
    /* slice stride is not always available */
@@ -646,7 +710,10 @@ tex_staging_sys_convert_write(struct ilo_context *ilo,
             0, 0, 0, box->width, box->height, box->depth,
             xfer->staging_sys, xfer->base.stride, xfer->base.layer_stride,
             0, 0, 0);
-      return;
+
+      tex_staging_sys_unmap_bo(ilo, tex);
+
+      return true;
    }
 
    switch (tex->base.format) {
@@ -668,39 +735,10 @@ tex_staging_sys_convert_write(struct ilo_context *ilo,
       assert(!"unable to convert the staging data");
       break;
    }
-}
 
-static bool
-tex_staging_sys_map_bo(const struct ilo_context *ilo,
-                       const struct ilo_texture *tex,
-                       bool for_read_back, bool linear_view)
-{
-   const bool prefer_cpu = (ilo->dev->has_llc || for_read_back);
-   int err;
+   tex_staging_sys_unmap_bo(ilo, tex);
 
-   if (prefer_cpu && (tex->tiling == INTEL_TILING_NONE || !linear_view))
-      err = intel_bo_map(tex->bo, !for_read_back);
-   else
-      err = intel_bo_map_gtt(tex->bo);
-
-   if (!tex->separate_s8)
-      return !err;
-
-   err = intel_bo_map(tex->separate_s8->bo, !for_read_back);
-   if (err)
-      intel_bo_unmap(tex->bo);
-
-   return !err;
-}
-
-static void
-tex_staging_sys_unmap_bo(const struct ilo_context *ilo,
-                         const struct ilo_texture *tex)
-{
-   if (tex->separate_s8)
-      intel_bo_unmap(tex->separate_s8->bo);
-
-   intel_bo_unmap(tex->bo);
+   return true;
 }
 
 static void
@@ -717,18 +755,10 @@ tex_staging_sys_unmap(struct ilo_context *ilo,
 
    switch (xfer->method) {
    case ILO_TRANSFER_MAP_SW_CONVERT:
-      success = tex_staging_sys_map_bo(ilo, tex, false, true);
-      if (success) {
-         tex_staging_sys_convert_write(ilo, tex, xfer);
-         tex_staging_sys_unmap_bo(ilo, tex);
-      }
+      success = tex_staging_sys_convert_write(ilo, tex, xfer);
       break;
    case ILO_TRANSFER_MAP_SW_ZS:
-      success = tex_staging_sys_map_bo(ilo, tex, false, false);
-      if (success) {
-         tex_staging_sys_zs_write(ilo, tex, xfer);
-         tex_staging_sys_unmap_bo(ilo, tex);
-      }
+      success = tex_staging_sys_zs_write(ilo, tex, xfer);
       break;
    default:
       assert(!"unknown mapping method");
@@ -782,11 +812,7 @@ tex_staging_sys_map(struct ilo_context *ilo,
       success = false;
       break;
    case ILO_TRANSFER_MAP_SW_ZS:
-      success = tex_staging_sys_map_bo(ilo, tex, true, false);
-      if (success) {
-         tex_staging_sys_zs_read(ilo, tex, xfer);
-         tex_staging_sys_unmap_bo(ilo, tex);
-      }
+      success = tex_staging_sys_zs_read(ilo, tex, xfer);
       break;
    default:
       assert(!"unknown mapping method");
@@ -810,8 +836,11 @@ tex_direct_map(struct ilo_context *ilo,
                struct ilo_texture *tex,
                struct ilo_transfer *xfer)
 {
-   if (!map_bo_for_transfer(ilo, tex->bo, xfer))
+   xfer->ptr = map_bo_for_transfer(ilo, tex->bo, xfer);
+   if (!xfer->ptr)
       return false;
+
+   xfer->ptr += tex_get_box_offset(tex, xfer->base.level, &xfer->base.box);
 
    /* note that stride is for a block row, not a texel row */
    xfer->base.stride = tex->bo_stride;
@@ -821,9 +850,6 @@ tex_direct_map(struct ilo_context *ilo,
       xfer->base.layer_stride = tex_get_slice_stride(tex, xfer->base.level);
    else
       xfer->base.layer_stride = 0;
-
-   xfer->ptr = intel_bo_get_virtual(tex->bo);
-   xfer->ptr += tex_get_box_offset(tex, xfer->base.level, &xfer->base.box);
 
    return true;
 }
@@ -885,7 +911,8 @@ buf_map(struct ilo_context *ilo, struct ilo_transfer *xfer)
    if (!choose_transfer_method(ilo, xfer))
       return false;
 
-   if (!map_bo_for_transfer(ilo, buf->bo, xfer))
+   xfer->ptr = map_bo_for_transfer(ilo, buf->bo, xfer);
+   if (!xfer->ptr)
       return false;
 
    assert(xfer->base.level == 0);
@@ -894,11 +921,9 @@ buf_map(struct ilo_context *ilo, struct ilo_transfer *xfer)
    assert(xfer->base.box.height == 1);
    assert(xfer->base.box.depth == 1);
 
+   xfer->ptr += xfer->base.box.x;
    xfer->base.stride = 0;
    xfer->base.layer_stride = 0;
-
-   xfer->ptr = intel_bo_get_virtual(buf->bo);
-   xfer->ptr += xfer->base.box.x;
 
    return true;
 }
@@ -938,7 +963,7 @@ buf_pwrite(struct ilo_context *ilo, struct ilo_buffer *buf,
 
       /* flush to make bo busy (so that pwrite() stalls as it should be) */
       if (will_stall && need_flush)
-         ilo_cp_flush(ilo->cp);
+         ilo_cp_flush(ilo->cp, "syncing for pwrites");
    }
 
    intel_bo_pwrite(buf->bo, offset, size, data);
@@ -991,6 +1016,8 @@ ilo_transfer_map(struct pipe_context *pipe,
    xfer->base.level = level;
    xfer->base.usage = usage;
    xfer->base.box = *box;
+
+   ilo_blit_resolve_transfer(ilo, &xfer->base);
 
    if (res->target == PIPE_BUFFER)
       success = buf_map(ilo, xfer);
