@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * Copyright 2009-2010 VMware, Inc.
  * All Rights Reserved.
  * 
@@ -19,7 +19,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -153,7 +153,7 @@ struct tgsi_declaration_interp
 #define TGSI_SEMANTIC_FACE       7
 #define TGSI_SEMANTIC_EDGEFLAG   8
 #define TGSI_SEMANTIC_PRIMID     9
-#define TGSI_SEMANTIC_INSTANCEID 10
+#define TGSI_SEMANTIC_INSTANCEID 10 /**< doesn't include start_instance */
 #define TGSI_SEMANTIC_VERTEXID   11
 #define TGSI_SEMANTIC_STENCIL    12
 #define TGSI_SEMANTIC_CLIPDIST   13
@@ -167,7 +167,11 @@ struct tgsi_declaration_interp
 #define TGSI_SEMANTIC_VIEWPORT_INDEX 21 /**< viewport index */
 #define TGSI_SEMANTIC_LAYER      22 /**< layer (rendertarget index) */
 #define TGSI_SEMANTIC_CULLDIST   23
-#define TGSI_SEMANTIC_COUNT      24 /**< number of semantic values */
+#define TGSI_SEMANTIC_SAMPLEID   24
+#define TGSI_SEMANTIC_SAMPLEPOS  25
+#define TGSI_SEMANTIC_SAMPLEMASK 26
+#define TGSI_SEMANTIC_INVOCATIONID 27
+#define TGSI_SEMANTIC_COUNT      28 /**< number of semantic values */
 
 struct tgsi_declaration_semantic
 {
@@ -232,7 +236,8 @@ union tgsi_immediate_data
 #define TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS 5
 #define TGSI_PROPERTY_FS_DEPTH_LAYOUT        6
 #define TGSI_PROPERTY_VS_PROHIBIT_UCPS       7
-#define TGSI_PROPERTY_COUNT                  8
+#define TGSI_PROPERTY_GS_INVOCATIONS         8
+#define TGSI_PROPERTY_COUNT                  9
 
 struct tgsi_property {
    unsigned Type         : 4;  /**< TGSI_TOKEN_TYPE_PROPERTY */
@@ -367,7 +372,12 @@ struct tgsi_property_data {
 #define TGSI_OPCODE_TXQ_LZ              103 /* TXQ for mipmap level 0 */
                                 /* gap */
 #define TGSI_OPCODE_NOP                 107
-                                /* gap */
+
+#define TGSI_OPCODE_FSEQ                108
+#define TGSI_OPCODE_FSGE                109
+#define TGSI_OPCODE_FSLT                110
+#define TGSI_OPCODE_FSNE                111
+
 #define TGSI_OPCODE_NRM4                112
 #define TGSI_OPCODE_CALLNZ              113
                                 /* gap */
@@ -445,7 +455,23 @@ struct tgsi_property_data {
 #define TGSI_OPCODE_TXB2                178
 #define TGSI_OPCODE_TXL2                179
 
-#define TGSI_OPCODE_LAST                180
+#define TGSI_OPCODE_IMUL_HI             180
+#define TGSI_OPCODE_UMUL_HI             181
+
+#define TGSI_OPCODE_TG4                 182
+
+#define TGSI_OPCODE_LODQ                183
+
+#define TGSI_OPCODE_IBFE                184
+#define TGSI_OPCODE_UBFE                185
+#define TGSI_OPCODE_BFI                 186
+#define TGSI_OPCODE_BREV                187
+#define TGSI_OPCODE_POPC                188
+#define TGSI_OPCODE_LSB                 189
+#define TGSI_OPCODE_IMSB                190
+#define TGSI_OPCODE_UMSB                191
+
+#define TGSI_OPCODE_LAST                192
 
 #define TGSI_SAT_NONE            0  /* do not saturate */
 #define TGSI_SAT_ZERO_ONE        1  /* clamp to [0,1] */

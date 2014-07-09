@@ -48,9 +48,7 @@
 #ifdef XF86VIDMODE
 #include <X11/extensions/xf86vmode.h>
 #endif
-#include "xf86dri.h"
 #endif
-#else
 #endif
 
 #include <X11/Xlib-xcb.h>
@@ -385,7 +383,9 @@ glXCreateContext(Display * dpy, XVisualInfo * vis,
 #if defined(GLX_DIRECT_RENDERING) || defined(GLX_USE_APPLEGL)
    struct glx_screen *const psc = GetGLXScreenConfigs(dpy, vis->screen);
 
-   config = glx_config_find_visual(psc->visuals, vis->visualid);
+   if (psc)
+      config = glx_config_find_visual(psc->visuals, vis->visualid);
+
    if (config == NULL) {
       xError error;
 
@@ -694,6 +694,13 @@ glXCreateGLXPixmap(Display * dpy, XVisualInfo * vis, Pixmap pixmap)
    GLXPixmap xid;
    CARD8 opcode;
 
+#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
+   struct glx_display *const priv = __glXInitialize(dpy);
+
+   if (priv == NULL)
+      return None;
+#endif
+
    opcode = __glXSetupForCommand(dpy);
    if (!opcode) {
       return None;
@@ -725,7 +732,6 @@ glXCreateGLXPixmap(Display * dpy, XVisualInfo * vis, Pixmap pixmap)
       /* FIXME: Maybe delay __DRIdrawable creation until the drawable
        * is actually bound to a context... */
 
-      struct glx_display *const priv = __glXInitialize(dpy);
       __GLXDRIdrawable *pdraw;
       struct glx_screen *psc;
       struct glx_config *config;
@@ -799,7 +805,7 @@ glXDestroyGLXPixmap(Display * dpy, GLXPixmap glxpixmap)
       struct glx_display *const priv = __glXInitialize(dpy);
       __GLXDRIdrawable *pdraw = GetGLXDRIDrawable(dpy, glxpixmap);
 
-      if (pdraw != NULL) {
+      if (priv != NULL && pdraw != NULL) {
          (*pdraw->destroyDrawable) (pdraw);
          __glxHashDelete(priv->drawHash, glxpixmap);
       }
@@ -917,13 +923,10 @@ init_fbconfig_for_chooser(struct glx_config * config,
    if (fbconfig_style_tags) {
       config->rgbMode = GL_TRUE;
       config->doubleBufferMode = GLX_DONT_CARE;
-      /* allow any kind of drawable, including those for off-screen buffers */
-      config->drawableType = 0;
-   } else {
-       /* allow configs which support on-screen drawing */
-       config->drawableType = GLX_WINDOW_BIT;
+      config->renderType = GLX_RGBA_BIT;
    }
 
+   config->drawableType = GLX_WINDOW_BIT;
    config->visualRating = GLX_DONT_CARE;
    config->transparentPixel = GLX_NONE;
    config->transparentRed = GLX_DONT_CARE;
@@ -932,8 +935,6 @@ init_fbconfig_for_chooser(struct glx_config * config,
    config->transparentAlpha = GLX_DONT_CARE;
    config->transparentIndex = GLX_DONT_CARE;
 
-   /* Set GLX_RENDER_TYPE property to not expect any flags by default. */
-   config->renderType = 0;
    config->xRenderable = GLX_DONT_CARE;
    config->fbconfigID = (GLXFBConfigID) (GLX_DONT_CARE);
 
@@ -1102,7 +1103,7 @@ static int
 fbconfig_compare(struct glx_config **a, struct glx_config **b)
 {
    /* The order of these comparisons must NOT change.  It is defined by
-    * the GLX 1.3 spec and ARB_multisample.
+    * the GLX 1.4 specification.
     */
 
    PREFER_SMALLER(visualSelectGroup);
@@ -1131,6 +1132,9 @@ fbconfig_compare(struct glx_config **a, struct glx_config **b)
 
    PREFER_SMALLER(numAuxBuffers);
 
+   PREFER_SMALLER(sampleBuffers);
+   PREFER_SMALLER(samples);
+
    PREFER_LARGER_OR_ZERO(depthBits);
    PREFER_SMALLER(stencilBits);
 
@@ -1143,12 +1147,6 @@ fbconfig_compare(struct glx_config **a, struct glx_config **b)
    PREFER_LARGER_OR_ZERO(accumAlphaBits);
 
    PREFER_SMALLER(visualType);
-
-   /* None of the multisample specs say where this comparison should happen,
-    * so I put it near the end.
-    */
-   PREFER_SMALLER(sampleBuffers);
-   PREFER_SMALLER(samples);
 
    /* None of the pbuffer or fbconfig specs say that this comparison needs
     * to happen at all, but it seems like it should.
@@ -1380,19 +1378,6 @@ glXQueryServerString(Display * dpy, int screen, int name)
    return *str;
 }
 
-void
-__glXClientInfo(Display * dpy, int opcode)
-{
-   char *ext_str = __glXGetClientGLExtensionString();
-   int size = strlen(ext_str) + 1;
-
-   xcb_connection_t *c = XGetXCBConnection(dpy);
-   xcb_glx_client_info(c,
-                       GLX_MAJOR_VERSION, GLX_MINOR_VERSION, size, ext_str);
-
-   free(ext_str);
-}
-
 
 /*
 ** EXT_import_context
@@ -1433,6 +1418,9 @@ glXImportContextEXT(Display *dpy, GLXContextID contextID)
    uint32_t visualID = 0;
    uint32_t screen = 0;
    Bool got_screen = False;
+
+   if (priv == NULL)
+      return NULL;
 
    /* The GLX_EXT_import_context spec says:
     *
@@ -1750,7 +1738,8 @@ __glXSwapIntervalSGI(int interval)
    psc = GetGLXScreenConfigs( gc->currentDpy, gc->screen);
 
 #ifdef GLX_DIRECT_RENDERING
-   if (gc->isDirect && psc->driScreen && psc->driScreen->setSwapInterval) {
+   if (gc->isDirect && psc && psc->driScreen &&
+          psc->driScreen->setSwapInterval) {
       __GLXDRIdrawable *pdraw =
 	 GetGLXDRIDrawable(gc->currentDpy, gc->currentDrawable);
       psc->driScreen->setSwapInterval(pdraw, interval);
@@ -1796,7 +1785,7 @@ __glXSwapIntervalMESA(unsigned int interval)
       struct glx_screen *psc;
 
       psc = GetGLXScreenConfigs( gc->currentDpy, gc->screen);
-      if (psc->driScreen && psc->driScreen->setSwapInterval) {
+      if (psc && psc->driScreen && psc->driScreen->setSwapInterval) {
          __GLXDRIdrawable *pdraw =
 	    GetGLXDRIDrawable(gc->currentDpy, gc->currentDrawable);
 	 return psc->driScreen->setSwapInterval(pdraw, interval);
@@ -1818,7 +1807,7 @@ __glXGetSwapIntervalMESA(void)
       struct glx_screen *psc;
 
       psc = GetGLXScreenConfigs( gc->currentDpy, gc->screen);
-      if (psc->driScreen && psc->driScreen->getSwapInterval) {
+      if (psc && psc->driScreen && psc->driScreen->getSwapInterval) {
          __GLXDRIdrawable *pdraw =
 	    GetGLXDRIDrawable(gc->currentDpy, gc->currentDrawable);
 	 return psc->driScreen->getSwapInterval(pdraw);
@@ -1862,7 +1851,7 @@ __glXGetVideoSyncSGI(unsigned int *count)
     * FIXME: documentation for the GLX encoding.
     */
 #ifdef GLX_DIRECT_RENDERING
-   if (psc->driScreen && psc->driScreen->getDrawableMSC) {
+   if (psc && psc->driScreen && psc->driScreen->getDrawableMSC) {
       ret = psc->driScreen->getDrawableMSC(psc, pdraw, &ust, &msc, &sbc);
       *count = (unsigned) msc;
       return (ret == True) ? 0 : GLX_BAD_CONTEXT;
@@ -1900,7 +1889,7 @@ __glXWaitVideoSyncSGI(int divisor, int remainder, unsigned int *count)
 #endif
 
 #ifdef GLX_DIRECT_RENDERING
-   if (psc->driScreen && psc->driScreen->waitForMSC) {
+   if (psc && psc->driScreen && psc->driScreen->waitForMSC) {
       ret = psc->driScreen->waitForMSC(pdraw, 0, divisor, remainder, &ust, &msc,
 				       &sbc);
       *count = (unsigned) msc;
@@ -2095,16 +2084,14 @@ __glXGetSyncValuesOML(Display * dpy, GLXDrawable drawable,
 
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
 _X_HIDDEN GLboolean
-__glxGetMscRate(__GLXDRIdrawable *glxDraw,
+__glxGetMscRate(struct glx_screen *psc,
 		int32_t * numerator, int32_t * denominator)
 {
 #ifdef XF86VIDMODE
-   struct glx_screen *psc;
    XF86VidModeModeLine mode_line;
    int dot_clock;
    int i;
 
-   psc = glxDraw->psc;
    if (XF86VidModeQueryVersion(psc->dpy, &i, &i) &&
        XF86VidModeGetModeLine(psc->dpy, psc->scr, &dot_clock, &mode_line)) {
       unsigned n = dot_clock * 1000;
@@ -2180,7 +2167,7 @@ __glXGetMscRateOML(Display * dpy, GLXDrawable drawable,
    if (draw == NULL)
       return False;
 
-   return __glxGetMscRate(draw, numerator, denominator);
+   return __glxGetMscRate(draw->psc, numerator, denominator);
 #else
    (void) dpy;
    (void) drawable;
@@ -2602,6 +2589,12 @@ static const struct name_address_pair GLX_functions[] = {
 
    /*** GLX_ARB_create_context and GLX_ARB_create_context_profile ***/
    GLX_FUNCTION(glXCreateContextAttribsARB),
+
+   /*** GLX_MESA_query_renderer ***/
+   GLX_FUNCTION(glXQueryRendererIntegerMESA),
+   GLX_FUNCTION(glXQueryRendererStringMESA),
+   GLX_FUNCTION(glXQueryCurrentRendererIntegerMESA),
+   GLX_FUNCTION(glXQueryCurrentRendererStringMESA),
 
    {NULL, NULL}                 /* end of list */
 };

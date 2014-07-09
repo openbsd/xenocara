@@ -103,7 +103,7 @@ static void set_vertices( void )
    vbuf.buffer_offset = 0;
    vbuf.buffer = pipe_buffer_create_with_data(ctx,
                                               PIPE_BIND_VERTEX_BUFFER,
-                                              PIPE_USAGE_STATIC,
+                                              PIPE_USAGE_DEFAULT,
                                               sizeof(vertices),
                                               vertices);
 
@@ -156,7 +156,7 @@ static void draw( void )
 
    graw_save_surface_to_file(ctx, surf, NULL);
 
-   screen->flush_frontbuffer(screen, rttex, 0, 0, window);
+   screen->flush_frontbuffer(screen, rttex, 0, 0, window, NULL);
 }
 
 #define SIZE 16
@@ -267,7 +267,7 @@ static void init_tex( void )
    if (sv == NULL)
       exit(5);
 
-   ctx->set_fragment_sampler_views(ctx, 1, &sv);
+   ctx->set_sampler_views(ctx, PIPE_SHADER_FRAGMENT, 0, 1, &sv);
    
 
    memset(&sampler_desc, 0, sizeof sampler_desc);
@@ -286,7 +286,7 @@ static void init_tex( void )
    if (sampler == NULL)
       exit(6);
 
-   ctx->bind_fragment_sampler_states(ctx, 1, &sampler);
+   ctx->bind_sampler_states(ctx, PIPE_SHADER_FRAGMENT, 0, 1, &sampler);
    
 }
 

@@ -1,8 +1,8 @@
 /*
  Copyright (C) Intel Corp.  2006.  All Rights Reserved.
- Intel funded Tungsten Graphics (http://www.tungstengraphics.com) to
+ Intel funded Tungsten Graphics to
  develop this 3D driver.
- 
+
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
- 
+
  The above copyright notice and this permission notice (including the
  next paragraph) shall be included in all copies or substantial
  portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -22,20 +22,23 @@
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  **********************************************************************/
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
-             
+
 #include "brw_context.h"
 #include "brw_wm.h"
 #include "brw_state.h"
+#include "main/enums.h"
 #include "main/formats.h"
 #include "main/fbobject.h"
 #include "main/samplerobj.h"
 #include "program/prog_parameter.h"
+#include "program/program.h"
+#include "intel_mipmap_tree.h"
 
 #include "glsl/ralloc.h"
 
@@ -46,6 +49,7 @@
 static unsigned
 brw_compute_barycentric_interp_modes(struct brw_context *brw,
                                      bool shade_model_flat,
+                                     bool persample_shading,
                                      const struct gl_fragment_program *fprog)
 {
    unsigned barycentric_interp_modes = 0;
@@ -58,7 +62,10 @@ brw_compute_barycentric_interp_modes(struct brw_context *brw,
    for (attr = 0; attr < VARYING_SLOT_MAX; ++attr) {
       enum glsl_interp_qualifier interp_qualifier =
          fprog->InterpQualifier[attr];
-      bool is_centroid = fprog->IsCentroid & BITFIELD64_BIT(attr);
+      bool is_centroid = (fprog->IsCentroid & BITFIELD64_BIT(attr)) &&
+         !persample_shading;
+      bool is_sample = (fprog->IsSample & BITFIELD64_BIT(attr)) ||
+         persample_shading;
       bool is_gl_Color = attr == VARYING_SLOT_COL0 || attr == VARYING_SLOT_COL1;
 
       /* Ignore unused inputs. */
@@ -79,8 +86,12 @@ brw_compute_barycentric_interp_modes(struct brw_context *brw,
          if (is_centroid) {
             barycentric_interp_modes |=
                1 << BRW_WM_NONPERSPECTIVE_CENTROID_BARYCENTRIC;
+         } else if (is_sample) {
+            barycentric_interp_modes |=
+               1 << BRW_WM_NONPERSPECTIVE_SAMPLE_BARYCENTRIC;
          }
-         if (!is_centroid || brw->needs_unlit_centroid_workaround) {
+         if ((!is_centroid && !is_sample) ||
+             brw->needs_unlit_centroid_workaround) {
             barycentric_interp_modes |=
                1 << BRW_WM_NONPERSPECTIVE_PIXEL_BARYCENTRIC;
          }
@@ -90,8 +101,12 @@ brw_compute_barycentric_interp_modes(struct brw_context *brw,
          if (is_centroid) {
             barycentric_interp_modes |=
                1 << BRW_WM_PERSPECTIVE_CENTROID_BARYCENTRIC;
+         } else if (is_sample) {
+            barycentric_interp_modes |=
+               1 << BRW_WM_PERSPECTIVE_SAMPLE_BARYCENTRIC;
          }
-         if (!is_centroid || brw->needs_unlit_centroid_workaround) {
+         if ((!is_centroid && !is_sample) ||
+             brw->needs_unlit_centroid_workaround) {
             barycentric_interp_modes |=
                1 << BRW_WM_PERSPECTIVE_PIXEL_BARYCENTRIC;
          }
@@ -102,32 +117,22 @@ brw_compute_barycentric_interp_modes(struct brw_context *brw,
 }
 
 bool
-brw_wm_prog_data_compare(const void *in_a, const void *in_b,
-                         int aux_size, const void *in_key)
+brw_wm_prog_data_compare(const void *in_a, const void *in_b)
 {
    const struct brw_wm_prog_data *a = in_a;
    const struct brw_wm_prog_data *b = in_b;
 
-   /* Compare all the struct up to the pointers. */
-   if (memcmp(a, b, offsetof(struct brw_wm_prog_data, param)))
+   /* Compare the base structure. */
+   if (!brw_stage_prog_data_compare(&a->base, &b->base))
       return false;
 
-   if (memcmp(a->param, b->param, a->nr_params * sizeof(void *)))
-      return false;
-
-   if (memcmp(a->pull_param, b->pull_param, a->nr_pull_params * sizeof(void *)))
+   /* Compare the rest of the structure. */
+   const unsigned offset = sizeof(struct brw_stage_prog_data);
+   if (memcmp(((char *) a) + offset, ((char *) b) + offset,
+              sizeof(struct brw_wm_prog_data) - offset))
       return false;
 
    return true;
-}
-
-void
-brw_wm_prog_data_free(const void *in_prog_data)
-{
-   const struct brw_wm_prog_data *prog_data = in_prog_data;
-
-   ralloc_free((void *)prog_data->param);
-   ralloc_free((void *)prog_data->pull_param);
 }
 
 /**
@@ -140,6 +145,7 @@ bool do_wm_prog(struct brw_context *brw,
 		struct brw_fragment_program *fp,
 		struct brw_wm_prog_key *key)
 {
+   struct gl_context *ctx = &brw->ctx;
    struct brw_wm_compile *c;
    const GLuint *program;
    struct gl_shader *fs = NULL;
@@ -161,14 +167,17 @@ bool do_wm_prog(struct brw_context *brw,
       param_count = fp->program.Base.Parameters->NumParameters * 4;
    }
    /* The backend also sometimes adds params for texture size. */
-   param_count += 2 * BRW_MAX_TEX_UNIT;
-   c->prog_data.param = rzalloc_array(NULL, const float *, param_count);
-   c->prog_data.pull_param = rzalloc_array(NULL, const float *, param_count);
+   param_count += 2 * ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxTextureImageUnits;
+   c->prog_data.base.param = rzalloc_array(NULL, const float *, param_count);
+   c->prog_data.base.pull_param =
+      rzalloc_array(NULL, const float *, param_count);
+   c->prog_data.base.nr_params = param_count;
 
    memcpy(&c->key, key, sizeof(*key));
 
    c->prog_data.barycentric_interp_modes =
       brw_compute_barycentric_interp_modes(brw, c->key.flat_shade,
+                                           c->key.persample_shading,
                                            &fp->program);
 
    program = brw_wm_fs_emit(brw, c, &fp->program, prog, &program_size);
@@ -183,7 +192,7 @@ bool do_wm_prog(struct brw_context *brw,
 
       c->prog_data.total_scratch = brw_get_scratch_size(c->last_scratch);
 
-      brw_get_scratch_bo(brw, &brw->wm.scratch_bo,
+      brw_get_scratch_bo(brw, &brw->wm.base.scratch_bo,
 			 c->prog_data.total_scratch * brw->max_wm_threads);
    }
 
@@ -194,7 +203,7 @@ bool do_wm_prog(struct brw_context *brw,
 		    &c->key, sizeof(c->key),
 		    program, program_size,
 		    &c->prog_data, sizeof(c->prog_data),
-		    &brw->wm.prog_offset, &brw->wm.prog_data);
+		    &brw->wm.base.prog_offset, &brw->wm.prog_data);
 
    ralloc_free(c);
 
@@ -229,10 +238,8 @@ brw_debug_recompile_sampler_key(struct brw_context *brw,
                       old_key->gl_clamp_mask[1], key->gl_clamp_mask[1]);
    found |= key_debug(brw, "GL_CLAMP enabled on any texture unit's 3rd coordinate",
                       old_key->gl_clamp_mask[2], key->gl_clamp_mask[2]);
-   found |= key_debug(brw, "GL_MESA_ycbcr texturing\n",
-                      old_key->yuvtex_mask, key->yuvtex_mask);
-   found |= key_debug(brw, "GL_MESA_ycbcr UV swapping\n",
-                      old_key->yuvtex_swap_mask, key->yuvtex_swap_mask);
+   found |= key_debug(brw, "gather channel quirk on any texture unit",
+                      old_key->gather_channel_quirk_mask, key->gather_channel_quirk_mask);
 
    return found;
 }
@@ -299,14 +306,29 @@ brw_wm_debug_recompile(struct brw_context *brw,
    }
 }
 
+static uint8_t
+gen6_gather_workaround(GLenum internalformat)
+{
+   switch (internalformat) {
+      case GL_R8I: return WA_SIGN | WA_8BIT;
+      case GL_R8UI: return WA_8BIT;
+      case GL_R16I: return WA_SIGN | WA_16BIT;
+      case GL_R16UI: return WA_16BIT;
+      /* note that even though GL_R32I and GL_R32UI have format overrides
+       * in the surface state, there is no shader w/a required */
+      default: return 0;
+   }
+}
+
 void
 brw_populate_sampler_prog_key_data(struct gl_context *ctx,
 				   const struct gl_program *prog,
+                                   unsigned sampler_count,
 				   struct brw_sampler_prog_key_data *key)
 {
    struct brw_context *brw = brw_context(ctx);
 
-   for (int s = 0; s < MAX_SAMPLERS; s++) {
+   for (int s = 0; s < sampler_count; s++) {
       key->swizzles[s] = SWIZZLE_NOOP;
 
       if (!(prog->SamplersUsed & (1 << s)))
@@ -315,7 +337,7 @@ brw_populate_sampler_prog_key_data(struct gl_context *ctx,
       int unit_id = prog->SamplerUnits[s];
       const struct gl_texture_unit *unit = &ctx->Texture.Unit[unit_id];
 
-      if (unit->_ReallyEnabled && unit->_Current->Target != GL_TEXTURE_BUFFER) {
+      if (unit->_Current && unit->_Current->Target != GL_TEXTURE_BUFFER) {
 	 const struct gl_texture_object *t = unit->_Current;
 	 const struct gl_texture_image *img = t->Image[0][t->BaseLevel];
 	 struct gl_sampler_object *sampler = _mesa_get_samplerobj(ctx, unit_id);
@@ -327,16 +349,11 @@ brw_populate_sampler_prog_key_data(struct gl_context *ctx,
          /* Haswell handles texture swizzling as surface format overrides
           * (except for GL_ALPHA); all other platforms need MOVs in the shader.
           */
-         if (!brw->is_haswell || alpha_depth)
+         if (alpha_depth || (brw->gen < 8 && !brw->is_haswell))
             key->swizzles[s] = brw_get_texture_swizzle(ctx, t);
 
-	 if (img->InternalFormat == GL_YCBCR_MESA) {
-	    key->yuvtex_mask |= 1 << s;
-	    if (img->TexFormat == MESA_FORMAT_YCBCR)
-		key->yuvtex_swap_mask |= 1 << s;
-	 }
-
-	 if (sampler->MinFilter != GL_NEAREST &&
+	 if (brw->gen < 8 &&
+             sampler->MinFilter != GL_NEAREST &&
 	     sampler->MagFilter != GL_NEAREST) {
 	    if (sampler->WrapS == GL_CLAMP)
 	       key->gl_clamp_mask[0] |= 1 << s;
@@ -345,6 +362,32 @@ brw_populate_sampler_prog_key_data(struct gl_context *ctx,
 	    if (sampler->WrapR == GL_CLAMP)
 	       key->gl_clamp_mask[2] |= 1 << s;
 	 }
+
+         /* gather4's channel select for green from RG32F is broken;
+          * requires a shader w/a on IVB; fixable with just SCS on HSW. */
+         if (brw->gen == 7 && !brw->is_haswell && prog->UsesGather) {
+            if (img->InternalFormat == GL_RG32F)
+               key->gather_channel_quirk_mask |= 1 << s;
+         }
+
+         /* Gen6's gather4 is broken for UINT/SINT; we treat them as
+          * UNORM/FLOAT instead and fix it in the shader.
+          */
+         if (brw->gen == 6 && prog->UsesGather) {
+            key->gen6_gather_wa[s] = gen6_gather_workaround(img->InternalFormat);
+         }
+
+         /* If this is a multisample sampler, and uses the CMS MSAA layout,
+          * then we need to emit slightly different code to first sample the
+          * MCS surface.
+          */
+         struct intel_texture_object *intel_tex =
+            intel_texture_object((struct gl_texture_object *)t);
+
+         if (brw->gen >= 7 &&
+             intel_tex->mt->msaa_layout == INTEL_MSAA_LAYOUT_CMS) {
+            key->compressed_multisample_layout_mask |= 1 << s;
+         }
       }
    }
 }
@@ -354,12 +397,13 @@ static void brw_wm_populate_key( struct brw_context *brw,
 {
    struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FRAGMENT_PROGRAM */
-   const struct brw_fragment_program *fp = 
+   const struct brw_fragment_program *fp =
       (struct brw_fragment_program *)brw->fragment_program;
    const struct gl_program *prog = (struct gl_program *) brw->fragment_program;
    GLuint lookup = 0;
    GLuint line_aa;
    bool program_uses_dfdy = fp->program.UsesDFdy;
+   bool multisample_fbo = ctx->DrawBuffer->Visual.samples > 1;
 
    memset(key, 0, sizeof(*key));
 
@@ -419,6 +463,15 @@ static void brw_wm_populate_key( struct brw_context *brw,
 
    key->line_aa = line_aa;
 
+   /* _NEW_HINT */
+   if (brw->disable_derivative_optimization) {
+      key->high_quality_derivatives =
+         ctx->Hint.FragmentShaderDerivative != GL_FASTEST;
+   } else {
+      key->high_quality_derivatives =
+         ctx->Hint.FragmentShaderDerivative == GL_NICEST;
+   }
+
    if (brw->gen < 6)
       key->stats_wm = brw->stats_wm;
 
@@ -429,7 +482,8 @@ static void brw_wm_populate_key( struct brw_context *brw,
    key->clamp_fragment_color = ctx->Color._ClampFragmentColor;
 
    /* _NEW_TEXTURE */
-   brw_populate_sampler_prog_key_data(ctx, prog, &key->tex);
+   brw_populate_sampler_prog_key_data(ctx, prog, brw->wm.base.sampler_count,
+                                      &key->tex);
 
    /* _NEW_BUFFERS */
    /*
@@ -467,8 +521,23 @@ static void brw_wm_populate_key( struct brw_context *brw,
    key->replicate_alpha = ctx->DrawBuffer->_NumColorDrawBuffers > 1 &&
       (ctx->Multisample.SampleAlphaToCoverage || ctx->Color.AlphaEnabled);
 
+   /* _NEW_BUFFERS _NEW_MULTISAMPLE */
+   /* Ignore sample qualifier while computing this flag. */
+   key->persample_shading =
+      _mesa_get_min_invocations_per_fragment(ctx, &fp->program, true) > 1;
+
+   key->compute_pos_offset =
+      _mesa_get_min_invocations_per_fragment(ctx, &fp->program, false) > 1 &&
+      fp->program.Base.SystemValuesRead & SYSTEM_BIT_SAMPLE_POS;
+
+   key->compute_sample_id =
+      multisample_fbo &&
+      ctx->Multisample.Enabled &&
+      (fp->program.Base.SystemValuesRead & SYSTEM_BIT_SAMPLE_ID);
+
    /* BRW_NEW_VUE_MAP_GEOM_OUT */
-   if (brw->gen < 6)
+   if (brw->gen < 6 || _mesa_bitcount_64(fp->program.Base.InputsRead &
+                                         BRW_FS_VARYING_INPUT_MASK) > 16)
       key->input_slots_valid = brw->vue_map_geom_out.slots_valid;
 
 
@@ -500,12 +569,13 @@ brw_upload_wm_prog(struct brw_context *brw)
 
    if (!brw_search_cache(&brw->cache, BRW_WM_PROG,
 			 &key, sizeof(key),
-			 &brw->wm.prog_offset, &brw->wm.prog_data)) {
-      bool success = do_wm_prog(brw, ctx->Shader._CurrentFragmentProgram, fp,
+			 &brw->wm.base.prog_offset, &brw->wm.prog_data)) {
+      bool success = do_wm_prog(brw, ctx->_Shader->_CurrentFragmentProgram, fp,
 				&key);
       (void) success;
       assert(success);
    }
+   brw->wm.base.prog_data = &brw->wm.prog_data->base;
 }
 
 
@@ -516,6 +586,7 @@ const struct brw_tracked_state brw_wm_prog = {
 		_NEW_STENCIL |
 		_NEW_POLYGON |
 		_NEW_LINE |
+		_NEW_HINT |
 		_NEW_LIGHT |
 		_NEW_FRAG_CLAMP |
 		_NEW_BUFFERS |

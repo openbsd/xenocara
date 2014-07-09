@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,14 +18,14 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
  **************************************************************************/
 
-/* Authors:  Keith Whitwell <keith@tungstengraphics.com>
+/* Authors:  Keith Whitwell <keithw@vmware.com>
  */
 
 #ifndef LP_CONTEXT_H
@@ -46,8 +46,8 @@
 struct llvmpipe_vbuf_render;
 struct draw_context;
 struct draw_stage;
+struct draw_vertex_shader;
 struct lp_fragment_shader;
-struct lp_vertex_shader;
 struct lp_blend_state;
 struct lp_setup_context;
 struct lp_setup_variant;
@@ -63,12 +63,13 @@ struct llvmpipe_context {
    const struct pipe_depth_stencil_alpha_state *depth_stencil;
    const struct pipe_rasterizer_state *rasterizer;
    struct lp_fragment_shader *fs;
-   const struct lp_vertex_shader *vs;
+   struct draw_vertex_shader *vs;
    const struct lp_geometry_shader *gs;
    const struct lp_velems_state *velems;
    const struct lp_so_state *so;
 
    /** Other rendering state */
+   unsigned sample_mask;
    struct pipe_blend_color blend_color;
    struct pipe_stencil_ref stencil_ref;
    struct pipe_clip_state clip;
@@ -92,7 +93,6 @@ struct llvmpipe_context {
    struct draw_so_target *so_targets[PIPE_MAX_SO_BUFFERS];
    int num_so_targets;
    struct pipe_query_data_so_statistics so_stats;
-   unsigned num_primitives_generated;
 
    struct pipe_query_data_pipeline_statistics pipeline_statistics;
    unsigned active_statistics_queries;
@@ -122,9 +122,13 @@ struct llvmpipe_context {
    /** Which geometry shader output slot contains layer */
    int layer_slot;
 
-   /**< minimum resolvable depth value, for polygon offset */   
-   double mrd;
-   
+   /** A fake frontface output for unfilled primitives */
+   int face_slot;
+
+   /** Depth format and bias settings. */
+   boolean floating_point_depth;
+   double mrd;   /**< minimum resolvable depth value, for polygon offset */
+
    /** The tiling engine */
    struct lp_setup_context *setup;
    struct lp_setup_variant setup_variant;

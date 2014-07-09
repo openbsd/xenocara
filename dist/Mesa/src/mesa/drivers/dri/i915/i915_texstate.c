@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -39,29 +39,29 @@
 
 
 static GLuint
-translate_texture_format(gl_format mesa_format, GLenum DepthMode)
+translate_texture_format(mesa_format mesa_format, GLenum DepthMode)
 {
    switch (mesa_format) {
-   case MESA_FORMAT_L8:
+   case MESA_FORMAT_L_UNORM8:
       return MAPSURF_8BIT | MT_8BIT_L8;
-   case MESA_FORMAT_I8:
+   case MESA_FORMAT_I_UNORM8:
       return MAPSURF_8BIT | MT_8BIT_I8;
-   case MESA_FORMAT_A8:
+   case MESA_FORMAT_A_UNORM8:
       return MAPSURF_8BIT | MT_8BIT_A8;
-   case MESA_FORMAT_AL88:
+   case MESA_FORMAT_L8A8_UNORM:
       return MAPSURF_16BIT | MT_16BIT_AY88;
-   case MESA_FORMAT_RGB565:
+   case MESA_FORMAT_B5G6R5_UNORM:
       return MAPSURF_16BIT | MT_16BIT_RGB565;
-   case MESA_FORMAT_ARGB1555:
+   case MESA_FORMAT_B5G5R5A1_UNORM:
       return MAPSURF_16BIT | MT_16BIT_ARGB1555;
-   case MESA_FORMAT_ARGB4444:
+   case MESA_FORMAT_B4G4R4A4_UNORM:
       return MAPSURF_16BIT | MT_16BIT_ARGB4444;
-   case MESA_FORMAT_SARGB8:
-   case MESA_FORMAT_ARGB8888:
+   case MESA_FORMAT_B8G8R8A8_SRGB:
+   case MESA_FORMAT_B8G8R8A8_UNORM:
       return MAPSURF_32BIT | MT_32BIT_ARGB8888;
-   case MESA_FORMAT_XRGB8888:
+   case MESA_FORMAT_B8G8R8X8_UNORM:
       return MAPSURF_32BIT | MT_32BIT_XRGB8888;
-   case MESA_FORMAT_RGBA8888_REV:
+   case MESA_FORMAT_R8G8B8A8_UNORM:
       return MAPSURF_32BIT | MT_32BIT_ABGR8888;
    case MESA_FORMAT_YCBCR_REV:
       return (MAPSURF_422 | MT_422_YCRCB_NORMAL);
@@ -70,7 +70,7 @@ translate_texture_format(gl_format mesa_format, GLenum DepthMode)
    case MESA_FORMAT_RGB_FXT1:
    case MESA_FORMAT_RGBA_FXT1:
       return (MAPSURF_COMPRESSED | MT_COMPRESS_FXT1);
-   case MESA_FORMAT_Z16:
+   case MESA_FORMAT_Z_UNORM16:
       if (DepthMode == GL_ALPHA)
           return (MAPSURF_16BIT | MT_16BIT_A16);
       else if (DepthMode == GL_INTENSITY)
@@ -88,8 +88,8 @@ translate_texture_format(gl_format mesa_format, GLenum DepthMode)
    case MESA_FORMAT_RGBA_DXT5:
    case MESA_FORMAT_SRGBA_DXT5:
       return (MAPSURF_COMPRESSED | MT_COMPRESS_DXT4_5);
-   case MESA_FORMAT_S8_Z24:
-   case MESA_FORMAT_X8_Z24:
+   case MESA_FORMAT_Z24_UNORM_S8_UINT:
+   case MESA_FORMAT_Z24_UNORM_X8_UINT:
       if (DepthMode == GL_ALPHA)
 	 return (MAPSURF_32BIT | MT_32BIT_x8A24);
       else if (DepthMode == GL_INTENSITY)
@@ -417,31 +417,30 @@ i915UpdateTextureState(struct intel_context *intel)
    GLuint i;
 
    for (i = 0; i < I915_TEX_UNITS && ok; i++) {
-      switch (intel->ctx.Texture.Unit[i]._ReallyEnabled) {
-      case TEXTURE_1D_BIT:
-      case TEXTURE_2D_BIT:
-      case TEXTURE_CUBE_BIT:
-      case TEXTURE_3D_BIT:
-         ok = i915_update_tex_unit(intel, i, SS3_NORMALIZED_COORDS);
-         break;
-      case TEXTURE_RECT_BIT:
-         ok = i915_update_tex_unit(intel, i, 0);
-         break;
-      case 0:{
-            struct i915_context *i915 = i915_context(&intel->ctx);
-            if (i915->state.active & I915_UPLOAD_TEX(i))
-               I915_ACTIVESTATE(i915, I915_UPLOAD_TEX(i), false);
-
-	    if (i915->state.tex_buffer[i] != NULL) {
-	       drm_intel_bo_unreference(i915->state.tex_buffer[i]);
-	       i915->state.tex_buffer[i] = NULL;
-	    }
-
+      if (intel->ctx.Texture.Unit[i]._Current) {
+         switch (intel->ctx.Texture.Unit[i]._Current->Target) {
+         case GL_TEXTURE_1D:
+         case GL_TEXTURE_2D:
+         case GL_TEXTURE_CUBE_MAP:
+         case GL_TEXTURE_3D:
+            ok = i915_update_tex_unit(intel, i, SS3_NORMALIZED_COORDS);
+            break;
+         case GL_TEXTURE_RECTANGLE:
+            ok = i915_update_tex_unit(intel, i, 0);
+            break;
+         default:
+            ok = false;
             break;
          }
-      default:
-         ok = false;
-         break;
+      } else {
+         struct i915_context *i915 = i915_context(&intel->ctx);
+         if (i915->state.active & I915_UPLOAD_TEX(i))
+            I915_ACTIVESTATE(i915, I915_UPLOAD_TEX(i), false);
+
+         if (i915->state.tex_buffer[i] != NULL) {
+            drm_intel_bo_unreference(i915->state.tex_buffer[i]);
+            i915->state.tex_buffer[i] = NULL;
+         }
       }
    }
 

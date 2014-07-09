@@ -21,7 +21,7 @@
  * MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
  **********************************************************************************/
 
-/* $Revision: 1.1.1.1 $ on $Date: 2014/07/09 20:35:17 $ */
+/* $Revision: 1.2 $ on $Date: 2014/07/09 21:08:51 $ */
 
 #ifndef __OPENCL_CL_D3D11_H
 #define __OPENCL_CL_D3D11_H

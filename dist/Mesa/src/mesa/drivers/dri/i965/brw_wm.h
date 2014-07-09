@@ -1,8 +1,8 @@
 /*
  Copyright (C) Intel Corp.  2006.  All Rights Reserved.
- Intel funded Tungsten Graphics (http://www.tungstengraphics.com) to
+ Intel funded Tungsten Graphics to
  develop this 3D driver.
- 
+
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
- 
+
  The above copyright notice and this permission notice (including the
  next paragraph) shall be included in all copies or substantial
  portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -22,13 +22,13 @@
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  **********************************************************************/
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
-              
+
 
 #ifndef BRW_WM_H
 #define BRW_WM_H
@@ -61,11 +61,15 @@ struct brw_wm_prog_key {
    uint8_t iz_lookup;
    GLuint stats_wm:1;
    GLuint flat_shade:1;
+   GLuint persample_shading:1;
    GLuint nr_color_regions:5;
    GLuint replicate_alpha:1;
    GLuint render_to_fbo:1;
    GLuint clamp_fragment_color:1;
+   GLuint compute_pos_offset:1;
+   GLuint compute_sample_id:1;
    GLuint line_aa:2;
+   GLuint high_quality_derivatives:1;
 
    GLushort drawable_height;
    GLbitfield64 input_slots_valid;
@@ -84,6 +88,8 @@ struct brw_wm_compile {
    uint8_t source_w_reg;
    uint8_t aa_dest_stencil_reg;
    uint8_t dest_depth_reg;
+   uint8_t sample_pos_reg;
+   uint8_t sample_mask_reg;
    uint8_t barycentric_coord_reg[BRW_WM_BARYCENTRIC_INTERP_MODE_COUNT];
    uint8_t nr_payload_regs;
    GLuint source_depth_to_render_target:1;
@@ -115,8 +121,6 @@ bool do_wm_prog(struct brw_context *brw,
 void brw_wm_debug_recompile(struct brw_context *brw,
                             struct gl_shader_program *prog,
                             const struct brw_wm_prog_key *key);
-bool brw_wm_prog_data_compare(const void *a, const void *b,
-                              int aux_size, const void *key);
-void brw_wm_prog_data_free(const void *in_prog_data);
+bool brw_wm_prog_data_compare(const void *a, const void *b);
 
 #endif

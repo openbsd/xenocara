@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -65,7 +65,7 @@ struct pipe_transfer;
 struct pipe_vertex_buffer;
 struct pipe_vertex_element;
 struct pipe_video_buffer;
-struct pipe_video_decoder;
+struct pipe_video_codec;
 struct pipe_viewport_state;
 struct pipe_compute_state;
 union pipe_color_union;
@@ -139,19 +139,9 @@ struct pipe_context {
 
    void * (*create_sampler_state)(struct pipe_context *,
                                   const struct pipe_sampler_state *);
-   void   (*bind_fragment_sampler_states)(struct pipe_context *,
-                                          unsigned num_samplers,
-                                          void **samplers);
-   void   (*bind_vertex_sampler_states)(struct pipe_context *,
-                                        unsigned num_samplers,
-                                        void **samplers);
-   void   (*bind_geometry_sampler_states)(struct pipe_context *,
-                                          unsigned num_samplers,
-                                          void **samplers);
-   void   (*bind_compute_sampler_states)(struct pipe_context *,
-                                         unsigned start_slot,
-                                         unsigned num_samplers,
-                                         void **samplers);
+   void   (*bind_sampler_states)(struct pipe_context *,
+                                 unsigned shader, unsigned start_slot,
+                                 unsigned num_samplers, void **samplers);
    void   (*delete_sampler_state)(struct pipe_context *, void *);
 
    void * (*create_rasterizer_state)(struct pipe_context *,
@@ -200,6 +190,9 @@ struct pipe_context {
    void (*set_sample_mask)( struct pipe_context *,
                             unsigned sample_mask );
 
+   void (*set_min_samples)( struct pipe_context *,
+                            unsigned min_samples );
+
    void (*set_clip_state)( struct pipe_context *,
                             const struct pipe_clip_state * );
 
@@ -223,21 +216,9 @@ struct pipe_context {
                                 unsigned num_viewports,
                                 const struct pipe_viewport_state *);
 
-   void (*set_fragment_sampler_views)(struct pipe_context *,
-                                      unsigned num_views,
-                                      struct pipe_sampler_view **);
-
-   void (*set_vertex_sampler_views)(struct pipe_context *,
-                                    unsigned num_views,
-                                    struct pipe_sampler_view **);
-
-   void (*set_geometry_sampler_views)(struct pipe_context *,
-                                      unsigned num_views,
-                                      struct pipe_sampler_view **);
-
-   void (*set_compute_sampler_views)(struct pipe_context *,
-                                     unsigned start_slot, unsigned num_views,
-                                     struct pipe_sampler_view **);
+   void (*set_sampler_views)(struct pipe_context *, unsigned shader,
+                             unsigned start_slot, unsigned num_views,
+                             struct pipe_sampler_view **);
 
    /**
     * Bind an array of shader resources that will be used by the
@@ -282,7 +263,7 @@ struct pipe_context {
    void (*set_stream_output_targets)(struct pipe_context *,
                               unsigned num_targets,
                               struct pipe_stream_output_target **targets,
-                              unsigned append_bitmask);
+                              const unsigned *offsets);
 
    /*@}*/
 
@@ -353,6 +334,17 @@ struct pipe_context {
                                unsigned stencil,
                                unsigned dstx, unsigned dsty,
                                unsigned width, unsigned height);
+
+   /**
+    * Clear a buffer. Runs a memset over the specified region with the element
+    * value passed in through clear_value of size clear_value_size.
+    */
+   void (*clear_buffer)(struct pipe_context *pipe,
+                        struct pipe_resource *res,
+                        unsigned offset,
+                        unsigned size,
+                        const void *clear_value,
+                        int clear_value_size);
 
    /** Flush draw commands
     *
@@ -428,16 +420,17 @@ struct pipe_context {
     * Flush any pending framebuffer writes and invalidate texture caches.
     */
    void (*texture_barrier)(struct pipe_context *);
-   
+
    /**
-    * Creates a video decoder for a specific video codec/profile
+    * Flush caches according to flags.
     */
-   struct pipe_video_decoder *(*create_video_decoder)( struct pipe_context *context,
-                                                       enum pipe_video_profile profile,
-                                                       enum pipe_video_entrypoint entrypoint,
-                                                       enum pipe_video_chroma_format chroma_format,
-                                                       unsigned width, unsigned height, unsigned max_references,
-                                                       bool expect_chunked_decode);
+   void (*memory_barrier)(struct pipe_context *, unsigned flags);
+
+   /**
+    * Creates a video codec for a specific video format/profile
+    */
+   struct pipe_video_codec *(*create_video_codec)( struct pipe_context *context,
+                                                   const struct pipe_video_codec *templat );
 
    /**
     * Creates a video buffer as decoding target
@@ -486,11 +479,14 @@ struct pipe_context {
     *                   unless it's NULL, in which case no new
     *                   resources will be bound.
     * \param handles    array of pointers to the memory locations that
-    *                   will be filled with the respective base
-    *                   addresses each buffer will be mapped to.  It
-    *                   should contain at least \a count elements,
-    *                   unless \a resources is NULL in which case \a
-    *                   handles should be NULL as well.
+    *                   will be updated with the address each buffer
+    *                   will be mapped to.  The base memory address of
+    *                   each of the buffers will be added to the value
+    *                   pointed to by its corresponding handle to form
+    *                   the final address argument.  It should contain
+    *                   at least \a count elements, unless \a
+    *                   resources is NULL in which case \a handles
+    *                   should be NULL as well.
     *
     * Note that the driver isn't required to make any guarantees about
     * the contents of the \a handles array being valid anytime except
@@ -541,6 +537,19 @@ struct pipe_context {
                                unsigned sample_count,
                                unsigned sample_index,
                                float *out_value);
+
+   /**
+    * Flush the resource cache, so that the resource can be used
+    * by an external client. Possible usage:
+    * - flushing a resource before presenting it on the screen
+    * - flushing a resource if some other process or device wants to use it
+    * This shouldn't be used to flush caches if the resource is only managed
+    * by a single pipe_screen and is not shared with another process.
+    * (i.e. you shouldn't use it to flush caches explicitly if you want to e.g.
+    * use the resource for texturing)
+    */
+   void (*flush_resource)(struct pipe_context *ctx,
+                          struct pipe_resource *resource);
 };
 
 

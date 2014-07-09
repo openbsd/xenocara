@@ -1,7 +1,7 @@
 #ifndef __glplatform_h_
 #define __glplatform_h_
 
-/* $Revision: 1.4 $ on $Date: 2013/09/05 13:59:16 $ */
+/* $Revision: 1.5 $ on $Date: 2014/07/09 21:08:51 $ */
 
 /*
  * This document is licensed under the SGI Free Software B License Version

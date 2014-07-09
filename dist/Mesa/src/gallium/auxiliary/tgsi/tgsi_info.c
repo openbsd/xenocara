@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -145,10 +145,10 @@ static const struct tgsi_opcode_info opcode_info[TGSI_OPCODE_LAST] =
    { 0, 0, 0, 0, 0, 0, NONE, "", 105 },     /* removed */
    { 0, 0, 0, 0, 0, 0, NONE, "", 106 },     /* removed */
    { 0, 0, 0, 0, 0, 0, NONE, "NOP", TGSI_OPCODE_NOP },
-   { 0, 0, 0, 0, 0, 0, NONE, "", 108 },     /* removed */
-   { 0, 0, 0, 0, 0, 0, NONE, "", 109 },     /* removed */
-   { 0, 0, 0, 0, 0, 0, NONE, "", 110 },     /* removed */
-   { 0, 0, 0, 0, 0, 0, NONE, "", 111 },     /* removed */
+   { 1, 2, 0, 0, 0, 0, COMP, "FSEQ", TGSI_OPCODE_FSEQ },
+   { 1, 2, 0, 0, 0, 0, COMP, "FSGE", TGSI_OPCODE_FSGE },
+   { 1, 2, 0, 0, 0, 0, COMP, "FSLT", TGSI_OPCODE_FSLT },
+   { 1, 2, 0, 0, 0, 0, COMP, "FSNE", TGSI_OPCODE_FSNE },
    { 1, 1, 0, 0, 0, 0, REPL, "NRM4", TGSI_OPCODE_NRM4 },
    { 0, 1, 0, 0, 0, 0, NONE, "CALLNZ", TGSI_OPCODE_CALLNZ },
    { 0, 1, 0, 0, 0, 0, NONE, "", 114 },     /* removed */
@@ -219,6 +219,18 @@ static const struct tgsi_opcode_info opcode_info[TGSI_OPCODE_LAST] =
    { 1, 3, 1, 0, 0, 0, OTHR, "TEX2", TGSI_OPCODE_TEX2 },
    { 1, 3, 1, 0, 0, 0, OTHR, "TXB2", TGSI_OPCODE_TXB2 },
    { 1, 3, 1, 0, 0, 0, OTHR, "TXL2", TGSI_OPCODE_TXL2 },
+   { 1, 2, 0, 0, 0, 0, COMP, "IMUL_HI", TGSI_OPCODE_IMUL_HI },
+   { 1, 2, 0, 0, 0, 0, COMP, "UMUL_HI", TGSI_OPCODE_UMUL_HI },
+   { 1, 3, 1, 0, 0, 0, OTHR, "TG4", TGSI_OPCODE_TG4 },
+   { 1, 2, 1, 0, 0, 0, OTHR, "LODQ", TGSI_OPCODE_LODQ },
+   { 1, 3, 0, 0, 0, 0, COMP, "IBFE", TGSI_OPCODE_IBFE },
+   { 1, 3, 0, 0, 0, 0, COMP, "UBFE", TGSI_OPCODE_UBFE },
+   { 1, 4, 0, 0, 0, 0, COMP, "BFI", TGSI_OPCODE_BFI },
+   { 1, 1, 0, 0, 0, 0, COMP, "BREV", TGSI_OPCODE_BREV },
+   { 1, 1, 0, 0, 0, 0, COMP, "POPC", TGSI_OPCODE_POPC },
+   { 1, 1, 0, 0, 0, 0, COMP, "LSB", TGSI_OPCODE_LSB },
+   { 1, 1, 0, 0, 0, 0, COMP, "IMSB", TGSI_OPCODE_IMSB },
+   { 1, 1, 0, 0, 0, 0, COMP, "UMSB", TGSI_OPCODE_UMSB },
 };
 
 const struct tgsi_opcode_info *
@@ -297,11 +309,16 @@ tgsi_opcode_infer_type( uint opcode )
    case TGSI_OPCODE_USLT:
    case TGSI_OPCODE_USNE:
    case TGSI_OPCODE_SVIEWINFO:
+   case TGSI_OPCODE_UMUL_HI:
       return TGSI_TYPE_UNSIGNED;
    case TGSI_OPCODE_ARL:
    case TGSI_OPCODE_ARR:
    case TGSI_OPCODE_MOD:
    case TGSI_OPCODE_F2I:
+   case TGSI_OPCODE_FSEQ:
+   case TGSI_OPCODE_FSGE:
+   case TGSI_OPCODE_FSLT:
+   case TGSI_OPCODE_FSNE:
    case TGSI_OPCODE_IDIV:
    case TGSI_OPCODE_IMAX:
    case TGSI_OPCODE_IMIN:
@@ -313,6 +330,7 @@ tgsi_opcode_infer_type( uint opcode )
    case TGSI_OPCODE_UARL:
    case TGSI_OPCODE_IABS:
    case TGSI_OPCODE_ISSG:
+   case TGSI_OPCODE_IMUL_HI:
       return TGSI_TYPE_SIGNED;
    default:
       return TGSI_TYPE_FLOAT;
@@ -335,7 +353,9 @@ tgsi_opcode_infer_src_type( uint opcode )
    case TGSI_OPCODE_CASE:
    case TGSI_OPCODE_SAMPLE_I:
    case TGSI_OPCODE_SAMPLE_I_MS:
+   case TGSI_OPCODE_UMUL_HI:
       return TGSI_TYPE_UNSIGNED;
+   case TGSI_OPCODE_IMUL_HI:
    case TGSI_OPCODE_I2F:
       return TGSI_TYPE_SIGNED;
    case TGSI_OPCODE_ARL:
@@ -343,6 +363,10 @@ tgsi_opcode_infer_src_type( uint opcode )
    case TGSI_OPCODE_TXQ_LZ:
    case TGSI_OPCODE_F2I:
    case TGSI_OPCODE_F2U:
+   case TGSI_OPCODE_FSEQ:
+   case TGSI_OPCODE_FSGE:
+   case TGSI_OPCODE_FSLT:
+   case TGSI_OPCODE_FSNE:
    case TGSI_OPCODE_UCMP:
       return TGSI_TYPE_FLOAT;
    default:

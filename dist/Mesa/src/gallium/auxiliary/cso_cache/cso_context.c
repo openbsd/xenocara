@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -31,8 +31,8 @@
   * Wrap the cso cache & hash mechanisms in a simplified
   * pipe-driver-specific interface.
   *
-  * @author Zack Rusin <zack@tungstengraphics.com>
-  * @author Keith Whitwell <keith@tungstengraphics.com>
+  * @author Zack Rusin <zackr@vmware.com>
+  * @author Keith Whitwell <keithw@vmware.com>
   */
 
 #include "pipe/p_state.h"
@@ -67,10 +67,10 @@ struct sampler_info
    void *samplers_saved[PIPE_MAX_SAMPLERS];
    unsigned nr_samplers_saved;
 
-   struct pipe_sampler_view *views[PIPE_MAX_SAMPLERS];
+   struct pipe_sampler_view *views[PIPE_MAX_SHADER_SAMPLER_VIEWS];
    unsigned nr_views;
 
-   struct pipe_sampler_view *views_saved[PIPE_MAX_SAMPLERS];
+   struct pipe_sampler_view *views_saved[PIPE_MAX_SHADER_SAMPLER_VIEWS];
    unsigned nr_views_saved;
 };
 
@@ -120,6 +120,7 @@ struct cso_context {
    struct pipe_viewport_state vp, vp_saved;
    struct pipe_blend_color blend_color;
    unsigned sample_mask, sample_mask_saved;
+   unsigned min_samples, min_samples_saved;
    struct pipe_stencil_ref stencil_ref, stencil_ref_saved;
 };
 
@@ -269,7 +270,7 @@ struct cso_context *cso_create_context( struct pipe_context *pipe )
                                    ctx);
 
    ctx->pipe = pipe;
-   ctx->sample_mask_saved = ~0;
+   ctx->sample_mask = ~0;
 
    ctx->aux_vertex_buffer_index = 0; /* 0 for now */
 
@@ -304,24 +305,41 @@ void cso_release_all( struct cso_context *ctx )
    if (ctx->pipe) {
       ctx->pipe->bind_blend_state( ctx->pipe, NULL );
       ctx->pipe->bind_rasterizer_state( ctx->pipe, NULL );
-      ctx->pipe->bind_fragment_sampler_states( ctx->pipe, 0, NULL );
-      if (ctx->pipe->bind_vertex_sampler_states)
-         ctx->pipe->bind_vertex_sampler_states(ctx->pipe, 0, NULL);
+
+      {
+         static struct pipe_sampler_view *views[PIPE_MAX_SHADER_SAMPLER_VIEWS] = { NULL };
+         static void *zeros[PIPE_MAX_SAMPLERS] = { NULL };
+         struct pipe_screen *scr = ctx->pipe->screen;
+         unsigned sh;
+         for (sh = 0; sh < PIPE_SHADER_TYPES; sh++) {
+            int maxsam = scr->get_shader_param(scr, sh,
+                                               PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS);
+            int maxview = scr->get_shader_param(scr, sh,
+                                                PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS);
+            assert(maxsam <= PIPE_MAX_SAMPLERS);
+            assert(maxview <= PIPE_MAX_SHADER_SAMPLER_VIEWS);
+            if (maxsam > 0) {
+               ctx->pipe->bind_sampler_states(ctx->pipe, sh, 0, maxsam, zeros);
+            }
+            if (maxview > 0) {
+               ctx->pipe->set_sampler_views(ctx->pipe, sh, 0, maxview, views);
+            }
+         }
+      }
+
       ctx->pipe->bind_depth_stencil_alpha_state( ctx->pipe, NULL );
       ctx->pipe->bind_fs_state( ctx->pipe, NULL );
       ctx->pipe->bind_vs_state( ctx->pipe, NULL );
       ctx->pipe->bind_vertex_elements_state( ctx->pipe, NULL );
-      ctx->pipe->set_fragment_sampler_views(ctx->pipe, 0, NULL);
-      if (ctx->pipe->set_vertex_sampler_views)
-         ctx->pipe->set_vertex_sampler_views(ctx->pipe, 0, NULL);
+
       if (ctx->pipe->set_stream_output_targets)
-         ctx->pipe->set_stream_output_targets(ctx->pipe, 0, NULL, 0);
+         ctx->pipe->set_stream_output_targets(ctx->pipe, 0, NULL, NULL);
    }
 
-   /* free fragment samplers, views */
+   /* free fragment sampler views */
    for (shader = 0; shader < Elements(ctx->samplers); shader++) {
       struct sampler_info *info = &ctx->samplers[shader];
-      for (i = 0; i < PIPE_MAX_SAMPLERS; i++) {
+      for (i = 0; i < PIPE_MAX_SHADER_SAMPLER_VIEWS; i++) {
          pipe_sampler_view_reference(&info->views[i], NULL);
          pipe_sampler_view_reference(&info->views_saved[i], NULL);
       }
@@ -697,6 +715,24 @@ void cso_save_sample_mask(struct cso_context *ctx)
 void cso_restore_sample_mask(struct cso_context *ctx)
 {
    cso_set_sample_mask(ctx, ctx->sample_mask_saved);
+}
+
+void cso_set_min_samples(struct cso_context *ctx, unsigned min_samples)
+{
+   if (ctx->min_samples != min_samples && ctx->pipe->set_min_samples) {
+      ctx->min_samples = min_samples;
+      ctx->pipe->set_min_samples(ctx->pipe, min_samples);
+   }
+}
+
+void cso_save_min_samples(struct cso_context *ctx)
+{
+   ctx->min_samples_saved = ctx->min_samples;
+}
+
+void cso_restore_min_samples(struct cso_context *ctx)
+{
+   cso_set_min_samples(ctx, ctx->min_samples_saved);
 }
 
 void cso_set_stencil_ref(struct cso_context *ctx,
@@ -1077,27 +1113,17 @@ single_sampler_done(struct cso_context *ctx, unsigned shader_stage)
       memcpy(info->hw.samplers,
              info->samplers,
              info->nr_samplers * sizeof(void *));
-      info->hw.nr_samplers = info->nr_samplers;
 
-      switch (shader_stage) {
-      case PIPE_SHADER_FRAGMENT:
-         ctx->pipe->bind_fragment_sampler_states(ctx->pipe,
-                                                 info->nr_samplers,
-                                                 info->samplers);
-         break;
-      case PIPE_SHADER_VERTEX:
-         ctx->pipe->bind_vertex_sampler_states(ctx->pipe,
-                                               info->nr_samplers,
-                                               info->samplers);
-         break;
-      case PIPE_SHADER_GEOMETRY:
-         ctx->pipe->bind_geometry_sampler_states(ctx->pipe,
-                                               info->nr_samplers,
-                                               info->samplers);
-         break;
-      default:
-         assert(!"bad shader type in single_sampler_done()");
-      }
+      /* set remaining slots/pointers to null */
+      for (i = info->nr_samplers; i < info->hw.nr_samplers; i++)
+         info->samplers[i] = NULL;
+
+      ctx->pipe->bind_sampler_states(ctx->pipe, shader_stage, 0,
+                                     MAX2(info->nr_samplers,
+                                          info->hw.nr_samplers),
+                                     info->samplers);
+
+      info->hw.nr_samplers = info->nr_samplers;
    }
 }
 
@@ -1170,32 +1196,27 @@ cso_set_sampler_views(struct cso_context *ctx,
 {
    struct sampler_info *info = &ctx->samplers[shader_stage];
    unsigned i;
+   boolean any_change = FALSE;
 
    /* reference new views */
    for (i = 0; i < count; i++) {
+      any_change |= info->views[i] != views[i];
       pipe_sampler_view_reference(&info->views[i], views[i]);
    }
    /* unref extra old views, if any */
    for (; i < info->nr_views; i++) {
+      any_change |= info->views[i] != NULL;
       pipe_sampler_view_reference(&info->views[i], NULL);
    }
 
-   info->nr_views = count;
-
    /* bind the new sampler views */
-   switch (shader_stage) {
-   case PIPE_SHADER_FRAGMENT:
-      ctx->pipe->set_fragment_sampler_views(ctx->pipe, count, info->views);
-      break;
-   case PIPE_SHADER_VERTEX:
-      ctx->pipe->set_vertex_sampler_views(ctx->pipe, count, info->views);
-      break;
-   case PIPE_SHADER_GEOMETRY:
-      ctx->pipe->set_geometry_sampler_views(ctx->pipe, count, info->views);
-      break;
-   default:
-      assert(!"bad shader type in cso_set_sampler_views()");
+   if (any_change) {
+      ctx->pipe->set_sampler_views(ctx->pipe, shader_stage, 0,
+                                   MAX2(info->nr_views, count),
+                                   info->views);
    }
+
+   info->nr_views = count;
 }
 
 
@@ -1219,6 +1240,7 @@ cso_restore_sampler_views(struct cso_context *ctx, unsigned shader_stage)
 {
    struct sampler_info *info = &ctx->samplers[shader_stage];
    unsigned i, nr_saved = info->nr_views_saved;
+   unsigned num;
 
    for (i = 0; i < nr_saved; i++) {
       pipe_sampler_view_reference(&info->views[i], NULL);
@@ -1230,20 +1252,10 @@ cso_restore_sampler_views(struct cso_context *ctx, unsigned shader_stage)
       pipe_sampler_view_reference(&info->views[i], NULL);
    }
 
+   num = MAX2(info->nr_views, nr_saved);
+
    /* bind the old/saved sampler views */
-   switch (shader_stage) {
-   case PIPE_SHADER_FRAGMENT:
-      ctx->pipe->set_fragment_sampler_views(ctx->pipe, nr_saved, info->views);
-      break;
-   case PIPE_SHADER_VERTEX:
-      ctx->pipe->set_vertex_sampler_views(ctx->pipe, nr_saved, info->views);
-      break;
-   case PIPE_SHADER_GEOMETRY:
-      ctx->pipe->set_geometry_sampler_views(ctx->pipe, nr_saved, info->views);
-      break;
-   default:
-      assert(!"bad shader type in cso_restore_sampler_views()");
-   }
+   ctx->pipe->set_sampler_views(ctx->pipe, shader_stage, 0, num, info->views);
 
    info->nr_views = nr_saved;
    info->nr_views_saved = 0;
@@ -1254,7 +1266,7 @@ void
 cso_set_stream_outputs(struct cso_context *ctx,
                        unsigned num_targets,
                        struct pipe_stream_output_target **targets,
-                       unsigned append_bitmask)
+                       const unsigned *offsets)
 {
    struct pipe_context *pipe = ctx->pipe;
    uint i;
@@ -1279,7 +1291,7 @@ cso_set_stream_outputs(struct cso_context *ctx,
    }
 
    pipe->set_stream_output_targets(pipe, num_targets, targets,
-                                   append_bitmask);
+                                   offsets);
    ctx->nr_so_targets = num_targets;
 }
 
@@ -1305,6 +1317,7 @@ cso_restore_stream_outputs(struct cso_context *ctx)
 {
    struct pipe_context *pipe = ctx->pipe;
    uint i;
+   unsigned offset[PIPE_MAX_SO_BUFFERS];
 
    if (!ctx->has_streamout) {
       return;
@@ -1315,19 +1328,21 @@ cso_restore_stream_outputs(struct cso_context *ctx)
       return;
    }
 
+   assert(ctx->nr_so_targets_saved <= PIPE_MAX_SO_BUFFERS);
    for (i = 0; i < ctx->nr_so_targets_saved; i++) {
       pipe_so_target_reference(&ctx->so_targets[i], NULL);
       /* move the reference from one pointer to another */
       ctx->so_targets[i] = ctx->so_targets_saved[i];
       ctx->so_targets_saved[i] = NULL;
+      /* -1 means append */
+      offset[i] = (unsigned)-1;
    }
    for (; i < ctx->nr_so_targets; i++) {
       pipe_so_target_reference(&ctx->so_targets[i], NULL);
    }
 
-   /* ~0 means append */
    pipe->set_stream_output_targets(pipe, ctx->nr_so_targets_saved,
-                                   ctx->so_targets, ~0);
+                                   ctx->so_targets, offset);
 
    ctx->nr_so_targets = ctx->nr_so_targets_saved;
    ctx->nr_so_targets_saved = 0;
@@ -1426,6 +1441,26 @@ cso_draw_arrays(struct cso_context *cso, uint mode, uint start, uint count)
    info.count = count;
    info.min_index = start;
    info.max_index = start + count - 1;
+
+   cso_draw_vbo(cso, &info);
+}
+
+void
+cso_draw_arrays_instanced(struct cso_context *cso, uint mode,
+                          uint start, uint count,
+                          uint start_instance, uint instance_count)
+{
+   struct pipe_draw_info info;
+
+   util_draw_init_info(&info);
+
+   info.mode = mode;
+   info.start = start;
+   info.count = count;
+   info.min_index = start;
+   info.max_index = start + count - 1;
+   info.start_instance = start_instance;
+   info.instance_count = instance_count;
 
    cso_draw_vbo(cso, &info);
 }

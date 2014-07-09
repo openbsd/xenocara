@@ -167,7 +167,6 @@ class PrintGlxProtoStubs(glX_proto_common.glx_print_proto):
         print '#include "glxclient.h"'
         print '#include "indirect_size.h"'
         print '#include "glapi.h"'
-        print '#include "glthread.h"'
         print '#include <GL/glxproto.h>'
         print '#include <X11/Xlib-xcb.h>'
         print '#include <xcb/xcb.h>'
@@ -971,6 +970,8 @@ struct _glapi_table * __glXNewIndirectAPI( void )
 
     entries = _glapi_get_dispatch_table_size();
     table = malloc(entries * sizeof(_glapi_proc));
+    if (table == NULL)
+        return NULL;
 
     /* first, set all entries to point to no-op functions */
     for (i = 0; i < entries; i++) {

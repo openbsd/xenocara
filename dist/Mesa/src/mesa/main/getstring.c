@@ -23,7 +23,7 @@
  */
 
 
-
+#include <stdbool.h>
 #include "glheader.h"
 #include "context.h"
 #include "get.h"
@@ -42,8 +42,6 @@ shading_language_version(struct gl_context *ctx)
    case API_OPENGL_COMPAT:
    case API_OPENGL_CORE:
       switch (ctx->Const.GLSLVersion) {
-      case 110:
-         return (const GLubyte *) "1.10";
       case 120:
          return (const GLubyte *) "1.20";
       case 130:
@@ -168,7 +166,7 @@ _mesa_GetStringi(GLenum name, GLuint index)
       }
       return _mesa_get_enabled_extension(ctx, index);
    default:
-      _mesa_error( ctx, GL_INVALID_ENUM, "glGetString" );
+      _mesa_error(ctx, GL_INVALID_ENUM, "glGetStringi");
       return (const GLubyte *) 0;
    }
 }
@@ -202,42 +200,42 @@ _mesa_GetPointerv( GLenum pname, GLvoid **params )
       case GL_VERTEX_ARRAY_POINTER:
          if (ctx->API != API_OPENGL_COMPAT && ctx->API != API_OPENGLES)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POS].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_POS].Ptr;
          break;
       case GL_NORMAL_ARRAY_POINTER:
          if (ctx->API != API_OPENGL_COMPAT && ctx->API != API_OPENGLES)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_NORMAL].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_NORMAL].Ptr;
          break;
       case GL_COLOR_ARRAY_POINTER:
          if (ctx->API != API_OPENGL_COMPAT && ctx->API != API_OPENGLES)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_COLOR0].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_COLOR0].Ptr;
          break;
       case GL_SECONDARY_COLOR_ARRAY_POINTER_EXT:
          if (ctx->API != API_OPENGL_COMPAT)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_COLOR1].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_COLOR1].Ptr;
          break;
       case GL_FOG_COORDINATE_ARRAY_POINTER_EXT:
          if (ctx->API != API_OPENGL_COMPAT)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_FOG].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_FOG].Ptr;
          break;
       case GL_INDEX_ARRAY_POINTER:
          if (ctx->API != API_OPENGL_COMPAT)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_COLOR_INDEX].Ptr;
          break;
       case GL_TEXTURE_COORD_ARRAY_POINTER:
          if (ctx->API != API_OPENGL_COMPAT && ctx->API != API_OPENGLES)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_TEX(clientUnit)].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_TEX(clientUnit)].Ptr;
          break;
       case GL_EDGE_FLAG_ARRAY_POINTER:
          if (ctx->API != API_OPENGL_COMPAT)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_EDGEFLAG].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_EDGEFLAG].Ptr;
          break;
       case GL_FEEDBACK_BUFFER_POINTER:
          if (ctx->API != API_OPENGL_COMPAT)
@@ -252,17 +250,14 @@ _mesa_GetPointerv( GLenum pname, GLvoid **params )
       case GL_POINT_SIZE_ARRAY_POINTER_OES:
          if (ctx->API != API_OPENGLES)
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Array.ArrayObj->VertexAttrib[VERT_ATTRIB_POINT_SIZE].Ptr;
+         *params = (GLvoid *) ctx->Array.VAO->VertexAttrib[VERT_ATTRIB_POINT_SIZE].Ptr;
          break;
       case GL_DEBUG_CALLBACK_FUNCTION_ARB:
-         if (!_mesa_is_desktop_gl(ctx))
-            goto invalid_pname;
-         *params = (GLvoid *) ctx->Debug.Callback;
-         break;
       case GL_DEBUG_CALLBACK_USER_PARAM_ARB:
          if (!_mesa_is_desktop_gl(ctx))
             goto invalid_pname;
-         *params = (GLvoid *) ctx->Debug.CallbackData;
+         else
+            *params = _mesa_get_debug_state_ptr(ctx, pname);
          break;
       default:
          goto invalid_pname;
@@ -305,11 +300,50 @@ GLenum GLAPIENTRY
 _mesa_GetGraphicsResetStatusARB( void )
 {
    GET_CURRENT_CONTEXT(ctx);
-   GLenum status = ctx->ResetStatus;
+   GLenum status = GL_NO_ERROR;
 
-   if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(ctx, "glGetGraphicsResetStatusARB"
-                       "(always returns GL_NO_ERROR)\n");
+   /* The ARB_robustness specification says:
+    *
+    *     "If the reset notification behavior is NO_RESET_NOTIFICATION_ARB,
+    *     then the implementation will never deliver notification of reset
+    *     events, and GetGraphicsResetStatusARB will always return NO_ERROR."
+    */
+   if (ctx->Const.ResetStrategy == GL_NO_RESET_NOTIFICATION_ARB) {
+      if (MESA_VERBOSE & VERBOSE_API)
+         _mesa_debug(ctx,
+                     "glGetGraphicsResetStatusARB always returns GL_NO_ERROR "
+                     "because reset notifictation was not requested at context "
+                     "creation.\n");
+
+      return GL_NO_ERROR;
+   }
+
+   if (ctx->Driver.GetGraphicsResetStatus) {
+      /* Query the reset status of this context from the driver core.
+       */
+      status = ctx->Driver.GetGraphicsResetStatus(ctx);
+
+      mtx_lock(&ctx->Shared->Mutex);
+
+      /* If this context has not been affected by a GPU reset, check to see if
+       * some other context in the share group has been affected by a reset.
+       * If another context saw a reset but this context did not, assume that
+       * this context was not guilty.
+       */
+      if (status != GL_NO_ERROR) {
+         ctx->Shared->ShareGroupReset = true;
+      } else if (ctx->Shared->ShareGroupReset && !ctx->ShareGroupReset) {
+         status = GL_INNOCENT_CONTEXT_RESET_ARB;
+      }
+
+      ctx->ShareGroupReset = ctx->Shared->ShareGroupReset;
+      mtx_unlock(&ctx->Shared->Mutex);
+   }
+
+   if (!ctx->Driver.GetGraphicsResetStatus && (MESA_VERBOSE & VERBOSE_API))
+      _mesa_debug(ctx,
+                  "glGetGraphicsResetStatusARB always returns GL_NO_ERROR "
+                  "because the driver doesn't track reset status.\n");
 
    return status;
 }

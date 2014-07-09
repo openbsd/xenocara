@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ *
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,19 +10,19 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 #define CMD_MI				(0x0 << 29)
@@ -43,6 +43,10 @@
 
 #define MI_STORE_REGISTER_MEM		(CMD_MI | (0x24 << 23))
 # define MI_STORE_REGISTER_MEM_USE_GGTT		(1 << 22)
+
+/* Load a value from memory into a register.  Only available on Gen7+. */
+#define GEN7_MI_LOAD_REGISTER_MEM	(CMD_MI | (0x29 << 23))
+# define MI_LOAD_REGISTER_MEM_USE_GGTT		(1 << 22)
 
 /** @{
  *
@@ -109,17 +113,11 @@
 #define PS_INVOCATION_COUNT             0x2348
 #define PS_DEPTH_COUNT                  0x2350
 
-#define SO_NUM_PRIM_STORAGE_NEEDED	0x2280
-#define SO_PRIM_STORAGE_NEEDED0_IVB	0x5240
-#define SO_PRIM_STORAGE_NEEDED1_IVB	0x5248
-#define SO_PRIM_STORAGE_NEEDED2_IVB	0x5250
-#define SO_PRIM_STORAGE_NEEDED3_IVB	0x5258
+#define GEN6_SO_PRIM_STORAGE_NEEDED     0x2280
+#define GEN7_SO_PRIM_STORAGE_NEEDED(n)  (0x5240 + (n) * 8)
 
-#define SO_NUM_PRIMS_WRITTEN		0x2288
-#define SO_NUM_PRIMS_WRITTEN0_IVB	0x5200
-#define SO_NUM_PRIMS_WRITTEN1_IVB	0x5208
-#define SO_NUM_PRIMS_WRITTEN2_IVB	0x5210
-#define SO_NUM_PRIMS_WRITTEN3_IVB	0x5218
+#define GEN6_SO_NUM_PRIMS_WRITTEN       0x2288
+#define GEN7_SO_NUM_PRIMS_WRITTEN(n)    (0x5200 + (n) * 8)
 
 #define GEN7_SO_WRITE_OFFSET(n)         (0x5280 + (n) * 4)
 
@@ -128,3 +126,15 @@
 #define BCS_SWCTRL                      0x22200
 # define BCS_SWCTRL_SRC_Y               (1 << 0)
 # define BCS_SWCTRL_DST_Y               (1 << 1)
+
+#define OACONTROL                       0x2360
+# define OACONTROL_COUNTER_SELECT_SHIFT  2
+# define OACONTROL_ENABLE_COUNTERS       (1 << 0)
+
+/* Auto-Draw / Indirect Registers */
+#define GEN7_3DPRIM_END_OFFSET          0x2420
+#define GEN7_3DPRIM_START_VERTEX        0x2430
+#define GEN7_3DPRIM_VERTEX_COUNT        0x2434
+#define GEN7_3DPRIM_INSTANCE_COUNT      0x2438
+#define GEN7_3DPRIM_START_INSTANCE      0x243C
+#define GEN7_3DPRIM_BASE_VERTEX         0x2440

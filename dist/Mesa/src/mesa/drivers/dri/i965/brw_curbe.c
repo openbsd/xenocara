@@ -1,8 +1,8 @@
 /*
  Copyright (C) Intel Corp.  2006.  All Rights Reserved.
- Intel funded Tungsten Graphics (http://www.tungstengraphics.com) to
+ Intel funded Tungsten Graphics to
  develop this 3D driver.
- 
+
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
- 
+
  The above copyright notice and this permission notice (including the
  next paragraph) shall be included in all copies or substantial
  portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -22,11 +22,11 @@
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  **********************************************************************/
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
 
 
@@ -39,7 +39,6 @@
 #include "program/prog_print.h"
 #include "program/prog_statevars.h"
 #include "intel_batchbuffer.h"
-#include "intel_regions.h"
 #include "brw_context.h"
 #include "brw_defines.h"
 #include "brw_state.h"
@@ -57,10 +56,10 @@ static void calculate_curbe_offsets( struct brw_context *brw )
 {
    struct gl_context *ctx = &brw->ctx;
    /* CACHE_NEW_WM_PROG */
-   const GLuint nr_fp_regs = (brw->wm.prog_data->nr_params + 15) / 16;
-   
+   const GLuint nr_fp_regs = (brw->wm.prog_data->base.nr_params + 15) / 16;
+
    /* BRW_NEW_VERTEX_PROGRAM */
-   const GLuint nr_vp_regs = (brw->vs.prog_data->base.nr_params + 15) / 16;
+   const GLuint nr_vp_regs = (brw->vs.prog_data->base.base.nr_params + 15) / 16;
    GLuint nr_clip_regs = 0;
    GLuint total_regs;
 
@@ -88,7 +87,7 @@ static void calculate_curbe_offsets( struct brw_context *brw )
     * the fragment and vertex program
     * api's.  It's not clear what happens
     * when both VP and FP want to use 128
-    * parameters, though. 
+    * parameters, though.
     */
    assert(total_regs <= 32);
 
@@ -102,7 +101,7 @@ static void calculate_curbe_offsets( struct brw_context *brw )
 
       GLuint reg = 0;
 
-      /* Calculate a new layout: 
+      /* Calculate a new layout:
        */
       reg = 0;
       brw->curbe.wm_start = reg;
@@ -114,13 +113,13 @@ static void calculate_curbe_offsets( struct brw_context *brw )
       brw->curbe.total_size = reg;
 
       if (0)
-	 printf("curbe wm %d+%d clip %d+%d vs %d+%d\n",
-		brw->curbe.wm_start,
-		brw->curbe.wm_size,
-		brw->curbe.clip_start,
-		brw->curbe.clip_size,
-		brw->curbe.vs_start,
-		brw->curbe.vs_size );
+	 fprintf(stderr, "curbe wm %d+%d clip %d+%d vs %d+%d\n",
+                 brw->curbe.wm_start,
+                 brw->curbe.wm_size,
+                 brw->curbe.clip_start,
+                 brw->curbe.clip_size,
+                 brw->curbe.vs_start,
+                 brw->curbe.vs_size );
 
       brw->state.dirty.brw |= BRW_NEW_CURBE_OFFSETS;
    }
@@ -161,7 +160,7 @@ void brw_upload_cs_urb_state(struct brw_context *brw)
       assert(brw->urb.nr_cs_entries);
       OUT_BATCH((brw->urb.csize - 1) << 4 | brw->urb.nr_cs_entries);
    }
-   CACHED_BATCH();
+   ADVANCE_BATCH();
 }
 
 static GLfloat fixed_plane[6][4] = {
@@ -199,8 +198,8 @@ brw_upload_constant_buffer(struct brw_context *brw)
       GLuint offset = brw->curbe.wm_start * 16;
 
       /* copy float constants */
-      for (i = 0; i < brw->wm.prog_data->nr_params; i++) {
-	 buf[offset + i] = *brw->wm.prog_data->param[i];
+      for (i = 0; i < brw->wm.prog_data->base.nr_params; i++) {
+	 buf[offset + i] = *brw->wm.prog_data->base.param[i];
       }
    }
 
@@ -237,20 +236,20 @@ brw_upload_constant_buffer(struct brw_context *brw)
    if (brw->curbe.vs_size) {
       GLuint offset = brw->curbe.vs_start * 16;
 
-      for (i = 0; i < brw->vs.prog_data->base.nr_params; i++) {
-         buf[offset + i] = *brw->vs.prog_data->base.param[i];
+      for (i = 0; i < brw->vs.prog_data->base.base.nr_params; i++) {
+         buf[offset + i] = *brw->vs.prog_data->base.base.param[i];
       }
    }
 
    if (0) {
-      for (i = 0; i < sz*16; i+=4) 
-	 printf("curbe %d.%d: %f %f %f %f\n", i/8, i&4,
-		buf[i+0], buf[i+1], buf[i+2], buf[i+3]);
+      for (i = 0; i < sz*16; i+=4)
+	 fprintf(stderr, "curbe %d.%d: %f %f %f %f\n", i/8, i&4,
+                 buf[i+0], buf[i+1], buf[i+2], buf[i+3]);
 
-      printf("last_buf %p buf %p sz %d/%d cmp %d\n",
-	     brw->curbe.last_buf, buf,
-	     bufsz, brw->curbe.last_bufsz,
-	     brw->curbe.last_buf ? memcmp(buf, brw->curbe.last_buf, bufsz) : -1);
+      fprintf(stderr, "last_buf %p buf %p sz %d/%d cmp %d\n",
+              brw->curbe.last_buf, buf,
+              bufsz, brw->curbe.last_bufsz,
+              brw->curbe.last_buf ? memcmp(buf, brw->curbe.last_buf, bufsz) : -1);
    }
 
    if (brw->curbe.curbe_bo != NULL &&
@@ -332,7 +331,7 @@ const struct brw_tracked_state brw_constant_buffer = {
 	       BRW_NEW_PSP | /* Implicit - hardware requires this, not used above */
 	       BRW_NEW_CURBE_OFFSETS |
 	       BRW_NEW_BATCH),
-      .cache = (CACHE_NEW_WM_PROG) 
+      .cache = (CACHE_NEW_WM_PROG)
    },
    .emit = brw_upload_constant_buffer,
 };

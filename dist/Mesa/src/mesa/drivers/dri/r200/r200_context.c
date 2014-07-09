@@ -29,7 +29,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /*
  * Authors:
- *   Keith Whitwell <keith@tungstengraphics.com>
+ *   Keith Whitwell <keithw@vmware.com>
  */
 
 #include <stdbool.h>
@@ -80,7 +80,7 @@ static const GLubyte *r200GetString( struct gl_context *ctx, GLenum name )
 
    switch ( name ) {
    case GL_VENDOR:
-      return (GLubyte *)"Tungsten Graphics, Inc.";
+      return (GLubyte *)"Mesa Project";
 
    case GL_RENDERER:
       offset = driGetRendererString( buffer, "R200", agp_mode );
@@ -169,7 +169,7 @@ static void r200_emit_query_finish(radeonContextPtr radeon)
    BATCH_LOCALS(radeon);
    struct radeon_query_object *query = radeon->query.current;
 
-   BEGIN_BATCH_NO_AUTOSTATE(4);
+   BEGIN_BATCH(4);
    OUT_BATCH(CP_PACKET0(RADEON_RB3D_ZPASS_ADDR, 0));
    OUT_BATCH_RELOC(0, query->bo, query->curr_offset, 0, RADEON_GEM_DOMAIN_GTT, 0);
    END_BATCH();
@@ -201,6 +201,7 @@ GLboolean r200CreateContext( gl_api api,
 			     unsigned major_version,
 			     unsigned minor_version,
 			     uint32_t flags,
+                             bool notify_reset,
 			     unsigned *error,
 			     void *sharedContextPrivate)
 {
@@ -212,23 +213,15 @@ GLboolean r200CreateContext( gl_api api,
    int i;
    int tcl_mode;
 
-   switch (api) {
-   case API_OPENGL_COMPAT:
-      if (major_version > 1 || minor_version > 3) {
-         *error = __DRI_CTX_ERROR_BAD_VERSION;
-         return GL_FALSE;
-      }
-      break;
-   case API_OPENGLES:
-      break;
-   default:
-      *error = __DRI_CTX_ERROR_BAD_API;
-      return GL_FALSE;
+   if (flags & ~__DRI_CTX_FLAG_DEBUG) {
+      *error = __DRI_CTX_ERROR_UNKNOWN_FLAG;
+      return false;
    }
 
-   /* Flag filtering is handled in dri2CreateContextAttribs.
-    */
-   (void) flags;
+   if (notify_reset) {
+      *error = __DRI_CTX_ERROR_UNKNOWN_ATTRIBUTE;
+      return false;
+   }
 
    assert(glVisual);
    assert(driContextPriv);
@@ -278,7 +271,7 @@ GLboolean r200CreateContext( gl_api api,
    r200InitShaderFuncs(&functions);
    radeonInitQueryObjFunctions(&functions);
 
-   if (!radeonInitContext(&rmesa->radeon, &functions,
+   if (!radeonInitContext(&rmesa->radeon, api, &functions,
 			  glVisual, driContextPriv,
 			  sharedContextPrivate)) {
      free(rmesa);
@@ -290,6 +283,9 @@ GLboolean r200CreateContext( gl_api api,
    rmesa->radeon.hw.all_dirty = 1;
 
    ctx = &rmesa->radeon.glCtx;
+
+   driContextSetFlags(ctx, flags);
+
    /* Initialize the software rasterizer and helper modules.
     */
    _swrast_CreateContext( ctx );
@@ -300,7 +296,7 @@ GLboolean r200CreateContext( gl_api api,
 
    ctx->Const.MaxTextureUnits = driQueryOptioni (&rmesa->radeon.optionCache,
 						 "texture_units");
-   ctx->Const.FragmentProgram.MaxTextureImageUnits = ctx->Const.MaxTextureUnits;
+   ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxTextureImageUnits = ctx->Const.MaxTextureUnits;
    ctx->Const.MaxTextureCoordUnits = ctx->Const.MaxTextureUnits;
 
    ctx->Const.MaxCombinedTextureImageUnits = ctx->Const.MaxTextureUnits;
@@ -334,16 +330,16 @@ GLboolean r200CreateContext( gl_api api,
    ctx->Const.MaxLineWidthAA = 10.0;
    ctx->Const.LineWidthGranularity = 0.0625;
 
-   ctx->Const.VertexProgram.MaxNativeInstructions = R200_VSF_MAX_INST;
-   ctx->Const.VertexProgram.MaxNativeAttribs = 12;
-   ctx->Const.VertexProgram.MaxNativeTemps = R200_VSF_MAX_TEMPS;
-   ctx->Const.VertexProgram.MaxNativeParameters = R200_VSF_MAX_PARAM;
-   ctx->Const.VertexProgram.MaxNativeAddressRegs = 1;
+   ctx->Const.Program[MESA_SHADER_VERTEX].MaxNativeInstructions = R200_VSF_MAX_INST;
+   ctx->Const.Program[MESA_SHADER_VERTEX].MaxNativeAttribs = 12;
+   ctx->Const.Program[MESA_SHADER_VERTEX].MaxNativeTemps = R200_VSF_MAX_TEMPS;
+   ctx->Const.Program[MESA_SHADER_VERTEX].MaxNativeParameters = R200_VSF_MAX_PARAM;
+   ctx->Const.Program[MESA_SHADER_VERTEX].MaxNativeAddressRegs = 1;
 
    ctx->Const.MaxDrawBuffers = 1;
    ctx->Const.MaxColorAttachments = 1;
 
-   ctx->ShaderCompilerOptions[MESA_SHADER_VERTEX].PreferDP4 = GL_TRUE;
+   ctx->ShaderCompilerOptions[MESA_SHADER_VERTEX].OptimizeForAOS = GL_TRUE;
 
    /* Install the customized pipeline:
     */
@@ -370,24 +366,30 @@ GLboolean r200CreateContext( gl_api api,
    _math_matrix_ctr( &rmesa->tmpmat );
    _math_matrix_set_identity( &rmesa->tmpmat );
 
-   ctx->Extensions.ARB_half_float_pixel = true;
    ctx->Extensions.ARB_occlusion_query = true;
+   ctx->Extensions.ARB_point_sprite = true;
    ctx->Extensions.ARB_texture_border_clamp = true;
+   ctx->Extensions.ARB_texture_cube_map = true;
    ctx->Extensions.ARB_texture_env_combine = true;
    ctx->Extensions.ARB_texture_env_dot3 = true;
    ctx->Extensions.ARB_texture_env_crossbar = true;
+   ctx->Extensions.ARB_texture_mirror_clamp_to_edge = true;
+   ctx->Extensions.ARB_vertex_program = true;
+   ctx->Extensions.ATI_fragment_shader = (ctx->Const.MaxTextureUnits == 6);
+   ctx->Extensions.ATI_texture_env_combine3 = true;
+   ctx->Extensions.ATI_texture_mirror_once = true;
    ctx->Extensions.EXT_blend_color = true;
+   ctx->Extensions.EXT_blend_equation_separate = true;
+   ctx->Extensions.EXT_blend_func_separate = true;
    ctx->Extensions.EXT_blend_minmax = true;
-   ctx->Extensions.EXT_packed_depth_stencil = true;
+   ctx->Extensions.EXT_gpu_program_parameters = true;
+   ctx->Extensions.EXT_point_parameters = true;
    ctx->Extensions.EXT_texture_env_dot3 = true;
    ctx->Extensions.EXT_texture_filter_anisotropic = true;
    ctx->Extensions.EXT_texture_mirror_clamp = true;
-   ctx->Extensions.ATI_texture_env_combine3 = true;
-   ctx->Extensions.ATI_texture_mirror_once = true;
    ctx->Extensions.MESA_pack_invert = true;
    ctx->Extensions.NV_texture_rectangle = true;
    ctx->Extensions.OES_EGL_image = true;
-   ctx->Extensions.ARB_occlusion_query = true;
 
    if (!(rmesa->radeon.radeonScreen->chip_flags & R200_CHIPSET_YCBCR_BROKEN)) {
      /* yuv textures don't work with some chips - R200 / rv280 okay so far
@@ -402,19 +404,6 @@ GLboolean r200CreateContext( gl_api api,
       ctx->Extensions.EXT_texture_compression_s3tc = true;
       ctx->Extensions.ANGLE_texture_compression_dxt = true;
    }
-
-   ctx->Extensions.ARB_texture_cube_map = true;
-
-   ctx->Extensions.EXT_blend_equation_separate = true;
-   ctx->Extensions.EXT_blend_func_separate = true;
-
-   ctx->Extensions.ARB_vertex_program = true;
-   ctx->Extensions.EXT_gpu_program_parameters = true;
-
-   ctx->Extensions.ATI_fragment_shader = (ctx->Const.MaxTextureUnits == 6);
-
-   ctx->Extensions.ARB_point_sprite = true;
-   ctx->Extensions.EXT_point_parameters = true;
 
 #if 0
    r200InitDriverFuncs( ctx );

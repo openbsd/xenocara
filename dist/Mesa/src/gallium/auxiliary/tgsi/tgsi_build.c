@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -124,6 +124,7 @@ tgsi_build_declaration(
    unsigned semantic,
    unsigned invariant,
    unsigned local,
+   unsigned array,
    struct tgsi_header *header )
 {
    struct tgsi_declaration declaration;
@@ -139,7 +140,7 @@ tgsi_build_declaration(
    declaration.Semantic = semantic;
    declaration.Invariant = invariant;
    declaration.Local = local;
-
+   declaration.Array = array;
    header_bodysize_grow( header );
 
    return declaration;
@@ -339,6 +340,21 @@ tgsi_default_declaration_array( void )
    return a;
 }
 
+static struct tgsi_declaration_array
+tgsi_build_declaration_array(unsigned arrayid,
+                             struct tgsi_declaration *declaration,
+                             struct tgsi_header *header)
+{
+   struct tgsi_declaration_array da;
+
+   da = tgsi_default_declaration_array();
+   da.ArrayID = arrayid;
+
+   declaration_grow(declaration, header);
+
+   return da;
+}
+
 struct tgsi_full_declaration
 tgsi_default_full_declaration( void )
 {
@@ -379,6 +395,7 @@ tgsi_build_full_declaration(
       full_decl->Declaration.Semantic,
       full_decl->Declaration.Invariant,
       full_decl->Declaration.Local,
+      full_decl->Declaration.Array,
       header );
 
    if (maxsize <= size)
@@ -472,6 +489,19 @@ tgsi_build_full_declaration(
          header);
    }
 
+   if (full_decl->Declaration.Array) {
+      struct tgsi_declaration_array *da;
+
+      if (maxsize <= size) {
+         return 0;
+      }
+      da = (struct tgsi_declaration_array *)&tokens[size];
+      size++;
+      *da = tgsi_build_declaration_array(
+         full_decl->Array.ArrayID,
+         declaration,
+         header);
+   }
    return size;
 }
 
@@ -846,8 +876,8 @@ static struct tgsi_ind_register
 tgsi_build_ind_register(
    unsigned file,
    unsigned swizzle,
-   unsigned arrayid,
    int index,
+   unsigned arrayid,
    struct tgsi_instruction *instruction,
    struct tgsi_header *header )
 {

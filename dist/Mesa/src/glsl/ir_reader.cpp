@@ -28,6 +28,8 @@
 
 const static bool debug = false;
 
+namespace {
+
 class ir_reader {
 public:
    ir_reader(_mesa_glsl_parse_state *);
@@ -59,10 +61,14 @@ private:
    ir_swizzle *read_swizzle(s_expression *);
    ir_constant *read_constant(s_expression *);
    ir_texture *read_texture(s_expression *);
+   ir_emit_vertex *read_emit_vertex(s_expression *);
+   ir_end_primitive *read_end_primitive(s_expression *);
 
    ir_dereference *read_dereference(s_expression *);
    ir_dereference_variable *read_var_ref(s_expression *);
 };
+
+} /* anonymous namespace */
 
 ir_reader::ir_reader(_mesa_glsl_parse_state *state) : state(state)
 {
@@ -164,8 +170,8 @@ ir_reader::scan_for_prototypes(exec_list *instructions, s_expression *expr)
       return;
    }
 
-   foreach_iter(exec_list_iterator, it, list->subexpressions) {
-      s_list *sub = SX_AS_LIST(it.get());
+   foreach_list(n, &list->subexpressions) {
+      s_list *sub = SX_AS_LIST(n);
       if (sub == NULL)
 	 continue; // not a (function ...); ignore it.
 
@@ -199,14 +205,21 @@ ir_reader::read_function(s_expression *expr, bool skip_body)
       assert(added);
    }
 
-   exec_list_iterator it = ((s_list *) expr)->subexpressions.iterator();
-   it.next(); // skip "function" tag
-   it.next(); // skip function name
-   for (/* nothing */; it.has_next(); it.next()) {
-      s_expression *s_sig = (s_expression *) it.get();
+   /* Skip over "function" tag and function name (which are guaranteed to be
+    * present by the above PARTIAL_MATCH call).
+    */
+   exec_node *node = ((s_list *) expr)->subexpressions.head->next->next;
+   for (/* nothing */; !node->is_tail_sentinel(); node = node->next) {
+      s_expression *s_sig = (s_expression *) node;
       read_function_sig(f, s_sig, skip_body);
    }
    return added ? f : NULL;
+}
+
+static bool
+always_available(const _mesa_glsl_parse_state *)
+{
+   return true;
 }
 
 void
@@ -237,20 +250,25 @@ ir_reader::read_function_sig(ir_function *f, s_expression *expr, bool skip_body)
    exec_list hir_parameters;
    state->symbols->push_scope();
 
-   exec_list_iterator it = paramlist->subexpressions.iterator();
-   for (it.next() /* skip "parameters" */; it.has_next(); it.next()) {
-      ir_variable *var = read_declaration((s_expression *) it.get());
+   /* Skip over the "parameters" tag. */
+   exec_node *node = paramlist->subexpressions.head->next;
+   for (/* nothing */; !node->is_tail_sentinel(); node = node->next) {
+      ir_variable *var = read_declaration((s_expression *) node);
       if (var == NULL)
 	 return;
 
       hir_parameters.push_tail(var);
    }
 
-   ir_function_signature *sig = f->exact_matching_signature(&hir_parameters);
+   ir_function_signature *sig =
+      f->exact_matching_signature(state, &hir_parameters);
    if (sig == NULL && skip_body) {
       /* If scanning for prototypes, generate a new signature. */
-      sig = new(mem_ctx) ir_function_signature(return_type);
-      sig->is_builtin = true;
+      /* ir_reader doesn't know what languages support a given built-in, so
+       * just say that they're always available.  For now, other mechanisms
+       * guarantee the right built-ins are available.
+       */
+      sig = new(mem_ctx) ir_function_signature(return_type, always_available);
       f->add_signature(sig);
    } else if (sig != NULL) {
       const char *badvar = sig->qualifiers_match(&hir_parameters);
@@ -299,8 +317,8 @@ ir_reader::read_instructions(exec_list *instructions, s_expression *expr,
       return;
    }
 
-   foreach_iter(exec_list_iterator, it, list->subexpressions) {
-      s_expression *sub = (s_expression*) it.get();
+   foreach_list(n, &list->subexpressions) {
+      s_expression *sub = (s_expression *) n;
       ir_instruction *ir = read_instruction(sub, loop_ctx);
       if (ir != NULL) {
 	 /* Global variable declarations should be moved to the top, before
@@ -355,6 +373,10 @@ ir_reader::read_instruction(s_expression *expr, ir_loop *loop_ctx)
       inst = read_return(list);
    } else if (strcmp(tag->value(), "function") == 0) {
       inst = read_function(list, false);
+   } else if (strcmp(tag->value(), "emit-vertex") == 0) {
+      inst = read_emit_vertex(list);
+   } else if (strcmp(tag->value(), "end-primitive") == 0) {
+      inst = read_end_primitive(list);
    } else {
       inst = read_rvalue(list);
       if (inst == NULL)
@@ -383,8 +405,8 @@ ir_reader::read_declaration(s_expression *expr)
    ir_variable *var = new(mem_ctx) ir_variable(type, s_name->value(),
 					       ir_var_auto);
 
-   foreach_iter(exec_list_iterator, it, s_quals->subexpressions) {
-      s_symbol *qualifier = SX_AS_SYMBOL(it.get());
+   foreach_list(n, &s_quals->subexpressions) {
+      s_symbol *qualifier = SX_AS_SYMBOL(n);
       if (qualifier == NULL) {
 	 ir_read_error(expr, "qualifier list must contain only symbols");
 	 return NULL;
@@ -392,33 +414,35 @@ ir_reader::read_declaration(s_expression *expr)
 
       // FINISHME: Check for duplicate/conflicting qualifiers.
       if (strcmp(qualifier->value(), "centroid") == 0) {
-	 var->centroid = 1;
+	 var->data.centroid = 1;
+      } else if (strcmp(qualifier->value(), "sample") == 0) {
+         var->data.sample = 1;
       } else if (strcmp(qualifier->value(), "invariant") == 0) {
-	 var->invariant = 1;
+	 var->data.invariant = 1;
       } else if (strcmp(qualifier->value(), "uniform") == 0) {
-	 var->mode = ir_var_uniform;
+	 var->data.mode = ir_var_uniform;
       } else if (strcmp(qualifier->value(), "auto") == 0) {
-	 var->mode = ir_var_auto;
+	 var->data.mode = ir_var_auto;
       } else if (strcmp(qualifier->value(), "in") == 0) {
-	 var->mode = ir_var_function_in;
+	 var->data.mode = ir_var_function_in;
       } else if (strcmp(qualifier->value(), "shader_in") == 0) {
-         var->mode = ir_var_shader_in;
+         var->data.mode = ir_var_shader_in;
       } else if (strcmp(qualifier->value(), "const_in") == 0) {
-	 var->mode = ir_var_const_in;
+	 var->data.mode = ir_var_const_in;
       } else if (strcmp(qualifier->value(), "out") == 0) {
-	 var->mode = ir_var_function_out;
+	 var->data.mode = ir_var_function_out;
       } else if (strcmp(qualifier->value(), "shader_out") == 0) {
-	 var->mode = ir_var_shader_out;
+	 var->data.mode = ir_var_shader_out;
       } else if (strcmp(qualifier->value(), "inout") == 0) {
-	 var->mode = ir_var_function_inout;
+	 var->data.mode = ir_var_function_inout;
       } else if (strcmp(qualifier->value(), "temporary") == 0) {
-	 var->mode = ir_var_temporary;
+	 var->data.mode = ir_var_temporary;
       } else if (strcmp(qualifier->value(), "smooth") == 0) {
-	 var->interpolation = INTERP_QUALIFIER_SMOOTH;
+	 var->data.interpolation = INTERP_QUALIFIER_SMOOTH;
       } else if (strcmp(qualifier->value(), "flat") == 0) {
-	 var->interpolation = INTERP_QUALIFIER_FLAT;
+	 var->data.interpolation = INTERP_QUALIFIER_FLAT;
       } else if (strcmp(qualifier->value(), "noperspective") == 0) {
-	 var->interpolation = INTERP_QUALIFIER_NOPERSPECTIVE;
+	 var->data.interpolation = INTERP_QUALIFIER_NOPERSPECTIVE;
       } else {
 	 ir_read_error(expr, "unknown qualifier: %s", qualifier->value());
 	 return NULL;
@@ -466,18 +490,16 @@ ir_reader::read_if(s_expression *expr, ir_loop *loop_ctx)
 ir_loop *
 ir_reader::read_loop(s_expression *expr)
 {
-   s_expression *s_counter, *s_from, *s_to, *s_inc, *s_body;
+   s_expression *s_body;
 
-   s_pattern pat[] = { "loop", s_counter, s_from, s_to, s_inc, s_body };
-   if (!MATCH(expr, pat)) {
-      ir_read_error(expr, "expected (loop <counter> <from> <to> "
-			  "<increment> <body>)");
+   s_pattern loop_pat[] = { "loop", s_body };
+   if (!MATCH(expr, loop_pat)) {
+      ir_read_error(expr, "expected (loop <body>)");
       return NULL;
    }
 
-   // FINISHME: actually read the count/from/to fields.
-
    ir_loop *loop = new(mem_ctx) ir_loop;
+
    read_instructions(&loop->body_instructions, s_body, loop);
    if (state->error) {
       delete loop;
@@ -636,8 +658,8 @@ ir_reader::read_call(s_expression *expr)
 
    exec_list parameters;
 
-   foreach_iter(exec_list_iterator, it, params->subexpressions) {
-      s_expression *expr = (s_expression*) it.get();
+   foreach_list(n, &params->subexpressions) {
+      s_expression *expr = (s_expression *) n;
       ir_rvalue *param = read_rvalue(expr);
       if (param == NULL) {
 	 ir_read_error(expr, "when reading parameter to function call");
@@ -653,7 +675,7 @@ ir_reader::read_call(s_expression *expr)
       return NULL;
    }
 
-   ir_function_signature *callee = f->matching_signature(&parameters);
+   ir_function_signature *callee = f->matching_signature(state, &parameters);
    if (callee == NULL) {
       ir_read_error(expr, "couldn't find matching signature for function "
                     "%s", name->value());
@@ -776,8 +798,8 @@ ir_reader::read_constant(s_expression *expr)
    if (type->is_array()) {
       unsigned elements_supplied = 0;
       exec_list elements;
-      foreach_iter(exec_list_iterator, it, values->subexpressions) {
-	 s_expression *elt = (s_expression *) it.get();
+      foreach_list(n, &values->subexpressions) {
+	 s_expression *elt = (s_expression *) n;
 	 ir_constant *ir_elt = read_constant(elt);
 	 if (ir_elt == NULL)
 	    return NULL;
@@ -797,13 +819,13 @@ ir_reader::read_constant(s_expression *expr)
 
    // Read in list of values (at most 16).
    unsigned k = 0;
-   foreach_iter(exec_list_iterator, it, values->subexpressions) {
+   foreach_list(n, &values->subexpressions) {
       if (k >= 16) {
 	 ir_read_error(values, "expected at most 16 numbers");
 	 return NULL;
       }
 
-      s_expression *expr = (s_expression*) it.get();
+      s_expression *expr = (s_expression *) n;
 
       if (type->base_type == GLSL_TYPE_FLOAT) {
 	 s_number *value = SX_AS_NUMBER(expr);
@@ -914,6 +936,7 @@ ir_reader::read_texture(s_expression *expr)
    s_list *s_shadow = NULL;
    s_expression *s_lod = NULL;
    s_expression *s_sample_index = NULL;
+   s_expression *s_component = NULL;
 
    ir_texture_opcode op = ir_tex; /* silence warning */
 
@@ -927,6 +950,10 @@ ir_reader::read_texture(s_expression *expr)
       { "txf_ms", s_type, s_sampler, s_coord, s_sample_index };
    s_pattern txs_pattern[] =
       { "txs", s_type, s_sampler, s_lod };
+   s_pattern tg4_pattern[] =
+      { "tg4", s_type, s_sampler, s_coord, s_offset, s_component };
+   s_pattern query_levels_pattern[] =
+      { "query_levels", s_type, s_sampler };
    s_pattern other_pattern[] =
       { tag, s_type, s_sampler, s_coord, s_offset, s_proj, s_shadow, s_lod };
 
@@ -940,6 +967,10 @@ ir_reader::read_texture(s_expression *expr)
       op = ir_txf_ms;
    } else if (MATCH(expr, txs_pattern)) {
       op = ir_txs;
+   } else if (MATCH(expr, tg4_pattern)) {
+      op = ir_tg4;
+   } else if (MATCH(expr, query_levels_pattern)) {
+      op = ir_query_levels;
    } else if (MATCH(expr, other_pattern)) {
       op = ir_texture::get_opcode(tag->value());
       if (op == -1)
@@ -990,7 +1021,9 @@ ir_reader::read_texture(s_expression *expr)
       }
    }
 
-   if (op != ir_txf && op != ir_txf_ms && op != ir_txs && op != ir_lod) {
+   if (op != ir_txf && op != ir_txf_ms &&
+       op != ir_txs && op != ir_lod && op != ir_tg4 &&
+       op != ir_query_levels) {
       s_int *proj_as_int = SX_AS_INT(s_proj);
       if (proj_as_int && proj_as_int->value() == 1) {
 	 tex->projector = NULL;
@@ -1059,9 +1092,40 @@ ir_reader::read_texture(s_expression *expr)
       }
       break;
    }
+   case ir_tg4:
+      tex->lod_info.component = read_rvalue(s_component);
+      if (tex->lod_info.component == NULL) {
+         ir_read_error(NULL, "when reading component in (tg4 ...)");
+         return NULL;
+      }
+      break;
    default:
       // tex and lod don't have any extra parameters.
       break;
    };
    return tex;
+}
+
+ir_emit_vertex *
+ir_reader::read_emit_vertex(s_expression *expr)
+{
+   s_pattern pat[] = { "emit-vertex" };
+
+   if (MATCH(expr, pat)) {
+      return new(mem_ctx) ir_emit_vertex();
+   }
+   ir_read_error(NULL, "when reading emit-vertex");
+   return NULL;
+}
+
+ir_end_primitive *
+ir_reader::read_end_primitive(s_expression *expr)
+{
+   s_pattern pat[] = { "end-primitive" };
+
+   if (MATCH(expr, pat)) {
+      return new(mem_ctx) ir_end_primitive();
+   }
+   ir_read_error(NULL, "when reading end-primitive");
+   return NULL;
 }

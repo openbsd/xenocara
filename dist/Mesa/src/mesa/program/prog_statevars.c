@@ -256,8 +256,7 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
       value[0] = ctx->Fog.Density;
       value[1] = ctx->Fog.Start;
       value[2] = ctx->Fog.End;
-      value[3] = (ctx->Fog.End == ctx->Fog.Start)
-         ? 1.0f : (GLfloat)(1.0 / (ctx->Fog.End - ctx->Fog.Start));
+      value[3] = 1.0f / (ctx->Fog.End - ctx->Fog.Start);
       return;
    case STATE_CLIPPLANE:
       {
@@ -350,10 +349,13 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
          }
       }
       return;
+   case STATE_NUM_SAMPLES:
+      ((int *)value)[0] = ctx->DrawBuffer->Visual.samples;
+      return;
    case STATE_DEPTH_RANGE:
-      value[0] = ctx->Viewport.Near;                     /* near       */
-      value[1] = ctx->Viewport.Far;                      /* far        */
-      value[2] = ctx->Viewport.Far - ctx->Viewport.Near; /* far - near */
+      value[0] = ctx->ViewportArray[0].Near;                /* near       */
+      value[1] = ctx->ViewportArray[0].Far;                 /* far        */
+      value[2] = ctx->ViewportArray[0].Far - ctx->ViewportArray[0].Near; /* far - near */
       value[3] = 1.0;
       return;
    case STATE_FRAGMENT_PROGRAM:
@@ -366,6 +368,13 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
                COPY_4V(value, ctx->FragmentProgram.Parameters[idx]);
                return;
             case STATE_LOCAL:
+               if (!ctx->FragmentProgram.Current->Base.LocalParams) {
+                  ctx->FragmentProgram.Current->Base.LocalParams =
+                     calloc(MAX_PROGRAM_LOCAL_PARAMS, sizeof(float[4]));
+                  if (!ctx->FragmentProgram.Current->Base.LocalParams)
+                     return;
+               }
+
                COPY_4V(value, ctx->FragmentProgram.Current->Base.LocalParams[idx]);
                return;
             default:
@@ -385,6 +394,13 @@ _mesa_fetch_state(struct gl_context *ctx, const gl_state_index state[],
                COPY_4V(value, ctx->VertexProgram.Parameters[idx]);
                return;
             case STATE_LOCAL:
+               if (!ctx->VertexProgram.Current->Base.LocalParams) {
+                  ctx->VertexProgram.Current->Base.LocalParams =
+                     calloc(MAX_PROGRAM_LOCAL_PARAMS, sizeof(float[4]));
+                  if (!ctx->VertexProgram.Current->Base.LocalParams)
+                     return;
+               }
+
                COPY_4V(value, ctx->VertexProgram.Current->Base.LocalParams[idx]);
                return;
             default:
@@ -666,6 +682,9 @@ _mesa_program_state_flags(const gl_state_index state[STATE_LENGTH])
    case STATE_PROGRAM_MATRIX:
       return _NEW_TRACK_MATRIX;
 
+   case STATE_NUM_SAMPLES:
+      return _NEW_BUFFERS;
+
    case STATE_DEPTH_RANGE:
       return _NEW_VIEWPORT;
 
@@ -853,6 +872,9 @@ append_token(char *dst, gl_state_index k)
    case STATE_TEXENV_COLOR:
       append(dst, "texenv");
       break;
+   case STATE_NUM_SAMPLES:
+      append(dst, "numsamples");
+      break;
    case STATE_DEPTH_RANGE:
       append(dst, "depth.range");
       break;
@@ -1027,6 +1049,8 @@ _mesa_program_state_string(const gl_state_index state[STATE_LENGTH])
    case STATE_FOG_PARAMS:
       break;
    case STATE_FOG_COLOR:
+      break;
+   case STATE_NUM_SAMPLES:
       break;
    case STATE_DEPTH_RANGE:
       break;

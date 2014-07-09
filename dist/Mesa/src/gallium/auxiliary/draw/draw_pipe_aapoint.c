@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -696,28 +696,7 @@ aapoint_first_point(struct draw_stage *stage, struct prim_header *header)
     */
    bind_aapoint_fragment_shader(aapoint);
 
-   /* update vertex attrib info */
-   aapoint->pos_slot = draw_current_shader_position_output(draw);
-
-   /* allocate the extra post-transformed vertex attribute */
-   aapoint->tex_slot = draw_alloc_extra_vertex_attrib(draw,
-                                                      TGSI_SEMANTIC_GENERIC,
-                                                      aapoint->fs->generic_attrib);
-   assert(aapoint->tex_slot > 0); /* output[0] is vertex pos */
-
-   /* find psize slot in post-transform vertex */
-   aapoint->psize_slot = -1;
-   if (draw->rasterizer->point_size_per_vertex) {
-      const struct tgsi_shader_info *info = draw_get_shader_info(draw);
-      uint i;
-      /* find PSIZ vertex output */
-      for (i = 0; i < info->num_outputs; i++) {
-         if (info->output_semantic_name[i] == TGSI_SEMANTIC_PSIZE) {
-            aapoint->psize_slot = i;
-            break;
-         }
-      }
-   }
+   draw_aapoint_prepare_outputs(draw, draw->pipeline.aapoint);
 
    draw->suspend_flushing = TRUE;
 
@@ -781,6 +760,39 @@ aapoint_destroy(struct draw_stage *stage)
    FREE( stage );
 }
 
+void
+draw_aapoint_prepare_outputs(struct draw_context *draw,
+                             struct draw_stage *stage)
+{
+   struct aapoint_stage *aapoint = aapoint_stage(stage);
+   const struct pipe_rasterizer_state *rast = draw->rasterizer;
+
+   /* update vertex attrib info */
+   aapoint->pos_slot = draw_current_shader_position_output(draw);
+
+   if (!rast->point_smooth)
+      return;
+
+   /* allocate the extra post-transformed vertex attribute */
+   aapoint->tex_slot = draw_alloc_extra_vertex_attrib(draw,
+                                                      TGSI_SEMANTIC_GENERIC,
+                                                      aapoint->fs->generic_attrib);
+   assert(aapoint->tex_slot > 0); /* output[0] is vertex pos */
+
+   /* find psize slot in post-transform vertex */
+   aapoint->psize_slot = -1;
+   if (draw->rasterizer->point_size_per_vertex) {
+      const struct tgsi_shader_info *info = draw_get_shader_info(draw);
+      uint i;
+      /* find PSIZ vertex output */
+      for (i = 0; i < info->num_outputs; i++) {
+         if (info->output_semantic_name[i] == TGSI_SEMANTIC_PSIZE) {
+            aapoint->psize_slot = i;
+            break;
+         }
+      }
+   }
+}
 
 static struct aapoint_stage *
 draw_aapoint_stage(struct draw_context *draw)

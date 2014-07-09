@@ -1,7 +1,7 @@
 /**************************************************************************
 
 Copyright 2000, 2001 ATI Technologies Inc., Ontario, Canada, and
-                     Tungsten Graphics Inc., Austin, Texas.
+                     VMware, Inc.
 
 All Rights Reserved.
 
@@ -29,7 +29,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /*
  * Authors:
- *   Keith Whitwell <keith@tungstengraphics.com>
+ *   Keith Whitwell <keithw@vmware.com>
  */
 
 #include "main/glheader.h"
@@ -386,7 +386,7 @@ static GLboolean radeon_run_tcl_render( struct gl_context *ctx,
    }
 
    for (i = 0 ; i < ctx->Const.MaxTextureUnits; i++) {
-      if (ctx->Texture.Unit[i]._ReallyEnabled) {
+      if (ctx->Texture.Unit[i]._Current) {
       /* TODO: probably should not emit texture coords when texgen is enabled */
 	 if (rmesa->TexGenNeedNormals[i]) {
 	    inputs |= VERT_BIT_NORMAL;

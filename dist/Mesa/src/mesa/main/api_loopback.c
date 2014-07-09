@@ -1,7 +1,7 @@
 /**
  * \file api_loopback.c
  *
- * \author Keith Whitwell <keith@tungstengraphics.com>
+ * \author Keith Whitwell <keithw@vmware.com>
  */
 
 /*
@@ -34,7 +34,6 @@
 #include "api_loopback.h"
 #include "mtypes.h"
 #include "glapi/glapi.h"
-#include "glapi/glthread.h"
 #include "main/dispatch.h"
 #include "main/context.h"
 

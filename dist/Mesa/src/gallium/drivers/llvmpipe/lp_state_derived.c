@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -53,6 +53,8 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
    int vs_index;
    uint i;
 
+   draw_prepare_shader_outputs(llvmpipe->draw);
+
    llvmpipe->color_slot[0] = -1;
    llvmpipe->color_slot[1] = -1;
    llvmpipe->bcolor_slot[0] = -1;
@@ -67,8 +69,8 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
    vinfo->num_attribs = 0;
 
    vs_index = draw_find_shader_output(llvmpipe->draw,
-                                       TGSI_SEMANTIC_POSITION,
-                                       0);
+                                      TGSI_SEMANTIC_POSITION,
+                                      0);
 
    draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_PERSPECTIVE, vs_index);
 
@@ -87,12 +89,18 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
          llvmpipe->color_slot[idx] = (int)vinfo->num_attribs;
       }
 
-      /*
-       * Emit the requested fs attribute for all but position.
-       */
-      draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_PERSPECTIVE, vs_index);
+      if (lpfs->info.base.input_semantic_name[i] == TGSI_SEMANTIC_FACE) {
+         llvmpipe->face_slot = vinfo->num_attribs;
+         draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_CONSTANT, vs_index);
+      } else if (lpfs->info.base.input_semantic_name[i] == TGSI_SEMANTIC_PRIMID) {
+         draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_CONSTANT, vs_index);
+      } else {
+         /*
+          * Emit the requested fs attribute for all but position.
+          */
+         draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_PERSPECTIVE, vs_index);
+      }
    }
-
    /* Figure out if we need bcolor as well.
     */
    for (i = 0; i < 2; i++) {
@@ -138,7 +146,6 @@ compute_vertex_info(struct llvmpipe_context *llvmpipe)
       llvmpipe->layer_slot = 0;
    }
 
-
    draw_compute_vertex_size(vinfo);
    lp_setup_set_vertex_info(llvmpipe->setup, vinfo);
 }
@@ -178,8 +185,17 @@ void llvmpipe_update_derived( struct llvmpipe_context *llvmpipe )
                           LP_NEW_OCCLUSION_QUERY))
       llvmpipe_update_fs( llvmpipe );
 
+   if (llvmpipe->dirty & (LP_NEW_RASTERIZER)) {
+      boolean discard =
+         (llvmpipe->sample_mask & 1) == 0 ||
+         (llvmpipe->rasterizer ? llvmpipe->rasterizer->rasterizer_discard : FALSE);
+
+      lp_setup_set_rasterizer_discard(llvmpipe->setup, discard);
+   }
+
    if (llvmpipe->dirty & (LP_NEW_FS |
-			  LP_NEW_RASTERIZER))
+                          LP_NEW_FRAMEBUFFER |
+                          LP_NEW_RASTERIZER))
       llvmpipe_update_setup( llvmpipe );
 
    if (llvmpipe->dirty & LP_NEW_BLEND_COLOR)
@@ -210,6 +226,18 @@ void llvmpipe_update_derived( struct llvmpipe_context *llvmpipe )
       lp_setup_set_fragment_sampler_state(llvmpipe->setup,
                                           llvmpipe->num_samplers[PIPE_SHADER_FRAGMENT],
                                           llvmpipe->samplers[PIPE_SHADER_FRAGMENT]);
+
+   if (llvmpipe->dirty & LP_NEW_VIEWPORT) {
+      /*
+       * Update setup and fragment's view of the active viewport state.
+       *
+       * XXX TODO: It is possible to only loop over the active viewports
+       *           instead of all viewports (PIPE_MAX_VIEWPORTS).
+       */
+      lp_setup_set_viewports(llvmpipe->setup,
+                             PIPE_MAX_VIEWPORTS,
+                             llvmpipe->viewports);
+   }
 
    llvmpipe->dirty = 0;
 }

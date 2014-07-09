@@ -1,8 +1,8 @@
 /*
  Copyright (C) Intel Corp.  2006.  All Rights Reserved.
- Intel funded Tungsten Graphics (http://www.tungstengraphics.com) to
+ Intel funded Tungsten Graphics to
  develop this 3D driver.
- 
+
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
- 
+
  The above copyright notice and this permission notice (including the
  next paragraph) shall be included in all copies or substantial
  portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -22,22 +22,24 @@
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  **********************************************************************/
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
-  
+
 #include <pthread.h>
 #include "main/imports.h"
 #include "main/enums.h"
 #include "main/shaderobj.h"
 #include "program/prog_parameter.h"
+#include "program/prog_print.h"
 #include "program/program.h"
 #include "program/programopt.h"
 #include "tnl/tnl.h"
 #include "glsl/ralloc.h"
+#include "glsl/ir.h"
 
 #include "brw_context.h"
 #include "brw_wm.h"
@@ -53,14 +55,17 @@ get_new_program_id(struct intel_screen *screen)
 }
 
 static void brwBindProgram( struct gl_context *ctx,
-			    GLenum target, 
+			    GLenum target,
 			    struct gl_program *prog )
 {
    struct brw_context *brw = brw_context(ctx);
 
    switch (target) {
-   case GL_VERTEX_PROGRAM_ARB: 
+   case GL_VERTEX_PROGRAM_ARB:
       brw->state.dirty.brw |= BRW_NEW_VERTEX_PROGRAM;
+      break;
+   case MESA_GEOMETRY_PROGRAM:
+      brw->state.dirty.brw |= BRW_NEW_GEOMETRY_PROGRAM;
       break;
    case GL_FRAGMENT_PROGRAM_ARB:
       brw->state.dirty.brw |= BRW_NEW_FRAGMENT_PROGRAM;
@@ -69,7 +74,7 @@ static void brwBindProgram( struct gl_context *ctx,
 }
 
 static struct gl_program *brwNewProgram( struct gl_context *ctx,
-				      GLenum target, 
+				      GLenum target,
 				      GLuint id )
 {
    struct brw_context *brw = brw_context(ctx);
@@ -99,8 +104,31 @@ static struct gl_program *brwNewProgram( struct gl_context *ctx,
 	 return NULL;
    }
 
+   case MESA_GEOMETRY_PROGRAM: {
+      struct brw_geometry_program *prog = CALLOC_STRUCT(brw_geometry_program);
+      if (prog) {
+         prog->id = get_new_program_id(brw->intelScreen);
+
+         return _mesa_init_geometry_program(ctx, &prog->program, target, id);
+      } else {
+         return NULL;
+      }
+   }
+
+   case GL_COMPUTE_PROGRAM_NV: {
+      struct brw_compute_program *prog = CALLOC_STRUCT(brw_compute_program);
+      if (prog) {
+         prog->id = get_new_program_id(brw->intelScreen);
+
+         return _mesa_init_compute_program(ctx, &prog->program, target, id);
+      } else {
+         return NULL;
+      }
+   }
+
    default:
-      return _mesa_new_program(ctx, target, id);
+      assert(!"Unsupported target in brwNewProgram()");
+      return NULL;
    }
 }
 
@@ -222,7 +250,7 @@ brw_get_scratch_bo(struct brw_context *brw,
 
 void brwInitFragProgFuncs( struct dd_function_table *functions )
 {
-   assert(functions->ProgramStringNotify == _tnl_program_string); 
+   assert(functions->ProgramStringNotify == _tnl_program_string);
 
    functions->BindProgram = brwBindProgram;
    functions->NewProgram = brwNewProgram;
@@ -273,7 +301,7 @@ get_written_and_reset(struct brw_context *brw, int i,
                       uint64_t *written, uint64_t *reset)
 {
    enum shader_time_shader_type type = brw->shader_time.types[i];
-   assert(type == ST_VS || type == ST_FS8 || type == ST_FS16);
+   assert(type == ST_VS || type == ST_GS || type == ST_FS8 || type == ST_FS16);
 
    /* Find where we recorded written and reset. */
    int wi, ri;
@@ -292,17 +320,17 @@ static void
 print_shader_time_line(const char *stage, const char *name,
                        int shader_num, uint64_t time, uint64_t total)
 {
-   printf("%-6s%-6s", stage, name);
+   fprintf(stderr, "%-6s%-18s", stage, name);
 
    if (shader_num != -1)
-      printf("%4d: ", shader_num);
+      fprintf(stderr, "%4d: ", shader_num);
    else
-      printf("    : ");
+      fprintf(stderr, "    : ");
 
-   printf("%16lld (%7.2f Gcycles)      %4.1f%%\n",
-          (long long)time,
-          (double)time / 1000000000.0,
-          (double)time / total * 100.0);
+   fprintf(stderr, "%16lld (%7.2f Gcycles)      %4.1f%%\n",
+           (long long)time,
+           (double)time / 1000000000.0,
+           (double)time / total * 100.0);
 }
 
 static void
@@ -325,6 +353,8 @@ brw_report_shader_time(struct brw_context *brw)
       switch (type) {
       case ST_VS_WRITTEN:
       case ST_VS_RESET:
+      case ST_GS_WRITTEN:
+      case ST_GS_RESET:
       case ST_FS8_WRITTEN:
       case ST_FS8_RESET:
       case ST_FS16_WRITTEN:
@@ -334,6 +364,7 @@ brw_report_shader_time(struct brw_context *brw)
          continue;
 
       case ST_VS:
+      case ST_GS:
       case ST_FS8:
       case ST_FS16:
          get_written_and_reset(brw, i, &written, &reset);
@@ -357,6 +388,7 @@ brw_report_shader_time(struct brw_context *brw)
 
       switch (type) {
       case ST_VS:
+      case ST_GS:
       case ST_FS8:
       case ST_FS16:
          total_by_type[type] += scaled[i];
@@ -369,31 +401,34 @@ brw_report_shader_time(struct brw_context *brw)
    }
 
    if (total == 0) {
-      printf("No shader time collected yet\n");
+      fprintf(stderr, "No shader time collected yet\n");
       return;
    }
 
    qsort(sorted, brw->shader_time.num_entries, sizeof(sorted[0]), compare_time);
 
-   printf("\n");
-   printf("type          ID      cycles spent                   %% of total\n");
+   fprintf(stderr, "\n");
+   fprintf(stderr, "type          ID                  cycles spent                   %% of total\n");
    for (int s = 0; s < brw->shader_time.num_entries; s++) {
       const char *shader_name;
       const char *stage;
       /* Work back from the sorted pointers times to a time to print. */
       int i = sorted[s] - scaled;
+      struct gl_shader_program *prog = brw->shader_time.shader_programs[i];
 
       if (scaled[i] == 0)
          continue;
 
       int shader_num = -1;
-      if (brw->shader_time.shader_programs[i]) {
-         shader_num = brw->shader_time.shader_programs[i]->Name;
+      if (prog) {
+         shader_num = prog->Name;
 
          /* The fixed function fragment shader generates GLSL IR with a Name
           * of 0, and nothing else does.
           */
-         if (shader_num == 0 &&
+         if (prog->Label) {
+            shader_name = prog->Label;
+         } else if (shader_num == 0 &&
              (brw->shader_time.types[i] == ST_FS8 ||
               brw->shader_time.types[i] == ST_FS16)) {
             shader_name = "ff";
@@ -417,6 +452,9 @@ brw_report_shader_time(struct brw_context *brw)
       case ST_VS:
          stage = "vs";
          break;
+      case ST_GS:
+         stage = "gs";
+         break;
       case ST_FS8:
          stage = "fs8";
          break;
@@ -432,8 +470,9 @@ brw_report_shader_time(struct brw_context *brw)
                              scaled[i], total);
    }
 
-   printf("\n");
+   fprintf(stderr, "\n");
    print_shader_time_line("total", "vs", -1, total_by_type[ST_VS], total);
+   print_shader_time_line("total", "gs", -1, total_by_type[ST_GS], total);
    print_shader_time_line("total", "fs8", -1, total_by_type[ST_FS8], total);
    print_shader_time_line("total", "fs16", -1, total_by_type[ST_FS16], total);
 }
@@ -509,4 +548,57 @@ brw_destroy_shader_time(struct brw_context *brw)
 {
    drm_intel_bo_unreference(brw->shader_time.bo);
    brw->shader_time.bo = NULL;
+}
+
+void
+brw_mark_surface_used(struct brw_stage_prog_data *prog_data,
+                      unsigned surf_index)
+{
+   assert(surf_index < BRW_MAX_SURFACES);
+
+   prog_data->binding_table.size_bytes =
+      MAX2(prog_data->binding_table.size_bytes, (surf_index + 1) * 4);
+}
+
+bool
+brw_stage_prog_data_compare(const struct brw_stage_prog_data *a,
+                            const struct brw_stage_prog_data *b)
+{
+   /* Compare all the struct up to the pointers. */
+   if (memcmp(a, b, offsetof(struct brw_stage_prog_data, param)))
+      return false;
+
+   if (memcmp(a->param, b->param, a->nr_params * sizeof(void *)))
+      return false;
+
+   if (memcmp(a->pull_param, b->pull_param, a->nr_pull_params * sizeof(void *)))
+      return false;
+
+   return true;
+}
+
+void
+brw_stage_prog_data_free(const void *p)
+{
+   struct brw_stage_prog_data *prog_data = (struct brw_stage_prog_data *)p;
+
+   ralloc_free(prog_data->param);
+   ralloc_free(prog_data->pull_param);
+}
+
+void
+brw_dump_ir(struct brw_context *brw, const char *stage,
+            struct gl_shader_program *shader_prog,
+            struct gl_shader *shader, struct gl_program *prog)
+{
+   if (shader_prog) {
+      fprintf(stderr,
+              "GLSL IR for native %s shader %d:\n", stage, shader_prog->Name);
+      _mesa_print_ir(stderr, shader->ir, NULL);
+      fprintf(stderr, "\n\n");
+   } else {
+      fprintf(stderr, "ARB_%s_program %d ir for native %s shader\n",
+              stage, prog->Id, stage);
+      _mesa_print_program(prog);
+   }
 }

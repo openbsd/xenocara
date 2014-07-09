@@ -1,6 +1,7 @@
 #ifndef __NOUVEAU_BUFFER_H__
 #define __NOUVEAU_BUFFER_H__
 
+#include "util/u_range.h"
 #include "util/u_transfer.h"
 #include "util/u_double_list.h"
 
@@ -33,9 +34,9 @@ struct nv04_resource {
 
    uint64_t address; /* virtual address (nv50+) */
 
-   uint8_t *data;
+   uint8_t *data; /* resource's contents, if domain == 0, or cached */
    struct nouveau_bo *bo;
-   uint32_t offset;
+   uint32_t offset; /* offset into the data/bo */
 
    uint8_t status;
    uint8_t domain;
@@ -44,6 +45,9 @@ struct nv04_resource {
    struct nouveau_fence *fence_wr;
 
    struct nouveau_mm_allocation *mm;
+
+   /* buffer range that has been initialized */
+   struct util_range valid_buffer_range;
 };
 
 void

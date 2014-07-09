@@ -90,8 +90,6 @@ struct dri_drawable
    __DRIdrawable *driDrawable;
 };
 
-static const struct glx_context_vtable dri_context_vtable;
-
 /*
  * Given a display pointer and screen number, determine the name of
  * the DRI driver for the screen (i.e., "i965", "radeon", "nouveau", etc).
@@ -184,10 +182,21 @@ _X_EXPORT const char *
 glXGetDriverConfig(const char *driverName)
 {
    void *handle = driOpenDriver(driverName);
-   if (handle)
-      return dlsym(handle, "__driConfigOptions");
-   else
+   const __DRIextension **extensions;
+
+   if (!handle)
       return NULL;
+
+   extensions = driGetDriverExtensions(handle, driverName);
+   if (extensions) {
+      for (int i = 0; extensions[i]; i++) {
+         if (strcmp(extensions[i]->name, __DRI_CONFIG_OPTIONS) == 0)
+            return ((__DRIconfigOptionsExtension *)extensions[i])->xml;
+      }
+   }
+
+   /* Fall back to the old method */
+   return dlsym(handle, "__driConfigOptions");
 }
 
 #ifdef XDAMAGE_1_1_INTERFACE
@@ -260,8 +269,9 @@ __glXReportDamage(__DRIdrawable * driDraw,
 }
 
 static const __DRIdamageExtension damageExtension = {
-   {__DRI_DAMAGE, __DRI_DAMAGE_VERSION},
-   __glXReportDamage,
+   .base = {__DRI_DAMAGE, 1 },
+
+   .reportDamage        = __glXReportDamage,
 };
 
 #endif
@@ -288,8 +298,9 @@ __glXDRIGetDrawableInfo(__DRIdrawable * drawable,
 }
 
 static const __DRIgetDrawableInfoExtension getDrawableInfoExtension = {
-   {__DRI_GET_DRAWABLE_INFO, __DRI_GET_DRAWABLE_INFO_VERSION},
-   __glXDRIGetDrawableInfo
+   .base = {__DRI_GET_DRAWABLE_INFO, 1 },
+
+   .getDrawableInfo     = __glXDRIGetDrawableInfo
 };
 
 static const __DRIextension *loader_extensions[] = {
@@ -407,7 +418,7 @@ CallCreateNewScreen(Display *dpy, int scrn, struct dri_screen *psc,
                              &framebuffer.size, &framebuffer.stride,
                              &framebuffer.dev_priv_size,
                              &framebuffer.dev_priv)) {
-      ErrorMessageF("XF86DRIGetDeviceInfo failed");
+      ErrorMessageF("XF86DRIGetDeviceInfo failed\n");
       goto handle_error;
    }
 
@@ -418,7 +429,7 @@ CallCreateNewScreen(Display *dpy, int scrn, struct dri_screen *psc,
    status = drmMap(fd, hFB, framebuffer.size,
                    (drmAddressPtr) & framebuffer.base);
    if (status != 0) {
-      ErrorMessageF("drmMap of framebuffer failed (%s)", strerror(-status));
+      ErrorMessageF("drmMap of framebuffer failed (%s)\n", strerror(-status));
       goto handle_error;
    }
 
@@ -427,7 +438,7 @@ CallCreateNewScreen(Display *dpy, int scrn, struct dri_screen *psc,
     */
    status = drmMap(fd, hSAREA, SAREA_MAX, &pSAREA);
    if (status != 0) {
-      ErrorMessageF("drmMap of SAREA failed (%s)", strerror(-status));
+      ErrorMessageF("drmMap of SAREA failed (%s)\n", strerror(-status));
       goto handle_error;
    }
 
@@ -442,7 +453,7 @@ CallCreateNewScreen(Display *dpy, int scrn, struct dri_screen *psc,
                                           &driver_configs, psc);
 
    if (psp == NULL) {
-      ErrorMessageF("Calling driver entry point failed");
+      ErrorMessageF("Calling driver entry point failed\n");
       goto handle_error;
    }
 
@@ -556,15 +567,15 @@ dri_unbind_context(struct glx_context *context, struct glx_context *new)
 }
 
 static const struct glx_context_vtable dri_context_vtable = {
-   dri_destroy_context,
-   dri_bind_context,
-   dri_unbind_context,
-   NULL,
-   NULL,
-   DRI_glXUseXFont,
-   NULL,
-   NULL,
-   NULL, /* get_proc_address */
+   .destroy             = dri_destroy_context,
+   .bind                = dri_bind_context,
+   .unbind              = dri_unbind_context,
+   .wait_gl             = NULL,
+   .wait_x              = NULL,
+   .use_x_font          = DRI_glXUseXFont,
+   .bind_tex_image      = NULL,
+   .release_tex_image   = NULL,
+   .get_proc_address    = NULL,
 };
 
 static struct glx_context *
@@ -736,13 +747,15 @@ static int
 driSetSwapInterval(__GLXDRIdrawable *pdraw, int interval)
 {
    struct dri_drawable *pdp = (struct dri_drawable *) pdraw;
-   struct dri_screen *psc = (struct dri_screen *) pdraw->psc;
 
-   if (psc->swapControl != NULL && pdraw != NULL) {
-      psc->swapControl->setSwapInterval(pdp->driDrawable, interval);
-      return 0;
+   if (pdraw != NULL) {
+      struct dri_screen *psc = (struct dri_screen *) pdraw->psc;
+
+      if (psc->swapControl != NULL) {
+         psc->swapControl->setSwapInterval(pdp->driDrawable, interval);
+         return 0;
+      }
    }
-
    return GLX_BAD_CONTEXT;
 }
 
@@ -750,11 +763,13 @@ static int
 driGetSwapInterval(__GLXDRIdrawable *pdraw)
 {
    struct dri_drawable *pdp = (struct dri_drawable *) pdraw;
-   struct dri_screen *psc = (struct dri_screen *) pdraw->psc;
 
-   if (psc->swapControl != NULL && pdraw != NULL)
-      return psc->swapControl->getSwapInterval(pdp->driDrawable);
+   if (pdraw != NULL) {
+      struct dri_screen *psc = (struct dri_screen *) pdraw->psc;
 
+      if (psc->swapControl != NULL)
+         return psc->swapControl->getSwapInterval(pdp->driDrawable);
+   }
    return 0;
 }
 
@@ -791,8 +806,10 @@ driBindExtensions(struct dri_screen *psc, const __DRIextension **extensions)
 }
 
 static const struct glx_screen_vtable dri_screen_vtable = {
-   dri_create_context,
-   NULL
+   .create_context         = dri_create_context,
+   .create_context_attribs = NULL,
+   .query_renderer_integer = NULL,
+   .query_renderer_string  = NULL,
 };
 
 static struct glx_screen *

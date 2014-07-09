@@ -1,6 +1,6 @@
 /**************************************************************************
 
-Copyright 2002-2008 Tungsten Graphics Inc., Cedar Park, Texas.
+Copyright 2002-2008 VMware, Inc.
 
 All Rights Reserved.
 
@@ -18,7 +18,7 @@ Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
-TUNGSTEN GRAPHICS AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
+VMWARE AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -27,7 +27,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /*
  * Authors:
- *   Keith Whitwell <keith@tungstengraphics.com>
+ *   Keith Whitwell <keithw@vmware.com>
  */
 
 #include "main/glheader.h"
@@ -702,6 +702,7 @@ static void GLAPIENTRY vbo_exec_Begin( GLenum mode )
    exec->vtx.prim[i].count = 0;
    exec->vtx.prim[i].num_instances = 1;
    exec->vtx.prim[i].base_instance = 0;
+   exec->vtx.prim[i].is_indirect = 0;
 
    ctx->Driver.CurrentExecPrimitive = mode;
 
@@ -989,16 +990,19 @@ void vbo_use_buffer_objects(struct gl_context *ctx)
 
    /* Make sure this func is only used once */
    assert(exec->vtx.bufferobj == ctx->Shared->NullBufferObj);
-   if (exec->vtx.buffer_map) {
-      _mesa_align_free(exec->vtx.buffer_map);
-      exec->vtx.buffer_map = NULL;
-      exec->vtx.buffer_ptr = NULL;
-   }
+
+   _mesa_align_free(exec->vtx.buffer_map);
+   exec->vtx.buffer_map = NULL;
+   exec->vtx.buffer_ptr = NULL;
 
    /* Allocate a real buffer object now */
    _mesa_reference_buffer_object(ctx, &exec->vtx.bufferobj, NULL);
    exec->vtx.bufferobj = ctx->Driver.NewBufferObject(ctx, bufName, target);
-   if (!ctx->Driver.BufferData(ctx, target, size, NULL, usage, exec->vtx.bufferobj)) {
+   if (!ctx->Driver.BufferData(ctx, target, size, NULL, usage,
+                               GL_MAP_WRITE_BIT |
+                               GL_DYNAMIC_STORAGE_BIT |
+                               GL_CLIENT_STORAGE_BIT,
+                               exec->vtx.bufferobj)) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "VBO allocation");
    }
 }
@@ -1114,8 +1118,8 @@ void vbo_exec_vtx_destroy( struct vbo_exec_context *exec )
 
    /* Free the vertex buffer.  Unmap first if needed.
     */
-   if (_mesa_bufferobj_mapped(exec->vtx.bufferobj)) {
-      ctx->Driver.UnmapBuffer(ctx, exec->vtx.bufferobj);
+   if (_mesa_bufferobj_mapped(exec->vtx.bufferobj, MAP_INTERNAL)) {
+      ctx->Driver.UnmapBuffer(ctx, exec->vtx.bufferobj, MAP_INTERNAL);
    }
    _mesa_reference_buffer_object(ctx, &exec->vtx.bufferobj, NULL);
 }

@@ -107,6 +107,31 @@ _mesa_ClearColorIuiEXT(GLuint r, GLuint g, GLuint b, GLuint a)
 
 
 /**
+ * Returns true if color writes are enabled for the given color attachment.
+ *
+ * Beyond checking ColorMask, this uses _mesa_format_has_color_component to
+ * ignore components that don't actually exist in the format (such as X in
+ * XRGB).
+ */
+static bool
+color_buffer_writes_enabled(const struct gl_context *ctx, unsigned idx)
+{
+   struct gl_renderbuffer *rb = ctx->DrawBuffer->_ColorDrawBuffers[idx];
+   GLuint c;
+   GLubyte colorMask = 0;
+
+   if (rb) {
+      for (c = 0; c < 4; c++) {
+         if (_mesa_format_has_color_component(rb->Format, c))
+            colorMask |= ctx->Color.ColorMask[idx][c];
+      }
+   }
+
+   return colorMask != 0;
+}
+
+
+/**
  * Clear buffers.
  * 
  * \param mask bit-mask indicating the buffers to be cleared.
@@ -155,11 +180,6 @@ _mesa_Clear( GLbitfield mask )
       return;
    }
 
-   if (ctx->DrawBuffer->Width == 0 || ctx->DrawBuffer->Height == 0 ||
-       ctx->DrawBuffer->_Xmin >= ctx->DrawBuffer->_Xmax ||
-       ctx->DrawBuffer->_Ymin >= ctx->DrawBuffer->_Ymax)
-      return;
-
    if (ctx->RasterDiscard)
       return;
 
@@ -179,7 +199,11 @@ _mesa_Clear( GLbitfield mask )
       if (mask & GL_COLOR_BUFFER_BIT) {
          GLuint i;
          for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {
-            bufferMask |= (1 << ctx->DrawBuffer->_ColorDrawBufferIndexes[i]);
+            GLint buf = ctx->DrawBuffer->_ColorDrawBufferIndexes[i];
+
+            if (buf >= 0 && color_buffer_writes_enabled(ctx, i)) {
+               bufferMask |= 1 << buf;
+            }
          }
       }
 
@@ -219,7 +243,25 @@ make_color_buffer_mask(struct gl_context *ctx, GLint drawbuffer)
    const struct gl_renderbuffer_attachment *att = ctx->DrawBuffer->Attachment;
    GLbitfield mask = 0x0;
 
-   switch (drawbuffer) {
+   /* From the GL 4.0 specification:
+    *	If buffer is COLOR, a particular draw buffer DRAW_BUFFERi is
+    *	specified by passing i as the parameter drawbuffer, and value
+    *	points to a four-element vector specifying the R, G, B, and A
+    *	color to clear that draw buffer to. If the draw buffer is one
+    *	of FRONT, BACK, LEFT, RIGHT, or FRONT_AND_BACK, identifying
+    *	multiple buffers, each selected buffer is cleared to the same
+    *	value.
+    *
+    * Note that "drawbuffer" and "draw buffer" have different meaning.
+    * "drawbuffer" specifies DRAW_BUFFERi, while "draw buffer" is what's
+    * assigned to DRAW_BUFFERi. It could be COLOR_ATTACHMENT0, FRONT, BACK,
+    * etc.
+    */
+   if (drawbuffer < 0 || drawbuffer >= (GLint)ctx->Const.MaxDrawBuffers) {
+      return INVALID_MASK;
+   }
+
+   switch (ctx->DrawBuffer->ColorDrawBuffer[drawbuffer]) {
    case GL_FRONT:
       if (att[BUFFER_FRONT_LEFT].Renderbuffer)
          mask |= BUFFER_BIT_FRONT_LEFT;
@@ -255,11 +297,12 @@ make_color_buffer_mask(struct gl_context *ctx, GLint drawbuffer)
          mask |= BUFFER_BIT_BACK_RIGHT;
       break;
    default:
-      if (drawbuffer < 0 || drawbuffer >= (GLint)ctx->Const.MaxDrawBuffers) {
-         mask = INVALID_MASK;
-      }
-      else if (att[BUFFER_COLOR0 + drawbuffer].Renderbuffer) {
-         mask |= (BUFFER_BIT_COLOR0 << drawbuffer);
+      {
+         GLint buf = ctx->DrawBuffer->_ColorDrawBufferIndexes[drawbuffer];
+
+         if (buf >= 0 && att[buf].Renderbuffer) {
+            mask |= 1 << buf;
+         }
       }
    }
 

@@ -38,7 +38,7 @@
 #undef NDEBUG
 #include <assert.h>
 
-#include <libdrm/nouveau.h>
+#include <nouveau.h>
 #include "nouveau_screen.h"
 #include "nouveau_state.h"
 #include "nouveau_surface.h"
@@ -48,6 +48,7 @@
 
 struct nouveau_driver {
 	struct gl_context *(*context_create)(struct nouveau_screen *screen,
+				     gl_api api,
 				     const struct gl_config *visual,
 				     struct gl_context *share_ctx);
 	void (*context_destroy)(struct gl_context *ctx);

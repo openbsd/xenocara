@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ *
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,19 +10,19 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 /*
@@ -32,7 +32,7 @@
  * glDrawElements, glEvalMesh, or glCalList, etc.
  *
  * Authors:
- *   Keith Whitwell <keith@tungstengraphics.com>
+ *   Keith Whitwell <keithw@vmware.com>
  */
 
 
@@ -72,7 +72,7 @@ static GLboolean
 all_varyings_in_vbos(const struct gl_client_array *arrays[])
 {
    GLuint i;
-   
+
    for (i = 0; i < VERT_ATTRIB_MAX; i++)
       if (arrays[i]->StrideB &&
           !arrays[i]->InstanceDivisor &&
@@ -104,6 +104,7 @@ setup_index_buffer(struct st_context *st,
       ibuffer->offset = pointer_to_offset(ib->ptr);
    }
    else if (st->indexbuf_uploader) {
+      /* upload indexes from user memory into a real buffer */
       if (u_upload_data(st->indexbuf_uploader, 0,
                         ib->count * ibuffer->index_size, ib->ptr,
                         &ibuffer->offset, &ibuffer->buffer) != PIPE_OK) {
@@ -130,11 +131,7 @@ setup_index_buffer(struct st_context *st,
 static void
 check_uniforms(struct gl_context *ctx)
 {
-   struct gl_shader_program *shProg[3] = {
-      ctx->Shader.CurrentVertexProgram,
-      ctx->Shader.CurrentGeometryProgram,
-      ctx->Shader.CurrentFragmentProgram,
-   };
+   struct gl_shader_program **shProg = ctx->_Shader->CurrentProgram;
    unsigned j;
 
    for (j = 0; j < 3; j++) {
@@ -167,16 +164,6 @@ translate_prim(const struct gl_context *ctx, unsigned prim)
    STATIC_ASSERT(GL_QUADS == PIPE_PRIM_QUADS);
    STATIC_ASSERT(GL_TRIANGLE_STRIP_ADJACENCY == PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY);
 
-   /* Avoid quadstrips if it's easy to do so:
-    * Note: it's important to do the correct trimming if we change the
-    * prim type!  We do that wherever this function is called.
-    */
-   if (prim == GL_QUAD_STRIP &&
-       ctx->Light.ShadeModel != GL_FLAT &&
-       ctx->Polygon.FrontMode == GL_FILL &&
-       ctx->Polygon.BackMode == GL_FILL)
-      prim = GL_TRIANGLE_STRIP;
-
    return prim;
 }
 
@@ -194,7 +181,8 @@ st_draw_vbo(struct gl_context *ctx,
 	    GLboolean index_bounds_valid,
             GLuint min_index,
             GLuint max_index,
-            struct gl_transform_feedback_object *tfb_vertcount)
+            struct gl_transform_feedback_object *tfb_vertcount,
+            struct gl_buffer_object *indirect)
 {
    struct st_context *st = st_context(ctx);
    struct pipe_index_buffer ibuffer = {0};
@@ -223,6 +211,7 @@ st_draw_vbo(struct gl_context *ctx,
    }
 
    util_draw_init_info(&info);
+
    if (ib) {
       /* Get index bounds for user buffers. */
       if (!index_bounds_valid)
@@ -257,7 +246,7 @@ st_draw_vbo(struct gl_context *ctx,
 
    /* do actual drawing */
    for (i = 0; i < nr_prims; i++) {
-      info.mode = translate_prim( ctx, prims[i].mode );
+      info.mode = translate_prim(ctx, prims[i].mode);
       info.start = prims[i].start;
       info.count = prims[i].count;
       info.start_instance = prims[i].base_instance;
@@ -283,8 +272,9 @@ st_draw_vbo(struct gl_context *ctx,
          /* don't trim, restarts might be inside index list */
          cso_draw_vbo(st->cso_context, &info);
       }
-      else if (u_trim_pipe_prim(prims[i].mode, &info.count))
+      else if (u_trim_pipe_prim(prims[i].mode, &info.count)) {
          cso_draw_vbo(st->cso_context, &info);
+      }
    }
 
    if (ib && st->indexbuf_uploader && !_mesa_is_bufferobj(ib->obj)) {

@@ -121,7 +121,7 @@
  * Max number of texture image units.  Also determines number of texture
  * samplers in shaders.
  */
-#define MAX_TEXTURE_IMAGE_UNITS 16
+#define MAX_TEXTURE_IMAGE_UNITS 32
 
 /**
  * Larger of MAX_TEXTURE_COORD_UNITS and MAX_TEXTURE_IMAGE_UNITS.
@@ -136,6 +136,9 @@
 /** Maximum viewport size */
 #define MAX_VIEWPORT_WIDTH 16384
 #define MAX_VIEWPORT_HEIGHT 16384
+
+/** Maximun number of viewports supported with ARB_viewport_array */
+#define MAX_VIEWPORTS 16
 
 /** Maxmimum size for CVA.  May be overridden by the drivers.  */
 #define MAX_ARRAY_LOCK_SIZE 3000
@@ -170,6 +173,14 @@
 #define MAX_UNIFORM_BUFFERS            15 /* + 1 default uniform buffer */
 /* 6 is for vertex, hull, domain, geometry, fragment, and compute shader. */
 #define MAX_COMBINED_UNIFORM_BUFFERS   (MAX_UNIFORM_BUFFERS * 6)
+#define MAX_ATOMIC_COUNTERS            4096
+/* 6 is for vertex, hull, domain, geometry, fragment, and compute shader. */
+#define MAX_COMBINED_ATOMIC_BUFFERS    (MAX_UNIFORM_BUFFERS * 6)
+/* Size of an atomic counter in bytes according to ARB_shader_atomic_counters */
+#define ATOMIC_COUNTER_SIZE            4
+#define MAX_IMAGE_UNIFORMS             16
+/* 6 is for vertex, hull, domain, geometry, fragment, and compute shader. */
+#define MAX_IMAGE_UNITS                (MAX_IMAGE_UNIFORMS * 6)
 /*@}*/
 
 /**
@@ -249,12 +260,34 @@
 #define MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS         1024
 /*@}*/
 
-/** For GL_ARB_debug_output */
+/** For GL_ARB_debug_output and GL_KHR_debug */
 /*@{*/
 #define MAX_DEBUG_LOGGED_MESSAGES   10
 #define MAX_DEBUG_MESSAGE_LENGTH    4096
 /*@}*/
 
+/** For GL_KHR_debug */
+/*@{*/
+#define MAX_LABEL_LENGTH 256
+#define MAX_DEBUG_GROUP_STACK_DEPTH 64
+/*@}*/
+
+/** For GL_ARB_gpu_shader5 */
+/*@{*/
+#define MAX_GEOMETRY_SHADER_INVOCATIONS     32
+#define MIN_FRAGMENT_INTERPOLATION_OFFSET   -0.5
+#define MAX_FRAGMENT_INTERPOLATION_OFFSET   0.5
+#define FRAGMENT_INTERPOLATION_OFFSET_BITS  4
+#define MAX_VERTEX_STREAMS                  4
+/*@}*/
+
+/** For GL_INTEL_performance_query */
+/*@{*/
+#define MAX_PERFQUERY_QUERY_NAME_LENGTH     256
+#define MAX_PERFQUERY_COUNTER_NAME_LENGTH   256
+#define MAX_PERFQUERY_COUNTER_DESC_LENGTH   1024
+#define PERFQUERY_HAVE_GPA_EXTENDED_COUNTERS 0
+/*@}*/
 
 /*
  * Color channel component order

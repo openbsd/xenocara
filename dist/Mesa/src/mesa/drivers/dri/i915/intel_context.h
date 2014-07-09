@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -278,8 +278,6 @@ struct intel_context
 
    __DRIcontext *driContext;
    struct intel_screen *intelScreen;
-   void (*saved_viewport)(struct gl_context * ctx,
-			  GLint x, GLint y, GLsizei width, GLsizei height);
 
    /**
     * Configuration cache
@@ -292,32 +290,6 @@ extern char *__progname;
 
 #define SUBPIXEL_X 0.125
 #define SUBPIXEL_Y 0.125
-
-/**
- * Align a value down to an alignment value
- *
- * If \c value is not already aligned to the requested alignment value, it
- * will be rounded down.
- *
- * \param value  Value to be rounded
- * \param alignment  Alignment value to be used.  This must be a power of two.
- *
- * \sa ALIGN()
- */
-#define ROUND_DOWN_TO(value, alignment) ((value) & ~(alignment - 1))
-
-static INLINE uint32_t
-U_FIXED(float value, uint32_t frac_bits)
-{
-   value *= (1 << frac_bits);
-   return value < 0 ? 0 : value;
-}
-
-static INLINE uint32_t
-S_FIXED(float value, uint32_t frac_bits)
-{
-   return value * (1 << frac_bits);
-}
 
 #define INTEL_FIREVERTICES(intel)		\
 do {						\
@@ -421,10 +393,15 @@ extern int INTEL_DEBUG;
  * intel_context.c:
  */
 
+extern const char *const i915_vendor_string;
+
+extern const char *i915_get_renderer_string(unsigned deviceID);
+
 extern bool intelInitContext(struct intel_context *intel,
                              int api,
                              unsigned major_version,
                              unsigned minor_version,
+                             uint32_t flags,
                              const struct gl_config * mesaVis,
                              __DRIcontext * driContextPriv,
                              void *sharedContextPrivate,
@@ -525,12 +502,6 @@ static INLINE struct intel_context *
 intel_context(struct gl_context * ctx)
 {
    return (struct intel_context *) ctx;
-}
-
-static INLINE bool
-is_power_of_two(uint32_t value)
-{
-   return (value & (value - 1)) == 0;
 }
 
 #ifdef __cplusplus

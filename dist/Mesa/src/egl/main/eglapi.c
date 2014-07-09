@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * Copyright 2009-2010 Chia-I Wu <olvaffe@gmail.com>
  * Copyright 2010-2011 LunarG, Inc.
  * All Rights Reserved.
@@ -87,6 +87,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "eglglobals.h"
 #include "eglcontext.h"
 #include "egldisplay.h"
 #include "egltypedefs.h"
@@ -295,11 +296,48 @@ _eglUnlockDisplay(_EGLDisplay *dpy)
 EGLDisplay EGLAPIENTRY
 eglGetDisplay(EGLNativeDisplayType nativeDisplay)
 {
-   _EGLPlatformType plat = _eglGetNativePlatform(nativeDisplay);
-   _EGLDisplay *dpy = _eglFindDisplay(plat, (void *) nativeDisplay);
+   _EGLPlatformType plat;
+   _EGLDisplay *dpy;
+   void *native_display_ptr;
+
+   STATIC_ASSERT(sizeof(void*) == sizeof(nativeDisplay));
+   native_display_ptr = (void*) nativeDisplay;
+
+   plat = _eglGetNativePlatform(native_display_ptr);
+   dpy = _eglFindDisplay(plat, native_display_ptr);
    return _eglGetDisplayHandle(dpy);
 }
 
+EGLDisplay EGLAPIENTRY
+eglGetPlatformDisplayEXT(EGLenum platform, void *native_display,
+                         const EGLint *attrib_list)
+{
+   _EGLDisplay *dpy;
+
+   switch (platform) {
+#ifdef HAVE_X11_PLATFORM
+   case EGL_PLATFORM_X11_EXT:
+      dpy = _eglGetX11Display((Display*) native_display, attrib_list);
+      break;
+#endif
+#ifdef HAVE_DRM_PLATFORM
+   case EGL_PLATFORM_GBM_MESA:
+      dpy = _eglGetGbmDisplay((struct gbm_device*) native_display,
+                              attrib_list);
+      break;
+#endif
+#ifdef HAVE_WAYLAND_PLATFORM
+   case EGL_PLATFORM_WAYLAND_EXT:
+      dpy = _eglGetWaylandDisplay((struct wl_display*) native_display,
+                                  attrib_list);
+      break;
+#endif
+   default:
+      RETURN_EGL_ERROR(NULL, EGL_BAD_PARAMETER, NULL);
+   }
+
+   return _eglGetDisplayHandle(dpy);
+}
 
 /**
  * This is typically the second EGL function that an application calls.
@@ -354,10 +392,15 @@ eglTerminate(EGLDisplay dpy)
 const char * EGLAPIENTRY
 eglQueryString(EGLDisplay dpy, EGLint name)
 {
-   _EGLDisplay *disp = _eglLockDisplay(dpy);
+   _EGLDisplay *disp;
    _EGLDriver *drv;
    const char *ret;
 
+   if (dpy == EGL_NO_DISPLAY && name == EGL_EXTENSIONS) {
+      RETURN_EGL_SUCCESS(NULL, _eglGlobal.ClientExtensionString);
+   }
+
+   disp = _eglLockDisplay(dpy);
    _EGL_CHECK_DISPLAY(disp, NULL, drv);
    ret = drv->API.QueryString(drv, disp, name);
 
@@ -425,11 +468,8 @@ eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_list,
 
    _EGL_CHECK_DISPLAY(disp, EGL_NO_CONTEXT, drv);
 
-   if (!config) {
-      /* config may be NULL if surfaceless */
-      if (!disp->Extensions.KHR_surfaceless_context)
-         RETURN_EGL_ERROR(disp, EGL_BAD_CONFIG, EGL_NO_CONTEXT);
-   }
+   if (!config && !disp->Extensions.MESA_configless_context)
+      RETURN_EGL_ERROR(disp, EGL_BAD_CONFIG, EGL_NO_CONTEXT);
 
    if (!share && share_list != EGL_NO_CONTEXT)
       RETURN_EGL_ERROR(disp, EGL_BAD_CONTEXT, EGL_NO_CONTEXT);
@@ -484,8 +524,12 @@ eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read,
    if (!context && ctx != EGL_NO_CONTEXT)
       RETURN_EGL_ERROR(disp, EGL_BAD_CONTEXT, EGL_FALSE);
    if (!draw_surf || !read_surf) {
-      /* surfaces may be NULL if surfaceless */
-      if (!disp->Extensions.KHR_surfaceless_context)
+      /* From the EGL 1.4 (20130211) spec:
+       *
+       *    To release the current context without assigning a new one, set ctx
+       *    to EGL_NO_CONTEXT and set draw and read to EGL_NO_SURFACE.
+       */
+      if (!disp->Extensions.KHR_surfaceless_context && ctx != EGL_NO_CONTEXT)
          RETURN_EGL_ERROR(disp, EGL_BAD_SURFACE, EGL_FALSE);
 
       if ((!draw_surf && draw != EGL_NO_SURFACE) ||
@@ -517,21 +561,76 @@ eglQueryContext(EGLDisplay dpy, EGLContext ctx,
 }
 
 
-EGLSurface EGLAPIENTRY
-eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config,
-                       EGLNativeWindowType window, const EGLint *attrib_list)
+static EGLSurface
+_eglCreateWindowSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
+                              void *native_window, const EGLint *attrib_list)
 {
-   _EGLDisplay *disp = _eglLockDisplay(dpy);
    _EGLConfig *conf = _eglLookupConfig(config, disp);
    _EGLDriver *drv;
    _EGLSurface *surf;
    EGLSurface ret;
 
    _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
-   if (disp->Platform != _eglGetNativePlatform(disp->PlatformDisplay))
+
+   if (native_window == NULL)
       RETURN_EGL_ERROR(disp, EGL_BAD_NATIVE_WINDOW, EGL_NO_SURFACE);
 
-   surf = drv->API.CreateWindowSurface(drv, disp, conf, window, attrib_list);
+   surf = drv->API.CreateWindowSurface(drv, disp, conf, native_window,
+                                       attrib_list);
+   ret = (surf) ? _eglLinkSurface(surf) : EGL_NO_SURFACE;
+
+   RETURN_EGL_EVAL(disp, ret);
+}
+
+
+EGLSurface EGLAPIENTRY
+eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config,
+                       EGLNativeWindowType window, const EGLint *attrib_list)
+{
+   _EGLDisplay *disp = _eglLockDisplay(dpy);
+   STATIC_ASSERT(sizeof(void*) == sizeof(window));
+   return _eglCreateWindowSurfaceCommon(disp, config, (void*) window,
+                                        attrib_list);
+}
+
+
+EGLSurface EGLAPIENTRY
+eglCreatePlatformWindowSurfaceEXT(EGLDisplay dpy, EGLConfig config,
+                                  void *native_window,
+                                  const EGLint *attrib_list)
+{
+   _EGLDisplay *disp = _eglLockDisplay(dpy);
+
+#ifdef HAVE_X11_PLATFORM
+   if (disp->Platform == _EGL_PLATFORM_X11 && native_window != NULL) {
+      /* The `native_window` parameter for the X11 platform differs between
+       * eglCreateWindowSurface() and eglCreatePlatformPixmapSurfaceEXT(). In
+       * eglCreateWindowSurface(), the type of `native_window` is an Xlib
+       * `Window`. In eglCreatePlatformWindowSurfaceEXT(), the type is
+       * `Window*`.  Convert `Window*` to `Window` because that's what
+       * dri2_x11_create_window_surface() expects.
+       */
+      native_window = (void*) (* (Window*) native_window);
+   }
+#endif
+
+   return _eglCreateWindowSurfaceCommon(disp, config, native_window,
+                                        attrib_list);
+}
+
+
+static EGLSurface
+_eglCreatePixmapSurfaceCommon(_EGLDisplay *disp, EGLConfig config,
+                              void *native_pixmap, const EGLint *attrib_list)
+{
+   _EGLConfig *conf = _eglLookupConfig(config, disp);
+   _EGLDriver *drv;
+   _EGLSurface *surf;
+   EGLSurface ret;
+
+   _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
+   surf = drv->API.CreatePixmapSurface(drv, disp, conf, native_pixmap,
+                                       attrib_list);
    ret = (surf) ? _eglLinkSurface(surf) : EGL_NO_SURFACE;
 
    RETURN_EGL_EVAL(disp, ret);
@@ -543,19 +642,33 @@ eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig config,
                        EGLNativePixmapType pixmap, const EGLint *attrib_list)
 {
    _EGLDisplay *disp = _eglLockDisplay(dpy);
-   _EGLConfig *conf = _eglLookupConfig(config, disp);
-   _EGLDriver *drv;
-   _EGLSurface *surf;
-   EGLSurface ret;
+   STATIC_ASSERT(sizeof(void*) == sizeof(pixmap));
+   return _eglCreatePixmapSurfaceCommon(disp, config, (void*) pixmap,
+                                         attrib_list);
+}
 
-   _EGL_CHECK_CONFIG(disp, conf, EGL_NO_SURFACE, drv);
-   if (disp->Platform != _eglGetNativePlatform(disp->PlatformDisplay))
-      RETURN_EGL_ERROR(disp, EGL_BAD_NATIVE_PIXMAP, EGL_NO_SURFACE);
+EGLSurface EGLAPIENTRY
+eglCreatePlatformPixmapSurfaceEXT(EGLDisplay dpy, EGLConfig config,
+                                   void *native_pixmap,
+                                   const EGLint *attrib_list)
+{
+   _EGLDisplay *disp = _eglLockDisplay(dpy);
 
-   surf = drv->API.CreatePixmapSurface(drv, disp, conf, pixmap, attrib_list);
-   ret = (surf) ? _eglLinkSurface(surf) : EGL_NO_SURFACE;
+#ifdef HAVE_X11_PLATFORM
+      /* The `native_pixmap` parameter for the X11 platform differs between
+       * eglCreatePixmapSurface() and eglCreatePlatformPixmapSurfaceEXT(). In
+       * eglCreatePixmapSurface(), the type of `native_pixmap` is an Xlib
+       * `Pixmap`. In eglCreatePlatformPixmapSurfaceEXT(), the type is
+       * `Pixmap*`.  Convert `Pixmap*` to `Pixmap` because that's what
+       * dri2_x11_create_pixmap_surface() expects.
+       */
+   if (disp->Platform == _EGL_PLATFORM_X11 && native_pixmap != NULL) {
+      native_pixmap = (void*) (* (Pixmap*) native_pixmap);
+   }
+#endif
 
-   RETURN_EGL_EVAL(disp, ret);
+   return _eglCreatePixmapSurfaceCommon(disp, config, native_pixmap,
+                                        attrib_list);
 }
 
 
@@ -737,11 +850,15 @@ eglCopyBuffers(EGLDisplay dpy, EGLSurface surface, EGLNativePixmapType target)
    _EGLSurface *surf = _eglLookupSurface(surface, disp);
    _EGLDriver *drv;
    EGLBoolean ret;
+   void *native_pixmap_ptr;
+
+   STATIC_ASSERT(sizeof(void*) == sizeof(target));
+   native_pixmap_ptr = (void*) target;
 
    _EGL_CHECK_SURFACE(disp, surf, EGL_FALSE, drv);
    if (disp->Platform != _eglGetNativePlatform(disp->PlatformDisplay))
       RETURN_EGL_ERROR(disp, EGL_BAD_NATIVE_PIXMAP, EGL_FALSE);
-   ret = drv->API.CopyBuffers(drv, disp, surf, target);
+   ret = drv->API.CopyBuffers(drv, disp, surf, native_pixmap_ptr);
 
    RETURN_EGL_EVAL(disp, ret);
 }
@@ -967,10 +1084,16 @@ eglGetProcAddress(const char *procname)
       { "eglUnbindWaylandDisplayWL", (_EGLProc) eglUnbindWaylandDisplayWL },
       { "eglQueryWaylandBufferWL", (_EGLProc) eglQueryWaylandBufferWL },
 #endif
+#ifdef EGL_WL_create_wayland_buffer_from_image
+      { "eglCreateWaylandBufferFromImageWL", (_EGLProc) eglCreateWaylandBufferFromImageWL },
+#endif
       { "eglPostSubBufferNV", (_EGLProc) eglPostSubBufferNV },
 #ifdef EGL_EXT_swap_buffers_with_damage
       { "eglSwapBuffersWithDamageEXT", (_EGLProc) eglSwapBuffersWithDamageEXT },
 #endif
+      { "eglGetPlatformDisplayEXT", (_EGLProc) eglGetPlatformDisplayEXT },
+      { "eglCreatePlatformWindowSurfaceEXT", (_EGLProc) eglCreatePlatformWindowSurfaceEXT },
+      { "eglCreatePlatformPixmapSurfaceEXT", (_EGLProc) eglCreatePlatformPixmapSurfaceEXT },
       { NULL, NULL }
    };
    EGLint i;
@@ -1344,6 +1467,11 @@ eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target,
       RETURN_EGL_EVAL(disp, EGL_NO_IMAGE_KHR);
    if (!context && ctx != EGL_NO_CONTEXT)
       RETURN_EGL_ERROR(disp, EGL_BAD_CONTEXT, EGL_NO_IMAGE_KHR);
+   /* "If <target> is EGL_LINUX_DMA_BUF_EXT, <dpy> must be a valid display,
+    *  <ctx> must be EGL_NO_CONTEXT..."
+    */
+   if (ctx != EGL_NO_CONTEXT && target == EGL_LINUX_DMA_BUF_EXT)
+      RETURN_EGL_ERROR(disp, EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
 
    img = drv->API.CreateImageKHR(drv,
          disp, context, target, buffer, attr_list);
@@ -1571,7 +1699,7 @@ eglUnbindWaylandDisplayWL(EGLDisplay dpy, struct wl_display *display)
 }
 
 EGLBoolean EGLAPIENTRY
-eglQueryWaylandBufferWL(EGLDisplay dpy,struct wl_buffer *buffer,
+eglQueryWaylandBufferWL(EGLDisplay dpy, struct wl_resource *buffer,
                         EGLint attribute, EGLint *value)
 {
    _EGLDisplay *disp = _eglLockDisplay(dpy);
@@ -1590,6 +1718,28 @@ eglQueryWaylandBufferWL(EGLDisplay dpy,struct wl_buffer *buffer,
 }
 #endif
 
+#ifdef EGL_WL_create_wayland_buffer_from_image
+struct wl_buffer * EGLAPIENTRY
+eglCreateWaylandBufferFromImageWL(EGLDisplay dpy, EGLImageKHR image)
+{
+   _EGLDisplay *disp = _eglLockDisplay(dpy);
+   _EGLImage *img;
+   _EGLDriver *drv;
+   struct wl_buffer *ret;
+
+   _EGL_CHECK_DISPLAY(disp, NULL, drv);
+   assert(disp->Extensions.WL_create_wayland_buffer_from_image);
+
+   img = _eglLookupImage(image, disp);
+
+   if (!img)
+      RETURN_EGL_ERROR(disp, EGL_BAD_PARAMETER, NULL);
+
+   ret = drv->API.CreateWaylandBufferFromImageWL(drv, disp, img);
+
+   RETURN_EGL_EVAL(disp, ret);
+}
+#endif
 
 EGLBoolean EGLAPIENTRY
 eglPostSubBufferNV(EGLDisplay dpy, EGLSurface surface,

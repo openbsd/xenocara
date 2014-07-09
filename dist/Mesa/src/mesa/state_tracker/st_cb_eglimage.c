@@ -99,7 +99,7 @@ st_bind_surface(struct gl_context *ctx, GLenum target,
    struct st_texture_object *stObj;
    struct st_texture_image *stImage;
    GLenum internalFormat;
-   gl_format texFormat;
+   mesa_format texFormat;
 
    /* map pipe format to base format */
    if (util_format_get_component_bits(ps->format, UTIL_FORMAT_COLORSPACE_RGB, 3) > 0)
@@ -124,7 +124,7 @@ st_bind_surface(struct gl_context *ctx, GLenum target,
 
    /* FIXME create a non-default sampler view from the pipe_surface? */
    pipe_resource_reference(&stObj->pt, ps->texture);
-   pipe_sampler_view_reference(&stObj->sampler_view, NULL);
+   st_texture_release_all_sampler_views(stObj);
    pipe_resource_reference(&stImage->pt, stObj->pt);
 
    stObj->width0 = ps->width;
@@ -132,7 +132,7 @@ st_bind_surface(struct gl_context *ctx, GLenum target,
    stObj->depth0 = 1;
    stObj->surface_format = ps->format;
 
-   _mesa_dirty_texobj(ctx, texObj, GL_TRUE);
+   _mesa_dirty_texobj(ctx, texObj);
 }
 
 static void

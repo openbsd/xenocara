@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007-2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007-2008 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -115,7 +115,7 @@ unsigned cso_get_aux_vertex_buffer_slot(struct cso_context *ctx);
 void cso_set_stream_outputs(struct cso_context *ctx,
                             unsigned num_targets,
                             struct pipe_stream_output_target **targets,
-                            unsigned append_bitmask);
+                            const unsigned *offsets);
 void cso_save_stream_outputs(struct cso_context *ctx);
 void cso_restore_stream_outputs(struct cso_context *ctx);
 
@@ -163,6 +163,10 @@ void cso_set_blend_color(struct cso_context *cso,
 void cso_set_sample_mask(struct cso_context *cso, unsigned stencil_mask);
 void cso_save_sample_mask(struct cso_context *ctx);
 void cso_restore_sample_mask(struct cso_context *ctx);
+
+void cso_set_min_samples(struct cso_context *cso, unsigned min_samples);
+void cso_save_min_samples(struct cso_context *ctx);
+void cso_restore_min_samples(struct cso_context *ctx);
 
 void cso_set_stencil_ref(struct cso_context *cso,
                          const struct pipe_stencil_ref *sr);
@@ -227,6 +231,11 @@ cso_set_index_buffer(struct cso_context *cso,
 void
 cso_draw_vbo(struct cso_context *cso,
              const struct pipe_draw_info *info);
+
+void
+cso_draw_arrays_instanced(struct cso_context *cso, uint mode,
+                          uint start, uint count,
+                          uint start_instance, uint instance_count);
 
 /* helper drawing function */
 void

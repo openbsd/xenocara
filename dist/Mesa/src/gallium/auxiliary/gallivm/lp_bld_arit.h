@@ -42,6 +42,7 @@
 
 struct lp_type;
 struct lp_build_context;
+struct gallivm_state;
 
 
 /**
@@ -131,6 +132,22 @@ lp_build_lerp_3d(struct lp_build_context *bld,
                  LLVMValueRef v111,
                  unsigned flags);
 
+/**
+ * Specifies floating point NaN behavior.
+ */
+enum gallivm_nan_behavior {
+   /* Results are undefined with NaN. Results in fastest code */
+   GALLIVM_NAN_BEHAVIOR_UNDEFINED,
+   /* If input is NaN, NaN is returned */
+   GALLIVM_NAN_RETURN_NAN,
+   /* If one of the inputs is NaN, the other operand is returned */
+   GALLIVM_NAN_RETURN_OTHER,
+   /* If one of the inputs is NaN, the other operand is returned,
+    * but we guarantee the second operand is not a NaN.
+    * In min/max it will be as fast as undefined with sse opcodes,
+    * and archs having native return_other can benefit too. */
+   GALLIVM_NAN_RETURN_OTHER_SECOND_NONNAN
+};
 
 LLVMValueRef
 lp_build_min(struct lp_build_context *bld,
@@ -138,15 +155,31 @@ lp_build_min(struct lp_build_context *bld,
              LLVMValueRef b);
 
 LLVMValueRef
+lp_build_min_ext(struct lp_build_context *bld,
+                 LLVMValueRef a,
+                 LLVMValueRef b,
+                 enum gallivm_nan_behavior nan_behavior);
+
+LLVMValueRef
 lp_build_max(struct lp_build_context *bld,
              LLVMValueRef a,
              LLVMValueRef b);
+
+LLVMValueRef
+lp_build_max_ext(struct lp_build_context *bld,
+                 LLVMValueRef a,
+                 LLVMValueRef b,
+                 enum gallivm_nan_behavior nan_behavior);
 
 LLVMValueRef
 lp_build_clamp(struct lp_build_context *bld,
                LLVMValueRef a,
                LLVMValueRef min,
                LLVMValueRef max);
+
+LLVMValueRef
+lp_build_clamp_zero_one_nanzero(struct lp_build_context *bld,
+                                LLVMValueRef a);
 
 LLVMValueRef
 lp_build_abs(struct lp_build_context *bld,
@@ -266,6 +299,10 @@ lp_build_log(struct lp_build_context *bld,
              LLVMValueRef a);
 
 LLVMValueRef
+lp_build_log_safe(struct lp_build_context *bld,
+                  LLVMValueRef a);
+
+LLVMValueRef
 lp_build_exp2(struct lp_build_context *bld,
               LLVMValueRef a);
 
@@ -283,6 +320,10 @@ lp_build_log2(struct lp_build_context *bld,
               LLVMValueRef a);
 
 LLVMValueRef
+lp_build_log2_safe(struct lp_build_context *bld,
+                   LLVMValueRef a);
+
+LLVMValueRef
 lp_build_fast_log2(struct lp_build_context *bld,
                    LLVMValueRef a);
 
@@ -291,22 +332,41 @@ lp_build_ilog2(struct lp_build_context *bld,
                LLVMValueRef x);
 
 void
-lp_build_exp2_approx(struct lp_build_context *bld,
-                     LLVMValueRef x,
-                     LLVMValueRef *p_exp2_int_part,
-                     LLVMValueRef *p_frac_part,
-                     LLVMValueRef *p_exp2);
-
-void
 lp_build_log2_approx(struct lp_build_context *bld,
                      LLVMValueRef x,
                      LLVMValueRef *p_exp,
                      LLVMValueRef *p_floor_log2,
-                     LLVMValueRef *p_log2);
+                     LLVMValueRef *p_log2,
+                     boolean handle_nans);
 
 LLVMValueRef
 lp_build_mod(struct lp_build_context *bld,
              LLVMValueRef x,
              LLVMValueRef y);
+
+LLVMValueRef
+lp_build_isnan(struct lp_build_context *bld,
+               LLVMValueRef x);
+
+LLVMValueRef
+lp_build_isfinite(struct lp_build_context *bld,
+                  LLVMValueRef x);
+
+
+LLVMValueRef
+lp_build_is_inf_or_nan(struct gallivm_state *gallivm,
+                       const struct lp_type type,
+                       LLVMValueRef x);
+
+
+LLVMValueRef
+lp_build_fpstate_get(struct gallivm_state *gallivm);
+
+void
+lp_build_fpstate_set_denorms_zero(struct gallivm_state *gallivm,
+                                  boolean zero);
+void
+lp_build_fpstate_set(struct gallivm_state *gallivm,
+                     LLVMValueRef mxcsr);
 
 #endif /* !LP_BLD_ARIT_H */

@@ -1107,6 +1107,7 @@
     <type name="void"    size="1"/>
 
     <type name="DEBUGPROCARB" size="4" pointer="true"/>
+    <type name="DEBUGPROC" size="4" pointer="true"/>
 
     <function name="NewList" offset="0" deprecated="3.1">
         <param name="list" type="GLuint"/>
@@ -5402,12 +5403,10 @@
         <param name="index" type="GLuint"/>
         <param name="name" type="const GLchar *"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="CompileShader" es2="2.0" offset="assign">
         <param name="shader" type="GLuint"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
 
@@ -5460,7 +5459,6 @@
         <param name="type" type="GLenum *" output="true"/>
         <param name="name" type="GLchar *" output="true"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="GetActiveUniform" es2="2.0" offset="assign">
@@ -5471,7 +5469,6 @@
         <param name="size" type="GLint *" output="true"/>
         <param name="type" type="GLenum *" output="true"/>
         <param name="name" type="GLchar *" output="true"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
 
@@ -5488,13 +5485,12 @@
         <param name="name" type="const GLchar *"/>
         <return type="GLint"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="GetProgramiv" offset="assign" es2="2.0">
         <param name="program" type="GLuint"/>
         <param name="pname" type="GLenum"/>
-        <param name="params" type="GLint *"/>
+        <param name="params" type="GLint *" output="true"/>
         <glx ignore="true"/>
     </function>
 
@@ -5527,7 +5523,6 @@
         <param name="length" type="GLsizei *" output="true"/>
         <param name="source" type="GLchar *" output="true"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="GetUniformLocation"
@@ -5536,7 +5531,6 @@
         <param name="name" type="const GLchar *"/>
         <return type="GLint"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="GetUniformfv" es2="2.0" offset="assign">
@@ -5544,14 +5538,12 @@
         <param name="location" type="GLint"/>
         <param name="params" type="GLfloat *" output="true"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="GetUniformiv" es2="2.0" offset="assign">
         <param name="program" type="GLuint"/>
         <param name="location" type="GLint"/>
         <param name="params" type="GLint *" output="true"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
 
@@ -5603,7 +5595,6 @@
     <function name="LinkProgram" es2="2.0" offset="assign">
         <param name="program" type="GLuint"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="ShaderSource" es2="2.0" offset="assign">
@@ -5612,12 +5603,10 @@
         <param name="string" type="const GLchar * const *"/>
         <param name="length" type="const GLint *"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="UseProgram" es2="2.0" offset="assign">
         <param name="program" type="GLuint"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
 
@@ -5625,13 +5614,11 @@
         <param name="location" type="GLint"/>
         <param name="v0" type="GLfloat"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
     <function name="Uniform2f" es2="2.0" offset="assign">
         <param name="location" type="GLint"/>
         <param name="v0" type="GLfloat"/>
         <param name="v1" type="GLfloat"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
     <function name="Uniform3f" es2="2.0" offset="assign">
@@ -5639,7 +5626,6 @@
         <param name="v0" type="GLfloat"/>
         <param name="v1" type="GLfloat"/>
         <param name="v2" type="GLfloat"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
     <function name="Uniform4f" es2="2.0" offset="assign">
@@ -5649,13 +5635,11 @@
         <param name="v2" type="GLfloat"/>
         <param name="v3" type="GLfloat"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="Uniform1i" es2="2.0" offset="assign">
         <param name="location" type="GLint"/>
         <param name="v0" type="GLint"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
     <function name="Uniform2i" es2="2.0" offset="assign">
@@ -5663,14 +5647,12 @@
         <param name="v0" type="GLint"/>
         <param name="v1" type="GLint"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
     <function name="Uniform3i" es2="2.0" offset="assign">
         <param name="location" type="GLint"/>
         <param name="v0" type="GLint"/>
         <param name="v1" type="GLint"/>
         <param name="v2" type="GLint"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
     <function name="Uniform4i" es2="2.0" offset="assign">
@@ -5680,7 +5662,6 @@
         <param name="v2" type="GLint"/>
         <param name="v3" type="GLint"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="Uniform1fv" es2="2.0" offset="assign">
@@ -5688,13 +5669,11 @@
         <param name="count" type="GLsizei" counter="true"/>
         <param name="value" type="const GLfloat *" count="count"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
     <function name="Uniform2fv" es2="2.0" offset="assign">
         <param name="location" type="GLint"/>
         <param name="count" type="GLsizei" counter="true"/>
         <param name="value" type="const GLfloat *" count="count" count_scale="2"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
     <function name="Uniform3fv" es2="2.0" offset="assign">
@@ -5702,13 +5681,11 @@
         <param name="count" type="GLsizei" counter="true"/>
         <param name="value" type="const GLfloat *" count="count" count_scale="3"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
     <function name="Uniform4fv" es2="2.0" offset="assign">
         <param name="location" type="GLint"/>
         <param name="count" type="GLsizei" counter="true"/>
         <param name="value" type="const GLfloat *" count="count" count_scale="4"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
 
@@ -5717,13 +5694,11 @@
         <param name="count" type="GLsizei" counter="true"/>
         <param name="value" type="const GLint *" count="count"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
     <function name="Uniform2iv" es2="2.0" offset="assign">
         <param name="location" type="GLint"/>
         <param name="count" type="GLsizei" counter="true"/>
         <param name="value" type="const GLint *" count="count" count_scale="2"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
     <function name="Uniform3iv" es2="2.0" offset="assign">
@@ -5731,13 +5706,11 @@
         <param name="count" type="GLsizei" counter="true"/>
         <param name="value" type="const GLint *" count="count" count_scale="3"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
     <function name="Uniform4iv" es2="2.0" offset="assign">
         <param name="location" type="GLint"/>
         <param name="count" type="GLsizei" counter="true"/>
         <param name="value" type="const GLint *" count="count" count_scale="4"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
 
@@ -5747,14 +5720,12 @@
         <param name="transpose" type="GLboolean"/>
         <param name="value" type="const GLfloat *" count="count" count_scale="4"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
     <function name="UniformMatrix3fv" es2="2.0" offset="assign">
         <param name="location" type="GLint"/>
         <param name="count" type="GLsizei" counter="true"/>
         <param name="transpose" type="GLboolean"/>
         <param name="value" type="const GLfloat *" count="count" count_scale="9"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
     <function name="UniformMatrix4fv" es2="2.0" offset="assign">
@@ -5763,12 +5734,10 @@
         <param name="transpose" type="GLboolean"/>
         <param name="value" type="const GLfloat *" count="count" count_scale="16"/>
         <glx ignore="true"/>
-        <glx ignore="true"/>
     </function>
 
     <function name="ValidateProgram" es2="2.0" offset="assign">
         <param name="program" type="GLuint"/>
-        <glx ignore="true"/>
         <glx ignore="true"/>
     </function>
 
@@ -8186,9 +8155,9 @@
 <xi:include href="ARB_draw_buffers_blend.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 <xi:include href="AMD_draw_buffers_blend.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
-<!-- 70. GL_ARB_sample_shading -->
+<xi:include href="ARB_sample_shading.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 <xi:include href="ARB_texture_cube_map_array.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-<!-- 72. GL_ARB_texture_gather -->
+<xi:include href="ARB_texture_gather.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 <!-- 73. GL_ARB_texture_query_lod -->
 
 <!-- ARB extension number 74 is a WGL extension. -->
@@ -8240,6 +8209,10 @@
 
 <!-- ARB extensions #86...#93 -->
 
+<xi:include href="ARB_draw_indirect.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<xi:include href="ARB_gpu_shader5.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
 <category name="GL_ARB_transform_feedback3" number="94">
   <enum name="MAX_TRANSFORM_FEEDBACK_BUFFERS" value="0x8E70"/>
   <enum name="MAX_VERTEX_STREAMS"             value="0x8E71"/>
@@ -8270,7 +8243,11 @@
   </function>
 </category>
 
-<!-- ARB extensions #95...#108 -->
+<!-- ARB extensions #95...#96 -->
+
+<xi:include href="ARB_separate_shader_objects.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<!-- ARB extensions #98...#108 -->
 
 <xi:include href="ARB_ES2_compatibility.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
@@ -8307,9 +8284,29 @@
   <enum name="MIN_MAP_BUFFER_ALIGNMENT" value="0x90BC" />
 </category>
 
+<xi:include href="ARB_shader_atomic_counters.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<xi:include href="ARB_shader_image_load_store.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
 <xi:include href="ARB_texture_storage.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
-<!-- ARB extensions #118...#126 -->
+<!-- ARB extension #118 -->
+
+<xi:include href="KHR_debug.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<!-- ARB extension #120 -->
+
+<xi:include href="ARB_clear_buffer_object.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<xi:include href="ARB_compute_shader.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<!-- ARB extension #123 -->
+
+<xi:include href="ARB_texture_view.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<xi:include href="ARB_vertex_attrib_binding.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<!-- ARB extension #126 -->
 
 <xi:include href="ARB_ES3_compatibility.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
@@ -8317,13 +8314,36 @@
 
 <xi:include href="ARB_invalidate_subdata.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
-<!-- ARB extensions #133...#138 -->
+<!-- ARB extensions #134...#138 -->
 
 <xi:include href="ARB_texture_buffer_range.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
 <!-- 140. GL_ARB_texture_query_levels -->
 
 <xi:include href="ARB_texture_storage_multisample.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<!-- ARB extension 142 - 143. -->
+
+<category name="GL_ARB_buffer_storage" number="144">
+    <enum name="MAP_PERSISTENT_BIT" value="0x40" />
+    <enum name="MAP_COHERENT_BIT" value="0x80" />
+    <enum name="DYNAMIC_STORAGE_BIT" value="0x100" />
+    <enum name="CLIENT_STORAGE_BIT" value="0x200" />
+    <enum name="BUFFER_IMMUTABLE_STORAGE" value="0x821F" />
+    <enum name="BUFFER_STORAGE_FLAGS" value="0x8220" />
+    <enum name="CLIENT_MAPPED_BUFFER_BARRIER_BIT" value="0x4000" />
+
+    <function name="BufferStorage" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="size" type="GLsizeiptr"/>
+        <param name="data" type="const GLvoid *"/>
+        <param name="flags" type="GLbitfield"/>
+    </function>
+</category>
+
+<!-- ARB extensions #145...#146 -->
+
+<xi:include href="ARB_multi_bind.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
 <!-- Non-ARB extensions sorted by extension number. -->
 
@@ -9763,7 +9783,7 @@
 </category>
 
 <!-- Extension number 99 is not listed in the extension registry. -->
-<!-- Extension number 100 is a GLU extension. -->
+<xi:include href="ARB_viewport_array.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
 <!-- Shouldn't this be EXT_fragment_lighting? -->
 <category name="GL_SGIX_fragment_lighting" number="102">
@@ -12743,6 +12763,8 @@
     <enum name="FRAMEBUFFER_SRGB_CAPABLE_EXT"      value="0x8DBA"/>
 </category>
 
+<xi:include href="AMD_performance_monitor.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
 <category name="GL_APPLE_texture_range" number="367">
     <enum name="TEXTURE_STORAGE_HINT_APPLE" count="1" value="0x85BC">
         <size name="TexParameteriv"/>
@@ -12789,6 +12811,8 @@
     <enum name="DECODE_EXT"                           value="0x8A49"/>
     <enum name="SKIP_DECODE_EXT"                      value="0x8A4A"/>
 </category>
+
+<xi:include href="INTEL_performance_query.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
 <!-- Unnumbered extensions sorted by name. -->
 
@@ -12876,38 +12900,6 @@
     <enum name="SIGNED_NORMALIZED"                        value="0x8F9C"/>
     <enum name="RGBA_SNORM"                               value="0x8F93"/>
     <enum name="RGBA8_SNORM"                              value="0x8F97"/>
-</category>
-
-<category name="GL_MESA_shader_debug">
-    <enum name="DEBUG_OBJECT_MESA"                        value="0x8759"/>
-    <enum name="DEBUG_PRINT_MESA"                         value="0x875A"/>
-    <enum name="DEBUG_ASSERT_MESA"                        value="0x875B"/>
-    <function name="CreateDebugObjectMESA" exec="skip">
-        <return type="GLhandleARB"/>
-        <glx ignore="true"/>
-    </function>
-    <function name="ClearDebugLogMESA" exec="skip">
-        <param name="obj" type="GLhandleARB"/>
-        <param name="logType" type="GLenum"/>
-        <param name="shaderType" type="GLenum"/>
-        <glx ignore="true"/>
-    </function>
-    <function name="GetDebugLogMESA" exec="skip">
-        <param name="obj" type="GLhandleARB"/>
-        <param name="logType" type="GLenum"/>
-        <param name="shaderType" type="GLenum"/>
-        <param name="maxLength" type="GLsizei"/>
-        <param name="length" type="GLsizei *" output="true"/>
-        <param name="debugLog" type="GLcharARB *" output="true"/>
-        <glx ignore="true"/>
-    </function>
-    <function name="GetDebugLogLengthMESA" exec="skip">
-        <return type="GLsizei"/>
-        <param name="obj" type="GLhandleARB"/>
-        <param name="logType" type="GLenum"/>
-        <param name="shaderType" type="GLenum"/>
-        <glx ignore="true"/>
-    </function>
 </category>
 
 <category name="GL_SGIS_point_parameters">
@@ -13000,5 +12992,9 @@
 <xi:include href="NV_texture_barrier.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
 <xi:include href="EXT_transform_feedback.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<xi:include href="NV_vdpau_interop.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+<xi:include href="GL4x.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
 </OpenGLAPI>

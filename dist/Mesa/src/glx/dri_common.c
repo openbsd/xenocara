@@ -40,6 +40,7 @@
 #include <stdarg.h>
 #include "glxclient.h"
 #include "dri_common.h"
+#include "loader.h"
 
 #ifndef RTLD_NOW
 #define RTLD_NOW 0
@@ -48,63 +49,27 @@
 #define RTLD_GLOBAL 0
 #endif
 
-/**
- * Print informational message to stderr if LIBGL_DEBUG is set to
- * "verbose".
- */
 _X_HIDDEN void
-InfoMessageF(const char *f, ...)
+dri_message(int level, const char *f, ...)
 {
    va_list args;
-   const char *env;
+   int threshold = _LOADER_WARNING;
+   const char *libgl_debug;
 
-   if ((env = getenv("LIBGL_DEBUG")) && strstr(env, "verbose")) {
-      fprintf(stderr, "libGL: ");
-      va_start(args, f);
-      vfprintf(stderr, f, args);
-      va_end(args);
+   libgl_debug = getenv("LIBGL_DEBUG");
+   if (libgl_debug) {
+      if (strstr(libgl_debug, "quiet"))
+         threshold = _LOADER_FATAL;
+      else if (strstr(libgl_debug, "verbose"))
+         threshold = _LOADER_DEBUG;
    }
-}
 
-/**
- * Print error message to stderr if LIBGL_DEBUG is set to anything but
- * "quiet", (do nothing if LIBGL_DEBUG is unset).
- */
-_X_HIDDEN void
-ErrorMessageF(const char *f, ...)
-{
-   va_list args;
-   const char *env;
-
-   if ((env = getenv("LIBGL_DEBUG")) && !strstr(env, "quiet")) {
-      fprintf(stderr, "libGL error: ");
+   /* Note that the _LOADER_* levels are lower numbers for more severe. */
+   if (level <= threshold) {
+      fprintf(stderr, "libGL%s: ", level <= _LOADER_WARNING ? " error" : "");
       va_start(args, f);
       vfprintf(stderr, f, args);
       va_end(args);
-   }
-}
-
-/**
- * Print error message unless LIBGL_DEBUG is set to "quiet".
- *
- * The distinction between CriticalErrorMessageF and ErrorMessageF is
- * that critcial errors will be printed by default, (even when
- * LIBGL_DEBUG is unset).
- */
-_X_HIDDEN void
-CriticalErrorMessageF(const char *f, ...)
-{
-   va_list args;
-   const char *env;
-
-   if (!(env = getenv("LIBGL_DEBUG")) || !strstr(env, "quiet")) {
-      fprintf(stderr, "libGL error: ");
-      va_start(args, f);
-      vfprintf(stderr, f, args);
-      va_end(args);
-
-      if (!env || !strstr(env, "verbose"))
-         fprintf(stderr, "libGL error: Try again with LIBGL_DEBUG=verbose for more details.\n");
    }
 }
 
@@ -191,6 +156,35 @@ driOpenDriver(const char *driverName)
    return handle;
 }
 
+_X_HIDDEN const __DRIextension **
+driGetDriverExtensions(void *handle, const char *driver_name)
+{
+   const __DRIextension **extensions = NULL;
+   const __DRIextension **(*get_extensions)(void);
+   char *get_extensions_name;
+
+   if (asprintf(&get_extensions_name, "%s_%s",
+                __DRI_DRIVER_GET_EXTENSIONS, driver_name) != -1) {
+      get_extensions = dlsym(handle, get_extensions_name);
+      if (get_extensions) {
+         free(get_extensions_name);
+         return get_extensions();
+      } else {
+         InfoMessageF("driver does not expose %s(): %s\n",
+                      get_extensions_name, dlerror());
+         free(get_extensions_name);
+      }
+   }
+
+   extensions = dlsym(handle, __DRI_DRIVER_EXTENSIONS);
+   if (extensions == NULL) {
+      ErrorMessageF("driver exports no extensions (%s)\n", dlerror());
+      return NULL;
+   }
+
+   return extensions;
+}
+
 static GLboolean
 __driGetMSCRate(__DRIdrawable *draw,
 		int32_t * numerator, int32_t * denominator,
@@ -198,13 +192,14 @@ __driGetMSCRate(__DRIdrawable *draw,
 {
    __GLXDRIdrawable *glxDraw = loaderPrivate;
 
-   return __glxGetMscRate(glxDraw, numerator, denominator);
+   return __glxGetMscRate(glxDraw->psc, numerator, denominator);
 }
 
 _X_HIDDEN const __DRIsystemTimeExtension systemTimeExtension = {
-   {__DRI_SYSTEM_TIME, __DRI_SYSTEM_TIME_VERSION},
-   __glXGetUST,
-   __driGetMSCRate
+   .base = {__DRI_SYSTEM_TIME, 1 },
+
+   .getUST              = __glXGetUST,
+   .getMSCRate          = __driGetMSCRate
 };
 
 #define __ATTRIB(attrib, field) \
@@ -400,6 +395,9 @@ driFetchDrawable(struct glx_context *gc, GLXDrawable glxDrawable)
    struct glx_screen *psc;
 
    if (priv == NULL)
+      return NULL;
+
+   if (glxDrawable == None)
       return NULL;
 
    psc = priv->screens[gc->screen];

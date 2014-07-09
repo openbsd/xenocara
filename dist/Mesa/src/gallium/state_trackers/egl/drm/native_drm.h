@@ -36,6 +36,10 @@
 #include "common/native.h"
 #include "common/native_helper.h"
 
+#ifdef HAVE_WAYLAND_BACKEND
+#include "common/native_wayland_drm_bufmgr.h"
+#endif
+
 #include "gbm_gallium_drmint.h"
 
 struct drm_config;

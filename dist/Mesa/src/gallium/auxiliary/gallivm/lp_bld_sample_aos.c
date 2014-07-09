@@ -194,6 +194,62 @@ lp_build_sample_wrap_nearest_float(struct lp_build_sample_context *bld,
 
 
 /**
+ * Helper to compute the first coord and the weight for
+ * linear wrap repeat npot textures
+ */
+static void
+lp_build_coord_repeat_npot_linear_int(struct lp_build_sample_context *bld,
+                                      LLVMValueRef coord_f,
+                                      LLVMValueRef length_i,
+                                      LLVMValueRef length_f,
+                                      LLVMValueRef *coord0_i,
+                                      LLVMValueRef *weight_i)
+{
+   struct lp_build_context *coord_bld = &bld->coord_bld;
+   struct lp_build_context *int_coord_bld = &bld->int_coord_bld;
+   struct lp_build_context abs_coord_bld;
+   struct lp_type abs_type;
+   LLVMValueRef length_minus_one = lp_build_sub(int_coord_bld, length_i,
+                                                int_coord_bld->one);
+   LLVMValueRef mask, i32_c8, i32_c128, i32_c255;
+
+   /* wrap with normalized floats is just fract */
+   coord_f = lp_build_fract(coord_bld, coord_f);
+   /* mul by size */
+   coord_f = lp_build_mul(coord_bld, coord_f, length_f);
+   /* convert to int, compute lerp weight */
+   coord_f = lp_build_mul_imm(&bld->coord_bld, coord_f, 256);
+
+   /* At this point we don't have any negative numbers so use non-signed
+    * build context which might help on some archs.
+    */
+   abs_type = coord_bld->type;
+   abs_type.sign = 0;
+   lp_build_context_init(&abs_coord_bld, bld->gallivm, abs_type);
+   *coord0_i = lp_build_iround(&abs_coord_bld, coord_f);
+
+   /* subtract 0.5 (add -128) */
+   i32_c128 = lp_build_const_int_vec(bld->gallivm, bld->int_coord_type, -128);
+   *coord0_i = LLVMBuildAdd(bld->gallivm->builder, *coord0_i, i32_c128, "");
+
+   /* compute fractional part (AND with 0xff) */
+   i32_c255 = lp_build_const_int_vec(bld->gallivm, bld->int_coord_type, 255);
+   *weight_i = LLVMBuildAnd(bld->gallivm->builder, *coord0_i, i32_c255, "");
+
+   /* compute floor (shift right 8) */
+   i32_c8 = lp_build_const_int_vec(bld->gallivm, bld->int_coord_type, 8);
+   *coord0_i = LLVMBuildAShr(bld->gallivm->builder, *coord0_i, i32_c8, "");
+   /*
+    * we avoided the 0.5/length division before the repeat wrap,
+    * now need to fix up edge cases with selects
+    */
+   mask = lp_build_compare(int_coord_bld->gallivm, int_coord_bld->type,
+                           PIPE_FUNC_LESS, *coord0_i, int_coord_bld->zero);
+   *coord0_i = lp_build_select(int_coord_bld, mask, length_minus_one, *coord0_i);
+}
+
+
+/**
  * Build LLVM code for texture coord wrapping, for linear filtering,
  * for scaled integer texcoords.
  * \param block_length  is the length of the pixel block along the
@@ -251,24 +307,21 @@ lp_build_sample_wrap_linear_int(struct lp_build_sample_context *bld,
          }
          else {
             LLVMValueRef mask;
-            LLVMValueRef weight;
             LLVMValueRef length_f = lp_build_int_to_float(&bld->coord_bld, length);
             if (offset) {
                offset = lp_build_int_to_float(&bld->coord_bld, offset);
                offset = lp_build_div(&bld->coord_bld, offset, length_f);
                coord_f = lp_build_add(&bld->coord_bld, coord_f, offset);
             }
-            lp_build_coord_repeat_npot_linear(bld, coord_f,
-                                              length, length_f,
-                                              &coord0, &weight);
+            lp_build_coord_repeat_npot_linear_int(bld, coord_f,
+                                                  length, length_f,
+                                                  &coord0, weight_i);
             mask = lp_build_compare(bld->gallivm, int_coord_bld->type,
                                     PIPE_FUNC_NOTEQUAL, coord0, length_minus_one);
             coord1 = LLVMBuildAnd(builder,
                                   lp_build_add(int_coord_bld, coord0,
                                                int_coord_bld->one),
                                   mask, "");
-            weight = lp_build_mul_imm(&bld->coord_bld, weight, 256);
-            *weight_i = lp_build_itrunc(&bld->coord_bld, weight);
          }
          break;
 
@@ -308,18 +361,15 @@ lp_build_sample_wrap_linear_int(struct lp_build_sample_context *bld,
          coord0 = LLVMBuildAnd(builder, coord0, length_minus_one, "");
       }
       else {
-         LLVMValueRef weight;
          LLVMValueRef length_f = lp_build_int_to_float(&bld->coord_bld, length);
          if (offset) {
             offset = lp_build_int_to_float(&bld->coord_bld, offset);
             offset = lp_build_div(&bld->coord_bld, offset, length_f);
             coord_f = lp_build_add(&bld->coord_bld, coord_f, offset);
          }
-         lp_build_coord_repeat_npot_linear(bld, coord_f,
-                                           length, length_f,
-                                           &coord0, &weight);
-         weight = lp_build_mul_imm(&bld->coord_bld, weight, 256);
-         *weight_i = lp_build_itrunc(&bld->coord_bld, weight);
+         lp_build_coord_repeat_npot_linear_int(bld, coord_f,
+                                               length, length_f,
+                                               &coord0, weight_i);
       }
 
       mask = lp_build_compare(bld->gallivm, int_coord_bld->type,
@@ -567,10 +617,7 @@ lp_build_sample_image_nearest(struct lp_build_sample_context *bld,
                               LLVMValueRef *colors)
 {
    const unsigned dims = bld->dims;
-   LLVMBuilderRef builder = bld->gallivm->builder;
    struct lp_build_context i32;
-   LLVMTypeRef i32_vec_type;
-   LLVMValueRef i32_c8;
    LLVMValueRef width_vec, height_vec, depth_vec;
    LLVMValueRef s_ipart, t_ipart = NULL, r_ipart = NULL;
    LLVMValueRef s_float, t_float = NULL, r_float = NULL;
@@ -579,8 +626,6 @@ lp_build_sample_image_nearest(struct lp_build_sample_context *bld,
    LLVMValueRef x_subcoord, y_subcoord, z_subcoord;
 
    lp_build_context_init(&i32, bld->gallivm, lp_type_int_vec(32, bld->vector_width));
-
-   i32_vec_type = lp_build_vec_type(bld->gallivm, i32.type);
 
    lp_build_extract_image_sizes(bld,
                                 &bld->int_size_bld,
@@ -593,39 +638,24 @@ lp_build_sample_image_nearest(struct lp_build_sample_context *bld,
    s_float = s; t_float = t; r_float = r;
 
    if (bld->static_sampler_state->normalized_coords) {
-      LLVMValueRef scaled_size;
       LLVMValueRef flt_size;
 
-      /* scale size by 256 (8 fractional bits) */
-      scaled_size = lp_build_shl_imm(&bld->int_size_bld, int_size, 8);
-
-      flt_size = lp_build_int_to_float(&bld->float_size_bld, scaled_size);
+      flt_size = lp_build_int_to_float(&bld->float_size_bld, int_size);
 
       lp_build_unnormalized_coords(bld, flt_size, &s, &t, &r);
    }
-   else {
-      /* scale coords by 256 (8 fractional bits) */
-      s = lp_build_mul_imm(&bld->coord_bld, s, 256);
-      if (dims >= 2)
-         t = lp_build_mul_imm(&bld->coord_bld, t, 256);
-      if (dims >= 3)
-         r = lp_build_mul_imm(&bld->coord_bld, r, 256);
-   }
 
    /* convert float to int */
-   s = LLVMBuildFPToSI(builder, s, i32_vec_type, "");
+   /* For correct rounding, need floor, not truncation here.
+    * Note that in some cases (clamp to edge, no texel offsets) we
+    * could use a non-signed build context which would help archs
+    * greatly which don't have arch rounding.
+    */
+   s_ipart = lp_build_ifloor(&bld->coord_bld, s);
    if (dims >= 2)
-      t = LLVMBuildFPToSI(builder, t, i32_vec_type, "");
+      t_ipart = lp_build_ifloor(&bld->coord_bld, t);
    if (dims >= 3)
-      r = LLVMBuildFPToSI(builder, r, i32_vec_type, "");
-
-   /* compute floor (shift right 8) */
-   i32_c8 = lp_build_const_int_vec(bld->gallivm, i32.type, 8);
-   s_ipart = LLVMBuildAShr(builder, s, i32_c8, "");
-   if (dims >= 2)
-      t_ipart = LLVMBuildAShr(builder, t, i32_c8, "");
-   if (dims >= 3)
-      r_ipart = LLVMBuildAShr(builder, r, i32_c8, "");
+      r_ipart = lp_build_ifloor(&bld->coord_bld, r);
 
    /* add texel offsets */
    if (offsets[0]) {
@@ -987,7 +1017,6 @@ lp_build_sample_image_linear(struct lp_build_sample_context *bld,
    const unsigned dims = bld->dims;
    LLVMBuilderRef builder = bld->gallivm->builder;
    struct lp_build_context i32;
-   LLVMTypeRef i32_vec_type;
    LLVMValueRef i32_c8, i32_c128, i32_c255;
    LLVMValueRef width_vec, height_vec, depth_vec;
    LLVMValueRef s_ipart, s_fpart, s_float;
@@ -1002,8 +1031,6 @@ lp_build_sample_image_linear(struct lp_build_sample_context *bld,
    unsigned x, y, z;
 
    lp_build_context_init(&i32, bld->gallivm, lp_type_int_vec(32, bld->vector_width));
-
-   i32_vec_type = lp_build_vec_type(bld->gallivm, i32.type);
 
    lp_build_extract_image_sizes(bld,
                                 &bld->int_size_bld,
@@ -1036,11 +1063,16 @@ lp_build_sample_image_linear(struct lp_build_sample_context *bld,
    }
 
    /* convert float to int */
-   s = LLVMBuildFPToSI(builder, s, i32_vec_type, "");
+   /* For correct rounding, need round to nearest, not truncation here.
+    * Note that in some cases (clamp to edge, no texel offsets) we
+    * could use a non-signed build context which would help archs which
+    * don't have fptosi intrinsic with nearest rounding implemented.
+    */
+   s = lp_build_iround(&bld->coord_bld, s);
    if (dims >= 2)
-      t = LLVMBuildFPToSI(builder, t, i32_vec_type, "");
+      t = lp_build_iround(&bld->coord_bld, t);
    if (dims >= 3)
-      r = LLVMBuildFPToSI(builder, r, i32_vec_type, "");
+      r = lp_build_iround(&bld->coord_bld, r);
 
    /* subtract 0.5 (add -128) */
    i32_c128 = lp_build_const_int_vec(bld->gallivm, i32.type, -128);
@@ -1141,7 +1173,7 @@ lp_build_sample_image_linear(struct lp_build_sample_context *bld,
 
    if (dims >= 3) {
       lp_build_sample_wrap_linear_int(bld,
-                                      bld->format_desc->block.height,
+                                      1, /* block length (depth) */
                                       r_ipart, &r_fpart, r_float,
                                       depth_vec, z_stride, offsets[2],
                                       bld->static_texture_state->pot_depth,
@@ -1233,7 +1265,7 @@ lp_build_sample_image_linear_afloat(struct lp_build_sample_context *bld,
 
       if (dims >= 3) {
          lp_build_sample_wrap_linear_float(bld,
-                                           bld->format_desc->block.height,
+                                           1, /* block length (depth) */
                                            r, depth_vec, offsets[2],
                                            bld->static_texture_state->pot_depth,
                                            bld->static_sampler_state->wrap_r,
@@ -1373,7 +1405,7 @@ lp_build_sample_mipmap(struct lp_build_sample_context *bld,
    lp_build_mipmap_level_sizes(bld, ilevel0,
                                &size0,
                                &row_stride0_vec, &img_stride0_vec);
-   if (bld->num_lods == 1) {
+   if (bld->num_mips == 1) {
       data_ptr0 = lp_build_get_mipmap_level(bld, ilevel0);
    }
    else {
@@ -1422,8 +1454,8 @@ lp_build_sample_mipmap(struct lp_build_sample_context *bld,
 
    if (mip_filter == PIPE_TEX_MIPFILTER_LINEAR) {
       LLVMValueRef h16vec_scale = lp_build_const_vec(bld->gallivm,
-                                                     bld->levelf_bld.type, 256.0);
-      LLVMTypeRef i32vec_type = bld->leveli_bld.vec_type;
+                                                     bld->lodf_bld.type, 256.0);
+      LLVMTypeRef i32vec_type = bld->lodi_bld.vec_type;
       struct lp_build_if_state if_ctx;
       LLVMValueRef need_lerp;
       unsigned num_quads = bld->coord_bld.type.length / 4;
@@ -1435,7 +1467,7 @@ lp_build_sample_mipmap(struct lp_build_sample_context *bld,
       /* need_lerp = lod_fpart > 0 */
       if (bld->num_lods == 1) {
          need_lerp = LLVMBuildICmp(builder, LLVMIntSGT,
-                                   lod_fpart, bld->leveli_bld.zero,
+                                   lod_fpart, bld->lodi_bld.zero,
                                    "need_lerp");
       }
       else {
@@ -1450,9 +1482,9 @@ lp_build_sample_mipmap(struct lp_build_sample_context *bld,
           * lod_fpart values have same sign.
           * We can however then skip the greater than comparison.
           */
-         lod_fpart = lp_build_max(&bld->leveli_bld, lod_fpart,
-                                  bld->leveli_bld.zero);
-         need_lerp = lp_build_any_true_range(&bld->leveli_bld, bld->num_lods, lod_fpart);
+         lod_fpart = lp_build_max(&bld->lodi_bld, lod_fpart,
+                                  bld->lodi_bld.zero);
+         need_lerp = lp_build_any_true_range(&bld->lodi_bld, bld->num_lods, lod_fpart);
       }
 
       lp_build_if(&if_ctx, bld->gallivm, need_lerp);
@@ -1465,7 +1497,7 @@ lp_build_sample_mipmap(struct lp_build_sample_context *bld,
          lp_build_mipmap_level_sizes(bld, ilevel1,
                                      &size1,
                                      &row_stride1_vec, &img_stride1_vec);
-         if (bld->num_lods == 1) {
+         if (bld->num_mips == 1) {
             data_ptr1 = lp_build_get_mipmap_level(bld, ilevel1);
          }
          else {
@@ -1524,7 +1556,7 @@ lp_build_sample_mipmap(struct lp_build_sample_context *bld,
          }
          else {
             unsigned num_chans_per_lod = 4 * bld->coord_type.length / bld->num_lods;
-            LLVMTypeRef tmp_vec_type = LLVMVectorType(u8n_bld.elem_type, bld->leveli_bld.type.length);
+            LLVMTypeRef tmp_vec_type = LLVMVectorType(u8n_bld.elem_type, bld->lodi_bld.type.length);
             LLVMValueRef shuffle[LP_MAX_VECTOR_LENGTH];
 
             /* Take the LSB of lod_fpart */
@@ -1562,13 +1594,12 @@ lp_build_sample_aos(struct lp_build_sample_context *bld,
                     LLVMValueRef t,
                     LLVMValueRef r,
                     const LLVMValueRef *offsets,
-                    LLVMValueRef lod_ipart,
+                    LLVMValueRef lod_positive,
                     LLVMValueRef lod_fpart,
                     LLVMValueRef ilevel0,
                     LLVMValueRef ilevel1,
                     LLVMValueRef texel_out[4])
 {
-   struct lp_build_context *int_bld = &bld->int_bld;
    LLVMBuilderRef builder = bld->gallivm->builder;
    const unsigned mip_filter = bld->static_sampler_state->min_mip_filter;
    const unsigned min_filter = bld->static_sampler_state->min_img_filter;
@@ -1608,26 +1639,20 @@ lp_build_sample_aos(struct lp_build_sample_context *bld,
        * depending on the lod being > 0 or <= 0, respectively.
        */
       struct lp_build_if_state if_ctx;
-      LLVMValueRef minify;
 
       /*
-       * XXX this should to all lods into account, if some are min
-       * some max probably could hack up the coords/weights in the linear
+       * FIXME this should take all lods into account, if some are min
+       * some max probably could hack up the weights in the linear
        * path with selects to work for nearest.
-       * If that's just two quads sitting next to each other it seems
-       * quite ok to do the same filtering method on both though, at
-       * least unless we have explicit lod (and who uses different
-       * min/mag filter with that?)
        */
       if (bld->num_lods > 1)
-         lod_ipart = LLVMBuildExtractElement(builder, lod_ipart,
-                                              lp_build_const_int32(bld->gallivm, 0), "");
+         lod_positive = LLVMBuildExtractElement(builder, lod_positive,
+                                                lp_build_const_int32(bld->gallivm, 0), "");
 
-      /* minify = lod >= 0.0 */
-      minify = LLVMBuildICmp(builder, LLVMIntSGE,
-                             lod_ipart, int_bld->zero, "");
+      lod_positive = LLVMBuildTrunc(builder, lod_positive,
+                                    LLVMInt1TypeInContext(bld->gallivm->context), "");
 
-      lp_build_if(&if_ctx, bld->gallivm, minify);
+      lp_build_if(&if_ctx, bld->gallivm, lod_positive);
       {
          /* Use the minification filter */
          lp_build_sample_mipmap(bld,

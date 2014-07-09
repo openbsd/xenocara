@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -27,7 +27,7 @@
 
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
  
 
@@ -43,51 +43,56 @@
 static void
 update_scissor( struct st_context *st )
 {
-   struct pipe_scissor_state scissor;
+   struct pipe_scissor_state scissor[PIPE_MAX_VIEWPORTS];
    const struct gl_context *ctx = st->ctx;
    const struct gl_framebuffer *fb = ctx->DrawBuffer;
    GLint miny, maxy;
+   int i;
+   bool changed = false;
+   for (i = 0 ; i < ctx->Const.MaxViewports; i++) {
+      scissor[i].minx = 0;
+      scissor[i].miny = 0;
+      scissor[i].maxx = fb->Width;
+      scissor[i].maxy = fb->Height;
 
-   scissor.minx = 0;
-   scissor.miny = 0;
-   scissor.maxx = fb->Width;
-   scissor.maxy = fb->Height;
+      if (ctx->Scissor.EnableFlags & (1 << i)) {
+         /* need to be careful here with xmax or ymax < 0 */
+         GLint xmax = MAX2(0, ctx->Scissor.ScissorArray[i].X + ctx->Scissor.ScissorArray[i].Width);
+         GLint ymax = MAX2(0, ctx->Scissor.ScissorArray[i].Y + ctx->Scissor.ScissorArray[i].Height);
 
-   if (ctx->Scissor.Enabled) {
-      /* need to be careful here with xmax or ymax < 0 */
-      GLint xmax = MAX2(0, ctx->Scissor.X + ctx->Scissor.Width);
-      GLint ymax = MAX2(0, ctx->Scissor.Y + ctx->Scissor.Height);
+         if (ctx->Scissor.ScissorArray[i].X > (GLint)scissor[i].minx)
+            scissor[i].minx = ctx->Scissor.ScissorArray[i].X;
+         if (ctx->Scissor.ScissorArray[i].Y > (GLint)scissor[i].miny)
+            scissor[i].miny = ctx->Scissor.ScissorArray[i].Y;
 
-      if (ctx->Scissor.X > (GLint)scissor.minx)
-         scissor.minx = ctx->Scissor.X;
-      if (ctx->Scissor.Y > (GLint)scissor.miny)
-         scissor.miny = ctx->Scissor.Y;
+         if (xmax < (GLint) scissor[i].maxx)
+            scissor[i].maxx = xmax;
+         if (ymax < (GLint) scissor[i].maxy)
+            scissor[i].maxy = ymax;
+         
+         /* check for null space */
+         if (scissor[i].minx >= scissor[i].maxx || scissor[i].miny >= scissor[i].maxy)
+            scissor[i].minx = scissor[i].miny = scissor[i].maxx = scissor[i].maxy = 0;
+      }
 
-      if (xmax < (GLint) scissor.maxx)
-         scissor.maxx = xmax;
-      if (ymax < (GLint) scissor.maxy)
-         scissor.maxy = ymax;
+      /* Now invert Y if needed.
+       * Gallium drivers use the convention Y=0=top for surfaces.
+       */
+      if (st_fb_orientation(fb) == Y_0_TOP) {
+         miny = fb->Height - scissor[i].maxy;
+         maxy = fb->Height - scissor[i].miny;
+         scissor[i].miny = miny;
+         scissor[i].maxy = maxy;
+      }
 
-      /* check for null space */
-      if (scissor.minx >= scissor.maxx || scissor.miny >= scissor.maxy)
-         scissor.minx = scissor.miny = scissor.maxx = scissor.maxy = 0;
+      if (memcmp(&scissor[i], &st->state.scissor[i], sizeof(scissor[0])) != 0) {
+         /* state has changed */
+         st->state.scissor[i] = scissor[i];  /* struct copy */
+         changed = true;
+      }
    }
-
-   /* Now invert Y if needed.
-    * Gallium drivers use the convention Y=0=top for surfaces.
-    */
-   if (st_fb_orientation(fb) == Y_0_TOP) {
-      miny = fb->Height - scissor.maxy;
-      maxy = fb->Height - scissor.miny;
-      scissor.miny = miny;
-      scissor.maxy = maxy;
-   }
-
-   if (memcmp(&scissor, &st->state.scissor, sizeof(scissor)) != 0) {
-      /* state has changed */
-      st->state.scissor = scissor;  /* struct copy */
-      st->pipe->set_scissor_states(st->pipe, 0, 1, &scissor); /* activate */
-   }
+   if (changed)
+      st->pipe->set_scissor_states(st->pipe, 0, ctx->Const.MaxViewports, scissor); /* activate */
 }
 
 

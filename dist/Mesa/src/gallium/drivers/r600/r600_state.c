@@ -141,465 +141,14 @@ static uint32_t r600_translate_dbformat(enum pipe_format format)
 	}
 }
 
-static uint32_t r600_translate_colorswap(enum pipe_format format)
-{
-	switch (format) {
-	/* 8-bit buffers. */
-	case PIPE_FORMAT_A8_UNORM:
-	case PIPE_FORMAT_A8_SNORM:
-	case PIPE_FORMAT_A8_UINT:
-	case PIPE_FORMAT_A8_SINT:
-	case PIPE_FORMAT_A16_UNORM:
-	case PIPE_FORMAT_A16_SNORM:
-	case PIPE_FORMAT_A16_UINT:
-	case PIPE_FORMAT_A16_SINT:
-	case PIPE_FORMAT_A16_FLOAT:
-	case PIPE_FORMAT_A32_UINT:
-	case PIPE_FORMAT_A32_SINT:
-	case PIPE_FORMAT_A32_FLOAT:
-	case PIPE_FORMAT_R4A4_UNORM:
-		return V_0280A0_SWAP_ALT_REV;
-	case PIPE_FORMAT_I8_UNORM:
-	case PIPE_FORMAT_I8_SNORM:
-	case PIPE_FORMAT_I8_UINT:
-	case PIPE_FORMAT_I8_SINT:
-	case PIPE_FORMAT_L8_UNORM:
-	case PIPE_FORMAT_L8_SNORM:
-	case PIPE_FORMAT_L8_UINT:
-	case PIPE_FORMAT_L8_SINT:
-	case PIPE_FORMAT_L8_SRGB:
-	case PIPE_FORMAT_L16_UNORM:
-	case PIPE_FORMAT_L16_SNORM:
-	case PIPE_FORMAT_L16_UINT:
-	case PIPE_FORMAT_L16_SINT:
-	case PIPE_FORMAT_L16_FLOAT:
-	case PIPE_FORMAT_L32_UINT:
-	case PIPE_FORMAT_L32_SINT:
-	case PIPE_FORMAT_L32_FLOAT:
-	case PIPE_FORMAT_I16_UNORM:
-	case PIPE_FORMAT_I16_SNORM:
-	case PIPE_FORMAT_I16_UINT:
-	case PIPE_FORMAT_I16_SINT:
-	case PIPE_FORMAT_I16_FLOAT:
-	case PIPE_FORMAT_I32_UINT:
-	case PIPE_FORMAT_I32_SINT:
-	case PIPE_FORMAT_I32_FLOAT:
-	case PIPE_FORMAT_R8_UNORM:
-	case PIPE_FORMAT_R8_SNORM:
-	case PIPE_FORMAT_R8_UINT:
-	case PIPE_FORMAT_R8_SINT:
-		return V_0280A0_SWAP_STD;
-
-	case PIPE_FORMAT_L4A4_UNORM:
-	case PIPE_FORMAT_A4R4_UNORM:
-		return V_0280A0_SWAP_ALT;
-
-	/* 16-bit buffers. */
-	case PIPE_FORMAT_B5G6R5_UNORM:
-		return V_0280A0_SWAP_STD_REV;
-
-	case PIPE_FORMAT_B5G5R5A1_UNORM:
-	case PIPE_FORMAT_B5G5R5X1_UNORM:
-		return V_0280A0_SWAP_ALT;
-
-	case PIPE_FORMAT_B4G4R4A4_UNORM:
-	case PIPE_FORMAT_B4G4R4X4_UNORM:
-		return V_0280A0_SWAP_ALT;
-
-	case PIPE_FORMAT_Z16_UNORM:
-		return V_0280A0_SWAP_STD;
-
-	case PIPE_FORMAT_L8A8_UNORM:
-	case PIPE_FORMAT_L8A8_SNORM:
-	case PIPE_FORMAT_L8A8_UINT:
-	case PIPE_FORMAT_L8A8_SINT:
-	case PIPE_FORMAT_L8A8_SRGB:
-	case PIPE_FORMAT_L16A16_UNORM:
-	case PIPE_FORMAT_L16A16_SNORM:
-	case PIPE_FORMAT_L16A16_UINT:
-	case PIPE_FORMAT_L16A16_SINT:
-	case PIPE_FORMAT_L16A16_FLOAT:
-	case PIPE_FORMAT_L32A32_UINT:
-	case PIPE_FORMAT_L32A32_SINT:
-	case PIPE_FORMAT_L32A32_FLOAT:
-        case PIPE_FORMAT_R8A8_UNORM:
-	case PIPE_FORMAT_R8A8_SNORM:
-	case PIPE_FORMAT_R8A8_UINT:
-	case PIPE_FORMAT_R8A8_SINT:
-	case PIPE_FORMAT_R16A16_UNORM:
-	case PIPE_FORMAT_R16A16_SNORM:
-	case PIPE_FORMAT_R16A16_UINT:
-	case PIPE_FORMAT_R16A16_SINT:
-	case PIPE_FORMAT_R16A16_FLOAT:
-	case PIPE_FORMAT_R32A32_UINT:
-	case PIPE_FORMAT_R32A32_SINT:
-	case PIPE_FORMAT_R32A32_FLOAT:
-		return V_0280A0_SWAP_ALT;
-	case PIPE_FORMAT_R8G8_UNORM:
-	case PIPE_FORMAT_R8G8_SNORM:
-	case PIPE_FORMAT_R8G8_UINT:
-	case PIPE_FORMAT_R8G8_SINT:
-		return V_0280A0_SWAP_STD;
-
-	case PIPE_FORMAT_R16_UNORM:
-	case PIPE_FORMAT_R16_SNORM:
-	case PIPE_FORMAT_R16_UINT:
-	case PIPE_FORMAT_R16_SINT:
-	case PIPE_FORMAT_R16_FLOAT:
-		return V_0280A0_SWAP_STD;
-
-	/* 32-bit buffers. */
-
-	case PIPE_FORMAT_A8B8G8R8_SRGB:
-		return V_0280A0_SWAP_STD_REV;
-	case PIPE_FORMAT_B8G8R8A8_SRGB:
-		return V_0280A0_SWAP_ALT;
-
-	case PIPE_FORMAT_B8G8R8A8_UNORM:
-	case PIPE_FORMAT_B8G8R8X8_UNORM:
-		return V_0280A0_SWAP_ALT;
-
-	case PIPE_FORMAT_A8R8G8B8_UNORM:
-	case PIPE_FORMAT_X8R8G8B8_UNORM:
-		return V_0280A0_SWAP_ALT_REV;
-	case PIPE_FORMAT_R8G8B8A8_SNORM:
-	case PIPE_FORMAT_R8G8B8A8_UNORM:
-	case PIPE_FORMAT_R8G8B8X8_UNORM:
-	case PIPE_FORMAT_R8G8B8X8_SNORM:
-	case PIPE_FORMAT_R8G8B8X8_SRGB:
-	case PIPE_FORMAT_R8G8B8X8_UINT:
-	case PIPE_FORMAT_R8G8B8X8_SINT:
-	case PIPE_FORMAT_R8G8B8A8_SINT:
-	case PIPE_FORMAT_R8G8B8A8_UINT:
-		return V_0280A0_SWAP_STD;
-
-	case PIPE_FORMAT_A8B8G8R8_UNORM:
-	case PIPE_FORMAT_X8B8G8R8_UNORM:
-	/* case PIPE_FORMAT_R8SG8SB8UX8U_NORM: */
-		return V_0280A0_SWAP_STD_REV;
-
-	case PIPE_FORMAT_Z24X8_UNORM:
-	case PIPE_FORMAT_Z24_UNORM_S8_UINT:
-		return V_0280A0_SWAP_STD;
-
-	case PIPE_FORMAT_R10G10B10A2_UNORM:
-	case PIPE_FORMAT_R10G10B10X2_SNORM:
-	case PIPE_FORMAT_R10SG10SB10SA2U_NORM:
-		return V_0280A0_SWAP_STD;
-
-	case PIPE_FORMAT_B10G10R10A2_UNORM:
-	case PIPE_FORMAT_B10G10R10A2_UINT:
-	case PIPE_FORMAT_B10G10R10X2_UNORM:
-		return V_0280A0_SWAP_ALT;
-
-	case PIPE_FORMAT_R11G11B10_FLOAT:
-	case PIPE_FORMAT_R16G16_UNORM:
-	case PIPE_FORMAT_R16G16_SNORM:
-	case PIPE_FORMAT_R16G16_FLOAT:
-	case PIPE_FORMAT_R16G16_UINT:
-	case PIPE_FORMAT_R16G16_SINT:
-	case PIPE_FORMAT_R32_UINT:
-	case PIPE_FORMAT_R32_SINT:
-	case PIPE_FORMAT_R32_FLOAT:
-	case PIPE_FORMAT_Z32_FLOAT:
-		return V_0280A0_SWAP_STD;
-
-	/* 64-bit buffers. */
-	case PIPE_FORMAT_R32G32_FLOAT:
-	case PIPE_FORMAT_R32G32_UINT:
-	case PIPE_FORMAT_R32G32_SINT:
-	case PIPE_FORMAT_R16G16B16A16_UNORM:
-	case PIPE_FORMAT_R16G16B16A16_SNORM:
-	case PIPE_FORMAT_R16G16B16A16_UINT:
-	case PIPE_FORMAT_R16G16B16A16_SINT:
-	case PIPE_FORMAT_R16G16B16A16_FLOAT:
-	case PIPE_FORMAT_R16G16B16X16_UNORM:
-	case PIPE_FORMAT_R16G16B16X16_SNORM:
-	case PIPE_FORMAT_R16G16B16X16_FLOAT:
-	case PIPE_FORMAT_R16G16B16X16_UINT:
-	case PIPE_FORMAT_R16G16B16X16_SINT:
-	case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
-
-	/* 128-bit buffers. */
-	case PIPE_FORMAT_R32G32B32A32_FLOAT:
-	case PIPE_FORMAT_R32G32B32A32_SNORM:
-	case PIPE_FORMAT_R32G32B32A32_UNORM:
-	case PIPE_FORMAT_R32G32B32A32_SINT:
-	case PIPE_FORMAT_R32G32B32A32_UINT:
-	case PIPE_FORMAT_R32G32B32X32_FLOAT:
-	case PIPE_FORMAT_R32G32B32X32_UINT:
-	case PIPE_FORMAT_R32G32B32X32_SINT:
-		return V_0280A0_SWAP_STD;
-	default:
-		R600_ERR("unsupported colorswap format %d\n", format);
-		return ~0U;
-	}
-	return ~0U;
-}
-
-static uint32_t r600_translate_colorformat(enum pipe_format format)
-{
-	switch (format) {
-	case PIPE_FORMAT_L4A4_UNORM:
-	case PIPE_FORMAT_R4A4_UNORM:
-	case PIPE_FORMAT_A4R4_UNORM:
-		return V_0280A0_COLOR_4_4;
-
-	/* 8-bit buffers. */
-	case PIPE_FORMAT_A8_UNORM:
-	case PIPE_FORMAT_A8_SNORM:
-	case PIPE_FORMAT_A8_UINT:
-	case PIPE_FORMAT_A8_SINT:
-	case PIPE_FORMAT_I8_UNORM:
-	case PIPE_FORMAT_I8_SNORM:
-	case PIPE_FORMAT_I8_UINT:
-	case PIPE_FORMAT_I8_SINT:
-	case PIPE_FORMAT_L8_UNORM:
-	case PIPE_FORMAT_L8_SNORM:
-	case PIPE_FORMAT_L8_UINT:
-	case PIPE_FORMAT_L8_SINT:
-	case PIPE_FORMAT_L8_SRGB:
-	case PIPE_FORMAT_R8_UNORM:
-	case PIPE_FORMAT_R8_SNORM:
-	case PIPE_FORMAT_R8_UINT:
-	case PIPE_FORMAT_R8_SINT:
-		return V_0280A0_COLOR_8;
-
-	/* 16-bit buffers. */
-	case PIPE_FORMAT_B5G6R5_UNORM:
-		return V_0280A0_COLOR_5_6_5;
-
-	case PIPE_FORMAT_B5G5R5A1_UNORM:
-	case PIPE_FORMAT_B5G5R5X1_UNORM:
-		return V_0280A0_COLOR_1_5_5_5;
-
-	case PIPE_FORMAT_B4G4R4A4_UNORM:
-	case PIPE_FORMAT_B4G4R4X4_UNORM:
-		return V_0280A0_COLOR_4_4_4_4;
-
-	case PIPE_FORMAT_Z16_UNORM:
-		return V_0280A0_COLOR_16;
-
-	case PIPE_FORMAT_L8A8_UNORM:
-	case PIPE_FORMAT_L8A8_SNORM:
-	case PIPE_FORMAT_L8A8_UINT:
-	case PIPE_FORMAT_L8A8_SINT:
-	case PIPE_FORMAT_L8A8_SRGB:
-	case PIPE_FORMAT_R8G8_UNORM:
-	case PIPE_FORMAT_R8G8_SNORM:
-	case PIPE_FORMAT_R8G8_UINT:
-	case PIPE_FORMAT_R8G8_SINT:
-        case PIPE_FORMAT_R8A8_UNORM:
-	case PIPE_FORMAT_R8A8_SNORM:
-	case PIPE_FORMAT_R8A8_UINT:
-	case PIPE_FORMAT_R8A8_SINT:
-		return V_0280A0_COLOR_8_8;
-
-	case PIPE_FORMAT_R16_UNORM:
-	case PIPE_FORMAT_R16_SNORM:
-	case PIPE_FORMAT_R16_UINT:
-	case PIPE_FORMAT_R16_SINT:
-	case PIPE_FORMAT_A16_UNORM:
-	case PIPE_FORMAT_A16_SNORM:
-	case PIPE_FORMAT_A16_UINT:
-	case PIPE_FORMAT_A16_SINT:
-	case PIPE_FORMAT_L16_UNORM:
-	case PIPE_FORMAT_L16_SNORM:
-	case PIPE_FORMAT_L16_UINT:
-	case PIPE_FORMAT_L16_SINT:
-	case PIPE_FORMAT_I16_UNORM:
-	case PIPE_FORMAT_I16_SNORM:
-	case PIPE_FORMAT_I16_UINT:
-	case PIPE_FORMAT_I16_SINT:
-		return V_0280A0_COLOR_16;
-
-	case PIPE_FORMAT_R16_FLOAT:
-	case PIPE_FORMAT_A16_FLOAT:
-	case PIPE_FORMAT_L16_FLOAT:
-	case PIPE_FORMAT_I16_FLOAT:
-		return V_0280A0_COLOR_16_FLOAT;
-
-	/* 32-bit buffers. */
-	case PIPE_FORMAT_A8B8G8R8_SRGB:
-	case PIPE_FORMAT_A8B8G8R8_UNORM:
-	case PIPE_FORMAT_A8R8G8B8_UNORM:
-	case PIPE_FORMAT_B8G8R8A8_SRGB:
-	case PIPE_FORMAT_B8G8R8A8_UNORM:
-	case PIPE_FORMAT_B8G8R8X8_UNORM:
-	case PIPE_FORMAT_R8G8B8A8_SNORM:
-	case PIPE_FORMAT_R8G8B8A8_UNORM:
-	case PIPE_FORMAT_R8G8B8X8_UNORM:
-	case PIPE_FORMAT_R8G8B8X8_SNORM:
-	case PIPE_FORMAT_R8G8B8X8_SRGB:
-	case PIPE_FORMAT_R8G8B8X8_UINT:
-	case PIPE_FORMAT_R8G8B8X8_SINT:
-	case PIPE_FORMAT_R8SG8SB8UX8U_NORM:
-	case PIPE_FORMAT_X8B8G8R8_UNORM:
-	case PIPE_FORMAT_X8R8G8B8_UNORM:
-	case PIPE_FORMAT_R8G8B8A8_SINT:
-	case PIPE_FORMAT_R8G8B8A8_UINT:
-		return V_0280A0_COLOR_8_8_8_8;
-
-	case PIPE_FORMAT_R10G10B10A2_UNORM:
-	case PIPE_FORMAT_R10G10B10X2_SNORM:
-	case PIPE_FORMAT_B10G10R10A2_UNORM:
-	case PIPE_FORMAT_B10G10R10A2_UINT:
-	case PIPE_FORMAT_B10G10R10X2_UNORM:
-	case PIPE_FORMAT_R10SG10SB10SA2U_NORM:
-		return V_0280A0_COLOR_2_10_10_10;
-
-	case PIPE_FORMAT_Z24X8_UNORM:
-	case PIPE_FORMAT_Z24_UNORM_S8_UINT:
-		return V_0280A0_COLOR_8_24;
-
-	case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
-		return V_0280A0_COLOR_X24_8_32_FLOAT;
-
-	case PIPE_FORMAT_R32_UINT:
-	case PIPE_FORMAT_R32_SINT:
-	case PIPE_FORMAT_A32_UINT:
-	case PIPE_FORMAT_A32_SINT:
-	case PIPE_FORMAT_L32_UINT:
-	case PIPE_FORMAT_L32_SINT:
-	case PIPE_FORMAT_I32_UINT:
-	case PIPE_FORMAT_I32_SINT:
-		return V_0280A0_COLOR_32;
-
-	case PIPE_FORMAT_R32_FLOAT:
-	case PIPE_FORMAT_A32_FLOAT:
-	case PIPE_FORMAT_L32_FLOAT:
-	case PIPE_FORMAT_I32_FLOAT:
-	case PIPE_FORMAT_Z32_FLOAT:
-		return V_0280A0_COLOR_32_FLOAT;
-
-	case PIPE_FORMAT_R16G16_FLOAT:
-	case PIPE_FORMAT_L16A16_FLOAT:
-        case PIPE_FORMAT_R16A16_FLOAT:
-		return V_0280A0_COLOR_16_16_FLOAT;
-
-	case PIPE_FORMAT_R16G16_UNORM:
-	case PIPE_FORMAT_R16G16_SNORM:
-	case PIPE_FORMAT_R16G16_UINT:
-	case PIPE_FORMAT_R16G16_SINT:
-	case PIPE_FORMAT_L16A16_UNORM:
-	case PIPE_FORMAT_L16A16_SNORM:
-	case PIPE_FORMAT_L16A16_UINT:
-	case PIPE_FORMAT_L16A16_SINT:
-        case PIPE_FORMAT_R16A16_UNORM:
-	case PIPE_FORMAT_R16A16_SNORM:
-	case PIPE_FORMAT_R16A16_UINT:
-	case PIPE_FORMAT_R16A16_SINT:
-		return V_0280A0_COLOR_16_16;
-
-	case PIPE_FORMAT_R11G11B10_FLOAT:
-		return V_0280A0_COLOR_10_11_11_FLOAT;
-
-	/* 64-bit buffers. */
-	case PIPE_FORMAT_R16G16B16A16_UINT:
-	case PIPE_FORMAT_R16G16B16A16_SINT:
-	case PIPE_FORMAT_R16G16B16A16_UNORM:
-	case PIPE_FORMAT_R16G16B16A16_SNORM:
-	case PIPE_FORMAT_R16G16B16X16_UNORM:
-	case PIPE_FORMAT_R16G16B16X16_SNORM:
-	case PIPE_FORMAT_R16G16B16X16_UINT:
-	case PIPE_FORMAT_R16G16B16X16_SINT:
-		return V_0280A0_COLOR_16_16_16_16;
-
-	case PIPE_FORMAT_R16G16B16A16_FLOAT:
-	case PIPE_FORMAT_R16G16B16X16_FLOAT:
-		return V_0280A0_COLOR_16_16_16_16_FLOAT;
-
-	case PIPE_FORMAT_R32G32_FLOAT:
-	case PIPE_FORMAT_L32A32_FLOAT:
-        case PIPE_FORMAT_R32A32_FLOAT:
-		return V_0280A0_COLOR_32_32_FLOAT;
-
-	case PIPE_FORMAT_R32G32_SINT:
-	case PIPE_FORMAT_R32G32_UINT:
-	case PIPE_FORMAT_L32A32_UINT:
-	case PIPE_FORMAT_L32A32_SINT:
-		return V_0280A0_COLOR_32_32;
-
-	/* 128-bit buffers. */
-	case PIPE_FORMAT_R32G32B32A32_FLOAT:
-	case PIPE_FORMAT_R32G32B32X32_FLOAT:
-		return V_0280A0_COLOR_32_32_32_32_FLOAT;
-	case PIPE_FORMAT_R32G32B32A32_SNORM:
-	case PIPE_FORMAT_R32G32B32A32_UNORM:
-	case PIPE_FORMAT_R32G32B32A32_SINT:
-	case PIPE_FORMAT_R32G32B32A32_UINT:
-	case PIPE_FORMAT_R32G32B32X32_UINT:
-	case PIPE_FORMAT_R32G32B32X32_SINT:
-		return V_0280A0_COLOR_32_32_32_32;
-
-	/* YUV buffers. */
-	case PIPE_FORMAT_UYVY:
-	case PIPE_FORMAT_YUYV:
-	default:
-		return ~0U; /* Unsupported. */
-	}
-}
-
-static uint32_t r600_colorformat_endian_swap(uint32_t colorformat)
-{
-	if (R600_BIG_ENDIAN) {
-		switch(colorformat) {
-		case V_0280A0_COLOR_4_4:
-			return ENDIAN_NONE;
-
-		/* 8-bit buffers. */
-		case V_0280A0_COLOR_8:
-			return ENDIAN_NONE;
-
-		/* 16-bit buffers. */
-		case V_0280A0_COLOR_5_6_5:
-		case V_0280A0_COLOR_1_5_5_5:
-		case V_0280A0_COLOR_4_4_4_4:
-		case V_0280A0_COLOR_16:
-		case V_0280A0_COLOR_8_8:
-			return ENDIAN_8IN16;
-
-		/* 32-bit buffers. */
-		case V_0280A0_COLOR_8_8_8_8:
-		case V_0280A0_COLOR_2_10_10_10:
-		case V_0280A0_COLOR_8_24:
-		case V_0280A0_COLOR_24_8:
-		case V_0280A0_COLOR_32_FLOAT:
-		case V_0280A0_COLOR_16_16_FLOAT:
-		case V_0280A0_COLOR_16_16:
-			return ENDIAN_8IN32;
-
-		/* 64-bit buffers. */
-		case V_0280A0_COLOR_16_16_16_16:
-		case V_0280A0_COLOR_16_16_16_16_FLOAT:
-			return ENDIAN_8IN16;
-
-		case V_0280A0_COLOR_32_32_FLOAT:
-		case V_0280A0_COLOR_32_32:
-		case V_0280A0_COLOR_X24_8_32_FLOAT:
-			return ENDIAN_8IN32;
-
-		/* 128-bit buffers. */
-		case V_0280A0_COLOR_32_32_32_FLOAT:
-		case V_0280A0_COLOR_32_32_32_32_FLOAT:
-		case V_0280A0_COLOR_32_32_32_32:
-			return ENDIAN_8IN32;
-		default:
-			return ENDIAN_NONE; /* Unsupported. */
-		}
-	} else {
-		return ENDIAN_NONE;
-	}
-}
-
 static bool r600_is_sampler_format_supported(struct pipe_screen *screen, enum pipe_format format)
 {
 	return r600_translate_texformat(screen, format, NULL, NULL, NULL) != ~0U;
 }
 
-static bool r600_is_colorbuffer_format_supported(enum pipe_format format)
+static bool r600_is_colorbuffer_format_supported(enum chip_class chip, enum pipe_format format)
 {
-	return r600_translate_colorformat(format) != ~0U &&
+	return r600_translate_colorformat(chip, format) != ~0U &&
 	       r600_translate_colorswap(format) != ~0U;
 }
 
@@ -630,7 +179,7 @@ boolean r600_is_format_supported(struct pipe_screen *screen,
 			return FALSE;
 
 		/* R11G11B10 is broken on R6xx. */
-		if (rscreen->chip_class == R600 &&
+		if (rscreen->b.chip_class == R600 &&
 		    format == PIPE_FORMAT_R11G11B10_FLOAT)
 			return FALSE;
 
@@ -649,16 +198,21 @@ boolean r600_is_format_supported(struct pipe_screen *screen,
 		}
 	}
 
-	if ((usage & PIPE_BIND_SAMPLER_VIEW) &&
-	    r600_is_sampler_format_supported(screen, format)) {
-		retval |= PIPE_BIND_SAMPLER_VIEW;
+	if (usage & PIPE_BIND_SAMPLER_VIEW) {
+		if (target == PIPE_BUFFER) {
+			if (r600_is_vertex_format_supported(format))
+				retval |= PIPE_BIND_SAMPLER_VIEW;
+		} else {
+			if (r600_is_sampler_format_supported(screen, format))
+				retval |= PIPE_BIND_SAMPLER_VIEW;
+		}
 	}
 
 	if ((usage & (PIPE_BIND_RENDER_TARGET |
 		      PIPE_BIND_DISPLAY_TARGET |
 		      PIPE_BIND_SCANOUT |
 		      PIPE_BIND_SHARED)) &&
-	    r600_is_colorbuffer_format_supported(format)) {
+	    r600_is_colorbuffer_format_supported(rscreen->b.chip_class, format)) {
 		retval |= usage &
 			  (PIPE_BIND_RENDER_TARGET |
 			   PIPE_BIND_DISPLAY_TARGET |
@@ -686,7 +240,7 @@ boolean r600_is_format_supported(struct pipe_screen *screen,
 
 static void r600_emit_polygon_offset(struct r600_context *rctx, struct r600_atom *a)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	struct r600_poly_offset_state *state = (struct r600_poly_offset_state*)a;
 	float offset_units = state->offset_units;
 	float offset_scale = state->offset_scale;
@@ -703,10 +257,10 @@ static void r600_emit_polygon_offset(struct r600_context *rctx, struct r600_atom
 	}
 
 	r600_write_context_reg_seq(cs, R_028E00_PA_SU_POLY_OFFSET_FRONT_SCALE, 4);
-	r600_write_value(cs, fui(offset_scale));
-	r600_write_value(cs, fui(offset_units));
-	r600_write_value(cs, fui(offset_scale));
-	r600_write_value(cs, fui(offset_units));
+	radeon_emit(cs, fui(offset_scale));
+	radeon_emit(cs, fui(offset_units));
+	radeon_emit(cs, fui(offset_scale));
+	radeon_emit(cs, fui(offset_units));
 }
 
 static uint32_t r600_get_blend_control(const struct pipe_blend_state *state, unsigned i)
@@ -754,7 +308,7 @@ static void *r600_create_blend_state_mode(struct pipe_context *ctx,
 	r600_init_command_buffer(&blend->buffer_no_blend, 20);
 
 	/* R600 does not support per-MRT blends */
-	if (rctx->family > CHIP_R600)
+	if (rctx->b.family > CHIP_R600)
 		color_control |= S_028808_PER_MRT_BLEND(1);
 
 	if (state->logicop_enable) {
@@ -811,7 +365,7 @@ static void *r600_create_blend_state_mode(struct pipe_context *ctx,
 	r600_store_context_reg(&blend->buffer, R_028804_CB_BLEND_CONTROL,
 			       r600_get_blend_control(state, 0));
 
-	if (rctx->family > CHIP_R600) {
+	if (rctx->b.family > CHIP_R600) {
 		r600_store_context_reg_seq(&blend->buffer, R_028780_CB_BLEND0_CONTROL, 8);
 		for (int i = 0; i < 8; i++) {
 			r600_store_value(&blend->buffer, r600_get_blend_control(state, i));
@@ -906,6 +460,10 @@ static void *r600_create_rs_state(struct pipe_context *ctx,
 		S_028810_ZCLIP_NEAR_DISABLE(!state->depth_clip) |
 		S_028810_ZCLIP_FAR_DISABLE(!state->depth_clip) |
 		S_028810_DX_LINEAR_ATTR_CLIP_ENA(1);
+	if (rctx->b.chip_class == R700) {
+		rs->pa_cl_clip_cntl |=
+			S_028810_DX_RASTERIZATION_KILL(state->rasterizer_discard);
+	}
 	rs->multisample_enable = state->multisample;
 
 	/* offset */
@@ -925,7 +483,7 @@ static void *r600_create_rs_state(struct pipe_context *ctx,
 	sc_mode_cntl = S_028A4C_MSAA_ENABLE(state->multisample) |
 		       S_028A4C_LINE_STIPPLE_ENABLE(state->line_stipple_enable) |
 		       S_028A4C_FORCE_EOV_CNTDWN_ENABLE(1);
-	if (rctx->chip_class >= R700) {
+	if (rctx->b.chip_class >= R700) {
 		sc_mode_cntl |= S_028A4C_FORCE_EOV_REZ_ENABLE(1) |
 				S_028A4C_R700_ZMM_LINE_OFFSET(1) |
 				S_028A4C_R700_VPORT_SCISSOR_ENABLE(state->scissor);
@@ -963,19 +521,25 @@ static void *r600_create_rs_state(struct pipe_context *ctx,
 			       S_028C08_PIX_CENTER_HALF(state->half_pixel_center) |
 			       S_028C08_QUANT_MODE(V_028C08_X_1_256TH));
 	r600_store_context_reg(&rs->buffer, R_028DFC_PA_SU_POLY_OFFSET_CLAMP, fui(state->offset_clamp));
-	r600_store_context_reg(&rs->buffer, R_028814_PA_SU_SC_MODE_CNTL,
-			       S_028814_PROVOKING_VTX_LAST(!state->flatshade_first) |
-			       S_028814_CULL_FRONT(state->cull_face & PIPE_FACE_FRONT ? 1 : 0) |
-			       S_028814_CULL_BACK(state->cull_face & PIPE_FACE_BACK ? 1 : 0) |
-			       S_028814_FACE(!state->front_ccw) |
-			       S_028814_POLY_OFFSET_FRONT_ENABLE(state->offset_tri) |
-			       S_028814_POLY_OFFSET_BACK_ENABLE(state->offset_tri) |
-			       S_028814_POLY_OFFSET_PARA_ENABLE(state->offset_tri) |
-			       S_028814_POLY_MODE(state->fill_front != PIPE_POLYGON_MODE_FILL ||
-						  state->fill_back != PIPE_POLYGON_MODE_FILL) |
-			       S_028814_POLYMODE_FRONT_PTYPE(r600_translate_fill(state->fill_front)) |
-			       S_028814_POLYMODE_BACK_PTYPE(r600_translate_fill(state->fill_back)));
-	r600_store_context_reg(&rs->buffer, R_028350_SX_MISC, S_028350_MULTIPASS(state->rasterizer_discard));
+
+	rs->pa_su_sc_mode_cntl = S_028814_PROVOKING_VTX_LAST(!state->flatshade_first) |
+				 S_028814_CULL_FRONT(state->cull_face & PIPE_FACE_FRONT ? 1 : 0) |
+				 S_028814_CULL_BACK(state->cull_face & PIPE_FACE_BACK ? 1 : 0) |
+				 S_028814_FACE(!state->front_ccw) |
+				 S_028814_POLY_OFFSET_FRONT_ENABLE(state->offset_tri) |
+				 S_028814_POLY_OFFSET_BACK_ENABLE(state->offset_tri) |
+				 S_028814_POLY_OFFSET_PARA_ENABLE(state->offset_tri) |
+				 S_028814_POLY_MODE(state->fill_front != PIPE_POLYGON_MODE_FILL ||
+									 state->fill_back != PIPE_POLYGON_MODE_FILL) |
+				 S_028814_POLYMODE_FRONT_PTYPE(r600_translate_fill(state->fill_front)) |
+				 S_028814_POLYMODE_BACK_PTYPE(r600_translate_fill(state->fill_back));
+	if (rctx->b.chip_class == R700) {
+		r600_store_context_reg(&rs->buffer, R_028814_PA_SU_SC_MODE_CNTL, rs->pa_su_sc_mode_cntl);
+	}
+	if (rctx->b.chip_class == R600) {
+		r600_store_context_reg(&rs->buffer, R_028350_SX_MISC,
+				       S_028350_MULTIPASS(state->rasterizer_discard));
+	}
 	return rs;
 }
 
@@ -1185,11 +749,11 @@ r600_create_sampler_view(struct pipe_context *ctx,
 
 static void r600_emit_clip_state(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	struct pipe_clip_state *state = &rctx->clip_state.state;
 
 	r600_write_context_reg_seq(cs, R_028E20_PA_CL_UCP0_X, 6*4);
-	r600_write_array(cs, 6*4, (unsigned*)state);
+	radeon_emit_array(cs, (unsigned*)state, 6*4);
 }
 
 static void r600_set_polygon_stipple(struct pipe_context *ctx,
@@ -1199,19 +763,21 @@ static void r600_set_polygon_stipple(struct pipe_context *ctx,
 
 static void r600_emit_scissor_state(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
-	struct pipe_scissor_state *state = &rctx->scissor.scissor;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
+	struct r600_scissor_state *rstate = (struct r600_scissor_state *)atom;
+	struct pipe_scissor_state *state = &rstate->scissor;
+	unsigned offset = rstate->idx * 4 * 2;
 
-	if (rctx->chip_class != R600 || rctx->scissor.enable) {
-		r600_write_context_reg_seq(cs, R_028250_PA_SC_VPORT_SCISSOR_0_TL, 2);
-		r600_write_value(cs, S_028240_TL_X(state->minx) | S_028240_TL_Y(state->miny) |
+	if (rctx->b.chip_class != R600 || rctx->scissor[0].enable) {
+		r600_write_context_reg_seq(cs, R_028250_PA_SC_VPORT_SCISSOR_0_TL + offset, 2);
+		radeon_emit(cs, S_028240_TL_X(state->minx) | S_028240_TL_Y(state->miny) |
 				     S_028240_WINDOW_OFFSET_DISABLE(1));
-		r600_write_value(cs, S_028244_BR_X(state->maxx) | S_028244_BR_Y(state->maxy));
+		radeon_emit(cs, S_028244_BR_X(state->maxx) | S_028244_BR_Y(state->maxy));
 	} else {
 		r600_write_context_reg_seq(cs, R_028250_PA_SC_VPORT_SCISSOR_0_TL, 2);
-		r600_write_value(cs, S_028240_TL_X(0) | S_028240_TL_Y(0) |
+		radeon_emit(cs, S_028240_TL_X(0) | S_028240_TL_Y(0) |
 				     S_028240_WINDOW_OFFSET_DISABLE(1));
-		r600_write_value(cs, S_028244_BR_X(8192) | S_028244_BR_Y(8192));
+		radeon_emit(cs, S_028244_BR_X(8192) | S_028244_BR_Y(8192));
 	}
 }
 
@@ -1221,13 +787,18 @@ static void r600_set_scissor_states(struct pipe_context *ctx,
                                     const struct pipe_scissor_state *state)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
+	int i;
 
-	rctx->scissor.scissor = *state;
+	for (i = start_slot ; i < start_slot + num_scissors; i++) {
+		rctx->scissor[i].scissor = state[i - start_slot];
+	}
 
-	if (rctx->chip_class == R600 && !rctx->scissor.enable)
+	if (rctx->b.chip_class == R600 && !rctx->scissor[0].enable)
 		return;
 
-	rctx->scissor.atom.dirty = true;
+	for (i = start_slot ; i < start_slot + num_scissors; i++) {
+		rctx->scissor[i].atom.dirty = true;
+	}
 }
 
 static struct r600_resource *r600_buffer_create_helper(struct r600_screen *rscreen,
@@ -1239,7 +810,7 @@ static struct r600_resource *r600_buffer_create_helper(struct r600_screen *rscre
 	buffer.target = PIPE_BUFFER;
 	buffer.format = PIPE_FORMAT_R8_UNORM;
 	buffer.bind = PIPE_BIND_CUSTOM;
-	buffer.usage = PIPE_USAGE_STATIC;
+	buffer.usage = PIPE_USAGE_DEFAULT;
 	buffer.flags = 0;
 	buffer.width0 = size;
 	buffer.height0 = 1;
@@ -1247,7 +818,7 @@ static struct r600_resource *r600_buffer_create_helper(struct r600_screen *rscre
 	buffer.array_size = 1;
 
 	return (struct r600_resource*)
-		r600_buffer_create(&rscreen->screen, &buffer, alignment);
+		r600_buffer_create(&rscreen->b.b, &buffer, alignment);
 }
 
 static void r600_init_color_surface(struct r600_context *rctx,
@@ -1259,6 +830,7 @@ static void r600_init_color_surface(struct r600_context *rctx,
 	unsigned level = surf->base.u.tex.level;
 	unsigned pitch, slice;
 	unsigned color_info;
+	unsigned color_view;
 	unsigned format, swap, ntype, endian;
 	unsigned offset;
 	const struct util_format_description *desc;
@@ -1266,16 +838,21 @@ static void r600_init_color_surface(struct r600_context *rctx,
 	bool blend_bypass = 0, blend_clamp = 1;
 
 	if (rtex->is_depth && !rtex->is_flushing_texture && !r600_can_read_depth(rtex)) {
-		r600_init_flushed_depth_texture(&rctx->context, surf->base.texture, NULL);
+		r600_init_flushed_depth_texture(&rctx->b.b, surf->base.texture, NULL);
 		rtex = rtex->flushed_depth_texture;
 		assert(rtex);
 	}
 
 	offset = rtex->surface.level[level].offset;
-	if (rtex->surface.level[level].mode < RADEON_SURF_MODE_1D) {
+	if (rtex->surface.level[level].mode == RADEON_SURF_MODE_LINEAR) {
+		assert(surf->base.u.tex.first_layer == surf->base.u.tex.last_layer);
 		offset += rtex->surface.level[level].slice_size *
-			  surf->base.u.tex.first_layer;
-	}
+			surf->base.u.tex.first_layer;
+		color_view = 0;
+	} else
+		color_view = S_028080_SLICE_START(surf->base.u.tex.first_layer) |
+			     S_028080_SLICE_MAX(surf->base.u.tex.last_layer);
+
 	pitch = rtex->surface.level[level].nblk_x / 8 - 1;
 	slice = (rtex->surface.level[level].nblk_x * rtex->surface.level[level].nblk_y) / 64;
 	if (slice) {
@@ -1321,7 +898,7 @@ static void r600_init_color_surface(struct r600_context *rctx,
 			ntype = V_0280A0_NUMBER_UINT;
 	}
 
-	format = r600_translate_colorformat(surf->base.format);
+	format = r600_translate_colorformat(rctx->b.chip_class, surf->base.format);
 	assert(format != ~0);
 
 	swap = r600_translate_colorswap(surf->base.format);
@@ -1354,7 +931,7 @@ static void r600_init_color_surface(struct r600_context *rctx,
 	/* EXPORT_NORM is an optimzation that can be enabled for better
 	 * performance in certain cases
 	 */
-	if (rctx->chip_class == R600) {
+	if (rctx->b.chip_class == R600) {
 		/* EXPORT_NORM can be enabled if:
 		 * - 11-bit or smaller UNORM/SNORM/SRGB
 		 * - BLEND_CLAMP is enabled
@@ -1399,14 +976,14 @@ static void r600_init_color_surface(struct r600_context *rctx,
 	pipe_resource_reference((struct pipe_resource**)&surf->cb_buffer_fmask,
 				&rtex->resource.b.b);
 
-	if (rtex->cmask_size) {
-		surf->cb_color_cmask = rtex->cmask_offset >> 8;
-		surf->cb_color_mask |= S_028100_CMASK_BLOCK_MAX(rtex->cmask_slice_tile_max);
+	if (rtex->cmask.size) {
+		surf->cb_color_cmask = rtex->cmask.offset >> 8;
+		surf->cb_color_mask |= S_028100_CMASK_BLOCK_MAX(rtex->cmask.slice_tile_max);
 
-		if (rtex->fmask_size) {
+		if (rtex->fmask.size) {
 			color_info |= S_0280A0_TILE_MODE(V_0280A0_FRAG_ENABLE);
-			surf->cb_color_fmask = rtex->fmask_offset >> 8;
-			surf->cb_color_mask |= S_028100_FMASK_TILE_MAX(rtex->fmask_slice_tile_max);
+			surf->cb_color_fmask = rtex->fmask.offset >> 8;
+			surf->cb_color_mask |= S_028100_FMASK_TILE_MAX(rtex->fmask.slice_tile_max);
 		} else { /* cmask only */
 			color_info |= S_0280A0_TILE_MODE(V_0280A0_CLEAR_ENABLE);
 		}
@@ -1420,8 +997,8 @@ static void r600_init_color_surface(struct r600_context *rctx,
 		struct r600_cmask_info cmask;
 		struct r600_fmask_info fmask;
 
-		r600_texture_get_cmask_info(rscreen, rtex, &cmask);
-		r600_texture_get_fmask_info(rscreen, rtex, 8, &fmask);
+		r600_texture_get_cmask_info(&rscreen->b, rtex, &cmask);
+		r600_texture_get_fmask_info(&rscreen->b, rtex, 8, &fmask);
 
 		/* CMASK. */
 		if (!rctx->dummy_cmask ||
@@ -1434,9 +1011,9 @@ static void r600_init_color_surface(struct r600_context *rctx,
 			rctx->dummy_cmask = r600_buffer_create_helper(rscreen, cmask.size, cmask.alignment);
 
 			/* Set the contents to 0xCC. */
-			ptr = pipe_buffer_map(&rctx->context, &rctx->dummy_cmask->b.b, PIPE_TRANSFER_WRITE, &transfer);
+			ptr = pipe_buffer_map(&rctx->b.b, &rctx->dummy_cmask->b.b, PIPE_TRANSFER_WRITE, &transfer);
 			memset(ptr, 0xCC, cmask.size);
-			pipe_buffer_unmap(&rctx->context, transfer);
+			pipe_buffer_unmap(&rctx->b.b, transfer);
 		}
 		pipe_resource_reference((struct pipe_resource**)&surf->cb_buffer_cmask,
 					&rctx->dummy_cmask->b.b);
@@ -1461,14 +1038,7 @@ static void r600_init_color_surface(struct r600_context *rctx,
 	}
 
 	surf->cb_color_info = color_info;
-
-	if (rtex->surface.level[level].mode < RADEON_SURF_MODE_1D) {
-		surf->cb_color_view = 0;
-	} else {
-		surf->cb_color_view = S_028080_SLICE_START(surf->base.u.tex.first_layer) |
-				      S_028080_SLICE_MAX(surf->base.u.tex.last_layer);
-	}
-
+	surf->cb_color_view = color_view;
 	surf->color_initialized = true;
 }
 
@@ -1526,11 +1096,9 @@ static void r600_init_depth_surface(struct r600_context *rctx,
 	default:;
 	}
 
-	surf->htile_enabled = 0;
 	/* use htile only for first level */
-	if (rtex->htile && !level) {
-		uint64_t va = r600_resource_va(&rctx->screen->screen, &rtex->htile->b.b);
-		surf->htile_enabled = 1;
+	if (rtex->htile_buffer && !level) {
+		uint64_t va = r600_resource_va(&rctx->screen->b.b, &rtex->htile_buffer->b.b);
 		surf->db_htile_data_base = va >> 8;
 		surf->db_htile_surface = S_028D24_HTILE_WIDTH(1) |
 					S_028D24_HTILE_HEIGHT(1) |
@@ -1552,21 +1120,17 @@ static void r600_set_framebuffer_state(struct pipe_context *ctx,
 	unsigned i;
 
 	if (rctx->framebuffer.state.nr_cbufs) {
-		rctx->flags |= R600_CONTEXT_WAIT_3D_IDLE | R600_CONTEXT_FLUSH_AND_INV;
-		rctx->flags |= R600_CONTEXT_FLUSH_AND_INV_CB;
-
-		if (rctx->chip_class >= R700 &&
-		    rctx->framebuffer.state.cbufs[0]->texture->nr_samples > 1) {
-			rctx->flags |= R600_CONTEXT_FLUSH_AND_INV_CB_META;
-		}
+		rctx->b.flags |= R600_CONTEXT_WAIT_3D_IDLE | R600_CONTEXT_FLUSH_AND_INV;
+		rctx->b.flags |= R600_CONTEXT_FLUSH_AND_INV_CB |
+				 R600_CONTEXT_FLUSH_AND_INV_CB_META;
 	}
 	if (rctx->framebuffer.state.zsbuf) {
-		rctx->flags |= R600_CONTEXT_WAIT_3D_IDLE | R600_CONTEXT_FLUSH_AND_INV;
-		rctx->flags |= R600_CONTEXT_FLUSH_AND_INV_DB;
+		rctx->b.flags |= R600_CONTEXT_WAIT_3D_IDLE | R600_CONTEXT_FLUSH_AND_INV;
+		rctx->b.flags |= R600_CONTEXT_FLUSH_AND_INV_DB;
 
 		rtex = (struct r600_texture*)rctx->framebuffer.state.zsbuf->texture;
-		if (rctx->chip_class >= R700 && rtex->htile) {
-			rctx->flags |= R600_CONTEXT_FLUSH_AND_INV_DB_META;
+		if (rctx->b.chip_class >= R700 && rtex->htile_buffer) {
+			rctx->b.flags |= R600_CONTEXT_FLUSH_AND_INV_DB_META;
 		}
 	}
 
@@ -1574,28 +1138,26 @@ static void r600_set_framebuffer_state(struct pipe_context *ctx,
 	util_copy_framebuffer_state(&rctx->framebuffer.state, state);
 
 	rctx->framebuffer.export_16bpc = state->nr_cbufs != 0;
-	rctx->framebuffer.cb0_is_integer = state->nr_cbufs &&
+	rctx->framebuffer.cb0_is_integer = state->nr_cbufs && state->cbufs[0] &&
 			       util_format_is_pure_integer(state->cbufs[0]->format);
 	rctx->framebuffer.compressed_cb_mask = 0;
 	rctx->framebuffer.is_msaa_resolve = state->nr_cbufs == 2 &&
+					    state->cbufs[0] && state->cbufs[1] &&
 					    state->cbufs[0]->texture->nr_samples > 1 &&
 				            state->cbufs[1]->texture->nr_samples <= 1;
-
-	if (state->nr_cbufs)
-		rctx->framebuffer.nr_samples = state->cbufs[0]->texture->nr_samples;
-	else if (state->zsbuf)
-		rctx->framebuffer.nr_samples = state->zsbuf->texture->nr_samples;
-	else
-		rctx->framebuffer.nr_samples = 0;
+	rctx->framebuffer.nr_samples = util_framebuffer_get_num_samples(state);
 
 	/* Colorbuffers. */
 	for (i = 0; i < state->nr_cbufs; i++) {
 		/* The resolve buffer must have CMASK and FMASK to prevent hardlocks on R6xx. */
-		bool force_cmask_fmask = rctx->chip_class == R600 &&
+		bool force_cmask_fmask = rctx->b.chip_class == R600 &&
 					 rctx->framebuffer.is_msaa_resolve &&
 					 i == 1;
 
 		surf = (struct r600_surface*)state->cbufs[i];
+		if (!surf)
+			continue;
+
 		rtex = (struct r600_texture*)surf->base.texture;
 		r600_context_add_resource_size(ctx, state->cbufs[i]->texture);
 
@@ -1611,7 +1173,7 @@ static void r600_set_framebuffer_state(struct pipe_context *ctx,
 			rctx->framebuffer.export_16bpc = false;
 		}
 
-		if (rtex->fmask_size && rtex->cmask_size) {
+		if (rtex->fmask.size && rtex->cmask.size) {
 			rctx->framebuffer.compressed_cb_mask |= 1 << i;
 		}
 	}
@@ -1619,9 +1181,15 @@ static void r600_set_framebuffer_state(struct pipe_context *ctx,
 	/* Update alpha-test state dependencies.
 	 * Alpha-test is done on the first colorbuffer only. */
 	if (state->nr_cbufs) {
+		bool alphatest_bypass = false;
+
 		surf = (struct r600_surface*)state->cbufs[0];
-		if (rctx->alphatest_state.bypass != surf->alphatest_bypass) {
-			rctx->alphatest_state.bypass = surf->alphatest_bypass;
+		if (surf) {
+			alphatest_bypass = surf->alphatest_bypass;
+		}
+
+		if (rctx->alphatest_state.bypass != alphatest_bypass) {
+			rctx->alphatest_state.bypass = alphatest_bypass;
 			rctx->alphatest_state.atom.dirty = true;
 		}
 	}
@@ -1662,35 +1230,25 @@ static void r600_set_framebuffer_state(struct pipe_context *ctx,
 		rctx->alphatest_state.atom.dirty = true;
 	}
 
-	r600_update_db_shader_control(rctx);
-
 	/* Calculate the CS size. */
 	rctx->framebuffer.atom.num_dw =
 		10 /*COLOR_INFO*/ + 4 /*SCISSOR*/ + 3 /*SHADER_CONTROL*/ + 8 /*MSAA*/;
 
 	if (rctx->framebuffer.state.nr_cbufs) {
-		rctx->framebuffer.atom.num_dw += 6 * (2 + rctx->framebuffer.state.nr_cbufs);
-		rctx->framebuffer.atom.num_dw += 6 * rctx->framebuffer.state.nr_cbufs; /* relocs */
-
+		rctx->framebuffer.atom.num_dw += 15 * rctx->framebuffer.state.nr_cbufs;
+		rctx->framebuffer.atom.num_dw += 3 * (2 + rctx->framebuffer.state.nr_cbufs);
 	}
 	if (rctx->framebuffer.state.zsbuf) {
-		rctx->framebuffer.atom.num_dw += 18;
-	} else if (rctx->screen->info.drm_minor >= 18) {
+		rctx->framebuffer.atom.num_dw += 16;
+	} else if (rctx->screen->b.info.drm_minor >= 18) {
 		rctx->framebuffer.atom.num_dw += 3;
 	}
-	if (rctx->family > CHIP_R600 && rctx->family < CHIP_RV770) {
+	if (rctx->b.family > CHIP_R600 && rctx->b.family < CHIP_RV770) {
 		rctx->framebuffer.atom.num_dw += 2;
 	}
 
 	rctx->framebuffer.atom.dirty = true;
 }
-
-#define FILL_SREG(s0x, s0y, s1x, s1y, s2x, s2y, s3x, s3y)  \
-	(((s0x) & 0xf) | (((s0y) & 0xf) << 4) |		   \
-	(((s1x) & 0xf) << 8) | (((s1y) & 0xf) << 12) |	   \
-	(((s2x) & 0xf) << 16) | (((s2y) & 0xf) << 20) |	   \
-	 (((s3x) & 0xf) << 24) | (((s3y) & 0xf) << 28))
-
 
 static uint32_t sample_locs_2x[] = {
 	FILL_SREG(-4, 4, 4, -4, -4, 4, 4, -4),
@@ -1750,10 +1308,10 @@ static void r600_get_sample_position(struct pipe_context *ctx,
 
 static void r600_emit_msaa_state(struct r600_context *rctx, int nr_samples)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	unsigned max_dist = 0;
 
-	if (rctx->family == CHIP_R600) {
+	if (rctx->b.family == CHIP_R600) {
 		switch (nr_samples) {
 		default:
 			nr_samples = 0;
@@ -1768,8 +1326,8 @@ static void r600_emit_msaa_state(struct r600_context *rctx, int nr_samples)
 			break;
 		case 8:
 			r600_write_config_reg_seq(cs, R_008B48_PA_SC_AA_SAMPLE_LOCS_8S_WD0, 2);
-			r600_write_value(cs, sample_locs_8x[0]); /* R_008B48_PA_SC_AA_SAMPLE_LOCS_8S_WD0 */
-			r600_write_value(cs, sample_locs_8x[1]); /* R_008B4C_PA_SC_AA_SAMPLE_LOCS_8S_WD1 */
+			radeon_emit(cs, sample_locs_8x[0]); /* R_008B48_PA_SC_AA_SAMPLE_LOCS_8S_WD0 */
+			radeon_emit(cs, sample_locs_8x[1]); /* R_008B4C_PA_SC_AA_SAMPLE_LOCS_8S_WD1 */
 			max_dist = max_dist_8x;
 			break;
 		}
@@ -1777,26 +1335,26 @@ static void r600_emit_msaa_state(struct r600_context *rctx, int nr_samples)
 		switch (nr_samples) {
 		default:
 			r600_write_context_reg_seq(cs, R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX, 2);
-			r600_write_value(cs, 0); /* R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX */
-			r600_write_value(cs, 0); /* R_028C20_PA_SC_AA_SAMPLE_LOCS_8D_WD1_MCTX */
+			radeon_emit(cs, 0); /* R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX */
+			radeon_emit(cs, 0); /* R_028C20_PA_SC_AA_SAMPLE_LOCS_8D_WD1_MCTX */
 			nr_samples = 0;
 			break;
 		case 2:
 			r600_write_context_reg_seq(cs, R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX, 2);
-			r600_write_value(cs, sample_locs_2x[0]); /* R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX */
-			r600_write_value(cs, sample_locs_2x[1]); /* R_028C20_PA_SC_AA_SAMPLE_LOCS_8D_WD1_MCTX */
+			radeon_emit(cs, sample_locs_2x[0]); /* R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX */
+			radeon_emit(cs, sample_locs_2x[1]); /* R_028C20_PA_SC_AA_SAMPLE_LOCS_8D_WD1_MCTX */
 			max_dist = max_dist_2x;
 			break;
 		case 4:
 			r600_write_context_reg_seq(cs, R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX, 2);
-			r600_write_value(cs, sample_locs_4x[0]); /* R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX */
-			r600_write_value(cs, sample_locs_4x[1]); /* R_028C20_PA_SC_AA_SAMPLE_LOCS_8D_WD1_MCTX */
+			radeon_emit(cs, sample_locs_4x[0]); /* R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX */
+			radeon_emit(cs, sample_locs_4x[1]); /* R_028C20_PA_SC_AA_SAMPLE_LOCS_8D_WD1_MCTX */
 			max_dist = max_dist_4x;
 			break;
 		case 8:
 			r600_write_context_reg_seq(cs, R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX, 2);
-			r600_write_value(cs, sample_locs_8x[0]); /* R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX */
-			r600_write_value(cs, sample_locs_8x[1]); /* R_028C20_PA_SC_AA_SAMPLE_LOCS_8D_WD1_MCTX */
+			radeon_emit(cs, sample_locs_8x[0]); /* R_028C1C_PA_SC_AA_SAMPLE_LOCS_MCTX */
+			radeon_emit(cs, sample_locs_8x[1]); /* R_028C20_PA_SC_AA_SAMPLE_LOCS_8D_WD1_MCTX */
 			max_dist = max_dist_8x;
 			break;
 		}
@@ -1804,20 +1362,20 @@ static void r600_emit_msaa_state(struct r600_context *rctx, int nr_samples)
 
 	if (nr_samples > 1) {
 		r600_write_context_reg_seq(cs, R_028C00_PA_SC_LINE_CNTL, 2);
-		r600_write_value(cs, S_028C00_LAST_PIXEL(1) |
+		radeon_emit(cs, S_028C00_LAST_PIXEL(1) |
 				     S_028C00_EXPAND_LINE_WIDTH(1)); /* R_028C00_PA_SC_LINE_CNTL */
-		r600_write_value(cs, S_028C04_MSAA_NUM_SAMPLES(util_logbase2(nr_samples)) |
+		radeon_emit(cs, S_028C04_MSAA_NUM_SAMPLES(util_logbase2(nr_samples)) |
 				     S_028C04_MAX_SAMPLE_DIST(max_dist)); /* R_028C04_PA_SC_AA_CONFIG */
 	} else {
 		r600_write_context_reg_seq(cs, R_028C00_PA_SC_LINE_CNTL, 2);
-		r600_write_value(cs, S_028C00_LAST_PIXEL(1)); /* R_028C00_PA_SC_LINE_CNTL */
-		r600_write_value(cs, 0); /* R_028C04_PA_SC_AA_CONFIG */
+		radeon_emit(cs, S_028C00_LAST_PIXEL(1)); /* R_028C00_PA_SC_LINE_CNTL */
+		radeon_emit(cs, 0); /* R_028C04_PA_SC_AA_CONFIG */
 	}
 }
 
 static void r600_emit_framebuffer_state(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	struct pipe_framebuffer_state *state = &rctx->framebuffer.state;
 	unsigned nr_cbufs = state->nr_cbufs;
 	struct r600_surface **cb = (struct r600_surface**)&state->cbufs[0];
@@ -1826,131 +1384,134 @@ static void r600_emit_framebuffer_state(struct r600_context *rctx, struct r600_a
 	/* Colorbuffers. */
 	r600_write_context_reg_seq(cs, R_0280A0_CB_COLOR0_INFO, 8);
 	for (i = 0; i < nr_cbufs; i++) {
-		r600_write_value(cs, cb[i]->cb_color_info);
+		radeon_emit(cs, cb[i] ? cb[i]->cb_color_info : 0);
 	}
 	/* set CB_COLOR1_INFO for possible dual-src blending */
-	if (i == 1) {
-		r600_write_value(cs, cb[0]->cb_color_info);
+	if (i == 1 && cb[0]) {
+		radeon_emit(cs, cb[0]->cb_color_info);
 		i++;
 	}
 	for (; i < 8; i++) {
-		r600_write_value(cs, 0);
+		radeon_emit(cs, 0);
 	}
 
 	if (nr_cbufs) {
-		/* COLOR_BASE */
-		r600_write_context_reg_seq(cs, R_028040_CB_COLOR0_BASE, nr_cbufs);
 		for (i = 0; i < nr_cbufs; i++) {
-			r600_write_value(cs, cb[i]->cb_color_base);
-		}
+			unsigned reloc;
 
-		/* relocations */
-		for (i = 0; i < nr_cbufs; i++) {
-			unsigned reloc = r600_context_bo_reloc(rctx,
-							       &rctx->rings.gfx,
-							       (struct r600_resource*)cb[i]->base.texture,
-							       RADEON_USAGE_READWRITE);
-			r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-			r600_write_value(cs, reloc);
+			if (!cb[i])
+				continue;
+
+			/* COLOR_BASE */
+			r600_write_context_reg(cs, R_028040_CB_COLOR0_BASE + i*4, cb[i]->cb_color_base);
+
+			reloc = r600_context_bo_reloc(&rctx->b,
+						      &rctx->b.rings.gfx,
+						      (struct r600_resource*)cb[i]->base.texture,
+						      RADEON_USAGE_READWRITE,
+						      cb[i]->base.texture->nr_samples > 1 ?
+							      RADEON_PRIO_COLOR_BUFFER_MSAA :
+							      RADEON_PRIO_COLOR_BUFFER);
+			radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+			radeon_emit(cs, reloc);
+
+			/* FMASK */
+			r600_write_context_reg(cs, R_0280E0_CB_COLOR0_FRAG + i*4, cb[i]->cb_color_fmask);
+
+			reloc = r600_context_bo_reloc(&rctx->b,
+						      &rctx->b.rings.gfx,
+						      cb[i]->cb_buffer_fmask,
+						      RADEON_USAGE_READWRITE,
+						      cb[i]->base.texture->nr_samples > 1 ?
+							      RADEON_PRIO_COLOR_BUFFER_MSAA :
+							      RADEON_PRIO_COLOR_BUFFER);
+			radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+			radeon_emit(cs, reloc);
+
+			/* CMASK */
+			r600_write_context_reg(cs, R_0280C0_CB_COLOR0_TILE + i*4, cb[i]->cb_color_cmask);
+
+			reloc = r600_context_bo_reloc(&rctx->b,
+						      &rctx->b.rings.gfx,
+						      cb[i]->cb_buffer_cmask,
+						      RADEON_USAGE_READWRITE,
+						      cb[i]->base.texture->nr_samples > 1 ?
+							      RADEON_PRIO_COLOR_BUFFER_MSAA :
+							      RADEON_PRIO_COLOR_BUFFER);
+			radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+			radeon_emit(cs, reloc);
 		}
 
 		r600_write_context_reg_seq(cs, R_028060_CB_COLOR0_SIZE, nr_cbufs);
 		for (i = 0; i < nr_cbufs; i++) {
-			r600_write_value(cs, cb[i]->cb_color_size);
+			radeon_emit(cs, cb[i] ? cb[i]->cb_color_size : 0);
 		}
 
 		r600_write_context_reg_seq(cs, R_028080_CB_COLOR0_VIEW, nr_cbufs);
 		for (i = 0; i < nr_cbufs; i++) {
-			r600_write_value(cs, cb[i]->cb_color_view);
+			radeon_emit(cs, cb[i] ? cb[i]->cb_color_view : 0);
 		}
 
 		r600_write_context_reg_seq(cs, R_028100_CB_COLOR0_MASK, nr_cbufs);
 		for (i = 0; i < nr_cbufs; i++) {
-			r600_write_value(cs, cb[i]->cb_color_mask);
-		}
-
-		/* FMASK. */
-		r600_write_context_reg_seq(cs, R_0280E0_CB_COLOR0_FRAG, nr_cbufs);
-		for (i = 0; i < nr_cbufs; i++) {
-			r600_write_value(cs, cb[i]->cb_color_fmask);
-		}
-		/* relocations */
-		for (i = 0; i < nr_cbufs; i++) {
-			unsigned reloc = r600_context_bo_reloc(rctx,
-							       &rctx->rings.gfx,
-							       cb[i]->cb_buffer_fmask,
-							       RADEON_USAGE_READWRITE);
-			r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-			r600_write_value(cs, reloc);
-		}
-
-		/* CMASK. */
-		r600_write_context_reg_seq(cs, R_0280C0_CB_COLOR0_TILE, nr_cbufs);
-		for (i = 0; i < nr_cbufs; i++) {
-			r600_write_value(cs, cb[i]->cb_color_cmask);
-		}
-		/* relocations */
-		for (i = 0; i < nr_cbufs; i++) {
-			unsigned reloc = r600_context_bo_reloc(rctx,
-							       &rctx->rings.gfx,
-							       cb[i]->cb_buffer_cmask,
-							       RADEON_USAGE_READWRITE);
-			r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-			r600_write_value(cs, reloc);
+			radeon_emit(cs, cb[i] ? cb[i]->cb_color_mask : 0);
 		}
 
 		sbu |= SURFACE_BASE_UPDATE_COLOR_NUM(nr_cbufs);
 	}
 
 	/* SURFACE_BASE_UPDATE */
-	if (rctx->family > CHIP_R600 && rctx->family < CHIP_RV770 && sbu) {
-		r600_write_value(cs, PKT3(PKT3_SURFACE_BASE_UPDATE, 0, 0));
-		r600_write_value(cs, sbu);
+	if (rctx->b.family > CHIP_R600 && rctx->b.family < CHIP_RV770 && sbu) {
+		radeon_emit(cs, PKT3(PKT3_SURFACE_BASE_UPDATE, 0, 0));
+		radeon_emit(cs, sbu);
 		sbu = 0;
 	}
 
 	/* Zbuffer. */
 	if (state->zsbuf) {
 		struct r600_surface *surf = (struct r600_surface*)state->zsbuf;
-		unsigned reloc = r600_context_bo_reloc(rctx,
-						       &rctx->rings.gfx,
+		unsigned reloc = r600_context_bo_reloc(&rctx->b,
+						       &rctx->b.rings.gfx,
 						       (struct r600_resource*)state->zsbuf->texture,
-						       RADEON_USAGE_READWRITE);
+						       RADEON_USAGE_READWRITE,
+						       surf->base.texture->nr_samples > 1 ?
+							       RADEON_PRIO_DEPTH_BUFFER_MSAA :
+							       RADEON_PRIO_DEPTH_BUFFER);
 
 		r600_write_context_reg(cs, R_028DF8_PA_SU_POLY_OFFSET_DB_FMT_CNTL,
 				       surf->pa_su_poly_offset_db_fmt_cntl);
 
 		r600_write_context_reg_seq(cs, R_028000_DB_DEPTH_SIZE, 2);
-		r600_write_value(cs, surf->db_depth_size); /* R_028000_DB_DEPTH_SIZE */
-		r600_write_value(cs, surf->db_depth_view); /* R_028004_DB_DEPTH_VIEW */
+		radeon_emit(cs, surf->db_depth_size); /* R_028000_DB_DEPTH_SIZE */
+		radeon_emit(cs, surf->db_depth_view); /* R_028004_DB_DEPTH_VIEW */
 		r600_write_context_reg_seq(cs, R_02800C_DB_DEPTH_BASE, 2);
-		r600_write_value(cs, surf->db_depth_base); /* R_02800C_DB_DEPTH_BASE */
-		r600_write_value(cs, surf->db_depth_info); /* R_028010_DB_DEPTH_INFO */
+		radeon_emit(cs, surf->db_depth_base); /* R_02800C_DB_DEPTH_BASE */
+		radeon_emit(cs, surf->db_depth_info); /* R_028010_DB_DEPTH_INFO */
 
-		r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-		r600_write_value(cs, reloc);
+		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+		radeon_emit(cs, reloc);
 
 		r600_write_context_reg(cs, R_028D34_DB_PREFETCH_LIMIT, surf->db_prefetch_limit);
 
 		sbu |= SURFACE_BASE_UPDATE_DEPTH;
-	} else if (rctx->screen->info.drm_minor >= 18) {
+	} else if (rctx->screen->b.info.drm_minor >= 18) {
 		/* DRM 2.6.18 allows the INVALID format to disable depth/stencil.
 		 * Older kernels are out of luck. */
 		r600_write_context_reg(cs, R_028010_DB_DEPTH_INFO, S_028010_FORMAT(V_028010_DEPTH_INVALID));
 	}
 
 	/* SURFACE_BASE_UPDATE */
-	if (rctx->family > CHIP_R600 && rctx->family < CHIP_RV770 && sbu) {
-		r600_write_value(cs, PKT3(PKT3_SURFACE_BASE_UPDATE, 0, 0));
-		r600_write_value(cs, sbu);
+	if (rctx->b.family > CHIP_R600 && rctx->b.family < CHIP_RV770 && sbu) {
+		radeon_emit(cs, PKT3(PKT3_SURFACE_BASE_UPDATE, 0, 0));
+		radeon_emit(cs, sbu);
 		sbu = 0;
 	}
 
 	/* Framebuffer dimensions. */
 	r600_write_context_reg_seq(cs, R_028204_PA_SC_WINDOW_SCISSOR_TL, 2);
-	r600_write_value(cs, S_028240_TL_X(0) | S_028240_TL_Y(0) |
+	radeon_emit(cs, S_028240_TL_X(0) | S_028240_TL_Y(0) |
 			     S_028240_WINDOW_OFFSET_DISABLE(1)); /* R_028204_PA_SC_WINDOW_SCISSOR_TL */
-	r600_write_value(cs, S_028244_BR_X(state->width) |
+	radeon_emit(cs, S_028244_BR_X(state->width) |
 			     S_028244_BR_Y(state->height)); /* R_028208_PA_SC_WINDOW_SCISSOR_BR */
 
 	if (rctx->framebuffer.is_msaa_resolve) {
@@ -1968,17 +1529,17 @@ static void r600_emit_framebuffer_state(struct r600_context *rctx, struct r600_a
 
 static void r600_emit_cb_misc_state(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	struct r600_cb_misc_state *a = (struct r600_cb_misc_state*)atom;
 
 	if (G_028808_SPECIAL_OP(a->cb_color_control) == V_028808_SPECIAL_RESOLVE_BOX) {
 		r600_write_context_reg_seq(cs, R_028238_CB_TARGET_MASK, 2);
-		if (rctx->chip_class == R600) {
-			r600_write_value(cs, 0xff); /* R_028238_CB_TARGET_MASK */
-			r600_write_value(cs, 0xff); /* R_02823C_CB_SHADER_MASK */
+		if (rctx->b.chip_class == R600) {
+			radeon_emit(cs, 0xff); /* R_028238_CB_TARGET_MASK */
+			radeon_emit(cs, 0xff); /* R_02823C_CB_SHADER_MASK */
 		} else {
-			r600_write_value(cs, 0xf); /* R_028238_CB_TARGET_MASK */
-			r600_write_value(cs, 0xf); /* R_02823C_CB_SHADER_MASK */
+			radeon_emit(cs, 0xf); /* R_028238_CB_TARGET_MASK */
+			radeon_emit(cs, 0xf); /* R_02823C_CB_SHADER_MASK */
 		}
 		r600_write_context_reg(cs, R_028808_CB_COLOR_CONTROL, a->cb_color_control);
 	} else {
@@ -1987,9 +1548,9 @@ static void r600_emit_cb_misc_state(struct r600_context *rctx, struct r600_atom 
 		unsigned multiwrite = a->multiwrite && a->nr_cbufs > 1;
 
 		r600_write_context_reg_seq(cs, R_028238_CB_TARGET_MASK, 2);
-		r600_write_value(cs, a->blend_colormask & fb_colormask); /* R_028238_CB_TARGET_MASK */
+		radeon_emit(cs, a->blend_colormask & fb_colormask); /* R_028238_CB_TARGET_MASK */
 		/* Always enable the first color output to make sure alpha-test works even without one. */
-		r600_write_value(cs, 0xf | (multiwrite ? fb_colormask : ps_colormask)); /* R_02823C_CB_SHADER_MASK */
+		radeon_emit(cs, 0xf | (multiwrite ? fb_colormask : ps_colormask)); /* R_02823C_CB_SHADER_MASK */
 		r600_write_context_reg(cs, R_028808_CB_COLOR_CONTROL,
 				       a->cb_color_control |
 				       S_028808_MULTIWRITE_ENABLE(multiwrite));
@@ -1998,17 +1559,18 @@ static void r600_emit_cb_misc_state(struct r600_context *rctx, struct r600_atom 
 
 static void r600_emit_db_state(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	struct r600_db_state *a = (struct r600_db_state*)atom;
 
-	if (a->rsurf && a->rsurf->htile_enabled) {
+	if (a->rsurf && a->rsurf->db_htile_surface) {
 		struct r600_texture *rtex = (struct r600_texture *)a->rsurf->base.texture;
 		unsigned reloc_idx;
 
-		r600_write_context_reg(cs, R_02802C_DB_DEPTH_CLEAR, fui(rtex->depth_clear));
+		r600_write_context_reg(cs, R_02802C_DB_DEPTH_CLEAR, fui(rtex->depth_clear_value));
 		r600_write_context_reg(cs, R_028D24_DB_HTILE_SURFACE, a->rsurf->db_htile_surface);
 		r600_write_context_reg(cs, R_028014_DB_HTILE_DATA_BASE, a->rsurf->db_htile_data_base);
-		reloc_idx = r600_context_bo_reloc(rctx, &rctx->rings.gfx, rtex->htile, RADEON_USAGE_READWRITE);
+		reloc_idx = r600_context_bo_reloc(&rctx->b, &rctx->b.rings.gfx, rtex->htile_buffer,
+						  RADEON_USAGE_READWRITE, RADEON_PRIO_DEPTH_META);
 		cs->buf[cs->cdw++] = PKT3(PKT3_NOP, 0, 0);
 		cs->buf[cs->cdw++] = reloc_idx;
 	} else {
@@ -2018,7 +1580,7 @@ static void r600_emit_db_state(struct r600_context *rctx, struct r600_atom *atom
 
 static void r600_emit_db_misc_state(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	struct r600_db_misc_state *a = (struct r600_db_misc_state*)atom;
 	unsigned db_render_control = 0;
 	unsigned db_render_override =
@@ -2026,12 +1588,12 @@ static void r600_emit_db_misc_state(struct r600_context *rctx, struct r600_atom 
 		S_028D10_FORCE_HIS_ENABLE1(V_028D10_FORCE_DISABLE);
 
 	if (a->occlusion_query_enabled) {
-		if (rctx->chip_class >= R700) {
+		if (rctx->b.chip_class >= R700) {
 			db_render_control |= S_028D0C_R700_PERFECT_ZPASS_COUNTS(1);
 		}
 		db_render_override |= S_028D10_NOOP_CULL_DISABLE(1);
 	}
-	if (rctx->db_state.rsurf && rctx->db_state.rsurf->htile_enabled) {
+	if (rctx->db_state.rsurf && rctx->db_state.rsurf->db_htile_surface) {
 		/* FORCE_OFF means HiZ/HiS are determined by DB_SHADER_CONTROL */
 		db_render_override |= S_028D10_FORCE_HIZ_ENABLE(V_028D10_FORCE_OFF);
 		/* This is to fix a lockup when hyperz and alpha test are enabled at
@@ -2060,23 +1622,29 @@ static void r600_emit_db_misc_state(struct r600_context *rctx, struct r600_atom 
 		db_render_control |= S_028D0C_DEPTH_CLEAR_ENABLE(1);
 	}
 
+	/* RV770 workaround for a hang with 8x MSAA. */
+	if (rctx->b.family == CHIP_RV770 && a->log_samples == 3) {
+		db_render_override |= S_028D10_MAX_TILES_IN_DTT(6);
+	}
+
 	r600_write_context_reg_seq(cs, R_028D0C_DB_RENDER_CONTROL, 2);
-	r600_write_value(cs, db_render_control); /* R_028D0C_DB_RENDER_CONTROL */
-	r600_write_value(cs, db_render_override); /* R_028D10_DB_RENDER_OVERRIDE */
+	radeon_emit(cs, db_render_control); /* R_028D0C_DB_RENDER_CONTROL */
+	radeon_emit(cs, db_render_override); /* R_028D10_DB_RENDER_OVERRIDE */
 	r600_write_context_reg(cs, R_02880C_DB_SHADER_CONTROL, a->db_shader_control);
 }
 
 static void r600_emit_config_state(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	struct r600_config_state *a = (struct r600_config_state*)atom;
 
 	r600_write_config_reg(cs, R_008C04_SQ_GPR_RESOURCE_MGMT_1, a->sq_gpr_resource_mgmt_1);
+	r600_write_config_reg(cs, R_008C08_SQ_GPR_RESOURCE_MGMT_2, a->sq_gpr_resource_mgmt_2);
 }
 
 static void r600_emit_vertex_buffers(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	uint32_t dirty_mask = rctx->vertex_buffer_state.dirty_mask;
 
 	while (dirty_mask) {
@@ -2092,20 +1660,21 @@ static void r600_emit_vertex_buffers(struct r600_context *rctx, struct r600_atom
 		offset = vb->buffer_offset;
 
 		/* fetch resources start at index 320 */
-		r600_write_value(cs, PKT3(PKT3_SET_RESOURCE, 7, 0));
-		r600_write_value(cs, (320 + buffer_index) * 7);
-		r600_write_value(cs, offset); /* RESOURCEi_WORD0 */
-		r600_write_value(cs, rbuffer->buf->size - offset - 1); /* RESOURCEi_WORD1 */
-		r600_write_value(cs, /* RESOURCEi_WORD2 */
+		radeon_emit(cs, PKT3(PKT3_SET_RESOURCE, 7, 0));
+		radeon_emit(cs, (320 + buffer_index) * 7);
+		radeon_emit(cs, offset); /* RESOURCEi_WORD0 */
+		radeon_emit(cs, rbuffer->buf->size - offset - 1); /* RESOURCEi_WORD1 */
+		radeon_emit(cs, /* RESOURCEi_WORD2 */
 				 S_038008_ENDIAN_SWAP(r600_endian_swap(32)) |
 				 S_038008_STRIDE(vb->stride));
-		r600_write_value(cs, 0); /* RESOURCEi_WORD3 */
-		r600_write_value(cs, 0); /* RESOURCEi_WORD4 */
-		r600_write_value(cs, 0); /* RESOURCEi_WORD5 */
-		r600_write_value(cs, 0xc0000000); /* RESOURCEi_WORD6 */
+		radeon_emit(cs, 0); /* RESOURCEi_WORD3 */
+		radeon_emit(cs, 0); /* RESOURCEi_WORD4 */
+		radeon_emit(cs, 0); /* RESOURCEi_WORD5 */
+		radeon_emit(cs, 0xc0000000); /* RESOURCEi_WORD6 */
 
-		r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-		r600_write_value(cs, r600_context_bo_reloc(rctx, &rctx->rings.gfx, rbuffer, RADEON_USAGE_READ));
+		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+		radeon_emit(cs, r600_context_bo_reloc(&rctx->b, &rctx->b.rings.gfx, rbuffer,
+						      RADEON_USAGE_READ, RADEON_PRIO_SHADER_BUFFER_RO));
 	}
 }
 
@@ -2115,7 +1684,7 @@ static void r600_emit_constant_buffers(struct r600_context *rctx,
 				       unsigned reg_alu_constbuf_size,
 				       unsigned reg_alu_const_cache)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	uint32_t dirty_mask = state->dirty_mask;
 
 	while (dirty_mask) {
@@ -2123,34 +1692,38 @@ static void r600_emit_constant_buffers(struct r600_context *rctx,
 		struct r600_resource *rbuffer;
 		unsigned offset;
 		unsigned buffer_index = ffs(dirty_mask) - 1;
-
+		unsigned gs_ring_buffer = (buffer_index == R600_GS_RING_CONST_BUFFER);
 		cb = &state->cb[buffer_index];
 		rbuffer = (struct r600_resource*)cb->buffer;
 		assert(rbuffer);
 
 		offset = cb->buffer_offset;
 
-		r600_write_context_reg(cs, reg_alu_constbuf_size + buffer_index * 4,
-				       ALIGN_DIVUP(cb->buffer_size >> 4, 16));
-		r600_write_context_reg(cs, reg_alu_const_cache + buffer_index * 4, offset >> 8);
+		if (!gs_ring_buffer) {
+			r600_write_context_reg(cs, reg_alu_constbuf_size + buffer_index * 4,
+					       ALIGN_DIVUP(cb->buffer_size >> 4, 16));
+			r600_write_context_reg(cs, reg_alu_const_cache + buffer_index * 4, offset >> 8);
+		}
 
-		r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-		r600_write_value(cs, r600_context_bo_reloc(rctx, &rctx->rings.gfx, rbuffer, RADEON_USAGE_READ));
+		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+		radeon_emit(cs, r600_context_bo_reloc(&rctx->b, &rctx->b.rings.gfx, rbuffer,
+						      RADEON_USAGE_READ, RADEON_PRIO_SHADER_BUFFER_RO));
 
-		r600_write_value(cs, PKT3(PKT3_SET_RESOURCE, 7, 0));
-		r600_write_value(cs, (buffer_id_base + buffer_index) * 7);
-		r600_write_value(cs, offset); /* RESOURCEi_WORD0 */
-		r600_write_value(cs, rbuffer->buf->size - offset - 1); /* RESOURCEi_WORD1 */
-		r600_write_value(cs, /* RESOURCEi_WORD2 */
-				 S_038008_ENDIAN_SWAP(r600_endian_swap(32)) |
-				 S_038008_STRIDE(16));
-		r600_write_value(cs, 0); /* RESOURCEi_WORD3 */
-		r600_write_value(cs, 0); /* RESOURCEi_WORD4 */
-		r600_write_value(cs, 0); /* RESOURCEi_WORD5 */
-		r600_write_value(cs, 0xc0000000); /* RESOURCEi_WORD6 */
+		radeon_emit(cs, PKT3(PKT3_SET_RESOURCE, 7, 0));
+		radeon_emit(cs, (buffer_id_base + buffer_index) * 7);
+		radeon_emit(cs, offset); /* RESOURCEi_WORD0 */
+		radeon_emit(cs, rbuffer->buf->size - offset - 1); /* RESOURCEi_WORD1 */
+		radeon_emit(cs, /* RESOURCEi_WORD2 */
+			    S_038008_ENDIAN_SWAP(gs_ring_buffer ? ENDIAN_NONE : r600_endian_swap(32)) |
+			    S_038008_STRIDE(gs_ring_buffer ? 4 : 16));
+		radeon_emit(cs, 0); /* RESOURCEi_WORD3 */
+		radeon_emit(cs, 0); /* RESOURCEi_WORD4 */
+		radeon_emit(cs, 0); /* RESOURCEi_WORD5 */
+		radeon_emit(cs, 0xc0000000); /* RESOURCEi_WORD6 */
 
-		r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-		r600_write_value(cs, r600_context_bo_reloc(rctx, &rctx->rings.gfx, rbuffer, RADEON_USAGE_READ));
+		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+		radeon_emit(cs, r600_context_bo_reloc(&rctx->b, &rctx->b.rings.gfx, rbuffer,
+						      RADEON_USAGE_READ, RADEON_PRIO_SHADER_BUFFER_RO));
 
 		dirty_mask &= ~(1 << buffer_index);
 	}
@@ -2182,7 +1755,7 @@ static void r600_emit_sampler_views(struct r600_context *rctx,
 				    struct r600_samplerview_state *state,
 				    unsigned resource_id_base)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	uint32_t dirty_mask = state->dirty_mask;
 
 	while (dirty_mask) {
@@ -2193,16 +1766,19 @@ static void r600_emit_sampler_views(struct r600_context *rctx,
 		rview = state->views[resource_index];
 		assert(rview);
 
-		r600_write_value(cs, PKT3(PKT3_SET_RESOURCE, 7, 0));
-		r600_write_value(cs, (resource_id_base + resource_index) * 7);
-		r600_write_array(cs, 7, rview->tex_resource_words);
+		radeon_emit(cs, PKT3(PKT3_SET_RESOURCE, 7, 0));
+		radeon_emit(cs, (resource_id_base + resource_index) * 7);
+		radeon_emit_array(cs, rview->tex_resource_words, 7);
 
-		reloc = r600_context_bo_reloc(rctx, &rctx->rings.gfx, rview->tex_resource,
-					      RADEON_USAGE_READ);
-		r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-		r600_write_value(cs, reloc);
-		r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-		r600_write_value(cs, reloc);
+		reloc = r600_context_bo_reloc(&rctx->b, &rctx->b.rings.gfx, rview->tex_resource,
+					      RADEON_USAGE_READ,
+					      rview->tex_resource->b.b.nr_samples > 1 ?
+						      RADEON_PRIO_SHADER_TEXTURE_MSAA :
+						      RADEON_PRIO_SHADER_TEXTURE_RO);
+		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+		radeon_emit(cs, reloc);
+		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+		radeon_emit(cs, reloc);
 	}
 	state->dirty_mask = 0;
 }
@@ -2234,7 +1810,7 @@ static void r600_emit_sampler_states(struct r600_context *rctx,
 				unsigned resource_id_base,
 				unsigned border_color_reg)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	uint32_t dirty_mask = texinfo->states.dirty_mask;
 
 	while (dirty_mask) {
@@ -2262,9 +1838,9 @@ static void r600_emit_sampler_states(struct r600_context *rctx,
 			}
 		}
 
-		r600_write_value(cs, PKT3(PKT3_SET_SAMPLER, 3, 0));
-		r600_write_value(cs, (resource_id_base + i) * 3);
-		r600_write_array(cs, 3, rstate->tex_sampler_words);
+		radeon_emit(cs, PKT3(PKT3_SET_SAMPLER, 3, 0));
+		radeon_emit(cs, (resource_id_base + i) * 3);
+		radeon_emit_array(cs, rstate->tex_sampler_words, 3);
 
 		if (rstate->border_color_use) {
 			unsigned offset;
@@ -2272,7 +1848,7 @@ static void r600_emit_sampler_states(struct r600_context *rctx,
 			offset = border_color_reg;
 			offset += i * 16;
 			r600_write_config_reg_seq(cs, offset, 4);
-			r600_write_array(cs, 4, rstate->border_color.ui);
+			radeon_emit_array(cs, rstate->border_color.ui, 4);
 		}
 	}
 	texinfo->states.dirty_mask = 0;
@@ -2295,7 +1871,7 @@ static void r600_emit_ps_sampler_states(struct r600_context *rctx, struct r600_a
 
 static void r600_emit_seamless_cube_map(struct r600_context *rctx, struct r600_atom *atom)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	unsigned tmp;
 
 	tmp = S_009508_DISABLE_CUBE_ANISO(1) |
@@ -2313,49 +1889,144 @@ static void r600_emit_sample_mask(struct r600_context *rctx, struct r600_atom *a
 	struct r600_sample_mask *s = (struct r600_sample_mask*)a;
 	uint8_t mask = s->sample_mask;
 
-	r600_write_context_reg(rctx->rings.gfx.cs, R_028C48_PA_SC_AA_MASK,
+	r600_write_context_reg(rctx->b.rings.gfx.cs, R_028C48_PA_SC_AA_MASK,
 			       mask | (mask << 8) | (mask << 16) | (mask << 24));
 }
 
 static void r600_emit_vertex_fetch_shader(struct r600_context *rctx, struct r600_atom *a)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.gfx.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
 	struct r600_cso_state *state = (struct r600_cso_state*)a;
 	struct r600_fetch_shader *shader = (struct r600_fetch_shader*)state->cso;
 
 	r600_write_context_reg(cs, R_028894_SQ_PGM_START_FS, shader->offset >> 8);
-	r600_write_value(cs, PKT3(PKT3_NOP, 0, 0));
-	r600_write_value(cs, r600_context_bo_reloc(rctx, &rctx->rings.gfx, shader->buffer, RADEON_USAGE_READ));
+	radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+	radeon_emit(cs, r600_context_bo_reloc(&rctx->b, &rctx->b.rings.gfx, shader->buffer,
+					      RADEON_USAGE_READ, RADEON_PRIO_SHADER_DATA));
+}
+
+static void r600_emit_shader_stages(struct r600_context *rctx, struct r600_atom *a)
+{
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
+	struct r600_shader_stages_state *state = (struct r600_shader_stages_state*)a;
+
+	uint32_t v2 = 0, primid = 0;
+
+	if (state->geom_enable) {
+		uint32_t cut_val;
+
+		if (rctx->gs_shader->current->shader.gs_max_out_vertices <= 128)
+			cut_val = V_028A40_GS_CUT_128;
+		else if (rctx->gs_shader->current->shader.gs_max_out_vertices <= 256)
+			cut_val = V_028A40_GS_CUT_256;
+		else if (rctx->gs_shader->current->shader.gs_max_out_vertices <= 512)
+			cut_val = V_028A40_GS_CUT_512;
+		else
+			cut_val = V_028A40_GS_CUT_1024;
+
+		v2 = S_028A40_MODE(V_028A40_GS_SCENARIO_G) |
+			S_028A40_CUT_MODE(cut_val);
+
+		if (rctx->gs_shader->current->shader.gs_prim_id_input)
+			primid = 1;
+	}
+
+	r600_write_context_reg(cs, R_028A40_VGT_GS_MODE, v2);
+	r600_write_context_reg(cs, R_028A84_VGT_PRIMITIVEID_EN, primid);
+}
+
+static void r600_emit_gs_rings(struct r600_context *rctx, struct r600_atom *a)
+{
+	struct pipe_screen *screen = rctx->b.b.screen;
+	struct radeon_winsys_cs *cs = rctx->b.rings.gfx.cs;
+	struct r600_gs_rings_state *state = (struct r600_gs_rings_state*)a;
+	struct r600_resource *rbuffer;
+
+	r600_write_config_reg(cs, R_008040_WAIT_UNTIL, S_008040_WAIT_3D_IDLE(1));
+	radeon_emit(cs, PKT3(PKT3_EVENT_WRITE, 0, 0));
+	radeon_emit(cs, EVENT_TYPE(EVENT_TYPE_VGT_FLUSH));
+
+	if (state->enable) {
+		rbuffer =(struct r600_resource*)state->esgs_ring.buffer;
+		r600_write_config_reg(cs, R_008C40_SQ_ESGS_RING_BASE,
+				(r600_resource_va(screen, &rbuffer->b.b)) >> 8);
+		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+		radeon_emit(cs, r600_context_bo_reloc(&rctx->b, &rctx->b.rings.gfx, rbuffer,
+						      RADEON_USAGE_READWRITE,
+						      RADEON_PRIO_SHADER_RESOURCE_RW));
+		r600_write_config_reg(cs, R_008C44_SQ_ESGS_RING_SIZE,
+				state->esgs_ring.buffer_size >> 8);
+
+		rbuffer =(struct r600_resource*)state->gsvs_ring.buffer;
+		r600_write_config_reg(cs, R_008C48_SQ_GSVS_RING_BASE,
+				(r600_resource_va(screen, &rbuffer->b.b)) >> 8);
+		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
+		radeon_emit(cs, r600_context_bo_reloc(&rctx->b, &rctx->b.rings.gfx, rbuffer,
+						      RADEON_USAGE_READWRITE,
+						      RADEON_PRIO_SHADER_RESOURCE_RW));
+		r600_write_config_reg(cs, R_008C4C_SQ_GSVS_RING_SIZE,
+				state->gsvs_ring.buffer_size >> 8);
+	} else {
+		r600_write_config_reg(cs, R_008C44_SQ_ESGS_RING_SIZE, 0);
+		r600_write_config_reg(cs, R_008C4C_SQ_GSVS_RING_SIZE, 0);
+	}
+
+	r600_write_config_reg(cs, R_008040_WAIT_UNTIL, S_008040_WAIT_3D_IDLE(1));
+	radeon_emit(cs, PKT3(PKT3_EVENT_WRITE, 0, 0));
+	radeon_emit(cs, EVENT_TYPE(EVENT_TYPE_VGT_FLUSH));
 }
 
 /* Adjust GPR allocation on R6xx/R7xx */
 bool r600_adjust_gprs(struct r600_context *rctx)
 {
 	unsigned num_ps_gprs = rctx->ps_shader->current->shader.bc.ngpr;
-	unsigned num_vs_gprs = rctx->vs_shader->current->shader.bc.ngpr;
+	unsigned num_vs_gprs, num_es_gprs, num_gs_gprs;
 	unsigned new_num_ps_gprs = num_ps_gprs;
-	unsigned new_num_vs_gprs = num_vs_gprs;
+	unsigned new_num_vs_gprs, new_num_es_gprs, new_num_gs_gprs;
 	unsigned cur_num_ps_gprs = G_008C04_NUM_PS_GPRS(rctx->config_state.sq_gpr_resource_mgmt_1);
 	unsigned cur_num_vs_gprs = G_008C04_NUM_VS_GPRS(rctx->config_state.sq_gpr_resource_mgmt_1);
+	unsigned cur_num_gs_gprs = G_008C08_NUM_GS_GPRS(rctx->config_state.sq_gpr_resource_mgmt_2);
+	unsigned cur_num_es_gprs = G_008C08_NUM_ES_GPRS(rctx->config_state.sq_gpr_resource_mgmt_2);
 	unsigned def_num_ps_gprs = rctx->default_ps_gprs;
 	unsigned def_num_vs_gprs = rctx->default_vs_gprs;
+	unsigned def_num_gs_gprs = 0;
+	unsigned def_num_es_gprs = 0;
 	unsigned def_num_clause_temp_gprs = rctx->r6xx_num_clause_temp_gprs;
 	/* hardware will reserve twice num_clause_temp_gprs */
-	unsigned max_gprs = def_num_ps_gprs + def_num_vs_gprs + def_num_clause_temp_gprs * 2;
-	unsigned tmp;
+	unsigned max_gprs = def_num_gs_gprs + def_num_es_gprs + def_num_ps_gprs + def_num_vs_gprs + def_num_clause_temp_gprs * 2;
+	unsigned tmp, tmp2;
+
+	if (rctx->gs_shader) {
+		num_es_gprs = rctx->vs_shader->current->shader.bc.ngpr;
+		num_gs_gprs = rctx->gs_shader->current->shader.bc.ngpr;
+		num_vs_gprs = rctx->gs_shader->current->gs_copy_shader->shader.bc.ngpr;
+	} else {
+		num_es_gprs = 0;
+		num_gs_gprs = 0;
+		num_vs_gprs = rctx->vs_shader->current->shader.bc.ngpr;
+	}
+	new_num_vs_gprs = num_vs_gprs;
+	new_num_es_gprs = num_es_gprs;
+	new_num_gs_gprs = num_gs_gprs;
 
 	/* the sum of all SQ_GPR_RESOURCE_MGMT*.NUM_*_GPRS must <= to max_gprs */
-	if (new_num_ps_gprs > cur_num_ps_gprs || new_num_vs_gprs > cur_num_vs_gprs) {
+	if (new_num_ps_gprs > cur_num_ps_gprs || new_num_vs_gprs > cur_num_vs_gprs ||
+	    new_num_es_gprs > cur_num_es_gprs || new_num_gs_gprs > cur_num_gs_gprs) {
 		/* try to use switch back to default */
-		if (new_num_ps_gprs > def_num_ps_gprs || new_num_vs_gprs > def_num_vs_gprs) {
+		if (new_num_ps_gprs > def_num_ps_gprs || new_num_vs_gprs > def_num_vs_gprs ||
+		    new_num_gs_gprs > def_num_gs_gprs || new_num_es_gprs > def_num_es_gprs) {
 			/* always privilege vs stage so that at worst we have the
 			 * pixel stage producing wrong output (not the vertex
 			 * stage) */
-			new_num_ps_gprs = max_gprs - (new_num_vs_gprs + def_num_clause_temp_gprs * 2);
+			new_num_ps_gprs = max_gprs - ((new_num_vs_gprs - new_num_es_gprs - new_num_gs_gprs) + def_num_clause_temp_gprs * 2);
 			new_num_vs_gprs = num_vs_gprs;
+			new_num_gs_gprs = num_gs_gprs;
+			new_num_es_gprs = num_es_gprs;
 		} else {
 			new_num_ps_gprs = def_num_ps_gprs;
 			new_num_vs_gprs = def_num_vs_gprs;
+			new_num_es_gprs = def_num_es_gprs;
+			new_num_gs_gprs = def_num_gs_gprs;
 		}
 	} else {
 		return true;
@@ -2367,10 +2038,11 @@ bool r600_adjust_gprs(struct r600_context *rctx)
 	 * it will lockup. So in this case just discard the draw command
 	 * and don't change the current gprs repartitions.
 	 */
-	if (num_ps_gprs > new_num_ps_gprs || num_vs_gprs > new_num_vs_gprs) {
-		R600_ERR("ps & vs shader require too many register (%d + %d) "
+	if (num_ps_gprs > new_num_ps_gprs || num_vs_gprs > new_num_vs_gprs ||
+	    num_gs_gprs > new_num_gs_gprs || num_es_gprs > new_num_es_gprs) {
+		R600_ERR("shaders require too many register (%d + %d + %d + %d) "
 			 "for a combined maximum of %d\n",
-			 num_ps_gprs, num_vs_gprs, max_gprs);
+			 num_ps_gprs, num_vs_gprs, num_es_gprs, num_gs_gprs, max_gprs);
 		return false;
 	}
 
@@ -2378,10 +2050,14 @@ bool r600_adjust_gprs(struct r600_context *rctx)
 	tmp = S_008C04_NUM_PS_GPRS(new_num_ps_gprs) |
 		S_008C04_NUM_VS_GPRS(new_num_vs_gprs) |
 		S_008C04_NUM_CLAUSE_TEMP_GPRS(def_num_clause_temp_gprs);
-	if (rctx->config_state.sq_gpr_resource_mgmt_1 != tmp) {
+
+	tmp2 = S_008C08_NUM_ES_GPRS(new_num_es_gprs) |
+		S_008C08_NUM_GS_GPRS(new_num_gs_gprs);
+	if (rctx->config_state.sq_gpr_resource_mgmt_1 != tmp || rctx->config_state.sq_gpr_resource_mgmt_2 != tmp2) {
 		rctx->config_state.sq_gpr_resource_mgmt_1 = tmp;
+		rctx->config_state.sq_gpr_resource_mgmt_2 = tmp2;
 		rctx->config_state.atom.dirty = true;
-		rctx->flags |= R600_CONTEXT_WAIT_3D_IDLE;
+		rctx->b.flags |= R600_CONTEXT_WAIT_3D_IDLE;
 	}
 	return true;
 }
@@ -2412,7 +2088,7 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 	r600_init_command_buffer(cb, 256);
 
 	/* R6xx requires this packet at the start of each command buffer */
-	if (rctx->chip_class == R600) {
+	if (rctx->b.chip_class == R600) {
 		r600_store_value(cb, PKT3(PKT3_START_3D_CMDBUF, 0, 0));
 		r600_store_value(cb, 0);
 	}
@@ -2425,7 +2101,7 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 	r600_store_value(cb, PKT3(PKT3_EVENT_WRITE, 0, 0));
 	r600_store_value(cb, EVENT_TYPE(EVENT_TYPE_PS_PARTIAL_FLUSH) | EVENT_INDEX(4));
 
-	family = rctx->family;
+	family = rctx->b.family;
 	ps_prio = 0;
 	vs_prio = 1;
 	gs_prio = 2;
@@ -2497,19 +2173,19 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 		num_es_stack_entries = 16;
 		break;
 	case CHIP_RV770:
-		num_ps_gprs = 192;
+		num_ps_gprs = 130;
 		num_vs_gprs = 56;
 		num_temp_gprs = 4;
-		num_gs_gprs = 0;
-		num_es_gprs = 0;
-		num_ps_threads = 188;
+		num_gs_gprs = 31;
+		num_es_gprs = 31;
+		num_ps_threads = 180;
 		num_vs_threads = 60;
-		num_gs_threads = 0;
-		num_es_threads = 0;
-		num_ps_stack_entries = 256;
-		num_vs_stack_entries = 256;
-		num_gs_stack_entries = 0;
-		num_es_stack_entries = 0;
+		num_gs_threads = 4;
+		num_es_threads = 4;
+		num_ps_stack_entries = 128;
+		num_vs_stack_entries = 128;
+		num_gs_stack_entries = 128;
+		num_es_stack_entries = 128;
 		break;
 	case CHIP_RV730:
 	case CHIP_RV740:
@@ -2518,10 +2194,10 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 		num_temp_gprs = 4;
 		num_gs_gprs = 0;
 		num_es_gprs = 0;
-		num_ps_threads = 188;
+		num_ps_threads = 180;
 		num_vs_threads = 60;
-		num_gs_threads = 0;
-		num_es_threads = 0;
+		num_gs_threads = 4;
+		num_es_threads = 4;
 		num_ps_stack_entries = 128;
 		num_vs_stack_entries = 128;
 		num_gs_stack_entries = 0;
@@ -2533,10 +2209,10 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 		num_temp_gprs = 4;
 		num_gs_gprs = 0;
 		num_es_gprs = 0;
-		num_ps_threads = 144;
+		num_ps_threads = 136;
 		num_vs_threads = 48;
-		num_gs_threads = 0;
-		num_es_threads = 0;
+		num_gs_threads = 4;
+		num_es_threads = 4;
 		num_ps_stack_entries = 128;
 		num_vs_stack_entries = 128;
 		num_gs_stack_entries = 0;
@@ -2594,7 +2270,7 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 
 	r600_store_config_reg(cb, R_009714_VC_ENHANCE, 0);
 
-	if (rctx->chip_class >= R700) {
+	if (rctx->b.chip_class >= R700) {
 		r600_store_config_reg(cb, R_008D8C_SQ_DYN_GPR_CNTL_PS_FLUSH_REQ, 0x00004000);
 		r600_store_config_reg(cb, R_009830_DB_DEBUG, 0);
 		r600_store_config_reg(cb, R_009838_DB_WATERMARKS, 0x00420204);
@@ -2655,8 +2331,7 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 	r600_store_context_reg(cb, R_028AA0_VGT_INSTANCE_STEP_RATE_0, 0);
 	r600_store_context_reg(cb, R_028AA4_VGT_INSTANCE_STEP_RATE_1, 0);
 
-	r600_store_context_reg_seq(cb, R_028AB0_VGT_STRMOUT_EN, 3);
-	r600_store_value(cb, 0); /* R_028AB0_VGT_STRMOUT_EN */
+	r600_store_context_reg_seq(cb, R_028AB4_VGT_REUSE_OFF, 2);
 	r600_store_value(cb, 1); /* R_028AB4_VGT_REUSE_OFF */
 	r600_store_value(cb, 0); /* R_028AB8_VGT_VTX_CNT_EN */
 
@@ -2685,16 +2360,18 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 	r600_store_value(cb, 0x3F800000); /* R_028C14_PA_CL_GB_HORZ_CLIP_ADJ */
 	r600_store_value(cb, 0x3F800000); /* R_028C18_PA_CL_GB_HORZ_DISC_ADJ */
 
-	r600_store_context_reg_seq(cb, R_0282D0_PA_SC_VPORT_ZMIN_0, 2);
-	r600_store_value(cb, 0); /* R_0282D0_PA_SC_VPORT_ZMIN_0 */
-	r600_store_value(cb, 0x3F800000); /* R_0282D4_PA_SC_VPORT_ZMAX_0 */
+	r600_store_context_reg_seq(cb, R_0282D0_PA_SC_VPORT_ZMIN_0, 2 * 16);
+	for (tmp = 0; tmp < 16; tmp++) {
+		r600_store_value(cb, 0); /* R_0282D0_PA_SC_VPORT_ZMIN_0 */
+		r600_store_value(cb, 0x3F800000); /* R_0282D4_PA_SC_VPORT_ZMAX_0 */
+	}
 
 	r600_store_context_reg(cb, R_028818_PA_CL_VTE_CNTL, 0x43F);
 
 	r600_store_context_reg(cb, R_028200_PA_SC_WINDOW_OFFSET, 0);
 	r600_store_context_reg(cb, R_02820C_PA_SC_CLIPRECT_RULE, 0xFFFF);
 
-	if (rctx->chip_class >= R700) {
+	if (rctx->b.chip_class >= R700) {
 		r600_store_context_reg(cb, R_028230_PA_SC_EDGERULE, 0xAAAAAAAA);
 	}
 
@@ -2712,9 +2389,12 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 	r600_store_value(cb, 0); /* R_028240_PA_SC_GENERIC_SCISSOR_TL */
 	r600_store_value(cb, S_028244_BR_X(8192) | S_028244_BR_Y(8192)); /* R_028244_PA_SC_GENERIC_SCISSOR_BR */
 
-	r600_store_context_reg_seq(cb, R_0288CC_SQ_PGM_CF_OFFSET_PS, 2);
+	r600_store_context_reg_seq(cb, R_0288CC_SQ_PGM_CF_OFFSET_PS, 5);
 	r600_store_value(cb, 0); /* R_0288CC_SQ_PGM_CF_OFFSET_PS */
 	r600_store_value(cb, 0); /* R_0288D0_SQ_PGM_CF_OFFSET_VS */
+	r600_store_value(cb, 0); /* R_0288D4_SQ_PGM_CF_OFFSET_GS */
+	r600_store_value(cb, 0); /* R_0288D8_SQ_PGM_CF_OFFSET_ES */
+	r600_store_value(cb, 0); /* R_0288DC_SQ_PGM_CF_OFFSET_FS */
 
         r600_store_context_reg(cb, R_0288E0_SQ_VTX_SEMANTIC_CLEAR, ~0);
 
@@ -2723,17 +2403,20 @@ void r600_init_atom_start_cs(struct r600_context *rctx)
 	r600_store_value(cb, 0); /* R_028404_VGT_MIN_VTX_INDX */
 
 	r600_store_context_reg(cb, R_0288A4_SQ_PGM_RESOURCES_FS, 0);
-	r600_store_context_reg(cb, R_0288DC_SQ_PGM_CF_OFFSET_FS, 0);
 
-	if (rctx->chip_class == R700 && rctx->screen->has_streamout)
+	if (rctx->b.chip_class == R700)
+		r600_store_context_reg(cb, R_028350_SX_MISC, 0);
+	if (rctx->b.chip_class == R700 && rctx->screen->b.has_streamout)
 		r600_store_context_reg(cb, R_028354_SX_SURFACE_SYNC, S_028354_SURFACE_SYNC_MASK(0xf));
+
 	r600_store_context_reg(cb, R_028800_DB_DEPTH_CONTROL, 0);
-	if (rctx->screen->has_streamout) {
+	if (rctx->screen->b.has_streamout) {
 		r600_store_context_reg(cb, R_028B28_VGT_STRMOUT_DRAW_OPAQUE_OFFSET, 0);
 	}
 
 	r600_store_loop_const(cb, R_03E200_SQ_LOOP_CONST_0, 0x1000FFF);
 	r600_store_loop_const(cb, R_03E200_SQ_LOOP_CONST_0 + (32 * 4), 0x1000FFF);
+	r600_store_loop_const(cb, R_03E200_SQ_LOOP_CONST_0 + (64 * 4), 0x1000FFF);
 }
 
 void r600_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader *shader)
@@ -2834,7 +2517,7 @@ void r600_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader *sha
 	}
 
 	/* HW bug in original R600 */
-	if (rctx->family == CHIP_R600)
+	if (rctx->b.family == CHIP_R600)
 		ufi = 1;
 
 	r600_store_context_reg_seq(cb, R_0286CC_SPI_PS_IN_CONTROL_0, 2);
@@ -2903,8 +2586,75 @@ void r600_update_vs_state(struct pipe_context *ctx, struct r600_pipe_shader *sha
 		S_02881C_VS_OUT_CCDIST0_VEC_ENA((rshader->clip_dist_write & 0x0F) != 0) |
 		S_02881C_VS_OUT_CCDIST1_VEC_ENA((rshader->clip_dist_write & 0xF0) != 0) |
 		S_02881C_VS_OUT_MISC_VEC_ENA(rshader->vs_out_misc_write) |
-		S_02881C_USE_VTX_POINT_SIZE(rshader->vs_out_point_size);
+		S_02881C_USE_VTX_POINT_SIZE(rshader->vs_out_point_size) |
+		S_02881C_USE_VTX_EDGE_FLAG(rshader->vs_out_edgeflag) |
+		S_02881C_USE_VTX_RENDER_TARGET_INDX(rshader->vs_out_layer) |
+		S_02881C_USE_VTX_VIEWPORT_INDX(rshader->vs_out_viewport);
 }
+
+void r600_update_gs_state(struct pipe_context *ctx, struct r600_pipe_shader *shader)
+{
+	struct r600_context *rctx = (struct r600_context *)ctx;
+	struct r600_command_buffer *cb = &shader->command_buffer;
+	struct r600_shader *rshader = &shader->shader;
+	struct r600_shader *cp_shader = &shader->gs_copy_shader->shader;
+	unsigned gsvs_itemsize =
+			(cp_shader->ring_item_size * rshader->gs_max_out_vertices) >> 2;
+
+	r600_init_command_buffer(cb, 64);
+
+	/* VGT_GS_MODE is written by r600_emit_shader_stages */
+	r600_store_context_reg(cb, R_028AB8_VGT_VTX_CNT_EN, 1);
+
+	if (rctx->b.chip_class >= R700) {
+		r600_store_context_reg(cb, R_028B38_VGT_GS_MAX_VERT_OUT,
+				       S_028B38_MAX_VERT_OUT(rshader->gs_max_out_vertices));
+	}
+	r600_store_context_reg(cb, R_028A6C_VGT_GS_OUT_PRIM_TYPE,
+			       r600_conv_prim_to_gs_out(rshader->gs_output_prim));
+
+	r600_store_context_reg_seq(cb, R_0288C8_SQ_GS_VERT_ITEMSIZE, 4);
+	r600_store_value(cb, cp_shader->ring_item_size >> 2);
+	r600_store_value(cb, 0);
+	r600_store_value(cb, 0);
+	r600_store_value(cb, 0);
+
+	r600_store_context_reg(cb, R_0288A8_SQ_ESGS_RING_ITEMSIZE,
+			       (rshader->ring_item_size) >> 2);
+
+	r600_store_context_reg(cb, R_0288AC_SQ_GSVS_RING_ITEMSIZE,
+			       gsvs_itemsize);
+
+	/* FIXME calculate these values somehow ??? */
+	r600_store_config_reg_seq(cb, R_0088C8_VGT_GS_PER_ES, 2);
+	r600_store_value(cb, 0x80); /* GS_PER_ES */
+	r600_store_value(cb, 0x100); /* ES_PER_GS */
+	r600_store_config_reg_seq(cb, R_0088E8_VGT_GS_PER_VS, 1);
+	r600_store_value(cb, 0x2); /* GS_PER_VS */
+
+	r600_store_context_reg(cb, R_02887C_SQ_PGM_RESOURCES_GS,
+			       S_02887C_NUM_GPRS(rshader->bc.ngpr) |
+			       S_02887C_STACK_SIZE(rshader->bc.nstack));
+	r600_store_context_reg(cb, R_02886C_SQ_PGM_START_GS,
+			       r600_resource_va(ctx->screen, (void *)shader->bo) >> 8);
+	/* After that, the NOP relocation packet must be emitted (shader->bo, RADEON_USAGE_READ). */
+}
+
+void r600_update_es_state(struct pipe_context *ctx, struct r600_pipe_shader *shader)
+{
+	struct r600_command_buffer *cb = &shader->command_buffer;
+	struct r600_shader *rshader = &shader->shader;
+
+	r600_init_command_buffer(cb, 32);
+
+	r600_store_context_reg(cb, R_028890_SQ_PGM_RESOURCES_ES,
+			       S_028890_NUM_GPRS(rshader->bc.ngpr) |
+			       S_028890_STACK_SIZE(rshader->bc.nstack));
+	r600_store_context_reg(cb, R_028880_SQ_PGM_START_ES,
+			       r600_resource_va(ctx->screen, (void *)shader->bo) >> 8);
+	/* After that, the NOP relocation packet must be emitted (shader->bo, RADEON_USAGE_READ). */
+}
+
 
 void *r600_create_resolve_blend(struct r600_context *rctx)
 {
@@ -2923,7 +2673,7 @@ void *r600_create_resolve_blend(struct r600_context *rctx)
 		blend.rt[i].alpha_src_factor = PIPE_BLENDFACTOR_ZERO;
 		blend.rt[i].alpha_dst_factor = PIPE_BLENDFACTOR_ZERO;
 	}
-	return r600_create_blend_state_mode(&rctx->context, &blend, V_028808_SPECIAL_RESOLVE_BOX);
+	return r600_create_blend_state_mode(&rctx->b.b, &blend, V_028808_SPECIAL_RESOLVE_BOX);
 }
 
 void *r700_create_resolve_blend(struct r600_context *rctx)
@@ -2933,7 +2683,7 @@ void *r700_create_resolve_blend(struct r600_context *rctx)
 	memset(&blend, 0, sizeof(blend));
 	blend.independent_blend_enable = true;
 	blend.rt[0].colormask = 0xf;
-	return r600_create_blend_state_mode(&rctx->context, &blend, V_028808_SPECIAL_RESOLVE_BOX);
+	return r600_create_blend_state_mode(&rctx->b.b, &blend, V_028808_SPECIAL_RESOLVE_BOX);
 }
 
 void *r600_create_decompress_blend(struct r600_context *rctx)
@@ -2943,7 +2693,7 @@ void *r600_create_decompress_blend(struct r600_context *rctx)
 	memset(&blend, 0, sizeof(blend));
 	blend.independent_blend_enable = true;
 	blend.rt[0].colormask = 0xf;
-	return r600_create_blend_state_mode(&rctx->context, &blend, V_028808_SPECIAL_EXPAND_SAMPLES);
+	return r600_create_blend_state_mode(&rctx->b.b, &blend, V_028808_SPECIAL_EXPAND_SAMPLES);
 }
 
 void *r600_create_db_flush_dsa(struct r600_context *rctx)
@@ -2951,8 +2701,8 @@ void *r600_create_db_flush_dsa(struct r600_context *rctx)
 	struct pipe_depth_stencil_alpha_state dsa;
 	boolean quirk = false;
 
-	if (rctx->family == CHIP_RV610 || rctx->family == CHIP_RV630 ||
-		rctx->family == CHIP_RV620 || rctx->family == CHIP_RV635)
+	if (rctx->b.family == CHIP_RV610 || rctx->b.family == CHIP_RV630 ||
+		rctx->b.family == CHIP_RV620 || rctx->b.family == CHIP_RV635)
 		quirk = true;
 
 	memset(&dsa, 0, sizeof(dsa));
@@ -2967,16 +2717,23 @@ void *r600_create_db_flush_dsa(struct r600_context *rctx)
 		dsa.stencil[0].writemask = 0xff;
 	}
 
-	return rctx->context.create_depth_stencil_alpha_state(&rctx->context, &dsa);
+	return rctx->b.b.create_depth_stencil_alpha_state(&rctx->b.b, &dsa);
 }
 
 void r600_update_db_shader_control(struct r600_context * rctx)
 {
-	bool dual_export = rctx->framebuffer.export_16bpc &&
-			   !rctx->ps_shader->current->ps_depth_export;
+	bool dual_export;
+	unsigned db_shader_control;
 
-	unsigned db_shader_control = rctx->ps_shader->current->db_shader_control |
-				     S_02880C_DUAL_EXPORT_ENABLE(dual_export);
+	if (!rctx->ps_shader) {
+		return;
+	}
+
+	dual_export = rctx->framebuffer.export_16bpc &&
+		      !rctx->ps_shader->current->ps_depth_export;
+
+	db_shader_control = rctx->ps_shader->current->db_shader_control |
+			    S_02880C_DUAL_EXPORT_ENABLE(dual_export);
 
 	/* When alpha test is enabled we can't trust the hw to make the proper
 	 * decision on the order in which ztest should be run related to fragment
@@ -3025,15 +2782,12 @@ static boolean r600_dma_copy_tile(struct r600_context *rctx,
 				unsigned pitch,
 				unsigned bpp)
 {
-	struct radeon_winsys_cs *cs = rctx->rings.dma.cs;
+	struct radeon_winsys_cs *cs = rctx->b.rings.dma.cs;
 	struct r600_texture *rsrc = (struct r600_texture*)src;
 	struct r600_texture *rdst = (struct r600_texture*)dst;
 	unsigned array_mode, lbpp, pitch_tile_max, slice_tile_max, size;
 	unsigned ncopy, height, cheight, detile, i, x, y, z, src_mode, dst_mode;
 	uint64_t base, addr;
-
-	/* make sure that the dma ring is only one active */
-	rctx->rings.gfx.flush(rctx, RADEON_FLUSH_ASYNC);
 
 	dst_mode = rdst->surface.level[dst_level].mode;
 	src_mode = rsrc->surface.level[src_level].mode;
@@ -3044,12 +2798,12 @@ static boolean r600_dma_copy_tile(struct r600_context *rctx,
 
 	y = 0;
 	lbpp = util_logbase2(bpp);
-	pitch_tile_max = ((pitch / bpp) >> 3) - 1;
+	pitch_tile_max = ((pitch / bpp) / 8) - 1;
 
 	if (dst_mode == RADEON_SURF_MODE_LINEAR) {
 		/* T2L */
 		array_mode = r600_array_mode(src_mode);
-		slice_tile_max = (rsrc->surface.level[src_level].nblk_x * rsrc->surface.level[src_level].nblk_y) >> 6;
+		slice_tile_max = (rsrc->surface.level[src_level].nblk_x * rsrc->surface.level[src_level].nblk_y) / (8*8);
 		slice_tile_max = slice_tile_max ? slice_tile_max - 1 : 0;
 		/* linear height must be the same as the slice tile max height, it's ok even
 		 * if the linear destination/source have smaller heigh as the size of the
@@ -3068,7 +2822,7 @@ static boolean r600_dma_copy_tile(struct r600_context *rctx,
 	} else {
 		/* L2T */
 		array_mode = r600_array_mode(dst_mode);
-		slice_tile_max = (rdst->surface.level[dst_level].nblk_x * rdst->surface.level[dst_level].nblk_y) >> 6;
+		slice_tile_max = (rdst->surface.level[dst_level].nblk_x * rdst->surface.level[dst_level].nblk_y) / (8*8);
 		slice_tile_max = slice_tile_max ? slice_tile_max - 1 : 0;
 		/* linear height must be the same as the slice tile max height, it's ok even
 		 * if the linear destination/source have smaller heigh as the size of the
@@ -3086,23 +2840,25 @@ static boolean r600_dma_copy_tile(struct r600_context *rctx,
 		addr += src_y * pitch + src_x * bpp;
 	}
 	/* check that we are in dw/base alignment constraint */
-	if ((addr & 0x3) || (base & 0xff)) {
+	if (addr % 4 || base % 256) {
 		return FALSE;
 	}
 
 	/* It's a r6xx/r7xx limitation, the blit must be on 8 boundary for number
 	 * line in the blit. Compute max 8 line we can copy in the size limit
 	 */
-	cheight = ((0x0000ffff << 2) / pitch) & 0xfffffff8;
+	cheight = ((R600_DMA_COPY_MAX_SIZE_DW * 4) / pitch) & 0xfffffff8;
 	ncopy = (copy_height / cheight) + !!(copy_height % cheight);
-	r600_need_dma_space(rctx, ncopy * 7);
+	r600_need_dma_space(&rctx->b, ncopy * 7);
 
 	for (i = 0; i < ncopy; i++) {
 		cheight = cheight > copy_height ? copy_height : cheight;
-		size = (cheight * pitch) >> 2;
+		size = (cheight * pitch) / 4;
 		/* emit reloc before writting cs so that cs is always in consistent state */
-		r600_context_bo_reloc(rctx, &rctx->rings.dma, &rsrc->resource, RADEON_USAGE_READ);
-		r600_context_bo_reloc(rctx, &rctx->rings.dma, &rdst->resource, RADEON_USAGE_WRITE);
+		r600_context_bo_reloc(&rctx->b, &rctx->b.rings.dma, &rsrc->resource, RADEON_USAGE_READ,
+				      RADEON_PRIO_MIN);
+		r600_context_bo_reloc(&rctx->b, &rctx->b.rings.dma, &rdst->resource, RADEON_USAGE_WRITE,
+				      RADEON_PRIO_MIN);
 		cs->buf[cs->cdw++] = DMA_PACKET(DMA_PACKET_COPY, 1, 0, size);
 		cs->buf[cs->cdw++] = base >> 8;
 		cs->buf[cs->cdw++] = (detile << 31) | (array_mode << 27) |
@@ -3119,13 +2875,13 @@ static boolean r600_dma_copy_tile(struct r600_context *rctx,
 	return TRUE;
 }
 
-boolean r600_dma_blit(struct pipe_context *ctx,
-			struct pipe_resource *dst,
-			unsigned dst_level,
-			unsigned dst_x, unsigned dst_y, unsigned dst_z,
-			struct pipe_resource *src,
-			unsigned src_level,
-			const struct pipe_box *src_box)
+static void r600_dma_copy(struct pipe_context *ctx,
+			  struct pipe_resource *dst,
+			  unsigned dst_level,
+			  unsigned dstx, unsigned dsty, unsigned dstz,
+			  struct pipe_resource *src,
+			  unsigned src_level,
+			  const struct pipe_box *src_box)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
 	struct r600_texture *rsrc = (struct r600_texture*)src;
@@ -3133,12 +2889,22 @@ boolean r600_dma_blit(struct pipe_context *ctx,
 	unsigned dst_pitch, src_pitch, bpp, dst_mode, src_mode, copy_height;
 	unsigned src_w, dst_w;
 	unsigned src_x, src_y;
+	unsigned dst_x = dstx, dst_y = dsty, dst_z = dstz;
 
-	if (rctx->rings.dma.cs == NULL) {
-		return FALSE;
+	if (rctx->b.rings.dma.cs == NULL) {
+		goto fallback;
 	}
-	if (src->format != dst->format) {
-		return FALSE;
+
+	if (dst->target == PIPE_BUFFER && src->target == PIPE_BUFFER) {
+		if (dst_x % 4 || src_box->x % 4 || src_box->width % 4)
+			goto fallback;
+
+		r600_dma_copy_buffer(rctx, dst, src, dst_x, src_box->x, src_box->width);
+		return;
+	}
+
+	if (src->format != dst->format || src_box->depth > 1) {
+		goto fallback;
 	}
 
 	src_x = util_format_get_nblocksx(src->format, src_box->x);
@@ -3160,12 +2926,12 @@ boolean r600_dma_blit(struct pipe_context *ctx,
 	dst_mode = dst_mode == RADEON_SURF_MODE_LINEAR_ALIGNED ? RADEON_SURF_MODE_LINEAR : dst_mode;
 
 	if (src_pitch != dst_pitch || src_box->x || dst_x || src_w != dst_w) {
-		/* strick requirement on r6xx/r7xx */
-		return FALSE;
+		/* strict requirement on r6xx/r7xx */
+		goto fallback;
 	}
 	/* lot of constraint on alignment this should capture them all */
-	if ((src_pitch & 0x7) || (src_box->y & 0x7) || (dst_y & 0x7)) {
-		return FALSE;
+	if (src_pitch % 8 || src_box->y % 8 || dst_y % 8) {
+		goto fallback;
 	}
 
 	if (src_mode == dst_mode) {
@@ -3184,21 +2950,28 @@ boolean r600_dma_blit(struct pipe_context *ctx,
 		dst_offset += dst_y * dst_pitch + dst_x * bpp;
 		size = src_box->height * src_pitch;
 		/* must be dw aligned */
-		if ((dst_offset & 0x3) || (src_offset & 0x3) || (size & 0x3)) {
-			return FALSE;
+		if (dst_offset % 4 || src_offset % 4 || size % 4) {
+			goto fallback;
 		}
-		r600_dma_copy(rctx, dst, src, dst_offset, src_offset, size);
+		r600_dma_copy_buffer(rctx, dst, src, dst_offset, src_offset, size);
 	} else {
-		return r600_dma_copy_tile(rctx, dst, dst_level, dst_x, dst_y, dst_z,
+		if (!r600_dma_copy_tile(rctx, dst, dst_level, dst_x, dst_y, dst_z,
 					src, src_level, src_x, src_y, src_box->z,
-					copy_height, dst_pitch, bpp);
+					copy_height, dst_pitch, bpp)) {
+			goto fallback;
+		}
 	}
-	return TRUE;
+	return;
+
+fallback:
+	ctx->resource_copy_region(ctx, dst, dst_level, dstx, dsty, dstz,
+				  src, src_level, src_box);
 }
 
 void r600_init_state_functions(struct r600_context *rctx)
 {
 	unsigned id = 4;
+	int i;
 
 	/* !!!
 	 *  To avoid GPU lockup registers must be emited in a specific order
@@ -3246,24 +3019,33 @@ void r600_init_state_functions(struct r600_context *rctx)
 	r600_init_atom(rctx, &rctx->dsa_state.atom, id++, r600_emit_cso_state, 0);
 	r600_init_atom(rctx, &rctx->poly_offset_state.atom, id++, r600_emit_polygon_offset, 6);
 	r600_init_atom(rctx, &rctx->rasterizer_state.atom, id++, r600_emit_cso_state, 0);
-	r600_init_atom(rctx, &rctx->scissor.atom, id++, r600_emit_scissor_state, 4);
+	for (i = 0;i < 16; i++) {
+		r600_init_atom(rctx, &rctx->scissor[i].atom, id++, r600_emit_scissor_state, 4);
+		r600_init_atom(rctx, &rctx->viewport[i].atom, id++, r600_emit_viewport_state, 8);
+		rctx->scissor[i].idx = i;
+		rctx->viewport[i].idx = i;
+	}
 	r600_init_atom(rctx, &rctx->config_state.atom, id++, r600_emit_config_state, 3);
 	r600_init_atom(rctx, &rctx->stencil_ref.atom, id++, r600_emit_stencil_ref, 4);
-	r600_init_atom(rctx, &rctx->viewport.atom, id++, r600_emit_viewport_state, 8);
 	r600_init_atom(rctx, &rctx->vertex_fetch_shader.atom, id++, r600_emit_vertex_fetch_shader, 5);
-	r600_init_atom(rctx, &rctx->streamout.begin_atom, id++, r600_emit_streamout_begin, 0);
+	rctx->atoms[id++] = &rctx->b.streamout.begin_atom;
+	rctx->atoms[id++] = &rctx->b.streamout.enable_atom;
 	r600_init_atom(rctx, &rctx->vertex_shader.atom, id++, r600_emit_shader, 23);
 	r600_init_atom(rctx, &rctx->pixel_shader.atom, id++, r600_emit_shader, 0);
+	r600_init_atom(rctx, &rctx->geometry_shader.atom, id++, r600_emit_shader, 0);
+	r600_init_atom(rctx, &rctx->export_shader.atom, id++, r600_emit_shader, 0);
+	r600_init_atom(rctx, &rctx->shader_stages.atom, id++, r600_emit_shader_stages, 0);
+	r600_init_atom(rctx, &rctx->gs_rings.atom, id++, r600_emit_gs_rings, 0);
 
-	rctx->context.create_blend_state = r600_create_blend_state;
-	rctx->context.create_depth_stencil_alpha_state = r600_create_dsa_state;
-	rctx->context.create_rasterizer_state = r600_create_rs_state;
-	rctx->context.create_sampler_state = r600_create_sampler_state;
-	rctx->context.create_sampler_view = r600_create_sampler_view;
-	rctx->context.set_framebuffer_state = r600_set_framebuffer_state;
-	rctx->context.set_polygon_stipple = r600_set_polygon_stipple;
-	rctx->context.set_scissor_states = r600_set_scissor_states;
-
-	rctx->context.get_sample_position = r600_get_sample_position;
+	rctx->b.b.create_blend_state = r600_create_blend_state;
+	rctx->b.b.create_depth_stencil_alpha_state = r600_create_dsa_state;
+	rctx->b.b.create_rasterizer_state = r600_create_rs_state;
+	rctx->b.b.create_sampler_state = r600_create_sampler_state;
+	rctx->b.b.create_sampler_view = r600_create_sampler_view;
+	rctx->b.b.set_framebuffer_state = r600_set_framebuffer_state;
+	rctx->b.b.set_polygon_stipple = r600_set_polygon_stipple;
+	rctx->b.b.set_scissor_states = r600_set_scissor_states;
+	rctx->b.b.get_sample_position = r600_get_sample_position;
+	rctx->b.dma_copy = r600_dma_copy;
 }
 /* this function must be last */

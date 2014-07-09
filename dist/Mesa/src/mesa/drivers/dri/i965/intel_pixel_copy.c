@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ *
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,19 +10,19 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 #include "main/glheader.h"
@@ -36,10 +36,10 @@
 #include "brw_context.h"
 #include "intel_buffers.h"
 #include "intel_mipmap_tree.h"
-#include "intel_regions.h"
 #include "intel_pixel.h"
 #include "intel_fbo.h"
 #include "intel_blit.h"
+#include "intel_batchbuffer.h"
 
 #define FILE_DEBUG_FLAG DEBUG_PIXEL
 
@@ -64,6 +64,8 @@ do_blit_copypixels(struct gl_context * ctx,
 
    /* Update draw buffer bounds */
    _mesa_update_state(ctx);
+
+   intel_prepare_render(brw);
 
    switch (type) {
    case GL_COLOR:
@@ -101,6 +103,11 @@ do_blit_copypixels(struct gl_context * ctx,
       return false;
    }
 
+   if (draw_irb->mt->num_samples > 1 || read_irb->mt->num_samples > 1) {
+      perf_debug("glCopyPixels() fallback: multisampled buffers\n");
+      return false;
+   }
+
    if (ctx->_ImageTransferState) {
       perf_debug("glCopyPixels(): Unsupported image transfer state\n");
       return false;
@@ -117,7 +124,7 @@ do_blit_copypixels(struct gl_context * ctx,
    }
 
    if (ctx->Fog.Enabled ||
-       ctx->Texture._EnabledUnits ||
+       ctx->Texture._MaxEnabledTexImageUnit != -1 ||
        ctx->FragmentProgram._Enabled) {
       perf_debug("glCopyPixels(): Unsupported fragment shader state\n");
       return false;
@@ -142,9 +149,7 @@ do_blit_copypixels(struct gl_context * ctx,
       return false;
    }
 
-   intel_prepare_render(brw);
-
-   intel_flush(&brw->ctx);
+   intel_batchbuffer_flush(brw);
 
    /* Clip to destination buffer. */
    orig_dstx = dstx;
@@ -184,7 +189,6 @@ do_blit_copypixels(struct gl_context * ctx,
       ctx->Query.CurrentOcclusionObject->Result += width * height;
 
 out:
-   intel_check_front_buffer_rendering(brw);
 
    DBG("%s: success\n", __FUNCTION__);
    return true;

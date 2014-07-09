@@ -1,6 +1,6 @@
 /**************************************************************************
 
-Copyright 2002 Tungsten Graphics Inc., Cedar Park, Texas.
+Copyright 2002 VMware, Inc.
 Copyright 2011 Dave Airlie (ARB_vertex_type_2_10_10_10_rev support)
 All Rights Reserved.
 
@@ -18,12 +18,15 @@ Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
-TUNGSTEN GRAPHICS AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
+VMWARE AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
+
+#include "util/u_format_r11g11b10f.h"
+#include "main/varray.h"
 
 /* float */
 #define ATTR1FV( A, V ) ATTR( A, 1, GL_FLOAT, (V)[0], 0, 0, 1 )
@@ -140,7 +143,7 @@ static inline float conv_i10_to_norm_float(const struct gl_context *ctx, int i10
        (ctx->API == API_OPENGL_CORE && ctx->Version >= 42)) {
       /* Equation 2.3 above. */
       float f = ((float) val.x) / 511.0F;
-      return MAX2(f, -1.0);
+      return MAX2(f, -1.0f);
    } else {
       /* Equation 2.2 above. */
       return (2.0F * (float)val.x + 1.0F) * (1.0F  / 1023.0F);
@@ -156,7 +159,7 @@ static inline float conv_i2_to_norm_float(const struct gl_context *ctx, int i2)
        (ctx->API == API_OPENGL_CORE && ctx->Version >= 42)) {
       /* Equation 2.3 above. */
       float f = (float) val.x;
-      return MAX2(f, -1.0);
+      return MAX2(f, -1.0f);
    } else {
       /* Equation 2.2 above. */
       return (2.0F * (float)val.x + 1.0F) * (1.0F / 3.0F);
@@ -205,6 +208,10 @@ static inline float conv_i2_to_norm_float(const struct gl_context *ctx, int i2)
       } else {							\
 	 ATTRI10_##val((attr), (arg));				\
       }								\
+   } else if ((type) == GL_UNSIGNED_INT_10F_11F_11F_REV) {	\
+      float res[4];						\
+      r11g11b10f_to_float3((arg), res);				\
+      ATTR##val##FV((attr), res);				\
    } else							\
       ERROR(GL_INVALID_VALUE);					\
    } while(0)
@@ -493,7 +500,7 @@ static void GLAPIENTRY
 TAG(VertexAttrib1fARB)(GLuint index, GLfloat x)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR1F(0, x);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR1F(VBO_ATTRIB_GENERIC0 + index, x);
@@ -505,7 +512,7 @@ static void GLAPIENTRY
 TAG(VertexAttrib1fvARB)(GLuint index, const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR1FV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR1FV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -517,7 +524,7 @@ static void GLAPIENTRY
 TAG(VertexAttrib2fARB)(GLuint index, GLfloat x, GLfloat y)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR2F(0, x, y);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR2F(VBO_ATTRIB_GENERIC0 + index, x, y);
@@ -529,7 +536,7 @@ static void GLAPIENTRY
 TAG(VertexAttrib2fvARB)(GLuint index, const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR2FV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR2FV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -541,7 +548,7 @@ static void GLAPIENTRY
 TAG(VertexAttrib3fARB)(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR3F(0, x, y, z);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR3F(VBO_ATTRIB_GENERIC0 + index, x, y, z);
@@ -553,7 +560,7 @@ static void GLAPIENTRY
 TAG(VertexAttrib3fvARB)(GLuint index, const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR3FV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR3FV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -565,7 +572,7 @@ static void GLAPIENTRY
 TAG(VertexAttrib4fARB)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR4F(0, x, y, z, w);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR4F(VBO_ATTRIB_GENERIC0 + index, x, y, z, w);
@@ -577,7 +584,7 @@ static void GLAPIENTRY
 TAG(VertexAttrib4fvARB)(GLuint index, const GLfloat * v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR4FV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR4FV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -594,7 +601,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI1i)(GLuint index, GLint x)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR1I(0, x);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR1I(VBO_ATTRIB_GENERIC0 + index, x);
@@ -606,7 +613,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI2i)(GLuint index, GLint x, GLint y)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR2I(0, x, y);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR2I(VBO_ATTRIB_GENERIC0 + index, x, y);
@@ -618,7 +625,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI3i)(GLuint index, GLint x, GLint y, GLint z)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR3I(0, x, y, z);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR3I(VBO_ATTRIB_GENERIC0 + index, x, y, z);
@@ -630,7 +637,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI4i)(GLuint index, GLint x, GLint y, GLint z, GLint w)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR4I(0, x, y, z, w);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR4I(VBO_ATTRIB_GENERIC0 + index, x, y, z, w);
@@ -642,7 +649,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI2iv)(GLuint index, const GLint *v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR2IV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR2IV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -654,7 +661,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI3iv)(GLuint index, const GLint *v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR3IV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR3IV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -666,7 +673,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI4iv)(GLuint index, const GLint *v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR4IV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR4IV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -683,7 +690,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI1ui)(GLuint index, GLuint x)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR1UI(0, x);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR1UI(VBO_ATTRIB_GENERIC0 + index, x);
@@ -695,7 +702,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI2ui)(GLuint index, GLuint x, GLuint y)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR2UI(0, x, y);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR2UI(VBO_ATTRIB_GENERIC0 + index, x, y);
@@ -707,7 +714,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI3ui)(GLuint index, GLuint x, GLuint y, GLuint z)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR3UI(0, x, y, z);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR3UI(VBO_ATTRIB_GENERIC0 + index, x, y, z);
@@ -719,7 +726,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI4ui)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR4UI(0, x, y, z, w);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR4UI(VBO_ATTRIB_GENERIC0 + index, x, y, z, w);
@@ -731,7 +738,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI2uiv)(GLuint index, const GLuint *v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR2UIV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR2UIV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -743,7 +750,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI3uiv)(GLuint index, const GLuint *v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR3UIV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR3UIV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -755,7 +762,7 @@ static void GLAPIENTRY
 TAG(VertexAttribI4uiv)(GLuint index, const GLuint *v)
 {
    GET_CURRENT_CONTEXT(ctx);
-   if (index == 0)
+   if (index == 0 && _mesa_attr_zero_aliases_vertex(ctx))
       ATTR4UIV(0, v);
    else if (index < MAX_VERTEX_GENERIC_ATTRIBS)
       ATTR4UIV(VBO_ATTRIB_GENERIC0 + index, v);
@@ -835,8 +842,22 @@ TAG(VertexAttrib4fvNV)(GLuint index, const GLfloat * v)
       ATTR4FV(index, v);
 }
 
+
 #define ERROR_IF_NOT_PACKED_TYPE(ctx, type, func) \
    if (type != GL_INT_2_10_10_10_REV && type != GL_UNSIGNED_INT_2_10_10_10_REV) { \
+      _mesa_error(ctx, GL_INVALID_ENUM, "%s(type)", func); \
+      return; \
+   }
+
+/* Extended version of ERROR_IF_NOT_PACKED_TYPE which also
+ * accepts GL_UNSIGNED_INT_10F_11F_11F_REV.
+ *
+ * Only used for VertexAttribP[123]ui[v]; VertexAttribP4* cannot use this type,
+ * and neither can legacy vertex attribs.
+ */
+#define ERROR_IF_NOT_PACKED_TYPE_EXT(ctx, type, func) \
+   if (type != GL_INT_2_10_10_10_REV && type != GL_UNSIGNED_INT_2_10_10_10_REV && \
+       type != GL_UNSIGNED_INT_10F_11F_11F_REV) { \
       _mesa_error(ctx, GL_INVALID_ENUM, "%s(type)", func); \
       return; \
    }
@@ -1094,7 +1115,7 @@ TAG(VertexAttribP1ui)(GLuint index, GLenum type, GLboolean normalized,
 		      GLuint value)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ERROR_IF_NOT_PACKED_TYPE(ctx, type, "glVertexAttribP1ui");
+   ERROR_IF_NOT_PACKED_TYPE_EXT(ctx, type, "glVertexAttribP1ui");
    ATTR_UI_INDEX(ctx, 1, type, normalized, index, value);
 }
 
@@ -1103,7 +1124,7 @@ TAG(VertexAttribP2ui)(GLuint index, GLenum type, GLboolean normalized,
 		      GLuint value)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ERROR_IF_NOT_PACKED_TYPE(ctx, type, "glVertexAttribP2ui");
+   ERROR_IF_NOT_PACKED_TYPE_EXT(ctx, type, "glVertexAttribP2ui");
    ATTR_UI_INDEX(ctx, 2, type, normalized, index, value);
 }
 
@@ -1112,7 +1133,7 @@ TAG(VertexAttribP3ui)(GLuint index, GLenum type, GLboolean normalized,
 		      GLuint value)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ERROR_IF_NOT_PACKED_TYPE(ctx, type, "glVertexAttribP3ui");
+   ERROR_IF_NOT_PACKED_TYPE_EXT(ctx, type, "glVertexAttribP3ui");
    ATTR_UI_INDEX(ctx, 3, type, normalized, index, value);
 }
 
@@ -1130,7 +1151,7 @@ TAG(VertexAttribP1uiv)(GLuint index, GLenum type, GLboolean normalized,
 		       const GLuint *value)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ERROR_IF_NOT_PACKED_TYPE(ctx, type, "glVertexAttribP1uiv");
+   ERROR_IF_NOT_PACKED_TYPE_EXT(ctx, type, "glVertexAttribP1uiv");
    ATTR_UI_INDEX(ctx, 1, type, normalized, index, *value);
 }
 
@@ -1139,7 +1160,7 @@ TAG(VertexAttribP2uiv)(GLuint index, GLenum type, GLboolean normalized,
 		       const GLuint *value)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ERROR_IF_NOT_PACKED_TYPE(ctx, type, "glVertexAttribP2uiv");
+   ERROR_IF_NOT_PACKED_TYPE_EXT(ctx, type, "glVertexAttribP2uiv");
    ATTR_UI_INDEX(ctx, 2, type, normalized, index, *value);
 }
 
@@ -1148,7 +1169,7 @@ TAG(VertexAttribP3uiv)(GLuint index, GLenum type, GLboolean normalized,
 		       const GLuint *value)
 {
    GET_CURRENT_CONTEXT(ctx);
-   ERROR_IF_NOT_PACKED_TYPE(ctx, type, "glVertexAttribP3uiv");
+   ERROR_IF_NOT_PACKED_TYPE_EXT(ctx, type, "glVertexAttribP3uiv");
    ATTR_UI_INDEX(ctx, 3, type, normalized, index, *value);
 }
 

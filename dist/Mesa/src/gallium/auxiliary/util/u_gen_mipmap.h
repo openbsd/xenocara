@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -35,26 +35,13 @@
 extern "C" {
 #endif
 
-   
+
 struct pipe_context;
-struct pipe_resource;
-struct cso_context;
 
-struct gen_mipmap_state;
-
-
-extern struct gen_mipmap_state *
-util_create_gen_mipmap(struct pipe_context *pipe, struct cso_context *cso);
-
-
-extern void
-util_destroy_gen_mipmap(struct gen_mipmap_state *ctx);
-
-
-extern void
-util_gen_mipmap(struct gen_mipmap_state *ctx,
-                struct pipe_sampler_view *psv,
-                uint layer, uint baseLevel, uint lastLevel, uint filter);
+extern boolean
+util_gen_mipmap(struct pipe_context *pipe, struct pipe_resource *pt,
+                enum pipe_format format, uint base_level, uint last_level,
+                uint first_layer, uint last_layer, uint filter);
 
 
 #ifdef __cplusplus

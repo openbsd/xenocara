@@ -40,6 +40,26 @@
 #include "glsl_types.h"
 #include "program/hash_table.h"
 
+#if defined(_MSC_VER) && (_MSC_VER < 1800)
+static int isnormal(double x)
+{
+   return _fpclass(x) == _FPCLASS_NN || _fpclass(x) == _FPCLASS_PN;
+}
+#elif defined(__SUNPRO_CC)
+#include <ieeefp.h>
+static int isnormal(double x)
+{
+   return fpclass(x) == FP_NORMAL;
+}
+#endif
+
+#if defined(_MSC_VER)
+static double copysign(double x, double y)
+{
+   return _copysign(x, y);
+}
+#endif
+
 static float
 dot(ir_constant *op0, ir_constant *op1)
 {
@@ -366,8 +386,104 @@ unpack_half_1x16(uint16_t u)
    return _mesa_half_to_float(u);
 }
 
+/**
+ * Get the constant that is ultimately referenced by an r-value, in a constant
+ * expression evaluation context.
+ *
+ * The offset is used when the reference is to a specific column of a matrix.
+ */
+static bool
+constant_referenced(const ir_dereference *deref,
+                    struct hash_table *variable_context,
+                    ir_constant *&store, int &offset)
+{
+   store = NULL;
+   offset = 0;
+
+   if (variable_context == NULL)
+      return false;
+
+   switch (deref->ir_type) {
+   case ir_type_dereference_array: {
+      const ir_dereference_array *const da =
+         (const ir_dereference_array *) deref;
+
+      ir_constant *const index_c =
+         da->array_index->constant_expression_value(variable_context);
+
+      if (!index_c || !index_c->type->is_scalar() || !index_c->type->is_integer())
+         break;
+
+      const int index = index_c->type->base_type == GLSL_TYPE_INT ?
+         index_c->get_int_component(0) :
+         index_c->get_uint_component(0);
+
+      ir_constant *substore;
+      int suboffset;
+
+      const ir_dereference *const deref = da->array->as_dereference();
+      if (!deref)
+         break;
+
+      if (!constant_referenced(deref, variable_context, substore, suboffset))
+         break;
+
+      const glsl_type *const vt = da->array->type;
+      if (vt->is_array()) {
+         store = substore->get_array_element(index);
+         offset = 0;
+      } else if (vt->is_matrix()) {
+         store = substore;
+         offset = index * vt->vector_elements;
+      } else if (vt->is_vector()) {
+         store = substore;
+         offset = suboffset + index;
+      }
+
+      break;
+   }
+
+   case ir_type_dereference_record: {
+      const ir_dereference_record *const dr =
+         (const ir_dereference_record *) deref;
+
+      const ir_dereference *const deref = dr->record->as_dereference();
+      if (!deref)
+         break;
+
+      ir_constant *substore;
+      int suboffset;
+
+      if (!constant_referenced(deref, variable_context, substore, suboffset))
+         break;
+
+      /* Since we're dropping it on the floor...
+       */
+      assert(suboffset == 0);
+
+      store = substore->get_record_field(dr->field);
+      break;
+   }
+
+   case ir_type_dereference_variable: {
+      const ir_dereference_variable *const dv =
+         (const ir_dereference_variable *) deref;
+
+      store = (ir_constant *) hash_table_find(variable_context, dv->var);
+      break;
+   }
+
+   default:
+      assert(!"Should not get here.");
+      break;
+   }
+
+   return store != NULL;
+}
+
+
 ir_constant *
-ir_rvalue::constant_expression_value(struct hash_table *variable_context)
+ir_rvalue::constant_expression_value(struct hash_table *)
 {
    assert(this->type->is_error());
    return NULL;
@@ -394,7 +510,9 @@ ir_expression::constant_expression_value(struct hash_table *variable_context)
       switch (this->operation) {
       case ir_binop_lshift:
       case ir_binop_rshift:
+      case ir_binop_ldexp:
       case ir_binop_vector_extract:
+      case ir_triop_csel:
       case ir_triop_bitfield_extract:
          break;
 
@@ -1375,6 +1493,43 @@ ir_expression::constant_expression_value(struct hash_table *variable_context)
       break;
    }
 
+   case ir_binop_bfm: {
+      int bits = op[0]->value.i[0];
+      int offset = op[1]->value.i[0];
+
+      for (unsigned c = 0; c < components; c++) {
+         if (bits == 0)
+            data.u[c] = op[0]->value.u[c];
+         else if (offset < 0 || bits < 0)
+            data.u[c] = 0; /* Undefined for bitfieldInsert, per spec. */
+         else if (offset + bits > 32)
+            data.u[c] = 0; /* Undefined for bitfieldInsert, per spec. */
+         else
+            data.u[c] = ((1 << bits) - 1) << offset;
+      }
+      break;
+   }
+
+   case ir_binop_ldexp:
+      for (unsigned c = 0; c < components; c++) {
+         data.f[c] = ldexp(op[0]->value.f[c], op[1]->value.i[c]);
+         /* Flush subnormal values to zero. */
+         if (!isnormal(data.f[c]))
+            data.f[c] = copysign(0.0f, op[0]->value.f[c]);
+      }
+      break;
+
+   case ir_triop_fma:
+      assert(op[0]->type->base_type == GLSL_TYPE_FLOAT);
+      assert(op[1]->type->base_type == GLSL_TYPE_FLOAT);
+      assert(op[2]->type->base_type == GLSL_TYPE_FLOAT);
+
+      for (unsigned c = 0; c < components; c++) {
+         data.f[c] = op[0]->value.f[c] * op[1]->value.f[c]
+                                       + op[2]->value.f[c];
+      }
+      break;
+
    case ir_triop_lrp: {
       assert(op[0]->type->base_type == GLSL_TYPE_FLOAT);
       assert(op[1]->type->base_type == GLSL_TYPE_FLOAT);
@@ -1387,6 +1542,13 @@ ir_expression::constant_expression_value(struct hash_table *variable_context)
       }
       break;
    }
+
+   case ir_triop_csel:
+      for (unsigned c = 0; c < components; c++) {
+         data.u[c] = op[0]->value.b[c] ? op[1]->value.u[c]
+                                       : op[2]->value.u[c];
+      }
+      break;
 
    case ir_triop_vector_insert: {
       const unsigned idx = op[2]->value.u[0];
@@ -1468,7 +1630,7 @@ ir_expression::constant_expression_value(struct hash_table *variable_context)
 
 
 ir_constant *
-ir_texture::constant_expression_value(struct hash_table *variable_context)
+ir_texture::constant_expression_value(struct hash_table *)
 {
    /* texture lookups aren't constant expressions */
    return NULL;
@@ -1504,19 +1666,6 @@ ir_swizzle::constant_expression_value(struct hash_table *variable_context)
 }
 
 
-void
-ir_dereference_variable::constant_referenced(struct hash_table *variable_context,
-					     ir_constant *&store, int &offset) const
-{
-   if (variable_context) {
-      store = (ir_constant *)hash_table_find(variable_context, var);
-      offset = 0;
-   } else {
-      store = NULL;
-      offset = 0;
-   }
-}
-
 ir_constant *
 ir_dereference_variable::constant_expression_value(struct hash_table *variable_context)
 {
@@ -1534,7 +1683,7 @@ ir_dereference_variable::constant_expression_value(struct hash_table *variable_c
    /* The constant_value of a uniform variable is its initializer,
     * not the lifetime constant value of the uniform.
     */
-   if (var->mode == ir_var_uniform)
+   if (var->data.mode == ir_var_uniform)
       return NULL;
 
    if (!var->constant_value)
@@ -1543,60 +1692,6 @@ ir_dereference_variable::constant_expression_value(struct hash_table *variable_c
    return var->constant_value->clone(ralloc_parent(var), NULL);
 }
 
-
-void
-ir_dereference_array::constant_referenced(struct hash_table *variable_context,
-					  ir_constant *&store, int &offset) const
-{
-   ir_constant *index_c = array_index->constant_expression_value(variable_context);
-
-   if (!index_c || !index_c->type->is_scalar() || !index_c->type->is_integer()) {
-      store = 0;
-      offset = 0;
-      return;
-   }
-
-   int index = index_c->type->base_type == GLSL_TYPE_INT ?
-      index_c->get_int_component(0) :
-      index_c->get_uint_component(0);
-
-   ir_constant *substore;
-   int suboffset;
-   const ir_dereference *deref = array->as_dereference();
-   if (!deref) {
-      store = 0;
-      offset = 0;
-      return;
-   }
-
-   deref->constant_referenced(variable_context, substore, suboffset);
-
-   if (!substore) {
-      store = 0;
-      offset = 0;
-      return;
-   }
-
-   const glsl_type *vt = array->type;
-   if (vt->is_array()) {
-      store = substore->get_array_element(index);
-      offset = 0;
-      return;
-   }
-   if (vt->is_matrix()) {
-      store = substore;
-      offset = index * vt->vector_elements;
-      return;
-   }
-   if (vt->is_vector()) {
-      store = substore;
-      offset = suboffset + index;
-      return;
-   }
-
-   store = 0;
-   offset = 0;
-}
 
 ir_constant *
 ir_dereference_array::constant_expression_value(struct hash_table *variable_context)
@@ -1653,33 +1748,8 @@ ir_dereference_array::constant_expression_value(struct hash_table *variable_cont
 }
 
 
-void
-ir_dereference_record::constant_referenced(struct hash_table *variable_context,
-					   ir_constant *&store, int &offset) const
-{
-   ir_constant *substore;
-   int suboffset;
-   const ir_dereference *deref = record->as_dereference();
-   if (!deref) {
-      store = 0;
-      offset = 0;
-      return;
-   }
-
-   deref->constant_referenced(variable_context, substore, suboffset);
-
-   if (!substore) {
-      store = 0;
-      offset = 0;
-      return;
-   }
-
-   store = substore->get_record_field(field);
-   offset = 0;
-}
-
 ir_constant *
-ir_dereference_record::constant_expression_value(struct hash_table *variable_context)
+ir_dereference_record::constant_expression_value(struct hash_table *)
 {
    ir_constant *v = this->record->constant_expression_value();
 
@@ -1688,7 +1758,7 @@ ir_dereference_record::constant_expression_value(struct hash_table *variable_con
 
 
 ir_constant *
-ir_assignment::constant_expression_value(struct hash_table *variable_context)
+ir_assignment::constant_expression_value(struct hash_table *)
 {
    /* FINISHME: Handle CEs involving assignment (return RHS) */
    return NULL;
@@ -1696,7 +1766,7 @@ ir_assignment::constant_expression_value(struct hash_table *variable_context)
 
 
 ir_constant *
-ir_constant::constant_expression_value(struct hash_table *variable_context)
+ir_constant::constant_expression_value(struct hash_table *)
 {
    return this;
 }
@@ -1737,9 +1807,8 @@ bool ir_function_signature::constant_expression_evaluate_expression_list(const s
 
 	 ir_constant *store = NULL;
 	 int offset = 0;
-	 asg->lhs->constant_referenced(variable_context, store, offset);
 
-	 if (!store)
+	 if (!constant_referenced(asg->lhs, variable_context, store, offset))
 	    return false;
 
 	 ir_constant *value = asg->rhs->constant_expression_value(variable_context);
@@ -1770,9 +1839,9 @@ bool ir_function_signature::constant_expression_evaluate_expression_list(const s
 
 	 ir_constant *store = NULL;
 	 int offset = 0;
-	 call->return_deref->constant_referenced(variable_context, store, offset);
 
-	 if (!store)
+	 if (!constant_referenced(call->return_deref, variable_context,
+                                  store, offset))
 	    return false;
 
 	 ir_constant *value = call->constant_expression_value(variable_context);
@@ -1829,7 +1898,7 @@ ir_function_signature::constant_expression_value(exec_list *actual_parameters, s
     * "Function calls to user-defined functions (non-built-in functions)
     *  cannot be used to form constant expressions."
     */
-   if (!this->is_builtin)
+   if (!this->is_builtin())
       return NULL;
 
    /*

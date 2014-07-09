@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -141,11 +141,8 @@ update_vp( struct st_context *st )
     * edgeflag semantics, and extend the vertex shader to pass through
     * the input to the output.  We'll need to use similar logic to set
     * up the extra vertex_element input for edgeflags.
-    * _NEW_POLYGON, ST_NEW_EDGEFLAGS_DATA
     */
-   key.passthrough_edgeflags = (st->vertdata_edgeflags && (
-                                st->ctx->Polygon.FrontMode != GL_FILL ||
-                                st->ctx->Polygon.BackMode != GL_FILL));
+   key.passthrough_edgeflags = st->vertdata_edgeflags;
 
    key.clamp_color = st->clamp_vert_color_in_shader &&
                      st->ctx->Light._ClampVertexColor;
@@ -164,8 +161,8 @@ update_vp( struct st_context *st )
 const struct st_tracked_state st_update_vp = {
    "st_update_vp",					/* name */
    {							/* dirty */
-      _NEW_POLYGON,					/* mesa */
-      ST_NEW_VERTEX_PROGRAM | ST_NEW_EDGEFLAGS_DATA	/* st */
+      0,                                                /* mesa */
+      ST_NEW_VERTEX_PROGRAM                             /* st */
    },
    update_vp						/* update */
 };

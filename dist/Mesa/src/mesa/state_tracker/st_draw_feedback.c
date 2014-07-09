@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -116,7 +116,8 @@ st_feedback_draw_vbo(struct gl_context *ctx,
 		     GLboolean index_bounds_valid,
                      GLuint min_index,
                      GLuint max_index,
-                     struct gl_transform_feedback_object *tfb_vertcount)
+                     struct gl_transform_feedback_object *tfb_vertcount,
+                     struct gl_buffer_object *indirect)
 {
    struct st_context *st = st_context(ctx);
    struct pipe_context *pipe = st->pipe;
@@ -155,7 +156,7 @@ st_feedback_draw_vbo(struct gl_context *ctx,
     * code sends state updates to the pipe, not to our private draw module.
     */
    assert(draw);
-   draw_set_viewport_states(draw, 0, 1, &st->state.viewport);
+   draw_set_viewport_states(draw, 0, 1, &st->state.viewport[0]);
    draw_set_clip_state(draw, &st->state.clip);
    draw_set_rasterizer_state(draw, &st->state.rasterizer, NULL);
    draw_bind_vertex_shader(draw, st->vp_variant->draw_shader);

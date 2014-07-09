@@ -64,20 +64,26 @@ glsl_type::glsl_type(GLenum gl_type,
    memset(& fields, 0, sizeof(fields));
 }
 
-glsl_type::glsl_type(GLenum gl_type,
+glsl_type::glsl_type(GLenum gl_type, glsl_base_type base_type,
 		     enum glsl_sampler_dim dim, bool shadow, bool array,
 		     unsigned type, const char *name) :
    gl_type(gl_type),
-   base_type(GLSL_TYPE_SAMPLER),
+   base_type(base_type),
    sampler_dimensionality(dim), sampler_shadow(shadow),
    sampler_array(array), sampler_type(type), interface_packing(0),
-   vector_elements(0), matrix_columns(0),
    length(0)
 {
    init_ralloc_type_ctx();
    assert(name != NULL);
    this->name = ralloc_strdup(this->mem_ctx, name);
    memset(& fields, 0, sizeof(fields));
+
+   if (base_type == GLSL_TYPE_SAMPLER) {
+      /* Samplers take no storage whatsoever. */
+      matrix_columns = vector_elements = 0;
+   } else {
+      matrix_columns = vector_elements = 1;
+   }
 }
 
 glsl_type::glsl_type(const glsl_struct_field *fields, unsigned num_fields,
@@ -100,6 +106,10 @@ glsl_type::glsl_type(const glsl_struct_field *fields, unsigned num_fields,
       this->fields.structure[i].type = fields[i].type;
       this->fields.structure[i].name = ralloc_strdup(this->fields.structure,
 						     fields[i].name);
+      this->fields.structure[i].location = fields[i].location;
+      this->fields.structure[i].interpolation = fields[i].interpolation;
+      this->fields.structure[i].centroid = fields[i].centroid;
+      this->fields.structure[i].sample = fields[i].sample;
       this->fields.structure[i].row_major = fields[i].row_major;
    }
 }
@@ -124,6 +134,10 @@ glsl_type::glsl_type(const glsl_struct_field *fields, unsigned num_fields,
       this->fields.structure[i].type = fields[i].type;
       this->fields.structure[i].name = ralloc_strdup(this->fields.structure,
 						     fields[i].name);
+      this->fields.structure[i].location = fields[i].location;
+      this->fields.structure[i].interpolation = fields[i].interpolation;
+      this->fields.structure[i].centroid = fields[i].centroid;
+      this->fields.structure[i].sample = fields[i].sample;
       this->fields.structure[i].row_major = fields[i].row_major;
    }
 }
@@ -162,6 +176,25 @@ glsl_type::contains_integer() const
    }
 }
 
+bool
+glsl_type::contains_opaque() const {
+   switch (base_type) {
+   case GLSL_TYPE_SAMPLER:
+   case GLSL_TYPE_IMAGE:
+   case GLSL_TYPE_ATOMIC_UINT:
+      return true;
+   case GLSL_TYPE_ARRAY:
+      return element_type()->contains_opaque();
+   case GLSL_TYPE_STRUCT:
+      for (unsigned int i = 0; i < length; i++) {
+         if (fields.structure[i].type->contains_opaque())
+            return true;
+      }
+      return false;
+   default:
+      return false;
+   }
+}
 
 gl_texture_index
 glsl_type::sampler_index() const
@@ -193,6 +226,21 @@ glsl_type::sampler_index() const
    }
 }
 
+bool
+glsl_type::contains_image() const
+{
+   if (this->is_array()) {
+      return this->fields.array->contains_image();
+   } else if (this->is_record()) {
+      for (unsigned int i = 0; i < this->length; i++) {
+	 if (this->fields.structure[i].type->contains_image())
+	    return true;
+      }
+      return false;
+   } else {
+      return this->is_image();
+   }
+}
 
 const glsl_type *glsl_type::get_base_type() const
 {
@@ -274,8 +322,20 @@ glsl_type::glsl_type(const glsl_type *array, unsigned length) :
 
    if (length == 0)
       snprintf(n, name_length, "%s[]", array->name);
-   else
-      snprintf(n, name_length, "%s[%u]", array->name, length);
+   else {
+      /* insert outermost dimensions in the correct spot
+       * otherwise the dimension order will be backwards
+       */
+      const char *pos = strchr(array->name, '[');
+      if (pos) {
+         int idx = pos - array->name;
+         snprintf(n, idx+1, "%s", array->name);
+         snprintf(n + idx, name_length - idx, "[%u]%s",
+                  length, array->name + idx);
+      } else {
+         snprintf(n, name_length, "%s[%u]", array->name, length);
+      }
+   }
 
    this->name = n;
 }
@@ -423,6 +483,42 @@ glsl_type::get_array_instance(const glsl_type *base, unsigned array_size)
 }
 
 
+bool
+glsl_type::record_compare(const glsl_type *b) const
+{
+   if (this->length != b->length)
+      return false;
+
+   if (this->interface_packing != b->interface_packing)
+      return false;
+
+   for (unsigned i = 0; i < this->length; i++) {
+      if (this->fields.structure[i].type != b->fields.structure[i].type)
+	 return false;
+      if (strcmp(this->fields.structure[i].name,
+		 b->fields.structure[i].name) != 0)
+	 return false;
+      if (this->fields.structure[i].row_major
+         != b->fields.structure[i].row_major)
+        return false;
+      if (this->fields.structure[i].location
+          != b->fields.structure[i].location)
+         return false;
+      if (this->fields.structure[i].interpolation
+          != b->fields.structure[i].interpolation)
+         return false;
+      if (this->fields.structure[i].centroid
+          != b->fields.structure[i].centroid)
+         return false;
+      if (this->fields.structure[i].sample
+          != b->fields.structure[i].sample)
+         return false;
+   }
+
+   return true;
+}
+
+
 int
 glsl_type::record_key_compare(const void *a, const void *b)
 {
@@ -435,24 +531,7 @@ glsl_type::record_key_compare(const void *a, const void *b)
    if (strcmp(key1->name, key2->name) != 0)
       return 1;
 
-   if (key1->length != key2->length)
-      return 1;
-
-   if (key1->interface_packing != key2->interface_packing)
-      return 1;
-
-   for (unsigned i = 0; i < key1->length; i++) {
-      if (key1->fields.structure[i].type != key2->fields.structure[i].type)
-	 return 1;
-      if (strcmp(key1->fields.structure[i].name,
-		 key2->fields.structure[i].name) != 0)
-	 return 1;
-      if (key1->fields.structure[i].row_major
-         != key2->fields.structure[i].row_major)
-        return 1;
-   }
-
-   return 0;
+   return !key1->record_compare(key2);
 }
 
 
@@ -507,9 +586,9 @@ const glsl_type *
 glsl_type::get_interface_instance(const glsl_struct_field *fields,
 				  unsigned num_fields,
 				  enum glsl_interface_packing packing,
-				  const char *name)
+				  const char *block_name)
 {
-   const glsl_type key(fields, num_fields, packing, name);
+   const glsl_type key(fields, num_fields, packing, block_name);
 
    if (interface_types == NULL) {
       interface_types = hash_table_ctor(64, record_key_hash, record_key_compare);
@@ -517,14 +596,14 @@ glsl_type::get_interface_instance(const glsl_struct_field *fields,
 
    const glsl_type *t = (glsl_type *) hash_table_find(interface_types, & key);
    if (t == NULL) {
-      t = new glsl_type(fields, num_fields, packing, name);
+      t = new glsl_type(fields, num_fields, packing, block_name);
 
       hash_table_insert(interface_types, (void *) t, t);
    }
 
    assert(t->base_type == GLSL_TYPE_INTERFACE);
    assert(t->length == num_fields);
-   assert(strcmp(t->name, name) == 0);
+   assert(strcmp(t->name, block_name) == 0);
 
    return t;
 }
@@ -585,7 +664,11 @@ glsl_type::component_slots() const
    case GLSL_TYPE_ARRAY:
       return this->length * this->fields.array->component_slots();
 
+   case GLSL_TYPE_IMAGE:
+      return 1;
+
    case GLSL_TYPE_SAMPLER:
+   case GLSL_TYPE_ATOMIC_UINT:
    case GLSL_TYPE_VOID:
    case GLSL_TYPE_ERROR:
       break;
@@ -827,4 +910,94 @@ glsl_type::std140_size(bool row_major) const
 
    assert(!"not reached");
    return -1;
+}
+
+
+unsigned
+glsl_type::count_attribute_slots() const
+{
+   /* From page 31 (page 37 of the PDF) of the GLSL 1.50 spec:
+    *
+    *     "A scalar input counts the same amount against this limit as a vec4,
+    *     so applications may want to consider packing groups of four
+    *     unrelated float inputs together into a vector to better utilize the
+    *     capabilities of the underlying hardware. A matrix input will use up
+    *     multiple locations.  The number of locations used will equal the
+    *     number of columns in the matrix."
+    *
+    * The spec does not explicitly say how arrays are counted.  However, it
+    * should be safe to assume the total number of slots consumed by an array
+    * is the number of entries in the array multiplied by the number of slots
+    * consumed by a single element of the array.
+    *
+    * The spec says nothing about how structs are counted, because vertex
+    * attributes are not allowed to be (or contain) structs.  However, Mesa
+    * allows varying structs, the number of varying slots taken up by a
+    * varying struct is simply equal to the sum of the number of slots taken
+    * up by each element.
+    */
+   switch (this->base_type) {
+   case GLSL_TYPE_UINT:
+   case GLSL_TYPE_INT:
+   case GLSL_TYPE_FLOAT:
+   case GLSL_TYPE_BOOL:
+      return this->matrix_columns;
+
+   case GLSL_TYPE_STRUCT:
+   case GLSL_TYPE_INTERFACE: {
+      unsigned size = 0;
+
+      for (unsigned i = 0; i < this->length; i++)
+         size += this->fields.structure[i].type->count_attribute_slots();
+
+      return size;
+   }
+
+   case GLSL_TYPE_ARRAY:
+      return this->length * this->fields.array->count_attribute_slots();
+
+   case GLSL_TYPE_SAMPLER:
+   case GLSL_TYPE_IMAGE:
+   case GLSL_TYPE_ATOMIC_UINT:
+   case GLSL_TYPE_VOID:
+   case GLSL_TYPE_ERROR:
+      break;
+   }
+
+   assert(!"Unexpected type in count_attribute_slots()");
+
+   return 0;
+}
+
+int
+glsl_type::coordinate_components() const
+{
+   int size;
+
+   switch (sampler_dimensionality) {
+   case GLSL_SAMPLER_DIM_1D:
+   case GLSL_SAMPLER_DIM_BUF:
+      size = 1;
+      break;
+   case GLSL_SAMPLER_DIM_2D:
+   case GLSL_SAMPLER_DIM_RECT:
+   case GLSL_SAMPLER_DIM_MS:
+   case GLSL_SAMPLER_DIM_EXTERNAL:
+      size = 2;
+      break;
+   case GLSL_SAMPLER_DIM_3D:
+   case GLSL_SAMPLER_DIM_CUBE:
+      size = 3;
+      break;
+   default:
+      assert(!"Should not get here.");
+      size = 1;
+      break;
+   }
+
+   /* Array textures need an additional component for the array index. */
+   if (sampler_array)
+      size += 1;
+
+   return size;
 }

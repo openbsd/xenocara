@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -47,7 +47,7 @@ struct u_upload_mgr;
 #define ST_NEW_FRAGMENT_PROGRAM        (1 << 1)
 #define ST_NEW_VERTEX_PROGRAM          (1 << 2)
 #define ST_NEW_FRAMEBUFFER             (1 << 3)
-#define ST_NEW_EDGEFLAGS_DATA          (1 << 4)
+/* gap, re-use it */
 #define ST_NEW_GEOMETRY_PROGRAM        (1 << 5)
 #define ST_NEW_VERTEX_ARRAYS           (1 << 6)
 #define ST_NEW_RASTERIZER              (1 << 7)
@@ -115,8 +115,8 @@ struct st_context
          unsigned size;
       } constants[PIPE_SHADER_TYPES];
       struct pipe_framebuffer_state framebuffer;
-      struct pipe_scissor_state scissor;
-      struct pipe_viewport_state viewport;
+      struct pipe_scissor_state scissor[PIPE_MAX_VIEWPORTS];
+      struct pipe_viewport_state viewport[PIPE_MAX_VIEWPORTS];
       unsigned sample_mask;
 
       GLuint poly_stipple[32];  /**< In OpenGL's bottom-to-top order */
@@ -131,6 +131,7 @@ struct st_context
 
    GLboolean missing_textures;
    GLboolean vertdata_edgeflags;
+   GLboolean edgeflag_culls_prims;
 
    /** Mapping from VARYING_SLOT_x to post-transformed vertex slot */
    const GLuint *vertex_result_to_slot;
@@ -178,6 +179,7 @@ struct st_context
       struct pipe_viewport_state viewport;
       void *vs;
       void *fs;
+      void *vs_layered;
    } clear;
 
    /** used for anything using util_draw_vertex_buffer */
@@ -186,7 +188,6 @@ struct st_context
    void *passthrough_fs;  /**< simple pass-through frag shader */
 
    enum pipe_texture_target internal_target;
-   struct gen_mipmap_state *gen_mipmap;
 
    struct cso_context *cso_context;
 

@@ -1,8 +1,8 @@
 /*
  Copyright (C) Intel Corp.  2006.  All Rights Reserved.
- Intel funded Tungsten Graphics (http://www.tungstengraphics.com) to
+ Intel funded Tungsten Graphics to
  develop this 3D driver.
- 
+
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
- 
+
  The above copyright notice and this permission notice (including the
  next paragraph) shall be included in all copies or substantial
  portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -22,13 +22,13 @@
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  **********************************************************************/
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
-                   
+
 
 
 #include "intel_fbo.h"
@@ -45,6 +45,7 @@ bool
 brw_color_buffer_write_enabled(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
+   /* BRW_NEW_FRAGMENT_PROGRAM */
    const struct gl_fragment_program *fp = brw->fragment_program;
    int i;
 
@@ -78,7 +79,7 @@ brw_upload_wm_unit(struct brw_context *brw)
    struct brw_wm_unit_state *wm;
 
    wm = brw_state_batch(brw, AUB_TRACE_WM_STATE,
-			sizeof(*wm), 32, &brw->wm.state_offset);
+			sizeof(*wm), 32, &brw->wm.base.state_offset);
    memset(wm, 0, sizeof(*wm));
 
    if (brw->wm.prog_data->prog_offset_16) {
@@ -96,35 +97,36 @@ brw_upload_wm_unit(struct brw_context *brw)
 
    wm->thread0.kernel_start_pointer =
       brw_program_reloc(brw,
-			brw->wm.state_offset +
+			brw->wm.base.state_offset +
 			offsetof(struct brw_wm_unit_state, thread0),
-			brw->wm.prog_offset +
+			brw->wm.base.prog_offset +
 			(wm->thread0.grf_reg_count << 1)) >> 6;
 
    wm->wm9.kernel_start_pointer_2 =
       brw_program_reloc(brw,
-			brw->wm.state_offset +
+			brw->wm.base.state_offset +
 			offsetof(struct brw_wm_unit_state, wm9),
-			brw->wm.prog_offset +
+			brw->wm.base.prog_offset +
 			brw->wm.prog_data->prog_offset_16 +
 			(wm->wm9.grf_reg_count_2 << 1)) >> 6;
 
    wm->thread1.depth_coef_urb_read_offset = 1;
    /* Use ALT floating point mode for ARB fragment programs, because they
     * require 0^0 == 1.  Even though _CurrentFragmentProgram is used for
-    * rendering, CurrentFragmentProgram is used for this check to
-    * differentiate between the GLSL and non-GLSL cases.
+    * rendering, CurrentProgram[MESA_SHADER_FRAGMENT] is used for this check
+    * to differentiate between the GLSL and non-GLSL cases.
     */
-   if (ctx->Shader.CurrentFragmentProgram == NULL)
+   if (ctx->Shader.CurrentProgram[MESA_SHADER_FRAGMENT] == NULL)
       wm->thread1.floating_point_mode = BRW_FLOATING_POINT_NON_IEEE_754;
    else
       wm->thread1.floating_point_mode = BRW_FLOATING_POINT_IEEE_754;
 
-   wm->thread1.binding_table_entry_count = 0;
+   wm->thread1.binding_table_entry_count =
+      brw->wm.prog_data->base.binding_table.size_bytes / 4;
 
    if (brw->wm.prog_data->total_scratch != 0) {
       wm->thread2.scratch_space_base_pointer =
-	 brw->wm.scratch_bo->offset >> 10; /* reloc */
+	 brw->wm.base.scratch_bo->offset64 >> 10; /* reloc */
       wm->thread2.per_thread_scratch_space =
 	 ffs(brw->wm.prog_data->total_scratch) - 11;
    } else {
@@ -133,7 +135,8 @@ brw_upload_wm_unit(struct brw_context *brw)
    }
 
    wm->thread3.dispatch_grf_start_reg = brw->wm.prog_data->first_curbe_grf;
-   wm->thread3.urb_entry_read_length = brw->wm.prog_data->urb_read_length;
+   wm->thread3.urb_entry_read_length =
+      brw->wm.prog_data->num_varying_inputs * 2;
    wm->thread3.urb_entry_read_offset = 0;
    wm->thread3.const_urb_entry_read_length =
       brw->wm.prog_data->curb_read_length;
@@ -144,13 +147,13 @@ brw_upload_wm_unit(struct brw_context *brw)
       wm->wm4.sampler_count = 0; /* hardware requirement */
    else {
       /* CACHE_NEW_SAMPLER */
-      wm->wm4.sampler_count = (brw->sampler.count + 1) / 4;
+      wm->wm4.sampler_count = (brw->wm.base.sampler_count + 1) / 4;
    }
 
-   if (brw->sampler.count) {
+   if (brw->wm.base.sampler_count) {
       /* reloc */
-      wm->wm4.sampler_state_pointer = (brw->batch.bo->offset +
-				       brw->sampler.offset) >> 5;
+      wm->wm4.sampler_state_pointer = (brw->batch.bo->offset64 +
+				       brw->wm.base.sampler_offset) >> 5;
    } else {
       wm->wm4.sampler_state_pointer = 0;
    }
@@ -217,21 +220,21 @@ brw_upload_wm_unit(struct brw_context *brw)
    /* Emit scratch space relocation */
    if (brw->wm.prog_data->total_scratch != 0) {
       drm_intel_bo_emit_reloc(brw->batch.bo,
-			      brw->wm.state_offset +
+			      brw->wm.base.state_offset +
 			      offsetof(struct brw_wm_unit_state, thread2),
-			      brw->wm.scratch_bo,
+			      brw->wm.base.scratch_bo,
 			      wm->thread2.per_thread_scratch_space,
 			      I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER);
    }
 
    /* Emit sampler state relocation */
-   if (brw->sampler.count != 0) {
+   if (brw->wm.base.sampler_count != 0) {
       drm_intel_bo_emit_reloc(brw->batch.bo,
-			      brw->wm.state_offset +
+			      brw->wm.base.state_offset +
 			      offsetof(struct brw_wm_unit_state, wm4),
-			      brw->batch.bo, (brw->sampler.offset |
-						wm->wm4.stats_enable |
-						(wm->wm4.sampler_count << 2)),
+			      brw->batch.bo, (brw->wm.base.sampler_offset |
+                                              wm->wm4.stats_enable |
+                                              (wm->wm4.sampler_count << 2)),
 			      I915_GEM_DOMAIN_INSTRUCTION, 0);
    }
 
@@ -240,9 +243,9 @@ brw_upload_wm_unit(struct brw_context *brw)
 
 const struct brw_tracked_state brw_wm_unit = {
    .dirty = {
-      .mesa = (_NEW_POLYGON | 
-	       _NEW_POLYGONSTIPPLE | 
-	       _NEW_LINE | 
+      .mesa = (_NEW_POLYGON |
+	       _NEW_POLYGONSTIPPLE |
+	       _NEW_LINE |
 	       _NEW_COLOR |
 	       _NEW_BUFFERS),
 

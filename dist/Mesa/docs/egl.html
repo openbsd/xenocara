@@ -88,7 +88,7 @@ drivers will be installed to <code>${libdir}/egl</code>.</p>
 <dd>
 
 <p>List the platforms (window systems) to support.  Its argument is a comma
-seprated string such as <code>--with-egl-platforms=x11,drm</code>.  It decides
+separated string such as <code>--with-egl-platforms=x11,drm</code>.  It decides
 the platforms a driver may support.  The first listed platform is also used by
 the main library to decide the native platform: the platform the EGL native
 types such as <code>EGLNativeDisplayType</code> or
@@ -223,7 +223,7 @@ the X server directly using (XCB-)DRI2 protocol.</p>
 <dd>
 
 <p>This driver is based on Gallium3D.  It supports all rendering APIs and
-hardwares supported by Gallium3D.  It is the only driver that supports OpenVG.
+hardware supported by Gallium3D.  It is the only driver that supports OpenVG.
 The supported platforms are X11, DRM, FBDEV, and GDI.</p>
 
 <p>This driver comes with its own hardware drivers
@@ -231,16 +231,6 @@ The supported platforms are X11, DRM, FBDEV, and GDI.</p>
 (<code>st_&lt;api&gt;</code>).</p>
 
 </dd>
-
-<dt><code>egl_glx</code></dt>
-<dd>
-
-<p>This driver provides a wrapper to GLX.  It uses exclusively GLX to implement
-the EGL API.  It supports both direct and indirect rendering when the GLX does.
-It is accelerated when the GLX is.  As such, it cannot provide functions that
-is not available in GLX or GLX extensions.</p>
-</dd>
-</dl>
 
 <h2>Packaging</h2>
 
@@ -262,10 +252,6 @@ is disabled by default.</p>
 <code>src/egl/</code>.  The sources of the <code>egl</code> state tracker can
 be found at <code>src/gallium/state_trackers/egl/</code>.</p>
 
-<p>The suggested way to learn to write a EGL driver is to see how other drivers
-are written.  <code>egl_glx</code> should be a good reference.  It works in any
-environment that has GLX support, and it is simpler than most drivers.</p>
-
 <h3>Lifetime of Display Resources</h3>
 
 <p>Contexts and surfaces are examples of display resources.  They might live
@@ -273,8 +259,8 @@ longer than the display that creates them.</p>
 
 <p>In EGL, when a display is terminated through <code>eglTerminate</code>, all
 display resources should be destroyed.  Similarly, when a thread is released
-throught <code>eglReleaseThread</code>, all current display resources should be
-released.  Another way to destory or release resources is through functions
+through <code>eglReleaseThread</code>, all current display resources should be
+released.  Another way to destroy or release resources is through functions
 such as <code>eglDestroySurface</code> or <code>eglMakeCurrent</code>.</p>
 
 <p>When a resource that is current to some thread is destroyed, the resource

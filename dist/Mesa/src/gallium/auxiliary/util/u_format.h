@@ -544,6 +544,33 @@ util_format_is_depth_and_stencil(enum pipe_format format)
           util_format_has_stencil(desc);
 }
 
+
+/**
+ * Calculates the depth format type based upon the incoming format description.
+ */
+static INLINE unsigned
+util_get_depth_format_type(const struct util_format_description *desc)
+{
+   unsigned depth_channel = desc->swizzle[0];
+   if (desc->colorspace == UTIL_FORMAT_COLORSPACE_ZS &&
+       depth_channel != UTIL_FORMAT_SWIZZLE_NONE) {
+      return desc->channel[depth_channel].type;
+   } else {
+      return UTIL_FORMAT_TYPE_VOID;
+   }
+}
+
+
+/**
+ * Calculates the MRD for the depth format. MRD is used in depth bias
+ * for UNORM and unbound depth buffers. When the depth buffer is floating
+ * point, the depth bias calculation does not use the MRD. However, the
+ * default MRD will be 1.0 / ((1 << 24) - 1).
+ */
+double
+util_get_depth_format_mrd(const struct util_format_description *desc);
+
+
 /**
  * Return whether this is an RGBA, Z, S, or combined ZS format.
  * Useful for initializing pipe_blit_info::mask.
@@ -685,6 +712,9 @@ util_format_is_rgba8_variant(const struct util_format_description *desc)
       if(desc->channel[chan].type != UTIL_FORMAT_TYPE_UNSIGNED &&
          desc->channel[chan].type != UTIL_FORMAT_TYPE_VOID)
          return FALSE;
+      if(desc->channel[chan].type == UTIL_FORMAT_TYPE_UNSIGNED &&
+         !desc->channel[chan].normalized)
+         return FALSE;
       if(desc->channel[chan].size != 8)
          return FALSE;
    }
@@ -716,10 +746,15 @@ static INLINE uint
 util_format_get_blocksize(enum pipe_format format)
 {
    uint bits = util_format_get_blocksizebits(format);
+   uint bytes = bits / 8;
 
    assert(bits % 8 == 0);
+   assert(bytes > 0);
+   if (bytes == 0) {
+      bytes = 1;
+   }
 
-   return bits / 8;
+   return bytes;
 }
 
 static INLINE uint
@@ -837,6 +872,9 @@ util_format_get_component_bits(enum pipe_format format,
 static INLINE enum pipe_format
 util_format_srgb(enum pipe_format format)
 {
+   if (util_format_is_srgb(format))
+      return format;
+
    switch (format) {
    case PIPE_FORMAT_L8_UNORM:
       return PIPE_FORMAT_L8_SRGB;
@@ -868,6 +906,8 @@ util_format_srgb(enum pipe_format format)
       return PIPE_FORMAT_DXT3_SRGBA;
    case PIPE_FORMAT_DXT5_RGBA:
       return PIPE_FORMAT_DXT5_SRGBA;
+   case PIPE_FORMAT_B5G6R5_UNORM:
+      return PIPE_FORMAT_B5G6R5_SRGB;
    default:
       return PIPE_FORMAT_NONE;
    }
@@ -911,6 +951,8 @@ util_format_linear(enum pipe_format format)
       return PIPE_FORMAT_DXT3_RGBA;
    case PIPE_FORMAT_DXT5_SRGBA:
       return PIPE_FORMAT_DXT5_RGBA;
+   case PIPE_FORMAT_B5G6R5_SRGB:
+      return PIPE_FORMAT_B5G6R5_UNORM;
    default:
       return format;
    }
@@ -1022,8 +1064,7 @@ util_format_luminance_to_red(enum pipe_format format)
       return PIPE_FORMAT_RGTC1_SNORM;
 
    case PIPE_FORMAT_L4A4_UNORM:
-      /* XXX A4R4 is defined as x00y in u_format.csv */
-      return PIPE_FORMAT_A4R4_UNORM;
+      return PIPE_FORMAT_R4A4_UNORM;
 
    case PIPE_FORMAT_L8A8_UNORM:
       return PIPE_FORMAT_R8A8_UNORM;
@@ -1152,7 +1193,7 @@ util_format_write_4i(enum pipe_format format,
 boolean
 util_format_fits_8unorm(const struct util_format_description *format_desc);
 
-void
+boolean
 util_format_translate(enum pipe_format dst_format,
                       void *dst, unsigned dst_stride,
                       unsigned dst_x, unsigned dst_y,

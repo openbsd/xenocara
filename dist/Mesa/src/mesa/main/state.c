@@ -94,9 +94,12 @@ update_program_enables(struct gl_context *ctx)
 static GLbitfield
 update_program(struct gl_context *ctx)
 {
-   const struct gl_shader_program *vsProg = ctx->Shader.CurrentVertexProgram;
-   const struct gl_shader_program *gsProg = ctx->Shader.CurrentGeometryProgram;
-   struct gl_shader_program *fsProg = ctx->Shader.CurrentFragmentProgram;
+   const struct gl_shader_program *vsProg =
+      ctx->_Shader->CurrentProgram[MESA_SHADER_VERTEX];
+   const struct gl_shader_program *gsProg =
+      ctx->_Shader->CurrentProgram[MESA_SHADER_GEOMETRY];
+   struct gl_shader_program *fsProg =
+      ctx->_Shader->CurrentProgram[MESA_SHADER_FRAGMENT];
    const struct gl_vertex_program *prevVP = ctx->VertexProgram._Current;
    const struct gl_fragment_program *prevFP = ctx->FragmentProgram._Current;
    const struct gl_geometry_program *prevGP = ctx->GeometryProgram._Current;
@@ -122,7 +125,7 @@ update_program(struct gl_context *ctx)
        && fsProg->_LinkedShaders[MESA_SHADER_FRAGMENT]) {
       /* Use GLSL fragment shader */
       _mesa_reference_shader_program(ctx,
-				     &ctx->Shader._CurrentFragmentProgram,
+                                     &ctx->_Shader->_CurrentFragmentProgram,
 				     fsProg);
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
                                gl_fragment_program(fsProg->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program));
@@ -132,7 +135,7 @@ update_program(struct gl_context *ctx)
    else if (ctx->FragmentProgram._Enabled) {
       /* Use user-defined fragment program */
       _mesa_reference_shader_program(ctx,
-				     &ctx->Shader._CurrentFragmentProgram,
+                                     &ctx->_Shader->_CurrentFragmentProgram,
 				     NULL);
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
                                ctx->FragmentProgram.Current);
@@ -144,7 +147,7 @@ update_program(struct gl_context *ctx)
       struct gl_shader_program *f = _mesa_get_fixed_func_fragment_program(ctx);
 
       _mesa_reference_shader_program(ctx,
-				     &ctx->Shader._CurrentFragmentProgram,
+                                     &ctx->_Shader->_CurrentFragmentProgram,
 				     f);
       _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current,
 			       gl_fragment_program(f->_LinkedShaders[MESA_SHADER_FRAGMENT]->Program));
@@ -269,6 +272,7 @@ static void
 update_viewport_matrix(struct gl_context *ctx)
 {
    const GLfloat depthMax = ctx->DrawBuffer->_DepthMaxF;
+   unsigned i;
 
    ASSERT(depthMax > 0);
 
@@ -276,11 +280,13 @@ update_viewport_matrix(struct gl_context *ctx)
     * and should be maintained elsewhere if at all.
     * NOTE: RasterPos uses this.
     */
-   _math_matrix_viewport(&ctx->Viewport._WindowMap,
-                         ctx->Viewport.X, ctx->Viewport.Y,
-                         ctx->Viewport.Width, ctx->Viewport.Height,
-                         ctx->Viewport.Near, ctx->Viewport.Far,
-                         depthMax);
+   for (i = 0; i < ctx->Const.MaxViewports; i++) {
+      _math_matrix_viewport(&ctx->ViewportArray[i]._WindowMap,
+                            ctx->ViewportArray[i].X, ctx->ViewportArray[i].Y,
+                            ctx->ViewportArray[i].Width, ctx->ViewportArray[i].Height,
+                            ctx->ViewportArray[i].Near, ctx->ViewportArray[i].Far,
+                            depthMax);
+   }
 }
 
 
@@ -304,7 +310,7 @@ update_multisample(struct gl_context *ctx)
 static void
 update_twoside(struct gl_context *ctx)
 {
-   if (ctx->Shader.CurrentVertexProgram ||
+   if (ctx->_Shader->CurrentProgram[MESA_SHADER_VERTEX] ||
        ctx->VertexProgram._Enabled) {
       ctx->VertexProgram._TwoSideEnabled = ctx->VertexProgram.TwoSideEnabled;
    } else {
@@ -410,9 +416,12 @@ _mesa_update_state_locked( struct gl_context *ctx )
       new_prog_state |= update_program( ctx );
    }
 
+   if (new_state & _NEW_ARRAY)
+      _mesa_update_vao_client_arrays(ctx, ctx->Array.VAO);
+
    if (ctx->Const.CheckArrayBounds &&
        new_state & (_NEW_ARRAY | _NEW_PROGRAM | _NEW_BUFFER_OBJECT)) {
-      _mesa_update_array_object_max_element(ctx, ctx->Array.ArrayObj);
+      _mesa_update_vao_max_element(ctx, ctx->Array.VAO);
    }
 
  out:
@@ -430,6 +439,7 @@ _mesa_update_state_locked( struct gl_context *ctx )
    new_state = ctx->NewState | new_prog_state;
    ctx->NewState = 0;
    ctx->Driver.UpdateState(ctx, new_state);
+   ctx->Array.VAO->NewArrays = 0x0;
 }
 
 

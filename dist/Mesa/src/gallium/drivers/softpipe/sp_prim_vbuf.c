@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -587,17 +587,23 @@ sp_vbuf_draw_arrays(struct vbuf_render *vbr, uint start, uint nr)
    }
 }
 
+/*
+ * FIXME: it is unclear if primitives_storage_needed (which is generally
+ * the same as pipe query num_primitives_generated) should increase
+ * if SO is disabled for d3d10, but for GL we definitely need to
+ * increase num_primitives_generated and this is only called for active
+ * SO. If it must not increase for d3d10 need to disambiguate the counters
+ * in the driver and do some work for getting correct values, if it should
+ * increase too should call this from outside streamout code.
+ */
 static void
-sp_vbuf_so_info(struct vbuf_render *vbr, uint primitives, uint vertices,
-                uint prim_generated)
+sp_vbuf_so_info(struct vbuf_render *vbr, uint primitives, uint prim_generated)
 {
    struct softpipe_vbuf_render *cvbr = softpipe_vbuf_render(vbr);
    struct softpipe_context *softpipe = cvbr->softpipe;
 
    softpipe->so_stats.num_primitives_written += primitives;
-   softpipe->so_stats.primitives_storage_needed =
-      vertices * 4 /*sizeof(float|int32)*/ * 4 /*x,y,z,w*/;
-   softpipe->num_primitives_generated += prim_generated;
+   softpipe->so_stats.primitives_storage_needed += prim_generated;
 }
 
 static void

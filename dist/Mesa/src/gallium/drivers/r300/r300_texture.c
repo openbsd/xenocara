@@ -1060,7 +1060,7 @@ r300_texture_create_object(struct r300_screen *rscreen,
     rws->buffer_set_tiling(tex->buf, NULL,
             tex->tex.microtile, tex->tex.macrotile[0],
             0, 0, 0, 0, 0,
-            tex->tex.stride_in_bytes[0]);
+            tex->tex.stride_in_bytes[0], false);
 
     return tex;
 
@@ -1079,7 +1079,7 @@ struct pipe_resource *r300_texture_create(struct pipe_screen *screen,
     enum radeon_bo_layout microtile, macrotile;
 
     if ((base->flags & R300_RESOURCE_FLAG_TRANSFER) ||
-        (base->bind & PIPE_BIND_SCANOUT)) {
+        (base->bind & (PIPE_BIND_SCANOUT | PIPE_BIND_LINEAR))) {
         microtile = RADEON_LAYOUT_LINEAR;
         macrotile = RADEON_LAYOUT_LINEAR;
     } else {
@@ -1115,7 +1115,8 @@ struct pipe_resource *r300_texture_from_handle(struct pipe_screen *screen,
     if (!buffer)
         return NULL;
 
-    rws->buffer_get_tiling(buffer, &microtile, &macrotile, NULL, NULL, NULL, NULL, NULL);
+    rws->buffer_get_tiling(buffer, &microtile, &macrotile, NULL, NULL, NULL,
+                           NULL, NULL, NULL);
 
     /* Enforce a microtiled zbuffer. */
     if (util_format_is_depth_or_stencil(base->format) &&

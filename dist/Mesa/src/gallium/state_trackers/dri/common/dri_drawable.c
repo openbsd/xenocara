@@ -258,10 +258,11 @@ dri_set_tex_buffer(__DRIcontext *pDRICtx, GLint target,
 }
 
 const __DRItexBufferExtension driTexBufferExtension = {
-    { __DRI_TEX_BUFFER, __DRI_TEX_BUFFER_VERSION },
-   dri_set_tex_buffer,
-   dri_set_tex_buffer2,
-   NULL,
+   .base = { __DRI_TEX_BUFFER, 2 },
+
+   .setTexBuffer       = dri_set_tex_buffer,
+   .setTexBuffer2      = dri_set_tex_buffer2,
+   .releaseTexBuffer   = NULL,
 };
 
 /**
@@ -371,17 +372,38 @@ dri_pipe_blit(struct pipe_context *pipe,
    if (!dst || !src)
       return;
 
+   /* From the GL spec, version 4.2, section 4.1.11 (Additional Multisample
+    *  Fragment Operations):
+    *
+    *      If a framebuffer object is not bound, after all operations have
+    *      been completed on the multisample buffer, the sample values for
+    *      each color in the multisample buffer are combined to produce a
+    *      single color value, and that value is written into the
+    *      corresponding color buffers selected by DrawBuffer or
+    *      DrawBuffers. An implementation may defer the writing of the color
+    *      buffers until a later time, but the state of the framebuffer must
+    *      behave as if the color buffers were updated as each fragment was
+    *      processed. The method of combination is not specified. If the
+    *      framebuffer contains sRGB values, then it is recommended that the
+    *      an average of sample values is computed in a linearized space, as
+    *      for blending (see section 4.1.7).
+    *
+    * In other words, to do a resolve operation in a linear space, we have
+    * to set sRGB formats if the original resources were sRGB, so don't use
+    * util_format_linear.
+    */
+
    memset(&blit, 0, sizeof(blit));
    blit.dst.resource = dst;
    blit.dst.box.width = dst->width0;
    blit.dst.box.height = dst->height0;
    blit.dst.box.depth = 1;
-   blit.dst.format = util_format_linear(dst->format);
+   blit.dst.format = dst->format;
    blit.src.resource = src;
    blit.src.box.width = src->width0;
    blit.src.box.height = src->height0;
    blit.src.box.depth = 1;
-   blit.src.format = util_format_linear(src->format);
+   blit.src.format = src->format;
    blit.mask = PIPE_MASK_RGBA;
    blit.filter = PIPE_TEX_FILTER_NEAREST;
 
@@ -438,6 +460,8 @@ dri_flush(__DRIcontext *cPriv,
    /* Flush the drawable. */
    if ((flags & __DRI2_FLUSH_DRAWABLE) &&
        drawable->textures[ST_ATTACHMENT_BACK_LEFT]) {
+      struct pipe_context *pipe = ctx->st->pipe;
+
       if (drawable->stvis.samples > 1 &&
           reason == __DRI2_THROTTLE_SWAPBUFFER) {
          /* Resolve the MSAA back buffer. */
@@ -458,6 +482,8 @@ dri_flush(__DRIcontext *cPriv,
       if (ctx->hud) {
          hud_draw(ctx->hud, drawable->textures[ST_ATTACHMENT_BACK_LEFT]);
       }
+
+      pipe->flush_resource(pipe, drawable->textures[ST_ATTACHMENT_BACK_LEFT]);
    }
 
    flush_flags = 0;
@@ -536,8 +562,9 @@ dri_throttle(__DRIcontext *cPriv, __DRIdrawable *dPriv,
 
 
 const __DRI2throttleExtension dri2ThrottleExtension = {
-    .base = { __DRI2_THROTTLE, __DRI2_THROTTLE_VERSION },
-    .throttle = dri_throttle,
+    .base = { __DRI2_THROTTLE, 1 },
+
+    .throttle          = dri_throttle,
 };
 
 

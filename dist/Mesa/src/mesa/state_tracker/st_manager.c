@@ -30,6 +30,7 @@
 #include "main/texobj.h"
 #include "main/teximage.h"
 #include "main/texstate.h"
+#include "main/errors.h"
 #include "main/framebuffer.h"
 #include "main/fbobject.h"
 #include "main/renderbuffer.h"
@@ -182,8 +183,13 @@ st_framebuffer_validate(struct st_framebuffer *stfb,
    uint width, height;
    unsigned i;
    boolean changed = FALSE;
-   int32_t new_stamp = p_atomic_read(&stfb->iface->stamp);
+   int32_t new_stamp;
 
+   /* Check for incomplete framebuffers (e.g. EGL_KHR_surfaceless_context) */
+   if (!stfb->iface)
+      return;
+
+   new_stamp = p_atomic_read(&stfb->iface->stamp);
    if (stfb->iface_stamp == new_stamp)
       return;
 
@@ -301,6 +307,8 @@ st_framebuffer_add_renderbuffer(struct st_framebuffer *stfb,
       break;
    default:
       format = stfb->iface->visual->color_format;
+      if (stfb->Base.Visual.sRGBCapable)
+         format = util_format_srgb(format);
       sw = FALSE;
       break;
    }
@@ -399,7 +407,8 @@ st_visual_to_context_mode(const struct st_visual *visual,
  * Create a framebuffer from a manager interface.
  */
 static struct st_framebuffer *
-st_framebuffer_create(struct st_framebuffer_iface *stfbi)
+st_framebuffer_create(struct st_context *st,
+                      struct st_framebuffer_iface *stfbi)
 {
    struct st_framebuffer *stfb;
    struct gl_config mode;
@@ -413,6 +422,38 @@ st_framebuffer_create(struct st_framebuffer_iface *stfbi)
       return NULL;
 
    st_visual_to_context_mode(stfbi->visual, &mode);
+
+   /*
+    * For desktop GL, sRGB framebuffer write is controlled by both the
+    * capability of the framebuffer and GL_FRAMEBUFFER_SRGB.  We should
+    * advertise the capability when the pipe driver (and core Mesa) supports
+    * it so that applications can enable sRGB write when they want to.
+    *
+    * This is not to be confused with GLX_FRAMEBUFFER_SRGB_CAPABLE_ARB.  When
+    * the attribute is GLX_TRUE, it tells the st manager to pick a color
+    * format such that util_format_srgb(visual->color_format) can be supported
+    * by the pipe driver.  We still need to advertise the capability here.
+    *
+    * For GLES, however, sRGB framebuffer write is controlled only by the
+    * capability of the framebuffer.  There is GL_EXT_sRGB_write_control to
+    * give applications the control back, but sRGB write is still enabled by
+    * default.  To avoid unexpected results, we should not advertise the
+    * capability.  This could change when we add support for
+    * EGL_KHR_gl_colorspace.
+    */
+   if (_mesa_is_desktop_gl(st->ctx)) {
+      struct pipe_screen *screen = st->pipe->screen;
+      const enum pipe_format srgb_format =
+         util_format_srgb(stfbi->visual->color_format);
+
+      if (srgb_format != PIPE_FORMAT_NONE &&
+          st_pipe_format_to_mesa_format(srgb_format) != MESA_FORMAT_NONE &&
+          screen->is_format_supported(screen, srgb_format,
+                                      PIPE_TEXTURE_2D, stfbi->visual->samples,
+                                      PIPE_BIND_RENDER_TARGET))
+         mode.sRGBCapable = GL_TRUE;
+   }
+
    _mesa_initialize_window_framebuffer(&stfb->Base, &mode);
 
    stfb->iface = stfbi;
@@ -469,7 +510,6 @@ st_context_teximage(struct st_context_iface *stctxi,
 {
    struct st_context *st = (struct st_context *) stctxi;
    struct gl_context *ctx = st->ctx;
-   struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
    struct gl_texture_object *texObj;
    struct gl_texture_image *texImage;
    struct st_texture_object *stObj;
@@ -495,7 +535,8 @@ st_context_teximage(struct st_context_iface *stctxi,
       return FALSE;
    }
 
-   texObj = _mesa_select_tex_object(ctx, texUnit, target);
+   texObj = _mesa_get_current_tex_object(ctx, target);
+
    _mesa_lock_texture(ctx, texObj);
 
    stObj = st_texture_object(texObj);
@@ -508,7 +549,7 @@ st_context_teximage(struct st_context_iface *stctxi,
    texImage = _mesa_get_tex_image(ctx, texObj, target, level);
    stImage = st_texture_image(texImage);
    if (tex) {
-      gl_format texFormat = st_pipe_format_to_mesa_format(pipe_format);
+      mesa_format texFormat = st_pipe_format_to_mesa_format(pipe_format);
 
       if (util_format_has_alpha(tex->format))
          internalFormat = GL_RGBA;
@@ -545,7 +586,7 @@ st_context_teximage(struct st_context_iface *stctxi,
    stObj->depth0 = depth;
    stObj->surface_format = pipe_format;
 
-   _mesa_dirty_texobj(ctx, texObj, GL_TRUE);
+   _mesa_dirty_texobj(ctx, texObj);
    _mesa_unlock_texture(ctx, texObj);
    
    return TRUE;
@@ -626,8 +667,14 @@ st_api_create_context(struct st_api *stapi, struct st_manager *smapi,
       return NULL;
    }
 
-   if (attribs->flags & ST_CONTEXT_FLAG_DEBUG)
+   if (attribs->flags & ST_CONTEXT_FLAG_DEBUG){
+      if (!_mesa_set_debug_state_int(st->ctx, GL_DEBUG_OUTPUT, GL_TRUE)) {
+         *error = ST_CONTEXT_ERROR_NO_MEMORY;
+         return NULL;
+      }
       st->ctx->Const.ContextFlags |= GL_CONTEXT_FLAG_DEBUG_BIT;
+   }
+
    if (attribs->flags & ST_CONTEXT_FLAG_FORWARD_COMPATIBLE)
       st->ctx->Const.ContextFlags |= GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT;
 
@@ -668,7 +715,8 @@ st_api_get_current(struct st_api *stapi)
 }
 
 static struct st_framebuffer *
-st_framebuffer_reuse_or_create(struct gl_framebuffer *fb,
+st_framebuffer_reuse_or_create(struct st_context *st,
+                               struct gl_framebuffer *fb,
                                struct st_framebuffer_iface *stfbi)
 {
    struct st_framebuffer *cur = st_ws_framebuffer(fb), *stfb = NULL;
@@ -681,7 +729,7 @@ st_framebuffer_reuse_or_create(struct gl_framebuffer *fb,
    }
    else {
       /* create a new one */
-      stfb = st_framebuffer_create(stfbi);
+      stfb = st_framebuffer_create(st, stfbi);
    }
 
    return stfb;
@@ -700,12 +748,12 @@ st_api_make_current(struct st_api *stapi, struct st_context_iface *stctxi,
 
    if (st) {
       /* reuse or create the draw fb */
-      stdraw = st_framebuffer_reuse_or_create(st->ctx->WinSysDrawBuffer,
-                                              stdrawi);
+      stdraw = st_framebuffer_reuse_or_create(st,
+            st->ctx->WinSysDrawBuffer, stdrawi);
       if (streadi != stdrawi) {
          /* do the same for the read fb */
-         stread = st_framebuffer_reuse_or_create(st->ctx->WinSysReadBuffer,
-                                                 streadi);
+         stread = st_framebuffer_reuse_or_create(st,
+               st->ctx->WinSysReadBuffer, streadi);
       }
       else {
          stread = NULL;

@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -84,6 +84,12 @@ static void sp_blit(struct pipe_context *pipe,
 }
 
 static void
+sp_flush_resource(struct pipe_context *pipe,
+                  struct pipe_resource *resource)
+{
+}
+
+static void
 softpipe_clear_render_target(struct pipe_context *pipe,
                              struct pipe_surface *dst,
                              const union pipe_color_union *color,
@@ -127,4 +133,5 @@ sp_init_surface_functions(struct softpipe_context *sp)
    sp->pipe.clear_render_target = softpipe_clear_render_target;
    sp->pipe.clear_depth_stencil = softpipe_clear_depth_stencil;
    sp->pipe.blit = sp_blit;
+   sp->pipe.flush_resource = sp_flush_resource;
 }

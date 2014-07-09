@@ -32,21 +32,21 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/cpuinfo.h"
 #include "main/extensions.h"
 #include "utils.h"
+#include "dri_util.h"
 
 
-unsigned
+uint64_t
 driParseDebugString( const char * debug, 
 		     const struct dri_debug_control * control  )
 {
-   unsigned   flag;
+   uint64_t flag = 0;
 
-
-   flag = 0;
    if ( debug != NULL ) {
       while( control->string != NULL ) {
 	 if ( !strcmp( debug, "all" ) ||
@@ -150,7 +150,7 @@ driGetRendererString( char * buffer, const char * hardware_name,
  *                      If the function fails and returns \c GL_FALSE, this
  *                      value will be unmodified, but some elements in the
  *                      linked list may be modified.
- * \param format        Mesa gl_format enum describing the pixel format
+ * \param format        Mesa mesa_format enum describing the pixel format
  * \param depth_bits    Array of depth buffer sizes to be exposed.
  * \param stencil_bits  Array of stencil buffer sizes to be exposed.
  * \param num_depth_stencil_bits  Number of entries in both \c depth_bits and
@@ -175,7 +175,7 @@ driGetRendererString( char * buffer, const char * hardware_name,
  * \c format).
  */
 __DRIconfig **
-driCreateConfigs(gl_format format,
+driCreateConfigs(mesa_format format,
 		 const uint8_t * depth_bits, const uint8_t * stencil_bits,
 		 unsigned num_depth_stencil_bits,
 		 const GLenum * db_modes, unsigned num_db_modes,
@@ -183,12 +183,16 @@ driCreateConfigs(gl_format format,
 		 GLboolean enable_accum)
 {
    static const uint32_t masks_table[][4] = {
-      /* MESA_FORMAT_RGB565 */
+      /* MESA_FORMAT_B5G6R5_UNORM */
       { 0x0000F800, 0x000007E0, 0x0000001F, 0x00000000 },
-      /* MESA_FORMAT_XRGB8888 */
+      /* MESA_FORMAT_B8G8R8X8_UNORM */
       { 0x00FF0000, 0x0000FF00, 0x000000FF, 0x00000000 },
-      /* MESA_FORMAT_ARGB8888 */
+      /* MESA_FORMAT_B8G8R8A8_UNORM */
       { 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000 },
+      /* MESA_FORMAT_B10G10R10X2_UNORM */
+      { 0x3FF00000, 0x000FFC00, 0x000003FF, 0x00000000 },
+      /* MESA_FORMAT_B10G10R10A2_UNORM */
+      { 0x3FF00000, 0x000FFC00, 0x000003FF, 0xC0000000 },
    };
 
    const uint32_t * masks;
@@ -204,15 +208,21 @@ driCreateConfigs(gl_format format,
    bool is_srgb;
 
    switch (format) {
-   case MESA_FORMAT_RGB565:
+   case MESA_FORMAT_B5G6R5_UNORM:
       masks = masks_table[0];
       break;
-   case MESA_FORMAT_XRGB8888:
+   case MESA_FORMAT_B8G8R8X8_UNORM:
       masks = masks_table[1];
       break;
-   case MESA_FORMAT_ARGB8888:
-   case MESA_FORMAT_SARGB8:
+   case MESA_FORMAT_B8G8R8A8_UNORM:
+   case MESA_FORMAT_B8G8R8A8_SRGB:
       masks = masks_table[2];
+      break;
+   case MESA_FORMAT_B10G10R10X2_UNORM:
+      masks = masks_table[3];
+      break;
+   case MESA_FORMAT_B10G10R10A2_UNORM:
+      masks = masks_table[4];
       break;
    default:
       fprintf(stderr, "[%s:%u] Unknown framebuffer type %s (%d).\n",
@@ -297,6 +307,7 @@ driCreateConfigs(gl_format format,
 			__DRI_ATTRIB_TEXTURE_2D_BIT |
 			__DRI_ATTRIB_TEXTURE_RECTANGLE_BIT;
 
+		    modes->yInverted = GL_TRUE;
 		    modes->sRGBCapable = is_srgb;
 		}
 	    }
@@ -466,4 +477,67 @@ driIndexConfigAttrib(const __DRIconfig *config, int index,
     }
 
     return GL_FALSE;
+}
+
+/**
+ * Implement queries for values that are common across all Mesa drivers
+ *
+ * Currently only the following queries are supported by this function:
+ *
+ *     - \c __DRI2_RENDERER_VERSION
+ *     - \c __DRI2_RENDERER_OPENGL_CORE_PROFILE_VERSION
+ *     - \c __DRI2_RENDERER_OPENGL_COMPATIBLITY_PROFILE_VERSION
+ *     - \c __DRI2_RENDERER_ES_PROFILE_VERSION
+ *     - \c __DRI2_RENDERER_ES2_PROFILE_VERSION
+ *
+ * \returns
+ * Zero if a recognized value of \c param is supplied, -1 otherwise.
+ */
+int
+driQueryRendererIntegerCommon(__DRIscreen *psp, int param, unsigned int *value)
+{
+   switch (param) {
+   case __DRI2_RENDERER_VERSION: {
+      static const char *const ver = PACKAGE_VERSION;
+      char *endptr;
+      int v[3];
+
+      v[0] = strtol(ver, &endptr, 10);
+      assert(endptr[0] == '.');
+      if (endptr[0] != '.')
+         return -1;
+
+      v[1] = strtol(endptr + 1, &endptr, 10);
+      assert(endptr[0] == '.');
+      if (endptr[0] != '.')
+         return -1;
+
+      v[2] = strtol(endptr + 1, &endptr, 10);
+
+      value[0] = v[0];
+      value[1] = v[1];
+      value[2] = v[2];
+      return 0;
+   }
+   case __DRI2_RENDERER_OPENGL_CORE_PROFILE_VERSION:
+      value[0] = psp->max_gl_core_version / 10;
+      value[1] = psp->max_gl_core_version % 10;
+      return 0;
+   case __DRI2_RENDERER_OPENGL_COMPATIBILITY_PROFILE_VERSION:
+      value[0] = psp->max_gl_compat_version / 10;
+      value[1] = psp->max_gl_compat_version % 10;
+      return 0;
+   case __DRI2_RENDERER_OPENGL_ES_PROFILE_VERSION:
+      value[0] = psp->max_gl_es1_version / 10;
+      value[1] = psp->max_gl_es1_version % 10;
+      return 0;
+   case __DRI2_RENDERER_OPENGL_ES2_PROFILE_VERSION:
+      value[0] = psp->max_gl_es2_version / 10;
+      value[1] = psp->max_gl_es2_version % 10;
+      return 0;
+   default:
+      break;
+   }
+
+   return -1;
 }

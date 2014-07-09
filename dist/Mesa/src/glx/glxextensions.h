@@ -49,6 +49,7 @@ enum
    MESA_copy_sub_buffer_bit,
    MESA_depth_float_bit,
    MESA_multithread_makecurrent_bit,
+   MESA_query_renderer_bit,
    MESA_swap_control_bit,
    MESA_swap_frame_usage_bit,
    NV_float_buffer_bit,
@@ -65,6 +66,7 @@ enum
    SGIX_visual_select_group_bit,
    EXT_texture_from_pixmap_bit,
    INTEL_swap_event_bit,
+   EXT_buffer_age_bit,
 };
 
 /* From the GLX perspective, the ARB and EXT extensions are identical.  Use a

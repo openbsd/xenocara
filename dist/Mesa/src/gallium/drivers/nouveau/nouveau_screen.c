@@ -14,7 +14,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include <libdrm/nouveau_drm.h>
+#include <nouveau_drm.h>
 
 #include "nouveau_winsys.h"
 #include "nouveau_screen.h"
@@ -85,8 +85,19 @@ nouveau_screen_bo_from_handle(struct pipe_screen *pscreen,
 	struct nouveau_device *dev = nouveau_screen(pscreen)->device;
 	struct nouveau_bo *bo = 0;
 	int ret;
- 
-	ret = nouveau_bo_name_ref(dev, whandle->handle, &bo);
+
+	if (whandle->type != DRM_API_HANDLE_TYPE_SHARED &&
+	    whandle->type != DRM_API_HANDLE_TYPE_FD) {
+		debug_printf("%s: attempt to import unsupported handle type %d\n",
+			     __FUNCTION__, whandle->type);
+		return NULL;
+	}
+
+	if (whandle->type == DRM_API_HANDLE_TYPE_SHARED)
+		ret = nouveau_bo_name_ref(dev, whandle->handle, &bo);
+	else
+		ret = nouveau_bo_prime_handle_ref(dev, whandle->handle, &bo);
+
 	if (ret) {
 		debug_printf("%s: ref name 0x%08x failed with %d\n",
 			     __FUNCTION__, whandle->handle, ret);
@@ -106,11 +117,13 @@ nouveau_screen_bo_get_handle(struct pipe_screen *pscreen,
 {
 	whandle->stride = stride;
 
-	if (whandle->type == DRM_API_HANDLE_TYPE_SHARED) { 
+	if (whandle->type == DRM_API_HANDLE_TYPE_SHARED) {
 		return nouveau_bo_name_get(bo, &whandle->handle) == 0;
 	} else if (whandle->type == DRM_API_HANDLE_TYPE_KMS) {
 		whandle->handle = bo->handle;
 		return TRUE;
+	} else if (whandle->type == DRM_API_HANDLE_TYPE_FD) {
+		return nouveau_bo_set_prime(bo, (int *)&whandle->handle) == 0;
 	} else {
 		return FALSE;
 	}
@@ -130,6 +143,12 @@ nouveau_screen_init(struct nouveau_screen *screen, struct nouveau_device *dev)
 	char *nv_dbg = getenv("NOUVEAU_MESA_DEBUG");
 	if (nv_dbg)
 	   nouveau_mesa_debug = atoi(nv_dbg);
+
+	/*
+	 * this is initialized to 1 in nouveau_drm_screen_create after screen
+	 * is fully constructed and added to the global screen list.
+	 */
+	screen->refcount = -1;
 
 	if (dev->chipset < 0xc0) {
 		data = &nv04_data;

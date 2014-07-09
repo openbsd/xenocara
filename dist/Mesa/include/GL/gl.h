@@ -33,25 +33,14 @@
 
 
 /**********************************************************************
- * Begin system-specific stuff. Do not do any of this when building
- * for SciTech SNAP, as this is all done before this header file is
- * included. 
+ * Begin system-specific stuff.
  */
-#if !defined(__SCITECH_SNAP__)
-
-#if defined(__BEOS__)
-#include <stdlib.h>     /* to get some BeOS-isms */
-#endif
-
-#if !defined(OPENSTEP) && (defined(NeXT) || defined(NeXT_PDO))
-#define OPENSTEP
-#endif
 
 #if defined(_WIN32) && !defined(__WIN32__) && !defined(__CYGWIN__)
 #define __WIN32__
 #endif
 
-#if !defined(OPENSTEP) && (defined(__WIN32__) && !defined(__CYGWIN__))
+#if defined(__WIN32__) && !defined(__CYGWIN__)
 #  if (defined(_MSC_VER) || defined(__MINGW32__)) && defined(BUILD_GL32) /* tag specify we're building mesa as a DLL */
 #    define GLAPI __declspec(dllexport)
 #  elif (defined(_MSC_VER) || defined(__MINGW32__)) && defined(_DLL) /* tag specifying we're building for DLL runtime support */
@@ -72,10 +61,6 @@
 #  define GLAPIENTRY
 #endif /* WIN32 && !CYGWIN */
 
-#if (defined(__BEOS__) && defined(__POWERPC__)) || defined(__QUICKDRAW__)
-#  define PRAGMA_EXPORT_SUPPORTED		1
-#endif
-
 /*
  * WINDOWS: Include windows.h here to define APIENTRY.
  * It is also useful when applications include this file by
@@ -89,10 +74,6 @@
 #define WIN32_LEAN_AND_MEAN 1
 #endif
 #include <windows.h>
-#endif
-
-#if defined(macintosh) && PRAGMA_IMPORT_SUPPORTED
-#pragma import on
 #endif
 
 #ifndef GLAPI
@@ -116,15 +97,6 @@
 #define GLAPIENTRYP GLAPIENTRY *
 #endif
 
-#ifdef CENTERLINE_CLPP
-#define signed
-#endif
-
-#if defined(PRAGMA_EXPORT_SUPPORTED)
-#pragma export on
-#endif
-
-#endif /* !__SCITECH_SNAP__ */
 /*
  * End system-specific stuff.
  **********************************************************************/
@@ -718,7 +690,7 @@ typedef double		GLclampd;	/* double precision float in [0,1] */
 #define GL_LIST_BIT				0x00020000
 #define GL_TEXTURE_BIT				0x00040000
 #define GL_SCISSOR_BIT				0x00080000
-#define GL_ALL_ATTRIB_BITS			0x000FFFFF
+#define GL_ALL_ATTRIB_BITS			0xFFFFFFFF
 
 
 /* OpenGL 1.1 */
@@ -1736,8 +1708,6 @@ GLAPI void GLAPIENTRY glSeparableFilter2D( GLenum target,
 GLAPI void GLAPIENTRY glGetSeparableFilter( GLenum target, GLenum format,
 	GLenum type, GLvoid *row, GLvoid *column, GLvoid *span );
 
-typedef void (APIENTRYP PFNGLBLENDCOLORPROC) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
-typedef void (APIENTRYP PFNGLBLENDEQUATIONPROC) (GLenum mode);
 
 
 
@@ -2088,26 +2058,6 @@ typedef void (APIENTRYP PFNGLMULTITEXCOORD4SVARBPROC) (GLenum target, const GLsh
 
 
 
-#if GL_ARB_shader_objects
-
-#ifndef GL_MESA_shader_debug
-#define GL_MESA_shader_debug 1
-
-#define GL_DEBUG_OBJECT_MESA              0x8759
-#define GL_DEBUG_PRINT_MESA               0x875A
-#define GL_DEBUG_ASSERT_MESA              0x875B
-
-GLAPI GLhandleARB GLAPIENTRY glCreateDebugObjectMESA (void);
-GLAPI void GLAPIENTRY glClearDebugLogMESA (GLhandleARB obj, GLenum logType, GLenum shaderType);
-GLAPI void GLAPIENTRY glGetDebugLogMESA (GLhandleARB obj, GLenum logType, GLenum shaderType, GLsizei maxLength,
-                                         GLsizei *length, GLcharARB *debugLog);
-GLAPI GLsizei GLAPIENTRY glGetDebugLogLengthMESA (GLhandleARB obj, GLenum logType, GLenum shaderType);
-
-#endif /* GL_MESA_shader_debug */
-
-#endif /* GL_ARB_shader_objects */
-
-
 /*
  * ???. GL_MESA_packed_depth_stencil
  * XXX obsolete
@@ -2122,60 +2072,6 @@ GLAPI GLsizei GLAPIENTRY glGetDebugLogLengthMESA (GLhandleARB obj, GLenum logTyp
 #define GL_UNSIGNED_SHORT_1_15_REV_MESA		0x8754
 
 #endif /* GL_MESA_packed_depth_stencil */
-
-
-#ifndef GL_MESA_program_debug
-#define GL_MESA_program_debug 1
-
-#define GL_FRAGMENT_PROGRAM_POSITION_MESA       0x8bb0
-#define GL_FRAGMENT_PROGRAM_CALLBACK_MESA       0x8bb1
-#define GL_FRAGMENT_PROGRAM_CALLBACK_FUNC_MESA  0x8bb2
-#define GL_FRAGMENT_PROGRAM_CALLBACK_DATA_MESA  0x8bb3
-#define GL_VERTEX_PROGRAM_POSITION_MESA         0x8bb4
-#define GL_VERTEX_PROGRAM_CALLBACK_MESA         0x8bb5
-#define GL_VERTEX_PROGRAM_CALLBACK_FUNC_MESA    0x8bb6
-#define GL_VERTEX_PROGRAM_CALLBACK_DATA_MESA    0x8bb7
-
-typedef void (*GLprogramcallbackMESA)(GLenum target, GLvoid *data);
-
-GLAPI void GLAPIENTRY glProgramCallbackMESA(GLenum target, GLprogramcallbackMESA callback, GLvoid *data);
-
-GLAPI void GLAPIENTRY glGetProgramRegisterfvMESA(GLenum target, GLsizei len, const GLubyte *name, GLfloat *v);
-
-#endif /* GL_MESA_program_debug */
-
-
-#ifndef GL_MESA_texture_array
-#define GL_MESA_texture_array 1
-
-/* GL_MESA_texture_array uses the same enum values as GL_EXT_texture_array.
- */
-#ifndef GL_EXT_texture_array
-
-#ifdef GL_GLEXT_PROTOTYPES
-GLAPI void APIENTRY glFramebufferTextureLayerEXT(GLenum target,
-    GLenum attachment, GLuint texture, GLint level, GLint layer);
-#endif /* GL_GLEXT_PROTOTYPES */
-
-#if 0
-/* (temporarily) disabled because of collision with typedef in glext.h
- * that happens if apps include both gl.h and glext.h
- */
-typedef void (APIENTRYP PFNGLFRAMEBUFFERTEXTURELAYEREXTPROC) (GLenum target,
-    GLenum attachment, GLuint texture, GLint level, GLint layer);
-#endif
-
-#define GL_TEXTURE_1D_ARRAY_EXT         0x8C18
-#define GL_PROXY_TEXTURE_1D_ARRAY_EXT   0x8C19
-#define GL_TEXTURE_2D_ARRAY_EXT         0x8C1A
-#define GL_PROXY_TEXTURE_2D_ARRAY_EXT   0x8C1B
-#define GL_TEXTURE_BINDING_1D_ARRAY_EXT 0x8C1C
-#define GL_TEXTURE_BINDING_2D_ARRAY_EXT 0x8C1D
-#define GL_MAX_ARRAY_TEXTURE_LAYERS_EXT 0x88FF
-#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER_EXT 0x8CD4
-#endif
-
-#endif
 
 
 #ifndef GL_ATI_blend_equation_separate
@@ -2210,22 +2106,6 @@ typedef void (APIENTRYP PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC) (GLenum t
  ** glext.h be sure to regenerate the gl_mangle.h file.  See comments
  ** in that file for details.
  **/
-
-
-
-/**********************************************************************
- * Begin system-specific stuff
- */
-#if defined(PRAGMA_EXPORT_SUPPORTED)
-#pragma export off
-#endif
-
-#if defined(macintosh) && PRAGMA_IMPORT_SUPPORTED
-#pragma import off
-#endif
-/*
- * End system-specific stuff
- **********************************************************************/
 
 
 #ifdef __cplusplus

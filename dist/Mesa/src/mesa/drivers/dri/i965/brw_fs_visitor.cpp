@@ -33,7 +33,6 @@ extern "C" {
 
 #include "main/macros.h"
 #include "main/shaderobj.h"
-#include "main/uniforms.h"
 #include "program/prog_parameter.h"
 #include "program/prog_print.h"
 #include "program/prog_optimize.h"
@@ -45,6 +44,7 @@ extern "C" {
 #include "brw_wm.h"
 }
 #include "brw_fs.h"
+#include "main/uniforms.h"
 #include "glsl/glsl_types.h"
 #include "glsl/ir_optimization.h"
 
@@ -56,7 +56,7 @@ fs_visitor::visit(ir_variable *ir)
    if (variable_storage(ir))
       return;
 
-   if (ir->mode == ir_var_shader_in) {
+   if (ir->data.mode == ir_var_shader_in) {
       if (!strcmp(ir->name, "gl_FragCoord")) {
 	 reg = emit_fragcoord_interpolation(ir);
       } else if (!strcmp(ir->name, "gl_FrontFacing")) {
@@ -67,25 +67,28 @@ fs_visitor::visit(ir_variable *ir)
       assert(reg);
       hash_table_insert(this->variable_ht, reg, ir);
       return;
-   } else if (ir->mode == ir_var_shader_out) {
+   } else if (ir->data.mode == ir_var_shader_out) {
       reg = new(this->mem_ctx) fs_reg(this, ir->type);
 
-      if (ir->index > 0) {
-	 assert(ir->location == FRAG_RESULT_DATA0);
-	 assert(ir->index == 1);
+      if (ir->data.index > 0) {
+	 assert(ir->data.location == FRAG_RESULT_DATA0);
+	 assert(ir->data.index == 1);
 	 this->dual_src_output = *reg;
-      } else if (ir->location == FRAG_RESULT_COLOR) {
+         this->do_dual_src = true;
+      } else if (ir->data.location == FRAG_RESULT_COLOR) {
 	 /* Writing gl_FragColor outputs to all color regions. */
 	 for (unsigned int i = 0; i < MAX2(c->key.nr_color_regions, 1); i++) {
 	    this->outputs[i] = *reg;
 	    this->output_components[i] = 4;
 	 }
-      } else if (ir->location == FRAG_RESULT_DEPTH) {
+      } else if (ir->data.location == FRAG_RESULT_DEPTH) {
 	 this->frag_depth = *reg;
+      } else if (ir->data.location == FRAG_RESULT_SAMPLE_MASK) {
+         this->sample_mask = *reg;
       } else {
 	 /* gl_FragData or a user-defined FS output */
-	 assert(ir->location >= FRAG_RESULT_DATA0 &&
-		ir->location < FRAG_RESULT_DATA0 + BRW_MAX_DRAW_BUFFERS);
+	 assert(ir->data.location >= FRAG_RESULT_DATA0 &&
+		ir->data.location < FRAG_RESULT_DATA0 + BRW_MAX_DRAW_BUFFERS);
 
 	 int vector_elements =
 	    ir->type->is_array() ? ir->type->fields.array->vector_elements
@@ -93,25 +96,28 @@ fs_visitor::visit(ir_variable *ir)
 
 	 /* General color output. */
 	 for (unsigned int i = 0; i < MAX2(1, ir->type->length); i++) {
-	    int output = ir->location - FRAG_RESULT_DATA0 + i;
+	    int output = ir->data.location - FRAG_RESULT_DATA0 + i;
 	    this->outputs[output] = *reg;
 	    this->outputs[output].reg_offset += vector_elements * i;
 	    this->output_components[output] = vector_elements;
 	 }
       }
-   } else if (ir->mode == ir_var_uniform) {
-      int param_index = c->prog_data.nr_params;
+   } else if (ir->data.mode == ir_var_uniform) {
+      int param_index = uniforms;
 
       /* Thanks to the lower_ubo_reference pass, we will see only
        * ir_binop_ubo_load expressions and not ir_dereference_variable for UBO
        * variables, so no need for them to be in variable_ht.
+       *
+       * Atomic counters take no uniform storage, no need to do
+       * anything here.
        */
-      if (ir->is_in_uniform_block())
+      if (ir->is_in_uniform_block() || ir->type->contains_atomic())
          return;
 
       if (dispatch_width == 16) {
 	 if (!variable_storage(ir)) {
-	    fail("Failed to find uniform '%s' in 16-wide\n", ir->name);
+	    fail("Failed to find uniform '%s' in SIMD16\n", ir->name);
 	 }
 	 return;
       }
@@ -125,6 +131,15 @@ fs_visitor::visit(ir_variable *ir)
 
       reg = new(this->mem_ctx) fs_reg(UNIFORM, param_index);
       reg->type = brw_type_for_base_type(ir->type);
+
+   } else if (ir->data.mode == ir_var_system_value) {
+      if (ir->data.location == SYSTEM_VALUE_SAMPLE_POS) {
+	 reg = emit_samplepos_setup(ir);
+      } else if (ir->data.location == SYSTEM_VALUE_SAMPLE_ID) {
+	 reg = emit_sampleid_setup(ir);
+      } else if (ir->data.location == SYSTEM_VALUE_SAMPLE_MASK_IN) {
+         reg = emit_samplemaskin_setup(ir);
+      }
    }
 
    if (!reg)
@@ -198,7 +213,8 @@ fs_visitor::visit(ir_dereference_array *ir)
 }
 
 void
-fs_visitor::emit_lrp(fs_reg dst, fs_reg x, fs_reg y, fs_reg a)
+fs_visitor::emit_lrp(const fs_reg &dst, const fs_reg &x, const fs_reg &y,
+                     const fs_reg &a)
 {
    if (brw->gen < 6 ||
        !x.is_valid_3src() ||
@@ -211,8 +227,9 @@ fs_visitor::emit_lrp(fs_reg dst, fs_reg x, fs_reg y, fs_reg a)
 
       emit(MUL(y_times_a, y, a));
 
-      a.negate = !a.negate;
-      emit(ADD(one_minus_a, a, fs_reg(1.0f)));
+      fs_reg negative_a = a;
+      negative_a.negate = !a.negate;
+      emit(ADD(one_minus_a, negative_a, fs_reg(1.0f)));
       emit(MUL(x_times_one_minus_a, x, one_minus_a));
 
       emit(ADD(dst, x_times_one_minus_a, y_times_a));
@@ -225,8 +242,8 @@ fs_visitor::emit_lrp(fs_reg dst, fs_reg x, fs_reg y, fs_reg a)
 }
 
 void
-fs_visitor::emit_minmax(uint32_t conditionalmod, fs_reg dst,
-                        fs_reg src0, fs_reg src1)
+fs_visitor::emit_minmax(uint32_t conditionalmod, const fs_reg &dst,
+                        const fs_reg &src0, const fs_reg &src1)
 {
    fs_inst *inst;
 
@@ -277,7 +294,7 @@ fs_visitor::try_emit_saturate(ir_expression *ir)
 }
 
 bool
-fs_visitor::try_emit_mad(ir_expression *ir, int mul_arg)
+fs_visitor::try_emit_mad(ir_expression *ir)
 {
    /* 3-src instructions were introduced in gen6. */
    if (brw->gen < 6)
@@ -287,11 +304,16 @@ fs_visitor::try_emit_mad(ir_expression *ir, int mul_arg)
    if (ir->type != glsl_type::float_type)
       return false;
 
-   ir_rvalue *nonmul = ir->operands[1 - mul_arg];
-   ir_expression *mul = ir->operands[mul_arg]->as_expression();
+   ir_rvalue *nonmul = ir->operands[1];
+   ir_expression *mul = ir->operands[0]->as_expression();
 
-   if (!mul || mul->operation != ir_binop_mul)
-      return false;
+   if (!mul || mul->operation != ir_binop_mul) {
+      nonmul = ir->operands[0];
+      mul = ir->operands[1]->as_expression();
+
+      if (!mul || mul->operation != ir_binop_mul)
+         return false;
+   }
 
    if (nonmul->as_constant() ||
        mul->operands[0]->as_constant() ||
@@ -325,7 +347,7 @@ fs_visitor::visit(ir_expression *ir)
    if (try_emit_saturate(ir))
       return;
    if (ir->operation == ir_binop_add) {
-      if (try_emit_mad(ir, 0) || try_emit_mad(ir, 1))
+      if (try_emit_mad(ir))
 	 return;
    }
 
@@ -333,9 +355,10 @@ fs_visitor::visit(ir_expression *ir)
       ir->operands[operand]->accept(this);
       if (this->result.file == BAD_FILE) {
 	 fail("Failed to get tree for expression operand:\n");
-	 ir->operands[operand]->print();
-         printf("\n");
+	 ir->operands[operand]->fprint(stderr);
+         fprintf(stderr, "\n");
       }
+      assert(this->result.is_valid_3src());
       op[operand] = this->result;
 
       /* Matrix expression operands should have been broken down to vector
@@ -369,18 +392,34 @@ fs_visitor::visit(ir_expression *ir)
       emit(MOV(this->result, op[0]));
       break;
    case ir_unop_sign:
-      temp = fs_reg(this, ir->type);
+      if (ir->type->is_float()) {
+         /* AND(val, 0x80000000) gives the sign bit.
+          *
+          * Predicated OR ORs 1.0 (0x3f800000) with the sign bit if val is not
+          * zero.
+          */
+         emit(CMP(reg_null_f, op[0], fs_reg(0.0f), BRW_CONDITIONAL_NZ));
 
-      emit(MOV(this->result, fs_reg(0.0f)));
+         op[0].type = BRW_REGISTER_TYPE_UD;
+         this->result.type = BRW_REGISTER_TYPE_UD;
+         emit(AND(this->result, op[0], fs_reg(0x80000000u)));
 
-      emit(CMP(reg_null_f, op[0], fs_reg(0.0f), BRW_CONDITIONAL_G));
-      inst = emit(MOV(this->result, fs_reg(1.0f)));
-      inst->predicate = BRW_PREDICATE_NORMAL;
+         inst = emit(OR(this->result, this->result, fs_reg(0x3f800000u)));
+         inst->predicate = BRW_PREDICATE_NORMAL;
 
-      emit(CMP(reg_null_f, op[0], fs_reg(0.0f), BRW_CONDITIONAL_L));
-      inst = emit(MOV(this->result, fs_reg(-1.0f)));
-      inst->predicate = BRW_PREDICATE_NORMAL;
+         this->result.type = BRW_REGISTER_TYPE_F;
+      } else {
+         /*  ASR(val, 31) -> negative val generates 0xffffffff (signed -1).
+          *               -> non-negative val generates 0x00000000.
+          *  Predicated OR sets 1 if val is positive.
+          */
+         emit(CMP(reg_null_d, op[0], fs_reg(0), BRW_CONDITIONAL_G));
 
+         emit(ASR(this->result, op[0], fs_reg(31)));
+
+         inst = emit(OR(this->result, this->result, fs_reg(1)));
+         inst->predicate = BRW_PREDICATE_NORMAL;
+      }
       break;
    case ir_unop_rcp:
       emit_math(SHADER_OPCODE_RCP, this->result, op[0]);
@@ -420,32 +459,71 @@ fs_visitor::visit(ir_expression *ir)
       break;
 
    case ir_binop_mul:
-      if (ir->type->is_integer()) {
+      if (brw->gen < 8 && ir->type->is_integer()) {
 	 /* For integer multiplication, the MUL uses the low 16 bits
 	  * of one of the operands (src0 on gen6, src1 on gen7).  The
 	  * MACH accumulates in the contribution of the upper 16 bits
 	  * of that operand.
-	  *
-	  * FINISHME: Emit just the MUL if we know an operand is small
-	  * enough.
-	  */
-	 if (brw->gen >= 7 && dispatch_width == 16)
-	    fail("16-wide explicit accumulator operands unsupported\n");
+          */
+         if (ir->operands[0]->is_uint16_constant()) {
+            if (brw->gen < 7)
+               emit(MUL(this->result, op[0], op[1]));
+            else
+               emit(MUL(this->result, op[1], op[0]));
+         } else if (ir->operands[1]->is_uint16_constant()) {
+            if (brw->gen < 7)
+               emit(MUL(this->result, op[1], op[0]));
+            else
+               emit(MUL(this->result, op[0], op[1]));
+         } else {
+            if (brw->gen >= 7)
+               no16("SIMD16 explicit accumulator operands unsupported\n");
 
-	 struct brw_reg acc = retype(brw_acc_reg(), BRW_REGISTER_TYPE_D);
+            struct brw_reg acc = retype(brw_acc_reg(), this->result.type);
 
-	 emit(MUL(acc, op[0], op[1]));
-	 emit(MACH(reg_null_d, op[0], op[1]));
-	 emit(MOV(this->result, fs_reg(acc)));
+            emit(MUL(acc, op[0], op[1]));
+            emit(MACH(reg_null_d, op[0], op[1]));
+            emit(MOV(this->result, fs_reg(acc)));
+         }
       } else {
 	 emit(MUL(this->result, op[0], op[1]));
       }
       break;
+   case ir_binop_imul_high: {
+      if (brw->gen >= 7)
+         no16("SIMD16 explicit accumulator operands unsupported\n");
+
+      struct brw_reg acc = retype(brw_acc_reg(), this->result.type);
+
+      emit(MUL(acc, op[0], op[1]));
+      emit(MACH(this->result, op[0], op[1]));
+      break;
+   }
    case ir_binop_div:
       /* Floating point should be lowered by DIV_TO_MUL_RCP in the compiler. */
       assert(ir->type->is_integer());
       emit_math(SHADER_OPCODE_INT_QUOTIENT, this->result, op[0], op[1]);
       break;
+   case ir_binop_carry: {
+      if (brw->gen >= 7)
+         no16("SIMD16 explicit accumulator operands unsupported\n");
+
+      struct brw_reg acc = retype(brw_acc_reg(), BRW_REGISTER_TYPE_UD);
+
+      emit(ADDC(reg_null_ud, op[0], op[1]));
+      emit(MOV(this->result, fs_reg(acc)));
+      break;
+   }
+   case ir_binop_borrow: {
+      if (brw->gen >= 7)
+         no16("SIMD16 explicit accumulator operands unsupported\n");
+
+      struct brw_reg acc = retype(brw_acc_reg(), BRW_REGISTER_TYPE_UD);
+
+      emit(SUBB(reg_null_ud, op[0], op[1]));
+      emit(MOV(this->result, fs_reg(acc)));
+      break;
+   }
    case ir_binop_mod:
       /* Floating point should be lowered by MOD_TO_FRACT in the compiler. */
       assert(ir->type->is_integer());
@@ -498,6 +576,10 @@ fs_visitor::visit(ir_expression *ir)
 
    case ir_triop_vector_insert:
       assert(!"not reached: should be handled by lower_vector_insert()");
+      break;
+
+   case ir_binop_ldexp:
+      assert(!"not reached: should be handled by ldexp_to_arith()");
       break;
 
    case ir_unop_sqrt:
@@ -669,17 +751,24 @@ fs_visitor::visit(ir_expression *ir)
        */
       ir_constant *uniform_block = ir->operands[0]->as_constant();
       ir_constant *const_offset = ir->operands[1]->as_constant();
-      fs_reg surf_index = fs_reg((unsigned)SURF_INDEX_WM_UBO(uniform_block->value.u[0]));
+      fs_reg surf_index = fs_reg(c->prog_data.base.binding_table.ubo_start +
+                                 uniform_block->value.u[0]);
       if (const_offset) {
          fs_reg packed_consts = fs_reg(this, glsl_type::float_type);
          packed_consts.type = result.type;
 
          fs_reg const_offset_reg = fs_reg(const_offset->value.u[0] & ~15);
-         emit(fs_inst(FS_OPCODE_UNIFORM_PULL_CONSTANT_LOAD,
-                      packed_consts, surf_index, const_offset_reg));
+         emit(new(mem_ctx) fs_inst(FS_OPCODE_UNIFORM_PULL_CONSTANT_LOAD,
+                                   packed_consts, surf_index, const_offset_reg));
 
-         packed_consts.smear = const_offset->value.u[0] % 16 / 4;
          for (int i = 0; i < ir->type->vector_elements; i++) {
+            packed_consts.set_smear(const_offset->value.u[0] % 16 / 4 + i);
+
+            /* The std140 packing rules don't allow vectors to cross 16-byte
+             * boundaries, and a reg is 32 bytes.
+             */
+            assert(packed_consts.subreg_offset < 32);
+
             /* UBO bools are any nonzero value.  We consider bools to be
              * values with the low bit set to 1.  Convert them using CMP.
              */
@@ -689,13 +778,7 @@ fs_visitor::visit(ir_expression *ir)
                emit(MOV(result, packed_consts));
             }
 
-            packed_consts.smear++;
             result.reg_offset++;
-
-            /* The std140 packing rules don't allow vectors to cross 16-byte
-             * boundaries, and a reg is 32 bytes.
-             */
-            assert(packed_consts.smear < 8);
          }
       } else {
          /* Turn the byte offset into a dword offset. */
@@ -717,8 +800,21 @@ fs_visitor::visit(ir_expression *ir)
       break;
    }
 
+   case ir_triop_fma:
+      /* Note that the instruction's argument order is reversed from GLSL
+       * and the IR.
+       */
+      emit(MAD(this->result, op[2], op[1], op[0]));
+      break;
+
    case ir_triop_lrp:
       emit_lrp(this->result, op[0], op[1], op[2]);
+      break;
+
+   case ir_triop_csel:
+      emit(CMP(reg_null_d, op[0], fs_reg(0), BRW_CONDITIONAL_NZ));
+      inst = emit(BRW_OPCODE_SEL, this->result, op[1], op[2]);
+      inst->predicate = BRW_PREDICATE_NORMAL;
       break;
    }
 }
@@ -759,6 +855,8 @@ fs_visitor::emit_assignment_writes(fs_reg &l, fs_reg &r,
       break;
 
    case GLSL_TYPE_SAMPLER:
+   case GLSL_TYPE_IMAGE:
+   case GLSL_TYPE_ATOMIC_UINT:
       break;
 
    case GLSL_TYPE_VOID:
@@ -1044,34 +1142,19 @@ fs_visitor::emit_texture_gen5(ir_texture *ir, fs_reg dst, fs_reg coordinate,
    const int vector_elements =
       ir->coordinate ? ir->coordinate->type->vector_elements : 0;
 
-   if (ir->offset != NULL && ir->op == ir_txf) {
-      /* It appears that the ld instruction used for txf does its
-       * address bounds check before adding in the offset.  To work
-       * around this, just add the integer offset to the integer texel
-       * coordinate, and don't put the offset in the header.
+   if (ir->offset) {
+      /* The offsets set up by the ir_texture visitor are in the
+       * m1 header, so we can't go headerless.
        */
-      ir_constant *offset = ir->offset->as_constant();
-      for (int i = 0; i < vector_elements; i++) {
-	 emit(ADD(fs_reg(MRF, base_mrf + mlen + i * reg_width, coordinate.type),
-                  coordinate,
-                  offset->value.i[i]));
-	 coordinate.reg_offset++;
-      }
-   } else {
-      if (ir->offset) {
-	 /* The offsets set up by the ir_texture visitor are in the
-	  * m1 header, so we can't go headerless.
-	  */
-	 header_present = true;
-	 mlen++;
-	 base_mrf--;
-      }
+      header_present = true;
+      mlen++;
+      base_mrf--;
+   }
 
-      for (int i = 0; i < vector_elements; i++) {
-	 emit(MOV(fs_reg(MRF, base_mrf + mlen + i * reg_width, coordinate.type),
-                  coordinate));
-	 coordinate.reg_offset++;
-      }
+   for (int i = 0; i < vector_elements; i++) {
+      emit(MOV(fs_reg(MRF, base_mrf + mlen + i * reg_width, coordinate.type),
+               coordinate));
+      coordinate.reg_offset++;
    }
    mlen += vector_elements * reg_width;
 
@@ -1131,6 +1214,11 @@ fs_visitor::emit_texture_gen5(ir_texture *ir, fs_reg dst, fs_reg coordinate,
       mlen += reg_width;
       inst = emit(SHADER_OPCODE_TXS, dst);
       break;
+   case ir_query_levels:
+      emit(MOV(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_UD), fs_reg(0u)));
+      mlen += reg_width;
+      inst = emit(SHADER_OPCODE_TXS, dst);
+      break;
    case ir_txf:
       mlen = header_present + 4 * reg_width;
       emit(MOV(fs_reg(MRF, base_mrf + mlen - reg_width, BRW_REGISTER_TYPE_UD), lod));
@@ -1144,10 +1232,16 @@ fs_visitor::emit_texture_gen5(ir_texture *ir, fs_reg dst, fs_reg coordinate,
       /* sample index */
       emit(MOV(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_UD), sample_index));
       mlen += reg_width;
-      inst = emit(SHADER_OPCODE_TXF_MS, dst);
+      inst = emit(SHADER_OPCODE_TXF_CMS, dst);
       break;
    case ir_lod:
       inst = emit(SHADER_OPCODE_LOD, dst);
+      break;
+   case ir_tg4:
+      inst = emit(SHADER_OPCODE_TG4, dst);
+      break;
+   default:
+      fail("unrecognized texture opcode");
       break;
    }
    inst->base_mrf = base_mrf;
@@ -1155,8 +1249,9 @@ fs_visitor::emit_texture_gen5(ir_texture *ir, fs_reg dst, fs_reg coordinate,
    inst->header_present = header_present;
    inst->regs_written = 4;
 
-   if (mlen > 11) {
-      fail("Message length >11 disallowed by hardware\n");
+   if (mlen > MAX_SAMPLER_MESSAGE_SIZE) {
+      fail("Message length >" STRINGIFY(MAX_SAMPLER_MESSAGE_SIZE)
+           " disallowed by hardware\n");
    }
 
    return inst;
@@ -1165,27 +1260,36 @@ fs_visitor::emit_texture_gen5(ir_texture *ir, fs_reg dst, fs_reg coordinate,
 fs_inst *
 fs_visitor::emit_texture_gen7(ir_texture *ir, fs_reg dst, fs_reg coordinate,
                               fs_reg shadow_c, fs_reg lod, fs_reg lod2,
-                              fs_reg sample_index)
+                              fs_reg sample_index, fs_reg mcs, int sampler)
 {
-   int mlen = 0;
-   int base_mrf = 2;
    int reg_width = dispatch_width / 8;
    bool header_present = false;
-   int offsets[3];
 
-   if (ir->offset && ir->op != ir_txf) {
-      /* The offsets set up by the ir_texture visitor are in the
-       * m1 header, so we can't go headerless.
+   fs_reg payload = fs_reg(this, glsl_type::float_type);
+   fs_reg next = payload;
+
+   if (ir->op == ir_tg4 || (ir->offset && ir->op != ir_txf) || sampler >= 16) {
+      /* For general texture offsets (no txf workaround), we need a header to
+       * put them in.  Note that for SIMD16 we're making space for two actual
+       * hardware registers here, so the emit will have to fix up for this.
+       *
+       * * ir4_tg4 needs to place its channel select in the header,
+       * for interaction with ARB_texture_swizzle
+       *
+       * The sampler index is only 4-bits, so for larger sampler numbers we
+       * need to offset the Sampler State Pointer in the header.
        */
       header_present = true;
-      mlen++;
-      base_mrf--;
+      next.reg_offset++;
    }
 
    if (ir->shadow_comparitor) {
-      emit(MOV(fs_reg(MRF, base_mrf + mlen), shadow_c));
-      mlen += reg_width;
+      emit(MOV(next, shadow_c));
+      next.reg_offset++;
    }
+
+   bool has_nonconstant_offset = ir->offset && !ir->offset->as_constant();
+   bool coordinate_done = false;
 
    /* Set up the LOD info */
    switch (ir->op) {
@@ -1193,126 +1297,157 @@ fs_visitor::emit_texture_gen7(ir_texture *ir, fs_reg dst, fs_reg coordinate,
    case ir_lod:
       break;
    case ir_txb:
-      emit(MOV(fs_reg(MRF, base_mrf + mlen), lod));
-      mlen += reg_width;
+      emit(MOV(next, lod));
+      next.reg_offset++;
       break;
    case ir_txl:
-      emit(MOV(fs_reg(MRF, base_mrf + mlen), lod));
-      mlen += reg_width;
+      emit(MOV(next, lod));
+      next.reg_offset++;
       break;
    case ir_txd: {
-      if (dispatch_width == 16)
-	 fail("Gen7 does not support sample_d/sample_d_c in SIMD16 mode.");
+      no16("Gen7 does not support sample_d/sample_d_c in SIMD16 mode.");
 
       /* Load dPdx and the coordinate together:
        * [hdr], [ref], x, dPdx.x, dPdy.x, y, dPdx.y, dPdy.y, z, dPdx.z, dPdy.z
        */
       for (int i = 0; i < ir->coordinate->type->vector_elements; i++) {
-	 emit(MOV(fs_reg(MRF, base_mrf + mlen), coordinate));
+	 emit(MOV(next, coordinate));
 	 coordinate.reg_offset++;
-	 mlen += reg_width;
+	 next.reg_offset++;
 
          /* For cube map array, the coordinate is (u,v,r,ai) but there are
           * only derivatives for (u, v, r).
           */
          if (i < ir->lod_info.grad.dPdx->type->vector_elements) {
-            emit(MOV(fs_reg(MRF, base_mrf + mlen), lod));
+            emit(MOV(next, lod));
             lod.reg_offset++;
-            mlen += reg_width;
+            next.reg_offset++;
 
-            emit(MOV(fs_reg(MRF, base_mrf + mlen), lod2));
+            emit(MOV(next, lod2));
             lod2.reg_offset++;
-            mlen += reg_width;
+            next.reg_offset++;
          }
       }
+
+      coordinate_done = true;
       break;
    }
    case ir_txs:
-      emit(MOV(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_UD), lod));
-      mlen += reg_width;
+      emit(MOV(retype(next, BRW_REGISTER_TYPE_UD), lod));
+      next.reg_offset++;
+      break;
+   case ir_query_levels:
+      emit(MOV(retype(next, BRW_REGISTER_TYPE_UD), fs_reg(0u)));
+      next.reg_offset++;
       break;
    case ir_txf:
-      /* It appears that the ld instruction used for txf does its
-       * address bounds check before adding in the offset.  To work
-       * around this, just add the integer offset to the integer texel
-       * coordinate, and don't put the offset in the header.
-       */
-      if (ir->offset) {
-	 ir_constant *offset = ir->offset->as_constant();
-	 offsets[0] = offset->value.i[0];
-	 offsets[1] = offset->value.i[1];
-	 offsets[2] = offset->value.i[2];
-      } else {
-	 memset(offsets, 0, sizeof(offsets));
-      }
-
       /* Unfortunately, the parameters for LD are intermixed: u, lod, v, r. */
-      emit(ADD(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_D),
-               coordinate, offsets[0]));
+      emit(MOV(retype(next, BRW_REGISTER_TYPE_D), coordinate));
       coordinate.reg_offset++;
-      mlen += reg_width;
+      next.reg_offset++;
 
-      emit(MOV(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_D), lod));
-      mlen += reg_width;
+      emit(MOV(retype(next, BRW_REGISTER_TYPE_D), lod));
+      next.reg_offset++;
 
       for (int i = 1; i < ir->coordinate->type->vector_elements; i++) {
-	 emit(ADD(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_D),
-                  coordinate, offsets[i]));
+	 emit(MOV(retype(next, BRW_REGISTER_TYPE_D), coordinate));
 	 coordinate.reg_offset++;
-	 mlen += reg_width;
+	 next.reg_offset++;
       }
+
+      coordinate_done = true;
       break;
    case ir_txf_ms:
-      emit(MOV(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_UD), sample_index));
-      mlen += reg_width;
+      emit(MOV(retype(next, BRW_REGISTER_TYPE_UD), sample_index));
+      next.reg_offset++;
 
-      /* constant zero MCS; we arrange to never actually have a compressed
-       * multisample surface here for now. TODO: issue ld_mcs to get this first,
-       * if we ever support texturing from compressed multisample surfaces
-       */
-      emit(MOV(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_UD), fs_reg(0u)));
-      mlen += reg_width;
+      /* data from the multisample control surface */
+      emit(MOV(retype(next, BRW_REGISTER_TYPE_UD), mcs));
+      next.reg_offset++;
 
       /* there is no offsetting for this message; just copy in the integer
        * texture coordinates
        */
       for (int i = 0; i < ir->coordinate->type->vector_elements; i++) {
-         emit(MOV(fs_reg(MRF, base_mrf + mlen, BRW_REGISTER_TYPE_D),
-                  coordinate));
+         emit(MOV(retype(next, BRW_REGISTER_TYPE_D), coordinate));
          coordinate.reg_offset++;
-         mlen += reg_width;
+         next.reg_offset++;
+      }
+
+      coordinate_done = true;
+      break;
+   case ir_tg4:
+      if (has_nonconstant_offset) {
+         if (ir->shadow_comparitor)
+            no16("Gen7 does not support gather4_po_c in SIMD16 mode.");
+
+         /* More crazy intermixing */
+         ir->offset->accept(this);
+         fs_reg offset_value = this->result;
+
+         for (int i = 0; i < 2; i++) { /* u, v */
+            emit(MOV(next, coordinate));
+            coordinate.reg_offset++;
+            next.reg_offset++;
+         }
+
+         for (int i = 0; i < 2; i++) { /* offu, offv */
+            emit(MOV(retype(next, BRW_REGISTER_TYPE_D), offset_value));
+            offset_value.reg_offset++;
+            next.reg_offset++;
+         }
+
+         if (ir->coordinate->type->vector_elements == 3) { /* r if present */
+            emit(MOV(next, coordinate));
+            coordinate.reg_offset++;
+            next.reg_offset++;
+         }
+
+         coordinate_done = true;
       }
       break;
    }
 
    /* Set up the coordinate (except for cases where it was done above) */
-   if (ir->op != ir_txd && ir->op != ir_txs && ir->op != ir_txf && ir->op != ir_txf_ms) {
+   if (ir->coordinate && !coordinate_done) {
       for (int i = 0; i < ir->coordinate->type->vector_elements; i++) {
-	 emit(MOV(fs_reg(MRF, base_mrf + mlen), coordinate));
-	 coordinate.reg_offset++;
-	 mlen += reg_width;
+         emit(MOV(next, coordinate));
+         coordinate.reg_offset++;
+         next.reg_offset++;
       }
    }
 
    /* Generate the SEND */
    fs_inst *inst = NULL;
    switch (ir->op) {
-   case ir_tex: inst = emit(SHADER_OPCODE_TEX, dst); break;
-   case ir_txb: inst = emit(FS_OPCODE_TXB, dst); break;
-   case ir_txl: inst = emit(SHADER_OPCODE_TXL, dst); break;
-   case ir_txd: inst = emit(SHADER_OPCODE_TXD, dst); break;
-   case ir_txf: inst = emit(SHADER_OPCODE_TXF, dst); break;
-   case ir_txf_ms: inst = emit(SHADER_OPCODE_TXF_MS, dst); break;
-   case ir_txs: inst = emit(SHADER_OPCODE_TXS, dst); break;
-   case ir_lod: inst = emit(SHADER_OPCODE_LOD, dst); break;
+   case ir_tex: inst = emit(SHADER_OPCODE_TEX, dst, payload); break;
+   case ir_txb: inst = emit(FS_OPCODE_TXB, dst, payload); break;
+   case ir_txl: inst = emit(SHADER_OPCODE_TXL, dst, payload); break;
+   case ir_txd: inst = emit(SHADER_OPCODE_TXD, dst, payload); break;
+   case ir_txf: inst = emit(SHADER_OPCODE_TXF, dst, payload); break;
+   case ir_txf_ms: inst = emit(SHADER_OPCODE_TXF_CMS, dst, payload); break;
+   case ir_txs: inst = emit(SHADER_OPCODE_TXS, dst, payload); break;
+   case ir_query_levels: inst = emit(SHADER_OPCODE_TXS, dst, payload); break;
+   case ir_lod: inst = emit(SHADER_OPCODE_LOD, dst, payload); break;
+   case ir_tg4:
+      if (has_nonconstant_offset)
+         inst = emit(SHADER_OPCODE_TG4_OFFSET, dst, payload);
+      else
+         inst = emit(SHADER_OPCODE_TG4, dst, payload);
+      break;
    }
-   inst->base_mrf = base_mrf;
-   inst->mlen = mlen;
+   inst->base_mrf = -1;
+   if (reg_width == 2)
+      inst->mlen = next.reg_offset * reg_width - header_present;
+   else
+      inst->mlen = next.reg_offset * reg_width;
    inst->header_present = header_present;
    inst->regs_written = 4;
 
-   if (mlen > 11) {
-      fail("Message length >11 disallowed by hardware\n");
+   virtual_grf_sizes[payload.reg] = next.reg_offset;
+   if (inst->mlen > MAX_SAMPLER_MESSAGE_SIZE) {
+      fail("Message length >" STRINGIFY(MAX_SAMPLER_MESSAGE_SIZE)
+           " disallowed by hardware\n");
    }
 
    return inst;
@@ -1334,7 +1469,7 @@ fs_visitor::rescale_texcoord(ir_texture *ir, fs_reg coordinate,
        (brw->gen < 6 ||
 	(brw->gen >= 6 && (c->key.tex.gl_clamp_mask[0] & (1 << sampler) ||
 			     c->key.tex.gl_clamp_mask[1] & (1 << sampler))))) {
-      struct gl_program_parameter_list *params = fp->Base.Parameters;
+      struct gl_program_parameter_list *params = prog->Parameters;
       int tokens[STATE_LENGTH] = {
 	 STATE_INTERNAL,
 	 STATE_TEXRECT_SCALE,
@@ -1343,20 +1478,33 @@ fs_visitor::rescale_texcoord(ir_texture *ir, fs_reg coordinate,
 	 0
       };
 
+      no16("rectangle scale uniform setup not supported on SIMD16\n");
       if (dispatch_width == 16) {
-	 fail("rectangle scale uniform setup not supported on 16-wide\n");
 	 return coordinate;
       }
 
-      scale_x = fs_reg(UNIFORM, c->prog_data.nr_params);
-      scale_y = fs_reg(UNIFORM, c->prog_data.nr_params + 1);
-
       GLuint index = _mesa_add_state_reference(params,
 					       (gl_state_index *)tokens);
-      c->prog_data.param[c->prog_data.nr_params++] =
-         &fp->Base.Parameters->ParameterValues[index][0].f;
-      c->prog_data.param[c->prog_data.nr_params++] =
-         &fp->Base.Parameters->ParameterValues[index][1].f;
+      /* Try to find existing copies of the texrect scale uniforms. */
+      for (unsigned i = 0; i < uniforms; i++) {
+         if (stage_prog_data->param[i] ==
+             &prog->Parameters->ParameterValues[index][0].f) {
+            scale_x = fs_reg(UNIFORM, i);
+            scale_y = fs_reg(UNIFORM, i + 1);
+            break;
+         }
+      }
+
+      /* If we didn't already set them up, do so now. */
+      if (scale_x.file == BAD_FILE) {
+         scale_x = fs_reg(UNIFORM, uniforms);
+         scale_y = fs_reg(UNIFORM, uniforms + 1);
+
+         stage_prog_data->param[uniforms++] =
+            &prog->Parameters->ParameterValues[index][0].f;
+         stage_prog_data->param[uniforms++] =
+            &prog->Parameters->ParameterValues[index][1].f;
+      }
    }
 
    /* The 965 requires the EU to do the normalization of GL rectangle
@@ -1419,21 +1567,72 @@ fs_visitor::rescale_texcoord(ir_texture *ir, fs_reg coordinate,
    return coordinate;
 }
 
+/* Sample from the MCS surface attached to this multisample texture. */
+fs_reg
+fs_visitor::emit_mcs_fetch(ir_texture *ir, fs_reg coordinate, int sampler)
+{
+   int reg_width = dispatch_width / 8;
+   fs_reg payload = fs_reg(this, glsl_type::float_type);
+   fs_reg dest = fs_reg(this, glsl_type::uvec4_type);
+   fs_reg next = payload;
+
+   /* parameters are: u, v, r, lod; missing parameters are treated as zero */
+   for (int i = 0; i < ir->coordinate->type->vector_elements; i++) {
+      emit(MOV(retype(next, BRW_REGISTER_TYPE_D), coordinate));
+      coordinate.reg_offset++;
+      next.reg_offset++;
+   }
+
+   fs_inst *inst = emit(SHADER_OPCODE_TXF_MCS, dest, payload);
+   virtual_grf_sizes[payload.reg] = next.reg_offset;
+   inst->base_mrf = -1;
+   inst->mlen = next.reg_offset * reg_width;
+   inst->header_present = false;
+   inst->regs_written = 4 * reg_width; /* we only care about one reg of response,
+                                        * but the sampler always writes 4/8
+                                        */
+   inst->sampler = sampler;
+
+   return dest;
+}
+
 void
 fs_visitor::visit(ir_texture *ir)
 {
    fs_inst *inst = NULL;
 
    int sampler =
-      _mesa_get_sampler_uniform_value(ir->sampler, shader_prog, &fp->Base);
+      _mesa_get_sampler_uniform_value(ir->sampler, shader_prog, prog);
    /* FINISHME: We're failing to recompile our programs when the sampler is
     * updated.  This only matters for the texture rectangle scale parameters
     * (pre-gen6, or gen6+ with GL_CLAMP).
     */
-   int texunit = fp->Base.SamplerUnits[sampler];
+   int texunit = prog->SamplerUnits[sampler];
+
+   if (ir->op == ir_tg4) {
+      /* When tg4 is used with the degenerate ZERO/ONE swizzles, don't bother
+       * emitting anything other than setting up the constant result.
+       */
+      ir_constant *chan = ir->lod_info.component->as_constant();
+      int swiz = GET_SWZ(c->key.tex.swizzles[sampler], chan->value.i[0]);
+      if (swiz == SWIZZLE_ZERO || swiz == SWIZZLE_ONE) {
+
+         fs_reg res = fs_reg(this, glsl_type::vec4_type);
+         this->result = res;
+
+         for (int i=0; i<4; i++) {
+            emit(MOV(res, fs_reg(swiz == SWIZZLE_ZERO ? 0.0f : 1.0f)));
+            res.reg_offset++;
+         }
+         return;
+      }
+   }
 
    /* Should be lowered by do_lower_texture_projection */
    assert(!ir->projector);
+
+   /* Should be lowered */
+   assert(!ir->offset || !ir->offset->type->is_array());
 
    /* Generate code to compute all the subexpression trees.  This has to be
     * done before loading any values into MRFs for the sampler message since
@@ -1455,10 +1654,12 @@ fs_visitor::visit(ir_texture *ir)
       shadow_comparitor = this->result;
    }
 
-   fs_reg lod, lod2, sample_index;
+   fs_reg lod, lod2, sample_index, mcs;
    switch (ir->op) {
    case ir_tex:
    case ir_lod:
+   case ir_tg4:
+   case ir_query_levels:
       break;
    case ir_txb:
       ir->lod_info.bias->accept(this);
@@ -1480,7 +1681,14 @@ fs_visitor::visit(ir_texture *ir)
    case ir_txf_ms:
       ir->lod_info.sample_index->accept(this);
       sample_index = this->result;
+
+      if (brw->gen >= 7 && c->key.tex.compressed_multisample_layout_mask & (1<<sampler))
+         mcs = emit_mcs_fetch(ir, coordinate, sampler);
+      else
+         mcs = fs_reg(0u);
       break;
+   default:
+      assert(!"Unrecognized texture opcode");
    };
 
    /* Writemasking doesn't eliminate channels on SIMD8 texture
@@ -1490,7 +1698,7 @@ fs_visitor::visit(ir_texture *ir)
 
    if (brw->gen >= 7) {
       inst = emit_texture_gen7(ir, dst, coordinate, shadow_comparitor,
-                               lod, lod2, sample_index);
+                               lod, lod2, sample_index, mcs, sampler);
    } else if (brw->gen >= 5) {
       inst = emit_texture_gen5(ir, dst, coordinate, shadow_comparitor,
                                lod, lod2, sample_index);
@@ -1499,11 +1707,11 @@ fs_visitor::visit(ir_texture *ir)
                                lod, lod2);
    }
 
-   /* The header is set up by generate_tex() when necessary. */
-   inst->src[0] = reg_undef;
-
    if (ir->offset != NULL && ir->op != ir_txf)
-      inst->texture_offset = brw_texture_offset(ir->offset->as_constant());
+      inst->texture_offset = brw_texture_offset(ctx, ir->offset->as_constant());
+
+   if (ir->op == ir_tg4)
+      inst->texture_offset |= gather_channel(ir, sampler) << 16; // M0.2:16-17
 
    inst->sampler = sampler;
 
@@ -1521,7 +1729,66 @@ fs_visitor::visit(ir_texture *ir)
       }
    }
 
+   if (brw->gen == 6 && ir->op == ir_tg4) {
+      emit_gen6_gather_wa(c->key.tex.gen6_gather_wa[sampler], dst);
+   }
+
    swizzle_result(ir, dst, sampler);
+}
+
+/**
+ * Apply workarounds for Gen6 gather with UINT/SINT
+ */
+void
+fs_visitor::emit_gen6_gather_wa(uint8_t wa, fs_reg dst)
+{
+   if (!wa)
+      return;
+
+   int width = (wa & WA_8BIT) ? 8 : 16;
+
+   for (int i = 0; i < 4; i++) {
+      fs_reg dst_f = retype(dst, BRW_REGISTER_TYPE_F);
+      /* Convert from UNORM to UINT */
+      emit(MUL(dst_f, dst_f, fs_reg((float)((1 << width) - 1))));
+      emit(MOV(dst, dst_f));
+
+      if (wa & WA_SIGN) {
+         /* Reinterpret the UINT value as a signed INT value by
+          * shifting the sign bit into place, then shifting back
+          * preserving sign.
+          */
+         emit(SHL(dst, dst, fs_reg(32 - width)));
+         emit(ASR(dst, dst, fs_reg(32 - width)));
+      }
+
+      dst.reg_offset++;
+   }
+}
+
+/**
+ * Set up the gather channel based on the swizzle, for gather4.
+ */
+uint32_t
+fs_visitor::gather_channel(ir_texture *ir, int sampler)
+{
+   ir_constant *chan = ir->lod_info.component->as_constant();
+   int swiz = GET_SWZ(c->key.tex.swizzles[sampler], chan->value.i[0]);
+   switch (swiz) {
+      case SWIZZLE_X: return 0;
+      case SWIZZLE_Y:
+         /* gather4 sampler is broken for green channel on RG32F --
+          * we must ask for blue instead.
+          */
+         if (c->key.tex.gather_channel_quirk_mask & (1<<sampler))
+            return 2;
+         return 1;
+      case SWIZZLE_Z: return 2;
+      case SWIZZLE_W: return 3;
+      default:
+         assert(!"Not reached"); /* zero, one swizzles handled already */
+         return 0;
+   }
 }
 
 /**
@@ -1531,9 +1798,19 @@ fs_visitor::visit(ir_texture *ir)
 void
 fs_visitor::swizzle_result(ir_texture *ir, fs_reg orig_val, int sampler)
 {
+   if (ir->op == ir_query_levels) {
+      /* # levels is in .w */
+      orig_val.reg_offset += 3;
+      this->result = orig_val;
+      return;
+   }
+
    this->result = orig_val;
 
-   if (ir->op == ir_txs || ir->op == ir_lod)
+   /* txs,lod don't actually sample the texture, so swizzling the result
+    * makes no sense.
+    */
+   if (ir->op == ir_txs || ir->op == ir_lod || ir->op == ir_tg4)
       return;
 
    if (ir->type == glsl_type::float_type) {
@@ -1706,7 +1983,10 @@ fs_visitor::emit_bool_to_cond_code(ir_rvalue *ir)
 {
    ir_expression *expr = ir->as_expression();
 
-   if (expr) {
+   if (expr &&
+       expr->operation != ir_binop_logic_and &&
+       expr->operation != ir_binop_logic_or &&
+       expr->operation != ir_binop_logic_xor) {
       fs_reg op[2];
       fs_inst *inst;
 
@@ -1725,11 +2005,6 @@ fs_visitor::emit_bool_to_cond_code(ir_rvalue *ir)
 	 inst = emit(AND(reg_null_d, op[0], fs_reg(1)));
 	 inst->conditional_mod = BRW_CONDITIONAL_Z;
 	 break;
-
-      case ir_binop_logic_xor:
-      case ir_binop_logic_or:
-      case ir_binop_logic_and:
-	 goto out;
 
       case ir_unop_f2b:
 	 if (brw->gen >= 6) {
@@ -1772,7 +2047,6 @@ fs_visitor::emit_bool_to_cond_code(ir_rvalue *ir)
       return;
    }
 
-out:
    ir->accept(this);
 
    fs_inst *inst = emit(AND(reg_null_d, this->result, fs_reg(1)));
@@ -1848,11 +2122,96 @@ fs_visitor::emit_if_gen6(ir_if *ir)
    inst->predicate = BRW_PREDICATE_NORMAL;
 }
 
+/**
+ * Try to replace IF/MOV/ELSE/MOV/ENDIF with SEL.
+ *
+ * Many GLSL shaders contain the following pattern:
+ *
+ *    x = condition ? foo : bar
+ *
+ * The compiler emits an ir_if tree for this, since each subexpression might be
+ * a complex tree that could have side-effects or short-circuit logic.
+ *
+ * However, the common case is to simply select one of two constants or
+ * variable values---which is exactly what SEL is for.  In this case, the
+ * assembly looks like:
+ *
+ *    (+f0) IF
+ *    MOV dst src0
+ *    ELSE
+ *    MOV dst src1
+ *    ENDIF
+ *
+ * which can be easily translated into:
+ *
+ *    (+f0) SEL dst src0 src1
+ *
+ * If src0 is an immediate value, we promote it to a temporary GRF.
+ */
+void
+fs_visitor::try_replace_with_sel()
+{
+   fs_inst *endif_inst = (fs_inst *) instructions.get_tail();
+   assert(endif_inst->opcode == BRW_OPCODE_ENDIF);
+
+   /* Pattern match in reverse: IF, MOV, ELSE, MOV, ENDIF. */
+   int opcodes[] = {
+      BRW_OPCODE_IF, BRW_OPCODE_MOV, BRW_OPCODE_ELSE, BRW_OPCODE_MOV,
+   };
+
+   fs_inst *match = (fs_inst *) endif_inst->prev;
+   for (int i = 0; i < 4; i++) {
+      if (match->is_head_sentinel() || match->opcode != opcodes[4-i-1])
+         return;
+      match = (fs_inst *) match->prev;
+   }
+
+   /* The opcodes match; it looks like the right sequence of instructions. */
+   fs_inst *else_mov = (fs_inst *) endif_inst->prev;
+   fs_inst *then_mov = (fs_inst *) else_mov->prev->prev;
+   fs_inst *if_inst = (fs_inst *) then_mov->prev;
+
+   /* Check that the MOVs are the right form. */
+   if (then_mov->dst.equals(else_mov->dst) &&
+       !then_mov->is_partial_write() &&
+       !else_mov->is_partial_write()) {
+
+      /* Remove the matched instructions; we'll emit a SEL to replace them. */
+      while (!if_inst->next->is_tail_sentinel())
+         if_inst->next->remove();
+      if_inst->remove();
+
+      /* Only the last source register can be a constant, so if the MOV in
+       * the "then" clause uses a constant, we need to put it in a temporary.
+       */
+      fs_reg src0(then_mov->src[0]);
+      if (src0.file == IMM) {
+         src0 = fs_reg(this, glsl_type::float_type);
+         src0.type = then_mov->src[0].type;
+         emit(MOV(src0, then_mov->src[0]));
+      }
+
+      fs_inst *sel;
+      if (if_inst->conditional_mod) {
+         /* Sandybridge-specific IF with embedded comparison */
+         emit(CMP(reg_null_d, if_inst->src[0], if_inst->src[1],
+                  if_inst->conditional_mod));
+         sel = emit(BRW_OPCODE_SEL, then_mov->dst, src0, else_mov->src[0]);
+         sel->predicate = BRW_PREDICATE_NORMAL;
+      } else {
+         /* Separate CMP and IF instructions */
+         sel = emit(BRW_OPCODE_SEL, then_mov->dst, src0, else_mov->src[0]);
+         sel->predicate = if_inst->predicate;
+         sel->predicate_inverse = if_inst->predicate_inverse;
+      }
+   }
+}
+
 void
 fs_visitor::visit(ir_if *ir)
 {
-   if (brw->gen < 6 && dispatch_width == 16) {
-      fail("Can't support (non-uniform) control flow on 16-wide\n");
+   if (brw->gen < 6) {
+      no16("Can't support (non-uniform) control flow on SIMD16\n");
    }
 
    /* Don't point the annotation at the if statement, because then it plus
@@ -1887,55 +2246,25 @@ fs_visitor::visit(ir_if *ir)
    }
 
    emit(BRW_OPCODE_ENDIF);
+
+   try_replace_with_sel();
 }
 
 void
 fs_visitor::visit(ir_loop *ir)
 {
-   fs_reg counter = reg_undef;
-
-   if (brw->gen < 6 && dispatch_width == 16) {
-      fail("Can't support (non-uniform) control flow on 16-wide\n");
-   }
-
-   if (ir->counter) {
-      this->base_ir = ir->counter;
-      ir->counter->accept(this);
-      counter = *(variable_storage(ir->counter));
-
-      if (ir->from) {
-	 this->base_ir = ir->from;
-	 ir->from->accept(this);
-
-	 emit(MOV(counter, this->result));
-      }
+   if (brw->gen < 6) {
+      no16("Can't support (non-uniform) control flow on SIMD16\n");
    }
 
    this->base_ir = NULL;
    emit(BRW_OPCODE_DO);
-
-   if (ir->to) {
-      this->base_ir = ir->to;
-      ir->to->accept(this);
-
-      emit(CMP(reg_null_d, counter, this->result,
-               brw_conditional_for_comparison(ir->cmp)));
-
-      fs_inst *inst = emit(BRW_OPCODE_BREAK);
-      inst->predicate = BRW_PREDICATE_NORMAL;
-   }
 
    foreach_list(node, &ir->body_instructions) {
       ir_instruction *ir = (ir_instruction *)node;
 
       this->base_ir = ir;
       ir->accept(this);
-   }
-
-   if (ir->increment) {
-      this->base_ir = ir->increment;
-      ir->increment->accept(this);
-      emit(ADD(counter, counter, this->result));
    }
 
    this->base_ir = NULL;
@@ -1956,9 +2285,58 @@ fs_visitor::visit(ir_loop_jump *ir)
 }
 
 void
+fs_visitor::visit_atomic_counter_intrinsic(ir_call *ir)
+{
+   ir_dereference *deref = static_cast<ir_dereference *>(
+      ir->actual_parameters.get_head());
+   ir_variable *location = deref->variable_referenced();
+   unsigned surf_index = (c->prog_data.base.binding_table.abo_start +
+                          location->data.atomic.buffer_index);
+
+   /* Calculate the surface offset */
+   fs_reg offset(this, glsl_type::uint_type);
+   ir_dereference_array *deref_array = deref->as_dereference_array();
+
+   if (deref_array) {
+      deref_array->array_index->accept(this);
+
+      fs_reg tmp(this, glsl_type::uint_type);
+      emit(MUL(tmp, this->result, ATOMIC_COUNTER_SIZE));
+      emit(ADD(offset, tmp, location->data.atomic.offset));
+   } else {
+      offset = location->data.atomic.offset;
+   }
+
+   /* Emit the appropriate machine instruction */
+   const char *callee = ir->callee->function_name();
+   ir->return_deref->accept(this);
+   fs_reg dst = this->result;
+
+   if (!strcmp("__intrinsic_atomic_read", callee)) {
+      emit_untyped_surface_read(surf_index, dst, offset);
+
+   } else if (!strcmp("__intrinsic_atomic_increment", callee)) {
+      emit_untyped_atomic(BRW_AOP_INC, surf_index, dst, offset,
+                          fs_reg(), fs_reg());
+
+   } else if (!strcmp("__intrinsic_atomic_predecrement", callee)) {
+      emit_untyped_atomic(BRW_AOP_PREDEC, surf_index, dst, offset,
+                          fs_reg(), fs_reg());
+   }
+}
+
+void
 fs_visitor::visit(ir_call *ir)
 {
-   assert(!"FINISHME");
+   const char *callee = ir->callee->function_name();
+
+   if (!strcmp("__intrinsic_atomic_read", callee) ||
+       !strcmp("__intrinsic_atomic_increment", callee) ||
+       !strcmp("__intrinsic_atomic_predecrement", callee)) {
+      visit_atomic_counter_intrinsic(ir);
+   } else {
+      assert(!"Unsupported intrinsic.");
+   }
 }
 
 void
@@ -1977,7 +2355,7 @@ fs_visitor::visit(ir_function *ir)
       const ir_function_signature *sig;
       exec_list empty;
 
-      sig = ir->matching_signature(&empty);
+      sig = ir->matching_signature(NULL, &empty);
 
       assert(sig);
 
@@ -1997,13 +2375,98 @@ fs_visitor::visit(ir_function_signature *ir)
    (void)ir;
 }
 
-fs_inst *
-fs_visitor::emit(fs_inst inst)
+void
+fs_visitor::visit(ir_emit_vertex *)
 {
-   fs_inst *list_inst = new(mem_ctx) fs_inst;
-   *list_inst = inst;
-   emit(list_inst);
-   return list_inst;
+   assert(!"not reached");
+}
+
+void
+fs_visitor::visit(ir_end_primitive *)
+{
+   assert(!"not reached");
+}
+
+void
+fs_visitor::emit_untyped_atomic(unsigned atomic_op, unsigned surf_index,
+                                fs_reg dst, fs_reg offset, fs_reg src0,
+                                fs_reg src1)
+{
+   const unsigned operand_len = dispatch_width / 8;
+   unsigned mlen = 0;
+
+   /* Initialize the sample mask in the message header. */
+   emit(MOV(brw_uvec_mrf(8, mlen, 0), brw_imm_ud(0)))
+      ->force_writemask_all = true;
+
+   if (fp->UsesKill) {
+      emit(MOV(brw_uvec_mrf(1, mlen, 7), brw_flag_reg(0, 1)))
+         ->force_writemask_all = true;
+   } else {
+      emit(MOV(brw_uvec_mrf(1, mlen, 7),
+               retype(brw_vec1_grf(1, 7), BRW_REGISTER_TYPE_UD)))
+         ->force_writemask_all = true;
+   }
+
+   mlen++;
+
+   /* Set the atomic operation offset. */
+   emit(MOV(brw_uvec_mrf(dispatch_width, mlen, 0), offset));
+   mlen += operand_len;
+
+   /* Set the atomic operation arguments. */
+   if (src0.file != BAD_FILE) {
+      emit(MOV(brw_uvec_mrf(dispatch_width, mlen, 0), src0));
+      mlen += operand_len;
+   }
+
+   if (src1.file != BAD_FILE) {
+      emit(MOV(brw_uvec_mrf(dispatch_width, mlen, 0), src1));
+      mlen += operand_len;
+   }
+
+   /* Emit the instruction. */
+   fs_inst *inst = new(mem_ctx) fs_inst(SHADER_OPCODE_UNTYPED_ATOMIC, dst,
+                                        atomic_op, surf_index);
+   inst->base_mrf = 0;
+   inst->mlen = mlen;
+   inst->header_present = true;
+   emit(inst);
+}
+
+void
+fs_visitor::emit_untyped_surface_read(unsigned surf_index, fs_reg dst,
+                                      fs_reg offset)
+{
+   const unsigned operand_len = dispatch_width / 8;
+   unsigned mlen = 0;
+
+   /* Initialize the sample mask in the message header. */
+   emit(MOV(brw_uvec_mrf(8, mlen, 0), brw_imm_ud(0)))
+      ->force_writemask_all = true;
+
+   if (fp->UsesKill) {
+      emit(MOV(brw_uvec_mrf(1, mlen, 7), brw_flag_reg(0, 1)))
+         ->force_writemask_all = true;
+   } else {
+      emit(MOV(brw_uvec_mrf(1, mlen, 7),
+               retype(brw_vec1_grf(1, 7), BRW_REGISTER_TYPE_UD)))
+         ->force_writemask_all = true;
+   }
+
+   mlen++;
+
+   /* Set the surface read offset. */
+   emit(MOV(brw_uvec_mrf(dispatch_width, mlen, 0), offset));
+   mlen += operand_len;
+
+   /* Emit the instruction. */
+   fs_inst *inst = new(mem_ctx)
+      fs_inst(SHADER_OPCODE_UNTYPED_SURFACE_READ, dst, surf_index);
+   inst->base_mrf = 0;
+   inst->mlen = mlen;
+   inst->header_present = true;
+   emit(inst);
 }
 
 fs_inst *
@@ -2011,8 +2474,6 @@ fs_visitor::emit(fs_inst *inst)
 {
    if (force_uncompressed_stack > 0)
       inst->force_uncompressed = true;
-   else if (force_sechalf_stack > 0)
-      inst->force_sechalf = true;
 
    inst->annotation = this->current_annotation;
    inst->ir = this->base_ir;
@@ -2058,10 +2519,10 @@ fs_visitor::emit_dummy_fs()
 struct brw_reg
 fs_visitor::interp_reg(int location, int channel)
 {
-   int regnr = urb_setup[location] * 2 + channel / 2;
+   int regnr = c->prog_data.urb_setup[location] * 2 + channel / 2;
    int stride = (channel & 1) * 4;
 
-   assert(urb_setup[location] != -1);
+   assert(c->prog_data.urb_setup[location] != -1);
 
    return brw_vec1_grf(regnr, stride);
 }
@@ -2217,13 +2678,10 @@ fs_visitor::emit_color_write(int target, int index, int first_color_mrf)
 	 inst->saturate = c->key.clamp_fragment_color;
 	 pop_force_uncompressed();
 
-	 push_force_sechalf();
-	 color.sechalf = true;
 	 inst = emit(MOV(fs_reg(MRF, first_color_mrf + index + 4, color.type),
-                         color));
+                         half(color, 1)));
+	 inst->force_sechalf = true;
 	 inst->saturate = c->key.clamp_fragment_color;
-	 pop_force_sechalf();
-	 color.sechalf = false;
       }
    }
 }
@@ -2293,12 +2751,12 @@ fs_visitor::emit_fb_writes()
    int base_mrf = 1;
    int nr = base_mrf;
    int reg_width = dispatch_width / 8;
-   bool do_dual_src = this->dual_src_output.file != BAD_FILE;
    bool src0_alpha_to_render_target = false;
 
-   if (dispatch_width == 16 && do_dual_src) {
-      fail("GL_ARB_blend_func_extended not yet supported in 16-wide.");
-      do_dual_src = false;
+   if (do_dual_src) {
+      no16("GL_ARB_blend_func_extended not yet supported in SIMD16.");
+      if (dispatch_width == 16)
+         do_dual_src = false;
    }
 
    /* From the Sandy Bridge PRM, volume 4, page 198:
@@ -2309,7 +2767,7 @@ fs_visitor::emit_fb_writes()
     *      thread message and on all dual-source messages."
     */
    if (brw->gen >= 6 &&
-       !this->fp->UsesKill &&
+       (brw->is_haswell || brw->gen >= 8 || !this->fp->UsesKill) &&
        !do_dual_src &&
        c->key.nr_color_regions == 1) {
       header_present = false;
@@ -2330,6 +2788,16 @@ fs_visitor::emit_fb_writes()
       pop_force_uncompressed();
    }
 
+   c->prog_data.uses_omask =
+      fp->Base.OutputsWritten & BITFIELD64_BIT(FRAG_RESULT_SAMPLE_MASK);
+   if(c->prog_data.uses_omask) {
+      this->current_annotation = "FB write oMask";
+      assert(this->sample_mask.file != BAD_FILE);
+      /* Hand over gl_SampleMask. Only lower 16 bits are relevant. */
+      emit(FS_OPCODE_SET_OMASK, fs_reg(MRF, nr, BRW_REGISTER_TYPE_UW), this->sample_mask);
+      nr += 1;
+   }
+
    /* Reserve space for color. It'll be filled in per MRT below. */
    int color_mrf = nr;
    nr += 4 * reg_width;
@@ -2339,16 +2807,16 @@ fs_visitor::emit_fb_writes()
       nr += reg_width;
 
    if (c->source_depth_to_render_target) {
-      if (brw->gen == 6 && dispatch_width == 16) {
+      if (brw->gen == 6) {
 	 /* For outputting oDepth on gen6, SIMD8 writes have to be
-	  * used.  This would require 8-wide moves of each half to
+	  * used.  This would require SIMD8 moves of each half to
 	  * message regs, kind of like pre-gen5 SIMD16 FB writes.
 	  * Just bail on doing so for now.
 	  */
-	 fail("Missing support for simd16 depth writes on gen6\n");
+	 no16("Missing support for simd16 depth writes on gen6\n");
       }
 
-      if (fp->Base.OutputsWritten & BITFIELD64_BIT(FRAG_RESULT_DEPTH)) {
+      if (prog->OutputsWritten & BITFIELD64_BIT(FRAG_RESULT_DEPTH)) {
 	 /* Hand over gl_FragDepth. */
 	 assert(this->frag_depth.file != BAD_FILE);
 	 emit(MOV(fs_reg(MRF, nr), this->frag_depth));
@@ -2396,6 +2864,10 @@ fs_visitor::emit_fb_writes()
       inst->mlen = nr - base_mrf;
       inst->eot = true;
       inst->header_present = header_present;
+      if ((brw->gen >= 8 || brw->is_haswell) && fp->UsesKill) {
+         inst->predicate = BRW_PREDICATE_NORMAL;
+         inst->flag_subreg = 1;
+      }
 
       c->prog_data.dual_src_blend = true;
       this->current_annotation = NULL;
@@ -2441,6 +2913,10 @@ fs_visitor::emit_fb_writes()
          inst->mlen = nr - base_mrf;
       inst->eot = eot;
       inst->header_present = header_present;
+      if ((brw->gen >= 8 || brw->is_haswell) && fp->UsesKill) {
+         inst->predicate = BRW_PREDICATE_NORMAL;
+         inst->flag_subreg = 1;
+      }
    }
 
    if (c->key.nr_color_regions == 0) {
@@ -2458,6 +2934,10 @@ fs_visitor::emit_fb_writes()
       inst->mlen = nr - base_mrf;
       inst->eot = true;
       inst->header_present = header_present;
+      if ((brw->gen >= 8 || brw->is_haswell) && fp->UsesKill) {
+         inst->predicate = BRW_PREDICATE_NORMAL;
+         inst->flag_subreg = 1;
+      }
    }
 
    this->current_annotation = NULL;
@@ -2491,20 +2971,16 @@ fs_visitor::fs_visitor(struct brw_context *brw,
                        struct gl_shader_program *shader_prog,
                        struct gl_fragment_program *fp,
                        unsigned dispatch_width)
-   : dispatch_width(dispatch_width)
+   : backend_visitor(brw, shader_prog, &fp->Base, &c->prog_data.base,
+                     MESA_SHADER_FRAGMENT),
+     dispatch_width(dispatch_width)
 {
    this->c = c;
-   this->brw = brw;
    this->fp = fp;
-   this->shader_prog = shader_prog;
-   this->ctx = &brw->ctx;
    this->mem_ctx = ralloc_context(NULL);
-   if (shader_prog)
-      shader = (struct brw_shader *)
-         shader_prog->_LinkedShaders[MESA_SHADER_FRAGMENT];
-   else
-      shader = NULL;
    this->failed = false;
+   this->simd16_unsupported = false;
+   this->no16_msg = NULL;
    this->variable_ht = hash_table_ctor(0,
                                        hash_table_pointer_hash,
                                        hash_table_pointer_compare);
@@ -2522,15 +2998,20 @@ fs_visitor::fs_visitor(struct brw_context *brw,
    this->virtual_grf_array_size = 0;
    this->virtual_grf_start = NULL;
    this->virtual_grf_end = NULL;
-   this->live_intervals_valid = false;
+   this->live_intervals = NULL;
+   this->regs_live_at_ip = NULL;
 
-   this->params_remap = NULL;
-   this->nr_params_remap = 0;
+   this->uniforms = 0;
+   this->pull_constant_loc = NULL;
+   this->push_constant_loc = NULL;
 
    this->force_uncompressed_stack = 0;
-   this->force_sechalf_stack = 0;
 
-   memset(&this->param_size, 0, sizeof(this->param_size));
+   this->spilled_any_registers = false;
+   this->do_dual_src = false;
+
+   if (dispatch_width == 8)
+      this->param_size = rzalloc_array(mem_ctx, int, stage_prog_data->nr_params);
 }
 
 fs_visitor::~fs_visitor()

@@ -30,7 +30,6 @@
 
 #include "gbmint.h"
 
-#include "common.h"
 #include "common_drm.h"
 
 #include <GL/gl.h> /* dri_interface needs GL types */
@@ -45,14 +44,15 @@ struct gbm_dri_device {
 
    __DRIscreen *screen;
 
-   __DRIcoreExtension   *core;
-   __DRIdri2Extension   *dri2;
-   __DRIimageExtension  *image;
-   __DRI2flushExtension *flush;
-   __DRIdri2LoaderExtension *loader;
+   const __DRIcoreExtension   *core;
+   const __DRIdri2Extension   *dri2;
+   const __DRIimageExtension  *image;
+   const __DRI2flushExtension *flush;
+   const __DRIdri2LoaderExtension *loader;
 
    const __DRIconfig   **driver_configs;
-   const __DRIextension *extensions[4];
+   const __DRIextension **extensions;
+   const __DRIextension **driver_extensions;
 
    __DRIimage *(*lookup_image)(__DRIscreen *screen, void *image, void *data);
    void *lookup_user_data;
@@ -66,6 +66,12 @@ struct gbm_dri_device {
 			     int *width, int *height,
 			     unsigned int *attachments, int count,
 			     int *out_count, void *data);
+   int (*image_get_buffers)(__DRIdrawable *driDrawable,
+                            unsigned int format,
+                            uint32_t *stamp,
+                            void *loaderPrivate,
+                            uint32_t buffer_mask,
+                            struct __DRIimageList *buffers);
 
    struct wl_drm *wl_drm;
 };
@@ -103,8 +109,5 @@ gbm_dri_surface(struct gbm_surface *surface)
 {
    return (struct gbm_dri_surface *) surface;
 }
-
-char *
-dri_fd_get_driver_name(int fd);
 
 #endif

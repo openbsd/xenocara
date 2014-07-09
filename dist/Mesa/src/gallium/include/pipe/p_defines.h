@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -188,11 +188,22 @@ enum pipe_texture_target {
 /**
  * Clear buffer bits
  */
+#define PIPE_CLEAR_DEPTH        (1 << 0)
+#define PIPE_CLEAR_STENCIL      (1 << 1)
+#define PIPE_CLEAR_COLOR0       (1 << 2)
+#define PIPE_CLEAR_COLOR1       (1 << 3)
+#define PIPE_CLEAR_COLOR2       (1 << 4)
+#define PIPE_CLEAR_COLOR3       (1 << 5)
+#define PIPE_CLEAR_COLOR4       (1 << 6)
+#define PIPE_CLEAR_COLOR5       (1 << 7)
+#define PIPE_CLEAR_COLOR6       (1 << 8)
+#define PIPE_CLEAR_COLOR7       (1 << 9)
+/** Combined flags */
 /** All color buffers currently bound */
-#define PIPE_CLEAR_COLOR        (1 << 0)
-#define PIPE_CLEAR_DEPTH        (1 << 1)
-#define PIPE_CLEAR_STENCIL      (1 << 2)
-/** Depth/stencil combined */
+#define PIPE_CLEAR_COLOR        (PIPE_CLEAR_COLOR0 | PIPE_CLEAR_COLOR1 | \
+                                 PIPE_CLEAR_COLOR2 | PIPE_CLEAR_COLOR3 | \
+                                 PIPE_CLEAR_COLOR4 | PIPE_CLEAR_COLOR5 | \
+                                 PIPE_CLEAR_COLOR6 | PIPE_CLEAR_COLOR7)
 #define PIPE_CLEAR_DEPTHSTENCIL (PIPE_CLEAR_DEPTH | PIPE_CLEAR_STENCIL)
 
 /**
@@ -284,8 +295,27 @@ enum pipe_transfer_usage {
     * - D3D10 DDI's D3D10_DDI_MAP_WRITE_DISCARD flag
     * - D3D10's D3D10_MAP_WRITE_DISCARD flag.
     */
-   PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE = (1 << 12)
+   PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE = (1 << 12),
 
+   /**
+    * Allows the resource to be used for rendering while mapped.
+    *
+    * PIPE_RESOURCE_FLAG_MAP_PERSISTENT must be set when creating
+    * the resource.
+    *
+    * If COHERENT is not set, memory_barrier(PIPE_BARRIER_MAPPED_BUFFER)
+    * must be called to ensure the device can see what the CPU has written.
+    */
+   PIPE_TRANSFER_PERSISTENT = (1 << 13),
+
+   /**
+    * If PERSISTENT is set, this ensures any writes done by the device are
+    * immediately visible to the CPU and vice versa.
+    *
+    * PIPE_RESOURCE_FLAG_MAP_COHERENT must be set when creating
+    * the resource.
+    */
+   PIPE_TRANSFER_COHERENT = (1 << 14)
 };
 
 /**
@@ -294,6 +324,11 @@ enum pipe_transfer_usage {
 enum pipe_flush_flags {
    PIPE_FLUSH_END_OF_FRAME = (1 << 0)
 };
+
+/**
+ * Flags for pipe_context::memory_barrier.
+ */
+#define PIPE_BARRIER_MAPPED_BUFFER     (1 << 0)
 
 /*
  * Resource binding flags -- state tracker must specify in advance all
@@ -330,25 +365,30 @@ enum pipe_flush_flags {
  * The shared flag is quite underspecified, but certainly isn't a
  * binding flag - it seems more like a message to the winsys to create
  * a shareable allocation.
+ * 
+ * The third flag has been added to be able to force textures to be created
+ * in linear mode (no tiling).
  */
 #define PIPE_BIND_SCANOUT     (1 << 14) /*  */
 #define PIPE_BIND_SHARED      (1 << 15) /* get_texture_handle ??? */
+#define PIPE_BIND_LINEAR      (1 << 21)
 
 
 /* Flags for the driver about resource behaviour:
  */
-#define PIPE_RESOURCE_FLAG_GEN_MIPS    (1 << 0)  /* Driver performs autogen mips */
+#define PIPE_RESOURCE_FLAG_MAP_PERSISTENT (1 << 0)
+#define PIPE_RESOURCE_FLAG_MAP_COHERENT   (1 << 1)
 #define PIPE_RESOURCE_FLAG_DRV_PRIV    (1 << 16) /* driver/winsys private */
 #define PIPE_RESOURCE_FLAG_ST_PRIV     (1 << 24) /* state-tracker/winsys private */
 
 /* Hint about the expected lifecycle of a resource.
+ * Sorted according to GPU vs CPU access.
  */
-#define PIPE_USAGE_DEFAULT        0 /* many uploads, draws intermixed */
-#define PIPE_USAGE_DYNAMIC        1 /* many uploads, draws intermixed */
-#define PIPE_USAGE_STATIC         2 /* same as immutable?? */
-#define PIPE_USAGE_IMMUTABLE      3 /* no change after first upload */
-#define PIPE_USAGE_STREAM         4 /* upload, draw, upload, draw */
-#define PIPE_USAGE_STAGING        5 /* supports data transfers from the GPU to the CPU */
+#define PIPE_USAGE_DEFAULT        0 /* fast GPU access */
+#define PIPE_USAGE_IMMUTABLE      1 /* fast GPU access, immutable */
+#define PIPE_USAGE_DYNAMIC        2 /* uploaded data is used multiple times */
+#define PIPE_USAGE_STREAM         3 /* uploaded data is used once */
+#define PIPE_USAGE_STAGING        4 /* fast CPU access */
 
 
 /**
@@ -454,9 +494,6 @@ enum pipe_cap {
    PIPE_CAP_SM3 = 29,  /*< Shader Model, supported */
    PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS = 30,
    PIPE_CAP_PRIMITIVE_RESTART = 31,
-   /** Maximum texture image units accessible from vertex and fragment shaders
-    * combined */
-   PIPE_CAP_MAX_COMBINED_SAMPLERS = 32,
    /** blend enables and write masks per rendertarget */
    PIPE_CAP_INDEP_BLEND_ENABLE = 33,
    /** different blend funcs per rendertarget */
@@ -474,7 +511,6 @@ enum pipe_cap {
    PIPE_CAP_MIXED_COLORBUFFER_FORMATS = 46,
    PIPE_CAP_SEAMLESS_CUBE_MAP = 47,
    PIPE_CAP_SEAMLESS_CUBE_MAP_PER_TEXTURE = 48,
-   PIPE_CAP_SCALED_RESOLVE = 49,
    PIPE_CAP_MIN_TEXEL_OFFSET = 50,
    PIPE_CAP_MAX_TEXEL_OFFSET = 51,
    PIPE_CAP_CONDITIONAL_RENDER = 52,
@@ -508,7 +544,19 @@ enum pipe_cap {
    PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK = 82,
    PIPE_CAP_MAX_TEXTURE_BUFFER_SIZE = 83,
    PIPE_CAP_MAX_VIEWPORTS = 84,
-   PIPE_CAP_ENDIANNESS = 85
+   PIPE_CAP_ENDIANNESS = 85,
+   PIPE_CAP_MIXED_FRAMEBUFFER_SIZES = 86,
+   PIPE_CAP_TGSI_VS_LAYER = 87,
+   PIPE_CAP_MAX_GEOMETRY_OUTPUT_VERTICES = 88,
+   PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS = 89,
+   PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS = 90,
+   PIPE_CAP_TEXTURE_GATHER_SM5 = 91,
+   PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT = 92,
+   PIPE_CAP_FAKE_SW_MSAA = 93,
+   PIPE_CAP_TEXTURE_QUERY_LOD = 94,
+   PIPE_CAP_MIN_TEXTURE_GATHER_OFFSET = 95,
+   PIPE_CAP_MAX_TEXTURE_GATHER_OFFSET = 96,
+   PIPE_CAP_SAMPLE_SHADING = 97,
 };
 
 #define PIPE_QUIRK_TEXTURE_BORDER_COLOR_SWIZZLE_NV50 (1 << 0)
@@ -566,7 +614,8 @@ enum pipe_shader_cap
    PIPE_SHADER_CAP_INTEGERS = 17,
    PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS = 18,
    PIPE_SHADER_CAP_PREFERRED_IR = 19,
-   PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED = 20
+   PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED = 20,
+   PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS = 21
 };
 
 /**
@@ -593,7 +642,8 @@ enum pipe_compute_cap
    PIPE_COMPUTE_CAP_MAX_LOCAL_SIZE,
    PIPE_COMPUTE_CAP_MAX_PRIVATE_SIZE,
    PIPE_COMPUTE_CAP_MAX_INPUT_SIZE,
-   PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE
+   PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE,
+   PIPE_COMPUTE_CAP_MAX_CLOCK_FREQUENCY
 };
 
 /**

@@ -125,6 +125,7 @@ struct __GLXDRIscreenRec {
 		     int64_t *msc, int64_t *sbc);
    int (*setSwapInterval)(__GLXDRIdrawable *pdraw, int interval);
    int (*getSwapInterval)(__GLXDRIdrawable *pdraw);
+   int (*getBufferAge)(__GLXDRIdrawable *pdraw);
 };
 
 struct __GLXDRIdrawableRec
@@ -150,6 +151,7 @@ extern __GLXDRIdisplay *dri2CreateDisplay(Display * dpy);
 extern void dri2InvalidateBuffers(Display *dpy, XID drawable);
 extern unsigned dri2GetSwapEventType(Display *dpy, XID drawable);
 
+extern __GLXDRIdisplay *dri3_create_display(Display * dpy);
 
 /*
 ** Functions to obtain driver configuration information from a direct
@@ -474,7 +476,12 @@ struct glx_screen_vtable {
 						 unsigned num_attrib,
 						 const uint32_t *attribs,
 						 unsigned *error);
-
+   int (*query_renderer_integer)(struct glx_screen *psc,
+                                 int attribute,
+                                 unsigned int *value);
+   int (*query_renderer_string)(struct glx_screen *psc,
+                                int attribute,
+                                const char **value);
 };
 
 struct glx_screen
@@ -582,6 +589,7 @@ struct glx_display
    __GLXDRIdisplay *driswDisplay;
    __GLXDRIdisplay *driDisplay;
    __GLXDRIdisplay *dri2Display;
+   __GLXDRIdisplay *dri3Display;
 #endif
 };
 
@@ -774,7 +782,7 @@ extern GLboolean __glXGetMscRateOML(Display * dpy, GLXDrawable drawable,
 
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
 extern GLboolean
-__glxGetMscRate(__GLXDRIdrawable *glxDraw,
+__glxGetMscRate(struct glx_screen *psc,
 		int32_t * numerator, int32_t * denominator);
 
 /* So that dri2.c:DRI2WireToEvent() can access

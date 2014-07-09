@@ -22,7 +22,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Authors:
- *    Keith Whitwell <keith@tungstengraphics.com> Brian Paul
+ *    Keith Whitwell <keithw@vmware.com> Brian Paul
  */
 
 #include "main/imports.h"
@@ -61,7 +61,7 @@ _swrast_update_rasterflags( struct gl_context *ctx )
    if (ctx->Color.BlendEnabled)           rasterMask |= BLEND_BIT;
    if (ctx->Depth.Test)                   rasterMask |= DEPTH_BIT;
    if (swrast->_FogEnabled)               rasterMask |= FOG_BIT;
-   if (ctx->Scissor.Enabled)              rasterMask |= CLIP_BIT;
+   if (ctx->Scissor.EnableFlags)          rasterMask |= CLIP_BIT;
    if (ctx->Stencil._Enabled)             rasterMask |= STENCIL_BIT;
    for (i = 0; i < ctx->Const.MaxDrawBuffers; i++) {
       if (!ctx->Color.ColorMask[i][0] ||
@@ -73,11 +73,11 @@ _swrast_update_rasterflags( struct gl_context *ctx )
       }
    }
    if (ctx->Color.ColorLogicOpEnabled) rasterMask |= LOGIC_OP_BIT;
-   if (ctx->Texture._EnabledUnits)     rasterMask |= TEXTURE_BIT;
-   if (   ctx->Viewport.X < 0
-       || ctx->Viewport.X + ctx->Viewport.Width > (GLint) ctx->DrawBuffer->Width
-       || ctx->Viewport.Y < 0
-       || ctx->Viewport.Y + ctx->Viewport.Height > (GLint) ctx->DrawBuffer->Height) {
+   if (ctx->Texture._MaxEnabledTexImageUnit >= 0) rasterMask |= TEXTURE_BIT;
+   if (   ctx->ViewportArray[0].X < 0
+       || ctx->ViewportArray[0].X + ctx->ViewportArray[0].Width > (GLfloat) ctx->DrawBuffer->Width
+       || ctx->ViewportArray[0].Y < 0
+       || ctx->ViewportArray[0].Y + ctx->ViewportArray[0].Height > (GLfloat) ctx->DrawBuffer->Height) {
       rasterMask |= CLIP_BIT;
    }
 
@@ -286,7 +286,7 @@ _swrast_update_specular_vertex_add(struct gl_context *ctx)
        ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR);
 
    swrast->SpecularVertexAdd = (separateSpecular
-                                && ctx->Texture._EnabledUnits == 0x0
+                                && ctx->Texture._MaxEnabledTexImageUnit == -1
                                 && !_swrast_use_fragment_program(ctx)
                                 && !ctx->ATIFragmentShader._Enabled);
 }
@@ -523,7 +523,7 @@ _swrast_update_active_attribs(struct gl_context *ctx)
       if (swrast->_FogEnabled)
          attribsMask |= VARYING_BIT_FOGC;
 
-      attribsMask |= (ctx->Texture._EnabledUnits << VARYING_SLOT_TEX0);
+      attribsMask |= (ctx->Texture._EnabledCoordUnits << VARYING_SLOT_TEX0);
    }
 
    swrast->_ActiveAttribMask = attribsMask;
@@ -794,9 +794,9 @@ _swrast_CreateContext( struct gl_context *ctx )
    swrast->PointSpan.facing = 0;
    swrast->PointSpan.array = swrast->SpanArrays;
 
-   init_program_native_limits(&ctx->Const.VertexProgram);
-   init_program_native_limits(&ctx->Const.GeometryProgram);
-   init_program_native_limits(&ctx->Const.FragmentProgram);
+   init_program_native_limits(&ctx->Const.Program[MESA_SHADER_VERTEX]);
+   init_program_native_limits(&ctx->Const.Program[MESA_SHADER_GEOMETRY]);
+   init_program_native_limits(&ctx->Const.Program[MESA_SHADER_FRAGMENT]);
 
    ctx->swrast_context = swrast;
 
@@ -923,7 +923,7 @@ _swrast_print_vertex( struct gl_context *ctx, const SWvertex *v )
                   v->attrib[VARYING_SLOT_POS][3]);
 
       for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++)
-	 if (ctx->Texture.Unit[i]._ReallyEnabled)
+	 if (ctx->Texture.Unit[i]._Current)
 	    _mesa_debug(ctx, "texcoord[%d] %f %f %f %f\n", i,
                         v->attrib[VARYING_SLOT_TEX0 + i][0],
                         v->attrib[VARYING_SLOT_TEX0 + i][1],

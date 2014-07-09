@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2006 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2006 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -26,8 +26,8 @@
  **************************************************************************/
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
-  *   Michel Dänzer <michel@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
+  *   Michel Dänzer <daenzer@vmware.com>
   */
 
 #include "pipe/p_defines.h"
@@ -60,7 +60,7 @@ softpipe_resource_layout(struct pipe_screen *screen,
    unsigned width = pt->width0;
    unsigned height = pt->height0;
    unsigned depth = pt->depth0;
-   unsigned buffer_size = 0;
+   uint64_t buffer_size = 0;
 
    for (level = 0; level <= pt->last_level; level++) {
       unsigned slices;
@@ -76,8 +76,8 @@ softpipe_resource_layout(struct pipe_screen *screen,
 
       spr->level_offset[level] = buffer_size;
 
-      buffer_size += (util_format_get_nblocksy(pt->format, height) *
-                      slices * spr->stride[level]);
+      buffer_size += (uint64_t) util_format_get_nblocksy(pt->format, height) *
+                     slices * spr->stride[level];
 
       width  = u_minify(width, 1);
       height = u_minify(height, 1);
@@ -88,7 +88,7 @@ softpipe_resource_layout(struct pipe_screen *screen,
       return FALSE;
 
    if (allocate) {
-      spr->data = align_malloc(buffer_size, 16);
+      spr->data = align_malloc(buffer_size, 64);
       return spr->data != NULL;
    }
    else {
@@ -128,7 +128,7 @@ softpipe_displaytarget_layout(struct pipe_screen *screen,
                                           spr->base.format,
                                           spr->base.width0, 
                                           spr->base.height0,
-                                          16,
+                                          64,
                                           &spr->stride[0] );
 
    return spr->dt != NULL;

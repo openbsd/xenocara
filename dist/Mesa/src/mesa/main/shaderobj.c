@@ -34,6 +34,7 @@
 #include "main/context.h"
 #include "main/hash.h"
 #include "main/mtypes.h"
+#include "main/shaderapi.h"
 #include "main/shaderobj.h"
 #include "main/uniforms.h"
 #include "program/program.h"
@@ -105,11 +106,11 @@ struct gl_shader *
 _mesa_new_shader(struct gl_context *ctx, GLuint name, GLenum type)
 {
    struct gl_shader *shader;
-   assert(type == GL_FRAGMENT_SHADER || type == GL_VERTEX_SHADER ||
-          type == GL_GEOMETRY_SHADER_ARB);
+   assert(_mesa_validate_shader_target(ctx, type));
    shader = rzalloc(NULL, struct gl_shader);
    if (shader) {
       shader->Type = type;
+      shader->Stage = _mesa_shader_enum_to_shader_stage(type);
       shader->Name = name;
       _mesa_init_shader(ctx, shader);
    }
@@ -125,6 +126,7 @@ static void
 _mesa_delete_shader(struct gl_context *ctx, struct gl_shader *sh)
 {
    free((void *)sh->Source);
+   free(sh->Label);
    _mesa_reference_program(ctx, &sh->Program, NULL);
    ralloc_free(sh);
 }
@@ -283,7 +285,12 @@ _mesa_clear_shader_program_data(struct gl_context *ctx,
       ralloc_free(shProg->UniformStorage);
       shProg->NumUserUniformStorage = 0;
       shProg->UniformStorage = NULL;
-      shProg->UniformLocationBaseScale = 0;
+   }
+
+   if (shProg->UniformRemapTable) {
+      ralloc_free(shProg->UniformRemapTable);
+      shProg->NumUniformRemapTable = 0;
+      shProg->UniformRemapTable = NULL;
    }
 
    if (shProg->UniformHash) {
@@ -306,7 +313,7 @@ _mesa_free_shader_program_data(struct gl_context *ctx,
                                struct gl_shader_program *shProg)
 {
    GLuint i;
-   gl_shader_type sh;
+   gl_shader_stage sh;
 
    assert(shProg->Type == GL_SHADER_PROGRAM_MESA);
 
@@ -345,12 +352,15 @@ _mesa_free_shader_program_data(struct gl_context *ctx,
    shProg->TransformFeedback.NumVarying = 0;
 
 
-   for (sh = 0; sh < MESA_SHADER_TYPES; sh++) {
+   for (sh = 0; sh < MESA_SHADER_STAGES; sh++) {
       if (shProg->_LinkedShaders[sh] != NULL) {
 	 ctx->Driver.DeleteShader(ctx, shProg->_LinkedShaders[sh]);
 	 shProg->_LinkedShaders[sh] = NULL;
       }
    }
+
+   free(shProg->Label);
+   shProg->Label = NULL;
 }
 
 

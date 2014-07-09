@@ -139,15 +139,15 @@ get_input_arg(struct combiner_state *rc, int arg, int flags)
 		int i = (source == GL_TEXTURE ?
 			 rc->unit : source - GL_TEXTURE0);
 		struct gl_texture_object *t = rc->ctx->Texture.Unit[i]._Current;
-		gl_format format = t->Image[0][t->BaseLevel]->TexFormat;
+		mesa_format format = t->Image[0][t->BaseLevel]->TexFormat;
 
-		if (format == MESA_FORMAT_A8) {
+		if (format == MESA_FORMAT_A_UNORM8) {
 			/* Emulated using I8. */
 			if (is_color_operand(operand))
 				return COMBINER_SOURCE(ZERO) |
 					get_input_mapping(rc, operand, flags);
 
-		} else if (format == MESA_FORMAT_L8) {
+		} else if (format == MESA_FORMAT_L_UNORM8) {
 			/* Emulated using I8. */
 			if (!is_color_operand(operand))
 				return COMBINER_SOURCE(ZERO) |
@@ -257,7 +257,7 @@ nv04_emit_tex_env(struct gl_context *ctx, int emit)
 	struct combiner_state rc_a = {}, rc_c = {};
 
 	/* Compute the new combiner state. */
-	if (ctx->Texture.Unit[i]._ReallyEnabled) {
+	if (ctx->Texture.Unit[i]._Current) {
 		INIT_COMBINER(A, ctx, &rc_a, i);
 		setup_combiner(&rc_a);
 
@@ -286,7 +286,7 @@ nv04_emit_tex_env(struct gl_context *ctx, int emit)
 
 	/* calculate non-multitex state */
 	nv04->blend &= ~NV04_TEXTURED_TRIANGLE_BLEND_TEXTURE_MAP__MASK;
-	if (ctx->Texture._EnabledUnits)
+	if (ctx->Texture._MaxEnabledTexImageUnit != -1)
 		nv04->blend |= get_texenv_mode(ctx->Texture.Unit[0].EnvMode);
 	else
 		nv04->blend |= get_texenv_mode(GL_MODULATE);
@@ -294,6 +294,6 @@ nv04_emit_tex_env(struct gl_context *ctx, int emit)
 	/* update calculated multitex state */
 	nv04->alpha[i] = rc_a.hw;
 	nv04->color[i] = rc_c.hw;
-	nv04->factor   = pack_rgba_f(MESA_FORMAT_ARGB8888,
+	nv04->factor   = pack_rgba_f(MESA_FORMAT_B8G8R8A8_UNORM,
 				     ctx->Texture.Unit[0].EnvColor);
 }

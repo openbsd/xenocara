@@ -1,7 +1,7 @@
 
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -19,7 +19,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -30,7 +30,7 @@
  * \brief  Public interface into the drawing module.
  */
 
-/* Authors:  Keith Whitwell <keith@tungstengraphics.com>
+/* Authors:  Keith Whitwell <keithw@vmware.com>
  */
 
 
@@ -53,14 +53,13 @@ struct tgsi_sampler;
  * structure to contain driver internal information 
  * for stream out support. mapping stores the pointer
  * to the buffer contents, and internal offset stores
- * stores an internal counter to how much of the stream
+ * an internal counter to how much of the stream
  * out buffer is used (in bytes).
  */
 struct draw_so_target {
    struct pipe_stream_output_target target;
    void *mapping;
    int internal_offset;
-   int emitted_vertices;
 };
 
 struct draw_context *draw_create( struct pipe_context *pipe );
@@ -111,7 +110,7 @@ void draw_enable_line_stipple(struct draw_context *draw, boolean enable);
 
 void draw_enable_point_sprites(struct draw_context *draw, boolean enable);
 
-void draw_set_mrd(struct draw_context *draw, double mrd);
+void draw_set_zs_format(struct draw_context *draw, enum pipe_format format);
 
 boolean
 draw_install_aaline_stage(struct draw_context *draw, struct pipe_context *pipe);
@@ -126,13 +125,24 @@ draw_install_pstipple_stage(struct draw_context *draw, struct pipe_context *pipe
 struct tgsi_shader_info *
 draw_get_shader_info(const struct draw_context *draw);
 
+void
+draw_prepare_shader_outputs(struct draw_context *draw);
+
 int
 draw_find_shader_output(const struct draw_context *draw,
                         uint semantic_name, uint semantic_index);
 
+boolean
+draw_will_inject_frontface(const struct draw_context *draw);
+
 uint
 draw_num_shader_outputs(const struct draw_context *draw);
 
+uint
+draw_total_vs_outputs(const struct draw_context *draw);
+
+uint
+draw_total_gs_outputs(const struct draw_context *draw);
 
 void
 draw_texture_sampler(struct draw_context *draw,
@@ -252,7 +262,8 @@ void draw_set_render( struct draw_context *draw,
 void draw_set_driver_clipping( struct draw_context *draw,
                                boolean bypass_clip_xy,
                                boolean bypass_clip_z,
-                               boolean guard_band_xy);
+                               boolean guard_band_xy,
+                               boolean bypass_clip_points);
 
 void draw_set_force_passthrough( struct draw_context *draw, 
                                  boolean enable );
@@ -277,9 +288,7 @@ draw_get_shader_param(unsigned shader, enum pipe_shader_cap param);
 int
 draw_get_shader_param_no_llvm(unsigned shader, enum pipe_shader_cap param);
 
-#ifdef HAVE_LLVM
 boolean
 draw_get_option_use_llvm(void);
-#endif
 
 #endif /* DRAW_CONTEXT_H */

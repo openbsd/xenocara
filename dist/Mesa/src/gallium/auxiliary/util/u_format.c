@@ -34,9 +34,9 @@
 
 #include "u_math.h"
 #include "u_memory.h"
-#include "u_rect.h"
 #include "u_format.h"
 #include "u_format_s3tc.h"
+#include "u_surface.h"
 
 #include "pipe/p_defines.h"
 
@@ -205,6 +205,43 @@ util_format_is_supported(enum pipe_format format, unsigned bind)
 #endif
 
    return TRUE;
+}
+
+
+/**
+ * Calculates the MRD for the depth format. MRD is used in depth bias
+ * for UNORM and unbound depth buffers. When the depth buffer is floating
+ * point, the depth bias calculation does not use the MRD. However, the
+ * default MRD will be 1.0 / ((1 << 24) - 1).
+ */
+double
+util_get_depth_format_mrd(const struct util_format_description *desc)
+{
+   /*
+    * Depth buffer formats without a depth component OR scenarios
+    * without a bound depth buffer default to D24.
+    */
+   double mrd = 1.0 / ((1 << 24) - 1);
+   unsigned depth_channel;
+
+   assert(desc);
+
+   /*
+    * Some depth formats do not store the depth component in the first
+    * channel, detect the format and adjust the depth channel. Get the
+    * swizzled depth component channel.
+    */
+   depth_channel = desc->swizzle[0];
+
+   if (desc->channel[depth_channel].type == UTIL_FORMAT_TYPE_UNSIGNED &&
+       desc->channel[depth_channel].normalized) {
+      int depth_bits;
+
+      depth_bits = desc->channel[depth_channel].size;
+      mrd = 1.0 / ((1ULL << depth_bits) - 1);
+   }
+
+   return mrd;
 }
 
 
@@ -490,7 +527,7 @@ util_format_fits_8unorm(const struct util_format_description *format_desc)
 }
 
 
-void
+boolean
 util_format_translate(enum pipe_format dst_format,
                       void *dst, unsigned dst_stride,
                       unsigned dst_x, unsigned dst_y,
@@ -518,7 +555,7 @@ util_format_translate(enum pipe_format dst_format,
       util_copy_rect(dst, dst_format, dst_stride,  dst_x, dst_y,
                      width, height, src, (int)src_stride,
                      src_x, src_y);
-      return;
+      return TRUE;
    }
 
    assert(dst_x % dst_format_desc->block.width == 0);
@@ -584,7 +621,7 @@ util_format_translate(enum pipe_format dst_format,
 
       FREE(tmp_z);
 
-      return;
+      return TRUE;
    }
 
    if (util_format_fits_8unorm(src_format_desc) ||
@@ -592,10 +629,15 @@ util_format_translate(enum pipe_format dst_format,
       unsigned tmp_stride;
       uint8_t *tmp_row;
 
+      if (!src_format_desc->unpack_rgba_8unorm ||
+          !dst_format_desc->pack_rgba_8unorm) {
+         return FALSE;
+      }
+
       tmp_stride = MAX2(width, x_step) * 4 * sizeof *tmp_row;
       tmp_row = MALLOC(y_step * tmp_stride);
       if (!tmp_row)
-         return;
+         return FALSE;
 
       while (height >= y_step) {
          src_format_desc->unpack_rgba_8unorm(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
@@ -617,10 +659,15 @@ util_format_translate(enum pipe_format dst_format,
       unsigned tmp_stride;
       float *tmp_row;
 
+      if (!src_format_desc->unpack_rgba_float ||
+          !dst_format_desc->pack_rgba_float) {
+         return FALSE;
+      }
+
       tmp_stride = MAX2(width, x_step) * 4 * sizeof *tmp_row;
       tmp_row = MALLOC(y_step * tmp_stride);
       if (!tmp_row)
-         return;
+         return FALSE;
 
       while (height >= y_step) {
          src_format_desc->unpack_rgba_float(tmp_row, tmp_stride, src_row, src_stride, width, y_step);
@@ -638,6 +685,7 @@ util_format_translate(enum pipe_format dst_format,
 
       FREE(tmp_row);
    }
+   return TRUE;
 }
 
 void util_format_compose_swizzles(const unsigned char swz1[4],

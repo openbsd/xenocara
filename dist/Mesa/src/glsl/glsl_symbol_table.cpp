@@ -26,20 +26,7 @@
 
 class symbol_table_entry {
 public:
-   /* Callers of this ralloc-based new need not call delete. It's
-    * easier to just ralloc_free 'ctx' (or any of its ancestors). */
-   static void* operator new(size_t size, void *ctx)
-   {
-      void *entry = ralloc_size(ctx, size);
-      assert(entry != NULL);
-      return entry;
-   }
-
-   /* If the user *does* call delete, that's OK, we will just ralloc_free. */
-   static void operator delete(void *entry)
-   {
-      ralloc_free(entry);
-   }
+   DECLARE_RALLOC_CXX_OPERATORS(symbol_table_entry);
 
    bool add_interface(const glsl_type *i, enum ir_variable_mode mode)
    {
@@ -175,23 +162,6 @@ bool glsl_symbol_table::add_type(const char *name, const glsl_type *t)
    return _mesa_symbol_table_add_symbol(table, -1, name, entry) == 0;
 }
 
-static char *make_ast_name(const char *name)
-{
-   char *ast_name = new char[strlen("#ast.") + strlen(name) + 1];
-   strcpy(ast_name, "#ast.");
-   strcat(ast_name + strlen("#ast."), name);
-   return ast_name;
-}
-
-bool glsl_symbol_table::add_type_ast(const char *name, const class ast_type_specifier *a)
-{
-   symbol_table_entry *entry = new(mem_ctx) symbol_table_entry(a);
-   char *ast_name = make_ast_name(name);
-   bool ret = _mesa_symbol_table_add_symbol(table, -1, ast_name, entry) == 0;
-   delete [] ast_name;
-   return ret;
-}
-
 bool glsl_symbol_table::add_interface(const char *name, const glsl_type *i,
                                       enum ir_variable_mode mode)
 {
@@ -243,14 +213,6 @@ const glsl_type *glsl_symbol_table::get_type(const char *name)
    return entry != NULL ? entry->t : NULL;
 }
 
-const class ast_type_specifier *glsl_symbol_table::get_type_ast(const char *name)
-{
-   char *ast_name = make_ast_name(name);
-   symbol_table_entry *entry = get_entry(ast_name);
-   delete [] ast_name;
-   return entry != NULL ? entry->a : NULL;
-}
-
 const glsl_type *glsl_symbol_table::get_interface(const char *name,
                                                   enum ir_variable_mode mode)
 {
@@ -268,4 +230,19 @@ symbol_table_entry *glsl_symbol_table::get_entry(const char *name)
 {
    return (symbol_table_entry *)
       _mesa_symbol_table_find_symbol(table, -1, name);
+}
+
+void
+glsl_symbol_table::disable_variable(const char *name)
+{
+   /* Ideally we would remove the variable's entry from the symbol table, but
+    * that would be difficult.  Fortunately, since this is only used for
+    * built-in variables, it won't be possible for the shader to re-introduce
+    * the variable later, so all we really need to do is to make sure that
+    * further attempts to access it using get_variable() will return NULL.
+    */
+   symbol_table_entry *entry = get_entry(name);
+   if (entry != NULL) {
+      entry->v = NULL;
+   }
 }

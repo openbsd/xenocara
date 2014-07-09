@@ -34,10 +34,10 @@
 
 struct dri_debug_control {
     const char * string;
-    unsigned     flag;
+    uint64_t     flag;
 };
 
-extern unsigned driParseDebugString( const char * debug,
+extern uint64_t driParseDebugString( const char * debug,
     const struct dri_debug_control * control );
 
 extern unsigned driGetRendererString( char * buffer,
@@ -48,7 +48,7 @@ struct __DRIconfigRec {
 };
 
 extern __DRIconfig **
-driCreateConfigs(gl_format format,
+driCreateConfigs(mesa_format format,
 		 const uint8_t * depth_bits, const uint8_t * stencil_bits,
 		 unsigned num_depth_stencil_bits,
 		 const GLenum * db_modes, unsigned num_db_modes,
@@ -64,5 +64,8 @@ driGetConfigAttrib(const __DRIconfig *config,
 int
 driIndexConfigAttrib(const __DRIconfig *config, int index,
 		     unsigned int *attrib, unsigned int *value);
+
+int
+driQueryRendererIntegerCommon(__DRIscreen *psp, int param, unsigned int *value);
 
 #endif /* DRI_DEBUG_H */

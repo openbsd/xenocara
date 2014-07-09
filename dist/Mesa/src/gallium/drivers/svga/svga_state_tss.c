@@ -85,7 +85,7 @@ update_tss_binding(struct svga_context *svga,
       struct pipe_sampler_view *sv = svga->curr.sampler_views[i];
 
       /* get min max lod */
-      if (sv) {
+      if (sv && s) {
          min_lod = MAX2(0, (s->view_min_lod + sv->u.tex.first_level));
          max_lod = MIN2(s->view_max_lod + sv->u.tex.first_level,
                         sv->texture->last_level);
@@ -153,6 +153,7 @@ update_tss_binding(struct svga_context *svga,
          }
          svga->swc->surface_relocation(svga->swc,
                                        &ts[i].value,
+                                       NULL,
                                        handle,
                                        SVGA_RELOC_READ);
          
@@ -164,7 +165,7 @@ update_tss_binding(struct svga_context *svga,
 
    svga->rebind.texture_samplers = FALSE;
 
-   return 0;
+   return PIPE_OK;
 
 fail:
    return PIPE_ERROR_OUT_OF_MEMORY;
@@ -220,6 +221,7 @@ svga_reemit_tss_bindings(struct svga_context *svga)
          handle = queue.bind[i].view->v->handle;
          svga->swc->surface_relocation(svga->swc,
                                        &ts[i].value,
+                                       NULL,
                                        handle,
                                        SVGA_RELOC_READ);
       }

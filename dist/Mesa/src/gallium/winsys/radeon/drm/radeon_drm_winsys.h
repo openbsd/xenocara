@@ -43,15 +43,18 @@ enum radeon_generation {
 
 struct radeon_drm_winsys {
     struct radeon_winsys base;
+    struct pipe_reference reference;
 
     int fd; /* DRM file descriptor */
     int num_cs; /* The number of command streams created. */
     uint64_t allocated_vram;
     uint64_t allocated_gtt;
     uint64_t buffer_wait_time; /* time spent in buffer_wait in ns */
+    uint64_t num_cs_flushes;
 
     enum radeon_generation gen;
     struct radeon_info info;
+    uint32_t va_start;
 
     struct pb_manager *kman;
     struct pb_manager *cman;
@@ -67,11 +70,6 @@ struct radeon_drm_winsys {
     /* rings submission thread */
     pipe_mutex cs_stack_lock;
     pipe_semaphore cs_queued;
-    /* we cannot use semaphore for empty queue because maintaining an even
-     * number of call to semaphore_wait and semaphore_signal is, to say the
-     * least, tricky
-     */
-    pipe_condvar cs_queue_empty;
     pipe_thread thread;
     int kill_thread;
     int ncs;

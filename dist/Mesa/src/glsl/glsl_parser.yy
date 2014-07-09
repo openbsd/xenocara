@@ -43,6 +43,32 @@ _mesa_glsl_lex(YYSTYPE *val, YYLTYPE *loc, _mesa_glsl_parse_state *state)
 {
    return _mesa_glsl_lexer_lex(val, loc, state->scanner);
 }
+
+static bool match_layout_qualifier(const char *s1, const char *s2,
+                                   _mesa_glsl_parse_state *state)
+{
+   /* From the GLSL 1.50 spec, section 4.3.8 (Layout Qualifiers):
+    *
+    *     "The tokens in any layout-qualifier-id-list ... are not case
+    *     sensitive, unless explicitly noted otherwise."
+    *
+    * The text "unless explicitly noted otherwise" appears to be
+    * vacuous--no desktop GLSL spec (up through GLSL 4.40) notes
+    * otherwise.
+    *
+    * However, the GLSL ES 3.00 spec says, in section 4.3.8 (Layout
+    * Qualifiers):
+    *
+    *     "As for other identifiers, they are case sensitive."
+    *
+    * So we need to do a case-sensitive or a case-insensitive match,
+    * depending on whether we are compiling for GLSL ES.
+    */
+   if (state->es_shader)
+      return strcmp(s1, s2);
+   else
+      return strcasecmp(s1, s2);
+}
 %}
 
 %expect 0
@@ -71,6 +97,7 @@ _mesa_glsl_lex(YYSTYPE *val, YYLTYPE *loc, _mesa_glsl_parse_state *state)
 
    ast_node *node;
    ast_type_specifier *type_specifier;
+   ast_array_specifier *array_specifier;
    ast_fully_specified_type *fully_specified_type;
    ast_function *function;
    ast_parameter_declarator *parameter_declarator;
@@ -118,6 +145,15 @@ _mesa_glsl_lex(YYSTYPE *val, YYLTYPE *loc, _mesa_glsl_parse_state *state)
 %token SAMPLER2DMS ISAMPLER2DMS USAMPLER2DMS
 %token SAMPLER2DMSARRAY ISAMPLER2DMSARRAY USAMPLER2DMSARRAY
 %token SAMPLEREXTERNALOES
+%token IMAGE1D IMAGE2D IMAGE3D IMAGE2DRECT IMAGECUBE IMAGEBUFFER
+%token IMAGE1DARRAY IMAGE2DARRAY IMAGECUBEARRAY IMAGE2DMS IMAGE2DMSARRAY
+%token IIMAGE1D IIMAGE2D IIMAGE3D IIMAGE2DRECT IIMAGECUBE IIMAGEBUFFER
+%token IIMAGE1DARRAY IIMAGE2DARRAY IIMAGECUBEARRAY IIMAGE2DMS IIMAGE2DMSARRAY
+%token UIMAGE1D UIMAGE2D UIMAGE3D UIMAGE2DRECT UIMAGECUBE UIMAGEBUFFER
+%token UIMAGE1DARRAY UIMAGE2DARRAY UIMAGECUBEARRAY UIMAGE2DMS UIMAGE2DMSARRAY
+%token IMAGE1DSHADOW IMAGE2DSHADOW IMAGE1DARRAYSHADOW IMAGE2DARRAYSHADOW
+%token COHERENT VOLATILE RESTRICT READONLY WRITEONLY
+%token ATOMIC_UINT
 %token STRUCT VOID_TOK WHILE
 %token <identifier> IDENTIFIER TYPE_IDENTIFIER NEW_IDENTIFIER
 %type <identifier> any_identifier
@@ -142,23 +178,17 @@ _mesa_glsl_lex(YYSTYPE *val, YYLTYPE *loc, _mesa_glsl_parse_state *state)
    /* Reserved words that are not actually used in the grammar.
     */
 %token ASM CLASS UNION ENUM TYPEDEF TEMPLATE THIS PACKED_TOK GOTO
-%token INLINE_TOK NOINLINE VOLATILE PUBLIC_TOK STATIC EXTERN EXTERNAL
+%token INLINE_TOK NOINLINE PUBLIC_TOK STATIC EXTERN EXTERNAL
 %token LONG_TOK SHORT_TOK DOUBLE_TOK HALF FIXED_TOK UNSIGNED INPUT_TOK OUPTUT
 %token HVEC2 HVEC3 HVEC4 DVEC2 DVEC3 DVEC4 FVEC2 FVEC3 FVEC4
 %token SAMPLER3DRECT
 %token SIZEOF CAST NAMESPACE USING
-%token COHERENT RESTRICT READONLY WRITEONLY RESOURCE ATOMIC_UINT PATCH SAMPLE
+%token RESOURCE PATCH SAMPLE
 %token SUBROUTINE
 
 %token ERROR_TOK
 
-%token COMMON PARTITION ACTIVE FILTER
-%token  IMAGE1D  IMAGE2D  IMAGE3D  IMAGECUBE  IMAGE1DARRAY  IMAGE2DARRAY
-%token IIMAGE1D IIMAGE2D IIMAGE3D IIMAGECUBE IIMAGE1DARRAY IIMAGE2DARRAY
-%token UIMAGE1D UIMAGE2D UIMAGE3D UIMAGECUBE UIMAGE1DARRAY UIMAGE2DARRAY
-%token IMAGE1DSHADOW IMAGE2DSHADOW IMAGEBUFFER IIMAGEBUFFER UIMAGEBUFFER
-%token IMAGE1DARRAYSHADOW IMAGE2DARRAYSHADOW
-%token ROW_MAJOR
+%token COMMON PARTITION ACTIVE FILTER ROW_MAJOR
 
 %type <identifier> variable_identifier
 %type <node> statement
@@ -175,6 +205,7 @@ _mesa_glsl_lex(YYSTYPE *val, YYLTYPE *loc, _mesa_glsl_parse_state *state)
 %type <type_qualifier> interface_qualifier
 %type <type_specifier> type_specifier
 %type <type_specifier> type_specifier_nonarray
+%type <array_specifier> array_specifier
 %type <identifier> basic_type_specifier_nonarray
 %type <fully_specified_type> fully_specified_type
 %type <function> function_prototype
@@ -254,6 +285,7 @@ _mesa_glsl_lex(YYSTYPE *val, YYLTYPE *loc, _mesa_glsl_parse_state *state)
 %type <node> for_init_statement
 %type <for_rest_statement> for_rest_statement
 %type <n> integer_constant
+%type <node> layout_defaults
 
 %right THEN ELSE
 %%
@@ -299,7 +331,7 @@ pragma_statement:
       if (!state->is_version(120, 100)) {
          _mesa_glsl_warning(& @1, state,
                             "pragma `invariant(all)' not supported in %s "
-                            "(GLSL ES 1.00 or GLSL 1.20 required).",
+                            "(GLSL ES 1.00 or GLSL 1.20 required)",
                             state->get_version_string());
       } else {
          state->all_invariant = true;
@@ -356,35 +388,35 @@ primary_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_identifier, NULL, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->primary_expression.identifier = $1;
    }
    | INTCONSTANT
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_int_constant, NULL, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->primary_expression.int_constant = $1;
    }
    | UINTCONSTANT
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_uint_constant, NULL, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->primary_expression.uint_constant = $1;
    }
    | FLOATCONSTANT
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_float_constant, NULL, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->primary_expression.float_constant = $1;
    }
    | BOOLCONSTANT
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_bool_constant, NULL, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->primary_expression.bool_constant = $1;
    }
    | '(' expression ')'
@@ -399,7 +431,7 @@ postfix_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_array_index, $1, $3, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @4);
    }
    | function_call
    {
@@ -409,20 +441,20 @@ postfix_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_field_selection, $1, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
       $$->primary_expression.identifier = $3;
    }
    | postfix_expression INC_OP
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_post_inc, $1, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
    }
    | postfix_expression DEC_OP
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_post_dec, $1, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
    }
    ;
 
@@ -440,7 +472,7 @@ function_call_or_method:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_field_selection, $1, $3, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -458,13 +490,13 @@ function_call_header_with_parameters:
    function_call_header assignment_expression
    {
       $$ = $1;
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->expressions.push_tail(& $2->link);
    }
    | function_call_header_with_parameters ',' assignment_expression
    {
       $$ = $1;
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->expressions.push_tail(& $3->link);
    }
    ;
@@ -481,21 +513,23 @@ function_identifier:
    {
       void *ctx = state;
       $$ = new(ctx) ast_function_expression($1);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       }
    | variable_identifier
    {
       void *ctx = state;
       ast_expression *callee = new(ctx) ast_expression($1);
+      callee->set_location(@1);
       $$ = new(ctx) ast_function_expression(callee);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       }
    | FIELD_SELECTION
    {
       void *ctx = state;
       ast_expression *callee = new(ctx) ast_expression($1);
+      callee->set_location(@1);
       $$ = new(ctx) ast_function_expression(callee);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       }
    ;
 
@@ -513,13 +547,13 @@ method_call_header_with_parameters:
    method_call_header assignment_expression
    {
       $$ = $1;
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->expressions.push_tail(& $2->link);
    }
    | method_call_header_with_parameters ',' assignment_expression
    {
       $$ = $1;
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->expressions.push_tail(& $3->link);
    }
    ;
@@ -532,8 +566,9 @@ method_call_header:
    {
       void *ctx = state;
       ast_expression *callee = new(ctx) ast_expression($1);
+      callee->set_location(@1);
       $$ = new(ctx) ast_function_expression(callee);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    ;
 
@@ -544,19 +579,19 @@ unary_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_pre_inc, $2, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | DEC_OP unary_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_pre_dec, $2, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | unary_operator unary_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression($1, $2, NULL, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
    }
    ;
 
@@ -574,19 +609,19 @@ multiplicative_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_mul, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    | multiplicative_expression '/' unary_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_div, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    | multiplicative_expression '%' unary_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_mod, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -596,13 +631,13 @@ additive_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_add, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    | additive_expression '-' multiplicative_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_sub, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -612,13 +647,13 @@ shift_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_lshift, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    | shift_expression RIGHT_OP additive_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_rshift, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -628,25 +663,25 @@ relational_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_less, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    | relational_expression '>' shift_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_greater, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    | relational_expression LE_OP shift_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_lequal, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    | relational_expression GE_OP shift_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_gequal, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -656,13 +691,13 @@ equality_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_equal, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    | equality_expression NE_OP relational_expression
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_nequal, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -672,7 +707,7 @@ and_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_bit_and, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -682,7 +717,7 @@ exclusive_or_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_bit_xor, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -692,7 +727,7 @@ inclusive_or_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_bit_or, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -702,7 +737,7 @@ logical_and_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_logic_and, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -712,7 +747,7 @@ logical_xor_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_logic_xor, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -722,7 +757,7 @@ logical_or_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_bin(ast_logic_or, $1, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -732,7 +767,7 @@ conditional_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression(ast_conditional, $1, $3, $5);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @5);
    }
    ;
 
@@ -742,7 +777,7 @@ assignment_expression:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression($2, $1, $3, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -770,7 +805,7 @@ expression:
       void *ctx = state;
       if ($1->oper != ast_sequence) {
          $$ = new(ctx) ast_expression(ast_sequence, NULL, NULL, NULL);
-         $$->set_location(yylloc);
+         $$->set_location_range(@1, @3);
          $$->expressions.push_tail(& $1->link);
       } else {
          $$ = $1;
@@ -832,7 +867,7 @@ function_header:
    {
       void *ctx = state;
       $$ = new(ctx) ast_function();
-      $$->set_location(yylloc);
+      $$->set_location(@2);
       $$->return_type = $1;
       $$->identifier = $2;
 
@@ -846,23 +881,22 @@ parameter_declarator:
    {
       void *ctx = state;
       $$ = new(ctx) ast_parameter_declarator();
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
       $$->type = new(ctx) ast_fully_specified_type();
-      $$->type->set_location(yylloc);
+      $$->type->set_location(@1);
       $$->type->specifier = $1;
       $$->identifier = $2;
    }
-   | type_specifier any_identifier '[' constant_expression ']'
+   | type_specifier any_identifier array_specifier
    {
       void *ctx = state;
       $$ = new(ctx) ast_parameter_declarator();
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
       $$->type = new(ctx) ast_fully_specified_type();
-      $$->type->set_location(yylloc);
+      $$->type->set_location(@1);
       $$->type->specifier = $1;
       $$->identifier = $2;
-      $$->is_array = true;
-      $$->array_size = $4;
+      $$->array_specifier = $3;
    }
    ;
 
@@ -876,8 +910,9 @@ parameter_declaration:
    {
       void *ctx = state;
       $$ = new(ctx) ast_parameter_declarator();
-      $$->set_location(yylloc);
+      $$->set_location(@2);
       $$->type = new(ctx) ast_fully_specified_type();
+      $$->type->set_location_range(@1, @2);
       $$->type->qualifier = $1;
       $$->type->specifier = $2;
    }
@@ -891,7 +926,7 @@ parameter_qualifier:
    | CONST_TOK parameter_qualifier
    {
       if ($2.flags.q.constant)
-         _mesa_glsl_error(&@1, state, "duplicate const qualifier.\n");
+         _mesa_glsl_error(&@1, state, "duplicate const qualifier");
 
       $$ = $2;
       $$.flags.q.constant = 1;
@@ -899,11 +934,11 @@ parameter_qualifier:
    | parameter_direction_qualifier parameter_qualifier
    {
       if (($1.flags.q.in || $1.flags.q.out) && ($2.flags.q.in || $2.flags.q.out))
-         _mesa_glsl_error(&@1, state, "duplicate in/out/inout qualifier\n");
+         _mesa_glsl_error(&@1, state, "duplicate in/out/inout qualifier");
 
       if (!state->ARB_shading_language_420pack_enable && $2.flags.q.constant)
          _mesa_glsl_error(&@1, state, "const must be specified before "
-                          "in/out/inout.\n");
+                          "in/out/inout");
 
       $$ = $1;
       $$.merge_qualifier(&@1, state, $2);
@@ -911,10 +946,10 @@ parameter_qualifier:
    | precision_qualifier parameter_qualifier
    {
       if ($2.precision != ast_precision_none)
-         _mesa_glsl_error(&@1, state, "Duplicate precision qualifier.\n");
+         _mesa_glsl_error(&@1, state, "duplicate precision qualifier");
 
       if (!state->ARB_shading_language_420pack_enable && $2.flags.i != 0)
-         _mesa_glsl_error(&@1, state, "Precision qualifiers must come last.\n");
+         _mesa_glsl_error(&@1, state, "precision qualifiers must come last");
 
       $$ = $2;
       $$.precision = $1;
@@ -948,76 +983,42 @@ init_declarator_list:
    | init_declarator_list ',' any_identifier
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($3, false, NULL, NULL);
-      decl->set_location(yylloc);
+      ast_declaration *decl = new(ctx) ast_declaration($3, NULL, NULL);
+      decl->set_location(@3);
 
       $$ = $1;
       $$->declarations.push_tail(&decl->link);
       state->symbols->add_variable(new(state) ir_variable(NULL, $3, ir_var_auto));
    }
-   | init_declarator_list ',' any_identifier '[' ']'
+   | init_declarator_list ',' any_identifier array_specifier
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($3, true, NULL, NULL);
-      decl->set_location(yylloc);
+      ast_declaration *decl = new(ctx) ast_declaration($3, $4, NULL);
+      decl->set_location_range(@3, @4);
 
       $$ = $1;
       $$->declarations.push_tail(&decl->link);
       state->symbols->add_variable(new(state) ir_variable(NULL, $3, ir_var_auto));
    }
-   | init_declarator_list ',' any_identifier '[' constant_expression ']'
+   | init_declarator_list ',' any_identifier array_specifier '=' initializer
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($3, true, $5, NULL);
-      decl->set_location(yylloc);
+      ast_declaration *decl = new(ctx) ast_declaration($3, $4, $6);
+      decl->set_location_range(@3, @4);
 
       $$ = $1;
       $$->declarations.push_tail(&decl->link);
       state->symbols->add_variable(new(state) ir_variable(NULL, $3, ir_var_auto));
-   }
-   | init_declarator_list ',' any_identifier '[' ']' '=' initializer
-   {
-      void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($3, true, NULL, $7);
-      decl->set_location(yylloc);
-
-      $$ = $1;
-      $$->declarations.push_tail(&decl->link);
-      state->symbols->add_variable(new(state) ir_variable(NULL, $3, ir_var_auto));
-      if ($7->oper == ast_aggregate) {
-         ast_aggregate_initializer *ai = (ast_aggregate_initializer *)$7;
-         ast_type_specifier *type = new(ctx) ast_type_specifier($1->type->specifier, true, NULL);
-         _mesa_ast_set_aggregate_type(type, ai, state);
-      }
-   }
-   | init_declarator_list ',' any_identifier '[' constant_expression ']' '=' initializer
-   {
-      void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($3, true, $5, $8);
-      decl->set_location(yylloc);
-
-      $$ = $1;
-      $$->declarations.push_tail(&decl->link);
-      state->symbols->add_variable(new(state) ir_variable(NULL, $3, ir_var_auto));
-      if ($8->oper == ast_aggregate) {
-         ast_aggregate_initializer *ai = (ast_aggregate_initializer *)$8;
-         ast_type_specifier *type = new(ctx) ast_type_specifier($1->type->specifier, true, $5);
-         _mesa_ast_set_aggregate_type(type, ai, state);
-      }
    }
    | init_declarator_list ',' any_identifier '=' initializer
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($3, false, NULL, $5);
-      decl->set_location(yylloc);
+      ast_declaration *decl = new(ctx) ast_declaration($3, NULL, $5);
+      decl->set_location(@3);
 
       $$ = $1;
       $$->declarations.push_tail(&decl->link);
       state->symbols->add_variable(new(state) ir_variable(NULL, $3, ir_var_auto));
-      if ($5->oper == ast_aggregate) {
-         ast_aggregate_initializer *ai = (ast_aggregate_initializer *)$5;
-         _mesa_ast_set_aggregate_type($1->type->specifier, ai, state);
-      }
    }
    ;
 
@@ -1028,82 +1029,56 @@ single_declaration:
       void *ctx = state;
       /* Empty declaration list is valid. */
       $$ = new(ctx) ast_declarator_list($1);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | fully_specified_type any_identifier
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($2, false, NULL, NULL);
+      ast_declaration *decl = new(ctx) ast_declaration($2, NULL, NULL);
+      decl->set_location(@2);
 
       $$ = new(ctx) ast_declarator_list($1);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
       $$->declarations.push_tail(&decl->link);
    }
-   | fully_specified_type any_identifier '[' ']'
+   | fully_specified_type any_identifier array_specifier
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($2, true, NULL, NULL);
+      ast_declaration *decl = new(ctx) ast_declaration($2, $3, NULL);
+      decl->set_location_range(@2, @3);
 
       $$ = new(ctx) ast_declarator_list($1);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
       $$->declarations.push_tail(&decl->link);
    }
-   | fully_specified_type any_identifier '[' constant_expression ']'
+   | fully_specified_type any_identifier array_specifier '=' initializer
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($2, true, $4, NULL);
+      ast_declaration *decl = new(ctx) ast_declaration($2, $3, $5);
+      decl->set_location_range(@2, @3);
 
       $$ = new(ctx) ast_declarator_list($1);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
       $$->declarations.push_tail(&decl->link);
-   }
-   | fully_specified_type any_identifier '[' ']' '=' initializer
-   {
-      void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($2, true, NULL, $6);
-
-      $$ = new(ctx) ast_declarator_list($1);
-      $$->set_location(yylloc);
-      $$->declarations.push_tail(&decl->link);
-      if ($6->oper == ast_aggregate) {
-         ast_aggregate_initializer *ai = (ast_aggregate_initializer *)$6;
-         ast_type_specifier *type = new(ctx) ast_type_specifier($1->specifier, true, NULL);
-         _mesa_ast_set_aggregate_type(type, ai, state);
-      }
-   }
-   | fully_specified_type any_identifier '[' constant_expression ']' '=' initializer
-   {
-      void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($2, true, $4, $7);
-
-      $$ = new(ctx) ast_declarator_list($1);
-      $$->set_location(yylloc);
-      $$->declarations.push_tail(&decl->link);
-      if ($7->oper == ast_aggregate) {
-         ast_aggregate_initializer *ai = (ast_aggregate_initializer *)$7;
-         ast_type_specifier *type = new(ctx) ast_type_specifier($1->specifier, true, $4);
-         _mesa_ast_set_aggregate_type(type, ai, state);
-      }
    }
    | fully_specified_type any_identifier '=' initializer
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($2, false, NULL, $4);
+      ast_declaration *decl = new(ctx) ast_declaration($2, NULL, $4);
+      decl->set_location(@2);
 
       $$ = new(ctx) ast_declarator_list($1);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
       $$->declarations.push_tail(&decl->link);
-      if ($4->oper == ast_aggregate) {
-         _mesa_ast_set_aggregate_type($1->specifier, $4, state);
-      }
    }
    | INVARIANT variable_identifier // Vertex only.
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($2, false, NULL, NULL);
+      ast_declaration *decl = new(ctx) ast_declaration($2, NULL, NULL);
+      decl->set_location(@2);
 
       $$ = new(ctx) ast_declarator_list(NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
       $$->invariant = true;
 
       $$->declarations.push_tail(&decl->link);
@@ -1115,14 +1090,14 @@ fully_specified_type:
    {
       void *ctx = state;
       $$ = new(ctx) ast_fully_specified_type();
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->specifier = $1;
    }
    | type_qualifier type_specifier
    {
       void *ctx = state;
       $$ = new(ctx) ast_fully_specified_type();
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
       $$->qualifier = $1;
       $$->specifier = $2;
    }
@@ -1157,17 +1132,19 @@ layout_qualifier_id:
       memset(& $$, 0, sizeof($$));
 
       /* Layout qualifiers for ARB_fragment_coord_conventions. */
-      if (!$$.flags.i && state->ARB_fragment_coord_conventions_enable) {
-         if (strcmp($1, "origin_upper_left") == 0) {
+      if (!$$.flags.i && (state->ARB_fragment_coord_conventions_enable ||
+                          state->is_version(150, 0))) {
+         if (match_layout_qualifier($1, "origin_upper_left", state) == 0) {
             $$.flags.q.origin_upper_left = 1;
-         } else if (strcmp($1, "pixel_center_integer") == 0) {
+         } else if (match_layout_qualifier($1, "pixel_center_integer",
+                                           state) == 0) {
             $$.flags.q.pixel_center_integer = 1;
          }
 
          if ($$.flags.i && state->ARB_fragment_coord_conventions_warn) {
             _mesa_glsl_warning(& @1, state,
                                "GL_ARB_fragment_coord_conventions layout "
-                               "identifier `%s' used\n", $1);
+                               "identifier `%s' used", $1);
          }
       }
 
@@ -1175,56 +1152,163 @@ layout_qualifier_id:
       if (!$$.flags.i &&
           (state->AMD_conservative_depth_enable ||
            state->ARB_conservative_depth_enable)) {
-         if (strcmp($1, "depth_any") == 0) {
+         if (match_layout_qualifier($1, "depth_any", state) == 0) {
             $$.flags.q.depth_any = 1;
-         } else if (strcmp($1, "depth_greater") == 0) {
+         } else if (match_layout_qualifier($1, "depth_greater", state) == 0) {
             $$.flags.q.depth_greater = 1;
-         } else if (strcmp($1, "depth_less") == 0) {
+         } else if (match_layout_qualifier($1, "depth_less", state) == 0) {
             $$.flags.q.depth_less = 1;
-         } else if (strcmp($1, "depth_unchanged") == 0) {
+         } else if (match_layout_qualifier($1, "depth_unchanged",
+                                           state) == 0) {
             $$.flags.q.depth_unchanged = 1;
          }
 
          if ($$.flags.i && state->AMD_conservative_depth_warn) {
             _mesa_glsl_warning(& @1, state,
                                "GL_AMD_conservative_depth "
-                               "layout qualifier `%s' is used\n", $1);
+                               "layout qualifier `%s' is used", $1);
          }
          if ($$.flags.i && state->ARB_conservative_depth_warn) {
             _mesa_glsl_warning(& @1, state,
                                "GL_ARB_conservative_depth "
-                               "layout qualifier `%s' is used\n", $1);
+                               "layout qualifier `%s' is used", $1);
          }
       }
 
       /* See also interface_block_layout_qualifier. */
-      if (!$$.flags.i && state->ARB_uniform_buffer_object_enable) {
-         if (strcmp($1, "std140") == 0) {
+      if (!$$.flags.i && state->has_uniform_buffer_objects()) {
+         if (match_layout_qualifier($1, "std140", state) == 0) {
             $$.flags.q.std140 = 1;
-         } else if (strcmp($1, "shared") == 0) {
+         } else if (match_layout_qualifier($1, "shared", state) == 0) {
             $$.flags.q.shared = 1;
-         } else if (strcmp($1, "column_major") == 0) {
+         } else if (match_layout_qualifier($1, "column_major", state) == 0) {
             $$.flags.q.column_major = 1;
          /* "row_major" is a reserved word in GLSL 1.30+. Its token is parsed
           * below in the interface_block_layout_qualifier rule.
           *
           * It is not a reserved word in GLSL ES 3.00, so it's handled here as
           * an identifier.
+          *
+          * Also, this takes care of alternate capitalizations of
+          * "row_major" (which is necessary because layout qualifiers
+          * are case-insensitive in desktop GLSL).
           */
-         } else if (strcmp($1, "row_major") == 0) {
+         } else if (match_layout_qualifier($1, "row_major", state) == 0) {
             $$.flags.q.row_major = 1;
+         /* "packed" is a reserved word in GLSL, and its token is
+          * parsed below in the interface_block_layout_qualifier rule.
+          * However, we must take care of alternate capitalizations of
+          * "packed", because layout qualifiers are case-insensitive
+          * in desktop GLSL.
+          */
+         } else if (match_layout_qualifier($1, "packed", state) == 0) {
+           $$.flags.q.packed = 1;
          }
 
          if ($$.flags.i && state->ARB_uniform_buffer_object_warn) {
             _mesa_glsl_warning(& @1, state,
                                "#version 140 / GL_ARB_uniform_buffer_object "
-                               "layout qualifier `%s' is used\n", $1);
+                               "layout qualifier `%s' is used", $1);
+         }
+      }
+
+      /* Layout qualifiers for GLSL 1.50 geometry shaders. */
+      if (!$$.flags.i) {
+         static const struct {
+            const char *s;
+            GLenum e;
+         } map[] = {
+                 { "points", GL_POINTS },
+                 { "lines", GL_LINES },
+                 { "lines_adjacency", GL_LINES_ADJACENCY },
+                 { "line_strip", GL_LINE_STRIP },
+                 { "triangles", GL_TRIANGLES },
+                 { "triangles_adjacency", GL_TRIANGLES_ADJACENCY },
+                 { "triangle_strip", GL_TRIANGLE_STRIP },
+         };
+         for (unsigned i = 0; i < Elements(map); i++) {
+            if (match_layout_qualifier($1, map[i].s, state) == 0) {
+               $$.flags.q.prim_type = 1;
+               $$.prim_type = map[i].e;
+               break;
+            }
+         }
+
+         if ($$.flags.i && !state->is_version(150, 0)) {
+            _mesa_glsl_error(& @1, state, "#version 150 layout "
+                             "qualifier `%s' used", $1);
+         }
+      }
+
+      /* Layout qualifiers for ARB_shader_image_load_store. */
+      if (state->ARB_shader_image_load_store_enable ||
+          state->is_version(420, 0)) {
+         if (!$$.flags.i) {
+            static const struct {
+               const char *name;
+               GLenum format;
+               glsl_base_type base_type;
+            } map[] = {
+               { "rgba32f", GL_RGBA32F, GLSL_TYPE_FLOAT },
+               { "rgba16f", GL_RGBA16F, GLSL_TYPE_FLOAT },
+               { "rg32f", GL_RG32F, GLSL_TYPE_FLOAT },
+               { "rg16f", GL_RG16F, GLSL_TYPE_FLOAT },
+               { "r11f_g11f_b10f", GL_R11F_G11F_B10F, GLSL_TYPE_FLOAT },
+               { "r32f", GL_R32F, GLSL_TYPE_FLOAT },
+               { "r16f", GL_R16F, GLSL_TYPE_FLOAT },
+               { "rgba32ui", GL_RGBA32UI, GLSL_TYPE_UINT },
+               { "rgba16ui", GL_RGBA16UI, GLSL_TYPE_UINT },
+               { "rgb10_a2ui", GL_RGB10_A2UI, GLSL_TYPE_UINT },
+               { "rgba8ui", GL_RGBA8UI, GLSL_TYPE_UINT },
+               { "rg32ui", GL_RG32UI, GLSL_TYPE_UINT },
+               { "rg16ui", GL_RG16UI, GLSL_TYPE_UINT },
+               { "rg8ui", GL_RG8UI, GLSL_TYPE_UINT },
+               { "r32ui", GL_R32UI, GLSL_TYPE_UINT },
+               { "r16ui", GL_R16UI, GLSL_TYPE_UINT },
+               { "r8ui", GL_R8UI, GLSL_TYPE_UINT },
+               { "rgba32i", GL_RGBA32I, GLSL_TYPE_INT },
+               { "rgba16i", GL_RGBA16I, GLSL_TYPE_INT },
+               { "rgba8i", GL_RGBA8I, GLSL_TYPE_INT },
+               { "rg32i", GL_RG32I, GLSL_TYPE_INT },
+               { "rg16i", GL_RG16I, GLSL_TYPE_INT },
+               { "rg8i", GL_RG8I, GLSL_TYPE_INT },
+               { "r32i", GL_R32I, GLSL_TYPE_INT },
+               { "r16i", GL_R16I, GLSL_TYPE_INT },
+               { "r8i", GL_R8I, GLSL_TYPE_INT },
+               { "rgba16", GL_RGBA16, GLSL_TYPE_FLOAT },
+               { "rgb10_a2", GL_RGB10_A2, GLSL_TYPE_FLOAT },
+               { "rgba8", GL_RGBA8, GLSL_TYPE_FLOAT },
+               { "rg16", GL_RG16, GLSL_TYPE_FLOAT },
+               { "rg8", GL_RG8, GLSL_TYPE_FLOAT },
+               { "r16", GL_R16, GLSL_TYPE_FLOAT },
+               { "r8", GL_R8, GLSL_TYPE_FLOAT },
+               { "rgba16_snorm", GL_RGBA16_SNORM, GLSL_TYPE_FLOAT },
+               { "rgba8_snorm", GL_RGBA8_SNORM, GLSL_TYPE_FLOAT },
+               { "rg16_snorm", GL_RG16_SNORM, GLSL_TYPE_FLOAT },
+               { "rg8_snorm", GL_RG8_SNORM, GLSL_TYPE_FLOAT },
+               { "r16_snorm", GL_R16_SNORM, GLSL_TYPE_FLOAT },
+               { "r8_snorm", GL_R8_SNORM, GLSL_TYPE_FLOAT }
+            };
+
+            for (unsigned i = 0; i < Elements(map); i++) {
+               if (match_layout_qualifier($1, map[i].name, state) == 0) {
+                  $$.flags.q.explicit_image_format = 1;
+                  $$.image_format = map[i].format;
+                  $$.image_base_type = map[i].base_type;
+                  break;
+               }
+            }
+         }
+
+         if (!$$.flags.i &&
+             match_layout_qualifier($1, "early_fragment_tests", state) == 0) {
+            $$.flags.q.early_fragment_tests = 1;
          }
       }
 
       if (!$$.flags.i) {
          _mesa_glsl_error(& @1, state, "unrecognized layout identifier "
-                          "`%s'\n", $1);
+                          "`%s'", $1);
          YYERROR;
       }
    }
@@ -1232,36 +1316,114 @@ layout_qualifier_id:
    {
       memset(& $$, 0, sizeof($$));
 
-      if (state->ARB_explicit_attrib_location_enable) {
-         if (strcmp("location", $1) == 0) {
-            $$.flags.q.explicit_location = 1;
+      if (match_layout_qualifier("location", $1, state) == 0) {
+         $$.flags.q.explicit_location = 1;
 
-            if ($3 >= 0) {
-               $$.location = $3;
-            } else {
-               _mesa_glsl_error(& @3, state,
-                                "invalid location %d specified\n", $3);
-               YYERROR;
-            }
+         if ($$.flags.q.attribute == 1 &&
+             state->ARB_explicit_attrib_location_warn) {
+            _mesa_glsl_warning(& @1, state,
+                               "GL_ARB_explicit_attrib_location layout "
+                               "identifier `%s' used", $1);
          }
 
-         if (strcmp("index", $1) == 0) {
-            $$.flags.q.explicit_index = 1;
+         if ($3 >= 0) {
+            $$.location = $3;
+         } else {
+             _mesa_glsl_error(& @3, state, "invalid location %d specified", $3);
+             YYERROR;
+         }
+      }
 
-            if ($3 >= 0) {
-               $$.index = $3;
-            } else {
+      if (match_layout_qualifier("index", $1, state) == 0) {
+         $$.flags.q.explicit_index = 1;
+
+         if ($3 >= 0) {
+            $$.index = $3;
+         } else {
+            _mesa_glsl_error(& @3, state, "invalid index %d specified", $3);
+            YYERROR;
+         }
+      }
+
+      if ((state->ARB_shading_language_420pack_enable ||
+           state->ARB_shader_atomic_counters_enable) &&
+          match_layout_qualifier("binding", $1, state) == 0) {
+         $$.flags.q.explicit_binding = 1;
+         $$.binding = $3;
+      }
+
+      if (state->ARB_shader_atomic_counters_enable &&
+          match_layout_qualifier("offset", $1, state) == 0) {
+         $$.flags.q.explicit_offset = 1;
+         $$.offset = $3;
+      }
+
+      if (match_layout_qualifier("max_vertices", $1, state) == 0) {
+         $$.flags.q.max_vertices = 1;
+
+         if ($3 < 0) {
+            _mesa_glsl_error(& @3, state,
+                             "invalid max_vertices %d specified", $3);
+            YYERROR;
+         } else {
+            $$.max_vertices = $3;
+            if (!state->is_version(150, 0)) {
                _mesa_glsl_error(& @3, state,
-                                "invalid index %d specified\n", $3);
-               YYERROR;
+                                "#version 150 max_vertices qualifier "
+                                "specified", $3);
             }
          }
       }
 
-      if (state->ARB_shading_language_420pack_enable &&
-          strcmp("binding", $1) == 0) {
-         $$.flags.q.explicit_binding = 1;
-         $$.binding = $3;
+      static const char * const local_size_qualifiers[3] = {
+         "local_size_x",
+         "local_size_y",
+         "local_size_z",
+      };
+      for (int i = 0; i < 3; i++) {
+         if (match_layout_qualifier(local_size_qualifiers[i], $1,
+                                    state) == 0) {
+            if ($3 <= 0) {
+               _mesa_glsl_error(& @3, state,
+                                "invalid %s of %d specified",
+                                local_size_qualifiers[i], $3);
+               YYERROR;
+            } else if (!state->is_version(430, 0) &&
+                       !state->ARB_compute_shader_enable) {
+               _mesa_glsl_error(& @3, state,
+                                "%s qualifier requires GLSL 4.30 or "
+                                "ARB_compute_shader",
+                                local_size_qualifiers[i]);
+               YYERROR;
+            } else {
+               $$.flags.q.local_size |= (1 << i);
+               $$.local_size[i] = $3;
+            }
+            break;
+         }
+      }
+
+      if (match_layout_qualifier("invocations", $1, state) == 0) {
+         $$.flags.q.invocations = 1;
+
+         if ($3 <= 0) {
+            _mesa_glsl_error(& @3, state,
+                             "invalid invocations %d specified", $3);
+            YYERROR;
+         } else if ($3 > MAX_GEOMETRY_SHADER_INVOCATIONS) {
+            _mesa_glsl_error(& @3, state,
+                             "invocations (%d) exceeds "
+                             "GL_MAX_GEOMETRY_SHADER_INVOCATIONS", $3);
+            YYERROR;
+         } else {
+            $$.invocations = $3;
+            if (!state->is_version(400, 0) &&
+                !state->ARB_gpu_shader5_enable) {
+               _mesa_glsl_error(& @3, state,
+                                "GL_ARB_gpu_shader5 invocations "
+                                "qualifier specified", $3);
+            }
+         }
       }
 
       /* If the identifier didn't match any known layout identifiers,
@@ -1269,26 +1431,22 @@ layout_qualifier_id:
        */
       if (!$$.flags.i) {
          _mesa_glsl_error(& @1, state, "unrecognized layout identifier "
-                          "`%s'\n", $1);
+                          "`%s'", $1);
          YYERROR;
-      } else if (state->ARB_explicit_attrib_location_warn) {
-         _mesa_glsl_warning(& @1, state,
-                            "GL_ARB_explicit_attrib_location layout "
-                            "identifier `%s' used\n", $1);
       }
    }
    | interface_block_layout_qualifier
    {
       $$ = $1;
       /* Layout qualifiers for ARB_uniform_buffer_object. */
-      if ($$.flags.q.uniform && !state->ARB_uniform_buffer_object_enable) {
+      if ($$.flags.q.uniform && !state->has_uniform_buffer_objects()) {
          _mesa_glsl_error(& @1, state,
                           "#version 140 / GL_ARB_uniform_buffer_object "
-                          "layout qualifier `%s' is used\n", $1);
+                          "layout qualifier `%s' is used", $1);
       } else if ($$.flags.q.uniform && state->ARB_uniform_buffer_object_warn) {
          _mesa_glsl_warning(& @1, state,
                             "#version 140 / GL_ARB_uniform_buffer_object "
-                            "layout qualifier `%s' is used\n", $1);
+                            "layout qualifier `%s' is used", $1);
       }
    }
    ;
@@ -1297,6 +1455,10 @@ layout_qualifier_id:
  * (due to them being reserved keywords) instead of identifiers like
  * most qualifiers.  See the any_identifier path of
  * layout_qualifier_id for the others.
+ *
+ * Note that since layout qualifiers are case-insensitive in desktop
+ * GLSL, all of these qualifiers need to be handled as identifiers as
+ * well (by the any_identifier path of layout_qualifier_id).
  */
 interface_block_layout_qualifier:
    ROW_MAJOR
@@ -1361,11 +1523,11 @@ type_qualifier:
    | INVARIANT type_qualifier
    {
       if ($2.flags.q.invariant)
-         _mesa_glsl_error(&@1, state, "Duplicate \"invariant\" qualifier.\n");
+         _mesa_glsl_error(&@1, state, "duplicate \"invariant\" qualifier");
 
       if ($2.has_layout()) {
          _mesa_glsl_error(&@1, state,
-                          "\"invariant\" cannot be used with layout(...).\n");
+                          "\"invariant\" cannot be used with layout(...)");
       }
 
       $$ = $2;
@@ -1384,16 +1546,16 @@ type_qualifier:
        * only one after all, and the 1.40 text is a clarification, not a change.
        */
       if ($2.has_interpolation())
-         _mesa_glsl_error(&@1, state, "Duplicate interpolation qualifier.\n");
+         _mesa_glsl_error(&@1, state, "duplicate interpolation qualifier");
 
       if ($2.has_layout()) {
-         _mesa_glsl_error(&@1, state, "Interpolation qualifiers cannot be used "
-                          "with layout(...).\n");
+         _mesa_glsl_error(&@1, state, "interpolation qualifiers cannot be used "
+                          "with layout(...)");
       }
 
       if (!state->ARB_shading_language_420pack_enable && $2.flags.q.invariant) {
-         _mesa_glsl_error(&@1, state, "Interpolation qualifiers must come "
-                          "after \"invariant\".\n");
+         _mesa_glsl_error(&@1, state, "interpolation qualifiers must come "
+                          "after \"invariant\"");
       }
 
       $$ = $1;
@@ -1408,15 +1570,15 @@ type_qualifier:
        * qualifier, but always seems to in examples.
        */
       if (!state->ARB_shading_language_420pack_enable && $2.has_layout())
-         _mesa_glsl_error(&@1, state, "Duplicate layout(...) qualifiers.\n");
+         _mesa_glsl_error(&@1, state, "duplicate layout(...) qualifiers");
 
       if ($2.flags.q.invariant)
          _mesa_glsl_error(&@1, state, "layout(...) cannot be used with "
-                          "the \"invariant\" qualifier\n");
+                          "the \"invariant\" qualifier");
 
       if ($2.has_interpolation()) {
          _mesa_glsl_error(&@1, state, "layout(...) cannot be used with "
-                          "interpolation qualifiers.\n");
+                          "interpolation qualifiers");
       }
 
       $$ = $1;
@@ -1426,16 +1588,16 @@ type_qualifier:
    {
       if ($2.has_auxiliary_storage()) {
          _mesa_glsl_error(&@1, state,
-                          "Duplicate auxiliary storage qualifier (centroid).\n");
+                          "duplicate auxiliary storage qualifier (centroid or sample)");
       }
 
       if (!state->ARB_shading_language_420pack_enable &&
           ($2.flags.q.invariant || $2.has_interpolation() || $2.has_layout())) {
-         _mesa_glsl_error(&@1, state, "Auxiliary storage qualifiers must come "
-                          "just before storage qualifiers.\n");
+         _mesa_glsl_error(&@1, state, "auxiliary storage qualifiers must come "
+                          "just before storage qualifiers");
       }
       $$ = $1;
-      $$.flags.i |= $2.flags.i;
+      $$.merge_qualifier(&@1, state, $2);
    }
    | storage_qualifier type_qualifier
    {
@@ -1444,14 +1606,14 @@ type_qualifier:
        *  1.30 clarifies this to "may have one storage qualifier".
        */
       if ($2.has_storage())
-         _mesa_glsl_error(&@1, state, "Duplicate storage qualifier.\n");
+         _mesa_glsl_error(&@1, state, "duplicate storage qualifier");
 
       if (!state->ARB_shading_language_420pack_enable &&
           ($2.flags.q.invariant || $2.has_interpolation() || $2.has_layout() ||
            $2.has_auxiliary_storage())) {
-         _mesa_glsl_error(&@1, state, "Storage qualifiers must come after "
+         _mesa_glsl_error(&@1, state, "storage qualifiers must come after "
                           "invariant, interpolation, layout and auxiliary "
-                          "storage qualifiers.\n");
+                          "storage qualifiers");
       }
 
       $$ = $1;
@@ -1460,10 +1622,10 @@ type_qualifier:
    | precision_qualifier type_qualifier
    {
       if ($2.precision != ast_precision_none)
-         _mesa_glsl_error(&@1, state, "Duplicate precision qualifier.\n");
+         _mesa_glsl_error(&@1, state, "duplicate precision qualifier");
 
       if (!state->ARB_shading_language_420pack_enable && $2.flags.i != 0)
-         _mesa_glsl_error(&@1, state, "Precision qualifiers must come last.\n");
+         _mesa_glsl_error(&@1, state, "precision qualifiers must come last");
 
       $$ = $2;
       $$.precision = $1;
@@ -1476,7 +1638,12 @@ auxiliary_storage_qualifier:
       memset(& $$, 0, sizeof($$));
       $$.flags.q.centroid = 1;
    }
-   /* TODO: "sample" and "patch" also go here someday. */
+   | SAMPLE
+   {
+      memset(& $$, 0, sizeof($$));
+      $$.flags.q.sample = 1;
+   }
+   /* TODO: "patch" also goes here someday. */
 
 storage_qualifier:
    CONST_TOK
@@ -1509,21 +1676,81 @@ storage_qualifier:
       memset(& $$, 0, sizeof($$));
       $$.flags.q.uniform = 1;
    }
+   | COHERENT
+   {
+      memset(& $$, 0, sizeof($$));
+      $$.flags.q.coherent = 1;
+   }
+   | VOLATILE
+   {
+      memset(& $$, 0, sizeof($$));
+      $$.flags.q._volatile = 1;
+   }
+   | RESTRICT
+   {
+      STATIC_ASSERT(sizeof($$.flags.q) <= sizeof($$.flags.i));
+      memset(& $$, 0, sizeof($$));
+      $$.flags.q.restrict_flag = 1;
+   }
+   | READONLY
+   {
+      memset(& $$, 0, sizeof($$));
+      $$.flags.q.read_only = 1;
+   }
+   | WRITEONLY
+   {
+      memset(& $$, 0, sizeof($$));
+      $$.flags.q.write_only = 1;
+   }
+   ;
+
+array_specifier:
+   '[' ']'
+   {
+      void *ctx = state;
+      $$ = new(ctx) ast_array_specifier(@1);
+      $$->set_location_range(@1, @2);
+   }
+   | '[' constant_expression ']'
+   {
+      void *ctx = state;
+      $$ = new(ctx) ast_array_specifier(@1, $2);
+      $$->set_location_range(@1, @3);
+   }
+   | array_specifier '[' ']'
+   {
+      $$ = $1;
+
+      if (!state->ARB_arrays_of_arrays_enable) {
+         _mesa_glsl_error(& @1, state,
+                          "GL_ARB_arrays_of_arrays "
+                          "required for defining arrays of arrays");
+      } else {
+         _mesa_glsl_error(& @1, state,
+                          "only the outermost array dimension can "
+                          "be unsized");
+      }
+   }
+   | array_specifier '[' constant_expression ']'
+   {
+      $$ = $1;
+
+      if (!state->ARB_arrays_of_arrays_enable) {
+         _mesa_glsl_error(& @1, state,
+                          "GL_ARB_arrays_of_arrays "
+                          "required for defining arrays of arrays");
+      }
+
+      $$->add_dimension($3);
+   }
    ;
 
 type_specifier:
    type_specifier_nonarray
-   | type_specifier_nonarray '[' ']'
+   | type_specifier_nonarray array_specifier
    {
       $$ = $1;
-      $$->is_array = true;
-      $$->array_size = NULL;
-   }
-   | type_specifier_nonarray '[' constant_expression ']'
-   {
-      $$ = $1;
-      $$->is_array = true;
-      $$->array_size = $3;
+      $$->array_specifier = $2;
    }
    ;
 
@@ -1532,19 +1759,19 @@ type_specifier_nonarray:
    {
       void *ctx = state;
       $$ = new(ctx) ast_type_specifier($1);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | struct_specifier
    {
       void *ctx = state;
       $$ = new(ctx) ast_type_specifier($1);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | TYPE_IDENTIFIER
    {
       void *ctx = state;
       $$ = new(ctx) ast_type_specifier($1);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    ;
 
@@ -1616,6 +1843,40 @@ basic_type_specifier_nonarray:
    | SAMPLER2DMSARRAY       { $$ = "sampler2DMSArray"; }
    | ISAMPLER2DMSARRAY      { $$ = "isampler2DMSArray"; }
    | USAMPLER2DMSARRAY      { $$ = "usampler2DMSArray"; }
+   | IMAGE1D                { $$ = "image1D"; }
+   | IMAGE2D                { $$ = "image2D"; }
+   | IMAGE3D                { $$ = "image3D"; }
+   | IMAGE2DRECT            { $$ = "image2DRect"; }
+   | IMAGECUBE              { $$ = "imageCube"; }
+   | IMAGEBUFFER            { $$ = "imageBuffer"; }
+   | IMAGE1DARRAY           { $$ = "image1DArray"; }
+   | IMAGE2DARRAY           { $$ = "image2DArray"; }
+   | IMAGECUBEARRAY         { $$ = "imageCubeArray"; }
+   | IMAGE2DMS              { $$ = "image2DMS"; }
+   | IMAGE2DMSARRAY         { $$ = "image2DMSArray"; }
+   | IIMAGE1D               { $$ = "iimage1D"; }
+   | IIMAGE2D               { $$ = "iimage2D"; }
+   | IIMAGE3D               { $$ = "iimage3D"; }
+   | IIMAGE2DRECT           { $$ = "iimage2DRect"; }
+   | IIMAGECUBE             { $$ = "iimageCube"; }
+   | IIMAGEBUFFER           { $$ = "iimageBuffer"; }
+   | IIMAGE1DARRAY          { $$ = "iimage1DArray"; }
+   | IIMAGE2DARRAY          { $$ = "iimage2DArray"; }
+   | IIMAGECUBEARRAY        { $$ = "iimageCubeArray"; }
+   | IIMAGE2DMS             { $$ = "iimage2DMS"; }
+   | IIMAGE2DMSARRAY        { $$ = "iimage2DMSArray"; }
+   | UIMAGE1D               { $$ = "uimage1D"; }
+   | UIMAGE2D               { $$ = "uimage2D"; }
+   | UIMAGE3D               { $$ = "uimage3D"; }
+   | UIMAGE2DRECT           { $$ = "uimage2DRect"; }
+   | UIMAGECUBE             { $$ = "uimageCube"; }
+   | UIMAGEBUFFER           { $$ = "uimageBuffer"; }
+   | UIMAGE1DARRAY          { $$ = "uimage1DArray"; }
+   | UIMAGE2DARRAY          { $$ = "uimage2DArray"; }
+   | UIMAGECUBEARRAY        { $$ = "uimageCubeArray"; }
+   | UIMAGE2DMS             { $$ = "uimage2DMS"; }
+   | UIMAGE2DMSARRAY        { $$ = "uimage2DMSArray"; }
+   | ATOMIC_UINT            { $$ = "atomic_uint"; }
    ;
 
 precision_qualifier:
@@ -1641,15 +1902,14 @@ struct_specifier:
    {
       void *ctx = state;
       $$ = new(ctx) ast_struct_specifier($2, $4);
-      $$->set_location(yylloc);
+      $$->set_location_range(@2, @5);
       state->symbols->add_type($2, glsl_type::void_type);
-      state->symbols->add_type_ast($2, new(ctx) ast_type_specifier($$));
    }
    | STRUCT '{' struct_declaration_list '}'
    {
       void *ctx = state;
       $$ = new(ctx) ast_struct_specifier(NULL, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@2, @4);
    }
    ;
 
@@ -1671,7 +1931,7 @@ struct_declaration:
    {
       void *ctx = state;
       ast_fully_specified_type *const type = $1;
-      type->set_location(yylloc);
+      type->set_location(@1);
 
       if (type->qualifier.flags.i != 0)
          _mesa_glsl_error(&@1, state,
@@ -1679,7 +1939,7 @@ struct_declaration:
 			  "structure members");
 
       $$ = new(ctx) ast_declarator_list(type);
-      $$->set_location(yylloc);
+      $$->set_location(@2);
 
       $$->declarations.push_degenerate_list_at_head(& $2->link);
    }
@@ -1702,14 +1962,14 @@ struct_declarator:
    any_identifier
    {
       void *ctx = state;
-      $$ = new(ctx) ast_declaration($1, false, NULL, NULL);
-      $$->set_location(yylloc);
+      $$ = new(ctx) ast_declaration($1, NULL, NULL);
+      $$->set_location(@1);
    }
-   | any_identifier '[' constant_expression ']'
+   | any_identifier array_specifier
    {
       void *ctx = state;
-      $$ = new(ctx) ast_declaration($1, true, $3, NULL);
-      $$->set_location(yylloc);
+      $$ = new(ctx) ast_declaration($1, $2, NULL);
+      $$->set_location_range(@1, @2);
    }
    ;
 
@@ -1730,7 +1990,7 @@ initializer_list:
    {
       void *ctx = state;
       $$ = new(ctx) ast_aggregate_initializer();
-      $$->set_location(yylloc);
+      $$->set_location(@1);
       $$->expressions.push_tail(& $1->link);
    }
    | initializer_list ',' initializer
@@ -1764,7 +2024,7 @@ compound_statement:
    {
       void *ctx = state;
       $$ = new(ctx) ast_compound_statement(true, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
    }
    | '{'
    {
@@ -1774,7 +2034,7 @@ compound_statement:
    {
       void *ctx = state;
       $$ = new(ctx) ast_compound_statement(true, $3);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @4);
       state->symbols->pop_scope();
    }
    ;
@@ -1789,13 +2049,13 @@ compound_statement_no_new_scope:
    {
       void *ctx = state;
       $$ = new(ctx) ast_compound_statement(false, NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
    }
    | '{' statement_list '}'
    {
       void *ctx = state;
       $$ = new(ctx) ast_compound_statement(false, $2);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -1803,7 +2063,7 @@ statement_list:
    statement
    {
       if ($1 == NULL) {
-         _mesa_glsl_error(& @1, state, "<nil> statement\n");
+         _mesa_glsl_error(& @1, state, "<nil> statement");
          assert($1 != NULL);
       }
 
@@ -1813,7 +2073,7 @@ statement_list:
    | statement_list statement
    {
       if ($2 == NULL) {
-         _mesa_glsl_error(& @2, state, "<nil> statement\n");
+         _mesa_glsl_error(& @2, state, "<nil> statement");
          assert($2 != NULL);
       }
       $$ = $1;
@@ -1826,13 +2086,13 @@ expression_statement:
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_statement(NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | expression ';'
    {
       void *ctx = state;
       $$ = new(ctx) ast_expression_statement($1);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    ;
 
@@ -1841,7 +2101,7 @@ selection_statement:
    {
       $$ = new(state) ast_selection_statement($3, $5.then_statement,
                                               $5.else_statement);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @5);
    }
    ;
 
@@ -1866,10 +2126,10 @@ condition:
    | fully_specified_type any_identifier '=' initializer
    {
       void *ctx = state;
-      ast_declaration *decl = new(ctx) ast_declaration($2, false, NULL, $4);
+      ast_declaration *decl = new(ctx) ast_declaration($2, NULL, $4);
       ast_declarator_list *declarator = new(ctx) ast_declarator_list($1);
-      decl->set_location(yylloc);
-      declarator->set_location(yylloc);
+      decl->set_location_range(@2, @4);
+      declarator->set_location(@1);
 
       declarator->declarations.push_tail(&decl->link);
       $$ = declarator;
@@ -1884,7 +2144,7 @@ switch_statement:
    SWITCH '(' expression ')' switch_body
    {
       $$ = new(state) ast_switch_statement($3, $5);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @5);
    }
    ;
 
@@ -1892,12 +2152,12 @@ switch_body:
    '{' '}'
    {
       $$ = new(state) ast_switch_body(NULL);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
    }
    | '{' case_statement_list '}'
    {
       $$ = new(state) ast_switch_body($2);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @3);
    }
    ;
 
@@ -1905,12 +2165,12 @@ case_label:
    CASE expression ':'
    {
       $$ = new(state) ast_case_label($2);
-      $$->set_location(yylloc);
+      $$->set_location(@2);
    }
    | DEFAULT ':'
    {
       $$ = new(state) ast_case_label(NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@2);
    }
    ;
 
@@ -1921,7 +2181,7 @@ case_label_list:
 
       labels->labels.push_tail(& $1->link);
       $$ = labels;
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | case_label_list case_label
    {
@@ -1934,7 +2194,7 @@ case_statement:
    case_label_list statement
    {
       ast_case_statement *stmts = new(state) ast_case_statement($1);
-      stmts->set_location(yylloc);
+      stmts->set_location(@2);
 
       stmts->stmts.push_tail(& $2->link);
       $$ = stmts;
@@ -1950,7 +2210,7 @@ case_statement_list:
    case_statement
    {
       ast_case_statement_list *cases= new(state) ast_case_statement_list();
-      cases->set_location(yylloc);
+      cases->set_location(@1);
 
       cases->cases.push_tail(& $1->link);
       $$ = cases;
@@ -1968,21 +2228,21 @@ iteration_statement:
       void *ctx = state;
       $$ = new(ctx) ast_iteration_statement(ast_iteration_statement::ast_while,
                                             NULL, $3, NULL, $5);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @4);
    }
    | DO statement WHILE '(' expression ')' ';'
    {
       void *ctx = state;
       $$ = new(ctx) ast_iteration_statement(ast_iteration_statement::ast_do_while,
                                             NULL, $5, NULL, $2);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @6);
    }
    | FOR '(' for_init_statement for_rest_statement ')' statement_no_new_scope
    {
       void *ctx = state;
       $$ = new(ctx) ast_iteration_statement(ast_iteration_statement::ast_for,
                                             $3, $4.cond, $4.rest, $6);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @6);
    }
    ;
 
@@ -2018,31 +2278,31 @@ jump_statement:
    {
       void *ctx = state;
       $$ = new(ctx) ast_jump_statement(ast_jump_statement::ast_continue, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | BREAK ';'
    {
       void *ctx = state;
       $$ = new(ctx) ast_jump_statement(ast_jump_statement::ast_break, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | RETURN ';'
    {
       void *ctx = state;
       $$ = new(ctx) ast_jump_statement(ast_jump_statement::ast_return, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    | RETURN expression ';'
    {
       void *ctx = state;
       $$ = new(ctx) ast_jump_statement(ast_jump_statement::ast_return, $2);
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
    }
    | DISCARD ';' // Fragment shader only.
    {
       void *ctx = state;
       $$ = new(ctx) ast_jump_statement(ast_jump_statement::ast_discard, NULL);
-      $$->set_location(yylloc);
+      $$->set_location(@1);
    }
    ;
 
@@ -2050,7 +2310,7 @@ external_declaration:
    function_definition      { $$ = $1; }
    | declaration            { $$ = $1; }
    | pragma_statement       { $$ = NULL; }
-   | layout_defaults        { $$ = NULL; }
+   | layout_defaults        { $$ = $1; }
    ;
 
 function_definition:
@@ -2058,7 +2318,7 @@ function_definition:
    {
       void *ctx = state;
       $$ = new(ctx) ast_function_definition();
-      $$->set_location(yylloc);
+      $$->set_location_range(@1, @2);
       $$->prototype = $1;
       $$->body = $2;
 
@@ -2091,20 +2351,20 @@ basic_interface_block:
       block->declarations.push_degenerate_list_at_head(& $4->link);
 
       if ($1.flags.q.uniform) {
-         if (!state->ARB_uniform_buffer_object_enable) {
+         if (!state->has_uniform_buffer_objects()) {
             _mesa_glsl_error(& @1, state,
                              "#version 140 / GL_ARB_uniform_buffer_object "
-                             "required for defining uniform blocks\n");
+                             "required for defining uniform blocks");
          } else if (state->ARB_uniform_buffer_object_warn) {
             _mesa_glsl_warning(& @1, state,
                                "#version 140 / GL_ARB_uniform_buffer_object "
-                               "required for defining uniform blocks\n");
+                               "required for defining uniform blocks");
          }
       } else {
          if (state->es_shader || state->language_version < 150) {
             _mesa_glsl_error(& @1, state,
                              "#version 150 required for using "
-                             "interface blocks.\n");
+                             "interface blocks");
          }
       }
 
@@ -2112,14 +2372,14 @@ basic_interface_block:
        * "It is illegal to have an input block in a vertex shader
        *  or an output block in a fragment shader"
        */
-      if ((state->target == vertex_shader) && $1.flags.q.in) {
+      if ((state->stage == MESA_SHADER_VERTEX) && $1.flags.q.in) {
          _mesa_glsl_error(& @1, state,
                           "`in' interface block is not allowed for "
-                          "a vertex shader\n");
-      } else if ((state->target == fragment_shader) && $1.flags.q.out) {
+                          "a vertex shader");
+      } else if ((state->stage == MESA_SHADER_FRAGMENT) && $1.flags.q.out) {
          _mesa_glsl_error(& @1, state,
                           "`out' interface block is not allowed for "
-                          "a fragment shader\n");
+                          "a fragment shader");
       }
 
       /* Since block arrays require names, and both features are added in
@@ -2131,7 +2391,7 @@ basic_interface_block:
                                "an instance name are not allowed");
       }
 
-      unsigned interface_type_mask;
+      uint64_t interface_type_mask;
       struct ast_type_qualifier temp_type_qualifier;
 
       /* Get a bitmask containing only the in/out/uniform flags, allowing us
@@ -2147,7 +2407,7 @@ basic_interface_block:
        * production rule guarantees that only one bit will be set (and
        * it will be in/out/uniform).
        */
-       unsigned block_interface_qualifier = $1.flags.i;
+      uint64_t block_interface_qualifier = $1.flags.i;
 
       block->layout.flags.i |= block_interface_qualifier;
 
@@ -2171,7 +2431,7 @@ basic_interface_block:
             _mesa_glsl_error(& @1, state,
                              "uniform/in/out qualifier on "
                              "interface block member does not match "
-                             "the interface block\n");
+                             "the interface block");
          }
       }
 
@@ -2207,19 +2467,13 @@ instance_name_opt:
    {
       $$ = new(state) ast_interface_block(*state->default_uniform_qualifier,
                                           $1, NULL);
+      $$->set_location(@1);
    }
-   | NEW_IDENTIFIER '[' constant_expression ']'
+   | NEW_IDENTIFIER array_specifier
    {
       $$ = new(state) ast_interface_block(*state->default_uniform_qualifier,
-                                          $1, $3);
-   }
-   | NEW_IDENTIFIER '[' ']'
-   {
-      _mesa_glsl_error(& @1, state,
-                       "instance block arrays must be explicitly sized\n");
-
-      $$ = new(state) ast_interface_block(*state->default_uniform_qualifier,
-                                          $1, NULL);
+                                          $1, $2);
+      $$->set_location_range(@1, @2);
    }
    ;
 
@@ -2241,20 +2495,20 @@ member_declaration:
    {
       void *ctx = state;
       ast_fully_specified_type *type = $1;
-      type->set_location(yylloc);
+      type->set_location(@1);
 
       if (type->qualifier.flags.q.attribute) {
          _mesa_glsl_error(& @1, state,
                           "keyword 'attribute' cannot be used with "
-                          "interface block member\n");
+                          "interface block member");
       } else if (type->qualifier.flags.q.varying) {
          _mesa_glsl_error(& @1, state,
                           "keyword 'varying' cannot be used with "
-                          "interface block member\n");
+                          "interface block member");
       }
 
       $$ = new(ctx) ast_declarator_list(type);
-      $$->set_location(yylloc);
+      $$->set_location(@2);
 
       $$->declarations.push_degenerate_list_at_head(& $2->link);
    }
@@ -2266,4 +2520,39 @@ layout_defaults:
       if (!state->default_uniform_qualifier->merge_qualifier(& @1, state, $1)) {
          YYERROR;
       }
+      $$ = NULL;
+   }
+
+   | layout_qualifier IN_TOK ';'
+   {
+      $$ = NULL;
+      if (!state->in_qualifier->merge_in_qualifier(& @1, state, $1, $$)) {
+         YYERROR;
+      }
+   }
+
+   | layout_qualifier OUT_TOK ';'
+   {
+      if (state->stage != MESA_SHADER_GEOMETRY) {
+         _mesa_glsl_error(& @1, state,
+                          "out layout qualifiers only valid in "
+                          "geometry shaders");
+      } else {
+         if ($1.flags.q.prim_type) {
+            /* Make sure this is a valid output primitive type. */
+            switch ($1.prim_type) {
+            case GL_POINTS:
+            case GL_LINE_STRIP:
+            case GL_TRIANGLE_STRIP:
+               break;
+            default:
+               _mesa_glsl_error(&@1, state, "invalid geometry shader output "
+                                "primitive type");
+               break;
+            }
+         }
+         if (!state->out_qualifier->merge_qualifier(& @1, state, $1))
+            YYERROR;
+      }
+      $$ = NULL;
    }

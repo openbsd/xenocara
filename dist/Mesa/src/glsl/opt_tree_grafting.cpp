@@ -127,12 +127,12 @@ ir_tree_grafting_visitor::do_graft(ir_rvalue **rvalue)
       return false;
 
    if (debug) {
-      printf("GRAFTING:\n");
-      this->graft_assign->print();
-      printf("\n");
-      printf("TO:\n");
-      (*rvalue)->print();
-      printf("\n");
+      fprintf(stderr, "GRAFTING:\n");
+      this->graft_assign->fprint(stderr);
+      fprintf(stderr, "\n");
+      fprintf(stderr, "TO:\n");
+      (*rvalue)->fprint(stderr);
+      fprintf(stderr, "\n");
    }
 
    this->graft_assign->remove();
@@ -164,9 +164,9 @@ ir_tree_grafting_visitor::check_graft(ir_instruction *ir, ir_variable *var)
 {
    if (dereferences_variable(this->graft_assign->rhs, var)) {
       if (debug) {
-	 printf("graft killed by: ");
-	 ir->print();
-	 printf("\n");
+	 fprintf(stderr, "graft killed by: ");
+	 ir->fprint(stderr);
+	 fprintf(stderr, "\n");
       }
       return visit_stop;
    }
@@ -204,15 +204,14 @@ ir_tree_grafting_visitor::visit_enter(ir_function_signature *ir)
 ir_visitor_status
 ir_tree_grafting_visitor::visit_enter(ir_call *ir)
 {
-   exec_list_iterator sig_iter = ir->callee->parameters.iterator();
-   /* Reminder: iterating ir_call iterates its parameters. */
-   foreach_iter(exec_list_iterator, iter, *ir) {
-      ir_variable *sig_param = (ir_variable *)sig_iter.get();
-      ir_rvalue *ir = (ir_rvalue *)iter.get();
+   foreach_two_lists(formal_node, &ir->callee->parameters,
+                     actual_node, &ir->actual_parameters) {
+      ir_variable *sig_param = (ir_variable *) formal_node;
+      ir_rvalue *ir = (ir_rvalue *) actual_node;
       ir_rvalue *new_ir = ir;
 
-      if (sig_param->mode != ir_var_function_in
-          && sig_param->mode != ir_var_const_in) {
+      if (sig_param->data.mode != ir_var_function_in
+          && sig_param->data.mode != ir_var_const_in) {
 	 if (check_graft(ir, sig_param) == visit_stop)
 	    return visit_stop;
 	 continue;
@@ -222,7 +221,6 @@ ir_tree_grafting_visitor::visit_enter(ir_call *ir)
 	 ir->replace_with(new_ir);
 	 return visit_stop;
       }
-      sig_iter.next();
    }
 
    if (ir->return_deref && check_graft(ir, ir->return_deref->var) == visit_stop)
@@ -275,6 +273,7 @@ ir_tree_grafting_visitor::visit_enter(ir_texture *ir)
    switch (ir->op) {
    case ir_tex:
    case ir_lod:
+   case ir_query_levels:
       break;
    case ir_txb:
       if (do_graft(&ir->lod_info.bias))
@@ -295,6 +294,10 @@ ir_tree_grafting_visitor::visit_enter(ir_texture *ir)
 	  do_graft(&ir->lod_info.grad.dPdy))
 	 return visit_stop;
       break;
+   case ir_tg4:
+      if (do_graft(&ir->lod_info.component))
+         return visit_stop;
+      break;
    }
 
    return visit_continue;
@@ -313,9 +316,9 @@ try_tree_grafting(ir_assignment *start,
    ir_tree_grafting_visitor v(start, lhs_var);
 
    if (debug) {
-      printf("trying to graft: ");
-      lhs_var->print();
-      printf("\n");
+      fprintf(stderr, "trying to graft: ");
+      lhs_var->fprint(stderr);
+      fprintf(stderr, "\n");
    }
 
    for (ir_instruction *ir = (ir_instruction *)start->next;
@@ -323,9 +326,9 @@ try_tree_grafting(ir_assignment *start,
 	ir = (ir_instruction *)ir->next) {
 
       if (debug) {
-	 printf("- ");
-	 ir->print();
-	 printf("\n");
+	 fprintf(stderr, "- ");
+	 ir->fprint(stderr);
+	 fprintf(stderr, "\n");
       }
 
       ir_visitor_status s = ir->accept(&v);
@@ -356,9 +359,9 @@ tree_grafting_basic_block(ir_instruction *bb_first,
       if (!lhs_var)
 	 continue;
 
-      if (lhs_var->mode == ir_var_function_out ||
-	  lhs_var->mode == ir_var_function_inout ||
-          lhs_var->mode == ir_var_shader_out)
+      if (lhs_var->data.mode == ir_var_function_out ||
+	  lhs_var->data.mode == ir_var_function_inout ||
+          lhs_var->data.mode == ir_var_shader_out)
 	 continue;
 
       ir_variable_refcount_entry *entry = info->refs->get_variable_entry(lhs_var);

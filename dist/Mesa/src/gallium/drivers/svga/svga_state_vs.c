@@ -35,32 +35,33 @@
 #include "svga_context.h"
 #include "svga_state.h"
 #include "svga_cmd.h"
+#include "svga_shader.h"
 #include "svga_tgsi.h"
 
 #include "svga_hw_reg.h"
 
-/***********************************************************************
- */
 
-
-static INLINE int compare_vs_keys( const struct svga_vs_compile_key *a,
-                                   const struct svga_vs_compile_key *b )
+static INLINE int
+compare_vs_keys(const struct svga_vs_compile_key *a,
+                const struct svga_vs_compile_key *b)
 {
    unsigned keysize = svga_vs_key_size( a );
    return memcmp( a, b, keysize );
 }
 
 
-static struct svga_shader_result *search_vs_key( struct svga_vertex_shader *vs,
-                                                 const struct svga_vs_compile_key *key )
+/** Search for a vertex shader variant */
+static struct svga_shader_variant *
+search_vs_key(const struct svga_vertex_shader *vs,
+              const struct svga_vs_compile_key *key)
 {
-   struct svga_shader_result *result = vs->base.results;
+   struct svga_shader_variant *variant = vs->base.variants;
 
    assert(key);
 
-   for ( ; result; result = result->next) {
-      if (compare_vs_keys( key, &result->key.vkey ) == 0)
-         return result;
+   for ( ; variant; variant = variant->next) {
+      if (compare_vs_keys( key, &variant->key.vkey ) == 0)
+         return variant;
    }
    
    return NULL;
@@ -98,16 +99,20 @@ get_dummy_vertex_shader(void)
 }
 
 
-static enum pipe_error compile_vs( struct svga_context *svga,
-                                   struct svga_vertex_shader *vs,
-                                   const struct svga_vs_compile_key *key,
-                                   struct svga_shader_result **out_result )
+/**
+ * Translate TGSI shader into an svga shader variant.
+ */
+static enum pipe_error
+compile_vs(struct svga_context *svga,
+           struct svga_vertex_shader *vs,
+           const struct svga_vs_compile_key *key,
+           struct svga_shader_variant **out_variant)
 {
-   struct svga_shader_result *result;
+   struct svga_shader_variant *variant;
    enum pipe_error ret = PIPE_ERROR;
 
-   result = svga_translate_vertex_program( vs, key );
-   if (result == NULL) {
+   variant = svga_translate_vertex_program( vs, key );
+   if (variant == NULL) {
       /* some problem during translation, try the dummy shader */
       const struct tgsi_token *dummy = get_dummy_vertex_shader();
       if (!dummy) {
@@ -117,37 +122,28 @@ static enum pipe_error compile_vs( struct svga_context *svga,
       debug_printf("Failed to compile vertex shader, using dummy shader instead.\n");
       FREE((void *) vs->base.tokens);
       vs->base.tokens = dummy;
-      result = svga_translate_vertex_program(vs, key);
-      if (result == NULL) {
+      variant = svga_translate_vertex_program(vs, key);
+      if (variant == NULL) {
          ret = PIPE_ERROR;
          goto fail;
       }
    }
 
-   result->id = util_bitmask_add(svga->vs_bm);
-   if(result->id == UTIL_BITMASK_INVALID_INDEX) {
-      ret = PIPE_ERROR_OUT_OF_MEMORY;
-      goto fail;
-   }
-
-   ret = SVGA3D_DefineShader(svga->swc, 
-                             result->id,
-                             SVGA3D_SHADERTYPE_VS,
-                             result->tokens, 
-                             result->nr_tokens * sizeof result->tokens[0]);
+   ret = svga_define_shader(svga, SVGA3D_SHADERTYPE_VS, variant);
    if (ret != PIPE_OK)
       goto fail;
 
-   *out_result = result;
-   result->next = vs->base.results;
-   vs->base.results = result;
+   *out_variant = variant;
+
+   /* insert variants at head of linked list */
+   variant->next = vs->base.variants;
+   vs->base.variants = variant;
+
    return PIPE_OK;
 
 fail:
-   if (result) {
-      if (result->id != UTIL_BITMASK_INVALID_INDEX)
-         util_bitmask_clear( svga->vs_bm, result->id );
-      svga_destroy_shader_result( result );
+   if (variant) {
+      svga_destroy_shader_variant(svga, SVGA3D_SHADERTYPE_VS, variant);
    }
    return ret;
 }
@@ -163,15 +159,39 @@ make_vs_key(struct svga_context *svga, struct svga_vs_compile_key *key)
 
    /* SVGA_NEW_FS */
    key->fs_generic_inputs = svga->curr.fs->generic_inputs;
+
+   /* SVGA_NEW_VELEMENT */
+   key->adjust_attrib_range = svga->curr.velems->adjust_attrib_range;
+   key->adjust_attrib_w_1 = svga->curr.velems->adjust_attrib_w_1;
 }
 
+
+/**
+ * svga_reemit_vs_bindings - Reemit the vertex shader bindings
+ */
+enum pipe_error
+svga_reemit_vs_bindings(struct svga_context *svga)
+{
+   enum pipe_error ret;
+   struct svga_winsys_gb_shader *gbshader =
+      svga->state.hw_draw.vs ? svga->state.hw_draw.vs->gb_shader : NULL;
+
+   assert(svga->rebind.vs);
+   assert(svga_have_gb_objects(svga));
+
+   ret = SVGA3D_SetGBShader(svga->swc, SVGA3D_SHADERTYPE_VS, gbshader);
+   if (ret != PIPE_OK)
+      return ret;
+
+   svga->rebind.vs = FALSE;
+   return PIPE_OK;
+}
 
 
 static enum pipe_error
 emit_hw_vs(struct svga_context *svga, unsigned dirty)
 {
-   struct svga_shader_result *result = NULL;
-   unsigned id = SVGA3D_INVALID_ID;
+   struct svga_shader_variant *variant = NULL;
    enum pipe_error ret = PIPE_OK;
 
    /* SVGA_NEW_NEED_SWTNL */
@@ -181,26 +201,46 @@ emit_hw_vs(struct svga_context *svga, unsigned dirty)
 
       make_vs_key( svga, &key );
 
-      result = search_vs_key( vs, &key );
-      if (!result) {
-         ret = compile_vs( svga, vs, &key, &result );
+      variant = search_vs_key( vs, &key );
+      if (!variant) {
+         ret = compile_vs( svga, vs, &key, &variant );
          if (ret != PIPE_OK)
             return ret;
       }
 
-      assert (result);
-      id = result->id;
+      assert(variant);
    }
 
-   if (result != svga->state.hw_draw.vs) {
-      ret = SVGA3D_SetShader(svga->swc,
-                             SVGA3D_SHADERTYPE_VS,
-                             id );
-      if (ret != PIPE_OK)
-         return ret;
+   if (variant != svga->state.hw_draw.vs) {
+      if (svga_have_gb_objects(svga)) {
+         struct svga_winsys_gb_shader *gbshader =
+            variant ? variant->gb_shader : NULL;
 
-      svga->dirty |= SVGA_NEW_VS_RESULT;
-      svga->state.hw_draw.vs = result;      
+         /*
+          * Bind is necessary here only because pipebuffer_fenced may move
+          * the shader contents around....
+          */
+         if (gbshader) {
+            ret = SVGA3D_BindGBShader(svga->swc, gbshader);
+            if (ret != PIPE_OK)
+               return ret;
+         }
+
+         ret = SVGA3D_SetGBShader(svga->swc, SVGA3D_SHADERTYPE_VS, gbshader);
+         if (ret != PIPE_OK)
+            return ret;
+
+         svga->rebind.vs = FALSE;
+      }
+      else {
+         unsigned id = variant ? variant->id : SVGA_ID_INVALID;
+         ret = SVGA3D_SetShader(svga->swc, SVGA3D_SHADERTYPE_VS, id);
+         if (ret != PIPE_OK)
+            return ret;
+      }
+
+      svga->dirty |= SVGA_NEW_VS_VARIANT;
+      svga->state.hw_draw.vs = variant;      
    }
 
    return PIPE_OK;
@@ -212,6 +252,7 @@ struct svga_tracked_state svga_hw_vs =
    (SVGA_NEW_VS |
     SVGA_NEW_FS |
     SVGA_NEW_PRESCALE |
+    SVGA_NEW_VELEMENT |
     SVGA_NEW_NEED_SWTNL),
    emit_hw_vs
 };

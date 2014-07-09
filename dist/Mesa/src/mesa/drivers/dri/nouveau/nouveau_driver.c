@@ -65,7 +65,7 @@ nouveau_flush(struct gl_context *ctx)
 	if (_mesa_is_winsys_fbo(ctx->DrawBuffer) &&
 	    ctx->DrawBuffer->_ColorDrawBufferIndexes[0] == BUFFER_FRONT_LEFT) {
 		__DRIscreen *screen = nctx->screen->dri_screen;
-		__DRIdri2LoaderExtension *dri2 = screen->dri2.loader;
+		const __DRIdri2LoaderExtension *dri2 = screen->dri2.loader;
 		__DRIdrawable *drawable = nctx->dri_context->driDrawablePriv;
 
 		if (drawable && drawable->loaderPrivate)
@@ -155,5 +155,5 @@ nouveau_driver_functions_init(struct dd_function_table *functions)
 	functions->DrawPixels = _mesa_meta_DrawPixels;
 	functions->CopyPixels = _mesa_meta_CopyPixels;
 	functions->Bitmap = _mesa_meta_Bitmap;
-	functions->BlitFramebuffer = _mesa_meta_BlitFramebuffer;
+	functions->BlitFramebuffer = _mesa_meta_and_swrast_BlitFramebuffer;
 }

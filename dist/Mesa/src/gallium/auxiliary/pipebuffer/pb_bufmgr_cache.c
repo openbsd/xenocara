@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007-2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007-2008 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -29,8 +29,8 @@
  * \file
  * Buffer cache.
  * 
- * \author Jose Fonseca <jrfonseca-at-tungstengraphics-dot-com>
- * \author Thomas Hellström <thomas-at-tungstengraphics-dot-com>
+ * \author Jose Fonseca <jfonseca-at-vmware-dot-com>
+ * \author Thomas Hellström <thellstom-at-vmware-dot-com>
  */
 
 
@@ -82,6 +82,8 @@ struct pb_cache_manager
    
    struct list_head delayed;
    pb_size numDelayed;
+   float size_factor;
+   unsigned bypass_usage;
 };
 
 
@@ -227,11 +229,14 @@ pb_cache_is_buffer_compat(struct pb_cache_buffer *buf,
                           pb_size size,
                           const struct pb_desc *desc)
 {
+   if (desc->usage & buf->mgr->bypass_usage)
+      return 0;
+
    if(buf->base.size < size)
       return 0;
 
    /* be lenient with size */
-   if(buf->base.size >= 2*size)
+   if(buf->base.size > (unsigned) (buf->mgr->size_factor * size))
       return 0;
    
    if(!pb_check_alignment(desc->alignment, buf->base.alignment))
@@ -338,7 +343,7 @@ pb_cache_manager_create_buffer(struct pb_manager *_mgr,
    
    assert(pipe_is_referenced(&buf->buffer->reference));
    assert(pb_check_alignment(desc->alignment, buf->buffer->alignment));
-   assert(pb_check_usage(desc->usage, buf->buffer->usage));
+   assert(pb_check_usage(desc->usage & ~mgr->bypass_usage, buf->buffer->usage));
    assert(buf->buffer->size >= size);
    
    pipe_reference_init(&buf->base.reference, 1);
@@ -384,10 +389,23 @@ pb_cache_manager_destroy(struct pb_manager *mgr)
    FREE(mgr);
 }
 
-
+/**
+ * Create a caching buffer manager
+ *
+ * @param provider The buffer manager to which cache miss buffer requests
+ * should be redirected.
+ * @param usecs Unused buffers may be released from the cache after this
+ * time
+ * @param size_factor Declare buffers that are size_factor times bigger than
+ * the requested size as cache hits.
+ * @param bypass_usage Bitmask. If (requested usage & bypass_usage) != 0,
+ * buffer allocation requests are redirected to the provider.
+ */
 struct pb_manager *
 pb_cache_manager_create(struct pb_manager *provider, 
-                     	unsigned usecs) 
+                        unsigned usecs,
+                        float size_factor,
+                        unsigned bypass_usage)
 {
    struct pb_cache_manager *mgr;
 
@@ -403,6 +421,8 @@ pb_cache_manager_create(struct pb_manager *provider,
    mgr->base.flush = pb_cache_manager_flush;
    mgr->provider = provider;
    mgr->usecs = usecs;
+   mgr->size_factor = size_factor;
+   mgr->bypass_usage = bypass_usage;
    LIST_INITHEAD(&mgr->delayed);
    mgr->numDelayed = 0;
    pipe_mutex_init(mgr->mutex);

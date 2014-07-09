@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -56,6 +56,7 @@ struct pipe_fence_handle;
 struct pipe_resource;
 struct pipe_surface;
 struct pipe_transfer;
+struct pipe_box;
 
 
 /**
@@ -94,6 +95,7 @@ struct pipe_screen {
     */
    int (*get_video_param)( struct pipe_screen *,
 			   enum pipe_video_profile profile,
+			   enum pipe_video_entrypoint entrypoint,
 			   enum pipe_video_cap param );
 
    /**
@@ -135,7 +137,8 @@ struct pipe_screen {
     */
    boolean (*is_video_format_supported)( struct pipe_screen *,
                                          enum pipe_format format,
-                                         enum pipe_video_profile profile );
+                                         enum pipe_video_profile profile,
+                                         enum pipe_video_entrypoint entrypoint );
 
    /**
     * Check if we can actually create the given resource (test the dimension,
@@ -179,13 +182,13 @@ struct pipe_screen {
     * displayed, eg copy fake frontbuffer.
     * \param winsys_drawable_handle  an opaque handle that the calling context
     *                                gets out-of-band
+    * \param subbox an optional sub region to flush
     */
    void (*flush_frontbuffer)( struct pipe_screen *screen,
                               struct pipe_resource *resource,
                               unsigned level, unsigned layer,
-                              void *winsys_drawable_handle );
-
-
+                              void *winsys_drawable_handle,
+                              struct pipe_box *subbox );
 
    /** Set ptr = fence, with reference counting */
    void (*fence_reference)( struct pipe_screen *screen,

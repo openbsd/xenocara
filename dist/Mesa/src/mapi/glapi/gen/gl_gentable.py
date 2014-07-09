@@ -42,7 +42,7 @@ header = """/* GLXEXT is the define used in the xserver when the GLX extension i
 #endif
 
 #if (defined(GLXEXT) && defined(HAVE_BACKTRACE)) \\
-	|| (!defined(GLXEXT) && defined(DEBUG) && !defined(_WIN32_WCE) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__OpenBSD__))
+	|| (!defined(GLXEXT) && defined(DEBUG) && !defined(_WIN32_WCE) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__OpenBSD__) && !defined(__NetBSD__))
 #define USE_BACKTRACE
 #endif
 
@@ -50,7 +50,9 @@ header = """/* GLXEXT is the define used in the xserver when the GLX extension i
 #include <execinfo.h>
 #endif
 
+#ifndef _WIN32
 #include <dlfcn.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -111,7 +113,7 @@ __glapi_gentable_set_remaining_noop(struct _glapi_table *disp) {
 
 struct _glapi_table *
 _glapi_create_table_from_handle(void *handle, const char *symbol_prefix) {
-    struct _glapi_table *disp = calloc(1, sizeof(struct _glapi_table));
+    struct _glapi_table *disp = calloc(1, _glapi_get_dispatch_table_size() * sizeof(_glapi_proc));
     char symboln[512];
 
     if(!disp)

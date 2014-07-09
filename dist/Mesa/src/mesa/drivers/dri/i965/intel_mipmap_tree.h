@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
- * Copyright 2006 Tungsten Graphics, Inc., Cedar Park, Texas.
+ *
+ * Copyright 2006 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,58 +10,55 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
+
+/** @file intel_mipmap_tree.h
+ *
+ * This file defines the structure that wraps a BO and describes how the
+ * mipmap levels and slices of a texture are laid out.
+ *
+ * The hardware has a fixed layout of a texture depending on parameters such
+ * as the target/type (2D, 3D, CUBE), width, height, pitch, and number of
+ * mipmap levels.  The individual level/layer slices are each 2D rectangles of
+ * pixels at some x/y offset from the start of the drm_intel_bo.
+ *
+ * Original OpenGL allowed texture miplevels to be specified in arbitrary
+ * order, and a texture may change size over time.  Thus, each
+ * intel_texture_image has a reference to a miptree that contains the pixel
+ * data sized appropriately for it, which will later be referenced by/copied
+ * to the intel_texture_object at draw time (intel_finalize_mipmap_tree()) so
+ * that there's a single miptree for the complete texture.
+ */
 
 #ifndef INTEL_MIPMAP_TREE_H
 #define INTEL_MIPMAP_TREE_H
 
 #include <assert.h>
 
-#include "intel_regions.h"
+#include "main/mtypes.h"
+#include "intel_bufmgr.h"
 #include "intel_resolve_map.h"
+#include <GL/internal/dri_interface.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* A layer on top of the intel_regions code which adds:
- *
- * - Code to size and layout a region to hold a set of mipmaps.
- * - Query to determine if a new image fits in an existing tree.
- * - More refcounting 
- *     - maybe able to remove refcounting from intel_region?
- * - ?
- *
- * The fixed mipmap layout of intel hardware where one offset
- * specifies the position of all images in a mipmap hierachy
- * complicates the implementation of GL texture image commands,
- * compared to hardware where each image is specified with an
- * independent offset.
- *
- * In an ideal world, each texture object would be associated with a
- * single bufmgr buffer or 2d intel_region, and all the images within
- * the texture object would slot into the tree as they arrive.  The
- * reality can be a little messier, as images can arrive from the user
- * with sizes that don't fit in the existing tree, or in an order
- * where the tree layout cannot be guessed immediately.  
- * 
- * This structure encodes an idealized mipmap tree.  The GL image
- * commands build these where possible, otherwise store the images in
- * temporary system buffers.
- */
+struct brw_context;
+struct intel_renderbuffer;
 
 struct intel_resolve_map;
 struct intel_texture_image;
@@ -90,16 +87,10 @@ struct intel_miptree_map {
    void *ptr;
    /** Stride of the mapping. */
    int stride;
-
-   /**
-    * intel_mipmap_tree::singlesample_mt is temporary storage that persists
-    * only for the duration of the map.
-    */
-   bool singlesample_mt_is_tmp;
 };
 
 /**
- * Describes the location of each texture image within a texture region.
+ * Describes the location of each texture image within a miptree.
  */
 struct intel_mipmap_level
 {
@@ -107,8 +98,6 @@ struct intel_mipmap_level
    GLuint level_x;
    /** Offset to this miptree level, used in computing y_offset. */
    GLuint level_y;
-   GLuint width;
-   GLuint height;
 
    /**
     * \brief Number of 2D slices in this miplevel.
@@ -120,6 +109,8 @@ struct intel_mipmap_level
     *    - For GL_TEXTURE_3D, it is the texture's depth at this miplevel. Its
     *      value, like width and height, varies with miplevel.
     *    - For other texture types, depth is 1.
+    *    - Additionally, for UMS and CMS miptrees, depth is multiplied by
+    *      sample count.
     */
    GLuint depth;
 
@@ -202,8 +193,8 @@ enum intel_msaa_layout
 
 
 /**
- * Enum for keeping track of the state of an MCS buffer associated with a
- * miptree.  This determines when fast clear related operations are needed.
+ * Enum for keeping track of the fast clear state of a buffer associated with
+ * a miptree.
  *
  * Fast clear works by deferring the memory writes that would be used to clear
  * the buffer, so that instead of performing them at the time of the clear
@@ -211,23 +202,18 @@ enum intel_msaa_layout
  * buffer is later accessed for rendering.  The MCS buffer keeps track of
  * which regions of the buffer still have pending clear writes.
  *
- * This enum keeps track of the driver's knowledge of the state of the MCS
- * buffer.
+ * This enum keeps track of the driver's knowledge of pending fast clears in
+ * the MCS buffer.
  *
  * MCS buffers only exist on Gen7+.
  */
-enum intel_mcs_state
+enum intel_fast_clear_state
 {
    /**
     * There is no MCS buffer for this miptree, and one should never be
     * allocated.
     */
-   INTEL_MCS_STATE_NONE,
-
-   /**
-    * An MCS buffer exists for this miptree, and it is used for MSAA purposes.
-    */
-   INTEL_MCS_STATE_MSAA,
+   INTEL_FAST_CLEAR_STATE_NO_MCS,
 
    /**
     * No deferred clears are pending for this miptree, and the contents of the
@@ -238,8 +224,11 @@ enum intel_mcs_state
     *
     * In this state, the color buffer can be used for purposes other than
     * rendering without needing a render target resolve.
+    *
+    * Since there is no such thing as a "fast color clear resolve" for MSAA
+    * buffers, an MSAA buffer will never be in this state.
     */
-   INTEL_MCS_STATE_RESOLVED,
+   INTEL_FAST_CLEAR_STATE_RESOLVED,
 
    /**
     * An MCS buffer exists for this miptree, and deferred clears are pending
@@ -247,27 +236,34 @@ enum intel_mcs_state
     * The contents of the color buffer are only correct for the regions where
     * the MCS buffer doesn't indicate a deferred clear.
     *
-    * In this state, a render target resolve must be performed before the
-    * color buffer can be used for purposes other than rendering.
+    * If a single-sample buffer is in this state, a render target resolve must
+    * be performed before it can be used for purposes other than rendering.
     */
-   INTEL_MCS_STATE_UNRESOLVED,
+   INTEL_FAST_CLEAR_STATE_UNRESOLVED,
 
    /**
     * An MCS buffer exists for this miptree, and deferred clears are pending
     * for the entire color buffer, and the contents of the MCS buffer reflect
     * this.  The contents of the color buffer are undefined.
     *
-    * In this state, a render target resolve must be performed before the
-    * color buffer can be used for purposes other than rendering.
+    * If a single-sample buffer is in this state, a render target resolve must
+    * be performed before it can be used for purposes other than rendering.
     *
     * If the client attempts to clear a buffer which is already in this state,
     * the clear can be safely skipped, since the buffer is already clear.
     */
-   INTEL_MCS_STATE_CLEAR,
+   INTEL_FAST_CLEAR_STATE_CLEAR,
 };
 
 struct intel_mipmap_tree
 {
+   /** Buffer object containing the pixel data. */
+   drm_intel_bo *bo;
+
+   uint32_t pitch; /**< pitch in bytes. */
+
+   uint32_t tiling; /**< One of the I915_TILING_* flags */
+
    /* Effectively the key:
     */
    GLenum target;
@@ -279,17 +275,17 @@ struct intel_mipmap_tree
     * However, for textures and renderbuffers with packed depth/stencil formats
     * on hardware where we want or need to use separate stencil, there will be
     * two miptrees for storing the data.  If the depthstencil texture or rb is
-    * MESA_FORMAT_Z32_FLOAT_X24S8, then mt->format will be
-    * MESA_FORMAT_Z32_FLOAT, otherwise for MESA_FORMAT_S8_Z24 objects it will be
-    * MESA_FORMAT_X8_Z24.
+    * MESA_FORMAT_Z32_FLOAT_S8X24_UINT, then mt->format will be
+    * MESA_FORMAT_Z_FLOAT32, otherwise for MESA_FORMAT_Z24_UNORM_S8_UINT objects it will be
+    * MESA_FORMAT_Z24_UNORM_X8_UINT.
     *
     * For ETC1/ETC2 textures, this is one of the uncompressed mesa texture
-    * formats if the hardware lacks support for ETC1/ETC2. See @ref wraps_etc.
+    * formats if the hardware lacks support for ETC1/ETC2. See @ref etc_format.
     */
-   gl_format format;
+   mesa_format format;
 
    /** This variable stores the value of ETC compressed texture format */
-   gl_format etc_format;
+   mesa_format etc_format;
 
    /**
     * The X offset of each image in the miptree must be aligned to this.
@@ -311,13 +307,13 @@ struct intel_mipmap_tree
     */
    GLuint physical_width0, physical_height0, physical_depth0;
 
-   GLuint cpp;
+   GLuint cpp; /**< bytes per pixel */
    GLuint num_samples;
    bool compressed;
 
    /**
     * Level zero image dimensions.  These dimensions correspond to the
-    * logical width, height, and depth of the region as seen by client code.
+    * logical width, height, and depth of the texture as seen by client code.
     * Accordingly, they do not account for the extra width, height, and/or
     * depth that must be allocated in order to accommodate multisample
     * formats, nor do they account for the extra factor of 6 in depth that
@@ -333,6 +329,14 @@ struct intel_mipmap_tree
     * Corresponds to the surface_array_spacing bit in gen7_surface_state.
     */
    bool array_spacing_lod0;
+
+   /**
+    * The distance in rows between array slices in an uncompressed surface.
+    *
+    * For compressed surfaces, slices are stored closer together physically;
+    * the real distance is (qpitch / block height).
+    */
+   uint32_t qpitch;
 
    /**
     * MSAA layout used by this buffer.
@@ -353,57 +357,9 @@ struct intel_mipmap_tree
     */
    struct intel_mipmap_level level[MAX_TEXTURE_LEVELS];
 
-   /* The data is held here:
-    */
-   struct intel_region *region;
-
-   /* Offset into region bo where miptree starts:
+   /* Offset into bo where miptree starts:
     */
    uint32_t offset;
-
-   /**
-    * \brief Singlesample miptree.
-    *
-    * This is used under two cases.
-    *
-    * --- Case 1: As persistent singlesample storage for multisample window
-    *  system front and back buffers ---
-    *
-    * Suppose that the window system FBO was created with a multisample
-    * config.  Let `back_irb` be the `intel_renderbuffer` for the FBO's back
-    * buffer. Then `back_irb` contains two miptrees: a parent multisample
-    * miptree (back_irb->mt) and a child singlesample miptree
-    * (back_irb->mt->singlesample_mt).  The DRM buffer shared with DRI2
-    * belongs to `back_irb->mt->singlesample_mt` and contains singlesample
-    * data.  The singlesample miptree is created at the same time as and
-    * persists for the lifetime of its parent multisample miptree.
-    *
-    * When access to the singlesample data is needed, such as at
-    * eglSwapBuffers and glReadPixels, an automatic downsample occurs from
-    * `back_rb->mt` to `back_rb->mt->singlesample_mt` when necessary.
-    *
-    * This description of the back buffer applies analogously to the front
-    * buffer.
-    *
-    *
-    * --- Case 2: As temporary singlesample storage for mapping multisample
-    *  miptrees ---
-    *
-    * Suppose the intel_miptree_map is called on a multisample miptree, `mt`,
-    * for which case 1 does not apply (that is, `mt` does not belong to
-    * a front or back buffer).  Then `mt->singlesample_mt` is null at the
-    * start of the call. intel_miptree_map will create a temporary
-    * singlesample miptree, store it at `mt->singlesample_mt`, downsample from
-    * `mt` to `mt->singlesample_mt` if necessary, then map
-    * `mt->singlesample_mt`. The temporary miptree is later deleted during
-    * intel_miptree_unmap.
-    */
-   struct intel_mipmap_tree *singlesample_mt;
-
-   /**
-    * \brief A downsample is needed from this miptree to singlesample_mt.
-    */
-   bool need_downsample;
 
    /**
     * \brief HiZ miptree
@@ -451,9 +407,9 @@ struct intel_mipmap_tree
    struct intel_mipmap_tree *mcs_mt;
 
    /**
-    * MCS state for this buffer.
+    * Fast clear state for this buffer.
     */
-   enum intel_mcs_state mcs_state;
+   enum intel_fast_clear_state fast_clear_state;
 
    /**
     * The SURFACE_STATE bits associated with the last fast color clear to this
@@ -490,7 +446,7 @@ intel_miptree_alloc_non_msrt_mcs(struct brw_context *brw,
 
 struct intel_mipmap_tree *intel_miptree_create(struct brw_context *brw,
                                                GLenum target,
-					       gl_format format,
+					       mesa_format format,
                                                GLuint first_level,
                                                GLuint last_level,
                                                GLuint width0,
@@ -503,7 +459,7 @@ struct intel_mipmap_tree *intel_miptree_create(struct brw_context *brw,
 struct intel_mipmap_tree *
 intel_miptree_create_layout(struct brw_context *brw,
                             GLenum target,
-                            gl_format format,
+                            mesa_format format,
                             GLuint first_level,
                             GLuint last_level,
                             GLuint width0,
@@ -515,19 +471,18 @@ intel_miptree_create_layout(struct brw_context *brw,
 struct intel_mipmap_tree *
 intel_miptree_create_for_bo(struct brw_context *brw,
                             drm_intel_bo *bo,
-                            gl_format format,
+                            mesa_format format,
                             uint32_t offset,
                             uint32_t width,
                             uint32_t height,
-                            int pitch,
-                            uint32_t tiling);
+                            int pitch);
 
-struct intel_mipmap_tree*
-intel_miptree_create_for_dri2_buffer(struct brw_context *brw,
-                                     unsigned dri_attachment,
-                                     gl_format format,
-                                     uint32_t num_samples,
-                                     struct intel_region *region);
+void
+intel_update_winsys_renderbuffer_miptree(struct brw_context *intel,
+                                         struct intel_renderbuffer *irb,
+                                         drm_intel_bo *bo,
+                                         uint32_t width, uint32_t height,
+                                         uint32_t pitch);
 
 /**
  * Create a miptree appropriate as the storage for a non-texture renderbuffer.
@@ -538,10 +493,16 @@ intel_miptree_create_for_dri2_buffer(struct brw_context *brw,
  */
 struct intel_mipmap_tree*
 intel_miptree_create_for_renderbuffer(struct brw_context *brw,
-                                      gl_format format,
+                                      mesa_format format,
                                       uint32_t width,
                                       uint32_t height,
                                       uint32_t num_samples);
+
+mesa_format
+intel_depth_format_for_depthstencil_format(mesa_format format);
+
+mesa_format
+intel_lower_compressed_format(struct brw_context *brw, mesa_format format);
 
 /** \brief Assert that the level and layer are valid for the miptree. */
 static inline void
@@ -565,7 +526,7 @@ bool intel_miptree_match_image(struct intel_mipmap_tree *mt,
                                     struct gl_texture_image *image);
 
 void
-intel_miptree_get_image_offset(struct intel_mipmap_tree *mt,
+intel_miptree_get_image_offset(const struct intel_mipmap_tree *mt,
 			       GLuint level, GLuint slice,
 			       GLuint *x, GLuint *y);
 
@@ -573,16 +534,24 @@ void
 intel_miptree_get_dimensions_for_image(struct gl_texture_image *image,
                                        int *width, int *height, int *depth);
 
+void
+intel_miptree_get_tile_masks(const struct intel_mipmap_tree *mt,
+                             uint32_t *mask_x, uint32_t *mask_y,
+                             bool map_stencil_as_y_tiled);
+
 uint32_t
-intel_miptree_get_tile_offsets(struct intel_mipmap_tree *mt,
+intel_miptree_get_tile_offsets(const struct intel_mipmap_tree *mt,
                                GLuint level, GLuint slice,
                                uint32_t *tile_x,
                                uint32_t *tile_y);
+uint32_t
+intel_miptree_get_aligned_offset(const struct intel_mipmap_tree *mt,
+                                 uint32_t x, uint32_t y,
+                                 bool map_stencil_as_y_tiled);
 
 void intel_miptree_set_level_info(struct intel_mipmap_tree *mt,
                                   GLuint level,
-                                  GLuint x, GLuint y,
-                                  GLuint w, GLuint h, GLuint d);
+                                  GLuint x, GLuint y, GLuint d);
 
 void intel_miptree_set_image_offset(struct intel_mipmap_tree *mt,
                                     GLuint level,
@@ -630,6 +599,10 @@ intel_miptree_slice_set_needs_depth_resolve(struct intel_mipmap_tree *mt,
                                             uint32_t level,
 					    uint32_t depth);
 
+void
+intel_miptree_set_all_slices_need_depth_resolve(struct intel_mipmap_tree *mt,
+                                                uint32_t level);
+
 /**
  * \return false if no resolve was needed
  */
@@ -675,8 +648,8 @@ intel_miptree_used_for_rendering(struct intel_mipmap_tree *mt)
     * unresolved state, since it won't be guaranteed to be clear after
     * rendering occurs.
     */
-   if (mt->mcs_state == INTEL_MCS_STATE_CLEAR)
-      mt->mcs_state = INTEL_MCS_STATE_UNRESOLVED;
+   if (mt->fast_clear_state == INTEL_FAST_CLEAR_STATE_CLEAR)
+      mt->fast_clear_state = INTEL_FAST_CLEAR_STATE_UNRESOLVED;
 }
 
 void
@@ -688,12 +661,9 @@ intel_miptree_make_shareable(struct brw_context *brw,
                              struct intel_mipmap_tree *mt);
 
 void
-intel_miptree_downsample(struct brw_context *brw,
-                         struct intel_mipmap_tree *mt);
-
-void
-intel_miptree_upsample(struct brw_context *brw,
-                       struct intel_mipmap_tree *mt);
+intel_miptree_updownsample(struct brw_context *brw,
+                           struct intel_mipmap_tree *src,
+                           struct intel_mipmap_tree *dst);
 
 void brw_miptree_layout(struct brw_context *brw, struct intel_mipmap_tree *mt);
 

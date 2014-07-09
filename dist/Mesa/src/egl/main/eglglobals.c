@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * Copyright 2009-2010 Chia-I Wu <olvaffe@gmail.com>
  * Copyright 2010-2011 LunarG, Inc.
  * All Rights Reserved.
@@ -36,7 +36,8 @@
 #include "eglmutex.h"
 
 
-static _EGL_DECLARE_MUTEX(_eglGlobalMutex);
+static _EGLMutex _eglGlobalMutex = _EGL_MUTEX_INITIALIZER;
+
 struct _egl_global _eglGlobal =
 {
    &_eglGlobalMutex,       /* Mutex */
@@ -47,6 +48,22 @@ struct _egl_global _eglGlobal =
       _eglUnloadDrivers, /* always called last */
       _eglFiniDisplay
    },
+
+   /* ClientExtensions */
+   {
+      true, /* EGL_EXT_client_extensions */
+      true, /* EGL_EXT_platform_base */
+      true, /* EGL_EXT_platform_x11 */
+      true, /* EGL_EXT_platform_wayland */
+      true  /* EGL_MESA_platform_gbm */
+   },
+
+   /* ClientExtensionsString */
+   "EGL_EXT_client_extensions"
+   " EGL_EXT_platform_base"
+   " EGL_EXT_platform_x11"
+   " EGL_EXT_platform_wayland"
+   " EGL_MESA_platform_gbm"
 };
 
 

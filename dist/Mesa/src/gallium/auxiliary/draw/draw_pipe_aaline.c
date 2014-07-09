@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -107,7 +107,7 @@ struct aaline_stage
    struct aaline_fragment_shader *fs;
    struct {
       void *sampler[PIPE_MAX_SAMPLERS];
-      struct pipe_sampler_view *sampler_views[PIPE_MAX_SAMPLERS];
+      struct pipe_sampler_view *sampler_views[PIPE_MAX_SHADER_SAMPLER_VIEWS];
    } state;
 
    /*
@@ -118,11 +118,11 @@ struct aaline_stage
    void (*driver_bind_fs_state)(struct pipe_context *, void *);
    void (*driver_delete_fs_state)(struct pipe_context *, void *);
 
-   void (*driver_bind_sampler_states)(struct pipe_context *, unsigned,
-                                      void **);
+   void (*driver_bind_sampler_states)(struct pipe_context *, unsigned, unsigned,
+                                      unsigned, void **);
 
-   void (*driver_set_sampler_views)(struct pipe_context *,
-                                    unsigned,
+   void (*driver_set_sampler_views)(struct pipe_context *, unsigned shader,
+                                    unsigned start, unsigned count,
                                     struct pipe_sampler_view **);
 };
 
@@ -692,13 +692,7 @@ aaline_first_line(struct draw_stage *stage, struct prim_header *header)
       return;
    }
 
-   /* update vertex attrib info */
-   aaline->pos_slot = draw_current_shader_position_output(draw);;
-
-   /* allocate the extra post-transformed vertex attribute */
-   aaline->tex_slot = draw_alloc_extra_vertex_attrib(draw,
-                                                     TGSI_SEMANTIC_GENERIC,
-                                                     aaline->fs->generic_attrib);
+   draw_aaline_prepare_outputs(draw, draw->pipeline.aaline);
 
    /* how many samplers? */
    /* we'll use sampler/texture[pstip->sampler_unit] for the stipple */
@@ -710,8 +704,12 @@ aaline_first_line(struct draw_stage *stage, struct prim_header *header)
                                aaline->sampler_view);
 
    draw->suspend_flushing = TRUE;
-   aaline->driver_bind_sampler_states(pipe, num_samplers, aaline->state.sampler);
-   aaline->driver_set_sampler_views(pipe, num_samplers, aaline->state.sampler_views);
+
+   aaline->driver_bind_sampler_states(pipe, PIPE_SHADER_FRAGMENT, 0,
+                                      num_samplers, aaline->state.sampler);
+
+   aaline->driver_set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0,
+                                    num_samplers, aaline->state.sampler_views);
 
    /* Disable triangle culling, stippling, unfilled mode etc. */
    r = draw_get_rasterizer_no_cull(draw, rast->scissor, rast->flatshade);
@@ -738,10 +736,13 @@ aaline_flush(struct draw_stage *stage, unsigned flags)
    /* restore original frag shader, texture, sampler state */
    draw->suspend_flushing = TRUE;
    aaline->driver_bind_fs_state(pipe, aaline->fs ? aaline->fs->driver_fs : NULL);
-   aaline->driver_bind_sampler_states(pipe, aaline->num_samplers,
+
+   aaline->driver_bind_sampler_states(pipe, PIPE_SHADER_FRAGMENT, 0,
+                                      aaline->num_samplers,
                                       aaline->state.sampler);
-   aaline->driver_set_sampler_views(pipe,
-                                    aaline->num_sampler_views,
+
+   aaline->driver_set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0,
+                                    aaline->num_samplers,
                                     aaline->state.sampler_views);
 
    /* restore original rasterizer state */
@@ -769,7 +770,7 @@ aaline_destroy(struct draw_stage *stage)
    struct pipe_context *pipe = stage->draw->pipe;
    uint i;
 
-   for (i = 0; i < PIPE_MAX_SAMPLERS; i++) {
+   for (i = 0; i < PIPE_MAX_SHADER_SAMPLER_VIEWS; i++) {
       pipe_sampler_view_reference(&aaline->state.sampler_views[i], NULL);
    }
 
@@ -790,8 +791,8 @@ aaline_destroy(struct draw_stage *stage)
    pipe->bind_fs_state = aaline->driver_bind_fs_state;
    pipe->delete_fs_state = aaline->driver_delete_fs_state;
 
-   pipe->bind_fragment_sampler_states = aaline->driver_bind_sampler_states;
-   pipe->set_fragment_sampler_views = aaline->driver_set_sampler_views;
+   pipe->bind_sampler_states = aaline->driver_bind_sampler_states;
+   pipe->set_sampler_views = aaline->driver_set_sampler_views;
 
    FREE( stage );
 }
@@ -909,27 +910,31 @@ aaline_delete_fs_state(struct pipe_context *pipe, void *fs)
 
 
 static void
-aaline_bind_sampler_states(struct pipe_context *pipe,
-                           unsigned num, void **sampler)
+aaline_bind_sampler_states(struct pipe_context *pipe, unsigned shader,
+                           unsigned start, unsigned num, void **sampler)
 {
    struct aaline_stage *aaline = aaline_stage_from_pipe(pipe);
+
+   assert(start == 0);
 
    if (aaline == NULL) {
       return;
    }
 
-   /* save current */
-   memcpy(aaline->state.sampler, sampler, num * sizeof(void *));
-   aaline->num_samplers = num;
+   if (shader == PIPE_SHADER_FRAGMENT) {
+      /* save current */
+      memcpy(aaline->state.sampler, sampler, num * sizeof(void *));
+      aaline->num_samplers = num;
+   }
 
    /* pass-through */
-   aaline->driver_bind_sampler_states(pipe, num, sampler);
+   aaline->driver_bind_sampler_states(pipe, shader, start, num, sampler);
 }
 
 
 static void
-aaline_set_sampler_views(struct pipe_context *pipe,
-                         unsigned num,
+aaline_set_sampler_views(struct pipe_context *pipe, unsigned shader,
+                         unsigned start, unsigned num,
                          struct pipe_sampler_view **views)
 {
    struct aaline_stage *aaline = aaline_stage_from_pipe(pipe);
@@ -939,19 +944,38 @@ aaline_set_sampler_views(struct pipe_context *pipe,
       return;
    }
 
-   /* save current */
-   for (i = 0; i < num; i++) {
-      pipe_sampler_view_reference(&aaline->state.sampler_views[i], views[i]);
+   if (shader == PIPE_SHADER_FRAGMENT) {
+      /* save current */
+      for (i = 0; i < num; i++) {
+         pipe_sampler_view_reference(&aaline->state.sampler_views[start + i],
+                                     views[i]);
+      }
+      aaline->num_sampler_views = num;
    }
-   for ( ; i < PIPE_MAX_SAMPLERS; i++) {
-      pipe_sampler_view_reference(&aaline->state.sampler_views[i], NULL);
-   }
-   aaline->num_sampler_views = num;
 
    /* pass-through */
-   aaline->driver_set_sampler_views(pipe, num, views);
+   aaline->driver_set_sampler_views(pipe, shader, start, num, views);
 }
 
+
+void
+draw_aaline_prepare_outputs(struct draw_context *draw,
+                            struct draw_stage *stage)
+{
+   struct aaline_stage *aaline = aaline_stage(stage);
+   const struct pipe_rasterizer_state *rast = draw->rasterizer;
+
+   /* update vertex attrib info */
+   aaline->pos_slot = draw_current_shader_position_output(draw);;
+
+   if (!rast->line_smooth)
+      return;
+
+   /* allocate the extra post-transformed vertex attribute */
+   aaline->tex_slot = draw_alloc_extra_vertex_attrib(draw,
+                                                     TGSI_SEMANTIC_GENERIC,
+                                                     aaline->fs->generic_attrib);
+}
 
 /**
  * Called by drivers that want to install this AA line prim stage
@@ -972,6 +996,14 @@ draw_install_aaline_stage(struct draw_context *draw, struct pipe_context *pipe)
    if (!aaline)
       goto fail;
 
+   /* save original driver functions */
+   aaline->driver_create_fs_state = pipe->create_fs_state;
+   aaline->driver_bind_fs_state = pipe->bind_fs_state;
+   aaline->driver_delete_fs_state = pipe->delete_fs_state;
+
+   aaline->driver_bind_sampler_states = pipe->bind_sampler_states;
+   aaline->driver_set_sampler_views = pipe->set_sampler_views;
+
    /* create special texture, sampler state */
    if (!aaline_create_texture(aaline))
       goto fail;
@@ -979,21 +1011,13 @@ draw_install_aaline_stage(struct draw_context *draw, struct pipe_context *pipe)
    if (!aaline_create_sampler(aaline))
       goto fail;
 
-   /* save original driver functions */
-   aaline->driver_create_fs_state = pipe->create_fs_state;
-   aaline->driver_bind_fs_state = pipe->bind_fs_state;
-   aaline->driver_delete_fs_state = pipe->delete_fs_state;
-
-   aaline->driver_bind_sampler_states = pipe->bind_fragment_sampler_states;
-   aaline->driver_set_sampler_views = pipe->set_fragment_sampler_views;
-
    /* override the driver's functions */
    pipe->create_fs_state = aaline_create_fs_state;
    pipe->bind_fs_state = aaline_bind_fs_state;
    pipe->delete_fs_state = aaline_delete_fs_state;
 
-   pipe->bind_fragment_sampler_states = aaline_bind_sampler_states;
-   pipe->set_fragment_sampler_views = aaline_set_sampler_views;
+   pipe->bind_sampler_states = aaline_bind_sampler_states;
+   pipe->set_sampler_views = aaline_set_sampler_views;
    
    /* Install once everything is known to be OK:
     */

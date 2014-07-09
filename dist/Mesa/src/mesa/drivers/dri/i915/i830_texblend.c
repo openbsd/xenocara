@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -440,20 +440,16 @@ void
 i830EmitTextureBlend(struct i830_context *i830)
 {
    struct gl_context *ctx = &i830->intel.ctx;
-   GLuint unit, last_stage = 0, blendunit = 0;
+   GLuint unit, blendunit = 0;
 
    I830_ACTIVESTATE(i830, I830_UPLOAD_TEXBLEND_ALL, false);
 
-   if (ctx->Texture._EnabledUnits) {
-      for (unit = 0; unit < ctx->Const.MaxTextureUnits; unit++)
-         if (ctx->Texture.Unit[unit]._ReallyEnabled)
-            last_stage = unit;
-
-      for (unit = 0; unit < ctx->Const.MaxTextureUnits; unit++)
-         if (ctx->Texture.Unit[unit]._ReallyEnabled)
-            emit_texblend(i830, unit, blendunit++, last_stage == unit);
-   }
-   else {
+   if (ctx->Texture._MaxEnabledTexImageUnit != -1) {
+      for (unit = 0; unit <= ctx->Texture._MaxEnabledTexImageUnit; unit++)
+         if (ctx->Texture.Unit[unit]._Current)
+            emit_texblend(i830, unit, blendunit++,
+                          unit == ctx->Texture._MaxEnabledTexImageUnit);
+   } else {
       emit_passthrough(i830);
    }
 }

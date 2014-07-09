@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -32,7 +32,7 @@
 
 /**
  * Authors:
- * Keith Whitwell <keith@tungstengraphics.com>
+ * Keith Whitwell <keithw@vmware.com>
  * Brian Paul
  */
 
@@ -47,7 +47,6 @@
 #include "tgsi/tgsi_scan.h"
 
 #ifdef HAVE_LLVM
-struct draw_llvm;
 struct gallivm_state;
 #endif
 
@@ -68,6 +67,8 @@ struct vbuf_render;
 struct tgsi_exec_machine;
 struct tgsi_sampler;
 struct draw_pt_front_end;
+struct draw_assembler;
+struct draw_llvm;
 
 
 /**
@@ -216,6 +217,7 @@ struct draw_context
       boolean bypass_clip_xy;
       boolean bypass_clip_z;
       boolean guard_band_xy;
+      boolean bypass_clip_points;
    } driver;
 
    boolean quads_always_flatshade_last;
@@ -230,11 +232,14 @@ struct draw_context
    boolean clip_z;
    boolean clip_user;
    boolean guard_band_xy;
+   boolean guard_band_points_xy;
 
    boolean force_passthrough; /**< never clip or shade */
 
    boolean dump_vs;
 
+   /** Depth format and bias related settings. */
+   boolean floating_point_depth;
    double mrd;  /**< minimum resolvable depth value, for polygon offset */
 
    /** Current rasterizer state given to us by the driver */
@@ -311,10 +316,9 @@ struct draw_context
 
    unsigned instance_id;
    unsigned start_instance;
+   unsigned start_index;
 
-#ifdef HAVE_LLVM
    struct draw_llvm *llvm;
-#endif
 
    /** Texture sampler and sampler view state.
     * Note that we have arrays indexed by shader type.  At this time
@@ -328,6 +332,8 @@ struct draw_context
 
    struct pipe_query_data_pipeline_statistics statistics;
    boolean collect_statistics;
+
+   struct draw_assembler *ia;
 
    void *driver_private;
 };
@@ -487,7 +493,7 @@ draw_stats_clipper_primitives(struct draw_context *draw,
 static INLINE unsigned
 draw_clamp_viewport_idx(int idx)
 {
-   return ((PIPE_MAX_VIEWPORTS > idx || idx < 0) ? idx : 0);
+   return ((PIPE_MAX_VIEWPORTS > idx && idx >= 0) ? idx : 0);
 }
 
 /**

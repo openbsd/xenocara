@@ -24,7 +24,7 @@
  *
  * Authors:
  *    Gareth Hughes <gareth@valinux.com>
- *    Keith Whitwell <keith@tungstengraphics.com>
+ *    Keith Whitwell <keithw@vmware.com>
  */
 
 #include "main/glheader.h"
@@ -206,14 +206,14 @@ CHECK( tex0_mm, GL_TRUE, 3 )
 CHECK( tex1_mm, GL_TRUE, 3 )
 /* need this for the cubic_map on disabled unit 2 bug, maybe r100 only? */
 CHECK( tex2_mm, GL_TRUE, 3 )
-CHECK( cube0_mm, (ctx->Texture.Unit[0]._ReallyEnabled & TEXTURE_CUBE_BIT), 2 + 4*5 - CUBE_STATE_SIZE )
-CHECK( cube1_mm, (ctx->Texture.Unit[1]._ReallyEnabled & TEXTURE_CUBE_BIT), 2 + 4*5 - CUBE_STATE_SIZE )
-CHECK( cube2_mm, (ctx->Texture.Unit[2]._ReallyEnabled & TEXTURE_CUBE_BIT), 2 + 4*5 - CUBE_STATE_SIZE )
+CHECK( cube0_mm, (ctx->Texture.Unit[0]._Current && ctx->Texture.Unit[0]._Current->Target == GL_TEXTURE_CUBE_MAP), 2 + 4*5 - CUBE_STATE_SIZE )
+CHECK( cube1_mm, (ctx->Texture.Unit[1]._Current && ctx->Texture.Unit[1]._Current->Target == GL_TEXTURE_CUBE_MAP), 2 + 4*5 - CUBE_STATE_SIZE )
+CHECK( cube2_mm, (ctx->Texture.Unit[2]._Current && ctx->Texture.Unit[2]._Current->Target == GL_TEXTURE_CUBE_MAP), 2 + 4*5 - CUBE_STATE_SIZE )
 CHECK( fog_add4, ctx->Fog.Enabled, 4 )
 TCL_CHECK( tcl_add4, GL_TRUE, 4 )
-TCL_CHECK( tcl_tex0_add4, ctx->Texture.Unit[0]._ReallyEnabled, 4 )
-TCL_CHECK( tcl_tex1_add4, ctx->Texture.Unit[1]._ReallyEnabled, 4 )
-TCL_CHECK( tcl_tex2_add4, ctx->Texture.Unit[2]._ReallyEnabled, 4 )
+TCL_CHECK( tcl_tex0_add4, ctx->Texture.Unit[0]._Current, 4 )
+TCL_CHECK( tcl_tex1_add4, ctx->Texture.Unit[1]._Current, 4 )
+TCL_CHECK( tcl_tex2_add4, ctx->Texture.Unit[2]._Current, 4 )
 TCL_CHECK( tcl_lighting, ctx->Light.Enabled, 0 )
 TCL_CHECK( tcl_lighting_add4, ctx->Light.Enabled, 4 )
 TCL_CHECK( tcl_eyespace_or_lighting_add4, ctx->_NeedEyeCoords || ctx->Light.Enabled, 4 )
@@ -233,9 +233,9 @@ TCL_CHECK( tcl_ucp4_add4, (ctx->Transform.ClipPlanesEnabled & 0x10), 4 )
 TCL_CHECK( tcl_ucp5_add4, (ctx->Transform.ClipPlanesEnabled & 0x20), 4 )
 TCL_CHECK( tcl_eyespace_or_fog_add4, ctx->_NeedEyeCoords || ctx->Fog.Enabled, 4 )
 
-CHECK( txr0, (ctx->Texture.Unit[0]._ReallyEnabled & TEXTURE_RECT_BIT), 0 )
-CHECK( txr1, (ctx->Texture.Unit[1]._ReallyEnabled & TEXTURE_RECT_BIT), 0 )
-CHECK( txr2, (ctx->Texture.Unit[2]._ReallyEnabled & TEXTURE_RECT_BIT), 0 )
+CHECK( txr0, (ctx->Texture.Unit[0]._Current && ctx->Texture.Unit[0]._Current->Target == GL_TEXTURE_RECTANGLE), 0 )
+CHECK( txr1, (ctx->Texture.Unit[1]._Current && ctx->Texture.Unit[1]._Current->Target == GL_TEXTURE_RECTANGLE), 0 )
+CHECK( txr2, (ctx->Texture.Unit[2]._Current && ctx->Texture.Unit[2]._Current->Target == GL_TEXTURE_RECTANGLE), 0 )
 
 #define OUT_VEC(hdr, data) do {			\
     drm_radeon_cmd_header_t h;					\
@@ -263,7 +263,7 @@ static void scl_emit(struct gl_context *ctx, struct radeon_state_atom *atom)
    BATCH_LOCALS(&r100->radeon);
    uint32_t dwords = atom->check(ctx, atom);
    
-   BEGIN_BATCH_NO_AUTOSTATE(dwords);
+   BEGIN_BATCH(dwords);
    OUT_SCL(atom->cmd[0], atom->cmd+1);
    END_BATCH();
 }
@@ -275,7 +275,7 @@ static void vec_emit(struct gl_context *ctx, struct radeon_state_atom *atom)
    BATCH_LOCALS(&r100->radeon);
    uint32_t dwords = atom->check(ctx, atom);
 
-   BEGIN_BATCH_NO_AUTOSTATE(dwords);
+   BEGIN_BATCH(dwords);
    OUT_VEC(atom->cmd[0], atom->cmd+1);
    END_BATCH();
 }
@@ -287,7 +287,7 @@ static void lit_emit(struct gl_context *ctx, struct radeon_state_atom *atom)
    BATCH_LOCALS(&r100->radeon);
    uint32_t dwords = atom->check(ctx, atom);
 
-   BEGIN_BATCH_NO_AUTOSTATE(dwords);
+   BEGIN_BATCH(dwords);
    OUT_VEC(atom->cmd[LIT_CMD_0], atom->cmd+1);
    OUT_SCL(atom->cmd[LIT_CMD_1], atom->cmd+LIT_CMD_1+1);
    END_BATCH();
@@ -335,13 +335,13 @@ static void ctx_emit_cs(struct gl_context *ctx, struct radeon_state_atom *atom)
    if (rrb->cpp == 4)
 	atom->cmd[CTX_RB3D_CNTL] |= RADEON_COLOR_FORMAT_ARGB8888;
    else switch (rrb->base.Base.Format) {
-   case MESA_FORMAT_RGB565:
+   case MESA_FORMAT_B5G6R5_UNORM:
 	atom->cmd[CTX_RB3D_CNTL] |= RADEON_COLOR_FORMAT_RGB565;
 	break;
-   case MESA_FORMAT_ARGB4444:
+   case MESA_FORMAT_B4G4R4A4_UNORM:
 	atom->cmd[CTX_RB3D_CNTL] |= RADEON_COLOR_FORMAT_ARGB4444;
 	break;
-   case MESA_FORMAT_ARGB1555:
+   case MESA_FORMAT_B5G5R5A1_UNORM:
 	atom->cmd[CTX_RB3D_CNTL] |= RADEON_COLOR_FORMAT_ARGB1555;
 	break;
    default:
@@ -366,7 +366,7 @@ static void ctx_emit_cs(struct gl_context *ctx, struct radeon_state_atom *atom)
      
    }
 
-   BEGIN_BATCH_NO_AUTOSTATE(dwords);
+   BEGIN_BATCH(dwords);
 
    /* In the CS case we need to split this up */
    OUT_BATCH(CP_PACKET0(packet[0].start, 3));
@@ -399,7 +399,7 @@ static void ctx_emit_cs(struct gl_context *ctx, struct radeon_state_atom *atom)
    // }
 
    END_BATCH();
-   BEGIN_BATCH_NO_AUTOSTATE(4);
+   BEGIN_BATCH(4);
    OUT_BATCH(CP_PACKET0(RADEON_RE_TOP_LEFT, 0));
    OUT_BATCH(0);
    OUT_BATCH(CP_PACKET0(RADEON_RE_WIDTH_HEIGHT, 0));
@@ -422,7 +422,8 @@ static void cube_emit_cs(struct gl_context *ctx, struct radeon_state_atom *atom)
    radeon_mipmap_level *lvl;
    uint32_t base_reg;
 
-   if (!(ctx->Texture.Unit[i]._ReallyEnabled & TEXTURE_CUBE_BIT))
+   if (!ctx->Texture.Unit[i]._Current ||
+       ctx->Texture.Unit[i]._Current->Target != GL_TEXTURE_CUBE_MAP)
 	return;
 
    if (!t)
@@ -437,7 +438,7 @@ static void cube_emit_cs(struct gl_context *ctx, struct radeon_state_atom *atom)
 	default:
 	case 0: base_reg = RADEON_PP_CUBIC_OFFSET_T0_0; break;
    };
-   BEGIN_BATCH_NO_AUTOSTATE(dwords);
+   BEGIN_BATCH(dwords);
    OUT_BATCH_TABLE(atom->cmd, 2);
    lvl = &t->mt->levels[0];
    for (j = 0; j < 5; j++) {
@@ -469,7 +470,7 @@ static void tex_emit_cs(struct gl_context *ctx, struct radeon_state_atom *atom)
      dwords += 2;
    else
      dwords -= 2;
-   BEGIN_BATCH_NO_AUTOSTATE(dwords);
+   BEGIN_BATCH(dwords);
 
    OUT_BATCH(CP_PACKET0(RADEON_PP_TXFILTER_0 + (24 * i), 1));
    OUT_BATCH_TABLE((atom->cmd + 1), 2);
@@ -477,7 +478,8 @@ static void tex_emit_cs(struct gl_context *ctx, struct radeon_state_atom *atom)
    if (hastexture) {
      OUT_BATCH(CP_PACKET0(RADEON_PP_TXOFFSET_0 + (24 * i), 0));
      if (t->mt && !t->image_override) {
-        if ((ctx->Texture.Unit[i]._ReallyEnabled & TEXTURE_CUBE_BIT)) {
+        if (ctx->Texture.Unit[i]._Current &&
+            ctx->Texture.Unit[i]._Current->Target == GL_TEXTURE_CUBE_MAP) {
             lvl = &t->mt->levels[t->minLod];
 	    OUT_BATCH_RELOC(lvl->faces[5].offset, t->mt->bo, lvl->faces[5].offset,
 			RADEON_GEM_DOMAIN_GTT|RADEON_GEM_DOMAIN_VRAM, 0, 0);
@@ -657,8 +659,6 @@ void radeonInitState( r100ContextPtr rmesa )
 
    for (i = 0; i < 6; i++)
       rmesa->hw.ucp[i].emit = vec_emit;
-
-   rmesa->last_ReallyEnabled = -1;
 
    /* Initial Harware state:
     */

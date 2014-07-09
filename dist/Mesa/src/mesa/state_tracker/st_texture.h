@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -56,7 +56,11 @@ struct st_texture_image
     */
    struct pipe_resource *pt;
 
-   struct pipe_transfer *transfer;
+   /* List of transfers, allocated on demand.
+    * transfer[layer] is a mapping for that layer.
+    */
+   struct pipe_transfer **transfer;
+   unsigned num_transfers;
 };
 
 
@@ -82,10 +86,13 @@ struct st_texture_object
     */
    struct pipe_resource *pt;
 
-   /* Default sampler view attached to this texture object. Created lazily
-    * on first binding.
+   /* Number of views in sampler_views array */
+   GLuint num_sampler_views;
+
+   /* Array of sampler views (one per context) attached to this texture
+    * object. Created lazily on first binding in context.
     */
-   struct pipe_sampler_view *sampler_view;
+   struct pipe_sampler_view **sampler_views;
 
    /* True if this texture comes from the window system. Such a texture
     * cannot be reallocated and the format can only be changed with a sampler
@@ -110,6 +117,12 @@ static INLINE struct st_texture_object *
 st_texture_object(struct gl_texture_object *obj)
 {
    return (struct st_texture_object *) obj;
+}
+
+static INLINE const struct st_texture_object *
+st_texture_object_const(const struct gl_texture_object *obj)
+{
+   return (const struct st_texture_object *) obj;
 }
 
 
@@ -186,11 +199,12 @@ extern GLubyte *
 st_texture_image_map(struct st_context *st, struct st_texture_image *stImage,
                      enum pipe_transfer_usage usage,
                      GLuint x, GLuint y, GLuint z,
-                     GLuint w, GLuint h, GLuint d);
+                     GLuint w, GLuint h, GLuint d,
+                     struct pipe_transfer **transfer);
 
 extern void
 st_texture_image_unmap(struct st_context *st,
-                       struct st_texture_image *stImage);
+                       struct st_texture_image *stImage, unsigned slice);
 
 
 /* Return pointers to each 2d slice within an image.  Indexed by depth
@@ -220,5 +234,19 @@ st_texture_image_copy(struct pipe_context *pipe,
 
 extern struct pipe_resource *
 st_create_color_map_texture(struct gl_context *ctx);
+
+extern struct pipe_sampler_view **
+st_texture_get_sampler_view(struct st_context *st,
+                            struct st_texture_object *stObj);
+
+extern void
+st_texture_release_sampler_view(struct st_context *st,
+                                struct st_texture_object *stObj);
+
+extern void
+st_texture_release_all_sampler_views(struct st_texture_object *stObj);
+
+void
+st_texture_free_sampler_views(struct st_texture_object *stObj);
 
 #endif

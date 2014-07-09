@@ -3,7 +3,7 @@
  * applications. Several early implementations included gl.h
  * in egl.h leading applications to include only egl.h
  *
- * $Revision: 1.5 $ on $Date: 2013/09/05 13:59:16 $
+ * $Revision: 1.6 $ on $Date: 2014/07/09 21:08:51 $
  */
 
 #ifndef __legacy_egl_h_

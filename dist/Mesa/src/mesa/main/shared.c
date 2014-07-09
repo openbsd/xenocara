@@ -38,6 +38,7 @@
 #include "dlist.h"
 #include "samplerobj.h"
 #include "set.h"
+#include "shaderapi.h"
 #include "shaderobj.h"
 #include "syncobj.h"
 
@@ -61,7 +62,7 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
    if (!shared)
       return NULL;
 
-   _glthread_INIT_MUTEX(shared->Mutex);
+   mtx_init(&shared->Mutex, mtx_plain);
 
    shared->DisplayList = _mesa_NewHashTable();
    shared->TexObjects = _mesa_NewHashTable();
@@ -112,7 +113,7 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
    assert(shared->DefaultTex[TEXTURE_1D_INDEX]->RefCount == 1);
 
    /* Mutex and timestamp for texobj state validation */
-   _glthread_INIT_MUTEX(shared->TexMutex);
+   mtx_init(&shared->TexMutex, mtx_plain);
    shared->TextureStateStamp = 0;
 
    shared->FrameBuffers = _mesa_NewHashTable();
@@ -185,10 +186,8 @@ delete_bufferobj_cb(GLuint id, void *data, void *userData)
 {
    struct gl_buffer_object *bufObj = (struct gl_buffer_object *) data;
    struct gl_context *ctx = (struct gl_context *) userData;
-   if (_mesa_bufferobj_mapped(bufObj)) {
-      ctx->Driver.UnmapBuffer(ctx, bufObj);
-      bufObj->Pointer = NULL;
-   }
+
+   _mesa_buffer_unmap_all_mappings(ctx, bufObj);
    _mesa_reference_buffer_object(ctx, &bufObj, NULL);
 }
 
@@ -218,7 +217,7 @@ delete_shader_cb(GLuint id, void *data, void *userData)
 {
    struct gl_context *ctx = (struct gl_context *) userData;
    struct gl_shader *sh = (struct gl_shader *) data;
-   if (sh->Type == GL_FRAGMENT_SHADER || sh->Type == GL_VERTEX_SHADER) {
+   if (_mesa_validate_shader_target(ctx, sh->Type)) {
       ctx->Driver.DeleteShader(ctx, sh);
    }
    else {
@@ -355,8 +354,8 @@ free_shared_state(struct gl_context *ctx, struct gl_shared_state *shared)
    _mesa_HashDeleteAll(shared->TexObjects, delete_texture_cb, ctx);
    _mesa_DeleteHashTable(shared->TexObjects);
 
-   _glthread_DESTROY_MUTEX(shared->Mutex);
-   _glthread_DESTROY_MUTEX(shared->TexMutex);
+   mtx_destroy(&shared->Mutex);
+   mtx_destroy(&shared->TexMutex);
 
    free(shared);
 }
@@ -379,11 +378,11 @@ _mesa_reference_shared_state(struct gl_context *ctx,
       struct gl_shared_state *old = *ptr;
       GLboolean delete;
 
-      _glthread_LOCK_MUTEX(old->Mutex);
+      mtx_lock(&old->Mutex);
       assert(old->RefCount >= 1);
       old->RefCount--;
       delete = (old->RefCount == 0);
-      _glthread_UNLOCK_MUTEX(old->Mutex);
+      mtx_unlock(&old->Mutex);
 
       if (delete) {
          free_shared_state(ctx, old);
@@ -394,9 +393,9 @@ _mesa_reference_shared_state(struct gl_context *ctx,
 
    if (state) {
       /* reference new state */
-      _glthread_LOCK_MUTEX(state->Mutex);
+      mtx_lock(&state->Mutex);
       state->RefCount++;
       *ptr = state;
-      _glthread_UNLOCK_MUTEX(state->Mutex);
+      mtx_unlock(&state->Mutex);
    }
 }

@@ -4,7 +4,6 @@
 
 #if defined R600_USE_LLVM || defined HAVE_OPENCL
 
-#include "r600_resource.h"
 #include "radeon_llvm.h"
 #include <llvm-c/Core.h>
 

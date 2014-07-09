@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -33,6 +33,7 @@
 #include "pipe/p_screen.h"
 
 #include "tr_dump.h"
+#include "tr_dump_defines.h"
 #include "tr_dump_state.h"
 #include "tr_public.h"
 #include "tr_screen.h"
@@ -40,7 +41,29 @@
 #include "tr_context.h"
 
 
+struct trace_query
+{
+   unsigned type;
 
+   struct pipe_query *query;
+};
+
+
+static INLINE struct trace_query *
+trace_query(struct pipe_query *query) {
+   return (struct trace_query *)query;
+}
+
+
+static INLINE struct pipe_query *
+trace_query_unwrap(struct pipe_query *query)
+{
+   if (query) {
+      return trace_query(query)->query;
+   } else {
+      return NULL;
+   }
+}
 
 
 static INLINE struct pipe_resource *
@@ -108,29 +131,46 @@ trace_context_create_query(struct pipe_context *_pipe,
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
-   struct pipe_query *result;
+   struct pipe_query *query;
 
    trace_dump_call_begin("pipe_context", "create_query");
 
    trace_dump_arg(ptr, pipe);
-   trace_dump_arg(uint, query_type);
+   trace_dump_arg(query_type, query_type);
 
-   result = pipe->create_query(pipe, query_type);
+   query = pipe->create_query(pipe, query_type);
 
-   trace_dump_ret(ptr, result);
+   trace_dump_ret(ptr, query);
 
    trace_dump_call_end();
 
-   return result;
+   /* Wrap query object. */
+   if (query) {
+      struct trace_query *tr_query = CALLOC_STRUCT(trace_query);
+      if (tr_query) {
+         tr_query->type = query_type;
+         tr_query->query = query;
+         query = (struct pipe_query *)tr_query;
+      } else {
+         pipe->destroy_query(pipe, query);
+         query = NULL;
+      }
+   }
+
+   return query;
 }
 
 
 static INLINE void
 trace_context_destroy_query(struct pipe_context *_pipe,
-                            struct pipe_query *query)
+                            struct pipe_query *_query)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
+   struct trace_query *tr_query = trace_query(_query);
+   struct pipe_query *query = tr_query->query;
+
+   FREE(tr_query);
 
    trace_dump_call_begin("pipe_context", "destroy_query");
 
@@ -150,6 +190,8 @@ trace_context_begin_query(struct pipe_context *_pipe,
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
 
+   query = trace_query_unwrap(query);
+
    trace_dump_call_begin("pipe_context", "begin_query");
 
    trace_dump_arg(ptr, pipe);
@@ -168,6 +210,8 @@ trace_context_end_query(struct pipe_context *_pipe,
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
 
+   query = trace_query_unwrap(query);
+
    trace_dump_call_begin("pipe_context", "end_query");
 
    trace_dump_arg(ptr, pipe);
@@ -181,29 +225,36 @@ trace_context_end_query(struct pipe_context *_pipe,
 
 static INLINE boolean
 trace_context_get_query_result(struct pipe_context *_pipe,
-                               struct pipe_query *query,
+                               struct pipe_query *_query,
                                boolean wait,
-                               union pipe_query_result *presult)
+                               union pipe_query_result *result)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
-   uint64_t result;
-   boolean _result;
+   struct trace_query *tr_query = trace_query(_query);
+   struct pipe_query *query = tr_query->query;
+   boolean ret;
 
    trace_dump_call_begin("pipe_context", "get_query_result");
 
    trace_dump_arg(ptr, pipe);
+   trace_dump_arg(ptr, query);
 
-   _result = pipe->get_query_result(pipe, query, wait, presult);
-   /* XXX this depends on the query type */
-   result = *((uint64_t*)presult);
+   ret = pipe->get_query_result(pipe, query, wait, result);
 
-   trace_dump_arg(uint, result);
-   trace_dump_ret(bool, _result);
+   trace_dump_arg_begin("result");
+   if (ret) {
+      trace_dump_query_result(tr_query->type, result);
+   } else {
+      trace_dump_null();
+   }
+   trace_dump_arg_end();
+
+   trace_dump_ret(bool, ret);
 
    trace_dump_call_end();
 
-   return _result;
+   return ret;
 }
 
 
@@ -302,69 +353,17 @@ trace_context_bind_sampler_states(struct pipe_context *_pipe,
    /* remove this when we have pipe->bind_sampler_states(..., start, ...) */
    assert(start == 0);
 
-   switch (shader) {
-   case PIPE_SHADER_VERTEX:
-      trace_dump_call_begin("pipe_context", "bind_vertex_sampler_states");
-      break;
-   case PIPE_SHADER_GEOMETRY:
-      trace_dump_call_begin("pipe_context", "bind_geometry_sampler_states");
-      break;
-   case PIPE_SHADER_FRAGMENT:
-      trace_dump_call_begin("pipe_context", "bind_fragment_sampler_states");
-      break;
-   default:
-      debug_error("Unexpected shader in trace_context_bind_sampler_states()");
-   }
+   trace_dump_call_begin("pipe_context", "bind_sampler_states");
 
    trace_dump_arg(ptr, pipe);
+   trace_dump_arg(uint, shader);
+   trace_dump_arg(uint, start);
    trace_dump_arg(uint, num_states);
    trace_dump_arg_array(ptr, states, num_states);
 
-   switch (shader) {
-   case PIPE_SHADER_VERTEX:
-      pipe->bind_vertex_sampler_states(pipe, num_states, states);
-      break;
-   case PIPE_SHADER_GEOMETRY:
-      pipe->bind_geometry_sampler_states(pipe, num_states, states);
-      break;
-   case PIPE_SHADER_FRAGMENT:
-      pipe->bind_fragment_sampler_states(pipe, num_states, states);
-      break;
-   default:
-      debug_error("Unexpected shader in trace_context_bind_sampler_states()");
-   }
+   pipe->bind_sampler_states(pipe, shader, start, num_states, states);
 
    trace_dump_call_end();
-}
-
-
-static INLINE void
-trace_context_bind_fragment_sampler_states(struct pipe_context *_pipe,
-                                           unsigned num,
-                                           void **states)
-{
-   trace_context_bind_sampler_states(_pipe, PIPE_SHADER_FRAGMENT,
-                                     0, num, states);
-}
-
-
-static INLINE void
-trace_context_bind_vertex_sampler_states(struct pipe_context *_pipe,
-                                         unsigned num,
-                                         void **states)
-{
-   trace_context_bind_sampler_states(_pipe, PIPE_SHADER_VERTEX,
-                                     0, num, states);
-}
-
-
-static INLINE void
-trace_context_bind_geometry_sampler_states(struct pipe_context *_pipe,
-                                         unsigned num,
-                                         void **states)
-{
-   trace_context_bind_sampler_states(_pipe, PIPE_SHADER_GEOMETRY,
-                                     0, num, states);
 }
 
 
@@ -943,7 +942,7 @@ trace_context_set_sampler_views(struct pipe_context *_pipe,
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct trace_sampler_view *tr_view;
    struct pipe_context *pipe = tr_ctx->pipe;
-   struct pipe_sampler_view *unwrapped_views[PIPE_MAX_SAMPLERS];
+   struct pipe_sampler_view *unwrapped_views[PIPE_MAX_SHADER_SAMPLER_VIEWS];
    unsigned i;
 
    /* remove this when we have pipe->set_sampler_views(..., start, ...) */
@@ -955,67 +954,17 @@ trace_context_set_sampler_views(struct pipe_context *_pipe,
    }
    views = unwrapped_views;
 
-   switch (shader) {
-   case PIPE_SHADER_VERTEX:
-      trace_dump_call_begin("pipe_context", "set_vertex_sampler_views");
-      break;
-   case PIPE_SHADER_GEOMETRY:
-      trace_dump_call_begin("pipe_context", "set_geometry_sampler_views");
-      break;
-   case PIPE_SHADER_FRAGMENT:
-      trace_dump_call_begin("pipe_context", "set_fragment_sampler_views");
-      break;
-   default:
-      debug_error("Unexpected shader in trace_context_set_sampler_views()");
-   }
+   trace_dump_call_begin("pipe_context", "set_sampler_views");
 
    trace_dump_arg(ptr, pipe);
-   /*trace_dump_arg(uint, shader);*/
+   trace_dump_arg(uint, shader);
+   trace_dump_arg(uint, start);
    trace_dump_arg(uint, num);
    trace_dump_arg_array(ptr, views, num);
 
-   switch (shader) {
-   case PIPE_SHADER_VERTEX:
-      pipe->set_vertex_sampler_views(pipe, num, views);
-      break;
-   case PIPE_SHADER_GEOMETRY:
-      pipe->set_geometry_sampler_views(pipe, num, views);
-      break;
-   case PIPE_SHADER_FRAGMENT:
-      pipe->set_fragment_sampler_views(pipe, num, views);
-      break;
-   default:
-      debug_error("Unexpected shader in trace_context_set_sampler_views()");
-   }
+   pipe->set_sampler_views(pipe, shader, start, num, views);
 
    trace_dump_call_end();
-}
-
-
-static INLINE void
-trace_context_set_fragment_sampler_views(struct pipe_context *_pipe,
-                                         unsigned num,
-                                         struct pipe_sampler_view **views)
-{
-   trace_context_set_sampler_views(_pipe, PIPE_SHADER_FRAGMENT, 0, num, views);
-}
-
-
-static INLINE void
-trace_context_set_vertex_sampler_views(struct pipe_context *_pipe,
-                                       unsigned num,
-                                       struct pipe_sampler_view **views)
-{
-   trace_context_set_sampler_views(_pipe, PIPE_SHADER_VERTEX, 0, num, views);
-}
-
-
-static INLINE void
-trace_context_set_geometry_sampler_views(struct pipe_context *_pipe,
-                                       unsigned num,
-                                       struct pipe_sampler_view **views)
-{
-   trace_context_set_sampler_views(_pipe, PIPE_SHADER_GEOMETRY, 0, num, views);
 }
 
 
@@ -1131,7 +1080,7 @@ static INLINE void
 trace_context_set_stream_output_targets(struct pipe_context *_pipe,
                                         unsigned num_targets,
                                         struct pipe_stream_output_target **tgs,
-                                        unsigned append_bitmask)
+                                        const unsigned *offsets)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
@@ -1141,9 +1090,9 @@ trace_context_set_stream_output_targets(struct pipe_context *_pipe,
    trace_dump_arg(ptr, pipe);
    trace_dump_arg(uint, num_targets);
    trace_dump_arg_array(ptr, tgs, num_targets);
-   trace_dump_arg(uint, append_bitmask);
+   trace_dump_arg_array(uint, offsets, num_targets);
 
-   pipe->set_stream_output_targets(pipe, num_targets, tgs, append_bitmask);
+   pipe->set_stream_output_targets(pipe, num_targets, tgs, offsets);
 
    trace_dump_call_end();
 }
@@ -1201,6 +1150,26 @@ trace_context_blit(struct pipe_context *_pipe,
    trace_dump_arg(blit_info, _info);
 
    pipe->blit(pipe, &info);
+
+   trace_dump_call_end();
+}
+
+
+static void
+trace_context_flush_resource(struct pipe_context *_pipe,
+                             struct pipe_resource *resource)
+{
+   struct trace_context *tr_ctx = trace_context(_pipe);
+   struct pipe_context *pipe = tr_ctx->pipe;
+
+   resource = trace_resource_unwrap(tr_ctx, resource);
+
+   trace_dump_call_begin("pipe_context", "flush_resource");
+
+   trace_dump_arg(ptr, pipe);
+   trace_dump_arg(ptr, resource);
+
+   pipe->flush_resource(pipe, resource);
 
    trace_dump_call_end();
 }
@@ -1490,6 +1459,8 @@ static void trace_context_render_condition(struct pipe_context *_context,
    struct trace_context *tr_context = trace_context(_context);
    struct pipe_context *context = tr_context->pipe;
 
+   query = trace_query_unwrap(query);
+
    trace_dump_call_begin("pipe_context", "render_condition");
 
    trace_dump_arg(ptr, context);
@@ -1515,6 +1486,21 @@ static void trace_context_texture_barrier(struct pipe_context *_context)
    trace_dump_call_end();
 
    context->texture_barrier(context);
+}
+
+
+static void trace_context_memory_barrier(struct pipe_context *_context,
+                                         unsigned flags)
+{
+   struct trace_context *tr_context = trace_context(_context);
+   struct pipe_context *context = tr_context->pipe;
+
+   trace_dump_call_begin("pipe_context", "memory_barrier");
+   trace_dump_arg(ptr, context);
+   trace_dump_arg(uint, flags);
+   trace_dump_call_end();
+
+   context->memory_barrier(context, flags);
 }
 
 
@@ -1559,9 +1545,7 @@ trace_context_create(struct trace_screen *tr_scr,
    TR_CTX_INIT(bind_blend_state);
    TR_CTX_INIT(delete_blend_state);
    TR_CTX_INIT(create_sampler_state);
-   TR_CTX_INIT(bind_fragment_sampler_states);
-   TR_CTX_INIT(bind_vertex_sampler_states);
-   TR_CTX_INIT(bind_geometry_sampler_states);
+   TR_CTX_INIT(bind_sampler_states);
    TR_CTX_INIT(delete_sampler_state);
    TR_CTX_INIT(create_rasterizer_state);
    TR_CTX_INIT(bind_rasterizer_state);
@@ -1590,9 +1574,7 @@ trace_context_create(struct trace_screen *tr_scr,
    TR_CTX_INIT(set_polygon_stipple);
    TR_CTX_INIT(set_scissor_states);
    TR_CTX_INIT(set_viewport_states);
-   TR_CTX_INIT(set_fragment_sampler_views);
-   TR_CTX_INIT(set_vertex_sampler_views);
-   TR_CTX_INIT(set_geometry_sampler_views);
+   TR_CTX_INIT(set_sampler_views);
    TR_CTX_INIT(create_sampler_view);
    TR_CTX_INIT(sampler_view_destroy);
    TR_CTX_INIT(create_surface);
@@ -1604,11 +1586,13 @@ trace_context_create(struct trace_screen *tr_scr,
    TR_CTX_INIT(set_stream_output_targets);
    TR_CTX_INIT(resource_copy_region);
    TR_CTX_INIT(blit);
+   TR_CTX_INIT(flush_resource);
    TR_CTX_INIT(clear);
    TR_CTX_INIT(clear_render_target);
    TR_CTX_INIT(clear_depth_stencil);
    TR_CTX_INIT(flush);
    TR_CTX_INIT(texture_barrier);
+   TR_CTX_INIT(memory_barrier);
 
    TR_CTX_INIT(transfer_map);
    TR_CTX_INIT(transfer_unmap);

@@ -43,7 +43,7 @@
 static struct gl_query_object *
 _mesa_new_query_object(struct gl_context *ctx, GLuint id)
 {
-   struct gl_query_object *q = MALLOC_STRUCT(gl_query_object);
+   struct gl_query_object *q = CALLOC_STRUCT(gl_query_object);
    (void) ctx;
    if (q) {
       q->Id = id;
@@ -126,6 +126,7 @@ _mesa_check_query(struct gl_context *ctx, struct gl_query_object *q)
 static void
 _mesa_delete_query(struct gl_context *ctx, struct gl_query_object *q)
 {
+   free(q->Label);
    free(q);
 }
 

@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * Copyright 2009-2010 Chia-I Wu <olvaffe@gmail.com>
  * Copyright 2010-2011 LunarG, Inc.
  * All Rights Reserved.
@@ -60,7 +60,7 @@ typedef struct _egl_module {
    _EGLDriver *Driver;
 } _EGLModule;
 
-static _EGL_DECLARE_MUTEX(_eglModuleMutex);
+static _EGLMutex _eglModuleMutex = _EGL_MUTEX_INITIALIZER;
 static _EGLArray *_eglModules;
 
 const struct {
@@ -72,9 +72,6 @@ const struct {
 #endif
 #ifdef _EGL_BUILT_IN_DRIVER_DRI2
    { "egl_dri2", _eglBuiltInDriverDRI2 },
-#endif
-#ifdef _EGL_BUILT_IN_DRIVER_GLX
-   { "egl_glx", _eglBuiltInDriverGLX },
 #endif
    { NULL, NULL }
 };

@@ -29,6 +29,7 @@
 #include "main/macros.h"
 #include "main/format_unpack.h"
 #include "main/format_pack.h"
+#include "main/condrender.h"
 #include "s_context.h"
 
 
@@ -166,8 +167,8 @@ blit_nearest(struct gl_context *ctx,
        * using the core helpers for pack/unpack, we avoid needing to handle
        * masking for things like DEPTH copies of Z24S8.
        */
-      if (readRb->Format == MESA_FORMAT_Z32_FLOAT ||
-	  readRb->Format == MESA_FORMAT_Z32_FLOAT_X24S8) {
+      if (readRb->Format == MESA_FORMAT_Z_FLOAT32 ||
+	  readRb->Format == MESA_FORMAT_Z32_FLOAT_S8X24_UINT) {
 	 mode = UNPACK_Z_FLOAT;
       } else {
 	 mode = UNPACK_Z_INT;
@@ -536,7 +537,7 @@ blit_linear(struct gl_context *ctx,
    GLint srcBufferY0 = -1, srcBufferY1 = -1;
    GLvoid *dstBuffer;
 
-   gl_format readFormat = _mesa_get_srgb_format_linear(readRb->Format);
+   mesa_format readFormat = _mesa_get_srgb_format_linear(readRb->Format);
    GLuint bpp = _mesa_get_format_bytes(readFormat);
 
    GLenum pixelType;
@@ -571,7 +572,7 @@ blit_linear(struct gl_context *ctx,
       GLint idx = drawFb->_ColorDrawBufferIndexes[i];
       struct gl_renderbuffer_attachment *drawAtt;
       struct gl_renderbuffer *drawRb;
-      gl_format drawFormat;
+      mesa_format drawFormat;
 
       if (idx == -1)
          continue;
@@ -747,6 +748,13 @@ _swrast_BlitFramebuffer(struct gl_context *ctx,
       GL_STENCIL,
    };
    GLint i;
+
+   /* Page 679 of OpenGL 4.4 spec says:
+    *    "Added BlitFramebuffer to commands affected by conditional rendering in
+    *     section 10.10 (Bug 9562)."
+    */
+   if (!_mesa_check_conditional_render(ctx))
+      return; /* Do not blit */
 
    if (!_mesa_clip_blit(ctx, &srcX0, &srcY0, &srcX1, &srcY1,
                         &dstX0, &dstY0, &dstX1, &dstY1)) {

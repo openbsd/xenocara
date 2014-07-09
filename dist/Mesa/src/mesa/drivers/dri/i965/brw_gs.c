@@ -1,8 +1,8 @@
 /*
  Copyright (C) Intel Corp.  2006.  All Rights Reserved.
- Intel funded Tungsten Graphics (http://www.tungstengraphics.com) to
+ Intel funded Tungsten Graphics to
  develop this 3D driver.
- 
+
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
- 
+
  The above copyright notice and this permission notice (including the
  next paragraph) shall be included in all copies or substantial
  portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -22,13 +22,13 @@
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  **********************************************************************/
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
-      
+
 #include "main/glheader.h"
 #include "main/macros.h"
 #include "main/enums.h"
@@ -45,22 +45,22 @@
 
 #include "glsl/ralloc.h"
 
-static void compile_gs_prog( struct brw_context *brw,
-			     struct brw_gs_prog_key *key )
+static void compile_ff_gs_prog(struct brw_context *brw,
+                               struct brw_ff_gs_prog_key *key)
 {
-   struct brw_gs_compile c;
+   struct brw_ff_gs_compile c;
    const GLuint *program;
    void *mem_ctx;
    GLuint program_size;
 
    memset(&c, 0, sizeof(c));
-   
+
    c.key = *key;
    c.vue_map = brw->vs.prog_data->base.vue_map;
    c.nr_regs = (c.vue_map.num_slots + 1)/2;
 
    mem_ctx = ralloc_context(NULL);
-   
+
    /* Begin the compilation:
     */
    brw_init_compile(brw, &c.func, mem_ctx);
@@ -68,7 +68,7 @@ static void compile_gs_prog( struct brw_context *brw,
    c.func.single_program_flow = 1;
 
    /* For some reason the thread is spawned with only 4 channels
-    * unmasked.  
+    * unmasked.
     */
    brw_set_mask_control(&c.func, BRW_MASK_DISABLE);
 
@@ -114,13 +114,13 @@ static void compile_gs_prog( struct brw_context *brw,
        */
       switch (key->primitive) {
       case _3DPRIM_QUADLIST:
-	 brw_gs_quads( &c, key );
+	 brw_ff_gs_quads( &c, key );
 	 break;
       case _3DPRIM_QUADSTRIP:
-	 brw_gs_quad_strip( &c, key );
+	 brw_ff_gs_quad_strip( &c, key );
 	 break;
       case _3DPRIM_LINELOOP:
-	 brw_gs_lines( &c );
+	 brw_ff_gs_lines( &c );
 	 break;
       default:
 	 ralloc_free(mem_ctx);
@@ -135,23 +135,23 @@ static void compile_gs_prog( struct brw_context *brw,
    if (unlikely(INTEL_DEBUG & DEBUG_GS)) {
       int i;
 
-      printf("gs:\n");
+      fprintf(stderr, "gs:\n");
       for (i = 0; i < program_size / sizeof(struct brw_instruction); i++)
-	 brw_disasm(stdout, &((struct brw_instruction *)program)[i],
+	 brw_disasm(stderr, &((struct brw_instruction *)program)[i],
 		    brw->gen);
-      printf("\n");
+      fprintf(stderr, "\n");
     }
 
-   brw_upload_cache(&brw->cache, BRW_GS_PROG,
+   brw_upload_cache(&brw->cache, BRW_FF_GS_PROG,
 		    &c.key, sizeof(c.key),
 		    program, program_size,
 		    &c.prog_data, sizeof(c.prog_data),
-		    &brw->gs.prog_offset, &brw->gs.prog_data);
+		    &brw->ff_gs.prog_offset, &brw->ff_gs.prog_data);
    ralloc_free(mem_ctx);
 }
 
-static void populate_key( struct brw_context *brw,
-			  struct brw_gs_prog_key *key )
+static void populate_key(struct brw_context *brw,
+                         struct brw_ff_gs_prog_key *key)
 {
    static const unsigned swizzle_for_offset[4] = {
       BRW_SWIZZLE4(0, 1, 2, 3),
@@ -187,7 +187,7 @@ static void populate_key( struct brw_context *brw,
       /* BRW_NEW_TRANSFORM_FEEDBACK */
       if (_mesa_is_xfb_active_and_unpaused(ctx)) {
          const struct gl_shader_program *shaderprog =
-            ctx->Shader.CurrentVertexProgram;
+            ctx->_Shader->CurrentProgram[MESA_SHADER_VERTEX];
          const struct gl_transform_feedback_info *linked_xfb_info =
             &shaderprog->LinkedTransformFeedback;
          int i;
@@ -225,34 +225,34 @@ static void populate_key( struct brw_context *brw,
 /* Calculate interpolants for triangle and line rasterization.
  */
 static void
-brw_upload_gs_prog(struct brw_context *brw)
+brw_upload_ff_gs_prog(struct brw_context *brw)
 {
-   struct brw_gs_prog_key key;
+   struct brw_ff_gs_prog_key key;
    /* Populate the key:
     */
    populate_key(brw, &key);
 
-   if (brw->gs.prog_active != key.need_gs_prog) {
-      brw->state.dirty.cache |= CACHE_NEW_GS_PROG;
-      brw->gs.prog_active = key.need_gs_prog;
+   if (brw->ff_gs.prog_active != key.need_gs_prog) {
+      brw->state.dirty.cache |= CACHE_NEW_FF_GS_PROG;
+      brw->ff_gs.prog_active = key.need_gs_prog;
    }
 
-   if (brw->gs.prog_active) {
-      if (!brw_search_cache(&brw->cache, BRW_GS_PROG,
+   if (brw->ff_gs.prog_active) {
+      if (!brw_search_cache(&brw->cache, BRW_FF_GS_PROG,
 			    &key, sizeof(key),
-			    &brw->gs.prog_offset, &brw->gs.prog_data)) {
-	 compile_gs_prog( brw, &key );
+			    &brw->ff_gs.prog_offset, &brw->ff_gs.prog_data)) {
+	 compile_ff_gs_prog( brw, &key );
       }
    }
 }
 
 
-const struct brw_tracked_state brw_gs_prog = {
+const struct brw_tracked_state brw_ff_gs_prog = {
    .dirty = {
       .mesa  = (_NEW_LIGHT),
       .brw   = (BRW_NEW_PRIMITIVE |
                 BRW_NEW_TRANSFORM_FEEDBACK),
       .cache = CACHE_NEW_VS_PROG
    },
-   .emit = brw_upload_gs_prog
+   .emit = brw_upload_ff_gs_prog
 };

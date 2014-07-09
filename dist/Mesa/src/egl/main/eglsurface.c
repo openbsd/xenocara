@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * Copyright 2009-2010 Chia-I Wu <olvaffe@gmail.com>
  * Copyright 2010 LunarG, Inc.
  * All Rights Reserved.
@@ -529,6 +529,17 @@ _eglBindTexImage(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSurface *surface,
    surface->BoundToTexture = EGL_TRUE;
 
    return EGL_TRUE;
+}
+
+EGLBoolean
+_eglReleaseTexImage(_EGLDriver *drv, _EGLDisplay *disp, _EGLSurface *surf,
+                    EGLint buffer)
+{
+   /* TODO: do basic error checking and return success/fail.
+    * Drivers must implement the real stuff.
+    */
+
+  return EGL_TRUE;
 }
 
 

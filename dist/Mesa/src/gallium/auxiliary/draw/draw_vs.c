@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -27,7 +27,7 @@
 
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   *   Brian Paul
   */
 
@@ -149,9 +149,11 @@ draw_vs_init( struct draw_context *draw )
 {
    draw->dump_vs = debug_get_option_gallium_dump_vs();
 
-   draw->vs.tgsi.machine = tgsi_exec_machine_create();
-   if (!draw->vs.tgsi.machine)
-      return FALSE;
+   if (!draw->llvm) {
+      draw->vs.tgsi.machine = tgsi_exec_machine_create();
+      if (!draw->vs.tgsi.machine)
+         return FALSE;
+   }
 
    draw->vs.emit_cache = translate_cache_create();
    if (!draw->vs.emit_cache) 
@@ -173,7 +175,8 @@ draw_vs_destroy( struct draw_context *draw )
    if (draw->vs.emit_cache)
       translate_cache_destroy(draw->vs.emit_cache);
 
-   tgsi_exec_machine_destroy(draw->vs.tgsi.machine);
+   if (!draw->llvm)
+      tgsi_exec_machine_destroy(draw->vs.tgsi.machine);
 }
 
 

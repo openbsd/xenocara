@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -40,7 +40,7 @@
  * - echo | gcc -dM -E - | sort
  * - http://msdn.microsoft.com/en-us/library/b0084kay.aspx
  * 
- * @author José Fonseca <jrfonseca@tungstengraphics.com>
+ * @author José Fonseca <jfonseca@vmware.com>
  */
 
 #ifndef P_CONFIG_H_
@@ -58,6 +58,10 @@
 
 /*
  * Meaning of _MSC_VER value:
+ * - 1800: Visual Studio 2013
+ * - 1700: Visual Studio 2012
+ * - 1600: Visual Studio 2010
+ * - 1500: Visual Studio 2008
  * - 1400: Visual C++ 2005
  * - 1310: Visual C++ .NET 2003
  * - 1300: Visual C++ .NET 2002
@@ -196,7 +200,7 @@
 #define PIPE_OS_ANDROID
 #endif
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #define PIPE_OS_FREEBSD
 #define PIPE_OS_BSD
 #define PIPE_OS_UNIX

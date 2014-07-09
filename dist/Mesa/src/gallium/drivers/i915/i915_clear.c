@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -66,10 +66,10 @@ i915_clear_emit(struct pipe_context *pipe, unsigned buffers,
 
       util_pack_color(color->f, cbuf->format, &u_color);
       if (util_format_get_blocksize(cbuf_tex->b.b.format) == 4) {
-         clear_color = u_color.ui;
+         clear_color = u_color.ui[0];
          color_clear_bbp = 32;
       } else {
-         clear_color = (u_color.ui & 0xffff) | (u_color.ui << 16);
+         clear_color = (u_color.ui[0] & 0xffff) | (u_color.ui[0] << 16);
          color_clear_bbp = 16;
       }
 
@@ -78,7 +78,7 @@ i915_clear_emit(struct pipe_context *pipe, unsigned buffers,
          util_pack_color(color->f, cbuf->format, &u_color);
       else
          util_pack_color(color->f, PIPE_FORMAT_B8G8R8A8_UNORM, &u_color);
-      clear_color8888 = u_color.ui;
+      clear_color8888 = u_color.ui[0];
    } else
       clear_color = clear_color8888 = 0;
 

@@ -168,6 +168,8 @@ _mesa_align_calloc(size_t bytes, unsigned long alignment)
  * \param ptr pointer to the memory to be freed.
  * The actual address to free is stored in the word immediately before the
  * address the client sees.
+ * Note that it is legal to pass NULL pointer to this function and will be
+ * handled accordingly.
  */
 void
 _mesa_align_free(void *ptr)
@@ -177,9 +179,11 @@ _mesa_align_free(void *ptr)
 #elif defined(_WIN32) && defined(_MSC_VER)
    _aligned_free(ptr);
 #else
-   void **cubbyHole = (void **) ((char *) ptr - sizeof(void *));
-   void *realAddr = *cubbyHole;
-   free(realAddr);
+   if (ptr) {
+      void **cubbyHole = (void **) ((char *) ptr - sizeof(void *));
+      void *realAddr = *cubbyHole;
+      free(realAddr);
+   }
 #endif /* defined(HAVE_POSIX_MEMALIGN) */
 }
 
@@ -199,8 +203,8 @@ _mesa_align_realloc(void *oldBuffer, size_t oldSize, size_t newSize,
    if (newBuf && oldBuffer && copySize > 0) {
       memcpy(newBuf, oldBuffer, copySize);
    }
-   if (oldBuffer)
-      _mesa_align_free(oldBuffer);
+
+   _mesa_align_free(oldBuffer);
    return newBuf;
 #endif
 }
@@ -566,7 +570,8 @@ float
 _mesa_strtof( const char *s, char **end )
 {
 #if defined(_GNU_SOURCE) && !defined(__CYGWIN__) && !defined(__FreeBSD__) && \
-   !defined(ANDROID) && !defined(__HAIKU__) && !defined(__UCLIBC__)
+   !defined(ANDROID) && !defined(__HAIKU__) && !defined(__UCLIBC__) && \
+   !defined(__NetBSD__)
    static locale_t loc = NULL;
    if (!loc) {
       loc = newlocale(LC_CTYPE_MASK, "C", NULL);

@@ -35,7 +35,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /*
  * Authors:
  *   Gareth Hughes <gareth@valinux.com>
- *   Keith Whitwell <keith@tungstengraphics.com>
+ *   Keith Whitwell <keithw@vmware.com>
  *   Kevin E. Martin <martin@valinux.com>
  *   Nicolai Haehnle <prefect_@gmx.net>
  */
@@ -416,7 +416,6 @@ struct r100_context {
 	GLuint NeedTexMatrix;
 	GLuint TexMatColSwap;
 	GLmatrix tmpmat[RADEON_MAX_TEXTURE_UNITS];
-	GLuint last_ReallyEnabled;
 
 	/* radeon_tcl.c
 	 */
@@ -458,6 +457,7 @@ extern GLboolean r100CreateContext( gl_api api,
 				    unsigned major_version,
 				    unsigned minor_version,
 				    uint32_t flags,
+                                    bool notify_reset,
 				    unsigned *error,
 				    void *sharedContextPrivate);
 

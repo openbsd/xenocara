@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -51,7 +51,7 @@
 union util_color {
    ubyte ub;
    ushort us;
-   uint ui;
+   uint ui[4];
    ushort h[4]; /* half float */
    float f[4];
    double d[4];
@@ -67,32 +67,32 @@ util_pack_color_ub(ubyte r, ubyte g, ubyte b, ubyte a,
    switch (format) {
    case PIPE_FORMAT_ABGR8888_UNORM:
       {
-         uc->ui = (r << 24) | (g << 16) | (b << 8) | a;
+         uc->ui[0] = (r << 24) | (g << 16) | (b << 8) | a;
       }
       return;
    case PIPE_FORMAT_XBGR8888_UNORM:
       {
-         uc->ui = (r << 24) | (g << 16) | (b << 8) | 0xff;
+         uc->ui[0] = (r << 24) | (g << 16) | (b << 8) | 0xff;
       }
       return;
    case PIPE_FORMAT_BGRA8888_UNORM:
       {
-         uc->ui = (a << 24) | (r << 16) | (g << 8) | b;
+         uc->ui[0] = (a << 24) | (r << 16) | (g << 8) | b;
       }
       return;
    case PIPE_FORMAT_BGRX8888_UNORM:
       {
-         uc->ui = (0xff << 24) | (r << 16) | (g << 8) | b;
+         uc->ui[0] = (0xff << 24) | (r << 16) | (g << 8) | b;
       }
       return;
    case PIPE_FORMAT_ARGB8888_UNORM:
       {
-         uc->ui = (b << 24) | (g << 16) | (r << 8) | a;
+         uc->ui[0] = (b << 24) | (g << 16) | (r << 8) | a;
       }
       return;
    case PIPE_FORMAT_XRGB8888_UNORM:
       {
-         uc->ui = (b << 24) | (g << 16) | (r << 8) | 0xff;
+         uc->ui[0] = (b << 24) | (g << 16) | (r << 8) | 0xff;
       }
       return;
    case PIPE_FORMAT_B5G6R5_UNORM:
@@ -168,7 +168,7 @@ util_unpack_color_ub(enum pipe_format format, union util_color *uc,
    switch (format) {
    case PIPE_FORMAT_ABGR8888_UNORM:
       {
-         uint p = uc->ui;
+         uint p = uc->ui[0];
          *r = (ubyte) ((p >> 24) & 0xff);
          *g = (ubyte) ((p >> 16) & 0xff);
          *b = (ubyte) ((p >>  8) & 0xff);
@@ -177,7 +177,7 @@ util_unpack_color_ub(enum pipe_format format, union util_color *uc,
       return;
    case PIPE_FORMAT_XBGR8888_UNORM:
       {
-         uint p = uc->ui;
+         uint p = uc->ui[0];
          *r = (ubyte) ((p >> 24) & 0xff);
          *g = (ubyte) ((p >> 16) & 0xff);
          *b = (ubyte) ((p >>  8) & 0xff);
@@ -186,7 +186,7 @@ util_unpack_color_ub(enum pipe_format format, union util_color *uc,
       return;
    case PIPE_FORMAT_BGRA8888_UNORM:
       {
-         uint p = uc->ui;
+         uint p = uc->ui[0];
          *r = (ubyte) ((p >> 16) & 0xff);
          *g = (ubyte) ((p >>  8) & 0xff);
          *b = (ubyte) ((p >>  0) & 0xff);
@@ -195,7 +195,7 @@ util_unpack_color_ub(enum pipe_format format, union util_color *uc,
       return;
    case PIPE_FORMAT_BGRX8888_UNORM:
       {
-         uint p = uc->ui;
+         uint p = uc->ui[0];
          *r = (ubyte) ((p >> 16) & 0xff);
          *g = (ubyte) ((p >>  8) & 0xff);
          *b = (ubyte) ((p >>  0) & 0xff);
@@ -204,7 +204,7 @@ util_unpack_color_ub(enum pipe_format format, union util_color *uc,
       return;
    case PIPE_FORMAT_ARGB8888_UNORM:
       {
-         uint p = uc->ui;
+         uint p = uc->ui[0];
          *r = (ubyte) ((p >>  8) & 0xff);
          *g = (ubyte) ((p >> 16) & 0xff);
          *b = (ubyte) ((p >> 24) & 0xff);
@@ -213,7 +213,7 @@ util_unpack_color_ub(enum pipe_format format, union util_color *uc,
       return;
    case PIPE_FORMAT_XRGB8888_UNORM:
       {
-         uint p = uc->ui;
+         uint p = uc->ui[0];
          *r = (ubyte) ((p >>  8) & 0xff);
          *g = (ubyte) ((p >> 16) & 0xff);
          *b = (ubyte) ((p >> 24) & 0xff);
@@ -352,32 +352,32 @@ util_pack_color(const float rgba[4], enum pipe_format format, union util_color *
    switch (format) {
    case PIPE_FORMAT_ABGR8888_UNORM:
       {
-         uc->ui = (r << 24) | (g << 16) | (b << 8) | a;
+         uc->ui[0] = (r << 24) | (g << 16) | (b << 8) | a;
       }
       return;
    case PIPE_FORMAT_XBGR8888_UNORM:
       {
-         uc->ui = (r << 24) | (g << 16) | (b << 8) | 0xff;
+         uc->ui[0] = (r << 24) | (g << 16) | (b << 8) | 0xff;
       }
       return;
    case PIPE_FORMAT_BGRA8888_UNORM:
       {
-         uc->ui = (a << 24) | (r << 16) | (g << 8) | b;
+         uc->ui[0] = (a << 24) | (r << 16) | (g << 8) | b;
       }
       return;
    case PIPE_FORMAT_BGRX8888_UNORM:
       {
-         uc->ui = (0xff << 24) | (r << 16) | (g << 8) | b;
+         uc->ui[0] = (0xff << 24) | (r << 16) | (g << 8) | b;
       }
       return;
    case PIPE_FORMAT_ARGB8888_UNORM:
       {
-         uc->ui = (b << 24) | (g << 16) | (r << 8) | a;
+         uc->ui[0] = (b << 24) | (g << 16) | (r << 8) | a;
       }
       return;
    case PIPE_FORMAT_XRGB8888_UNORM:
       {
-         uc->ui = (b << 24) | (g << 16) | (r << 8) | 0xff;
+         uc->ui[0] = (b << 24) | (g << 16) | (r << 8) | 0xff;
       }
       return;
    case PIPE_FORMAT_B5G6R5_UNORM:
@@ -528,12 +528,12 @@ util_pack_z(enum pipe_format format, double z)
    case PIPE_FORMAT_Z16_UNORM:
       if (z == 1.0)
          return 0xffff;
-      return (uint32_t) (z * 0xffff);
+      return (uint32_t) lrint(z * 0xffff);
    case PIPE_FORMAT_Z32_UNORM:
       /* special-case to avoid overflow */
       if (z == 1.0)
          return 0xffffffff;
-      return (uint32_t) (z * 0xffffffff);
+      return (uint32_t) llrint(z * 0xffffffff);
    case PIPE_FORMAT_Z32_FLOAT:
       fui.f = (float)z;
       return fui.ui;
@@ -541,12 +541,12 @@ util_pack_z(enum pipe_format format, double z)
    case PIPE_FORMAT_Z24X8_UNORM:
       if (z == 1.0)
          return 0xffffff;
-      return (uint32_t) (z * 0xffffff);
+      return (uint32_t) lrint(z * 0xffffff);
    case PIPE_FORMAT_S8_UINT_Z24_UNORM:
    case PIPE_FORMAT_X8Z24_UNORM:
       if (z == 1.0)
          return 0xffffff00;
-      return ((uint32_t) (z * 0xffffff)) << 8;
+      return ((uint32_t) lrint(z * 0xffffff)) << 8;
    case PIPE_FORMAT_S8_UINT:
       /* this case can get it via util_pack_z_stencil() */
       return 0;

@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -37,6 +37,7 @@
 #include "lp_state_fs.h"
 #include "lp_state_setup.h"
 #include "lp_context.h"
+#include "draw/draw_context.h"
 
 #define NUM_CHANNELS 4
 
@@ -45,6 +46,7 @@ struct lp_line_info {
    float dx;
    float dy;
    float oneoverarea;
+   boolean frontfacing;
 
    const float (*v1)[4];
    const float (*v2)[4];
@@ -214,7 +216,8 @@ static void setup_line_coefficients( struct lp_setup_context *setup,
       case LP_INTERP_FACING:
          for (i = 0; i < NUM_CHANNELS; i++)
             if (usage_mask & (1 << i))
-               constant_coef(setup, info, slot+1, 1.0, i);
+               constant_coef(setup, info, slot+1,
+                             info->frontfacing ? 1.0f : -1.0f, i);
          break;
 
       default:
@@ -291,7 +294,7 @@ try_setup_line( struct lp_setup_context *setup,
    int y[4];
    int i;
    int nr_planes = 4;
-   unsigned scissor_index = 0;
+   unsigned viewport_index = 0;
    unsigned layer = 0;
    
    /* linewidth should be interpreted as integer */
@@ -321,7 +324,7 @@ try_setup_line( struct lp_setup_context *setup,
       nr_planes = 8;
       if (setup->viewport_index_slot > 0) {
          unsigned *udata = (unsigned*)v1[setup->viewport_index_slot];
-         scissor_index = lp_clamp_scissor_idx(*udata);
+         viewport_index = lp_clamp_viewport_idx(*udata);
       }
    }
    else {
@@ -550,7 +553,7 @@ try_setup_line( struct lp_setup_context *setup,
        * up needing a bottom-left fill convention, which requires
        * slightly different rounding.
        */
-      int adj = (setup->pixel_offset != 0) ? 1 : 0;
+      int adj = (setup->bottom_edge_rule != 0) ? 1 : 0;
 
       bbox.x0 = (MIN4(x[0], x[1], x[2], x[3]) + (FIXED_ONE-1)) >> FIXED_ORDER;
       bbox.x1 = (MAX4(x[0], x[1], x[2], x[3]) + (FIXED_ONE-1)) >> FIXED_ORDER;
@@ -570,7 +573,7 @@ try_setup_line( struct lp_setup_context *setup,
       return TRUE;
    }
 
-   if (!u_rect_test_intersection(&setup->draw_regions[scissor_index], &bbox)) {
+   if (!u_rect_test_intersection(&setup->draw_regions[viewport_index], &bbox)) {
       if (0) debug_printf("offscreen\n");
       LP_COUNT(nr_culled_tris);
       return TRUE;
@@ -597,7 +600,8 @@ try_setup_line( struct lp_setup_context *setup,
 
    LP_COUNT(nr_tris);
 
-   if (lp_context->active_statistics_queries) {
+   if (lp_context->active_statistics_queries &&
+       !llvmpipe_rasterization_disabled(lp_context)) {
       lp_context->pipeline_statistics.c_primitives++;
    }
 
@@ -613,25 +617,32 @@ try_setup_line( struct lp_setup_context *setup,
    plane[2].dcdx = y[2] - y[3];
    plane[3].dcdx = y[3] - y[0];
 
+   if (draw_will_inject_frontface(lp_context->draw) &&
+       setup->face_slot > 0) {
+      line->inputs.frontfacing = v1[setup->face_slot][0];
+   } else {
+      line->inputs.frontfacing = TRUE;
+   }
 
    /* Setup parameter interpolants:
     */
    info.a0 = GET_A0(&line->inputs);
    info.dadx = GET_DADX(&line->inputs);
    info.dady = GET_DADY(&line->inputs);
+   info.frontfacing = line->inputs.frontfacing;
    setup_line_coefficients(setup, &info); 
 
-   line->inputs.frontfacing = TRUE;
    line->inputs.disable = FALSE;
    line->inputs.opaque = FALSE;
    line->inputs.layer = layer;
+   line->inputs.viewport_index = viewport_index;
 
    for (i = 0; i < 4; i++) {
 
       /* half-edge constants, will be interated over the whole render
        * target.
        */
-      plane[i].c = plane[i].dcdx * x[i] - plane[i].dcdy * y[i];
+      plane[i].c = IMUL64(plane[i].dcdx, x[i]) - IMUL64(plane[i].dcdy, y[i]);
 
       
       /* correct for top-left vs. bottom-left fill convention.  
@@ -687,7 +698,7 @@ try_setup_line( struct lp_setup_context *setup,
     */
    if (nr_planes == 8) {
       const struct u_rect *scissor =
-         &setup->scissors[scissor_index];
+         &setup->scissors[viewport_index];
 
       plane[4].dcdx = -1;
       plane[4].dcdy = 0;
@@ -710,7 +721,7 @@ try_setup_line( struct lp_setup_context *setup,
       plane[7].eo = 0;
    }
 
-   return lp_setup_bin_triangle(setup, line, &bbox, nr_planes, scissor_index);
+   return lp_setup_bin_triangle(setup, line, &bbox, nr_planes, viewport_index);
 }
 
 

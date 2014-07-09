@@ -38,19 +38,19 @@ static uint32_t
 get_tex_format(struct gl_texture_image *ti)
 {
 	switch (ti->TexFormat) {
-	case MESA_FORMAT_A8:
-	case MESA_FORMAT_L8:
-	case MESA_FORMAT_I8:
+	case MESA_FORMAT_A_UNORM8:
+	case MESA_FORMAT_L_UNORM8:
+	case MESA_FORMAT_I_UNORM8:
 		return NV04_TEXTURED_TRIANGLE_FORMAT_COLOR_Y8;
-	case MESA_FORMAT_ARGB1555:
+	case MESA_FORMAT_B5G5R5A1_UNORM:
 		return NV04_TEXTURED_TRIANGLE_FORMAT_COLOR_A1R5G5B5;
-	case MESA_FORMAT_ARGB4444:
+	case MESA_FORMAT_B4G4R4A4_UNORM:
 		return NV04_TEXTURED_TRIANGLE_FORMAT_COLOR_A4R4G4B4;
-	case MESA_FORMAT_RGB565:
+	case MESA_FORMAT_B5G6R5_UNORM:
 		return NV04_TEXTURED_TRIANGLE_FORMAT_COLOR_R5G6B5;
-	case MESA_FORMAT_ARGB8888:
+	case MESA_FORMAT_B8G8R8A8_UNORM:
 		return NV04_TEXTURED_TRIANGLE_FORMAT_COLOR_A8R8G8B8;
-	case MESA_FORMAT_XRGB8888:
+	case MESA_FORMAT_B8G8R8X8_UNORM:
 		return NV04_TEXTURED_TRIANGLE_FORMAT_COLOR_X8R8G8B8;
 	default:
 		assert(0);
@@ -65,7 +65,7 @@ nv04_emit_tex_obj(struct gl_context *ctx, int emit)
 	struct nouveau_surface *s;
 	uint32_t format = 0xa0, filter = 0x1010;
 
-	if (ctx->Texture.Unit[i]._ReallyEnabled) {
+	if (ctx->Texture.Unit[i]._Current) {
 		struct gl_texture_object *t = ctx->Texture.Unit[i]._Current;
 		struct gl_texture_image *ti = t->Image[0][t->BaseLevel];
 		const struct gl_sampler_object *sa = _mesa_get_samplerobj(ctx, i);

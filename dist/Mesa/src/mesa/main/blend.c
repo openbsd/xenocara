@@ -854,7 +854,7 @@ _mesa_update_clamp_vertex_color(struct gl_context *ctx)
 }
 
 /**
- * Returns an appropriate gl_format for color rendering based on the
+ * Returns an appropriate mesa_format for color rendering based on the
  * GL_FRAMEBUFFER_SRGB state.
  *
  * Some drivers implement GL_FRAMEBUFFER_SRGB using a flag on the blend state
@@ -862,8 +862,8 @@ _mesa_update_clamp_vertex_color(struct gl_context *ctx)
  * overriding the format of the surface.  This is a helper for doing the
  * surface format override variant.
  */
-gl_format
-_mesa_get_render_format(const struct gl_context *ctx, gl_format format)
+mesa_format
+_mesa_get_render_format(const struct gl_context *ctx, mesa_format format)
 {
    if (ctx->Color.sRGBEnabled)
       return format;
@@ -911,7 +911,9 @@ void _mesa_init_color( struct gl_context * ctx )
    ctx->Color.LogicOp = GL_COPY;
    ctx->Color.DitherFlag = GL_TRUE;
 
-   if (ctx->Visual.doubleBufferMode) {
+   /* GL_FRONT is not possible on GLES. Instead GL_BACK will render to either
+    * the front or the back buffer depending on the config */
+   if (ctx->Visual.doubleBufferMode || _mesa_is_gles(ctx)) {
       ctx->Color.DrawBuffer[0] = GL_BACK;
    }
    else {

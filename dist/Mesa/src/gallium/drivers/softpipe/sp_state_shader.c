@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -347,6 +347,8 @@ softpipe_set_constant_buffer(struct pipe_context *pipe,
    unsigned size;
    const void *data;
 
+   assert(shader < PIPE_SHADER_TYPES);
+
    if (cb && cb->user_buffer) {
       constants = softpipe_user_buffer_create(pipe->screen,
                                               (void *) cb->user_buffer,
@@ -354,10 +356,10 @@ softpipe_set_constant_buffer(struct pipe_context *pipe,
                                               PIPE_BIND_CONSTANT_BUFFER);
    }
 
-   size = constants ? constants->width0 : 0;
-   data = constants ? softpipe_resource(constants)->data : NULL;
-
-   assert(shader < PIPE_SHADER_TYPES);
+   size = cb ? cb->buffer_size : 0;
+   data = constants ? softpipe_resource_data(constants) : NULL;
+   if (data)
+      data = (const char *) data + cb->buffer_offset;
 
    draw_flush(softpipe->draw);
 

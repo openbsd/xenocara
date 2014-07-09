@@ -52,10 +52,10 @@ nouveau_get_configs(void)
 	const uint8_t stencil_bits[] = { 0,  0,  0,  8 };
 	const uint8_t msaa_samples[] = { 0 };
 
-	static const gl_format formats[3] = {
-		MESA_FORMAT_RGB565,
-		MESA_FORMAT_ARGB8888,
-		MESA_FORMAT_XRGB8888,
+	static const mesa_format formats[3] = {
+		MESA_FORMAT_B5G6R5_UNORM,
+		MESA_FORMAT_B8G8R8A8_UNORM,
+		MESA_FORMAT_B8G8R8X8_UNORM,
 	};
 
 	const GLenum back_buffer_modes[] = {
@@ -93,10 +93,6 @@ nouveau_init_screen2(__DRIscreen *dri_screen)
 	if (!screen)
 		return NULL;
 
-	dri_screen->driverPrivate = screen;
-	dri_screen->extensions = nouveau_screen_extensions;
-	screen->dri_screen = dri_screen;
-
 	/* Open the DRM device. */
 	ret = nouveau_device_wrap(dri_screen->fd, 0, &screen->device);
 	if (ret) {
@@ -118,6 +114,21 @@ nouveau_init_screen2(__DRIscreen *dri_screen)
 	default:
 		assert(0);
 	}
+
+	/* Compat version validation will occur at context init after
+	 * _mesa_compute_version().
+	 */
+	dri_screen->max_gl_compat_version = 15;
+
+	/* NV10 and NV20 can support OpenGL ES 1.0 only.  Older chips
+	 * cannot do even that.
+	 */
+	if ((screen->device->chipset & 0xf0) != 0x00)
+		dri_screen->max_gl_es1_version = 10;
+
+	dri_screen->driverPrivate = screen;
+	dri_screen->extensions = nouveau_screen_extensions;
+	screen->dri_screen = dri_screen;
 
 	configs = nouveau_get_configs();
 	if (!configs)
@@ -216,15 +227,18 @@ nouveau_drawable_flush(__DRIdrawable *draw)
 }
 
 static const struct __DRI2flushExtensionRec nouveau_flush_extension = {
-    { __DRI2_FLUSH, 3 },
-    nouveau_drawable_flush,
-    dri2InvalidateDrawable,
+   .base = { __DRI2_FLUSH, 3 },
+
+   .flush               = nouveau_drawable_flush,
+   .invalidate          = dri2InvalidateDrawable,
 };
 
 static const struct __DRItexBufferExtensionRec nouveau_texbuffer_extension = {
-    { __DRI_TEX_BUFFER, __DRI_TEX_BUFFER_VERSION },
-    NULL,
-    nouveau_set_texbuffer,
+   .base = { __DRI_TEX_BUFFER, 3 },
+
+   .setTexBuffer        = NULL,
+   .setTexBuffer2       = nouveau_set_texbuffer,
+   .releaseTexBuffer    = NULL,
 };
 
 static const __DRIextension *nouveau_screen_extensions[] = {
@@ -234,7 +248,7 @@ static const __DRIextension *nouveau_screen_extensions[] = {
     NULL
 };
 
-const struct __DriverAPIRec driDriverAPI = {
+const struct __DriverAPIRec nouveau_driver_api = {
 	.InitScreen      = nouveau_init_screen2,
 	.DestroyScreen   = nouveau_destroy_screen,
 	.CreateBuffer    = nouveau_create_buffer,
@@ -245,9 +259,22 @@ const struct __DriverAPIRec driDriverAPI = {
 	.UnbindContext   = nouveau_context_unbind,
 };
 
+static const struct __DRIDriverVtableExtensionRec nouveau_vtable = {
+   .base = { __DRI_DRIVER_VTABLE, 1 },
+   .vtable = &nouveau_driver_api,
+};
+
 /* This is the table of extensions that the loader will dlsym() for. */
-PUBLIC const __DRIextension *__driDriverExtensions[] = {
+static const __DRIextension *nouveau_driver_extensions[] = {
 	&driCoreExtension.base,
 	&driDRI2Extension.base,
+	&nouveau_vtable.base,
 	NULL
 };
+
+PUBLIC const __DRIextension **__driDriverGetExtensions_nouveau_vieux(void)
+{
+   globalDriverAPI = &nouveau_driver_api;
+
+   return nouveau_driver_extensions;
+}

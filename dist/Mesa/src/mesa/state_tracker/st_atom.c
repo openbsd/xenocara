@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -61,11 +61,13 @@ static const struct st_tracked_state *atoms[] =
    &st_update_sampler, /* depends on update_*_texture for swizzle */
    &st_update_framebuffer,
    &st_update_msaa,
+   &st_update_sample_shading,
    &st_update_vs_constants,
    &st_update_gs_constants,
    &st_update_fs_constants,
    &st_bind_vs_ubos,
    &st_bind_fs_ubos,
+   &st_bind_gs_ubos,
    &st_update_pixel_transfer,
 
    /* this must be done after the vertex program update */
@@ -131,16 +133,26 @@ static void check_program_state( struct st_context *st )
 static void check_attrib_edgeflag(struct st_context *st)
 {
    const struct gl_client_array **arrays = st->ctx->Array._DrawArrays;
-   GLboolean vertDataEdgeFlags;
+   GLboolean vertdata_edgeflags, edgeflag_culls_prims, edgeflags_enabled;
 
    if (!arrays)
       return;
 
-   vertDataEdgeFlags = arrays[VERT_ATTRIB_EDGEFLAG]->BufferObj &&
-                       arrays[VERT_ATTRIB_EDGEFLAG]->BufferObj->Name;
-   if (vertDataEdgeFlags != st->vertdata_edgeflags) {
-      st->vertdata_edgeflags = vertDataEdgeFlags;
-      st->dirty.st |= ST_NEW_EDGEFLAGS_DATA;
+   edgeflags_enabled = st->ctx->Polygon.FrontMode != GL_FILL ||
+                       st->ctx->Polygon.BackMode != GL_FILL;
+
+   vertdata_edgeflags = edgeflags_enabled &&
+                        arrays[VERT_ATTRIB_EDGEFLAG]->StrideB != 0;
+   if (vertdata_edgeflags != st->vertdata_edgeflags) {
+      st->vertdata_edgeflags = vertdata_edgeflags;
+      st->dirty.st |= ST_NEW_VERTEX_PROGRAM;
+   }
+
+   edgeflag_culls_prims = edgeflags_enabled && !vertdata_edgeflags &&
+                          !st->ctx->Current.Attrib[VERT_ATTRIB_EDGEFLAG][0];
+   if (edgeflag_culls_prims != st->edgeflag_culls_prims) {
+      st->edgeflag_culls_prims = edgeflag_culls_prims;
+      st->dirty.st |= ST_NEW_RASTERIZER;
    }
 }
 

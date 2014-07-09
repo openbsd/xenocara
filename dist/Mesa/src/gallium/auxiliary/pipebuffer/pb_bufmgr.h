@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -43,7 +43,7 @@
  * - the fenced buffer manager, which will delay buffer destruction until the 
  * the moment the card finishing processing it. 
  * 
- * \author Jose Fonseca <jrfonseca@tungstengraphics.com>
+ * \author Jose Fonseca <jfonseca@vmware.com>
  */
 
 #ifndef PB_BUFMGR_H_
@@ -161,7 +161,9 @@ pb_slab_range_manager_create(struct pb_manager *provider,
  */
 struct pb_manager *
 pb_cache_manager_create(struct pb_manager *provider, 
-                     	unsigned usecs); 
+                        unsigned usecs,
+                        float size_factor,
+                        unsigned bypass_usage);
 
 
 struct pb_fence_ops;

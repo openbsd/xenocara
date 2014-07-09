@@ -57,6 +57,7 @@
 #include <GL/internal/dri_interface.h>
 #include "main/mtypes.h"
 #include "xmlconfig.h"
+#include <stdbool.h>
 
 /**
  * Extensions.
@@ -65,7 +66,7 @@ extern const __DRIcoreExtension driCoreExtension;
 extern const __DRIswrastExtension driSWRastExtension;
 extern const __DRIdri2Extension driDRI2Extension;
 extern const __DRI2configQueryExtension dri2ConfigQueryExtension;
-
+extern const __DRIcopySubBufferExtension driCopySubBufferExtension;
 /**
  * Driver callback functions.
  *
@@ -87,6 +88,7 @@ struct __DriverAPIRec {
 			       unsigned major_version,
 			       unsigned minor_version,
 			       uint32_t flags,
+                               bool notify_reset,
 			       unsigned *error,
                                void *sharedContextPrivate);
 
@@ -113,15 +115,24 @@ struct __DriverAPIRec {
                                     int width, int height);
 
     void (*ReleaseBuffer) (__DRIscreen *screenPrivate, __DRIbuffer *buffer);
+
+    void (*CopySubBuffer)(__DRIdrawable *driDrawPriv, int x, int y,
+                          int w, int h);
 };
 
 extern const struct __DriverAPIRec driDriverAPI;
-
+extern const struct __DriverAPIRec *globalDriverAPI;
 
 /**
  * Per-screen private driver information.
  */
 struct __DRIscreenRec {
+    /**
+     * Driver-specific entrypoints provided by the driver's
+     * __DRIDriverVtableExtensionRec.
+     */
+    const struct __DriverAPIRec *driver;
+
     /**
      * Current screen's number
      */
@@ -151,6 +162,11 @@ struct __DRIscreenRec {
 
     void *loaderPrivate;
 
+    int max_gl_core_version;
+    int max_gl_compat_version;
+    int max_gl_es1_version;
+    int max_gl_es2_version;
+
     const __DRIextension **extensions;
 
     const __DRIswrastLoaderExtension *swrast_loader;
@@ -158,10 +174,14 @@ struct __DRIscreenRec {
     struct {
 	/* Flag to indicate that this is a DRI2 screen.  Many of the above
 	 * fields will not be valid or initializaed in that case. */
-	__DRIdri2LoaderExtension *loader;
-	__DRIimageLookupExtension *image;
-	__DRIuseInvalidateExtension *useInvalidate;
+	const __DRIdri2LoaderExtension *loader;
+	const __DRIimageLookupExtension *image;
+	const __DRIuseInvalidateExtension *useInvalidate;
     } dri2;
+
+    struct {
+        const __DRIimageLoaderExtension *loader;
+    } image;
 
     driOptionCache optionInfo;
     driOptionCache optionCache;
@@ -260,10 +280,21 @@ struct __DRIdrawableRec {
     } dri2;
 };
 
+extern uint32_t
+driGLFormatToImageFormat(mesa_format format);
+
+extern mesa_format
+driImageFormatToGLFormat(uint32_t image_format);
+
 extern void
 dri2InvalidateDrawable(__DRIdrawable *drawable);
 
 extern void
 driUpdateFramebufferSize(struct gl_context *ctx, const __DRIdrawable *dPriv);
+
+extern void
+driContextSetFlags(struct gl_context *ctx, uint32_t flags);
+
+extern const __DRIimageDriverExtension driImageDriverExtension;
 
 #endif /* _DRI_UTIL_H_ */

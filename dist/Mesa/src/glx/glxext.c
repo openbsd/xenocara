@@ -134,13 +134,14 @@ __glXWireToEvent(Display *dpy, XEvent *event, xEvent *wire)
       GLXBufferSwapComplete *aevent = (GLXBufferSwapComplete *)event;
       xGLXBufferSwapComplete2 *awire = (xGLXBufferSwapComplete2 *)wire;
       struct glx_drawable *glxDraw = GetGLXDrawable(dpy, awire->drawable);
-      aevent->event_type = awire->event_type;
-      aevent->drawable = awire->drawable;
-      aevent->ust = ((CARD64)awire->ust_hi << 32) | awire->ust_lo;
-      aevent->msc = ((CARD64)awire->msc_hi << 32) | awire->msc_lo;
 
       if (!glxDraw)
 	 return False;
+
+      aevent->event_type = awire->event_type;
+      aevent->drawable = glxDraw->xDrawable;
+      aevent->ust = ((CARD64)awire->ust_hi << 32) | awire->ust_lo;
+      aevent->msc = ((CARD64)awire->msc_hi << 32) | awire->msc_lo;
 
       if (awire->sbc < glxDraw->lastEventSbc)
 	 glxDraw->eventSbcWrap += 0x100000000;
@@ -249,6 +250,10 @@ glx_display_free(struct glx_display *priv)
    if (priv->dri2Display)
       (*priv->dri2Display->destroyDisplay) (priv->dri2Display);
    priv->dri2Display = NULL;
+
+   if (priv->dri3Display)
+      (*priv->dri3Display->destroyDisplay) (priv->dri3Display);
+   priv->dri3Display = NULL;
 #endif
 
    free((char *) priv);
@@ -269,7 +274,8 @@ __glXCloseDisplay(Display * dpy, XExtCodes * codes)
    }
    _XUnlockMutex(_Xglobal_lock);
 
-   glx_display_free(priv);
+   if (priv != NULL)
+      glx_display_free(priv);
 
    return 1;
 }
@@ -676,6 +682,10 @@ static GLboolean
    psc->serverGLXexts =
       __glXQueryServerString(dpy, priv->majorOpcode, screen, GLX_EXTENSIONS);
 
+   if (psc->serverGLXexts == NULL) {
+      return GL_FALSE;
+   }
+
    LockDisplay(dpy);
 
    psc->configs = NULL;
@@ -770,7 +780,11 @@ AllocAndFetchScreenConfigs(Display * dpy, struct glx_display * priv)
    for (i = 0; i < screens; i++, psc++) {
       psc = NULL;
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-      if (priv->dri2Display)
+#if defined(HAVE_DRI3)
+      if (priv->dri3Display)
+         psc = (*priv->dri3Display->createScreen) (i, priv);
+#endif
+      if (psc == NULL && priv->dri2Display)
 	 psc = (*priv->dri2Display->createScreen) (i, priv);
       if (psc == NULL && priv->driDisplay)
 	 psc = (*priv->driDisplay->createScreen) (i, priv);
@@ -821,7 +835,6 @@ __glXInitialize(Display * dpy)
    dpyPriv->codes = XInitExtension(dpy, __glXExtensionName);
    if (!dpyPriv->codes) {
       free(dpyPriv);
-      _XUnlockMutex(_Xglobal_lock);
       return NULL;
    }
 
@@ -837,7 +850,6 @@ __glXInitialize(Display * dpy)
 		     &dpyPriv->majorVersion, &dpyPriv->minorVersion)
        || (dpyPriv->majorVersion == 1 && dpyPriv->minorVersion < 1)) {
       free(dpyPriv);
-      _XUnlockMutex(_Xglobal_lock);
       return NULL;
    }
 
@@ -863,6 +875,10 @@ __glXInitialize(Display * dpy)
     ** (e.g., those called in AllocAndFetchScreenConfigs).
     */
    if (glx_direct && glx_accel) {
+#if defined(HAVE_DRI3)
+      if (!getenv("LIBGL_DRI3_DISABLE"))
+         dpyPriv->dri3Display = dri3_create_display(dpy);
+#endif
       dpyPriv->dri2Display = dri2CreateDisplay(dpy);
       dpyPriv->driDisplay = driCreateDisplay(dpy);
    }
@@ -898,7 +914,7 @@ __glXInitialize(Display * dpy)
    dpyPriv->next = glx_displays;
    glx_displays = dpyPriv;
 
-    _XUnlockMutex(_Xglobal_lock);
+   _XUnlockMutex(_Xglobal_lock);
 
    return dpyPriv;
 }

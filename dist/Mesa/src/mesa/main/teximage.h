@@ -66,9 +66,6 @@ _mesa_base_tex_format( struct gl_context *ctx, GLint internalFormat );
 extern GLboolean
 _mesa_is_proxy_texture(GLenum target);
 
-extern GLenum
-_mesa_get_proxy_target(GLenum target);
-
 extern struct gl_texture_image *
 _mesa_new_texture_image( struct gl_context *ctx );
 
@@ -83,10 +80,10 @@ _mesa_init_teximage_fields(struct gl_context *ctx,
                            struct gl_texture_image *img,
                            GLsizei width, GLsizei height, GLsizei depth,
                            GLint border, GLenum internalFormat,
-                           gl_format format);
+                           mesa_format format);
 
 
-extern gl_format
+extern mesa_format
 _mesa_choose_texture_format(struct gl_context *ctx,
                             struct gl_texture_object *texObj,
                             GLenum target, GLint level,
@@ -101,11 +98,6 @@ extern void
 _mesa_clear_texture_image(struct gl_context *ctx,
                           struct gl_texture_image *texImage);
 
-
-extern struct gl_texture_object *
-_mesa_select_tex_object(struct gl_context *ctx,
-                        const struct gl_texture_unit *texUnit,
-                        GLenum target);
 
 extern struct gl_texture_object *
 _mesa_get_current_tex_object(struct gl_context *ctx, GLenum target);
@@ -128,7 +120,7 @@ _mesa_max_texture_levels(struct gl_context *ctx, GLenum target);
 
 extern GLboolean
 _mesa_test_proxy_teximage(struct gl_context *ctx, GLenum target, GLint level,
-                          gl_format format,
+                          mesa_format format,
                           GLint width, GLint height, GLint depth, GLint border);
 
 
@@ -137,6 +129,12 @@ _mesa_tex_target_to_face(GLenum target);
 
 extern GLint
 _mesa_get_texture_dimensions(GLenum target);
+
+extern GLboolean
+_mesa_tex_target_is_layered(GLenum target);
+
+extern GLuint
+_mesa_get_texture_layers(const struct gl_texture_object *texObj, GLint level);
 
 extern GLsizei
 _mesa_get_tex_max_num_levels(GLenum target, GLsizei width, GLsizei height,
@@ -147,13 +145,25 @@ _mesa_legal_texture_dimensions(struct gl_context *ctx, GLenum target,
                                GLint level, GLint width, GLint height,
                                GLint depth, GLint border);
 
+extern mesa_format
+_mesa_validate_texbuffer_format(const struct gl_context *ctx,
+                                GLenum internalFormat);
+
+
+bool
+_mesa_legal_texture_base_format_for_target(struct gl_context *ctx,
+                                           GLenum target,
+                                           GLenum internalFormat,
+                                           unsigned dimensions,
+                                           const char *caller);
+
 /**
  * Lock a texture for updating.  See also _mesa_lock_context_textures().
  */
 static inline void
 _mesa_lock_texture(struct gl_context *ctx, struct gl_texture_object *texObj)
 {
-   _glthread_LOCK_MUTEX(ctx->Shared->TexMutex);
+   mtx_lock(&ctx->Shared->TexMutex);
    ctx->Shared->TextureStateStamp++;
    (void) texObj;
 }
@@ -162,7 +172,7 @@ static inline void
 _mesa_unlock_texture(struct gl_context *ctx, struct gl_texture_object *texObj)
 {
    (void) texObj;
-   _glthread_UNLOCK_MUTEX(ctx->Shared->TexMutex);
+   mtx_unlock(&ctx->Shared->TexMutex);
 }
 
 /*@}*/
@@ -296,12 +306,12 @@ _mesa_TexBufferRange(GLenum target, GLenum internalFormat, GLuint buffer,
 
 extern void GLAPIENTRY
 _mesa_TexImage2DMultisample(GLenum target, GLsizei samples,
-                            GLint internalformat, GLsizei width,
+                            GLenum internalformat, GLsizei width,
                             GLsizei height, GLboolean fixedsamplelocations);
 
 extern void GLAPIENTRY
 _mesa_TexImage3DMultisample(GLenum target, GLsizei samples,
-                            GLint internalformat, GLsizei width,
+                            GLenum internalformat, GLsizei width,
                             GLsizei height, GLsizei depth,
                             GLboolean fixedsamplelocations);
 

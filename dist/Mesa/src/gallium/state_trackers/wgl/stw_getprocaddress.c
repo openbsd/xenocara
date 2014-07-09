@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -33,7 +33,6 @@
 #include <GL/wglext.h>
 
 #include "glapi/glapi.h"
-#include "stw_ext_gallium.h"
 #include "stw_device.h"
 #include "stw_icd.h"
 
@@ -68,10 +67,6 @@ static const struct stw_extension_entry stw_extension_entries[] = {
    /* WGL_EXT_swap_interval */
    STW_EXTENSION_ENTRY( wglGetSwapIntervalEXT ),
    STW_EXTENSION_ENTRY( wglSwapIntervalEXT ),
-
-   /* WGL_EXT_gallium ? */
-   STW_EXTENSION_ENTRY( wglGetGalliumScreenMESA ),
-   STW_EXTENSION_ENTRY( wglCreateGalliumContextMESA ),
 
    /* WGL_ARB_create_context */
    STW_EXTENSION_ENTRY( wglCreateContextAttribsARB ),

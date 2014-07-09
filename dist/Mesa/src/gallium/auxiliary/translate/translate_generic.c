@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -27,7 +27,7 @@
 
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
 
 #include "util/u_memory.h"
@@ -73,7 +73,7 @@ struct translate_generic {
        */
       int copy_size;
 
-   } attrib[PIPE_MAX_ATTRIBS];
+   } attrib[TRANSLATE_MAX_ATTRIBS];
 
    unsigned nr_attrib;
 };
@@ -625,8 +625,7 @@ static ALWAYS_INLINE void PIPE_CDECL generic_run_one( struct translate_generic *
 
          if (tg->attrib[attr].instance_divisor) {
             index = start_instance;
-            index += (instance_id - start_instance) /
-               tg->attrib[attr].instance_divisor;
+            index += (instance_id  / tg->attrib[attr].instance_divisor);
             /* XXX we need to clamp the index here too, but to a
              * per-array max value, not the draw->pt.max_index value
              * that's being given to us via translate->set_buffer().
@@ -639,7 +638,7 @@ static ALWAYS_INLINE void PIPE_CDECL generic_run_one( struct translate_generic *
          }
 
          src = tg->attrib[attr].input_ptr +
-               tg->attrib[attr].input_stride * index;
+               (ptrdiff_t)tg->attrib[attr].input_stride * index;
 
          copy_size = tg->attrib[attr].copy_size;
          if(likely(copy_size >= 0))
@@ -799,6 +798,8 @@ struct translate *translate_generic_create( const struct translate_key *key )
 
    if (tg == NULL)
       return NULL;
+
+   assert(key->nr_elements <= TRANSLATE_MAX_ATTRIBS);
 
    tg->translate.key = *key;
    tg->translate.release = generic_release;

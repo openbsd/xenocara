@@ -25,15 +25,16 @@ CSO objects handled by the context object:
 
 * :ref:`Blend`: ``*_blend_state``
 * :ref:`Sampler`: Texture sampler states are bound separately for fragment,
-  vertex and geometry samplers.  Note that sampler states are set en masse.
-  If M is the max number of sampler units supported by the driver and N
-  samplers are bound with ``bind_fragment_sampler_states`` then sampler
-  units N..M-1 are considered disabled/NULL.
+  vertex, geometry and compute shaders with the ``bind_sampler_states``
+  function.  The ``start`` and ``num_samplers`` parameters indicate a range
+  of samplers to change.  NOTE: at this time, start is always zero and
+  the CSO module will always replace all samplers at once (no sub-ranges).
+  This may change in the future.
 * :ref:`Rasterizer`: ``*_rasterizer_state``
-* :ref:`Depth, Stencil, & Alpha`: ``*_depth_stencil_alpha_state``
+* :ref:`depth-stencil-alpha`: ``*_depth_stencil_alpha_state``
 * :ref:`Shader`: These are create, bind and destroy methods for vertex,
   fragment and geometry shaders.
-* :ref:`Vertex Elements`: ``*_vertex_elements_state``
+* :ref:`vertexelements`: ``*_vertex_elements_state``
 
 
 Resource Binding State
@@ -66,6 +67,7 @@ objects. They all follow simple, one-method binding calls, e.g.
   which are used as comparison values in stencil test.
 * ``set_blend_color``
 * ``set_sample_mask``
+* ``set_min_samples`` sets the minimum number of samples that must be run.
 * ``set_clip_state``
 * ``set_polygon_stipple``
 * ``set_scissor_states`` sets the bounds for the scissor test, which culls
@@ -103,16 +105,10 @@ The ``first_layer`` and ``last_layer`` fields specify the layer range the
 texture is going to be constrained to. Similar to the LOD range, this is added
 to the array index which is used for sampling.
 
-* ``set_fragment_sampler_views`` binds an array of sampler views to
-  fragment shader stage. Every binding point acquires a reference
+* ``set_sampler_views`` binds an array of sampler views to a shader stage.
+  Every binding point acquires a reference
   to a respective sampler view and releases a reference to the previous
-  sampler view.  If M is the maximum number of sampler units and N units
-  is passed to set_fragment_sampler_views, the driver should unbind the
-  sampler views for units N..M-1.
-
-* ``set_vertex_sampler_views`` binds an array of sampler views to vertex
-  shader stage. Every binding point acquires a reference to a respective
-  sampler view and releases a reference to the previous sampler view.
+  sampler view.
 
 * ``create_sampler_view`` creates a new sampler view. ``texture`` is associated
   with the sampler view which results in sampler view holding a reference
@@ -187,10 +183,11 @@ discussed above.
   use pipe_so_target_reference instead.
 
 * ``set_stream_output_targets`` binds stream output targets. The parameter
-  append_bitmask is a bitmask, where the i-th bit specifies whether new
-  primitives should be appended to the i-th buffer (writing starts at
-  the internal offset), or whether writing should start at the beginning
-  (the internal offset is effectively set to 0).
+  offset is an array which specifies the internal offset of the buffer. The
+  internal offset is, besides writing, used for reading the data during the
+  draw_auto stage, i.e. it specifies how much data there is in the buffer
+  for the purposes of the draw_auto stage. -1 means the buffer should
+  be appended to, and everything else sets the internal offset.
 
 NOTE: The currently-bound vertex or geometry shader must be compiled with
 the properly-filled-in structure pipe_stream_output_info describing which
@@ -221,6 +218,11 @@ with the specified depth and stencil values (for combined depth/stencil buffers,
 is is also possible to only clear one or the other part). While it is only
 possible to clear one surface at a time (which can include several layers),
 this surface need not be bound to the framebuffer.
+
+``clear_buffer`` clears a PIPE_BUFFER resource with the specified clear value
+(which may be multiple bytes in length). Logically this is a memset with a
+multi-byte element value starting at offset bytes from resource start, going
+for size bytes. It is guaranteed that size % clear_value_size == 0.
 
 
 Drawing
@@ -309,7 +311,7 @@ The interface currently includes the following types of queries:
 
 ``PIPE_QUERY_OCCLUSION_COUNTER`` counts the number of fragments which
 are written to the framebuffer without being culled by
-:ref:`Depth, Stencil, & Alpha` testing or shader KILL instructions.
+:ref:`depth-stencil-alpha` testing or shader KILL instructions.
 The result is an unsigned 64-bit integer.
 This query can be used with ``render_condition``.
 
@@ -350,6 +352,8 @@ the result of
 ``PIPE_QUERY_PRIMITIVES_EMITTED`` and
 the number of primitives that would have been written to stream output buffers
 if they had infinite space available (primitives_storage_needed), in this order.
+XXX the 2nd value is equivalent to ``PIPE_QUERY_PRIMITIVES_GENERATED`` but it is
+unclear if it should be increased if stream output is not active.
 
 ``PIPE_QUERY_SO_OVERFLOW_PREDICATE`` returns a boolean value indicating
 whether the stream output targets have overflowed as a result of the
@@ -419,6 +423,19 @@ Flushing
 ^^^^^^^^
 
 ``flush``
+
+
+``flush_resource``
+
+Flush the resource cache, so that the resource can be used
+by an external client. Possible usage:
+- flushing a resource before presenting it on the screen
+- flushing a resource if some other process or device wants to use it
+This shouldn't be used to flush caches if the resource is only managed
+by a single pipe_screen and is not shared with another process.
+(i.e. you shouldn't use it to flush caches explicitly if you want to e.g.
+use the resource for texturing)
+
 
 
 Resource Busy Queries
@@ -510,6 +527,16 @@ invalidates all read caches of the currently-set samplers.
 
 
 
+.. _memory_barrier:
+
+memory_barrier
+%%%%%%%%%%%%%%%
+
+This function flushes caches according to which of the PIPE_BARRIER_* flags
+are set.
+
+
+
 .. _pipe_transfer:
 
 PIPE_TRANSFER
@@ -547,6 +574,18 @@ These flags control the behavior of a transfer object.
   Written ranges will be notified later with :ref:`transfer_flush_region`.
   Cannot be used with ``PIPE_TRANSFER_READ``.
 
+``PIPE_TRANSFER_PERSISTENT``
+  Allows the resource to be used for rendering while mapped.
+  PIPE_RESOURCE_FLAG_MAP_PERSISTENT must be set when creating
+  the resource.
+  If COHERENT is not set, memory_barrier(PIPE_BARRIER_MAPPED_BUFFER)
+  must be called to ensure the device can see what the CPU has written.
+
+``PIPE_TRANSFER_COHERENT``
+  If PERSISTENT is set, this ensures any writes done by the device are
+  immediately visible to the CPU and vice versa.
+  PIPE_RESOURCE_FLAG_MAP_COHERENT must be set when creating
+  the resource.
 
 Compute kernel execution
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -584,6 +623,6 @@ may be specified by the user with the ``set_compute_resources``
 method.
 
 In addition, normal texture sampling is allowed from the compute
-program: ``bind_compute_sampler_states`` may be used to set up texture
-samplers for the compute stage and ``set_compute_sampler_views`` may
+program: ``bind_sampler_states`` may be used to set up texture
+samplers for the compute stage and ``set_sampler_views`` may
 be used to bind a number of sampler views to it.

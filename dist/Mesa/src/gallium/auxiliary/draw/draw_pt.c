@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -27,7 +27,7 @@
 
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
 
 #include "draw/draw_context.h"
@@ -431,14 +431,16 @@ draw_pt_arrays_restart(struct draw_context *draw,
  */
 static void
 resolve_draw_info(const struct pipe_draw_info *raw_info,
-                  struct pipe_draw_info *info)
+                  struct pipe_draw_info *info,
+                  struct pipe_vertex_buffer *vertex_buffer)
 {
    memcpy(info, raw_info, sizeof(struct pipe_draw_info));
 
    if (raw_info->count_from_stream_output) {
       struct draw_so_target *target =
          (struct draw_so_target *)info->count_from_stream_output;
-      info->count = target->emitted_vertices;
+      assert(vertex_buffer != NULL);
+      info->count = target->internal_offset / vertex_buffer->stride;
 
       /* Stream output draw can not be indexed */
       debug_assert(!info->indexed);
@@ -467,7 +469,7 @@ draw_vbo(struct draw_context *draw,
     */
    util_fpstate_set_denorms_to_zero(fpstate);
 
-   resolve_draw_info(info, &resolved_info);
+   resolve_draw_info(info, &resolved_info, &(draw->pt.vertex_buffer[0]));
    info = &resolved_info;
 
    assert(info->instance_count > 0);
@@ -535,6 +537,7 @@ draw_vbo(struct draw_context *draw,
    }
 
    draw->pt.max_index = index_limit - 1;
+   draw->start_index = info->start;
 
    /*
     * TODO: We could use draw->pt.max_index to further narrow
@@ -542,11 +545,12 @@ draw_vbo(struct draw_context *draw,
     */
 
    for (instance = 0; instance < info->instance_count; instance++) {
-      draw->instance_id = instance + info->start_instance;
+      unsigned instance_idx = instance + info->start_instance;
       draw->start_instance = info->start_instance;
+      draw->instance_id = instance;
       /* check for overflow */
-      if (draw->instance_id < instance ||
-          draw->instance_id < info->start_instance) {
+      if (instance_idx < instance ||
+          instance_idx < draw->start_instance) {
          /* if we overflown just set the instance id to the max */
          draw->instance_id = 0xffffffff;
       }

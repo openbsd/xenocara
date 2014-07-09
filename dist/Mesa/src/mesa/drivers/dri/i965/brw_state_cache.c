@@ -1,8 +1,8 @@
 /*
  Copyright (C) Intel Corp.  2006.  All Rights Reserved.
- Intel funded Tungsten Graphics (http://www.tungstengraphics.com) to
+ Intel funded Tungsten Graphics to
  develop this 3D driver.
- 
+
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  distribute, sublicense, and/or sell copies of the Software, and to
  permit persons to whom the Software is furnished to do so, subject to
  the following conditions:
- 
+
  The above copyright notice and this permission notice (including the
  next paragraph) shall be included in all copies or substantial
  portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -22,11 +22,11 @@
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  **********************************************************************/
  /*
   * Authors:
-  *   Keith Whitwell <keith@tungstengraphics.com>
+  *   Keith Whitwell <keithw@vmware.com>
   */
 
 /** @file brw_state_cache.c
@@ -50,6 +50,7 @@
 #include "brw_vs.h"
 #include "brw_wm.h"
 #include "brw_vs.h"
+#include "brw_vec4_gs.h"
 
 #define FILE_DEBUG_FLAG DEBUG_STATE
 
@@ -214,9 +215,7 @@ brw_try_upload_using_copy(struct brw_cache *cache,
 	 }
 
          if (cache->aux_compare[result_item->cache_id]) {
-            if (!cache->aux_compare[result_item->cache_id](item_aux, aux,
-                                                           item->aux_size,
-                                                           item->key))
+            if (!cache->aux_compare[result_item->cache_id](item_aux, aux))
                continue;
          } else if (memcmp(item_aux, aux, item->aux_size) != 0) {
 	    continue;
@@ -341,9 +340,11 @@ brw_init_caches(struct brw_context *brw)
 				  4096, 64);
 
    cache->aux_compare[BRW_VS_PROG] = brw_vs_prog_data_compare;
+   cache->aux_compare[BRW_GS_PROG] = brw_gs_prog_data_compare;
    cache->aux_compare[BRW_WM_PROG] = brw_wm_prog_data_compare;
-   cache->aux_free[BRW_VS_PROG] = brw_vs_prog_data_free;
-   cache->aux_free[BRW_WM_PROG] = brw_wm_prog_data_free;
+   cache->aux_free[BRW_VS_PROG] = brw_stage_prog_data_free;
+   cache->aux_free[BRW_GS_PROG] = brw_stage_prog_data_free;
+   cache->aux_free[BRW_WM_PROG] = brw_stage_prog_data_free;
 }
 
 static void

@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2008 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2008 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -87,7 +87,7 @@ struct pstip_stage
    struct pstip_fragment_shader *fs;
    struct {
       void *samplers[PIPE_MAX_SAMPLERS];
-      struct pipe_sampler_view *sampler_views[PIPE_MAX_SAMPLERS];
+      struct pipe_sampler_view *sampler_views[PIPE_MAX_SHADER_SAMPLER_VIEWS];
       const struct pipe_poly_stipple *stipple;
    } state;
 
@@ -99,10 +99,12 @@ struct pstip_stage
    void (*driver_bind_fs_state)(struct pipe_context *, void *);
    void (*driver_delete_fs_state)(struct pipe_context *, void *);
 
-   void (*driver_bind_sampler_states)(struct pipe_context *, unsigned, void **);
+   void (*driver_bind_sampler_states)(struct pipe_context *, unsigned,
+                                      unsigned, unsigned, void **);
 
    void (*driver_set_sampler_views)(struct pipe_context *,
-                                    unsigned,
+                                    unsigned shader, unsigned start,
+                                    unsigned count,
                                     struct pipe_sampler_view **);
 
    void (*driver_set_polygon_stipple)(struct pipe_context *,
@@ -547,8 +549,13 @@ pstip_first_tri(struct draw_stage *stage, struct prim_header *header)
    assert(num_samplers <= PIPE_MAX_SAMPLERS);
 
    draw->suspend_flushing = TRUE;
-   pstip->driver_bind_sampler_states(pipe, num_samplers, pstip->state.samplers);
-   pstip->driver_set_sampler_views(pipe, num_samplers, pstip->state.sampler_views);
+
+   pstip->driver_bind_sampler_states(pipe, PIPE_SHADER_FRAGMENT, 0,
+                                     num_samplers, pstip->state.samplers);
+
+   pstip->driver_set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0,
+                                   num_samplers, pstip->state.sampler_views);
+
    draw->suspend_flushing = FALSE;
 
    /* now really draw first triangle */
@@ -570,11 +577,15 @@ pstip_flush(struct draw_stage *stage, unsigned flags)
    /* restore original frag shader, texture, sampler state */
    draw->suspend_flushing = TRUE;
    pstip->driver_bind_fs_state(pipe, pstip->fs ? pstip->fs->driver_fs : NULL);
-   pstip->driver_bind_sampler_states(pipe, pstip->num_samplers,
+
+   pstip->driver_bind_sampler_states(pipe, PIPE_SHADER_FRAGMENT, 0,
+                                     pstip->num_samplers,
                                      pstip->state.samplers);
-   pstip->driver_set_sampler_views(pipe,
+
+   pstip->driver_set_sampler_views(pipe, PIPE_SHADER_FRAGMENT, 0,
                                    pstip->num_sampler_views,
                                    pstip->state.sampler_views);
+
    draw->suspend_flushing = FALSE;
 }
 
@@ -592,7 +603,7 @@ pstip_destroy(struct draw_stage *stage)
    struct pstip_stage *pstip = pstip_stage(stage);
    uint i;
 
-   for (i = 0; i < PIPE_MAX_SAMPLERS; i++) {
+   for (i = 0; i < PIPE_MAX_SHADER_SAMPLER_VIEWS; i++) {
       pipe_sampler_view_reference(&pstip->state.sampler_views[i], NULL);
    }
 
@@ -662,7 +673,7 @@ pstip_create_fs_state(struct pipe_context *pipe,
    struct pstip_fragment_shader *pstipfs = CALLOC_STRUCT(pstip_fragment_shader);
 
    if (pstipfs) {
-      pstipfs->state = *fs;
+      pstipfs->state.tokens = tgsi_dup_tokens(fs->tokens);
 
       /* pass-through */
       pstipfs->driver_fs = pstip->driver_create_fs_state(pstip->pipe, fs);
@@ -696,49 +707,53 @@ pstip_delete_fs_state(struct pipe_context *pipe, void *fs)
    if (pstipfs->pstip_fs)
       pstip->driver_delete_fs_state(pstip->pipe, pstipfs->pstip_fs);
 
+   FREE((void*)pstipfs->state.tokens);
    FREE(pstipfs);
 }
 
 
 static void
-pstip_bind_sampler_states(struct pipe_context *pipe,
-                          unsigned num, void **sampler)
+pstip_bind_sampler_states(struct pipe_context *pipe, unsigned shader,
+                          unsigned start, unsigned num, void **sampler)
 {
    struct pstip_stage *pstip = pstip_stage_from_pipe(pipe);
    uint i;
 
-   /* save current */
-   memcpy(pstip->state.samplers, sampler, num * sizeof(void *));
-   for (i = num; i < PIPE_MAX_SAMPLERS; i++) {
-      pstip->state.samplers[i] = NULL;
+   assert(start == 0);
+
+   if (shader == PIPE_SHADER_FRAGMENT) {
+      /* save current */
+      memcpy(pstip->state.samplers, sampler, num * sizeof(void *));
+      for (i = num; i < PIPE_MAX_SAMPLERS; i++) {
+         pstip->state.samplers[i] = NULL;
+      }
+      pstip->num_samplers = num;
    }
 
-   pstip->num_samplers = num;
    /* pass-through */
-   pstip->driver_bind_sampler_states(pstip->pipe, num, sampler);
+   pstip->driver_bind_sampler_states(pstip->pipe, shader, start, num, sampler);
 }
 
 
 static void
 pstip_set_sampler_views(struct pipe_context *pipe,
-                        unsigned num,
+                        unsigned shader, unsigned start, unsigned num,
                         struct pipe_sampler_view **views)
 {
    struct pstip_stage *pstip = pstip_stage_from_pipe(pipe);
    uint i;
 
-   /* save current */
-   for (i = 0; i < num; i++) {
-      pipe_sampler_view_reference(&pstip->state.sampler_views[i], views[i]);
+   if (shader == PIPE_SHADER_FRAGMENT) {
+      /* save current */
+      for (i = 0; i < num; i++) {
+         pipe_sampler_view_reference(&pstip->state.sampler_views[start + i],
+                                     views[i]);
+      }
+      pstip->num_sampler_views = num;
    }
-   for (; i < PIPE_MAX_SAMPLERS; i++) {
-      pipe_sampler_view_reference(&pstip->state.sampler_views[i], NULL);
-   }
-
-   pstip->num_sampler_views = num;
 
    /* pass-through */
-   pstip->driver_set_sampler_views(pstip->pipe, num, views);
+   pstip->driver_set_sampler_views(pstip->pipe, shader, start, num, views);
 }
 
 
@@ -780,6 +795,15 @@ draw_install_pstipple_stage(struct draw_context *draw,
 
    draw->pipeline.pstipple = &pstip->stage;
 
+   /* save original driver functions */
+   pstip->driver_create_fs_state = pipe->create_fs_state;
+   pstip->driver_bind_fs_state = pipe->bind_fs_state;
+   pstip->driver_delete_fs_state = pipe->delete_fs_state;
+
+   pstip->driver_bind_sampler_states = pipe->bind_sampler_states;
+   pstip->driver_set_sampler_views = pipe->set_sampler_views;
+   pstip->driver_set_polygon_stipple = pipe->set_polygon_stipple;
+
    /* create special texture, sampler state */
    if (!pstip_create_texture(pstip))
       goto fail;
@@ -787,22 +811,13 @@ draw_install_pstipple_stage(struct draw_context *draw,
    if (!pstip_create_sampler(pstip))
       goto fail;
 
-   /* save original driver functions */
-   pstip->driver_create_fs_state = pipe->create_fs_state;
-   pstip->driver_bind_fs_state = pipe->bind_fs_state;
-   pstip->driver_delete_fs_state = pipe->delete_fs_state;
-
-   pstip->driver_bind_sampler_states = pipe->bind_fragment_sampler_states;
-   pstip->driver_set_sampler_views = pipe->set_fragment_sampler_views;
-   pstip->driver_set_polygon_stipple = pipe->set_polygon_stipple;
-
    /* override the driver's functions */
    pipe->create_fs_state = pstip_create_fs_state;
    pipe->bind_fs_state = pstip_bind_fs_state;
    pipe->delete_fs_state = pstip_delete_fs_state;
 
-   pipe->bind_fragment_sampler_states = pstip_bind_sampler_states;
-   pipe->set_fragment_sampler_views = pstip_set_sampler_views;
+   pipe->bind_sampler_states = pstip_bind_sampler_states;
+   pipe->set_sampler_views = pstip_set_sampler_views;
    pipe->set_polygon_stipple = pstip_set_polygon_stipple;
 
    return TRUE;

@@ -8,7 +8,7 @@
 void radeonUserClear(struct gl_context *ctx, GLuint mask);
 void radeonSetCliprects(radeonContextPtr radeon);
 void radeonUpdateScissor( struct gl_context *ctx );
-void radeonScissor(struct gl_context* ctx, GLint x, GLint y, GLsizei w, GLsizei h);
+void radeonScissor(struct gl_context *ctx);
 
 extern uint32_t radeonGetAge(radeonContextPtr radeon);
 
@@ -23,13 +23,13 @@ void radeon_window_moved(radeonContextPtr radeon);
 void radeon_draw_buffer(struct gl_context *ctx, struct gl_framebuffer *fb);
 void radeonDrawBuffer( struct gl_context *ctx, GLenum mode );
 void radeonReadBuffer( struct gl_context *ctx, GLenum mode );
-void radeon_viewport(struct gl_context *ctx, GLint x, GLint y, GLsizei width, GLsizei height);
+void radeon_viewport(struct gl_context *ctx);
 void radeon_fbo_init(struct radeon_context *radeon);
 void
 radeon_renderbuffer_set_bo(struct radeon_renderbuffer *rb,
 			   struct radeon_bo *bo);
 struct radeon_renderbuffer *
-radeon_create_renderbuffer(gl_format format, __DRIdrawable *driDrawPriv);
+radeon_create_renderbuffer(mesa_format format, __DRIdrawable *driDrawPriv);
 
 void
 radeonReadPixels(struct gl_context * ctx,

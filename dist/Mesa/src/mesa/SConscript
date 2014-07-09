@@ -18,9 +18,6 @@ env.Append(CPPPATH = [
     Dir('.'), # src/mesa build path
 ])
 
-enabled_apis = []
-enabled_apis += ['GL']
-
 if env['platform'] == 'windows':
     env.Append(CPPDEFINES = [
         '_GDI32_', # prevent gl* being declared __declspec(dllimport) in MS headers
@@ -49,11 +46,13 @@ main_sources = [
     'main/attrib.c',
     'main/arrayobj.c',
     'main/blend.c',
+    'main/blit.c',
     'main/bufferobj.c',
     'main/buffers.c',
     'main/clear.c',
     'main/clip.c',
     'main/colortab.c',
+    'main/compute.c',
     'main/condrender.c',
     'main/context.c',
     'main/convolve.c',
@@ -80,6 +79,7 @@ main_sources = [
     'main/format_pack.c',
     'main/format_unpack.c',
     'main/framebuffer.c',
+    'main/genmipmap.c',
     'main/getstring.c',
     'main/glformats.c',
     'main/hash.c',
@@ -94,8 +94,11 @@ main_sources = [
     'main/mipmap.c',
     'main/mm.c',
     'main/multisample.c',
+    'main/objectlabel.c',
     'main/pack.c',
     'main/pbo.c',
+    'main/performance_monitor.c',
+    'main/pipelineobj.c',
     'main/pixel.c',
     'main/pixelstore.c',
     'main/pixeltransfer.c',
@@ -111,6 +114,7 @@ main_sources = [
     'main/scissor.c',
     'main/set.c',
     'main/shaderapi.c',
+    'main/shaderimage.c',
     'main/shaderobj.c',
     'main/shader_query.cpp',
     'main/shared.c',
@@ -134,10 +138,12 @@ main_sources = [
     'main/texstorage.c',
     'main/texstore.c',
     'main/texturebarrier.c',
+    'main/textureview.c',
     'main/transformfeedback.c',
     'main/uniform_query.cpp',
     'main/uniforms.c',
     'main/varray.c',
+    'main/vdpau.c',
     'main/version.c',
     'main/viewport.c',
     'main/vtxfmt.c',
@@ -285,6 +291,7 @@ statetracker_sources = [
     'state_tracker/st_mesa_to_tgsi.c',
     'state_tracker/st_program.c',
     'state_tracker/st_texture.c',
+    'state_tracker/st_vdpau.c',
 ]
 
 env.Append(YACCFLAGS = '-d -p "_mesa_program_"')
@@ -319,6 +326,8 @@ program_sources = [
 common_driver_sources =	[
     'drivers/common/driverfuncs.c',
     'drivers/common/meta.c',
+    'drivers/common/meta_blit.c',
+    'drivers/common/meta_generate_mipmap.c'
 ]
 
 mesa_sources = (
@@ -335,10 +344,6 @@ mesa_sources = (
 )
 
 GLAPI = '#src/mapi/glapi/'
-
-if env['gles']:
-
-    enabled_apis += ['ES1', 'ES2']
 
 get_hash_header = env.CodeGenerate(
       target = 'main/get_hash.h',

@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
- * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
+ *
+ * Copyright 2003 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,19 +10,19 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 #include "main/glheader.h"
@@ -222,16 +222,16 @@ static GLuint byte_types_scale[5] = {
  * the appopriate hardware surface type.
  * Format will be GL_RGBA or possibly GL_BGRA for GLubyte[4] color arrays.
  */
-static unsigned
-get_surface_type(struct brw_context *brw,
-                 const struct gl_client_array *glarray)
+unsigned
+brw_get_vertex_surface_type(struct brw_context *brw,
+                            const struct gl_client_array *glarray)
 {
    int size = glarray->Size;
 
    if (unlikely(INTEL_DEBUG & DEBUG_VERTS))
-      printf("type %s size %d normalized %d\n", 
-             _mesa_lookup_enum_by_nr(glarray->Type),
-             glarray->Size, glarray->Normalized);
+      fprintf(stderr, "type %s size %d normalized %d\n",
+              _mesa_lookup_enum_by_nr(glarray->Type),
+              glarray->Size, glarray->Normalized);
 
    if (glarray->Integer) {
       assert(glarray->Format == GL_RGBA); /* sanity check */
@@ -244,6 +244,8 @@ get_surface_type(struct brw_context *brw,
       case GL_UNSIGNED_BYTE: return ubyte_types_direct[size];
       default: assert(0); return 0;
       }
+   } else if (glarray->Type == GL_UNSIGNED_INT_10F_11F_11F_REV) {
+      return BRW_SURFACEFORMAT_R11G11B10_FLOAT;
    } else if (glarray->Normalized) {
       switch (glarray->Type) {
       case GL_DOUBLE: return double_types[size];
@@ -342,7 +344,8 @@ get_surface_type(struct brw_context *brw,
    }
 }
 
-static GLuint get_index_type(GLenum type)
+unsigned
+brw_get_index_type(GLenum type)
 {
    switch (type) {
    case GL_UNSIGNED_BYTE:  return BRW_INDEX_BYTE;
@@ -378,26 +381,23 @@ copy_array_to_vbo_array(struct brw_context *brw,
    const unsigned char *src = element->glarray->Ptr + min * src_stride;
    int count = max - min + 1;
    GLuint size = count * dst_stride;
+   uint8_t *dst = intel_upload_space(brw, size, dst_stride,
+                                     &buffer->bo, &buffer->offset);
 
    if (dst_stride == src_stride) {
-      intel_upload_data(brw, src, size, dst_stride,
-			&buffer->bo, &buffer->offset);
+      memcpy(dst, src, size);
    } else {
-      char * const map = intel_upload_map(brw, size, dst_stride);
-      char *dst = map;
-
       while (count--) {
 	 memcpy(dst, src, dst_stride);
 	 src += src_stride;
 	 dst += dst_stride;
       }
-      intel_upload_unmap(brw, map, size, dst_stride,
-			 &buffer->bo, &buffer->offset);
    }
    buffer->stride = dst_stride;
 }
 
-static void brw_prepare_vertices(struct brw_context *brw)
+void
+brw_prepare_vertices(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
    /* CACHE_NEW_VS_PROG */
@@ -424,7 +424,7 @@ static void brw_prepare_vertices(struct brw_context *brw)
    }
 
    if (0)
-      printf("%s %d..%d\n", __FUNCTION__, min_index, max_index);
+      fprintf(stderr, "%s %d..%d\n", __FUNCTION__, min_index, max_index);
 
    /* Accumulate the list of enabled arrays. */
    brw->vb.nr_enabled = 0;
@@ -471,13 +471,29 @@ static void brw_prepare_vertices(struct brw_context *brw)
 	    struct brw_vertex_buffer *buffer = &brw->vb.buffers[j];
 
 	    /* Named buffer object: Just reference its contents directly. */
-            buffer->bo = intel_bufferobj_source(brw,
-                                                intel_buffer, 1,
-						&buffer->offset);
-	    drm_intel_bo_reference(buffer->bo);
-	    buffer->offset += (uintptr_t)glarray->Ptr;
+	    buffer->offset = (uintptr_t)glarray->Ptr;
 	    buffer->stride = glarray->StrideB;
 	    buffer->step_rate = glarray->InstanceDivisor;
+
+            uint32_t offset, size;
+            if (glarray->InstanceDivisor) {
+               offset = buffer->offset;
+               size = (buffer->stride * ((brw->num_instances /
+                                          glarray->InstanceDivisor) - 1) +
+                       glarray->_ElementSize);
+            } else {
+               if (min_index == -1) {
+                  offset = 0;
+                  size = intel_buffer->Base.Size;
+               } else {
+                  offset = buffer->offset + min_index * buffer->stride;
+                  size = (buffer->stride * (max_index - min_index) +
+                          glarray->_ElementSize);
+               }
+            }
+            buffer->bo = intel_bufferobj_buffer(brw, intel_buffer,
+                                                offset, size);
+            drm_intel_bo_reference(buffer->bo);
 
 	    input->buffer = j++;
 	    input->offset = 0;
@@ -590,6 +606,7 @@ static void brw_prepare_vertices(struct brw_context *brw)
 
 static void brw_emit_vertices(struct brw_context *brw)
 {
+   struct gl_context *ctx = &brw->ctx;
    GLuint i, nr_elements;
 
    brw_prepare_vertices(brw);
@@ -623,7 +640,7 @@ static void brw_emit_vertices(struct brw_context *brw)
 		(BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_1_SHIFT) |
 		(BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_2_SHIFT) |
 		(BRW_VE1_COMPONENT_STORE_1_FLT << BRW_VE1_COMPONENT_3_SHIFT));
-      CACHED_BATCH();
+      ADVANCE_BATCH();
       return;
    }
 
@@ -658,9 +675,12 @@ static void brw_emit_vertices(struct brw_context *brw)
 	 if (brw->gen >= 7)
 	    dw0 |= GEN7_VB0_ADDRESS_MODIFYENABLE;
 
-	 if (brw->is_haswell)
+         if (brw->gen == 7)
 	    dw0 |= GEN7_MOCS_L3 << 16;
 
+         WARN_ONCE(buffer->stride >= (brw->gen >= 5 ? 2048 : 2047),
+                   "VBO stride %d too large, bad rendering may occur\n",
+                   buffer->stride);
 	 OUT_BATCH(dw0 | (buffer->stride << BRW_VB0_PITCH_SHIFT));
 	 OUT_RELOC(buffer->bo, I915_GEM_DOMAIN_VERTEX, 0, buffer->offset);
 	 if (brw->gen >= 5) {
@@ -687,19 +707,13 @@ static void brw_emit_vertices(struct brw_context *brw)
    OUT_BATCH((_3DSTATE_VERTEX_ELEMENTS << 16) | (2 * nr_elements - 1));
    for (i = 0; i < brw->vb.nr_enabled; i++) {
       struct brw_vertex_element *input = brw->vb.enabled[i];
-      uint32_t format = get_surface_type(brw, input->glarray);
+      uint32_t format = brw_get_vertex_surface_type(brw, input->glarray);
       uint32_t comp0 = BRW_VE1_COMPONENT_STORE_SRC;
       uint32_t comp1 = BRW_VE1_COMPONENT_STORE_SRC;
       uint32_t comp2 = BRW_VE1_COMPONENT_STORE_SRC;
       uint32_t comp3 = BRW_VE1_COMPONENT_STORE_SRC;
 
-      /* The gen4 driver expects edgeflag to come in as a float, and passes
-       * that float on to the tests in the clipper.  Mesa's current vertex
-       * attribute value for EdgeFlag is stored as a float, which works out.
-       * glEdgeFlagPointer, on the other hand, gives us an unnormalized
-       * integer ubyte.  Just rewrite that to convert to a float.
-       */
-      if (input->attrib == VERT_ATTRIB_EDGEFLAG) {
+      if (input == &brw->vb.inputs[VERT_ATTRIB_EDGEFLAG]) {
          /* Gen6+ passes edgeflag as sideband along with the vertex, instead
           * of in the VUE.  We have to upload it sideband as the last vertex
           * element according to the B-Spec.
@@ -708,9 +722,6 @@ static void brw_emit_vertices(struct brw_context *brw)
             gen6_edgeflag_input = input;
             continue;
          }
-
-         if (format == BRW_SURFACEFORMAT_R8_UINT)
-            format = BRW_SURFACEFORMAT_R8_SSCALED;
       }
 
       switch (input->glarray->Size) {
@@ -748,7 +759,8 @@ static void brw_emit_vertices(struct brw_context *brw)
    }
 
    if (brw->gen >= 6 && gen6_edgeflag_input) {
-      uint32_t format = get_surface_type(brw, gen6_edgeflag_input->glarray);
+      uint32_t format =
+         brw_get_vertex_surface_type(brw, gen6_edgeflag_input->glarray);
 
       OUT_BATCH((gen6_edgeflag_input->buffer << GEN6_VE0_INDEX_SHIFT) |
                 GEN6_VE0_VALID |
@@ -784,7 +796,7 @@ static void brw_emit_vertices(struct brw_context *brw)
       OUT_BATCH(dw1);
    }
 
-   CACHED_BATCH();
+   ADVANCE_BATCH();
 }
 
 const struct brw_tracked_state brw_vertices = {
@@ -801,7 +813,7 @@ static void brw_upload_indices(struct brw_context *brw)
    struct gl_context *ctx = &brw->ctx;
    const struct _mesa_index_buffer *index_buffer = brw->ib.ib;
    GLuint ib_size;
-   drm_intel_bo *bo = NULL;
+   drm_intel_bo *old_bo = brw->ib.bo;
    struct gl_buffer_object *bufferobj;
    GLuint offset;
    GLuint ib_type_size;
@@ -816,57 +828,51 @@ static void brw_upload_indices(struct brw_context *brw)
    /* Turn into a proper VBO:
     */
    if (!_mesa_is_bufferobj(bufferobj)) {
-
       /* Get new bufferobj, offset:
        */
       intel_upload_data(brw, index_buffer->ptr, ib_size, ib_type_size,
-			&bo, &offset);
-      brw->ib.start_vertex_offset = offset / ib_type_size;
+			&brw->ib.bo, &offset);
    } else {
       offset = (GLuint) (unsigned long) index_buffer->ptr;
 
       /* If the index buffer isn't aligned to its element size, we have to
        * rebase it into a temporary.
        */
-       if ((ib_type_size - 1) & offset) {
-          perf_debug("copying index buffer to a temporary to work around "
-                     "misaligned offset %d\n", offset);
+      if ((ib_type_size - 1) & offset) {
+         perf_debug("copying index buffer to a temporary to work around "
+                    "misaligned offset %d\n", offset);
 
-          GLubyte *map = ctx->Driver.MapBufferRange(ctx,
-                                                    offset,
-                                                    ib_size,
-                                                    GL_MAP_READ_BIT,
-                                                    bufferobj);
+         GLubyte *map = ctx->Driver.MapBufferRange(ctx,
+                                                   offset,
+                                                   ib_size,
+                                                   GL_MAP_READ_BIT,
+                                                   bufferobj,
+                                                   MAP_INTERNAL);
 
-          intel_upload_data(brw, map, ib_size, ib_type_size, &bo, &offset);
-          brw->ib.start_vertex_offset = offset / ib_type_size;
+         intel_upload_data(brw, map, ib_size, ib_type_size,
+                           &brw->ib.bo, &offset);
 
-          ctx->Driver.UnmapBuffer(ctx, bufferobj);
-       } else {
-	  /* Use CMD_3D_PRIM's start_vertex_offset to avoid re-uploading
-	   * the index buffer state when we're just moving the start index
-	   * of our drawing.
-	   */
-	  brw->ib.start_vertex_offset = offset / ib_type_size;
-
-	  bo = intel_bufferobj_source(brw,
-				      intel_buffer_object(bufferobj),
-				      ib_type_size,
-				      &offset);
-	  drm_intel_bo_reference(bo);
-
-	  brw->ib.start_vertex_offset += offset / ib_type_size;
-       }
+         ctx->Driver.UnmapBuffer(ctx, bufferobj, MAP_INTERNAL);
+      } else {
+         drm_intel_bo *bo =
+            intel_bufferobj_buffer(brw, intel_buffer_object(bufferobj),
+                                   offset, ib_size);
+         if (bo != brw->ib.bo) {
+            drm_intel_bo_unreference(brw->ib.bo);
+            brw->ib.bo = bo;
+            drm_intel_bo_reference(bo);
+         }
+      }
    }
 
-   if (brw->ib.bo != bo) {
-      drm_intel_bo_unreference(brw->ib.bo);
-      brw->ib.bo = bo;
+   /* Use 3DPRIMITIVE's start_vertex_offset to avoid re-uploading
+    * the index buffer state when we're just moving the start index
+    * of our drawing.
+    */
+   brw->ib.start_vertex_offset = offset / ib_type_size;
 
+   if (brw->ib.bo != old_bo)
       brw->state.dirty.brw |= BRW_NEW_INDEX_BUFFER;
-   } else {
-      drm_intel_bo_unreference(bo);
-   }
 
    if (index_buffer->type != brw->ib.type) {
       brw->ib.type = index_buffer->type;
@@ -900,7 +906,7 @@ static void brw_emit_index_buffer(struct brw_context *brw)
    BEGIN_BATCH(3);
    OUT_BATCH(CMD_INDEX_BUFFER << 16 |
              cut_index_setting |
-             get_index_type(index_buffer->type) << 8 |
+             brw_get_index_type(index_buffer->type) << 8 |
              1);
    OUT_RELOC(brw->ib.bo,
              I915_GEM_DOMAIN_VERTEX, 0,

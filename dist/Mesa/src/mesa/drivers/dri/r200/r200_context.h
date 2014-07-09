@@ -29,7 +29,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /*
  * Authors:
- *   Keith Whitwell <keith@tungstengraphics.com>
+ *   Keith Whitwell <keithw@vmware.com>
  */
 
 #ifndef __R200_CONTEXT_H__
@@ -638,6 +638,7 @@ extern GLboolean r200CreateContext( gl_api api,
 				    unsigned major_version,
 				    unsigned minor_version,
 				    uint32_t flags,
+                                    bool notify_reset,
 				    unsigned *error,
 				    void *sharedContextPrivate);
 extern GLboolean r200MakeCurrent( __DRIcontext *driContextPriv,

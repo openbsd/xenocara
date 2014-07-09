@@ -123,11 +123,12 @@ static void r300_destroy_context(struct pipe_context* context)
     FREE(r300);
 }
 
-static void r300_flush_callback(void *data, unsigned flags)
+static void r300_flush_callback(void *data, unsigned flags,
+				struct pipe_fence_handle **fence)
 {
     struct r300_context* const cs_context_copy = data;
 
-    r300_flush(&cs_context_copy->context, flags, NULL);
+    r300_flush(&cs_context_copy->context, flags, fence);
 }
 
 #define R300_INIT_ATOM(atomname, atomsize) \
@@ -379,7 +380,7 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
                      sizeof(struct pipe_transfer), 64,
                      UTIL_SLAB_SINGLETHREADED);
 
-    r300->cs = rws->cs_create(rws, RING_GFX, NULL);
+    r300->cs = rws->cs_create(rws, RING_GFX, r300_flush_callback, r300, NULL);
     if (r300->cs == NULL)
         goto fail;
 
@@ -409,7 +410,7 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
     r300_init_render_functions(r300);
     r300_init_states(&r300->context);
 
-    r300->context.create_video_decoder = vl_create_decoder;
+    r300->context.create_video_codec = vl_create_decoder;
     r300->context.create_video_buffer = vl_video_buffer_create;
 
     r300->uploader = u_upload_create(&r300->context, 256 * 1024, 4,
@@ -419,8 +420,6 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
     if (r300->blitter == NULL)
         goto fail;
     r300->blitter->draw_rectangle = r300_blitter_draw_rectangle;
-
-    rws->cs_set_flush_callback(r300->cs, r300_flush_callback, r300);
 
     /* The KIL opcode needs the first texture unit to be enabled
      * on r3xx-r4xx. In order to calm down the CS checker, we bind this
@@ -451,7 +450,7 @@ struct pipe_context* r300_create_context(struct pipe_screen* screen,
         memset(&vb, 0, sizeof(vb));
         vb.target = PIPE_BUFFER;
         vb.format = PIPE_FORMAT_R8_UNORM;
-        vb.usage = PIPE_USAGE_STATIC;
+        vb.usage = PIPE_USAGE_DEFAULT;
         vb.width0 = sizeof(float) * 16;
         vb.height0 = 1;
         vb.depth0 = 1;

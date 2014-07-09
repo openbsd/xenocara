@@ -1,6 +1,6 @@
 /**************************************************************************
  * 
- * Copyright 2007 Tungsten Graphics, Inc., Cedar Park, Texas.
+ * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -18,7 +18,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
- * IN NO EVENT SHALL TUNGSTEN GRAPHICS AND/OR ITS SUPPLIERS BE LIABLE FOR
+ * IN NO EVENT SHALL VMWARE AND/OR ITS SUPPLIERS BE LIABLE FOR
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -33,6 +33,7 @@
 #include "main/shaderobj.h"
 #include "main/version.h"
 #include "main/vtxfmt.h"
+#include "main/hash.h"
 #include "program/prog_cache.h"
 #include "vbo/vbo.h"
 #include "glapi/glapi.h"
@@ -65,6 +66,8 @@
 #include "st_extensions.h"
 #include "st_gen_mipmap.h"
 #include "st_program.h"
+#include "st_vdpau.h"
+#include "st_texture.h"
 #include "pipe/p_context.h"
 #include "util/u_inlines.h"
 #include "util/u_upload_mgr.h"
@@ -125,6 +128,9 @@ st_create_context_priv( struct gl_context *ctx, struct pipe_context *pipe,
    st->dirty.mesa = ~0;
    st->dirty.st = ~0;
 
+   /* Create upload manager for vertex data for glBitmap, glDrawPixels,
+    * glClear, etc.
+    */
    st->uploader = u_upload_create(st->pipe, 65536, 4, PIPE_BIND_VERTEX_BUFFER);
 
    if (!screen->get_param(screen, PIPE_CAP_USER_INDEX_BUFFERS)) {
@@ -146,9 +152,9 @@ st_create_context_priv( struct gl_context *ctx, struct pipe_context *pipe,
    st_init_bitmap(st);
    st_init_clear(st);
    st_init_draw( st );
-   st_init_generate_mipmap(st);
 
-   if(pipe->screen->get_param(pipe->screen, PIPE_CAP_NPOT_TEXTURES))
+   /* Choose texture target for glDrawPixels, glBitmap, renderbuffers */
+   if (pipe->screen->get_param(pipe->screen, PIPE_CAP_NPOT_TEXTURES))
       st->internal_target = PIPE_TEXTURE_2D;
    else
       st->internal_target = PIPE_TEXTURE_RECT;
@@ -235,7 +241,7 @@ struct st_context *st_create_context(gl_api api, struct pipe_context *pipe,
     * driver prefers DP4 or MUL/MAD for vertex transformation.
     */
    if (debug_get_option_mesa_mvp_dp4())
-      ctx->ShaderCompilerOptions[MESA_SHADER_VERTEX].PreferDP4 = GL_TRUE;
+      ctx->ShaderCompilerOptions[MESA_SHADER_VERTEX].OptimizeForAOS = GL_TRUE;
 
    return st_create_context_priv(ctx, pipe, options);
 }
@@ -247,7 +253,6 @@ static void st_destroy_context_priv( struct st_context *st )
 
    st_destroy_atoms( st );
    st_destroy_draw( st );
-   st_destroy_generate_mipmap(st);
    st_destroy_clear(st);
    st_destroy_bitmap(st);
    st_destroy_drawpix(st);
@@ -275,6 +280,19 @@ static void st_destroy_context_priv( struct st_context *st )
    free( st );
 }
 
+
+/**
+ * Callback to release the sampler view attached to a texture object.
+ * Called by _mesa_HashWalk().
+ */
+static void
+destroy_tex_sampler_cb(GLuint id, void *data, void *userData)
+{
+   struct gl_texture_object *texObj = (struct gl_texture_object *) data;
+   struct st_context *st = (struct st_context *) userData;
+
+   st_texture_release_sampler_view(st, st_texture_object(texObj));
+}
  
 void st_destroy_context( struct st_context *st )
 {
@@ -282,6 +300,8 @@ void st_destroy_context( struct st_context *st )
    struct cso_context *cso = st->cso_context;
    struct gl_context *ctx = st->ctx;
    GLuint i;
+
+   _mesa_HashWalk(ctx->Shared->TexObjects, destroy_tex_sampler_cb, st);
 
    /* need to unbind and destroy CSO objects before anything else */
    cso_release_all(st->cso_context);
@@ -355,6 +375,8 @@ void st_init_driver_functions(struct dd_function_table *functions)
 
    st_init_xformfb_functions(functions);
    st_init_syncobj_functions(functions);
+
+   st_init_vdpau_functions(functions);
 
    functions->UpdateState = st_invalidate_state;
 }

@@ -22,7 +22,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  *
  * Authors:
- *    Keith Whitwell <keith@tungstengraphics.com>
+ *    Keith Whitwell <keithw@vmware.com>
  */
 
 #include "main/glheader.h"
@@ -167,7 +167,7 @@ setup_vertex_format(struct gl_context *ctx)
          EMIT_ATTR( _TNL_ATTRIB_POINTSIZE, EMIT_1F, pointSize );
 
       _tnl_install_attrs( ctx, map, e,
-                          ctx->Viewport._WindowMap.m,
+                          ctx->ViewportArray[0]._WindowMap.m,
                           sizeof(SWvertex) );
 
       swsetup->last_index_bitset = index_bitset;
@@ -265,7 +265,7 @@ _swsetup_Wakeup( struct gl_context *ctx )
 void 
 _swsetup_Translate( struct gl_context *ctx, const void *vertex, SWvertex *dest )
 {
-   const GLfloat *m = ctx->Viewport._WindowMap.m;
+   const GLfloat *m = ctx->ViewportArray[0]._WindowMap.m;
    GLfloat tmp[4];
    GLuint i;
 
@@ -287,7 +287,8 @@ _swsetup_Translate( struct gl_context *ctx, const void *vertex, SWvertex *dest )
 
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR0,
                   dest->attrib[VARYING_SLOT_COL0] );
-   UNCLAMPED_FLOAT_TO_RGBA_CHAN( dest->color, tmp );
+
+   UNCLAMPED_FLOAT_TO_RGBA_CHAN(dest->color, dest->attrib[VARYING_SLOT_COL0]);
 
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR1,
                   dest->attrib[VARYING_SLOT_COL1]);

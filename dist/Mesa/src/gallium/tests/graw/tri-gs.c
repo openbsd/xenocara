@@ -94,7 +94,7 @@ static void set_vertices( void )
    vbuf.buffer_offset = 0;
    vbuf.buffer = pipe_buffer_create_with_data(ctx,
                                               PIPE_BIND_VERTEX_BUFFER,
-                                              PIPE_USAGE_STATIC,
+                                              PIPE_USAGE_DEFAULT,
                                               sizeof(vertices),
                                               vertices);
 
@@ -168,7 +168,7 @@ static void draw( void )
    util_draw_arrays(ctx, PIPE_PRIM_TRIANGLES, 0, 3);
    ctx->flush(ctx, NULL, 0);
 
-   screen->flush_frontbuffer(screen, tex, 0, 0, window);
+   screen->flush_frontbuffer(screen, tex, 0, 0, window, NULL);
 }
 
 

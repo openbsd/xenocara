@@ -32,14 +32,8 @@ ast_type_specifier::print(void) const
       printf("%s ", type_name);
    }
 
-   if (is_array) {
-      printf("[ ");
-
-      if (array_size) {
-	 array_size->print();
-      }
-
-      printf("] ");
+   if (array_specifier) {
+      array_specifier->print();
    }
 }
 
@@ -72,7 +66,8 @@ ast_type_qualifier::has_layout() const
           || this->flags.q.packed
           || this->flags.q.explicit_location
           || this->flags.q.explicit_index
-          || this->flags.q.explicit_binding;
+          || this->flags.q.explicit_binding
+          || this->flags.q.explicit_offset;
 }
 
 bool
@@ -89,7 +84,8 @@ ast_type_qualifier::has_storage() const
 bool
 ast_type_qualifier::has_auxiliary_storage() const
 {
-   return this->flags.q.centroid;
+   return this->flags.q.centroid
+          || this->flags.q.sample;
 }
 
 const char*
@@ -121,22 +117,61 @@ ast_type_qualifier::merge_qualifier(YYLTYPE *loc,
    ubo_layout_mask.flags.q.packed = 1;
    ubo_layout_mask.flags.q.shared = 1;
 
+   ast_type_qualifier ubo_binding_mask;
+   ubo_binding_mask.flags.i = 0;
+   ubo_binding_mask.flags.q.explicit_binding = 1;
+   ubo_binding_mask.flags.q.explicit_offset = 1;
+
    /* Uniform block layout qualifiers get to overwrite each
     * other (rightmost having priority), while all other
     * qualifiers currently don't allow duplicates.
     */
 
    if ((this->flags.i & q.flags.i & ~(ubo_mat_mask.flags.i |
-				      ubo_layout_mask.flags.i)) != 0) {
+				      ubo_layout_mask.flags.i |
+                                      ubo_binding_mask.flags.i)) != 0) {
       _mesa_glsl_error(loc, state,
-		       "duplicate layout qualifiers used\n");
+		       "duplicate layout qualifiers used");
       return false;
+   }
+
+   if (q.flags.q.prim_type) {
+      if (this->flags.q.prim_type && this->prim_type != q.prim_type) {
+	 _mesa_glsl_error(loc, state,
+			  "conflicting primitive type qualifiers used");
+	 return false;
+      }
+      this->prim_type = q.prim_type;
+   }
+
+   if (q.flags.q.max_vertices) {
+      if (this->flags.q.max_vertices && this->max_vertices != q.max_vertices) {
+	 _mesa_glsl_error(loc, state,
+			  "geometry shader set conflicting max_vertices "
+			  "(%d and %d)", this->max_vertices, q.max_vertices);
+	 return false;
+      }
+      this->max_vertices = q.max_vertices;
    }
 
    if ((q.flags.i & ubo_mat_mask.flags.i) != 0)
       this->flags.i &= ~ubo_mat_mask.flags.i;
    if ((q.flags.i & ubo_layout_mask.flags.i) != 0)
       this->flags.i &= ~ubo_layout_mask.flags.i;
+
+   for (int i = 0; i < 3; i++) {
+      if (q.flags.q.local_size & (1 << i)) {
+         if ((this->flags.q.local_size & (1 << i)) &&
+             this->local_size[i] != q.local_size[i]) {
+            _mesa_glsl_error(loc, state,
+                             "compute shader set conflicting values for "
+                             "local_size_%c (%d and %d)", 'x' + i,
+                             this->local_size[i], q.local_size[i]);
+            return false;
+         }
+         this->local_size[i] = q.local_size[i];
+      }
+   }
 
    this->flags.i |= q.flags.i;
 
@@ -149,9 +184,123 @@ ast_type_qualifier::merge_qualifier(YYLTYPE *loc,
    if (q.flags.q.explicit_binding)
       this->binding = q.binding;
 
+   if (q.flags.q.explicit_offset)
+      this->offset = q.offset;
+
    if (q.precision != ast_precision_none)
       this->precision = q.precision;
+
+   if (q.flags.q.explicit_image_format) {
+      this->image_format = q.image_format;
+      this->image_base_type = q.image_base_type;
+   }
 
    return true;
 }
 
+bool
+ast_type_qualifier::merge_in_qualifier(YYLTYPE *loc,
+                                       _mesa_glsl_parse_state *state,
+                                       ast_type_qualifier q,
+                                       ast_node* &node)
+{
+   void *mem_ctx = state;
+   bool create_gs_ast = false;
+   bool create_cs_ast = false;
+   ast_type_qualifier valid_in_mask;
+   valid_in_mask.flags.i = 0;
+
+   switch (state->stage) {
+   case MESA_SHADER_GEOMETRY:
+      if (q.flags.q.prim_type) {
+         /* Make sure this is a valid input primitive type. */
+         switch (q.prim_type) {
+         case GL_POINTS:
+         case GL_LINES:
+         case GL_LINES_ADJACENCY:
+         case GL_TRIANGLES:
+         case GL_TRIANGLES_ADJACENCY:
+            break;
+         default:
+            _mesa_glsl_error(loc, state,
+                             "invalid geometry shader input primitive type");
+            break;
+         }
+      }
+
+      create_gs_ast |=
+         q.flags.q.prim_type &&
+         !state->in_qualifier->flags.q.prim_type;
+
+      valid_in_mask.flags.q.prim_type = 1;
+      valid_in_mask.flags.q.invocations = 1;
+      break;
+   case MESA_SHADER_FRAGMENT:
+      if (q.flags.q.early_fragment_tests) {
+         state->early_fragment_tests = true;
+      } else {
+         _mesa_glsl_error(loc, state, "invalid input layout qualifier");
+      }
+      break;
+   case MESA_SHADER_COMPUTE:
+      create_cs_ast |=
+         q.flags.q.local_size != 0 &&
+         state->in_qualifier->flags.q.local_size == 0;
+
+      valid_in_mask.flags.q.local_size = 1;
+      break;
+   default:
+      _mesa_glsl_error(loc, state,
+                       "input layout qualifiers only valid in "
+                       "geometry, fragment and compute shaders");
+      break;
+   }
+
+   /* Generate an error when invalid input layout qualifiers are used. */
+   if ((q.flags.i & ~valid_in_mask.flags.i) != 0) {
+      _mesa_glsl_error(loc, state,
+		       "invalid input layout qualifiers used");
+      return false;
+   }
+
+   /* Input layout qualifiers can be specified multiple
+    * times in separate declarations, as long as they match.
+    */
+   if (this->flags.q.prim_type) {
+      if (q.flags.q.prim_type &&
+          this->prim_type != q.prim_type) {
+         _mesa_glsl_error(loc, state,
+                          "conflicting input primitive types specified");
+      }
+   } else if (q.flags.q.prim_type) {
+      state->in_qualifier->flags.q.prim_type = 1;
+      state->in_qualifier->prim_type = q.prim_type;
+   }
+
+   if (this->flags.q.invocations &&
+       q.flags.q.invocations &&
+       this->invocations != q.invocations) {
+      _mesa_glsl_error(loc, state,
+                       "conflicting invocations counts specified");
+      return false;
+   } else if (q.flags.q.invocations) {
+      this->flags.q.invocations = 1;
+      this->invocations = q.invocations;
+   }
+
+   if (create_gs_ast) {
+      node = new(mem_ctx) ast_gs_input_layout(*loc, q.prim_type);
+   } else if (create_cs_ast) {
+      /* Infer a local_size of 1 for every unspecified dimension */
+      unsigned local_size[3];
+      for (int i = 0; i < 3; i++) {
+         if (q.flags.q.local_size & (1 << i))
+            local_size[i] = q.local_size[i];
+         else
+            local_size[i] = 1;
+      }
+      node = new(mem_ctx) ast_cs_input_layout(*loc, local_size);
+   }
+
+   return true;
+}

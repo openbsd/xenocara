@@ -36,6 +36,7 @@
 #include "svga_hw_reg.h"
 #include "svga_cmd.h"
 #include "svga_debug.h"
+#include "svga_shader.h"
 
 
 /**
@@ -148,33 +149,24 @@ svga_delete_vs_state(struct pipe_context *pipe, void *shader)
 {
    struct svga_context *svga = svga_context(pipe);
    struct svga_vertex_shader *vs = (struct svga_vertex_shader *)shader;
-   struct svga_shader_result *result, *tmp;
+   struct svga_shader_variant *variant, *tmp;
    enum pipe_error ret;
 
    svga_hwtnl_flush_retry(svga);
 
    draw_delete_vertex_shader(svga->swtnl.draw, vs->draw_shader);
 
-   for (result = vs->base.results; result; result = tmp) {
-      tmp = result->next;
+   for (variant = vs->base.variants; variant; variant = tmp) {
+      tmp = variant->next;
 
-      ret = SVGA3D_DestroyShader(svga->swc, result->id, SVGA3D_SHADERTYPE_VS);
-      if (ret != PIPE_OK) {
-         svga_context_flush(svga, NULL);
-         ret = SVGA3D_DestroyShader(svga->swc, result->id,
-                                    SVGA3D_SHADERTYPE_VS);
-         assert(ret == PIPE_OK);
-      }
-
-      util_bitmask_clear(svga->vs_bm, result->id);
-
-      svga_destroy_shader_result(result);
+      ret = svga_destroy_shader_variant(svga, SVGA3D_SHADERTYPE_VS, variant);
+      (void) ret;  /* PIPE_ERROR_ not handled yet */
 
       /*
-       * Remove stale references to this result to ensure a new result on the
+       * Remove stale references to this variant to ensure a new variant on the
        * same address will be detected as a change.
        */
-      if (result == svga->state.hw_draw.vs)
+      if (variant == svga->state.hw_draw.vs)
          svga->state.hw_draw.vs = NULL;
    }
 

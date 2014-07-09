@@ -29,7 +29,8 @@
 #include "util/u_format.h"
 #include "pipe/p_compiler.h"
 #include "util/u_inlines.h"
-#include "state_tracker/xlib_sw_winsys.h"
+#include "state_tracker/xlibsw_api.h"
+#include "sw/xlib/xlib_sw_winsys.h"
 #include "util/u_debug.h"
 #include "egllog.h"
 
@@ -476,7 +477,7 @@ ximage_display_copy_to_pixmap(struct native_display *ndpy,
       xdraw.drawable = (Drawable) pix;
 
       xdpy->base.screen->flush_frontbuffer(xdpy->base.screen,
-            src, 0, 0, &xdraw);
+            src, 0, 0, &xdraw, NULL);
 
       return TRUE;
    }

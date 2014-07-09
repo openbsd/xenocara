@@ -46,6 +46,15 @@
 extern struct gl_texture_object *
 _mesa_lookup_texture(struct gl_context *ctx, GLuint id);
 
+extern void
+_mesa_begin_texture_lookups(struct gl_context *ctx);
+
+extern void
+_mesa_end_texture_lookups(struct gl_context *ctx);
+
+extern struct gl_texture_object *
+_mesa_lookup_texture_locked(struct gl_context *ctx, GLuint id);
+
 extern struct gl_texture_object *
 _mesa_new_texture_object( struct gl_context *ctx, GLuint name, GLenum target );
 
@@ -53,6 +62,9 @@ extern void
 _mesa_initialize_texture_object( struct gl_context *ctx,
                                  struct gl_texture_object *obj,
                                  GLuint name, GLenum target );
+
+extern int
+_mesa_tex_target_to_index(const struct gl_context *ctx, GLenum target);
 
 extern void
 _mesa_delete_texture_object( struct gl_context *ctx,
@@ -111,6 +123,20 @@ _mesa_is_texture_complete(const struct gl_texture_object *texObj,
       return GL_FALSE;
    }
 
+   /* From the ARB_stencil_texturing specification:
+    * "Add a new bullet point for the conditions that cause the texture
+    *  to not be complete:
+    *
+    *  * The internal format of the texture is DEPTH_STENCIL, the
+    *    DEPTH_STENCIL_TEXTURE_MODE for the texture is STENCIL_INDEX and either
+    *    the magnification filter or the minification filter is not NEAREST."
+    */
+   if (texObj->StencilSampling &&
+       texObj->Image[0][texObj->BaseLevel]->_BaseFormat == GL_DEPTH_STENCIL &&
+       (sampler->MagFilter != GL_NEAREST || sampler->MinFilter != GL_NEAREST)) {
+      return GL_FALSE;
+   }
+
    if (_mesa_is_mipmap_filter(sampler))
       return texObj->_MipmapComplete;
    else
@@ -126,8 +152,7 @@ extern GLboolean
 _mesa_cube_complete(const struct gl_texture_object *texObj);
 
 extern void
-_mesa_dirty_texobj(struct gl_context *ctx, struct gl_texture_object *texObj,
-                   GLboolean invalidate_state);
+_mesa_dirty_texobj(struct gl_context *ctx, struct gl_texture_object *texObj);
 
 extern struct gl_texture_object *
 _mesa_get_fallback_texture(struct gl_context *ctx, gl_texture_index tex);
@@ -158,6 +183,10 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures );
 
 extern void GLAPIENTRY
 _mesa_BindTexture( GLenum target, GLuint texture );
+
+
+extern void GLAPIENTRY
+_mesa_BindTextures( GLuint first, GLsizei count, const GLuint *textures );
 
 
 extern void GLAPIENTRY

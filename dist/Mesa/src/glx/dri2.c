@@ -38,7 +38,6 @@
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 #include <X11/extensions/dri2proto.h>
-#include "xf86drm.h"
 #include "dri2.h"
 #include "glxclient.h"
 #include "GL/glxext.h"
@@ -102,6 +101,8 @@ DRI2WireToEvent(Display *dpy, XEvent *event, xEvent *wire)
       __GLXDRIdrawable *pdraw;
 
       pdraw = dri2GetGlxDrawableFromXDrawableId(dpy, awire->drawable);
+      if (pdraw == NULL)
+         return False;
 
       /* Ignore swap events if we're not looking for them */
       aevent->type = dri2GetSwapEventType(dpy, awire->drawable);
@@ -130,10 +131,14 @@ DRI2WireToEvent(Display *dpy, XEvent *event, xEvent *wire)
       aevent->msc = ((CARD64)awire->msc_hi << 32) | awire->msc_lo;
 
       glxDraw = GetGLXDrawable(dpy, pdraw->drawable);
-      if (awire->sbc < glxDraw->lastEventSbc)
-	 glxDraw->eventSbcWrap += 0x100000000;
-      glxDraw->lastEventSbc = awire->sbc;
-      aevent->sbc = awire->sbc + glxDraw->eventSbcWrap;
+      if (glxDraw != NULL) {
+         if (awire->sbc < glxDraw->lastEventSbc)
+            glxDraw->eventSbcWrap += 0x100000000;
+         glxDraw->lastEventSbc = awire->sbc;
+         aevent->sbc = awire->sbc + glxDraw->eventSbcWrap;
+      } else {
+         aevent->sbc = awire->sbc;
+      }
 
       return True;
    }

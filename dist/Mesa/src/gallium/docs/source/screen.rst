@@ -53,8 +53,6 @@ The integer capabilities:
   opcodes to the Shader Model 3 specification. XXX oh god this is horrible
 * ``PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS``: The maximum number of stream buffers.
 * ``PIPE_CAP_PRIMITIVE_RESTART``: Whether primitive restart is supported.
-* ``PIPE_CAP_MAX_COMBINED_SAMPLERS``: The total number of samplers accessible from
-  the vertex and fragment shader, inclusive.
 * ``PIPE_CAP_INDEP_BLEND_ENABLE``: Whether per-rendertarget blend enabling and channel
   masks are supported. If 0, then the first rendertarget's blend mask is
   replicated across all MRTs.
@@ -104,7 +102,8 @@ The integer capabilities:
   the flatshade_first setting in ``pipe_rasterizer_state``.
 * ``PIPE_CAP_USER_VERTEX_BUFFERS``: Whether the driver supports user vertex
   buffers.  If not, the state tracker must upload all data which is not in hw
-  resources.
+  resources.  If user-space buffers are supported, the driver must also still
+  accept HW resource buffers.
 * ``PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY``: This CAP describes a hw
   limitation.  If true, pipe_vertex_buffer::buffer_offset must always be aligned
   to 4.  If false, there are no restrictions on the offset.
@@ -118,10 +117,12 @@ The integer capabilities:
   compute entry points defined in pipe_context and pipe_screen.
 * ``PIPE_CAP_USER_INDEX_BUFFERS``: Whether user index buffers are supported.
   If not, the state tracker must upload all indices which are not in hw
-  resources.
-* ``PIPE_CAP_USER_CONSTANT_BUFFERS``: Whether user constant buffers are
-  supported. If not, the state tracker must upload constants which are not in hw
-  resources.
+  resources.  If user-space buffers are supported, the driver must also still
+  accept HW resource buffers.
+* ``PIPE_CAP_USER_CONSTANT_BUFFERS``: Whether user-space constant buffers
+  are supported.  If not, the state tracker must put constants into HW
+  resources/buffers.  If user-space constant buffers are supported, the
+  driver must still accept HW constant buffers also.
 * ``PIPE_CAP_CONSTANT_BUFFER_OFFSET_ALIGNMENT``: Describes the required
   alignment of pipe_constant_buffer::buffer_offset.
 * ``PIPE_CAP_START_INSTANCE``: Whether the driver supports
@@ -167,9 +168,38 @@ The integer capabilities:
 * ``PIPE_CAP_MAX_VIEWPORTS``: The maximum number of viewports (and scissors
   since they are linked) a driver can support. Returning 0 is equivalent
   to returning 1 because every driver has to support at least a single
-  viewport/scissor combination.  
-* ''PIPE_CAP_ENDIANNESS``:: The endianness of the device.  Either
+  viewport/scissor combination.
+* ``PIPE_CAP_ENDIANNESS``:: The endianness of the device.  Either
   PIPE_ENDIAN_BIG or PIPE_ENDIAN_LITTLE.
+* ``PIPE_CAP_MIXED_FRAMEBUFFER_SIZES``: Whether it is allowed to have
+  different sizes for fb color/zs attachments. This controls whether
+  ARB_framebuffer_object is provided.
+* ``PIPE_CAP_TGSI_VS_LAYER``: Whether TGSI_SEMANTIC_LAYER is supported
+  as a vertex shader output.
+* ``PIPE_CAP_MAX_GEOMETRY_OUTPUT_VERTICES``: The maximum number of vertices
+  output by a single invocation of a geometry shader.
+* ``PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS``: The maximum number of
+  vertex components output by a single invocation of a geometry shader.
+  This is the product of the number of attribute components per vertex and
+  the number of output vertices.
+* ``PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS``: Max number of components
+  in format that texture gather can operate on. 1 == RED, ALPHA etc,
+  4 == All formats.
+* ``PIPE_CAP_TEXTURE_GATHER_SM5``: Whether the texture gather
+  hardware implements the SM5 features, component selection,
+  shadow comparison, and run-time offsets.
+* ``PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT``: Whether
+  PIPE_TRANSFER_PERSISTENT and PIPE_TRANSFER_COHERENT are supported
+  for buffers.
+* ``PIPE_CAP_TEXTURE_QUERY_LOD``: Whether the ``LODQ`` instruction is
+  supported.
+* ``PIPE_CAP_MIN_TEXTURE_GATHER_OFFSET``: The minimum offset that can be used
+  in conjunction with a texture gather opcode.
+* ``PIPE_CAP_MAX_TEXTURE_GATHER_OFFSET``: The maximum offset that can be used
+  in conjunction with a texture gather opcode.
+* ``PIPE_CAP_SAMPLE_SHADING``: Whether there is support for per-sample
+  shading. The context->set_min_samples function will be expected to be
+  implemented.
 
 
 .. _pipe_capf:
@@ -212,7 +242,7 @@ support different features.
   to any shader stage using ``set_constant_buffer``. If 0 or 1, the pipe will
   only permit binding one constant buffer per shader, and the shaders will
   not permit two-dimensional access to constants.
-  
+
 If a value greater than 0 is returned, the driver can have multiple
 constant buffers bound to shader stages. The CONST register file can
 be accessed with two-dimensional indices, like in the example below.
@@ -224,7 +254,7 @@ MOV OUT[0], CONST[0][3]  # copy vector 3 of constbuf 0
 For backwards compatibility, one-dimensional access to CONST register
 file is still supported. In that case, the constbuf index is assumed
 to be 0.
-  
+
 * ``PIPE_SHADER_CAP_MAX_TEMPS``: The maximum number of temporary registers.
 * ``PIPE_SHADER_CAP_MAX_ADDRS``: The maximum number of address registers.
 * ``PIPE_SHADER_CAP_MAX_PREDS``: The maximum number of predicate registers.
@@ -241,10 +271,12 @@ to be 0.
   BGNSUB, ENDSUB, CAL, and RET, including RET in the main block.
 * ``PIPE_SHADER_CAP_INTEGERS``: Whether integer opcodes are supported.
   If unsupported, only float opcodes are supported.
-* ``PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS``: THe maximum number of texture
+* ``PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS``: The maximum number of texture
   samplers.
 * ``PIPE_SHADER_CAP_PREFERRED_IR``: Preferred representation of the
   program.  It should be one of the ``pipe_shader_ir`` enum values.
+* ``PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS``: The maximum number of texture
+  sampler views. Must not be lower than PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS.
 
 
 .. _pipe_compute_cap:
@@ -281,6 +313,8 @@ pipe_screen::get_compute_param.
   resource.  Value type: ``uint64_t``.
 * ``PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE``: Maximum size of a memory object
   allocation in bytes.  Value type: ``uint64_t``.
+* ``PIPE_COMPUTE_CAP_MAX_CLOCK_FREQUENCY``: Maximum frequency of the GPU
+  clock in MHz. Value type: ``uint32_t``
 
 .. _pipe_bind:
 
@@ -332,12 +366,17 @@ PIPE_USAGE_*
 ^^^^^^^^^^^^
 
 The PIPE_USAGE enums are hints about the expected usage pattern of a resource.
+Note that drivers must always support read and write CPU access at any time
+no matter which hint they got.
 
-* ``PIPE_USAGE_DEFAULT``: Expect many uploads to the resource, intermixed with draws.
-* ``PIPE_USAGE_DYNAMIC``: Expect many uploads to the resource, intermixed with draws.
-* ``PIPE_USAGE_STATIC``: Same as immutable (?)
-* ``PIPE_USAGE_IMMUTABLE``: Resource will not be changed after first upload.
-* ``PIPE_USAGE_STREAM``: Upload will be followed by draw, followed by upload, ...
+* ``PIPE_USAGE_DEFAULT``: Optimized for fast GPU access.
+* ``PIPE_USAGE_IMMUTABLE``: Optimized for fast GPU access and the resource is
+  not expected to be mapped or changed (even by the GPU) after the first upload.
+* ``PIPE_USAGE_DYNAMIC``: Expect frequent write-only CPU access. What is
+  uploaded is expected to be used at least several times by the GPU.
+* ``PIPE_USAGE_STREAM``: Expect frequent write-only CPU access. What is
+  uploaded is expected to be used only once by the GPU.
+* ``PIPE_USAGE_STAGING``: Optimized for fast CPU access.
 
 
 Methods

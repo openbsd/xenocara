@@ -224,16 +224,14 @@ compute_version(struct gl_context *ctx)
 			      (ctx->Extensions.EXT_stencil_two_side
 			       || ctx->Extensions.ATI_separate_stencil));
    const GLboolean ver_2_1 = (ver_2_0 &&
-                              ctx->Const.GLSLVersion >= 120 &&
                               ctx->Extensions.EXT_pixel_buffer_object &&
                               ctx->Extensions.EXT_texture_sRGB);
    const GLboolean ver_3_0 = (ver_2_1 &&
                               ctx->Const.GLSLVersion >= 130 &&
-                              ctx->Const.MaxSamples >= 4 &&
+                              (ctx->Const.MaxSamples >= 4 || ctx->Const.FakeSWMSAA) &&
                               (ctx->API == API_OPENGL_CORE ||
                                ctx->Extensions.ARB_color_buffer_float) &&
                               ctx->Extensions.ARB_depth_buffer_float &&
-                              ctx->Extensions.ARB_half_float_pixel &&
                               ctx->Extensions.ARB_half_float_vertex &&
                               ctx->Extensions.ARB_map_buffer_range &&
                               ctx->Extensions.ARB_shader_texture_lod &&
@@ -256,13 +254,12 @@ compute_version(struct gl_context *ctx)
                               ctx->Extensions.EXT_texture_snorm &&
                               ctx->Extensions.NV_primitive_restart &&
                               ctx->Extensions.NV_texture_rectangle &&
-                              ctx->Const.VertexProgram.MaxTextureImageUnits >= 16);
+                              ctx->Const.Program[MESA_SHADER_VERTEX].MaxTextureImageUnits >= 16);
    const GLboolean ver_3_2 = (ver_3_1 &&
                               ctx->Const.GLSLVersion >= 150 &&
                               ctx->Extensions.ARB_depth_clamp &&
                               ctx->Extensions.ARB_draw_elements_base_vertex &&
                               ctx->Extensions.ARB_fragment_coord_conventions &&
-                              ctx->Extensions.ARB_geometry_shader4 &&
                               ctx->Extensions.EXT_provoking_vertex &&
                               ctx->Extensions.ARB_seamless_cube_map &&
                               ctx->Extensions.ARB_sync &&

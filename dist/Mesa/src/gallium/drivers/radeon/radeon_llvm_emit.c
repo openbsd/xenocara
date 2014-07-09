@@ -80,7 +80,7 @@ static LLVMTargetRef get_r600_target() {
 	return target;
 }
 
-#if HAVE_LLVM >= 0x0305
+#if HAVE_LLVM >= 0x0305 && !defined(__OpenBSD__)
 
 static void radeonDiagnosticHandler(LLVMDiagnosticInfoRef di, void *context) {
 	unsigned int *diagnosticflag;
@@ -136,7 +136,7 @@ unsigned radeon_llvm_compile(LLVMModuleRef M, struct radeon_shader_binary *binar
 	/* Setup Diagnostic Handler*/
 	llvm_ctx = LLVMGetModuleContext(M);
 
-#if HAVE_LLVM >= 0x0305
+#if HAVE_LLVM >= 0x0305 && !defined(__OpenBSD__)
 	LLVMContextSetDiagnosticHandler(llvm_ctx, radeonDiagnosticHandler, &rval);
 #endif
 	rval = 0;

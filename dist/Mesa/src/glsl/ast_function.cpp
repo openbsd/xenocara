@@ -93,6 +93,57 @@ prototype_string(const glsl_type *return_type, const char *name,
    return str;
 }
 
+static bool
+verify_image_parameter(YYLTYPE *loc, _mesa_glsl_parse_state *state,
+                       const ir_variable *formal, const ir_variable *actual)
+{
+   /**
+    * From the ARB_shader_image_load_store specification:
+    *
+    * "The values of image variables qualified with coherent,
+    *  volatile, restrict, readonly, or writeonly may not be passed
+    *  to functions whose formal parameters lack such
+    *  qualifiers. [...] It is legal to have additional qualifiers
+    *  on a formal parameter, but not to have fewer."
+    */
+   if (actual->data.image.coherent && !formal->data.image.coherent) {
+      _mesa_glsl_error(loc, state,
+                       "function call parameter `%s' drops "
+                       "`coherent' qualifier", formal->name);
+      return false;
+   }
+
+   if (actual->data.image._volatile && !formal->data.image._volatile) {
+      _mesa_glsl_error(loc, state,
+                       "function call parameter `%s' drops "
+                       "`volatile' qualifier", formal->name);
+      return false;
+   }
+
+   if (actual->data.image.restrict_flag && !formal->data.image.restrict_flag) {
+      _mesa_glsl_error(loc, state,
+                       "function call parameter `%s' drops "
+                       "`restrict' qualifier", formal->name);
+      return false;
+   }
+
+   if (actual->data.image.read_only && !formal->data.image.read_only) {
+      _mesa_glsl_error(loc, state,
+                       "function call parameter `%s' drops "
+                       "`readonly' qualifier", formal->name);
+      return false;
+   }
+
+   if (actual->data.image.write_only && !formal->data.image.write_only) {
+      _mesa_glsl_error(loc, state,
+                       "function call parameter `%s' drops "
+                       "`writeonly' qualifier", formal->name);
+      return false;
+   }
+
+   return true;
+}
+
 /**
  * Verify that 'out' and 'inout' actual parameters are lvalues.  Also, verify
  * that 'const_in' formal parameters (an extension in our IR) correspond to
@@ -123,7 +174,7 @@ verify_parameter_modes(_mesa_glsl_parse_state *state,
       YYLTYPE loc = actual_ast->get_location();
 
       /* Verify that 'const_in' parameters are ir_constants. */
-      if (formal->mode == ir_var_const_in &&
+      if (formal->data.mode == ir_var_const_in &&
 	  actual->ir_type != ir_type_constant) {
 	 _mesa_glsl_error(&loc, state,
 			  "parameter `in %s' must be a constant expression",
@@ -132,10 +183,10 @@ verify_parameter_modes(_mesa_glsl_parse_state *state,
       }
 
       /* Verify that 'out' and 'inout' actual parameters are lvalues. */
-      if (formal->mode == ir_var_function_out
-          || formal->mode == ir_var_function_inout) {
+      if (formal->data.mode == ir_var_function_out
+          || formal->data.mode == ir_var_function_inout) {
 	 const char *mode = NULL;
-	 switch (formal->mode) {
+	 switch (formal->data.mode) {
 	 case ir_var_function_out:   mode = "out";   break;
 	 case ir_var_function_inout: mode = "inout"; break;
 	 default:                    assert(false);  break;
@@ -155,9 +206,9 @@ verify_parameter_modes(_mesa_glsl_parse_state *state,
 
 	 ir_variable *var = actual->variable_referenced();
 	 if (var)
-	    var->assigned = true;
+	    var->data.assigned = true;
 
-	 if (var && var->read_only) {
+	 if (var && var->data.read_only) {
 	    _mesa_glsl_error(&loc, state,
 			     "function parameter '%s %s' references the "
 			     "read-only variable '%s'",
@@ -178,6 +229,13 @@ verify_parameter_modes(_mesa_glsl_parse_state *state,
                return false;
             }
 	 }
+      }
+
+      if (formal->type->is_image() &&
+          actual->variable_referenced()) {
+         if (!verify_image_parameter(&loc, state, formal,
+                                     actual->variable_referenced()))
+            return false;
       }
 
       actual_ir_node  = actual_ir_node->next;
@@ -274,37 +332,32 @@ fix_parameter(void *mem_ctx, ir_rvalue *actual, const glsl_type *formal_type,
 }
 
 /**
- * If a function call is generated, \c call_ir will point to it on exit.
- * Otherwise \c call_ir will be set to \c NULL.
+ * Generate a function call.
+ *
+ * For non-void functions, this returns a dereference of the temporary variable
+ * which stores the return value for the call.  For void functions, this returns
+ * NULL.
  */
 static ir_rvalue *
 generate_call(exec_list *instructions, ir_function_signature *sig,
 	      exec_list *actual_parameters,
-	      ir_call **call_ir,
 	      struct _mesa_glsl_parse_state *state)
 {
    void *ctx = state;
    exec_list post_call_conversions;
-
-   *call_ir = NULL;
 
    /* Perform implicit conversion of arguments.  For out parameters, we need
     * to place them in a temporary variable and do the conversion after the
     * call takes place.  Since we haven't emitted the call yet, we'll place
     * the post-call conversions in a temporary exec_list, and emit them later.
     */
-   exec_list_iterator actual_iter = actual_parameters->iterator();
-   exec_list_iterator formal_iter = sig->parameters.iterator();
-
-   while (actual_iter.has_next()) {
-      ir_rvalue *actual = (ir_rvalue *) actual_iter.get();
-      ir_variable *formal = (ir_variable *) formal_iter.get();
-
-      assert(actual != NULL);
-      assert(formal != NULL);
+   foreach_two_lists(formal_node, &sig->parameters,
+                     actual_node, actual_parameters) {
+      ir_rvalue *actual = (ir_rvalue *) actual_node;
+      ir_variable *formal = (ir_variable *) formal_node;
 
       if (formal->type->is_numeric() || formal->type->is_boolean()) {
-	 switch (formal->mode) {
+	 switch (formal->data.mode) {
 	 case ir_var_const_in:
 	 case ir_var_function_in: {
 	    ir_rvalue *converted
@@ -316,16 +369,13 @@ generate_call(exec_list *instructions, ir_function_signature *sig,
 	 case ir_var_function_inout:
             fix_parameter(ctx, actual, formal->type,
                           instructions, &post_call_conversions,
-                          formal->mode == ir_var_function_inout);
+                          formal->data.mode == ir_var_function_inout);
 	    break;
 	 default:
 	    assert (!"Illegal formal parameter mode");
 	    break;
 	 }
       }
-
-      actual_iter.next();
-      formal_iter.next();
    }
 
    /* If the function call is a constant expression, don't generate any
@@ -388,7 +438,8 @@ match_function_by_name(const char *name,
    if (f != NULL) {
       /* Look for a match in the local shader.  If exact, we're done. */
       bool is_exact = false;
-      sig = local_sig = f->matching_signature(actual_parameters, &is_exact);
+      sig = local_sig = f->matching_signature(state, actual_parameters,
+                                              &is_exact);
       if (is_exact)
 	 goto done;
 
@@ -402,33 +453,8 @@ match_function_by_name(const char *name,
    }
 
    /* Local shader has no exact candidates; check the built-ins. */
-   _mesa_glsl_initialize_functions(state);
-   for (unsigned i = 0; i < state->num_builtins_to_link; i++) {
-      ir_function *builtin =
-	 state->builtins_to_link[i]->symbols->get_function(name);
-      if (builtin == NULL)
-	 continue;
-
-      bool is_exact = false;
-      ir_function_signature *builtin_sig =
-	 builtin->matching_signature(actual_parameters, &is_exact);
-
-      if (builtin_sig == NULL)
-	 continue;
-
-      /* If the built-in signature is exact, we can stop. */
-      if (is_exact) {
-	 sig = builtin_sig;
-	 goto done;
-      }
-
-      if (sig == NULL) {
-	 /* We found an inexact match, which is better than nothing.  However,
-	  * we should keep searching for an exact match.
-	  */
-	 sig = builtin_sig;
-      }
-   }
+   _mesa_glsl_initialize_builtin_functions();
+   sig = _mesa_glsl_find_builtin_function(state, name, actual_parameters);
 
 done:
    if (sig != NULL) {
@@ -445,6 +471,25 @@ done:
    return sig;
 }
 
+static void
+print_function_prototypes(_mesa_glsl_parse_state *state, YYLTYPE *loc,
+                          ir_function *f)
+{
+   if (f == NULL)
+      return;
+
+   foreach_list (node, &f->signatures) {
+      ir_function_signature *sig = (ir_function_signature *) node;
+
+      if (sig->is_builtin() && !sig->is_builtin_available(state))
+         continue;
+
+      char *str = prototype_string(sig->return_type, f->name, &sig->parameters);
+      _mesa_glsl_error(loc, state, "   %s", str);
+      ralloc_free(str);
+   }
+}
+
 /**
  * Raise a "no matching function" error, listing all possible overloads the
  * compiler considered so developers can figure out what went wrong.
@@ -455,27 +500,23 @@ no_matching_function_error(const char *name,
 			   exec_list *actual_parameters,
 			   _mesa_glsl_parse_state *state)
 {
-   char *str = prototype_string(NULL, name, actual_parameters);
-   _mesa_glsl_error(loc, state, "no matching function for call to `%s'", str);
-   ralloc_free(str);
+   gl_shader *sh = _mesa_glsl_get_builtin_function_shader();
 
-   const char *prefix = "candidates are: ";
+   if (state->symbols->get_function(name) == NULL
+      && (!state->uses_builtin_functions
+          || sh->symbols->get_function(name) == NULL)) {
+      _mesa_glsl_error(loc, state, "no function with name '%s'", name);
+   } else {
+      char *str = prototype_string(NULL, name, actual_parameters);
+      _mesa_glsl_error(loc, state,
+                       "no matching function for call to `%s'; candidates are:",
+                       str);
+      ralloc_free(str);
 
-   for (int i = -1; i < (int) state->num_builtins_to_link; i++) {
-      glsl_symbol_table *syms = i >= 0 ? state->builtins_to_link[i]->symbols
-				       : state->symbols;
-      ir_function *f = syms->get_function(name);
-      if (f == NULL)
-	 continue;
+      print_function_prototypes(state, loc, state->symbols->get_function(name));
 
-      foreach_list (node, &f->signatures) {
-	 ir_function_signature *sig = (ir_function_signature *) node;
-
-	 str = prototype_string(sig->return_type, f->name, &sig->parameters);
-	 _mesa_glsl_error(loc, state, "%s%s", prefix, str);
-	 ralloc_free(str);
-
-	 prefix = "                ";
+      if (state->uses_builtin_functions) {
+         print_function_prototypes(state, loc, sh->symbols->get_function(name));
       }
    }
 }
@@ -626,7 +667,7 @@ process_vec_mat_constructor(exec_list *instructions,
     *      int i = { 1 }; // illegal, i is not an aggregate"
     */
    if (constructor_type->vector_elements <= 1) {
-      _mesa_glsl_error(loc, state, "Aggregates can only initialize vectors, "
+      _mesa_glsl_error(loc, state, "aggregates can only initialize vectors, "
                        "matrices, arrays, and structs");
       return ir_rvalue::error_value(ctx);
    }
@@ -753,21 +794,21 @@ process_array_constructor(exec_list *instructions,
    exec_list actual_parameters;
    const unsigned parameter_count =
       process_parameters(instructions, &actual_parameters, parameters, state);
+   bool is_unsized_array = constructor_type->is_unsized_array();
 
-   if ((parameter_count == 0)
-       || ((constructor_type->length != 0)
-	   && (constructor_type->length != parameter_count))) {
-      const unsigned min_param = (constructor_type->length == 0)
-	 ? 1 : constructor_type->length;
+   if ((parameter_count == 0) ||
+       (!is_unsized_array && (constructor_type->length != parameter_count))) {
+      const unsigned min_param = is_unsized_array
+         ? 1 : constructor_type->length;
 
       _mesa_glsl_error(loc, state, "array constructor must have %s %u "
 		       "parameter%s",
-		       (constructor_type->length == 0) ? "at least" : "exactly",
+		       is_unsized_array ? "at least" : "exactly",
 		       min_param, (min_param <= 1) ? "" : "s");
       return ir_rvalue::error_value(ctx);
    }
 
-   if (constructor_type->length == 0) {
+   if (is_unsized_array) {
       constructor_type =
 	 glsl_type::get_array_instance(constructor_type->element_type(),
 				       parameter_count);
@@ -1672,7 +1713,7 @@ ast_function_expression::hir(exec_list *instructions,
    } else {
       const ast_expression *id = subexpressions[0];
       const char *func_name = id->primary_expression.identifier;
-      YYLTYPE loc = id->get_location();
+      YYLTYPE loc = get_location();
       exec_list actual_parameters;
 
       process_parameters(instructions, &actual_parameters, &this->expressions,
@@ -1681,7 +1722,6 @@ ast_function_expression::hir(exec_list *instructions,
       ir_function_signature *sig =
 	 match_function_by_name(func_name, &actual_parameters, state);
 
-      ir_call *call = NULL;
       ir_rvalue *value = NULL;
       if (sig == NULL) {
 	 no_matching_function_error(func_name, &loc, &actual_parameters, state);
@@ -1690,8 +1730,7 @@ ast_function_expression::hir(exec_list *instructions,
 	 /* an error has already been emitted */
 	 value = ir_rvalue::error_value(ctx);
       } else {
-	 value = generate_call(instructions, sig, &actual_parameters,
-			       &call, state);
+	 value = generate_call(instructions, sig, &actual_parameters, state);
       }
 
       return value;
@@ -1706,14 +1745,12 @@ ast_aggregate_initializer::hir(exec_list *instructions,
 {
    void *ctx = state;
    YYLTYPE loc = this->get_location();
-   const char *name;
 
    if (!this->constructor_type) {
       _mesa_glsl_error(&loc, state, "type of C-style initializer unknown");
       return ir_rvalue::error_value(ctx);
    }
-   const glsl_type *const constructor_type =
-      this->constructor_type->glsl_type(&name, state);
+   const glsl_type *const constructor_type = this->constructor_type;
 
    if (!state->ARB_shading_language_420pack_enable) {
       _mesa_glsl_error(&loc, state, "C-style initialization requires the "
@@ -1721,12 +1758,12 @@ ast_aggregate_initializer::hir(exec_list *instructions,
       return ir_rvalue::error_value(ctx);
    }
 
-   if (this->constructor_type->is_array) {
+   if (constructor_type->is_array()) {
       return process_array_constructor(instructions, constructor_type, &loc,
                                        &this->expressions, state);
    }
 
-   if (this->constructor_type->structure) {
+   if (constructor_type->is_record()) {
       return process_record_constructor(instructions, constructor_type, &loc,
                                         &this->expressions, state);
    }
