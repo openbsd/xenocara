@@ -630,427 +630,543 @@ void APIENTRY shared_dispatch_stub_616(GLenum target, GLenum attachment, GLuint 
 void APIENTRY shared_dispatch_stub_617(GLenum target, GLenum pname, GLint64 *params);
 void APIENTRY shared_dispatch_stub_618(GLenum cap, GLuint index, GLint64 *data);
 void APIENTRY shared_dispatch_stub_619(GLuint index, GLuint divisor);
-void APIENTRY shared_dispatch_stub_620(GLenum target, GLuint program);
-void APIENTRY shared_dispatch_stub_621(GLsizei n, const GLuint *programs);
-void APIENTRY shared_dispatch_stub_622(GLsizei n, GLuint *programs);
-void APIENTRY shared_dispatch_stub_623(GLenum target, GLuint index, GLdouble *params);
-void APIENTRY shared_dispatch_stub_624(GLenum target, GLuint index, GLfloat *params);
-void APIENTRY shared_dispatch_stub_625(GLenum target, GLuint index, GLdouble *params);
-void APIENTRY shared_dispatch_stub_626(GLenum target, GLuint index, GLfloat *params);
-void APIENTRY shared_dispatch_stub_627(GLenum target, GLenum pname, GLvoid *string);
-void APIENTRY shared_dispatch_stub_628(GLenum target, GLenum pname, GLint *params);
-GLboolean APIENTRY shared_dispatch_stub_629(GLuint program);
-void APIENTRY shared_dispatch_stub_630(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-void APIENTRY shared_dispatch_stub_631(GLenum target, GLuint index, const GLdouble *params);
-void APIENTRY shared_dispatch_stub_632(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void APIENTRY shared_dispatch_stub_633(GLenum target, GLuint index, const GLfloat *params);
-void APIENTRY shared_dispatch_stub_634(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-void APIENTRY shared_dispatch_stub_635(GLenum target, GLuint index, const GLdouble *params);
-void APIENTRY shared_dispatch_stub_636(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void APIENTRY shared_dispatch_stub_637(GLenum target, GLuint index, const GLfloat *params);
-void APIENTRY shared_dispatch_stub_638(GLenum target, GLenum format, GLsizei len, const GLvoid *string);
-void APIENTRY shared_dispatch_stub_639(GLuint index, GLfloat x);
-void APIENTRY shared_dispatch_stub_640(GLuint index, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_641(GLuint index, GLfloat x, GLfloat y);
-void APIENTRY shared_dispatch_stub_642(GLuint index, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_643(GLuint index, GLfloat x, GLfloat y, GLfloat z);
-void APIENTRY shared_dispatch_stub_644(GLuint index, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_645(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void APIENTRY shared_dispatch_stub_646(GLuint index, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_647(GLhandleARB containerObj, GLhandleARB obj);
-GLhandleARB APIENTRY shared_dispatch_stub_648(void);
-GLhandleARB APIENTRY shared_dispatch_stub_649(GLenum shaderType);
-void APIENTRY shared_dispatch_stub_650(GLhandleARB obj);
-void APIENTRY shared_dispatch_stub_651(GLhandleARB containerObj, GLhandleARB attachedObj);
-void APIENTRY shared_dispatch_stub_652(GLhandleARB containerObj, GLsizei maxLength, GLsizei *length, GLhandleARB *infoLog);
-GLhandleARB APIENTRY shared_dispatch_stub_653(GLenum pname);
-void APIENTRY shared_dispatch_stub_654(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
-void APIENTRY shared_dispatch_stub_655(GLhandleARB obj, GLenum pname, GLfloat *params);
-void APIENTRY shared_dispatch_stub_656(GLhandleARB obj, GLenum pname, GLint *params);
-void APIENTRY shared_dispatch_stub_657(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
-void APIENTRY shared_dispatch_stub_658(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
-void APIENTRY shared_dispatch_stub_659(GLenum target, GLuint framebuffer);
-void APIENTRY shared_dispatch_stub_660(GLenum target, GLuint renderbuffer);
-void APIENTRY shared_dispatch_stub_661(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
-GLenum APIENTRY shared_dispatch_stub_662(GLenum target);
-void APIENTRY shared_dispatch_stub_663(GLsizei n, const GLuint *framebuffers);
-void APIENTRY shared_dispatch_stub_664(GLsizei n, const GLuint *renderbuffers);
-void APIENTRY shared_dispatch_stub_665(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
-void APIENTRY shared_dispatch_stub_666(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+void APIENTRY shared_dispatch_stub_620(GLfloat value);
+void APIENTRY shared_dispatch_stub_621(GLenum target, GLuint program);
+void APIENTRY shared_dispatch_stub_622(GLsizei n, const GLuint *programs);
+void APIENTRY shared_dispatch_stub_623(GLsizei n, GLuint *programs);
+void APIENTRY shared_dispatch_stub_624(GLenum target, GLuint index, GLdouble *params);
+void APIENTRY shared_dispatch_stub_625(GLenum target, GLuint index, GLfloat *params);
+void APIENTRY shared_dispatch_stub_626(GLenum target, GLuint index, GLdouble *params);
+void APIENTRY shared_dispatch_stub_627(GLenum target, GLuint index, GLfloat *params);
+void APIENTRY shared_dispatch_stub_628(GLenum target, GLenum pname, GLvoid *string);
+void APIENTRY shared_dispatch_stub_629(GLenum target, GLenum pname, GLint *params);
+GLboolean APIENTRY shared_dispatch_stub_630(GLuint program);
+void APIENTRY shared_dispatch_stub_631(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
+void APIENTRY shared_dispatch_stub_632(GLenum target, GLuint index, const GLdouble *params);
+void APIENTRY shared_dispatch_stub_633(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void APIENTRY shared_dispatch_stub_634(GLenum target, GLuint index, const GLfloat *params);
+void APIENTRY shared_dispatch_stub_635(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
+void APIENTRY shared_dispatch_stub_636(GLenum target, GLuint index, const GLdouble *params);
+void APIENTRY shared_dispatch_stub_637(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void APIENTRY shared_dispatch_stub_638(GLenum target, GLuint index, const GLfloat *params);
+void APIENTRY shared_dispatch_stub_639(GLenum target, GLenum format, GLsizei len, const GLvoid *string);
+void APIENTRY shared_dispatch_stub_640(GLuint index, GLfloat x);
+void APIENTRY shared_dispatch_stub_641(GLuint index, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_642(GLuint index, GLfloat x, GLfloat y);
+void APIENTRY shared_dispatch_stub_643(GLuint index, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_644(GLuint index, GLfloat x, GLfloat y, GLfloat z);
+void APIENTRY shared_dispatch_stub_645(GLuint index, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_646(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void APIENTRY shared_dispatch_stub_647(GLuint index, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_648(GLhandleARB containerObj, GLhandleARB obj);
+GLhandleARB APIENTRY shared_dispatch_stub_649(void);
+GLhandleARB APIENTRY shared_dispatch_stub_650(GLenum shaderType);
+void APIENTRY shared_dispatch_stub_651(GLhandleARB obj);
+void APIENTRY shared_dispatch_stub_652(GLhandleARB containerObj, GLhandleARB attachedObj);
+void APIENTRY shared_dispatch_stub_653(GLhandleARB containerObj, GLsizei maxLength, GLsizei *length, GLhandleARB *infoLog);
+GLhandleARB APIENTRY shared_dispatch_stub_654(GLenum pname);
+void APIENTRY shared_dispatch_stub_655(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
+void APIENTRY shared_dispatch_stub_656(GLhandleARB obj, GLenum pname, GLfloat *params);
+void APIENTRY shared_dispatch_stub_657(GLhandleARB obj, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_658(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+void APIENTRY shared_dispatch_stub_659(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
+void APIENTRY shared_dispatch_stub_660(GLenum target, GLuint framebuffer);
+void APIENTRY shared_dispatch_stub_661(GLenum target, GLuint renderbuffer);
+void APIENTRY shared_dispatch_stub_662(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+GLenum APIENTRY shared_dispatch_stub_663(GLenum target);
+void APIENTRY shared_dispatch_stub_664(GLsizei n, const GLuint *framebuffers);
+void APIENTRY shared_dispatch_stub_665(GLsizei n, const GLuint *renderbuffers);
+void APIENTRY shared_dispatch_stub_666(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
 void APIENTRY shared_dispatch_stub_667(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
-void APIENTRY shared_dispatch_stub_668(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset);
-void APIENTRY shared_dispatch_stub_669(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
-void APIENTRY shared_dispatch_stub_670(GLsizei n, GLuint *framebuffers);
-void APIENTRY shared_dispatch_stub_671(GLsizei n, GLuint *renderbuffers);
-void APIENTRY shared_dispatch_stub_672(GLenum target);
-void APIENTRY shared_dispatch_stub_673(GLenum target, GLenum attachment, GLenum pname, GLint *params);
-void APIENTRY shared_dispatch_stub_674(GLenum target, GLenum pname, GLint *params);
-GLboolean APIENTRY shared_dispatch_stub_675(GLuint framebuffer);
-GLboolean APIENTRY shared_dispatch_stub_676(GLuint renderbuffer);
-void APIENTRY shared_dispatch_stub_677(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
-void APIENTRY shared_dispatch_stub_678(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
-void APIENTRY shared_dispatch_stub_679(GLenum target, GLenum attachment, GLuint texture, GLint level, GLenum face);
-void APIENTRY shared_dispatch_stub_680(GLenum target, GLintptr offset, GLsizeiptr length);
-GLvoid * APIENTRY shared_dispatch_stub_681(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
-void APIENTRY shared_dispatch_stub_682(GLuint array);
-void APIENTRY shared_dispatch_stub_683(GLsizei n, const GLuint *arrays);
-void APIENTRY shared_dispatch_stub_684(GLsizei n, GLuint *arrays);
-GLboolean APIENTRY shared_dispatch_stub_685(GLuint array);
-void APIENTRY shared_dispatch_stub_686(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName);
-void APIENTRY shared_dispatch_stub_687(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params);
-void APIENTRY shared_dispatch_stub_688(GLuint program, GLuint uniformIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformName);
-void APIENTRY shared_dispatch_stub_689(GLuint program, GLsizei uniformCount, const GLuint *uniformIndices, GLenum pname, GLint *params);
-GLuint APIENTRY shared_dispatch_stub_690(GLuint program, const GLchar *uniformBlockName);
-void APIENTRY shared_dispatch_stub_691(GLuint program, GLsizei uniformCount, const GLchar * const *uniformNames, GLuint *uniformIndices);
-void APIENTRY shared_dispatch_stub_692(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
-void APIENTRY shared_dispatch_stub_693(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
-GLenum APIENTRY shared_dispatch_stub_694(GLsync sync, GLbitfield flags, GLuint64 timeout);
-void APIENTRY shared_dispatch_stub_695(GLsync sync);
-GLsync APIENTRY shared_dispatch_stub_696(GLenum condition, GLbitfield flags);
-void APIENTRY shared_dispatch_stub_697(GLenum pname, GLint64 *params);
-void APIENTRY shared_dispatch_stub_698(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values);
-GLboolean APIENTRY shared_dispatch_stub_699(GLsync sync);
-void APIENTRY shared_dispatch_stub_700(GLsync sync, GLbitfield flags, GLuint64 timeout);
-void APIENTRY shared_dispatch_stub_701(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
-void APIENTRY shared_dispatch_stub_702(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex);
-void APIENTRY shared_dispatch_stub_703(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
-void APIENTRY shared_dispatch_stub_704(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, const GLint *basevertex);
-void APIENTRY shared_dispatch_stub_705(GLenum mode);
-void APIENTRY shared_dispatch_stub_706(GLenum pname, GLuint index, GLfloat *val);
-void APIENTRY shared_dispatch_stub_707(GLuint index, GLbitfield mask);
-void APIENTRY shared_dispatch_stub_708(GLenum target, GLsizei samples, GLint internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
-void APIENTRY shared_dispatch_stub_709(GLenum target, GLsizei samples, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations);
-void APIENTRY shared_dispatch_stub_710(GLuint buf, GLenum modeRGB, GLenum modeA);
-void APIENTRY shared_dispatch_stub_711(GLuint buf, GLenum mode);
-void APIENTRY shared_dispatch_stub_712(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcA, GLenum dstA);
-void APIENTRY shared_dispatch_stub_713(GLuint buf, GLenum src, GLenum dst);
-void APIENTRY shared_dispatch_stub_714(GLuint program, GLuint colorNumber, GLuint index, const GLchar *name);
-GLint APIENTRY shared_dispatch_stub_715(GLuint program, const GLchar *name);
-void APIENTRY shared_dispatch_stub_716(GLuint unit, GLuint sampler);
-void APIENTRY shared_dispatch_stub_717(GLsizei count, const GLuint *samplers);
-void APIENTRY shared_dispatch_stub_718(GLsizei count, GLuint *samplers);
-void APIENTRY shared_dispatch_stub_719(GLuint sampler, GLenum pname, GLint *params);
-void APIENTRY shared_dispatch_stub_720(GLuint sampler, GLenum pname, GLuint *params);
-void APIENTRY shared_dispatch_stub_721(GLuint sampler, GLenum pname, GLfloat *params);
-void APIENTRY shared_dispatch_stub_722(GLuint sampler, GLenum pname, GLint *params);
-GLboolean APIENTRY shared_dispatch_stub_723(GLuint sampler);
-void APIENTRY shared_dispatch_stub_724(GLuint sampler, GLenum pname, const GLint *params);
-void APIENTRY shared_dispatch_stub_725(GLuint sampler, GLenum pname, const GLuint *params);
-void APIENTRY shared_dispatch_stub_726(GLuint sampler, GLenum pname, GLfloat param);
-void APIENTRY shared_dispatch_stub_727(GLuint sampler, GLenum pname, const GLfloat *params);
-void APIENTRY shared_dispatch_stub_728(GLuint sampler, GLenum pname, GLint param);
-void APIENTRY shared_dispatch_stub_729(GLuint sampler, GLenum pname, const GLint *params);
-void APIENTRY shared_dispatch_stub_730(GLuint id, GLenum pname, GLint64 *params);
-void APIENTRY shared_dispatch_stub_731(GLuint id, GLenum pname, GLuint64 *params);
-void APIENTRY shared_dispatch_stub_732(GLuint id, GLenum target);
-void APIENTRY shared_dispatch_stub_733(GLenum type, GLuint color);
-void APIENTRY shared_dispatch_stub_734(GLenum type, const GLuint *color);
-void APIENTRY shared_dispatch_stub_735(GLenum type, GLuint color);
-void APIENTRY shared_dispatch_stub_736(GLenum type, const GLuint *color);
-void APIENTRY shared_dispatch_stub_737(GLenum texture, GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_738(GLenum texture, GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_739(GLenum texture, GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_740(GLenum texture, GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_741(GLenum texture, GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_742(GLenum texture, GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_743(GLenum texture, GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_744(GLenum texture, GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_745(GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_746(GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_747(GLenum type, GLuint color);
-void APIENTRY shared_dispatch_stub_748(GLenum type, const GLuint *color);
-void APIENTRY shared_dispatch_stub_749(GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_750(GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_751(GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_752(GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_753(GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_754(GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_755(GLenum type, GLuint coords);
-void APIENTRY shared_dispatch_stub_756(GLenum type, const GLuint *coords);
-void APIENTRY shared_dispatch_stub_757(GLuint index, GLenum type, GLboolean normalized, GLuint value);
-void APIENTRY shared_dispatch_stub_758(GLuint index, GLenum type, GLboolean normalized, const GLuint *value);
-void APIENTRY shared_dispatch_stub_759(GLuint index, GLenum type, GLboolean normalized, GLuint value);
-void APIENTRY shared_dispatch_stub_760(GLuint index, GLenum type, GLboolean normalized, const GLuint *value);
-void APIENTRY shared_dispatch_stub_761(GLuint index, GLenum type, GLboolean normalized, GLuint value);
-void APIENTRY shared_dispatch_stub_762(GLuint index, GLenum type, GLboolean normalized, const GLuint *value);
-void APIENTRY shared_dispatch_stub_763(GLuint index, GLenum type, GLboolean normalized, GLuint value);
-void APIENTRY shared_dispatch_stub_764(GLuint index, GLenum type, GLboolean normalized, const GLuint *value);
-void APIENTRY shared_dispatch_stub_765(GLenum type, GLuint value);
-void APIENTRY shared_dispatch_stub_766(GLenum type, const GLuint *value);
-void APIENTRY shared_dispatch_stub_767(GLenum type, GLuint value);
-void APIENTRY shared_dispatch_stub_768(GLenum type, const GLuint *value);
-void APIENTRY shared_dispatch_stub_769(GLenum type, GLuint value);
-void APIENTRY shared_dispatch_stub_770(GLenum type, const GLuint *value);
-void APIENTRY shared_dispatch_stub_771(GLenum target, GLuint id);
-void APIENTRY shared_dispatch_stub_772(GLsizei n, const GLuint *ids);
-void APIENTRY shared_dispatch_stub_773(GLenum mode, GLuint id);
-void APIENTRY shared_dispatch_stub_774(GLsizei n, GLuint *ids);
-GLboolean APIENTRY shared_dispatch_stub_775(GLuint id);
-void APIENTRY shared_dispatch_stub_776(void);
-void APIENTRY shared_dispatch_stub_777(void);
-void APIENTRY shared_dispatch_stub_778(GLenum target, GLuint index, GLuint id);
-void APIENTRY shared_dispatch_stub_779(GLenum mode, GLuint id, GLuint stream);
-void APIENTRY shared_dispatch_stub_780(GLenum target, GLuint index);
-void APIENTRY shared_dispatch_stub_781(GLenum target, GLuint index, GLenum pname, GLint *params);
-void APIENTRY shared_dispatch_stub_782(GLclampf depth);
-void APIENTRY shared_dispatch_stub_783(GLclampf zNear, GLclampf zFar);
-void APIENTRY shared_dispatch_stub_784(GLenum shadertype, GLenum precisiontype, GLint *range, GLint *precision);
-void APIENTRY shared_dispatch_stub_785(void);
-void APIENTRY shared_dispatch_stub_786(GLsizei n, const GLuint *shaders, GLenum binaryformat, const GLvoid *binary, GLsizei length);
-void APIENTRY shared_dispatch_stub_787(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary);
-void APIENTRY shared_dispatch_stub_788(GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length);
-void APIENTRY shared_dispatch_stub_789(GLuint program, GLenum pname, GLint value);
-void APIENTRY shared_dispatch_stub_790(GLDEBUGPROCARB callback, const GLvoid *userParam);
-void APIENTRY shared_dispatch_stub_791(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled);
-void APIENTRY shared_dispatch_stub_792(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB *buf);
-GLuint APIENTRY shared_dispatch_stub_793(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLcharARB *messageLog);
-GLenum APIENTRY shared_dispatch_stub_794(void);
-void APIENTRY shared_dispatch_stub_795(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *table);
-void APIENTRY shared_dispatch_stub_796(GLenum target, GLint lod, GLsizei bufSize, GLvoid *img);
-void APIENTRY shared_dispatch_stub_797(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *image);
-void APIENTRY shared_dispatch_stub_798(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values);
-void APIENTRY shared_dispatch_stub_799(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v);
-void APIENTRY shared_dispatch_stub_800(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v);
-void APIENTRY shared_dispatch_stub_801(GLenum target, GLenum query, GLsizei bufSize, GLint *v);
-void APIENTRY shared_dispatch_stub_802(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values);
-void APIENTRY shared_dispatch_stub_803(GLenum map, GLsizei bufSize, GLfloat *values);
-void APIENTRY shared_dispatch_stub_804(GLenum map, GLsizei bufSize, GLuint *values);
-void APIENTRY shared_dispatch_stub_805(GLenum map, GLsizei bufSize, GLushort *values);
-void APIENTRY shared_dispatch_stub_806(GLsizei bufSize, GLubyte *pattern);
-void APIENTRY shared_dispatch_stub_807(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, GLvoid *row, GLsizei columnBufSize, GLvoid *column, GLvoid *span);
-void APIENTRY shared_dispatch_stub_808(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, GLvoid *img);
-void APIENTRY shared_dispatch_stub_809(GLhandleARB program, GLint location, GLsizei bufSize, GLdouble *params);
-void APIENTRY shared_dispatch_stub_810(GLhandleARB program, GLint location, GLsizei bufSize, GLfloat *params);
-void APIENTRY shared_dispatch_stub_811(GLhandleARB program, GLint location, GLsizei bufSize, GLint *params);
-void APIENTRY shared_dispatch_stub_812(GLhandleARB program, GLint location, GLsizei bufSize, GLuint *params);
-void APIENTRY shared_dispatch_stub_813(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data);
-void APIENTRY shared_dispatch_stub_814(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance);
-void APIENTRY shared_dispatch_stub_815(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance);
-void APIENTRY shared_dispatch_stub_816(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance);
-void APIENTRY shared_dispatch_stub_817(GLenum mode, GLuint id, GLsizei primcount);
-void APIENTRY shared_dispatch_stub_818(GLenum mode, GLuint id, GLuint stream, GLsizei primcount);
-void APIENTRY shared_dispatch_stub_819(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params);
-void APIENTRY shared_dispatch_stub_820(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width);
-void APIENTRY shared_dispatch_stub_821(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height);
-void APIENTRY shared_dispatch_stub_822(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth);
-void APIENTRY shared_dispatch_stub_823(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width);
-void APIENTRY shared_dispatch_stub_824(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height);
-void APIENTRY shared_dispatch_stub_825(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth);
-void APIENTRY shared_dispatch_stub_826(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size);
-void APIENTRY shared_dispatch_stub_827(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
-void APIENTRY shared_dispatch_stub_828(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations);
-void APIENTRY shared_dispatch_stub_829(GLuint buffer);
-void APIENTRY shared_dispatch_stub_830(GLuint buffer, GLintptr offset, GLsizeiptr length);
-void APIENTRY shared_dispatch_stub_831(GLenum target, GLsizei numAttachments, const GLenum *attachments);
-void APIENTRY shared_dispatch_stub_832(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height);
-void APIENTRY shared_dispatch_stub_833(GLuint texture, GLint level);
-void APIENTRY shared_dispatch_stub_834(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth);
-void APIENTRY shared_dispatch_stub_835(GLfloat factor, GLfloat bias);
-void APIENTRY shared_dispatch_stub_836(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height);
-void APIENTRY shared_dispatch_stub_837(const GLfloat *coords);
-void APIENTRY shared_dispatch_stub_838(GLint x, GLint y, GLint z, GLint width, GLint height);
-void APIENTRY shared_dispatch_stub_839(const GLint *coords);
-void APIENTRY shared_dispatch_stub_840(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height);
-void APIENTRY shared_dispatch_stub_841(const GLshort *coords);
-void APIENTRY shared_dispatch_stub_842(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height);
-void APIENTRY shared_dispatch_stub_843(const GLfixed *coords);
-void APIENTRY shared_dispatch_stub_844(GLenum type, GLsizei stride, const GLvoid *pointer);
-GLbitfield APIENTRY shared_dispatch_stub_845(GLfixed *mantissa, GLint *exponent);
-void APIENTRY shared_dispatch_stub_846(GLclampf value, GLboolean invert);
-void APIENTRY shared_dispatch_stub_847(GLenum pattern);
-void APIENTRY shared_dispatch_stub_848(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
-void APIENTRY shared_dispatch_stub_849(GLsizei stride, GLsizei count, const GLboolean *pointer);
-void APIENTRY shared_dispatch_stub_850(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
-void APIENTRY shared_dispatch_stub_851(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
-void APIENTRY shared_dispatch_stub_852(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
-void APIENTRY shared_dispatch_stub_853(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
-void APIENTRY shared_dispatch_stub_854(GLenum target, GLsizei numAttachments, const GLenum *attachments);
-void APIENTRY shared_dispatch_stub_855(GLint first, GLsizei count);
-void APIENTRY shared_dispatch_stub_856(void);
-void APIENTRY shared_dispatch_stub_857(GLfloat red, GLfloat green, GLfloat blue);
-void APIENTRY shared_dispatch_stub_858(const GLfloat *v);
-void APIENTRY shared_dispatch_stub_859(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount);
-void APIENTRY shared_dispatch_stub_860(GLfloat coord);
-void APIENTRY shared_dispatch_stub_861(const GLfloat *coord);
-void APIENTRY shared_dispatch_stub_862(void);
-void APIENTRY shared_dispatch_stub_863(GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-void APIENTRY shared_dispatch_stub_864(const GLdouble *v);
-void APIENTRY shared_dispatch_stub_865(GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void APIENTRY shared_dispatch_stub_866(const GLfloat *v);
-void APIENTRY shared_dispatch_stub_867(GLint x, GLint y, GLint z, GLint w);
-void APIENTRY shared_dispatch_stub_868(const GLint *v);
-void APIENTRY shared_dispatch_stub_869(GLshort x, GLshort y, GLshort z, GLshort w);
-void APIENTRY shared_dispatch_stub_870(const GLshort *v);
-void APIENTRY shared_dispatch_stub_871(const GLenum *mode, const GLint *first, const GLsizei *count, GLsizei primcount, GLint modestride);
-void APIENTRY shared_dispatch_stub_872(const GLenum *mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, GLint modestride);
-GLboolean APIENTRY shared_dispatch_stub_873(GLsizei n, const GLuint *ids, GLboolean *residences);
-void APIENTRY shared_dispatch_stub_874(GLenum target, GLuint id, const GLfloat *params);
-void APIENTRY shared_dispatch_stub_875(GLenum target, GLuint index, GLenum pname, GLdouble *params);
-void APIENTRY shared_dispatch_stub_876(GLenum target, GLuint index, GLenum pname, GLfloat *params);
-void APIENTRY shared_dispatch_stub_877(GLuint id, GLenum pname, GLubyte *program);
-void APIENTRY shared_dispatch_stub_878(GLuint id, GLenum pname, GLint *params);
-void APIENTRY shared_dispatch_stub_879(GLenum target, GLuint address, GLenum pname, GLint *params);
-void APIENTRY shared_dispatch_stub_880(GLuint index, GLenum pname, GLdouble *params);
-void APIENTRY shared_dispatch_stub_881(GLuint index, GLenum pname, GLfloat *params);
-void APIENTRY shared_dispatch_stub_882(GLuint index, GLenum pname, GLint *params);
-void APIENTRY shared_dispatch_stub_883(GLenum target, GLuint id, GLsizei len, const GLubyte *program);
-void APIENTRY shared_dispatch_stub_884(GLenum target, GLuint index, GLsizei num, const GLdouble *params);
-void APIENTRY shared_dispatch_stub_885(GLenum target, GLuint index, GLsizei num, const GLfloat *params);
-void APIENTRY shared_dispatch_stub_886(GLsizei n, const GLuint *ids);
-void APIENTRY shared_dispatch_stub_887(GLenum target, GLuint address, GLenum matrix, GLenum transform);
-void APIENTRY shared_dispatch_stub_888(GLuint index, GLdouble x);
-void APIENTRY shared_dispatch_stub_889(GLuint index, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_890(GLuint index, GLfloat x);
-void APIENTRY shared_dispatch_stub_891(GLuint index, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_892(GLuint index, GLshort x);
-void APIENTRY shared_dispatch_stub_893(GLuint index, const GLshort *v);
-void APIENTRY shared_dispatch_stub_894(GLuint index, GLdouble x, GLdouble y);
-void APIENTRY shared_dispatch_stub_895(GLuint index, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_896(GLuint index, GLfloat x, GLfloat y);
-void APIENTRY shared_dispatch_stub_897(GLuint index, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_898(GLuint index, GLshort x, GLshort y);
-void APIENTRY shared_dispatch_stub_899(GLuint index, const GLshort *v);
-void APIENTRY shared_dispatch_stub_900(GLuint index, GLdouble x, GLdouble y, GLdouble z);
-void APIENTRY shared_dispatch_stub_901(GLuint index, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_902(GLuint index, GLfloat x, GLfloat y, GLfloat z);
-void APIENTRY shared_dispatch_stub_903(GLuint index, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_904(GLuint index, GLshort x, GLshort y, GLshort z);
-void APIENTRY shared_dispatch_stub_905(GLuint index, const GLshort *v);
-void APIENTRY shared_dispatch_stub_906(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-void APIENTRY shared_dispatch_stub_907(GLuint index, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_908(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void APIENTRY shared_dispatch_stub_909(GLuint index, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_910(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w);
-void APIENTRY shared_dispatch_stub_911(GLuint index, const GLshort *v);
-void APIENTRY shared_dispatch_stub_912(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w);
-void APIENTRY shared_dispatch_stub_913(GLuint index, const GLubyte *v);
-void APIENTRY shared_dispatch_stub_914(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
-void APIENTRY shared_dispatch_stub_915(GLuint index, GLsizei n, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_916(GLuint index, GLsizei n, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_917(GLuint index, GLsizei n, const GLshort *v);
-void APIENTRY shared_dispatch_stub_918(GLuint index, GLsizei n, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_919(GLuint index, GLsizei n, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_920(GLuint index, GLsizei n, const GLshort *v);
-void APIENTRY shared_dispatch_stub_921(GLuint index, GLsizei n, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_922(GLuint index, GLsizei n, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_923(GLuint index, GLsizei n, const GLshort *v);
-void APIENTRY shared_dispatch_stub_924(GLuint index, GLsizei n, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_925(GLuint index, GLsizei n, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_926(GLuint index, GLsizei n, const GLshort *v);
-void APIENTRY shared_dispatch_stub_927(GLuint index, GLsizei n, const GLubyte *v);
-void APIENTRY shared_dispatch_stub_928(GLenum pname, GLfloat *param);
-void APIENTRY shared_dispatch_stub_929(GLenum pname, GLint *param);
-void APIENTRY shared_dispatch_stub_930(GLenum pname, const GLfloat *param);
-void APIENTRY shared_dispatch_stub_931(GLenum pname, const GLint *param);
-void APIENTRY shared_dispatch_stub_932(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod);
-void APIENTRY shared_dispatch_stub_933(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod);
-void APIENTRY shared_dispatch_stub_934(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod);
-void APIENTRY shared_dispatch_stub_935(void);
-void APIENTRY shared_dispatch_stub_936(GLuint id);
-void APIENTRY shared_dispatch_stub_937(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod);
-void APIENTRY shared_dispatch_stub_938(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod);
-void APIENTRY shared_dispatch_stub_939(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod);
-void APIENTRY shared_dispatch_stub_940(GLuint id);
-void APIENTRY shared_dispatch_stub_941(void);
-GLuint APIENTRY shared_dispatch_stub_942(GLuint range);
-void APIENTRY shared_dispatch_stub_943(GLuint dst, GLuint coord, GLenum swizzle);
-void APIENTRY shared_dispatch_stub_944(GLuint dst, GLuint interp, GLenum swizzle);
-void APIENTRY shared_dispatch_stub_945(GLuint dst, const GLfloat *value);
-void APIENTRY shared_dispatch_stub_946(GLenum face);
-void APIENTRY shared_dispatch_stub_947(GLuint array);
-void APIENTRY shared_dispatch_stub_948(GLsizei n, GLuint *arrays);
-void APIENTRY shared_dispatch_stub_949(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params);
-void APIENTRY shared_dispatch_stub_950(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params);
-void APIENTRY shared_dispatch_stub_951(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-void APIENTRY shared_dispatch_stub_952(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v);
-void APIENTRY shared_dispatch_stub_953(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void APIENTRY shared_dispatch_stub_954(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v);
-void APIENTRY shared_dispatch_stub_955(void);
-void APIENTRY shared_dispatch_stub_956(GLenum coord, GLenum pname, GLfixed *params);
-void APIENTRY shared_dispatch_stub_957(GLenum coord, GLenum pname, GLint param);
-void APIENTRY shared_dispatch_stub_958(GLenum coord, GLenum pname, const GLfixed *params);
-void APIENTRY shared_dispatch_stub_959(GLclampd zmin, GLclampd zmax);
-void APIENTRY shared_dispatch_stub_960(GLenum target, GLuint framebuffer);
-void APIENTRY shared_dispatch_stub_961(GLenum target, GLuint renderbuffer);
-void APIENTRY shared_dispatch_stub_962(GLenum target, GLenum pname, GLint param);
-void APIENTRY shared_dispatch_stub_963(GLenum target, GLintptr offset, GLsizeiptr size);
-void APIENTRY shared_dispatch_stub_964(GLuint index, GLint x);
-void APIENTRY shared_dispatch_stub_965(GLuint index, GLuint x);
-void APIENTRY shared_dispatch_stub_966(GLuint index, GLint x, GLint y);
-void APIENTRY shared_dispatch_stub_967(GLuint index, const GLint *v);
-void APIENTRY shared_dispatch_stub_968(GLuint index, GLuint x, GLuint y);
-void APIENTRY shared_dispatch_stub_969(GLuint index, const GLuint *v);
-void APIENTRY shared_dispatch_stub_970(GLuint index, GLint x, GLint y, GLint z);
-void APIENTRY shared_dispatch_stub_971(GLuint index, const GLint *v);
-void APIENTRY shared_dispatch_stub_972(GLuint index, GLuint x, GLuint y, GLuint z);
-void APIENTRY shared_dispatch_stub_973(GLuint index, const GLuint *v);
-void APIENTRY shared_dispatch_stub_974(GLuint index, GLint x, GLint y, GLint z, GLint w);
-void APIENTRY shared_dispatch_stub_975(GLuint index, const GLint *v);
-void APIENTRY shared_dispatch_stub_976(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
-void APIENTRY shared_dispatch_stub_977(GLuint index, const GLuint *v);
-void APIENTRY shared_dispatch_stub_978(GLint r, GLint g, GLint b, GLint a);
-void APIENTRY shared_dispatch_stub_979(GLuint r, GLuint g, GLuint b, GLuint a);
-void APIENTRY shared_dispatch_stub_980(GLenum target, GLuint index, GLuint buffer, GLintptr offset);
-void APIENTRY shared_dispatch_stub_981(GLenum objectType, GLuint name, GLenum pname, GLint *value);
-GLenum APIENTRY shared_dispatch_stub_982(GLenum objectType, GLuint name, GLenum option);
-GLenum APIENTRY shared_dispatch_stub_983(GLenum objectType, GLuint name, GLenum option);
-void APIENTRY shared_dispatch_stub_984(GLuint program);
-GLuint APIENTRY shared_dispatch_stub_985(GLenum type, const GLchar *string);
-void APIENTRY shared_dispatch_stub_986(GLenum type, GLuint program);
-void APIENTRY shared_dispatch_stub_987(void);
-void APIENTRY shared_dispatch_stub_988(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
-void APIENTRY shared_dispatch_stub_989(GLenum target, GLuint index, GLsizei count, const GLfloat *params);
-void APIENTRY shared_dispatch_stub_990(GLenum target, GLuint index, GLsizei count, const GLfloat *params);
-void APIENTRY shared_dispatch_stub_991(GLenum target, GLvoid *writeOffset);
-void APIENTRY shared_dispatch_stub_992(GLenum target, GLvoid *writeOffset);
-void APIENTRY shared_dispatch_stub_993(GLenum func, GLclampx ref);
-void APIENTRY shared_dispatch_stub_994(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha);
-void APIENTRY shared_dispatch_stub_995(GLclampx depth);
-void APIENTRY shared_dispatch_stub_996(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha);
-void APIENTRY shared_dispatch_stub_997(GLclampx zNear, GLclampx zFar);
-void APIENTRY shared_dispatch_stub_998(GLenum pname, GLfixed param);
-void APIENTRY shared_dispatch_stub_999(GLenum pname, const GLfixed *params);
-void APIENTRY shared_dispatch_stub_1000(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
-void APIENTRY shared_dispatch_stub_1001(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar);
-void APIENTRY shared_dispatch_stub_1002(GLenum pname, GLfixed param);
-void APIENTRY shared_dispatch_stub_1003(GLenum pname, const GLfixed *params);
-void APIENTRY shared_dispatch_stub_1004(GLenum light, GLenum pname, GLfixed param);
-void APIENTRY shared_dispatch_stub_1005(GLenum light, GLenum pname, const GLfixed *params);
-void APIENTRY shared_dispatch_stub_1006(GLfixed width);
-void APIENTRY shared_dispatch_stub_1007(const GLfixed *m);
-void APIENTRY shared_dispatch_stub_1008(GLenum face, GLenum pname, GLfixed param);
-void APIENTRY shared_dispatch_stub_1009(GLenum face, GLenum pname, const GLfixed *params);
-void APIENTRY shared_dispatch_stub_1010(const GLfixed *m);
-void APIENTRY shared_dispatch_stub_1011(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q);
-void APIENTRY shared_dispatch_stub_1012(GLfixed nx, GLfixed ny, GLfixed nz);
-void APIENTRY shared_dispatch_stub_1013(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
-void APIENTRY shared_dispatch_stub_1014(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar);
-void APIENTRY shared_dispatch_stub_1015(GLfixed size);
-void APIENTRY shared_dispatch_stub_1016(GLfixed factor, GLfixed units);
-void APIENTRY shared_dispatch_stub_1017(GLfixed angle, GLfixed x, GLfixed y, GLfixed z);
-void APIENTRY shared_dispatch_stub_1018(GLclampx value, GLboolean invert);
-void APIENTRY shared_dispatch_stub_1019(GLfixed x, GLfixed y, GLfixed z);
-void APIENTRY shared_dispatch_stub_1020(GLenum target, GLenum pname, GLfixed param);
-void APIENTRY shared_dispatch_stub_1021(GLenum target, GLenum pname, const GLfixed *params);
-void APIENTRY shared_dispatch_stub_1022(GLenum target, GLenum pname, GLfixed param);
-void APIENTRY shared_dispatch_stub_1023(GLfixed x, GLfixed y, GLfixed z);
-void APIENTRY shared_dispatch_stub_1024(GLenum plane, const GLfloat *equation);
-void APIENTRY shared_dispatch_stub_1025(GLenum plane, const GLfixed *equation);
-void APIENTRY shared_dispatch_stub_1026(GLenum plane, GLfloat *equation);
-void APIENTRY shared_dispatch_stub_1027(GLenum plane, GLfixed *equation);
-void APIENTRY shared_dispatch_stub_1028(GLenum pname, GLfixed *params);
-void APIENTRY shared_dispatch_stub_1029(GLenum light, GLenum pname, GLfixed *params);
-void APIENTRY shared_dispatch_stub_1030(GLenum face, GLenum pname, GLfixed *params);
-void APIENTRY shared_dispatch_stub_1031(GLenum target, GLenum pname, GLfixed *params);
-void APIENTRY shared_dispatch_stub_1032(GLenum target, GLenum pname, GLfixed *params);
-void APIENTRY shared_dispatch_stub_1033(GLenum pname, GLfixed param);
-void APIENTRY shared_dispatch_stub_1034(GLenum pname, const GLfixed *params);
-void APIENTRY shared_dispatch_stub_1035(GLenum target, GLenum pname, const GLfixed *params);
+void APIENTRY shared_dispatch_stub_668(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+void APIENTRY shared_dispatch_stub_669(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset);
+void APIENTRY shared_dispatch_stub_670(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer);
+void APIENTRY shared_dispatch_stub_671(GLsizei n, GLuint *framebuffers);
+void APIENTRY shared_dispatch_stub_672(GLsizei n, GLuint *renderbuffers);
+void APIENTRY shared_dispatch_stub_673(GLenum target);
+void APIENTRY shared_dispatch_stub_674(GLenum target, GLenum attachment, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_675(GLenum target, GLenum pname, GLint *params);
+GLboolean APIENTRY shared_dispatch_stub_676(GLuint framebuffer);
+GLboolean APIENTRY shared_dispatch_stub_677(GLuint renderbuffer);
+void APIENTRY shared_dispatch_stub_678(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+void APIENTRY shared_dispatch_stub_679(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+void APIENTRY shared_dispatch_stub_680(GLenum target, GLenum attachment, GLuint texture, GLint level, GLenum face);
+void APIENTRY shared_dispatch_stub_681(GLenum target, GLintptr offset, GLsizeiptr length);
+GLvoid * APIENTRY shared_dispatch_stub_682(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
+void APIENTRY shared_dispatch_stub_683(GLuint array);
+void APIENTRY shared_dispatch_stub_684(GLsizei n, const GLuint *arrays);
+void APIENTRY shared_dispatch_stub_685(GLsizei n, GLuint *arrays);
+GLboolean APIENTRY shared_dispatch_stub_686(GLuint array);
+void APIENTRY shared_dispatch_stub_687(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName);
+void APIENTRY shared_dispatch_stub_688(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_689(GLuint program, GLuint uniformIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformName);
+void APIENTRY shared_dispatch_stub_690(GLuint program, GLsizei uniformCount, const GLuint *uniformIndices, GLenum pname, GLint *params);
+GLuint APIENTRY shared_dispatch_stub_691(GLuint program, const GLchar *uniformBlockName);
+void APIENTRY shared_dispatch_stub_692(GLuint program, GLsizei uniformCount, const GLchar * const *uniformNames, GLuint *uniformIndices);
+void APIENTRY shared_dispatch_stub_693(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
+void APIENTRY shared_dispatch_stub_694(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
+GLenum APIENTRY shared_dispatch_stub_695(GLsync sync, GLbitfield flags, GLuint64 timeout);
+void APIENTRY shared_dispatch_stub_696(GLsync sync);
+GLsync APIENTRY shared_dispatch_stub_697(GLenum condition, GLbitfield flags);
+void APIENTRY shared_dispatch_stub_698(GLenum pname, GLint64 *params);
+void APIENTRY shared_dispatch_stub_699(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values);
+GLboolean APIENTRY shared_dispatch_stub_700(GLsync sync);
+void APIENTRY shared_dispatch_stub_701(GLsync sync, GLbitfield flags, GLuint64 timeout);
+void APIENTRY shared_dispatch_stub_702(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
+void APIENTRY shared_dispatch_stub_703(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex);
+void APIENTRY shared_dispatch_stub_704(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
+void APIENTRY shared_dispatch_stub_705(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, const GLint *basevertex);
+void APIENTRY shared_dispatch_stub_706(GLenum mode);
+void APIENTRY shared_dispatch_stub_707(GLenum pname, GLuint index, GLfloat *val);
+void APIENTRY shared_dispatch_stub_708(GLuint index, GLbitfield mask);
+void APIENTRY shared_dispatch_stub_709(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
+void APIENTRY shared_dispatch_stub_710(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations);
+void APIENTRY shared_dispatch_stub_711(GLuint buf, GLenum modeRGB, GLenum modeA);
+void APIENTRY shared_dispatch_stub_712(GLuint buf, GLenum mode);
+void APIENTRY shared_dispatch_stub_713(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcA, GLenum dstA);
+void APIENTRY shared_dispatch_stub_714(GLuint buf, GLenum src, GLenum dst);
+void APIENTRY shared_dispatch_stub_715(GLuint program, GLuint colorNumber, GLuint index, const GLchar *name);
+GLint APIENTRY shared_dispatch_stub_716(GLuint program, const GLchar *name);
+void APIENTRY shared_dispatch_stub_717(GLuint unit, GLuint sampler);
+void APIENTRY shared_dispatch_stub_718(GLsizei count, const GLuint *samplers);
+void APIENTRY shared_dispatch_stub_719(GLsizei count, GLuint *samplers);
+void APIENTRY shared_dispatch_stub_720(GLuint sampler, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_721(GLuint sampler, GLenum pname, GLuint *params);
+void APIENTRY shared_dispatch_stub_722(GLuint sampler, GLenum pname, GLfloat *params);
+void APIENTRY shared_dispatch_stub_723(GLuint sampler, GLenum pname, GLint *params);
+GLboolean APIENTRY shared_dispatch_stub_724(GLuint sampler);
+void APIENTRY shared_dispatch_stub_725(GLuint sampler, GLenum pname, const GLint *params);
+void APIENTRY shared_dispatch_stub_726(GLuint sampler, GLenum pname, const GLuint *params);
+void APIENTRY shared_dispatch_stub_727(GLuint sampler, GLenum pname, GLfloat param);
+void APIENTRY shared_dispatch_stub_728(GLuint sampler, GLenum pname, const GLfloat *params);
+void APIENTRY shared_dispatch_stub_729(GLuint sampler, GLenum pname, GLint param);
+void APIENTRY shared_dispatch_stub_730(GLuint sampler, GLenum pname, const GLint *params);
+void APIENTRY shared_dispatch_stub_731(GLuint id, GLenum pname, GLint64 *params);
+void APIENTRY shared_dispatch_stub_732(GLuint id, GLenum pname, GLuint64 *params);
+void APIENTRY shared_dispatch_stub_733(GLuint id, GLenum target);
+void APIENTRY shared_dispatch_stub_734(GLenum type, GLuint color);
+void APIENTRY shared_dispatch_stub_735(GLenum type, const GLuint *color);
+void APIENTRY shared_dispatch_stub_736(GLenum type, GLuint color);
+void APIENTRY shared_dispatch_stub_737(GLenum type, const GLuint *color);
+void APIENTRY shared_dispatch_stub_738(GLenum texture, GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_739(GLenum texture, GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_740(GLenum texture, GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_741(GLenum texture, GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_742(GLenum texture, GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_743(GLenum texture, GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_744(GLenum texture, GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_745(GLenum texture, GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_746(GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_747(GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_748(GLenum type, GLuint color);
+void APIENTRY shared_dispatch_stub_749(GLenum type, const GLuint *color);
+void APIENTRY shared_dispatch_stub_750(GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_751(GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_752(GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_753(GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_754(GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_755(GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_756(GLenum type, GLuint coords);
+void APIENTRY shared_dispatch_stub_757(GLenum type, const GLuint *coords);
+void APIENTRY shared_dispatch_stub_758(GLuint index, GLenum type, GLboolean normalized, GLuint value);
+void APIENTRY shared_dispatch_stub_759(GLuint index, GLenum type, GLboolean normalized, const GLuint *value);
+void APIENTRY shared_dispatch_stub_760(GLuint index, GLenum type, GLboolean normalized, GLuint value);
+void APIENTRY shared_dispatch_stub_761(GLuint index, GLenum type, GLboolean normalized, const GLuint *value);
+void APIENTRY shared_dispatch_stub_762(GLuint index, GLenum type, GLboolean normalized, GLuint value);
+void APIENTRY shared_dispatch_stub_763(GLuint index, GLenum type, GLboolean normalized, const GLuint *value);
+void APIENTRY shared_dispatch_stub_764(GLuint index, GLenum type, GLboolean normalized, GLuint value);
+void APIENTRY shared_dispatch_stub_765(GLuint index, GLenum type, GLboolean normalized, const GLuint *value);
+void APIENTRY shared_dispatch_stub_766(GLenum type, GLuint value);
+void APIENTRY shared_dispatch_stub_767(GLenum type, const GLuint *value);
+void APIENTRY shared_dispatch_stub_768(GLenum type, GLuint value);
+void APIENTRY shared_dispatch_stub_769(GLenum type, const GLuint *value);
+void APIENTRY shared_dispatch_stub_770(GLenum type, GLuint value);
+void APIENTRY shared_dispatch_stub_771(GLenum type, const GLuint *value);
+void APIENTRY shared_dispatch_stub_772(GLenum mode, const GLvoid *indirect);
+void APIENTRY shared_dispatch_stub_773(GLenum mode, GLenum type, const GLvoid *indirect);
+void APIENTRY shared_dispatch_stub_774(GLenum target, GLuint id);
+void APIENTRY shared_dispatch_stub_775(GLsizei n, const GLuint *ids);
+void APIENTRY shared_dispatch_stub_776(GLenum mode, GLuint id);
+void APIENTRY shared_dispatch_stub_777(GLsizei n, GLuint *ids);
+GLboolean APIENTRY shared_dispatch_stub_778(GLuint id);
+void APIENTRY shared_dispatch_stub_779(void);
+void APIENTRY shared_dispatch_stub_780(void);
+void APIENTRY shared_dispatch_stub_781(GLenum target, GLuint index, GLuint id);
+void APIENTRY shared_dispatch_stub_782(GLenum mode, GLuint id, GLuint stream);
+void APIENTRY shared_dispatch_stub_783(GLenum target, GLuint index);
+void APIENTRY shared_dispatch_stub_784(GLenum target, GLuint index, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_785(GLclampf depth);
+void APIENTRY shared_dispatch_stub_786(GLclampf zNear, GLclampf zFar);
+void APIENTRY shared_dispatch_stub_787(GLenum shadertype, GLenum precisiontype, GLint *range, GLint *precision);
+void APIENTRY shared_dispatch_stub_788(void);
+void APIENTRY shared_dispatch_stub_789(GLsizei n, const GLuint *shaders, GLenum binaryformat, const GLvoid *binary, GLsizei length);
+void APIENTRY shared_dispatch_stub_790(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary);
+void APIENTRY shared_dispatch_stub_791(GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length);
+void APIENTRY shared_dispatch_stub_792(GLuint program, GLenum pname, GLint value);
+void APIENTRY shared_dispatch_stub_793(GLuint first, GLsizei count, const GLclampd *v);
+void APIENTRY shared_dispatch_stub_794(GLuint index, GLclampd n, GLclampd f);
+void APIENTRY shared_dispatch_stub_795(GLenum target, GLuint index, GLdouble *data);
+void APIENTRY shared_dispatch_stub_796(GLenum target, GLuint index, GLfloat *data);
+void APIENTRY shared_dispatch_stub_797(GLuint first, GLsizei count, const int *v);
+void APIENTRY shared_dispatch_stub_798(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height);
+void APIENTRY shared_dispatch_stub_799(GLuint index, const GLint *v);
+void APIENTRY shared_dispatch_stub_800(GLuint first, GLsizei count, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_801(GLuint index, GLfloat x, GLfloat y, GLfloat w, GLfloat h);
+void APIENTRY shared_dispatch_stub_802(GLuint index, const GLfloat *v);
+GLenum APIENTRY shared_dispatch_stub_803(void);
+void APIENTRY shared_dispatch_stub_804(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *table);
+void APIENTRY shared_dispatch_stub_805(GLenum target, GLint lod, GLsizei bufSize, GLvoid *img);
+void APIENTRY shared_dispatch_stub_806(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *image);
+void APIENTRY shared_dispatch_stub_807(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values);
+void APIENTRY shared_dispatch_stub_808(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v);
+void APIENTRY shared_dispatch_stub_809(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v);
+void APIENTRY shared_dispatch_stub_810(GLenum target, GLenum query, GLsizei bufSize, GLint *v);
+void APIENTRY shared_dispatch_stub_811(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values);
+void APIENTRY shared_dispatch_stub_812(GLenum map, GLsizei bufSize, GLfloat *values);
+void APIENTRY shared_dispatch_stub_813(GLenum map, GLsizei bufSize, GLuint *values);
+void APIENTRY shared_dispatch_stub_814(GLenum map, GLsizei bufSize, GLushort *values);
+void APIENTRY shared_dispatch_stub_815(GLsizei bufSize, GLubyte *pattern);
+void APIENTRY shared_dispatch_stub_816(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, GLvoid *row, GLsizei columnBufSize, GLvoid *column, GLvoid *span);
+void APIENTRY shared_dispatch_stub_817(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, GLvoid *img);
+void APIENTRY shared_dispatch_stub_818(GLuint program, GLint location, GLsizei bufSize, GLdouble *params);
+void APIENTRY shared_dispatch_stub_819(GLuint program, GLint location, GLsizei bufSize, GLfloat *params);
+void APIENTRY shared_dispatch_stub_820(GLuint program, GLint location, GLsizei bufSize, GLint *params);
+void APIENTRY shared_dispatch_stub_821(GLuint program, GLint location, GLsizei bufSize, GLuint *params);
+void APIENTRY shared_dispatch_stub_822(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data);
+void APIENTRY shared_dispatch_stub_823(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance);
+void APIENTRY shared_dispatch_stub_824(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance);
+void APIENTRY shared_dispatch_stub_825(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance);
+void APIENTRY shared_dispatch_stub_826(GLenum mode, GLuint id, GLsizei primcount);
+void APIENTRY shared_dispatch_stub_827(GLenum mode, GLuint id, GLuint stream, GLsizei primcount);
+void APIENTRY shared_dispatch_stub_828(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params);
+void APIENTRY shared_dispatch_stub_829(GLuint program, GLuint bufferIndex, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_830(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format);
+void APIENTRY shared_dispatch_stub_831(GLbitfield barriers);
+void APIENTRY shared_dispatch_stub_832(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width);
+void APIENTRY shared_dispatch_stub_833(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height);
+void APIENTRY shared_dispatch_stub_834(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth);
+void APIENTRY shared_dispatch_stub_835(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width);
+void APIENTRY shared_dispatch_stub_836(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height);
+void APIENTRY shared_dispatch_stub_837(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth);
+void APIENTRY shared_dispatch_stub_838(GLenum target, GLenum internalformat, GLenum format, GLenum type, const GLvoid *data);
+void APIENTRY shared_dispatch_stub_839(GLenum target, GLenum internalformat, GLintptr offset, GLsizeiptr size, GLenum format, GLenum type, const GLvoid *data);
+void APIENTRY shared_dispatch_stub_840(GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z);
+void APIENTRY shared_dispatch_stub_841(GLintptr indirect);
+void APIENTRY shared_dispatch_stub_842(GLuint texture, GLenum target, GLuint origtexture, GLenum internalformat, GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers);
+void APIENTRY shared_dispatch_stub_843(GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride);
+void APIENTRY shared_dispatch_stub_844(GLuint attribindex, GLuint bindingindex);
+void APIENTRY shared_dispatch_stub_845(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset);
+void APIENTRY shared_dispatch_stub_846(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset);
+void APIENTRY shared_dispatch_stub_847(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset);
+void APIENTRY shared_dispatch_stub_848(GLuint attribindex, GLuint divisor);
+void APIENTRY shared_dispatch_stub_849(GLenum mode, const GLvoid *indirect, GLsizei primcount, GLsizei stride);
+void APIENTRY shared_dispatch_stub_850(GLenum mode, GLenum type, const GLvoid *indirect, GLsizei primcount, GLsizei stride);
+void APIENTRY shared_dispatch_stub_851(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size);
+void APIENTRY shared_dispatch_stub_852(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
+void APIENTRY shared_dispatch_stub_853(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations);
+void APIENTRY shared_dispatch_stub_854(GLenum target, GLsizeiptr size, const GLvoid *data, GLbitfield flags);
+void APIENTRY shared_dispatch_stub_855(GLenum target, GLuint first, GLsizei count, const GLuint *buffers);
+void APIENTRY shared_dispatch_stub_856(GLenum target, GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizeiptr *sizes);
+void APIENTRY shared_dispatch_stub_857(GLuint first, GLsizei count, const GLuint *textures);
+void APIENTRY shared_dispatch_stub_858(GLuint first, GLsizei count, const GLuint *samplers);
+void APIENTRY shared_dispatch_stub_859(GLuint first, GLsizei count, const GLuint *textures);
+void APIENTRY shared_dispatch_stub_860(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides);
+void APIENTRY shared_dispatch_stub_861(GLuint buffer);
+void APIENTRY shared_dispatch_stub_862(GLuint buffer, GLintptr offset, GLsizeiptr length);
+void APIENTRY shared_dispatch_stub_863(GLenum target, GLsizei numAttachments, const GLenum *attachments);
+void APIENTRY shared_dispatch_stub_864(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height);
+void APIENTRY shared_dispatch_stub_865(GLuint texture, GLint level);
+void APIENTRY shared_dispatch_stub_866(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth);
+void APIENTRY shared_dispatch_stub_867(GLfloat factor, GLfloat bias);
+void APIENTRY shared_dispatch_stub_868(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height);
+void APIENTRY shared_dispatch_stub_869(const GLfloat *coords);
+void APIENTRY shared_dispatch_stub_870(GLint x, GLint y, GLint z, GLint width, GLint height);
+void APIENTRY shared_dispatch_stub_871(const GLint *coords);
+void APIENTRY shared_dispatch_stub_872(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height);
+void APIENTRY shared_dispatch_stub_873(const GLshort *coords);
+void APIENTRY shared_dispatch_stub_874(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height);
+void APIENTRY shared_dispatch_stub_875(const GLfixed *coords);
+void APIENTRY shared_dispatch_stub_876(GLenum type, GLsizei stride, const GLvoid *pointer);
+GLbitfield APIENTRY shared_dispatch_stub_877(GLfixed *mantissa, GLint *exponent);
+void APIENTRY shared_dispatch_stub_878(GLclampf value, GLboolean invert);
+void APIENTRY shared_dispatch_stub_879(GLenum pattern);
+void APIENTRY shared_dispatch_stub_880(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
+void APIENTRY shared_dispatch_stub_881(GLsizei stride, GLsizei count, const GLboolean *pointer);
+void APIENTRY shared_dispatch_stub_882(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
+void APIENTRY shared_dispatch_stub_883(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
+void APIENTRY shared_dispatch_stub_884(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
+void APIENTRY shared_dispatch_stub_885(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
+void APIENTRY shared_dispatch_stub_886(GLenum target, GLsizei numAttachments, const GLenum *attachments);
+void APIENTRY shared_dispatch_stub_887(GLuint pipeline, GLuint program);
+void APIENTRY shared_dispatch_stub_888(GLuint pipeline);
+GLuint APIENTRY shared_dispatch_stub_889(GLenum type, GLsizei count, const GLchar * const *strings);
+void APIENTRY shared_dispatch_stub_890(GLsizei n, const GLuint *pipelines);
+void APIENTRY shared_dispatch_stub_891(GLsizei n, GLuint *pipelines);
+void APIENTRY shared_dispatch_stub_892(GLuint pipeline, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+void APIENTRY shared_dispatch_stub_893(GLuint pipeline, GLenum pname, GLint *params);
+GLboolean APIENTRY shared_dispatch_stub_894(GLuint pipeline);
+void APIENTRY shared_dispatch_stub_895(GLint first, GLsizei count);
+void APIENTRY shared_dispatch_stub_896(GLuint program, GLint location, GLfloat x);
+void APIENTRY shared_dispatch_stub_897(GLuint program, GLint location, GLsizei count, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_898(GLuint program, GLint location, GLint x);
+void APIENTRY shared_dispatch_stub_899(GLuint program, GLint location, GLsizei count, const GLint *value);
+void APIENTRY shared_dispatch_stub_900(GLuint program, GLint location, GLuint x);
+void APIENTRY shared_dispatch_stub_901(GLuint program, GLint location, GLsizei count, const GLuint *value);
+void APIENTRY shared_dispatch_stub_902(GLuint program, GLint location, GLfloat x, GLfloat y);
+void APIENTRY shared_dispatch_stub_903(GLuint program, GLint location, GLsizei count, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_904(GLuint program, GLint location, GLint x, GLint y);
+void APIENTRY shared_dispatch_stub_905(GLuint program, GLint location, GLsizei count, const GLint *value);
+void APIENTRY shared_dispatch_stub_906(GLuint program, GLint location, GLuint x, GLuint y);
+void APIENTRY shared_dispatch_stub_907(GLuint program, GLint location, GLsizei count, const GLuint *value);
+void APIENTRY shared_dispatch_stub_908(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z);
+void APIENTRY shared_dispatch_stub_909(GLuint program, GLint location, GLsizei count, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_910(GLuint program, GLint location, GLint x, GLint y, GLint z);
+void APIENTRY shared_dispatch_stub_911(GLuint program, GLint location, GLsizei count, const GLint *value);
+void APIENTRY shared_dispatch_stub_912(GLuint program, GLint location, GLuint x, GLuint y, GLuint z);
+void APIENTRY shared_dispatch_stub_913(GLuint program, GLint location, GLsizei count, const GLuint *value);
+void APIENTRY shared_dispatch_stub_914(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void APIENTRY shared_dispatch_stub_915(GLuint program, GLint location, GLsizei count, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_916(GLuint program, GLint location, GLint x, GLint y, GLint z, GLint w);
+void APIENTRY shared_dispatch_stub_917(GLuint program, GLint location, GLsizei count, const GLint *value);
+void APIENTRY shared_dispatch_stub_918(GLuint program, GLint location, GLuint x, GLuint y, GLuint z, GLuint w);
+void APIENTRY shared_dispatch_stub_919(GLuint program, GLint location, GLsizei count, const GLuint *value);
+void APIENTRY shared_dispatch_stub_920(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_921(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_922(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_923(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_924(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_925(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_926(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_927(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_928(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_929(void);
+void APIENTRY shared_dispatch_stub_930(GLuint pipeline, GLbitfield stages, GLuint program);
+void APIENTRY shared_dispatch_stub_931(GLuint pipeline);
+void APIENTRY shared_dispatch_stub_932(GLDEBUGPROC callback, const GLvoid *userParam);
+void APIENTRY shared_dispatch_stub_933(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled);
+void APIENTRY shared_dispatch_stub_934(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *buf);
+GLuint APIENTRY shared_dispatch_stub_935(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog);
+void APIENTRY shared_dispatch_stub_936(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLchar *label);
+void APIENTRY shared_dispatch_stub_937(const GLvoid *ptr, GLsizei bufSize, GLsizei *length, GLchar *label);
+void APIENTRY shared_dispatch_stub_938(GLenum identifier, GLuint name, GLsizei length, const GLchar *label);
+void APIENTRY shared_dispatch_stub_939(const GLvoid *ptr, GLsizei length, const GLchar *label);
+void APIENTRY shared_dispatch_stub_940(void);
+void APIENTRY shared_dispatch_stub_941(GLenum source, GLuint id, GLsizei length, const GLchar *message);
+void APIENTRY shared_dispatch_stub_942(GLfloat red, GLfloat green, GLfloat blue);
+void APIENTRY shared_dispatch_stub_943(const GLfloat *v);
+void APIENTRY shared_dispatch_stub_944(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount);
+void APIENTRY shared_dispatch_stub_945(GLfloat coord);
+void APIENTRY shared_dispatch_stub_946(const GLfloat *coord);
+void APIENTRY shared_dispatch_stub_947(void);
+void APIENTRY shared_dispatch_stub_948(GLdouble x, GLdouble y, GLdouble z, GLdouble w);
+void APIENTRY shared_dispatch_stub_949(const GLdouble *v);
+void APIENTRY shared_dispatch_stub_950(GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void APIENTRY shared_dispatch_stub_951(const GLfloat *v);
+void APIENTRY shared_dispatch_stub_952(GLint x, GLint y, GLint z, GLint w);
+void APIENTRY shared_dispatch_stub_953(const GLint *v);
+void APIENTRY shared_dispatch_stub_954(GLshort x, GLshort y, GLshort z, GLshort w);
+void APIENTRY shared_dispatch_stub_955(const GLshort *v);
+void APIENTRY shared_dispatch_stub_956(const GLenum *mode, const GLint *first, const GLsizei *count, GLsizei primcount, GLint modestride);
+void APIENTRY shared_dispatch_stub_957(const GLenum *mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, GLint modestride);
+GLboolean APIENTRY shared_dispatch_stub_958(GLsizei n, const GLuint *ids, GLboolean *residences);
+void APIENTRY shared_dispatch_stub_959(GLenum target, GLuint id, const GLfloat *params);
+void APIENTRY shared_dispatch_stub_960(GLenum target, GLuint index, GLenum pname, GLdouble *params);
+void APIENTRY shared_dispatch_stub_961(GLenum target, GLuint index, GLenum pname, GLfloat *params);
+void APIENTRY shared_dispatch_stub_962(GLuint id, GLenum pname, GLubyte *program);
+void APIENTRY shared_dispatch_stub_963(GLuint id, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_964(GLenum target, GLuint address, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_965(GLuint index, GLenum pname, GLdouble *params);
+void APIENTRY shared_dispatch_stub_966(GLuint index, GLenum pname, GLfloat *params);
+void APIENTRY shared_dispatch_stub_967(GLuint index, GLenum pname, GLint *params);
+void APIENTRY shared_dispatch_stub_968(GLenum target, GLuint id, GLsizei len, const GLubyte *program);
+void APIENTRY shared_dispatch_stub_969(GLenum target, GLuint index, GLsizei num, const GLdouble *params);
+void APIENTRY shared_dispatch_stub_970(GLenum target, GLuint index, GLsizei num, const GLfloat *params);
+void APIENTRY shared_dispatch_stub_971(GLsizei n, const GLuint *ids);
+void APIENTRY shared_dispatch_stub_972(GLenum target, GLuint address, GLenum matrix, GLenum transform);
+void APIENTRY shared_dispatch_stub_973(GLuint index, GLdouble x);
+void APIENTRY shared_dispatch_stub_974(GLuint index, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_975(GLuint index, GLfloat x);
+void APIENTRY shared_dispatch_stub_976(GLuint index, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_977(GLuint index, GLshort x);
+void APIENTRY shared_dispatch_stub_978(GLuint index, const GLshort *v);
+void APIENTRY shared_dispatch_stub_979(GLuint index, GLdouble x, GLdouble y);
+void APIENTRY shared_dispatch_stub_980(GLuint index, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_981(GLuint index, GLfloat x, GLfloat y);
+void APIENTRY shared_dispatch_stub_982(GLuint index, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_983(GLuint index, GLshort x, GLshort y);
+void APIENTRY shared_dispatch_stub_984(GLuint index, const GLshort *v);
+void APIENTRY shared_dispatch_stub_985(GLuint index, GLdouble x, GLdouble y, GLdouble z);
+void APIENTRY shared_dispatch_stub_986(GLuint index, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_987(GLuint index, GLfloat x, GLfloat y, GLfloat z);
+void APIENTRY shared_dispatch_stub_988(GLuint index, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_989(GLuint index, GLshort x, GLshort y, GLshort z);
+void APIENTRY shared_dispatch_stub_990(GLuint index, const GLshort *v);
+void APIENTRY shared_dispatch_stub_991(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
+void APIENTRY shared_dispatch_stub_992(GLuint index, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_993(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void APIENTRY shared_dispatch_stub_994(GLuint index, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_995(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w);
+void APIENTRY shared_dispatch_stub_996(GLuint index, const GLshort *v);
+void APIENTRY shared_dispatch_stub_997(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w);
+void APIENTRY shared_dispatch_stub_998(GLuint index, const GLubyte *v);
+void APIENTRY shared_dispatch_stub_999(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
+void APIENTRY shared_dispatch_stub_1000(GLuint index, GLsizei n, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_1001(GLuint index, GLsizei n, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_1002(GLuint index, GLsizei n, const GLshort *v);
+void APIENTRY shared_dispatch_stub_1003(GLuint index, GLsizei n, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_1004(GLuint index, GLsizei n, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_1005(GLuint index, GLsizei n, const GLshort *v);
+void APIENTRY shared_dispatch_stub_1006(GLuint index, GLsizei n, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_1007(GLuint index, GLsizei n, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_1008(GLuint index, GLsizei n, const GLshort *v);
+void APIENTRY shared_dispatch_stub_1009(GLuint index, GLsizei n, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_1010(GLuint index, GLsizei n, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_1011(GLuint index, GLsizei n, const GLshort *v);
+void APIENTRY shared_dispatch_stub_1012(GLuint index, GLsizei n, const GLubyte *v);
+void APIENTRY shared_dispatch_stub_1013(GLenum pname, GLfloat *param);
+void APIENTRY shared_dispatch_stub_1014(GLenum pname, GLint *param);
+void APIENTRY shared_dispatch_stub_1015(GLenum pname, const GLfloat *param);
+void APIENTRY shared_dispatch_stub_1016(GLenum pname, const GLint *param);
+void APIENTRY shared_dispatch_stub_1017(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod);
+void APIENTRY shared_dispatch_stub_1018(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod);
+void APIENTRY shared_dispatch_stub_1019(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod);
+void APIENTRY shared_dispatch_stub_1020(void);
+void APIENTRY shared_dispatch_stub_1021(GLuint id);
+void APIENTRY shared_dispatch_stub_1022(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod);
+void APIENTRY shared_dispatch_stub_1023(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod);
+void APIENTRY shared_dispatch_stub_1024(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod);
+void APIENTRY shared_dispatch_stub_1025(GLuint id);
+void APIENTRY shared_dispatch_stub_1026(void);
+GLuint APIENTRY shared_dispatch_stub_1027(GLuint range);
+void APIENTRY shared_dispatch_stub_1028(GLuint dst, GLuint coord, GLenum swizzle);
+void APIENTRY shared_dispatch_stub_1029(GLuint dst, GLuint interp, GLenum swizzle);
+void APIENTRY shared_dispatch_stub_1030(GLuint dst, const GLfloat *value);
+void APIENTRY shared_dispatch_stub_1031(GLenum face);
+void APIENTRY shared_dispatch_stub_1032(GLuint array);
+void APIENTRY shared_dispatch_stub_1033(GLsizei n, GLuint *arrays);
+void APIENTRY shared_dispatch_stub_1034(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params);
+void APIENTRY shared_dispatch_stub_1035(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params);
+void APIENTRY shared_dispatch_stub_1036(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
+void APIENTRY shared_dispatch_stub_1037(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v);
+void APIENTRY shared_dispatch_stub_1038(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void APIENTRY shared_dispatch_stub_1039(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v);
+void APIENTRY shared_dispatch_stub_1040(void);
+void APIENTRY shared_dispatch_stub_1041(GLenum coord, GLenum pname, GLfixed *params);
+void APIENTRY shared_dispatch_stub_1042(GLenum coord, GLenum pname, GLint param);
+void APIENTRY shared_dispatch_stub_1043(GLenum coord, GLenum pname, const GLfixed *params);
+void APIENTRY shared_dispatch_stub_1044(GLclampd zmin, GLclampd zmax);
+void APIENTRY shared_dispatch_stub_1045(GLenum target, GLuint framebuffer);
+void APIENTRY shared_dispatch_stub_1046(GLenum target, GLuint renderbuffer);
+void APIENTRY shared_dispatch_stub_1047(GLenum target, GLenum pname, GLint param);
+void APIENTRY shared_dispatch_stub_1048(GLenum target, GLintptr offset, GLsizeiptr size);
+void APIENTRY shared_dispatch_stub_1049(GLuint index, GLint x);
+void APIENTRY shared_dispatch_stub_1050(GLuint index, GLuint x);
+void APIENTRY shared_dispatch_stub_1051(GLuint index, GLint x, GLint y);
+void APIENTRY shared_dispatch_stub_1052(GLuint index, const GLint *v);
+void APIENTRY shared_dispatch_stub_1053(GLuint index, GLuint x, GLuint y);
+void APIENTRY shared_dispatch_stub_1054(GLuint index, const GLuint *v);
+void APIENTRY shared_dispatch_stub_1055(GLuint index, GLint x, GLint y, GLint z);
+void APIENTRY shared_dispatch_stub_1056(GLuint index, const GLint *v);
+void APIENTRY shared_dispatch_stub_1057(GLuint index, GLuint x, GLuint y, GLuint z);
+void APIENTRY shared_dispatch_stub_1058(GLuint index, const GLuint *v);
+void APIENTRY shared_dispatch_stub_1059(GLuint index, GLint x, GLint y, GLint z, GLint w);
+void APIENTRY shared_dispatch_stub_1060(GLuint index, const GLint *v);
+void APIENTRY shared_dispatch_stub_1061(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
+void APIENTRY shared_dispatch_stub_1062(GLuint index, const GLuint *v);
+void APIENTRY shared_dispatch_stub_1063(GLint r, GLint g, GLint b, GLint a);
+void APIENTRY shared_dispatch_stub_1064(GLuint r, GLuint g, GLuint b, GLuint a);
+void APIENTRY shared_dispatch_stub_1065(GLenum target, GLuint index, GLuint buffer, GLintptr offset);
+void APIENTRY shared_dispatch_stub_1066(GLuint monitor);
+void APIENTRY shared_dispatch_stub_1067(GLsizei n, GLuint *monitors);
+void APIENTRY shared_dispatch_stub_1068(GLuint monitor);
+void APIENTRY shared_dispatch_stub_1069(GLsizei n, GLuint *monitors);
+void APIENTRY shared_dispatch_stub_1070(GLuint monitor, GLenum pname, GLsizei dataSize, GLuint *data, GLint *bytesWritten);
+void APIENTRY shared_dispatch_stub_1071(GLuint group, GLuint counter, GLenum pname, GLvoid *data);
+void APIENTRY shared_dispatch_stub_1072(GLuint group, GLuint counter, GLsizei bufSize, GLsizei *length, GLchar *counterString);
+void APIENTRY shared_dispatch_stub_1073(GLuint group, GLint *numCounters, GLint *maxActiveCounters, GLsizei countersSize, GLuint *counters);
+void APIENTRY shared_dispatch_stub_1074(GLuint group, GLsizei bufSize, GLsizei *length, GLchar *groupString);
+void APIENTRY shared_dispatch_stub_1075(GLint *numGroups, GLsizei groupsSize, GLuint *groups);
+void APIENTRY shared_dispatch_stub_1076(GLuint monitor, GLboolean enable, GLuint group, GLint numCounters, GLuint *counterList);
+void APIENTRY shared_dispatch_stub_1077(GLenum objectType, GLuint name, GLenum pname, GLint *value);
+GLenum APIENTRY shared_dispatch_stub_1078(GLenum objectType, GLuint name, GLenum option);
+GLenum APIENTRY shared_dispatch_stub_1079(GLenum objectType, GLuint name, GLenum option);
+void APIENTRY shared_dispatch_stub_1080(GLuint program);
+GLuint APIENTRY shared_dispatch_stub_1081(GLenum type, const GLchar *string);
+void APIENTRY shared_dispatch_stub_1082(GLenum type, GLuint program);
+void APIENTRY shared_dispatch_stub_1083(void);
+void APIENTRY shared_dispatch_stub_1084(void);
+void APIENTRY shared_dispatch_stub_1085(GLintptr surface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values);
+void APIENTRY shared_dispatch_stub_1086(const GLvoid *vdpDevice, const GLvoid *getProcAddress);
+GLboolean APIENTRY shared_dispatch_stub_1087(GLintptr surface);
+void APIENTRY shared_dispatch_stub_1088(GLsizei numSurfaces, const GLintptr *surfaces);
+GLintptr APIENTRY shared_dispatch_stub_1089(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames);
+GLintptr APIENTRY shared_dispatch_stub_1090(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames);
+void APIENTRY shared_dispatch_stub_1091(GLintptr surface, GLenum access);
+void APIENTRY shared_dispatch_stub_1092(GLsizei numSurfaces, const GLintptr *surfaces);
+void APIENTRY shared_dispatch_stub_1093(GLintptr surface);
+void APIENTRY shared_dispatch_stub_1094(GLuint queryHandle);
+void APIENTRY shared_dispatch_stub_1095(GLuint queryId, GLuint *queryHandle);
+void APIENTRY shared_dispatch_stub_1096(GLuint queryHandle);
+void APIENTRY shared_dispatch_stub_1097(GLuint queryHandle);
+void APIENTRY shared_dispatch_stub_1098(GLuint *queryId);
+void APIENTRY shared_dispatch_stub_1099(GLuint queryId, GLuint *nextQueryId);
+void APIENTRY shared_dispatch_stub_1100(GLuint queryId, GLuint counterId, GLuint counterNameLength, GLchar *counterName, GLuint counterDescLength, GLchar *counterDesc, GLuint *counterOffset, GLuint *counterDataSize, GLuint *counterTypeEnum, GLuint *counterDataTypeEnum, GLuint64 *rawCounterMaxValue);
+void APIENTRY shared_dispatch_stub_1101(GLuint queryHandle, GLuint flags, GLsizei dataSize, GLvoid *data, GLuint *bytesWritten);
+void APIENTRY shared_dispatch_stub_1102(GLchar *queryName, GLuint *queryId);
+void APIENTRY shared_dispatch_stub_1103(GLuint queryId, GLuint queryNameLength, GLchar *queryName, GLuint *dataSize, GLuint *noCounters, GLuint *noInstances, GLuint *capsMask);
+void APIENTRY shared_dispatch_stub_1104(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
+void APIENTRY shared_dispatch_stub_1105(GLenum target, GLuint index, GLsizei count, const GLfloat *params);
+void APIENTRY shared_dispatch_stub_1106(GLenum target, GLuint index, GLsizei count, const GLfloat *params);
+void APIENTRY shared_dispatch_stub_1107(GLenum target, GLvoid *writeOffset);
+void APIENTRY shared_dispatch_stub_1108(GLenum target, GLvoid *writeOffset);
+void APIENTRY shared_dispatch_stub_1109(GLenum func, GLclampx ref);
+void APIENTRY shared_dispatch_stub_1110(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha);
+void APIENTRY shared_dispatch_stub_1111(GLclampx depth);
+void APIENTRY shared_dispatch_stub_1112(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha);
+void APIENTRY shared_dispatch_stub_1113(GLclampx zNear, GLclampx zFar);
+void APIENTRY shared_dispatch_stub_1114(GLenum pname, GLfixed param);
+void APIENTRY shared_dispatch_stub_1115(GLenum pname, const GLfixed *params);
+void APIENTRY shared_dispatch_stub_1116(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
+void APIENTRY shared_dispatch_stub_1117(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar);
+void APIENTRY shared_dispatch_stub_1118(GLenum pname, GLfixed param);
+void APIENTRY shared_dispatch_stub_1119(GLenum pname, const GLfixed *params);
+void APIENTRY shared_dispatch_stub_1120(GLenum light, GLenum pname, GLfixed param);
+void APIENTRY shared_dispatch_stub_1121(GLenum light, GLenum pname, const GLfixed *params);
+void APIENTRY shared_dispatch_stub_1122(GLfixed width);
+void APIENTRY shared_dispatch_stub_1123(const GLfixed *m);
+void APIENTRY shared_dispatch_stub_1124(GLenum face, GLenum pname, GLfixed param);
+void APIENTRY shared_dispatch_stub_1125(GLenum face, GLenum pname, const GLfixed *params);
+void APIENTRY shared_dispatch_stub_1126(const GLfixed *m);
+void APIENTRY shared_dispatch_stub_1127(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q);
+void APIENTRY shared_dispatch_stub_1128(GLfixed nx, GLfixed ny, GLfixed nz);
+void APIENTRY shared_dispatch_stub_1129(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
+void APIENTRY shared_dispatch_stub_1130(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar);
+void APIENTRY shared_dispatch_stub_1131(GLfixed size);
+void APIENTRY shared_dispatch_stub_1132(GLfixed factor, GLfixed units);
+void APIENTRY shared_dispatch_stub_1133(GLfixed angle, GLfixed x, GLfixed y, GLfixed z);
+void APIENTRY shared_dispatch_stub_1134(GLclampx value, GLboolean invert);
+void APIENTRY shared_dispatch_stub_1135(GLfixed x, GLfixed y, GLfixed z);
+void APIENTRY shared_dispatch_stub_1136(GLenum target, GLenum pname, GLfixed param);
+void APIENTRY shared_dispatch_stub_1137(GLenum target, GLenum pname, const GLfixed *params);
+void APIENTRY shared_dispatch_stub_1138(GLenum target, GLenum pname, GLfixed param);
+void APIENTRY shared_dispatch_stub_1139(GLfixed x, GLfixed y, GLfixed z);
+void APIENTRY shared_dispatch_stub_1140(GLenum plane, const GLfloat *equation);
+void APIENTRY shared_dispatch_stub_1141(GLenum plane, const GLfixed *equation);
+void APIENTRY shared_dispatch_stub_1142(GLenum plane, GLfloat *equation);
+void APIENTRY shared_dispatch_stub_1143(GLenum plane, GLfixed *equation);
+void APIENTRY shared_dispatch_stub_1144(GLenum pname, GLfixed *params);
+void APIENTRY shared_dispatch_stub_1145(GLenum light, GLenum pname, GLfixed *params);
+void APIENTRY shared_dispatch_stub_1146(GLenum face, GLenum pname, GLfixed *params);
+void APIENTRY shared_dispatch_stub_1147(GLenum target, GLenum pname, GLfixed *params);
+void APIENTRY shared_dispatch_stub_1148(GLenum target, GLenum pname, GLfixed *params);
+void APIENTRY shared_dispatch_stub_1149(GLenum pname, GLfixed param);
+void APIENTRY shared_dispatch_stub_1150(GLenum pname, const GLfixed *params);
+void APIENTRY shared_dispatch_stub_1151(GLenum target, GLenum pname, const GLfixed *params);
 #undef MAPI_TMP_DEFINES
 #endif /* MAPI_TMP_DEFINES */
 
 #ifdef MAPI_TMP_TABLE
-#define MAPI_TABLE_NUM_STATIC 1036
+#define MAPI_TABLE_NUM_STATIC 1152
 #define MAPI_TABLE_NUM_DYNAMIC 256
 #undef MAPI_TMP_TABLE
 #endif /* MAPI_TMP_TABLE */
@@ -4784,6 +4900,12 @@ static void APIENTRY noopVertexAttribDivisor(GLuint index, GLuint divisor)
    noop_warn("glVertexAttribDivisor");
 }
 
+static void APIENTRY noopMinSampleShading(GLfloat value)
+{
+   (void) value;
+   noop_warn("glMinSampleShading");
+}
+
 static void APIENTRY noopBindProgramARB(GLenum target, GLuint program)
 {
    (void) target; (void) program;
@@ -5324,13 +5446,13 @@ static void APIENTRY noopSampleMaski(GLuint index, GLbitfield mask)
    noop_warn("glSampleMaski");
 }
 
-static void APIENTRY noopTexImage2DMultisample(GLenum target, GLsizei samples, GLint internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)
+static void APIENTRY noopTexImage2DMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)
 {
    (void) target; (void) samples; (void) internalformat; (void) width; (void) height; (void) fixedsamplelocations;
    noop_warn("glTexImage2DMultisample");
 }
 
-static void APIENTRY noopTexImage3DMultisample(GLenum target, GLsizei samples, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)
+static void APIENTRY noopTexImage3DMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)
 {
    (void) target; (void) samples; (void) internalformat; (void) width; (void) height; (void) depth; (void) fixedsamplelocations;
    noop_warn("glTexImage3DMultisample");
@@ -5704,6 +5826,18 @@ static void APIENTRY noopVertexP4uiv(GLenum type, const GLuint *value)
    noop_warn("glVertexP4uiv");
 }
 
+static void APIENTRY noopDrawArraysIndirect(GLenum mode, const GLvoid *indirect)
+{
+   (void) mode; (void) indirect;
+   noop_warn("glDrawArraysIndirect");
+}
+
+static void APIENTRY noopDrawElementsIndirect(GLenum mode, GLenum type, const GLvoid *indirect)
+{
+   (void) mode; (void) type; (void) indirect;
+   noop_warn("glDrawElementsIndirect");
+}
+
 static void APIENTRY noopBindTransformFeedback(GLenum target, GLuint id)
 {
    (void) target; (void) id;
@@ -5816,29 +5950,64 @@ static void APIENTRY noopProgramParameteri(GLuint program, GLenum pname, GLint v
    noop_warn("glProgramParameteri");
 }
 
-static void APIENTRY noopDebugMessageCallbackARB(GLDEBUGPROCARB callback, const GLvoid *userParam)
+static void APIENTRY noopDepthRangeArrayv(GLuint first, GLsizei count, const GLclampd *v)
 {
-   (void) callback; (void) userParam;
-   noop_warn("glDebugMessageCallbackARB");
+   (void) first; (void) count; (void) v;
+   noop_warn("glDepthRangeArrayv");
 }
 
-static void APIENTRY noopDebugMessageControlARB(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)
+static void APIENTRY noopDepthRangeIndexed(GLuint index, GLclampd n, GLclampd f)
 {
-   (void) source; (void) type; (void) severity; (void) count; (void) ids; (void) enabled;
-   noop_warn("glDebugMessageControlARB");
+   (void) index; (void) n; (void) f;
+   noop_warn("glDepthRangeIndexed");
 }
 
-static void APIENTRY noopDebugMessageInsertARB(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB *buf)
+static void APIENTRY noopGetDoublei_v(GLenum target, GLuint index, GLdouble *data)
 {
-   (void) source; (void) type; (void) id; (void) severity; (void) length; (void) buf;
-   noop_warn("glDebugMessageInsertARB");
+   (void) target; (void) index; (void) data;
+   noop_warn("glGetDoublei_v");
 }
 
-static GLuint APIENTRY noopGetDebugMessageLogARB(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLcharARB *messageLog)
+static void APIENTRY noopGetFloati_v(GLenum target, GLuint index, GLfloat *data)
 {
-   (void) count; (void) bufsize; (void) sources; (void) types; (void) ids; (void) severities; (void) lengths; (void) messageLog;
-   noop_warn("glGetDebugMessageLogARB");
-   return (GLuint) 0;
+   (void) target; (void) index; (void) data;
+   noop_warn("glGetFloati_v");
+}
+
+static void APIENTRY noopScissorArrayv(GLuint first, GLsizei count, const int *v)
+{
+   (void) first; (void) count; (void) v;
+   noop_warn("glScissorArrayv");
+}
+
+static void APIENTRY noopScissorIndexed(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height)
+{
+   (void) index; (void) left; (void) bottom; (void) width; (void) height;
+   noop_warn("glScissorIndexed");
+}
+
+static void APIENTRY noopScissorIndexedv(GLuint index, const GLint *v)
+{
+   (void) index; (void) v;
+   noop_warn("glScissorIndexedv");
+}
+
+static void APIENTRY noopViewportArrayv(GLuint first, GLsizei count, const GLfloat *v)
+{
+   (void) first; (void) count; (void) v;
+   noop_warn("glViewportArrayv");
+}
+
+static void APIENTRY noopViewportIndexedf(GLuint index, GLfloat x, GLfloat y, GLfloat w, GLfloat h)
+{
+   (void) index; (void) x; (void) y; (void) w; (void) h;
+   noop_warn("glViewportIndexedf");
+}
+
+static void APIENTRY noopViewportIndexedfv(GLuint index, const GLfloat *v)
+{
+   (void) index; (void) v;
+   noop_warn("glViewportIndexedfv");
 }
 
 static GLenum APIENTRY noopGetGraphicsResetStatusARB(void)
@@ -5931,25 +6100,25 @@ static void APIENTRY noopGetnTexImageARB(GLenum target, GLint level, GLenum form
    noop_warn("glGetnTexImageARB");
 }
 
-static void APIENTRY noopGetnUniformdvARB(GLhandleARB program, GLint location, GLsizei bufSize, GLdouble *params)
+static void APIENTRY noopGetnUniformdvARB(GLuint program, GLint location, GLsizei bufSize, GLdouble *params)
 {
    (void) program; (void) location; (void) bufSize; (void) params;
    noop_warn("glGetnUniformdvARB");
 }
 
-static void APIENTRY noopGetnUniformfvARB(GLhandleARB program, GLint location, GLsizei bufSize, GLfloat *params)
+static void APIENTRY noopGetnUniformfvARB(GLuint program, GLint location, GLsizei bufSize, GLfloat *params)
 {
    (void) program; (void) location; (void) bufSize; (void) params;
    noop_warn("glGetnUniformfvARB");
 }
 
-static void APIENTRY noopGetnUniformivARB(GLhandleARB program, GLint location, GLsizei bufSize, GLint *params)
+static void APIENTRY noopGetnUniformivARB(GLuint program, GLint location, GLsizei bufSize, GLint *params)
 {
    (void) program; (void) location; (void) bufSize; (void) params;
    noop_warn("glGetnUniformivARB");
 }
 
-static void APIENTRY noopGetnUniformuivARB(GLhandleARB program, GLint location, GLsizei bufSize, GLuint *params)
+static void APIENTRY noopGetnUniformuivARB(GLuint program, GLint location, GLsizei bufSize, GLuint *params)
 {
    (void) program; (void) location; (void) bufSize; (void) params;
    noop_warn("glGetnUniformuivARB");
@@ -5997,6 +6166,24 @@ static void APIENTRY noopGetInternalformativ(GLenum target, GLenum internalforma
    noop_warn("glGetInternalformativ");
 }
 
+static void APIENTRY noopGetActiveAtomicCounterBufferiv(GLuint program, GLuint bufferIndex, GLenum pname, GLint *params)
+{
+   (void) program; (void) bufferIndex; (void) pname; (void) params;
+   noop_warn("glGetActiveAtomicCounterBufferiv");
+}
+
+static void APIENTRY noopBindImageTexture(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format)
+{
+   (void) unit; (void) texture; (void) level; (void) layered; (void) layer; (void) access; (void) format;
+   noop_warn("glBindImageTexture");
+}
+
+static void APIENTRY noopMemoryBarrier(GLbitfield barriers)
+{
+   (void) barriers;
+   noop_warn("glMemoryBarrier");
+}
+
 static void APIENTRY noopTexStorage1D(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)
 {
    (void) target; (void) levels; (void) internalFormat; (void) width;
@@ -6033,6 +6220,84 @@ static void APIENTRY noopTextureStorage3DEXT(GLuint texture, GLenum target, GLsi
    noop_warn("glTextureStorage3DEXT");
 }
 
+static void APIENTRY noopClearBufferData(GLenum target, GLenum internalformat, GLenum format, GLenum type, const GLvoid *data)
+{
+   (void) target; (void) internalformat; (void) format; (void) type; (void) data;
+   noop_warn("glClearBufferData");
+}
+
+static void APIENTRY noopClearBufferSubData(GLenum target, GLenum internalformat, GLintptr offset, GLsizeiptr size, GLenum format, GLenum type, const GLvoid *data)
+{
+   (void) target; (void) internalformat; (void) offset; (void) size; (void) format; (void) type; (void) data;
+   noop_warn("glClearBufferSubData");
+}
+
+static void APIENTRY noopDispatchCompute(GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z)
+{
+   (void) num_groups_x; (void) num_groups_y; (void) num_groups_z;
+   noop_warn("glDispatchCompute");
+}
+
+static void APIENTRY noopDispatchComputeIndirect(GLintptr indirect)
+{
+   (void) indirect;
+   noop_warn("glDispatchComputeIndirect");
+}
+
+static void APIENTRY noopTextureView(GLuint texture, GLenum target, GLuint origtexture, GLenum internalformat, GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers)
+{
+   (void) texture; (void) target; (void) origtexture; (void) internalformat; (void) minlevel; (void) numlevels; (void) minlayer; (void) numlayers;
+   noop_warn("glTextureView");
+}
+
+static void APIENTRY noopBindVertexBuffer(GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride)
+{
+   (void) bindingindex; (void) buffer; (void) offset; (void) stride;
+   noop_warn("glBindVertexBuffer");
+}
+
+static void APIENTRY noopVertexAttribBinding(GLuint attribindex, GLuint bindingindex)
+{
+   (void) attribindex; (void) bindingindex;
+   noop_warn("glVertexAttribBinding");
+}
+
+static void APIENTRY noopVertexAttribFormat(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset)
+{
+   (void) attribindex; (void) size; (void) type; (void) normalized; (void) relativeoffset;
+   noop_warn("glVertexAttribFormat");
+}
+
+static void APIENTRY noopVertexAttribIFormat(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)
+{
+   (void) attribindex; (void) size; (void) type; (void) relativeoffset;
+   noop_warn("glVertexAttribIFormat");
+}
+
+static void APIENTRY noopVertexAttribLFormat(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)
+{
+   (void) attribindex; (void) size; (void) type; (void) relativeoffset;
+   noop_warn("glVertexAttribLFormat");
+}
+
+static void APIENTRY noopVertexBindingDivisor(GLuint attribindex, GLuint divisor)
+{
+   (void) attribindex; (void) divisor;
+   noop_warn("glVertexBindingDivisor");
+}
+
+static void APIENTRY noopMultiDrawArraysIndirect(GLenum mode, const GLvoid *indirect, GLsizei primcount, GLsizei stride)
+{
+   (void) mode; (void) indirect; (void) primcount; (void) stride;
+   noop_warn("glMultiDrawArraysIndirect");
+}
+
+static void APIENTRY noopMultiDrawElementsIndirect(GLenum mode, GLenum type, const GLvoid *indirect, GLsizei primcount, GLsizei stride)
+{
+   (void) mode; (void) type; (void) indirect; (void) primcount; (void) stride;
+   noop_warn("glMultiDrawElementsIndirect");
+}
+
 static void APIENTRY noopTexBufferRange(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)
 {
    (void) target; (void) internalformat; (void) buffer; (void) offset; (void) size;
@@ -6049,6 +6314,48 @@ static void APIENTRY noopTexStorage3DMultisample(GLenum target, GLsizei samples,
 {
    (void) target; (void) samples; (void) internalformat; (void) width; (void) height; (void) depth; (void) fixedsamplelocations;
    noop_warn("glTexStorage3DMultisample");
+}
+
+static void APIENTRY noopBufferStorage(GLenum target, GLsizeiptr size, const GLvoid *data, GLbitfield flags)
+{
+   (void) target; (void) size; (void) data; (void) flags;
+   noop_warn("glBufferStorage");
+}
+
+static void APIENTRY noopBindBuffersBase(GLenum target, GLuint first, GLsizei count, const GLuint *buffers)
+{
+   (void) target; (void) first; (void) count; (void) buffers;
+   noop_warn("glBindBuffersBase");
+}
+
+static void APIENTRY noopBindBuffersRange(GLenum target, GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizeiptr *sizes)
+{
+   (void) target; (void) first; (void) count; (void) buffers; (void) offsets; (void) sizes;
+   noop_warn("glBindBuffersRange");
+}
+
+static void APIENTRY noopBindImageTextures(GLuint first, GLsizei count, const GLuint *textures)
+{
+   (void) first; (void) count; (void) textures;
+   noop_warn("glBindImageTextures");
+}
+
+static void APIENTRY noopBindSamplers(GLuint first, GLsizei count, const GLuint *samplers)
+{
+   (void) first; (void) count; (void) samplers;
+   noop_warn("glBindSamplers");
+}
+
+static void APIENTRY noopBindTextures(GLuint first, GLsizei count, const GLuint *textures)
+{
+   (void) first; (void) count; (void) textures;
+   noop_warn("glBindTextures");
+}
+
+static void APIENTRY noopBindVertexBuffers(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides)
+{
+   (void) first; (void) count; (void) buffers; (void) offsets; (void) strides;
+   noop_warn("glBindVertexBuffers");
 }
 
 static void APIENTRY noopInvalidateBufferData(GLuint buffer)
@@ -6208,15 +6515,335 @@ static void APIENTRY noopDiscardFramebufferEXT(GLenum target, GLsizei numAttachm
    noop_warn("glDiscardFramebufferEXT");
 }
 
+static void APIENTRY noopActiveShaderProgram(GLuint pipeline, GLuint program)
+{
+   (void) pipeline; (void) program;
+   noop_warn("glActiveShaderProgram");
+}
+
+static void APIENTRY noopBindProgramPipeline(GLuint pipeline)
+{
+   (void) pipeline;
+   noop_warn("glBindProgramPipeline");
+}
+
+static GLuint APIENTRY noopCreateShaderProgramv(GLenum type, GLsizei count, const GLchar * const *strings)
+{
+   (void) type; (void) count; (void) strings;
+   noop_warn("glCreateShaderProgramv");
+   return (GLuint) 0;
+}
+
+static void APIENTRY noopDeleteProgramPipelines(GLsizei n, const GLuint *pipelines)
+{
+   (void) n; (void) pipelines;
+   noop_warn("glDeleteProgramPipelines");
+}
+
+static void APIENTRY noopGenProgramPipelines(GLsizei n, GLuint *pipelines)
+{
+   (void) n; (void) pipelines;
+   noop_warn("glGenProgramPipelines");
+}
+
+static void APIENTRY noopGetProgramPipelineInfoLog(GLuint pipeline, GLsizei bufSize, GLsizei *length, GLchar *infoLog)
+{
+   (void) pipeline; (void) bufSize; (void) length; (void) infoLog;
+   noop_warn("glGetProgramPipelineInfoLog");
+}
+
+static void APIENTRY noopGetProgramPipelineiv(GLuint pipeline, GLenum pname, GLint *params)
+{
+   (void) pipeline; (void) pname; (void) params;
+   noop_warn("glGetProgramPipelineiv");
+}
+
+static GLboolean APIENTRY noopIsProgramPipeline(GLuint pipeline)
+{
+   (void) pipeline;
+   noop_warn("glIsProgramPipeline");
+   return (GLboolean) 0;
+}
+
 static void APIENTRY noopLockArraysEXT(GLint first, GLsizei count)
 {
    (void) first; (void) count;
    noop_warn("glLockArraysEXT");
 }
 
+static void APIENTRY noopProgramUniform1f(GLuint program, GLint location, GLfloat x)
+{
+   (void) program; (void) location; (void) x;
+   noop_warn("glProgramUniform1f");
+}
+
+static void APIENTRY noopProgramUniform1fv(GLuint program, GLint location, GLsizei count, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform1fv");
+}
+
+static void APIENTRY noopProgramUniform1i(GLuint program, GLint location, GLint x)
+{
+   (void) program; (void) location; (void) x;
+   noop_warn("glProgramUniform1i");
+}
+
+static void APIENTRY noopProgramUniform1iv(GLuint program, GLint location, GLsizei count, const GLint *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform1iv");
+}
+
+static void APIENTRY noopProgramUniform1ui(GLuint program, GLint location, GLuint x)
+{
+   (void) program; (void) location; (void) x;
+   noop_warn("glProgramUniform1ui");
+}
+
+static void APIENTRY noopProgramUniform1uiv(GLuint program, GLint location, GLsizei count, const GLuint *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform1uiv");
+}
+
+static void APIENTRY noopProgramUniform2f(GLuint program, GLint location, GLfloat x, GLfloat y)
+{
+   (void) program; (void) location; (void) x; (void) y;
+   noop_warn("glProgramUniform2f");
+}
+
+static void APIENTRY noopProgramUniform2fv(GLuint program, GLint location, GLsizei count, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform2fv");
+}
+
+static void APIENTRY noopProgramUniform2i(GLuint program, GLint location, GLint x, GLint y)
+{
+   (void) program; (void) location; (void) x; (void) y;
+   noop_warn("glProgramUniform2i");
+}
+
+static void APIENTRY noopProgramUniform2iv(GLuint program, GLint location, GLsizei count, const GLint *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform2iv");
+}
+
+static void APIENTRY noopProgramUniform2ui(GLuint program, GLint location, GLuint x, GLuint y)
+{
+   (void) program; (void) location; (void) x; (void) y;
+   noop_warn("glProgramUniform2ui");
+}
+
+static void APIENTRY noopProgramUniform2uiv(GLuint program, GLint location, GLsizei count, const GLuint *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform2uiv");
+}
+
+static void APIENTRY noopProgramUniform3f(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z)
+{
+   (void) program; (void) location; (void) x; (void) y; (void) z;
+   noop_warn("glProgramUniform3f");
+}
+
+static void APIENTRY noopProgramUniform3fv(GLuint program, GLint location, GLsizei count, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform3fv");
+}
+
+static void APIENTRY noopProgramUniform3i(GLuint program, GLint location, GLint x, GLint y, GLint z)
+{
+   (void) program; (void) location; (void) x; (void) y; (void) z;
+   noop_warn("glProgramUniform3i");
+}
+
+static void APIENTRY noopProgramUniform3iv(GLuint program, GLint location, GLsizei count, const GLint *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform3iv");
+}
+
+static void APIENTRY noopProgramUniform3ui(GLuint program, GLint location, GLuint x, GLuint y, GLuint z)
+{
+   (void) program; (void) location; (void) x; (void) y; (void) z;
+   noop_warn("glProgramUniform3ui");
+}
+
+static void APIENTRY noopProgramUniform3uiv(GLuint program, GLint location, GLsizei count, const GLuint *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform3uiv");
+}
+
+static void APIENTRY noopProgramUniform4f(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   (void) program; (void) location; (void) x; (void) y; (void) z; (void) w;
+   noop_warn("glProgramUniform4f");
+}
+
+static void APIENTRY noopProgramUniform4fv(GLuint program, GLint location, GLsizei count, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform4fv");
+}
+
+static void APIENTRY noopProgramUniform4i(GLuint program, GLint location, GLint x, GLint y, GLint z, GLint w)
+{
+   (void) program; (void) location; (void) x; (void) y; (void) z; (void) w;
+   noop_warn("glProgramUniform4i");
+}
+
+static void APIENTRY noopProgramUniform4iv(GLuint program, GLint location, GLsizei count, const GLint *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform4iv");
+}
+
+static void APIENTRY noopProgramUniform4ui(GLuint program, GLint location, GLuint x, GLuint y, GLuint z, GLuint w)
+{
+   (void) program; (void) location; (void) x; (void) y; (void) z; (void) w;
+   noop_warn("glProgramUniform4ui");
+}
+
+static void APIENTRY noopProgramUniform4uiv(GLuint program, GLint location, GLsizei count, const GLuint *value)
+{
+   (void) program; (void) location; (void) count; (void) value;
+   noop_warn("glProgramUniform4uiv");
+}
+
+static void APIENTRY noopProgramUniformMatrix2fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix2fv");
+}
+
+static void APIENTRY noopProgramUniformMatrix2x3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix2x3fv");
+}
+
+static void APIENTRY noopProgramUniformMatrix2x4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix2x4fv");
+}
+
+static void APIENTRY noopProgramUniformMatrix3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix3fv");
+}
+
+static void APIENTRY noopProgramUniformMatrix3x2fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix3x2fv");
+}
+
+static void APIENTRY noopProgramUniformMatrix3x4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix3x4fv");
+}
+
+static void APIENTRY noopProgramUniformMatrix4fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix4fv");
+}
+
+static void APIENTRY noopProgramUniformMatrix4x2fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix4x2fv");
+}
+
+static void APIENTRY noopProgramUniformMatrix4x3fv(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   (void) program; (void) location; (void) count; (void) transpose; (void) value;
+   noop_warn("glProgramUniformMatrix4x3fv");
+}
+
 static void APIENTRY noopUnlockArraysEXT(void)
 {
       noop_warn("glUnlockArraysEXT");
+}
+
+static void APIENTRY noopUseProgramStages(GLuint pipeline, GLbitfield stages, GLuint program)
+{
+   (void) pipeline; (void) stages; (void) program;
+   noop_warn("glUseProgramStages");
+}
+
+static void APIENTRY noopValidateProgramPipeline(GLuint pipeline)
+{
+   (void) pipeline;
+   noop_warn("glValidateProgramPipeline");
+}
+
+static void APIENTRY noopDebugMessageCallback(GLDEBUGPROC callback, const GLvoid *userParam)
+{
+   (void) callback; (void) userParam;
+   noop_warn("glDebugMessageCallback");
+}
+
+static void APIENTRY noopDebugMessageControl(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)
+{
+   (void) source; (void) type; (void) severity; (void) count; (void) ids; (void) enabled;
+   noop_warn("glDebugMessageControl");
+}
+
+static void APIENTRY noopDebugMessageInsert(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *buf)
+{
+   (void) source; (void) type; (void) id; (void) severity; (void) length; (void) buf;
+   noop_warn("glDebugMessageInsert");
+}
+
+static GLuint APIENTRY noopGetDebugMessageLog(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog)
+{
+   (void) count; (void) bufsize; (void) sources; (void) types; (void) ids; (void) severities; (void) lengths; (void) messageLog;
+   noop_warn("glGetDebugMessageLog");
+   return (GLuint) 0;
+}
+
+static void APIENTRY noopGetObjectLabel(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLchar *label)
+{
+   (void) identifier; (void) name; (void) bufSize; (void) length; (void) label;
+   noop_warn("glGetObjectLabel");
+}
+
+static void APIENTRY noopGetObjectPtrLabel(const GLvoid *ptr, GLsizei bufSize, GLsizei *length, GLchar *label)
+{
+   (void) ptr; (void) bufSize; (void) length; (void) label;
+   noop_warn("glGetObjectPtrLabel");
+}
+
+static void APIENTRY noopObjectLabel(GLenum identifier, GLuint name, GLsizei length, const GLchar *label)
+{
+   (void) identifier; (void) name; (void) length; (void) label;
+   noop_warn("glObjectLabel");
+}
+
+static void APIENTRY noopObjectPtrLabel(const GLvoid *ptr, GLsizei length, const GLchar *label)
+{
+   (void) ptr; (void) length; (void) label;
+   noop_warn("glObjectPtrLabel");
+}
+
+static void APIENTRY noopPopDebugGroup(void)
+{
+      noop_warn("glPopDebugGroup");
+}
+
+static void APIENTRY noopPushDebugGroup(GLenum source, GLuint id, GLsizei length, const GLchar *message)
+{
+   (void) source; (void) id; (void) length; (void) message;
+   noop_warn("glPushDebugGroup");
 }
 
 static void APIENTRY noopSecondaryColor3fEXT(GLfloat red, GLfloat green, GLfloat blue)
@@ -6961,6 +7588,72 @@ static void APIENTRY noopBindBufferOffsetEXT(GLenum target, GLuint index, GLuint
    noop_warn("glBindBufferOffsetEXT");
 }
 
+static void APIENTRY noopBeginPerfMonitorAMD(GLuint monitor)
+{
+   (void) monitor;
+   noop_warn("glBeginPerfMonitorAMD");
+}
+
+static void APIENTRY noopDeletePerfMonitorsAMD(GLsizei n, GLuint *monitors)
+{
+   (void) n; (void) monitors;
+   noop_warn("glDeletePerfMonitorsAMD");
+}
+
+static void APIENTRY noopEndPerfMonitorAMD(GLuint monitor)
+{
+   (void) monitor;
+   noop_warn("glEndPerfMonitorAMD");
+}
+
+static void APIENTRY noopGenPerfMonitorsAMD(GLsizei n, GLuint *monitors)
+{
+   (void) n; (void) monitors;
+   noop_warn("glGenPerfMonitorsAMD");
+}
+
+static void APIENTRY noopGetPerfMonitorCounterDataAMD(GLuint monitor, GLenum pname, GLsizei dataSize, GLuint *data, GLint *bytesWritten)
+{
+   (void) monitor; (void) pname; (void) dataSize; (void) data; (void) bytesWritten;
+   noop_warn("glGetPerfMonitorCounterDataAMD");
+}
+
+static void APIENTRY noopGetPerfMonitorCounterInfoAMD(GLuint group, GLuint counter, GLenum pname, GLvoid *data)
+{
+   (void) group; (void) counter; (void) pname; (void) data;
+   noop_warn("glGetPerfMonitorCounterInfoAMD");
+}
+
+static void APIENTRY noopGetPerfMonitorCounterStringAMD(GLuint group, GLuint counter, GLsizei bufSize, GLsizei *length, GLchar *counterString)
+{
+   (void) group; (void) counter; (void) bufSize; (void) length; (void) counterString;
+   noop_warn("glGetPerfMonitorCounterStringAMD");
+}
+
+static void APIENTRY noopGetPerfMonitorCountersAMD(GLuint group, GLint *numCounters, GLint *maxActiveCounters, GLsizei countersSize, GLuint *counters)
+{
+   (void) group; (void) numCounters; (void) maxActiveCounters; (void) countersSize; (void) counters;
+   noop_warn("glGetPerfMonitorCountersAMD");
+}
+
+static void APIENTRY noopGetPerfMonitorGroupStringAMD(GLuint group, GLsizei bufSize, GLsizei *length, GLchar *groupString)
+{
+   (void) group; (void) bufSize; (void) length; (void) groupString;
+   noop_warn("glGetPerfMonitorGroupStringAMD");
+}
+
+static void APIENTRY noopGetPerfMonitorGroupsAMD(GLint *numGroups, GLsizei groupsSize, GLuint *groups)
+{
+   (void) numGroups; (void) groupsSize; (void) groups;
+   noop_warn("glGetPerfMonitorGroupsAMD");
+}
+
+static void APIENTRY noopSelectPerfMonitorCountersAMD(GLuint monitor, GLboolean enable, GLuint group, GLint numCounters, GLuint *counterList)
+{
+   (void) monitor; (void) enable; (void) group; (void) numCounters; (void) counterList;
+   noop_warn("glSelectPerfMonitorCountersAMD");
+}
+
 static void APIENTRY noopGetObjectParameterivAPPLE(GLenum objectType, GLuint name, GLenum pname, GLint *value)
 {
    (void) objectType; (void) name; (void) pname; (void) value;
@@ -7003,6 +7696,128 @@ static void APIENTRY noopUseShaderProgramEXT(GLenum type, GLuint program)
 static void APIENTRY noopTextureBarrierNV(void)
 {
       noop_warn("glTextureBarrierNV");
+}
+
+static void APIENTRY noopVDPAUFiniNV(void)
+{
+      noop_warn("glVDPAUFiniNV");
+}
+
+static void APIENTRY noopVDPAUGetSurfaceivNV(GLintptr surface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
+{
+   (void) surface; (void) pname; (void) bufSize; (void) length; (void) values;
+   noop_warn("glVDPAUGetSurfaceivNV");
+}
+
+static void APIENTRY noopVDPAUInitNV(const GLvoid *vdpDevice, const GLvoid *getProcAddress)
+{
+   (void) vdpDevice; (void) getProcAddress;
+   noop_warn("glVDPAUInitNV");
+}
+
+static GLboolean APIENTRY noopVDPAUIsSurfaceNV(GLintptr surface)
+{
+   (void) surface;
+   noop_warn("glVDPAUIsSurfaceNV");
+   return (GLboolean) 0;
+}
+
+static void APIENTRY noopVDPAUMapSurfacesNV(GLsizei numSurfaces, const GLintptr *surfaces)
+{
+   (void) numSurfaces; (void) surfaces;
+   noop_warn("glVDPAUMapSurfacesNV");
+}
+
+static GLintptr APIENTRY noopVDPAURegisterOutputSurfaceNV(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)
+{
+   (void) vdpSurface; (void) target; (void) numTextureNames; (void) textureNames;
+   noop_warn("glVDPAURegisterOutputSurfaceNV");
+   return (GLintptr) 0;
+}
+
+static GLintptr APIENTRY noopVDPAURegisterVideoSurfaceNV(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)
+{
+   (void) vdpSurface; (void) target; (void) numTextureNames; (void) textureNames;
+   noop_warn("glVDPAURegisterVideoSurfaceNV");
+   return (GLintptr) 0;
+}
+
+static void APIENTRY noopVDPAUSurfaceAccessNV(GLintptr surface, GLenum access)
+{
+   (void) surface; (void) access;
+   noop_warn("glVDPAUSurfaceAccessNV");
+}
+
+static void APIENTRY noopVDPAUUnmapSurfacesNV(GLsizei numSurfaces, const GLintptr *surfaces)
+{
+   (void) numSurfaces; (void) surfaces;
+   noop_warn("glVDPAUUnmapSurfacesNV");
+}
+
+static void APIENTRY noopVDPAUUnregisterSurfaceNV(GLintptr surface)
+{
+   (void) surface;
+   noop_warn("glVDPAUUnregisterSurfaceNV");
+}
+
+static void APIENTRY noopBeginPerfQueryINTEL(GLuint queryHandle)
+{
+   (void) queryHandle;
+   noop_warn("glBeginPerfQueryINTEL");
+}
+
+static void APIENTRY noopCreatePerfQueryINTEL(GLuint queryId, GLuint *queryHandle)
+{
+   (void) queryId; (void) queryHandle;
+   noop_warn("glCreatePerfQueryINTEL");
+}
+
+static void APIENTRY noopDeletePerfQueryINTEL(GLuint queryHandle)
+{
+   (void) queryHandle;
+   noop_warn("glDeletePerfQueryINTEL");
+}
+
+static void APIENTRY noopEndPerfQueryINTEL(GLuint queryHandle)
+{
+   (void) queryHandle;
+   noop_warn("glEndPerfQueryINTEL");
+}
+
+static void APIENTRY noopGetFirstPerfQueryIdINTEL(GLuint *queryId)
+{
+   (void) queryId;
+   noop_warn("glGetFirstPerfQueryIdINTEL");
+}
+
+static void APIENTRY noopGetNextPerfQueryIdINTEL(GLuint queryId, GLuint *nextQueryId)
+{
+   (void) queryId; (void) nextQueryId;
+   noop_warn("glGetNextPerfQueryIdINTEL");
+}
+
+static void APIENTRY noopGetPerfCounterInfoINTEL(GLuint queryId, GLuint counterId, GLuint counterNameLength, GLchar *counterName, GLuint counterDescLength, GLchar *counterDesc, GLuint *counterOffset, GLuint *counterDataSize, GLuint *counterTypeEnum, GLuint *counterDataTypeEnum, GLuint64 *rawCounterMaxValue)
+{
+   (void) queryId; (void) counterId; (void) counterNameLength; (void) counterName; (void) counterDescLength; (void) counterDesc; (void) counterOffset; (void) counterDataSize; (void) counterTypeEnum; (void) counterDataTypeEnum; (void) rawCounterMaxValue;
+   noop_warn("glGetPerfCounterInfoINTEL");
+}
+
+static void APIENTRY noopGetPerfQueryDataINTEL(GLuint queryHandle, GLuint flags, GLsizei dataSize, GLvoid *data, GLuint *bytesWritten)
+{
+   (void) queryHandle; (void) flags; (void) dataSize; (void) data; (void) bytesWritten;
+   noop_warn("glGetPerfQueryDataINTEL");
+}
+
+static void APIENTRY noopGetPerfQueryIdByNameINTEL(GLchar *queryName, GLuint *queryId)
+{
+   (void) queryName; (void) queryId;
+   noop_warn("glGetPerfQueryIdByNameINTEL");
+}
+
+static void APIENTRY noopGetPerfQueryInfoINTEL(GLuint queryId, GLuint queryNameLength, GLchar *queryName, GLuint *dataSize, GLuint *noCounters, GLuint *noInstances, GLuint *capsMask)
+{
+   (void) queryId; (void) queryNameLength; (void) queryName; (void) dataSize; (void) noCounters; (void) noInstances; (void) capsMask;
+   noop_warn("glGetPerfQueryInfoINTEL");
 }
 
 static void APIENTRY noopStencilFuncSeparateATI(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask)
@@ -7914,6 +8729,7 @@ const mapi_func table_noop_array[] = {
    (mapi_func) noopGetBufferParameteri64v,
    (mapi_func) noopGetInteger64i_v,
    (mapi_func) noopVertexAttribDivisor,
+   (mapi_func) noopMinSampleShading,
    (mapi_func) noopBindProgramARB,
    (mapi_func) noopDeleteProgramsARB,
    (mapi_func) noopGenProgramsARB,
@@ -8065,6 +8881,8 @@ const mapi_func table_noop_array[] = {
    (mapi_func) noopVertexP3uiv,
    (mapi_func) noopVertexP4ui,
    (mapi_func) noopVertexP4uiv,
+   (mapi_func) noopDrawArraysIndirect,
+   (mapi_func) noopDrawElementsIndirect,
    (mapi_func) noopBindTransformFeedback,
    (mapi_func) noopDeleteTransformFeedbacks,
    (mapi_func) noopDrawTransformFeedback,
@@ -8084,10 +8902,16 @@ const mapi_func table_noop_array[] = {
    (mapi_func) noopGetProgramBinary,
    (mapi_func) noopProgramBinary,
    (mapi_func) noopProgramParameteri,
-   (mapi_func) noopDebugMessageCallbackARB,
-   (mapi_func) noopDebugMessageControlARB,
-   (mapi_func) noopDebugMessageInsertARB,
-   (mapi_func) noopGetDebugMessageLogARB,
+   (mapi_func) noopDepthRangeArrayv,
+   (mapi_func) noopDepthRangeIndexed,
+   (mapi_func) noopGetDoublei_v,
+   (mapi_func) noopGetFloati_v,
+   (mapi_func) noopScissorArrayv,
+   (mapi_func) noopScissorIndexed,
+   (mapi_func) noopScissorIndexedv,
+   (mapi_func) noopViewportArrayv,
+   (mapi_func) noopViewportIndexedf,
+   (mapi_func) noopViewportIndexedfv,
    (mapi_func) noopGetGraphicsResetStatusARB,
    (mapi_func) noopGetnColorTableARB,
    (mapi_func) noopGetnCompressedTexImageARB,
@@ -8114,15 +8938,38 @@ const mapi_func table_noop_array[] = {
    (mapi_func) noopDrawTransformFeedbackInstanced,
    (mapi_func) noopDrawTransformFeedbackStreamInstanced,
    (mapi_func) noopGetInternalformativ,
+   (mapi_func) noopGetActiveAtomicCounterBufferiv,
+   (mapi_func) noopBindImageTexture,
+   (mapi_func) noopMemoryBarrier,
    (mapi_func) noopTexStorage1D,
    (mapi_func) noopTexStorage2D,
    (mapi_func) noopTexStorage3D,
    (mapi_func) noopTextureStorage1DEXT,
    (mapi_func) noopTextureStorage2DEXT,
    (mapi_func) noopTextureStorage3DEXT,
+   (mapi_func) noopClearBufferData,
+   (mapi_func) noopClearBufferSubData,
+   (mapi_func) noopDispatchCompute,
+   (mapi_func) noopDispatchComputeIndirect,
+   (mapi_func) noopTextureView,
+   (mapi_func) noopBindVertexBuffer,
+   (mapi_func) noopVertexAttribBinding,
+   (mapi_func) noopVertexAttribFormat,
+   (mapi_func) noopVertexAttribIFormat,
+   (mapi_func) noopVertexAttribLFormat,
+   (mapi_func) noopVertexBindingDivisor,
+   (mapi_func) noopMultiDrawArraysIndirect,
+   (mapi_func) noopMultiDrawElementsIndirect,
    (mapi_func) noopTexBufferRange,
    (mapi_func) noopTexStorage2DMultisample,
    (mapi_func) noopTexStorage3DMultisample,
+   (mapi_func) noopBufferStorage,
+   (mapi_func) noopBindBuffersBase,
+   (mapi_func) noopBindBuffersRange,
+   (mapi_func) noopBindImageTextures,
+   (mapi_func) noopBindSamplers,
+   (mapi_func) noopBindTextures,
+   (mapi_func) noopBindVertexBuffers,
    (mapi_func) noopInvalidateBufferData,
    (mapi_func) noopInvalidateBufferSubData,
    (mapi_func) noopInvalidateFramebuffer,
@@ -8149,8 +8996,61 @@ const mapi_func table_noop_array[] = {
    (mapi_func) noopTexCoordPointerEXT,
    (mapi_func) noopVertexPointerEXT,
    (mapi_func) noopDiscardFramebufferEXT,
+   (mapi_func) noopActiveShaderProgram,
+   (mapi_func) noopBindProgramPipeline,
+   (mapi_func) noopCreateShaderProgramv,
+   (mapi_func) noopDeleteProgramPipelines,
+   (mapi_func) noopGenProgramPipelines,
+   (mapi_func) noopGetProgramPipelineInfoLog,
+   (mapi_func) noopGetProgramPipelineiv,
+   (mapi_func) noopIsProgramPipeline,
    (mapi_func) noopLockArraysEXT,
+   (mapi_func) noopProgramUniform1f,
+   (mapi_func) noopProgramUniform1fv,
+   (mapi_func) noopProgramUniform1i,
+   (mapi_func) noopProgramUniform1iv,
+   (mapi_func) noopProgramUniform1ui,
+   (mapi_func) noopProgramUniform1uiv,
+   (mapi_func) noopProgramUniform2f,
+   (mapi_func) noopProgramUniform2fv,
+   (mapi_func) noopProgramUniform2i,
+   (mapi_func) noopProgramUniform2iv,
+   (mapi_func) noopProgramUniform2ui,
+   (mapi_func) noopProgramUniform2uiv,
+   (mapi_func) noopProgramUniform3f,
+   (mapi_func) noopProgramUniform3fv,
+   (mapi_func) noopProgramUniform3i,
+   (mapi_func) noopProgramUniform3iv,
+   (mapi_func) noopProgramUniform3ui,
+   (mapi_func) noopProgramUniform3uiv,
+   (mapi_func) noopProgramUniform4f,
+   (mapi_func) noopProgramUniform4fv,
+   (mapi_func) noopProgramUniform4i,
+   (mapi_func) noopProgramUniform4iv,
+   (mapi_func) noopProgramUniform4ui,
+   (mapi_func) noopProgramUniform4uiv,
+   (mapi_func) noopProgramUniformMatrix2fv,
+   (mapi_func) noopProgramUniformMatrix2x3fv,
+   (mapi_func) noopProgramUniformMatrix2x4fv,
+   (mapi_func) noopProgramUniformMatrix3fv,
+   (mapi_func) noopProgramUniformMatrix3x2fv,
+   (mapi_func) noopProgramUniformMatrix3x4fv,
+   (mapi_func) noopProgramUniformMatrix4fv,
+   (mapi_func) noopProgramUniformMatrix4x2fv,
+   (mapi_func) noopProgramUniformMatrix4x3fv,
    (mapi_func) noopUnlockArraysEXT,
+   (mapi_func) noopUseProgramStages,
+   (mapi_func) noopValidateProgramPipeline,
+   (mapi_func) noopDebugMessageCallback,
+   (mapi_func) noopDebugMessageControl,
+   (mapi_func) noopDebugMessageInsert,
+   (mapi_func) noopGetDebugMessageLog,
+   (mapi_func) noopGetObjectLabel,
+   (mapi_func) noopGetObjectPtrLabel,
+   (mapi_func) noopObjectLabel,
+   (mapi_func) noopObjectPtrLabel,
+   (mapi_func) noopPopDebugGroup,
+   (mapi_func) noopPushDebugGroup,
    (mapi_func) noopSecondaryColor3fEXT,
    (mapi_func) noopSecondaryColor3fvEXT,
    (mapi_func) noopMultiDrawElementsEXT,
@@ -8275,6 +9175,17 @@ const mapi_func table_noop_array[] = {
    (mapi_func) noopClearColorIiEXT,
    (mapi_func) noopClearColorIuiEXT,
    (mapi_func) noopBindBufferOffsetEXT,
+   (mapi_func) noopBeginPerfMonitorAMD,
+   (mapi_func) noopDeletePerfMonitorsAMD,
+   (mapi_func) noopEndPerfMonitorAMD,
+   (mapi_func) noopGenPerfMonitorsAMD,
+   (mapi_func) noopGetPerfMonitorCounterDataAMD,
+   (mapi_func) noopGetPerfMonitorCounterInfoAMD,
+   (mapi_func) noopGetPerfMonitorCounterStringAMD,
+   (mapi_func) noopGetPerfMonitorCountersAMD,
+   (mapi_func) noopGetPerfMonitorGroupStringAMD,
+   (mapi_func) noopGetPerfMonitorGroupsAMD,
+   (mapi_func) noopSelectPerfMonitorCountersAMD,
    (mapi_func) noopGetObjectParameterivAPPLE,
    (mapi_func) noopObjectPurgeableAPPLE,
    (mapi_func) noopObjectUnpurgeableAPPLE,
@@ -8282,6 +9193,26 @@ const mapi_func table_noop_array[] = {
    (mapi_func) noopCreateShaderProgramEXT,
    (mapi_func) noopUseShaderProgramEXT,
    (mapi_func) noopTextureBarrierNV,
+   (mapi_func) noopVDPAUFiniNV,
+   (mapi_func) noopVDPAUGetSurfaceivNV,
+   (mapi_func) noopVDPAUInitNV,
+   (mapi_func) noopVDPAUIsSurfaceNV,
+   (mapi_func) noopVDPAUMapSurfacesNV,
+   (mapi_func) noopVDPAURegisterOutputSurfaceNV,
+   (mapi_func) noopVDPAURegisterVideoSurfaceNV,
+   (mapi_func) noopVDPAUSurfaceAccessNV,
+   (mapi_func) noopVDPAUUnmapSurfacesNV,
+   (mapi_func) noopVDPAUUnregisterSurfaceNV,
+   (mapi_func) noopBeginPerfQueryINTEL,
+   (mapi_func) noopCreatePerfQueryINTEL,
+   (mapi_func) noopDeletePerfQueryINTEL,
+   (mapi_func) noopEndPerfQueryINTEL,
+   (mapi_func) noopGetFirstPerfQueryIdINTEL,
+   (mapi_func) noopGetNextPerfQueryIdINTEL,
+   (mapi_func) noopGetPerfCounterInfoINTEL,
+   (mapi_func) noopGetPerfQueryDataINTEL,
+   (mapi_func) noopGetPerfQueryIdByNameINTEL,
+   (mapi_func) noopGetPerfQueryInfoINTEL,
    (mapi_func) noopStencilFuncSeparateATI,
    (mapi_func) noopProgramEnvParameters4fvEXT,
    (mapi_func) noopProgramLocalParameters4fvEXT,
@@ -9882,6 +10813,122 @@ const mapi_func table_noop_array[] = {
    (mapi_func) noop_generic,
    (mapi_func) noop_generic,
    (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
+   (mapi_func) noop_generic,
    (mapi_func) noop_generic
 };
 
@@ -9893,6 +10940,8 @@ const mapi_func table_noop_array[] = {
 static const char public_string_pool[] =
    "Accum\0"
    "ActiveProgramEXT\0"
+   "ActiveShaderProgram\0"
+   "ActiveShaderProgramEXT\0"
    "ActiveStencilFaceEXT\0"
    "ActiveTexture\0"
    "ActiveTextureARB\0"
@@ -9913,6 +10962,8 @@ static const char public_string_pool[] =
    "BeginConditionalRender\0"
    "BeginConditionalRenderNV\0"
    "BeginFragmentShaderATI\0"
+   "BeginPerfMonitorAMD\0"
+   "BeginPerfQueryINTEL\0"
    "BeginQuery\0"
    "BeginQueryARB\0"
    "BeginQueryIndexed\0"
@@ -9927,6 +10978,8 @@ static const char public_string_pool[] =
    "BindBufferOffsetEXT\0"
    "BindBufferRange\0"
    "BindBufferRangeEXT\0"
+   "BindBuffersBase\0"
+   "BindBuffersRange\0"
    "BindFragDataLocation\0"
    "BindFragDataLocationEXT\0"
    "BindFragDataLocationIndexed\0"
@@ -9934,18 +10987,26 @@ static const char public_string_pool[] =
    "BindFramebuffer\0"
    "BindFramebufferEXT\0"
    "BindFramebufferOES\0"
+   "BindImageTexture\0"
+   "BindImageTextures\0"
    "BindProgramARB\0"
    "BindProgramNV\0"
+   "BindProgramPipeline\0"
+   "BindProgramPipelineEXT\0"
    "BindRenderbuffer\0"
    "BindRenderbufferEXT\0"
    "BindRenderbufferOES\0"
    "BindSampler\0"
+   "BindSamplers\0"
    "BindTexture\0"
    "BindTextureEXT\0"
+   "BindTextures\0"
    "BindTransformFeedback\0"
    "BindVertexArray\0"
    "BindVertexArrayAPPLE\0"
    "BindVertexArrayOES\0"
+   "BindVertexBuffer\0"
+   "BindVertexBuffers\0"
    "Bitmap\0"
    "BlendColor\0"
    "BlendColorEXT\0"
@@ -9974,6 +11035,7 @@ static const char public_string_pool[] =
    "BufferData\0"
    "BufferDataARB\0"
    "BufferParameteriAPPLE\0"
+   "BufferStorage\0"
    "BufferSubData\0"
    "BufferSubDataARB\0"
    "CallList\0"
@@ -9985,6 +11047,8 @@ static const char public_string_pool[] =
    "ClampColorARB\0"
    "Clear\0"
    "ClearAccum\0"
+   "ClearBufferData\0"
+   "ClearBufferSubData\0"
    "ClearBufferfi\0"
    "ClearBufferfv\0"
    "ClearBufferiv\0"
@@ -10114,14 +11178,20 @@ static const char public_string_pool[] =
    "CopyTexSubImage3D\0"
    "CopyTexSubImage3DEXT\0"
    "CopyTexSubImage3DOES\0"
+   "CreatePerfQueryINTEL\0"
    "CreateProgram\0"
    "CreateProgramObjectARB\0"
    "CreateShader\0"
    "CreateShaderObjectARB\0"
    "CreateShaderProgramEXT\0"
+   "CreateShaderProgramv\0"
+   "CreateShaderProgramvEXT\0"
    "CullFace\0"
+   "DebugMessageCallback\0"
    "DebugMessageCallbackARB\0"
+   "DebugMessageControl\0"
    "DebugMessageControlARB\0"
+   "DebugMessageInsert\0"
    "DebugMessageInsertARB\0"
    "DeleteBuffers\0"
    "DeleteBuffersARB\0"
@@ -10131,7 +11201,11 @@ static const char public_string_pool[] =
    "DeleteFramebuffersOES\0"
    "DeleteLists\0"
    "DeleteObjectARB\0"
+   "DeletePerfMonitorsAMD\0"
+   "DeletePerfQueryINTEL\0"
    "DeleteProgram\0"
+   "DeleteProgramPipelines\0"
+   "DeleteProgramPipelinesEXT\0"
    "DeleteProgramsARB\0"
    "DeleteProgramsNV\0"
    "DeleteQueries\0"
@@ -10152,6 +11226,8 @@ static const char public_string_pool[] =
    "DepthFunc\0"
    "DepthMask\0"
    "DepthRange\0"
+   "DepthRangeArrayv\0"
+   "DepthRangeIndexed\0"
    "DepthRangef\0"
    "DepthRangefOES\0"
    "DepthRangex\0"
@@ -10165,8 +11241,11 @@ static const char public_string_pool[] =
    "DisableVertexAttribArrayARB\0"
    "Disablei\0"
    "DiscardFramebufferEXT\0"
+   "DispatchCompute\0"
+   "DispatchComputeIndirect\0"
    "DrawArrays\0"
    "DrawArraysEXT\0"
+   "DrawArraysIndirect\0"
    "DrawArraysInstanced\0"
    "DrawArraysInstancedARB\0"
    "DrawArraysInstancedBaseInstance\0"
@@ -10178,6 +11257,7 @@ static const char public_string_pool[] =
    "DrawBuffersNV\0"
    "DrawElements\0"
    "DrawElementsBaseVertex\0"
+   "DrawElementsIndirect\0"
    "DrawElementsInstanced\0"
    "DrawElementsInstancedARB\0"
    "DrawElementsInstancedBaseInstance\0"
@@ -10217,6 +11297,8 @@ static const char public_string_pool[] =
    "EndConditionalRenderNV\0"
    "EndFragmentShaderATI\0"
    "EndList\0"
+   "EndPerfMonitorAMD\0"
+   "EndPerfQueryINTEL\0"
    "EndQuery\0"
    "EndQueryARB\0"
    "EndQueryIndexed\0"
@@ -10290,6 +11372,9 @@ static const char public_string_pool[] =
    "GenFramebuffersEXT\0"
    "GenFramebuffersOES\0"
    "GenLists\0"
+   "GenPerfMonitorsAMD\0"
+   "GenProgramPipelines\0"
+   "GenProgramPipelinesEXT\0"
    "GenProgramsARB\0"
    "GenProgramsNV\0"
    "GenQueries\0"
@@ -10307,6 +11392,7 @@ static const char public_string_pool[] =
    "GenerateMipmap\0"
    "GenerateMipmapEXT\0"
    "GenerateMipmapOES\0"
+   "GetActiveAtomicCounterBufferiv\0"
    "GetActiveAttrib\0"
    "GetActiveAttribARB\0"
    "GetActiveUniform\0"
@@ -10352,11 +11438,15 @@ static const char public_string_pool[] =
    "GetConvolutionParameterfvEXT\0"
    "GetConvolutionParameteriv\0"
    "GetConvolutionParameterivEXT\0"
+   "GetDebugMessageLog\0"
    "GetDebugMessageLogARB\0"
+   "GetDoublei_v\0"
    "GetDoublev\0"
    "GetError\0"
+   "GetFirstPerfQueryIdINTEL\0"
    "GetFixedv\0"
    "GetFixedvOES\0"
+   "GetFloati_v\0"
    "GetFloatv\0"
    "GetFragDataIndex\0"
    "GetFragDataLocation\0"
@@ -10397,9 +11487,22 @@ static const char public_string_pool[] =
    "GetMinmaxParameteriv\0"
    "GetMinmaxParameterivEXT\0"
    "GetMultisamplefv\0"
+   "GetNextPerfQueryIdINTEL\0"
+   "GetObjectLabel\0"
    "GetObjectParameterfvARB\0"
    "GetObjectParameterivAPPLE\0"
    "GetObjectParameterivARB\0"
+   "GetObjectPtrLabel\0"
+   "GetPerfCounterInfoINTEL\0"
+   "GetPerfMonitorCounterDataAMD\0"
+   "GetPerfMonitorCounterInfoAMD\0"
+   "GetPerfMonitorCounterStringAMD\0"
+   "GetPerfMonitorCountersAMD\0"
+   "GetPerfMonitorGroupStringAMD\0"
+   "GetPerfMonitorGroupsAMD\0"
+   "GetPerfQueryDataINTEL\0"
+   "GetPerfQueryIdByNameINTEL\0"
+   "GetPerfQueryInfoINTEL\0"
    "GetPixelMapfv\0"
    "GetPixelMapuiv\0"
    "GetPixelMapusv\0"
@@ -10417,6 +11520,10 @@ static const char public_string_pool[] =
    "GetProgramNamedParameterfvNV\0"
    "GetProgramParameterdvNV\0"
    "GetProgramParameterfvNV\0"
+   "GetProgramPipelineInfoLog\0"
+   "GetProgramPipelineInfoLogEXT\0"
+   "GetProgramPipelineiv\0"
+   "GetProgramPipelineivEXT\0"
    "GetProgramStringARB\0"
    "GetProgramStringNV\0"
    "GetProgramiv\0"
@@ -10556,6 +11663,8 @@ static const char public_string_pool[] =
    "IsProgram\0"
    "IsProgramARB\0"
    "IsProgramNV\0"
+   "IsProgramPipeline\0"
+   "IsProgramPipelineEXT\0"
    "IsQuery\0"
    "IsQueryARB\0"
    "IsRenderbuffer\0"
@@ -10628,6 +11737,9 @@ static const char public_string_pool[] =
    "Materialxv\0"
    "MaterialxvOES\0"
    "MatrixMode\0"
+   "MemoryBarrier\0"
+   "MinSampleShading\0"
+   "MinSampleShadingARB\0"
    "Minmax\0"
    "MinmaxEXT\0"
    "MultMatrixd\0"
@@ -10640,9 +11752,11 @@ static const char public_string_pool[] =
    "MultTransposeMatrixfARB\0"
    "MultiDrawArrays\0"
    "MultiDrawArraysEXT\0"
+   "MultiDrawArraysIndirect\0"
    "MultiDrawElements\0"
    "MultiDrawElementsBaseVertex\0"
    "MultiDrawElementsEXT\0"
+   "MultiDrawElementsIndirect\0"
    "MultiModeDrawArraysIBM\0"
    "MultiModeDrawElementsIBM\0"
    "MultiTexCoord1d\0"
@@ -10736,6 +11850,8 @@ static const char public_string_pool[] =
    "NormalP3uiv\0"
    "NormalPointer\0"
    "NormalPointerEXT\0"
+   "ObjectLabel\0"
+   "ObjectPtrLabel\0"
    "ObjectPurgeableAPPLE\0"
    "ObjectUnpurgeableAPPLE\0"
    "Ortho\0"
@@ -10782,6 +11898,7 @@ static const char public_string_pool[] =
    "PolygonStipple\0"
    "PopAttrib\0"
    "PopClientAttrib\0"
+   "PopDebugGroup\0"
    "PopMatrix\0"
    "PopName\0"
    "PrimitiveRestartIndex\0"
@@ -10811,13 +11928,81 @@ static const char public_string_pool[] =
    "ProgramParameter4fvNV\0"
    "ProgramParameteri\0"
    "ProgramParameteriARB\0"
+   "ProgramParameteriEXT\0"
    "ProgramParameters4dvNV\0"
    "ProgramParameters4fvNV\0"
    "ProgramStringARB\0"
+   "ProgramUniform1f\0"
+   "ProgramUniform1fEXT\0"
+   "ProgramUniform1fv\0"
+   "ProgramUniform1fvEXT\0"
+   "ProgramUniform1i\0"
+   "ProgramUniform1iEXT\0"
+   "ProgramUniform1iv\0"
+   "ProgramUniform1ivEXT\0"
+   "ProgramUniform1ui\0"
+   "ProgramUniform1uiEXT\0"
+   "ProgramUniform1uiv\0"
+   "ProgramUniform1uivEXT\0"
+   "ProgramUniform2f\0"
+   "ProgramUniform2fEXT\0"
+   "ProgramUniform2fv\0"
+   "ProgramUniform2fvEXT\0"
+   "ProgramUniform2i\0"
+   "ProgramUniform2iEXT\0"
+   "ProgramUniform2iv\0"
+   "ProgramUniform2ivEXT\0"
+   "ProgramUniform2ui\0"
+   "ProgramUniform2uiEXT\0"
+   "ProgramUniform2uiv\0"
+   "ProgramUniform2uivEXT\0"
+   "ProgramUniform3f\0"
+   "ProgramUniform3fEXT\0"
+   "ProgramUniform3fv\0"
+   "ProgramUniform3fvEXT\0"
+   "ProgramUniform3i\0"
+   "ProgramUniform3iEXT\0"
+   "ProgramUniform3iv\0"
+   "ProgramUniform3ivEXT\0"
+   "ProgramUniform3ui\0"
+   "ProgramUniform3uiEXT\0"
+   "ProgramUniform3uiv\0"
+   "ProgramUniform3uivEXT\0"
+   "ProgramUniform4f\0"
+   "ProgramUniform4fEXT\0"
+   "ProgramUniform4fv\0"
+   "ProgramUniform4fvEXT\0"
+   "ProgramUniform4i\0"
+   "ProgramUniform4iEXT\0"
+   "ProgramUniform4iv\0"
+   "ProgramUniform4ivEXT\0"
+   "ProgramUniform4ui\0"
+   "ProgramUniform4uiEXT\0"
+   "ProgramUniform4uiv\0"
+   "ProgramUniform4uivEXT\0"
+   "ProgramUniformMatrix2fv\0"
+   "ProgramUniformMatrix2fvEXT\0"
+   "ProgramUniformMatrix2x3fv\0"
+   "ProgramUniformMatrix2x3fvEXT\0"
+   "ProgramUniformMatrix2x4fv\0"
+   "ProgramUniformMatrix2x4fvEXT\0"
+   "ProgramUniformMatrix3fv\0"
+   "ProgramUniformMatrix3fvEXT\0"
+   "ProgramUniformMatrix3x2fv\0"
+   "ProgramUniformMatrix3x2fvEXT\0"
+   "ProgramUniformMatrix3x4fv\0"
+   "ProgramUniformMatrix3x4fvEXT\0"
+   "ProgramUniformMatrix4fv\0"
+   "ProgramUniformMatrix4fvEXT\0"
+   "ProgramUniformMatrix4x2fv\0"
+   "ProgramUniformMatrix4x2fvEXT\0"
+   "ProgramUniformMatrix4x3fv\0"
+   "ProgramUniformMatrix4x3fvEXT\0"
    "ProvokingVertex\0"
    "ProvokingVertexEXT\0"
    "PushAttrib\0"
    "PushClientAttrib\0"
+   "PushDebugGroup\0"
    "PushMatrix\0"
    "PushName\0"
    "QueryCounter\0"
@@ -10897,6 +12082,9 @@ static const char public_string_pool[] =
    "Scalex\0"
    "ScalexOES\0"
    "Scissor\0"
+   "ScissorArrayv\0"
+   "ScissorIndexed\0"
+   "ScissorIndexedv\0"
    "SecondaryColor3b\0"
    "SecondaryColor3bEXT\0"
    "SecondaryColor3bv\0"
@@ -10934,6 +12122,7 @@ static const char public_string_pool[] =
    "SecondaryColorPointer\0"
    "SecondaryColorPointerEXT\0"
    "SelectBuffer\0"
+   "SelectPerfMonitorCountersAMD\0"
    "SeparableFilter2D\0"
    "SeparableFilter2DEXT\0"
    "SetFragmentShaderConstantATI\0"
@@ -11051,6 +12240,7 @@ static const char public_string_pool[] =
    "TextureStorage1DEXT\0"
    "TextureStorage2DEXT\0"
    "TextureStorage3DEXT\0"
+   "TextureView\0"
    "TrackMatrixNV\0"
    "TransformFeedbackVaryings\0"
    "TransformFeedbackVaryingsEXT\0"
@@ -11125,9 +12315,23 @@ static const char public_string_pool[] =
    "UnmapBufferOES\0"
    "UseProgram\0"
    "UseProgramObjectARB\0"
+   "UseProgramStages\0"
+   "UseProgramStagesEXT\0"
    "UseShaderProgramEXT\0"
+   "VDPAUFiniNV\0"
+   "VDPAUGetSurfaceivNV\0"
+   "VDPAUInitNV\0"
+   "VDPAUIsSurfaceNV\0"
+   "VDPAUMapSurfacesNV\0"
+   "VDPAURegisterOutputSurfaceNV\0"
+   "VDPAURegisterVideoSurfaceNV\0"
+   "VDPAUSurfaceAccessNV\0"
+   "VDPAUUnmapSurfacesNV\0"
+   "VDPAUUnregisterSurfaceNV\0"
    "ValidateProgram\0"
    "ValidateProgramARB\0"
+   "ValidateProgramPipeline\0"
+   "ValidateProgramPipelineEXT\0"
    "Vertex2d\0"
    "Vertex2dv\0"
    "Vertex2f\0"
@@ -11250,8 +12454,10 @@ static const char public_string_pool[] =
    "VertexAttrib4uivARB\0"
    "VertexAttrib4usv\0"
    "VertexAttrib4usvARB\0"
+   "VertexAttribBinding\0"
    "VertexAttribDivisor\0"
    "VertexAttribDivisorARB\0"
+   "VertexAttribFormat\0"
    "VertexAttribI1i\0"
    "VertexAttribI1iEXT\0"
    "VertexAttribI1iv\0"
@@ -11292,8 +12498,10 @@ static const char public_string_pool[] =
    "VertexAttribI4uivEXT\0"
    "VertexAttribI4usv\0"
    "VertexAttribI4usvEXT\0"
+   "VertexAttribIFormat\0"
    "VertexAttribIPointer\0"
    "VertexAttribIPointerEXT\0"
+   "VertexAttribLFormat\0"
    "VertexAttribP1ui\0"
    "VertexAttribP1uiv\0"
    "VertexAttribP2ui\0"
@@ -11318,6 +12526,7 @@ static const char public_string_pool[] =
    "VertexAttribs4fvNV\0"
    "VertexAttribs4svNV\0"
    "VertexAttribs4ubvNV\0"
+   "VertexBindingDivisor\0"
    "VertexP2ui\0"
    "VertexP2uiv\0"
    "VertexP3ui\0"
@@ -11327,6 +12536,9 @@ static const char public_string_pool[] =
    "VertexPointer\0"
    "VertexPointerEXT\0"
    "Viewport\0"
+   "ViewportArrayv\0"
+   "ViewportIndexedf\0"
+   "ViewportIndexedfv\0"
    "WaitSync\0"
    "WindowPos2d\0"
    "WindowPos2dARB\0"
@@ -11387,1498 +12599,1663 @@ static const char public_string_pool[] =
 
 static const struct mapi_stub public_stubs[] = {
    { (void *) 0, 213, NULL },
-   { (void *) 6, 984, NULL },
-   { (void *) 23, 946, NULL },
-   { (void *) 44, 374, NULL },
-   { (void *) 58, 374, NULL },
-   { (void *) 75, 932, NULL },
-   { (void *) 95, 933, NULL },
-   { (void *) 115, 934, NULL },
-   { (void *) 135, 240, NULL },
-   { (void *) 145, 993, NULL },
-   { (void *) 156, 993, NULL },
-   { (void *) 170, 873, NULL },
-   { (void *) 192, 322, NULL },
-   { (void *) 212, 322, NULL },
-   { (void *) 235, 306, NULL },
-   { (void *) 248, 306, NULL },
-   { (void *) 264, 647, NULL },
-   { (void *) 280, 479, NULL },
-   { (void *) 293, 7, NULL },
-   { (void *) 299, 570, NULL },
-   { (void *) 322, 570, NULL },
-   { (void *) 347, 935, NULL },
-   { (void *) 370, 460, NULL },
-   { (void *) 381, 460, NULL },
-   { (void *) 395, 778, NULL },
-   { (void *) 413, 571, NULL },
-   { (void *) 436, 571, NULL },
-   { (void *) 462, 480, NULL },
-   { (void *) 481, 480, NULL },
-   { (void *) 503, 461, NULL },
-   { (void *) 514, 461, NULL },
-   { (void *) 528, 572, NULL },
-   { (void *) 543, 572, NULL },
-   { (void *) 561, 980, NULL },
-   { (void *) 581, 573, NULL },
-   { (void *) 597, 573, NULL },
-   { (void *) 616, 574, NULL },
-   { (void *) 637, 574, NULL },
-   { (void *) 661, 714, NULL },
-   { (void *) 689, 936, NULL },
-   { (void *) 711, 659, NULL },
-   { (void *) 727, 960, NULL },
-   { (void *) 746, 659, NULL },
-   { (void *) 765, 620, NULL },
-   { (void *) 780, 620, NULL },
-   { (void *) 794, 660, NULL },
-   { (void *) 811, 961, NULL },
-   { (void *) 831, 660, NULL },
-   { (void *) 851, 716, NULL },
-   { (void *) 863, 307, NULL },
-   { (void *) 875, 307, NULL },
-   { (void *) 890, 771, NULL },
-   { (void *) 912, 682, NULL },
-   { (void *) 928, 947, NULL },
-   { (void *) 949, 682, NULL },
-   { (void *) 968, 8, NULL },
-   { (void *) 975, 336, NULL },
-   { (void *) 986, 336, NULL },
-   { (void *) 1000, 337, NULL },
-   { (void *) 1014, 337, NULL },
-   { (void *) 1031, 711, NULL },
-   { (void *) 1055, 337, NULL },
-   { (void *) 1072, 481, NULL },
-   { (void *) 1094, 481, NULL },
-   { (void *) 1119, 481, NULL },
-   { (void *) 1144, 710, NULL },
-   { (void *) 1176, 481, NULL },
-   { (void *) 1201, 710, NULL },
-   { (void *) 1227, 711, NULL },
-   { (void *) 1245, 241, NULL },
-   { (void *) 1255, 713, NULL },
-   { (void *) 1275, 420, NULL },
-   { (void *) 1293, 420, NULL },
-   { (void *) 1314, 420, NULL },
-   { (void *) 1336, 712, NULL },
-   { (void *) 1364, 420, NULL },
-   { (void *) 1385, 712, NULL },
-   { (void *) 1407, 713, NULL },
-   { (void *) 1421, 661, NULL },
-   { (void *) 1437, 661, NULL },
-   { (void *) 1456, 462, NULL },
-   { (void *) 1467, 462, NULL },
-   { (void *) 1481, 962, NULL },
-   { (void *) 1503, 463, NULL },
-   { (void *) 1517, 463, NULL },
-   { (void *) 1534, 2, NULL },
-   { (void *) 1543, 3, NULL },
-   { (void *) 1553, 662, NULL },
-   { (void *) 1576, 662, NULL },
-   { (void *) 1602, 662, NULL },
-   { (void *) 1628, 575, NULL },
-   { (void *) 1639, 575, NULL },
-   { (void *) 1653, 203, NULL },
-   { (void *) 1659, 204, NULL },
-   { (void *) 1670, 576, NULL },
-   { (void *) 1684, 577, NULL },
-   { (void *) 1698, 578, NULL },
-   { (void *) 1712, 579, NULL },
-   { (void *) 1727, 206, NULL },
-   { (void *) 1738, 978, NULL },
-   { (void *) 1754, 979, NULL },
-   { (void *) 1771, 994, NULL },
-   { (void *) 1783, 994, NULL },
-   { (void *) 1798, 208, NULL },
-   { (void *) 1809, 782, NULL },
-   { (void *) 1821, 782, NULL },
-   { (void *) 1836, 995, NULL },
-   { (void *) 1848, 995, NULL },
-   { (void *) 1863, 205, NULL },
-   { (void *) 1874, 207, NULL },
-   { (void *) 1887, 375, NULL },
-   { (void *) 1907, 375, NULL },
-   { (void *) 1930, 694, NULL },
-   { (void *) 1945, 150, NULL },
-   { (void *) 1955, 1024, NULL },
-   { (void *) 1966, 1024, NULL },
-   { (void *) 1980, 1025, NULL },
-   { (void *) 1991, 1025, NULL },
-   { (void *) 2005, 9, NULL },
-   { (void *) 2013, 10, NULL },
-   { (void *) 2022, 11, NULL },
-   { (void *) 2030, 12, NULL },
-   { (void *) 2039, 13, NULL },
-   { (void *) 2047, 14, NULL },
-   { (void *) 2056, 15, NULL },
-   { (void *) 2064, 16, NULL },
-   { (void *) 2073, 17, NULL },
-   { (void *) 2081, 18, NULL },
-   { (void *) 2090, 19, NULL },
-   { (void *) 2099, 20, NULL },
-   { (void *) 2109, 21, NULL },
-   { (void *) 2118, 22, NULL },
-   { (void *) 2128, 23, NULL },
-   { (void *) 2137, 24, NULL },
-   { (void *) 2147, 25, NULL },
-   { (void *) 2155, 26, NULL },
-   { (void *) 2164, 27, NULL },
-   { (void *) 2172, 28, NULL },
-   { (void *) 2181, 29, NULL },
-   { (void *) 2189, 30, NULL },
-   { (void *) 2198, 31, NULL },
-   { (void *) 2206, 32, NULL },
-   { (void *) 2215, 33, NULL },
-   { (void *) 2223, 34, NULL },
-   { (void *) 2232, 35, NULL },
-   { (void *) 2241, 36, NULL },
-   { (void *) 2251, 37, NULL },
-   { (void *) 2260, 38, NULL },
-   { (void *) 2270, 39, NULL },
-   { (void *) 2279, 40, NULL },
-   { (void *) 2289, 996, NULL },
-   { (void *) 2297, 996, NULL },
-   { (void *) 2308, 937, NULL },
-   { (void *) 2328, 938, NULL },
-   { (void *) 2348, 939, NULL },
-   { (void *) 2368, 210, NULL },
-   { (void *) 2378, 580, NULL },
-   { (void *) 2398, 580, NULL },
-   { (void *) 2409, 151, NULL },
-   { (void *) 2423, 733, NULL },
-   { (void *) 2433, 734, NULL },
-   { (void *) 2444, 735, NULL },
-   { (void *) 2454, 736, NULL },
-   { (void *) 2465, 308, NULL },
-   { (void *) 2478, 848, NULL },
-   { (void *) 2494, 346, NULL },
-   { (void *) 2508, 346, NULL },
-   { (void *) 2525, 339, NULL },
-   { (void *) 2536, 339, NULL },
-   { (void *) 2550, 340, NULL },
-   { (void *) 2572, 340, NULL },
-   { (void *) 2597, 341, NULL },
-   { (void *) 2619, 341, NULL },
-   { (void *) 2644, 339, NULL },
-   { (void *) 2658, 482, NULL },
-   { (void *) 2672, 482, NULL },
-   { (void *) 2689, 408, NULL },
-   { (void *) 2710, 408, NULL },
-   { (void *) 2734, 409, NULL },
-   { (void *) 2755, 409, NULL },
-   { (void *) 2779, 410, NULL },
-   { (void *) 2800, 410, NULL },
-   { (void *) 2824, 410, NULL },
-   { (void *) 2848, 411, NULL },
-   { (void *) 2872, 411, NULL },
-   { (void *) 2899, 412, NULL },
-   { (void *) 2923, 412, NULL },
-   { (void *) 2950, 413, NULL },
-   { (void *) 2974, 413, NULL },
-   { (void *) 3001, 413, NULL },
-   { (void *) 3028, 348, NULL },
-   { (void *) 3048, 348, NULL },
-   { (void *) 3071, 349, NULL },
-   { (void *) 3091, 349, NULL },
-   { (void *) 3114, 350, NULL },
-   { (void *) 3136, 350, NULL },
-   { (void *) 3161, 351, NULL },
-   { (void *) 3184, 351, NULL },
-   { (void *) 3210, 352, NULL },
-   { (void *) 3232, 352, NULL },
-   { (void *) 3257, 353, NULL },
-   { (void *) 3280, 353, NULL },
-   { (void *) 3306, 693, NULL },
-   { (void *) 3324, 347, NULL },
-   { (void *) 3342, 347, NULL },
-   { (void *) 3363, 342, NULL },
-   { (void *) 3378, 342, NULL },
-   { (void *) 3396, 354, NULL },
-   { (void *) 3420, 354, NULL },
-   { (void *) 3447, 355, NULL },
-   { (void *) 3471, 355, NULL },
-   { (void *) 3498, 255, NULL },
-   { (void *) 3509, 323, NULL },
-   { (void *) 3524, 323, NULL },
-   { (void *) 3542, 324, NULL },
-   { (void *) 3557, 324, NULL },
-   { (void *) 3575, 325, NULL },
-   { (void *) 3593, 325, NULL },
-   { (void *) 3614, 326, NULL },
-   { (void *) 3632, 326, NULL },
-   { (void *) 3653, 373, NULL },
-   { (void *) 3671, 373, NULL },
-   { (void *) 3692, 373, NULL },
-   { (void *) 3713, 483, NULL },
-   { (void *) 3727, 648, NULL },
-   { (void *) 3750, 484, NULL },
-   { (void *) 3763, 649, NULL },
-   { (void *) 3785, 985, NULL },
-   { (void *) 3808, 152, NULL },
-   { (void *) 3817, 790, NULL },
-   { (void *) 3841, 791, NULL },
-   { (void *) 3864, 792, NULL },
-   { (void *) 3886, 464, NULL },
-   { (void *) 3900, 464, NULL },
-   { (void *) 3917, 940, NULL },
-   { (void *) 3941, 663, NULL },
-   { (void *) 3960, 663, NULL },
-   { (void *) 3982, 663, NULL },
-   { (void *) 4004, 4, NULL },
-   { (void *) 4016, 650, NULL },
-   { (void *) 4032, 485, NULL },
-   { (void *) 4046, 621, NULL },
-   { (void *) 4064, 621, NULL },
-   { (void *) 4081, 465, NULL },
-   { (void *) 4095, 465, NULL },
-   { (void *) 4112, 664, NULL },
-   { (void *) 4132, 664, NULL },
-   { (void *) 4155, 664, NULL },
-   { (void *) 4178, 717, NULL },
-   { (void *) 4193, 486, NULL },
-   { (void *) 4206, 695, NULL },
-   { (void *) 4217, 327, NULL },
-   { (void *) 4232, 327, NULL },
-   { (void *) 4250, 772, NULL },
-   { (void *) 4275, 683, NULL },
-   { (void *) 4294, 683, NULL },
-   { (void *) 4318, 683, NULL },
-   { (void *) 4340, 959, NULL },
-   { (void *) 4355, 245, NULL },
-   { (void *) 4365, 211, NULL },
-   { (void *) 4375, 288, NULL },
-   { (void *) 4386, 783, NULL },
-   { (void *) 4398, 783, NULL },
-   { (void *) 4413, 997, NULL },
-   { (void *) 4425, 997, NULL },
-   { (void *) 4440, 651, NULL },
-   { (void *) 4456, 487, NULL },
-   { (void *) 4469, 214, NULL },
-   { (void *) 4477, 309, NULL },
-   { (void *) 4496, 581, NULL },
-   { (void *) 4514, 488, NULL },
-   { (void *) 4539, 488, NULL },
-   { (void *) 4567, 581, NULL },
-   { (void *) 4576, 854, NULL },
-   { (void *) 4598, 310, NULL },
-   { (void *) 4609, 310, NULL },
-   { (void *) 4623, 657, NULL },
-   { (void *) 4643, 657, NULL },
-   { (void *) 4666, 814, NULL },
-   { (void *) 4698, 657, NULL },
-   { (void *) 4721, 202, NULL },
-   { (void *) 4732, 489, NULL },
-   { (void *) 4744, 489, NULL },
-   { (void *) 4759, 489, NULL },
-   { (void *) 4774, 489, NULL },
-   { (void *) 4788, 311, NULL },
-   { (void *) 4801, 701, NULL },
-   { (void *) 4824, 658, NULL },
-   { (void *) 4846, 658, NULL },
-   { (void *) 4871, 815, NULL },
-   { (void *) 4905, 702, NULL },
-   { (void *) 4937, 816, NULL },
-   { (void *) 4981, 658, NULL },
-   { (void *) 5006, 257, NULL },
-   { (void *) 5017, 338, NULL },
-   { (void *) 5035, 703, NULL },
-   { (void *) 5063, 338, NULL },
-   { (void *) 5084, 836, NULL },
-   { (void *) 5096, 837, NULL },
-   { (void *) 5109, 838, NULL },
-   { (void *) 5121, 839, NULL },
-   { (void *) 5134, 840, NULL },
-   { (void *) 5146, 841, NULL },
-   { (void *) 5159, 842, NULL },
-   { (void *) 5171, 843, NULL },
-   { (void *) 5184, 773, NULL },
-   { (void *) 5206, 817, NULL },
-   { (void *) 5237, 779, NULL },
-   { (void *) 5265, 818, NULL },
-   { (void *) 5302, 991, NULL },
-   { (void *) 5339, 992, NULL },
-   { (void *) 5366, 41, NULL },
-   { (void *) 5375, 312, NULL },
-   { (void *) 5391, 849, NULL },
-   { (void *) 5410, 42, NULL },
-   { (void *) 5420, 215, NULL },
-   { (void *) 5427, 313, NULL },
-   { (void *) 5445, 582, NULL },
-   { (void *) 5462, 490, NULL },
-   { (void *) 5486, 490, NULL },
-   { (void *) 5513, 582, NULL },
-   { (void *) 5521, 43, NULL },
-   { (void *) 5525, 583, NULL },
-   { (void *) 5546, 583, NULL },
-   { (void *) 5569, 941, NULL },
-   { (void *) 5590, 1, NULL },
-   { (void *) 5598, 466, NULL },
-   { (void *) 5607, 466, NULL },
-   { (void *) 5619, 780, NULL },
-   { (void *) 5635, 584, NULL },
-   { (void *) 5656, 584, NULL },
-   { (void *) 5680, 228, NULL },
-   { (void *) 5692, 229, NULL },
-   { (void *) 5705, 230, NULL },
-   { (void *) 5717, 231, NULL },
-   { (void *) 5730, 232, NULL },
-   { (void *) 5742, 233, NULL },
-   { (void *) 5755, 234, NULL },
-   { (void *) 5767, 235, NULL },
-   { (void *) 5780, 236, NULL },
-   { (void *) 5790, 238, NULL },
-   { (void *) 5800, 237, NULL },
-   { (void *) 5811, 239, NULL },
-   { (void *) 5822, 874, NULL },
-   { (void *) 5839, 194, NULL },
-   { (void *) 5854, 696, NULL },
-   { (void *) 5864, 216, NULL },
-   { (void *) 5871, 217, NULL },
-   { (void *) 5877, 680, NULL },
-   { (void *) 5900, 963, NULL },
-   { (void *) 5928, 680, NULL },
-   { (void *) 5954, 421, NULL },
-   { (void *) 5970, 421, NULL },
-   { (void *) 5989, 422, NULL },
-   { (void *) 5999, 422, NULL },
-   { (void *) 6012, 423, NULL },
-   { (void *) 6023, 423, NULL },
-   { (void *) 6037, 860, NULL },
-   { (void *) 6047, 860, NULL },
-   { (void *) 6060, 861, NULL },
-   { (void *) 6071, 861, NULL },
-   { (void *) 6085, 153, NULL },
-   { (void *) 6090, 154, NULL },
-   { (void *) 6096, 155, NULL },
-   { (void *) 6101, 156, NULL },
-   { (void *) 6107, 998, NULL },
-   { (void *) 6112, 998, NULL },
-   { (void *) 6120, 999, NULL },
-   { (void *) 6126, 999, NULL },
-   { (void *) 6135, 665, NULL },
-   { (void *) 6159, 665, NULL },
-   { (void *) 6186, 665, NULL },
-   { (void *) 6213, 616, NULL },
-   { (void *) 6232, 666, NULL },
-   { (void *) 6253, 666, NULL },
-   { (void *) 6277, 667, NULL },
-   { (void *) 6298, 667, NULL },
-   { (void *) 6322, 667, NULL },
-   { (void *) 6346, 668, NULL },
-   { (void *) 6367, 668, NULL },
-   { (void *) 6391, 668, NULL },
-   { (void *) 6415, 616, NULL },
-   { (void *) 6437, 679, NULL },
-   { (void *) 6463, 669, NULL },
-   { (void *) 6487, 669, NULL },
-   { (void *) 6514, 669, NULL },
-   { (void *) 6541, 157, NULL },
-   { (void *) 6551, 289, NULL },
-   { (void *) 6559, 1000, NULL },
-   { (void *) 6568, 1000, NULL },
-   { (void *) 6580, 1001, NULL },
-   { (void *) 6589, 1001, NULL },
-   { (void *) 6601, 467, NULL },
-   { (void *) 6612, 467, NULL },
-   { (void *) 6626, 942, NULL },
-   { (void *) 6648, 670, NULL },
-   { (void *) 6664, 670, NULL },
-   { (void *) 6683, 670, NULL },
-   { (void *) 6702, 5, NULL },
-   { (void *) 6711, 622, NULL },
-   { (void *) 6726, 622, NULL },
-   { (void *) 6740, 468, NULL },
-   { (void *) 6751, 468, NULL },
-   { (void *) 6765, 671, NULL },
-   { (void *) 6782, 671, NULL },
-   { (void *) 6802, 671, NULL },
-   { (void *) 6822, 718, NULL },
-   { (void *) 6834, 328, NULL },
-   { (void *) 6846, 328, NULL },
-   { (void *) 6861, 774, NULL },
-   { (void *) 6883, 684, NULL },
-   { (void *) 6899, 948, NULL },
-   { (void *) 6920, 684, NULL },
-   { (void *) 6939, 672, NULL },
-   { (void *) 6954, 672, NULL },
-   { (void *) 6972, 672, NULL },
-   { (void *) 6990, 491, NULL },
-   { (void *) 7006, 491, NULL },
-   { (void *) 7025, 492, NULL },
-   { (void *) 7042, 492, NULL },
-   { (void *) 7062, 686, NULL },
-   { (void *) 7088, 687, NULL },
-   { (void *) 7112, 688, NULL },
-   { (void *) 7133, 689, NULL },
-   { (void *) 7153, 652, NULL },
-   { (void *) 7175, 493, NULL },
-   { (void *) 7194, 494, NULL },
-   { (void *) 7212, 494, NULL },
-   { (void *) 7233, 585, NULL },
-   { (void *) 7255, 585, NULL },
-   { (void *) 7269, 258, NULL },
-   { (void *) 7281, 617, NULL },
-   { (void *) 7304, 469, NULL },
-   { (void *) 7325, 469, NULL },
-   { (void *) 7349, 470, NULL },
-   { (void *) 7367, 470, NULL },
-   { (void *) 7388, 470, NULL },
-   { (void *) 7409, 471, NULL },
-   { (void *) 7426, 471, NULL },
-   { (void *) 7446, 259, NULL },
-   { (void *) 7459, 1026, NULL },
-   { (void *) 7473, 1026, NULL },
-   { (void *) 7490, 1027, NULL },
-   { (void *) 7504, 1027, NULL },
-   { (void *) 7521, 343, NULL },
-   { (void *) 7535, 343, NULL },
-   { (void *) 7552, 344, NULL },
-   { (void *) 7577, 344, NULL },
-   { (void *) 7605, 344, NULL },
-   { (void *) 7633, 345, NULL },
-   { (void *) 7658, 345, NULL },
-   { (void *) 7686, 345, NULL },
-   { (void *) 7714, 343, NULL },
-   { (void *) 7731, 414, NULL },
-   { (void *) 7753, 414, NULL },
-   { (void *) 7778, 356, NULL },
-   { (void *) 7799, 356, NULL },
-   { (void *) 7823, 357, NULL },
-   { (void *) 7849, 357, NULL },
-   { (void *) 7878, 358, NULL },
-   { (void *) 7904, 358, NULL },
-   { (void *) 7933, 793, NULL },
-   { (void *) 7955, 260, NULL },
-   { (void *) 7966, 261, NULL },
-   { (void *) 7975, 1028, NULL },
-   { (void *) 7985, 1028, NULL },
-   { (void *) 7998, 262, NULL },
-   { (void *) 8008, 715, NULL },
-   { (void *) 8025, 586, NULL },
-   { (void *) 8045, 586, NULL },
-   { (void *) 8068, 673, NULL },
-   { (void *) 8104, 673, NULL },
-   { (void *) 8143, 673, NULL },
-   { (void *) 8182, 794, NULL },
-   { (void *) 8208, 653, NULL },
-   { (void *) 8221, 361, NULL },
-   { (void *) 8234, 361, NULL },
-   { (void *) 8250, 362, NULL },
-   { (void *) 8274, 362, NULL },
-   { (void *) 8301, 363, NULL },
-   { (void *) 8325, 363, NULL },
-   { (void *) 8352, 654, NULL },
-   { (void *) 8366, 618, NULL },
-   { (void *) 8382, 697, NULL },
-   { (void *) 8396, 587, NULL },
-   { (void *) 8418, 587, NULL },
-   { (void *) 8432, 263, NULL },
-   { (void *) 8444, 819, NULL },
-   { (void *) 8464, 264, NULL },
-   { (void *) 8475, 265, NULL },
-   { (void *) 8486, 1029, NULL },
-   { (void *) 8497, 1029, NULL },
-   { (void *) 8511, 266, NULL },
-   { (void *) 8520, 267, NULL },
-   { (void *) 8529, 268, NULL },
-   { (void *) 8538, 269, NULL },
-   { (void *) 8552, 270, NULL },
-   { (void *) 8566, 1030, NULL },
-   { (void *) 8580, 1030, NULL },
-   { (void *) 8597, 364, NULL },
-   { (void *) 8607, 364, NULL },
-   { (void *) 8620, 365, NULL },
-   { (void *) 8641, 365, NULL },
-   { (void *) 8665, 366, NULL },
-   { (void *) 8686, 366, NULL },
-   { (void *) 8710, 706, NULL },
-   { (void *) 8727, 655, NULL },
-   { (void *) 8751, 981, NULL },
-   { (void *) 8777, 656, NULL },
-   { (void *) 8801, 271, NULL },
-   { (void *) 8815, 272, NULL },
-   { (void *) 8830, 273, NULL },
-   { (void *) 8845, 329, NULL },
-   { (void *) 8857, 329, NULL },
-   { (void *) 8872, 274, NULL },
-   { (void *) 8890, 787, NULL },
-   { (void *) 8907, 787, NULL },
-   { (void *) 8927, 623, NULL },
-   { (void *) 8955, 624, NULL },
-   { (void *) 8983, 495, NULL },
-   { (void *) 9001, 625, NULL },
-   { (void *) 9031, 626, NULL },
-   { (void *) 9061, 949, NULL },
-   { (void *) 9090, 950, NULL },
-   { (void *) 9119, 875, NULL },
-   { (void *) 9143, 876, NULL },
-   { (void *) 9167, 627, NULL },
-   { (void *) 9187, 877, NULL },
-   { (void *) 9206, 496, NULL },
-   { (void *) 9219, 628, NULL },
-   { (void *) 9235, 878, NULL },
-   { (void *) 9250, 781, NULL },
-   { (void *) 9268, 730, NULL },
-   { (void *) 9287, 730, NULL },
-   { (void *) 9309, 472, NULL },
-   { (void *) 9326, 472, NULL },
-   { (void *) 9346, 731, NULL },
-   { (void *) 9366, 731, NULL },
-   { (void *) 9389, 473, NULL },
-   { (void *) 9407, 473, NULL },
-   { (void *) 9428, 474, NULL },
-   { (void *) 9439, 474, NULL },
-   { (void *) 9453, 674, NULL },
-   { (void *) 9480, 674, NULL },
-   { (void *) 9510, 674, NULL },
-   { (void *) 9540, 719, NULL },
-   { (void *) 9563, 720, NULL },
-   { (void *) 9587, 721, NULL },
-   { (void *) 9609, 722, NULL },
-   { (void *) 9631, 359, NULL },
-   { (void *) 9650, 359, NULL },
-   { (void *) 9672, 497, NULL },
-   { (void *) 9689, 784, NULL },
-   { (void *) 9714, 498, NULL },
-   { (void *) 9730, 498, NULL },
-   { (void *) 9749, 499, NULL },
-   { (void *) 9761, 275, NULL },
-   { (void *) 9771, 588, NULL },
-   { (void *) 9782, 698, NULL },
-   { (void *) 9792, 928, NULL },
-   { (void *) 9817, 929, NULL },
-   { (void *) 9842, 276, NULL },
-   { (void *) 9854, 277, NULL },
-   { (void *) 9866, 1031, NULL },
-   { (void *) 9878, 1031, NULL },
-   { (void *) 9893, 278, NULL },
-   { (void *) 9905, 279, NULL },
-   { (void *) 9917, 279, NULL },
-   { (void *) 9932, 280, NULL },
-   { (void *) 9944, 280, NULL },
-   { (void *) 9959, 956, NULL },
-   { (void *) 9974, 281, NULL },
-   { (void *) 9986, 284, NULL },
-   { (void *) 10009, 285, NULL },
-   { (void *) 10032, 589, NULL },
-   { (void *) 10051, 589, NULL },
-   { (void *) 10073, 590, NULL },
-   { (void *) 10093, 590, NULL },
-   { (void *) 10116, 282, NULL },
-   { (void *) 10134, 283, NULL },
-   { (void *) 10152, 1032, NULL },
-   { (void *) 10170, 1032, NULL },
-   { (void *) 10191, 879, NULL },
-   { (void *) 10210, 591, NULL },
-   { (void *) 10238, 591, NULL },
-   { (void *) 10269, 690, NULL },
-   { (void *) 10290, 691, NULL },
-   { (void *) 10308, 500, NULL },
-   { (void *) 10327, 500, NULL },
-   { (void *) 10349, 501, NULL },
-   { (void *) 10362, 501, NULL },
-   { (void *) 10378, 502, NULL },
-   { (void *) 10391, 502, NULL },
-   { (void *) 10407, 592, NULL },
-   { (void *) 10421, 592, NULL },
-   { (void *) 10438, 593, NULL },
-   { (void *) 10457, 593, NULL },
-   { (void *) 10479, 594, NULL },
-   { (void *) 10499, 594, NULL },
-   { (void *) 10522, 503, NULL },
-   { (void *) 10546, 503, NULL },
-   { (void *) 10573, 503, NULL },
-   { (void *) 10599, 504, NULL },
-   { (void *) 10617, 504, NULL },
-   { (void *) 10638, 880, NULL },
-   { (void *) 10658, 505, NULL },
-   { (void *) 10676, 505, NULL },
-   { (void *) 10697, 881, NULL },
-   { (void *) 10717, 506, NULL },
-   { (void *) 10735, 506, NULL },
-   { (void *) 10756, 882, NULL },
-   { (void *) 10776, 795, NULL },
-   { (void *) 10794, 796, NULL },
-   { (void *) 10820, 797, NULL },
-   { (void *) 10845, 798, NULL },
-   { (void *) 10862, 799, NULL },
-   { (void *) 10875, 800, NULL },
-   { (void *) 10888, 801, NULL },
-   { (void *) 10901, 802, NULL },
-   { (void *) 10915, 803, NULL },
-   { (void *) 10933, 804, NULL },
-   { (void *) 10952, 805, NULL },
-   { (void *) 10971, 806, NULL },
-   { (void *) 10993, 807, NULL },
-   { (void *) 11016, 808, NULL },
-   { (void *) 11032, 809, NULL },
-   { (void *) 11049, 810, NULL },
-   { (void *) 11066, 811, NULL },
-   { (void *) 11083, 812, NULL },
-   { (void *) 11101, 158, NULL },
-   { (void *) 11106, 367, NULL },
-   { (void *) 11116, 367, NULL },
-   { (void *) 11129, 212, NULL },
-   { (void *) 11139, 314, NULL },
-   { (void *) 11152, 850, NULL },
-   { (void *) 11168, 44, NULL },
-   { (void *) 11175, 45, NULL },
-   { (void *) 11183, 46, NULL },
-   { (void *) 11190, 47, NULL },
-   { (void *) 11198, 48, NULL },
-   { (void *) 11205, 49, NULL },
-   { (void *) 11213, 50, NULL },
-   { (void *) 11220, 51, NULL },
-   { (void *) 11228, 315, NULL },
-   { (void *) 11236, 316, NULL },
-   { (void *) 11245, 197, NULL },
-   { (void *) 11255, 317, NULL },
-   { (void *) 11273, 829, NULL },
-   { (void *) 11294, 830, NULL },
-   { (void *) 11318, 831, NULL },
-   { (void *) 11340, 832, NULL },
-   { (void *) 11365, 833, NULL },
-   { (void *) 11384, 834, NULL },
-   { (void *) 11406, 475, NULL },
-   { (void *) 11415, 475, NULL },
-   { (void *) 11427, 286, NULL },
-   { (void *) 11437, 595, NULL },
-   { (void *) 11457, 595, NULL },
-   { (void *) 11468, 675, NULL },
-   { (void *) 11482, 675, NULL },
-   { (void *) 11499, 675, NULL },
-   { (void *) 11516, 287, NULL },
-   { (void *) 11523, 507, NULL },
-   { (void *) 11533, 629, NULL },
-   { (void *) 11546, 629, NULL },
-   { (void *) 11558, 476, NULL },
-   { (void *) 11566, 476, NULL },
-   { (void *) 11577, 676, NULL },
-   { (void *) 11592, 676, NULL },
-   { (void *) 11610, 676, NULL },
-   { (void *) 11628, 723, NULL },
-   { (void *) 11638, 508, NULL },
-   { (void *) 11647, 699, NULL },
-   { (void *) 11654, 330, NULL },
-   { (void *) 11664, 330, NULL },
-   { (void *) 11677, 775, NULL },
-   { (void *) 11697, 685, NULL },
-   { (void *) 11711, 685, NULL },
-   { (void *) 11730, 685, NULL },
-   { (void *) 11747, 163, NULL },
-   { (void *) 11759, 164, NULL },
-   { (void *) 11772, 165, NULL },
-   { (void *) 11784, 166, NULL },
-   { (void *) 11797, 1002, NULL },
-   { (void *) 11809, 1002, NULL },
-   { (void *) 11824, 1003, NULL },
-   { (void *) 11837, 1003, NULL },
-   { (void *) 11853, 159, NULL },
-   { (void *) 11860, 160, NULL },
-   { (void *) 11868, 161, NULL },
-   { (void *) 11875, 162, NULL },
-   { (void *) 11883, 1004, NULL },
-   { (void *) 11890, 1004, NULL },
-   { (void *) 11900, 1005, NULL },
-   { (void *) 11908, 1005, NULL },
-   { (void *) 11919, 167, NULL },
-   { (void *) 11931, 168, NULL },
-   { (void *) 11941, 1006, NULL },
-   { (void *) 11952, 1006, NULL },
-   { (void *) 11966, 509, NULL },
-   { (void *) 11978, 509, NULL },
-   { (void *) 11993, 6, NULL },
-   { (void *) 12002, 290, NULL },
-   { (void *) 12015, 292, NULL },
-   { (void *) 12027, 291, NULL },
-   { (void *) 12039, 1007, NULL },
-   { (void *) 12051, 1007, NULL },
-   { (void *) 12066, 198, NULL },
-   { (void *) 12075, 883, NULL },
-   { (void *) 12089, 415, NULL },
-   { (void *) 12110, 415, NULL },
-   { (void *) 12134, 416, NULL },
-   { (void *) 12155, 416, NULL },
-   { (void *) 12179, 855, NULL },
-   { (void *) 12193, 242, NULL },
-   { (void *) 12201, 220, NULL },
-   { (void *) 12207, 221, NULL },
-   { (void *) 12213, 222, NULL },
-   { (void *) 12219, 223, NULL },
-   { (void *) 12225, 477, NULL },
-   { (void *) 12235, 477, NULL },
-   { (void *) 12248, 477, NULL },
-   { (void *) 12261, 681, NULL },
-   { (void *) 12276, 681, NULL },
-   { (void *) 12294, 224, NULL },
-   { (void *) 12304, 225, NULL },
-   { (void *) 12314, 226, NULL },
-   { (void *) 12324, 227, NULL },
-   { (void *) 12334, 169, NULL },
-   { (void *) 12344, 170, NULL },
-   { (void *) 12355, 171, NULL },
-   { (void *) 12365, 172, NULL },
-   { (void *) 12376, 1008, NULL },
-   { (void *) 12386, 1008, NULL },
-   { (void *) 12399, 1009, NULL },
-   { (void *) 12410, 1009, NULL },
-   { (void *) 12424, 293, NULL },
-   { (void *) 12435, 368, NULL },
-   { (void *) 12442, 368, NULL },
-   { (void *) 12452, 295, NULL },
-   { (void *) 12464, 294, NULL },
-   { (void *) 12476, 1010, NULL },
-   { (void *) 12488, 1010, NULL },
-   { (void *) 12503, 417, NULL },
-   { (void *) 12524, 417, NULL },
-   { (void *) 12548, 418, NULL },
-   { (void *) 12569, 418, NULL },
-   { (void *) 12593, 424, NULL },
-   { (void *) 12609, 424, NULL },
-   { (void *) 12628, 859, NULL },
-   { (void *) 12646, 704, NULL },
-   { (void *) 12674, 859, NULL },
-   { (void *) 12695, 871, NULL },
-   { (void *) 12718, 872, NULL },
-   { (void *) 12743, 376, NULL },
-   { (void *) 12759, 376, NULL },
-   { (void *) 12778, 377, NULL },
-   { (void *) 12795, 377, NULL },
-   { (void *) 12815, 378, NULL },
-   { (void *) 12831, 378, NULL },
-   { (void *) 12850, 379, NULL },
-   { (void *) 12867, 379, NULL },
-   { (void *) 12887, 380, NULL },
-   { (void *) 12903, 380, NULL },
-   { (void *) 12922, 381, NULL },
-   { (void *) 12939, 381, NULL },
-   { (void *) 12959, 382, NULL },
-   { (void *) 12975, 382, NULL },
-   { (void *) 12994, 383, NULL },
-   { (void *) 13011, 383, NULL },
-   { (void *) 13031, 384, NULL },
-   { (void *) 13047, 384, NULL },
-   { (void *) 13066, 385, NULL },
-   { (void *) 13083, 385, NULL },
-   { (void *) 13103, 386, NULL },
-   { (void *) 13119, 386, NULL },
-   { (void *) 13138, 387, NULL },
-   { (void *) 13155, 387, NULL },
-   { (void *) 13175, 388, NULL },
-   { (void *) 13191, 388, NULL },
-   { (void *) 13210, 389, NULL },
-   { (void *) 13227, 389, NULL },
-   { (void *) 13247, 390, NULL },
-   { (void *) 13263, 390, NULL },
-   { (void *) 13282, 391, NULL },
-   { (void *) 13299, 391, NULL },
-   { (void *) 13319, 392, NULL },
-   { (void *) 13335, 392, NULL },
-   { (void *) 13354, 393, NULL },
-   { (void *) 13371, 393, NULL },
-   { (void *) 13391, 394, NULL },
-   { (void *) 13407, 394, NULL },
-   { (void *) 13426, 395, NULL },
-   { (void *) 13443, 395, NULL },
-   { (void *) 13463, 396, NULL },
-   { (void *) 13479, 396, NULL },
-   { (void *) 13498, 397, NULL },
-   { (void *) 13515, 397, NULL },
-   { (void *) 13535, 398, NULL },
-   { (void *) 13551, 398, NULL },
-   { (void *) 13570, 399, NULL },
-   { (void *) 13587, 399, NULL },
-   { (void *) 13607, 400, NULL },
-   { (void *) 13623, 400, NULL },
-   { (void *) 13642, 401, NULL },
-   { (void *) 13659, 401, NULL },
-   { (void *) 13679, 402, NULL },
-   { (void *) 13695, 402, NULL },
-   { (void *) 13714, 403, NULL },
-   { (void *) 13731, 403, NULL },
-   { (void *) 13751, 404, NULL },
-   { (void *) 13767, 404, NULL },
-   { (void *) 13786, 405, NULL },
-   { (void *) 13803, 405, NULL },
-   { (void *) 13823, 406, NULL },
-   { (void *) 13839, 406, NULL },
-   { (void *) 13858, 407, NULL },
-   { (void *) 13875, 407, NULL },
-   { (void *) 13895, 1011, NULL },
-   { (void *) 13911, 1011, NULL },
-   { (void *) 13930, 737, NULL },
-   { (void *) 13948, 738, NULL },
-   { (void *) 13967, 739, NULL },
-   { (void *) 13985, 740, NULL },
-   { (void *) 14004, 741, NULL },
-   { (void *) 14022, 742, NULL },
-   { (void *) 14041, 743, NULL },
-   { (void *) 14059, 744, NULL },
-   { (void *) 14078, 0, NULL },
-   { (void *) 14086, 52, NULL },
-   { (void *) 14095, 53, NULL },
-   { (void *) 14105, 54, NULL },
-   { (void *) 14114, 55, NULL },
-   { (void *) 14124, 56, NULL },
-   { (void *) 14133, 57, NULL },
-   { (void *) 14143, 58, NULL },
-   { (void *) 14152, 59, NULL },
-   { (void *) 14162, 60, NULL },
-   { (void *) 14171, 61, NULL },
-   { (void *) 14181, 1012, NULL },
-   { (void *) 14190, 1012, NULL },
-   { (void *) 14202, 745, NULL },
-   { (void *) 14213, 746, NULL },
-   { (void *) 14225, 318, NULL },
-   { (void *) 14239, 851, NULL },
-   { (void *) 14256, 982, NULL },
-   { (void *) 14277, 983, NULL },
-   { (void *) 14300, 296, NULL },
-   { (void *) 14306, 1013, NULL },
-   { (void *) 14313, 1013, NULL },
-   { (void *) 14323, 1014, NULL },
-   { (void *) 14330, 1014, NULL },
-   { (void *) 14340, 943, NULL },
-   { (void *) 14356, 199, NULL },
-   { (void *) 14368, 776, NULL },
-   { (void *) 14391, 251, NULL },
-   { (void *) 14402, 252, NULL },
-   { (void *) 14414, 253, NULL },
-   { (void *) 14426, 249, NULL },
-   { (void *) 14438, 250, NULL },
-   { (void *) 14450, 247, NULL },
-   { (void *) 14465, 248, NULL },
-   { (void *) 14480, 246, NULL },
-   { (void *) 14490, 425, NULL },
-   { (void *) 14506, 425, NULL },
-   { (void *) 14525, 425, NULL },
-   { (void *) 14544, 425, NULL },
-   { (void *) 14564, 426, NULL },
-   { (void *) 14581, 426, NULL },
-   { (void *) 14601, 426, NULL },
-   { (void *) 14621, 426, NULL },
-   { (void *) 14642, 427, NULL },
-   { (void *) 14658, 427, NULL },
-   { (void *) 14676, 428, NULL },
-   { (void *) 14693, 428, NULL },
-   { (void *) 14712, 1033, NULL },
-   { (void *) 14728, 1033, NULL },
-   { (void *) 14747, 1034, NULL },
-   { (void *) 14764, 1034, NULL },
-   { (void *) 14784, 173, NULL },
-   { (void *) 14794, 844, NULL },
-   { (void *) 14814, 1015, NULL },
-   { (void *) 14825, 1015, NULL },
-   { (void *) 14839, 174, NULL },
-   { (void *) 14851, 319, NULL },
-   { (void *) 14865, 835, NULL },
-   { (void *) 14882, 1016, NULL },
-   { (void *) 14897, 1016, NULL },
-   { (void *) 14915, 175, NULL },
-   { (void *) 14930, 218, NULL },
-   { (void *) 14940, 334, NULL },
-   { (void *) 14956, 297, NULL },
-   { (void *) 14966, 200, NULL },
-   { (void *) 14974, 614, NULL },
-   { (void *) 14996, 614, NULL },
-   { (void *) 15020, 955, NULL },
-   { (void *) 15039, 331, NULL },
-   { (void *) 15058, 331, NULL },
-   { (void *) 15080, 788, NULL },
-   { (void *) 15094, 788, NULL },
-   { (void *) 15111, 630, NULL },
-   { (void *) 15136, 631, NULL },
-   { (void *) 15162, 632, NULL },
-   { (void *) 15187, 633, NULL },
-   { (void *) 15213, 989, NULL },
-   { (void *) 15240, 634, NULL },
-   { (void *) 15267, 635, NULL },
-   { (void *) 15295, 636, NULL },
-   { (void *) 15322, 637, NULL },
-   { (void *) 15350, 990, NULL },
-   { (void *) 15379, 951, NULL },
-   { (void *) 15405, 952, NULL },
-   { (void *) 15432, 953, NULL },
-   { (void *) 15458, 954, NULL },
-   { (void *) 15485, 630, NULL },
-   { (void *) 15506, 631, NULL },
-   { (void *) 15528, 632, NULL },
-   { (void *) 15549, 633, NULL },
-   { (void *) 15571, 789, NULL },
-   { (void *) 15589, 789, NULL },
-   { (void *) 15610, 884, NULL },
-   { (void *) 15633, 885, NULL },
-   { (void *) 15656, 638, NULL },
-   { (void *) 15673, 705, NULL },
-   { (void *) 15689, 705, NULL },
-   { (void *) 15708, 219, NULL },
-   { (void *) 15719, 335, NULL },
-   { (void *) 15736, 298, NULL },
-   { (void *) 15747, 201, NULL },
-   { (void *) 15756, 732, NULL },
-   { (void *) 15769, 845, NULL },
-   { (void *) 15785, 62, NULL },
-   { (void *) 15797, 63, NULL },
-   { (void *) 15810, 64, NULL },
-   { (void *) 15822, 65, NULL },
-   { (void *) 15835, 66, NULL },
-   { (void *) 15847, 67, NULL },
-   { (void *) 15860, 68, NULL },
-   { (void *) 15872, 69, NULL },
-   { (void *) 15885, 70, NULL },
-   { (void *) 15897, 71, NULL },
-   { (void *) 15910, 72, NULL },
-   { (void *) 15922, 73, NULL },
-   { (void *) 15935, 74, NULL },
-   { (void *) 15947, 75, NULL },
-   { (void *) 15960, 76, NULL },
-   { (void *) 15972, 77, NULL },
-   { (void *) 15985, 78, NULL },
-   { (void *) 15997, 79, NULL },
-   { (void *) 16010, 80, NULL },
-   { (void *) 16022, 81, NULL },
-   { (void *) 16035, 82, NULL },
-   { (void *) 16047, 83, NULL },
-   { (void *) 16060, 84, NULL },
-   { (void *) 16072, 85, NULL },
-   { (void *) 16085, 254, NULL },
-   { (void *) 16096, 254, NULL },
-   { (void *) 16109, 256, NULL },
-   { (void *) 16120, 813, NULL },
-   { (void *) 16135, 86, NULL },
-   { (void *) 16141, 87, NULL },
-   { (void *) 16148, 88, NULL },
-   { (void *) 16154, 89, NULL },
-   { (void *) 16161, 90, NULL },
-   { (void *) 16167, 91, NULL },
-   { (void *) 16174, 92, NULL },
-   { (void *) 16180, 93, NULL },
-   { (void *) 16187, 785, NULL },
-   { (void *) 16209, 196, NULL },
-   { (void *) 16220, 677, NULL },
-   { (void *) 16240, 677, NULL },
-   { (void *) 16263, 678, NULL },
-   { (void *) 16294, 678, NULL },
-   { (void *) 16328, 677, NULL },
-   { (void *) 16351, 886, NULL },
-   { (void *) 16377, 369, NULL },
-   { (void *) 16392, 369, NULL },
-   { (void *) 16410, 370, NULL },
-   { (void *) 16422, 370, NULL },
-   { (void *) 16437, 862, NULL },
-   { (void *) 16455, 777, NULL },
-   { (void *) 16479, 299, NULL },
-   { (void *) 16487, 300, NULL },
-   { (void *) 16495, 1017, NULL },
-   { (void *) 16503, 1017, NULL },
-   { (void *) 16514, 419, NULL },
-   { (void *) 16529, 419, NULL },
-   { (void *) 16547, 1018, NULL },
-   { (void *) 16563, 1018, NULL },
-   { (void *) 16582, 944, NULL },
-   { (void *) 16595, 846, NULL },
-   { (void *) 16609, 846, NULL },
-   { (void *) 16624, 707, NULL },
-   { (void *) 16636, 847, NULL },
-   { (void *) 16653, 847, NULL },
-   { (void *) 16671, 724, NULL },
-   { (void *) 16691, 725, NULL },
-   { (void *) 16712, 726, NULL },
-   { (void *) 16730, 727, NULL },
-   { (void *) 16749, 728, NULL },
-   { (void *) 16767, 729, NULL },
-   { (void *) 16786, 301, NULL },
-   { (void *) 16793, 302, NULL },
-   { (void *) 16800, 1019, NULL },
-   { (void *) 16807, 1019, NULL },
-   { (void *) 16817, 176, NULL },
-   { (void *) 16825, 429, NULL },
-   { (void *) 16842, 429, NULL },
-   { (void *) 16862, 430, NULL },
-   { (void *) 16880, 430, NULL },
-   { (void *) 16901, 431, NULL },
-   { (void *) 16918, 431, NULL },
-   { (void *) 16938, 432, NULL },
-   { (void *) 16956, 432, NULL },
-   { (void *) 16977, 857, NULL },
-   { (void *) 16994, 857, NULL },
-   { (void *) 17014, 858, NULL },
-   { (void *) 17032, 858, NULL },
-   { (void *) 17053, 433, NULL },
-   { (void *) 17070, 433, NULL },
-   { (void *) 17090, 434, NULL },
-   { (void *) 17108, 434, NULL },
-   { (void *) 17129, 435, NULL },
-   { (void *) 17146, 435, NULL },
-   { (void *) 17166, 436, NULL },
-   { (void *) 17184, 436, NULL },
-   { (void *) 17205, 437, NULL },
-   { (void *) 17223, 437, NULL },
-   { (void *) 17244, 438, NULL },
-   { (void *) 17263, 438, NULL },
-   { (void *) 17285, 439, NULL },
-   { (void *) 17303, 439, NULL },
-   { (void *) 17324, 440, NULL },
-   { (void *) 17343, 440, NULL },
-   { (void *) 17365, 441, NULL },
-   { (void *) 17383, 441, NULL },
-   { (void *) 17404, 442, NULL },
-   { (void *) 17423, 442, NULL },
-   { (void *) 17445, 747, NULL },
-   { (void *) 17464, 748, NULL },
-   { (void *) 17484, 443, NULL },
-   { (void *) 17506, 443, NULL },
-   { (void *) 17531, 195, NULL },
-   { (void *) 17544, 360, NULL },
-   { (void *) 17562, 360, NULL },
-   { (void *) 17583, 945, NULL },
-   { (void *) 17612, 177, NULL },
-   { (void *) 17623, 786, NULL },
-   { (void *) 17636, 510, NULL },
-   { (void *) 17649, 510, NULL },
-   { (void *) 17665, 243, NULL },
-   { (void *) 17677, 511, NULL },
-   { (void *) 17697, 988, NULL },
-   { (void *) 17720, 209, NULL },
-   { (void *) 17732, 512, NULL },
-   { (void *) 17752, 244, NULL },
-   { (void *) 17762, 513, NULL },
-   { (void *) 17780, 513, NULL },
-   { (void *) 17801, 615, NULL },
-   { (void *) 17811, 615, NULL },
-   { (void *) 17824, 826, NULL },
-   { (void *) 17839, 930, NULL },
-   { (void *) 17861, 931, NULL },
-   { (void *) 17883, 94, NULL },
-   { (void *) 17894, 95, NULL },
-   { (void *) 17906, 96, NULL },
-   { (void *) 17917, 97, NULL },
-   { (void *) 17929, 98, NULL },
-   { (void *) 17940, 99, NULL },
-   { (void *) 17952, 100, NULL },
-   { (void *) 17963, 101, NULL },
-   { (void *) 17975, 102, NULL },
-   { (void *) 17986, 103, NULL },
-   { (void *) 17998, 104, NULL },
-   { (void *) 18009, 105, NULL },
-   { (void *) 18021, 106, NULL },
-   { (void *) 18032, 107, NULL },
-   { (void *) 18044, 108, NULL },
-   { (void *) 18055, 109, NULL },
-   { (void *) 18067, 110, NULL },
-   { (void *) 18078, 111, NULL },
-   { (void *) 18090, 112, NULL },
-   { (void *) 18101, 113, NULL },
-   { (void *) 18113, 114, NULL },
-   { (void *) 18124, 115, NULL },
-   { (void *) 18136, 116, NULL },
-   { (void *) 18147, 117, NULL },
-   { (void *) 18159, 118, NULL },
-   { (void *) 18170, 119, NULL },
-   { (void *) 18182, 120, NULL },
-   { (void *) 18193, 121, NULL },
-   { (void *) 18205, 122, NULL },
-   { (void *) 18216, 123, NULL },
-   { (void *) 18228, 124, NULL },
-   { (void *) 18239, 125, NULL },
-   { (void *) 18251, 749, NULL },
-   { (void *) 18264, 750, NULL },
-   { (void *) 18278, 751, NULL },
-   { (void *) 18291, 752, NULL },
-   { (void *) 18305, 753, NULL },
-   { (void *) 18318, 754, NULL },
-   { (void *) 18332, 755, NULL },
-   { (void *) 18345, 756, NULL },
-   { (void *) 18359, 320, NULL },
-   { (void *) 18375, 852, NULL },
-   { (void *) 18394, 184, NULL },
-   { (void *) 18402, 185, NULL },
-   { (void *) 18411, 186, NULL },
-   { (void *) 18419, 187, NULL },
-   { (void *) 18428, 1020, NULL },
-   { (void *) 18436, 1020, NULL },
-   { (void *) 18447, 1021, NULL },
-   { (void *) 18456, 1021, NULL },
-   { (void *) 18468, 188, NULL },
-   { (void *) 18476, 189, NULL },
-   { (void *) 18485, 190, NULL },
-   { (void *) 18493, 190, NULL },
-   { (void *) 18504, 191, NULL },
-   { (void *) 18513, 191, NULL },
-   { (void *) 18525, 192, NULL },
-   { (void *) 18533, 192, NULL },
-   { (void *) 18544, 193, NULL },
-   { (void *) 18553, 193, NULL },
-   { (void *) 18565, 957, NULL },
-   { (void *) 18576, 958, NULL },
-   { (void *) 18588, 182, NULL },
-   { (void *) 18599, 183, NULL },
-   { (void *) 18610, 708, NULL },
-   { (void *) 18632, 371, NULL },
-   { (void *) 18643, 371, NULL },
-   { (void *) 18657, 709, NULL },
-   { (void *) 18679, 371, NULL },
-   { (void *) 18693, 596, NULL },
-   { (void *) 18709, 596, NULL },
-   { (void *) 18728, 597, NULL },
-   { (void *) 18745, 597, NULL },
-   { (void *) 18765, 178, NULL },
-   { (void *) 18779, 179, NULL },
-   { (void *) 18794, 180, NULL },
-   { (void *) 18808, 181, NULL },
-   { (void *) 18823, 1022, NULL },
-   { (void *) 18837, 1022, NULL },
-   { (void *) 18854, 1035, NULL },
-   { (void *) 18869, 1035, NULL },
-   { (void *) 18887, 820, NULL },
-   { (void *) 18900, 821, NULL },
-   { (void *) 18913, 827, NULL },
-   { (void *) 18937, 822, NULL },
-   { (void *) 18950, 828, NULL },
-   { (void *) 18974, 332, NULL },
-   { (void *) 18988, 332, NULL },
-   { (void *) 19005, 333, NULL },
-   { (void *) 19019, 333, NULL },
-   { (void *) 19036, 372, NULL },
-   { (void *) 19050, 372, NULL },
-   { (void *) 19067, 372, NULL },
-   { (void *) 19084, 987, NULL },
-   { (void *) 19101, 823, NULL },
-   { (void *) 19121, 824, NULL },
-   { (void *) 19141, 825, NULL },
-   { (void *) 19161, 887, NULL },
-   { (void *) 19175, 598, NULL },
-   { (void *) 19201, 598, NULL },
-   { (void *) 19230, 303, NULL },
-   { (void *) 19241, 304, NULL },
-   { (void *) 19252, 1023, NULL },
-   { (void *) 19263, 1023, NULL },
-   { (void *) 19277, 514, NULL },
-   { (void *) 19287, 514, NULL },
-   { (void *) 19300, 515, NULL },
-   { (void *) 19311, 515, NULL },
-   { (void *) 19325, 516, NULL },
-   { (void *) 19335, 516, NULL },
-   { (void *) 19348, 517, NULL },
-   { (void *) 19359, 517, NULL },
-   { (void *) 19373, 599, NULL },
-   { (void *) 19384, 599, NULL },
-   { (void *) 19398, 600, NULL },
-   { (void *) 19410, 600, NULL },
-   { (void *) 19425, 518, NULL },
-   { (void *) 19435, 518, NULL },
-   { (void *) 19448, 519, NULL },
-   { (void *) 19459, 519, NULL },
-   { (void *) 19473, 520, NULL },
-   { (void *) 19483, 520, NULL },
-   { (void *) 19496, 521, NULL },
-   { (void *) 19507, 521, NULL },
-   { (void *) 19521, 601, NULL },
-   { (void *) 19532, 601, NULL },
-   { (void *) 19546, 602, NULL },
-   { (void *) 19558, 602, NULL },
-   { (void *) 19573, 522, NULL },
-   { (void *) 19583, 522, NULL },
-   { (void *) 19596, 523, NULL },
-   { (void *) 19607, 523, NULL },
-   { (void *) 19621, 524, NULL },
-   { (void *) 19631, 524, NULL },
-   { (void *) 19644, 525, NULL },
-   { (void *) 19655, 525, NULL },
-   { (void *) 19669, 603, NULL },
-   { (void *) 19680, 603, NULL },
-   { (void *) 19694, 604, NULL },
-   { (void *) 19706, 604, NULL },
-   { (void *) 19721, 526, NULL },
-   { (void *) 19731, 526, NULL },
-   { (void *) 19744, 527, NULL },
-   { (void *) 19755, 527, NULL },
-   { (void *) 19769, 528, NULL },
-   { (void *) 19779, 528, NULL },
-   { (void *) 19792, 529, NULL },
-   { (void *) 19803, 529, NULL },
-   { (void *) 19817, 605, NULL },
-   { (void *) 19828, 605, NULL },
-   { (void *) 19842, 606, NULL },
-   { (void *) 19854, 606, NULL },
-   { (void *) 19869, 692, NULL },
-   { (void *) 19889, 530, NULL },
-   { (void *) 19906, 530, NULL },
-   { (void *) 19926, 564, NULL },
-   { (void *) 19945, 565, NULL },
-   { (void *) 19964, 531, NULL },
-   { (void *) 19981, 531, NULL },
-   { (void *) 20001, 566, NULL },
-   { (void *) 20020, 567, NULL },
-   { (void *) 20039, 532, NULL },
-   { (void *) 20056, 532, NULL },
-   { (void *) 20076, 568, NULL },
-   { (void *) 20095, 569, NULL },
-   { (void *) 20114, 856, NULL },
-   { (void *) 20130, 478, NULL },
-   { (void *) 20142, 478, NULL },
-   { (void *) 20157, 478, NULL },
-   { (void *) 20172, 533, NULL },
-   { (void *) 20183, 533, NULL },
-   { (void *) 20203, 986, NULL },
-   { (void *) 20223, 534, NULL },
-   { (void *) 20239, 534, NULL },
-   { (void *) 20258, 126, NULL },
-   { (void *) 20267, 127, NULL },
-   { (void *) 20277, 128, NULL },
-   { (void *) 20286, 129, NULL },
-   { (void *) 20296, 130, NULL },
-   { (void *) 20305, 131, NULL },
-   { (void *) 20315, 132, NULL },
-   { (void *) 20324, 133, NULL },
-   { (void *) 20334, 134, NULL },
-   { (void *) 20343, 135, NULL },
-   { (void *) 20353, 136, NULL },
-   { (void *) 20362, 137, NULL },
-   { (void *) 20372, 138, NULL },
-   { (void *) 20381, 139, NULL },
-   { (void *) 20391, 140, NULL },
-   { (void *) 20400, 141, NULL },
-   { (void *) 20410, 142, NULL },
-   { (void *) 20419, 143, NULL },
-   { (void *) 20429, 144, NULL },
-   { (void *) 20438, 145, NULL },
-   { (void *) 20448, 146, NULL },
-   { (void *) 20457, 147, NULL },
-   { (void *) 20467, 148, NULL },
-   { (void *) 20476, 149, NULL },
-   { (void *) 20486, 535, NULL },
-   { (void *) 20501, 535, NULL },
-   { (void *) 20519, 888, NULL },
-   { (void *) 20536, 536, NULL },
-   { (void *) 20552, 536, NULL },
-   { (void *) 20571, 889, NULL },
-   { (void *) 20589, 639, NULL },
-   { (void *) 20604, 639, NULL },
-   { (void *) 20622, 890, NULL },
-   { (void *) 20639, 640, NULL },
-   { (void *) 20655, 640, NULL },
-   { (void *) 20674, 891, NULL },
-   { (void *) 20692, 537, NULL },
-   { (void *) 20707, 537, NULL },
-   { (void *) 20725, 892, NULL },
-   { (void *) 20742, 538, NULL },
-   { (void *) 20758, 538, NULL },
-   { (void *) 20777, 893, NULL },
-   { (void *) 20795, 539, NULL },
-   { (void *) 20810, 539, NULL },
-   { (void *) 20828, 894, NULL },
-   { (void *) 20845, 540, NULL },
-   { (void *) 20861, 540, NULL },
-   { (void *) 20880, 895, NULL },
-   { (void *) 20898, 641, NULL },
-   { (void *) 20913, 641, NULL },
-   { (void *) 20931, 896, NULL },
-   { (void *) 20948, 642, NULL },
-   { (void *) 20964, 642, NULL },
-   { (void *) 20983, 897, NULL },
-   { (void *) 21001, 541, NULL },
-   { (void *) 21016, 541, NULL },
-   { (void *) 21034, 898, NULL },
-   { (void *) 21051, 542, NULL },
-   { (void *) 21067, 542, NULL },
-   { (void *) 21086, 899, NULL },
-   { (void *) 21104, 543, NULL },
-   { (void *) 21119, 543, NULL },
-   { (void *) 21137, 900, NULL },
-   { (void *) 21154, 544, NULL },
-   { (void *) 21170, 544, NULL },
-   { (void *) 21189, 901, NULL },
-   { (void *) 21207, 643, NULL },
-   { (void *) 21222, 643, NULL },
-   { (void *) 21240, 902, NULL },
-   { (void *) 21257, 644, NULL },
-   { (void *) 21273, 644, NULL },
-   { (void *) 21292, 903, NULL },
-   { (void *) 21310, 545, NULL },
-   { (void *) 21325, 545, NULL },
-   { (void *) 21343, 904, NULL },
-   { (void *) 21360, 546, NULL },
-   { (void *) 21376, 546, NULL },
-   { (void *) 21395, 905, NULL },
-   { (void *) 21413, 547, NULL },
-   { (void *) 21430, 547, NULL },
-   { (void *) 21450, 548, NULL },
-   { (void *) 21467, 548, NULL },
-   { (void *) 21487, 549, NULL },
-   { (void *) 21504, 549, NULL },
-   { (void *) 21524, 550, NULL },
-   { (void *) 21541, 550, NULL },
-   { (void *) 21561, 551, NULL },
-   { (void *) 21579, 551, NULL },
-   { (void *) 21600, 552, NULL },
-   { (void *) 21618, 552, NULL },
-   { (void *) 21639, 553, NULL },
-   { (void *) 21657, 553, NULL },
-   { (void *) 21678, 554, NULL },
-   { (void *) 21694, 554, NULL },
-   { (void *) 21713, 555, NULL },
-   { (void *) 21728, 555, NULL },
-   { (void *) 21746, 906, NULL },
-   { (void *) 21763, 556, NULL },
-   { (void *) 21779, 556, NULL },
-   { (void *) 21798, 907, NULL },
-   { (void *) 21816, 645, NULL },
-   { (void *) 21831, 645, NULL },
-   { (void *) 21849, 908, NULL },
-   { (void *) 21866, 646, NULL },
-   { (void *) 21882, 646, NULL },
-   { (void *) 21901, 909, NULL },
-   { (void *) 21919, 557, NULL },
-   { (void *) 21935, 557, NULL },
-   { (void *) 21954, 558, NULL },
-   { (void *) 21969, 558, NULL },
-   { (void *) 21987, 910, NULL },
-   { (void *) 22004, 559, NULL },
-   { (void *) 22020, 559, NULL },
-   { (void *) 22039, 911, NULL },
-   { (void *) 22057, 912, NULL },
-   { (void *) 22075, 560, NULL },
-   { (void *) 22092, 560, NULL },
-   { (void *) 22112, 913, NULL },
-   { (void *) 22131, 561, NULL },
-   { (void *) 22148, 561, NULL },
-   { (void *) 22168, 562, NULL },
-   { (void *) 22185, 562, NULL },
-   { (void *) 22205, 619, NULL },
-   { (void *) 22225, 619, NULL },
-   { (void *) 22248, 964, NULL },
-   { (void *) 22264, 964, NULL },
-   { (void *) 22283, 607, NULL },
-   { (void *) 22300, 607, NULL },
-   { (void *) 22320, 965, NULL },
-   { (void *) 22337, 965, NULL },
-   { (void *) 22357, 608, NULL },
-   { (void *) 22375, 608, NULL },
-   { (void *) 22396, 966, NULL },
-   { (void *) 22412, 966, NULL },
-   { (void *) 22431, 967, NULL },
-   { (void *) 22448, 967, NULL },
-   { (void *) 22468, 968, NULL },
-   { (void *) 22485, 968, NULL },
-   { (void *) 22505, 969, NULL },
-   { (void *) 22523, 969, NULL },
-   { (void *) 22544, 970, NULL },
-   { (void *) 22560, 970, NULL },
-   { (void *) 22579, 971, NULL },
-   { (void *) 22596, 971, NULL },
-   { (void *) 22616, 972, NULL },
-   { (void *) 22633, 972, NULL },
-   { (void *) 22653, 973, NULL },
-   { (void *) 22671, 973, NULL },
-   { (void *) 22692, 609, NULL },
-   { (void *) 22709, 609, NULL },
-   { (void *) 22729, 974, NULL },
-   { (void *) 22745, 974, NULL },
-   { (void *) 22764, 975, NULL },
-   { (void *) 22781, 975, NULL },
-   { (void *) 22801, 610, NULL },
-   { (void *) 22818, 610, NULL },
-   { (void *) 22838, 611, NULL },
-   { (void *) 22856, 611, NULL },
-   { (void *) 22877, 976, NULL },
-   { (void *) 22894, 976, NULL },
-   { (void *) 22914, 977, NULL },
-   { (void *) 22932, 977, NULL },
-   { (void *) 22953, 612, NULL },
-   { (void *) 22971, 612, NULL },
-   { (void *) 22992, 613, NULL },
-   { (void *) 23013, 613, NULL },
-   { (void *) 23037, 757, NULL },
-   { (void *) 23054, 758, NULL },
-   { (void *) 23072, 759, NULL },
-   { (void *) 23089, 760, NULL },
-   { (void *) 23107, 761, NULL },
-   { (void *) 23124, 762, NULL },
-   { (void *) 23142, 763, NULL },
-   { (void *) 23159, 764, NULL },
-   { (void *) 23177, 563, NULL },
-   { (void *) 23197, 563, NULL },
-   { (void *) 23220, 914, NULL },
-   { (void *) 23242, 915, NULL },
-   { (void *) 23261, 916, NULL },
-   { (void *) 23280, 917, NULL },
-   { (void *) 23299, 918, NULL },
-   { (void *) 23318, 919, NULL },
-   { (void *) 23337, 920, NULL },
-   { (void *) 23356, 921, NULL },
-   { (void *) 23375, 922, NULL },
-   { (void *) 23394, 923, NULL },
-   { (void *) 23413, 924, NULL },
-   { (void *) 23432, 925, NULL },
-   { (void *) 23451, 926, NULL },
-   { (void *) 23470, 927, NULL },
-   { (void *) 23490, 765, NULL },
-   { (void *) 23501, 766, NULL },
-   { (void *) 23513, 767, NULL },
-   { (void *) 23524, 768, NULL },
-   { (void *) 23536, 769, NULL },
-   { (void *) 23547, 770, NULL },
-   { (void *) 23559, 321, NULL },
-   { (void *) 23573, 853, NULL },
-   { (void *) 23590, 305, NULL },
-   { (void *) 23599, 700, NULL },
-   { (void *) 23608, 444, NULL },
-   { (void *) 23620, 444, NULL },
-   { (void *) 23635, 444, NULL },
-   { (void *) 23651, 445, NULL },
-   { (void *) 23664, 445, NULL },
-   { (void *) 23680, 445, NULL },
-   { (void *) 23697, 446, NULL },
-   { (void *) 23709, 446, NULL },
-   { (void *) 23724, 446, NULL },
-   { (void *) 23740, 447, NULL },
-   { (void *) 23753, 447, NULL },
-   { (void *) 23769, 447, NULL },
-   { (void *) 23786, 448, NULL },
-   { (void *) 23798, 448, NULL },
-   { (void *) 23813, 448, NULL },
-   { (void *) 23829, 449, NULL },
-   { (void *) 23842, 449, NULL },
-   { (void *) 23858, 449, NULL },
-   { (void *) 23875, 450, NULL },
-   { (void *) 23887, 450, NULL },
-   { (void *) 23902, 450, NULL },
-   { (void *) 23918, 451, NULL },
-   { (void *) 23931, 451, NULL },
-   { (void *) 23947, 451, NULL },
-   { (void *) 23964, 452, NULL },
-   { (void *) 23976, 452, NULL },
-   { (void *) 23991, 452, NULL },
-   { (void *) 24007, 453, NULL },
-   { (void *) 24020, 453, NULL },
-   { (void *) 24036, 453, NULL },
-   { (void *) 24053, 454, NULL },
-   { (void *) 24065, 454, NULL },
-   { (void *) 24080, 454, NULL },
-   { (void *) 24096, 455, NULL },
-   { (void *) 24109, 455, NULL },
-   { (void *) 24125, 455, NULL },
-   { (void *) 24142, 456, NULL },
-   { (void *) 24154, 456, NULL },
-   { (void *) 24169, 456, NULL },
-   { (void *) 24185, 457, NULL },
-   { (void *) 24198, 457, NULL },
-   { (void *) 24214, 457, NULL },
-   { (void *) 24231, 458, NULL },
-   { (void *) 24243, 458, NULL },
-   { (void *) 24258, 458, NULL },
-   { (void *) 24274, 459, NULL },
-   { (void *) 24287, 459, NULL },
-   { (void *) 24303, 459, NULL },
-   { (void *) 24320, 863, NULL },
-   { (void *) 24336, 864, NULL },
-   { (void *) 24353, 865, NULL },
-   { (void *) 24369, 866, NULL },
-   { (void *) 24386, 867, NULL },
-   { (void *) 24402, 868, NULL },
-   { (void *) 24419, 869, NULL },
-   { (void *) 24435, 870, NULL }
+   { (void *) 6, 1080, NULL },
+   { (void *) 23, 887, NULL },
+   { (void *) 43, 887, NULL },
+   { (void *) 66, 1031, NULL },
+   { (void *) 87, 374, NULL },
+   { (void *) 101, 374, NULL },
+   { (void *) 118, 1017, NULL },
+   { (void *) 138, 1018, NULL },
+   { (void *) 158, 1019, NULL },
+   { (void *) 178, 240, NULL },
+   { (void *) 188, 1109, NULL },
+   { (void *) 199, 1109, NULL },
+   { (void *) 213, 958, NULL },
+   { (void *) 235, 322, NULL },
+   { (void *) 255, 322, NULL },
+   { (void *) 278, 306, NULL },
+   { (void *) 291, 306, NULL },
+   { (void *) 307, 648, NULL },
+   { (void *) 323, 479, NULL },
+   { (void *) 336, 7, NULL },
+   { (void *) 342, 570, NULL },
+   { (void *) 365, 570, NULL },
+   { (void *) 390, 1020, NULL },
+   { (void *) 413, 1066, NULL },
+   { (void *) 433, 1094, NULL },
+   { (void *) 453, 460, NULL },
+   { (void *) 464, 460, NULL },
+   { (void *) 478, 781, NULL },
+   { (void *) 496, 571, NULL },
+   { (void *) 519, 571, NULL },
+   { (void *) 545, 480, NULL },
+   { (void *) 564, 480, NULL },
+   { (void *) 586, 461, NULL },
+   { (void *) 597, 461, NULL },
+   { (void *) 611, 572, NULL },
+   { (void *) 626, 572, NULL },
+   { (void *) 644, 1065, NULL },
+   { (void *) 664, 573, NULL },
+   { (void *) 680, 573, NULL },
+   { (void *) 699, 855, NULL },
+   { (void *) 715, 856, NULL },
+   { (void *) 732, 574, NULL },
+   { (void *) 753, 574, NULL },
+   { (void *) 777, 715, NULL },
+   { (void *) 805, 1021, NULL },
+   { (void *) 827, 660, NULL },
+   { (void *) 843, 1045, NULL },
+   { (void *) 862, 660, NULL },
+   { (void *) 881, 830, NULL },
+   { (void *) 898, 857, NULL },
+   { (void *) 916, 621, NULL },
+   { (void *) 931, 621, NULL },
+   { (void *) 945, 888, NULL },
+   { (void *) 965, 888, NULL },
+   { (void *) 988, 661, NULL },
+   { (void *) 1005, 1046, NULL },
+   { (void *) 1025, 661, NULL },
+   { (void *) 1045, 717, NULL },
+   { (void *) 1057, 858, NULL },
+   { (void *) 1070, 307, NULL },
+   { (void *) 1082, 307, NULL },
+   { (void *) 1097, 859, NULL },
+   { (void *) 1110, 774, NULL },
+   { (void *) 1132, 683, NULL },
+   { (void *) 1148, 1032, NULL },
+   { (void *) 1169, 683, NULL },
+   { (void *) 1188, 843, NULL },
+   { (void *) 1205, 860, NULL },
+   { (void *) 1223, 8, NULL },
+   { (void *) 1230, 336, NULL },
+   { (void *) 1241, 336, NULL },
+   { (void *) 1255, 337, NULL },
+   { (void *) 1269, 337, NULL },
+   { (void *) 1286, 712, NULL },
+   { (void *) 1310, 337, NULL },
+   { (void *) 1327, 481, NULL },
+   { (void *) 1349, 481, NULL },
+   { (void *) 1374, 481, NULL },
+   { (void *) 1399, 711, NULL },
+   { (void *) 1431, 481, NULL },
+   { (void *) 1456, 711, NULL },
+   { (void *) 1482, 712, NULL },
+   { (void *) 1500, 241, NULL },
+   { (void *) 1510, 714, NULL },
+   { (void *) 1530, 420, NULL },
+   { (void *) 1548, 420, NULL },
+   { (void *) 1569, 420, NULL },
+   { (void *) 1591, 713, NULL },
+   { (void *) 1619, 420, NULL },
+   { (void *) 1640, 713, NULL },
+   { (void *) 1662, 714, NULL },
+   { (void *) 1676, 662, NULL },
+   { (void *) 1692, 662, NULL },
+   { (void *) 1711, 462, NULL },
+   { (void *) 1722, 462, NULL },
+   { (void *) 1736, 1047, NULL },
+   { (void *) 1758, 854, NULL },
+   { (void *) 1772, 463, NULL },
+   { (void *) 1786, 463, NULL },
+   { (void *) 1803, 2, NULL },
+   { (void *) 1812, 3, NULL },
+   { (void *) 1822, 663, NULL },
+   { (void *) 1845, 663, NULL },
+   { (void *) 1871, 663, NULL },
+   { (void *) 1897, 575, NULL },
+   { (void *) 1908, 575, NULL },
+   { (void *) 1922, 203, NULL },
+   { (void *) 1928, 204, NULL },
+   { (void *) 1939, 838, NULL },
+   { (void *) 1955, 839, NULL },
+   { (void *) 1974, 576, NULL },
+   { (void *) 1988, 577, NULL },
+   { (void *) 2002, 578, NULL },
+   { (void *) 2016, 579, NULL },
+   { (void *) 2031, 206, NULL },
+   { (void *) 2042, 1063, NULL },
+   { (void *) 2058, 1064, NULL },
+   { (void *) 2075, 1110, NULL },
+   { (void *) 2087, 1110, NULL },
+   { (void *) 2102, 208, NULL },
+   { (void *) 2113, 785, NULL },
+   { (void *) 2125, 785, NULL },
+   { (void *) 2140, 1111, NULL },
+   { (void *) 2152, 1111, NULL },
+   { (void *) 2167, 205, NULL },
+   { (void *) 2178, 207, NULL },
+   { (void *) 2191, 375, NULL },
+   { (void *) 2211, 375, NULL },
+   { (void *) 2234, 695, NULL },
+   { (void *) 2249, 150, NULL },
+   { (void *) 2259, 1140, NULL },
+   { (void *) 2270, 1140, NULL },
+   { (void *) 2284, 1141, NULL },
+   { (void *) 2295, 1141, NULL },
+   { (void *) 2309, 9, NULL },
+   { (void *) 2317, 10, NULL },
+   { (void *) 2326, 11, NULL },
+   { (void *) 2334, 12, NULL },
+   { (void *) 2343, 13, NULL },
+   { (void *) 2351, 14, NULL },
+   { (void *) 2360, 15, NULL },
+   { (void *) 2368, 16, NULL },
+   { (void *) 2377, 17, NULL },
+   { (void *) 2385, 18, NULL },
+   { (void *) 2394, 19, NULL },
+   { (void *) 2403, 20, NULL },
+   { (void *) 2413, 21, NULL },
+   { (void *) 2422, 22, NULL },
+   { (void *) 2432, 23, NULL },
+   { (void *) 2441, 24, NULL },
+   { (void *) 2451, 25, NULL },
+   { (void *) 2459, 26, NULL },
+   { (void *) 2468, 27, NULL },
+   { (void *) 2476, 28, NULL },
+   { (void *) 2485, 29, NULL },
+   { (void *) 2493, 30, NULL },
+   { (void *) 2502, 31, NULL },
+   { (void *) 2510, 32, NULL },
+   { (void *) 2519, 33, NULL },
+   { (void *) 2527, 34, NULL },
+   { (void *) 2536, 35, NULL },
+   { (void *) 2545, 36, NULL },
+   { (void *) 2555, 37, NULL },
+   { (void *) 2564, 38, NULL },
+   { (void *) 2574, 39, NULL },
+   { (void *) 2583, 40, NULL },
+   { (void *) 2593, 1112, NULL },
+   { (void *) 2601, 1112, NULL },
+   { (void *) 2612, 1022, NULL },
+   { (void *) 2632, 1023, NULL },
+   { (void *) 2652, 1024, NULL },
+   { (void *) 2672, 210, NULL },
+   { (void *) 2682, 580, NULL },
+   { (void *) 2702, 580, NULL },
+   { (void *) 2713, 151, NULL },
+   { (void *) 2727, 734, NULL },
+   { (void *) 2737, 735, NULL },
+   { (void *) 2748, 736, NULL },
+   { (void *) 2758, 737, NULL },
+   { (void *) 2769, 308, NULL },
+   { (void *) 2782, 880, NULL },
+   { (void *) 2798, 346, NULL },
+   { (void *) 2812, 346, NULL },
+   { (void *) 2829, 339, NULL },
+   { (void *) 2840, 339, NULL },
+   { (void *) 2854, 340, NULL },
+   { (void *) 2876, 340, NULL },
+   { (void *) 2901, 341, NULL },
+   { (void *) 2923, 341, NULL },
+   { (void *) 2948, 339, NULL },
+   { (void *) 2962, 482, NULL },
+   { (void *) 2976, 482, NULL },
+   { (void *) 2993, 408, NULL },
+   { (void *) 3014, 408, NULL },
+   { (void *) 3038, 409, NULL },
+   { (void *) 3059, 409, NULL },
+   { (void *) 3083, 410, NULL },
+   { (void *) 3104, 410, NULL },
+   { (void *) 3128, 410, NULL },
+   { (void *) 3152, 411, NULL },
+   { (void *) 3176, 411, NULL },
+   { (void *) 3203, 412, NULL },
+   { (void *) 3227, 412, NULL },
+   { (void *) 3254, 413, NULL },
+   { (void *) 3278, 413, NULL },
+   { (void *) 3305, 413, NULL },
+   { (void *) 3332, 348, NULL },
+   { (void *) 3352, 348, NULL },
+   { (void *) 3375, 349, NULL },
+   { (void *) 3395, 349, NULL },
+   { (void *) 3418, 350, NULL },
+   { (void *) 3440, 350, NULL },
+   { (void *) 3465, 351, NULL },
+   { (void *) 3488, 351, NULL },
+   { (void *) 3514, 352, NULL },
+   { (void *) 3536, 352, NULL },
+   { (void *) 3561, 353, NULL },
+   { (void *) 3584, 353, NULL },
+   { (void *) 3610, 694, NULL },
+   { (void *) 3628, 347, NULL },
+   { (void *) 3646, 347, NULL },
+   { (void *) 3667, 342, NULL },
+   { (void *) 3682, 342, NULL },
+   { (void *) 3700, 354, NULL },
+   { (void *) 3724, 354, NULL },
+   { (void *) 3751, 355, NULL },
+   { (void *) 3775, 355, NULL },
+   { (void *) 3802, 255, NULL },
+   { (void *) 3813, 323, NULL },
+   { (void *) 3828, 323, NULL },
+   { (void *) 3846, 324, NULL },
+   { (void *) 3861, 324, NULL },
+   { (void *) 3879, 325, NULL },
+   { (void *) 3897, 325, NULL },
+   { (void *) 3918, 326, NULL },
+   { (void *) 3936, 326, NULL },
+   { (void *) 3957, 373, NULL },
+   { (void *) 3975, 373, NULL },
+   { (void *) 3996, 373, NULL },
+   { (void *) 4017, 1095, NULL },
+   { (void *) 4038, 483, NULL },
+   { (void *) 4052, 649, NULL },
+   { (void *) 4075, 484, NULL },
+   { (void *) 4088, 650, NULL },
+   { (void *) 4110, 1081, NULL },
+   { (void *) 4133, 889, NULL },
+   { (void *) 4154, 889, NULL },
+   { (void *) 4178, 152, NULL },
+   { (void *) 4187, 932, NULL },
+   { (void *) 4208, 932, NULL },
+   { (void *) 4232, 933, NULL },
+   { (void *) 4252, 933, NULL },
+   { (void *) 4275, 934, NULL },
+   { (void *) 4294, 934, NULL },
+   { (void *) 4316, 464, NULL },
+   { (void *) 4330, 464, NULL },
+   { (void *) 4347, 1025, NULL },
+   { (void *) 4371, 664, NULL },
+   { (void *) 4390, 664, NULL },
+   { (void *) 4412, 664, NULL },
+   { (void *) 4434, 4, NULL },
+   { (void *) 4446, 651, NULL },
+   { (void *) 4462, 1067, NULL },
+   { (void *) 4484, 1096, NULL },
+   { (void *) 4505, 485, NULL },
+   { (void *) 4519, 890, NULL },
+   { (void *) 4542, 890, NULL },
+   { (void *) 4568, 622, NULL },
+   { (void *) 4586, 622, NULL },
+   { (void *) 4603, 465, NULL },
+   { (void *) 4617, 465, NULL },
+   { (void *) 4634, 665, NULL },
+   { (void *) 4654, 665, NULL },
+   { (void *) 4677, 665, NULL },
+   { (void *) 4700, 718, NULL },
+   { (void *) 4715, 486, NULL },
+   { (void *) 4728, 696, NULL },
+   { (void *) 4739, 327, NULL },
+   { (void *) 4754, 327, NULL },
+   { (void *) 4772, 775, NULL },
+   { (void *) 4797, 684, NULL },
+   { (void *) 4816, 684, NULL },
+   { (void *) 4840, 684, NULL },
+   { (void *) 4862, 1044, NULL },
+   { (void *) 4877, 245, NULL },
+   { (void *) 4887, 211, NULL },
+   { (void *) 4897, 288, NULL },
+   { (void *) 4908, 793, NULL },
+   { (void *) 4925, 794, NULL },
+   { (void *) 4943, 786, NULL },
+   { (void *) 4955, 786, NULL },
+   { (void *) 4970, 1113, NULL },
+   { (void *) 4982, 1113, NULL },
+   { (void *) 4997, 652, NULL },
+   { (void *) 5013, 487, NULL },
+   { (void *) 5026, 214, NULL },
+   { (void *) 5034, 309, NULL },
+   { (void *) 5053, 581, NULL },
+   { (void *) 5071, 488, NULL },
+   { (void *) 5096, 488, NULL },
+   { (void *) 5124, 581, NULL },
+   { (void *) 5133, 886, NULL },
+   { (void *) 5155, 840, NULL },
+   { (void *) 5171, 841, NULL },
+   { (void *) 5195, 310, NULL },
+   { (void *) 5206, 310, NULL },
+   { (void *) 5220, 772, NULL },
+   { (void *) 5239, 658, NULL },
+   { (void *) 5259, 658, NULL },
+   { (void *) 5282, 823, NULL },
+   { (void *) 5314, 658, NULL },
+   { (void *) 5337, 202, NULL },
+   { (void *) 5348, 489, NULL },
+   { (void *) 5360, 489, NULL },
+   { (void *) 5375, 489, NULL },
+   { (void *) 5390, 489, NULL },
+   { (void *) 5404, 311, NULL },
+   { (void *) 5417, 702, NULL },
+   { (void *) 5440, 773, NULL },
+   { (void *) 5461, 659, NULL },
+   { (void *) 5483, 659, NULL },
+   { (void *) 5508, 824, NULL },
+   { (void *) 5542, 703, NULL },
+   { (void *) 5574, 825, NULL },
+   { (void *) 5618, 659, NULL },
+   { (void *) 5643, 257, NULL },
+   { (void *) 5654, 338, NULL },
+   { (void *) 5672, 704, NULL },
+   { (void *) 5700, 338, NULL },
+   { (void *) 5721, 868, NULL },
+   { (void *) 5733, 869, NULL },
+   { (void *) 5746, 870, NULL },
+   { (void *) 5758, 871, NULL },
+   { (void *) 5771, 872, NULL },
+   { (void *) 5783, 873, NULL },
+   { (void *) 5796, 874, NULL },
+   { (void *) 5808, 875, NULL },
+   { (void *) 5821, 776, NULL },
+   { (void *) 5843, 826, NULL },
+   { (void *) 5874, 782, NULL },
+   { (void *) 5902, 827, NULL },
+   { (void *) 5939, 1107, NULL },
+   { (void *) 5976, 1108, NULL },
+   { (void *) 6003, 41, NULL },
+   { (void *) 6012, 312, NULL },
+   { (void *) 6028, 881, NULL },
+   { (void *) 6047, 42, NULL },
+   { (void *) 6057, 215, NULL },
+   { (void *) 6064, 313, NULL },
+   { (void *) 6082, 582, NULL },
+   { (void *) 6099, 490, NULL },
+   { (void *) 6123, 490, NULL },
+   { (void *) 6150, 582, NULL },
+   { (void *) 6158, 43, NULL },
+   { (void *) 6162, 583, NULL },
+   { (void *) 6183, 583, NULL },
+   { (void *) 6206, 1026, NULL },
+   { (void *) 6227, 1, NULL },
+   { (void *) 6235, 1068, NULL },
+   { (void *) 6253, 1097, NULL },
+   { (void *) 6271, 466, NULL },
+   { (void *) 6280, 466, NULL },
+   { (void *) 6292, 783, NULL },
+   { (void *) 6308, 584, NULL },
+   { (void *) 6329, 584, NULL },
+   { (void *) 6353, 228, NULL },
+   { (void *) 6365, 229, NULL },
+   { (void *) 6378, 230, NULL },
+   { (void *) 6390, 231, NULL },
+   { (void *) 6403, 232, NULL },
+   { (void *) 6415, 233, NULL },
+   { (void *) 6428, 234, NULL },
+   { (void *) 6440, 235, NULL },
+   { (void *) 6453, 236, NULL },
+   { (void *) 6463, 238, NULL },
+   { (void *) 6473, 237, NULL },
+   { (void *) 6484, 239, NULL },
+   { (void *) 6495, 959, NULL },
+   { (void *) 6512, 194, NULL },
+   { (void *) 6527, 697, NULL },
+   { (void *) 6537, 216, NULL },
+   { (void *) 6544, 217, NULL },
+   { (void *) 6550, 681, NULL },
+   { (void *) 6573, 1048, NULL },
+   { (void *) 6601, 681, NULL },
+   { (void *) 6627, 421, NULL },
+   { (void *) 6643, 421, NULL },
+   { (void *) 6662, 422, NULL },
+   { (void *) 6672, 422, NULL },
+   { (void *) 6685, 423, NULL },
+   { (void *) 6696, 423, NULL },
+   { (void *) 6710, 945, NULL },
+   { (void *) 6720, 945, NULL },
+   { (void *) 6733, 946, NULL },
+   { (void *) 6744, 946, NULL },
+   { (void *) 6758, 153, NULL },
+   { (void *) 6763, 154, NULL },
+   { (void *) 6769, 155, NULL },
+   { (void *) 6774, 156, NULL },
+   { (void *) 6780, 1114, NULL },
+   { (void *) 6785, 1114, NULL },
+   { (void *) 6793, 1115, NULL },
+   { (void *) 6799, 1115, NULL },
+   { (void *) 6808, 666, NULL },
+   { (void *) 6832, 666, NULL },
+   { (void *) 6859, 666, NULL },
+   { (void *) 6886, 616, NULL },
+   { (void *) 6905, 667, NULL },
+   { (void *) 6926, 667, NULL },
+   { (void *) 6950, 668, NULL },
+   { (void *) 6971, 668, NULL },
+   { (void *) 6995, 668, NULL },
+   { (void *) 7019, 669, NULL },
+   { (void *) 7040, 669, NULL },
+   { (void *) 7064, 669, NULL },
+   { (void *) 7088, 616, NULL },
+   { (void *) 7110, 680, NULL },
+   { (void *) 7136, 670, NULL },
+   { (void *) 7160, 670, NULL },
+   { (void *) 7187, 670, NULL },
+   { (void *) 7214, 157, NULL },
+   { (void *) 7224, 289, NULL },
+   { (void *) 7232, 1116, NULL },
+   { (void *) 7241, 1116, NULL },
+   { (void *) 7253, 1117, NULL },
+   { (void *) 7262, 1117, NULL },
+   { (void *) 7274, 467, NULL },
+   { (void *) 7285, 467, NULL },
+   { (void *) 7299, 1027, NULL },
+   { (void *) 7321, 671, NULL },
+   { (void *) 7337, 671, NULL },
+   { (void *) 7356, 671, NULL },
+   { (void *) 7375, 5, NULL },
+   { (void *) 7384, 1069, NULL },
+   { (void *) 7403, 891, NULL },
+   { (void *) 7423, 891, NULL },
+   { (void *) 7446, 623, NULL },
+   { (void *) 7461, 623, NULL },
+   { (void *) 7475, 468, NULL },
+   { (void *) 7486, 468, NULL },
+   { (void *) 7500, 672, NULL },
+   { (void *) 7517, 672, NULL },
+   { (void *) 7537, 672, NULL },
+   { (void *) 7557, 719, NULL },
+   { (void *) 7569, 328, NULL },
+   { (void *) 7581, 328, NULL },
+   { (void *) 7596, 777, NULL },
+   { (void *) 7618, 685, NULL },
+   { (void *) 7634, 1033, NULL },
+   { (void *) 7655, 685, NULL },
+   { (void *) 7674, 673, NULL },
+   { (void *) 7689, 673, NULL },
+   { (void *) 7707, 673, NULL },
+   { (void *) 7725, 829, NULL },
+   { (void *) 7756, 491, NULL },
+   { (void *) 7772, 491, NULL },
+   { (void *) 7791, 492, NULL },
+   { (void *) 7808, 492, NULL },
+   { (void *) 7828, 687, NULL },
+   { (void *) 7854, 688, NULL },
+   { (void *) 7878, 689, NULL },
+   { (void *) 7899, 690, NULL },
+   { (void *) 7919, 653, NULL },
+   { (void *) 7941, 493, NULL },
+   { (void *) 7960, 494, NULL },
+   { (void *) 7978, 494, NULL },
+   { (void *) 7999, 585, NULL },
+   { (void *) 8021, 585, NULL },
+   { (void *) 8035, 258, NULL },
+   { (void *) 8047, 617, NULL },
+   { (void *) 8070, 469, NULL },
+   { (void *) 8091, 469, NULL },
+   { (void *) 8115, 470, NULL },
+   { (void *) 8133, 470, NULL },
+   { (void *) 8154, 470, NULL },
+   { (void *) 8175, 471, NULL },
+   { (void *) 8192, 471, NULL },
+   { (void *) 8212, 259, NULL },
+   { (void *) 8225, 1142, NULL },
+   { (void *) 8239, 1142, NULL },
+   { (void *) 8256, 1143, NULL },
+   { (void *) 8270, 1143, NULL },
+   { (void *) 8287, 343, NULL },
+   { (void *) 8301, 343, NULL },
+   { (void *) 8318, 344, NULL },
+   { (void *) 8343, 344, NULL },
+   { (void *) 8371, 344, NULL },
+   { (void *) 8399, 345, NULL },
+   { (void *) 8424, 345, NULL },
+   { (void *) 8452, 345, NULL },
+   { (void *) 8480, 343, NULL },
+   { (void *) 8497, 414, NULL },
+   { (void *) 8519, 414, NULL },
+   { (void *) 8544, 356, NULL },
+   { (void *) 8565, 356, NULL },
+   { (void *) 8589, 357, NULL },
+   { (void *) 8615, 357, NULL },
+   { (void *) 8644, 358, NULL },
+   { (void *) 8670, 358, NULL },
+   { (void *) 8699, 935, NULL },
+   { (void *) 8718, 935, NULL },
+   { (void *) 8740, 795, NULL },
+   { (void *) 8753, 260, NULL },
+   { (void *) 8764, 261, NULL },
+   { (void *) 8773, 1098, NULL },
+   { (void *) 8798, 1144, NULL },
+   { (void *) 8808, 1144, NULL },
+   { (void *) 8821, 796, NULL },
+   { (void *) 8833, 262, NULL },
+   { (void *) 8843, 716, NULL },
+   { (void *) 8860, 586, NULL },
+   { (void *) 8880, 586, NULL },
+   { (void *) 8903, 674, NULL },
+   { (void *) 8939, 674, NULL },
+   { (void *) 8978, 674, NULL },
+   { (void *) 9017, 803, NULL },
+   { (void *) 9043, 654, NULL },
+   { (void *) 9056, 361, NULL },
+   { (void *) 9069, 361, NULL },
+   { (void *) 9085, 362, NULL },
+   { (void *) 9109, 362, NULL },
+   { (void *) 9136, 363, NULL },
+   { (void *) 9160, 363, NULL },
+   { (void *) 9187, 655, NULL },
+   { (void *) 9201, 618, NULL },
+   { (void *) 9217, 698, NULL },
+   { (void *) 9231, 587, NULL },
+   { (void *) 9253, 587, NULL },
+   { (void *) 9267, 263, NULL },
+   { (void *) 9279, 828, NULL },
+   { (void *) 9299, 264, NULL },
+   { (void *) 9310, 265, NULL },
+   { (void *) 9321, 1145, NULL },
+   { (void *) 9332, 1145, NULL },
+   { (void *) 9346, 266, NULL },
+   { (void *) 9355, 267, NULL },
+   { (void *) 9364, 268, NULL },
+   { (void *) 9373, 269, NULL },
+   { (void *) 9387, 270, NULL },
+   { (void *) 9401, 1146, NULL },
+   { (void *) 9415, 1146, NULL },
+   { (void *) 9432, 364, NULL },
+   { (void *) 9442, 364, NULL },
+   { (void *) 9455, 365, NULL },
+   { (void *) 9476, 365, NULL },
+   { (void *) 9500, 366, NULL },
+   { (void *) 9521, 366, NULL },
+   { (void *) 9545, 707, NULL },
+   { (void *) 9562, 1099, NULL },
+   { (void *) 9586, 936, NULL },
+   { (void *) 9601, 656, NULL },
+   { (void *) 9625, 1077, NULL },
+   { (void *) 9651, 657, NULL },
+   { (void *) 9675, 937, NULL },
+   { (void *) 9693, 1100, NULL },
+   { (void *) 9717, 1070, NULL },
+   { (void *) 9746, 1071, NULL },
+   { (void *) 9775, 1072, NULL },
+   { (void *) 9806, 1073, NULL },
+   { (void *) 9832, 1074, NULL },
+   { (void *) 9861, 1075, NULL },
+   { (void *) 9885, 1101, NULL },
+   { (void *) 9907, 1102, NULL },
+   { (void *) 9933, 1103, NULL },
+   { (void *) 9955, 271, NULL },
+   { (void *) 9969, 272, NULL },
+   { (void *) 9984, 273, NULL },
+   { (void *) 9999, 329, NULL },
+   { (void *) 10011, 329, NULL },
+   { (void *) 10026, 274, NULL },
+   { (void *) 10044, 790, NULL },
+   { (void *) 10061, 790, NULL },
+   { (void *) 10081, 624, NULL },
+   { (void *) 10109, 625, NULL },
+   { (void *) 10137, 495, NULL },
+   { (void *) 10155, 626, NULL },
+   { (void *) 10185, 627, NULL },
+   { (void *) 10215, 1034, NULL },
+   { (void *) 10244, 1035, NULL },
+   { (void *) 10273, 960, NULL },
+   { (void *) 10297, 961, NULL },
+   { (void *) 10321, 892, NULL },
+   { (void *) 10347, 892, NULL },
+   { (void *) 10376, 893, NULL },
+   { (void *) 10397, 893, NULL },
+   { (void *) 10421, 628, NULL },
+   { (void *) 10441, 962, NULL },
+   { (void *) 10460, 496, NULL },
+   { (void *) 10473, 629, NULL },
+   { (void *) 10489, 963, NULL },
+   { (void *) 10504, 784, NULL },
+   { (void *) 10522, 731, NULL },
+   { (void *) 10541, 731, NULL },
+   { (void *) 10563, 472, NULL },
+   { (void *) 10580, 472, NULL },
+   { (void *) 10600, 732, NULL },
+   { (void *) 10620, 732, NULL },
+   { (void *) 10643, 473, NULL },
+   { (void *) 10661, 473, NULL },
+   { (void *) 10682, 474, NULL },
+   { (void *) 10693, 474, NULL },
+   { (void *) 10707, 675, NULL },
+   { (void *) 10734, 675, NULL },
+   { (void *) 10764, 675, NULL },
+   { (void *) 10794, 720, NULL },
+   { (void *) 10817, 721, NULL },
+   { (void *) 10841, 722, NULL },
+   { (void *) 10863, 723, NULL },
+   { (void *) 10885, 359, NULL },
+   { (void *) 10904, 359, NULL },
+   { (void *) 10926, 497, NULL },
+   { (void *) 10943, 787, NULL },
+   { (void *) 10968, 498, NULL },
+   { (void *) 10984, 498, NULL },
+   { (void *) 11003, 499, NULL },
+   { (void *) 11015, 275, NULL },
+   { (void *) 11025, 588, NULL },
+   { (void *) 11036, 699, NULL },
+   { (void *) 11046, 1013, NULL },
+   { (void *) 11071, 1014, NULL },
+   { (void *) 11096, 276, NULL },
+   { (void *) 11108, 277, NULL },
+   { (void *) 11120, 1147, NULL },
+   { (void *) 11132, 1147, NULL },
+   { (void *) 11147, 278, NULL },
+   { (void *) 11159, 279, NULL },
+   { (void *) 11171, 279, NULL },
+   { (void *) 11186, 280, NULL },
+   { (void *) 11198, 280, NULL },
+   { (void *) 11213, 1041, NULL },
+   { (void *) 11228, 281, NULL },
+   { (void *) 11240, 284, NULL },
+   { (void *) 11263, 285, NULL },
+   { (void *) 11286, 589, NULL },
+   { (void *) 11305, 589, NULL },
+   { (void *) 11327, 590, NULL },
+   { (void *) 11347, 590, NULL },
+   { (void *) 11370, 282, NULL },
+   { (void *) 11388, 283, NULL },
+   { (void *) 11406, 1148, NULL },
+   { (void *) 11424, 1148, NULL },
+   { (void *) 11445, 964, NULL },
+   { (void *) 11464, 591, NULL },
+   { (void *) 11492, 591, NULL },
+   { (void *) 11523, 691, NULL },
+   { (void *) 11544, 692, NULL },
+   { (void *) 11562, 500, NULL },
+   { (void *) 11581, 500, NULL },
+   { (void *) 11603, 501, NULL },
+   { (void *) 11616, 501, NULL },
+   { (void *) 11632, 502, NULL },
+   { (void *) 11645, 502, NULL },
+   { (void *) 11661, 592, NULL },
+   { (void *) 11675, 592, NULL },
+   { (void *) 11692, 593, NULL },
+   { (void *) 11711, 593, NULL },
+   { (void *) 11733, 594, NULL },
+   { (void *) 11753, 594, NULL },
+   { (void *) 11776, 503, NULL },
+   { (void *) 11800, 503, NULL },
+   { (void *) 11827, 503, NULL },
+   { (void *) 11853, 504, NULL },
+   { (void *) 11871, 504, NULL },
+   { (void *) 11892, 965, NULL },
+   { (void *) 11912, 505, NULL },
+   { (void *) 11930, 505, NULL },
+   { (void *) 11951, 966, NULL },
+   { (void *) 11971, 506, NULL },
+   { (void *) 11989, 506, NULL },
+   { (void *) 12010, 967, NULL },
+   { (void *) 12030, 804, NULL },
+   { (void *) 12048, 805, NULL },
+   { (void *) 12074, 806, NULL },
+   { (void *) 12099, 807, NULL },
+   { (void *) 12116, 808, NULL },
+   { (void *) 12129, 809, NULL },
+   { (void *) 12142, 810, NULL },
+   { (void *) 12155, 811, NULL },
+   { (void *) 12169, 812, NULL },
+   { (void *) 12187, 813, NULL },
+   { (void *) 12206, 814, NULL },
+   { (void *) 12225, 815, NULL },
+   { (void *) 12247, 816, NULL },
+   { (void *) 12270, 817, NULL },
+   { (void *) 12286, 818, NULL },
+   { (void *) 12303, 819, NULL },
+   { (void *) 12320, 820, NULL },
+   { (void *) 12337, 821, NULL },
+   { (void *) 12355, 158, NULL },
+   { (void *) 12360, 367, NULL },
+   { (void *) 12370, 367, NULL },
+   { (void *) 12383, 212, NULL },
+   { (void *) 12393, 314, NULL },
+   { (void *) 12406, 882, NULL },
+   { (void *) 12422, 44, NULL },
+   { (void *) 12429, 45, NULL },
+   { (void *) 12437, 46, NULL },
+   { (void *) 12444, 47, NULL },
+   { (void *) 12452, 48, NULL },
+   { (void *) 12459, 49, NULL },
+   { (void *) 12467, 50, NULL },
+   { (void *) 12474, 51, NULL },
+   { (void *) 12482, 315, NULL },
+   { (void *) 12490, 316, NULL },
+   { (void *) 12499, 197, NULL },
+   { (void *) 12509, 317, NULL },
+   { (void *) 12527, 861, NULL },
+   { (void *) 12548, 862, NULL },
+   { (void *) 12572, 863, NULL },
+   { (void *) 12594, 864, NULL },
+   { (void *) 12619, 865, NULL },
+   { (void *) 12638, 866, NULL },
+   { (void *) 12660, 475, NULL },
+   { (void *) 12669, 475, NULL },
+   { (void *) 12681, 286, NULL },
+   { (void *) 12691, 595, NULL },
+   { (void *) 12711, 595, NULL },
+   { (void *) 12722, 676, NULL },
+   { (void *) 12736, 676, NULL },
+   { (void *) 12753, 676, NULL },
+   { (void *) 12770, 287, NULL },
+   { (void *) 12777, 507, NULL },
+   { (void *) 12787, 630, NULL },
+   { (void *) 12800, 630, NULL },
+   { (void *) 12812, 894, NULL },
+   { (void *) 12830, 894, NULL },
+   { (void *) 12851, 476, NULL },
+   { (void *) 12859, 476, NULL },
+   { (void *) 12870, 677, NULL },
+   { (void *) 12885, 677, NULL },
+   { (void *) 12903, 677, NULL },
+   { (void *) 12921, 724, NULL },
+   { (void *) 12931, 508, NULL },
+   { (void *) 12940, 700, NULL },
+   { (void *) 12947, 330, NULL },
+   { (void *) 12957, 330, NULL },
+   { (void *) 12970, 778, NULL },
+   { (void *) 12990, 686, NULL },
+   { (void *) 13004, 686, NULL },
+   { (void *) 13023, 686, NULL },
+   { (void *) 13040, 163, NULL },
+   { (void *) 13052, 164, NULL },
+   { (void *) 13065, 165, NULL },
+   { (void *) 13077, 166, NULL },
+   { (void *) 13090, 1118, NULL },
+   { (void *) 13102, 1118, NULL },
+   { (void *) 13117, 1119, NULL },
+   { (void *) 13130, 1119, NULL },
+   { (void *) 13146, 159, NULL },
+   { (void *) 13153, 160, NULL },
+   { (void *) 13161, 161, NULL },
+   { (void *) 13168, 162, NULL },
+   { (void *) 13176, 1120, NULL },
+   { (void *) 13183, 1120, NULL },
+   { (void *) 13193, 1121, NULL },
+   { (void *) 13201, 1121, NULL },
+   { (void *) 13212, 167, NULL },
+   { (void *) 13224, 168, NULL },
+   { (void *) 13234, 1122, NULL },
+   { (void *) 13245, 1122, NULL },
+   { (void *) 13259, 509, NULL },
+   { (void *) 13271, 509, NULL },
+   { (void *) 13286, 6, NULL },
+   { (void *) 13295, 290, NULL },
+   { (void *) 13308, 292, NULL },
+   { (void *) 13320, 291, NULL },
+   { (void *) 13332, 1123, NULL },
+   { (void *) 13344, 1123, NULL },
+   { (void *) 13359, 198, NULL },
+   { (void *) 13368, 968, NULL },
+   { (void *) 13382, 415, NULL },
+   { (void *) 13403, 415, NULL },
+   { (void *) 13427, 416, NULL },
+   { (void *) 13448, 416, NULL },
+   { (void *) 13472, 895, NULL },
+   { (void *) 13486, 242, NULL },
+   { (void *) 13494, 220, NULL },
+   { (void *) 13500, 221, NULL },
+   { (void *) 13506, 222, NULL },
+   { (void *) 13512, 223, NULL },
+   { (void *) 13518, 477, NULL },
+   { (void *) 13528, 477, NULL },
+   { (void *) 13541, 477, NULL },
+   { (void *) 13554, 682, NULL },
+   { (void *) 13569, 682, NULL },
+   { (void *) 13587, 224, NULL },
+   { (void *) 13597, 225, NULL },
+   { (void *) 13607, 226, NULL },
+   { (void *) 13617, 227, NULL },
+   { (void *) 13627, 169, NULL },
+   { (void *) 13637, 170, NULL },
+   { (void *) 13648, 171, NULL },
+   { (void *) 13658, 172, NULL },
+   { (void *) 13669, 1124, NULL },
+   { (void *) 13679, 1124, NULL },
+   { (void *) 13692, 1125, NULL },
+   { (void *) 13703, 1125, NULL },
+   { (void *) 13717, 293, NULL },
+   { (void *) 13728, 831, NULL },
+   { (void *) 13742, 620, NULL },
+   { (void *) 13759, 620, NULL },
+   { (void *) 13779, 368, NULL },
+   { (void *) 13786, 368, NULL },
+   { (void *) 13796, 295, NULL },
+   { (void *) 13808, 294, NULL },
+   { (void *) 13820, 1126, NULL },
+   { (void *) 13832, 1126, NULL },
+   { (void *) 13847, 417, NULL },
+   { (void *) 13868, 417, NULL },
+   { (void *) 13892, 418, NULL },
+   { (void *) 13913, 418, NULL },
+   { (void *) 13937, 424, NULL },
+   { (void *) 13953, 424, NULL },
+   { (void *) 13972, 849, NULL },
+   { (void *) 13996, 944, NULL },
+   { (void *) 14014, 705, NULL },
+   { (void *) 14042, 944, NULL },
+   { (void *) 14063, 850, NULL },
+   { (void *) 14089, 956, NULL },
+   { (void *) 14112, 957, NULL },
+   { (void *) 14137, 376, NULL },
+   { (void *) 14153, 376, NULL },
+   { (void *) 14172, 377, NULL },
+   { (void *) 14189, 377, NULL },
+   { (void *) 14209, 378, NULL },
+   { (void *) 14225, 378, NULL },
+   { (void *) 14244, 379, NULL },
+   { (void *) 14261, 379, NULL },
+   { (void *) 14281, 380, NULL },
+   { (void *) 14297, 380, NULL },
+   { (void *) 14316, 381, NULL },
+   { (void *) 14333, 381, NULL },
+   { (void *) 14353, 382, NULL },
+   { (void *) 14369, 382, NULL },
+   { (void *) 14388, 383, NULL },
+   { (void *) 14405, 383, NULL },
+   { (void *) 14425, 384, NULL },
+   { (void *) 14441, 384, NULL },
+   { (void *) 14460, 385, NULL },
+   { (void *) 14477, 385, NULL },
+   { (void *) 14497, 386, NULL },
+   { (void *) 14513, 386, NULL },
+   { (void *) 14532, 387, NULL },
+   { (void *) 14549, 387, NULL },
+   { (void *) 14569, 388, NULL },
+   { (void *) 14585, 388, NULL },
+   { (void *) 14604, 389, NULL },
+   { (void *) 14621, 389, NULL },
+   { (void *) 14641, 390, NULL },
+   { (void *) 14657, 390, NULL },
+   { (void *) 14676, 391, NULL },
+   { (void *) 14693, 391, NULL },
+   { (void *) 14713, 392, NULL },
+   { (void *) 14729, 392, NULL },
+   { (void *) 14748, 393, NULL },
+   { (void *) 14765, 393, NULL },
+   { (void *) 14785, 394, NULL },
+   { (void *) 14801, 394, NULL },
+   { (void *) 14820, 395, NULL },
+   { (void *) 14837, 395, NULL },
+   { (void *) 14857, 396, NULL },
+   { (void *) 14873, 396, NULL },
+   { (void *) 14892, 397, NULL },
+   { (void *) 14909, 397, NULL },
+   { (void *) 14929, 398, NULL },
+   { (void *) 14945, 398, NULL },
+   { (void *) 14964, 399, NULL },
+   { (void *) 14981, 399, NULL },
+   { (void *) 15001, 400, NULL },
+   { (void *) 15017, 400, NULL },
+   { (void *) 15036, 401, NULL },
+   { (void *) 15053, 401, NULL },
+   { (void *) 15073, 402, NULL },
+   { (void *) 15089, 402, NULL },
+   { (void *) 15108, 403, NULL },
+   { (void *) 15125, 403, NULL },
+   { (void *) 15145, 404, NULL },
+   { (void *) 15161, 404, NULL },
+   { (void *) 15180, 405, NULL },
+   { (void *) 15197, 405, NULL },
+   { (void *) 15217, 406, NULL },
+   { (void *) 15233, 406, NULL },
+   { (void *) 15252, 407, NULL },
+   { (void *) 15269, 407, NULL },
+   { (void *) 15289, 1127, NULL },
+   { (void *) 15305, 1127, NULL },
+   { (void *) 15324, 738, NULL },
+   { (void *) 15342, 739, NULL },
+   { (void *) 15361, 740, NULL },
+   { (void *) 15379, 741, NULL },
+   { (void *) 15398, 742, NULL },
+   { (void *) 15416, 743, NULL },
+   { (void *) 15435, 744, NULL },
+   { (void *) 15453, 745, NULL },
+   { (void *) 15472, 0, NULL },
+   { (void *) 15480, 52, NULL },
+   { (void *) 15489, 53, NULL },
+   { (void *) 15499, 54, NULL },
+   { (void *) 15508, 55, NULL },
+   { (void *) 15518, 56, NULL },
+   { (void *) 15527, 57, NULL },
+   { (void *) 15537, 58, NULL },
+   { (void *) 15546, 59, NULL },
+   { (void *) 15556, 60, NULL },
+   { (void *) 15565, 61, NULL },
+   { (void *) 15575, 1128, NULL },
+   { (void *) 15584, 1128, NULL },
+   { (void *) 15596, 746, NULL },
+   { (void *) 15607, 747, NULL },
+   { (void *) 15619, 318, NULL },
+   { (void *) 15633, 883, NULL },
+   { (void *) 15650, 938, NULL },
+   { (void *) 15662, 939, NULL },
+   { (void *) 15677, 1078, NULL },
+   { (void *) 15698, 1079, NULL },
+   { (void *) 15721, 296, NULL },
+   { (void *) 15727, 1129, NULL },
+   { (void *) 15734, 1129, NULL },
+   { (void *) 15744, 1130, NULL },
+   { (void *) 15751, 1130, NULL },
+   { (void *) 15761, 1028, NULL },
+   { (void *) 15777, 199, NULL },
+   { (void *) 15789, 779, NULL },
+   { (void *) 15812, 251, NULL },
+   { (void *) 15823, 252, NULL },
+   { (void *) 15835, 253, NULL },
+   { (void *) 15847, 249, NULL },
+   { (void *) 15859, 250, NULL },
+   { (void *) 15871, 247, NULL },
+   { (void *) 15886, 248, NULL },
+   { (void *) 15901, 246, NULL },
+   { (void *) 15911, 425, NULL },
+   { (void *) 15927, 425, NULL },
+   { (void *) 15946, 425, NULL },
+   { (void *) 15965, 425, NULL },
+   { (void *) 15985, 426, NULL },
+   { (void *) 16002, 426, NULL },
+   { (void *) 16022, 426, NULL },
+   { (void *) 16042, 426, NULL },
+   { (void *) 16063, 427, NULL },
+   { (void *) 16079, 427, NULL },
+   { (void *) 16097, 428, NULL },
+   { (void *) 16114, 428, NULL },
+   { (void *) 16133, 1149, NULL },
+   { (void *) 16149, 1149, NULL },
+   { (void *) 16168, 1150, NULL },
+   { (void *) 16185, 1150, NULL },
+   { (void *) 16205, 173, NULL },
+   { (void *) 16215, 876, NULL },
+   { (void *) 16235, 1131, NULL },
+   { (void *) 16246, 1131, NULL },
+   { (void *) 16260, 174, NULL },
+   { (void *) 16272, 319, NULL },
+   { (void *) 16286, 867, NULL },
+   { (void *) 16303, 1132, NULL },
+   { (void *) 16318, 1132, NULL },
+   { (void *) 16336, 175, NULL },
+   { (void *) 16351, 218, NULL },
+   { (void *) 16361, 334, NULL },
+   { (void *) 16377, 940, NULL },
+   { (void *) 16391, 297, NULL },
+   { (void *) 16401, 200, NULL },
+   { (void *) 16409, 614, NULL },
+   { (void *) 16431, 614, NULL },
+   { (void *) 16455, 1040, NULL },
+   { (void *) 16474, 331, NULL },
+   { (void *) 16493, 331, NULL },
+   { (void *) 16515, 791, NULL },
+   { (void *) 16529, 791, NULL },
+   { (void *) 16546, 631, NULL },
+   { (void *) 16571, 632, NULL },
+   { (void *) 16597, 633, NULL },
+   { (void *) 16622, 634, NULL },
+   { (void *) 16648, 1105, NULL },
+   { (void *) 16675, 635, NULL },
+   { (void *) 16702, 636, NULL },
+   { (void *) 16730, 637, NULL },
+   { (void *) 16757, 638, NULL },
+   { (void *) 16785, 1106, NULL },
+   { (void *) 16814, 1036, NULL },
+   { (void *) 16840, 1037, NULL },
+   { (void *) 16867, 1038, NULL },
+   { (void *) 16893, 1039, NULL },
+   { (void *) 16920, 631, NULL },
+   { (void *) 16941, 632, NULL },
+   { (void *) 16963, 633, NULL },
+   { (void *) 16984, 634, NULL },
+   { (void *) 17006, 792, NULL },
+   { (void *) 17024, 792, NULL },
+   { (void *) 17045, 792, NULL },
+   { (void *) 17066, 969, NULL },
+   { (void *) 17089, 970, NULL },
+   { (void *) 17112, 639, NULL },
+   { (void *) 17129, 896, NULL },
+   { (void *) 17146, 896, NULL },
+   { (void *) 17166, 897, NULL },
+   { (void *) 17184, 897, NULL },
+   { (void *) 17205, 898, NULL },
+   { (void *) 17222, 898, NULL },
+   { (void *) 17242, 899, NULL },
+   { (void *) 17260, 899, NULL },
+   { (void *) 17281, 900, NULL },
+   { (void *) 17299, 900, NULL },
+   { (void *) 17320, 901, NULL },
+   { (void *) 17339, 901, NULL },
+   { (void *) 17361, 902, NULL },
+   { (void *) 17378, 902, NULL },
+   { (void *) 17398, 903, NULL },
+   { (void *) 17416, 903, NULL },
+   { (void *) 17437, 904, NULL },
+   { (void *) 17454, 904, NULL },
+   { (void *) 17474, 905, NULL },
+   { (void *) 17492, 905, NULL },
+   { (void *) 17513, 906, NULL },
+   { (void *) 17531, 906, NULL },
+   { (void *) 17552, 907, NULL },
+   { (void *) 17571, 907, NULL },
+   { (void *) 17593, 908, NULL },
+   { (void *) 17610, 908, NULL },
+   { (void *) 17630, 909, NULL },
+   { (void *) 17648, 909, NULL },
+   { (void *) 17669, 910, NULL },
+   { (void *) 17686, 910, NULL },
+   { (void *) 17706, 911, NULL },
+   { (void *) 17724, 911, NULL },
+   { (void *) 17745, 912, NULL },
+   { (void *) 17763, 912, NULL },
+   { (void *) 17784, 913, NULL },
+   { (void *) 17803, 913, NULL },
+   { (void *) 17825, 914, NULL },
+   { (void *) 17842, 914, NULL },
+   { (void *) 17862, 915, NULL },
+   { (void *) 17880, 915, NULL },
+   { (void *) 17901, 916, NULL },
+   { (void *) 17918, 916, NULL },
+   { (void *) 17938, 917, NULL },
+   { (void *) 17956, 917, NULL },
+   { (void *) 17977, 918, NULL },
+   { (void *) 17995, 918, NULL },
+   { (void *) 18016, 919, NULL },
+   { (void *) 18035, 919, NULL },
+   { (void *) 18057, 920, NULL },
+   { (void *) 18081, 920, NULL },
+   { (void *) 18108, 921, NULL },
+   { (void *) 18134, 921, NULL },
+   { (void *) 18163, 922, NULL },
+   { (void *) 18189, 922, NULL },
+   { (void *) 18218, 923, NULL },
+   { (void *) 18242, 923, NULL },
+   { (void *) 18269, 924, NULL },
+   { (void *) 18295, 924, NULL },
+   { (void *) 18324, 925, NULL },
+   { (void *) 18350, 925, NULL },
+   { (void *) 18379, 926, NULL },
+   { (void *) 18403, 926, NULL },
+   { (void *) 18430, 927, NULL },
+   { (void *) 18456, 927, NULL },
+   { (void *) 18485, 928, NULL },
+   { (void *) 18511, 928, NULL },
+   { (void *) 18540, 706, NULL },
+   { (void *) 18556, 706, NULL },
+   { (void *) 18575, 219, NULL },
+   { (void *) 18586, 335, NULL },
+   { (void *) 18603, 941, NULL },
+   { (void *) 18618, 298, NULL },
+   { (void *) 18629, 201, NULL },
+   { (void *) 18638, 733, NULL },
+   { (void *) 18651, 877, NULL },
+   { (void *) 18667, 62, NULL },
+   { (void *) 18679, 63, NULL },
+   { (void *) 18692, 64, NULL },
+   { (void *) 18704, 65, NULL },
+   { (void *) 18717, 66, NULL },
+   { (void *) 18729, 67, NULL },
+   { (void *) 18742, 68, NULL },
+   { (void *) 18754, 69, NULL },
+   { (void *) 18767, 70, NULL },
+   { (void *) 18779, 71, NULL },
+   { (void *) 18792, 72, NULL },
+   { (void *) 18804, 73, NULL },
+   { (void *) 18817, 74, NULL },
+   { (void *) 18829, 75, NULL },
+   { (void *) 18842, 76, NULL },
+   { (void *) 18854, 77, NULL },
+   { (void *) 18867, 78, NULL },
+   { (void *) 18879, 79, NULL },
+   { (void *) 18892, 80, NULL },
+   { (void *) 18904, 81, NULL },
+   { (void *) 18917, 82, NULL },
+   { (void *) 18929, 83, NULL },
+   { (void *) 18942, 84, NULL },
+   { (void *) 18954, 85, NULL },
+   { (void *) 18967, 254, NULL },
+   { (void *) 18978, 254, NULL },
+   { (void *) 18991, 256, NULL },
+   { (void *) 19002, 822, NULL },
+   { (void *) 19017, 86, NULL },
+   { (void *) 19023, 87, NULL },
+   { (void *) 19030, 88, NULL },
+   { (void *) 19036, 89, NULL },
+   { (void *) 19043, 90, NULL },
+   { (void *) 19049, 91, NULL },
+   { (void *) 19056, 92, NULL },
+   { (void *) 19062, 93, NULL },
+   { (void *) 19069, 788, NULL },
+   { (void *) 19091, 196, NULL },
+   { (void *) 19102, 678, NULL },
+   { (void *) 19122, 678, NULL },
+   { (void *) 19145, 679, NULL },
+   { (void *) 19176, 679, NULL },
+   { (void *) 19210, 678, NULL },
+   { (void *) 19233, 971, NULL },
+   { (void *) 19259, 369, NULL },
+   { (void *) 19274, 369, NULL },
+   { (void *) 19292, 370, NULL },
+   { (void *) 19304, 370, NULL },
+   { (void *) 19319, 947, NULL },
+   { (void *) 19337, 780, NULL },
+   { (void *) 19361, 299, NULL },
+   { (void *) 19369, 300, NULL },
+   { (void *) 19377, 1133, NULL },
+   { (void *) 19385, 1133, NULL },
+   { (void *) 19396, 419, NULL },
+   { (void *) 19411, 419, NULL },
+   { (void *) 19429, 1134, NULL },
+   { (void *) 19445, 1134, NULL },
+   { (void *) 19464, 1029, NULL },
+   { (void *) 19477, 878, NULL },
+   { (void *) 19491, 878, NULL },
+   { (void *) 19506, 708, NULL },
+   { (void *) 19518, 879, NULL },
+   { (void *) 19535, 879, NULL },
+   { (void *) 19553, 725, NULL },
+   { (void *) 19573, 726, NULL },
+   { (void *) 19594, 727, NULL },
+   { (void *) 19612, 728, NULL },
+   { (void *) 19631, 729, NULL },
+   { (void *) 19649, 730, NULL },
+   { (void *) 19668, 301, NULL },
+   { (void *) 19675, 302, NULL },
+   { (void *) 19682, 1135, NULL },
+   { (void *) 19689, 1135, NULL },
+   { (void *) 19699, 176, NULL },
+   { (void *) 19707, 797, NULL },
+   { (void *) 19721, 798, NULL },
+   { (void *) 19736, 799, NULL },
+   { (void *) 19752, 429, NULL },
+   { (void *) 19769, 429, NULL },
+   { (void *) 19789, 430, NULL },
+   { (void *) 19807, 430, NULL },
+   { (void *) 19828, 431, NULL },
+   { (void *) 19845, 431, NULL },
+   { (void *) 19865, 432, NULL },
+   { (void *) 19883, 432, NULL },
+   { (void *) 19904, 942, NULL },
+   { (void *) 19921, 942, NULL },
+   { (void *) 19941, 943, NULL },
+   { (void *) 19959, 943, NULL },
+   { (void *) 19980, 433, NULL },
+   { (void *) 19997, 433, NULL },
+   { (void *) 20017, 434, NULL },
+   { (void *) 20035, 434, NULL },
+   { (void *) 20056, 435, NULL },
+   { (void *) 20073, 435, NULL },
+   { (void *) 20093, 436, NULL },
+   { (void *) 20111, 436, NULL },
+   { (void *) 20132, 437, NULL },
+   { (void *) 20150, 437, NULL },
+   { (void *) 20171, 438, NULL },
+   { (void *) 20190, 438, NULL },
+   { (void *) 20212, 439, NULL },
+   { (void *) 20230, 439, NULL },
+   { (void *) 20251, 440, NULL },
+   { (void *) 20270, 440, NULL },
+   { (void *) 20292, 441, NULL },
+   { (void *) 20310, 441, NULL },
+   { (void *) 20331, 442, NULL },
+   { (void *) 20350, 442, NULL },
+   { (void *) 20372, 748, NULL },
+   { (void *) 20391, 749, NULL },
+   { (void *) 20411, 443, NULL },
+   { (void *) 20433, 443, NULL },
+   { (void *) 20458, 195, NULL },
+   { (void *) 20471, 1076, NULL },
+   { (void *) 20500, 360, NULL },
+   { (void *) 20518, 360, NULL },
+   { (void *) 20539, 1030, NULL },
+   { (void *) 20568, 177, NULL },
+   { (void *) 20579, 789, NULL },
+   { (void *) 20592, 510, NULL },
+   { (void *) 20605, 510, NULL },
+   { (void *) 20621, 243, NULL },
+   { (void *) 20633, 511, NULL },
+   { (void *) 20653, 1104, NULL },
+   { (void *) 20676, 209, NULL },
+   { (void *) 20688, 512, NULL },
+   { (void *) 20708, 244, NULL },
+   { (void *) 20718, 513, NULL },
+   { (void *) 20736, 513, NULL },
+   { (void *) 20757, 615, NULL },
+   { (void *) 20767, 615, NULL },
+   { (void *) 20780, 851, NULL },
+   { (void *) 20795, 1015, NULL },
+   { (void *) 20817, 1016, NULL },
+   { (void *) 20839, 94, NULL },
+   { (void *) 20850, 95, NULL },
+   { (void *) 20862, 96, NULL },
+   { (void *) 20873, 97, NULL },
+   { (void *) 20885, 98, NULL },
+   { (void *) 20896, 99, NULL },
+   { (void *) 20908, 100, NULL },
+   { (void *) 20919, 101, NULL },
+   { (void *) 20931, 102, NULL },
+   { (void *) 20942, 103, NULL },
+   { (void *) 20954, 104, NULL },
+   { (void *) 20965, 105, NULL },
+   { (void *) 20977, 106, NULL },
+   { (void *) 20988, 107, NULL },
+   { (void *) 21000, 108, NULL },
+   { (void *) 21011, 109, NULL },
+   { (void *) 21023, 110, NULL },
+   { (void *) 21034, 111, NULL },
+   { (void *) 21046, 112, NULL },
+   { (void *) 21057, 113, NULL },
+   { (void *) 21069, 114, NULL },
+   { (void *) 21080, 115, NULL },
+   { (void *) 21092, 116, NULL },
+   { (void *) 21103, 117, NULL },
+   { (void *) 21115, 118, NULL },
+   { (void *) 21126, 119, NULL },
+   { (void *) 21138, 120, NULL },
+   { (void *) 21149, 121, NULL },
+   { (void *) 21161, 122, NULL },
+   { (void *) 21172, 123, NULL },
+   { (void *) 21184, 124, NULL },
+   { (void *) 21195, 125, NULL },
+   { (void *) 21207, 750, NULL },
+   { (void *) 21220, 751, NULL },
+   { (void *) 21234, 752, NULL },
+   { (void *) 21247, 753, NULL },
+   { (void *) 21261, 754, NULL },
+   { (void *) 21274, 755, NULL },
+   { (void *) 21288, 756, NULL },
+   { (void *) 21301, 757, NULL },
+   { (void *) 21315, 320, NULL },
+   { (void *) 21331, 884, NULL },
+   { (void *) 21350, 184, NULL },
+   { (void *) 21358, 185, NULL },
+   { (void *) 21367, 186, NULL },
+   { (void *) 21375, 187, NULL },
+   { (void *) 21384, 1136, NULL },
+   { (void *) 21392, 1136, NULL },
+   { (void *) 21403, 1137, NULL },
+   { (void *) 21412, 1137, NULL },
+   { (void *) 21424, 188, NULL },
+   { (void *) 21432, 189, NULL },
+   { (void *) 21441, 190, NULL },
+   { (void *) 21449, 190, NULL },
+   { (void *) 21460, 191, NULL },
+   { (void *) 21469, 191, NULL },
+   { (void *) 21481, 192, NULL },
+   { (void *) 21489, 192, NULL },
+   { (void *) 21500, 193, NULL },
+   { (void *) 21509, 193, NULL },
+   { (void *) 21521, 1042, NULL },
+   { (void *) 21532, 1043, NULL },
+   { (void *) 21544, 182, NULL },
+   { (void *) 21555, 183, NULL },
+   { (void *) 21566, 709, NULL },
+   { (void *) 21588, 371, NULL },
+   { (void *) 21599, 371, NULL },
+   { (void *) 21613, 710, NULL },
+   { (void *) 21635, 371, NULL },
+   { (void *) 21649, 596, NULL },
+   { (void *) 21665, 596, NULL },
+   { (void *) 21684, 597, NULL },
+   { (void *) 21701, 597, NULL },
+   { (void *) 21721, 178, NULL },
+   { (void *) 21735, 179, NULL },
+   { (void *) 21750, 180, NULL },
+   { (void *) 21764, 181, NULL },
+   { (void *) 21779, 1138, NULL },
+   { (void *) 21793, 1138, NULL },
+   { (void *) 21810, 1151, NULL },
+   { (void *) 21825, 1151, NULL },
+   { (void *) 21843, 832, NULL },
+   { (void *) 21856, 833, NULL },
+   { (void *) 21869, 852, NULL },
+   { (void *) 21893, 834, NULL },
+   { (void *) 21906, 853, NULL },
+   { (void *) 21930, 332, NULL },
+   { (void *) 21944, 332, NULL },
+   { (void *) 21961, 333, NULL },
+   { (void *) 21975, 333, NULL },
+   { (void *) 21992, 372, NULL },
+   { (void *) 22006, 372, NULL },
+   { (void *) 22023, 372, NULL },
+   { (void *) 22040, 1083, NULL },
+   { (void *) 22057, 835, NULL },
+   { (void *) 22077, 836, NULL },
+   { (void *) 22097, 837, NULL },
+   { (void *) 22117, 842, NULL },
+   { (void *) 22129, 972, NULL },
+   { (void *) 22143, 598, NULL },
+   { (void *) 22169, 598, NULL },
+   { (void *) 22198, 303, NULL },
+   { (void *) 22209, 304, NULL },
+   { (void *) 22220, 1139, NULL },
+   { (void *) 22231, 1139, NULL },
+   { (void *) 22245, 514, NULL },
+   { (void *) 22255, 514, NULL },
+   { (void *) 22268, 515, NULL },
+   { (void *) 22279, 515, NULL },
+   { (void *) 22293, 516, NULL },
+   { (void *) 22303, 516, NULL },
+   { (void *) 22316, 517, NULL },
+   { (void *) 22327, 517, NULL },
+   { (void *) 22341, 599, NULL },
+   { (void *) 22352, 599, NULL },
+   { (void *) 22366, 600, NULL },
+   { (void *) 22378, 600, NULL },
+   { (void *) 22393, 518, NULL },
+   { (void *) 22403, 518, NULL },
+   { (void *) 22416, 519, NULL },
+   { (void *) 22427, 519, NULL },
+   { (void *) 22441, 520, NULL },
+   { (void *) 22451, 520, NULL },
+   { (void *) 22464, 521, NULL },
+   { (void *) 22475, 521, NULL },
+   { (void *) 22489, 601, NULL },
+   { (void *) 22500, 601, NULL },
+   { (void *) 22514, 602, NULL },
+   { (void *) 22526, 602, NULL },
+   { (void *) 22541, 522, NULL },
+   { (void *) 22551, 522, NULL },
+   { (void *) 22564, 523, NULL },
+   { (void *) 22575, 523, NULL },
+   { (void *) 22589, 524, NULL },
+   { (void *) 22599, 524, NULL },
+   { (void *) 22612, 525, NULL },
+   { (void *) 22623, 525, NULL },
+   { (void *) 22637, 603, NULL },
+   { (void *) 22648, 603, NULL },
+   { (void *) 22662, 604, NULL },
+   { (void *) 22674, 604, NULL },
+   { (void *) 22689, 526, NULL },
+   { (void *) 22699, 526, NULL },
+   { (void *) 22712, 527, NULL },
+   { (void *) 22723, 527, NULL },
+   { (void *) 22737, 528, NULL },
+   { (void *) 22747, 528, NULL },
+   { (void *) 22760, 529, NULL },
+   { (void *) 22771, 529, NULL },
+   { (void *) 22785, 605, NULL },
+   { (void *) 22796, 605, NULL },
+   { (void *) 22810, 606, NULL },
+   { (void *) 22822, 606, NULL },
+   { (void *) 22837, 693, NULL },
+   { (void *) 22857, 530, NULL },
+   { (void *) 22874, 530, NULL },
+   { (void *) 22894, 564, NULL },
+   { (void *) 22913, 565, NULL },
+   { (void *) 22932, 531, NULL },
+   { (void *) 22949, 531, NULL },
+   { (void *) 22969, 566, NULL },
+   { (void *) 22988, 567, NULL },
+   { (void *) 23007, 532, NULL },
+   { (void *) 23024, 532, NULL },
+   { (void *) 23044, 568, NULL },
+   { (void *) 23063, 569, NULL },
+   { (void *) 23082, 929, NULL },
+   { (void *) 23098, 478, NULL },
+   { (void *) 23110, 478, NULL },
+   { (void *) 23125, 478, NULL },
+   { (void *) 23140, 533, NULL },
+   { (void *) 23151, 533, NULL },
+   { (void *) 23171, 930, NULL },
+   { (void *) 23188, 930, NULL },
+   { (void *) 23208, 1082, NULL },
+   { (void *) 23228, 1084, NULL },
+   { (void *) 23240, 1085, NULL },
+   { (void *) 23260, 1086, NULL },
+   { (void *) 23272, 1087, NULL },
+   { (void *) 23289, 1088, NULL },
+   { (void *) 23308, 1089, NULL },
+   { (void *) 23337, 1090, NULL },
+   { (void *) 23365, 1091, NULL },
+   { (void *) 23386, 1092, NULL },
+   { (void *) 23407, 1093, NULL },
+   { (void *) 23432, 534, NULL },
+   { (void *) 23448, 534, NULL },
+   { (void *) 23467, 931, NULL },
+   { (void *) 23491, 931, NULL },
+   { (void *) 23518, 126, NULL },
+   { (void *) 23527, 127, NULL },
+   { (void *) 23537, 128, NULL },
+   { (void *) 23546, 129, NULL },
+   { (void *) 23556, 130, NULL },
+   { (void *) 23565, 131, NULL },
+   { (void *) 23575, 132, NULL },
+   { (void *) 23584, 133, NULL },
+   { (void *) 23594, 134, NULL },
+   { (void *) 23603, 135, NULL },
+   { (void *) 23613, 136, NULL },
+   { (void *) 23622, 137, NULL },
+   { (void *) 23632, 138, NULL },
+   { (void *) 23641, 139, NULL },
+   { (void *) 23651, 140, NULL },
+   { (void *) 23660, 141, NULL },
+   { (void *) 23670, 142, NULL },
+   { (void *) 23679, 143, NULL },
+   { (void *) 23689, 144, NULL },
+   { (void *) 23698, 145, NULL },
+   { (void *) 23708, 146, NULL },
+   { (void *) 23717, 147, NULL },
+   { (void *) 23727, 148, NULL },
+   { (void *) 23736, 149, NULL },
+   { (void *) 23746, 535, NULL },
+   { (void *) 23761, 535, NULL },
+   { (void *) 23779, 973, NULL },
+   { (void *) 23796, 536, NULL },
+   { (void *) 23812, 536, NULL },
+   { (void *) 23831, 974, NULL },
+   { (void *) 23849, 640, NULL },
+   { (void *) 23864, 640, NULL },
+   { (void *) 23882, 975, NULL },
+   { (void *) 23899, 641, NULL },
+   { (void *) 23915, 641, NULL },
+   { (void *) 23934, 976, NULL },
+   { (void *) 23952, 537, NULL },
+   { (void *) 23967, 537, NULL },
+   { (void *) 23985, 977, NULL },
+   { (void *) 24002, 538, NULL },
+   { (void *) 24018, 538, NULL },
+   { (void *) 24037, 978, NULL },
+   { (void *) 24055, 539, NULL },
+   { (void *) 24070, 539, NULL },
+   { (void *) 24088, 979, NULL },
+   { (void *) 24105, 540, NULL },
+   { (void *) 24121, 540, NULL },
+   { (void *) 24140, 980, NULL },
+   { (void *) 24158, 642, NULL },
+   { (void *) 24173, 642, NULL },
+   { (void *) 24191, 981, NULL },
+   { (void *) 24208, 643, NULL },
+   { (void *) 24224, 643, NULL },
+   { (void *) 24243, 982, NULL },
+   { (void *) 24261, 541, NULL },
+   { (void *) 24276, 541, NULL },
+   { (void *) 24294, 983, NULL },
+   { (void *) 24311, 542, NULL },
+   { (void *) 24327, 542, NULL },
+   { (void *) 24346, 984, NULL },
+   { (void *) 24364, 543, NULL },
+   { (void *) 24379, 543, NULL },
+   { (void *) 24397, 985, NULL },
+   { (void *) 24414, 544, NULL },
+   { (void *) 24430, 544, NULL },
+   { (void *) 24449, 986, NULL },
+   { (void *) 24467, 644, NULL },
+   { (void *) 24482, 644, NULL },
+   { (void *) 24500, 987, NULL },
+   { (void *) 24517, 645, NULL },
+   { (void *) 24533, 645, NULL },
+   { (void *) 24552, 988, NULL },
+   { (void *) 24570, 545, NULL },
+   { (void *) 24585, 545, NULL },
+   { (void *) 24603, 989, NULL },
+   { (void *) 24620, 546, NULL },
+   { (void *) 24636, 546, NULL },
+   { (void *) 24655, 990, NULL },
+   { (void *) 24673, 547, NULL },
+   { (void *) 24690, 547, NULL },
+   { (void *) 24710, 548, NULL },
+   { (void *) 24727, 548, NULL },
+   { (void *) 24747, 549, NULL },
+   { (void *) 24764, 549, NULL },
+   { (void *) 24784, 550, NULL },
+   { (void *) 24801, 550, NULL },
+   { (void *) 24821, 551, NULL },
+   { (void *) 24839, 551, NULL },
+   { (void *) 24860, 552, NULL },
+   { (void *) 24878, 552, NULL },
+   { (void *) 24899, 553, NULL },
+   { (void *) 24917, 553, NULL },
+   { (void *) 24938, 554, NULL },
+   { (void *) 24954, 554, NULL },
+   { (void *) 24973, 555, NULL },
+   { (void *) 24988, 555, NULL },
+   { (void *) 25006, 991, NULL },
+   { (void *) 25023, 556, NULL },
+   { (void *) 25039, 556, NULL },
+   { (void *) 25058, 992, NULL },
+   { (void *) 25076, 646, NULL },
+   { (void *) 25091, 646, NULL },
+   { (void *) 25109, 993, NULL },
+   { (void *) 25126, 647, NULL },
+   { (void *) 25142, 647, NULL },
+   { (void *) 25161, 994, NULL },
+   { (void *) 25179, 557, NULL },
+   { (void *) 25195, 557, NULL },
+   { (void *) 25214, 558, NULL },
+   { (void *) 25229, 558, NULL },
+   { (void *) 25247, 995, NULL },
+   { (void *) 25264, 559, NULL },
+   { (void *) 25280, 559, NULL },
+   { (void *) 25299, 996, NULL },
+   { (void *) 25317, 997, NULL },
+   { (void *) 25335, 560, NULL },
+   { (void *) 25352, 560, NULL },
+   { (void *) 25372, 998, NULL },
+   { (void *) 25391, 561, NULL },
+   { (void *) 25408, 561, NULL },
+   { (void *) 25428, 562, NULL },
+   { (void *) 25445, 562, NULL },
+   { (void *) 25465, 844, NULL },
+   { (void *) 25485, 619, NULL },
+   { (void *) 25505, 619, NULL },
+   { (void *) 25528, 845, NULL },
+   { (void *) 25547, 1049, NULL },
+   { (void *) 25563, 1049, NULL },
+   { (void *) 25582, 607, NULL },
+   { (void *) 25599, 607, NULL },
+   { (void *) 25619, 1050, NULL },
+   { (void *) 25636, 1050, NULL },
+   { (void *) 25656, 608, NULL },
+   { (void *) 25674, 608, NULL },
+   { (void *) 25695, 1051, NULL },
+   { (void *) 25711, 1051, NULL },
+   { (void *) 25730, 1052, NULL },
+   { (void *) 25747, 1052, NULL },
+   { (void *) 25767, 1053, NULL },
+   { (void *) 25784, 1053, NULL },
+   { (void *) 25804, 1054, NULL },
+   { (void *) 25822, 1054, NULL },
+   { (void *) 25843, 1055, NULL },
+   { (void *) 25859, 1055, NULL },
+   { (void *) 25878, 1056, NULL },
+   { (void *) 25895, 1056, NULL },
+   { (void *) 25915, 1057, NULL },
+   { (void *) 25932, 1057, NULL },
+   { (void *) 25952, 1058, NULL },
+   { (void *) 25970, 1058, NULL },
+   { (void *) 25991, 609, NULL },
+   { (void *) 26008, 609, NULL },
+   { (void *) 26028, 1059, NULL },
+   { (void *) 26044, 1059, NULL },
+   { (void *) 26063, 1060, NULL },
+   { (void *) 26080, 1060, NULL },
+   { (void *) 26100, 610, NULL },
+   { (void *) 26117, 610, NULL },
+   { (void *) 26137, 611, NULL },
+   { (void *) 26155, 611, NULL },
+   { (void *) 26176, 1061, NULL },
+   { (void *) 26193, 1061, NULL },
+   { (void *) 26213, 1062, NULL },
+   { (void *) 26231, 1062, NULL },
+   { (void *) 26252, 612, NULL },
+   { (void *) 26270, 612, NULL },
+   { (void *) 26291, 846, NULL },
+   { (void *) 26311, 613, NULL },
+   { (void *) 26332, 613, NULL },
+   { (void *) 26356, 847, NULL },
+   { (void *) 26376, 758, NULL },
+   { (void *) 26393, 759, NULL },
+   { (void *) 26411, 760, NULL },
+   { (void *) 26428, 761, NULL },
+   { (void *) 26446, 762, NULL },
+   { (void *) 26463, 763, NULL },
+   { (void *) 26481, 764, NULL },
+   { (void *) 26498, 765, NULL },
+   { (void *) 26516, 563, NULL },
+   { (void *) 26536, 563, NULL },
+   { (void *) 26559, 999, NULL },
+   { (void *) 26581, 1000, NULL },
+   { (void *) 26600, 1001, NULL },
+   { (void *) 26619, 1002, NULL },
+   { (void *) 26638, 1003, NULL },
+   { (void *) 26657, 1004, NULL },
+   { (void *) 26676, 1005, NULL },
+   { (void *) 26695, 1006, NULL },
+   { (void *) 26714, 1007, NULL },
+   { (void *) 26733, 1008, NULL },
+   { (void *) 26752, 1009, NULL },
+   { (void *) 26771, 1010, NULL },
+   { (void *) 26790, 1011, NULL },
+   { (void *) 26809, 1012, NULL },
+   { (void *) 26829, 848, NULL },
+   { (void *) 26850, 766, NULL },
+   { (void *) 26861, 767, NULL },
+   { (void *) 26873, 768, NULL },
+   { (void *) 26884, 769, NULL },
+   { (void *) 26896, 770, NULL },
+   { (void *) 26907, 771, NULL },
+   { (void *) 26919, 321, NULL },
+   { (void *) 26933, 885, NULL },
+   { (void *) 26950, 305, NULL },
+   { (void *) 26959, 800, NULL },
+   { (void *) 26974, 801, NULL },
+   { (void *) 26991, 802, NULL },
+   { (void *) 27009, 701, NULL },
+   { (void *) 27018, 444, NULL },
+   { (void *) 27030, 444, NULL },
+   { (void *) 27045, 444, NULL },
+   { (void *) 27061, 445, NULL },
+   { (void *) 27074, 445, NULL },
+   { (void *) 27090, 445, NULL },
+   { (void *) 27107, 446, NULL },
+   { (void *) 27119, 446, NULL },
+   { (void *) 27134, 446, NULL },
+   { (void *) 27150, 447, NULL },
+   { (void *) 27163, 447, NULL },
+   { (void *) 27179, 447, NULL },
+   { (void *) 27196, 448, NULL },
+   { (void *) 27208, 448, NULL },
+   { (void *) 27223, 448, NULL },
+   { (void *) 27239, 449, NULL },
+   { (void *) 27252, 449, NULL },
+   { (void *) 27268, 449, NULL },
+   { (void *) 27285, 450, NULL },
+   { (void *) 27297, 450, NULL },
+   { (void *) 27312, 450, NULL },
+   { (void *) 27328, 451, NULL },
+   { (void *) 27341, 451, NULL },
+   { (void *) 27357, 451, NULL },
+   { (void *) 27374, 452, NULL },
+   { (void *) 27386, 452, NULL },
+   { (void *) 27401, 452, NULL },
+   { (void *) 27417, 453, NULL },
+   { (void *) 27430, 453, NULL },
+   { (void *) 27446, 453, NULL },
+   { (void *) 27463, 454, NULL },
+   { (void *) 27475, 454, NULL },
+   { (void *) 27490, 454, NULL },
+   { (void *) 27506, 455, NULL },
+   { (void *) 27519, 455, NULL },
+   { (void *) 27535, 455, NULL },
+   { (void *) 27552, 456, NULL },
+   { (void *) 27564, 456, NULL },
+   { (void *) 27579, 456, NULL },
+   { (void *) 27595, 457, NULL },
+   { (void *) 27608, 457, NULL },
+   { (void *) 27624, 457, NULL },
+   { (void *) 27641, 458, NULL },
+   { (void *) 27653, 458, NULL },
+   { (void *) 27668, 458, NULL },
+   { (void *) 27684, 459, NULL },
+   { (void *) 27697, 459, NULL },
+   { (void *) 27713, 459, NULL },
+   { (void *) 27730, 948, NULL },
+   { (void *) 27746, 949, NULL },
+   { (void *) 27763, 950, NULL },
+   { (void *) 27779, 951, NULL },
+   { (void *) 27796, 952, NULL },
+   { (void *) 27812, 953, NULL },
+   { (void *) 27829, 954, NULL },
+   { (void *) 27845, 955, NULL }
 };
 #undef MAPI_TMP_PUBLIC_STUBS
 #endif /* MAPI_TMP_PUBLIC_STUBS */
@@ -17224,333 +18601,333 @@ void APIENTRY shared_dispatch_stub_619(GLuint index, GLuint divisor)
    ((void (APIENTRY *)(GLuint index, GLuint divisor)) _func)(index, divisor);
 }
 
-void APIENTRY shared_dispatch_stub_620(GLenum target, GLuint program)
+void APIENTRY shared_dispatch_stub_620(GLfloat value)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[620];
-   ((void (APIENTRY *)(GLenum target, GLuint program)) _func)(target, program);
+   ((void (APIENTRY *)(GLfloat value)) _func)(value);
 }
 
-void APIENTRY shared_dispatch_stub_621(GLsizei n, const GLuint *programs)
+void APIENTRY shared_dispatch_stub_621(GLenum target, GLuint program)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[621];
-   ((void (APIENTRY *)(GLsizei n, const GLuint *programs)) _func)(n, programs);
+   ((void (APIENTRY *)(GLenum target, GLuint program)) _func)(target, program);
 }
 
-void APIENTRY shared_dispatch_stub_622(GLsizei n, GLuint *programs)
+void APIENTRY shared_dispatch_stub_622(GLsizei n, const GLuint *programs)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[622];
-   ((void (APIENTRY *)(GLsizei n, GLuint *programs)) _func)(n, programs);
+   ((void (APIENTRY *)(GLsizei n, const GLuint *programs)) _func)(n, programs);
 }
 
-void APIENTRY shared_dispatch_stub_623(GLenum target, GLuint index, GLdouble *params)
+void APIENTRY shared_dispatch_stub_623(GLsizei n, GLuint *programs)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[623];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLdouble *params)) _func)(target, index, params);
+   ((void (APIENTRY *)(GLsizei n, GLuint *programs)) _func)(n, programs);
 }
 
-void APIENTRY shared_dispatch_stub_624(GLenum target, GLuint index, GLfloat *params)
+void APIENTRY shared_dispatch_stub_624(GLenum target, GLuint index, GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[624];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLfloat *params)) _func)(target, index, params);
-}
-
-void APIENTRY shared_dispatch_stub_625(GLenum target, GLuint index, GLdouble *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[625];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLdouble *params)) _func)(target, index, params);
 }
 
-void APIENTRY shared_dispatch_stub_626(GLenum target, GLuint index, GLfloat *params)
+void APIENTRY shared_dispatch_stub_625(GLenum target, GLuint index, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[626];
+   mapi_func _func = ((const mapi_func *) _tbl)[625];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLfloat *params)) _func)(target, index, params);
 }
 
-void APIENTRY shared_dispatch_stub_627(GLenum target, GLenum pname, GLvoid *string)
+void APIENTRY shared_dispatch_stub_626(GLenum target, GLuint index, GLdouble *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[626];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLdouble *params)) _func)(target, index, params);
+}
+
+void APIENTRY shared_dispatch_stub_627(GLenum target, GLuint index, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[627];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, GLvoid *string)) _func)(target, pname, string);
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLfloat *params)) _func)(target, index, params);
 }
 
-void APIENTRY shared_dispatch_stub_628(GLenum target, GLenum pname, GLint *params)
+void APIENTRY shared_dispatch_stub_628(GLenum target, GLenum pname, GLvoid *string)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[628];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, GLint *params)) _func)(target, pname, params);
+   ((void (APIENTRY *)(GLenum target, GLenum pname, GLvoid *string)) _func)(target, pname, string);
 }
 
-GLboolean APIENTRY shared_dispatch_stub_629(GLuint program)
+void APIENTRY shared_dispatch_stub_629(GLenum target, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[629];
-   return ((GLboolean (APIENTRY *)(GLuint program)) _func)(program);
+   ((void (APIENTRY *)(GLenum target, GLenum pname, GLint *params)) _func)(target, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_630(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+GLboolean APIENTRY shared_dispatch_stub_630(GLuint program)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[630];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(target, index, x, y, z, w);
+   return ((GLboolean (APIENTRY *)(GLuint program)) _func)(program);
 }
 
-void APIENTRY shared_dispatch_stub_631(GLenum target, GLuint index, const GLdouble *params)
+void APIENTRY shared_dispatch_stub_631(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[631];
-   ((void (APIENTRY *)(GLenum target, GLuint index, const GLdouble *params)) _func)(target, index, params);
-}
-
-void APIENTRY shared_dispatch_stub_632(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[632];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(target, index, x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_633(GLenum target, GLuint index, const GLfloat *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[633];
-   ((void (APIENTRY *)(GLenum target, GLuint index, const GLfloat *params)) _func)(target, index, params);
-}
-
-void APIENTRY shared_dispatch_stub_634(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[634];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(target, index, x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_635(GLenum target, GLuint index, const GLdouble *params)
+void APIENTRY shared_dispatch_stub_632(GLenum target, GLuint index, const GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[635];
+   mapi_func _func = ((const mapi_func *) _tbl)[632];
    ((void (APIENTRY *)(GLenum target, GLuint index, const GLdouble *params)) _func)(target, index, params);
 }
 
-void APIENTRY shared_dispatch_stub_636(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+void APIENTRY shared_dispatch_stub_633(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[636];
+   mapi_func _func = ((const mapi_func *) _tbl)[633];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(target, index, x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_637(GLenum target, GLuint index, const GLfloat *params)
+void APIENTRY shared_dispatch_stub_634(GLenum target, GLuint index, const GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[637];
+   mapi_func _func = ((const mapi_func *) _tbl)[634];
    ((void (APIENTRY *)(GLenum target, GLuint index, const GLfloat *params)) _func)(target, index, params);
 }
 
-void APIENTRY shared_dispatch_stub_638(GLenum target, GLenum format, GLsizei len, const GLvoid *string)
+void APIENTRY shared_dispatch_stub_635(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[635];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(target, index, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_636(GLenum target, GLuint index, const GLdouble *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[636];
+   ((void (APIENTRY *)(GLenum target, GLuint index, const GLdouble *params)) _func)(target, index, params);
+}
+
+void APIENTRY shared_dispatch_stub_637(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[637];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(target, index, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_638(GLenum target, GLuint index, const GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[638];
-   ((void (APIENTRY *)(GLenum target, GLenum format, GLsizei len, const GLvoid *string)) _func)(target, format, len, string);
+   ((void (APIENTRY *)(GLenum target, GLuint index, const GLfloat *params)) _func)(target, index, params);
 }
 
-void APIENTRY shared_dispatch_stub_639(GLuint index, GLfloat x)
+void APIENTRY shared_dispatch_stub_639(GLenum target, GLenum format, GLsizei len, const GLvoid *string)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[639];
-   ((void (APIENTRY *)(GLuint index, GLfloat x)) _func)(index, x);
+   ((void (APIENTRY *)(GLenum target, GLenum format, GLsizei len, const GLvoid *string)) _func)(target, format, len, string);
 }
 
-void APIENTRY shared_dispatch_stub_640(GLuint index, const GLfloat *v)
+void APIENTRY shared_dispatch_stub_640(GLuint index, GLfloat x)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[640];
-   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLuint index, GLfloat x)) _func)(index, x);
 }
 
-void APIENTRY shared_dispatch_stub_641(GLuint index, GLfloat x, GLfloat y)
+void APIENTRY shared_dispatch_stub_641(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[641];
-   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y)) _func)(index, x, y);
+   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_642(GLuint index, const GLfloat *v)
+void APIENTRY shared_dispatch_stub_642(GLuint index, GLfloat x, GLfloat y)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[642];
-   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y)) _func)(index, x, y);
 }
 
-void APIENTRY shared_dispatch_stub_643(GLuint index, GLfloat x, GLfloat y, GLfloat z)
+void APIENTRY shared_dispatch_stub_643(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[643];
-   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z)) _func)(index, x, y, z);
+   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_644(GLuint index, const GLfloat *v)
+void APIENTRY shared_dispatch_stub_644(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[644];
-   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z)) _func)(index, x, y, z);
 }
 
-void APIENTRY shared_dispatch_stub_645(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+void APIENTRY shared_dispatch_stub_645(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[645];
-   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(index, x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_646(GLuint index, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[646];
    ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_647(GLhandleARB containerObj, GLhandleARB obj)
+void APIENTRY shared_dispatch_stub_646(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[646];
+   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(index, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_647(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[647];
-   ((void (APIENTRY *)(GLhandleARB containerObj, GLhandleARB obj)) _func)(containerObj, obj);
+   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
-GLhandleARB APIENTRY shared_dispatch_stub_648(void)
+void APIENTRY shared_dispatch_stub_648(GLhandleARB containerObj, GLhandleARB obj)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[648];
-   return ((GLhandleARB (APIENTRY *)(void)) _func)();
+   ((void (APIENTRY *)(GLhandleARB containerObj, GLhandleARB obj)) _func)(containerObj, obj);
 }
 
-GLhandleARB APIENTRY shared_dispatch_stub_649(GLenum shaderType)
+GLhandleARB APIENTRY shared_dispatch_stub_649(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[649];
-   return ((GLhandleARB (APIENTRY *)(GLenum shaderType)) _func)(shaderType);
+   return ((GLhandleARB (APIENTRY *)(void)) _func)();
 }
 
-void APIENTRY shared_dispatch_stub_650(GLhandleARB obj)
+GLhandleARB APIENTRY shared_dispatch_stub_650(GLenum shaderType)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[650];
-   ((void (APIENTRY *)(GLhandleARB obj)) _func)(obj);
+   return ((GLhandleARB (APIENTRY *)(GLenum shaderType)) _func)(shaderType);
 }
 
-void APIENTRY shared_dispatch_stub_651(GLhandleARB containerObj, GLhandleARB attachedObj)
+void APIENTRY shared_dispatch_stub_651(GLhandleARB obj)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[651];
-   ((void (APIENTRY *)(GLhandleARB containerObj, GLhandleARB attachedObj)) _func)(containerObj, attachedObj);
+   ((void (APIENTRY *)(GLhandleARB obj)) _func)(obj);
 }
 
-void APIENTRY shared_dispatch_stub_652(GLhandleARB containerObj, GLsizei maxLength, GLsizei *length, GLhandleARB *infoLog)
+void APIENTRY shared_dispatch_stub_652(GLhandleARB containerObj, GLhandleARB attachedObj)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[652];
-   ((void (APIENTRY *)(GLhandleARB containerObj, GLsizei maxLength, GLsizei *length, GLhandleARB *infoLog)) _func)(containerObj, maxLength, length, infoLog);
+   ((void (APIENTRY *)(GLhandleARB containerObj, GLhandleARB attachedObj)) _func)(containerObj, attachedObj);
 }
 
-GLhandleARB APIENTRY shared_dispatch_stub_653(GLenum pname)
+void APIENTRY shared_dispatch_stub_653(GLhandleARB containerObj, GLsizei maxLength, GLsizei *length, GLhandleARB *infoLog)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[653];
-   return ((GLhandleARB (APIENTRY *)(GLenum pname)) _func)(pname);
+   ((void (APIENTRY *)(GLhandleARB containerObj, GLsizei maxLength, GLsizei *length, GLhandleARB *infoLog)) _func)(containerObj, maxLength, length, infoLog);
 }
 
-void APIENTRY shared_dispatch_stub_654(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog)
+GLhandleARB APIENTRY shared_dispatch_stub_654(GLenum pname)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[654];
-   ((void (APIENTRY *)(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog)) _func)(obj, maxLength, length, infoLog);
+   return ((GLhandleARB (APIENTRY *)(GLenum pname)) _func)(pname);
 }
 
-void APIENTRY shared_dispatch_stub_655(GLhandleARB obj, GLenum pname, GLfloat *params)
+void APIENTRY shared_dispatch_stub_655(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[655];
-   ((void (APIENTRY *)(GLhandleARB obj, GLenum pname, GLfloat *params)) _func)(obj, pname, params);
+   ((void (APIENTRY *)(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog)) _func)(obj, maxLength, length, infoLog);
 }
 
-void APIENTRY shared_dispatch_stub_656(GLhandleARB obj, GLenum pname, GLint *params)
+void APIENTRY shared_dispatch_stub_656(GLhandleARB obj, GLenum pname, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[656];
-   ((void (APIENTRY *)(GLhandleARB obj, GLenum pname, GLint *params)) _func)(obj, pname, params);
+   ((void (APIENTRY *)(GLhandleARB obj, GLenum pname, GLfloat *params)) _func)(obj, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_657(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+void APIENTRY shared_dispatch_stub_657(GLhandleARB obj, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[657];
-   ((void (APIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)) _func)(mode, first, count, primcount);
+   ((void (APIENTRY *)(GLhandleARB obj, GLenum pname, GLint *params)) _func)(obj, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_658(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
+void APIENTRY shared_dispatch_stub_658(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[658];
-   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
+   ((void (APIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)) _func)(mode, first, count, primcount);
 }
 
-void APIENTRY shared_dispatch_stub_659(GLenum target, GLuint framebuffer)
+void APIENTRY shared_dispatch_stub_659(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[659];
-   ((void (APIENTRY *)(GLenum target, GLuint framebuffer)) _func)(target, framebuffer);
+   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
 }
 
-void APIENTRY shared_dispatch_stub_660(GLenum target, GLuint renderbuffer)
+void APIENTRY shared_dispatch_stub_660(GLenum target, GLuint framebuffer)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[660];
-   ((void (APIENTRY *)(GLenum target, GLuint renderbuffer)) _func)(target, renderbuffer);
+   ((void (APIENTRY *)(GLenum target, GLuint framebuffer)) _func)(target, framebuffer);
 }
 
-void APIENTRY shared_dispatch_stub_661(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
+void APIENTRY shared_dispatch_stub_661(GLenum target, GLuint renderbuffer)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[661];
-   ((void (APIENTRY *)(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)) _func)(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+   ((void (APIENTRY *)(GLenum target, GLuint renderbuffer)) _func)(target, renderbuffer);
 }
 
-GLenum APIENTRY shared_dispatch_stub_662(GLenum target)
+void APIENTRY shared_dispatch_stub_662(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[662];
-   return ((GLenum (APIENTRY *)(GLenum target)) _func)(target);
+   ((void (APIENTRY *)(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)) _func)(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 }
 
-void APIENTRY shared_dispatch_stub_663(GLsizei n, const GLuint *framebuffers)
+GLenum APIENTRY shared_dispatch_stub_663(GLenum target)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[663];
-   ((void (APIENTRY *)(GLsizei n, const GLuint *framebuffers)) _func)(n, framebuffers);
+   return ((GLenum (APIENTRY *)(GLenum target)) _func)(target);
 }
 
-void APIENTRY shared_dispatch_stub_664(GLsizei n, const GLuint *renderbuffers)
+void APIENTRY shared_dispatch_stub_664(GLsizei n, const GLuint *framebuffers)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[664];
-   ((void (APIENTRY *)(GLsizei n, const GLuint *renderbuffers)) _func)(n, renderbuffers);
+   ((void (APIENTRY *)(GLsizei n, const GLuint *framebuffers)) _func)(n, framebuffers);
 }
 
-void APIENTRY shared_dispatch_stub_665(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
+void APIENTRY shared_dispatch_stub_665(GLsizei n, const GLuint *renderbuffers)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[665];
-   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)) _func)(target, attachment, renderbuffertarget, renderbuffer);
+   ((void (APIENTRY *)(GLsizei n, const GLuint *renderbuffers)) _func)(n, renderbuffers);
 }
 
-void APIENTRY shared_dispatch_stub_666(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+void APIENTRY shared_dispatch_stub_666(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[666];
-   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)) _func)(target, attachment, textarget, texture, level);
+   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)) _func)(target, attachment, renderbuffertarget, renderbuffer);
 }
 
 void APIENTRY shared_dispatch_stub_667(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
@@ -17560,2579 +18937,3391 @@ void APIENTRY shared_dispatch_stub_667(GLenum target, GLenum attachment, GLenum 
    ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)) _func)(target, attachment, textarget, texture, level);
 }
 
-void APIENTRY shared_dispatch_stub_668(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)
+void APIENTRY shared_dispatch_stub_668(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[668];
-   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)) _func)(target, attachment, textarget, texture, level, zoffset);
+   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)) _func)(target, attachment, textarget, texture, level);
 }
 
-void APIENTRY shared_dispatch_stub_669(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
+void APIENTRY shared_dispatch_stub_669(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[669];
-   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)) _func)(target, attachment, texture, level, layer);
+   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)) _func)(target, attachment, textarget, texture, level, zoffset);
 }
 
-void APIENTRY shared_dispatch_stub_670(GLsizei n, GLuint *framebuffers)
+void APIENTRY shared_dispatch_stub_670(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[670];
-   ((void (APIENTRY *)(GLsizei n, GLuint *framebuffers)) _func)(n, framebuffers);
+   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)) _func)(target, attachment, texture, level, layer);
 }
 
-void APIENTRY shared_dispatch_stub_671(GLsizei n, GLuint *renderbuffers)
+void APIENTRY shared_dispatch_stub_671(GLsizei n, GLuint *framebuffers)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[671];
-   ((void (APIENTRY *)(GLsizei n, GLuint *renderbuffers)) _func)(n, renderbuffers);
+   ((void (APIENTRY *)(GLsizei n, GLuint *framebuffers)) _func)(n, framebuffers);
 }
 
-void APIENTRY shared_dispatch_stub_672(GLenum target)
+void APIENTRY shared_dispatch_stub_672(GLsizei n, GLuint *renderbuffers)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[672];
-   ((void (APIENTRY *)(GLenum target)) _func)(target);
+   ((void (APIENTRY *)(GLsizei n, GLuint *renderbuffers)) _func)(n, renderbuffers);
 }
 
-void APIENTRY shared_dispatch_stub_673(GLenum target, GLenum attachment, GLenum pname, GLint *params)
+void APIENTRY shared_dispatch_stub_673(GLenum target)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[673];
-   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum pname, GLint *params)) _func)(target, attachment, pname, params);
+   ((void (APIENTRY *)(GLenum target)) _func)(target);
 }
 
-void APIENTRY shared_dispatch_stub_674(GLenum target, GLenum pname, GLint *params)
+void APIENTRY shared_dispatch_stub_674(GLenum target, GLenum attachment, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[674];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, GLint *params)) _func)(target, pname, params);
+   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLenum pname, GLint *params)) _func)(target, attachment, pname, params);
 }
 
-GLboolean APIENTRY shared_dispatch_stub_675(GLuint framebuffer)
+void APIENTRY shared_dispatch_stub_675(GLenum target, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[675];
-   return ((GLboolean (APIENTRY *)(GLuint framebuffer)) _func)(framebuffer);
+   ((void (APIENTRY *)(GLenum target, GLenum pname, GLint *params)) _func)(target, pname, params);
 }
 
-GLboolean APIENTRY shared_dispatch_stub_676(GLuint renderbuffer)
+GLboolean APIENTRY shared_dispatch_stub_676(GLuint framebuffer)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[676];
-   return ((GLboolean (APIENTRY *)(GLuint renderbuffer)) _func)(renderbuffer);
+   return ((GLboolean (APIENTRY *)(GLuint framebuffer)) _func)(framebuffer);
 }
 
-void APIENTRY shared_dispatch_stub_677(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
+GLboolean APIENTRY shared_dispatch_stub_677(GLuint renderbuffer)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[677];
-   ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)) _func)(target, internalformat, width, height);
+   return ((GLboolean (APIENTRY *)(GLuint renderbuffer)) _func)(renderbuffer);
 }
 
-void APIENTRY shared_dispatch_stub_678(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
+void APIENTRY shared_dispatch_stub_678(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[678];
-   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)) _func)(target, samples, internalformat, width, height);
+   ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)) _func)(target, internalformat, width, height);
 }
 
-void APIENTRY shared_dispatch_stub_679(GLenum target, GLenum attachment, GLuint texture, GLint level, GLenum face)
+void APIENTRY shared_dispatch_stub_679(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[679];
-   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLenum face)) _func)(target, attachment, texture, level, face);
+   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)) _func)(target, samples, internalformat, width, height);
 }
 
-void APIENTRY shared_dispatch_stub_680(GLenum target, GLintptr offset, GLsizeiptr length)
+void APIENTRY shared_dispatch_stub_680(GLenum target, GLenum attachment, GLuint texture, GLint level, GLenum face)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[680];
-   ((void (APIENTRY *)(GLenum target, GLintptr offset, GLsizeiptr length)) _func)(target, offset, length);
+   ((void (APIENTRY *)(GLenum target, GLenum attachment, GLuint texture, GLint level, GLenum face)) _func)(target, attachment, texture, level, face);
 }
 
-GLvoid * APIENTRY shared_dispatch_stub_681(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access)
+void APIENTRY shared_dispatch_stub_681(GLenum target, GLintptr offset, GLsizeiptr length)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[681];
-   return ((GLvoid * (APIENTRY *)(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access)) _func)(target, offset, length, access);
+   ((void (APIENTRY *)(GLenum target, GLintptr offset, GLsizeiptr length)) _func)(target, offset, length);
 }
 
-void APIENTRY shared_dispatch_stub_682(GLuint array)
+GLvoid * APIENTRY shared_dispatch_stub_682(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[682];
-   ((void (APIENTRY *)(GLuint array)) _func)(array);
+   return ((GLvoid * (APIENTRY *)(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access)) _func)(target, offset, length, access);
 }
 
-void APIENTRY shared_dispatch_stub_683(GLsizei n, const GLuint *arrays)
+void APIENTRY shared_dispatch_stub_683(GLuint array)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[683];
-   ((void (APIENTRY *)(GLsizei n, const GLuint *arrays)) _func)(n, arrays);
-}
-
-void APIENTRY shared_dispatch_stub_684(GLsizei n, GLuint *arrays)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[684];
-   ((void (APIENTRY *)(GLsizei n, GLuint *arrays)) _func)(n, arrays);
-}
-
-GLboolean APIENTRY shared_dispatch_stub_685(GLuint array)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[685];
-   return ((GLboolean (APIENTRY *)(GLuint array)) _func)(array);
-}
-
-void APIENTRY shared_dispatch_stub_686(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[686];
-   ((void (APIENTRY *)(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName)) _func)(program, uniformBlockIndex, bufSize, length, uniformBlockName);
-}
-
-void APIENTRY shared_dispatch_stub_687(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[687];
-   ((void (APIENTRY *)(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params)) _func)(program, uniformBlockIndex, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_688(GLuint program, GLuint uniformIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformName)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[688];
-   ((void (APIENTRY *)(GLuint program, GLuint uniformIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformName)) _func)(program, uniformIndex, bufSize, length, uniformName);
-}
-
-void APIENTRY shared_dispatch_stub_689(GLuint program, GLsizei uniformCount, const GLuint *uniformIndices, GLenum pname, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[689];
-   ((void (APIENTRY *)(GLuint program, GLsizei uniformCount, const GLuint *uniformIndices, GLenum pname, GLint *params)) _func)(program, uniformCount, uniformIndices, pname, params);
-}
-
-GLuint APIENTRY shared_dispatch_stub_690(GLuint program, const GLchar *uniformBlockName)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[690];
-   return ((GLuint (APIENTRY *)(GLuint program, const GLchar *uniformBlockName)) _func)(program, uniformBlockName);
-}
-
-void APIENTRY shared_dispatch_stub_691(GLuint program, GLsizei uniformCount, const GLchar * const *uniformNames, GLuint *uniformIndices)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[691];
-   ((void (APIENTRY *)(GLuint program, GLsizei uniformCount, const GLchar * const *uniformNames, GLuint *uniformIndices)) _func)(program, uniformCount, uniformNames, uniformIndices);
-}
-
-void APIENTRY shared_dispatch_stub_692(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[692];
-   ((void (APIENTRY *)(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding)) _func)(program, uniformBlockIndex, uniformBlockBinding);
-}
-
-void APIENTRY shared_dispatch_stub_693(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[693];
-   ((void (APIENTRY *)(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)) _func)(readTarget, writeTarget, readOffset, writeOffset, size);
-}
-
-GLenum APIENTRY shared_dispatch_stub_694(GLsync sync, GLbitfield flags, GLuint64 timeout)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[694];
-   return ((GLenum (APIENTRY *)(GLsync sync, GLbitfield flags, GLuint64 timeout)) _func)(sync, flags, timeout);
-}
-
-void APIENTRY shared_dispatch_stub_695(GLsync sync)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[695];
-   ((void (APIENTRY *)(GLsync sync)) _func)(sync);
-}
-
-GLsync APIENTRY shared_dispatch_stub_696(GLenum condition, GLbitfield flags)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[696];
-   return ((GLsync (APIENTRY *)(GLenum condition, GLbitfield flags)) _func)(condition, flags);
-}
-
-void APIENTRY shared_dispatch_stub_697(GLenum pname, GLint64 *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[697];
-   ((void (APIENTRY *)(GLenum pname, GLint64 *params)) _func)(pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_698(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[698];
-   ((void (APIENTRY *)(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)) _func)(sync, pname, bufSize, length, values);
-}
-
-GLboolean APIENTRY shared_dispatch_stub_699(GLsync sync)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[699];
-   return ((GLboolean (APIENTRY *)(GLsync sync)) _func)(sync);
-}
-
-void APIENTRY shared_dispatch_stub_700(GLsync sync, GLbitfield flags, GLuint64 timeout)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[700];
-   ((void (APIENTRY *)(GLsync sync, GLbitfield flags, GLuint64 timeout)) _func)(sync, flags, timeout);
-}
-
-void APIENTRY shared_dispatch_stub_701(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[701];
-   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)) _func)(mode, count, type, indices, basevertex);
-}
-
-void APIENTRY shared_dispatch_stub_702(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[702];
-   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex)) _func)(mode, count, type, indices, primcount, basevertex);
-}
-
-void APIENTRY shared_dispatch_stub_703(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[703];
-   ((void (APIENTRY *)(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)) _func)(mode, start, end, count, type, indices, basevertex);
-}
-
-void APIENTRY shared_dispatch_stub_704(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, const GLint *basevertex)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[704];
-   ((void (APIENTRY *)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, const GLint *basevertex)) _func)(mode, count, type, indices, primcount, basevertex);
-}
-
-void APIENTRY shared_dispatch_stub_705(GLenum mode)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[705];
-   ((void (APIENTRY *)(GLenum mode)) _func)(mode);
-}
-
-void APIENTRY shared_dispatch_stub_706(GLenum pname, GLuint index, GLfloat *val)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[706];
-   ((void (APIENTRY *)(GLenum pname, GLuint index, GLfloat *val)) _func)(pname, index, val);
-}
-
-void APIENTRY shared_dispatch_stub_707(GLuint index, GLbitfield mask)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[707];
-   ((void (APIENTRY *)(GLuint index, GLbitfield mask)) _func)(index, mask);
-}
-
-void APIENTRY shared_dispatch_stub_708(GLenum target, GLsizei samples, GLint internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[708];
-   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLint internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, fixedsamplelocations);
-}
-
-void APIENTRY shared_dispatch_stub_709(GLenum target, GLsizei samples, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[709];
-   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, depth, fixedsamplelocations);
-}
-
-void APIENTRY shared_dispatch_stub_710(GLuint buf, GLenum modeRGB, GLenum modeA)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[710];
-   ((void (APIENTRY *)(GLuint buf, GLenum modeRGB, GLenum modeA)) _func)(buf, modeRGB, modeA);
-}
-
-void APIENTRY shared_dispatch_stub_711(GLuint buf, GLenum mode)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[711];
-   ((void (APIENTRY *)(GLuint buf, GLenum mode)) _func)(buf, mode);
-}
-
-void APIENTRY shared_dispatch_stub_712(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcA, GLenum dstA)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[712];
-   ((void (APIENTRY *)(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcA, GLenum dstA)) _func)(buf, srcRGB, dstRGB, srcA, dstA);
-}
-
-void APIENTRY shared_dispatch_stub_713(GLuint buf, GLenum src, GLenum dst)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[713];
-   ((void (APIENTRY *)(GLuint buf, GLenum src, GLenum dst)) _func)(buf, src, dst);
-}
-
-void APIENTRY shared_dispatch_stub_714(GLuint program, GLuint colorNumber, GLuint index, const GLchar *name)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[714];
-   ((void (APIENTRY *)(GLuint program, GLuint colorNumber, GLuint index, const GLchar *name)) _func)(program, colorNumber, index, name);
-}
-
-GLint APIENTRY shared_dispatch_stub_715(GLuint program, const GLchar *name)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[715];
-   return ((GLint (APIENTRY *)(GLuint program, const GLchar *name)) _func)(program, name);
-}
-
-void APIENTRY shared_dispatch_stub_716(GLuint unit, GLuint sampler)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[716];
-   ((void (APIENTRY *)(GLuint unit, GLuint sampler)) _func)(unit, sampler);
-}
-
-void APIENTRY shared_dispatch_stub_717(GLsizei count, const GLuint *samplers)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[717];
-   ((void (APIENTRY *)(GLsizei count, const GLuint *samplers)) _func)(count, samplers);
-}
-
-void APIENTRY shared_dispatch_stub_718(GLsizei count, GLuint *samplers)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[718];
-   ((void (APIENTRY *)(GLsizei count, GLuint *samplers)) _func)(count, samplers);
-}
-
-void APIENTRY shared_dispatch_stub_719(GLuint sampler, GLenum pname, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[719];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLint *params)) _func)(sampler, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_720(GLuint sampler, GLenum pname, GLuint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[720];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLuint *params)) _func)(sampler, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_721(GLuint sampler, GLenum pname, GLfloat *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[721];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLfloat *params)) _func)(sampler, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_722(GLuint sampler, GLenum pname, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[722];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLint *params)) _func)(sampler, pname, params);
-}
-
-GLboolean APIENTRY shared_dispatch_stub_723(GLuint sampler)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[723];
-   return ((GLboolean (APIENTRY *)(GLuint sampler)) _func)(sampler);
-}
-
-void APIENTRY shared_dispatch_stub_724(GLuint sampler, GLenum pname, const GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[724];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, const GLint *params)) _func)(sampler, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_725(GLuint sampler, GLenum pname, const GLuint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[725];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, const GLuint *params)) _func)(sampler, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_726(GLuint sampler, GLenum pname, GLfloat param)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[726];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLfloat param)) _func)(sampler, pname, param);
-}
-
-void APIENTRY shared_dispatch_stub_727(GLuint sampler, GLenum pname, const GLfloat *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[727];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, const GLfloat *params)) _func)(sampler, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_728(GLuint sampler, GLenum pname, GLint param)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[728];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLint param)) _func)(sampler, pname, param);
-}
-
-void APIENTRY shared_dispatch_stub_729(GLuint sampler, GLenum pname, const GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[729];
-   ((void (APIENTRY *)(GLuint sampler, GLenum pname, const GLint *params)) _func)(sampler, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_730(GLuint id, GLenum pname, GLint64 *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[730];
-   ((void (APIENTRY *)(GLuint id, GLenum pname, GLint64 *params)) _func)(id, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_731(GLuint id, GLenum pname, GLuint64 *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[731];
-   ((void (APIENTRY *)(GLuint id, GLenum pname, GLuint64 *params)) _func)(id, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_732(GLuint id, GLenum target)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[732];
-   ((void (APIENTRY *)(GLuint id, GLenum target)) _func)(id, target);
-}
-
-void APIENTRY shared_dispatch_stub_733(GLenum type, GLuint color)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[733];
-   ((void (APIENTRY *)(GLenum type, GLuint color)) _func)(type, color);
-}
-
-void APIENTRY shared_dispatch_stub_734(GLenum type, const GLuint *color)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[734];
-   ((void (APIENTRY *)(GLenum type, const GLuint *color)) _func)(type, color);
-}
-
-void APIENTRY shared_dispatch_stub_735(GLenum type, GLuint color)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[735];
-   ((void (APIENTRY *)(GLenum type, GLuint color)) _func)(type, color);
-}
-
-void APIENTRY shared_dispatch_stub_736(GLenum type, const GLuint *color)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[736];
-   ((void (APIENTRY *)(GLenum type, const GLuint *color)) _func)(type, color);
-}
-
-void APIENTRY shared_dispatch_stub_737(GLenum texture, GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[737];
-   ((void (APIENTRY *)(GLenum texture, GLenum type, GLuint coords)) _func)(texture, type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_738(GLenum texture, GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[738];
-   ((void (APIENTRY *)(GLenum texture, GLenum type, const GLuint *coords)) _func)(texture, type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_739(GLenum texture, GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[739];
-   ((void (APIENTRY *)(GLenum texture, GLenum type, GLuint coords)) _func)(texture, type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_740(GLenum texture, GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[740];
-   ((void (APIENTRY *)(GLenum texture, GLenum type, const GLuint *coords)) _func)(texture, type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_741(GLenum texture, GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[741];
-   ((void (APIENTRY *)(GLenum texture, GLenum type, GLuint coords)) _func)(texture, type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_742(GLenum texture, GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[742];
-   ((void (APIENTRY *)(GLenum texture, GLenum type, const GLuint *coords)) _func)(texture, type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_743(GLenum texture, GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[743];
-   ((void (APIENTRY *)(GLenum texture, GLenum type, GLuint coords)) _func)(texture, type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_744(GLenum texture, GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[744];
-   ((void (APIENTRY *)(GLenum texture, GLenum type, const GLuint *coords)) _func)(texture, type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_745(GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[745];
-   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_746(GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[746];
-   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_747(GLenum type, GLuint color)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[747];
-   ((void (APIENTRY *)(GLenum type, GLuint color)) _func)(type, color);
-}
-
-void APIENTRY shared_dispatch_stub_748(GLenum type, const GLuint *color)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[748];
-   ((void (APIENTRY *)(GLenum type, const GLuint *color)) _func)(type, color);
-}
-
-void APIENTRY shared_dispatch_stub_749(GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[749];
-   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_750(GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[750];
-   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_751(GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[751];
-   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_752(GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[752];
-   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_753(GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[753];
-   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_754(GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[754];
-   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_755(GLenum type, GLuint coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[755];
-   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_756(GLenum type, const GLuint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[756];
-   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
-}
-
-void APIENTRY shared_dispatch_stub_757(GLuint index, GLenum type, GLboolean normalized, GLuint value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[757];
-   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, GLuint value)) _func)(index, type, normalized, value);
-}
-
-void APIENTRY shared_dispatch_stub_758(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[758];
-   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)) _func)(index, type, normalized, value);
-}
-
-void APIENTRY shared_dispatch_stub_759(GLuint index, GLenum type, GLboolean normalized, GLuint value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[759];
-   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, GLuint value)) _func)(index, type, normalized, value);
-}
-
-void APIENTRY shared_dispatch_stub_760(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[760];
-   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)) _func)(index, type, normalized, value);
-}
-
-void APIENTRY shared_dispatch_stub_761(GLuint index, GLenum type, GLboolean normalized, GLuint value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[761];
-   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, GLuint value)) _func)(index, type, normalized, value);
-}
-
-void APIENTRY shared_dispatch_stub_762(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[762];
-   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)) _func)(index, type, normalized, value);
-}
-
-void APIENTRY shared_dispatch_stub_763(GLuint index, GLenum type, GLboolean normalized, GLuint value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[763];
-   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, GLuint value)) _func)(index, type, normalized, value);
-}
-
-void APIENTRY shared_dispatch_stub_764(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[764];
-   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)) _func)(index, type, normalized, value);
-}
-
-void APIENTRY shared_dispatch_stub_765(GLenum type, GLuint value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[765];
-   ((void (APIENTRY *)(GLenum type, GLuint value)) _func)(type, value);
-}
-
-void APIENTRY shared_dispatch_stub_766(GLenum type, const GLuint *value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[766];
-   ((void (APIENTRY *)(GLenum type, const GLuint *value)) _func)(type, value);
-}
-
-void APIENTRY shared_dispatch_stub_767(GLenum type, GLuint value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[767];
-   ((void (APIENTRY *)(GLenum type, GLuint value)) _func)(type, value);
-}
-
-void APIENTRY shared_dispatch_stub_768(GLenum type, const GLuint *value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[768];
-   ((void (APIENTRY *)(GLenum type, const GLuint *value)) _func)(type, value);
-}
-
-void APIENTRY shared_dispatch_stub_769(GLenum type, GLuint value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[769];
-   ((void (APIENTRY *)(GLenum type, GLuint value)) _func)(type, value);
-}
-
-void APIENTRY shared_dispatch_stub_770(GLenum type, const GLuint *value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[770];
-   ((void (APIENTRY *)(GLenum type, const GLuint *value)) _func)(type, value);
-}
-
-void APIENTRY shared_dispatch_stub_771(GLenum target, GLuint id)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[771];
-   ((void (APIENTRY *)(GLenum target, GLuint id)) _func)(target, id);
-}
-
-void APIENTRY shared_dispatch_stub_772(GLsizei n, const GLuint *ids)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[772];
-   ((void (APIENTRY *)(GLsizei n, const GLuint *ids)) _func)(n, ids);
-}
-
-void APIENTRY shared_dispatch_stub_773(GLenum mode, GLuint id)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[773];
-   ((void (APIENTRY *)(GLenum mode, GLuint id)) _func)(mode, id);
-}
-
-void APIENTRY shared_dispatch_stub_774(GLsizei n, GLuint *ids)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[774];
-   ((void (APIENTRY *)(GLsizei n, GLuint *ids)) _func)(n, ids);
-}
-
-GLboolean APIENTRY shared_dispatch_stub_775(GLuint id)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[775];
-   return ((GLboolean (APIENTRY *)(GLuint id)) _func)(id);
-}
-
-void APIENTRY shared_dispatch_stub_776(void)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[776];
-   ((void (APIENTRY *)(void)) _func)();
-}
-
-void APIENTRY shared_dispatch_stub_777(void)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[777];
-   ((void (APIENTRY *)(void)) _func)();
-}
-
-void APIENTRY shared_dispatch_stub_778(GLenum target, GLuint index, GLuint id)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[778];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLuint id)) _func)(target, index, id);
-}
-
-void APIENTRY shared_dispatch_stub_779(GLenum mode, GLuint id, GLuint stream)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[779];
-   ((void (APIENTRY *)(GLenum mode, GLuint id, GLuint stream)) _func)(mode, id, stream);
-}
-
-void APIENTRY shared_dispatch_stub_780(GLenum target, GLuint index)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[780];
-   ((void (APIENTRY *)(GLenum target, GLuint index)) _func)(target, index);
-}
-
-void APIENTRY shared_dispatch_stub_781(GLenum target, GLuint index, GLenum pname, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[781];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLenum pname, GLint *params)) _func)(target, index, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_782(GLclampf depth)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[782];
-   ((void (APIENTRY *)(GLclampf depth)) _func)(depth);
-}
-
-void APIENTRY shared_dispatch_stub_783(GLclampf zNear, GLclampf zFar)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[783];
-   ((void (APIENTRY *)(GLclampf zNear, GLclampf zFar)) _func)(zNear, zFar);
-}
-
-void APIENTRY shared_dispatch_stub_784(GLenum shadertype, GLenum precisiontype, GLint *range, GLint *precision)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[784];
-   ((void (APIENTRY *)(GLenum shadertype, GLenum precisiontype, GLint *range, GLint *precision)) _func)(shadertype, precisiontype, range, precision);
-}
-
-void APIENTRY shared_dispatch_stub_785(void)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[785];
-   ((void (APIENTRY *)(void)) _func)();
-}
-
-void APIENTRY shared_dispatch_stub_786(GLsizei n, const GLuint *shaders, GLenum binaryformat, const GLvoid *binary, GLsizei length)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[786];
-   ((void (APIENTRY *)(GLsizei n, const GLuint *shaders, GLenum binaryformat, const GLvoid *binary, GLsizei length)) _func)(n, shaders, binaryformat, binary, length);
-}
-
-void APIENTRY shared_dispatch_stub_787(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[787];
-   ((void (APIENTRY *)(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary)) _func)(program, bufSize, length, binaryFormat, binary);
-}
-
-void APIENTRY shared_dispatch_stub_788(GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[788];
-   ((void (APIENTRY *)(GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length)) _func)(program, binaryFormat, binary, length);
-}
-
-void APIENTRY shared_dispatch_stub_789(GLuint program, GLenum pname, GLint value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[789];
-   ((void (APIENTRY *)(GLuint program, GLenum pname, GLint value)) _func)(program, pname, value);
-}
-
-void APIENTRY shared_dispatch_stub_790(GLDEBUGPROCARB callback, const GLvoid *userParam)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[790];
-   ((void (APIENTRY *)(GLDEBUGPROCARB callback, const GLvoid *userParam)) _func)(callback, userParam);
-}
-
-void APIENTRY shared_dispatch_stub_791(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[791];
-   ((void (APIENTRY *)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)) _func)(source, type, severity, count, ids, enabled);
-}
-
-void APIENTRY shared_dispatch_stub_792(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB *buf)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[792];
-   ((void (APIENTRY *)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB *buf)) _func)(source, type, id, severity, length, buf);
-}
-
-GLuint APIENTRY shared_dispatch_stub_793(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLcharARB *messageLog)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[793];
-   return ((GLuint (APIENTRY *)(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLcharARB *messageLog)) _func)(count, bufsize, sources, types, ids, severities, lengths, messageLog);
-}
-
-GLenum APIENTRY shared_dispatch_stub_794(void)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[794];
-   return ((GLenum (APIENTRY *)(void)) _func)();
-}
-
-void APIENTRY shared_dispatch_stub_795(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *table)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[795];
-   ((void (APIENTRY *)(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *table)) _func)(target, format, type, bufSize, table);
-}
-
-void APIENTRY shared_dispatch_stub_796(GLenum target, GLint lod, GLsizei bufSize, GLvoid *img)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[796];
-   ((void (APIENTRY *)(GLenum target, GLint lod, GLsizei bufSize, GLvoid *img)) _func)(target, lod, bufSize, img);
-}
-
-void APIENTRY shared_dispatch_stub_797(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *image)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[797];
-   ((void (APIENTRY *)(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *image)) _func)(target, format, type, bufSize, image);
-}
-
-void APIENTRY shared_dispatch_stub_798(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[798];
-   ((void (APIENTRY *)(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values)) _func)(target, reset, format, type, bufSize, values);
-}
-
-void APIENTRY shared_dispatch_stub_799(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[799];
-   ((void (APIENTRY *)(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v)) _func)(target, query, bufSize, v);
-}
-
-void APIENTRY shared_dispatch_stub_800(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[800];
-   ((void (APIENTRY *)(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v)) _func)(target, query, bufSize, v);
-}
-
-void APIENTRY shared_dispatch_stub_801(GLenum target, GLenum query, GLsizei bufSize, GLint *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[801];
-   ((void (APIENTRY *)(GLenum target, GLenum query, GLsizei bufSize, GLint *v)) _func)(target, query, bufSize, v);
-}
-
-void APIENTRY shared_dispatch_stub_802(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[802];
-   ((void (APIENTRY *)(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values)) _func)(target, reset, format, type, bufSize, values);
-}
-
-void APIENTRY shared_dispatch_stub_803(GLenum map, GLsizei bufSize, GLfloat *values)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[803];
-   ((void (APIENTRY *)(GLenum map, GLsizei bufSize, GLfloat *values)) _func)(map, bufSize, values);
-}
-
-void APIENTRY shared_dispatch_stub_804(GLenum map, GLsizei bufSize, GLuint *values)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[804];
-   ((void (APIENTRY *)(GLenum map, GLsizei bufSize, GLuint *values)) _func)(map, bufSize, values);
-}
-
-void APIENTRY shared_dispatch_stub_805(GLenum map, GLsizei bufSize, GLushort *values)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[805];
-   ((void (APIENTRY *)(GLenum map, GLsizei bufSize, GLushort *values)) _func)(map, bufSize, values);
-}
-
-void APIENTRY shared_dispatch_stub_806(GLsizei bufSize, GLubyte *pattern)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[806];
-   ((void (APIENTRY *)(GLsizei bufSize, GLubyte *pattern)) _func)(bufSize, pattern);
-}
-
-void APIENTRY shared_dispatch_stub_807(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, GLvoid *row, GLsizei columnBufSize, GLvoid *column, GLvoid *span)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[807];
-   ((void (APIENTRY *)(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, GLvoid *row, GLsizei columnBufSize, GLvoid *column, GLvoid *span)) _func)(target, format, type, rowBufSize, row, columnBufSize, column, span);
-}
-
-void APIENTRY shared_dispatch_stub_808(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, GLvoid *img)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[808];
-   ((void (APIENTRY *)(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, GLvoid *img)) _func)(target, level, format, type, bufSize, img);
-}
-
-void APIENTRY shared_dispatch_stub_809(GLhandleARB program, GLint location, GLsizei bufSize, GLdouble *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[809];
-   ((void (APIENTRY *)(GLhandleARB program, GLint location, GLsizei bufSize, GLdouble *params)) _func)(program, location, bufSize, params);
-}
-
-void APIENTRY shared_dispatch_stub_810(GLhandleARB program, GLint location, GLsizei bufSize, GLfloat *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[810];
-   ((void (APIENTRY *)(GLhandleARB program, GLint location, GLsizei bufSize, GLfloat *params)) _func)(program, location, bufSize, params);
-}
-
-void APIENTRY shared_dispatch_stub_811(GLhandleARB program, GLint location, GLsizei bufSize, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[811];
-   ((void (APIENTRY *)(GLhandleARB program, GLint location, GLsizei bufSize, GLint *params)) _func)(program, location, bufSize, params);
-}
-
-void APIENTRY shared_dispatch_stub_812(GLhandleARB program, GLint location, GLsizei bufSize, GLuint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[812];
-   ((void (APIENTRY *)(GLhandleARB program, GLint location, GLsizei bufSize, GLuint *params)) _func)(program, location, bufSize, params);
-}
-
-void APIENTRY shared_dispatch_stub_813(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[813];
-   ((void (APIENTRY *)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data)) _func)(x, y, width, height, format, type, bufSize, data);
-}
-
-void APIENTRY shared_dispatch_stub_814(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[814];
-   ((void (APIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance)) _func)(mode, first, count, primcount, baseinstance);
-}
-
-void APIENTRY shared_dispatch_stub_815(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[815];
-   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance)) _func)(mode, count, type, indices, primcount, baseinstance);
-}
-
-void APIENTRY shared_dispatch_stub_816(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[816];
-   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance)) _func)(mode, count, type, indices, primcount, basevertex, baseinstance);
-}
-
-void APIENTRY shared_dispatch_stub_817(GLenum mode, GLuint id, GLsizei primcount)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[817];
-   ((void (APIENTRY *)(GLenum mode, GLuint id, GLsizei primcount)) _func)(mode, id, primcount);
-}
-
-void APIENTRY shared_dispatch_stub_818(GLenum mode, GLuint id, GLuint stream, GLsizei primcount)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[818];
-   ((void (APIENTRY *)(GLenum mode, GLuint id, GLuint stream, GLsizei primcount)) _func)(mode, id, stream, primcount);
-}
-
-void APIENTRY shared_dispatch_stub_819(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[819];
-   ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params)) _func)(target, internalformat, pname, bufSize, params);
-}
-
-void APIENTRY shared_dispatch_stub_820(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[820];
-   ((void (APIENTRY *)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)) _func)(target, levels, internalFormat, width);
-}
-
-void APIENTRY shared_dispatch_stub_821(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[821];
-   ((void (APIENTRY *)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height)) _func)(target, levels, internalFormat, width, height);
-}
-
-void APIENTRY shared_dispatch_stub_822(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[822];
-   ((void (APIENTRY *)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth)) _func)(target, levels, internalFormat, width, height, depth);
-}
-
-void APIENTRY shared_dispatch_stub_823(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[823];
-   ((void (APIENTRY *)(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)) _func)(texture, target, levels, internalFormat, width);
-}
-
-void APIENTRY shared_dispatch_stub_824(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[824];
-   ((void (APIENTRY *)(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height)) _func)(texture, target, levels, internalFormat, width, height);
-}
-
-void APIENTRY shared_dispatch_stub_825(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[825];
-   ((void (APIENTRY *)(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth)) _func)(texture, target, levels, internalFormat, width, height, depth);
-}
-
-void APIENTRY shared_dispatch_stub_826(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[826];
-   ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)) _func)(target, internalformat, buffer, offset, size);
-}
-
-void APIENTRY shared_dispatch_stub_827(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[827];
-   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, fixedsamplelocations);
-}
-
-void APIENTRY shared_dispatch_stub_828(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[828];
-   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, depth, fixedsamplelocations);
-}
-
-void APIENTRY shared_dispatch_stub_829(GLuint buffer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[829];
-   ((void (APIENTRY *)(GLuint buffer)) _func)(buffer);
-}
-
-void APIENTRY shared_dispatch_stub_830(GLuint buffer, GLintptr offset, GLsizeiptr length)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[830];
-   ((void (APIENTRY *)(GLuint buffer, GLintptr offset, GLsizeiptr length)) _func)(buffer, offset, length);
-}
-
-void APIENTRY shared_dispatch_stub_831(GLenum target, GLsizei numAttachments, const GLenum *attachments)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[831];
-   ((void (APIENTRY *)(GLenum target, GLsizei numAttachments, const GLenum *attachments)) _func)(target, numAttachments, attachments);
-}
-
-void APIENTRY shared_dispatch_stub_832(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[832];
-   ((void (APIENTRY *)(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)) _func)(target, numAttachments, attachments, x, y, width, height);
-}
-
-void APIENTRY shared_dispatch_stub_833(GLuint texture, GLint level)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[833];
-   ((void (APIENTRY *)(GLuint texture, GLint level)) _func)(texture, level);
-}
-
-void APIENTRY shared_dispatch_stub_834(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[834];
-   ((void (APIENTRY *)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth)) _func)(texture, level, xoffset, yoffset, zoffset, width, height, depth);
-}
-
-void APIENTRY shared_dispatch_stub_835(GLfloat factor, GLfloat bias)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[835];
-   ((void (APIENTRY *)(GLfloat factor, GLfloat bias)) _func)(factor, bias);
-}
-
-void APIENTRY shared_dispatch_stub_836(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[836];
-   ((void (APIENTRY *)(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height)) _func)(x, y, z, width, height);
-}
-
-void APIENTRY shared_dispatch_stub_837(const GLfloat *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[837];
-   ((void (APIENTRY *)(const GLfloat *coords)) _func)(coords);
-}
-
-void APIENTRY shared_dispatch_stub_838(GLint x, GLint y, GLint z, GLint width, GLint height)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[838];
-   ((void (APIENTRY *)(GLint x, GLint y, GLint z, GLint width, GLint height)) _func)(x, y, z, width, height);
-}
-
-void APIENTRY shared_dispatch_stub_839(const GLint *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[839];
-   ((void (APIENTRY *)(const GLint *coords)) _func)(coords);
-}
-
-void APIENTRY shared_dispatch_stub_840(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[840];
-   ((void (APIENTRY *)(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height)) _func)(x, y, z, width, height);
-}
-
-void APIENTRY shared_dispatch_stub_841(const GLshort *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[841];
-   ((void (APIENTRY *)(const GLshort *coords)) _func)(coords);
-}
-
-void APIENTRY shared_dispatch_stub_842(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[842];
-   ((void (APIENTRY *)(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height)) _func)(x, y, z, width, height);
-}
-
-void APIENTRY shared_dispatch_stub_843(const GLfixed *coords)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[843];
-   ((void (APIENTRY *)(const GLfixed *coords)) _func)(coords);
-}
-
-void APIENTRY shared_dispatch_stub_844(GLenum type, GLsizei stride, const GLvoid *pointer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[844];
-   ((void (APIENTRY *)(GLenum type, GLsizei stride, const GLvoid *pointer)) _func)(type, stride, pointer);
-}
-
-GLbitfield APIENTRY shared_dispatch_stub_845(GLfixed *mantissa, GLint *exponent)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[845];
-   return ((GLbitfield (APIENTRY *)(GLfixed *mantissa, GLint *exponent)) _func)(mantissa, exponent);
-}
-
-void APIENTRY shared_dispatch_stub_846(GLclampf value, GLboolean invert)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[846];
-   ((void (APIENTRY *)(GLclampf value, GLboolean invert)) _func)(value, invert);
-}
-
-void APIENTRY shared_dispatch_stub_847(GLenum pattern)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[847];
-   ((void (APIENTRY *)(GLenum pattern)) _func)(pattern);
-}
-
-void APIENTRY shared_dispatch_stub_848(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[848];
-   ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
-}
-
-void APIENTRY shared_dispatch_stub_849(GLsizei stride, GLsizei count, const GLboolean *pointer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[849];
-   ((void (APIENTRY *)(GLsizei stride, GLsizei count, const GLboolean *pointer)) _func)(stride, count, pointer);
-}
-
-void APIENTRY shared_dispatch_stub_850(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[850];
-   ((void (APIENTRY *)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(type, stride, count, pointer);
-}
-
-void APIENTRY shared_dispatch_stub_851(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[851];
-   ((void (APIENTRY *)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(type, stride, count, pointer);
-}
-
-void APIENTRY shared_dispatch_stub_852(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[852];
-   ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
-}
-
-void APIENTRY shared_dispatch_stub_853(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[853];
-   ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
-}
-
-void APIENTRY shared_dispatch_stub_854(GLenum target, GLsizei numAttachments, const GLenum *attachments)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[854];
-   ((void (APIENTRY *)(GLenum target, GLsizei numAttachments, const GLenum *attachments)) _func)(target, numAttachments, attachments);
-}
-
-void APIENTRY shared_dispatch_stub_855(GLint first, GLsizei count)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[855];
-   ((void (APIENTRY *)(GLint first, GLsizei count)) _func)(first, count);
-}
-
-void APIENTRY shared_dispatch_stub_856(void)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[856];
-   ((void (APIENTRY *)(void)) _func)();
-}
-
-void APIENTRY shared_dispatch_stub_857(GLfloat red, GLfloat green, GLfloat blue)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[857];
-   ((void (APIENTRY *)(GLfloat red, GLfloat green, GLfloat blue)) _func)(red, green, blue);
-}
-
-void APIENTRY shared_dispatch_stub_858(const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[858];
-   ((void (APIENTRY *)(const GLfloat *v)) _func)(v);
-}
-
-void APIENTRY shared_dispatch_stub_859(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[859];
-   ((void (APIENTRY *)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
-}
-
-void APIENTRY shared_dispatch_stub_860(GLfloat coord)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[860];
-   ((void (APIENTRY *)(GLfloat coord)) _func)(coord);
-}
-
-void APIENTRY shared_dispatch_stub_861(const GLfloat *coord)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[861];
-   ((void (APIENTRY *)(const GLfloat *coord)) _func)(coord);
-}
-
-void APIENTRY shared_dispatch_stub_862(void)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[862];
-   ((void (APIENTRY *)(void)) _func)();
-}
-
-void APIENTRY shared_dispatch_stub_863(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[863];
-   ((void (APIENTRY *)(GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_864(const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[864];
-   ((void (APIENTRY *)(const GLdouble *v)) _func)(v);
-}
-
-void APIENTRY shared_dispatch_stub_865(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[865];
-   ((void (APIENTRY *)(GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_866(const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[866];
-   ((void (APIENTRY *)(const GLfloat *v)) _func)(v);
-}
-
-void APIENTRY shared_dispatch_stub_867(GLint x, GLint y, GLint z, GLint w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[867];
-   ((void (APIENTRY *)(GLint x, GLint y, GLint z, GLint w)) _func)(x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_868(const GLint *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[868];
-   ((void (APIENTRY *)(const GLint *v)) _func)(v);
-}
-
-void APIENTRY shared_dispatch_stub_869(GLshort x, GLshort y, GLshort z, GLshort w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[869];
-   ((void (APIENTRY *)(GLshort x, GLshort y, GLshort z, GLshort w)) _func)(x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_870(const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[870];
-   ((void (APIENTRY *)(const GLshort *v)) _func)(v);
-}
-
-void APIENTRY shared_dispatch_stub_871(const GLenum *mode, const GLint *first, const GLsizei *count, GLsizei primcount, GLint modestride)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[871];
-   ((void (APIENTRY *)(const GLenum *mode, const GLint *first, const GLsizei *count, GLsizei primcount, GLint modestride)) _func)(mode, first, count, primcount, modestride);
-}
-
-void APIENTRY shared_dispatch_stub_872(const GLenum *mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, GLint modestride)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[872];
-   ((void (APIENTRY *)(const GLenum *mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, GLint modestride)) _func)(mode, count, type, indices, primcount, modestride);
-}
-
-GLboolean APIENTRY shared_dispatch_stub_873(GLsizei n, const GLuint *ids, GLboolean *residences)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[873];
-   return ((GLboolean (APIENTRY *)(GLsizei n, const GLuint *ids, GLboolean *residences)) _func)(n, ids, residences);
-}
-
-void APIENTRY shared_dispatch_stub_874(GLenum target, GLuint id, const GLfloat *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[874];
-   ((void (APIENTRY *)(GLenum target, GLuint id, const GLfloat *params)) _func)(target, id, params);
-}
-
-void APIENTRY shared_dispatch_stub_875(GLenum target, GLuint index, GLenum pname, GLdouble *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[875];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLenum pname, GLdouble *params)) _func)(target, index, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_876(GLenum target, GLuint index, GLenum pname, GLfloat *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[876];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLenum pname, GLfloat *params)) _func)(target, index, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_877(GLuint id, GLenum pname, GLubyte *program)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[877];
-   ((void (APIENTRY *)(GLuint id, GLenum pname, GLubyte *program)) _func)(id, pname, program);
-}
-
-void APIENTRY shared_dispatch_stub_878(GLuint id, GLenum pname, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[878];
-   ((void (APIENTRY *)(GLuint id, GLenum pname, GLint *params)) _func)(id, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_879(GLenum target, GLuint address, GLenum pname, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[879];
-   ((void (APIENTRY *)(GLenum target, GLuint address, GLenum pname, GLint *params)) _func)(target, address, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_880(GLuint index, GLenum pname, GLdouble *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[880];
-   ((void (APIENTRY *)(GLuint index, GLenum pname, GLdouble *params)) _func)(index, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_881(GLuint index, GLenum pname, GLfloat *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[881];
-   ((void (APIENTRY *)(GLuint index, GLenum pname, GLfloat *params)) _func)(index, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_882(GLuint index, GLenum pname, GLint *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[882];
-   ((void (APIENTRY *)(GLuint index, GLenum pname, GLint *params)) _func)(index, pname, params);
-}
-
-void APIENTRY shared_dispatch_stub_883(GLenum target, GLuint id, GLsizei len, const GLubyte *program)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[883];
-   ((void (APIENTRY *)(GLenum target, GLuint id, GLsizei len, const GLubyte *program)) _func)(target, id, len, program);
-}
-
-void APIENTRY shared_dispatch_stub_884(GLenum target, GLuint index, GLsizei num, const GLdouble *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[884];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei num, const GLdouble *params)) _func)(target, index, num, params);
-}
-
-void APIENTRY shared_dispatch_stub_885(GLenum target, GLuint index, GLsizei num, const GLfloat *params)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[885];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei num, const GLfloat *params)) _func)(target, index, num, params);
-}
-
-void APIENTRY shared_dispatch_stub_886(GLsizei n, const GLuint *ids)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[886];
-   ((void (APIENTRY *)(GLsizei n, const GLuint *ids)) _func)(n, ids);
-}
-
-void APIENTRY shared_dispatch_stub_887(GLenum target, GLuint address, GLenum matrix, GLenum transform)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[887];
-   ((void (APIENTRY *)(GLenum target, GLuint address, GLenum matrix, GLenum transform)) _func)(target, address, matrix, transform);
-}
-
-void APIENTRY shared_dispatch_stub_888(GLuint index, GLdouble x)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[888];
-   ((void (APIENTRY *)(GLuint index, GLdouble x)) _func)(index, x);
-}
-
-void APIENTRY shared_dispatch_stub_889(GLuint index, const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[889];
-   ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_890(GLuint index, GLfloat x)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[890];
-   ((void (APIENTRY *)(GLuint index, GLfloat x)) _func)(index, x);
-}
-
-void APIENTRY shared_dispatch_stub_891(GLuint index, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[891];
-   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_892(GLuint index, GLshort x)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[892];
-   ((void (APIENTRY *)(GLuint index, GLshort x)) _func)(index, x);
-}
-
-void APIENTRY shared_dispatch_stub_893(GLuint index, const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[893];
-   ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_894(GLuint index, GLdouble x, GLdouble y)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[894];
-   ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y)) _func)(index, x, y);
-}
-
-void APIENTRY shared_dispatch_stub_895(GLuint index, const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[895];
-   ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_896(GLuint index, GLfloat x, GLfloat y)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[896];
-   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y)) _func)(index, x, y);
-}
-
-void APIENTRY shared_dispatch_stub_897(GLuint index, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[897];
-   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_898(GLuint index, GLshort x, GLshort y)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[898];
-   ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y)) _func)(index, x, y);
-}
-
-void APIENTRY shared_dispatch_stub_899(GLuint index, const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[899];
-   ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_900(GLuint index, GLdouble x, GLdouble y, GLdouble z)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[900];
-   ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y, GLdouble z)) _func)(index, x, y, z);
-}
-
-void APIENTRY shared_dispatch_stub_901(GLuint index, const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[901];
-   ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_902(GLuint index, GLfloat x, GLfloat y, GLfloat z)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[902];
-   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z)) _func)(index, x, y, z);
-}
-
-void APIENTRY shared_dispatch_stub_903(GLuint index, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[903];
-   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_904(GLuint index, GLshort x, GLshort y, GLshort z)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[904];
-   ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y, GLshort z)) _func)(index, x, y, z);
-}
-
-void APIENTRY shared_dispatch_stub_905(GLuint index, const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[905];
-   ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_906(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[906];
-   ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(index, x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_907(GLuint index, const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[907];
-   ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_908(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[908];
-   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(index, x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_909(GLuint index, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[909];
-   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_910(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[910];
-   ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)) _func)(index, x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_911(GLuint index, const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[911];
-   ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_912(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[912];
-   ((void (APIENTRY *)(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)) _func)(index, x, y, z, w);
-}
-
-void APIENTRY shared_dispatch_stub_913(GLuint index, const GLubyte *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[913];
-   ((void (APIENTRY *)(GLuint index, const GLubyte *v)) _func)(index, v);
-}
-
-void APIENTRY shared_dispatch_stub_914(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[914];
-   ((void (APIENTRY *)(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)) _func)(index, size, type, stride, pointer);
-}
-
-void APIENTRY shared_dispatch_stub_915(GLuint index, GLsizei n, const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[915];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_916(GLuint index, GLsizei n, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[916];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_917(GLuint index, GLsizei n, const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[917];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_918(GLuint index, GLsizei n, const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[918];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_919(GLuint index, GLsizei n, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[919];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_920(GLuint index, GLsizei n, const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[920];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_921(GLuint index, GLsizei n, const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[921];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_922(GLuint index, GLsizei n, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[922];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_923(GLuint index, GLsizei n, const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[923];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_924(GLuint index, GLsizei n, const GLdouble *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[924];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_925(GLuint index, GLsizei n, const GLfloat *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[925];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_926(GLuint index, GLsizei n, const GLshort *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[926];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_927(GLuint index, GLsizei n, const GLubyte *v)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[927];
-   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLubyte *v)) _func)(index, n, v);
-}
-
-void APIENTRY shared_dispatch_stub_928(GLenum pname, GLfloat *param)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[928];
-   ((void (APIENTRY *)(GLenum pname, GLfloat *param)) _func)(pname, param);
-}
-
-void APIENTRY shared_dispatch_stub_929(GLenum pname, GLint *param)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[929];
-   ((void (APIENTRY *)(GLenum pname, GLint *param)) _func)(pname, param);
-}
-
-void APIENTRY shared_dispatch_stub_930(GLenum pname, const GLfloat *param)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[930];
-   ((void (APIENTRY *)(GLenum pname, const GLfloat *param)) _func)(pname, param);
-}
-
-void APIENTRY shared_dispatch_stub_931(GLenum pname, const GLint *param)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[931];
-   ((void (APIENTRY *)(GLenum pname, const GLint *param)) _func)(pname, param);
-}
-
-void APIENTRY shared_dispatch_stub_932(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[932];
-   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod);
-}
-
-void APIENTRY shared_dispatch_stub_933(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[933];
-   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod);
-}
-
-void APIENTRY shared_dispatch_stub_934(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[934];
-   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod);
-}
-
-void APIENTRY shared_dispatch_stub_935(void)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[935];
-   ((void (APIENTRY *)(void)) _func)();
-}
-
-void APIENTRY shared_dispatch_stub_936(GLuint id)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[936];
-   ((void (APIENTRY *)(GLuint id)) _func)(id);
-}
-
-void APIENTRY shared_dispatch_stub_937(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[937];
-   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod);
-}
-
-void APIENTRY shared_dispatch_stub_938(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[938];
-   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod);
-}
-
-void APIENTRY shared_dispatch_stub_939(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[939];
-   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod);
-}
-
-void APIENTRY shared_dispatch_stub_940(GLuint id)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[940];
-   ((void (APIENTRY *)(GLuint id)) _func)(id);
-}
-
-void APIENTRY shared_dispatch_stub_941(void)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[941];
-   ((void (APIENTRY *)(void)) _func)();
-}
-
-GLuint APIENTRY shared_dispatch_stub_942(GLuint range)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[942];
-   return ((GLuint (APIENTRY *)(GLuint range)) _func)(range);
-}
-
-void APIENTRY shared_dispatch_stub_943(GLuint dst, GLuint coord, GLenum swizzle)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[943];
-   ((void (APIENTRY *)(GLuint dst, GLuint coord, GLenum swizzle)) _func)(dst, coord, swizzle);
-}
-
-void APIENTRY shared_dispatch_stub_944(GLuint dst, GLuint interp, GLenum swizzle)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[944];
-   ((void (APIENTRY *)(GLuint dst, GLuint interp, GLenum swizzle)) _func)(dst, interp, swizzle);
-}
-
-void APIENTRY shared_dispatch_stub_945(GLuint dst, const GLfloat *value)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[945];
-   ((void (APIENTRY *)(GLuint dst, const GLfloat *value)) _func)(dst, value);
-}
-
-void APIENTRY shared_dispatch_stub_946(GLenum face)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[946];
-   ((void (APIENTRY *)(GLenum face)) _func)(face);
-}
-
-void APIENTRY shared_dispatch_stub_947(GLuint array)
-{
-   const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[947];
    ((void (APIENTRY *)(GLuint array)) _func)(array);
 }
 
-void APIENTRY shared_dispatch_stub_948(GLsizei n, GLuint *arrays)
+void APIENTRY shared_dispatch_stub_684(GLsizei n, const GLuint *arrays)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[948];
+   mapi_func _func = ((const mapi_func *) _tbl)[684];
+   ((void (APIENTRY *)(GLsizei n, const GLuint *arrays)) _func)(n, arrays);
+}
+
+void APIENTRY shared_dispatch_stub_685(GLsizei n, GLuint *arrays)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[685];
    ((void (APIENTRY *)(GLsizei n, GLuint *arrays)) _func)(n, arrays);
 }
 
-void APIENTRY shared_dispatch_stub_949(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params)
+GLboolean APIENTRY shared_dispatch_stub_686(GLuint array)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[686];
+   return ((GLboolean (APIENTRY *)(GLuint array)) _func)(array);
+}
+
+void APIENTRY shared_dispatch_stub_687(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[687];
+   ((void (APIENTRY *)(GLuint program, GLuint uniformBlockIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName)) _func)(program, uniformBlockIndex, bufSize, length, uniformBlockName);
+}
+
+void APIENTRY shared_dispatch_stub_688(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[688];
+   ((void (APIENTRY *)(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params)) _func)(program, uniformBlockIndex, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_689(GLuint program, GLuint uniformIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformName)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[689];
+   ((void (APIENTRY *)(GLuint program, GLuint uniformIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformName)) _func)(program, uniformIndex, bufSize, length, uniformName);
+}
+
+void APIENTRY shared_dispatch_stub_690(GLuint program, GLsizei uniformCount, const GLuint *uniformIndices, GLenum pname, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[690];
+   ((void (APIENTRY *)(GLuint program, GLsizei uniformCount, const GLuint *uniformIndices, GLenum pname, GLint *params)) _func)(program, uniformCount, uniformIndices, pname, params);
+}
+
+GLuint APIENTRY shared_dispatch_stub_691(GLuint program, const GLchar *uniformBlockName)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[691];
+   return ((GLuint (APIENTRY *)(GLuint program, const GLchar *uniformBlockName)) _func)(program, uniformBlockName);
+}
+
+void APIENTRY shared_dispatch_stub_692(GLuint program, GLsizei uniformCount, const GLchar * const *uniformNames, GLuint *uniformIndices)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[692];
+   ((void (APIENTRY *)(GLuint program, GLsizei uniformCount, const GLchar * const *uniformNames, GLuint *uniformIndices)) _func)(program, uniformCount, uniformNames, uniformIndices);
+}
+
+void APIENTRY shared_dispatch_stub_693(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[693];
+   ((void (APIENTRY *)(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding)) _func)(program, uniformBlockIndex, uniformBlockBinding);
+}
+
+void APIENTRY shared_dispatch_stub_694(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[694];
+   ((void (APIENTRY *)(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)) _func)(readTarget, writeTarget, readOffset, writeOffset, size);
+}
+
+GLenum APIENTRY shared_dispatch_stub_695(GLsync sync, GLbitfield flags, GLuint64 timeout)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[695];
+   return ((GLenum (APIENTRY *)(GLsync sync, GLbitfield flags, GLuint64 timeout)) _func)(sync, flags, timeout);
+}
+
+void APIENTRY shared_dispatch_stub_696(GLsync sync)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[696];
+   ((void (APIENTRY *)(GLsync sync)) _func)(sync);
+}
+
+GLsync APIENTRY shared_dispatch_stub_697(GLenum condition, GLbitfield flags)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[697];
+   return ((GLsync (APIENTRY *)(GLenum condition, GLbitfield flags)) _func)(condition, flags);
+}
+
+void APIENTRY shared_dispatch_stub_698(GLenum pname, GLint64 *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[698];
+   ((void (APIENTRY *)(GLenum pname, GLint64 *params)) _func)(pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_699(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[699];
+   ((void (APIENTRY *)(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)) _func)(sync, pname, bufSize, length, values);
+}
+
+GLboolean APIENTRY shared_dispatch_stub_700(GLsync sync)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[700];
+   return ((GLboolean (APIENTRY *)(GLsync sync)) _func)(sync);
+}
+
+void APIENTRY shared_dispatch_stub_701(GLsync sync, GLbitfield flags, GLuint64 timeout)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[701];
+   ((void (APIENTRY *)(GLsync sync, GLbitfield flags, GLuint64 timeout)) _func)(sync, flags, timeout);
+}
+
+void APIENTRY shared_dispatch_stub_702(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[702];
+   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)) _func)(mode, count, type, indices, basevertex);
+}
+
+void APIENTRY shared_dispatch_stub_703(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[703];
+   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex)) _func)(mode, count, type, indices, primcount, basevertex);
+}
+
+void APIENTRY shared_dispatch_stub_704(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[704];
+   ((void (APIENTRY *)(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex)) _func)(mode, start, end, count, type, indices, basevertex);
+}
+
+void APIENTRY shared_dispatch_stub_705(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, const GLint *basevertex)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[705];
+   ((void (APIENTRY *)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, const GLint *basevertex)) _func)(mode, count, type, indices, primcount, basevertex);
+}
+
+void APIENTRY shared_dispatch_stub_706(GLenum mode)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[706];
+   ((void (APIENTRY *)(GLenum mode)) _func)(mode);
+}
+
+void APIENTRY shared_dispatch_stub_707(GLenum pname, GLuint index, GLfloat *val)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[707];
+   ((void (APIENTRY *)(GLenum pname, GLuint index, GLfloat *val)) _func)(pname, index, val);
+}
+
+void APIENTRY shared_dispatch_stub_708(GLuint index, GLbitfield mask)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[708];
+   ((void (APIENTRY *)(GLuint index, GLbitfield mask)) _func)(index, mask);
+}
+
+void APIENTRY shared_dispatch_stub_709(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[709];
+   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, fixedsamplelocations);
+}
+
+void APIENTRY shared_dispatch_stub_710(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[710];
+   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, depth, fixedsamplelocations);
+}
+
+void APIENTRY shared_dispatch_stub_711(GLuint buf, GLenum modeRGB, GLenum modeA)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[711];
+   ((void (APIENTRY *)(GLuint buf, GLenum modeRGB, GLenum modeA)) _func)(buf, modeRGB, modeA);
+}
+
+void APIENTRY shared_dispatch_stub_712(GLuint buf, GLenum mode)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[712];
+   ((void (APIENTRY *)(GLuint buf, GLenum mode)) _func)(buf, mode);
+}
+
+void APIENTRY shared_dispatch_stub_713(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcA, GLenum dstA)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[713];
+   ((void (APIENTRY *)(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcA, GLenum dstA)) _func)(buf, srcRGB, dstRGB, srcA, dstA);
+}
+
+void APIENTRY shared_dispatch_stub_714(GLuint buf, GLenum src, GLenum dst)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[714];
+   ((void (APIENTRY *)(GLuint buf, GLenum src, GLenum dst)) _func)(buf, src, dst);
+}
+
+void APIENTRY shared_dispatch_stub_715(GLuint program, GLuint colorNumber, GLuint index, const GLchar *name)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[715];
+   ((void (APIENTRY *)(GLuint program, GLuint colorNumber, GLuint index, const GLchar *name)) _func)(program, colorNumber, index, name);
+}
+
+GLint APIENTRY shared_dispatch_stub_716(GLuint program, const GLchar *name)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[716];
+   return ((GLint (APIENTRY *)(GLuint program, const GLchar *name)) _func)(program, name);
+}
+
+void APIENTRY shared_dispatch_stub_717(GLuint unit, GLuint sampler)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[717];
+   ((void (APIENTRY *)(GLuint unit, GLuint sampler)) _func)(unit, sampler);
+}
+
+void APIENTRY shared_dispatch_stub_718(GLsizei count, const GLuint *samplers)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[718];
+   ((void (APIENTRY *)(GLsizei count, const GLuint *samplers)) _func)(count, samplers);
+}
+
+void APIENTRY shared_dispatch_stub_719(GLsizei count, GLuint *samplers)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[719];
+   ((void (APIENTRY *)(GLsizei count, GLuint *samplers)) _func)(count, samplers);
+}
+
+void APIENTRY shared_dispatch_stub_720(GLuint sampler, GLenum pname, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[720];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLint *params)) _func)(sampler, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_721(GLuint sampler, GLenum pname, GLuint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[721];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLuint *params)) _func)(sampler, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_722(GLuint sampler, GLenum pname, GLfloat *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[722];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLfloat *params)) _func)(sampler, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_723(GLuint sampler, GLenum pname, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[723];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLint *params)) _func)(sampler, pname, params);
+}
+
+GLboolean APIENTRY shared_dispatch_stub_724(GLuint sampler)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[724];
+   return ((GLboolean (APIENTRY *)(GLuint sampler)) _func)(sampler);
+}
+
+void APIENTRY shared_dispatch_stub_725(GLuint sampler, GLenum pname, const GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[725];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, const GLint *params)) _func)(sampler, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_726(GLuint sampler, GLenum pname, const GLuint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[726];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, const GLuint *params)) _func)(sampler, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_727(GLuint sampler, GLenum pname, GLfloat param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[727];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLfloat param)) _func)(sampler, pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_728(GLuint sampler, GLenum pname, const GLfloat *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[728];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, const GLfloat *params)) _func)(sampler, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_729(GLuint sampler, GLenum pname, GLint param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[729];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, GLint param)) _func)(sampler, pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_730(GLuint sampler, GLenum pname, const GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[730];
+   ((void (APIENTRY *)(GLuint sampler, GLenum pname, const GLint *params)) _func)(sampler, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_731(GLuint id, GLenum pname, GLint64 *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[731];
+   ((void (APIENTRY *)(GLuint id, GLenum pname, GLint64 *params)) _func)(id, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_732(GLuint id, GLenum pname, GLuint64 *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[732];
+   ((void (APIENTRY *)(GLuint id, GLenum pname, GLuint64 *params)) _func)(id, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_733(GLuint id, GLenum target)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[733];
+   ((void (APIENTRY *)(GLuint id, GLenum target)) _func)(id, target);
+}
+
+void APIENTRY shared_dispatch_stub_734(GLenum type, GLuint color)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[734];
+   ((void (APIENTRY *)(GLenum type, GLuint color)) _func)(type, color);
+}
+
+void APIENTRY shared_dispatch_stub_735(GLenum type, const GLuint *color)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[735];
+   ((void (APIENTRY *)(GLenum type, const GLuint *color)) _func)(type, color);
+}
+
+void APIENTRY shared_dispatch_stub_736(GLenum type, GLuint color)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[736];
+   ((void (APIENTRY *)(GLenum type, GLuint color)) _func)(type, color);
+}
+
+void APIENTRY shared_dispatch_stub_737(GLenum type, const GLuint *color)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[737];
+   ((void (APIENTRY *)(GLenum type, const GLuint *color)) _func)(type, color);
+}
+
+void APIENTRY shared_dispatch_stub_738(GLenum texture, GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[738];
+   ((void (APIENTRY *)(GLenum texture, GLenum type, GLuint coords)) _func)(texture, type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_739(GLenum texture, GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[739];
+   ((void (APIENTRY *)(GLenum texture, GLenum type, const GLuint *coords)) _func)(texture, type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_740(GLenum texture, GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[740];
+   ((void (APIENTRY *)(GLenum texture, GLenum type, GLuint coords)) _func)(texture, type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_741(GLenum texture, GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[741];
+   ((void (APIENTRY *)(GLenum texture, GLenum type, const GLuint *coords)) _func)(texture, type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_742(GLenum texture, GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[742];
+   ((void (APIENTRY *)(GLenum texture, GLenum type, GLuint coords)) _func)(texture, type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_743(GLenum texture, GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[743];
+   ((void (APIENTRY *)(GLenum texture, GLenum type, const GLuint *coords)) _func)(texture, type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_744(GLenum texture, GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[744];
+   ((void (APIENTRY *)(GLenum texture, GLenum type, GLuint coords)) _func)(texture, type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_745(GLenum texture, GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[745];
+   ((void (APIENTRY *)(GLenum texture, GLenum type, const GLuint *coords)) _func)(texture, type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_746(GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[746];
+   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_747(GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[747];
+   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_748(GLenum type, GLuint color)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[748];
+   ((void (APIENTRY *)(GLenum type, GLuint color)) _func)(type, color);
+}
+
+void APIENTRY shared_dispatch_stub_749(GLenum type, const GLuint *color)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[749];
+   ((void (APIENTRY *)(GLenum type, const GLuint *color)) _func)(type, color);
+}
+
+void APIENTRY shared_dispatch_stub_750(GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[750];
+   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_751(GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[751];
+   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_752(GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[752];
+   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_753(GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[753];
+   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_754(GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[754];
+   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_755(GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[755];
+   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_756(GLenum type, GLuint coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[756];
+   ((void (APIENTRY *)(GLenum type, GLuint coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_757(GLenum type, const GLuint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[757];
+   ((void (APIENTRY *)(GLenum type, const GLuint *coords)) _func)(type, coords);
+}
+
+void APIENTRY shared_dispatch_stub_758(GLuint index, GLenum type, GLboolean normalized, GLuint value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[758];
+   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, GLuint value)) _func)(index, type, normalized, value);
+}
+
+void APIENTRY shared_dispatch_stub_759(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[759];
+   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)) _func)(index, type, normalized, value);
+}
+
+void APIENTRY shared_dispatch_stub_760(GLuint index, GLenum type, GLboolean normalized, GLuint value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[760];
+   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, GLuint value)) _func)(index, type, normalized, value);
+}
+
+void APIENTRY shared_dispatch_stub_761(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[761];
+   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)) _func)(index, type, normalized, value);
+}
+
+void APIENTRY shared_dispatch_stub_762(GLuint index, GLenum type, GLboolean normalized, GLuint value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[762];
+   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, GLuint value)) _func)(index, type, normalized, value);
+}
+
+void APIENTRY shared_dispatch_stub_763(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[763];
+   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)) _func)(index, type, normalized, value);
+}
+
+void APIENTRY shared_dispatch_stub_764(GLuint index, GLenum type, GLboolean normalized, GLuint value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[764];
+   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, GLuint value)) _func)(index, type, normalized, value);
+}
+
+void APIENTRY shared_dispatch_stub_765(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[765];
+   ((void (APIENTRY *)(GLuint index, GLenum type, GLboolean normalized, const GLuint *value)) _func)(index, type, normalized, value);
+}
+
+void APIENTRY shared_dispatch_stub_766(GLenum type, GLuint value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[766];
+   ((void (APIENTRY *)(GLenum type, GLuint value)) _func)(type, value);
+}
+
+void APIENTRY shared_dispatch_stub_767(GLenum type, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[767];
+   ((void (APIENTRY *)(GLenum type, const GLuint *value)) _func)(type, value);
+}
+
+void APIENTRY shared_dispatch_stub_768(GLenum type, GLuint value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[768];
+   ((void (APIENTRY *)(GLenum type, GLuint value)) _func)(type, value);
+}
+
+void APIENTRY shared_dispatch_stub_769(GLenum type, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[769];
+   ((void (APIENTRY *)(GLenum type, const GLuint *value)) _func)(type, value);
+}
+
+void APIENTRY shared_dispatch_stub_770(GLenum type, GLuint value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[770];
+   ((void (APIENTRY *)(GLenum type, GLuint value)) _func)(type, value);
+}
+
+void APIENTRY shared_dispatch_stub_771(GLenum type, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[771];
+   ((void (APIENTRY *)(GLenum type, const GLuint *value)) _func)(type, value);
+}
+
+void APIENTRY shared_dispatch_stub_772(GLenum mode, const GLvoid *indirect)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[772];
+   ((void (APIENTRY *)(GLenum mode, const GLvoid *indirect)) _func)(mode, indirect);
+}
+
+void APIENTRY shared_dispatch_stub_773(GLenum mode, GLenum type, const GLvoid *indirect)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[773];
+   ((void (APIENTRY *)(GLenum mode, GLenum type, const GLvoid *indirect)) _func)(mode, type, indirect);
+}
+
+void APIENTRY shared_dispatch_stub_774(GLenum target, GLuint id)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[774];
+   ((void (APIENTRY *)(GLenum target, GLuint id)) _func)(target, id);
+}
+
+void APIENTRY shared_dispatch_stub_775(GLsizei n, const GLuint *ids)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[775];
+   ((void (APIENTRY *)(GLsizei n, const GLuint *ids)) _func)(n, ids);
+}
+
+void APIENTRY shared_dispatch_stub_776(GLenum mode, GLuint id)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[776];
+   ((void (APIENTRY *)(GLenum mode, GLuint id)) _func)(mode, id);
+}
+
+void APIENTRY shared_dispatch_stub_777(GLsizei n, GLuint *ids)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[777];
+   ((void (APIENTRY *)(GLsizei n, GLuint *ids)) _func)(n, ids);
+}
+
+GLboolean APIENTRY shared_dispatch_stub_778(GLuint id)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[778];
+   return ((GLboolean (APIENTRY *)(GLuint id)) _func)(id);
+}
+
+void APIENTRY shared_dispatch_stub_779(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[779];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_780(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[780];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_781(GLenum target, GLuint index, GLuint id)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[781];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLuint id)) _func)(target, index, id);
+}
+
+void APIENTRY shared_dispatch_stub_782(GLenum mode, GLuint id, GLuint stream)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[782];
+   ((void (APIENTRY *)(GLenum mode, GLuint id, GLuint stream)) _func)(mode, id, stream);
+}
+
+void APIENTRY shared_dispatch_stub_783(GLenum target, GLuint index)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[783];
+   ((void (APIENTRY *)(GLenum target, GLuint index)) _func)(target, index);
+}
+
+void APIENTRY shared_dispatch_stub_784(GLenum target, GLuint index, GLenum pname, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[784];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLenum pname, GLint *params)) _func)(target, index, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_785(GLclampf depth)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[785];
+   ((void (APIENTRY *)(GLclampf depth)) _func)(depth);
+}
+
+void APIENTRY shared_dispatch_stub_786(GLclampf zNear, GLclampf zFar)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[786];
+   ((void (APIENTRY *)(GLclampf zNear, GLclampf zFar)) _func)(zNear, zFar);
+}
+
+void APIENTRY shared_dispatch_stub_787(GLenum shadertype, GLenum precisiontype, GLint *range, GLint *precision)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[787];
+   ((void (APIENTRY *)(GLenum shadertype, GLenum precisiontype, GLint *range, GLint *precision)) _func)(shadertype, precisiontype, range, precision);
+}
+
+void APIENTRY shared_dispatch_stub_788(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[788];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_789(GLsizei n, const GLuint *shaders, GLenum binaryformat, const GLvoid *binary, GLsizei length)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[789];
+   ((void (APIENTRY *)(GLsizei n, const GLuint *shaders, GLenum binaryformat, const GLvoid *binary, GLsizei length)) _func)(n, shaders, binaryformat, binary, length);
+}
+
+void APIENTRY shared_dispatch_stub_790(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[790];
+   ((void (APIENTRY *)(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary)) _func)(program, bufSize, length, binaryFormat, binary);
+}
+
+void APIENTRY shared_dispatch_stub_791(GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[791];
+   ((void (APIENTRY *)(GLuint program, GLenum binaryFormat, const GLvoid *binary, GLsizei length)) _func)(program, binaryFormat, binary, length);
+}
+
+void APIENTRY shared_dispatch_stub_792(GLuint program, GLenum pname, GLint value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[792];
+   ((void (APIENTRY *)(GLuint program, GLenum pname, GLint value)) _func)(program, pname, value);
+}
+
+void APIENTRY shared_dispatch_stub_793(GLuint first, GLsizei count, const GLclampd *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[793];
+   ((void (APIENTRY *)(GLuint first, GLsizei count, const GLclampd *v)) _func)(first, count, v);
+}
+
+void APIENTRY shared_dispatch_stub_794(GLuint index, GLclampd n, GLclampd f)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[794];
+   ((void (APIENTRY *)(GLuint index, GLclampd n, GLclampd f)) _func)(index, n, f);
+}
+
+void APIENTRY shared_dispatch_stub_795(GLenum target, GLuint index, GLdouble *data)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[795];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLdouble *data)) _func)(target, index, data);
+}
+
+void APIENTRY shared_dispatch_stub_796(GLenum target, GLuint index, GLfloat *data)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[796];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLfloat *data)) _func)(target, index, data);
+}
+
+void APIENTRY shared_dispatch_stub_797(GLuint first, GLsizei count, const int *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[797];
+   ((void (APIENTRY *)(GLuint first, GLsizei count, const int *v)) _func)(first, count, v);
+}
+
+void APIENTRY shared_dispatch_stub_798(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[798];
+   ((void (APIENTRY *)(GLuint index, GLint left, GLint bottom, GLsizei width, GLsizei height)) _func)(index, left, bottom, width, height);
+}
+
+void APIENTRY shared_dispatch_stub_799(GLuint index, const GLint *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[799];
+   ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
+}
+
+void APIENTRY shared_dispatch_stub_800(GLuint first, GLsizei count, const GLfloat *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[800];
+   ((void (APIENTRY *)(GLuint first, GLsizei count, const GLfloat *v)) _func)(first, count, v);
+}
+
+void APIENTRY shared_dispatch_stub_801(GLuint index, GLfloat x, GLfloat y, GLfloat w, GLfloat h)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[801];
+   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat w, GLfloat h)) _func)(index, x, y, w, h);
+}
+
+void APIENTRY shared_dispatch_stub_802(GLuint index, const GLfloat *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[802];
+   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
+}
+
+GLenum APIENTRY shared_dispatch_stub_803(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[803];
+   return ((GLenum (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_804(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *table)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[804];
+   ((void (APIENTRY *)(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *table)) _func)(target, format, type, bufSize, table);
+}
+
+void APIENTRY shared_dispatch_stub_805(GLenum target, GLint lod, GLsizei bufSize, GLvoid *img)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[805];
+   ((void (APIENTRY *)(GLenum target, GLint lod, GLsizei bufSize, GLvoid *img)) _func)(target, lod, bufSize, img);
+}
+
+void APIENTRY shared_dispatch_stub_806(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *image)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[806];
+   ((void (APIENTRY *)(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid *image)) _func)(target, format, type, bufSize, image);
+}
+
+void APIENTRY shared_dispatch_stub_807(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[807];
+   ((void (APIENTRY *)(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values)) _func)(target, reset, format, type, bufSize, values);
+}
+
+void APIENTRY shared_dispatch_stub_808(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[808];
+   ((void (APIENTRY *)(GLenum target, GLenum query, GLsizei bufSize, GLdouble *v)) _func)(target, query, bufSize, v);
+}
+
+void APIENTRY shared_dispatch_stub_809(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[809];
+   ((void (APIENTRY *)(GLenum target, GLenum query, GLsizei bufSize, GLfloat *v)) _func)(target, query, bufSize, v);
+}
+
+void APIENTRY shared_dispatch_stub_810(GLenum target, GLenum query, GLsizei bufSize, GLint *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[810];
+   ((void (APIENTRY *)(GLenum target, GLenum query, GLsizei bufSize, GLint *v)) _func)(target, query, bufSize, v);
+}
+
+void APIENTRY shared_dispatch_stub_811(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[811];
+   ((void (APIENTRY *)(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid *values)) _func)(target, reset, format, type, bufSize, values);
+}
+
+void APIENTRY shared_dispatch_stub_812(GLenum map, GLsizei bufSize, GLfloat *values)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[812];
+   ((void (APIENTRY *)(GLenum map, GLsizei bufSize, GLfloat *values)) _func)(map, bufSize, values);
+}
+
+void APIENTRY shared_dispatch_stub_813(GLenum map, GLsizei bufSize, GLuint *values)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[813];
+   ((void (APIENTRY *)(GLenum map, GLsizei bufSize, GLuint *values)) _func)(map, bufSize, values);
+}
+
+void APIENTRY shared_dispatch_stub_814(GLenum map, GLsizei bufSize, GLushort *values)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[814];
+   ((void (APIENTRY *)(GLenum map, GLsizei bufSize, GLushort *values)) _func)(map, bufSize, values);
+}
+
+void APIENTRY shared_dispatch_stub_815(GLsizei bufSize, GLubyte *pattern)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[815];
+   ((void (APIENTRY *)(GLsizei bufSize, GLubyte *pattern)) _func)(bufSize, pattern);
+}
+
+void APIENTRY shared_dispatch_stub_816(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, GLvoid *row, GLsizei columnBufSize, GLvoid *column, GLvoid *span)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[816];
+   ((void (APIENTRY *)(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, GLvoid *row, GLsizei columnBufSize, GLvoid *column, GLvoid *span)) _func)(target, format, type, rowBufSize, row, columnBufSize, column, span);
+}
+
+void APIENTRY shared_dispatch_stub_817(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, GLvoid *img)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[817];
+   ((void (APIENTRY *)(GLenum target, GLint level, GLenum format, GLenum type, GLsizei bufSize, GLvoid *img)) _func)(target, level, format, type, bufSize, img);
+}
+
+void APIENTRY shared_dispatch_stub_818(GLuint program, GLint location, GLsizei bufSize, GLdouble *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[818];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei bufSize, GLdouble *params)) _func)(program, location, bufSize, params);
+}
+
+void APIENTRY shared_dispatch_stub_819(GLuint program, GLint location, GLsizei bufSize, GLfloat *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[819];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei bufSize, GLfloat *params)) _func)(program, location, bufSize, params);
+}
+
+void APIENTRY shared_dispatch_stub_820(GLuint program, GLint location, GLsizei bufSize, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[820];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei bufSize, GLint *params)) _func)(program, location, bufSize, params);
+}
+
+void APIENTRY shared_dispatch_stub_821(GLuint program, GLint location, GLsizei bufSize, GLuint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[821];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei bufSize, GLuint *params)) _func)(program, location, bufSize, params);
+}
+
+void APIENTRY shared_dispatch_stub_822(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[822];
+   ((void (APIENTRY *)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid *data)) _func)(x, y, width, height, format, type, bufSize, data);
+}
+
+void APIENTRY shared_dispatch_stub_823(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[823];
+   ((void (APIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei primcount, GLuint baseinstance)) _func)(mode, first, count, primcount, baseinstance);
+}
+
+void APIENTRY shared_dispatch_stub_824(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[824];
+   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLuint baseinstance)) _func)(mode, count, type, indices, primcount, baseinstance);
+}
+
+void APIENTRY shared_dispatch_stub_825(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[825];
+   ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex, GLuint baseinstance)) _func)(mode, count, type, indices, primcount, basevertex, baseinstance);
+}
+
+void APIENTRY shared_dispatch_stub_826(GLenum mode, GLuint id, GLsizei primcount)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[826];
+   ((void (APIENTRY *)(GLenum mode, GLuint id, GLsizei primcount)) _func)(mode, id, primcount);
+}
+
+void APIENTRY shared_dispatch_stub_827(GLenum mode, GLuint id, GLuint stream, GLsizei primcount)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[827];
+   ((void (APIENTRY *)(GLenum mode, GLuint id, GLuint stream, GLsizei primcount)) _func)(mode, id, stream, primcount);
+}
+
+void APIENTRY shared_dispatch_stub_828(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[828];
+   ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params)) _func)(target, internalformat, pname, bufSize, params);
+}
+
+void APIENTRY shared_dispatch_stub_829(GLuint program, GLuint bufferIndex, GLenum pname, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[829];
+   ((void (APIENTRY *)(GLuint program, GLuint bufferIndex, GLenum pname, GLint *params)) _func)(program, bufferIndex, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_830(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[830];
+   ((void (APIENTRY *)(GLuint unit, GLuint texture, GLint level, GLboolean layered, GLint layer, GLenum access, GLenum format)) _func)(unit, texture, level, layered, layer, access, format);
+}
+
+void APIENTRY shared_dispatch_stub_831(GLbitfield barriers)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[831];
+   ((void (APIENTRY *)(GLbitfield barriers)) _func)(barriers);
+}
+
+void APIENTRY shared_dispatch_stub_832(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[832];
+   ((void (APIENTRY *)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)) _func)(target, levels, internalFormat, width);
+}
+
+void APIENTRY shared_dispatch_stub_833(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[833];
+   ((void (APIENTRY *)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height)) _func)(target, levels, internalFormat, width, height);
+}
+
+void APIENTRY shared_dispatch_stub_834(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[834];
+   ((void (APIENTRY *)(GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth)) _func)(target, levels, internalFormat, width, height, depth);
+}
+
+void APIENTRY shared_dispatch_stub_835(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[835];
+   ((void (APIENTRY *)(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width)) _func)(texture, target, levels, internalFormat, width);
+}
+
+void APIENTRY shared_dispatch_stub_836(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[836];
+   ((void (APIENTRY *)(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height)) _func)(texture, target, levels, internalFormat, width, height);
+}
+
+void APIENTRY shared_dispatch_stub_837(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[837];
+   ((void (APIENTRY *)(GLuint texture, GLenum target, GLsizei levels, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth)) _func)(texture, target, levels, internalFormat, width, height, depth);
+}
+
+void APIENTRY shared_dispatch_stub_838(GLenum target, GLenum internalformat, GLenum format, GLenum type, const GLvoid *data)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[838];
+   ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLenum format, GLenum type, const GLvoid *data)) _func)(target, internalformat, format, type, data);
+}
+
+void APIENTRY shared_dispatch_stub_839(GLenum target, GLenum internalformat, GLintptr offset, GLsizeiptr size, GLenum format, GLenum type, const GLvoid *data)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[839];
+   ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLintptr offset, GLsizeiptr size, GLenum format, GLenum type, const GLvoid *data)) _func)(target, internalformat, offset, size, format, type, data);
+}
+
+void APIENTRY shared_dispatch_stub_840(GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[840];
+   ((void (APIENTRY *)(GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z)) _func)(num_groups_x, num_groups_y, num_groups_z);
+}
+
+void APIENTRY shared_dispatch_stub_841(GLintptr indirect)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[841];
+   ((void (APIENTRY *)(GLintptr indirect)) _func)(indirect);
+}
+
+void APIENTRY shared_dispatch_stub_842(GLuint texture, GLenum target, GLuint origtexture, GLenum internalformat, GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[842];
+   ((void (APIENTRY *)(GLuint texture, GLenum target, GLuint origtexture, GLenum internalformat, GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers)) _func)(texture, target, origtexture, internalformat, minlevel, numlevels, minlayer, numlayers);
+}
+
+void APIENTRY shared_dispatch_stub_843(GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[843];
+   ((void (APIENTRY *)(GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride)) _func)(bindingindex, buffer, offset, stride);
+}
+
+void APIENTRY shared_dispatch_stub_844(GLuint attribindex, GLuint bindingindex)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[844];
+   ((void (APIENTRY *)(GLuint attribindex, GLuint bindingindex)) _func)(attribindex, bindingindex);
+}
+
+void APIENTRY shared_dispatch_stub_845(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[845];
+   ((void (APIENTRY *)(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset)) _func)(attribindex, size, type, normalized, relativeoffset);
+}
+
+void APIENTRY shared_dispatch_stub_846(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[846];
+   ((void (APIENTRY *)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)) _func)(attribindex, size, type, relativeoffset);
+}
+
+void APIENTRY shared_dispatch_stub_847(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[847];
+   ((void (APIENTRY *)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)) _func)(attribindex, size, type, relativeoffset);
+}
+
+void APIENTRY shared_dispatch_stub_848(GLuint attribindex, GLuint divisor)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[848];
+   ((void (APIENTRY *)(GLuint attribindex, GLuint divisor)) _func)(attribindex, divisor);
+}
+
+void APIENTRY shared_dispatch_stub_849(GLenum mode, const GLvoid *indirect, GLsizei primcount, GLsizei stride)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[849];
+   ((void (APIENTRY *)(GLenum mode, const GLvoid *indirect, GLsizei primcount, GLsizei stride)) _func)(mode, indirect, primcount, stride);
+}
+
+void APIENTRY shared_dispatch_stub_850(GLenum mode, GLenum type, const GLvoid *indirect, GLsizei primcount, GLsizei stride)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[850];
+   ((void (APIENTRY *)(GLenum mode, GLenum type, const GLvoid *indirect, GLsizei primcount, GLsizei stride)) _func)(mode, type, indirect, primcount, stride);
+}
+
+void APIENTRY shared_dispatch_stub_851(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[851];
+   ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)) _func)(target, internalformat, buffer, offset, size);
+}
+
+void APIENTRY shared_dispatch_stub_852(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[852];
+   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, fixedsamplelocations);
+}
+
+void APIENTRY shared_dispatch_stub_853(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[853];
+   ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, depth, fixedsamplelocations);
+}
+
+void APIENTRY shared_dispatch_stub_854(GLenum target, GLsizeiptr size, const GLvoid *data, GLbitfield flags)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[854];
+   ((void (APIENTRY *)(GLenum target, GLsizeiptr size, const GLvoid *data, GLbitfield flags)) _func)(target, size, data, flags);
+}
+
+void APIENTRY shared_dispatch_stub_855(GLenum target, GLuint first, GLsizei count, const GLuint *buffers)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[855];
+   ((void (APIENTRY *)(GLenum target, GLuint first, GLsizei count, const GLuint *buffers)) _func)(target, first, count, buffers);
+}
+
+void APIENTRY shared_dispatch_stub_856(GLenum target, GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizeiptr *sizes)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[856];
+   ((void (APIENTRY *)(GLenum target, GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizeiptr *sizes)) _func)(target, first, count, buffers, offsets, sizes);
+}
+
+void APIENTRY shared_dispatch_stub_857(GLuint first, GLsizei count, const GLuint *textures)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[857];
+   ((void (APIENTRY *)(GLuint first, GLsizei count, const GLuint *textures)) _func)(first, count, textures);
+}
+
+void APIENTRY shared_dispatch_stub_858(GLuint first, GLsizei count, const GLuint *samplers)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[858];
+   ((void (APIENTRY *)(GLuint first, GLsizei count, const GLuint *samplers)) _func)(first, count, samplers);
+}
+
+void APIENTRY shared_dispatch_stub_859(GLuint first, GLsizei count, const GLuint *textures)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[859];
+   ((void (APIENTRY *)(GLuint first, GLsizei count, const GLuint *textures)) _func)(first, count, textures);
+}
+
+void APIENTRY shared_dispatch_stub_860(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[860];
+   ((void (APIENTRY *)(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides)) _func)(first, count, buffers, offsets, strides);
+}
+
+void APIENTRY shared_dispatch_stub_861(GLuint buffer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[861];
+   ((void (APIENTRY *)(GLuint buffer)) _func)(buffer);
+}
+
+void APIENTRY shared_dispatch_stub_862(GLuint buffer, GLintptr offset, GLsizeiptr length)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[862];
+   ((void (APIENTRY *)(GLuint buffer, GLintptr offset, GLsizeiptr length)) _func)(buffer, offset, length);
+}
+
+void APIENTRY shared_dispatch_stub_863(GLenum target, GLsizei numAttachments, const GLenum *attachments)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[863];
+   ((void (APIENTRY *)(GLenum target, GLsizei numAttachments, const GLenum *attachments)) _func)(target, numAttachments, attachments);
+}
+
+void APIENTRY shared_dispatch_stub_864(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[864];
+   ((void (APIENTRY *)(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)) _func)(target, numAttachments, attachments, x, y, width, height);
+}
+
+void APIENTRY shared_dispatch_stub_865(GLuint texture, GLint level)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[865];
+   ((void (APIENTRY *)(GLuint texture, GLint level)) _func)(texture, level);
+}
+
+void APIENTRY shared_dispatch_stub_866(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[866];
+   ((void (APIENTRY *)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth)) _func)(texture, level, xoffset, yoffset, zoffset, width, height, depth);
+}
+
+void APIENTRY shared_dispatch_stub_867(GLfloat factor, GLfloat bias)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[867];
+   ((void (APIENTRY *)(GLfloat factor, GLfloat bias)) _func)(factor, bias);
+}
+
+void APIENTRY shared_dispatch_stub_868(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[868];
+   ((void (APIENTRY *)(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height)) _func)(x, y, z, width, height);
+}
+
+void APIENTRY shared_dispatch_stub_869(const GLfloat *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[869];
+   ((void (APIENTRY *)(const GLfloat *coords)) _func)(coords);
+}
+
+void APIENTRY shared_dispatch_stub_870(GLint x, GLint y, GLint z, GLint width, GLint height)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[870];
+   ((void (APIENTRY *)(GLint x, GLint y, GLint z, GLint width, GLint height)) _func)(x, y, z, width, height);
+}
+
+void APIENTRY shared_dispatch_stub_871(const GLint *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[871];
+   ((void (APIENTRY *)(const GLint *coords)) _func)(coords);
+}
+
+void APIENTRY shared_dispatch_stub_872(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[872];
+   ((void (APIENTRY *)(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height)) _func)(x, y, z, width, height);
+}
+
+void APIENTRY shared_dispatch_stub_873(const GLshort *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[873];
+   ((void (APIENTRY *)(const GLshort *coords)) _func)(coords);
+}
+
+void APIENTRY shared_dispatch_stub_874(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[874];
+   ((void (APIENTRY *)(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height)) _func)(x, y, z, width, height);
+}
+
+void APIENTRY shared_dispatch_stub_875(const GLfixed *coords)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[875];
+   ((void (APIENTRY *)(const GLfixed *coords)) _func)(coords);
+}
+
+void APIENTRY shared_dispatch_stub_876(GLenum type, GLsizei stride, const GLvoid *pointer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[876];
+   ((void (APIENTRY *)(GLenum type, GLsizei stride, const GLvoid *pointer)) _func)(type, stride, pointer);
+}
+
+GLbitfield APIENTRY shared_dispatch_stub_877(GLfixed *mantissa, GLint *exponent)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[877];
+   return ((GLbitfield (APIENTRY *)(GLfixed *mantissa, GLint *exponent)) _func)(mantissa, exponent);
+}
+
+void APIENTRY shared_dispatch_stub_878(GLclampf value, GLboolean invert)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[878];
+   ((void (APIENTRY *)(GLclampf value, GLboolean invert)) _func)(value, invert);
+}
+
+void APIENTRY shared_dispatch_stub_879(GLenum pattern)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[879];
+   ((void (APIENTRY *)(GLenum pattern)) _func)(pattern);
+}
+
+void APIENTRY shared_dispatch_stub_880(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[880];
+   ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
+}
+
+void APIENTRY shared_dispatch_stub_881(GLsizei stride, GLsizei count, const GLboolean *pointer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[881];
+   ((void (APIENTRY *)(GLsizei stride, GLsizei count, const GLboolean *pointer)) _func)(stride, count, pointer);
+}
+
+void APIENTRY shared_dispatch_stub_882(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[882];
+   ((void (APIENTRY *)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(type, stride, count, pointer);
+}
+
+void APIENTRY shared_dispatch_stub_883(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[883];
+   ((void (APIENTRY *)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(type, stride, count, pointer);
+}
+
+void APIENTRY shared_dispatch_stub_884(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[884];
+   ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
+}
+
+void APIENTRY shared_dispatch_stub_885(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[885];
+   ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
+}
+
+void APIENTRY shared_dispatch_stub_886(GLenum target, GLsizei numAttachments, const GLenum *attachments)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[886];
+   ((void (APIENTRY *)(GLenum target, GLsizei numAttachments, const GLenum *attachments)) _func)(target, numAttachments, attachments);
+}
+
+void APIENTRY shared_dispatch_stub_887(GLuint pipeline, GLuint program)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[887];
+   ((void (APIENTRY *)(GLuint pipeline, GLuint program)) _func)(pipeline, program);
+}
+
+void APIENTRY shared_dispatch_stub_888(GLuint pipeline)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[888];
+   ((void (APIENTRY *)(GLuint pipeline)) _func)(pipeline);
+}
+
+GLuint APIENTRY shared_dispatch_stub_889(GLenum type, GLsizei count, const GLchar * const *strings)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[889];
+   return ((GLuint (APIENTRY *)(GLenum type, GLsizei count, const GLchar * const *strings)) _func)(type, count, strings);
+}
+
+void APIENTRY shared_dispatch_stub_890(GLsizei n, const GLuint *pipelines)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[890];
+   ((void (APIENTRY *)(GLsizei n, const GLuint *pipelines)) _func)(n, pipelines);
+}
+
+void APIENTRY shared_dispatch_stub_891(GLsizei n, GLuint *pipelines)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[891];
+   ((void (APIENTRY *)(GLsizei n, GLuint *pipelines)) _func)(n, pipelines);
+}
+
+void APIENTRY shared_dispatch_stub_892(GLuint pipeline, GLsizei bufSize, GLsizei *length, GLchar *infoLog)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[892];
+   ((void (APIENTRY *)(GLuint pipeline, GLsizei bufSize, GLsizei *length, GLchar *infoLog)) _func)(pipeline, bufSize, length, infoLog);
+}
+
+void APIENTRY shared_dispatch_stub_893(GLuint pipeline, GLenum pname, GLint *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[893];
+   ((void (APIENTRY *)(GLuint pipeline, GLenum pname, GLint *params)) _func)(pipeline, pname, params);
+}
+
+GLboolean APIENTRY shared_dispatch_stub_894(GLuint pipeline)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[894];
+   return ((GLboolean (APIENTRY *)(GLuint pipeline)) _func)(pipeline);
+}
+
+void APIENTRY shared_dispatch_stub_895(GLint first, GLsizei count)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[895];
+   ((void (APIENTRY *)(GLint first, GLsizei count)) _func)(first, count);
+}
+
+void APIENTRY shared_dispatch_stub_896(GLuint program, GLint location, GLfloat x)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[896];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLfloat x)) _func)(program, location, x);
+}
+
+void APIENTRY shared_dispatch_stub_897(GLuint program, GLint location, GLsizei count, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[897];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLfloat *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_898(GLuint program, GLint location, GLint x)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[898];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLint x)) _func)(program, location, x);
+}
+
+void APIENTRY shared_dispatch_stub_899(GLuint program, GLint location, GLsizei count, const GLint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[899];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLint *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_900(GLuint program, GLint location, GLuint x)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[900];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLuint x)) _func)(program, location, x);
+}
+
+void APIENTRY shared_dispatch_stub_901(GLuint program, GLint location, GLsizei count, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[901];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLuint *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_902(GLuint program, GLint location, GLfloat x, GLfloat y)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[902];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLfloat x, GLfloat y)) _func)(program, location, x, y);
+}
+
+void APIENTRY shared_dispatch_stub_903(GLuint program, GLint location, GLsizei count, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[903];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLfloat *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_904(GLuint program, GLint location, GLint x, GLint y)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[904];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLint x, GLint y)) _func)(program, location, x, y);
+}
+
+void APIENTRY shared_dispatch_stub_905(GLuint program, GLint location, GLsizei count, const GLint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[905];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLint *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_906(GLuint program, GLint location, GLuint x, GLuint y)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[906];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLuint x, GLuint y)) _func)(program, location, x, y);
+}
+
+void APIENTRY shared_dispatch_stub_907(GLuint program, GLint location, GLsizei count, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[907];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLuint *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_908(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[908];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z)) _func)(program, location, x, y, z);
+}
+
+void APIENTRY shared_dispatch_stub_909(GLuint program, GLint location, GLsizei count, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[909];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLfloat *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_910(GLuint program, GLint location, GLint x, GLint y, GLint z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[910];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLint x, GLint y, GLint z)) _func)(program, location, x, y, z);
+}
+
+void APIENTRY shared_dispatch_stub_911(GLuint program, GLint location, GLsizei count, const GLint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[911];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLint *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_912(GLuint program, GLint location, GLuint x, GLuint y, GLuint z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[912];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLuint x, GLuint y, GLuint z)) _func)(program, location, x, y, z);
+}
+
+void APIENTRY shared_dispatch_stub_913(GLuint program, GLint location, GLsizei count, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[913];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLuint *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_914(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[914];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(program, location, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_915(GLuint program, GLint location, GLsizei count, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[915];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLfloat *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_916(GLuint program, GLint location, GLint x, GLint y, GLint z, GLint w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[916];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLint x, GLint y, GLint z, GLint w)) _func)(program, location, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_917(GLuint program, GLint location, GLsizei count, const GLint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[917];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLint *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_918(GLuint program, GLint location, GLuint x, GLuint y, GLuint z, GLuint w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[918];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLuint x, GLuint y, GLuint z, GLuint w)) _func)(program, location, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_919(GLuint program, GLint location, GLsizei count, const GLuint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[919];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, const GLuint *value)) _func)(program, location, count, value);
+}
+
+void APIENTRY shared_dispatch_stub_920(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[920];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_921(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[921];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_922(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[922];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_923(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[923];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_924(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[924];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_925(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[925];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_926(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[926];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_927(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[927];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_928(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[928];
+   ((void (APIENTRY *)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)) _func)(program, location, count, transpose, value);
+}
+
+void APIENTRY shared_dispatch_stub_929(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[929];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_930(GLuint pipeline, GLbitfield stages, GLuint program)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[930];
+   ((void (APIENTRY *)(GLuint pipeline, GLbitfield stages, GLuint program)) _func)(pipeline, stages, program);
+}
+
+void APIENTRY shared_dispatch_stub_931(GLuint pipeline)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[931];
+   ((void (APIENTRY *)(GLuint pipeline)) _func)(pipeline);
+}
+
+void APIENTRY shared_dispatch_stub_932(GLDEBUGPROC callback, const GLvoid *userParam)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[932];
+   ((void (APIENTRY *)(GLDEBUGPROC callback, const GLvoid *userParam)) _func)(callback, userParam);
+}
+
+void APIENTRY shared_dispatch_stub_933(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[933];
+   ((void (APIENTRY *)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)) _func)(source, type, severity, count, ids, enabled);
+}
+
+void APIENTRY shared_dispatch_stub_934(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *buf)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[934];
+   ((void (APIENTRY *)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *buf)) _func)(source, type, id, severity, length, buf);
+}
+
+GLuint APIENTRY shared_dispatch_stub_935(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[935];
+   return ((GLuint (APIENTRY *)(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog)) _func)(count, bufsize, sources, types, ids, severities, lengths, messageLog);
+}
+
+void APIENTRY shared_dispatch_stub_936(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLchar *label)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[936];
+   ((void (APIENTRY *)(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLchar *label)) _func)(identifier, name, bufSize, length, label);
+}
+
+void APIENTRY shared_dispatch_stub_937(const GLvoid *ptr, GLsizei bufSize, GLsizei *length, GLchar *label)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[937];
+   ((void (APIENTRY *)(const GLvoid *ptr, GLsizei bufSize, GLsizei *length, GLchar *label)) _func)(ptr, bufSize, length, label);
+}
+
+void APIENTRY shared_dispatch_stub_938(GLenum identifier, GLuint name, GLsizei length, const GLchar *label)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[938];
+   ((void (APIENTRY *)(GLenum identifier, GLuint name, GLsizei length, const GLchar *label)) _func)(identifier, name, length, label);
+}
+
+void APIENTRY shared_dispatch_stub_939(const GLvoid *ptr, GLsizei length, const GLchar *label)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[939];
+   ((void (APIENTRY *)(const GLvoid *ptr, GLsizei length, const GLchar *label)) _func)(ptr, length, label);
+}
+
+void APIENTRY shared_dispatch_stub_940(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[940];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_941(GLenum source, GLuint id, GLsizei length, const GLchar *message)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[941];
+   ((void (APIENTRY *)(GLenum source, GLuint id, GLsizei length, const GLchar *message)) _func)(source, id, length, message);
+}
+
+void APIENTRY shared_dispatch_stub_942(GLfloat red, GLfloat green, GLfloat blue)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[942];
+   ((void (APIENTRY *)(GLfloat red, GLfloat green, GLfloat blue)) _func)(red, green, blue);
+}
+
+void APIENTRY shared_dispatch_stub_943(const GLfloat *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[943];
+   ((void (APIENTRY *)(const GLfloat *v)) _func)(v);
+}
+
+void APIENTRY shared_dispatch_stub_944(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[944];
+   ((void (APIENTRY *)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
+}
+
+void APIENTRY shared_dispatch_stub_945(GLfloat coord)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[945];
+   ((void (APIENTRY *)(GLfloat coord)) _func)(coord);
+}
+
+void APIENTRY shared_dispatch_stub_946(const GLfloat *coord)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[946];
+   ((void (APIENTRY *)(const GLfloat *coord)) _func)(coord);
+}
+
+void APIENTRY shared_dispatch_stub_947(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[947];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_948(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[948];
+   ((void (APIENTRY *)(GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_949(const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[949];
-   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params)) _func)(id, len, name, params);
+   ((void (APIENTRY *)(const GLdouble *v)) _func)(v);
 }
 
-void APIENTRY shared_dispatch_stub_950(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params)
+void APIENTRY shared_dispatch_stub_950(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[950];
-   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params)) _func)(id, len, name, params);
+   ((void (APIENTRY *)(GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_951(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+void APIENTRY shared_dispatch_stub_951(const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[951];
-   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(id, len, name, x, y, z, w);
+   ((void (APIENTRY *)(const GLfloat *v)) _func)(v);
 }
 
-void APIENTRY shared_dispatch_stub_952(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v)
+void APIENTRY shared_dispatch_stub_952(GLint x, GLint y, GLint z, GLint w)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[952];
-   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v)) _func)(id, len, name, v);
+   ((void (APIENTRY *)(GLint x, GLint y, GLint z, GLint w)) _func)(x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_953(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+void APIENTRY shared_dispatch_stub_953(const GLint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[953];
-   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(id, len, name, x, y, z, w);
+   ((void (APIENTRY *)(const GLint *v)) _func)(v);
 }
 
-void APIENTRY shared_dispatch_stub_954(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v)
+void APIENTRY shared_dispatch_stub_954(GLshort x, GLshort y, GLshort z, GLshort w)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[954];
-   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v)) _func)(id, len, name, v);
+   ((void (APIENTRY *)(GLshort x, GLshort y, GLshort z, GLshort w)) _func)(x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_955(void)
+void APIENTRY shared_dispatch_stub_955(const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[955];
-   ((void (APIENTRY *)(void)) _func)();
+   ((void (APIENTRY *)(const GLshort *v)) _func)(v);
 }
 
-void APIENTRY shared_dispatch_stub_956(GLenum coord, GLenum pname, GLfixed *params)
+void APIENTRY shared_dispatch_stub_956(const GLenum *mode, const GLint *first, const GLsizei *count, GLsizei primcount, GLint modestride)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[956];
-   ((void (APIENTRY *)(GLenum coord, GLenum pname, GLfixed *params)) _func)(coord, pname, params);
+   ((void (APIENTRY *)(const GLenum *mode, const GLint *first, const GLsizei *count, GLsizei primcount, GLint modestride)) _func)(mode, first, count, primcount, modestride);
 }
 
-void APIENTRY shared_dispatch_stub_957(GLenum coord, GLenum pname, GLint param)
+void APIENTRY shared_dispatch_stub_957(const GLenum *mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, GLint modestride)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[957];
-   ((void (APIENTRY *)(GLenum coord, GLenum pname, GLint param)) _func)(coord, pname, param);
+   ((void (APIENTRY *)(const GLenum *mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, GLint modestride)) _func)(mode, count, type, indices, primcount, modestride);
 }
 
-void APIENTRY shared_dispatch_stub_958(GLenum coord, GLenum pname, const GLfixed *params)
+GLboolean APIENTRY shared_dispatch_stub_958(GLsizei n, const GLuint *ids, GLboolean *residences)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[958];
-   ((void (APIENTRY *)(GLenum coord, GLenum pname, const GLfixed *params)) _func)(coord, pname, params);
+   return ((GLboolean (APIENTRY *)(GLsizei n, const GLuint *ids, GLboolean *residences)) _func)(n, ids, residences);
 }
 
-void APIENTRY shared_dispatch_stub_959(GLclampd zmin, GLclampd zmax)
+void APIENTRY shared_dispatch_stub_959(GLenum target, GLuint id, const GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[959];
-   ((void (APIENTRY *)(GLclampd zmin, GLclampd zmax)) _func)(zmin, zmax);
+   ((void (APIENTRY *)(GLenum target, GLuint id, const GLfloat *params)) _func)(target, id, params);
 }
 
-void APIENTRY shared_dispatch_stub_960(GLenum target, GLuint framebuffer)
+void APIENTRY shared_dispatch_stub_960(GLenum target, GLuint index, GLenum pname, GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[960];
-   ((void (APIENTRY *)(GLenum target, GLuint framebuffer)) _func)(target, framebuffer);
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLenum pname, GLdouble *params)) _func)(target, index, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_961(GLenum target, GLuint renderbuffer)
+void APIENTRY shared_dispatch_stub_961(GLenum target, GLuint index, GLenum pname, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[961];
-   ((void (APIENTRY *)(GLenum target, GLuint renderbuffer)) _func)(target, renderbuffer);
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLenum pname, GLfloat *params)) _func)(target, index, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_962(GLenum target, GLenum pname, GLint param)
+void APIENTRY shared_dispatch_stub_962(GLuint id, GLenum pname, GLubyte *program)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[962];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, GLint param)) _func)(target, pname, param);
+   ((void (APIENTRY *)(GLuint id, GLenum pname, GLubyte *program)) _func)(id, pname, program);
 }
 
-void APIENTRY shared_dispatch_stub_963(GLenum target, GLintptr offset, GLsizeiptr size)
+void APIENTRY shared_dispatch_stub_963(GLuint id, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[963];
-   ((void (APIENTRY *)(GLenum target, GLintptr offset, GLsizeiptr size)) _func)(target, offset, size);
+   ((void (APIENTRY *)(GLuint id, GLenum pname, GLint *params)) _func)(id, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_964(GLuint index, GLint x)
+void APIENTRY shared_dispatch_stub_964(GLenum target, GLuint address, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[964];
-   ((void (APIENTRY *)(GLuint index, GLint x)) _func)(index, x);
+   ((void (APIENTRY *)(GLenum target, GLuint address, GLenum pname, GLint *params)) _func)(target, address, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_965(GLuint index, GLuint x)
+void APIENTRY shared_dispatch_stub_965(GLuint index, GLenum pname, GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[965];
-   ((void (APIENTRY *)(GLuint index, GLuint x)) _func)(index, x);
+   ((void (APIENTRY *)(GLuint index, GLenum pname, GLdouble *params)) _func)(index, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_966(GLuint index, GLint x, GLint y)
+void APIENTRY shared_dispatch_stub_966(GLuint index, GLenum pname, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[966];
-   ((void (APIENTRY *)(GLuint index, GLint x, GLint y)) _func)(index, x, y);
+   ((void (APIENTRY *)(GLuint index, GLenum pname, GLfloat *params)) _func)(index, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_967(GLuint index, const GLint *v)
+void APIENTRY shared_dispatch_stub_967(GLuint index, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[967];
-   ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLuint index, GLenum pname, GLint *params)) _func)(index, pname, params);
 }
 
-void APIENTRY shared_dispatch_stub_968(GLuint index, GLuint x, GLuint y)
+void APIENTRY shared_dispatch_stub_968(GLenum target, GLuint id, GLsizei len, const GLubyte *program)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[968];
-   ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y)) _func)(index, x, y);
+   ((void (APIENTRY *)(GLenum target, GLuint id, GLsizei len, const GLubyte *program)) _func)(target, id, len, program);
 }
 
-void APIENTRY shared_dispatch_stub_969(GLuint index, const GLuint *v)
+void APIENTRY shared_dispatch_stub_969(GLenum target, GLuint index, GLsizei num, const GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[969];
-   ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei num, const GLdouble *params)) _func)(target, index, num, params);
 }
 
-void APIENTRY shared_dispatch_stub_970(GLuint index, GLint x, GLint y, GLint z)
+void APIENTRY shared_dispatch_stub_970(GLenum target, GLuint index, GLsizei num, const GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[970];
-   ((void (APIENTRY *)(GLuint index, GLint x, GLint y, GLint z)) _func)(index, x, y, z);
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei num, const GLfloat *params)) _func)(target, index, num, params);
 }
 
-void APIENTRY shared_dispatch_stub_971(GLuint index, const GLint *v)
+void APIENTRY shared_dispatch_stub_971(GLsizei n, const GLuint *ids)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[971];
-   ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLsizei n, const GLuint *ids)) _func)(n, ids);
 }
 
-void APIENTRY shared_dispatch_stub_972(GLuint index, GLuint x, GLuint y, GLuint z)
+void APIENTRY shared_dispatch_stub_972(GLenum target, GLuint address, GLenum matrix, GLenum transform)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[972];
-   ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y, GLuint z)) _func)(index, x, y, z);
+   ((void (APIENTRY *)(GLenum target, GLuint address, GLenum matrix, GLenum transform)) _func)(target, address, matrix, transform);
 }
 
-void APIENTRY shared_dispatch_stub_973(GLuint index, const GLuint *v)
+void APIENTRY shared_dispatch_stub_973(GLuint index, GLdouble x)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[973];
-   ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLuint index, GLdouble x)) _func)(index, x);
 }
 
-void APIENTRY shared_dispatch_stub_974(GLuint index, GLint x, GLint y, GLint z, GLint w)
+void APIENTRY shared_dispatch_stub_974(GLuint index, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[974];
-   ((void (APIENTRY *)(GLuint index, GLint x, GLint y, GLint z, GLint w)) _func)(index, x, y, z, w);
+   ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_975(GLuint index, const GLint *v)
+void APIENTRY shared_dispatch_stub_975(GLuint index, GLfloat x)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[975];
-   ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLuint index, GLfloat x)) _func)(index, x);
 }
 
-void APIENTRY shared_dispatch_stub_976(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
+void APIENTRY shared_dispatch_stub_976(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[976];
-   ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)) _func)(index, x, y, z, w);
+   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_977(GLuint index, const GLuint *v)
+void APIENTRY shared_dispatch_stub_977(GLuint index, GLshort x)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[977];
-   ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
+   ((void (APIENTRY *)(GLuint index, GLshort x)) _func)(index, x);
 }
 
-void APIENTRY shared_dispatch_stub_978(GLint r, GLint g, GLint b, GLint a)
+void APIENTRY shared_dispatch_stub_978(GLuint index, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[978];
-   ((void (APIENTRY *)(GLint r, GLint g, GLint b, GLint a)) _func)(r, g, b, a);
+   ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_979(GLuint r, GLuint g, GLuint b, GLuint a)
+void APIENTRY shared_dispatch_stub_979(GLuint index, GLdouble x, GLdouble y)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[979];
-   ((void (APIENTRY *)(GLuint r, GLuint g, GLuint b, GLuint a)) _func)(r, g, b, a);
+   ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y)) _func)(index, x, y);
 }
 
-void APIENTRY shared_dispatch_stub_980(GLenum target, GLuint index, GLuint buffer, GLintptr offset)
+void APIENTRY shared_dispatch_stub_980(GLuint index, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[980];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLuint buffer, GLintptr offset)) _func)(target, index, buffer, offset);
+   ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_981(GLenum objectType, GLuint name, GLenum pname, GLint *value)
+void APIENTRY shared_dispatch_stub_981(GLuint index, GLfloat x, GLfloat y)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[981];
-   ((void (APIENTRY *)(GLenum objectType, GLuint name, GLenum pname, GLint *value)) _func)(objectType, name, pname, value);
+   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y)) _func)(index, x, y);
 }
 
-GLenum APIENTRY shared_dispatch_stub_982(GLenum objectType, GLuint name, GLenum option)
+void APIENTRY shared_dispatch_stub_982(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[982];
-   return ((GLenum (APIENTRY *)(GLenum objectType, GLuint name, GLenum option)) _func)(objectType, name, option);
+   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
-GLenum APIENTRY shared_dispatch_stub_983(GLenum objectType, GLuint name, GLenum option)
+void APIENTRY shared_dispatch_stub_983(GLuint index, GLshort x, GLshort y)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[983];
-   return ((GLenum (APIENTRY *)(GLenum objectType, GLuint name, GLenum option)) _func)(objectType, name, option);
+   ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y)) _func)(index, x, y);
 }
 
-void APIENTRY shared_dispatch_stub_984(GLuint program)
+void APIENTRY shared_dispatch_stub_984(GLuint index, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[984];
-   ((void (APIENTRY *)(GLuint program)) _func)(program);
+   ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
 }
 
-GLuint APIENTRY shared_dispatch_stub_985(GLenum type, const GLchar *string)
+void APIENTRY shared_dispatch_stub_985(GLuint index, GLdouble x, GLdouble y, GLdouble z)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[985];
-   return ((GLuint (APIENTRY *)(GLenum type, const GLchar *string)) _func)(type, string);
+   ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y, GLdouble z)) _func)(index, x, y, z);
 }
 
-void APIENTRY shared_dispatch_stub_986(GLenum type, GLuint program)
+void APIENTRY shared_dispatch_stub_986(GLuint index, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[986];
-   ((void (APIENTRY *)(GLenum type, GLuint program)) _func)(type, program);
+   ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_987(void)
+void APIENTRY shared_dispatch_stub_987(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[987];
-   ((void (APIENTRY *)(void)) _func)();
+   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z)) _func)(index, x, y, z);
 }
 
-void APIENTRY shared_dispatch_stub_988(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask)
+void APIENTRY shared_dispatch_stub_988(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[988];
-   ((void (APIENTRY *)(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask)) _func)(frontfunc, backfunc, ref, mask);
+   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_989(GLenum target, GLuint index, GLsizei count, const GLfloat *params)
+void APIENTRY shared_dispatch_stub_989(GLuint index, GLshort x, GLshort y, GLshort z)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[989];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei count, const GLfloat *params)) _func)(target, index, count, params);
+   ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y, GLshort z)) _func)(index, x, y, z);
 }
 
-void APIENTRY shared_dispatch_stub_990(GLenum target, GLuint index, GLsizei count, const GLfloat *params)
+void APIENTRY shared_dispatch_stub_990(GLuint index, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[990];
-   ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei count, const GLfloat *params)) _func)(target, index, count, params);
+   ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_991(GLenum target, GLvoid *writeOffset)
+void APIENTRY shared_dispatch_stub_991(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[991];
-   ((void (APIENTRY *)(GLenum target, GLvoid *writeOffset)) _func)(target, writeOffset);
+   ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(index, x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_992(GLenum target, GLvoid *writeOffset)
+void APIENTRY shared_dispatch_stub_992(GLuint index, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[992];
-   ((void (APIENTRY *)(GLenum target, GLvoid *writeOffset)) _func)(target, writeOffset);
+   ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_993(GLenum func, GLclampx ref)
+void APIENTRY shared_dispatch_stub_993(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[993];
-   ((void (APIENTRY *)(GLenum func, GLclampx ref)) _func)(func, ref);
+   ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(index, x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_994(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha)
+void APIENTRY shared_dispatch_stub_994(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[994];
-   ((void (APIENTRY *)(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha)) _func)(red, green, blue, alpha);
+   ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_995(GLclampx depth)
+void APIENTRY shared_dispatch_stub_995(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[995];
-   ((void (APIENTRY *)(GLclampx depth)) _func)(depth);
+   ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)) _func)(index, x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_996(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
+void APIENTRY shared_dispatch_stub_996(GLuint index, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[996];
-   ((void (APIENTRY *)(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)) _func)(red, green, blue, alpha);
+   ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_997(GLclampx zNear, GLclampx zFar)
+void APIENTRY shared_dispatch_stub_997(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[997];
-   ((void (APIENTRY *)(GLclampx zNear, GLclampx zFar)) _func)(zNear, zFar);
+   ((void (APIENTRY *)(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)) _func)(index, x, y, z, w);
 }
 
-void APIENTRY shared_dispatch_stub_998(GLenum pname, GLfixed param)
+void APIENTRY shared_dispatch_stub_998(GLuint index, const GLubyte *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[998];
-   ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
+   ((void (APIENTRY *)(GLuint index, const GLubyte *v)) _func)(index, v);
 }
 
-void APIENTRY shared_dispatch_stub_999(GLenum pname, const GLfixed *params)
+void APIENTRY shared_dispatch_stub_999(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[999];
-   ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
+   ((void (APIENTRY *)(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)) _func)(index, size, type, stride, pointer);
 }
 
-void APIENTRY shared_dispatch_stub_1000(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+void APIENTRY shared_dispatch_stub_1000(GLuint index, GLsizei n, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1000];
-   ((void (APIENTRY *)(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)) _func)(left, right, bottom, top, zNear, zFar);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1001(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)
+void APIENTRY shared_dispatch_stub_1001(GLuint index, GLsizei n, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1001];
-   ((void (APIENTRY *)(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)) _func)(left, right, bottom, top, zNear, zFar);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1002(GLenum pname, GLfixed param)
+void APIENTRY shared_dispatch_stub_1002(GLuint index, GLsizei n, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1002];
-   ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1003(GLenum pname, const GLfixed *params)
+void APIENTRY shared_dispatch_stub_1003(GLuint index, GLsizei n, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1003];
-   ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1004(GLenum light, GLenum pname, GLfixed param)
+void APIENTRY shared_dispatch_stub_1004(GLuint index, GLsizei n, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1004];
-   ((void (APIENTRY *)(GLenum light, GLenum pname, GLfixed param)) _func)(light, pname, param);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1005(GLenum light, GLenum pname, const GLfixed *params)
+void APIENTRY shared_dispatch_stub_1005(GLuint index, GLsizei n, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1005];
-   ((void (APIENTRY *)(GLenum light, GLenum pname, const GLfixed *params)) _func)(light, pname, params);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1006(GLfixed width)
+void APIENTRY shared_dispatch_stub_1006(GLuint index, GLsizei n, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1006];
-   ((void (APIENTRY *)(GLfixed width)) _func)(width);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1007(const GLfixed *m)
+void APIENTRY shared_dispatch_stub_1007(GLuint index, GLsizei n, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1007];
-   ((void (APIENTRY *)(const GLfixed *m)) _func)(m);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1008(GLenum face, GLenum pname, GLfixed param)
+void APIENTRY shared_dispatch_stub_1008(GLuint index, GLsizei n, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1008];
-   ((void (APIENTRY *)(GLenum face, GLenum pname, GLfixed param)) _func)(face, pname, param);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1009(GLenum face, GLenum pname, const GLfixed *params)
+void APIENTRY shared_dispatch_stub_1009(GLuint index, GLsizei n, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1009];
-   ((void (APIENTRY *)(GLenum face, GLenum pname, const GLfixed *params)) _func)(face, pname, params);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1010(const GLfixed *m)
+void APIENTRY shared_dispatch_stub_1010(GLuint index, GLsizei n, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1010];
-   ((void (APIENTRY *)(const GLfixed *m)) _func)(m);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1011(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q)
+void APIENTRY shared_dispatch_stub_1011(GLuint index, GLsizei n, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1011];
-   ((void (APIENTRY *)(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q)) _func)(target, s, t, r, q);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1012(GLfixed nx, GLfixed ny, GLfixed nz)
+void APIENTRY shared_dispatch_stub_1012(GLuint index, GLsizei n, const GLubyte *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1012];
-   ((void (APIENTRY *)(GLfixed nx, GLfixed ny, GLfixed nz)) _func)(nx, ny, nz);
+   ((void (APIENTRY *)(GLuint index, GLsizei n, const GLubyte *v)) _func)(index, n, v);
 }
 
-void APIENTRY shared_dispatch_stub_1013(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+void APIENTRY shared_dispatch_stub_1013(GLenum pname, GLfloat *param)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1013];
-   ((void (APIENTRY *)(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)) _func)(left, right, bottom, top, zNear, zFar);
+   ((void (APIENTRY *)(GLenum pname, GLfloat *param)) _func)(pname, param);
 }
 
-void APIENTRY shared_dispatch_stub_1014(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)
+void APIENTRY shared_dispatch_stub_1014(GLenum pname, GLint *param)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1014];
-   ((void (APIENTRY *)(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)) _func)(left, right, bottom, top, zNear, zFar);
+   ((void (APIENTRY *)(GLenum pname, GLint *param)) _func)(pname, param);
 }
 
-void APIENTRY shared_dispatch_stub_1015(GLfixed size)
+void APIENTRY shared_dispatch_stub_1015(GLenum pname, const GLfloat *param)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1015];
-   ((void (APIENTRY *)(GLfixed size)) _func)(size);
+   ((void (APIENTRY *)(GLenum pname, const GLfloat *param)) _func)(pname, param);
 }
 
-void APIENTRY shared_dispatch_stub_1016(GLfixed factor, GLfixed units)
+void APIENTRY shared_dispatch_stub_1016(GLenum pname, const GLint *param)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1016];
-   ((void (APIENTRY *)(GLfixed factor, GLfixed units)) _func)(factor, units);
+   ((void (APIENTRY *)(GLenum pname, const GLint *param)) _func)(pname, param);
 }
 
-void APIENTRY shared_dispatch_stub_1017(GLfixed angle, GLfixed x, GLfixed y, GLfixed z)
+void APIENTRY shared_dispatch_stub_1017(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1017];
-   ((void (APIENTRY *)(GLfixed angle, GLfixed x, GLfixed y, GLfixed z)) _func)(angle, x, y, z);
+   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod);
 }
 
-void APIENTRY shared_dispatch_stub_1018(GLclampx value, GLboolean invert)
+void APIENTRY shared_dispatch_stub_1018(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1018];
-   ((void (APIENTRY *)(GLclampx value, GLboolean invert)) _func)(value, invert);
+   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod);
 }
 
-void APIENTRY shared_dispatch_stub_1019(GLfixed x, GLfixed y, GLfixed z)
+void APIENTRY shared_dispatch_stub_1019(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1019];
-   ((void (APIENTRY *)(GLfixed x, GLfixed y, GLfixed z)) _func)(x, y, z);
+   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod);
 }
 
-void APIENTRY shared_dispatch_stub_1020(GLenum target, GLenum pname, GLfixed param)
+void APIENTRY shared_dispatch_stub_1020(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1020];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed param)) _func)(target, pname, param);
+   ((void (APIENTRY *)(void)) _func)();
 }
 
-void APIENTRY shared_dispatch_stub_1021(GLenum target, GLenum pname, const GLfixed *params)
+void APIENTRY shared_dispatch_stub_1021(GLuint id)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1021];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, const GLfixed *params)) _func)(target, pname, params);
+   ((void (APIENTRY *)(GLuint id)) _func)(id);
 }
 
-void APIENTRY shared_dispatch_stub_1022(GLenum target, GLenum pname, GLfixed param)
+void APIENTRY shared_dispatch_stub_1022(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1022];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed param)) _func)(target, pname, param);
+   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod);
 }
 
-void APIENTRY shared_dispatch_stub_1023(GLfixed x, GLfixed y, GLfixed z)
+void APIENTRY shared_dispatch_stub_1023(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1023];
-   ((void (APIENTRY *)(GLfixed x, GLfixed y, GLfixed z)) _func)(x, y, z);
+   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod);
 }
 
-void APIENTRY shared_dispatch_stub_1024(GLenum plane, const GLfloat *equation)
+void APIENTRY shared_dispatch_stub_1024(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1024];
-   ((void (APIENTRY *)(GLenum plane, const GLfloat *equation)) _func)(plane, equation);
+   ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod);
 }
 
-void APIENTRY shared_dispatch_stub_1025(GLenum plane, const GLfixed *equation)
+void APIENTRY shared_dispatch_stub_1025(GLuint id)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1025];
-   ((void (APIENTRY *)(GLenum plane, const GLfixed *equation)) _func)(plane, equation);
+   ((void (APIENTRY *)(GLuint id)) _func)(id);
 }
 
-void APIENTRY shared_dispatch_stub_1026(GLenum plane, GLfloat *equation)
+void APIENTRY shared_dispatch_stub_1026(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1026];
-   ((void (APIENTRY *)(GLenum plane, GLfloat *equation)) _func)(plane, equation);
+   ((void (APIENTRY *)(void)) _func)();
 }
 
-void APIENTRY shared_dispatch_stub_1027(GLenum plane, GLfixed *equation)
+GLuint APIENTRY shared_dispatch_stub_1027(GLuint range)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1027];
-   ((void (APIENTRY *)(GLenum plane, GLfixed *equation)) _func)(plane, equation);
+   return ((GLuint (APIENTRY *)(GLuint range)) _func)(range);
 }
 
-void APIENTRY shared_dispatch_stub_1028(GLenum pname, GLfixed *params)
+void APIENTRY shared_dispatch_stub_1028(GLuint dst, GLuint coord, GLenum swizzle)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1028];
-   ((void (APIENTRY *)(GLenum pname, GLfixed *params)) _func)(pname, params);
+   ((void (APIENTRY *)(GLuint dst, GLuint coord, GLenum swizzle)) _func)(dst, coord, swizzle);
 }
 
-void APIENTRY shared_dispatch_stub_1029(GLenum light, GLenum pname, GLfixed *params)
+void APIENTRY shared_dispatch_stub_1029(GLuint dst, GLuint interp, GLenum swizzle)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1029];
-   ((void (APIENTRY *)(GLenum light, GLenum pname, GLfixed *params)) _func)(light, pname, params);
+   ((void (APIENTRY *)(GLuint dst, GLuint interp, GLenum swizzle)) _func)(dst, interp, swizzle);
 }
 
-void APIENTRY shared_dispatch_stub_1030(GLenum face, GLenum pname, GLfixed *params)
+void APIENTRY shared_dispatch_stub_1030(GLuint dst, const GLfloat *value)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1030];
-   ((void (APIENTRY *)(GLenum face, GLenum pname, GLfixed *params)) _func)(face, pname, params);
+   ((void (APIENTRY *)(GLuint dst, const GLfloat *value)) _func)(dst, value);
 }
 
-void APIENTRY shared_dispatch_stub_1031(GLenum target, GLenum pname, GLfixed *params)
+void APIENTRY shared_dispatch_stub_1031(GLenum face)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1031];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed *params)) _func)(target, pname, params);
+   ((void (APIENTRY *)(GLenum face)) _func)(face);
 }
 
-void APIENTRY shared_dispatch_stub_1032(GLenum target, GLenum pname, GLfixed *params)
+void APIENTRY shared_dispatch_stub_1032(GLuint array)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1032];
-   ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed *params)) _func)(target, pname, params);
+   ((void (APIENTRY *)(GLuint array)) _func)(array);
 }
 
-void APIENTRY shared_dispatch_stub_1033(GLenum pname, GLfixed param)
+void APIENTRY shared_dispatch_stub_1033(GLsizei n, GLuint *arrays)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1033];
-   ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
+   ((void (APIENTRY *)(GLsizei n, GLuint *arrays)) _func)(n, arrays);
 }
 
-void APIENTRY shared_dispatch_stub_1034(GLenum pname, const GLfixed *params)
+void APIENTRY shared_dispatch_stub_1034(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1034];
-   ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
+   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params)) _func)(id, len, name, params);
 }
 
-void APIENTRY shared_dispatch_stub_1035(GLenum target, GLenum pname, const GLfixed *params)
+void APIENTRY shared_dispatch_stub_1035(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1035];
+   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params)) _func)(id, len, name, params);
+}
+
+void APIENTRY shared_dispatch_stub_1036(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1036];
+   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(id, len, name, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_1037(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1037];
+   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v)) _func)(id, len, name, v);
+}
+
+void APIENTRY shared_dispatch_stub_1038(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1038];
+   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(id, len, name, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_1039(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1039];
+   ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v)) _func)(id, len, name, v);
+}
+
+void APIENTRY shared_dispatch_stub_1040(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1040];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_1041(GLenum coord, GLenum pname, GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1041];
+   ((void (APIENTRY *)(GLenum coord, GLenum pname, GLfixed *params)) _func)(coord, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1042(GLenum coord, GLenum pname, GLint param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1042];
+   ((void (APIENTRY *)(GLenum coord, GLenum pname, GLint param)) _func)(coord, pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1043(GLenum coord, GLenum pname, const GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1043];
+   ((void (APIENTRY *)(GLenum coord, GLenum pname, const GLfixed *params)) _func)(coord, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1044(GLclampd zmin, GLclampd zmax)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1044];
+   ((void (APIENTRY *)(GLclampd zmin, GLclampd zmax)) _func)(zmin, zmax);
+}
+
+void APIENTRY shared_dispatch_stub_1045(GLenum target, GLuint framebuffer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1045];
+   ((void (APIENTRY *)(GLenum target, GLuint framebuffer)) _func)(target, framebuffer);
+}
+
+void APIENTRY shared_dispatch_stub_1046(GLenum target, GLuint renderbuffer)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1046];
+   ((void (APIENTRY *)(GLenum target, GLuint renderbuffer)) _func)(target, renderbuffer);
+}
+
+void APIENTRY shared_dispatch_stub_1047(GLenum target, GLenum pname, GLint param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1047];
+   ((void (APIENTRY *)(GLenum target, GLenum pname, GLint param)) _func)(target, pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1048(GLenum target, GLintptr offset, GLsizeiptr size)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1048];
+   ((void (APIENTRY *)(GLenum target, GLintptr offset, GLsizeiptr size)) _func)(target, offset, size);
+}
+
+void APIENTRY shared_dispatch_stub_1049(GLuint index, GLint x)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1049];
+   ((void (APIENTRY *)(GLuint index, GLint x)) _func)(index, x);
+}
+
+void APIENTRY shared_dispatch_stub_1050(GLuint index, GLuint x)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1050];
+   ((void (APIENTRY *)(GLuint index, GLuint x)) _func)(index, x);
+}
+
+void APIENTRY shared_dispatch_stub_1051(GLuint index, GLint x, GLint y)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1051];
+   ((void (APIENTRY *)(GLuint index, GLint x, GLint y)) _func)(index, x, y);
+}
+
+void APIENTRY shared_dispatch_stub_1052(GLuint index, const GLint *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1052];
+   ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
+}
+
+void APIENTRY shared_dispatch_stub_1053(GLuint index, GLuint x, GLuint y)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1053];
+   ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y)) _func)(index, x, y);
+}
+
+void APIENTRY shared_dispatch_stub_1054(GLuint index, const GLuint *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1054];
+   ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
+}
+
+void APIENTRY shared_dispatch_stub_1055(GLuint index, GLint x, GLint y, GLint z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1055];
+   ((void (APIENTRY *)(GLuint index, GLint x, GLint y, GLint z)) _func)(index, x, y, z);
+}
+
+void APIENTRY shared_dispatch_stub_1056(GLuint index, const GLint *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1056];
+   ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
+}
+
+void APIENTRY shared_dispatch_stub_1057(GLuint index, GLuint x, GLuint y, GLuint z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1057];
+   ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y, GLuint z)) _func)(index, x, y, z);
+}
+
+void APIENTRY shared_dispatch_stub_1058(GLuint index, const GLuint *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1058];
+   ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
+}
+
+void APIENTRY shared_dispatch_stub_1059(GLuint index, GLint x, GLint y, GLint z, GLint w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1059];
+   ((void (APIENTRY *)(GLuint index, GLint x, GLint y, GLint z, GLint w)) _func)(index, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_1060(GLuint index, const GLint *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1060];
+   ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
+}
+
+void APIENTRY shared_dispatch_stub_1061(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1061];
+   ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)) _func)(index, x, y, z, w);
+}
+
+void APIENTRY shared_dispatch_stub_1062(GLuint index, const GLuint *v)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1062];
+   ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
+}
+
+void APIENTRY shared_dispatch_stub_1063(GLint r, GLint g, GLint b, GLint a)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1063];
+   ((void (APIENTRY *)(GLint r, GLint g, GLint b, GLint a)) _func)(r, g, b, a);
+}
+
+void APIENTRY shared_dispatch_stub_1064(GLuint r, GLuint g, GLuint b, GLuint a)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1064];
+   ((void (APIENTRY *)(GLuint r, GLuint g, GLuint b, GLuint a)) _func)(r, g, b, a);
+}
+
+void APIENTRY shared_dispatch_stub_1065(GLenum target, GLuint index, GLuint buffer, GLintptr offset)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1065];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLuint buffer, GLintptr offset)) _func)(target, index, buffer, offset);
+}
+
+void APIENTRY shared_dispatch_stub_1066(GLuint monitor)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1066];
+   ((void (APIENTRY *)(GLuint monitor)) _func)(monitor);
+}
+
+void APIENTRY shared_dispatch_stub_1067(GLsizei n, GLuint *monitors)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1067];
+   ((void (APIENTRY *)(GLsizei n, GLuint *monitors)) _func)(n, monitors);
+}
+
+void APIENTRY shared_dispatch_stub_1068(GLuint monitor)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1068];
+   ((void (APIENTRY *)(GLuint monitor)) _func)(monitor);
+}
+
+void APIENTRY shared_dispatch_stub_1069(GLsizei n, GLuint *monitors)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1069];
+   ((void (APIENTRY *)(GLsizei n, GLuint *monitors)) _func)(n, monitors);
+}
+
+void APIENTRY shared_dispatch_stub_1070(GLuint monitor, GLenum pname, GLsizei dataSize, GLuint *data, GLint *bytesWritten)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1070];
+   ((void (APIENTRY *)(GLuint monitor, GLenum pname, GLsizei dataSize, GLuint *data, GLint *bytesWritten)) _func)(monitor, pname, dataSize, data, bytesWritten);
+}
+
+void APIENTRY shared_dispatch_stub_1071(GLuint group, GLuint counter, GLenum pname, GLvoid *data)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1071];
+   ((void (APIENTRY *)(GLuint group, GLuint counter, GLenum pname, GLvoid *data)) _func)(group, counter, pname, data);
+}
+
+void APIENTRY shared_dispatch_stub_1072(GLuint group, GLuint counter, GLsizei bufSize, GLsizei *length, GLchar *counterString)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1072];
+   ((void (APIENTRY *)(GLuint group, GLuint counter, GLsizei bufSize, GLsizei *length, GLchar *counterString)) _func)(group, counter, bufSize, length, counterString);
+}
+
+void APIENTRY shared_dispatch_stub_1073(GLuint group, GLint *numCounters, GLint *maxActiveCounters, GLsizei countersSize, GLuint *counters)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1073];
+   ((void (APIENTRY *)(GLuint group, GLint *numCounters, GLint *maxActiveCounters, GLsizei countersSize, GLuint *counters)) _func)(group, numCounters, maxActiveCounters, countersSize, counters);
+}
+
+void APIENTRY shared_dispatch_stub_1074(GLuint group, GLsizei bufSize, GLsizei *length, GLchar *groupString)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1074];
+   ((void (APIENTRY *)(GLuint group, GLsizei bufSize, GLsizei *length, GLchar *groupString)) _func)(group, bufSize, length, groupString);
+}
+
+void APIENTRY shared_dispatch_stub_1075(GLint *numGroups, GLsizei groupsSize, GLuint *groups)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1075];
+   ((void (APIENTRY *)(GLint *numGroups, GLsizei groupsSize, GLuint *groups)) _func)(numGroups, groupsSize, groups);
+}
+
+void APIENTRY shared_dispatch_stub_1076(GLuint monitor, GLboolean enable, GLuint group, GLint numCounters, GLuint *counterList)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1076];
+   ((void (APIENTRY *)(GLuint monitor, GLboolean enable, GLuint group, GLint numCounters, GLuint *counterList)) _func)(monitor, enable, group, numCounters, counterList);
+}
+
+void APIENTRY shared_dispatch_stub_1077(GLenum objectType, GLuint name, GLenum pname, GLint *value)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1077];
+   ((void (APIENTRY *)(GLenum objectType, GLuint name, GLenum pname, GLint *value)) _func)(objectType, name, pname, value);
+}
+
+GLenum APIENTRY shared_dispatch_stub_1078(GLenum objectType, GLuint name, GLenum option)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1078];
+   return ((GLenum (APIENTRY *)(GLenum objectType, GLuint name, GLenum option)) _func)(objectType, name, option);
+}
+
+GLenum APIENTRY shared_dispatch_stub_1079(GLenum objectType, GLuint name, GLenum option)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1079];
+   return ((GLenum (APIENTRY *)(GLenum objectType, GLuint name, GLenum option)) _func)(objectType, name, option);
+}
+
+void APIENTRY shared_dispatch_stub_1080(GLuint program)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1080];
+   ((void (APIENTRY *)(GLuint program)) _func)(program);
+}
+
+GLuint APIENTRY shared_dispatch_stub_1081(GLenum type, const GLchar *string)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1081];
+   return ((GLuint (APIENTRY *)(GLenum type, const GLchar *string)) _func)(type, string);
+}
+
+void APIENTRY shared_dispatch_stub_1082(GLenum type, GLuint program)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1082];
+   ((void (APIENTRY *)(GLenum type, GLuint program)) _func)(type, program);
+}
+
+void APIENTRY shared_dispatch_stub_1083(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1083];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_1084(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1084];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+void APIENTRY shared_dispatch_stub_1085(GLintptr surface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1085];
+   ((void (APIENTRY *)(GLintptr surface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)) _func)(surface, pname, bufSize, length, values);
+}
+
+void APIENTRY shared_dispatch_stub_1086(const GLvoid *vdpDevice, const GLvoid *getProcAddress)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1086];
+   ((void (APIENTRY *)(const GLvoid *vdpDevice, const GLvoid *getProcAddress)) _func)(vdpDevice, getProcAddress);
+}
+
+GLboolean APIENTRY shared_dispatch_stub_1087(GLintptr surface)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1087];
+   return ((GLboolean (APIENTRY *)(GLintptr surface)) _func)(surface);
+}
+
+void APIENTRY shared_dispatch_stub_1088(GLsizei numSurfaces, const GLintptr *surfaces)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1088];
+   ((void (APIENTRY *)(GLsizei numSurfaces, const GLintptr *surfaces)) _func)(numSurfaces, surfaces);
+}
+
+GLintptr APIENTRY shared_dispatch_stub_1089(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1089];
+   return ((GLintptr (APIENTRY *)(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)) _func)(vdpSurface, target, numTextureNames, textureNames);
+}
+
+GLintptr APIENTRY shared_dispatch_stub_1090(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1090];
+   return ((GLintptr (APIENTRY *)(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)) _func)(vdpSurface, target, numTextureNames, textureNames);
+}
+
+void APIENTRY shared_dispatch_stub_1091(GLintptr surface, GLenum access)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1091];
+   ((void (APIENTRY *)(GLintptr surface, GLenum access)) _func)(surface, access);
+}
+
+void APIENTRY shared_dispatch_stub_1092(GLsizei numSurfaces, const GLintptr *surfaces)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1092];
+   ((void (APIENTRY *)(GLsizei numSurfaces, const GLintptr *surfaces)) _func)(numSurfaces, surfaces);
+}
+
+void APIENTRY shared_dispatch_stub_1093(GLintptr surface)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1093];
+   ((void (APIENTRY *)(GLintptr surface)) _func)(surface);
+}
+
+void APIENTRY shared_dispatch_stub_1094(GLuint queryHandle)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1094];
+   ((void (APIENTRY *)(GLuint queryHandle)) _func)(queryHandle);
+}
+
+void APIENTRY shared_dispatch_stub_1095(GLuint queryId, GLuint *queryHandle)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1095];
+   ((void (APIENTRY *)(GLuint queryId, GLuint *queryHandle)) _func)(queryId, queryHandle);
+}
+
+void APIENTRY shared_dispatch_stub_1096(GLuint queryHandle)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1096];
+   ((void (APIENTRY *)(GLuint queryHandle)) _func)(queryHandle);
+}
+
+void APIENTRY shared_dispatch_stub_1097(GLuint queryHandle)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1097];
+   ((void (APIENTRY *)(GLuint queryHandle)) _func)(queryHandle);
+}
+
+void APIENTRY shared_dispatch_stub_1098(GLuint *queryId)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1098];
+   ((void (APIENTRY *)(GLuint *queryId)) _func)(queryId);
+}
+
+void APIENTRY shared_dispatch_stub_1099(GLuint queryId, GLuint *nextQueryId)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1099];
+   ((void (APIENTRY *)(GLuint queryId, GLuint *nextQueryId)) _func)(queryId, nextQueryId);
+}
+
+void APIENTRY shared_dispatch_stub_1100(GLuint queryId, GLuint counterId, GLuint counterNameLength, GLchar *counterName, GLuint counterDescLength, GLchar *counterDesc, GLuint *counterOffset, GLuint *counterDataSize, GLuint *counterTypeEnum, GLuint *counterDataTypeEnum, GLuint64 *rawCounterMaxValue)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1100];
+   ((void (APIENTRY *)(GLuint queryId, GLuint counterId, GLuint counterNameLength, GLchar *counterName, GLuint counterDescLength, GLchar *counterDesc, GLuint *counterOffset, GLuint *counterDataSize, GLuint *counterTypeEnum, GLuint *counterDataTypeEnum, GLuint64 *rawCounterMaxValue)) _func)(queryId, counterId, counterNameLength, counterName, counterDescLength, counterDesc, counterOffset, counterDataSize, counterTypeEnum, counterDataTypeEnum, rawCounterMaxValue);
+}
+
+void APIENTRY shared_dispatch_stub_1101(GLuint queryHandle, GLuint flags, GLsizei dataSize, GLvoid *data, GLuint *bytesWritten)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1101];
+   ((void (APIENTRY *)(GLuint queryHandle, GLuint flags, GLsizei dataSize, GLvoid *data, GLuint *bytesWritten)) _func)(queryHandle, flags, dataSize, data, bytesWritten);
+}
+
+void APIENTRY shared_dispatch_stub_1102(GLchar *queryName, GLuint *queryId)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1102];
+   ((void (APIENTRY *)(GLchar *queryName, GLuint *queryId)) _func)(queryName, queryId);
+}
+
+void APIENTRY shared_dispatch_stub_1103(GLuint queryId, GLuint queryNameLength, GLchar *queryName, GLuint *dataSize, GLuint *noCounters, GLuint *noInstances, GLuint *capsMask)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1103];
+   ((void (APIENTRY *)(GLuint queryId, GLuint queryNameLength, GLchar *queryName, GLuint *dataSize, GLuint *noCounters, GLuint *noInstances, GLuint *capsMask)) _func)(queryId, queryNameLength, queryName, dataSize, noCounters, noInstances, capsMask);
+}
+
+void APIENTRY shared_dispatch_stub_1104(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1104];
+   ((void (APIENTRY *)(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask)) _func)(frontfunc, backfunc, ref, mask);
+}
+
+void APIENTRY shared_dispatch_stub_1105(GLenum target, GLuint index, GLsizei count, const GLfloat *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1105];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei count, const GLfloat *params)) _func)(target, index, count, params);
+}
+
+void APIENTRY shared_dispatch_stub_1106(GLenum target, GLuint index, GLsizei count, const GLfloat *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1106];
+   ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei count, const GLfloat *params)) _func)(target, index, count, params);
+}
+
+void APIENTRY shared_dispatch_stub_1107(GLenum target, GLvoid *writeOffset)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1107];
+   ((void (APIENTRY *)(GLenum target, GLvoid *writeOffset)) _func)(target, writeOffset);
+}
+
+void APIENTRY shared_dispatch_stub_1108(GLenum target, GLvoid *writeOffset)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1108];
+   ((void (APIENTRY *)(GLenum target, GLvoid *writeOffset)) _func)(target, writeOffset);
+}
+
+void APIENTRY shared_dispatch_stub_1109(GLenum func, GLclampx ref)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1109];
+   ((void (APIENTRY *)(GLenum func, GLclampx ref)) _func)(func, ref);
+}
+
+void APIENTRY shared_dispatch_stub_1110(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1110];
+   ((void (APIENTRY *)(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha)) _func)(red, green, blue, alpha);
+}
+
+void APIENTRY shared_dispatch_stub_1111(GLclampx depth)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1111];
+   ((void (APIENTRY *)(GLclampx depth)) _func)(depth);
+}
+
+void APIENTRY shared_dispatch_stub_1112(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1112];
+   ((void (APIENTRY *)(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)) _func)(red, green, blue, alpha);
+}
+
+void APIENTRY shared_dispatch_stub_1113(GLclampx zNear, GLclampx zFar)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1113];
+   ((void (APIENTRY *)(GLclampx zNear, GLclampx zFar)) _func)(zNear, zFar);
+}
+
+void APIENTRY shared_dispatch_stub_1114(GLenum pname, GLfixed param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1114];
+   ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1115(GLenum pname, const GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1115];
+   ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1116(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1116];
+   ((void (APIENTRY *)(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)) _func)(left, right, bottom, top, zNear, zFar);
+}
+
+void APIENTRY shared_dispatch_stub_1117(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1117];
+   ((void (APIENTRY *)(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)) _func)(left, right, bottom, top, zNear, zFar);
+}
+
+void APIENTRY shared_dispatch_stub_1118(GLenum pname, GLfixed param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1118];
+   ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1119(GLenum pname, const GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1119];
+   ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1120(GLenum light, GLenum pname, GLfixed param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1120];
+   ((void (APIENTRY *)(GLenum light, GLenum pname, GLfixed param)) _func)(light, pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1121(GLenum light, GLenum pname, const GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1121];
+   ((void (APIENTRY *)(GLenum light, GLenum pname, const GLfixed *params)) _func)(light, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1122(GLfixed width)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1122];
+   ((void (APIENTRY *)(GLfixed width)) _func)(width);
+}
+
+void APIENTRY shared_dispatch_stub_1123(const GLfixed *m)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1123];
+   ((void (APIENTRY *)(const GLfixed *m)) _func)(m);
+}
+
+void APIENTRY shared_dispatch_stub_1124(GLenum face, GLenum pname, GLfixed param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1124];
+   ((void (APIENTRY *)(GLenum face, GLenum pname, GLfixed param)) _func)(face, pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1125(GLenum face, GLenum pname, const GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1125];
+   ((void (APIENTRY *)(GLenum face, GLenum pname, const GLfixed *params)) _func)(face, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1126(const GLfixed *m)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1126];
+   ((void (APIENTRY *)(const GLfixed *m)) _func)(m);
+}
+
+void APIENTRY shared_dispatch_stub_1127(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1127];
+   ((void (APIENTRY *)(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q)) _func)(target, s, t, r, q);
+}
+
+void APIENTRY shared_dispatch_stub_1128(GLfixed nx, GLfixed ny, GLfixed nz)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1128];
+   ((void (APIENTRY *)(GLfixed nx, GLfixed ny, GLfixed nz)) _func)(nx, ny, nz);
+}
+
+void APIENTRY shared_dispatch_stub_1129(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1129];
+   ((void (APIENTRY *)(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)) _func)(left, right, bottom, top, zNear, zFar);
+}
+
+void APIENTRY shared_dispatch_stub_1130(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1130];
+   ((void (APIENTRY *)(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)) _func)(left, right, bottom, top, zNear, zFar);
+}
+
+void APIENTRY shared_dispatch_stub_1131(GLfixed size)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1131];
+   ((void (APIENTRY *)(GLfixed size)) _func)(size);
+}
+
+void APIENTRY shared_dispatch_stub_1132(GLfixed factor, GLfixed units)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1132];
+   ((void (APIENTRY *)(GLfixed factor, GLfixed units)) _func)(factor, units);
+}
+
+void APIENTRY shared_dispatch_stub_1133(GLfixed angle, GLfixed x, GLfixed y, GLfixed z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1133];
+   ((void (APIENTRY *)(GLfixed angle, GLfixed x, GLfixed y, GLfixed z)) _func)(angle, x, y, z);
+}
+
+void APIENTRY shared_dispatch_stub_1134(GLclampx value, GLboolean invert)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1134];
+   ((void (APIENTRY *)(GLclampx value, GLboolean invert)) _func)(value, invert);
+}
+
+void APIENTRY shared_dispatch_stub_1135(GLfixed x, GLfixed y, GLfixed z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1135];
+   ((void (APIENTRY *)(GLfixed x, GLfixed y, GLfixed z)) _func)(x, y, z);
+}
+
+void APIENTRY shared_dispatch_stub_1136(GLenum target, GLenum pname, GLfixed param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1136];
+   ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed param)) _func)(target, pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1137(GLenum target, GLenum pname, const GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1137];
+   ((void (APIENTRY *)(GLenum target, GLenum pname, const GLfixed *params)) _func)(target, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1138(GLenum target, GLenum pname, GLfixed param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1138];
+   ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed param)) _func)(target, pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1139(GLfixed x, GLfixed y, GLfixed z)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1139];
+   ((void (APIENTRY *)(GLfixed x, GLfixed y, GLfixed z)) _func)(x, y, z);
+}
+
+void APIENTRY shared_dispatch_stub_1140(GLenum plane, const GLfloat *equation)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1140];
+   ((void (APIENTRY *)(GLenum plane, const GLfloat *equation)) _func)(plane, equation);
+}
+
+void APIENTRY shared_dispatch_stub_1141(GLenum plane, const GLfixed *equation)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1141];
+   ((void (APIENTRY *)(GLenum plane, const GLfixed *equation)) _func)(plane, equation);
+}
+
+void APIENTRY shared_dispatch_stub_1142(GLenum plane, GLfloat *equation)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1142];
+   ((void (APIENTRY *)(GLenum plane, GLfloat *equation)) _func)(plane, equation);
+}
+
+void APIENTRY shared_dispatch_stub_1143(GLenum plane, GLfixed *equation)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1143];
+   ((void (APIENTRY *)(GLenum plane, GLfixed *equation)) _func)(plane, equation);
+}
+
+void APIENTRY shared_dispatch_stub_1144(GLenum pname, GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1144];
+   ((void (APIENTRY *)(GLenum pname, GLfixed *params)) _func)(pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1145(GLenum light, GLenum pname, GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1145];
+   ((void (APIENTRY *)(GLenum light, GLenum pname, GLfixed *params)) _func)(light, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1146(GLenum face, GLenum pname, GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1146];
+   ((void (APIENTRY *)(GLenum face, GLenum pname, GLfixed *params)) _func)(face, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1147(GLenum target, GLenum pname, GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1147];
+   ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed *params)) _func)(target, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1148(GLenum target, GLenum pname, GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1148];
+   ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed *params)) _func)(target, pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1149(GLenum pname, GLfixed param)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1149];
+   ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
+}
+
+void APIENTRY shared_dispatch_stub_1150(GLenum pname, const GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1150];
+   ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
+}
+
+void APIENTRY shared_dispatch_stub_1151(GLenum target, GLenum pname, const GLfixed *params)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1151];
    ((void (APIENTRY *)(GLenum target, GLenum pname, const GLfixed *params)) _func)(target, pname, params);
 }
 
@@ -21172,7 +23361,123 @@ static const mapi_func public_entries[] = {
    (mapi_func) shared_dispatch_stub_1032,
    (mapi_func) shared_dispatch_stub_1033,
    (mapi_func) shared_dispatch_stub_1034,
-   (mapi_func) shared_dispatch_stub_1035
+   (mapi_func) shared_dispatch_stub_1035,
+   (mapi_func) shared_dispatch_stub_1036,
+   (mapi_func) shared_dispatch_stub_1037,
+   (mapi_func) shared_dispatch_stub_1038,
+   (mapi_func) shared_dispatch_stub_1039,
+   (mapi_func) shared_dispatch_stub_1040,
+   (mapi_func) shared_dispatch_stub_1041,
+   (mapi_func) shared_dispatch_stub_1042,
+   (mapi_func) shared_dispatch_stub_1043,
+   (mapi_func) shared_dispatch_stub_1044,
+   (mapi_func) shared_dispatch_stub_1045,
+   (mapi_func) shared_dispatch_stub_1046,
+   (mapi_func) shared_dispatch_stub_1047,
+   (mapi_func) shared_dispatch_stub_1048,
+   (mapi_func) shared_dispatch_stub_1049,
+   (mapi_func) shared_dispatch_stub_1050,
+   (mapi_func) shared_dispatch_stub_1051,
+   (mapi_func) shared_dispatch_stub_1052,
+   (mapi_func) shared_dispatch_stub_1053,
+   (mapi_func) shared_dispatch_stub_1054,
+   (mapi_func) shared_dispatch_stub_1055,
+   (mapi_func) shared_dispatch_stub_1056,
+   (mapi_func) shared_dispatch_stub_1057,
+   (mapi_func) shared_dispatch_stub_1058,
+   (mapi_func) shared_dispatch_stub_1059,
+   (mapi_func) shared_dispatch_stub_1060,
+   (mapi_func) shared_dispatch_stub_1061,
+   (mapi_func) shared_dispatch_stub_1062,
+   (mapi_func) shared_dispatch_stub_1063,
+   (mapi_func) shared_dispatch_stub_1064,
+   (mapi_func) shared_dispatch_stub_1065,
+   (mapi_func) shared_dispatch_stub_1066,
+   (mapi_func) shared_dispatch_stub_1067,
+   (mapi_func) shared_dispatch_stub_1068,
+   (mapi_func) shared_dispatch_stub_1069,
+   (mapi_func) shared_dispatch_stub_1070,
+   (mapi_func) shared_dispatch_stub_1071,
+   (mapi_func) shared_dispatch_stub_1072,
+   (mapi_func) shared_dispatch_stub_1073,
+   (mapi_func) shared_dispatch_stub_1074,
+   (mapi_func) shared_dispatch_stub_1075,
+   (mapi_func) shared_dispatch_stub_1076,
+   (mapi_func) shared_dispatch_stub_1077,
+   (mapi_func) shared_dispatch_stub_1078,
+   (mapi_func) shared_dispatch_stub_1079,
+   (mapi_func) shared_dispatch_stub_1080,
+   (mapi_func) shared_dispatch_stub_1081,
+   (mapi_func) shared_dispatch_stub_1082,
+   (mapi_func) shared_dispatch_stub_1083,
+   (mapi_func) shared_dispatch_stub_1084,
+   (mapi_func) shared_dispatch_stub_1085,
+   (mapi_func) shared_dispatch_stub_1086,
+   (mapi_func) shared_dispatch_stub_1087,
+   (mapi_func) shared_dispatch_stub_1088,
+   (mapi_func) shared_dispatch_stub_1089,
+   (mapi_func) shared_dispatch_stub_1090,
+   (mapi_func) shared_dispatch_stub_1091,
+   (mapi_func) shared_dispatch_stub_1092,
+   (mapi_func) shared_dispatch_stub_1093,
+   (mapi_func) shared_dispatch_stub_1094,
+   (mapi_func) shared_dispatch_stub_1095,
+   (mapi_func) shared_dispatch_stub_1096,
+   (mapi_func) shared_dispatch_stub_1097,
+   (mapi_func) shared_dispatch_stub_1098,
+   (mapi_func) shared_dispatch_stub_1099,
+   (mapi_func) shared_dispatch_stub_1100,
+   (mapi_func) shared_dispatch_stub_1101,
+   (mapi_func) shared_dispatch_stub_1102,
+   (mapi_func) shared_dispatch_stub_1103,
+   (mapi_func) shared_dispatch_stub_1104,
+   (mapi_func) shared_dispatch_stub_1105,
+   (mapi_func) shared_dispatch_stub_1106,
+   (mapi_func) shared_dispatch_stub_1107,
+   (mapi_func) shared_dispatch_stub_1108,
+   (mapi_func) shared_dispatch_stub_1109,
+   (mapi_func) shared_dispatch_stub_1110,
+   (mapi_func) shared_dispatch_stub_1111,
+   (mapi_func) shared_dispatch_stub_1112,
+   (mapi_func) shared_dispatch_stub_1113,
+   (mapi_func) shared_dispatch_stub_1114,
+   (mapi_func) shared_dispatch_stub_1115,
+   (mapi_func) shared_dispatch_stub_1116,
+   (mapi_func) shared_dispatch_stub_1117,
+   (mapi_func) shared_dispatch_stub_1118,
+   (mapi_func) shared_dispatch_stub_1119,
+   (mapi_func) shared_dispatch_stub_1120,
+   (mapi_func) shared_dispatch_stub_1121,
+   (mapi_func) shared_dispatch_stub_1122,
+   (mapi_func) shared_dispatch_stub_1123,
+   (mapi_func) shared_dispatch_stub_1124,
+   (mapi_func) shared_dispatch_stub_1125,
+   (mapi_func) shared_dispatch_stub_1126,
+   (mapi_func) shared_dispatch_stub_1127,
+   (mapi_func) shared_dispatch_stub_1128,
+   (mapi_func) shared_dispatch_stub_1129,
+   (mapi_func) shared_dispatch_stub_1130,
+   (mapi_func) shared_dispatch_stub_1131,
+   (mapi_func) shared_dispatch_stub_1132,
+   (mapi_func) shared_dispatch_stub_1133,
+   (mapi_func) shared_dispatch_stub_1134,
+   (mapi_func) shared_dispatch_stub_1135,
+   (mapi_func) shared_dispatch_stub_1136,
+   (mapi_func) shared_dispatch_stub_1137,
+   (mapi_func) shared_dispatch_stub_1138,
+   (mapi_func) shared_dispatch_stub_1139,
+   (mapi_func) shared_dispatch_stub_1140,
+   (mapi_func) shared_dispatch_stub_1141,
+   (mapi_func) shared_dispatch_stub_1142,
+   (mapi_func) shared_dispatch_stub_1143,
+   (mapi_func) shared_dispatch_stub_1144,
+   (mapi_func) shared_dispatch_stub_1145,
+   (mapi_func) shared_dispatch_stub_1146,
+   (mapi_func) shared_dispatch_stub_1147,
+   (mapi_func) shared_dispatch_stub_1148,
+   (mapi_func) shared_dispatch_stub_1149,
+   (mapi_func) shared_dispatch_stub_1150,
+   (mapi_func) shared_dispatch_stub_1151
 };
 #undef MAPI_TMP_PUBLIC_ENTRIES
 #endif /* MAPI_TMP_PUBLIC_ENTRIES */
@@ -25322,6 +27627,470 @@ STUB_ASM_ENTRY("shared_dispatch_stub_1034")"\n"
 ".hidden ""shared_dispatch_stub_1035""\n"
 STUB_ASM_ENTRY("shared_dispatch_stub_1035")"\n"
 "\t"STUB_ASM_CODE("1035")"\n"
+
+".hidden ""shared_dispatch_stub_1036""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1036")"\n"
+"\t"STUB_ASM_CODE("1036")"\n"
+
+".hidden ""shared_dispatch_stub_1037""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1037")"\n"
+"\t"STUB_ASM_CODE("1037")"\n"
+
+".hidden ""shared_dispatch_stub_1038""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1038")"\n"
+"\t"STUB_ASM_CODE("1038")"\n"
+
+".hidden ""shared_dispatch_stub_1039""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1039")"\n"
+"\t"STUB_ASM_CODE("1039")"\n"
+
+".hidden ""shared_dispatch_stub_1040""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1040")"\n"
+"\t"STUB_ASM_CODE("1040")"\n"
+
+".hidden ""shared_dispatch_stub_1041""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1041")"\n"
+"\t"STUB_ASM_CODE("1041")"\n"
+
+".hidden ""shared_dispatch_stub_1042""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1042")"\n"
+"\t"STUB_ASM_CODE("1042")"\n"
+
+".hidden ""shared_dispatch_stub_1043""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1043")"\n"
+"\t"STUB_ASM_CODE("1043")"\n"
+
+".hidden ""shared_dispatch_stub_1044""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1044")"\n"
+"\t"STUB_ASM_CODE("1044")"\n"
+
+".hidden ""shared_dispatch_stub_1045""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1045")"\n"
+"\t"STUB_ASM_CODE("1045")"\n"
+
+".hidden ""shared_dispatch_stub_1046""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1046")"\n"
+"\t"STUB_ASM_CODE("1046")"\n"
+
+".hidden ""shared_dispatch_stub_1047""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1047")"\n"
+"\t"STUB_ASM_CODE("1047")"\n"
+
+".hidden ""shared_dispatch_stub_1048""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1048")"\n"
+"\t"STUB_ASM_CODE("1048")"\n"
+
+".hidden ""shared_dispatch_stub_1049""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1049")"\n"
+"\t"STUB_ASM_CODE("1049")"\n"
+
+".hidden ""shared_dispatch_stub_1050""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1050")"\n"
+"\t"STUB_ASM_CODE("1050")"\n"
+
+".hidden ""shared_dispatch_stub_1051""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1051")"\n"
+"\t"STUB_ASM_CODE("1051")"\n"
+
+".hidden ""shared_dispatch_stub_1052""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1052")"\n"
+"\t"STUB_ASM_CODE("1052")"\n"
+
+".hidden ""shared_dispatch_stub_1053""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1053")"\n"
+"\t"STUB_ASM_CODE("1053")"\n"
+
+".hidden ""shared_dispatch_stub_1054""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1054")"\n"
+"\t"STUB_ASM_CODE("1054")"\n"
+
+".hidden ""shared_dispatch_stub_1055""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1055")"\n"
+"\t"STUB_ASM_CODE("1055")"\n"
+
+".hidden ""shared_dispatch_stub_1056""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1056")"\n"
+"\t"STUB_ASM_CODE("1056")"\n"
+
+".hidden ""shared_dispatch_stub_1057""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1057")"\n"
+"\t"STUB_ASM_CODE("1057")"\n"
+
+".hidden ""shared_dispatch_stub_1058""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1058")"\n"
+"\t"STUB_ASM_CODE("1058")"\n"
+
+".hidden ""shared_dispatch_stub_1059""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1059")"\n"
+"\t"STUB_ASM_CODE("1059")"\n"
+
+".hidden ""shared_dispatch_stub_1060""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1060")"\n"
+"\t"STUB_ASM_CODE("1060")"\n"
+
+".hidden ""shared_dispatch_stub_1061""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1061")"\n"
+"\t"STUB_ASM_CODE("1061")"\n"
+
+".hidden ""shared_dispatch_stub_1062""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1062")"\n"
+"\t"STUB_ASM_CODE("1062")"\n"
+
+".hidden ""shared_dispatch_stub_1063""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1063")"\n"
+"\t"STUB_ASM_CODE("1063")"\n"
+
+".hidden ""shared_dispatch_stub_1064""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1064")"\n"
+"\t"STUB_ASM_CODE("1064")"\n"
+
+".hidden ""shared_dispatch_stub_1065""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1065")"\n"
+"\t"STUB_ASM_CODE("1065")"\n"
+
+".hidden ""shared_dispatch_stub_1066""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1066")"\n"
+"\t"STUB_ASM_CODE("1066")"\n"
+
+".hidden ""shared_dispatch_stub_1067""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1067")"\n"
+"\t"STUB_ASM_CODE("1067")"\n"
+
+".hidden ""shared_dispatch_stub_1068""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1068")"\n"
+"\t"STUB_ASM_CODE("1068")"\n"
+
+".hidden ""shared_dispatch_stub_1069""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1069")"\n"
+"\t"STUB_ASM_CODE("1069")"\n"
+
+".hidden ""shared_dispatch_stub_1070""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1070")"\n"
+"\t"STUB_ASM_CODE("1070")"\n"
+
+".hidden ""shared_dispatch_stub_1071""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1071")"\n"
+"\t"STUB_ASM_CODE("1071")"\n"
+
+".hidden ""shared_dispatch_stub_1072""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1072")"\n"
+"\t"STUB_ASM_CODE("1072")"\n"
+
+".hidden ""shared_dispatch_stub_1073""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1073")"\n"
+"\t"STUB_ASM_CODE("1073")"\n"
+
+".hidden ""shared_dispatch_stub_1074""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1074")"\n"
+"\t"STUB_ASM_CODE("1074")"\n"
+
+".hidden ""shared_dispatch_stub_1075""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1075")"\n"
+"\t"STUB_ASM_CODE("1075")"\n"
+
+".hidden ""shared_dispatch_stub_1076""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1076")"\n"
+"\t"STUB_ASM_CODE("1076")"\n"
+
+".hidden ""shared_dispatch_stub_1077""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1077")"\n"
+"\t"STUB_ASM_CODE("1077")"\n"
+
+".hidden ""shared_dispatch_stub_1078""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1078")"\n"
+"\t"STUB_ASM_CODE("1078")"\n"
+
+".hidden ""shared_dispatch_stub_1079""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1079")"\n"
+"\t"STUB_ASM_CODE("1079")"\n"
+
+".hidden ""shared_dispatch_stub_1080""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1080")"\n"
+"\t"STUB_ASM_CODE("1080")"\n"
+
+".hidden ""shared_dispatch_stub_1081""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1081")"\n"
+"\t"STUB_ASM_CODE("1081")"\n"
+
+".hidden ""shared_dispatch_stub_1082""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1082")"\n"
+"\t"STUB_ASM_CODE("1082")"\n"
+
+".hidden ""shared_dispatch_stub_1083""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1083")"\n"
+"\t"STUB_ASM_CODE("1083")"\n"
+
+".hidden ""shared_dispatch_stub_1084""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1084")"\n"
+"\t"STUB_ASM_CODE("1084")"\n"
+
+".hidden ""shared_dispatch_stub_1085""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1085")"\n"
+"\t"STUB_ASM_CODE("1085")"\n"
+
+".hidden ""shared_dispatch_stub_1086""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1086")"\n"
+"\t"STUB_ASM_CODE("1086")"\n"
+
+".hidden ""shared_dispatch_stub_1087""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1087")"\n"
+"\t"STUB_ASM_CODE("1087")"\n"
+
+".hidden ""shared_dispatch_stub_1088""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1088")"\n"
+"\t"STUB_ASM_CODE("1088")"\n"
+
+".hidden ""shared_dispatch_stub_1089""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1089")"\n"
+"\t"STUB_ASM_CODE("1089")"\n"
+
+".hidden ""shared_dispatch_stub_1090""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1090")"\n"
+"\t"STUB_ASM_CODE("1090")"\n"
+
+".hidden ""shared_dispatch_stub_1091""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1091")"\n"
+"\t"STUB_ASM_CODE("1091")"\n"
+
+".hidden ""shared_dispatch_stub_1092""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1092")"\n"
+"\t"STUB_ASM_CODE("1092")"\n"
+
+".hidden ""shared_dispatch_stub_1093""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1093")"\n"
+"\t"STUB_ASM_CODE("1093")"\n"
+
+".hidden ""shared_dispatch_stub_1094""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1094")"\n"
+"\t"STUB_ASM_CODE("1094")"\n"
+
+".hidden ""shared_dispatch_stub_1095""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1095")"\n"
+"\t"STUB_ASM_CODE("1095")"\n"
+
+".hidden ""shared_dispatch_stub_1096""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1096")"\n"
+"\t"STUB_ASM_CODE("1096")"\n"
+
+".hidden ""shared_dispatch_stub_1097""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1097")"\n"
+"\t"STUB_ASM_CODE("1097")"\n"
+
+".hidden ""shared_dispatch_stub_1098""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1098")"\n"
+"\t"STUB_ASM_CODE("1098")"\n"
+
+".hidden ""shared_dispatch_stub_1099""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1099")"\n"
+"\t"STUB_ASM_CODE("1099")"\n"
+
+".hidden ""shared_dispatch_stub_1100""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1100")"\n"
+"\t"STUB_ASM_CODE("1100")"\n"
+
+".hidden ""shared_dispatch_stub_1101""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1101")"\n"
+"\t"STUB_ASM_CODE("1101")"\n"
+
+".hidden ""shared_dispatch_stub_1102""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1102")"\n"
+"\t"STUB_ASM_CODE("1102")"\n"
+
+".hidden ""shared_dispatch_stub_1103""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1103")"\n"
+"\t"STUB_ASM_CODE("1103")"\n"
+
+".hidden ""shared_dispatch_stub_1104""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1104")"\n"
+"\t"STUB_ASM_CODE("1104")"\n"
+
+".hidden ""shared_dispatch_stub_1105""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1105")"\n"
+"\t"STUB_ASM_CODE("1105")"\n"
+
+".hidden ""shared_dispatch_stub_1106""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1106")"\n"
+"\t"STUB_ASM_CODE("1106")"\n"
+
+".hidden ""shared_dispatch_stub_1107""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1107")"\n"
+"\t"STUB_ASM_CODE("1107")"\n"
+
+".hidden ""shared_dispatch_stub_1108""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1108")"\n"
+"\t"STUB_ASM_CODE("1108")"\n"
+
+".hidden ""shared_dispatch_stub_1109""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1109")"\n"
+"\t"STUB_ASM_CODE("1109")"\n"
+
+".hidden ""shared_dispatch_stub_1110""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1110")"\n"
+"\t"STUB_ASM_CODE("1110")"\n"
+
+".hidden ""shared_dispatch_stub_1111""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1111")"\n"
+"\t"STUB_ASM_CODE("1111")"\n"
+
+".hidden ""shared_dispatch_stub_1112""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1112")"\n"
+"\t"STUB_ASM_CODE("1112")"\n"
+
+".hidden ""shared_dispatch_stub_1113""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1113")"\n"
+"\t"STUB_ASM_CODE("1113")"\n"
+
+".hidden ""shared_dispatch_stub_1114""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1114")"\n"
+"\t"STUB_ASM_CODE("1114")"\n"
+
+".hidden ""shared_dispatch_stub_1115""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1115")"\n"
+"\t"STUB_ASM_CODE("1115")"\n"
+
+".hidden ""shared_dispatch_stub_1116""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1116")"\n"
+"\t"STUB_ASM_CODE("1116")"\n"
+
+".hidden ""shared_dispatch_stub_1117""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1117")"\n"
+"\t"STUB_ASM_CODE("1117")"\n"
+
+".hidden ""shared_dispatch_stub_1118""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1118")"\n"
+"\t"STUB_ASM_CODE("1118")"\n"
+
+".hidden ""shared_dispatch_stub_1119""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1119")"\n"
+"\t"STUB_ASM_CODE("1119")"\n"
+
+".hidden ""shared_dispatch_stub_1120""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1120")"\n"
+"\t"STUB_ASM_CODE("1120")"\n"
+
+".hidden ""shared_dispatch_stub_1121""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1121")"\n"
+"\t"STUB_ASM_CODE("1121")"\n"
+
+".hidden ""shared_dispatch_stub_1122""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1122")"\n"
+"\t"STUB_ASM_CODE("1122")"\n"
+
+".hidden ""shared_dispatch_stub_1123""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1123")"\n"
+"\t"STUB_ASM_CODE("1123")"\n"
+
+".hidden ""shared_dispatch_stub_1124""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1124")"\n"
+"\t"STUB_ASM_CODE("1124")"\n"
+
+".hidden ""shared_dispatch_stub_1125""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1125")"\n"
+"\t"STUB_ASM_CODE("1125")"\n"
+
+".hidden ""shared_dispatch_stub_1126""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1126")"\n"
+"\t"STUB_ASM_CODE("1126")"\n"
+
+".hidden ""shared_dispatch_stub_1127""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1127")"\n"
+"\t"STUB_ASM_CODE("1127")"\n"
+
+".hidden ""shared_dispatch_stub_1128""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1128")"\n"
+"\t"STUB_ASM_CODE("1128")"\n"
+
+".hidden ""shared_dispatch_stub_1129""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1129")"\n"
+"\t"STUB_ASM_CODE("1129")"\n"
+
+".hidden ""shared_dispatch_stub_1130""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1130")"\n"
+"\t"STUB_ASM_CODE("1130")"\n"
+
+".hidden ""shared_dispatch_stub_1131""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1131")"\n"
+"\t"STUB_ASM_CODE("1131")"\n"
+
+".hidden ""shared_dispatch_stub_1132""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1132")"\n"
+"\t"STUB_ASM_CODE("1132")"\n"
+
+".hidden ""shared_dispatch_stub_1133""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1133")"\n"
+"\t"STUB_ASM_CODE("1133")"\n"
+
+".hidden ""shared_dispatch_stub_1134""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1134")"\n"
+"\t"STUB_ASM_CODE("1134")"\n"
+
+".hidden ""shared_dispatch_stub_1135""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1135")"\n"
+"\t"STUB_ASM_CODE("1135")"\n"
+
+".hidden ""shared_dispatch_stub_1136""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1136")"\n"
+"\t"STUB_ASM_CODE("1136")"\n"
+
+".hidden ""shared_dispatch_stub_1137""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1137")"\n"
+"\t"STUB_ASM_CODE("1137")"\n"
+
+".hidden ""shared_dispatch_stub_1138""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1138")"\n"
+"\t"STUB_ASM_CODE("1138")"\n"
+
+".hidden ""shared_dispatch_stub_1139""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1139")"\n"
+"\t"STUB_ASM_CODE("1139")"\n"
+
+".hidden ""shared_dispatch_stub_1140""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1140")"\n"
+"\t"STUB_ASM_CODE("1140")"\n"
+
+".hidden ""shared_dispatch_stub_1141""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1141")"\n"
+"\t"STUB_ASM_CODE("1141")"\n"
+
+".hidden ""shared_dispatch_stub_1142""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1142")"\n"
+"\t"STUB_ASM_CODE("1142")"\n"
+
+".hidden ""shared_dispatch_stub_1143""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1143")"\n"
+"\t"STUB_ASM_CODE("1143")"\n"
+
+".hidden ""shared_dispatch_stub_1144""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1144")"\n"
+"\t"STUB_ASM_CODE("1144")"\n"
+
+".hidden ""shared_dispatch_stub_1145""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1145")"\n"
+"\t"STUB_ASM_CODE("1145")"\n"
+
+".hidden ""shared_dispatch_stub_1146""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1146")"\n"
+"\t"STUB_ASM_CODE("1146")"\n"
+
+".hidden ""shared_dispatch_stub_1147""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1147")"\n"
+"\t"STUB_ASM_CODE("1147")"\n"
+
+".hidden ""shared_dispatch_stub_1148""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1148")"\n"
+"\t"STUB_ASM_CODE("1148")"\n"
+
+".hidden ""shared_dispatch_stub_1149""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1149")"\n"
+"\t"STUB_ASM_CODE("1149")"\n"
+
+".hidden ""shared_dispatch_stub_1150""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1150")"\n"
+"\t"STUB_ASM_CODE("1150")"\n"
+
+".hidden ""shared_dispatch_stub_1151""\n"
+STUB_ASM_ENTRY("shared_dispatch_stub_1151")"\n"
+"\t"STUB_ASM_CODE("1151")"\n"
 
 );
 #undef MAPI_TMP_STUB_ASM_GCC

@@ -1,5 +1,6 @@
-# $OpenBSD: Makefile,v 1.7 2014/01/11 12:39:14 miod Exp $
+# $OpenBSD: Makefile,v 1.8 2014/07/09 21:32:41 jsg Exp $
 .include <bsd.xconf.mk>
+.include "../../config.mk"
 
 MESA=	${.CURDIR}/../../../../dist/Mesa/src/mesa
 MAPI=	${.CURDIR}/../../../../dist/Mesa/src/mapi
@@ -23,32 +24,33 @@ C_SOURCES = \
 	ralloc.c \
 	$(LIBGLCPP_SOURCES)
 
-#	builtin_stubs.cpp is used instead of builtin_function.cpp
-#	when bootstrapping builtin_compiler
+GENERATED_CXX_SOURCES = \
+	glsl_lexer.cpp \
+	glsl_parser.cpp
+
 CXX_SOURCES = \
 	ast_array_index.cpp \
 	ast_expr.cpp \
 	ast_function.cpp \
 	ast_to_hir.cpp \
 	ast_type.cpp \
-	builtin_function.cpp \
+	builtin_functions.cpp \
 	builtin_types.cpp \
 	builtin_variables.cpp \
-	glsl_lexer.cpp \
-	glsl_parser.cpp \
 	glsl_parser_extras.cpp \
-	glsl_symbol_table.cpp \
 	glsl_types.cpp \
+	glsl_symbol_table.cpp \
 	hir_field_selection.cpp \
-	ir.cpp \
 	ir_basic_block.cpp \
 	ir_builder.cpp \
 	ir_clone.cpp \
 	ir_constant_expression.cpp \
+	ir.cpp \
+	ir_equals.cpp \
 	ir_expression_flattening.cpp \
-	ir_function.cpp \
 	ir_function_can_inline.cpp \
 	ir_function_detect_recursion.cpp \
+	ir_function.cpp \
 	ir_hierarchical_visitor.cpp \
 	ir_hv_accept.cpp \
 	ir_import_prototypes.cpp \
@@ -58,14 +60,15 @@ CXX_SOURCES = \
 	ir_set_program_inouts.cpp \
 	ir_validate.cpp \
 	ir_variable_refcount.cpp \
+	linker.cpp \
+	link_atomics.cpp \
 	link_functions.cpp \
 	link_interface_blocks.cpp \
+	link_uniforms.cpp \
+	link_uniform_initializers.cpp \
 	link_uniform_block_active_visitor.cpp \
 	link_uniform_blocks.cpp \
-	link_uniform_initializers.cpp \
-	link_uniforms.cpp \
 	link_varyings.cpp \
-	linker.cpp \
 	loop_analysis.cpp \
 	loop_controls.cpp \
 	loop_unroll.cpp \
@@ -76,20 +79,19 @@ CXX_SOURCES = \
 	lower_instructions.cpp \
 	lower_jumps.cpp \
 	lower_mat_op_to_vec.cpp \
-	lower_named_interface_blocks.cpp \
 	lower_noise.cpp \
-	lower_output_reads.cpp \
+	lower_offset_array.cpp \
 	lower_packed_varyings.cpp \
+	lower_named_interface_blocks.cpp \
 	lower_packing_builtins.cpp \
 	lower_texture_projection.cpp \
-	lower_texture_projection.cpp \
-	lower_ubo_reference.cpp \
 	lower_variable_index_to_cond_assign.cpp \
 	lower_vec_index_to_cond_assign.cpp \
 	lower_vec_index_to_swizzle.cpp \
 	lower_vector.cpp \
 	lower_vector_insert.cpp \
-	main.cpp \
+	lower_output_reads.cpp \
+	lower_ubo_reference.cpp \
 	opt_algebraic.cpp \
 	opt_array_splitting.cpp \
 	opt_constant_folding.cpp \
@@ -97,6 +99,7 @@ CXX_SOURCES = \
 	opt_constant_variable.cpp \
 	opt_copy_propagation.cpp \
 	opt_copy_propagation_elements.cpp \
+	opt_cse.cpp \
 	opt_dead_builtin_varyings.cpp \
 	opt_dead_code.cpp \
 	opt_dead_code_local.cpp \
@@ -110,16 +113,15 @@ CXX_SOURCES = \
 	opt_structure_splitting.cpp \
 	opt_swizzle_swizzle.cpp \
 	opt_tree_grafting.cpp \
+	opt_vectorize.cpp \
 	s_expression.cpp \
-	standalone_scaffolding.cpp \
-	test.cpp \
-	test_optpass.cpp
+	$(GENERATED_CXX_SOURCES)
 
 LIB=	libglsl
 
 SRCS=	\
 	$(C_SOURCES) \
-	$(CXX_SOURCES) \
+	$(CXX_SOURCES)
 
 OBJS+= $(C_SOURCES:.c=.so) $(CXX_SOURCES:.cpp=.so)
 
@@ -134,8 +136,6 @@ INCLUDES= \
 	-I$(MESA_INCLUDE)
 
 CPPFLAGS+= $(INCLUDES) $(DEFINES)
-
-CFLAGS+= -std=c99
 
 all: ${LIB}_pic.a
 
@@ -180,8 +180,3 @@ ${LIB}_pic.a:	${OBJS} $(DPADD)
 .PATH: ${GLSL}/builtin_compiler
 .PATH: ${.CURDIR}/../../generated/glsl
 .PATH: ${.CURDIR}/../../generated/glsl/glcpp
-
-.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
-    ${MACHINE_ARCH} == "sparc"
-PICFLAG=-fPIC
-.endif

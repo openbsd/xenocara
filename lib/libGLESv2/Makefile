@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2014/01/19 03:20:40 jsg Exp $
+# $OpenBSD: Makefile,v 1.7 2014/07/09 21:32:42 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	GLESv2
@@ -8,9 +8,9 @@ MAPI=	${.CURDIR}/../../dist/Mesa/src/mapi
 GL=	${.CURDIR}/../../dist/Mesa/Mesa/src/GL
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
-MESA_MAJOR=	9
+MESA_MAJOR=	10
 MESA_MINOR=	2
-MESA_TINY=	5
+MESA_TINY=	3
 
 INCSDIR=	${X11BASE}/include/GLES2
 INCSDIR3=	${X11BASE}/include/GLES3
@@ -38,6 +38,7 @@ CPPFLAGS+= \
 	-I/usr/include/dev/pci/drm \
 	-DGLX_INDIRECT_RENDERING \
 	-DPTHREADS \
+	-DHAVE_PTHREAD \
 	-DHAVE_ALIAS \
 	-D_REENTRANT \
 	-DMAPI_MODE_BRIDGE \

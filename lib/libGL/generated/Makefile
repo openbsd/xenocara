@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2013/09/05 15:12:03 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2014/07/09 21:32:40 jsg Exp $
 
 MESA=		${.CURDIR}/../../../dist/Mesa/src/mesa
 GLAPI=		${.CURDIR}/../../../dist/Mesa/src/mapi/glapi
@@ -12,7 +12,7 @@ COMP=		${.CURDIR}/../glsl/builtin_compiler/obj
 # py-libxml required as well...
 PYTHON=		python${PYTHON_VERSION}
 PYTHON_FLAGS=	-t -O -O
-FLEX=		flex
+FLEX=		gflex
 BISON=		bison
 
 # src/glx
@@ -39,7 +39,7 @@ GEN_UTIL= \
 # src/glsl
 YACC_GLSL= glsl/glsl_lexer.cpp glsl/glsl_parser.cpp
 GEN_GLSL= \
-	${YACC_GLSL} glsl/builtin_function.cpp
+	${YACC_GLSL}
 
 # src/glsl/glcpp
 YACC_GLCPP= glsl/glcpp/glcpp-lex.c glsl/glcpp/glcpp-parse.c
@@ -124,7 +124,7 @@ glapi/glapitemp.h: gl_and_es_API.xml gl_apitemp.py
 
 glapi/glprocs.h: gl_and_es_API.xml gl_procs.py
 	$(PYTHON) $(PYTHON_FLAGS) ${GLAPI}/gen/gl_procs.py \
-	    -f ${GLAPI}/gen/gl_and_es_API.xml > $@
+	    -c -f ${GLAPI}/gen/gl_and_es_API.xml > $@
 
 glapi/glapi_mapi_tmp.h: gl_and_es_API.xml mapi_abi.py
 	$(PYTHON) $(PYTHON_FLAGS) ${MAPI}/mapi_abi.py \
@@ -145,10 +145,6 @@ util/u_format_srgb.c: ${AUX}/util/u_format_srgb.py
 
 util/u_format_table.c: u_format_table.py u_format_pack.py u_format_parse.py u_format.csv
 	${PYTHON} ${PYTHON_FLAGS} ${AUX}/util/u_format_table.py ${AUX}/util/u_format.csv > $@
-
-glsl/builtin_function.cpp: ${GLSL}/builtins/tools/generate_builtins.py
-	$(PYTHON) $(PYTHON_FLAGS) ${GLSL}/builtins/tools/generate_builtins.py \
-	    ${COMP}/builtin_compiler > $@
 
 glsl/glsl_lexer.cpp: ${GLSL}/glsl_lexer.ll
 	$(FLEX) -o $@ ${GLSL}/glsl_lexer.ll

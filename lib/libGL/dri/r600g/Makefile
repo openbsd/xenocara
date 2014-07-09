@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2013/09/05 15:11:58 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2014/07/09 21:32:40 jsg Exp $
 
 LIB=	r600_dri.so
 
@@ -37,14 +37,14 @@ COMMON_GALLIUM_SOURCES = \
 	dri_util.c \
 	xmlconfig.c
 
-DRIVER_SOURCES = \
-	target.c \
+DRIVER_SOURCES =
 
 SRCS = \
 	${WINSYS_SOURCES} \
 	${DRIDRM_SOURCES} \
 	${COMMON_GALLIUM_SOURCES} \
-	${DRIVER_SOURCES}
+	${DRIVER_SOURCES} \
+	drm_target.c
 
 LDADD=	../../mesa/libmesagallium/libmesagallium_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
@@ -58,5 +58,5 @@ DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a
 
 .PATH: ${GALLIUM}/state_trackers/dri/common
 .PATH: ${GALLIUM}/state_trackers/dri/drm
-.PATH: ${GALLIUM}/targets/dri-r600
+.PATH: ${GALLIUM}/targets/r600/dri
 .PATH: ${GALLIUM}/winsys/radeon/drm

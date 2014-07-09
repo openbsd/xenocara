@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.25 2014/04/14 19:33:09 matthieu Exp $
+# $OpenBSD: Makefile,v 1.26 2014/07/09 21:32:40 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -52,7 +52,7 @@ SUBDIR+= pixman
 
 # libdrm is needed by the via driver built on i386 only
 .if ${XENOCARA_BUILD_DRI:L} == "yes" || ${MACHINE} == "i386"
-SUBDIR+= libdrm
+SUBDIR+= libdrm libgbm
 .endif
 
 .if ${XENOCARA_BUILD_GL:L} == "yes"

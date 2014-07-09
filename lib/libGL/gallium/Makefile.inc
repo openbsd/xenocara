@@ -1,10 +1,6 @@
-# $OpenBSD: Makefile.inc,v 1.6 2014/04/20 10:58:20 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.7 2014/07/09 21:32:40 jsg Exp $
 .include <bsd.xconf.mk>
-
-CPP=	cpp -notraditional
-
-CFLAGS+= -std=c99
-CPPFLAGS+= -DPACKAGE_BUGREPORT=\"bugs@openbsd.org\"
+.include "../config.mk"
 
 OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}
 
@@ -51,16 +47,11 @@ LDADD+=		-L${LLVM_LIBDIR} ${LLVM_LIBS}
 
 CPPFLAGS+= \
 	-DGALLIUM_LLVMPIPE \
-	-DHAVE_LLVM=${LLVM_VERSION}
+	-DHAVE_LLVM=${LLVM_VERSION} -DLLVM_VERSION_PATCH=0
 
 SWRAST_DRIVERS+= ../../gallium/drivers/llvmpipe/libllvmpipe_pic.a
 
 # for r600 and radeonsi
 LOCALBASE?=	/usr/local
 LDADD+=		${LOCALBASE}/lib/libelf.a
-.endif
-
-.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
-    ${MACHINE_ARCH} == "sparc"
-PICFLAG=-fPIC
 .endif

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2013/09/05 15:12:00 jsg Exp $
+# $OpenBSD: Makefile,v 1.3 2014/07/09 21:32:40 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB = r600
@@ -6,15 +6,11 @@ LIB = r600
 C_SOURCES = \
 	r600_asm.c \
 	r600_blit.c \
-	r600_buffer.c \
 	r600_hw_context.c \
 	r600_isa.c \
 	r600_pipe.c \
-	r600_query.c \
-	r600_resource.c \
 	r600_shader.c \
 	r600_state.c \
-	r600_texture.c \
 	r700_asm.c \
 	evergreen_hw_context.c \
 	evergreen_state.c \
@@ -55,12 +51,26 @@ CXX_SOURCES = \
 
 LLVM_C_SOURCES = \
 	r600_llvm.c \
+	radeon_elf_util.c \
 	radeon_llvm_emit.c \
 	radeon_llvm_util.c \
 	radeon_setup_tgsi_llvm.c
 
+RADEON_C_SOURCES = \
+	cayman_msaa.c \
+	r600_buffer_common.c \
+	r600_pipe_common.c \
+	r600_query.c \
+	r600_streamout.c \
+	r600_texture.c \
+	radeon_video.c \
+	radeon_uvd.c \
+	radeon_vce.c \
+	radeon_vce_40_2_2.c
+
 SRCS = \
 	$(C_SOURCES) \
+	$(RADEON_C_SOURCES) \
 	$(CXX_SOURCES)
 
 CPPFLAGS+= -I${GALLIUM}/drivers/r600 -I${GALLIUM}/drivers/r600/sb \

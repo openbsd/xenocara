@@ -1,34 +1,43 @@
-# $OpenBSD: Makefile,v 1.1 2013/09/05 15:12:00 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2014/07/09 21:32:40 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB = radeonsi
 
 C_SOURCES = \
-	r600_blit.c \
-	r600_buffer.c \
-	r600_hw_context.c \
-	radeonsi_pipe.c \
-	r600_query.c \
-	r600_resource.c \
-	radeonsi_shader.c \
-	r600_texture.c \
-	r600_translate.c \
-	radeonsi_pm4.c \
-	radeonsi_compute.c \
-	si_state.c \
-	si_state_streamout.c \
-	si_state_draw.c \
+	si_blit.c \
 	si_commands.c \
-	radeonsi_uvd.c \
-	radeon_uvd.c
+	si_compute.c \
+	si_descriptors.c \
+	si_dma.c \
+	si_hw_context.c \
+	si_pipe.c \
+	si_pm4.c \
+	si_shader.c \
+	si_state.c \
+	si_state_draw.c \
+	si_uvd.c
 
 LLVM_C_SOURCES = \
+	radeon_elf_util.c \
+	radeon_setup_tgsi_llvm.c \
 	radeon_llvm_emit.c \
-	radeon_llvm_util.c \
-	radeon_setup_tgsi_llvm.c
+	radeon_llvm_util.c
+
+RADEON_C_SOURCES = \
+	cayman_msaa.c \
+	r600_buffer_common.c \
+	r600_pipe_common.c \
+	r600_query.c \
+	r600_streamout.c \
+	r600_texture.c \
+	radeon_video.c \
+	radeon_uvd.c \
+	radeon_vce.c \
+	radeon_vce_40_2_2.c
 
 SRCS = \
-	$(C_SOURCES)
+	$(C_SOURCES) \
+	$(RADEON_C_SOURCES)
 
 CPPFLAGS+= -I${GALLIUM}/drivers/radeonsi \
 	   -I${GALLIUM}/drivers -I${GALLIUM}/drivers/radeon \

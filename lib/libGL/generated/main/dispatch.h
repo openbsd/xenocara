@@ -57,7 +57,7 @@
     } while(0)
 
 /* total number of offsets below */
-#define _gloffset_COUNT 1036
+#define _gloffset_COUNT 1152
 
 #define _gloffset_NewList 0
 #define _gloffset_EndList 1
@@ -467,7 +467,7 @@
 #define _gloffset_MultiTexCoord4iv 405
 #define _gloffset_MultiTexCoord4s 406
 #define _gloffset_MultiTexCoord4sv 407
-#define driDispatchRemapTable_size 628
+#define driDispatchRemapTable_size 744
 extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 
 #define CompressedTexImage1D_remap_index 0
@@ -682,422 +682,538 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define GetBufferParameteri64v_remap_index 209
 #define GetInteger64i_v_remap_index 210
 #define VertexAttribDivisor_remap_index 211
-#define BindProgramARB_remap_index 212
-#define DeleteProgramsARB_remap_index 213
-#define GenProgramsARB_remap_index 214
-#define GetProgramEnvParameterdvARB_remap_index 215
-#define GetProgramEnvParameterfvARB_remap_index 216
-#define GetProgramLocalParameterdvARB_remap_index 217
-#define GetProgramLocalParameterfvARB_remap_index 218
-#define GetProgramStringARB_remap_index 219
-#define GetProgramivARB_remap_index 220
-#define IsProgramARB_remap_index 221
-#define ProgramEnvParameter4dARB_remap_index 222
-#define ProgramEnvParameter4dvARB_remap_index 223
-#define ProgramEnvParameter4fARB_remap_index 224
-#define ProgramEnvParameter4fvARB_remap_index 225
-#define ProgramLocalParameter4dARB_remap_index 226
-#define ProgramLocalParameter4dvARB_remap_index 227
-#define ProgramLocalParameter4fARB_remap_index 228
-#define ProgramLocalParameter4fvARB_remap_index 229
-#define ProgramStringARB_remap_index 230
-#define VertexAttrib1fARB_remap_index 231
-#define VertexAttrib1fvARB_remap_index 232
-#define VertexAttrib2fARB_remap_index 233
-#define VertexAttrib2fvARB_remap_index 234
-#define VertexAttrib3fARB_remap_index 235
-#define VertexAttrib3fvARB_remap_index 236
-#define VertexAttrib4fARB_remap_index 237
-#define VertexAttrib4fvARB_remap_index 238
-#define AttachObjectARB_remap_index 239
-#define CreateProgramObjectARB_remap_index 240
-#define CreateShaderObjectARB_remap_index 241
-#define DeleteObjectARB_remap_index 242
-#define DetachObjectARB_remap_index 243
-#define GetAttachedObjectsARB_remap_index 244
-#define GetHandleARB_remap_index 245
-#define GetInfoLogARB_remap_index 246
-#define GetObjectParameterfvARB_remap_index 247
-#define GetObjectParameterivARB_remap_index 248
-#define DrawArraysInstancedARB_remap_index 249
-#define DrawElementsInstancedARB_remap_index 250
-#define BindFramebuffer_remap_index 251
-#define BindRenderbuffer_remap_index 252
-#define BlitFramebuffer_remap_index 253
-#define CheckFramebufferStatus_remap_index 254
-#define DeleteFramebuffers_remap_index 255
-#define DeleteRenderbuffers_remap_index 256
-#define FramebufferRenderbuffer_remap_index 257
-#define FramebufferTexture1D_remap_index 258
-#define FramebufferTexture2D_remap_index 259
-#define FramebufferTexture3D_remap_index 260
-#define FramebufferTextureLayer_remap_index 261
-#define GenFramebuffers_remap_index 262
-#define GenRenderbuffers_remap_index 263
-#define GenerateMipmap_remap_index 264
-#define GetFramebufferAttachmentParameteriv_remap_index 265
-#define GetRenderbufferParameteriv_remap_index 266
-#define IsFramebuffer_remap_index 267
-#define IsRenderbuffer_remap_index 268
-#define RenderbufferStorage_remap_index 269
-#define RenderbufferStorageMultisample_remap_index 270
-#define FramebufferTextureFaceARB_remap_index 271
-#define FlushMappedBufferRange_remap_index 272
-#define MapBufferRange_remap_index 273
-#define BindVertexArray_remap_index 274
-#define DeleteVertexArrays_remap_index 275
-#define GenVertexArrays_remap_index 276
-#define IsVertexArray_remap_index 277
-#define GetActiveUniformBlockName_remap_index 278
-#define GetActiveUniformBlockiv_remap_index 279
-#define GetActiveUniformName_remap_index 280
-#define GetActiveUniformsiv_remap_index 281
-#define GetUniformBlockIndex_remap_index 282
-#define GetUniformIndices_remap_index 283
-#define UniformBlockBinding_remap_index 284
-#define CopyBufferSubData_remap_index 285
-#define ClientWaitSync_remap_index 286
-#define DeleteSync_remap_index 287
-#define FenceSync_remap_index 288
-#define GetInteger64v_remap_index 289
-#define GetSynciv_remap_index 290
-#define IsSync_remap_index 291
-#define WaitSync_remap_index 292
-#define DrawElementsBaseVertex_remap_index 293
-#define DrawElementsInstancedBaseVertex_remap_index 294
-#define DrawRangeElementsBaseVertex_remap_index 295
-#define MultiDrawElementsBaseVertex_remap_index 296
-#define ProvokingVertex_remap_index 297
-#define GetMultisamplefv_remap_index 298
-#define SampleMaski_remap_index 299
-#define TexImage2DMultisample_remap_index 300
-#define TexImage3DMultisample_remap_index 301
-#define BlendEquationSeparateiARB_remap_index 302
-#define BlendEquationiARB_remap_index 303
-#define BlendFuncSeparateiARB_remap_index 304
-#define BlendFunciARB_remap_index 305
-#define BindFragDataLocationIndexed_remap_index 306
-#define GetFragDataIndex_remap_index 307
-#define BindSampler_remap_index 308
-#define DeleteSamplers_remap_index 309
-#define GenSamplers_remap_index 310
-#define GetSamplerParameterIiv_remap_index 311
-#define GetSamplerParameterIuiv_remap_index 312
-#define GetSamplerParameterfv_remap_index 313
-#define GetSamplerParameteriv_remap_index 314
-#define IsSampler_remap_index 315
-#define SamplerParameterIiv_remap_index 316
-#define SamplerParameterIuiv_remap_index 317
-#define SamplerParameterf_remap_index 318
-#define SamplerParameterfv_remap_index 319
-#define SamplerParameteri_remap_index 320
-#define SamplerParameteriv_remap_index 321
-#define GetQueryObjecti64v_remap_index 322
-#define GetQueryObjectui64v_remap_index 323
-#define QueryCounter_remap_index 324
-#define ColorP3ui_remap_index 325
-#define ColorP3uiv_remap_index 326
-#define ColorP4ui_remap_index 327
-#define ColorP4uiv_remap_index 328
-#define MultiTexCoordP1ui_remap_index 329
-#define MultiTexCoordP1uiv_remap_index 330
-#define MultiTexCoordP2ui_remap_index 331
-#define MultiTexCoordP2uiv_remap_index 332
-#define MultiTexCoordP3ui_remap_index 333
-#define MultiTexCoordP3uiv_remap_index 334
-#define MultiTexCoordP4ui_remap_index 335
-#define MultiTexCoordP4uiv_remap_index 336
-#define NormalP3ui_remap_index 337
-#define NormalP3uiv_remap_index 338
-#define SecondaryColorP3ui_remap_index 339
-#define SecondaryColorP3uiv_remap_index 340
-#define TexCoordP1ui_remap_index 341
-#define TexCoordP1uiv_remap_index 342
-#define TexCoordP2ui_remap_index 343
-#define TexCoordP2uiv_remap_index 344
-#define TexCoordP3ui_remap_index 345
-#define TexCoordP3uiv_remap_index 346
-#define TexCoordP4ui_remap_index 347
-#define TexCoordP4uiv_remap_index 348
-#define VertexAttribP1ui_remap_index 349
-#define VertexAttribP1uiv_remap_index 350
-#define VertexAttribP2ui_remap_index 351
-#define VertexAttribP2uiv_remap_index 352
-#define VertexAttribP3ui_remap_index 353
-#define VertexAttribP3uiv_remap_index 354
-#define VertexAttribP4ui_remap_index 355
-#define VertexAttribP4uiv_remap_index 356
-#define VertexP2ui_remap_index 357
-#define VertexP2uiv_remap_index 358
-#define VertexP3ui_remap_index 359
-#define VertexP3uiv_remap_index 360
-#define VertexP4ui_remap_index 361
-#define VertexP4uiv_remap_index 362
-#define BindTransformFeedback_remap_index 363
-#define DeleteTransformFeedbacks_remap_index 364
-#define DrawTransformFeedback_remap_index 365
-#define GenTransformFeedbacks_remap_index 366
-#define IsTransformFeedback_remap_index 367
-#define PauseTransformFeedback_remap_index 368
-#define ResumeTransformFeedback_remap_index 369
-#define BeginQueryIndexed_remap_index 370
-#define DrawTransformFeedbackStream_remap_index 371
-#define EndQueryIndexed_remap_index 372
-#define GetQueryIndexediv_remap_index 373
-#define ClearDepthf_remap_index 374
-#define DepthRangef_remap_index 375
-#define GetShaderPrecisionFormat_remap_index 376
-#define ReleaseShaderCompiler_remap_index 377
-#define ShaderBinary_remap_index 378
-#define GetProgramBinary_remap_index 379
-#define ProgramBinary_remap_index 380
-#define ProgramParameteri_remap_index 381
-#define DebugMessageCallbackARB_remap_index 382
-#define DebugMessageControlARB_remap_index 383
-#define DebugMessageInsertARB_remap_index 384
-#define GetDebugMessageLogARB_remap_index 385
-#define GetGraphicsResetStatusARB_remap_index 386
-#define GetnColorTableARB_remap_index 387
-#define GetnCompressedTexImageARB_remap_index 388
-#define GetnConvolutionFilterARB_remap_index 389
-#define GetnHistogramARB_remap_index 390
-#define GetnMapdvARB_remap_index 391
-#define GetnMapfvARB_remap_index 392
-#define GetnMapivARB_remap_index 393
-#define GetnMinmaxARB_remap_index 394
-#define GetnPixelMapfvARB_remap_index 395
-#define GetnPixelMapuivARB_remap_index 396
-#define GetnPixelMapusvARB_remap_index 397
-#define GetnPolygonStippleARB_remap_index 398
-#define GetnSeparableFilterARB_remap_index 399
-#define GetnTexImageARB_remap_index 400
-#define GetnUniformdvARB_remap_index 401
-#define GetnUniformfvARB_remap_index 402
-#define GetnUniformivARB_remap_index 403
-#define GetnUniformuivARB_remap_index 404
-#define ReadnPixelsARB_remap_index 405
-#define DrawArraysInstancedBaseInstance_remap_index 406
-#define DrawElementsInstancedBaseInstance_remap_index 407
-#define DrawElementsInstancedBaseVertexBaseInstance_remap_index 408
-#define DrawTransformFeedbackInstanced_remap_index 409
-#define DrawTransformFeedbackStreamInstanced_remap_index 410
-#define GetInternalformativ_remap_index 411
-#define TexStorage1D_remap_index 412
-#define TexStorage2D_remap_index 413
-#define TexStorage3D_remap_index 414
-#define TextureStorage1DEXT_remap_index 415
-#define TextureStorage2DEXT_remap_index 416
-#define TextureStorage3DEXT_remap_index 417
-#define TexBufferRange_remap_index 418
-#define TexStorage2DMultisample_remap_index 419
-#define TexStorage3DMultisample_remap_index 420
-#define InvalidateBufferData_remap_index 421
-#define InvalidateBufferSubData_remap_index 422
-#define InvalidateFramebuffer_remap_index 423
-#define InvalidateSubFramebuffer_remap_index 424
-#define InvalidateTexImage_remap_index 425
-#define InvalidateTexSubImage_remap_index 426
-#define PolygonOffsetEXT_remap_index 427
-#define DrawTexfOES_remap_index 428
-#define DrawTexfvOES_remap_index 429
-#define DrawTexiOES_remap_index 430
-#define DrawTexivOES_remap_index 431
-#define DrawTexsOES_remap_index 432
-#define DrawTexsvOES_remap_index 433
-#define DrawTexxOES_remap_index 434
-#define DrawTexxvOES_remap_index 435
-#define PointSizePointerOES_remap_index 436
-#define QueryMatrixxOES_remap_index 437
-#define SampleMaskSGIS_remap_index 438
-#define SamplePatternSGIS_remap_index 439
-#define ColorPointerEXT_remap_index 440
-#define EdgeFlagPointerEXT_remap_index 441
-#define IndexPointerEXT_remap_index 442
-#define NormalPointerEXT_remap_index 443
-#define TexCoordPointerEXT_remap_index 444
-#define VertexPointerEXT_remap_index 445
-#define DiscardFramebufferEXT_remap_index 446
-#define LockArraysEXT_remap_index 447
-#define UnlockArraysEXT_remap_index 448
-#define SecondaryColor3fEXT_remap_index 449
-#define SecondaryColor3fvEXT_remap_index 450
-#define MultiDrawElementsEXT_remap_index 451
-#define FogCoordfEXT_remap_index 452
-#define FogCoordfvEXT_remap_index 453
-#define ResizeBuffersMESA_remap_index 454
-#define WindowPos4dMESA_remap_index 455
-#define WindowPos4dvMESA_remap_index 456
-#define WindowPos4fMESA_remap_index 457
-#define WindowPos4fvMESA_remap_index 458
-#define WindowPos4iMESA_remap_index 459
-#define WindowPos4ivMESA_remap_index 460
-#define WindowPos4sMESA_remap_index 461
-#define WindowPos4svMESA_remap_index 462
-#define MultiModeDrawArraysIBM_remap_index 463
-#define MultiModeDrawElementsIBM_remap_index 464
-#define AreProgramsResidentNV_remap_index 465
-#define ExecuteProgramNV_remap_index 466
-#define GetProgramParameterdvNV_remap_index 467
-#define GetProgramParameterfvNV_remap_index 468
-#define GetProgramStringNV_remap_index 469
-#define GetProgramivNV_remap_index 470
-#define GetTrackMatrixivNV_remap_index 471
-#define GetVertexAttribdvNV_remap_index 472
-#define GetVertexAttribfvNV_remap_index 473
-#define GetVertexAttribivNV_remap_index 474
-#define LoadProgramNV_remap_index 475
-#define ProgramParameters4dvNV_remap_index 476
-#define ProgramParameters4fvNV_remap_index 477
-#define RequestResidentProgramsNV_remap_index 478
-#define TrackMatrixNV_remap_index 479
-#define VertexAttrib1dNV_remap_index 480
-#define VertexAttrib1dvNV_remap_index 481
-#define VertexAttrib1fNV_remap_index 482
-#define VertexAttrib1fvNV_remap_index 483
-#define VertexAttrib1sNV_remap_index 484
-#define VertexAttrib1svNV_remap_index 485
-#define VertexAttrib2dNV_remap_index 486
-#define VertexAttrib2dvNV_remap_index 487
-#define VertexAttrib2fNV_remap_index 488
-#define VertexAttrib2fvNV_remap_index 489
-#define VertexAttrib2sNV_remap_index 490
-#define VertexAttrib2svNV_remap_index 491
-#define VertexAttrib3dNV_remap_index 492
-#define VertexAttrib3dvNV_remap_index 493
-#define VertexAttrib3fNV_remap_index 494
-#define VertexAttrib3fvNV_remap_index 495
-#define VertexAttrib3sNV_remap_index 496
-#define VertexAttrib3svNV_remap_index 497
-#define VertexAttrib4dNV_remap_index 498
-#define VertexAttrib4dvNV_remap_index 499
-#define VertexAttrib4fNV_remap_index 500
-#define VertexAttrib4fvNV_remap_index 501
-#define VertexAttrib4sNV_remap_index 502
-#define VertexAttrib4svNV_remap_index 503
-#define VertexAttrib4ubNV_remap_index 504
-#define VertexAttrib4ubvNV_remap_index 505
-#define VertexAttribPointerNV_remap_index 506
-#define VertexAttribs1dvNV_remap_index 507
-#define VertexAttribs1fvNV_remap_index 508
-#define VertexAttribs1svNV_remap_index 509
-#define VertexAttribs2dvNV_remap_index 510
-#define VertexAttribs2fvNV_remap_index 511
-#define VertexAttribs2svNV_remap_index 512
-#define VertexAttribs3dvNV_remap_index 513
-#define VertexAttribs3fvNV_remap_index 514
-#define VertexAttribs3svNV_remap_index 515
-#define VertexAttribs4dvNV_remap_index 516
-#define VertexAttribs4fvNV_remap_index 517
-#define VertexAttribs4svNV_remap_index 518
-#define VertexAttribs4ubvNV_remap_index 519
-#define GetTexBumpParameterfvATI_remap_index 520
-#define GetTexBumpParameterivATI_remap_index 521
-#define TexBumpParameterfvATI_remap_index 522
-#define TexBumpParameterivATI_remap_index 523
-#define AlphaFragmentOp1ATI_remap_index 524
-#define AlphaFragmentOp2ATI_remap_index 525
-#define AlphaFragmentOp3ATI_remap_index 526
-#define BeginFragmentShaderATI_remap_index 527
-#define BindFragmentShaderATI_remap_index 528
-#define ColorFragmentOp1ATI_remap_index 529
-#define ColorFragmentOp2ATI_remap_index 530
-#define ColorFragmentOp3ATI_remap_index 531
-#define DeleteFragmentShaderATI_remap_index 532
-#define EndFragmentShaderATI_remap_index 533
-#define GenFragmentShadersATI_remap_index 534
-#define PassTexCoordATI_remap_index 535
-#define SampleMapATI_remap_index 536
-#define SetFragmentShaderConstantATI_remap_index 537
-#define ActiveStencilFaceEXT_remap_index 538
-#define BindVertexArrayAPPLE_remap_index 539
-#define GenVertexArraysAPPLE_remap_index 540
-#define GetProgramNamedParameterdvNV_remap_index 541
-#define GetProgramNamedParameterfvNV_remap_index 542
-#define ProgramNamedParameter4dNV_remap_index 543
-#define ProgramNamedParameter4dvNV_remap_index 544
-#define ProgramNamedParameter4fNV_remap_index 545
-#define ProgramNamedParameter4fvNV_remap_index 546
-#define PrimitiveRestartNV_remap_index 547
-#define GetTexGenxvOES_remap_index 548
-#define TexGenxOES_remap_index 549
-#define TexGenxvOES_remap_index 550
-#define DepthBoundsEXT_remap_index 551
-#define BindFramebufferEXT_remap_index 552
-#define BindRenderbufferEXT_remap_index 553
-#define BufferParameteriAPPLE_remap_index 554
-#define FlushMappedBufferRangeAPPLE_remap_index 555
-#define VertexAttribI1iEXT_remap_index 556
-#define VertexAttribI1uiEXT_remap_index 557
-#define VertexAttribI2iEXT_remap_index 558
-#define VertexAttribI2ivEXT_remap_index 559
-#define VertexAttribI2uiEXT_remap_index 560
-#define VertexAttribI2uivEXT_remap_index 561
-#define VertexAttribI3iEXT_remap_index 562
-#define VertexAttribI3ivEXT_remap_index 563
-#define VertexAttribI3uiEXT_remap_index 564
-#define VertexAttribI3uivEXT_remap_index 565
-#define VertexAttribI4iEXT_remap_index 566
-#define VertexAttribI4ivEXT_remap_index 567
-#define VertexAttribI4uiEXT_remap_index 568
-#define VertexAttribI4uivEXT_remap_index 569
-#define ClearColorIiEXT_remap_index 570
-#define ClearColorIuiEXT_remap_index 571
-#define BindBufferOffsetEXT_remap_index 572
-#define GetObjectParameterivAPPLE_remap_index 573
-#define ObjectPurgeableAPPLE_remap_index 574
-#define ObjectUnpurgeableAPPLE_remap_index 575
-#define ActiveProgramEXT_remap_index 576
-#define CreateShaderProgramEXT_remap_index 577
-#define UseShaderProgramEXT_remap_index 578
-#define TextureBarrierNV_remap_index 579
-#define StencilFuncSeparateATI_remap_index 580
-#define ProgramEnvParameters4fvEXT_remap_index 581
-#define ProgramLocalParameters4fvEXT_remap_index 582
-#define EGLImageTargetRenderbufferStorageOES_remap_index 583
-#define EGLImageTargetTexture2DOES_remap_index 584
-#define AlphaFuncx_remap_index 585
-#define ClearColorx_remap_index 586
-#define ClearDepthx_remap_index 587
-#define Color4x_remap_index 588
-#define DepthRangex_remap_index 589
-#define Fogx_remap_index 590
-#define Fogxv_remap_index 591
-#define Frustumf_remap_index 592
-#define Frustumx_remap_index 593
-#define LightModelx_remap_index 594
-#define LightModelxv_remap_index 595
-#define Lightx_remap_index 596
-#define Lightxv_remap_index 597
-#define LineWidthx_remap_index 598
-#define LoadMatrixx_remap_index 599
-#define Materialx_remap_index 600
-#define Materialxv_remap_index 601
-#define MultMatrixx_remap_index 602
-#define MultiTexCoord4x_remap_index 603
-#define Normal3x_remap_index 604
-#define Orthof_remap_index 605
-#define Orthox_remap_index 606
-#define PointSizex_remap_index 607
-#define PolygonOffsetx_remap_index 608
-#define Rotatex_remap_index 609
-#define SampleCoveragex_remap_index 610
-#define Scalex_remap_index 611
-#define TexEnvx_remap_index 612
-#define TexEnvxv_remap_index 613
-#define TexParameterx_remap_index 614
-#define Translatex_remap_index 615
-#define ClipPlanef_remap_index 616
-#define ClipPlanex_remap_index 617
-#define GetClipPlanef_remap_index 618
-#define GetClipPlanex_remap_index 619
-#define GetFixedv_remap_index 620
-#define GetLightxv_remap_index 621
-#define GetMaterialxv_remap_index 622
-#define GetTexEnvxv_remap_index 623
-#define GetTexParameterxv_remap_index 624
-#define PointParameterx_remap_index 625
-#define PointParameterxv_remap_index 626
-#define TexParameterxv_remap_index 627
+#define MinSampleShading_remap_index 212
+#define BindProgramARB_remap_index 213
+#define DeleteProgramsARB_remap_index 214
+#define GenProgramsARB_remap_index 215
+#define GetProgramEnvParameterdvARB_remap_index 216
+#define GetProgramEnvParameterfvARB_remap_index 217
+#define GetProgramLocalParameterdvARB_remap_index 218
+#define GetProgramLocalParameterfvARB_remap_index 219
+#define GetProgramStringARB_remap_index 220
+#define GetProgramivARB_remap_index 221
+#define IsProgramARB_remap_index 222
+#define ProgramEnvParameter4dARB_remap_index 223
+#define ProgramEnvParameter4dvARB_remap_index 224
+#define ProgramEnvParameter4fARB_remap_index 225
+#define ProgramEnvParameter4fvARB_remap_index 226
+#define ProgramLocalParameter4dARB_remap_index 227
+#define ProgramLocalParameter4dvARB_remap_index 228
+#define ProgramLocalParameter4fARB_remap_index 229
+#define ProgramLocalParameter4fvARB_remap_index 230
+#define ProgramStringARB_remap_index 231
+#define VertexAttrib1fARB_remap_index 232
+#define VertexAttrib1fvARB_remap_index 233
+#define VertexAttrib2fARB_remap_index 234
+#define VertexAttrib2fvARB_remap_index 235
+#define VertexAttrib3fARB_remap_index 236
+#define VertexAttrib3fvARB_remap_index 237
+#define VertexAttrib4fARB_remap_index 238
+#define VertexAttrib4fvARB_remap_index 239
+#define AttachObjectARB_remap_index 240
+#define CreateProgramObjectARB_remap_index 241
+#define CreateShaderObjectARB_remap_index 242
+#define DeleteObjectARB_remap_index 243
+#define DetachObjectARB_remap_index 244
+#define GetAttachedObjectsARB_remap_index 245
+#define GetHandleARB_remap_index 246
+#define GetInfoLogARB_remap_index 247
+#define GetObjectParameterfvARB_remap_index 248
+#define GetObjectParameterivARB_remap_index 249
+#define DrawArraysInstancedARB_remap_index 250
+#define DrawElementsInstancedARB_remap_index 251
+#define BindFramebuffer_remap_index 252
+#define BindRenderbuffer_remap_index 253
+#define BlitFramebuffer_remap_index 254
+#define CheckFramebufferStatus_remap_index 255
+#define DeleteFramebuffers_remap_index 256
+#define DeleteRenderbuffers_remap_index 257
+#define FramebufferRenderbuffer_remap_index 258
+#define FramebufferTexture1D_remap_index 259
+#define FramebufferTexture2D_remap_index 260
+#define FramebufferTexture3D_remap_index 261
+#define FramebufferTextureLayer_remap_index 262
+#define GenFramebuffers_remap_index 263
+#define GenRenderbuffers_remap_index 264
+#define GenerateMipmap_remap_index 265
+#define GetFramebufferAttachmentParameteriv_remap_index 266
+#define GetRenderbufferParameteriv_remap_index 267
+#define IsFramebuffer_remap_index 268
+#define IsRenderbuffer_remap_index 269
+#define RenderbufferStorage_remap_index 270
+#define RenderbufferStorageMultisample_remap_index 271
+#define FramebufferTextureFaceARB_remap_index 272
+#define FlushMappedBufferRange_remap_index 273
+#define MapBufferRange_remap_index 274
+#define BindVertexArray_remap_index 275
+#define DeleteVertexArrays_remap_index 276
+#define GenVertexArrays_remap_index 277
+#define IsVertexArray_remap_index 278
+#define GetActiveUniformBlockName_remap_index 279
+#define GetActiveUniformBlockiv_remap_index 280
+#define GetActiveUniformName_remap_index 281
+#define GetActiveUniformsiv_remap_index 282
+#define GetUniformBlockIndex_remap_index 283
+#define GetUniformIndices_remap_index 284
+#define UniformBlockBinding_remap_index 285
+#define CopyBufferSubData_remap_index 286
+#define ClientWaitSync_remap_index 287
+#define DeleteSync_remap_index 288
+#define FenceSync_remap_index 289
+#define GetInteger64v_remap_index 290
+#define GetSynciv_remap_index 291
+#define IsSync_remap_index 292
+#define WaitSync_remap_index 293
+#define DrawElementsBaseVertex_remap_index 294
+#define DrawElementsInstancedBaseVertex_remap_index 295
+#define DrawRangeElementsBaseVertex_remap_index 296
+#define MultiDrawElementsBaseVertex_remap_index 297
+#define ProvokingVertex_remap_index 298
+#define GetMultisamplefv_remap_index 299
+#define SampleMaski_remap_index 300
+#define TexImage2DMultisample_remap_index 301
+#define TexImage3DMultisample_remap_index 302
+#define BlendEquationSeparateiARB_remap_index 303
+#define BlendEquationiARB_remap_index 304
+#define BlendFuncSeparateiARB_remap_index 305
+#define BlendFunciARB_remap_index 306
+#define BindFragDataLocationIndexed_remap_index 307
+#define GetFragDataIndex_remap_index 308
+#define BindSampler_remap_index 309
+#define DeleteSamplers_remap_index 310
+#define GenSamplers_remap_index 311
+#define GetSamplerParameterIiv_remap_index 312
+#define GetSamplerParameterIuiv_remap_index 313
+#define GetSamplerParameterfv_remap_index 314
+#define GetSamplerParameteriv_remap_index 315
+#define IsSampler_remap_index 316
+#define SamplerParameterIiv_remap_index 317
+#define SamplerParameterIuiv_remap_index 318
+#define SamplerParameterf_remap_index 319
+#define SamplerParameterfv_remap_index 320
+#define SamplerParameteri_remap_index 321
+#define SamplerParameteriv_remap_index 322
+#define GetQueryObjecti64v_remap_index 323
+#define GetQueryObjectui64v_remap_index 324
+#define QueryCounter_remap_index 325
+#define ColorP3ui_remap_index 326
+#define ColorP3uiv_remap_index 327
+#define ColorP4ui_remap_index 328
+#define ColorP4uiv_remap_index 329
+#define MultiTexCoordP1ui_remap_index 330
+#define MultiTexCoordP1uiv_remap_index 331
+#define MultiTexCoordP2ui_remap_index 332
+#define MultiTexCoordP2uiv_remap_index 333
+#define MultiTexCoordP3ui_remap_index 334
+#define MultiTexCoordP3uiv_remap_index 335
+#define MultiTexCoordP4ui_remap_index 336
+#define MultiTexCoordP4uiv_remap_index 337
+#define NormalP3ui_remap_index 338
+#define NormalP3uiv_remap_index 339
+#define SecondaryColorP3ui_remap_index 340
+#define SecondaryColorP3uiv_remap_index 341
+#define TexCoordP1ui_remap_index 342
+#define TexCoordP1uiv_remap_index 343
+#define TexCoordP2ui_remap_index 344
+#define TexCoordP2uiv_remap_index 345
+#define TexCoordP3ui_remap_index 346
+#define TexCoordP3uiv_remap_index 347
+#define TexCoordP4ui_remap_index 348
+#define TexCoordP4uiv_remap_index 349
+#define VertexAttribP1ui_remap_index 350
+#define VertexAttribP1uiv_remap_index 351
+#define VertexAttribP2ui_remap_index 352
+#define VertexAttribP2uiv_remap_index 353
+#define VertexAttribP3ui_remap_index 354
+#define VertexAttribP3uiv_remap_index 355
+#define VertexAttribP4ui_remap_index 356
+#define VertexAttribP4uiv_remap_index 357
+#define VertexP2ui_remap_index 358
+#define VertexP2uiv_remap_index 359
+#define VertexP3ui_remap_index 360
+#define VertexP3uiv_remap_index 361
+#define VertexP4ui_remap_index 362
+#define VertexP4uiv_remap_index 363
+#define DrawArraysIndirect_remap_index 364
+#define DrawElementsIndirect_remap_index 365
+#define BindTransformFeedback_remap_index 366
+#define DeleteTransformFeedbacks_remap_index 367
+#define DrawTransformFeedback_remap_index 368
+#define GenTransformFeedbacks_remap_index 369
+#define IsTransformFeedback_remap_index 370
+#define PauseTransformFeedback_remap_index 371
+#define ResumeTransformFeedback_remap_index 372
+#define BeginQueryIndexed_remap_index 373
+#define DrawTransformFeedbackStream_remap_index 374
+#define EndQueryIndexed_remap_index 375
+#define GetQueryIndexediv_remap_index 376
+#define ClearDepthf_remap_index 377
+#define DepthRangef_remap_index 378
+#define GetShaderPrecisionFormat_remap_index 379
+#define ReleaseShaderCompiler_remap_index 380
+#define ShaderBinary_remap_index 381
+#define GetProgramBinary_remap_index 382
+#define ProgramBinary_remap_index 383
+#define ProgramParameteri_remap_index 384
+#define DepthRangeArrayv_remap_index 385
+#define DepthRangeIndexed_remap_index 386
+#define GetDoublei_v_remap_index 387
+#define GetFloati_v_remap_index 388
+#define ScissorArrayv_remap_index 389
+#define ScissorIndexed_remap_index 390
+#define ScissorIndexedv_remap_index 391
+#define ViewportArrayv_remap_index 392
+#define ViewportIndexedf_remap_index 393
+#define ViewportIndexedfv_remap_index 394
+#define GetGraphicsResetStatusARB_remap_index 395
+#define GetnColorTableARB_remap_index 396
+#define GetnCompressedTexImageARB_remap_index 397
+#define GetnConvolutionFilterARB_remap_index 398
+#define GetnHistogramARB_remap_index 399
+#define GetnMapdvARB_remap_index 400
+#define GetnMapfvARB_remap_index 401
+#define GetnMapivARB_remap_index 402
+#define GetnMinmaxARB_remap_index 403
+#define GetnPixelMapfvARB_remap_index 404
+#define GetnPixelMapuivARB_remap_index 405
+#define GetnPixelMapusvARB_remap_index 406
+#define GetnPolygonStippleARB_remap_index 407
+#define GetnSeparableFilterARB_remap_index 408
+#define GetnTexImageARB_remap_index 409
+#define GetnUniformdvARB_remap_index 410
+#define GetnUniformfvARB_remap_index 411
+#define GetnUniformivARB_remap_index 412
+#define GetnUniformuivARB_remap_index 413
+#define ReadnPixelsARB_remap_index 414
+#define DrawArraysInstancedBaseInstance_remap_index 415
+#define DrawElementsInstancedBaseInstance_remap_index 416
+#define DrawElementsInstancedBaseVertexBaseInstance_remap_index 417
+#define DrawTransformFeedbackInstanced_remap_index 418
+#define DrawTransformFeedbackStreamInstanced_remap_index 419
+#define GetInternalformativ_remap_index 420
+#define GetActiveAtomicCounterBufferiv_remap_index 421
+#define BindImageTexture_remap_index 422
+#define MemoryBarrier_remap_index 423
+#define TexStorage1D_remap_index 424
+#define TexStorage2D_remap_index 425
+#define TexStorage3D_remap_index 426
+#define TextureStorage1DEXT_remap_index 427
+#define TextureStorage2DEXT_remap_index 428
+#define TextureStorage3DEXT_remap_index 429
+#define ClearBufferData_remap_index 430
+#define ClearBufferSubData_remap_index 431
+#define DispatchCompute_remap_index 432
+#define DispatchComputeIndirect_remap_index 433
+#define TextureView_remap_index 434
+#define BindVertexBuffer_remap_index 435
+#define VertexAttribBinding_remap_index 436
+#define VertexAttribFormat_remap_index 437
+#define VertexAttribIFormat_remap_index 438
+#define VertexAttribLFormat_remap_index 439
+#define VertexBindingDivisor_remap_index 440
+#define MultiDrawArraysIndirect_remap_index 441
+#define MultiDrawElementsIndirect_remap_index 442
+#define TexBufferRange_remap_index 443
+#define TexStorage2DMultisample_remap_index 444
+#define TexStorage3DMultisample_remap_index 445
+#define BufferStorage_remap_index 446
+#define BindBuffersBase_remap_index 447
+#define BindBuffersRange_remap_index 448
+#define BindImageTextures_remap_index 449
+#define BindSamplers_remap_index 450
+#define BindTextures_remap_index 451
+#define BindVertexBuffers_remap_index 452
+#define InvalidateBufferData_remap_index 453
+#define InvalidateBufferSubData_remap_index 454
+#define InvalidateFramebuffer_remap_index 455
+#define InvalidateSubFramebuffer_remap_index 456
+#define InvalidateTexImage_remap_index 457
+#define InvalidateTexSubImage_remap_index 458
+#define PolygonOffsetEXT_remap_index 459
+#define DrawTexfOES_remap_index 460
+#define DrawTexfvOES_remap_index 461
+#define DrawTexiOES_remap_index 462
+#define DrawTexivOES_remap_index 463
+#define DrawTexsOES_remap_index 464
+#define DrawTexsvOES_remap_index 465
+#define DrawTexxOES_remap_index 466
+#define DrawTexxvOES_remap_index 467
+#define PointSizePointerOES_remap_index 468
+#define QueryMatrixxOES_remap_index 469
+#define SampleMaskSGIS_remap_index 470
+#define SamplePatternSGIS_remap_index 471
+#define ColorPointerEXT_remap_index 472
+#define EdgeFlagPointerEXT_remap_index 473
+#define IndexPointerEXT_remap_index 474
+#define NormalPointerEXT_remap_index 475
+#define TexCoordPointerEXT_remap_index 476
+#define VertexPointerEXT_remap_index 477
+#define DiscardFramebufferEXT_remap_index 478
+#define ActiveShaderProgram_remap_index 479
+#define BindProgramPipeline_remap_index 480
+#define CreateShaderProgramv_remap_index 481
+#define DeleteProgramPipelines_remap_index 482
+#define GenProgramPipelines_remap_index 483
+#define GetProgramPipelineInfoLog_remap_index 484
+#define GetProgramPipelineiv_remap_index 485
+#define IsProgramPipeline_remap_index 486
+#define LockArraysEXT_remap_index 487
+#define ProgramUniform1f_remap_index 488
+#define ProgramUniform1fv_remap_index 489
+#define ProgramUniform1i_remap_index 490
+#define ProgramUniform1iv_remap_index 491
+#define ProgramUniform1ui_remap_index 492
+#define ProgramUniform1uiv_remap_index 493
+#define ProgramUniform2f_remap_index 494
+#define ProgramUniform2fv_remap_index 495
+#define ProgramUniform2i_remap_index 496
+#define ProgramUniform2iv_remap_index 497
+#define ProgramUniform2ui_remap_index 498
+#define ProgramUniform2uiv_remap_index 499
+#define ProgramUniform3f_remap_index 500
+#define ProgramUniform3fv_remap_index 501
+#define ProgramUniform3i_remap_index 502
+#define ProgramUniform3iv_remap_index 503
+#define ProgramUniform3ui_remap_index 504
+#define ProgramUniform3uiv_remap_index 505
+#define ProgramUniform4f_remap_index 506
+#define ProgramUniform4fv_remap_index 507
+#define ProgramUniform4i_remap_index 508
+#define ProgramUniform4iv_remap_index 509
+#define ProgramUniform4ui_remap_index 510
+#define ProgramUniform4uiv_remap_index 511
+#define ProgramUniformMatrix2fv_remap_index 512
+#define ProgramUniformMatrix2x3fv_remap_index 513
+#define ProgramUniformMatrix2x4fv_remap_index 514
+#define ProgramUniformMatrix3fv_remap_index 515
+#define ProgramUniformMatrix3x2fv_remap_index 516
+#define ProgramUniformMatrix3x4fv_remap_index 517
+#define ProgramUniformMatrix4fv_remap_index 518
+#define ProgramUniformMatrix4x2fv_remap_index 519
+#define ProgramUniformMatrix4x3fv_remap_index 520
+#define UnlockArraysEXT_remap_index 521
+#define UseProgramStages_remap_index 522
+#define ValidateProgramPipeline_remap_index 523
+#define DebugMessageCallback_remap_index 524
+#define DebugMessageControl_remap_index 525
+#define DebugMessageInsert_remap_index 526
+#define GetDebugMessageLog_remap_index 527
+#define GetObjectLabel_remap_index 528
+#define GetObjectPtrLabel_remap_index 529
+#define ObjectLabel_remap_index 530
+#define ObjectPtrLabel_remap_index 531
+#define PopDebugGroup_remap_index 532
+#define PushDebugGroup_remap_index 533
+#define SecondaryColor3fEXT_remap_index 534
+#define SecondaryColor3fvEXT_remap_index 535
+#define MultiDrawElementsEXT_remap_index 536
+#define FogCoordfEXT_remap_index 537
+#define FogCoordfvEXT_remap_index 538
+#define ResizeBuffersMESA_remap_index 539
+#define WindowPos4dMESA_remap_index 540
+#define WindowPos4dvMESA_remap_index 541
+#define WindowPos4fMESA_remap_index 542
+#define WindowPos4fvMESA_remap_index 543
+#define WindowPos4iMESA_remap_index 544
+#define WindowPos4ivMESA_remap_index 545
+#define WindowPos4sMESA_remap_index 546
+#define WindowPos4svMESA_remap_index 547
+#define MultiModeDrawArraysIBM_remap_index 548
+#define MultiModeDrawElementsIBM_remap_index 549
+#define AreProgramsResidentNV_remap_index 550
+#define ExecuteProgramNV_remap_index 551
+#define GetProgramParameterdvNV_remap_index 552
+#define GetProgramParameterfvNV_remap_index 553
+#define GetProgramStringNV_remap_index 554
+#define GetProgramivNV_remap_index 555
+#define GetTrackMatrixivNV_remap_index 556
+#define GetVertexAttribdvNV_remap_index 557
+#define GetVertexAttribfvNV_remap_index 558
+#define GetVertexAttribivNV_remap_index 559
+#define LoadProgramNV_remap_index 560
+#define ProgramParameters4dvNV_remap_index 561
+#define ProgramParameters4fvNV_remap_index 562
+#define RequestResidentProgramsNV_remap_index 563
+#define TrackMatrixNV_remap_index 564
+#define VertexAttrib1dNV_remap_index 565
+#define VertexAttrib1dvNV_remap_index 566
+#define VertexAttrib1fNV_remap_index 567
+#define VertexAttrib1fvNV_remap_index 568
+#define VertexAttrib1sNV_remap_index 569
+#define VertexAttrib1svNV_remap_index 570
+#define VertexAttrib2dNV_remap_index 571
+#define VertexAttrib2dvNV_remap_index 572
+#define VertexAttrib2fNV_remap_index 573
+#define VertexAttrib2fvNV_remap_index 574
+#define VertexAttrib2sNV_remap_index 575
+#define VertexAttrib2svNV_remap_index 576
+#define VertexAttrib3dNV_remap_index 577
+#define VertexAttrib3dvNV_remap_index 578
+#define VertexAttrib3fNV_remap_index 579
+#define VertexAttrib3fvNV_remap_index 580
+#define VertexAttrib3sNV_remap_index 581
+#define VertexAttrib3svNV_remap_index 582
+#define VertexAttrib4dNV_remap_index 583
+#define VertexAttrib4dvNV_remap_index 584
+#define VertexAttrib4fNV_remap_index 585
+#define VertexAttrib4fvNV_remap_index 586
+#define VertexAttrib4sNV_remap_index 587
+#define VertexAttrib4svNV_remap_index 588
+#define VertexAttrib4ubNV_remap_index 589
+#define VertexAttrib4ubvNV_remap_index 590
+#define VertexAttribPointerNV_remap_index 591
+#define VertexAttribs1dvNV_remap_index 592
+#define VertexAttribs1fvNV_remap_index 593
+#define VertexAttribs1svNV_remap_index 594
+#define VertexAttribs2dvNV_remap_index 595
+#define VertexAttribs2fvNV_remap_index 596
+#define VertexAttribs2svNV_remap_index 597
+#define VertexAttribs3dvNV_remap_index 598
+#define VertexAttribs3fvNV_remap_index 599
+#define VertexAttribs3svNV_remap_index 600
+#define VertexAttribs4dvNV_remap_index 601
+#define VertexAttribs4fvNV_remap_index 602
+#define VertexAttribs4svNV_remap_index 603
+#define VertexAttribs4ubvNV_remap_index 604
+#define GetTexBumpParameterfvATI_remap_index 605
+#define GetTexBumpParameterivATI_remap_index 606
+#define TexBumpParameterfvATI_remap_index 607
+#define TexBumpParameterivATI_remap_index 608
+#define AlphaFragmentOp1ATI_remap_index 609
+#define AlphaFragmentOp2ATI_remap_index 610
+#define AlphaFragmentOp3ATI_remap_index 611
+#define BeginFragmentShaderATI_remap_index 612
+#define BindFragmentShaderATI_remap_index 613
+#define ColorFragmentOp1ATI_remap_index 614
+#define ColorFragmentOp2ATI_remap_index 615
+#define ColorFragmentOp3ATI_remap_index 616
+#define DeleteFragmentShaderATI_remap_index 617
+#define EndFragmentShaderATI_remap_index 618
+#define GenFragmentShadersATI_remap_index 619
+#define PassTexCoordATI_remap_index 620
+#define SampleMapATI_remap_index 621
+#define SetFragmentShaderConstantATI_remap_index 622
+#define ActiveStencilFaceEXT_remap_index 623
+#define BindVertexArrayAPPLE_remap_index 624
+#define GenVertexArraysAPPLE_remap_index 625
+#define GetProgramNamedParameterdvNV_remap_index 626
+#define GetProgramNamedParameterfvNV_remap_index 627
+#define ProgramNamedParameter4dNV_remap_index 628
+#define ProgramNamedParameter4dvNV_remap_index 629
+#define ProgramNamedParameter4fNV_remap_index 630
+#define ProgramNamedParameter4fvNV_remap_index 631
+#define PrimitiveRestartNV_remap_index 632
+#define GetTexGenxvOES_remap_index 633
+#define TexGenxOES_remap_index 634
+#define TexGenxvOES_remap_index 635
+#define DepthBoundsEXT_remap_index 636
+#define BindFramebufferEXT_remap_index 637
+#define BindRenderbufferEXT_remap_index 638
+#define BufferParameteriAPPLE_remap_index 639
+#define FlushMappedBufferRangeAPPLE_remap_index 640
+#define VertexAttribI1iEXT_remap_index 641
+#define VertexAttribI1uiEXT_remap_index 642
+#define VertexAttribI2iEXT_remap_index 643
+#define VertexAttribI2ivEXT_remap_index 644
+#define VertexAttribI2uiEXT_remap_index 645
+#define VertexAttribI2uivEXT_remap_index 646
+#define VertexAttribI3iEXT_remap_index 647
+#define VertexAttribI3ivEXT_remap_index 648
+#define VertexAttribI3uiEXT_remap_index 649
+#define VertexAttribI3uivEXT_remap_index 650
+#define VertexAttribI4iEXT_remap_index 651
+#define VertexAttribI4ivEXT_remap_index 652
+#define VertexAttribI4uiEXT_remap_index 653
+#define VertexAttribI4uivEXT_remap_index 654
+#define ClearColorIiEXT_remap_index 655
+#define ClearColorIuiEXT_remap_index 656
+#define BindBufferOffsetEXT_remap_index 657
+#define BeginPerfMonitorAMD_remap_index 658
+#define DeletePerfMonitorsAMD_remap_index 659
+#define EndPerfMonitorAMD_remap_index 660
+#define GenPerfMonitorsAMD_remap_index 661
+#define GetPerfMonitorCounterDataAMD_remap_index 662
+#define GetPerfMonitorCounterInfoAMD_remap_index 663
+#define GetPerfMonitorCounterStringAMD_remap_index 664
+#define GetPerfMonitorCountersAMD_remap_index 665
+#define GetPerfMonitorGroupStringAMD_remap_index 666
+#define GetPerfMonitorGroupsAMD_remap_index 667
+#define SelectPerfMonitorCountersAMD_remap_index 668
+#define GetObjectParameterivAPPLE_remap_index 669
+#define ObjectPurgeableAPPLE_remap_index 670
+#define ObjectUnpurgeableAPPLE_remap_index 671
+#define ActiveProgramEXT_remap_index 672
+#define CreateShaderProgramEXT_remap_index 673
+#define UseShaderProgramEXT_remap_index 674
+#define TextureBarrierNV_remap_index 675
+#define VDPAUFiniNV_remap_index 676
+#define VDPAUGetSurfaceivNV_remap_index 677
+#define VDPAUInitNV_remap_index 678
+#define VDPAUIsSurfaceNV_remap_index 679
+#define VDPAUMapSurfacesNV_remap_index 680
+#define VDPAURegisterOutputSurfaceNV_remap_index 681
+#define VDPAURegisterVideoSurfaceNV_remap_index 682
+#define VDPAUSurfaceAccessNV_remap_index 683
+#define VDPAUUnmapSurfacesNV_remap_index 684
+#define VDPAUUnregisterSurfaceNV_remap_index 685
+#define BeginPerfQueryINTEL_remap_index 686
+#define CreatePerfQueryINTEL_remap_index 687
+#define DeletePerfQueryINTEL_remap_index 688
+#define EndPerfQueryINTEL_remap_index 689
+#define GetFirstPerfQueryIdINTEL_remap_index 690
+#define GetNextPerfQueryIdINTEL_remap_index 691
+#define GetPerfCounterInfoINTEL_remap_index 692
+#define GetPerfQueryDataINTEL_remap_index 693
+#define GetPerfQueryIdByNameINTEL_remap_index 694
+#define GetPerfQueryInfoINTEL_remap_index 695
+#define StencilFuncSeparateATI_remap_index 696
+#define ProgramEnvParameters4fvEXT_remap_index 697
+#define ProgramLocalParameters4fvEXT_remap_index 698
+#define EGLImageTargetRenderbufferStorageOES_remap_index 699
+#define EGLImageTargetTexture2DOES_remap_index 700
+#define AlphaFuncx_remap_index 701
+#define ClearColorx_remap_index 702
+#define ClearDepthx_remap_index 703
+#define Color4x_remap_index 704
+#define DepthRangex_remap_index 705
+#define Fogx_remap_index 706
+#define Fogxv_remap_index 707
+#define Frustumf_remap_index 708
+#define Frustumx_remap_index 709
+#define LightModelx_remap_index 710
+#define LightModelxv_remap_index 711
+#define Lightx_remap_index 712
+#define Lightxv_remap_index 713
+#define LineWidthx_remap_index 714
+#define LoadMatrixx_remap_index 715
+#define Materialx_remap_index 716
+#define Materialxv_remap_index 717
+#define MultMatrixx_remap_index 718
+#define MultiTexCoord4x_remap_index 719
+#define Normal3x_remap_index 720
+#define Orthof_remap_index 721
+#define Orthox_remap_index 722
+#define PointSizex_remap_index 723
+#define PolygonOffsetx_remap_index 724
+#define Rotatex_remap_index 725
+#define SampleCoveragex_remap_index 726
+#define Scalex_remap_index 727
+#define TexEnvx_remap_index 728
+#define TexEnvxv_remap_index 729
+#define TexParameterx_remap_index 730
+#define Translatex_remap_index 731
+#define ClipPlanef_remap_index 732
+#define ClipPlanex_remap_index 733
+#define GetClipPlanef_remap_index 734
+#define GetClipPlanex_remap_index 735
+#define GetFixedv_remap_index 736
+#define GetLightxv_remap_index 737
+#define GetMaterialxv_remap_index 738
+#define GetTexEnvxv_remap_index 739
+#define GetTexParameterxv_remap_index 740
+#define PointParameterx_remap_index 741
+#define PointParameterxv_remap_index 742
+#define TexParameterxv_remap_index 743
 
 #define _gloffset_CompressedTexImage1D driDispatchRemapTable[CompressedTexImage1D_remap_index]
 #define _gloffset_CompressedTexImage2D driDispatchRemapTable[CompressedTexImage2D_remap_index]
@@ -1311,6 +1427,7 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_GetBufferParameteri64v driDispatchRemapTable[GetBufferParameteri64v_remap_index]
 #define _gloffset_GetInteger64i_v driDispatchRemapTable[GetInteger64i_v_remap_index]
 #define _gloffset_VertexAttribDivisor driDispatchRemapTable[VertexAttribDivisor_remap_index]
+#define _gloffset_MinSampleShading driDispatchRemapTable[MinSampleShading_remap_index]
 #define _gloffset_BindProgramARB driDispatchRemapTable[BindProgramARB_remap_index]
 #define _gloffset_DeleteProgramsARB driDispatchRemapTable[DeleteProgramsARB_remap_index]
 #define _gloffset_GenProgramsARB driDispatchRemapTable[GenProgramsARB_remap_index]
@@ -1462,6 +1579,8 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_VertexP3uiv driDispatchRemapTable[VertexP3uiv_remap_index]
 #define _gloffset_VertexP4ui driDispatchRemapTable[VertexP4ui_remap_index]
 #define _gloffset_VertexP4uiv driDispatchRemapTable[VertexP4uiv_remap_index]
+#define _gloffset_DrawArraysIndirect driDispatchRemapTable[DrawArraysIndirect_remap_index]
+#define _gloffset_DrawElementsIndirect driDispatchRemapTable[DrawElementsIndirect_remap_index]
 #define _gloffset_BindTransformFeedback driDispatchRemapTable[BindTransformFeedback_remap_index]
 #define _gloffset_DeleteTransformFeedbacks driDispatchRemapTable[DeleteTransformFeedbacks_remap_index]
 #define _gloffset_DrawTransformFeedback driDispatchRemapTable[DrawTransformFeedback_remap_index]
@@ -1481,10 +1600,16 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_GetProgramBinary driDispatchRemapTable[GetProgramBinary_remap_index]
 #define _gloffset_ProgramBinary driDispatchRemapTable[ProgramBinary_remap_index]
 #define _gloffset_ProgramParameteri driDispatchRemapTable[ProgramParameteri_remap_index]
-#define _gloffset_DebugMessageCallbackARB driDispatchRemapTable[DebugMessageCallbackARB_remap_index]
-#define _gloffset_DebugMessageControlARB driDispatchRemapTable[DebugMessageControlARB_remap_index]
-#define _gloffset_DebugMessageInsertARB driDispatchRemapTable[DebugMessageInsertARB_remap_index]
-#define _gloffset_GetDebugMessageLogARB driDispatchRemapTable[GetDebugMessageLogARB_remap_index]
+#define _gloffset_DepthRangeArrayv driDispatchRemapTable[DepthRangeArrayv_remap_index]
+#define _gloffset_DepthRangeIndexed driDispatchRemapTable[DepthRangeIndexed_remap_index]
+#define _gloffset_GetDoublei_v driDispatchRemapTable[GetDoublei_v_remap_index]
+#define _gloffset_GetFloati_v driDispatchRemapTable[GetFloati_v_remap_index]
+#define _gloffset_ScissorArrayv driDispatchRemapTable[ScissorArrayv_remap_index]
+#define _gloffset_ScissorIndexed driDispatchRemapTable[ScissorIndexed_remap_index]
+#define _gloffset_ScissorIndexedv driDispatchRemapTable[ScissorIndexedv_remap_index]
+#define _gloffset_ViewportArrayv driDispatchRemapTable[ViewportArrayv_remap_index]
+#define _gloffset_ViewportIndexedf driDispatchRemapTable[ViewportIndexedf_remap_index]
+#define _gloffset_ViewportIndexedfv driDispatchRemapTable[ViewportIndexedfv_remap_index]
 #define _gloffset_GetGraphicsResetStatusARB driDispatchRemapTable[GetGraphicsResetStatusARB_remap_index]
 #define _gloffset_GetnColorTableARB driDispatchRemapTable[GetnColorTableARB_remap_index]
 #define _gloffset_GetnCompressedTexImageARB driDispatchRemapTable[GetnCompressedTexImageARB_remap_index]
@@ -1511,15 +1636,38 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_DrawTransformFeedbackInstanced driDispatchRemapTable[DrawTransformFeedbackInstanced_remap_index]
 #define _gloffset_DrawTransformFeedbackStreamInstanced driDispatchRemapTable[DrawTransformFeedbackStreamInstanced_remap_index]
 #define _gloffset_GetInternalformativ driDispatchRemapTable[GetInternalformativ_remap_index]
+#define _gloffset_GetActiveAtomicCounterBufferiv driDispatchRemapTable[GetActiveAtomicCounterBufferiv_remap_index]
+#define _gloffset_BindImageTexture driDispatchRemapTable[BindImageTexture_remap_index]
+#define _gloffset_MemoryBarrier driDispatchRemapTable[MemoryBarrier_remap_index]
 #define _gloffset_TexStorage1D driDispatchRemapTable[TexStorage1D_remap_index]
 #define _gloffset_TexStorage2D driDispatchRemapTable[TexStorage2D_remap_index]
 #define _gloffset_TexStorage3D driDispatchRemapTable[TexStorage3D_remap_index]
 #define _gloffset_TextureStorage1DEXT driDispatchRemapTable[TextureStorage1DEXT_remap_index]
 #define _gloffset_TextureStorage2DEXT driDispatchRemapTable[TextureStorage2DEXT_remap_index]
 #define _gloffset_TextureStorage3DEXT driDispatchRemapTable[TextureStorage3DEXT_remap_index]
+#define _gloffset_ClearBufferData driDispatchRemapTable[ClearBufferData_remap_index]
+#define _gloffset_ClearBufferSubData driDispatchRemapTable[ClearBufferSubData_remap_index]
+#define _gloffset_DispatchCompute driDispatchRemapTable[DispatchCompute_remap_index]
+#define _gloffset_DispatchComputeIndirect driDispatchRemapTable[DispatchComputeIndirect_remap_index]
+#define _gloffset_TextureView driDispatchRemapTable[TextureView_remap_index]
+#define _gloffset_BindVertexBuffer driDispatchRemapTable[BindVertexBuffer_remap_index]
+#define _gloffset_VertexAttribBinding driDispatchRemapTable[VertexAttribBinding_remap_index]
+#define _gloffset_VertexAttribFormat driDispatchRemapTable[VertexAttribFormat_remap_index]
+#define _gloffset_VertexAttribIFormat driDispatchRemapTable[VertexAttribIFormat_remap_index]
+#define _gloffset_VertexAttribLFormat driDispatchRemapTable[VertexAttribLFormat_remap_index]
+#define _gloffset_VertexBindingDivisor driDispatchRemapTable[VertexBindingDivisor_remap_index]
+#define _gloffset_MultiDrawArraysIndirect driDispatchRemapTable[MultiDrawArraysIndirect_remap_index]
+#define _gloffset_MultiDrawElementsIndirect driDispatchRemapTable[MultiDrawElementsIndirect_remap_index]
 #define _gloffset_TexBufferRange driDispatchRemapTable[TexBufferRange_remap_index]
 #define _gloffset_TexStorage2DMultisample driDispatchRemapTable[TexStorage2DMultisample_remap_index]
 #define _gloffset_TexStorage3DMultisample driDispatchRemapTable[TexStorage3DMultisample_remap_index]
+#define _gloffset_BufferStorage driDispatchRemapTable[BufferStorage_remap_index]
+#define _gloffset_BindBuffersBase driDispatchRemapTable[BindBuffersBase_remap_index]
+#define _gloffset_BindBuffersRange driDispatchRemapTable[BindBuffersRange_remap_index]
+#define _gloffset_BindImageTextures driDispatchRemapTable[BindImageTextures_remap_index]
+#define _gloffset_BindSamplers driDispatchRemapTable[BindSamplers_remap_index]
+#define _gloffset_BindTextures driDispatchRemapTable[BindTextures_remap_index]
+#define _gloffset_BindVertexBuffers driDispatchRemapTable[BindVertexBuffers_remap_index]
 #define _gloffset_InvalidateBufferData driDispatchRemapTable[InvalidateBufferData_remap_index]
 #define _gloffset_InvalidateBufferSubData driDispatchRemapTable[InvalidateBufferSubData_remap_index]
 #define _gloffset_InvalidateFramebuffer driDispatchRemapTable[InvalidateFramebuffer_remap_index]
@@ -1546,8 +1694,61 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_TexCoordPointerEXT driDispatchRemapTable[TexCoordPointerEXT_remap_index]
 #define _gloffset_VertexPointerEXT driDispatchRemapTable[VertexPointerEXT_remap_index]
 #define _gloffset_DiscardFramebufferEXT driDispatchRemapTable[DiscardFramebufferEXT_remap_index]
+#define _gloffset_ActiveShaderProgram driDispatchRemapTable[ActiveShaderProgram_remap_index]
+#define _gloffset_BindProgramPipeline driDispatchRemapTable[BindProgramPipeline_remap_index]
+#define _gloffset_CreateShaderProgramv driDispatchRemapTable[CreateShaderProgramv_remap_index]
+#define _gloffset_DeleteProgramPipelines driDispatchRemapTable[DeleteProgramPipelines_remap_index]
+#define _gloffset_GenProgramPipelines driDispatchRemapTable[GenProgramPipelines_remap_index]
+#define _gloffset_GetProgramPipelineInfoLog driDispatchRemapTable[GetProgramPipelineInfoLog_remap_index]
+#define _gloffset_GetProgramPipelineiv driDispatchRemapTable[GetProgramPipelineiv_remap_index]
+#define _gloffset_IsProgramPipeline driDispatchRemapTable[IsProgramPipeline_remap_index]
 #define _gloffset_LockArraysEXT driDispatchRemapTable[LockArraysEXT_remap_index]
+#define _gloffset_ProgramUniform1f driDispatchRemapTable[ProgramUniform1f_remap_index]
+#define _gloffset_ProgramUniform1fv driDispatchRemapTable[ProgramUniform1fv_remap_index]
+#define _gloffset_ProgramUniform1i driDispatchRemapTable[ProgramUniform1i_remap_index]
+#define _gloffset_ProgramUniform1iv driDispatchRemapTable[ProgramUniform1iv_remap_index]
+#define _gloffset_ProgramUniform1ui driDispatchRemapTable[ProgramUniform1ui_remap_index]
+#define _gloffset_ProgramUniform1uiv driDispatchRemapTable[ProgramUniform1uiv_remap_index]
+#define _gloffset_ProgramUniform2f driDispatchRemapTable[ProgramUniform2f_remap_index]
+#define _gloffset_ProgramUniform2fv driDispatchRemapTable[ProgramUniform2fv_remap_index]
+#define _gloffset_ProgramUniform2i driDispatchRemapTable[ProgramUniform2i_remap_index]
+#define _gloffset_ProgramUniform2iv driDispatchRemapTable[ProgramUniform2iv_remap_index]
+#define _gloffset_ProgramUniform2ui driDispatchRemapTable[ProgramUniform2ui_remap_index]
+#define _gloffset_ProgramUniform2uiv driDispatchRemapTable[ProgramUniform2uiv_remap_index]
+#define _gloffset_ProgramUniform3f driDispatchRemapTable[ProgramUniform3f_remap_index]
+#define _gloffset_ProgramUniform3fv driDispatchRemapTable[ProgramUniform3fv_remap_index]
+#define _gloffset_ProgramUniform3i driDispatchRemapTable[ProgramUniform3i_remap_index]
+#define _gloffset_ProgramUniform3iv driDispatchRemapTable[ProgramUniform3iv_remap_index]
+#define _gloffset_ProgramUniform3ui driDispatchRemapTable[ProgramUniform3ui_remap_index]
+#define _gloffset_ProgramUniform3uiv driDispatchRemapTable[ProgramUniform3uiv_remap_index]
+#define _gloffset_ProgramUniform4f driDispatchRemapTable[ProgramUniform4f_remap_index]
+#define _gloffset_ProgramUniform4fv driDispatchRemapTable[ProgramUniform4fv_remap_index]
+#define _gloffset_ProgramUniform4i driDispatchRemapTable[ProgramUniform4i_remap_index]
+#define _gloffset_ProgramUniform4iv driDispatchRemapTable[ProgramUniform4iv_remap_index]
+#define _gloffset_ProgramUniform4ui driDispatchRemapTable[ProgramUniform4ui_remap_index]
+#define _gloffset_ProgramUniform4uiv driDispatchRemapTable[ProgramUniform4uiv_remap_index]
+#define _gloffset_ProgramUniformMatrix2fv driDispatchRemapTable[ProgramUniformMatrix2fv_remap_index]
+#define _gloffset_ProgramUniformMatrix2x3fv driDispatchRemapTable[ProgramUniformMatrix2x3fv_remap_index]
+#define _gloffset_ProgramUniformMatrix2x4fv driDispatchRemapTable[ProgramUniformMatrix2x4fv_remap_index]
+#define _gloffset_ProgramUniformMatrix3fv driDispatchRemapTable[ProgramUniformMatrix3fv_remap_index]
+#define _gloffset_ProgramUniformMatrix3x2fv driDispatchRemapTable[ProgramUniformMatrix3x2fv_remap_index]
+#define _gloffset_ProgramUniformMatrix3x4fv driDispatchRemapTable[ProgramUniformMatrix3x4fv_remap_index]
+#define _gloffset_ProgramUniformMatrix4fv driDispatchRemapTable[ProgramUniformMatrix4fv_remap_index]
+#define _gloffset_ProgramUniformMatrix4x2fv driDispatchRemapTable[ProgramUniformMatrix4x2fv_remap_index]
+#define _gloffset_ProgramUniformMatrix4x3fv driDispatchRemapTable[ProgramUniformMatrix4x3fv_remap_index]
 #define _gloffset_UnlockArraysEXT driDispatchRemapTable[UnlockArraysEXT_remap_index]
+#define _gloffset_UseProgramStages driDispatchRemapTable[UseProgramStages_remap_index]
+#define _gloffset_ValidateProgramPipeline driDispatchRemapTable[ValidateProgramPipeline_remap_index]
+#define _gloffset_DebugMessageCallback driDispatchRemapTable[DebugMessageCallback_remap_index]
+#define _gloffset_DebugMessageControl driDispatchRemapTable[DebugMessageControl_remap_index]
+#define _gloffset_DebugMessageInsert driDispatchRemapTable[DebugMessageInsert_remap_index]
+#define _gloffset_GetDebugMessageLog driDispatchRemapTable[GetDebugMessageLog_remap_index]
+#define _gloffset_GetObjectLabel driDispatchRemapTable[GetObjectLabel_remap_index]
+#define _gloffset_GetObjectPtrLabel driDispatchRemapTable[GetObjectPtrLabel_remap_index]
+#define _gloffset_ObjectLabel driDispatchRemapTable[ObjectLabel_remap_index]
+#define _gloffset_ObjectPtrLabel driDispatchRemapTable[ObjectPtrLabel_remap_index]
+#define _gloffset_PopDebugGroup driDispatchRemapTable[PopDebugGroup_remap_index]
+#define _gloffset_PushDebugGroup driDispatchRemapTable[PushDebugGroup_remap_index]
 #define _gloffset_SecondaryColor3fEXT driDispatchRemapTable[SecondaryColor3fEXT_remap_index]
 #define _gloffset_SecondaryColor3fvEXT driDispatchRemapTable[SecondaryColor3fvEXT_remap_index]
 #define _gloffset_MultiDrawElementsEXT driDispatchRemapTable[MultiDrawElementsEXT_remap_index]
@@ -1672,6 +1873,17 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_ClearColorIiEXT driDispatchRemapTable[ClearColorIiEXT_remap_index]
 #define _gloffset_ClearColorIuiEXT driDispatchRemapTable[ClearColorIuiEXT_remap_index]
 #define _gloffset_BindBufferOffsetEXT driDispatchRemapTable[BindBufferOffsetEXT_remap_index]
+#define _gloffset_BeginPerfMonitorAMD driDispatchRemapTable[BeginPerfMonitorAMD_remap_index]
+#define _gloffset_DeletePerfMonitorsAMD driDispatchRemapTable[DeletePerfMonitorsAMD_remap_index]
+#define _gloffset_EndPerfMonitorAMD driDispatchRemapTable[EndPerfMonitorAMD_remap_index]
+#define _gloffset_GenPerfMonitorsAMD driDispatchRemapTable[GenPerfMonitorsAMD_remap_index]
+#define _gloffset_GetPerfMonitorCounterDataAMD driDispatchRemapTable[GetPerfMonitorCounterDataAMD_remap_index]
+#define _gloffset_GetPerfMonitorCounterInfoAMD driDispatchRemapTable[GetPerfMonitorCounterInfoAMD_remap_index]
+#define _gloffset_GetPerfMonitorCounterStringAMD driDispatchRemapTable[GetPerfMonitorCounterStringAMD_remap_index]
+#define _gloffset_GetPerfMonitorCountersAMD driDispatchRemapTable[GetPerfMonitorCountersAMD_remap_index]
+#define _gloffset_GetPerfMonitorGroupStringAMD driDispatchRemapTable[GetPerfMonitorGroupStringAMD_remap_index]
+#define _gloffset_GetPerfMonitorGroupsAMD driDispatchRemapTable[GetPerfMonitorGroupsAMD_remap_index]
+#define _gloffset_SelectPerfMonitorCountersAMD driDispatchRemapTable[SelectPerfMonitorCountersAMD_remap_index]
 #define _gloffset_GetObjectParameterivAPPLE driDispatchRemapTable[GetObjectParameterivAPPLE_remap_index]
 #define _gloffset_ObjectPurgeableAPPLE driDispatchRemapTable[ObjectPurgeableAPPLE_remap_index]
 #define _gloffset_ObjectUnpurgeableAPPLE driDispatchRemapTable[ObjectUnpurgeableAPPLE_remap_index]
@@ -1679,6 +1891,26 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_CreateShaderProgramEXT driDispatchRemapTable[CreateShaderProgramEXT_remap_index]
 #define _gloffset_UseShaderProgramEXT driDispatchRemapTable[UseShaderProgramEXT_remap_index]
 #define _gloffset_TextureBarrierNV driDispatchRemapTable[TextureBarrierNV_remap_index]
+#define _gloffset_VDPAUFiniNV driDispatchRemapTable[VDPAUFiniNV_remap_index]
+#define _gloffset_VDPAUGetSurfaceivNV driDispatchRemapTable[VDPAUGetSurfaceivNV_remap_index]
+#define _gloffset_VDPAUInitNV driDispatchRemapTable[VDPAUInitNV_remap_index]
+#define _gloffset_VDPAUIsSurfaceNV driDispatchRemapTable[VDPAUIsSurfaceNV_remap_index]
+#define _gloffset_VDPAUMapSurfacesNV driDispatchRemapTable[VDPAUMapSurfacesNV_remap_index]
+#define _gloffset_VDPAURegisterOutputSurfaceNV driDispatchRemapTable[VDPAURegisterOutputSurfaceNV_remap_index]
+#define _gloffset_VDPAURegisterVideoSurfaceNV driDispatchRemapTable[VDPAURegisterVideoSurfaceNV_remap_index]
+#define _gloffset_VDPAUSurfaceAccessNV driDispatchRemapTable[VDPAUSurfaceAccessNV_remap_index]
+#define _gloffset_VDPAUUnmapSurfacesNV driDispatchRemapTable[VDPAUUnmapSurfacesNV_remap_index]
+#define _gloffset_VDPAUUnregisterSurfaceNV driDispatchRemapTable[VDPAUUnregisterSurfaceNV_remap_index]
+#define _gloffset_BeginPerfQueryINTEL driDispatchRemapTable[BeginPerfQueryINTEL_remap_index]
+#define _gloffset_CreatePerfQueryINTEL driDispatchRemapTable[CreatePerfQueryINTEL_remap_index]
+#define _gloffset_DeletePerfQueryINTEL driDispatchRemapTable[DeletePerfQueryINTEL_remap_index]
+#define _gloffset_EndPerfQueryINTEL driDispatchRemapTable[EndPerfQueryINTEL_remap_index]
+#define _gloffset_GetFirstPerfQueryIdINTEL driDispatchRemapTable[GetFirstPerfQueryIdINTEL_remap_index]
+#define _gloffset_GetNextPerfQueryIdINTEL driDispatchRemapTable[GetNextPerfQueryIdINTEL_remap_index]
+#define _gloffset_GetPerfCounterInfoINTEL driDispatchRemapTable[GetPerfCounterInfoINTEL_remap_index]
+#define _gloffset_GetPerfQueryDataINTEL driDispatchRemapTable[GetPerfQueryDataINTEL_remap_index]
+#define _gloffset_GetPerfQueryIdByNameINTEL driDispatchRemapTable[GetPerfQueryIdByNameINTEL_remap_index]
+#define _gloffset_GetPerfQueryInfoINTEL driDispatchRemapTable[GetPerfQueryInfoINTEL_remap_index]
 #define _gloffset_StencilFuncSeparateATI driDispatchRemapTable[StencilFuncSeparateATI_remap_index]
 #define _gloffset_ProgramEnvParameters4fvEXT driDispatchRemapTable[ProgramEnvParameters4fvEXT_remap_index]
 #define _gloffset_ProgramLocalParameters4fvEXT driDispatchRemapTable[ProgramLocalParameters4fvEXT_remap_index]
@@ -8548,6 +8780,17 @@ static inline void SET_VertexAttribDivisor(struct _glapi_table *disp, void (GLAP
    SET_by_offset(disp, _gloffset_VertexAttribDivisor, fn);
 }
 
+typedef void (GLAPIENTRYP _glptr_MinSampleShading)(GLfloat);
+#define CALL_MinSampleShading(disp, parameters) \
+    (* GET_MinSampleShading(disp)) parameters
+static inline _glptr_MinSampleShading GET_MinSampleShading(struct _glapi_table *disp) {
+   return (_glptr_MinSampleShading) (GET_by_offset(disp, _gloffset_MinSampleShading));
+}
+
+static inline void SET_MinSampleShading(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLfloat)) {
+   SET_by_offset(disp, _gloffset_MinSampleShading, fn);
+}
+
 typedef void (GLAPIENTRYP _glptr_BindProgramARB)(GLenum, GLuint);
 #define CALL_BindProgramARB(disp, parameters) \
     (* GET_BindProgramARB(disp)) parameters
@@ -9516,25 +9759,25 @@ static inline void SET_SampleMaski(struct _glapi_table *disp, void (GLAPIENTRYP 
    SET_by_offset(disp, _gloffset_SampleMaski, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_TexImage2DMultisample)(GLenum, GLsizei, GLint, GLsizei, GLsizei, GLboolean);
+typedef void (GLAPIENTRYP _glptr_TexImage2DMultisample)(GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLboolean);
 #define CALL_TexImage2DMultisample(disp, parameters) \
     (* GET_TexImage2DMultisample(disp)) parameters
 static inline _glptr_TexImage2DMultisample GET_TexImage2DMultisample(struct _glapi_table *disp) {
    return (_glptr_TexImage2DMultisample) (GET_by_offset(disp, _gloffset_TexImage2DMultisample));
 }
 
-static inline void SET_TexImage2DMultisample(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLint, GLsizei, GLsizei, GLboolean)) {
+static inline void SET_TexImage2DMultisample(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLboolean)) {
    SET_by_offset(disp, _gloffset_TexImage2DMultisample, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_TexImage3DMultisample)(GLenum, GLsizei, GLint, GLsizei, GLsizei, GLsizei, GLboolean);
+typedef void (GLAPIENTRYP _glptr_TexImage3DMultisample)(GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, GLboolean);
 #define CALL_TexImage3DMultisample(disp, parameters) \
     (* GET_TexImage3DMultisample(disp)) parameters
 static inline _glptr_TexImage3DMultisample GET_TexImage3DMultisample(struct _glapi_table *disp) {
    return (_glptr_TexImage3DMultisample) (GET_by_offset(disp, _gloffset_TexImage3DMultisample));
 }
 
-static inline void SET_TexImage3DMultisample(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLint, GLsizei, GLsizei, GLsizei, GLboolean)) {
+static inline void SET_TexImage3DMultisample(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, GLboolean)) {
    SET_by_offset(disp, _gloffset_TexImage3DMultisample, fn);
 }
 
@@ -10209,6 +10452,28 @@ static inline void SET_VertexP4uiv(struct _glapi_table *disp, void (GLAPIENTRYP 
    SET_by_offset(disp, _gloffset_VertexP4uiv, fn);
 }
 
+typedef void (GLAPIENTRYP _glptr_DrawArraysIndirect)(GLenum, const GLvoid *);
+#define CALL_DrawArraysIndirect(disp, parameters) \
+    (* GET_DrawArraysIndirect(disp)) parameters
+static inline _glptr_DrawArraysIndirect GET_DrawArraysIndirect(struct _glapi_table *disp) {
+   return (_glptr_DrawArraysIndirect) (GET_by_offset(disp, _gloffset_DrawArraysIndirect));
+}
+
+static inline void SET_DrawArraysIndirect(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, const GLvoid *)) {
+   SET_by_offset(disp, _gloffset_DrawArraysIndirect, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DrawElementsIndirect)(GLenum, GLenum, const GLvoid *);
+#define CALL_DrawElementsIndirect(disp, parameters) \
+    (* GET_DrawElementsIndirect(disp)) parameters
+static inline _glptr_DrawElementsIndirect GET_DrawElementsIndirect(struct _glapi_table *disp) {
+   return (_glptr_DrawElementsIndirect) (GET_by_offset(disp, _gloffset_DrawElementsIndirect));
+}
+
+static inline void SET_DrawElementsIndirect(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, const GLvoid *)) {
+   SET_by_offset(disp, _gloffset_DrawElementsIndirect, fn);
+}
+
 typedef void (GLAPIENTRYP _glptr_BindTransformFeedback)(GLenum, GLuint);
 #define CALL_BindTransformFeedback(disp, parameters) \
     (* GET_BindTransformFeedback(disp)) parameters
@@ -10418,48 +10683,114 @@ static inline void SET_ProgramParameteri(struct _glapi_table *disp, void (GLAPIE
    SET_by_offset(disp, _gloffset_ProgramParameteri, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_DebugMessageCallbackARB)(GLDEBUGPROCARB, const GLvoid *);
-#define CALL_DebugMessageCallbackARB(disp, parameters) \
-    (* GET_DebugMessageCallbackARB(disp)) parameters
-static inline _glptr_DebugMessageCallbackARB GET_DebugMessageCallbackARB(struct _glapi_table *disp) {
-   return (_glptr_DebugMessageCallbackARB) (GET_by_offset(disp, _gloffset_DebugMessageCallbackARB));
+typedef void (GLAPIENTRYP _glptr_DepthRangeArrayv)(GLuint, GLsizei, const GLclampd *);
+#define CALL_DepthRangeArrayv(disp, parameters) \
+    (* GET_DepthRangeArrayv(disp)) parameters
+static inline _glptr_DepthRangeArrayv GET_DepthRangeArrayv(struct _glapi_table *disp) {
+   return (_glptr_DepthRangeArrayv) (GET_by_offset(disp, _gloffset_DepthRangeArrayv));
 }
 
-static inline void SET_DebugMessageCallbackARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLDEBUGPROCARB, const GLvoid *)) {
-   SET_by_offset(disp, _gloffset_DebugMessageCallbackARB, fn);
+static inline void SET_DepthRangeArrayv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, const GLclampd *)) {
+   SET_by_offset(disp, _gloffset_DepthRangeArrayv, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_DebugMessageControlARB)(GLenum, GLenum, GLenum, GLsizei, const GLuint *, GLboolean);
-#define CALL_DebugMessageControlARB(disp, parameters) \
-    (* GET_DebugMessageControlARB(disp)) parameters
-static inline _glptr_DebugMessageControlARB GET_DebugMessageControlARB(struct _glapi_table *disp) {
-   return (_glptr_DebugMessageControlARB) (GET_by_offset(disp, _gloffset_DebugMessageControlARB));
+typedef void (GLAPIENTRYP _glptr_DepthRangeIndexed)(GLuint, GLclampd, GLclampd);
+#define CALL_DepthRangeIndexed(disp, parameters) \
+    (* GET_DepthRangeIndexed(disp)) parameters
+static inline _glptr_DepthRangeIndexed GET_DepthRangeIndexed(struct _glapi_table *disp) {
+   return (_glptr_DepthRangeIndexed) (GET_by_offset(disp, _gloffset_DepthRangeIndexed));
 }
 
-static inline void SET_DebugMessageControlARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLsizei, const GLuint *, GLboolean)) {
-   SET_by_offset(disp, _gloffset_DebugMessageControlARB, fn);
+static inline void SET_DepthRangeIndexed(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLclampd, GLclampd)) {
+   SET_by_offset(disp, _gloffset_DepthRangeIndexed, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_DebugMessageInsertARB)(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLcharARB *);
-#define CALL_DebugMessageInsertARB(disp, parameters) \
-    (* GET_DebugMessageInsertARB(disp)) parameters
-static inline _glptr_DebugMessageInsertARB GET_DebugMessageInsertARB(struct _glapi_table *disp) {
-   return (_glptr_DebugMessageInsertARB) (GET_by_offset(disp, _gloffset_DebugMessageInsertARB));
+typedef void (GLAPIENTRYP _glptr_GetDoublei_v)(GLenum, GLuint, GLdouble *);
+#define CALL_GetDoublei_v(disp, parameters) \
+    (* GET_GetDoublei_v(disp)) parameters
+static inline _glptr_GetDoublei_v GET_GetDoublei_v(struct _glapi_table *disp) {
+   return (_glptr_GetDoublei_v) (GET_by_offset(disp, _gloffset_GetDoublei_v));
 }
 
-static inline void SET_DebugMessageInsertARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLcharARB *)) {
-   SET_by_offset(disp, _gloffset_DebugMessageInsertARB, fn);
+static inline void SET_GetDoublei_v(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLdouble *)) {
+   SET_by_offset(disp, _gloffset_GetDoublei_v, fn);
 }
 
-typedef GLuint (GLAPIENTRYP _glptr_GetDebugMessageLogARB)(GLuint, GLsizei, GLenum *, GLenum *, GLuint *, GLenum *, GLsizei *, GLcharARB *);
-#define CALL_GetDebugMessageLogARB(disp, parameters) \
-    (* GET_GetDebugMessageLogARB(disp)) parameters
-static inline _glptr_GetDebugMessageLogARB GET_GetDebugMessageLogARB(struct _glapi_table *disp) {
-   return (_glptr_GetDebugMessageLogARB) (GET_by_offset(disp, _gloffset_GetDebugMessageLogARB));
+typedef void (GLAPIENTRYP _glptr_GetFloati_v)(GLenum, GLuint, GLfloat *);
+#define CALL_GetFloati_v(disp, parameters) \
+    (* GET_GetFloati_v(disp)) parameters
+static inline _glptr_GetFloati_v GET_GetFloati_v(struct _glapi_table *disp) {
+   return (_glptr_GetFloati_v) (GET_by_offset(disp, _gloffset_GetFloati_v));
 }
 
-static inline void SET_GetDebugMessageLogARB(struct _glapi_table *disp, GLuint (GLAPIENTRYP fn)(GLuint, GLsizei, GLenum *, GLenum *, GLuint *, GLenum *, GLsizei *, GLcharARB *)) {
-   SET_by_offset(disp, _gloffset_GetDebugMessageLogARB, fn);
+static inline void SET_GetFloati_v(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLfloat *)) {
+   SET_by_offset(disp, _gloffset_GetFloati_v, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ScissorArrayv)(GLuint, GLsizei, const int *);
+#define CALL_ScissorArrayv(disp, parameters) \
+    (* GET_ScissorArrayv(disp)) parameters
+static inline _glptr_ScissorArrayv GET_ScissorArrayv(struct _glapi_table *disp) {
+   return (_glptr_ScissorArrayv) (GET_by_offset(disp, _gloffset_ScissorArrayv));
+}
+
+static inline void SET_ScissorArrayv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, const int *)) {
+   SET_by_offset(disp, _gloffset_ScissorArrayv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ScissorIndexed)(GLuint, GLint, GLint, GLsizei, GLsizei);
+#define CALL_ScissorIndexed(disp, parameters) \
+    (* GET_ScissorIndexed(disp)) parameters
+static inline _glptr_ScissorIndexed GET_ScissorIndexed(struct _glapi_table *disp) {
+   return (_glptr_ScissorIndexed) (GET_by_offset(disp, _gloffset_ScissorIndexed));
+}
+
+static inline void SET_ScissorIndexed(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLint, GLsizei, GLsizei)) {
+   SET_by_offset(disp, _gloffset_ScissorIndexed, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ScissorIndexedv)(GLuint, const GLint *);
+#define CALL_ScissorIndexedv(disp, parameters) \
+    (* GET_ScissorIndexedv(disp)) parameters
+static inline _glptr_ScissorIndexedv GET_ScissorIndexedv(struct _glapi_table *disp) {
+   return (_glptr_ScissorIndexedv) (GET_by_offset(disp, _gloffset_ScissorIndexedv));
+}
+
+static inline void SET_ScissorIndexedv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, const GLint *)) {
+   SET_by_offset(disp, _gloffset_ScissorIndexedv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ViewportArrayv)(GLuint, GLsizei, const GLfloat *);
+#define CALL_ViewportArrayv(disp, parameters) \
+    (* GET_ViewportArrayv(disp)) parameters
+static inline _glptr_ViewportArrayv GET_ViewportArrayv(struct _glapi_table *disp) {
+   return (_glptr_ViewportArrayv) (GET_by_offset(disp, _gloffset_ViewportArrayv));
+}
+
+static inline void SET_ViewportArrayv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ViewportArrayv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ViewportIndexedf)(GLuint, GLfloat, GLfloat, GLfloat, GLfloat);
+#define CALL_ViewportIndexedf(disp, parameters) \
+    (* GET_ViewportIndexedf(disp)) parameters
+static inline _glptr_ViewportIndexedf GET_ViewportIndexedf(struct _glapi_table *disp) {
+   return (_glptr_ViewportIndexedf) (GET_by_offset(disp, _gloffset_ViewportIndexedf));
+}
+
+static inline void SET_ViewportIndexedf(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLfloat, GLfloat, GLfloat, GLfloat)) {
+   SET_by_offset(disp, _gloffset_ViewportIndexedf, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ViewportIndexedfv)(GLuint, const GLfloat *);
+#define CALL_ViewportIndexedfv(disp, parameters) \
+    (* GET_ViewportIndexedfv(disp)) parameters
+static inline _glptr_ViewportIndexedfv GET_ViewportIndexedfv(struct _glapi_table *disp) {
+   return (_glptr_ViewportIndexedfv) (GET_by_offset(disp, _gloffset_ViewportIndexedfv));
+}
+
+static inline void SET_ViewportIndexedfv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ViewportIndexedfv, fn);
 }
 
 typedef GLenum (GLAPIENTRYP _glptr_GetGraphicsResetStatusARB)(void);
@@ -10627,47 +10958,47 @@ static inline void SET_GetnTexImageARB(struct _glapi_table *disp, void (GLAPIENT
    SET_by_offset(disp, _gloffset_GetnTexImageARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_GetnUniformdvARB)(GLhandleARB, GLint, GLsizei, GLdouble *);
+typedef void (GLAPIENTRYP _glptr_GetnUniformdvARB)(GLuint, GLint, GLsizei, GLdouble *);
 #define CALL_GetnUniformdvARB(disp, parameters) \
     (* GET_GetnUniformdvARB(disp)) parameters
 static inline _glptr_GetnUniformdvARB GET_GetnUniformdvARB(struct _glapi_table *disp) {
    return (_glptr_GetnUniformdvARB) (GET_by_offset(disp, _gloffset_GetnUniformdvARB));
 }
 
-static inline void SET_GetnUniformdvARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLhandleARB, GLint, GLsizei, GLdouble *)) {
+static inline void SET_GetnUniformdvARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLdouble *)) {
    SET_by_offset(disp, _gloffset_GetnUniformdvARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_GetnUniformfvARB)(GLhandleARB, GLint, GLsizei, GLfloat *);
+typedef void (GLAPIENTRYP _glptr_GetnUniformfvARB)(GLuint, GLint, GLsizei, GLfloat *);
 #define CALL_GetnUniformfvARB(disp, parameters) \
     (* GET_GetnUniformfvARB(disp)) parameters
 static inline _glptr_GetnUniformfvARB GET_GetnUniformfvARB(struct _glapi_table *disp) {
    return (_glptr_GetnUniformfvARB) (GET_by_offset(disp, _gloffset_GetnUniformfvARB));
 }
 
-static inline void SET_GetnUniformfvARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLhandleARB, GLint, GLsizei, GLfloat *)) {
+static inline void SET_GetnUniformfvARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLfloat *)) {
    SET_by_offset(disp, _gloffset_GetnUniformfvARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_GetnUniformivARB)(GLhandleARB, GLint, GLsizei, GLint *);
+typedef void (GLAPIENTRYP _glptr_GetnUniformivARB)(GLuint, GLint, GLsizei, GLint *);
 #define CALL_GetnUniformivARB(disp, parameters) \
     (* GET_GetnUniformivARB(disp)) parameters
 static inline _glptr_GetnUniformivARB GET_GetnUniformivARB(struct _glapi_table *disp) {
    return (_glptr_GetnUniformivARB) (GET_by_offset(disp, _gloffset_GetnUniformivARB));
 }
 
-static inline void SET_GetnUniformivARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLhandleARB, GLint, GLsizei, GLint *)) {
+static inline void SET_GetnUniformivARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLint *)) {
    SET_by_offset(disp, _gloffset_GetnUniformivARB, fn);
 }
 
-typedef void (GLAPIENTRYP _glptr_GetnUniformuivARB)(GLhandleARB, GLint, GLsizei, GLuint *);
+typedef void (GLAPIENTRYP _glptr_GetnUniformuivARB)(GLuint, GLint, GLsizei, GLuint *);
 #define CALL_GetnUniformuivARB(disp, parameters) \
     (* GET_GetnUniformuivARB(disp)) parameters
 static inline _glptr_GetnUniformuivARB GET_GetnUniformuivARB(struct _glapi_table *disp) {
    return (_glptr_GetnUniformuivARB) (GET_by_offset(disp, _gloffset_GetnUniformuivARB));
 }
 
-static inline void SET_GetnUniformuivARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLhandleARB, GLint, GLsizei, GLuint *)) {
+static inline void SET_GetnUniformuivARB(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLuint *)) {
    SET_by_offset(disp, _gloffset_GetnUniformuivARB, fn);
 }
 
@@ -10748,6 +11079,39 @@ static inline void SET_GetInternalformativ(struct _glapi_table *disp, void (GLAP
    SET_by_offset(disp, _gloffset_GetInternalformativ, fn);
 }
 
+typedef void (GLAPIENTRYP _glptr_GetActiveAtomicCounterBufferiv)(GLuint, GLuint, GLenum, GLint *);
+#define CALL_GetActiveAtomicCounterBufferiv(disp, parameters) \
+    (* GET_GetActiveAtomicCounterBufferiv(disp)) parameters
+static inline _glptr_GetActiveAtomicCounterBufferiv GET_GetActiveAtomicCounterBufferiv(struct _glapi_table *disp) {
+   return (_glptr_GetActiveAtomicCounterBufferiv) (GET_by_offset(disp, _gloffset_GetActiveAtomicCounterBufferiv));
+}
+
+static inline void SET_GetActiveAtomicCounterBufferiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLenum, GLint *)) {
+   SET_by_offset(disp, _gloffset_GetActiveAtomicCounterBufferiv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindImageTexture)(GLuint, GLuint, GLint, GLboolean, GLint, GLenum, GLenum);
+#define CALL_BindImageTexture(disp, parameters) \
+    (* GET_BindImageTexture(disp)) parameters
+static inline _glptr_BindImageTexture GET_BindImageTexture(struct _glapi_table *disp) {
+   return (_glptr_BindImageTexture) (GET_by_offset(disp, _gloffset_BindImageTexture));
+}
+
+static inline void SET_BindImageTexture(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLint, GLboolean, GLint, GLenum, GLenum)) {
+   SET_by_offset(disp, _gloffset_BindImageTexture, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_MemoryBarrier)(GLbitfield);
+#define CALL_MemoryBarrier(disp, parameters) \
+    (* GET_MemoryBarrier(disp)) parameters
+static inline _glptr_MemoryBarrier GET_MemoryBarrier(struct _glapi_table *disp) {
+   return (_glptr_MemoryBarrier) (GET_by_offset(disp, _gloffset_MemoryBarrier));
+}
+
+static inline void SET_MemoryBarrier(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLbitfield)) {
+   SET_by_offset(disp, _gloffset_MemoryBarrier, fn);
+}
+
 typedef void (GLAPIENTRYP _glptr_TexStorage1D)(GLenum, GLsizei, GLenum, GLsizei);
 #define CALL_TexStorage1D(disp, parameters) \
     (* GET_TexStorage1D(disp)) parameters
@@ -10814,6 +11178,149 @@ static inline void SET_TextureStorage3DEXT(struct _glapi_table *disp, void (GLAP
    SET_by_offset(disp, _gloffset_TextureStorage3DEXT, fn);
 }
 
+typedef void (GLAPIENTRYP _glptr_ClearBufferData)(GLenum, GLenum, GLenum, GLenum, const GLvoid *);
+#define CALL_ClearBufferData(disp, parameters) \
+    (* GET_ClearBufferData(disp)) parameters
+static inline _glptr_ClearBufferData GET_ClearBufferData(struct _glapi_table *disp) {
+   return (_glptr_ClearBufferData) (GET_by_offset(disp, _gloffset_ClearBufferData));
+}
+
+static inline void SET_ClearBufferData(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLenum, const GLvoid *)) {
+   SET_by_offset(disp, _gloffset_ClearBufferData, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ClearBufferSubData)(GLenum, GLenum, GLintptr, GLsizeiptr, GLenum, GLenum, const GLvoid *);
+#define CALL_ClearBufferSubData(disp, parameters) \
+    (* GET_ClearBufferSubData(disp)) parameters
+static inline _glptr_ClearBufferSubData GET_ClearBufferSubData(struct _glapi_table *disp) {
+   return (_glptr_ClearBufferSubData) (GET_by_offset(disp, _gloffset_ClearBufferSubData));
+}
+
+static inline void SET_ClearBufferSubData(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLintptr, GLsizeiptr, GLenum, GLenum, const GLvoid *)) {
+   SET_by_offset(disp, _gloffset_ClearBufferSubData, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DispatchCompute)(GLuint, GLuint, GLuint);
+#define CALL_DispatchCompute(disp, parameters) \
+    (* GET_DispatchCompute(disp)) parameters
+static inline _glptr_DispatchCompute GET_DispatchCompute(struct _glapi_table *disp) {
+   return (_glptr_DispatchCompute) (GET_by_offset(disp, _gloffset_DispatchCompute));
+}
+
+static inline void SET_DispatchCompute(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLuint)) {
+   SET_by_offset(disp, _gloffset_DispatchCompute, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DispatchComputeIndirect)(GLintptr);
+#define CALL_DispatchComputeIndirect(disp, parameters) \
+    (* GET_DispatchComputeIndirect(disp)) parameters
+static inline _glptr_DispatchComputeIndirect GET_DispatchComputeIndirect(struct _glapi_table *disp) {
+   return (_glptr_DispatchComputeIndirect) (GET_by_offset(disp, _gloffset_DispatchComputeIndirect));
+}
+
+static inline void SET_DispatchComputeIndirect(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLintptr)) {
+   SET_by_offset(disp, _gloffset_DispatchComputeIndirect, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_TextureView)(GLuint, GLenum, GLuint, GLenum, GLuint, GLuint, GLuint, GLuint);
+#define CALL_TextureView(disp, parameters) \
+    (* GET_TextureView(disp)) parameters
+static inline _glptr_TextureView GET_TextureView(struct _glapi_table *disp) {
+   return (_glptr_TextureView) (GET_by_offset(disp, _gloffset_TextureView));
+}
+
+static inline void SET_TextureView(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLuint, GLenum, GLuint, GLuint, GLuint, GLuint)) {
+   SET_by_offset(disp, _gloffset_TextureView, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindVertexBuffer)(GLuint, GLuint, GLintptr, GLsizei);
+#define CALL_BindVertexBuffer(disp, parameters) \
+    (* GET_BindVertexBuffer(disp)) parameters
+static inline _glptr_BindVertexBuffer GET_BindVertexBuffer(struct _glapi_table *disp) {
+   return (_glptr_BindVertexBuffer) (GET_by_offset(disp, _gloffset_BindVertexBuffer));
+}
+
+static inline void SET_BindVertexBuffer(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLintptr, GLsizei)) {
+   SET_by_offset(disp, _gloffset_BindVertexBuffer, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VertexAttribBinding)(GLuint, GLuint);
+#define CALL_VertexAttribBinding(disp, parameters) \
+    (* GET_VertexAttribBinding(disp)) parameters
+static inline _glptr_VertexAttribBinding GET_VertexAttribBinding(struct _glapi_table *disp) {
+   return (_glptr_VertexAttribBinding) (GET_by_offset(disp, _gloffset_VertexAttribBinding));
+}
+
+static inline void SET_VertexAttribBinding(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint)) {
+   SET_by_offset(disp, _gloffset_VertexAttribBinding, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VertexAttribFormat)(GLuint, GLint, GLenum, GLboolean, GLuint);
+#define CALL_VertexAttribFormat(disp, parameters) \
+    (* GET_VertexAttribFormat(disp)) parameters
+static inline _glptr_VertexAttribFormat GET_VertexAttribFormat(struct _glapi_table *disp) {
+   return (_glptr_VertexAttribFormat) (GET_by_offset(disp, _gloffset_VertexAttribFormat));
+}
+
+static inline void SET_VertexAttribFormat(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLenum, GLboolean, GLuint)) {
+   SET_by_offset(disp, _gloffset_VertexAttribFormat, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VertexAttribIFormat)(GLuint, GLint, GLenum, GLuint);
+#define CALL_VertexAttribIFormat(disp, parameters) \
+    (* GET_VertexAttribIFormat(disp)) parameters
+static inline _glptr_VertexAttribIFormat GET_VertexAttribIFormat(struct _glapi_table *disp) {
+   return (_glptr_VertexAttribIFormat) (GET_by_offset(disp, _gloffset_VertexAttribIFormat));
+}
+
+static inline void SET_VertexAttribIFormat(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLenum, GLuint)) {
+   SET_by_offset(disp, _gloffset_VertexAttribIFormat, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VertexAttribLFormat)(GLuint, GLint, GLenum, GLuint);
+#define CALL_VertexAttribLFormat(disp, parameters) \
+    (* GET_VertexAttribLFormat(disp)) parameters
+static inline _glptr_VertexAttribLFormat GET_VertexAttribLFormat(struct _glapi_table *disp) {
+   return (_glptr_VertexAttribLFormat) (GET_by_offset(disp, _gloffset_VertexAttribLFormat));
+}
+
+static inline void SET_VertexAttribLFormat(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLenum, GLuint)) {
+   SET_by_offset(disp, _gloffset_VertexAttribLFormat, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VertexBindingDivisor)(GLuint, GLuint);
+#define CALL_VertexBindingDivisor(disp, parameters) \
+    (* GET_VertexBindingDivisor(disp)) parameters
+static inline _glptr_VertexBindingDivisor GET_VertexBindingDivisor(struct _glapi_table *disp) {
+   return (_glptr_VertexBindingDivisor) (GET_by_offset(disp, _gloffset_VertexBindingDivisor));
+}
+
+static inline void SET_VertexBindingDivisor(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint)) {
+   SET_by_offset(disp, _gloffset_VertexBindingDivisor, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_MultiDrawArraysIndirect)(GLenum, const GLvoid *, GLsizei, GLsizei);
+#define CALL_MultiDrawArraysIndirect(disp, parameters) \
+    (* GET_MultiDrawArraysIndirect(disp)) parameters
+static inline _glptr_MultiDrawArraysIndirect GET_MultiDrawArraysIndirect(struct _glapi_table *disp) {
+   return (_glptr_MultiDrawArraysIndirect) (GET_by_offset(disp, _gloffset_MultiDrawArraysIndirect));
+}
+
+static inline void SET_MultiDrawArraysIndirect(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, const GLvoid *, GLsizei, GLsizei)) {
+   SET_by_offset(disp, _gloffset_MultiDrawArraysIndirect, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_MultiDrawElementsIndirect)(GLenum, GLenum, const GLvoid *, GLsizei, GLsizei);
+#define CALL_MultiDrawElementsIndirect(disp, parameters) \
+    (* GET_MultiDrawElementsIndirect(disp)) parameters
+static inline _glptr_MultiDrawElementsIndirect GET_MultiDrawElementsIndirect(struct _glapi_table *disp) {
+   return (_glptr_MultiDrawElementsIndirect) (GET_by_offset(disp, _gloffset_MultiDrawElementsIndirect));
+}
+
+static inline void SET_MultiDrawElementsIndirect(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, const GLvoid *, GLsizei, GLsizei)) {
+   SET_by_offset(disp, _gloffset_MultiDrawElementsIndirect, fn);
+}
+
 typedef void (GLAPIENTRYP _glptr_TexBufferRange)(GLenum, GLenum, GLuint, GLintptr, GLsizeiptr);
 #define CALL_TexBufferRange(disp, parameters) \
     (* GET_TexBufferRange(disp)) parameters
@@ -10845,6 +11352,83 @@ static inline _glptr_TexStorage3DMultisample GET_TexStorage3DMultisample(struct 
 
 static inline void SET_TexStorage3DMultisample(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, GLboolean)) {
    SET_by_offset(disp, _gloffset_TexStorage3DMultisample, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BufferStorage)(GLenum, GLsizeiptr, const GLvoid *, GLbitfield);
+#define CALL_BufferStorage(disp, parameters) \
+    (* GET_BufferStorage(disp)) parameters
+static inline _glptr_BufferStorage GET_BufferStorage(struct _glapi_table *disp) {
+   return (_glptr_BufferStorage) (GET_by_offset(disp, _gloffset_BufferStorage));
+}
+
+static inline void SET_BufferStorage(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLsizeiptr, const GLvoid *, GLbitfield)) {
+   SET_by_offset(disp, _gloffset_BufferStorage, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindBuffersBase)(GLenum, GLuint, GLsizei, const GLuint *);
+#define CALL_BindBuffersBase(disp, parameters) \
+    (* GET_BindBuffersBase(disp)) parameters
+static inline _glptr_BindBuffersBase GET_BindBuffersBase(struct _glapi_table *disp) {
+   return (_glptr_BindBuffersBase) (GET_by_offset(disp, _gloffset_BindBuffersBase));
+}
+
+static inline void SET_BindBuffersBase(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_BindBuffersBase, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindBuffersRange)(GLenum, GLuint, GLsizei, const GLuint *, const GLintptr *, const GLsizeiptr *);
+#define CALL_BindBuffersRange(disp, parameters) \
+    (* GET_BindBuffersRange(disp)) parameters
+static inline _glptr_BindBuffersRange GET_BindBuffersRange(struct _glapi_table *disp) {
+   return (_glptr_BindBuffersRange) (GET_by_offset(disp, _gloffset_BindBuffersRange));
+}
+
+static inline void SET_BindBuffersRange(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, const GLuint *, const GLintptr *, const GLsizeiptr *)) {
+   SET_by_offset(disp, _gloffset_BindBuffersRange, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindImageTextures)(GLuint, GLsizei, const GLuint *);
+#define CALL_BindImageTextures(disp, parameters) \
+    (* GET_BindImageTextures(disp)) parameters
+static inline _glptr_BindImageTextures GET_BindImageTextures(struct _glapi_table *disp) {
+   return (_glptr_BindImageTextures) (GET_by_offset(disp, _gloffset_BindImageTextures));
+}
+
+static inline void SET_BindImageTextures(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_BindImageTextures, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindSamplers)(GLuint, GLsizei, const GLuint *);
+#define CALL_BindSamplers(disp, parameters) \
+    (* GET_BindSamplers(disp)) parameters
+static inline _glptr_BindSamplers GET_BindSamplers(struct _glapi_table *disp) {
+   return (_glptr_BindSamplers) (GET_by_offset(disp, _gloffset_BindSamplers));
+}
+
+static inline void SET_BindSamplers(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_BindSamplers, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindTextures)(GLuint, GLsizei, const GLuint *);
+#define CALL_BindTextures(disp, parameters) \
+    (* GET_BindTextures(disp)) parameters
+static inline _glptr_BindTextures GET_BindTextures(struct _glapi_table *disp) {
+   return (_glptr_BindTextures) (GET_by_offset(disp, _gloffset_BindTextures));
+}
+
+static inline void SET_BindTextures(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_BindTextures, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindVertexBuffers)(GLuint, GLsizei, const GLuint *, const GLintptr *, const GLsizei *);
+#define CALL_BindVertexBuffers(disp, parameters) \
+    (* GET_BindVertexBuffers(disp)) parameters
+static inline _glptr_BindVertexBuffers GET_BindVertexBuffers(struct _glapi_table *disp) {
+   return (_glptr_BindVertexBuffers) (GET_by_offset(disp, _gloffset_BindVertexBuffers));
+}
+
+static inline void SET_BindVertexBuffers(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, const GLuint *, const GLintptr *, const GLsizei *)) {
+   SET_by_offset(disp, _gloffset_BindVertexBuffers, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_InvalidateBufferData)(GLuint);
@@ -11133,6 +11717,94 @@ static inline void SET_DiscardFramebufferEXT(struct _glapi_table *disp, void (GL
    SET_by_offset(disp, _gloffset_DiscardFramebufferEXT, fn);
 }
 
+typedef void (GLAPIENTRYP _glptr_ActiveShaderProgram)(GLuint, GLuint);
+#define CALL_ActiveShaderProgram(disp, parameters) \
+    (* GET_ActiveShaderProgram(disp)) parameters
+static inline _glptr_ActiveShaderProgram GET_ActiveShaderProgram(struct _glapi_table *disp) {
+   return (_glptr_ActiveShaderProgram) (GET_by_offset(disp, _gloffset_ActiveShaderProgram));
+}
+
+static inline void SET_ActiveShaderProgram(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint)) {
+   SET_by_offset(disp, _gloffset_ActiveShaderProgram, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BindProgramPipeline)(GLuint);
+#define CALL_BindProgramPipeline(disp, parameters) \
+    (* GET_BindProgramPipeline(disp)) parameters
+static inline _glptr_BindProgramPipeline GET_BindProgramPipeline(struct _glapi_table *disp) {
+   return (_glptr_BindProgramPipeline) (GET_by_offset(disp, _gloffset_BindProgramPipeline));
+}
+
+static inline void SET_BindProgramPipeline(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
+   SET_by_offset(disp, _gloffset_BindProgramPipeline, fn);
+}
+
+typedef GLuint (GLAPIENTRYP _glptr_CreateShaderProgramv)(GLenum, GLsizei, const GLchar * const *);
+#define CALL_CreateShaderProgramv(disp, parameters) \
+    (* GET_CreateShaderProgramv(disp)) parameters
+static inline _glptr_CreateShaderProgramv GET_CreateShaderProgramv(struct _glapi_table *disp) {
+   return (_glptr_CreateShaderProgramv) (GET_by_offset(disp, _gloffset_CreateShaderProgramv));
+}
+
+static inline void SET_CreateShaderProgramv(struct _glapi_table *disp, GLuint (GLAPIENTRYP fn)(GLenum, GLsizei, const GLchar * const *)) {
+   SET_by_offset(disp, _gloffset_CreateShaderProgramv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DeleteProgramPipelines)(GLsizei, const GLuint *);
+#define CALL_DeleteProgramPipelines(disp, parameters) \
+    (* GET_DeleteProgramPipelines(disp)) parameters
+static inline _glptr_DeleteProgramPipelines GET_DeleteProgramPipelines(struct _glapi_table *disp) {
+   return (_glptr_DeleteProgramPipelines) (GET_by_offset(disp, _gloffset_DeleteProgramPipelines));
+}
+
+static inline void SET_DeleteProgramPipelines(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_DeleteProgramPipelines, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GenProgramPipelines)(GLsizei, GLuint *);
+#define CALL_GenProgramPipelines(disp, parameters) \
+    (* GET_GenProgramPipelines(disp)) parameters
+static inline _glptr_GenProgramPipelines GET_GenProgramPipelines(struct _glapi_table *disp) {
+   return (_glptr_GenProgramPipelines) (GET_by_offset(disp, _gloffset_GenProgramPipelines));
+}
+
+static inline void SET_GenProgramPipelines(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
+   SET_by_offset(disp, _gloffset_GenProgramPipelines, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetProgramPipelineInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
+#define CALL_GetProgramPipelineInfoLog(disp, parameters) \
+    (* GET_GetProgramPipelineInfoLog(disp)) parameters
+static inline _glptr_GetProgramPipelineInfoLog GET_GetProgramPipelineInfoLog(struct _glapi_table *disp) {
+   return (_glptr_GetProgramPipelineInfoLog) (GET_by_offset(disp, _gloffset_GetProgramPipelineInfoLog));
+}
+
+static inline void SET_GetProgramPipelineInfoLog(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, GLsizei *, GLchar *)) {
+   SET_by_offset(disp, _gloffset_GetProgramPipelineInfoLog, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetProgramPipelineiv)(GLuint, GLenum, GLint *);
+#define CALL_GetProgramPipelineiv(disp, parameters) \
+    (* GET_GetProgramPipelineiv(disp)) parameters
+static inline _glptr_GetProgramPipelineiv GET_GetProgramPipelineiv(struct _glapi_table *disp) {
+   return (_glptr_GetProgramPipelineiv) (GET_by_offset(disp, _gloffset_GetProgramPipelineiv));
+}
+
+static inline void SET_GetProgramPipelineiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLint *)) {
+   SET_by_offset(disp, _gloffset_GetProgramPipelineiv, fn);
+}
+
+typedef GLboolean (GLAPIENTRYP _glptr_IsProgramPipeline)(GLuint);
+#define CALL_IsProgramPipeline(disp, parameters) \
+    (* GET_IsProgramPipeline(disp)) parameters
+static inline _glptr_IsProgramPipeline GET_IsProgramPipeline(struct _glapi_table *disp) {
+   return (_glptr_IsProgramPipeline) (GET_by_offset(disp, _gloffset_IsProgramPipeline));
+}
+
+static inline void SET_IsProgramPipeline(struct _glapi_table *disp, GLboolean (GLAPIENTRYP fn)(GLuint)) {
+   SET_by_offset(disp, _gloffset_IsProgramPipeline, fn);
+}
+
 typedef void (GLAPIENTRYP _glptr_LockArraysEXT)(GLint, GLsizei);
 #define CALL_LockArraysEXT(disp, parameters) \
     (* GET_LockArraysEXT(disp)) parameters
@@ -11144,6 +11816,369 @@ static inline void SET_LockArraysEXT(struct _glapi_table *disp, void (GLAPIENTRY
    SET_by_offset(disp, _gloffset_LockArraysEXT, fn);
 }
 
+typedef void (GLAPIENTRYP _glptr_ProgramUniform1f)(GLuint, GLint, GLfloat);
+#define CALL_ProgramUniform1f(disp, parameters) \
+    (* GET_ProgramUniform1f(disp)) parameters
+static inline _glptr_ProgramUniform1f GET_ProgramUniform1f(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform1f) (GET_by_offset(disp, _gloffset_ProgramUniform1f));
+}
+
+static inline void SET_ProgramUniform1f(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLfloat)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform1f, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform1fv)(GLuint, GLint, GLsizei, const GLfloat *);
+#define CALL_ProgramUniform1fv(disp, parameters) \
+    (* GET_ProgramUniform1fv(disp)) parameters
+static inline _glptr_ProgramUniform1fv GET_ProgramUniform1fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform1fv) (GET_by_offset(disp, _gloffset_ProgramUniform1fv));
+}
+
+static inline void SET_ProgramUniform1fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform1fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform1i)(GLuint, GLint, GLint);
+#define CALL_ProgramUniform1i(disp, parameters) \
+    (* GET_ProgramUniform1i(disp)) parameters
+static inline _glptr_ProgramUniform1i GET_ProgramUniform1i(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform1i) (GET_by_offset(disp, _gloffset_ProgramUniform1i));
+}
+
+static inline void SET_ProgramUniform1i(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLint)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform1i, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform1iv)(GLuint, GLint, GLsizei, const GLint *);
+#define CALL_ProgramUniform1iv(disp, parameters) \
+    (* GET_ProgramUniform1iv(disp)) parameters
+static inline _glptr_ProgramUniform1iv GET_ProgramUniform1iv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform1iv) (GET_by_offset(disp, _gloffset_ProgramUniform1iv));
+}
+
+static inline void SET_ProgramUniform1iv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLint *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform1iv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform1ui)(GLuint, GLint, GLuint);
+#define CALL_ProgramUniform1ui(disp, parameters) \
+    (* GET_ProgramUniform1ui(disp)) parameters
+static inline _glptr_ProgramUniform1ui GET_ProgramUniform1ui(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform1ui) (GET_by_offset(disp, _gloffset_ProgramUniform1ui));
+}
+
+static inline void SET_ProgramUniform1ui(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLuint)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform1ui, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform1uiv)(GLuint, GLint, GLsizei, const GLuint *);
+#define CALL_ProgramUniform1uiv(disp, parameters) \
+    (* GET_ProgramUniform1uiv(disp)) parameters
+static inline _glptr_ProgramUniform1uiv GET_ProgramUniform1uiv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform1uiv) (GET_by_offset(disp, _gloffset_ProgramUniform1uiv));
+}
+
+static inline void SET_ProgramUniform1uiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform1uiv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform2f)(GLuint, GLint, GLfloat, GLfloat);
+#define CALL_ProgramUniform2f(disp, parameters) \
+    (* GET_ProgramUniform2f(disp)) parameters
+static inline _glptr_ProgramUniform2f GET_ProgramUniform2f(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform2f) (GET_by_offset(disp, _gloffset_ProgramUniform2f));
+}
+
+static inline void SET_ProgramUniform2f(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLfloat, GLfloat)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform2f, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform2fv)(GLuint, GLint, GLsizei, const GLfloat *);
+#define CALL_ProgramUniform2fv(disp, parameters) \
+    (* GET_ProgramUniform2fv(disp)) parameters
+static inline _glptr_ProgramUniform2fv GET_ProgramUniform2fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform2fv) (GET_by_offset(disp, _gloffset_ProgramUniform2fv));
+}
+
+static inline void SET_ProgramUniform2fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform2fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform2i)(GLuint, GLint, GLint, GLint);
+#define CALL_ProgramUniform2i(disp, parameters) \
+    (* GET_ProgramUniform2i(disp)) parameters
+static inline _glptr_ProgramUniform2i GET_ProgramUniform2i(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform2i) (GET_by_offset(disp, _gloffset_ProgramUniform2i));
+}
+
+static inline void SET_ProgramUniform2i(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLint, GLint)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform2i, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform2iv)(GLuint, GLint, GLsizei, const GLint *);
+#define CALL_ProgramUniform2iv(disp, parameters) \
+    (* GET_ProgramUniform2iv(disp)) parameters
+static inline _glptr_ProgramUniform2iv GET_ProgramUniform2iv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform2iv) (GET_by_offset(disp, _gloffset_ProgramUniform2iv));
+}
+
+static inline void SET_ProgramUniform2iv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLint *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform2iv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform2ui)(GLuint, GLint, GLuint, GLuint);
+#define CALL_ProgramUniform2ui(disp, parameters) \
+    (* GET_ProgramUniform2ui(disp)) parameters
+static inline _glptr_ProgramUniform2ui GET_ProgramUniform2ui(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform2ui) (GET_by_offset(disp, _gloffset_ProgramUniform2ui));
+}
+
+static inline void SET_ProgramUniform2ui(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLuint, GLuint)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform2ui, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform2uiv)(GLuint, GLint, GLsizei, const GLuint *);
+#define CALL_ProgramUniform2uiv(disp, parameters) \
+    (* GET_ProgramUniform2uiv(disp)) parameters
+static inline _glptr_ProgramUniform2uiv GET_ProgramUniform2uiv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform2uiv) (GET_by_offset(disp, _gloffset_ProgramUniform2uiv));
+}
+
+static inline void SET_ProgramUniform2uiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform2uiv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform3f)(GLuint, GLint, GLfloat, GLfloat, GLfloat);
+#define CALL_ProgramUniform3f(disp, parameters) \
+    (* GET_ProgramUniform3f(disp)) parameters
+static inline _glptr_ProgramUniform3f GET_ProgramUniform3f(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform3f) (GET_by_offset(disp, _gloffset_ProgramUniform3f));
+}
+
+static inline void SET_ProgramUniform3f(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLfloat, GLfloat, GLfloat)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform3f, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform3fv)(GLuint, GLint, GLsizei, const GLfloat *);
+#define CALL_ProgramUniform3fv(disp, parameters) \
+    (* GET_ProgramUniform3fv(disp)) parameters
+static inline _glptr_ProgramUniform3fv GET_ProgramUniform3fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform3fv) (GET_by_offset(disp, _gloffset_ProgramUniform3fv));
+}
+
+static inline void SET_ProgramUniform3fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform3fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform3i)(GLuint, GLint, GLint, GLint, GLint);
+#define CALL_ProgramUniform3i(disp, parameters) \
+    (* GET_ProgramUniform3i(disp)) parameters
+static inline _glptr_ProgramUniform3i GET_ProgramUniform3i(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform3i) (GET_by_offset(disp, _gloffset_ProgramUniform3i));
+}
+
+static inline void SET_ProgramUniform3i(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLint, GLint, GLint)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform3i, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform3iv)(GLuint, GLint, GLsizei, const GLint *);
+#define CALL_ProgramUniform3iv(disp, parameters) \
+    (* GET_ProgramUniform3iv(disp)) parameters
+static inline _glptr_ProgramUniform3iv GET_ProgramUniform3iv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform3iv) (GET_by_offset(disp, _gloffset_ProgramUniform3iv));
+}
+
+static inline void SET_ProgramUniform3iv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLint *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform3iv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform3ui)(GLuint, GLint, GLuint, GLuint, GLuint);
+#define CALL_ProgramUniform3ui(disp, parameters) \
+    (* GET_ProgramUniform3ui(disp)) parameters
+static inline _glptr_ProgramUniform3ui GET_ProgramUniform3ui(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform3ui) (GET_by_offset(disp, _gloffset_ProgramUniform3ui));
+}
+
+static inline void SET_ProgramUniform3ui(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLuint, GLuint, GLuint)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform3ui, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform3uiv)(GLuint, GLint, GLsizei, const GLuint *);
+#define CALL_ProgramUniform3uiv(disp, parameters) \
+    (* GET_ProgramUniform3uiv(disp)) parameters
+static inline _glptr_ProgramUniform3uiv GET_ProgramUniform3uiv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform3uiv) (GET_by_offset(disp, _gloffset_ProgramUniform3uiv));
+}
+
+static inline void SET_ProgramUniform3uiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform3uiv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform4f)(GLuint, GLint, GLfloat, GLfloat, GLfloat, GLfloat);
+#define CALL_ProgramUniform4f(disp, parameters) \
+    (* GET_ProgramUniform4f(disp)) parameters
+static inline _glptr_ProgramUniform4f GET_ProgramUniform4f(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform4f) (GET_by_offset(disp, _gloffset_ProgramUniform4f));
+}
+
+static inline void SET_ProgramUniform4f(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLfloat, GLfloat, GLfloat, GLfloat)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform4f, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform4fv)(GLuint, GLint, GLsizei, const GLfloat *);
+#define CALL_ProgramUniform4fv(disp, parameters) \
+    (* GET_ProgramUniform4fv(disp)) parameters
+static inline _glptr_ProgramUniform4fv GET_ProgramUniform4fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform4fv) (GET_by_offset(disp, _gloffset_ProgramUniform4fv));
+}
+
+static inline void SET_ProgramUniform4fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform4fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform4i)(GLuint, GLint, GLint, GLint, GLint, GLint);
+#define CALL_ProgramUniform4i(disp, parameters) \
+    (* GET_ProgramUniform4i(disp)) parameters
+static inline _glptr_ProgramUniform4i GET_ProgramUniform4i(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform4i) (GET_by_offset(disp, _gloffset_ProgramUniform4i));
+}
+
+static inline void SET_ProgramUniform4i(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLint, GLint, GLint, GLint)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform4i, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform4iv)(GLuint, GLint, GLsizei, const GLint *);
+#define CALL_ProgramUniform4iv(disp, parameters) \
+    (* GET_ProgramUniform4iv(disp)) parameters
+static inline _glptr_ProgramUniform4iv GET_ProgramUniform4iv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform4iv) (GET_by_offset(disp, _gloffset_ProgramUniform4iv));
+}
+
+static inline void SET_ProgramUniform4iv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLint *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform4iv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform4ui)(GLuint, GLint, GLuint, GLuint, GLuint, GLuint);
+#define CALL_ProgramUniform4ui(disp, parameters) \
+    (* GET_ProgramUniform4ui(disp)) parameters
+static inline _glptr_ProgramUniform4ui GET_ProgramUniform4ui(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform4ui) (GET_by_offset(disp, _gloffset_ProgramUniform4ui));
+}
+
+static inline void SET_ProgramUniform4ui(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLuint, GLuint, GLuint, GLuint)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform4ui, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniform4uiv)(GLuint, GLint, GLsizei, const GLuint *);
+#define CALL_ProgramUniform4uiv(disp, parameters) \
+    (* GET_ProgramUniform4uiv(disp)) parameters
+static inline _glptr_ProgramUniform4uiv GET_ProgramUniform4uiv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniform4uiv) (GET_by_offset(disp, _gloffset_ProgramUniform4uiv));
+}
+
+static inline void SET_ProgramUniform4uiv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniform4uiv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix2fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix2fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix2fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix2fv GET_ProgramUniformMatrix2fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix2fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix2fv));
+}
+
+static inline void SET_ProgramUniformMatrix2fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix2fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix2x3fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix2x3fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix2x3fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix2x3fv GET_ProgramUniformMatrix2x3fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix2x3fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix2x3fv));
+}
+
+static inline void SET_ProgramUniformMatrix2x3fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix2x3fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix2x4fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix2x4fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix2x4fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix2x4fv GET_ProgramUniformMatrix2x4fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix2x4fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix2x4fv));
+}
+
+static inline void SET_ProgramUniformMatrix2x4fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix2x4fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix3fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix3fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix3fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix3fv GET_ProgramUniformMatrix3fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix3fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix3fv));
+}
+
+static inline void SET_ProgramUniformMatrix3fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix3fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix3x2fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix3x2fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix3x2fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix3x2fv GET_ProgramUniformMatrix3x2fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix3x2fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix3x2fv));
+}
+
+static inline void SET_ProgramUniformMatrix3x2fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix3x2fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix3x4fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix3x4fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix3x4fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix3x4fv GET_ProgramUniformMatrix3x4fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix3x4fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix3x4fv));
+}
+
+static inline void SET_ProgramUniformMatrix3x4fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix3x4fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix4fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix4fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix4fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix4fv GET_ProgramUniformMatrix4fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix4fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix4fv));
+}
+
+static inline void SET_ProgramUniformMatrix4fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix4fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix4x2fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix4x2fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix4x2fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix4x2fv GET_ProgramUniformMatrix4x2fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix4x2fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix4x2fv));
+}
+
+static inline void SET_ProgramUniformMatrix4x2fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix4x2fv, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ProgramUniformMatrix4x3fv)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *);
+#define CALL_ProgramUniformMatrix4x3fv(disp, parameters) \
+    (* GET_ProgramUniformMatrix4x3fv(disp)) parameters
+static inline _glptr_ProgramUniformMatrix4x3fv GET_ProgramUniformMatrix4x3fv(struct _glapi_table *disp) {
+   return (_glptr_ProgramUniformMatrix4x3fv) (GET_by_offset(disp, _gloffset_ProgramUniformMatrix4x3fv));
+}
+
+static inline void SET_ProgramUniformMatrix4x3fv(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint, GLsizei, GLboolean, const GLfloat *)) {
+   SET_by_offset(disp, _gloffset_ProgramUniformMatrix4x3fv, fn);
+}
+
 typedef void (GLAPIENTRYP _glptr_UnlockArraysEXT)(void);
 #define CALL_UnlockArraysEXT(disp, parameters) \
     (* GET_UnlockArraysEXT(disp)) parameters
@@ -11153,6 +12188,138 @@ static inline _glptr_UnlockArraysEXT GET_UnlockArraysEXT(struct _glapi_table *di
 
 static inline void SET_UnlockArraysEXT(struct _glapi_table *disp, void (GLAPIENTRYP fn)(void)) {
    SET_by_offset(disp, _gloffset_UnlockArraysEXT, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_UseProgramStages)(GLuint, GLbitfield, GLuint);
+#define CALL_UseProgramStages(disp, parameters) \
+    (* GET_UseProgramStages(disp)) parameters
+static inline _glptr_UseProgramStages GET_UseProgramStages(struct _glapi_table *disp) {
+   return (_glptr_UseProgramStages) (GET_by_offset(disp, _gloffset_UseProgramStages));
+}
+
+static inline void SET_UseProgramStages(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLbitfield, GLuint)) {
+   SET_by_offset(disp, _gloffset_UseProgramStages, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ValidateProgramPipeline)(GLuint);
+#define CALL_ValidateProgramPipeline(disp, parameters) \
+    (* GET_ValidateProgramPipeline(disp)) parameters
+static inline _glptr_ValidateProgramPipeline GET_ValidateProgramPipeline(struct _glapi_table *disp) {
+   return (_glptr_ValidateProgramPipeline) (GET_by_offset(disp, _gloffset_ValidateProgramPipeline));
+}
+
+static inline void SET_ValidateProgramPipeline(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
+   SET_by_offset(disp, _gloffset_ValidateProgramPipeline, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DebugMessageCallback)(GLDEBUGPROC, const GLvoid *);
+#define CALL_DebugMessageCallback(disp, parameters) \
+    (* GET_DebugMessageCallback(disp)) parameters
+static inline _glptr_DebugMessageCallback GET_DebugMessageCallback(struct _glapi_table *disp) {
+   return (_glptr_DebugMessageCallback) (GET_by_offset(disp, _gloffset_DebugMessageCallback));
+}
+
+static inline void SET_DebugMessageCallback(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLDEBUGPROC, const GLvoid *)) {
+   SET_by_offset(disp, _gloffset_DebugMessageCallback, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DebugMessageControl)(GLenum, GLenum, GLenum, GLsizei, const GLuint *, GLboolean);
+#define CALL_DebugMessageControl(disp, parameters) \
+    (* GET_DebugMessageControl(disp)) parameters
+static inline _glptr_DebugMessageControl GET_DebugMessageControl(struct _glapi_table *disp) {
+   return (_glptr_DebugMessageControl) (GET_by_offset(disp, _gloffset_DebugMessageControl));
+}
+
+static inline void SET_DebugMessageControl(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLenum, GLsizei, const GLuint *, GLboolean)) {
+   SET_by_offset(disp, _gloffset_DebugMessageControl, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DebugMessageInsert)(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *);
+#define CALL_DebugMessageInsert(disp, parameters) \
+    (* GET_DebugMessageInsert(disp)) parameters
+static inline _glptr_DebugMessageInsert GET_DebugMessageInsert(struct _glapi_table *disp) {
+   return (_glptr_DebugMessageInsert) (GET_by_offset(disp, _gloffset_DebugMessageInsert));
+}
+
+static inline void SET_DebugMessageInsert(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLchar *)) {
+   SET_by_offset(disp, _gloffset_DebugMessageInsert, fn);
+}
+
+typedef GLuint (GLAPIENTRYP _glptr_GetDebugMessageLog)(GLuint, GLsizei, GLenum *, GLenum *, GLuint *, GLenum *, GLsizei *, GLchar *);
+#define CALL_GetDebugMessageLog(disp, parameters) \
+    (* GET_GetDebugMessageLog(disp)) parameters
+static inline _glptr_GetDebugMessageLog GET_GetDebugMessageLog(struct _glapi_table *disp) {
+   return (_glptr_GetDebugMessageLog) (GET_by_offset(disp, _gloffset_GetDebugMessageLog));
+}
+
+static inline void SET_GetDebugMessageLog(struct _glapi_table *disp, GLuint (GLAPIENTRYP fn)(GLuint, GLsizei, GLenum *, GLenum *, GLuint *, GLenum *, GLsizei *, GLchar *)) {
+   SET_by_offset(disp, _gloffset_GetDebugMessageLog, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetObjectLabel)(GLenum, GLuint, GLsizei, GLsizei *, GLchar *);
+#define CALL_GetObjectLabel(disp, parameters) \
+    (* GET_GetObjectLabel(disp)) parameters
+static inline _glptr_GetObjectLabel GET_GetObjectLabel(struct _glapi_table *disp) {
+   return (_glptr_GetObjectLabel) (GET_by_offset(disp, _gloffset_GetObjectLabel));
+}
+
+static inline void SET_GetObjectLabel(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, GLsizei *, GLchar *)) {
+   SET_by_offset(disp, _gloffset_GetObjectLabel, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetObjectPtrLabel)(const GLvoid *, GLsizei, GLsizei *, GLchar *);
+#define CALL_GetObjectPtrLabel(disp, parameters) \
+    (* GET_GetObjectPtrLabel(disp)) parameters
+static inline _glptr_GetObjectPtrLabel GET_GetObjectPtrLabel(struct _glapi_table *disp) {
+   return (_glptr_GetObjectPtrLabel) (GET_by_offset(disp, _gloffset_GetObjectPtrLabel));
+}
+
+static inline void SET_GetObjectPtrLabel(struct _glapi_table *disp, void (GLAPIENTRYP fn)(const GLvoid *, GLsizei, GLsizei *, GLchar *)) {
+   SET_by_offset(disp, _gloffset_GetObjectPtrLabel, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ObjectLabel)(GLenum, GLuint, GLsizei, const GLchar *);
+#define CALL_ObjectLabel(disp, parameters) \
+    (* GET_ObjectLabel(disp)) parameters
+static inline _glptr_ObjectLabel GET_ObjectLabel(struct _glapi_table *disp) {
+   return (_glptr_ObjectLabel) (GET_by_offset(disp, _gloffset_ObjectLabel));
+}
+
+static inline void SET_ObjectLabel(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, const GLchar *)) {
+   SET_by_offset(disp, _gloffset_ObjectLabel, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_ObjectPtrLabel)(const GLvoid *, GLsizei, const GLchar *);
+#define CALL_ObjectPtrLabel(disp, parameters) \
+    (* GET_ObjectPtrLabel(disp)) parameters
+static inline _glptr_ObjectPtrLabel GET_ObjectPtrLabel(struct _glapi_table *disp) {
+   return (_glptr_ObjectPtrLabel) (GET_by_offset(disp, _gloffset_ObjectPtrLabel));
+}
+
+static inline void SET_ObjectPtrLabel(struct _glapi_table *disp, void (GLAPIENTRYP fn)(const GLvoid *, GLsizei, const GLchar *)) {
+   SET_by_offset(disp, _gloffset_ObjectPtrLabel, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_PopDebugGroup)(void);
+#define CALL_PopDebugGroup(disp, parameters) \
+    (* GET_PopDebugGroup(disp)) parameters
+static inline _glptr_PopDebugGroup GET_PopDebugGroup(struct _glapi_table *disp) {
+   return (_glptr_PopDebugGroup) (GET_by_offset(disp, _gloffset_PopDebugGroup));
+}
+
+static inline void SET_PopDebugGroup(struct _glapi_table *disp, void (GLAPIENTRYP fn)(void)) {
+   SET_by_offset(disp, _gloffset_PopDebugGroup, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_PushDebugGroup)(GLenum, GLuint, GLsizei, const GLchar *);
+#define CALL_PushDebugGroup(disp, parameters) \
+    (* GET_PushDebugGroup(disp)) parameters
+static inline _glptr_PushDebugGroup GET_PushDebugGroup(struct _glapi_table *disp) {
+   return (_glptr_PushDebugGroup) (GET_by_offset(disp, _gloffset_PushDebugGroup));
+}
+
+static inline void SET_PushDebugGroup(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, const GLchar *)) {
+   SET_by_offset(disp, _gloffset_PushDebugGroup, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_SecondaryColor3fEXT)(GLfloat, GLfloat, GLfloat);
@@ -12519,6 +13686,127 @@ static inline void SET_BindBufferOffsetEXT(struct _glapi_table *disp, void (GLAP
    SET_by_offset(disp, _gloffset_BindBufferOffsetEXT, fn);
 }
 
+typedef void (GLAPIENTRYP _glptr_BeginPerfMonitorAMD)(GLuint);
+#define CALL_BeginPerfMonitorAMD(disp, parameters) \
+    (* GET_BeginPerfMonitorAMD(disp)) parameters
+static inline _glptr_BeginPerfMonitorAMD GET_BeginPerfMonitorAMD(struct _glapi_table *disp) {
+   return (_glptr_BeginPerfMonitorAMD) (GET_by_offset(disp, _gloffset_BeginPerfMonitorAMD));
+}
+
+static inline void SET_BeginPerfMonitorAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
+   SET_by_offset(disp, _gloffset_BeginPerfMonitorAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DeletePerfMonitorsAMD)(GLsizei, GLuint *);
+#define CALL_DeletePerfMonitorsAMD(disp, parameters) \
+    (* GET_DeletePerfMonitorsAMD(disp)) parameters
+static inline _glptr_DeletePerfMonitorsAMD GET_DeletePerfMonitorsAMD(struct _glapi_table *disp) {
+   return (_glptr_DeletePerfMonitorsAMD) (GET_by_offset(disp, _gloffset_DeletePerfMonitorsAMD));
+}
+
+static inline void SET_DeletePerfMonitorsAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
+   SET_by_offset(disp, _gloffset_DeletePerfMonitorsAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_EndPerfMonitorAMD)(GLuint);
+#define CALL_EndPerfMonitorAMD(disp, parameters) \
+    (* GET_EndPerfMonitorAMD(disp)) parameters
+static inline _glptr_EndPerfMonitorAMD GET_EndPerfMonitorAMD(struct _glapi_table *disp) {
+   return (_glptr_EndPerfMonitorAMD) (GET_by_offset(disp, _gloffset_EndPerfMonitorAMD));
+}
+
+static inline void SET_EndPerfMonitorAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
+   SET_by_offset(disp, _gloffset_EndPerfMonitorAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GenPerfMonitorsAMD)(GLsizei, GLuint *);
+#define CALL_GenPerfMonitorsAMD(disp, parameters) \
+    (* GET_GenPerfMonitorsAMD(disp)) parameters
+static inline _glptr_GenPerfMonitorsAMD GET_GenPerfMonitorsAMD(struct _glapi_table *disp) {
+   return (_glptr_GenPerfMonitorsAMD) (GET_by_offset(disp, _gloffset_GenPerfMonitorsAMD));
+}
+
+static inline void SET_GenPerfMonitorsAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, GLuint *)) {
+   SET_by_offset(disp, _gloffset_GenPerfMonitorsAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfMonitorCounterDataAMD)(GLuint, GLenum, GLsizei, GLuint *, GLint *);
+#define CALL_GetPerfMonitorCounterDataAMD(disp, parameters) \
+    (* GET_GetPerfMonitorCounterDataAMD(disp)) parameters
+static inline _glptr_GetPerfMonitorCounterDataAMD GET_GetPerfMonitorCounterDataAMD(struct _glapi_table *disp) {
+   return (_glptr_GetPerfMonitorCounterDataAMD) (GET_by_offset(disp, _gloffset_GetPerfMonitorCounterDataAMD));
+}
+
+static inline void SET_GetPerfMonitorCounterDataAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLenum, GLsizei, GLuint *, GLint *)) {
+   SET_by_offset(disp, _gloffset_GetPerfMonitorCounterDataAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfMonitorCounterInfoAMD)(GLuint, GLuint, GLenum, GLvoid *);
+#define CALL_GetPerfMonitorCounterInfoAMD(disp, parameters) \
+    (* GET_GetPerfMonitorCounterInfoAMD(disp)) parameters
+static inline _glptr_GetPerfMonitorCounterInfoAMD GET_GetPerfMonitorCounterInfoAMD(struct _glapi_table *disp) {
+   return (_glptr_GetPerfMonitorCounterInfoAMD) (GET_by_offset(disp, _gloffset_GetPerfMonitorCounterInfoAMD));
+}
+
+static inline void SET_GetPerfMonitorCounterInfoAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLenum, GLvoid *)) {
+   SET_by_offset(disp, _gloffset_GetPerfMonitorCounterInfoAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfMonitorCounterStringAMD)(GLuint, GLuint, GLsizei, GLsizei *, GLchar *);
+#define CALL_GetPerfMonitorCounterStringAMD(disp, parameters) \
+    (* GET_GetPerfMonitorCounterStringAMD(disp)) parameters
+static inline _glptr_GetPerfMonitorCounterStringAMD GET_GetPerfMonitorCounterStringAMD(struct _glapi_table *disp) {
+   return (_glptr_GetPerfMonitorCounterStringAMD) (GET_by_offset(disp, _gloffset_GetPerfMonitorCounterStringAMD));
+}
+
+static inline void SET_GetPerfMonitorCounterStringAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLsizei, GLsizei *, GLchar *)) {
+   SET_by_offset(disp, _gloffset_GetPerfMonitorCounterStringAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfMonitorCountersAMD)(GLuint, GLint *, GLint *, GLsizei, GLuint *);
+#define CALL_GetPerfMonitorCountersAMD(disp, parameters) \
+    (* GET_GetPerfMonitorCountersAMD(disp)) parameters
+static inline _glptr_GetPerfMonitorCountersAMD GET_GetPerfMonitorCountersAMD(struct _glapi_table *disp) {
+   return (_glptr_GetPerfMonitorCountersAMD) (GET_by_offset(disp, _gloffset_GetPerfMonitorCountersAMD));
+}
+
+static inline void SET_GetPerfMonitorCountersAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLint *, GLint *, GLsizei, GLuint *)) {
+   SET_by_offset(disp, _gloffset_GetPerfMonitorCountersAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfMonitorGroupStringAMD)(GLuint, GLsizei, GLsizei *, GLchar *);
+#define CALL_GetPerfMonitorGroupStringAMD(disp, parameters) \
+    (* GET_GetPerfMonitorGroupStringAMD(disp)) parameters
+static inline _glptr_GetPerfMonitorGroupStringAMD GET_GetPerfMonitorGroupStringAMD(struct _glapi_table *disp) {
+   return (_glptr_GetPerfMonitorGroupStringAMD) (GET_by_offset(disp, _gloffset_GetPerfMonitorGroupStringAMD));
+}
+
+static inline void SET_GetPerfMonitorGroupStringAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLsizei, GLsizei *, GLchar *)) {
+   SET_by_offset(disp, _gloffset_GetPerfMonitorGroupStringAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfMonitorGroupsAMD)(GLint *, GLsizei, GLuint *);
+#define CALL_GetPerfMonitorGroupsAMD(disp, parameters) \
+    (* GET_GetPerfMonitorGroupsAMD(disp)) parameters
+static inline _glptr_GetPerfMonitorGroupsAMD GET_GetPerfMonitorGroupsAMD(struct _glapi_table *disp) {
+   return (_glptr_GetPerfMonitorGroupsAMD) (GET_by_offset(disp, _gloffset_GetPerfMonitorGroupsAMD));
+}
+
+static inline void SET_GetPerfMonitorGroupsAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLint *, GLsizei, GLuint *)) {
+   SET_by_offset(disp, _gloffset_GetPerfMonitorGroupsAMD, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_SelectPerfMonitorCountersAMD)(GLuint, GLboolean, GLuint, GLint, GLuint *);
+#define CALL_SelectPerfMonitorCountersAMD(disp, parameters) \
+    (* GET_SelectPerfMonitorCountersAMD(disp)) parameters
+static inline _glptr_SelectPerfMonitorCountersAMD GET_SelectPerfMonitorCountersAMD(struct _glapi_table *disp) {
+   return (_glptr_SelectPerfMonitorCountersAMD) (GET_by_offset(disp, _gloffset_SelectPerfMonitorCountersAMD));
+}
+
+static inline void SET_SelectPerfMonitorCountersAMD(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLboolean, GLuint, GLint, GLuint *)) {
+   SET_by_offset(disp, _gloffset_SelectPerfMonitorCountersAMD, fn);
+}
+
 typedef void (GLAPIENTRYP _glptr_GetObjectParameterivAPPLE)(GLenum, GLuint, GLenum, GLint *);
 #define CALL_GetObjectParameterivAPPLE(disp, parameters) \
     (* GET_GetObjectParameterivAPPLE(disp)) parameters
@@ -12594,6 +13882,226 @@ static inline _glptr_TextureBarrierNV GET_TextureBarrierNV(struct _glapi_table *
 
 static inline void SET_TextureBarrierNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(void)) {
    SET_by_offset(disp, _gloffset_TextureBarrierNV, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VDPAUFiniNV)(void);
+#define CALL_VDPAUFiniNV(disp, parameters) \
+    (* GET_VDPAUFiniNV(disp)) parameters
+static inline _glptr_VDPAUFiniNV GET_VDPAUFiniNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAUFiniNV) (GET_by_offset(disp, _gloffset_VDPAUFiniNV));
+}
+
+static inline void SET_VDPAUFiniNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(void)) {
+   SET_by_offset(disp, _gloffset_VDPAUFiniNV, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VDPAUGetSurfaceivNV)(GLintptr, GLenum, GLsizei, GLsizei *, GLint *);
+#define CALL_VDPAUGetSurfaceivNV(disp, parameters) \
+    (* GET_VDPAUGetSurfaceivNV(disp)) parameters
+static inline _glptr_VDPAUGetSurfaceivNV GET_VDPAUGetSurfaceivNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAUGetSurfaceivNV) (GET_by_offset(disp, _gloffset_VDPAUGetSurfaceivNV));
+}
+
+static inline void SET_VDPAUGetSurfaceivNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLintptr, GLenum, GLsizei, GLsizei *, GLint *)) {
+   SET_by_offset(disp, _gloffset_VDPAUGetSurfaceivNV, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VDPAUInitNV)(const GLvoid *, const GLvoid *);
+#define CALL_VDPAUInitNV(disp, parameters) \
+    (* GET_VDPAUInitNV(disp)) parameters
+static inline _glptr_VDPAUInitNV GET_VDPAUInitNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAUInitNV) (GET_by_offset(disp, _gloffset_VDPAUInitNV));
+}
+
+static inline void SET_VDPAUInitNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(const GLvoid *, const GLvoid *)) {
+   SET_by_offset(disp, _gloffset_VDPAUInitNV, fn);
+}
+
+typedef GLboolean (GLAPIENTRYP _glptr_VDPAUIsSurfaceNV)(GLintptr);
+#define CALL_VDPAUIsSurfaceNV(disp, parameters) \
+    (* GET_VDPAUIsSurfaceNV(disp)) parameters
+static inline _glptr_VDPAUIsSurfaceNV GET_VDPAUIsSurfaceNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAUIsSurfaceNV) (GET_by_offset(disp, _gloffset_VDPAUIsSurfaceNV));
+}
+
+static inline void SET_VDPAUIsSurfaceNV(struct _glapi_table *disp, GLboolean (GLAPIENTRYP fn)(GLintptr)) {
+   SET_by_offset(disp, _gloffset_VDPAUIsSurfaceNV, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VDPAUMapSurfacesNV)(GLsizei, const GLintptr *);
+#define CALL_VDPAUMapSurfacesNV(disp, parameters) \
+    (* GET_VDPAUMapSurfacesNV(disp)) parameters
+static inline _glptr_VDPAUMapSurfacesNV GET_VDPAUMapSurfacesNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAUMapSurfacesNV) (GET_by_offset(disp, _gloffset_VDPAUMapSurfacesNV));
+}
+
+static inline void SET_VDPAUMapSurfacesNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLintptr *)) {
+   SET_by_offset(disp, _gloffset_VDPAUMapSurfacesNV, fn);
+}
+
+typedef GLintptr (GLAPIENTRYP _glptr_VDPAURegisterOutputSurfaceNV)(const GLvoid *, GLenum, GLsizei, const GLuint *);
+#define CALL_VDPAURegisterOutputSurfaceNV(disp, parameters) \
+    (* GET_VDPAURegisterOutputSurfaceNV(disp)) parameters
+static inline _glptr_VDPAURegisterOutputSurfaceNV GET_VDPAURegisterOutputSurfaceNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAURegisterOutputSurfaceNV) (GET_by_offset(disp, _gloffset_VDPAURegisterOutputSurfaceNV));
+}
+
+static inline void SET_VDPAURegisterOutputSurfaceNV(struct _glapi_table *disp, GLintptr (GLAPIENTRYP fn)(const GLvoid *, GLenum, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_VDPAURegisterOutputSurfaceNV, fn);
+}
+
+typedef GLintptr (GLAPIENTRYP _glptr_VDPAURegisterVideoSurfaceNV)(const GLvoid *, GLenum, GLsizei, const GLuint *);
+#define CALL_VDPAURegisterVideoSurfaceNV(disp, parameters) \
+    (* GET_VDPAURegisterVideoSurfaceNV(disp)) parameters
+static inline _glptr_VDPAURegisterVideoSurfaceNV GET_VDPAURegisterVideoSurfaceNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAURegisterVideoSurfaceNV) (GET_by_offset(disp, _gloffset_VDPAURegisterVideoSurfaceNV));
+}
+
+static inline void SET_VDPAURegisterVideoSurfaceNV(struct _glapi_table *disp, GLintptr (GLAPIENTRYP fn)(const GLvoid *, GLenum, GLsizei, const GLuint *)) {
+   SET_by_offset(disp, _gloffset_VDPAURegisterVideoSurfaceNV, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VDPAUSurfaceAccessNV)(GLintptr, GLenum);
+#define CALL_VDPAUSurfaceAccessNV(disp, parameters) \
+    (* GET_VDPAUSurfaceAccessNV(disp)) parameters
+static inline _glptr_VDPAUSurfaceAccessNV GET_VDPAUSurfaceAccessNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAUSurfaceAccessNV) (GET_by_offset(disp, _gloffset_VDPAUSurfaceAccessNV));
+}
+
+static inline void SET_VDPAUSurfaceAccessNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLintptr, GLenum)) {
+   SET_by_offset(disp, _gloffset_VDPAUSurfaceAccessNV, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VDPAUUnmapSurfacesNV)(GLsizei, const GLintptr *);
+#define CALL_VDPAUUnmapSurfacesNV(disp, parameters) \
+    (* GET_VDPAUUnmapSurfacesNV(disp)) parameters
+static inline _glptr_VDPAUUnmapSurfacesNV GET_VDPAUUnmapSurfacesNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAUUnmapSurfacesNV) (GET_by_offset(disp, _gloffset_VDPAUUnmapSurfacesNV));
+}
+
+static inline void SET_VDPAUUnmapSurfacesNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLsizei, const GLintptr *)) {
+   SET_by_offset(disp, _gloffset_VDPAUUnmapSurfacesNV, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_VDPAUUnregisterSurfaceNV)(GLintptr);
+#define CALL_VDPAUUnregisterSurfaceNV(disp, parameters) \
+    (* GET_VDPAUUnregisterSurfaceNV(disp)) parameters
+static inline _glptr_VDPAUUnregisterSurfaceNV GET_VDPAUUnregisterSurfaceNV(struct _glapi_table *disp) {
+   return (_glptr_VDPAUUnregisterSurfaceNV) (GET_by_offset(disp, _gloffset_VDPAUUnregisterSurfaceNV));
+}
+
+static inline void SET_VDPAUUnregisterSurfaceNV(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLintptr)) {
+   SET_by_offset(disp, _gloffset_VDPAUUnregisterSurfaceNV, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_BeginPerfQueryINTEL)(GLuint);
+#define CALL_BeginPerfQueryINTEL(disp, parameters) \
+    (* GET_BeginPerfQueryINTEL(disp)) parameters
+static inline _glptr_BeginPerfQueryINTEL GET_BeginPerfQueryINTEL(struct _glapi_table *disp) {
+   return (_glptr_BeginPerfQueryINTEL) (GET_by_offset(disp, _gloffset_BeginPerfQueryINTEL));
+}
+
+static inline void SET_BeginPerfQueryINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
+   SET_by_offset(disp, _gloffset_BeginPerfQueryINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_CreatePerfQueryINTEL)(GLuint, GLuint *);
+#define CALL_CreatePerfQueryINTEL(disp, parameters) \
+    (* GET_CreatePerfQueryINTEL(disp)) parameters
+static inline _glptr_CreatePerfQueryINTEL GET_CreatePerfQueryINTEL(struct _glapi_table *disp) {
+   return (_glptr_CreatePerfQueryINTEL) (GET_by_offset(disp, _gloffset_CreatePerfQueryINTEL));
+}
+
+static inline void SET_CreatePerfQueryINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint *)) {
+   SET_by_offset(disp, _gloffset_CreatePerfQueryINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_DeletePerfQueryINTEL)(GLuint);
+#define CALL_DeletePerfQueryINTEL(disp, parameters) \
+    (* GET_DeletePerfQueryINTEL(disp)) parameters
+static inline _glptr_DeletePerfQueryINTEL GET_DeletePerfQueryINTEL(struct _glapi_table *disp) {
+   return (_glptr_DeletePerfQueryINTEL) (GET_by_offset(disp, _gloffset_DeletePerfQueryINTEL));
+}
+
+static inline void SET_DeletePerfQueryINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
+   SET_by_offset(disp, _gloffset_DeletePerfQueryINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_EndPerfQueryINTEL)(GLuint);
+#define CALL_EndPerfQueryINTEL(disp, parameters) \
+    (* GET_EndPerfQueryINTEL(disp)) parameters
+static inline _glptr_EndPerfQueryINTEL GET_EndPerfQueryINTEL(struct _glapi_table *disp) {
+   return (_glptr_EndPerfQueryINTEL) (GET_by_offset(disp, _gloffset_EndPerfQueryINTEL));
+}
+
+static inline void SET_EndPerfQueryINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint)) {
+   SET_by_offset(disp, _gloffset_EndPerfQueryINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetFirstPerfQueryIdINTEL)(GLuint *);
+#define CALL_GetFirstPerfQueryIdINTEL(disp, parameters) \
+    (* GET_GetFirstPerfQueryIdINTEL(disp)) parameters
+static inline _glptr_GetFirstPerfQueryIdINTEL GET_GetFirstPerfQueryIdINTEL(struct _glapi_table *disp) {
+   return (_glptr_GetFirstPerfQueryIdINTEL) (GET_by_offset(disp, _gloffset_GetFirstPerfQueryIdINTEL));
+}
+
+static inline void SET_GetFirstPerfQueryIdINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint *)) {
+   SET_by_offset(disp, _gloffset_GetFirstPerfQueryIdINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetNextPerfQueryIdINTEL)(GLuint, GLuint *);
+#define CALL_GetNextPerfQueryIdINTEL(disp, parameters) \
+    (* GET_GetNextPerfQueryIdINTEL(disp)) parameters
+static inline _glptr_GetNextPerfQueryIdINTEL GET_GetNextPerfQueryIdINTEL(struct _glapi_table *disp) {
+   return (_glptr_GetNextPerfQueryIdINTEL) (GET_by_offset(disp, _gloffset_GetNextPerfQueryIdINTEL));
+}
+
+static inline void SET_GetNextPerfQueryIdINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint *)) {
+   SET_by_offset(disp, _gloffset_GetNextPerfQueryIdINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfCounterInfoINTEL)(GLuint, GLuint, GLuint, GLchar *, GLuint, GLchar *, GLuint *, GLuint *, GLuint *, GLuint *, GLuint64 *);
+#define CALL_GetPerfCounterInfoINTEL(disp, parameters) \
+    (* GET_GetPerfCounterInfoINTEL(disp)) parameters
+static inline _glptr_GetPerfCounterInfoINTEL GET_GetPerfCounterInfoINTEL(struct _glapi_table *disp) {
+   return (_glptr_GetPerfCounterInfoINTEL) (GET_by_offset(disp, _gloffset_GetPerfCounterInfoINTEL));
+}
+
+static inline void SET_GetPerfCounterInfoINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLuint, GLchar *, GLuint, GLchar *, GLuint *, GLuint *, GLuint *, GLuint *, GLuint64 *)) {
+   SET_by_offset(disp, _gloffset_GetPerfCounterInfoINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfQueryDataINTEL)(GLuint, GLuint, GLsizei, GLvoid *, GLuint *);
+#define CALL_GetPerfQueryDataINTEL(disp, parameters) \
+    (* GET_GetPerfQueryDataINTEL(disp)) parameters
+static inline _glptr_GetPerfQueryDataINTEL GET_GetPerfQueryDataINTEL(struct _glapi_table *disp) {
+   return (_glptr_GetPerfQueryDataINTEL) (GET_by_offset(disp, _gloffset_GetPerfQueryDataINTEL));
+}
+
+static inline void SET_GetPerfQueryDataINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLsizei, GLvoid *, GLuint *)) {
+   SET_by_offset(disp, _gloffset_GetPerfQueryDataINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfQueryIdByNameINTEL)(GLchar *, GLuint *);
+#define CALL_GetPerfQueryIdByNameINTEL(disp, parameters) \
+    (* GET_GetPerfQueryIdByNameINTEL(disp)) parameters
+static inline _glptr_GetPerfQueryIdByNameINTEL GET_GetPerfQueryIdByNameINTEL(struct _glapi_table *disp) {
+   return (_glptr_GetPerfQueryIdByNameINTEL) (GET_by_offset(disp, _gloffset_GetPerfQueryIdByNameINTEL));
+}
+
+static inline void SET_GetPerfQueryIdByNameINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLchar *, GLuint *)) {
+   SET_by_offset(disp, _gloffset_GetPerfQueryIdByNameINTEL, fn);
+}
+
+typedef void (GLAPIENTRYP _glptr_GetPerfQueryInfoINTEL)(GLuint, GLuint, GLchar *, GLuint *, GLuint *, GLuint *, GLuint *);
+#define CALL_GetPerfQueryInfoINTEL(disp, parameters) \
+    (* GET_GetPerfQueryInfoINTEL(disp)) parameters
+static inline _glptr_GetPerfQueryInfoINTEL GET_GetPerfQueryInfoINTEL(struct _glapi_table *disp) {
+   return (_glptr_GetPerfQueryInfoINTEL) (GET_by_offset(disp, _gloffset_GetPerfQueryInfoINTEL));
+}
+
+static inline void SET_GetPerfQueryInfoINTEL(struct _glapi_table *disp, void (GLAPIENTRYP fn)(GLuint, GLuint, GLchar *, GLuint *, GLuint *, GLuint *, GLuint *)) {
+   SET_by_offset(disp, _gloffset_GetPerfQueryInfoINTEL, fn);
 }
 
 typedef void (GLAPIENTRYP _glptr_StencilFuncSeparateATI)(GLenum, GLenum, GLint, GLuint);

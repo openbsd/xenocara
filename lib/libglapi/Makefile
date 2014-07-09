@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2014/01/11 12:39:15 miod Exp $
+# $OpenBSD: Makefile,v 1.3 2014/07/09 21:32:42 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	glapi
@@ -27,6 +27,7 @@ CPPFLAGS+= \
 	-I/usr/include/dev/pci/drm \
 	-DGLX_INDIRECT_RENDERING \
 	-DPTHREADS \
+	-DHAVE_PTHREAD \
 	-DHAVE_ALIAS \
 	-D_REENTRANT \
 	-DMAPI_MODE_GLAPI \

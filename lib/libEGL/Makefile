@@ -1,15 +1,17 @@
-# $OpenBSD: Makefile,v 1.6 2014/01/19 03:20:40 jsg Exp $
+# $OpenBSD: Makefile,v 1.7 2014/07/09 21:32:40 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	EGL
 
 MESA=	${.CURDIR}/../../dist/Mesa/src/mesa
 EGL=	${.CURDIR}/../../dist/Mesa/src/egl
+GBM=	${.CURDIR}/../../dist/Mesa/src/gbm
+LOADER=	${.CURDIR}/../../dist/Mesa/src/loader
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
-MESA_MAJOR=	9
+MESA_MAJOR=	10
 MESA_MINOR=	2
-MESA_TINY=	5
+MESA_TINY=	3
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 EGL_DRIVER_SEARCH_DIR=	${X11BASE}/lib/modules/egl
@@ -65,17 +67,21 @@ EGL_SOURCES= \
 
 DRI2_SOURCES= \
 	egl_dri2.c \
-	common.c \
 	platform_x11.c
 
-GLX_SOURCES= \
-	egl_glx.c
+DRM_SOURCES= \
+	platform_drm.c
 
-CFLAGS+= -std=c99
+LOADER_SOURCES= \
+	loader.c \
+	pci_id_driver_map.c
+
+CFLAGS+= -std=c99 -fvisibility=hidden
 
 CPPFLAGS+= \
 	-I${MESA_INCLUDE} \
 	-I${EGL}/main \
+	-I${LOADER} \
 	-I${X11BASE}/include \
 	-I/usr/include/dev/pci/drm \
 	-DHAVE_PTHREAD \
@@ -88,12 +94,12 @@ CPPFLAGS+= \
 	-DDEFAULT_DRIVER_DIR=\"${DRI_DRIVER_INSTALL_DIR}\"
 
 SRCS= \
-	${EGL_SOURCES} \
-	${GLX_SOURCES}
+	${EGL_SOURCES} ${LOADER_SOURCES}
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-SRCS+=	${DRI2_SOURCES}
-CPPFLAGS+=	-D_EGL_BUILT_IN_DRIVER_DRI2 -DHAVE_XCB_DRI2
+SRCS+=	${DRI2_SOURCES} ${DRM_SOURCES}
+CPPFLAGS+=	-D_EGL_BUILT_IN_DRIVER_DRI2 -DHAVE_XCB_DRI2 \
+		-I${GBM}/main -I${GBM}/backends/dri -DHAVE_DRM_PLATFORM
 LDADD=	-L${X11BASE}/lib -lX11-xcb -lX11 -lxcb-dri2 -lxcb-xfixes -lxcb-render \
 	-lxcb-shape -lxcb -lpthread -ldrm
 .else
@@ -126,8 +132,8 @@ egl.pc: ${EGL}/main/egl.pc.in Makefile
 	sed -e 's,@prefix@,$(X11BASE),' \
 	    -e 's,@libdir@,${LIBDIR},' \
 	    -e 's,@includedir@,${INCSDIR},' \
-	    -e 's,@GL_PC_REQ_PRIV@,libdrm >= 2.4.24 x11 xext xdamage xfixes x11-xcb xcb-glx >= 1.8.1 xcb-dri2 >= 1.8 xxf86vm,' \
-	    -e 's,@GL_PC_LIB_PRIV@,-m -lpthread,' \
+	    -e 's,@GL_PC_REQ_PRIV@,libdrm >= 2.4.38 x11 xext xdamage xfixes x11-xcb xcb-glx >= 1.8.1 xcb-dri2 >= 1.8 xxf86vm,' \
+	    -e 's,@GL_PC_LIB_PRIV@,-lm -lpthread,' \
 	    -e 's,@GL_PC_CFLAGS@,,' \
 	    -e 's,@GL_LIB@,GL,' \
 	    -e 's,@PACKAGE_VERSION@,$(MESA_MAJOR).$(MESA_MINOR).$(MESA_TINY),' \
@@ -144,3 +150,4 @@ CLEANFILES+= egl.pc
 .PATH: ${EGL}/main
 .PATH: ${EGL}/drivers/dri2
 .PATH: ${EGL}/drivers/glx
+.PATH: ${LOADER}

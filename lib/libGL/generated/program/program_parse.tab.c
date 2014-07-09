@@ -5302,10 +5302,10 @@ _mesa_parse_arb_program(struct gl_context *ctx, GLenum target, const GLubyte *st
    state->st = _mesa_symbol_table_ctor();
 
    state->limits = (target == GL_VERTEX_PROGRAM_ARB)
-      ? & ctx->Const.VertexProgram
-      : & ctx->Const.FragmentProgram;
+      ? & ctx->Const.Program[MESA_SHADER_VERTEX]
+      : & ctx->Const.Program[MESA_SHADER_FRAGMENT];
 
-   state->MaxTextureImageUnits = ctx->Const.FragmentProgram.MaxTextureImageUnits;
+   state->MaxTextureImageUnits = ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxTextureImageUnits;
    state->MaxTextureCoordUnits = ctx->Const.MaxTextureCoordUnits;
    state->MaxTextureUnits = ctx->Const.MaxTextureUnits;
    state->MaxClipPlanes = ctx->Const.MaxClipPlanes;
@@ -5344,6 +5344,11 @@ _mesa_parse_arb_program(struct gl_context *ctx, GLenum target, const GLubyte *st
     */
    state->prog->Instructions =
       _mesa_alloc_instructions(state->prog->NumInstructions + 1);
+
+   if (state->prog->Instructions == NULL) {
+      goto error;
+   }
+
    inst = state->inst_head;
    for (i = 0; i < state->prog->NumInstructions; i++) {
       struct asm_instruction *const temp = inst->next;

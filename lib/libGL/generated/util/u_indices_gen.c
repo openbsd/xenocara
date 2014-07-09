@@ -65,48 +65,52 @@ static u_generate_func  generate[OUT_COUNT][PV_COUNT][PV_COUNT][PRIM_COUNT];
 
 
 static void generate_points_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)(i);
    }
 }
 static void generate_lines_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)(i);
       (out+i)[1] = (ushort)(i+1);
    }
 }
 static void generate_linestrip_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)(i);
       (out+j)[1] = (ushort)(i+1);
    }
 }
 static void generate_lineloop_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)(i);
       (out+j)[1] = (ushort)(i+1);
    }
@@ -114,52 +118,56 @@ static void generate_lineloop_ushort_first2first(
       (out+j)[1] = (ushort)(0);
 }
 static void generate_tris_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)(i);
       (out+i)[1] = (ushort)(i+1);
       (out+i)[2] = (ushort)(i+2);
    }
 }
 static void generate_tristrip_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(i);
       (out+j)[1] = (ushort)(i+1+(i&1));
       (out+j)[2] = (ushort)(i+2-(i&1));
    }
 }
 static void generate_trifan_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(0);
       (out+j)[1] = (ushort)(i+1);
       (out+j)[2] = (ushort)(i+2);
    }
 }
 static void generate_quads_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)(i+0);
       (out+j+0)[1] = (ushort)(i+1);
       (out+j+0)[2] = (ushort)(i+3);
@@ -169,13 +177,14 @@ static void generate_quads_ushort_first2first(
    }
 }
 static void generate_quadstrip_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)(i+2);
       (out+j+0)[1] = (ushort)(i+0);
       (out+j+0)[2] = (ushort)(i+3);
@@ -185,61 +194,66 @@ static void generate_quadstrip_ushort_first2first(
    }
 }
 static void generate_polygon_ushort_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(0);
       (out+j)[1] = (ushort)(i+1);
       (out+j)[2] = (ushort)(i+2);
    }
 }
 static void generate_points_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)(i);
    }
 }
 static void generate_lines_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)(i+1);
       (out+i)[1] = (ushort)(i);
    }
 }
 static void generate_linestrip_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i);
    }
 }
 static void generate_lineloop_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i);
    }
@@ -247,52 +261,56 @@ static void generate_lineloop_ushort_first2last(
       (out+j)[1] = (ushort)(i);
 }
 static void generate_tris_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)(i+1);
       (out+i)[1] = (ushort)(i+2);
       (out+i)[2] = (ushort)(i);
    }
 }
 static void generate_tristrip_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(i+1+(i&1));
       (out+j)[1] = (ushort)(i+2-(i&1));
       (out+j)[2] = (ushort)(i);
    }
 }
 static void generate_trifan_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i+2);
       (out+j)[2] = (ushort)(0);
    }
 }
 static void generate_quads_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)(i+1);
       (out+j+0)[1] = (ushort)(i+3);
       (out+j+0)[2] = (ushort)(i+0);
@@ -302,13 +320,14 @@ static void generate_quads_ushort_first2last(
    }
 }
 static void generate_quadstrip_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)(i+0);
       (out+j+0)[1] = (ushort)(i+3);
       (out+j+0)[2] = (ushort)(i+2);
@@ -318,61 +337,66 @@ static void generate_quadstrip_ushort_first2last(
    }
 }
 static void generate_polygon_ushort_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i+2);
       (out+j)[2] = (ushort)(0);
    }
 }
 static void generate_points_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)(i);
    }
 }
 static void generate_lines_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)(i+1);
       (out+i)[1] = (ushort)(i);
    }
 }
 static void generate_linestrip_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i);
    }
 }
 static void generate_lineloop_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i);
    }
@@ -380,52 +404,56 @@ static void generate_lineloop_ushort_last2first(
       (out+j)[1] = (ushort)(i);
 }
 static void generate_tris_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)(i+2);
       (out+i)[1] = (ushort)(i);
       (out+i)[2] = (ushort)(i+1);
    }
 }
 static void generate_tristrip_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(i+2);
       (out+j)[1] = (ushort)(i+(i&1));
       (out+j)[2] = (ushort)(i+1-(i&1));
    }
 }
 static void generate_trifan_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(i+2);
       (out+j)[1] = (ushort)(0);
       (out+j)[2] = (ushort)(i+1);
    }
 }
 static void generate_quads_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)(i+3);
       (out+j+0)[1] = (ushort)(i+0);
       (out+j+0)[2] = (ushort)(i+1);
@@ -435,13 +463,14 @@ static void generate_quads_ushort_last2first(
    }
 }
 static void generate_quadstrip_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)(i+3);
       (out+j+0)[1] = (ushort)(i+2);
       (out+j+0)[2] = (ushort)(i+0);
@@ -451,61 +480,66 @@ static void generate_quadstrip_ushort_last2first(
    }
 }
 static void generate_polygon_ushort_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(0);
       (out+j)[1] = (ushort)(i+1);
       (out+j)[2] = (ushort)(i+2);
    }
 }
 static void generate_points_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)(i);
    }
 }
 static void generate_lines_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)(i);
       (out+i)[1] = (ushort)(i+1);
    }
 }
 static void generate_linestrip_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)(i);
       (out+j)[1] = (ushort)(i+1);
    }
 }
 static void generate_lineloop_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)(i);
       (out+j)[1] = (ushort)(i+1);
    }
@@ -513,52 +547,56 @@ static void generate_lineloop_ushort_last2last(
       (out+j)[1] = (ushort)(0);
 }
 static void generate_tris_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)(i);
       (out+i)[1] = (ushort)(i+1);
       (out+i)[2] = (ushort)(i+2);
    }
 }
 static void generate_tristrip_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(i+(i&1));
       (out+j)[1] = (ushort)(i+1-(i&1));
       (out+j)[2] = (ushort)(i+2);
    }
 }
 static void generate_trifan_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(0);
       (out+j)[1] = (ushort)(i+1);
       (out+j)[2] = (ushort)(i+2);
    }
 }
 static void generate_quads_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)(i+0);
       (out+j+0)[1] = (ushort)(i+1);
       (out+j+0)[2] = (ushort)(i+3);
@@ -568,13 +606,14 @@ static void generate_quads_ushort_last2last(
    }
 }
 static void generate_quadstrip_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)(i+2);
       (out+j+0)[1] = (ushort)(i+0);
       (out+j+0)[2] = (ushort)(i+3);
@@ -584,61 +623,66 @@ static void generate_quadstrip_ushort_last2last(
    }
 }
 static void generate_polygon_ushort_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)(i+1);
       (out+j)[1] = (ushort)(i+2);
       (out+j)[2] = (ushort)(0);
    }
 }
 static void generate_points_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)(i);
    }
 }
 static void generate_lines_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)(i);
       (out+i)[1] = (uint)(i+1);
    }
 }
 static void generate_linestrip_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)(i);
       (out+j)[1] = (uint)(i+1);
    }
 }
 static void generate_lineloop_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)(i);
       (out+j)[1] = (uint)(i+1);
    }
@@ -646,52 +690,56 @@ static void generate_lineloop_uint_first2first(
       (out+j)[1] = (uint)(0);
 }
 static void generate_tris_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)(i);
       (out+i)[1] = (uint)(i+1);
       (out+i)[2] = (uint)(i+2);
    }
 }
 static void generate_tristrip_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(i);
       (out+j)[1] = (uint)(i+1+(i&1));
       (out+j)[2] = (uint)(i+2-(i&1));
    }
 }
 static void generate_trifan_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(0);
       (out+j)[1] = (uint)(i+1);
       (out+j)[2] = (uint)(i+2);
    }
 }
 static void generate_quads_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)(i+0);
       (out+j+0)[1] = (uint)(i+1);
       (out+j+0)[2] = (uint)(i+3);
@@ -701,13 +749,14 @@ static void generate_quads_uint_first2first(
    }
 }
 static void generate_quadstrip_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)(i+2);
       (out+j+0)[1] = (uint)(i+0);
       (out+j+0)[2] = (uint)(i+3);
@@ -717,61 +766,66 @@ static void generate_quadstrip_uint_first2first(
    }
 }
 static void generate_polygon_uint_first2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(0);
       (out+j)[1] = (uint)(i+1);
       (out+j)[2] = (uint)(i+2);
    }
 }
 static void generate_points_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)(i);
    }
 }
 static void generate_lines_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)(i+1);
       (out+i)[1] = (uint)(i);
    }
 }
 static void generate_linestrip_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i);
    }
 }
 static void generate_lineloop_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i);
    }
@@ -779,52 +833,56 @@ static void generate_lineloop_uint_first2last(
       (out+j)[1] = (uint)(i);
 }
 static void generate_tris_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)(i+1);
       (out+i)[1] = (uint)(i+2);
       (out+i)[2] = (uint)(i);
    }
 }
 static void generate_tristrip_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(i+1+(i&1));
       (out+j)[1] = (uint)(i+2-(i&1));
       (out+j)[2] = (uint)(i);
    }
 }
 static void generate_trifan_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i+2);
       (out+j)[2] = (uint)(0);
    }
 }
 static void generate_quads_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)(i+1);
       (out+j+0)[1] = (uint)(i+3);
       (out+j+0)[2] = (uint)(i+0);
@@ -834,13 +892,14 @@ static void generate_quads_uint_first2last(
    }
 }
 static void generate_quadstrip_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)(i+0);
       (out+j+0)[1] = (uint)(i+3);
       (out+j+0)[2] = (uint)(i+2);
@@ -850,61 +909,66 @@ static void generate_quadstrip_uint_first2last(
    }
 }
 static void generate_polygon_uint_first2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i+2);
       (out+j)[2] = (uint)(0);
    }
 }
 static void generate_points_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)(i);
    }
 }
 static void generate_lines_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)(i+1);
       (out+i)[1] = (uint)(i);
    }
 }
 static void generate_linestrip_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i);
    }
 }
 static void generate_lineloop_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i);
    }
@@ -912,52 +976,56 @@ static void generate_lineloop_uint_last2first(
       (out+j)[1] = (uint)(i);
 }
 static void generate_tris_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)(i+2);
       (out+i)[1] = (uint)(i);
       (out+i)[2] = (uint)(i+1);
    }
 }
 static void generate_tristrip_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(i+2);
       (out+j)[1] = (uint)(i+(i&1));
       (out+j)[2] = (uint)(i+1-(i&1));
    }
 }
 static void generate_trifan_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(i+2);
       (out+j)[1] = (uint)(0);
       (out+j)[2] = (uint)(i+1);
    }
 }
 static void generate_quads_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)(i+3);
       (out+j+0)[1] = (uint)(i+0);
       (out+j+0)[2] = (uint)(i+1);
@@ -967,13 +1035,14 @@ static void generate_quads_uint_last2first(
    }
 }
 static void generate_quadstrip_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)(i+3);
       (out+j+0)[1] = (uint)(i+2);
       (out+j+0)[2] = (uint)(i+0);
@@ -983,61 +1052,66 @@ static void generate_quadstrip_uint_last2first(
    }
 }
 static void generate_polygon_uint_last2first(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(0);
       (out+j)[1] = (uint)(i+1);
       (out+j)[2] = (uint)(i+2);
    }
 }
 static void generate_points_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)(i);
    }
 }
 static void generate_lines_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)(i);
       (out+i)[1] = (uint)(i+1);
    }
 }
 static void generate_linestrip_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)(i);
       (out+j)[1] = (uint)(i+1);
    }
 }
 static void generate_lineloop_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)(i);
       (out+j)[1] = (uint)(i+1);
    }
@@ -1045,52 +1119,56 @@ static void generate_lineloop_uint_last2last(
       (out+j)[1] = (uint)(0);
 }
 static void generate_tris_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)(i);
       (out+i)[1] = (uint)(i+1);
       (out+i)[2] = (uint)(i+2);
    }
 }
 static void generate_tristrip_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(i+(i&1));
       (out+j)[1] = (uint)(i+1-(i&1));
       (out+j)[2] = (uint)(i+2);
    }
 }
 static void generate_trifan_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(0);
       (out+j)[1] = (uint)(i+1);
       (out+j)[2] = (uint)(i+2);
    }
 }
 static void generate_quads_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)(i+0);
       (out+j+0)[1] = (uint)(i+1);
       (out+j+0)[2] = (uint)(i+3);
@@ -1100,13 +1178,14 @@ static void generate_quads_uint_last2last(
    }
 }
 static void generate_quadstrip_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)(i+2);
       (out+j+0)[1] = (uint)(i+0);
       (out+j+0)[2] = (uint)(i+3);
@@ -1116,13 +1195,14 @@ static void generate_quadstrip_uint_last2last(
    }
 }
 static void generate_polygon_uint_last2last(
+    unsigned start,
     unsigned nr,
     void *_out )
 {
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)(i+1);
       (out+j)[1] = (uint)(i+2);
       (out+j)[2] = (uint)(0);
@@ -1130,6 +1210,7 @@ static void generate_polygon_uint_last2last(
 }
 static void translate_points_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1137,12 +1218,13 @@ static void translate_points_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1150,13 +1232,14 @@ static void translate_lines_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
    }
 }
 static void translate_linestrip_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1164,13 +1247,14 @@ static void translate_linestrip_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
 }
 static void translate_lineloop_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1178,7 +1262,7 @@ static void translate_lineloop_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
@@ -1187,6 +1271,7 @@ static void translate_lineloop_ubyte2ushort_first2first(
 }
 static void translate_tris_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1194,7 +1279,7 @@ static void translate_tris_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
       (out+i)[2] = (ushort)in[i+2];
@@ -1202,6 +1287,7 @@ static void translate_tris_ubyte2ushort_first2first(
 }
 static void translate_tristrip_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1209,7 +1295,7 @@ static void translate_tristrip_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1+(i&1)];
       (out+j)[2] = (ushort)in[i+2-(i&1)];
@@ -1217,6 +1303,7 @@ static void translate_tristrip_ubyte2ushort_first2first(
 }
 static void translate_trifan_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1224,7 +1311,7 @@ static void translate_trifan_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -1232,6 +1319,7 @@ static void translate_trifan_ubyte2ushort_first2first(
 }
 static void translate_quads_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1239,7 +1327,7 @@ static void translate_quads_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+1];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -1250,6 +1338,7 @@ static void translate_quads_ubyte2ushort_first2first(
 }
 static void translate_quadstrip_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1257,7 +1346,7 @@ static void translate_quadstrip_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+2];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -1268,6 +1357,7 @@ static void translate_quadstrip_ubyte2ushort_first2first(
 }
 static void translate_polygon_ubyte2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1275,7 +1365,7 @@ static void translate_polygon_ubyte2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -1283,6 +1373,7 @@ static void translate_polygon_ubyte2ushort_first2first(
 }
 static void translate_points_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1290,12 +1381,13 @@ static void translate_points_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1303,13 +1395,14 @@ static void translate_lines_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i];
    }
 }
 static void translate_linestrip_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1317,13 +1410,14 @@ static void translate_linestrip_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
 }
 static void translate_lineloop_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1331,7 +1425,7 @@ static void translate_lineloop_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
@@ -1340,6 +1434,7 @@ static void translate_lineloop_ubyte2ushort_first2last(
 }
 static void translate_tris_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1347,7 +1442,7 @@ static void translate_tris_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i+2];
       (out+i)[2] = (ushort)in[i];
@@ -1355,6 +1450,7 @@ static void translate_tris_ubyte2ushort_first2last(
 }
 static void translate_tristrip_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1362,7 +1458,7 @@ static void translate_tristrip_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1+(i&1)];
       (out+j)[1] = (ushort)in[i+2-(i&1)];
       (out+j)[2] = (ushort)in[i];
@@ -1370,6 +1466,7 @@ static void translate_tristrip_ubyte2ushort_first2last(
 }
 static void translate_trifan_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1377,7 +1474,7 @@ static void translate_trifan_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -1385,6 +1482,7 @@ static void translate_trifan_ubyte2ushort_first2last(
 }
 static void translate_quads_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1392,7 +1490,7 @@ static void translate_quads_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+1];
       (out+j+0)[1] = (ushort)in[i+3];
       (out+j+0)[2] = (ushort)in[i+0];
@@ -1403,6 +1501,7 @@ static void translate_quads_ubyte2ushort_first2last(
 }
 static void translate_quadstrip_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1410,7 +1509,7 @@ static void translate_quadstrip_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+3];
       (out+j+0)[2] = (ushort)in[i+2];
@@ -1421,6 +1520,7 @@ static void translate_quadstrip_ubyte2ushort_first2last(
 }
 static void translate_polygon_ubyte2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1428,7 +1528,7 @@ static void translate_polygon_ubyte2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -1436,6 +1536,7 @@ static void translate_polygon_ubyte2ushort_first2last(
 }
 static void translate_points_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1443,12 +1544,13 @@ static void translate_points_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1456,13 +1558,14 @@ static void translate_lines_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i];
    }
 }
 static void translate_linestrip_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1470,13 +1573,14 @@ static void translate_linestrip_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
 }
 static void translate_lineloop_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1484,7 +1588,7 @@ static void translate_lineloop_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
@@ -1493,6 +1597,7 @@ static void translate_lineloop_ubyte2ushort_last2first(
 }
 static void translate_tris_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1500,7 +1605,7 @@ static void translate_tris_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i+2];
       (out+i)[1] = (ushort)in[i];
       (out+i)[2] = (ushort)in[i+1];
@@ -1508,6 +1613,7 @@ static void translate_tris_ubyte2ushort_last2first(
 }
 static void translate_tristrip_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1515,7 +1621,7 @@ static void translate_tristrip_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[i+(i&1)];
       (out+j)[2] = (ushort)in[i+1-(i&1)];
@@ -1523,6 +1629,7 @@ static void translate_tristrip_ubyte2ushort_last2first(
 }
 static void translate_trifan_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1530,7 +1637,7 @@ static void translate_trifan_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[0];
       (out+j)[2] = (ushort)in[i+1];
@@ -1538,6 +1645,7 @@ static void translate_trifan_ubyte2ushort_last2first(
 }
 static void translate_quads_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1545,7 +1653,7 @@ static void translate_quads_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+3];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+1];
@@ -1556,6 +1664,7 @@ static void translate_quads_ubyte2ushort_last2first(
 }
 static void translate_quadstrip_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1563,7 +1672,7 @@ static void translate_quadstrip_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+3];
       (out+j+0)[1] = (ushort)in[i+2];
       (out+j+0)[2] = (ushort)in[i+0];
@@ -1574,6 +1683,7 @@ static void translate_quadstrip_ubyte2ushort_last2first(
 }
 static void translate_polygon_ubyte2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1581,7 +1691,7 @@ static void translate_polygon_ubyte2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -1589,6 +1699,7 @@ static void translate_polygon_ubyte2ushort_last2first(
 }
 static void translate_points_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1596,12 +1707,13 @@ static void translate_points_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1609,13 +1721,14 @@ static void translate_lines_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
    }
 }
 static void translate_linestrip_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1623,13 +1736,14 @@ static void translate_linestrip_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
 }
 static void translate_lineloop_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1637,7 +1751,7 @@ static void translate_lineloop_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
@@ -1646,6 +1760,7 @@ static void translate_lineloop_ubyte2ushort_last2last(
 }
 static void translate_tris_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1653,7 +1768,7 @@ static void translate_tris_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
       (out+i)[2] = (ushort)in[i+2];
@@ -1661,6 +1776,7 @@ static void translate_tris_ubyte2ushort_last2last(
 }
 static void translate_tristrip_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1668,7 +1784,7 @@ static void translate_tristrip_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+(i&1)];
       (out+j)[1] = (ushort)in[i+1-(i&1)];
       (out+j)[2] = (ushort)in[i+2];
@@ -1676,6 +1792,7 @@ static void translate_tristrip_ubyte2ushort_last2last(
 }
 static void translate_trifan_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1683,7 +1800,7 @@ static void translate_trifan_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -1691,6 +1808,7 @@ static void translate_trifan_ubyte2ushort_last2last(
 }
 static void translate_quads_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1698,7 +1816,7 @@ static void translate_quads_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+1];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -1709,6 +1827,7 @@ static void translate_quads_ubyte2ushort_last2last(
 }
 static void translate_quadstrip_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1716,7 +1835,7 @@ static void translate_quadstrip_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+2];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -1727,6 +1846,7 @@ static void translate_quadstrip_ubyte2ushort_last2last(
 }
 static void translate_polygon_ubyte2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1734,7 +1854,7 @@ static void translate_polygon_ubyte2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -1742,6 +1862,7 @@ static void translate_polygon_ubyte2ushort_last2last(
 }
 static void translate_points_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1749,12 +1870,13 @@ static void translate_points_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1762,13 +1884,14 @@ static void translate_lines_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
    }
 }
 static void translate_linestrip_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1776,13 +1899,14 @@ static void translate_linestrip_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
 }
 static void translate_lineloop_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1790,7 +1914,7 @@ static void translate_lineloop_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
@@ -1799,6 +1923,7 @@ static void translate_lineloop_ubyte2uint_first2first(
 }
 static void translate_tris_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1806,7 +1931,7 @@ static void translate_tris_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
       (out+i)[2] = (uint)in[i+2];
@@ -1814,6 +1939,7 @@ static void translate_tris_ubyte2uint_first2first(
 }
 static void translate_tristrip_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1821,7 +1947,7 @@ static void translate_tristrip_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1+(i&1)];
       (out+j)[2] = (uint)in[i+2-(i&1)];
@@ -1829,6 +1955,7 @@ static void translate_tristrip_ubyte2uint_first2first(
 }
 static void translate_trifan_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1836,7 +1963,7 @@ static void translate_trifan_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -1844,6 +1971,7 @@ static void translate_trifan_ubyte2uint_first2first(
 }
 static void translate_quads_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1851,7 +1979,7 @@ static void translate_quads_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+1];
       (out+j+0)[2] = (uint)in[i+3];
@@ -1862,6 +1990,7 @@ static void translate_quads_ubyte2uint_first2first(
 }
 static void translate_quadstrip_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1869,7 +1998,7 @@ static void translate_quadstrip_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+2];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+3];
@@ -1880,6 +2009,7 @@ static void translate_quadstrip_ubyte2uint_first2first(
 }
 static void translate_polygon_ubyte2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1887,7 +2017,7 @@ static void translate_polygon_ubyte2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -1895,6 +2025,7 @@ static void translate_polygon_ubyte2uint_first2first(
 }
 static void translate_points_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1902,12 +2033,13 @@ static void translate_points_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1915,13 +2047,14 @@ static void translate_lines_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i];
    }
 }
 static void translate_linestrip_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1929,13 +2062,14 @@ static void translate_linestrip_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
 }
 static void translate_lineloop_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1943,7 +2077,7 @@ static void translate_lineloop_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
@@ -1952,6 +2086,7 @@ static void translate_lineloop_ubyte2uint_first2last(
 }
 static void translate_tris_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1959,7 +2094,7 @@ static void translate_tris_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i+2];
       (out+i)[2] = (uint)in[i];
@@ -1967,6 +2102,7 @@ static void translate_tris_ubyte2uint_first2last(
 }
 static void translate_tristrip_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1974,7 +2110,7 @@ static void translate_tristrip_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1+(i&1)];
       (out+j)[1] = (uint)in[i+2-(i&1)];
       (out+j)[2] = (uint)in[i];
@@ -1982,6 +2118,7 @@ static void translate_tristrip_ubyte2uint_first2last(
 }
 static void translate_trifan_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -1989,7 +2126,7 @@ static void translate_trifan_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];
@@ -1997,6 +2134,7 @@ static void translate_trifan_ubyte2uint_first2last(
 }
 static void translate_quads_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2004,7 +2142,7 @@ static void translate_quads_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+1];
       (out+j+0)[1] = (uint)in[i+3];
       (out+j+0)[2] = (uint)in[i+0];
@@ -2015,6 +2153,7 @@ static void translate_quads_ubyte2uint_first2last(
 }
 static void translate_quadstrip_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2022,7 +2161,7 @@ static void translate_quadstrip_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+3];
       (out+j+0)[2] = (uint)in[i+2];
@@ -2033,6 +2172,7 @@ static void translate_quadstrip_ubyte2uint_first2last(
 }
 static void translate_polygon_ubyte2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2040,7 +2180,7 @@ static void translate_polygon_ubyte2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];
@@ -2048,6 +2188,7 @@ static void translate_polygon_ubyte2uint_first2last(
 }
 static void translate_points_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2055,12 +2196,13 @@ static void translate_points_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2068,13 +2210,14 @@ static void translate_lines_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i];
    }
 }
 static void translate_linestrip_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2082,13 +2225,14 @@ static void translate_linestrip_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
 }
 static void translate_lineloop_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2096,7 +2240,7 @@ static void translate_lineloop_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
@@ -2105,6 +2249,7 @@ static void translate_lineloop_ubyte2uint_last2first(
 }
 static void translate_tris_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2112,7 +2257,7 @@ static void translate_tris_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i+2];
       (out+i)[1] = (uint)in[i];
       (out+i)[2] = (uint)in[i+1];
@@ -2120,6 +2265,7 @@ static void translate_tris_ubyte2uint_last2first(
 }
 static void translate_tristrip_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2127,7 +2273,7 @@ static void translate_tristrip_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[i+(i&1)];
       (out+j)[2] = (uint)in[i+1-(i&1)];
@@ -2135,6 +2281,7 @@ static void translate_tristrip_ubyte2uint_last2first(
 }
 static void translate_trifan_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2142,7 +2289,7 @@ static void translate_trifan_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[0];
       (out+j)[2] = (uint)in[i+1];
@@ -2150,6 +2297,7 @@ static void translate_trifan_ubyte2uint_last2first(
 }
 static void translate_quads_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2157,7 +2305,7 @@ static void translate_quads_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+3];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+1];
@@ -2168,6 +2316,7 @@ static void translate_quads_ubyte2uint_last2first(
 }
 static void translate_quadstrip_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2175,7 +2324,7 @@ static void translate_quadstrip_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+3];
       (out+j+0)[1] = (uint)in[i+2];
       (out+j+0)[2] = (uint)in[i+0];
@@ -2186,6 +2335,7 @@ static void translate_quadstrip_ubyte2uint_last2first(
 }
 static void translate_polygon_ubyte2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2193,7 +2343,7 @@ static void translate_polygon_ubyte2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -2201,6 +2351,7 @@ static void translate_polygon_ubyte2uint_last2first(
 }
 static void translate_points_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2208,12 +2359,13 @@ static void translate_points_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2221,13 +2373,14 @@ static void translate_lines_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
    }
 }
 static void translate_linestrip_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2235,13 +2388,14 @@ static void translate_linestrip_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
 }
 static void translate_lineloop_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2249,7 +2403,7 @@ static void translate_lineloop_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
@@ -2258,6 +2412,7 @@ static void translate_lineloop_ubyte2uint_last2last(
 }
 static void translate_tris_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2265,7 +2420,7 @@ static void translate_tris_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
       (out+i)[2] = (uint)in[i+2];
@@ -2273,6 +2428,7 @@ static void translate_tris_ubyte2uint_last2last(
 }
 static void translate_tristrip_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2280,7 +2436,7 @@ static void translate_tristrip_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+(i&1)];
       (out+j)[1] = (uint)in[i+1-(i&1)];
       (out+j)[2] = (uint)in[i+2];
@@ -2288,6 +2444,7 @@ static void translate_tristrip_ubyte2uint_last2last(
 }
 static void translate_trifan_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2295,7 +2452,7 @@ static void translate_trifan_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -2303,6 +2460,7 @@ static void translate_trifan_ubyte2uint_last2last(
 }
 static void translate_quads_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2310,7 +2468,7 @@ static void translate_quads_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+1];
       (out+j+0)[2] = (uint)in[i+3];
@@ -2321,6 +2479,7 @@ static void translate_quads_ubyte2uint_last2last(
 }
 static void translate_quadstrip_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2328,7 +2487,7 @@ static void translate_quadstrip_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+2];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+3];
@@ -2339,6 +2498,7 @@ static void translate_quadstrip_ubyte2uint_last2last(
 }
 static void translate_polygon_ubyte2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2346,7 +2506,7 @@ static void translate_polygon_ubyte2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];
@@ -2354,6 +2514,7 @@ static void translate_polygon_ubyte2uint_last2last(
 }
 static void translate_points_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2361,12 +2522,13 @@ static void translate_points_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2374,13 +2536,14 @@ static void translate_lines_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
    }
 }
 static void translate_linestrip_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2388,13 +2551,14 @@ static void translate_linestrip_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
 }
 static void translate_lineloop_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2402,7 +2566,7 @@ static void translate_lineloop_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
@@ -2411,6 +2575,7 @@ static void translate_lineloop_ushort2ushort_first2first(
 }
 static void translate_tris_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2418,7 +2583,7 @@ static void translate_tris_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
       (out+i)[2] = (ushort)in[i+2];
@@ -2426,6 +2591,7 @@ static void translate_tris_ushort2ushort_first2first(
 }
 static void translate_tristrip_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2433,7 +2599,7 @@ static void translate_tristrip_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1+(i&1)];
       (out+j)[2] = (ushort)in[i+2-(i&1)];
@@ -2441,6 +2607,7 @@ static void translate_tristrip_ushort2ushort_first2first(
 }
 static void translate_trifan_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2448,7 +2615,7 @@ static void translate_trifan_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -2456,6 +2623,7 @@ static void translate_trifan_ushort2ushort_first2first(
 }
 static void translate_quads_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2463,7 +2631,7 @@ static void translate_quads_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+1];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -2474,6 +2642,7 @@ static void translate_quads_ushort2ushort_first2first(
 }
 static void translate_quadstrip_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2481,7 +2650,7 @@ static void translate_quadstrip_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+2];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -2492,6 +2661,7 @@ static void translate_quadstrip_ushort2ushort_first2first(
 }
 static void translate_polygon_ushort2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2499,7 +2669,7 @@ static void translate_polygon_ushort2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -2507,6 +2677,7 @@ static void translate_polygon_ushort2ushort_first2first(
 }
 static void translate_points_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2514,12 +2685,13 @@ static void translate_points_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2527,13 +2699,14 @@ static void translate_lines_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i];
    }
 }
 static void translate_linestrip_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2541,13 +2714,14 @@ static void translate_linestrip_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
 }
 static void translate_lineloop_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2555,7 +2729,7 @@ static void translate_lineloop_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
@@ -2564,6 +2738,7 @@ static void translate_lineloop_ushort2ushort_first2last(
 }
 static void translate_tris_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2571,7 +2746,7 @@ static void translate_tris_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i+2];
       (out+i)[2] = (ushort)in[i];
@@ -2579,6 +2754,7 @@ static void translate_tris_ushort2ushort_first2last(
 }
 static void translate_tristrip_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2586,7 +2762,7 @@ static void translate_tristrip_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1+(i&1)];
       (out+j)[1] = (ushort)in[i+2-(i&1)];
       (out+j)[2] = (ushort)in[i];
@@ -2594,6 +2770,7 @@ static void translate_tristrip_ushort2ushort_first2last(
 }
 static void translate_trifan_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2601,7 +2778,7 @@ static void translate_trifan_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -2609,6 +2786,7 @@ static void translate_trifan_ushort2ushort_first2last(
 }
 static void translate_quads_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2616,7 +2794,7 @@ static void translate_quads_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+1];
       (out+j+0)[1] = (ushort)in[i+3];
       (out+j+0)[2] = (ushort)in[i+0];
@@ -2627,6 +2805,7 @@ static void translate_quads_ushort2ushort_first2last(
 }
 static void translate_quadstrip_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2634,7 +2813,7 @@ static void translate_quadstrip_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+3];
       (out+j+0)[2] = (ushort)in[i+2];
@@ -2645,6 +2824,7 @@ static void translate_quadstrip_ushort2ushort_first2last(
 }
 static void translate_polygon_ushort2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2652,7 +2832,7 @@ static void translate_polygon_ushort2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -2660,6 +2840,7 @@ static void translate_polygon_ushort2ushort_first2last(
 }
 static void translate_points_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2667,12 +2848,13 @@ static void translate_points_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2680,13 +2862,14 @@ static void translate_lines_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i];
    }
 }
 static void translate_linestrip_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2694,13 +2877,14 @@ static void translate_linestrip_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
 }
 static void translate_lineloop_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2708,7 +2892,7 @@ static void translate_lineloop_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
@@ -2717,6 +2901,7 @@ static void translate_lineloop_ushort2ushort_last2first(
 }
 static void translate_tris_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2724,7 +2909,7 @@ static void translate_tris_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i+2];
       (out+i)[1] = (ushort)in[i];
       (out+i)[2] = (ushort)in[i+1];
@@ -2732,6 +2917,7 @@ static void translate_tris_ushort2ushort_last2first(
 }
 static void translate_tristrip_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2739,7 +2925,7 @@ static void translate_tristrip_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[i+(i&1)];
       (out+j)[2] = (ushort)in[i+1-(i&1)];
@@ -2747,6 +2933,7 @@ static void translate_tristrip_ushort2ushort_last2first(
 }
 static void translate_trifan_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2754,7 +2941,7 @@ static void translate_trifan_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[0];
       (out+j)[2] = (ushort)in[i+1];
@@ -2762,6 +2949,7 @@ static void translate_trifan_ushort2ushort_last2first(
 }
 static void translate_quads_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2769,7 +2957,7 @@ static void translate_quads_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+3];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+1];
@@ -2780,6 +2968,7 @@ static void translate_quads_ushort2ushort_last2first(
 }
 static void translate_quadstrip_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2787,7 +2976,7 @@ static void translate_quadstrip_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+3];
       (out+j+0)[1] = (ushort)in[i+2];
       (out+j+0)[2] = (ushort)in[i+0];
@@ -2798,6 +2987,7 @@ static void translate_quadstrip_ushort2ushort_last2first(
 }
 static void translate_polygon_ushort2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2805,7 +2995,7 @@ static void translate_polygon_ushort2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -2813,6 +3003,7 @@ static void translate_polygon_ushort2ushort_last2first(
 }
 static void translate_points_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2820,12 +3011,13 @@ static void translate_points_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2833,13 +3025,14 @@ static void translate_lines_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
    }
 }
 static void translate_linestrip_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2847,13 +3040,14 @@ static void translate_linestrip_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
 }
 static void translate_lineloop_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2861,7 +3055,7 @@ static void translate_lineloop_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
@@ -2870,6 +3064,7 @@ static void translate_lineloop_ushort2ushort_last2last(
 }
 static void translate_tris_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2877,7 +3072,7 @@ static void translate_tris_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
       (out+i)[2] = (ushort)in[i+2];
@@ -2885,6 +3080,7 @@ static void translate_tris_ushort2ushort_last2last(
 }
 static void translate_tristrip_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2892,7 +3088,7 @@ static void translate_tristrip_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+(i&1)];
       (out+j)[1] = (ushort)in[i+1-(i&1)];
       (out+j)[2] = (ushort)in[i+2];
@@ -2900,6 +3096,7 @@ static void translate_tristrip_ushort2ushort_last2last(
 }
 static void translate_trifan_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2907,7 +3104,7 @@ static void translate_trifan_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -2915,6 +3112,7 @@ static void translate_trifan_ushort2ushort_last2last(
 }
 static void translate_quads_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2922,7 +3120,7 @@ static void translate_quads_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+1];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -2933,6 +3131,7 @@ static void translate_quads_ushort2ushort_last2last(
 }
 static void translate_quadstrip_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2940,7 +3139,7 @@ static void translate_quadstrip_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+2];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -2951,6 +3150,7 @@ static void translate_quadstrip_ushort2ushort_last2last(
 }
 static void translate_polygon_ushort2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2958,7 +3158,7 @@ static void translate_polygon_ushort2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -2966,6 +3166,7 @@ static void translate_polygon_ushort2ushort_last2last(
 }
 static void translate_points_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2973,12 +3174,13 @@ static void translate_points_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -2986,13 +3188,14 @@ static void translate_lines_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
    }
 }
 static void translate_linestrip_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3000,13 +3203,14 @@ static void translate_linestrip_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
 }
 static void translate_lineloop_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3014,7 +3218,7 @@ static void translate_lineloop_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
@@ -3023,6 +3227,7 @@ static void translate_lineloop_ushort2uint_first2first(
 }
 static void translate_tris_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3030,7 +3235,7 @@ static void translate_tris_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
       (out+i)[2] = (uint)in[i+2];
@@ -3038,6 +3243,7 @@ static void translate_tris_ushort2uint_first2first(
 }
 static void translate_tristrip_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3045,7 +3251,7 @@ static void translate_tristrip_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1+(i&1)];
       (out+j)[2] = (uint)in[i+2-(i&1)];
@@ -3053,6 +3259,7 @@ static void translate_tristrip_ushort2uint_first2first(
 }
 static void translate_trifan_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3060,7 +3267,7 @@ static void translate_trifan_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -3068,6 +3275,7 @@ static void translate_trifan_ushort2uint_first2first(
 }
 static void translate_quads_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3075,7 +3283,7 @@ static void translate_quads_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+1];
       (out+j+0)[2] = (uint)in[i+3];
@@ -3086,6 +3294,7 @@ static void translate_quads_ushort2uint_first2first(
 }
 static void translate_quadstrip_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3093,7 +3302,7 @@ static void translate_quadstrip_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+2];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+3];
@@ -3104,6 +3313,7 @@ static void translate_quadstrip_ushort2uint_first2first(
 }
 static void translate_polygon_ushort2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3111,7 +3321,7 @@ static void translate_polygon_ushort2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -3119,6 +3329,7 @@ static void translate_polygon_ushort2uint_first2first(
 }
 static void translate_points_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3126,12 +3337,13 @@ static void translate_points_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3139,13 +3351,14 @@ static void translate_lines_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i];
    }
 }
 static void translate_linestrip_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3153,13 +3366,14 @@ static void translate_linestrip_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
 }
 static void translate_lineloop_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3167,7 +3381,7 @@ static void translate_lineloop_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
@@ -3176,6 +3390,7 @@ static void translate_lineloop_ushort2uint_first2last(
 }
 static void translate_tris_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3183,7 +3398,7 @@ static void translate_tris_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i+2];
       (out+i)[2] = (uint)in[i];
@@ -3191,6 +3406,7 @@ static void translate_tris_ushort2uint_first2last(
 }
 static void translate_tristrip_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3198,7 +3414,7 @@ static void translate_tristrip_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1+(i&1)];
       (out+j)[1] = (uint)in[i+2-(i&1)];
       (out+j)[2] = (uint)in[i];
@@ -3206,6 +3422,7 @@ static void translate_tristrip_ushort2uint_first2last(
 }
 static void translate_trifan_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3213,7 +3430,7 @@ static void translate_trifan_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];
@@ -3221,6 +3438,7 @@ static void translate_trifan_ushort2uint_first2last(
 }
 static void translate_quads_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3228,7 +3446,7 @@ static void translate_quads_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+1];
       (out+j+0)[1] = (uint)in[i+3];
       (out+j+0)[2] = (uint)in[i+0];
@@ -3239,6 +3457,7 @@ static void translate_quads_ushort2uint_first2last(
 }
 static void translate_quadstrip_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3246,7 +3465,7 @@ static void translate_quadstrip_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+3];
       (out+j+0)[2] = (uint)in[i+2];
@@ -3257,6 +3476,7 @@ static void translate_quadstrip_ushort2uint_first2last(
 }
 static void translate_polygon_ushort2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3264,7 +3484,7 @@ static void translate_polygon_ushort2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];
@@ -3272,6 +3492,7 @@ static void translate_polygon_ushort2uint_first2last(
 }
 static void translate_points_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3279,12 +3500,13 @@ static void translate_points_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3292,13 +3514,14 @@ static void translate_lines_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i];
    }
 }
 static void translate_linestrip_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3306,13 +3529,14 @@ static void translate_linestrip_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
 }
 static void translate_lineloop_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3320,7 +3544,7 @@ static void translate_lineloop_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
@@ -3329,6 +3553,7 @@ static void translate_lineloop_ushort2uint_last2first(
 }
 static void translate_tris_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3336,7 +3561,7 @@ static void translate_tris_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i+2];
       (out+i)[1] = (uint)in[i];
       (out+i)[2] = (uint)in[i+1];
@@ -3344,6 +3569,7 @@ static void translate_tris_ushort2uint_last2first(
 }
 static void translate_tristrip_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3351,7 +3577,7 @@ static void translate_tristrip_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[i+(i&1)];
       (out+j)[2] = (uint)in[i+1-(i&1)];
@@ -3359,6 +3585,7 @@ static void translate_tristrip_ushort2uint_last2first(
 }
 static void translate_trifan_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3366,7 +3593,7 @@ static void translate_trifan_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[0];
       (out+j)[2] = (uint)in[i+1];
@@ -3374,6 +3601,7 @@ static void translate_trifan_ushort2uint_last2first(
 }
 static void translate_quads_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3381,7 +3609,7 @@ static void translate_quads_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+3];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+1];
@@ -3392,6 +3620,7 @@ static void translate_quads_ushort2uint_last2first(
 }
 static void translate_quadstrip_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3399,7 +3628,7 @@ static void translate_quadstrip_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+3];
       (out+j+0)[1] = (uint)in[i+2];
       (out+j+0)[2] = (uint)in[i+0];
@@ -3410,6 +3639,7 @@ static void translate_quadstrip_ushort2uint_last2first(
 }
 static void translate_polygon_ushort2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3417,7 +3647,7 @@ static void translate_polygon_ushort2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -3425,6 +3655,7 @@ static void translate_polygon_ushort2uint_last2first(
 }
 static void translate_points_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3432,12 +3663,13 @@ static void translate_points_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3445,13 +3677,14 @@ static void translate_lines_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
    }
 }
 static void translate_linestrip_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3459,13 +3692,14 @@ static void translate_linestrip_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
 }
 static void translate_lineloop_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3473,7 +3707,7 @@ static void translate_lineloop_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
@@ -3482,6 +3716,7 @@ static void translate_lineloop_ushort2uint_last2last(
 }
 static void translate_tris_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3489,7 +3724,7 @@ static void translate_tris_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
       (out+i)[2] = (uint)in[i+2];
@@ -3497,6 +3732,7 @@ static void translate_tris_ushort2uint_last2last(
 }
 static void translate_tristrip_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3504,7 +3740,7 @@ static void translate_tristrip_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+(i&1)];
       (out+j)[1] = (uint)in[i+1-(i&1)];
       (out+j)[2] = (uint)in[i+2];
@@ -3512,6 +3748,7 @@ static void translate_tristrip_ushort2uint_last2last(
 }
 static void translate_trifan_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3519,7 +3756,7 @@ static void translate_trifan_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -3527,6 +3764,7 @@ static void translate_trifan_ushort2uint_last2last(
 }
 static void translate_quads_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3534,7 +3772,7 @@ static void translate_quads_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+1];
       (out+j+0)[2] = (uint)in[i+3];
@@ -3545,6 +3783,7 @@ static void translate_quads_ushort2uint_last2last(
 }
 static void translate_quadstrip_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3552,7 +3791,7 @@ static void translate_quadstrip_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+2];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+3];
@@ -3563,6 +3802,7 @@ static void translate_quadstrip_ushort2uint_last2last(
 }
 static void translate_polygon_ushort2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3570,7 +3810,7 @@ static void translate_polygon_ushort2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];
@@ -3578,6 +3818,7 @@ static void translate_polygon_ushort2uint_last2last(
 }
 static void translate_points_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3585,12 +3826,13 @@ static void translate_points_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3598,13 +3840,14 @@ static void translate_lines_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
    }
 }
 static void translate_linestrip_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3612,13 +3855,14 @@ static void translate_linestrip_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
 }
 static void translate_lineloop_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3626,7 +3870,7 @@ static void translate_lineloop_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
@@ -3635,6 +3879,7 @@ static void translate_lineloop_uint2ushort_first2first(
 }
 static void translate_tris_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3642,7 +3887,7 @@ static void translate_tris_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
       (out+i)[2] = (ushort)in[i+2];
@@ -3650,6 +3895,7 @@ static void translate_tris_uint2ushort_first2first(
 }
 static void translate_tristrip_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3657,7 +3903,7 @@ static void translate_tristrip_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1+(i&1)];
       (out+j)[2] = (ushort)in[i+2-(i&1)];
@@ -3665,6 +3911,7 @@ static void translate_tristrip_uint2ushort_first2first(
 }
 static void translate_trifan_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3672,7 +3919,7 @@ static void translate_trifan_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -3680,6 +3927,7 @@ static void translate_trifan_uint2ushort_first2first(
 }
 static void translate_quads_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3687,7 +3935,7 @@ static void translate_quads_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+1];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -3698,6 +3946,7 @@ static void translate_quads_uint2ushort_first2first(
 }
 static void translate_quadstrip_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3705,7 +3954,7 @@ static void translate_quadstrip_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+2];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -3716,6 +3965,7 @@ static void translate_quadstrip_uint2ushort_first2first(
 }
 static void translate_polygon_uint2ushort_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3723,7 +3973,7 @@ static void translate_polygon_uint2ushort_first2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -3731,6 +3981,7 @@ static void translate_polygon_uint2ushort_first2first(
 }
 static void translate_points_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3738,12 +3989,13 @@ static void translate_points_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3751,13 +4003,14 @@ static void translate_lines_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i];
    }
 }
 static void translate_linestrip_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3765,13 +4018,14 @@ static void translate_linestrip_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
 }
 static void translate_lineloop_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3779,7 +4033,7 @@ static void translate_lineloop_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
@@ -3788,6 +4042,7 @@ static void translate_lineloop_uint2ushort_first2last(
 }
 static void translate_tris_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3795,7 +4050,7 @@ static void translate_tris_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i+2];
       (out+i)[2] = (ushort)in[i];
@@ -3803,6 +4058,7 @@ static void translate_tris_uint2ushort_first2last(
 }
 static void translate_tristrip_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3810,7 +4066,7 @@ static void translate_tristrip_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1+(i&1)];
       (out+j)[1] = (ushort)in[i+2-(i&1)];
       (out+j)[2] = (ushort)in[i];
@@ -3818,6 +4074,7 @@ static void translate_tristrip_uint2ushort_first2last(
 }
 static void translate_trifan_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3825,7 +4082,7 @@ static void translate_trifan_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -3833,6 +4090,7 @@ static void translate_trifan_uint2ushort_first2last(
 }
 static void translate_quads_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3840,7 +4098,7 @@ static void translate_quads_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+1];
       (out+j+0)[1] = (ushort)in[i+3];
       (out+j+0)[2] = (ushort)in[i+0];
@@ -3851,6 +4109,7 @@ static void translate_quads_uint2ushort_first2last(
 }
 static void translate_quadstrip_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3858,7 +4117,7 @@ static void translate_quadstrip_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+3];
       (out+j+0)[2] = (ushort)in[i+2];
@@ -3869,6 +4128,7 @@ static void translate_quadstrip_uint2ushort_first2last(
 }
 static void translate_polygon_uint2ushort_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3876,7 +4136,7 @@ static void translate_polygon_uint2ushort_first2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -3884,6 +4144,7 @@ static void translate_polygon_uint2ushort_first2last(
 }
 static void translate_points_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3891,12 +4152,13 @@ static void translate_points_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3904,13 +4166,14 @@ static void translate_lines_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i+1];
       (out+i)[1] = (ushort)in[i];
    }
 }
 static void translate_linestrip_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3918,13 +4181,14 @@ static void translate_linestrip_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
 }
 static void translate_lineloop_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3932,7 +4196,7 @@ static void translate_lineloop_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i];
    }
@@ -3941,6 +4205,7 @@ static void translate_lineloop_uint2ushort_last2first(
 }
 static void translate_tris_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3948,7 +4213,7 @@ static void translate_tris_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i+2];
       (out+i)[1] = (ushort)in[i];
       (out+i)[2] = (ushort)in[i+1];
@@ -3956,6 +4221,7 @@ static void translate_tris_uint2ushort_last2first(
 }
 static void translate_tristrip_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3963,7 +4229,7 @@ static void translate_tristrip_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[i+(i&1)];
       (out+j)[2] = (ushort)in[i+1-(i&1)];
@@ -3971,6 +4237,7 @@ static void translate_tristrip_uint2ushort_last2first(
 }
 static void translate_trifan_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3978,7 +4245,7 @@ static void translate_trifan_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+2];
       (out+j)[1] = (ushort)in[0];
       (out+j)[2] = (ushort)in[i+1];
@@ -3986,6 +4253,7 @@ static void translate_trifan_uint2ushort_last2first(
 }
 static void translate_quads_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -3993,7 +4261,7 @@ static void translate_quads_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+3];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+1];
@@ -4004,6 +4272,7 @@ static void translate_quads_uint2ushort_last2first(
 }
 static void translate_quadstrip_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4011,7 +4280,7 @@ static void translate_quadstrip_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+3];
       (out+j+0)[1] = (ushort)in[i+2];
       (out+j+0)[2] = (ushort)in[i+0];
@@ -4022,6 +4291,7 @@ static void translate_quadstrip_uint2ushort_last2first(
 }
 static void translate_polygon_uint2ushort_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4029,7 +4299,7 @@ static void translate_polygon_uint2ushort_last2first(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -4037,6 +4307,7 @@ static void translate_polygon_uint2ushort_last2first(
 }
 static void translate_points_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4044,12 +4315,13 @@ static void translate_points_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (ushort)in[i];
    }
 }
 static void translate_lines_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4057,13 +4329,14 @@ static void translate_lines_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
    }
 }
 static void translate_linestrip_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4071,13 +4344,14 @@ static void translate_linestrip_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
 }
 static void translate_lineloop_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4085,7 +4359,7 @@ static void translate_lineloop_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (ushort)in[i];
       (out+j)[1] = (ushort)in[i+1];
    }
@@ -4094,6 +4368,7 @@ static void translate_lineloop_uint2ushort_last2last(
 }
 static void translate_tris_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4101,7 +4376,7 @@ static void translate_tris_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (ushort)in[i];
       (out+i)[1] = (ushort)in[i+1];
       (out+i)[2] = (ushort)in[i+2];
@@ -4109,6 +4384,7 @@ static void translate_tris_uint2ushort_last2last(
 }
 static void translate_tristrip_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4116,7 +4392,7 @@ static void translate_tristrip_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+(i&1)];
       (out+j)[1] = (ushort)in[i+1-(i&1)];
       (out+j)[2] = (ushort)in[i+2];
@@ -4124,6 +4400,7 @@ static void translate_tristrip_uint2ushort_last2last(
 }
 static void translate_trifan_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4131,7 +4408,7 @@ static void translate_trifan_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[0];
       (out+j)[1] = (ushort)in[i+1];
       (out+j)[2] = (ushort)in[i+2];
@@ -4139,6 +4416,7 @@ static void translate_trifan_uint2ushort_last2last(
 }
 static void translate_quads_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4146,7 +4424,7 @@ static void translate_quads_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (ushort)in[i+0];
       (out+j+0)[1] = (ushort)in[i+1];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -4157,6 +4435,7 @@ static void translate_quads_uint2ushort_last2last(
 }
 static void translate_quadstrip_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4164,7 +4443,7 @@ static void translate_quadstrip_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (ushort)in[i+2];
       (out+j+0)[1] = (ushort)in[i+0];
       (out+j+0)[2] = (ushort)in[i+3];
@@ -4175,6 +4454,7 @@ static void translate_quadstrip_uint2ushort_last2last(
 }
 static void translate_polygon_uint2ushort_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4182,7 +4462,7 @@ static void translate_polygon_uint2ushort_last2last(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (ushort)in[i+1];
       (out+j)[1] = (ushort)in[i+2];
       (out+j)[2] = (ushort)in[0];
@@ -4190,6 +4470,7 @@ static void translate_polygon_uint2ushort_last2last(
 }
 static void translate_points_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4197,12 +4478,13 @@ static void translate_points_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4210,13 +4492,14 @@ static void translate_lines_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
    }
 }
 static void translate_linestrip_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4224,13 +4507,14 @@ static void translate_linestrip_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
 }
 static void translate_lineloop_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4238,7 +4522,7 @@ static void translate_lineloop_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
@@ -4247,6 +4531,7 @@ static void translate_lineloop_uint2uint_first2first(
 }
 static void translate_tris_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4254,7 +4539,7 @@ static void translate_tris_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
       (out+i)[2] = (uint)in[i+2];
@@ -4262,6 +4547,7 @@ static void translate_tris_uint2uint_first2first(
 }
 static void translate_tristrip_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4269,7 +4555,7 @@ static void translate_tristrip_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1+(i&1)];
       (out+j)[2] = (uint)in[i+2-(i&1)];
@@ -4277,6 +4563,7 @@ static void translate_tristrip_uint2uint_first2first(
 }
 static void translate_trifan_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4284,7 +4571,7 @@ static void translate_trifan_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -4292,6 +4579,7 @@ static void translate_trifan_uint2uint_first2first(
 }
 static void translate_quads_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4299,7 +4587,7 @@ static void translate_quads_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+1];
       (out+j+0)[2] = (uint)in[i+3];
@@ -4310,6 +4598,7 @@ static void translate_quads_uint2uint_first2first(
 }
 static void translate_quadstrip_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4317,7 +4606,7 @@ static void translate_quadstrip_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+2];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+3];
@@ -4328,6 +4617,7 @@ static void translate_quadstrip_uint2uint_first2first(
 }
 static void translate_polygon_uint2uint_first2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4335,7 +4625,7 @@ static void translate_polygon_uint2uint_first2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -4343,6 +4633,7 @@ static void translate_polygon_uint2uint_first2first(
 }
 static void translate_points_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4350,12 +4641,13 @@ static void translate_points_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4363,13 +4655,14 @@ static void translate_lines_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i];
    }
 }
 static void translate_linestrip_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4377,13 +4670,14 @@ static void translate_linestrip_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
 }
 static void translate_lineloop_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4391,7 +4685,7 @@ static void translate_lineloop_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
@@ -4400,6 +4694,7 @@ static void translate_lineloop_uint2uint_first2last(
 }
 static void translate_tris_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4407,7 +4702,7 @@ static void translate_tris_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i+2];
       (out+i)[2] = (uint)in[i];
@@ -4415,6 +4710,7 @@ static void translate_tris_uint2uint_first2last(
 }
 static void translate_tristrip_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4422,7 +4718,7 @@ static void translate_tristrip_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1+(i&1)];
       (out+j)[1] = (uint)in[i+2-(i&1)];
       (out+j)[2] = (uint)in[i];
@@ -4430,6 +4726,7 @@ static void translate_tristrip_uint2uint_first2last(
 }
 static void translate_trifan_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4437,7 +4734,7 @@ static void translate_trifan_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];
@@ -4445,6 +4742,7 @@ static void translate_trifan_uint2uint_first2last(
 }
 static void translate_quads_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4452,7 +4750,7 @@ static void translate_quads_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+1];
       (out+j+0)[1] = (uint)in[i+3];
       (out+j+0)[2] = (uint)in[i+0];
@@ -4463,6 +4761,7 @@ static void translate_quads_uint2uint_first2last(
 }
 static void translate_quadstrip_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4470,7 +4769,7 @@ static void translate_quadstrip_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+3];
       (out+j+0)[2] = (uint)in[i+2];
@@ -4481,6 +4780,7 @@ static void translate_quadstrip_uint2uint_first2last(
 }
 static void translate_polygon_uint2uint_first2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4488,7 +4788,7 @@ static void translate_polygon_uint2uint_first2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];
@@ -4496,6 +4796,7 @@ static void translate_polygon_uint2uint_first2last(
 }
 static void translate_points_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4503,12 +4804,13 @@ static void translate_points_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4516,13 +4818,14 @@ static void translate_lines_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i+1];
       (out+i)[1] = (uint)in[i];
    }
 }
 static void translate_linestrip_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4530,13 +4833,14 @@ static void translate_linestrip_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
 }
 static void translate_lineloop_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4544,7 +4848,7 @@ static void translate_lineloop_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i];
    }
@@ -4553,6 +4857,7 @@ static void translate_lineloop_uint2uint_last2first(
 }
 static void translate_tris_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4560,7 +4865,7 @@ static void translate_tris_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i+2];
       (out+i)[1] = (uint)in[i];
       (out+i)[2] = (uint)in[i+1];
@@ -4568,6 +4873,7 @@ static void translate_tris_uint2uint_last2first(
 }
 static void translate_tristrip_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4575,7 +4881,7 @@ static void translate_tristrip_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[i+(i&1)];
       (out+j)[2] = (uint)in[i+1-(i&1)];
@@ -4583,6 +4889,7 @@ static void translate_tristrip_uint2uint_last2first(
 }
 static void translate_trifan_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4590,7 +4897,7 @@ static void translate_trifan_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+2];
       (out+j)[1] = (uint)in[0];
       (out+j)[2] = (uint)in[i+1];
@@ -4598,6 +4905,7 @@ static void translate_trifan_uint2uint_last2first(
 }
 static void translate_quads_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4605,7 +4913,7 @@ static void translate_quads_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+3];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+1];
@@ -4616,6 +4924,7 @@ static void translate_quads_uint2uint_last2first(
 }
 static void translate_quadstrip_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4623,7 +4932,7 @@ static void translate_quadstrip_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+3];
       (out+j+0)[1] = (uint)in[i+2];
       (out+j+0)[2] = (uint)in[i+0];
@@ -4634,6 +4943,7 @@ static void translate_quadstrip_uint2uint_last2first(
 }
 static void translate_polygon_uint2uint_last2first(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4641,7 +4951,7 @@ static void translate_polygon_uint2uint_last2first(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -4649,6 +4959,7 @@ static void translate_polygon_uint2uint_last2first(
 }
 static void translate_points_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4656,12 +4967,13 @@ static void translate_points_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i++) { 
+  for (i = start; i < (nr+start); i++) { 
       (out+i)[0] = (uint)in[i];
    }
 }
 static void translate_lines_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4669,13 +4981,14 @@ static void translate_lines_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=2) { 
+  for (i = start; i < (nr+start); i+=2) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
    }
 }
 static void translate_linestrip_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4683,13 +4996,14 @@ static void translate_linestrip_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=2, i++) { 
+  for (i = start, j = 0; j < nr; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
 }
 static void translate_lineloop_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4697,7 +5011,7 @@ static void translate_lineloop_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr - 2; j+=2, i++) { 
+  for (i = start, j = 0; j < nr - 2; j+=2, i++) { 
       (out+j)[0] = (uint)in[i];
       (out+j)[1] = (uint)in[i+1];
    }
@@ -4706,6 +5020,7 @@ static void translate_lineloop_uint2uint_last2last(
 }
 static void translate_tris_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4713,7 +5028,7 @@ static void translate_tris_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (i = 0; i < nr; i+=3) { 
+  for (i = start; i < (nr+start); i+=3) { 
       (out+i)[0] = (uint)in[i];
       (out+i)[1] = (uint)in[i+1];
       (out+i)[2] = (uint)in[i+2];
@@ -4721,6 +5036,7 @@ static void translate_tris_uint2uint_last2last(
 }
 static void translate_tristrip_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4728,7 +5044,7 @@ static void translate_tristrip_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+(i&1)];
       (out+j)[1] = (uint)in[i+1-(i&1)];
       (out+j)[2] = (uint)in[i+2];
@@ -4736,6 +5052,7 @@ static void translate_tristrip_uint2uint_last2last(
 }
 static void translate_trifan_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4743,7 +5060,7 @@ static void translate_trifan_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[0];
       (out+j)[1] = (uint)in[i+1];
       (out+j)[2] = (uint)in[i+2];
@@ -4751,6 +5068,7 @@ static void translate_trifan_uint2uint_last2last(
 }
 static void translate_quads_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4758,7 +5076,7 @@ static void translate_quads_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=4) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=4) { 
       (out+j+0)[0] = (uint)in[i+0];
       (out+j+0)[1] = (uint)in[i+1];
       (out+j+0)[2] = (uint)in[i+3];
@@ -4769,6 +5087,7 @@ static void translate_quads_uint2uint_last2last(
 }
 static void translate_quadstrip_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4776,7 +5095,7 @@ static void translate_quadstrip_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i+=2) { 
+  for (i = start, j = 0; j < nr; j+=6, i+=2) { 
       (out+j+0)[0] = (uint)in[i+2];
       (out+j+0)[1] = (uint)in[i+0];
       (out+j+0)[2] = (uint)in[i+3];
@@ -4787,6 +5106,7 @@ static void translate_quadstrip_uint2uint_last2last(
 }
 static void translate_polygon_uint2uint_last2last(
     const void * _in,
+    unsigned start,
     unsigned nr,
     void *_out )
 {
@@ -4794,7 +5114,7 @@ static void translate_polygon_uint2uint_last2last(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=3, i++) { 
+  for (i = start, j = 0; j < nr; j+=3, i++) { 
       (out+j)[0] = (uint)in[i+1];
       (out+j)[1] = (uint)in[i+2];
       (out+j)[2] = (uint)in[0];

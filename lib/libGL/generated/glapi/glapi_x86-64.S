@@ -23168,21 +23168,19 @@ GL_PREFIX(VertexAttribDivisor):
 	.size	GL_PREFIX(VertexAttribDivisor), .-GL_PREFIX(VertexAttribDivisor)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(BindProgramARB)
-	.type	GL_PREFIX(BindProgramARB), @function
-GL_PREFIX(BindProgramARB):
+	.globl	GL_PREFIX(MinSampleShading)
+	.type	GL_PREFIX(MinSampleShading), @function
+GL_PREFIX(MinSampleShading):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	4960(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$8, %rsp
+	movq	%xmm0, (%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	(%rsp), %xmm0
+	addq	$8, %rsp
 	movq	4960(%rax), %r11
 	jmp	*%r11
 #else
@@ -23192,6 +23190,41 @@ GL_PREFIX(BindProgramARB):
 	movq	4960(%rax), %r11
 	jmp	*%r11
 1:
+	subq	$8, %rsp
+	movq	%xmm0, (%rsp)
+	call	_glapi_get_dispatch
+	movq	(%rsp), %xmm0
+	addq	$8, %rsp
+	movq	4960(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(MinSampleShading), .-GL_PREFIX(MinSampleShading)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindProgramARB)
+	.type	GL_PREFIX(BindProgramARB), @function
+GL_PREFIX(BindProgramARB):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	4968(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	4968(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	4968(%rax), %r11
+	jmp	*%r11
+1:
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rbp
@@ -23199,7 +23232,7 @@ GL_PREFIX(BindProgramARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	4960(%rax), %r11
+	movq	4968(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BindProgramARB), .-GL_PREFIX(BindProgramARB)
@@ -23210,7 +23243,7 @@ GL_PREFIX(BindProgramARB):
 GL_PREFIX(DeleteProgramsARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	4968(%rax), %r11
+	movq	4976(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23220,13 +23253,13 @@ GL_PREFIX(DeleteProgramsARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	4968(%rax), %r11
+	movq	4976(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	4968(%rax), %r11
+	movq	4976(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23236,7 +23269,7 @@ GL_PREFIX(DeleteProgramsARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	4968(%rax), %r11
+	movq	4976(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DeleteProgramsARB), .-GL_PREFIX(DeleteProgramsARB)
@@ -23247,7 +23280,7 @@ GL_PREFIX(DeleteProgramsARB):
 GL_PREFIX(GenProgramsARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	4976(%rax), %r11
+	movq	4984(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23257,13 +23290,13 @@ GL_PREFIX(GenProgramsARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	4976(%rax), %r11
+	movq	4984(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	4976(%rax), %r11
+	movq	4984(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23273,7 +23306,7 @@ GL_PREFIX(GenProgramsARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	4976(%rax), %r11
+	movq	4984(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GenProgramsARB), .-GL_PREFIX(GenProgramsARB)
@@ -23284,7 +23317,7 @@ GL_PREFIX(GenProgramsARB):
 GL_PREFIX(GetProgramEnvParameterdvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	4984(%rax), %r11
+	movq	4992(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23294,13 +23327,13 @@ GL_PREFIX(GetProgramEnvParameterdvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	4984(%rax), %r11
+	movq	4992(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	4984(%rax), %r11
+	movq	4992(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23310,7 +23343,7 @@ GL_PREFIX(GetProgramEnvParameterdvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	4984(%rax), %r11
+	movq	4992(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetProgramEnvParameterdvARB), .-GL_PREFIX(GetProgramEnvParameterdvARB)
@@ -23321,7 +23354,7 @@ GL_PREFIX(GetProgramEnvParameterdvARB):
 GL_PREFIX(GetProgramEnvParameterfvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	4992(%rax), %r11
+	movq	5000(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23331,13 +23364,13 @@ GL_PREFIX(GetProgramEnvParameterfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	4992(%rax), %r11
+	movq	5000(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	4992(%rax), %r11
+	movq	5000(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23347,7 +23380,7 @@ GL_PREFIX(GetProgramEnvParameterfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	4992(%rax), %r11
+	movq	5000(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetProgramEnvParameterfvARB), .-GL_PREFIX(GetProgramEnvParameterfvARB)
@@ -23358,7 +23391,7 @@ GL_PREFIX(GetProgramEnvParameterfvARB):
 GL_PREFIX(GetProgramLocalParameterdvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5000(%rax), %r11
+	movq	5008(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23368,13 +23401,13 @@ GL_PREFIX(GetProgramLocalParameterdvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5000(%rax), %r11
+	movq	5008(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5000(%rax), %r11
+	movq	5008(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23384,7 +23417,7 @@ GL_PREFIX(GetProgramLocalParameterdvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5000(%rax), %r11
+	movq	5008(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetProgramLocalParameterdvARB), .-GL_PREFIX(GetProgramLocalParameterdvARB)
@@ -23395,7 +23428,7 @@ GL_PREFIX(GetProgramLocalParameterdvARB):
 GL_PREFIX(GetProgramLocalParameterfvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5008(%rax), %r11
+	movq	5016(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23405,13 +23438,13 @@ GL_PREFIX(GetProgramLocalParameterfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5008(%rax), %r11
+	movq	5016(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5008(%rax), %r11
+	movq	5016(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23421,7 +23454,7 @@ GL_PREFIX(GetProgramLocalParameterfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5008(%rax), %r11
+	movq	5016(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetProgramLocalParameterfvARB), .-GL_PREFIX(GetProgramLocalParameterfvARB)
@@ -23432,7 +23465,7 @@ GL_PREFIX(GetProgramLocalParameterfvARB):
 GL_PREFIX(GetProgramStringARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5016(%rax), %r11
+	movq	5024(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23442,13 +23475,13 @@ GL_PREFIX(GetProgramStringARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5016(%rax), %r11
+	movq	5024(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5016(%rax), %r11
+	movq	5024(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23458,7 +23491,7 @@ GL_PREFIX(GetProgramStringARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5016(%rax), %r11
+	movq	5024(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetProgramStringARB), .-GL_PREFIX(GetProgramStringARB)
@@ -23469,7 +23502,7 @@ GL_PREFIX(GetProgramStringARB):
 GL_PREFIX(GetProgramivARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5024(%rax), %r11
+	movq	5032(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23479,13 +23512,13 @@ GL_PREFIX(GetProgramivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5024(%rax), %r11
+	movq	5032(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5024(%rax), %r11
+	movq	5032(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23495,7 +23528,7 @@ GL_PREFIX(GetProgramivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5024(%rax), %r11
+	movq	5032(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetProgramivARB), .-GL_PREFIX(GetProgramivARB)
@@ -23506,25 +23539,25 @@ GL_PREFIX(GetProgramivARB):
 GL_PREFIX(IsProgramARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5032(%rax), %r11
+	movq	5040(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5032(%rax), %r11
+	movq	5040(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5032(%rax), %r11
+	movq	5040(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5032(%rax), %r11
+	movq	5040(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(IsProgramARB), .-GL_PREFIX(IsProgramARB)
@@ -23535,7 +23568,7 @@ GL_PREFIX(IsProgramARB):
 GL_PREFIX(ProgramEnvParameter4dARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5040(%rax), %r11
+	movq	5048(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$56, %rsp
@@ -23553,13 +23586,13 @@ GL_PREFIX(ProgramEnvParameter4dARB):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$56, %rsp
-	movq	5040(%rax), %r11
+	movq	5048(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5040(%rax), %r11
+	movq	5048(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$56, %rsp
@@ -23577,7 +23610,7 @@ GL_PREFIX(ProgramEnvParameter4dARB):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$56, %rsp
-	movq	5040(%rax), %r11
+	movq	5048(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramEnvParameter4dARB), .-GL_PREFIX(ProgramEnvParameter4dARB)
@@ -23588,7 +23621,7 @@ GL_PREFIX(ProgramEnvParameter4dARB):
 GL_PREFIX(ProgramEnvParameter4dvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5048(%rax), %r11
+	movq	5056(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23598,13 +23631,13 @@ GL_PREFIX(ProgramEnvParameter4dvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5048(%rax), %r11
+	movq	5056(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5048(%rax), %r11
+	movq	5056(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23614,7 +23647,7 @@ GL_PREFIX(ProgramEnvParameter4dvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5048(%rax), %r11
+	movq	5056(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramEnvParameter4dvARB), .-GL_PREFIX(ProgramEnvParameter4dvARB)
@@ -23625,7 +23658,7 @@ GL_PREFIX(ProgramEnvParameter4dvARB):
 GL_PREFIX(ProgramEnvParameter4fARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5056(%rax), %r11
+	movq	5064(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$56, %rsp
@@ -23643,13 +23676,13 @@ GL_PREFIX(ProgramEnvParameter4fARB):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$56, %rsp
-	movq	5056(%rax), %r11
+	movq	5064(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5056(%rax), %r11
+	movq	5064(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$56, %rsp
@@ -23667,7 +23700,7 @@ GL_PREFIX(ProgramEnvParameter4fARB):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$56, %rsp
-	movq	5056(%rax), %r11
+	movq	5064(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramEnvParameter4fARB), .-GL_PREFIX(ProgramEnvParameter4fARB)
@@ -23678,7 +23711,7 @@ GL_PREFIX(ProgramEnvParameter4fARB):
 GL_PREFIX(ProgramEnvParameter4fvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5064(%rax), %r11
+	movq	5072(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23688,13 +23721,13 @@ GL_PREFIX(ProgramEnvParameter4fvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5064(%rax), %r11
+	movq	5072(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5064(%rax), %r11
+	movq	5072(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23704,7 +23737,7 @@ GL_PREFIX(ProgramEnvParameter4fvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5064(%rax), %r11
+	movq	5072(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramEnvParameter4fvARB), .-GL_PREFIX(ProgramEnvParameter4fvARB)
@@ -23715,7 +23748,7 @@ GL_PREFIX(ProgramEnvParameter4fvARB):
 GL_PREFIX(ProgramLocalParameter4dARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5072(%rax), %r11
+	movq	5080(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$56, %rsp
@@ -23733,13 +23766,13 @@ GL_PREFIX(ProgramLocalParameter4dARB):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$56, %rsp
-	movq	5072(%rax), %r11
+	movq	5080(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5072(%rax), %r11
+	movq	5080(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$56, %rsp
@@ -23757,7 +23790,7 @@ GL_PREFIX(ProgramLocalParameter4dARB):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$56, %rsp
-	movq	5072(%rax), %r11
+	movq	5080(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramLocalParameter4dARB), .-GL_PREFIX(ProgramLocalParameter4dARB)
@@ -23768,7 +23801,7 @@ GL_PREFIX(ProgramLocalParameter4dARB):
 GL_PREFIX(ProgramLocalParameter4dvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5080(%rax), %r11
+	movq	5088(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23778,13 +23811,13 @@ GL_PREFIX(ProgramLocalParameter4dvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5080(%rax), %r11
+	movq	5088(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5080(%rax), %r11
+	movq	5088(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23794,7 +23827,7 @@ GL_PREFIX(ProgramLocalParameter4dvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5080(%rax), %r11
+	movq	5088(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramLocalParameter4dvARB), .-GL_PREFIX(ProgramLocalParameter4dvARB)
@@ -23805,7 +23838,7 @@ GL_PREFIX(ProgramLocalParameter4dvARB):
 GL_PREFIX(ProgramLocalParameter4fARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5088(%rax), %r11
+	movq	5096(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$56, %rsp
@@ -23823,13 +23856,13 @@ GL_PREFIX(ProgramLocalParameter4fARB):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$56, %rsp
-	movq	5088(%rax), %r11
+	movq	5096(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5088(%rax), %r11
+	movq	5096(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$56, %rsp
@@ -23847,7 +23880,7 @@ GL_PREFIX(ProgramLocalParameter4fARB):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$56, %rsp
-	movq	5088(%rax), %r11
+	movq	5096(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramLocalParameter4fARB), .-GL_PREFIX(ProgramLocalParameter4fARB)
@@ -23858,7 +23891,7 @@ GL_PREFIX(ProgramLocalParameter4fARB):
 GL_PREFIX(ProgramLocalParameter4fvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5096(%rax), %r11
+	movq	5104(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23868,13 +23901,13 @@ GL_PREFIX(ProgramLocalParameter4fvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5096(%rax), %r11
+	movq	5104(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5096(%rax), %r11
+	movq	5104(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23884,7 +23917,7 @@ GL_PREFIX(ProgramLocalParameter4fvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5096(%rax), %r11
+	movq	5104(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramLocalParameter4fvARB), .-GL_PREFIX(ProgramLocalParameter4fvARB)
@@ -23895,7 +23928,7 @@ GL_PREFIX(ProgramLocalParameter4fvARB):
 GL_PREFIX(ProgramStringARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5104(%rax), %r11
+	movq	5112(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23909,13 +23942,13 @@ GL_PREFIX(ProgramStringARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5104(%rax), %r11
+	movq	5112(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5104(%rax), %r11
+	movq	5112(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -23929,7 +23962,7 @@ GL_PREFIX(ProgramStringARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5104(%rax), %r11
+	movq	5112(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramStringARB), .-GL_PREFIX(ProgramStringARB)
@@ -23940,7 +23973,7 @@ GL_PREFIX(ProgramStringARB):
 GL_PREFIX(VertexAttrib1fARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5112(%rax), %r11
+	movq	5120(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$24, %rsp
@@ -23950,13 +23983,13 @@ GL_PREFIX(VertexAttrib1fARB):
 	movq	8(%rsp), %xmm0
 	movq	(%rsp), %rdi
 	addq	$24, %rsp
-	movq	5112(%rax), %r11
+	movq	5120(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5112(%rax), %r11
+	movq	5120(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$24, %rsp
@@ -23966,7 +23999,7 @@ GL_PREFIX(VertexAttrib1fARB):
 	movq	8(%rsp), %xmm0
 	movq	(%rsp), %rdi
 	addq	$24, %rsp
-	movq	5112(%rax), %r11
+	movq	5120(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttrib1fARB), .-GL_PREFIX(VertexAttrib1fARB)
@@ -23977,7 +24010,7 @@ GL_PREFIX(VertexAttrib1fARB):
 GL_PREFIX(VertexAttrib1fvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5120(%rax), %r11
+	movq	5128(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -23987,13 +24020,13 @@ GL_PREFIX(VertexAttrib1fvARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5120(%rax), %r11
+	movq	5128(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5120(%rax), %r11
+	movq	5128(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24003,7 +24036,7 @@ GL_PREFIX(VertexAttrib1fvARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5120(%rax), %r11
+	movq	5128(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttrib1fvARB), .-GL_PREFIX(VertexAttrib1fvARB)
@@ -24014,7 +24047,7 @@ GL_PREFIX(VertexAttrib1fvARB):
 GL_PREFIX(VertexAttrib2fARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5128(%rax), %r11
+	movq	5136(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$24, %rsp
@@ -24026,13 +24059,13 @@ GL_PREFIX(VertexAttrib2fARB):
 	movq	8(%rsp), %xmm0
 	movq	(%rsp), %rdi
 	addq	$24, %rsp
-	movq	5128(%rax), %r11
+	movq	5136(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5128(%rax), %r11
+	movq	5136(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$24, %rsp
@@ -24044,7 +24077,7 @@ GL_PREFIX(VertexAttrib2fARB):
 	movq	8(%rsp), %xmm0
 	movq	(%rsp), %rdi
 	addq	$24, %rsp
-	movq	5128(%rax), %r11
+	movq	5136(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttrib2fARB), .-GL_PREFIX(VertexAttrib2fARB)
@@ -24055,7 +24088,7 @@ GL_PREFIX(VertexAttrib2fARB):
 GL_PREFIX(VertexAttrib2fvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5136(%rax), %r11
+	movq	5144(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24065,13 +24098,13 @@ GL_PREFIX(VertexAttrib2fvARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5136(%rax), %r11
+	movq	5144(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5136(%rax), %r11
+	movq	5144(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24081,7 +24114,7 @@ GL_PREFIX(VertexAttrib2fvARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5136(%rax), %r11
+	movq	5144(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttrib2fvARB), .-GL_PREFIX(VertexAttrib2fvARB)
@@ -24092,7 +24125,7 @@ GL_PREFIX(VertexAttrib2fvARB):
 GL_PREFIX(VertexAttrib3fARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5144(%rax), %r11
+	movq	5152(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$40, %rsp
@@ -24106,13 +24139,13 @@ GL_PREFIX(VertexAttrib3fARB):
 	movq	8(%rsp), %xmm0
 	movq	(%rsp), %rdi
 	addq	$40, %rsp
-	movq	5144(%rax), %r11
+	movq	5152(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5144(%rax), %r11
+	movq	5152(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$40, %rsp
@@ -24126,7 +24159,7 @@ GL_PREFIX(VertexAttrib3fARB):
 	movq	8(%rsp), %xmm0
 	movq	(%rsp), %rdi
 	addq	$40, %rsp
-	movq	5144(%rax), %r11
+	movq	5152(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttrib3fARB), .-GL_PREFIX(VertexAttrib3fARB)
@@ -24137,7 +24170,7 @@ GL_PREFIX(VertexAttrib3fARB):
 GL_PREFIX(VertexAttrib3fvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5152(%rax), %r11
+	movq	5160(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24147,13 +24180,13 @@ GL_PREFIX(VertexAttrib3fvARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5152(%rax), %r11
+	movq	5160(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5152(%rax), %r11
+	movq	5160(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24163,7 +24196,7 @@ GL_PREFIX(VertexAttrib3fvARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5152(%rax), %r11
+	movq	5160(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttrib3fvARB), .-GL_PREFIX(VertexAttrib3fvARB)
@@ -24174,7 +24207,7 @@ GL_PREFIX(VertexAttrib3fvARB):
 GL_PREFIX(VertexAttrib4fARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5160(%rax), %r11
+	movq	5168(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$40, %rsp
@@ -24190,13 +24223,13 @@ GL_PREFIX(VertexAttrib4fARB):
 	movq	8(%rsp), %xmm0
 	movq	(%rsp), %rdi
 	addq	$40, %rsp
-	movq	5160(%rax), %r11
+	movq	5168(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5160(%rax), %r11
+	movq	5168(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$40, %rsp
@@ -24212,7 +24245,7 @@ GL_PREFIX(VertexAttrib4fARB):
 	movq	8(%rsp), %xmm0
 	movq	(%rsp), %rdi
 	addq	$40, %rsp
-	movq	5160(%rax), %r11
+	movq	5168(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttrib4fARB), .-GL_PREFIX(VertexAttrib4fARB)
@@ -24223,7 +24256,7 @@ GL_PREFIX(VertexAttrib4fARB):
 GL_PREFIX(VertexAttrib4fvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5168(%rax), %r11
+	movq	5176(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24233,13 +24266,13 @@ GL_PREFIX(VertexAttrib4fvARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5168(%rax), %r11
+	movq	5176(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5168(%rax), %r11
+	movq	5176(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24249,7 +24282,7 @@ GL_PREFIX(VertexAttrib4fvARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5168(%rax), %r11
+	movq	5176(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttrib4fvARB), .-GL_PREFIX(VertexAttrib4fvARB)
@@ -24260,7 +24293,7 @@ GL_PREFIX(VertexAttrib4fvARB):
 GL_PREFIX(AttachObjectARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5176(%rax), %r11
+	movq	5184(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24270,13 +24303,13 @@ GL_PREFIX(AttachObjectARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5176(%rax), %r11
+	movq	5184(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5176(%rax), %r11
+	movq	5184(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24286,7 +24319,7 @@ GL_PREFIX(AttachObjectARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5176(%rax), %r11
+	movq	5184(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(AttachObjectARB), .-GL_PREFIX(AttachObjectARB)
@@ -24297,25 +24330,25 @@ GL_PREFIX(AttachObjectARB):
 GL_PREFIX(CreateProgramObjectARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5184(%rax), %r11
+	movq	5192(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	movq	5184(%rax), %r11
+	movq	5192(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5184(%rax), %r11
+	movq	5192(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	movq	5184(%rax), %r11
+	movq	5192(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(CreateProgramObjectARB), .-GL_PREFIX(CreateProgramObjectARB)
@@ -24326,25 +24359,25 @@ GL_PREFIX(CreateProgramObjectARB):
 GL_PREFIX(CreateShaderObjectARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5192(%rax), %r11
+	movq	5200(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5192(%rax), %r11
+	movq	5200(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5192(%rax), %r11
+	movq	5200(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5192(%rax), %r11
+	movq	5200(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(CreateShaderObjectARB), .-GL_PREFIX(CreateShaderObjectARB)
@@ -24355,25 +24388,25 @@ GL_PREFIX(CreateShaderObjectARB):
 GL_PREFIX(DeleteObjectARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5200(%rax), %r11
+	movq	5208(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5200(%rax), %r11
+	movq	5208(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5200(%rax), %r11
+	movq	5208(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5200(%rax), %r11
+	movq	5208(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DeleteObjectARB), .-GL_PREFIX(DeleteObjectARB)
@@ -24384,7 +24417,7 @@ GL_PREFIX(DeleteObjectARB):
 GL_PREFIX(DetachObjectARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5208(%rax), %r11
+	movq	5216(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24394,13 +24427,13 @@ GL_PREFIX(DetachObjectARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5208(%rax), %r11
+	movq	5216(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5208(%rax), %r11
+	movq	5216(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24410,7 +24443,7 @@ GL_PREFIX(DetachObjectARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5208(%rax), %r11
+	movq	5216(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DetachObjectARB), .-GL_PREFIX(DetachObjectARB)
@@ -24421,7 +24454,7 @@ GL_PREFIX(DetachObjectARB):
 GL_PREFIX(GetAttachedObjectsARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5216(%rax), %r11
+	movq	5224(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24435,13 +24468,13 @@ GL_PREFIX(GetAttachedObjectsARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5216(%rax), %r11
+	movq	5224(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5216(%rax), %r11
+	movq	5224(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24455,7 +24488,7 @@ GL_PREFIX(GetAttachedObjectsARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5216(%rax), %r11
+	movq	5224(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetAttachedObjectsARB), .-GL_PREFIX(GetAttachedObjectsARB)
@@ -24466,25 +24499,25 @@ GL_PREFIX(GetAttachedObjectsARB):
 GL_PREFIX(GetHandleARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5224(%rax), %r11
+	movq	5232(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5224(%rax), %r11
+	movq	5232(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5224(%rax), %r11
+	movq	5232(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5224(%rax), %r11
+	movq	5232(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetHandleARB), .-GL_PREFIX(GetHandleARB)
@@ -24495,7 +24528,7 @@ GL_PREFIX(GetHandleARB):
 GL_PREFIX(GetInfoLogARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5232(%rax), %r11
+	movq	5240(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24509,13 +24542,13 @@ GL_PREFIX(GetInfoLogARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5232(%rax), %r11
+	movq	5240(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5232(%rax), %r11
+	movq	5240(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24529,7 +24562,7 @@ GL_PREFIX(GetInfoLogARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5232(%rax), %r11
+	movq	5240(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetInfoLogARB), .-GL_PREFIX(GetInfoLogARB)
@@ -24540,7 +24573,7 @@ GL_PREFIX(GetInfoLogARB):
 GL_PREFIX(GetObjectParameterfvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5240(%rax), %r11
+	movq	5248(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24550,13 +24583,13 @@ GL_PREFIX(GetObjectParameterfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5240(%rax), %r11
+	movq	5248(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5240(%rax), %r11
+	movq	5248(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24566,7 +24599,7 @@ GL_PREFIX(GetObjectParameterfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5240(%rax), %r11
+	movq	5248(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetObjectParameterfvARB), .-GL_PREFIX(GetObjectParameterfvARB)
@@ -24577,7 +24610,7 @@ GL_PREFIX(GetObjectParameterfvARB):
 GL_PREFIX(GetObjectParameterivARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5248(%rax), %r11
+	movq	5256(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24587,13 +24620,13 @@ GL_PREFIX(GetObjectParameterivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5248(%rax), %r11
+	movq	5256(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5248(%rax), %r11
+	movq	5256(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24603,7 +24636,7 @@ GL_PREFIX(GetObjectParameterivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5248(%rax), %r11
+	movq	5256(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetObjectParameterivARB), .-GL_PREFIX(GetObjectParameterivARB)
@@ -24614,7 +24647,7 @@ GL_PREFIX(GetObjectParameterivARB):
 GL_PREFIX(DrawArraysInstancedARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5256(%rax), %r11
+	movq	5264(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24628,13 +24661,13 @@ GL_PREFIX(DrawArraysInstancedARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5256(%rax), %r11
+	movq	5264(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5256(%rax), %r11
+	movq	5264(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24648,7 +24681,7 @@ GL_PREFIX(DrawArraysInstancedARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5256(%rax), %r11
+	movq	5264(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawArraysInstancedARB), .-GL_PREFIX(DrawArraysInstancedARB)
@@ -24659,7 +24692,7 @@ GL_PREFIX(DrawArraysInstancedARB):
 GL_PREFIX(DrawElementsInstancedARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5264(%rax), %r11
+	movq	5272(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24673,13 +24706,13 @@ GL_PREFIX(DrawElementsInstancedARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5264(%rax), %r11
+	movq	5272(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5264(%rax), %r11
+	movq	5272(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24693,7 +24726,7 @@ GL_PREFIX(DrawElementsInstancedARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5264(%rax), %r11
+	movq	5272(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawElementsInstancedARB), .-GL_PREFIX(DrawElementsInstancedARB)
@@ -24704,7 +24737,7 @@ GL_PREFIX(DrawElementsInstancedARB):
 GL_PREFIX(BindFramebuffer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5272(%rax), %r11
+	movq	5280(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24714,13 +24747,13 @@ GL_PREFIX(BindFramebuffer):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5272(%rax), %r11
+	movq	5280(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5272(%rax), %r11
+	movq	5280(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24730,7 +24763,7 @@ GL_PREFIX(BindFramebuffer):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5272(%rax), %r11
+	movq	5280(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BindFramebuffer), .-GL_PREFIX(BindFramebuffer)
@@ -24741,7 +24774,7 @@ GL_PREFIX(BindFramebuffer):
 GL_PREFIX(BindRenderbuffer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5280(%rax), %r11
+	movq	5288(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24751,13 +24784,13 @@ GL_PREFIX(BindRenderbuffer):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5280(%rax), %r11
+	movq	5288(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5280(%rax), %r11
+	movq	5288(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24767,7 +24800,7 @@ GL_PREFIX(BindRenderbuffer):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5280(%rax), %r11
+	movq	5288(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BindRenderbuffer), .-GL_PREFIX(BindRenderbuffer)
@@ -24778,7 +24811,7 @@ GL_PREFIX(BindRenderbuffer):
 GL_PREFIX(BlitFramebuffer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5288(%rax), %r11
+	movq	5296(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24796,13 +24829,13 @@ GL_PREFIX(BlitFramebuffer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5288(%rax), %r11
+	movq	5296(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5288(%rax), %r11
+	movq	5296(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24820,7 +24853,7 @@ GL_PREFIX(BlitFramebuffer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5288(%rax), %r11
+	movq	5296(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BlitFramebuffer), .-GL_PREFIX(BlitFramebuffer)
@@ -24831,25 +24864,25 @@ GL_PREFIX(BlitFramebuffer):
 GL_PREFIX(CheckFramebufferStatus):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5296(%rax), %r11
+	movq	5304(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5296(%rax), %r11
+	movq	5304(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5296(%rax), %r11
+	movq	5304(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5296(%rax), %r11
+	movq	5304(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(CheckFramebufferStatus), .-GL_PREFIX(CheckFramebufferStatus)
@@ -24860,7 +24893,7 @@ GL_PREFIX(CheckFramebufferStatus):
 GL_PREFIX(DeleteFramebuffers):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5304(%rax), %r11
+	movq	5312(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24870,13 +24903,13 @@ GL_PREFIX(DeleteFramebuffers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5304(%rax), %r11
+	movq	5312(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5304(%rax), %r11
+	movq	5312(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24886,7 +24919,7 @@ GL_PREFIX(DeleteFramebuffers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5304(%rax), %r11
+	movq	5312(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DeleteFramebuffers), .-GL_PREFIX(DeleteFramebuffers)
@@ -24897,7 +24930,7 @@ GL_PREFIX(DeleteFramebuffers):
 GL_PREFIX(DeleteRenderbuffers):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5312(%rax), %r11
+	movq	5320(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24907,13 +24940,13 @@ GL_PREFIX(DeleteRenderbuffers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5312(%rax), %r11
+	movq	5320(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5312(%rax), %r11
+	movq	5320(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24923,7 +24956,7 @@ GL_PREFIX(DeleteRenderbuffers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5312(%rax), %r11
+	movq	5320(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DeleteRenderbuffers), .-GL_PREFIX(DeleteRenderbuffers)
@@ -24934,7 +24967,7 @@ GL_PREFIX(DeleteRenderbuffers):
 GL_PREFIX(FramebufferRenderbuffer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5320(%rax), %r11
+	movq	5328(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24948,13 +24981,13 @@ GL_PREFIX(FramebufferRenderbuffer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5320(%rax), %r11
+	movq	5328(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5320(%rax), %r11
+	movq	5328(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -24968,7 +25001,7 @@ GL_PREFIX(FramebufferRenderbuffer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5320(%rax), %r11
+	movq	5328(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(FramebufferRenderbuffer), .-GL_PREFIX(FramebufferRenderbuffer)
@@ -24979,7 +25012,7 @@ GL_PREFIX(FramebufferRenderbuffer):
 GL_PREFIX(FramebufferTexture1D):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5328(%rax), %r11
+	movq	5336(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -24993,13 +25026,13 @@ GL_PREFIX(FramebufferTexture1D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5328(%rax), %r11
+	movq	5336(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5328(%rax), %r11
+	movq	5336(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25013,7 +25046,7 @@ GL_PREFIX(FramebufferTexture1D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5328(%rax), %r11
+	movq	5336(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(FramebufferTexture1D), .-GL_PREFIX(FramebufferTexture1D)
@@ -25024,7 +25057,7 @@ GL_PREFIX(FramebufferTexture1D):
 GL_PREFIX(FramebufferTexture2D):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5336(%rax), %r11
+	movq	5344(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25038,13 +25071,13 @@ GL_PREFIX(FramebufferTexture2D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5336(%rax), %r11
+	movq	5344(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5336(%rax), %r11
+	movq	5344(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25058,7 +25091,7 @@ GL_PREFIX(FramebufferTexture2D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5336(%rax), %r11
+	movq	5344(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(FramebufferTexture2D), .-GL_PREFIX(FramebufferTexture2D)
@@ -25069,7 +25102,7 @@ GL_PREFIX(FramebufferTexture2D):
 GL_PREFIX(FramebufferTexture3D):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5344(%rax), %r11
+	movq	5352(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25087,13 +25120,13 @@ GL_PREFIX(FramebufferTexture3D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5344(%rax), %r11
+	movq	5352(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5344(%rax), %r11
+	movq	5352(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25111,7 +25144,7 @@ GL_PREFIX(FramebufferTexture3D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5344(%rax), %r11
+	movq	5352(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(FramebufferTexture3D), .-GL_PREFIX(FramebufferTexture3D)
@@ -25122,7 +25155,7 @@ GL_PREFIX(FramebufferTexture3D):
 GL_PREFIX(FramebufferTextureLayer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5352(%rax), %r11
+	movq	5360(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25136,13 +25169,13 @@ GL_PREFIX(FramebufferTextureLayer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5352(%rax), %r11
+	movq	5360(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5352(%rax), %r11
+	movq	5360(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25156,7 +25189,7 @@ GL_PREFIX(FramebufferTextureLayer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5352(%rax), %r11
+	movq	5360(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(FramebufferTextureLayer), .-GL_PREFIX(FramebufferTextureLayer)
@@ -25167,7 +25200,7 @@ GL_PREFIX(FramebufferTextureLayer):
 GL_PREFIX(GenFramebuffers):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5360(%rax), %r11
+	movq	5368(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25177,13 +25210,13 @@ GL_PREFIX(GenFramebuffers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5360(%rax), %r11
+	movq	5368(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5360(%rax), %r11
+	movq	5368(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25193,7 +25226,7 @@ GL_PREFIX(GenFramebuffers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5360(%rax), %r11
+	movq	5368(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GenFramebuffers), .-GL_PREFIX(GenFramebuffers)
@@ -25204,7 +25237,7 @@ GL_PREFIX(GenFramebuffers):
 GL_PREFIX(GenRenderbuffers):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5368(%rax), %r11
+	movq	5376(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25214,13 +25247,13 @@ GL_PREFIX(GenRenderbuffers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5368(%rax), %r11
+	movq	5376(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5368(%rax), %r11
+	movq	5376(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25230,7 +25263,7 @@ GL_PREFIX(GenRenderbuffers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5368(%rax), %r11
+	movq	5376(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GenRenderbuffers), .-GL_PREFIX(GenRenderbuffers)
@@ -25241,25 +25274,25 @@ GL_PREFIX(GenRenderbuffers):
 GL_PREFIX(GenerateMipmap):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5376(%rax), %r11
+	movq	5384(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5376(%rax), %r11
+	movq	5384(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5376(%rax), %r11
+	movq	5384(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5376(%rax), %r11
+	movq	5384(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GenerateMipmap), .-GL_PREFIX(GenerateMipmap)
@@ -25270,7 +25303,7 @@ GL_PREFIX(GenerateMipmap):
 GL_PREFIX(GetFramebufferAttachmentParameteriv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5384(%rax), %r11
+	movq	5392(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25284,13 +25317,13 @@ GL_PREFIX(GetFramebufferAttachmentParameteriv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5384(%rax), %r11
+	movq	5392(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5384(%rax), %r11
+	movq	5392(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25304,7 +25337,7 @@ GL_PREFIX(GetFramebufferAttachmentParameteriv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5384(%rax), %r11
+	movq	5392(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetFramebufferAttachmentParameteriv), .-GL_PREFIX(GetFramebufferAttachmentParameteriv)
@@ -25315,7 +25348,7 @@ GL_PREFIX(GetFramebufferAttachmentParameteriv):
 GL_PREFIX(GetRenderbufferParameteriv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5392(%rax), %r11
+	movq	5400(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25325,13 +25358,13 @@ GL_PREFIX(GetRenderbufferParameteriv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5392(%rax), %r11
+	movq	5400(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5392(%rax), %r11
+	movq	5400(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25341,7 +25374,7 @@ GL_PREFIX(GetRenderbufferParameteriv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5392(%rax), %r11
+	movq	5400(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetRenderbufferParameteriv), .-GL_PREFIX(GetRenderbufferParameteriv)
@@ -25352,25 +25385,25 @@ GL_PREFIX(GetRenderbufferParameteriv):
 GL_PREFIX(IsFramebuffer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5400(%rax), %r11
+	movq	5408(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5400(%rax), %r11
+	movq	5408(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5400(%rax), %r11
+	movq	5408(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5400(%rax), %r11
+	movq	5408(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(IsFramebuffer), .-GL_PREFIX(IsFramebuffer)
@@ -25381,25 +25414,25 @@ GL_PREFIX(IsFramebuffer):
 GL_PREFIX(IsRenderbuffer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5408(%rax), %r11
+	movq	5416(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5408(%rax), %r11
+	movq	5416(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5408(%rax), %r11
+	movq	5416(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5408(%rax), %r11
+	movq	5416(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(IsRenderbuffer), .-GL_PREFIX(IsRenderbuffer)
@@ -25410,7 +25443,7 @@ GL_PREFIX(IsRenderbuffer):
 GL_PREFIX(RenderbufferStorage):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5416(%rax), %r11
+	movq	5424(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25424,13 +25457,13 @@ GL_PREFIX(RenderbufferStorage):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5416(%rax), %r11
+	movq	5424(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5416(%rax), %r11
+	movq	5424(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25444,7 +25477,7 @@ GL_PREFIX(RenderbufferStorage):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5416(%rax), %r11
+	movq	5424(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(RenderbufferStorage), .-GL_PREFIX(RenderbufferStorage)
@@ -25455,7 +25488,7 @@ GL_PREFIX(RenderbufferStorage):
 GL_PREFIX(RenderbufferStorageMultisample):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5424(%rax), %r11
+	movq	5432(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25469,13 +25502,13 @@ GL_PREFIX(RenderbufferStorageMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5424(%rax), %r11
+	movq	5432(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5424(%rax), %r11
+	movq	5432(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25489,7 +25522,7 @@ GL_PREFIX(RenderbufferStorageMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5424(%rax), %r11
+	movq	5432(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(RenderbufferStorageMultisample), .-GL_PREFIX(RenderbufferStorageMultisample)
@@ -25500,7 +25533,7 @@ GL_PREFIX(RenderbufferStorageMultisample):
 GL_PREFIX(FramebufferTextureFaceARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5432(%rax), %r11
+	movq	5440(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25514,13 +25547,13 @@ GL_PREFIX(FramebufferTextureFaceARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5432(%rax), %r11
+	movq	5440(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5432(%rax), %r11
+	movq	5440(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25534,7 +25567,7 @@ GL_PREFIX(FramebufferTextureFaceARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5432(%rax), %r11
+	movq	5440(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(FramebufferTextureFaceARB), .-GL_PREFIX(FramebufferTextureFaceARB)
@@ -25545,7 +25578,7 @@ GL_PREFIX(FramebufferTextureFaceARB):
 GL_PREFIX(FlushMappedBufferRange):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5440(%rax), %r11
+	movq	5448(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25555,13 +25588,13 @@ GL_PREFIX(FlushMappedBufferRange):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5440(%rax), %r11
+	movq	5448(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5440(%rax), %r11
+	movq	5448(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25571,7 +25604,7 @@ GL_PREFIX(FlushMappedBufferRange):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5440(%rax), %r11
+	movq	5448(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(FlushMappedBufferRange), .-GL_PREFIX(FlushMappedBufferRange)
@@ -25582,7 +25615,7 @@ GL_PREFIX(FlushMappedBufferRange):
 GL_PREFIX(MapBufferRange):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5448(%rax), %r11
+	movq	5456(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25596,13 +25629,13 @@ GL_PREFIX(MapBufferRange):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5448(%rax), %r11
+	movq	5456(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5448(%rax), %r11
+	movq	5456(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25616,7 +25649,7 @@ GL_PREFIX(MapBufferRange):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5448(%rax), %r11
+	movq	5456(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MapBufferRange), .-GL_PREFIX(MapBufferRange)
@@ -25627,25 +25660,25 @@ GL_PREFIX(MapBufferRange):
 GL_PREFIX(BindVertexArray):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5456(%rax), %r11
+	movq	5464(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5456(%rax), %r11
+	movq	5464(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5456(%rax), %r11
+	movq	5464(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5456(%rax), %r11
+	movq	5464(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BindVertexArray), .-GL_PREFIX(BindVertexArray)
@@ -25656,7 +25689,7 @@ GL_PREFIX(BindVertexArray):
 GL_PREFIX(DeleteVertexArrays):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5464(%rax), %r11
+	movq	5472(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25666,13 +25699,13 @@ GL_PREFIX(DeleteVertexArrays):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5464(%rax), %r11
+	movq	5472(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5464(%rax), %r11
+	movq	5472(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25682,7 +25715,7 @@ GL_PREFIX(DeleteVertexArrays):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5464(%rax), %r11
+	movq	5472(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DeleteVertexArrays), .-GL_PREFIX(DeleteVertexArrays)
@@ -25693,7 +25726,7 @@ GL_PREFIX(DeleteVertexArrays):
 GL_PREFIX(GenVertexArrays):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5472(%rax), %r11
+	movq	5480(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25703,13 +25736,13 @@ GL_PREFIX(GenVertexArrays):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5472(%rax), %r11
+	movq	5480(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5472(%rax), %r11
+	movq	5480(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25719,7 +25752,7 @@ GL_PREFIX(GenVertexArrays):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5472(%rax), %r11
+	movq	5480(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GenVertexArrays), .-GL_PREFIX(GenVertexArrays)
@@ -25730,25 +25763,25 @@ GL_PREFIX(GenVertexArrays):
 GL_PREFIX(IsVertexArray):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5480(%rax), %r11
+	movq	5488(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5480(%rax), %r11
+	movq	5488(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5480(%rax), %r11
+	movq	5488(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5480(%rax), %r11
+	movq	5488(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(IsVertexArray), .-GL_PREFIX(IsVertexArray)
@@ -25759,7 +25792,7 @@ GL_PREFIX(IsVertexArray):
 GL_PREFIX(GetActiveUniformBlockName):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5488(%rax), %r11
+	movq	5496(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25773,13 +25806,13 @@ GL_PREFIX(GetActiveUniformBlockName):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5488(%rax), %r11
+	movq	5496(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5488(%rax), %r11
+	movq	5496(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25793,7 +25826,7 @@ GL_PREFIX(GetActiveUniformBlockName):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5488(%rax), %r11
+	movq	5496(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetActiveUniformBlockName), .-GL_PREFIX(GetActiveUniformBlockName)
@@ -25804,7 +25837,7 @@ GL_PREFIX(GetActiveUniformBlockName):
 GL_PREFIX(GetActiveUniformBlockiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5496(%rax), %r11
+	movq	5504(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25818,13 +25851,13 @@ GL_PREFIX(GetActiveUniformBlockiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5496(%rax), %r11
+	movq	5504(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5496(%rax), %r11
+	movq	5504(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25838,7 +25871,7 @@ GL_PREFIX(GetActiveUniformBlockiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5496(%rax), %r11
+	movq	5504(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetActiveUniformBlockiv), .-GL_PREFIX(GetActiveUniformBlockiv)
@@ -25849,7 +25882,7 @@ GL_PREFIX(GetActiveUniformBlockiv):
 GL_PREFIX(GetActiveUniformName):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5504(%rax), %r11
+	movq	5512(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25863,13 +25896,13 @@ GL_PREFIX(GetActiveUniformName):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5504(%rax), %r11
+	movq	5512(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5504(%rax), %r11
+	movq	5512(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25883,7 +25916,7 @@ GL_PREFIX(GetActiveUniformName):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5504(%rax), %r11
+	movq	5512(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetActiveUniformName), .-GL_PREFIX(GetActiveUniformName)
@@ -25894,7 +25927,7 @@ GL_PREFIX(GetActiveUniformName):
 GL_PREFIX(GetActiveUniformsiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5512(%rax), %r11
+	movq	5520(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25908,13 +25941,13 @@ GL_PREFIX(GetActiveUniformsiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5512(%rax), %r11
+	movq	5520(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5512(%rax), %r11
+	movq	5520(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25928,7 +25961,7 @@ GL_PREFIX(GetActiveUniformsiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5512(%rax), %r11
+	movq	5520(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetActiveUniformsiv), .-GL_PREFIX(GetActiveUniformsiv)
@@ -25939,7 +25972,7 @@ GL_PREFIX(GetActiveUniformsiv):
 GL_PREFIX(GetUniformBlockIndex):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5520(%rax), %r11
+	movq	5528(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25949,13 +25982,13 @@ GL_PREFIX(GetUniformBlockIndex):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5520(%rax), %r11
+	movq	5528(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5520(%rax), %r11
+	movq	5528(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -25965,7 +25998,7 @@ GL_PREFIX(GetUniformBlockIndex):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5520(%rax), %r11
+	movq	5528(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetUniformBlockIndex), .-GL_PREFIX(GetUniformBlockIndex)
@@ -25976,7 +26009,7 @@ GL_PREFIX(GetUniformBlockIndex):
 GL_PREFIX(GetUniformIndices):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5528(%rax), %r11
+	movq	5536(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -25990,13 +26023,13 @@ GL_PREFIX(GetUniformIndices):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5528(%rax), %r11
+	movq	5536(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5528(%rax), %r11
+	movq	5536(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26010,7 +26043,7 @@ GL_PREFIX(GetUniformIndices):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5528(%rax), %r11
+	movq	5536(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetUniformIndices), .-GL_PREFIX(GetUniformIndices)
@@ -26021,7 +26054,7 @@ GL_PREFIX(GetUniformIndices):
 GL_PREFIX(UniformBlockBinding):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5536(%rax), %r11
+	movq	5544(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26031,13 +26064,13 @@ GL_PREFIX(UniformBlockBinding):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5536(%rax), %r11
+	movq	5544(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5536(%rax), %r11
+	movq	5544(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26047,7 +26080,7 @@ GL_PREFIX(UniformBlockBinding):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5536(%rax), %r11
+	movq	5544(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(UniformBlockBinding), .-GL_PREFIX(UniformBlockBinding)
@@ -26058,7 +26091,7 @@ GL_PREFIX(UniformBlockBinding):
 GL_PREFIX(CopyBufferSubData):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5544(%rax), %r11
+	movq	5552(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26072,13 +26105,13 @@ GL_PREFIX(CopyBufferSubData):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5544(%rax), %r11
+	movq	5552(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5544(%rax), %r11
+	movq	5552(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26092,7 +26125,7 @@ GL_PREFIX(CopyBufferSubData):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5544(%rax), %r11
+	movq	5552(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(CopyBufferSubData), .-GL_PREFIX(CopyBufferSubData)
@@ -26103,7 +26136,7 @@ GL_PREFIX(CopyBufferSubData):
 GL_PREFIX(ClientWaitSync):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5552(%rax), %r11
+	movq	5560(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26113,13 +26146,13 @@ GL_PREFIX(ClientWaitSync):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5552(%rax), %r11
+	movq	5560(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5552(%rax), %r11
+	movq	5560(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26129,7 +26162,7 @@ GL_PREFIX(ClientWaitSync):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5552(%rax), %r11
+	movq	5560(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ClientWaitSync), .-GL_PREFIX(ClientWaitSync)
@@ -26140,25 +26173,25 @@ GL_PREFIX(ClientWaitSync):
 GL_PREFIX(DeleteSync):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5560(%rax), %r11
+	movq	5568(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5560(%rax), %r11
+	movq	5568(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5560(%rax), %r11
+	movq	5568(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5560(%rax), %r11
+	movq	5568(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DeleteSync), .-GL_PREFIX(DeleteSync)
@@ -26169,7 +26202,7 @@ GL_PREFIX(DeleteSync):
 GL_PREFIX(FenceSync):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5568(%rax), %r11
+	movq	5576(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26179,13 +26212,13 @@ GL_PREFIX(FenceSync):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5568(%rax), %r11
+	movq	5576(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5568(%rax), %r11
+	movq	5576(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26195,7 +26228,7 @@ GL_PREFIX(FenceSync):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5568(%rax), %r11
+	movq	5576(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(FenceSync), .-GL_PREFIX(FenceSync)
@@ -26206,7 +26239,7 @@ GL_PREFIX(FenceSync):
 GL_PREFIX(GetInteger64v):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5576(%rax), %r11
+	movq	5584(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26216,13 +26249,13 @@ GL_PREFIX(GetInteger64v):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5576(%rax), %r11
+	movq	5584(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5576(%rax), %r11
+	movq	5584(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26232,7 +26265,7 @@ GL_PREFIX(GetInteger64v):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5576(%rax), %r11
+	movq	5584(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetInteger64v), .-GL_PREFIX(GetInteger64v)
@@ -26243,7 +26276,7 @@ GL_PREFIX(GetInteger64v):
 GL_PREFIX(GetSynciv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5584(%rax), %r11
+	movq	5592(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26257,13 +26290,13 @@ GL_PREFIX(GetSynciv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5584(%rax), %r11
+	movq	5592(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5584(%rax), %r11
+	movq	5592(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26277,7 +26310,7 @@ GL_PREFIX(GetSynciv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5584(%rax), %r11
+	movq	5592(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetSynciv), .-GL_PREFIX(GetSynciv)
@@ -26288,25 +26321,25 @@ GL_PREFIX(GetSynciv):
 GL_PREFIX(IsSync):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5592(%rax), %r11
+	movq	5600(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5592(%rax), %r11
+	movq	5600(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5592(%rax), %r11
+	movq	5600(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5592(%rax), %r11
+	movq	5600(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(IsSync), .-GL_PREFIX(IsSync)
@@ -26317,7 +26350,7 @@ GL_PREFIX(IsSync):
 GL_PREFIX(WaitSync):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5600(%rax), %r11
+	movq	5608(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26327,13 +26360,13 @@ GL_PREFIX(WaitSync):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5600(%rax), %r11
+	movq	5608(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5600(%rax), %r11
+	movq	5608(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26343,7 +26376,7 @@ GL_PREFIX(WaitSync):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5600(%rax), %r11
+	movq	5608(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(WaitSync), .-GL_PREFIX(WaitSync)
@@ -26354,7 +26387,7 @@ GL_PREFIX(WaitSync):
 GL_PREFIX(DrawElementsBaseVertex):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5608(%rax), %r11
+	movq	5616(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26368,13 +26401,13 @@ GL_PREFIX(DrawElementsBaseVertex):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5608(%rax), %r11
+	movq	5616(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5608(%rax), %r11
+	movq	5616(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26388,7 +26421,7 @@ GL_PREFIX(DrawElementsBaseVertex):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5608(%rax), %r11
+	movq	5616(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawElementsBaseVertex), .-GL_PREFIX(DrawElementsBaseVertex)
@@ -26399,7 +26432,7 @@ GL_PREFIX(DrawElementsBaseVertex):
 GL_PREFIX(DrawElementsInstancedBaseVertex):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5616(%rax), %r11
+	movq	5624(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26417,13 +26450,13 @@ GL_PREFIX(DrawElementsInstancedBaseVertex):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5616(%rax), %r11
+	movq	5624(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5616(%rax), %r11
+	movq	5624(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26441,7 +26474,7 @@ GL_PREFIX(DrawElementsInstancedBaseVertex):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5616(%rax), %r11
+	movq	5624(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawElementsInstancedBaseVertex), .-GL_PREFIX(DrawElementsInstancedBaseVertex)
@@ -26452,7 +26485,7 @@ GL_PREFIX(DrawElementsInstancedBaseVertex):
 GL_PREFIX(DrawRangeElementsBaseVertex):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5624(%rax), %r11
+	movq	5632(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26470,13 +26503,13 @@ GL_PREFIX(DrawRangeElementsBaseVertex):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5624(%rax), %r11
+	movq	5632(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5624(%rax), %r11
+	movq	5632(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26494,7 +26527,7 @@ GL_PREFIX(DrawRangeElementsBaseVertex):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5624(%rax), %r11
+	movq	5632(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawRangeElementsBaseVertex), .-GL_PREFIX(DrawRangeElementsBaseVertex)
@@ -26505,7 +26538,7 @@ GL_PREFIX(DrawRangeElementsBaseVertex):
 GL_PREFIX(MultiDrawElementsBaseVertex):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5632(%rax), %r11
+	movq	5640(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26523,13 +26556,13 @@ GL_PREFIX(MultiDrawElementsBaseVertex):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5632(%rax), %r11
+	movq	5640(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5632(%rax), %r11
+	movq	5640(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26547,7 +26580,7 @@ GL_PREFIX(MultiDrawElementsBaseVertex):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5632(%rax), %r11
+	movq	5640(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiDrawElementsBaseVertex), .-GL_PREFIX(MultiDrawElementsBaseVertex)
@@ -26558,25 +26591,25 @@ GL_PREFIX(MultiDrawElementsBaseVertex):
 GL_PREFIX(ProvokingVertex):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5640(%rax), %r11
+	movq	5648(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5640(%rax), %r11
+	movq	5648(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5640(%rax), %r11
+	movq	5648(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5640(%rax), %r11
+	movq	5648(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProvokingVertex), .-GL_PREFIX(ProvokingVertex)
@@ -26587,7 +26620,7 @@ GL_PREFIX(ProvokingVertex):
 GL_PREFIX(GetMultisamplefv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5648(%rax), %r11
+	movq	5656(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26597,13 +26630,13 @@ GL_PREFIX(GetMultisamplefv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5648(%rax), %r11
+	movq	5656(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5648(%rax), %r11
+	movq	5656(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26613,7 +26646,7 @@ GL_PREFIX(GetMultisamplefv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5648(%rax), %r11
+	movq	5656(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetMultisamplefv), .-GL_PREFIX(GetMultisamplefv)
@@ -26624,7 +26657,7 @@ GL_PREFIX(GetMultisamplefv):
 GL_PREFIX(SampleMaski):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5656(%rax), %r11
+	movq	5664(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26634,13 +26667,13 @@ GL_PREFIX(SampleMaski):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5656(%rax), %r11
+	movq	5664(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5656(%rax), %r11
+	movq	5664(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26650,7 +26683,7 @@ GL_PREFIX(SampleMaski):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5656(%rax), %r11
+	movq	5664(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SampleMaski), .-GL_PREFIX(SampleMaski)
@@ -26661,7 +26694,7 @@ GL_PREFIX(SampleMaski):
 GL_PREFIX(TexImage2DMultisample):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5664(%rax), %r11
+	movq	5672(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26679,13 +26712,13 @@ GL_PREFIX(TexImage2DMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5664(%rax), %r11
+	movq	5672(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5664(%rax), %r11
+	movq	5672(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26703,7 +26736,7 @@ GL_PREFIX(TexImage2DMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5664(%rax), %r11
+	movq	5672(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexImage2DMultisample), .-GL_PREFIX(TexImage2DMultisample)
@@ -26714,7 +26747,7 @@ GL_PREFIX(TexImage2DMultisample):
 GL_PREFIX(TexImage3DMultisample):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5672(%rax), %r11
+	movq	5680(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26732,13 +26765,13 @@ GL_PREFIX(TexImage3DMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5672(%rax), %r11
+	movq	5680(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5672(%rax), %r11
+	movq	5680(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26756,7 +26789,7 @@ GL_PREFIX(TexImage3DMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5672(%rax), %r11
+	movq	5680(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexImage3DMultisample), .-GL_PREFIX(TexImage3DMultisample)
@@ -26767,7 +26800,7 @@ GL_PREFIX(TexImage3DMultisample):
 GL_PREFIX(BlendEquationSeparateiARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5680(%rax), %r11
+	movq	5688(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26777,13 +26810,13 @@ GL_PREFIX(BlendEquationSeparateiARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5680(%rax), %r11
+	movq	5688(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5680(%rax), %r11
+	movq	5688(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26793,7 +26826,7 @@ GL_PREFIX(BlendEquationSeparateiARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5680(%rax), %r11
+	movq	5688(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BlendEquationSeparateiARB), .-GL_PREFIX(BlendEquationSeparateiARB)
@@ -26804,7 +26837,7 @@ GL_PREFIX(BlendEquationSeparateiARB):
 GL_PREFIX(BlendEquationiARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5688(%rax), %r11
+	movq	5696(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26814,13 +26847,13 @@ GL_PREFIX(BlendEquationiARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5688(%rax), %r11
+	movq	5696(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5688(%rax), %r11
+	movq	5696(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26830,7 +26863,7 @@ GL_PREFIX(BlendEquationiARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5688(%rax), %r11
+	movq	5696(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BlendEquationiARB), .-GL_PREFIX(BlendEquationiARB)
@@ -26841,7 +26874,7 @@ GL_PREFIX(BlendEquationiARB):
 GL_PREFIX(BlendFuncSeparateiARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5696(%rax), %r11
+	movq	5704(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26855,13 +26888,13 @@ GL_PREFIX(BlendFuncSeparateiARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5696(%rax), %r11
+	movq	5704(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5696(%rax), %r11
+	movq	5704(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26875,7 +26908,7 @@ GL_PREFIX(BlendFuncSeparateiARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5696(%rax), %r11
+	movq	5704(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BlendFuncSeparateiARB), .-GL_PREFIX(BlendFuncSeparateiARB)
@@ -26886,7 +26919,7 @@ GL_PREFIX(BlendFuncSeparateiARB):
 GL_PREFIX(BlendFunciARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5704(%rax), %r11
+	movq	5712(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26896,13 +26929,13 @@ GL_PREFIX(BlendFunciARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5704(%rax), %r11
+	movq	5712(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5704(%rax), %r11
+	movq	5712(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26912,7 +26945,7 @@ GL_PREFIX(BlendFunciARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5704(%rax), %r11
+	movq	5712(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BlendFunciARB), .-GL_PREFIX(BlendFunciARB)
@@ -26923,7 +26956,7 @@ GL_PREFIX(BlendFunciARB):
 GL_PREFIX(BindFragDataLocationIndexed):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5712(%rax), %r11
+	movq	5720(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26937,13 +26970,13 @@ GL_PREFIX(BindFragDataLocationIndexed):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5712(%rax), %r11
+	movq	5720(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5712(%rax), %r11
+	movq	5720(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26957,7 +26990,7 @@ GL_PREFIX(BindFragDataLocationIndexed):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5712(%rax), %r11
+	movq	5720(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BindFragDataLocationIndexed), .-GL_PREFIX(BindFragDataLocationIndexed)
@@ -26968,7 +27001,7 @@ GL_PREFIX(BindFragDataLocationIndexed):
 GL_PREFIX(GetFragDataIndex):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5720(%rax), %r11
+	movq	5728(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -26978,13 +27011,13 @@ GL_PREFIX(GetFragDataIndex):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5720(%rax), %r11
+	movq	5728(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5720(%rax), %r11
+	movq	5728(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -26994,7 +27027,7 @@ GL_PREFIX(GetFragDataIndex):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5720(%rax), %r11
+	movq	5728(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetFragDataIndex), .-GL_PREFIX(GetFragDataIndex)
@@ -27005,7 +27038,7 @@ GL_PREFIX(GetFragDataIndex):
 GL_PREFIX(BindSampler):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5728(%rax), %r11
+	movq	5736(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27015,13 +27048,13 @@ GL_PREFIX(BindSampler):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5728(%rax), %r11
+	movq	5736(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5728(%rax), %r11
+	movq	5736(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27031,7 +27064,7 @@ GL_PREFIX(BindSampler):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5728(%rax), %r11
+	movq	5736(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BindSampler), .-GL_PREFIX(BindSampler)
@@ -27042,7 +27075,7 @@ GL_PREFIX(BindSampler):
 GL_PREFIX(DeleteSamplers):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5736(%rax), %r11
+	movq	5744(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27052,13 +27085,13 @@ GL_PREFIX(DeleteSamplers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5736(%rax), %r11
+	movq	5744(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5736(%rax), %r11
+	movq	5744(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27068,7 +27101,7 @@ GL_PREFIX(DeleteSamplers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5736(%rax), %r11
+	movq	5744(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DeleteSamplers), .-GL_PREFIX(DeleteSamplers)
@@ -27079,7 +27112,7 @@ GL_PREFIX(DeleteSamplers):
 GL_PREFIX(GenSamplers):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5744(%rax), %r11
+	movq	5752(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27089,13 +27122,13 @@ GL_PREFIX(GenSamplers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5744(%rax), %r11
+	movq	5752(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5744(%rax), %r11
+	movq	5752(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27105,7 +27138,7 @@ GL_PREFIX(GenSamplers):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5744(%rax), %r11
+	movq	5752(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GenSamplers), .-GL_PREFIX(GenSamplers)
@@ -27116,7 +27149,7 @@ GL_PREFIX(GenSamplers):
 GL_PREFIX(GetSamplerParameterIiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5752(%rax), %r11
+	movq	5760(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27126,13 +27159,13 @@ GL_PREFIX(GetSamplerParameterIiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5752(%rax), %r11
+	movq	5760(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5752(%rax), %r11
+	movq	5760(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27142,7 +27175,7 @@ GL_PREFIX(GetSamplerParameterIiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5752(%rax), %r11
+	movq	5760(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetSamplerParameterIiv), .-GL_PREFIX(GetSamplerParameterIiv)
@@ -27153,7 +27186,7 @@ GL_PREFIX(GetSamplerParameterIiv):
 GL_PREFIX(GetSamplerParameterIuiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5760(%rax), %r11
+	movq	5768(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27163,13 +27196,13 @@ GL_PREFIX(GetSamplerParameterIuiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5760(%rax), %r11
+	movq	5768(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5760(%rax), %r11
+	movq	5768(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27179,7 +27212,7 @@ GL_PREFIX(GetSamplerParameterIuiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5760(%rax), %r11
+	movq	5768(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetSamplerParameterIuiv), .-GL_PREFIX(GetSamplerParameterIuiv)
@@ -27190,7 +27223,7 @@ GL_PREFIX(GetSamplerParameterIuiv):
 GL_PREFIX(GetSamplerParameterfv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5768(%rax), %r11
+	movq	5776(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27200,13 +27233,13 @@ GL_PREFIX(GetSamplerParameterfv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5768(%rax), %r11
+	movq	5776(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5768(%rax), %r11
+	movq	5776(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27216,7 +27249,7 @@ GL_PREFIX(GetSamplerParameterfv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5768(%rax), %r11
+	movq	5776(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetSamplerParameterfv), .-GL_PREFIX(GetSamplerParameterfv)
@@ -27227,7 +27260,7 @@ GL_PREFIX(GetSamplerParameterfv):
 GL_PREFIX(GetSamplerParameteriv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5776(%rax), %r11
+	movq	5784(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27237,13 +27270,13 @@ GL_PREFIX(GetSamplerParameteriv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5776(%rax), %r11
+	movq	5784(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5776(%rax), %r11
+	movq	5784(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27253,7 +27286,7 @@ GL_PREFIX(GetSamplerParameteriv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5776(%rax), %r11
+	movq	5784(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetSamplerParameteriv), .-GL_PREFIX(GetSamplerParameteriv)
@@ -27264,25 +27297,25 @@ GL_PREFIX(GetSamplerParameteriv):
 GL_PREFIX(IsSampler):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5784(%rax), %r11
+	movq	5792(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	5784(%rax), %r11
+	movq	5792(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5784(%rax), %r11
+	movq	5792(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	5784(%rax), %r11
+	movq	5792(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(IsSampler), .-GL_PREFIX(IsSampler)
@@ -27293,7 +27326,7 @@ GL_PREFIX(IsSampler):
 GL_PREFIX(SamplerParameterIiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5792(%rax), %r11
+	movq	5800(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27303,13 +27336,13 @@ GL_PREFIX(SamplerParameterIiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5792(%rax), %r11
+	movq	5800(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5792(%rax), %r11
+	movq	5800(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27319,7 +27352,7 @@ GL_PREFIX(SamplerParameterIiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5792(%rax), %r11
+	movq	5800(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SamplerParameterIiv), .-GL_PREFIX(SamplerParameterIiv)
@@ -27330,7 +27363,7 @@ GL_PREFIX(SamplerParameterIiv):
 GL_PREFIX(SamplerParameterIuiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5800(%rax), %r11
+	movq	5808(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27340,13 +27373,13 @@ GL_PREFIX(SamplerParameterIuiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5800(%rax), %r11
+	movq	5808(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5800(%rax), %r11
+	movq	5808(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27356,7 +27389,7 @@ GL_PREFIX(SamplerParameterIuiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5800(%rax), %r11
+	movq	5808(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SamplerParameterIuiv), .-GL_PREFIX(SamplerParameterIuiv)
@@ -27367,7 +27400,7 @@ GL_PREFIX(SamplerParameterIuiv):
 GL_PREFIX(SamplerParameterf):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5808(%rax), %r11
+	movq	5816(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$24, %rsp
@@ -27379,13 +27412,13 @@ GL_PREFIX(SamplerParameterf):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$24, %rsp
-	movq	5808(%rax), %r11
+	movq	5816(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5808(%rax), %r11
+	movq	5816(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$24, %rsp
@@ -27397,7 +27430,7 @@ GL_PREFIX(SamplerParameterf):
 	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$24, %rsp
-	movq	5808(%rax), %r11
+	movq	5816(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SamplerParameterf), .-GL_PREFIX(SamplerParameterf)
@@ -27408,7 +27441,7 @@ GL_PREFIX(SamplerParameterf):
 GL_PREFIX(SamplerParameterfv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5816(%rax), %r11
+	movq	5824(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27418,13 +27451,13 @@ GL_PREFIX(SamplerParameterfv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5816(%rax), %r11
+	movq	5824(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5816(%rax), %r11
+	movq	5824(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27434,7 +27467,7 @@ GL_PREFIX(SamplerParameterfv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5816(%rax), %r11
+	movq	5824(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SamplerParameterfv), .-GL_PREFIX(SamplerParameterfv)
@@ -27445,7 +27478,7 @@ GL_PREFIX(SamplerParameterfv):
 GL_PREFIX(SamplerParameteri):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5824(%rax), %r11
+	movq	5832(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27455,13 +27488,13 @@ GL_PREFIX(SamplerParameteri):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5824(%rax), %r11
+	movq	5832(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5824(%rax), %r11
+	movq	5832(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27471,7 +27504,7 @@ GL_PREFIX(SamplerParameteri):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5824(%rax), %r11
+	movq	5832(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SamplerParameteri), .-GL_PREFIX(SamplerParameteri)
@@ -27482,7 +27515,7 @@ GL_PREFIX(SamplerParameteri):
 GL_PREFIX(SamplerParameteriv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5832(%rax), %r11
+	movq	5840(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27492,13 +27525,13 @@ GL_PREFIX(SamplerParameteriv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5832(%rax), %r11
+	movq	5840(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5832(%rax), %r11
+	movq	5840(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27508,48 +27541,10 @@ GL_PREFIX(SamplerParameteriv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5832(%rax), %r11
+	movq	5840(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SamplerParameteriv), .-GL_PREFIX(SamplerParameteriv)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_730)
-	.type	GL_PREFIX(_dispatch_stub_730), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_730))
-GL_PREFIX(_dispatch_stub_730):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	5840(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	5840(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	5840(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	5840(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_730), .-GL_PREFIX(_dispatch_stub_730)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(_dispatch_stub_731)
@@ -27601,9 +27596,9 @@ GL_PREFIX(_dispatch_stub_732):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	5856(%rax), %r11
@@ -27617,9 +27612,9 @@ GL_PREFIX(_dispatch_stub_732):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	5856(%rax), %r11
@@ -27628,9 +27623,10 @@ GL_PREFIX(_dispatch_stub_732):
 	.size	GL_PREFIX(_dispatch_stub_732), .-GL_PREFIX(_dispatch_stub_732)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ColorP3ui)
-	.type	GL_PREFIX(ColorP3ui), @function
-GL_PREFIX(ColorP3ui):
+	.globl	GL_PREFIX(_dispatch_stub_733)
+	.type	GL_PREFIX(_dispatch_stub_733), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_733))
+GL_PREFIX(_dispatch_stub_733):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	5864(%rax), %r11
@@ -27660,6 +27656,43 @@ GL_PREFIX(ColorP3ui):
 	popq	%rsi
 	popq	%rdi
 	movq	5864(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_733), .-GL_PREFIX(_dispatch_stub_733)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ColorP3ui)
+	.type	GL_PREFIX(ColorP3ui), @function
+GL_PREFIX(ColorP3ui):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	5872(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	5872(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	5872(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	5872(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ColorP3ui), .-GL_PREFIX(ColorP3ui)
@@ -27670,7 +27703,7 @@ GL_PREFIX(ColorP3ui):
 GL_PREFIX(ColorP3uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5872(%rax), %r11
+	movq	5880(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27680,13 +27713,13 @@ GL_PREFIX(ColorP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5872(%rax), %r11
+	movq	5880(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5872(%rax), %r11
+	movq	5880(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27696,7 +27729,7 @@ GL_PREFIX(ColorP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5872(%rax), %r11
+	movq	5880(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ColorP3uiv), .-GL_PREFIX(ColorP3uiv)
@@ -27707,7 +27740,7 @@ GL_PREFIX(ColorP3uiv):
 GL_PREFIX(ColorP4ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5880(%rax), %r11
+	movq	5888(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27717,13 +27750,13 @@ GL_PREFIX(ColorP4ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5880(%rax), %r11
+	movq	5888(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5880(%rax), %r11
+	movq	5888(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27733,7 +27766,7 @@ GL_PREFIX(ColorP4ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5880(%rax), %r11
+	movq	5888(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ColorP4ui), .-GL_PREFIX(ColorP4ui)
@@ -27744,7 +27777,7 @@ GL_PREFIX(ColorP4ui):
 GL_PREFIX(ColorP4uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5888(%rax), %r11
+	movq	5896(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27754,13 +27787,13 @@ GL_PREFIX(ColorP4uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5888(%rax), %r11
+	movq	5896(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5888(%rax), %r11
+	movq	5896(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27770,7 +27803,7 @@ GL_PREFIX(ColorP4uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5888(%rax), %r11
+	movq	5896(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ColorP4uiv), .-GL_PREFIX(ColorP4uiv)
@@ -27781,7 +27814,7 @@ GL_PREFIX(ColorP4uiv):
 GL_PREFIX(MultiTexCoordP1ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5896(%rax), %r11
+	movq	5904(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27791,13 +27824,13 @@ GL_PREFIX(MultiTexCoordP1ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5896(%rax), %r11
+	movq	5904(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5896(%rax), %r11
+	movq	5904(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27807,7 +27840,7 @@ GL_PREFIX(MultiTexCoordP1ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5896(%rax), %r11
+	movq	5904(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiTexCoordP1ui), .-GL_PREFIX(MultiTexCoordP1ui)
@@ -27818,7 +27851,7 @@ GL_PREFIX(MultiTexCoordP1ui):
 GL_PREFIX(MultiTexCoordP1uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5904(%rax), %r11
+	movq	5912(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27828,13 +27861,13 @@ GL_PREFIX(MultiTexCoordP1uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5904(%rax), %r11
+	movq	5912(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5904(%rax), %r11
+	movq	5912(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27844,7 +27877,7 @@ GL_PREFIX(MultiTexCoordP1uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5904(%rax), %r11
+	movq	5912(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiTexCoordP1uiv), .-GL_PREFIX(MultiTexCoordP1uiv)
@@ -27855,7 +27888,7 @@ GL_PREFIX(MultiTexCoordP1uiv):
 GL_PREFIX(MultiTexCoordP2ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5912(%rax), %r11
+	movq	5920(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27865,13 +27898,13 @@ GL_PREFIX(MultiTexCoordP2ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5912(%rax), %r11
+	movq	5920(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5912(%rax), %r11
+	movq	5920(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27881,7 +27914,7 @@ GL_PREFIX(MultiTexCoordP2ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5912(%rax), %r11
+	movq	5920(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiTexCoordP2ui), .-GL_PREFIX(MultiTexCoordP2ui)
@@ -27892,7 +27925,7 @@ GL_PREFIX(MultiTexCoordP2ui):
 GL_PREFIX(MultiTexCoordP2uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5920(%rax), %r11
+	movq	5928(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27902,13 +27935,13 @@ GL_PREFIX(MultiTexCoordP2uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5920(%rax), %r11
+	movq	5928(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5920(%rax), %r11
+	movq	5928(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27918,7 +27951,7 @@ GL_PREFIX(MultiTexCoordP2uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5920(%rax), %r11
+	movq	5928(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiTexCoordP2uiv), .-GL_PREFIX(MultiTexCoordP2uiv)
@@ -27929,7 +27962,7 @@ GL_PREFIX(MultiTexCoordP2uiv):
 GL_PREFIX(MultiTexCoordP3ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5928(%rax), %r11
+	movq	5936(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27939,13 +27972,13 @@ GL_PREFIX(MultiTexCoordP3ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5928(%rax), %r11
+	movq	5936(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5928(%rax), %r11
+	movq	5936(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27955,7 +27988,7 @@ GL_PREFIX(MultiTexCoordP3ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5928(%rax), %r11
+	movq	5936(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiTexCoordP3ui), .-GL_PREFIX(MultiTexCoordP3ui)
@@ -27966,7 +27999,7 @@ GL_PREFIX(MultiTexCoordP3ui):
 GL_PREFIX(MultiTexCoordP3uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5936(%rax), %r11
+	movq	5944(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -27976,13 +28009,13 @@ GL_PREFIX(MultiTexCoordP3uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5936(%rax), %r11
+	movq	5944(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5936(%rax), %r11
+	movq	5944(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -27992,7 +28025,7 @@ GL_PREFIX(MultiTexCoordP3uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5936(%rax), %r11
+	movq	5944(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiTexCoordP3uiv), .-GL_PREFIX(MultiTexCoordP3uiv)
@@ -28003,7 +28036,7 @@ GL_PREFIX(MultiTexCoordP3uiv):
 GL_PREFIX(MultiTexCoordP4ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5944(%rax), %r11
+	movq	5952(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28013,13 +28046,13 @@ GL_PREFIX(MultiTexCoordP4ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5944(%rax), %r11
+	movq	5952(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5944(%rax), %r11
+	movq	5952(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28029,7 +28062,7 @@ GL_PREFIX(MultiTexCoordP4ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5944(%rax), %r11
+	movq	5952(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiTexCoordP4ui), .-GL_PREFIX(MultiTexCoordP4ui)
@@ -28040,7 +28073,7 @@ GL_PREFIX(MultiTexCoordP4ui):
 GL_PREFIX(MultiTexCoordP4uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5952(%rax), %r11
+	movq	5960(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28050,13 +28083,13 @@ GL_PREFIX(MultiTexCoordP4uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5952(%rax), %r11
+	movq	5960(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5952(%rax), %r11
+	movq	5960(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28066,7 +28099,7 @@ GL_PREFIX(MultiTexCoordP4uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	5952(%rax), %r11
+	movq	5960(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(MultiTexCoordP4uiv), .-GL_PREFIX(MultiTexCoordP4uiv)
@@ -28077,7 +28110,7 @@ GL_PREFIX(MultiTexCoordP4uiv):
 GL_PREFIX(NormalP3ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5960(%rax), %r11
+	movq	5968(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28087,13 +28120,13 @@ GL_PREFIX(NormalP3ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5960(%rax), %r11
+	movq	5968(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5960(%rax), %r11
+	movq	5968(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28103,7 +28136,7 @@ GL_PREFIX(NormalP3ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5960(%rax), %r11
+	movq	5968(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(NormalP3ui), .-GL_PREFIX(NormalP3ui)
@@ -28114,7 +28147,7 @@ GL_PREFIX(NormalP3ui):
 GL_PREFIX(NormalP3uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5968(%rax), %r11
+	movq	5976(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28124,13 +28157,13 @@ GL_PREFIX(NormalP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5968(%rax), %r11
+	movq	5976(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5968(%rax), %r11
+	movq	5976(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28140,7 +28173,7 @@ GL_PREFIX(NormalP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5968(%rax), %r11
+	movq	5976(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(NormalP3uiv), .-GL_PREFIX(NormalP3uiv)
@@ -28151,7 +28184,7 @@ GL_PREFIX(NormalP3uiv):
 GL_PREFIX(SecondaryColorP3ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5976(%rax), %r11
+	movq	5984(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28161,13 +28194,13 @@ GL_PREFIX(SecondaryColorP3ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5976(%rax), %r11
+	movq	5984(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5976(%rax), %r11
+	movq	5984(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28177,7 +28210,7 @@ GL_PREFIX(SecondaryColorP3ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5976(%rax), %r11
+	movq	5984(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SecondaryColorP3ui), .-GL_PREFIX(SecondaryColorP3ui)
@@ -28188,7 +28221,7 @@ GL_PREFIX(SecondaryColorP3ui):
 GL_PREFIX(SecondaryColorP3uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5984(%rax), %r11
+	movq	5992(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28198,13 +28231,13 @@ GL_PREFIX(SecondaryColorP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5984(%rax), %r11
+	movq	5992(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5984(%rax), %r11
+	movq	5992(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28214,7 +28247,7 @@ GL_PREFIX(SecondaryColorP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5984(%rax), %r11
+	movq	5992(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(SecondaryColorP3uiv), .-GL_PREFIX(SecondaryColorP3uiv)
@@ -28225,7 +28258,7 @@ GL_PREFIX(SecondaryColorP3uiv):
 GL_PREFIX(TexCoordP1ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	5992(%rax), %r11
+	movq	6000(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28235,13 +28268,13 @@ GL_PREFIX(TexCoordP1ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5992(%rax), %r11
+	movq	6000(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	5992(%rax), %r11
+	movq	6000(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28251,7 +28284,7 @@ GL_PREFIX(TexCoordP1ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	5992(%rax), %r11
+	movq	6000(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexCoordP1ui), .-GL_PREFIX(TexCoordP1ui)
@@ -28262,7 +28295,7 @@ GL_PREFIX(TexCoordP1ui):
 GL_PREFIX(TexCoordP1uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6000(%rax), %r11
+	movq	6008(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28272,13 +28305,13 @@ GL_PREFIX(TexCoordP1uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6000(%rax), %r11
+	movq	6008(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6000(%rax), %r11
+	movq	6008(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28288,7 +28321,7 @@ GL_PREFIX(TexCoordP1uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6000(%rax), %r11
+	movq	6008(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexCoordP1uiv), .-GL_PREFIX(TexCoordP1uiv)
@@ -28299,7 +28332,7 @@ GL_PREFIX(TexCoordP1uiv):
 GL_PREFIX(TexCoordP2ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6008(%rax), %r11
+	movq	6016(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28309,13 +28342,13 @@ GL_PREFIX(TexCoordP2ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6008(%rax), %r11
+	movq	6016(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6008(%rax), %r11
+	movq	6016(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28325,7 +28358,7 @@ GL_PREFIX(TexCoordP2ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6008(%rax), %r11
+	movq	6016(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexCoordP2ui), .-GL_PREFIX(TexCoordP2ui)
@@ -28336,7 +28369,7 @@ GL_PREFIX(TexCoordP2ui):
 GL_PREFIX(TexCoordP2uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6016(%rax), %r11
+	movq	6024(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28346,13 +28379,13 @@ GL_PREFIX(TexCoordP2uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6016(%rax), %r11
+	movq	6024(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6016(%rax), %r11
+	movq	6024(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28362,7 +28395,7 @@ GL_PREFIX(TexCoordP2uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6016(%rax), %r11
+	movq	6024(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexCoordP2uiv), .-GL_PREFIX(TexCoordP2uiv)
@@ -28373,7 +28406,7 @@ GL_PREFIX(TexCoordP2uiv):
 GL_PREFIX(TexCoordP3ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6024(%rax), %r11
+	movq	6032(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28383,13 +28416,13 @@ GL_PREFIX(TexCoordP3ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6024(%rax), %r11
+	movq	6032(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6024(%rax), %r11
+	movq	6032(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28399,7 +28432,7 @@ GL_PREFIX(TexCoordP3ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6024(%rax), %r11
+	movq	6032(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexCoordP3ui), .-GL_PREFIX(TexCoordP3ui)
@@ -28410,7 +28443,7 @@ GL_PREFIX(TexCoordP3ui):
 GL_PREFIX(TexCoordP3uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6032(%rax), %r11
+	movq	6040(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28420,13 +28453,13 @@ GL_PREFIX(TexCoordP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6032(%rax), %r11
+	movq	6040(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6032(%rax), %r11
+	movq	6040(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28436,7 +28469,7 @@ GL_PREFIX(TexCoordP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6032(%rax), %r11
+	movq	6040(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexCoordP3uiv), .-GL_PREFIX(TexCoordP3uiv)
@@ -28447,7 +28480,7 @@ GL_PREFIX(TexCoordP3uiv):
 GL_PREFIX(TexCoordP4ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6040(%rax), %r11
+	movq	6048(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28457,13 +28490,13 @@ GL_PREFIX(TexCoordP4ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6040(%rax), %r11
+	movq	6048(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6040(%rax), %r11
+	movq	6048(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28473,7 +28506,7 @@ GL_PREFIX(TexCoordP4ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6040(%rax), %r11
+	movq	6048(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexCoordP4ui), .-GL_PREFIX(TexCoordP4ui)
@@ -28484,7 +28517,7 @@ GL_PREFIX(TexCoordP4ui):
 GL_PREFIX(TexCoordP4uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6048(%rax), %r11
+	movq	6056(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28494,13 +28527,13 @@ GL_PREFIX(TexCoordP4uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6048(%rax), %r11
+	movq	6056(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6048(%rax), %r11
+	movq	6056(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28510,7 +28543,7 @@ GL_PREFIX(TexCoordP4uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6048(%rax), %r11
+	movq	6056(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexCoordP4uiv), .-GL_PREFIX(TexCoordP4uiv)
@@ -28521,7 +28554,7 @@ GL_PREFIX(TexCoordP4uiv):
 GL_PREFIX(VertexAttribP1ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6056(%rax), %r11
+	movq	6064(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28535,13 +28568,13 @@ GL_PREFIX(VertexAttribP1ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6056(%rax), %r11
+	movq	6064(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6056(%rax), %r11
+	movq	6064(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28555,7 +28588,7 @@ GL_PREFIX(VertexAttribP1ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6056(%rax), %r11
+	movq	6064(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttribP1ui), .-GL_PREFIX(VertexAttribP1ui)
@@ -28566,7 +28599,7 @@ GL_PREFIX(VertexAttribP1ui):
 GL_PREFIX(VertexAttribP1uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6064(%rax), %r11
+	movq	6072(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28580,13 +28613,13 @@ GL_PREFIX(VertexAttribP1uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6064(%rax), %r11
+	movq	6072(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6064(%rax), %r11
+	movq	6072(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28600,7 +28633,7 @@ GL_PREFIX(VertexAttribP1uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6064(%rax), %r11
+	movq	6072(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttribP1uiv), .-GL_PREFIX(VertexAttribP1uiv)
@@ -28611,7 +28644,7 @@ GL_PREFIX(VertexAttribP1uiv):
 GL_PREFIX(VertexAttribP2ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6072(%rax), %r11
+	movq	6080(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28625,13 +28658,13 @@ GL_PREFIX(VertexAttribP2ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6072(%rax), %r11
+	movq	6080(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6072(%rax), %r11
+	movq	6080(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28645,7 +28678,7 @@ GL_PREFIX(VertexAttribP2ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6072(%rax), %r11
+	movq	6080(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttribP2ui), .-GL_PREFIX(VertexAttribP2ui)
@@ -28656,7 +28689,7 @@ GL_PREFIX(VertexAttribP2ui):
 GL_PREFIX(VertexAttribP2uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6080(%rax), %r11
+	movq	6088(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28670,13 +28703,13 @@ GL_PREFIX(VertexAttribP2uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6080(%rax), %r11
+	movq	6088(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6080(%rax), %r11
+	movq	6088(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28690,7 +28723,7 @@ GL_PREFIX(VertexAttribP2uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6080(%rax), %r11
+	movq	6088(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttribP2uiv), .-GL_PREFIX(VertexAttribP2uiv)
@@ -28701,7 +28734,7 @@ GL_PREFIX(VertexAttribP2uiv):
 GL_PREFIX(VertexAttribP3ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6088(%rax), %r11
+	movq	6096(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28715,13 +28748,13 @@ GL_PREFIX(VertexAttribP3ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6088(%rax), %r11
+	movq	6096(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6088(%rax), %r11
+	movq	6096(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28735,7 +28768,7 @@ GL_PREFIX(VertexAttribP3ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6088(%rax), %r11
+	movq	6096(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttribP3ui), .-GL_PREFIX(VertexAttribP3ui)
@@ -28746,7 +28779,7 @@ GL_PREFIX(VertexAttribP3ui):
 GL_PREFIX(VertexAttribP3uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6096(%rax), %r11
+	movq	6104(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28760,13 +28793,13 @@ GL_PREFIX(VertexAttribP3uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6096(%rax), %r11
+	movq	6104(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6096(%rax), %r11
+	movq	6104(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28780,7 +28813,7 @@ GL_PREFIX(VertexAttribP3uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6096(%rax), %r11
+	movq	6104(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttribP3uiv), .-GL_PREFIX(VertexAttribP3uiv)
@@ -28791,7 +28824,7 @@ GL_PREFIX(VertexAttribP3uiv):
 GL_PREFIX(VertexAttribP4ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6104(%rax), %r11
+	movq	6112(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28805,13 +28838,13 @@ GL_PREFIX(VertexAttribP4ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6104(%rax), %r11
+	movq	6112(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6104(%rax), %r11
+	movq	6112(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28825,7 +28858,7 @@ GL_PREFIX(VertexAttribP4ui):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6104(%rax), %r11
+	movq	6112(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttribP4ui), .-GL_PREFIX(VertexAttribP4ui)
@@ -28836,7 +28869,7 @@ GL_PREFIX(VertexAttribP4ui):
 GL_PREFIX(VertexAttribP4uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6112(%rax), %r11
+	movq	6120(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28850,13 +28883,13 @@ GL_PREFIX(VertexAttribP4uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6112(%rax), %r11
+	movq	6120(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6112(%rax), %r11
+	movq	6120(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28870,7 +28903,7 @@ GL_PREFIX(VertexAttribP4uiv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6112(%rax), %r11
+	movq	6120(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexAttribP4uiv), .-GL_PREFIX(VertexAttribP4uiv)
@@ -28881,7 +28914,7 @@ GL_PREFIX(VertexAttribP4uiv):
 GL_PREFIX(VertexP2ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6120(%rax), %r11
+	movq	6128(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28891,13 +28924,13 @@ GL_PREFIX(VertexP2ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6120(%rax), %r11
+	movq	6128(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6120(%rax), %r11
+	movq	6128(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28907,7 +28940,7 @@ GL_PREFIX(VertexP2ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6120(%rax), %r11
+	movq	6128(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexP2ui), .-GL_PREFIX(VertexP2ui)
@@ -28918,7 +28951,7 @@ GL_PREFIX(VertexP2ui):
 GL_PREFIX(VertexP2uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6128(%rax), %r11
+	movq	6136(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28928,13 +28961,13 @@ GL_PREFIX(VertexP2uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6128(%rax), %r11
+	movq	6136(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6128(%rax), %r11
+	movq	6136(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28944,7 +28977,7 @@ GL_PREFIX(VertexP2uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6128(%rax), %r11
+	movq	6136(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexP2uiv), .-GL_PREFIX(VertexP2uiv)
@@ -28955,7 +28988,7 @@ GL_PREFIX(VertexP2uiv):
 GL_PREFIX(VertexP3ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6136(%rax), %r11
+	movq	6144(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -28965,13 +28998,13 @@ GL_PREFIX(VertexP3ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6136(%rax), %r11
+	movq	6144(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6136(%rax), %r11
+	movq	6144(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -28981,7 +29014,7 @@ GL_PREFIX(VertexP3ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6136(%rax), %r11
+	movq	6144(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexP3ui), .-GL_PREFIX(VertexP3ui)
@@ -28992,7 +29025,7 @@ GL_PREFIX(VertexP3ui):
 GL_PREFIX(VertexP3uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6144(%rax), %r11
+	movq	6152(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29002,13 +29035,13 @@ GL_PREFIX(VertexP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6144(%rax), %r11
+	movq	6152(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6144(%rax), %r11
+	movq	6152(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29018,7 +29051,7 @@ GL_PREFIX(VertexP3uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6144(%rax), %r11
+	movq	6152(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexP3uiv), .-GL_PREFIX(VertexP3uiv)
@@ -29029,7 +29062,7 @@ GL_PREFIX(VertexP3uiv):
 GL_PREFIX(VertexP4ui):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6152(%rax), %r11
+	movq	6160(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29039,13 +29072,13 @@ GL_PREFIX(VertexP4ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6152(%rax), %r11
+	movq	6160(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6152(%rax), %r11
+	movq	6160(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29055,7 +29088,7 @@ GL_PREFIX(VertexP4ui):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6152(%rax), %r11
+	movq	6160(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexP4ui), .-GL_PREFIX(VertexP4ui)
@@ -29066,7 +29099,7 @@ GL_PREFIX(VertexP4ui):
 GL_PREFIX(VertexP4uiv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6160(%rax), %r11
+	movq	6168(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29076,13 +29109,13 @@ GL_PREFIX(VertexP4uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6160(%rax), %r11
+	movq	6168(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6160(%rax), %r11
+	movq	6168(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29092,10 +29125,84 @@ GL_PREFIX(VertexP4uiv):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6160(%rax), %r11
+	movq	6168(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(VertexP4uiv), .-GL_PREFIX(VertexP4uiv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(DrawArraysIndirect)
+	.type	GL_PREFIX(DrawArraysIndirect), @function
+GL_PREFIX(DrawArraysIndirect):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6176(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6176(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6176(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6176(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(DrawArraysIndirect), .-GL_PREFIX(DrawArraysIndirect)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(DrawElementsIndirect)
+	.type	GL_PREFIX(DrawElementsIndirect), @function
+GL_PREFIX(DrawElementsIndirect):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6184(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6184(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6184(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6184(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(DrawElementsIndirect), .-GL_PREFIX(DrawElementsIndirect)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(BindTransformFeedback)
@@ -29103,7 +29210,7 @@ GL_PREFIX(VertexP4uiv):
 GL_PREFIX(BindTransformFeedback):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6168(%rax), %r11
+	movq	6192(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29113,13 +29220,13 @@ GL_PREFIX(BindTransformFeedback):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6168(%rax), %r11
+	movq	6192(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6168(%rax), %r11
+	movq	6192(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29129,7 +29236,7 @@ GL_PREFIX(BindTransformFeedback):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6168(%rax), %r11
+	movq	6192(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BindTransformFeedback), .-GL_PREFIX(BindTransformFeedback)
@@ -29140,7 +29247,7 @@ GL_PREFIX(BindTransformFeedback):
 GL_PREFIX(DeleteTransformFeedbacks):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6176(%rax), %r11
+	movq	6200(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29150,13 +29257,13 @@ GL_PREFIX(DeleteTransformFeedbacks):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6176(%rax), %r11
+	movq	6200(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6176(%rax), %r11
+	movq	6200(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29166,7 +29273,7 @@ GL_PREFIX(DeleteTransformFeedbacks):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6176(%rax), %r11
+	movq	6200(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DeleteTransformFeedbacks), .-GL_PREFIX(DeleteTransformFeedbacks)
@@ -29177,7 +29284,7 @@ GL_PREFIX(DeleteTransformFeedbacks):
 GL_PREFIX(DrawTransformFeedback):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6184(%rax), %r11
+	movq	6208(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29187,13 +29294,13 @@ GL_PREFIX(DrawTransformFeedback):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6184(%rax), %r11
+	movq	6208(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6184(%rax), %r11
+	movq	6208(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29203,7 +29310,7 @@ GL_PREFIX(DrawTransformFeedback):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6184(%rax), %r11
+	movq	6208(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawTransformFeedback), .-GL_PREFIX(DrawTransformFeedback)
@@ -29214,7 +29321,7 @@ GL_PREFIX(DrawTransformFeedback):
 GL_PREFIX(GenTransformFeedbacks):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6192(%rax), %r11
+	movq	6216(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29224,13 +29331,13 @@ GL_PREFIX(GenTransformFeedbacks):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6192(%rax), %r11
+	movq	6216(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6192(%rax), %r11
+	movq	6216(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29240,7 +29347,7 @@ GL_PREFIX(GenTransformFeedbacks):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6192(%rax), %r11
+	movq	6216(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GenTransformFeedbacks), .-GL_PREFIX(GenTransformFeedbacks)
@@ -29251,25 +29358,25 @@ GL_PREFIX(GenTransformFeedbacks):
 GL_PREFIX(IsTransformFeedback):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6200(%rax), %r11
+	movq	6224(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	6200(%rax), %r11
+	movq	6224(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6200(%rax), %r11
+	movq	6224(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	6200(%rax), %r11
+	movq	6224(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(IsTransformFeedback), .-GL_PREFIX(IsTransformFeedback)
@@ -29280,25 +29387,25 @@ GL_PREFIX(IsTransformFeedback):
 GL_PREFIX(PauseTransformFeedback):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6208(%rax), %r11
+	movq	6232(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	movq	6208(%rax), %r11
+	movq	6232(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6208(%rax), %r11
+	movq	6232(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	movq	6208(%rax), %r11
+	movq	6232(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(PauseTransformFeedback), .-GL_PREFIX(PauseTransformFeedback)
@@ -29309,25 +29416,25 @@ GL_PREFIX(PauseTransformFeedback):
 GL_PREFIX(ResumeTransformFeedback):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6216(%rax), %r11
+	movq	6240(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	movq	6216(%rax), %r11
+	movq	6240(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6216(%rax), %r11
+	movq	6240(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	movq	6216(%rax), %r11
+	movq	6240(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ResumeTransformFeedback), .-GL_PREFIX(ResumeTransformFeedback)
@@ -29338,7 +29445,7 @@ GL_PREFIX(ResumeTransformFeedback):
 GL_PREFIX(BeginQueryIndexed):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6224(%rax), %r11
+	movq	6248(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29348,13 +29455,13 @@ GL_PREFIX(BeginQueryIndexed):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6224(%rax), %r11
+	movq	6248(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6224(%rax), %r11
+	movq	6248(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29364,7 +29471,7 @@ GL_PREFIX(BeginQueryIndexed):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6224(%rax), %r11
+	movq	6248(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(BeginQueryIndexed), .-GL_PREFIX(BeginQueryIndexed)
@@ -29375,7 +29482,7 @@ GL_PREFIX(BeginQueryIndexed):
 GL_PREFIX(DrawTransformFeedbackStream):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6232(%rax), %r11
+	movq	6256(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29385,13 +29492,13 @@ GL_PREFIX(DrawTransformFeedbackStream):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6232(%rax), %r11
+	movq	6256(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6232(%rax), %r11
+	movq	6256(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29401,7 +29508,7 @@ GL_PREFIX(DrawTransformFeedbackStream):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6232(%rax), %r11
+	movq	6256(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawTransformFeedbackStream), .-GL_PREFIX(DrawTransformFeedbackStream)
@@ -29412,7 +29519,7 @@ GL_PREFIX(DrawTransformFeedbackStream):
 GL_PREFIX(EndQueryIndexed):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6240(%rax), %r11
+	movq	6264(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29422,13 +29529,13 @@ GL_PREFIX(EndQueryIndexed):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6240(%rax), %r11
+	movq	6264(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6240(%rax), %r11
+	movq	6264(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29438,7 +29545,7 @@ GL_PREFIX(EndQueryIndexed):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6240(%rax), %r11
+	movq	6264(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(EndQueryIndexed), .-GL_PREFIX(EndQueryIndexed)
@@ -29449,7 +29556,7 @@ GL_PREFIX(EndQueryIndexed):
 GL_PREFIX(GetQueryIndexediv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6248(%rax), %r11
+	movq	6272(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29463,13 +29570,13 @@ GL_PREFIX(GetQueryIndexediv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6248(%rax), %r11
+	movq	6272(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6248(%rax), %r11
+	movq	6272(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29483,7 +29590,7 @@ GL_PREFIX(GetQueryIndexediv):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6248(%rax), %r11
+	movq	6272(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetQueryIndexediv), .-GL_PREFIX(GetQueryIndexediv)
@@ -29494,25 +29601,25 @@ GL_PREFIX(GetQueryIndexediv):
 GL_PREFIX(ClearDepthf):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6256(%rax), %r11
+	movq	6280(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	6256(%rax), %r11
+	movq	6280(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6256(%rax), %r11
+	movq	6280(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	6256(%rax), %r11
+	movq	6280(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ClearDepthf), .-GL_PREFIX(ClearDepthf)
@@ -29523,7 +29630,7 @@ GL_PREFIX(ClearDepthf):
 GL_PREFIX(DepthRangef):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6264(%rax), %r11
+	movq	6288(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29533,13 +29640,13 @@ GL_PREFIX(DepthRangef):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6264(%rax), %r11
+	movq	6288(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6264(%rax), %r11
+	movq	6288(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29549,7 +29656,7 @@ GL_PREFIX(DepthRangef):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6264(%rax), %r11
+	movq	6288(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DepthRangef), .-GL_PREFIX(DepthRangef)
@@ -29560,7 +29667,7 @@ GL_PREFIX(DepthRangef):
 GL_PREFIX(GetShaderPrecisionFormat):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6272(%rax), %r11
+	movq	6296(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29574,13 +29681,13 @@ GL_PREFIX(GetShaderPrecisionFormat):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6272(%rax), %r11
+	movq	6296(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6272(%rax), %r11
+	movq	6296(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29594,7 +29701,7 @@ GL_PREFIX(GetShaderPrecisionFormat):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6272(%rax), %r11
+	movq	6296(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetShaderPrecisionFormat), .-GL_PREFIX(GetShaderPrecisionFormat)
@@ -29605,25 +29712,25 @@ GL_PREFIX(GetShaderPrecisionFormat):
 GL_PREFIX(ReleaseShaderCompiler):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6280(%rax), %r11
+	movq	6304(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	movq	6280(%rax), %r11
+	movq	6304(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6280(%rax), %r11
+	movq	6304(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	movq	6280(%rax), %r11
+	movq	6304(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ReleaseShaderCompiler), .-GL_PREFIX(ReleaseShaderCompiler)
@@ -29634,7 +29741,7 @@ GL_PREFIX(ReleaseShaderCompiler):
 GL_PREFIX(ShaderBinary):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6288(%rax), %r11
+	movq	6312(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29648,13 +29755,13 @@ GL_PREFIX(ShaderBinary):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6288(%rax), %r11
+	movq	6312(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6288(%rax), %r11
+	movq	6312(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29668,7 +29775,7 @@ GL_PREFIX(ShaderBinary):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6288(%rax), %r11
+	movq	6312(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ShaderBinary), .-GL_PREFIX(ShaderBinary)
@@ -29679,7 +29786,7 @@ GL_PREFIX(ShaderBinary):
 GL_PREFIX(GetProgramBinary):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6296(%rax), %r11
+	movq	6320(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29693,13 +29800,13 @@ GL_PREFIX(GetProgramBinary):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6296(%rax), %r11
+	movq	6320(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6296(%rax), %r11
+	movq	6320(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29713,7 +29820,7 @@ GL_PREFIX(GetProgramBinary):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6296(%rax), %r11
+	movq	6320(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetProgramBinary), .-GL_PREFIX(GetProgramBinary)
@@ -29724,7 +29831,7 @@ GL_PREFIX(GetProgramBinary):
 GL_PREFIX(ProgramBinary):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6304(%rax), %r11
+	movq	6328(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29738,13 +29845,13 @@ GL_PREFIX(ProgramBinary):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6304(%rax), %r11
+	movq	6328(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6304(%rax), %r11
+	movq	6328(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29758,7 +29865,7 @@ GL_PREFIX(ProgramBinary):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6304(%rax), %r11
+	movq	6328(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramBinary), .-GL_PREFIX(ProgramBinary)
@@ -29769,7 +29876,7 @@ GL_PREFIX(ProgramBinary):
 GL_PREFIX(ProgramParameteri):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6312(%rax), %r11
+	movq	6336(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29779,13 +29886,13 @@ GL_PREFIX(ProgramParameteri):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6312(%rax), %r11
+	movq	6336(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6312(%rax), %r11
+	movq	6336(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29795,161 +29902,203 @@ GL_PREFIX(ProgramParameteri):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6312(%rax), %r11
+	movq	6336(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ProgramParameteri), .-GL_PREFIX(ProgramParameteri)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(DebugMessageCallbackARB)
-	.type	GL_PREFIX(DebugMessageCallbackARB), @function
-GL_PREFIX(DebugMessageCallbackARB):
+	.globl	GL_PREFIX(DepthRangeArrayv)
+	.type	GL_PREFIX(DepthRangeArrayv), @function
+GL_PREFIX(DepthRangeArrayv):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6320(%rax), %r11
+	movq	6344(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6320(%rax), %r11
+	movq	6344(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6320(%rax), %r11
+	movq	6344(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6320(%rax), %r11
+	movq	6344(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(DebugMessageCallbackARB), .-GL_PREFIX(DebugMessageCallbackARB)
+	.size	GL_PREFIX(DepthRangeArrayv), .-GL_PREFIX(DepthRangeArrayv)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(DebugMessageControlARB)
-	.type	GL_PREFIX(DebugMessageControlARB), @function
-GL_PREFIX(DebugMessageControlARB):
+	.globl	GL_PREFIX(DepthRangeIndexed)
+	.type	GL_PREFIX(DepthRangeIndexed), @function
+GL_PREFIX(DepthRangeIndexed):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6328(%rax), %r11
+	movq	6352(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%r9
-	popq	%r8
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6328(%rax), %r11
+	movq	6352(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6328(%rax), %r11
+	movq	6352(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%r9
-	popq	%r8
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6328(%rax), %r11
+	movq	6352(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(DebugMessageControlARB), .-GL_PREFIX(DebugMessageControlARB)
+	.size	GL_PREFIX(DepthRangeIndexed), .-GL_PREFIX(DepthRangeIndexed)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(DebugMessageInsertARB)
-	.type	GL_PREFIX(DebugMessageInsertARB), @function
-GL_PREFIX(DebugMessageInsertARB):
+	.globl	GL_PREFIX(GetDoublei_v)
+	.type	GL_PREFIX(GetDoublei_v), @function
+GL_PREFIX(GetDoublei_v):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6336(%rax), %r11
+	movq	6360(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%r9
-	popq	%r8
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6336(%rax), %r11
+	movq	6360(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6336(%rax), %r11
+	movq	6360(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%r9
-	popq	%r8
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6336(%rax), %r11
+	movq	6360(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(DebugMessageInsertARB), .-GL_PREFIX(DebugMessageInsertARB)
+	.size	GL_PREFIX(GetDoublei_v), .-GL_PREFIX(GetDoublei_v)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetDebugMessageLogARB)
-	.type	GL_PREFIX(GetDebugMessageLogARB), @function
-GL_PREFIX(GetDebugMessageLogARB):
+	.globl	GL_PREFIX(GetFloati_v)
+	.type	GL_PREFIX(GetFloati_v), @function
+GL_PREFIX(GetFloati_v):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6344(%rax), %r11
+	movq	6368(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6368(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6368(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6368(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetFloati_v), .-GL_PREFIX(GetFloati_v)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ScissorArrayv)
+	.type	GL_PREFIX(ScissorArrayv), @function
+GL_PREFIX(ScissorArrayv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6376(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6376(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6376(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6376(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ScissorArrayv), .-GL_PREFIX(ScissorArrayv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ScissorIndexed)
+	.type	GL_PREFIX(ScissorIndexed), @function
+GL_PREFIX(ScissorIndexed):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6384(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -29957,23 +30106,19 @@ GL_PREFIX(GetDebugMessageLogARB):
 	pushq	%rdx
 	pushq	%rcx
 	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%r9
 	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6344(%rax), %r11
+	movq	6384(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6344(%rax), %r11
+	movq	6384(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -29981,20 +30126,176 @@ GL_PREFIX(GetDebugMessageLogARB):
 	pushq	%rdx
 	pushq	%rcx
 	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%r9
 	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6344(%rax), %r11
+	movq	6384(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetDebugMessageLogARB), .-GL_PREFIX(GetDebugMessageLogARB)
+	.size	GL_PREFIX(ScissorIndexed), .-GL_PREFIX(ScissorIndexed)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ScissorIndexedv)
+	.type	GL_PREFIX(ScissorIndexedv), @function
+GL_PREFIX(ScissorIndexedv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6392(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6392(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6392(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6392(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ScissorIndexedv), .-GL_PREFIX(ScissorIndexedv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ViewportArrayv)
+	.type	GL_PREFIX(ViewportArrayv), @function
+GL_PREFIX(ViewportArrayv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6400(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6400(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6400(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6400(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ViewportArrayv), .-GL_PREFIX(ViewportArrayv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ViewportIndexedf)
+	.type	GL_PREFIX(ViewportIndexedf), @function
+GL_PREFIX(ViewportIndexedf):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6408(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
+	movq	%xmm3, 32(%rsp)
+	call	_x86_64_get_dispatch@PLT
+	movq	32(%rsp), %xmm3
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
+	movq	6408(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6408(%rax), %r11
+	jmp	*%r11
+1:
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
+	movq	%xmm3, 32(%rsp)
+	call	_glapi_get_dispatch
+	movq	32(%rsp), %xmm3
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
+	movq	6408(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ViewportIndexedf), .-GL_PREFIX(ViewportIndexedf)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ViewportIndexedfv)
+	.type	GL_PREFIX(ViewportIndexedfv), @function
+GL_PREFIX(ViewportIndexedfv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6416(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6416(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6416(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6416(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ViewportIndexedfv), .-GL_PREFIX(ViewportIndexedfv)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(GetGraphicsResetStatusARB)
@@ -30002,25 +30303,25 @@ GL_PREFIX(GetDebugMessageLogARB):
 GL_PREFIX(GetGraphicsResetStatusARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6352(%rax), %r11
+	movq	6424(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	movq	6352(%rax), %r11
+	movq	6424(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6352(%rax), %r11
+	movq	6424(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	movq	6352(%rax), %r11
+	movq	6424(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetGraphicsResetStatusARB), .-GL_PREFIX(GetGraphicsResetStatusARB)
@@ -30031,7 +30332,7 @@ GL_PREFIX(GetGraphicsResetStatusARB):
 GL_PREFIX(GetnColorTableARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6360(%rax), %r11
+	movq	6432(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30045,13 +30346,13 @@ GL_PREFIX(GetnColorTableARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6360(%rax), %r11
+	movq	6432(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6360(%rax), %r11
+	movq	6432(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30065,7 +30366,7 @@ GL_PREFIX(GetnColorTableARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6360(%rax), %r11
+	movq	6432(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnColorTableARB), .-GL_PREFIX(GetnColorTableARB)
@@ -30076,7 +30377,7 @@ GL_PREFIX(GetnColorTableARB):
 GL_PREFIX(GetnCompressedTexImageARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6368(%rax), %r11
+	movq	6440(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30090,13 +30391,13 @@ GL_PREFIX(GetnCompressedTexImageARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6368(%rax), %r11
+	movq	6440(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6368(%rax), %r11
+	movq	6440(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30110,7 +30411,7 @@ GL_PREFIX(GetnCompressedTexImageARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6368(%rax), %r11
+	movq	6440(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnCompressedTexImageARB), .-GL_PREFIX(GetnCompressedTexImageARB)
@@ -30121,7 +30422,7 @@ GL_PREFIX(GetnCompressedTexImageARB):
 GL_PREFIX(GetnConvolutionFilterARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6376(%rax), %r11
+	movq	6448(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30135,13 +30436,13 @@ GL_PREFIX(GetnConvolutionFilterARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6376(%rax), %r11
+	movq	6448(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6376(%rax), %r11
+	movq	6448(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30155,7 +30456,7 @@ GL_PREFIX(GetnConvolutionFilterARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6376(%rax), %r11
+	movq	6448(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnConvolutionFilterARB), .-GL_PREFIX(GetnConvolutionFilterARB)
@@ -30166,7 +30467,7 @@ GL_PREFIX(GetnConvolutionFilterARB):
 GL_PREFIX(GetnHistogramARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6384(%rax), %r11
+	movq	6456(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30184,13 +30485,13 @@ GL_PREFIX(GetnHistogramARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6384(%rax), %r11
+	movq	6456(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6384(%rax), %r11
+	movq	6456(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30208,7 +30509,7 @@ GL_PREFIX(GetnHistogramARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6384(%rax), %r11
+	movq	6456(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnHistogramARB), .-GL_PREFIX(GetnHistogramARB)
@@ -30219,7 +30520,7 @@ GL_PREFIX(GetnHistogramARB):
 GL_PREFIX(GetnMapdvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6392(%rax), %r11
+	movq	6464(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30233,13 +30534,13 @@ GL_PREFIX(GetnMapdvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6392(%rax), %r11
+	movq	6464(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6392(%rax), %r11
+	movq	6464(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30253,7 +30554,7 @@ GL_PREFIX(GetnMapdvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6392(%rax), %r11
+	movq	6464(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnMapdvARB), .-GL_PREFIX(GetnMapdvARB)
@@ -30264,7 +30565,7 @@ GL_PREFIX(GetnMapdvARB):
 GL_PREFIX(GetnMapfvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6400(%rax), %r11
+	movq	6472(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30278,13 +30579,13 @@ GL_PREFIX(GetnMapfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6400(%rax), %r11
+	movq	6472(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6400(%rax), %r11
+	movq	6472(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30298,7 +30599,7 @@ GL_PREFIX(GetnMapfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6400(%rax), %r11
+	movq	6472(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnMapfvARB), .-GL_PREFIX(GetnMapfvARB)
@@ -30309,7 +30610,7 @@ GL_PREFIX(GetnMapfvARB):
 GL_PREFIX(GetnMapivARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6408(%rax), %r11
+	movq	6480(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30323,13 +30624,13 @@ GL_PREFIX(GetnMapivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6408(%rax), %r11
+	movq	6480(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6408(%rax), %r11
+	movq	6480(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30343,7 +30644,7 @@ GL_PREFIX(GetnMapivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6408(%rax), %r11
+	movq	6480(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnMapivARB), .-GL_PREFIX(GetnMapivARB)
@@ -30354,7 +30655,7 @@ GL_PREFIX(GetnMapivARB):
 GL_PREFIX(GetnMinmaxARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6416(%rax), %r11
+	movq	6488(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30372,13 +30673,13 @@ GL_PREFIX(GetnMinmaxARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6416(%rax), %r11
+	movq	6488(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6416(%rax), %r11
+	movq	6488(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30396,7 +30697,7 @@ GL_PREFIX(GetnMinmaxARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6416(%rax), %r11
+	movq	6488(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnMinmaxARB), .-GL_PREFIX(GetnMinmaxARB)
@@ -30407,7 +30708,7 @@ GL_PREFIX(GetnMinmaxARB):
 GL_PREFIX(GetnPixelMapfvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6424(%rax), %r11
+	movq	6496(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30417,13 +30718,13 @@ GL_PREFIX(GetnPixelMapfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6424(%rax), %r11
+	movq	6496(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6424(%rax), %r11
+	movq	6496(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30433,7 +30734,7 @@ GL_PREFIX(GetnPixelMapfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6424(%rax), %r11
+	movq	6496(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnPixelMapfvARB), .-GL_PREFIX(GetnPixelMapfvARB)
@@ -30444,7 +30745,7 @@ GL_PREFIX(GetnPixelMapfvARB):
 GL_PREFIX(GetnPixelMapuivARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6432(%rax), %r11
+	movq	6504(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30454,13 +30755,13 @@ GL_PREFIX(GetnPixelMapuivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6432(%rax), %r11
+	movq	6504(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6432(%rax), %r11
+	movq	6504(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30470,7 +30771,7 @@ GL_PREFIX(GetnPixelMapuivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6432(%rax), %r11
+	movq	6504(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnPixelMapuivARB), .-GL_PREFIX(GetnPixelMapuivARB)
@@ -30481,7 +30782,7 @@ GL_PREFIX(GetnPixelMapuivARB):
 GL_PREFIX(GetnPixelMapusvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6440(%rax), %r11
+	movq	6512(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30491,13 +30792,13 @@ GL_PREFIX(GetnPixelMapusvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6440(%rax), %r11
+	movq	6512(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6440(%rax), %r11
+	movq	6512(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30507,7 +30808,7 @@ GL_PREFIX(GetnPixelMapusvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6440(%rax), %r11
+	movq	6512(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnPixelMapusvARB), .-GL_PREFIX(GetnPixelMapusvARB)
@@ -30518,7 +30819,7 @@ GL_PREFIX(GetnPixelMapusvARB):
 GL_PREFIX(GetnPolygonStippleARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6448(%rax), %r11
+	movq	6520(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30528,13 +30829,13 @@ GL_PREFIX(GetnPolygonStippleARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6448(%rax), %r11
+	movq	6520(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6448(%rax), %r11
+	movq	6520(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30544,7 +30845,7 @@ GL_PREFIX(GetnPolygonStippleARB):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6448(%rax), %r11
+	movq	6520(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnPolygonStippleARB), .-GL_PREFIX(GetnPolygonStippleARB)
@@ -30555,7 +30856,7 @@ GL_PREFIX(GetnPolygonStippleARB):
 GL_PREFIX(GetnSeparableFilterARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6456(%rax), %r11
+	movq	6528(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30573,13 +30874,13 @@ GL_PREFIX(GetnSeparableFilterARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6456(%rax), %r11
+	movq	6528(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6456(%rax), %r11
+	movq	6528(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30597,7 +30898,7 @@ GL_PREFIX(GetnSeparableFilterARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6456(%rax), %r11
+	movq	6528(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnSeparableFilterARB), .-GL_PREFIX(GetnSeparableFilterARB)
@@ -30608,7 +30909,7 @@ GL_PREFIX(GetnSeparableFilterARB):
 GL_PREFIX(GetnTexImageARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6464(%rax), %r11
+	movq	6536(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30626,13 +30927,13 @@ GL_PREFIX(GetnTexImageARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6464(%rax), %r11
+	movq	6536(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6464(%rax), %r11
+	movq	6536(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30650,7 +30951,7 @@ GL_PREFIX(GetnTexImageARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6464(%rax), %r11
+	movq	6536(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnTexImageARB), .-GL_PREFIX(GetnTexImageARB)
@@ -30661,7 +30962,7 @@ GL_PREFIX(GetnTexImageARB):
 GL_PREFIX(GetnUniformdvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6472(%rax), %r11
+	movq	6544(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30675,13 +30976,13 @@ GL_PREFIX(GetnUniformdvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6472(%rax), %r11
+	movq	6544(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6472(%rax), %r11
+	movq	6544(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30695,7 +30996,7 @@ GL_PREFIX(GetnUniformdvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6472(%rax), %r11
+	movq	6544(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnUniformdvARB), .-GL_PREFIX(GetnUniformdvARB)
@@ -30706,7 +31007,7 @@ GL_PREFIX(GetnUniformdvARB):
 GL_PREFIX(GetnUniformfvARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6480(%rax), %r11
+	movq	6552(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30720,13 +31021,13 @@ GL_PREFIX(GetnUniformfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6480(%rax), %r11
+	movq	6552(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6480(%rax), %r11
+	movq	6552(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30740,7 +31041,7 @@ GL_PREFIX(GetnUniformfvARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6480(%rax), %r11
+	movq	6552(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnUniformfvARB), .-GL_PREFIX(GetnUniformfvARB)
@@ -30751,7 +31052,7 @@ GL_PREFIX(GetnUniformfvARB):
 GL_PREFIX(GetnUniformivARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6488(%rax), %r11
+	movq	6560(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30765,13 +31066,13 @@ GL_PREFIX(GetnUniformivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6488(%rax), %r11
+	movq	6560(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6488(%rax), %r11
+	movq	6560(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30785,7 +31086,7 @@ GL_PREFIX(GetnUniformivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6488(%rax), %r11
+	movq	6560(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnUniformivARB), .-GL_PREFIX(GetnUniformivARB)
@@ -30796,7 +31097,7 @@ GL_PREFIX(GetnUniformivARB):
 GL_PREFIX(GetnUniformuivARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6496(%rax), %r11
+	movq	6568(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30810,13 +31111,13 @@ GL_PREFIX(GetnUniformuivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6496(%rax), %r11
+	movq	6568(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6496(%rax), %r11
+	movq	6568(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30830,7 +31131,7 @@ GL_PREFIX(GetnUniformuivARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6496(%rax), %r11
+	movq	6568(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(GetnUniformuivARB), .-GL_PREFIX(GetnUniformuivARB)
@@ -30841,7 +31142,7 @@ GL_PREFIX(GetnUniformuivARB):
 GL_PREFIX(ReadnPixelsARB):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6504(%rax), %r11
+	movq	6576(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30859,13 +31160,13 @@ GL_PREFIX(ReadnPixelsARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6504(%rax), %r11
+	movq	6576(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6504(%rax), %r11
+	movq	6576(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30883,7 +31184,7 @@ GL_PREFIX(ReadnPixelsARB):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6504(%rax), %r11
+	movq	6576(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(ReadnPixelsARB), .-GL_PREFIX(ReadnPixelsARB)
@@ -30894,7 +31195,7 @@ GL_PREFIX(ReadnPixelsARB):
 GL_PREFIX(DrawArraysInstancedBaseInstance):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6512(%rax), %r11
+	movq	6584(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30908,13 +31209,13 @@ GL_PREFIX(DrawArraysInstancedBaseInstance):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6512(%rax), %r11
+	movq	6584(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6512(%rax), %r11
+	movq	6584(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30928,7 +31229,7 @@ GL_PREFIX(DrawArraysInstancedBaseInstance):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6512(%rax), %r11
+	movq	6584(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawArraysInstancedBaseInstance), .-GL_PREFIX(DrawArraysInstancedBaseInstance)
@@ -30939,7 +31240,7 @@ GL_PREFIX(DrawArraysInstancedBaseInstance):
 GL_PREFIX(DrawElementsInstancedBaseInstance):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6520(%rax), %r11
+	movq	6592(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -30957,13 +31258,13 @@ GL_PREFIX(DrawElementsInstancedBaseInstance):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6520(%rax), %r11
+	movq	6592(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6520(%rax), %r11
+	movq	6592(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -30981,7 +31282,7 @@ GL_PREFIX(DrawElementsInstancedBaseInstance):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6520(%rax), %r11
+	movq	6592(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawElementsInstancedBaseInstance), .-GL_PREFIX(DrawElementsInstancedBaseInstance)
@@ -30992,7 +31293,7 @@ GL_PREFIX(DrawElementsInstancedBaseInstance):
 GL_PREFIX(DrawElementsInstancedBaseVertexBaseInstance):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6528(%rax), %r11
+	movq	6600(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31010,13 +31311,13 @@ GL_PREFIX(DrawElementsInstancedBaseVertexBaseInstance):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6528(%rax), %r11
+	movq	6600(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6528(%rax), %r11
+	movq	6600(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31034,7 +31335,7 @@ GL_PREFIX(DrawElementsInstancedBaseVertexBaseInstance):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6528(%rax), %r11
+	movq	6600(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawElementsInstancedBaseVertexBaseInstance), .-GL_PREFIX(DrawElementsInstancedBaseVertexBaseInstance)
@@ -31045,7 +31346,7 @@ GL_PREFIX(DrawElementsInstancedBaseVertexBaseInstance):
 GL_PREFIX(DrawTransformFeedbackInstanced):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6536(%rax), %r11
+	movq	6608(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31055,13 +31356,13 @@ GL_PREFIX(DrawTransformFeedbackInstanced):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6536(%rax), %r11
+	movq	6608(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6536(%rax), %r11
+	movq	6608(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31071,7 +31372,7 @@ GL_PREFIX(DrawTransformFeedbackInstanced):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6536(%rax), %r11
+	movq	6608(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawTransformFeedbackInstanced), .-GL_PREFIX(DrawTransformFeedbackInstanced)
@@ -31082,7 +31383,7 @@ GL_PREFIX(DrawTransformFeedbackInstanced):
 GL_PREFIX(DrawTransformFeedbackStreamInstanced):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6544(%rax), %r11
+	movq	6616(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31096,13 +31397,13 @@ GL_PREFIX(DrawTransformFeedbackStreamInstanced):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6544(%rax), %r11
+	movq	6616(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6544(%rax), %r11
+	movq	6616(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31116,19 +31417,19 @@ GL_PREFIX(DrawTransformFeedbackStreamInstanced):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6544(%rax), %r11
+	movq	6616(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(DrawTransformFeedbackStreamInstanced), .-GL_PREFIX(DrawTransformFeedbackStreamInstanced)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_819)
-	.type	GL_PREFIX(_dispatch_stub_819), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_819))
-GL_PREFIX(_dispatch_stub_819):
+	.globl	GL_PREFIX(_dispatch_stub_828)
+	.type	GL_PREFIX(_dispatch_stub_828), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_828))
+GL_PREFIX(_dispatch_stub_828):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6552(%rax), %r11
+	movq	6624(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31142,13 +31443,13 @@ GL_PREFIX(_dispatch_stub_819):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6552(%rax), %r11
+	movq	6624(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6552(%rax), %r11
+	movq	6624(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31162,10 +31463,137 @@ GL_PREFIX(_dispatch_stub_819):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6552(%rax), %r11
+	movq	6624(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_819), .-GL_PREFIX(_dispatch_stub_819)
+	.size	GL_PREFIX(_dispatch_stub_828), .-GL_PREFIX(_dispatch_stub_828)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetActiveAtomicCounterBufferiv)
+	.type	GL_PREFIX(GetActiveAtomicCounterBufferiv), @function
+GL_PREFIX(GetActiveAtomicCounterBufferiv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6632(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6632(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6632(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6632(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetActiveAtomicCounterBufferiv), .-GL_PREFIX(GetActiveAtomicCounterBufferiv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindImageTexture)
+	.type	GL_PREFIX(BindImageTexture), @function
+GL_PREFIX(BindImageTexture):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6640(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6640(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6640(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6640(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindImageTexture), .-GL_PREFIX(BindImageTexture)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(MemoryBarrier)
+	.type	GL_PREFIX(MemoryBarrier), @function
+GL_PREFIX(MemoryBarrier):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6648(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	6648(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6648(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	6648(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(MemoryBarrier), .-GL_PREFIX(MemoryBarrier)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(TexStorage1D)
@@ -31173,7 +31601,7 @@ GL_PREFIX(_dispatch_stub_819):
 GL_PREFIX(TexStorage1D):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6560(%rax), %r11
+	movq	6656(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31187,13 +31615,13 @@ GL_PREFIX(TexStorage1D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6560(%rax), %r11
+	movq	6656(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6560(%rax), %r11
+	movq	6656(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31207,7 +31635,7 @@ GL_PREFIX(TexStorage1D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6560(%rax), %r11
+	movq	6656(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexStorage1D), .-GL_PREFIX(TexStorage1D)
@@ -31218,7 +31646,7 @@ GL_PREFIX(TexStorage1D):
 GL_PREFIX(TexStorage2D):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6568(%rax), %r11
+	movq	6664(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31232,13 +31660,13 @@ GL_PREFIX(TexStorage2D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6568(%rax), %r11
+	movq	6664(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6568(%rax), %r11
+	movq	6664(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31252,7 +31680,7 @@ GL_PREFIX(TexStorage2D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6568(%rax), %r11
+	movq	6664(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexStorage2D), .-GL_PREFIX(TexStorage2D)
@@ -31263,7 +31691,7 @@ GL_PREFIX(TexStorage2D):
 GL_PREFIX(TexStorage3D):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6576(%rax), %r11
+	movq	6672(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31281,13 +31709,13 @@ GL_PREFIX(TexStorage3D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6576(%rax), %r11
+	movq	6672(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6576(%rax), %r11
+	movq	6672(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31305,7 +31733,7 @@ GL_PREFIX(TexStorage3D):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6576(%rax), %r11
+	movq	6672(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexStorage3D), .-GL_PREFIX(TexStorage3D)
@@ -31316,7 +31744,7 @@ GL_PREFIX(TexStorage3D):
 GL_PREFIX(TextureStorage1DEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6584(%rax), %r11
+	movq	6680(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31330,13 +31758,13 @@ GL_PREFIX(TextureStorage1DEXT):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6584(%rax), %r11
+	movq	6680(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6584(%rax), %r11
+	movq	6680(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31350,7 +31778,7 @@ GL_PREFIX(TextureStorage1DEXT):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6584(%rax), %r11
+	movq	6680(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TextureStorage1DEXT), .-GL_PREFIX(TextureStorage1DEXT)
@@ -31361,7 +31789,7 @@ GL_PREFIX(TextureStorage1DEXT):
 GL_PREFIX(TextureStorage2DEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6592(%rax), %r11
+	movq	6688(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31379,13 +31807,13 @@ GL_PREFIX(TextureStorage2DEXT):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6592(%rax), %r11
+	movq	6688(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6592(%rax), %r11
+	movq	6688(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31403,7 +31831,7 @@ GL_PREFIX(TextureStorage2DEXT):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6592(%rax), %r11
+	movq	6688(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TextureStorage2DEXT), .-GL_PREFIX(TextureStorage2DEXT)
@@ -31414,7 +31842,7 @@ GL_PREFIX(TextureStorage2DEXT):
 GL_PREFIX(TextureStorage3DEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6600(%rax), %r11
+	movq	6696(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31432,13 +31860,13 @@ GL_PREFIX(TextureStorage3DEXT):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6600(%rax), %r11
+	movq	6696(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6600(%rax), %r11
+	movq	6696(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31456,10 +31884,571 @@ GL_PREFIX(TextureStorage3DEXT):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6600(%rax), %r11
+	movq	6696(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TextureStorage3DEXT), .-GL_PREFIX(TextureStorage3DEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ClearBufferData)
+	.type	GL_PREFIX(ClearBufferData), @function
+GL_PREFIX(ClearBufferData):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6704(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6704(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6704(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6704(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ClearBufferData), .-GL_PREFIX(ClearBufferData)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ClearBufferSubData)
+	.type	GL_PREFIX(ClearBufferSubData), @function
+GL_PREFIX(ClearBufferSubData):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6712(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6712(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6712(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6712(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ClearBufferSubData), .-GL_PREFIX(ClearBufferSubData)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(DispatchCompute)
+	.type	GL_PREFIX(DispatchCompute), @function
+GL_PREFIX(DispatchCompute):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6720(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6720(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6720(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6720(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(DispatchCompute), .-GL_PREFIX(DispatchCompute)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(DispatchComputeIndirect)
+	.type	GL_PREFIX(DispatchComputeIndirect), @function
+GL_PREFIX(DispatchComputeIndirect):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6728(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	6728(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6728(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	6728(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(DispatchComputeIndirect), .-GL_PREFIX(DispatchComputeIndirect)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(TextureView)
+	.type	GL_PREFIX(TextureView), @function
+GL_PREFIX(TextureView):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6736(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6736(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6736(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6736(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(TextureView), .-GL_PREFIX(TextureView)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindVertexBuffer)
+	.type	GL_PREFIX(BindVertexBuffer), @function
+GL_PREFIX(BindVertexBuffer):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6744(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6744(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6744(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6744(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindVertexBuffer), .-GL_PREFIX(BindVertexBuffer)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribBinding)
+	.type	GL_PREFIX(VertexAttribBinding), @function
+GL_PREFIX(VertexAttribBinding):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6752(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6752(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6752(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6752(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribBinding), .-GL_PREFIX(VertexAttribBinding)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribFormat)
+	.type	GL_PREFIX(VertexAttribFormat), @function
+GL_PREFIX(VertexAttribFormat):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6760(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6760(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6760(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6760(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribFormat), .-GL_PREFIX(VertexAttribFormat)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribIFormat)
+	.type	GL_PREFIX(VertexAttribIFormat), @function
+GL_PREFIX(VertexAttribIFormat):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6768(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6768(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6768(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6768(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribIFormat), .-GL_PREFIX(VertexAttribIFormat)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribLFormat)
+	.type	GL_PREFIX(VertexAttribLFormat), @function
+GL_PREFIX(VertexAttribLFormat):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6776(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6776(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6776(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6776(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribLFormat), .-GL_PREFIX(VertexAttribLFormat)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexBindingDivisor)
+	.type	GL_PREFIX(VertexBindingDivisor), @function
+GL_PREFIX(VertexBindingDivisor):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6784(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6784(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6784(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	6784(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexBindingDivisor), .-GL_PREFIX(VertexBindingDivisor)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(MultiDrawArraysIndirect)
+	.type	GL_PREFIX(MultiDrawArraysIndirect), @function
+GL_PREFIX(MultiDrawArraysIndirect):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6792(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6792(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6792(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6792(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(MultiDrawArraysIndirect), .-GL_PREFIX(MultiDrawArraysIndirect)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(MultiDrawElementsIndirect)
+	.type	GL_PREFIX(MultiDrawElementsIndirect), @function
+GL_PREFIX(MultiDrawElementsIndirect):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6800(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6800(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6800(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6800(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(MultiDrawElementsIndirect), .-GL_PREFIX(MultiDrawElementsIndirect)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(TexBufferRange)
@@ -31467,7 +32456,7 @@ GL_PREFIX(TextureStorage3DEXT):
 GL_PREFIX(TexBufferRange):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6608(%rax), %r11
+	movq	6808(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31481,13 +32470,13 @@ GL_PREFIX(TexBufferRange):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6608(%rax), %r11
+	movq	6808(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6608(%rax), %r11
+	movq	6808(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31501,7 +32490,7 @@ GL_PREFIX(TexBufferRange):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6608(%rax), %r11
+	movq	6808(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexBufferRange), .-GL_PREFIX(TexBufferRange)
@@ -31512,7 +32501,7 @@ GL_PREFIX(TexBufferRange):
 GL_PREFIX(TexStorage2DMultisample):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6616(%rax), %r11
+	movq	6816(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31530,13 +32519,13 @@ GL_PREFIX(TexStorage2DMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6616(%rax), %r11
+	movq	6816(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6616(%rax), %r11
+	movq	6816(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31554,7 +32543,7 @@ GL_PREFIX(TexStorage2DMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6616(%rax), %r11
+	movq	6816(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexStorage2DMultisample), .-GL_PREFIX(TexStorage2DMultisample)
@@ -31565,7 +32554,7 @@ GL_PREFIX(TexStorage2DMultisample):
 GL_PREFIX(TexStorage3DMultisample):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6624(%rax), %r11
+	movq	6824(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31583,13 +32572,13 @@ GL_PREFIX(TexStorage3DMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6624(%rax), %r11
+	movq	6824(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6624(%rax), %r11
+	movq	6824(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31607,10 +32596,309 @@ GL_PREFIX(TexStorage3DMultisample):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6624(%rax), %r11
+	movq	6824(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(TexStorage3DMultisample), .-GL_PREFIX(TexStorage3DMultisample)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BufferStorage)
+	.type	GL_PREFIX(BufferStorage), @function
+GL_PREFIX(BufferStorage):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6832(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6832(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6832(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6832(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BufferStorage), .-GL_PREFIX(BufferStorage)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindBuffersBase)
+	.type	GL_PREFIX(BindBuffersBase), @function
+GL_PREFIX(BindBuffersBase):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6840(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6840(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6840(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6840(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindBuffersBase), .-GL_PREFIX(BindBuffersBase)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindBuffersRange)
+	.type	GL_PREFIX(BindBuffersRange), @function
+GL_PREFIX(BindBuffersRange):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6848(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6848(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6848(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6848(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindBuffersRange), .-GL_PREFIX(BindBuffersRange)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindImageTextures)
+	.type	GL_PREFIX(BindImageTextures), @function
+GL_PREFIX(BindImageTextures):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6856(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6856(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6856(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6856(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindImageTextures), .-GL_PREFIX(BindImageTextures)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindSamplers)
+	.type	GL_PREFIX(BindSamplers), @function
+GL_PREFIX(BindSamplers):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6864(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6864(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6864(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6864(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindSamplers), .-GL_PREFIX(BindSamplers)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindTextures)
+	.type	GL_PREFIX(BindTextures), @function
+GL_PREFIX(BindTextures):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6872(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6872(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6872(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6872(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindTextures), .-GL_PREFIX(BindTextures)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindVertexBuffers)
+	.type	GL_PREFIX(BindVertexBuffers), @function
+GL_PREFIX(BindVertexBuffers):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	6880(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6880(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6880(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6880(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindVertexBuffers), .-GL_PREFIX(BindVertexBuffers)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(InvalidateBufferData)
@@ -31618,25 +32906,25 @@ GL_PREFIX(TexStorage3DMultisample):
 GL_PREFIX(InvalidateBufferData):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6632(%rax), %r11
+	movq	6888(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
-	movq	6632(%rax), %r11
+	movq	6888(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6632(%rax), %r11
+	movq	6888(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	call	_glapi_get_dispatch
 	popq	%rdi
-	movq	6632(%rax), %r11
+	movq	6888(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(InvalidateBufferData), .-GL_PREFIX(InvalidateBufferData)
@@ -31647,7 +32935,7 @@ GL_PREFIX(InvalidateBufferData):
 GL_PREFIX(InvalidateBufferSubData):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6640(%rax), %r11
+	movq	6896(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31657,13 +32945,13 @@ GL_PREFIX(InvalidateBufferSubData):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6640(%rax), %r11
+	movq	6896(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6640(%rax), %r11
+	movq	6896(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31673,7 +32961,7 @@ GL_PREFIX(InvalidateBufferSubData):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6640(%rax), %r11
+	movq	6896(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(InvalidateBufferSubData), .-GL_PREFIX(InvalidateBufferSubData)
@@ -31684,7 +32972,7 @@ GL_PREFIX(InvalidateBufferSubData):
 GL_PREFIX(InvalidateFramebuffer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6648(%rax), %r11
+	movq	6904(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31694,13 +32982,13 @@ GL_PREFIX(InvalidateFramebuffer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6648(%rax), %r11
+	movq	6904(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6648(%rax), %r11
+	movq	6904(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31710,7 +32998,7 @@ GL_PREFIX(InvalidateFramebuffer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6648(%rax), %r11
+	movq	6904(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(InvalidateFramebuffer), .-GL_PREFIX(InvalidateFramebuffer)
@@ -31721,7 +33009,7 @@ GL_PREFIX(InvalidateFramebuffer):
 GL_PREFIX(InvalidateSubFramebuffer):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6656(%rax), %r11
+	movq	6912(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31739,13 +33027,13 @@ GL_PREFIX(InvalidateSubFramebuffer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6656(%rax), %r11
+	movq	6912(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6656(%rax), %r11
+	movq	6912(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31763,7 +33051,7 @@ GL_PREFIX(InvalidateSubFramebuffer):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6656(%rax), %r11
+	movq	6912(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(InvalidateSubFramebuffer), .-GL_PREFIX(InvalidateSubFramebuffer)
@@ -31774,7 +33062,7 @@ GL_PREFIX(InvalidateSubFramebuffer):
 GL_PREFIX(InvalidateTexImage):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6664(%rax), %r11
+	movq	6920(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31784,13 +33072,13 @@ GL_PREFIX(InvalidateTexImage):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6664(%rax), %r11
+	movq	6920(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6664(%rax), %r11
+	movq	6920(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31800,7 +33088,7 @@ GL_PREFIX(InvalidateTexImage):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
-	movq	6664(%rax), %r11
+	movq	6920(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(InvalidateTexImage), .-GL_PREFIX(InvalidateTexImage)
@@ -31811,7 +33099,7 @@ GL_PREFIX(InvalidateTexImage):
 GL_PREFIX(InvalidateTexSubImage):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6672(%rax), %r11
+	movq	6928(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -31829,13 +33117,13 @@ GL_PREFIX(InvalidateTexSubImage):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6672(%rax), %r11
+	movq	6928(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6672(%rax), %r11
+	movq	6928(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -31853,7 +33141,7 @@ GL_PREFIX(InvalidateTexSubImage):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	6672(%rax), %r11
+	movq	6928(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(InvalidateTexSubImage), .-GL_PREFIX(InvalidateTexSubImage)
@@ -31864,7 +33152,7 @@ GL_PREFIX(InvalidateTexSubImage):
 GL_PREFIX(PolygonOffsetEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6680(%rax), %r11
+	movq	6936(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$24, %rsp
@@ -31874,13 +33162,13 @@ GL_PREFIX(PolygonOffsetEXT):
 	movq	8(%rsp), %xmm1
 	movq	(%rsp), %xmm0
 	addq	$24, %rsp
-	movq	6680(%rax), %r11
+	movq	6936(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6680(%rax), %r11
+	movq	6936(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$24, %rsp
@@ -31890,19 +33178,19 @@ GL_PREFIX(PolygonOffsetEXT):
 	movq	8(%rsp), %xmm1
 	movq	(%rsp), %xmm0
 	addq	$24, %rsp
-	movq	6680(%rax), %r11
+	movq	6936(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
 	.size	GL_PREFIX(PolygonOffsetEXT), .-GL_PREFIX(PolygonOffsetEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_836)
-	.type	GL_PREFIX(_dispatch_stub_836), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_836))
-GL_PREFIX(_dispatch_stub_836):
+	.globl	GL_PREFIX(_dispatch_stub_868)
+	.type	GL_PREFIX(_dispatch_stub_868), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_868))
+GL_PREFIX(_dispatch_stub_868):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	6688(%rax), %r11
+	movq	6944(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	subq	$40, %rsp
@@ -31918,13 +33206,13 @@ GL_PREFIX(_dispatch_stub_836):
 	movq	8(%rsp), %xmm1
 	movq	(%rsp), %xmm0
 	addq	$40, %rsp
-	movq	6688(%rax), %r11
+	movq	6944(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	6688(%rax), %r11
+	movq	6944(%rax), %r11
 	jmp	*%r11
 1:
 	subq	$40, %rsp
@@ -31940,1226 +33228,23 @@ GL_PREFIX(_dispatch_stub_836):
 	movq	8(%rsp), %xmm1
 	movq	(%rsp), %xmm0
 	addq	$40, %rsp
-	movq	6688(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_836), .-GL_PREFIX(_dispatch_stub_836)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_837)
-	.type	GL_PREFIX(_dispatch_stub_837), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_837))
-GL_PREFIX(_dispatch_stub_837):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6696(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6696(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6696(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6696(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_837), .-GL_PREFIX(_dispatch_stub_837)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_838)
-	.type	GL_PREFIX(_dispatch_stub_838), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_838))
-GL_PREFIX(_dispatch_stub_838):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6704(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6704(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6704(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6704(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_838), .-GL_PREFIX(_dispatch_stub_838)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_839)
-	.type	GL_PREFIX(_dispatch_stub_839), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_839))
-GL_PREFIX(_dispatch_stub_839):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6712(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6712(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6712(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6712(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_839), .-GL_PREFIX(_dispatch_stub_839)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_840)
-	.type	GL_PREFIX(_dispatch_stub_840), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_840))
-GL_PREFIX(_dispatch_stub_840):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6720(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6720(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6720(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6720(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_840), .-GL_PREFIX(_dispatch_stub_840)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_841)
-	.type	GL_PREFIX(_dispatch_stub_841), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_841))
-GL_PREFIX(_dispatch_stub_841):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6728(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6728(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6728(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6728(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_841), .-GL_PREFIX(_dispatch_stub_841)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_842)
-	.type	GL_PREFIX(_dispatch_stub_842), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_842))
-GL_PREFIX(_dispatch_stub_842):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6736(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6736(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6736(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6736(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_842), .-GL_PREFIX(_dispatch_stub_842)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_843)
-	.type	GL_PREFIX(_dispatch_stub_843), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_843))
-GL_PREFIX(_dispatch_stub_843):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6744(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6744(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6744(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6744(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_843), .-GL_PREFIX(_dispatch_stub_843)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_844)
-	.type	GL_PREFIX(_dispatch_stub_844), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_844))
-GL_PREFIX(_dispatch_stub_844):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6752(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6752(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6752(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6752(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_844), .-GL_PREFIX(_dispatch_stub_844)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_845)
-	.type	GL_PREFIX(_dispatch_stub_845), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_845))
-GL_PREFIX(_dispatch_stub_845):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6760(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	6760(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6760(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	6760(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_845), .-GL_PREFIX(_dispatch_stub_845)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_846)
-	.type	GL_PREFIX(_dispatch_stub_846), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_846))
-GL_PREFIX(_dispatch_stub_846):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6768(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	6768(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6768(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	6768(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_846), .-GL_PREFIX(_dispatch_stub_846)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_847)
-	.type	GL_PREFIX(_dispatch_stub_847), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_847))
-GL_PREFIX(_dispatch_stub_847):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6776(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6776(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6776(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6776(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_847), .-GL_PREFIX(_dispatch_stub_847)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(ColorPointerEXT)
-	.type	GL_PREFIX(ColorPointerEXT), @function
-GL_PREFIX(ColorPointerEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6784(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6784(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6784(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6784(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ColorPointerEXT), .-GL_PREFIX(ColorPointerEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(EdgeFlagPointerEXT)
-	.type	GL_PREFIX(EdgeFlagPointerEXT), @function
-GL_PREFIX(EdgeFlagPointerEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6792(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6792(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6792(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6792(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(EdgeFlagPointerEXT), .-GL_PREFIX(EdgeFlagPointerEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(IndexPointerEXT)
-	.type	GL_PREFIX(IndexPointerEXT), @function
-GL_PREFIX(IndexPointerEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6800(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6800(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6800(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6800(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(IndexPointerEXT), .-GL_PREFIX(IndexPointerEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(NormalPointerEXT)
-	.type	GL_PREFIX(NormalPointerEXT), @function
-GL_PREFIX(NormalPointerEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6808(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6808(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6808(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6808(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(NormalPointerEXT), .-GL_PREFIX(NormalPointerEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(TexCoordPointerEXT)
-	.type	GL_PREFIX(TexCoordPointerEXT), @function
-GL_PREFIX(TexCoordPointerEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6816(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6816(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6816(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6816(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(TexCoordPointerEXT), .-GL_PREFIX(TexCoordPointerEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexPointerEXT)
-	.type	GL_PREFIX(VertexPointerEXT), @function
-GL_PREFIX(VertexPointerEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6824(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6824(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6824(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6824(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexPointerEXT), .-GL_PREFIX(VertexPointerEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_854)
-	.type	GL_PREFIX(_dispatch_stub_854), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_854))
-GL_PREFIX(_dispatch_stub_854):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6832(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6832(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6832(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6832(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_854), .-GL_PREFIX(_dispatch_stub_854)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(LockArraysEXT)
-	.type	GL_PREFIX(LockArraysEXT), @function
-GL_PREFIX(LockArraysEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6840(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	6840(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6840(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	6840(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(LockArraysEXT), .-GL_PREFIX(LockArraysEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(UnlockArraysEXT)
-	.type	GL_PREFIX(UnlockArraysEXT), @function
-GL_PREFIX(UnlockArraysEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6848(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	movq	6848(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6848(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	movq	6848(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(UnlockArraysEXT), .-GL_PREFIX(UnlockArraysEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(SecondaryColor3fEXT)
-	.type	GL_PREFIX(SecondaryColor3fEXT), @function
-GL_PREFIX(SecondaryColor3fEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6856(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	subq	$24, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	call	_x86_64_get_dispatch@PLT
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$24, %rsp
-	movq	6856(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6856(%rax), %r11
-	jmp	*%r11
-1:
-	subq	$24, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	call	_glapi_get_dispatch
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$24, %rsp
-	movq	6856(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(SecondaryColor3fEXT), .-GL_PREFIX(SecondaryColor3fEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(SecondaryColor3fvEXT)
-	.type	GL_PREFIX(SecondaryColor3fvEXT), @function
-GL_PREFIX(SecondaryColor3fvEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6864(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6864(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6864(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6864(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(SecondaryColor3fvEXT), .-GL_PREFIX(SecondaryColor3fvEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(MultiDrawElementsEXT)
-	.type	GL_PREFIX(MultiDrawElementsEXT), @function
-GL_PREFIX(MultiDrawElementsEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6872(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6872(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6872(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6872(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(MultiDrawElementsEXT), .-GL_PREFIX(MultiDrawElementsEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(FogCoordfEXT)
-	.type	GL_PREFIX(FogCoordfEXT), @function
-GL_PREFIX(FogCoordfEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6880(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	subq	$8, %rsp
-	movq	%xmm0, (%rsp)
-	call	_x86_64_get_dispatch@PLT
-	movq	(%rsp), %xmm0
-	addq	$8, %rsp
-	movq	6880(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6880(%rax), %r11
-	jmp	*%r11
-1:
-	subq	$8, %rsp
-	movq	%xmm0, (%rsp)
-	call	_glapi_get_dispatch
-	movq	(%rsp), %xmm0
-	addq	$8, %rsp
-	movq	6880(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(FogCoordfEXT), .-GL_PREFIX(FogCoordfEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(FogCoordfvEXT)
-	.type	GL_PREFIX(FogCoordfvEXT), @function
-GL_PREFIX(FogCoordfvEXT):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6888(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6888(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6888(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6888(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(FogCoordfvEXT), .-GL_PREFIX(FogCoordfvEXT)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(ResizeBuffersMESA)
-	.type	GL_PREFIX(ResizeBuffersMESA), @function
-GL_PREFIX(ResizeBuffersMESA):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6896(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	movq	6896(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6896(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	movq	6896(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ResizeBuffersMESA), .-GL_PREFIX(ResizeBuffersMESA)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(WindowPos4dMESA)
-	.type	GL_PREFIX(WindowPos4dMESA), @function
-GL_PREFIX(WindowPos4dMESA):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6904(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	subq	$40, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	movq	%xmm3, 24(%rsp)
-	call	_x86_64_get_dispatch@PLT
-	movq	24(%rsp), %xmm3
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$40, %rsp
-	movq	6904(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6904(%rax), %r11
-	jmp	*%r11
-1:
-	subq	$40, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	movq	%xmm3, 24(%rsp)
-	call	_glapi_get_dispatch
-	movq	24(%rsp), %xmm3
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$40, %rsp
-	movq	6904(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(WindowPos4dMESA), .-GL_PREFIX(WindowPos4dMESA)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(WindowPos4dvMESA)
-	.type	GL_PREFIX(WindowPos4dvMESA), @function
-GL_PREFIX(WindowPos4dvMESA):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6912(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6912(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6912(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6912(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(WindowPos4dvMESA), .-GL_PREFIX(WindowPos4dvMESA)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(WindowPos4fMESA)
-	.type	GL_PREFIX(WindowPos4fMESA), @function
-GL_PREFIX(WindowPos4fMESA):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6920(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	subq	$40, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	movq	%xmm3, 24(%rsp)
-	call	_x86_64_get_dispatch@PLT
-	movq	24(%rsp), %xmm3
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$40, %rsp
-	movq	6920(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6920(%rax), %r11
-	jmp	*%r11
-1:
-	subq	$40, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	movq	%xmm3, 24(%rsp)
-	call	_glapi_get_dispatch
-	movq	24(%rsp), %xmm3
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$40, %rsp
-	movq	6920(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(WindowPos4fMESA), .-GL_PREFIX(WindowPos4fMESA)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(WindowPos4fvMESA)
-	.type	GL_PREFIX(WindowPos4fvMESA), @function
-GL_PREFIX(WindowPos4fvMESA):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6928(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6928(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6928(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	6928(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(WindowPos4fvMESA), .-GL_PREFIX(WindowPos4fvMESA)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(WindowPos4iMESA)
-	.type	GL_PREFIX(WindowPos4iMESA), @function
-GL_PREFIX(WindowPos4iMESA):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6936(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6936(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6936(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6936(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(WindowPos4iMESA), .-GL_PREFIX(WindowPos4iMESA)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(WindowPos4ivMESA)
-	.type	GL_PREFIX(WindowPos4ivMESA), @function
-GL_PREFIX(WindowPos4ivMESA):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	6944(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	6944(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6944(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
 	movq	6944(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(WindowPos4ivMESA), .-GL_PREFIX(WindowPos4ivMESA)
+	.size	GL_PREFIX(_dispatch_stub_868), .-GL_PREFIX(_dispatch_stub_868)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(WindowPos4sMESA)
-	.type	GL_PREFIX(WindowPos4sMESA), @function
-GL_PREFIX(WindowPos4sMESA):
+	.globl	GL_PREFIX(_dispatch_stub_869)
+	.type	GL_PREFIX(_dispatch_stub_869), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_869))
+GL_PREFIX(_dispatch_stub_869):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	6952(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	6952(%rax), %r11
 	jmp	*%r11
@@ -33171,32 +33256,33 @@ GL_PREFIX(WindowPos4sMESA):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	6952(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(WindowPos4sMESA), .-GL_PREFIX(WindowPos4sMESA)
+	.size	GL_PREFIX(_dispatch_stub_869), .-GL_PREFIX(_dispatch_stub_869)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(WindowPos4svMESA)
-	.type	GL_PREFIX(WindowPos4svMESA), @function
-GL_PREFIX(WindowPos4svMESA):
+	.globl	GL_PREFIX(_dispatch_stub_870)
+	.type	GL_PREFIX(_dispatch_stub_870), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_870))
+GL_PREFIX(_dispatch_stub_870):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	6960(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	6960(%rax), %r11
 	jmp	*%r11
@@ -33208,12 +33294,20 @@ GL_PREFIX(WindowPos4svMESA):
 	jmp	*%r11
 1:
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	6960(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(WindowPos4svMESA), .-GL_PREFIX(WindowPos4svMESA)
+	.size	GL_PREFIX(_dispatch_stub_870), .-GL_PREFIX(_dispatch_stub_870)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(_dispatch_stub_871)
@@ -33226,15 +33320,7 @@ GL_PREFIX(_dispatch_stub_871):
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	6968(%rax), %r11
 	jmp	*%r11
@@ -33246,15 +33332,7 @@ GL_PREFIX(_dispatch_stub_871):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
 	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	6968(%rax), %r11
 	jmp	*%r11
@@ -33276,11 +33354,7 @@ GL_PREFIX(_dispatch_stub_872):
 	pushq	%rdx
 	pushq	%rcx
 	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%r9
 	popq	%r8
 	popq	%rcx
 	popq	%rdx
@@ -33300,11 +33374,7 @@ GL_PREFIX(_dispatch_stub_872):
 	pushq	%rdx
 	pushq	%rcx
 	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%r9
 	popq	%r8
 	popq	%rcx
 	popq	%rdx
@@ -33316,20 +33386,17 @@ GL_PREFIX(_dispatch_stub_872):
 	.size	GL_PREFIX(_dispatch_stub_872), .-GL_PREFIX(_dispatch_stub_872)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(AreProgramsResidentNV)
-	.type	GL_PREFIX(AreProgramsResidentNV), @function
-GL_PREFIX(AreProgramsResidentNV):
+	.globl	GL_PREFIX(_dispatch_stub_873)
+	.type	GL_PREFIX(_dispatch_stub_873), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_873))
+GL_PREFIX(_dispatch_stub_873):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	6984(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	6984(%rax), %r11
 	jmp	*%r11
@@ -33341,73 +33408,71 @@ GL_PREFIX(AreProgramsResidentNV):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	6984(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(AreProgramsResidentNV), .-GL_PREFIX(AreProgramsResidentNV)
+	.size	GL_PREFIX(_dispatch_stub_873), .-GL_PREFIX(_dispatch_stub_873)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ExecuteProgramNV)
-	.type	GL_PREFIX(ExecuteProgramNV), @function
-GL_PREFIX(ExecuteProgramNV):
+	.globl	GL_PREFIX(_dispatch_stub_874)
+	.type	GL_PREFIX(_dispatch_stub_874), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_874))
+GL_PREFIX(_dispatch_stub_874):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	6992(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6992(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	6992(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	6992(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ExecuteProgramNV), .-GL_PREFIX(ExecuteProgramNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(GetProgramParameterdvNV)
-	.type	GL_PREFIX(GetProgramParameterdvNV), @function
-GL_PREFIX(GetProgramParameterdvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7000(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
+	popq	%rdi
+	movq	6992(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	6992(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	6992(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_874), .-GL_PREFIX(_dispatch_stub_874)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_875)
+	.type	GL_PREFIX(_dispatch_stub_875), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_875))
+GL_PREFIX(_dispatch_stub_875):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7000(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
 	popq	%rdi
 	movq	7000(%rax), %r11
 	jmp	*%r11
@@ -33419,25 +33484,17 @@ GL_PREFIX(GetProgramParameterdvNV):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	7000(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetProgramParameterdvNV), .-GL_PREFIX(GetProgramParameterdvNV)
+	.size	GL_PREFIX(_dispatch_stub_875), .-GL_PREFIX(_dispatch_stub_875)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetProgramParameterfvNV)
-	.type	GL_PREFIX(GetProgramParameterfvNV), @function
-GL_PREFIX(GetProgramParameterfvNV):
+	.globl	GL_PREFIX(PointSizePointerOES)
+	.type	GL_PREFIX(PointSizePointerOES), @function
+GL_PREFIX(PointSizePointerOES):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7008(%rax), %r11
@@ -33446,11 +33503,7 @@ GL_PREFIX(GetProgramParameterfvNV):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -33466,23 +33519,20 @@ GL_PREFIX(GetProgramParameterfvNV):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7008(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetProgramParameterfvNV), .-GL_PREFIX(GetProgramParameterfvNV)
+	.size	GL_PREFIX(PointSizePointerOES), .-GL_PREFIX(PointSizePointerOES)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetProgramStringNV)
-	.type	GL_PREFIX(GetProgramStringNV), @function
-GL_PREFIX(GetProgramStringNV):
+	.globl	GL_PREFIX(_dispatch_stub_877)
+	.type	GL_PREFIX(_dispatch_stub_877), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_877))
+GL_PREFIX(_dispatch_stub_877):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7016(%rax), %r11
@@ -33490,9 +33540,9 @@ GL_PREFIX(GetProgramStringNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7016(%rax), %r11
@@ -33506,20 +33556,21 @@ GL_PREFIX(GetProgramStringNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7016(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetProgramStringNV), .-GL_PREFIX(GetProgramStringNV)
+	.size	GL_PREFIX(_dispatch_stub_877), .-GL_PREFIX(_dispatch_stub_877)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetProgramivNV)
-	.type	GL_PREFIX(GetProgramivNV), @function
-GL_PREFIX(GetProgramivNV):
+	.globl	GL_PREFIX(_dispatch_stub_878)
+	.type	GL_PREFIX(_dispatch_stub_878), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_878))
+GL_PREFIX(_dispatch_stub_878):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7024(%rax), %r11
@@ -33527,9 +33578,9 @@ GL_PREFIX(GetProgramivNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7024(%rax), %r11
@@ -33543,102 +33594,95 @@ GL_PREFIX(GetProgramivNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7024(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetProgramivNV), .-GL_PREFIX(GetProgramivNV)
+	.size	GL_PREFIX(_dispatch_stub_878), .-GL_PREFIX(_dispatch_stub_878)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetTrackMatrixivNV)
-	.type	GL_PREFIX(GetTrackMatrixivNV), @function
-GL_PREFIX(GetTrackMatrixivNV):
+	.globl	GL_PREFIX(_dispatch_stub_879)
+	.type	GL_PREFIX(_dispatch_stub_879), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_879))
+GL_PREFIX(_dispatch_stub_879):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7032(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	7032(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7032(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	7032(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_879), .-GL_PREFIX(_dispatch_stub_879)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ColorPointerEXT)
+	.type	GL_PREFIX(ColorPointerEXT), @function
+GL_PREFIX(ColorPointerEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7040(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	7032(%rax), %r11
+	movq	7040(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	7032(%rax), %r11
+	movq	7040(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	7032(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetTrackMatrixivNV), .-GL_PREFIX(GetTrackMatrixivNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(GetVertexAttribdvNV)
-	.type	GL_PREFIX(GetVertexAttribdvNV), @function
-GL_PREFIX(GetVertexAttribdvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7040(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7040(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7040(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
 	movq	7040(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetVertexAttribdvNV), .-GL_PREFIX(GetVertexAttribdvNV)
+	.size	GL_PREFIX(ColorPointerEXT), .-GL_PREFIX(ColorPointerEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetVertexAttribfvNV)
-	.type	GL_PREFIX(GetVertexAttribfvNV), @function
-GL_PREFIX(GetVertexAttribfvNV):
+	.globl	GL_PREFIX(EdgeFlagPointerEXT)
+	.type	GL_PREFIX(EdgeFlagPointerEXT), @function
+GL_PREFIX(EdgeFlagPointerEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7048(%rax), %r11
@@ -33670,12 +33714,12 @@ GL_PREFIX(GetVertexAttribfvNV):
 	movq	7048(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetVertexAttribfvNV), .-GL_PREFIX(GetVertexAttribfvNV)
+	.size	GL_PREFIX(EdgeFlagPointerEXT), .-GL_PREFIX(EdgeFlagPointerEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetVertexAttribivNV)
-	.type	GL_PREFIX(GetVertexAttribivNV), @function
-GL_PREFIX(GetVertexAttribivNV):
+	.globl	GL_PREFIX(IndexPointerEXT)
+	.type	GL_PREFIX(IndexPointerEXT), @function
+GL_PREFIX(IndexPointerEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7056(%rax), %r11
@@ -33684,7 +33728,11 @@ GL_PREFIX(GetVertexAttribivNV):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -33700,19 +33748,23 @@ GL_PREFIX(GetVertexAttribivNV):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7056(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetVertexAttribivNV), .-GL_PREFIX(GetVertexAttribivNV)
+	.size	GL_PREFIX(IndexPointerEXT), .-GL_PREFIX(IndexPointerEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(LoadProgramNV)
-	.type	GL_PREFIX(LoadProgramNV), @function
-GL_PREFIX(LoadProgramNV):
+	.globl	GL_PREFIX(NormalPointerEXT)
+	.type	GL_PREFIX(NormalPointerEXT), @function
+GL_PREFIX(NormalPointerEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7064(%rax), %r11
@@ -33752,12 +33804,12 @@ GL_PREFIX(LoadProgramNV):
 	movq	7064(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(LoadProgramNV), .-GL_PREFIX(LoadProgramNV)
+	.size	GL_PREFIX(NormalPointerEXT), .-GL_PREFIX(NormalPointerEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ProgramParameters4dvNV)
-	.type	GL_PREFIX(ProgramParameters4dvNV), @function
-GL_PREFIX(ProgramParameters4dvNV):
+	.globl	GL_PREFIX(TexCoordPointerEXT)
+	.type	GL_PREFIX(TexCoordPointerEXT), @function
+GL_PREFIX(TexCoordPointerEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7072(%rax), %r11
@@ -33767,9 +33819,9 @@ GL_PREFIX(ProgramParameters4dvNV):
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
@@ -33787,9 +33839,9 @@ GL_PREFIX(ProgramParameters4dvNV):
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
@@ -33797,12 +33849,12 @@ GL_PREFIX(ProgramParameters4dvNV):
 	movq	7072(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ProgramParameters4dvNV), .-GL_PREFIX(ProgramParameters4dvNV)
+	.size	GL_PREFIX(TexCoordPointerEXT), .-GL_PREFIX(TexCoordPointerEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ProgramParameters4fvNV)
-	.type	GL_PREFIX(ProgramParameters4fvNV), @function
-GL_PREFIX(ProgramParameters4fvNV):
+	.globl	GL_PREFIX(VertexPointerEXT)
+	.type	GL_PREFIX(VertexPointerEXT), @function
+GL_PREFIX(VertexPointerEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7080(%rax), %r11
@@ -33812,9 +33864,9 @@ GL_PREFIX(ProgramParameters4fvNV):
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
@@ -33832,9 +33884,9 @@ GL_PREFIX(ProgramParameters4fvNV):
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
@@ -33842,63 +33894,61 @@ GL_PREFIX(ProgramParameters4fvNV):
 	movq	7080(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ProgramParameters4fvNV), .-GL_PREFIX(ProgramParameters4fvNV)
+	.size	GL_PREFIX(VertexPointerEXT), .-GL_PREFIX(VertexPointerEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(RequestResidentProgramsNV)
-	.type	GL_PREFIX(RequestResidentProgramsNV), @function
-GL_PREFIX(RequestResidentProgramsNV):
+	.globl	GL_PREFIX(_dispatch_stub_886)
+	.type	GL_PREFIX(_dispatch_stub_886), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_886))
+GL_PREFIX(_dispatch_stub_886):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7088(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7088(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7088(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7088(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(RequestResidentProgramsNV), .-GL_PREFIX(RequestResidentProgramsNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(TrackMatrixNV)
-	.type	GL_PREFIX(TrackMatrixNV), @function
-GL_PREFIX(TrackMatrixNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7096(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7088(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7088(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7088(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_886), .-GL_PREFIX(_dispatch_stub_886)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_887)
+	.type	GL_PREFIX(_dispatch_stub_887), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_887))
+GL_PREFIX(_dispatch_stub_887):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7096(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7096(%rax), %r11
@@ -33912,36 +33962,29 @@ GL_PREFIX(TrackMatrixNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7096(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(TrackMatrixNV), .-GL_PREFIX(TrackMatrixNV)
+	.size	GL_PREFIX(_dispatch_stub_887), .-GL_PREFIX(_dispatch_stub_887)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib1dNV)
-	.type	GL_PREFIX(VertexAttrib1dNV), @function
-GL_PREFIX(VertexAttrib1dNV):
+	.globl	GL_PREFIX(_dispatch_stub_888)
+	.type	GL_PREFIX(_dispatch_stub_888), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_888))
+GL_PREFIX(_dispatch_stub_888):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7104(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$24, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
+	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$24, %rsp
+	popq	%rdi
 	movq	7104(%rax), %r11
 	jmp	*%r11
 #else
@@ -33951,22 +33994,19 @@ GL_PREFIX(VertexAttrib1dNV):
 	movq	7104(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$24, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
+	pushq	%rdi
 	call	_glapi_get_dispatch
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$24, %rsp
+	popq	%rdi
 	movq	7104(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib1dNV), .-GL_PREFIX(VertexAttrib1dNV)
+	.size	GL_PREFIX(_dispatch_stub_888), .-GL_PREFIX(_dispatch_stub_888)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib1dvNV)
-	.type	GL_PREFIX(VertexAttrib1dvNV), @function
-GL_PREFIX(VertexAttrib1dvNV):
+	.globl	GL_PREFIX(_dispatch_stub_889)
+	.type	GL_PREFIX(_dispatch_stub_889), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_889))
+GL_PREFIX(_dispatch_stub_889):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7112(%rax), %r11
@@ -33974,9 +34014,9 @@ GL_PREFIX(VertexAttrib1dvNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7112(%rax), %r11
@@ -33990,32 +34030,33 @@ GL_PREFIX(VertexAttrib1dvNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7112(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib1dvNV), .-GL_PREFIX(VertexAttrib1dvNV)
+	.size	GL_PREFIX(_dispatch_stub_889), .-GL_PREFIX(_dispatch_stub_889)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib1fNV)
-	.type	GL_PREFIX(VertexAttrib1fNV), @function
-GL_PREFIX(VertexAttrib1fNV):
+	.globl	GL_PREFIX(_dispatch_stub_890)
+	.type	GL_PREFIX(_dispatch_stub_890), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_890))
+GL_PREFIX(_dispatch_stub_890):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7120(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$24, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$24, %rsp
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
 	movq	7120(%rax), %r11
 	jmp	*%r11
 #else
@@ -34025,22 +34066,23 @@ GL_PREFIX(VertexAttrib1fNV):
 	movq	7120(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$24, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$24, %rsp
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
 	movq	7120(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib1fNV), .-GL_PREFIX(VertexAttrib1fNV)
+	.size	GL_PREFIX(_dispatch_stub_890), .-GL_PREFIX(_dispatch_stub_890)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib1fvNV)
-	.type	GL_PREFIX(VertexAttrib1fvNV), @function
-GL_PREFIX(VertexAttrib1fvNV):
+	.globl	GL_PREFIX(_dispatch_stub_891)
+	.type	GL_PREFIX(_dispatch_stub_891), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_891))
+GL_PREFIX(_dispatch_stub_891):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7128(%rax), %r11
@@ -34072,12 +34114,13 @@ GL_PREFIX(VertexAttrib1fvNV):
 	movq	7128(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib1fvNV), .-GL_PREFIX(VertexAttrib1fvNV)
+	.size	GL_PREFIX(_dispatch_stub_891), .-GL_PREFIX(_dispatch_stub_891)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib1sNV)
-	.type	GL_PREFIX(VertexAttrib1sNV), @function
-GL_PREFIX(VertexAttrib1sNV):
+	.globl	GL_PREFIX(_dispatch_stub_892)
+	.type	GL_PREFIX(_dispatch_stub_892), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_892))
+GL_PREFIX(_dispatch_stub_892):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7136(%rax), %r11
@@ -34085,9 +34128,13 @@ GL_PREFIX(VertexAttrib1sNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7136(%rax), %r11
@@ -34101,20 +34148,25 @@ GL_PREFIX(VertexAttrib1sNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7136(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib1sNV), .-GL_PREFIX(VertexAttrib1sNV)
+	.size	GL_PREFIX(_dispatch_stub_892), .-GL_PREFIX(_dispatch_stub_892)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib1svNV)
-	.type	GL_PREFIX(VertexAttrib1svNV), @function
-GL_PREFIX(VertexAttrib1svNV):
+	.globl	GL_PREFIX(_dispatch_stub_893)
+	.type	GL_PREFIX(_dispatch_stub_893), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_893))
+GL_PREFIX(_dispatch_stub_893):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7144(%rax), %r11
@@ -34122,9 +34174,9 @@ GL_PREFIX(VertexAttrib1svNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7144(%rax), %r11
@@ -34138,34 +34190,29 @@ GL_PREFIX(VertexAttrib1svNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7144(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib1svNV), .-GL_PREFIX(VertexAttrib1svNV)
+	.size	GL_PREFIX(_dispatch_stub_893), .-GL_PREFIX(_dispatch_stub_893)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib2dNV)
-	.type	GL_PREFIX(VertexAttrib2dNV), @function
-GL_PREFIX(VertexAttrib2dNV):
+	.globl	GL_PREFIX(_dispatch_stub_894)
+	.type	GL_PREFIX(_dispatch_stub_894), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_894))
+GL_PREFIX(_dispatch_stub_894):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7152(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$24, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
+	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$24, %rsp
+	popq	%rdi
 	movq	7152(%rax), %r11
 	jmp	*%r11
 #else
@@ -34175,24 +34222,18 @@ GL_PREFIX(VertexAttrib2dNV):
 	movq	7152(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$24, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
+	pushq	%rdi
 	call	_glapi_get_dispatch
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$24, %rsp
+	popq	%rdi
 	movq	7152(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib2dNV), .-GL_PREFIX(VertexAttrib2dNV)
+	.size	GL_PREFIX(_dispatch_stub_894), .-GL_PREFIX(_dispatch_stub_894)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib2dvNV)
-	.type	GL_PREFIX(VertexAttrib2dvNV), @function
-GL_PREFIX(VertexAttrib2dvNV):
+	.globl	GL_PREFIX(LockArraysEXT)
+	.type	GL_PREFIX(LockArraysEXT), @function
+GL_PREFIX(LockArraysEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7160(%rax), %r11
@@ -34224,12 +34265,13 @@ GL_PREFIX(VertexAttrib2dvNV):
 	movq	7160(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib2dvNV), .-GL_PREFIX(VertexAttrib2dvNV)
+	.size	GL_PREFIX(LockArraysEXT), .-GL_PREFIX(LockArraysEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib2fNV)
-	.type	GL_PREFIX(VertexAttrib2fNV), @function
-GL_PREFIX(VertexAttrib2fNV):
+	.globl	GL_PREFIX(_dispatch_stub_896)
+	.type	GL_PREFIX(_dispatch_stub_896), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_896))
+GL_PREFIX(_dispatch_stub_896):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7168(%rax), %r11
@@ -34237,11 +34279,11 @@ GL_PREFIX(VertexAttrib2fNV):
 #elif defined(HAVE_PTHREAD)
 	subq	$24, %rsp
 	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%xmm0, 16(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
+	movq	16(%rsp), %xmm0
+	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$24, %rsp
 	movq	7168(%rax), %r11
@@ -34255,22 +34297,23 @@ GL_PREFIX(VertexAttrib2fNV):
 1:
 	subq	$24, %rsp
 	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%xmm0, 16(%rsp)
 	call	_glapi_get_dispatch
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
+	movq	16(%rsp), %xmm0
+	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$24, %rsp
 	movq	7168(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib2fNV), .-GL_PREFIX(VertexAttrib2fNV)
+	.size	GL_PREFIX(_dispatch_stub_896), .-GL_PREFIX(_dispatch_stub_896)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib2fvNV)
-	.type	GL_PREFIX(VertexAttrib2fvNV), @function
-GL_PREFIX(VertexAttrib2fvNV):
+	.globl	GL_PREFIX(_dispatch_stub_897)
+	.type	GL_PREFIX(_dispatch_stub_897), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_897))
+GL_PREFIX(_dispatch_stub_897):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7176(%rax), %r11
@@ -34278,9 +34321,13 @@ GL_PREFIX(VertexAttrib2fvNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7176(%rax), %r11
@@ -34294,20 +34341,25 @@ GL_PREFIX(VertexAttrib2fvNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7176(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib2fvNV), .-GL_PREFIX(VertexAttrib2fvNV)
+	.size	GL_PREFIX(_dispatch_stub_897), .-GL_PREFIX(_dispatch_stub_897)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib2sNV)
-	.type	GL_PREFIX(VertexAttrib2sNV), @function
-GL_PREFIX(VertexAttrib2sNV):
+	.globl	GL_PREFIX(_dispatch_stub_898)
+	.type	GL_PREFIX(_dispatch_stub_898), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_898))
+GL_PREFIX(_dispatch_stub_898):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7184(%rax), %r11
@@ -34339,12 +34391,13 @@ GL_PREFIX(VertexAttrib2sNV):
 	movq	7184(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib2sNV), .-GL_PREFIX(VertexAttrib2sNV)
+	.size	GL_PREFIX(_dispatch_stub_898), .-GL_PREFIX(_dispatch_stub_898)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib2svNV)
-	.type	GL_PREFIX(VertexAttrib2svNV), @function
-GL_PREFIX(VertexAttrib2svNV):
+	.globl	GL_PREFIX(_dispatch_stub_899)
+	.type	GL_PREFIX(_dispatch_stub_899), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_899))
+GL_PREFIX(_dispatch_stub_899):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7192(%rax), %r11
@@ -34352,9 +34405,13 @@ GL_PREFIX(VertexAttrib2svNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7192(%rax), %r11
@@ -34368,36 +34425,37 @@ GL_PREFIX(VertexAttrib2svNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7192(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib2svNV), .-GL_PREFIX(VertexAttrib2svNV)
+	.size	GL_PREFIX(_dispatch_stub_899), .-GL_PREFIX(_dispatch_stub_899)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib3dNV)
-	.type	GL_PREFIX(VertexAttrib3dNV), @function
-GL_PREFIX(VertexAttrib3dNV):
+	.globl	GL_PREFIX(_dispatch_stub_900)
+	.type	GL_PREFIX(_dispatch_stub_900), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_900))
+GL_PREFIX(_dispatch_stub_900):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7200(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$40, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
-	movq	%xmm2, 24(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	movq	24(%rsp), %xmm2
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$40, %rsp
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	7200(%rax), %r11
 	jmp	*%r11
 #else
@@ -34407,26 +34465,23 @@ GL_PREFIX(VertexAttrib3dNV):
 	movq	7200(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$40, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
-	movq	%xmm2, 24(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	movq	24(%rsp), %xmm2
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$40, %rsp
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	7200(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib3dNV), .-GL_PREFIX(VertexAttrib3dNV)
+	.size	GL_PREFIX(_dispatch_stub_900), .-GL_PREFIX(_dispatch_stub_900)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib3dvNV)
-	.type	GL_PREFIX(VertexAttrib3dvNV), @function
-GL_PREFIX(VertexAttrib3dvNV):
+	.globl	GL_PREFIX(_dispatch_stub_901)
+	.type	GL_PREFIX(_dispatch_stub_901), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_901))
+GL_PREFIX(_dispatch_stub_901):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7208(%rax), %r11
@@ -34434,9 +34489,13 @@ GL_PREFIX(VertexAttrib3dvNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7208(%rax), %r11
@@ -34450,20 +34509,25 @@ GL_PREFIX(VertexAttrib3dvNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7208(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib3dvNV), .-GL_PREFIX(VertexAttrib3dvNV)
+	.size	GL_PREFIX(_dispatch_stub_901), .-GL_PREFIX(_dispatch_stub_901)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib3fNV)
-	.type	GL_PREFIX(VertexAttrib3fNV), @function
-GL_PREFIX(VertexAttrib3fNV):
+	.globl	GL_PREFIX(_dispatch_stub_902)
+	.type	GL_PREFIX(_dispatch_stub_902), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_902))
+GL_PREFIX(_dispatch_stub_902):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7216(%rax), %r11
@@ -34471,13 +34535,13 @@ GL_PREFIX(VertexAttrib3fNV):
 #elif defined(HAVE_PTHREAD)
 	subq	$40, %rsp
 	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
-	movq	%xmm2, 24(%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%xmm0, 16(%rsp)
+	movq	%xmm1, 24(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	movq	24(%rsp), %xmm2
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
+	movq	24(%rsp), %xmm1
+	movq	16(%rsp), %xmm0
+	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$40, %rsp
 	movq	7216(%rax), %r11
@@ -34491,24 +34555,25 @@ GL_PREFIX(VertexAttrib3fNV):
 1:
 	subq	$40, %rsp
 	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
-	movq	%xmm2, 24(%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%xmm0, 16(%rsp)
+	movq	%xmm1, 24(%rsp)
 	call	_glapi_get_dispatch
-	movq	24(%rsp), %xmm2
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
+	movq	24(%rsp), %xmm1
+	movq	16(%rsp), %xmm0
+	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$40, %rsp
 	movq	7216(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib3fNV), .-GL_PREFIX(VertexAttrib3fNV)
+	.size	GL_PREFIX(_dispatch_stub_902), .-GL_PREFIX(_dispatch_stub_902)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib3fvNV)
-	.type	GL_PREFIX(VertexAttrib3fvNV), @function
-GL_PREFIX(VertexAttrib3fvNV):
+	.globl	GL_PREFIX(_dispatch_stub_903)
+	.type	GL_PREFIX(_dispatch_stub_903), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_903))
+GL_PREFIX(_dispatch_stub_903):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7224(%rax), %r11
@@ -34516,9 +34581,13 @@ GL_PREFIX(VertexAttrib3fvNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7224(%rax), %r11
@@ -34532,20 +34601,25 @@ GL_PREFIX(VertexAttrib3fvNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7224(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib3fvNV), .-GL_PREFIX(VertexAttrib3fvNV)
+	.size	GL_PREFIX(_dispatch_stub_903), .-GL_PREFIX(_dispatch_stub_903)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib3sNV)
-	.type	GL_PREFIX(VertexAttrib3sNV), @function
-GL_PREFIX(VertexAttrib3sNV):
+	.globl	GL_PREFIX(_dispatch_stub_904)
+	.type	GL_PREFIX(_dispatch_stub_904), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_904))
+GL_PREFIX(_dispatch_stub_904):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7232(%rax), %r11
@@ -34585,12 +34659,13 @@ GL_PREFIX(VertexAttrib3sNV):
 	movq	7232(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib3sNV), .-GL_PREFIX(VertexAttrib3sNV)
+	.size	GL_PREFIX(_dispatch_stub_904), .-GL_PREFIX(_dispatch_stub_904)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib3svNV)
-	.type	GL_PREFIX(VertexAttrib3svNV), @function
-GL_PREFIX(VertexAttrib3svNV):
+	.globl	GL_PREFIX(_dispatch_stub_905)
+	.type	GL_PREFIX(_dispatch_stub_905), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_905))
+GL_PREFIX(_dispatch_stub_905):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7240(%rax), %r11
@@ -34598,9 +34673,13 @@ GL_PREFIX(VertexAttrib3svNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7240(%rax), %r11
@@ -34614,38 +34693,41 @@ GL_PREFIX(VertexAttrib3svNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7240(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib3svNV), .-GL_PREFIX(VertexAttrib3svNV)
+	.size	GL_PREFIX(_dispatch_stub_905), .-GL_PREFIX(_dispatch_stub_905)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib4dNV)
-	.type	GL_PREFIX(VertexAttrib4dNV), @function
-GL_PREFIX(VertexAttrib4dNV):
+	.globl	GL_PREFIX(_dispatch_stub_906)
+	.type	GL_PREFIX(_dispatch_stub_906), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_906))
+GL_PREFIX(_dispatch_stub_906):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7248(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$40, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
-	movq	%xmm2, 24(%rsp)
-	movq	%xmm3, 32(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	movq	32(%rsp), %xmm3
-	movq	24(%rsp), %xmm2
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$40, %rsp
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	7248(%rax), %r11
 	jmp	*%r11
 #else
@@ -34655,28 +34737,27 @@ GL_PREFIX(VertexAttrib4dNV):
 	movq	7248(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$40, %rsp
-	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
-	movq	%xmm2, 24(%rsp)
-	movq	%xmm3, 32(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	movq	32(%rsp), %xmm3
-	movq	24(%rsp), %xmm2
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
-	movq	(%rsp), %rdi
-	addq	$40, %rsp
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	7248(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib4dNV), .-GL_PREFIX(VertexAttrib4dNV)
+	.size	GL_PREFIX(_dispatch_stub_906), .-GL_PREFIX(_dispatch_stub_906)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib4dvNV)
-	.type	GL_PREFIX(VertexAttrib4dvNV), @function
-GL_PREFIX(VertexAttrib4dvNV):
+	.globl	GL_PREFIX(_dispatch_stub_907)
+	.type	GL_PREFIX(_dispatch_stub_907), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_907))
+GL_PREFIX(_dispatch_stub_907):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7256(%rax), %r11
@@ -34684,9 +34765,13 @@ GL_PREFIX(VertexAttrib4dvNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7256(%rax), %r11
@@ -34700,20 +34785,25 @@ GL_PREFIX(VertexAttrib4dvNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7256(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib4dvNV), .-GL_PREFIX(VertexAttrib4dvNV)
+	.size	GL_PREFIX(_dispatch_stub_907), .-GL_PREFIX(_dispatch_stub_907)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib4fNV)
-	.type	GL_PREFIX(VertexAttrib4fNV), @function
-GL_PREFIX(VertexAttrib4fNV):
+	.globl	GL_PREFIX(_dispatch_stub_908)
+	.type	GL_PREFIX(_dispatch_stub_908), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_908))
+GL_PREFIX(_dispatch_stub_908):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7264(%rax), %r11
@@ -34721,15 +34811,15 @@ GL_PREFIX(VertexAttrib4fNV):
 #elif defined(HAVE_PTHREAD)
 	subq	$40, %rsp
 	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
-	movq	%xmm2, 24(%rsp)
-	movq	%xmm3, 32(%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%xmm0, 16(%rsp)
+	movq	%xmm1, 24(%rsp)
+	movq	%xmm2, 32(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	movq	32(%rsp), %xmm3
-	movq	24(%rsp), %xmm2
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
+	movq	32(%rsp), %xmm2
+	movq	24(%rsp), %xmm1
+	movq	16(%rsp), %xmm0
+	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$40, %rsp
 	movq	7264(%rax), %r11
@@ -34743,26 +34833,27 @@ GL_PREFIX(VertexAttrib4fNV):
 1:
 	subq	$40, %rsp
 	movq	%rdi, (%rsp)
-	movq	%xmm0, 8(%rsp)
-	movq	%xmm1, 16(%rsp)
-	movq	%xmm2, 24(%rsp)
-	movq	%xmm3, 32(%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%xmm0, 16(%rsp)
+	movq	%xmm1, 24(%rsp)
+	movq	%xmm2, 32(%rsp)
 	call	_glapi_get_dispatch
-	movq	32(%rsp), %xmm3
-	movq	24(%rsp), %xmm2
-	movq	16(%rsp), %xmm1
-	movq	8(%rsp), %xmm0
+	movq	32(%rsp), %xmm2
+	movq	24(%rsp), %xmm1
+	movq	16(%rsp), %xmm0
+	movq	8(%rsp), %rsi
 	movq	(%rsp), %rdi
 	addq	$40, %rsp
 	movq	7264(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib4fNV), .-GL_PREFIX(VertexAttrib4fNV)
+	.size	GL_PREFIX(_dispatch_stub_908), .-GL_PREFIX(_dispatch_stub_908)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib4fvNV)
-	.type	GL_PREFIX(VertexAttrib4fvNV), @function
-GL_PREFIX(VertexAttrib4fvNV):
+	.globl	GL_PREFIX(_dispatch_stub_909)
+	.type	GL_PREFIX(_dispatch_stub_909), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_909))
+GL_PREFIX(_dispatch_stub_909):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7272(%rax), %r11
@@ -34770,9 +34861,13 @@ GL_PREFIX(VertexAttrib4fvNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7272(%rax), %r11
@@ -34786,20 +34881,25 @@ GL_PREFIX(VertexAttrib4fvNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7272(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib4fvNV), .-GL_PREFIX(VertexAttrib4fvNV)
+	.size	GL_PREFIX(_dispatch_stub_909), .-GL_PREFIX(_dispatch_stub_909)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib4sNV)
-	.type	GL_PREFIX(VertexAttrib4sNV), @function
-GL_PREFIX(VertexAttrib4sNV):
+	.globl	GL_PREFIX(_dispatch_stub_910)
+	.type	GL_PREFIX(_dispatch_stub_910), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_910))
+GL_PREFIX(_dispatch_stub_910):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7280(%rax), %r11
@@ -34839,12 +34939,13 @@ GL_PREFIX(VertexAttrib4sNV):
 	movq	7280(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib4sNV), .-GL_PREFIX(VertexAttrib4sNV)
+	.size	GL_PREFIX(_dispatch_stub_910), .-GL_PREFIX(_dispatch_stub_910)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib4svNV)
-	.type	GL_PREFIX(VertexAttrib4svNV), @function
-GL_PREFIX(VertexAttrib4svNV):
+	.globl	GL_PREFIX(_dispatch_stub_911)
+	.type	GL_PREFIX(_dispatch_stub_911), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_911))
+GL_PREFIX(_dispatch_stub_911):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7288(%rax), %r11
@@ -34852,9 +34953,13 @@ GL_PREFIX(VertexAttrib4svNV):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7288(%rax), %r11
@@ -34868,20 +34973,25 @@ GL_PREFIX(VertexAttrib4svNV):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7288(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib4svNV), .-GL_PREFIX(VertexAttrib4svNV)
+	.size	GL_PREFIX(_dispatch_stub_911), .-GL_PREFIX(_dispatch_stub_911)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib4ubNV)
-	.type	GL_PREFIX(VertexAttrib4ubNV), @function
-GL_PREFIX(VertexAttrib4ubNV):
+	.globl	GL_PREFIX(_dispatch_stub_912)
+	.type	GL_PREFIX(_dispatch_stub_912), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_912))
+GL_PREFIX(_dispatch_stub_912):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7296(%rax), %r11
@@ -34921,94 +35031,113 @@ GL_PREFIX(VertexAttrib4ubNV):
 	movq	7296(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib4ubNV), .-GL_PREFIX(VertexAttrib4ubNV)
+	.size	GL_PREFIX(_dispatch_stub_912), .-GL_PREFIX(_dispatch_stub_912)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttrib4ubvNV)
-	.type	GL_PREFIX(VertexAttrib4ubvNV), @function
-GL_PREFIX(VertexAttrib4ubvNV):
+	.globl	GL_PREFIX(_dispatch_stub_913)
+	.type	GL_PREFIX(_dispatch_stub_913), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_913))
+GL_PREFIX(_dispatch_stub_913):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7304(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7304(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7304(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7304(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttrib4ubvNV), .-GL_PREFIX(VertexAttrib4ubvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribPointerNV)
-	.type	GL_PREFIX(VertexAttribPointerNV), @function
-GL_PREFIX(VertexAttribPointerNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7312(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%r8
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%r8
+	popq	%rbp
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	7312(%rax), %r11
+	movq	7304(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	7312(%rax), %r11
+	movq	7304(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%r8
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%r8
+	popq	%rbp
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
+	movq	7304(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_913), .-GL_PREFIX(_dispatch_stub_913)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_914)
+	.type	GL_PREFIX(_dispatch_stub_914), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_914))
+GL_PREFIX(_dispatch_stub_914):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7312(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	subq	$56, %rsp
+	movq	%rdi, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%xmm0, 16(%rsp)
+	movq	%xmm1, 24(%rsp)
+	movq	%xmm2, 32(%rsp)
+	movq	%xmm3, 40(%rsp)
+	call	_x86_64_get_dispatch@PLT
+	movq	40(%rsp), %xmm3
+	movq	32(%rsp), %xmm2
+	movq	24(%rsp), %xmm1
+	movq	16(%rsp), %xmm0
+	movq	8(%rsp), %rsi
+	movq	(%rsp), %rdi
+	addq	$56, %rsp
+	movq	7312(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7312(%rax), %r11
+	jmp	*%r11
+1:
+	subq	$56, %rsp
+	movq	%rdi, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%xmm0, 16(%rsp)
+	movq	%xmm1, 24(%rsp)
+	movq	%xmm2, 32(%rsp)
+	movq	%xmm3, 40(%rsp)
+	call	_glapi_get_dispatch
+	movq	40(%rsp), %xmm3
+	movq	32(%rsp), %xmm2
+	movq	24(%rsp), %xmm1
+	movq	16(%rsp), %xmm0
+	movq	8(%rsp), %rsi
+	movq	(%rsp), %rdi
+	addq	$56, %rsp
 	movq	7312(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribPointerNV), .-GL_PREFIX(VertexAttribPointerNV)
+	.size	GL_PREFIX(_dispatch_stub_914), .-GL_PREFIX(_dispatch_stub_914)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs1dvNV)
-	.type	GL_PREFIX(VertexAttribs1dvNV), @function
-GL_PREFIX(VertexAttribs1dvNV):
+	.globl	GL_PREFIX(_dispatch_stub_915)
+	.type	GL_PREFIX(_dispatch_stub_915), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_915))
+GL_PREFIX(_dispatch_stub_915):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7320(%rax), %r11
@@ -35017,7 +35146,11 @@ GL_PREFIX(VertexAttribs1dvNV):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -35033,614 +35166,27 @@ GL_PREFIX(VertexAttribs1dvNV):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7320(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs1dvNV), .-GL_PREFIX(VertexAttribs1dvNV)
+	.size	GL_PREFIX(_dispatch_stub_915), .-GL_PREFIX(_dispatch_stub_915)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs1fvNV)
-	.type	GL_PREFIX(VertexAttribs1fvNV), @function
-GL_PREFIX(VertexAttribs1fvNV):
+	.globl	GL_PREFIX(_dispatch_stub_916)
+	.type	GL_PREFIX(_dispatch_stub_916), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_916))
+GL_PREFIX(_dispatch_stub_916):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7328(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7328(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7328(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7328(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs1fvNV), .-GL_PREFIX(VertexAttribs1fvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs1svNV)
-	.type	GL_PREFIX(VertexAttribs1svNV), @function
-GL_PREFIX(VertexAttribs1svNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7336(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7336(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7336(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7336(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs1svNV), .-GL_PREFIX(VertexAttribs1svNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs2dvNV)
-	.type	GL_PREFIX(VertexAttribs2dvNV), @function
-GL_PREFIX(VertexAttribs2dvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7344(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7344(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7344(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7344(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs2dvNV), .-GL_PREFIX(VertexAttribs2dvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs2fvNV)
-	.type	GL_PREFIX(VertexAttribs2fvNV), @function
-GL_PREFIX(VertexAttribs2fvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7352(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7352(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7352(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7352(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs2fvNV), .-GL_PREFIX(VertexAttribs2fvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs2svNV)
-	.type	GL_PREFIX(VertexAttribs2svNV), @function
-GL_PREFIX(VertexAttribs2svNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7360(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7360(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7360(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7360(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs2svNV), .-GL_PREFIX(VertexAttribs2svNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs3dvNV)
-	.type	GL_PREFIX(VertexAttribs3dvNV), @function
-GL_PREFIX(VertexAttribs3dvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7368(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7368(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7368(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7368(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs3dvNV), .-GL_PREFIX(VertexAttribs3dvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs3fvNV)
-	.type	GL_PREFIX(VertexAttribs3fvNV), @function
-GL_PREFIX(VertexAttribs3fvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7376(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7376(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7376(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7376(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs3fvNV), .-GL_PREFIX(VertexAttribs3fvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs3svNV)
-	.type	GL_PREFIX(VertexAttribs3svNV), @function
-GL_PREFIX(VertexAttribs3svNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7384(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7384(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7384(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7384(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs3svNV), .-GL_PREFIX(VertexAttribs3svNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs4dvNV)
-	.type	GL_PREFIX(VertexAttribs4dvNV), @function
-GL_PREFIX(VertexAttribs4dvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7392(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7392(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7392(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7392(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs4dvNV), .-GL_PREFIX(VertexAttribs4dvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs4fvNV)
-	.type	GL_PREFIX(VertexAttribs4fvNV), @function
-GL_PREFIX(VertexAttribs4fvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7400(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7400(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7400(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7400(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs4fvNV), .-GL_PREFIX(VertexAttribs4fvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs4svNV)
-	.type	GL_PREFIX(VertexAttribs4svNV), @function
-GL_PREFIX(VertexAttribs4svNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7408(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7408(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7408(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7408(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs4svNV), .-GL_PREFIX(VertexAttribs4svNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribs4ubvNV)
-	.type	GL_PREFIX(VertexAttribs4ubvNV), @function
-GL_PREFIX(VertexAttribs4ubvNV):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7416(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7416(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7416(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7416(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribs4ubvNV), .-GL_PREFIX(VertexAttribs4ubvNV)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(GetTexBumpParameterfvATI)
-	.type	GL_PREFIX(GetTexBumpParameterfvATI), @function
-GL_PREFIX(GetTexBumpParameterfvATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7424(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7424(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7424(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7424(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetTexBumpParameterfvATI), .-GL_PREFIX(GetTexBumpParameterfvATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(GetTexBumpParameterivATI)
-	.type	GL_PREFIX(GetTexBumpParameterivATI), @function
-GL_PREFIX(GetTexBumpParameterivATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7432(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7432(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7432(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7432(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetTexBumpParameterivATI), .-GL_PREFIX(GetTexBumpParameterivATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(TexBumpParameterfvATI)
-	.type	GL_PREFIX(TexBumpParameterfvATI), @function
-GL_PREFIX(TexBumpParameterfvATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7440(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7440(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7440(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7440(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(TexBumpParameterfvATI), .-GL_PREFIX(TexBumpParameterfvATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(TexBumpParameterivATI)
-	.type	GL_PREFIX(TexBumpParameterivATI), @function
-GL_PREFIX(TexBumpParameterivATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7448(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7448(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7448(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	7448(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(TexBumpParameterivATI), .-GL_PREFIX(TexBumpParameterivATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(AlphaFragmentOp1ATI)
-	.type	GL_PREFIX(AlphaFragmentOp1ATI), @function
-GL_PREFIX(AlphaFragmentOp1ATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7456(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -35658,13 +35204,13 @@ GL_PREFIX(AlphaFragmentOp1ATI):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	7456(%rax), %r11
+	movq	7328(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	7456(%rax), %r11
+	movq	7328(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -35682,15 +35228,709 @@ GL_PREFIX(AlphaFragmentOp1ATI):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
+	movq	7328(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_916), .-GL_PREFIX(_dispatch_stub_916)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_917)
+	.type	GL_PREFIX(_dispatch_stub_917), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_917))
+GL_PREFIX(_dispatch_stub_917):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7336(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7336(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7336(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7336(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_917), .-GL_PREFIX(_dispatch_stub_917)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_918)
+	.type	GL_PREFIX(_dispatch_stub_918), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_918))
+GL_PREFIX(_dispatch_stub_918):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7344(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7344(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7344(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7344(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_918), .-GL_PREFIX(_dispatch_stub_918)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_919)
+	.type	GL_PREFIX(_dispatch_stub_919), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_919))
+GL_PREFIX(_dispatch_stub_919):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7352(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7352(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7352(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7352(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_919), .-GL_PREFIX(_dispatch_stub_919)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_920)
+	.type	GL_PREFIX(_dispatch_stub_920), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_920))
+GL_PREFIX(_dispatch_stub_920):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7360(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7360(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7360(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7360(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_920), .-GL_PREFIX(_dispatch_stub_920)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_921)
+	.type	GL_PREFIX(_dispatch_stub_921), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_921))
+GL_PREFIX(_dispatch_stub_921):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7368(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7368(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7368(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7368(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_921), .-GL_PREFIX(_dispatch_stub_921)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_922)
+	.type	GL_PREFIX(_dispatch_stub_922), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_922))
+GL_PREFIX(_dispatch_stub_922):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7376(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7376(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7376(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7376(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_922), .-GL_PREFIX(_dispatch_stub_922)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_923)
+	.type	GL_PREFIX(_dispatch_stub_923), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_923))
+GL_PREFIX(_dispatch_stub_923):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7384(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7384(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7384(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7384(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_923), .-GL_PREFIX(_dispatch_stub_923)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_924)
+	.type	GL_PREFIX(_dispatch_stub_924), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_924))
+GL_PREFIX(_dispatch_stub_924):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7392(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7392(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7392(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7392(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_924), .-GL_PREFIX(_dispatch_stub_924)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_925)
+	.type	GL_PREFIX(_dispatch_stub_925), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_925))
+GL_PREFIX(_dispatch_stub_925):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7400(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7400(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7400(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7400(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_925), .-GL_PREFIX(_dispatch_stub_925)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_926)
+	.type	GL_PREFIX(_dispatch_stub_926), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_926))
+GL_PREFIX(_dispatch_stub_926):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7408(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7408(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7408(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7408(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_926), .-GL_PREFIX(_dispatch_stub_926)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_927)
+	.type	GL_PREFIX(_dispatch_stub_927), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_927))
+GL_PREFIX(_dispatch_stub_927):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7416(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7416(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7416(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7416(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_927), .-GL_PREFIX(_dispatch_stub_927)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_928)
+	.type	GL_PREFIX(_dispatch_stub_928), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_928))
+GL_PREFIX(_dispatch_stub_928):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7424(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7424(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7424(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7424(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_928), .-GL_PREFIX(_dispatch_stub_928)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(UnlockArraysEXT)
+	.type	GL_PREFIX(UnlockArraysEXT), @function
+GL_PREFIX(UnlockArraysEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7432(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	movq	7432(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7432(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	movq	7432(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(UnlockArraysEXT), .-GL_PREFIX(UnlockArraysEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_930)
+	.type	GL_PREFIX(_dispatch_stub_930), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_930))
+GL_PREFIX(_dispatch_stub_930):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7440(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7440(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7440(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7440(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_930), .-GL_PREFIX(_dispatch_stub_930)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_931)
+	.type	GL_PREFIX(_dispatch_stub_931), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_931))
+GL_PREFIX(_dispatch_stub_931):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7448(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	7448(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7448(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	7448(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_931), .-GL_PREFIX(_dispatch_stub_931)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(DebugMessageCallback)
+	.type	GL_PREFIX(DebugMessageCallback), @function
+GL_PREFIX(DebugMessageCallback):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7456(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	7456(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7456(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
 	movq	7456(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(AlphaFragmentOp1ATI), .-GL_PREFIX(AlphaFragmentOp1ATI)
+	.size	GL_PREFIX(DebugMessageCallback), .-GL_PREFIX(DebugMessageCallback)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(AlphaFragmentOp2ATI)
-	.type	GL_PREFIX(AlphaFragmentOp2ATI), @function
-GL_PREFIX(AlphaFragmentOp2ATI):
+	.globl	GL_PREFIX(DebugMessageControl)
+	.type	GL_PREFIX(DebugMessageControl), @function
+GL_PREFIX(DebugMessageControl):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7464(%rax), %r11
@@ -35738,12 +35978,12 @@ GL_PREFIX(AlphaFragmentOp2ATI):
 	movq	7464(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(AlphaFragmentOp2ATI), .-GL_PREFIX(AlphaFragmentOp2ATI)
+	.size	GL_PREFIX(DebugMessageControl), .-GL_PREFIX(DebugMessageControl)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(AlphaFragmentOp3ATI)
-	.type	GL_PREFIX(AlphaFragmentOp3ATI), @function
-GL_PREFIX(AlphaFragmentOp3ATI):
+	.globl	GL_PREFIX(DebugMessageInsert)
+	.type	GL_PREFIX(DebugMessageInsert), @function
+GL_PREFIX(DebugMessageInsert):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7472(%rax), %r11
@@ -35791,20 +36031,32 @@ GL_PREFIX(AlphaFragmentOp3ATI):
 	movq	7472(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(AlphaFragmentOp3ATI), .-GL_PREFIX(AlphaFragmentOp3ATI)
+	.size	GL_PREFIX(DebugMessageInsert), .-GL_PREFIX(DebugMessageInsert)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(BeginFragmentShaderATI)
-	.type	GL_PREFIX(BeginFragmentShaderATI), @function
-GL_PREFIX(BeginFragmentShaderATI):
+	.globl	GL_PREFIX(GetDebugMessageLog)
+	.type	GL_PREFIX(GetDebugMessageLog), @function
+GL_PREFIX(GetDebugMessageLog):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7480(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	7480(%rax), %r11
 	jmp	*%r11
 #else
@@ -35814,25 +36066,45 @@ GL_PREFIX(BeginFragmentShaderATI):
 	movq	7480(%rax), %r11
 	jmp	*%r11
 1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	7480(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(BeginFragmentShaderATI), .-GL_PREFIX(BeginFragmentShaderATI)
+	.size	GL_PREFIX(GetDebugMessageLog), .-GL_PREFIX(GetDebugMessageLog)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(BindFragmentShaderATI)
-	.type	GL_PREFIX(BindFragmentShaderATI), @function
-GL_PREFIX(BindFragmentShaderATI):
+	.globl	GL_PREFIX(GetObjectLabel)
+	.type	GL_PREFIX(GetObjectLabel), @function
+GL_PREFIX(GetObjectLabel):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7488(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	7488(%rax), %r11
 	jmp	*%r11
@@ -35844,17 +36116,25 @@ GL_PREFIX(BindFragmentShaderATI):
 	jmp	*%r11
 1:
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	7488(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(BindFragmentShaderATI), .-GL_PREFIX(BindFragmentShaderATI)
+	.size	GL_PREFIX(GetObjectLabel), .-GL_PREFIX(GetObjectLabel)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ColorFragmentOp1ATI)
-	.type	GL_PREFIX(ColorFragmentOp1ATI), @function
-GL_PREFIX(ColorFragmentOp1ATI):
+	.globl	GL_PREFIX(GetObjectPtrLabel)
+	.type	GL_PREFIX(GetObjectPtrLabel), @function
+GL_PREFIX(GetObjectPtrLabel):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7496(%rax), %r11
@@ -35864,13 +36144,9 @@ GL_PREFIX(ColorFragmentOp1ATI):
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%r9
-	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
@@ -35888,13 +36164,9 @@ GL_PREFIX(ColorFragmentOp1ATI):
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%r9
-	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
@@ -35902,12 +36174,12 @@ GL_PREFIX(ColorFragmentOp1ATI):
 	movq	7496(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ColorFragmentOp1ATI), .-GL_PREFIX(ColorFragmentOp1ATI)
+	.size	GL_PREFIX(GetObjectPtrLabel), .-GL_PREFIX(GetObjectPtrLabel)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ColorFragmentOp2ATI)
-	.type	GL_PREFIX(ColorFragmentOp2ATI), @function
-GL_PREFIX(ColorFragmentOp2ATI):
+	.globl	GL_PREFIX(ObjectLabel)
+	.type	GL_PREFIX(ObjectLabel), @function
+GL_PREFIX(ObjectLabel):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7504(%rax), %r11
@@ -35917,13 +36189,9 @@ GL_PREFIX(ColorFragmentOp2ATI):
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%r9
-	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
@@ -35941,13 +36209,9 @@ GL_PREFIX(ColorFragmentOp2ATI):
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%r9
-	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
@@ -35955,15 +36219,196 @@ GL_PREFIX(ColorFragmentOp2ATI):
 	movq	7504(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ColorFragmentOp2ATI), .-GL_PREFIX(ColorFragmentOp2ATI)
+	.size	GL_PREFIX(ObjectLabel), .-GL_PREFIX(ObjectLabel)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ColorFragmentOp3ATI)
-	.type	GL_PREFIX(ColorFragmentOp3ATI), @function
-GL_PREFIX(ColorFragmentOp3ATI):
+	.globl	GL_PREFIX(ObjectPtrLabel)
+	.type	GL_PREFIX(ObjectPtrLabel), @function
+GL_PREFIX(ObjectPtrLabel):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7512(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7512(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7512(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7512(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ObjectPtrLabel), .-GL_PREFIX(ObjectPtrLabel)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(PopDebugGroup)
+	.type	GL_PREFIX(PopDebugGroup), @function
+GL_PREFIX(PopDebugGroup):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7520(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	movq	7520(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7520(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	movq	7520(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(PopDebugGroup), .-GL_PREFIX(PopDebugGroup)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(PushDebugGroup)
+	.type	GL_PREFIX(PushDebugGroup), @function
+GL_PREFIX(PushDebugGroup):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7528(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7528(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7528(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	7528(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(PushDebugGroup), .-GL_PREFIX(PushDebugGroup)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(SecondaryColor3fEXT)
+	.type	GL_PREFIX(SecondaryColor3fEXT), @function
+GL_PREFIX(SecondaryColor3fEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7536(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	subq	$24, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	call	_x86_64_get_dispatch@PLT
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$24, %rsp
+	movq	7536(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7536(%rax), %r11
+	jmp	*%r11
+1:
+	subq	$24, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	call	_glapi_get_dispatch
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$24, %rsp
+	movq	7536(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(SecondaryColor3fEXT), .-GL_PREFIX(SecondaryColor3fEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(SecondaryColor3fvEXT)
+	.type	GL_PREFIX(SecondaryColor3fvEXT), @function
+GL_PREFIX(SecondaryColor3fvEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7544(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	7544(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7544(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	7544(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(SecondaryColor3fvEXT), .-GL_PREFIX(SecondaryColor3fvEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(MultiDrawElementsEXT)
+	.type	GL_PREFIX(MultiDrawElementsEXT), @function
+GL_PREFIX(MultiDrawElementsEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7552(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -35971,23 +36416,19 @@ GL_PREFIX(ColorFragmentOp3ATI):
 	pushq	%rdx
 	pushq	%rcx
 	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%r9
 	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	7512(%rax), %r11
+	movq	7552(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	7512(%rax), %r11
+	movq	7552(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -35995,198 +36436,31 @@ GL_PREFIX(ColorFragmentOp3ATI):
 	pushq	%rdx
 	pushq	%rcx
 	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%r9
 	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	7512(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ColorFragmentOp3ATI), .-GL_PREFIX(ColorFragmentOp3ATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(DeleteFragmentShaderATI)
-	.type	GL_PREFIX(DeleteFragmentShaderATI), @function
-GL_PREFIX(DeleteFragmentShaderATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7520(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	7520(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7520(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	7520(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(DeleteFragmentShaderATI), .-GL_PREFIX(DeleteFragmentShaderATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(EndFragmentShaderATI)
-	.type	GL_PREFIX(EndFragmentShaderATI), @function
-GL_PREFIX(EndFragmentShaderATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7528(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	movq	7528(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7528(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	movq	7528(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(EndFragmentShaderATI), .-GL_PREFIX(EndFragmentShaderATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(GenFragmentShadersATI)
-	.type	GL_PREFIX(GenFragmentShadersATI), @function
-GL_PREFIX(GenFragmentShadersATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7536(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	7536(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7536(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	7536(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GenFragmentShadersATI), .-GL_PREFIX(GenFragmentShadersATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(PassTexCoordATI)
-	.type	GL_PREFIX(PassTexCoordATI), @function
-GL_PREFIX(PassTexCoordATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7544(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7544(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7544(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7544(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(PassTexCoordATI), .-GL_PREFIX(PassTexCoordATI)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(SampleMapATI)
-	.type	GL_PREFIX(SampleMapATI), @function
-GL_PREFIX(SampleMapATI):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7552(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
-	movq	7552(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7552(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
 	movq	7552(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(SampleMapATI), .-GL_PREFIX(SampleMapATI)
+	.size	GL_PREFIX(MultiDrawElementsEXT), .-GL_PREFIX(MultiDrawElementsEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(SetFragmentShaderConstantATI)
-	.type	GL_PREFIX(SetFragmentShaderConstantATI), @function
-GL_PREFIX(SetFragmentShaderConstantATI):
+	.globl	GL_PREFIX(FogCoordfEXT)
+	.type	GL_PREFIX(FogCoordfEXT), @function
+GL_PREFIX(FogCoordfEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7560(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$8, %rsp
+	movq	%xmm0, (%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	(%rsp), %xmm0
+	addq	$8, %rsp
 	movq	7560(%rax), %r11
 	jmp	*%r11
 #else
@@ -36196,23 +36470,20 @@ GL_PREFIX(SetFragmentShaderConstantATI):
 	movq	7560(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$8, %rsp
+	movq	%xmm0, (%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	(%rsp), %xmm0
+	addq	$8, %rsp
 	movq	7560(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(SetFragmentShaderConstantATI), .-GL_PREFIX(SetFragmentShaderConstantATI)
+	.size	GL_PREFIX(FogCoordfEXT), .-GL_PREFIX(FogCoordfEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_946)
-	.type	GL_PREFIX(_dispatch_stub_946), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_946))
-GL_PREFIX(_dispatch_stub_946):
+	.globl	GL_PREFIX(FogCoordfvEXT)
+	.type	GL_PREFIX(FogCoordfvEXT), @function
+GL_PREFIX(FogCoordfvEXT):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7568(%rax), %r11
@@ -36236,21 +36507,20 @@ GL_PREFIX(_dispatch_stub_946):
 	movq	7568(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_946), .-GL_PREFIX(_dispatch_stub_946)
+	.size	GL_PREFIX(FogCoordfvEXT), .-GL_PREFIX(FogCoordfvEXT)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_947)
-	.type	GL_PREFIX(_dispatch_stub_947), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_947))
-GL_PREFIX(_dispatch_stub_947):
+	.globl	GL_PREFIX(ResizeBuffersMESA)
+	.type	GL_PREFIX(ResizeBuffersMESA), @function
+GL_PREFIX(ResizeBuffersMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7576(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
+	popq	%rbp
 	movq	7576(%rax), %r11
 	jmp	*%r11
 #else
@@ -36260,31 +36530,34 @@ GL_PREFIX(_dispatch_stub_947):
 	movq	7576(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rdi
+	popq	%rbp
 	movq	7576(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_947), .-GL_PREFIX(_dispatch_stub_947)
+	.size	GL_PREFIX(ResizeBuffersMESA), .-GL_PREFIX(ResizeBuffersMESA)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_948)
-	.type	GL_PREFIX(_dispatch_stub_948), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_948))
-GL_PREFIX(_dispatch_stub_948):
+	.globl	GL_PREFIX(WindowPos4dMESA)
+	.type	GL_PREFIX(WindowPos4dMESA), @function
+GL_PREFIX(WindowPos4dMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7584(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	movq	%xmm3, 24(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	24(%rsp), %xmm3
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$40, %rsp
 	movq	7584(%rax), %r11
 	jmp	*%r11
 #else
@@ -36294,37 +36567,33 @@ GL_PREFIX(_dispatch_stub_948):
 	movq	7584(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	movq	%xmm3, 24(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	24(%rsp), %xmm3
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$40, %rsp
 	movq	7584(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_948), .-GL_PREFIX(_dispatch_stub_948)
+	.size	GL_PREFIX(WindowPos4dMESA), .-GL_PREFIX(WindowPos4dMESA)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetProgramNamedParameterdvNV)
-	.type	GL_PREFIX(GetProgramNamedParameterdvNV), @function
-GL_PREFIX(GetProgramNamedParameterdvNV):
+	.globl	GL_PREFIX(WindowPos4dvMESA)
+	.type	GL_PREFIX(WindowPos4dvMESA), @function
+GL_PREFIX(WindowPos4dvMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7592(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	7592(%rax), %r11
 	jmp	*%r11
@@ -36336,41 +36605,33 @@ GL_PREFIX(GetProgramNamedParameterdvNV):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	7592(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetProgramNamedParameterdvNV), .-GL_PREFIX(GetProgramNamedParameterdvNV)
+	.size	GL_PREFIX(WindowPos4dvMESA), .-GL_PREFIX(WindowPos4dvMESA)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetProgramNamedParameterfvNV)
-	.type	GL_PREFIX(GetProgramNamedParameterfvNV), @function
-GL_PREFIX(GetProgramNamedParameterfvNV):
+	.globl	GL_PREFIX(WindowPos4fMESA)
+	.type	GL_PREFIX(WindowPos4fMESA), @function
+GL_PREFIX(WindowPos4fMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7600(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	movq	%xmm3, 24(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	movq	24(%rsp), %xmm3
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$40, %rsp
 	movq	7600(%rax), %r11
 	jmp	*%r11
 #else
@@ -36380,48 +36641,34 @@ GL_PREFIX(GetProgramNamedParameterfvNV):
 	movq	7600(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	movq	%xmm3, 24(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	movq	24(%rsp), %xmm3
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$40, %rsp
 	movq	7600(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetProgramNamedParameterfvNV), .-GL_PREFIX(GetProgramNamedParameterfvNV)
+	.size	GL_PREFIX(WindowPos4fMESA), .-GL_PREFIX(WindowPos4fMESA)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ProgramNamedParameter4dNV)
-	.type	GL_PREFIX(ProgramNamedParameter4dNV), @function
-GL_PREFIX(ProgramNamedParameter4dNV):
+	.globl	GL_PREFIX(WindowPos4fvMESA)
+	.type	GL_PREFIX(WindowPos4fvMESA), @function
+GL_PREFIX(WindowPos4fvMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7608(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$56, %rsp
-	movq	%rdi, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%rdx, 16(%rsp)
-	movq	%xmm0, 24(%rsp)
-	movq	%xmm1, 32(%rsp)
-	movq	%xmm2, 40(%rsp)
-	movq	%xmm3, 48(%rsp)
+	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
-	movq	48(%rsp), %xmm3
-	movq	40(%rsp), %xmm2
-	movq	32(%rsp), %xmm1
-	movq	24(%rsp), %xmm0
-	movq	16(%rsp), %rdx
-	movq	8(%rsp), %rsi
-	movq	(%rsp), %rdi
-	addq	$56, %rsp
+	popq	%rdi
 	movq	7608(%rax), %r11
 	jmp	*%r11
 #else
@@ -36431,32 +36678,18 @@ GL_PREFIX(ProgramNamedParameter4dNV):
 	movq	7608(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$56, %rsp
-	movq	%rdi, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%rdx, 16(%rsp)
-	movq	%xmm0, 24(%rsp)
-	movq	%xmm1, 32(%rsp)
-	movq	%xmm2, 40(%rsp)
-	movq	%xmm3, 48(%rsp)
+	pushq	%rdi
 	call	_glapi_get_dispatch
-	movq	48(%rsp), %xmm3
-	movq	40(%rsp), %xmm2
-	movq	32(%rsp), %xmm1
-	movq	24(%rsp), %xmm0
-	movq	16(%rsp), %rdx
-	movq	8(%rsp), %rsi
-	movq	(%rsp), %rdi
-	addq	$56, %rsp
+	popq	%rdi
 	movq	7608(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ProgramNamedParameter4dNV), .-GL_PREFIX(ProgramNamedParameter4dNV)
+	.size	GL_PREFIX(WindowPos4fvMESA), .-GL_PREFIX(WindowPos4fvMESA)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ProgramNamedParameter4dvNV)
-	.type	GL_PREFIX(ProgramNamedParameter4dvNV), @function
-GL_PREFIX(ProgramNamedParameter4dvNV):
+	.globl	GL_PREFIX(WindowPos4iMESA)
+	.type	GL_PREFIX(WindowPos4iMESA), @function
+GL_PREFIX(WindowPos4iMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7616(%rax), %r11
@@ -36496,34 +36729,20 @@ GL_PREFIX(ProgramNamedParameter4dvNV):
 	movq	7616(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ProgramNamedParameter4dvNV), .-GL_PREFIX(ProgramNamedParameter4dvNV)
+	.size	GL_PREFIX(WindowPos4iMESA), .-GL_PREFIX(WindowPos4iMESA)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ProgramNamedParameter4fNV)
-	.type	GL_PREFIX(ProgramNamedParameter4fNV), @function
-GL_PREFIX(ProgramNamedParameter4fNV):
+	.globl	GL_PREFIX(WindowPos4ivMESA)
+	.type	GL_PREFIX(WindowPos4ivMESA), @function
+GL_PREFIX(WindowPos4ivMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7624(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$56, %rsp
-	movq	%rdi, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%rdx, 16(%rsp)
-	movq	%xmm0, 24(%rsp)
-	movq	%xmm1, 32(%rsp)
-	movq	%xmm2, 40(%rsp)
-	movq	%xmm3, 48(%rsp)
+	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
-	movq	48(%rsp), %xmm3
-	movq	40(%rsp), %xmm2
-	movq	32(%rsp), %xmm1
-	movq	24(%rsp), %xmm0
-	movq	16(%rsp), %rdx
-	movq	8(%rsp), %rsi
-	movq	(%rsp), %rdi
-	addq	$56, %rsp
+	popq	%rdi
 	movq	7624(%rax), %r11
 	jmp	*%r11
 #else
@@ -36533,32 +36752,18 @@ GL_PREFIX(ProgramNamedParameter4fNV):
 	movq	7624(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$56, %rsp
-	movq	%rdi, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%rdx, 16(%rsp)
-	movq	%xmm0, 24(%rsp)
-	movq	%xmm1, 32(%rsp)
-	movq	%xmm2, 40(%rsp)
-	movq	%xmm3, 48(%rsp)
+	pushq	%rdi
 	call	_glapi_get_dispatch
-	movq	48(%rsp), %xmm3
-	movq	40(%rsp), %xmm2
-	movq	32(%rsp), %xmm1
-	movq	24(%rsp), %xmm0
-	movq	16(%rsp), %rdx
-	movq	8(%rsp), %rsi
-	movq	(%rsp), %rdi
-	addq	$56, %rsp
+	popq	%rdi
 	movq	7624(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ProgramNamedParameter4fNV), .-GL_PREFIX(ProgramNamedParameter4fNV)
+	.size	GL_PREFIX(WindowPos4ivMESA), .-GL_PREFIX(WindowPos4ivMESA)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ProgramNamedParameter4fvNV)
-	.type	GL_PREFIX(ProgramNamedParameter4fvNV), @function
-GL_PREFIX(ProgramNamedParameter4fvNV):
+	.globl	GL_PREFIX(WindowPos4sMESA)
+	.type	GL_PREFIX(WindowPos4sMESA), @function
+GL_PREFIX(WindowPos4sMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7632(%rax), %r11
@@ -36598,20 +36803,20 @@ GL_PREFIX(ProgramNamedParameter4fvNV):
 	movq	7632(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ProgramNamedParameter4fvNV), .-GL_PREFIX(ProgramNamedParameter4fvNV)
+	.size	GL_PREFIX(WindowPos4sMESA), .-GL_PREFIX(WindowPos4sMESA)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(PrimitiveRestartNV)
-	.type	GL_PREFIX(PrimitiveRestartNV), @function
-GL_PREFIX(PrimitiveRestartNV):
+	.globl	GL_PREFIX(WindowPos4svMESA)
+	.type	GL_PREFIX(WindowPos4svMESA), @function
+GL_PREFIX(WindowPos4svMESA):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7640(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rbp
+	pushq	%rdi
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdi
 	movq	7640(%rax), %r11
 	jmp	*%r11
 #else
@@ -36621,13 +36826,13 @@ GL_PREFIX(PrimitiveRestartNV):
 	movq	7640(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rbp
+	pushq	%rdi
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdi
 	movq	7640(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(PrimitiveRestartNV), .-GL_PREFIX(PrimitiveRestartNV)
+	.size	GL_PREFIX(WindowPos4svMESA), .-GL_PREFIX(WindowPos4svMESA)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(_dispatch_stub_956)
@@ -36642,7 +36847,11 @@ GL_PREFIX(_dispatch_stub_956):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -36658,7 +36867,11 @@ GL_PREFIX(_dispatch_stub_956):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -36680,7 +36893,15 @@ GL_PREFIX(_dispatch_stub_957):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -36696,7 +36917,15 @@ GL_PREFIX(_dispatch_stub_957):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -36706,10 +36935,9 @@ GL_PREFIX(_dispatch_stub_957):
 	.size	GL_PREFIX(_dispatch_stub_957), .-GL_PREFIX(_dispatch_stub_957)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_958)
-	.type	GL_PREFIX(_dispatch_stub_958), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_958))
-GL_PREFIX(_dispatch_stub_958):
+	.globl	GL_PREFIX(AreProgramsResidentNV)
+	.type	GL_PREFIX(AreProgramsResidentNV), @function
+GL_PREFIX(AreProgramsResidentNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7664(%rax), %r11
@@ -36741,13 +36969,12 @@ GL_PREFIX(_dispatch_stub_958):
 	movq	7664(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_958), .-GL_PREFIX(_dispatch_stub_958)
+	.size	GL_PREFIX(AreProgramsResidentNV), .-GL_PREFIX(AreProgramsResidentNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_959)
-	.type	GL_PREFIX(_dispatch_stub_959), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_959))
-GL_PREFIX(_dispatch_stub_959):
+	.globl	GL_PREFIX(ExecuteProgramNV)
+	.type	GL_PREFIX(ExecuteProgramNV), @function
+GL_PREFIX(ExecuteProgramNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7672(%rax), %r11
@@ -36755,9 +36982,9 @@ GL_PREFIX(_dispatch_stub_959):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7672(%rax), %r11
@@ -36771,20 +36998,20 @@ GL_PREFIX(_dispatch_stub_959):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7672(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_959), .-GL_PREFIX(_dispatch_stub_959)
+	.size	GL_PREFIX(ExecuteProgramNV), .-GL_PREFIX(ExecuteProgramNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(BindFramebufferEXT)
-	.type	GL_PREFIX(BindFramebufferEXT), @function
-GL_PREFIX(BindFramebufferEXT):
+	.globl	GL_PREFIX(GetProgramParameterdvNV)
+	.type	GL_PREFIX(GetProgramParameterdvNV), @function
+GL_PREFIX(GetProgramParameterdvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7680(%rax), %r11
@@ -36792,9 +37019,13 @@ GL_PREFIX(BindFramebufferEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7680(%rax), %r11
@@ -36808,20 +37039,24 @@ GL_PREFIX(BindFramebufferEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7680(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(BindFramebufferEXT), .-GL_PREFIX(BindFramebufferEXT)
+	.size	GL_PREFIX(GetProgramParameterdvNV), .-GL_PREFIX(GetProgramParameterdvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(BindRenderbufferEXT)
-	.type	GL_PREFIX(BindRenderbufferEXT), @function
-GL_PREFIX(BindRenderbufferEXT):
+	.globl	GL_PREFIX(GetProgramParameterfvNV)
+	.type	GL_PREFIX(GetProgramParameterfvNV), @function
+GL_PREFIX(GetProgramParameterfvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7688(%rax), %r11
@@ -36829,9 +37064,13 @@ GL_PREFIX(BindRenderbufferEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7688(%rax), %r11
@@ -36845,21 +37084,24 @@ GL_PREFIX(BindRenderbufferEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7688(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(BindRenderbufferEXT), .-GL_PREFIX(BindRenderbufferEXT)
+	.size	GL_PREFIX(GetProgramParameterfvNV), .-GL_PREFIX(GetProgramParameterfvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_962)
-	.type	GL_PREFIX(_dispatch_stub_962), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_962))
-GL_PREFIX(_dispatch_stub_962):
+	.globl	GL_PREFIX(GetProgramStringNV)
+	.type	GL_PREFIX(GetProgramStringNV), @function
+GL_PREFIX(GetProgramStringNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7696(%rax), %r11
@@ -36891,13 +37133,12 @@ GL_PREFIX(_dispatch_stub_962):
 	movq	7696(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_962), .-GL_PREFIX(_dispatch_stub_962)
+	.size	GL_PREFIX(GetProgramStringNV), .-GL_PREFIX(GetProgramStringNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_963)
-	.type	GL_PREFIX(_dispatch_stub_963), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_963))
-GL_PREFIX(_dispatch_stub_963):
+	.globl	GL_PREFIX(GetProgramivNV)
+	.type	GL_PREFIX(GetProgramivNV), @function
+GL_PREFIX(GetProgramivNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7704(%rax), %r11
@@ -36929,12 +37170,12 @@ GL_PREFIX(_dispatch_stub_963):
 	movq	7704(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_963), .-GL_PREFIX(_dispatch_stub_963)
+	.size	GL_PREFIX(GetProgramivNV), .-GL_PREFIX(GetProgramivNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI1iEXT)
-	.type	GL_PREFIX(VertexAttribI1iEXT), @function
-GL_PREFIX(VertexAttribI1iEXT):
+	.globl	GL_PREFIX(GetTrackMatrixivNV)
+	.type	GL_PREFIX(GetTrackMatrixivNV), @function
+GL_PREFIX(GetTrackMatrixivNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7712(%rax), %r11
@@ -36942,9 +37183,13 @@ GL_PREFIX(VertexAttribI1iEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7712(%rax), %r11
@@ -36958,20 +37203,24 @@ GL_PREFIX(VertexAttribI1iEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7712(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI1iEXT), .-GL_PREFIX(VertexAttribI1iEXT)
+	.size	GL_PREFIX(GetTrackMatrixivNV), .-GL_PREFIX(GetTrackMatrixivNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI1uiEXT)
-	.type	GL_PREFIX(VertexAttribI1uiEXT), @function
-GL_PREFIX(VertexAttribI1uiEXT):
+	.globl	GL_PREFIX(GetVertexAttribdvNV)
+	.type	GL_PREFIX(GetVertexAttribdvNV), @function
+GL_PREFIX(GetVertexAttribdvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7720(%rax), %r11
@@ -36979,9 +37228,9 @@ GL_PREFIX(VertexAttribI1uiEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7720(%rax), %r11
@@ -36995,20 +37244,20 @@ GL_PREFIX(VertexAttribI1uiEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7720(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI1uiEXT), .-GL_PREFIX(VertexAttribI1uiEXT)
+	.size	GL_PREFIX(GetVertexAttribdvNV), .-GL_PREFIX(GetVertexAttribdvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI2iEXT)
-	.type	GL_PREFIX(VertexAttribI2iEXT), @function
-GL_PREFIX(VertexAttribI2iEXT):
+	.globl	GL_PREFIX(GetVertexAttribfvNV)
+	.type	GL_PREFIX(GetVertexAttribfvNV), @function
+GL_PREFIX(GetVertexAttribfvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7728(%rax), %r11
@@ -37040,12 +37289,12 @@ GL_PREFIX(VertexAttribI2iEXT):
 	movq	7728(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI2iEXT), .-GL_PREFIX(VertexAttribI2iEXT)
+	.size	GL_PREFIX(GetVertexAttribfvNV), .-GL_PREFIX(GetVertexAttribfvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI2ivEXT)
-	.type	GL_PREFIX(VertexAttribI2ivEXT), @function
-GL_PREFIX(VertexAttribI2ivEXT):
+	.globl	GL_PREFIX(GetVertexAttribivNV)
+	.type	GL_PREFIX(GetVertexAttribivNV), @function
+GL_PREFIX(GetVertexAttribivNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7736(%rax), %r11
@@ -37053,9 +37302,9 @@ GL_PREFIX(VertexAttribI2ivEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7736(%rax), %r11
@@ -37069,20 +37318,20 @@ GL_PREFIX(VertexAttribI2ivEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7736(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI2ivEXT), .-GL_PREFIX(VertexAttribI2ivEXT)
+	.size	GL_PREFIX(GetVertexAttribivNV), .-GL_PREFIX(GetVertexAttribivNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI2uiEXT)
-	.type	GL_PREFIX(VertexAttribI2uiEXT), @function
-GL_PREFIX(VertexAttribI2uiEXT):
+	.globl	GL_PREFIX(LoadProgramNV)
+	.type	GL_PREFIX(LoadProgramNV), @function
+GL_PREFIX(LoadProgramNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7744(%rax), %r11
@@ -37091,7 +37340,11 @@ GL_PREFIX(VertexAttribI2uiEXT):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -37107,19 +37360,23 @@ GL_PREFIX(VertexAttribI2uiEXT):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7744(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI2uiEXT), .-GL_PREFIX(VertexAttribI2uiEXT)
+	.size	GL_PREFIX(LoadProgramNV), .-GL_PREFIX(LoadProgramNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI2uivEXT)
-	.type	GL_PREFIX(VertexAttribI2uivEXT), @function
-GL_PREFIX(VertexAttribI2uivEXT):
+	.globl	GL_PREFIX(ProgramParameters4dvNV)
+	.type	GL_PREFIX(ProgramParameters4dvNV), @function
+GL_PREFIX(ProgramParameters4dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7752(%rax), %r11
@@ -37127,9 +37384,13 @@ GL_PREFIX(VertexAttribI2uivEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7752(%rax), %r11
@@ -37143,20 +37404,24 @@ GL_PREFIX(VertexAttribI2uivEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7752(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI2uivEXT), .-GL_PREFIX(VertexAttribI2uivEXT)
+	.size	GL_PREFIX(ProgramParameters4dvNV), .-GL_PREFIX(ProgramParameters4dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI3iEXT)
-	.type	GL_PREFIX(VertexAttribI3iEXT), @function
-GL_PREFIX(VertexAttribI3iEXT):
+	.globl	GL_PREFIX(ProgramParameters4fvNV)
+	.type	GL_PREFIX(ProgramParameters4fvNV), @function
+GL_PREFIX(ProgramParameters4fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7760(%rax), %r11
@@ -37196,12 +37461,12 @@ GL_PREFIX(VertexAttribI3iEXT):
 	movq	7760(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI3iEXT), .-GL_PREFIX(VertexAttribI3iEXT)
+	.size	GL_PREFIX(ProgramParameters4fvNV), .-GL_PREFIX(ProgramParameters4fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI3ivEXT)
-	.type	GL_PREFIX(VertexAttribI3ivEXT), @function
-GL_PREFIX(VertexAttribI3ivEXT):
+	.globl	GL_PREFIX(RequestResidentProgramsNV)
+	.type	GL_PREFIX(RequestResidentProgramsNV), @function
+GL_PREFIX(RequestResidentProgramsNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7768(%rax), %r11
@@ -37233,12 +37498,12 @@ GL_PREFIX(VertexAttribI3ivEXT):
 	movq	7768(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI3ivEXT), .-GL_PREFIX(VertexAttribI3ivEXT)
+	.size	GL_PREFIX(RequestResidentProgramsNV), .-GL_PREFIX(RequestResidentProgramsNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI3uiEXT)
-	.type	GL_PREFIX(VertexAttribI3uiEXT), @function
-GL_PREFIX(VertexAttribI3uiEXT):
+	.globl	GL_PREFIX(TrackMatrixNV)
+	.type	GL_PREFIX(TrackMatrixNV), @function
+GL_PREFIX(TrackMatrixNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7776(%rax), %r11
@@ -37278,24 +37543,24 @@ GL_PREFIX(VertexAttribI3uiEXT):
 	movq	7776(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI3uiEXT), .-GL_PREFIX(VertexAttribI3uiEXT)
+	.size	GL_PREFIX(TrackMatrixNV), .-GL_PREFIX(TrackMatrixNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI3uivEXT)
-	.type	GL_PREFIX(VertexAttribI3uivEXT), @function
-GL_PREFIX(VertexAttribI3uivEXT):
+	.globl	GL_PREFIX(VertexAttrib1dNV)
+	.type	GL_PREFIX(VertexAttrib1dNV), @function
+GL_PREFIX(VertexAttrib1dNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7784(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$24, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$24, %rsp
 	movq	7784(%rax), %r11
 	jmp	*%r11
 #else
@@ -37305,22 +37570,22 @@ GL_PREFIX(VertexAttribI3uivEXT):
 	movq	7784(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$24, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$24, %rsp
 	movq	7784(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI3uivEXT), .-GL_PREFIX(VertexAttribI3uivEXT)
+	.size	GL_PREFIX(VertexAttrib1dNV), .-GL_PREFIX(VertexAttrib1dNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI4iEXT)
-	.type	GL_PREFIX(VertexAttribI4iEXT), @function
-GL_PREFIX(VertexAttribI4iEXT):
+	.globl	GL_PREFIX(VertexAttrib1dvNV)
+	.type	GL_PREFIX(VertexAttrib1dvNV), @function
+GL_PREFIX(VertexAttrib1dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7792(%rax), %r11
@@ -37328,13 +37593,9 @@ GL_PREFIX(VertexAttribI4iEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7792(%rax), %r11
@@ -37348,36 +37609,32 @@ GL_PREFIX(VertexAttribI4iEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7792(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI4iEXT), .-GL_PREFIX(VertexAttribI4iEXT)
+	.size	GL_PREFIX(VertexAttrib1dvNV), .-GL_PREFIX(VertexAttrib1dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI4ivEXT)
-	.type	GL_PREFIX(VertexAttribI4ivEXT), @function
-GL_PREFIX(VertexAttribI4ivEXT):
+	.globl	GL_PREFIX(VertexAttrib1fNV)
+	.type	GL_PREFIX(VertexAttrib1fNV), @function
+GL_PREFIX(VertexAttrib1fNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7800(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$24, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$24, %rsp
 	movq	7800(%rax), %r11
 	jmp	*%r11
 #else
@@ -37387,22 +37644,22 @@ GL_PREFIX(VertexAttribI4ivEXT):
 	movq	7800(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$24, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$24, %rsp
 	movq	7800(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI4ivEXT), .-GL_PREFIX(VertexAttribI4ivEXT)
+	.size	GL_PREFIX(VertexAttrib1fNV), .-GL_PREFIX(VertexAttrib1fNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI4uiEXT)
-	.type	GL_PREFIX(VertexAttribI4uiEXT), @function
-GL_PREFIX(VertexAttribI4uiEXT):
+	.globl	GL_PREFIX(VertexAttrib1fvNV)
+	.type	GL_PREFIX(VertexAttrib1fvNV), @function
+GL_PREFIX(VertexAttrib1fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7808(%rax), %r11
@@ -37410,13 +37667,9 @@ GL_PREFIX(VertexAttribI4uiEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7808(%rax), %r11
@@ -37430,24 +37683,20 @@ GL_PREFIX(VertexAttribI4uiEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7808(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI4uiEXT), .-GL_PREFIX(VertexAttribI4uiEXT)
+	.size	GL_PREFIX(VertexAttrib1fvNV), .-GL_PREFIX(VertexAttrib1fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(VertexAttribI4uivEXT)
-	.type	GL_PREFIX(VertexAttribI4uivEXT), @function
-GL_PREFIX(VertexAttribI4uivEXT):
+	.globl	GL_PREFIX(VertexAttrib1sNV)
+	.type	GL_PREFIX(VertexAttrib1sNV), @function
+GL_PREFIX(VertexAttrib1sNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7816(%rax), %r11
@@ -37479,12 +37728,12 @@ GL_PREFIX(VertexAttribI4uivEXT):
 	movq	7816(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(VertexAttribI4uivEXT), .-GL_PREFIX(VertexAttribI4uivEXT)
+	.size	GL_PREFIX(VertexAttrib1sNV), .-GL_PREFIX(VertexAttrib1sNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ClearColorIiEXT)
-	.type	GL_PREFIX(ClearColorIiEXT), @function
-GL_PREFIX(ClearColorIiEXT):
+	.globl	GL_PREFIX(VertexAttrib1svNV)
+	.type	GL_PREFIX(VertexAttrib1svNV), @function
+GL_PREFIX(VertexAttrib1svNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7824(%rax), %r11
@@ -37492,13 +37741,9 @@ GL_PREFIX(ClearColorIiEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7824(%rax), %r11
@@ -37512,40 +37757,34 @@ GL_PREFIX(ClearColorIiEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7824(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ClearColorIiEXT), .-GL_PREFIX(ClearColorIiEXT)
+	.size	GL_PREFIX(VertexAttrib1svNV), .-GL_PREFIX(VertexAttrib1svNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ClearColorIuiEXT)
-	.type	GL_PREFIX(ClearColorIuiEXT), @function
-GL_PREFIX(ClearColorIuiEXT):
+	.globl	GL_PREFIX(VertexAttrib2dNV)
+	.type	GL_PREFIX(VertexAttrib2dNV), @function
+GL_PREFIX(VertexAttrib2dNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7832(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
+	subq	$24, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$24, %rsp
 	movq	7832(%rax), %r11
 	jmp	*%r11
 #else
@@ -37555,26 +37794,24 @@ GL_PREFIX(ClearColorIuiEXT):
 	movq	7832(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
+	subq	$24, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$24, %rsp
 	movq	7832(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ClearColorIuiEXT), .-GL_PREFIX(ClearColorIuiEXT)
+	.size	GL_PREFIX(VertexAttrib2dNV), .-GL_PREFIX(VertexAttrib2dNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(BindBufferOffsetEXT)
-	.type	GL_PREFIX(BindBufferOffsetEXT), @function
-GL_PREFIX(BindBufferOffsetEXT):
+	.globl	GL_PREFIX(VertexAttrib2dvNV)
+	.type	GL_PREFIX(VertexAttrib2dvNV), @function
+GL_PREFIX(VertexAttrib2dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7840(%rax), %r11
@@ -37582,13 +37819,9 @@ GL_PREFIX(BindBufferOffsetEXT):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7840(%rax), %r11
@@ -37602,40 +37835,34 @@ GL_PREFIX(BindBufferOffsetEXT):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7840(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(BindBufferOffsetEXT), .-GL_PREFIX(BindBufferOffsetEXT)
+	.size	GL_PREFIX(VertexAttrib2dvNV), .-GL_PREFIX(VertexAttrib2dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(GetObjectParameterivAPPLE)
-	.type	GL_PREFIX(GetObjectParameterivAPPLE), @function
-GL_PREFIX(GetObjectParameterivAPPLE):
+	.globl	GL_PREFIX(VertexAttrib2fNV)
+	.type	GL_PREFIX(VertexAttrib2fNV), @function
+GL_PREFIX(VertexAttrib2fNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7848(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
+	subq	$24, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$24, %rsp
 	movq	7848(%rax), %r11
 	jmp	*%r11
 #else
@@ -37645,26 +37872,24 @@ GL_PREFIX(GetObjectParameterivAPPLE):
 	movq	7848(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
-	pushq	%rbp
+	subq	$24, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rcx
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$24, %rsp
 	movq	7848(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(GetObjectParameterivAPPLE), .-GL_PREFIX(GetObjectParameterivAPPLE)
+	.size	GL_PREFIX(VertexAttrib2fNV), .-GL_PREFIX(VertexAttrib2fNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ObjectPurgeableAPPLE)
-	.type	GL_PREFIX(ObjectPurgeableAPPLE), @function
-GL_PREFIX(ObjectPurgeableAPPLE):
+	.globl	GL_PREFIX(VertexAttrib2fvNV)
+	.type	GL_PREFIX(VertexAttrib2fvNV), @function
+GL_PREFIX(VertexAttrib2fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7856(%rax), %r11
@@ -37672,9 +37897,9 @@ GL_PREFIX(ObjectPurgeableAPPLE):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7856(%rax), %r11
@@ -37688,20 +37913,20 @@ GL_PREFIX(ObjectPurgeableAPPLE):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	7856(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ObjectPurgeableAPPLE), .-GL_PREFIX(ObjectPurgeableAPPLE)
+	.size	GL_PREFIX(VertexAttrib2fvNV), .-GL_PREFIX(VertexAttrib2fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ObjectUnpurgeableAPPLE)
-	.type	GL_PREFIX(ObjectUnpurgeableAPPLE), @function
-GL_PREFIX(ObjectUnpurgeableAPPLE):
+	.globl	GL_PREFIX(VertexAttrib2sNV)
+	.type	GL_PREFIX(VertexAttrib2sNV), @function
+GL_PREFIX(VertexAttrib2sNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7864(%rax), %r11
@@ -37733,19 +37958,23 @@ GL_PREFIX(ObjectUnpurgeableAPPLE):
 	movq	7864(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ObjectUnpurgeableAPPLE), .-GL_PREFIX(ObjectUnpurgeableAPPLE)
+	.size	GL_PREFIX(VertexAttrib2sNV), .-GL_PREFIX(VertexAttrib2sNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(ActiveProgramEXT)
-	.type	GL_PREFIX(ActiveProgramEXT), @function
-GL_PREFIX(ActiveProgramEXT):
+	.globl	GL_PREFIX(VertexAttrib2svNV)
+	.type	GL_PREFIX(VertexAttrib2svNV), @function
+GL_PREFIX(VertexAttrib2svNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7872(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
 	popq	%rdi
 	movq	7872(%rax), %r11
 	jmp	*%r11
@@ -37757,29 +37986,37 @@ GL_PREFIX(ActiveProgramEXT):
 	jmp	*%r11
 1:
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
 	popq	%rdi
 	movq	7872(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(ActiveProgramEXT), .-GL_PREFIX(ActiveProgramEXT)
+	.size	GL_PREFIX(VertexAttrib2svNV), .-GL_PREFIX(VertexAttrib2svNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(CreateShaderProgramEXT)
-	.type	GL_PREFIX(CreateShaderProgramEXT), @function
-GL_PREFIX(CreateShaderProgramEXT):
+	.globl	GL_PREFIX(VertexAttrib3dNV)
+	.type	GL_PREFIX(VertexAttrib3dNV), @function
+GL_PREFIX(VertexAttrib3dNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7880(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
 	movq	7880(%rax), %r11
 	jmp	*%r11
 #else
@@ -37789,22 +38026,26 @@ GL_PREFIX(CreateShaderProgramEXT):
 	movq	7880(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
 	movq	7880(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(CreateShaderProgramEXT), .-GL_PREFIX(CreateShaderProgramEXT)
+	.size	GL_PREFIX(VertexAttrib3dNV), .-GL_PREFIX(VertexAttrib3dNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(UseShaderProgramEXT)
-	.type	GL_PREFIX(UseShaderProgramEXT), @function
-GL_PREFIX(UseShaderProgramEXT):
+	.globl	GL_PREFIX(VertexAttrib3dvNV)
+	.type	GL_PREFIX(VertexAttrib3dvNV), @function
+GL_PREFIX(VertexAttrib3dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7888(%rax), %r11
@@ -37836,20 +38077,28 @@ GL_PREFIX(UseShaderProgramEXT):
 	movq	7888(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(UseShaderProgramEXT), .-GL_PREFIX(UseShaderProgramEXT)
+	.size	GL_PREFIX(VertexAttrib3dvNV), .-GL_PREFIX(VertexAttrib3dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(TextureBarrierNV)
-	.type	GL_PREFIX(TextureBarrierNV), @function
-GL_PREFIX(TextureBarrierNV):
+	.globl	GL_PREFIX(VertexAttrib3fNV)
+	.type	GL_PREFIX(VertexAttrib3fNV), @function
+GL_PREFIX(VertexAttrib3fNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7896(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
 	movq	7896(%rax), %r11
 	jmp	*%r11
 #else
@@ -37859,19 +38108,26 @@ GL_PREFIX(TextureBarrierNV):
 	movq	7896(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
 	movq	7896(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(TextureBarrierNV), .-GL_PREFIX(TextureBarrierNV)
+	.size	GL_PREFIX(VertexAttrib3fNV), .-GL_PREFIX(VertexAttrib3fNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_988)
-	.type	GL_PREFIX(_dispatch_stub_988), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_988))
-GL_PREFIX(_dispatch_stub_988):
+	.globl	GL_PREFIX(VertexAttrib3fvNV)
+	.type	GL_PREFIX(VertexAttrib3fvNV), @function
+GL_PREFIX(VertexAttrib3fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7904(%rax), %r11
@@ -37879,13 +38135,9 @@ GL_PREFIX(_dispatch_stub_988):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7904(%rax), %r11
@@ -37899,25 +38151,20 @@ GL_PREFIX(_dispatch_stub_988):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7904(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_988), .-GL_PREFIX(_dispatch_stub_988)
+	.size	GL_PREFIX(VertexAttrib3fvNV), .-GL_PREFIX(VertexAttrib3fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_989)
-	.type	GL_PREFIX(_dispatch_stub_989), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_989))
-GL_PREFIX(_dispatch_stub_989):
+	.globl	GL_PREFIX(VertexAttrib3sNV)
+	.type	GL_PREFIX(VertexAttrib3sNV), @function
+GL_PREFIX(VertexAttrib3sNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7912(%rax), %r11
@@ -37957,13 +38204,12 @@ GL_PREFIX(_dispatch_stub_989):
 	movq	7912(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_989), .-GL_PREFIX(_dispatch_stub_989)
+	.size	GL_PREFIX(VertexAttrib3sNV), .-GL_PREFIX(VertexAttrib3sNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_990)
-	.type	GL_PREFIX(_dispatch_stub_990), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_990))
-GL_PREFIX(_dispatch_stub_990):
+	.globl	GL_PREFIX(VertexAttrib3svNV)
+	.type	GL_PREFIX(VertexAttrib3svNV), @function
+GL_PREFIX(VertexAttrib3svNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7920(%rax), %r11
@@ -37971,13 +38217,9 @@ GL_PREFIX(_dispatch_stub_990):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7920(%rax), %r11
@@ -37991,36 +38233,38 @@ GL_PREFIX(_dispatch_stub_990):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7920(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_990), .-GL_PREFIX(_dispatch_stub_990)
+	.size	GL_PREFIX(VertexAttrib3svNV), .-GL_PREFIX(VertexAttrib3svNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(EGLImageTargetRenderbufferStorageOES)
-	.type	GL_PREFIX(EGLImageTargetRenderbufferStorageOES), @function
-GL_PREFIX(EGLImageTargetRenderbufferStorageOES):
+	.globl	GL_PREFIX(VertexAttrib4dNV)
+	.type	GL_PREFIX(VertexAttrib4dNV), @function
+GL_PREFIX(VertexAttrib4dNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7928(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
+	movq	%xmm3, 32(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	32(%rsp), %xmm3
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
 	movq	7928(%rax), %r11
 	jmp	*%r11
 #else
@@ -38030,22 +38274,28 @@ GL_PREFIX(EGLImageTargetRenderbufferStorageOES):
 	movq	7928(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
+	movq	%xmm3, 32(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	32(%rsp), %xmm3
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
 	movq	7928(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(EGLImageTargetRenderbufferStorageOES), .-GL_PREFIX(EGLImageTargetRenderbufferStorageOES)
+	.size	GL_PREFIX(VertexAttrib4dNV), .-GL_PREFIX(VertexAttrib4dNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(EGLImageTargetTexture2DOES)
-	.type	GL_PREFIX(EGLImageTargetTexture2DOES), @function
-GL_PREFIX(EGLImageTargetTexture2DOES):
+	.globl	GL_PREFIX(VertexAttrib4dvNV)
+	.type	GL_PREFIX(VertexAttrib4dvNV), @function
+GL_PREFIX(VertexAttrib4dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7936(%rax), %r11
@@ -38077,25 +38327,30 @@ GL_PREFIX(EGLImageTargetTexture2DOES):
 	movq	7936(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(EGLImageTargetTexture2DOES), .-GL_PREFIX(EGLImageTargetTexture2DOES)
+	.size	GL_PREFIX(VertexAttrib4dvNV), .-GL_PREFIX(VertexAttrib4dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_993)
-	.type	GL_PREFIX(_dispatch_stub_993), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_993))
-GL_PREFIX(_dispatch_stub_993):
+	.globl	GL_PREFIX(VertexAttrib4fNV)
+	.type	GL_PREFIX(VertexAttrib4fNV), @function
+GL_PREFIX(VertexAttrib4fNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7944(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
+	movq	%xmm3, 32(%rsp)
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	32(%rsp), %xmm3
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
 	movq	7944(%rax), %r11
 	jmp	*%r11
 #else
@@ -38105,23 +38360,28 @@ GL_PREFIX(_dispatch_stub_993):
 	movq	7944(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
+	subq	$40, %rsp
+	movq	%rdi, (%rsp)
+	movq	%xmm0, 8(%rsp)
+	movq	%xmm1, 16(%rsp)
+	movq	%xmm2, 24(%rsp)
+	movq	%xmm3, 32(%rsp)
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
+	movq	32(%rsp), %xmm3
+	movq	24(%rsp), %xmm2
+	movq	16(%rsp), %xmm1
+	movq	8(%rsp), %xmm0
+	movq	(%rsp), %rdi
+	addq	$40, %rsp
 	movq	7944(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_993), .-GL_PREFIX(_dispatch_stub_993)
+	.size	GL_PREFIX(VertexAttrib4fNV), .-GL_PREFIX(VertexAttrib4fNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_994)
-	.type	GL_PREFIX(_dispatch_stub_994), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_994))
-GL_PREFIX(_dispatch_stub_994):
+	.globl	GL_PREFIX(VertexAttrib4fvNV)
+	.type	GL_PREFIX(VertexAttrib4fvNV), @function
+GL_PREFIX(VertexAttrib4fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7952(%rax), %r11
@@ -38129,13 +38389,9 @@ GL_PREFIX(_dispatch_stub_994):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7952(%rax), %r11
@@ -38149,104 +38405,68 @@ GL_PREFIX(_dispatch_stub_994):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
-	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%rcx
-	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7952(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_994), .-GL_PREFIX(_dispatch_stub_994)
+	.size	GL_PREFIX(VertexAttrib4fvNV), .-GL_PREFIX(VertexAttrib4fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_995)
-	.type	GL_PREFIX(_dispatch_stub_995), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_995))
-GL_PREFIX(_dispatch_stub_995):
+	.globl	GL_PREFIX(VertexAttrib4sNV)
+	.type	GL_PREFIX(VertexAttrib4sNV), @function
+GL_PREFIX(VertexAttrib4sNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7960(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	7960(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	7960(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	7960(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_995), .-GL_PREFIX(_dispatch_stub_995)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_996)
-	.type	GL_PREFIX(_dispatch_stub_996), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_996))
-GL_PREFIX(_dispatch_stub_996):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	7968(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	7968(%rax), %r11
+	movq	7960(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	7968(%rax), %r11
+	movq	7960(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
-	pushq	%rbp
+	pushq	%r8
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	7968(%rax), %r11
+	movq	7960(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_996), .-GL_PREFIX(_dispatch_stub_996)
+	.size	GL_PREFIX(VertexAttrib4sNV), .-GL_PREFIX(VertexAttrib4sNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_997)
-	.type	GL_PREFIX(_dispatch_stub_997), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_997))
-GL_PREFIX(_dispatch_stub_997):
+	.globl	GL_PREFIX(VertexAttrib4svNV)
+	.type	GL_PREFIX(VertexAttrib4svNV), @function
+GL_PREFIX(VertexAttrib4svNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
-	movq	7976(%rax), %r11
+	movq	7968(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -38256,6 +38476,47 @@ GL_PREFIX(_dispatch_stub_997):
 	popq	%rbp
 	popq	%rsi
 	popq	%rdi
+	movq	7968(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	7968(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	7968(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttrib4svNV), .-GL_PREFIX(VertexAttrib4svNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttrib4ubNV)
+	.type	GL_PREFIX(VertexAttrib4ubNV), @function
+GL_PREFIX(VertexAttrib4ubNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	7976(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	7976(%rax), %r11
 	jmp	*%r11
 #else
@@ -38267,21 +38528,24 @@ GL_PREFIX(_dispatch_stub_997):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7976(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_997), .-GL_PREFIX(_dispatch_stub_997)
+	.size	GL_PREFIX(VertexAttrib4ubNV), .-GL_PREFIX(VertexAttrib4ubNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_998)
-	.type	GL_PREFIX(_dispatch_stub_998), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_998))
-GL_PREFIX(_dispatch_stub_998):
+	.globl	GL_PREFIX(VertexAttrib4ubvNV)
+	.type	GL_PREFIX(VertexAttrib4ubvNV), @function
+GL_PREFIX(VertexAttrib4ubvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7984(%rax), %r11
@@ -38313,13 +38577,12 @@ GL_PREFIX(_dispatch_stub_998):
 	movq	7984(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_998), .-GL_PREFIX(_dispatch_stub_998)
+	.size	GL_PREFIX(VertexAttrib4ubvNV), .-GL_PREFIX(VertexAttrib4ubvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_999)
-	.type	GL_PREFIX(_dispatch_stub_999), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_999))
-GL_PREFIX(_dispatch_stub_999):
+	.globl	GL_PREFIX(VertexAttribPointerNV)
+	.type	GL_PREFIX(VertexAttribPointerNV), @function
+GL_PREFIX(VertexAttribPointerNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	7992(%rax), %r11
@@ -38327,9 +38590,13 @@ GL_PREFIX(_dispatch_stub_999):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7992(%rax), %r11
@@ -38343,41 +38610,36 @@ GL_PREFIX(_dispatch_stub_999):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	7992(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_999), .-GL_PREFIX(_dispatch_stub_999)
+	.size	GL_PREFIX(VertexAttribPointerNV), .-GL_PREFIX(VertexAttribPointerNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1000)
-	.type	GL_PREFIX(_dispatch_stub_1000), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1000))
-GL_PREFIX(_dispatch_stub_1000):
+	.globl	GL_PREFIX(VertexAttribs1dvNV)
+	.type	GL_PREFIX(VertexAttribs1dvNV), @function
+GL_PREFIX(VertexAttribs1dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8000(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$56, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	movq	%xmm3, 24(%rsp)
-	movq	%xmm4, 32(%rsp)
-	movq	%xmm5, 40(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	movq	40(%rsp), %xmm5
-	movq	32(%rsp), %xmm4
-	movq	24(%rsp), %xmm3
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$56, %rsp
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	8000(%rax), %r11
 	jmp	*%r11
 #else
@@ -38387,31 +38649,22 @@ GL_PREFIX(_dispatch_stub_1000):
 	movq	8000(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$56, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	movq	%xmm3, 24(%rsp)
-	movq	%xmm4, 32(%rsp)
-	movq	%xmm5, 40(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	movq	40(%rsp), %xmm5
-	movq	32(%rsp), %xmm4
-	movq	24(%rsp), %xmm3
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$56, %rsp
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
 	movq	8000(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1000), .-GL_PREFIX(_dispatch_stub_1000)
+	.size	GL_PREFIX(VertexAttribs1dvNV), .-GL_PREFIX(VertexAttribs1dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1001)
-	.type	GL_PREFIX(_dispatch_stub_1001), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1001))
-GL_PREFIX(_dispatch_stub_1001):
+	.globl	GL_PREFIX(VertexAttribs1fvNV)
+	.type	GL_PREFIX(VertexAttribs1fvNV), @function
+GL_PREFIX(VertexAttribs1fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8008(%rax), %r11
@@ -38420,15 +38673,7 @@ GL_PREFIX(_dispatch_stub_1001):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%r9
-	popq	%r8
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -38444,28 +38689,19 @@ GL_PREFIX(_dispatch_stub_1001):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
-	pushq	%r9
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%r9
-	popq	%r8
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8008(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1001), .-GL_PREFIX(_dispatch_stub_1001)
+	.size	GL_PREFIX(VertexAttribs1fvNV), .-GL_PREFIX(VertexAttribs1fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1002)
-	.type	GL_PREFIX(_dispatch_stub_1002), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1002))
-GL_PREFIX(_dispatch_stub_1002):
+	.globl	GL_PREFIX(VertexAttribs1svNV)
+	.type	GL_PREFIX(VertexAttribs1svNV), @function
+GL_PREFIX(VertexAttribs1svNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8016(%rax), %r11
@@ -38473,9 +38709,9 @@ GL_PREFIX(_dispatch_stub_1002):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8016(%rax), %r11
@@ -38489,21 +38725,20 @@ GL_PREFIX(_dispatch_stub_1002):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8016(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1002), .-GL_PREFIX(_dispatch_stub_1002)
+	.size	GL_PREFIX(VertexAttribs1svNV), .-GL_PREFIX(VertexAttribs1svNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1003)
-	.type	GL_PREFIX(_dispatch_stub_1003), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1003))
-GL_PREFIX(_dispatch_stub_1003):
+	.globl	GL_PREFIX(VertexAttribs2dvNV)
+	.type	GL_PREFIX(VertexAttribs2dvNV), @function
+GL_PREFIX(VertexAttribs2dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8024(%rax), %r11
@@ -38511,9 +38746,9 @@ GL_PREFIX(_dispatch_stub_1003):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8024(%rax), %r11
@@ -38527,21 +38762,20 @@ GL_PREFIX(_dispatch_stub_1003):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8024(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1003), .-GL_PREFIX(_dispatch_stub_1003)
+	.size	GL_PREFIX(VertexAttribs2dvNV), .-GL_PREFIX(VertexAttribs2dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1004)
-	.type	GL_PREFIX(_dispatch_stub_1004), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1004))
-GL_PREFIX(_dispatch_stub_1004):
+	.globl	GL_PREFIX(VertexAttribs2fvNV)
+	.type	GL_PREFIX(VertexAttribs2fvNV), @function
+GL_PREFIX(VertexAttribs2fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8032(%rax), %r11
@@ -38573,13 +38807,12 @@ GL_PREFIX(_dispatch_stub_1004):
 	movq	8032(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1004), .-GL_PREFIX(_dispatch_stub_1004)
+	.size	GL_PREFIX(VertexAttribs2fvNV), .-GL_PREFIX(VertexAttribs2fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1005)
-	.type	GL_PREFIX(_dispatch_stub_1005), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1005))
-GL_PREFIX(_dispatch_stub_1005):
+	.globl	GL_PREFIX(VertexAttribs2svNV)
+	.type	GL_PREFIX(VertexAttribs2svNV), @function
+GL_PREFIX(VertexAttribs2svNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8040(%rax), %r11
@@ -38611,20 +38844,23 @@ GL_PREFIX(_dispatch_stub_1005):
 	movq	8040(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1005), .-GL_PREFIX(_dispatch_stub_1005)
+	.size	GL_PREFIX(VertexAttribs2svNV), .-GL_PREFIX(VertexAttribs2svNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1006)
-	.type	GL_PREFIX(_dispatch_stub_1006), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1006))
-GL_PREFIX(_dispatch_stub_1006):
+	.globl	GL_PREFIX(VertexAttribs3dvNV)
+	.type	GL_PREFIX(VertexAttribs3dvNV), @function
+GL_PREFIX(VertexAttribs3dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8048(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	8048(%rax), %r11
 	jmp	*%r11
@@ -38636,25 +38872,32 @@ GL_PREFIX(_dispatch_stub_1006):
 	jmp	*%r11
 1:
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	8048(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1006), .-GL_PREFIX(_dispatch_stub_1006)
+	.size	GL_PREFIX(VertexAttribs3dvNV), .-GL_PREFIX(VertexAttribs3dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1007)
-	.type	GL_PREFIX(_dispatch_stub_1007), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1007))
-GL_PREFIX(_dispatch_stub_1007):
+	.globl	GL_PREFIX(VertexAttribs3fvNV)
+	.type	GL_PREFIX(VertexAttribs3fvNV), @function
+GL_PREFIX(VertexAttribs3fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8056(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	8056(%rax), %r11
 	jmp	*%r11
@@ -38666,18 +38909,21 @@ GL_PREFIX(_dispatch_stub_1007):
 	jmp	*%r11
 1:
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	8056(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1007), .-GL_PREFIX(_dispatch_stub_1007)
+	.size	GL_PREFIX(VertexAttribs3fvNV), .-GL_PREFIX(VertexAttribs3fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1008)
-	.type	GL_PREFIX(_dispatch_stub_1008), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1008))
-GL_PREFIX(_dispatch_stub_1008):
+	.globl	GL_PREFIX(VertexAttribs3svNV)
+	.type	GL_PREFIX(VertexAttribs3svNV), @function
+GL_PREFIX(VertexAttribs3svNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8064(%rax), %r11
@@ -38709,13 +38955,12 @@ GL_PREFIX(_dispatch_stub_1008):
 	movq	8064(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1008), .-GL_PREFIX(_dispatch_stub_1008)
+	.size	GL_PREFIX(VertexAttribs3svNV), .-GL_PREFIX(VertexAttribs3svNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1009)
-	.type	GL_PREFIX(_dispatch_stub_1009), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1009))
-GL_PREFIX(_dispatch_stub_1009):
+	.globl	GL_PREFIX(VertexAttribs4dvNV)
+	.type	GL_PREFIX(VertexAttribs4dvNV), @function
+GL_PREFIX(VertexAttribs4dvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8072(%rax), %r11
@@ -38747,20 +38992,23 @@ GL_PREFIX(_dispatch_stub_1009):
 	movq	8072(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1009), .-GL_PREFIX(_dispatch_stub_1009)
+	.size	GL_PREFIX(VertexAttribs4dvNV), .-GL_PREFIX(VertexAttribs4dvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1010)
-	.type	GL_PREFIX(_dispatch_stub_1010), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1010))
-GL_PREFIX(_dispatch_stub_1010):
+	.globl	GL_PREFIX(VertexAttribs4fvNV)
+	.type	GL_PREFIX(VertexAttribs4fvNV), @function
+GL_PREFIX(VertexAttribs4fvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8080(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	8080(%rax), %r11
 	jmp	*%r11
@@ -38772,18 +39020,21 @@ GL_PREFIX(_dispatch_stub_1010):
 	jmp	*%r11
 1:
 	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
 	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
 	popq	%rdi
 	movq	8080(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1010), .-GL_PREFIX(_dispatch_stub_1010)
+	.size	GL_PREFIX(VertexAttribs4fvNV), .-GL_PREFIX(VertexAttribs4fvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1011)
-	.type	GL_PREFIX(_dispatch_stub_1011), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1011))
-GL_PREFIX(_dispatch_stub_1011):
+	.globl	GL_PREFIX(VertexAttribs4svNV)
+	.type	GL_PREFIX(VertexAttribs4svNV), @function
+GL_PREFIX(VertexAttribs4svNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8088(%rax), %r11
@@ -38792,11 +39043,7 @@ GL_PREFIX(_dispatch_stub_1011):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
 	call	_x86_64_get_dispatch@PLT
-	popq	%r8
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -38812,24 +39059,19 @@ GL_PREFIX(_dispatch_stub_1011):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
-	pushq	%rcx
-	pushq	%r8
 	call	_glapi_get_dispatch
-	popq	%r8
-	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8088(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1011), .-GL_PREFIX(_dispatch_stub_1011)
+	.size	GL_PREFIX(VertexAttribs4svNV), .-GL_PREFIX(VertexAttribs4svNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1012)
-	.type	GL_PREFIX(_dispatch_stub_1012), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1012))
-GL_PREFIX(_dispatch_stub_1012):
+	.globl	GL_PREFIX(VertexAttribs4ubvNV)
+	.type	GL_PREFIX(VertexAttribs4ubvNV), @function
+GL_PREFIX(VertexAttribs4ubvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8096(%rax), %r11
@@ -38861,33 +39103,24 @@ GL_PREFIX(_dispatch_stub_1012):
 	movq	8096(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1012), .-GL_PREFIX(_dispatch_stub_1012)
+	.size	GL_PREFIX(VertexAttribs4ubvNV), .-GL_PREFIX(VertexAttribs4ubvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1013)
-	.type	GL_PREFIX(_dispatch_stub_1013), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1013))
-GL_PREFIX(_dispatch_stub_1013):
+	.globl	GL_PREFIX(GetTexBumpParameterfvATI)
+	.type	GL_PREFIX(GetTexBumpParameterfvATI), @function
+GL_PREFIX(GetTexBumpParameterfvATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8104(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	subq	$56, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	movq	%xmm3, 24(%rsp)
-	movq	%xmm4, 32(%rsp)
-	movq	%xmm5, 40(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	movq	40(%rsp), %xmm5
-	movq	32(%rsp), %xmm4
-	movq	24(%rsp), %xmm3
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$56, %rsp
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
 	movq	8104(%rax), %r11
 	jmp	*%r11
 #else
@@ -38897,34 +39130,136 @@ GL_PREFIX(_dispatch_stub_1013):
 	movq	8104(%rax), %r11
 	jmp	*%r11
 1:
-	subq	$56, %rsp
-	movq	%xmm0, (%rsp)
-	movq	%xmm1, 8(%rsp)
-	movq	%xmm2, 16(%rsp)
-	movq	%xmm3, 24(%rsp)
-	movq	%xmm4, 32(%rsp)
-	movq	%xmm5, 40(%rsp)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	movq	40(%rsp), %xmm5
-	movq	32(%rsp), %xmm4
-	movq	24(%rsp), %xmm3
-	movq	16(%rsp), %xmm2
-	movq	8(%rsp), %xmm1
-	movq	(%rsp), %xmm0
-	addq	$56, %rsp
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
 	movq	8104(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1013), .-GL_PREFIX(_dispatch_stub_1013)
+	.size	GL_PREFIX(GetTexBumpParameterfvATI), .-GL_PREFIX(GetTexBumpParameterfvATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1014)
-	.type	GL_PREFIX(_dispatch_stub_1014), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1014))
-GL_PREFIX(_dispatch_stub_1014):
+	.globl	GL_PREFIX(GetTexBumpParameterivATI)
+	.type	GL_PREFIX(GetTexBumpParameterivATI), @function
+GL_PREFIX(GetTexBumpParameterivATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8112(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8112(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8112(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8112(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetTexBumpParameterivATI), .-GL_PREFIX(GetTexBumpParameterivATI)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(TexBumpParameterfvATI)
+	.type	GL_PREFIX(TexBumpParameterfvATI), @function
+GL_PREFIX(TexBumpParameterfvATI):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8120(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8120(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8120(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8120(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(TexBumpParameterfvATI), .-GL_PREFIX(TexBumpParameterfvATI)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(TexBumpParameterivATI)
+	.type	GL_PREFIX(TexBumpParameterivATI), @function
+GL_PREFIX(TexBumpParameterivATI):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8128(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8128(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8128(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8128(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(TexBumpParameterivATI), .-GL_PREFIX(TexBumpParameterivATI)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(AlphaFragmentOp1ATI)
+	.type	GL_PREFIX(AlphaFragmentOp1ATI), @function
+GL_PREFIX(AlphaFragmentOp1ATI):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8136(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
@@ -38942,13 +39277,13 @@ GL_PREFIX(_dispatch_stub_1014):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	8112(%rax), %r11
+	movq	8136(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	8112(%rax), %r11
+	movq	8136(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
@@ -38966,168 +39301,68 @@ GL_PREFIX(_dispatch_stub_1014):
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	8112(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1014), .-GL_PREFIX(_dispatch_stub_1014)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1015)
-	.type	GL_PREFIX(_dispatch_stub_1015), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1015))
-GL_PREFIX(_dispatch_stub_1015):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	8120(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	call	_x86_64_get_dispatch@PLT
-	popq	%rdi
-	movq	8120(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	8120(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	call	_glapi_get_dispatch
-	popq	%rdi
-	movq	8120(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1015), .-GL_PREFIX(_dispatch_stub_1015)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1016)
-	.type	GL_PREFIX(_dispatch_stub_1016), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1016))
-GL_PREFIX(_dispatch_stub_1016):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	8128(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	8128(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	8128(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	8128(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1016), .-GL_PREFIX(_dispatch_stub_1016)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1017)
-	.type	GL_PREFIX(_dispatch_stub_1017), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1017))
-GL_PREFIX(_dispatch_stub_1017):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
 	movq	8136(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(AlphaFragmentOp1ATI), .-GL_PREFIX(AlphaFragmentOp1ATI)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(AlphaFragmentOp2ATI)
+	.type	GL_PREFIX(AlphaFragmentOp2ATI), @function
+GL_PREFIX(AlphaFragmentOp2ATI):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8144(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%r9
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	8136(%rax), %r11
+	movq	8144(%rax), %r11
 	jmp	*%r11
 #else
 	movq	_glapi_Dispatch(%rip), %rax
 	testq	%rax, %rax
 	je	1f
-	movq	8136(%rax), %r11
+	movq	8144(%rax), %r11
 	jmp	*%r11
 1:
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
 	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%r9
+	popq	%r8
 	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
-	movq	8136(%rax), %r11
-	jmp	*%r11
-#endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1017), .-GL_PREFIX(_dispatch_stub_1017)
-
-	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1018)
-	.type	GL_PREFIX(_dispatch_stub_1018), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1018))
-GL_PREFIX(_dispatch_stub_1018):
-#if defined(GLX_USE_TLS)
-	call	_x86_64_get_dispatch@PLT
-	movq	8144(%rax), %r11
-	jmp	*%r11
-#elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
-	movq	8144(%rax), %r11
-	jmp	*%r11
-#else
-	movq	_glapi_Dispatch(%rip), %rax
-	testq	%rax, %rax
-	je	1f
-	movq	8144(%rax), %r11
-	jmp	*%r11
-1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
-	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
-	popq	%rdi
 	movq	8144(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1018), .-GL_PREFIX(_dispatch_stub_1018)
+	.size	GL_PREFIX(AlphaFragmentOp2ATI), .-GL_PREFIX(AlphaFragmentOp2ATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1019)
-	.type	GL_PREFIX(_dispatch_stub_1019), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1019))
-GL_PREFIX(_dispatch_stub_1019):
+	.globl	GL_PREFIX(AlphaFragmentOp3ATI)
+	.type	GL_PREFIX(AlphaFragmentOp3ATI), @function
+GL_PREFIX(AlphaFragmentOp3ATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8152(%rax), %r11
@@ -39136,7 +39371,15 @@ GL_PREFIX(_dispatch_stub_1019):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -39152,32 +39395,35 @@ GL_PREFIX(_dispatch_stub_1019):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8152(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1019), .-GL_PREFIX(_dispatch_stub_1019)
+	.size	GL_PREFIX(AlphaFragmentOp3ATI), .-GL_PREFIX(AlphaFragmentOp3ATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1020)
-	.type	GL_PREFIX(_dispatch_stub_1020), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1020))
-GL_PREFIX(_dispatch_stub_1020):
+	.globl	GL_PREFIX(BeginFragmentShaderATI)
+	.type	GL_PREFIX(BeginFragmentShaderATI), @function
+GL_PREFIX(BeginFragmentShaderATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8160(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	popq	%rbp
 	movq	8160(%rax), %r11
 	jmp	*%r11
 #else
@@ -39187,34 +39433,25 @@ GL_PREFIX(_dispatch_stub_1020):
 	movq	8160(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
-	popq	%rdi
+	popq	%rbp
 	movq	8160(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1020), .-GL_PREFIX(_dispatch_stub_1020)
+	.size	GL_PREFIX(BeginFragmentShaderATI), .-GL_PREFIX(BeginFragmentShaderATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1021)
-	.type	GL_PREFIX(_dispatch_stub_1021), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1021))
-GL_PREFIX(_dispatch_stub_1021):
+	.globl	GL_PREFIX(BindFragmentShaderATI)
+	.type	GL_PREFIX(BindFragmentShaderATI), @function
+GL_PREFIX(BindFragmentShaderATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8168(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	8168(%rax), %r11
 	jmp	*%r11
@@ -39226,22 +39463,17 @@ GL_PREFIX(_dispatch_stub_1021):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	8168(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1021), .-GL_PREFIX(_dispatch_stub_1021)
+	.size	GL_PREFIX(BindFragmentShaderATI), .-GL_PREFIX(BindFragmentShaderATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1022)
-	.type	GL_PREFIX(_dispatch_stub_1022), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1022))
-GL_PREFIX(_dispatch_stub_1022):
+	.globl	GL_PREFIX(ColorFragmentOp1ATI)
+	.type	GL_PREFIX(ColorFragmentOp1ATI), @function
+GL_PREFIX(ColorFragmentOp1ATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8176(%rax), %r11
@@ -39250,7 +39482,15 @@ GL_PREFIX(_dispatch_stub_1022):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -39266,20 +39506,27 @@ GL_PREFIX(_dispatch_stub_1022):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8176(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1022), .-GL_PREFIX(_dispatch_stub_1022)
+	.size	GL_PREFIX(ColorFragmentOp1ATI), .-GL_PREFIX(ColorFragmentOp1ATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1023)
-	.type	GL_PREFIX(_dispatch_stub_1023), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1023))
-GL_PREFIX(_dispatch_stub_1023):
+	.globl	GL_PREFIX(ColorFragmentOp2ATI)
+	.type	GL_PREFIX(ColorFragmentOp2ATI), @function
+GL_PREFIX(ColorFragmentOp2ATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8184(%rax), %r11
@@ -39288,7 +39535,15 @@ GL_PREFIX(_dispatch_stub_1023):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -39304,20 +39559,27 @@ GL_PREFIX(_dispatch_stub_1023):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8184(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1023), .-GL_PREFIX(_dispatch_stub_1023)
+	.size	GL_PREFIX(ColorFragmentOp2ATI), .-GL_PREFIX(ColorFragmentOp2ATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1024)
-	.type	GL_PREFIX(_dispatch_stub_1024), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1024))
-GL_PREFIX(_dispatch_stub_1024):
+	.globl	GL_PREFIX(ColorFragmentOp3ATI)
+	.type	GL_PREFIX(ColorFragmentOp3ATI), @function
+GL_PREFIX(ColorFragmentOp3ATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8192(%rax), %r11
@@ -39325,9 +39587,17 @@ GL_PREFIX(_dispatch_stub_1024):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8192(%rax), %r11
@@ -39341,32 +39611,35 @@ GL_PREFIX(_dispatch_stub_1024):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8192(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1024), .-GL_PREFIX(_dispatch_stub_1024)
+	.size	GL_PREFIX(ColorFragmentOp3ATI), .-GL_PREFIX(ColorFragmentOp3ATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1025)
-	.type	GL_PREFIX(_dispatch_stub_1025), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1025))
-GL_PREFIX(_dispatch_stub_1025):
+	.globl	GL_PREFIX(DeleteFragmentShaderATI)
+	.type	GL_PREFIX(DeleteFragmentShaderATI), @function
+GL_PREFIX(DeleteFragmentShaderATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8200(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
 	popq	%rdi
 	movq	8200(%rax), %r11
 	jmp	*%r11
@@ -39378,34 +39651,25 @@ GL_PREFIX(_dispatch_stub_1025):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
 	popq	%rdi
 	movq	8200(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1025), .-GL_PREFIX(_dispatch_stub_1025)
+	.size	GL_PREFIX(DeleteFragmentShaderATI), .-GL_PREFIX(DeleteFragmentShaderATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1026)
-	.type	GL_PREFIX(_dispatch_stub_1026), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1026))
-GL_PREFIX(_dispatch_stub_1026):
+	.globl	GL_PREFIX(EndFragmentShaderATI)
+	.type	GL_PREFIX(EndFragmentShaderATI), @function
+GL_PREFIX(EndFragmentShaderATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8208(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
-	pushq	%rdi
-	pushq	%rsi
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
-	popq	%rsi
-	popq	%rdi
 	movq	8208(%rax), %r11
 	jmp	*%r11
 #else
@@ -39415,34 +39679,25 @@ GL_PREFIX(_dispatch_stub_1026):
 	movq	8208(%rax), %r11
 	jmp	*%r11
 1:
-	pushq	%rdi
-	pushq	%rsi
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
-	popq	%rsi
-	popq	%rdi
 	movq	8208(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1026), .-GL_PREFIX(_dispatch_stub_1026)
+	.size	GL_PREFIX(EndFragmentShaderATI), .-GL_PREFIX(EndFragmentShaderATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1027)
-	.type	GL_PREFIX(_dispatch_stub_1027), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1027))
-GL_PREFIX(_dispatch_stub_1027):
+	.globl	GL_PREFIX(GenFragmentShadersATI)
+	.type	GL_PREFIX(GenFragmentShadersATI), @function
+GL_PREFIX(GenFragmentShadersATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8216(%rax), %r11
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
-	popq	%rsi
 	popq	%rdi
 	movq	8216(%rax), %r11
 	jmp	*%r11
@@ -39454,22 +39709,17 @@ GL_PREFIX(_dispatch_stub_1027):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rbp
-	popq	%rsi
 	popq	%rdi
 	movq	8216(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1027), .-GL_PREFIX(_dispatch_stub_1027)
+	.size	GL_PREFIX(GenFragmentShadersATI), .-GL_PREFIX(GenFragmentShadersATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1028)
-	.type	GL_PREFIX(_dispatch_stub_1028), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1028))
-GL_PREFIX(_dispatch_stub_1028):
+	.globl	GL_PREFIX(PassTexCoordATI)
+	.type	GL_PREFIX(PassTexCoordATI), @function
+GL_PREFIX(PassTexCoordATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8224(%rax), %r11
@@ -39477,9 +39727,9 @@ GL_PREFIX(_dispatch_stub_1028):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8224(%rax), %r11
@@ -39493,21 +39743,20 @@ GL_PREFIX(_dispatch_stub_1028):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rbp
+	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rbp
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8224(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1028), .-GL_PREFIX(_dispatch_stub_1028)
+	.size	GL_PREFIX(PassTexCoordATI), .-GL_PREFIX(PassTexCoordATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1029)
-	.type	GL_PREFIX(_dispatch_stub_1029), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1029))
-GL_PREFIX(_dispatch_stub_1029):
+	.globl	GL_PREFIX(SampleMapATI)
+	.type	GL_PREFIX(SampleMapATI), @function
+GL_PREFIX(SampleMapATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8232(%rax), %r11
@@ -39539,13 +39788,12 @@ GL_PREFIX(_dispatch_stub_1029):
 	movq	8232(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1029), .-GL_PREFIX(_dispatch_stub_1029)
+	.size	GL_PREFIX(SampleMapATI), .-GL_PREFIX(SampleMapATI)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1030)
-	.type	GL_PREFIX(_dispatch_stub_1030), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1030))
-GL_PREFIX(_dispatch_stub_1030):
+	.globl	GL_PREFIX(SetFragmentShaderConstantATI)
+	.type	GL_PREFIX(SetFragmentShaderConstantATI), @function
+GL_PREFIX(SetFragmentShaderConstantATI):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8240(%rax), %r11
@@ -39553,9 +39801,9 @@ GL_PREFIX(_dispatch_stub_1030):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	8240(%rax), %r11
@@ -39569,15 +39817,15 @@ GL_PREFIX(_dispatch_stub_1030):
 1:
 	pushq	%rdi
 	pushq	%rsi
-	pushq	%rdx
+	pushq	%rbp
 	call	_glapi_get_dispatch
-	popq	%rdx
+	popq	%rbp
 	popq	%rsi
 	popq	%rdi
 	movq	8240(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1030), .-GL_PREFIX(_dispatch_stub_1030)
+	.size	GL_PREFIX(SetFragmentShaderConstantATI), .-GL_PREFIX(SetFragmentShaderConstantATI)
 
 	.p2align	4,,15
 	.globl	GL_PREFIX(_dispatch_stub_1031)
@@ -39590,11 +39838,7 @@ GL_PREFIX(_dispatch_stub_1031):
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	8248(%rax), %r11
 	jmp	*%r11
@@ -39606,11 +39850,7 @@ GL_PREFIX(_dispatch_stub_1031):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	8248(%rax), %r11
 	jmp	*%r11
@@ -39628,11 +39868,7 @@ GL_PREFIX(_dispatch_stub_1032):
 	jmp	*%r11
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
 	call	_x86_64_get_dispatch@PLT
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	8256(%rax), %r11
 	jmp	*%r11
@@ -39644,11 +39880,7 @@ GL_PREFIX(_dispatch_stub_1032):
 	jmp	*%r11
 1:
 	pushq	%rdi
-	pushq	%rsi
-	pushq	%rdx
 	call	_glapi_get_dispatch
-	popq	%rdx
-	popq	%rsi
 	popq	%rdi
 	movq	8256(%rax), %r11
 	jmp	*%r11
@@ -39694,10 +39926,9 @@ GL_PREFIX(_dispatch_stub_1033):
 	.size	GL_PREFIX(_dispatch_stub_1033), .-GL_PREFIX(_dispatch_stub_1033)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1034)
-	.type	GL_PREFIX(_dispatch_stub_1034), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1034))
-GL_PREFIX(_dispatch_stub_1034):
+	.globl	GL_PREFIX(GetProgramNamedParameterdvNV)
+	.type	GL_PREFIX(GetProgramNamedParameterdvNV), @function
+GL_PREFIX(GetProgramNamedParameterdvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8272(%rax), %r11
@@ -39705,9 +39936,13 @@ GL_PREFIX(_dispatch_stub_1034):
 #elif defined(HAVE_PTHREAD)
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8272(%rax), %r11
@@ -39721,21 +39956,24 @@ GL_PREFIX(_dispatch_stub_1034):
 1:
 	pushq	%rdi
 	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
 	pushq	%rbp
 	call	_glapi_get_dispatch
 	popq	%rbp
+	popq	%rcx
+	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8272(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1034), .-GL_PREFIX(_dispatch_stub_1034)
+	.size	GL_PREFIX(GetProgramNamedParameterdvNV), .-GL_PREFIX(GetProgramNamedParameterdvNV)
 
 	.p2align	4,,15
-	.globl	GL_PREFIX(_dispatch_stub_1035)
-	.type	GL_PREFIX(_dispatch_stub_1035), @function
-	HIDDEN(GL_PREFIX(_dispatch_stub_1035))
-GL_PREFIX(_dispatch_stub_1035):
+	.globl	GL_PREFIX(GetProgramNamedParameterfvNV)
+	.type	GL_PREFIX(GetProgramNamedParameterfvNV), @function
+GL_PREFIX(GetProgramNamedParameterfvNV):
 #if defined(GLX_USE_TLS)
 	call	_x86_64_get_dispatch@PLT
 	movq	8280(%rax), %r11
@@ -39744,7 +39982,11 @@ GL_PREFIX(_dispatch_stub_1035):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
@@ -39760,14 +40002,4545 @@ GL_PREFIX(_dispatch_stub_1035):
 	pushq	%rdi
 	pushq	%rsi
 	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
 	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
 	popq	%rdx
 	popq	%rsi
 	popq	%rdi
 	movq	8280(%rax), %r11
 	jmp	*%r11
 #endif /* defined(GLX_USE_TLS) */
-	.size	GL_PREFIX(_dispatch_stub_1035), .-GL_PREFIX(_dispatch_stub_1035)
+	.size	GL_PREFIX(GetProgramNamedParameterfvNV), .-GL_PREFIX(GetProgramNamedParameterfvNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ProgramNamedParameter4dNV)
+	.type	GL_PREFIX(ProgramNamedParameter4dNV), @function
+GL_PREFIX(ProgramNamedParameter4dNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8288(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	subq	$56, %rsp
+	movq	%rdi, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%rdx, 16(%rsp)
+	movq	%xmm0, 24(%rsp)
+	movq	%xmm1, 32(%rsp)
+	movq	%xmm2, 40(%rsp)
+	movq	%xmm3, 48(%rsp)
+	call	_x86_64_get_dispatch@PLT
+	movq	48(%rsp), %xmm3
+	movq	40(%rsp), %xmm2
+	movq	32(%rsp), %xmm1
+	movq	24(%rsp), %xmm0
+	movq	16(%rsp), %rdx
+	movq	8(%rsp), %rsi
+	movq	(%rsp), %rdi
+	addq	$56, %rsp
+	movq	8288(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8288(%rax), %r11
+	jmp	*%r11
+1:
+	subq	$56, %rsp
+	movq	%rdi, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%rdx, 16(%rsp)
+	movq	%xmm0, 24(%rsp)
+	movq	%xmm1, 32(%rsp)
+	movq	%xmm2, 40(%rsp)
+	movq	%xmm3, 48(%rsp)
+	call	_glapi_get_dispatch
+	movq	48(%rsp), %xmm3
+	movq	40(%rsp), %xmm2
+	movq	32(%rsp), %xmm1
+	movq	24(%rsp), %xmm0
+	movq	16(%rsp), %rdx
+	movq	8(%rsp), %rsi
+	movq	(%rsp), %rdi
+	addq	$56, %rsp
+	movq	8288(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ProgramNamedParameter4dNV), .-GL_PREFIX(ProgramNamedParameter4dNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ProgramNamedParameter4dvNV)
+	.type	GL_PREFIX(ProgramNamedParameter4dvNV), @function
+GL_PREFIX(ProgramNamedParameter4dvNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8296(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8296(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8296(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8296(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ProgramNamedParameter4dvNV), .-GL_PREFIX(ProgramNamedParameter4dvNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ProgramNamedParameter4fNV)
+	.type	GL_PREFIX(ProgramNamedParameter4fNV), @function
+GL_PREFIX(ProgramNamedParameter4fNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8304(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	subq	$56, %rsp
+	movq	%rdi, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%rdx, 16(%rsp)
+	movq	%xmm0, 24(%rsp)
+	movq	%xmm1, 32(%rsp)
+	movq	%xmm2, 40(%rsp)
+	movq	%xmm3, 48(%rsp)
+	call	_x86_64_get_dispatch@PLT
+	movq	48(%rsp), %xmm3
+	movq	40(%rsp), %xmm2
+	movq	32(%rsp), %xmm1
+	movq	24(%rsp), %xmm0
+	movq	16(%rsp), %rdx
+	movq	8(%rsp), %rsi
+	movq	(%rsp), %rdi
+	addq	$56, %rsp
+	movq	8304(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8304(%rax), %r11
+	jmp	*%r11
+1:
+	subq	$56, %rsp
+	movq	%rdi, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%rdx, 16(%rsp)
+	movq	%xmm0, 24(%rsp)
+	movq	%xmm1, 32(%rsp)
+	movq	%xmm2, 40(%rsp)
+	movq	%xmm3, 48(%rsp)
+	call	_glapi_get_dispatch
+	movq	48(%rsp), %xmm3
+	movq	40(%rsp), %xmm2
+	movq	32(%rsp), %xmm1
+	movq	24(%rsp), %xmm0
+	movq	16(%rsp), %rdx
+	movq	8(%rsp), %rsi
+	movq	(%rsp), %rdi
+	addq	$56, %rsp
+	movq	8304(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ProgramNamedParameter4fNV), .-GL_PREFIX(ProgramNamedParameter4fNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ProgramNamedParameter4fvNV)
+	.type	GL_PREFIX(ProgramNamedParameter4fvNV), @function
+GL_PREFIX(ProgramNamedParameter4fvNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8312(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8312(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8312(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8312(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ProgramNamedParameter4fvNV), .-GL_PREFIX(ProgramNamedParameter4fvNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(PrimitiveRestartNV)
+	.type	GL_PREFIX(PrimitiveRestartNV), @function
+GL_PREFIX(PrimitiveRestartNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8320(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	movq	8320(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8320(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	movq	8320(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(PrimitiveRestartNV), .-GL_PREFIX(PrimitiveRestartNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1041)
+	.type	GL_PREFIX(_dispatch_stub_1041), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1041))
+GL_PREFIX(_dispatch_stub_1041):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8328(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8328(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8328(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8328(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1041), .-GL_PREFIX(_dispatch_stub_1041)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1042)
+	.type	GL_PREFIX(_dispatch_stub_1042), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1042))
+GL_PREFIX(_dispatch_stub_1042):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8336(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8336(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8336(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8336(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1042), .-GL_PREFIX(_dispatch_stub_1042)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1043)
+	.type	GL_PREFIX(_dispatch_stub_1043), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1043))
+GL_PREFIX(_dispatch_stub_1043):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8344(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8344(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8344(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8344(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1043), .-GL_PREFIX(_dispatch_stub_1043)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1044)
+	.type	GL_PREFIX(_dispatch_stub_1044), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1044))
+GL_PREFIX(_dispatch_stub_1044):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8352(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8352(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8352(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8352(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1044), .-GL_PREFIX(_dispatch_stub_1044)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindFramebufferEXT)
+	.type	GL_PREFIX(BindFramebufferEXT), @function
+GL_PREFIX(BindFramebufferEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8360(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8360(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8360(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8360(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindFramebufferEXT), .-GL_PREFIX(BindFramebufferEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindRenderbufferEXT)
+	.type	GL_PREFIX(BindRenderbufferEXT), @function
+GL_PREFIX(BindRenderbufferEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8368(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8368(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8368(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8368(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindRenderbufferEXT), .-GL_PREFIX(BindRenderbufferEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1047)
+	.type	GL_PREFIX(_dispatch_stub_1047), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1047))
+GL_PREFIX(_dispatch_stub_1047):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8376(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8376(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8376(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8376(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1047), .-GL_PREFIX(_dispatch_stub_1047)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1048)
+	.type	GL_PREFIX(_dispatch_stub_1048), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1048))
+GL_PREFIX(_dispatch_stub_1048):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8384(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8384(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8384(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8384(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1048), .-GL_PREFIX(_dispatch_stub_1048)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI1iEXT)
+	.type	GL_PREFIX(VertexAttribI1iEXT), @function
+GL_PREFIX(VertexAttribI1iEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8392(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8392(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8392(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8392(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI1iEXT), .-GL_PREFIX(VertexAttribI1iEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI1uiEXT)
+	.type	GL_PREFIX(VertexAttribI1uiEXT), @function
+GL_PREFIX(VertexAttribI1uiEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8400(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8400(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8400(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8400(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI1uiEXT), .-GL_PREFIX(VertexAttribI1uiEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI2iEXT)
+	.type	GL_PREFIX(VertexAttribI2iEXT), @function
+GL_PREFIX(VertexAttribI2iEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8408(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8408(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8408(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8408(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI2iEXT), .-GL_PREFIX(VertexAttribI2iEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI2ivEXT)
+	.type	GL_PREFIX(VertexAttribI2ivEXT), @function
+GL_PREFIX(VertexAttribI2ivEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8416(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8416(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8416(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8416(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI2ivEXT), .-GL_PREFIX(VertexAttribI2ivEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI2uiEXT)
+	.type	GL_PREFIX(VertexAttribI2uiEXT), @function
+GL_PREFIX(VertexAttribI2uiEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8424(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8424(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8424(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8424(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI2uiEXT), .-GL_PREFIX(VertexAttribI2uiEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI2uivEXT)
+	.type	GL_PREFIX(VertexAttribI2uivEXT), @function
+GL_PREFIX(VertexAttribI2uivEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8432(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8432(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8432(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8432(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI2uivEXT), .-GL_PREFIX(VertexAttribI2uivEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI3iEXT)
+	.type	GL_PREFIX(VertexAttribI3iEXT), @function
+GL_PREFIX(VertexAttribI3iEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8440(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8440(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8440(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8440(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI3iEXT), .-GL_PREFIX(VertexAttribI3iEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI3ivEXT)
+	.type	GL_PREFIX(VertexAttribI3ivEXT), @function
+GL_PREFIX(VertexAttribI3ivEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8448(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8448(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8448(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8448(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI3ivEXT), .-GL_PREFIX(VertexAttribI3ivEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI3uiEXT)
+	.type	GL_PREFIX(VertexAttribI3uiEXT), @function
+GL_PREFIX(VertexAttribI3uiEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8456(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8456(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8456(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8456(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI3uiEXT), .-GL_PREFIX(VertexAttribI3uiEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI3uivEXT)
+	.type	GL_PREFIX(VertexAttribI3uivEXT), @function
+GL_PREFIX(VertexAttribI3uivEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8464(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8464(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8464(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8464(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI3uivEXT), .-GL_PREFIX(VertexAttribI3uivEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI4iEXT)
+	.type	GL_PREFIX(VertexAttribI4iEXT), @function
+GL_PREFIX(VertexAttribI4iEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8472(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8472(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8472(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8472(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI4iEXT), .-GL_PREFIX(VertexAttribI4iEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI4ivEXT)
+	.type	GL_PREFIX(VertexAttribI4ivEXT), @function
+GL_PREFIX(VertexAttribI4ivEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8480(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8480(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8480(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8480(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI4ivEXT), .-GL_PREFIX(VertexAttribI4ivEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI4uiEXT)
+	.type	GL_PREFIX(VertexAttribI4uiEXT), @function
+GL_PREFIX(VertexAttribI4uiEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8488(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8488(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8488(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8488(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI4uiEXT), .-GL_PREFIX(VertexAttribI4uiEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VertexAttribI4uivEXT)
+	.type	GL_PREFIX(VertexAttribI4uivEXT), @function
+GL_PREFIX(VertexAttribI4uivEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8496(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8496(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8496(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8496(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VertexAttribI4uivEXT), .-GL_PREFIX(VertexAttribI4uivEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ClearColorIiEXT)
+	.type	GL_PREFIX(ClearColorIiEXT), @function
+GL_PREFIX(ClearColorIiEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8504(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8504(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8504(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8504(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ClearColorIiEXT), .-GL_PREFIX(ClearColorIiEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ClearColorIuiEXT)
+	.type	GL_PREFIX(ClearColorIuiEXT), @function
+GL_PREFIX(ClearColorIuiEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8512(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8512(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8512(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8512(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ClearColorIuiEXT), .-GL_PREFIX(ClearColorIuiEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BindBufferOffsetEXT)
+	.type	GL_PREFIX(BindBufferOffsetEXT), @function
+GL_PREFIX(BindBufferOffsetEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8520(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8520(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8520(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8520(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BindBufferOffsetEXT), .-GL_PREFIX(BindBufferOffsetEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(BeginPerfMonitorAMD)
+	.type	GL_PREFIX(BeginPerfMonitorAMD), @function
+GL_PREFIX(BeginPerfMonitorAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8528(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8528(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8528(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8528(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(BeginPerfMonitorAMD), .-GL_PREFIX(BeginPerfMonitorAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(DeletePerfMonitorsAMD)
+	.type	GL_PREFIX(DeletePerfMonitorsAMD), @function
+GL_PREFIX(DeletePerfMonitorsAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8536(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8536(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8536(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8536(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(DeletePerfMonitorsAMD), .-GL_PREFIX(DeletePerfMonitorsAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(EndPerfMonitorAMD)
+	.type	GL_PREFIX(EndPerfMonitorAMD), @function
+GL_PREFIX(EndPerfMonitorAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8544(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8544(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8544(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8544(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(EndPerfMonitorAMD), .-GL_PREFIX(EndPerfMonitorAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GenPerfMonitorsAMD)
+	.type	GL_PREFIX(GenPerfMonitorsAMD), @function
+GL_PREFIX(GenPerfMonitorsAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8552(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8552(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8552(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8552(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GenPerfMonitorsAMD), .-GL_PREFIX(GenPerfMonitorsAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetPerfMonitorCounterDataAMD)
+	.type	GL_PREFIX(GetPerfMonitorCounterDataAMD), @function
+GL_PREFIX(GetPerfMonitorCounterDataAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8560(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8560(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8560(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8560(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetPerfMonitorCounterDataAMD), .-GL_PREFIX(GetPerfMonitorCounterDataAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetPerfMonitorCounterInfoAMD)
+	.type	GL_PREFIX(GetPerfMonitorCounterInfoAMD), @function
+GL_PREFIX(GetPerfMonitorCounterInfoAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8568(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8568(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8568(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8568(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetPerfMonitorCounterInfoAMD), .-GL_PREFIX(GetPerfMonitorCounterInfoAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetPerfMonitorCounterStringAMD)
+	.type	GL_PREFIX(GetPerfMonitorCounterStringAMD), @function
+GL_PREFIX(GetPerfMonitorCounterStringAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8576(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8576(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8576(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8576(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetPerfMonitorCounterStringAMD), .-GL_PREFIX(GetPerfMonitorCounterStringAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetPerfMonitorCountersAMD)
+	.type	GL_PREFIX(GetPerfMonitorCountersAMD), @function
+GL_PREFIX(GetPerfMonitorCountersAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8584(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8584(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8584(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8584(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetPerfMonitorCountersAMD), .-GL_PREFIX(GetPerfMonitorCountersAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetPerfMonitorGroupStringAMD)
+	.type	GL_PREFIX(GetPerfMonitorGroupStringAMD), @function
+GL_PREFIX(GetPerfMonitorGroupStringAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8592(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8592(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8592(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8592(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetPerfMonitorGroupStringAMD), .-GL_PREFIX(GetPerfMonitorGroupStringAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetPerfMonitorGroupsAMD)
+	.type	GL_PREFIX(GetPerfMonitorGroupsAMD), @function
+GL_PREFIX(GetPerfMonitorGroupsAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8600(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8600(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8600(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8600(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetPerfMonitorGroupsAMD), .-GL_PREFIX(GetPerfMonitorGroupsAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(SelectPerfMonitorCountersAMD)
+	.type	GL_PREFIX(SelectPerfMonitorCountersAMD), @function
+GL_PREFIX(SelectPerfMonitorCountersAMD):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8608(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8608(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8608(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8608(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(SelectPerfMonitorCountersAMD), .-GL_PREFIX(SelectPerfMonitorCountersAMD)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetObjectParameterivAPPLE)
+	.type	GL_PREFIX(GetObjectParameterivAPPLE), @function
+GL_PREFIX(GetObjectParameterivAPPLE):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8616(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8616(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8616(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8616(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetObjectParameterivAPPLE), .-GL_PREFIX(GetObjectParameterivAPPLE)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ObjectPurgeableAPPLE)
+	.type	GL_PREFIX(ObjectPurgeableAPPLE), @function
+GL_PREFIX(ObjectPurgeableAPPLE):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8624(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8624(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8624(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8624(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ObjectPurgeableAPPLE), .-GL_PREFIX(ObjectPurgeableAPPLE)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ObjectUnpurgeableAPPLE)
+	.type	GL_PREFIX(ObjectUnpurgeableAPPLE), @function
+GL_PREFIX(ObjectUnpurgeableAPPLE):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8632(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8632(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8632(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8632(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ObjectUnpurgeableAPPLE), .-GL_PREFIX(ObjectUnpurgeableAPPLE)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ActiveProgramEXT)
+	.type	GL_PREFIX(ActiveProgramEXT), @function
+GL_PREFIX(ActiveProgramEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8640(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8640(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8640(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8640(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ActiveProgramEXT), .-GL_PREFIX(ActiveProgramEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(CreateShaderProgramEXT)
+	.type	GL_PREFIX(CreateShaderProgramEXT), @function
+GL_PREFIX(CreateShaderProgramEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8648(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8648(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8648(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8648(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(CreateShaderProgramEXT), .-GL_PREFIX(CreateShaderProgramEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(UseShaderProgramEXT)
+	.type	GL_PREFIX(UseShaderProgramEXT), @function
+GL_PREFIX(UseShaderProgramEXT):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8656(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8656(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8656(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8656(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(UseShaderProgramEXT), .-GL_PREFIX(UseShaderProgramEXT)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(TextureBarrierNV)
+	.type	GL_PREFIX(TextureBarrierNV), @function
+GL_PREFIX(TextureBarrierNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8664(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	movq	8664(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8664(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	movq	8664(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(TextureBarrierNV), .-GL_PREFIX(TextureBarrierNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAUFiniNV)
+	.type	GL_PREFIX(VDPAUFiniNV), @function
+GL_PREFIX(VDPAUFiniNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8672(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	movq	8672(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8672(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	movq	8672(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAUFiniNV), .-GL_PREFIX(VDPAUFiniNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAUGetSurfaceivNV)
+	.type	GL_PREFIX(VDPAUGetSurfaceivNV), @function
+GL_PREFIX(VDPAUGetSurfaceivNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8680(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8680(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8680(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8680(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAUGetSurfaceivNV), .-GL_PREFIX(VDPAUGetSurfaceivNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAUInitNV)
+	.type	GL_PREFIX(VDPAUInitNV), @function
+GL_PREFIX(VDPAUInitNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8688(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8688(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8688(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8688(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAUInitNV), .-GL_PREFIX(VDPAUInitNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAUIsSurfaceNV)
+	.type	GL_PREFIX(VDPAUIsSurfaceNV), @function
+GL_PREFIX(VDPAUIsSurfaceNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8696(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8696(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8696(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8696(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAUIsSurfaceNV), .-GL_PREFIX(VDPAUIsSurfaceNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAUMapSurfacesNV)
+	.type	GL_PREFIX(VDPAUMapSurfacesNV), @function
+GL_PREFIX(VDPAUMapSurfacesNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8704(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8704(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8704(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8704(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAUMapSurfacesNV), .-GL_PREFIX(VDPAUMapSurfacesNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAURegisterOutputSurfaceNV)
+	.type	GL_PREFIX(VDPAURegisterOutputSurfaceNV), @function
+GL_PREFIX(VDPAURegisterOutputSurfaceNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8712(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8712(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8712(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8712(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAURegisterOutputSurfaceNV), .-GL_PREFIX(VDPAURegisterOutputSurfaceNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAURegisterVideoSurfaceNV)
+	.type	GL_PREFIX(VDPAURegisterVideoSurfaceNV), @function
+GL_PREFIX(VDPAURegisterVideoSurfaceNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8720(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8720(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8720(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8720(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAURegisterVideoSurfaceNV), .-GL_PREFIX(VDPAURegisterVideoSurfaceNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAUSurfaceAccessNV)
+	.type	GL_PREFIX(VDPAUSurfaceAccessNV), @function
+GL_PREFIX(VDPAUSurfaceAccessNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8728(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8728(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8728(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8728(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAUSurfaceAccessNV), .-GL_PREFIX(VDPAUSurfaceAccessNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAUUnmapSurfacesNV)
+	.type	GL_PREFIX(VDPAUUnmapSurfacesNV), @function
+GL_PREFIX(VDPAUUnmapSurfacesNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8736(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8736(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8736(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8736(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAUUnmapSurfacesNV), .-GL_PREFIX(VDPAUUnmapSurfacesNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(VDPAUUnregisterSurfaceNV)
+	.type	GL_PREFIX(VDPAUUnregisterSurfaceNV), @function
+GL_PREFIX(VDPAUUnregisterSurfaceNV):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8744(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8744(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8744(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8744(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(VDPAUUnregisterSurfaceNV), .-GL_PREFIX(VDPAUUnregisterSurfaceNV)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1094)
+	.type	GL_PREFIX(_dispatch_stub_1094), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1094))
+GL_PREFIX(_dispatch_stub_1094):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8752(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8752(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8752(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8752(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1094), .-GL_PREFIX(_dispatch_stub_1094)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1095)
+	.type	GL_PREFIX(_dispatch_stub_1095), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1095))
+GL_PREFIX(_dispatch_stub_1095):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8760(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8760(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8760(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8760(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1095), .-GL_PREFIX(_dispatch_stub_1095)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1096)
+	.type	GL_PREFIX(_dispatch_stub_1096), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1096))
+GL_PREFIX(_dispatch_stub_1096):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8768(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8768(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8768(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8768(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1096), .-GL_PREFIX(_dispatch_stub_1096)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1097)
+	.type	GL_PREFIX(_dispatch_stub_1097), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1097))
+GL_PREFIX(_dispatch_stub_1097):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8776(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8776(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8776(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8776(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1097), .-GL_PREFIX(_dispatch_stub_1097)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1098)
+	.type	GL_PREFIX(_dispatch_stub_1098), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1098))
+GL_PREFIX(_dispatch_stub_1098):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8784(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8784(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8784(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8784(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1098), .-GL_PREFIX(_dispatch_stub_1098)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1099)
+	.type	GL_PREFIX(_dispatch_stub_1099), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1099))
+GL_PREFIX(_dispatch_stub_1099):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8792(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8792(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8792(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8792(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1099), .-GL_PREFIX(_dispatch_stub_1099)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1100)
+	.type	GL_PREFIX(_dispatch_stub_1100), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1100))
+GL_PREFIX(_dispatch_stub_1100):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8800(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8800(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8800(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8800(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1100), .-GL_PREFIX(_dispatch_stub_1100)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1101)
+	.type	GL_PREFIX(_dispatch_stub_1101), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1101))
+GL_PREFIX(_dispatch_stub_1101):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8808(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8808(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8808(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8808(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1101), .-GL_PREFIX(_dispatch_stub_1101)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1102)
+	.type	GL_PREFIX(_dispatch_stub_1102), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1102))
+GL_PREFIX(_dispatch_stub_1102):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8816(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8816(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8816(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8816(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1102), .-GL_PREFIX(_dispatch_stub_1102)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1103)
+	.type	GL_PREFIX(_dispatch_stub_1103), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1103))
+GL_PREFIX(_dispatch_stub_1103):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8824(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8824(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8824(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8824(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1103), .-GL_PREFIX(_dispatch_stub_1103)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1104)
+	.type	GL_PREFIX(_dispatch_stub_1104), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1104))
+GL_PREFIX(_dispatch_stub_1104):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8832(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8832(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8832(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8832(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1104), .-GL_PREFIX(_dispatch_stub_1104)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1105)
+	.type	GL_PREFIX(_dispatch_stub_1105), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1105))
+GL_PREFIX(_dispatch_stub_1105):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8840(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8840(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8840(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8840(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1105), .-GL_PREFIX(_dispatch_stub_1105)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(_dispatch_stub_1106)
+	.type	GL_PREFIX(_dispatch_stub_1106), @function
+	HIDDEN(GL_PREFIX(_dispatch_stub_1106))
+GL_PREFIX(_dispatch_stub_1106):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8848(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8848(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8848(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8848(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(_dispatch_stub_1106), .-GL_PREFIX(_dispatch_stub_1106)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(EGLImageTargetRenderbufferStorageOES)
+	.type	GL_PREFIX(EGLImageTargetRenderbufferStorageOES), @function
+GL_PREFIX(EGLImageTargetRenderbufferStorageOES):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8856(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8856(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8856(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8856(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(EGLImageTargetRenderbufferStorageOES), .-GL_PREFIX(EGLImageTargetRenderbufferStorageOES)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(EGLImageTargetTexture2DOES)
+	.type	GL_PREFIX(EGLImageTargetTexture2DOES), @function
+GL_PREFIX(EGLImageTargetTexture2DOES):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8864(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8864(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8864(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8864(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(EGLImageTargetTexture2DOES), .-GL_PREFIX(EGLImageTargetTexture2DOES)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(AlphaFuncx)
+	.type	GL_PREFIX(AlphaFuncx), @function
+GL_PREFIX(AlphaFuncx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8872(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8872(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8872(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8872(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(AlphaFuncx), .-GL_PREFIX(AlphaFuncx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ClearColorx)
+	.type	GL_PREFIX(ClearColorx), @function
+GL_PREFIX(ClearColorx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8880(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8880(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8880(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8880(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ClearColorx), .-GL_PREFIX(ClearColorx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ClearDepthx)
+	.type	GL_PREFIX(ClearDepthx), @function
+GL_PREFIX(ClearDepthx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8888(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8888(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8888(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8888(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ClearDepthx), .-GL_PREFIX(ClearDepthx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Color4x)
+	.type	GL_PREFIX(Color4x), @function
+GL_PREFIX(Color4x):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8896(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8896(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8896(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8896(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Color4x), .-GL_PREFIX(Color4x)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(DepthRangex)
+	.type	GL_PREFIX(DepthRangex), @function
+GL_PREFIX(DepthRangex):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8904(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8904(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8904(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8904(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(DepthRangex), .-GL_PREFIX(DepthRangex)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Fogx)
+	.type	GL_PREFIX(Fogx), @function
+GL_PREFIX(Fogx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8912(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8912(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8912(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8912(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Fogx), .-GL_PREFIX(Fogx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Fogxv)
+	.type	GL_PREFIX(Fogxv), @function
+GL_PREFIX(Fogxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8920(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8920(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8920(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8920(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Fogxv), .-GL_PREFIX(Fogxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Frustumf)
+	.type	GL_PREFIX(Frustumf), @function
+GL_PREFIX(Frustumf):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8928(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	subq	$56, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	movq	%xmm3, 24(%rsp)
+	movq	%xmm4, 32(%rsp)
+	movq	%xmm5, 40(%rsp)
+	call	_x86_64_get_dispatch@PLT
+	movq	40(%rsp), %xmm5
+	movq	32(%rsp), %xmm4
+	movq	24(%rsp), %xmm3
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$56, %rsp
+	movq	8928(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8928(%rax), %r11
+	jmp	*%r11
+1:
+	subq	$56, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	movq	%xmm3, 24(%rsp)
+	movq	%xmm4, 32(%rsp)
+	movq	%xmm5, 40(%rsp)
+	call	_glapi_get_dispatch
+	movq	40(%rsp), %xmm5
+	movq	32(%rsp), %xmm4
+	movq	24(%rsp), %xmm3
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$56, %rsp
+	movq	8928(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Frustumf), .-GL_PREFIX(Frustumf)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Frustumx)
+	.type	GL_PREFIX(Frustumx), @function
+GL_PREFIX(Frustumx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8936(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8936(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8936(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8936(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Frustumx), .-GL_PREFIX(Frustumx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(LightModelx)
+	.type	GL_PREFIX(LightModelx), @function
+GL_PREFIX(LightModelx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8944(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8944(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8944(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8944(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(LightModelx), .-GL_PREFIX(LightModelx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(LightModelxv)
+	.type	GL_PREFIX(LightModelxv), @function
+GL_PREFIX(LightModelxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8952(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8952(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8952(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	8952(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(LightModelxv), .-GL_PREFIX(LightModelxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Lightx)
+	.type	GL_PREFIX(Lightx), @function
+GL_PREFIX(Lightx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8960(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8960(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8960(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8960(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Lightx), .-GL_PREFIX(Lightx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Lightxv)
+	.type	GL_PREFIX(Lightxv), @function
+GL_PREFIX(Lightxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8968(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8968(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8968(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8968(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Lightxv), .-GL_PREFIX(Lightxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(LineWidthx)
+	.type	GL_PREFIX(LineWidthx), @function
+GL_PREFIX(LineWidthx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8976(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8976(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8976(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8976(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(LineWidthx), .-GL_PREFIX(LineWidthx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(LoadMatrixx)
+	.type	GL_PREFIX(LoadMatrixx), @function
+GL_PREFIX(LoadMatrixx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8984(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	8984(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8984(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	8984(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(LoadMatrixx), .-GL_PREFIX(LoadMatrixx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Materialx)
+	.type	GL_PREFIX(Materialx), @function
+GL_PREFIX(Materialx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	8992(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8992(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	8992(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	8992(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Materialx), .-GL_PREFIX(Materialx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Materialxv)
+	.type	GL_PREFIX(Materialxv), @function
+GL_PREFIX(Materialxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9000(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9000(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9000(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9000(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Materialxv), .-GL_PREFIX(Materialxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(MultMatrixx)
+	.type	GL_PREFIX(MultMatrixx), @function
+GL_PREFIX(MultMatrixx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9008(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	9008(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9008(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	9008(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(MultMatrixx), .-GL_PREFIX(MultMatrixx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(MultiTexCoord4x)
+	.type	GL_PREFIX(MultiTexCoord4x), @function
+GL_PREFIX(MultiTexCoord4x):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9016(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_x86_64_get_dispatch@PLT
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9016(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9016(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	call	_glapi_get_dispatch
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9016(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(MultiTexCoord4x), .-GL_PREFIX(MultiTexCoord4x)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Normal3x)
+	.type	GL_PREFIX(Normal3x), @function
+GL_PREFIX(Normal3x):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9024(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9024(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9024(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9024(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Normal3x), .-GL_PREFIX(Normal3x)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Orthof)
+	.type	GL_PREFIX(Orthof), @function
+GL_PREFIX(Orthof):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9032(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	subq	$56, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	movq	%xmm3, 24(%rsp)
+	movq	%xmm4, 32(%rsp)
+	movq	%xmm5, 40(%rsp)
+	call	_x86_64_get_dispatch@PLT
+	movq	40(%rsp), %xmm5
+	movq	32(%rsp), %xmm4
+	movq	24(%rsp), %xmm3
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$56, %rsp
+	movq	9032(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9032(%rax), %r11
+	jmp	*%r11
+1:
+	subq	$56, %rsp
+	movq	%xmm0, (%rsp)
+	movq	%xmm1, 8(%rsp)
+	movq	%xmm2, 16(%rsp)
+	movq	%xmm3, 24(%rsp)
+	movq	%xmm4, 32(%rsp)
+	movq	%xmm5, 40(%rsp)
+	call	_glapi_get_dispatch
+	movq	40(%rsp), %xmm5
+	movq	32(%rsp), %xmm4
+	movq	24(%rsp), %xmm3
+	movq	16(%rsp), %xmm2
+	movq	8(%rsp), %xmm1
+	movq	(%rsp), %xmm0
+	addq	$56, %rsp
+	movq	9032(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Orthof), .-GL_PREFIX(Orthof)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Orthox)
+	.type	GL_PREFIX(Orthox), @function
+GL_PREFIX(Orthox):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9040(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9040(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9040(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%r8
+	pushq	%r9
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%r9
+	popq	%r8
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9040(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Orthox), .-GL_PREFIX(Orthox)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(PointSizex)
+	.type	GL_PREFIX(PointSizex), @function
+GL_PREFIX(PointSizex):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9048(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdi
+	movq	9048(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9048(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	call	_glapi_get_dispatch
+	popq	%rdi
+	movq	9048(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(PointSizex), .-GL_PREFIX(PointSizex)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(PolygonOffsetx)
+	.type	GL_PREFIX(PolygonOffsetx), @function
+GL_PREFIX(PolygonOffsetx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9056(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9056(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9056(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9056(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(PolygonOffsetx), .-GL_PREFIX(PolygonOffsetx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Rotatex)
+	.type	GL_PREFIX(Rotatex), @function
+GL_PREFIX(Rotatex):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9064(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9064(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9064(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	pushq	%rcx
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rcx
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9064(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Rotatex), .-GL_PREFIX(Rotatex)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(SampleCoveragex)
+	.type	GL_PREFIX(SampleCoveragex), @function
+GL_PREFIX(SampleCoveragex):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9072(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9072(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9072(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9072(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(SampleCoveragex), .-GL_PREFIX(SampleCoveragex)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Scalex)
+	.type	GL_PREFIX(Scalex), @function
+GL_PREFIX(Scalex):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9080(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9080(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9080(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9080(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Scalex), .-GL_PREFIX(Scalex)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(TexEnvx)
+	.type	GL_PREFIX(TexEnvx), @function
+GL_PREFIX(TexEnvx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9088(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9088(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9088(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9088(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(TexEnvx), .-GL_PREFIX(TexEnvx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(TexEnvxv)
+	.type	GL_PREFIX(TexEnvxv), @function
+GL_PREFIX(TexEnvxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9096(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9096(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9096(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9096(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(TexEnvxv), .-GL_PREFIX(TexEnvxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(TexParameterx)
+	.type	GL_PREFIX(TexParameterx), @function
+GL_PREFIX(TexParameterx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9104(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9104(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9104(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9104(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(TexParameterx), .-GL_PREFIX(TexParameterx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(Translatex)
+	.type	GL_PREFIX(Translatex), @function
+GL_PREFIX(Translatex):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9112(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9112(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9112(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9112(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(Translatex), .-GL_PREFIX(Translatex)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ClipPlanef)
+	.type	GL_PREFIX(ClipPlanef), @function
+GL_PREFIX(ClipPlanef):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9120(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9120(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9120(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9120(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ClipPlanef), .-GL_PREFIX(ClipPlanef)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(ClipPlanex)
+	.type	GL_PREFIX(ClipPlanex), @function
+GL_PREFIX(ClipPlanex):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9128(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9128(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9128(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9128(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(ClipPlanex), .-GL_PREFIX(ClipPlanex)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetClipPlanef)
+	.type	GL_PREFIX(GetClipPlanef), @function
+GL_PREFIX(GetClipPlanef):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9136(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9136(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9136(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9136(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetClipPlanef), .-GL_PREFIX(GetClipPlanef)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetClipPlanex)
+	.type	GL_PREFIX(GetClipPlanex), @function
+GL_PREFIX(GetClipPlanex):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9144(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9144(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9144(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9144(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetClipPlanex), .-GL_PREFIX(GetClipPlanex)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetFixedv)
+	.type	GL_PREFIX(GetFixedv), @function
+GL_PREFIX(GetFixedv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9152(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9152(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9152(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9152(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetFixedv), .-GL_PREFIX(GetFixedv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetLightxv)
+	.type	GL_PREFIX(GetLightxv), @function
+GL_PREFIX(GetLightxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9160(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9160(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9160(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9160(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetLightxv), .-GL_PREFIX(GetLightxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetMaterialxv)
+	.type	GL_PREFIX(GetMaterialxv), @function
+GL_PREFIX(GetMaterialxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9168(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9168(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9168(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9168(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetMaterialxv), .-GL_PREFIX(GetMaterialxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetTexEnvxv)
+	.type	GL_PREFIX(GetTexEnvxv), @function
+GL_PREFIX(GetTexEnvxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9176(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9176(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9176(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9176(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetTexEnvxv), .-GL_PREFIX(GetTexEnvxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(GetTexParameterxv)
+	.type	GL_PREFIX(GetTexParameterxv), @function
+GL_PREFIX(GetTexParameterxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9184(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9184(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9184(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9184(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(GetTexParameterxv), .-GL_PREFIX(GetTexParameterxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(PointParameterx)
+	.type	GL_PREFIX(PointParameterx), @function
+GL_PREFIX(PointParameterx):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9192(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9192(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9192(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9192(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(PointParameterx), .-GL_PREFIX(PointParameterx)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(PointParameterxv)
+	.type	GL_PREFIX(PointParameterxv), @function
+GL_PREFIX(PointParameterxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9200(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_x86_64_get_dispatch@PLT
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9200(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9200(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rbp
+	call	_glapi_get_dispatch
+	popq	%rbp
+	popq	%rsi
+	popq	%rdi
+	movq	9200(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(PointParameterxv), .-GL_PREFIX(PointParameterxv)
+
+	.p2align	4,,15
+	.globl	GL_PREFIX(TexParameterxv)
+	.type	GL_PREFIX(TexParameterxv), @function
+GL_PREFIX(TexParameterxv):
+#if defined(GLX_USE_TLS)
+	call	_x86_64_get_dispatch@PLT
+	movq	9208(%rax), %r11
+	jmp	*%r11
+#elif defined(HAVE_PTHREAD)
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_x86_64_get_dispatch@PLT
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9208(%rax), %r11
+	jmp	*%r11
+#else
+	movq	_glapi_Dispatch(%rip), %rax
+	testq	%rax, %rax
+	je	1f
+	movq	9208(%rax), %r11
+	jmp	*%r11
+1:
+	pushq	%rdi
+	pushq	%rsi
+	pushq	%rdx
+	call	_glapi_get_dispatch
+	popq	%rdx
+	popq	%rsi
+	popq	%rdi
+	movq	9208(%rax), %r11
+	jmp	*%r11
+#endif /* defined(GLX_USE_TLS) */
+	.size	GL_PREFIX(TexParameterxv), .-GL_PREFIX(TexParameterxv)
 
 	.globl GL_PREFIX(ArrayElementEXT) ; .set GL_PREFIX(ArrayElementEXT), GL_PREFIX(ArrayElement)
 	.globl GL_PREFIX(BindTextureEXT) ; .set GL_PREFIX(BindTextureEXT), GL_PREFIX(BindTexture)
@@ -40044,6 +44817,7 @@ GL_PREFIX(_dispatch_stub_1035):
 	.globl GL_PREFIX(TexBufferARB) ; .set GL_PREFIX(TexBufferARB), GL_PREFIX(TexBuffer)
 	.globl GL_PREFIX(FramebufferTextureARB) ; .set GL_PREFIX(FramebufferTextureARB), GL_PREFIX(FramebufferTexture)
 	.globl GL_PREFIX(VertexAttribDivisorARB) ; .set GL_PREFIX(VertexAttribDivisorARB), GL_PREFIX(VertexAttribDivisor)
+	.globl GL_PREFIX(MinSampleShadingARB) ; .set GL_PREFIX(MinSampleShadingARB), GL_PREFIX(MinSampleShading)
 	.globl GL_PREFIX(BindProgramNV) ; .set GL_PREFIX(BindProgramNV), GL_PREFIX(BindProgramARB)
 	.globl GL_PREFIX(DeleteProgramsNV) ; .set GL_PREFIX(DeleteProgramsNV), GL_PREFIX(DeleteProgramsARB)
 	.globl GL_PREFIX(GenProgramsNV) ; .set GL_PREFIX(GenProgramsNV), GL_PREFIX(GenProgramsARB)
@@ -40088,6 +44862,10 @@ GL_PREFIX(_dispatch_stub_1035):
 	.globl GL_PREFIX(BlendFuncSeparateIndexedAMD) ; .set GL_PREFIX(BlendFuncSeparateIndexedAMD), GL_PREFIX(BlendFuncSeparateiARB)
 	.globl GL_PREFIX(BlendFuncIndexedAMD) ; .set GL_PREFIX(BlendFuncIndexedAMD), GL_PREFIX(BlendFunciARB)
 	.globl GL_PREFIX(ProgramParameteriARB) ; .set GL_PREFIX(ProgramParameteriARB), GL_PREFIX(ProgramParameteri)
+	.globl GL_PREFIX(DebugMessageCallbackARB) ; .set GL_PREFIX(DebugMessageCallbackARB), GL_PREFIX(DebugMessageCallback)
+	.globl GL_PREFIX(DebugMessageControlARB) ; .set GL_PREFIX(DebugMessageControlARB), GL_PREFIX(DebugMessageControl)
+	.globl GL_PREFIX(DebugMessageInsertARB) ; .set GL_PREFIX(DebugMessageInsertARB), GL_PREFIX(DebugMessageInsert)
+	.globl GL_PREFIX(GetDebugMessageLogARB) ; .set GL_PREFIX(GetDebugMessageLogARB), GL_PREFIX(GetDebugMessageLog)
 	.globl GL_PREFIX(SecondaryColor3f) ; .set GL_PREFIX(SecondaryColor3f), GL_PREFIX(SecondaryColor3fEXT)
 	.globl GL_PREFIX(SecondaryColor3fv) ; .set GL_PREFIX(SecondaryColor3fv), GL_PREFIX(SecondaryColor3fvEXT)
 	.globl GL_PREFIX(MultiDrawElements) ; .set GL_PREFIX(MultiDrawElements), GL_PREFIX(MultiDrawElementsEXT)

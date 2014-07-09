@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2013/09/05 15:11:58 jsg Exp $
+#	$OpenBSD: Makefile,v 1.10 2014/07/09 21:32:40 jsg Exp $
 
 LIB=	swrast_dri.so
 
@@ -32,7 +32,7 @@ DRISW_SOURCES = \
 
 SWRAST_COMMON_SOURCES = \
 	utils.c \
-	drisw_util.c \
+	dri_util.c \
 	xmlconfig.c
 
 DRIVER_SOURCES = \

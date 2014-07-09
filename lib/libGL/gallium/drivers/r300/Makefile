@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2013/09/05 15:12:00 jsg Exp $
+# $OpenBSD: Makefile,v 1.4 2014/07/09 21:32:40 jsg Exp $
 
 LIB = r300
 
@@ -69,7 +69,8 @@ SRCS = \
 	${COMPILER_SOURCES}
 
 CPPFLAGS+= -I${.CURDIR}/compiler -I${MESA}/../../include \
-	   -I${MESA} -I${MESA}/../glsl -I${MESA}/../mapi
+	   -I${MESA} -I${MESA}/../glsl -I${MESA}/../mapi \
+	   -I${MESA}/program
 
 .include <bsd.xorg.mk>
 

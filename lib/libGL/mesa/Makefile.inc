@@ -1,4 +1,5 @@
-# $OpenBSD: Makefile.inc,v 1.8 2014/01/19 03:20:40 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.9 2014/07/09 21:32:41 jsg Exp $
+.include "../config.mk"
 
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
 MAPI=		${.CURDIR}/../../../../dist/Mesa/src/mapi
@@ -6,14 +7,6 @@ GLSL=		${.CURDIR}/../../../../dist/Mesa/src/glsl
 GALLIUM=	${.CURDIR}/../../../../dist/Mesa/src/gallium
 
 MESA_INCLUDE=	${.CURDIR}/../../../../dist/Mesa/include
-
-MESA_MAJOR=	9
-MESA_MINOR=	2
-MESA_TINY=	5
-
-CPP=	cpp -notraditional
-
-CFLAGS+= -std=c99
 
 CPPFLAGS+= \
 	-I. \
@@ -25,19 +18,13 @@ CPPFLAGS+= \
 	-I${MESA}/math \
 	-I${MESA}/tnl \
 	-I${GLSL} \
+	-I${GALLIUM}/auxiliary \
 	-I${.OBJDIR}/shader/slang \
 	-I${.CURDIR}/../../generated \
 	-I${.CURDIR}/../../generated/main \
 	-I${X11BASE}/include \
-	-DHAVE_UNISTD_H \
-	-DHAVE_PTHREAD \
-	-DHAVE_ALIAS \
-	-DHAVE_DLOPEN \
-	-DHAVE_POSIX_MEMALIGN \
 	-D_REENTRANT \
-	-DIN_DRI_DRIVER \
-	-DPACKAGE_VERSION=\"${MESA_MAJOR}.${MESA_MINOR}.${MESA_TINY}\" \
-	-DPACKAGE_BUGREPORT=\"bugs@openbsd.org\"
+	-DIN_DRI_DRIVER
 
 .if ${MACHINE_ARCH} == "i386"
 CPPFLAGS += \
@@ -58,21 +45,23 @@ MAIN_ES_SOURCES = \
 
 # main
 MAIN_SOURCES = \
-	accum.c \
 	api_arrayelt.c \
 	api_exec.c \
 	api_loopback.c \
 	api_validate.c \
+	accum.c \
 	arbprogram.c \
-	arrayobj.c \
 	atifragshader.c \
 	attrib.c \
+	arrayobj.c \
 	blend.c \
+	blit.c \
 	bufferobj.c \
 	buffers.c \
 	clear.c \
 	clip.c \
 	colortab.c \
+	compute.c \
 	condrender.c \
 	context.c \
 	convolve.c \
@@ -83,7 +72,6 @@ MAIN_SOURCES = \
 	drawpix.c \
 	drawtex.c \
 	enable.c \
-	enums.c \
 	errors.c \
 	eval.c \
 	execmem.c \
@@ -92,15 +80,17 @@ MAIN_SOURCES = \
 	feedback.c \
 	ffvertex_prog.c \
 	fog.c \
-	format_pack.c \
 	formatquery.c \
-	format_unpack.c \
 	formats.c \
+	format_pack.c \
+	format_unpack.c \
 	framebuffer.c \
 	get.c \
+	genmipmap.c \
 	getstring.c \
 	glformats.c \
 	hash.c \
+	hash_table.c \
 	hint.c \
 	histogram.c \
 	image.c \
@@ -111,15 +101,18 @@ MAIN_SOURCES = \
 	mipmap.c \
 	mm.c \
 	multisample.c \
+        objectlabel.c \
 	pack.c \
 	pbo.c \
+	performance_monitor.c \
+	pipelineobj.c \
 	pixel.c \
 	pixelstore.c \
 	pixeltransfer.c \
 	points.c \
 	polygon.c \
-	querymatrix.c \
 	queryobj.c \
+	querymatrix.c \
 	rastpos.c \
 	readpix.c \
 	remap.c \
@@ -128,6 +121,7 @@ MAIN_SOURCES = \
 	scissor.c \
 	set.c \
 	shaderapi.c \
+	shaderimage.c \
 	shaderobj.c \
 	shared.c \
 	state.c \
@@ -135,10 +129,10 @@ MAIN_SOURCES = \
 	syncobj.c \
 	texcompress.c \
 	texcompress_cpal.c \
-	texcompress_etc.c \
-	texcompress_fxt1.c \
 	texcompress_rgtc.c \
 	texcompress_s3tc.c \
+	texcompress_fxt1.c \
+	texcompress_etc.c \
 	texenv.c \
 	texformat.c \
 	texgen.c \
@@ -149,13 +143,16 @@ MAIN_SOURCES = \
 	texstate.c \
 	texstorage.c \
 	texstore.c \
+        textureview.c \
 	texturebarrier.c \
 	transformfeedback.c \
 	uniforms.c \
 	varray.c \
+	vdpau.c \
 	version.c \
 	viewport.c \
 	vtxfmt.c \
+	enums.c \
 	${MAIN_ES_SOURCES}
 
 MAIN_CXX_SOURCES = \
@@ -300,7 +297,8 @@ STATETRACKER_SOURCES = \
 	st_manager.c \
 	st_mesa_to_tgsi.c \
 	st_program.c \
-	st_texture.c
+	st_texture.c \
+	st_vdpau.c
 
 STATETRACKER_CXX_SOURCES = \
 	st_glsl_to_tgsi.cpp
@@ -521,8 +519,3 @@ x86_xform4.so: matypes.h
 .PATH: ${.CURDIR}/../../generated
 .PATH: ${.CURDIR}/../../generated/main
 .PATH: ${.CURDIR}/../../generated/program
-
-.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
-    ${MACHINE_ARCH} == "sparc"
-PICFLAG=-fPIC
-.endif

@@ -34,7 +34,6 @@
 #include "glxclient.h"
 #include "indirect_size.h"
 #include "glapi.h"
-#include "glthread.h"
 #include <GL/glxproto.h>
 #include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>

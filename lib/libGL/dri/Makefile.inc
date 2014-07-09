@@ -1,5 +1,6 @@
-# $OpenBSD: Makefile.inc,v 1.18 2013/09/05 15:11:57 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.19 2014/07/09 21:32:40 jsg Exp $
 .include <bsd.xconf.mk>
+.include "../config.mk"
 
 TOP=		${.CURDIR}/../../../../dist/Mesa
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -14,9 +15,12 @@ COMMON_GALLIUM_SOURCES = \
 
 COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
 	driverfuncs.c \
-	meta.c
+	meta_blit.c \
+	meta_generate_mipmap.c \
+	meta.c \
+	megadriver_stub.c
 
-CFLAGS+= -std=c99 -g -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DHAVE_PTHREAD \
+CFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING \
 	 $(INCLUDES) $(DRIVER_DEFINES)
 
 INCLUDES = \

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2013/09/05 15:12:00 jsg Exp $
+# $OpenBSD: Makefile,v 1.5 2014/07/09 21:32:40 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	gallium
@@ -59,6 +59,7 @@ C_SOURCES = \
 	hud_driver_query.c \
 	u_indices_gen.c \
 	u_unfilled_gen.c \
+	u_primconvert.c \
 	os_misc.c \
 	os_process.c \
 	os_time.c \
@@ -106,6 +107,7 @@ C_SOURCES = \
 	translate_sse.c \
 	u_debug.c \
 	u_debug_describe.c \
+	u_debug_flush.c \
 	u_debug_memory.c \
 	u_debug_refcnt.c \
 	u_debug_stack.c \
@@ -172,8 +174,8 @@ C_SOURCES = \
 	vl_mpeg12_decoder.c \
 	vl_vertex_buffers.c \
 	vl_video_buffer.c \
+	vl_deint_filter.c \
 	vl_winsys_dri.c \
-	vl_winsys_xsp.c \
 	vl_zscan.c
 
 GALLIVM_SOURCES = \

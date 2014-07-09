@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2014/01/11 12:39:14 miod Exp $
+#	$OpenBSD: Makefile,v 1.7 2014/07/09 21:32:40 jsg Exp $
 
 LIB=	swrast_dri.so
 
@@ -6,11 +6,15 @@ LIB=	swrast_dri.so
 PICFLAG = -fPIC
 .endif
 
-
 SWRAST_COMMON_SOURCES = \
         driverfuncs.c \
+	meta_blit.c \
+	meta_generate_mipmap.c \
+	meta.c \
+	dri_util.c \
         utils.c \
-	drisw_util.c
+	xmlconfig.c \
+	megadriver_stub.c
 
 DRIVER_SOURCES = \
 	swrast.c
