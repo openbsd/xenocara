@@ -1,0 +1,20 @@
+#!/bin/sh
+#	$OpenBSD: makelocatedb,v 1.1 2014/07/10 07:13:13 espie Exp $
+
+# xy
+RELEASE=$1
+
+if [ "X${RELEASE}" = "X" ]; then
+	echo "Usage: `basename $0` <OSREVISION>"
+	exit 1
+fi
+
+pwd=`pwd`
+listsdir=`pwd`/lists
+
+lists=`sh ./genlists $arch`
+
+for setname in $lists; do
+	(cd $pwd; sh gensetlist $setname) | \
+	    sed -e "s,^\.,${setname}${RELEASE}:,"
+done | sort | /usr/libexec/locate.mklocatedb
