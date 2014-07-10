@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2014/07/09 21:32:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2014/07/10 08:44:00 jsg Exp $
 
 LIB=	radeonsi_dri.so
 
@@ -58,5 +58,5 @@ DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a
 
 .PATH: ${GALLIUM}/state_trackers/dri/common
 .PATH: ${GALLIUM}/state_trackers/dri/drm
-.PATH: ${GALLIUM}/targets/radeonsi/dri
+.PATH: ${GALLIUM}/targets/radeonsi/common
 .PATH: ${GALLIUM}/winsys/radeon/drm
