@@ -140,6 +140,8 @@
 ./usr/X11R6/lib/libfontconfig.so.9.1
 ./usr/X11R6/lib/libfontenc.so.4.0
 ./usr/X11R6/lib/libfreetype.so.22.0
+./usr/X11R6/lib/libgbm.a
+./usr/X11R6/lib/libgbm.so.0.0
 ./usr/X11R6/lib/libglapi.a
 ./usr/X11R6/lib/libglapi.so.0.0
 ./usr/X11R6/lib/libpciaccess.so.2.0
@@ -190,9 +192,13 @@
 ./usr/X11R6/lib/libxcb.so.3.1
 ./usr/X11R6/lib/libxkbfile.so.6.0
 ./usr/X11R6/lib/libxkbui.so.5.0
+./usr/X11R6/lib/locate
+./usr/X11R6/lib/locate/xorg.db
 ./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/dri2proto.pc
+./usr/X11R6/lib/pkgconfig/egbm.pc
 ./usr/X11R6/lib/pkgconfig/egl.pc
+./usr/X11R6/lib/pkgconfig/gbm.pc
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glesv1_cm.pc
 ./usr/X11R6/lib/pkgconfig/glesv2.pc

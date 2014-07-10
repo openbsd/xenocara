@@ -41,6 +41,8 @@
 ./usr/X11R6/lib/libfontconfig.so.9.1
 ./usr/X11R6/lib/libfontenc.so.4.0
 ./usr/X11R6/lib/libfreetype.so.22.0
+./usr/X11R6/lib/libgbm.a
+./usr/X11R6/lib/libgbm.so.0.0
 ./usr/X11R6/lib/libpciaccess.so.2.0
 ./usr/X11R6/lib/libpixman-1.a
 ./usr/X11R6/lib/libpixman-1.la
@@ -87,6 +89,8 @@
 ./usr/X11R6/lib/libxcb.so.3.1
 ./usr/X11R6/lib/libxkbfile.so.6.0
 ./usr/X11R6/lib/libxkbui.so.5.0
+./usr/X11R6/lib/locate
+./usr/X11R6/lib/locate/xorg.db
 ./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/pkgconfig/presentproto.pc
 ./usr/X11R6/lib/xorg/protocol.txt
