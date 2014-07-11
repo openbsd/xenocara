@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.58 2014/07/10 07:13:13 espie Exp $
+# $OpenBSD: Makefile,v 1.59 2014/07/11 13:45:54 matthieu Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -100,7 +100,7 @@ release-clean:
 	fi
 
 release-install:
-	@exec ${SUDO} ${MAKE} bootstrap-root
+	@exec ${MAKE} bootstrap-root
 	@exec ${MAKE} install
 .if ${MACHINE} == zaurus
 	@if [ -f $(DESTDIR)/etc/X11/xorg.conf ]; then \
