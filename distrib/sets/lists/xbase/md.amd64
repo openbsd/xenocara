@@ -196,7 +196,6 @@
 ./usr/X11R6/lib/locate/xorg.db
 ./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/dri2proto.pc
-./usr/X11R6/lib/pkgconfig/egbm.pc
 ./usr/X11R6/lib/pkgconfig/egl.pc
 ./usr/X11R6/lib/pkgconfig/gbm.pc
 ./usr/X11R6/lib/pkgconfig/gl.pc
