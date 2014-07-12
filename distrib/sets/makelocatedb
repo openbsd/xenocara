@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$OpenBSD: makelocatedb,v 1.1 2014/07/10 07:13:13 espie Exp $
+#	$OpenBSD: makelocatedb,v 1.2 2014/07/12 19:14:55 espie Exp $
 
 # xy
 RELEASE=$1
@@ -12,7 +12,7 @@ fi
 pwd=`pwd`
 listsdir=`pwd`/lists
 
-lists=`sh ./genlists $arch`
+lists=`sh ./genlists ${MACHINE}`
 
 for setname in $lists; do
 	(cd $pwd; sh gensetlist $setname) | \
