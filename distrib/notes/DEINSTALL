@@ -1,7 +1,0 @@
-#!/bin/sh
-
-echo "+---------------"
-echo "| You do not want to delete this package.
-echo "+---------------"
-
-exit 1
