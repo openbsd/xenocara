@@ -70,7 +70,7 @@ _IceGetPoAuthData (
     {
 	*authDataLenRet = entry->auth_data_length;
 
-	if ((*authDataRet = (char *) malloc (entry->auth_data_length)) != NULL)
+	if ((*authDataRet = malloc (entry->auth_data_length)) != NULL)
 	    memcpy (*authDataRet, entry->auth_data, entry->auth_data_length);
     }
     else
@@ -111,7 +111,7 @@ _IceGetPaAuthData (
     {
 	*authDataLenRet = entry->auth_data_length;
 
-	if ((*authDataRet = (char *) malloc (entry->auth_data_length)) != NULL)
+	if ((*authDataRet = malloc (entry->auth_data_length)) != NULL)
 	    memcpy (*authDataRet, entry->auth_data, entry->auth_data_length);
     }
     else

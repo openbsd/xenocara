@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libICE], [1.0.8],
+AC_INIT([libICE], [1.0.9],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libICE])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -13,7 +13,6 @@ AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -38,6 +37,7 @@ XTRANS_CONNECTION_FLAGS
 AC_DEFINE(ICE_t, 1, [Xtrans transport type])
 
 # Checks for library functions.
+AC_CHECK_LIB([bsd], [arc4random_buf])
 AC_CHECK_FUNCS([asprintf arc4random_buf])
 
 # Allow checking code with lint, sparse, etc.

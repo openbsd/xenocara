@@ -58,7 +58,7 @@ Author: Ralph Mor, X Consortium
 
 #define PAD64(_bytes) ((8 - ((unsigned int) (_bytes) % 8)) % 8)
 
-#define PADDED_BYTES64(_bytes) (_bytes + PAD64 (_bytes))
+#define PADDED_BYTES64(_bytes) ((unsigned int) _bytes + PAD64 (_bytes))
 
 
 /*
@@ -67,7 +67,7 @@ Author: Ralph Mor, X Consortium
 
 #define PAD32(_bytes) ((4 - ((unsigned int) (_bytes) % 4)) % 4)
 
-#define PADDED_BYTES32(_bytes) (_bytes + PAD32 (_bytes))
+#define PADDED_BYTES32(_bytes) ((unsigned int) _bytes + PAD32 (_bytes))
 
 
 /*
@@ -155,8 +155,6 @@ typedef struct {
     _pBuf += 1; \
 }
 
-#ifndef WORD64
-
 #define STORE_CARD16(_pBuf, _val) \
 { \
     *((CARD16 *) _pBuf) = _val; \
@@ -169,34 +167,10 @@ typedef struct {
     _pBuf += 4; \
 }
 
-#else /* WORD64 */
-
-#define STORE_CARD16(_pBuf, _val) \
-{ \
-    struct { \
-        int value   :16; \
-        int pad     :16; \
-    } _d; \
-    _d.value = _val; \
-    memcpy (_pBuf, &_d, 2); \
-    _pBuf += 2; \
-}
-
-#define STORE_CARD32(_pBuf, _val) \
-{ \
-    struct { \
-        int value   :32; \
-    } _d; \
-    _d.value = _val; \
-    memcpy (_pBuf, &_d, 4); \
-    _pBuf += 4; \
-}
-
-#endif /* WORD64 */
 
 #define STORE_STRING(_pBuf, _string) \
 { \
-    CARD16 _len = strlen (_string); \
+    CARD16 _len = (CARD16) strlen (_string); \
     STORE_CARD16 (_pBuf, _len); \
     memcpy (_pBuf, _string, _len); \
     _pBuf += _len; \
@@ -215,8 +189,6 @@ typedef struct {
     _pBuf += 1; \
 }
 
-#ifndef WORD64
-
 #define EXTRACT_CARD16(_pBuf, _swap, _val) \
 { \
     _val = *((CARD16 *) _pBuf); \
@@ -233,39 +205,12 @@ typedef struct {
         _val = lswapl (_val); \
 }
 
-#else /* WORD64 */
-
-#define EXTRACT_CARD16(_pBuf, _swap, _val) \
-{ \
-    _val = *(_pBuf + 0) & 0xff; 	/* 0xff incase _pBuf is signed */ \
-    _val <<= 8; \
-    _val |= *(_pBuf + 1) & 0xff;\
-    _pBuf += 2; \
-    if (_swap) \
-        _val = lswaps (_val); \
-}
-
-#define EXTRACT_CARD32(_pBuf, _swap, _val) \
-{ \
-    _val = *(_pBuf + 0) & 0xff; 	/* 0xff incase _pBuf is signed */ \
-    _val <<= 8; \
-    _val |= *(_pBuf + 1) & 0xff;\
-    _val <<= 8; \
-    _val |= *(_pBuf + 2) & 0xff;\
-    _val <<= 8; \
-    _val |= *(_pBuf + 3) & 0xff;\
-    _pBuf += 4; \
-    if (_swap) \
-        _val = lswapl (_val); \
-}
-
-#endif /* WORD64 */
 
 #define EXTRACT_STRING(_pBuf, _swap, _string) \
 { \
     CARD16 _len; \
     EXTRACT_CARD16 (_pBuf, _swap, _len); \
-    _string = (char *) malloc (_len + 1); \
+    _string = malloc (_len + 1); \
     memcpy (_string, _pBuf, _len); \
     _pBuf += _len; \
     _string[_len] = '\0'; \

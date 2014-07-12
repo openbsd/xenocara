@@ -39,7 +39,7 @@ IcePing (
 	IcePointer	 clientData
 )
 {
-    _IcePingWait *newping = (_IcePingWait *) malloc (sizeof (_IcePingWait));
+    _IcePingWait *newping = malloc (sizeof (_IcePingWait));
     _IcePingWait *ptr = iceConn->ping_waits;
 
     if (newping == NULL)

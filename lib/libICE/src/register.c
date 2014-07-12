@@ -67,8 +67,7 @@ IceRegisterForProtocolSetup (
 
     if (i <= _IceLastMajorOpcode)
     {
-	p = _IceProtocols[i - 1].orig_client =
-	    (_IcePoProtocol *) malloc (sizeof (_IcePoProtocol));
+	p = _IceProtocols[i - 1].orig_client = malloc (sizeof(_IcePoProtocol));
 	opcodeRet = i;
     }
     else if (_IceLastMajorOpcode == 255 ||
@@ -79,13 +78,11 @@ IceRegisterForProtocolSetup (
     }
     else
     {
-	char *name;
-
-	_IceProtocols[_IceLastMajorOpcode].protocol_name = name =
+	_IceProtocols[_IceLastMajorOpcode].protocol_name =
 	    strdup(protocolName);
 
 	p = _IceProtocols[_IceLastMajorOpcode].orig_client =
-	    (_IcePoProtocol *) malloc (sizeof (_IcePoProtocol));
+	    malloc (sizeof (_IcePoProtocol));
 
 	_IceProtocols[_IceLastMajorOpcode].accept_client = NULL;
 
@@ -97,18 +94,15 @@ IceRegisterForProtocolSetup (
 
     p->version_count = versionCount;
 
-    p->version_recs = (IcePoVersionRec *) malloc (
-	versionCount * sizeof (IcePoVersionRec));
+    p->version_recs = malloc (versionCount * sizeof (IcePoVersionRec));
     memcpy (p->version_recs, versionRecs,
 	versionCount * sizeof (IcePoVersionRec));
 
     if ((p->auth_count = authCount) > 0)
     {
-	p->auth_names = (char **) malloc (
-	    authCount * sizeof (char *));
+	p->auth_names = malloc (authCount * sizeof (char *));
 
-	p->auth_procs = (IcePoAuthProc *) malloc (
-	    authCount * sizeof (IcePoAuthProc));
+	p->auth_procs = malloc (authCount * sizeof (IcePoAuthProc));
 
 	for (i = 0; i < authCount; i++)
 	{
@@ -169,7 +163,7 @@ IceRegisterForProtocolReply (
     if (i <= _IceLastMajorOpcode)
     {
 	p = _IceProtocols[i - 1].accept_client =
-	    (_IcePaProtocol *) malloc (sizeof (_IcePaProtocol));
+	    malloc (sizeof (_IcePaProtocol));
 	opcodeRet = i;
     }
     else if (_IceLastMajorOpcode == 255 ||
@@ -180,15 +174,13 @@ IceRegisterForProtocolReply (
     }
     else
     {
-	char *name;
-
-	_IceProtocols[_IceLastMajorOpcode].protocol_name = name =
+	_IceProtocols[_IceLastMajorOpcode].protocol_name =
 	    strdup(protocolName);
 
 	_IceProtocols[_IceLastMajorOpcode].orig_client = NULL;
 
 	p = _IceProtocols[_IceLastMajorOpcode].accept_client =
-	    (_IcePaProtocol *) malloc (sizeof (_IcePaProtocol));
+	    malloc (sizeof (_IcePaProtocol));
 
 	opcodeRet = ++_IceLastMajorOpcode;
     }
@@ -198,8 +190,7 @@ IceRegisterForProtocolReply (
 
     p->version_count = versionCount;
 
-    p->version_recs = (IcePaVersionRec *) malloc (
-	versionCount * sizeof (IcePaVersionRec));
+    p->version_recs = malloc (versionCount * sizeof (IcePaVersionRec));
     memcpy (p->version_recs, versionRecs,
 	versionCount * sizeof (IcePaVersionRec));
 
@@ -208,11 +199,9 @@ IceRegisterForProtocolReply (
 
     if ((p->auth_count = authCount) > 0)
     {
-	p->auth_names = (char **) malloc (
-	    authCount * sizeof (char *));
+	p->auth_names = malloc (authCount * sizeof (char *));
 
-	p->auth_procs = (IcePaAuthProc *) malloc (
-	    authCount * sizeof (IcePaAuthProc));
+	p->auth_procs = malloc (authCount * sizeof (IcePaAuthProc));
 
 	for (i = 0; i < authCount; i++)
 	{

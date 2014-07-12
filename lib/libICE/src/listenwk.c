@@ -64,12 +64,11 @@ IceListenForWellKnownConnections (
 	return (0);
     }
 
-    if ((listenObjs = (struct _IceListenObj *) malloc (
-	transCount * sizeof (struct _IceListenObj))) == NULL)
+    if ((listenObjs = malloc (transCount * sizeof (struct _IceListenObj))) == NULL)
     {
 	for (i = 0; i < transCount; i++)
 	    _IceTransClose (transConns[i]);
-	free ((char *) transConns);
+	free (transConns);
 	return (0);
     }
 
@@ -99,8 +98,7 @@ IceListenForWellKnownConnections (
     }
     else
     {
-	*listenObjsRet = (IceListenObj *) malloc (
-	    *countRet * sizeof (IceListenObj));
+	*listenObjsRet = malloc (*countRet * sizeof (IceListenObj));
 
 	if (*listenObjsRet == NULL)
 	{
@@ -112,17 +110,16 @@ IceListenForWellKnownConnections (
 	{
 	    for (i = 0; i < *countRet; i++)
 	    {
-		(*listenObjsRet)[i] = (IceListenObj) malloc (
-		    sizeof (struct _IceListenObj));
+		(*listenObjsRet)[i] = malloc (sizeof (struct _IceListenObj));
 
 		if ((*listenObjsRet)[i] == NULL)
 		{
 		    strncpy (errorStringRet, "Malloc failed", errorLength);
 
 		    for (j = 0; j < i; j++)
-			free ((char *) (*listenObjsRet)[j]);
+			free ((*listenObjsRet)[j]);
 
-		    free ((char *) *listenObjsRet);
+		    free (*listenObjsRet);
 		    *listenObjsRet = NULL;
 
 		    status = 0;
@@ -152,8 +149,8 @@ IceListenForWellKnownConnections (
 	    _IceTransClose (transConns[i]);
     }
 
-    free ((char *) listenObjs);
-    free ((char *) transConns);
+    free (listenObjs);
+    free (transConns);
 
     return (status);
 }

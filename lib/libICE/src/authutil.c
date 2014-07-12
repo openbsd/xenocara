@@ -35,13 +35,10 @@ Author: Ralph Mor, X Consortium
 #include <X11/Xos.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <limits.h>
 
 #include <time.h>
 #define Time_t time_t
-#ifdef __UNIXOS2__
-extern char* getenv(const char*);
-#define link rename
-#endif
 #ifndef X_NOT_POSIX
 #include <unistd.h>
 #else
@@ -56,8 +53,8 @@ static Status read_short (FILE *file, unsigned short *shortp);
 static Status read_string (FILE *file, char **stringp);
 static Status read_counted_string (FILE *file, unsigned short *countp, char **stringp);
 static Status write_short (FILE *file, unsigned short s);
-static Status write_string (FILE *file, char *string);
-static Status write_counted_string (FILE *file, unsigned short count, char *string);
+static Status write_string (FILE *file, const char *string);
+static Status write_counted_string (FILE *file, unsigned short count, const char *string);
 
 
 
@@ -73,9 +70,9 @@ IceAuthFileName (void)
     static char slashDotICEauthority[] = "/.ICEauthority";
     char    	*name;
     static char	*buf;
-    static int	bsize;
-    int	    	size;
-#if defined(WIN32) || defined(__UNIXOS2__)
+    static size_t bsize;
+    size_t    	size;
+#ifdef WIN32
 #ifndef PATH_MAX
 #define PATH_MAX 512
 #endif
@@ -102,15 +99,10 @@ IceAuthFileName (void)
 	len2 = strlen (ptr2);
     }
     if ((len1 + len2 + 1) < PATH_MAX) {
-	sprintf (dir, "%s%s", ptr1, (ptr2) ? ptr2 : "");
+	snprintf (dir, sizeof(dir), "%s%s", ptr1, (ptr2) ? ptr2 : "");
 	name = dir;
     }
     if (!name)
-#endif
-#ifdef __UNIXOS2__
-	strcpy (dir,"c:");
-	name = dir;
-	if (!name)
 #endif
 	return (NULL);
     }
@@ -121,14 +113,14 @@ IceAuthFileName (void)
     {
 	if (buf)
 	    free (buf);
-	buf = malloc ((unsigned) size);
+	buf = malloc (size);
 	if (!buf)
 	    return (NULL);
 	bsize = size;
     }
 
-    strcpy (buf, name);
-    strcat (buf, slashDotICEauthority + (name[1] == '\0' ? 1 : 0));
+    snprintf (buf, bsize, "%s%s", name,
+              slashDotICEauthority + (name[1] == '\0' ? 1 : 0));
 
     return (buf);
 }
@@ -137,7 +129,7 @@ IceAuthFileName (void)
 
 int
 IceLockAuthFile (
-	char	*file_name,
+	const char *file_name,
 	int	retries,
 	int	timeout,
 	long	dead
@@ -151,10 +143,8 @@ IceLockAuthFile (
     if ((int) strlen (file_name) > 1022)
 	return (IceAuthLockError);
 
-    strcpy (creat_name, file_name);
-    strcat (creat_name, "-c");
-    strcpy (link_name, file_name);
-    strcat (link_name, "-l");
+    snprintf (creat_name, sizeof(creat_name), "%s-c", file_name);
+    snprintf (link_name, sizeof(link_name), "%s-l", file_name);
 
     if (stat (creat_name, &statb) != -1)
     {
@@ -213,7 +203,7 @@ IceLockAuthFile (
 
 void
 IceUnlockAuthFile (
-	char	*file_name
+	const char	*file_name
 )
 {
 #ifndef WIN32
@@ -225,15 +215,10 @@ IceUnlockAuthFile (
 	return;
 
 #ifndef WIN32
-    strcpy (creat_name, file_name);
-    strcat (creat_name, "-c");
-#endif
-    strcpy (link_name, file_name);
-    strcat (link_name, "-l");
-
-#ifndef WIN32
+    snprintf (creat_name, sizeof(creat_name), "%s-c", file_name);
     unlink (creat_name);
 #endif
+    snprintf (link_name, sizeof(link_name), "%s-l", file_name);
     unlink (link_name);
 }
 
@@ -270,7 +255,7 @@ IceReadAuthFileEntry (
 	&local.auth_data_length, &local.auth_data))
 	goto bad;
 
-    if (!(ret = (IceAuthFileEntry *) malloc (sizeof (IceAuthFileEntry))))
+    if (!(ret = malloc (sizeof (IceAuthFileEntry))))
 	goto bad;
 
     *ret = local;
@@ -302,7 +287,7 @@ IceFreeAuthFileEntry (
 	if (auth->network_id) free (auth->network_id);
 	if (auth->auth_name) free (auth->auth_name);
 	if (auth->auth_data) free (auth->auth_data);
-	free ((char *) auth);
+	free (auth);
     }
 }
 
@@ -387,7 +372,7 @@ read_short (FILE *file, unsigned short *shortp)
 {
     unsigned char   file_short[2];
 
-    if (fread ((char *) file_short, (int) sizeof (file_short), 1, file) != 1)
+    if (fread (file_short, sizeof (file_short), 1, file) != 1)
 	return (0);
 
     *shortp = file_short[0] * 256 + file_short[1];
@@ -412,7 +397,7 @@ read_string (FILE *file, char **stringp)
 
     if (len != 0)
     {
-	if (fread (data, (int) sizeof (char), (int) len, file) != len)
+	if (fread (data, sizeof (char), len, file) != len)
 	{
 	    free (data);
 	    return (0);
@@ -447,7 +432,7 @@ read_counted_string (FILE *file, unsigned short	*countp, char **stringp)
     	if (!data)
 	    return (0);
 
-    	if (fread (data, (int) sizeof (char), (int) len, file) != len)
+	if (fread (data, sizeof (char), len, file) != len)
 	{
 	    free (data);
 	    return (0);
@@ -469,7 +454,7 @@ write_short (FILE *file, unsigned short s)
     file_short[0] = (s & (unsigned) 0xff00) >> 8;
     file_short[1] = s & 0xff;
 
-    if (fwrite ((char *) file_short, (int) sizeof (file_short), 1, file) != 1)
+    if (fwrite (file_short, sizeof (file_short), 1, file) != 1)
 	return (0);
 
     return (1);
@@ -477,27 +462,24 @@ write_short (FILE *file, unsigned short s)
 
 
 static Status
-write_string (FILE *file, char *string)
+write_string (FILE *file, const char *string)
 {
-    unsigned short count = strlen (string);
+    size_t count = strlen (string);
 
-    if (!write_short (file, count))
+    if (count > USHRT_MAX)
 	return (0);
 
-    if (fwrite (string, (int) sizeof (char), (int) count, file) != count)
-	return (0);
-
-    return (1);
+    return write_counted_string (file, (unsigned short) count, string);
 }
 
 
 static Status
-write_counted_string (FILE *file, unsigned short count, char *string)
+write_counted_string (FILE *file, unsigned short count, const char *string)
 {
     if (!write_short (file, count))
 	return (0);
 
-    if (fwrite (string, (int) sizeof (char), (int) count, file) != count)
+    if (fwrite (string, sizeof (char), count, file) != count)
 	return (0);
 
     return (1);

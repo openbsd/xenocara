@@ -301,21 +301,21 @@ _IceFreeConnection (
 	free (iceConn->scratch);
 
     if (iceConn->process_msg_info)
-	free ((char *) iceConn->process_msg_info);
+	free (iceConn->process_msg_info);
 
     if (iceConn->connect_to_you)
-	free ((char *) iceConn->connect_to_you);
+	free (iceConn->connect_to_you);
 
     if (iceConn->protosetup_to_you)
-	free ((char *) iceConn->protosetup_to_you);
+	free (iceConn->protosetup_to_you);
 
     if (iceConn->connect_to_me)
-	free ((char *) iceConn->connect_to_me);
+	free (iceConn->connect_to_me);
 
     if (iceConn->protosetup_to_me)
-	free ((char *) iceConn->protosetup_to_me);
+	free (iceConn->protosetup_to_me);
 
-    free ((char *) iceConn);
+    free (iceConn);
 }
 
 

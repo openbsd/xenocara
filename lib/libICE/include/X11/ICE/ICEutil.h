@@ -81,14 +81,14 @@ extern char *IceAuthFileName (
 );
 
 extern int IceLockAuthFile (
-    char *		/* file_name */,
+    const char *	/* file_name */,
     int			/* retries */,
     int			/* timeout */,
     long		/* dead */
 );
 
 extern void IceUnlockAuthFile (
-    char *		/* file_name */
+    const char *	/* file_name */
 );
 
 extern IceAuthFileEntry *IceReadAuthFileEntry (

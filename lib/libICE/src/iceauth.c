@@ -36,6 +36,10 @@ Author: Ralph Mor, X Consortium
 #include <time.h>
 #define Time_t time_t
 
+#ifdef HAVE_LIBBSD
+#include <bsd/stdlib.h>	/* for arc4random_buf() */
+#endif
+
 static int was_called_state;
 
 /*
@@ -50,12 +54,14 @@ IceGenerateMagicCookie (
 )
 {
     char    *auth;
+#ifndef HAVE_ARC4RANDOM_BUF
     long    ldata[2];
     int	    seed;
     int	    value;
     int	    i;
+#endif
 
-    if ((auth = (char *) malloc (len + 1)) == NULL)
+    if ((auth = malloc (len + 1)) == NULL)
 	return (NULL);
 
 #ifdef HAVE_ARC4RANDOM_BUF
@@ -70,9 +76,7 @@ IceGenerateMagicCookie (
     }
 #else
     {
-#ifndef __UNIXOS2__
 	long    time ();
-#endif
 	ldata[0] = time ((long *) 0);
 	ldata[1] = getpid ();
     }

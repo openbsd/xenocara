@@ -161,10 +161,10 @@ extern IcePaAuthStatus _IcePaMagicCookie1Proc (
     IceGetHeader (_iceConn, _offendingMajorOpcode, ICE_Error, \
 	SIZEOF (iceErrorMsg), iceErrorMsg, _pMsg); \
     _pMsg->length += (_dataLength); \
-    _pMsg->offendingMinorOpcode = _offendingMinorOpcode; \
-    _pMsg->severity = _severity; \
-    _pMsg->offendingSequenceNum = _offendingSequenceNum; \
-    _pMsg->errorClass = _errorClass; \
+    _pMsg->offendingMinorOpcode = (CARD8) _offendingMinorOpcode; \
+    _pMsg->severity = (CARD8) _severity; \
+    _pMsg->offendingSequenceNum = (CARD32) _offendingSequenceNum; \
+    _pMsg->errorClass = (CARD16) _errorClass; \
 }
 
 
@@ -186,19 +186,11 @@ extern IcePaAuthStatus _IcePaMagicCookie1Proc (
     } \
 }
 
-#ifndef WORD64
-
 #define IceWriteData16(_iceConn, _bytes, _data) \
     IceWriteData (_iceConn, _bytes, (char *) _data)
 
 #define IceWriteData32(_iceConn, _bytes, _data) \
     IceWriteData (_iceConn, _bytes, (char *) _data)
-
-#else /* WORD64 */
-
-/* IceWriteData16 and IceWriteData32 defined in misc.c for WORD64 */
-
-#endif /* WORD64 */
 
 
 /*
@@ -252,7 +244,7 @@ extern IcePaAuthStatus _IcePaMagicCookie1Proc (
     } \
     else \
     { \
-	_pData = (char *) malloc ((unsigned) _bytes); \
+	_pData = malloc (_bytes); \
         if (_pData) \
 	    _IceRead (_iceConn, _bytes, _pData); \
         else \
@@ -263,7 +255,7 @@ extern IcePaAuthStatus _IcePaMagicCookie1Proc (
 #define IceDisposeCompleteMessage(_iceConn, _pData) \
     if ((char *) _pData < _iceConn->inbuf || \
 	(char *) _pData >= _iceConn->inbufmax) \
-        free ((char *) _pData);
+        free (_pData);
 
 
 #define IceReadSimpleMessage(_iceConn, _msgType, _pMsg) \
@@ -281,8 +273,6 @@ extern IcePaAuthStatus _IcePaMagicCookie1Proc (
 #define IceReadData(_iceConn, _bytes, _pData) \
     _IceRead (_iceConn, (unsigned long) (_bytes), (char *) _pData); \
 
-#ifndef WORD64
-
 #define IceReadData16(_iceConn, _swap, _bytes, _pData) \
 { \
     _IceRead (_iceConn, (unsigned long) (_bytes), (char *) _pData); \
@@ -292,12 +282,6 @@ extern IcePaAuthStatus _IcePaMagicCookie1Proc (
 { \
     _IceRead (_iceConn, (unsigned long) (_bytes), (char *) _pData); \
 }
-
-#else /* WORD64 */
-
-/* IceReadData16 and IceReadData32 defined in misc.c for WORD64 */
-
-#endif /* WORD64 */
 
 
 /*

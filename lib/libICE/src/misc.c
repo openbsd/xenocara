@@ -57,7 +57,7 @@ IceAllocScratch (
 	if (iceConn->scratch)
 	    free (iceConn->scratch);
 
-	iceConn->scratch = (char *) malloc ((unsigned) size);
+	iceConn->scratch = malloc (size);
 	iceConn->scratch_size = size;
     }
 
@@ -406,91 +406,6 @@ _IceWrite (
     }
 }
 
-#ifdef WORD64
-
-IceWriteData16 (
-	IceConn 	iceConn,
-	unsigned long 	nbytes,
-	short  		*data
-)
-{
-    int numShorts = nbytes / 2;
-    int index = 0;
-
-    while (index < numShorts)
-    {
-	int spaceLeft, count, i;
-	int shortsLeft = numShorts - index;
-
-	spaceLeft = iceConn->outbufmax - iceConn->outbufptr - 1;
-
-	if (spaceLeft < 2)
-	{
-	    IceFlush (iceConn);
-	    spaceLeft = iceConn->outbufmax - iceConn->outbufptr - 1;
-	}
-
-	count = (shortsLeft < spaceLeft / 2) ? shortsLeft : spaceLeft / 2;
-
-	for (i = 0; i < count; i++)
-	    STORE_CARD16 (iceConn->outbufptr, data[index++]);
-    }
-}
-
-
-IceWriteData32 (
-	IceConn 	iceConn,
-	unsigned long  	nbytes,
-	int	 	*data
-)
-{
-    int numLongs = nbytes / 4;
-    int index = 0;
-
-    while (index < numLongs)
-    {
-	int spaceLeft, count, i;
-	int longsLeft = numLongs - index;
-
-	spaceLeft = iceConn->outbufmax - iceConn->outbufptr - 1;
-
-	if (spaceLeft < 4)
-	{
-	    IceFlush (iceConn);
-	    spaceLeft = iceConn->outbufmax - iceConn->outbufptr - 1;
-	}
-
-	count = (longsLeft < spaceLeft / 4) ? longsLeft : spaceLeft / 4;
-
-	for (i = 0; i < count; i++)
-	    STORE_CARD32 (iceConn->outbufptr, data[index++]);
-    }
-}
-
-
-IceReadData16 (
-	IceConn 	iceConn,
-	Bool		swap,
-	unsigned long 	nbytes,
-	short  		*data
-)
-{
-    /* NOT IMPLEMENTED YET */
-}
-
-
-IceReadData32 (
-	IceConn 	iceConn,
-	Bool		swap,
-	unsigned long  	nbytes,
-	int	 	*data
-)
-{
-    /* NOT IMPLEMENTED YET */
-}
-
-#endif  /* WORD64 */
-
 
 
 void
@@ -506,8 +421,7 @@ _IceAddOpcodeMapping (
     }
     else if (iceConn->process_msg_info == NULL)
     {
-	iceConn->process_msg_info = (_IceProcessMsgInfo *) malloc (
-	    sizeof (_IceProcessMsgInfo));
+	iceConn->process_msg_info = malloc (sizeof (_IceProcessMsgInfo));
 	iceConn->his_min_opcode = iceConn->his_max_opcode = hisOpcode;
     }
     else if (hisOpcode < iceConn->his_min_opcode)
@@ -517,14 +431,14 @@ _IceAddOpcodeMapping (
 	int newsize = iceConn->his_max_opcode - hisOpcode + 1;
 	int i;
 
-	iceConn->process_msg_info = (_IceProcessMsgInfo *) malloc (
+	iceConn->process_msg_info = malloc (
 	    newsize * sizeof (_IceProcessMsgInfo));
 
 	memcpy (&iceConn->process_msg_info[
 	    iceConn->his_min_opcode - hisOpcode], oldVec,
 	    oldsize * sizeof (_IceProcessMsgInfo));
 
-	free ((char *) oldVec);
+	free (oldVec);
 
 	for (i = hisOpcode + 1; i < iceConn->his_min_opcode; i++)
 	{
@@ -544,13 +458,13 @@ _IceAddOpcodeMapping (
 	int newsize = hisOpcode - iceConn->his_min_opcode + 1;
 	int i;
 
-	iceConn->process_msg_info = (_IceProcessMsgInfo *) malloc (
+	iceConn->process_msg_info = malloc (
 	    newsize * sizeof (_IceProcessMsgInfo));
 
 	memcpy (iceConn->process_msg_info, oldVec,
 	    oldsize * sizeof (_IceProcessMsgInfo));
 
-	free ((char *) oldVec);
+	free (oldVec);
 
 	for (i = iceConn->his_max_opcode + 1; i < hisOpcode; i++)
 	{

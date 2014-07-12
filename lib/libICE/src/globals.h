@@ -26,15 +26,9 @@ in this Software without prior written authorization from The Open Group.
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
 
-#ifndef __UNIXOS2__
 IceConn     	_IceConnectionObjs[256];
 char	    	*_IceConnectionStrings[256];
 _IceProtocol 	_IceProtocols[255];
-#else
-IceConn     	_IceConnectionObjs[256] = {0};
-char	    	*_IceConnectionStrings[256] = {0};
-_IceProtocol 	_IceProtocols[255] = {0};
-#endif
 int     	_IceConnectionCount = 0;
 
 int         	_IceLastMajorOpcode = 0;

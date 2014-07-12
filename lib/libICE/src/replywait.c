@@ -59,8 +59,7 @@ _IceAddReplyWait (
 	last = last->next;
     }
 
-    savedReplyWait = (_IceSavedReplyWait *) malloc (
-	sizeof (_IceSavedReplyWait));
+    savedReplyWait = malloc (sizeof (_IceSavedReplyWait));
 
     savedReplyWait->reply_wait = replyWait;
     savedReplyWait->reply_ready = False;
@@ -149,7 +148,7 @@ _IceCheckReplyReady (
 	else
 	    prev->next = savedReplyWait->next;
 
-	free ((char *) savedReplyWait);
+	free (savedReplyWait);
     }
 
     return (ready);

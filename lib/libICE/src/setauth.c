@@ -50,11 +50,7 @@ Author: Ralph Mor, X Consortium
  */
 
 int		 _IcePaAuthDataEntryCount = 0;
-#ifndef __UNIXOS2__
 IceAuthDataEntry _IcePaAuthDataEntries[ICE_MAX_AUTH_DATA_ENTRIES];
-#else
-IceAuthDataEntry _IcePaAuthDataEntries[ICE_MAX_AUTH_DATA_ENTRIES] = {0};
-#endif
 
 
 void
@@ -104,7 +100,7 @@ IceSetPaAuthData (
 
 	_IcePaAuthDataEntries[j].auth_data_length =
             entries[i].auth_data_length;
-	_IcePaAuthDataEntries[j].auth_data = (char *) malloc (
+	_IcePaAuthDataEntries[j].auth_data = malloc (
             entries[i].auth_data_length);
 	memcpy (_IcePaAuthDataEntries[j].auth_data,
             entries[i].auth_data, entries[i].auth_data_length);

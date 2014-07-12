@@ -144,7 +144,7 @@ IceOpenConnection (
 	}
     }
 
-    if ((iceConn = (IceConn) malloc (sizeof (struct _IceConn))) == NULL)
+    if ((iceConn = malloc (sizeof (struct _IceConn))) == NULL)
     {
 	strncpy (errorStringRet, "Can't malloc", errorLength);
 	return (NULL);
@@ -158,7 +158,7 @@ IceOpenConnection (
     if ((iceConn->trans_conn = ConnectToPeer (networkIdsList,
 	&iceConn->connection_string)) == NULL)
     {
-	free ((char *) iceConn);
+	free (iceConn);
 	strncpy (errorStringRet, "Could not open network socket", errorLength);
 	return (NULL);
     }
@@ -194,8 +194,7 @@ IceOpenConnection (
     iceConn->connect_to_me = NULL;
     iceConn->protosetup_to_me = NULL;
 
-    if ((iceConn->inbuf = iceConn->inbufptr =
-	(char *) malloc (ICE_INBUFSIZE)) == NULL)
+    if ((iceConn->inbuf = iceConn->inbufptr = malloc (ICE_INBUFSIZE)) == NULL)
     {
 	_IceFreeConnection (iceConn);
 	strncpy (errorStringRet, "Can't malloc", errorLength);
@@ -204,8 +203,7 @@ IceOpenConnection (
 
     iceConn->inbufmax = iceConn->inbuf + ICE_INBUFSIZE;
 
-    if ((iceConn->outbuf = iceConn->outbufptr =
-	(char *) calloc (1, ICE_OUTBUFSIZE)) == NULL)
+    if ((iceConn->outbuf = iceConn->outbufptr = calloc (1, ICE_OUTBUFSIZE)) == NULL)
     {
 	_IceFreeConnection (iceConn);
 	strncpy (errorStringRet, "Can't malloc", errorLength);
@@ -224,8 +222,7 @@ IceOpenConnection (
     iceConn->saved_reply_waits = NULL;
     iceConn->ping_waits = NULL;
 
-    iceConn->connect_to_you = (_IceConnectToYouInfo *) malloc (
-	sizeof (_IceConnectToYouInfo));
+    iceConn->connect_to_you = malloc (sizeof (_IceConnectToYouInfo));
     iceConn->connect_to_you->auth_active = 0;
 
     /*
@@ -392,7 +389,7 @@ IceOpenConnection (
 			iceConn->connection_string;
 		    _IceConnectionCount++;
 
-		    free ((char *) iceConn->connect_to_you);
+		    free (iceConn->connect_to_you);
 		    iceConn->connect_to_you = NULL;
 
 		    iceConn->connection_status = IceConnectAccepted;
@@ -451,9 +448,9 @@ ConnectToPeer (char *networkIdsList, char **actualConnectionRet)
     char* address;
     char *ptr, *endptr, *delim;
     int  madeConnection = 0;
-    int  len, retry;
-    int  connect_stat;
-    int  address_size;
+    size_t  len;
+    int  retry, connect_stat;
+    size_t  address_size;
     XtransConnInfo trans_conn = NULL;
 
     *actualConnectionRet = NULL;

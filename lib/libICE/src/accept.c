@@ -70,7 +70,7 @@ IceAcceptConnection (
      * Create an ICE object for this connection.
      */
 
-    if ((iceConn = (IceConn) malloc (sizeof (struct _IceConn))) == NULL)
+    if ((iceConn = malloc (sizeof (struct _IceConn))) == NULL)
     {
 	_IceTransClose (newconn);
 	*statusRet = IceAcceptBadMalloc;
@@ -95,7 +95,7 @@ IceAcceptConnection (
     if (iceConn->connection_string == NULL)
     {
 	_IceTransClose (newconn);
-	free ((char *) iceConn);
+	free (iceConn);
 	*statusRet = IceAcceptBadMalloc;
 	return (NULL);
     }
@@ -103,29 +103,29 @@ IceAcceptConnection (
     iceConn->vendor = NULL;
     iceConn->release = NULL;
 
-    if ((iceConn->inbuf = iceConn->inbufptr =
-	(char *) malloc (ICE_INBUFSIZE)) != NULL)
+    if ((iceConn->inbuf = iceConn->inbufptr = malloc (ICE_INBUFSIZE)) != NULL)
     {
 	iceConn->inbufmax = iceConn->inbuf + ICE_INBUFSIZE;
     }
     else
     {
 	_IceTransClose (newconn);
-	free ((char *) iceConn);
+	free (iceConn->connection_string);
+	free (iceConn);
 	*statusRet = IceAcceptBadMalloc;
 	return (NULL);
     }
 
-    if ((iceConn->outbuf = iceConn->outbufptr =
-	(char *) malloc (ICE_OUTBUFSIZE)) != NULL)
+    if ((iceConn->outbuf = iceConn->outbufptr = malloc (ICE_OUTBUFSIZE)) != NULL)
     {
 	iceConn->outbufmax = iceConn->outbuf + ICE_OUTBUFSIZE;
     }
     else
     {
 	_IceTransClose (newconn);
+	free (iceConn->connection_string);
 	free (iceConn->inbuf);
-	free ((char *) iceConn);
+	free (iceConn);
 	*statusRet = IceAcceptBadMalloc;
 	return (NULL);
     }

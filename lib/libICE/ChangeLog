@@ -1,3 +1,183 @@
+commit 0dfab4253e26d5c6e5f058126eb5e9f7a7732ae8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 6 18:28:28 2014 -0700
+
+    libICE 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9fb6ba03d7183ae06644f8a747fdb99b970d65fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 24 09:35:02 2013 -0800
+
+    Delete unused name variable in register.c
+    
+    Found by cppcheck 1.62:
+    [src/register.c:84]: (style) Variable 'name' is assigned a value
+     that is never used.
+    [src/register.c:182]: (style) Variable 'name' is assigned a value
+     that is never used.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c5060918164168c0a4f737b76e92df3c03356dc6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 24 09:18:17 2013 -0800
+
+    Free iceConn->connection_string when unwinding after malloc fails
+    
+    Found by cppcheck 1.62:
+    [src/accept.c:113]: (error) Memory leak: iceConn.connection_string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80f62c54fbd50a3bbdf9c37258525098c9117830
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Aug 29 22:18:14 2013 +0200
+
+    Use arc4random when available to produce the auth cookie.
+    
+    arc4random() and associated functions can be found in libbsd on
+    GNU/Linux systems.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2312ee00402088307e69589c3d12529b5232df66
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 8 23:01:30 2013 -0700
+
+    Make STORE_STRING cast strlen result to CARD16 when storing in CARD16
+    
+    Clears a number of clang warnings of the form:
+    
+    connect.c:328:6: warning: implicit conversion loses integer precision:
+       'size_t' (aka 'unsigned long') to 'CARD16' (aka 'unsigned short')
+       [-Wconversion]
+                STORE_STRING (pData, _IceAuthNames[i]);
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ./ICElibint.h:173:19: note: expanded from macro 'STORE_STRING'
+        CARD16 _len = strlen (_string); \
+               ~~~~   ^~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d6aa84dc6acb2daa3ef7e20942c38a1416bf543
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 8 22:58:46 2013 -0700
+
+    Cast assignments in IceErrorHeader() macro
+    
+    Clears many clang warnings about implicit conversions losing
+    integer precision, such as from storing ints into CARD8 or CARD16.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9450bb648ef98efd6f08ea7d14ab8b9ea6e7bb54
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 8 22:47:41 2013 -0700
+
+    Make write_string call write_counted_string instead of copying it
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 84153eee4db318cd897c464e70cb9f8bc8e469f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 8 22:37:09 2013 -0700
+
+    Mark input arguments to write_string functions as const
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9a74512ffdc1628f1b87d2191439915c63b9104f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 8 22:31:41 2013 -0700
+
+    Stop casting return values from malloc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4033226105fa861ab5f0276850afc24c0fa45406
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 8 22:17:27 2013 -0700
+
+    Get rid of casts to (char *) in calls to free()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 10c30ae6a7df1a7c352a1d611a313dffcaa42082
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 14:48:33 2013 -0700
+
+    Convert remaining sprintf() call to snprintf()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a94633e3d805ca477fba6b7acb673d055a3f43d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 14:46:09 2013 -0700
+
+    Convert strcpy/strcat pairs to snprintf calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d276835222eeb57de56f56cd9e12611b1d30466
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 14:35:11 2013 -0700
+
+    Fix some clang warnings about integer sign/size conversions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bb3d8a7767cf260b97c7e019e4fec0ee7d7b65a8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 14:24:04 2013 -0700
+
+    unifdef WORD64
+    
+    Remove leftover remnants of CRAY support, which still had some
+    functions consisting solely of /* NOT IMPLEMENTED YET */ comments.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9561eca1ad28afee6dcd0aebea3dd20a154ec481
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 18 00:36:28 2013 -0700
+
+    Constify filename argument to IceLockAuthFile & IceUnlockAuthFile
+    
+    Needed to fix const string warnings in iceauth - functions already
+    copy provided arguments to temporary local buffer for modifications.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1b1cf8072b2559e15ac440d5484a29a81d6918c6
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 5e784ca7f37823e62733765371c0b8ed1c58e5aa
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit e1677ce019219ac164d99f1e04f17caf16fc785a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 19:32:08 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f166e8bbf16ec214fefdcf02ce81f80442899cb7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 2 19:59:50 2012 -0800
