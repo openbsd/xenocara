@@ -39,7 +39,7 @@ may remove or edit it.
 `configure.ac' if you want to change it or regenerate `configure' using
 a newer version of `autoconf'.
 
-The simplest way to compile this package is:
+   The simplest way to compile this package is:
 
   1. `cd' to the directory containing the package's source code and type
      `./configure' to configure the package for your system.  If you're
@@ -53,12 +53,22 @@ The simplest way to compile this package is:
   2. Type `make' to compile the package.
 
   3. Optionally, type `make check' to run any self-tests that come with
-     the package.
+     the package, generally using the just-built uninstalled binaries.
 
   4. Type `make install' to install the programs and any data files and
-     documentation.
+     documentation.  When installing into a prefix owned by root, it is
+     recommended that the package be configured and built as a regular
+     user, and only the `make install' phase executed with root
+     privileges.
 
-  5. You can remove the program binaries and object files from the
+  5. Optionally, type `make installcheck' to repeat any self-tests, but
+     this time using the binaries in their final installed location.
+     This target does not install anything.  Running this target as a
+     regular user, particularly if the prior `make install' required
+     root privileges, verifies that the installation completed
+     correctly.
+
+  6. You can remove the program binaries and object files from the
      source code directory by typing `make clean'.  To also remove the
      files that `configure' created (so you can compile the package for
      a different kind of computer), type `make distclean'.  There is
@@ -91,7 +101,8 @@ own directory.  To do this, you must use a version of `make' that
 supports the `VPATH' variable, such as GNU `make'.  `cd' to the
 directory where you want the object files and executables to go and run
 the `configure' script.  `configure' automatically checks for the
-source code in the directory that `configure' is in and in `..'.
+source code in the directory that `configure' is in and in `..'.  This
+is known as a "VPATH" build.
 
    If you have to use a `make' that does not support the `VPATH'
 variable, you have to compile the package for one architecture at a
@@ -105,7 +116,8 @@ Installation Names
 By default, `make install' installs the package's commands under
 `/usr/local/bin', include files under `/usr/local/include', etc.  You
 can specify an installation prefix other than `/usr/local' by giving
-`configure' the option `--prefix=PREFIX'.
+`configure' the option `--prefix=PREFIX', where PREFIX must be an
+absolute file name.
 
    You can specify separate installation prefixes for
 architecture-specific files and architecture-independent files.  If you
@@ -137,6 +149,16 @@ find the X include and library files automatically, but if it doesn't,
 you can use the `configure' options `--x-includes=DIR' and
 `--x-libraries=DIR' to specify their locations.
 
+   On Solaris, don't put `/usr/ucb' early in your `PATH'.  This
+directory contains several dysfunctional programs; working variants of
+these programs are available in `/usr/bin'.  So, if you need `/usr/ucb'
+in your `PATH', put it _after_ `/usr/bin'.
+
+   On Haiku, software installed for all users goes in `/boot/common',
+not `/usr/local'.  It is recommended to use the following options:
+
+     ./configure --prefix=/boot/common
+
 Specifying the System Type
 ==========================
 
@@ -152,7 +174,8 @@ type, such as `sun4', or a canonical name which has the form:
 
 where SYSTEM can have one of these forms:
 
-     OS KERNEL-OS
+     OS
+     KERNEL-OS
 
    See the file `config.sub' for the possible values of each field.  If
 `config.sub' isn't included in this package, then this package doesn't

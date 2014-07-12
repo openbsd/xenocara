@@ -1,3 +1,47 @@
+commit 214f9b5306d833e2787c75fe41dfdc9228fcb738
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 5 23:04:54 2014 -0700
+
+    libXft 2.3.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4acfdaf95adb0a05c2a25550bdde036c865902f4
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Dec 2 16:26:24 2013 +0100
+
+    Use FT_*_H macros instead of including <freetype/*.h>
+    
+    freetype moved its headers around in 2.5.1.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit c5e760a239afc62a1c75e0509868e35957c8df52
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9fa39862224b7e1b7873336cbf718db0d58f6b4b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 835cd2a6cb4aa8f89e6e7dead66483643a6e7ee8
+Author: Alexander Polakov <plhk@sdf.org>
+Date:   Sat Dec 1 02:53:23 2012 +0400
+
+    Fix man page to match include
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0847b64af14acefaa7aa86b3cec8632497babe73
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jun 2 09:36:29 2012 -0700

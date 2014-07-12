@@ -27,14 +27,13 @@ AC_PREREQ([2.60])
 # version.  This version number will be substituted into Xft.h
 # Please bump the minor library number at each release as well.
 #
-AC_INIT([libXft], [2.3.1],
+AC_INIT([libXft], [2.3.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXft])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
