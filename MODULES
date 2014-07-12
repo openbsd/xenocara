@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.301 2014/07/11 08:21:18 matthieu Exp $
+# $OpenBSD: MODULES,v 1.302 2014/07/12 19:34:19 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -114,7 +114,7 @@ driver/xf86-video-i740		1.3.4
 driver/xf86-video-intel		2.99.912	7.7+ needs-update
 driver/xf86-video-mach64	6.9.4	7.7+
 driver/xf86-video-mga		1.6.3	7.7+	needs-update
-driver/xf86-video-modesetting	0.9.0		needs-update
+driver/xf86-video-modesetting	0.9.0
 driver/xf86-video-neomagic	1.2.8	7.7+	needs-update
 driver/xf86-video-nv		2.1.20	7.7+
 driver/xf86-video-openchrome	0.3.3	7.7+	needs-update-and-dri
@@ -173,7 +173,7 @@ font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
 lib/libFS			1.0.6	7.7+
-lib/libICE			1.0.9	7.7+	needs-update
+lib/libICE			1.0.9	7.7+
 lib/libSM			1.2.2	7.7+
 lib/libX11			1.6.2	7.7+
 lib/libXScrnSaver		1.2.2	7.7
@@ -187,7 +187,7 @@ lib/libXext			1.3.2	7.7+
 lib/libXfixes			5.0.1	7.7+
 lib/libXfont			1.4.8	7.7+
 lib/libXfontcache		1.0.5
-lib/libXft			2.3.2	7.7+	needs-update
+lib/libXft			2.3.2	7.7+
 lib/libXi			1.7.2	7.7+
 lib/libXinerama			1.1.3	7.7+
 lib/libXmu			1.1.2	7.7+
