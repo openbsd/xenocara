@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2014/07/12 14:34:36 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2014/07/12 16:36:22 matthieu Exp $
 
-CONFIGURE_ARGS+= --with-cpp=${X11BASE}/bin/xrdb-cpp
+CONFIGURE_ARGS+= --with-cpp=/usr/libexec/auxcpp
 
 .include <bsd.xorg.mk>
