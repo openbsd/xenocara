@@ -219,9 +219,20 @@ static int check_outputs(int fd)
     return ret;
 }
 
-static Bool probe_hw(const char *dev)
+static Bool probe_hw(const char *dev, struct xf86_platform_device *platform_dev)
 {
-    int fd = open_hw(dev);
+    int fd;
+
+#if XF86_PDEV_SERVER_FD
+    if (platform_dev && (platform_dev->flags & XF86_PDEV_SERVER_FD)) {
+        fd = xf86_get_platform_device_int_attrib(platform_dev, ODEV_ATTRIB_FD, -1);
+        if (fd == -1)
+            return FALSE;
+        return check_outputs(fd);
+    }
+#endif
+
+    fd = open_hw(dev);
     if (fd != -1) {
         int ret = check_outputs(fd);
         close(fd);
@@ -264,11 +275,11 @@ static Bool probe_hw_pci(const char *dev, struct pci_device *pdev)
 
     id = drmGetBusid(fd);
     devid = ms_DRICreatePCIBusID(pdev);
-    close(fd);
 
     if (id && devid && !strcmp(id, devid))
         ret = check_outputs(fd);
 
+    close(fd);
     free(id);
     free(devid);
     return ret;
@@ -289,6 +300,10 @@ ms_driver_func(ScrnInfoPtr scrn, xorgDriverFuncOp op, void *data)
 	    flag = (CARD32 *)data;
 	    (*flag) = 0;
 	    return TRUE;
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,15,99,902,0)
+        case SUPPORTS_SERVER_FDS:
+            return TRUE;
+#endif
 	default:
 	    return FALSE;
     }
@@ -347,7 +362,7 @@ ms_platform_probe(DriverPtr driver,
     if (flags & PLATFORM_PROBE_GPU_SCREEN)
             scr_flags = XF86_ALLOCATE_GPU_SCREEN;
 
-    if (probe_hw(path)) {
+    if (probe_hw(path, dev)) {
         scrn = xf86AllocateScreen(driver, scr_flags);
         xf86AddEntityToScreen(scrn, entity_num);
 
@@ -393,7 +408,7 @@ Probe(DriverPtr drv, int flags)
     for (i = 0; i < numDevSections; i++) {
 
 	dev = xf86FindOptionValue(devSections[i]->options,"kmsdev");
-	if (probe_hw(dev)) {
+	if (probe_hw(dev, NULL)) {
 	    int entity;
 	    entity = xf86ClaimFbSlot(drv, 0, devSections[i], TRUE);
 	    scrn = xf86ConfigFbEntity(scrn, 0, entity,
@@ -564,6 +579,10 @@ FreeRec(ScrnInfoPtr pScrn)
         if (ms->pEnt->location.type == BUS_PCI)
             ret = drmClose(ms->fd);
         else
+#ifdef XF86_PDEV_SERVER_FD
+        if (!(ms->pEnt->location.type == BUS_PLATFORM &&
+              (ms->pEnt->location.id.plat->flags & XF86_PDEV_SERVER_FD)))
+#endif
             ret = close(ms->fd);
         (void) ret;
     }
@@ -571,6 +590,14 @@ FreeRec(ScrnInfoPtr pScrn)
     free(ms);
 
 }
+
+#ifndef DRM_CAP_CURSOR_WIDTH
+#define DRM_CAP_CURSOR_WIDTH 0x8
+#endif
+
+#ifndef DRM_CAP_CURSOR_HEIGHT
+#define DRM_CAP_CURSOR_HEIGHT 0x9
+#endif
 
 static Bool
 PreInit(ScrnInfoPtr pScrn, int flags)
@@ -628,8 +655,15 @@ PreInit(ScrnInfoPtr pScrn, int flags)
 
 #if XSERVER_PLATFORM_BUS
     if (pEnt->location.type == BUS_PLATFORM) {
-        char *path = xf86_get_platform_device_attrib(pEnt->location.id.plat, ODEV_ATTRIB_PATH);
-        ms->fd = open_hw(path);
+#ifdef XF86_PDEV_SERVER_FD
+        if (pEnt->location.id.plat->flags & XF86_PDEV_SERVER_FD)
+            ms->fd = xf86_get_platform_device_int_attrib(pEnt->location.id.plat, ODEV_ATTRIB_FD, -1);
+        else
+#endif
+        {
+            char *path = xf86_get_platform_device_attrib(pEnt->location.id.plat, ODEV_ATTRIB_PATH);
+            ms->fd = open_hw(path);
+        }
     }
     else 
 #endif
@@ -712,6 +746,17 @@ PreInit(ScrnInfoPtr pScrn, int flags)
 	prefer_shadow = !!value;
     }
 
+    ms->cursor_width = 64;
+    ms->cursor_height = 64;
+    ret = drmGetCap(ms->fd, DRM_CAP_CURSOR_WIDTH, &value);
+    if (!ret) {
+	ms->cursor_width = value;
+    }
+    ret = drmGetCap(ms->fd, DRM_CAP_CURSOR_HEIGHT, &value);
+    if (!ret) {
+	ms->cursor_height = value;
+    }
+
     ms->drmmode.shadow_enable = xf86ReturnOptValBool(ms->Options, OPTION_SHADOW_FB, prefer_shadow);
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ShadowFB: preferred %s, enabled %s\n", prefer_shadow ? "YES" : "NO", ms->drmmode.shadow_enable ? "YES" : "NO");
@@ -771,6 +816,12 @@ msShadowWindow(ScreenPtr screen, CARD32 row, CARD32 offset, int mode,
     return ((uint8_t *)ms->drmmode.front_bo->ptr + row * stride + offset);
 }
 
+static void
+msUpdatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
+{
+    shadowUpdatePacked(pScreen, pBuf);
+}
+
 static Bool
 CreateScreenResources(ScreenPtr pScreen)
 {
@@ -788,7 +839,7 @@ CreateScreenResources(ScreenPtr pScreen)
 
     drmmode_uevent_init(pScrn, &ms->drmmode);
 
-    if (!ms->SWCursor)
+    if (!ms->drmmode.sw_cursor)
         drmmode_map_cursor_bos(pScrn, &ms->drmmode);
     pixels = drmmode_map_front_bo(&ms->drmmode);
     if (!pixels)
@@ -803,7 +854,7 @@ CreateScreenResources(ScreenPtr pScreen)
 	FatalError("Couldn't adjust screen pixmap\n");
 
     if (ms->drmmode.shadow_enable) {
-	if (!shadowAdd(pScreen, rootPixmap, shadowUpdatePackedWeak(),
+	if (!shadowAdd(pScreen, rootPixmap, msUpdatePacked,
 		       msShadowWindow, 0, 0))
 	    return FALSE;
     }
@@ -852,21 +903,37 @@ msSetSharedPixmapBacking(PixmapPtr ppix, void *fd_handle)
 #endif
 
 static Bool
+SetMaster(ScrnInfoPtr pScrn)
+{
+    modesettingPtr ms = modesettingPTR(pScrn);
+    int ret;
+
+#ifdef XF86_PDEV_SERVER_FD
+    if (ms->pEnt->location.type == BUS_PLATFORM &&
+            (ms->pEnt->location.id.plat->flags & XF86_PDEV_SERVER_FD))
+        return TRUE;
+#endif
+
+    ret = drmSetMaster(ms->fd);
+    if (ret)
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "drmSetMaster failed: %s\n",
+                   strerror(errno));
+
+    return ret == 0;
+}
+
+static Bool
 ScreenInit(SCREEN_INIT_ARGS_DECL)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     modesettingPtr ms = modesettingPTR(pScrn);
     VisualPtr visual;
-    int ret;
 
     pScrn->pScreen = pScreen;
 
-    ret = drmSetMaster(ms->fd);
-    if (ret) {
-        ErrorF("Unable to set master\n");
+    if (!SetMaster(pScrn))
         return FALSE;
-    }
-      
+
     /* HW dependent - FIXME */
     pScrn->displayWidth = pScrn->virtualX;
     if (!drmmode_create_initial_bos(pScrn, &ms->drmmode))
@@ -939,7 +1006,7 @@ ScreenInit(SCREEN_INIT_ARGS_DECL)
 
     /* Need to extend HWcursor support to handle mask interleave */
     if (!ms->drmmode.sw_cursor)
-	xf86_cursors_init(pScreen, 64, 64,
+	xf86_cursors_init(pScreen, ms->cursor_width, ms->cursor_height,
 			  HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_64 |
 			  HARDWARE_CURSOR_ARGB);
 
@@ -997,6 +1064,12 @@ LeaveVT(VT_FUNC_ARGS_DECL)
 
     pScrn->vtSema = FALSE;
 
+#ifdef XF86_PDEV_SERVER_FD
+    if (ms->pEnt->location.type == BUS_PLATFORM &&
+            (ms->pEnt->location.id.plat->flags & XF86_PDEV_SERVER_FD))
+        return;
+#endif
+
     drmDropMaster(ms->fd);
 }
 
@@ -1011,10 +1084,7 @@ EnterVT(VT_FUNC_ARGS_DECL)
 
     pScrn->vtSema = TRUE;
 
-    if (drmSetMaster(ms->fd)) {
-        xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "drmSetMaster failed: %s\n",
-                   strerror(errno));
-    }
+    SetMaster(pScrn);
 
     if (!drmmode_set_desired_modes(pScrn, &ms->drmmode))
 	return FALSE;

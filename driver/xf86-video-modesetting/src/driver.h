@@ -59,7 +59,6 @@ typedef struct _modesettingRec
 #endif
 
     Bool noAccel;
-    Bool SWCursor;
     CloseScreenProcPtr CloseScreen;
 
     /* Broken-out options. */
@@ -76,6 +75,7 @@ typedef struct _modesettingRec
     DamagePtr damage;
     Bool dirty_enabled;
 
+    uint32_t cursor_width, cursor_height;
 } modesettingRec, *modesettingPtr;
 
 #define modesettingPTR(p) ((modesettingPtr)((p)->driverPrivate))

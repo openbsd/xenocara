@@ -1,3 +1,92 @@
+commit 1e4cb922617990a3005ac23b0c90f89147c3564b
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Thu Jun 26 10:37:19 2014 +0200
+
+    bump to 0.9.0
+
+commit d1c6e27759ea1d2c30cabc62ff2bc315bbbec5fc
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 10:16:39 2014 -0400
+
+    Use own thunk function instead of shadowUpdatePackedWeak
+    
+    I plan to remove the Weak functions from a future server.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 07c5d9cb782fde2a073efdc437489d6c4b432d46
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri May 2 13:16:05 2014 +1000
+
+    modesetting: fix build regression against older servers.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 32fb5f2d821e5e13038eab7db35c5048ad807ccc
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri May 2 13:14:30 2014 +1000
+
+    modesetting: fix use after free.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 509dbe8cab339e44b02fed3728bbef7de5c60d05
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Tue Mar 18 15:48:22 2014 +0100
+
+    Add support for server managed fds
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit c9d377a19201973012bb6bbb07e3b8c3e9c3b856
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Feb 28 12:04:30 2014 +1000
+
+    modesetting: fix cursor rendering with hotspots.
+    
+    older kernels report EINVAL not ENOSYS, doh.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit b8840f5442f9fbd8ce47ab2dd555b75cf4bb114a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Feb 25 09:06:55 2014 -0500
+
+    modesetting: Don't (brokenly) double-track software cursor
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit c36a5e298c36deb5f6fd0eef3029235aa58de295
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jan 20 11:06:42 2014 +1000
+
+    modesetting: try and use hotspot cursor support
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit bf359b118a0870f18a229d33979270ac2f0f5dcd
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Feb 21 12:48:42 2014 +1000
+
+    modesetting: move closing fd to after we check outputs
+    
+    On something like cirrus, start X, then attempt to start a second
+    X while the first is running, if fbdev is installed it'll fail
+    hard.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 677935b2d20f54f21c645b5eb386b6c9485fee5f
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Wed Feb 12 13:06:51 2014 -0500
+
+    modesetting: query cursor size from the kernel
+    
+    Use new drm caps.  This allows hw cursors to work
+    correctly on gpus with non-64x64 cursors.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit da64ee70f96fcac32c08128559b293732b318a00
 Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
 Date:   Tue Dec 3 17:01:28 2013 +0100
