@@ -637,8 +637,8 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
-DRIVER_NAME
 moduledir
+DRIVER_NAME
 XORG_LIBS
 XORG_CFLAGS
 AM_BACKSLASH
@@ -17754,8 +17754,6 @@ if test $ac_cv_header_stdc = yes; then
 $as_echo "#define STDC_HEADERS 1" >>confdefs.h
 
 fi
-
-
 
 
 DRIVER_NAME=wsfb

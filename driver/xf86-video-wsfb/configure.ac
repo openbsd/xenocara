@@ -67,8 +67,6 @@ PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto $REQUIRED_MODULES])
 # Checks for header files.
 AC_HEADER_STDC
 
-AC_SUBST([moduledir])
-
 DRIVER_NAME=wsfb
 AC_SUBST([DRIVER_NAME])
 AC_SUBST([moduledir])
