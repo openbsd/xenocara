@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.10 2013/05/12 13:06:25 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.11 2014/07/13 15:50:14 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -153,7 +153,7 @@ static int pix24bpp = 0;
 #define WSUDL_DRIVER_NAME	"wsudl"
 _X_EXPORT DriverRec WSUDL = {
 	WSUDL_VERSION,
-	WSUDL_DRIVER_NAME,
+	(char *)WSUDL_DRIVER_NAME,
 	WsudlIdentify,
 	WsudlProbe,
 	WsudlAvailableOptions,
@@ -313,8 +313,8 @@ WsudlProbe(DriverPtr drv, int flags)
 			if (pScrn != NULL) {
 				foundScreen = TRUE;
 				pScrn->driverVersion = WSUDL_VERSION;
-				pScrn->driverName = WSUDL_DRIVER_NAME;
-				pScrn->name = WSUDL_NAME;
+				pScrn->driverName = (char *)WSUDL_DRIVER_NAME;
+				pScrn->name = (char *)WSUDL_NAME;
 				pScrn->Probe = WsudlProbe;
 				pScrn->PreInit = WsudlPreInit;
 				pScrn->ScreenInit = WsudlScreenInit;
@@ -413,8 +413,8 @@ WsudlPreInit(ScrnInfoPtr pScrn, int flags)
 
 	/* color weight */
 	if (pScrn->depth > 8) {
-		rgb zeros = { 0, 0, 0 };
-		if (!xf86SetWeight(pScrn, zeros, zeros))
+		rgb izeros = { 0, 0, 0 };
+		if (!xf86SetWeight(pScrn, izeros, izeros))
 			return (FALSE);
 	}
 
@@ -434,7 +434,7 @@ WsudlPreInit(ScrnInfoPtr pScrn, int flags)
 
 	pScrn->progClock = TRUE;
 	pScrn->rgbBits = 8;
-	pScrn->chipset = "wsudl";
+	pScrn->chipset = (char *)"wsudl";
 	pScrn->videoRam = fPtr->linebytes * fPtr->info.height;
 
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Vidmem: %dk\n",
@@ -452,7 +452,7 @@ WsudlPreInit(ScrnInfoPtr pScrn, int flags)
 	mode = (DisplayModePtr)malloc(sizeof(DisplayModeRec));
 	mode->prev = mode;
 	mode->next = mode;      
-	mode->name = "wsudl current mode";
+	mode->name = (char *)"wsudl current mode";
 	mode->status = MODE_OK;     
 	mode->type = M_T_BUILTIN;
 	mode->Clock = 0; 
@@ -526,7 +526,6 @@ WsudlCreateScreenResources(ScreenPtr pScreen)
 {
 	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WsudlPtr fPtr = WSUDLPTR(pScrn);
-	PixmapPtr pPixmap;
 	Bool r;
 
 	DEBUGP("WsudlCreateScreenResources");
