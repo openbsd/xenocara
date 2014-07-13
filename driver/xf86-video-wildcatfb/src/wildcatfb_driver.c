@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.11 2013/05/12 13:06:25 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.12 2014/07/13 16:03:17 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -185,7 +185,7 @@ static pointer wildcatfb_mmap(size_t, off_t, int);
 
 _X_EXPORT DriverRec WILDCATFB = {
 	WILDCATFB_VERSION,
-	WILDCATFB_DRIVER_NAME,
+	(char *)WILDCATFB_DRIVER_NAME,
 	WildcatFBIdentify,
 	WildcatFBProbe,
 	WildcatFBAvailableOptions,
@@ -381,8 +381,9 @@ WildcatFBProbe(DriverPtr drv, int flags)
 			if (pScrn != NULL) {
 				foundScreen = TRUE;
 				pScrn->driverVersion = WILDCATFB_VERSION;
-				pScrn->driverName = WILDCATFB_DRIVER_NAME;
-				pScrn->name = WILDCATFB_NAME;
+				pScrn->driverName =
+				    (char *) WILDCATFB_DRIVER_NAME;
+				pScrn->name = (char *)WILDCATFB_NAME;
 				pScrn->Probe = WildcatFBProbe;
 				pScrn->PreInit = WildcatFBPreInit;
 				pScrn->ScreenInit = WildcatFBScreenInit;
@@ -407,8 +408,8 @@ static Bool
 WildcatFBPreInit(ScrnInfoPtr pScrn, int flags)
 {
 	WildcatFBPtr fPtr;
-	int defaultDepth, depths, wstype;
-	const char *dev, *s;
+	int defaultDepth, wstype;
+	const char *dev;
 	Gamma zeros = {0.0, 0.0, 0.0};
 	DisplayModePtr mode;
 
@@ -517,7 +518,7 @@ WildcatFBPreInit(ScrnInfoPtr pScrn, int flags)
 
 	pScrn->progClock = TRUE;
 	pScrn->rgbBits = 6;
-	pScrn->chipset   = "wildcatfb";
+	pScrn->chipset   = (char *)"wildcatfb";
 	pScrn->videoRam  = fPtr->linebytes * fPtr->info.height;
 
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Vidmem: %dk\n",
@@ -535,7 +536,7 @@ WildcatFBPreInit(ScrnInfoPtr pScrn, int flags)
 	mode = (DisplayModePtr)malloc(sizeof(DisplayModeRec));
 	mode->prev = mode;
 	mode->next = mode;
-	mode->name = "wildcatfb current mode";
+	mode->name = (char *)"wildcatfb current mode";
 	mode->status = MODE_OK;
 	mode->type = M_T_BUILTIN;
 	mode->Clock = 0;
@@ -618,7 +619,6 @@ WildcatFBScreenInit(SCREEN_INIT_ARGS_DECL)
 {
 	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
-	VisualPtr visual;
 	int ret, flags, ncolors;
 	int wsmode = WSDISPLAYIO_MODE_MAPPED;
 	size_t len;
