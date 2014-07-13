@@ -34,7 +34,9 @@
  */
 
 #define GLX_GLXEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES
 
+#include <assert.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <GL/gl.h>
@@ -42,6 +44,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "glinfo_common.h"
 
 
 #ifndef GLX_NONE_EXT
@@ -71,7 +74,8 @@ typedef enum
 struct visual_attribs
 {
    /* X visual attribs */
-   int id;
+   int id;		/* May be visual ID or FBConfig ID */
+   int vis_id;		/* Visual ID.  Only set for FBConfigs */
    int klass;
    int depth;
    int redMask, greenMask, blueMask;
@@ -80,6 +84,7 @@ struct visual_attribs
 
    /* GL visual attribs */
    int supportsGL;
+   int drawableType;
    int transparentType;
    int transparentRedValue;
    int transparentGreenValue;
@@ -98,58 +103,53 @@ struct visual_attribs
    int accumRedSize, accumGreenSize, accumBlueSize, accumAlphaSize;
    int numSamples, numMultisample;
    int visualCaveat;
+   int floatComponents;
+   int packedfloatComponents;
+   int srgb;
 };
 
    
-/*
- * Print a list of extensions, with word-wrapping.
+/** list of known OpenGL versions */
+static const struct { int major, minor; } gl_versions[] = {
+   {1, 0},
+   {1, 1},
+   {1, 2},
+   {1, 3},
+   {1, 4},
+   {1, 5},
+   {2, 0},
+   {2, 1},
+   {3, 0},
+   {3, 1},
+   {3, 2},
+   {3, 3},
+   {4, 0},
+   {4, 1},
+   {4, 2},
+   {4, 3},
+   {4, 4},
+   {0, 0} /* end of list */
+};
+
+#define NUM_GL_VERSIONS ELEMENTS(gl_versions)
+
+/**
+ * Version of the context that was created
+ *
+ * 20, 21, 30, 31, 32, etc.
+ */
+static int version;
+
+/**
+ * GL Error checking/warning.
  */
 static void
-print_extension_list(const char *ext)
+CheckError(int line)
 {
-   const char *indentString = "    ";
-   const int indent = 4;
-   const int max = 79;
-   int width, i, j;
-
-   if (!ext || !ext[0])
-      return;
-
-   width = indent;
-   printf("%s", indentString);
-   i = j = 0;
-   while (1) {
-      if (ext[j] == ' ' || ext[j] == 0) {
-         /* found end of an extension name */
-         const int len = j - i;
-         if (width + len > max) {
-            /* start a new line */
-            printf("\n");
-            width = indent;
-            printf("%s", indentString);
-         }
-         /* print the extension name between ext[i] and ext[j] */
-         while (i < j) {
-            printf("%c", ext[i]);
-            i++;
-         }
-         /* either we're all done, or we'll continue with next extension */
-         width += len + 1;
-         if (ext[j] == 0) {
-            break;
-         }
-         else {
-            i++;
-            j++;
-            if (ext[j] == 0)
-               break;
-            printf(", ");
-            width += 2;
-         }
-      }
-      j++;
-   }
-   printf("\n");
+   int n;
+   n = glGetError();
+   if (n)
+      printf("Warning: GL error 0x%x at line %d\n", n, line);
 }
 
 
@@ -161,236 +161,195 @@ print_display_info(Display *dpy)
 
 
 /**
- * Print interesting limits for vertex/fragment programs.
+ * Choose a simple FB Config.
  */
-static void
-print_program_limits(GLenum target)
+static GLXFBConfig *
+choose_fb_config(Display *dpy, int scrnum)
 {
-#if defined(GL_ARB_vertex_program) || defined(GL_ARB_fragment_program)
-   struct token_name {
-      GLenum token;
-      const char *name;
-   };
-   static const struct token_name common_limits[] = {
-      { GL_MAX_PROGRAM_INSTRUCTIONS_ARB, "GL_MAX_PROGRAM_INSTRUCTIONS_ARB" },
-      { GL_MAX_PROGRAM_NATIVE_INSTRUCTIONS_ARB, "GL_MAX_PROGRAM_NATIVE_INSTRUCTIONS_ARB" },
-      { GL_MAX_PROGRAM_TEMPORARIES_ARB, "GL_MAX_PROGRAM_TEMPORARIES_ARB" },
-      { GL_MAX_PROGRAM_NATIVE_TEMPORARIES_ARB, "GL_MAX_PROGRAM_NATIVE_TEMPORARIES_ARB" },
-      { GL_MAX_PROGRAM_PARAMETERS_ARB, "GL_MAX_PROGRAM_PARAMETERS_ARB" },
-      { GL_MAX_PROGRAM_NATIVE_PARAMETERS_ARB, "GL_MAX_PROGRAM_NATIVE_PARAMETERS_ARB" },
-      { GL_MAX_PROGRAM_ATTRIBS_ARB, "GL_MAX_PROGRAM_ATTRIBS_ARB" },
-      { GL_MAX_PROGRAM_NATIVE_ATTRIBS_ARB, "GL_MAX_PROGRAM_NATIVE_ATTRIBS_ARB" },
-      { GL_MAX_PROGRAM_ADDRESS_REGISTERS_ARB, "GL_MAX_PROGRAM_ADDRESS_REGISTERS_ARB" },
-      { GL_MAX_PROGRAM_NATIVE_ADDRESS_REGISTERS_ARB, "GL_MAX_PROGRAM_NATIVE_ADDRESS_REGISTERS_ARB" },
-      { GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, "GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB" },
-      { GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, "GL_MAX_PROGRAM_ENV_PARAMETERS_ARB" },
-      { (GLenum) 0, NULL }
-   };
-   static const struct token_name fragment_limits[] = {
-      { GL_MAX_PROGRAM_ALU_INSTRUCTIONS_ARB, "GL_MAX_PROGRAM_ALU_INSTRUCTIONS_ARB" },
-      { GL_MAX_PROGRAM_TEX_INSTRUCTIONS_ARB, "GL_MAX_PROGRAM_TEX_INSTRUCTIONS_ARB" },
-      { GL_MAX_PROGRAM_TEX_INDIRECTIONS_ARB, "GL_MAX_PROGRAM_TEX_INDIRECTIONS_ARB" },
-      { GL_MAX_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB, "GL_MAX_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB" },
-      { GL_MAX_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB, "GL_MAX_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB" },
-      { GL_MAX_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB, "GL_MAX_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB" },
-      { (GLenum) 0, NULL }
-   };
+   int fbAttribSingle[] = {
+      GLX_RENDER_TYPE,   GLX_RGBA_BIT,
+      GLX_RED_SIZE,      1,
+      GLX_GREEN_SIZE,    1,
+      GLX_BLUE_SIZE,     1,
+      GLX_DOUBLEBUFFER,  False,
+      None };
+   int fbAttribDouble[] = {
+      GLX_RENDER_TYPE,   GLX_RGBA_BIT,
+      GLX_RED_SIZE,      1,
+      GLX_GREEN_SIZE,    1,
+      GLX_BLUE_SIZE,     1,
+      GLX_DOUBLEBUFFER,  True,
+      None };
+   GLXFBConfig *configs;
+   int nConfigs;
 
-   PFNGLGETPROGRAMIVARBPROC GetProgramivARB_func = (PFNGLGETPROGRAMIVARBPROC)
-      glXGetProcAddressARB((GLubyte *) "glGetProgramivARB");
+   configs = glXChooseFBConfig(dpy, scrnum, fbAttribSingle, &nConfigs);
+   if (!configs)
+      configs = glXChooseFBConfig(dpy, scrnum, fbAttribDouble, &nConfigs);
 
-   GLint max[1];
-   int i;
+   return configs;
+}
 
-   if (target == GL_VERTEX_PROGRAM_ARB) {
-      printf("    GL_VERTEX_PROGRAM_ARB:\n");
-   }
-   else if (target == GL_FRAGMENT_PROGRAM_ARB) {
-      printf("    GL_FRAGMENT_PROGRAM_ARB:\n");
-   }
-   else {
-      return; /* something's wrong */
-   }
 
-   for (i = 0; common_limits[i].token; i++) {
-      GetProgramivARB_func(target, common_limits[i].token, max);
-      if (glGetError() == GL_NO_ERROR) {
-         printf("        %s = %d\n", common_limits[i].name, max[0]);
-      }
-   }
-   if (target == GL_FRAGMENT_PROGRAM_ARB) {
-      for (i = 0; fragment_limits[i].token; i++) {
-         GetProgramivARB_func(target, fragment_limits[i].token, max);
-         if (glGetError() == GL_NO_ERROR) {
-            printf("        %s = %d\n", fragment_limits[i].name, max[0]);
-         }
-      }
-   }
-#endif /* GL_ARB_vertex_program / GL_ARB_fragment_program */
+static Bool CreateContextErrorFlag;
+
+static int
+create_context_error_handler(Display *dpy, XErrorEvent *error)
+{
+   (void) dpy;
+   (void) error->error_code;
+   CreateContextErrorFlag = True;
+   return 0;
 }
 
 
 /**
- * Print interesting limits for vertex/fragment shaders.
+ * Try to create a GLX context of the given version with flags/options.
+ * Note: A version number is required in order to get a core profile
+ * (at least w/ NVIDIA).
  */
-static void
-print_shader_limits(GLenum target)
+static GLXContext
+create_context_flags(Display *dpy, GLXFBConfig fbconfig, int major, int minor,
+                     int contextFlags, int profileMask, Bool direct)
 {
-   struct token_name {
-      GLenum token;
-      const char *name;
-   };
-#if defined(GL_ARB_vertex_shader)
-   static const struct token_name vertex_limits[] = {
-      { GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, "GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB" },
-      { GL_MAX_VARYING_FLOATS_ARB, "GL_MAX_VARYING_FLOATS_ARB" },
-      { GL_MAX_VERTEX_ATTRIBS_ARB, "GL_MAX_VERTEX_ATTRIBS_ARB" },
-      { GL_MAX_TEXTURE_IMAGE_UNITS_ARB, "GL_MAX_TEXTURE_IMAGE_UNITS_ARB" },
-      { GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS_ARB, "GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS_ARB" },
-      { GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_ARB, "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_ARB" },
-      { GL_MAX_TEXTURE_COORDS_ARB, "GL_MAX_TEXTURE_COORDS_ARB" },
-      { (GLenum) 0, NULL }
-   };
-#endif
-#if defined(GL_ARB_fragment_shader)
-   static const struct token_name fragment_limits[] = {
-      { GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB, "GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB" },
-      { GL_MAX_TEXTURE_COORDS_ARB, "GL_MAX_TEXTURE_COORDS_ARB" },
-      { GL_MAX_TEXTURE_IMAGE_UNITS_ARB, "GL_MAX_TEXTURE_IMAGE_UNITS_ARB" },
-      { (GLenum) 0, NULL }
-   };
-#endif
-   GLint max[1];
-   int i;
+#ifdef GLX_ARB_create_context
+   static PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB_func = 0;
+   static Bool firstCall = True;
+   int (*old_handler)(Display *, XErrorEvent *);
+   GLXContext context;
+   int attribs[20];
+   int n = 0;
 
-#if defined(GL_ARB_vertex_shader)
-   if (target == GL_VERTEX_SHADER_ARB) {
-      printf("    GL_VERTEX_SHADER_ARB:\n");
-      for (i = 0; vertex_limits[i].token; i++) {
-         glGetIntegerv(vertex_limits[i].token, max);
-         if (glGetError() == GL_NO_ERROR) {
-            printf("        %s = %d\n", vertex_limits[i].name, max[0]);
-         }
+   if (firstCall) {
+      /* See if we have GLX_ARB_create_context_profile and get pointer to
+       * glXCreateContextAttribsARB() function.
+       */
+      const char *glxExt = glXQueryExtensionsString(dpy, 0);
+      if (extension_supported("GLX_ARB_create_context_profile", glxExt)) {
+         glXCreateContextAttribsARB_func = (PFNGLXCREATECONTEXTATTRIBSARBPROC)
+            glXGetProcAddress((const GLubyte *) "glXCreateContextAttribsARB");
       }
+      firstCall = False;
+   }
+
+   if (!glXCreateContextAttribsARB_func)
+      return 0;
+
+   /* setup attribute array */
+   if (major) {
+      attribs[n++] = GLX_CONTEXT_MAJOR_VERSION_ARB;
+      attribs[n++] = major;
+      attribs[n++] = GLX_CONTEXT_MINOR_VERSION_ARB;
+      attribs[n++] = minor;
+   }
+   if (contextFlags) {
+      attribs[n++] = GLX_CONTEXT_FLAGS_ARB;
+      attribs[n++] = contextFlags;
+   }
+#ifdef GLX_ARB_create_context_profile
+   if (profileMask) {
+      attribs[n++] = GLX_CONTEXT_PROFILE_MASK_ARB;
+      attribs[n++] = profileMask;
    }
 #endif
-#if defined(GL_ARB_fragment_shader)
-   if (target == GL_FRAGMENT_SHADER_ARB) {
-      printf("    GL_FRAGMENT_SHADER_ARB:\n");
-      for (i = 0; fragment_limits[i].token; i++) {
-         glGetIntegerv(fragment_limits[i].token, max);
-         if (glGetError() == GL_NO_ERROR) {
-            printf("        %s = %d\n", fragment_limits[i].name, max[0]);
-         }
+   attribs[n++] = 0;
+
+   /* install X error handler */
+   old_handler = XSetErrorHandler(create_context_error_handler);
+   CreateContextErrorFlag = False;
+
+   /* try creating context */
+   context = glXCreateContextAttribsARB_func(dpy,
+                                             fbconfig,
+                                             0, /* share_context */
+                                             direct,
+                                             attribs);
+
+   /* restore error handler */
+   XSetErrorHandler(old_handler);
+
+   if (CreateContextErrorFlag)
+      context = 0;
+
+   if (context && direct) {
+      if (!glXIsDirect(dpy, context)) {
+         glXDestroyContext(dpy, context);
+         return 0;
       }
    }
+
+   return context;
+#else
+   return 0;
 #endif
 }
 
 
 /**
- * Print interesting OpenGL implementation limits.
+ * Try to create a GLX context of the newest version.
  */
-static void
-print_limits(const char *extensions)
+static GLXContext
+create_context_with_config(Display *dpy, GLXFBConfig config,
+                           Bool coreProfile, Bool es2Profile, Bool direct)
 {
-   struct token_name {
-      GLuint count;
-      GLenum token;
-      const char *name;
-   };
-   static const struct token_name limits[] = {
-      { 1, GL_MAX_ATTRIB_STACK_DEPTH, "GL_MAX_ATTRIB_STACK_DEPTH" },
-      { 1, GL_MAX_CLIENT_ATTRIB_STACK_DEPTH, "GL_MAX_CLIENT_ATTRIB_STACK_DEPTH" },
-      { 1, GL_MAX_CLIP_PLANES, "GL_MAX_CLIP_PLANES" },
-      { 1, GL_MAX_COLOR_MATRIX_STACK_DEPTH, "GL_MAX_COLOR_MATRIX_STACK_DEPTH" },
-      { 1, GL_MAX_ELEMENTS_VERTICES, "GL_MAX_ELEMENTS_VERTICES" },
-      { 1, GL_MAX_ELEMENTS_INDICES, "GL_MAX_ELEMENTS_INDICES" },
-      { 1, GL_MAX_EVAL_ORDER, "GL_MAX_EVAL_ORDER" },
-      { 1, GL_MAX_LIGHTS, "GL_MAX_LIGHTS" },
-      { 1, GL_MAX_LIST_NESTING, "GL_MAX_LIST_NESTING" },
-      { 1, GL_MAX_MODELVIEW_STACK_DEPTH, "GL_MAX_MODELVIEW_STACK_DEPTH" },
-      { 1, GL_MAX_NAME_STACK_DEPTH, "GL_MAX_NAME_STACK_DEPTH" },
-      { 1, GL_MAX_PIXEL_MAP_TABLE, "GL_MAX_PIXEL_MAP_TABLE" },
-      { 1, GL_MAX_PROJECTION_STACK_DEPTH, "GL_MAX_PROJECTION_STACK_DEPTH" },
-      { 1, GL_MAX_TEXTURE_STACK_DEPTH, "GL_MAX_TEXTURE_STACK_DEPTH" },
-      { 1, GL_MAX_TEXTURE_SIZE, "GL_MAX_TEXTURE_SIZE" },
-      { 1, GL_MAX_3D_TEXTURE_SIZE, "GL_MAX_3D_TEXTURE_SIZE" },
-      { 2, GL_MAX_VIEWPORT_DIMS, "GL_MAX_VIEWPORT_DIMS" },
-      { 2, GL_ALIASED_LINE_WIDTH_RANGE, "GL_ALIASED_LINE_WIDTH_RANGE" },
-      { 2, GL_SMOOTH_LINE_WIDTH_RANGE, "GL_SMOOTH_LINE_WIDTH_RANGE" },
-      { 2, GL_ALIASED_POINT_SIZE_RANGE, "GL_ALIASED_POINT_SIZE_RANGE" },
-      { 2, GL_SMOOTH_POINT_SIZE_RANGE, "GL_SMOOTH_POINT_SIZE_RANGE" },
-#if defined(GL_ARB_texture_cube_map)
-      { 1, GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, "GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB" },
-#endif
-#if defined(GLX_NV_texture_rectangle)
-      { 1, GL_MAX_RECTANGLE_TEXTURE_SIZE_NV, "GL_MAX_RECTANGLE_TEXTURE_SIZE_NV" },
-#endif
-#if defined(GL_ARB_texture_compression)
-      { 1, GL_NUM_COMPRESSED_TEXTURE_FORMATS_ARB, "GL_NUM_COMPRESSED_TEXTURE_FORMATS_ARB" },
-#endif
-#if defined(GL_ARB_multitexture)
-      { 1, GL_MAX_TEXTURE_UNITS_ARB, "GL_MAX_TEXTURE_UNITS_ARB" },
-#endif
-#if defined(GL_EXT_texture_lod_bias)
-      { 1, GL_MAX_TEXTURE_LOD_BIAS_EXT, "GL_MAX_TEXTURE_LOD_BIAS_EXT" },
-#endif
-#if defined(GL_EXT_texture_filter_anisotropic)
-      { 1, GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, "GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT" },
-#endif
-#if defined(GL_ARB_draw_buffers)
-      { 1, GL_MAX_DRAW_BUFFERS_ARB, "GL_MAX_DRAW_BUFFERS_ARB" },
-#endif
-      { 0, (GLenum) 0, NULL }
-   };
-   GLint i, max[2];
+   GLXContext ctx = 0;
 
-   printf("OpenGL limits:\n");
-   for (i = 0; limits[i].count; i++) {
-      glGetIntegerv(limits[i].token, max);
-      if (glGetError() == GL_NO_ERROR) {
-         if (limits[i].count == 1)
-            printf("    %s = %d\n", limits[i].name, max[0]);
-         else /* XXX fix if we ever query something with more than 2 values */
-            printf("    %s = %d, %d\n", limits[i].name, max[0], max[1]);
+   if (coreProfile) {
+      /* Try to create a core profile, starting with the newest version of
+       * GL that we're aware of.  If we don't specify the version
+       */
+      int i;
+      for (i = NUM_GL_VERSIONS - 2; i > 0 ; i--) {
+          /* don't bother below GL 3.0 */
+          if (gl_versions[i].major == 3 &&
+              gl_versions[i].minor == 0)
+             return 0;
+         ctx = create_context_flags(dpy, config,
+                                    gl_versions[i].major,
+                                    gl_versions[i].minor,
+                                    0x0,
+                                    GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+                                    direct);
+         if (ctx)
+            return ctx;
+      }
+      /* couldn't get core profile context */
+      return 0;
+   }
+
+   if (es2Profile) {
+#ifdef GLX_CONTEXT_ES2_PROFILE_BIT_EXT
+      if (extension_supported("GLX_EXT_create_context_es2_profile",
+                              glXQueryExtensionsString(dpy, 0))) {
+         ctx = create_context_flags(dpy, config, 2, 0, 0x0,
+                                    GLX_CONTEXT_ES2_PROFILE_BIT_EXT,
+                                    direct);
+         return ctx;
+      }
+#endif
+      return 0;
+   }
+
+   /* GLX should return a context of the latest GL version that supports
+    * the full profile.
+    */
+   ctx = glXCreateNewContext(dpy, config, GLX_RGBA_TYPE, NULL, direct);
+
+   /* make sure the context is direct, if direct was requested */
+   if (ctx && direct) {
+      if (!glXIsDirect(dpy, ctx)) {
+         glXDestroyContext(dpy, ctx);
+         return 0;
       }
    }
 
-   /* these don't fit into the above mechanism, unfortunately */
-   glGetConvolutionParameteriv(GL_CONVOLUTION_2D, GL_MAX_CONVOLUTION_WIDTH, max);
-   glGetConvolutionParameteriv(GL_CONVOLUTION_2D, GL_MAX_CONVOLUTION_HEIGHT, max+1);
-   if (glGetError() == GL_NONE) {
-      printf("    GL_MAX_CONVOLUTION_WIDTH/HEIGHT = %d, %d\n", max[0], max[1]);
-   }
-
-#if defined(GL_ARB_vertex_program)
-   if (strstr(extensions, "GL_ARB_vertex_program")) {
-      print_program_limits(GL_VERTEX_PROGRAM_ARB);
-   }
-#endif
-#if defined(GL_ARB_fragment_program)
-   if (strstr(extensions, "GL_ARB_fragment_program")) {
-      print_program_limits(GL_FRAGMENT_PROGRAM_ARB);
-   }
-#endif
-#if defined(GL_ARB_vertex_shader)
-   if (strstr(extensions, "GL_ARB_vertex_shader")) {
-      print_shader_limits(GL_VERTEX_SHADER_ARB);
-   }
-#endif
-#if defined(GL_ARB_fragment_shader)
-   if (strstr(extensions, "GL_ARB_fragment_shader")) {
-      print_shader_limits(GL_FRAGMENT_SHADER_ARB);
-   }
-#endif
+   return ctx;
 }
 
 
-static void
-print_screen_info(Display *dpy, int scrnum, Bool allowDirect, GLboolean limits)
+static XVisualInfo *
+choose_xvisinfo(Display *dpy, int scrnum)
 {
-   Window win;
    int attribSingle[] = {
       GLX_RGBA,
       GLX_RED_SIZE, 1,
@@ -404,72 +363,72 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect, GLboolean limits)
       GLX_BLUE_SIZE, 1,
       GLX_DOUBLEBUFFER,
       None };
+   XVisualInfo *visinfo;
 
+   visinfo = glXChooseVisual(dpy, scrnum, attribSingle);
+   if (!visinfo)
+      visinfo = glXChooseVisual(dpy, scrnum, attribDouble);
+
+   return visinfo;
+}
+
+
+static Bool
+print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
+                  Bool coreProfile, Bool es2Profile, Bool limits,
+                  Bool singleLine, Bool coreWorked)
+{
+   Window win;
    XSetWindowAttributes attr;
    unsigned long mask;
    Window root;
    GLXContext ctx = NULL;
    XVisualInfo *visinfo;
    int width = 100, height = 100;
+   GLXFBConfig *fbconfigs;
+   const char *oglstring = coreProfile ? "OpenGL core profile" :
+                           es2Profile ? "OpenGL ES profile" : "OpenGL";
 
    root = RootWindow(dpy, scrnum);
 
    /*
-    * Find a basic GLX visual.  We'll then create a rendering context and
-    * query various info strings.
+    * Choose FBConfig or XVisualInfo and create a context.
     */
-   visinfo = glXChooseVisual(dpy, scrnum, attribSingle);
-   if (!visinfo)
-      visinfo = glXChooseVisual(dpy, scrnum, attribDouble);
-
-   if (visinfo)
-      ctx = glXCreateContext( dpy, visinfo, NULL, allowDirect );
-
-#ifdef GLX_VERSION_1_3
-   /* Try glXChooseFBConfig() if glXChooseVisual didn't work.
-    * XXX when would that happen?
-    */
-   if (!visinfo) {
-      int fbAttribSingle[] = {
-	 GLX_RENDER_TYPE,   GLX_RGBA_BIT,
-	 GLX_RED_SIZE,      1,
-	 GLX_GREEN_SIZE,    1,
-	 GLX_BLUE_SIZE,     1,
-	 GLX_DOUBLEBUFFER,  GL_FALSE,
-	 None };
-      int fbAttribDouble[] = {
-	 GLX_RENDER_TYPE,   GLX_RGBA_BIT,
-	 GLX_RED_SIZE,      1,
-	 GLX_GREEN_SIZE,    1,
-	 GLX_BLUE_SIZE,     1,
-	 GLX_DOUBLEBUFFER,  GL_TRUE,
-	 None };
-      GLXFBConfig *configs = NULL;
-      int nConfigs;
-
-      configs = glXChooseFBConfig(dpy, scrnum, fbAttribSingle, &nConfigs);
-      if (!configs)
-	 configs = glXChooseFBConfig(dpy, scrnum, fbAttribDouble, &nConfigs);
-
-      if (configs) {
-	 visinfo = glXGetVisualFromFBConfig(dpy, configs[0]);
-	 ctx = glXCreateNewContext(dpy, configs[0], GLX_RGBA_TYPE, NULL, allowDirect);
-	 XFree(configs);
+   fbconfigs = choose_fb_config(dpy, scrnum);
+   if (fbconfigs) {
+      ctx = create_context_with_config(dpy, fbconfigs[0],
+                                       coreProfile, es2Profile, allowDirect);
+      if (!ctx && allowDirect && !coreProfile) {
+         /* try indirect */
+         ctx = create_context_with_config(dpy, fbconfigs[0],
+                                          coreProfile, es2Profile, False);
       }
-   }
-#endif
 
-   if (!visinfo) {
+      visinfo = glXGetVisualFromFBConfig(dpy, fbconfigs[0]);
+      XFree(fbconfigs);
+   }
+   else if (!coreProfile && !es2Profile) {
+      visinfo = choose_xvisinfo(dpy, scrnum);
+      if (visinfo)
+	 ctx = glXCreateContext(dpy, visinfo, NULL, allowDirect);
+   } else
+      visinfo = NULL;
+
+   if (!visinfo && !coreProfile && !es2Profile) {
       fprintf(stderr, "Error: couldn't find RGB GLX visual or fbconfig\n");
-      return;
+      return False;
    }
 
    if (!ctx) {
-      fprintf(stderr, "Error: glXCreateContext failed\n");
+      if (!coreProfile && !es2Profile)
+	 fprintf(stderr, "Error: glXCreateContext failed\n");
       XFree(visinfo);
-      return;
+      return False;
    }
 
+   /*
+    * Create a window so that we can just bind the context.
+    */
    attr.background_pixel = 0;
    attr.border_pixel = 0;
    attr.colormap = XCreateColormap(dpy, root, visinfo->visual, AllocNone);
@@ -490,69 +449,128 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect, GLboolean limits)
       const char *glVendor = (const char *) glGetString(GL_VENDOR);
       const char *glRenderer = (const char *) glGetString(GL_RENDERER);
       const char *glVersion = (const char *) glGetString(GL_VERSION);
-      const char *glExtensions = (const char *) glGetString(GL_EXTENSIONS);
+      char *glExtensions;
       int glxVersionMajor;
       int glxVersionMinor;
       char *displayName = NULL;
       char *colon = NULL, *period = NULL;
-      
+      struct ext_functions extfuncs;
+
+      CheckError(__LINE__);
+
+      /* Get some ext functions */
+      extfuncs.GetProgramivARB = (GETPROGRAMIVARBPROC)
+         glXGetProcAddressARB((GLubyte *) "glGetProgramivARB");
+      extfuncs.GetStringi = (GETSTRINGIPROC)
+         glXGetProcAddressARB((GLubyte *) "glGetStringi");
+      extfuncs.GetConvolutionParameteriv = (GETCONVOLUTIONPARAMETERIVPROC)
+         glXGetProcAddressARB((GLubyte *) "glGetConvolutionParameteriv");
+
+      /* Get list of GL extensions */
+      if (coreProfile) {
+         glExtensions = build_core_profile_extension_list(&extfuncs);
+      }
+      else {
+         glExtensions = (char *) glGetString(GL_EXTENSIONS);
+      }
+
+      CheckError(__LINE__);
+
       if (! glXQueryVersion( dpy, & glxVersionMajor, & glxVersionMinor )) {
          fprintf(stderr, "Error: glXQueryVersion failed\n");
          exit(1);
       }
 
-      /* Strip the screen number from the display name, if present. */
-      if (!(displayName = (char *) malloc(strlen(DisplayString(dpy)) + 1))) {
-         fprintf(stderr, "Error: malloc() failed\n");
-         exit(1);
-      }
-      strcpy(displayName, DisplayString(dpy));
-      colon = strrchr(displayName, ':');
-      if (colon) {
-         period = strchr(colon, '.');
-         if (period)
-            *period = '\0';
-      }
-      printf("display: %s  screen: %d\n", displayName, scrnum);
-      free(displayName);
-      printf("direct rendering: ");
-      if (glXIsDirect(dpy, ctx)) {
-         printf("Yes\n");
-      } else {
-         if (!allowDirect) {
-            printf("No (-i specified)\n");
-         } else if (getenv("LIBGL_ALWAYS_INDIRECT")) {
-            printf("No (LIBGL_ALWAYS_INDIRECT set)\n");
-         } else {
-            printf("No (If you want to find out why, try setting "
-                   "LIBGL_DEBUG=verbose)\n");
+      if (!coreWorked) {
+         /* Strip the screen number from the display name, if present. */
+         if (!(displayName = (char *) malloc(strlen(DisplayString(dpy)) + 1))) {
+            fprintf(stderr, "Error: malloc() failed\n");
+            exit(1);
          }
-      }
-      printf("server glx vendor string: %s\n", serverVendor);
-      printf("server glx version string: %s\n", serverVersion);
-      printf("server glx extensions:\n");
-      print_extension_list(serverExtensions);
-      printf("client glx vendor string: %s\n", clientVendor);
-      printf("client glx version string: %s\n", clientVersion);
-      printf("client glx extensions:\n");
-      print_extension_list(clientExtensions);
-      printf("GLX version: %u.%u\n", glxVersionMajor, glxVersionMinor);
-      printf("GLX extensions:\n");
-      print_extension_list(glxExtensions);
-      printf("OpenGL vendor string: %s\n", glVendor);
-      printf("OpenGL renderer string: %s\n", glRenderer);
-      printf("OpenGL version string: %s\n", glVersion);
+         strcpy(displayName, DisplayString(dpy));
+         colon = strrchr(displayName, ':');
+         if (colon) {
+            period = strchr(colon, '.');
+            if (period)
+               *period = '\0';
+         }
+
+         printf("display: %s  screen: %d\n", displayName, scrnum);
+         free(displayName);
+         printf("direct rendering: ");
+         if (glXIsDirect(dpy, ctx)) {
+            printf("Yes\n");
+         }
+         else {
+            if (!allowDirect) {
+               printf("No (-i specified)\n");
+            }
+            else if (getenv("LIBGL_ALWAYS_INDIRECT")) {
+               printf("No (LIBGL_ALWAYS_INDIRECT set)\n");
+            }
+            else {
+               printf("No (If you want to find out why, try setting "
+                      "LIBGL_DEBUG=verbose)\n");
+            }
+         }
+         printf("server glx vendor string: %s\n", serverVendor);
+         printf("server glx version string: %s\n", serverVersion);
+         printf("server glx extensions:\n");
+         print_extension_list(serverExtensions, singleLine);
+         printf("client glx vendor string: %s\n", clientVendor);
+         printf("client glx version string: %s\n", clientVersion);
+         printf("client glx extensions:\n");
+         print_extension_list(clientExtensions, singleLine);
+         printf("GLX version: %u.%u\n", glxVersionMajor, glxVersionMinor);
+         printf("GLX extensions:\n");
+         print_extension_list(glxExtensions, singleLine);
+         printf("OpenGL vendor string: %s\n", glVendor);
+         printf("OpenGL renderer string: %s\n", glRenderer);
+      } else
+         printf("\n");
+
+      printf("%s version string: %s\n", oglstring, glVersion);
+
+      version = (glVersion[0] - '0') * 10 + (glVersion[2] - '0');
+
+      CheckError(__LINE__);
+
 #ifdef GL_VERSION_2_0
-      if (glVersion[0] >= '2' && glVersion[1] == '.') {
+      if (version >= 20) {
          char *v = (char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
-         printf("OpenGL shading language version string: %s\n", v);
+         printf("%s shading language version string: %s\n", oglstring, v);
+      }
+#endif
+      CheckError(__LINE__);
+#ifdef GL_VERSION_3_0
+      if (version >= 30 && !es2Profile) {
+         GLint flags;
+         glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+         printf("%s context flags: %s\n", oglstring, context_flags_string(flags));
+      }
+#endif
+      CheckError(__LINE__);
+#ifdef GL_VERSION_3_2
+      if (version >= 32 && !es2Profile) {
+         GLint mask;
+         glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &mask);
+         printf("%s profile mask: %s\n", oglstring, profile_mask_string(mask));
       }
 #endif
 
-      printf("OpenGL extensions:\n");
-      print_extension_list(glExtensions);
-      if (limits)
-         print_limits(glExtensions);
+      CheckError(__LINE__);
+
+      printf("%s extensions:\n", oglstring);
+      print_extension_list(glExtensions, singleLine);
+
+      CheckError(__LINE__);
+
+      if (limits) {
+         print_limits(glExtensions, oglstring, version, &extfuncs);
+      }
+
+      if (coreProfile)
+         free(glExtensions);
    }
    else {
       fprintf(stderr, "Error: glXMakeCurrent failed\n");
@@ -561,6 +579,8 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect, GLboolean limits)
    glXDestroyContext(dpy, ctx);
    XFree(visinfo);
    XDestroyWindow(dpy, win);
+   XSync(dpy, 1);
+   return True;
 }
 
 
@@ -585,6 +605,17 @@ visual_class_name(int cls)
    }
 }
 
+static const char *
+visual_drawable_type(int type)
+{
+   const static struct bit_info bits[] = {
+      { GLX_WINDOW_BIT, "window" },
+      { GLX_PIXMAP_BIT, "pixmap" },
+      { GLX_PBUFFER_BIT, "pbuffer" }
+   };
+
+   return bitmask_to_string(bits, ELEMENTS(bits), type);
+}
 
 static const char *
 visual_class_abbrev(int cls)
@@ -611,6 +642,10 @@ static const char *
 visual_render_type_name(int type)
 {
    switch (type) {
+      case GLX_RGBA_UNSIGNED_FLOAT_BIT_EXT:
+         return "ufloat";
+      case GLX_RGBA_FLOAT_BIT_ARB:
+         return "float";
       case GLX_RGBA_BIT:
          return "rgba";
       case GLX_COLOR_INDEX_BIT:
@@ -619,10 +654,30 @@ visual_render_type_name(int type)
          return "rgba|ci";
       default:
          return "";
-      }
+   }
 }
 
-static GLboolean
+static const char *
+caveat_string(int caveat)
+{
+   switch (caveat) {
+#ifdef GLX_EXT_visual_rating
+      case GLX_SLOW_VISUAL_EXT:
+         return "Slow";
+      case GLX_NON_CONFORMANT_VISUAL_EXT:
+         return "Ncon";
+      case GLX_NONE_EXT:
+         /* fall-through */
+#endif
+      case 0:
+         /* fall-through */
+      default:
+         return "None";
+   }
+}
+
+
+static Bool
 get_visual_attribs(Display *dpy, XVisualInfo *vInfo,
                    struct visual_attribs *attribs)
 {
@@ -646,7 +701,7 @@ get_visual_attribs(Display *dpy, XVisualInfo *vInfo,
 
    if (glXGetConfig(dpy, vInfo, GLX_USE_GL, &attribs->supportsGL) != 0 ||
        !attribs->supportsGL)
-      return GL_FALSE;
+      return False;
    glXGetConfig(dpy, vInfo, GLX_BUFFER_SIZE, &attribs->bufferSize);
    glXGetConfig(dpy, vInfo, GLX_LEVEL, &attribs->level);
    glXGetConfig(dpy, vInfo, GLX_RGBA, &rgba);
@@ -655,6 +710,7 @@ get_visual_attribs(Display *dpy, XVisualInfo *vInfo,
    else
       attribs->render_type = GLX_COLOR_INDEX_BIT;
    
+   glXGetConfig(dpy, vInfo, GLX_DRAWABLE_TYPE, &attribs->drawableType);
    glXGetConfig(dpy, vInfo, GLX_DOUBLEBUFFER, &attribs->doubleBuffer);
    glXGetConfig(dpy, vInfo, GLX_STEREO, &attribs->stereo);
    glXGetConfig(dpy, vInfo, GLX_AUX_BUFFERS, &attribs->auxBuffers);
@@ -704,7 +760,13 @@ get_visual_attribs(Display *dpy, XVisualInfo *vInfo,
    attribs->visualCaveat = 0;
 #endif
 
-   return GL_TRUE;
+#if defined(GLX_EXT_framebuffer_sRGB)
+   if (ext && strstr(ext, "GLX_EXT_framebuffer_sRGB")) {
+      glXGetConfig(dpy, vInfo, GLX_FRAMEBUFFER_SRGB_CAPABLE_EXT, &attribs->srgb);
+   }
+#endif
+
+   return True;
 }
 
 #ifdef GLX_VERSION_1_3
@@ -731,28 +793,34 @@ glx_token_to_visual_class(int visual_type)
    }
 }
 
-static GLboolean
+static Bool
 get_fbconfig_attribs(Display *dpy, GLXFBConfig fbconfig,
 		     struct visual_attribs *attribs)
 {
+   const char *ext = glXQueryExtensionsString(dpy, 0);
    int visual_type;
+   XVisualInfo *vInfo;
 
    memset(attribs, 0, sizeof(struct visual_attribs));
 
    glXGetFBConfigAttrib(dpy, fbconfig, GLX_FBCONFIG_ID, &attribs->id);
 
-#if 0
-   attribs->depth = vInfo->depth;
-   attribs->redMask = vInfo->red_mask;
-   attribs->greenMask = vInfo->green_mask;
-   attribs->blueMask = vInfo->blue_mask;
-   attribs->colormapSize = vInfo->colormap_size;
-   attribs->bitsPerRGB = vInfo->bits_per_rgb;
-#endif
+   vInfo = glXGetVisualFromFBConfig(dpy, fbconfig);
+
+   if (vInfo != NULL) {
+      attribs->vis_id = vInfo->visualid;
+      attribs->depth = vInfo->depth;
+      attribs->redMask = vInfo->red_mask;
+      attribs->greenMask = vInfo->green_mask;
+      attribs->blueMask = vInfo->blue_mask;
+      attribs->colormapSize = vInfo->colormap_size;
+      attribs->bitsPerRGB = vInfo->bits_per_rgb;
+   }
 
    glXGetFBConfigAttrib(dpy, fbconfig, GLX_X_VISUAL_TYPE, &visual_type);
    attribs->klass = glx_token_to_visual_class(visual_type);
 
+   glXGetFBConfigAttrib(dpy, fbconfig, GLX_DRAWABLE_TYPE, &attribs->drawableType);
    glXGetFBConfigAttrib(dpy, fbconfig, GLX_BUFFER_SIZE, &attribs->bufferSize);
    glXGetFBConfigAttrib(dpy, fbconfig, GLX_LEVEL, &attribs->level);
    glXGetFBConfigAttrib(dpy, fbconfig, GLX_RENDER_TYPE, &attribs->render_type);
@@ -788,7 +856,32 @@ get_fbconfig_attribs(Display *dpy, GLXFBConfig fbconfig,
    glXGetFBConfigAttrib(dpy, fbconfig, GLX_SAMPLES, &attribs->numSamples);
    glXGetFBConfigAttrib(dpy, fbconfig, GLX_CONFIG_CAVEAT, &attribs->visualCaveat);
 
-   return GL_TRUE;
+#if defined(GLX_NV_float_buffer)
+   if (ext && strstr(ext, "GLX_NV_float_buffer")) {
+      glXGetFBConfigAttrib(dpy, fbconfig, GLX_FLOAT_COMPONENTS_NV, &attribs->floatComponents);
+   }
+#endif
+#if defined(GLX_ARB_fbconfig_float)
+   if (ext && strstr(ext, "GLX_ARB_fbconfig_float")) {
+      if (attribs->render_type & GLX_RGBA_FLOAT_BIT_ARB) {
+         attribs->floatComponents = True;
+      }
+   }
+#endif
+#if defined(GLX_EXT_fbconfig_packed_float)
+   if (ext && strstr(ext, "GLX_EXT_fbconfig_packed_float")) {
+      if (attribs->render_type & GLX_RGBA_UNSIGNED_FLOAT_BIT_EXT) {
+         attribs->packedfloatComponents = True;
+      }
+   }
+#endif
+
+#if defined(GLX_EXT_framebuffer_sRGB)
+   if (ext && strstr(ext, "GLX_EXT_framebuffer_sRGB")) {
+      glXGetFBConfigAttrib(dpy, fbconfig, GLX_FRAMEBUFFER_SRGB_CAPABLE_EXT, &attribs->srgb);
+   }
+#endif
+   return True;
 }
 
 #endif
@@ -796,17 +889,29 @@ get_fbconfig_attribs(Display *dpy, GLXFBConfig fbconfig,
 
 
 static void
-print_visual_attribs_verbose(const struct visual_attribs *attribs)
+print_visual_attribs_verbose(const struct visual_attribs *attribs,
+			     int fbconfigs)
 {
-   printf("Visual ID: %x  depth=%d  class=%s\n",
-          attribs->id, attribs->depth, visual_class_name(attribs->klass));
+   if (fbconfigs) {
+      printf("FBConfig ID: %x  Visual ID=%x  depth=%d  class=%s, type=%s\n",
+             attribs->id, attribs->vis_id, attribs->depth,
+             visual_class_name(attribs->klass),
+             visual_drawable_type(attribs->drawableType));
+   }
+   else {
+      printf("Visual ID: %x  depth=%d  class=%s, type=%s\n",
+	     attribs->id, attribs->depth, visual_class_name(attribs->klass),
+	     visual_drawable_type(attribs->drawableType));
+   }
    printf("    bufferSize=%d level=%d renderType=%s doubleBuffer=%d stereo=%d\n",
           attribs->bufferSize, attribs->level,
 	  visual_render_type_name(attribs->render_type),
           attribs->doubleBuffer, attribs->stereo);
-   printf("    rgba: redSize=%d greenSize=%d blueSize=%d alphaSize=%d\n",
+   printf("    rgba: redSize=%d greenSize=%d blueSize=%d alphaSize=%d float=%c sRGB=%c\n",
           attribs->redSize, attribs->greenSize,
-          attribs->blueSize, attribs->alphaSize);
+          attribs->blueSize, attribs->alphaSize,
+          attribs->packedfloatComponents ? 'P' : attribs->floatComponents ? 'Y' : 'N',
+          attribs->srgb ? 'Y' : 'N');
    printf("    auxBuffers=%d depthSize=%d stencilSize=%d\n",
           attribs->auxBuffers, attribs->depthSize, attribs->stencilSize);
    printf("    accum: redSize=%d greenSize=%d blueSize=%d alphaSize=%d\n",
@@ -837,30 +942,18 @@ print_visual_attribs_verbose(const struct visual_attribs *attribs)
 static void
 print_visual_attribs_short_header(void)
 {
- printf("   visual  x  bf lv rg d st colorbuffer ax dp st accumbuffer  ms  cav\n");
- printf(" id dep cl sp sz l  ci b ro  r  g  b  a bf th cl  r  g  b  a ns b eat\n");
- printf("----------------------------------------------------------------------\n");
+ printf("    visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav\n");
+ printf("  id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat\n");
+ printf("----------------------------------------------------------------------------\n");
 }
 
 
 static void
 print_visual_attribs_short(const struct visual_attribs *attribs)
 {
-   char *caveat = NULL;
-#ifdef GLX_EXT_visual_rating
-   if (attribs->visualCaveat == GLX_NONE_EXT || attribs->visualCaveat == 0)
-      caveat = "None";
-   else if (attribs->visualCaveat == GLX_SLOW_VISUAL_EXT)
-      caveat = "Slow";
-   else if (attribs->visualCaveat == GLX_NON_CONFORMANT_VISUAL_EXT)
-      caveat = "Ncon";
-   else
-      caveat = "None";
-#else
-   caveat = "None";
-#endif 
+   const char *caveat = caveat_string(attribs->visualCaveat);
 
-   printf("0x%02x %2d %2s %2d %2d %2d %c%c %c  %c %2d %2d %2d %2d %2d %2d %2d",
+   printf("0x%03x %2d %2s %2d %3d %2d %c%c %c %c  %2d %2d %2d %2d %c  %c %2d %2d %2d",
           attribs->id,
           attribs->depth,
           visual_class_abbrev(attribs->klass),
@@ -873,6 +966,8 @@ print_visual_attribs_short(const struct visual_attribs *attribs)
           attribs->stereo ? 'y' : '.',
           attribs->redSize, attribs->greenSize,
           attribs->blueSize, attribs->alphaSize,
+          attribs->packedfloatComponents ? 'u' : attribs->floatComponents ? 'f' : '.',
+          attribs->srgb ? 's' : '.',
           attribs->auxBuffers,
           attribs->depthSize,
           attribs->stencilSize
@@ -890,16 +985,18 @@ print_visual_attribs_short(const struct visual_attribs *attribs)
 static void
 print_visual_attribs_long_header(void)
 {
- printf("Vis  Vis   Visual Trans  buff lev render DB ste  r   g   b   a  aux dep ste  accum buffers  MS   MS\n");
- printf(" ID Depth   Type  parent size el   type     reo sz  sz  sz  sz  buf th  ncl  r   g   b   a  num bufs\n");
- printf("----------------------------------------------------------------------------------------------------\n");
+ printf("Vis   Vis   Visual Trans  buff lev render DB ste  r   g   b   a      s  aux dep ste  accum buffer   MS   MS         \n");
+ printf(" ID  Depth   Type  parent size el   type     reo sz  sz  sz  sz flt rgb buf th  ncl  r   g   b   a  num bufs caveats\n");
+ printf("--------------------------------------------------------------------------------------------------------------------\n");
 }
 
 
 static void
 print_visual_attribs_long(const struct visual_attribs *attribs)
 {
-   printf("0x%2x %2d %-11s %2d     %2d %2d  %4s %3d %3d %3d %3d %3d %3d",
+   const char *caveat = caveat_string(attribs->visualCaveat);
+
+   printf("0x%3x %2d %-11s %2d    %3d %2d  %4s %3d %3d %3d %3d %3d %3d",
           attribs->id,
           attribs->depth,
           visual_class_name(attribs->klass),
@@ -913,13 +1010,16 @@ print_visual_attribs_long(const struct visual_attribs *attribs)
           attribs->blueSize, attribs->alphaSize
           );
 
-   printf(" %3d %4d %2d %3d %3d %3d %3d  %2d  %2d\n",
+   printf("  %c   %c %3d %4d %2d %3d %3d %3d %3d  %2d  %2d %6s\n",
+          attribs->floatComponents ? 'f' : '.',
+          attribs->srgb ? 's' : '.',
           attribs->auxBuffers,
           attribs->depthSize,
           attribs->stencilSize,
           attribs->accumRedSize, attribs->accumGreenSize,
           attribs->accumBlueSize, attribs->accumAlphaSize,
-          attribs->numSamples, attribs->numMultisample
+          attribs->numSamples, attribs->numMultisample,
+          caveat
           );
 }
 
@@ -960,7 +1060,7 @@ print_visual_info(Display *dpy, int scrnum, InfoMode mode)
 	 continue;
 
       if (mode == Verbose)
-	 print_visual_attribs_verbose(&attribs);
+	 print_visual_attribs_verbose(&attribs, False);
       else if (mode == Normal)
          print_visual_attribs_short(&attribs);
       else if (mode == Wide) 
@@ -999,7 +1099,7 @@ print_fbconfig_info(Display *dpy, int scrnum, InfoMode mode)
       get_fbconfig_attribs(dpy, fbconfigs[i], &attribs);
 
       if (mode == Verbose) 
-         print_visual_attribs_verbose(&attribs);
+         print_visual_attribs_verbose(&attribs, True);
       else if (mode == Normal)
 	 print_visual_attribs_short(&attribs);
       else if (mode == Wide)
@@ -1107,7 +1207,7 @@ find_best_visual(Display *dpy, int scrnum)
 static void
 usage(void)
 {
-   printf("Usage: glxinfo [-v] [-t] [-h] [-i] [-b] [-display <dname>]\n");
+   printf("Usage: glxinfo [-v] [-t] [-h] [-i] [-b] [-s] [-display <dname>]\n");
    printf("\t-v: Print visuals info in verbose form.\n");
    printf("\t-t: Print verbose table.\n");
    printf("\t-display <dname>: Print GLX visuals on specified server.\n");
@@ -1115,6 +1215,7 @@ usage(void)
    printf("\t-i: Force an indirect rendering context.\n");
    printf("\t-b: Find the 'best' visual and print its number.\n");
    printf("\t-l: Print interesting OpenGL limits.\n");
+   printf("\t-s: Print a single extension per line.\n");
 }
 
 
@@ -1125,9 +1226,11 @@ main(int argc, char *argv[])
    Display *dpy;
    int numScreens, scrnum;
    InfoMode mode = Normal;
-   GLboolean findBest = GL_FALSE;
-   GLboolean limits = GL_FALSE;
+   Bool findBest = False;
+   Bool limits = False;
    Bool allowDirect = True;
+   Bool singleLine = False;
+   Bool coreWorked;
    int i;
 
    for (i = 1; i < argc; i++) {
@@ -1142,17 +1245,20 @@ main(int argc, char *argv[])
          mode = Verbose;
       }
       else if (strcmp(argv[i], "-b") == 0) {
-         findBest = GL_TRUE;
+         findBest = True;
       }
       else if (strcmp(argv[i], "-i") == 0) {
          allowDirect = False;
       }
       else if (strcmp(argv[i], "-l") == 0) {
-         limits = GL_TRUE;
+         limits = True;
       }
       else if (strcmp(argv[i], "-h") == 0) {
          usage();
          return 0;
+      }
+      else if (strcmp(argv[i], "-s") == 0) {
+         singleLine = True;
       }
       else {
          printf("Unknown option `%s'\n", argv[i]);
@@ -1178,7 +1284,10 @@ main(int argc, char *argv[])
       print_display_info(dpy);
       for (scrnum = 0; scrnum < numScreens; scrnum++) {
          mesa_hack(dpy, scrnum);
-         print_screen_info(dpy, scrnum, allowDirect, limits);
+         coreWorked = print_screen_info(dpy, scrnum, allowDirect, True, False, limits, singleLine, False);
+         print_screen_info(dpy, scrnum, allowDirect, False, False, limits, singleLine, coreWorked);
+         print_screen_info(dpy, scrnum, allowDirect, False, True, False, singleLine, True);
+
          printf("\n");
          print_visual_info(dpy, scrnum, mode);
 #ifdef GLX_VERSION_1_3

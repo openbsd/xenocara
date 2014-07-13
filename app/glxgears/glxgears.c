@@ -102,6 +102,7 @@ static GLfloat angle = 0.0;
 
 static GLboolean fullscreen = GL_FALSE;	/* Create a single fullscreen window */
 static GLboolean stereo = GL_FALSE;	/* Enable stereo.  */
+static GLint samples = 0;               /* Choose visual with at least N samples. */
 static GLboolean animate = GL_TRUE;	/* Animation */
 static GLfloat eyesep = 5.0;		/* Eye separation. */
 static GLfloat fix_point = 40.0;	/* Fixation point distance.  */
@@ -349,6 +350,7 @@ draw_frame(Display *dpy, Window win)
       GLfloat fps = frames / seconds;
       printf("%d frames in %3.1f seconds = %6.3f FPS\n", frames, seconds,
              fps);
+      fflush(stdout);
       tRate0 = t;
       frames = 0;
    }
@@ -475,23 +477,11 @@ no_border( Display *dpy, Window w)
 static void
 make_window( Display *dpy, const char *name,
              int x, int y, int width, int height,
-             Window *winRet, GLXContext *ctxRet)
+             Window *winRet, GLXContext *ctxRet, VisualID *visRet)
 {
-   int attribs[] = { GLX_RGBA,
-                     GLX_RED_SIZE, 1,
-                     GLX_GREEN_SIZE, 1,
-                     GLX_BLUE_SIZE, 1,
-                     GLX_DOUBLEBUFFER,
-                     GLX_DEPTH_SIZE, 1,
-                     None };
-   int stereoAttribs[] = { GLX_RGBA,
-                           GLX_RED_SIZE, 1,
-                           GLX_GREEN_SIZE, 1,
-                           GLX_BLUE_SIZE, 1,
-                           GLX_DOUBLEBUFFER,
-                           GLX_DEPTH_SIZE, 1,
-                           GLX_STEREO,
-                           None };
+   int attribs[64];
+   int i = 0;
+
    int scrnum;
    XSetWindowAttributes attr;
    unsigned long mask;
@@ -500,25 +490,41 @@ make_window( Display *dpy, const char *name,
    GLXContext ctx;
    XVisualInfo *visinfo;
 
+   /* Singleton attributes. */
+   attribs[i++] = GLX_RGBA;
+   attribs[i++] = GLX_DOUBLEBUFFER;
+   if (stereo)
+      attribs[i++] = GLX_STEREO;
+
+   /* Key/value attributes. */
+   attribs[i++] = GLX_RED_SIZE;
+   attribs[i++] = 1;
+   attribs[i++] = GLX_GREEN_SIZE;
+   attribs[i++] = 1;
+   attribs[i++] = GLX_BLUE_SIZE;
+   attribs[i++] = 1;
+   attribs[i++] = GLX_DEPTH_SIZE;
+   attribs[i++] = 1;
+   if (samples > 0) {
+      attribs[i++] = GLX_SAMPLE_BUFFERS;
+      attribs[i++] = 1;
+      attribs[i++] = GLX_SAMPLES;
+      attribs[i++] = samples;
+   }
+
+   attribs[i++] = None;
+
    scrnum = DefaultScreen( dpy );
    root = RootWindow( dpy, scrnum );
 
-   if (fullscreen) {
-      x = 0; y = 0;
-      width = DisplayWidth( dpy, scrnum );
-      height = DisplayHeight( dpy, scrnum );
-   }
-
-   if (stereo)
-      visinfo = glXChooseVisual( dpy, scrnum, stereoAttribs );
-   else
-      visinfo = glXChooseVisual( dpy, scrnum, attribs );
+   visinfo = glXChooseVisual(dpy, scrnum, attribs);
    if (!visinfo) {
-      if (stereo) {
-         printf("Error: couldn't get an RGB, "
-                "Double-buffered, Stereo visual\n");
-      } else
-         printf("Error: couldn't get an RGB, Double-buffered visual\n");
+      printf("Error: couldn't get an RGB, Double-buffered");
+      if (stereo)
+         printf(", Stereo");
+      if (samples > 0)
+         printf(", Multisample");
+      printf(" visual\n");
       exit(1);
    }
 
@@ -556,10 +562,11 @@ make_window( Display *dpy, const char *name,
       exit(1);
    }
 
-   XFree(visinfo);
-
    *winRet = win;
    *ctxRet = ctx;
+   *visRet = visinfo->visualid;
+
+   XFree(visinfo);
 }
 
 
@@ -646,7 +653,7 @@ handle_event(Display *dpy, Window win, XEvent *event)
    case KeyPress:
       {
          char buffer[10];
-         int r, code;
+         int code;
          code = XLookupKeysym(&event->xkey, 0);
          if (code == XK_Left) {
             view_roty += 5.0;
@@ -661,8 +668,8 @@ handle_event(Display *dpy, Window win, XEvent *event)
             view_rotx -= 5.0;
          }
          else {
-            r = XLookupString(&event->xkey, buffer, sizeof(buffer),
-                              NULL, NULL);
+            XLookupString(&event->xkey, buffer, sizeof(buffer),
+                          NULL, NULL);
             if (buffer[0] == 27) {
                /* escape */
                return EXIT;
@@ -704,6 +711,7 @@ usage(void)
    printf("Usage:\n");
    printf("  -display <displayname>  set the display to run on\n");
    printf("  -stereo                 run in stereo mode\n");
+   printf("  -samples N              run in multisample mode with at least N samples\n");
    printf("  -fullscreen             run in fullscreen mode\n");
    printf("  -info                   display OpenGL renderer info\n");
    printf("  -geometry WxH+X+Y       window geometry\n");
@@ -720,6 +728,7 @@ main(int argc, char *argv[])
    GLXContext ctx;
    char *dpyName = NULL;
    GLboolean printInfo = GL_FALSE;
+   VisualID visId;
    int i;
 
    for (i = 1; i < argc; i++) {
@@ -732,6 +741,10 @@ main(int argc, char *argv[])
       }
       else if (strcmp(argv[i], "-stereo") == 0) {
          stereo = GL_TRUE;
+      }
+      else if (i < argc-1 && strcmp(argv[i], "-samples") == 0) {
+         samples = strtod(argv[i+1], NULL );
+         ++i;
       }
       else if (strcmp(argv[i], "-fullscreen") == 0) {
          fullscreen = GL_TRUE;
@@ -753,7 +766,15 @@ main(int argc, char *argv[])
       return -1;
    }
 
-   make_window(dpy, "glxgears", x, y, winWidth, winHeight, &win, &ctx);
+   if (fullscreen) {
+      int scrnum = DefaultScreen(dpy);
+
+      x = 0; y = 0;
+      winWidth = DisplayWidth(dpy, scrnum);
+      winHeight = DisplayHeight(dpy, scrnum);
+   }
+
+   make_window(dpy, "glxgears", x, y, winWidth, winHeight, &win, &ctx, &visId);
    XMapWindow(dpy, win);
    glXMakeCurrent(dpy, win, ctx);
    query_vsync(dpy, win);
@@ -763,6 +784,7 @@ main(int argc, char *argv[])
       printf("GL_VERSION    = %s\n", (char *) glGetString(GL_VERSION));
       printf("GL_VENDOR     = %s\n", (char *) glGetString(GL_VENDOR));
       printf("GL_EXTENSIONS = %s\n", (char *) glGetString(GL_EXTENSIONS));
+      printf("VisualID %d, 0x%x\n", (int) visId, (int) visId);
    }
 
    init();
