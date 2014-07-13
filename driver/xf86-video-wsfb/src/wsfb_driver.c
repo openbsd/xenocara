@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.34 2014/07/13 14:01:30 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.35 2014/07/13 14:09:14 matthieu Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -395,7 +395,6 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	int defaultDepth, depths, flags24;
 	const char *dev;
 	char *s;
-	const char *reqSym = NULL;
 	Gamma zeros = {0.0, 0.0, 0.0};
 	DisplayModePtr mode;
 
@@ -1371,7 +1370,6 @@ static Bool
 WsfbDGASetMode(ScrnInfoPtr pScrn, DGAModePtr pDGAMode)
 {
 	DisplayModePtr pMode;
-	int scrnIdx = pScrn->pScreen->myNum;
 	int frameX0, frameY0;
 
 	if (pDGAMode) {
