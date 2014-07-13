@@ -28,13 +28,7 @@ AC_INIT([xf86-video-wsudl],
         [xf86-video-wsudl])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
-
-# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
-m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.8)
-XORG_DEFAULT_OPTIONS
-
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
@@ -44,6 +38,12 @@ AM_MAINTAINER_MODE
 # Initialize libtool
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
+
+# Initialize X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+	[m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 AH_TOP([#include "xorg-server.h"])
 
@@ -62,10 +62,16 @@ AC_ARG_WITH(xorg-module-dir,
 # Obtain compiler/linker options for the driver dependencies
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto $REQUIRED_MODULES])
 
+# Checks for libraries.
+
+# Checks for header files.
+AC_HEADER_STDC
+
 AC_SUBST([moduledir])
 
 DRIVER_NAME=wsudl
 AC_SUBST([DRIVER_NAME])
+AC_SUBST([moduledir])
 
 AC_CONFIG_FILES([
 	Makefile
