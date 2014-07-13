@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.32 2014/04/15 05:48:38 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.33 2014/07/13 10:13:19 matthieu Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -153,7 +153,7 @@ enum { WSFB_ROTATE_NONE = 0,
  */
 static int pix24bpp = 0;
 
-#define WSFB_VERSION 		4000
+#define WSFB_VERSION		4000
 #define WSFB_NAME		"wsfb"
 #define WSFB_DRIVER_NAME	"wsfb"
 
@@ -346,7 +346,7 @@ static Bool
 WsfbProbe(DriverPtr drv, int flags)
 {
 	int i, fd, entity;
-       	GDevPtr *devSections;
+	GDevPtr *devSections;
 	int numDevSections;
 	const char *dev;
 	Bool foundScreen = FALSE;
@@ -797,6 +797,18 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	return TRUE;
 }
 
+static void
+wsfbUpdateRotatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
+{
+    shadowUpdateRotatePacked(pScreen, pBuf);
+}
+
+static void
+wsfbUpdatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
+{
+    shadowUpdatePacked(pScreen, pBuf);
+}
+
 static Bool
 WsfbCreateScreenResources(ScreenPtr pScreen)
 {
@@ -815,7 +827,7 @@ WsfbCreateScreenResources(ScreenPtr pScreen)
 	pPixmap = pScreen->GetScreenPixmap(pScreen);
 
 	if (!shadowAdd(pScreen, pPixmap, fPtr->rotate ?
-		shadowUpdateRotatePackedWeak() : shadowUpdatePackedWeak(),
+		wsfbUpdateRotatePacked : wsfbUpdatePacked,
 		WsfbWindowLinear, fPtr->rotate, NULL)) {
 		return FALSE;
 	}
@@ -1028,7 +1040,7 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 		    "disabling DGA\n");
 #endif
 	if (fPtr->rotate) {
-		xf86DrvMsg(pScrn->scrnIndex, X_INFO, 
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		    "Enabling Driver Rotation, " "disabling RandR\n");
 		xf86DisableRandR();
 		if (pScrn->bitsPerPixel == 24)
