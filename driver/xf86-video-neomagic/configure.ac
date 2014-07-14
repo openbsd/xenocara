@@ -23,8 +23,8 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-neomagic],
-        [1.2.7],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [1.2.8],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/Neomagic],
         [xf86-video-neomagic])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -52,14 +52,6 @@ AC_ARG_WITH(xorg-module-dir,
                            [Default xorg module directory [[default=$libdir/xorg/modules]]]),
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
-
-
-# Store the list of server defined optional extensions in REQUIRED_MODULES
-XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
-XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
-XORG_DRIVER_CHECK_EXT(XV, videoproto)
-XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
-XORG_DRIVER_CHECK_EXT(XFreeXDGA, xf86dgaproto)
 
 # Obtain compiler/linker options for the driver dependencies
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901 xproto fontsproto $REQUIRED_MODULES])

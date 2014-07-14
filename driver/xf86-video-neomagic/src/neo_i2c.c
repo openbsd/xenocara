@@ -44,7 +44,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "compiler.h"
 
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 
 #include "vgaHW.h"
 

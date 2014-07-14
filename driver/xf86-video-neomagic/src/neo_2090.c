@@ -42,7 +42,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"
-#include "xf86PciInfo.h"
 
 /* Drivers that use XAA need this */
 #include "xf86fbman.h"

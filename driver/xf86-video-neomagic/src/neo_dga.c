@@ -29,7 +29,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "neo.h"
 #include "neo_reg.h"
 #include "dgaproc.h"
@@ -225,11 +224,9 @@ NEO_Sync(
    ScrnInfoPtr pScrn
 ){
     NEOPtr pNEO = NEOPTR(pScrn);
-#ifdef HAVE_XAA_H
     if(pNEO->AccelInfoRec) {
 	(*pNEO->AccelInfoRec->Sync)(pScrn);
     }
-#endif
 }
 
 static void 

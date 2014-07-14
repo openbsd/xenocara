@@ -1,3 +1,69 @@
+commit a559a07989265a84ee31530a2b002899b40389ae
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Fri Aug 16 11:12:14 2013 -0700
+
+    xf86-video-neomagic 1.2.8
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit d7c14dfbac1b50ad484c0070075f060b53783550
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Jun 13 23:38:13 2013 +0200
+
+    Unbreak shadowfb initialization with modern X servers.
+    
+    Bugzilla: https://bugs.gentoo.org/show_bug.cgi?id=434468
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 005d61313e989bf054b1cc2190f1c743362d86ff
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:44 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit bc78be1c268d02c91926425cdf09ba1f7f1e3879
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Sep 9 14:07:22 2012 -0700
+
+    Don't check for unneeded proto headers
+    
+    DGA unneeded since b6633ee7, others probably never needed.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit a419c141d67728f84fdb376257618fe199154d29
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Sep 9 13:29:24 2012 -0700
+
+    Remove uses of xf86PciInfo.h
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 3a4cd45c63671f89bed7b1c9cc518ac028c189d3
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Sep 9 13:23:35 2012 -0700
+
+    Add &component=Driver/Neomagic to Bugzilla link
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 66f7229838ce725cff0813a9eae02ed452204ad1
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Sep 9 13:10:24 2012 -0700
+
+    Don't call NEO_Sync with no XAA
+    
+    The commit that makes XAA optional left a use of NEO_Sync while putting
+    the body inside an #ifdef HAVE_XAA_H block, which caused undefined
+    symbol errors when loading the driver. NEO_Sync doesn't do anything
+    without XAA, so don't bother calling it without XAA.
+    
+    Bugzilla: https://bugs.gentoo.org/show_bug.cgi?id=434468
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+
 commit 7a10cbda5a0a9ae31e33c5cc77c6b1bda8cae852
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000
