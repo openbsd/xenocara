@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.84 2014/04/25 23:41:42 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.85 2014/05/08 01:08:39 tom Exp $ */
 
 /*
  * Copyright 1997-2013,2014 by Thomas E. Dickey
@@ -254,7 +254,8 @@ xterm_Double_index(XtermWidget xw, unsigned chrset, unsigned flags)
 GC
 xterm_DoubleGC(XtermWidget xw,
 	       unsigned chrset,
-	       unsigned flags,
+	       unsigned attr_flags,
+	       unsigned draw_flags,
 	       GC old_gc,
 	       int *inxp)
 {
@@ -265,11 +266,11 @@ xterm_DoubleGC(XtermWidget xw,
     XTermFonts *data = 0;
     GC result = 0;
 
-    if ((name = xtermSpecialFont(screen, flags, chrset)) != 0) {
-	CgsEnum cgsId = WhichCgsId(flags);
+    if ((name = xtermSpecialFont(screen, attr_flags, draw_flags, chrset)) != 0) {
+	CgsEnum cgsId = WhichCgsId(attr_flags);
 	Boolean found = False;
 
-	if ((n = xterm_Double_index(xw, chrset, flags)) >= 0) {
+	if ((n = xterm_Double_index(xw, chrset, attr_flags)) >= 0) {
 	    data = &(screen->double_fonts[n]);
 	    if (data->fn != 0) {
 		if (!strcmp(data->fn, name)
@@ -286,16 +287,19 @@ xterm_DoubleGC(XtermWidget xw,
 	    XTermFonts temp;
 
 	    TRACE(("xterm_DoubleGC %s %d: %s\n",
-		   flags & BOLD ? "BOLD" : "NORM", n, name));
+		   attr_flags & BOLD ? "BOLD" : "NORM", n, name));
 
 	    memset(&temp, 0, sizeof(temp));
 	    temp.fn = name;
 	    temp.chrset = chrset;
-	    temp.flags = (flags & BOLD);
+	    temp.flags = (attr_flags & BOLD);
 
 	    if (!xtermOpenFont(xw, name, &temp, fwAlways, False)) {
 		/* Retry with * in resolutions */
-		char *nname = xtermSpecialFont(screen, flags | NORESOLUTION, chrset);
+		char *nname = xtermSpecialFont(screen,
+					       attr_flags,
+					       draw_flags | NORESOLUTION,
+					       chrset);
 
 		if (nname != 0) {
 		    found = (Boolean) xtermOpenFont(xw, nname, &temp,
@@ -322,9 +326,12 @@ xterm_DoubleGC(XtermWidget xw,
 	    setCgsBack(xw, cgsWin, cgsId, getCgsBack(xw, cgsWin, old_gc));
 	    result = getCgsGC(xw, cgsWin, cgsId);
 	    *inxp = n;
-	} else if (flags & BOLD) {
-	    UIntClr(flags, BOLD);
-	    result = xterm_DoubleGC(xw, chrset, flags, old_gc, inxp);
+	} else if (attr_flags & BOLD) {
+	    UIntClr(attr_flags, BOLD);
+	    result = xterm_DoubleGC(xw, chrset,
+				    attr_flags,
+				    draw_flags,
+				    old_gc, inxp);
 	}
     }
 

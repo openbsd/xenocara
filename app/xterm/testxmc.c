@@ -1,7 +1,7 @@
-/* $XTermId: testxmc.c,v 1.48 2011/09/11 14:59:40 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.52 2014/05/11 14:05:38 tom Exp $ */
 
 /*
- * Copyright 1997-2010,2011 by Thomas E. Dickey
+ * Copyright 1997-2011,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -175,8 +175,8 @@ Resolve_XMC(XtermWidget xw)
     TScreen *screen = TScreenOf(xw);
     LineData *ld;
     Bool changed = False;
-    Char start;
-    Char my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
+    IAttr start;
+    IAttr my_attrs = CharOf(screen->xmc_attributes & XMC_FLAGS);
     int row = screen->cur_row;
     int col = screen->cur_col;
 
@@ -208,7 +208,7 @@ Resolve_XMC(XtermWidget xw)
 	    break;
 	if ((ld->attribs[col] & my_attrs) != start) {
 	    ld->attribs[col] =
-		CharOf(start | (ld->attribs[col] & ~my_attrs));
+		(IAttr) (start | (ld->attribs[col] & ~my_attrs));
 	    changed = True;
 	}
     }

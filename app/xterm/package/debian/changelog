@@ -1,3 +1,33 @@
+xterm-dev (309) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sat, 28 Jun 2014 10:34:28 -0400
+
+xterm-dev (308) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 19 Jun 2014 15:58:13 -0400
+
+xterm-dev (307) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 04 Jun 2014 18:58:36 -0400
+
+xterm-dev (306) unstable; urgency=low
+
+  * fix incomplete implementation of new SGRs
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 03 Jun 2014 16:25:02 -0400
+
+xterm-dev (305) unstable; urgency=low
+
+  * maintenance updates
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 05 May 2014 14:51:42 -0400
+
 xterm-dev (304) unstable; urgency=low
 
   * maintenance updates

@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.67 2014/04/10 00:27:40 tom Exp $
+# $XTermId: xterm.spec,v 1.74 2014/07/13 15:29:11 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 304
+Version: 309
 Release: 1
 License: X11
 Group: User Interface/X
@@ -123,6 +123,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-logging \
 	--enable-mini-luit \
 	--enable-paste64 \
+	--enable-regis-graphics \
 	--enable-sco-fkeys \
 	--enable-sixel-graphics \
 	--enable-tcap-fkeys \
@@ -137,7 +138,6 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--with-utempter \
 	--with-icon-name=mini.xterm \
 	--with-xpm
-	copy config.status /tmp/
 make
 
 chmod u+w XTerm.ad

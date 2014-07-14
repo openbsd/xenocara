@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.711 2014/04/25 23:27:45 tom Exp $ */
+/* $XTermId: misc.c,v 1.712 2014/05/26 14:45:58 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -240,7 +240,7 @@ unselectwindow(XtermWidget xw, int flag)
 }
 
 static void
-DoSpecialEnterNotify(XtermWidget xw, XEnterWindowEvent * ev)
+DoSpecialEnterNotify(XtermWidget xw, XEnterWindowEvent *ev)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -253,7 +253,7 @@ DoSpecialEnterNotify(XtermWidget xw, XEnterWindowEvent * ev)
 }
 
 static void
-DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent * ev)
+DoSpecialLeaveNotify(XtermWidget xw, XEnterWindowEvent *ev)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -382,7 +382,7 @@ xtermShowPointer(XtermWidget xw, Bool enable)
 
 #if OPT_TRACE
 static void
-TraceExposeEvent(XEvent * arg)
+TraceExposeEvent(XEvent *arg)
 {
     XExposeEvent *event = (XExposeEvent *) arg;
 
@@ -408,7 +408,7 @@ TraceExposeEvent(XEvent * arg)
 	  && ((p)->x + (p)->width) >= ((q)->x + (q)->width))
 
 static XtInputMask
-mergeExposeEvents(XEvent * target)
+mergeExposeEvents(XEvent *target)
 {
     XEvent next_event;
     XExposeEvent *p, *q;
@@ -455,7 +455,7 @@ mergeExposeEvents(XEvent * target)
 
 #if OPT_TRACE
 static void
-TraceConfigureEvent(XEvent * arg)
+TraceConfigureEvent(XEvent *arg)
 {
     XConfigureEvent *event = (XConfigureEvent *) arg;
 
@@ -484,7 +484,7 @@ TraceConfigureEvent(XEvent * arg)
  * Finally, process the (remaining) configure-notify event.
  */
 static XtInputMask
-mergeConfigureEvents(XEvent * target)
+mergeConfigureEvents(XEvent *target)
 {
     XEvent next_event;
     XConfigureEvent *p, *q;
@@ -793,7 +793,7 @@ make_colored_cursor(unsigned cursorindex,	/* index into font */
 /* ARGSUSED */
 void
 HandleKeyPressed(Widget w GCC_UNUSED,
-		 XEvent * event,
+		 XEvent *event,
 		 String *params GCC_UNUSED,
 		 Cardinal *nparams GCC_UNUSED)
 {
@@ -804,7 +804,7 @@ HandleKeyPressed(Widget w GCC_UNUSED,
 /* ARGSUSED */
 void
 HandleEightBitKeyPressed(Widget w GCC_UNUSED,
-			 XEvent * event,
+			 XEvent *event,
 			 String *params GCC_UNUSED,
 			 Cardinal *nparams GCC_UNUSED)
 {
@@ -815,7 +815,7 @@ HandleEightBitKeyPressed(Widget w GCC_UNUSED,
 /* ARGSUSED */
 void
 HandleStringEvent(Widget w GCC_UNUSED,
-		  XEvent * event GCC_UNUSED,
+		  XEvent *event GCC_UNUSED,
 		  String *params,
 		  Cardinal *nparams)
 {
@@ -860,7 +860,7 @@ HandleStringEvent(Widget w GCC_UNUSED,
 /* ARGSUSED */
 void
 HandleSpawnTerminal(Widget w GCC_UNUSED,
-		    XEvent * event GCC_UNUSED,
+		    XEvent *event GCC_UNUSED,
 		    String *params,
 		    Cardinal *nparams)
 {
@@ -954,7 +954,7 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 /* ARGSUSED */
 void
 HandleInterpret(Widget w GCC_UNUSED,
-		XEvent * event GCC_UNUSED,
+		XEvent *event GCC_UNUSED,
 		String *params,
 		Cardinal *param_count)
 {
@@ -978,7 +978,7 @@ HandleInterpret(Widget w GCC_UNUSED,
 void
 HandleEnterWindow(Widget w GCC_UNUSED,
 		  XtPointer eventdata GCC_UNUSED,
-		  XEvent * event GCC_UNUSED,
+		  XEvent *event GCC_UNUSED,
 		  Boolean *cont GCC_UNUSED)
 {
     /* NOP since we handled it above */
@@ -990,7 +990,7 @@ HandleEnterWindow(Widget w GCC_UNUSED,
 void
 HandleLeaveWindow(Widget w GCC_UNUSED,
 		  XtPointer eventdata GCC_UNUSED,
-		  XEvent * event GCC_UNUSED,
+		  XEvent *event GCC_UNUSED,
 		  Boolean *cont GCC_UNUSED)
 {
     /* NOP since we handled it above */
@@ -1002,7 +1002,7 @@ HandleLeaveWindow(Widget w GCC_UNUSED,
 void
 HandleFocusChange(Widget w GCC_UNUSED,
 		  XtPointer eventdata GCC_UNUSED,
-		  XEvent * ev,
+		  XEvent *ev,
 		  Boolean *cont GCC_UNUSED)
 {
     XFocusChangeEvent *event = (XFocusChangeEvent *) ev;
@@ -1253,7 +1253,7 @@ VisualBell(void)
 void
 HandleBellPropertyChange(Widget w GCC_UNUSED,
 			 XtPointer data GCC_UNUSED,
-			 XEvent * ev,
+			 XEvent *ev,
 			 Boolean *more GCC_UNUSED)
 {
     TScreen *screen = TScreenOf(term);
@@ -1494,7 +1494,7 @@ dabbrev_expand(XtermWidget xw)
 /*ARGSUSED*/
 void
 HandleDabbrevExpand(Widget w,
-		    XEvent * event GCC_UNUSED,
+		    XEvent *event GCC_UNUSED,
 		    String *params GCC_UNUSED,
 		    Cardinal *nparams GCC_UNUSED)
 {
@@ -1512,7 +1512,7 @@ HandleDabbrevExpand(Widget w,
 /*ARGSUSED*/
 void
 HandleDeIconify(Widget w,
-		XEvent * event GCC_UNUSED,
+		XEvent *event GCC_UNUSED,
 		String *params GCC_UNUSED,
 		Cardinal *nparams GCC_UNUSED)
 {
@@ -1527,7 +1527,7 @@ HandleDeIconify(Widget w,
 /*ARGSUSED*/
 void
 HandleIconify(Widget w,
-	      XEvent * event GCC_UNUSED,
+	      XEvent *event GCC_UNUSED,
 	      String *params GCC_UNUSED,
 	      Cardinal *nparams GCC_UNUSED)
 {
@@ -1694,7 +1694,7 @@ RequestMaximize(XtermWidget xw, int maximize)
 /*ARGSUSED*/
 void
 HandleMaximize(Widget w,
-	       XEvent * event GCC_UNUSED,
+	       XEvent *event GCC_UNUSED,
 	       String *params GCC_UNUSED,
 	       Cardinal *nparams GCC_UNUSED)
 {
@@ -1708,7 +1708,7 @@ HandleMaximize(Widget w,
 /*ARGSUSED*/
 void
 HandleRestoreSize(Widget w,
-		  XEvent * event GCC_UNUSED,
+		  XEvent *event GCC_UNUSED,
 		  String *params GCC_UNUSED,
 		  Cardinal *nparams GCC_UNUSED)
 {
@@ -1739,11 +1739,11 @@ Redraw(void)
 	event.width = term->core.width;
 	event.height = term->core.height;
 	(*term->core.widget_class->core_class.expose) ((Widget) term,
-						       (XEvent *) & event,
+						       (XEvent *) &event,
 						       NULL);
 	if (ScrollbarWidth(screen)) {
 	    (screen->scrollWidget->core.widget_class->core_class.expose)
-		(screen->scrollWidget, (XEvent *) & event, NULL);
+		(screen->scrollWidget, (XEvent *) &event, NULL);
 	}
     }
 #if OPT_TEK4014
@@ -1752,7 +1752,7 @@ Redraw(void)
 	event.window = TWindow(tekscr);
 	event.width = tekWidget->core.width;
 	event.height = tekWidget->core.height;
-	TekExpose((Widget) tekWidget, (XEvent *) & event, NULL);
+	TekExpose((Widget) tekWidget, (XEvent *) &event, NULL);
     }
 #endif
 }
@@ -2272,7 +2272,7 @@ loadColorTable(XtermWidget xw, unsigned length)
  * Return False if not able to find or allocate a color.
  */
 static Boolean
-allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor * def)
+allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor *def)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean result = False;
@@ -2382,7 +2382,7 @@ allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor * def)
  * match.
  */
 static int
-simpleColors(XColor * colortable, unsigned length)
+simpleColors(XColor *colortable, unsigned length)
 {
     unsigned n;
     int state = 0;
@@ -2428,7 +2428,7 @@ normalizeMask(unsigned mask)
 }
 
 static unsigned
-searchColors(XColor * colortable, unsigned mask, unsigned length, unsigned
+searchColors(XColor *colortable, unsigned mask, unsigned length, unsigned
 	     color, int state)
 {
     unsigned result = 0;
@@ -2485,7 +2485,7 @@ searchColors(XColor * colortable, unsigned mask, unsigned length, unsigned
  * approximation, but not the closest.
  */
 static Boolean
-allocateExactRGB(XtermWidget xw, Colormap cmap, XColor * def)
+allocateExactRGB(XtermWidget xw, Colormap cmap, XColor *def)
 {
     XColor save = *def;
     TScreen *screen = TScreenOf(xw);
@@ -2755,7 +2755,7 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 #endif /* OPT_ISO_COLORS */
 
 Boolean
-allocateBestRGB(XtermWidget xw, XColor * def)
+allocateBestRGB(XtermWidget xw, XColor *def)
 {
     Colormap cmap = xw->core.colormap;
 
@@ -2763,7 +2763,7 @@ allocateBestRGB(XtermWidget xw, XColor * def)
 }
 
 static Boolean
-xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
+xtermAllocColor(XtermWidget xw, XColor *def, const char *spec)
 {
     Boolean result = False;
     TScreen *screen = TScreenOf(xw);
@@ -2958,7 +2958,7 @@ xtermIsPrintable(XtermWidget xw, Char **bufp, Char *last)
     if (xtermEnvUTF8() && IsSetUtf8Title(xw)) {
 	PtyData data;
 
-	if (decodeUtf8(fakePtyData(&data, cp, last))) {
+	if (decodeUtf8(screen, fakePtyData(&data, cp, last))) {
 	    if (data.utf_data != UCS_REPL
 		&& (data.utf_data >= 128 ||
 		    ansi_table[data.utf_data] == CASE_PRINT)) {
@@ -5394,7 +5394,7 @@ xtermUnsetenv(const char *var)
 
 /*ARGSUSED*/
 int
-xerror(Display *d, XErrorEvent * ev)
+xerror(Display *d, XErrorEvent *ev)
 {
     xtermWarning("warning, error event received:\n");
     (void) XmuPrintDefaultErrorMessage(d, ev, stderr);
@@ -5952,7 +5952,7 @@ xtermOpenApplication(XtAppContext * app_context_return,
 static int x11_errors;
 
 static int
-catch_x11_error(Display *display, XErrorEvent * error_event)
+catch_x11_error(Display *display, XErrorEvent *error_event)
 {
     (void) display;
     (void) error_event;
@@ -5989,7 +5989,7 @@ xtermGetWinProp(Display *display,
 		long long_offset,
 		long long_length,
 		Atom req_type,
-		Atom * actual_type_return,
+		Atom *actual_type_return,
 		int *actual_format_return,
 		unsigned long *nitems_return,
 		unsigned long *bytes_after_return,

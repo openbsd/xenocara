@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.150 2014/04/11 19:36:41 Ross.Combs Exp $
+-- $XTermId: INSTALL,v 1.152 2014/07/12 22:40:36 Steve.Wall Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2012,2013 by Thomas E. Dickey
+-- Copyright 1997-2013,2014 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -339,6 +339,14 @@ The options (in alphabetic order):
 
 	A genuine vt100 emulates a vt52.
 
+  --disable-wide-attrs    disable wide-attribute support
+
+	Xterm's base attributes include all of those used in DEC terminals.
+	ISO 6429 defines a few more which historically have found little use.
+	Some people find these amusing.
+
+	This is normally enabled.
+
   --disable-wide-chars    disable wide-character support
 
   	The wide-character code supports Unicode and UTF-8.
@@ -453,7 +461,7 @@ The options (in alphabetic order):
 
   --enable-narrowproto    enable narrow prototypes for X libraries
 
-	Originally xterm was built using imake rather than a configure script. 
+	Originally xterm was built using imake rather than a configure script.
 	One feature of imake that is not possible to guess within the
 	configure script is the wide-prototype compile-time definition
 	NARROWPROTO.  When this is not set properly, the Athena widget
@@ -532,6 +540,10 @@ The options (in alphabetic order):
 
   	Look for, compile and link with the Xaw 3d widget library.
 
+  --with-Xaw3dxft         link with Xaw 3d xft library
+
+	Look for, compile and link with the Xaw 3d xft widget library.
+
   --with-XawPlus          link with Athena-Plus library
 
   	Look for, compile and link with the Xaw Plus widget library.
@@ -593,7 +605,7 @@ The options (in alphabetic order):
 	just one of the variations:
 
 	"pkg*", e.g., pkg-config or pkgconfig uses whatever pkg-config
-		script was found. 
+		script was found.
 
 	otherwise, the parameter value is used as the name of the script
 	to try, using --cflags and --libs options.
@@ -716,7 +728,7 @@ The options (in alphabetic order):
 
 	If xterm is installed setuid'd to root, change the group of the tty
 	device to the given value on startup.  Three cases are possible:
-	
+
 	a) If this option is not given, the configure script will attempt to
 	   find a suitable value (usually "tty"), and verify that it exists in
 	   the group database.

@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.103 2013/02/03 23:17:07 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.104 2014/05/26 14:46:18 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2013 by Thomas E. Dickey
+ * Copyright 1999-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -57,7 +57,7 @@
  * The number of bytes converted will be nonzero iff there is data.
  */
 Bool
-decodeUtf8(PtyData * data)
+decodeUtf8(TScreen *screen, PtyData *data)
 {
     int i;
     int length = (int) (data->last - data->next);
@@ -85,9 +85,10 @@ decodeUtf8(PtyData * data)
 		/*
 		 * We received a continuation byte before receiving a sequence
 		 * state.  Or an attempt to use a C1 control string.  Either
-		 * way, it is mapped to the replacement character.
+		 * way, it is mapped to the replacement character, unless
+		 * allowed by optional feature.
 		 */
-		data->utf_data = UCS_REPL;	/* ... unexpectedly */
+		data->utf_data = (IChar) (screen->c1_printable ? c : UCS_REPL);
 		data->utf_size = (i + 1);
 		break;
 	    } else {
@@ -161,8 +162,8 @@ decodeUtf8(PtyData * data)
 #if OPT_TRACE > 1
     TRACE(("UTF-8 char %04X [%d..%d]\n",
 	   data->utf_data,
-	   data->next - data->buffer,
-	   data->next - data->buffer + data->utf_size - 1));
+	   (int) (data->next - data->buffer),
+	   (int) (data->next - data->buffer + data->utf_size - 1)));
 #endif
 
     return (data->utf_size != 0);
@@ -170,7 +171,7 @@ decodeUtf8(PtyData * data)
 #endif
 
 int
-readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData * data)
+readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData *data)
 {
     TScreen *screen = TScreenOf(xw);
     int size = 0;
@@ -254,7 +255,7 @@ readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData * data)
  */
 #if OPT_WIDE_CHARS
 IChar
-nextPtyData(TScreen * screen, PtyData * data)
+nextPtyData(TScreen *screen, PtyData *data)
 {
     IChar result;
     if (screen->utf8_inparse) {
@@ -273,7 +274,7 @@ nextPtyData(TScreen * screen, PtyData * data)
  * Simply return the data and skip past it.
  */
 IChar
-skipPtyData(PtyData * data)
+skipPtyData(PtyData *data)
 {
     IChar result = data->utf_data;
 
@@ -289,7 +290,7 @@ skipPtyData(PtyData * data)
  * Called when UTF-8 mode has been turned on/off.
  */
 void
-switchPtyData(TScreen * screen, int flag)
+switchPtyData(TScreen *screen, int flag)
 {
     if (screen->utf8_mode != flag) {
 	screen->utf8_mode = flag;
@@ -305,7 +306,7 @@ switchPtyData(TScreen * screen, int flag)
  * Allocate a buffer.
  */
 void
-initPtyData(PtyData ** result)
+initPtyData(PtyData **result)
 {
     PtyData *data;
 
@@ -335,7 +336,7 @@ initPtyData(PtyData ** result)
  */
 #if OPT_WIDE_CHARS
 PtyData *
-fakePtyData(PtyData * result, Char * next, Char * last)
+fakePtyData(PtyData *result, Char *next, Char *last)
 {
     PtyData *data = result;
 
@@ -352,7 +353,7 @@ fakePtyData(PtyData * result, Char * next, Char * last)
  * e.g., a continuation-read.
  */
 void
-trimPtyData(XtermWidget xw GCC_UNUSED, PtyData * data)
+trimPtyData(XtermWidget xw GCC_UNUSED, PtyData *data)
 {
     int i;
 
@@ -376,7 +377,7 @@ trimPtyData(XtermWidget xw GCC_UNUSED, PtyData * data)
  * and nextPtyData() will return that.
  */
 void
-fillPtyData(XtermWidget xw, PtyData * data, const char *value, int length)
+fillPtyData(XtermWidget xw, PtyData *data, const char *value, int length)
 {
     int size;
     int n;
@@ -398,7 +399,7 @@ fillPtyData(XtermWidget xw, PtyData * data, const char *value, int length)
 
 #if OPT_WIDE_CHARS
 Char *
-convertToUTF8(Char * lp, unsigned c)
+convertToUTF8(Char *lp, unsigned c)
 {
 #define CH(n) (Char)((c) >> ((n) * 8))
     if (c < 0x80) {
@@ -444,7 +445,7 @@ convertToUTF8(Char * lp, unsigned c)
  * Write data back to the PTY
  */
 void
-writePtyData(int f, IChar * d, unsigned len)
+writePtyData(int f, IChar *d, unsigned len)
 {
     unsigned n = (len << 1);
 
@@ -474,37 +475,6 @@ noleaks_ptydata(void)
 #endif
 	free(VTbuffer);
 	VTbuffer = 0;
-    }
-}
-#endif
-
-#if 0
-void
-test_ptydata(void)
-{
-    PtyData *data;
-    unsigned code;
-
-    initPtyData(&data);
-    TRACE(("test_ptydata\n"));
-    for (code = 0; code <= 0x7fffffff; ++code) {
-	int use_size;
-
-	memset(data, 0, sizeof(*data));
-	data->next = data->buffer;
-	data->last = convertToUTF8(data->buffer, code);
-
-	use_size = (data->last - data->next);
-
-	if (decodeUtf8(data)) {
-	    if (code != data->utf_data) {
-		TRACE(("code %#x ->%#x\n", code, data->utf_data));
-	    } else if (use_size != data->utf_size) {
-		TRACE(("size %#x %d->%d\n", code, use_size, data->utf_size));
-	    }
-	} else {
-	    TRACE(("fail %#x\n", code));
-	}
     }
 }
 #endif

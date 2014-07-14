@@ -1,7 +1,7 @@
-/* $XTermId: scrollbar.c,v 1.197 2013/06/23 21:55:39 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.199 2014/07/12 22:55:11 tom Exp $ */
 
 /*
- * Copyright 2000-2012,2013 by Thomas E. Dickey
+ * Copyright 2000-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -60,6 +60,8 @@
 #include <X11/Xaw/Scrollbar.h>
 #elif defined(HAVE_LIB_XAW3D)
 #include <X11/Xaw3d/Scrollbar.h>
+#elif defined(HAVE_LIB_XAW3DXFT)
+#include <X11/Xaw3dxft/Scrollbar.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/Scrollbar.h>
 #elif defined(HAVE_LIB_XAWPLUS)
@@ -643,7 +645,7 @@ CompareWidths(const char *a, const char *b, int *modifier)
 }
 
 static long
-params_to_pixels(TScreen * screen, String * params, Cardinal n)
+params_to_pixels(TScreen *screen, String *params, Cardinal n)
 {
     int mult = 1;
     const char *s;
@@ -678,7 +680,7 @@ params_to_pixels(TScreen * screen, String * params, Cardinal n)
 }
 
 static long
-AmountToScroll(Widget w, String * params, Cardinal nparams)
+AmountToScroll(Widget w, String *params, Cardinal nparams)
 {
     long result = 0;
     XtermWidget xw;
@@ -727,8 +729,8 @@ AlternateScroll(Widget w, long amount)
 void
 HandleScrollForward(
 		       Widget xw,
-		       XEvent * event GCC_UNUSED,
-		       String * params,
+		       XEvent *event GCC_UNUSED,
+		       String *params,
 		       Cardinal *nparams)
 {
     long amount;
@@ -742,8 +744,8 @@ HandleScrollForward(
 void
 HandleScrollBack(
 		    Widget xw,
-		    XEvent * event GCC_UNUSED,
-		    String * params,
+		    XEvent *event GCC_UNUSED,
+		    String *params,
 		    Cardinal *nparams)
 {
     long amount;
@@ -761,7 +763,7 @@ HandleScrollBack(
  * Check for Xkb on client and server.
  */
 static int
-have_xkb(Display * dpy)
+have_xkb(Display *dpy)
 {
     static int initialized = -1;
 
@@ -813,7 +815,7 @@ have_xkb(Display * dpy)
 }
 
 static Boolean
-getXkbLED(Display * dpy, const char *name, Boolean * result)
+getXkbLED(Display *dpy, const char *name, Boolean *result)
 {
     Atom my_atom;
     Boolean success = False;
@@ -835,7 +837,7 @@ getXkbLED(Display * dpy, const char *name, Boolean * result)
  * Use Xkb if we have it (still unreliable, but slightly better than hardcoded).
  */
 static Boolean
-showXkbLED(Display * dpy, const char *name, Bool enable)
+showXkbLED(Display *dpy, const char *name, Bool enable)
 {
     Atom my_atom;
     Boolean result = False;
@@ -866,7 +868,7 @@ static const char *led_table[] =
 };
 
 static Boolean
-xtermGetLED(TScreen * screen, Cardinal led_number)
+xtermGetLED(TScreen *screen, Cardinal led_number)
 {
     Display *dpy = screen->display;
     Boolean result = False;
@@ -891,7 +893,7 @@ xtermGetLED(TScreen * screen, Cardinal led_number)
  * Display the given LED, preferably independent of keyboard state.
  */
 void
-xtermShowLED(TScreen * screen, Cardinal led_number, Bool enable)
+xtermShowLED(TScreen *screen, Cardinal led_number, Bool enable)
 {
     TRACE(("xtermShowLED %d:%s\n", led_number, BtoS(enable)));
     if ((led_number >= 1) && (led_number <= XtNumber(led_table))) {
@@ -924,7 +926,7 @@ xtermShowLED(TScreen * screen, Cardinal led_number, Bool enable)
 }
 
 void
-xtermClearLEDs(TScreen * screen)
+xtermClearLEDs(TScreen *screen)
 {
     Display *dpy = screen->display;
     XKeyboardControl values;
@@ -938,20 +940,20 @@ xtermClearLEDs(TScreen * screen)
 }
 
 void
-ShowScrollLock(TScreen * screen, Bool enable)
+ShowScrollLock(TScreen *screen, Bool enable)
 {
     xtermShowLED(screen, SCROLL_LOCK_LED, enable);
 }
 
 void
-GetScrollLock(TScreen * screen)
+GetScrollLock(TScreen *screen)
 {
     if (screen->allowScrollLock)
 	screen->scroll_lock = xtermGetLED(screen, SCROLL_LOCK_LED);
 }
 
 void
-SetScrollLock(TScreen * screen, Bool enable)
+SetScrollLock(TScreen *screen, Bool enable)
 {
     if (screen->allowScrollLock) {
 	if (screen->scroll_lock != enable) {
@@ -965,8 +967,8 @@ SetScrollLock(TScreen * screen, Bool enable)
 /* ARGSUSED */
 void
 HandleScrollLock(Widget w,
-		 XEvent * event GCC_UNUSED,
-		 String * params,
+		 XEvent *event GCC_UNUSED,
+		 String *params,
 		 Cardinal *param_count)
 {
     XtermWidget xw;

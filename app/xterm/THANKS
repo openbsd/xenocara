@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.12 2014/03/03 19:31:41 tom Exp $
+-- $XTermId: THANKS,v 1.14 2014/07/12 14:41:17 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -157,7 +157,7 @@ Rob Braun
 Robert Brady
 Robert Earl
 Robin Cutshaw
-Romain Francois
+Romain Francoise
 Ross Combs
 Ross Paterson
 Ryan Johnson
@@ -167,7 +167,7 @@ Sergei Laskavy
 Sergey Vlasov
 Slava Semushin
 Stefan Dirsch
-Steve Wall
+Stephen P Wall
 Stuart Lissaman
 Sven Verdoolaege
 Taketo Kabe

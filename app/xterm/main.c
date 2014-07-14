@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.757 2014/05/03 17:17:00 tom Exp $ */
+/* $XTermId: main.c,v 1.760 2014/07/12 22:50:07 Steve.Wall Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -102,6 +102,8 @@
 #include <X11/Xaw/Form.h>
 #elif defined(HAVE_LIB_XAW3D)
 #include <X11/Xaw3d/Form.h>
+#elif defined(HAVE_LIB_XAW3DXFT)
+#include <X11/Xaw3dxft/Form.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/Form.h>
 #elif defined(HAVE_LIB_XAWPLUS)
@@ -1216,6 +1218,7 @@ static OptionHelp xtermOptions[] = {
 #endif
 { "-/+rvc",                "turn off/on display of reverse as color" },
 { "-/+sf",                 "turn on/off Sun Function Key escape codes" },
+{ "-sh number",            "scale line-height values by the given number" },
 { "-/+si",                 "turn on/off scroll-on-tty-output inhibit" },
 { "-/+sk",                 "turn on/off scroll-on-keypress" },
 { "-sl number",            "number of scrolled lines to save" },
@@ -2549,7 +2552,9 @@ main(int argc, char *argv[]ENVP_ARG)
     });
     XSetErrorHandler(xerror);
     XSetIOErrorHandler(xioerror);
+#if OPT_SESSION_MGT
     IceSetIOErrorHandler(ice_error);
+#endif
 
     initPtyData(&VTbuffer);
 #ifdef ALLOWLOGGING

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2014 Thomas Dickey <dickey@invisible-island.net> -->
+<application>
+ <id type="desktop">xterm.desktop</id>
+ <metadata_license>CC-BY-3.0</metadata_license>
+ <project_license>X11</project_license>
+ <name>XTerm</name>
+ <summary>Terminal emulator for the X Window System</summary>
+ <description>
+  <p>
+   XTerm is the standard terminal emulator for the X Window System.
+   It provides DEC VT102/VT220 and selected features from higher-level
+   terminals such as VT320/VT420/VT520 (VTxxx).  It also provides Tektronix
+   4014 emulation for programs that cannot use the window system directly.
+  </p>
+  <p>
+   You would use xterm to get a shell prompt, to run command-line programs.
+  </p>
+ </description>
+ <screenshots>
+  <screenshot type="default" width="813" height="539">http://invisible-island.net/xterm/images/merged-xterm-menus.png</screenshot>
+ </screenshots>
+ <url type="homepage">http://invisible-island.net/xterm/</url>
+ <updatecontact>dickey@invisible-island.net</updatecontact>
+</application>

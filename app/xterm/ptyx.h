@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.802 2014/05/03 12:58:37 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.809 2014/06/13 00:53:35 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -753,6 +753,10 @@ typedef struct {
 #define OPT_VT52_MODE   1 /* true if xterm supports VT52 emulation */
 #endif
 
+#ifndef OPT_WIDE_ATTRS
+#define OPT_WIDE_ATTRS  1 /* true if xterm supports 16-bit attributes */
+#endif
+
 #ifndef OPT_WIDE_CHARS
 #define OPT_WIDE_CHARS  0 /* true if xterm supports 16-bit characters */
 #endif
@@ -1378,6 +1382,16 @@ extern int A2E(int);
 
 /***====================================================================***/
 
+typedef unsigned IFlags;	/* at least 32 bits */
+
+#if OPT_WIDE_ATTRS
+typedef unsigned short IAttr;	/* at least 16 bits */
+#else
+typedef unsigned char IAttr;	/* at least 8 bits */
+#endif
+
+/***====================================================================***/
+
 #define LO_BYTE(ch) CharOf((ch) & 0xff)
 #define HI_BYTE(ch) CharOf((ch) >> 8)
 
@@ -1498,7 +1512,7 @@ typedef struct {
 #if OPT_WIDE_CHARS
 	Char combSize;		/* number of items in combData[] */
 #endif
-	Char *attribs;		/* video attributes */
+	IAttr *attribs;		/* video attributes */
 #if OPT_ISO_COLORS
 	CellColor *color;	/* foreground+background color numbers */
 #endif
@@ -1511,7 +1525,7 @@ typedef struct {
  * variable.
  */
 typedef struct {
-	Char attribs;
+	IAttr attribs;
 #if OPT_WIDE_CHARS
 	Char combSize;		/* number of items in combData[] */
 #endif
@@ -1729,7 +1743,7 @@ typedef struct {
 	Boolean		saved;
 	int		row;
 	int		col;
-	unsigned	flags;		/* VTxxx saves graphics rendition */
+	IFlags		flags;		/* VTxxx saves graphics rendition */
 	Char		curgl;
 	Char		curgr;
 	int		gsets[4];
@@ -2013,6 +2027,7 @@ typedef struct {
 #endif /* NO_ACTIVE_ICON */
 
 	int		pointer_mode;	/* when to use hidden_cursor	*/
+	int		pointer_mode0;	/* ...initial value             */
 	Boolean 	hide_pointer;	/* true to use "hidden_cursor"  */
 	Cursor		pointer_cursor;	/* pointer cursor in window	*/
 	Cursor		hidden_cursor;	/* hidden cursor in window	*/
@@ -2040,6 +2055,10 @@ typedef struct {
 	XTermFonts	fnts[fMAX];	/* normal/bold/etc for terminal	*/
 	Boolean		free_bold_box;	/* same_font_size's austerity	*/
 	Boolean		allowBoldFonts;	/* do we use bold fonts at all? */
+#if OPT_WIDE_ATTRS
+	XTermFonts	ifnts[fMAX];	/* normal/bold/etc italic fonts */
+	Boolean		ifnts_ok;	/* true if ifnts[] is cached	*/
+#endif
 #ifndef NO_ACTIVE_ICON
 	XTermFonts	fnt_icon;	/* icon font			*/
 	String		icon_fontname;	/* name of icon font		*/
@@ -2152,9 +2171,10 @@ typedef struct {
 	int		scrolls;	/* outstanding scroll count,
 					    used only with multiscroll	*/
 	SavedCursor	sc[SAVED_CURSORS]; /* data for restore cursor	*/
-	unsigned int	save_modes[DP_LAST]; /* save dec/xterm private modes */
+	IFlags		save_modes[DP_LAST]; /* save dec/xterm private modes */
 
 	int		title_modes;	/* control set/get of titles	*/
+	int		title_modes0;	/* ...initial value         	*/
 	SaveTitle	*save_title;
 
 	/* Improved VT100 emulation stuff.				*/
@@ -2175,6 +2195,7 @@ typedef struct {
 	Boolean		jumpscroll;	/* whether we should jumpscroll */
 	Boolean		fastscroll;	/* whether we should fastscroll */
 	Boolean		old_fkeys;	/* true for compatible fkeys	*/
+	Boolean		old_fkeys0;	/* ...initial value         	*/
 	Boolean		underline;	/* whether to underline text	*/
 
 #if OPT_MAXIMIZE
@@ -2211,7 +2232,7 @@ typedef struct {
 	/* Testing */
 #if OPT_XMC_GLITCH
 	unsigned	xmc_glitch;	/* # of spaces to pad on SGR's	*/
-	int		xmc_attributes;	/* attrs that make a glitch	*/
+	IAttr		xmc_attributes;	/* attrs that make a glitch	*/
 	Boolean		xmc_inline;	/* SGR's propagate only to eol	*/
 	Boolean		move_sgr_ok;	/* SGR is reset on move		*/
 #endif
@@ -2511,7 +2532,7 @@ typedef struct
 typedef struct
 {
     xtermKeyboardType type;
-    unsigned flags;
+    IFlags flags;
     char *shell_translations;
     char *xterm_translations;
     char *extra_translations;
@@ -2697,7 +2718,7 @@ typedef struct _XtermWidgetRec {
     Bool	init_menu;
     TKeyboard	keyboard;	/* terminal keyboard		*/
     TScreen	screen;		/* terminal screen		*/
-    unsigned	flags;		/* mode flags			*/
+    IFlags	flags;		/* mode flags			*/
     int		cur_foreground; /* current foreground color	*/
     int		cur_background; /* current background color	*/
     Pixel	dft_foreground; /* default foreground color	*/
@@ -2709,7 +2730,7 @@ typedef struct _XtermWidgetRec {
     int		sgr_background; /* current SGR background color */
     Boolean	sgr_extended;	/* SGR set with extended codes? */
 #endif
-    unsigned	initflags;	/* initial mode flags		*/
+    IFlags	initflags;	/* initial mode flags		*/
     Tabs	tabs;		/* tabstops of the terminal	*/
     Misc	misc;		/* miscellaneous parameters	*/
     Work	work;		/* workspace (no resources)	*/
@@ -2735,7 +2756,6 @@ typedef struct _TekWidgetRec {
  */
 
 #define AttrBIT(n)	xBIT(n)		/* text-attributes */
-#define DrawBIT(n)	xBIT(n + 8)	/* drawXtermText flags */
 #define MiscBIT(n)	xBIT(n + 16)	/* miscellaneous state flags */
 
 /* global flags and character flags (visible character attributes) */
@@ -2754,15 +2774,15 @@ typedef struct _TekWidgetRec {
 					   blanks from empty parts of the
 					   screen when selecting */
 
-/* The following attributes are used in the argument of drawXtermText()  */
-#define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
-#define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
-#define DOUBLEWFONT	DrawBIT(2)	/* The actual X-font is double-width */
-#define DOUBLEHFONT	DrawBIT(3)	/* The actual X-font is double-height */
-#define CHARBYCHAR	DrawBIT(4)	/* Draw chars one-by-one */
-
-/* The following attribute is used in the argument of xtermSpecialFont etc */
-#define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
+#if OPT_WIDE_ATTRS
+#define ATR_FAINT	AttrBIT(8)
+#define ATR_ITALIC	AttrBIT(9)
+#define ATR_STRIKEOUT	AttrBIT(10)
+#define ATR_DBL_UNDER	AttrBIT(11)
+#define SGR_MASK2       (ATR_FAINT | ATR_ITALIC | ATR_STRIKEOUT | ATR_DBL_UNDER)
+#else
+#define SGR_MASK2       0
+#endif
 
 /*
  * Other flags
@@ -2780,6 +2800,18 @@ typedef struct _TekWidgetRec {
 #define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
 #define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
 
+#define DrawBIT(n)	xBIT(n + 8)	/* drawXtermText flags */
+/* The following attributes are used in the argument of drawXtermText()  */
+#define NOBACKGROUND	DrawBIT(0)	/* Used for overstrike */
+#define NOTRANSLATION	DrawBIT(1)	/* No scan for chars missing in font */
+#define DOUBLEWFONT	DrawBIT(2)	/* The actual X-font is double-width */
+#define DOUBLEHFONT	DrawBIT(3)	/* The actual X-font is double-height */
+#define CHARBYCHAR	DrawBIT(4)	/* Draw chars one-by-one */
+
+/* The following attribute is used in the argument of xtermSpecialFont etc */
+#define NORESOLUTION	DrawBIT(5)	/* find the font without resolution */
+
+
 /*
  * Groups of attributes
  */
@@ -2787,7 +2819,7 @@ typedef struct _TekWidgetRec {
 #define SGR_MASK	(BOLD | BLINK | UNDERLINE | INVERSE)
 
 			/* mask: user-visible attributes */
-#define	ATTRIBUTES	(SGR_MASK | BG_COLOR | FG_COLOR | INVISIBLE | PROTECTED)
+#define	ATTRIBUTES	(SGR_MASK | SGR_MASK2 | BG_COLOR | FG_COLOR | INVISIBLE | PROTECTED)
 
 /* The toplevel-call to drawXtermText() should have text-attributes guarded: */
 #define DRAWX_MASK	(ATTRIBUTES | CHARDRAWN)

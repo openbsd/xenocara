@@ -70,7 +70,7 @@ configure-stamp:
 		--enable-logging \
 		--enable-mini-luit \
 		--enable-paste64 \
-		--enable-rectangles \
+		--enable-regis-graphics \
 		--enable-sco-fkeys \
 		--enable-sixel-graphics \
 		--enable-tcap-fkeys \

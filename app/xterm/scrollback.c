@@ -1,7 +1,7 @@
-/* $XTermId: scrollback.c,v 1.16 2013/04/23 09:57:05 Bertram.Felgenhauer Exp $ */
+/* $XTermId: scrollback.c,v 1.17 2014/05/11 14:08:11 tom Exp $ */
 
 /*
- * Copyright 2009-2011,2013 by Thomas E. Dickey
+ * Copyright 2009-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -42,7 +42,7 @@
  * So we just count backwards from the last saved line.
  */
 LineData *
-getScrollback(TScreen * screen, int row)
+getScrollback(TScreen *screen, int row)
 {
     LineData *result = 0;
 
@@ -62,7 +62,7 @@ getScrollback(TScreen * screen, int row)
  * Allocate a new row in the scrollback FIFO, returning a pointer to it.
  */
 LineData *
-addScrollback(TScreen * screen)
+addScrollback(TScreen *screen)
 {
     ScrnBuf where = 0;
     unsigned which;
@@ -85,7 +85,7 @@ addScrollback(TScreen * screen)
 	     */
 	    if (prior->attribs != 0) {
 		TRACE(("...freeing prior FIFO data in slot %d: %p->%p\n",
-		       which, (void *) prior, prior->attribs));
+		       which, (void *) prior, (void *) prior->attribs));
 		free(prior->attribs);
 		prior->attribs = 0;
 	    }
@@ -109,7 +109,7 @@ addScrollback(TScreen * screen)
 }
 
 void
-deleteScrollback(TScreen * screen)
+deleteScrollback(TScreen *screen)
 {
     unsigned which = ROW2FIFO(screen, -1);
     ScrnBuf where = scrnHeadAddr(screen, screen->saveBuf_index, which);
@@ -120,7 +120,7 @@ deleteScrollback(TScreen * screen)
      */
     if (prior->attribs != 0) {
 	TRACE(("...freeing prior FIFO data in slot %d: %p->%p\n",
-	       which, (void *) prior, prior->attribs));
+	       which, (void *) prior, (void *) prior->attribs));
 	free(prior->attribs);
 	prior->attribs = 0;
     }

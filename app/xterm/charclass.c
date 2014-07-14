@@ -1,4 +1,4 @@
-/* $XTermId: charclass.c,v 1.22 2009/11/05 23:46:15 tom Exp $ */
+/* $XTermId: charclass.c,v 1.23 2014/05/26 17:12:51 tom Exp $ */
 
 /*
  * Compact and efficient reimplementation of the
@@ -6,7 +6,7 @@
  *
  * Markus Kuhn -- mkuhn@acm.org -- 2000-07-03
  *
- * Xterm allows users to select entire words with a double-click on the left
+ * xterm allows users to select entire words with a double-click on the left
  * mouse button.  Opinions might differ on what type of characters are part of
  * separate words, therefore xterm allows users to configure a class code for
  * each 8-bit character.  Words are maximum length sequences of neighboring

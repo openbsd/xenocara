@@ -1,4 +1,4 @@
-MANIFEST for xterm-304, version xterm-304
+MANIFEST for xterm-309, version xterm-309
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -100,6 +100,7 @@ wcwidth.h                       interface of wcwidth.c
 xcharmouse.h                    Jason Bacon's mouse-defs, cleaned up a little
 xstrings.c                      a few common string functions
 xstrings.h                      interface of xstrings.c
+xterm.appdata.xml               sample "appdata.xml" file
 xterm.dat                       application defaults for VMS port of 'xterm'
 xterm.desktop                   sample desktop file for xterm.
 xterm.h                         common includes, definitions and prototypes for 'xterm'

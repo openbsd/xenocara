@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.204 2014/04/11 19:36:41 Ross.Combs Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.205 2014/05/08 08:05:07 tom Exp $ */
 
 /*
  * Copyright 1997-2013,2014 by Thomas E. Dickey
@@ -160,7 +160,8 @@
 /* #undef OPT_TOOLBAR */		/* CF_ARG_ENABLE(toolbar) */
 /* #undef OPT_VT52_MODE */		/* CF_ARG_DISABLE(vt52) */
 /* #undef OPT_WIDER_ICHAR */		/* CF_ARG_ENABLE(16bit-chars) */
-#define OPT_WIDE_CHARS 1		/* CF_ARG_OPTION(wide-chars) */
+#define OPT_WIDE_ATTRS 1	/* CF_ARG_DISABLE(wide-attrs) */
+#define OPT_WIDE_CHARS 1	/* CF_ARG_DISABLE(wide-chars) */
 /* #undef OPT_XMC_GLITCH */		/* CF_ARG_ENABLE(xmc-glitch) */
 /* #undef OPT_ZICONBEEP */		/* CF_ARG_DISABLE(ziconbeep) */
 /* #undef OWN_TERMINFO_DIR */		/* AC_ARG_WITH(own-terminfo) */

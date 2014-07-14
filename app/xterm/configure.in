@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.324 2014/04/14 19:17:15 tom Exp $
+dnl $XTermId: configure.in,v 1.326 2014/05/08 20:47:36 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -842,12 +842,20 @@ CF_ARG_DISABLE(vt52,
 AC_MSG_RESULT($enable_vt52)
 test "$enable_vt52" = no && AC_DEFINE(OPT_VT52_MODE,0,[Define to 0 to disable VT52 emulation])
 
+AC_MSG_CHECKING(if you want wide-attribute support)
+CF_ARG_DISABLE(wide-attrs,
+	[  --disable-wide-attrs    disable wide-attribute support],
+	[enable_wattr=no],
+	[enable_wattr=yes])
+AC_MSG_RESULT($enable_wattr)
+
 AC_MSG_CHECKING(if you want wide-character support)
 CF_ARG_DISABLE(wide-chars,
 	[  --disable-wide-chars    disable wide-character support],
 	[enable_wchar=no],
 	[enable_wchar=yes])
 AC_MSG_RESULT($enable_wchar)
+test "$enable_wattr" = no && AC_DEFINE(OPT_WIDE_ATTRS,0,[Define to 0 to disable rarely-used SGR features])
 
 AC_MSG_CHECKING(if you want only 16-bit character support)
 CF_ARG_ENABLE(16bit-chars,

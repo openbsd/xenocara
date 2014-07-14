@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.150 2013/05/27 00:55:47 tom Exp $ */
+/* $XTermId: print.c,v 1.152 2014/06/13 00:36:51 tom Exp $ */
 
 /*
- * Copyright 1997-2012,2013 by Thomas E. Dickey
+ * Copyright 1997-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -124,12 +124,12 @@ printCursorLine(XtermWidget xw)
  * characters that xterm would allow as a selection (which may include blanks).
  */
 static void
-printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
+printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags *p)
 {
     TScreen *screen = TScreenOf(xw);
     int inx = ROW2INX(screen, row);
     LineData *ld;
-    Char attr = 0;
+    IAttr attr = 0;
     unsigned ch;
     int last = MaxCols(screen);
     int col;
@@ -180,7 +180,7 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
 #endif
 		)
 		&& ch) {
-		attr = CharOf(ld->attribs[col] & SGR_MASK);
+		attr = ld->attribs[col] & SGR_MASK;
 #if OPT_PRINT_COLORS
 		last_fg = fg;
 		last_bg = bg;
@@ -252,7 +252,7 @@ printLine(XtermWidget xw, int row, unsigned chr, PrinterFlags * p)
 #define PrintNewLine() (unsigned) (((top < bot) || p->printer_newline) ? '\n' : '\0')
 
 static void
-printLines(XtermWidget xw, int top, int bot, PrinterFlags * p)
+printLines(XtermWidget xw, int top, int bot, PrinterFlags *p)
 {
     TRACE(("printLines, rows %d..%d\n", top, bot));
     while (top <= bot) {
@@ -262,7 +262,7 @@ printLines(XtermWidget xw, int top, int bot, PrinterFlags * p)
 }
 
 void
-xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags * p)
+xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags *p)
 {
     if (XtIsRealized((Widget) xw)) {
 	TScreen *screen = TScreenOf(xw);
@@ -297,7 +297,7 @@ xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags * p)
  *	8 = saved lines
  */
 void
-xtermPrintEverything(XtermWidget xw, PrinterFlags * p)
+xtermPrintEverything(XtermWidget xw, PrinterFlags *p)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean was_open = SPS.isOpen;
@@ -344,7 +344,7 @@ xtermPrintEverything(XtermWidget xw, PrinterFlags * p)
 }
 
 static void
-send_CharSet(XtermWidget xw, LineData * ld)
+send_CharSet(XtermWidget xw, LineData *ld)
 {
 #if OPT_DEC_CHRSET
     const char *msg = 0;
@@ -379,6 +379,12 @@ send_SGR(XtermWidget xw, unsigned attr, unsigned fg, unsigned bg)
     strcpy(msg, "\033[0");
     if (attr & BOLD)
 	strcat(msg, ";1");
+#if OPT_WIDE_ATTRS
+    if (attr & ATR_FAINT)
+	strcat(msg, ";2");
+    if (attr & ATR_ITALIC)
+	strcat(msg, ";3");
+#endif
     if (attr & UNDERLINE)
 	strcat(msg, ";4");	/* typo? DEC documents this as '2' */
     if (attr & BLINK)
@@ -726,7 +732,7 @@ setPrinterControlMode(XtermWidget xw, int mode)
 }
 
 PrinterFlags *
-getPrinterFlags(XtermWidget xw, String * params, Cardinal *param_count)
+getPrinterFlags(XtermWidget xw, String *params, Cardinal *param_count)
 {
     /* *INDENT-OFF* */
     static const struct {

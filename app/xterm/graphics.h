@@ -1,4 +1,4 @@
-/* $XTermId: graphics.h,v 1.16 2014/04/25 21:30:23 Ross.Combs Exp $ */
+/* $XTermId: graphics.h,v 1.17 2014/07/13 00:56:45 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -85,6 +85,7 @@ extern RegisterNum read_pixel(Graphic *graphic, int x, int y);
 extern void draw_solid_pixel(Graphic *graphic, int x, int y, unsigned color);
 extern void draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color);
 extern void draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color);
+extern void copy_overlapping_area(Graphic *graphic, int src_x, int src_y, int dst_x, int dst_y, unsigned w, unsigned h, unsigned default_color);
 extern void hls2rgb(int h, int l, int s, short *r, short *g, short *b);
 extern void dump_graphic(Graphic const *graphic);
 extern unsigned get_color_register_count(TScreen const *screen);
@@ -109,6 +110,7 @@ extern void noleaks_graphics(void);
 #define draw_solid_pixel(graphic, x, y, color) /* nothing */
 #define draw_solid_rectangle(graphic, x1, y1, x2, y2, color) /* nothing */
 #define draw_solid_line(graphic, x1, y1, x2, y2, color) /* nothing */
+#define copy_overlapping_area(graphic, src_x, src_y, dst_x, dst_y, w, h, default_color) /* nothing */
 #define hls2rgb(h, l, s, r, g, b) /* nothing */
 #define dump_graphic(graphic) /* nothing */
 #define get_color_register_count(screen) /* nothing */

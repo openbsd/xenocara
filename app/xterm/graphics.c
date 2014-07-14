@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.42 2014/05/03 14:26:57 tom Exp $ */
+/* $XTermId: graphics.c,v 1.47 2014/07/13 01:19:45 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -50,48 +50,73 @@
 
 /* TODO:
  * ReGIS:
- * - shading with text
- * - polygon filling
- * - plane write control
- * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
- * - text
+ * - find a suitable default alphabet zero font instead of scaling Xft fonts
+ * - load command extension to load by font name (via Xft)
  * - input and output cursors
  * - mouse input
- * - stacks
+ * - custom coordinate systems
  * - investigate second graphic page for ReGIS -- does it also apply to text and sixel graphics? are the contents preserved?
- * - font upload, italics, and other text attributes
+ * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
+ * - non-ASCII alphabets
  * - enter/leave during a command
  * - command display mode
- * - scrolling
- * - custom coordinate systems
  * - scaling/re-rasterization to fit screen
  * - macros
+ *
  * sixel:
  * - fix problem where new_row < 0 during sixel parsing (see FIXME)
+ * - screen-capture support (need dialog of some sort for safety)
+ *
  * VT55/VT105 waveform graphics
  * - everything
- * common:
+ *
+ * Tektronix:
+ * - color (VT340 4014 emulation, 41xx, IRAF GTERM, and also MS-DOS Kermit color support)
+ * - polygon fill (41xx)
+ * - clear area extension
+ * - area fill extension
+ * - pixel operations (RU/RS/RP)
+ * - research other 41xx and 42xx extensions
+ *
+ * common graphics features:
+ * - speed up drawing by using an XImage and/or better GC and color handling
  * - handle light/dark screen modes (CSI?5[hl])
  * - update text fg/bg color which overlaps images
  * - erase graphic when erasing screen
  * - handle graphic updates in scroll regions
  * - handle rectangular area copies (verify they work with graphics)
- * - maintain ordered list/array instead of qsort()
+ * - maintain ordered list/array of graphics instead of qsort()
  * - erase text under graphic if bg not transparent to avoid flickering (or not: bad if the font changes or window resizes)
  * - erase graphics under graphic if same origin and bg not transparent to avoid flickering
  * - erase scrolled portions of all graphics on alt buffer
  * - delete graphic if scrolled past end of scrollback
  * - delete graphic if all pixels are transparent/erased
- * - dynamic memory allocation of graphics buffers, add configurable limits
- * - auto convert color graphics in VT330 mode
- * - posturize requested colors to match hardware palettes (e.g. four possible shades on VT240)
+ * - auto-convert color graphics in VT330 mode
+ * - posturize requested colors to match hardware palettes (e.g. only four possible shades on VT240)
  * - color register report/restore
- * escape sequences:
- * - way to query font size without "window ops" (or make "window ops" permissions more fine grained)
- * - way to query and/or set the maximum number of color registers
+ * - ability to select/copy graphics for pasting in other programs
+ * - ability to show non-scrolled sixel graphics in a separate window
+ * - ability to show ReGIS graphics in a separate window
+ * - ability to show Tektronix graphics in VT100 window
+ *
+ * new escape sequences:
+ * - way to query text font size without "window ops" (or make "window ops" permissions more fine grained)
  * - way to query and set the number of graphics pages
+ *
  * ReGIS extensions:
- * - gradients
+ * - non-integer text scaling
+ * - free distortionless text rotation
+ * - font characteristics: bold/underline/italic
+ * - font selection by name
+ * - user fonts in larger sizes than 8x10
+ * - remove/increase arbitrary limits (pattern size, pages, alphabets, stack size, font names, etc.)
+ * - comment command
+ * - shade/fill with borders
+ * - sprites (copy portion of page into/out of buffer with scaling and rotation)
+ * - ellipses
+ * - 2D patterns
+ * - option to set actual size (not just coordinates)
+ * - gradients (for lines and fills)
  * - line width (RLogin has this and it is mentioned in docs for the DEC ReGIS to Postscript converter)
  * - F option for screen command (mentioned in docs for the DEC ReGIS to Postscript converter)
  * - transparency
@@ -193,8 +218,8 @@ deactivateSlot(unsigned n)
 extern RegisterNum
 read_pixel(Graphic *graphic, int x, int y)
 {
-    if (x < 0 && x >= graphic->actual_width &&
-	y < 0 && y >= graphic->actual_height) {
+    if (x < 0 || x >= graphic->actual_width ||
+	y < 0 || y >= graphic->actual_height) {
 	return COLOR_HOLE;
     }
 
@@ -310,6 +335,64 @@ draw_solid_line(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned color
     }
 }
 
+void
+copy_overlapping_area(Graphic *graphic, int src_ul_x, int src_ul_y,
+		      int dst_ul_x, int dst_ul_y, unsigned w, unsigned h,
+		      unsigned default_color)
+{
+    int sx, ex, dx;
+    int sy, ey, dy;
+    int xx, yy;
+    int dst_x, dst_y;
+    int src_x, src_y;
+    RegisterNum color;
+
+    if (dst_ul_x <= src_ul_x) {
+	sx = 0;
+	ex = (int) w - 1;
+	dx = +1;
+    } else {
+	sx = (int) w - 1;
+	ex = 0;
+	dx = -1;
+    }
+
+    if (dst_ul_y <= src_ul_y) {
+	sy = 0;
+	ey = (int) h - 1;
+	dy = +1;
+    } else {
+	sy = (int) h - 1;
+	ey = 0;
+	dy = -1;
+    }
+
+    for (yy = sy; yy != ey + dy; yy += dy) {
+	dst_y = dst_ul_y + yy;
+	src_y = src_ul_y + yy;
+	if (dst_y < 0 || dst_y >= (int) graphic->actual_height)
+	    continue;
+
+	for (xx = sx; xx != ex + dx; xx += dx) {
+	    dst_x = dst_ul_x + xx;
+	    src_x = src_ul_x + xx;
+	    if (dst_x < 0 || dst_x >= (int) graphic->actual_width)
+		continue;
+
+	    if (src_x < 0 || src_x >= (int) graphic->actual_width ||
+		src_y < 0 || src_y >= (int) graphic->actual_height)
+		color = (RegisterNum) default_color;
+	    else
+		color = graphic->pixels[(unsigned) (src_y *
+						    graphic->max_width) +
+					(unsigned) src_x];
+
+	    graphic->pixels[(unsigned) (dst_y * graphic->max_width) +
+			    (unsigned) dst_x] = color;
+	}
+    }
+}
+
 static void
 set_color_register(ColorRegister *color_registers,
 		   unsigned color,
@@ -411,7 +494,7 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
 static void
 init_color_registers(ColorRegister *color_registers, int terminal_id)
 {
-    TRACE(("setting inital colors for terminal %d\n", terminal_id));
+    TRACE(("setting initial colors for terminal %d\n", terminal_id));
     {
 	unsigned i;
 

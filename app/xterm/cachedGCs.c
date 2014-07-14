@@ -1,7 +1,7 @@
-/* $XTermId: cachedGCs.c,v 1.61 2011/09/11 14:59:38 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.62 2014/06/12 23:04:07 tom Exp $ */
 
 /*
- * Copyright 2007-2010,2011 by Thomas E. Dickey
+ * Copyright 2007-2011,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -120,7 +120,7 @@ traceCgsEnum(CgsEnum value)
 #undef CASE
 
 static const char *
-traceVTwin(XtermWidget xw, VTwin * value)
+traceVTwin(XtermWidget xw, VTwin *value)
 {
     const char *result = "?";
     if (value == 0)
@@ -273,7 +273,7 @@ relinkData(CgsCache * me, int item)
  * Returns the appropriate cache pointer.
  */
 static CgsCache *
-myCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
+myCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 {
     CgsCache *result = 0;
 
@@ -304,7 +304,7 @@ myDisplay(XtermWidget xw)
 }
 
 static Drawable
-myDrawable(XtermWidget xw, VTwin * cgsWin)
+myDrawable(XtermWidget xw, VTwin *cgsWin)
 {
     Drawable drawable = 0;
 
@@ -316,7 +316,7 @@ myDrawable(XtermWidget xw, VTwin * cgsWin)
 }
 
 static GC
-newCache(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, CgsCache * me)
+newCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, CgsCache * me)
 {
     XGCValues xgcv;
     XtGCMask mask;
@@ -448,11 +448,12 @@ chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me, Bool both)
     THIS(used) = 0;
     return THIS(gc);
 }
+
 /*
  * Use the "setCgsXXXX()" calls to initialize parameters for a new GC.
  */
 void
-setCgsFore(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, Pixel fg)
+setCgsFore(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, Pixel fg)
 {
     CgsCache *me;
 
@@ -463,7 +464,7 @@ setCgsFore(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, Pixel fg)
 }
 
 void
-setCgsBack(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, Pixel bg)
+setCgsBack(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, Pixel bg)
 {
     CgsCache *me;
 
@@ -475,7 +476,7 @@ setCgsBack(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, Pixel bg)
 
 #if OPT_DEC_CHRSET
 void
-setCgsCSet(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, unsigned cset)
+setCgsCSet(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, unsigned cset)
 {
     CgsCache *me;
 
@@ -489,7 +490,7 @@ setCgsCSet(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, unsigned cset)
 #endif
 
 void
-setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XTermFonts * font)
+setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
 {
     CgsCache *me;
 
@@ -505,8 +506,9 @@ setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XTermFonts * font)
 		font = &(TScreenOf(xw)->fnts[fNorm]);
 	}
 	if (HaveFont(font) && okFont(font->fs)) {
-	    TRACE2(("...updated next font in %p for %s to %s\n",
-		    me, traceCgsEnum(cgsId), traceFont(font)));
+	    TRACE2(("setCgsFont next: %s for %s slot %p, gc %#x\n",
+		    traceFont(font), traceCgsEnum(cgsId),
+		    me, (unsigned) THIS(gc)));
 	    TRACE2(("...next font was %s\n", traceFont(NEXT(font))));
 	    NEXT(font) = font;
 	    me->mask |= GCFont;
@@ -523,7 +525,7 @@ setCgsFont(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId, XTermFonts * font)
  * Keep the GC's so we can simply change them rather than creating new ones.
  */
 void
-clrCgsFonts(XtermWidget xw, VTwin * cgsWin, XTermFonts * font)
+clrCgsFonts(XtermWidget xw, VTwin *cgsWin, XTermFonts * font)
 {
     CgsCache *me;
     int j, k;
@@ -559,7 +561,7 @@ clrCgsFonts(XtermWidget xw, VTwin * cgsWin, XTermFonts * font)
  * Return a GC associated with the given id, allocating if needed.
  */
 GC
-getCgsGC(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
+getCgsGC(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 {
     CgsCache *me;
     GC result = 0;
@@ -648,7 +650,7 @@ getCgsGC(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
  * Return the font for the given GC.
  */
 CgsEnum
-getCgsId(XtermWidget xw, VTwin * cgsWin, GC gc)
+getCgsId(XtermWidget xw, VTwin *cgsWin, GC gc)
 {
     int n;
     CgsEnum result = gcNorm;
@@ -670,7 +672,7 @@ getCgsId(XtermWidget xw, VTwin * cgsWin, GC gc)
  * Return the font for the given GC.
  */
 XTermFonts *
-getCgsFont(XtermWidget xw, VTwin * cgsWin, GC gc)
+getCgsFont(XtermWidget xw, VTwin *cgsWin, GC gc)
 {
     int n;
     XTermFonts *result = 0;
@@ -692,7 +694,7 @@ getCgsFont(XtermWidget xw, VTwin * cgsWin, GC gc)
  * Return the foreground color for the given GC.
  */
 Pixel
-getCgsFore(XtermWidget xw, VTwin * cgsWin, GC gc)
+getCgsFore(XtermWidget xw, VTwin *cgsWin, GC gc)
 {
     int n;
     Pixel result = 0;
@@ -714,7 +716,7 @@ getCgsFore(XtermWidget xw, VTwin * cgsWin, GC gc)
  * Return the background color for the given GC.
  */
 Pixel
-getCgsBack(XtermWidget xw, VTwin * cgsWin, GC gc)
+getCgsBack(XtermWidget xw, VTwin *cgsWin, GC gc)
 {
     int n;
     Pixel result = 0;
@@ -736,7 +738,7 @@ getCgsBack(XtermWidget xw, VTwin * cgsWin, GC gc)
  * Copy the parameters (except GC of course) from one cache record to another.
  */
 void
-copyCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
+copyCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 {
     if (dstCgsId != srcCgsId) {
 	CgsCache *me;
@@ -801,7 +803,7 @@ redoCgs(XtermWidget xw, Pixel fg, Pixel bg, CgsEnum cgsId)
  * Swap the cache records, e.g., when doing reverse-video.
  */
 void
-swapCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
+swapCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 {
     if (dstCgsId != srcCgsId) {
 	CgsCache *dst;
@@ -826,7 +828,7 @@ swapCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
  * Free any GC associated with the given id.
  */
 GC
-freeCgs(XtermWidget xw, VTwin * cgsWin, CgsEnum cgsId)
+freeCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 {
     CgsCache *me;
     int j;

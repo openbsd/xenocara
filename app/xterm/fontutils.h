@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.h,v 1.89 2013/12/09 12:18:01 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.94 2014/06/08 21:10:27 tom Exp $ */
 
 /*
- * Copyright 1998-2011,2013 by Thomas E. Dickey
+ * Copyright 1998-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -52,10 +52,15 @@ extern void xtermFreeFontInfo (XTermFonts * /* target */);
 extern void xtermSaveFontInfo (TScreen * /* screen */, XFontStruct */* font */);
 extern void xtermSetCursorBox (TScreen * /* screen */);
 extern void xtermUpdateFontInfo (XtermWidget /* xw */, Bool /* doresize */);
+extern void xtermUpdateFontGCs (XtermWidget /* xw */, XTermFonts * /* fnts */);
 
 #if OPT_DEC_CHRSET
-extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsigned /* chrset */);
+extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* attr_flags */, unsigned /* draw_flags */, unsigned /* chrset */);
 #endif
+
+#define FontLacksMetrics(font) \
+	((font)->fs != 0 \
+	 && ((font)->fs->per_char == 0))
 
 #define FontIsIncomplete(font) \
 	((font)->fs != 0 \
@@ -88,12 +93,12 @@ extern char *xtermSpecialFont (TScreen */* screen */, unsigned /* atts */, unsig
 	  : ((FontIsIncomplete(font) && xtermMissingChar(ch, font)) \
 	   || ForceBoxChars(screen, ch)))
 
-extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
+extern void xtermDrawBoxChar (XtermWidget /* xw */, unsigned /* ch */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* cols */);
 #else
 #define IsXtermMissingChar(screen, ch, font) False
 #endif
 
-#if OPT_BOX_CHARS || OPT_REPORT_FONTS 
+#if OPT_BOX_CHARS || OPT_REPORT_FONTS
 extern Bool xtermMissingChar (unsigned /* ch */, XTermFonts */* font */);
 #endif
 
@@ -118,6 +123,10 @@ extern String getFaceName(XtermWidget /* xw */, Bool /* wideName */);
 extern void HandleLargerFont PROTO_XT_ACTIONS_ARGS;
 extern void HandleSmallerFont PROTO_XT_ACTIONS_ARGS;
 extern void setFaceName(XtermWidget /* xw */, const char * /*value */);
+#endif
+
+#if OPT_WIDE_ATTRS
+extern void xtermLoadItalics(XtermWidget /* xw */);
 #endif
 
 #if OPT_WIDE_CHARS

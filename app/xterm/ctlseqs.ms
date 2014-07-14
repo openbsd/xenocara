@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.310 2014/05/03 00:27:29 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.311 2014/05/27 00:23:36 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #304
-.ds RF 2014/05/02
+.ds LF Patch #305
+.ds RF 2014/05/26
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1056,15 +1056,21 @@ Use this with terminfo-based applications rather than the \*4\*7 mode.
 Character Attributes (SGR).
   \*(Ps = \*0 \(-> Normal (default).
   \*(Ps = \*1 \(-> Bold.
+  \*(Ps = \*2 \(-> Faint, decreased intensity (ISO 6429).
+  \*(Ps = \*3 \(-> Italicized (ISO 6429).
   \*(Ps = \*4 \(-> Underlined.
   \*(Ps = \*5 \(-> Blink (appears as Bold).
   \*(Ps = \*7 \(-> Inverse.
   \*(Ps = \*8 \(-> Invisible, i.e., hidden (VT300).
+  \*(Ps = \*9 \(-> Crossed-out characters (ISO 6429).
+  \*(Ps = \*2\*1 \(-> Doubly-underlined (ISO 6429).
   \*(Ps = \*2\*2 \(-> Normal (neither bold nor faint).
+  \*(Ps = \*2\*3 \(-> Not italicized (ISO 6429).
   \*(Ps = \*2\*4 \(-> Not underlined.
   \*(Ps = \*2\*5 \(-> Steady (not blinking).
   \*(Ps = \*2\*7 \(-> Positive (not inverse).
   \*(Ps = \*2\*8 \(-> Visible, i.e., not hidden (VT300).
+  \*(Ps = \*2\*9 \(-> Not crossed-out (ISO 6429).
   \*(Ps = \*3\*0 \(-> Set foreground color to Black.
   \*(Ps = \*3\*1 \(-> Set foreground color to Red.
   \*(Ps = \*3\*2 \(-> Set foreground color to Green.

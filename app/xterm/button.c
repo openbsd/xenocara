@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.467 2014/04/22 00:50:10 tom Exp $ */
+/* $XTermId: button.c,v 1.473 2014/05/26 17:12:51 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1235,7 +1235,7 @@ UTF8toLatin1(TScreen *screen, Char *s, unsigned long len, unsigned long *result)
 	PtyData data;
 
 	fakePtyData(&data, s, s + len);
-	while (decodeUtf8(&data)) {
+	while (decodeUtf8(screen, &data)) {
 	    Bool fails = False;
 	    Bool extra = False;
 	    IChar value = skipPtyData(&data);
@@ -1846,7 +1846,7 @@ ToNational(TScreen *screen, Char *buffer, unsigned *length)
 	memcpy(data->buffer, buffer, (size_t) *length);
 	p = buffer;
 	while (data->next < data->last) {
-	    if (!decodeUtf8(data)) {
+	    if (!decodeUtf8(screen, data)) {
 		data->utf_size = 1;
 		data->utf_data = data->next[0];
 	    }
@@ -2821,7 +2821,7 @@ static int
 LastTextCol(TScreen *screen, LineData *ld, int row)
 {
     int i = -1;
-    Char *ch;
+    IAttr *ch;
 
     if (ld != 0) {
 	if (okScrnRow(screen, row)) {
@@ -3229,8 +3229,8 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 			if (regexec(&preg,
 				    search + indexed[col],
 				    (size_t) 1, &match, 0) == 0) {
-			    int start_inx = match.rm_so + indexed[col];
-			    int finis_inx = match.rm_eo + indexed[col];
+			    int start_inx = (int) (match.rm_so + indexed[col]);
+			    int finis_inx = (int) (match.rm_eo + indexed[col]);
 			    int start_col = indexToCol(indexed, len, start_inx);
 			    int finis_col = indexToCol(indexed, len, finis_inx);
 
@@ -4086,7 +4086,7 @@ _OwnSelection(XtermWidget xw,
 			     screen->selection_length, cutbuffer);
 	    } else {
 		/* This used to just use the UTF-8 data, which was totally
-		 * broken as not even the corresponding paste code in Xterm
+		 * broken as not even the corresponding paste code in xterm
 		 * understood this!  So now it converts to Latin1 first.
 		 *   Robert Brady, 2000-09-05
 		 */
@@ -4225,23 +4225,27 @@ SaveText(TScreen *screen,
 	/* We want to strip out every occurrence of HIDDEN_CHAR AFTER a
 	 * wide character.
 	 */
-	if (c == HIDDEN_CHAR && isWide((int) previous)) {
-	    previous = c;
-	    /* Combining characters attached to double-width characters
-	       are in memory attached to the HIDDEN_CHAR */
-	    if_OPT_WIDE_CHARS(screen, {
-		if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
-		    unsigned ch;
-		    size_t off;
-		    for_each_combData(off, ld) {
-			ch = ld->combData[off][i];
-			if (ch == 0)
-			    break;
-			lp = convertToUTF8(lp, ch);
+	if (c == HIDDEN_CHAR) {
+	    if (isWide((int) previous)) {
+		previous = c;
+		/* Combining characters attached to double-width characters
+		   are in memory attached to the HIDDEN_CHAR */
+		if_OPT_WIDE_CHARS(screen, {
+		    if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
+			unsigned ch;
+			size_t off;
+			for_each_combData(off, ld) {
+			    ch = ld->combData[off][i];
+			    if (ch == 0)
+				break;
+			    lp = convertToUTF8(lp, ch);
+			}
 		    }
-		}
-	    });
-	    continue;
+		});
+		continue;
+	    } else {
+		c = ' ';	/* should not happen, but just in case... */
+	    }
 	}
 	previous = c;
 	if ((screen->utf8_nrc_mode | screen->utf8_mode) != uFalse) {
@@ -4784,7 +4788,7 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
 
     *buffer = '\0';
     if (ld != 0 && cell->col < (int) ld->lineSize) {
-	Char attribs = ld->attribs[cell->col];
+	IAttr attribs = ld->attribs[cell->col];
 	const char *delim = "";
 
 	if (attribs & INVERSE) {

@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.737 2014/05/03 19:30:17 tom Exp $ */
+/* $XTermId: xterm.h,v 1.743 2014/06/28 20:53:20 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -421,7 +421,7 @@ extern char **environ;
 #define XtNcursorColor		"cursorColor"
 #define XtNcursorOffTime	"cursorOffTime"
 #define XtNcursorOnTime		"cursorOnTime"
-#define XtNcursorUnderline	"cursorUnderLine"
+#define XtNcursorUnderLine	"cursorUnderLine"
 #define XtNcutNewline		"cutNewline"
 #define XtNcutToBeginningOfLine	"cutToBeginningOfLine"
 #define XtNdecTerminalID	"decTerminalID"
@@ -606,7 +606,7 @@ extern char **environ;
 #define XtCCursorBlink		"CursorBlink"
 #define XtCCursorOffTime	"CursorOffTime"
 #define XtCCursorOnTime		"CursorOnTime"
-#define XtCCursorUnderline	"CursorUnderLine"
+#define XtCCursorUnderLine	"CursorUnderLine"
 #define XtCCutNewline		"CutNewline"
 #define XtCCutToBeginningOfLine	"CutToBeginningOfLine"
 #define XtCDecTerminalID	"DecTerminalID"
@@ -954,7 +954,7 @@ extern void xterm_DECDWL (XtermWidget /* xw */);
 extern void xterm_ResetDouble(XtermWidget /* xw */);
 #if OPT_DEC_CHRSET
 extern int xterm_Double_index(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */);
-extern GC xterm_DoubleGC(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* flags */, GC  /* old_gc */, int * /* inxp */);
+extern GC xterm_DoubleGC(XtermWidget /* xw */, unsigned  /* chrset */, unsigned  /* attr_flags */, unsigned  /* draw_flags */, GC  /* old_gc */, int * /* inxp */);
 #endif
 
 /* input.c */
@@ -1164,7 +1164,7 @@ extern void xtermPrintOnXError (XtermWidget /* xw */, int /* n */);
 #define PtySelect fd_set
 #endif
 
-extern Bool decodeUtf8 (PtyData * /* data */);
+extern Bool decodeUtf8 (TScreen * /* screen */, PtyData * /* data */);
 extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
 extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, int  /* length */);
 extern void initPtyData (PtyData ** /* data */);
@@ -1185,7 +1185,7 @@ extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
 #define morePtyData(screen,data) \
 	(((data)->last > (data)->next) \
 	 ? (((screen)->utf8_inparse && !(data)->utf_size) \
-	    ? decodeUtf8(data) \
+	    ? decodeUtf8(screen, data) \
 	    : True) \
 	 : False)
 #else
@@ -1331,11 +1331,14 @@ extern void TabZonk (Tabs  /* tabs */);
 /* util.c */
 extern Boolean isDefaultBackground(const char * /* name */);
 extern Boolean isDefaultForeground(const char * /* name */);
+extern CgsEnum whichXtermCgs(XtermWidget /* xw */, unsigned /* attr_flags */, Bool /* hilite */);
 extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned /* fg_bg */, Bool  /* hilite */);
+extern Pixel getXtermBackground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
+extern Pixel getXtermForeground(XtermWidget /* xw */, unsigned /* flags */, int /* color */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
 extern int dimRound (double /* value */);
-extern int drawXtermText (XtermWidget /* xw */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
+extern int drawXtermText (XtermWidget /* xw */, unsigned /* attr_flags */, unsigned /* draw_flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
 extern int extendedBoolean(const char * /* value */, const FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
 extern void ClearRight (XtermWidget /* xw */, int /* n */);
@@ -1379,16 +1382,6 @@ extern CellColor makeColorPair (int  /* fg */, int  /* bg */);
 extern void ClearCurBackground (XtermWidget /* xw */, int  /* top */, int  /* left */, unsigned  /* height */, unsigned  /* width */, unsigned /* fw */);
 
 #define xtermColorPair(xw) makeColorPair(xw->sgr_foreground, xw->sgr_background)
-
-#define getXtermForeground(xw, flags, color) \
-	(((flags) & FG_COLOR) && ((int)(color) >= 0 && (color) < MAXCOLORS) \
-			? GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]) \
-			: T_COLOR(TScreenOf(xw), TEXT_FG))
-
-#define getXtermBackground(xw, flags, color) \
-	(((flags) & BG_COLOR) && ((int)(color) >= 0 && (color) < MAXCOLORS) \
-			? GET_COLOR_RES(xw, TScreenOf(xw)->Acolors[color]) \
-			: T_COLOR(TScreenOf(xw), TEXT_BG))
 
 #if OPT_COLOR_RES
 #define GET_COLOR_RES(xw, res) xtermGetColorRes(xw, &(res))
@@ -1446,8 +1439,6 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 
 		/* FIXME: Reverse-Video? */
 #define T_COLOR(v,n) (v)->Tcolors[n]
-#define getXtermBackground(xw, flags, color) T_COLOR(TScreenOf(xw), TEXT_BG)
-#define getXtermForeground(xw, flags, color) T_COLOR(TScreenOf(xw), TEXT_FG)
 #define makeColorPair(fg, bg) 0
 #define xtermColorPair(xw) 0
 

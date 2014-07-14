@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.196 2014/04/12 00:55:22 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.198 2014/07/12 22:55:02 tom Exp $ */
 
 /*
  * Copyright 2001-2012,2014 by Thomas E. Dickey
@@ -90,6 +90,8 @@
 #include <X11/Xaw/Form.h>
 #elif defined(HAVE_LIB_XAW3D)
 #include <X11/Xaw3d/Form.h>
+#elif defined(HAVE_LIB_XAW3DXFT)
+#include <X11/Xaw3dxft/Form.h>
 #elif defined(HAVE_LIB_NEXTAW)
 #include <X11/neXtaw/Form.h>
 #elif defined(HAVE_LIB_XAWPLUS)
@@ -926,7 +928,7 @@ TekConfigure(Widget w)
 /*ARGSUSED*/
 void
 TekExpose(Widget w,
-	  XEvent * event GCC_UNUSED,
+	  XEvent *event GCC_UNUSED,
 	  Region region GCC_UNUSED)
 {
     TekWidget tw = getTekWidget(w);
@@ -1938,7 +1940,7 @@ TekCopy(TekWidget tw)
 /*ARGSUSED*/
 void
 HandleGINInput(Widget w,
-	       XEvent * event GCC_UNUSED,
+	       XEvent *event GCC_UNUSED,
 	       String *param_list,
 	       Cardinal *nparamsp)
 {
