@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.26 2014/07/09 21:32:40 jsg Exp $
+# $OpenBSD: Makefile,v 1.27 2014/07/14 19:06:02 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -50,12 +50,8 @@ SUBDIR= libpthread-stubs \
 SUBDIR+= pixman
 .endif
 
-# libdrm is needed by the via driver built on i386 only
-.if ${XENOCARA_BUILD_DRI:L} == "yes" || ${MACHINE} == "i386"
-SUBDIR+= libdrm libgbm
-.endif
-
 .if ${XENOCARA_BUILD_GL:L} == "yes"
+SUBDIR+= libdrm libgbm
 SUBDIR+= libglapi libGL libEGL libGLESv1_CM libGLESv2 libGLU libGLw libtxc_dxtn
 .endif
 
