@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.198 2014/07/14 08:30:36 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.199 2014/07/14 08:56:32 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -60,30 +60,3 @@ Package:	fvwm
 Version:	2.2.5
 Comment:	Locally forked, newer upstream versions have incompatible
 		licensing.
-
-Package:	cwm
-Version:	3
-Current Vers:	3
-Maintainer:	marius@openbsd.org
-Archive Site:	http://monkey.org/~marius/pages/?page=cwm
-Comment:	Now maintained in Xenocara. Abandonned upstreams.
-
-Package:	xidle
-Maintainer:	fgsch@openbsd.org
-Comment:	developed and maintained in Xenocara
-
-Package:	xsystrace
-Maintainer:	matthieu@openbsd.org
-Comment:	developed and maintained in Xenocara
-
-Package:	xvctl
-Maintainer:	espie@openbsd.org
-Comment:	developed and maintained in Xenocara
-
-Package:	xf86-input-usbtablet
-Maintainer:	matthieu@openbsd.org
-Comment:	developed and maintained in Xenocara
-
-Package:	xf86-input-ws
-Maintainer:	matthieu@openbsd.org
-Comment:	developed and maintained in Xenocara
