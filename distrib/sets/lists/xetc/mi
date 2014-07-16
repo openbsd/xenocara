@@ -111,5 +111,5 @@
 ./etc/fonts/conf.d/README
 ./etc/fonts/fonts.conf
 ./etc/fonts/fonts.dtd
-./var/db/sysmerge
-./var/db/sysmerge/xetcsum
+./usr/share/sysmerge
+./usr/share/sysmerge/xetcsum

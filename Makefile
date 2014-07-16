@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.59 2014/07/11 13:45:54 matthieu Exp $
+# $OpenBSD: Makefile,v 1.60 2014/07/16 21:38:36 ajacoutot Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -110,12 +110,12 @@ release-install:
 		${XCONFIG} ${DESTDIR}/etc/X11 ; \
 	fi
 .endif
-	touch ${DESTDIR}/var/db/sysmerge/xetcsum
-	TMPSUM=`mktemp /tmp/_xetcsum.XXXXXXXXXX` || exit 1; \
-	sort distrib/sets/lists/xetc/{mi,md.${MACHINE}} > $${TMPSUM}; \
+	touch ${DESTDIR}/usr/share/sysmerge/xetcsum
+	XETCLIST=`mktemp /tmp/_xetcsum.XXXXXXXXXX` || exit 1; \
+	sort distrib/sets/lists/xetc/{mi,md.${MACHINE}} > $${XETCLIST}; \
 	cd ${DESTDIR} && \
-		xargs cksum < $${TMPSUM} > ${DESTDIR}/var/db/sysmerge/xetcsum; \
-	rm -f $${TMPSUM}
+		xargs sha256 -h ${DESTDIR}/usr/share/sysmerge/xetcsum < $${XETCLIST} || true; \
+	rm -f $${XETCLIST}
 
 dist-rel:
 	${MAKE} RELEASEDIR=`pwd`/rel DESTDIR=`pwd`/dest dist 2>&1 | tee distlog
