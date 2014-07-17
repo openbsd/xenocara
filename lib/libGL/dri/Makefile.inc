@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.19 2014/07/09 21:32:40 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.20 2014/07/17 13:53:23 jsg Exp $
 .include <bsd.xconf.mk>
 .include "../config.mk"
 
@@ -20,7 +20,7 @@ COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
 	meta.c \
 	megadriver_stub.c
 
-CFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING \
+CPPFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING \
 	 $(INCLUDES) $(DRIVER_DEFINES)
 
 INCLUDES = \
