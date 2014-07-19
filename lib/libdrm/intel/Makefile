@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2013/03/25 14:01:33 jsg Exp $
+# $OpenBSD: Makefile,v 1.6 2014/07/19 17:06:47 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=		drm_intel
@@ -10,7 +10,8 @@ CPPFLAGS+=	-I${.CURDIR}			\
 		-I${X11BASE}/include		\
 		-I/usr/include/dev/pci/drm 
 
-INCS= 		intel_bufmgr.h
+INCS=		intel_aub.h		\
+		intel_bufmgr.h
 
 SRCS=		intel_bufmgr.c		\
 		intel_bufmgr_fake.c	\
