@@ -1,8 +1,8 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.22 2013/12/01 20:34:20 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.23 2014/07/20 19:22:20 matthieu Exp $
 
 .include <bsd.own.mk>
 
-SHARED_LIBS=	pixman-1 32.4
+SHARED_LIBS=	pixman-1 32.6
 
 .if ${MACHINE_ARCH} == arm
 CONFIGURE_ARGS +=  --disable-arm-simd --disable-arm-neon
