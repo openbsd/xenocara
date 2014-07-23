@@ -341,3 +341,5 @@
 ./var/cache
 ./var/cache/fontconfig
 ./var/cache/fontconfig/CACHEDIR.TAG
+./var/db/sysmerge
+./var/db/sysmerge/xetcsum
