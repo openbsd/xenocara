@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2008/04/08 21:53:47 todd Exp $
+# $OpenBSD: Makefile,v 1.5 2014/07/23 20:47:37 todd Exp $
 
 # Various list maintenance functions
 
@@ -14,7 +14,8 @@ all: sort
 
 sort:
 	@for f in */m*; do echo "===> sorting $$f"; \
-		sed 's/[ ]*$$//' $$f | sort | uniq > $$f.tmp; \
+		sed 's/[ ]*$$//' $$f | sort -u | awk '/^$$/{next}{print}' > \
+			$$f.tmp; \
 		diff -u $$f $$f.tmp || true; \
 		cat $$f.tmp > $$f && rm $$f.tmp; \
 	done
