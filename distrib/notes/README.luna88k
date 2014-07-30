@@ -10,10 +10,10 @@ No xorg.conf is needed in this configuration, unless you want to
 change default options.
 
 To start xdm, the X display manager, activate the xdm_flags option in
-/etc/rc.conf. You will need to disable the console getty in /etc/ttys.
+/etc/rc.conf.local(8). You will need to disable the console getty in /etc/ttys.
 
 Alternatively, you can log in on console and use `startx'.
 
 problem_blurb
 
-$OpenBSD: README.luna88k,v 1.2 2013/07/16 20:43:50 aoyama Exp $
+$OpenBSD: README.luna88k,v 1.3 2014/07/30 20:06:30 matthieu Exp $

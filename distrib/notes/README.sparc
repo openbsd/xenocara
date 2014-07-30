@@ -37,9 +37,10 @@ Post-installation instructions for X.Org on OpenBSD/sparc
 
 2. Start either xdm(1) or startx(1).
 
-   a. Start xdm(1), the X display manager by activating the xdm_flags option
-      in /etc/rc.conf(8) or /etc/rc.conf.local(8).  It is necessary to disable
-      /dev/console in /etc/ttys, change the 'status' of /dev/console to 'off'.
+   a. Start xdm(1), the X display manager by activating the xdm_flags
+      option in /etc/rc.conf.local(8).  It is necessary to disable
+      /dev/console in /etc/ttys, change the 'status' of /dev/console
+      to 'off'.
 
    b. Start startx(1) from a console shell.  It is the X script that starts
       the X server and a few X applications, including a window manager.
@@ -47,4 +48,4 @@ Post-installation instructions for X.Org on OpenBSD/sparc
 
 problem_blurb
 
-$OpenBSD: README.sparc,v 1.3 2009/05/20 18:26:35 miod Exp $
+$OpenBSD: README.sparc,v 1.4 2014/07/30 20:06:30 matthieu Exp $

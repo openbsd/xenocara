@@ -6,26 +6,15 @@ Conventions used in this document:
     manual page available in section 1 of the manual pages for further
     reading, viewed by typing "man 1 somename".
 
-1. Make sure your system has support for X enabled:
-
-   You must have "option APERTURE" in your kernel configuration and
-   uncomment the line that says:
-
-	machdep.allowaperture=2
-
-   in /etc/sysctl.conf.  See xf86(4) for more details about security
-   issues related to this.  After changing this variable in sysctl.conf,
-   you will need to reboot for the change to take effect.
-
-2. Start either xdm(1) or startx(1).
+1. Start either xdm(1) or startx(1).
 
    a. Start xdm(1), the X display manager by activating the xdm_flags option
-      in /etc/rc.conf(8) or /etc/rc.conf.local(8).
+      in /etc/rc.conf.local(8).
 
    b. Start startx(1) from a console shell.  It is the X script that starts
       the X server and a few X applications, including a window manager.
 
-3. If needed, Create the configuration file for your server.
+2. If needed, Create the configuration file for your server.
 
    For many users of X.Org's servers, an xorg.conf file is not needed,
    X, will automatically detect and use your hardware.
@@ -38,9 +27,9 @@ Conventions used in this document:
 
    See also Xorg(1), xorg.conf(5).
 
-4. With X.Org XOrgVersion, you can use anti-aliased fonts in many applications.
+3. With X.Org XOrgVersion, you can use anti-aliased fonts in many applications.
    visit http://www.openbsd.org/faq/truetype.html for more information.
 
 problem_blurb
 
-$OpenBSD: README.amd64,v 1.7 2013/12/30 09:16:41 jsg Exp $
+$OpenBSD: README.amd64,v 1.8 2014/07/30 20:06:30 matthieu Exp $

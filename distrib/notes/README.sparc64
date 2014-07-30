@@ -58,9 +58,6 @@ your monitor.
 For UPA Creator framebuffers, the device will be automatically detected
 and you don't need to have an xorg.conf file.
 
-To use xdm from rc.conf, it is necessary to disable /dev/console in
-/etc/ttys, change the 'status' of /dev/console to 'off'.
-
 Dual, unaccelerated display
 ---------------------------
 Dual-headed displays are only supported on machines with SBus framebuffers.
@@ -93,9 +90,9 @@ displays and their location relative to the first, as in:
 
 See xorg.conf(5) for more options.
 
-To use xdm from rc.conf, it is necessary to disable /dev/console in
+To use xdm from rc.conf.local(8), it is necessary to disable /dev/console in
 /etc/ttys, change the 'status' of /dev/console to 'off'.
 
 problem_blurb
 
-$OpenBSD: README.sparc64,v 1.10 2011/02/21 18:13:18 miod Exp $
+$OpenBSD: README.sparc64,v 1.11 2014/07/30 20:06:30 matthieu Exp $
