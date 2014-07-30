@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2014/07/12 16:36:22 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2014/07/30 16:48:32 jsg Exp $
 
-CONFIGURE_ARGS+= --with-cpp=/usr/libexec/auxcpp
+CONFIGURE_ARGS+= --with-cpp=/usr/libexec/tradcpp
 
 .include <bsd.xorg.mk>
