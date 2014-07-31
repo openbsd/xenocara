@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.24 2014/05/09 19:56:40 matthieu Exp $
+# $OpenBSD: Makefile,v 1.25 2014/07/31 20:13:40 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -54,12 +54,28 @@ beforedepend: builtin_icons.h
 
 .SUFFIXES: .man .1
 
+PATCH_NUM != sed -n '/XTERM_PATCH/s/[^0-9]*//gp' ${.CURDIR}/version.h
+PATCH_YMD != sed -n '/XTERM_DATE/s,[^0-9/.-]*,,gp' ${.CURDIR}/version.h
+
 .man.1:
 	sed -e 's#__vendorversion__#"X Window System"#g' \
 	    -e 's#__mansuffix__#1#g' \
 	    -e 's#__miscmansuffix__#7#g' \
 	    -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
-	    < $< > $@
+	    -e 's%__app_version__%Patch\ \#'$(PATCH_NUM)% \
+	    -e 's%__app_date__%'${PATCH_YMD}% \
+	    -e s%__default_termname__%xterm% \
+	    -e s%__default_termid__%vt100% \
+	    -e s%__alt_sends_esc__%false% \
+	    -e s%__meta_sends_esc__%false% \
+	    -e s%__backarrow_is_bs__%true% \
+	    -e s%__backarrow_is_erase__%true% \
+	    -e s%__delete_is_del__%true% \
+	    -e s%__default_class__%XTerm% \
+	    -e s%__pixmapsdir__%${X11BASE}/include/X11/pixmaps/% \
+	    -e s%/etc/utmp%/var/run/utmp%g \
+	    -e s%/etc/wtmp%/var/run/wtmp%g \
+	     < $< > $@
 
 CLEANFILES+=	${MAN} builtin_icons.h
 
