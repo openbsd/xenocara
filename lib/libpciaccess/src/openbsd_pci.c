@@ -598,6 +598,12 @@ pci_system_openbsd_create(void)
 	if (ndomains > 0)
 		return 0;
 
+	pci_sys = calloc(1, sizeof(struct pci_system));
+	if (pci_sys == NULL)
+		return ENOMEM;
+
+	pci_sys->methods = &openbsd_pci_methods;
+
 	for (domain = 0; domain < sizeof(pcifd) / sizeof(pcifd[0]); domain++) {
 		snprintf(path, sizeof(path), "/dev/pci%d", domain);
 	        pcifd[domain] = open(path, O_RDWR | O_CLOEXEC);
@@ -611,16 +617,6 @@ pci_system_openbsd_create(void)
 
 	if (ndomains == 0)
 		return ENXIO;
-
-	pci_sys = calloc(1, sizeof(struct pci_system));
-	if (pci_sys == NULL) {
-		for (domain = 0; domain < ndomains; domain++)
-			close(pcifd[domain]);
-		ndomains = 0;
-		return ENOMEM;
-	}
-
-	pci_sys->methods = &openbsd_pci_methods;
 
 	ndevs = 0;
 	for (domain = 0; domain < ndomains; domain++) {
