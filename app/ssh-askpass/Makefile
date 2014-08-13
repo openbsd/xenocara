@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.13 2011/06/23 22:48:59 naddy Exp $
+# $OpenBSD: Makefile,v 1.14 2014/08/13 21:02:16 matthieu Exp $
 .include	<bsd.xconf.mk>
 
 PROG=		ssh-askpass
@@ -33,7 +33,7 @@ x11-ssh-askpass.o: $(CLASS)_ad.h
 
 afterinstall:
 	${INSTALL_DATA} $(CLASS).ad \
-		$(DESTDIR)/etc/X11/app-defaults/$(CLASS)
+		$(DESTDIR)${X11BASE}/share/X11/app-defaults/$(CLASS)
 
 beforedepend: $(CLASS)_ad.h
 

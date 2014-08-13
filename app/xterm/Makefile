@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.25 2014/07/31 20:13:40 matthieu Exp $
+# $OpenBSD: Makefile,v 1.26 2014/08/13 21:02:16 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -26,7 +26,6 @@ SRCS=	TekPrsTbl.c Tekproc.c VTPrsTbl.c button.c cachedGCs.c \
 	scrollback.c scrollbar.c tabs.c trace.c util.c version.c xstrings.c
 
 MANDIR=		${X11BASE}/man/man
-XETC?=		/etc/X11
 
 .if ${MACHINE_ARCH} == "sh"
 charproc.o:	charproc.c
@@ -61,7 +60,7 @@ PATCH_YMD != sed -n '/XTERM_DATE/s,[^0-9/.-]*,,gp' ${.CURDIR}/version.h
 	sed -e 's#__vendorversion__#"X Window System"#g' \
 	    -e 's#__mansuffix__#1#g' \
 	    -e 's#__miscmansuffix__#7#g' \
-	    -e 's#__apploaddir__#${X11ETC}/app-defaults#g' \
+	    -e 's#__apploaddir__#${X11BASE}/share/X11/app-defaults#g' \
 	    -e 's%__app_version__%Patch\ \#'$(PATCH_NUM)% \
 	    -e 's%__app_date__%'${PATCH_YMD}% \
 	    -e s%__default_termname__%xterm% \
@@ -85,13 +84,13 @@ afterinstall:
 	${INSTALL} ${INSTALL_COPY} -m 755 ${.CURDIR}/koi8rxterm \
 		${DESTDIR}${BINDIR}
 	${INSTALL_DATA} ${.CURDIR}/XTerm.ad \
-		${DESTDIR}${XETC}/app-defaults/XTerm
+		${DESTDIR}${X11BASE}/share/X11/app-defaults/XTerm
 	${INSTALL_DATA} ${.CURDIR}/XTerm-col.ad \
-		${DESTDIR}${XETC}/app-defaults/XTerm-color
+		${DESTDIR}${X11BASE}/share/X11/app-defaults/XTerm-color
 	${INSTALL_DATA} ${.CURDIR}/UXTerm.ad \
-		${DESTDIR}${XETC}/app-defaults/UXTerm
+		${DESTDIR}${X11BASE}/share/X11/app-defaults/UXTerm
 	${INSTALL_DATA} ${.CURDIR}/KOI8RXTerm.ad \
-		${DESTDIR}${XETC}/app-defaults/KOI8RXTerm
+		${DESTDIR}${X11BASE}/share/X11/app-defaults/KOI8RXTerm
 
 
 obj: _xenocara_obj

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2011/12/10 14:54:18 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.12 2014/08/13 21:02:16 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -11,7 +11,7 @@ config.status:
 	CONFIG_SITE=$(CONFIG_SITE) \
 		sh ${.CURDIR}/configure --prefix=${X11BASE} \
 		--datarootdir=${X11BASE} \
-		--enable-appdefaultdir=/etc/X11/app-defaults \
+		--enable-appdefaultdir=${X11BASE}/share/X11/app-defaults \
 		--enable-syslog --without-motif --without-ttf \
 		--without-gtk2 --without-gtk --without-esound \
 		--without-rplay --without-ftgl

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.12 2011/06/23 22:48:59 naddy Exp $
+# $OpenBSD: Makefile,v 1.13 2014/08/13 21:02:16 matthieu Exp $
 .include <bsd.xconf.mk>
 
 PROG=	xsystrace
@@ -15,7 +15,8 @@ SRCS=		main.c interface.c callbacks.c policy.c
 
 afterinstall:
 	${INSTALL_DATA} \
-		${.CURDIR}/Xsystrace.ad ${DESTDIR}/etc/X11/app-defaults/Xsystrace
+		${.CURDIR}/Xsystrace.ad \
+		${DESTDIR}${X11BASE}/share/X11/app-defaults/Xsystrace
 
 MANDIR=	${X11BASE}/man/man
 
