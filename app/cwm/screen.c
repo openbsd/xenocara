@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.61 2014/02/08 02:49:30 okan Exp $
+ * $OpenBSD: screen.c,v 1.62 2014/08/20 12:35:39 okan Exp $
  */
 
 #include <sys/param.h>
@@ -105,7 +105,7 @@ screen_updatestackingorder(struct screen_ctx *sc)
 			if ((cc = client_find(wins[i])) == NULL ||
 			    cc->flags & CLIENT_HIDDEN)
 				continue;
-	
+
 			cc->stackingorder = s++;
 		}
 		XFree(wins);
