@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.50 2014/05/18 10:29:01 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.51 2014/08/24 15:53:08 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -142,7 +142,7 @@ _lt_libs+=lib${_n:S/+/_/g:S/-/_/g:S/./_/g}_ltversion=${_v}
 
 .if !target(all)
 all:	config.status
-	exec ${MAKE} ${_lt_libs}
+	@exec ${MAKE} ${_lt_libs}
 .endif
 
 
