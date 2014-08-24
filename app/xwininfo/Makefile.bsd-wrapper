@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2012/02/28 20:49:29 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2014/08/24 20:22:20 matthieu Exp $
 
-# CONFIGURE_ARGS += --with-xcb-icccm
+CONFIGURE_ARGS += --with-xcb-icccm
 
 .include <bsd.xorg.mk>
