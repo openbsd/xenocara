@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.63 2014/08/20 15:15:29 okan Exp $
+ * $OpenBSD: screen.c,v 1.64 2014/08/24 15:37:45 okan Exp $
  */
 
 #include <sys/param.h>
@@ -69,7 +69,6 @@ screen_init(int which)
 		XFree(wins);
 	}
 	screen_updatestackingorder(sc);
-	group_set_state(sc);
 
 	if (HasRandr)
 		XRRSelectInput(X_Dpy, sc->rootwin, RRScreenChangeNotifyMask);
