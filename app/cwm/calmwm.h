@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.263 2014/08/24 15:37:45 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.264 2014/08/25 12:49:19 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -180,6 +180,7 @@ struct client_ctx {
 #define CLIENT_WM_TAKE_FOCUS		0x0200
 #define CLIENT_URGENCY			0x0400
 #define CLIENT_FULLSCREEN		0x0800
+#define CLIENT_STICKY			0x1000
 
 #define CLIENT_HIGHLIGHT		(CLIENT_GROUP | CLIENT_UNGROUP)
 #define CLIENT_MAXFLAGS			(CLIENT_VMAXIMIZED | CLIENT_HMAXIMIZED)
@@ -349,7 +350,8 @@ enum {
 	_NET_WM_DESKTOP,
 	_NET_CLOSE_WINDOW,
 	_NET_WM_STATE,
-#define	_NET_WM_STATES_NITEMS	4
+#define	_NET_WM_STATES_NITEMS	5
+	_NET_WM_STATE_STICKY,
 	_NET_WM_STATE_MAXIMIZED_VERT,
 	_NET_WM_STATE_MAXIMIZED_HORZ,
 	_NET_WM_STATE_FULLSCREEN,
@@ -396,6 +398,7 @@ void			 client_set_wm_state(struct client_ctx *, long);
 void			 client_setactive(struct client_ctx *);
 void			 client_setname(struct client_ctx *);
 int			 client_snapcalc(int, int, int, int, int);
+void			 client_sticky(struct client_ctx *);
 void			 client_transient(struct client_ctx *);
 void			 client_unhide(struct client_ctx *);
 void			 client_urgency(struct client_ctx *);
@@ -464,6 +467,7 @@ void			 kbfunc_client_nogroup(struct client_ctx *,
 void			 kbfunc_client_raise(struct client_ctx *, union arg *);
 void			 kbfunc_client_rcycle(struct client_ctx *, union arg *);
 void			 kbfunc_client_search(struct client_ctx *, union arg *);
+void			 kbfunc_client_sticky(struct client_ctx *, union arg *);
 void			 kbfunc_client_vmaximize(struct client_ctx *,
 			     union arg *);
 void			 kbfunc_cmdexec(struct client_ctx *, union arg *);

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.95 2014/01/30 15:41:11 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.96 2014/08/25 12:49:19 okan Exp $
  */
 
 #include <sys/param.h>
@@ -430,6 +430,12 @@ void
 kbfunc_client_movetogroup(struct client_ctx *cc, union arg *arg)
 {
 	group_movetogroup(cc, arg->i);
+}
+
+void
+kbfunc_client_sticky(struct client_ctx *cc, union arg *arg)
+{
+	client_sticky(cc);
 }
 
 void

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.176 2014/08/24 15:49:58 okan Exp $
+ * $OpenBSD: conf.c,v 1.177 2014/08/25 12:49:19 okan Exp $
  */
 
 #include <sys/param.h>
@@ -204,6 +204,7 @@ static const struct {
 	{ "CM-g",	"grouptoggle" },
 	{ "CM-f",	"fullscreen" },
 	{ "CM-m",	"maximize" },
+	{ "CM-s",	"sticky" },
 	{ "CM-equal",	"vmaximize" },
 	{ "CMS-equal",	"hmaximize" },
 	{ "CMS-f",	"freeze" },
@@ -389,6 +390,7 @@ static const struct {
 	{ "rcycleingroup", kbfunc_client_cycle, CWM_WIN,
 	    {.i = CWM_RCYCLE|CWM_INGROUP} },
 	{ "grouptoggle", kbfunc_client_grouptoggle, CWM_WIN, {0}},
+	{ "sticky", kbfunc_client_sticky, CWM_WIN, {0} },
 	{ "fullscreen", kbfunc_client_fullscreen, CWM_WIN, {0} },
 	{ "maximize", kbfunc_client_maximize, CWM_WIN, {0} },
 	{ "vmaximize", kbfunc_client_vmaximize, CWM_WIN, {0} },
@@ -678,6 +680,7 @@ static char *ewmhints[] = {
 	"_NET_WM_DESKTOP",
 	"_NET_CLOSE_WINDOW",
 	"_NET_WM_STATE",
+	"_NET_WM_STATE_STICKY",
 	"_NET_WM_STATE_MAXIMIZED_VERT",
 	"_NET_WM_STATE_MAXIMIZED_HORZ",
 	"_NET_WM_STATE_FULLSCREEN",
