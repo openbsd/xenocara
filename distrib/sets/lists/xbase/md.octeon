@@ -1,5 +1,4 @@
 ./usr/X11R6/bin/ucs2any
-./usr/X11R6/bin/xfs
 ./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xorg
@@ -97,7 +96,6 @@
 ./usr/X11R6/man/man1/bdftruncate.1
 ./usr/X11R6/man/man1/dga.1
 ./usr/X11R6/man/man1/ucs2any.1
-./usr/X11R6/man/man1/xfs.1
 ./usr/X11R6/man/man3/XDGA.3
 ./usr/X11R6/man/man3/XDGAChangePixmapMode.3
 ./usr/X11R6/man/man3/XDGACloseFramebuffer.3

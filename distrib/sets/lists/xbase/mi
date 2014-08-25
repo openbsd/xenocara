@@ -1,7 +1,6 @@
 ./etc
 ./etc/X11
 ./etc/X11/app-defaults
-./etc/X11/fs
 ./etc/X11/twm
 ./etc/X11/xdm
 ./etc/X11/xdm/chooser

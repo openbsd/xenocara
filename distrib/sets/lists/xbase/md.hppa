@@ -1,7 +1,6 @@
 ./usr/X11R6/bin/glxgears
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/xdriinfo
-./usr/X11R6/bin/xfs
 ./usr/X11R6/include/EGL/egl.h
 ./usr/X11R6/include/EGL/eglext.h
 ./usr/X11R6/include/EGL/eglmesaext.h
@@ -164,7 +163,6 @@
 ./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man/man1/glxgears.1
 ./usr/X11R6/man/man1/glxinfo.1
-./usr/X11R6/man/man1/xfs.1
 ./usr/X11R6/share/doc/dri2proto/dri2proto.txt
 ./var/cache/fontconfig/0fe0af1d5898cfe43064332244d1dc15-be32d8.cache-4
 ./var/cache/fontconfig/1bd20f0f0c9d7d1d5fd55b69fcc2b3a3-be32d8.cache-4
