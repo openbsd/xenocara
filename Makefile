@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.60 2014/07/16 21:38:36 ajacoutot Exp $
+# $OpenBSD: Makefile,v 1.61 2014/08/28 17:08:33 matthieu Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -101,7 +101,6 @@ release-clean:
 
 release-install:
 	@exec ${MAKE} bootstrap-root
-	@exec ${MAKE} install
 .if ${MACHINE} == zaurus
 	@if [ -f $(DESTDIR)/etc/X11/xorg.conf ]; then \
 	 echo "Not overwriting existing" $(DESTDIR)/etc/X11/xorg.conf; \
@@ -111,6 +110,7 @@ release-install:
 	fi
 .endif
 	touch ${DESTDIR}/usr/share/sysmerge/xetcsum
+	@exec ${MAKE} install
 	XETCLIST=`mktemp /tmp/_xetcsum.XXXXXXXXXX` || exit 1; \
 	sort distrib/sets/lists/xetc/{mi,md.${MACHINE}} > $${XETCLIST}; \
 	cd ${DESTDIR} && \

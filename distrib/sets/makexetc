@@ -1,0 +1,15 @@
+#!/bin/sh
+#	$OpenBSD: makexetc,v 1.1 2014/08/28 17:08:33 matthieu Exp $
+
+pwd=`pwd`
+listsdir=`pwd`/lists
+tardir=$DESTDIR/usr/share/sysmerge
+
+TMP=`mktemp /tmp/_makexetc.XXXXXXXXXX` || exit 1
+trap 'rm -f $TMP'  0 1 15
+
+cd ${DESTDIR:=/}
+
+(cd $pwd; sh gensetlist xetc) | sort >> $TMP
+pax -w -d < $TMP | gzip -9 > ${tardir}/xetc.tgz
+echo    "done."
