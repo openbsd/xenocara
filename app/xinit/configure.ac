@@ -31,10 +31,10 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require X.Org macros 1.8 or later for AC_PROG_SED in XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.19 or later for TRADITIONALCPPFLAGS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.8)
+          [m4_fatal([must install xorg-macros 1.19 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.19)
 XORG_DEFAULT_OPTIONS
 
 XORG_PROG_RAWCPP
@@ -50,8 +50,8 @@ DEFAULT_XTERM=xterm
 DEFAULT_XSERVER=${bindir}/X
 DEFAULT_XAUTH=xauth
 DEFAULT_XINIT=xinit
-DEFAULT_WM=fvwm
 DEFAULT_XINITDIR=${sysconfdir}/X11/xinit
+DEFAULT_WM=fvwm
 DEFAULT_XCONSOLE=xconsole
 
 AC_ARG_WITH(xrdb,
@@ -94,6 +94,11 @@ AC_ARG_WITH(xinit,
 	[XINIT="$withval"],
 	[XINIT="$DEFAULT_XINIT"])
 
+AC_ARG_WITH(xinitdir,
+	 AS_HELP_STRING([--with-xinitdir=XINITDIR], [Path to xinitdir]),
+	[XINITDIR="$withval"],
+	[XINITDIR="$DEFAULT_XINITDIR"])
+
 AC_ARG_WITH(wm,
 	AS_HELP_STRING([--with-wm=WM], [Path to default window manager]),
 	[WM="$withval"],
@@ -103,11 +108,6 @@ AC_ARG_WITH(xconsole,
 	 AS_HELP_STRING([--with-xconsole=XCONSOLE], [Path to xconsole]),
 	[XCONSOLE="$withval"],
 	[XCONSOLE="$DEFAULT_XCONSOLE"])
-
-AC_ARG_WITH(xinitdir,
-	 AS_HELP_STRING([--with-xinitdir=XINITDIR], [Path to xinitdir]),
-	[XINITDIR="$withval"],
-	[XINITDIR="$DEFAULT_XINITDIR"])
 
 AC_ARG_WITH(launchd,            AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
 AC_ARG_WITH(launchagents-dir,   AS_HELP_STRING([--with-launchagents-dir=PATH], [Path to launchd's LaunchAgents directory (default: /Library/LaunchAgents)]),
@@ -225,10 +225,9 @@ AC_SUBST(XTERM)
 AC_SUBST(XSERVER)
 AC_SUBST(XAUTH)
 AC_SUBST(XINIT)
+AC_SUBST(XINITDIR)
 AC_SUBST(WM)
 AC_SUBST(XCONSOLE)
-
-AC_SUBST(XINITDIR)
 
 AC_CONFIG_FILES([Makefile
 	man/Makefile
