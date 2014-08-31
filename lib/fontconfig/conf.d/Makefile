@@ -1,8 +1,9 @@
-#	$OpenBSD: Makefile,v 1.6 2013/03/16 15:09:38 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.7 2014/08/31 13:50:27 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
 CONFAVAILDIR=	/etc/fonts/conf.avail
+CONFAVAILREL=	../conf.avail
 
 DOC_FILES= \
 	README
@@ -71,9 +72,9 @@ install:
 	@(echo cd ${DESTDIR}${CONFIGDIR};			\
 	  cd ${DESTDIR}${CONFIGDIR};				\
 	  for i in ${CONF_LINKS}; do				\
-	    echo rm $$i";" ln -s ${CONFAVAILDIR}/$$i .;	\
+	    echo rm $$i";" ln -s ${CONFAVAILREL}/$$i .;	\
 	    rm -f $$i;						\
-	    ln -s ${CONFAVAILDIR}/$$i .;			\
+	    ln -s ${CONFAVAILREL}/$$i .;			\
 	  done)
 
 NOOBJ=
