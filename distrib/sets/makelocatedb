@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$OpenBSD: makelocatedb,v 1.2 2014/07/12 19:14:55 espie Exp $
+#	$OpenBSD: makelocatedb,v 1.3 2014/08/31 16:52:26 matthieu Exp $
 
 # xy
 RELEASE=$1
@@ -12,9 +12,7 @@ fi
 pwd=`pwd`
 listsdir=`pwd`/lists
 
-lists=`sh ./genlists ${MACHINE}`
-
-for setname in $lists; do
+for setname in xbase xetc xfont xserv xshare; do
 	(cd $pwd; sh gensetlist $setname) | \
 	    sed -e "s,^\.,${setname}${RELEASE}:,"
 done | sort | /usr/libexec/locate.mklocatedb

@@ -1,5 +1,5 @@
 #!/bin/sh
-#	$OpenBSD: maketars,v 1.5 2014/05/03 15:18:26 todd Exp $
+#	$OpenBSD: maketars,v 1.6 2014/08/31 16:52:26 matthieu Exp $
 
 # xy
 RELEASE=$1
@@ -29,11 +29,9 @@ trap 'rm -f $TMP1 $TMP2; rmdir $TMPDIR' 0 1 15
 TMP1=$TMPDIR/one
 TMP2=$TMPDIR/two
 
-lists=`sh ./genlists $arch`
-
 cd $DESTDIR
 
-for setname in $lists; do
+for setname in xbase xfont xserv xshare; do
 	echo -n "${setname}: "
 	(cd $pwd; sh gensetlist $setname) | sort > $TMP1
 	sed -n  '/^\.\/usr\/X11R6\/lib\/lib.*\.so\..*/{p;}' $TMP1 > $TMP2
