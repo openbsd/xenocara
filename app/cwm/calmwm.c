@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.89 2014/02/02 16:29:04 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.90 2014/09/06 16:24:32 okan Exp $
  */
 
 #include <sys/param.h>
@@ -48,7 +48,7 @@ struct conf			 Conf;
 const char			*homedir;
 volatile sig_atomic_t		 cwm_status;
 
-static void	sigchld_cb(int);
+static void	sighdlr(int);
 static int	x_errorhandler(Display *, XErrorEvent *);
 static void	x_init(const char *);
 static void	x_restart(char **);
@@ -84,7 +84,7 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	if (signal(SIGCHLD, sigchld_cb) == SIG_ERR)
+	if (signal(SIGCHLD, sighdlr) == SIG_ERR)
 		err(1, "signal");
 
 	if ((homedir = getenv("HOME")) == NULL || *homedir == '\0') {
@@ -205,16 +205,19 @@ x_errorhandler(Display *dpy, XErrorEvent *e)
 }
 
 static void
-sigchld_cb(int which)
+sighdlr(int sig)
 {
 	pid_t	 pid;
-	int	 save_errno = errno;
-	int	 status;
+	int	 save_errno = errno, status;
 
-	/* Collect dead children. */
-	while ((pid = waitpid(-1, &status, WNOHANG)) > 0 ||
-	    (pid < 0 && errno == EINTR))
-		;
+	switch (sig) {
+	case SIGCHLD:
+		/* Collect dead children. */
+		while ((pid = waitpid(WAIT_ANY, &status, WNOHANG)) > 0 ||
+		    (pid < 0 && errno == EINTR))
+			;
+		break;
+	}
 
 	errno = save_errno;
 }
