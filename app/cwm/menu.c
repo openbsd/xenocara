@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.75 2014/02/01 19:28:46 okan Exp $
+ * $OpenBSD: menu.c,v 1.76 2014/09/06 16:18:08 okan Exp $
  */
 
 #include <sys/param.h>
@@ -260,7 +260,7 @@ menu_handle_key(XEvent *e, struct menu_ctx *mc, struct menu_q *menuq,
 		 * even if dummy is zero, we need to return something.
 		 */
 		if ((mi = TAILQ_FIRST(resultq)) == NULL) {
-			mi = xmalloc(sizeof *mi);
+			mi = xmalloc(sizeof(*mi));
 			(void)strlcpy(mi->text,
 			    mc->searchstr, sizeof(mi->text));
 			mi->dummy = 1;
@@ -302,7 +302,7 @@ menu_handle_key(XEvent *e, struct menu_ctx *mc, struct menu_q *menuq,
 		mc->list = !mc->list;
 		break;
 	case CTL_ABORT:
-		mi = xmalloc(sizeof *mi);
+		mi = xmalloc(sizeof(*mi));
 		mi->text[0] = '\0';
 		mi->dummy = 1;
 		mi->abort = 1;
