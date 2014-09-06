@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.76 2014/09/02 14:08:39 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.77 2014/09/06 16:08:58 okan Exp $
  */
 
 #include <sys/param.h>
@@ -192,7 +192,7 @@ mousefunc_menu_group(struct client_ctx *cc, union arg *arg)
 			continue;
 		menuq_add(&menuq, gc,
 		    group_hidden_state(gc) ? "%d: [%s]" : "%d: %s",
-		    gc->num, sc->group_names[gc->num]);
+		    gc->num, gc->name);
 	}
 	if (TAILQ_EMPTY(&menuq))
 		return;
