@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.90 2014/09/06 16:24:32 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.91 2014/09/07 19:27:30 okan Exp $
  */
 
 #include <sys/param.h>
@@ -120,7 +120,7 @@ main(int argc, char **argv)
 	if (cwm_status == CWM_RESTART)
 		x_restart(cwm_argv);
 
-	return (0);
+	return(0);
 }
 
 static void
@@ -185,7 +185,7 @@ x_wmerrorhandler(Display *dpy, XErrorEvent *e)
 {
 	errx(1, "root window unavailable - perhaps another wm is running?");
 
-	return (0);
+	return(0);
 }
 
 static int
@@ -201,7 +201,7 @@ x_errorhandler(Display *dpy, XErrorEvent *e)
 
 	warnx("%s(0x%x): %s", req, (unsigned int)e->resourceid, msg);
 #endif
-	return (0);
+	return(0);
 }
 
 static void

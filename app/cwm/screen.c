@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.65 2014/09/07 17:38:38 okan Exp $
+ * $OpenBSD: screen.c,v 1.66 2014/09/07 19:27:30 okan Exp $
  */
 
 #include <sys/param.h>
@@ -83,12 +83,12 @@ screen_find(Window win)
 {
 	struct screen_ctx	*sc;
 
-	TAILQ_FOREACH(sc, &Screenq, entry)
+	TAILQ_FOREACH(sc, &Screenq, entry) {
 		if (sc->rootwin == win)
-			return (sc);
-
+			return(sc);
+	}
 	/* XXX FAIL HERE */
-	return (TAILQ_FIRST(&Screenq));
+	return(TAILQ_FIRST(&Screenq));
 }
 
 void
@@ -133,7 +133,7 @@ screen_find_xinerama(struct screen_ctx *sc, int x, int y, int flags)
 		geom.w -= (sc->gap.left + sc->gap.right);
 		geom.h -= (sc->gap.top + sc->gap.bottom);
 	}
-	return (geom);
+	return(geom);
 }
 
 void
