@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.7 2014/07/09 21:32:40 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.8 2014/09/07 15:32:18 jsg Exp $
 .include <bsd.xconf.mk>
 .include "../config.mk"
 
@@ -27,9 +27,17 @@ lib${LIB}_pic.a: ${OBJS} ${DPADD}
 
 .if ${XENOCARA_BUILD_GALLIUM} == "llvm"
 
-# Remember to keep in sync with LLVM port's version.
-LLVM_VERSION=	0x305	# 3.5
 LLVM_CONFIG?=	/usr/local/bin/llvm-config
+LLVM_V!=	${LLVM_CONFIG} --version | sed 's/svn.*//g'
+LLVM_V_MAJOR!=	echo ${LLVM_V} | cut -d. -f 1
+LLVM_V_MINOR!=	echo ${LLVM_V} | cut -d. -f 2
+LLVM_V_PATCH!=	echo ${LLVM_V} | cut -d. -f 3
+
+.if empty(LLVM_V_PATCH)
+LLVM_V_PATCH=0
+.endif
+
+LLVM_VERSION_INT="${LLVM_V_MAJOR}0${LLVM_V_MINOR}"
 
 # ugh...
 ALLVM_CFLAGS!=		${LLVM_CONFIG} --cflags
@@ -47,7 +55,7 @@ LDADD+=		-L${LLVM_LIBDIR} ${LLVM_LIBS}
 
 CPPFLAGS+= \
 	-DGALLIUM_LLVMPIPE \
-	-DHAVE_LLVM=${LLVM_VERSION} -DLLVM_VERSION_PATCH=0
+	-DHAVE_LLVM=0x0${LLVM_VERSION_INT} -DLLVM_VERSION_PATCH=${LLVM_V_PATCH}
 
 SWRAST_DRIVERS+= ../../gallium/drivers/llvmpipe/libllvmpipe_pic.a
 
