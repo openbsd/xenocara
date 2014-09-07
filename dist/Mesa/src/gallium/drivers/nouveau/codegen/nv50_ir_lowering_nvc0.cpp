@@ -26,6 +26,7 @@
 #include "codegen/nv50_ir_target_nvc0.h"
 
 #include <limits>
+#include <tr1/unordered_set>
 
 namespace nv50_ir {
 
@@ -148,7 +149,8 @@ private:
    bool insertTextureBarriers(Function *);
    inline bool insnDominatedBy(const Instruction *, const Instruction *) const;
    void findFirstUses(const Instruction *tex, const Instruction *def,
-                      std::list<TexUse>&);
+                      std::list<TexUse>&,
+                      std::tr1::unordered_set<const Instruction *>&);
    void findOverwritingDefs(const Instruction *tex, Instruction *insn,
                             const BasicBlock *term,
                             std::list<TexUse>&);
@@ -230,14 +232,30 @@ NVC0LegalizePostRA::findOverwritingDefs(const Instruction *texi,
 }
 
 void
-NVC0LegalizePostRA::findFirstUses(const Instruction *texi,
-                                  const Instruction *insn,
-                                  std::list<TexUse> &uses)
+NVC0LegalizePostRA::findFirstUses(
+      const Instruction *texi,
+      const Instruction *insn,
+      std::list<TexUse> &uses,
+      std::tr1::unordered_set<const Instruction *>& visited)
 {
    for (int d = 0; insn->defExists(d); ++d) {
       Value *v = insn->getDef(d);
       for (Value::UseIterator u = v->uses.begin(); u != v->uses.end(); ++u) {
          Instruction *usei = (*u)->getInsn();
+
+         /* XXX HACK ALERT XXX
+          *
+          * This shouldn't have to be here, we should always be making forward
+          * progress by looking at the uses. However this somehow does not
+          * appear to be the case. Probably because this is being done right
+          * after RA, when the defs/uses lists have been messed with by node
+          * merging. This should probably be moved to being done right before
+          * RA. But this will do for now.
+          */
+         if (visited.find(usei) != visited.end())
+            continue;
+
+         visited.insert(usei);
 
          if (usei->op == OP_PHI || usei->op == OP_UNION) {
             // need a barrier before WAW cases
@@ -253,11 +271,11 @@ NVC0LegalizePostRA::findFirstUses(const Instruction *texi,
              usei->op == OP_PHI ||
              usei->op == OP_UNION) {
             // these uses don't manifest in the machine code
-            findFirstUses(texi, usei, uses);
+            findFirstUses(texi, usei, uses, visited);
          } else
          if (usei->op == OP_MOV && usei->getDef(0)->equals(usei->getSrc(0)) &&
              usei->subOp != NV50_IR_SUBOP_MOV_FINAL) {
-            findFirstUses(texi, usei, uses);
+            findFirstUses(texi, usei, uses, visited);
          } else {
             addTexUse(uses, usei, insn);
          }
@@ -313,8 +331,10 @@ NVC0LegalizePostRA::insertTextureBarriers(Function *fn)
    uses = new std::list<TexUse>[texes.size()];
    if (!uses)
       return false;
-   for (size_t i = 0; i < texes.size(); ++i)
-      findFirstUses(texes[i], texes[i], uses[i]);
+   for (size_t i = 0; i < texes.size(); ++i) {
+      std::tr1::unordered_set<const Instruction *> visited;
+      findFirstUses(texes[i], texes[i], uses[i], visited);
+   }
 
    // determine the barrier level at each use
    for (size_t i = 0; i < texes.size(); ++i) {
@@ -814,6 +834,7 @@ NVC0LoweringPass::handleManualTXD(TexInstruction *i)
    Value *zero = bld.loadImm(bld.getSSA(), 0);
    int l, c;
    const int dim = i->tex.target.getDim();
+   const int array = i->tex.target.isArray();
 
    i->op = OP_TEX; // no need to clone dPdx/dPdy later
 
@@ -824,7 +845,7 @@ NVC0LoweringPass::handleManualTXD(TexInstruction *i)
    for (l = 0; l < 4; ++l) {
       // mov coordinates from lane l to all lanes
       for (c = 0; c < dim; ++c)
-         bld.mkQuadop(0x00, crd[c], l, i->getSrc(c), zero);
+         bld.mkQuadop(0x00, crd[c], l, i->getSrc(c + array), zero);
       // add dPdx from lane l to lanes dx
       for (c = 0; c < dim; ++c)
          bld.mkQuadop(qOps[l][0], crd[c], l, i->dPdx[c].get(), crd[c]);
@@ -834,7 +855,7 @@ NVC0LoweringPass::handleManualTXD(TexInstruction *i)
       // texture
       bld.insert(tex = cloneForward(func, i));
       for (c = 0; c < dim; ++c)
-         tex->setSrc(c, crd[c]);
+         tex->setSrc(c + array, crd[c]);
       // save results
       for (c = 0; i->defExists(c); ++c) {
          Instruction *mov;
@@ -870,7 +891,8 @@ NVC0LoweringPass::handleTXD(TexInstruction *txd)
    if (dim > 2 ||
        txd->tex.target.isCube() ||
        arg > 4 ||
-       txd->tex.target.isShadow())
+       txd->tex.target.isShadow() ||
+       txd->tex.useOffsets)
       return handleManualTXD(txd);
 
    for (int c = 0; c < dim; ++c) {

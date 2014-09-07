@@ -613,8 +613,6 @@ GALLIUM_WINSYS_CFLAGS = \
 
 AM_CFLAGS = \
 	-Wno-packed-bitfield-compat \
-	-I$(top_srcdir)/src/gallium/drivers/freedreno/a3xx \
-	-I$(top_srcdir)/src/gallium/drivers/freedreno/a2xx \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(FREEDRENO_CFLAGS)
 

@@ -1,7 +1,4 @@
-# Mesa 3-D graphics library
-#
-# Copyright (C) 2011 Chia-I Wu <olvaffe@gmail.com>
-# Copyright (C) 2011 LunarG Inc.
+# Copyright (C) 2014 Emil Velikov <emil.l.velikov@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -28,11 +25,20 @@ include $(LOCAL_PATH)/Makefile.sources
 
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(C_SOURCES)
+LOCAL_SRC_FILES := \
+	$(C_SOURCES) \
+	$(a2xx_SOURCES) \
+	$(a3xx_SOURCES)
 
-LOCAL_C_INCLUDES := $(TARGET_OUT_HEADERS)/libdrm
+LOCAL_CFLAGS := \
+	-Wno-packed-bitfield-compat
 
-LOCAL_MODULE := libmesa_winsys_nouveau
+LOCAL_C_INCLUDES := \
+	$(LOCAL_PATH)/ir3 \
+	$(TARGET_OUT_HEADERS)/libdrm \
+	$(TARGET_OUT_HEADERS)/freedreno
+
+LOCAL_MODULE := libmesa_pipe_freedreno
 
 include $(GALLIUM_COMMON_MK)
 include $(BUILD_STATIC_LIBRARY)

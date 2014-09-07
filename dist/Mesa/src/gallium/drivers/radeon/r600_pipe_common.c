@@ -142,7 +142,13 @@ bool r600_common_context_init(struct r600_common_context *rctx,
 	rctx->ws = rscreen->ws;
 	rctx->family = rscreen->family;
 	rctx->chip_class = rscreen->chip_class;
-	rctx->max_db = rscreen->chip_class >= EVERGREEN ? 8 : 4;
+
+	if (rscreen->family == CHIP_HAWAII)
+		rctx->max_db = 16;
+	else if (rscreen->chip_class >= EVERGREEN)
+		rctx->max_db = 8;
+	else
+		rctx->max_db = 4;
 
 	rctx->b.transfer_map = u_transfer_map_vtbl;
 	rctx->b.transfer_flush_region = u_default_transfer_flush_region;
@@ -431,7 +437,20 @@ static int r600_get_compute_param(struct pipe_screen *screen,
 	//TODO: select these params by asic
 	switch (param) {
 	case PIPE_COMPUTE_CAP_IR_TARGET: {
-		const char *gpu = r600_get_llvm_processor_name(rscreen->family);
+		const char *gpu;
+		switch(rscreen->family) {
+		/* Clang < 3.6 is missing Hainan in its list of
+		 * GPUs, so we need to use the name of a similar GPU.
+		 */
+#if HAVE_LLVM < 0x0306
+		case CHIP_HAINAN:
+			gpu = "oland";
+			break;
+#endif
+		default:
+			gpu = r600_get_llvm_processor_name(rscreen->family);
+			break;
+		}
 		if (ret) {
 			sprintf(ret, "%s-r600--", gpu);
 		}
@@ -472,13 +491,21 @@ static int r600_get_compute_param(struct pipe_screen *screen,
 	case PIPE_COMPUTE_CAP_MAX_GLOBAL_SIZE:
 		if (ret) {
 			uint64_t *max_global_size = ret;
-			/* XXX: This is what the proprietary driver reports, we
-			 * may want to use a different value. */
-			/* XXX: Not sure what to put here for SI. */
-			if (rscreen->chip_class >= SI)
-				*max_global_size = 2000000000;
-			else
-				*max_global_size = 201326592;
+			uint64_t max_mem_alloc_size;
+
+			r600_get_compute_param(screen,
+				PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE,
+				&max_mem_alloc_size);
+
+			/* In OpenCL, the MAX_MEM_ALLOC_SIZE must be at least
+			 * 1/4 of the MAX_GLOBAL_SIZE.  Since the
+			 * MAX_MEM_ALLOC_SIZE is fixed for older kernels,
+			 * make sure we never report more than
+			 * 4 * MAX_MEM_ALLOC_SIZE.
+			 */
+			*max_global_size = MIN2(4 * max_mem_alloc_size,
+				rscreen->info.gart_size +
+				rscreen->info.vram_size);
 		}
 		return sizeof(uint64_t);
 
@@ -502,13 +529,11 @@ static int r600_get_compute_param(struct pipe_screen *screen,
 		if (ret) {
 			uint64_t max_global_size;
 			uint64_t *max_mem_alloc_size = ret;
-			r600_get_compute_param(screen, PIPE_COMPUTE_CAP_MAX_GLOBAL_SIZE, &max_global_size);
-			/* OpenCL requres this value be at least
-			 * max(MAX_GLOBAL_SIZE / 4, 128 * 1024 *1024)
-			 * I'm really not sure what value to report here, but
-			 * MAX_GLOBAL_SIZE / 4 seems resonable.
+
+			/* XXX: The limit in older kernels is 256 MB.  We
+			 * should add a query here for newer kernels.
 			 */
-			*max_mem_alloc_size = max_global_size / 4;
+			*max_mem_alloc_size = 256 * 1024 * 1024;
 		}
 		return sizeof(uint64_t);
 

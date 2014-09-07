@@ -32,7 +32,7 @@ LOCAL_SRC_FILES := $(C_SOURCES)
 
 LOCAL_C_INCLUDES := $(TARGET_OUT_HEADERS)/libdrm
 
-LOCAL_MODULE := libmesa_winsys_nouveau
+LOCAL_MODULE := libmesa_pipe_radeon
 
 include $(GALLIUM_COMMON_MK)
 include $(BUILD_STATIC_LIBRARY)

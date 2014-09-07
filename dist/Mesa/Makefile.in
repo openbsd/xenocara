@@ -103,8 +103,8 @@ subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(top_srcdir)/src/gbm/main/gbm.pc.in bin/ar-lib bin/compile \
-	bin/config.guess bin/config.sub bin/depcomp bin/install-sh \
-	bin/missing bin/ltmain.sh $(top_srcdir)/bin/ar-lib \
+	bin/config.guess bin/config.sub bin/install-sh bin/missing \
+	bin/ltmain.sh $(top_srcdir)/bin/ar-lib \
 	$(top_srcdir)/bin/compile $(top_srcdir)/bin/config.guess \
 	$(top_srcdir)/bin/config.sub $(top_srcdir)/bin/install-sh \
 	$(top_srcdir)/bin/ltmain.sh $(top_srcdir)/bin/missing
@@ -993,9 +993,8 @@ doxygen:
 
 parsers: configure
 	$(MAKE) -C src/glsl glsl_parser.cpp glsl_parser.h glsl_lexer.cpp glcpp/glcpp-lex.c glcpp/glcpp-parse.c glcpp/glcpp-parse.h
-	$(MAKE) -C src/mesa program/lex.yy.c program/program_parse.tab.c program/program_parse.tab.h
 
-tarballs: md5
+tarballs: checksums
 	rm -f ../$(PACKAGE_DIR) $(PACKAGE_NAME).tar
 
 manifest.txt: .git
@@ -1022,10 +1021,10 @@ $(PACKAGE_NAME).zip: parsers ../$(PACKAGE_DIR) manifest.txt
 	zip -q -@ $(PACKAGE_NAME).zip < $(PACKAGE_DIR)/manifest.txt ; \
 	mv $(PACKAGE_NAME).zip $(PACKAGE_DIR)
 
-md5: $(ARCHIVES)
-	@-md5sum $(PACKAGE_NAME).tar.gz
-	@-md5sum $(PACKAGE_NAME).tar.bz2
-	@-md5sum $(PACKAGE_NAME).zip
+checksums: $(ARCHIVES)
+	@-sha256sum $(PACKAGE_NAME).tar.gz
+	@-sha256sum $(PACKAGE_NAME).tar.bz2
+	@-sha256sum $(PACKAGE_NAME).zip
 
 .PHONY: tarballs md5
 

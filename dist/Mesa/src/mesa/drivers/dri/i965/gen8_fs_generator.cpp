@@ -113,10 +113,8 @@ gen8_fs_generator::generate_fb_write(fs_inst *ir)
 
    uint32_t msg_control = msg_type;
 
-   /* "Last Render Target Select" must be set on all writes to the last of
-    * the render targets (if using MRT), or always for a single RT scenario.
-    */
-   if ((ir->target == c->key.nr_color_regions - 1) || !c->key.nr_color_regions)
+   /* Set "Last Render Target Select" on the final FB write. */
+   if (ir->eot)
       msg_control |= (1 << 4); /* Last Render Target Select */
 
    uint32_t surf_index =
@@ -713,13 +711,8 @@ gen8_fs_generator::generate_set_omask(fs_inst *inst,
              mask.hstride == BRW_HORIZONTAL_STRIDE_0);
    }
 
-   unsigned save_exec_size = default_state.exec_size;
-   default_state.exec_size = BRW_EXECUTE_8;
-
    gen8_instruction *mov = MOV(dst, retype(mask, dst.type));
    gen8_set_mask_control(mov, BRW_MASK_DISABLE);
-
-   default_state.exec_size = save_exec_size;
 }
 
 /**
@@ -973,7 +966,7 @@ gen8_fs_generator::generate_code(exec_list *instructions)
       default_state.mask_control = ir->force_writemask_all;
       default_state.flag_subreg_nr = ir->flag_subreg;
 
-      if (dispatch_width == 16 && !ir->force_uncompressed)
+      if (dispatch_width == 16 && !ir->force_uncompressed && !ir->force_sechalf)
          default_state.exec_size = BRW_EXECUTE_16;
       else
          default_state.exec_size = BRW_EXECUTE_8;
