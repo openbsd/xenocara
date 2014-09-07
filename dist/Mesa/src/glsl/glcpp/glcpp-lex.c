@@ -159,15 +159,7 @@ typedef void* yyscan_t;
 
 /* Size of default input buffer. */
 #ifndef YY_BUF_SIZE
-#ifdef __ia64__
-/* On IA-64, the buffer size is 16k, not 8k.
- * Moreover, YY_BUF_SIZE is 2*YY_READ_BUF_SIZE in the general case.
- * Ditto for the __ia64__ case accordingly.
- */
-#define YY_BUF_SIZE 32768
-#else
 #define YY_BUF_SIZE 16384
-#endif /* __ia64__ */
 #endif
 
 /* The state buf must be large enough to hold one state per character in the main buffer.
@@ -637,7 +629,7 @@ match longer strings take priority over those matching shorter
 strings, we have to be careful to avoid OTHER matching and hiding
 something that CPP does care about. So we simply exclude all
 characters that appear in any other expressions. */
-#line 641 "glcpp/glcpp-lex.c"
+#line 633 "glcpp/glcpp-lex.c"
 
 #define INITIAL 0
 #define DONE 1
@@ -788,12 +780,7 @@ static int input (yyscan_t yyscanner );
     
 /* Amount of stuff to slurp up with each read. */
 #ifndef YY_READ_BUF_SIZE
-#ifdef __ia64__
-/* On IA-64, the buffer size is 16k, not 8k */
-#define YY_READ_BUF_SIZE 16384
-#else
 #define YY_READ_BUF_SIZE 8192
-#endif /* __ia64__ */
 #endif
 
 /* Copy whatever the last rule matched to the standard output. */
@@ -995,7 +982,7 @@ YY_DECL
 	}
 
 	/* Single-line comments */
-#line 999 "glcpp/glcpp-lex.c"
+#line 986 "glcpp/glcpp-lex.c"
 
 	while ( 1 )		/* loops until end-of-file is reached */
 		{
@@ -1418,7 +1405,7 @@ YY_RULE_SETUP
 #line 373 "glcpp/glcpp-lex.l"
 ECHO;
 	YY_BREAK
-#line 1422 "glcpp/glcpp-lex.c"
+#line 1409 "glcpp/glcpp-lex.c"
 case YY_STATE_EOF(DONE):
 case YY_STATE_EOF(COMMENT):
 case YY_STATE_EOF(UNREACHABLE):
@@ -2644,7 +2631,7 @@ void glcpp_free (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 372 "glcpp/glcpp-lex.l"
+#line 373 "glcpp/glcpp-lex.l"
 
 
 

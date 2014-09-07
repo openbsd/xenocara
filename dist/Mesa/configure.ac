@@ -494,10 +494,10 @@ AC_CHECK_FUNC([dlopen], [DEFINES="$DEFINES -DHAVE_DLOPEN"],
 AC_SUBST([DLOPEN_LIBS])
 
 dnl Check if that library also has dladdr
-save_LDFLAGS="$LDFLAGS"
-LDFLAGS="$LDFLAGS $DLOPEN_LIBS"
+save_LIBS="$LIBS"
+LIBS="$LIBS $DLOPEN_LIBS"
 AC_CHECK_FUNCS([dladdr])
-LDFLAGS="$save_LDFLAGS"
+LIBS="$save_LIBS"
 
 case "$host_os" in
 darwin*|mingw*)
@@ -1273,6 +1273,10 @@ if test "x$enable_gallium_gbm" = xyes; then
         AC_MSG_ERROR([gbm_gallium requires --enable-dri to build])
     fi
 
+    if test "x$enable_gallium_egl" != xyes; then
+        AC_MSG_ERROR([gbm_gallium is only used by egl_gallium])
+    fi
+
     GALLIUM_STATE_TRACKERS_DIRS="gbm $GALLIUM_STATE_TRACKERS_DIRS"
     GALLIUM_TARGET_DIRS="$GALLIUM_TARGET_DIRS gbm"
     enable_gallium_loader=yes
@@ -1757,6 +1761,7 @@ gallium_check_st() {
 
 gallium_require_llvm() {
     if test "x$MESA_LLVM" = x0; then
+        case "$host" in *gnux32) return;; esac
         case "$host_cpu" in
         i*86|x86_64|amd64) AC_MSG_ERROR([LLVM is required to build $1 on x86 and x86_64]);;
         esac

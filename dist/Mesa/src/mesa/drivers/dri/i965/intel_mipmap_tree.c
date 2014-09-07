@@ -67,14 +67,6 @@ compute_msaa_layout(struct brw_context *brw, mesa_format format, GLenum target)
    case GL_DEPTH_STENCIL:
       return INTEL_MSAA_LAYOUT_IMS;
    default:
-      /* Disable MCS on Broadwell for now.  We can enable it once things
-       * are working without it.
-       */
-      if (brw->gen >= 8) {
-         perf_debug("Missing CMS support on Broadwell.\n");
-         return INTEL_MSAA_LAYOUT_UMS;
-      }
-
       /* From the Ivy Bridge PRM, Vol4 Part1 p77 ("MCS Enable"):
        *
        *   This field must be set to 0 for all SINT MSRTs when all RT channels
@@ -86,9 +78,7 @@ compute_msaa_layout(struct brw_context *brw, mesa_format format, GLenum target)
        * would require converting between CMS and UMS MSAA layouts on the fly,
        * which is expensive.
        */
-      if (_mesa_get_format_datatype(format) == GL_INT) {
-         /* TODO: is this workaround needed for future chipsets? */
-         assert(brw->gen == 7);
+      if (brw->gen == 7 && _mesa_get_format_datatype(format) == GL_INT) {
          return INTEL_MSAA_LAYOUT_UMS;
       } else {
          return INTEL_MSAA_LAYOUT_CMS;
@@ -251,6 +241,26 @@ intel_miptree_create_layout(struct brw_context *brw,
        _mesa_lookup_enum_by_nr(target),
        _mesa_get_format_name(format),
        first_level, last_level, depth0, mt);
+
+   if (target == GL_TEXTURE_1D_ARRAY) {
+      /* For a 1D Array texture the OpenGL API will treat the height0
+       * parameter as the number of array slices. For Intel hardware, we treat
+       * the 1D array as a 2D Array with a height of 1.
+       *
+       * So, when we first come through this path to create a 1D Array
+       * texture, height0 stores the number of slices, and depth0 is 1. In
+       * this case, we want to swap height0 and depth0.
+       *
+       * Since some miptrees will be created based on the base miptree, we may
+       * come through this path and see height0 as 1 and depth0 being the
+       * number of slices. In this case we don't need to do the swap.
+       */
+      assert(height0 == 1 || depth0 == 1);
+      if (height0 > 1) {
+         depth0 = height0;
+         height0 = 1;
+      }
+   }
 
    mt->target = target;
    mt->format = format;
@@ -1251,6 +1261,7 @@ intel_miptree_alloc_mcs(struct brw_context *brw,
     */
    mesa_format format;
    switch (num_samples) {
+   case 2:
    case 4:
       /* 8 bits/pixel are required for MCS data when using 4x MSAA (2 bits for
        * each sample).
@@ -2144,9 +2155,9 @@ intel_miptree_unmap_depthstencil(struct brw_context *brw,
 						 x + s_image_x + map->x,
 						 y + s_image_y + map->y,
 						 brw->has_swizzling);
-	    ptrdiff_t z_offset = ((y + z_image_y) *
+	    ptrdiff_t z_offset = ((y + z_image_y + map->y) *
                                   (z_mt->pitch / 4) +
-				  (x + z_image_x));
+				  (x + z_image_x + map->x));
 
 	    if (map_z32f_x24s8) {
 	       z_map[z_offset] = packed_map[(y * map->w + x) * 2 + 0];

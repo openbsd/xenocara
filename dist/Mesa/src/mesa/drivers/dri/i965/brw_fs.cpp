@@ -1263,19 +1263,21 @@ fs_visitor::emit_samplepos_setup(ir_variable *ir)
       stride(retype(brw_vec1_grf(c->sample_pos_reg, 0),
                     BRW_REGISTER_TYPE_B), 16, 8, 2);
 
-   emit(MOV(int_sample_x, fs_reg(sample_pos_reg)));
+   fs_inst *inst = emit(MOV(int_sample_x, fs_reg(sample_pos_reg)));
    if (dispatch_width == 16) {
-      fs_inst *inst = emit(MOV(half(int_sample_x, 1),
-                               fs_reg(suboffset(sample_pos_reg, 16))));
+      inst->force_uncompressed = true;
+      inst = emit(MOV(half(int_sample_x, 1),
+                      fs_reg(suboffset(sample_pos_reg, 16))));
       inst->force_sechalf = true;
    }
    /* Compute gl_SamplePosition.x */
    compute_sample_position(pos, int_sample_x);
    pos.reg_offset++;
-   emit(MOV(int_sample_y, fs_reg(suboffset(sample_pos_reg, 1))));
+   inst = emit(MOV(int_sample_y, fs_reg(suboffset(sample_pos_reg, 1))));
    if (dispatch_width == 16) {
-      fs_inst *inst = emit(MOV(half(int_sample_y, 1),
-                               fs_reg(suboffset(sample_pos_reg, 17))));
+      inst->force_uncompressed = true;
+      inst = emit(MOV(half(int_sample_y, 1),
+                      fs_reg(suboffset(sample_pos_reg, 17))));
       inst->force_sechalf = true;
    }
    /* Compute gl_SamplePosition.y */
@@ -1309,13 +1311,22 @@ fs_visitor::emit_sampleid_setup(ir_variable *ir)
        * populating a temporary variable with the sequence (0, 1, 2, 3),
        * and then reading from it using vstride=1, width=4, hstride=0.
        * These computations hold good for 4x multisampling as well.
+       *
+       * For 2x MSAA and SIMD16, we want to use the sequence (0, 1, 0, 1):
+       * the first four slots are sample 0 of subspan 0; the next four
+       * are sample 1 of subspan 0; the third group is sample 0 of
+       * subspan 1, and finally sample 1 of subspan 1.
        */
-      emit(BRW_OPCODE_AND, t1,
-           fs_reg(retype(brw_vec1_grf(0, 0), BRW_REGISTER_TYPE_D)),
-           fs_reg(brw_imm_d(0xc0)));
-      emit(BRW_OPCODE_SHR, t1, t1, fs_reg(5));
+      fs_inst *inst;
+      inst = emit(BRW_OPCODE_AND, t1,
+                  fs_reg(retype(brw_vec1_grf(0, 0), BRW_REGISTER_TYPE_UD)),
+                  fs_reg(0xc0));
+      inst->force_writemask_all = true;
+      inst = emit(BRW_OPCODE_SHR, t1, t1, fs_reg(5));
+      inst->force_writemask_all = true;
       /* This works for both SIMD8 and SIMD16 */
-      emit(MOV(t2, brw_imm_v(0x3210)));
+      inst = emit(MOV(t2, brw_imm_v(c->key.persample_2x ? 0x1010 : 0x3210)));
+      inst->force_writemask_all = true;
       /* This special instruction takes care of setting vstride=1,
        * width=4, hstride=0 of t2 during an ADD instruction.
        */
@@ -1393,7 +1404,7 @@ fs_visitor::emit_math(enum opcode opcode, fs_reg dst, fs_reg src)
     * Gen 6 hardware ignores source modifiers (negate and abs) on math
     * instructions, so we also move to a temp to set those up.
     */
-   if (brw->gen >= 6)
+   if (brw->gen == 6 || brw->gen == 7)
       src = fix_math_operand(src);
 
    fs_inst *inst = emit(opcode, dst, src);
@@ -1425,7 +1436,9 @@ fs_visitor::emit_math(enum opcode opcode, fs_reg dst, fs_reg src0, fs_reg src1)
       return NULL;
    }
 
-   if (brw->gen >= 6) {
+   if (brw->gen >= 8) {
+      inst = emit(opcode, dst, src0, src1);
+   } else if (brw->gen >= 6) {
       src0 = fix_math_operand(src0);
       src1 = fix_math_operand(src1);
 

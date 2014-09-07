@@ -34,6 +34,10 @@
 #include <llvm/Support/Format.h>
 #include <llvm/Support/MemoryObject.h>
 
+#if HAVE_LLVM >= 0x0306
+#include <llvm/Target/TargetSubtargetInfo.h>
+#endif
+
 #if HAVE_LLVM >= 0x0300
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/MC/MCSubtargetInfo.h>
@@ -302,7 +306,11 @@ disassemble(const void* func, llvm::raw_ostream & Out)
    OwningPtr<TargetMachine> TM(T->createTargetMachine(Triple, ""));
 #endif
 
+#if HAVE_LLVM >= 0x0306
+   const TargetInstrInfo *TII = TM->getSubtargetImpl()->getInstrInfo();
+#else
    const TargetInstrInfo *TII = TM->getInstrInfo();
+#endif
 
    /*
     * Wrap the data in a MemoryObject
