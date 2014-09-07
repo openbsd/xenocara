@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.99 2014/09/07 17:27:20 okan Exp $
+ * $OpenBSD: group.c,v 1.100 2014/09/07 20:57:26 okan Exp $
  */
 
 #include <sys/param.h>
@@ -124,6 +124,7 @@ group_init(struct screen_ctx *sc)
 
 	for (i = 0; i < CALMWM_NGROUPS; i++) {
 		gc = xcalloc(1, sizeof(*gc));
+		gc->sc = sc;
 		TAILQ_INIT(&gc->clients);
 		gc->name = xstrdup(num_to_name[i]);
 		gc->num = i;
