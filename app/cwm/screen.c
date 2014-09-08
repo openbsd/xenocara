@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.66 2014/09/07 19:27:30 okan Exp $
+ * $OpenBSD: screen.c,v 1.67 2014/09/08 20:11:22 okan Exp $
  */
 
 #include <sys/param.h>
@@ -40,7 +40,7 @@ screen_init(int which)
 
 	sc = xcalloc(1, sizeof(*sc));
 
-	TAILQ_INIT(&sc->mruq);
+	TAILQ_INIT(&sc->clientq);
 	TAILQ_INIT(&sc->regionq);
 
 	sc->which = which;
