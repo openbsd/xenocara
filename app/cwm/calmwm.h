@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.273 2014/09/08 20:11:22 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.274 2014/09/08 21:15:14 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -202,7 +202,7 @@ TAILQ_HEAD(client_ctx_q, client_ctx);
 struct group_ctx {
 	TAILQ_ENTRY(group_ctx)	 entry;
 	struct screen_ctx	*sc;
-	struct client_ctx_q	 clients;
+	struct client_ctx_q	 clientq;
 	char			*name;
 	int			 num;
 };
