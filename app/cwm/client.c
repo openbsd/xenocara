@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.180 2014/09/08 21:15:14 okan Exp $
+ * $OpenBSD: client.c,v 1.181 2014/09/08 21:24:27 okan Exp $
  */
 
 #include <sys/param.h>
@@ -639,12 +639,10 @@ client_cycle(struct screen_ctx *sc, int flags)
 	struct client_ctx	*oldcc, *newcc;
 	int			 again = 1;
 
-	oldcc = client_current();
-
-	/* If no windows then you cant cycle */
 	if (TAILQ_EMPTY(&sc->clientq))
 		return;
 
+	oldcc = client_current();
 	if (oldcc == NULL)
 		oldcc = (flags & CWM_RCYCLE ?
 		    TAILQ_LAST(&sc->clientq, client_ctx_q) :
