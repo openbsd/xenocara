@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.92 2014/09/08 20:11:22 okan Exp $
+ * $OpenBSD: xutil.c,v 1.93 2014/09/15 13:00:49 okan Exp $
  */
 
 #include <sys/param.h>
@@ -393,7 +393,7 @@ xu_ewmh_handle_net_wm_state_msg(struct client_ctx *cc, int action,
 			continue;
 		switch (action) {
 		case _NET_WM_STATE_ADD:
-			if ((cc->flags & handlers[i].property) == 0)
+			if (!(cc->flags & handlers[i].property))
 				handlers[i].toggle(cc);
 			break;
 		case _NET_WM_STATE_REMOVE:

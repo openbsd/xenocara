@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.40 2014/09/07 19:27:30 okan Exp $
+ * $OpenBSD: search.c,v 1.41 2014/09/15 13:00:49 okan Exp $
  */
 
 #include <sys/param.h>
@@ -102,7 +102,7 @@ search_match_client(struct menu_q *menuq, struct menu_q *resultq, char *search)
 			tier++;
 
 		/* Clients that are hidden get ranked one up. */
-		if (cc->flags & CLIENT_HIDDEN && tier > 0)
+		if ((cc->flags & CLIENT_HIDDEN) && (tier > 0))
 			tier--;
 
 		assert(tier < nitems(tierp));
