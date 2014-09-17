@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.101 2014/09/11 16:06:26 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.102 2014/09/17 18:09:30 okan Exp $
  */
 
 #include <sys/param.h>
@@ -60,7 +60,7 @@ kbfunc_client_moveresize(struct client_ctx *cc, union arg *arg)
 	int			 x, y, flags, amt;
 	unsigned int		 mx, my;
 
-	if (cc->flags & CLIENT_FREEZE)
+	if (cc->flags & (CLIENT_FREEZE|CLIENT_STICKY))
 		return;
 
 	mx = my = 0;
