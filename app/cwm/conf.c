@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.180 2014/09/17 16:00:44 okan Exp $
+ * $OpenBSD: conf.c,v 1.181 2014/09/17 18:41:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -382,12 +382,12 @@ static const struct {
 	{ "rcycleingroup", kbfunc_client_cycle, CWM_WIN,
 	    {.i = CWM_RCYCLE|CWM_INGROUP} },
 	{ "grouptoggle", kbfunc_client_grouptoggle, CWM_WIN, {0}},
-	{ "sticky", kbfunc_client_sticky, CWM_WIN, {0} },
-	{ "fullscreen", kbfunc_client_fullscreen, CWM_WIN, {0} },
-	{ "maximize", kbfunc_client_maximize, CWM_WIN, {0} },
-	{ "vmaximize", kbfunc_client_vmaximize, CWM_WIN, {0} },
-	{ "hmaximize", kbfunc_client_hmaximize, CWM_WIN, {0} },
-	{ "freeze", kbfunc_client_freeze, CWM_WIN, {0} },
+	{ "sticky", kbfunc_client_toggle_sticky, CWM_WIN, {0} },
+	{ "fullscreen", kbfunc_client_toggle_fullscreen, CWM_WIN, {0} },
+	{ "maximize", kbfunc_client_toggle_maximize, CWM_WIN, {0} },
+	{ "vmaximize", kbfunc_client_toggle_vmaximize, CWM_WIN, {0} },
+	{ "hmaximize", kbfunc_client_toggle_hmaximize, CWM_WIN, {0} },
+	{ "freeze", kbfunc_client_toggle_freeze, CWM_WIN, {0} },
 	{ "restart", kbfunc_cwm_status, 0, {.i = CWM_RESTART} },
 	{ "quit", kbfunc_cwm_status, 0, {.i = CWM_QUIT} },
 	{ "exec", kbfunc_exec, 0, {.i = CWM_EXEC_PROGRAM} },
