@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.183 2014/09/15 13:00:49 okan Exp $
+ * $OpenBSD: client.c,v 1.184 2014/09/17 16:00:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -237,6 +237,17 @@ client_freeze(struct client_ctx *cc)
 		cc->flags &= ~CLIENT_FREEZE;
 	else
 		cc->flags |= CLIENT_FREEZE;
+}
+
+void
+client_hidden(struct client_ctx *cc)
+{
+	if (cc->flags & CLIENT_HIDDEN)
+		cc->flags &= ~CLIENT_HIDDEN;
+	else
+		cc->flags |= CLIENT_HIDDEN;
+
+	xu_ewmh_set_net_wm_state(cc);
 }
 
 void
@@ -486,7 +497,7 @@ client_hide(struct client_ctx *cc)
 	XUnmapWindow(X_Dpy, cc->win);
 
 	cc->flags &= ~CLIENT_ACTIVE;
-	cc->flags |= CLIENT_HIDDEN;
+	client_hidden(cc);
 	client_set_wm_state(cc, IconicState);
 
 	if (cc == client_current())
@@ -501,7 +512,7 @@ client_unhide(struct client_ctx *cc)
 
 	XMapRaised(X_Dpy, cc->win);
 
-	cc->flags &= ~CLIENT_HIDDEN;
+	client_hidden(cc);
 	client_set_wm_state(cc, NormalState);
 	client_draw_border(cc);
 }

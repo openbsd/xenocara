@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.276 2014/09/17 14:31:37 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.277 2014/09/17 16:00:44 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -344,10 +344,11 @@ enum {
 	_NET_WM_DESKTOP,
 	_NET_CLOSE_WINDOW,
 	_NET_WM_STATE,
-#define	_NET_WM_STATES_NITEMS	5
+#define	_NET_WM_STATES_NITEMS	6
 	_NET_WM_STATE_STICKY,
 	_NET_WM_STATE_MAXIMIZED_VERT,
 	_NET_WM_STATE_MAXIMIZED_HORZ,
+	_NET_WM_STATE_HIDDEN,
 	_NET_WM_STATE_FULLSCREEN,
 	_NET_WM_STATE_DEMANDS_ATTENTION,
 	EWMH_NITEMS
@@ -374,6 +375,7 @@ void			 client_freeze(struct client_ctx *);
 void			 client_fullscreen(struct client_ctx *);
 long			 client_get_wm_state(struct client_ctx *);
 void			 client_getsizehints(struct client_ctx *);
+void			 client_hidden(struct client_ctx *);
 void			 client_hide(struct client_ctx *);
 void			 client_hmaximize(struct client_ctx *);
 void 			 client_htile(struct client_ctx *);
