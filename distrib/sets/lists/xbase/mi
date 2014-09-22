@@ -370,6 +370,7 @@
 ./usr/X11R6/man/mandoc.db
 ./usr/X11R6/share
 ./usr/X11R6/share/X11
+./usr/X11R6/share/X11/Xcms.txt
 ./usr/X11R6/share/X11/app-defaults
 ./usr/X11R6/share/X11/app-defaults/Beforelight
 ./usr/X11R6/share/X11/app-defaults/Bitmap
@@ -410,7 +411,6 @@
 ./usr/X11R6/share/X11/app-defaults/Xmessage-color
 ./usr/X11R6/share/X11/app-defaults/Xsystrace
 ./usr/X11R6/share/X11/app-defaults/Xvidtune
-./usr/X11R6/share/X11/Xcms.txt
 ./usr/X11R6/share/xcb
 ./usr/X11R6/share/xcb/xcb.xsd
 ./usr/X11R6/share/xcb/xkb.xml
