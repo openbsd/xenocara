@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.67 2014/09/08 20:11:22 okan Exp $
+ * $OpenBSD: screen.c,v 1.68 2014/09/23 13:45:48 okan Exp $
  */
 
 #include <sys/param.h>
@@ -42,9 +42,12 @@ screen_init(int which)
 
 	TAILQ_INIT(&sc->clientq);
 	TAILQ_INIT(&sc->regionq);
+	TAILQ_INIT(&sc->groupq);
 
 	sc->which = which;
 	sc->rootwin = RootWindow(X_Dpy, sc->which);
+	sc->cycling = 0;
+	sc->hideall = 0;
 	conf_screen(sc);
 
 	xu_ewmh_net_supported(sc);
@@ -52,6 +55,12 @@ screen_init(int which)
 
 	screen_update_geometry(sc);
 	group_init(sc);
+
+	xu_ewmh_net_desktop_names(sc);
+	xu_ewmh_net_wm_desktop_viewport(sc);
+	xu_ewmh_net_wm_number_of_desktops(sc);
+	xu_ewmh_net_showing_desktop(sc);
+	xu_ewmh_net_virtual_roots(sc);
 
 	rootattr.cursor = Conf.cursor[CF_NORMAL];
 	rootattr.event_mask = SubstructureRedirectMask|SubstructureNotifyMask|
