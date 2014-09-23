@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.280 2014/09/23 13:45:48 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.281 2014/09/23 14:25:08 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -544,7 +544,7 @@ void			 xu_ewmh_net_wm_desktop_viewport(struct screen_ctx *);
 void			 xu_ewmh_net_wm_number_of_desktops(struct screen_ctx *);
 void			 xu_ewmh_net_showing_desktop(struct screen_ctx *);
 void			 xu_ewmh_net_virtual_roots(struct screen_ctx *);
-void			 xu_ewmh_net_current_desktop(struct screen_ctx *, long);
+void			 xu_ewmh_net_current_desktop(struct screen_ctx *);
 void			 xu_ewmh_net_desktop_names(struct screen_ctx *);
 
 void			 xu_ewmh_net_wm_desktop(struct client_ctx *);

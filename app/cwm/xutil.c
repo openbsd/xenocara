@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.95 2014/09/17 18:41:44 okan Exp $
+ * $OpenBSD: xutil.c,v 1.96 2014/09/23 14:25:08 okan Exp $
  */
 
 #include <sys/param.h>
@@ -274,10 +274,12 @@ xu_ewmh_net_virtual_roots(struct screen_ctx *sc)
 }
 
 void
-xu_ewmh_net_current_desktop(struct screen_ctx *sc, long idx)
+xu_ewmh_net_current_desktop(struct screen_ctx *sc)
 {
+	long	 num = sc->group_active->num;
+
 	XChangeProperty(X_Dpy, sc->rootwin, ewmh[_NET_CURRENT_DESKTOP],
-	    XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&idx, 1);
+	    XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&num, 1);
 }
 
 void

@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.105 2014/09/23 13:45:48 okan Exp $
+ * $OpenBSD: group.c,v 1.106 2014/09/23 14:25:08 okan Exp $
  */
 
 #include <sys/param.h>
@@ -34,7 +34,7 @@
 
 static void		 group_assign(struct group_ctx *, struct client_ctx *);
 static void		 group_restack(struct group_ctx *);
-static void		 group_setactive(struct screen_ctx *, long);
+static void		 group_setactive(struct screen_ctx *, int);
 
 const char *num_to_name[] = {
 	"nogroup", "one", "two", "three", "four", "five", "six",
@@ -132,7 +132,7 @@ group_init(struct screen_ctx *sc)
 }
 
 static void
-group_setactive(struct screen_ctx *sc, long idx)
+group_setactive(struct screen_ctx *sc, int idx)
 {
 	struct group_ctx	*gc;
 
@@ -142,7 +142,7 @@ group_setactive(struct screen_ctx *sc, long idx)
 	}
 	sc->group_active = gc;
 
-	xu_ewmh_net_current_desktop(sc, idx);
+	xu_ewmh_net_current_desktop(sc);
 }
 
 void
