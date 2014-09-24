@@ -1,12 +1,3 @@
-#define _LARGEFILE64_SOURCE
-
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#ifdef __OpenBSD__
-#include <machine/amdmsr.h>
-#endif
-
-#include <errno.h>
 /*
  * Copyright (c) 2008 Advanced Micro Devices, Inc.
  *
@@ -39,6 +30,14 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <errno.h>
+
+#ifdef __OpenBSD__
+#include <sys/ioctl.h>
+#include <machine/amdmsr.h>
+#endif
 
 #include "os.h"
 #include "geode.h"
@@ -74,10 +73,8 @@ GeodeReadMSR(unsigned long addr, unsigned long *lo, unsigned long *hi)
 {
 #ifdef __OpenBSD__
     struct amdmsr_req req;
-#endif
     int fd = _msr_open();
 
-#ifdef __OpenBSD__
     req.addr = addr;
 
     if (ioctl(fd, RDMSR, &req) == -1)
@@ -115,10 +112,8 @@ GeodeWriteMSR(unsigned long addr, unsigned long lo, unsigned long hi)
 {
 #ifdef __OpenBSD__
     struct amdmsr_req req;
-#endif
     int fd = _msr_open();
 
-#ifdef __OpenBSD__
     req.addr = addr;
     req.val = (u_int64_t) hi << 32 | (u_int64_t)lo;
 
