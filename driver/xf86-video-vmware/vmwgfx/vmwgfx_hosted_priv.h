@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 VMWare, Inc.
+ * Copyright 2013 VMWare, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,50 +24,17 @@
  *
  * Author: Thomas Hellstrom <thellstrom@vmware.com>
  */
-#ifndef _VMWARE_BOOTSTRAP_H_
-#define _VMWARE_BOOTSTRAP_H_
 
-#include <xf86.h>
+#ifndef _VMWGFX_HOSTED_PRIV_H_
+#define _VMWGFX_HOSTED_PRIV_H_
 
-#define VMWARE_INCHTOMM 25.4
+#include <stdint.h>
+#include "vmwgfx_hosted.h"
 
-typedef enum {
-    OPTION_HW_CURSOR,
-    OPTION_XINERAMA,
-    OPTION_STATIC_XINERAMA,
-    OPTION_GUI_LAYOUT,
-    OPTION_DEFAULT_MODE,
-    OPTION_RENDER_ACCEL,
-    OPTION_DRI,
-    OPTION_DIRECT_PRESENTS,
-    OPTION_HW_PRESENTS,
-    OPTION_RENDERCHECK
-} VMWAREOpts;
+extern const struct vmwgfx_hosted_driver *vmwgfx_xmir_detect(void);
+extern void vmwgfx_xmir_modify_flags(uint32_t *flags);
 
-OptionInfoPtr VMWARECopyOptions(void);
-
-void
-vmwlegacy_hookup(ScrnInfoPtr pScrn);
-
-#ifdef BUILD_VMWGFX
-void
-vmwgfx_hookup(ScrnInfoPtr pScrn);
-void
-vmwgfx_modify_flags(uint32_t *flags);
-#endif /* defined(BUILD_VMWGFX) */
-
-#ifdef XFree86LOADER
-void
-VMWARERefSymLists(void);
-#endif	/* XFree86LOADER */
-
-/*#define DEBUG_LOGGING*/
-#ifdef DEBUG_LOGGING
-# define VmwareLog(args) ErrorF args
-# define TRACEPOINT VmwareLog(("%s : %s\n", __FUNCTION__, __FILE__));
-#else
-# define VmwareLog(args)
-# define TRACEPOINT
-#endif
+extern const struct vmwgfx_hosted_driver *vmwgfx_xwl_detect(void);
+extern void vmwgfx_xwl_modify_flags(uint32_t *flags);
 
 #endif

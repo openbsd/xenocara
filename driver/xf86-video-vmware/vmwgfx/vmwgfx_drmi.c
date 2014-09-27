@@ -284,7 +284,7 @@ vmwgfx_dmabuf_destroy(struct vmwgfx_dmabuf *buf)
 }
 
 int
-vmwgfx_dma(unsigned int host_x, unsigned int host_y,
+vmwgfx_dma(int host_x, int host_y,
 	   RegionPtr region, struct vmwgfx_dmabuf *buf,
 	   uint32_t buf_pitch, uint32_t surface_handle, int to_surface)
 {
@@ -500,3 +500,42 @@ vmwgfx_max_fb_size(int drm_fd, size_t *size)
 
     return 0;
 }
+
+#ifdef HAVE_LIBDRM_2_4_38
+/**
+ * vmwgfx_prime_fd_to_handle - Return a TTM handle to a prime object
+ *
+ * @drm_fd: File descriptor for the drm connection.
+ * @prime_fd: File descriptor identifying the prime object.
+ * @handle: Pointer to returned TTM handle.
+ *
+ * Takes a reference on the underlying object and returns a TTM handle to it.
+ */
+int
+vmwgfx_prime_fd_to_handle(int drm_fd, int prime_fd, uint32_t *handle)
+{
+    *handle = 0;
+
+    return drmPrimeFDToHandle(drm_fd, prime_fd, handle);
+}
+
+/**
+ * vmwgfx_prime_release_handle - Release a reference on a TTM object
+ *
+ * @drm_fd: File descriptor for the drm connection.
+ * @handle: TTM handle as returned by vmwgfx_prime_fd_to_handle.
+ *
+ * Releases the reference obtained by vmwgfx_prime_fd_to_handle().
+ */
+void
+vmwgfx_prime_release_handle(int drm_fd, uint32_t handle)
+{
+    struct drm_vmw_surface_arg s_arg;
+
+    memset(&s_arg, 0, sizeof(s_arg));
+    s_arg.sid = handle;
+
+    (void) drmCommandWrite(drm_fd, DRM_VMW_UNREF_SURFACE, &s_arg,
+			   sizeof(s_arg));
+}
+#endif /* HAVE_LIBDRM_2_4_38 */

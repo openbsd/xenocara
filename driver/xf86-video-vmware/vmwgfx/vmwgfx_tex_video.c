@@ -70,11 +70,11 @@ static const float bt_709[] = {
 static Atom xvBrightness, xvContrast, xvSaturation, xvHue;
 
 #define NUM_TEXTURED_ATTRIBUTES 4
-static XF86AttributeRec TexturedAttributes[NUM_TEXTURED_ATTRIBUTES] = {
-   {XvSettable | XvGettable, -1000, 1000, "XV_BRIGHTNESS"},
-   {XvSettable | XvGettable, -1000, 1000, "XV_CONTRAST"},
-   {XvSettable | XvGettable, -1000, 1000, "XV_SATURATION"},
-   {XvSettable | XvGettable, -1000, 1000, "XV_HUE"}
+static const XF86AttributeRec TexturedAttributes[NUM_TEXTURED_ATTRIBUTES] = {
+    {XvSettable | XvGettable, -1000, 1000, "XV_BRIGHTNESS"},
+    {XvSettable | XvGettable, -1000, 1000, "XV_CONTRAST"},
+    {XvSettable | XvGettable, -1000, 1000, "XV_SATURATION"},
+    {XvSettable | XvGettable, -1000, 1000, "XV_HUE"}
 };
 
 #define NUM_FORMATS 3
@@ -111,8 +111,7 @@ struct xorg_xv_port_priv {
     int hue;
 
     int current_set;
-    struct vmwgfx_dmabuf *bounce[2][3];
-    struct xa_surface *yuv[3];
+    struct xa_surface *yuv[2][3];
 
     int drm_fd;
 
@@ -198,14 +197,10 @@ stop_video(ScrnInfoPtr pScrn, pointer data, Bool shutdown)
        priv->fence = NULL;
 
        for (i=0; i<3; ++i) {
-	   if (priv->yuv[i]) {
-	       xa_surface_destroy(priv->yuv[i]);
-	       priv->yuv[i] = NULL;
-	   }
 	   for (j=0; j<2; ++j) {
-	       if (priv->bounce[j][i]) {
-		   vmwgfx_dmabuf_destroy(priv->bounce[j][i]);
-		   priv->bounce[0][i] = NULL;
+	       if (priv->yuv[i]) {
+		   xa_surface_destroy(priv->yuv[j][i]);
+		   priv->yuv[j][i] = NULL;
 	       }
 	   }
        }
@@ -297,11 +292,9 @@ static int
 check_yuv_surfaces(struct xorg_xv_port_priv *priv,  int id,
 		   int width, int height)
 {
-    struct xa_surface **yuv = priv->yuv;
-    struct vmwgfx_dmabuf **bounce = priv->bounce[priv->current_set];
+    struct xa_surface **yuv = priv->yuv[priv->current_set];
     int ret = 0;
     int i;
-    size_t size;
 
     for (i=0; i<3; ++i) {
 
@@ -334,19 +327,6 @@ check_yuv_surfaces(struct xorg_xv_port_priv *priv,  int id,
 	if (ret || !yuv[i])
 	    return BadAlloc;
 
-	size = width * height;
-
-	if (bounce[i] && (bounce[i]->size < size ||
-			  bounce[i]->size > 2*size)) {
-	    vmwgfx_dmabuf_destroy(bounce[i]);
-	    bounce[i] = NULL;
-	}
-
-	if (!bounce[i]) {
-	    bounce[i] = vmwgfx_dmabuf_alloc(priv->drm_fd, size);
-	    if (!bounce[i])
-		return BadAlloc;
-	}
     }
     return Success;
 }
@@ -413,28 +393,20 @@ copy_packed_data(ScrnInfoPtr pScrn,
                  unsigned short w, unsigned short h)
 {
     int i;
-   struct vmwgfx_dmabuf **bounce = port->bounce[port->current_set];
+   struct xa_surface **yuv = port->yuv[port->current_set];
    char *ymap, *vmap, *umap;
    unsigned char y1, y2, u, v;
    int yidx, uidx, vidx;
    int y_array_size = w * h;
    int ret = BadAlloc;
 
-   /*
-    * Here, we could use xa_surface_[map|unmap], but given the size of
-    * the yuv textures, that could stress the xa tracker dma buffer pool,
-    * particularaly with multiple videos rendering simultaneously.
-    *
-    * Instead, cheat and allocate vmwgfx dma buffers directly.
-    */
-
-   ymap = (char *)vmwgfx_dmabuf_map(bounce[0]);
+   ymap = xa_surface_map(port->r, yuv[0], XA_MAP_WRITE);
    if (!ymap)
        return BadAlloc;
-   umap = (char *)vmwgfx_dmabuf_map(bounce[1]);
+   umap = xa_surface_map(port->r, yuv[1], XA_MAP_WRITE);
    if (!umap)
        goto out_no_umap;
-   vmap = (char *)vmwgfx_dmabuf_map(bounce[2]);
+   vmap = xa_surface_map(port->r, yuv[2], XA_MAP_WRITE);
    if (!vmap)
        goto out_no_vmap;
 
@@ -444,16 +416,16 @@ copy_packed_data(ScrnInfoPtr pScrn,
    switch (id) {
    case FOURCC_YV12: {
       int pitches[3], offsets[3];
-      unsigned char *y, *u, *v;
+      unsigned char *yp, *up, *vp;
       query_image_attributes(pScrn, FOURCC_YV12,
                              &w, &h, pitches, offsets);
 
-      y = buf + offsets[0];
-      v = buf + offsets[1];
-      u = buf + offsets[2];
-      memcpy(ymap, y, w*h);
-      memcpy(vmap, v, w*h/4);
-      memcpy(umap, u, w*h/4);
+      yp = buf + offsets[0];
+      vp = buf + offsets[1];
+      up = buf + offsets[2];
+      memcpy(ymap, yp, w*h);
+      memcpy(vmap, vp, w*h/4);
+      memcpy(umap, up, w*h/4);
       break;
    }
    case FOURCC_UYVY:
@@ -493,64 +465,11 @@ copy_packed_data(ScrnInfoPtr pScrn,
    }
 
    ret = Success;
-   vmwgfx_dmabuf_unmap(bounce[2]);
+   xa_surface_unmap(yuv[2]);
   out_no_vmap:
-   vmwgfx_dmabuf_unmap(bounce[1]);
+   xa_surface_unmap(yuv[1]);
   out_no_umap:
-   vmwgfx_dmabuf_unmap(bounce[0]);
-
-   if (ret == Success) {
-       struct xa_surface *srf;
-       struct vmwgfx_dmabuf *buf;
-       uint32_t handle;
-       unsigned int stride;
-       BoxRec box;
-       RegionRec reg;
-
-       box.x1 = 0;
-       box.x2 = w;
-       box.y1 = 0;
-       box.y2 = h;
-
-       REGION_INIT(pScrn->pScreen, &reg, &box, 1);
-
-       for (i=0; i<3; ++i) {
-	   srf = port->yuv[i];
-	   buf = bounce[i];
-
-	   if (i == 1) {
-	       switch(id) {
-	       case FOURCC_YV12:
-		   h /= 2;
-		   /* Fall through */
-	       case FOURCC_YUY2:
-	       case FOURCC_UYVY:
-		   w /= 2;
-		   break;
-	       default:
-		   break;
-	       }
-
-	       box.x1 = 0;
-	       box.x2 = w;
-	       box.y1 = 0;
-	       box.y2 = h;
-
-	       REGION_RESET(pScrn->pScreen, &reg, &box);
-	   }
-
-	   if (xa_surface_handle(srf, &handle, &stride) != 0) {
-	       ret = BadAlloc;
-	       break;
-	   }
-
-	   if (vmwgfx_dma(0, 0, &reg, buf, w, handle, 1) != 0) {
-	       ret = BadAlloc;
-	       break;
-	   }
-       }
-       REGION_UNINIT(pScrn->pScreen, &reg);
-   }
+   xa_surface_unmap(yuv[0]);
 
    return ret;
 }
@@ -609,7 +528,8 @@ display_video(ScreenPtr pScreen, struct xorg_xv_port_priv *pPriv, int id,
 				 (struct xa_box *)REGION_RECTS(dstRegion),
 				 REGION_NUM_RECTS(dstRegion),
 				 pPriv->cm,
-				 vpix->hw, pPriv->yuv);
+				 vpix->hw,
+				 pPriv->yuv[pPriv->current_set ]);
 
    saa_pixmap_dirty(pPixmap, TRUE, dstRegion);
    DamageRegionProcessPending(&pPixmap->drawable);

@@ -318,7 +318,7 @@ vmwgfx_hw_commit(PixmapPtr pixmap)
 	uint32_t new_flags;
 
 	new_flags = (vpix->xa_flags & ~vpix->staging_remove_flags) |
-	    vpix->staging_add_flags;
+	    vpix->staging_add_flags | XA_FLAG_SHARED;
 
 	if (vpix->staging_format != xa_surface_format(vpix->hw))
 	    LogMessage(X_INFO, "Changing hardware format.\n");
@@ -362,6 +362,12 @@ vmwgfx_hw_accel_validate(PixmapPtr pixmap, unsigned int depth,
 Bool
 vmwgfx_hw_dri2_validate(PixmapPtr pixmap, unsigned int depth)
 {
+    struct vmwgfx_saa *vsaa =
+	to_vmwgfx_saa(saa_get_driver(pixmap->drawable.pScreen));
+
+    if (!vsaa->is_master)
+	    return FALSE;
+
     return (vmwgfx_hw_dri2_stage(pixmap, depth) &&
 	    vmwgfx_hw_commit(pixmap) &&
 	    vmwgfx_hw_validate(pixmap, NULL));

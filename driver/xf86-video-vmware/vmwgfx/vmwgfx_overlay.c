@@ -64,6 +64,7 @@ typedef uint8_t uint8;
 #include "vmwgfx_drm.h"
 #include "vmwgfx_drmi.h"
 #include "vmwgfx_driver.h"
+#include "vmwgfx_hosted.h"
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
@@ -286,6 +287,9 @@ vmw_video_init_adaptor(ScrnInfoPtr pScrn)
     int i;
     DevUnion *dev_unions;
     uint32_t ntot, nfree;
+
+    if (vmwgfx_is_hosted(ms->hdriver))
+	return NULL;
 
     if (vmwgfx_num_streams(ms->fd, &ntot, &nfree) != 0) {
         debug_printf("No stream ioctl support\n");

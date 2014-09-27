@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 VMWare, Inc.
+ * Copyright 2013 VMWare, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,50 +24,48 @@
  *
  * Author: Thomas Hellstrom <thellstrom@vmware.com>
  */
-#ifndef _VMWARE_BOOTSTRAP_H_
-#define _VMWARE_BOOTSTRAP_H_
 
-#include <xf86.h>
-
-#define VMWARE_INCHTOMM 25.4
-
-typedef enum {
-    OPTION_HW_CURSOR,
-    OPTION_XINERAMA,
-    OPTION_STATIC_XINERAMA,
-    OPTION_GUI_LAYOUT,
-    OPTION_DEFAULT_MODE,
-    OPTION_RENDER_ACCEL,
-    OPTION_DRI,
-    OPTION_DIRECT_PRESENTS,
-    OPTION_HW_PRESENTS,
-    OPTION_RENDERCHECK
-} VMWAREOpts;
-
-OptionInfoPtr VMWARECopyOptions(void);
-
-void
-vmwlegacy_hookup(ScrnInfoPtr pScrn);
-
-#ifdef BUILD_VMWGFX
-void
-vmwgfx_hookup(ScrnInfoPtr pScrn);
-void
-vmwgfx_modify_flags(uint32_t *flags);
-#endif /* defined(BUILD_VMWGFX) */
-
-#ifdef XFree86LOADER
-void
-VMWARERefSymLists(void);
-#endif	/* XFree86LOADER */
-
-/*#define DEBUG_LOGGING*/
-#ifdef DEBUG_LOGGING
-# define VmwareLog(args) ErrorF args
-# define TRACEPOINT VmwareLog(("%s : %s\n", __FUNCTION__, __FILE__));
-#else
-# define VmwareLog(args)
-# define TRACEPOINT
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
 
-#endif
+#include "vmwgfx_hosted.h"
+#include "vmwgfx_hosted_priv.h"
+
+/*
+ * Hook up hosted environments here.
+ */
+
+/**
+ * vmwgfx_hosted_detect - Check whether we are hosted
+ *
+ * Check whether we are hosted by a compositor and
+ * in that case return a pointer to a valid struct vmwgfx_hosted_driver.
+ * If not hosted, return NULL.
+ */
+const struct vmwgfx_hosted_driver *
+vmwgfx_hosted_detect(void)
+{
+    const struct vmwgfx_hosted_driver *tmp = vmwgfx_xmir_detect();
+
+    if (!tmp)
+	tmp = vmwgfx_xwl_detect();
+
+    return tmp;
+}
+
+/**
+ * vmwgfx_hosted_modify_flags - Modify driver flags if hosted.
+ *
+ * @flag: Pointer to the flag argument given to the vmware driver's
+ * DriverFunc function, when operation is GET_REQUIRED_HW_INTERFACES.
+ *
+ * Checks whether we are running hosted, and in that case modifies
+ * the flag according to the hosted environment's requirements.
+ */
+void
+vmwgfx_hosted_modify_flags(uint32_t *flags)
+{
+    vmwgfx_xmir_modify_flags(flags);
+    vmwgfx_xwl_modify_flags(flags);
+}

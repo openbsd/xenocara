@@ -60,7 +60,7 @@ extern void
 vmwgfx_dmabuf_unmap(struct vmwgfx_dmabuf *buf);
 
 extern int
-vmwgfx_dma(unsigned int host_x, unsigned int host_y,
+vmwgfx_dma(int host_x, int host_y,
 	   RegionPtr region, struct vmwgfx_dmabuf *buf,
 	   uint32_t buf_pitch, uint32_t surface_handle, int to_surface);
 
@@ -84,4 +84,12 @@ vmwgfx_update_gui_layout(int drm_fd, unsigned int num_rects,
 			 struct drm_vmw_rect *rects);
 int
 vmwgfx_get_param(int drm_fd, uint32_t param, uint64_t *out);
+
+#ifdef HAVE_LIBDRM_2_4_38
+int
+vmwgfx_prime_fd_to_handle(int drm_fd, int prime_fd, uint32_t *handle);
+
+void
+vmwgfx_prime_release_handle(int drm_fd, uint32_t handle);
+#endif /* HAVE_LIBDRM_2_4_38 */
 #endif

@@ -1,3 +1,302 @@
+commit cbd56b3759f01ec18ae0705d023e4c0b2ab38c25
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Wed Mar 26 12:45:52 2014 +0100
+
+    Bump the version number to 13.0.2
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 51cdfa6f5102bde92c98630ace6650e4b286f6e2
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Fri Feb 21 18:10:07 2014 +0100
+
+    vmware: Fix compilation on newer X servers
+    
+    Found by Bryan Lee. Later versions of X.org turns dispMode pointers
+    into const upsetting gcc, turn them into size_t's instead.
+    
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 8da981712f62050076cff53e1b40ed1e307fcca8
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Jan 15 11:04:05 2014 +0100
+
+    vmware/vmwgfx: Always allocate shared hardware surfaces.
+    
+    Hardware surfaces are all likely to be shared at some point, and we *really*
+    don't want to change a hardware surface that is bound as a drm framebuffer.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 31bff9f7f3d9a68fd1449532e8ab50065de63857
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jan 9 13:53:59 2014 +0100
+
+    vmware: Require libdrm 2.4.38 to build XMir.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit d6b179a5addef6456325adf241eb8dcaf8e4c3d6
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jan 9 13:28:22 2014 +0100
+
+    vmware: Fix build errors and warnings
+    
+    A previous commit and the hosted merge unfortunately brought in some build
+    errors / warnings on early X servers.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit f37684e7169b9c0ab23ff748d5acacb65fad82f7
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue Jan 7 17:55:49 2014 +0100
+
+    vmwgfx: Block DMA to prime surfaces for now
+    
+    Since there is currently no _good_ way to get the surface format of a
+    prime surface, we block DMA to these surfaces; we don't know if our
+    software data is compatible with the surface format.
+    
+    This patch also makes sure that there is a hardware surface backing the
+    drawable we copy from.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 97ce302ddd6e86397ea56ea9089b9549af73c3ac
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Jan 6 12:37:36 2014 +0100
+
+    vmwgfx: Enable direct dmas
+    
+    Enable direct dmas instead of using the xa-provided dma functionality.
+    This saves a bounce-buffer software copy of all dma'd contents.
+    
+    This also implies that all drawables with mixed software / hardware contents
+    will use a kernel buffer for software rendering.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+
+commit fd636e39a3f32a6dcd107c370513d8cb9aae26c2
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Dec 16 06:21:09 2013 -0800
+
+    vmwgfx: Add support for XWayland
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit c020923597d3bc30dffa89ba0a47f3b9517dd5fb
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Dec 16 06:13:25 2013 -0800
+
+    vmwgfx: Add support for XMir v2.
+    
+    Use the hosted infrastructure to add support for XMir.
+    Helpers go in vmwgfx_saa.c.
+    
+    v2: Added comments for the helpers, and added a
+    vmwgfx_flush_dri2 to be executed when coming back from vt switch.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit c8e1c498431b1f8758f62c94131c302cf3d07b39
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Dec 16 06:05:35 2013 -0800
+
+    vmwgfx: Add an infrastructure to be able to run hosted under a compositor v2
+    
+    Figure out what's needed both for XMir and XWayland and make a common
+    driver structure out of it.
+    
+    v2: Added a lot of comments. No code change.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit f45a551e9b70ccec8f92df02747d4e2af299cf8c
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Dec 16 10:38:21 2013 +0100
+
+    vmwgfx: Fix compile breakage on XA version 1.
+    
+    A recent revert brought back code that assumed XA version 2.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: trivial
+
+commit 93228f3dd3355a25583d22dbb96791678b93be3e
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Dec 11 06:54:02 2013 -0800
+
+    vmwgfx: Really allow XA version 2.
+    
+    When XA starts to correctly advertise version 2, we didn't allow it.
+    Fix this.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 4af6062ce281a7f4aaa50985fe757e9569208ee1
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Dec 11 04:59:49 2013 -0800
+
+    Revert "vmwgfx: Get rid of device-specific DMA code"
+    
+    This reverts commit 45b2457516a9db4bd1d60fbb24a1efbe2d9dd932.
+    
+    Reverting this because using direct DMA for shared pixmaps should
+    boost performance. It should be usable both in a composited environment
+    and when running hosted. Need to retest the DMA flaws I saw before disabling
+    this code.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit c36cbcefb8526944141eb431e1e736dc4485a36e
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Dec 9 00:19:55 2013 -0800
+
+    vmwgfx: Remove stray 1
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit a40cbd7b4fa19219849b4b0a48f07538772c3e22
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Dec 5 02:58:47 2013 -0800
+
+    vmwgfx: Support also XA version 1 v2
+    
+    We need to support also XA version 1, since we want to be backwards
+    compatible with older mesa releases.
+    Unfortunately, the intended way of detecting XA major version at
+    compile-time was broken on mesa 10 so we need a workaround that tests
+    for XA version 2 at config time.
+    
+    v2: Update the test for XA version 2.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 7ac45326eccbf3bea9a4a8f95b9662a36ab58eb0
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Nov 28 02:02:20 2013 -0800
+
+    vmwgfx: Fix some compilation warnings and indentations
+    
+    Most of the compilation warnings we're seeing are due to bad xorg headers,
+    but fix the ones we can fix in the driver. Some indentation fixes as well.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit e26dec8f5278df74a102493bf6d2d8444dab5d6d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 28 18:21:29 2013 -0400
+
+    vmwgfx: handle changes of DamageUnregister API in 1.14.99.2
+    
+    Fix is inspired from the intel driver.
+    
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 45b2457516a9db4bd1d60fbb24a1efbe2d9dd932
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Sep 19 21:50:40 2012 +0200
+
+    vmwgfx: Get rid of device-specific DMA code
+    
+    It's rarely used and things seem to work well enough on top of XA.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Zack Rusin <zackr@vmware.com>
+
+commit 7192acf9f0bf8e7176ab0b803b861a858623f709
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Sep 19 20:36:57 2012 +0200
+
+    vmwgfx: Implement textured video completely on top of XA.
+    
+    Remove device-specific hacks. This may increase resource usage a little
+    on old hardware revisions, but we don't need separate code paths on
+    different hardware revisions.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Zack Rusin <zackr@vmware.com>
+
+commit 835ce4698f916ba080f4132988fd4caf898e0b1e
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Sep 26 01:25:33 2013 -0700
+
+    vmwgfx: Avoid HW operations when not master
+    
+    Note that for DRI2, a dri2_copy_region becomes a NOP when not master.
+    Additionally, all dri2 operations that lead to a potential kernel
+    access will return FALSE.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 0945bea5fc32eacb7bf42639efbd45dcd43e7ab5
+Author: Rob Clark <robdclark@gmail.com>
+Date:   Mon Jun 10 13:31:31 2013 -0400
+
+    vmwgfx: update for XA API changes
+    
+    Signed-off-by: Rob Clark <robdclark@gmail.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Tested-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit b3345886332ee2b9fd1348dc2cd36257dfd71986
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Wed Apr 17 12:03:32 2013 +0200
+
+    Bump the version number to 13.0.1
+
+commit d13a6334fe76f4e869b2cb8c0a6a13c185b1bedd
+Author: Loïc Yhuel <loic.yhuel@gmail.com>
+Date:   Thu Apr 11 11:29:10 2013 +0200
+
+    vmwgfx: Use myGlyphs to fix crashes
+    
+    Tested-by: Christian Hesse <mail@eworm.de>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Loïc Yhuel <loic.yhuel@gmail.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 23d87c92b7211cc5249eefe4ab3a2c7f370e279e
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Thu Feb 14 14:33:01 2013 -0800
+
+    Kill mibstore
+    
+    It was a noop for at least 5 years and it has been removed.
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
+commit 686859fba16ed2616c38bbe5d4e38abf4c5b7ae9
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Tue Jan 15 12:05:45 2013 -0800
+
+    Bump the version number to 13.0.0
+    
+    New abi and various fixes
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
 commit adf375f3d400e51b1e445e89de6bd82be0bb4ef3
 Author: Zack Rusin <zackr@vmware.com>
 Date:   Thu Dec 6 16:40:13 2012 -0500

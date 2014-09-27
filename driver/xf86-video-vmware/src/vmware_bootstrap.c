@@ -34,6 +34,7 @@
 #include "xf86Pci.h"		/* pci */
 #include "vm_device_version.h"
 #include "vmware_bootstrap.h"
+#include <stdint.h>
 
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
@@ -199,6 +200,12 @@ OptionInfoPtr VMWARECopyOptions(void)
     return options;
 }
 
+/*
+ * Also in vmwgfx_hosted.h, which we don't include.
+ */
+void *
+vmwgfx_hosted_detect(void);
+
 static Bool
 VMwarePreinitStub(ScrnInfoPtr pScrn, int flags)
 {
@@ -220,6 +227,11 @@ VMwarePreinitStub(ScrnInfoPtr pScrn, int flags)
     if ((*pScrn->PreInit)(pScrn, flags))
 	return TRUE;
 
+    /*
+     * Can't run legacy hosted
+     */
+    if (vmwgfx_hosted_detect())
+	return FALSE;
 #else
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Driver was compiled without KMS- and 3D support.\n");
@@ -256,7 +268,6 @@ VMwarePciProbe (DriverPtr           drv,
                 intptr_t            match_data)
 {
     ScrnInfoPtr     scrn = NULL;
-    EntityInfoPtr   entity;
 
     scrn = xf86ConfigPciEntity(scrn, 0, entity_num, VMWAREPciChipsets,
                                NULL, NULL, NULL, NULL, NULL);
@@ -267,7 +278,6 @@ VMwarePciProbe (DriverPtr           drv,
         scrn->Probe = NULL;
     }
 
-    entity = xf86GetEntityInfo(entity_num);
     switch (DEVICE_ID(device)) {
     case PCI_DEVICE_ID_VMWARE_SVGA2:
     case PCI_DEVICE_ID_VMWARE_SVGA:
@@ -415,15 +425,19 @@ VMWareDriverFunc(ScrnInfoPtr pScrn,
                  xorgDriverFuncOp op,
                  pointer data)
 {
-   CARD32 *flag;
+   uint32_t *flag;
    xorgRRModeMM *modemm;
 
    switch (op) {
    case GET_REQUIRED_HW_INTERFACES:
-      flag = (CARD32 *)data;
+      flag = (uint32_t *)data;
 
       if (flag) {
+#ifdef BUILD_VMWGFX
+	  vmwgfx_modify_flags(flag);
+#else
          *flag = HW_IO | HW_MMIO;
+#endif
       }
       return TRUE;
    case RR_GET_MODE_MM:

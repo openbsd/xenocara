@@ -102,7 +102,9 @@ vmwareAddDefaultMode(ScrnInfoPtr pScrn, uint32 dwidth, uint32 dheight)
 	    dispModeList = pScrn->display->modes;
 	    while(*dispModeList)
 		dispModeList++;
-	    dispModeCount = dispModeList - pScrn->display->modes;
+	    dispModeCount = (unsigned)(((size_t)dispModeList -
+	                                (size_t)pScrn->display->modes) /
+	                               sizeof(*dispModeList));
 	}
 
 	dispModeList = xnfcalloc(dispModeCount + 2, sizeof(*dispModeList));

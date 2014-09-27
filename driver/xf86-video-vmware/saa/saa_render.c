@@ -406,6 +406,8 @@ saa_render_setup(ScreenPtr pScreen)
 	saa_wrap(sscreen, ps, Trapezoids, saa_trapezoids);
 	saa_wrap(sscreen, ps, Triangles, saa_triangles);
 	saa_wrap(sscreen, ps, Composite, saa_composite);
+	saa_wrap(sscreen, ps, Glyphs,    miGlyphs);
+	saa_wrap(sscreen, ps, UnrealizeGlyph, miUnrealizeGlyph);
     }
 }
 
@@ -419,6 +421,8 @@ saa_render_takedown(ScreenPtr pScreen)
 	saa_unwrap(sscreen, ps, Trapezoids);
 	saa_unwrap(sscreen, ps, Triangles);
 	saa_unwrap(sscreen, ps, Composite);
+	saa_unwrap(sscreen, ps, Glyphs);
+	saa_unwrap(sscreen, ps, UnrealizeGlyph);
     }
 }
 #endif

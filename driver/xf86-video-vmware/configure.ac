@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-vmware],
-        [12.0.99.901],
+        [13.0.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-vmware])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -118,7 +118,21 @@ if test x$BUILD_VMWGFX = xyes; then
 	PKG_CHECK_MODULES([LIBDRM], [libdrm],[],[BUILD_VMWGFX=no])
 fi
 if test x$BUILD_VMWGFX = xyes; then
-	PKG_CHECK_MODULES([XATRACKER], [xatracker >= 0.4.0],[],[BUILD_VMWGFX=no])
+#
+# Early versions of mesa 10 forgot to bump the XA major version number in
+# the xa_tracker.h header
+#
+	PKG_CHECK_MODULES([XATRACKER], [xatracker >= 0.4.0],
+			  [PKG_CHECK_EXISTS([xatracker = 2.0.0],
+	                  [AC_DEFINE([HAVE_XA_2], 1,
+               		  [Has version 2 of XA])])],
+			  [BUILD_VMWGFX=no])
+#
+# Check for prime.
+#
+	PKG_CHECK_EXISTS([libdrm >= 2.4.38],
+			 [AC_DEFINE([HAVE_LIBDRM_2_4_38], 1,
+			 [Has version 2.4.38 or greater of libdrm])])
 fi
 
 DRIVER_NAME=vmware

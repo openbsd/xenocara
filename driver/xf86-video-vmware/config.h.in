@@ -5,8 +5,14 @@
 /* Building the vmwgfx driver path */
 #undef BUILD_VMWGFX
 
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Has version 2.4.38 or greater of libdrm */
+#undef HAVE_LIBDRM_2_4_38
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -32,6 +38,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Has version 2 of XA */
+#undef HAVE_XA_2
+
 /* Has version 1.12.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_12_0
 
@@ -46,6 +55,10 @@
 
 /* Has version 1.7.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_7_0
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
