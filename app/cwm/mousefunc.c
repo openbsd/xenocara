@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.84 2014/09/18 13:56:58 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.85 2014/09/27 19:04:32 okan Exp $
  */
 
 #include <sys/param.h>
@@ -174,7 +174,7 @@ mousefunc_client_move(struct client_ctx *cc, union arg *arg)
 void
 mousefunc_client_grouptoggle(struct client_ctx *cc, union arg *arg)
 {
-	group_sticky_toggle_enter(cc);
+	group_toggle_membership_enter(cc);
 }
 
 void

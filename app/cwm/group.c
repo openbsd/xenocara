@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.107 2014/09/27 18:57:11 okan Exp $
+ * $OpenBSD: group.c,v 1.108 2014/09/27 19:04:32 okan Exp $
  */
 
 #include <sys/param.h>
@@ -162,11 +162,8 @@ group_movetogroup(struct client_ctx *cc, int idx)
 	group_assign(gc, cc);
 }
 
-/*
- * Colouring for groups upon add/remove.
- */
 void
-group_sticky_toggle_enter(struct client_ctx *cc)
+group_toggle_membership_enter(struct client_ctx *cc)
 {
 	struct screen_ctx	*sc = cc->sc;
 	struct group_ctx	*gc = sc->group_active;
@@ -183,7 +180,7 @@ group_sticky_toggle_enter(struct client_ctx *cc)
 }
 
 void
-group_sticky_toggle_exit(struct client_ctx *cc)
+group_toggle_membership_leave(struct client_ctx *cc)
 {
 	cc->flags &= ~CLIENT_HIGHLIGHT;
 	client_draw_border(cc);

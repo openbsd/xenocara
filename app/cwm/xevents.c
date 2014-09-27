@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.114 2014/09/15 13:00:49 okan Exp $
+ * $OpenBSD: xevents.c,v 1.115 2014/09/27 19:04:32 okan Exp $
  */
 
 /*
@@ -251,7 +251,7 @@ xev_handle_buttonrelease(XEvent *ee)
 	struct client_ctx *cc;
 
 	if ((cc = client_current()))
-		group_sticky_toggle_exit(cc);
+		group_toggle_membership_leave(cc);
 }
 
 static void
