@@ -33,6 +33,7 @@
 
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <xf86.h>
 #include <xf86Xinput.h>
 #include <xisb.h>
 
