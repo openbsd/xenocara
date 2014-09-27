@@ -118,10 +118,17 @@ KdDoSwitchCmd(const char *reason)
 {
     if (kdSwitchCmd) {
         char *command;
+        int ret;
 
         if (asprintf(&command, "%s %s", kdSwitchCmd, reason) == -1)
             return;
-        system(command);
+
+        /* Ignore the return value from system; I'm not sure
+         * there's anything more useful to be done when
+         * it fails
+         */
+        ret = system(command);
+        (void) ret;
         free(command);
     }
 }
@@ -665,7 +672,7 @@ KdCloseScreen(ScreenPtr pScreen)
 
     pScreenPriv->screen->pScreen = 0;
 
-    free((pointer) pScreenPriv);
+    free((void *) pScreenPriv);
     return ret;
 }
 

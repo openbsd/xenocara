@@ -67,7 +67,7 @@ static int xf86ScrnInfoPrivateCount = 0;
 /* Add a pointer to a new DriverRec to xf86DriverList */
 
 void
-xf86AddDriver(DriverPtr driver, pointer module, int flags)
+xf86AddDriver(DriverPtr driver, void *module, int flags)
 {
     /* Don't add null entries */
     if (!driver)
@@ -107,7 +107,7 @@ xf86DeleteDriver(int drvIndex)
 /* Add a pointer to a new InputDriverRec to xf86InputDriverList */
 
 void
-xf86AddInputDriver(InputDriverPtr driver, pointer module, int flags)
+xf86AddInputDriver(InputDriverPtr driver, void *module, int flags)
 {
     /* Don't add null entries */
     if (!driver)
@@ -422,7 +422,6 @@ xf86SetDepthBpp(ScrnInfoPtr scrp, int depth, int dummy, int fbbpp,
              * Check for DefaultDepth and DefaultFbBpp options in the
              * Device sections.
              */
-            int i;
             GDevPtr device;
             Bool found = FALSE;
 
@@ -1069,9 +1068,7 @@ void
 xf86EnableDisableFBAccess(ScrnInfoPtr pScrnInfo, Bool enable)
 {
     ScreenPtr pScreen = pScrnInfo->pScreen;
-    PixmapPtr pspix;
 
-    pspix = (*pScreen->GetScreenPixmap) (pScreen);
     if (enable) {
         /*
          * Restore all of the clip lists on the screen
@@ -1220,16 +1217,45 @@ xf86ErrorF(const char *format, ...)
     va_end(ap);
 }
 
+/* Note temporarily modifies the passed in buffer! */
+static void xf86_mkdir_p(char *path)
+{
+    char *sep = path;
+
+    while ((sep = strchr(sep + 1, '/'))) {
+        *sep = 0;
+        (void)mkdir(path, 0777);
+        *sep = '/';
+    }
+    (void)mkdir(path, 0777);
+}
+
 void
 xf86LogInit(void)
 {
-    char *lf = NULL;
+    char *env, *lf = NULL;
+    char buf[PATH_MAX];
 
 #define LOGSUFFIX ".log"
 #define LOGOLDSUFFIX ".old"
 
     /* Get the log file name */
     if (xf86LogFileFrom == X_DEFAULT) {
+        /* When not running as root, we won't be able to write to /var/log */
+        if (geteuid() != 0) {
+            if ((env = getenv("XDG_DATA_HOME")))
+                snprintf(buf, sizeof(buf), "%s/%s", env,
+                         DEFAULT_XDG_DATA_HOME_LOGDIR);
+            else if ((env = getenv("HOME")))
+                snprintf(buf, sizeof(buf), "%s/%s/%s", env,
+                         DEFAULT_XDG_DATA_HOME, DEFAULT_XDG_DATA_HOME_LOGDIR);
+
+            if (env) {
+                xf86_mkdir_p(buf);
+                strlcat(buf, "/" DEFAULT_LOGPREFIX, sizeof(buf));
+                xf86LogFile = buf;
+            }
+        }
         /* Append the display number and ".log" */
         if (asprintf(&lf, "%s%%s" LOGSUFFIX, xf86LogFile) == -1)
             FatalError("Cannot allocate space for the log file name\n");
@@ -1532,15 +1558,15 @@ xf86DisableRandR(void)
 }
 
 CARD32
-xf86GetModuleVersion(pointer module)
+xf86GetModuleVersion(void *module)
 {
     return (CARD32) LoaderGetModuleVersion(module);
 }
 
-pointer
+void *
 xf86LoadDrvSubModule(DriverPtr drv, const char *name)
 {
-    pointer ret;
+    void *ret;
     int errmaj = 0, errmin = 0;
 
     ret = LoadSubModule(drv->module, name, NULL, NULL, NULL, NULL,
@@ -1550,10 +1576,10 @@ xf86LoadDrvSubModule(DriverPtr drv, const char *name)
     return ret;
 }
 
-pointer
+void *
 xf86LoadSubModule(ScrnInfoPtr pScrn, const char *name)
 {
-    pointer ret;
+    void *ret;
     int errmaj = 0, errmin = 0;
 
     ret = LoadSubModule(pScrn->module, name, NULL, NULL, NULL, NULL,
@@ -1566,12 +1592,12 @@ xf86LoadSubModule(ScrnInfoPtr pScrn, const char *name)
 /*
  * xf86LoadOneModule loads a single module.
  */
-pointer
-xf86LoadOneModule(char *name, pointer opt)
+void *
+xf86LoadOneModule(const char *name, void *opt)
 {
     int errmaj, errmin;
     char *Name;
-    pointer mod;
+    void *mod;
 
     if (!name)
         return NULL;
@@ -1595,7 +1621,7 @@ xf86LoadOneModule(char *name, pointer opt)
 }
 
 void
-xf86UnloadSubModule(pointer mod)
+xf86UnloadSubModule(void *mod)
 {
     UnloadSubModule(mod);
 }
@@ -1698,9 +1724,9 @@ xf86SetSilkenMouse(ScreenPtr pScreen)
 
 /* Wrote this function for the PM2 Xv driver, preliminary. */
 
-pointer
-xf86FindXvOptions(ScrnInfoPtr pScrn, int adaptor_index, char *port_name,
-                  char **adaptor_name, pointer *adaptor_options)
+void *
+xf86FindXvOptions(ScrnInfoPtr pScrn, int adaptor_index, const char *port_name,
+                  const char **adaptor_name, void **adaptor_options)
 {
     confXvAdaptorPtr adaptor;
     int i;
@@ -1732,7 +1758,7 @@ xf86FindXvOptions(ScrnInfoPtr pScrn, int adaptor_index, char *port_name,
 
 static void
 xf86ConfigFbEntityInactive(EntityInfoPtr pEnt, EntityProc init,
-                           EntityProc enter, EntityProc leave, pointer private)
+                           EntityProc enter, EntityProc leave, void *private)
 {
     ScrnInfoPtr pScrn;
 
@@ -1744,7 +1770,7 @@ xf86ConfigFbEntityInactive(EntityInfoPtr pEnt, EntityProc init,
 ScrnInfoPtr
 xf86ConfigFbEntity(ScrnInfoPtr pScrn, int scrnFlag, int entityIndex,
                    EntityProc init, EntityProc enter, EntityProc leave,
-                   pointer private)
+                   void *private)
 {
     EntityInfoPtr pEnt = xf86GetEntityInfo(entityIndex);
 
@@ -1786,7 +1812,7 @@ xf86IsScreenPrimary(ScrnInfoPtr pScrn)
 
 int
 xf86RegisterRootWindowProperty(int ScrnIndex, Atom property, Atom type,
-                               int format, unsigned long len, pointer value)
+                               int format, unsigned long len, void *value)
 {
     RootWinPropPtr pNewProp = NULL, pRegProp;
     Bool existing = FALSE;
@@ -1818,7 +1844,7 @@ xf86RegisterRootWindowProperty(int ScrnIndex, Atom property, Atom type,
         pNewProp->next = NULL;
     }
     else {
-        free(pNewProp->name);
+        free((void *) pNewProp->name);
         existing = TRUE;
     }
 

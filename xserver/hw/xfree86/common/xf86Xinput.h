@@ -64,6 +64,10 @@
 /* 0x08 is reserved for legacy XI86_SEND_DRAG_EVENTS, do not use for now */
 /* server-internal only */
 #define XI86_DEVICE_DISABLED    0x10    /* device was disabled before vt switch */
+#define XI86_SERVER_FD		0x20	/* fd is managed by xserver */
+
+/* Input device driver capabilities */
+#define XI86_DRV_CAP_SERVER_FD	0x01
 
 /* This holds the input driver entry and module information. */
 typedef struct _InputDriverRec {
@@ -74,13 +78,14 @@ typedef struct _InputDriverRec {
                     struct _InputInfoRec * pInfo, int flags);
     void (*UnInit) (struct _InputDriverRec * drv,
                     struct _InputInfoRec * pInfo, int flags);
-    pointer module;
+    void *module;
     const char **default_options;
+    int capabilities;
 } InputDriverRec, *InputDriverPtr;
 
 /* This is to input devices what the ScrnInfoRec is to screens. */
 
-typedef struct _InputInfoRec {
+struct _InputInfoRec {
     struct _InputInfoRec *next;
     char *name;
     char *driver;
@@ -96,14 +101,16 @@ typedef struct _InputInfoRec {
       int *valuators, int first_valuator, int num_valuators);
 
     int fd;
+    int major;
+    int minor;
     DeviceIntPtr dev;
-    pointer private;
+    void *private;
     const char *type_name;
     InputDriverPtr drv;
-    pointer module;
+    void *module;
     XF86OptionPtr options;
     InputAttributes *attrs;
-} *InputInfoPtr;
+};
 
 /* xf86Globals.c */
 extern InputInfoPtr xf86InputDevs;
@@ -172,13 +179,14 @@ extern _X_EXPORT void xf86AddEnabledDevice(InputInfoPtr pInfo);
 extern _X_EXPORT void xf86RemoveEnabledDevice(InputInfoPtr pInfo);
 extern _X_EXPORT void xf86DisableDevice(DeviceIntPtr dev, Bool panic);
 extern _X_EXPORT void xf86EnableDevice(DeviceIntPtr dev);
+extern _X_EXPORT void xf86InputEnableVTProbe(void);
 
 /* not exported */
 int xf86NewInputDevice(InputInfoPtr pInfo, DeviceIntPtr *pdev, BOOL is_auto);
 InputInfoPtr xf86AllocateInput(void);
 
 /* xf86Helper.c */
-extern _X_EXPORT void xf86AddInputDriver(InputDriverPtr driver, pointer module,
+extern _X_EXPORT void xf86AddInputDriver(InputDriverPtr driver, void *module,
                                          int flags);
 extern _X_EXPORT void xf86DeleteInputDriver(int drvIndex);
 extern _X_EXPORT InputDriverPtr xf86LookupInputDriver(const char *name);

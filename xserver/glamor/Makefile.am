@@ -1,0 +1,53 @@
+noinst_LTLIBRARIES = libglamor.la libglamor_egl_stubs.la
+
+libglamor_la_LIBADD = $(GLAMOR_LIBS)
+
+AM_CFLAGS = $(CWARNFLAGS) $(DIX_CFLAGS) $(GLAMOR_CFLAGS)
+
+libglamor_la_SOURCES = \
+	glamor.c \
+	glamor_context.h \
+	glamor_copyarea.c \
+	glamor_copywindow.c \
+	glamor_core.c \
+	glamor_debug.h \
+	glamor_fill.c \
+	glamor_font.c \
+	glamor_font.h \
+	glamor_glx.c \
+	glamor_glyphs.c \
+	glamor_polylines.c \
+	glamor_segment.c \
+	glamor_image.c \
+	glamor_render.c \
+	glamor_gradient.c \
+	glamor_program.c \
+	glamor_program.h \
+	glamor_rects.c \
+	glamor_spans.c \
+	glamor_text.c \
+	glamor_transfer.c \
+	glamor_transfer.h \
+	glamor_transform.c \
+	glamor_transform.h \
+	glamor_trapezoid.c \
+	glamor_tile.c \
+	glamor_triangles.c\
+	glamor_addtraps.c\
+	glamor_copyplane.c\
+	glamor_glyphblt.c\
+	glamor_points.c\
+	glamor_priv.h\
+	glamor_pixmap.c\
+	glamor_largepixmap.c\
+	glamor_picture.c\
+	glamor_vbo.c \
+	glamor_window.c\
+	glamor_fbo.c\
+	glamor_compositerects.c\
+	glamor_utils.h\
+	glamor.h
+
+libglamor_egl_stubs_la_SOURCES = glamor_egl_stubs.c
+
+sdk_HEADERS = glamor.h

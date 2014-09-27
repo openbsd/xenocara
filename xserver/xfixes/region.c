@@ -35,7 +35,7 @@
 RESTYPE RegionResType;
 
 static int
-RegionResFree(pointer data, XID id)
+RegionResFree(void *data, XID id)
 {
     RegionPtr pRegion = (RegionPtr) data;
 
@@ -85,7 +85,7 @@ ProcXFixesCreateRegion(ClientPtr client)
     pRegion = RegionFromRects(things, (xRectangle *) (stuff + 1), CT_UNSORTED);
     if (!pRegion)
         return BadAlloc;
-    if (!AddResource(stuff->region, RegionResType, (pointer) pRegion))
+    if (!AddResource(stuff->region, RegionResType, (void *) pRegion))
         return BadAlloc;
 
     return Success;
@@ -115,7 +115,7 @@ ProcXFixesCreateRegionFromBitmap(ClientPtr client)
     REQUEST_SIZE_MATCH(xXFixesCreateRegionFromBitmapReq);
     LEGAL_NEW_RESOURCE(stuff->region, client);
 
-    rc = dixLookupResourceByType((pointer *) &pPixmap, stuff->bitmap, RT_PIXMAP,
+    rc = dixLookupResourceByType((void **) &pPixmap, stuff->bitmap, RT_PIXMAP,
                                  client, DixReadAccess);
     if (rc != Success) {
         client->errorValue = stuff->bitmap;
@@ -129,7 +129,7 @@ ProcXFixesCreateRegionFromBitmap(ClientPtr client)
     if (!pRegion)
         return BadAlloc;
 
-    if (!AddResource(stuff->region, RegionResType, (pointer) pRegion))
+    if (!AddResource(stuff->region, RegionResType, (void *) pRegion))
         return BadAlloc;
 
     return Success;
@@ -159,7 +159,7 @@ ProcXFixesCreateRegionFromWindow(ClientPtr client)
 
     REQUEST_SIZE_MATCH(xXFixesCreateRegionFromWindowReq);
     LEGAL_NEW_RESOURCE(stuff->region, client);
-    rc = dixLookupResourceByType((pointer *) &pWin, stuff->window, RT_WINDOW,
+    rc = dixLookupResourceByType((void **) &pWin, stuff->window, RT_WINDOW,
                                  client, DixGetAttrAccess);
     if (rc != Success) {
         client->errorValue = stuff->window;
@@ -188,7 +188,7 @@ ProcXFixesCreateRegionFromWindow(ClientPtr client)
         pRegion = XFixesRegionCopy(pRegion);
     if (!pRegion)
         return BadAlloc;
-    if (!AddResource(stuff->region, RegionResType, (pointer) pRegion))
+    if (!AddResource(stuff->region, RegionResType, (void *) pRegion))
         return BadAlloc;
 
     return Success;
@@ -238,7 +238,7 @@ ProcXFixesCreateRegionFromGC(ClientPtr client)
         return BadImplementation;       /* assume sane server bits */
     }
 
-    if (!AddResource(stuff->region, RegionResType, (pointer) pRegion))
+    if (!AddResource(stuff->region, RegionResType, (void *) pRegion))
         return BadAlloc;
 
     return Success;
@@ -269,6 +269,9 @@ ProcXFixesCreateRegionFromPicture(ClientPtr client)
 
     VERIFY_PICTURE(pPicture, stuff->picture, client, DixGetAttrAccess);
 
+    if (!pPicture->pDrawable)
+        return RenderErrBase + BadPicture;
+
     switch (pPicture->clientClipType) {
     case CT_PIXMAP:
         pRegion = BitmapToRegion(pPicture->pDrawable->pScreen,
@@ -285,7 +288,7 @@ ProcXFixesCreateRegionFromPicture(ClientPtr client)
         return BadImplementation;       /* assume sane server bits */
     }
 
-    if (!AddResource(stuff->region, RegionResType, (pointer) pRegion))
+    if (!AddResource(stuff->region, RegionResType, (void *) pRegion))
         return BadAlloc;
 
     return Success;
@@ -629,7 +632,7 @@ ProcXFixesSetGCClipRegion(ClientPtr client)
     vals[1].val = stuff->yOrigin;
     ChangeGC(NullClient, pGC, GCClipXOrigin | GCClipYOrigin, vals);
     (*pGC->funcs->ChangeClip) (pGC, pRegion ? CT_REGION : CT_NONE,
-                               (pointer) pRegion, 0);
+                               (void *) pRegion, 0);
 
     return Success;
 }
@@ -661,7 +664,7 @@ ProcXFixesSetWindowShapeRegion(ClientPtr client)
     REQUEST(xXFixesSetWindowShapeRegionReq);
 
     REQUEST_SIZE_MATCH(xXFixesSetWindowShapeRegionReq);
-    rc = dixLookupResourceByType((pointer *) &pWin, stuff->dest, RT_WINDOW,
+    rc = dixLookupResourceByType((void **) &pWin, stuff->dest, RT_WINDOW,
                                  client, DixSetAttrAccess);
     if (rc != Success) {
         client->errorValue = stuff->dest;
@@ -749,6 +752,9 @@ ProcXFixesSetPictureClipRegion(ClientPtr client)
     REQUEST_SIZE_MATCH(xXFixesSetPictureClipRegionReq);
     VERIFY_PICTURE(pPicture, stuff->picture, client, DixSetAttrAccess);
     VERIFY_REGION_OR_NONE(pRegion, stuff->region, client, DixReadAccess);
+
+    if (!pPicture->pDrawable)
+        return RenderErrBase + BadPicture;
 
     return SetPictureClipRegion(pPicture, stuff->xOrigin, stuff->yOrigin,
                                 pRegion);

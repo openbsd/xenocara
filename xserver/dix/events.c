@@ -580,7 +580,7 @@ XineramaSetWindowPntrs(DeviceIntPtr pDev, WindowPtr pWin)
         PanoramiXRes *win;
         int rc, i;
 
-        rc = dixLookupResourceByType((pointer *) &win, pWin->drawable.id,
+        rc = dixLookupResourceByType((void **) &win, pWin->drawable.id,
                                      XRT_WINDOW, serverClient, DixReadAccess);
         if (rc != Success)
             return FALSE;
@@ -1162,7 +1162,7 @@ EnqueueEvent(InternalEvent *ev, DeviceIntPtr device)
 
         eventinfo.event = ev;
         eventinfo.device = device;
-        CallCallbacks(&DeviceEventCallback, (pointer) &eventinfo);
+        CallCallbacks(&DeviceEventCallback, (void *) &eventinfo);
     }
 
     if (event->type == ET_Motion) {
@@ -2671,6 +2671,9 @@ DeliverOneEvent(InternalEvent *event, DeviceIntPtr dev, enum InputLevel level,
     case CORE:
         rc = EventToCore(event, &xE, &count);
         break;
+    default:
+        rc = BadImplementation;
+        break;
     }
 
     if (rc == Success) {
@@ -2832,7 +2835,7 @@ DeliverEvents(WindowPtr pWin, xEvent *xE, int count, WindowPtr otherParent)
     return deliveries;
 }
 
-static Bool
+Bool
 PointInBorderSize(WindowPtr pWin, int x, int y)
 {
     BoxRec box;
@@ -2873,49 +2876,9 @@ PointInBorderSize(WindowPtr pWin, int x, int y)
 WindowPtr
 XYToWindow(SpritePtr pSprite, int x, int y)
 {
-    WindowPtr pWin;
-    BoxRec box;
+    ScreenPtr pScreen = RootWindow(pSprite)->drawable.pScreen;
 
-    pSprite->spriteTraceGood = 1;       /* root window still there */
-    pWin = RootWindow(pSprite)->firstChild;
-    while (pWin) {
-        if ((pWin->mapped) &&
-            (x >= pWin->drawable.x - wBorderWidth(pWin)) &&
-            (x < pWin->drawable.x + (int) pWin->drawable.width +
-             wBorderWidth(pWin)) &&
-            (y >= pWin->drawable.y - wBorderWidth(pWin)) &&
-            (y < pWin->drawable.y + (int) pWin->drawable.height +
-             wBorderWidth(pWin))
-            /* When a window is shaped, a further check
-             * is made to see if the point is inside
-             * borderSize
-             */
-            && (!wBoundingShape(pWin) || PointInBorderSize(pWin, x, y))
-            && (!wInputShape(pWin) ||
-                RegionContainsPoint(wInputShape(pWin),
-                                    x - pWin->drawable.x,
-                                    y - pWin->drawable.y, &box))
-#ifdef ROOTLESS
-            /* In rootless mode windows may be offscreen, even when
-             * they're in X's stack. (E.g. if the native window system
-             * implements some form of virtual desktop system).
-             */
-            && !pWin->rootlessUnhittable
-#endif
-            ) {
-            if (pSprite->spriteTraceGood >= pSprite->spriteTraceSize) {
-                pSprite->spriteTraceSize += 10;
-                pSprite->spriteTrace = realloc(pSprite->spriteTrace,
-                                               pSprite->spriteTraceSize *
-                                               sizeof(WindowPtr));
-            }
-            pSprite->spriteTrace[pSprite->spriteTraceGood++] = pWin;
-            pWin = pWin->firstChild;
-        }
-        else
-            pWin = pWin->nextSib;
-    }
-    return DeepestSpriteWin(pSprite);
+    return (*pScreen->XYToWindow)(pScreen, pSprite, x, y);
 }
 
 /**
@@ -3274,7 +3237,7 @@ InitializeSprite(DeviceIntPtr pDev, WindowPtr pWin)
     pCursor = RefCursor(pCursor);
     if (pSprite->current)
         FreeCursor(pSprite->current, None);
-    pSprite->current = RefCursor(pCursor);
+    pSprite->current = pCursor;
 
     if (pScreen) {
         (*pScreen->RealizeCursor) (pDev, pScreen, pSprite->current);
@@ -3828,6 +3791,8 @@ MatchForType(const GrabPtr grab, GrabPtr tmp, enum InputLevel level,
         match = CORE_MATCH;
         ignore_device = TRUE;
         break;
+    default:
+        return NO_MATCH;
     }
 
     tmp->grabtype = grabtype;
@@ -3956,6 +3921,8 @@ CheckPassiveGrabsOnWindow(WindowPtr pWin,
         return NULL;
 
     tempGrab = AllocGrab(NULL);
+    if (tempGrab == NULL)
+        return NULL;
 
     /* Fill out the grab details, but leave the type for later before
      * comparing */
@@ -4293,12 +4260,6 @@ DeliverGrabbedEvent(InternalEvent *event, DeviceIntPtr thisDev,
                                              thisDev);
     }
     if (!deliveries) {
-        /* XXX: In theory, we could pass the internal events through to
-         * everything and only convert just before hitting the wire. We can't
-         * do that yet, so DGE is the last stop for internal events. From here
-         * onwards, we deal with core/XI events.
-         */
-
         sendCore = (IsMaster(thisDev) && thisDev->coreEvents);
         /* try core event */
         if ((sendCore && grab->grabtype == CORE) || grab->grabtype != CORE)
@@ -4412,7 +4373,7 @@ RecalculateDeliverableEvents(WindowPtr pWin)
  *  \param value must conform to DeleteType
  */
 int
-OtherClientGone(pointer value, XID id)
+OtherClientGone(void *value, XID id)
 {
     OtherClientsPtr other, prev;
     WindowPtr pWin = (WindowPtr) value;
@@ -4493,7 +4454,7 @@ EventSelectForWindow(WindowPtr pWin, ClientPtr client, Mask mask)
         others->resource = FakeClientID(client->index);
         others->next = pWin->optional->otherClients;
         pWin->optional->otherClients = others;
-        if (!AddResource(others->resource, RT_OTHERCLIENT, (pointer) pWin))
+        if (!AddResource(others->resource, RT_OTHERCLIENT, (void *) pWin))
             return BadAlloc;
     }
  maskSet:
@@ -4980,7 +4941,7 @@ ProcChangeActivePointerGrab(ClientPtr client)
     if (stuff->cursor == None)
         newCursor = NullCursor;
     else {
-        int rc = dixLookupResourceByType((pointer *) &newCursor, stuff->cursor,
+        int rc = dixLookupResourceByType((void **) &newCursor, stuff->cursor,
                                          RT_CURSOR, client, DixUseAccess);
 
         if (rc != Success) {
@@ -5051,7 +5012,7 @@ ProcUngrabPointer(ClientPtr client)
  * @param other_mode GrabModeSync or GrabModeAsync
  * @param status Return code to be returned to the caller.
  *
- * @returns Success or BadValue.
+ * @returns Success or BadValue or BadAlloc.
  */
 int
 GrabDevice(ClientPtr client, DeviceIntPtr dev,
@@ -5097,7 +5058,7 @@ GrabDevice(ClientPtr client, DeviceIntPtr dev,
     if (curs == None)
         cursor = NullCursor;
     else {
-        rc = dixLookupResourceByType((pointer *) &cursor, curs, RT_CURSOR,
+        rc = dixLookupResourceByType((void **) &cursor, curs, RT_CURSOR,
                                      client, DixUseAccess);
         if (rc != Success) {
             client->errorValue = curs;
@@ -5132,6 +5093,8 @@ GrabDevice(ClientPtr client, DeviceIntPtr dev,
         GrabPtr tempGrab;
 
         tempGrab = AllocGrab(NULL);
+        if (tempGrab == NULL)
+            return BadAlloc;
 
         tempGrab->next = NULL;
         tempGrab->window = pWin;
@@ -5623,7 +5586,7 @@ ProcGrabButton(ClientPtr client)
     if (stuff->cursor == None)
         cursor = NullCursor;
     else {
-        rc = dixLookupResourceByType((pointer *) &cursor, stuff->cursor,
+        rc = dixLookupResourceByType((void **) &cursor, stuff->cursor,
                                      RT_CURSOR, client, DixUseAccess);
         if (rc != Success) {
             client->errorValue = stuff->cursor;
@@ -5877,7 +5840,7 @@ ProcRecolorCursor(ClientPtr client)
     REQUEST(xRecolorCursorReq);
 
     REQUEST_SIZE_MATCH(xRecolorCursorReq);
-    rc = dixLookupResourceByType((pointer *) &pCursor, stuff->cursor, RT_CURSOR,
+    rc = dixLookupResourceByType((void **) &pCursor, stuff->cursor, RT_CURSOR,
                                  client, DixWriteAccess);
     if (rc != Success) {
         client->errorValue = stuff->cursor;
@@ -5978,7 +5941,7 @@ WriteEventsToClient(ClientPtr pClient, int count, xEvent *events)
         eventinfo.client = pClient;
         eventinfo.events = events;
         eventinfo.count = count;
-        CallCallbacks(&EventCallback, (pointer) &eventinfo);
+        CallCallbacks(&EventCallback, (void *) &eventinfo);
     }
 #ifdef XSERVER_DTRACE
     if (XSERVER_SEND_EVENT_ENABLED()) {

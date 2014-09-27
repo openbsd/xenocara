@@ -91,6 +91,9 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+libXistubs_la_LIBADD =
+am_libXistubs_la_OBJECTS = stubs.lo
+libXistubs_la_OBJECTS = $(am_libXistubs_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -125,8 +128,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libXi_la_SOURCES)
-DIST_SOURCES = $(libXi_la_SOURCES)
+SOURCES = $(libXi_la_SOURCES) $(libXistubs_la_SOURCES)
+DIST_SOURCES = $(libXi_la_SOURCES) $(libXistubs_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -173,6 +176,8 @@ DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
+DEFAULT_XDG_DATA_HOME = @DEFAULT_XDG_DATA_HOME@
+DEFAULT_XDG_DATA_HOME_LOGDIR = @DEFAULT_XDG_DATA_HOME_LOGDIR@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DGA_CFLAGS = @DGA_CFLAGS@
@@ -217,6 +222,10 @@ FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
+GBM_CFLAGS = @GBM_CFLAGS@
+GBM_LIBS = @GBM_LIBS@
+GLAMOR_CFLAGS = @GLAMOR_CFLAGS@
+GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
@@ -319,7 +328,10 @@ SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+SUID_WRAPPER_DIR = @SUID_WRAPPER_DIR@
 SYSCONFDIR = @SYSCONFDIR@
+SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
+SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
@@ -328,6 +340,7 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -394,6 +407,10 @@ XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
+XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
+XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
+XWAYLAND_LIBS = @XWAYLAND_LIBS@
+XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -466,7 +483,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-noinst_LTLIBRARIES = libXi.la
+noinst_LTLIBRARIES = libXi.la libXistubs.la
 AM_CFLAGS = $(DIX_CFLAGS)
 libXi_la_SOURCES = \
 	allowev.c \
@@ -573,7 +590,9 @@ libXi_la_SOURCES = \
 	xiwarppointer.c \
 	xiwarppointer.h
 
-EXTRA_DIST = stubs.c
+libXistubs_la_SOURCES = \
+	stubs.c
+
 all: all-am
 
 .SUFFIXES:
@@ -621,6 +640,8 @@ clean-noinstLTLIBRARIES:
 	}
 libXi.la: $(libXi_la_OBJECTS) $(libXi_la_DEPENDENCIES) $(EXTRA_libXi_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libXi_la_OBJECTS) $(libXi_la_LIBADD) $(LIBS)
+libXistubs.la: $(libXistubs_la_OBJECTS) $(libXistubs_la_DEPENDENCIES) $(EXTRA_libXistubs_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK)  $(libXistubs_la_OBJECTS) $(libXistubs_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -662,6 +683,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setfocus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setmmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setmode.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stubs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ungrdev.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ungrdevb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ungrdevk.Plo@am__quote@

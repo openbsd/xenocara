@@ -14,6 +14,10 @@ DRI3_BUILDDIR = $(top_builddir)/dri3
 DRI3_LIB = $(DRI3_BUILDDIR)/libdri3.la
 endif
 
+if GLAMOR_EGL
+GLAMOR_EGL_SUBDIR = glamor_egl
+endif
+
 if XF86UTILS
 XF86UTILS_SUBDIR = utils
 endif
@@ -33,12 +37,13 @@ endif
 SUBDIRS = common ddc x86emu $(INT10_SUBDIR) os-support parser \
 	  ramdac $(VGAHW_SUBDIR) loader modes $(DRI_SUBDIR) \
 	  $(DRI2_SUBDIR) . $(VBE_SUBDIR) i2c dixmods \
-	  fbdevhw shadowfb exa $(XF86UTILS_SUBDIR) doc man
+	  fbdevhw shadowfb exa $(XF86UTILS_SUBDIR) doc man \
+	  $(GLAMOR_EGL_SUBDIR)
 
 DIST_SUBDIRS = common ddc i2c x86emu int10 fbdevhw os-support \
                parser ramdac shadowfb vbe vgahw \
                loader dixmods dri dri2 exa modes \
-	       utils doc man
+	       utils doc man glamor_egl
 
 bin_PROGRAMS = Xorg
 nodist_Xorg_SOURCES = sdksyms.c
@@ -76,6 +81,12 @@ Xorg_DEPENDENCIES = $(LOCAL_LIBS)
 
 Xorg_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 
+if SUID_WRAPPER
+wrapdir = $(SUID_WRAPPER_DIR)
+wrap_PROGRAMS = Xorg.wrap
+Xorg_wrap_SOURCES = xorg-wrapper.c
+endif
+
 BUILT_SOURCES = xorg.conf.example
 DISTCLEANFILES = xorg.conf.example
 EXTRA_DIST = xorgconf.cpp
@@ -92,6 +103,12 @@ install-exec-hook:
 if INSTALL_SETUID
 	chown root $(DESTDIR)$(bindir)/Xorg
 	chmod u+s $(DESTDIR)$(bindir)/Xorg
+endif
+if SUID_WRAPPER
+	$(MKDIR_P) $(DESTDIR)$(SUID_WRAPPER_DIR)
+	mv $(DESTDIR)$(bindir)/Xorg $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.bin
+	${INSTALL} -m 755 Xorg.sh $(DESTDIR)$(bindir)/Xorg
+	-chown root $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap && chmod u+s $(DESTDIR)$(SUID_WRAPPER_DIR)/Xorg.wrap
 endif
 
 uninstall-local:
@@ -114,7 +131,7 @@ xorg.conf.example: xorgconf.cpp
 relink:
 	$(AM_V_at)rm -f Xorg$(EXEEXT) && $(MAKE) Xorg$(EXEEXT)
 
-CLEANFILES = sdksyms.c sdksyms.dep
+CLEANFILES = sdksyms.c sdksyms.dep Xorg.sh
 EXTRA_DIST += sdksyms.sh
 
 sdksyms.dep sdksyms.c: sdksyms.sh

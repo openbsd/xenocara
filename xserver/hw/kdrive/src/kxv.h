@@ -56,34 +56,7 @@ of the copyright holder.
 #define VIDEO_OVERLAID_STILLS			0x00000008
 #define VIDEO_CLIP_TO_VIEWPORT			0x00000010
 
-typedef struct {
-    int id;
-    int type;
-    int byte_order;
-    unsigned char guid[16];
-    int bits_per_pixel;
-    int format;
-    int num_planes;
-
-    /* for RGB formats only */
-    int depth;
-    unsigned int red_mask;
-    unsigned int green_mask;
-    unsigned int blue_mask;
-
-    /* for YUV formats only */
-    unsigned int y_sample_bits;
-    unsigned int u_sample_bits;
-    unsigned int v_sample_bits;
-    unsigned int horz_y_period;
-    unsigned int horz_u_period;
-    unsigned int horz_v_period;
-    unsigned int vert_y_period;
-    unsigned int vert_u_period;
-    unsigned int vert_v_period;
-    char component_order[32];
-    int scanline_order;
-} KdImageRec, *KdImagePtr;
+typedef XvImageRec KdImageRec, *KdImagePtr;
 
 typedef struct {
     KdScreenInfo *screen;
@@ -98,41 +71,41 @@ typedef int (*PutVideoFuncPtr) (KdScreenInfo * screen, DrawablePtr pDraw,
                                 short vid_x, short vid_y, short drw_x,
                                 short drw_y, short vid_w, short vid_h,
                                 short drw_w, short drw_h, RegionPtr clipBoxes,
-                                pointer data);
+                                void *data);
 typedef int (*PutStillFuncPtr) (KdScreenInfo * screen, DrawablePtr pDraw,
                                 short vid_x, short vid_y, short drw_x,
                                 short drw_y, short vid_w, short vid_h,
                                 short drw_w, short drw_h, RegionPtr clipBoxes,
-                                pointer data);
+                                void *data);
 typedef int (*GetVideoFuncPtr) (KdScreenInfo * screen, DrawablePtr pDraw,
                                 short vid_x, short vid_y, short drw_x,
                                 short drw_y, short vid_w, short vid_h,
                                 short drw_w, short drw_h, RegionPtr clipBoxes,
-                                pointer data);
+                                void *data);
 typedef int (*GetStillFuncPtr) (KdScreenInfo * screen, DrawablePtr pDraw,
                                 short vid_x, short vid_y, short drw_x,
                                 short drw_y, short vid_w, short vid_h,
                                 short drw_w, short drw_h, RegionPtr clipBoxes,
-                                pointer data);
-typedef void (*StopVideoFuncPtr) (KdScreenInfo * screen, pointer data,
+                                void *data);
+typedef void (*StopVideoFuncPtr) (KdScreenInfo * screen, void *data,
                                   Bool Exit);
 typedef int (*SetPortAttributeFuncPtr) (KdScreenInfo * screen, Atom attribute,
-                                        int value, pointer data);
+                                        int value, void *data);
 typedef int (*GetPortAttributeFuncPtr) (KdScreenInfo * screen, Atom attribute,
-                                        int *value, pointer data);
+                                        int *value, void *data);
 typedef void (*QueryBestSizeFuncPtr) (KdScreenInfo * screen, Bool motion,
                                       short vid_w, short vid_h, short drw_w,
                                       short drw_h, unsigned int *p_w,
-                                      unsigned int *p_h, pointer data);
+                                      unsigned int *p_h, void *data);
 typedef int (*PutImageFuncPtr) (KdScreenInfo * screen, DrawablePtr pDraw,
                                 short src_x, short src_y, short drw_x,
                                 short drw_y, short src_w, short src_h,
                                 short drw_w, short drw_h, int image,
                                 unsigned char *buf, short width, short height,
-                                Bool Sync, RegionPtr clipBoxes, pointer data);
+                                Bool Sync, RegionPtr clipBoxes, void *data);
 typedef int (*ReputImageFuncPtr) (KdScreenInfo * screen, DrawablePtr pDraw,
                                   short drw_x, short drw_y, RegionPtr clipBoxes,
-                                  pointer data);
+                                  void *data);
 typedef int (*QueryImageAttributesFuncPtr) (KdScreenInfo * screen, int image,
                                             unsigned short *width,
                                             unsigned short *height,
@@ -158,12 +131,7 @@ typedef struct {
     short class;
 } KdVideoFormatRec, *KdVideoFormatPtr;
 
-typedef struct {
-    int flags;
-    int min_value;
-    int max_value;
-    char *name;
-} KdAttributeRec, *KdAttributePtr;
+typedef XvAttributeRec KdAttributeRec, *KdAttributePtr;
 
 typedef struct {
     unsigned int type;

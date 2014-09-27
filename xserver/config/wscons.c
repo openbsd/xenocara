@@ -111,7 +111,7 @@ wscons_add_keyboard(void)
         close(fd);
         return;
     }
-    close (fd);
+    close(fd);
 
     input_options = input_option_new(input_options, "_source", "server/wscons");
     if (input_options == NULL)
@@ -219,13 +219,11 @@ wscons_add_pointers(void)
 
     /* Check pointing devices */
     for (i = 0; i < 4; i++) {
-        snprintf(devname, sizeof(devname), "%s%d",
-                 WSCONS_MOUSE_PREFIX, i);
+        snprintf(devname, sizeof(devname), "%s%d", WSCONS_MOUSE_PREFIX, i);
         LogMessageVerb(X_INFO, 10, "wsmouse: checking %s\n", devname);
         fd = priv_open_device(devname);
         if (fd == -1) {
-            LogMessageVerb(X_WARNING, 10, "%s: %s\n", devname,
-                           strerror(errno));
+            LogMessageVerb(X_WARNING, 10, "%s: %s\n", devname, strerror(errno));
             continue;
         }
         if (ioctl(fd, WSMOUSEIO_GTYPE, &wsmouse_type) != 0) {

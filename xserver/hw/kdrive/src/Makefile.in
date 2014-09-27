@@ -85,9 +85,6 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libkdrivestubs_la_LIBADD =
-am_libkdrivestubs_la_OBJECTS = fbcmap_mi.lo
-libkdrivestubs_la_OBJECTS = $(am_libkdrivestubs_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -122,9 +119,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libkdrive_la_SOURCES) $(libkdrivestubs_la_SOURCES)
-DIST_SOURCES = $(am__libkdrive_la_SOURCES_DIST) \
-	$(libkdrivestubs_la_SOURCES)
+SOURCES = $(libkdrive_la_SOURCES)
+DIST_SOURCES = $(am__libkdrive_la_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -171,6 +167,8 @@ DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
+DEFAULT_XDG_DATA_HOME = @DEFAULT_XDG_DATA_HOME@
+DEFAULT_XDG_DATA_HOME_LOGDIR = @DEFAULT_XDG_DATA_HOME_LOGDIR@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DGA_CFLAGS = @DGA_CFLAGS@
@@ -215,6 +213,10 @@ FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
+GBM_CFLAGS = @GBM_CFLAGS@
+GBM_LIBS = @GBM_LIBS@
+GLAMOR_CFLAGS = @GLAMOR_CFLAGS@
+GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
@@ -317,7 +319,10 @@ SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+SUID_WRAPPER_DIR = @SUID_WRAPPER_DIR@
 SYSCONFDIR = @SYSCONFDIR@
+SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
+SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
@@ -326,6 +331,7 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -392,6 +398,10 @@ XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
+XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
+XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
+XWAYLAND_LIBS = @XWAYLAND_LIBS@
+XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -469,7 +479,7 @@ AM_CPPFLAGS = \
 	@KDRIVE_CFLAGS@
 
 AM_CFLAGS = -DHAVE_DIX_CONFIG_H
-noinst_LTLIBRARIES = libkdrive.la libkdrivestubs.la
+noinst_LTLIBRARIES = libkdrive.la
 @XV_TRUE@KDRIVE_XV_SOURCES = \
 @XV_TRUE@	kxv.c		\
 @XV_TRUE@	kxv.h
@@ -485,9 +495,6 @@ libkdrive_la_SOURCES = \
 	kshadow.c	\
 	$(KDRIVE_XV_SOURCES) \
         $(top_srcdir)/mi/miinitext.c
-
-libkdrivestubs_la_SOURCES = \
-        $(top_srcdir)/fb/fbcmap_mi.c
 
 all: all-am
 
@@ -536,8 +543,6 @@ clean-noinstLTLIBRARIES:
 	}
 libkdrive.la: $(libkdrive_la_OBJECTS) $(libkdrive_la_DEPENDENCIES) $(EXTRA_libkdrive_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libkdrive_la_OBJECTS) $(libkdrive_la_LIBADD) $(LIBS)
-libkdrivestubs.la: $(libkdrivestubs_la_OBJECTS) $(libkdrivestubs_la_DEPENDENCIES) $(EXTRA_libkdrivestubs_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK)  $(libkdrivestubs_la_OBJECTS) $(libkdrivestubs_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -545,7 +550,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbcmap_mi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kcmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kdrive.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kinfo.Plo@am__quote@
@@ -582,13 +586,6 @@ miinitext.lo: $(top_srcdir)/mi/miinitext.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/mi/miinitext.c' object='miinitext.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o miinitext.lo `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c
-
-fbcmap_mi.lo: $(top_srcdir)/fb/fbcmap_mi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap_mi.lo -MD -MP -MF $(DEPDIR)/fbcmap_mi.Tpo -c -o fbcmap_mi.lo `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fbcmap_mi.Tpo $(DEPDIR)/fbcmap_mi.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/fb/fbcmap_mi.c' object='fbcmap_mi.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap_mi.lo `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

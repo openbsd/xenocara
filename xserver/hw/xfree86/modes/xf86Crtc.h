@@ -188,12 +188,16 @@ typedef struct _xf86CrtcFuncs {
      */
     void
      (*load_cursor_image) (xf86CrtcPtr crtc, CARD8 *image);
+    Bool
+     (*load_cursor_image_check) (xf86CrtcPtr crtc, CARD8 *image);
 
     /**
      * Load ARGB image
      */
     void
      (*load_cursor_argb) (xf86CrtcPtr crtc, CARD32 *image);
+    Bool
+     (*load_cursor_argb_check) (xf86CrtcPtr crtc, CARD32 *image);
 
     /**
      * Clean up driver-specific bits of the crtc

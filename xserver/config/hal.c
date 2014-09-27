@@ -33,6 +33,7 @@
 #include <string.h>
 #include <sys/select.h>
 
+#include "dbus-core.h"
 #include "input.h"
 #include "inputstr.h"
 #include "hotplug.h"
@@ -641,7 +642,7 @@ connect_hook(DBusConnection * connection, void *data)
 
 static struct config_hal_info hal_info;
 
-static struct config_dbus_core_hook hook = {
+static struct dbus_core_hook hook = {
     .connect = connect_hook,
     .disconnect = disconnect_hook,
     .data = &hal_info,
@@ -654,7 +655,7 @@ config_hal_init(void)
     hal_info.system_bus = NULL;
     hal_info.hal_ctx = NULL;
 
-    if (!config_dbus_core_add_hook(&hook)) {
+    if (!dbus_core_add_hook(&hook)) {
         LogMessage(X_ERROR, "config/hal: failed to add D-Bus hook\n");
         return 0;
     }
@@ -668,5 +669,5 @@ config_hal_init(void)
 void
 config_hal_fini(void)
 {
-    config_dbus_core_remove_hook(&hook);
+    dbus_core_remove_hook(&hook);
 }

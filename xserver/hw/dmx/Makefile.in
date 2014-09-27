@@ -84,9 +84,8 @@ am__Xdmx_SOURCES_DIST = dmx.c dmxcb.c dmxcb.h dmxclient.h dmxcmap.c \
 	dmxpict.h dmxpixmap.c dmxpixmap.h dmxprop.c dmxprop.h \
 	dmxscrinit.c dmxscrinit.h dmxstat.c dmxstat.h dmxsync.c \
 	dmxsync.h dmxvisual.c dmxvisual.h dmxwindow.c dmxwindow.h \
-	$(top_srcdir)/mi/miinitext.c $(top_srcdir)/fb/fbcmap_mi.c \
-	$(top_srcdir)/Xext/panoramiX.c dmx_glxvisuals.c \
-	dmx_glxvisuals.h
+	$(top_srcdir)/mi/miinitext.c $(top_srcdir)/Xext/panoramiX.c \
+	dmx_glxvisuals.c dmx_glxvisuals.h
 @XINERAMA_TRUE@am__objects_1 = panoramiX.$(OBJEXT)
 @GLX_TRUE@am__objects_2 = $(am__objects_1) dmx_glxvisuals.$(OBJEXT)
 am_Xdmx_OBJECTS = dmx.$(OBJEXT) dmxcb.$(OBJEXT) dmxcmap.$(OBJEXT) \
@@ -96,7 +95,7 @@ am_Xdmx_OBJECTS = dmx.$(OBJEXT) dmxcb.$(OBJEXT) dmxcmap.$(OBJEXT) \
 	dmxpict.$(OBJEXT) dmxpixmap.$(OBJEXT) dmxprop.$(OBJEXT) \
 	dmxscrinit.$(OBJEXT) dmxstat.$(OBJEXT) dmxsync.$(OBJEXT) \
 	dmxvisual.$(OBJEXT) dmxwindow.$(OBJEXT) miinitext.$(OBJEXT) \
-	fbcmap_mi.$(OBJEXT) $(am__objects_2)
+	$(am__objects_2)
 Xdmx_OBJECTS = $(am_Xdmx_OBJECTS)
 am__DEPENDENCIES_1 = $(GLX_LIBS) input/libdmxinput.a \
 	config/libdmxconfig.a
@@ -228,6 +227,8 @@ DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
+DEFAULT_XDG_DATA_HOME = @DEFAULT_XDG_DATA_HOME@
+DEFAULT_XDG_DATA_HOME_LOGDIR = @DEFAULT_XDG_DATA_HOME_LOGDIR@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DGA_CFLAGS = @DGA_CFLAGS@
@@ -272,6 +273,10 @@ FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
+GBM_CFLAGS = @GBM_CFLAGS@
+GBM_LIBS = @GBM_LIBS@
+GLAMOR_CFLAGS = @GLAMOR_CFLAGS@
+GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
@@ -374,7 +379,10 @@ SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+SUID_WRAPPER_DIR = @SUID_WRAPPER_DIR@
 SYSCONFDIR = @SYSCONFDIR@
+SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
+SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
@@ -383,6 +391,7 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -458,6 +467,10 @@ XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
+XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
+XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
+XWAYLAND_LIBS = @XWAYLAND_LIBS@
+XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -587,7 +600,6 @@ Xdmx_SOURCES = dmx.c \
                dmxwindow.c \
                dmxwindow.h \
                $(top_srcdir)/mi/miinitext.c \
-               $(top_srcdir)/fb/fbcmap_mi.c \
                $(GLX_SRCS) 
 
 Xdmx_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
@@ -704,7 +716,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxsync.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxvisual.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxwindow.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fbcmap_mi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miinitext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/panoramiX.Po@am__quote@
 
@@ -742,20 +753,6 @@ miinitext.obj: $(top_srcdir)/mi/miinitext.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/mi/miinitext.c' object='miinitext.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o miinitext.obj `if test -f '$(top_srcdir)/mi/miinitext.c'; then $(CYGPATH_W) '$(top_srcdir)/mi/miinitext.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/mi/miinitext.c'; fi`
-
-fbcmap_mi.o: $(top_srcdir)/fb/fbcmap_mi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap_mi.o -MD -MP -MF $(DEPDIR)/fbcmap_mi.Tpo -c -o fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fbcmap_mi.Tpo $(DEPDIR)/fbcmap_mi.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/fb/fbcmap_mi.c' object='fbcmap_mi.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
-
-fbcmap_mi.obj: $(top_srcdir)/fb/fbcmap_mi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT fbcmap_mi.obj -MD -MP -MF $(DEPDIR)/fbcmap_mi.Tpo -c -o fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/fbcmap_mi.Tpo $(DEPDIR)/fbcmap_mi.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/fb/fbcmap_mi.c' object='fbcmap_mi.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`
 
 panoramiX.o: $(top_srcdir)/Xext/panoramiX.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT panoramiX.o -MD -MP -MF $(DEPDIR)/panoramiX.Tpo -c -o panoramiX.o `test -f '$(top_srcdir)/Xext/panoramiX.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/panoramiX.c

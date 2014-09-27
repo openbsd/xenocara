@@ -157,14 +157,14 @@ xf86SbusUseBuiltinMode(ScrnInfoPtr pScrn, sbusDevicePtr psdp)
 	pScrn->virtualY = wdf.height;
 }
 
-_X_EXPORT pointer
+_X_EXPORT void *
 xf86MapSbusMem(sbusDevicePtr psdp, unsigned long Base, unsigned long Size)
 {
 	return xf86MapVidMem(0, 0, Base, Size);
 }
 
 _X_EXPORT void
-xf86UnmapSbusMem(sbusDevicePtr psdp, pointer Base, unsigned long Size)
+xf86UnmapSbusMem(sbusDevicePtr psdp, void *Base, unsigned long Size)
 {
 	xf86UnMapVidMem(0, Base, Size);
 }

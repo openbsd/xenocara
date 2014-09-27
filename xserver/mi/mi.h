@@ -271,7 +271,7 @@ extern _X_EXPORT void miPolyGlyphBlt(DrawablePtr /*pDrawable */ ,
                                      int /*y */ ,
                                      unsigned int /*nglyph */ ,
                                      CharInfoPtr * /*ppci */ ,
-                                     pointer    /*pglyphBase */
+                                     void */*pglyphBase */
     );
 
 extern _X_EXPORT void miImageGlyphBlt(DrawablePtr /*pDrawable */ ,
@@ -280,7 +280,7 @@ extern _X_EXPORT void miImageGlyphBlt(DrawablePtr /*pDrawable */ ,
                                       int /*y */ ,
                                       unsigned int /*nglyph */ ,
                                       CharInfoPtr * /*ppci */ ,
-                                      pointer   /*pglyphBase */
+                                      void */*pglyphBase */
     );
 
 /* mipoly.c */
@@ -387,7 +387,7 @@ extern _X_EXPORT Bool miModifyPixmapHeader(PixmapPtr /*pPixmap */ ,
                                            int /*depth */ ,
                                            int /*bitsPerPixel */ ,
                                            int /*devKind */ ,
-                                           pointer      /*pPixData */
+                                           void */*pPixData */
     );
 
 extern _X_EXPORT Bool miCreateScreenResources(ScreenPtr /*pScreen */
@@ -395,11 +395,11 @@ extern _X_EXPORT Bool miCreateScreenResources(ScreenPtr /*pScreen */
 
 extern _X_EXPORT Bool miScreenDevPrivateInit(ScreenPtr /*pScreen */ ,
                                              int /*width */ ,
-                                             pointer    /*pbits */
+                                             void */*pbits */
     );
 
 extern _X_EXPORT Bool miScreenInit(ScreenPtr /*pScreen */ ,
-                                   pointer /*pbits */ ,
+                                   void */*pbits */ ,
                                    int /*xsize */ ,
                                    int /*ysize */ ,
                                    int /*dpix */ ,
@@ -506,6 +506,10 @@ extern _X_EXPORT void miMarkUnrealizedWindow(WindowPtr /*pChild */ ,
 
 extern _X_EXPORT void miSegregateChildren(WindowPtr pWin, RegionPtr pReg,
                                           int depth);
+
+extern _X_EXPORT WindowPtr miSpriteTrace(SpritePtr pSprite, int x, int y);
+
+extern _X_EXPORT WindowPtr miXYToWindow(ScreenPtr pScreen, SpritePtr pSprite, int x, int y);
 
 /* mizerarc.c */
 

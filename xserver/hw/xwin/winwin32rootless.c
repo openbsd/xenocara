@@ -39,7 +39,6 @@
 #include <winuser.h>
 #define _WINDOWSWM_SERVER_
 #include <X11/extensions/windowswmstr.h>
-#include "dixevents.h"
 #include "winmultiwindowclass.h"
 #include <X11/Xatom.h>
 
@@ -184,8 +183,8 @@ InitWin32RootlessEngine(win32RootlessWindowPtr pRLWinPriv)
 
     /* Allocate bitmap info header */
     pRLWinPriv->pbmihShadow =
-        (BITMAPINFOHEADER *) malloc(sizeof(BITMAPINFOHEADER)
-                                    + 256 * sizeof(RGBQUAD));
+        malloc(sizeof(BITMAPINFOHEADER)
+               + 256 * sizeof(RGBQUAD));
     if (pRLWinPriv->pbmihShadow == NULL) {
         ErrorF("InitWin32RootlessEngine - malloc () failed\n");
         return;
@@ -214,8 +213,7 @@ winMWExtWMCreateFrame(RootlessWindowPtr pFrame, ScreenPtr pScreen,
              newX, newY, pFrame->width, pFrame->height);
 #endif
 
-    pRLWinPriv =
-        (win32RootlessWindowPtr) malloc(sizeof(win32RootlessWindowRec));
+    pRLWinPriv = malloc(sizeof(win32RootlessWindowRec));
     pRLWinPriv->pFrame = pFrame;
     pRLWinPriv->pfb = NULL;
     pRLWinPriv->hbmpShadow = NULL;

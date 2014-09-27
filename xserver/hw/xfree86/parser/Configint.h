@@ -79,6 +79,8 @@ typedef struct {
     ParserNumType numType;      /* used to enforce correct number formatting */
 } LexRec, *LexPtr;
 
+extern LexRec xf86_lex_val;
+
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -90,7 +92,7 @@ typedef struct {
 #include "configProcs.h"
 #include <stdlib.h>
 
-#define TestFree(a) if (a) { free (a); a = NULL; }
+#define TestFree(a) if (a) { free ((void *) a); a = NULL; }
 
 #define parsePrologue(typeptr,typerec) typeptr ptr; \
 if( (ptr=calloc(1,sizeof(typerec))) == NULL ) { return NULL; }

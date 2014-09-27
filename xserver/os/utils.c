@@ -194,6 +194,8 @@ Bool noGEExtension = FALSE;
 
 Bool CoreDump;
 
+Bool enableIndirectGLX = TRUE;
+
 #ifdef PANORAMIX
 Bool PanoramiXExtensionDisabledHack = FALSE;
 #endif
@@ -270,7 +272,7 @@ LockServer(void)
     int len;
     char port[20];
 
-    if (nolock)
+    if (nolock || NoListenAll)
         return;
     /*
      * Path names
@@ -313,7 +315,8 @@ LockServer(void)
     if (lfd < 0)
         FatalError("Could not create lock file in %s\n", tmp);
     snprintf(pid_str, sizeof(pid_str), "%10ld\n", (long) getpid());
-    (void) write(lfd, pid_str, 11);
+    if (write(lfd, pid_str, 11) != 11)
+        FatalError("Could not write pid to lock file in %s\n", tmp);
 #ifdef __OpenBSD__
     /* if possible give away the lock file to the real uid/gid */
     fchown(lfd, getuid(), getgid());
@@ -394,7 +397,7 @@ LockServer(void)
 void
 UnlockServer(void)
 {
-    if (nolock)
+    if (nolock || NoListenAll)
         return;
 
     if (!StillLocking) {
@@ -502,7 +505,7 @@ GetTimeInMicros(void)
 #endif
 
 void
-AdjustWaitForDelay(pointer waitTime, unsigned long newdelay)
+AdjustWaitForDelay(void *waitTime, unsigned long newdelay)
 {
     static struct timeval delay_val;
     struct timeval **wt = (struct timeval **) waitTime;
@@ -538,6 +541,7 @@ UseMsg(void)
     ErrorF("-cc int                default color visual class\n");
     ErrorF("-nocursor              disable the cursor\n");
     ErrorF("-core                  generate core dump on fatal error\n");
+    ErrorF("-displayfd fd          file descriptor to write display number to when ready to connect\n");
     ErrorF("-dpi int               screen resolution in dots per inch\n");
 #ifdef DPMSExtension
     ErrorF("-dpms                  disables VESA DPMS monitor control\n");
@@ -549,6 +553,8 @@ UseMsg(void)
     ErrorF("-fn string             default font name\n");
     ErrorF("-fp string             default font path\n");
     ErrorF("-help                  prints message with these options\n");
+    ErrorF("+iglx                  Allow creating indirect GLX contexts (default)\n");
+    ErrorF("-iglx                  Prohibit creating indirect GLX contexts\n");
     ErrorF("-I                     ignore all remaining arguments\n");
 #ifdef RLIMIT_DATA
     ErrorF("-ld int                limit data space to N Kb\n");
@@ -682,6 +688,7 @@ ProcessCommandLine(int argc, char *argv[])
         else if (argv[i][0] == ':') {
             /* initialize display */
             display = argv[i];
+            explicit_display = TRUE;
             display++;
             if (!VerifyDisplayName(display)) {
                 ErrorF("Bad display name: %s\n", display);
@@ -752,7 +759,6 @@ ProcessCommandLine(int argc, char *argv[])
         else if (strcmp(argv[i], "-displayfd") == 0) {
             if (++i < argc) {
                 displayfd = atoi(argv[i]);
-                display = NULL;
 #ifdef LOCK_SERVER
                 nolock = TRUE;
 #endif
@@ -799,6 +805,10 @@ ProcessCommandLine(int argc, char *argv[])
             UseMsg();
             exit(0);
         }
+        else if (strcmp(argv[i], "+iglx") == 0)
+            enableIndirectGLX = TRUE;
+        else if (strcmp(argv[i], "-iglx") == 0)
+            enableIndirectGLX = FALSE;
         else if ((skip = XkbProcessArguments(argc, argv, i)) != 0) {
             if (skip > 0)
                 i += skip - 1;
@@ -1034,7 +1044,7 @@ ProcessCommandLine(int argc, char *argv[])
 /* Implement a simple-minded font authorization scheme.  The authorization
    name is "hp-hostname-1", the contents are simply the host name. */
 int
-set_font_authorizations(char **authorizations, int *authlen, pointer client)
+set_font_authorizations(char **authorizations, int *authlen, void *client)
 {
 #define AUTHORIZATION_NAME "hp-hostname-1"
 #if defined(TCPCONN) || defined(STREAMSCONN)
@@ -1433,7 +1443,7 @@ static struct pid {
 
 OsSigHandlerPtr old_alarm = NULL;       /* XXX horrible awful hack */
 
-pointer
+void *
 Popen(const char *command, const char *type)
 {
     struct pid *cur;
@@ -1521,7 +1531,7 @@ Popen(const char *command, const char *type)
 }
 
 /* fopen that drops privileges */
-pointer
+void *
 Fopen(const char *file, const char *type)
 {
     FILE *iop;
@@ -1616,7 +1626,7 @@ Fopen(const char *file, const char *type)
 }
 
 int
-Pclose(pointer iop)
+Pclose(void *iop)
 {
     struct pid *cur, *last;
     int pstat;
@@ -1653,7 +1663,7 @@ Pclose(pointer iop)
 }
 
 int
-Fclose(pointer iop)
+Fclose(void *iop)
 {
 #ifdef HAS_SAVED_IDS_AND_SETEUID
     return fclose(iop);

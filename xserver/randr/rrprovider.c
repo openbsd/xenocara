@@ -285,7 +285,7 @@ ProcRRSetProviderOutputSource(ClientPtr client)
     RRProviderPtr provider, source_provider = NULL;
     ScreenPtr pScreen;
 
-    REQUEST_AT_LEAST_SIZE(xRRSetProviderOutputSourceReq);
+    REQUEST_SIZE_MATCH(xRRSetProviderOutputSourceReq);
 
     VERIFY_RR_PROVIDER(stuff->provider, provider, DixReadAccess);
 
@@ -320,7 +320,7 @@ ProcRRSetProviderOffloadSink(ClientPtr client)
     RRProviderPtr provider, sink_provider = NULL;
     ScreenPtr pScreen;
 
-    REQUEST_AT_LEAST_SIZE(xRRSetProviderOffloadSinkReq);
+    REQUEST_SIZE_MATCH(xRRSetProviderOffloadSinkReq);
 
     VERIFY_RR_PROVIDER(stuff->provider, provider, DixReadAccess);
     if (!(provider->capabilities & RR_Capability_SourceOffload))
@@ -365,7 +365,7 @@ RRProviderCreate(ScreenPtr pScreen, const char *name,
     provider->name[nameLength] = '\0';
     provider->changed = FALSE;
 
-    if (!AddResource (provider->id, RRProviderType, (pointer) provider))
+    if (!AddResource (provider->id, RRProviderType, (void *) provider))
         return NULL;
     pScrPriv->provider = provider;
     return provider;
@@ -387,7 +387,7 @@ RRProviderSetCapabilities(RRProviderPtr provider, uint32_t capabilities)
 }
 
 static int
-RRProviderDestroyResource (pointer value, XID pid)
+RRProviderDestroyResource (void *value, XID pid)
 {
     RRProviderPtr provider = (RRProviderPtr)value;
     ScreenPtr pScreen = provider->pScreen;

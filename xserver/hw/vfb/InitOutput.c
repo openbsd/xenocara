@@ -404,7 +404,6 @@ vfbInstallColormap(ColormapPtr pmap)
     if (pmap != oldpmap) {
         int entries;
         XWDFileHeader *pXWDHeader;
-        XWDColor *pXWDCmap;
         VisualPtr pVisual;
         Pixel *ppix;
         xrgb *prgb;
@@ -419,7 +418,6 @@ vfbInstallColormap(ColormapPtr pmap)
 
         entries = pmap->pVisual->ColormapEntries;
         pXWDHeader = vfbScreens[pmap->pScreen->myNum].pXWDHeader;
-        pXWDCmap = vfbScreens[pmap->pScreen->myNum].pXWDCmap;
         pVisual = pmap->pVisual;
 
         swapcopy32(pXWDHeader->visual_class, pVisual->class);
@@ -460,7 +458,7 @@ vfbUninstallColormap(ColormapPtr pmap)
 
     if (pmap == curpmap) {
         if (pmap->mid != pmap->pScreen->defColormap) {
-            dixLookupResourceByType((pointer *) &curpmap,
+            dixLookupResourceByType((void **) &curpmap,
                                     pmap->pScreen->defColormap,
                                     RT_COLORMAP, serverClient,
                                     DixInstallAccess);
@@ -508,7 +506,7 @@ vfbSaveScreen(ScreenPtr pScreen, int on)
 
 /* this flushes any changes to the screens out to the mmapped file */
 static void
-vfbBlockHandler(pointer blockData, OSTimePtr pTimeout, pointer pReadmask)
+vfbBlockHandler(void *blockData, OSTimePtr pTimeout, void *pReadmask)
 {
     int i;
 
@@ -529,7 +527,7 @@ vfbBlockHandler(pointer blockData, OSTimePtr pTimeout, pointer pReadmask)
 }
 
 static void
-vfbWakeupHandler(pointer blockData, int result, pointer pReadmask)
+vfbWakeupHandler(void *blockData, int result, void *pReadmask)
 {
 }
 
@@ -894,14 +892,11 @@ static const ExtensionModule vfbExtensions[] = {
 static
 void vfbExtensionInit(void)
 {
-    int i;
-
-    for (i = 0; i < ARRAY_SIZE(vfbExtensions); i++)
-        LoadExtension(&vfbExtensions[i], TRUE);
+    LoadExtensionList(vfbExtensions, ARRAY_SIZE(vfbExtensions), TRUE);
 }
 
 void
-InitOutput(ScreenInfo * screenInfo, int argc, char **argv)
+InitOutput(ScreenInfo * screen_info, int argc, char **argv)
 {
     int i;
     int NumFormats = 0;
@@ -937,18 +932,18 @@ InitOutput(ScreenInfo * screenInfo, int argc, char **argv)
         if (vfbPixmapDepths[i]) {
             if (NumFormats >= MAXFORMATS)
                 FatalError("MAXFORMATS is too small for this server\n");
-            screenInfo->formats[NumFormats].depth = i;
-            screenInfo->formats[NumFormats].bitsPerPixel = vfbBitsPerPixel(i);
-            screenInfo->formats[NumFormats].scanlinePad = BITMAP_SCANLINE_PAD;
+            screen_info->formats[NumFormats].depth = i;
+            screen_info->formats[NumFormats].bitsPerPixel = vfbBitsPerPixel(i);
+            screen_info->formats[NumFormats].scanlinePad = BITMAP_SCANLINE_PAD;
             NumFormats++;
         }
     }
 
-    screenInfo->imageByteOrder = IMAGE_BYTE_ORDER;
-    screenInfo->bitmapScanlineUnit = BITMAP_SCANLINE_UNIT;
-    screenInfo->bitmapScanlinePad = BITMAP_SCANLINE_PAD;
-    screenInfo->bitmapBitOrder = BITMAP_BIT_ORDER;
-    screenInfo->numPixmapFormats = NumFormats;
+    screen_info->imageByteOrder = IMAGE_BYTE_ORDER;
+    screen_info->bitmapScanlineUnit = BITMAP_SCANLINE_UNIT;
+    screen_info->bitmapScanlinePad = BITMAP_SCANLINE_PAD;
+    screen_info->bitmapBitOrder = BITMAP_BIT_ORDER;
+    screen_info->numPixmapFormats = NumFormats;
 
     /* initialize screens */
 

@@ -34,6 +34,7 @@
 #define IN_XSERVER
 #include "Configint.h"
 #include "xf86DDC.h"
+#include "xf86pciBus.h"
 #if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
 #include "xf86Bus.h"
 #include "xf86Sbus.h"
@@ -80,6 +81,7 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData,
                             int chipset)
 {
     int ret, i, j;
+    char *lower_driver;
 
     if (!xf86DoConfigure || !xf86DoConfigurePass1)
         return NULL;
@@ -116,8 +118,9 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData,
     DevToConfig[i].iDriver = CurrentDriver;
 
     /* Fill in what we know, converting the driver name to lower case */
-    DevToConfig[i].GDev.driver = xnfalloc(strlen(driver) + 1);
-    for (j = 0; (DevToConfig[i].GDev.driver[j] = tolower(driver[j])); j++);
+    lower_driver = xnfalloc(strlen(driver) + 1);
+    for (j = 0; (lower_driver[j] = tolower(driver[j])); j++);
+    DevToConfig[i].GDev.driver = lower_driver;
 
     switch (bus) {
 #ifdef XSERVER_LIBPCIACCESS
@@ -156,8 +159,8 @@ configureInputSection(void)
 
     parsePrologue(XF86ConfInputPtr, XF86ConfInputRec)
 
-        ptr->inp_identifier = "Keyboard0";
-    ptr->inp_driver = "kbd";
+    ptr->inp_identifier = xnfstrdup("Keyboard0");
+    ptr->inp_driver = xnfstrdup("kbd");
     ptr->list.next = NULL;
 
     /* Crude mechanism to auto-detect mouse (os dependent) */
@@ -172,17 +175,17 @@ configureInputSection(void)
     }
 
     mouse = calloc(1, sizeof(XF86ConfInputRec));
-    mouse->inp_identifier = "Mouse0";
-    mouse->inp_driver = "mouse";
+    mouse->inp_identifier = xnfstrdup("Mouse0");
+    mouse->inp_driver = xnfstrdup("mouse");
     mouse->inp_option_lst =
-        xf86addNewOption(mouse->inp_option_lst, strdup("Protocol"),
-                         strdup(DFLT_MOUSE_PROTO));
+        xf86addNewOption(mouse->inp_option_lst, xnfstrdup("Protocol"),
+                         xnfstrdup(DFLT_MOUSE_PROTO));
     mouse->inp_option_lst =
-        xf86addNewOption(mouse->inp_option_lst, strdup("Device"),
-                         strdup(DFLT_MOUSE_DEV));
+        xf86addNewOption(mouse->inp_option_lst, xnfstrdup("Device"),
+                         xnfstrdup(DFLT_MOUSE_DEV));
     mouse->inp_option_lst =
-        xf86addNewOption(mouse->inp_option_lst, strdup("ZAxisMapping"),
-                         strdup("4 5 6 7"));
+        xf86addNewOption(mouse->inp_option_lst, xnfstrdup("ZAxisMapping"),
+                         xnfstrdup("4 5 6 7"));
     ptr = (XF86ConfInputPtr) xf86addListItem((glp) ptr, (glp) mouse);
     return ptr;
 }
@@ -192,24 +195,28 @@ configureScreenSection(int screennum)
 {
     int i;
     int depths[] = { 1, 4, 8, 15, 16, 24 /*, 32 */  };
+    char *tmp;
     parsePrologue(XF86ConfScreenPtr, XF86ConfScreenRec)
 
-        XNFasprintf(&ptr->scrn_identifier, "Screen%d", screennum);
-    XNFasprintf(&ptr->scrn_monitor_str, "Monitor%d", screennum);
-    XNFasprintf(&ptr->scrn_device_str, "Card%d", screennum);
+    XNFasprintf(&tmp, "Screen%d", screennum);
+    ptr->scrn_identifier = tmp;
+    XNFasprintf(&tmp, "Monitor%d", screennum);
+    ptr->scrn_monitor_str = tmp;
+    XNFasprintf(&tmp, "Card%d", screennum);
+    ptr->scrn_device_str = tmp;
 
     for (i = 0; i < sizeof(depths) / sizeof(depths[0]); i++) {
-        XF86ConfDisplayPtr display;
+        XF86ConfDisplayPtr conf_display;
 
-        display = calloc(1, sizeof(XF86ConfDisplayRec));
-        display->disp_depth = depths[i];
-        display->disp_black.red = display->disp_white.red = -1;
-        display->disp_black.green = display->disp_white.green = -1;
-        display->disp_black.blue = display->disp_white.blue = -1;
+        conf_display = calloc(1, sizeof(XF86ConfDisplayRec));
+        conf_display->disp_depth = depths[i];
+        conf_display->disp_black.red = conf_display->disp_white.red = -1;
+        conf_display->disp_black.green = conf_display->disp_white.green = -1;
+        conf_display->disp_black.blue = conf_display->disp_white.blue = -1;
         ptr->scrn_display_lst = (XF86ConfDisplayPtr) xf86addListItem((glp) ptr->
                                                                      scrn_display_lst,
                                                                      (glp)
-                                                                     display);
+                                                                     conf_display);
     }
 
     return ptr;
@@ -245,12 +252,14 @@ configureDeviceSection(int screennum)
 {
     OptionInfoPtr p;
     int i = 0;
+    char *identifier;
 
     parsePrologue(XF86ConfDevicePtr, XF86ConfDeviceRec)
 
         /* Move device info to parser structure */
-        if (asprintf(&ptr->dev_identifier, "Card%d", screennum) == -1)
-        ptr->dev_identifier = NULL;
+   if (asprintf(&identifier, "Card%d", screennum) == -1)
+        identifier = NULL;
+    ptr->dev_identifier = identifier;
     ptr->dev_chipset = DevToConfig[screennum].GDev.chipset;
     ptr->dev_busid = DevToConfig[screennum].GDev.busID;
     ptr->dev_driver = DevToConfig[screennum].GDev.driver;
@@ -281,7 +290,7 @@ configureDeviceSection(int screennum)
             "        ### <string>: \"String\", <freq>: \"<f> Hz/kHz/MHz\",\n"
             "        ### <percent>: \"<f>%\"\n"
             "        ### [arg]: arg optional\n";
-        ptr->dev_comment = strdup(descrip);
+        ptr->dev_comment = xnfstrdup(descrip);
         if (ptr->dev_comment) {
             for (p = DevToConfig[screennum].GDev.options; p->name != NULL; p++) {
                 char *p_e;
@@ -328,9 +337,9 @@ configureLayoutSection(void)
         iptr = malloc(sizeof(XF86ConfInputrefRec));
         iptr->list.next = NULL;
         iptr->iref_option_lst = NULL;
-        iptr->iref_inputdev_str = "Mouse0";
+        iptr->iref_inputdev_str = xnfstrdup("Mouse0");
         iptr->iref_option_lst =
-            xf86addNewOption(iptr->iref_option_lst, strdup("CorePointer"),
+            xf86addNewOption(iptr->iref_option_lst, xnfstrdup("CorePointer"),
                              NULL);
         ptr->lay_input_lst = (XF86ConfInputrefPtr)
             xf86addListItem((glp) ptr->lay_input_lst, (glp) iptr);
@@ -342,9 +351,9 @@ configureLayoutSection(void)
         iptr = malloc(sizeof(XF86ConfInputrefRec));
         iptr->list.next = NULL;
         iptr->iref_option_lst = NULL;
-        iptr->iref_inputdev_str = "Keyboard0";
+        iptr->iref_inputdev_str = xnfstrdup("Keyboard0");
         iptr->iref_option_lst =
-            xf86addNewOption(iptr->iref_option_lst, strdup("CoreKeyboard"),
+            xf86addNewOption(iptr->iref_option_lst, xnfstrdup("CoreKeyboard"),
                              NULL);
         ptr->lay_input_lst = (XF86ConfInputrefPtr)
             xf86addListItem((glp) ptr->lay_input_lst, (glp) iptr);
@@ -352,20 +361,23 @@ configureLayoutSection(void)
 
     for (scrnum = 0; scrnum < nDevToConfig; scrnum++) {
         XF86ConfAdjacencyPtr aptr;
+        char *tmp;
 
         aptr = malloc(sizeof(XF86ConfAdjacencyRec));
         aptr->list.next = NULL;
         aptr->adj_x = 0;
         aptr->adj_y = 0;
         aptr->adj_scrnum = scrnum;
-        XNFasprintf(&aptr->adj_screen_str, "Screen%d", scrnum);
+        XNFasprintf(&tmp, "Screen%d", scrnum);
+        aptr->adj_screen_str = tmp;
         if (scrnum == 0) {
             aptr->adj_where = CONF_ADJ_ABSOLUTE;
             aptr->adj_refscreen = NULL;
         }
         else {
             aptr->adj_where = CONF_ADJ_RIGHTOF;
-            XNFasprintf(&aptr->adj_refscreen, "Screen%d", scrnum - 1);
+            XNFasprintf(&tmp, "Screen%d", scrnum - 1);
+            aptr->adj_refscreen = tmp;
         }
         ptr->lay_adjacency_lst =
             (XF86ConfAdjacencyPtr) xf86addListItem((glp) ptr->lay_adjacency_lst,
@@ -386,7 +398,7 @@ configureFlagsSection(void)
 static XF86ConfModulePtr
 configureModuleSection(void)
 {
-    char **elist, **el;
+    const char **elist, **el;
 
     /* Find the list of extension & font modules. */
     const char *esubdirs[] = {
@@ -419,9 +431,9 @@ configureFilesSection(void)
     parsePrologue(XF86ConfFilesPtr, XF86ConfFilesRec)
 
         if (xf86ModulePath)
-        ptr->file_modulepath = strdup(xf86ModulePath);
+        ptr->file_modulepath = xnfstrdup(xf86ModulePath);
     if (defaultFontPath)
-        ptr->file_fontpath = strdup(defaultFontPath);
+        ptr->file_fontpath = xnfstrdup(defaultFontPath);
 
     return ptr;
 }
@@ -429,11 +441,13 @@ configureFilesSection(void)
 static XF86ConfMonitorPtr
 configureMonitorSection(int screennum)
 {
+    char *tmp;
     parsePrologue(XF86ConfMonitorPtr, XF86ConfMonitorRec)
 
-        XNFasprintf(&ptr->mon_identifier, "Monitor%d", screennum);
-    ptr->mon_vendor = strdup("Monitor Vendor");
-    ptr->mon_modelname = strdup("Monitor Model");
+    XNFasprintf(&tmp, "Monitor%d", screennum);
+    ptr->mon_identifier = tmp;
+    ptr->mon_vendor = xnfstrdup("Monitor Vendor");
+    ptr->mon_modelname = xnfstrdup("Monitor Model");
 
     return ptr;
 }
@@ -471,11 +485,13 @@ configureDDCMonitorSection(int screennum)
 #define displaySizeMaxLen 80
     char displaySize_string[displaySizeMaxLen];
     int displaySizeLen;
+    char *tmp;
 
     parsePrologue(XF86ConfMonitorPtr, XF86ConfMonitorRec)
 
-        XNFasprintf(&ptr->mon_identifier, "Monitor%d", screennum);
-    ptr->mon_vendor = strdup(ConfiguredMonitor->vendor.name);
+    XNFasprintf(&tmp, "Monitor%d", screennum);
+    ptr->mon_identifier = tmp;
+    ptr->mon_vendor = xnfstrdup(ConfiguredMonitor->vendor.name);
     XNFasprintf(&ptr->mon_modelname, "%x", ConfiguredMonitor->vendor.prod_id);
 
     /* features in centimetres, we want millimetres */
@@ -513,7 +529,7 @@ configureDDCMonitorSection(int screennum)
 
     if (ConfiguredMonitor->features.dpms) {
         ptr->mon_option_lst =
-            xf86addNewOption(ptr->mon_option_lst, strdup("DPMS"), NULL);
+            xf86addNewOption(ptr->mon_option_lst, xnfstrdup("DPMS"), NULL);
     }
 
     return ptr;
@@ -527,7 +543,7 @@ DoConfigure(void)
     char filename[PATH_MAX];
     const char *addslash = "";
     XF86ConfigPtr xf86config = NULL;
-    char **vlist, **vl;
+    const char **vlist, **vl;
     int *dev2screen;
 
     vlist = xf86DriverlistFromCompile();
@@ -569,24 +585,24 @@ DoConfigure(void)
 
     /* Add device, monitor and screen sections for detected devices */
     for (screennum = 0; screennum < nDevToConfig; screennum++) {
-        XF86ConfDevicePtr DevicePtr;
-        XF86ConfMonitorPtr MonitorPtr;
-        XF86ConfScreenPtr ScreenPtr;
+        XF86ConfDevicePtr device_ptr;
+        XF86ConfMonitorPtr monitor_ptr;
+        XF86ConfScreenPtr screen_ptr;
 
-        DevicePtr = configureDeviceSection(screennum);
+        device_ptr = configureDeviceSection(screennum);
         xf86config->conf_device_lst = (XF86ConfDevicePtr) xf86addListItem((glp)
                                                                           xf86config->
                                                                           conf_device_lst,
                                                                           (glp)
-                                                                          DevicePtr);
-        MonitorPtr = configureMonitorSection(screennum);
-        xf86config->conf_monitor_lst = (XF86ConfMonitorPtr) xf86addListItem((glp) xf86config->conf_monitor_lst, (glp) MonitorPtr);
-        ScreenPtr = configureScreenSection(screennum);
+                                                                          device_ptr);
+        monitor_ptr = configureMonitorSection(screennum);
+        xf86config->conf_monitor_lst = (XF86ConfMonitorPtr) xf86addListItem((glp) xf86config->conf_monitor_lst, (glp) monitor_ptr);
+        screen_ptr = configureScreenSection(screennum);
         xf86config->conf_screen_lst = (XF86ConfScreenPtr) xf86addListItem((glp)
                                                                           xf86config->
                                                                           conf_screen_lst,
                                                                           (glp)
-                                                                          ScreenPtr);
+                                                                          screen_ptr);
     }
 
     xf86config->conf_files = configureFilesSection();
@@ -697,27 +713,27 @@ DoConfigure(void)
     xf86freeScreenList(xf86config->conf_screen_lst);
     xf86config->conf_screen_lst = NULL;
     for (j = 0; j < xf86NumScreens; j++) {
-        XF86ConfMonitorPtr MonitorPtr;
-        XF86ConfScreenPtr ScreenPtr;
+        XF86ConfMonitorPtr monitor_ptr;
+        XF86ConfScreenPtr screen_ptr;
 
         ConfiguredMonitor = NULL;
 
         if ((*xf86Screens[dev2screen[j]]->PreInit) (xf86Screens[dev2screen[j]],
                                                     PROBE_DETECT) &&
             ConfiguredMonitor) {
-            MonitorPtr = configureDDCMonitorSection(j);
+            monitor_ptr = configureDDCMonitorSection(j);
         }
         else {
-            MonitorPtr = configureMonitorSection(j);
+            monitor_ptr = configureMonitorSection(j);
         }
-        ScreenPtr = configureScreenSection(j);
+        screen_ptr = configureScreenSection(j);
 
-        xf86config->conf_monitor_lst = (XF86ConfMonitorPtr) xf86addListItem((glp) xf86config->conf_monitor_lst, (glp) MonitorPtr);
+        xf86config->conf_monitor_lst = (XF86ConfMonitorPtr) xf86addListItem((glp) xf86config->conf_monitor_lst, (glp) monitor_ptr);
         xf86config->conf_screen_lst = (XF86ConfScreenPtr) xf86addListItem((glp)
                                                                           xf86config->
                                                                           conf_screen_lst,
                                                                           (glp)
-                                                                          ScreenPtr);
+                                                                          screen_ptr);
     }
 
     if (xf86writeConfigFile(filename, xf86config) == 0) {
@@ -766,7 +782,7 @@ void
 DoShowOptions(void)
 {
     int i = 0;
-    char **vlist = 0;
+    const char **vlist = NULL;
     char *pSymbol = 0;
     XF86ModuleData *initData = 0;
 

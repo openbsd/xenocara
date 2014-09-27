@@ -103,7 +103,7 @@
 					"/etc/X11/%X," "%C/X11/%X"
 #endif
 #ifndef SYS_CONFIGDIRPATH
-#define SYS_CONFIGDIRPATH	"/usr/share/X11/%X," "%D/X11/%X"
+#define SYS_CONFIGDIRPATH	"%D/X11/%X"
 #endif
 #ifndef PROJECTROOT
 #define PROJECTROOT	"/usr/X11R6"
@@ -171,7 +171,7 @@ xf86GetPathElem(char **pnt)
 static char *
 xf86ValidateFontPath(char *path)
 {
-    char *tmp_path, *out_pnt, *path_elem, *next, *p1, *dir_elem;
+    char *next, *tmp_path, *out_pnt, *path_elem, *p1, *dir_elem;
     struct stat stat_buf;
     int flag;
     int dirlen;
@@ -232,21 +232,33 @@ xf86ValidateFontPath(char *path)
     return tmp_path;
 }
 
+#define FIND_SUITABLE(pointertype, listhead, ptr)                                            \
+    do {                                                                                     \
+        pointertype _l, _p;                                                                  \
+                                                                                             \
+        for (_l = (listhead), _p = NULL; !_p && _l; _l = (pointertype)_l->list.next) {       \
+            if (!_l->match_seat || (SeatId && xf86nameCompare(_l->match_seat, SeatId) == 0)) \
+                _p = _l;                                                                     \
+        }                                                                                    \
+                                                                                             \
+        (ptr) = _p;                                                                          \
+    } while(0)
+
 /*
  * use the datastructure that the parser provides and pick out the parts
  * that we need at this point
  */
-char **
-xf86ModulelistFromConfig(pointer **optlist)
+const char **
+xf86ModulelistFromConfig(void ***optlist)
 {
     int count = 0, i = 0;
-    char **modulearray;
+    const char **modulearray;
 
     const char *ignore[] = { "GLcore", "speedo", "bitmap", "drm",
         "freetype", "type1",
         NULL
     };
-    pointer *optarray;
+    void **optarray;
     XF86LoadPtr modp;
     Bool found;
 
@@ -352,7 +364,7 @@ xf86ModulelistFromConfig(pointer **optlist)
      * allocate the memory and walk the list again to fill in the pointers
      */
     modulearray = xnfalloc((count + 1) * sizeof(char *));
-    optarray = xnfalloc((count + 1) * sizeof(pointer));
+    optarray = xnfalloc((count + 1) * sizeof(void *));
     count = 0;
     if (xf86configptr->conf_modules) {
         modp = xf86configptr->conf_modules->mod_load_lst;
@@ -374,12 +386,12 @@ xf86ModulelistFromConfig(pointer **optlist)
     return modulearray;
 }
 
-char **
+const char **
 xf86DriverlistFromConfig(void)
 {
     int count = 0;
     int j;
-    char **modulearray;
+    const char **modulearray;
     screenLayoutPtr slp;
 
     /*
@@ -446,11 +458,11 @@ xf86DriverlistFromConfig(void)
     return modulearray;
 }
 
-char **
+const char **
 xf86InputDriverlistFromConfig(void)
 {
     int count = 0;
-    char **modulearray;
+    const char **modulearray;
     InputInfoPtr *idp;
 
     /*
@@ -505,11 +517,11 @@ xf86InputDriverlistFromConfig(void)
 }
 
 static void
-fixup_video_driver_list(char **drivers)
+fixup_video_driver_list(const char **drivers)
 {
-    static const char *fallback[4] = { "fbdev", "vesa", "wsfb", NULL };
-    char **end, **drv;
-    char *x;
+    static const char *fallback[5] = { "modesetting", "fbdev", "vesa", "wsfb", NULL };
+    const char **end, **drv;
+    const char *x;
     int i;
 
     /* walk to the end of the list */
@@ -532,10 +544,10 @@ fixup_video_driver_list(char **drivers)
     }
 }
 
-static char **
+static const char **
 GenerateDriverlist(const char *dirname)
 {
-    char **ret;
+    const char **ret;
     const char *subdirs[] = { dirname, NULL };
     static const char *patlist[] = { "(.*)_drv\\.so", NULL };
     ret = LoaderListDirs(subdirs, patlist);
@@ -547,10 +559,10 @@ GenerateDriverlist(const char *dirname)
     return ret;
 }
 
-char **
+const char **
 xf86DriverlistFromCompile(void)
 {
-    static char **driverlist = NULL;
+    static const char **driverlist = NULL;
 
     if (!driverlist)
         driverlist = GenerateDriverlist("drivers");
@@ -588,33 +600,35 @@ configFiles(XF86ConfFilesPtr fileconf)
     /* FontPath */
     must_copy = TRUE;
 
-    temp_path = defaultFontPath ? defaultFontPath : "";
+    temp_path = defaultFontPath ? (char *) defaultFontPath : (char *) "";
     if (xf86fpFlag)
         pathFrom = X_CMDLINE;
     else if (fileconf && fileconf->file_fontpath) {
         pathFrom = X_CONFIG;
         if (xf86Info.useDefaultFontPath) {
-            if (asprintf(&defaultFontPath, "%s%s%s", fileconf->file_fontpath,
+            char *new_font_path;
+            if (asprintf(&new_font_path, "%s%s%s", fileconf->file_fontpath,
                          *temp_path ? "," : "", temp_path) == -1)
-                defaultFontPath = NULL;
+                new_font_path = NULL;
             else
                 must_copy = FALSE;
+            defaultFontPath = new_font_path;
         }
         else
             defaultFontPath = fileconf->file_fontpath;
     }
     else
         pathFrom = X_DEFAULT;
-    temp_path = defaultFontPath ? defaultFontPath : "";
+    temp_path = defaultFontPath ? (char *) defaultFontPath : (char *) "";
 
     /* xf86ValidateFontPath modifies its argument, but returns a copy of it. */
-    temp_path = must_copy ? xnfstrdup(defaultFontPath) : defaultFontPath;
+    temp_path = must_copy ? xnfstrdup(defaultFontPath) : (char *) defaultFontPath;
     defaultFontPath = xf86ValidateFontPath(temp_path);
     free(temp_path);
 
     /* make fontpath more readable in the logfiles */
     countDirs = 1;
-    temp_path = defaultFontPath;
+    temp_path = (char *) defaultFontPath;
     while ((temp_path = index(temp_path, ',')) != NULL) {
         countDirs++;
         temp_path++;
@@ -622,7 +636,7 @@ configFiles(XF86ConfFilesPtr fileconf)
 
     log_buf = xnfalloc(strlen(defaultFontPath) + (2 * countDirs) + 1);
     temp_path = log_buf;
-    start = defaultFontPath;
+    start = (char *) defaultFontPath;
     while ((end = index(start, ',')) != NULL) {
         size = (end - start) + 1;
         *(temp_path++) = '\t';
@@ -774,13 +788,7 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
     MessageType from;
     const char *s;
     XkbRMLVOSet set;
-
-    /* Default options. */
-    set.rules = XKB_DFLT_RULES;
-    set.model = "pc105";
-    set.layout = "us";
-    set.variant = NULL;
-    set.options = NULL;
+    const char *rules;
 
     /*
      * Merge the ServerLayout and ServerFlags options.  The former have
@@ -960,9 +968,15 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
      * evdev rules set. */
 #if defined(linux)
     if (!xf86Info.forceInputDevices)
-        set.rules = "evdev";
+        rules = "evdev";
+    else
 #endif
+        rules = "base";
+
+    /* Xkb default options. */
+    XkbInitRules(&set, rules, "pc105", "us", NULL, NULL);
     XkbSetRulesDflts(&set);
+    XkbFreeRMLVOSet(&set, FALSE);
 
     xf86Info.useDefaultFontPath = TRUE;
     xf86Info.useDefaultFontPathFrom = X_DEFAULT;
@@ -1577,8 +1591,11 @@ configLayout(serverLayoutPtr servlayoutp, XF86ConfLayoutPtr conf_layout,
      * config file, or - if it is NULL - configScreen autogenerates one for
      * us */
     if (!count) {
+        XF86ConfScreenPtr screen;
+
+        FIND_SUITABLE (XF86ConfScreenPtr, xf86configptr->conf_screen_lst, screen);
         slp[0].screen = xnfcalloc(1, sizeof(confScreenRec));
-        if (!configScreen(slp[0].screen, xf86configptr->conf_screen_lst,
+        if (!configScreen(slp[0].screen, screen,
                           0, X_CONFIG)) {
             free(slp[0].screen);
             free(slp);
@@ -1674,7 +1691,7 @@ configLayout(serverLayoutPtr servlayoutp, XF86ConfLayoutPtr conf_layout,
  */
 static Bool
 configImpliedLayout(serverLayoutPtr servlayoutp, XF86ConfScreenPtr conf_screen,
-                    XF86ConfigPtr xf86configptr)
+                    XF86ConfigPtr conf_ptr)
 {
     MessageType from;
     XF86ConfScreenPtr s;
@@ -1719,7 +1736,7 @@ configImpliedLayout(serverLayoutPtr servlayoutp, XF86ConfScreenPtr conf_screen,
 
     memset(&layout, 0, sizeof(layout));
     layout.lay_identifier = servlayoutp->id;
-    if (xf86layoutAddInputDevices(xf86configptr, &layout) > 0) {
+    if (xf86layoutAddInputDevices(conf_ptr, &layout) > 0) {
         if (!configInputDevices(&layout, servlayoutp))
             return FALSE;
         from = X_DEFAULT;
@@ -1818,7 +1835,7 @@ configScreen(confScreenPtr screenp, XF86ConfScreenPtr conf_screen, int scrnum,
      * set it to NULL so that the section can be autoconfigured later */
     screenp->device = xnfcalloc(1, sizeof(GDevRec));
     if ((!conf_screen->scrn_device) && (xf86configptr->conf_device_lst)) {
-        conf_screen->scrn_device = xf86configptr->conf_device_lst;
+        FIND_SUITABLE (XF86ConfDevicePtr, xf86configptr->conf_device_lst, conf_screen->scrn_device);
         xf86Msg(X_DEFAULT, "No device specified for screen \"%s\".\n"
                 "\tUsing the first device section listed.\n", screenp->id);
     }
@@ -2348,9 +2365,10 @@ checkInput(serverLayoutPtr layout, Bool implicit_layout)
 ConfigStatus
 xf86HandleConfigFile(Bool autoconfig)
 {
-    char *scanptr;
+    const char *scanptr;
     Bool singlecard = 0;
     Bool implicit_layout = FALSE;
+    XF86ConfLayoutPtr layout;
 
     if (!autoconfig) {
         char *filename, *dirname, *sysdirname;
@@ -2426,14 +2444,17 @@ xf86HandleConfigFile(Bool autoconfig)
      */
 
     /* First check if a layout section is present, and if it is valid. */
+    FIND_SUITABLE(XF86ConfLayoutPtr, xf86configptr->conf_layout_lst, layout);
+    if (layout == NULL || xf86ScreenName != NULL) {
+        XF86ConfScreenPtr screen;
 
-    if (xf86configptr->conf_layout_lst == NULL || xf86ScreenName != NULL) {
         if (xf86ScreenName == NULL) {
             xf86Msg(X_DEFAULT,
                     "No Layout section.  Using the first Screen section.\n");
         }
+        FIND_SUITABLE (XF86ConfScreenPtr, xf86configptr->conf_screen_lst, screen);
         if (!configImpliedLayout(&xf86ConfigLayout,
-                                 xf86configptr->conf_screen_lst,
+                                 screen,
                                  xf86configptr)) {
             xf86Msg(X_ERROR, "Unable to determine the screen layout\n");
             return CONFIG_PARSE_ERROR;
@@ -2443,21 +2464,18 @@ xf86HandleConfigFile(Bool autoconfig)
     else {
         if (xf86configptr->conf_flags != NULL) {
             char *dfltlayout = NULL;
-            pointer optlist = xf86configptr->conf_flags->flg_option_lst;
+            void *optlist = xf86configptr->conf_flags->flg_option_lst;
 
             if (optlist && xf86FindOption(optlist, "defaultserverlayout"))
                 dfltlayout =
                     xf86SetStrOption(optlist, "defaultserverlayout", NULL);
-            if (!configLayout
-                (&xf86ConfigLayout, xf86configptr->conf_layout_lst,
-                 dfltlayout)) {
+            if (!configLayout(&xf86ConfigLayout, layout, dfltlayout)) {
                 xf86Msg(X_ERROR, "Unable to determine the screen layout\n");
                 return CONFIG_PARSE_ERROR;
             }
         }
         else {
-            if (!configLayout(&xf86ConfigLayout, xf86configptr->conf_layout_lst,
-                              NULL)) {
+            if (!configLayout(&xf86ConfigLayout, layout, NULL)) {
                 xf86Msg(X_ERROR, "Unable to determine the screen layout\n");
                 return CONFIG_PARSE_ERROR;
             }

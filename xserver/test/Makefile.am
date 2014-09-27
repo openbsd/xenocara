@@ -30,19 +30,18 @@ endif
 xkb_LDADD=$(TEST_LDADD)
 input_LDADD=$(TEST_LDADD)
 xtest_LDADD=$(TEST_LDADD)
-list_LDADD=$(TEST_LDADD)
 misc_LDADD=$(TEST_LDADD)
 fixes_LDADD=$(TEST_LDADD)
 xfree86_LDADD=$(TEST_LDADD)
 touch_LDADD=$(TEST_LDADD)
 signal_logging_LDADD=$(TEST_LDADD)
-hashtabletest_LDADD=$(TEST_LDADD) $(top_srcdir)/Xext/hashtable.c
+hashtabletest_LDADD=$(TEST_LDADD)
 os_LDADD=$(TEST_LDADD)
 
 libxservertest_la_LIBADD = $(XSERVER_LIBS)
 if XORG
 
-nodist_libxservertest_la_SOURCES = $(top_builddir)/hw/xfree86/sdksyms.c
+nodist_libxservertest_la_SOURCES = sdksyms.c
 libxservertest_la_LIBADD += \
             $(top_builddir)/hw/xfree86/loader/libloader.la \
             $(top_builddir)/hw/xfree86/os-support/libxorgos.la \
@@ -55,6 +54,12 @@ libxservertest_la_LIBADD += \
             $(top_builddir)/hw/xfree86/i2c/libi2c.la \
             $(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
             @XORG_LIBS@
+
+BUILT_SOURCES = sdksyms.c
+CLEANFILES = sdksyms.c
+
+sdksyms.c: $(top_builddir)/hw/xfree86/sdksyms.c
+	$(AM_V_GEN)$(LN_S) $(top_builddir)/hw/xfree86/sdksyms.c
 
 if DRI
 libxservertest_la_LIBADD += $(top_builddir)/hw/xfree86/dri/libdri.la
@@ -71,9 +76,7 @@ endif
 else
 nodist_libxservertest_la_SOURCES = \
             ddxstubs.c \
-            $(top_srcdir)/mi/miinitext.c \
-            $(top_srcdir)/Xext/dpmsstubs.c \
-            $(top_srcdir)/Xi/stubs.c
+            $(top_srcdir)/mi/miinitext.c
 
 libxservertest_la_LIBADD += \
             $(top_builddir)/damageext/libdamageext.la \
@@ -84,7 +87,9 @@ libxservertest_la_LIBADD += \
             $(top_builddir)/randr/librandr.la \
             $(top_builddir)/render/librender.la \
             $(top_builddir)/Xext/libXext.la \
+            $(top_builddir)/Xext/libXextdpmsstubs.la \
             $(top_builddir)/Xi/libXi.la \
+            $(top_builddir)/Xi/libXistubs.la \
             $(top_builddir)/xfixes/libxfixes.la \
             $(top_builddir)/xkb/libxkb.la \
             $(top_builddir)/xkb/libxkbstubs.la

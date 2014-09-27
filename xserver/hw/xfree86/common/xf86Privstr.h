@@ -136,11 +136,11 @@ typedef struct {
 /* Information for root window properties. */
 typedef struct _RootWinProp {
     struct _RootWinProp *next;
-    char *name;
+    const char *name;
     Atom type;
     short format;
     long size;
-    pointer data;
+    void *data;
 } RootWinProp, *RootWinPropPtr;
 
 /* ISC's cc can't handle ~ of UL constants, so explicitly type cast them. */
@@ -162,5 +162,9 @@ typedef struct _RootWinProp {
 #define PCVT		  16
 #define WSCONS		  32
 #endif
+
+/* Root window property to tell clients whether our VT is currently active.
+ * Name chosen to match the "XFree86_VT" property. */
+#define HAS_VT_ATOM_NAME "XFree86_has_VT"
 
 #endif                          /* _XF86PRIVSTR_H */

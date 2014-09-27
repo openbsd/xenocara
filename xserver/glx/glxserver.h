@@ -46,7 +46,6 @@
 #include <resource.h>
 #include <scrnintstr.h>
 
-#define GL_GLEXT_PROTOTYPES     /* we want prototypes */
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GL/glxproto.h>
@@ -85,7 +84,6 @@ void __glXScreenInitVisuals(__GLXscreen * screen);
 /*
 ** The last context used (from the server's persective) is cached.
 */
-extern __GLXcontext *__glXLastContext;
 extern __GLXcontext *__glXForceCurrent(__GLXclientState *, GLXContextTag,
                                        int *);
 

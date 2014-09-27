@@ -9,7 +9,6 @@
 
 #include <x86emu.h>
 #include "xf86.h"
-#include "compiler.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
 #define _INT10_PRIVATE
@@ -50,12 +49,12 @@ xf86Int10ExecSetup(xf86Int10InfoPtr pInt)
     X86EMU_intrFuncs intFuncs[256];
 
     X86EMU_pioFuncs pioFuncs = {
-        (&x_inb),
-        (&x_inw),
-        (&x_inl),
-        (&x_outb),
-        (&x_outw),
-        (&x_outl)
+        .inb = x_inb,
+        .inw = x_inw,
+        .inl = x_inl,
+        .outb = x_outb,
+        .outw = x_outw,
+        .outl = x_outl
     };
 
     X86EMU_memFuncs memFuncs = {

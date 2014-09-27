@@ -102,12 +102,17 @@ typedef struct _connectionOutput {
 static ConnectionInputPtr AllocateInputBuffer(void);
 static ConnectionOutputPtr AllocateOutputBuffer(void);
 
-/* check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
+/* If EAGAIN and EWOULDBLOCK are distinct errno values, then we check errno
+ * for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
  * systems are broken and return EWOULDBLOCK when they should return EAGAIN
  */
 #ifndef WIN32
-#define ETEST(err) (err == EAGAIN || err == EWOULDBLOCK)
-#else                           /* WIN32 The socket errorcodes differ from the normal errors */
+# if (EAGAIN != EWOULDBLOCK)
+#  define ETEST(err) (err == EAGAIN || err == EWOULDBLOCK)
+# else
+#  define ETEST(err) (err == EAGAIN)
+# endif
+#else   /* WIN32 The socket errorcodes differ from the normal errors */
 #define ETEST(err) (err == EAGAIN || err == WSAEWOULDBLOCK)
 #endif
 
@@ -481,7 +486,7 @@ ReadRequestFromClient(ClientPtr client)
         oci->lenLastReq -= (sizeof(xBigReq) - sizeof(xReq));
         client->req_len -= bytes_to_int32(sizeof(xBigReq) - sizeof(xReq));
     }
-    client->requestBuffer = (pointer) oci->bufptr;
+    client->requestBuffer = (void *) oci->bufptr;
 #ifdef DEBUG_COMMUNICATION
     {
         xReq *req = client->requestBuffer;
@@ -809,7 +814,7 @@ WriteToClient(ClientPtr who, int count, const void *__buf)
             who->replyBytesRemaining -= count + padBytes;
             replyinfo.startOfReply = FALSE;
             replyinfo.bytesRemaining = who->replyBytesRemaining;
-            CallCallbacks((&ReplyCallback), (pointer) &replyinfo);
+            CallCallbacks((&ReplyCallback), (void *) &replyinfo);
         }
         else if (who->clientState == ClientStateRunning && buf[0] == X_Reply) { /* start of new reply */
             CARD32 replylen;
@@ -821,7 +826,7 @@ WriteToClient(ClientPtr who, int count, const void *__buf)
             bytesleft = (replylen * 4) + SIZEOF(xReply) - count - padBytes;
             replyinfo.startOfReply = TRUE;
             replyinfo.bytesRemaining = who->replyBytesRemaining = bytesleft;
-            CallCallbacks((&ReplyCallback), (pointer) &replyinfo);
+            CallCallbacks((&ReplyCallback), (void *) &replyinfo);
         }
     }
 #ifdef DEBUG_COMMUNICATION

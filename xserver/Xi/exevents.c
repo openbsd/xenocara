@@ -230,7 +230,7 @@ CopyKeyClass(DeviceIntPtr device, DeviceIntPtr master)
 
     mk->sourceid = device->id;
 
-    if (!XkbCopyDeviceKeymap(master, device))
+    if (!XkbDeviceApplyKeymap(master, device->key->xkbInfo->desc))
         FatalError("Couldn't pivot keymap from device to core!\n");
 }
 
@@ -1306,7 +1306,7 @@ RetrieveTouchDeliveryData(DeviceIntPtr dev, TouchPointInfoPtr ti,
         *mask = (*grab)->xi2mask;
     }
     else {
-        rc = dixLookupResourceByType((pointer *) win, listener->listener,
+        rc = dixLookupResourceByType((void **) win, listener->listener,
                                      listener->resource_type,
                                      serverClient, DixSendAccess);
         if (rc != Success)
@@ -1473,7 +1473,7 @@ static void
 DeliverEmulatedMotionEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
                            InternalEvent *ev)
 {
-    InternalEvent motion;
+    DeviceEvent motion;
 
     if (ti->num_listeners) {
         ClientPtr client;
@@ -1485,11 +1485,11 @@ DeliverEmulatedMotionEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
             ti->listeners[0].type != LISTENER_POINTER_GRAB)
             return;
 
-        motion = *ev;
-        motion.any.type = ET_TouchUpdate;
-        motion.device_event.detail.button = 0;
+        motion = ev->device_event;
+        motion.type = ET_TouchUpdate;
+        motion.detail.button = 0;
 
-        if (!RetrieveTouchDeliveryData(dev, ti, &motion,
+        if (!RetrieveTouchDeliveryData(dev, ti, (InternalEvent*)&motion,
                                        &ti->listeners[0], &client, &win, &grab,
                                        &mask))
             return;
@@ -1504,18 +1504,18 @@ DeliverEmulatedMotionEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
             }
         }
 
-        DeliverTouchEmulatedEvent(dev, ti, &motion, &ti->listeners[0], client,
+        DeliverTouchEmulatedEvent(dev, ti, (InternalEvent*)&motion, &ti->listeners[0], client,
                                   win, grab, mask);
     }
     else {
         InternalEvent button;
         int converted;
 
-        converted = TouchConvertToPointerEvent(ev, &motion, &button);
+        converted = TouchConvertToPointerEvent(ev, (InternalEvent*)&motion, &button);
 
         BUG_WARN(converted == 0);
         if (converted)
-            ProcessOtherEvent(&motion, dev);
+            ProcessOtherEvent((InternalEvent*)&motion, dev);
     }
 }
 
@@ -1739,7 +1739,7 @@ ProcessDeviceEvent(InternalEvent *ev, DeviceIntPtr device)
 
         eventinfo.device = device;
         eventinfo.event = ev;
-        CallCallbacks(&DeviceEventCallback, (pointer) &eventinfo);
+        CallCallbacks(&DeviceEventCallback, (void *) &eventinfo);
     }
 
     grab = device->deviceGrab.grab;
@@ -2226,7 +2226,7 @@ GrabButton(ClientPtr client, DeviceIntPtr dev, DeviceIntPtr modifier_device,
     if (param->cursor == None)
         cursor = NullCursor;
     else {
-        rc = dixLookupResourceByType((pointer *) &cursor, param->cursor,
+        rc = dixLookupResourceByType((void **) &cursor, param->cursor,
                                      RT_CURSOR, client, DixUseAccess);
         if (rc != Success) {
             client->errorValue = param->cursor;
@@ -2325,7 +2325,7 @@ GrabWindow(ClientPtr client, DeviceIntPtr dev, int type,
     if (param->cursor == None)
         cursor = NullCursor;
     else {
-        rc = dixLookupResourceByType((pointer *) &cursor, param->cursor,
+        rc = dixLookupResourceByType((void **) &cursor, param->cursor,
                                      RT_CURSOR, client, DixUseAccess);
         if (rc != Success) {
             client->errorValue = param->cursor;
@@ -2468,7 +2468,7 @@ AddExtensionClient(WindowPtr pWin, ClientPtr client, Mask mask, int mskidx)
     others->resource = FakeClientID(client->index);
     others->next = pWin->optional->inputMasks->inputClients;
     pWin->optional->inputMasks->inputClients = others;
-    if (!AddResource(others->resource, RT_INPUTCLIENT, (pointer) pWin))
+    if (!AddResource(others->resource, RT_INPUTCLIENT, (void *) pWin))
         goto bail;
     return Success;
 
@@ -2570,7 +2570,7 @@ InputClientGone(WindowPtr pWin, XID id)
                 else {
                     other->resource = FakeClientID(0);
                     if (!AddResource(other->resource, RT_INPUTCLIENT,
-                                     (pointer) pWin))
+                                     (void *) pWin))
                         return BadAlloc;
                 }
             }

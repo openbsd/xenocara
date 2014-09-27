@@ -103,6 +103,7 @@
 #if !defined(__sparc__) && !defined(__sparc) && !defined(__arm32__) && !defined(__nds32__) \
       && !(defined(__alpha__) && defined(linux)) \
       && !(defined(__ia64__) && defined(linux)) \
+      && !(defined(__mips64) && defined(linux)) \
 
 extern _X_EXPORT void outb(unsigned short, unsigned char);
 extern _X_EXPORT void outw(unsigned short, unsigned short);
@@ -1351,7 +1352,10 @@ stl_u(unsigned long val, unsigned int *p)
 #else                           /* ix86 */
 
 #if !defined(__SUNPRO_C)
-#if !defined(FAKEIT) && !defined(__mc68000__) && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__) && !defined(__s390__) && !defined(__m32r__) && !defined(__aarch64__)
+#if !defined(FAKEIT) && !defined(__mc68000__) && !defined(__arm__) && \
+    !defined(__sh__) && !defined(__hppa__) && !defined(__s390__) && \
+    !defined(__m32r__) && !defined(__aarch64__) && !defined(__arc__) && \
+    !defined(__xtensa__)
 #ifdef GCCUSESGAS
 
 /*
@@ -1453,7 +1457,7 @@ inl(unsigned short port)
 
 #endif                          /* GCCUSESGAS */
 
-#else                           /* !defined(FAKEIT) && !defined(__mc68000__)  && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__) && !defined(__m32r__) */
+#else                           /* !defined(FAKEIT) && !defined(__mc68000__)  && !defined(__arm__) && !defined(__sh__) && !defined(__hppa__) && !defined(__m32r__) && !defined(__arc__) */
 
 static __inline__ void
 outb(unsigned short port, unsigned char val)

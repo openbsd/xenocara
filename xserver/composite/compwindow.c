@@ -53,7 +53,7 @@
 
 #ifdef COMPOSITE_DEBUG
 static int
-compCheckWindow(WindowPtr pWin, pointer data)
+compCheckWindow(WindowPtr pWin, void *data)
 {
     ScreenPtr pScreen = pWin->drawable.pScreen;
     PixmapPtr pWinPixmap = (*pScreen->GetWindowPixmap) (pWin);
@@ -92,7 +92,7 @@ typedef struct _compPixmapVisit {
 } CompPixmapVisitRec, *CompPixmapVisitPtr;
 
 static Bool
-compRepaintBorder(ClientPtr pClient, pointer closure)
+compRepaintBorder(ClientPtr pClient, void *closure)
 {
     WindowPtr pWindow;
     int rc =
@@ -111,7 +111,7 @@ compRepaintBorder(ClientPtr pClient, pointer closure)
 }
 
 static int
-compSetPixmapVisitWindow(WindowPtr pWindow, pointer data)
+compSetPixmapVisitWindow(WindowPtr pWindow, void *data)
 {
     CompPixmapVisitPtr pVisit = (CompPixmapVisitPtr) data;
     ScreenPtr pScreen = pWindow->drawable.pScreen;
@@ -128,7 +128,7 @@ compSetPixmapVisitWindow(WindowPtr pWindow, pointer data)
     SetBorderSize(pWindow);
     if (HasBorder(pWindow))
         QueueWorkProc(compRepaintBorder, serverClient,
-                      (pointer) (intptr_t) pWindow->drawable.id);
+                      (void *) (intptr_t) pWindow->drawable.id);
     return WT_WALKCHILDREN;
 }
 
@@ -139,7 +139,7 @@ compSetPixmap(WindowPtr pWindow, PixmapPtr pPixmap)
 
     visitRec.pWindow = pWindow;
     visitRec.pPixmap = pPixmap;
-    TraverseTree(pWindow, compSetPixmapVisitWindow, (pointer) &visitRec);
+    TraverseTree(pWindow, compSetPixmapVisitWindow, (void *) &visitRec);
     compCheckTree(pWindow->drawable.pScreen);
 }
 
@@ -336,12 +336,30 @@ compIsAlternateVisual(ScreenPtr pScreen, XID visual)
 }
 
 static Bool
+compIsImplicitRedirectException(ScreenPtr pScreen,
+                                XID parentVisual, XID winVisual)
+{
+    CompScreenPtr cs = GetCompScreen(pScreen);
+    int i;
+
+    for (i = 0; i < cs->numImplicitRedirectExceptions; i++)
+        if (cs->implicitRedirectExceptions[i].parentVisual == parentVisual &&
+            cs->implicitRedirectExceptions[i].winVisual == winVisual)
+            return TRUE;
+
+    return FALSE;
+}
+
+static Bool
 compImplicitRedirect(WindowPtr pWin, WindowPtr pParent)
 {
     if (pParent) {
         ScreenPtr pScreen = pWin->drawable.pScreen;
         XID winVisual = wVisual(pWin);
         XID parentVisual = wVisual(pParent);
+
+        if (compIsImplicitRedirectException(pScreen, parentVisual, winVisual))
+            return FALSE;
 
         if (winVisual != parentVisual &&
             (compIsAlternateVisual(pScreen, winVisual) ||
@@ -475,7 +493,6 @@ compCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
              * need to be copied to pNewPixmap.
              */
             RegionRec rgnDst;
-            PixmapPtr pPixmap = (*pScreen->GetWindowPixmap) (pWin);
             GCPtr pGC;
 
             dx = ptOldOrg.x - pWin->drawable.x;
@@ -508,6 +525,7 @@ compCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
                 }
                 FreeScratchGC(pGC);
             }
+            RegionUninit(&rgnDst);
             return;
         }
         dx = pPixmap->screen_x - cw->oldx;

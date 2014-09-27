@@ -72,6 +72,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = Xephyr$(EXEEXT)
+@GLAMOR_TRUE@am__append_1 = $(XLIB_CFLAGS)
 subdir = hw/kdrive/ephyr
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -99,14 +100,18 @@ PROGRAMS = $(bin_PROGRAMS)
 am__Xephyr_SOURCES_DIST = ephyr.c ephyr.h ephyrlog.h ephyr_draw.c os.c \
 	ephyrinit.c hostx.c hostx.h ephyrvideo.c ephyrdriext.c \
 	ephyrdriext.h ephyrdri.c ephyrdri.h ephyrglxext.c \
-	ephyrglxext.h ephyrhostglx.c ephyrhostglx.h
+	ephyrglxext.h ephyrhostglx.c ephyrhostglx.h ephyr_glamor_glx.c \
+	ephyr_glamor_glx.h
 @XV_TRUE@am__objects_1 = ephyrvideo.$(OBJEXT)
 @DRI_TRUE@am__objects_2 = ephyrdriext.$(OBJEXT) ephyrdri.$(OBJEXT) \
 @DRI_TRUE@	ephyrglxext.$(OBJEXT) ephyrhostglx.$(OBJEXT)
+@GLAMOR_TRUE@am__objects_3 = ephyr_glamor_glx.$(OBJEXT)
 am_Xephyr_OBJECTS = ephyr.$(OBJEXT) ephyr_draw.$(OBJEXT) os.$(OBJEXT) \
 	ephyrinit.$(OBJEXT) hostx.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2)
+	$(am__objects_2) $(am__objects_3)
 Xephyr_OBJECTS = $(am_Xephyr_OBJECTS)
+@GLAMOR_TRUE@am__DEPENDENCIES_1 = $(top_builddir)/glamor/libglamor.la \
+@GLAMOR_TRUE@	$(top_builddir)/glamor/libglamor_egl_stubs.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -234,6 +239,8 @@ DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
+DEFAULT_XDG_DATA_HOME = @DEFAULT_XDG_DATA_HOME@
+DEFAULT_XDG_DATA_HOME_LOGDIR = @DEFAULT_XDG_DATA_HOME_LOGDIR@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DGA_CFLAGS = @DGA_CFLAGS@
@@ -278,6 +285,10 @@ FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
+GBM_CFLAGS = @GBM_CFLAGS@
+GBM_LIBS = @GBM_LIBS@
+GLAMOR_CFLAGS = @GLAMOR_CFLAGS@
+GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
@@ -380,7 +391,10 @@ SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+SUID_WRAPPER_DIR = @SUID_WRAPPER_DIR@
 SYSCONFDIR = @SYSCONFDIR@
+SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
+SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
@@ -389,6 +403,7 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -455,6 +470,10 @@ XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
+XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
+XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
+XWAYLAND_LIBS = @XWAYLAND_LIBS@
+XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -528,15 +547,15 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
-AM_CPPFLAGS = \
-	@KDRIVE_INCS@		\
-	@KDRIVE_CFLAGS@		\
-	@XEPHYR_INCS@		\
-	@XEPHYR_CFLAGS@		\
-	-I$(top_srcdir)		\
-	-I$(top_srcdir)/exa
-
+AM_CPPFLAGS = @KDRIVE_INCS@ @KDRIVE_CFLAGS@ @XEPHYR_INCS@ \
+	@XEPHYR_CFLAGS@ -I$(top_srcdir) -I$(top_srcdir)/glamor \
+	-I$(top_srcdir)/exa $(am__append_1)
 @XV_TRUE@XV_SRCS = ephyrvideo.c
+@GLAMOR_TRUE@GLAMOR_SRCS = \
+@GLAMOR_TRUE@	ephyr_glamor_glx.c \
+@GLAMOR_TRUE@	ephyr_glamor_glx.h \
+@GLAMOR_TRUE@	$()
+
 @DRI_TRUE@DRI_SRCS = \
 @DRI_TRUE@	ephyrdriext.c		\
 @DRI_TRUE@	ephyrdriext.h		\
@@ -559,14 +578,21 @@ Xephyr_SOURCES = \
 	hostx.h \
 	$(XV_SRCS) \
 	$(DRI_SRCS) \
+	$(GLAMOR_SRCS) \
 	$()
+
+@GLAMOR_TRUE@XEPHYR_GLAMOR_LIB = \
+@GLAMOR_TRUE@	$(top_builddir)/glamor/libglamor.la \
+@GLAMOR_TRUE@	$(top_builddir)/glamor/libglamor_egl_stubs.la \
+@GLAMOR_TRUE@	$()
 
 Xephyr_LDADD = \
 	$(top_builddir)/exa/libexa.la			\
+	$(XEPHYR_GLAMOR_LIB)				\
 	@KDRIVE_LIBS@					\
 	@XEPHYR_LIBS@
 
-Xephyr_DEPENDENCIES = @KDRIVE_LOCAL_LIBS@
+Xephyr_DEPENDENCIES = @KDRIVE_LOCAL_LIBS@ $(XEPHYR_GLAMOR_LIB)
 Xephyr_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 all: all-recursive
 
@@ -660,6 +686,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_draw.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_glamor_glx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdri.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdriext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrglxext.Po@am__quote@

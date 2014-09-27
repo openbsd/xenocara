@@ -454,7 +454,6 @@ xf86RandR12GetInfo(ScreenPtr pScreen, Rotation * rotations)
     ScrnInfoPtr scrp = xf86ScreenToScrn(pScreen);
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
     DisplayModePtr mode;
-    int refresh0 = 60;
     int maxX = 0, maxY = 0;
 
     *rotations = randrp->supported_rotations;
@@ -479,8 +478,6 @@ xf86RandR12GetInfo(ScreenPtr pScreen, Rotation * rotations)
             if (maxY < mode->VDisplay)
                 maxY = mode->VDisplay;
         }
-        if (mode == scrp->modes)
-            refresh0 = refresh;
         pSize = RRRegisterSize(pScreen,
                                mode->HDisplay, mode->VDisplay,
                                randrp->mmWidth, randrp->mmHeight);
@@ -684,7 +681,6 @@ xf86RandR12ScreenSetSize(ScreenPtr pScreen,
     WindowPtr pRoot = pScreen->root;
     PixmapPtr pScrnPix;
     Bool ret = FALSE;
-    Bool panning = FALSE;
     int c;
 
     if (xf86RandR12Key) {
@@ -716,7 +712,6 @@ xf86RandR12ScreenSetSize(ScreenPtr pScreen,
                 crtc->panningTrackingArea.y2 += height - pScreen->height;
             xf86RandR13VerifyPanningArea(crtc, width, height);
             xf86RandR13Pan(crtc, randrp->pointerX, randrp->pointerY);
-	    panning = TRUE;
         }
     }
 
@@ -947,8 +942,6 @@ xf86RandR12SetRotations(ScreenPtr pScreen, Rotation rotations)
 void
 xf86RandR12SetTransformSupport(ScreenPtr pScreen, Bool transforms)
 {
-    XF86RandRInfoPtr randrp;
-
 #if RANDR_13_INTERFACE
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     int c;
@@ -958,7 +951,6 @@ xf86RandR12SetTransformSupport(ScreenPtr pScreen, Bool transforms)
     if (xf86RandR12Key == NULL)
         return;
 
-    randrp = XF86RANDRINFO(pScreen);
 #if RANDR_13_INTERFACE
     for (c = 0; c < config->num_crtc; c++) {
         xf86CrtcPtr crtc = config->crtc[c];
@@ -1211,7 +1203,6 @@ xf86RandR12CrtcSet(ScreenPtr pScreen,
 
         if (randr_mode) {
             DisplayModeRec mode;
-            RRTransformPtr transform = RRCrtcGetTransform(randr_crtc);
 
             xf86RandRModeConvert(pScrn, randr_mode, &mode);
             if (!xf86CrtcSetModeTransform
@@ -1266,12 +1257,13 @@ xf86RandR12CrtcSetGamma(ScreenPtr pScreen, RRCrtcPtr randr_crtc)
         CARD16 *tmp_ptr;
 
         tmp_ptr =
-            realloc(crtc->gamma_red, 3 * crtc->gamma_size * sizeof(CARD16));
+            realloc(crtc->gamma_red,
+                    3 * randr_crtc->gammaSize * sizeof(CARD16));
         if (!tmp_ptr)
             return FALSE;
         crtc->gamma_red = tmp_ptr;
-        crtc->gamma_green = crtc->gamma_red + crtc->gamma_size;
-        crtc->gamma_blue = crtc->gamma_green + crtc->gamma_size;
+        crtc->gamma_green = crtc->gamma_red + randr_crtc->gammaSize;
+        crtc->gamma_blue = crtc->gamma_green + randr_crtc->gammaSize;
     }
 
     crtc->gamma_size = randr_crtc->gammaSize;
@@ -1456,7 +1448,6 @@ xf86RandR12SetInfo12(ScreenPtr pScreen)
     RRCrtcPtr *crtcs;
     int ncrtc;
     int o, c, l;
-    RRCrtcPtr randr_crtc;
     int nclone;
 
     clones = malloc(config->num_output * sizeof(RROutputPtr));
@@ -1468,11 +1459,6 @@ xf86RandR12SetInfo12(ScreenPtr pScreen)
         for (c = 0; c < config->num_crtc; c++)
             if (output->possible_crtcs & (1 << c))
                 crtcs[ncrtc++] = config->crtc[c]->randr_crtc;
-
-        if (output->crtc)
-            randr_crtc = output->crtc->randr_crtc;
-        else
-            randr_crtc = NULL;
 
         if (!RROutputSetCrtcs(output->randr_output, crtcs, ncrtc)) {
             free(crtcs);

@@ -56,6 +56,7 @@
 #include <X11/X.h>
 #include <X11/Xpoll.h>
 #include <X11/Xproto.h>
+#include <X11/Xatom.h>
 #include "misc.h"
 #include "compiler.h"
 #include "xf86.h"
@@ -85,6 +86,8 @@
 #endif
 
 #include "xf86platformBus.h"
+#include "systemd-logind.h"
+
 /*
  * This is a toggling variable:
  *  FALSE = No VT switching keys have been pressed last time around
@@ -114,7 +117,7 @@ static void xf86VTSwitch(void);
 typedef struct x_IHRec {
     int fd;
     InputHandlerProc ihproc;
-    pointer data;
+    void *data;
     Bool enabled;
     Bool is_input;
     struct x_IHRec *next;
@@ -243,7 +246,7 @@ xf86ProcessActionEvent(ActionEvent action, void *arg)
 
 /* ARGSUSED */
 void
-xf86Wakeup(pointer blockData, int err, pointer pReadmask)
+xf86Wakeup(void *blockData, int err, void *pReadmask)
 {
     fd_set *LastSelectMask = (fd_set *) pReadmask;
     fd_set devicesWithInput;
@@ -407,6 +410,201 @@ xf86ReleaseKeys(DeviceIntPtr pDev)
     }
 }
 
+void
+xf86DisableInputDeviceForVTSwitch(InputInfoPtr pInfo)
+{
+    if (!pInfo->dev)
+        return;
+
+    if (!pInfo->dev->enabled)
+        pInfo->flags |= XI86_DEVICE_DISABLED;
+
+    xf86ReleaseKeys(pInfo->dev);
+    ProcessInputEvents();
+    DisableDevice(pInfo->dev, TRUE);
+}
+
+void
+xf86EnableInputDeviceForVTSwitch(InputInfoPtr pInfo)
+{
+    if (pInfo->dev && (pInfo->flags & XI86_DEVICE_DISABLED) == 0)
+        EnableDevice(pInfo->dev, TRUE);
+    pInfo->flags &= ~XI86_DEVICE_DISABLED;
+}
+
+/*
+ * xf86UpdateHasVTProperty --
+ *    Update a flag property on the root window to say whether the server VT
+ *    is currently the active one as some clients need to know this.
+ */
+static void
+xf86UpdateHasVTProperty(Bool hasVT)
+{
+    Atom property_name;
+    int32_t value = hasVT ? 1 : 0;
+    int i;
+
+    property_name = MakeAtom(HAS_VT_ATOM_NAME, sizeof(HAS_VT_ATOM_NAME) - 1,
+                             FALSE);
+    if (property_name == BAD_RESOURCE)
+        FatalError("Failed to retrieve \"HAS_VT\" atom\n");
+    for (i = 0; i < xf86NumScreens; i++) {
+        ChangeWindowProperty(xf86ScrnToScreen(xf86Screens[i])->root,
+                             property_name, XA_INTEGER, 32,
+                             PropModeReplace, 1, &value, TRUE);
+    }
+}
+
+void
+xf86VTLeave(void)
+{
+    int i;
+    InputInfoPtr pInfo;
+    IHPtr ih;
+
+    DebugF("xf86VTSwitch: Leaving, xf86Exiting is %s\n",
+           BOOLTOSTRING((dispatchException & DE_TERMINATE) ? TRUE : FALSE));
+#ifdef DPMSExtension
+    if (DPMSPowerLevel != DPMSModeOn)
+        DPMSSet(serverClient, DPMSModeOn);
+#endif
+    for (i = 0; i < xf86NumScreens; i++) {
+        if (!(dispatchException & DE_TERMINATE))
+            if (xf86Screens[i]->EnableDisableFBAccess)
+                (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], FALSE);
+    }
+
+    /*
+     * Keep the order: Disable Device > LeaveVT
+     *                        EnterVT > EnableDevice
+     */
+    for (ih = InputHandlers; ih; ih = ih->next) {
+        if (ih->is_input)
+            xf86DisableInputHandler(ih);
+        else
+            xf86DisableGeneralHandler(ih);
+    }
+    for (pInfo = xf86InputDevs; pInfo; pInfo = pInfo->next)
+        xf86DisableInputDeviceForVTSwitch(pInfo);
+
+    OsBlockSIGIO();
+    for (i = 0; i < xf86NumScreens; i++)
+        xf86Screens[i]->LeaveVT(xf86Screens[i]);
+    for (i = 0; i < xf86NumGPUScreens; i++)
+        xf86GPUScreens[i]->LeaveVT(xf86GPUScreens[i]);
+
+    xf86AccessLeave();      /* We need this here, otherwise */
+
+    if (!xf86VTSwitchAway())
+        goto switch_failed;
+
+#ifdef XF86PM
+    if (xf86OSPMClose)
+        xf86OSPMClose();
+    xf86OSPMClose = NULL;
+#endif
+
+    for (i = 0; i < xf86NumScreens; i++) {
+        /*
+         * zero all access functions to
+         * trap calls when switched away.
+         */
+        xf86Screens[i]->vtSema = FALSE;
+    }
+    if (xorgHWAccess)
+        xf86DisableIO();
+
+    xf86UpdateHasVTProperty(FALSE);
+
+    return;
+
+switch_failed:
+    DebugF("xf86VTSwitch: Leave failed\n");
+    xf86AccessEnter();
+    for (i = 0; i < xf86NumScreens; i++) {
+        if (!xf86Screens[i]->EnterVT(xf86Screens[i]))
+            FatalError("EnterVT failed for screen %d\n", i);
+    }
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        if (!xf86GPUScreens[i]->EnterVT(xf86GPUScreens[i]))
+            FatalError("EnterVT failed for gpu screen %d\n", i);
+    }
+    if (!(dispatchException & DE_TERMINATE)) {
+        for (i = 0; i < xf86NumScreens; i++) {
+            if (xf86Screens[i]->EnableDisableFBAccess)
+                (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
+        }
+    }
+    dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
+
+    for (pInfo = xf86InputDevs; pInfo; pInfo = pInfo->next)
+        xf86EnableInputDeviceForVTSwitch(pInfo);
+    for (ih = InputHandlers; ih; ih = ih->next) {
+        if (ih->is_input)
+            xf86EnableInputHandler(ih);
+        else
+            xf86EnableGeneralHandler(ih);
+    }
+    OsReleaseSIGIO();
+}
+
+void
+xf86VTEnter(void)
+{
+    int i;
+    InputInfoPtr pInfo;
+    IHPtr ih;
+
+    DebugF("xf86VTSwitch: Entering\n");
+    if (!xf86VTSwitchTo())
+        return;
+
+#ifdef XF86PM
+    xf86OSPMClose = xf86OSPMOpen();
+#endif
+
+    if (xorgHWAccess)
+        xf86EnableIO();
+    xf86AccessEnter();
+    for (i = 0; i < xf86NumScreens; i++) {
+        xf86Screens[i]->vtSema = TRUE;
+        if (!xf86Screens[i]->EnterVT(xf86Screens[i]))
+            FatalError("EnterVT failed for screen %d\n", i);
+    }
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        xf86GPUScreens[i]->vtSema = TRUE;
+        if (!xf86GPUScreens[i]->EnterVT(xf86GPUScreens[i]))
+            FatalError("EnterVT failed for gpu screen %d\n", i);
+    }
+    for (i = 0; i < xf86NumScreens; i++) {
+        if (xf86Screens[i]->EnableDisableFBAccess)
+            (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
+    }
+
+    /* Turn screen saver off when switching back */
+    dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
+
+    /* If we use systemd-logind it will enable input devices for us */
+    if (!systemd_logind_controls_session())
+        for (pInfo = xf86InputDevs; pInfo; pInfo = pInfo->next)
+            xf86EnableInputDeviceForVTSwitch(pInfo);
+
+    for (ih = InputHandlers; ih; ih = ih->next) {
+        if (ih->is_input)
+            xf86EnableInputHandler(ih);
+        else
+            xf86EnableGeneralHandler(ih);
+    }
+#ifdef XSERVER_PLATFORM_BUS
+    /* check for any new output devices */
+    xf86platformVTProbe();
+#endif
+
+    xf86UpdateHasVTProperty(TRUE);
+
+    OsReleaseSIGIO();
+}
+
 /*
  * xf86VTSwitch --
  *      Handle requests for switching the vt.
@@ -414,10 +612,6 @@ xf86ReleaseKeys(DeviceIntPtr pDev)
 static void
 xf86VTSwitch(void)
 {
-    int i;
-    InputInfoPtr pInfo;
-    IHPtr ih;
-
     DebugF("xf86VTSwitch()\n");
 
 #ifdef XFreeXDGA
@@ -428,163 +622,21 @@ xf86VTSwitch(void)
     /*
      * Since all screens are currently all in the same state it is sufficient
      * check the first.  This might change in future.
+     *
+     * VTLeave is always handled here (VT_PROCESS guarantees this is safe),
+     * if we use systemd_logind xf86VTEnter() gets called by systemd-logind.c
+     * once it has resumed all drm nodes.
      */
-    if (xf86VTOwner()) {
-
-        DebugF("xf86VTSwitch: Leaving, xf86Exiting is %s\n",
-               BOOLTOSTRING((dispatchException & DE_TERMINATE) ? TRUE : FALSE));
-#ifdef DPMSExtension
-        if (DPMSPowerLevel != DPMSModeOn)
-            DPMSSet(serverClient, DPMSModeOn);
-#endif
-        for (i = 0; i < xf86NumScreens; i++) {
-            if (!(dispatchException & DE_TERMINATE))
-                if (xf86Screens[i]->EnableDisableFBAccess)
-                    (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], FALSE);
-        }
-
-        /*
-         * Keep the order: Disable Device > LeaveVT
-         *                        EnterVT > EnableDevice
-         */
-        for (ih = InputHandlers; ih; ih = ih->next) {
-            if (ih->is_input)
-                xf86DisableInputHandler(ih);
-            else
-                xf86DisableGeneralHandler(ih);
-        }
-        for (pInfo = xf86InputDevs; pInfo; pInfo = pInfo->next) {
-            if (pInfo->dev) {
-                if (!pInfo->dev->enabled)
-                    pInfo->flags |= XI86_DEVICE_DISABLED;
-                xf86ReleaseKeys(pInfo->dev);
-                ProcessInputEvents();
-                DisableDevice(pInfo->dev, TRUE);
-            }
-        }
-
-        OsBlockSIGIO();
-        for (i = 0; i < xf86NumScreens; i++)
-            xf86Screens[i]->LeaveVT(xf86Screens[i]);
-        for (i = 0; i < xf86NumGPUScreens; i++)
-            xf86GPUScreens[i]->LeaveVT(xf86GPUScreens[i]);
-
-        xf86AccessLeave();      /* We need this here, otherwise */
-
-        if (!xf86VTSwitchAway()) {
-            /*
-             * switch failed
-             */
-
-            DebugF("xf86VTSwitch: Leave failed\n");
-            xf86AccessEnter();
-            for (i = 0; i < xf86NumScreens; i++) {
-                if (!xf86Screens[i]->EnterVT(xf86Screens[i]))
-                    FatalError("EnterVT failed for screen %d\n", i);
-            }
-            for (i = 0; i < xf86NumGPUScreens; i++) {
-                if (!xf86GPUScreens[i]->EnterVT(xf86GPUScreens[i]))
-                    FatalError("EnterVT failed for gpu screen %d\n", i);
-            }
-            if (!(dispatchException & DE_TERMINATE)) {
-                for (i = 0; i < xf86NumScreens; i++) {
-                    if (xf86Screens[i]->EnableDisableFBAccess)
-                        (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
-                }
-            }
-            dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
-
-            pInfo = xf86InputDevs;
-            while (pInfo) {
-                if (pInfo->dev && (pInfo->flags & XI86_DEVICE_DISABLED) == 0)
-                    EnableDevice(pInfo->dev, TRUE);
-                pInfo->flags &= ~XI86_DEVICE_DISABLED;
-                pInfo = pInfo->next;
-            }
-            for (ih = InputHandlers; ih; ih = ih->next) {
-                if (ih->is_input)
-                    xf86EnableInputHandler(ih);
-                else
-                    xf86EnableGeneralHandler(ih);
-            }
-            OsReleaseSIGIO();
-
-        }
-        else {
-#ifdef XF86PM
-            if (xf86OSPMClose)
-                xf86OSPMClose();
-            xf86OSPMClose = NULL;
-#endif
-
-            for (i = 0; i < xf86NumScreens; i++) {
-                /*
-                 * zero all access functions to
-                 * trap calls when switched away.
-                 */
-                xf86Screens[i]->vtSema = FALSE;
-            }
-            if (xorgHWAccess)
-                xf86DisableIO();
-        }
-    }
-    else {
-        DebugF("xf86VTSwitch: Entering\n");
-        if (!xf86VTSwitchTo())
-            return;
-
-#ifdef XF86PM
-        xf86OSPMClose = xf86OSPMOpen();
-#endif
-
-        if (xorgHWAccess)
-            xf86EnableIO();
-        xf86AccessEnter();
-        for (i = 0; i < xf86NumScreens; i++) {
-            xf86Screens[i]->vtSema = TRUE;
-            if (!xf86Screens[i]->EnterVT(xf86Screens[i]))
-                FatalError("EnterVT failed for screen %d\n", i);
-        }
-        for (i = 0; i < xf86NumGPUScreens; i++) {
-            xf86GPUScreens[i]->vtSema = TRUE;
-            if (!xf86GPUScreens[i]->EnterVT(xf86GPUScreens[i]))
-                FatalError("EnterVT failed for gpu screen %d\n", i);
-        }
-        for (i = 0; i < xf86NumScreens; i++) {
-            if (xf86Screens[i]->EnableDisableFBAccess)
-                (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
-        }
-
-        /* Turn screen saver off when switching back */
-        dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
-
-        pInfo = xf86InputDevs;
-        while (pInfo) {
-            if (pInfo->dev && (pInfo->flags & XI86_DEVICE_DISABLED) == 0)
-                EnableDevice(pInfo->dev, TRUE);
-            pInfo->flags &= ~XI86_DEVICE_DISABLED;
-            pInfo = pInfo->next;
-        }
-
-        for (ih = InputHandlers; ih; ih = ih->next) {
-            if (ih->is_input)
-                xf86EnableInputHandler(ih);
-            else
-                xf86EnableGeneralHandler(ih);
-        }
-#ifdef XSERVER_PLATFORM_BUS
-        /* check for any new output devices */
-        xf86platformVTProbe();
-#endif
-
-        OsReleaseSIGIO();
-    }
+    if (xf86VTOwner())
+        xf86VTLeave();
+    else if (!systemd_logind_controls_session())
+        xf86VTEnter();
 }
 
 /* Input handler registration */
 
-static pointer
-addInputHandler(int fd, InputHandlerProc proc, pointer data)
+static void *
+addInputHandler(int fd, InputHandlerProc proc, void *data)
 {
     IHPtr ih;
 
@@ -606,8 +658,8 @@ addInputHandler(int fd, InputHandlerProc proc, pointer data)
     return ih;
 }
 
-pointer
-xf86AddInputHandler(int fd, InputHandlerProc proc, pointer data)
+void *
+xf86AddInputHandler(int fd, InputHandlerProc proc, void *data)
 {
     IHPtr ih = addInputHandler(fd, proc, data);
 
@@ -618,8 +670,8 @@ xf86AddInputHandler(int fd, InputHandlerProc proc, pointer data)
     return ih;
 }
 
-pointer
-xf86AddGeneralHandler(int fd, InputHandlerProc proc, pointer data)
+void *
+xf86AddGeneralHandler(int fd, InputHandlerProc proc, void *data)
 {
     IHPtr ih = addInputHandler(fd, proc, data);
 
@@ -634,7 +686,7 @@ xf86AddGeneralHandler(int fd, InputHandlerProc proc, pointer data)
  * proc may be NULL if the server should not handle events on the console.
  */
 InputHandlerProc
-xf86SetConsoleHandler(InputHandlerProc proc, pointer data)
+xf86SetConsoleHandler(InputHandlerProc proc, void *data)
 {
     static IHPtr handler = NULL;
     InputHandlerProc old_proc = NULL;
@@ -667,7 +719,7 @@ removeInputHandler(IHPtr ih)
 }
 
 int
-xf86RemoveInputHandler(pointer handler)
+xf86RemoveInputHandler(void *handler)
 {
     IHPtr ih;
     int fd;
@@ -686,7 +738,7 @@ xf86RemoveInputHandler(pointer handler)
 }
 
 int
-xf86RemoveGeneralHandler(pointer handler)
+xf86RemoveGeneralHandler(void *handler)
 {
     IHPtr ih;
     int fd;
@@ -705,7 +757,7 @@ xf86RemoveGeneralHandler(pointer handler)
 }
 
 void
-xf86DisableInputHandler(pointer handler)
+xf86DisableInputHandler(void *handler)
 {
     IHPtr ih;
 
@@ -719,7 +771,7 @@ xf86DisableInputHandler(pointer handler)
 }
 
 void
-xf86DisableGeneralHandler(pointer handler)
+xf86DisableGeneralHandler(void *handler)
 {
     IHPtr ih;
 
@@ -733,7 +785,7 @@ xf86DisableGeneralHandler(pointer handler)
 }
 
 void
-xf86EnableInputHandler(pointer handler)
+xf86EnableInputHandler(void *handler)
 {
     IHPtr ih;
 
@@ -747,7 +799,7 @@ xf86EnableInputHandler(pointer handler)
 }
 
 void
-xf86EnableGeneralHandler(pointer handler)
+xf86EnableGeneralHandler(void *handler)
 {
     IHPtr ih;
 

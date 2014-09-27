@@ -35,6 +35,7 @@ extern Bool EphyrWantGrayScale;
 extern Bool EphyrWantResize;
 extern Bool kdHasPointer;
 extern Bool kdHasKbd;
+extern Bool ephyr_glamor;
 
 #ifdef GLXEXT
 extern Bool ephyrNoDRI;
@@ -64,10 +65,7 @@ static const ExtensionModule ephyrExtensions[] = {
 static
 void ephyrExtensionInit(void)
 {
- int i;
-
- for (i = 0; i < ARRAY_SIZE(ephyrExtensions); i++)
- LoadExtension(&ephyrExtensions[i], TRUE);
+    LoadExtensionList(ephyrExtensions, ARRAY_SIZE(ephyrExtensions), TRUE);
 }
 
 
@@ -138,6 +136,9 @@ ddxUseMsg(void)
     ErrorF("-fullscreen          Attempt to run Xephyr fullscreen\n");
     ErrorF("-grayscale           Simulate 8bit grayscale\n");
     ErrorF("-resizeable          Make Xephyr windows resizeable\n");
+#ifdef GLAMOR
+    ErrorF("-glamor              Enable 2D acceleration using glamor\n");
+#endif
     ErrorF
         ("-fakexa              Simulate acceleration using software rendering\n");
     ErrorF("-verbosity <level>   Set log verbosity level\n");
@@ -149,8 +150,6 @@ ddxUseMsg(void)
     ErrorF
         ("-title [title]       set the window title in the WM_NAME property\n");
     ErrorF("\n");
-
-    exit(1);
 }
 
 void
@@ -243,6 +242,16 @@ ddxProcessArgument(int argc, char **argv, int i)
         EphyrWantResize = 1;
         return 1;
     }
+#ifdef GLAMOR
+    else if (!strcmp (argv[i], "-glamor")) {
+        ephyr_glamor = TRUE;
+        ephyrFuncs.initAccel = ephyr_glamor_init;
+        ephyrFuncs.enableAccel = ephyr_glamor_enable;
+        ephyrFuncs.disableAccel = ephyr_glamor_disable;
+        ephyrFuncs.finiAccel = ephyr_glamor_fini;
+        return 1;
+    }
+#endif
     else if (!strcmp(argv[i], "-fakexa")) {
         ephyrFuncs.initAccel = ephyrDrawInit;
         ephyrFuncs.enableAccel = ephyrDrawEnable;

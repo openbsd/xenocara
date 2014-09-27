@@ -265,7 +265,7 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
 #endif
 #ifdef XSERVER_LIBPCIACCESS
     if (i < (nmatches - 1))
-        i = xf86PciMatchDriver(matches, nmatches);
+        i += xf86PciMatchDriver(&matches[i], nmatches - i);
 #endif
 
 #if defined(__linux__)
@@ -306,6 +306,7 @@ copyScreen(confScreenPtr oscreen, GDevPtr odev, int i, char *driver)
 {
     confScreenPtr nscreen;
     GDevPtr cptr = NULL;
+    char *identifier;
 
     nscreen = malloc(sizeof(confScreenRec));
     if (!nscreen)
@@ -319,13 +320,14 @@ copyScreen(confScreenPtr oscreen, GDevPtr odev, int i, char *driver)
     }
     memcpy(cptr, odev, sizeof(GDevRec));
 
-    if (asprintf(&cptr->identifier, "Autoconfigured Video Device %s", driver)
+    if (asprintf(&identifier, "Autoconfigured Video Device %s", driver)
         == -1) {
         free(cptr);
         free(nscreen);
         return FALSE;
     }
     cptr->driver = driver;
+    cptr->identifier = identifier;
 
     xf86ConfigLayout.screens[i].screen = nscreen;
 

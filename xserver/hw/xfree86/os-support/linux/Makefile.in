@@ -53,6 +53,7 @@ host_triplet = @host@
 @LINUX_ALPHA_TRUE@am__append_1 = liblinuxev56.la
 @LNXACPI_TRUE@am__append_2 = -DHAVE_ACPI
 @LNXAPM_TRUE@am__append_3 = -DHAVE_APM
+@SYSTEMD_LOGIND_TRUE@am__append_4 = $(DBUS_CFLAGS)
 subdir = hw/xfree86/os-support/linux
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -82,14 +83,16 @@ am__liblinux_la_SOURCES_DIST = lnx_init.c lnx_video.c lnx_agp.c \
 	$(srcdir)/../shared/bios_mmap.c $(srcdir)/../shared/VTsw_usl.c \
 	$(srcdir)/../shared/posix_tty.c $(srcdir)/../shared/vidmem.c \
 	$(srcdir)/../shared/sigio.c lnx_acpi.c lnx_apm.c \
-	$(srcdir)/lnx_axp.c $(srcdir)/../shared/xf86Axp.c
+	systemd-logind.c $(srcdir)/lnx_axp.c \
+	$(srcdir)/../shared/xf86Axp.c
 @LNXACPI_TRUE@am__objects_1 = lnx_acpi.lo lnx_apm.lo
 @LNXAPM_TRUE@am__objects_2 = lnx_apm.lo
-@LINUX_ALPHA_TRUE@am__objects_3 = lnx_axp.lo xf86Axp.lo
+@SYSTEMD_LOGIND_TRUE@am__objects_3 = systemd-logind.lo
+@LINUX_ALPHA_TRUE@am__objects_4 = lnx_axp.lo xf86Axp.lo
 am_liblinux_la_OBJECTS = lnx_init.lo lnx_video.lo lnx_agp.lo \
 	lnx_kmod.lo lnx_bell.lo lnx_platform.lo bios_mmap.lo \
 	VTsw_usl.lo posix_tty.lo vidmem.lo sigio.lo $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3)
+	$(am__objects_2) $(am__objects_3) $(am__objects_4)
 liblinux_la_OBJECTS = $(am_liblinux_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -188,6 +191,8 @@ DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
+DEFAULT_XDG_DATA_HOME = @DEFAULT_XDG_DATA_HOME@
+DEFAULT_XDG_DATA_HOME_LOGDIR = @DEFAULT_XDG_DATA_HOME_LOGDIR@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DGA_CFLAGS = @DGA_CFLAGS@
@@ -232,6 +237,10 @@ FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
+GBM_CFLAGS = @GBM_CFLAGS@
+GBM_LIBS = @GBM_LIBS@
+GLAMOR_CFLAGS = @GLAMOR_CFLAGS@
+GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
@@ -334,7 +343,10 @@ SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+SUID_WRAPPER_DIR = @SUID_WRAPPER_DIR@
 SYSCONFDIR = @SYSCONFDIR@
+SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
+SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
@@ -343,6 +355,7 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -378,7 +391,8 @@ XNESTMODULES_CFLAGS = @XNESTMODULES_CFLAGS@
 XNESTMODULES_LIBS = @XNESTMODULES_LIBS@
 XNEST_LIBS = @XNEST_LIBS@
 XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
-XORG_CFLAGS = @XORG_CFLAGS@ $(am__append_2) $(am__append_3)
+XORG_CFLAGS = @XORG_CFLAGS@ $(am__append_2) $(am__append_3) \
+	$(am__append_4)
 XORG_DRIVER_LIBS = @XORG_DRIVER_LIBS@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
@@ -409,6 +423,10 @@ XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
+XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
+XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
+XWAYLAND_LIBS = @XWAYLAND_LIBS@
+XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -490,6 +508,7 @@ noinst_LTLIBRARIES = liblinux.la $(am__append_1)
 @LINUX_ALPHA_TRUE@liblinuxev56_la_SOURCES = lnx_ev56.c
 @LNXACPI_TRUE@ACPI_SRCS = lnx_acpi.c lnx_apm.c
 @LNXAPM_TRUE@APM_SRCS = lnx_apm.c
+@SYSTEMD_LOGIND_TRUE@LOGIND_SRCS = systemd-logind.c
 liblinux_la_SOURCES = lnx_init.c lnx_video.c \
                      lnx_agp.c lnx_kmod.c lnx_bell.c lnx_platform.c \
                      $(srcdir)/../shared/bios_mmap.c \
@@ -499,6 +518,7 @@ liblinux_la_SOURCES = lnx_init.c lnx_video.c \
 		     $(srcdir)/../shared/sigio.c \
                      $(ACPI_SRCS) \
                      $(APM_SRCS) \
+                     $(LOGIND_SRCS) \
                      $(PLATFORM_PCI_SUPPORT)
 
 AM_CFLAGS = -DUSESTDRES -DHAVE_SYSV_IPC $(DIX_CFLAGS) $(XORG_CFLAGS) $(PLATFORM_DEFINES)
@@ -577,6 +597,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/posix_tty.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigio.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/systemd-logind.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vidmem.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Axp.Plo@am__quote@
 

@@ -36,14 +36,8 @@
 /* Support Composite Extension */
 #undef COMPOSITE
 
-/* Use the D-Bus input configuration API */
-#undef CONFIG_DBUS_API
-
 /* Use the HAL hotplug API */
 #undef CONFIG_HAL
-
-/* Use D-Bus for input hotplug */
-#undef CONFIG_NEED_DBUS
 
 /* Use libudev for input hotplug */
 #undef CONFIG_UDEV
@@ -87,11 +81,17 @@
 /* Default log location */
 #undef DEFAULT_LOGDIR
 
-/* Default log location */
+/* Default logfile prefix */
 #undef DEFAULT_LOGPREFIX
 
 /* Default module search path */
 #undef DEFAULT_MODULE_PATH
+
+/* Default XDG_DATA dir under HOME */
+#undef DEFAULT_XDG_DATA_HOME
+
+/* Default log dir under XDG_DATA_HOME */
+#undef DEFAULT_XDG_DATA_HOME_LOGDIR
 
 /* Support DGA extension */
 #undef DGA
@@ -110,6 +110,12 @@
 
 /* Default DRI driver path */
 #undef DRI_DRIVER_PATH
+
+/* Build glamor */
+#undef GLAMOR
+
+/* Build glamor with GBM-based EGL support */
+#undef GLAMOR_HAS_GBM
 
 /* Build GLX extension */
 #undef GLXEXT
@@ -322,6 +328,9 @@
 /* Define to 1 if you have the <stropts.h> header file. */
 #undef HAVE_STROPTS_H
 
+/* Define to 1 if libsystemd-daemon is available */
+#undef HAVE_SYSTEMD_DAEMON
+
 /* Define to 1 if SYSV IPC is available */
 #undef HAVE_SYSV_IPC
 
@@ -343,6 +352,9 @@
 
 /* Define to 1 if you have the <sys/memrange.h> header file. */
 #undef HAVE_SYS_MEMRANGE_H
+
+/* Define to 1 if you have the <sys/mkdev.h> header file. */
+#undef HAVE_SYS_MKDEV_H
 
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
    */
@@ -418,6 +430,9 @@
 
 /* Have monotonic clock from clock_gettime() */
 #undef MONOTONIC_CLOCK
+
+/* Enable D-Bus core */
+#undef NEED_DBUS
 
 /* Need XFree86 helper functions */
 #undef NEED_XF86_PROTOTYPES
@@ -521,14 +536,20 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Where to install Xorg.bin and Xorg.wrap */
+#undef SUID_WRAPPER_DIR
+
 /* Define to 1 on systems derived from System V Release 4 */
 #undef SVR4
 
-/* Location of system.XWinrc */
+/* sysconfdir */
 #undef SYSCONFDIR
 
 /* System has syscons console */
 #undef SYSCONS_SUPPORT
+
+/* Enable systemd-logind integration */
+#undef SYSTEMD_LOGIND
 
 /* Support TCP socket connections */
 #undef TCPCONN

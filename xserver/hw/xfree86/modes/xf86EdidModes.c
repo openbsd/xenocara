@@ -162,6 +162,11 @@ quirk_detailed_use_maximum_size(int scrnIndex, xf86MonPtr DDC)
         DDC->vendor.prod_id == 0x7f01)
         return TRUE;
 
+    /* Sony Vaio Pro 13 */
+    if (memcmp(DDC->vendor.name, "MEI", 4) == 0 &&
+        DDC->vendor.prod_id == 0x96a2)
+        return TRUE;
+
     return FALSE;
 }
 
@@ -973,11 +978,11 @@ handle_cea_svd(struct cea_video_block *video, void *data)
 }
 
 static DisplayModePtr
-DDCModesFromCEAExtension(int scrnIndex, xf86MonPtr MonPtr)
+DDCModesFromCEAExtension(int scrnIndex, xf86MonPtr mon_ptr)
 {
     DisplayModePtr Modes = NULL;
 
-    xf86ForEachVideoBlock(MonPtr, handle_cea_svd, &Modes);
+    xf86ForEachVideoBlock(mon_ptr, handle_cea_svd, &Modes);
 
     return Modes;
 }

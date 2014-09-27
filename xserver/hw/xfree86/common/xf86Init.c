@@ -53,6 +53,8 @@
 #include "scrnintstr.h"
 #include "site.h"
 #include "mi.h"
+#include "dbus-core.h"
+#include "systemd-logind.h"
 
 #include "compiler.h"
 
@@ -313,7 +315,7 @@ xf86CreateRootWindow(WindowPtr pWin)
     int err = Success;
     ScreenPtr pScreen = pWin->drawable.pScreen;
     RootWinPropPtr pProp;
-    CreateWindowProcPtr CreateWindow = (CreateWindowProcPtr)
+    CreateWindowProcPtr create_window = (CreateWindowProcPtr)
         dixLookupPrivate(&pScreen->devPrivates, xf86CreateRootWindowKey);
 
     DebugF("xf86CreateRootWindow(%p)\n", pWin);
@@ -327,7 +329,7 @@ xf86CreateRootWindow(WindowPtr pWin)
     }
 
     /* Unhook this function ... */
-    pScreen->CreateWindow = CreateWindow;
+    pScreen->CreateWindow = create_window;
     dixSetPrivate(&pScreen->devPrivates, xf86CreateRootWindowKey, NULL);
 
     /* ... and call the previous CreateWindow fuction, if any */
@@ -389,6 +391,11 @@ InstallSignalHandlers(void)
     }
 }
 
+/* The memory storing the initial value of the XFree86_has_VT root window
+ * property.  This has to remain available until server start-up, so we just
+ * use a global. */
+static CARD32 HasVTValue = 1;
+
 /*
  * InitOutput --
  *	Initialize screenInfo for all actually accessible framebuffers.
@@ -399,8 +406,8 @@ void
 InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 {
     int i, j, k, scr_index;
-    char **modulelist;
-    pointer *optionlist;
+    const char **modulelist;
+    void **optionlist;
     Pix24Flags screenpix24, pix24;
     MessageType pix24From = X_DEFAULT;
     Bool pix24Fail = FALSE;
@@ -459,6 +466,9 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 
         if (xf86DoShowOptions)
             DoShowOptions();
+
+        dbus_core_init();
+        systemd_logind_init();
 
         /* Do a general bus probe.  This will be a PCI probe for x86 platforms */
         xf86BusProbe();
@@ -548,7 +558,8 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             if (NEED_IO_ENABLED(flags))
                 want_hw_access = TRUE;
 
-            if (!(flags & HW_SKIP_CONSOLE))
+            /* Non-seat0 X servers should not open console */
+            if (!(flags & HW_SKIP_CONSOLE) && !ServerIsNotSeat0())
                 xorgHWOpenConsole = TRUE;
         }
 
@@ -627,7 +638,9 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 
         for (i = 0; i < xf86NumScreens; i++) {
             if (xf86Screens[i]->name == NULL) {
-                XNFasprintf(&xf86Screens[i]->name, "screen%d", i);
+                char *tmp;
+                XNFasprintf(&tmp, "screen%d", i);
+                xf86Screens[i]->name = tmp;
                 xf86MsgVerb(X_WARNING, 0,
                             "Screen driver %d has no name set, using `%s'.\n",
                             i, xf86Screens[i]->name);
@@ -727,7 +740,9 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
         if (xf86Info.vtno >= 0) {
 #define VT_ATOM_NAME         "XFree86_VT"
             Atom VTAtom = -1;
+            Atom HasVTAtom = -1;
             CARD32 *VT = NULL;
+            CARD32 *HasVT = &HasVTValue;
             int ret;
 
             /* This memory needs to stay available until the screen has been
@@ -740,6 +755,8 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             *VT = xf86Info.vtno;
 
             VTAtom = MakeAtom(VT_ATOM_NAME, sizeof(VT_ATOM_NAME) - 1, TRUE);
+            HasVTAtom = MakeAtom(HAS_VT_ATOM_NAME,
+                                 sizeof(HAS_VT_ATOM_NAME) - 1, TRUE);
 
             for (i = 0, ret = Success; i < xf86NumScreens && ret == Success;
                  i++) {
@@ -747,9 +764,14 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
                     xf86RegisterRootWindowProperty(xf86Screens[i]->scrnIndex,
                                                    VTAtom, XA_INTEGER, 32, 1,
                                                    VT);
+                if (ret == Success)
+                    ret = xf86RegisterRootWindowProperty(xf86Screens[i]
+                                                             ->scrnIndex,
+                                                         HasVTAtom, XA_INTEGER,
+                                                         32, 1, HasVT);
                 if (ret != Success)
                     xf86DrvMsg(xf86Screens[i]->scrnIndex, X_WARNING,
-                               "Failed to register VT property\n");
+                               "Failed to register VT properties\n");
             }
         }
 
@@ -1070,6 +1092,9 @@ ddxGiveUp(enum ExitCode error)
 
     if (xorgHWOpenConsole)
         xf86CloseConsole();
+
+    systemd_logind_fini();
+    dbus_core_fini();
 
     xf86CloseLog(error);
 
@@ -1572,10 +1597,10 @@ ddxUseMsg(void)
  * xf86LoadModules iterates over a list that is being passed in.
  */
 Bool
-xf86LoadModules(char **list, pointer *optlist)
+xf86LoadModules(const char **list, void **optlist)
 {
     int errmaj, errmin;
-    pointer opt;
+    void *opt;
     int i;
     char *name;
     Bool failed = FALSE;

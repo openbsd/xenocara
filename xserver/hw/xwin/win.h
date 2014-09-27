@@ -609,7 +609,7 @@ typedef struct {
 #endif
 
 typedef struct {
-    pointer value;
+    void *value;
     XID id;
 } WindowIDPairRec, *WindowIDPairPtr;
 
@@ -751,7 +751,7 @@ Bool
  winAllocatePrivates(ScreenPtr pScreen);
 
 Bool
- winInitCmapPrivates(ColormapPtr pCmap, int index);
+ winInitCmapPrivates(ColormapPtr pCmap, int i);
 
 Bool
  winAllocateCmapPrivates(ColormapPtr pCmap);
@@ -773,7 +773,7 @@ void winSetAuthorization(void);
 void
 
 winBlockHandler(ScreenPtr pScreen,
-                pointer pTimeout, pointer pReadMask);
+                void *pTimeout, void *pReadMask);
 
 #ifdef XWIN_NATIVEGDI
 /*
@@ -1035,7 +1035,7 @@ winModifyPixmapHeaderNativeGDI(PixmapPtr pPixmap,
                                int iWidth, int iHeight,
                                int iDepth,
                                int iBitsPerPixel,
-                               int devKind, pointer pPixData);
+                               int devKind, void *pPixData);
 #endif
 
 #ifdef XWIN_NATIVEGDI
@@ -1056,12 +1056,12 @@ Bool
  winScreenInit(ScreenPtr pScreen, int argc, char **argv);
 
 Bool
- winFinishScreenInitFB(int index, ScreenPtr pScreen, int argc, char **argv);
+ winFinishScreenInitFB(int i, ScreenPtr pScreen, int argc, char **argv);
 
 #if defined(XWIN_NATIVEGDI)
 Bool
 
-winFinishScreenInitNativeGDI(int index,
+winFinishScreenInitNativeGDI(int i,
                              ScreenPtr pScreen, int argc, char **argv);
 #endif
 
@@ -1106,7 +1106,7 @@ Bool
 void
 
 winWakeupHandler(ScreenPtr pScreen,
-                 unsigned long ulResult, pointer pReadmask);
+                 unsigned long ulResult, void *pReadmask);
 
 /*
  * winwindow.c
@@ -1334,9 +1334,6 @@ void
 
 void
  winMWExtWMMoveResizeXWindow(WindowPtr pWin, int x, int y, int w, int h);
-
-void
- winMWExtWMUpdateIcon(Window id);
 
 void
 

@@ -60,7 +60,7 @@ xf86DPMSInit(ScreenPtr pScreen, DPMSSetProcPtr set, int flags)
 #ifdef DPMSExtension
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DPMSPtr pDPMS;
-    pointer DPMSOpt;
+    void *DPMSOpt;
     MessageType enabled_from;
 
     DPMSKey = &DPMSKeyRec;
@@ -166,7 +166,7 @@ DPMSSet(ClientPtr client, int level)
                 return rc;
         }
     } else if (!xf86IsUnblank(screenIsSaved)) {
-        rc = dixSaveScreens(client, SCREEN_SAVER_FORCER, ScreenSaverReset);
+        rc = dixSaveScreens(client, SCREEN_SAVER_OFF, ScreenSaverReset);
         if (rc != Success)
             return rc;
     }

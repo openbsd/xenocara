@@ -134,8 +134,13 @@ SOFTWARE.
 
 #if defined(__powerpc__) || defined(__ppc__) || defined(__ppc64__)
 
-#define IMAGE_BYTE_ORDER        MSBFirst
-#define BITMAP_BIT_ORDER        MSBFirst
+#if defined(__LITTLE_ENDIAN__)
+#define IMAGE_BYTE_ORDER      LSBFirst
+#define BITMAP_BIT_ORDER      LSBFirst
+#else
+#define IMAGE_BYTE_ORDER      MSBFirst
+#define BITMAP_BIT_ORDER      MSBFirst
+#endif
 #define GLYPHPADBYTES           4
 
 #endif                          /* PowerPC */
@@ -342,6 +347,33 @@ SOFTWARE.
 #define GLYPHPADBYTES           4
 
 #endif                          /* __aarch64__ */
+
+#if defined(__arc__)
+
+#if defined(__BIG_ENDIAN__)
+#define IMAGE_BYTE_ORDER	MSBFirst
+#define BITMAP_BIT_ORDER	MSBFirst
+#else
+#define IMAGE_BYTE_ORDER	LSBFirst
+#define BITMAP_BIT_ORDER	LSBFirst
+#endif
+#define GLYPHPADBYTES		4
+
+#endif                          /* ARC */
+
+#ifdef __xtensa__
+
+#ifdef __XTENSA_EL__
+#define IMAGE_BYTE_ORDER        LSBFirst
+#define BITMAP_BIT_ORDER        LSBFirst
+#endif
+#ifdef __XTENSA_EB__
+#define IMAGE_BYTE_ORDER        MSBFirst
+#define BITMAP_BIT_ORDER        MSBFirst
+#endif
+#define GLYPHPADBYTES           4
+
+#endif                          /* __xtensa__ */
 
 /* size of buffer to use with GetImage, measured in bytes. There's obviously
  * a trade-off between the amount of heap used and the number of times the

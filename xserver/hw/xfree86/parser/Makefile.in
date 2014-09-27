@@ -105,13 +105,13 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libxf86config_la_LIBADD =
 am__objects_1 = libxf86config_la-Device.lo libxf86config_la-Files.lo \
 	libxf86config_la-Flags.lo libxf86config_la-Input.lo \
-	libxf86config_la-InputClass.lo libxf86config_la-Layout.lo \
-	libxf86config_la-Module.lo libxf86config_la-Video.lo \
-	libxf86config_la-Monitor.lo libxf86config_la-Pointer.lo \
-	libxf86config_la-Screen.lo libxf86config_la-Vendor.lo \
-	libxf86config_la-read.lo libxf86config_la-scan.lo \
-	libxf86config_la-write.lo libxf86config_la-DRI.lo \
-	libxf86config_la-Extensions.lo
+	libxf86config_la-InputClass.lo libxf86config_la-OutputClass.lo \
+	libxf86config_la-Layout.lo libxf86config_la-Module.lo \
+	libxf86config_la-Video.lo libxf86config_la-Monitor.lo \
+	libxf86config_la-Pointer.lo libxf86config_la-Screen.lo \
+	libxf86config_la-Vendor.lo libxf86config_la-read.lo \
+	libxf86config_la-scan.lo libxf86config_la-write.lo \
+	libxf86config_la-DRI.lo libxf86config_la-Extensions.lo
 am_libxf86config_la_OBJECTS = libxf86config_la-xprintf.lo \
 	$(am__objects_1)
 libxf86config_la_OBJECTS = $(am_libxf86config_la_OBJECTS)
@@ -127,8 +127,9 @@ libxf86config_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 @INSTALL_LIBXF86CONFIG_TRUE@	$(libdir)
 libxf86config_internal_la_LIBADD =
 am__objects_2 = Device.lo Files.lo Flags.lo Input.lo InputClass.lo \
-	Layout.lo Module.lo Video.lo Monitor.lo Pointer.lo Screen.lo \
-	Vendor.lo read.lo scan.lo write.lo DRI.lo Extensions.lo
+	OutputClass.lo Layout.lo Module.lo Video.lo Monitor.lo \
+	Pointer.lo Screen.lo Vendor.lo read.lo scan.lo write.lo DRI.lo \
+	Extensions.lo
 am_libxf86config_internal_la_OBJECTS = $(am__objects_2)
 libxf86config_internal_la_OBJECTS =  \
 	$(am_libxf86config_internal_la_OBJECTS)
@@ -219,6 +220,8 @@ DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
+DEFAULT_XDG_DATA_HOME = @DEFAULT_XDG_DATA_HOME@
+DEFAULT_XDG_DATA_HOME_LOGDIR = @DEFAULT_XDG_DATA_HOME_LOGDIR@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DGA_CFLAGS = @DGA_CFLAGS@
@@ -263,6 +266,10 @@ FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
+GBM_CFLAGS = @GBM_CFLAGS@
+GBM_LIBS = @GBM_LIBS@
+GLAMOR_CFLAGS = @GLAMOR_CFLAGS@
+GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
@@ -365,7 +372,10 @@ SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+SUID_WRAPPER_DIR = @SUID_WRAPPER_DIR@
 SYSCONFDIR = @SYSCONFDIR@
+SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
+SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
@@ -374,6 +384,7 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -440,6 +451,10 @@ XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
+XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
+XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
+XWAYLAND_LIBS = @XWAYLAND_LIBS@
+XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -525,6 +540,7 @@ INTERNAL_SOURCES = \
 	Flags.c \
 	Input.c \
 	InputClass.c \
+	OutputClass.c \
 	Layout.c \
 	Module.c \
 	Video.c \
@@ -663,6 +679,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Layout.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Module.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Monitor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OutputClass.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Pointer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Screen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Vendor.Plo@am__quote@
@@ -677,6 +694,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Layout.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Module.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Monitor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-OutputClass.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Pointer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Screen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Vendor.Plo@am__quote@
@@ -751,6 +769,13 @@ libxf86config_la-InputClass.lo: InputClass.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='InputClass.c' object='libxf86config_la-InputClass.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-InputClass.lo `test -f 'InputClass.c' || echo '$(srcdir)/'`InputClass.c
+
+libxf86config_la-OutputClass.lo: OutputClass.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-OutputClass.lo -MD -MP -MF $(DEPDIR)/libxf86config_la-OutputClass.Tpo -c -o libxf86config_la-OutputClass.lo `test -f 'OutputClass.c' || echo '$(srcdir)/'`OutputClass.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libxf86config_la-OutputClass.Tpo $(DEPDIR)/libxf86config_la-OutputClass.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='OutputClass.c' object='libxf86config_la-OutputClass.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-OutputClass.lo `test -f 'OutputClass.c' || echo '$(srcdir)/'`OutputClass.c
 
 libxf86config_la-Layout.lo: Layout.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Layout.lo -MD -MP -MF $(DEPDIR)/libxf86config_la-Layout.Tpo -c -o libxf86config_la-Layout.lo `test -f 'Layout.c' || echo '$(srcdir)/'`Layout.c

@@ -136,7 +136,7 @@ request_XIPassiveGrabDevice(ClientPtr client, xXIPassiveGrabDeviceReq * req,
                             int error, int errval)
 {
     int rc;
-    int modifiers;
+    int local_modifiers;
     int mask_len;
 
     rc = ProcXIPassiveGrabDevice(&client_request);
@@ -152,13 +152,13 @@ request_XIPassiveGrabDevice(ClientPtr client, xXIPassiveGrabDeviceReq * req,
     swapl(&req->cursor);
     swapl(&req->detail);
     swaps(&req->deviceid);
-    modifiers = req->num_modifiers;
+    local_modifiers = req->num_modifiers;
     swaps(&req->num_modifiers);
     mask_len = req->mask_len;
     swaps(&req->mask_len);
 
-    while (modifiers--) {
-        CARD32 *mod = ((CARD32 *) (req + 1)) + mask_len + modifiers;
+    while (local_modifiers--) {
+        CARD32 *mod = (CARD32 *) (req + 1) + mask_len + local_modifiers;
 
         swapl(mod);
     }

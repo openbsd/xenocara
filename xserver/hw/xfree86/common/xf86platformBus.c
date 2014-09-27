@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include "os.h"
 #include "hotplug.h"
+#include "systemd-logind.h"
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -46,16 +47,17 @@
 #include "xf86Bus.h"
 #include "Pci.h"
 #include "xf86platformBus.h"
+#include "xf86Config.h"
 
 #include "randrstr.h"
 int platformSlotClaimed;
 
 int xf86_num_platform_devices;
 
-static struct xf86_platform_device *xf86_platform_devices;
+struct xf86_platform_device *xf86_platform_devices;
 
 int
-xf86_add_platform_device(struct OdevAttributes *attribs)
+xf86_add_platform_device(struct OdevAttributes *attribs, Bool unowned)
 {
     xf86_platform_devices = xnfrealloc(xf86_platform_devices,
                                    (sizeof(struct xf86_platform_device)
@@ -63,6 +65,8 @@ xf86_add_platform_device(struct OdevAttributes *attribs)
 
     xf86_platform_devices[xf86_num_platform_devices].attribs = attribs;
     xf86_platform_devices[xf86_num_platform_devices].pdev = NULL;
+    xf86_platform_devices[xf86_num_platform_devices].flags =
+        unowned ? XF86_PDEV_UNOWNED : 0;
 
     xf86_num_platform_devices++;
     return 0;
@@ -89,35 +93,55 @@ xf86_add_platform_device_attrib(int index, int attrib_id, char *attrib_name)
     return config_odev_add_attribute(device->attribs, attrib_id, attrib_name);
 }
 
+Bool
+xf86_add_platform_device_int_attrib(int index, int attrib_id, int attrib_value)
+{
+    return config_odev_add_int_attribute(xf86_platform_devices[index].attribs, attrib_id, attrib_value);
+}
+
 char *
 xf86_get_platform_attrib(int index, int attrib_id)
 {
-    struct xf86_platform_device *device = &xf86_platform_devices[index];
-    struct OdevAttribute *oa;
-
-    xorg_list_for_each_entry(oa, &device->attribs->list, member) {
-        if (oa->attrib_id == attrib_id)
-            return oa->attrib_name;
-    }
-    return NULL;
+    return config_odev_get_attribute(xf86_platform_devices[index].attribs, attrib_id);
 }
 
 char *
 xf86_get_platform_device_attrib(struct xf86_platform_device *device, int attrib_id)
 {
-    struct OdevAttribute *oa;
+    return config_odev_get_attribute(device->attribs, attrib_id);
+}
 
-    xorg_list_for_each_entry(oa, &device->attribs->list, member) {
-        if (oa->attrib_id == attrib_id)
-            return oa->attrib_name;
-    }
-    return NULL;
+int
+xf86_get_platform_int_attrib(int index, int attrib_id, int def)
+{
+    return config_odev_get_int_attribute(xf86_platform_devices[index].attribs, attrib_id, def);
+}
+
+int
+xf86_get_platform_device_int_attrib(struct xf86_platform_device *device, int attrib_id, int def)
+{
+    return config_odev_get_int_attribute(device->attribs, attrib_id, def);
 }
 
 Bool
 xf86_get_platform_device_unowned(int index)
 {
-    return xf86_platform_devices[index].attribs->unowned;
+    return (xf86_platform_devices[index].flags & XF86_PDEV_UNOWNED) ?
+        TRUE : FALSE;
+}
+
+struct xf86_platform_device *
+xf86_find_platform_device_by_devnum(int major, int minor)
+{
+    int i, attr_major, attr_minor;
+
+    for (i = 0; i < xf86_num_platform_devices; i++) {
+        attr_major = xf86_get_platform_int_attrib(i, ODEV_ATTRIB_MAJOR, 0);
+        attr_minor = xf86_get_platform_int_attrib(i, ODEV_ATTRIB_MINOR, 0);
+        if (attr_major == major && attr_minor == minor)
+            return &xf86_platform_devices[i];
+    }
+    return NULL;
 }
 
 /*
@@ -176,6 +200,81 @@ xf86_check_platform_slot(const struct xf86_platform_device *pd)
     return TRUE;
 }
 
+static Bool
+MatchToken(const char *value, struct xorg_list *patterns,
+           int (*compare)(const char *, const char *))
+{
+    const xf86MatchGroup *group;
+
+    /* If there are no patterns, accept the match */
+    if (xorg_list_is_empty(patterns))
+        return TRUE;
+
+    /* If there are patterns but no attribute, reject the match */
+    if (!value)
+        return FALSE;
+
+    /*
+     * Otherwise, iterate the list of patterns ensuring each entry has a
+     * match. Each list entry is a separate Match line of the same type.
+     */
+    xorg_list_for_each_entry(group, patterns, entry) {
+        Bool match = FALSE;
+        char *const *cur;
+
+        for (cur = group->values; *cur; cur++) {
+            if ((*compare)(value, *cur) == 0) {
+                match = TRUE;
+                break;
+            }
+        }
+
+        if (!match)
+            return FALSE;
+    }
+
+    /* All the entries in the list matched the attribute */
+    return TRUE;
+}
+
+static Bool
+OutputClassMatches(const XF86ConfOutputClassPtr oclass, int index)
+{
+    char *driver = xf86_get_platform_attrib(index, ODEV_ATTRIB_DRIVER);
+
+    if (!MatchToken(driver, &oclass->match_driver, strcmp))
+        return FALSE;
+
+    return TRUE;
+}
+
+static int
+xf86OutputClassDriverList(int index, char *matches[], int nmatches)
+{
+    XF86ConfOutputClassPtr cl;
+    int i = 0;
+
+    if (nmatches == 0)
+        return 0;
+
+    for (cl = xf86configptr->conf_outputclass_lst; cl; cl = cl->list.next) {
+        if (OutputClassMatches(cl, index)) {
+            char *path = xf86_get_platform_attrib(index, ODEV_ATTRIB_PATH);
+
+            xf86Msg(X_INFO, "Applying OutputClass \"%s\" to %s\n",
+                    cl->identifier, path);
+            xf86Msg(X_NONE, "\tloading driver: %s\n", cl->driver);
+
+            matches[i++] = xstrdup(cl->driver);
+        }
+
+        if (i >= nmatches)
+            break;
+    }
+
+    return i;
+}
+
 /**
  *  @return The numbers of found devices that match with the current system
  *  drivers.
@@ -195,15 +294,14 @@ xf86PlatformMatchDriver(char *matches[], int nmatches)
             else if (!xf86IsPrimaryPlatform(&xf86_platform_devices[i]) && (pass == 0))
                 continue;
 
+            j += xf86OutputClassDriverList(i, &matches[j], nmatches - j);
+
             info = xf86_platform_devices[i].pdev;
 #ifdef __linux__
             if (info)
-                xf86MatchDriverFromFiles(matches, info->vendor_id, info->device_id);
+                j += xf86MatchDriverFromFiles(info->vendor_id, info->device_id,
+                                              &matches[j], nmatches - j);
 #endif
-
-            for (j = 0; (j < nmatches) && (matches[j]); j++) {
-                /* find end of matches list */
-            }
 
             if ((info != NULL) && (j < nmatches)) {
                 j += xf86VideoPtrToDriverList(info, &(matches[j]), nmatches - j);
@@ -288,15 +386,15 @@ static Bool doPlatformProbe(struct xf86_platform_device *dev, DriverPtr drvp,
                             GDevPtr gdev, int flags, intptr_t match_data)
 {
     Bool foundScreen = FALSE;
-    int entity;
+    int entity, fd, major, minor;
 
-    if (gdev->screen == 0 && !xf86_check_platform_slot(dev))
+    if (gdev && gdev->screen == 0 && !xf86_check_platform_slot(dev))
         return FALSE;
 
     entity = xf86ClaimPlatformSlot(dev, drvp, 0,
-                                   gdev, gdev->active);
+                                   gdev, gdev ? gdev->active : 0);
 
-    if ((entity == -1) && (gdev->screen > 0)) {
+    if ((entity == -1) && gdev && (gdev->screen > 0)) {
         unsigned nent;
 
         for (nent = 0; nent < xf86NumEntities; nent++) {
@@ -312,6 +410,16 @@ static Bool doPlatformProbe(struct xf86_platform_device *dev, DriverPtr drvp,
         }
     }
     if (entity != -1) {
+        if ((dev->flags & XF86_PDEV_SERVER_FD) && (!drvp->driverFunc ||
+                !drvp->driverFunc(NULL, SUPPORTS_SERVER_FDS, NULL))) {
+            fd = xf86_get_platform_device_int_attrib(dev, ODEV_ATTRIB_FD, -1);
+            major = xf86_get_platform_device_int_attrib(dev, ODEV_ATTRIB_MAJOR, 0);
+            minor = xf86_get_platform_device_int_attrib(dev, ODEV_ATTRIB_MINOR, 0);
+            systemd_logind_release_fd(major, minor, fd);
+            config_odev_add_int_attribute(dev->attribs, ODEV_ATTRIB_FD, -1);
+            dev->flags &= ~XF86_PDEV_SERVER_FD;
+        }
+
         if (drvp->platformProbe(drvp, entity, flags, dev, match_data))
             foundScreen = TRUE;
         else
@@ -368,10 +476,9 @@ xf86platformProbeDev(DriverPtr drvp)
                 /* for non-seat0 servers assume first device is the master */
                 if (ServerIsNotSeat0())
                     break;
-                if (xf86_platform_devices[j].pdev) {
-                    if (xf86IsPrimaryPlatform(&xf86_platform_devices[j]))
-                        break;
-                }
+
+                if (xf86IsPrimaryPlatform(&xf86_platform_devices[j]))
+                    break;
             }
         }
 
@@ -398,9 +505,8 @@ xf86platformAddDevice(int index)
 {
     int i, old_screens, scr_index;
     DriverPtr drvp = NULL;
-    int entity;
     screenLayoutPtr layout;
-    static char *hotplug_driver_name = "modesetting";
+    static const char *hotplug_driver_name = "modesetting";
 
     /* force load the driver for now */
     xf86LoadOneModule(hotplug_driver_name, NULL);
@@ -418,11 +524,8 @@ xf86platformAddDevice(int index)
         return -1;
 
     old_screens = xf86NumGPUScreens;
-    entity = xf86ClaimPlatformSlot(&xf86_platform_devices[index],
-                                   drvp, 0, 0, 0);
-    if (!drvp->platformProbe(drvp, entity, PLATFORM_PROBE_GPU_SCREEN, &xf86_platform_devices[index], 0)) {
-        xf86UnclaimPlatformSlot(&xf86_platform_devices[index], NULL);
-    }
+    doPlatformProbe(&xf86_platform_devices[index], drvp, NULL,
+                    PLATFORM_PROBE_GPU_SCREEN, 0);
     if (old_screens == xf86NumGPUScreens)
         return -1;
     i = old_screens;
@@ -524,11 +627,28 @@ void xf86platformVTProbe(void)
     int i;
 
     for (i = 0; i < xf86_num_platform_devices; i++) {
-        if (xf86_platform_devices[i].attribs->unowned == FALSE)
+        if (!(xf86_platform_devices[i].flags & XF86_PDEV_UNOWNED))
             continue;
 
-        xf86_platform_devices[i].attribs->unowned = FALSE;
+        xf86_platform_devices[i].flags &= ~XF86_PDEV_UNOWNED;
         xf86PlatformReprobeDevice(i, xf86_platform_devices[i].attribs);
+    }
+}
+
+void xf86platformPrimary(void)
+{
+    /* use the first platform device as a fallback */
+    if (primaryBus.type == BUS_NONE) {
+        xf86Msg(X_INFO, "no primary bus or device found\n");
+
+        if (xf86_num_platform_devices > 0) {
+            char *syspath = xf86_get_platform_attrib(0, ODEV_ATTRIB_SYSPATH);
+
+            primaryBus.id.plat = &xf86_platform_devices[0];
+            primaryBus.type = BUS_PLATFORM;
+
+            xf86Msg(X_NONE, "\tfalling back to %s\n", syspath);
+        }
     }
 }
 #endif

@@ -195,6 +195,9 @@ LogInit(const char *fname, const char *backup)
     char *logFileName = NULL;
 
     if (fname && *fname) {
+#if __GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ > 2
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
         if (asprintf(&logFileName, fname, display) == -1)
             FatalError("Cannot allocate space for the log file name\n");
 
@@ -205,6 +208,9 @@ LogInit(const char *fname, const char *backup)
                 char *suffix;
                 char *oldLog;
 
+#if __GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ > 2
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
                 if ((asprintf(&suffix, backup, display) == -1) ||
                     (asprintf(&oldLog, "%s%s", logFileName, suffix) == -1))
                     FatalError("Cannot allocate space for the log file name\n");
@@ -336,7 +342,7 @@ out:
  * which directives you use.
  */
 static int
-pnprintf(char *string, size_t size, const char *f, va_list args)
+vpnprintf(char *string, int size_in, const char *f, va_list args)
 {
     int f_idx = 0;
     int s_idx = 0;
@@ -347,6 +353,7 @@ pnprintf(char *string, size_t size, const char *f, va_list args)
     int i;
     uint64_t ui;
     int64_t si;
+    size_t size = size_in;
 
     for (; f_idx < f_len && s_idx < size - 1; f_idx++) {
         int length_modifier = 0;
@@ -478,6 +485,19 @@ pnprintf(char *string, size_t size, const char *f, va_list args)
     return s_idx;
 }
 
+static int
+pnprintf(char *string, int size, const char *f, ...)
+{
+    int rc;
+    va_list args;
+
+    va_start(args, f);
+    rc = vpnprintf(string, size, f, args);
+    va_end(args);
+
+    return rc;
+}
+
 /* This function does the actual log message writes. It must be signal safe.
  * When attempting to call non-signal-safe functions, guard them with a check
  * of the inSignalContext global variable. */
@@ -485,13 +505,14 @@ static void
 LogSWrite(int verb, const char *buf, size_t len, Bool end_line)
 {
     static Bool newline = TRUE;
+    int ret;
 
     if (verb < 0 || logVerbosity >= verb)
-        write(2, buf, len);
+        ret = write(2, buf, len);
 
     if (verb < 0 || logFileVerbosity >= verb) {
         if (inSignalContext && logFileFd >= 0) {
-            write(logFileFd, buf, len);
+            ret = write(logFileFd, buf, len);
 #ifndef WIN32
             if (logFlush && logSync)
                 fsync(logFileFd);
@@ -523,6 +544,11 @@ LogSWrite(int verb, const char *buf, size_t len, Bool end_line)
             bufferPos += len;
         }
     }
+
+    /* There's no place to log an error message if the log write
+     * fails...
+     */
+    (void) ret;
 }
 
 void
@@ -585,7 +611,6 @@ LogMessageTypeVerbString(MessageType type, int verb)
 void
 LogVMessageVerb(MessageType type, int verb, const char *format, va_list args)
 {
-    static unsigned int warned;
     const char *type_str;
     char buf[1024];
     const size_t size = sizeof(buf);
@@ -593,17 +618,8 @@ LogVMessageVerb(MessageType type, int verb, const char *format, va_list args)
     size_t len = 0;
 
     if (inSignalContext) {
-        if (warned < 3) {
-            BUG_WARN_MSG(inSignalContext,
-                         "Warning: attempting to log data in a signal unsafe "
-                         "manner while in signal context.\nPlease update to check "
-                         "inSignalContext and/or use LogMessageVerbSigSafe() or "
-                         "ErrorFSigSafe().\nThe offending log format message is:\n"
-                         "%s\n", format);
-            warned++;
-            if (warned == 3)
-                LogMessageVerbSigSafe(X_WARNING, -1, "Warned %u times about sigsafe logging. Will be quiet now.\n", warned);
-        }
+        LogVMessageVerbSigSafe(type, verb, format, args);
+        return;
     }
 
     type_str = LogMessageTypeVerbString(type, verb);
@@ -675,13 +691,13 @@ LogVMessageVerbSigSafe(MessageType type, int verb, const char *format, va_list a
         LogSWrite(verb, " ", 1, FALSE);
     }
 
-    len = pnprintf(buf, sizeof(buf), format, args);
+    len = vpnprintf(buf, sizeof(buf), format, args);
 
     /* Force '\n' at end of truncated line */
     if (sizeof(buf) - len == 1)
         buf[len - 1] = '\n';
 
-    newline = (buf[len - 1] == '\n');
+    newline = (len > 0 && buf[len - 1] == '\n');
     LogSWrite(verb, buf, len, newline);
 }
 
@@ -689,40 +705,37 @@ void
 LogVHdrMessageVerb(MessageType type, int verb, const char *msg_format,
                    va_list msg_args, const char *hdr_format, va_list hdr_args)
 {
-    static unsigned int warned;
     const char *type_str;
     char buf[1024];
     const size_t size = sizeof(buf);
     Bool newline;
     size_t len = 0;
-
-    if (inSignalContext) {
-        if (warned < 3) {
-            BUG_WARN_MSG(inSignalContext,
-                         "Warning: attempting to log data in a signal unsafe "
-                         "manner while in signal context.\nPlease update to check "
-                         "inSignalContext and/or use LogMessageVerbSigSafe().\nThe "
-                         "offending header and log message formats are:\n%s %s\n",
-                         hdr_format, msg_format);
-            warned++;
-            if (warned == 3)
-                LogMessageVerbSigSafe(X_WARNING, -1, "Warned %u times about sigsafe logging. Will be quiet now.\n", warned);
-        }
-    }
+    int (*vprintf_func)(char *, int, const char* _X_RESTRICT_KYWD f, va_list args)
+            _X_ATTRIBUTE_PRINTF(3, 0);
+    int (*printf_func)(char *, int, const char* _X_RESTRICT_KYWD f, ...)
+            _X_ATTRIBUTE_PRINTF(3, 4);
 
     type_str = LogMessageTypeVerbString(type, verb);
     if (!type_str)
         return;
 
+    if (inSignalContext) {
+        vprintf_func = vpnprintf;
+        printf_func = pnprintf;
+    } else {
+        vprintf_func = Xvscnprintf;
+        printf_func = Xscnprintf;
+    }
+
     /* if type_str is not "", prepend it and ' ', to message */
     if (type_str[0] != '\0')
-        len += Xscnprintf(&buf[len], size - len, "%s ", type_str);
+        len += printf_func(&buf[len], size - len, "%s ", type_str);
 
     if (hdr_format && size - len > 1)
-        len += Xvscnprintf(&buf[len], size - len, hdr_format, hdr_args);
+        len += vprintf_func(&buf[len], size - len, hdr_format, hdr_args);
 
     if (msg_format && size - len > 1)
-        len += Xvscnprintf(&buf[len], size - len, msg_format, msg_args);
+        len += vprintf_func(&buf[len], size - len, msg_format, msg_args);
 
     /* Force '\n' at end of truncated line */
     if (size - len == 1)
@@ -826,7 +839,7 @@ AuditF(const char *f, ...)
 }
 
 static CARD32
-AuditFlush(OsTimerPtr timer, CARD32 now, pointer arg)
+AuditFlush(OsTimerPtr timer, CARD32 now, void *arg)
 {
     char *prefix;
 

@@ -13,6 +13,7 @@ typedef struct _xf86CursorInfoRec {
     void (*SetCursorColors) (ScrnInfoPtr pScrn, int bg, int fg);
     void (*SetCursorPosition) (ScrnInfoPtr pScrn, int x, int y);
     void (*LoadCursorImage) (ScrnInfoPtr pScrn, unsigned char *bits);
+    Bool (*LoadCursorImageCheck) (ScrnInfoPtr pScrn, unsigned char *bits);
     void (*HideCursor) (ScrnInfoPtr pScrn);
     void (*ShowCursor) (ScrnInfoPtr pScrn);
     unsigned char *(*RealizeCursor) (struct _xf86CursorInfoRec *, CursorPtr);
@@ -21,9 +22,40 @@ typedef struct _xf86CursorInfoRec {
 #ifdef ARGB_CURSOR
     Bool (*UseHWCursorARGB) (ScreenPtr, CursorPtr);
     void (*LoadCursorARGB) (ScrnInfoPtr, CursorPtr);
+    Bool (*LoadCursorARGBCheck) (ScrnInfoPtr, CursorPtr);
 #endif
 
 } xf86CursorInfoRec, *xf86CursorInfoPtr;
+
+static inline Bool
+xf86DriverHasLoadCursorImage(xf86CursorInfoPtr infoPtr)
+{
+    return infoPtr->LoadCursorImageCheck || infoPtr->LoadCursorImage;
+}
+
+static inline Bool
+xf86DriverLoadCursorImage(xf86CursorInfoPtr infoPtr, unsigned char *bits)
+{
+    if(infoPtr->LoadCursorImageCheck)
+        return infoPtr->LoadCursorImageCheck(infoPtr->pScrn, bits);
+    infoPtr->LoadCursorImage(infoPtr->pScrn, bits);
+    return TRUE;
+}
+
+static inline Bool
+xf86DriverHasLoadCursorARGB(xf86CursorInfoPtr infoPtr)
+{
+    return infoPtr->LoadCursorARGBCheck || infoPtr->LoadCursorARGB;
+}
+
+static inline Bool
+xf86DriverLoadCursorARGB(xf86CursorInfoPtr infoPtr, CursorPtr pCursor)
+{
+    if(infoPtr->LoadCursorARGBCheck)
+        return infoPtr->LoadCursorARGBCheck(infoPtr->pScrn, pCursor);
+    infoPtr->LoadCursorARGB(infoPtr->pScrn, pCursor);
+    return TRUE;
+}
 
 extern _X_EXPORT Bool xf86InitCursor(ScreenPtr pScreen,
                                      xf86CursorInfoPtr infoPtr);

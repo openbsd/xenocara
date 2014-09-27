@@ -1,4 +1,4 @@
-/* $OpenBSD: hppa_video.c,v 1.8 2013/06/07 17:28:52 matthieu Exp $ */
+/* $OpenBSD: hppa_video.c,v 1.9 2014/09/27 17:53:02 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -44,8 +44,8 @@
 /* Video Memory Mapping section                                            */
 /***************************************************************************/
 
-static pointer hppaMapVidMem(int, unsigned long, unsigned long, int);
-static void hppaUnmapVidMem(int, pointer, unsigned long);
+static void *hppaMapVidMem(int, unsigned long, unsigned long, int);
+static void hppaUnmapVidMem(int, void *, unsigned long);
 
 
 void
@@ -65,11 +65,11 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 
 volatile unsigned char *ioBase = MAP_FAILED;
 
-static pointer
+static void *
 hppaMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 {
 	int fd = xf86Info.consoleFd;
-	pointer base;
+	void *base;
 
 #ifdef DEBUG
 	xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d\n", 
@@ -86,7 +86,7 @@ hppaMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 
 
 static void
-hppaUnmapVidMem(int ScreenNum, pointer Base, unsigned long Size)
+hppaUnmapVidMem(int ScreenNum, void *Base, unsigned long Size)
 {
 
 	munmap(Base, Size);

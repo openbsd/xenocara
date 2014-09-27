@@ -44,8 +44,8 @@
 #define DEV_MEM "/dev/xf86"
 #endif
 
-static pointer ppcMapVidMem(int, unsigned long, unsigned long, int flags);
-static void ppcUnmapVidMem(int, pointer, unsigned long);
+static void *ppcMapVidMem(int, unsigned long, unsigned long, int flags);
+static void ppcUnmapVidMem(int, void *, unsigned long);
 
 #ifdef __NetBSD__
 Bool xf86EnableIO(void);
@@ -69,11 +69,11 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 
 volatile unsigned char *ioBase = MAP_FAILED;
 
-static pointer
+static void *
 ppcMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 {
     int fd = xf86Info.consoleFd;
-    pointer base;
+    void *base;
 
 #ifdef DEBUG
     xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d",
@@ -92,7 +92,7 @@ ppcMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 }
 
 static void
-ppcUnmapVidMem(int ScreenNum, pointer Base, unsigned long Size)
+ppcUnmapVidMem(int ScreenNum, void *Base, unsigned long Size)
 {
     munmap(Base, Size);
 }

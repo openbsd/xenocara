@@ -303,7 +303,6 @@ dmxConfigCanvasUpdate(void)
     fs = XQueryFont(dpy, gcontext);
     for (pt = dmxConfigCurrent->subentry; pt; pt = pt->next) {
         int x, y, len;
-        int xo = 3, yo = fs->ascent + fs->descent + 2;
         GC gc;
 
         if (pt->type != dmxConfigDisplay)
@@ -321,6 +320,8 @@ dmxConfigCanvasUpdate(void)
             y = dmxConfigWidgetHeight - 1;
         XDrawRectangle(dpy, win, gc, x, y, w, h);
         if (fs && len) {
+            int xo = 3, yo = fs->ascent + fs->descent + 2;
+
             while (len && XTextWidth(fs, pt->display->name, len) >= w - 2 * xo)
                 --len;
             if (len)
@@ -974,9 +975,9 @@ main(int argc, char **argv)
     const char *canvastrans =
         "<Btn3Down>: placeMenu() XtMenuPopup(buttonpopup)";
     XtActionsRec actiontable[] = {
-        {"openOk", dmxConfigOkAction},
-        {"placeMenu", dmxConfigPlaceMenu},
-        {"noop", NULL}
+        {(char *) "openOk", dmxConfigOkAction},
+        {(char *) "placeMenu", dmxConfigPlaceMenu},
+        {(char *) "noop", NULL}
     };
 
     dmxConfigFilename = XtNewString((argc >= 2) ? argv[1] : "");

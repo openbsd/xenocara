@@ -286,7 +286,7 @@ mieqEnqueue(DeviceIntPtr pDev, InternalEvent *e)
         else if (miEventQueue.dropped % QUEUE_DROP_BACKTRACE_FREQUENCY == 0 &&
                  miEventQueue.dropped / QUEUE_DROP_BACKTRACE_FREQUENCY <=
                  QUEUE_DROP_BACKTRACE_MAX) {
-            ErrorFSigSafe("[mi] EQ overflow continuing.  %u events have been "
+            ErrorFSigSafe("[mi] EQ overflow continuing.  %zu events have been "
                          "dropped.\n", miEventQueue.dropped);
             if (miEventQueue.dropped / QUEUE_DROP_BACKTRACE_FREQUENCY ==
                 QUEUE_DROP_BACKTRACE_MAX) {
@@ -515,6 +515,10 @@ mieqProcessDeviceEvent(DeviceIntPtr dev, InternalEvent *event, ScreenPtr screen)
 
     verify_internal_event(event);
 
+    /* refuse events from disabled devices */
+    if (dev && !dev->enabled)
+        return;
+
     /* Custom event handler */
     handler = miEventQueue.handlers[event->any.type];
 
@@ -585,7 +589,7 @@ mieqProcessInputEvents(void)
     if (n_enqueued >= (miEventQueue.nevents - (2 * QUEUE_RESERVED_SIZE)) &&
         miEventQueue.nevents < QUEUE_MAXIMUM_SIZE) {
         ErrorF("[mi] Increasing EQ size to %lu to prevent dropped events.\n",
-               miEventQueue.nevents << 1);
+               (unsigned long) (miEventQueue.nevents << 1));
         if (!mieqGrowQueue(&miEventQueue, miEventQueue.nevents << 1)) {
             ErrorF("[mi] Increasing the size of EQ failed.\n");
         }
@@ -593,7 +597,7 @@ mieqProcessInputEvents(void)
 
     if (miEventQueue.dropped) {
         ErrorF("[mi] EQ processing has resumed after %lu dropped events.\n",
-               miEventQueue.dropped);
+               (unsigned long) miEventQueue.dropped);
         ErrorF
             ("[mi] This may be caused my a misbehaving driver monopolizing the server's resources.\n");
         miEventQueue.dropped = 0;

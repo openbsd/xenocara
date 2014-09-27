@@ -281,7 +281,7 @@ extern _X_EXPORT DevPrivateKeyRec xkbDevicePrivateKeyRec;
 
 #define XKBDEVICEINFO(dev) ((xkbDeviceInfoPtr)dixLookupPrivate(&(dev)->devPrivates, xkbDevicePrivateKey))
 
-extern void xkbUnwrapProc(DeviceIntPtr, DeviceHandleProc, pointer);
+extern void xkbUnwrapProc(DeviceIntPtr, DeviceHandleProc, void *);
 
 /***====================================================================***/
 
@@ -600,7 +600,7 @@ extern _X_EXPORT void XkbHandleBell(BOOL /* force */ ,
                                     BOOL /* eventOnly */ ,
                                     DeviceIntPtr /* kbd */ ,
                                     CARD8 /* percent */ ,
-                                    pointer /* ctrl */ ,
+                                    void */* ctrl */ ,
                                     CARD8 /* class */ ,
                                     Atom /* name */ ,
                                     WindowPtr /* pWin */ ,
@@ -637,6 +637,10 @@ extern _X_EXPORT void XkbHandleActions(DeviceIntPtr /* dev */ ,
                                        DeviceIntPtr /* kbd */ ,
                                        DeviceEvent *    /* event */
     );
+
+extern void XkbPushLockedStateToSlaves(DeviceIntPtr /* master */,
+                                       int /* evtype */,
+                                       int /* key */);
 
 extern _X_EXPORT Bool XkbEnableDisableControls(XkbSrvInfoPtr /* xkbi */ ,
                                                unsigned long /* change */ ,
@@ -738,6 +742,14 @@ extern _X_EXPORT void XkbClearAllLatchesAndLocks(DeviceIntPtr /* dev */ ,
                                                  XkbEventCausePtr       /* cause */
     );
 
+extern _X_EXPORT void XkbInitRules(XkbRMLVOSet * /* rmlvo   */,
+                                   const char *  /* rules   */,
+                                   const char *  /* model   */,
+                                   const char *  /* layout  */,
+                                   const char *  /* variant */,
+                                   const char *  /* options */
+    ) ;
+
 extern _X_EXPORT void XkbGetRulesDflts(XkbRMLVOSet *    /* rmlvo */
     );
 
@@ -812,8 +824,11 @@ extern _X_EXPORT void XkbSendNewKeyboardNotify(DeviceIntPtr /* kbd */ ,
 extern Bool XkbCopyKeymap(XkbDescPtr /* dst */ ,
                           XkbDescPtr /* src */ );
 
-extern _X_EXPORT Bool XkbCopyDeviceKeymap(DeviceIntPtr /* dst */ ,
-                                          DeviceIntPtr /* src */ );
+extern _X_EXPORT Bool XkbCopyDeviceKeymap(DeviceIntPtr /* dst */,
+					  DeviceIntPtr /* src */);
+
+extern _X_EXPORT Bool XkbDeviceApplyKeymap(DeviceIntPtr /* dst */ ,
+                                           XkbDescPtr /* src */ );
 
 extern void XkbFilterEvents(ClientPtr /* pClient */ ,
                             int /* nEvents */ ,
@@ -828,6 +843,9 @@ extern void XkbMergeLockedPtrBtns(DeviceIntPtr /* master */ );
 extern void XkbFakeDeviceButton(DeviceIntPtr /* dev */ ,
                                 int /* press */ ,
                                 int /* button */ );
+
+extern _X_EXPORT void XkbCopyControls(XkbDescPtr /* dst */ ,
+                                      XkbDescPtr /* src */ );
 
 #include "xkbfile.h"
 #include "xkbrules.h"
@@ -852,7 +870,7 @@ extern _X_EXPORT unsigned int XkbDDXLoadKeymapByNames(DeviceIntPtr /* keybd */ ,
     );
 
 extern _X_EXPORT Bool XkbDDXNamesFromRules(DeviceIntPtr /* keybd */ ,
-                                           char * /* rules */ ,
+                                           const char * /* rules */ ,
                                            XkbRF_VarDefsPtr /* defs */ ,
                                            XkbComponentNamesPtr /* names */
     );
@@ -860,5 +878,9 @@ extern _X_EXPORT Bool XkbDDXNamesFromRules(DeviceIntPtr /* keybd */ ,
 extern _X_EXPORT XkbDescPtr XkbCompileKeymap(DeviceIntPtr /* dev */ ,
                                              XkbRMLVOSet *      /* rmlvo */
     );
+
+extern _X_EXPORT XkbDescPtr XkbCompileKeymapFromString(DeviceIntPtr dev,
+						       const char *keymap,
+						       int keymap_length);
 
 #endif                          /* _XKBSRV_H_ */

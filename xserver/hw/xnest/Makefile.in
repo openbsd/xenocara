@@ -14,7 +14,6 @@
 
 @SET_MAKE@
 
-
 VPATH = @srcdir@
 am__make_dryrun = \
   { \
@@ -74,16 +73,6 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-LIBRARIES = $(noinst_LIBRARIES)
-ARFLAGS = cru
-AM_V_AR = $(am__v_AR_@AM_V@)
-am__v_AR_ = $(am__v_AR_@AM_DEFAULT_V@)
-am__v_AR_0 = @echo "  AR      " $@;
-am__v_AR_1 = 
-libfbcmap_a_AR = $(AR) $(ARFLAGS)
-libfbcmap_a_LIBADD =
-am_libfbcmap_a_OBJECTS = libfbcmap_a-fbcmap_mi.$(OBJEXT)
-libfbcmap_a_OBJECTS = $(am_libfbcmap_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__objects_1 = Args.$(OBJEXT) Color.$(OBJEXT) Cursor.$(OBJEXT) \
@@ -91,10 +80,11 @@ am__objects_1 = Args.$(OBJEXT) Color.$(OBJEXT) Cursor.$(OBJEXT) \
 	GCOps.$(OBJEXT) Handlers.$(OBJEXT) Init.$(OBJEXT) \
 	Keyboard.$(OBJEXT) Pixmap.$(OBJEXT) Pointer.$(OBJEXT) \
 	Screen.$(OBJEXT) Visual.$(OBJEXT) Window.$(OBJEXT) \
-	dpmsstubs.$(OBJEXT) stubs.$(OBJEXT) miinitext.$(OBJEXT)
+	miinitext.$(OBJEXT)
 am_Xnest_OBJECTS = $(am__objects_1)
 Xnest_OBJECTS = $(am_Xnest_OBJECTS)
-am__DEPENDENCIES_1 = libfbcmap.a
+am__DEPENDENCIES_1 = $(top_builddir)/Xext/libXextdpmsstubs.la \
+	$(top_builddir)/Xi/libXistubs.la
 am__DEPENDENCIES_2 =
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -137,8 +127,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libfbcmap_a_SOURCES) $(Xnest_SOURCES)
-DIST_SOURCES = $(libfbcmap_a_SOURCES) $(Xnest_SOURCES)
+SOURCES = $(Xnest_SOURCES)
+DIST_SOURCES = $(Xnest_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -223,6 +213,8 @@ DEFAULT_LIBRARY_PATH = @DEFAULT_LIBRARY_PATH@
 DEFAULT_LOGDIR = @DEFAULT_LOGDIR@
 DEFAULT_LOGPREFIX = @DEFAULT_LOGPREFIX@
 DEFAULT_MODULE_PATH = @DEFAULT_MODULE_PATH@
+DEFAULT_XDG_DATA_HOME = @DEFAULT_XDG_DATA_HOME@
+DEFAULT_XDG_DATA_HOME_LOGDIR = @DEFAULT_XDG_DATA_HOME_LOGDIR@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DGA_CFLAGS = @DGA_CFLAGS@
@@ -267,6 +259,10 @@ FONTROOTDIR = @FONTROOTDIR@
 FONTTTFDIR = @FONTTTFDIR@
 FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
+GBM_CFLAGS = @GBM_CFLAGS@
+GBM_LIBS = @GBM_LIBS@
+GLAMOR_CFLAGS = @GLAMOR_CFLAGS@
+GLAMOR_LIBS = @GLAMOR_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_SYS_LIBS = @GLX_SYS_LIBS@
@@ -369,7 +365,10 @@ SOLARIS_INOUT_ARCH = @SOLARIS_INOUT_ARCH@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+SUID_WRAPPER_DIR = @SUID_WRAPPER_DIR@
 SYSCONFDIR = @SYSCONFDIR@
+SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
+SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
 TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 TSLIB_CFLAGS = @TSLIB_CFLAGS@
 TSLIB_LIBS = @TSLIB_LIBS@
@@ -378,6 +377,7 @@ UDEV_LIBS = @UDEV_LIBS@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VENDOR_NAME_SHORT = @VENDOR_NAME_SHORT@
 VERSION = @VERSION@
+WAYLAND_SCANNER = @WAYLAND_SCANNER@
 WINDOWSWM_CFLAGS = @WINDOWSWM_CFLAGS@
 WINDOWSWM_LIBS = @WINDOWSWM_LIBS@
 WINDRES = @WINDRES@
@@ -413,7 +413,8 @@ XNESTMODULES_CFLAGS = @XNESTMODULES_CFLAGS@
 XNESTMODULES_LIBS = @XNESTMODULES_LIBS@
 XNEST_LIBS = \
         @XNEST_LIBS@ \
-	libfbcmap.a
+	$(top_builddir)/Xext/libXextdpmsstubs.la \
+	$(top_builddir)/Xi/libXistubs.la
 
 XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
@@ -447,6 +448,10 @@ XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
 XVFB_LIBS = @XVFB_LIBS@
 XVFB_SYS_LIBS = @XVFB_SYS_LIBS@
+XWAYLANDMODULES_CFLAGS = @XWAYLANDMODULES_CFLAGS@
+XWAYLANDMODULES_LIBS = @XWAYLANDMODULES_LIBS@
+XWAYLAND_LIBS = @XWAYLAND_LIBS@
+XWAYLAND_SYS_LIBS = @XWAYLAND_SYS_LIBS@
 XWINMODULES_CFLAGS = @XWINMODULES_CFLAGS@
 XWINMODULES_LIBS = @XWINMODULES_LIBS@
 XWIN_LIBS = @XWIN_LIBS@
@@ -520,7 +525,6 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = man
-noinst_LIBRARIES = libfbcmap.a
 AM_CFLAGS = -DHAVE_XNEST_CONFIG_H \
             $(DIX_CFLAGS) \
             $(XNESTMODULES_CFLAGS)
@@ -560,12 +564,8 @@ SRCS = Args.c \
 	XNPixmap.h \
 	XNWindow.h \
 	xnest-config.h \
-	$(top_srcdir)/Xext/dpmsstubs.c \
-	$(top_srcdir)/Xi/stubs.c \
 	$(top_srcdir)/mi/miinitext.c
 
-libfbcmap_a_SOURCES = $(top_srcdir)/fb/fbcmap_mi.c
-libfbcmap_a_CFLAGS = $(AM_CFLAGS)
 Xnest_SOURCES = $(SRCS)
 Xnest_DEPENDENCIES = $(XNEST_LIBS)
 Xnest_LDADD = $(XNEST_LIBS) $(XNEST_SYS_LIBS) $(XSERVER_SYS_LIBS)
@@ -607,13 +607,6 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-libfbcmap.a: $(libfbcmap_a_OBJECTS) $(libfbcmap_a_DEPENDENCIES) $(EXTRA_libfbcmap_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libfbcmap.a
-	$(AM_V_AR)$(libfbcmap_a_AR) libfbcmap.a $(libfbcmap_a_OBJECTS) $(libfbcmap_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libfbcmap.a
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
@@ -686,10 +679,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Screen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Visual.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Window.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dpmsstubs.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfbcmap_a-fbcmap_mi.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/miinitext.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stubs.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -711,48 +701,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
-
-libfbcmap_a-fbcmap_mi.o: $(top_srcdir)/fb/fbcmap_mi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfbcmap_a_CFLAGS) $(CFLAGS) -MT libfbcmap_a-fbcmap_mi.o -MD -MP -MF $(DEPDIR)/libfbcmap_a-fbcmap_mi.Tpo -c -o libfbcmap_a-fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfbcmap_a-fbcmap_mi.Tpo $(DEPDIR)/libfbcmap_a-fbcmap_mi.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/fb/fbcmap_mi.c' object='libfbcmap_a-fbcmap_mi.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfbcmap_a_CFLAGS) $(CFLAGS) -c -o libfbcmap_a-fbcmap_mi.o `test -f '$(top_srcdir)/fb/fbcmap_mi.c' || echo '$(srcdir)/'`$(top_srcdir)/fb/fbcmap_mi.c
-
-libfbcmap_a-fbcmap_mi.obj: $(top_srcdir)/fb/fbcmap_mi.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfbcmap_a_CFLAGS) $(CFLAGS) -MT libfbcmap_a-fbcmap_mi.obj -MD -MP -MF $(DEPDIR)/libfbcmap_a-fbcmap_mi.Tpo -c -o libfbcmap_a-fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfbcmap_a-fbcmap_mi.Tpo $(DEPDIR)/libfbcmap_a-fbcmap_mi.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/fb/fbcmap_mi.c' object='libfbcmap_a-fbcmap_mi.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfbcmap_a_CFLAGS) $(CFLAGS) -c -o libfbcmap_a-fbcmap_mi.obj `if test -f '$(top_srcdir)/fb/fbcmap_mi.c'; then $(CYGPATH_W) '$(top_srcdir)/fb/fbcmap_mi.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/fb/fbcmap_mi.c'; fi`
-
-dpmsstubs.o: $(top_srcdir)/Xext/dpmsstubs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dpmsstubs.o -MD -MP -MF $(DEPDIR)/dpmsstubs.Tpo -c -o dpmsstubs.o `test -f '$(top_srcdir)/Xext/dpmsstubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/dpmsstubs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dpmsstubs.Tpo $(DEPDIR)/dpmsstubs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/Xext/dpmsstubs.c' object='dpmsstubs.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dpmsstubs.o `test -f '$(top_srcdir)/Xext/dpmsstubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xext/dpmsstubs.c
-
-dpmsstubs.obj: $(top_srcdir)/Xext/dpmsstubs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT dpmsstubs.obj -MD -MP -MF $(DEPDIR)/dpmsstubs.Tpo -c -o dpmsstubs.obj `if test -f '$(top_srcdir)/Xext/dpmsstubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/dpmsstubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/dpmsstubs.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/dpmsstubs.Tpo $(DEPDIR)/dpmsstubs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/Xext/dpmsstubs.c' object='dpmsstubs.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o dpmsstubs.obj `if test -f '$(top_srcdir)/Xext/dpmsstubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xext/dpmsstubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xext/dpmsstubs.c'; fi`
-
-stubs.o: $(top_srcdir)/Xi/stubs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT stubs.o -MD -MP -MF $(DEPDIR)/stubs.Tpo -c -o stubs.o `test -f '$(top_srcdir)/Xi/stubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xi/stubs.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/stubs.Tpo $(DEPDIR)/stubs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/Xi/stubs.c' object='stubs.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o stubs.o `test -f '$(top_srcdir)/Xi/stubs.c' || echo '$(srcdir)/'`$(top_srcdir)/Xi/stubs.c
-
-stubs.obj: $(top_srcdir)/Xi/stubs.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT stubs.obj -MD -MP -MF $(DEPDIR)/stubs.Tpo -c -o stubs.obj `if test -f '$(top_srcdir)/Xi/stubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xi/stubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xi/stubs.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/stubs.Tpo $(DEPDIR)/stubs.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/Xi/stubs.c' object='stubs.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o stubs.obj `if test -f '$(top_srcdir)/Xi/stubs.c'; then $(CYGPATH_W) '$(top_srcdir)/Xi/stubs.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/Xi/stubs.c'; fi`
 
 miinitext.o: $(top_srcdir)/mi/miinitext.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT miinitext.o -MD -MP -MF $(DEPDIR)/miinitext.Tpo -c -o miinitext.o `test -f '$(top_srcdir)/mi/miinitext.c' || echo '$(srcdir)/'`$(top_srcdir)/mi/miinitext.c
@@ -957,7 +905,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LIBRARIES) $(PROGRAMS)
+all-am: Makefile $(PROGRAMS)
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)"; do \
@@ -995,8 +943,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic clean-libtool \
-	clean-noinstLIBRARIES mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -1070,20 +1017,19 @@ uninstall-am: uninstall-binPROGRAMS
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic clean-libtool clean-noinstLIBRARIES cscopelist \
-	cscopelist-recursive ctags ctags-recursive distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS
+	clean-generic clean-libtool cscopelist cscopelist-recursive \
+	ctags ctags-recursive distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-binPROGRAMS install-data install-data-am install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-binPROGRAMS
 
 
 # -UDPMSExtension for miinitext? can't put into 

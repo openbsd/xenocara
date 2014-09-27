@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/bsd/ppc_video.c,v 1.6 2003/10/07 23:14:55 herrb Exp $ */
-/* $OpenBSD: arm_video.c,v 1.10 2013/06/07 17:28:52 matthieu Exp $ */
+/* $OpenBSD: arm_video.c,v 1.11 2014/09/27 17:53:02 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -87,8 +87,8 @@
 #define DEV_MEM "/dev/xf86"
 #endif
 
-static pointer ppcMapVidMem(int, unsigned long, unsigned long, int flags);
-static void ppcUnmapVidMem(int, pointer, unsigned long);
+static void* ppcMapVidMem(int, unsigned long, unsigned long, int flags);
+static void ppcUnmapVidMem(int, void *, unsigned long);
 
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
@@ -102,11 +102,11 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 
 volatile unsigned char *ioBase = MAP_FAILED;
 
-static pointer
+static void*
 ppcMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 {
     int fd = xf86Info.consoleFd;
-    pointer base;
+    void *base;
 #ifdef DEBUG
     xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d",
                 Base, Size, fd);
@@ -124,7 +124,7 @@ ppcMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 }
 
 static void
-ppcUnmapVidMem(int ScreenNum, pointer Base, unsigned long Size)
+ppcUnmapVidMem(int ScreenNum, void *Base, unsigned long Size)
 {
 
     munmap(Base, Size);

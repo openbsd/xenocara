@@ -27,10 +27,12 @@
 #include <dix-config.h>
 #endif
 
+#include <unistd.h>
 #include "os.h"
 #include "inputstr.h"
 #include "hotplug.h"
 #include "config-backends.h"
+#include "systemd-logind.h"
 
 void
 config_pre_init(void)
@@ -47,20 +49,9 @@ config_init(void)
 #ifdef CONFIG_UDEV
     if (!config_udev_init())
         ErrorF("[config] failed to initialise udev\n");
-#elif defined(CONFIG_NEED_DBUS)
-    if (config_dbus_core_init()) {
-#ifdef CONFIG_DBUS_API
-        if (!config_dbus_init())
-            ErrorF("[config] failed to initialise D-Bus API\n");
-#endif
-#ifdef CONFIG_HAL
-        if (!config_hal_init())
-            ErrorF("[config] failed to initialise HAL\n");
-#endif
-    }
-    else {
-        ErrorF("[config] failed to initialise D-Bus core\n");
-    }
+#elif defined(CONFIG_HAL)
+    if (!config_hal_init())
+        ErrorF("[config] failed to initialise HAL\n");
 #elif defined(CONFIG_WSCONS)
     if (!config_wscons_init())
         ErrorF("[config] failed to initialise wscons\n");
@@ -72,14 +63,8 @@ config_fini(void)
 {
 #if defined(CONFIG_UDEV)
     config_udev_fini();
-#elif defined(CONFIG_NEED_DBUS)
-#ifdef CONFIG_HAL
+#elif defined(CONFIG_HAL)
     config_hal_fini();
-#endif
-#ifdef CONFIG_DBUS_API
-    config_dbus_fini();
-#endif
-    config_dbus_core_fini();
 #elif defined(CONFIG_WSCONS)
     config_wscons_fini();
 #endif
@@ -147,10 +132,7 @@ config_odev_allocate_attribute_list(void)
 {
     struct OdevAttributes *attriblist;
 
-    attriblist = malloc(sizeof(struct OdevAttributes));
-    if (!attriblist)
-        return NULL;
-
+    attriblist = XNFalloc(sizeof(struct OdevAttributes));
     xorg_list_init(&attriblist->list);
     return attriblist;
 }
@@ -162,30 +144,144 @@ config_odev_free_attribute_list(struct OdevAttributes *attribs)
     free(attribs);
 }
 
+static struct OdevAttribute *
+config_odev_find_attribute(struct OdevAttributes *attribs, int attrib_id)
+{
+    struct OdevAttribute *oa;
+
+    xorg_list_for_each_entry(oa, &attribs->list, member) {
+        if (oa->attrib_id == attrib_id)
+          return oa;
+    }
+    return NULL;
+}
+
+static struct OdevAttribute *
+config_odev_find_or_add_attribute(struct OdevAttributes *attribs, int attrib)
+{
+    struct OdevAttribute *oa;
+
+    oa = config_odev_find_attribute(attribs, attrib);
+    if (oa)
+        return oa;
+
+    oa = XNFcalloc(sizeof(struct OdevAttribute));
+    oa->attrib_id = attrib;
+    xorg_list_append(&oa->member, &attribs->list);
+
+    return oa;
+}
+
+static int config_odev_get_attribute_type(int attrib)
+{
+    switch (attrib) {
+    case ODEV_ATTRIB_PATH:
+    case ODEV_ATTRIB_SYSPATH:
+    case ODEV_ATTRIB_BUSID:
+        return ODEV_ATTRIB_STRING;
+    case ODEV_ATTRIB_FD:
+    case ODEV_ATTRIB_MAJOR:
+    case ODEV_ATTRIB_MINOR:
+        return ODEV_ATTRIB_INT;
+    case ODEV_ATTRIB_DRIVER:
+        return ODEV_ATTRIB_STRING;
+    default:
+        LogMessage(X_ERROR, "Error %s called for unknown attribute %d\n",
+                   __func__, attrib);
+        return ODEV_ATTRIB_UNKNOWN;
+    }
+}
+
 Bool
 config_odev_add_attribute(struct OdevAttributes *attribs, int attrib,
                           const char *attrib_name)
 {
     struct OdevAttribute *oa;
 
-    oa = malloc(sizeof(struct OdevAttribute));
-    if (!oa)
+    if (config_odev_get_attribute_type(attrib) != ODEV_ATTRIB_STRING) {
+        LogMessage(X_ERROR, "Error %s called for non string attrib %d\n",
+                   __func__, attrib);
         return FALSE;
+    }
 
-    oa->attrib_id = attrib;
-    oa->attrib_name = strdup(attrib_name);
-    xorg_list_append(&oa->member, &attribs->list);
+    oa = config_odev_find_or_add_attribute(attribs, attrib);
+    free(oa->attrib_name);
+    oa->attrib_name = XNFstrdup(attrib_name);
+    oa->attrib_type = ODEV_ATTRIB_STRING;
     return TRUE;
+}
+
+Bool
+config_odev_add_int_attribute(struct OdevAttributes *attribs, int attrib,
+                              int attrib_value)
+{
+    struct OdevAttribute *oa;
+
+    if (config_odev_get_attribute_type(attrib) != ODEV_ATTRIB_INT) {
+        LogMessage(X_ERROR, "Error %s called for non integer attrib %d\n",
+                   __func__, attrib);
+        return FALSE;
+    }
+
+    oa = config_odev_find_or_add_attribute(attribs, attrib);
+    oa->attrib_value = attrib_value;
+    oa->attrib_type = ODEV_ATTRIB_INT;
+    return TRUE;
+}
+
+char *
+config_odev_get_attribute(struct OdevAttributes *attribs, int attrib_id)
+{
+    struct OdevAttribute *oa;
+
+    oa = config_odev_find_attribute(attribs, attrib_id);
+    if (!oa)
+        return NULL;
+
+    if (oa->attrib_type != ODEV_ATTRIB_STRING) {
+        LogMessage(X_ERROR, "Error %s called for non string attrib %d\n",
+                   __func__, attrib_id);
+        return NULL;
+    }
+    return oa->attrib_name;
+}
+
+int
+config_odev_get_int_attribute(struct OdevAttributes *attribs, int attrib_id, int def)
+{
+    struct OdevAttribute *oa;
+
+    oa = config_odev_find_attribute(attribs, attrib_id);
+    if (!oa)
+        return def;
+
+    if (oa->attrib_type != ODEV_ATTRIB_INT) {
+        LogMessage(X_ERROR, "Error %s called for non integer attrib %d\n",
+                   __func__, attrib_id);
+        return def;
+    }
+
+    return oa->attrib_value;
 }
 
 void
 config_odev_free_attributes(struct OdevAttributes *attribs)
 {
     struct OdevAttribute *iter, *safe;
+    int major = 0, minor = 0, fd = -1;
 
     xorg_list_for_each_entry_safe(iter, safe, &attribs->list, member) {
+        switch (iter->attrib_id) {
+        case ODEV_ATTRIB_MAJOR: major = iter->attrib_value; break;
+        case ODEV_ATTRIB_MINOR: minor = iter->attrib_value; break;
+        case ODEV_ATTRIB_FD: fd = iter->attrib_value; break;
+        }
         xorg_list_del(&iter->member);
-        free(iter->attrib_name);
+        if (iter->attrib_type == ODEV_ATTRIB_STRING)
+            free(iter->attrib_name);
         free(iter);
     }
+
+    if (fd != -1)
+        systemd_logind_release_fd(major, minor, fd);
 }

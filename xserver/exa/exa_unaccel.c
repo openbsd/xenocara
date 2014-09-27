@@ -319,7 +319,7 @@ ExaCheckPolyFillRect(DrawablePtr pDrawable, GCPtr pGC,
 void
 ExaCheckImageGlyphBlt(DrawablePtr pDrawable, GCPtr pGC,
                       int x, int y, unsigned int nglyph,
-                      CharInfoPtr * ppci, pointer pglyphBase)
+                      CharInfoPtr * ppci, void *pglyphBase)
 {
     EXA_PRE_FALLBACK_GC(pGC);
     EXA_FALLBACK(("to %p (%c)\n", pDrawable, exaDrawableLocation(pDrawable)));
@@ -334,7 +334,7 @@ ExaCheckImageGlyphBlt(DrawablePtr pDrawable, GCPtr pGC,
 void
 ExaCheckPolyGlyphBlt(DrawablePtr pDrawable, GCPtr pGC,
                      int x, int y, unsigned int nglyph,
-                     CharInfoPtr * ppci, pointer pglyphBase)
+                     CharInfoPtr * ppci, void *pglyphBase)
 {
     EXA_PRE_FALLBACK_GC(pGC);
     EXA_FALLBACK(("to %p (%c), style %d alu %d\n", pDrawable,
@@ -685,7 +685,7 @@ ExaCheckAddTraps(PicturePtr pPicture,
 
     EXA_PRE_FALLBACK(pScreen);
 
-    EXA_FALLBACK(("to pict %p (%c)\n",
+    EXA_FALLBACK(("to pict %p (%c)\n", pPicture,
                   exaDrawableLocation(pPicture->pDrawable)));
     exaPrepareAccess(pPicture->pDrawable, EXA_PREPARE_DEST);
     swap(pExaScr, ps, AddTraps);

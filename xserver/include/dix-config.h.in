@@ -199,6 +199,9 @@
 /* Define to 1 if you have the `strndup' function. */
 #undef HAVE_STRNDUP
 
+/* Define to 1 if libsystemd-daemon is available */
+#undef HAVE_SYSTEMD_DAEMON
+
 /* Define to 1 if SYSV IPC is available */
 #undef HAVE_SYSV_IPC
 
@@ -285,8 +288,14 @@
 /* Support SHAPE extension */
 #undef SHAPE
 
+/* Where to install Xorg.bin and Xorg.wrap */
+#undef SUID_WRAPPER_DIR
+
 /* Define to 1 on systems derived from System V Release 4 */
 #undef SVR4
+
+/* sysconfdir */
+#undef SYSCONFDIR
 
 /* Support TCP socket connections */
 #undef TCPCONN
@@ -411,14 +420,14 @@
 /* Use udev_enumerate_add_match_tag() */
 #undef HAVE_UDEV_ENUMERATE_ADD_MATCH_TAG
 
-/* Use D-Bus for input hotplug */
-#undef CONFIG_NEED_DBUS
-
-/* Support the D-Bus hotplug API */
-#undef CONFIG_DBUS_API
+/* Enable D-Bus core */
+#undef NEED_DBUS
 
 /* Support HAL for hotplug */
 #undef CONFIG_HAL
+
+/* Enable systemd-logind integration */
+#undef SYSTEMD_LOGIND 1
 
 /* Use wscons for input auto configuration */
 #undef CONFIG_WSCONS
@@ -474,5 +483,20 @@
 
 /* Directory for shared memory temp files */
 #undef SHMDIR
+
+/* Don't let Xdefs.h define 'pointer' */
+#define _XTYPEDEF_POINTER       1
+
+/* Don't let XIproto define 'Pointer' */
+#define _XITYPEDEF_POINTER      1
+
+/* Ask fontsproto to make font path element names const */
+#define FONT_PATH_ELEMENT_NAME_CONST    1
+
+/* Build GLAMOR */
+#undef GLAMOR
+
+/* Build glamor's GBM-based EGL support */
+#undef GLAMOR_HAS_GBM
 
 #endif /* _DIX_CONFIG_H_ */
