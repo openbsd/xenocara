@@ -83,6 +83,29 @@ pci_write(int domain, int bus, int dev, int func, uint32_t reg, uint32_t val)
 	return ioctl(pcifd[domain], PCIOCWRITE, &io);
 }
 
+static int
+pci_readmask(int domain, int bus, int dev, int func, uint32_t reg,
+    uint32_t *val)
+{
+	struct pci_io io;
+	int err;
+
+	bzero(&io, sizeof(io));
+	io.pi_sel.pc_bus = bus;
+	io.pi_sel.pc_dev = dev;
+	io.pi_sel.pc_func = func;
+	io.pi_reg = reg;
+	io.pi_width = 4;
+
+	err = ioctl(pcifd[domain], PCIOCREADMASK, &io);
+	if (err)
+		return (err);
+
+	*val = io.pi_data;
+
+	return 0;
+}
+
 /**
  * Read a VGA ROM
  *
@@ -331,11 +354,9 @@ pci_device_openbsd_probe(struct pci_device *device)
 			return err;
 
 		/* Probe the size of the region. */
-		err = pci_write(domain, bus, dev, func, bar, ~0);
+		err = pci_readmask(domain, bus, dev, func, bar, &size);
 		if (err)
 			return err;
-		pci_read(domain, bus, dev, func, bar, &size);
-		pci_write(domain, bus, dev, func, bar, reg);
 
 		if (PCI_MAPREG_TYPE(reg) == PCI_MAPREG_TYPE_IO) {
 			region->is_IO = 1;
@@ -363,11 +384,9 @@ pci_device_openbsd_probe(struct pci_device *device)
 					return err;
 				reg64 |= (uint64_t)reg << 32;
 
-				err = pci_write(domain, bus, dev, func, bar, ~0);
+				err = pci_readmask(domain, bus, dev, func, bar, &size);
 				if (err)
 					return err;
-				pci_read(domain, bus, dev, func, bar, &size);
-				pci_write(domain, bus, dev, func, bar, reg64 >> 32);
 				size64 |= (uint64_t)size << 32;
 
 				region->base_addr = PCI_MAPREG_MEM64_ADDR(reg64);
