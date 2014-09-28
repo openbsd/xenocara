@@ -139,6 +139,7 @@ usage(void)
            "      --crtc <crtc>\n"
            "      --panning <w>x<h>[+<x>+<y>[/<track:w>x<h>+<x>+<y>[/<border:l>/<t>/<r>/<b>]]]\n"
            "      --gamma <r>:<g>:<b>\n"
+           "      --brightness <value>\n"
            "      --primary\n"
            "  --noprimary\n"
            "  --newmode <name> <clock MHz>\n"
@@ -1394,7 +1395,7 @@ set_gamma(void)
     output_t	*output;
 
     for (output = all_outputs; output; output = output->next) {
-	int i, size, shift;
+	int i, size;
 	crtc_t *crtc;
 	XRRCrtcGamma *crtc_gamma;
 	float gammaRed;
@@ -1429,14 +1430,6 @@ set_gamma(void)
 	    continue;
 	}
 
-	/*
-	 * The hardware color lookup table has a number of significant
-	 * bits equal to ffs(size) - 1; compute all values so that
-	 * they are in the range [0,size) then shift the values so
-	 * that they occupy the MSBs of the 16-bit X Color.
-	 */
-	shift = 16 - (ffs(size) - 1);
-
 	crtc_gamma = XRRAllocGamma(size);
 	if (!crtc_gamma) {
 	    fatal("Gamma allocation failed.\n");
@@ -1456,28 +1449,25 @@ set_gamma(void)
 
 	for (i = 0; i < size; i++) {
 	    if (gammaRed == 1.0 && output->brightness == 1.0)
-		crtc_gamma->red[i] = i;
+		crtc_gamma->red[i] = (double)i / (double)(size - 1) * 65535.0;
 	    else
 		crtc_gamma->red[i] = dmin(pow((double)i/(double)(size - 1),
 					      gammaRed) * output->brightness,
-					  1.0) * (double)(size - 1);
-	    crtc_gamma->red[i] <<= shift;
+					  1.0) * 65535.0;
 
 	    if (gammaGreen == 1.0 && output->brightness == 1.0)
-		crtc_gamma->green[i] = i;
+		crtc_gamma->green[i] = (double)i / (double)(size - 1) * 65535.0;
 	    else
 		crtc_gamma->green[i] = dmin(pow((double)i/(double)(size - 1),
 						gammaGreen) * output->brightness,
-					    1.0) * (double)(size - 1);
-	    crtc_gamma->green[i] <<= shift;
+					    1.0) * 65535.0;
 
 	    if (gammaBlue == 1.0 && output->brightness == 1.0)
-		crtc_gamma->blue[i] = i;
+		crtc_gamma->blue[i] = (double)i / (double)(size - 1) * 65535.0;
 	    else
 		crtc_gamma->blue[i] = dmin(pow((double)i/(double)(size - 1),
 					       gammaBlue) * output->brightness,
-					   1.0) * (double)(size - 1);
-	    crtc_gamma->blue[i] <<= shift;
+					   1.0) * 65535.0;
 	}
 
 	XRRSetCrtcGamma(dpy, crtc->crtc.xid, crtc_gamma);
@@ -2582,6 +2572,8 @@ main (int argc, char **argv)
     Bool        provsetoffsink = False;
     int		major, minor;
     Bool	current = False;
+    Bool	toggle_x = False;
+    Bool	toggle_y = False;
 
     program_name = argv[0];
     for (i = 1; i < argc; i++) {
@@ -2650,13 +2642,13 @@ main (int argc, char **argv)
 	}
 
 	if (!strcmp ("-x", argv[i])) {
-	    reflection |= RR_Reflect_X;
+	    toggle_x = True;
 	    setit = True;
 	    action_requested = True;
 	    continue;
 	}
 	if (!strcmp ("-y", argv[i])) {
-	    reflection |= RR_Reflect_Y;
+	    toggle_y = True;
 	    setit = True;
 	    action_requested = True;
 	    continue;
@@ -3266,13 +3258,13 @@ main (int argc, char **argv)
 		    nelements = 1;
 		    format = 32;
 		}
-		else if ((type == XA_ATOM))
+		else if (type == XA_ATOM)
 		{
 		    ulong_value = XInternAtom (dpy, prop->value, False);
 		    data = (unsigned char *) &ulong_value;
 		    nelements = 1;
 		}
-		else if ((type == XA_STRING || type == AnyPropertyType))
+		else if (type == XA_STRING || type == AnyPropertyType)
 		{
 		    type = XA_STRING;
 		    data = (unsigned char *) prop->value;
@@ -3835,6 +3827,9 @@ main (int argc, char **argv)
     {
 	Rotation rotations = XRRConfigRotations(sc, &current_rotation);
 
+	if (toggle_x && !(current_rotation & RR_Reflect_X)) reflection |= RR_Reflect_X;
+	if (toggle_y && !(current_rotation & RR_Reflect_Y)) reflection |= RR_Reflect_Y;
+
 	if (query) {
 	    printf("Current rotation - %s\n",
 		   rotation_name (current_rotation));
@@ -3872,10 +3867,6 @@ main (int argc, char **argv)
 	else
 	    printf ("neither axis");
 	printf ("\n");
-
-	if (reflection & RR_Reflect_X) printf("Setting reflection on X axis\n");
-
-	if (reflection & RR_Reflect_Y) printf("Setting reflection on Y axis\n");
     }
 
     /* we should test configureNotify on the root window */

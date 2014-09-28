@@ -1,3 +1,90 @@
+commit 9887ed4989e0abd48004598be0eb5cb06fa40bd1
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Aug 1 23:14:42 2014 -0700
+
+    xrandr 1.4.3
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 20d76f773cf8de474cf7a3f1082961605732c3f1
+Merge: 00477d8 193a358
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Aug 1 23:10:46 2014 -0700
+
+    Merge commit '193a358'
+    
+    Conflicts:
+    	xrandr.c
+
+commit 193a358563a59c1a3fc55f55029c605e2419c80b
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Sat Jun 29 16:50:25 2013 -0700
+
+    Mention of --brightness with -h option
+    
+    Reported by jidanni at http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=709569
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Reviewed-By: Matt Dew <marcoz@osource.org>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 00477d88297eaa6c87aa144548590c32540e3928
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Tue Jun 10 23:56:12 2014 -0700
+
+    Allow -x and -y switches to undo themselves
+    
+    People who want to dick around might think it is safe to run "xrandr -x"
+    before they know any of the other syntax. When "xrandr -x" again does
+    not get back to a normal screen, they are stuck having to read a manpage
+    with reflected text.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Tested-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 7d464312fb84c080a6e287edd21a794193a0dd78
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Sun Jun 1 16:35:50 2014 -0700
+
+    Remove duplicate printing of the axis
+    
+    Even in verbose mode, why print the same information twice?
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 792f05ea20d5191425154470760e36dcf023c6e9
+Author: Dominik Behr <dbehr@chromium.org>
+Date:   Tue Apr 1 18:38:05 2014 -0700
+
+    xrandr: use full range for gamma table generation
+    
+    Calculate gamma table using full [0,65536) range and do not make any
+    assumptions about relation of gamma table size and significant bits.
+    
+    Gamma table size has nothing to do with number of significant bits in hardware.
+    In particular we are dealing now with gamma table that has 17 entries and 8
+    bit precision, there are other GPUs with 10 bit precision and less than 256
+    entries using partial linear approximation. Deriving assumed gamma table
+    significant bits from size of gamma table leads to incorrect calculations and
+    loss of precision. Also XRandR specification never mentions that gamma tables
+    need to be power of 2.
+    
+    Signed-off-by: Dominik Behr <dbehr@chromium.org>
+    Reviewed-by: Stéphane Marchesin <marcheu@chromium.org>
+
+commit 866366d0825c3f488abd58960e4f76ae50de08d1
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sat Mar 29 00:50:17 2014 +0100
+
+    Remove unnecessary parentheses.
+    
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
 commit 31f5fa6a47db154abb47cf16e9f6cc4d983ad371
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Thu Mar 27 11:37:07 2014 -0700
@@ -206,7 +293,7 @@ Date:   Tue Feb 12 13:24:38 2013 -0800
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 3e5f160c4198a5160be5e9a3f21ba3f4130d4318
-Merge: dac72dbbc750 bd166184f6c1
+Merge: dac72db bd16618
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Feb 12 12:30:20 2013 -0800
 
@@ -1472,7 +1559,7 @@ Date:   Mon Dec 1 21:45:47 2008 +0100
     Fix build outside of the source dir
 
 commit 63ba316bcbe8ad61ba63d9fe62c82e7d56dcc399
-Merge: a813c4da7f0b 1b95e32b4b0a
+Merge: a813c4d 1b95e32
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Mon Dec 1 21:33:35 2008 +0100
 
@@ -1950,7 +2037,7 @@ Date:   Sun Feb 18 21:27:55 2007 -0800
     Update version number to 1.2.0 for release.
 
 commit 13cef2baa884039e96f5dfd9245bb949aed99448
-Merge: 065f09cc304d a175972de6fb
+Merge: 065f09c a175972
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Sun Feb 18 21:26:50 2007 -0800
 
@@ -1992,7 +2079,7 @@ Date:   Sat Feb 10 16:14:58 2007 -0800
     Display set of available CRTCs per output in --verbose mode.
 
 commit 067cafb5cda0aa6e34773e888fd469ff657760c2
-Merge: 7c25c245bceb b0a00df69f83
+Merge: 7c25c24 b0a00df
 Author: Keith Packard <keithp@guitar.keithp.com>
 Date:   Wed Jan 31 15:25:35 2007 -0800
 
@@ -2151,7 +2238,7 @@ Date:   Tue Dec 19 16:27:46 2006 -0800
     Actually respect the --fb option
 
 commit 7b32611632ab08b6a123db5df1c2b919b3a12104
-Merge: a0df3aa81205 4bb1a9cd6f9c
+Merge: a0df3aa 4bb1a9c
 Author: Keith Packard <keithp@guitar.keithp.com>
 Date:   Tue Dec 19 15:58:38 2006 -0800
 
@@ -2164,7 +2251,7 @@ Date:   Tue Dec 19 15:58:21 2006 -0800
     Correct format for sscanf to double variable "dpi"
 
 commit 4bb1a9cd6f9cc3ed61d7913528afa3f573092833
-Merge: b6c03827bae7 6ef400f35d7d
+Merge: b6c0382 6ef400f
 Author: Keith Packard <keithp@bouzouki.jf.intel.com>
 Date:   Wed Dec 13 11:36:36 2006 -0800
 
