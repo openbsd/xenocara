@@ -1,3 +1,72 @@
+commit 343ff0938f592876b9d82c966f166bf45a78c3c8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 30 11:25:39 2014 +1000
+
+    inputproto 2.3.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c2cf8cab4aa781306ff26b171107d26f12bac015
+Author: Daniel Martin <consume.noise@gmail.com>
+Date:   Thu May 29 12:24:46 2014 +0200
+
+    XI2: Fix XI_TouchOwnershipChangedMask value
+    
+    A none existing define
+        XI_TouchOwnershipChanged
+    had been used to set the value of XI_TouchOwnershipChangedMask. Fix this
+    by using
+        XI_TouchOwnership.
+    
+    Signed-off-by: Daniel Martin <consume.noise@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b4184619702b6801e3a2ea9733ae1620fa4ceda7
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Dec 16 09:43:41 2013 -0800
+
+    inputproto: Allow library users to avoid having the 'Pointer' typedef declared
+    
+    'Pointer' collides with too many other application names, so stop
+    using it locally and allow applications to avoid having it in the API.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+
+commit 3c1ebd1cfe71029ebc6a732a6b55308861e549e0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 14 19:30:24 2013 +1000
+
+    specs: note that axis values are non-sparse arrays
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 06da19e15c9d3a9e57f4fe89fe507a4fa7160a45
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 19 15:54:45 2013 +1000
+
+    specs: clarify SD keyboard focus behaviour
+    
+    The smart thing would be to have the SD's keyboard focus to be identical to
+    the MD's keyboard focus (and a BadDevice returned when trying to set an
+    attached SD's keyboard focus) but alas, the server never implemented this
+    behaviour and we've now shipped 7 versions with separate SD and MD focus. So
+    consider this set in stone. oops.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit 65f14b2edaf70a2520e0180609f79f52836ca4f9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Oct 26 09:42:05 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit f33a329026c9f2eaa5fa436543e4feb0e54b685d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Mar 7 10:42:39 2013 +1000
