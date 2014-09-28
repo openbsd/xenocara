@@ -108,15 +108,21 @@ static XExtDisplayInfo *_xgeFindDisplay(Display *dpy)
                                   &xge_extension_hooks,
                                   0 /* no events, see below */,
                                   NULL);
-        /* We don't use an extension opcode, so we have to set the handlers
-         * directly. If GenericEvent would be > 64, the job would be done by
-         * XExtAddDisplay  */
-        XESetWireToEvent (dpy,
-                          GenericEvent,
-                          xge_extension_hooks.wire_to_event);
-        XESetEventToWire (dpy,
-                          GenericEvent,
-                          xge_extension_hooks.event_to_wire);
+        /* dpyinfo->codes is only null if the server claims not to suppport
+           XGE. Don't set up the hooks then, so that an XGE event from the
+           server doesn't crash our client */
+        if (dpyinfo && dpyinfo->codes)
+        {
+            /* We don't use an extension opcode, so we have to set the handlers
+             * directly. If GenericEvent would be > 64, the job would be done by
+             * XExtAddDisplay  */
+            XESetWireToEvent (dpy,
+                              GenericEvent,
+                              xge_extension_hooks.wire_to_event);
+            XESetEventToWire (dpy,
+                              GenericEvent,
+                              xge_extension_hooks.event_to_wire);
+        }
     }
     return dpyinfo;
 }
@@ -238,7 +244,7 @@ _xgeWireToEvent(Display* dpy, XEvent* re, xEvent *event)
     int extension;
     XGEExtList it;
     XExtDisplayInfo* info = _xgeFindDisplay(dpy);
-    if (!info)
+    if (!info || !info->data)
         return False;
     /*
        _xgeCheckExtInit() calls LockDisplay, leading to a SIGABRT.
@@ -259,9 +265,6 @@ _xgeWireToEvent(Display* dpy, XEvent* re, xEvent *event)
         it = it->next;
     }
 
-    fprintf(stderr,
-        "_xgeWireToEvent: Unknown extension %d, this should never happen.\n",
-            extension);
     return False;
 }
 
@@ -274,7 +277,7 @@ _xgeEventToWire(Display* dpy, XEvent* re, xEvent* event)
     int extension;
     XGEExtList it;
     XExtDisplayInfo* info = _xgeFindDisplay(dpy);
-    if (!info)
+    if (!info || !info->data)
         return 1; /* error! */
 
     extension = ((XGenericEvent*)re)->extension;
@@ -288,10 +291,6 @@ _xgeEventToWire(Display* dpy, XEvent* re, xEvent* event)
         }
         it = it->next;
     }
-
-    fprintf(stderr,
-        "_xgeEventToWire: Unknown extension %d, this should never happen.\n",
-        extension);
 
     return Success;
 }

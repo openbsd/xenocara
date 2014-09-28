@@ -60,7 +60,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <X11/extensions/sync.h>
 #include <X11/extensions/syncproto.h>
 #include <limits.h>
-#include "eat.h"
 
 static XExtensionInfo _sync_info_data;
 static XExtensionInfo *sync_info = &_sync_info_data;
@@ -189,7 +188,7 @@ char *error_string(Display *dpy, int code, XExtCodes *codes, char *buf, int n)
     code -= codes->first_error;
     if (code >= 0 && code < nerr) {
 	char tmp[256];
-	sprintf (tmp, "%s.%d", sync_extension_name, code);
+	snprintf (tmp, sizeof(tmp), "%s.%d", sync_extension_name, code);
 	XGetErrorDatabaseText (dpy, "XProtoError", tmp, sync_error_list[code], buf, n);
 	return buf;
     }

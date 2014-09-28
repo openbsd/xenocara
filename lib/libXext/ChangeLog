@@ -1,3 +1,92 @@
+commit efdcbb7634501e1117d422636a0a75d7ea84b16b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 24 01:30:38 2014 +1000
+
+    libXext 1.3.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 11aad96bd689d54156064d2e81213dc827a689d1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Mar 6 14:56:17 2014 -0800
+
+    Xge: remove warning messages about missing Xge extension event translations
+    
+    When mixing Xlib and xcb, it's quite possible for some events to be
+    received for xcb-only extensions, which will subsequently not be
+    translatable by the Xge WireToEvent/EventToWire hooks
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+
+commit dde40e03c10808b964dc1d6a7eb48156dd5ce4a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 8 20:09:46 2014 -0800
+
+    XeviGetVisualInfo: Free & clear *evi_return, not evi_return pointer
+    
+    evi_return is passed in as a pointer to a location into which
+    XeviGetVisualInfo is expected to write a pointer to the memory
+    it allocated for the returned structures.  If we're failing and
+    bailing out, we need to dispose of the pointer we set, not the
+    one passed into us (which the caller may have put on the stack
+    or allocated as part of a larger structure).
+    
+    Flagged by cppcheck 1.64:
+    [lib/libXext/src/XEVI.c:182] -> [lib/libXext/src/XEVI.c:186]:
+     (warning) Possible null pointer dereference: evi_return - otherwise it
+               is redundant to check it against null.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d5447c0156f556114dbf97d6064c0c7b0fcd5f70
+Author: Nathan Kidd <nkidd@opentext.com>
+Date:   Fri Jan 17 13:40:07 2014 +1000
+
+    Stricter event error checking
+    
+    A malicious X server claiming to not support GE but sending a GE would
+    SEGV the client  (always a NULL derefrence).  Possible since d1c93500.
+    
+    (Also guard the EventToWire case so it's harder to shoot yourself in the
+    foot.)
+    
+    Signed-off-by: Nathan Kidd <nkidd@opentext.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bb24f2970f2e425f4df90c9b73d078ad15a73fbb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 7 16:31:16 2013 -0800
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7378d4bdbd33ed49ed6cfa5c4f73d7527982aab4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 22:55:18 2013 -0700
+
+    Require ANSI C89 pre-processor, drop pre-C89 token pasting support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 230a1dc356266afb206c98e47ee72e8fca0948e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 10:56:53 2013 -0700
+
+    Replace sprintf with snprintf when looking up extension error strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d8366afbb0d2e4fbb1e419b1187f490522270bea
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri May 31 14:34:58 2013 -0700
