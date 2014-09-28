@@ -1,3 +1,92 @@
+commit 7cbad9fe2e61cd9d5caeaf361826a6f4bd320f03
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Sep 20 10:02:05 2014 -0700
+
+    xtrans 1.3.5
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit fb7f198c88e97d22c8c89e76e9cd06b2b2720a96
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Sep 12 11:27:39 2014 -0700
+
+    Add TRANS(Listen) function to re-enable specific listen sockets
+    
+    This will allow a server to disable listeners by default and then
+    let later configuration re-enable them. In particular, this lets the X
+    server disable inet and unix listen sockets by default while still
+    providing a '-listen' command line option to re-enable them later on.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 17491de45c352c833442cccf17a9bd65909889db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 23 12:28:14 2014 -0700
+
+    Add const qualifiers to TRANS(OpenC{L,O}TS{Server,Client}) args
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 305d20f2ee888d1c890f902da978176b8ec58a8d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 23 12:10:48 2014 -0700
+
+    Add const qualifiers to TRANS(MakeAll*ServerListeners) port args
+    
+    Required also changing receive_listening_fds to specify port as const,
+    which we can do now that TRANS(ReopenCOTSServer) takes it as const.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba70d48951fb925fb3082d81afb08c330333aa51
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 23 11:33:57 2014 -0700
+
+    Add const qualifiers to TRANS(Connect) args
+    
+    Also required constifying UnixHostReallyLocal, since SocketUNIXConnect
+    passes the host arg through to it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63b65a20706def951dd25e531949b7bc556419eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 23 10:17:57 2014 -0700
+
+    Add const qualifiers to TRANS(CreateListener) port args
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd90a4e00321b22c96565cfa354b8b0efa376979
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 23 10:07:22 2014 -0700
+
+    Add const qualifiers to TRANS(Reopen...) port args
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a56ec9d720a7964bada837790e9c1f6ceef97861
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 23 09:58:05 2014 -0700
+
+    Add const qualifiers to TRANS(Open...) address args
+    
+    Required also adding const to static TRANS(ParseAddress) function which
+    they pass the address arg to for parsing.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 30b3fd74a27c80993e81dfcb33e33520ae8684fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 23 12:46:44 2014 -0700
+
+    Update docs to note that TransName is now const char *
+    
+    Missed when the code was updated in commit eb9a8904fbef61a57ff0.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a57a7f62242e1ea972b81414741729bf3dbae0a4
 Author: Hans de Goede <hdegoede@redhat.com>
 Date:   Mon Mar 31 12:37:43 2014 +0200
