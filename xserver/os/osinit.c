@@ -236,7 +236,7 @@ OsInit(void)
             if (strlen(display) + strlen(ADMPATH) + 1 < sizeof fname)
                 snprintf(fname, sizeof(fname), ADMPATH, display);
             else
-	      strlcpy(fname, devnull, sizeof(fname));
+                strlcpy(fname, devnull, sizeof(fname));
             /*
              * uses stdio to avoid os dependencies here,
              * a real os would use
