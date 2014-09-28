@@ -86,17 +86,12 @@ Status
 XIAllowTouchEvents(Display *dpy, int deviceid, unsigned int touchid,
                    Window grab_window, int event_mode)
 {
-    int status;
     XExtDisplayInfo *extinfo = XInput_find_display(dpy);
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_2_2, extinfo) == -1)
 	return (NoSuchExtension);
-
-    status = _XIAllowEvents(dpy, deviceid, event_mode, CurrentTime, touchid, grab_window);
-
     UnlockDisplay(dpy);
-    SyncHandle();
 
-    return status;
+    return _XIAllowEvents(dpy, deviceid, event_mode, CurrentTime, touchid, grab_window);
 }

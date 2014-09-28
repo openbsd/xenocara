@@ -1,3 +1,89 @@
+commit 8c255b30f3a4ed8bf67e6bb76df47cbd480735f8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 18 16:45:51 2014 +1000
+
+    libXi 1.7.4
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b731d1357d993663ee6b28d6627bdeba69b60dd2
+Author: Owen W. Taylor <otaylor@fishsoup.net>
+Date:   Fri Jul 11 15:13:54 2014 -0400
+
+    Fix locking bugs with XIAllowTouchEvents() and XIUngrabTouchBegin()
+    
+    Fix two places where the display was double locked when an API
+    function chained to an implementation that also locks the display.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0250f40fb7c9cb7d542189b9cd37e0ae75309729
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 10 08:58:48 2014 +1000
+
+    libXi 1.7.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit aa628936c7d81ff5fe2da62964dc543c67ec66f1
+Author: Jasper St. Pierre <jstpierre@mecheye.net>
+Date:   Tue Jul 8 17:01:04 2014 -0400
+
+    XIPassiveGrab: Fix completely broken locking in XIGrabTouchBegin
+    
+    _XIPassiveGrabDevice calls LockDisplay as the first thing it does. That
+    means that it expects the display to be unlocked. XIGrabTouchBegin locks
+    the display to check for the XI extension, and then never unlocks it.
+    Effectively, this meant that anybody that called XIGrabTouchBegin after
+    XInitThreads just got a deadlock.
+    
+    Cool.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit eb0c522e0ce5763b6bf181f1236e78ca94f98b7e
+Author: Jasper St. Pierre <jstpierre@mecheye.net>
+Date:   Tue Jul 8 17:01:03 2014 -0400
+
+    XIPassiveGrab: Fix display locking inside _XIPassiveGrabDevice for error paths
+    
+    The code here before would just leave the display locked on error, which is
+    all sorts of broken.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 288f3362133a36e2c370eb34caf6b5ed6c0764ca
+Author: Michael Joost <mehl@michael-joost.de>
+Date:   Sat Nov 23 09:51:57 2013 -0800
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c4b261d230a8ed7c04a140f65d40af86ea73f2fa
+Author: Keith Packard <keithp@keithp.com>
+Date:   Thu Jul 25 11:46:17 2013 -0700
+
+    man: Update XIQueryVersion docs to match new version compatibility semantics
+    
+    The X server now allows clients to specify any combination of versions
+    starting with version 2.2, document how that works.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit b6553cdb36c1bd7071d3bf0493216c5483325716
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Jul 3 10:28:10 2013 +1000

@@ -1,13 +1,14 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXi], [1.7.2],
+AC_INIT([libXi], [1.7.4],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXi])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([src/config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -27,15 +28,9 @@ XORG_WITH_ASCIIDOC(8.4.5)
 XORG_CHECK_MALLOC_ZERO
 
 # Obtain compiler/linker options for dependencies
-PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.4.99.1] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 2.2.99.1])
+PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.6] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 2.2.99.1])
 # CFLAGS only for PointerBarrier typedef
 PKG_CHECK_MODULES(XFIXES, [xfixes >= 5])
-
-# Check for _XEatDataWords function that may be patched into older Xlib releases
-SAVE_LIBS="$LIBS"
-LIBS="$XI_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
 
 # Check for xmlto and asciidoc for man page conversion
 # (only needed by people building tarballs)
