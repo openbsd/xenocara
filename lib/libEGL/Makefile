@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2014/09/07 15:32:18 jsg Exp $
+# $OpenBSD: Makefile,v 1.9 2014/09/28 11:02:37 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	EGL
@@ -101,10 +101,10 @@ SRCS+=	${DRI2_SOURCES} ${DRM_SOURCES}
 CPPFLAGS+=	-D_EGL_BUILT_IN_DRIVER_DRI2 -DHAVE_XCB_DRI2 \
 		-I${GBM}/main -I${GBM}/backends/dri -DHAVE_DRM_PLATFORM
 LDADD=	-L${X11BASE}/lib -lX11-xcb -lX11 -lxcb-dri2 -lxcb-xfixes -lxcb-render \
-	-lxcb-shape -lxcb -lpthread -ldrm
+	-lxcb-shape -lxcb -lgbm -lglapi -lpthread -ldrm
 .else
 LDADD=	-L${X11BASE}/lib -lX11-xcb -lX11 -lxcb-xfixes -lxcb-render \
-	-lxcb-shape -lxcb -lpthread
+	-lxcb-shape -lxcb -lglapi -lpthread
 .endif
 
 includes: _SUBDIRUSE
