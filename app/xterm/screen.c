@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.500 2014/06/19 21:09:11 tom Exp $ */
+/* $XTermId: screen.c,v 1.501 2014/07/30 08:06:23 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1254,8 +1254,8 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     if (col < first || col > last) {
 	TRACE(("ScrnInsertChar - col %d outside [%d..%d]\n", col, first, last));
 	return;
-    } else if (last <= (col + (int) n)) {
-	n = (unsigned) (last - col);
+    } else if (last < (col + (int) n)) {
+	n = (unsigned) (last + 1 - col);
     }
 
     assert(screen->cur_col >= 0);

@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.440 2014/07/13 00:34:40 Ross.Combs Exp $ */
+/* $XTermId: fontutils.c,v 1.443 2014/09/03 23:58:53 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -50,12 +50,6 @@
 
 #include <stdio.h>
 #include <ctype.h>
-
-#define ALLOC_STRING(name) \
-	if (name != 0) \
-	    name = x_strdup(name)
-#define FREE_STRING(name) \
-	    free_string(name)
 
 #define SetFontWidth(screen,dst,src)  (dst)->f_width = (src)
 #define SetFontHeight(screen,dst,src) (dst)->f_height = dimRound((screen)->scale_height * (float) (src))
@@ -125,12 +119,6 @@ typedef struct {
     /* charset registry, charset encoding */
     char *end;
 } FontNameProperties;
-
-static void
-free_string(String value)
-{
-    free((void *) value);
-}
 
 #if OPT_RENDERFONT
 static void fillInFaceSize(XtermWidget, int);
@@ -1145,7 +1133,9 @@ xtermLoadFont(XtermWidget xw,
 		       &fnts[fNorm],
 		       warn[fNorm],
 		       (fontnum == fontMenu_default))) {
-	SetItemSensitivity(fontMenuEntries[fontnum].widget, False);
+	if (fontnum != fontMenu_fontsel) {
+	    SetItemSensitivity(fontMenuEntries[fontnum].widget, False);
+	}
 	goto bad;
     }
 
@@ -1437,8 +1427,7 @@ xtermLoadFont(XtermWidget xw,
 	    FREE_STRING(screen->MenuFontName(fontnum));
 	screen->MenuFontName(fontnum) = tmpname;
 	if (fontnum == fontMenu_fontescape) {
-	    SetItemSensitivity(fontMenuEntries[fontMenu_fontescape].widget,
-			       True);
+	    update_font_escape();
 	}
 #if OPT_SHIFT_FONTS
 	screen->menu_font_sizes[fontnum] = FontSize(fnts[fNorm].fs);
@@ -1477,7 +1466,7 @@ xtermLoadFont(XtermWidget xw,
 	free(tmpname);
 
 #if OPT_RENDERFONT
-    if (fontnum == fontMenu_fontsel) {
+    if ((fontnum == fontMenu_fontsel) && (fontnum != screen->menu_font_number)) {
 	int old_fontnum = screen->menu_font_number;
 #if OPT_TOOLBAR
 	SetItemSensitivity(fontMenuEntries[fontnum].widget, True);
@@ -1492,8 +1481,10 @@ xtermLoadFont(XtermWidget xw,
 	TRACE(("...recovering for TrueType fonts\n"));
 	code = xtermLoadFont(xw, &myfonts, doresize, fontnum);
 	if (code) {
-	    SetItemSensitivity(fontMenuEntries[fontnum].widget,
-			       UsingRenderFont(xw));
+	    if (fontnum != fontMenu_fontsel) {
+		SetItemSensitivity(fontMenuEntries[fontnum].widget,
+				   UsingRenderFont(xw));
+	    }
 	    TRACE(("...recovered size %dx%d\n",
 		   FontHeight(screen),
 		   FontWidth(screen)));

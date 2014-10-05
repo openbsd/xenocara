@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.809 2014/06/13 00:53:35 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.813 2014/09/17 08:24:34 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -908,6 +908,23 @@ typedef enum {
 #endif
     , NCOLORS			/* total number of colors */
 } TermColors;
+
+/*
+ * Definitions for exec-formatted and insert-formatted actions.
+ */
+typedef void (*FormatSelect) (Widget, char *, char *, CELL *, CELL *);
+
+typedef struct {
+    char *format;
+    char *buffer;
+    FormatSelect format_select;
+#if OPT_PASTE64
+    Cardinal base64_paste;
+#endif
+#if OPT_READLINE
+    unsigned paste_brackets;
+#endif
+} InternalSelect;
 
 /*
  * Constants for titleModes resource
@@ -2294,7 +2311,7 @@ typedef struct {
 	int		lastValidRow;	/* " " */
 
 	Boolean		selectToBuffer;	/* copy selection to buffer	*/
-	char *		internal_select;
+	InternalSelect	internal_select;
 
 	String		default_string;
 	String		eightbit_select_types;
@@ -2328,6 +2345,8 @@ typedef struct {
 	String		initial_font;
 	String		menu_font_names[NMENUFONTS][fMAX];
 #define MenuFontName(n) menu_font_names[n][fNorm]
+#define EscapeFontName() MenuFontName(fontMenu_fontescape)
+#define SelectFontName() MenuFontName(fontMenu_fontsel)
 	long		menu_font_sizes[NMENUFONTS];
 	int		menu_font_number;
 #if OPT_LOAD_VTFONTS || OPT_WIDE_CHARS

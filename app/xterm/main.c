@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.760 2014/07/12 22:50:07 Steve.Wall Exp $ */
+/* $XTermId: main.c,v 1.762 2014/07/24 22:47:09 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -2509,7 +2509,7 @@ main(int argc, char *argv[]ENVP_ARG)
     }
 #endif
 #endif
-#if defined(USE_ANY_SYSV_TERMIO) || defined(__MVS__)
+#if defined(USE_ANY_SYSV_TERMIO) || defined(__MVS__) || defined(__minix)
     if (0 > (mode = fcntl(screen->respond, F_GETFL, 0)))
 	SysError(ERROR_F_GETFL);
 #ifdef O_NDELAY
@@ -5370,5 +5370,19 @@ qsetlogin(char *login, char *ttyname)
     Send(1, &ps, &rps, sizeof(ps), sizeof(rps));
 
     return (rps.status);
+}
+#endif
+
+#ifdef __minix
+int
+setpgrp(void)
+{
+    return 0;
+}
+
+void
+_longjmp(jmp_buf _env, int _val)
+{
+    longjmp(_env, _val);
 }
 #endif

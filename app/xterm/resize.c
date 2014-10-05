@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.130 2014/04/25 23:39:42 tom Exp $ */
+/* $XTermId: resize.c,v 1.132 2014/07/24 22:47:09 tom Exp $ */
 
 /*
  * Copyright 2003-2013,2014 by Thomas E. Dickey
@@ -264,13 +264,13 @@ static void
 readstring(FILE *fp, char *buf, const char *str)
 {
     int last, c;
-#if !defined(USG)
+#if !defined(USG) && !defined(__minix)
     /* What is the advantage of setitimer() over alarm()? */
     struct itimerval it;
 #endif
 
     signal(SIGALRM, resize_timeout);
-#if defined(USG)
+#if defined(USG) || defined(__minix)
     alarm(TIMEOUT);
 #else
     memset((char *) &it, 0, sizeof(struct itimerval));
@@ -292,7 +292,7 @@ readstring(FILE *fp, char *buf, const char *str)
     while ((*buf++ = (char) getc(fp)) != last) {
 	;
     }
-#if defined(USG)
+#if defined(USG) || defined(__minix)
     alarm(0);
 #else
     memset((char *) &it, 0, sizeof(struct itimerval));

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.42 2014/07/13 09:10:24 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.44 2014/09/17 08:35:49 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -188,7 +188,7 @@ typedef struct RegisParseState {
     unsigned load_alphabet;
     unsigned load_w, load_h;
     unsigned load_index;
-    char load_glyph;
+    unsigned load_glyph;
     unsigned load_row;
     /* text options */
     int string_rot_set;		/* flag to distinguish string vs. character rotation */
@@ -3729,7 +3729,7 @@ parse_regis_command(RegisParseState *state)
 	state->load_w = 8U;
 	state->load_h = 10U;
 	state->load_alphabet = 1U;
-	state->load_glyph = '\0';
+	state->load_glyph = (unsigned) (unsigned char) '\0';
 	state->load_row = 0U;
 	break;
     case 'P':
@@ -4777,10 +4777,14 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 					      (RegisterNum) register_num,
 					      r, g, b);
 			continue;
-		    }
+		    } {
+			char skip;
 
-		    TRACE(("DATA_ERROR: ignoring unexpected character in ReGIS screen color register mapping value \"%c\"\n",
-			   pop_fragment(&optionarg)));
+			skip = pop_fragment(&optionarg);
+			(void) skip;	/* variable needed only if tracing */
+			TRACE(("DATA_ERROR: ignoring unexpected character in ReGIS screen color register mapping value \"%c\"\n",
+			       skip));
+		    }
 		    return 1;
 		}
 	    }
@@ -5050,8 +5054,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("size multiplier: %s\n",
 		       fragment_to_tempstr(&sizemultiplierarg)));
-		load_regis_extent(fragment_to_tempstr(&sizemultiplierarg),
-				  0, 0, &ww, &hh);
+		if (!load_regis_extent(fragment_to_tempstr(&sizemultiplierarg),
+				       0, 0, &ww, &hh)) {
+		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
+			   state->option, fragment_to_tempstr(&sizemultiplierarg)));
+		    break;
+		}
 		if (!regis_num_to_int(&sizemultiplierarg, &sizemultiplier)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in size multiplier option: \"%s\"\n",
 			   fragment_to_tempstr(&sizemultiplierarg)));
@@ -5195,8 +5203,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("unitsize cell size: %s\n",
 		       fragment_to_tempstr(&unitsizearg)));
-		load_regis_extent(fragment_to_tempstr(&unitsizearg), 0, 0,
-				  &unit_w, &unit_h);
+		if (!load_regis_extent(fragment_to_tempstr(&unitsizearg), 0, 0,
+				       &unit_w, &unit_h)) {
+		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
+			   state->option, fragment_to_tempstr(&unitsizearg)));
+		    break;
+		}
 		if (!regis_num_to_int(&unitsizearg, &unitsize)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in text unit cell size option: \"%s\"\n",
 			   fragment_to_tempstr(&unitsizearg)));
@@ -5690,8 +5702,9 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
     if (extract_regis_string(input, state->temp, state->templen)) {
 	switch (state->command) {
 	case 'l':
+	    /* FIXME: confirm that extra characters are ignored */
 	    TRACE(("found character to load: \"%s\"\n", state->temp));
-	    state->load_glyph = state->temp[0];		/* FIXME: proper conversion */
+	    state->load_glyph = (unsigned) (unsigned char) state->temp[0];
 	    state->load_row = 0U;
 	    break;
 	case 't':
@@ -5744,11 +5757,11 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    unsigned glyph_size;
 
 	    val = strtoul(state->temp, NULL, 16);
-	    TRACE(("found row %u for glyph \"%c\": \"%s\" value %02lx (%lu)\n",
+	    TRACE(("found row %u for glyph %u: \"%s\" value %02lx (%lu)\n",
 		   state->load_row, state->load_glyph, state->temp, val, val));
 
 	    if (state->load_row >= state->load_h) {
-		TRACE(("DATA_ERROR: ignoring extra glyph row for \"%c\"\n",
+		TRACE(("DATA_ERROR: ignoring extra row for glyph %u\n",
 		       state->load_glyph));
 		return 0;
 	    }
@@ -5777,7 +5790,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		unsigned unused_bits;
 
 		glyph = &context->alphabets[state->load_index]
-		    .bytes[(unsigned) state->load_glyph * glyph_size];
+		    .bytes[state->load_glyph * glyph_size];
 		bytew = GLYPH_WIDTH_BYTES(context->alphabets[state->load_index]
 					  .pixw);
 		unused_bits = 8U - (context->alphabets[state->load_index].pixw
@@ -5798,9 +5811,9 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 
 		state->load_row++;
 		context->alphabets[state->load_index]
-		    .loaded[(unsigned) state->load_glyph] = 1;
+		    .loaded[state->load_glyph] = 1;
 #ifdef DEBUG_LOAD
-		TRACE(("marking alphabet %u at index %u glyph '%c' as loaded\n",
+		TRACE(("marking alphabet %u at index %u glyph %u as loaded\n",
 		       state->load_alphabet, state->load_index,
 		       state->load_glyph));
 #endif
@@ -5893,8 +5906,14 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 		    continue;
 		if (state->input.pos >= state->input.len)
 		    break;
-		TRACE(("DATA_ERROR: skipping unknown token in optionset: \"%c\"\n",
-		       pop_fragment(&state->input)));
+		{
+		    char skip;
+
+		    skip = pop_fragment(&state->input);
+		    (void) skip;	/* variable needed only if tracing */
+		    TRACE(("DATA_ERROR: skipping unexpected character in optionset: \"%c\"\n",
+			   skip));
+		}
 		/* FIXME: suboptions */
 	    }
 	    state->option = '_';
@@ -5929,8 +5948,14 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
     }
     if (state->input.pos >= state->input.len)
 	return 0;
-    TRACE(("DATA_ERROR: skipping unknown token at top level: \"%c\"\n",
-	   pop_fragment(&state->input)));
+
+    {
+	char skip;
+
+	skip = pop_fragment(&state->input);
+	(void) skip;		/* variable needed only if tracing */
+	TRACE(("DATA_ERROR: skipping unexpected character at top level: \"%c\"\n", ch));
+    }
     return 0;
 }
 

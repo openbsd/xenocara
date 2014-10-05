@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.110 2014/04/11 19:36:41 Ross.Combs Exp $
+XCOMM $XTermId: Imakefile,v 1.111 2014/07/22 22:29:17 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -140,7 +140,7 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
 # endif
 #endif
 
-#if !defined(OS2Architecture) && !defined(__GNU__)
+#if !defined(OS2Architecture) && !defined(__GNU__) && !defined(Minix3Architecture)
 #if defined(UseUtempter)
         UTMPDEF = -DUSE_UTEMPTER
 #else

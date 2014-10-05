@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1504 2014/07/13 21:58:07 tom Exp $
+  $XTermId: xterm.log.html,v 1.1522 2014/09/18 21:11:45 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,10 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_311">Patch #311 - 2014/09/18</a></li>
+
+    <li><a href="#xterm_310">Patch #310 - 2014/07/25</a></li>
+
     <li><a href="#xterm_309">Patch #309 - 2014/07/13</a></li>
 
     <li><a href="#xterm_308">Patch #308 - 2014/06/19</a></li>
@@ -901,6 +905,65 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_311" id="xterm_311">Patch #311 -
+  2014/09/18</a></h1>
+
+  <ul>
+    <li>mention <code>xclip</code> in manpage as an alternative
+    workaround for copying clipboard data, noting that
+    <code>selectToClipboard</code> (from <a href="#xterm_209">patch
+    #209</a>) is the recommended approach (Debian #639094).</li>
+
+    <li>correct comparison in do_select_regex() of working position
+    against starting column.</li>
+
+    <li>correct initialization for regular-expression feature of
+    <code>exec-selectable</code> and <code>insert-selectable</code>
+    actions (Debian #758633).</li>
+
+    <li>modify logic for <code>exec-formatted</code> and
+    <code>insert-formatted</code> actions to ensure that the
+    formatting occurs just after the selection is received (Debian
+    #758633).</li>
+
+    <li>account for state of reverse-video in special case of
+    cursor coloring (Debian #759734).</li>
+
+    <li>fix a sign-extension problem in ReGIS support, as well as
+    correcting a case where ignored-characters were not really
+    ignored (patch by Ross Combs).</li>
+
+    <li>Enable the "Escape Sequence" menu entry when an OSC&nbsp;50
+    is received. Also disable it if the escape sequence specifies
+    no font (Debian #760208).</li>
+
+    <li>improve fix for the <code>fontsel</code> menu entry from
+    <a href="#xterm_304">patch #304</a>: because the recovery used
+    the "current font", it would fail if one first selected a valid
+    font, then an invalid font (Debian #760207).</li>
+
+    <li>correct an off-by-one in limit-check for
+    <code>ScrnLimitChar</code> function (report by Egmont
+    Koblinger).</li>
+  </ul>
+
+  <h1><a name="xterm_310" id="xterm_310">Patch #310 -
+  2014/07/25</a></h1>
+
+  <ul>
+    <li>update package/freebsd files based on xterm #309 port.</li>
+
+    <li>adapt changes from Minux3.2 which ported <a href=
+    "#xterm_197">xterm #197</a>, to allow building on that platform
+    both using <code>imake</code> as well as using the configure
+    script.</li>
+
+    <li>update precompose.c based on Unicode 7.0</li>
+
+    <li>build-fix for <code>--with-Xaw3dxft</code> option (report
+    by Emanuel Haupt).</li>
   </ul>
 
   <h1><a name="xterm_309" id="xterm_309">Patch #309 -

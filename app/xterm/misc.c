@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.712 2014/05/26 14:45:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.714 2014/09/03 23:59:25 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3412,6 +3412,10 @@ ChangeFontRequest(XtermWidget xw, String buf)
 	    num = screen->menu_font_number;
 	}
 	name = x_strtrim(buf);
+	if (screen->EscapeFontName()) {
+	    FREE_STRING(screen->EscapeFontName());
+	    screen->EscapeFontName() = 0;
+	}
 	if (success && !IsEmpty(name)) {
 #if OPT_RENDERFONT
 	    if (UsingRenderFont(xw)) {
@@ -3423,10 +3427,15 @@ ChangeFontRequest(XtermWidget xw, String buf)
 		memset(&fonts, 0, sizeof(fonts));
 		fonts.f_n = name;
 		SetVTFont(xw, num, True, &fonts);
+		if (num == screen->menu_font_number &&
+		    num != fontMenu_fontescape) {
+		    screen->EscapeFontName() = x_strdup(name);
+		}
 	    }
 	} else {
 	    Bell(xw, XkbBI_MinorError, 0);
 	}
+	update_font_escape();
 	free(name);
     }
 }
@@ -3528,6 +3537,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      * a special case.
      */
     switch (mode) {
+    case 50:
 #if OPT_ISO_COLORS
     case OSC_Reset(4):
     case OSC_Reset(5):
@@ -6043,4 +6053,10 @@ xtermEmbedWindow(Window winToEmbedInto)
 	screen->embed_high = (Dimension) attrs.height;
 	screen->embed_wide = (Dimension) attrs.width;
     }
+}
+
+void
+free_string(String value)
+{
+    free((void *) value);
 }

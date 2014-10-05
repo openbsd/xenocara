@@ -62,6 +62,7 @@
 /* #undef HAVE_LIB_PCRE */		/* CF_WITH_PCRE */
 #define HAVE_LIB_XAW 1		/* CF_X_ATHENA */
 /* #undef HAVE_LIB_XAW3D */		/* CF_X_ATHENA(--with-Xaw3d) */
+/* #undef HAVE_LIB_XAW3DXFT */	/* CF_X_ATHENA(--with-Xaw3dxft) */
 /* #undef HAVE_LIB_XAWPLUS */		/* CF_X_ATHENA(--with-XawPlus) */
 #define HAVE_LIB_XCURSOR 1	/* AC_CHECK_LIB(Xcursor) */
 #define HAVE_MKDTEMP 1		/* AC_CHECK_FUNCS(mkdtemp) */

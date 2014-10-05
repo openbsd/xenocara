@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.326 2014/07/12 22:50:28 Steve.Wall Exp $ */
+/* $XTermId: menu.c,v 1.327 2014/09/03 23:35:52 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -822,10 +822,7 @@ domenu(Widget w,
 		if (IsEmpty(screen->menu_font_names[n][fNorm]))
 		    SetItemSensitivity(fontMenuEntries[n].widget, False);
 	    }
-	    SetItemSensitivity(
-				  fontMenuEntries[fontMenu_fontescape].widget,
-				  (screen->menu_font_names[fontMenu_fontescape][fNorm]
-				   ? True : False));
+	    update_font_escape();
 	    update_menu_allowBoldFonts();
 #if OPT_BOX_CHARS
 	    update_font_boxchars();
@@ -872,10 +869,10 @@ domenu(Widget w,
 	SetItemSensitivity(fontMenuEntries[fontMenu_fontsel].widget, True);
 #else
 	FindFontSelection(xw, NULL, True);
-	SetItemSensitivity(
-			      fontMenuEntries[fontMenu_fontsel].widget,
-			      (screen->menu_font_names[fontMenu_fontsel][fNorm]
-			       ? True : False));
+	SetItemSensitivity(fontMenuEntries[fontMenu_fontsel].widget,
+			   (screen->SelectFontName()
+			    ? True
+			    : False));
 #endif
 	break;
 
@@ -2632,6 +2629,19 @@ HandleAllowBoldFonts(Widget w,
 {
     HANDLE_VT_TOGGLE(allowBoldFonts);
 }
+
+#if OPT_LOAD_VTFONTS
+void
+update_font_escape(void)
+{
+    TScreen *screen = TScreenOf(term);
+
+    SetItemSensitivity(fontMenuEntries[fontMenu_fontescape].widget,
+		       ((screen->allowFontOps &&
+			 screen->EscapeFontName())
+			? True : False));
+}
+#endif
 
 #if OPT_DEC_CHRSET
 void

@@ -5,7 +5,6 @@
  * unicode/make-precompose.sh
  */
 /* @XTermId@ */
-/* @XFree86@ */
 
 #include <precompose.h>
 

@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.133 2014/04/12 00:03:12 Ross.Combs Exp $ */
+/* $XTermId: menu.h,v 1.135 2014/09/04 00:17:55 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -451,6 +451,12 @@ extern void update_bellIsUrgent(void);
 extern void update_poponbell(void);
 
 #define update_marginbell() /* nothing */
+
+#if OPT_LOAD_VTFONTS
+extern void update_font_escape(void);
+#else
+#define update_font_escape() /* nothing */
+#endif
 
 #if OPT_ALLOW_XXX_OPS
 extern void update_menu_allowColorOps(void);

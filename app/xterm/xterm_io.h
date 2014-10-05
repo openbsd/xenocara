@@ -1,7 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.56 2013/01/06 15:20:45 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.58 2014/07/25 08:26:56 tom Exp $ */
 
 /*
- * Copyright 2000-2012,2013 by Thomas E. Dickey
+ * Copyright 2000-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -41,6 +41,11 @@
  * FIXME:  some, such as those defining USE_TERMIOS should be moved to xterm.h
  * as they are integrated with the configure script.
  */
+#if defined(__minix)
+#define USE_POSIX_TERMIOS 1
+#undef HAVE_POSIX_OPENPT	/* present, does not work */
+#endif
+
 #ifdef CSRG_BASED
 #define USE_TERMIOS
 #endif
@@ -162,9 +167,9 @@
  */
 #ifdef SYSV
 #ifdef USE_USG_PTYS
-#include <sys/stream.h>			/* get typedef used in ptem.h */
+#include <sys/stream.h>		/* get typedef used in ptem.h */
 #ifdef HAVE_SYS_PTEM_H
-#include <sys/ptem.h>			/* get struct winsize */
+#include <sys/ptem.h>		/* get struct winsize */
 #endif
 #endif /* USE_USG_PTYS */
 #endif /* SYSV */
@@ -203,7 +208,7 @@
 #endif
 
 #if defined(__sgi) && (OSMAJORVERSION >= 5)
-#undef TIOCLSET				/* defined, but not useable */
+#undef TIOCLSET			/* defined, but not useable */
 #endif
 
 #if defined(__GNU__) || defined(__MVS__) || defined(__osf__)
@@ -212,7 +217,7 @@
 #endif
 
 #if defined (__sgi) || (defined(__linux__) && defined(__sparc__)) || defined(__UNIXWARE__)
-#undef TIOCLSET /* XXX why is this undef-ed again? */
+#undef TIOCLSET			/* XXX why is this undef-ed again? */
 #endif
 
 #if defined(sun) || defined(__UNIXWARE__)

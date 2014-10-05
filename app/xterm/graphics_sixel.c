@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.8 2014/05/02 22:53:20 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.9 2014/07/15 21:07:44 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -214,7 +214,6 @@ update_sixel_aspect(SixelContext const *context, Graphic *graphic)
  * Interpret sixel graphics sequences.
  *
  * Resources:
- *  http://en.wikipedia.org/wiki/Sixel
  *  http://vt100.net/docs/vt3xx-gp/chapter14.html
  *  ftp://ftp.cs.utk.edu/pub/shuford/terminal/sixel_graphics_news.txt
  *  ftp://ftp.cs.utk.edu/pub/shuford/terminal/all_about_sixels.txt

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1367 2014/07/12 22:49:54 Steve.Wall Exp $ */
+/* $XTermId: charproc.c,v 1.1370 2014/09/15 23:39:44 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -7972,8 +7972,8 @@ VTInitialize(Widget wrequest,
     DefaultFontNames[fWide] = x_strdup(wnew->misc.default_font.f_w);
     DefaultFontNames[fWBold] = x_strdup(wnew->misc.default_font.f_wb);
 #endif
-    TScreenOf(wnew)->MenuFontName(fontMenu_fontescape) = NULL;
-    TScreenOf(wnew)->MenuFontName(fontMenu_fontsel) = NULL;
+    TScreenOf(wnew)->EscapeFontName() = NULL;
+    TScreenOf(wnew)->SelectFontName() = NULL;
 
     TScreenOf(wnew)->menu_font_number = fontMenu_default;
     init_Sres(screen.initial_font);
@@ -9830,7 +9830,9 @@ ShowCursor(void)
 		}
 	    }
 	}
-	if (T_COLOR(screen, TEXT_CURSOR) == xw->dft_foreground) {
+	if (T_COLOR(screen, TEXT_CURSOR) == (reversed
+					     ? xw->dft_background
+					     : xw->dft_foreground)) {
 	    setCgsBack(xw, currentWin, currentCgs, fg_pix);
 	}
 	setCgsFore(xw, currentWin, currentCgs, bg_pix);
@@ -9906,7 +9908,9 @@ ShowCursor(void)
 	     * Set up a new request.
 	     */
 	    if (filled) {
-		if (T_COLOR(screen, TEXT_CURSOR) == xw->dft_foreground) {
+		if (T_COLOR(screen, TEXT_CURSOR) == (reversed
+						     ? xw->dft_background
+						     : xw->dft_foreground)) {
 		    setCgsBack(xw, currentWin, currentCgs, fg_pix);
 		}
 		setCgsFore(xw, currentWin, currentCgs, bg_pix);
@@ -10764,7 +10768,7 @@ DoSetSelectedFont(Widget w,
     } else {
 	Boolean failed = False;
 	int oldFont = TScreenOf(xw)->menu_font_number;
-	String save = TScreenOf(xw)->MenuFontName(fontMenu_fontsel);
+	String save = TScreenOf(xw)->SelectFontName();
 	char *val;
 	char *test = 0;
 	char *used = 0;
@@ -10794,14 +10798,14 @@ DoSetSelectedFont(Widget w,
 		&& used != 0
 		&& !strchr(used, '\n')
 		&& (test = x_strdup(used)) != 0) {
-		TScreenOf(xw)->MenuFontName(fontMenu_fontsel) = test;
+		TScreenOf(xw)->SelectFontName() = test;
 		if (!xtermLoadFont(term,
 				   xtermFontName(used),
 				   True,
 				   fontMenu_fontsel)) {
 		    failed = True;
 		    free(test);
-		    TScreenOf(xw)->MenuFontName(fontMenu_fontsel) = save;
+		    TScreenOf(xw)->SelectFontName() = save;
 		}
 	    } else {
 		failed = True;
@@ -10830,7 +10834,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     Atom target;
 
     if (!atom_name)
-	atom_name = (screen->mappedSelect
+	atom_name = ((screen->mappedSelect && atomCount)
 		     ? screen->mappedSelect[0]
 		     : "PRIMARY");
     TRACE(("FindFontSelection(%s)\n", atom_name));
@@ -10850,10 +10854,10 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 
     target = XmuInternAtom(XtDisplay(xw), *pAtom);
     if (justprobe) {
-	screen->MenuFontName(fontMenu_fontsel) =
+	screen->SelectFontName() =
 	    XGetSelectionOwner(XtDisplay(xw), target) ? _Font_Selected_ : 0;
 	TRACE(("...selected fontname '%s'\n",
-	       NonNull(screen->MenuFontName(fontMenu_fontsel))));
+	       NonNull(screen->SelectFontName())));
     } else {
 	XtGetSelectionValue((Widget) xw, target, XA_STRING,
 			    DoSetSelectedFont, NULL,

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.581 2014/04/14 18:42:54 Ross.Combs Exp $
+.\" $XTermId: xterm.man,v 1.582 2014/09/18 08:35:37 tom Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -4623,6 +4623,24 @@ When configured to use the clipboard (see resource \fBselectToClipboard\fP),
 the problem with persistence of ownership is bypassed.
 Otherwise, there is no difference regarding the data which can be
 passed via selection.
+.PP
+The PRIMARY token is a standard X feature, documented in the ICCCM
+(\fIInter-Client Communication Conventions Manual\fR),
+which states
+.RS
+.PP
+The selection named by the atom PRIMARY is used for all commands that take only a single argument and is the principal means of communication between clients that use the selection mechanism. 
+.RE
+.PP
+However, many applications use CLIPBOARD in imitation of other windowing
+systems.
+The \fBselectToClipboard\fP resource (and corresponding menu entry
+\fISelect to Clipboard\fP) introduce the SELECT token (known only
+to \fI\*n\fP) which chooses between the PRIMARY and CLIPBOARD tokens.
+.PP
+Without using this feature, one can use workarounds such as the
+\fIxclip\fP program to show the contents of the X clipboard within an
+\fI\*n\fP window.
 .
 .SS SELECTION TARGETS
 The different types of data which are passed depend on what the receiving
