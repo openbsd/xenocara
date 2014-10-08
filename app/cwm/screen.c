@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.69 2014/10/08 12:48:51 okan Exp $
+ * $OpenBSD: screen.c,v 1.70 2014/10/08 15:31:01 okan Exp $
  */
 
 #include <sys/param.h>
@@ -38,7 +38,7 @@ screen_init(int which)
 	XSetWindowAttributes	 rootattr;
 	unsigned int		 nwins, i;
 
-	sc = xcalloc(1, sizeof(*sc));
+	sc = xmalloc(sizeof(*sc));
 
 	TAILQ_INIT(&sc->clientq);
 	TAILQ_INIT(&sc->regionq);
@@ -48,6 +48,7 @@ screen_init(int which)
 	sc->rootwin = RootWindow(X_Dpy, sc->which);
 	sc->cycling = 0;
 	sc->hideall = 0;
+
 	conf_screen(sc);
 
 	xu_ewmh_net_supported(sc);
