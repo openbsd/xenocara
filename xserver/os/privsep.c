@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.26 2013/08/13 18:14:31 kettenis Exp $ */
+/* $OpenBSD: privsep.c,v 1.27 2014/10/18 14:39:40 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -114,7 +114,6 @@ struct okdev {
 	{"/dev/ttyI0", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/ttyJ0", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/pci", O_RDWR | O_NONBLOCK | O_EXCL},
-	{"/dev/agp0", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/drm0", O_RDWR },
 	{"/dev/drm1", O_RDWR },
 	{"/dev/drm2", O_RDWR },
