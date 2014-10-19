@@ -1,3 +1,97 @@
+commit d27abbf74fee30ddb9a3ca0d597ca0ce16a1bc35
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Tue Sep 24 23:14:35 2013 +0200
+
+    xf86-video-savage: bump to version 2.3.7
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 966a0e95d6c420e5e0ab01e665144e66a4004846
+Author: Alexander Grothe <alexander.grothe@gmail.com>
+Date:   Sun Sep 15 11:00:41 2013 +0200
+
+    Drop miInitializeBackingStore() call
+    
+    It was only needed up to xserver 1.4 and is not supported in the
+    recent xserver versions.
+    
+    Thanks to Alexander Grothe for reporting the issue and providing
+    the fix.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=65444
+    
+    > commit 1cb0261ef54b7dd6a7ef84e1c3959e424706228b
+    > Author: Daniel Martin <consume.noise@gmail.com>
+    > Date:   Thu Sep 6 00:38:26 2012 +0200
+    >
+    >    dix: Delete mibstore.h
+    >
+    >    Since Nov 2010 (commit c4c4676) the only purpose of mibstore.h was to
+    >    define an empty function (miInitializeBackingStore()) for backward
+    >    compatibility. Time to say goodbye.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 44581aef5f878e7f2b34d5693d50ef75263b195c
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Wed Feb 6 22:14:59 2013 +0100
+
+    Fix video window height on MX/IX/SuperSavage
+    
+    Some copy-pasto caused the width to be written into the height register.
+    
+    Thanks to Hans-Jürgen Mauser for pointing out a couple of more places this
+    was wrong.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 3425ddb4c5dd7bbd91068c7ba0b1c001719795a5
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Thu May 9 12:39:58 2013 +0000
+
+    Fix building with TRACEON defined
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit ac460e6836bdd2cd16c9d29743376c16fdc6924e
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Tue May 7 22:41:31 2013 +0200
+
+    exa: Use exaGetPixmapFirstPixel() instead of devPrivate.ptr
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit c30f9b4a61283f21f6bd230950f52961afa203cf
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Thu May 9 12:36:33 2013 +0000
+
+    Really fix default accel arch when built with no XAA
+    
+    After ca9718a887ecbc59b76869af673791ab591b849b it would
+    still default to XAA unless AccelMethod option was used.
+    
+    Make sure the default is EXA if there is no XAA support.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit ca9718a887ecbc59b76869af673791ab591b849b
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Sat Dec 22 20:00:00 2012 +1000
+
+    savage: fix default accel arch when built with no XAA
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 3d181030a6ba2205a57ef4665e53aed0251ccaa6
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Wed Jul 18 18:52:38 2012 +1000
+
+    savage: move compat-api.h down to proper place.
+    
+    This screws up when DRI isn't enabled.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit cb27a7a072c6e087a2e272d84c1d569dc717da8b
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

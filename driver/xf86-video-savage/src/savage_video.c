@@ -1717,28 +1717,28 @@ SavageDisplayVideoNew(
         OUTREG(SEC_STREAM2_STRIDE_LPB, pitch & 0xfff );
         OUTREG(SEC_STREAM2_WINDOW_START, ((dstBox->x1+1) << 16) | (dstBox->y1+1) );
         OUTREG(SEC_STREAM2_WINDOW_SZ, ((dstBox->x2-dstBox->x1) << 16) 
-	   | (dstBox->x2-dstBox->x1) );
+	   | (dstBox->y2 - dstBox->y1) );
     } else if (psav->IsPrimary) {
         OUTREG(SEC_STREAM_FBUF_ADDR0, (offset + (x1>>15)) 
 	   & (0x7ffffff & ~BASE_PAD));
         OUTREG(SEC_STREAM_STRIDE, pitch & 0xfff );
         OUTREG(SEC_STREAM_WINDOW_START, ((dstBox->x1+1) << 16) | (dstBox->y1+1) );
         OUTREG(SEC_STREAM_WINDOW_SZ, ((dstBox->x2-dstBox->x1) << 16) 
-	   | (dstBox->x2-dstBox->x1) );
+	   | (dstBox->y2 - dstBox->y1) );
     } else {
         OUTREG(SEC_STREAM_FBUF_ADDR0, (offset + (x1>>15)) 
 	   & (0x7ffffff & ~BASE_PAD));
         OUTREG(SEC_STREAM_STRIDE, pitch & 0xfff );
         OUTREG(SEC_STREAM_WINDOW_START, ((dstBox->x1+1) << 16) | (dstBox->y1+1) );
         OUTREG(SEC_STREAM_WINDOW_SZ, ((dstBox->x2-dstBox->x1) << 16) 
-	   | (dstBox->x2-dstBox->x1) );
+	   | (dstBox->y2 - dstBox->y1) );
 #if 0
         OUTREG(SEC_STREAM2_FBUF_ADDR0, (offset + (x1>>15)) 
 	   & (0x7ffffff & ~BASE_PAD));
         OUTREG(SEC_STREAM2_STRIDE_LPB, pitch & 0xfff );
         OUTREG(SEC_STREAM2_WINDOW_START, ((dstBox->x1+1) << 16) | (dstBox->y1+1) );
         OUTREG(SEC_STREAM2_WINDOW_SZ, ((dstBox->x2-dstBox->x1) << 16) 
-	   | (dstBox->x2-dstBox->x1) );
+	   | (dstBox->y2 - dstBox->y1) );
 #endif
     }
 
