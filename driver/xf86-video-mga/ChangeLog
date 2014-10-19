@@ -1,3 +1,125 @@
+commit f647727a2c1d4c2a9261c411cd3df71c3c9f0c06
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Dec 5 12:09:27 2013 +1000
+
+    mga: bump release to 1.6.3
+
+commit 55525bdfc00b0b746401f6ea6ed289048e9d06eb
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Dec 5 11:51:39 2013 +1000
+
+    mga: fix XAA runtime
+    
+    XAA->USE_XAA add USE_XAA.
+    
+    Tested-by: Avengence on #xorg-devel
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 6aa94687233f55a8044efe83cac82b04ab19609f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 17 10:27:42 2013 -0800
+
+    Remove mga_esc.c vestigal stub
+    
+    Previously contained MGA HAL code, was left an empty shell by the
+    removal of USEMGAHAL in commit 94bbeb132c7eda.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Ian Romanick <ian.d.romanick@intel.com>
+
+commit e9109a0b04695d6971c94abe271dda2dc1a5e886
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Thu Oct 31 22:48:18 2013 +0100
+
+    mga: Use exaGetPixmapFirstPixel() instead of devPrivate.ptr
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit a77b9c5143591672fbe56f4428ced439c1f4d0f3
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Jul 29 13:02:21 2013 +0200
+
+    Disable HW cursor by default on G200 server chips
+    
+    Disable HW cursor by default on G200 server chips as these chips a
+    re often used with a remote graphics link which cannot display
+    the HW cursor.
+    This can be overridden by a config option.
+    Most desktops today use ARGB cursors anyhow which are not
+    supported by this driver anyhow. Thus the performance penalty
+    should be irrelevant.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit dba8778b9214dc3794198029fc6d59b3e97700d4
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Mon Jul 29 13:01:45 2013 +0200
+
+    Restructure code to make it more readable
+    
+    With the previous structure it wasn't immediately clear when SecondCrtc
+    and HWCursor were set to which value. Make the code more readable.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit cbcee5de1ba02c8a58bae932a0cb98093dccefd9
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Thu Oct 17 22:01:20 2013 +0200
+
+    Fix dual head crash without XAA
+    
+    https://launchpad.net/bugs/1180986
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+    Reviewed-by: Robert Jacobs <robert.n.jacobs@gmail.com>
+    Tested-by: Robert Jacobs <robert.n.jacobs@gmail.com>
+
+commit 15815c8612694a89d0d8593b3e603fdcdeacdd05
+Author: Andy MacLean <andy-ub1@themacleans.org.uk>
+Date:   Thu Oct 17 19:51:36 2013 +0200
+
+    Unbreak dual head (xinerama)
+    
+    This patch has been used in Debian, Ubuntu and Gentoo for years.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=18472
+    https://launchpad.net/bugs/292214
+    https://bugs.gentoo.org/show_bug.cgi?id=265100
+    
+    Signed-off-by: Andy MacLean <andy-ub1@themacleans.org.uk>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+    Reviewed-by: Robert Jacobs <robert.n.jacobs@gmail.com>
+    Tested-by: Robert Jacobs <robert.n.jacobs@gmail.com>
+
+commit 12af175fee1d3f6f17f8391ec642d904deca3783
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Tue Jun 7 19:31:16 2011 +0200
+
+    Disable Linear Expansion on BE
+    
+    Linear Expansion doesn't work on BE as the bit order in
+    a word is reversed. ScreenToScreenColorExpansion allows
+    to adjust the bit order in a byte, still the bytes have
+    the wrong order.
+    
+    Reviewed-by:  <wharms@bfs.de>
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
+commit 49381ff2c3aa98be5bb84494b2ad3f81a0d31bcc
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Jan 7 23:04:36 2013 +0100
+
+    Restrict kernel driver matching to g200 server chips
+    
+    Otherwise we might catch devices handled by matroxfb, not the mgag200
+    kms driver.
+    
+    Debian bug#697532
+    
+    Reported-by: olafBuddenhagen@gmx.net
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
 commit fcd27b2b4ab2a181d5263296e71cda2d8772ba2d
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Fri Sep 28 11:36:44 2012 +1000

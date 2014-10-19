@@ -710,7 +710,11 @@ Bool mgaAccelInit( ScreenPtr pScreen )
     /* screen to screen color expansion */
     if(pMga->AccelFlags & USE_LINEAR_EXPANSION) {
 	infoPtr->ScreenToScreenColorExpandFillFlags =
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+						BIT_ORDER_IN_BYTE_MSBFIRST;
+#else 
 						BIT_ORDER_IN_BYTE_LSBFIRST;
+#endif
 	infoPtr->SetupForScreenToScreenColorExpandFill =
 		mgaSetupForScreenToScreenColorExpandFill;
 	infoPtr->SubsequentScreenToScreenColorExpandFill =

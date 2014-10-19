@@ -729,7 +729,7 @@ mgaDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
 {
     PMGA(pSrc);
 
-    char *src = pSrc->devPrivate.ptr;
+    char *src = (char *) exaGetPixmapFirstPixel(pSrc);
     int src_pitch = exaGetPixmapPitch(pSrc);
 
     int cpp = (pSrc->drawable.bitsPerPixel + 7) / 8;

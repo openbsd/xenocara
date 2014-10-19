@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-mga],
-        [1.6.2],
+        [1.6.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-mga])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -147,6 +147,9 @@ fi
 AC_MSG_CHECKING([whether to include XAA support])
 AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
 AC_MSG_RESULT([$XAA])
+if test "x$XAA" = xyes; then
+        AC_DEFINE(USE_XAA, 1, [Build support for XAA])
+fi
 
 # Properly handle EXA.
 AC_MSG_CHECKING([whether to enable EXA support])

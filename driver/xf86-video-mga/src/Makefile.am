@@ -39,7 +39,6 @@ mga_drv_la_SOURCES = \
          mga_dga.c \
          mga_dh.c \
          mga_driver.c \
-         mga_esc.c \
          mga_g450pll.c \
          mga.h \
          mga_halmod.c \
