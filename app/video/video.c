@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.11 2012/08/14 12:09:33 matthieu Exp $	*/
+/*	$OpenBSD: video.c,v 1.12 2014/10/23 07:36:06 brad Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -735,19 +735,19 @@ dev_get_sizes(struct video *vid)
 	while (ioctl(d->fd, VIDIOC_ENUM_FRAMESIZES, &fsize) == 0) {
 		switch (fsize.type) {
 		case V4L2_FRMSIZE_TYPE_DISCRETE:
-			sizes[nsizes].w = fsize.un.discrete.width;
-			sizes[nsizes].h = fsize.un.discrete.height;
+			sizes[nsizes].w = fsize.discrete.width;
+			sizes[nsizes].h = fsize.discrete.height;
 			nsizes++;
 			break;
 		case V4L2_FRMSIZE_TYPE_CONTINUOUS:
-			step_w = (((fsize.un.stepwise.max_width -
-			    fsize.un.stepwise.min_width) / MAX_DSZS) + 15) & ~15;
-			step_h = (((fsize.un.stepwise.max_height -
-			    fsize.un.stepwise.min_height) / MAX_DSZS) + 15) & ~15;
-			for (tmp_w = fsize.un.stepwise.min_width,
-			    tmp_h = fsize.un.stepwise.min_height;
-			    tmp_w <= fsize.un.stepwise.max_width &&
-			    tmp_h <= fsize.un.stepwise.max_height;
+			step_w = (((fsize.stepwise.max_width -
+			    fsize.stepwise.min_width) / MAX_DSZS) + 15) & ~15;
+			step_h = (((fsize.stepwise.max_height -
+			    fsize.stepwise.min_height) / MAX_DSZS) + 15) & ~15;
+			for (tmp_w = fsize.stepwise.min_width,
+			    tmp_h = fsize.stepwise.min_height;
+			    tmp_w <= fsize.stepwise.max_width &&
+			    tmp_h <= fsize.stepwise.max_height;
 			    tmp_w += step_w, tmp_h += step_h) {
 				sizes[nsizes].w = tmp_w;
 				sizes[nsizes].h = tmp_h;
@@ -756,18 +756,18 @@ dev_get_sizes(struct video *vid)
 			}
 			break;
 		case V4L2_FRMSIZE_TYPE_STEPWISE:
-			step_w = (((fsize.un.stepwise.max_width -
-			    fsize.un.stepwise.min_width) / MAX_DSZS) +
-			    fsize.un.stepwise.step_width - 1) &
-			    ~(fsize.un.stepwise.step_width - 1);
-			step_h = (((fsize.un.stepwise.max_height -
-			    fsize.un.stepwise.min_height) / MAX_DSZS) +
-			    fsize.un.stepwise.step_height - 1) &
-			    ~(fsize.un.stepwise.step_height - 1);
-			for (tmp_w = fsize.un.stepwise.min_width,
-			    tmp_h = fsize.un.stepwise.min_height;
-			    tmp_w <= fsize.un.stepwise.max_width &&
-			    tmp_h <= fsize.un.stepwise.max_height;
+			step_w = (((fsize.stepwise.max_width -
+			    fsize.stepwise.min_width) / MAX_DSZS) +
+			    fsize.stepwise.step_width - 1) &
+			    ~(fsize.stepwise.step_width - 1);
+			step_h = (((fsize.stepwise.max_height -
+			    fsize.stepwise.min_height) / MAX_DSZS) +
+			    fsize.stepwise.step_height - 1) &
+			    ~(fsize.stepwise.step_height - 1);
+			for (tmp_w = fsize.stepwise.min_width,
+			    tmp_h = fsize.stepwise.min_height;
+			    tmp_w <= fsize.stepwise.max_width &&
+			    tmp_h <= fsize.stepwise.max_height;
 			    tmp_w += step_w, tmp_h += step_h) {
 				sizes[nsizes].w = tmp_w;
 				sizes[nsizes].h = tmp_h;
@@ -831,8 +831,8 @@ dev_get_rates(struct video *vid)
 			case V4L2_FRMIVAL_TYPE_DISCRETE:
 				if (ival.index < MAX_RATES) {
 					d->rates[i][ival.index] =
-					    ival.un.discrete.denominator /
-					    ival.un.discrete.numerator;
+					    ival.discrete.denominator /
+					    ival.discrete.numerator;
 				}
 				break;
 			case V4L2_FRMIVAL_TYPE_CONTINUOUS:
@@ -841,7 +841,7 @@ dev_get_rates(struct video *vid)
 					printf("invalid frame type!\n");
 					return 0;
 				}
-				s = &ival.un.stepwise;
+				s = &ival.stepwise;
 				if (s->step.denominator != s->min.denominator ||
 				    s->step.denominator != s->max.denominator) {
 					printf("can't parse frame rate!\n");
