@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.481 2014/09/18 00:17:35 tom Exp $ */
+/* $XTermId: button.c,v 1.482 2014/09/26 23:58:14 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -3257,7 +3257,7 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 			    int start_col = indexToCol(indexed, len, start_inx);
 			    int finis_col = indexToCol(indexed, len, finis_inx);
 
-			    if (start_col >= actual &&
+			    if (start_col <= actual &&
 				actual < finis_col) {
 				int test = finis_col - start_col;
 				if (best_len < test) {
