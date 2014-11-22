@@ -762,7 +762,7 @@ present_pixmap(WindowPtr window,
      * in the same frame
      */
 
-    if (!update) {
+    if (!update && pixmap) {
         xorg_list_for_each_entry_safe(vblank, tmp, &window_priv->vblank, window_list) {
 
             if (!vblank->pixmap)
@@ -858,7 +858,7 @@ present_pixmap(WindowPtr window,
 
     xorg_list_add(&vblank->event_queue, &present_exec_queue);
     vblank->queued = TRUE;
-    if (target_msc >= crtc_msc) {
+    if ((pixmap && target_msc >= crtc_msc) || (!pixmap && target_msc > crtc_msc)) {
         ret = present_queue_vblank(screen, target_crtc, vblank->event_id, target_msc);
         if (ret != Success) {
             xorg_list_del(&vblank->event_queue);
@@ -921,7 +921,7 @@ present_notify_msc(WindowPtr window,
                           0, 0,
                           NULL,
                           NULL, NULL,
-                          0,
+                          PresentOptionAsync,
                           target_msc, divisor, remainder, NULL, 0);
 }
 
