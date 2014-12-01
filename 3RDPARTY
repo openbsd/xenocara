@@ -1,6 +1,5 @@
-# $OpenBSD: 3RDPARTY,v 1.211 2014/11/23 20:05:31 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.212 2014/12/01 18:09:59 matthieu Exp $
 #
-
 Package: 	Freetype
 Version:	2.5.3
 Current Vers:	2.5.3
@@ -9,7 +8,7 @@ Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
 Version:	312
-Current Vers:	312
+Current Vers:	313
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
@@ -54,7 +53,6 @@ Version:	1.2.4.1
 Current Vers:	1.2.4.1
 Maintainer:	Jim Knoble
 Archive Site:	http://www.jmknoble.net/software/x11-ssh-askpass/
-
 
 Package:	fvwm
 Version:	2.2.5

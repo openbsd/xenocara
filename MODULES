@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.310 2014/11/23 20:05:31 matthieu Exp $
+# $OpenBSD: MODULES,v 1.311 2014/12/01 18:09:59 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -19,7 +19,7 @@ app/mkcomposecache	1.2.1		needs-import
 app/mkfontdir		1.0.7	7.7
 app/mkfontscale		1.1.1	7.7+
 app/oclock		1.0.3
-app/rgb			1.0.5
+app/rgb			1.0.6		needs-update
 app/scripts		1.0.1
 app/sessreg		1.0.8	7.7+
 app/setxkbmap		1.3.0	7.7
