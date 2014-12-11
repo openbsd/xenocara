@@ -421,3 +421,14 @@
 ./var/cache
 ./var/cache/fontconfig
 ./var/cache/fontconfig/CACHEDIR.TAG
+./usr/X11R6/lib/libgbm.a
+./usr/X11R6/lib/libxcb-cursor.la
+./usr/X11R6/lib/libxcb-ewmh.la
+./usr/X11R6/lib/libxcb-icccm.la
+./usr/X11R6/lib/libxcb-image.la
+./usr/X11R6/lib/libxcb-keysyms.la
+./usr/X11R6/lib/libxcb-render-util.la
+./usr/X11R6/lib/libxcb-util.la
+./usr/X11R6/lib/locate
+./usr/X11R6/lib/locate/xorg.db
+./usr/X11R6/lib/pkgconfig/presentproto.pc
