@@ -1013,8 +1013,8 @@ do_ico_window(void *ptr)
 	icoX = ((closure->winW - icoW) * (rand() & 0xFF)) >> 8;
 	icoY = ((closure->winH - icoH) * (rand() & 0xFF)) >> 8;
 #else
-	icoX = ((closure->winW - icoW) * arc4random_uniform(0xFF)) >> 8;
-        icoY = ((closure->winH - icoH) * arc4random_uniform(0xFF)) >> 8;
+	icoX = ((closure->winW - icoW) * arc4random_uniform(0x100)) >> 8;
+        icoY = ((closure->winH - icoH) * arc4random_uniform(0x100)) >> 8;
 #endif
 	/* Bounce the box in the window */
 
