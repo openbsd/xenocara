@@ -1,4 +1,4 @@
-.\" t
+'\" t
 .\" $XConsortium: xedit.man,v 1.23 94/04/17 20:43:39 matt Exp $
 .\" Copyright (c) 1994  X Consortium
 .\"
@@ -95,8 +95,8 @@ Ctrl-k	Kill To End Of Line
 Meta-d	Delete Next Word
 Ctrl-l	Redraw Display
 Meta-D	Kill Word
-Ctrl-m	Newline	Meta-h
-Delete Previous Word
+Ctrl-m	Newline
+Meta-h	Delete Previous Word
 Ctrl-n	Next Line
 Meta-H	Backward Kill Word
 Ctrl-o	Newline And Backup
@@ -114,8 +114,8 @@ Ctrl-v	Next Page
 Meta-Shift Delete	Kill Previous Word
 Ctrl-w	Kill Selection	
 Meta-Backspace	Delete Previous Word
-Ctrl-y	Unkill	Meta-Shift Backspace
-Kill Previous Word
+Ctrl-y	Unkill
+Meta-Shift Backspace	Kill Previous Word
 Ctrl-z	Scroll One Line Up
 Meta-z	Scroll One Line Down
 Ctrl-_	Undo
@@ -134,7 +134,7 @@ Button 2 Down	Insert Current Selection (paste)
 Button 3 Down	Extend Current Selection
 Button 3 Motion	Adjust Selection
 Button 3 Up	End Selection (cut)
-.fi
+.TE
 .sp
 
 .SH LINE EDIT MODE
