@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.714 2014/09/03 23:59:25 tom Exp $ */
+/* $XTermId: misc.c,v 1.715 2014/10/29 00:54:25 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1018,15 +1018,10 @@ HandleFocusChange(Widget w GCC_UNUSED,
     if (screen->quiet_grab
 	&& (event->mode == NotifyGrab || event->mode == NotifyUngrab)) {
 	/* EMPTY */ ;
-    } else if ((event->type == FocusIn || event->type == FocusOut)
-	       && event->detail == NotifyPointer) {
-	/*
-	 * NotifyPointer is sent to the window where the pointer is, and is
-	 * in addition to events sent to the old/new focus-windows.
-	 */
-	/* EMPTY */ ;
     } else if (event->type == FocusIn) {
-	setXUrgency(xw, False);
+	if (event->detail != NotifyPointer) {
+	    setXUrgency(xw, False);
+	}
 
 	/*
 	 * NotifyNonlinear only happens (on FocusIn) if the pointer was not in

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1370 2014/09/15 23:39:44 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1379 2014/11/28 22:27:20 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -674,6 +674,11 @@ static XtResource xterm_resources[] =
     Ires(XtNprintAttributes, XtCPrintAttributes, SPS.print_attributes, 1),
 #endif
 
+#if OPT_REGIS_GRAPHICS
+    Sres(XtNregisScreenSize, XtCRegisScreenSize, screen.regis_screensize,
+	 "800x1000"),
+#endif
+
 #if OPT_SHIFT_FONTS
     Bres(XtNshiftFonts, XtCShiftFonts, misc.shift_fonts, True),
 #endif
@@ -906,7 +911,7 @@ CheckBogusForeground(TScreen *screen, const char *tag)
     for (pass = 0; pass < 2; ++pass) {
 	row = screen->cur_row;
 	for (; isClear && (row <= screen->max_row); ++row) {
-	    LineData *ld = getLineData(screen, row)->;
+	    CLineData *ld = getLineData(screen, row);
 
 	    if (ld != 0) {
 		IAttr *attribs = ld->attribs;
@@ -4791,7 +4796,7 @@ PreeditPosition(XtermWidget xw)
 {
     TInput *input = lookupTInput(xw, (Widget) xw);
     TScreen *screen = TScreenOf(xw);
-    LineData *ld;
+    CLineData *ld;
     XPoint spot;
     XVaNestedList list;
 
@@ -4958,7 +4963,7 @@ dotext(XtermWidget xw,
 
     for (offset = 0; offset < len; offset += (Cardinal) this_col) {
 #if OPT_DEC_CHRSET
-	LineData *ld = getLineData(screen, screen->cur_row);
+	CLineData *ld = getLineData(screen, screen->cur_row);
 #endif
 
 	last_col = LineMaxCol(screen, ld);
@@ -4994,7 +4999,7 @@ dotext(XtermWidget xw,
 
 #if OPT_WIDE_CHARS
 unsigned
-visual_width(IChar *str, Cardinal len)
+visual_width(const IChar *str, Cardinal len)
 {
     /* returns the visual width of a string (doublewide characters count
        as 2, normalwide characters count as 1) */
@@ -5024,12 +5029,12 @@ HandleStructNotify(Widget w GCC_UNUSED,
 
     switch (event->type) {
     case MapNotify:
-	TRACE(("HandleStructNotify(MapNotify)\n"));
+	TRACE(("HandleStructNotify(MapNotify) %#lx\n", event->xmap.window));
 	resetZIconBeep(xw);
 	mapstate = !IsUnmapped;
 	break;
     case UnmapNotify:
-	TRACE(("HandleStructNotify(UnmapNotify)\n"));
+	TRACE(("HandleStructNotify(UnmapNotify) %#lx\n", event->xunmap.window));
 	mapstate = IsUnmapped;
 	break;
     case ConfigureNotify:
@@ -5040,7 +5045,8 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	    height = event->xconfigure.height;
 	    width = event->xconfigure.width;
 #endif
-	    TRACE(("HandleStructNotify(ConfigureNotify) %d,%d %dx%d\n",
+	    TRACE(("HandleStructNotify(ConfigureNotify) %#lx %d,%d %dx%d\n",
+		   event->xconfigure.window,
 		   event->xconfigure.y, event->xconfigure.x,
 		   event->xconfigure.height, event->xconfigure.width));
 
@@ -5090,11 +5096,12 @@ HandleStructNotify(Widget w GCC_UNUSED,
 	}
 	break;
     case ReparentNotify:
-	TRACE(("HandleStructNotify(ReparentNotify)\n"));
+	TRACE(("HandleStructNotify(ReparentNotify) %#lx\n", event->xreparent.window));
 	break;
     default:
-	TRACE(("HandleStructNotify(event %s)\n",
-	       visibleEventType(event->type)));
+	TRACE(("HandleStructNotify(event %s) %#lx\n",
+	       visibleEventType(event->type),
+	       event->xany.window));
 	break;
     }
 }
@@ -6767,7 +6774,6 @@ ToAlternate(XtermWidget xw, Bool clearFirst)
 						    (unsigned) MaxCols(screen),
 						    &screen->editBuf_data[1]);
 	SwitchBufs(xw, 1, clearFirst);
-	screen->whichBuf = 1;
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
 #endif
@@ -6784,7 +6790,6 @@ FromAlternate(XtermWidget xw)
 	TRACE(("FromAlternate\n"));
 	if (screen->scroll_amt)
 	    FlushScroll(xw);
-	screen->whichBuf = 0;
 	SwitchBufs(xw, 0, False);
 #if OPT_SAVE_LINES
 	screen->visbuf = screen->editBuf_index[screen->whichBuf];
@@ -6799,6 +6804,7 @@ SwitchBufs(XtermWidget xw, int toBuf, Bool clearFirst)
     TScreen *screen = TScreenOf(xw);
     int rows, top;
 
+    screen->whichBuf = toBuf;
     if (screen->cursor_state)
 	HideCursor();
 
@@ -8322,6 +8328,58 @@ VTInitialize(Widget wrequest,
 	   BtoS(TScreenOf(wnew)->privatecolorregisters)));
 #endif
 
+#if OPT_REGIS_GRAPHICS
+    init_Sres(screen.regis_screensize);
+    TScreenOf(wnew)->regis_max_high = 800;
+    TScreenOf(wnew)->regis_max_wide = 1000;
+    if (!x_strcasecmp(TScreenOf(wnew)->regis_screensize, "auto")) {
+	TRACE(("setting ReGIS screensize based on terminal_id %d\n",
+	       TScreenOf(wnew)->terminal_id));
+	switch (TScreenOf(wnew)->terminal_id) {
+	case 125:
+	    TScreenOf(wnew)->regis_max_high = 768;
+	    TScreenOf(wnew)->regis_max_wide = 460;
+	    break;
+	case 240:
+	    TScreenOf(wnew)->regis_max_high = 800;
+	    TScreenOf(wnew)->regis_max_wide = 460;
+	    break;
+	case 241:
+	    TScreenOf(wnew)->regis_max_high = 800;
+	    TScreenOf(wnew)->regis_max_wide = 460;
+	    break;
+	case 330:
+	    TScreenOf(wnew)->regis_max_high = 800;
+	    TScreenOf(wnew)->regis_max_wide = 480;
+	    break;
+	case 340:
+	    TScreenOf(wnew)->regis_max_high = 800;
+	    TScreenOf(wnew)->regis_max_wide = 480;
+	    break;
+	case 382:
+	    TScreenOf(wnew)->regis_max_high = 960;
+	    TScreenOf(wnew)->regis_max_wide = 750;
+	    break;
+	}
+    } else {
+	int max_high;
+	int max_wide;
+	char ignore;
+
+	if (sscanf(TScreenOf(wnew)->regis_screensize,
+		   "%dx%d%c",
+		   &max_high,
+		   &max_wide,
+		   &ignore) == 2) {
+	    TScreenOf(wnew)->regis_max_high = (Dimension) max_high;
+	    TScreenOf(wnew)->regis_max_wide = (Dimension) max_wide;
+	}
+    }
+    TRACE(("maximum ReGIS screensize %dx%d\n",
+	   (int) TScreenOf(wnew)->regis_max_high,
+	   (int) TScreenOf(wnew)->regis_max_wide));
+#endif
+
 #if OPT_SIXEL_GRAPHICS
     init_Bres(screen.sixel_scrolls_right);
     TRACE(("initialized SIXEL_SCROLLS_RIGHT to resource default: %s\n",
@@ -9676,7 +9734,7 @@ ShowCursor(void)
     int my_col = 0;
 #endif
     int cursor_col;
-    LineData *ld = 0;
+    CLineData *ld = 0;
 
     if (screen->cursor_state == BLINKED_OFF)
 	return;
@@ -10040,7 +10098,7 @@ HideCursor(void)
     int my_col = 0;
 #endif
     int cursor_col;
-    LineData *ld = 0;
+    CLineData *ld = 0;
 #if OPT_WIDE_ATTRS
     unsigned attr_flags;
     int which_font = fNorm;
@@ -10180,7 +10238,7 @@ HideCursor(void)
 #endif
     resetXtermGC(xw, flags, in_selection);
 
-    refresh_displayed_graphics(screen,
+    refresh_displayed_graphics(xw,
 			       screen->cursorp.col,
 			       screen->cursorp.row,
 			       1, 1);
@@ -10219,7 +10277,7 @@ StopBlinking(TScreen *screen)
 
 #if OPT_BLINK_TEXT
 Bool
-LineHasBlinking(TScreen *screen, LineData *ld)
+LineHasBlinking(TScreen *screen, CLineData *ld)
 {
     int col;
     Bool result = False;
@@ -10332,7 +10390,7 @@ RestartBlinking(TScreen *screen GCC_UNUSED)
 	    int row;
 
 	    for (row = screen->max_row; row >= 0; row--) {
-		LineData *ld = getLineData(screen, ROW2INX(screen, row));
+		CLineData *ld = getLineData(screen, ROW2INX(screen, row));
 
 		if (ld != 0 && LineTstBlinked(ld)) {
 		    if (LineHasBlinking(screen, ld)) {

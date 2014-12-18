@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1526 2014/09/29 00:39:23 tom Exp $
+  $XTermId: xterm.log.html,v 1.1538 2014/11/29 02:25:58 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,8 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_313">Patch #313 - 2014/11/28</a></li>
+
     <li><a href="#xterm_312">Patch #312 - 2014/09/28</a></li>
 
     <li><a href="#xterm_311">Patch #311 - 2014/09/18</a></li>
@@ -909,6 +911,100 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_313" id="xterm_313">Patch #313 -
+  2014/11/28</a></h1>
+
+  <ul>
+    <li>add <code>regisScreenSize</code> resource setting to allow
+    custom screensizes for ReGIS graphics (prompted by discussion
+    with Scott Froebe).</li>
+
+    <li>fix some minor issues in manpage (Jens Schweikhardt).</li>
+
+    <li>improve ReGIS font-handling (Ross Combs):
+
+      <ul>
+        <li>remove "random junk" generation for unknown
+        characters</li>
+
+        <li>add xterm extension to load user glyphs for alphabet
+        0</li>
+
+        <li>add xterm extension to specify loading an alphabet from
+        a font by name</li>
+
+        <li>fix bug with use of empty alphabet slots which caused
+        slot 0 to be clobbered</li>
+
+        <li>update/clarify ReGIS-related comments</li>
+
+        <li>add DECprint extension for printing/clearing the screen
+        (only clearing is performed)</li>
+      </ul>
+    </li>
+
+    <li>improve ReGIS colorspec conversion (Ross Combs):
+
+      <ul>
+        <li>avoid some floating point math for colorspace
+        conversion</li>
+
+        <li>move two copies of colorspec parsing to a single
+        function</li>
+
+        <li>change colorspec parsing to handle components being out
+        of order or with spaces and commas between them</li>
+
+        <li>add support for an extension where RGB components can
+        be given instead of HLS</li>
+      </ul>
+    </li>
+
+    <li>improve use of const, e.g., for the <code>LineData</code>
+    pointers (patch by Ross Combs).</li>
+
+    <li>clip of graphics that overlap the scrollback buffer and alt
+    screen (patch by Ross Combs).</li>
+
+    <li>amend change to focus-change events in <a href=
+    "xterm_287">patch #287</a> to limit it to suppressing the reset
+    of the urgency-hint, because some useful <code>FocusOut</code>
+    events were lost (report by Joe Peterson).</li>
+
+    <li>modify dpkg build-script to configure xterm-dev as an
+    <code>x-terminal-emulator</code> alternative.</li>
+
+    <li>extend the <code>--with-xterm-symlink</code> feature to
+    make symbolic links for the other programs and scripts.</li>
+
+    <li>minor fix to <code>vttests/resize.pl</code> to avoid
+    undefined variable when receiving broken/missing response,
+    e.g., from mrxvt.</li>
+
+    <li>change the way that ReGIS graphics are refreshed (patch by
+    Ross Combs):
+
+      <ul>
+        <li>it pre-composes any overlapping graphics to avoid
+        unnecessary and flickering draws</li>
+
+        <li>it adds a three-dimensional lookup table for RGB -&gt;
+        pixel values and uses this across all graphics</li>
+
+        <li>it draws in line segments when there is a run of the
+        same color</li>
+
+        <li>in cases where there are no transparent parts, it uses
+        an XImage to draw</li>
+
+        <li>it hooks into the double-buffering support if it is
+        enabled (though this doesn't seem to get rid of all
+        flicker).</li>
+      </ul>This has the effect of reducing flicker and speeding up
+      redraws.
+    </li>
+  </ul>
+
   <h1><a name="xterm_312" id="xterm_312">Patch #312 -
   2014/09/28</a></h1>
 
@@ -987,7 +1083,7 @@
     <li>modify test-package scripts to enable ReGIS graphics.</li>
 
     <li>improvements/additions to ReGIS graphics, e.g., drawing
-    text (Ross Comb).</li>
+    text (Ross Combs).</li>
 
     <li>add <code>--with-Xaw3dxft</code>, to link with Xaw 3d xft
     library (Stephen P Wall).</li>

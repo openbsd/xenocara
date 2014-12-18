@@ -75,26 +75,26 @@ our $original=get_reply("\x1b[18t");
 our $high;
 our $wide;
 
-if ( $original =~ /\x1b\[8;\d+;\d+t/ ) {
+if ( defined($original) and ( $original =~ /\x1b\[8;\d+;\d+t/ ) ) {
 	$high=csi_field($original,2);
 	$wide=csi_field($original,3);
 	printf "parsed terminal size $high,$wide\n";
 } else {
-	die "Cannot get terminal size via escape sequence\n";
+	die "Cannot get current terminal size via escape sequence\n";
 }
 #
 our $maximize=get_reply("\x1b[19t");
 our $maxhigh;
 our $maxwide;
 
-if ( $maximize =~ /\x1b\[9;\d+;\d+t/ ) {
+if ( defined($maximize) and ( $maximize =~ /^\x1b\[9;\d+;\d+t/ ) ) {
 	$maxhigh=csi_field($maximize,2);
 	$maxwide=csi_field($maximize,3);
 	$maxhigh != 0 or $maxhigh = $high * 2;
 	$maxwide != 0 or $maxwide = $wide * 2;
 	printf "parsed terminal maxsize $maxhigh,$maxwide\n";
 } else {
-	die "Cannot get terminal size via escape sequence\n";
+	die "Cannot get maximum terminal size via escape sequence\n";
 }
 
 our $zapped;

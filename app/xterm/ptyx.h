@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.813 2014/09/17 08:24:34 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.816 2014/11/28 19:31:59 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1472,16 +1472,16 @@ typedef unsigned char IChar;	/* for 8-bit characters */
 #define BUF_SIZE resource.maxBufSize
 
 typedef struct {
-	Char *	next;
-	Char *	last;
-	int	update;		/* HandleInterpret */
+	Char    *next;
+	Char    *last;
+	int      update;	/* HandleInterpret */
 #if OPT_WIDE_CHARS
-	IChar	utf_data;	/* resulting character */
-	int	utf_size;	/* ...number of bytes decoded */
-	Char	*write_buf;
+	IChar    utf_data;	/* resulting character */
+	int      utf_size;	/* ...number of bytes decoded */
+	Char    *write_buf;
 	unsigned write_len;
 #endif
-	Char	buffer[1];
+	Char     buffer[1];
 } PtyData;
 
 /***====================================================================***/
@@ -1537,6 +1537,8 @@ typedef struct {
 	CharData *combData[1];	/* first enum past fixed-offsets */
 } LineData;
 
+typedef const LineData CLineData;
+
 /*
  * We use CellData in a few places, when copying a cell's data to a temporary
  * variable.
@@ -1568,8 +1570,11 @@ typedef struct {
 #define ROW2INX(screen, row)	((row) + (screen)->topline)
 #define INX2ROW(screen, inx)	((inx) - (screen)->topline)
 
+/* these are unused but could be useful for debugging */
+#if 0
 #define ROW2ABS(screen, row)	((row) + (screen)->savedlines)
 #define INX2ABS(screen, inx)	ROW2ABS(screen, INX2ROW(screen, inx))
+#endif
 
 #define okScrnRow(screen, row) \
 	((row) <= ((screen)->max_row - (screen)->topline) \
@@ -2122,7 +2127,7 @@ typedef struct {
 	 * the saved lines, taking scrolling into account.
 	 */
 	int		topline;	/* line number of top, <= 0	*/
-	long		saved_fifo;     /* number of lines that've been saved */
+	long		saved_fifo;     /* number of lines that've ever been saved */
 	int		savedlines;     /* number of lines that've been saved */
 	int		savelines;	/* number of lines off top to save */
 	int		scroll_amt;	/* amount to scroll		*/
@@ -2221,6 +2226,12 @@ typedef struct {
 	int		restore_y;
 	unsigned	restore_width;
 	unsigned	restore_height;
+#endif
+
+#if OPT_SIXEL_GRAPHICS
+	String		regis_screensize; /* ReGIS given screensize	*/
+	Dimension	regis_max_high;	/* ...corresponding height	*/
+	Dimension	regis_max_wide;	/* ...and width			*/
 #endif
 
 #if OPT_SCROLL_LOCK

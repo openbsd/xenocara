@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.660 2014/06/19 22:15:20 tom Exp $ */
+/* $XTermId: util.c,v 1.665 2014/11/13 00:54:35 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -687,7 +687,7 @@ xtermScroll(XtermWidget xw, int amount)
 	}
     }
 
-    scroll_displayed_graphics(amount);
+    scroll_displayed_graphics(xw, amount);
 
     if (refreshheight > 0) {
 	ScrnRefresh(xw,
@@ -1019,7 +1019,7 @@ void
 WriteText(XtermWidget xw, IChar *str, Cardinal len)
 {
     TScreen *screen = TScreenOf(xw);
-    LineData *ld = 0;
+    CLineData *ld = 0;
     int fg;
     unsigned test;
     unsigned attr_flags = xw->flags;
@@ -1321,7 +1321,7 @@ void
 InsertChar(XtermWidget xw, unsigned n)
 {
     TScreen *screen = TScreenOf(xw);
-    LineData *ld;
+    CLineData *ld;
     unsigned limit;
     int row = INX2ROW(screen, screen->cur_row);
     int left = ScrnLeftMargin(xw);
@@ -1404,7 +1404,7 @@ void
 DeleteChar(XtermWidget xw, unsigned n)
 {
     TScreen *screen = TScreenOf(xw);
-    LineData *ld;
+    CLineData *ld;
     unsigned limit;
     int row = INX2ROW(screen, screen->cur_row);
     int left = ScrnLeftMargin(xw);
@@ -1561,7 +1561,7 @@ static int
 ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 {
     TScreen *screen = TScreenOf(xw);
-    LineData *ld;
+    CLineData *ld;
     int rc = 1;
 
     TRACE(("ClearInLine(row=%d, col=%d, len=%d) vs %d..%d\n",
@@ -1889,7 +1889,7 @@ screen_has_data(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean result = False;
-    LineData *ld;
+    CLineData *ld;
     int row, col;
 
     for (row = 0; row < screen->max_row; ++row) {
@@ -1950,8 +1950,7 @@ CopyWait(XtermWidget xw)
     XEvent *rep = &reply;
 
     for (;;) {
-	XWindowEvent(screen->display, VWindow(screen),
-		     ExposureMask, &reply);
+	XWindowEvent(screen->display, VWindow(screen), ExposureMask, &reply);
 	switch (reply.type) {
 	case Expose:
 	    HandleExposure(xw, &reply);
@@ -2028,7 +2027,7 @@ horizontal_copy_area(XtermWidget xw,
 		     int amount)	/* number of characters to move right */
 {
     TScreen *screen = TScreenOf(xw);
-    LineData *ld;
+    CLineData *ld;
 
     if ((ld = getLineData(screen, screen->cur_row)) != 0) {
 	int src_x = LineCursorX(screen, ld, firstchar);
@@ -2068,7 +2067,7 @@ vertical_copy_area(XtermWidget xw,
 	copy_area(xw, src_x, src_y, w, h, dst_x, dst_y);
 
 	if (screen->show_wrap_marks) {
-	    LineData *ld;
+	    CLineData *ld;
 	    int row;
 	    for (row = firstline; row < firstline + nlines; ++row) {
 		if ((ld = getLineData(screen, row)) != 0) {
@@ -2803,7 +2802,7 @@ getNormXftFont(XtermWidget xw,
  * fontconfig/Xft combination prior to 2.2 has a problem with
  * CJK truetype 'double-width' (bi-width/monospace) fonts leading
  * to the 's p a c e d o u t' rendering. Consequently, we can't
- * rely on XftDrawString8/16  when one of  those fonts is used.
+ * rely on XftDrawString8/16 when one of those fonts is used.
  * Instead, we need to roll out our own using XftDrawCharSpec.
  * A patch in the same spirit (but in a rather different form)
  * was applied to gnome vte and gtk2 port of vim.
@@ -2816,7 +2815,7 @@ xtermXftDrawString(XtermWidget xw,
 		   XftFont *font,
 		   int x,
 		   int y,
-		   IChar *text,
+		   const IChar *text,
 		   Cardinal len,
 		   Bool really)
 {
@@ -3176,7 +3175,7 @@ drawClippedXftString(XtermWidget xw,
 		     XftColor *fg_color,
 		     int x,
 		     int y,
-		     IChar *text,
+		     const IChar *text,
 		     Cardinal len)
 {
     int ncells = xtermXftWidth(xw, attr_flags,
@@ -3311,7 +3310,7 @@ drawXtermText(XtermWidget xw,
 	      int start_x,
 	      int start_y,
 	      int chrset,
-	      IChar *text,
+	      const IChar *text,
 	      Cardinal len,
 	      int on_wide)
 {
@@ -4481,7 +4480,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 unsigned
 getXtermCell(TScreen *screen, int row, int col)
 {
-    LineData *ld = getLineData(screen, row);
+    CLineData *ld = getLineData(screen, row);
 
     return ((ld && (col < (int) ld->lineSize))
 	    ? ld->charData[col]
@@ -4533,7 +4532,7 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 unsigned
 getXtermCombining(TScreen *screen, int row, int col, int off)
 {
-    LineData *ld = getLineData(screen, row);
+    CLineData *ld = getLineData(screen, row);
     return ld->combData[off][col];
 }
 #endif

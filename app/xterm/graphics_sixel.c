@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.9 2014/07/15 21:07:44 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.10 2014/10/06 09:28:00 Ross.Combs Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -571,7 +571,9 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
 	string++;
     }
 
-    /* update the screen */
+    /* Update the screen scrolling and do a refresh.
+     * The refresh may not cover the whole graphic.
+     */
     if (screen->scroll_amt)
 	FlushScroll(xw);
 
@@ -632,7 +634,8 @@ parse_sixel(XtermWidget xw, ANSI *params, char const *string)
     }
 
   finis:
-    refresh_modified_displayed_graphics(screen);
+    graphic->dirty = 1;
+    refresh_modified_displayed_graphics(xw);
 
     TRACE(("DONE successfully parsed sixel data\n"));
     dump_graphic(graphic);

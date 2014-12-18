@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.155 2014/04/25 21:30:23 Ross.Combs Exp $ */
+/* $XTermId: trace.c,v 1.156 2014/11/13 01:03:02 tom Exp $ */
 
 /*
  * Copyright 1997-2013,2014 by Thomas E. Dickey
@@ -310,7 +310,7 @@ visibleChars(const Char *buf, unsigned len)
 }
 
 char *
-visibleIChars(IChar *buf, unsigned len)
+visibleIChars(const IChar *buf, unsigned len)
 {
     static char *result;
     static unsigned used;
@@ -627,7 +627,7 @@ TraceScreen(XtermWidget xw, int whichBuf)
 }
 
 void
-TraceFocus(Widget w, XEvent * ev)
+TraceFocus(Widget w, XEvent *ev)
 {
     TRACE(("trace_focus event type %d:%s\n",
 	   ev->type, visibleEventType(ev->type)));
@@ -783,7 +783,7 @@ TraceWMSizeHints(XtermWidget xw)
  */
 /* ARGSUSED */
 static int
-no_error(Display *dpy GCC_UNUSED, XErrorEvent * event GCC_UNUSED)
+no_error(Display *dpy GCC_UNUSED, XErrorEvent *event GCC_UNUSED)
 {
     return 1;
 }

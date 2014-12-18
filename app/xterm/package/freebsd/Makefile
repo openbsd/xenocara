@@ -5,7 +5,7 @@
 # and "make makesum".
 
 PORTNAME=	xterm
-PORTVERSION=	312
+PORTVERSION=	313
 CATEGORIES=	x11
 MASTER_SITES=	ftp://invisible-island.net/xterm/ \
 		CRITICAL

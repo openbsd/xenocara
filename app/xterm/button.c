@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.482 2014/09/26 23:58:14 tom Exp $ */
+/* $XTermId: button.c,v 1.484 2014/11/13 01:00:26 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -2841,10 +2841,10 @@ PointToCELL(TScreen *screen,
  * Find the last column at which text was drawn on the given row.
  */
 static int
-LastTextCol(TScreen *screen, LineData *ld, int row)
+LastTextCol(TScreen *screen, CLineData *ld, int row)
 {
     int i = -1;
-    IAttr *ch;
+    const IAttr *ch;
 
     if (ld != 0) {
 	if (okScrnRow(screen, row)) {
@@ -3170,7 +3170,7 @@ static void
 columnToCell(TScreen *screen, int row, int col, CELL *cell)
 {
     while (row < screen->max_row) {
-	LineData *ld = GET_LINEDATA(screen, row);
+	CLineData *ld = GET_LINEDATA(screen, row);
 	int last = LastTextCol(screen, ld, row);
 
 	/* TRACE(("last(%d) = %d, have %d\n", row, last, col)); */
@@ -3200,7 +3200,7 @@ columnToCell(TScreen *screen, int row, int col, CELL *cell)
 static int
 cellToColumn(TScreen *screen, CELL *cell)
 {
-    LineData *ld = 0;
+    CLineData *ld = 0;
     int col = cell->col;
     int row = firstRowOfLine(screen, cell->row, False);
     while (row < cell->row) {
@@ -4206,8 +4206,8 @@ Length(TScreen *screen,
        int scol,
        int ecol)
 {
-    LineData *ld = GET_LINEDATA(screen, row);
-    int lastcol = LastTextCol(screen, ld, row);
+    CLineData *ld = GET_LINEDATA(screen, row);
+    const int lastcol = LastTextCol(screen, ld, row);
 
     if (ecol > lastcol)
 	ecol = lastcol;

@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.47 2014/07/13 01:19:45 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.58 2014/11/28 21:00:04 tom Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -48,10 +48,11 @@
 #undef DEBUG_PIXEL
 #undef DEBUG_REFRESH
 
-/* TODO:
+/*
+ * graphics TODO list
+ *
  * ReGIS:
  * - find a suitable default alphabet zero font instead of scaling Xft fonts
- * - load command extension to load by font name (via Xft)
  * - input and output cursors
  * - mouse input
  * - custom coordinate systems
@@ -62,6 +63,7 @@
  * - command display mode
  * - scaling/re-rasterization to fit screen
  * - macros
+ * - improved fills for narrow angles (track actual lines not just pixels)
  *
  * sixel:
  * - fix problem where new_row < 0 during sixel parsing (see FIXME)
@@ -79,25 +81,21 @@
  * - research other 41xx and 42xx extensions
  *
  * common graphics features:
- * - speed up drawing by using an XImage and/or better GC and color handling
  * - handle light/dark screen modes (CSI?5[hl])
  * - update text fg/bg color which overlaps images
- * - erase graphic when erasing screen
- * - handle graphic updates in scroll regions
+ * - handle graphic updates in scroll regions (verify effect on graphics)
  * - handle rectangular area copies (verify they work with graphics)
- * - maintain ordered list/array of graphics instead of qsort()
- * - erase text under graphic if bg not transparent to avoid flickering (or not: bad if the font changes or window resizes)
- * - erase graphics under graphic if same origin and bg not transparent to avoid flickering
- * - erase scrolled portions of all graphics on alt buffer
- * - delete graphic if scrolled past end of scrollback
- * - delete graphic if all pixels are transparent/erased
- * - auto-convert color graphics in VT330 mode
+ * - invalidate graphics under graphic if same origin, at least as big, and bg not transparent
+ * - invalidate graphic if completely scrolled past end of scrollback
+ * - invalidate graphic if all pixels are transparent/erased
+ * - invalidate graphic if completely scrolled out of alt buffer
  * - posturize requested colors to match hardware palettes (e.g. only four possible shades on VT240)
  * - color register report/restore
  * - ability to select/copy graphics for pasting in other programs
- * - ability to show non-scrolled sixel graphics in a separate window
+ * - ability to show non-scroll-mode sixel graphics in a separate window
  * - ability to show ReGIS graphics in a separate window
  * - ability to show Tektronix graphics in VT100 window
+ * - truncate graphics at bottom edge of window?
  *
  * new escape sequences:
  * - way to query text font size without "window ops" (or make "window ops" permissions more fine grained)
@@ -107,21 +105,17 @@
  * - non-integer text scaling
  * - free distortionless text rotation
  * - font characteristics: bold/underline/italic
- * - font selection by name
- * - user fonts in larger sizes than 8x10
  * - remove/increase arbitrary limits (pattern size, pages, alphabets, stack size, font names, etc.)
  * - comment command
  * - shade/fill with borders
  * - sprites (copy portion of page into/out of buffer with scaling and rotation)
  * - ellipses
  * - 2D patterns
- * - option to set actual size (not just coordinates)
+ * - option to set actual graphic size (not just coordinate range)
  * - gradients (for lines and fills)
  * - line width (RLogin has this and it is mentioned in docs for the DEC ReGIS to Postscript converter)
- * - F option for screen command (mentioned in docs for the DEC ReGIS to Postscript converter)
  * - transparency
  * - background color as stackable write control
- * - RGB triplets
  * - true color (virtual color registers created upon lookup)
  * - anti-aliasing
  */
@@ -133,7 +127,16 @@
  *   10 x 13   6 x 13  26 lines + keyboard indicator line
  *   10 x 10   6 x 10  42 lines + keyboard indicator line
  *   10 x 8    6 x 8   53 lines + keyboard indicator line
-*/
+ */
+
+typedef struct allocated_color_register {
+    struct allocated_color_register *next;
+    Pixel pix;
+    short r, g, b;
+} AllocatedColorRegister;
+
+#define LOOKUP_WIDTH 16
+static AllocatedColorRegister *allocated_colors[LOOKUP_WIDTH][LOOKUP_WIDTH][LOOKUP_WIDTH];
 
 #define FOR_EACH_SLOT(ii) for (ii = 0U; ii < MAX_GRAPHICS; ii++)
 
@@ -161,11 +164,12 @@ freeGraphic(Graphic *obj)
 }
 
 static Graphic *
-allocGraphic(void)
+allocGraphic(const TScreen *screen)
 {
     Graphic *result = TypeCalloc(Graphic);
     if (result) {
-	if (!(result->pixels = TypeCallocN(RegisterNum, MAX_PIXELS))) {
+	size_t max_pixels = (size_t) (screen->regis_max_wide * screen->regis_max_high);
+	if (!(result->pixels = TypeCallocN(RegisterNum, max_pixels))) {
 	    result = freeGraphic(result);
 	} else if (!(result->private_color_registers = allocRegisters())) {
 	    result = freeGraphic(result);
@@ -186,13 +190,13 @@ getActiveSlot(unsigned n)
 }
 
 static Graphic *
-getInactiveSlot(unsigned n)
+getInactiveSlot(const TScreen *screen, unsigned n)
 {
     if (n < MAX_GRAPHICS &&
 	(!displayed_graphics[n] ||
 	 !displayed_graphics[n]->valid)) {
 	if (!displayed_graphics[n]) {
-	    displayed_graphics[n] = allocGraphic();
+	    displayed_graphics[n] = allocGraphic(screen);
 	}
 	return displayed_graphics[n];
     }
@@ -226,6 +230,11 @@ read_pixel(Graphic *graphic, int x, int y)
     return graphic->pixels[y * graphic->max_width + x];
 }
 
+#define _draw_pixel(G, X, Y, C) \
+    do { \
+        (G)->pixels[(Y) * (G)->max_width + (X)] = (RegisterNum) (C); \
+    } while (0)
+
 void
 draw_solid_pixel(Graphic *graphic, int x, int y, unsigned color)
 {
@@ -246,11 +255,9 @@ draw_solid_pixel(Graphic *graphic, int x, int y, unsigned color)
 #endif
     if (x >= 0 && x < graphic->actual_width &&
 	y >= 0 && y < graphic->actual_height) {
-	graphic->pixels[y * graphic->max_width + x] = (RegisterNum) color;
+	_draw_pixel(graphic, x, y, color);
 	if (color < MAX_COLOR_REGISTERS)
 	    graphic->color_registers_used[color] = 1;
-    } else {
-	TRACE(("pixel %d,%d out of bounds\n", x, y));
     }
 }
 
@@ -269,9 +276,24 @@ draw_solid_rectangle(Graphic *graphic, int x1, int y1, int x2, int y2, unsigned 
 	EXCHANGE(y1, y2, tmp);
     }
 
+    if (x2 < 0 || x1 >= graphic->actual_width ||
+	y2 < 0 || y1 >= graphic->actual_height)
+	return;
+
+    if (x1 < 0)
+	x1 = 0;
+    if (x2 >= graphic->actual_width)
+	x2 = graphic->actual_width - 1;
+    if (y1 < 0)
+	y1 = 0;
+    if (y2 >= graphic->actual_height)
+	y2 = graphic->actual_height - 1;
+
+    if (color < MAX_COLOR_REGISTERS)
+	graphic->color_registers_used[color] = 1;
     for (y = y1; y <= y2; y++)
-	for (x = x1; x < x2; x++)
-	    draw_solid_pixel(graphic, x, y, color);
+	for (x = x1; x <= x2; x++)
+	    _draw_pixel(graphic, x, y, color);
 }
 
 void
@@ -404,7 +426,6 @@ set_color_register(ColorRegister *color_registers,
     reg->r = (short) r;
     reg->g = (short) g;
     reg->b = (short) b;
-    reg->allocated = 0;
 }
 
 /* Graphics which don't use private colors will act as if they are using a
@@ -466,7 +487,7 @@ find_color_register(ColorRegister const *color_registers, int r, int g, int b)
     /* I have no idea what algorithm DEC used for this.
      * The documentation warns that it is unpredictable, especially with values
      * far away from any allocated color so it is probably a very simple
-     * hueristic rather than something fancy like finding the minimum distance
+     * heuristic rather than something fancy like finding the minimum distance
      * in a linear perceptive color space.
      */
     closest_index = MAX_COLOR_REGISTERS;
@@ -594,11 +615,11 @@ init_color_registers(ColorRegister *color_registers, int terminal_id)
 	unsigned i;
 
 	for (i = 0U; i < MAX_COLOR_REGISTERS; i++) {
-	    printf("initial value for register %03u: %d,%d,%d\n",
+	    TRACE(("initial value for register %03u: %d,%d,%d\n",
 		   i,
 		   color_registers[i].r,
 		   color_registers[i].g,
-		   color_registers[i].b);
+		   color_registers[i].b));
 	}
     }
 #endif
@@ -652,7 +673,8 @@ get_color_register_count(TScreen const *screen)
 }
 
 static void
-init_graphic(Graphic *graphic,
+init_graphic(const TScreen *screen,
+	     Graphic *graphic,
 	     unsigned type,
 	     int terminal_id,
 	     int charrow,
@@ -660,12 +682,13 @@ init_graphic(Graphic *graphic,
 	     unsigned num_color_registers,
 	     int private_colors)
 {
+    size_t max_pixels = (size_t) (screen->regis_max_wide * screen->regis_max_high);
     unsigned i;
 
     TRACE(("initializing graphic object\n"));
 
     graphic->dirty = 1;
-    for (i = 0U; i < MAX_PIXELS; i++)
+    for (i = 0U; i < max_pixels; i++)
 	graphic->pixels[i] = COLOR_HOLE;
     memset(graphic->color_registers_used, 0, sizeof(graphic->color_registers_used));
 
@@ -688,8 +711,8 @@ init_graphic(Graphic *graphic,
      * VT382       960x750  sixel only
      * dxterm      ?x? ?x?  variable?
      */
-    graphic->max_width = BUFFER_WIDTH;
-    graphic->max_height = BUFFER_HEIGHT;
+    graphic->max_width = screen->regis_max_wide;
+    graphic->max_height = screen->regis_max_high;
 
     graphic->actual_width = 0;
     graphic->actual_height = 0;
@@ -726,7 +749,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
     unsigned ii;
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getInactiveSlot(ii))) {
+	if ((graphic = getInactiveSlot(screen, ii))) {
 	    TRACE(("using fresh graphic index=%u id=%u\n", ii, next_graphic_id));
 	    break;
 	}
@@ -755,7 +778,8 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 	graphic->xw = xw;
 	graphic->bufferid = bufferid;
 	graphic->id = next_graphic_id++;
-	init_graphic(graphic,
+	init_graphic(screen,
+		     graphic,
 		     type,
 		     terminal_id,
 		     charrow,
@@ -800,179 +824,243 @@ get_new_or_matching_graphic(XtermWidget xw,
     return graphic;
 }
 
-#define ScaleForXColor(s) (unsigned short) ((long)(s) * 65535 / 100)
+static int
+lookup_allocated_color(const ColorRegister *reg, Pixel *pix)
+{
+    unsigned const rr = ((unsigned) reg->r * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    unsigned const gg = ((unsigned) reg->g * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    unsigned const bb = ((unsigned) reg->b * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    const AllocatedColorRegister *search;
+
+    for (search = allocated_colors[rr][gg][bb]; search; search = search->next) {
+	if (search->r == reg->r &&
+	    search->g == reg->g &&
+	    search->b == reg->b) {
+	    *pix = search->pix;
+	    return 1;
+	}
+    }
+
+    *pix = 0UL;
+    return 0;
+}
+
+#define ScaleForXColor(s) (unsigned short) ((long)(s) * 65535 / CHANNEL_MAX)
+
+static int
+save_allocated_color(const ColorRegister *reg, XtermWidget xw, Pixel *pix)
+{
+    unsigned const rr = ((unsigned) reg->r * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    unsigned const gg = ((unsigned) reg->g * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    unsigned const bb = ((unsigned) reg->b * (LOOKUP_WIDTH - 1)) / CHANNEL_MAX;
+    XColor xcolor;
+    AllocatedColorRegister *new_color;
+
+    xcolor.pixel = 0UL;
+    xcolor.red = ScaleForXColor(reg->r);
+    xcolor.green = ScaleForXColor(reg->g);
+    xcolor.blue = ScaleForXColor(reg->b);
+    xcolor.flags = DoRed | DoGreen | DoBlue;
+    if (!allocateBestRGB(xw, &xcolor)) {
+	TRACE(("unable to allocate xcolor\n"));
+	*pix = 0UL;
+	return 0;
+    }
+
+    *pix = xcolor.pixel;
+
+    if (!(new_color = malloc(sizeof(*new_color)))) {
+	TRACE(("unable to save pixel %lu\n", (unsigned long) *pix));
+	return 0;
+    }
+    new_color->r = reg->r;
+    new_color->g = reg->g;
+    new_color->b = reg->b;
+    new_color->pix = *pix;
+    new_color->next = allocated_colors[rr][gg][bb];
+
+    allocated_colors[rr][gg][bb] = new_color;
+
+    return 1;
+}
 
 static Pixel
-color_register_to_xpixel(ColorRegister *reg, XtermWidget xw)
+color_register_to_xpixel(const ColorRegister *reg, XtermWidget xw)
 {
-    if (!reg->allocated) {
-	XColor def;
+    Pixel pix;
 
-	def.red = ScaleForXColor(reg->r);
-	def.green = ScaleForXColor(reg->g);
-	def.blue = ScaleForXColor(reg->b);
-	def.flags = DoRed | DoGreen | DoBlue;
-	if (!allocateBestRGB(xw, &def)) {
-	    TRACE(("unable to allocate xcolor for color register\n"));
-	    return 0UL;
-	}
-	reg->pix = def.pixel;
-	reg->allocated = 1;
-    }
+    if (!lookup_allocated_color(reg, &pix))
+	save_allocated_color(reg, xw, &pix);
 
     /* FIXME: with so many possible colors we need to determine
      * when to free them to be nice to PseudoColor displays
      */
-    return reg->pix;
+    return pix;
 }
 
 static void
 refresh_graphic(TScreen const *screen,
 		Graphic const *graphic,
-		int xbase,
-		int ybase,
-		int x,
-		int y,
-		int w,
-		int h)
+		ColorRegister *buffer,
+		int refresh_x,
+		int refresh_y,
+		int refresh_w,
+		int refresh_h,
+		int draw_x,
+		int draw_y,
+		int draw_w,
+		int draw_h)
 {
-    Display *display = screen->display;
-    Window vwindow = WhichVWin(screen)->window;
-    GC graphics_gc;
+    int const pw = graphic->pixw;
+    int const ph = graphic->pixh;
+    int const graph_x = graphic->charcol * FontWidth(screen);
+    int const graph_y = graphic->charrow * FontHeight(screen);
+    int const graph_w = graphic->actual_width;
+    int const graph_h = graphic->actual_height;
     int r, c;
-    int pw, ph;
-    int rbase, cbase;
-    RegisterNum color;
-    RegisterNum old_fg;
-    XGCValues xgcv;
-    XtGCMask mask;
-    int holes, total;
+    int fillx, filly;
+    int holes, total, out_of_range;
+    RegisterNum regnum;
 
-    TRACE(("refreshing graphic from %d,%d %dx%d (valid=%d, size=%dx%d, scale=%dx%d max=%dx%d) at base=%d,%d\n",
-	   x, y, w, h,
+    TRACE(("refreshing graphic %u from %d,%d %dx%d (valid=%d, size=%dx%d, scale=%dx%d max=%dx%d)\n",
+	   graphic->id,
+	   graph_x, graph_y, draw_w, draw_h,
 	   graphic->valid,
 	   graphic->actual_width,
 	   graphic->actual_height,
-	   graphic->pixw,
-	   graphic->pixh,
+	   pw, ph,
 	   graphic->max_width,
-	   graphic->max_height,
-	   xbase, ybase));
+	   graphic->max_height));
 
-    memset(&xgcv, 0, sizeof(xgcv));
-    xgcv.foreground = 0UL;
-    xgcv.graphics_exposures = False;
-    mask = GCForeground | GCGraphicsExposures;
-    graphics_gc = XCreateGC(display, vwindow, mask, &xgcv);
+    TRACE(("refresh pixmap starts at %d,%d\n", refresh_x, refresh_y));
 
-    pw = graphic->pixw;
-    ph = graphic->pixh;
-
-    TRACE(("refreshed graphic covers 0,0 to %d,%d\n",
-	   (graphic->actual_width - 1) * pw + pw - 1,
-	   (graphic->actual_height - 1) * ph + ph - 1));
-    TRACE(("refreshed area covers %d,%d to %d,%d\n",
-	   x, y,
-	   x + w - 1,
-	   y + h - 1));
-
-    old_fg = COLOR_HOLE;
     holes = total = 0;
-    rbase = 0;
-    for (r = 0; r < graphic->actual_height; r++) {
-	int rtest = rbase;
+    out_of_range = 0;
+    for (r = 0; r < graph_h; r++) {
+	int pmy = graph_y + r * ph;
 
-	rbase += ph;
-	if (rtest + ph - 1 < y)
+	if (pmy + ph - 1 < draw_y)
 	    continue;
-	if (rtest > y + h - 1)
-	    continue;
+	if (pmy > draw_y + draw_h - 1)
+	    break;
 
-	cbase = 0;
-	for (c = 0; c < graphic->actual_width; c++) {
-	    int ctest = cbase;
+	for (c = 0; c < graph_w; c++) {
+	    int pmx = graph_x + c * pw;
 
-	    cbase += pw;
-	    if (ctest + pw - 1 < x)
+	    if (pmx + pw - 1 < draw_x)
 		continue;
-	    if (ctest > x + w - 1)
-		continue;
+	    if (pmx > draw_x + draw_w - 1)
+		break;
 
 	    total++;
-	    color = graphic->pixels[r * graphic->max_width + c];
-	    if (color == COLOR_HOLE) {
+	    regnum = graphic->pixels[r * graphic->max_width + c];
+	    if (regnum == COLOR_HOLE) {
 		holes++;
 		continue;
 	    }
 
-	    if (color != old_fg) {
-		xgcv.foreground =
-		    color_register_to_xpixel(&graphic->color_registers[color],
-					     graphic->xw);
-		XChangeGC(display, graphics_gc, mask, &xgcv);
-		old_fg = color;
-	    }
+	    for (fillx = 0; fillx < pw; fillx++) {
+		for (filly = 0; filly < ph; filly++) {
+		    if (pmx < draw_x || pmx > draw_x + draw_w - 1 ||
+			pmy < draw_y || pmy > draw_y + draw_h - 1) {
+			out_of_range++;
+			continue;
+		    }
 
-	    XFillRectangle(display, vwindow, graphics_gc,
-			   xbase + ctest,
-			   ybase + rtest,
-			   (unsigned) pw,
-			   (unsigned) ph);
+		    /* this shouldn't happen, but it doesn't hurt to check */
+		    if (pmx < refresh_x || pmx > refresh_x + refresh_w - 1 ||
+			pmy < refresh_y || pmy > refresh_y + refresh_h - 1) {
+			TRACE(("OUT OF RANGE: %d,%d (%d,%d)\n", pmx, pmy, r, c));
+			out_of_range++;
+			continue;
+		    }
+
+		    buffer[(pmy - refresh_y) * refresh_w +
+			   (pmx - refresh_x)] =
+			graphic->color_registers[regnum];
+		}
+	    }
 	}
     }
+
+    TRACE(("done refreshing graphic: %d of %d refreshed pixels were holes; %d were out of pixmap range\n",
+	   holes, total, out_of_range));
+}
 
 #ifdef DEBUG_REFRESH
-    {
-	XColor def;
 
-	def.red = (short) (1.0 * 65535.0);
-	def.green = (short) (0.1 * 65535.0);
-	def.blue = (short) (1.0 * 65535.0);
-	def.flags = DoRed | DoGreen | DoBlue;
-	if (allocateBestRGB(graphic->xw, &def)) {
-	    xgcv.foreground = def.pixel;
-	    XChangeGC(display, graphics_gc, mask, &xgcv);
-	}
-	XFillRectangle(display, vwindow, graphics_gc,
-		       xbase + 0,
-		       ybase + 0,
-		       (unsigned) pw, (unsigned) ph);
-	XFillRectangle(display, vwindow, graphics_gc,
-		       xbase + (graphic->actual_width - 1) * pw,
-		       ybase + (graphic->actual_height - 1) * ph,
-		       (unsigned) pw, (unsigned) ph);
+#define BASEX(X) ( (draw_x - base_x) + (X) )
+#define BASEY(Y) ( (draw_y - base_y) + (Y) )
 
-	def.red = (unsigned short) ((1.0 - 0.1 * (rand() / (double)
-						  RAND_MAX) * 65535.0));
-	def.green = (unsigned short) ((0.7 + 0.2 * (rand() / (double)
-						    RAND_MAX)) * 65535.0);
-	def.blue = (unsigned short) ((0.1 + 0.1 * (rand() / (double)
-						   RAND_MAX)) * 65535.0);
-	def.flags = DoRed | DoGreen | DoBlue;
-	if (allocateBestRGB(graphic->xw, &def)) {
-	    xgcv.foreground = def.pixel;
-	    XChangeGC(display, graphics_gc, mask, &xgcv);
-	}
-	XDrawLine(display, vwindow, graphics_gc,
-		  xbase + x + 0, ybase + y + 0,
-		  xbase + x + w - 1, ybase + y + 0);
-	XDrawLine(display, vwindow, graphics_gc,
-		  xbase + x + w - 1, ybase + y + 0,
-		  xbase + x + 0, ybase + y + h - 1);
-	XDrawLine(display, vwindow, graphics_gc,
-		  xbase + x + 0, ybase + y + h - 1,
-		  xbase + x + w - 1, ybase + y + h - 1);
-	XDrawLine(display, vwindow, graphics_gc,
-		  xbase + x + w - 1, ybase + y + h - 1,
-		  xbase + x + 0, ybase + y + 0);
+static void
+outline_refresh(TScreen const *screen,
+		Graphic const *graphic,
+		Pixmap output_pm,
+		GC graphics_gc,
+		int base_x,
+		int base_y,
+		int draw_x,
+		int draw_y,
+		int draw_w,
+		int draw_h)
+{
+    Display *const display = screen->display;
+    int const pw = graphic->pixw;
+    int const ph = graphic->pixh;
+    XGCValues xgcv;
+    XColor def;
+
+    def.red = (unsigned short) ((1.0 - 0.1 * (rand() / (double)
+					      RAND_MAX) * 65535.0));
+    def.green = (unsigned short) ((0.7 + 0.2 * (rand() / (double)
+						RAND_MAX)) * 65535.0);
+    def.blue = (unsigned short) ((0.1 + 0.1 * (rand() / (double)
+					       RAND_MAX)) * 65535.0);
+    def.flags = DoRed | DoGreen | DoBlue;
+    if (allocateBestRGB(graphic->xw, &def)) {
+	xgcv.foreground = def.pixel;
+	XChangeGC(display, graphics_gc, GCForeground, &xgcv);
     }
-#endif
-    XFlush(display);
-    TRACE(("done refreshing graphic: %d of %d refreshed pixels were holes\n",
-	   holes, total));
 
-    XFreeGC(display, graphics_gc);
+    XDrawLine(display, output_pm, graphics_gc,
+	      BASEX(0), BASEY(0),
+	      BASEX(draw_w - 1), BASEY(0));
+    XDrawLine(display, output_pm, graphics_gc,
+	      BASEX(0), BASEY(draw_h - 1),
+	      BASEX(draw_w - 1), BASEY(draw_h - 1));
+
+    XDrawLine(display, output_pm, graphics_gc,
+	      BASEX(0), BASEY(0),
+	      BASEX(0), BASEY(draw_h - 1));
+    XDrawLine(display, output_pm, graphics_gc,
+	      BASEX(draw_w - 1), BASEY(0),
+	      BASEX(draw_w - 1), BASEY(draw_h - 1));
+
+    XDrawLine(display, output_pm, graphics_gc,
+	      BASEX(draw_w - 1), BASEY(0),
+	      BASEX(0), BASEY(draw_h - 1));
+    XDrawLine(display, output_pm, graphics_gc,
+	      BASEX(draw_w - 1), BASEY(draw_h - 1),
+	      BASEX(0), BASEY(0));
+
+    def.red = (short) (0.7 * 65535.0);
+    def.green = (short) (0.1 * 65535.0);
+    def.blue = (short) (1.0 * 65535.0);
+    def.flags = DoRed | DoGreen | DoBlue;
+    if (allocateBestRGB(graphic->xw, &def)) {
+	xgcv.foreground = def.pixel;
+	XChangeGC(display, graphics_gc, GCForeground, &xgcv);
+    }
+    XFillRectangle(display, output_pm, graphics_gc,
+		   BASEX(0),
+		   BASEY(0),
+		   (unsigned) pw, (unsigned) ph);
+    XFillRectangle(display, output_pm, graphics_gc,
+		   BASEX(draw_w - 1 - pw),
+		   BASEY(draw_h - 1 - ph),
+		   (unsigned) pw, (unsigned) ph);
 }
+#endif
 
 /*
  * Primary color hues:
@@ -983,27 +1071,25 @@ refresh_graphic(TScreen const *screen,
 void
 hls2rgb(int h, int l, int s, short *r, short *g, short *b)
 {
-    double hs = (h + 240) % 360;
-    double hv = hs / 360.0;
-    double lv = l / 100.0;
-    double sv = s / 100.0;
+    const int hs = ((h + 240) / 60) % 6;
+    const double lv = l / 100.0;
+    const double sv = s / 100.0;
     double c, x, m, c2;
     double r1, g1, b1;
-    int hpi;
 
     if (s == 0) {
 	*r = *g = *b = (short) l;
 	return;
     }
 
-    if ((c2 = ((2.0 * lv) - 1.0)) < 0.0)
+    c2 = (2.0 * lv) - 1.0;
+    if (c2 < 0.0)
 	c2 = -c2;
     c = (1.0 - c2) * sv;
-    hpi = (int) (hv * 6.0);
-    x = (hpi & 1) ? c : 0.0;
+    x = (hs & 1) ? c : 0.0;
     m = lv - 0.5 * c;
 
-    switch (hpi) {
+    switch (hs) {
     case 0:
 	r1 = c;
 	g1 = x;
@@ -1123,8 +1209,8 @@ dump_graphic(Graphic const *graphic)
 }
 
 /* Erase the portion of any displayed graphic overlapping with a rectangle
- * of the given size and location in pixels.
- * This is used to allow text to "erase" graphics underneath it.
+ * of the given size and location in pixels relative to the start of the
+ * graphic.  This is used to allow text to "erase" graphics underneath it.
  */
 static void
 erase_graphic(Graphic *graphic, int x, int y, int w, int h)
@@ -1164,134 +1250,432 @@ compare_graphic_ids(const void *left, const void *right)
 
     if (!l->valid || !r->valid)
 	return 0;
+
+    if (l->bufferid < r->bufferid)
+	return -1;
+    else if (l->bufferid > r->bufferid)
+	return 1;
+
     if (l->id < r->id)
 	return -1;
     else
 	return 1;
 }
 
+static void
+clip_area(int *orig_x, int *orig_y, int *orig_w, int *orig_h,
+	  int clip_x, int clip_y, int clip_w, int clip_h)
+{
+    if (*orig_x < clip_x) {
+	const int diff = clip_x - *orig_x;
+	*orig_x += diff;
+	*orig_w -= diff;
+    }
+    if (*orig_w > 0 && *orig_x + *orig_w > clip_x + clip_w) {
+	*orig_w -= (*orig_x + *orig_w) - (clip_x + clip_w);
+    }
+
+    if (*orig_y < clip_y) {
+	const int diff = clip_y - *orig_y;
+	*orig_y += diff;
+	*orig_h -= diff;
+    }
+    if (*orig_h > 0 && *orig_y + *orig_h > clip_y + clip_h) {
+	*orig_h -= (*orig_y + *orig_h) - (clip_y + clip_h);
+    }
+}
+
+/* the coordinates are relative to the screen */
+static void
+refresh_graphics(XtermWidget xw,
+		 int leftcol,
+		 int toprow,
+		 int ncols,
+		 int nrows,
+		 int skip_clean)
+{
+    TScreen *const screen = TScreenOf(xw);
+    Display *const display = screen->display;
+    Window const drawable = VDrawable(screen);
+    int const scroll_y = screen->topline * FontHeight(screen);
+    int const refresh_x = leftcol * FontWidth(screen);
+    int const refresh_y = toprow * FontHeight(screen) + scroll_y;
+    int const refresh_w = ncols * FontWidth(screen);
+    int const refresh_h = nrows * FontHeight(screen);
+    int draw_x_min, draw_x_max;
+    int draw_y_min, draw_y_max;
+    Graphic *ordered_graphics[MAX_GRAPHICS];
+    unsigned ii, jj;
+    unsigned active_count;
+    unsigned holes, non_holes;
+    int xx, yy;
+    ColorRegister *buffer;
+
+    active_count = 0;
+    FOR_EACH_SLOT(ii) {
+	Graphic *graphic;
+	if (!(graphic = getActiveSlot(ii)))
+	    continue;
+	TRACE(("refreshing graphic %d on buffer %d, current buffer %d\n",
+	       graphic->id, graphic->bufferid, screen->whichBuf));
+	if (screen->whichBuf == 0) {
+	    if (graphic->bufferid != 0) {
+		TRACE(("skipping graphic %d from alt buffer (%d) when drawing screen=%d\n",
+		       graphic->id, graphic->bufferid, screen->whichBuf));
+		continue;
+	    }
+	} else {
+	    if (graphic->bufferid == 0 && graphic->charrow >= 0) {
+		TRACE(("skipping graphic %d from normal buffer (%d) when drawing screen=%d because it is not in scrollback area\n",
+		       graphic->id, graphic->bufferid, screen->whichBuf));
+		continue;
+	    }
+	    if (graphic->bufferid == 1 &&
+		graphic->charrow + (graphic->actual_height +
+				    FontHeight(screen) - 1) /
+		FontHeight(screen) < 0) {
+		TRACE(("skipping graphic %d from alt buffer (%d) when drawing screen=%d because it is completely in scrollback area\n",
+		       graphic->id, graphic->bufferid, screen->whichBuf));
+		continue;
+	    }
+	}
+	ordered_graphics[active_count++] = graphic;
+    }
+
+    if (active_count == 0)
+	return;
+    if (active_count > 1) {
+	qsort(ordered_graphics,
+	      (size_t) active_count,
+	      sizeof(ordered_graphics[0]),
+	      compare_graphic_ids);
+    }
+
+    if (skip_clean) {
+	unsigned skip_count;
+
+	for (jj = 0; jj < active_count; ++jj) {
+	    if (ordered_graphics[jj]->dirty)
+		break;
+	}
+	skip_count = jj;
+	if (skip_count == active_count)
+	    return;
+
+	active_count -= skip_count;
+	for (jj = 0; jj < active_count; ++jj) {
+	    ordered_graphics[jj] = ordered_graphics[jj + skip_count];
+	}
+    }
+
+    if (!(buffer = malloc(sizeof(*buffer) *
+			  (unsigned) refresh_w * (unsigned) refresh_h))) {
+	TRACE(("unable to allocate %dx%d buffer for graphics refresh\n",
+	       refresh_w, refresh_h));
+	return;
+    }
+    for (yy = 0; yy < refresh_h; yy++) {
+	for (xx = 0; xx < refresh_w; xx++) {
+	    buffer[yy * refresh_w + xx].r = -1;
+	    buffer[yy * refresh_w + xx].g = -1;
+	    buffer[yy * refresh_w + xx].b = -1;
+	}
+    }
+
+    TRACE(("refresh: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d (%d,%d %dx%d)\n",
+	   screen->topline,
+	   leftcol, toprow,
+	   nrows, ncols,
+	   refresh_x, refresh_y,
+	   refresh_w, refresh_h));
+
+    {
+	int const altarea_x = 0;
+	int const altarea_y = 0;
+	int const altarea_w = Width(screen) * FontWidth(screen);
+	int const altarea_h = Height(screen) * FontHeight(screen);
+
+	int const scrollarea_x = 0;
+	int const scrollarea_y = scroll_y;
+	int const scrollarea_w = Width(screen) * FontWidth(screen);
+	int const scrollarea_h = -scroll_y;
+
+	int const mainarea_x = 0;
+	int const mainarea_y = scroll_y;
+	int const mainarea_w = Width(screen) * FontWidth(screen);
+	int const mainarea_h = -scroll_y + Height(screen) * FontHeight(screen);
+
+	draw_x_min = refresh_x + refresh_w;
+	draw_x_max = refresh_x - 1;
+	draw_y_min = refresh_y + refresh_h;
+	draw_y_max = refresh_y - 1;
+	for (jj = 0; jj < active_count; ++jj) {
+	    Graphic *graphic = ordered_graphics[jj];
+	    int draw_x = graphic->charcol * FontWidth(screen);
+	    int draw_y = graphic->charrow * FontHeight(screen);
+	    int draw_w = graphic->actual_width;
+	    int draw_h = graphic->actual_height;
+
+	    if (screen->whichBuf != 0) {
+		if (graphic->bufferid != 0) {
+		    /* clip to alt buffer */
+		    clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
+			      altarea_x, altarea_y, altarea_w, altarea_h);
+		} else if (graphic->bufferid == 0) {
+		    /* clip to scrollback area */
+		    clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
+			      scrollarea_x, scrollarea_y,
+			      scrollarea_w, scrollarea_h);
+		}
+	    } else {
+		/* clip to scrollback + normal area */
+		clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
+			  mainarea_x, mainarea_y,
+			  mainarea_w, mainarea_h);
+	    }
+
+	    clip_area(&draw_x, &draw_y, &draw_w, &draw_h,
+		      refresh_x, refresh_y, refresh_w, refresh_h);
+
+	    TRACE(("refresh: graph=%u\n", jj));
+	    TRACE(("         refresh_x=%d refresh_y=%d refresh_w=%d refresh_h=%d\n",
+		   refresh_x, refresh_y, refresh_w, refresh_h));
+	    TRACE(("         draw_x=%d draw_y=%d draw_w=%d draw_h=%d\n",
+		   draw_x, draw_y, draw_w, draw_h));
+
+	    if (draw_w > 0 && draw_h > 0) {
+		refresh_graphic(screen, graphic, buffer,
+				refresh_x, refresh_y,
+				refresh_w, refresh_h,
+				draw_x, draw_y,
+				draw_w, draw_h);
+		if (draw_x < draw_x_min)
+		    draw_x_min = draw_x;
+		if (draw_x + draw_w - 1 > draw_x_max)
+		    draw_x_max = draw_x + draw_w - 1;
+		if (draw_y < draw_y_min)
+		    draw_y_min = draw_y;
+		if (draw_y + draw_h - 1 > draw_y_max)
+		    draw_y_max = draw_y + draw_h - 1;
+	    }
+	    graphic->dirty = 0;
+	}
+    }
+
+    if (draw_x_max < refresh_x ||
+	draw_x_min > refresh_x + refresh_w - 1 ||
+	draw_y_max < refresh_y ||
+	draw_y_min > refresh_y + refresh_h - 1) {
+	free(buffer);
+	return;
+    }
+
+    holes = 0U;
+    non_holes = 0U;
+    for (yy = draw_y_min - refresh_y; yy <= draw_y_max - refresh_y; yy++) {
+	for (xx = draw_x_min - refresh_x; xx <= draw_x_max - refresh_x; xx++) {
+	    const ColorRegister color = buffer[yy * refresh_w + xx];
+	    if (color.r < 0 || color.g < 0 || color.b < 0) {
+		holes++;
+	    } else {
+		non_holes++;
+	    }
+	}
+    }
+
+    if (non_holes < 1U) {
+	TRACE(("refresh: visible graphics areas are erased; nothing to do\n"));
+	free(buffer);
+	return;
+    }
+
+    /*
+     * If we have any holes we can't just copy an image rectangle, and masking
+     * with bitmaps is very expensive.  This fallback is surprisingly faster
+     * than the XPutImage version in some cases, but I don't know why.
+     * (This is even though there's no X11 primitive for drawing a horizontal
+     * line of height one and no attempt is made to handle multiple lines at
+     * once.)
+     */
+    if (holes > 0U) {
+	GC graphics_gc;
+	XGCValues xgcv;
+	ColorRegister last_color;
+	ColorRegister gc_color;
+	int run;
+
+	memset(&xgcv, 0, sizeof(xgcv));
+	xgcv.graphics_exposures = False;
+	graphics_gc = XCreateGC(display, drawable, GCGraphicsExposures, &xgcv);
+	if (graphics_gc == None) {
+	    TRACE(("unable to allocate GC for graphics refresh\n"));
+	    free(buffer);
+	    return;
+	}
+
+	last_color.r = -1;
+	last_color.g = -1;
+	last_color.b = -1;
+	gc_color.r = -1;
+	gc_color.g = -1;
+	gc_color.b = -1;
+	run = 0;
+	for (yy = draw_y_min - refresh_y; yy <= draw_y_max - refresh_y; yy++) {
+	    for (xx = draw_x_min - refresh_x; xx <= draw_x_max - refresh_x;
+		 xx++) {
+		const ColorRegister color = buffer[yy * refresh_w + xx];
+
+		if (color.r < 0 || color.g < 0 || color.b < 0) {
+		    last_color = color;
+		    if (run > 0) {
+			XDrawLine(display, drawable, graphics_gc,
+				  OriginX(screen) + refresh_x + xx - run,
+				  (OriginY(screen) - scroll_y) + refresh_y + yy,
+				  OriginX(screen) + refresh_x + xx - 1,
+				  (OriginY(screen) - scroll_y) + refresh_y + yy);
+			run = 0;
+		    }
+		    continue;
+		}
+
+		if (color.r != last_color.r ||
+		    color.g != last_color.g ||
+		    color.b != last_color.b) {
+		    last_color = color;
+		    if (run > 0) {
+			XDrawLine(display, drawable, graphics_gc,
+				  OriginX(screen) + refresh_x + xx - run,
+				  (OriginY(screen) - scroll_y) + refresh_y + yy,
+				  OriginX(screen) + refresh_x + xx - 1,
+				  (OriginY(screen) - scroll_y) + refresh_y + yy);
+			run = 0;
+		    }
+
+		    if (color.r != gc_color.r ||
+			color.g != gc_color.g ||
+			color.b != gc_color.b) {
+			xgcv.foreground =
+			    color_register_to_xpixel(&color, xw);
+			XChangeGC(display, graphics_gc, GCForeground, &xgcv);
+			gc_color = color;
+		    }
+		}
+		run++;
+	    }
+	    if (run > 0) {
+		last_color.r = -1;
+		last_color.g = -1;
+		last_color.b = -1;
+		XDrawLine(display, drawable, graphics_gc,
+			  OriginX(screen) + refresh_x + xx - run,
+			  (OriginY(screen) - scroll_y) + refresh_y + yy,
+			  OriginX(screen) + refresh_x + xx - 1,
+			  (OriginY(screen) - scroll_y) + refresh_y + yy);
+		run = 0;
+	    }
+	}
+
+	XFreeGC(display, graphics_gc);
+    } else {
+	XGCValues xgcv;
+	GC graphics_gc;
+	ColorRegister old_color;
+	Pixel fg;
+	XImage *image;
+	char *imgdata;
+	unsigned image_w, image_h;
+
+	memset(&xgcv, 0, sizeof(xgcv));
+	xgcv.graphics_exposures = False;
+	graphics_gc = XCreateGC(display, drawable, GCGraphicsExposures, &xgcv);
+	if (graphics_gc == None) {
+	    TRACE(("unable to allocate GC for graphics refresh\n"));
+	    free(buffer);
+	    return;
+	}
+
+	/* FIXME: is it worth reusing the GC/Image/imagedata across calls? */
+	/* FIXME: is it worth using shared memory when available? */
+	image_w = (unsigned) draw_x_max + 1U - (unsigned) draw_x_min;
+	image_h = (unsigned) draw_y_max + 1U - (unsigned) draw_y_min;
+	image = XCreateImage(display, xw->visInfo->visual,
+			     (unsigned) xw->visInfo->depth,
+			     ZPixmap, 0, NULL,
+			     image_w, image_h,
+			     sizeof(int) * 8U, 0);
+	if (!image) {
+	    TRACE(("unable to allocate XImage for graphics refresh\n"));
+	    XFreeGC(display, graphics_gc);
+	    free(buffer);
+	    return;
+	}
+	imgdata = malloc(image_h * (unsigned) image->bytes_per_line);
+	if (!imgdata) {
+	    TRACE(("unable to allocate XImage for graphics refresh\n"));
+	    XDestroyImage(image);
+	    XFreeGC(display, graphics_gc);
+	    free(buffer);
+	    return;
+	}
+	image->data = imgdata;
+
+	fg = 0U;
+	old_color.r = -1;
+	old_color.g = -1;
+	old_color.b = -1;
+	for (yy = draw_y_min - refresh_y; yy <= draw_y_max - refresh_y; yy++) {
+	    for (xx = draw_x_min - refresh_x; xx <= draw_x_max - refresh_x;
+		 xx++) {
+		const ColorRegister color = buffer[yy * refresh_w + xx];
+
+		if (color.r != old_color.r ||
+		    color.g != old_color.g ||
+		    color.b != old_color.b) {
+		    fg = color_register_to_xpixel(&color, xw);
+		    old_color = color;
+		}
+
+		XPutPixel(image, xx + refresh_x - draw_x_min,
+			  yy + refresh_y - draw_y_min, fg);
+	    }
+	}
+
+	XPutImage(display, drawable, graphics_gc, image,
+		  0, 0,
+		  OriginX(screen) + draw_x_min,
+		  (OriginY(screen) - scroll_y) + draw_y_min,
+		  image_w, image_h);
+	free(imgdata);
+	image->data = NULL;
+	XDestroyImage(image);
+	XFreeGC(display, graphics_gc);
+    }
+
+    free(buffer);
+    XFlush(display);
+}
+
 void
-refresh_displayed_graphics(TScreen const *screen,
+refresh_displayed_graphics(XtermWidget xw,
 			   int leftcol,
 			   int toprow,
 			   int ncols,
 			   int nrows)
 {
-    Graphic *ordered_graphics[MAX_GRAPHICS];
-    Graphic *graphic;
-    unsigned ii;
-    unsigned jj = 0;
-    int x, y, w, h;
-    int xbase, ybase;
-
-    FOR_EACH_SLOT(ii) {
-	if ((graphic = getActiveSlot(ii))) {
-	    ordered_graphics[jj++] = graphic;
-	}
-    }
-    if (jj > 1) {
-	qsort(ordered_graphics,
-	      (size_t) jj,
-	      sizeof(ordered_graphics[0]),
-	      compare_graphic_ids);
-    }
-
-    for (ii = 0; ii < jj; ++ii) {
-	graphic = ordered_graphics[ii];
-	if (graphic->bufferid != screen->whichBuf)
-	    continue;
-
-	x = (leftcol - graphic->charcol) * FontWidth(screen);
-	y = (toprow - graphic->charrow) * FontHeight(screen);
-	w = ncols * FontWidth(screen);
-	h = nrows * FontHeight(screen);
-
-	xbase = (OriginX(screen)
-		 + graphic->charcol * FontWidth(screen));
-	ybase = (OriginY(screen)
-		 + (graphic->charrow - screen->topline) * FontHeight(screen));
-
-	if (xbase + x + w + OriginX(screen) > FullWidth(screen))
-	    w = FullWidth(screen) - (xbase + x + OriginX(screen));
-	if (ybase + y + h + OriginY(screen) > FullHeight(screen))
-	    h = FullHeight(screen) - (ybase + y + OriginY(screen));
-	else if (ybase + y < OriginY(screen)) {
-	    int diff = OriginY(screen) - (ybase + y);
-	    y += diff;
-	    h -= diff;
-	}
-
-	TRACE(("graphics refresh: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d xbase=%d ybase=%d\n",
-	       screen->topline,
-	       leftcol, toprow,
-	       nrows, ncols,
-	       x, y, w, h,
-	       xbase, ybase));
-	refresh_graphic(screen, graphic, xbase, ybase, x, y, w, h);
-    }
+    refresh_graphics(xw, leftcol, toprow, ncols, nrows, 0);
 }
 
 void
-refresh_modified_displayed_graphics(TScreen const *screen)
+refresh_modified_displayed_graphics(XtermWidget xw)
 {
-    Graphic *graphic;
-    unsigned ii;
-    int leftcol, toprow;
-    int nrows, ncols;
-    int x, y, w, h;
-    int xbase, ybase;
-
-    FOR_EACH_SLOT(ii) {
-	if (!(graphic = getActiveSlot(ii)))
-	    continue;
-	if (graphic->bufferid != screen->whichBuf)
-	    continue;
-	if (!graphic->dirty)
-	    continue;
-
-	leftcol = graphic->charcol;
-	toprow = graphic->charrow;
-	nrows = (((graphic->actual_height * graphic->pixh)
-		  + FontHeight(screen) - 1)
-		 / FontHeight(screen));
-	ncols = (((graphic->actual_width * graphic->pixw)
-		  + FontWidth(screen) - 1)
-		 / FontWidth(screen));
-
-	x = (leftcol - graphic->charcol) * FontWidth(screen);
-	y = (toprow - graphic->charrow) * FontHeight(screen);
-	w = ncols * FontWidth(screen);
-	h = nrows * FontHeight(screen);
-
-	xbase = (OriginX(screen)
-		 + graphic->charcol * FontWidth(screen));
-	ybase = (OriginY(screen)
-		 + (graphic->charrow - screen->topline) * FontHeight(screen));
-
-	if (xbase + x + w + OriginX(screen) > FullWidth(screen))
-	    w = FullWidth(screen) - (xbase + x + OriginX(screen));
-	if (ybase + y + h + OriginY(screen) > FullHeight(screen))
-	    h = FullHeight(screen) - (ybase + y + OriginY(screen));
-	else if (ybase + y < OriginY(screen)) {
-	    int diff = OriginY(screen) - (ybase + y);
-	    y += diff;
-	    h -= diff;
-	}
-
-	TRACE(("full graphics refresh: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d xbase=%d ybase=%d\n",
-	       screen->topline,
-	       leftcol, toprow,
-	       nrows, ncols,
-	       x, y, w, h,
-	       xbase, ybase));
-	refresh_graphic(screen, graphic, xbase, ybase, x, y, w, h);
-	graphic->dirty = 0;
-    }
+    TScreen const *screen = TScreenOf(xw);
+    refresh_graphics(xw, 0, 0, MaxCols(screen), MaxRows(screen), 1);
 }
 
 void
-scroll_displayed_graphics(int rows)
+scroll_displayed_graphics(XtermWidget xw, int rows)
 {
+    TScreen const *screen = TScreenOf(xw);
     Graphic *graphic;
     unsigned ii;
 
@@ -1300,6 +1684,8 @@ scroll_displayed_graphics(int rows)
 
     FOR_EACH_SLOT(ii) {
 	if (!(graphic = getActiveSlot(ii)))
+	    continue;
+	if (graphic->bufferid != screen->whichBuf)
 	    continue;
 
 	graphic->charrow -= rows;
@@ -1313,18 +1699,29 @@ pixelarea_clear_displayed_graphics(TScreen const *screen,
 				   int w,
 				   int h)
 {
-    Graphic *graphic;
     unsigned ii;
-    int x, y;
 
     FOR_EACH_SLOT(ii) {
+	Graphic *graphic;
+	/* FIXME: are these coordinates (scrolled) screen-relative? */
+	int const scroll_y = (screen->whichBuf == 0
+			      ? screen->topline * FontHeight(screen)
+			      : 0);
+	int graph_x;
+	int graph_y;
+	int x, y;
+
 	if (!(graphic = getActiveSlot(ii)))
 	    continue;
+	if (graphic->bufferid != screen->whichBuf)
+	    continue;
 
-	x = winx - graphic->charcol * FontWidth(screen);
-	y = winy - graphic->charrow * FontHeight(screen);
+	graph_x = graphic->charcol * FontWidth(screen);
+	graph_y = graphic->charrow * FontHeight(screen);
+	x = winx - graph_x;
+	y = (winy - scroll_y) - graph_y;
 
-	TRACE(("pixelarea graphics erase: screen->topline=%d winx=%d winy=%d w=%d h=%d x=%d y=%d\n",
+	TRACE(("pixelarea clear graphics: screen->topline=%d winx=%d winy=%d w=%d h=%d x=%d y=%d\n",
 	       screen->topline,
 	       winx, winy,
 	       w, h,
@@ -1340,12 +1737,10 @@ chararea_clear_displayed_graphics(TScreen const *screen,
 				  int ncols,
 				  int nrows)
 {
-    int x, y, w, h;
-
-    x = leftcol * FontWidth(screen);
-    y = toprow * FontHeight(screen);
-    w = ncols * FontWidth(screen);
-    h = nrows * FontHeight(screen);
+    int const x = leftcol * FontWidth(screen);
+    int const y = toprow * FontHeight(screen);
+    int const w = ncols * FontWidth(screen);
+    int const h = nrows * FontHeight(screen);
 
     TRACE(("chararea clear graphics: screen->topline=%d leftcol=%d toprow=%d nrows=%d ncols=%d x=%d y=%d w=%d h=%d\n",
 	   screen->topline,

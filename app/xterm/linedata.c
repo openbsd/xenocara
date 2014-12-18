@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.82 2013/02/08 00:11:16 tom Exp $ */
+/* $XTermId: linedata.c,v 1.85 2014/11/13 01:17:59 tom Exp $ */
 
 /*
- * Copyright 2009-2012,2013 by Thomas E. Dickey
+ * Copyright 2009-2013,2014 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -41,7 +41,7 @@
  * If the data comes from the scrollback, defer that to getScrollback().
  */
 LineData *
-getLineData(TScreen * screen, int row)
+getLineData(TScreen *screen, int row)
 {
     LineData *result = 0;
     ScrnBuf buffer;
@@ -85,7 +85,7 @@ getLineData(TScreen * screen, int row)
  * TODO: optionally prune unused combining character data from the result.
  */
 void
-copyLineData(LineData * dst, LineData * src)
+copyLineData(LineData *dst, CLineData *src)
 {
     dst->bufHead = src->bufHead;
 
@@ -186,7 +186,10 @@ initLineData(XtermWidget xw)
 #define CellDataSize(screen) (SizeOfCellData + screen->lineExtra)
 
 #define CellDataAddr(screen, data, cell) \
-	(CellData *)(void *) ((char *)data + (cell * CellDataSize(screen)))
+	( (CellData *)(void *) ((char *)data + (cell * CellDataSize(screen))) )
+#define ConstCellDataAddr(screen, data, cell) \
+	( (const CellData *)(const void *) ( \
+	      (const char *)data + (cell * CellDataSize(screen))) )
 
 CellData *
 newCellData(XtermWidget xw, Cardinal count)
@@ -200,10 +203,10 @@ newCellData(XtermWidget xw, Cardinal count)
 }
 
 void
-saveCellData(TScreen * screen,
-	     CellData * data,
+saveCellData(TScreen *screen,
+	     CellData *data,
 	     Cardinal cell,
-	     LineData * ld,
+	     CLineData *ld,
 	     int column)
 {
     CellData *item = CellDataAddr(screen, data, cell);
@@ -225,13 +228,13 @@ saveCellData(TScreen * screen,
 }
 
 void
-restoreCellData(TScreen * screen,
-		CellData * data,
+restoreCellData(TScreen *screen,
+		const CellData *data,
 		Cardinal cell,
-		LineData * ld,
+		LineData *ld,
 		int column)
 {
-    CellData *item = CellDataAddr(screen, data, cell);
+    const CellData *item = ConstCellDataAddr(screen, data, cell);
 
     if (column < MaxCols(screen)) {
 	ld->attribs[column] = item->attribs;

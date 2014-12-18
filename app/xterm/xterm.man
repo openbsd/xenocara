@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.582 2014/09/18 08:35:37 tom Exp $
+.\" $XTermId: xterm.man,v 1.586 2014/11/28 22:33:56 tom Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -97,7 +97,7 @@ It also provides Tektronix 4014 emulation
 for programs that cannot use the window system directly.
 If the underlying operating system supports
 terminal resizing capabilities (for example, the SIGWINCH signal in systems
-derived from 4.3bsd), \fI\*n\fP will use the facilities to notify programs
+derived from 4.3BSD), \fI\*n\fP will use the facilities to notify programs
 running in the window whenever it is resized.
 .
 .PP
@@ -1269,7 +1269,7 @@ with \fI\*n\fP:
 .B \-bd \fIcolor\fP
 This option specifies the color to use for the border of the window.
 The corresponding resource name is \fIborderColor\fP.
-\fI\*n\fP uses the X Toolkit default, which is \*(``XtDefaultForeground\*(''.
+\fI\*N\fP uses the X Toolkit default, which is \*(``XtDefaultForeground\*(''.
 .TP 8
 .B \-bg \fIcolor\fP
 This option specifies the color to use for the background of the window.
@@ -1398,8 +1398,8 @@ Specifies the preferred size and position of the application when iconified.
 It is not necessarily obeyed by all window managers.
 .TP 8
 .B "iconHint (\fPclass\fB IconHint)"
-Specifies a icon which will be added to the window manager hints.
-\fI\*n\fP provides no default value.
+Specifies an icon which will be added to the window manager hints.
+\fI\*N\fP provides no default value.
 .IP
 Set this resource to \*(``none\*('' to omit the hint entirely,
 using whatever the window manager may decide.
@@ -1450,7 +1450,7 @@ The more capable desktop systems allow changing the icon on a per-user basis.
 .TP 8
 .B "iconName (\fPclass\fB IconName)"
 Specifies a label for \fI\*n\fP when iconified.
-\fI\*n\fP provides no default value;
+\fI\*N\fP provides no default value;
 some window managers may assume the application name, e.g., \*(``\*n\*(''.
 .IP
 Setting the \fBiconName\fP resource sets the icon label
@@ -1622,9 +1622,8 @@ Specifies whether or not Sun/PC keyboard layout should be assumed rather
 than DEC VT220.
 This causes the keypad \*(``+' to be mapped to \*(``,'.
 and
-CTRL F1-F12 to F11-F20, depending on the setting of the \fBctrlFKeys\fP
-resource.
-so \fI\*n\fP emulates a DEC VT220 more accurately.
+CTRL F1-F10 to F11-F20, depending on the setting of the \fBctrlFKeys\fP
+resource, so \fI\*n\fP emulates a DEC VT220 more accurately.
 Otherwise (the default, with \fBsunKeyboard\fP set to \*(``false\*(''),
 \fI\*n\fP uses PC-style bindings for the function keys and keypad.
 .IP
@@ -1726,7 +1725,8 @@ This is part of the
 logic.
 When \fI\*n\fP is directed to wait in this fashion,
 it passes the terminal size from the display end of the pseudo-terminal
-to the terminal I/O connection, e.g., according to the window manager.
+to the terminal I/O connection, e.g.,
+using the size according to the window manager.
 Otherwise, it uses the size as given in resource values or command-line
 option \fB\-geom\fP.
 The default is \*(``false\*(''.
@@ -1785,7 +1785,7 @@ The active icon is shown.
 If you are using \fItwm\fP, use this setting to enable active-icons.
 .TP
 default (2)
-\fI\*n\fP checks at startup, and shows an active icon only for window
+\fI\*N\fP checks at startup, and shows an active icon only for window
 managers which it can identify and which are known to support the feature.
 These are \fIfvwm\fP (full support), and \fIwindow maker\fP (limited).
 A few other windows managers (such as \fItwm\fP and \fIctwm\fP)
@@ -1865,12 +1865,12 @@ description of the terminal's capabilities,
 independent of the termcap/terminfo setting:
 .RS
 .bP
-\fI\*n\fP can tell the querying program how many colors it supports.
+\fI\*N\fP can tell the querying program how many colors it supports.
 This is a constant, depending on how it is compiled, typically 16.
 It does not change if you alter resource settings,
 e.g., the \fBboldColors\fP resource.
 .bP
-\fI\*n\fP can tell the querying program what strings are sent by modified
+\fI\*N\fP can tell the querying program what strings are sent by modified
 (shift-, control-, alt-) function- and keypad-keys.
 Reporting control- and alt-modifiers is a feature that relies on the
 \fIncurses\fP extended naming.
@@ -2019,7 +2019,7 @@ The
 default is \*(``true\*(''.
 .TP 8
 .B "awaitInput (\fPclass\fB AwaitInput)"
-Specifies whether or not the \fI\*n\fR uses a 50 millisecond timeout to
+Specifies whether or not \fI\*n\fR uses a 50 millisecond timeout to
 await input (i.e., to support the Xaw3d arrow scrollbar).
 The default is \*(``false\*(''.
 .TP 8
@@ -2096,7 +2096,8 @@ Since X11R6, bitmap fonts have been scaled.
 The font server claims to provide the bold font that \fI\*n\fP requests,
 but the result is not always readable.
 XFree86 introduced a feature which can be used to suppress the scaling.
-In the X server's configuration file (e.g., \*(``/etc/X11/XFree86\*(''), you
+In the X server's configuration file (e.g., \*(``/etc/X11/XFree86\*(''
+or \*(``/etc/X11/xorg.conf\*(''), you
 can add \*(``:unscaled\*('' to the end of the directory specification for the
 \*(``misc\*('' fonts,
 which comprise the fixed-pitch fonts that are used by \fI\*n\fP.
@@ -2481,7 +2482,7 @@ SetColor,GetColor,GetAnsiColor
 .RE
 .IP
 The names are listed below.
-\fI\*n\fP ignores capitalization, but
+\fI\*N\fP ignores capitalization, but
 they are shown in mixed-case for clarity.
 .RS
 .TP 5
@@ -2505,7 +2506,7 @@ SetFont,GetFont
 .RE
 .IP
 The names are listed below.
-\fI\*n\fP ignores capitalization, but
+\fI\*N\fP ignores capitalization, but
 they are shown in mixed-case for clarity.
 .RS
 .TP 5
@@ -2525,7 +2526,7 @@ SetTcap,GetTcap
 .RE
 .IP
 The names are listed below.
-\fI\*n\fP ignores capitalization, but
+\fI\*N\fP ignores capitalization, but
 they are shown in mixed-case for clarity.
 .RS
 .TP 5
@@ -2546,7 +2547,7 @@ The default value is
 .RE
 .IP
 The names are listed below.
-\fI\*n\fP ignores capitalization, but
+\fI\*N\fP ignores capitalization, but
 they are shown in mixed-case for clarity.
 Where a number can be used
 as an alternative, it is given in parentheses after the name.
@@ -2651,11 +2652,11 @@ For more background on this, see the \fBmeta\fP function in curses.
 .IP
 Note that the \fIAlt\fP key is not necessarily the same as the
 \fIMeta\fP modifier.
-\fIxmodmap\fP lists your key modifiers.
+The \fIxmodmap\fP utility lists your key modifiers.
 X defines modifiers for shift, (caps) lock and control,
 as well as 5 additional modifiers which are generally used to configure
 key modifiers.
-\fI\*n\fP inspects the same information to find the modifier associated
+\fI\*N\fP inspects the same information to find the modifier associated
 with either \fIMeta\fP key (left or right),
 and uses that key as the \fIMeta\fP modifier.
 It also looks for the NumLock key,
@@ -3142,7 +3143,7 @@ The resource value (ignoring case) may be:
 .RS
 .TP 4
 .I true
-\fI\*n\fR will use the
+\fI\*N\fR will use the
 encoding specified by the users' LC_CTYPE locale (i.e., LC_ALL,
 LC_CTYPE, or LANG variables) as far as possible.
 This is realized
@@ -3150,7 +3151,7 @@ by always enabling UTF-8 mode and invoking \fIluit\fR in non-UTF-8
 locales.
 .TP
 .I medium
-\fI\*n\fR will follow users'
+\fI\*N\fR will follow users'
 LC_CTYPE locale only for UTF-8, east Asian, and Thai locales,
 where the encodings were not supported by conventional 8bit mode
 with changing fonts.
@@ -3165,7 +3166,7 @@ mapping to support those with the Unicode font.
 For other encodings, \fI\*n\fR assumes that UTF-8 encoding is required.
 .TP
 .I false
-\fI\*n\fR will use conventional 8bit mode
+\fI\*N\fR will use conventional 8bit mode
 or UTF-8 mode according to \fButf8\fR resource or \fB\-u8\fP option.
 .RE
 .IP
@@ -3454,7 +3455,7 @@ follows in the resource value.
 .TP
 none
 No selection action is associated with this resource.
-\fI\*n\fP interprets it as the end of the list.
+\fI\*N\fP interprets it as the end of the list.
 For example, you may use it to disable triple (and higher) clicking
 by setting \fBon3Clicks\fP to \*(``none\*(''.
 .RE
@@ -3669,6 +3670,18 @@ Controls whether the cursor is repainted
 when \fINotifyGrab\fP and \fINotifyUngrab\fP
 event types are received during change of focus.
 The default is \*(``false\*(''.
+.TP 8
+.B "regisScreenSize (\fPclass\fB RegisScreenSize)"
+If \fI\*n\fR is configured to support ReGIS graphics,
+this resource tells \fI\*n\fR the maximum size (in pixels) for graphics.
+.IP
+\fI\*N\fR accepts a special resource value \*(``auto\*('',
+which tells \fI\*n\fR to use the \fBdecTerminalID\fP resource to
+set the maximum size based on the hardware terminal's limits.
+Otherwise, \fI\*n\fR expects the size to be given as \fIheight\fPx\fIwidth\fP,
+e.g., \*(``800x1000\*(''.
+.IP
+The default resource value is \*(``800x1000\*(''.
 .TP 8
 .B "renderFont (\fPclass\fB RenderFont)"
 If \fI\*n\fR is built with the Xft library,
@@ -6772,7 +6785,7 @@ Large pastes do not work on some systems.
 This is not a bug in
 \fI\*n\fP; it is a bug in the pseudo terminal driver of those
 systems.
-\fI\*n\fP feeds large pastes to the pty only as fast as the pty
+\fI\*N\fP feeds large pastes to the pty only as fast as the pty
 will accept data, but some pty drivers do not return enough information
 to know if the write has succeeded.
 .

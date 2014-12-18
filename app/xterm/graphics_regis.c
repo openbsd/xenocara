@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.44 2014/09/17 08:35:49 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.52 2014/11/28 20:37:24 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -36,6 +36,10 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
+
+#if OPT_DOUBLE_BUFFER
+#include <X11/extensions/Xdbe.h>
+#endif
 
 #include <data.h>
 #include <VTparse.h>
@@ -91,8 +95,11 @@
 #undef DEBUG_LOAD
 
 /* controls for extensions over VT3x0 limitations */
+#define ENABLE_RGB_COLORSPECS
 #define ENABLE_FREE_ROTATION
-#define ENABLE_USER_FONT_SIZE_EXTENSION
+#define ENABLE_UPLOAD_ALPHABET_FROM_FONT
+#define ENABLE_UPLOAD_ALPHABET_ZERO
+#define ENABLE_USER_FONT_SIZE
 #define ENABLE_VARIABLE_ITALICS
 
 #define MIN_ITERATIONS_BEFORE_REFRESH 20U
@@ -114,10 +121,11 @@ typedef struct RegisWriteControls {
     char         shading_character;
     int          shading_reference;
     unsigned     shading_reference_dim;
+    unsigned     line_width;
 } RegisWriteControls;
 
 typedef struct RegisTextControls {
-    unsigned  alphabet;
+    unsigned  alphabet_num;
     unsigned  character_set_l; /* default: "(B" (ASCII) */
     unsigned  character_set_r; /* default: "-@" (Latin-1) */
     unsigned  character_display_w;
@@ -133,15 +141,19 @@ typedef struct RegisTextControls {
 
 #define MAX_REGIS_ALPHABETS 8U
 #define REGIS_ALPHABET_NAME_LEN 11U
+#define REGIS_FONTNAME_LEN 256U
 /* enough for a 16x24 font (about 100KB) */
 #define MAX_REGIS_ALPHABET_BYTES (256U * 16U * 24U)
 #define MAX_GLYPH_PIXELS 8192U
 #define MAX_GLYPHS 256U
+#define INVALID_ALPHABET_NUM ~0U
 
 typedef struct RegisAlphabet {
     unsigned       alphabet_num;
     unsigned       pixw, pixh;
     char           name[REGIS_ALPHABET_NAME_LEN];
+    char           fontname[REGIS_FONTNAME_LEN];
+    int            use_font;
     int            loaded[MAX_GLYPHS];
     unsigned char *bytes;
 } RegisAlphabet;
@@ -225,6 +237,8 @@ typedef struct RegisGraphicsContext {
 #define WRITE_SHADING_REF_Y 0U
 #define WRITE_SHADING_REF_X 1U
 
+/* keypress event example: http://iraf.net/forum/viewtopic.php?showtopic=61692 */
+
 #define ROT_LEFT_N(V, N) ( (((V) << ((N) & 3U )) & 255U) | \
 			   ((V) >> (8U - ((N) & 3U))) )
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
@@ -255,7 +269,7 @@ isqrt(double d)
 
 static void
 draw_regis_pixel(RegisGraphicsContext *context, int x, int y,
-		 unsigned int value)
+		 unsigned value)
 {
     unsigned color = 0;
 
@@ -533,11 +547,11 @@ draw_filled_polygon(RegisGraphicsContext *context)
 		 */
 		if (context->temporary_write_controls.shading_character != '\0') {
 		    shade_char_to_pixel(context, pixels, w, h,
-					WRITE_SHADING_REF_X, old_x,
-					old_x, old_y);
+					WRITE_SHADING_REF_X,
+					old_x, old_x, old_y);
 		} else {
-		    shade_pattern_to_pixel(context, WRITE_SHADING_REF_X, old_x,
-					   old_x, old_y);
+		    shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
+					   old_x, old_x, old_y);
 		}
 	    }
 	    inside = 1;
@@ -545,11 +559,11 @@ draw_filled_polygon(RegisGraphicsContext *context)
 	    if (inside) {
 		if (context->temporary_write_controls.shading_character != '\0') {
 		    shade_char_to_pixel(context, pixels, w, h,
-					WRITE_SHADING_REF_X, old_x,
-					new_x, new_y);
+					WRITE_SHADING_REF_X,
+					old_x, new_x, new_y);
 		} else {
-		    shade_pattern_to_pixel(context, WRITE_SHADING_REF_X, old_x,
-					   new_x, new_y);
+		    shade_pattern_to_pixel(context, WRITE_SHADING_REF_X,
+					   old_x, new_x, new_y);
 		}
 	    }
 	    if (new_x > old_x + 1) {
@@ -1315,7 +1329,7 @@ find_free_alphabet_index(RegisGraphicsContext *context, unsigned alphabet,
 {
     unsigned ii, jj;
 
-    /* exact match first */
+    /* try an exact match */
     for (ii = 0U; ii < MAX_REGIS_ALPHABETS; ii++) {
 	if (context->alphabets[ii].alphabet_num == alphabet &&
 	    context->alphabets[ii].pixw == pixw &&
@@ -1324,23 +1338,24 @@ find_free_alphabet_index(RegisGraphicsContext *context, unsigned alphabet,
 	}
     }
 
-    /* empty slot next */
+    /* otherwise use any empty slot */
     for (ii = 0U; ii < MAX_REGIS_ALPHABETS; ii++) {
-	if (context->alphabets[ii].alphabet_num == 0U &&
-	    context->alphabets[ii].pixw == 0U &&
-	    context->alphabets[ii].pixh == 0U) {
-	    context->alphabets[0U].alphabet_num = alphabet;
-	    context->alphabets[0U].pixw = pixw;
-	    context->alphabets[0U].pixh = pixh;
+	if (context->alphabets[ii].alphabet_num == INVALID_ALPHABET_NUM) {
+	    context->alphabets[ii].alphabet_num = alphabet;
+	    context->alphabets[ii].pixw = pixw;
+	    context->alphabets[ii].pixh = pixh;
 	    return ii;
 	}
     }
 
-    /* recycle different font size next */
+    /* otherwise recycle a slot with a different font size */
     for (ii = 0U; ii < MAX_REGIS_ALPHABETS; ii++) {
 	if (context->alphabets[ii].alphabet_num == alphabet) {
 	    context->alphabets[ii].pixw = pixw;
 	    context->alphabets[ii].pixh = pixh;
+	    context->alphabets[ii].name[0] = '\0';
+	    context->alphabets[ii].fontname[0] = '\0';
+	    context->alphabets[ii].use_font = 0;
 	    if (context->alphabets[ii].bytes != NULL) {
 		free(context->alphabets[ii].bytes);
 		context->alphabets[ii].bytes = NULL;
@@ -1352,11 +1367,13 @@ find_free_alphabet_index(RegisGraphicsContext *context, unsigned alphabet,
 	}
     }
 
-    /* else recycle this arbitrary slot */
+    /* finally just recycle this arbitrary slot */
     context->alphabets[0U].alphabet_num = alphabet;
     context->alphabets[0U].pixw = pixw;
     context->alphabets[0U].pixh = pixh;
     context->alphabets[0U].name[0] = '\0';
+    context->alphabets[0U].fontname[0] = '\0';
+    context->alphabets[0U].use_font = 0;
     if (context->alphabets[0U].bytes != NULL) {
 	free(context->alphabets[0U].bytes);
 	context->alphabets[0U].bytes = NULL;
@@ -1364,6 +1381,7 @@ find_free_alphabet_index(RegisGraphicsContext *context, unsigned alphabet,
     for (jj = 0U; jj < MAX_GLYPHS; jj++) {
 	context->alphabets[0U].loaded[jj] = 0;
     }
+
     return 0U;
 }
 
@@ -1389,7 +1407,7 @@ dump_bitmap_pixels(unsigned char const *pixels, unsigned w, unsigned h)
 
 #if OPT_RENDERFONT && defined(HAVE_TYPE_FCCHAR32)
 static int
-copy_bitmap_from_xft_font(Display *display, XftFont *font, char ch,
+copy_bitmap_from_xft_font(Display *display, XftFont *font, FcChar32 ch,
 			  unsigned char *pixels, unsigned w, unsigned h,
 			  unsigned xmin, unsigned ymin)
 {
@@ -1398,7 +1416,6 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, char ch,
      * - the bitmap for the last M characters and target dimensions
      * - resuse the pixmap object where possible
      */
-    const FcChar32 ch32 = (FcChar32) ch;	/* FIXME: convert correctly */
     XftColor bg, fg;
     Pixmap bitmap;
     XftDraw *draw;
@@ -1437,7 +1454,7 @@ copy_bitmap_from_xft_font(Display *display, XftFont *font, char ch,
 
     XftDrawRect(draw, &bg, 0, 0, bmw, bmh);
     XftDrawString32(draw, &fg, font, 0, font->ascent - (int) ymin,
-		    &ch32, 1);
+		    &ch, 1);
 
     image = XGetImage(display, bitmap, (int) xmin, 0, w, h, 1, XYPixmap);
     if (!image) {
@@ -1503,6 +1520,7 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
 	return;
     }
 
+    /* FIXME: ch is in UCS32 -- try to support non-ASCII characters */
     char_count = 0U;
     real_minx = workw - 1U;
     real_maxx = 0U;
@@ -1514,7 +1532,7 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
 	if (!FcCharSetHasChar(font->charset, ch))
 	    continue;
 
-	copy_bitmap_from_xft_font(display, font, (char) ch, pixels,
+	copy_bitmap_from_xft_font(display, font, ch, pixels,
 				  workw, workh, 0U, 0U);
 
 	pixel_count = 0U;
@@ -1593,8 +1611,8 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
  * maxw and maxh without overstepping either dimension.
  */
 static XftFont *
-find_best_xft_font_size(Display *display, Screen * screen, unsigned maxw,
-			unsigned maxh, unsigned max_pixels,
+find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
+			unsigned maxw, unsigned maxh, unsigned max_pixels,
 			unsigned *w, unsigned *h,
 			unsigned *xmin, unsigned *ymin)
 {
@@ -1638,7 +1656,7 @@ find_best_xft_font_size(Display *display, Screen * screen, unsigned maxw,
 	 *    doesn't appear to matter).
 	 *
 	 * In those two cases it literally drops pixels, sometimes whole
-	 * columns, making the glyphs unreadable and ugly even readable.
+	 * columns, making the glyphs unreadable and ugly even when readable.
 	 */
 	/*
 	 * FIXME:
@@ -1655,9 +1673,9 @@ find_best_xft_font_size(Display *display, Screen * screen, unsigned maxw,
 
 	    font = NULL;
 	    /* FIXME: make this name configurable.  In practice it may not be
-	     * useful -- there are few fonts which meet the other requirements.
+	     * useful -- there are few fonts which meet all the requirements.
 	     */
-	    if ((pat = XftNameParse(""))) {
+	    if ((pat = XftNameParse(fontname))) {
 		XftPatternBuild(pat,
 		/* arbitrary value */
 				XFT_SIZE, XftTypeDouble, 12.0,
@@ -1791,7 +1809,8 @@ find_best_xft_font_size(Display *display, Screen * screen, unsigned maxw,
 #endif
 
 static int
-get_xft_bitmap_of_character(RegisGraphicsContext const *context, char ch,
+get_xft_bitmap_of_character(RegisGraphicsContext const *context,
+			    char const *fontname, char ch,
 			    unsigned maxw, unsigned maxh, unsigned char *pixels,
 			    unsigned max_pixels, unsigned *w, unsigned *h)
 {
@@ -1809,13 +1828,13 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context, char ch,
     XftFont *font;
     unsigned xmin = 0U, ymin = 0U;
 
-    if (!(font = find_best_xft_font_size(display, screen, maxw, maxh,
+    if (!(font = find_best_xft_font_size(display, screen, fontname, maxw, maxh,
 					 max_pixels, w, h, &xmin, &ymin))) {
 	TRACE(("Unable to find suitable Xft font\n"));
 	return 0;
     }
 
-    if (!copy_bitmap_from_xft_font(display, font, ch, pixels, *w, *h,
+    if (!copy_bitmap_from_xft_font(display, font, CharOf(ch), pixels, *w, *h,
 				   xmin, ymin)) {
 	TRACE(("Unable to create bitmap for '%c'\n", ch));
 	XftFontClose(display, font);
@@ -1838,32 +1857,28 @@ get_xft_bitmap_of_character(RegisGraphicsContext const *context, char ch,
 #endif
 }
 
-#define GLYPH_WIDTH_BYTES(PIXW) ( ((PIXW) + 7U) >> 3U )
-
-static int
-get_user_bitmap_of_character(RegisGraphicsContext const *context,
-			     char ch, unsigned maxw, unsigned maxh,
-			     unsigned char *pixels, unsigned max_pixels,
-			     unsigned *w, unsigned *h)
+static unsigned
+find_best_alphabet_index(RegisGraphicsContext const *context,
+			 unsigned minw, unsigned minh,
+			 unsigned maxw, unsigned maxh,
+			 unsigned max_pixels)
 {
     unsigned ii;
     unsigned bestmatch;
     unsigned bestw, besth;
-    const unsigned char *glyph;
-    unsigned xx, yy;
-    unsigned byte, bit;
 
     assert(context);
-    assert(pixels);
-    assert(w);
-    assert(h);
+    assert(maxw);
+    assert(maxh);
 
     bestmatch = MAX_REGIS_ALPHABETS;
     bestw = 0U;
     besth = 0U;
     for (ii = 0U; ii < MAX_REGIS_ALPHABETS; ii++) {
 	if (context->alphabets[ii].alphabet_num ==
-	    context->current_text_controls->alphabet &&
+	    context->current_text_controls->alphabet_num &&
+	    context->alphabets[ii].pixw >= minw &&
+	    context->alphabets[ii].pixh >= minh &&
 	    context->alphabets[ii].pixw <= maxw &&
 	    context->alphabets[ii].pixh <= maxh &&
 	    context->alphabets[ii].pixw > bestw &&
@@ -1875,29 +1890,48 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
 	    besth = context->alphabets[ii].pixh;
 	}
     }
-    if (bestmatch >= MAX_REGIS_ALPHABETS) {
-	TRACE(("user bitmap not found (no alphabet or resolution mismatch)\n"));
+
+    TRACE(("found alphabet %u at index %u size %ux%u font=%s\n",
+	   context->current_text_controls->alphabet_num, bestmatch,
+	   bestw, besth,
+	   context->alphabets[bestmatch].use_font ?
+	   context->alphabets[bestmatch].fontname : "(none)"));
+    return bestmatch;
+}
+
+#define GLYPH_WIDTH_BYTES(PIXW) ( ((PIXW) + 7U) >> 3U )
+
+static int
+get_user_bitmap_of_character(RegisGraphicsContext const *context,
+			     char ch,
+			     unsigned alphabet_index,
+			     unsigned char *pixels)
+{
+    const unsigned char *glyph;
+    unsigned w, h;
+    unsigned xx, yy;
+    unsigned byte, bit;
+
+    assert(context);
+    assert(pixels);
+
+    if (!context->alphabets[alphabet_index].loaded[(unsigned) ch]) {
+	TRACE(("in alphabet %u with alphabet index %u user glyph for '%c' not loaded\n",
+	       context->current_text_controls->alphabet_num, alphabet_index,
+	       ch));
 	return 0;
     }
 
-    if (!context->alphabets[bestmatch].loaded[(unsigned) ch]) {
-	TRACE(("user bitmap not found (alphabet %u found at index %u but glyph for '%c' not loaded)\n",
-	       context->current_text_controls->alphabet, bestmatch, ch));
-	return 0;
-    }
-    glyph = &context->alphabets[bestmatch]
-	.bytes[(unsigned) ch *
-	       GLYPH_WIDTH_BYTES(context->alphabets[bestmatch].pixw) *
-	       context->alphabets[bestmatch].pixh];
+    w = context->alphabets[alphabet_index].pixw;
+    h = context->alphabets[alphabet_index].pixh;
+    glyph = &context->alphabets[alphabet_index]
+	.bytes[(unsigned) ch * GLYPH_WIDTH_BYTES(w) * h];
 
-    *w = bestw;
-    *h = besth;
-    for (yy = 0U; yy < besth; yy++) {
-	for (xx = 0U; xx < bestw; xx++) {
-	    byte = yy * GLYPH_WIDTH_BYTES(bestw) + (xx >> 3U);
+    for (yy = 0U; yy < h; yy++) {
+	for (xx = 0U; xx < w; xx++) {
+	    byte = yy * GLYPH_WIDTH_BYTES(w) + (xx >> 3U);
 	    bit = xx & 7U;
-	    pixels[yy * bestw + xx] =
-		((unsigned) glyph[byte] >> (7U - bit)) & 1U;
+	    pixels[yy * w + xx] = ((unsigned) glyph[byte] >> (7U - bit)) & 1U;
 	}
     }
 
@@ -1943,46 +1977,69 @@ get_bitmap_of_character(RegisGraphicsContext const *context, char ch,
 			unsigned maxw, unsigned maxh, unsigned char *pixels,
 			unsigned *w, unsigned *h, unsigned max_pixels)
 {
-    if (context->current_text_controls->alphabet == 0U) {
-	if (get_xft_bitmap_of_character(context, ch, maxw, maxh, pixels,
-					max_pixels, w, h)) {
-	    if (*w <= maxw && *h <= maxh && *w * *h <= max_pixels) {
-#ifdef DEBUG_SPECIFIC_CHAR_METRICS
-		if (IS_DEBUG_CHAR(ch)) {
-		    printf("got %ux%u Xft bitmap for '%c' target size %ux%u:\n",
-			   *w, *h,
-			   ch, maxw, maxh);
-		    dump_bitmap_pixels(pixels, *w, *h);
-		    printf("\n");
-		}
-#endif
-		return;
-	    }
-	    TRACE(("giving up on Xft glyph; results are too large\n"));
-	}
-    } else {
-	if (get_user_bitmap_of_character(context, ch, maxw, maxh, pixels,
-					 max_pixels, w, h))
-	    return;
-	TRACE(("unable to load user bitmap for character '%c' in alphabet %u at %ux%u\n",
-	       ch, context->current_text_controls->alphabet, maxw, maxh));
+    char const *fontname;
+    unsigned bestmatch;
+
+    *w = 0U;
+    *h = 0U;
+
+    bestmatch = find_best_alphabet_index(context, 1U, 1U, maxw, maxh,
+					 max_pixels);
+    if (bestmatch < MAX_REGIS_ALPHABETS &&
+	get_user_bitmap_of_character(context, ch, bestmatch, pixels)) {
+	*w = context->alphabets[bestmatch].pixw;
+	*h = context->alphabets[bestmatch].pixh;
+	return;
     }
 
-    /* fallback -- FIXME: for now fill with junk */
+    fontname = NULL;
+    if (bestmatch < MAX_REGIS_ALPHABETS) {
+	RegisAlphabet const *alpha = &context->alphabets[bestmatch];
+	if (alpha && alpha->use_font)
+	    fontname = alpha->fontname;
+    }
+    if (!fontname && context->current_text_controls->alphabet_num == 0) {
+	fontname = "";
+    }
+
+    if (fontname && get_xft_bitmap_of_character(context, fontname, ch,
+						maxw, maxh, pixels,
+						max_pixels, w, h)) {
+	if (*w > maxw) {
+	    TRACE(("BUG: Xft glyph is too wide: %ux%u but max is %ux%u\n",
+		   *w, *h, maxw, maxh));
+	} else if (*h > maxh) {
+	    TRACE(("BUG: Xft glyph is too tall: %ux%u but max is %ux%u\n",
+		   *w, *h, maxw, maxh));
+	} else if (*w * *h > max_pixels) {
+	    TRACE(("BUG: Xft glyph has too many pixels: %u but max is %u\n",
+		   *w * *h, max_pixels));
+	} else {
+#ifdef DEBUG_SPECIFIC_CHAR_METRICS
+	    if (IS_DEBUG_CHAR(ch)) {
+		printf("got %ux%u Xft bitmap for '%c' target size %ux%u:\n",
+		       *w, *h,
+		       ch, maxw, maxh);
+		dump_bitmap_pixels(pixels, *w, *h);
+		printf("\n");
+	    }
+#endif
+	    return;
+	}
+    }
+
+    TRACE(("unable to load any bitmap for character '%c' in alphabet number %u at %ux%u\n",
+	   ch, context->current_text_controls->alphabet_num, maxw, maxh));
+
+    /* FIXME: this should probably produce an "unknown character" symbol */
     {
 	unsigned xx, yy;
 
 	*w = 8U;
 	*h = 10U;
-	for (yy = 0U; yy < 10U; yy++) {
-	    for (xx = 0U; xx < 8U; xx++) {
-		pixels[yy * *w + xx] = (char) ((((((unsigned) ch * 10U) /
-						  (yy +
-						   1U)) * (xx * (unsigned)
-							   ch)) +
-						xx) & 1U);
-	    }
-	}
+	for (yy = 0U; yy < 10U; yy++)
+	    for (xx = 0U; xx < 8U; xx++)
+		pixels[yy * *w + xx] = '\0';
     }
 }
 
@@ -2867,114 +2924,290 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
     return 1;
 }
 
+#define MIN2(X, Y) ( (X) < (Y) ? (X) : (Y) )
+#define MIN3(X, Y, Z) ( MIN2(MIN2((X), (Y)), MIN2((Y), (Z))) )
+#define MAX2(X, Y) ( (X) > (Y) ? (X) : (Y) )
+#define MAX3(X, Y, Z) ( MAX2(MAX2((X), (Y)), MAX2((Y), (Z))) )
+
 static int
-load_regis_colorspec(Graphic const *graphic, RegisDataFragment const *input,
-		     RegisterNum *out)
+load_regis_colorspec(RegisGraphicsContext const *context,
+		     RegisDataFragment const *input,
+		     short *r_out, short *g_out, short *b_out)
+{
+    RegisDataFragment colorspec;
+    short r = -1, g = -1, b = -1;
+    short h = -1, l = -1, s = -1;
+
+    copy_fragment(&colorspec, input);
+    TRACE(("colorspec option: \"%s\"\n", fragment_to_tempstr(&colorspec)));
+
+    skip_regis_whitespace(&colorspec);
+    if (fragment_len(&colorspec) == 1) {
+	char ch = pop_fragment(&colorspec);
+
+	TRACE(("got ReGIS RGB colorspec pattern '%c' with arguments: \"%s\"\n",
+	       ch, fragment_to_tempstr(&colorspec)));
+	switch (ch) {
+	case 'D':
+	case 'd':
+	    r = 0;
+	    g = 0;
+	    b = 0;
+	    l = 0;
+	    break;
+	case 'R':
+	case 'r':
+	    r = 100;
+	    g = 0;
+	    b = 0;
+	    l = 46;
+	    break;
+	case 'G':
+	case 'g':
+	    r = 0;
+	    g = 100;
+	    b = 0;
+	    l = 50;
+	    break;
+	case 'B':
+	case 'b':
+	    r = 0;
+	    g = 0;
+	    b = 100;
+	    l = 50;
+	    break;
+	case 'C':
+	case 'c':
+	    r = 0;
+	    g = 100;
+	    b = 100;
+	    l = 50;
+	    break;
+	case 'Y':
+	case 'y':
+	    r = 100;
+	    g = 100;
+	    b = 0;
+	    l = 50;
+	    break;
+	case 'M':
+	case 'm':
+	    r = 100;
+	    g = 0;
+	    b = 100;
+	    l = 50;
+	    break;
+	case 'W':
+	case 'w':
+	    r = 100;
+	    g = 100;
+	    b = 100;
+	    l = 100;
+	    break;
+	default:
+	    TRACE(("unknown RGB color name: \"%c\"\n", ch));
+	    return 0;
+	}
+    } else {
+	RegisDataFragment num;
+	int max, val;
+	char comp;
+
+	while (colorspec.pos < colorspec.len) {
+	    if (skip_regis_whitespace(&colorspec))
+		continue;
+
+	    comp = pop_fragment(&colorspec);
+	    switch (comp) {
+	    case ',':
+		/* not sure if this is valid, but it is easy to handle */
+		continue;
+	    case 'H':
+	    case 'h':
+		max = 360;
+		comp = 'H';
+		break;
+	    case 'L':
+	    case 'l':
+		max = 100;
+		comp = 'L';
+		break;
+	    case 'S':
+	    case 's':
+		max = 100;
+		comp = 'S';
+		break;
+#ifdef ENABLE_RGB_COLORSPECS
+	    case 'R':		/* RLogin extension */
+	    case 'r':
+		max = 100;
+		comp = 'R';
+		break;
+	    case 'G':		/* RLogin extension */
+	    case 'g':
+		max = 100;
+		comp = 'G';
+		break;
+	    case 'B':		/* RLogin extension */
+	    case 'b':
+		max = 100;
+		comp = 'B';
+		break;
+#endif
+	    default:
+		TRACE(("unrecognized character in colorspec: \"%c\"\n", comp));
+		return 0;
+	    }
+
+	    skip_regis_whitespace(&colorspec);
+	    if (!extract_regis_num(&colorspec, &num)) {
+		TRACE(("unrecognized character in colorspec: \"%c\"\n", comp));
+		return 0;
+	    }
+	    if (!regis_num_to_int(&num, &val)) {
+		TRACE(("DATA_ERROR: component value %s is not a number\n",
+		       fragment_to_tempstr(&num)));
+		return 0;
+	    }
+	    /* FIXME: error, truncate, wrap, ...? */
+	    if (val < 0 || val > max) {
+		TRACE(("DATA_ERROR: component value %d out of range\n", val));
+		return 0;
+	    }
+
+	    switch (comp) {
+	    case 'H':
+		h = (short) val;
+		break;
+	    case 'L':
+		l = (short) val;
+		break;
+	    case 'S':
+		s = (short) val;
+		break;
+	    case 'R':
+		r = (short) val;
+		break;
+	    case 'G':
+		g = (short) val;
+		break;
+	    case 'B':
+		b = (short) val;
+		break;
+	    }
+	}
+
+	if (h >= 0 && l >= 0 && s >= 0 && r < 0 && g < 0 && b < 0) {
+	    TRACE(("found HLS colorspec to be converted: %hd,%hd,%hd\n",
+		   h, l, s));
+	    hls2rgb(h, l, s, &r, &g, &b);
+	    TRACE(("converted to RGB: %hd,%hd,%hd\n", r, g, b));
+	} else if (h < 0 && l < 0 && s < 0 && r >= 0 && g >= 0 && b >= 0) {
+	    TRACE(("found RGB colorspec: %hd,%hd,%hd\n", r, g, b));
+	    l = (short) ((MIN3(r, g, b) + MAX3(r, g, b)) / 2);
+	    TRACE(("calculated L: %d\n", l));
+	} else if (h < 0 && l >= 0 && s < 0 && r < 0 && g < 0 && b < 0) {
+	    TRACE(("found L colorspec to be converted: %hd,%hd,%hd\n",
+		   h, l, s));
+	    hls2rgb(0, l, 0, &r, &g, &b);
+	    TRACE(("converted to RGB: %hd,%hd,%hd\n", r, g, b));
+	} else {
+	    TRACE(("unrecognized colorspec format\n"));
+	    return 0;
+	}
+    }
+
+    /*
+     * The VT240 and VT330 models convert to the closest grayscale value.
+     */
+    if (context->terminal_id == 240 || context->terminal_id == 330) {
+	hls2rgb(0, l, 0, &r, &g, &b);
+	TRACE(("converted to grayscale: %hd,%hd,%hd\n", r, g, b));
+    }
+
+    *r_out = r;
+    *g_out = g;
+    *b_out = b;
+
+    if (colorspec.pos < colorspec.len) {
+	char skip;
+
+	skip_regis_whitespace(&colorspec);
+	skip = pop_fragment(&colorspec);
+	(void) skip;		/* variable needed only if tracing */
+	TRACE(("DATA_ERROR: ignoring unexpected character in ReGIS colorspec \"%c\"\n",
+	       skip));
+    }
+
+    return 1;
+}
+
+static int
+load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
+			       RegisDataFragment const *input,
+			       RegisterNum *out)
 {
     int val;
     RegisDataFragment colorspec;
+    RegisDataFragment num;
     RegisDataFragment coloroption;
 
     copy_fragment(&colorspec, input);
     TRACE(("looking at colorspec pattern: \"%s\"\n",
 	   fragment_to_tempstr(&colorspec)));
 
-    if (regis_num_to_int(&colorspec, &val)) {
-	if (val < 0 || val >= (int) graphic->valid_registers) {
-	    /* FIXME: error, truncate, wrap, ...? */
-	    TRACE(("DATA_ERROR: colorspec value %d is not a valid register\n",
-		   val));
-	    if (val < 0) {
-		return 0;
-	    }
-	    val %= (int) graphic->valid_registers;
+    skip_regis_whitespace(&colorspec);
+
+    if (extract_regis_num(&colorspec, &num)) {
+	if (!regis_num_to_int(&num, &val)) {
+	    TRACE(("DATA_ERROR: colorspec value %s is not a valid register\n",
+		   fragment_to_tempstr(&num)));
+	    return 0;
 	}
+	if (val < 0) {
+	    /* FIXME: error, truncate, wrap, ...? */
+	    TRACE(("DATA_ERROR: ignoring negative colorspec value: %d\n", val));
+	    return 0;
+	}
+	if (val >= (int) context->graphic->valid_registers) {
+	    /* FIXME: error, truncate, wrap, ...? */
+	    TRACE(("DATA_ERROR: colorspec value %d is too big; wrapping\n",
+		   val));
+	    val %= (int) context->graphic->valid_registers;
+	}
+
 	TRACE(("colorspec contains index for register %u\n", val));
 	*out = (RegisterNum) val;
+
+	if (colorspec.pos < colorspec.len) {
+	    char skip;
+
+	    skip_regis_whitespace(&colorspec);
+	    skip = pop_fragment(&colorspec);
+	    (void) skip;	/* variable needed only if tracing */
+	    TRACE(("DATA_ERROR: unexpected character after register \"%c\"\n",
+		   skip));
+	    return 0;
+	}
+
 	return 1;
     }
 
     if (extract_regis_parenthesized_data(&colorspec, &coloroption)) {
 	short r, g, b;
-	TRACE(("option: \"%s\"\n", fragment_to_tempstr(&coloroption)));
 
-	if (fragment_len(&coloroption) == 1) {
-	    char ch = pop_fragment(&coloroption);
-
-	    TRACE(("got regis RGB colorspec pattern '%c' with arguments: \"%s\"\n",
-		   ch, fragment_to_tempstr(&coloroption)));
-	    switch (ch) {
-	    case 'D':
-	    case 'd':
-		r = 0;
-		g = 0;
-		b = 0;
-		break;
-	    case 'R':
-	    case 'r':
-		r = 100;
-		g = 0;
-		b = 0;
-		break;
-	    case 'G':
-	    case 'g':
-		r = 0;
-		g = 100;
-		b = 0;
-		break;
-	    case 'B':
-	    case 'b':
-		r = 0;
-		g = 0;
-		b = 100;
-		break;
-	    case 'C':
-	    case 'c':
-		r = 0;
-		g = 100;
-		b = 100;
-		break;
-	    case 'Y':
-	    case 'y':
-		r = 100;
-		g = 100;
-		b = 0;
-		break;
-	    case 'M':
-	    case 'm':
-		r = 100;
-		g = 0;
-		b = 100;
-		break;
-	    case 'W':
-	    case 'w':
-		r = 100;
-		g = 100;
-		b = 100;
-		break;
-	    default:
-		TRACE(("unknown RGB color name: \"%c\"\n", ch));
-		return 0;
-	    }
-	} else {
-	    short h, l, s;
-
-	    if (sscanf(fragment_to_tempstr(&coloroption),
-		       "%*1[Hh]%6hd%*1[Ll]%6hd%*1[Ss]%6hd",
-		       &h, &l, &s) != 3) {
-		TRACE(("unrecognized colorspec format: \"%s\"\n",
-		       fragment_to_tempstr(&coloroption)));
-		return 0;
-	    }
-	    hls2rgb(h, l, s, &r, &g, &b);
+	if (!load_regis_colorspec(context, &coloroption, &r, &g, &b)) {
+	    TRACE(("unable to parse colorspec\n"));
+	    return 0;
 	}
-	/* FIXME: check for trailing junk? */
-	*out = find_color_register(graphic->color_registers, r, g, b);
+
+	*out = find_color_register(context->graphic->color_registers, r, g, b);
 	TRACE(("colorspec maps to closest register %u\n", *out));
+
 	return 1;
     }
 
-    TRACE(("unrecognized colorspec format: \"%s\"\n",
+    TRACE(("expected register number or colorspec, but found: \"%s\"\n",
 	   fragment_to_tempstr(&colorspec)));
     return 0;
 }
@@ -3083,7 +3316,7 @@ load_regis_pixelvector(char const *pixelvector,
 
 static int
 load_regis_write_control(RegisParseState *state,
-			 Graphic const *graphic,
+			 RegisGraphicsContext const *context,
 			 int cur_x, int cur_y,
 			 int option,
 			 RegisDataFragment *arg,
@@ -3092,6 +3325,12 @@ load_regis_write_control(RegisParseState *state,
     TRACE(("checking write control option \"%c\" with arg \"%s\"\n",
 	   option, fragment_to_tempstr(arg)));
     switch (option) {
+    case 'C':
+    case 'c':
+	TRACE(("write control compliment writing mode \"%s\"\n",
+	       fragment_to_tempstr(arg)));
+	out->write_style = WRITE_STYLE_COMPLEMENT;
+	break;
     case 'E':
     case 'e':
 	TRACE(("write control erase writing mode \"%s\"\n",
@@ -3105,7 +3344,7 @@ load_regis_write_control(RegisParseState *state,
 	{
 	    int val;
 	    if (!regis_num_to_int(arg, &val) ||
-		val < 0 || val >= (int) graphic->valid_registers) {
+		val < 0 || val >= (int) context->graphic->valid_registers) {
 		TRACE(("interpreting out of range value as 0 FIXME\n"));
 		out->plane_mask = 0U;
 	    } else {
@@ -3117,10 +3356,25 @@ load_regis_write_control(RegisParseState *state,
     case 'i':
 	TRACE(("write control foreground color \"%s\"\n",
 	       fragment_to_tempstr(arg)));
-	if (!load_regis_colorspec(graphic, arg, &out->foreground)) {
+	if (!load_regis_regnum_or_colorspec(context, arg, &out->foreground)) {
 	    TRACE(("DATA_ERROR: write control foreground color specifier not recognized: \"%s\"\n",
 		   fragment_to_tempstr(arg)));
 	    return 0;
+	}
+	break;
+    case 'L':
+    case 'l':
+	TRACE(("write control line width \"%s\" (FIXME: currently ignored)\n",
+	       fragment_to_tempstr(arg)));
+	{
+	    int val;
+	    if (!regis_num_to_int(arg, &val) ||
+		val < 0 || val >= (int) 9) {
+		TRACE(("interpreting out of range value as 1 FIXME\n"));
+		out->line_width = 1U;
+	    } else {
+		out->line_width = (unsigned) val;
+	    }
 	}
 	break;
     case 'M':
@@ -3194,7 +3448,8 @@ load_regis_write_control(RegisParseState *state,
 				    RegisDataFragment num;
 				    int val;
 
-				    if (extract_regis_num(&suboptionarg, &num)) {
+				    if (extract_regis_num(&suboptionarg,
+							  &num)) {
 					if (!regis_num_to_int(&num, &val)
 					    || val < 1) {
 					    TRACE(("interpreting out of range pattern multiplier \"%s\" as 2 FIXME\n",
@@ -3335,12 +3590,6 @@ load_regis_write_control(RegisParseState *state,
 		pop_fragment(arg);
 	    }
 	}
-	break;
-    case 'C':
-    case 'c':
-	TRACE(("write control compliment writing mode \"%s\"\n",
-	       fragment_to_tempstr(arg)));
-	out->write_style = WRITE_STYLE_COMPLEMENT;
 	break;
     case 'R':
     case 'r':
@@ -3491,7 +3740,7 @@ load_regis_write_control(RegisParseState *state,
 
 static int
 load_regis_write_control_set(RegisParseState *state,
-			     Graphic const *graphic,
+			     RegisGraphicsContext const *context,
 			     int cur_x, int cur_y,
 			     RegisDataFragment *controls,
 			     RegisWriteControls *out)
@@ -3512,7 +3761,7 @@ load_regis_write_control_set(RegisParseState *state,
 		    skip_regis_whitespace(&arg);
 		    TRACE(("got write control option and value: \"%c\" \"%s\"\n",
 			   option, fragment_to_tempstr(&arg)));
-		    if (!load_regis_write_control(state, graphic,
+		    if (!load_regis_write_control(state, context,
 						  cur_x, cur_y,
 						  option, &arg, out)) {
 			return 0;
@@ -3561,6 +3810,7 @@ init_regis_write_controls(int terminal_id, unsigned all_planes,
     controls->shading_character = '\0';
     controls->shading_reference = 0;	/* no meaning if shading is disabled */
     controls->shading_reference_dim = WRITE_SHADING_REF_Y;
+    controls->line_width = 1U;
     /* FIXME: add the rest */
 }
 
@@ -3579,12 +3829,13 @@ copy_regis_write_controls(RegisWriteControls const *src,
     dst->shading_character = src->shading_character;
     dst->shading_reference = src->shading_reference;
     dst->shading_reference_dim = src->shading_reference_dim;
+    dst->line_width = src->line_width;
 }
 
 static void
-init_regis_text_controls(RegisTextControls * controls)
+init_regis_text_controls(RegisTextControls *controls)
 {
-    controls->alphabet = 0U;	/* built-in */
+    controls->alphabet_num = 0U;	/* built-in */
     controls->character_set_l = 0U;	/* ASCII */
     controls->character_set_r = 0U;	/* Latin-1 */
     get_standard_character_size(1, &controls->character_display_w,
@@ -3599,9 +3850,9 @@ init_regis_text_controls(RegisTextControls * controls)
 }
 
 static void
-copy_regis_text_controls(RegisTextControls const *src, RegisTextControls * dst)
+copy_regis_text_controls(RegisTextControls const *src, RegisTextControls *dst)
 {
-    dst->alphabet = src->alphabet;
+    dst->alphabet_num = src->alphabet_num;
     dst->character_set_l = src->character_set_l;
     dst->character_set_r = src->character_set_r;
     dst->character_display_w = src->character_display_w;
@@ -3622,10 +3873,12 @@ init_regis_alphabets(RegisGraphicsContext *context)
 
     for (alphabet_index = 0U; alphabet_index < MAX_REGIS_ALPHABETS;
 	 alphabet_index++) {
-	context->alphabets[alphabet_index].alphabet_num = 0U;
+	context->alphabets[alphabet_index].alphabet_num = INVALID_ALPHABET_NUM;
 	context->alphabets[alphabet_index].pixw = 0U;
 	context->alphabets[alphabet_index].pixh = 0U;
 	context->alphabets[alphabet_index].name[0] = '\0';
+	context->alphabets[alphabet_index].fontname[0] = '\0';
+	context->alphabets[alphabet_index].use_font = 0;
 	context->alphabets[alphabet_index].bytes = NULL;
     }
 }
@@ -3719,8 +3972,9 @@ parse_regis_command(RegisParseState *state)
 	/* Load
 
 	 * L
-	 * (S)[w,h]  # set glyph size (xterm extension)
 	 * (A)  # set character set number or name
+	 * (F)"fontname"  # load from font (xterm extension)
+	 * (S)[w,h]  # set glyph size (xterm extension)
 	 * "ascii"xx,xx,xx,xx,xx,xx,xx,xx  # pixel values
 	 */
 	TRACE(("found ReGIS command \"%c\" (load charset)\n", ch));
@@ -3728,7 +3982,8 @@ parse_regis_command(RegisParseState *state)
 	state->load_index = MAX_REGIS_ALPHABETS;
 	state->load_w = 8U;
 	state->load_h = 10U;
-	state->load_alphabet = 1U;
+	state->load_alphabet = 1U;	/* FIXME: is this the correct default */
+	state->load_name[0] = '\0';
 	state->load_glyph = (unsigned) (unsigned char) '\0';
 	state->load_row = 0U;
 	break;
@@ -3774,16 +4029,21 @@ parse_regis_command(RegisParseState *state)
 	 * S
 	 * (A[<upper left>][<lower right>])
 	 * (C<setting>  # 0 (cursor output off), 1 (cursor output on)
-	 * (E  # erase to background color, resets shades, curves, and stacks
+	 * (E)  # erase to background color, resets shades, curves, and stacks
+	 * (F)  # print the graphic and erase the screen (DECprint extension)
 	 * (H(P<printer offset>)[<print area cornet>][<print area corner>)
 	 * (I<color register>)  # set the background to a specific register
-	 * (I(<rgb>))  # set the background to the register closest to an RGB value
-	 * (I(<hls>))  # set the background to the register closest to an HLS color
-	 * (M<color index to set>(L<mono level>)...)  # level is 0 ... 100 (sets grayscale registers only)
-	 * (M<color index to set>(<RGB code>)...)  # codes are D (black), R (red), G (green), B (blue), C (cyan), Y (yellow), M (magenta), W (white) (sets color and grayscale registers)
-	 * (M<color index to set>(A<RGB code>)...)  # codes are D (black), R (red), G (green), B (blue), C (cyan), Y (yellow), M (magenta), W (white) (sets color registers only)
+	 * (I(<rgbcode>))  # set the background to the register closest to an "RGB" color
+	 * (I(R<r>G<g>B<b>))  # set the background to the register closest to an RGB triplet (RLogin extension)
+	 * (I(H<h>L<l>S<s>))  # set the background to the register closest to an HLS triplet
+	 * (I(L<l>))  # set the background to the register closest to a grayscale value
+	 * (M<color index to set>(<rgbcode>)...)  # codes are D (black), R (red), G (green), B (blue), C (cyan), Y (yellow), M (magenta), W (white) (sets color and grayscale registers)
+	 * (M<color index to set>(A<rgbcode>)...)  # codes are D (black), R (red), G (green), B (blue), C (cyan), Y (yellow), M (magenta), W (white) (sets color registers only)
+	 * (M<color index to set>(R<red>G<green>B<blue>)...)  # 0..100, 0..100, 0..100 (sets color and grayscale registers) (RLogin extension)
+	 * (M<color index to set>(AR<red>G<green>B<blue>)...)  # 0..100, 0..100, 0..100 (sets color registers only) (RLogin extension)
 	 * (M<color index to set>(H<hue>L<lightness>S<saturation>)...)  # 0..360, 0..100, 0..100 (sets color and grayscale registers)
 	 * (M<color index to set>(AH<hue>L<lightness>S<saturation>)...)  # 0..360, 0..100, 0..100 (sets color registers only)
+	 * (M<color index to set>(L<mono level>)...)  # level is 0 ... 100 (sets grayscale registers only)
 	 * (P<graphics page number>)  # 0 (default) or 1
 	 * (T(<time delay ticks>)  # 60 ticks per second, up to 32767 ticks
 	 * (W(M<factor>)  # PV multiplier
@@ -3846,8 +4106,11 @@ parse_regis_command(RegisParseState *state)
 	 * (E)  # erase writing mode
 	 * (F<plane>)  # set the foreground intensity to a specific register
 	 * (I<color register>)  # set the foreground to a specific register
-	 * (I(<rgb>))  # set the foreground to the register closest to an RGB value
-	 * (I(<hls>))  # set the foreground to the register closest to an HLS color
+	 * (I(<rgbcode>))  # set the foreground to the register closest to an "RGB" color
+	 * (I(R<r>G<g>B<b>))  # set the foreground to the register closest to an RGB triplet (RLogin extension)
+	 * (I(H<h>L<l>S<s>))  # set the foreground to the register closest to an HLS triplet
+	 * (I(L<l>))  # set the foreground to the register closest to a grayscale value
+	 * (L<width>)  # set the line width (RLogin extension)
 	 * (M<pixel vector multiplier>)  # set the multiplication factor
 	 * (N<setting>)  # 0 == negative patterns disabled, 1 == negative patterns enabled
 	 * (P<pattern number>)  # 0..9: 0 == none, 1 == solid, 2 == 50% dash, 3 == dash-dot
@@ -4108,7 +4371,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'w':
 	    TRACE(("found temporary write options \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (!load_regis_write_control_set(state, context->graphic,
+	    if (!load_regis_write_control_set(state, context,
 					      context->graphics_output_cursor_x,
 					      context->graphics_output_cursor_y,
 					      &optionarg,
@@ -4154,7 +4417,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			       alphabet));
 			break;
 		    }
-#ifdef ENABLE_USER_FONT_SIZE_EXTENSION
+#ifndef ENABLE_UPLOAD_ALPHABET_ZERO
 		    if (alphabet == 0) {
 			TRACE(("DATA_ERROR: alphabet 0 can not be modified\n"));
 			break;
@@ -4170,8 +4433,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    if (strlen(state->temp) == 0U ||
 			strlen(state->temp) >= REGIS_ALPHABET_NAME_LEN) {
 			TRACE(("DATA_ERROR: alphabet names must be between 1 and %u characters long: \"%s\" FIXME\n",
-			       REGIS_ALPHABET_NAME_LEN - 1U,
-			       fragment_to_tempstr(&optionarg)));
+			       REGIS_ALPHABET_NAME_LEN - 1U, state->temp));
 			break;
 		    }
 
@@ -4189,14 +4451,80 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 	    }
 	    break;
-#ifdef ENABLE_USER_FONT_SIZE_EXTENSION
+#ifdef ENABLE_UPLOAD_ALPHABET_FROM_FONT
+	case 'F':
+	case 'f':
+	    TRACE(("found font option \"%s\"\n",
+		   fragment_to_tempstr(&optionarg)));
+
+	    if (state->load_index == MAX_REGIS_ALPHABETS) {
+		state->load_index = find_free_alphabet_index(context,
+							     state->load_alphabet,
+							     state->load_w,
+							     state->load_h);
+		TRACE(("current alphabet is %u and size is %ux%u; assigning alphabet index %u\n",
+		       state->load_alphabet, state->load_w, state->load_h, state->load_index));
+	    }
+
+	    for (;;) {
+		RegisDataFragment fontarg;
+
+		if (skip_regis_whitespace(&optionarg))
+		    continue;
+		if (extract_regis_num(&optionarg, &fontarg)) {
+		    int enabled;
+
+		    TRACE(("fontname enabled: %s\n", fragment_to_tempstr(&fontarg)));
+		    if (!regis_num_to_int(&fontarg, &enabled)) {
+			TRACE(("DATA_ERROR: unable to parse int in load fontname option: \"%s\"\n",
+			       fragment_to_tempstr(&fontarg)));
+			break;
+		    }
+		    if (enabled != 0U && enabled != 1U) {
+			TRACE(("DATA_ERROR: invalid fontname enable state: \"%d\"\n", enabled));
+			break;
+		    }
+
+		    TRACE(("fontname enabled: %d\n", enabled));
+		    context->alphabets[state->load_index].use_font = enabled;
+		    continue;
+		}
+		if (extract_regis_string(&optionarg, state->temp,
+					 state->templen)) {
+		    if (strlen(state->temp) == 0U ||
+			strlen(state->temp) >= REGIS_FONTNAME_LEN) {
+			TRACE(("DATA_ERROR: font names must be between 1 and %u characters long: \"%s\"\n",
+			       REGIS_FONTNAME_LEN - 1U, state->temp));
+			break;
+		    }
+
+		    strcpy(context->alphabets[state->load_index].fontname,
+			   state->temp);
+		    context->alphabets[state->load_index].use_font = 1;
+		    TRACE(("using backing font: %s\n",
+			   context->alphabets[state->load_index].fontname));
+		}
+
+		if (!fragment_len(&optionarg)) {
+		    break;
+		} else {
+		    TRACE(("DATA_ERROR: unexpected text in load fontname option: \"%s\"\n",
+			   fragment_to_tempstr(&optionarg)));
+		    break;
+		}
+	    }
+	    break;
+#endif
+#ifdef ENABLE_USER_FONT_SIZE
 	case 'S':
 	case 's':
 	    TRACE(("found glyph size option \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    for (;;) {
+	    while (fragment_len(&optionarg) > 0) {
 		RegisDataFragment sizearg;
 
+		if (skip_regis_whitespace(&optionarg))
+		    continue;
 		if (extract_regis_extent(&optionarg, &sizearg)) {
 		    int w, h;
 		    unsigned size;
@@ -4205,7 +4533,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			   fragment_to_tempstr(&sizearg)));
 		    if (!load_regis_extent(fragment_to_tempstr(&sizearg), 0, 0,
 					   &w, &h)) {
-			TRACE(("DATA_ERROR: unable to parse extenet in glyph size option: \"%s\"\n",
+			TRACE(("DATA_ERROR: unable to parse extent in glyph size option: \"%s\"\n",
 			       fragment_to_tempstr(&sizearg)));
 			break;
 		    }
@@ -4226,18 +4554,15 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			break;
 		    }
 
-		    TRACE(("using size: %dx%d\n", w, h));
+		    TRACE(("using glyph size: %dx%d\n", w, h));
 		    state->load_w = (unsigned) w;
 		    state->load_h = (unsigned) h;
-		} else if (skip_regis_whitespace(&sizearg)) {
-		    ;
-		} else if (!fragment_len(&sizearg)) {
-		    break;
-		} else {
-		    TRACE(("DATA_ERROR: expected extent in glyph size option: \"%s\"\n",
-			   fragment_to_tempstr(&sizearg)));
-		    break;
+		    continue;
 		}
+
+		TRACE(("DATA_ERROR: expected extent in glyph size option: \"%s\"\n",
+		       fragment_to_tempstr(&sizearg)));
+		break;
 	    }
 	    break;
 #endif
@@ -4324,7 +4649,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'w':
 	    TRACE(("found temporary write options \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (!load_regis_write_control_set(state, context->graphic,
+	    if (!load_regis_write_control_set(state, context,
 					      context->graphics_output_cursor_x,
 					      context->graphics_output_cursor_y,
 					      &optionarg,
@@ -4586,10 +4911,25 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    TRACE(("found erase request \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
 	    if (fragment_len(&optionarg)) {
-		TRACE(("DATA_ERROR: ignoring unexpected argument to ReGIS screen erase option \"%s\"\n",
+		TRACE(("DATA_ERROR: ignoring unexpected argument to ReGIS erase request \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 1;
 	    }
+	    draw_solid_rectangle(context->graphic, 0, 0,
+				 context->graphic->actual_width,
+				 context->graphic->actual_height,
+				 context->background);
+	    break;
+	case 'F':
+	case 'f':
+	    TRACE(("found page eject request \"%s\"\n",
+		   fragment_to_tempstr(&optionarg)));
+	    if (fragment_len(&optionarg)) {
+		TRACE(("DATA_ERROR: ignoring unexpected argument to ReGIS page eject request \"%s\"\n",
+		       fragment_to_tempstr(&optionarg)));
+		return 1;
+	    }
+	    /* We aren't going to print anything so no need to deduplicate. */
 	    draw_solid_rectangle(context->graphic, 0, 0,
 				 context->graphic->actual_width,
 				 context->graphic->actual_height,
@@ -4610,8 +4950,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'i':
 	    TRACE(("found screen background color index \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (!load_regis_colorspec(context->graphic, &optionarg,
-				      &context->background)) {
+	    if (!load_regis_regnum_or_colorspec(context, &optionarg,
+						&context->background)) {
 		TRACE(("DATA_ERROR: screen background color specifier not recognized: \"%s\"\n",
 		       fragment_to_tempstr(&optionarg)));
 		return 1;
@@ -4624,7 +4964,6 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    {
 		RegisDataFragment regnum;
 		RegisDataFragment colorspec;
-		char ch;
 
 		while (fragment_len(&optionarg)) {
 		    if (skip_regis_whitespace(&optionarg))
@@ -4653,6 +4992,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 			    return 1;
 			}
 
+			skip_regis_whitespace(&colorspec);
 			switch (peek_fragment(&colorspec)) {
 			case 'A':
 			case 'a':
@@ -4666,126 +5006,36 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 			TRACE(("mapping register %d to color spec: \"%s\"\n",
 			       register_num, fragment_to_tempstr(&colorspec)));
-			if (fragment_len(&colorspec) == 1) {
-			    short l;
-			    ch = pop_fragment(&colorspec);
-
-			    TRACE(("got regis RGB colorspec pattern: \"%s\"\n",
-				   fragment_to_tempstr(&colorspec)));
-			    switch (ch) {
-			    case 'D':
-			    case 'd':
-				r = 0;
-				g = 0;
-				b = 0;
-				l = 0;
-				break;
-			    case 'R':
-			    case 'r':
-				r = 100;
-				g = 0;
-				b = 0;
-				l = 46;
-				break;
-			    case 'G':
-			    case 'g':
-				r = 0;
-				g = 100;
-				b = 0;
-				l = 50;
-				break;
-			    case 'B':
-			    case 'b':
-				r = 0;
-				g = 0;
-				b = 100;
-				l = 50;
-				break;
-			    case 'C':
-			    case 'c':
-				r = 0;
-				g = 100;
-				b = 100;
-				l = 50;
-				break;
-			    case 'Y':
-			    case 'y':
-				r = 100;
-				g = 100;
-				b = 0;
-				l = 50;
-				break;
-			    case 'M':
-			    case 'm':
-				r = 100;
-				g = 0;
-				b = 100;
-				l = 50;
-				break;
-			    case 'W':
-			    case 'w':
-				r = 100;
-				g = 100;
-				b = 100;
-				l = 100;
-				break;
-			    default:
-				TRACE(("screen color register mapping with unknown RGB color name: \"%c\"\n",
-				       ch));
-				return 1;
-			    }
-			    if (context->terminal_id == 240 ||
-				context->terminal_id == 330) {
-				/*
-				 * The VT240 and VT330 models force saturation
-				 * to zero.
-				 */
-				hls2rgb(0, l, 0, &r, &g, &b);
-			    }
-			} else {
-			    short h, l, s;
-
-			    if (sscanf(fragment_to_tempstr(&colorspec),
-				       "%*1[Hh]%6hd%*1[Ll]%6hd%*1[Ss]%6hd",
-				       &h, &l, &s) != 3) {
-				h = 0;
-				s = 0;
-				if (sscanf(fragment_to_tempstr(&colorspec),
-					   "%*1[Ll]%6hd", &l) != 1) {
-				    TRACE(("unrecognized colorspec: \"%s\"\n",
-					   fragment_to_tempstr(&colorspec)));
-				    return 1;
-				}
-			    }
-			    if (context->terminal_id == 240 ||
-				context->terminal_id == 330) {
-				/*
-				 * The VT240 and VT330 models force saturation
-				 * to zero.
-				 */
-				h = 0;
-				s = 0;
-			    }
-			    hls2rgb(h, l, s, &r, &g, &b);
+			if (!load_regis_colorspec(context, &colorspec,
+						  &r, &g, &b)) {
+			    TRACE(("DATA_ERROR: unable to use colorspec for mapping of register %d\n",
+				   register_num));
+			    return 1;
 			}
 
 			if (color_only &&
 			    (context->terminal_id == 240 ||
-			     context->terminal_id == 330))
-			    continue;
-			update_color_register(context->graphic,
-					      (RegisterNum) register_num,
-					      r, g, b);
+			     context->terminal_id == 330)) {
+			    TRACE(("NOT setting color register %d to %hd,%hd,%hd\n",
+				   register_num, r, g, b));
+			} else {
+			    TRACE(("setting color register %d to %hd,%hd,%hd\n",
+				   register_num, r, g, b));
+			    update_color_register(context->graphic,
+						  (RegisterNum) register_num,
+						  r, g, b);
+			}
 			continue;
 		    } {
 			char skip;
 
+			skip_regis_whitespace(&optionarg);
 			skip = pop_fragment(&optionarg);
 			(void) skip;	/* variable needed only if tracing */
-			TRACE(("DATA_ERROR: ignoring unexpected character in ReGIS screen color register mapping value \"%c\"\n",
+			TRACE(("DATA_ERROR: ignoring mapping request with unexpected character \"%c\"\n",
 			       skip));
+			return 1;
 		    }
-		    return 1;
 		}
 	    }
 	    break;
@@ -4861,8 +5111,8 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		    break;
 		}
 
-		TRACE(("using alphabet: %d\n", alphabet));
-		context->current_text_controls->alphabet = (unsigned) alphabet;
+		TRACE(("using alphabet number: %d\n", alphabet));
+		context->current_text_controls->alphabet_num = (unsigned) alphabet;
 
 		if (fragment_len(&optionarg)) {
 		    TRACE(("DATA_ERROR: ignoring trailing junk in text alphabet option \"%s\"\n",
@@ -5238,7 +5488,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'w':
 	    TRACE(("found temporary write options \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (!load_regis_write_control_set(state, context->graphic,
+	    if (!load_regis_write_control_set(state, context,
 					      context->graphics_output_cursor_x,
 					      context->graphics_output_cursor_y,
 					      &optionarg,
@@ -5337,7 +5587,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	case 'w':
 	    TRACE(("found temporary write options \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (!load_regis_write_control_set(state, context->graphic,
+	    if (!load_regis_write_control_set(state, context,
 					      context->graphics_output_cursor_x,
 					      context->graphics_output_cursor_y,
 					      &optionarg,
@@ -5356,7 +5606,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	skip_regis_whitespace(&optionarg);
 	TRACE(("inspecting permanent write option \"%c\" with value \"%s\"\n",
 	       state->option, fragment_to_tempstr(&optionarg)));
-	if (!load_regis_write_control(state, context->graphic,
+	if (!load_regis_write_control(state, context,
 				      context->graphics_output_cursor_x,
 				      context->graphics_output_cursor_y,
 				      state->option, &optionarg,
@@ -5771,6 +6021,8 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 							     state->load_alphabet,
 							     state->load_w,
 							     state->load_h);
+		TRACE(("current alphabet is %u and size is %ux%u; assigning alphabet index %u\n",
+		       state->load_alphabet, state->load_w, state->load_h, state->load_index));
 	    }
 
 	    glyph_size = GLYPH_WIDTH_BYTES(
@@ -5785,7 +6037,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		}
 	    } {
 		unsigned char *glyph;
-		unsigned int bytew;
+		unsigned bytew;
 		unsigned byte;
 		unsigned unused_bits;
 
@@ -5928,7 +6180,7 @@ parse_regis_toplevel(RegisParseState *state, RegisGraphicsContext *context)
 
 	    TRACE(("found temporary write options \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    if (!load_regis_write_control_set(state, context->graphic,
+	    if (!load_regis_write_control_set(state, context,
 					      context->graphics_output_cursor_x,
 					      context->graphics_output_cursor_y,
 					      &optionarg,
@@ -5989,9 +6241,16 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     memset(&context, 0, sizeof(context));
 
+    /* Update the screen scrolling and do a refresh.
+     * The refresh may not cover the whole graphic.
+     */
+    if (screen->scroll_amt)
+	FlushScroll(xw);
+
     context.graphic = get_new_or_matching_graphic(xw,
 						  charrow, charcol,
-						  800, 480,
+						  screen->regis_max_wide,
+						  screen->regis_max_high,
 						  type);
     /*
      * FIXME: Don't initialize parameters for continued command mode,
@@ -6003,7 +6262,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     X_GETTIMEOFDAY(&prev_tv);
     iterations = 0U;
-    refresh_modified_displayed_graphics(screen);
+    refresh_modified_displayed_graphics(xw);
 
     for (;;) {
 	if (skip_regis_whitespace(&state.input))
@@ -6027,7 +6286,17 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 		    /* FIXME: pre-ANSI compilers need memcpy() */
 		    prev_tv = curr_tv;
 		    iterations = 0U;
-		    refresh_modified_displayed_graphics(screen);
+		    refresh_modified_displayed_graphics(xw);
+#if OPT_DOUBLE_BUFFER
+		    {
+			XdbeSwapInfo swap;
+
+			swap.swap_window = VWindow(screen);
+			swap.swap_action = XdbeCopied;
+			XdbeSwapBuffers(XtDisplay(term), &swap, 1);
+			XFlush(XtDisplay(xw));
+		    }
+#endif
 		}
 	    }
 	    continue;
@@ -6039,6 +6308,6 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     free(state.temp);
 
-    refresh_modified_displayed_graphics(screen);
+    refresh_modified_displayed_graphics(xw);
     TRACE(("DONE! Successfully parsed ReGIS data.\n"));
 }

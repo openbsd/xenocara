@@ -1,4 +1,4 @@
-MANIFEST for xterm-312, version xterm-312
+MANIFEST for xterm-313, version xterm-313
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -150,6 +150,8 @@ package/debian/color.sed        build-script
 package/debian/compat           build-script
 package/debian/control          build-script
 package/debian/copyright        build-script
+package/debian/postinst         post-install script for update-alternatives
+package/debian/prerm            pre-remove script for update-alternatives
 package/debian/rules            build-script
 package/debian/source           subdirectory
 package/debian/source/format    build-script
