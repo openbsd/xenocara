@@ -125,7 +125,7 @@ RegionEnd(RegionPtr reg)
 }
 
 static inline size_t
-RegionSizeof(unsigned int n)
+RegionSizeof(int n)
 {
     if (n < ((INT_MAX - sizeof(RegDataRec)) / sizeof(BoxRec)))
         return (sizeof(RegDataRec) + ((n) * sizeof(BoxRec)));
