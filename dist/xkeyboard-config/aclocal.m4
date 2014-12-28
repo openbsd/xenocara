@@ -453,7 +453,7 @@ AS_VAR_IF([$1], [""], [$5], [$4])dnl
 dnl xorg-macros.m4.  Generated from xorg-macros.m4.in xorgversion.m4 by configure.
 dnl
 dnl Copyright (c) 2005, 2006, Oracle and/or its affiliates. All rights reserved.
-dnl 
+dnl
 dnl Permission is hereby granted, free of charge, to any person obtaining a
 dnl copy of this software and associated documentation files (the "Software"),
 dnl to deal in the Software without restriction, including without limitation
@@ -486,10 +486,10 @@ dnl DEALINGS IN THE SOFTWARE.
 #     [m4_fatal([must install xorg-macros 1.1 or later before running autoconf/autogen])])
 #
 #
-# See the "minimum version" comment for each macro you use to see what 
+# See the "minimum version" comment for each macro you use to see what
 # version you require.
 m4_defun([XORG_MACROS_VERSION],[
-m4_define([vers_have], [1.17])
+m4_define([vers_have], [1.17.1])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,
@@ -509,7 +509,7 @@ m4_undefine([maj_needed])
 # such as man pages and config files
 AC_DEFUN([XORG_PROG_RAWCPP],[
 AC_REQUIRE([AC_PROG_CPP])
-AC_PATH_PROGS(RAWCPP, [cpp], [${CPP}], 
+AC_PATH_PROGS(RAWCPP, [cpp], [${CPP}],
    [$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/ccs/lib:/usr/ccs/lbin:/lib])
 
 # Check for flag to avoid builtin definitions - assumes unix is predefined,
@@ -1995,18 +1995,18 @@ fi
 found="no"
 m4_foreach([flag], m4_cdr($@), [
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_]CACHE_PREFIX[_unknown_warning_option" = "xyes" ; then
 			PREFIX[FLAGS]="$PREFIX[FLAGS] -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_]CACHE_PREFIX[_unused_command_line_argument" = "xyes" ; then
 			PREFIX[FLAGS]="$PREFIX[FLAGS] -Werror=unused-command-line-argument"
 		fi
 
 		PREFIX[FLAGS]="$PREFIX[FLAGS] ]flag["
 
 dnl Some hackery here since AC_CACHE_VAL can't handle a non-literal varname
-		AC_MSG_CHECKING([if ]COMPILER[ supports]flag[])
+		AC_MSG_CHECKING([if ]COMPILER[ supports ]flag[])
 		cacheid=AS_TR_SH([xorg_cv_]CACHE_PREFIX[_flag_]flag[])
 		AC_CACHE_VAL($cacheid,
 			     [AC_LINK_IFELSE([AC_LANG_PROGRAM([int i;])],
@@ -2266,7 +2266,7 @@ dnl
 # XORG_RELEASE_VERSION
 # --------------------
 # Defines PACKAGE_VERSION_{MAJOR,MINOR,PATCHLEVEL} for modules to use.
- 
+
 AC_DEFUN([XORG_RELEASE_VERSION],[
 	AC_DEFINE_UNQUOTED([PACKAGE_VERSION_MAJOR],
 		[`echo $PACKAGE_VERSION | cut -d . -f 1`],
