@@ -95,8 +95,6 @@
 ./usr/X11R6/lib/libGLU.so.9.0
 ./usr/X11R6/lib/libGLw.a
 ./usr/X11R6/lib/libGLw.so.6.0
-./usr/X11R6/lib/libI810XvMC.la
-./usr/X11R6/lib/libI810XvMC.so.3.0
 ./usr/X11R6/lib/libICE.so.10.0
 ./usr/X11R6/lib/libIntelXvMC.la
 ./usr/X11R6/lib/libIntelXvMC.so.3.0
