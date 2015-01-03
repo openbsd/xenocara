@@ -1,3 +1,81 @@
+commit 41599a3703e7b95c73a44c548d2ba074aa3eb3d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 8 11:31:26 2014 -0800
+
+    rgb 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 436c80aa9fe73824b6438934897c4f810e52f6e7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 25 11:04:57 2014 -0700
+
+    If opening argv[1] + ".txt" fails, try opening argv[1] without suffix
+    
+    Previously, running "showrgb /usr/share/X11/rgb.txt" would give the
+    confusing error message:
+     showrgb:  unable to open rgb database "/usr/share/X11/rgb.txt"
+    since it was really looking for rgb.txt.txt.
+    
+    Now it just works, allowing users to use filename completion.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3f1a7aac4b4c91e0d7b3c355b4148245ab8eb24d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 24 19:08:41 2014 -0700
+
+    Use asprintf() instead of malloc/strcpy/strcat, if its available
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit ca05c39d1c52734661d703d92c39cc3669c7b520
+Author: Daphne Pfister <daphnediane@mac.com>
+Date:   Mon Jun 23 01:02:29 2014 -0400
+
+    Add aliases for colors that differ between X11 and CSS
+    
+    While CSS colors are based on X11 color and mostly the same there
+    are a handful that have different values: gray, grey, green, and
+    maroon. Add versions of the color names with X11 and Web prefix so
+    that tools that process rgb.txt can get either version.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee2c453a748af6fbd0b31569b3b240517b9320f3
+Author: Daphne Pfister <daphnediane@mac.com>
+Date:   Mon Jun 23 00:58:43 2014 -0400
+
+    Add missing colors from CSS Color Module Level 4
+    
+    CSS web colors are based on the X11 rgb.txt file. There are a few
+    colors in CSS that were not in rgb.txt. Update rgb.txt to include
+    all CSS color names. Adding aqua, lime, fuchsia, crimson, indigo,
+    olive, rebecca purple, silver and teal.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 107c0c25bae9bf784df1fe5ad9c950cc48ff98ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:05:57 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c9fb7603f4a9ea4a2a6bc7096769a2ae12140998
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:05:57 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c78228c3948966c3dc8cdaa9ed68449c64150fbd
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 19 16:16:39 2013 -0800
