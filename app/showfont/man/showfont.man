@@ -73,6 +73,9 @@ where 0 is ImageRectMin, 1 is ImageRectMaxWidth and 2 is ImageRectMax).
 .TP 8
 .B \-noprops
 Do not show the font properties.
+.TP 8
+.B \-version
+Print the program version and exit.
 .SH "SEE ALSO"
 xfs(__appmansuffix__), fslsfonts(__appmansuffix__),
 fstobdf(__appmansuffix__), xlsfonts(__appmansuffix__), X(__miscmansuffix__).

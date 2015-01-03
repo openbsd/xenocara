@@ -1,3 +1,69 @@
+commit 459ea00b62fe926fae9856b12865a536067bb68e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 30 21:10:00 2014 -0800
+
+    showfont 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3c39ee122f31c788bcef29984a49aa4f02ffb4a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:19:18 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20f4d6c07fa61bd1e9f83bb646415ab1a68fd236
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:19:18 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 977404fffdeeb3003c5da0479764c57fb1307179
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:19:15 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68eed1b5a1b3cfc5dedc10931c9a6b28b9c66207
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 00:29:22 2013 -0800
+
+    Add -version flag to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19a9941f9a16ae7529ef47bba193eee9ab7db98c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 00:23:31 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 40118948a19f53c15d67a0493832ff2feac52cb6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 00:11:46 2013 -0800
+
+    Rename row pointer to avoid shadowing row integer variable
+    
+    Fixes gcc warning:
+    showfont.c: In function ‘show_glyphs’:
+    showfont.c:261:18: warning: declaration of ‘row’ shadows a previous local [-Wshadow]
+    showfont.c:178:10: warning: shadowed declaration is here [-Wshadow]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 898c6df7d1de9fa19bedf3c1c1fd31df5ccd1116
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 12 16:14:28 2013 -0800
