@@ -1,3 +1,106 @@
+commit edfc75e3a922888d802cf18250b3de10c62d3e86
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 30 20:46:30 2014 -0800
+
+    fslsfonts 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 08ba596c3c21c9a43e02ec257a37ef6152cbd3d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 5 12:47:04 2014 -0700
+
+    Delete unreachable code after usage() calls
+    
+    Warned about by both Solaris Studio cc:
+    "fslsfonts.c", line 148: warning: statement not reached
+    "fslsfonts.c", line 204: warning: statement not reached
+    
+    and clang:
+    fslsfonts.c:204:7: warning: will never be executed [-Wunreachable-code]
+                        break;
+                        ^~~~~
+    fslsfonts.c:148:11: warning: will never be executed [-Wunreachable-code]
+                exit(0);
+                     ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7cb653d8699d6a774b340384603abc47a41b8295
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 5 12:41:47 2014 -0700
+
+    Fix a bunch of size/sign conversion warnings from clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e254f9e0ec8953ce02043642021a7307512c57be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 5 12:04:11 2014 -0700
+
+    Remove unnecessary casts on malloc/realloc return values
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 44a450461b6361d691c360438af21fa3be21c408
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 5 11:57:17 2014 -0700
+
+    Abort on malloc/realloc failure
+    
+    cppcheck still warns about our use of realloc, but it's harmless:
+    [fslsfonts.c:268]: (error) Common realloc mistake: 'font_list' nulled
+     but not freed upon failure
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 79344cb17e9b6b3d16ae2067b7d6e16ae204e52f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:35:16 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 16cc67667403dca89a03305e8a76fa3c386749d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:35:15 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7bbb887262c79849a52ee2e3e3d0835fcf582c9f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:35:07 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f09c42b9849ebc84ecc625323351d24dc551b94a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 4 23:53:20 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8d60a7198cc366d72fd03a5821de9b56719588fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 4 23:31:29 2013 -0800
+
+    Add -version option to print version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 5e7991fdcb98c06702a364b856a31541874c51da
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Apr 20 13:28:17 2012 -0700

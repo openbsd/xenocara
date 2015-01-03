@@ -85,6 +85,9 @@ number of character specified by \fB\-w\fP \fIwidth\fP.
 .TP 8
 .B \-u
 This option indicates that the output should be left unsorted.
+.TP 8
+.B \-version
+This option prints the program version and exits.
 .PP
 .SH ENVIRONMENT
 .TP 8
