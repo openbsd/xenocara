@@ -19,23 +19,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
-gccmakedep_DATA = gccmakedep
-gccmakedepdir = $(bindir)
-
-include cpprules.in
-
-DEFS = \
-	-DCCCMD=$(CC)\
-	-DRMCMD='"rm -f"'\
-	-DLNCMD="ln"\
-	-DMVCMD="mv"
-
-CPP_FILES_FLAGS = $(DEFS)
-
-gccmakedep: gccmdep
-	cp gccmdep gccmakedep
-install-data-hook:
-	chmod +x $(DESTDIR)/$(bindir)/gccmakedep
+bin_SCRIPTS = gccmakedep
 
 appmandir = $(APP_MAN_DIR)
 
@@ -43,18 +27,20 @@ appman_PRE = gccmakedep.man
 
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 
-CLEANFILES = $(appman_DATA) gccmakedep gccmdep
+CLEANFILES = $(appman_DATA)
 
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|'
-
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
+SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
-EXTRA_DIST = $(appman_PRE) gccmdep.cpp
+EXTRA_DIST = $(appman_PRE)
+
+MAINTAINERCLEANFILES = ChangeLog
+
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

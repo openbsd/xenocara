@@ -1,38 +1,191 @@
-2006-05-15  Adam Jackson  <ajax@freedesktop.org>
+commit 1f01500a313ed91f093e1d489162742e3d588dde
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed May 21 20:20:47 2014 +0200
 
-	* configure.ac:
-	Bump to 1.0.2
+    Bump to 1.0.3
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
 
-2006-02-06  Donnie Berkholz  <spyderous@gentoo.org>
+commit 855a9cb40ca734e1c99c3a1032630281d99572d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 4 21:36:36 2011 -0700
 
-	* Makefile.am:
-	RM needed some more quoting.
+    Use autoconf instead of XORG_RAWCPP to substitute text in gccmakedep
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
 
-2006-02-06  Donnie Berkholz  <spyderous@gentoo.org>
+commit 7abbe73c0ead0f335f2e39a486ac3004b8c30b08
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 4 21:27:24 2011 -0700
 
-	* Makefile.am:
-	RM should be 'rm -f' for monolithic compatibility.
+    config: use util-macros 1.8 for man page substitutions
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Use $(CHANGELOG_CMD) provided by XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 7718a63128381dc22021e9a7bee5a477771d1be0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 4 21:23:33 2011 -0700
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    config: Use AC_CONFIG_FILES to list output files instead of AC_OUTPUT
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 0df68dd170d1be2fbd5e87329164dae97fb18ad6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 4 21:17:30 2011 -0700
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2005-12-08  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 2921a02d56ab550ac307fc8ad313ad76c7b05f03
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 4 21:15:49 2011 -0700
 
-	* Makefile.am:
-	* configure.ac:
-	Add man page processing.
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2005-12-08  Adam Jackson  <ajax@freedesktop.org>
+commit a29912840d4baccc6d3819e9a2b25ba9d5cb7f7e
+Author: Peter Breitenlohner <peb@mppmu.mpg.de>
+Date:   Fri Dec 3 16:13:32 2010 -0500
 
-	* configure.ac:
-	* Makefile.am:
-	* cpprules.in:
-	* ChangeLog:
-	Bug #4807: Modularized gccmakedep (Joshua Baergen)
+    Fix gccmakedep from mutilates arguments containing "'" or " * "
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=7414
+    
+    Reviewed-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit fa623ff1e2f48336f09d38c50c598890e21fa1cc
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 16:39:16 2007 -0500
+
+    Replace static ChangeLog with dist-hook to generate from git log
+
+commit fe134552168001a00bf8366ebda4e605e57dc795
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri May 19 18:42:17 2006 +0000
+
+    Bump to 1.0.2
+
+commit d54c03e6f9fd552a1c9440cbc25d85c7cb48614e
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Mon Feb 6 18:16:59 2006 +0000
+
+    RM needed some more quoting.
+
+commit 704a0d6b153b25093fac55e7ef27eba419fb92a0
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Mon Feb 6 08:08:04 2006 +0000
+
+    RM should be 'rm -f' for monolithic compatibility.
+
+commit de3023cbb9d973bb8c8539ebdd71322f5c415ecf
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:07 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 5b28ecda846387528406d802eeaaf4a7d6090a84
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:36:01 2005 +0000
+
+    Stub COPYING files
+
+commit e2dab0baa71298840cdd322cbda37a7b826136dc
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:40 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit de02b8908884953fe99478b18032e619f39db90d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 9 03:45:24 2005 +0000
+
+    Add man page processing.
+
+commit bcddba78bfef8b6b7590705842ee315fed7fb5b9
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Dec 8 19:22:53 2005 +0000
+
+    distcheck fix
+
+commit 97f1f13964af776adf04823f7ee9b683dd224ca0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Dec 8 19:18:17 2005 +0000
+
+    Bug #4807: Modularized gccmakedep (Joshua Baergen)
+
+commit 8d57eb7ac9b9af835c83ef1b3e58a152bdd3bdc6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Thu Dec 8 19:17:54 2005 +0000
+
+    Bug #4807: Modularized gccmakedep (Joshua Baergen)
+
+commit 46b58da4e6c675859199be64db0c9b5297e1aa14
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 18:42:00 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 2449984d931f6f4612ee0a5902f2fa1a09a10d06
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:27:28 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit dc98d637f62438a6ee33702affcf46127eeb9ca1
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:09:38 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit e5267fa52264d70a0337d526082173083b0a8f1d
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:34:16 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 7ce280c3ad733193da8514f4bd663aa15092e65c
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:21:15 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 04573316bc083ce18e4488042ec0d0bf305ec06a
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:26:55 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit f97ff81ca2073c9301771fd7a3534b2b86e20833
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:20 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 4ce164596212363bbfbd35b982f97a7c8fca13f8
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:20 2003 +0000
+
+    Initial revision

@@ -1,18 +1,18 @@
-XCOMM!/bin/sh
+#!/bin/sh
 
-XCOMM
-XCOMM makedepend which uses 'gcc -M'
-XCOMM
-XCOMM $XFree86: xc/config/util/gccmdep.cpp,v 3.10tsi Exp $
-XCOMM
-XCOMM Based on mdepend.cpp and code supplied by Hongjiu Lu <hjl@nynexst.com>
-XCOMM
+#
+# makedepend which uses 'gcc -M'
+#
+# $XFree86: xc/config/util/gccmdep.cpp,v 3.10tsi Exp $
+#
+# Based on mdepend.cpp and code supplied by Hongjiu Lu <hjl@nynexst.com>
+#
 
 TMP=mdep$$.tmp
-CC=CCCMD
-RM=RMCMD
-LN=LNCMD
-MV=MVCMD
+CC="@CC@"
+RM="rm -f"
+LN="ln"
+MV="mv"
 
 ${RM} ${TMP}
 
@@ -32,14 +32,16 @@ while [ $# != 0 ]; do
     else
 	case "$1" in
 	    -D*|-I*|-U*)
-		args="$args '$1'"
+# arg may contain single quotes
+		qarg=`echo "$1" | sed "s/'/'\\\\\\\\''/g"`
+                args="$args '$qarg'"
 		;;
 	    -g*|-O*)
 		;;
 	    *)
 		if [ "$endmarker"x = x ]; then
 		    case $1 in
-XCOMM ignore these flags
+# ignore these flags
 			-w|-o|-cc)
 			    shift
 			    ;;
@@ -74,7 +76,8 @@ XCOMM ignore these flags
 			    echo "Unknown option '$1' ignored" 1>&2
 			    ;;
 			*)
-			    files="$files $1"
+# filename may contain blanks
+			    files="$files '$1'"
 			    ;;
 		    esac
 		fi
@@ -85,7 +88,7 @@ XCOMM ignore these flags
 done
 
 if [ x"$files" = x ]; then
-XCOMM Nothing to do
+# Nothing to do
     exit 0
 fi
 
@@ -115,7 +118,8 @@ CMD="$CC -M $args $files"
 if [ X"$makefile" != X- ]; then
     CMD="$CMD >> $TMP"
 fi
-eval $CMD
+# Do not wildcard expand '*' in args
+eval "$CMD"
 if [ X"$makefile" != X- ]; then
     $RM ${makefile}.bak
     $MV $makefile ${makefile}.bak
