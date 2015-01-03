@@ -48,7 +48,7 @@ in this Software without prior written authorization from The Open Group.
 #include	"fstobdf.h"
 
 static char *
-AddQuotes(unsigned char *string, int length)
+AddQuotes(unsigned char *string, unsigned int length)
 {
     static unsigned char new[256] = "\"";
     unsigned char *cp;
@@ -72,7 +72,7 @@ EmitProperties(FILE *outFile,
 	       FSPropOffset *propOffsets,
 	       unsigned char *propData)
 {
-    int         nProperties;
+    unsigned int  nProperties;
     FSPropOffset *property;
     Bool        needDefaultChar;
     Bool        needFontAscent;
@@ -85,7 +85,7 @@ EmitProperties(FILE *outFile,
     nProperties = propInfo->num_offsets;
     for (property = &propOffsets[0]; nProperties--; property++) {
 	char       *name;
-	int         length;
+	unsigned int length;
 
 	name = (char *)propData + property->name.position;
 	length = property->name.length;
@@ -122,7 +122,7 @@ EmitProperties(FILE *outFile,
 	    fprintf(outFile, "%lu\n", value);
 	    break;
 	case PropTypeSigned:
-	    fprintf(outFile, "%ld\n", value);
+	    fprintf(outFile, "%ld\n", (signed long) value);
 	    break;
 	default:
 	    fprintf(stderr, "unknown property type\n");

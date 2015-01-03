@@ -35,6 +35,8 @@ fstobdf \- generate BDF font from X font server
 ]
 .B \-fn
 .I fontname
+.TP
+.B fstobdf \-version
 .SH DESCRIPTION
 The \fIfstobdf\fP program reads a font from a font server and prints a BDF
 file on the standard output that may be used to recreate the font.
@@ -53,6 +55,10 @@ environment variable is used.
 .TP 8
 .B \-fn \fIfontname\fP
 This option specifies the font for which a BDF file should be generated.
+.TP 8
+.B \-version
+This option prints the program version and then exits without generating
+a BDF file.
 .SH ENVIRONMENT
 .TP 8
 .B FONTSERVER

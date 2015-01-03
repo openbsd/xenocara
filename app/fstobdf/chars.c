@@ -155,17 +155,17 @@ EmitCharacters(FILE *outFile,
 {
     FSXCharInfo *extents;
     FSXCharInfo *charInfo;
-    int         encoding;
+    unsigned int encoding;
     FSOffset   *offsets;
     unsigned char *glyph;
     unsigned char *glyphs;
     unsigned int nChars;
-    int         firstCharLow;
-    int         firstCharHigh;
-    int         lastCharLow;
-    int         lastCharHigh;
-    int         chLow;
-    int         chHigh;
+    unsigned int firstCharLow;
+    unsigned int firstCharHigh;
+    unsigned int lastCharLow;
+    unsigned int lastCharHigh;
+    unsigned int chLow;
+    unsigned int chHigh;
     FSBitmapFormat format;
 
     nChars = 0;

@@ -66,17 +66,17 @@ static const char *warning[] =
 
 static char *
 FindStringProperty(const char *propName,
-		   int *propLength,
+		   unsigned int *propLength,
 		   FSPropInfo *propInfo,
 		   FSPropOffset *propOffsets,
 		   unsigned char *propData)
 {
     FSPropOffset *propOffset;
-    int         length;
-    int         i;
+    unsigned int  length;
+    unsigned int  i;
 
     propOffset = &propOffsets[0];
-    length = strlen(propName);
+    length = (unsigned int) strlen(propName);
     for (i = propInfo->num_offsets; i--; propOffset++) {
 	if (propOffset->type == PropTypeString) {
 
@@ -109,11 +109,11 @@ FindNumberProperty(const char *propName,
 		   unsigned char *propData)
 {
     FSPropOffset *propOffset;
-    int         i;
-    int         length;
+    unsigned int  i;
+    unsigned int  length;
 
     propOffset = &propOffsets[0];
-    length = strlen(propName);
+    length = (unsigned int) strlen(propName);
     for (i = propInfo->num_offsets; i--; propOffset++) {
 	if ((propOffset->type == PropTypeSigned) ||
 		(propOffset->type == PropTypeUnsigned)) {
@@ -138,7 +138,7 @@ EmitHeader(FILE *outFile,
 	   FSPropOffset *propOffsets,
 	   unsigned char *propData)
 {
-    int         len;
+    unsigned int len;
     int         type;
     char       *cp;
     const char **cpp;

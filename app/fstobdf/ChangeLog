@@ -1,3 +1,86 @@
+commit 30a982223d71d6809cc01809c71f206ce736c4ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 30 20:57:33 2014 -0800
+
+    fstobdf 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11b1eba90baecf41b9e54b32827be864f0823469
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 5 14:47:00 2014 -0700
+
+    Fix integer sign/size conversion warnings from clang & cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9faac187bfa7ecd669c5fd68fc989641117d8bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:36:47 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 894265254c79fa348136a3c227dc52bf59aaaf6a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:36:47 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13331398794c5e6e89442e8eb3f26a4a5f059084
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:36:36 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7694580ad51740e1854a6678fb68c9edce2f37c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 5 22:48:02 2013 -0800
+
+    Print error and usage on invalid arg, instead of ignoring it
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f557d6258105ac2717093aebfd2fcbcb16730593
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 5 22:38:53 2013 -0800
+
+    Add -version option to print version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0d2f3192cc7dedee160702c5eaf4d2b03a21612b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 5 22:29:46 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9729a3345940c400753a383f014300bf9878cb0f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 5 22:24:33 2013 -0800
+
+    Spell out -server in usage message to match man page
+    
+    Code matches -s*, so either form works, but better to have them agree.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit bc9e90093861d12de7aaf880a7f7b0bb35f130c7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Apr 20 13:42:03 2012 -0700

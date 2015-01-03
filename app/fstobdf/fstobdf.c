@@ -43,22 +43,30 @@ in this Software without prior written authorization from The Open Group.
  * THIS SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include	<stdio.h>
 #include	<stdlib.h>
 #include        <string.h>
 #include	"fstobdf.h"
 
 
-static void _X_NORETURN
-usage(char *progName)
+static void _X_NORETURN _X_COLD
+usage(const char *progName, const char *msg)
 {
-    fprintf(stderr, "Usage: %s [-s <font server>] -fn <font name>\n",
-	    progName);
+    if (msg)
+        fprintf(stderr, "%s: %s\n", progName, msg);
+    fprintf(stderr,
+	    "Usage: %s [-server <font server>] -fn <font name>\n"
+	    "	or: %s -version\n",
+	    progName, progName);
     exit(0);
 }
 
-static void _X_NORETURN
-Fail(char *progName)
+static void _X_NORETURN _X_COLD
+Fail(const char *progName)
 {
     fprintf(stderr, "%s: unable to dump font\n", progName);
     exit(1);
@@ -90,17 +98,26 @@ main(int argc, char *argv[])
 	    if (argv[++i])
 		serverName = argv[i];
 	    else
-		usage(argv[0]);
+		usage(argv[0], "-server requires an argument");
 	} else if (!strncmp(argv[i], "-fn", 3)) {
 	    if (argv[++i])
 		fontName = argv[i];
 	    else
-		usage(argv[0]);
+		usage(argv[0], "-fn requires an argument");
+	}
+	else if (!strcmp(argv[i], "-version")) {
+	    printf("%s\n", PACKAGE_STRING);
+	    exit(0);
+	}
+	else {
+	    fprintf(stderr, "%s: unrecognized option '%s'\n",
+		    argv[0], argv[i]);
+	    usage(argv[0], NULL);
 	}
     }
 
     if (fontName == NULL)
-	usage(argv[0]);
+	usage(argv[0], "No font name specified");
 
     fontServer = FSOpenServer(serverName);
     if (!fontServer) {
@@ -109,8 +126,7 @@ main(int argc, char *argv[])
 	    fprintf(stderr, "%s: can't open font server \"%s\"\n",
 	      	    argv[0], sn);
 	else
-	    fprintf(stderr, "%s:  No font server specified.\n",
-		    argv[0]);
+	    usage(argv[0], "No font server specified.");
 	exit(0);
     }
     bitmapFormat = 0;
