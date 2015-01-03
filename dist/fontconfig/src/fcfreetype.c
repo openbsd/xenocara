@@ -1391,7 +1391,7 @@ FcFreeTypeQueryFace (const FT_Face  face,
     }
     else
     {
-	strcpy (psname, tmp);
+	strlcpy (psname, tmp, sizeof(psname));
     }
     if (!FcPatternAddString (pat, FC_POSTSCRIPT_NAME, (const FcChar8 *)psname))
 	goto bail1;
