@@ -1,3 +1,45 @@
+commit 9428c7c023461a04b2cd553e932871cda353e14e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 30 21:05:36 2014 -0800
+
+    xfsinfo 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1018e1b4ebaa1319550a7c8101a38f3ade1deb37
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:36:11 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ef07c497b81efd83b44a91d7ef5792f8cfb227e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:36:11 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b79192e409347d36e06b91530d75fba4acc799d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 23 23:13:30 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5d579a475beb6083c5321ea2293b7ec5c4328a62
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 23 23:09:51 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 4c717e41a5d894ef833815396b0de057b53213aa
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 10 15:39:31 2013 -0800

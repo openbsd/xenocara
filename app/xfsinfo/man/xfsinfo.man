@@ -48,6 +48,9 @@ must be specified in one of the formats defined in the
 section of X(__miscmansuffix__).   If not specified, the server name in the
 .B FONTSERVER
 environment variable is used.
+.TP
+.B \-version
+This option prints the program version and exits.
 .SH HISTORY
 .I Xfsinfo
 was originally called
