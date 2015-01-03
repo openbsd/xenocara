@@ -157,7 +157,6 @@ LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINT = @LINT@
 LINT_FLAGS = @LINT_FLAGS@
 LTLIBOBJS = @LTLIBOBJS@
-MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
@@ -173,6 +172,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -240,7 +241,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .$(APP_MAN_SUFFIX) .man
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -265,9 +266,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
+$(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
+$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 install-appmanDATA: $(appman_DATA)
