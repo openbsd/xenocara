@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.4 API Reference</title>
+<title>FreeType-2.5.5 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.5.4 API Reference</h1>
+<h1>FreeType-2.5.5 API Reference</h1>
 
 <h1>System Interface</h1>
 <h2>Synopsis</h2>
@@ -258,6 +258,9 @@
 
 <p>A handle to an input stream.</p>
 
+<h4>also</h4>
+<p>See <a href="ft2-system_interface.html#FT_StreamRec">FT_StreamRec</a> for the publicly accessible fields of a given stream object.</p>
+
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
@@ -367,6 +370,7 @@
 </td></tr>
 <tr><td class="val" id="size">size</td><td class="desc">
 <p>The stream size in bytes.</p>
+<p>In case of compressed streams where the size is unknown before actually doing the decompression, the value is set to 0x7FFFFFFF. (Note that this size value can occur for normal streams also; it is thus just a hint.)</p>
 </td></tr>
 <tr><td class="val" id="pos">pos</td><td class="desc">
 <p>The current position within the stream.</p>
