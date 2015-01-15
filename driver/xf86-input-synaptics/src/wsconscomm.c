@@ -60,6 +60,7 @@ WSConsIsTouchpad(InputInfoPtr pInfo, const char *device)
     }
 
     if (wsmouse_type == WSMOUSE_TYPE_SYNAPTICS ||
+        wsmouse_type == WSMOUSE_TYPE_SYNAP_SBTN ||
         wsmouse_type == WSMOUSE_TYPE_ALPS ||
         wsmouse_type == WSMOUSE_TYPE_ELANTECH)
         rc = TRUE;
@@ -250,6 +251,7 @@ static void
 WSConsReadDevDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    SynapticsParameters *para = &priv->synpara;
     struct wsmouse_calibcoords wsmc;
     int wsmouse_type;
 
@@ -287,6 +289,10 @@ WSConsReadDevDimensions(InputInfoPtr pInfo)
 
     switch (wsmouse_type) {
     default:
+    case WSMOUSE_TYPE_SYNAP_SBTN:
+        para->clickpad = TRUE;
+        para->has_secondary_buttons = TRUE;
+    /* FALLTHROUGH */
     case WSMOUSE_TYPE_SYNAPTICS:
         priv->model = MODEL_SYNAPTICS;
         priv->has_width = TRUE;
