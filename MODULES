@@ -1,29 +1,29 @@
-# $OpenBSD: MODULES,v 1.313 2015/01/01 16:57:55 matthieu Exp $
+# $OpenBSD: MODULES,v 1.314 2015/01/18 20:25:04 matthieu Exp $
 #
 # X.Org maintained modules
 #
 
 app/appres		1.0.4
-app/bdftopcf		1.0.5	7.7+	needs-update
+app/bdftopcf		1.0.5	7.7+
 app/beforelight		1.0.5
-app/bitmap		1.0.7
+app/bitmap		1.0.8		needs-update
 app/editres		1.0.6
 app/fonttosfnt		1.0.4
-app/fslsfonts		1.0.5		needs-update
-app/fstobdf		1.0.6		needs-update
-app/iceauth		1.0.6	7.7+
+app/fslsfonts		1.0.5
+app/fstobdf		1.0.6
+app/iceauth		1.0.7	7.7+	needs-update
 app/ico			1.0.4
 app/listres		1.0.3
 app/luit		1.1.1	7.7
 app/mkcomposecache	1.2.1		needs-import
 app/mkfontdir		1.0.7	7.7
-app/mkfontscale		1.1.1	7.7+
+app/mkfontscale		1.1.2	7.7+	needs-update
 app/oclock		1.0.3
-app/rgb			1.0.6		needs-update
+app/rgb			1.0.6
 app/scripts		1.0.1
 app/sessreg		1.0.8	7.7+
 app/setxkbmap		1.3.0	7.7
-app/showfont		1.0.5		needs-update
+app/showfont		1.0.5
 app/smproxy		1.0.5	7.7
 app/twm			1.0.8
 app/viewres		1.0.4
@@ -46,7 +46,7 @@ app/xeyes		1.1.1
 app/xf86dga		1.0.3
 app/xfd			1.1.2
 app/xfontsel		1.0.5
-app/xfsinfo		1.0.5		needs-update
+app/xfsinfo		1.0.5
 app/xfwp		1.0.3
 app/xgamma		1.0.5	7.7
 app/xgc			1.0.4
@@ -208,7 +208,7 @@ lib/libpthread-stubs		0.3	7.7
 lib/libxcb			1.11	7.7+	needs-update
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2
-lib/libxshmfence		1.1		needs-import
+lib/libxshmfence		1.2		needs-import
 lib/libxtrans			1.3.5	7.7+
 lib/pixman			0.32.6
 lib/xcb-util			0.4.0		needs-update
@@ -238,7 +238,7 @@ proto/renderproto		0.11.1	7.7
 proto/resourceproto		1.2.0	7.7
 proto/scrnsaverproto		1.2.2	7.7
 proto/videoproto		2.3.2	7.7+
-proto/x11proto			7.0.27	7.7+	needs-update
+proto/x11proto			7.0.27	7.7+
 proto/xcb-proto			1.11	7.7+	needs-update
 proto/xcmiscproto		1.2.2	7.7
 proto/xextproto			7.3.0	7.7+
@@ -250,7 +250,7 @@ proto/xf86vidmodeproto		2.3.1	7.7
 proto/xineramaproto		1.2.1	7.7
 
 util/cf				1.0.4
-util/gccmakedep			1.0.3		needs-update
+util/gccmakedep			1.0.3
 util/macros			1.19.0	7.7+
 util/makedepend			1.0.5	7.7+
 
