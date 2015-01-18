@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.156 2014/11/13 01:03:02 tom Exp $ */
+/* $XTermId: trace.c,v 1.157 2014/12/25 22:01:07 tom Exp $ */
 
 /*
  * Copyright 1997-2013,2014 by Thomas E. Dickey
@@ -306,7 +306,7 @@ visibleChars(const Char *buf, unsigned len)
 	result = 0;
 	used = 0;
     }
-    return result;
+    return NonNull(result);
 }
 
 char *
@@ -342,7 +342,7 @@ visibleIChars(const IChar *buf, unsigned len)
 	result = 0;
 	used = 0;
     }
-    return result;
+    return NonNull(result);
 }
 
 char *

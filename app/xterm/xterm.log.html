@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1538 2014/11/29 02:25:58 tom Exp $
+  $XTermId: xterm.log.html,v 1.1557 2014/12/29 00:55:21 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,8 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_314">Patch #314 - 2014/12/28</a></li>
+
     <li><a href="#xterm_313">Patch #313 - 2014/11/28</a></li>
 
     <li><a href="#xterm_312">Patch #312 - 2014/09/28</a></li>
@@ -911,6 +913,107 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_314" id="xterm_314">Patch #314 -
+  2014/12/28</a></h1>
+
+  <ul>
+    <li>fix a minor bug in the termcap-specific version of
+    <code>resize</code> when the lines or columns values are at the
+    very end of an incomplete termcap string (prompted by coverity
+    report).</li>
+
+    <li>improve paste64 feature (report by Olaf Rogalsky)
+
+      <ul>
+        <li>fix &ldquo;<code>p</code>;&rdquo; command in
+        <code>paste64.pl</code> example.</li>
+
+        <li>modify <code>_OwnSelection</code> to allow the paste64
+        control to cause primary/clipboard selections to be
+        disowned and cleared.</li>
+
+        <li>omit an extra "=" used in padding, to make the base64
+        response a multiple of four characters.</li>
+
+        <li>modify <code>_ConvertSelectionHelper</code> to not stop
+        converting on embedded nulls in the primary or clipboard
+        selection. That makes the behavior consistent with
+        cut-buffers. Nulls are not passed on to the application
+        because they are used for separators in the X library calls
+        that convert <code>XTextProperty</code> values.</li>
+      </ul>
+    </li>
+
+    <li>add configure option <code>--with-man2html</code> to allow
+    an alternative to groff's man/html conversion.</li>
+
+    <li>review and modify resource-settings which can be set via
+    control sequences, etc:
+
+      <ul>
+        <li>add <code>OSC&nbsp;6</code>, to enable/disable colors
+        set via <code>OSC&nbsp;5</code>, without changing the color
+        assignments (prompted by patch by Ingo Br&uuml;ckl).</li>
+
+        <li>add command-line option <code>-itc</code> for
+        italics.</li>
+
+        <li>add <code>colorIT</code> and <code>colorITMode</code>
+        for italics, like <code>colorBD</code>, etc.</li>
+
+        <li>guard <code>allowPasteControls</code> against
+        modification by <code>editres</code>.</li>
+      </ul>
+    </li>
+
+    <li>change <code>passedPty</code> from fixed-length to
+    allocated to ensure that it is long enough to hold the
+    <code>-S</code> option value (report by Ben Longbons).</li>
+
+    <li>improve ReGIS graphics initialization (Ross Combs):
+
+      <ul>
+        <li>add a new string resource to set the default ReGIS
+        font.</li>
+
+        <li>fix a caching problem where the font name wasn't taken
+        into consideration when looking up cached metrics.</li>
+
+        <li>enables use of fractional values in coordinates (which
+        in turn allows setting the coordinates to something like
+        [0,1][1,0])</li>
+
+        <li>doubles the minimum ReGIS graphic to 200x200</li>
+
+        <li>set the default ReGIS image size to "auto"</li>
+
+        <li>fix some swapped width/height parameters in TRACE
+        messages</li>
+
+        <li>add support for scaling and mirrored coordinate systems
+        to the screen address command</li>
+
+        <li>sets a minimum ReGIS graphics size of 100x100 --
+        smaller address ranges will be scaled up</li>
+
+        <li>reset the image if either the width or height is zero
+        (which should happen together or not at all, but switching
+        the logic gets rid of some parentheses)</li>
+
+        <li>adds support for alternate screen coordinates (just
+        offsets, not inverted coordinates or scaling)</li>
+
+        <li>keeps the graphics state across ReGIS calls unless P1
+        or P3 entry codes are used</li>
+
+        <li>changes loops to continue after parsing whitespace to
+        allow trailing whitespace</li>
+
+        <li>fixes some incorrect character casts</li>
+      </ul>
+    </li>
+  </ul>
+
   <h1><a name="xterm_313" id="xterm_313">Patch #313 -
   2014/11/28</a></h1>
 
@@ -967,9 +1070,10 @@
     screen (patch by Ross Combs).</li>
 
     <li>amend change to focus-change events in <a href=
-    "xterm_287">patch #287</a> to limit it to suppressing the reset
-    of the urgency-hint, because some useful <code>FocusOut</code>
-    events were lost (report by Joe Peterson).</li>
+    "#xterm_287">patch #287</a> to limit it to suppressing the
+    reset of the urgency-hint, because some useful
+    <code>FocusOut</code> events were lost (report by Joe
+    Peterson).</li>
 
     <li>modify dpkg build-script to configure xterm-dev as an
     <code>x-terminal-emulator</code> alternative.</li>

@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.816 2014/11/28 19:31:59 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.821 2014/12/28 21:50:14 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1229,10 +1229,19 @@ typedef enum {
 #define COLOR_UL	(NUM_ANSI_COLORS+1)	/* UNDERLINE */
 #define COLOR_BL	(NUM_ANSI_COLORS+2)	/* BLINK */
 #define COLOR_RV	(NUM_ANSI_COLORS+3)	/* REVERSE */
+
+#if OPT_WIDE_ATTRS
+#define COLOR_IT	(NUM_ANSI_COLORS+4)	/* ITALIC */
+#define MAXCOLORS	(NUM_ANSI_COLORS+5)
+#else
 #define MAXCOLORS	(NUM_ANSI_COLORS+4)
+#endif
+
 #ifndef DFT_COLORMODE
 #define DFT_COLORMODE True	/* default colorMode resource */
 #endif
+
+#define UseItalicFont(screen) (!(screen)->colorITMode)
 
 #define ReverseOrHilite(screen,flags,hilite) \
 		(( screen->colorRVMode && hilite ) || \
@@ -1250,6 +1259,7 @@ typedef enum {
 
 #define TERM_COLOR_FLAGS(xw) 0
 
+#define UseItalicFont(screen) True
 #define ReverseOrHilite(screen,flags,hilite) \
 		      (( (flags & INVERSE) && !hilite) || \
 		       (!(flags & INVERSE) &&  hilite))
@@ -1912,6 +1922,9 @@ typedef struct {
 	Boolean		colorBLMode;	/* use color for blink?		*/
 	Boolean		colorRVMode;	/* use color for reverse?	*/
 	Boolean		colorAttrMode;	/* prefer colorUL/BD to SGR	*/
+#if OPT_WIDE_ATTRS
+	Boolean		colorITMode;	/* use color for italics?	*/
+#endif
 #endif
 #if OPT_DEC_CHRSET
 	Boolean		font_doublesize;/* enable font-scaling		*/
@@ -2010,6 +2023,7 @@ typedef struct {
 	Boolean		allowTitleOps;	/* TitleOps mode		*/
 	Boolean		allowWindowOps;	/* WindowOps mode		*/
 
+	Boolean		allowPasteControl0; /* PasteControls mode	*/
 	Boolean		allowColorOp0;	/* initial ColorOps mode	*/
 	Boolean		allowFontOp0;	/* initial FontOps mode		*/
 	Boolean		allowSendEvent0;/* initial SendEvent mode	*/
@@ -2228,10 +2242,18 @@ typedef struct {
 	unsigned	restore_height;
 #endif
 
-#if OPT_SIXEL_GRAPHICS
-	String		regis_screensize; /* ReGIS given screensize	*/
-	Dimension	regis_max_high;	/* ...corresponding height	*/
-	Dimension	regis_max_wide;	/* ...and width			*/
+#if OPT_REGIS_GRAPHICS
+	String		graphics_regis_default_font; /* font for "builtin" */
+
+	String		graphics_regis_screensize; /* given a size in pixels */
+	Dimension	graphics_regis_def_wide; /* ...corresponding width   */
+	Dimension	graphics_regis_def_high; /* ...and height            */
+#endif
+
+#if OPT_GRAPHICS
+	String		graphics_max_size;	/* given a size in pixels */
+	Dimension	graphics_max_wide;	/* ...corresponding width */
+	Dimension	graphics_max_high;	/* ...and height          */
 #endif
 
 #if OPT_SCROLL_LOCK

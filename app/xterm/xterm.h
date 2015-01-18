@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.749 2014/11/28 19:30:12 tom Exp $ */
+/* $XTermId: xterm.h,v 1.753 2014/12/23 00:08:58 Ross.Combs Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -417,6 +417,7 @@ extern char **environ;
 #define XtNcolorAttrMode	"colorAttrMode"
 #define XtNcolorBDMode		"colorBDMode"
 #define XtNcolorBLMode		"colorBLMode"
+#define XtNcolorITMode		"colorITMode"
 #define XtNcolorMode		"colorMode"
 #define XtNcolorRVMode		"colorRVMode"
 #define XtNcolorULMode		"colorULMode"
@@ -484,6 +485,7 @@ extern char **environ;
 #define XtNloginShell		"loginShell"
 #define XtNmarginBell		"marginBell"
 #define XtNmaximized		"maximized"
+#define XtNmaxGraphicSize	"maxGraphicSize"
 #define XtNmenuBar		"menuBar"
 #define XtNmenuHeight		"menuHeight"
 #define XtNmetaSendsEscape	"metaSendsEscape"
@@ -517,6 +519,7 @@ extern char **environ;
 #define XtNprinterNewLine	"printerNewLine"
 #define XtNprivateColorRegisters "privateColorRegisters"
 #define XtNquietGrab		"quietGrab"
+#define XtNregisDefaultFont	"regisDefaultFont"
 #define XtNregisScreenSize	"regisScreenSize"
 #define XtNrenderFont		"renderFont"
 #define XtNresizeGravity	"resizeGravity"
@@ -666,6 +669,7 @@ extern char **environ;
 #define XtCLoginShell		"LoginShell"
 #define XtCMarginBell		"MarginBell"
 #define XtCMaximized		"Maximized"
+#define XtCMaxGraphicSize	"MaxGraphicSize"
 #define XtCMenuBar		"MenuBar"
 #define XtCMenuHeight		"MenuHeight"
 #define XtCMetaSendsEscape	"MetaSendsEscape"
@@ -695,6 +699,7 @@ extern char **environ;
 #define XtCPrinterNewLine	"PrinterNewLine"
 #define XtCPrivateColorRegisters "PrivateColorRegisters"
 #define XtCQuietGrab		"QuietGrab"
+#define XtCRegisDefaultFont	"RegisDefaultFont"
 #define XtCRegisScreenSize	"RegisScreenSize"
 #define XtCRenderFont		"RenderFont"
 #define XtCResizeGravity	"ResizeGravity"
@@ -1408,6 +1413,15 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 #define ExtractForeground(color) (unsigned) GetCellColorFG(color)
 #define ExtractBackground(color) (unsigned) GetCellColorBG(color)
 
+#if OPT_WIDE_ATTRS
+#define MapToWideColorMode(fg, screen, flags) \
+	(((screen)->colorITMode && ((flags) & ATR_ITALIC)) \
+	 ? COLOR_IT \
+	 : fg)
+#else
+#define MapToWideColorMode(fg, screen, flags) fg
+#endif
+
 #define MapToColorMode(fg, screen, flags) \
 	(((screen)->colorBLMode && ((flags) & BLINK)) \
 	 ? COLOR_BL \
@@ -1415,7 +1429,7 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 	    ? COLOR_BD \
 	    : (((screen)->colorULMode && ((flags) & UNDERLINE)) \
 	       ? COLOR_UL \
-	       : fg)))
+	       : MapToWideColorMode(fg, screen, flags))))
 
 #define checkVeryBoldAttr(flags, fg, code, attr) \
 	if ((flags & FG_COLOR) != 0 \
@@ -1424,11 +1438,19 @@ extern Pixel xtermGetColorRes(XtermWidget /* xw */, ColorRes * /* res */);
 	 && (fg == code)) \
 		 UIntClr(flags, attr)
 
+#if OPT_WIDE_ATTRS
+#define checkVeryBoldWideAttr(flags, fg, it, atr) \
+	    checkVeryBoldAttr(flags, fg, it, atr)
+#else
+#define checkVeryBoldWideAttr(flags, fg, it, atr) (void) flags
+#endif
+
 #define checkVeryBoldColors(flags, fg) \
 	checkVeryBoldAttr(flags, fg, COLOR_RV, INVERSE); \
 	checkVeryBoldAttr(flags, fg, COLOR_UL, UNDERLINE); \
 	checkVeryBoldAttr(flags, fg, COLOR_BD, BOLD); \
-	checkVeryBoldAttr(flags, fg, COLOR_BL, BLINK)
+	checkVeryBoldAttr(flags, fg, COLOR_BL, BLINK); \
+	checkVeryBoldWideAttr(flags, fg, COLOR_IT, ATR_ITALIC)
 
 #else /* !OPT_ISO_COLORS */
 

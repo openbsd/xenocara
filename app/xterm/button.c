@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.484 2014/11/13 01:00:26 tom Exp $ */
+/* $XTermId: button.c,v 1.491 2014/12/28 22:15:03 tom Exp $ */
 
 /*
  * Copyright 1999-2013,2014 by Thomas E. Dickey
@@ -1773,7 +1773,7 @@ GettingSelection(Display *dpy, Atom type, Char *line, unsigned long len)
 
     name = XGetAtomName(dpy, type);
 
-    TRACE(("Getting %s (%ld)\n", name, (long int) type));
+    TRACE(("Getting %s (type=%ld, length=%ld)\n", name, (long int) type, len));
     for (cp = line; cp < line + len; cp++) {
 	TRACE(("[%d:%lu]", (int) (cp + 1 - line), len));
 	if (isprint(*cp)) {
@@ -1803,6 +1803,12 @@ static void
 base64_flush(TScreen *screen)
 {
     Char x;
+
+    TRACE(("base64_flush count %d, pad %d (%d)\n",
+	   screen->base64_count,
+	   screen->base64_pad,
+	   screen->base64_pad & 3));
+
     switch (screen->base64_count) {
     case 0:
 	break;
@@ -1815,10 +1821,11 @@ base64_flush(TScreen *screen)
 	tty_vwrite(screen->respond, &x, 1);
 	break;
     }
-    if (screen->base64_pad & 3)
+    if (screen->base64_pad & 3) {
 	tty_vwrite(screen->respond,
 		   (const Char *) "===",
-		   (unsigned) (4 - (screen->base64_pad & 3)));
+		   (unsigned) (3 - (screen->base64_pad & 3)));
+    }
     screen->base64_count = 0;
     screen->base64_accu = 0;
     screen->base64_pad = 0;
@@ -1901,6 +1908,8 @@ _qWriteSelectionData(XtermWidget xw, Char *lag, unsigned length)
 	Char buf[64];
 	unsigned x = 0;
 
+	TRACE(("convert to base64 %d:%s\n", length, visibleChars(p, length)));
+
 	/*
 	 * Handle the case where the selection is from _this_ xterm, which
 	 * puts part of the reply in the buffer before the selection callback
@@ -1936,12 +1945,14 @@ _qWriteSelectionData(XtermWidget xw, Char *lag, unsigned length)
 	    if (x >= 63) {
 		/* Write 63 or 64 characters */
 		screen->base64_pad += x;
+		TRACE(("writing base64 interim %s\n", visibleChars(buf, x)));
 		tty_vwrite(screen->respond, buf, x);
 		x = 0;
 	    }
 	}
 	if (x != 0) {
 	    screen->base64_pad += x;
+	    TRACE(("writing base64 finish %s\n", visibleChars(buf, x)));
 	    tty_vwrite(screen->respond, buf, x);
 	}
     } else
@@ -1954,7 +1965,10 @@ _qWriteSelectionData(XtermWidget xw, Char *lag, unsigned length)
 	}
     } else
 #endif
+    {
+	TRACE(("writing base64 padding %s\n", visibleChars(lag, length)));
 	tty_vwrite(screen->respond, lag, length);
+    }
 }
 
 static void
@@ -2102,15 +2116,18 @@ SelectionReceived(Widget w,
 
     if (*type == 0		/*XT_CONVERT_FAIL */
 	|| *length == 0
-	|| value == NULL)
+	|| value == NULL) {
+	TRACE(("...no data to convert\n"));
 	goto fail;
+    }
 
     text_prop.value = (unsigned char *) value;
     text_prop.encoding = *type;
     text_prop.format = *format;
     text_prop.nitems = *length;
 
-    TRACE(("SelectionReceived %s format %d, nitems %ld\n",
+    TRACE(("SelectionReceived %s %s format %d, nitems %ld\n",
+	   XGetAtomName(screen->display, *selection),
 	   visibleSelectionTarget(dpy, text_prop.encoding),
 	   text_prop.format,
 	   text_prop.nitems));
@@ -2225,8 +2242,10 @@ SelectionReceived(Widget w,
 	}
 #endif
 	XFreeStringList(text_list);
-    } else
+    } else {
+	TRACE(("...empty text-list\n"));
 	goto fail;
+    }
 
     XtFree((char *) client_data);
     XtFree((char *) value);
@@ -3819,21 +3838,75 @@ _ConvertSelectionHelper(Widget w,
 {
     XtermWidget xw;
 
+    *value = 0;
+    *length = 0;
+    *type = 0;
+    *format = 0;
+
     if ((xw = getXtermWidget(w)) != 0) {
 	TScreen *screen = TScreenOf(xw);
 	Display *dpy = XtDisplay(w);
 	XTextProperty textprop;
+	int out_n = 0;
+	unsigned long remaining = screen->selection_length;
+	char *result = 0;
 	char *the_data = (char *) screen->selection_data;
+	char *the_next;
 
+	TRACE(("converting %ld:'%s'\n", screen->selection_length,
+	       visibleChars(screen->selection_data, screen->selection_length)));
+	/*
+	 * For most selections, we can convert in one pass.  It is possible
+	 * that some applications contain embedded nulls, e.g., using xterm's
+	 * paste64 feature.  For those cases, we will build up the result in
+	 * parts.
+	 */
+	if (memchr(the_data, 0, screen->selection_length) != 0) {
+	    TRACE(("selection contains embedded nulls\n"));
+	    result = calloc(screen->selection_length + 1, sizeof(char));
+	}
+
+      next_try:
+	memset(&textprop, 0, sizeof(textprop));
 	if (conversion_function(dpy, &the_data, 1,
 				conversion_style,
 				&textprop) >= Success) {
-	    *value = (XtPointer) textprop.value;
-	    *length = textprop.nitems;
-	    *type = textprop.encoding;
-	    *format = textprop.format;
-	    return True;
+	    if ((result != 0)
+		&& (textprop.value != 0)
+		&& (textprop.format == 8)) {
+		char *text_values = (char *) textprop.value;
+		unsigned long in_n;
+
+		if (out_n == 0) {
+		    *value = result;
+		    *type = textprop.encoding;
+		    *format = textprop.format;
+		}
+		for (in_n = 0; in_n < textprop.nitems; ++in_n) {
+		    result[out_n++] = text_values[in_n];
+		}
+		*length += textprop.nitems;
+		if ((the_next = memchr(the_data, 0, remaining)) != 0) {
+		    unsigned long this_was = (unsigned long) (the_next - the_data);
+		    this_was++;
+		    the_data += this_was;
+		    remaining -= this_was;
+		    result[out_n++] = 0;
+		    *length += 1;
+		    if (remaining)
+			goto next_try;
+		}
+		return True;
+	    } else {
+		free(result);
+		*value = (XtPointer) textprop.value;
+		*length = textprop.nitems;
+		*type = textprop.encoding;
+		*format = textprop.format;
+		return True;
+	    }
 	}
+	free(result);
     }
     return False;
 }
@@ -3883,11 +3956,13 @@ ConvertSelection(Widget w,
 
     screen = TScreenOf(xw);
 
-    if (screen->selection_data == NULL)
-	return False;		/* can this happen? */
-
     TRACE(("ConvertSelection %s\n",
 	   visibleSelectionTarget(dpy, *target)));
+
+    if (screen->selection_data == NULL) {
+	TRACE(("...FIXME: no selection_data\n"));
+	return False;		/* can this happen? */
+    }
 
     if (*target == XA_TARGETS(dpy)) {
 	Atom *allocP;
@@ -4037,6 +4112,8 @@ LoseSelection(Widget w, Atom *selection)
 	return;
 
     screen = TScreenOf(xw);
+    TRACE(("LoseSelection %s\n", XGetAtomName(screen->display, *selection)));
+
     for (i = 0, atomP = screen->selection_atoms;
 	 i < screen->selection_count; i++, atomP++) {
 	if (*selection == *atomP)
@@ -4070,6 +4147,7 @@ SelectionDone(Widget w GCC_UNUSED,
 	      Atom *target GCC_UNUSED)
 {
     /* empty proc so Intrinsics know we want to keep storage */
+    TRACE(("SelectionDone\n"));
 }
 
 static void
@@ -4084,10 +4162,10 @@ _OwnSelection(XtermWidget xw,
 
     if (count == 0)
 	return;
-    if (screen->selection_length == 0)
-	return;
 
-    TRACE(("_OwnSelection count %d\n", count));
+    TRACE(("_OwnSelection count %d, length %ld value %s\n", count,
+	   screen->selection_length,
+	   visibleChars(screen->selection_data, screen->selection_length)));
     selections = MapSelections(xw, selections, count);
 
     if (count > screen->sel_atoms_size) {
@@ -4124,6 +4202,8 @@ _OwnSelection(XtermWidget xw,
 			     (int) length,
 			     cutbuffer);
 	    }
+	} else if (screen->selection_length == 0) {
+	    XtDisownSelection((Widget) xw, atoms[i], screen->selection_time);
 	} else if (!screen->replyToEmacs) {
 	    have_selection |=
 		XtOwnSelection((Widget) xw, atoms[i],

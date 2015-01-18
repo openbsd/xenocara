@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.62 2014/06/12 23:04:07 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.63 2014/12/18 21:56:08 tom Exp $ */
 
 /*
  * Copyright 2007-2011,2014 by Thomas E. Dickey
@@ -506,9 +506,9 @@ setCgsFont(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font)
 		font = &(TScreenOf(xw)->fnts[fNorm]);
 	}
 	if (HaveFont(font) && okFont(font->fs)) {
-	    TRACE2(("setCgsFont next: %s for %s slot %p, gc %#x\n",
+	    TRACE2(("setCgsFont next: %s for %s slot %p, gc %p\n",
 		    traceFont(font), traceCgsEnum(cgsId),
-		    me, (unsigned) THIS(gc)));
+		    me, THIS(gc)));
 	    TRACE2(("...next font was %s\n", traceFont(NEXT(font))));
 	    NEXT(font) = font;
 	    me->mask |= GCFont;

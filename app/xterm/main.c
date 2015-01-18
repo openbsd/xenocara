@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.762 2014/07/24 22:47:09 tom Exp $ */
+/* $XTermId: main.c,v 1.767 2014/12/29 00:17:32 tom Exp $ */
 
 /*
  * Copyright 2002-2013,2014 by Thomas E. Dickey
@@ -779,7 +779,8 @@ static char etc_wtmp[] = WTMP_FILENAME;
 static char bin_login[] = LOGIN_FILENAME;
 #endif
 
-static char passedPty[PTYCHARLEN + 1];	/* name if pty if slave */
+static char noPassedPty[2];
+static char *passedPty = noPassedPty;	/* name if pty if slave */
 
 #if defined(TIOCCONS) || defined(SRIOCSREDIR)
 static int Console;
@@ -959,6 +960,10 @@ static XrmOptionDescRec optionDescList[] = {
 {"-fa",		"*faceName",	XrmoptionSepArg,	(XPointer) NULL},
 {"-fd",		"*faceNameDoublesize", XrmoptionSepArg,	(XPointer) NULL},
 {"-fs",		"*faceSize",	XrmoptionSepArg,	(XPointer) NULL},
+#endif
+#if OPT_WIDE_ATTRS && OPT_ISO_COLORS
+{"-itc",	"*colorITMode",	XrmoptionNoArg,		(XPointer) "off"},
+{"+itc",	"*colorITMode",	XrmoptionNoArg,		(XPointer) "on"},
 #endif
 #if OPT_WIDE_CHARS
 {"-fw",		"*wideFont",	XrmoptionSepArg,	(XPointer) NULL},
@@ -1252,6 +1257,9 @@ static OptionHelp xtermOptions[] = {
 #endif
 { "-/+vb",                 "turn on/off visual bell" },
 { "-/+pob",                "turn on/off pop on bell" },
+#if OPT_WIDE_ATTRS && OPT_ISO_COLORS
+{ "-/+itc",                "turn off/on display of italic as color"},
+#endif
 #if OPT_WIDE_CHARS
 { "-/+wc",                 "turn on/off wide-character mode" },
 { "-/+mk_width",           "turn on/off simple width convention" },
@@ -1760,6 +1768,7 @@ ParseSccn(char *option)
     char *leaf = x_basename(option);
     Bool code = False;
 
+    passedPty = x_strdup(option);
     if (leaf != option) {
 	if (leaf - option > 0
 	    && isdigit(CharOf(*leaf))
@@ -1771,13 +1780,13 @@ ParseSccn(char *option)
 	     * the /dev/pts/XXX value, but since we do not need to reopen it,
 	     * it is useful mainly for display in a "ps -ef".
 	     */
-	    strncpy(passedPty, option, len);
 	    passedPty[len] = 0;
 	    code = True;
 	}
     } else {
 	code = (sscanf(option, "%c%c%d",
 		       passedPty, passedPty + 1, &am_slave) == 3);
+	passedPty[2] = '\0';
     }
     TRACE(("ParseSccn(%s) = '%s' %d (%s)\n", option,
 	   passedPty, am_slave, code ? "OK" : "ERR"));
@@ -4691,9 +4700,13 @@ spawnXTerm(XtermWidget xw)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    shname_minus = CastMallocN(char, strlen(shname) + 2);
-	    (void) strcpy(shname_minus, "-");
-	    (void) strcat(shname_minus, shname);
+	    if ((shname_minus = CastMallocN(char, strlen(shname) + 2)) != 0) {
+		(void) strcpy(shname_minus, "-");
+		(void) strcat(shname_minus, shname);
+	    } else {
+		static char default_minus[] = "-sh";
+		shname_minus = default_minus;
+	    }
 #ifndef TERMIO_STRUCT
 	    ldisc = (!XStrCmp("csh", shname + strlen(shname) - 3)
 		     ? NTTYDISC

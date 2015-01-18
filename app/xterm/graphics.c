@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.58 2014/11/28 21:00:04 tom Exp $ */
+/* $XTermId: graphics.c,v 1.62 2014/12/23 00:08:58 Ross.Combs Exp $ */
 
 /*
  * Copyright 2013,2014 by Ross Combs
@@ -55,13 +55,12 @@
  * - find a suitable default alphabet zero font instead of scaling Xft fonts
  * - input and output cursors
  * - mouse input
- * - custom coordinate systems
  * - investigate second graphic page for ReGIS -- does it also apply to text and sixel graphics? are the contents preserved?
  * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
  * - non-ASCII alphabets
  * - enter/leave during a command
  * - command display mode
- * - scaling/re-rasterization to fit screen
+ * - re-rasterization on resize
  * - macros
  * - improved fills for narrow angles (track actual lines not just pixels)
  *
@@ -118,6 +117,7 @@
  * - background color as stackable write control
  * - true color (virtual color registers created upon lookup)
  * - anti-aliasing
+ * - variable-width text
  */
 
 /* font sizes:
@@ -164,12 +164,14 @@ freeGraphic(Graphic *obj)
 }
 
 static Graphic *
-allocGraphic(const TScreen *screen)
+allocGraphic(int max_w, int max_h)
 {
     Graphic *result = TypeCalloc(Graphic);
     if (result) {
-	size_t max_pixels = (size_t) (screen->regis_max_wide * screen->regis_max_high);
-	if (!(result->pixels = TypeCallocN(RegisterNum, max_pixels))) {
+	result->max_width = max_w;
+	result->max_height = max_h;
+	if (!(result->pixels = TypeCallocN(RegisterNum,
+					     (size_t) max_w * (size_t) max_h))) {
 	    result = freeGraphic(result);
 	} else if (!(result->private_color_registers = allocRegisters())) {
 	    result = freeGraphic(result);
@@ -196,7 +198,8 @@ getInactiveSlot(const TScreen *screen, unsigned n)
 	(!displayed_graphics[n] ||
 	 !displayed_graphics[n]->valid)) {
 	if (!displayed_graphics[n]) {
-	    displayed_graphics[n] = allocGraphic(screen);
+	    displayed_graphics[n] = allocGraphic(screen->graphics_max_wide,
+						 screen->graphics_max_high);
 	}
 	return displayed_graphics[n];
     }
@@ -673,8 +676,7 @@ get_color_register_count(TScreen const *screen)
 }
 
 static void
-init_graphic(const TScreen *screen,
-	     Graphic *graphic,
+init_graphic(Graphic *graphic,
 	     unsigned type,
 	     int terminal_id,
 	     int charrow,
@@ -682,7 +684,8 @@ init_graphic(const TScreen *screen,
 	     unsigned num_color_registers,
 	     int private_colors)
 {
-    size_t max_pixels = (size_t) (screen->regis_max_wide * screen->regis_max_high);
+    const unsigned max_pixels = (unsigned) (graphic->max_width *
+					    graphic->max_height);
     unsigned i;
 
     TRACE(("initializing graphic object\n"));
@@ -711,8 +714,6 @@ init_graphic(const TScreen *screen,
      * VT382       960x750  sixel only
      * dxterm      ?x? ?x?  variable?
      */
-    graphic->max_width = screen->regis_max_wide;
-    graphic->max_height = screen->regis_max_high;
 
     graphic->actual_width = 0;
     graphic->actual_height = 0;
@@ -778,8 +779,7 @@ get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type)
 	graphic->xw = xw;
 	graphic->bufferid = bufferid;
 	graphic->id = next_graphic_id++;
-	init_graphic(screen,
-		     graphic,
+	init_graphic(graphic,
 		     type,
 		     terminal_id,
 		     charrow,
@@ -917,6 +917,7 @@ refresh_graphic(TScreen const *screen,
     int const graph_y = graphic->charrow * FontHeight(screen);
     int const graph_w = graphic->actual_width;
     int const graph_h = graphic->actual_height;
+    int const mw = graphic->max_width;
     int r, c;
     int fillx, filly;
     int holes, total, out_of_range;
@@ -953,7 +954,7 @@ refresh_graphic(TScreen const *screen,
 		break;
 
 	    total++;
-	    regnum = graphic->pixels[r * graphic->max_width + c];
+	    regnum = graphic->pixels[r * mw + c];
 	    if (regnum == COLOR_HOLE) {
 		holes++;
 		continue;

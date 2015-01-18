@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.52 2014/11/28 20:37:24 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.62 2014/12/23 01:39:00 tom Exp $ */
 
 /*
  * Copyright 2014 by Ross Combs
@@ -79,6 +79,7 @@
 
 #define SCALE_FIXED_POINT 16U
 
+#undef DEBUG_ALPHABETS
 #undef DEBUG_BEZIER
 #undef DEBUG_SPLINE_SEGMENTS
 #undef DEBUG_SPLINE_POINTS
@@ -90,6 +91,7 @@
 #undef DEBUG_SPECIFIC_CHAR_METRICS
 #define IS_DEBUG_CHAR(CH) ((CH) == 'W')		/* glyphs to dump to terminal */
 #undef DEBUG_COMPUTED_FONT_METRICS
+#undef DEBUG_FONT_NAME
 #undef DEBUG_FONT_SIZE_SEARCH
 #undef DEBUG_XFT_GLYPH
 #undef DEBUG_LOAD
@@ -138,6 +140,9 @@ typedef struct RegisTextControls {
     int       character_rotation;
     int       slant; /* for italic/oblique */
 } RegisTextControls;
+
+#define FixedCopy(dst, src, len) strncpy(dst, src, len - 1)[len - 1] = '\0'
+#define CopyFontname(dst, src) FixedCopy(dst, src, REGIS_FONTNAME_LEN)
 
 #define MAX_REGIS_ALPHABETS 8U
 #define REGIS_ALPHABET_NAME_LEN 11U
@@ -209,8 +214,12 @@ typedef struct RegisParseState {
 typedef struct RegisGraphicsContext {
     Graphic *graphic;
     int terminal_id;
+    int x_off, y_off;
+    int x_div, y_div;
+    int width, height;
     unsigned all_planes;
     RegisterNum background;
+    char const *builtin_font;
     RegisAlphabet alphabets[MAX_REGIS_ALPHABETS];
     RegisWriteControls persistent_write_controls;
     RegisWriteControls temporary_write_controls;
@@ -227,6 +236,8 @@ typedef struct RegisGraphicsContext {
     unsigned fill_point_count;
 } RegisGraphicsContext;
 
+static RegisGraphicsContext persistent_context;
+
 #define MAX_PATTERN_BITS 8U
 
 #define WRITE_STYLE_OVERLAY 1U
@@ -239,9 +250,24 @@ typedef struct RegisGraphicsContext {
 
 /* keypress event example: http://iraf.net/forum/viewtopic.php?showtopic=61692 */
 
+#define MIN2(X, Y) ( (X) < (Y) ? (X) : (Y) )
+#define MIN3(X, Y, Z) ( MIN2(MIN2((X), (Y)), MIN2((Y), (Z))) )
+#define MAX2(X, Y) ( (X) > (Y) ? (X) : (Y) )
+#define MAX3(X, Y, Z) ( MAX2(MAX2((X), (Y)), MAX2((Y), (Z))) )
+
 #define ROT_LEFT_N(V, N) ( (((V) << ((N) & 3U )) & 255U) | \
 			   ((V) >> (8U - ((N) & 3U))) )
 #define ROT_LEFT(V) ( (((V) << 1U) & 255U) | ((V) >> 7U) )
+
+#define SCALE_XCOORD(C, X, S) ( ( (X) * ((C)->width  - 1) ) / ( (C)->x_div * (S) ) )
+#define SCALE_YCOORD(C, Y, S) ( ( (Y) * ((C)->height - 1) ) / ( (C)->y_div * (S) ) )
+#define TRANSLATE_XCOORD(C, X, S) SCALE_XCOORD((C), (X) - (C)->x_off * (S), (S) )
+#define TRANSLATE_YCOORD(C, Y, S) SCALE_YCOORD((C), (Y) - (C)->y_off * (S), (S) )
+
+#define READ_PIXEL(C, X, Y) read_pixel((C)->graphic, (X), (Y))
+#define DRAW_PIXEL(C, X, Y, COL) draw_solid_pixel((C)->graphic, (X), (Y), (COL))
+#define DRAW_ALL(C, COL) \
+    draw_solid_rectangle((C)->graphic, 0, 0, (C)->width, (C)->height, (COL))
 
 static unsigned get_shade_character_pixel(unsigned char const *pixels,
 					  unsigned w, unsigned h,
@@ -318,7 +344,7 @@ draw_regis_pixel(RegisGraphicsContext *context, int x, int y,
 	    return;
 	}
 
-	color = read_pixel(context->graphic, x, y);
+	color = READ_PIXEL(context, x, y);
 	if (color == COLOR_HOLE)
 	    color = context->background;
 	color = color ^ context->all_planes;
@@ -334,7 +360,7 @@ draw_regis_pixel(RegisGraphicsContext *context, int x, int y,
 	break;
     }
 
-    draw_solid_pixel(context->graphic, x, y, color);
+    DRAW_PIXEL(context, x, y, color);
 }
 
 static void
@@ -717,7 +743,8 @@ draw_patterned_arc(RegisGraphicsContext *context,
     points_stop = (total_points * a_start +
 		   total_points * abs(a_length) + 359) / 360;
     TRACE(("drawing arc with %d points from %d angle for %d degrees (from point %d to %d out of %d)\n",
-	   total_points, a_start, a_length, points_start, points_stop, total_points));
+	   total_points, a_start, a_length, points_start, points_stop,
+	   total_points));
 
     points = 0;
     for (iterations = 0U; iterations < 8U; iterations++) {
@@ -1219,14 +1246,14 @@ plotCubicSpline(int n, int x[], int y[], int skip_first_last)
     int x3, y3, x4, y4;
     int i, x0, y0, x1, y1, x2, y2;
 #ifdef DEBUG_SPLINE_SEGMENTS
-    int color = 0;
+    RegisterNum color = 0;
 #endif
 
     assert(n > 2);		/* need at least 4 points P[0]..P[n] */
 
 #ifdef DEBUG_SPLINE_POINTS
     {
-	int save_pattern;
+	unsigned save_pattern;
 
 	i = 0;
 	global_context->temporary_write_controls.foreground = 11;
@@ -1611,7 +1638,7 @@ get_xft_glyph_dimensions(Display *display, XftFont *font, unsigned *w,
  * maxw and maxh without overstepping either dimension.
  */
 static XftFont *
-find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
+find_best_xft_font_size(Display *display, Screen *screen, char const *fontname,
 			unsigned maxw, unsigned maxh, unsigned max_pixels,
 			unsigned *w, unsigned *h,
 			unsigned *xmin, unsigned *ymin)
@@ -1620,6 +1647,7 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
     unsigned targeth;
     unsigned ii, cacheindex;
     static struct {
+	char fontname[REGIS_FONTNAME_LEN];
 	unsigned maxw, maxh, max_pixels;
 	unsigned targeth;
 	unsigned w, h;
@@ -1627,10 +1655,19 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
 	unsigned ymin;
     } cache[FONT_SIZE_CACHE_SIZE];
 
+    assert(display);
+    assert(screen);
+    assert(fontname);
+    assert(w);
+    assert(h);
+    assert(xmin);
+    assert(ymin);
+
     cacheindex = FONT_SIZE_CACHE_SIZE;
     for (ii = 0U; ii < FONT_SIZE_CACHE_SIZE; ii++) {
 	if (cache[ii].maxw == maxw && cache[ii].maxh == maxh &&
-	    cache[ii].max_pixels == max_pixels) {
+	    cache[ii].max_pixels == max_pixels &&
+	    strcmp(cache[ii].fontname, fontname) == 0) {
 	    cacheindex = ii;
 	    break;
 	}
@@ -1706,14 +1743,15 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
 	    char buffer[1024];
 
 	    if (XftNameUnparse(font->pattern, buffer, (int) sizeof(buffer))) {
-		printf("Using font named \"%s\"\n", buffer);
+		printf("Testing font named \"%s\"\n", buffer);
 	    } else {
-		printf("Using unknown font\n");
+		printf("Testing unknown font\n");
 	    }
 	}
 #endif
 
-	if (cacheindex < sizeof(cache) / sizeof(cache[0])) {
+	if (cacheindex < FONT_SIZE_CACHE_SIZE &&
+	    targeth == cache[cacheindex].targeth) {
 	    *w = cache[cacheindex].w;
 	    *h = cache[cacheindex].h;
 	    *xmin = cache[cacheindex].xmin;
@@ -1775,11 +1813,25 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
 	    }
 	    continue;
 	}
+#ifdef DEBUG_FONT_NAME
+	{
+	    char buffer[1024];
+
+	    if (XftNameUnparse(font->pattern, buffer, (int) sizeof(buffer))) {
+		printf("Final font for \"%s\" max %dx%d is \"%s\"\n",
+		       fontname, maxw, maxh, buffer);
+	    } else {
+		printf("Final font for \"%s\" max %dx%d is unknown\n",
+		       fontname, maxw, maxh);
+	    }
+	}
+#endif
 
 	if (cacheindex == FONT_SIZE_CACHE_SIZE) {
 	    for (ii = 0U; ii < FONT_SIZE_CACHE_SIZE; ii++) {
 		if (cache[ii].maxw == 0U || cache[ii].maxh == 0U ||
 		    cache[ii].max_pixels == 0U) {
+		    CopyFontname(cache[ii].fontname, fontname);
 		    cache[ii].maxw = maxw;
 		    cache[ii].maxh = maxh;
 		    cache[ii].max_pixels = max_pixels;
@@ -1793,6 +1845,7 @@ find_best_xft_font_size(Display *display, Screen * screen, char const *fontname,
 	    }
 	    if (ii == FONT_SIZE_CACHE_SIZE) {
 		ii = targeth % FONT_SIZE_CACHE_SIZE;
+		CopyFontname(cache[ii].fontname, fontname);
 		cache[ii].maxw = maxw;
 		cache[ii].maxh = maxh;
 		cache[ii].max_pixels = max_pixels;
@@ -1891,11 +1944,14 @@ find_best_alphabet_index(RegisGraphicsContext const *context,
 	}
     }
 
-    TRACE(("found alphabet %u at index %u size %ux%u font=%s\n",
-	   context->current_text_controls->alphabet_num, bestmatch,
-	   bestw, besth,
-	   context->alphabets[bestmatch].use_font ?
-	   context->alphabets[bestmatch].fontname : "(none)"));
+    if (bestmatch < MAX_REGIS_ALPHABETS) {
+	TRACE(("found alphabet %u at index %u size %ux%u font=%s\n",
+	       context->current_text_controls->alphabet_num, bestmatch,
+	       bestw, besth,
+	       context->alphabets[bestmatch].use_font ?
+	       context->alphabets[bestmatch].fontname : "(none)"));
+    }
+
     return bestmatch;
 }
 
@@ -1915,17 +1971,19 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
     assert(context);
     assert(pixels);
 
-    if (!context->alphabets[alphabet_index].loaded[(unsigned) ch]) {
+    if (!context->alphabets[alphabet_index].loaded[(unsigned char) ch]) {
 	TRACE(("in alphabet %u with alphabet index %u user glyph for '%c' not loaded\n",
 	       context->current_text_controls->alphabet_num, alphabet_index,
 	       ch));
 	return 0;
     }
 
+    assert(context->alphabets[alphabet_index].bytes);
+
     w = context->alphabets[alphabet_index].pixw;
     h = context->alphabets[alphabet_index].pixh;
     glyph = &context->alphabets[alphabet_index]
-	.bytes[(unsigned) ch * GLYPH_WIDTH_BYTES(w) * h];
+	.bytes[(unsigned char) ch * GLYPH_WIDTH_BYTES(w) * h];
 
     for (yy = 0U; yy < h; yy++) {
 	for (xx = 0U; xx < w; xx++) {
@@ -1940,8 +1998,8 @@ get_user_bitmap_of_character(RegisGraphicsContext const *context,
 
 /*
  * alphabets
- *  0                          built-in
- *  1-(MAX_REGIS_ALPHABETS-1)  custom (max is 3 on VT3X0)
+ *  0    built-in
+ *  1-N  custom (max is 3 on VT3X0 -- up to MAX_REGIS_ALPHABETS with xterm)
  *
  * built-in 7-bit charsets
  *  (B    ASCII
@@ -1977,54 +2035,61 @@ get_bitmap_of_character(RegisGraphicsContext const *context, char ch,
 			unsigned maxw, unsigned maxh, unsigned char *pixels,
 			unsigned *w, unsigned *h, unsigned max_pixels)
 {
-    char const *fontname;
     unsigned bestmatch;
+    char const *fontname = NULL;
+
+    if (context->current_text_controls->alphabet_num == 0) {
+	fontname = context->builtin_font;
+    }
 
     *w = 0U;
     *h = 0U;
 
     bestmatch = find_best_alphabet_index(context, 1U, 1U, maxw, maxh,
 					 max_pixels);
-    if (bestmatch < MAX_REGIS_ALPHABETS &&
-	get_user_bitmap_of_character(context, ch, bestmatch, pixels)) {
-	*w = context->alphabets[bestmatch].pixw;
-	*h = context->alphabets[bestmatch].pixh;
-	return;
-    }
-
-    fontname = NULL;
     if (bestmatch < MAX_REGIS_ALPHABETS) {
 	RegisAlphabet const *alpha = &context->alphabets[bestmatch];
-	if (alpha && alpha->use_font)
+
+	if (!alpha->use_font &&
+	    get_user_bitmap_of_character(context, ch, bestmatch, pixels)) {
+	    TRACE(("found user glyph for alphabet number %d (index %u)\n\n",
+		   context->current_text_controls->alphabet_num, bestmatch));
+	    *w = alpha->pixw;
+	    *h = alpha->pixh;
+	    return;
+	}
+
+	if (alpha->use_font)
 	    fontname = alpha->fontname;
     }
-    if (!fontname && context->current_text_controls->alphabet_num == 0) {
-	fontname = "";
-    }
 
-    if (fontname && get_xft_bitmap_of_character(context, fontname, ch,
-						maxw, maxh, pixels,
-						max_pixels, w, h)) {
-	if (*w > maxw) {
-	    TRACE(("BUG: Xft glyph is too wide: %ux%u but max is %ux%u\n",
-		   *w, *h, maxw, maxh));
-	} else if (*h > maxh) {
-	    TRACE(("BUG: Xft glyph is too tall: %ux%u but max is %ux%u\n",
-		   *w, *h, maxw, maxh));
-	} else if (*w * *h > max_pixels) {
-	    TRACE(("BUG: Xft glyph has too many pixels: %u but max is %u\n",
-		   *w * *h, max_pixels));
-	} else {
+    if (fontname) {
+	if (get_xft_bitmap_of_character(context, fontname, ch,
+					maxw, maxh, pixels,
+					max_pixels, w, h)) {
+	    if (*w > maxw) {
+		TRACE(("BUG: Xft glyph is too wide: %ux%u but max is %ux%u\n",
+		       *w, *h, maxw, maxh));
+	    } else if (*h > maxh) {
+		TRACE(("BUG: Xft glyph is too tall: %ux%u but max is %ux%u\n",
+		       *w, *h, maxw, maxh));
+	    } else if (*w * *h > max_pixels) {
+		TRACE(("BUG: Xft glyph has too many pixels: %u but max is %u\n",
+		       *w * *h, max_pixels));
+	    } else {
+		TRACE(("got glyph from \"%s\" for alphabet number %d\n",
+		       fontname, context->current_text_controls->alphabet_num));
 #ifdef DEBUG_SPECIFIC_CHAR_METRICS
-	    if (IS_DEBUG_CHAR(ch)) {
-		printf("got %ux%u Xft bitmap for '%c' target size %ux%u:\n",
-		       *w, *h,
-		       ch, maxw, maxh);
-		dump_bitmap_pixels(pixels, *w, *h);
-		printf("\n");
-	    }
+		if (IS_DEBUG_CHAR(ch)) {
+		    printf("got %ux%u Xft bitmap for '%c' target size %ux%u:\n",
+			   *w, *h,
+			   ch, maxw, maxh);
+		    dump_bitmap_pixels(pixels, *w, *h);
+		    printf("\n");
+		}
 #endif
-	    return;
+		return;
+	    }
 	}
     }
 
@@ -2035,10 +2100,10 @@ get_bitmap_of_character(RegisGraphicsContext const *context, char ch,
     {
 	unsigned xx, yy;
 
-	*w = 8U;
-	*h = 10U;
-	for (yy = 0U; yy < 10U; yy++)
-	    for (xx = 0U; xx < 8U; xx++)
+	*w = MIN2(8U, maxh);
+	*h = MIN2(10U, maxw);
+	for (yy = 0U; yy < *h; yy++)
+	    for (xx = 0U; xx < *w; xx++)
 		pixels[yy * *w + xx] = '\0';
     }
 }
@@ -2073,11 +2138,11 @@ draw_character(RegisGraphicsContext *context, char ch,
 	       int rot_shear_y, int x_sign_x, int x_sign_y,
 	       int y_sign_x, int y_sign_y)
 {
+    const unsigned xmaxd = context->current_text_controls->character_display_w;
+    const unsigned ymaxd = context->current_text_controls->character_display_h;
+    const unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
+    const unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
     unsigned w, h;
-    unsigned xmaxd = context->current_text_controls->character_display_w;
-    unsigned ymaxd = context->current_text_controls->character_display_h;
-    unsigned xmaxf = context->current_text_controls->character_unit_cell_w;
-    unsigned ymaxf = context->current_text_controls->character_unit_cell_h;
     unsigned xscale, yscale;
     unsigned fx, fy;
     unsigned px, py;
@@ -2157,6 +2222,25 @@ draw_text(RegisGraphicsContext *context, char const *str)
     int begin_x, begin_y;
     int rx, ry;
     int ox, oy;
+
+#ifdef DEBUG_ALPHABETS
+    {
+	unsigned n;
+
+	for (n = 0U; n < MAX_REGIS_ALPHABETS; n++) {
+	    printf("alphabet index %u\n", n);
+	    if (context->alphabets[n].alphabet_num != INVALID_ALPHABET_NUM) {
+		printf(" alphabet_num=%u\n", context->alphabets[n].alphabet_num);
+		printf(" pixw=%d\n", context->alphabets[n].pixw);
+		printf(" pixh=%d\n", context->alphabets[n].pixh);
+		printf(" name=\"%s\"\n", context->alphabets[n].name);
+		printf(" use_font=%d\n", context->alphabets[n].use_font);
+		printf(" fontname=\"%s\"\n", context->alphabets[n].fontname);
+		printf(" bytes=%p\n", context->alphabets[n].bytes);
+	    }
+	}
+    }
+#endif
 
     if (context->current_text_controls->slant <= -75 ||
 	context->current_text_controls->slant >= +75) {
@@ -2924,11 +3008,6 @@ regis_num_to_int(RegisDataFragment const *input, int *out)
     return 1;
 }
 
-#define MIN2(X, Y) ( (X) < (Y) ? (X) : (Y) )
-#define MIN3(X, Y, Z) ( MIN2(MIN2((X), (Y)), MIN2((Y), (Z))) )
-#define MAX2(X, Y) ( (X) > (Y) ? (X) : (Y) )
-#define MAX3(X, Y, Z) ( MAX2(MAX2((X), (Y)), MAX2((Y), (Z))) )
-
 static int
 load_regis_colorspec(RegisGraphicsContext const *context,
 		     RegisDataFragment const *input,
@@ -3213,8 +3292,45 @@ load_regis_regnum_or_colorspec(RegisGraphicsContext const *context,
 }
 
 static int
-load_regis_extent(char const *extent, int origx, int origy,
-		  int *xloc, int *yloc)
+to_scaled_int(char const *num, int scale, int *value)
+{
+    unsigned long whole, frac;
+    char *end;
+
+    /* FIXME: handle whitespace? how about trailing junk? */
+    whole = strtoul(num, &end, 10);
+    if (end[0] == '.') {
+	char temp[5] = "0000";
+
+	if (end[1] != '\0') {
+	    temp[0] = end[1];
+	    if (end[2] != '\0') {
+		temp[1] = end[2];
+		if (end[3] != '\0') {
+		    temp[2] = end[3];
+		    if (end[4] != '\0') {
+			temp[3] = end[4];
+		    }
+		}
+	    }
+	}
+	frac = strtoul(temp, NULL, 10);
+    } else if (end[0] == '\0' || end[0] == ',') {
+	frac = 0;
+    } else {
+	TRACE(("unexpected character %c in number %s\n", end[0], num));
+	return 0;
+    }
+
+    *value = (int) (whole * (unsigned) scale +
+		    (frac * (unsigned) scale) / 10000);
+
+    return 1;
+}
+
+static int
+load_regis_raw_extent(char const *extent, int *relx, int *rely,
+		      int *xloc, int *yloc, int scale)
 {
     int xsign, ysign;
     char const *xpart;
@@ -3247,18 +3363,105 @@ load_regis_extent(char const *extent, int origx, int origy,
     }
 
     if (xpart[0] == '\0' || xpart[0] == ',') {
-	*xloc = origx;
+	*relx = 1;
+	*xloc = 0;
     } else if (xsign == 0) {
-	*xloc = atoi(xpart);
+	int val;
+
+	if (!to_scaled_int(xpart, scale, &val))
+	    return 0;
+	*relx = 0;
+	*xloc = val;
     } else {
-	*xloc = origx + xsign * atoi(xpart);
+	int val;
+
+	if (!to_scaled_int(xpart, scale, &val))
+	    return 0;
+	*relx = 1;
+	*xloc = xsign * val;
     }
     if (ypart[0] == '\0') {
-	*yloc = origy;
+	*rely = 1;
+	*yloc = 0;
     } else if (ysign == 0) {
-	*yloc = atoi(ypart);
+	int val;
+
+	if (!to_scaled_int(ypart, scale, &val))
+	    return 0;
+	*rely = 0;
+	*yloc = val;
     } else {
-	*yloc = origy + ysign * atoi(ypart);
+	int val;
+
+	if (!to_scaled_int(ypart, scale, &val))
+	    return 0;
+	*rely = 1;
+	*yloc = ysign * val;
+    }
+
+    return 1;
+}
+
+static int
+load_regis_pixel_extent(char const *extent, int origx, int origy,
+			int *xloc, int *yloc)
+{
+    int relx, rely;
+    int px, py;
+
+    if (!load_regis_raw_extent(extent, &relx, &rely, &px, &py, 1)) {
+	TRACE(("invalid coordinates in extent %s\n", extent));
+	return 0;
+    }
+
+    *xloc = px;
+    *yloc = py;
+
+    if (relx)
+	*xloc += origx;
+    if (rely)
+	*yloc += origy;
+
+    return 1;
+}
+
+#define COORD_SCALE 1000
+
+static int
+load_regis_coord_extent(RegisGraphicsContext const *context, char const *extent,
+			int origx, int origy, int *xloc, int *yloc)
+{
+    int relx, rely;
+    int ux, uy;
+
+    if (!load_regis_raw_extent(extent, &relx, &rely, &ux, &uy, COORD_SCALE)) {
+	TRACE(("invalid coordinates in extent %s\n", extent));
+	return 0;
+    }
+
+    if (relx) {
+	const int px = SCALE_XCOORD(context, ux, COORD_SCALE);
+	TRACE(("converted relative X coord %.03f to relative pixel coord %d (width=%d xoff=%d xdiv=%d)\n",
+	       ux / (double) COORD_SCALE, px, context->width,
+	       context->x_off, context->x_div));
+	*xloc = origx + px;
+    } else {
+	const int px = TRANSLATE_XCOORD(context, ux, COORD_SCALE);
+	TRACE(("converted absolute X coord %.03f to absolute pixel coord %d\n",
+	       ux / (double) COORD_SCALE, px));
+	*xloc = px;
+    }
+    if (rely) {
+	const int py = SCALE_YCOORD(context, uy, COORD_SCALE);
+	TRACE(("converted relative Y coord %.03f to relative pixel coord %d (height=%d, yoff=%d, ydiv=%d)\n",
+	       uy / (double) COORD_SCALE, py, context->height,
+	       context->y_off, context->y_div));
+	*yloc = origy + py;
+    } else {
+	const int py = TRANSLATE_YCOORD(context, uy, COORD_SCALE);
+	TRACE(("converted absolute Y coord %.03f to absolute pixel coord %d\n",
+	       uy / (double) COORD_SCALE, py));
+	*yloc = py;
     }
 
     return 1;
@@ -3425,7 +3628,9 @@ load_regis_write_control(RegisParseState *state,
 	    char suboption;
 
 	    while (arg->pos < arg->len) {
-		skip_regis_whitespace(arg);
+		if (skip_regis_whitespace(arg))
+		    continue;
+
 		TRACE(("looking for option in \"%s\"\n",
 		       fragment_to_tempstr(arg)));
 		if (extract_regis_parenthesized_data(arg, &suboptionset)) {
@@ -3612,7 +3817,8 @@ load_regis_write_control(RegisParseState *state,
 	    int shading_enabled = 0;
 
 	    while (arg->pos < arg->len) {
-		skip_regis_whitespace(arg);
+		if (skip_regis_whitespace(arg))
+		    continue;
 
 		if (extract_regis_string(arg, state->temp, state->templen)) {
 		    TRACE(("found fill char \"%s\"\n", state->temp));
@@ -3670,9 +3876,10 @@ load_regis_write_control(RegisParseState *state,
 		}
 
 		if (extract_regis_extent(arg, &item)) {
-		    if (!load_regis_extent(fragment_to_tempstr(&item),
-					   ref_x, ref_y,
-					   &ref_x, &ref_y)) {
+		    if (!load_regis_coord_extent(context,
+						 fragment_to_tempstr(&item),
+						 ref_x, ref_y,
+						 &ref_x, &ref_y)) {
 			TRACE(("DATA_ERROR: unable to parse extent in write shading option '%c': \"%s\"\n",
 			       option, fragment_to_tempstr(&item)));
 			return 0;
@@ -3750,7 +3957,8 @@ load_regis_write_control_set(RegisParseState *state,
     char option;
 
     while (controls->pos < controls->len) {
-	skip_regis_whitespace(controls);
+	if (skip_regis_whitespace(controls))
+	    continue;
 
 	if (extract_regis_parenthesized_data(controls, &optionset)) {
 	    TRACE(("got write control optionset: \"%s\"\n",
@@ -3884,20 +4092,31 @@ init_regis_alphabets(RegisGraphicsContext *context)
 }
 
 static void
-init_regis_graphics_context(int terminal_id, RegisGraphicsContext *context)
+init_regis_graphics_context(int terminal_id, int width, int height,
+			    unsigned max_colors, const char *builtin_font,
+			    RegisGraphicsContext *context)
 {
+    context->graphic = NULL;
     context->terminal_id = terminal_id;
+    context->width = width;
+    context->height = height;
+    context->x_off = 0;
+    context->y_off = 0;
+    context->x_div = width - 1;
+    context->y_div = height - 1;
     /*
      * Generate a mask covering all valid color register address bits
      * (but don't bother past 2**16).
      */
-    context->all_planes = (unsigned) context->graphic->valid_registers;
+    context->all_planes = max_colors;
     context->all_planes--;
     context->all_planes |= 1U;
     context->all_planes |= context->all_planes >> 1U;
     context->all_planes |= context->all_planes >> 2U;
     context->all_planes |= context->all_planes >> 4U;
     context->all_planes |= context->all_planes >> 8U;
+
+    context->builtin_font = builtin_font;
 
     init_regis_write_controls(terminal_id, context->all_planes,
 			      &context->persistent_write_controls);
@@ -4251,26 +4470,26 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	    switch (state->curve_mode) {
 	    case CURVE_POSITION_CLOSED_CURVE:
 		{
-		    int i;
+		    unsigned i;
 
 #ifdef DEBUG_SPLINE_POINTS
 		    printf("points: \n");
-		    for (i = 0; i < (int) state->num_points; i++)
+		    for (i = 0; i < state->num_points; i++)
 			printf("  %d,%d\n",
 			       state->x_points[i], state->y_points[i]);
 #endif
 
 #ifdef DEBUG_SPLINE_WITH_ROTATION
 		    {
-			static int shift = 0;
+			static unsigned shift = 0;
 			int temp_x[MAX_CURVE_POINTS], temp_y[MAX_CURVE_POINTS];
 			shift++;
 			shift = shift % state->num_points;
-			for (i = 0; i < (int) state->num_points; i++) {
+			for (i = 0; i < state->num_points; i++) {
 			    temp_x[i] = state->x_points[i];
 			    temp_y[i] = state->y_points[i];
 			}
-			for (i = 0; i < (int) state->num_points; i++) {
+			for (i = 0; i < state->num_points; i++) {
 			    state->x_points[i] =
 				temp_x[(i + shift) % state->num_points];
 			    state->y_points[i] =
@@ -4279,21 +4498,21 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 #ifdef DEBUG_SPLINE_POINTS
 			printf("after shift %d: \n", shift);
-			for (i = 0; i < (int) state->num_points; i++)
+			for (i = 0; i < state->num_points; i++)
 			    printf("  %d,%d\n",
 				   state->x_points[i], state->y_points[i]);
 #endif
 		    }
 #endif
 
-		    for (i = (int) state->num_points; i > 0; i--) {
+		    for (i = state->num_points; i > 0; i--) {
 			state->x_points[i] = state->x_points[i - 1];
 			state->y_points[i] = state->y_points[i - 1];
 		    }
 		    state->x_points[0] = state->x_points[state->num_points];
 		    state->y_points[0] = state->y_points[state->num_points];
 		    state->num_points++;
-		    for (i = (int) state->num_points; i > 0; i--) {
+		    for (i = state->num_points; i != 0; i--) {
 			state->x_points[i] = state->x_points[i - 1];
 			state->y_points[i] = state->y_points[i - 1];
 		    }
@@ -4313,7 +4532,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 #endif
 #ifdef DEBUG_SPLINE_POINTS
 		    printf("after points added: \n");
-		    for (i = 0; i < (int) state->num_points; i++)
+		    for (i = 0; i < state->num_points; i++)
 			printf("  %d,%d\n",
 			       state->x_points[i], state->y_points[i]);
 #endif
@@ -4525,14 +4744,17 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		if (skip_regis_whitespace(&optionarg))
 		    continue;
+
 		if (extract_regis_extent(&optionarg, &sizearg)) {
 		    int w, h;
 		    unsigned size;
 
 		    TRACE(("glyph size: %s\n",
 			   fragment_to_tempstr(&sizearg)));
-		    if (!load_regis_extent(fragment_to_tempstr(&sizearg), 0, 0,
-					   &w, &h)) {
+		    /* FIXME: verify this is in pixels, not user coordinates */
+		    if (!load_regis_pixel_extent(fragment_to_tempstr(&sizearg),
+						 0, 0,
+						 &w, &h)) {
 			TRACE(("DATA_ERROR: unable to parse extent in glyph size option: \"%s\"\n",
 			       fragment_to_tempstr(&sizearg)));
 			break;
@@ -4886,13 +5108,99 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 	switch (state->option) {
 	case 'A':
 	case 'a':
-	    TRACE(("found address definition \"%s\" FIXME\n",
+	    TRACE(("found address definition \"%s\"\n",
 		   fragment_to_tempstr(&optionarg)));
-	    /* FIXME: handle */
-	    if (!fragment_len(&optionarg)) {
-		TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition option value \"%s\"\n",
-		       fragment_to_tempstr(&optionarg)));
-		return 1;
+	    {
+		RegisDataFragment address_extent;
+		int got_ul = 0;
+		int got_lr = 0;
+		int ulx = 0, uly = 0, lrx = 0, lry = 0;
+
+		while (fragment_len(&optionarg)) {
+		    if (skip_regis_whitespace(&optionarg))
+			continue;
+
+		    if (extract_regis_extent(&optionarg, &address_extent)) {
+			int x, y;
+
+			/* FIXME: are relative values supposed to be handled? */
+			if (!load_regis_pixel_extent(fragment_to_tempstr(&address_extent),
+						     0, 0, &x, &y)) {
+			    TRACE(("DATA_ERROR: unable to parse extent in address definition: \"%s\"\n",
+				   fragment_to_tempstr(&address_extent)));
+			    break;
+			}
+
+			if (!got_ul) {
+			    ulx = x;
+			    uly = y;
+			    got_ul = 1;
+			} else if (!got_lr) {
+			    lrx = x;
+			    lry = y;
+			    got_lr = 1;
+			} else {
+			    TRACE(("DATA_ERROR: ignoring extra extent argument in address definition: \"%s\"\n",
+				   fragment_to_tempstr(&address_extent)));
+			}
+			continue;
+		    }
+
+		    TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition: expected extent argument but found: \"%s\"\n",
+			   fragment_to_tempstr(&optionarg)));
+		    return 1;
+		}
+
+		if (!got_ul || !got_lr) {
+		    TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition: one or both locations missing in definition\n"));
+		    return 1;
+		}
+		if (ulx == lrx || uly == lry) {
+		    TRACE(("DATA_ERROR: ignoring malformed ReGIS screen address definition: one or both dimensions are zero: ul=%d,%d lr=%d,%d\n",
+			   ulx, uly, lrx, lry));
+		    return 1;
+		} {
+		    const int cw = abs(ulx - lrx) + 1;
+		    const int ch = abs(uly - lry) + 1;
+		    int scale;
+		    int width, height;
+
+		    width = cw;
+		    height = ch;
+
+		    scale = 1;
+		    while (width * scale < 200 ||
+			   height * scale < 200) {
+			scale++;
+		    }
+		    width *= scale;
+		    height *= scale;
+
+		    scale = 1;
+		    while (width / scale > context->graphic->max_width ||
+			   height / scale > context->graphic->max_height) {
+			scale++;
+		    }
+		    width /= scale;
+		    height /= scale;
+
+		    TRACE(("custom screen address: ul=%d,%d lr=%d,%d\n",
+			   ulx, uly, lrx, lry));
+
+		    context->x_off = ulx;
+		    context->y_off = uly;
+		    context->x_div = lrx - ulx;
+		    context->y_div = lry - uly;
+		    context->width = width;
+		    context->height = height;
+		    context->graphic->actual_width = width;
+		    context->graphic->actual_height = height;
+
+		    TRACE(("conversion factors: off=%+d,%+d div=%+d,%+d width=%d, height=%d\n",
+			   context->x_off, context->y_off,
+			   context->x_div, context->y_div,
+			   context->width, context->height));
+		}
 	    }
 	    break;
 	case 'C':
@@ -4915,10 +5223,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		       fragment_to_tempstr(&optionarg)));
 		return 1;
 	    }
-	    draw_solid_rectangle(context->graphic, 0, 0,
-				 context->graphic->actual_width,
-				 context->graphic->actual_height,
-				 context->background);
+	    DRAW_ALL(context, context->background);
 	    break;
 	case 'F':
 	case 'f':
@@ -4930,10 +5235,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		return 1;
 	    }
 	    /* We aren't going to print anything so no need to deduplicate. */
-	    draw_solid_rectangle(context->graphic, 0, 0,
-				 context->graphic->actual_width,
-				 context->graphic->actual_height,
-				 context->background);
+	    DRAW_ALL(context, context->background);
 	    break;
 	case 'H':
 	case 'h':
@@ -4968,6 +5270,7 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		while (fragment_len(&optionarg)) {
 		    if (skip_regis_whitespace(&optionarg))
 			continue;
+
 		    if (extract_regis_num(&optionarg, &regnum)) {
 			int register_num;
 			int color_only;
@@ -5304,8 +5607,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("size multiplier: %s\n",
 		       fragment_to_tempstr(&sizemultiplierarg)));
-		if (!load_regis_extent(fragment_to_tempstr(&sizemultiplierarg),
-				       0, 0, &ww, &hh)) {
+		/* FIXME: verify this is in pixels, not user coordinates */
+		if (!load_regis_pixel_extent(fragment_to_tempstr(&sizemultiplierarg),
+					     0, 0, &ww, &hh)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->option, fragment_to_tempstr(&sizemultiplierarg)));
 		    break;
@@ -5354,8 +5658,9 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 
 		    TRACE(("custom display size: %s\n",
 			   fragment_to_tempstr(&displaysizearg)));
-		    if (!load_regis_extent(fragment_to_tempstr(&displaysizearg),
-					   0, 0, &disp_w, &disp_h)) {
+		    /* FIXME: verify this is in pixels, not user coordinates */
+		    if (!load_regis_pixel_extent(fragment_to_tempstr(&displaysizearg),
+						 0, 0, &disp_w, &disp_h)) {
 			TRACE(("DATA_ERROR: unable to parse extent in text display size option: \"%s\"\n",
 			       fragment_to_tempstr(&displaysizearg)));
 			break;
@@ -5453,8 +5758,10 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 		}
 		TRACE(("unitsize cell size: %s\n",
 		       fragment_to_tempstr(&unitsizearg)));
-		if (!load_regis_extent(fragment_to_tempstr(&unitsizearg), 0, 0,
-				       &unit_w, &unit_h)) {
+		/* FIXME: verify this is in pixels, not user coordinates */
+		if (!load_regis_pixel_extent(fragment_to_tempstr(&unitsizearg),
+					     0, 0,
+					     &unit_w, &unit_h)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->option, fragment_to_tempstr(&unitsizearg)));
 		    break;
@@ -5648,9 +5955,10 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		    orig_x = context->graphics_output_cursor_x;
 		    orig_y = context->graphics_output_cursor_y;
 		}
-		if (!load_regis_extent(fragment_to_tempstr(&item),
-				       orig_x, orig_y,
-				       &new_x, &new_y)) {
+		if (!load_regis_coord_extent(context,
+					     fragment_to_tempstr(&item),
+					     orig_x, orig_y,
+					     &new_x, &new_y)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
@@ -5695,32 +6003,27 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 					   &e_x_final, &e_y_final);
 
 #ifdef DEBUG_ARC_CENTER
-			draw_solid_pixel(context->graphic, c_x + 1, c_y, 3U);
-			draw_solid_pixel(context->graphic, c_x - 1, c_y, 3U);
-			draw_solid_pixel(context->graphic, c_x, c_y + 1, 3U);
-			draw_solid_pixel(context->graphic, c_x, c_y - 1, 3U);
-			draw_solid_pixel(context->graphic, c_x, c_y, 3U);
+			DRAW_PIXEL(context, c_x + 1, c_y, 3U);
+			DRAW_PIXEL(context, c_x - 1, c_y, 3U);
+			DRAW_PIXEL(context, c_x, c_y + 1, 3U);
+			DRAW_PIXEL(context, c_x, c_y - 1, 3U);
+			DRAW_PIXEL(context, c_x, c_y, 3U);
 #endif
 
 #ifdef DEBUG_ARC_START
-			draw_solid_pixel(context->graphic, e_x + 1, e_y, 2U);
-			draw_solid_pixel(context->graphic, e_x - 1, e_y, 2U);
-			draw_solid_pixel(context->graphic, e_x, e_y + 1, 2U);
-			draw_solid_pixel(context->graphic, e_x, e_y - 1, 2U);
-			draw_solid_pixel(context->graphic, e_x, e_y, 2U);
+			DRAW_PIXEL(context, e_x + 1, e_y, 2U);
+			DRAW_PIXEL(context, e_x - 1, e_y, 2U);
+			DRAW_PIXEL(context, e_x, e_y + 1, 2U);
+			DRAW_PIXEL(context, e_x, e_y - 1, 2U);
+			DRAW_PIXEL(context, e_x, e_y, 2U);
 #endif
 
 #ifdef DEBUG_ARC_END
-			draw_solid_pixel(context->graphic, e_x_final + 1,
-					 e_y_final + 1, 1U);
-			draw_solid_pixel(context->graphic, e_x_final + 1,
-					 e_y_final - 1, 1U);
-			draw_solid_pixel(context->graphic, e_x_final - 1,
-					 e_y_final + 1, 1U);
-			draw_solid_pixel(context->graphic, e_x_final - 1,
-					 e_y_final - 1, 1U);
-			draw_solid_pixel(context->graphic, e_x_final,
-					 e_y_final, 1U);
+			DRAW_PIXEL(context, e_x_final + 1, e_y_final + 1, 1U);
+			DRAW_PIXEL(context, e_x_final + 1, e_y_final - 1, 1U);
+			DRAW_PIXEL(context, e_x_final - 1, e_y_final + 1, 1U);
+			DRAW_PIXEL(context, e_x_final - 1, e_y_final - 1, 1U);
+			DRAW_PIXEL(context, e_x_final, e_y_final, 1U);
 #endif
 
 			if (state->curve_mode == CURVE_POSITION_ARC_CENTER) {
@@ -5759,11 +6062,12 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 	    break;
 	case 'p':
 	    /* FIXME TRACE(("DATA_ERROR: ignoring pen command with no location\n")); */
-	    if (!load_regis_extent(fragment_to_tempstr(&item),
-				   context->graphics_output_cursor_x,
-				   context->graphics_output_cursor_y,
-				   &context->graphics_output_cursor_x,
-				   &context->graphics_output_cursor_y)) {
+	    if (!load_regis_coord_extent(context,
+					 fragment_to_tempstr(&item),
+					 context->graphics_output_cursor_x,
+					 context->graphics_output_cursor_y,
+					 &context->graphics_output_cursor_x,
+					 &context->graphics_output_cursor_y)) {
 		TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 		       state->command, fragment_to_tempstr(&item)));
 		break;
@@ -5778,32 +6082,37 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		int new_x, new_y;
 		int copy_w, copy_h;
 
-		if (!load_regis_extent(fragment_to_tempstr(&item),
-				       0, 0, &new_x, &new_y)) {
+		if (!load_regis_coord_extent(context,
+					     fragment_to_tempstr(&item),
+					     0, 0, &new_x, &new_y)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
 		}
-		TRACE(("scrolling image to location %d,%d\n", new_x, new_y));
-		/* FIXME: does any write mode (like mode) affect background? */
+		TRACE(("scrolling image to coordinates %d,%d\n", new_x, new_y));
+		new_x -= context->x_off;
+		new_y -= context->y_off;
+		TRACE(("scrolling image to buffer location %d,%d\n", new_x, new_y));
+		/* FIXME: does any write mode affect background? */
 		if (new_y < 0)
-		    copy_h = context->graphic->actual_height - new_y;
+		    copy_h = context->height - new_y;
 		else
-		    copy_h = context->graphic->actual_height;
+		    copy_h = context->height;
 		if (new_x < 0)
-		    copy_w = context->graphic->actual_width - new_x;
+		    copy_w = context->width - new_x;
 		else
-		    copy_w = context->graphic->actual_width;
+		    copy_w = context->width;
 		copy_overlapping_area(context->graphic, 0, 0, new_x, new_y,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
 	    }
 	    break;
 	case 't':
-	    if (!load_regis_extent(fragment_to_tempstr(&item),
-				   0, 0,
-				   &context->current_text_controls->character_inc_x,
-				   &context->current_text_controls->character_inc_y)) {
+	    /* FIXME: verify this is in pixels, not user coordinates */
+	    if (!load_regis_pixel_extent(fragment_to_tempstr(&item),
+					 0, 0,
+					 &context->current_text_controls->character_inc_x,
+					 &context->current_text_controls->character_inc_y)) {
 		TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 		       state->command, fragment_to_tempstr(&item)));
 		break;
@@ -5818,10 +6127,11 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 
 		orig_x = context->graphics_output_cursor_x;
 		orig_y = context->graphics_output_cursor_y;
-		if (!load_regis_extent(fragment_to_tempstr(&item),
-				       orig_x, orig_y,
-				       &context->graphics_output_cursor_x,
-				       &context->graphics_output_cursor_y)) {
+		if (!load_regis_coord_extent(context,
+					     fragment_to_tempstr(&item),
+					     orig_x, orig_y,
+					     &context->graphics_output_cursor_x,
+					     &context->graphics_output_cursor_y)) {
 		    TRACE(("DATA_ERROR: unable to parse extent in '%c' command: \"%s\"\n",
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
@@ -5880,16 +6190,19 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 			   state->command, fragment_to_tempstr(&item)));
 		    break;
 		}
-		TRACE(("scrolling image to location %d,%d\n", new_x, new_y));
-		/* FIXME: does any write mode (like mode) affect background? */
+		TRACE(("scrolling image to coordinates %d,%d\n", new_x, new_y));
+		new_x -= context->x_off;
+		new_y -= context->y_off;
+		TRACE(("scrolling image to buffer location %d,%d\n", new_x, new_y));
+		/* FIXME: does any write mode affect background? */
 		if (new_y < 0)
-		    copy_h = context->graphic->actual_height - new_y;
+		    copy_h = context->height - new_y;
 		else
-		    copy_h = context->graphic->actual_height;
+		    copy_h = context->height;
 		if (new_x < 0)
-		    copy_w = context->graphic->actual_width - new_x;
+		    copy_w = context->width - new_x;
 		else
-		    copy_w = context->graphic->actual_width;
+		    copy_w = context->width;
 		copy_overlapping_area(context->graphic, 0, 0, new_x, new_y,
 				      (unsigned) copy_w, (unsigned) copy_h,
 				      context->background);
@@ -6215,7 +6528,7 @@ void
 parse_regis(XtermWidget xw, ANSI *params, char const *string)
 {
     TScreen *screen = TScreenOf(xw);
-    RegisGraphicsContext context;
+    RegisGraphicsContext *const context = &persistent_context;
     RegisParseState state;
     struct timeval prev_tv;
     struct timeval curr_tv;
@@ -6223,9 +6536,15 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     int charrow = 0;
     int charcol = 0;
     unsigned type = 1;		/* FIXME: use page number */
+    int Pmode;
 
-    (void) params;		/* ..only used here in a trace */
-    TRACE(("ReGIS vector graphics mode, params=%d\n", params->a_nparam));
+    if (params->a_nparam > 0)
+	Pmode = params->a_param[0];
+    else
+	Pmode = 0;
+
+    TRACE(("ReGIS vector graphics mode, param_count=%d mode=%d\n",
+	   params->a_nparam, Pmode));
 
     init_fragment(&state.input, string);
     state.templen = (unsigned) strlen(string) + 1U;
@@ -6239,26 +6558,30 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     state.stack_next = 0U;
     state.load_index = MAX_REGIS_ALPHABETS;
 
-    memset(&context, 0, sizeof(context));
-
     /* Update the screen scrolling and do a refresh.
      * The refresh may not cover the whole graphic.
      */
     if (screen->scroll_amt)
 	FlushScroll(xw);
 
-    context.graphic = get_new_or_matching_graphic(xw,
-						  charrow, charcol,
-						  screen->regis_max_wide,
-						  screen->regis_max_high,
-						  type);
-    /*
-     * FIXME: Don't initialize parameters for continued command mode,
-     * or when reusing the same graphic.
-     */
-    init_regis_graphics_context(screen->terminal_id, &context);
-    context.graphic->valid = 1;
-    context.graphic->dirty = 1;
+    /* Only reset on the first ReGIS image unless it is being requested. */
+    if (context->width == 0 || context->height == 0 ||
+	Pmode == 1 || Pmode == 3) {
+	init_regis_graphics_context(screen->terminal_id,
+				    screen->graphics_regis_def_wide,
+				    screen->graphics_regis_def_high,
+				    get_color_register_count(screen),
+				    screen->graphics_regis_default_font,
+				    context);
+    }
+
+    context->graphic = get_new_or_matching_graphic(xw,
+						   charrow, charcol,
+						   context->width,
+						   context->height,
+						   type);
+    context->graphic->valid = 1;
+    context->graphic->dirty = 1;
 
     X_GETTIMEOFDAY(&prev_tv);
     iterations = 0U;
@@ -6268,7 +6591,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 	if (skip_regis_whitespace(&state.input))
 	    continue;
 	iterations++;
-	if (parse_regis_toplevel(&state, &context)) {
+	if (parse_regis_toplevel(&state, context)) {
 	    if (iterations > MIN_ITERATIONS_BEFORE_REFRESH) {
 		int need_refresh = 0;
 

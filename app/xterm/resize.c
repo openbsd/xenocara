@@ -1,4 +1,4 @@
-/* $XTermId: resize.c,v 1.132 2014/07/24 22:47:09 tom Exp $ */
+/* $XTermId: resize.c,v 1.133 2014/12/28 22:50:41 tom Exp $ */
 
 /*
  * Copyright 2003-2013,2014 by Thomas E. Dickey
@@ -554,8 +554,8 @@ main(int argc, char **argv ENVP_ARG)
 	i = (int) (ptr - termcap) + 3;
 	strncpy(newtc, termcap, (size_t) i);
 	sprintf(newtc + i, "%d", cols);
-	ptr = strchr(ptr, ':');
-	strcat(newtc, ptr);
+	if ((ptr = strchr(ptr, ':')) != 0)
+	    strcat(newtc, ptr);
 
 	/* now do lines */
 	if ((ptr = x_strindex(newtc, "li#")) == NULL) {
@@ -566,8 +566,8 @@ main(int argc, char **argv ENVP_ARG)
 	i = (int) (ptr - newtc) + 3;
 	strncpy(termcap, newtc, (size_t) i);
 	sprintf(termcap + i, "%d", rows);
-	ptr = strchr(ptr, ':');
-	strcat(termcap, ptr);
+	if ((ptr = strchr(ptr, ':')) != 0)
+	    strcat(termcap, ptr);
     }
 #endif /* USE_TERMCAP */
 

@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.586 2014/11/28 22:33:56 tom Exp $
+.\" $XTermId: xterm.man,v 1.587 2014/12/17 10:10:02 tom Exp $
 .\"
 .\" Copyright 1996-2013,2014 by Thomas E. Dickey
 .\"
@@ -427,12 +427,12 @@ set the amount of time text cursor is on when blinking via the
 .TP 8
 .B "\-bdc"
 Set the \fIvt100\fP resource \fBcolorBDMode\fR to \*(``false\*('',
-disabling the display of characters with bold attribute as color
+disabling the display of characters with bold attribute as color.
 .TP 8
 .B "+bdc"
 Set the \fIvt100\fP resource \fBcolorBDMode\fR to \*(``true\*('',
 enabling the display of characters with bold attribute as color
-rather than bold
+rather than bold.
 .TP 8
 .B "\-cb"
 Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to \*(``false\*(''.
@@ -692,6 +692,15 @@ For instance, there are scripts for Tcl/Tk and Gtk which can be used
 to demonstrate the feature.
 When using Gtk, there is a limitation of that toolkit which requires
 that \fI\*n\fP's \fBallowSendEvents\fP resource is enabled.
+.TP 8
+.B "\-itc"
+Set the \fIvt100\fP resource \fBcolorITMode\fR to \*(``false\*('',
+disabling the display of characters with italic attribute as italic.
+.TP 8
+.B "+itc"
+Set the \fIvt100\fP resource \fBcolorITMode\fR to \*(``true\*('',
+enabling the display of characters with italic attribute as color
+rather than italic.
 .TP 8
 .B \-j
 This option indicates that \fI\*n\fP should do jump scrolling.
@@ -2344,6 +2353,26 @@ Specifies whether characters with the blink attribute should be displayed in
 color.
 Note that setting \fBcolorMode\fR off disables all colors, including this.
 The default is \*(``false\*(''.
+.TP 8
+.B "colorIT (\fPclass\fB ColorIT)"
+This specifies the color to use to display italic characters if
+the \*(``colorITMode\*('' resource is enabled.
+The default is \*(``XtDefaultForeground\*(''.
+.IP
+See also the \fBveryBoldColors\fP resource which allows combining attributes and color.
+.TP 8
+.B "colorITMode (\fPclass\fB ColorAttrMode)"
+Specifies whether characters with the italic attribute should be displayed in
+color or as italic characters.
+The default is \*(``false\*(''.
+.IP
+Note that:
+.RS
+.bP
+Setting \fBcolorMode\fR off disables all colors, including italic.
+.bP
+The \fBitalicULMode\fP resource overrides \fBcolorITMode\fP. 
+.RE
 .TP 8
 .B "colorMode (\fPclass\fB ColorMode)"
 Specifies whether or not recognition of ANSI (ISO-6429)
@@ -4096,14 +4125,19 @@ The default is \*(``false\*(''.
 .TP 8
 .B "veryBoldColors (\fPclass\fB VeryBoldColors)"
 Specifies whether to combine video attributes with colors specified by
-\fBcolorBD\fR, \fBcolorBL\fR, \fBcolorRV\fR and \fBcolorUL\fR.
+\fBcolorBD\fR,
+\fBcolorBL\fR,
+\fBcolorIT\fR,
+\fBcolorRV\fR, and
+\fBcolorUL\fR.
 The resource value is the sum of values for each attribute:
 .RS 10
 .nf
 1 for reverse,
 2 for underline,
-4 for bold and
-8 for blink.
+4 for bold,
+8 for blink, and
+512 for italic
 .fi
 .RE
 .IP

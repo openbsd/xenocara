@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.443 2014/09/03 23:58:53 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.445 2014/12/28 22:52:30 tom Exp $ */
 
 /*
  * Copyright 1998-2013,2014 by Thomas E. Dickey
@@ -1589,7 +1589,7 @@ xtermLoadItalics(XtermWidget xw)
 		FREE_STRING(dst.menu_font_names[n][m]); \
 		dst.menu_font_names[n][m] = x_strdup(src.menu_font_names[n][m]); \
 	    } \
-	    TRACE((".. " #dst ".menu_fonts_names[%d] = %s\n", n, dst.menu_font_names[n][fNorm])); \
+	    TRACE((".. " #dst ".menu_fonts_names[%d] = %s\n", n, NonNull(dst.menu_font_names[n][fNorm]))); \
 	}
 
 #define COPY_DEFAULT_FONTS(target, source) \
@@ -3569,9 +3569,9 @@ SetVTFont(XtermWidget xw,
 		SAVE_FNAME(f_wb, fWBold);
 #endif
 	    } else {
-		xtermLoadFont(xw,
-			      xtermFontName(screen->MenuFontName(oldFont)),
-			      doresize, oldFont);
+		(void) xtermLoadFont(xw,
+				     xtermFontName(screen->MenuFontName(oldFont)),
+				     doresize, oldFont);
 		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	    FREE_FNAME(f_n);
