@@ -15,14 +15,15 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: util.c,v 1.16 2012/11/09 03:52:02 okan Exp $
+ * $OpenBSD: util.c,v 1.17 2015/01/19 14:54:16 okan Exp $
  */
 
-#include <sys/param.h>
+#include <sys/types.h>
 #include <sys/queue.h>
 
 #include <err.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

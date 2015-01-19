@@ -16,15 +16,16 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.77 2014/09/07 19:27:30 okan Exp $
+ * $OpenBSD: menu.c,v 1.78 2015/01/19 14:54:16 okan Exp $
  */
 
-#include <sys/param.h>
+#include <sys/types.h>
 #include <sys/queue.h>
 
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>

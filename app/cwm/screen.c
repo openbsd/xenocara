@@ -15,14 +15,15 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.70 2014/10/08 15:31:01 okan Exp $
+ * $OpenBSD: screen.c,v 1.71 2015/01/19 14:54:16 okan Exp $
  */
 
-#include <sys/param.h>
+#include <sys/types.h>
 #include <sys/queue.h>
 
 #include <err.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

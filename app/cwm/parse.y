@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.60 2015/01/17 02:05:03 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.61 2015/01/19 14:54:16 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -21,7 +21,7 @@
 
 %{
 
-#include <sys/param.h>
+#include <sys/types.h>
 #include <sys/queue.h>
 
 #include <ctype.h>
