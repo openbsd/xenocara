@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.182 2015/01/19 14:54:16 okan Exp $
+ * $OpenBSD: conf.c,v 1.183 2015/01/23 20:26:36 okan Exp $
  */
 
 #include <sys/types.h>
@@ -96,7 +96,7 @@ conf_ignore(struct conf *c, const char *name)
 {
 	struct winname	*wn;
 
-	wn = xcalloc(1, sizeof(*wn));
+	wn = xmalloc(sizeof(*wn));
 	wn->name = xstrdup(name);
 	TAILQ_INSERT_TAIL(&c->ignoreq, wn, entry);
 }
