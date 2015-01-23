@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.189 2015/01/19 14:54:16 okan Exp $
+ * $OpenBSD: client.c,v 1.190 2015/01/23 19:35:11 okan Exp $
  */
 
 #include <sys/types.h>
@@ -63,7 +63,6 @@ client_init(Window win, struct screen_ctx *sc)
 {
 	struct client_ctx	*cc;
 	XWindowAttributes	 wattr;
-	long			 state;
 	int			 mapped;
 
 	if (win == None)
@@ -125,15 +124,15 @@ client_init(Window win, struct screen_ctx *sc)
 	/* Notify client of its configuration. */
 	client_config(cc);
 
-	if ((state = client_get_wm_state(cc)) < 0)
-		state = NormalState;
-
-	(state == IconicState) ? client_hide(cc) : client_unhide(cc);
-
 	TAILQ_INSERT_TAIL(&sc->clientq, cc, entry);
 
 	xu_ewmh_net_client_list(sc);
 	xu_ewmh_restore_net_wm_state(cc);
+
+	if (client_get_wm_state(cc) == IconicState)
+		client_hide(cc);
+	else
+		client_unhide(cc);
 
 	if (mapped)
 		group_autogroup(cc);
