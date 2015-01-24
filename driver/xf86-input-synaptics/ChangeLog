@@ -1,3 +1,141 @@
+commit d50c4bab8ae2836a0f38b29a5d22be2e950e4d08
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 18 07:40:13 2014 +1000
+
+    synaptics 1.8.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bdf6a6b2e2603142e62ae5968c65e6e26f57e51d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Sep 16 10:44:40 2014 +1000
+
+    Prohibit negative or zero x/y resolutions
+    
+    Default resolution is 1, don't allow setting 0 to avoid divisions by 0 or
+    just general weirdness.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 049611bd7f04e285909c55807478306cce83385f)
+
+commit 2dd60417450af4ac4f9938e09b06707dd91bddfb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 5 15:14:47 2014 +1000
+
+    When resetting, reset the open slots to -1
+    
+    open_slots holds the slot index, resetting it to 0 is a bad idea. And make
+    sure that we do reset after DEVICE_INIT. We already do so on DEVICE_CLOSE, but
+    after the first DEVICE_ON the data could still be random.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit afbbcfa10eb3a2295823720907f35bb59972dd82)
+
+commit 9de611219bebd9b101b98bb79cc0173115ee1833
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 5 14:24:29 2014 +1000
+
+    eventcomm: add missing axis labels to avoid array overrun
+    
+    And warn when we run out of labels.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit d239f831f17ccf5468f5dc6b2f199a9c1f6e35af)
+
+commit 36d7ee1c9d60752666a94ee4755b3a1d0f339164
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 28 14:13:38 2014 +1000
+
+    eventcomm: ensure we're on the same clock as the server
+    
+    Default on evdev devices is CLOCK_REALTIME. If that clock falls behind the
+    server's CLOCK_MONOTONIC, motion after a clickpad click may be delayed by the
+    difference in the clocks.
+    
+    In detail:
+    When the timer func is triggered, GetTimeInMillis() which is CLOCK_MONOTONIC,
+    is stored as hwState->millis. The eventcomm backend uses struct
+    input_event time (CLOCK_REALTIME).
+    
+    When we read events from the device, if the evdev time is less than the server
+    time, the fix for (#48777) sets the current event time to hwState->millis.
+    Until the evdev time overtakes that stored time, all events have the
+    hwState->millis time.
+    
+    If during that time a clickpad triggers a physical click,
+    clickpad_click_millis is set to hwState->millis + the ignore-motion timeout.
+    Thus, all motion is ignored until the event time overtakes that stored
+    time.
+    
+    The whole issue is further enhanced by us unconditionally setting the timer
+    func if we get any events, which is a separate issue anyway.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    (cherry picked from commit 90d19302306f49722e210227b2fb5161e6f51880)
+
+commit 475e0d3668097f4deb9448c8765dd12b3f15534f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 29 07:57:41 2014 +1000
+
+    Include xorg-server.h to fix build errors on newest glibc
+    
+    In file included from /usr/include/string.h:634:0,
+                     from /usr/include/xorg/os.h:53,
+                     from /usr/include/xorg/misc.h:115,
+                     from /usr/include/xorg/xf86str.h:37,
+                     from /usr/include/xorg/xf86Xinput.h:54,
+                     from synproto.h:36,
+                     from synproto.c:24:
+    /usr/include/xorg/os.h:579:1: error: expected identifier or '(' before '__extension__'
+     strndup(const char *str, size_t n);
+    
+    See http://lists.freedesktop.org/archives/xorg-devel/2014-July/043070.html
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 96e60a4ea242d2decf109835981ae186cc36f642)
+
+commit ae77fdfc8e57e612e8aa0e9b45bbea478a82c30b
+Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Date:   Sun Jul 27 12:58:18 2014 +0200
+
+    Prevent two-finger taps from being ignored
+    
+    When two fingers are used, the coordinates of only one of them is taken into
+    account. This can lead to sudden variations of the absolute coordinates when
+    two-fingers taps are performed if the finger considered changes.
+    
+    Take into account coordinates variations to prevent unwanted taps only if
+    the number of fingers doesn't change.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 7d0ff39519e4d3760722b914883bee276035061c)
+
+commit cbf0ca508a14201d2c25f96dd6f38cea2cb1954b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 6 12:04:14 2014 +1000
+
+    conf: increase top software button area to 15%
+    
+    We had reports that the top software button area is hard to hit for those
+    using the trackpoint and clicking the buttons with their thumb.
+    
+    Analysis of event recordings (3 different people) for left, right and middle
+    clicks shows that there is a significant amount of events up to about 10mm
+    (with outliers up to 12mm) from the top of the touchpad. That maps to 15%.
+    
+    Interestingly, the middle button does not seem to need this, presumably the
+    haptic feedback of the little dots sticking out from the surface make hitting
+    the button easier. Its size is increased to 15% anyway, for simplicity and
+    because a sample set of 3 is too small to be definitive about this.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    (cherry picked from commit 730101223432f60397c61f74a5e6789b3ee34ecd)
+
 commit 3a4cc96590ca0e0ff526a5e5406f29a402bddd1a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue May 13 11:20:25 2014 +1000

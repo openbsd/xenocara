@@ -292,7 +292,7 @@ WSConsReadDevDimensions(InputInfoPtr pInfo)
     case WSMOUSE_TYPE_SYNAP_SBTN:
         para->clickpad = TRUE;
         para->has_secondary_buttons = TRUE;
-    /* FALLTHROUGH */
+        /* FALLTHROUGH */
     case WSMOUSE_TYPE_SYNAPTICS:
         priv->model = MODEL_SYNAPTICS;
         priv->has_width = TRUE;

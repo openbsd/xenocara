@@ -27,6 +27,8 @@
 #ifndef _EVENTCOMM_H_
 #define _EVENTCOMM_H_
 
+#include <xorg-server.h>
+
 #include <linux/input.h>
 #include <linux/version.h>
 #include <xf86Xinput.h>

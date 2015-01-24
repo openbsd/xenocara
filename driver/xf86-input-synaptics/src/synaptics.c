@@ -772,6 +772,16 @@ set_default_parameters(InputInfoPtr pInfo)
         xf86SetIntOption(opts, "HorizResolution", horizResolution);
     pars->resolution_vert =
         xf86SetIntOption(opts, "VertResolution", vertResolution);
+    if (pars->resolution_horiz <= 0) {
+        xf86IDrvMsg(pInfo, X_ERROR,
+                    "Invalid X resolution, using 1 instead.\n");
+        pars->resolution_horiz = 1;
+    }
+    if (pars->resolution_vert <= 0) {
+        xf86IDrvMsg(pInfo, X_ERROR,
+                    "Invalid Y resolution, using 1 instead.\n");
+        pars->resolution_vert = 1;
+    }
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
@@ -1029,6 +1039,8 @@ error:
 static void
 SynapticsReset(SynapticsPrivate * priv)
 {
+    int i;
+
     SynapticsResetHwState(priv->hwState);
     SynapticsResetHwState(priv->local_hw_state);
     SynapticsResetHwState(priv->comm.hwState);
@@ -1058,7 +1070,9 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->prev_z = 0;
     priv->prevFingers = 0;
     priv->num_active_touches = 0;
-    memset(priv->open_slots, 0, priv->num_slots * sizeof(int));
+
+    for (i = 0; i < priv->num_slots; i++)
+        priv->open_slots[i] = -1;
 }
 
 static int
@@ -1354,6 +1368,8 @@ DeviceInit(DeviceIntPtr dev)
 
     InitDeviceProperties(pInfo);
     XIRegisterPropertyHandler(pInfo->dev, SetProperty, NULL, NULL);
+
+    SynapticsReset(priv);
 
     return Success;
 
@@ -1963,8 +1979,9 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             (priv->tap_max_fingers <=
              ((priv->horiz_scroll_twofinger_on ||
                priv->vert_scroll_twofinger_on) ? 2 : 1)) &&
-            ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
-             (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
+            (priv->prevFingers == hw->numFingers &&
+             ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
+              (abs(hw->y - priv->touch_on.y) >= para->tap_move))));
     press = (hw->left || hw->right || hw->middle);
 
     if (touch) {

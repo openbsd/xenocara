@@ -39,6 +39,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 #include "synproto.h"
 #include "synapticsstr.h"
 #include <xf86.h>
@@ -88,6 +89,8 @@ struct eventcomm_proto_data {
 
     struct libevdev *evdev;
     enum libevdev_read_flag read_flag;
+
+    int have_monotonic_clock;
 };
 
 static void
@@ -217,6 +220,7 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data =
         (struct eventcomm_proto_data *) priv->proto_data;
+    int ret;
 
     set_libevdev_log_handler();
 
@@ -238,7 +242,6 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
 
     if (para->grab_event_device) {
         /* Try to grab the event device so that data don't leak to /dev/input/mice */
-        int ret;
 
         ret = libevdev_grab(proto_data->evdev, LIBEVDEV_GRAB);
         if (ret < 0) {
@@ -249,6 +252,9 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
     }
 
     proto_data->need_grab = FALSE;
+
+    ret = libevdev_set_clock_id(proto_data->evdev, CLOCK_MONOTONIC);
+    proto_data->have_monotonic_clock = (ret == 0);
 
     InitializeTouch(pInfo);
 
@@ -686,7 +692,10 @@ EventReadHwState(InputInfoPtr pInfo,
             switch (ev.code) {
             case SYN_REPORT:
                 hw->numFingers = count_fingers(pInfo, comm);
-                hw->millis = 1000 * ev.time.tv_sec + ev.time.tv_usec / 1000;
+                if (proto_data->have_monotonic_clock)
+                    hw->millis = 1000 * ev.time.tv_sec + ev.time.tv_usec / 1000;
+                else
+                    hw->millis = GetTimeInMillis();
                 SynapticsCopyHwState(hwRet, hw);
                 return TRUE;
             }
@@ -836,7 +845,7 @@ event_query_touch(InputInfoPtr pInfo)
     if (priv->has_touch) {
         int axnum;
 
-        static const char *labels[] = {
+        static const char *labels[ABS_MT_MAX] = {
             AXIS_LABEL_PROP_ABS_MT_TOUCH_MAJOR,
             AXIS_LABEL_PROP_ABS_MT_TOUCH_MINOR,
             AXIS_LABEL_PROP_ABS_MT_WIDTH_MAJOR,
@@ -848,6 +857,9 @@ event_query_touch(InputInfoPtr pInfo)
             AXIS_LABEL_PROP_ABS_MT_BLOB_ID,
             AXIS_LABEL_PROP_ABS_MT_TRACKING_ID,
             AXIS_LABEL_PROP_ABS_MT_PRESSURE,
+            AXIS_LABEL_PROP_ABS_MT_DISTANCE,
+            AXIS_LABEL_PROP_ABS_MT_TOOL_X,
+            AXIS_LABEL_PROP_ABS_MT_TOOL_Y,
         };
 
         priv->max_touches = libevdev_get_num_slots(dev);
@@ -881,7 +893,13 @@ event_query_touch(InputInfoPtr pInfo)
                     break;
 
                 default:
-                    priv->touch_axes[axnum].label = labels[axis_idx];
+                    if (axis_idx >= sizeof(labels)/sizeof(labels[0])) {
+                        xf86IDrvMsg(pInfo, X_ERROR,
+                                    "Axis %d out of label range. This is a bug\n",
+                                    axis);
+                        priv->touch_axes[axnum].label = NULL;
+                    } else
+                        priv->touch_axes[axnum].label = labels[axis_idx];
                     priv->touch_axes[axnum].min = libevdev_get_abs_minimum(dev, axis);
                     priv->touch_axes[axnum].max = libevdev_get_abs_maximum(dev, axis);
                     /* Kernel provides units/mm, X wants units/m */

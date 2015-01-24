@@ -31,6 +31,8 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
+
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <xf86.h>

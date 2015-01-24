@@ -22,6 +22,8 @@
 #ifndef _PS2COMM_H_
 #define _PS2COMM_H_
 
+#include <xorg-server.h>
+
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include "xf86_OSproc.h"
