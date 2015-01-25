@@ -23,12 +23,13 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-mouse],
-        [1.9.0],
+        [1.9.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-mouse])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(.)
+AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -43,6 +44,9 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 XORG_WITH_LINT
+
+# Checks for library functions
+AC_CHECK_FUNCS([asprintf])
 
 # Obtain compiler/linker options from server and required extensions
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.7] xproto inputproto)

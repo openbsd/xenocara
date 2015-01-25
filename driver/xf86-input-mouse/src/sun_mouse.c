@@ -57,6 +57,7 @@
 #include "mouse.h"
 #include "xisb.h"
 #include "mipointer.h"
+#include "xf86Crtc.h"
 #include <sys/stropts.h>
 #include <sys/vuid_event.h>
 #include <sys/msio.h>
@@ -405,14 +406,11 @@ static void vuidMouseSendScreenSize(ScreenPtr pScreen, VuidMsePtr pVuidMse)
     ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
     int result;
 
-    if (!pScr->currentMode)
-        return;
-
-    if ((pVuidMse->absres.width != pScr->currentMode->HDisplay) ||
-        (pVuidMse->absres.height != pScr->currentMode->VDisplay))
+    if ((pVuidMse->absres.width != pScr->virtualX) ||
+        (pVuidMse->absres.height != pScr->virtualY))
     {
-        pVuidMse->absres.width = pScr->currentMode->HDisplay;
-        pVuidMse->absres.height = pScr->currentMode->VDisplay;
+        pVuidMse->absres.width = pScr->virtualX;
+        pVuidMse->absres.height = pScr->virtualY;
 
         do {
             result = ioctl(pInfo->fd, MSIOSRESOLUTION, &(pVuidMse->absres));
@@ -457,6 +455,24 @@ static void vuidMouseAdjustFrame(ADJUST_FRAME_ARGS_DECL)
           }
       }
 }
+
+static void vuidMouseCrtcNotify(ScreenPtr pScreen)
+{
+    xf86_crtc_notify_proc_ptr wrappedCrtcNotify
+        = (xf86_crtc_notify_proc_ptr) vuidMouseGetScreenPrivate(pScreen);
+    VuidMsePtr       m;
+    ScreenPtr        ptrCurScreen;
+
+    if (wrappedCrtcNotify)
+        wrappedCrtcNotify(pScreen);
+
+    for (m = vuidMouseList; m != NULL ; m = m->next) {
+        ptrCurScreen = miPointerGetScreen(m->pInfo->dev);
+        if (ptrCurScreen == pScreen) {
+            vuidMouseSendScreenSize(pScreen, m);
+        }
+    }
+}
 #endif /* HAVE_ABSOLUTE_MOUSE_SCALING */
 
 
@@ -492,8 +508,16 @@ vuidMouseProc(DeviceIntPtr pPointer, int what)
                 for (i = 0; i < screenInfo.numScreens; i++) {
                     ScreenPtr pScreen = screenInfo.screens[i];
                     ScrnInfoPtr pScrn = XF86SCRNINFO(pScreen);
-                    vuidMouseSetScreenPrivate(pScreen, pScrn->AdjustFrame);
-                    pScrn->AdjustFrame = vuidMouseAdjustFrame;
+                    if (xf86CrtcConfigPrivateIndex != -1) {
+                        xf86_crtc_notify_proc_ptr pCrtcNotify
+                            = xf86_wrap_crtc_notify(pScreen,
+                                                    vuidMouseCrtcNotify);
+                        vuidMouseSetScreenPrivate(pScreen, pCrtcNotify);
+                    } else {
+                        vuidMouseSetScreenPrivate(pScreen,
+                                                  pScrn->AdjustFrame);
+                        pScrn->AdjustFrame = vuidMouseAdjustFrame;
+                    }
                 }
             vuidMouseGeneration = serverGeneration;
         }

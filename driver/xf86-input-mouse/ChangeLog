@@ -1,3 +1,135 @@
+commit 6886084b192e681739fc55892f30681efb4f79f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 11 23:36:23 2014 -0700
+
+    xf86-input-mouse 1.9.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 252b15a2aeab5d7c843271caf4852df03d7a25eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 11 19:47:20 2014 -0700
+
+    Update some outdated language in a comment on obsolete hardware
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e83991474e9964917ea6ece5ad21d1bf56481dfa
+Author: Michael Thayer <michael.thayer@oracle.com>
+Date:   Thu Apr 24 10:32:17 2014 +0200
+
+    Make absolute input reporting in Solaris aware of resolution changes
+    
+    Currently on Solaris absolute input reporting only takes resolution changes
+    into account when the video driver is using the pre-RandR 1.2 APIs, and
+    there it uses the physical resolution, not the virtual.  This patch fixes
+    those two things.
+    
+    Signed-off-by: Michael Thayer <michael.thayer@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a1fb986cc5ace474b6f040179bd130d4ba6f78f
+Author: Michael Thayer <michael.thayer@oracle.com>
+Date:   Mon Mar 31 11:21:12 2014 +0200
+
+    Do not drop the result of protocol detection
+    
+    In MousePickProtocol() with protocol PROT_AUTO we probe for the protocol to
+    use but drop the result in most cases.  This was causing DEVICE_INIT and
+    DEVICE_ON to fail to be called with the VUID protocol.  Git history suggests
+    that this code was originally meant to cover both PS/2 auto-detection and OS-
+    specific detection, but that only the first case was implemented at the time.
+    Now that only the second is needed dropping the result to keep the protocol
+    as PROT_AUTO is presumably no longer useful and seems to actively breaking
+    things.
+    
+    Signed-off-by: Michael Thayer <michael.thayer@oracle.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e79eb64e50bf19d984a27af1dedaa78c1e77072
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Aug 19 19:30:37 2013 +0200
+
+    Add support for absolute positioning (tablets).
+    
+    From Pierre Pronchery <khorben@NetBSD.org>
+    and review comments by Daniel Stone <daniel@fooishbar.org>.
+    
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit b77a728904d5492163728762d4f363554edefba5
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Aug 19 11:14:33 2013 +0200
+
+    For wsmouse, keep 3-button emulation status.
+    
+    With a multiplexed device like wsmouse it does not make sense to
+    kill emulate3buttons on the first button-3-pressed event. The
+    button-3 pressed may belong to a mouse long gone and leave the
+    internal (two button only) mousepad useless.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    From Martin Husemann <martin@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit ae1a3d6072fea65a8a594f2614f47c43dd8dd267
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Aug 19 11:14:32 2013 +0200
+
+    Make wsmouse (re-)init the version.
+    
+    This makes sure that the xserver and the mouse speak the same
+    protocol version.
+    
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    From Matthew R. Green <mrg@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit e2cb94b0f3f555f4b1744d63caa587c804f942a2
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Mon Aug 19 11:14:30 2013 +0200
+
+    Enable MSE_MISC on NetBSD as well.
+    
+    Otherwise we can't find WSMouse.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    From Matthew R. Green <mrg@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit ea504b225f7cbedced9466bbf09ebfa43f39dcfb
+Author: Patrik Jakobsson <patrik.r.jakobsson@gmail.com>
+Date:   Sun Jan 5 18:57:28 2014 +0100
+
+    Add AC_SYSTEM_EXTENSIONS to expose asprintf with GNU libc
+    
+    As required by the following commit:
+    commit 8c75f6e1c117f3d05f0bc7bed34f0e7e933f3b9a
+    Use asprintf (or Xprintf on old servers) instead of strdup+sprintf
+    
+    Signed-off-by: Patrik Jakobsson <patrik.r.jakobsson@gmail.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8c75f6e1c117f3d05f0bc7bed34f0e7e933f3b9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 19 21:49:57 2013 -0700
+
+    Use asprintf (or Xprintf on old servers) instead of strdup+sprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d5de178fe9c20351ff400ff616ffbfe05471cdcc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 19 18:40:10 2013 -0700
+
+    Wrap some overly long lines
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 35cae8f4352002c8dce85dbc86cebb50e915a478
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Mar 27 10:59:05 2013 +1000
