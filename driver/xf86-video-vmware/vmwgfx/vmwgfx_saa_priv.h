@@ -100,6 +100,17 @@ vmwgfx_hw_composite_dst_stage(PixmapPtr pixmap,
 Bool
 vmwgfx_hw_commit(PixmapPtr pixmap);
 
+Bool
+vmwgfx_xa_surface_redefine(struct vmwgfx_saa_pixmap *vpix,
+			   struct xa_surface *srf,
+			   int width,
+			   int height,
+			   int depth,
+			   enum xa_surface_type stype,
+			   enum xa_formats rgb_format,
+			   unsigned int new_flags,
+			   int copy_contents);
+
 /*
  * vmwgfx_xa_composite.c
  */

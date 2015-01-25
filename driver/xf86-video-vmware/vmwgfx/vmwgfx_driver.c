@@ -54,6 +54,10 @@
 
 #include <pciaccess.h>
 
+#ifdef XSERVER_PLATFORM_BUS
+#include "xf86platformBus.h"
+#endif
+
 #include "vmwgfx_driver.h"
 
 #include <saa.h>
@@ -243,6 +247,15 @@ static const xf86CrtcConfigFuncsRec crtc_config_funcs = {
     .resize = drv_crtc_resize
 };
 
+static Bool vmwgfx_use_server_fd(modesettingPtr ms)
+{
+#ifdef XF86_PDEV_SERVER_FD
+    return ms->platform_dev && (ms->platform_dev->flags & XF86_PDEV_SERVER_FD);
+#else
+    return FALSE;
+#endif
+}
+
 static Bool
 drv_init_drm(ScrnInfoPtr pScrn)
 {
@@ -252,6 +265,12 @@ drv_init_drm(ScrnInfoPtr pScrn)
     if (ms->fd < 0) {
 
 	ms->fd = vmwgfx_hosted_drm_fd(ms->hdriver, ms->hosted, ms->PciInfo);
+
+#ifdef ODEV_ATTRIB_FD
+	if (ms->fd < 0 && vmwgfx_use_server_fd(ms))
+	    ms->fd = xf86_get_platform_device_int_attrib(ms->platform_dev,
+	                                                 ODEV_ATTRIB_FD, -1);
+#endif
 
 	if (ms->fd < 0) {
 
@@ -465,13 +484,18 @@ drv_pre_init(ScrnInfoPtr pScrn, int flags)
 
     pScrn->displayWidth = 640;	       /* default it */
 
-    if (ms->pEnt->location.type != BUS_PCI) {
+    ms->PciInfo = xf86GetPciInfoForEntity(ms->pEnt->index);
+    if (!ms->PciInfo) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Incorrect bus for device.\n");
 	goto out_err_bus;
     }
 
-    ms->PciInfo = xf86GetPciInfoForEntity(ms->pEnt->index);
+#ifdef XSERVER_PLATFORM_BUS
+    if (pEnt->location.type == BUS_PLATFORM)
+        ms->platform_dev = pEnt->location.id.plat;
+#endif
+
     xf86SetPrimInitDone(pScrn->entityList[0]);
 
     ms->hdriver = vmwgfx_hosted_detect();
@@ -605,7 +629,7 @@ drv_pre_init(ScrnInfoPtr pScrn, int flags)
     free(ms->Options);
   out_depth:
   out_drm_version:
-    if (!vmwgfx_is_hosted(ms->hdriver))
+    if (!vmwgfx_is_hosted(ms->hdriver) && !vmwgfx_use_server_fd(ms))
 	close(ms->fd);
   out_no_drm:
     vmwgfx_hosted_destroy(ms->hdriver, ms->hosted);
@@ -783,8 +807,8 @@ drv_set_master(ScrnInfoPtr pScrn)
 {
     modesettingPtr ms = modesettingPTR(pScrn);
 
-    if (!vmwgfx_is_hosted(ms->hdriver) && !ms->isMaster &&
-	drmSetMaster(ms->fd) != 0) {
+    if (!vmwgfx_is_hosted(ms->hdriver) && !vmwgfx_use_server_fd(ms) &&
+            !ms->isMaster && drmSetMaster(ms->fd) != 0) {
 	if (errno == EINVAL) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		       "drmSetMaster failed: 2.6.29 or newer kernel required for "
@@ -1184,7 +1208,8 @@ drv_leave_vt(VT_FUNC_ARGS_DECL)
 
     vmwgfx_saa_drop_master(pScrn->pScreen);
 
-    if (!vmwgfx_is_hosted(ms->hdriver) && drmDropMaster(ms->fd))
+    if (!vmwgfx_is_hosted(ms->hdriver) && !vmwgfx_use_server_fd(ms) &&
+            drmDropMaster(ms->fd))
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "drmDropMaster failed: %s\n", strerror(errno));
     ms->isMaster = FALSE;

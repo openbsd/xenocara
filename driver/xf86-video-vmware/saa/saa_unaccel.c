@@ -421,17 +421,20 @@ saa_check_poly_fill_rect_noreadback(DrawablePtr pDrawable, GCPtr pGC,
     if (!region)
 	goto out_no_region;
 
-    REGION_TRANSLATE(pGC->pScreen, region, xoff + pDrawable->x,
-		     yoff + pDrawable->y);
-
+    REGION_TRANSLATE(pGC->pScreen, region, pDrawable->x, pDrawable->y);
+    REGION_INTERSECT(pGC->pScreen, region, fbGetCompositeClip(pGC), region);
+    REGION_TRANSLATE(pGC->pScreen, region, xoff, yoff);
 
     access = SAA_ACCESS_W;
     if (saa_gc_reads_destination(pDrawable, pGC)) {
 	/*
 	 * We need to do a readback anyway. In case of more than an
-	 * ad hoc number of say 10 rectangles, we might as well do a
+	 * ad hoc number of say 4 rectangles, we might as well do a
 	 * readback of the whole damage area to avoid fragmentation.
 	 */
+	if (REGION_NUM_RECTS(region) > 4)
+	    goto out_no_access;
+
 	access |= SAA_ACCESS_R;
 	ret = saa_prepare_access_pixmap(pPixmap, access, region);
     } else
@@ -451,13 +454,8 @@ saa_check_poly_fill_rect_noreadback(DrawablePtr pDrawable, GCPtr pGC,
     saa_finish_access_pixmap(pPixmap, access);
 
     if (spix->damage) {
-	/*
-	 * Not sure why the region can be larger than the pending damage region
-	 * at this point, (happens on clipped-away drawables). To avoid potential
-	 * rendering problems, we clip to the pending damage region.
-	 */
-	REGION_INTERSECT(pGC->pScreen, region, region, saa_pix_damage_pending(spix));
-
+	REGION_INTERSECT(pGC->pScreen, region, region,
+			 saa_pix_damage_pending(spix));
 	saa_pixmap_dirty(pPixmap, FALSE, region);
     }
 
@@ -617,10 +615,32 @@ saa_check_copy_window(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
 	goto out_no_access;;
 
     if (saa_prepare_access_pixmap(pPixmap, SAA_ACCESS_W, NULL)) {
+	struct saa_pixmap *spix;
+	RegionRec rgnDst;
+
+	REGION_NULL(pScreen, &rgnDst);
+	REGION_COPY(pScreen, &rgnDst, prgnSrc);
+
 	saa_swap(sscreen, pScreen, CopyWindow);
 	pScreen->CopyWindow(pWin, ptOldOrg, prgnSrc);
 	saa_swap(sscreen, pScreen, CopyWindow);
-	saa_fad_write(pDrawable, SAA_ACCESS_W);
+	saa_finish_access_pixmap(pPixmap, SAA_ACCESS_W);
+
+	spix = saa_get_saa_pixmap(pPixmap);
+	if (spix->damage) {
+	    int dx, dy;
+
+	    dx = ptOldOrg.x - pWin->drawable.x;
+	    dy = ptOldOrg.y - pWin->drawable.y;
+	    REGION_TRANSLATE(pScreen, &rgnDst, -dx, -dy);
+	    REGION_INTERSECT(pSreen, &rgnDst, &pWin->borderClip, &rgnDst);
+	    REGION_TRANSLATE(pScreen, &rgnDst, xoff, yoff);
+
+	    REGION_INTERSECT(pScreen, &rgnDst, &rgnDst,
+			     saa_pix_damage_pending(spix));
+	    saa_pixmap_dirty(pPixmap, FALSE, &rgnDst);
+	}
+	REGION_UNINIT(pScreen, &rgnDst);
     }
     saa_fad_read(pDrawable);
  out_no_access:

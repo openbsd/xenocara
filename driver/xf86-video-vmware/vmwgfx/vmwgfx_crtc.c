@@ -193,6 +193,7 @@ crtc_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 	crtcp->entry.pixmap = pixmap;
 	crtcp->scanout_id = vmwgfx_scanout_ref(&crtcp->entry);
 	if (crtcp->scanout_id == -1) {
+	    crtcp->entry.pixmap = NULL;
 	    LogMessage(X_ERROR, "Failed to convert pixmap to scanout.\n");
 	    return FALSE;
 	}
@@ -211,6 +212,15 @@ crtc_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 			       crtc->gamma_blue, crtc->gamma_size);
     crtc->active = TRUE;
 #endif
+
+    /*
+     * Strictly, this needs to be done only once per configuration change,
+     * not once per crtc, but there's no better place to put this. Since
+     * Intel wrote the crtc code, let's do what the xf86-video-intel driver
+     * does.
+     */
+    if (pScreen)
+	xf86_reload_cursors(pScreen);
 
     return TRUE;
 }
@@ -276,6 +286,10 @@ crtc_set_cursor_position(xf86CrtcPtr crtc, int x, int y)
     modesettingPtr ms = modesettingPTR(crtc->scrn);
     struct crtc_private *crtcp = crtc->driver_private;
 
+    /* Seems like newer X servers try to move cursors without images */
+    if (!crtcp->cursor_bo)
+	return;
+
     drmModeMoveCursor(ms->fd, crtcp->drm_crtc->crtc_id, x, y);
 }
 
@@ -296,8 +310,11 @@ crtc_load_cursor_argb_kms(xf86CrtcPtr crtc, CARD32 * image)
     if (!crtcp->cursor_bo) {
 	size_t size = 64*64*4;
         crtcp->cursor_bo = vmwgfx_dmabuf_alloc(ms->fd, size);
-	if (!crtcp->cursor_bo)
+	if (!crtcp->cursor_bo) {
+	    xf86DrvMsg(crtc->scrn->scrnIndex, X_ERROR,
+		       "Failed to create a dmabuf for cursor.\n");
 	    return;
+	}
 	crtcp->cursor_handle = crtcp->cursor_bo->handle;
     }
 
@@ -305,6 +322,9 @@ crtc_load_cursor_argb_kms(xf86CrtcPtr crtc, CARD32 * image)
     if (ptr) {
 	memcpy(ptr, image, 64*64*4);
 	vmwgfx_dmabuf_unmap(crtcp->cursor_bo);
+    } else {
+	xf86DrvMsg(crtc->scrn->scrnIndex, X_ERROR,
+		   "Failed to map cursor dmabuf.\n");
     }
 
     if (crtc->cursor_shown)

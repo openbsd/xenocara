@@ -58,6 +58,10 @@
      ((GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) == 1) && \
       (GET_ABI_MINOR(ABI_VIDEODRV_VERSION) >= 2)))
 
+#if HAVE_FILLKEYHELPERDRAWABLE
+#include <damage.h>
+#endif
+
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
 /*
@@ -687,7 +691,12 @@ vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
 	int nBoxes = REGION_NUM_RECTS(&pVid->clipBoxes);
 
 #if HAVE_FILLKEYHELPERDRAWABLE
-	xf86XVFillKeyHelperDrawable(draw, pVid->colorKey, clipBoxes);
+	if (draw->type == DRAWABLE_WINDOW) {
+	    xf86XVFillKeyHelperDrawable(draw, pVid->colorKey, clipBoxes);
+	    DamageDamageRegion(draw, clipBoxes);
+	} else {
+	    xf86XVFillKeyHelper(pScrn->pScreen, pVid->colorKey, clipBoxes);
+        }
 #else
         xf86XVFillKeyHelper(pScrn->pScreen, pVid->colorKey, clipBoxes);
 #endif
@@ -789,7 +798,8 @@ vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
     struct PACKED _body {
         uint32 escape;
         uint32 streamId;
-        struct _item items[SVGA_VIDEO_NUM_REGS];
+        /* Old hosts can not handle more then these regs */
+        struct _item items[SVGA_VIDEO_DATA_GMRID];
     };
 
     struct PACKED _cmdSetRegs {
@@ -831,7 +841,7 @@ vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
     cmdSetRegs.body.streamId = pVid->streamId;
 
     items = cmdSetRegs.body.items;
-    for (i = SVGA_VIDEO_ENABLED; i < SVGA_VIDEO_NUM_REGS; i++) {
+    for (i = SVGA_VIDEO_ENABLED; i < SVGA_VIDEO_DATA_GMRID; i++) {
         items[i].regId = i;
     }
 

@@ -1,3 +1,384 @@
+commit 891ee48e4c1baa2643eda048b4207f8263a37dca
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Jan 19 11:23:50 2015 +0100
+
+    vmware: Bump version number for release
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 79289b0ffc553ded902eea7b8b9803b098f340e3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Dec 4 10:35:04 2014 -0500
+
+    saa: Adapt to GC client clip changes in xserver 1.17
+    
+    1.17 always stores the client clip as a region, so there's no longer a
+    clientClipType member to look at.  Change the code to just inspect
+    whether the clientClip is non-null, since that works both before and
+    after 1.17.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 4664412d7a5266d2b392957406b34abc5db95e48
+Author: Stefan Dirsch <sndirsch@suse.de>
+Date:   Tue Oct 7 11:29:32 2014 +0200
+
+    xf86xv.h cannot be included without first including xorg-server.h.
+    
+    Without this the build fails on systems with the latest glibc,
+    throwing this error:
+    
+    In file included from /usr/include/string.h:634:0,
+                     from /usr/include/xorg/os.h:53,
+                     from /usr/include/xorg/misc.h:115,
+                     from /usr/include/xorg/screenint.h:50,
+                     from /usr/include/xorg/scrnintstr.h:50,
+                     from /usr/include/xorg/xvdix.h:55,
+                     from /usr/include/xorg/xf86xv.h:32,
+                     from vmwgfx_overlay.c:38:
+    /usr/include/xorg/os.h:579:1: error: expected identifier or '(' before '__extension__'
+    strndup(const char *str, size_t n);
+    
+    This is caused by HAVE_STRNDUP not being set (it is set from xorg-server.h),
+    causing os.h to redefine it.
+    
+    Signed-off-by: Stefan Dirsch <sndirsch@suse.de>
+    Reviewed-by: Daniel Stone <daniels@collabora.com>
+    Acked-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 8e1c4e5bd521ec2d4f1a21da432f110c606b3fde
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Sep 22 12:09:13 2014 +0200
+
+    vmware/saa: Fix saa_check_poly_fill_rect_noreadback v2
+    
+    We were not clipping the dirty region correctly, Fix this.
+    Also actually do what the comment in the function says: If there are more than
+    an ad-hoc number of rectangles to read back, then revert to the default
+    saa_check_poly_fill_rect function that reads back the whole damage region.
+    
+    v2: Fix commit log message.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+    Reviewed-by: Sinclair Yeh <syeh@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit c23fd33d8ce8491891255d93c04e053bf333bd4e
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Sep 22 11:43:02 2014 +0200
+
+    vmware/saa: Fix saa_check_copy_window dirty region v3
+    
+    The saa_check_copy_window could dirty regions that were never touched, since
+    we were using the X server provided damage region rather than the more
+    detailed region actually copied. This would have been OK if we had first done
+    a read-back of the region to be dirtied, but since we want to avoid that,
+    instead compute the detailed destination region and use that for dirtying.
+    
+    This fixes rendering glitches seen with motif applications.
+    
+    v2: Fix whitespace error.
+    v3: Move dirty region computation.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+    Reviewed-by: Sinclair Yeh <syeh@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit f86434ac69bd288c7fba65d178c22a91a0f4f6c2
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Mon Sep 15 15:13:53 2014 +0200
+
+    Revert "vmware/saa: Disable the noreadback polyfillrect optimization"
+    
+    This reverts commit 88c487cb19aaf2882d582f7f887a52935ef8d92e.
+    
+    While the commit made the rendering artefacts less frequent, they didn't
+    disappear completely and are likely caused by something else, so revert this
+    commit.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Acked-by: Sinclair Yeh <syeh@vmware.com>
+
+commit 8545a166931617af0d2a9ca8175fd8b11c67e246
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue Sep 9 01:59:07 2014 -0700
+
+    vmware/vmwgfx: Fix cursor problem with multimon
+    
+    In a multimon environment, the cursor would sometimes disappear on the
+    newly enabled screen. Fix this.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 32562129750077a23f26f2e69adc8403eb24bf3f
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Sep 3 07:08:41 2014 -0700
+
+    vmware/vmwgfx: Don't add pixmaps to the pixmap list if they're already on it
+    
+    This could cause loops through the list to spin indefinitely.
+    This would most likely occur at VT switches.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 8b6316a312689d83ca8f8de939698bc137206f58
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Aug 28 15:32:45 2014 +0200
+
+    vmware/legacy: Fix overlay related compile breakage on earlier X servers
+    
+    Introduced by commit:
+    vmware/legacy: Apply same fix to auto colrkey fill
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 8a47e9a45036005d46a60cf8df366baffcb9a8d1
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Aug 28 13:43:03 2014 +0200
+
+    vmware: Fix bootstrap related compile errors on earlier X servers
+    
+    Introduced by commit
+    Add support for XSERVER_PLATFORM_BUS
+    
+    Note that the vmware DriverRec declaration can be cleaned up
+    considerably using C99 designated initializers. Perhaps something for
+    the next release...
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit f5d8c8f1fe2de727018600f471b6a8829fe492ad
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Aug 20 13:02:58 2014 +0200
+
+    vmware: Clear the PITCHLOCK register if available before modeset
+    
+    In some situations the fbdev driver may have set this register before legacy
+    driver startup causing a weird-looking desktop. Make sure this register
+    is cleared on each modeset.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit b1697434348799b0808a6c9e9a899394075b980c
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Thu Aug 14 16:42:05 2014 +0200
+
+    vmware/legacy: Fix out of bound array indexing
+    
+    Spotted by coverity.
+    
+    Reported-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 0825d98744b20a20af7bd81d347334ab4a1de015
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Sat Aug 9 00:19:17 2014 +0200
+
+    vmware/vmwgfx: Fix compilation issue on older X servers
+    
+    Introduced in 268307 "Add support for server managed fds"
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+
+commit 0a212afefd8670a1823c9b6474de8bf26d33bdeb
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Fri Aug 8 21:37:38 2014 +0200
+
+    vmware/legacy: Fix uninitialized values in video commands
+    
+    Fixed bug where video stopped working on systems that didn't have the new kms
+    enabled kernel driver installed. Found on CentOS 6.4.
+    
+    After updating the register header SVGA_VIDEO_NUM_REGS value got upped by two
+    in order to support GMR and Screen Objects. Since this path is mostly used
+    on older hosts that may not support them, don't send them at all.
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+
+commit 0a596fd0c92fdcf73071869a59029263a2596018
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Jul 2 14:21:45 2014 +0200
+
+    vmware/vmwgfx: Fix an error path segfault
+    
+    Part of freedesktop.org bugzilla bug #80645
+    If taking a scanout reference on a pixmap fails, the
+    struct vmwgfx_screen_entry::pixmap pointer must be set to NULL, otherwise
+    the driver will incorrectly attempt to remove the scanout reference in the
+    error path, causing a segfault.
+    
+    This problem is seen in the above-mentioned bug, but it is not the root
+    cause of the problem. With this patch applied, the server will terminate
+    cleanly instead of segfaulting.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 4e378a730d2d2deffc915af2a3d013d2a994a1b0
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Wed May 21 11:52:29 2014 +0200
+
+    vmware/legacy: Apply same fix to auto colorkey fill
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Thomas Hellström <thellstrom@vmware.com>
+
+commit 82c9b0c1d34459c568d004521e3f35a69f5d7ae3
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Wed May 21 11:51:46 2014 +0200
+
+    vmware/vmwgfx: Fix auto colorkey fill usage
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Thomas Hellström <thellstrom@vmware.com>
+
+commit 43e043868fbd74e28cd392a3665b36abdfe87de0
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Wed May 21 11:54:48 2014 +0200
+
+    vmware/vmwgfx: A bit more error logging when handling cursors
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Thomas Hellström <thellstrom@vmware.com>
+
+commit aa7309254808e27a4ac5d3dc674be179646280b5
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Wed May 21 11:54:24 2014 +0200
+
+    vmware/vmwgfx: Don't move cursors without images
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Thomas Hellström <thellstrom@vmware.com>
+
+commit e8d6facf34adf1c601a3afd0a984ce90ad8fe059
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue May 20 06:29:19 2014 -0700
+
+    vmware/vmwgfx: Fix xwayland build on newer XA versions
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 268307e85c06be27345a6808bcf2b3c9887bf8bc
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Tue May 6 16:33:21 2014 +0200
+
+    Add support for server managed fds
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 675fe58eee8acdb302c3501236b86a3289991053
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Tue May 6 16:00:50 2014 +0200
+
+    Add support for XSERVER_PLATFORM_BUS
+    
+    This is a preparation patch for adding support for server managed fds.
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 88c487cb19aaf2882d582f7f887a52935ef8d92e
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Fri May 9 09:35:59 2014 +0200
+
+    vmware/saa: Disable the noreadback polyfillrect optimization
+    
+    It causes rendering artefacts with some motif applications due to
+    damage area confusion. Until that is sorted out, temporarily disable the
+    optimization.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit f31eed4a578784329a7038aa01acaa10a2d0c246
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu May 8 09:24:04 2014 +0200
+
+    vmware/vmwgfx: Fix initial dirty region for pixmaps
+    
+    When storage is attached to pixmaps for the first time the dirty region is
+    set to cover either the hardware surface or the software buffer based on
+    the presence of the hardware surface.
+    
+    However, if the storage was created as part of an accelerated operation,
+    the dirty region was assigned before the hardware surface was assigned to the
+    pixmap, causing the dirty region to incorrectly cover the software buffer.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 1ed14687a3f1092db8504fb9cf4f446451801665
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Apr 10 14:05:24 2014 +0200
+
+    vmware/vmwgfx: Set desired modes after xMir screen init
+    
+    While XMir does initial mode configuration, it leaves setting initial
+    modes to the DDX driver.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+
+commit 64e0faf1480663a990e0f6aeef7af0e69845af49
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Apr 2 14:05:23 2014 +0200
+
+    vmware/vmwgfx: Don't tell XA that we have a mask when we haven't
+    
+    In some cases, the X server sends us a composit operation with
+    mask_pict != NULL, but mask_pix == NULL. Assume there's no mask
+    involved in that case.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Brian Paul <brianp@vmware.com>
+
+commit c062d08a50a26c99a3b8f565a8b2b00e8dc21c3f
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Jan 16 18:27:57 2014 +0100
+
+    vmware/vmwgfx: Don't change backing-store of active scanout surfaces
+    
+    With option "HwPresents" on, the driver would sometimes change backing
+    store of active scanout surfaces, making the kernel module refuse to
+    present. This was caused by scanout surfaces not having the RENDERTARGET flag
+    on by default. So when rendered to, using copies or composites, they
+    would be reallocated. Fix this by adding the RENDERTARGET flag from start.
+    
+    Also add code that prints out an error message when we change backing store
+    of active scanout surfaces
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit c42e1f750629f18144d065b8bba5e2eaf6cbf675
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Apr 1 10:11:13 2014 +0200
+
+    configure: fix build without xatracker
+    
+    ACTION-IF-NOT-FOUND is the fourth argument to PKG_CHECK_MODULES, not the
+    fifth.
+    
+    Debian bug#743239 <https://bugs.debian.org/743239>
+    
+    Reviewed-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
 commit cbd56b3759f01ec18ae0705d023e4c0b2ab38c25
 Author: Jakob Bornecrantz <jakob@vmware.com>
 Date:   Wed Mar 26 12:45:52 2014 +0100

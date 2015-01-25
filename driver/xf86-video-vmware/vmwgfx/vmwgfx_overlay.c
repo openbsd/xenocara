@@ -35,6 +35,7 @@
  */
 
 
+#include "xorg-server.h"
 #include "xf86xv.h"
 #include "fourcc.h"
 #define debug_printf(...)
@@ -162,7 +163,7 @@ struct vmwgfx_overlay_port
     int (*play)(ScrnInfoPtr, struct vmwgfx_overlay_port *,
                 short, short, short, short, short,
                 short, short, short, int, unsigned char*,
-                short, short, RegionPtr);
+                short, short, RegionPtr, DrawablePtr);
 
     /* values to go into the SVGAOverlayUnit */
     uint32 streamId;
@@ -217,13 +218,15 @@ static int vmw_video_port_init(ScrnInfoPtr pScrn,
                                short drw_y, short src_w, short src_h,
                                short drw_w, short drw_h, int format,
                                unsigned char *buf, short width,
-                               short height, RegionPtr clipBoxes);
+                               short height, RegionPtr clipBoxes,
+                               DrawablePtr pDraw);
 static int vmw_video_port_play(ScrnInfoPtr pScrn, struct vmwgfx_overlay_port *port,
                                short src_x, short src_y, short drw_x,
                                short drw_y, short src_w, short src_h,
                                short drw_w, short drw_h, int format,
                                unsigned char *buf, short width,
-                               short height, RegionPtr clipBoxes);
+                               short height, RegionPtr clipBoxes,
+                               DrawablePtr pDraw);
 static void vmw_video_port_cleanup(ScrnInfoPtr pScrn, struct vmwgfx_overlay_port *port);
 
 static int vmw_video_buffer_alloc(int drm_fd, int size,
@@ -380,7 +383,7 @@ vmw_video_port_init(ScrnInfoPtr pScrn, struct vmwgfx_overlay_port *port,
                     short drw_y, short src_w, short src_h,
                     short drw_w, short drw_h, int format,
                     unsigned char *buf, short width,
-                    short height, RegionPtr clipBoxes)
+                    short height, RegionPtr clipBoxes, DrawablePtr pDraw)
 {
     unsigned short w, h;
     int i, ret;
@@ -412,7 +415,7 @@ vmw_video_port_init(ScrnInfoPtr pScrn, struct vmwgfx_overlay_port *port,
     REGION_NULL(pScrn->pScreen, &port->clipBoxes);
     port->play = vmw_video_port_play;
     return port->play(pScrn, port, src_x, src_y, drw_x, drw_y, src_w, src_h,
-                      drw_w, drw_h, format, buf, width, height, clipBoxes);
+                      drw_w, drw_h, format, buf, width, height, clipBoxes, pDraw);
 
   out_no_buffer:
     while(i-- != 0) {
@@ -448,7 +451,7 @@ vmw_video_port_play(ScrnInfoPtr pScrn, struct vmwgfx_overlay_port *port,
                     short drw_y, short src_w, short src_h,
                     short drw_w, short drw_h, int format,
                     unsigned char *buf, short width,
-                    short height, RegionPtr clipBoxes)
+                    short height, RegionPtr clipBoxes, DrawablePtr pDraw)
 {
     struct drm_vmw_control_stream_arg arg;
     unsigned short w, h;
@@ -468,7 +471,7 @@ vmw_video_port_play(ScrnInfoPtr pScrn, struct vmwgfx_overlay_port *port,
         vmw_xv_stop_video(pScrn, port, TRUE);
         return port->play(pScrn, port, src_x, src_y, drw_x, drw_y, src_w,
                           src_h, drw_w, drw_h, format, buf, width, height,
-                          clipBoxes);
+                          clipBoxes, pDraw);
     }
 
     memcpy(port->bufs[port->currBuf].data, buf, port->size);
@@ -502,8 +505,14 @@ vmw_video_port_play(ScrnInfoPtr pScrn, struct vmwgfx_overlay_port *port,
      */
     if (!REGION_EQUAL(pScrn->pScreen, &port->clipBoxes, clipBoxes)) {
         REGION_COPY(pScrn->pScreen, &port->clipBoxes, clipBoxes);
-        if (port->isAutoPaintColorkey)
-            xf86XVFillKeyHelper(pScrn->pScreen, port->colorKey, clipBoxes);
+        if (port->isAutoPaintColorkey) {
+            if (pDraw->type == DRAWABLE_WINDOW) {
+                xf86XVFillKeyHelperDrawable(pDraw, port->colorKey, clipBoxes);
+                DamageDamageRegion(pDraw, clipBoxes);
+            } else {
+                xf86XVFillKeyHelper(pScrn->pScreen, port->colorKey, clipBoxes);
+            }
+        }
     }
 
     xorg_flush(pScrn->pScreen);
@@ -667,7 +676,7 @@ vmw_xv_put_image(ScrnInfoPtr pScrn, short src_x, short src_y,
 		 width, height);
 
     return port->play(pScrn, port, src_x, src_y, drw_x, drw_y, src_w, src_h,
-                      drw_w, drw_h, format, buf, width, height, clipBoxes);
+                      drw_w, drw_h, format, buf, width, height, clipBoxes, dst);
 }
 
 

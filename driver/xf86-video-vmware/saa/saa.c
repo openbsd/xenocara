@@ -349,7 +349,7 @@ saa_gc_reads_destination(DrawablePtr pDrawable, GCPtr pGC)
 {
     return ((pGC->alu != GXcopy && pGC->alu != GXclear && pGC->alu != GXset &&
 	     pGC->alu != GXcopyInverted) || pGC->fillStyle == FillStippled ||
-	    pGC->clientClipType != CT_NONE ||
+	    pGC->clientClip != NULL ||
 	    !SAA_PM_IS_SOLID(pDrawable, pGC->planemask));
 }
 

@@ -610,9 +610,9 @@ vmwgfx_pix_resize(PixmapPtr pixmap, unsigned int old_pitch,
     }
 
     if (vpix->hw) {
-	if (xa_surface_redefine(vpix->hw, draw->width, draw->height,
-				draw->depth, xa_type_argb,
-				xa_format_unknown, vpix->xa_flags, 1) != 0)
+      if (!vmwgfx_xa_surface_redefine(vpix, vpix->hw, draw->width,
+				      draw->height, draw->depth, xa_type_argb,
+				      xa_format_unknown, vpix->xa_flags, 1))
 	    return FALSE;
     }
 
@@ -694,7 +694,8 @@ vmwgfx_modify_pixmap_header (PixmapPtr pixmap, int w, int h, int depth,
 
     vmwgfx_pix_resize(pixmap, old_pitch, old_height, old_width);
     vmwgfx_pixmap_free_storage(vpix);
-    WSBMLISTADDTAIL(&vpix->pixmap_list, &vsaa->pixmaps);
+    if (WSBMLISTEMPTY(&vpix->pixmap_list))
+	WSBMLISTADDTAIL(&vpix->pixmap_list, &vsaa->pixmaps);
 
     return TRUE;
 
@@ -824,11 +825,11 @@ vmwgfx_create_hw(struct vmwgfx_saa *vsaa,
 	return FALSE;
 
     vpix->xa_flags = new_flags;
+    vpix->hw = hw;
 
     if (!vmwgfx_pixmap_add_damage(pixmap))
 	goto out_no_damage;
 
-    vpix->hw = hw;
     vpix->backing |= VMWGFX_PIX_SURFACE;
     vmwgfx_pixmap_free_storage(vpix);
 
@@ -841,6 +842,7 @@ vmwgfx_create_hw(struct vmwgfx_saa *vsaa,
     return TRUE;
 
 out_no_damage:
+    vpix->hw = NULL;
     xa_surface_destroy(hw);
     return FALSE;
 }
@@ -1158,6 +1160,8 @@ vmwgfx_composite_prepare(struct saa_driver *driver, CARD8 op,
      * and check whether XA can accelerate.
      */
 
+    if (!mask_pix)
+	mask_pict = NULL;
     xa_comp = vmwgfx_xa_setup_comp(vsaa->vcomp, op,
 				   src_pict, mask_pict, dst_pict);
     if (!xa_comp)
@@ -1504,7 +1508,8 @@ vmwgfx_scanout_ref(struct vmwgfx_screen_entry  *entry)
 	     * The KMS fb will be a HW surface. Create it, add damage
 	     * and get the handle.
 	     */
-	    if (!vmwgfx_hw_accel_validate(pixmap, 0, XA_FLAG_SCANOUT, 0, NULL))
+	    if (!vmwgfx_hw_accel_validate(pixmap, 0, XA_FLAG_SCANOUT |
+					  XA_FLAG_RENDER_TARGET, 0, NULL))
 		goto out_err;
 	    if (_xa_surface_handle(vpix->hw, &handle, &dummy) != 0)
 		goto out_err;

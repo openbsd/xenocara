@@ -43,6 +43,52 @@ static const enum xa_surface_type vmwgfx_stype_map[] = {
 static const unsigned int vmwgfx_stype_map_size =
     sizeof(vmwgfx_stype_map) / sizeof(enum xa_surface_type);
 
+/**
+ * vmwgfx_xa_surface_redefine - wrapper around xa_surface_redefine
+ *
+ * @vpix: Pointer to the struct vmwgfx_saa_pixmap the surface is attached to.
+ * @srf: The surface.
+ * @width: New width.
+ * @height: New height.
+ * @depth: New pixel depth.
+ * @stype: New surface type.
+ * @rgb_format: New rgb format.
+ * @new_flags: New surface flags.
+ * @copy_contents: Copy contents if new backing store is allocated.
+ *
+ * This is a wrapper that prints out an error message if the backing store
+ * of an active scanout surface is changed.
+ */
+Bool
+vmwgfx_xa_surface_redefine(struct vmwgfx_saa_pixmap *vpix,
+			   struct xa_surface *srf,
+			   int width,
+			   int height,
+			   int depth,
+			   enum xa_surface_type stype,
+			   enum xa_formats rgb_format,
+			   unsigned int new_flags,
+			   int copy_contents)
+{
+    uint32_t handle, new_handle, dummy;
+    Bool have_handle = FALSE;
+
+    if (!WSBMLISTEMPTY(&vpix->scanout_list))
+	have_handle = (_xa_surface_handle(srf, &handle, &dummy) == XA_ERR_NONE);
+
+    if (xa_surface_redefine(srf, width, height, depth, stype, rgb_format,
+			    new_flags, copy_contents) != XA_ERR_NONE)
+	return FALSE;
+
+    if (!WSBMLISTEMPTY(&vpix->scanout_list) && have_handle &&
+	_xa_surface_handle(srf, &new_handle, &dummy) == XA_ERR_NONE &&
+	new_handle != handle) {
+	LogMessage(X_ERROR, "Changed active scanout surface handle.\n");
+    }
+
+    return TRUE;
+}
+
 
 /*
  * Create an xa format from a PICT format.
@@ -323,13 +369,14 @@ vmwgfx_hw_commit(PixmapPtr pixmap)
 	if (vpix->staging_format != xa_surface_format(vpix->hw))
 	    LogMessage(X_INFO, "Changing hardware format.\n");
 
-	if (xa_surface_redefine(vpix->hw,
-				pixmap->drawable.width,
-				pixmap->drawable.height,
-				0,
-				xa_type_other,
-				vpix->staging_format,
-				new_flags, 1) != XA_ERR_NONE)
+	if (!vmwgfx_xa_surface_redefine(vpix,
+					vpix->hw,
+					pixmap->drawable.width,
+					pixmap->drawable.height,
+					0,
+					xa_type_other,
+					vpix->staging_format,
+					new_flags, 1) != XA_ERR_NONE)
 	    return FALSE;
 	vpix->xa_flags = new_flags;
     } else if (!vmwgfx_create_hw(vsaa, pixmap))

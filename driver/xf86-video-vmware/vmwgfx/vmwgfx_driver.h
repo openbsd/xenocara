@@ -83,6 +83,7 @@ enum xorg_throttling_reason {
 };
 
 struct vmwgfx_hosted;
+struct xf86_platform_device;
 
 typedef struct _modesettingRec
 {
@@ -98,6 +99,7 @@ typedef struct _modesettingRec
     int Chipset;
     EntityInfoPtr pEnt;
     struct pci_device *PciInfo;
+    struct xf86_platform_device *platform_dev;
 
     /* Accel */
     Bool accelerate_render;

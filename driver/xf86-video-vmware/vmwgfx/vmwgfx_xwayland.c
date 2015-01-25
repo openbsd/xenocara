@@ -62,7 +62,7 @@ vmwgfx_create_window_buffer(struct xwl_window *xwl_window,
      * surface.
      */
     vpix->hw_is_hosted = TRUE;
-    if (xa_surface_handle(vpix->hw, &name, &pitch) != XA_ERR_NONE)
+    if (_xa_surface_handle(vpix->hw, &name, &pitch) != XA_ERR_NONE)
 	return BadDrawable;
 
     return xwl_create_window_buffer_drm(xwl_window, pixmap, name);

@@ -36,6 +36,7 @@
 
 #include "vmwgfx_hosted.h"
 #include "vmwgfx_saa.h"
+#include <xf86Crtc.h>
 #include <xf86Priv.h>
 #include <xmir.h>
 
@@ -103,6 +104,11 @@ vmwgfx_xmir_screen_init(struct vmwgfx_hosted *hosted, ScreenPtr pScreen)
 	return FALSE;
 
     hosted->pScreen = pScreen;
+    if (!xf86SetDesiredModes(hosted->pScrn)) {
+	xmir_screen_close(hosted->pScreen, hosted->xmir);
+	hosted->pScreen = NULL;
+	return FALSE;
+    }
 
     return TRUE;
 }
