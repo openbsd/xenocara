@@ -121,10 +121,10 @@ namespace clover {
       clRetainDevice,
       clReleaseDevice,
       clCreateImage,
-      NULL, // clCreateProgramWithBuiltInKernels
-      NULL, // clCompileProgram
+      clCreateProgramWithBuiltInKernels,
+      clCompileProgram,
       NULL, // clLinkProgram
-      NULL, // clUnloadPlatformCompiler
+      clUnloadPlatformCompiler,
       NULL, // clGetKernelArgInfo
       NULL, // clEnqueueFillBuffer
       NULL, // clEnqueueFillImage

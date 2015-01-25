@@ -103,18 +103,19 @@ target_triplet = @target@
 DIST_COMMON = $(srcdir)/Makefile.sources \
 	$(top_srcdir)/src/gallium/Automake.inc $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/bin/depcomp
-@HAVE_MESA_LLVM_TRUE@am__append_1 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_2 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_3 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_4 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_5 = $(LLVM_LIBS)
-@HAVE_MESA_LLVM_TRUE@am__append_6 = $(LLVM_LIBS)
-@HAVE_MESA_LLVM_TRUE@am__append_7 = $(LLVM_LIBS)
-@HAVE_MESA_LLVM_TRUE@am__append_8 = $(LLVM_LIBS)
+@HAVE_DRISW_TRUE@am__append_1 = \
+@HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
+
+@NEED_WINSYS_XLIB_TRUE@am__append_2 = \
+@NEED_WINSYS_XLIB_TRUE@	$(top_builddir)/src/gallium/winsys/sw/xlib/libws_xlib.la \
+@NEED_WINSYS_XLIB_TRUE@	-lX11 -lXext -lXfixes \
+@NEED_WINSYS_XLIB_TRUE@	$(LIBDRM_LIBS)
+
 subdir = src/gallium/state_trackers/osmesa
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
+	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
 	$(top_srcdir)/m4/ax_prog_bison.m4 \
 	$(top_srcdir)/m4/ax_prog_flex.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -204,6 +205,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
 CCASDEPMODE = @CCASDEPMODE@
@@ -219,6 +221,7 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+D3D_DRIVER_INSTALL_DIR = @D3D_DRIVER_INSTALL_DIR@
 DEFINES = @DEFINES@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -241,7 +244,6 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
 EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
-EGL_DRIVER_INSTALL_DIR = @EGL_DRIVER_INSTALL_DIR@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
@@ -314,11 +316,14 @@ LLVM_LIBS = @LLVM_LIBS@
 LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
+NINE_MAJOR = @NINE_MAJOR@
+NINE_MINOR = @NINE_MINOR@
+NINE_TINY = @NINE_TINY@
+NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NOUVEAU_CFLAGS = @NOUVEAU_CFLAGS@
@@ -329,10 +334,8 @@ OMX_CFLAGS = @OMX_CFLAGS@
 OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
-OPENCL_LIB_INSTALL_DIR = @OPENCL_LIB_INSTALL_DIR@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
-OSMESA_MESA_DEPS = @OSMESA_MESA_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
 OSMESA_PC_REQ = @OSMESA_PC_REQ@
 OSMESA_VERSION = @OSMESA_VERSION@
@@ -346,7 +349,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -365,7 +367,13 @@ SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
+VA_CFLAGS = @VA_CFLAGS@
+VA_LIBS = @VA_LIBS@
+VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
+VA_MAJOR = @VA_MAJOR@
+VA_MINOR = @VA_MINOR@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -429,6 +437,7 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
+ifGNUmake = @ifGNUmake@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -460,6 +469,7 @@ C_SOURCES := \
 
 GALLIUM_CFLAGS = \
 	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	$(DEFINES)
@@ -471,37 +481,29 @@ GALLIUM_CFLAGS = \
 # preprocessor is determined by the ordering of the -I flags.
 GALLIUM_DRIVER_CFLAGS = \
 	-I$(srcdir)/include \
+	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
+	-I$(top_srcdir)/src/gallium/winsys \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS)
 
 GALLIUM_DRIVER_CXXFLAGS = \
 	-I$(srcdir)/include \
+	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
+	-I$(top_srcdir)/src/gallium/winsys \
 	$(DEFINES) \
 	$(VISIBILITY_CXXFLAGS)
 
-GALLIUM_DRI_CFLAGS = \
+GALLIUM_TARGET_CFLAGS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/gallium/include \
-	-I$(top_srcdir)/src/gallium/auxiliary \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/src/gallium/winsys \
-	-I$(top_srcdir)/src/mesa \
-	-I$(top_srcdir)/src/mapi \
-	$(DEFINES) \
-	$(PTHREAD_CFLAGS) \
-	$(LIBDRM_CFLAGS) \
-	$(VISIBILITY_CFLAGS)
-
-GALLIUM_VIDEO_CFLAGS = \
-	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src/loader \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
@@ -511,45 +513,12 @@ GALLIUM_VIDEO_CFLAGS = \
 	$(LIBDRM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
 
-GALLIUM_DRI_LINKER_FLAGS = -shared -shrext .so -module -avoid-version \
-	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/dri.sym \
-	$(GC_SECTIONS) $(am__append_1)
-GALLIUM_VDPAU_LINKER_FLAGS = -shared -module -no-undefined \
-	-version-number $(VDPAU_MAJOR):$(VDPAU_MINOR) \
-	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/vdpau.sym \
-	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_2)
-GALLIUM_XVMC_LINKER_FLAGS = -shared -module -no-undefined \
-	-version-number $(XVMC_MAJOR):$(XVMC_MINOR) \
-	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/xvmc.sym \
-	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_3)
-GALLIUM_OMX_LINKER_FLAGS = -shared -module -no-undefined \
-	-avoid-version \
-	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/omx.sym \
-	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_4)
 GALLIUM_COMMON_LIB_DEPS = \
 	-lm \
 	$(CLOCK_LIB) \
 	$(PTHREAD_LIBS) \
 	$(DLOPEN_LIBS)
 
-GALLIUM_DRI_LIB_DEPS = $(top_builddir)/src/mesa/libmesagallium.la \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(SELINUX_LIBS) $(LIBDRM_LIBS) $(EXPAT_LIBS) \
-	$(GALLIUM_COMMON_LIB_DEPS) $(am__append_5)
-GALLIUM_VDPAU_LIB_DEPS =  \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/gallium/state_trackers/vdpau/libvdpautracker.la \
-	$(VDPAU_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
-	$(am__append_6)
-GALLIUM_XVMC_LIB_DEPS =  \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/gallium/state_trackers/xvmc/libxvmctracker.la \
-	$(XVMC_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
-	$(am__append_7)
-GALLIUM_OMX_LIB_DEPS =  \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/gallium/state_trackers/omx/libomxtracker.la \
-	$(OMX_LIBS) $(GALLIUM_COMMON_LIB_DEPS) $(am__append_8)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
@@ -557,6 +526,10 @@ GALLIUM_WINSYS_CFLAGS = \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS)
 
+GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
+	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
+	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
+	$(am__append_1) $(am__append_2)
 AM_CFLAGS = $(GALLIUM_CFLAGS)
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \

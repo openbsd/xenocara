@@ -46,9 +46,11 @@ extern const char *tgsi_texture_names[TGSI_TEXTURE_COUNT];
 
 extern const char *tgsi_property_names[TGSI_PROPERTY_COUNT];
 
-extern const char *tgsi_type_names[5];
+extern const char *tgsi_return_type_names[TGSI_RETURN_TYPE_COUNT];
 
 extern const char *tgsi_interpolate_names[TGSI_INTERPOLATE_COUNT];
+
+extern const char *tgsi_interpolate_locations[TGSI_INTERPOLATE_LOC_COUNT];
 
 extern const char *tgsi_primitive_names[PIPE_PRIM_MAX];
 

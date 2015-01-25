@@ -95,10 +95,11 @@ protected:
    virtual void visit(ir_emit_vertex *);
    virtual void visit(ir_end_primitive *);
 
-private:
+protected:
    int setup_varying_inputs(int payload_reg, int *attribute_map,
                             int attributes_per_reg);
    void emit_control_data_bits();
+   void set_stream_control_data_bits(unsigned stream_id);
 
    src_reg vertex_count;
    src_reg control_data_bits;

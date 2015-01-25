@@ -29,10 +29,15 @@
 #include "pipe/p_defines.h"
 
 namespace clover {
+   typedef compat::vector<compat::pair<compat::string,
+                                       compat::string> > header_map;
+
    module compile_program_llvm(const compat::string &source,
+                               const header_map &headers,
                                pipe_shader_ir ir,
                                const compat::string &target,
-                               const compat::string &opts);
+                               const compat::string &opts,
+                               compat::string &r_log);
 
    module compile_program_tgsi(const compat::string &source);
 }

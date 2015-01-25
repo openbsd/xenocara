@@ -40,9 +40,12 @@
 
 #include "vl/vl_video_buffer.h"
 
-#include "../../winsys/radeon/drm/radeon_winsys.h"
+#include "radeon/drm/radeon_winsys.h"
+#include "r600_pipe_common.h"
 #include "radeon_video.h"
 #include "radeon_vce.h"
+
+static const unsigned profiles[7] = { 66, 77, 88, 100, 110, 122, 244 };
 
 static struct rvce_cpb_slot *current_slot(struct rvce_encoder *enc)
 {
@@ -92,7 +95,7 @@ static void task_info(struct rvce_encoder *enc, uint32_t taskOperation)
 static void feedback(struct rvce_encoder *enc)
 {
 	RVCE_BEGIN(0x05000005); // feedback buffer
-	RVCE_WRITE(enc->fb->cs_handle, enc->fb->domain); // feedbackRingAddressHi
+	RVCE_WRITE(enc->fb->res->cs_buf, enc->fb->res->domains); // feedbackRingAddressHi
 	RVCE_CS(0x00000000); // feedbackRingAddressLo
 	RVCE_CS(0x00000001); // feedbackRingSize
 	RVCE_END();
@@ -104,8 +107,9 @@ static void create(struct rvce_encoder *enc)
 
 	RVCE_BEGIN(0x01000001); // create cmd
 	RVCE_CS(0x00000000); // encUseCircularBuffer
-	RVCE_CS(0x0000004d); // encProfile: Main
-	RVCE_CS(0x0000002a); // encLevel: 4.2
+	RVCE_CS(profiles[enc->base.profile -
+		PIPE_VIDEO_PROFILE_MPEG4_AVC_BASELINE]); // encProfile
+	RVCE_CS(enc->base.level); // encLevel
 	RVCE_CS(0x00000000); // encPicStructRestriction
 	RVCE_CS(enc->base.width); // encImageWidth
 	RVCE_CS(enc->base.height); // encImageHeight
@@ -252,7 +256,7 @@ static void encode(struct rvce_encoder *enc)
 	task_info(enc, 0x00000003);
 
 	RVCE_BEGIN(0x05000001); // context buffer
-	RVCE_READWRITE(enc->cpb.cs_handle, enc->cpb.domain); // encodeContextAddressHi
+	RVCE_READWRITE(enc->cpb.res->cs_buf, enc->cpb.res->domains); // encodeContextAddressHi
 	RVCE_CS(0x00000000); // encodeContextAddressLo
 	RVCE_END();
 
@@ -283,7 +287,7 @@ static void encode(struct rvce_encoder *enc)
 	RVCE_CS(enc->pic.picture_type == PIPE_H264_ENC_PICTURE_TYPE_IDR); // encIdrFlag
 	RVCE_CS(0x00000000); // encIdrPicId
 	RVCE_CS(0x00000000); // encMGSKeyPic
-	RVCE_CS(0x00000001); // encReferenceFlag
+	RVCE_CS(!enc->pic.not_referenced); // encReferenceFlag
 	RVCE_CS(0x00000000); // encTemporalLayerIndex
 	RVCE_CS(0x00000000); // num_ref_idx_active_override_flag
 	RVCE_CS(0x00000000); // num_ref_idx_l0_active_minus1

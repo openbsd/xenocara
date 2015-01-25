@@ -57,7 +57,7 @@
 #include "main/blend.h"
 #include "main/varray.h"
 #include "main/shaderapi.h"
-#include "glsl/ralloc.h"
+#include "util/ralloc.h"
 
 #include "drivers/common/meta.h"
 #include "brw_meta_util.h"
@@ -276,7 +276,7 @@ setup_program(struct brw_context *brw, bool msaa_tex)
 {
    struct gl_context *ctx = &brw->ctx;
    struct blit_state *blit = &ctx->Meta->Blit;
-   const char *fs_source;
+   char *fs_source;
    const struct sampler_and_fetch *sampler = &samplers[msaa_tex];
 
    _mesa_meta_setup_vertex_objects(&blit->VAO, &blit->VBO, true, 2, 2, 0);
@@ -371,7 +371,7 @@ prepare_vertex_data(void)
    _mesa_BufferSubData(GL_ARRAY_BUFFER_ARB, 0, sizeof(verts), verts);
 }
 
-static void
+static bool
 set_read_rb_tex_image(struct gl_context *ctx, struct fb_tex_blit_state *blit,
                       GLenum *target)
 {
@@ -387,8 +387,10 @@ set_read_rb_tex_image(struct gl_context *ctx, struct fb_tex_blit_state *blit,
       *target = tex_obj->Target;
       level = att->TextureLevel;
    } else {
-      _mesa_meta_bind_rb_as_tex_image(ctx, rb, &blit->tempTex, &tex_obj,
-                                      target);
+      if (!_mesa_meta_bind_rb_as_tex_image(ctx, rb, &blit->tempTex, &tex_obj,
+                                          target)) {
+         return false;
+      }
    }
 
    blit->baseLevelSave = tex_obj->BaseLevel;
@@ -396,6 +398,7 @@ set_read_rb_tex_image(struct gl_context *ctx, struct fb_tex_blit_state *blit,
    blit->stencilSamplingSave = tex_obj->StencilSampling;
    blit->sampler = _mesa_meta_setup_sampler(ctx, tex_obj, *target,
                                             GL_NEAREST, level);
+   return true;
 }
 
 static void
@@ -424,7 +427,9 @@ brw_meta_stencil_blit(struct brw_context *brw,
    _mesa_DrawBuffer(GL_COLOR_ATTACHMENT0);
    ctx->DrawBuffer->_Status = GL_FRAMEBUFFER_COMPLETE;
 
-   set_read_rb_tex_image(ctx, &blit, &target);
+   if (!set_read_rb_tex_image(ctx, &blit, &target)) {
+      goto error;
+   }
 
    _mesa_TexParameteri(target, GL_DEPTH_STENCIL_TEXTURE_MODE,
                        GL_STENCIL_INDEX);
@@ -445,6 +450,7 @@ brw_meta_stencil_blit(struct brw_context *brw,
 
    _mesa_DrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
+error:
    _mesa_meta_fb_tex_blit_end(ctx, target, &blit);
    _mesa_meta_end(ctx);
 

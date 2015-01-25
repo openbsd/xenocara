@@ -70,18 +70,27 @@
 #define R600_TEXEL_PITCH_ALIGNMENT_MASK        0x7
 
 #define PKT3_NOP                               0x10
+#define PKT3_SET_BASE                          0x11
+#define PKT3_CLEAR_STATE                       0x12
+#define PKT3_INDEX_BUFFER_SIZE                 0x13
 #define PKT3_DISPATCH_DIRECT                   0x15
 #define PKT3_DISPATCH_INDIRECT                 0x16
 #define PKT3_OCCLUSION_QUERY                   0x1F /* new for CIK */
 #define PKT3_SET_PREDICATION                   0x20
 #define PKT3_COND_EXEC                         0x22
 #define PKT3_PRED_EXEC                         0x23
+#define PKT3_DRAW_INDIRECT                     0x24
+#define PKT3_DRAW_INDEX_INDIRECT               0x25
+#define PKT3_INDEX_BASE                        0x26
 #define PKT3_DRAW_INDEX_2                      0x27
 #define PKT3_CONTEXT_CONTROL                   0x28
 #define PKT3_INDEX_TYPE                        0x2A
+#define PKT3_DRAW_INDIRECT_MULTI               0x2C
 #define PKT3_DRAW_INDEX_AUTO                   0x2D
 #define PKT3_DRAW_INDEX_IMMD                   0x2E /* not on CIK */
 #define PKT3_NUM_INSTANCES                     0x2F
+#define PKT3_DRAW_INDEX_MULTI_AUTO             0x30
+#define PKT3_INDIRECT_BUFFER                   0x32
 #define PKT3_STRMOUT_BUFFER_UPDATE             0x34
 #define PKT3_DRAW_INDEX_OFFSET_2               0x35
 #define PKT3_DRAW_PREAMBLE                     0x36 /* new on CIK, required on GFX7.2 and later */
@@ -99,12 +108,12 @@
 #define PKT3_WRITE_DATA_ENGINE_SEL_ME              0
 #define PKT3_WRITE_DATA_ENGINE_SEL_PFP             1
 #define PKT3_WRITE_DATA_ENGINE_SEL_CE              2
+#define PKT3_DRAW_INDEX_INDIRECT_MULTI         0x38
 #define PKT3_MEM_SEMAPHORE                     0x39
 #define PKT3_MPEG_INDEX                        0x3A /* not on CIK */
 #define PKT3_WAIT_REG_MEM                      0x3C
 #define		WAIT_REG_MEM_EQUAL		3
 #define PKT3_MEM_WRITE                         0x3D /* not on CIK */
-#define PKT3_INDIRECT_BUFFER                   0x32
 #define PKT3_COPY_DATA			       0x40
 #define		COPY_DATA_SRC_SEL(x)		((x) & 0xf)
 #define			COPY_DATA_REG		0
@@ -195,7 +204,13 @@
  * 6. COMMAND [29:22] | BYTE_COUNT [20:0]
  */
 
-
+#define GRBM_GFX_INDEX                                                  0x802C
+#define         INSTANCE_INDEX(x)                                     ((x) << 0)
+#define         SH_INDEX(x)                                           ((x) << 8)
+#define         SE_INDEX(x)                                           ((x) << 16)
+#define         SH_BROADCAST_WRITES                                   (1 << 29)
+#define         INSTANCE_BROADCAST_WRITES                             (1 << 30)
+#define         SE_BROADCAST_WRITES                                   (1 << 31)
 #define R_0084FC_CP_STRMOUT_CNTL		                        0x0084FC
 #define   S_0084FC_OFFSET_UPDATE_DONE(x)		              (((x) & 0x1) << 0)
 #define R_0085F0_CP_COHER_CNTL                                          0x0085F0
@@ -4820,6 +4835,9 @@
 #define   S_00B32C_EXCP_EN(x)                                         (((x) & 0x7F) << 8) /* mask is 0x1FF on CIK */
 #define   G_00B32C_EXCP_EN(x)                                         (((x) >> 8) & 0x7F) /* mask is 0x1FF on CIK */
 #define   C_00B32C_EXCP_EN                                            0xFFFF80FF /* mask is 0x1FF on CIK */
+#define   S_00B32C_LDS_SIZE(x)                                        (((x) & 0x1FF) << 20) /* CIK, for on-chip GS */
+#define   G_00B32C_LDS_SIZE(x)                                        (((x) >> 20) & 0x1FF) /* CIK, for on-chip GS */
+#define   C_00B32C_LDS_SIZE                                           0xE00FFFFF /* CIK, for on-chip GS */
 #define R_00B330_SPI_SHADER_USER_DATA_ES_0                              0x00B330
 /* CIK */
 #define R_00B41C_SPI_SHADER_PGM_RSRC3_HS                                0x00B41C
@@ -6618,15 +6636,35 @@
 #define   C_028800_DISABLE_COLOR_WRITES_ON_DEPTH_PASS                 0x7FFFFFFF
 #define R_028804_DB_EQAA                                                0x028804
 #define   S_028804_MAX_ANCHOR_SAMPLES(x)		(((x) & 0x7) << 0)
+#define   G_028804_MAX_ANCHOR_SAMPLES(x)		(((x) >> 0) & 0x7)
+#define   C_028804_MAX_ANCHOR_SAMPLES			(~(((~0) & 0x7) << 0))
 #define   S_028804_PS_ITER_SAMPLES(x)			(((x) & 0x7) << 4)
+#define   G_028804_PS_ITER_SAMPLES(x)			(((x) >> 4) & 0x7)
+#define   C_028804_PS_ITER_SAMPLES			(~(((~0) & 0x7) << 4))
 #define   S_028804_MASK_EXPORT_NUM_SAMPLES(x)		(((x) & 0x7) << 8)
+#define   G_028804_MASK_EXPORT_NUM_SAMPLES(x)		(((x) >> 8) & 0x7)
+#define   C_028804_MASK_EXPORT_NUM_SAMPLES		(~(((~0) & 0x7) << 8))
 #define   S_028804_ALPHA_TO_MASK_NUM_SAMPLES(x)		(((x) & 0x7) << 12)
+#define   G_028804_ALPHA_TO_MASK_NUM_SAMPLES(x)		(((x) >> 12) & 0x7)
+#define   C_028804_ALPHA_TO_MASK_NUM_SAMPLES		(~(((~0) & 0x7) << 12))
 #define   S_028804_HIGH_QUALITY_INTERSECTIONS(x)	(((x) & 0x1) << 16)
+#define   G_028804_HIGH_QUALITY_INTERSECTIONS(x)	(((x) >> 16) & 0x1)
+#define   C_028804_HIGH_QUALITY_INTERSECTIONS		(~(((~0) & 0x1) << 16))
 #define   S_028804_INCOHERENT_EQAA_READS(x)		(((x) & 0x1) << 17)
+#define   G_028804_INCOHERENT_EQAA_READS(x)		(((x) >> 17) & 0x1)
+#define   C_028804_INCOHERENT_EQAA_READS		(~(((~0) & 0x1) << 17))
 #define   S_028804_INTERPOLATE_COMP_Z(x)		(((x) & 0x1) << 18)
+#define   G_028804_INTERPOLATE_COMP_Z(x)		(((x) >> 18) & 0x1)
+#define   C_028804_INTERPOLATE_COMP_Z			(~(((~0) >> 18) & 0x1))
 #define   S_028804_INTERPOLATE_SRC_Z(x)			(((x) & 0x1) << 19)
+#define   G_028804_INTERPOLATE_SRC_Z(x)			(((x) >> 19) & 0x1)
+#define   C_028804_INTERPOLATE_SRC_Z			(~(((~0) & 0x1) << 19))
 #define   S_028804_STATIC_ANCHOR_ASSOCIATIONS(x)	(((x) & 0x1) << 20)
+#define   G_028804_STATIC_ANCHOR_ASSOCIATIONS(x)	(((x) >> 20) & 0x1)
+#define   C_028804_STATIC_ANCHOR_ASSOCIATIONS		(~(((~0) & 0x1) << 20))
 #define   S_028804_ALPHA_TO_MASK_EQAA_DISABLE(x)	(((x) & 0x1) << 21)
+#define   G_028804_ALPHA_TO_MASK_EQAA_DISABLE(x)	(((x) >> 21) & 0x1)
+#define   C_028804_ALPHA_TO_MASK_EQAA_DISABLE		(~(((~0) & 0x1) << 21))
 #define R_028808_CB_COLOR_CONTROL                                       0x028808
 #define   S_028808_DEGAMMA_ENABLE(x)                                  (((x) & 0x1) << 3)
 #define   G_028808_DEGAMMA_ENABLE(x)                                  (((x) >> 3) & 0x1)
@@ -6712,6 +6750,10 @@
 #define   S_02880C_CONSERVATIVE_Z_EXPORT(x)                           (((x) & 0x03) << 13)
 #define   G_02880C_CONSERVATIVE_Z_EXPORT(x)                           (((x) >> 13) & 0x03)
 #define   C_02880C_CONSERVATIVE_Z_EXPORT                              0xFFFF9FFF
+#define     V_02880C_EXPORT_ANY_Z                                   0
+#define     V_02880C_EXPORT_LESS_THAN_Z                             1
+#define     V_02880C_EXPORT_GREATER_THAN_Z                          2
+#define     V_02880C_EXPORT_RESERVED                                3
 /*     */
 #define R_028810_PA_CL_CLIP_CNTL                                        0x028810
 #define   S_028810_UCP_ENA_0(x)                                       (((x) & 0x1) << 0)

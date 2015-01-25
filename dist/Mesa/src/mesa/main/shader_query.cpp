@@ -92,8 +92,9 @@ is_active_attrib(const ir_variable *var)
        * are enumerated, including the special built-in inputs gl_VertexID
        * and gl_InstanceID."
        */
-      return !strcmp(var->name, "gl_VertexID") ||
-             !strcmp(var->name, "gl_InstanceID");
+      return var->data.location == SYSTEM_VALUE_VERTEX_ID ||
+             var->data.location == SYSTEM_VALUE_VERTEX_ID_ZERO_BASE ||
+             var->data.location == SYSTEM_VALUE_INSTANCE_ID;
 
    default:
       return false;
@@ -126,14 +127,25 @@ _mesa_GetActiveAttrib(GLhandleARB program, GLuint desired_index,
    exec_list *const ir = shProg->_LinkedShaders[MESA_SHADER_VERTEX]->ir;
    unsigned current_index = 0;
 
-   foreach_list(node, ir) {
-      const ir_variable *const var = ((ir_instruction *) node)->as_variable();
+   foreach_in_list(ir_instruction, node, ir) {
+      const ir_variable *const var = node->as_variable();
 
       if (!is_active_attrib(var))
          continue;
 
       if (current_index == desired_index) {
-	 _mesa_copy_string(name, maxLength, length, var->name);
+         const char *var_name = var->name;
+
+         /* Since gl_VertexID may be lowered to gl_VertexIDMESA, we need to
+          * consider gl_VertexIDMESA as gl_VertexID for purposes of checking
+          * active attributes.
+          */
+         if (var->data.mode == ir_var_system_value &&
+             var->data.location == SYSTEM_VALUE_VERTEX_ID_ZERO_BASE) {
+            var_name = "gl_VertexID";
+         }
+
+	 _mesa_copy_string(name, maxLength, length, var_name);
 
 	 if (size)
 	    *size = (var->type->is_array()) ? var->type->length : 1;
@@ -236,8 +248,8 @@ _mesa_GetAttribLocation(GLhandleARB program, const GLcharARB * name)
       return -1;
 
    exec_list *ir = shProg->_LinkedShaders[MESA_SHADER_VERTEX]->ir;
-   foreach_list(node, ir) {
-      const ir_variable *const var = ((ir_instruction *) node)->as_variable();
+   foreach_in_list(ir_instruction, node, ir) {
+      const ir_variable *const var = node->as_variable();
 
       /* The extra check against VERT_ATTRIB_GENERIC0 is because
        * glGetAttribLocation cannot be used on "conventional" attributes.
@@ -274,8 +286,8 @@ _mesa_count_active_attribs(struct gl_shader_program *shProg)
    exec_list *const ir = shProg->_LinkedShaders[MESA_SHADER_VERTEX]->ir;
    unsigned i = 0;
 
-   foreach_list(node, ir) {
-      const ir_variable *const var = ((ir_instruction *) node)->as_variable();
+   foreach_in_list(ir_instruction, node, ir) {
+      const ir_variable *const var = node->as_variable();
 
       if (!is_active_attrib(var))
          continue;
@@ -298,8 +310,8 @@ _mesa_longest_attribute_name_length(struct gl_shader_program *shProg)
    exec_list *const ir = shProg->_LinkedShaders[MESA_SHADER_VERTEX]->ir;
    size_t longest = 0;
 
-   foreach_list(node, ir) {
-      const ir_variable *const var = ((ir_instruction *) node)->as_variable();
+   foreach_in_list(ir_instruction, node, ir) {
+      const ir_variable *const var = node->as_variable();
 
       if (var == NULL
 	  || var->data.mode != ir_var_shader_in
@@ -400,8 +412,8 @@ _mesa_GetFragDataIndex(GLuint program, const GLchar *name)
       return -1;
 
    exec_list *ir = shProg->_LinkedShaders[MESA_SHADER_FRAGMENT]->ir;
-   foreach_list(node, ir) {
-      const ir_variable *const var = ((ir_instruction *) node)->as_variable();
+   foreach_in_list(ir_instruction, node, ir) {
+      const ir_variable *const var = node->as_variable();
 
       /* The extra check against FRAG_RESULT_DATA0 is because
        * glGetFragDataLocation cannot be used on "conventional" attributes.
@@ -456,8 +468,8 @@ _mesa_GetFragDataLocation(GLuint program, const GLchar *name)
       return -1;
 
    exec_list *ir = shProg->_LinkedShaders[MESA_SHADER_FRAGMENT]->ir;
-   foreach_list(node, ir) {
-      const ir_variable *const var = ((ir_instruction *) node)->as_variable();
+   foreach_in_list(ir_instruction, node, ir) {
+      const ir_variable *const var = node->as_variable();
 
       /* The extra check against FRAG_RESULT_DATA0 is because
        * glGetFragDataLocation cannot be used on "conventional" attributes.

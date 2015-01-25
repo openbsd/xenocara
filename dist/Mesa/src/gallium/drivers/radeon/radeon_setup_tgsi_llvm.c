@@ -218,7 +218,13 @@ static LLVMValueRef fetch_system_value(
 	unsigned swizzle)
 {
 	struct radeon_llvm_context * ctx = radeon_llvm_context(bld_base);
+	struct gallivm_state *gallivm = bld_base->base.gallivm;
+
 	LLVMValueRef cval = ctx->system_values[reg->Register.Index];
+	if (LLVMGetTypeKind(LLVMTypeOf(cval)) == LLVMVectorTypeKind) {
+		cval = LLVMBuildExtractElement(gallivm->builder, cval,
+					       lp_build_const_int32(gallivm, swizzle), "");
+	}
 	return bitcast(bld_base, type, cval);
 }
 
@@ -269,7 +275,8 @@ static void emit_declaration(
 	{
 		unsigned idx;
 		for (idx = decl->Range.First; idx <= decl->Range.Last; idx++) {
-			ctx->load_input(ctx, idx, decl);
+			if (ctx->load_input)
+				ctx->load_input(ctx, idx, decl);
 		}
 	}
 	break;
@@ -439,7 +446,19 @@ static void bgnloop_emit(
 						endloop_block, "LOOP");
 	LLVMBuildBr(gallivm->builder, loop_block);
 	LLVMPositionBuilderAtEnd(gallivm->builder, loop_block);
-	ctx->loop_depth++;
+
+	if (++ctx->loop_depth > ctx->loop_depth_max) {
+		unsigned new_max = ctx->loop_depth_max << 1;
+
+		if (!new_max)
+			new_max = RADEON_LLVM_INITIAL_CF_DEPTH;
+
+		ctx->loop = REALLOC(ctx->loop, ctx->loop_depth_max *
+				    sizeof(ctx->loop[0]),
+				    new_max * sizeof(ctx->loop[0]));
+		ctx->loop_depth_max = new_max;
+	}
+
 	ctx->loop[ctx->loop_depth - 1].loop_block = loop_block;
 	ctx->loop[ctx->loop_depth - 1].endloop_block = endloop_block;
 }
@@ -570,7 +589,18 @@ static void if_cond_emit(
 	LLVMBuildCondBr(gallivm->builder, cond, if_block, else_block);
 	LLVMPositionBuilderAtEnd(gallivm->builder, if_block);
 
-	ctx->branch_depth++;
+	if (++ctx->branch_depth > ctx->branch_depth_max) {
+		unsigned new_max = ctx->branch_depth_max << 1;
+
+		if (!new_max)
+			new_max = RADEON_LLVM_INITIAL_CF_DEPTH;
+
+		ctx->branch = REALLOC(ctx->branch, ctx->branch_depth_max *
+				      sizeof(ctx->branch[0]),
+				      new_max * sizeof(ctx->branch[0]));
+		ctx->branch_depth_max = new_max;
+	}
+
 	ctx->branch[ctx->branch_depth - 1].endif_block = endif_block;
 	ctx->branch[ctx->branch_depth - 1].if_block = if_block;
 	ctx->branch[ctx->branch_depth - 1].else_block = else_block;
@@ -1433,4 +1463,10 @@ void radeon_llvm_dispose(struct radeon_llvm_context * ctx)
 	LLVMContextDispose(ctx->soa.bld_base.base.gallivm->context);
 	FREE(ctx->temps);
 	ctx->temps = NULL;
+	FREE(ctx->loop);
+	ctx->loop = NULL;
+	ctx->loop_depth_max = 0;
+	FREE(ctx->branch);
+	ctx->branch = NULL;
+	ctx->branch_depth_max = 0;
 }

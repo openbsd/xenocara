@@ -82,29 +82,30 @@ target_triplet = @target@
 DIST_COMMON = $(srcdir)/Makefile.sources \
 	$(top_srcdir)/src/gallium/Automake.inc $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/bin/depcomp
-@HAVE_MESA_LLVM_TRUE@am__append_1 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_2 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_3 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_4 = $(LLVM_LDFLAGS)
-@HAVE_MESA_LLVM_TRUE@am__append_5 = $(LLVM_LIBS)
-@HAVE_MESA_LLVM_TRUE@am__append_6 = $(LLVM_LIBS)
-@HAVE_MESA_LLVM_TRUE@am__append_7 = $(LLVM_LIBS)
-@HAVE_MESA_LLVM_TRUE@am__append_8 = $(LLVM_LIBS)
-@HAVE_MESA_LLVM_TRUE@am__append_9 = \
+@HAVE_DRISW_TRUE@am__append_1 = \
+@HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
+
+@NEED_WINSYS_XLIB_TRUE@am__append_2 = \
+@NEED_WINSYS_XLIB_TRUE@	$(top_builddir)/src/gallium/winsys/sw/xlib/libws_xlib.la \
+@NEED_WINSYS_XLIB_TRUE@	-lX11 -lXext -lXfixes \
+@NEED_WINSYS_XLIB_TRUE@	$(LIBDRM_LIBS)
+
+@HAVE_MESA_LLVM_TRUE@am__append_3 = \
 @HAVE_MESA_LLVM_TRUE@	$(LLVM_CFLAGS)
 
-@HAVE_MESA_LLVM_TRUE@am__append_10 = \
+@HAVE_MESA_LLVM_TRUE@am__append_4 = \
 @HAVE_MESA_LLVM_TRUE@	$(GALLIUM_CFLAGS) \
 @HAVE_MESA_LLVM_TRUE@	$(LLVM_CXXFLAGS)
 
-@HAVE_MESA_LLVM_TRUE@am__append_11 = \
+@HAVE_MESA_LLVM_TRUE@am__append_5 = \
 @HAVE_MESA_LLVM_TRUE@	$(GALLIVM_SOURCES) \
 @HAVE_MESA_LLVM_TRUE@	$(GALLIVM_CPP_SOURCES)
 
 subdir = src/gallium/auxiliary
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
+	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
 	$(top_srcdir)/m4/ax_prog_bison.m4 \
 	$(top_srcdir)/m4/ax_prog_flex.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -151,12 +152,13 @@ am__libgallium_la_SOURCES_DIST = cso_cache/cso_cache.c \
 	rbug/rbug_texture.c rbug/rbug_shader.c rtasm/rtasm_cpu.c \
 	rtasm/rtasm_execmem.c rtasm/rtasm_x86sse.c tgsi/tgsi_build.c \
 	tgsi/tgsi_dump.c tgsi/tgsi_exec.c tgsi/tgsi_info.c \
-	tgsi/tgsi_iterate.c tgsi/tgsi_parse.c tgsi/tgsi_sanity.c \
-	tgsi/tgsi_scan.c tgsi/tgsi_strings.c tgsi/tgsi_text.c \
-	tgsi/tgsi_transform.c tgsi/tgsi_ureg.c tgsi/tgsi_util.c \
-	translate/translate.c translate/translate_cache.c \
-	translate/translate_generic.c translate/translate_sse.c \
-	util/u_debug.c util/u_debug_describe.c util/u_debug_flush.c \
+	tgsi/tgsi_iterate.c tgsi/tgsi_lowering.c tgsi/tgsi_parse.c \
+	tgsi/tgsi_sanity.c tgsi/tgsi_scan.c tgsi/tgsi_strings.c \
+	tgsi/tgsi_text.c tgsi/tgsi_transform.c tgsi/tgsi_ureg.c \
+	tgsi/tgsi_util.c translate/translate.c \
+	translate/translate_cache.c translate/translate_generic.c \
+	translate/translate_sse.c util/u_debug.c \
+	util/u_debug_describe.c util/u_debug_flush.c \
 	util/u_debug_memory.c util/u_debug_refcnt.c \
 	util/u_debug_stack.c util/u_debug_symbol.c \
 	util/u_dump_defines.c util/u_dump_state.c util/u_bitmask.c \
@@ -164,12 +166,12 @@ am__libgallium_la_SOURCES_DIST = cso_cache/cso_cache.c \
 	util/u_cpu_detect.c util/u_dl.c util/u_draw.c \
 	util/u_draw_quad.c util/u_format.c util/u_format_other.c \
 	util/u_format_latc.c util/u_format_s3tc.c util/u_format_rgtc.c \
-	util/u_format_etc.c util/u_format_tests.c util/u_format_yuv.c \
-	util/u_format_zs.c util/u_framebuffer.c util/u_gen_mipmap.c \
-	util/u_handle_table.c util/u_hash.c util/u_hash_table.c \
-	util/u_helpers.c util/u_index_modify.c util/u_keymap.c \
-	util/u_linear.c util/u_linkage.c util/u_network.c \
-	util/u_math.c util/u_mm.c util/u_pstipple.c \
+	util/u_format_etc.c util/u_format_bptc.c util/u_format_tests.c \
+	util/u_format_yuv.c util/u_format_zs.c util/u_framebuffer.c \
+	util/u_gen_mipmap.c util/u_handle_table.c util/u_hash.c \
+	util/u_hash_table.c util/u_helpers.c util/u_index_modify.c \
+	util/u_keymap.c util/u_linear.c util/u_linkage.c \
+	util/u_network.c util/u_math.c util/u_mm.c util/u_pstipple.c \
 	util/u_ringbuffer.c util/u_sampler.c util/u_simple_shaders.c \
 	util/u_slab.c util/u_snprintf.c util/u_staging.c \
 	util/u_suballoc.c util/u_surface.c util/u_surfaces.c \
@@ -180,12 +182,12 @@ am__libgallium_la_SOURCES_DIST = cso_cache/cso_cache.c \
 	vl/vl_mpeg12_bitstream.c vl/vl_zscan.c vl/vl_idct.c vl/vl_mc.c \
 	vl/vl_vertex_buffers.c vl/vl_video_buffer.c \
 	vl/vl_deint_filter.c indices/u_indices_gen.c \
-	indices/u_unfilled_gen.c util/u_format_srgb.c \
-	util/u_format_table.c gallivm/lp_bld_arit.c \
-	gallivm/lp_bld_arit_overflow.c gallivm/lp_bld_assert.c \
-	gallivm/lp_bld_bitarit.c gallivm/lp_bld_const.c \
-	gallivm/lp_bld_conv.c gallivm/lp_bld_flow.c \
-	gallivm/lp_bld_format_aos.c gallivm/lp_bld_format_aos_array.c \
+	indices/u_unfilled_gen.c util/u_format_table.c \
+	gallivm/lp_bld_arit.c gallivm/lp_bld_arit_overflow.c \
+	gallivm/lp_bld_assert.c gallivm/lp_bld_bitarit.c \
+	gallivm/lp_bld_const.c gallivm/lp_bld_conv.c \
+	gallivm/lp_bld_flow.c gallivm/lp_bld_format_aos.c \
+	gallivm/lp_bld_format_aos_array.c \
 	gallivm/lp_bld_format_float.c gallivm/lp_bld_format_srgb.c \
 	gallivm/lp_bld_format_soa.c gallivm/lp_bld_format_yuv.c \
 	gallivm/lp_bld_gather.c gallivm/lp_bld_init.c \
@@ -233,10 +235,10 @@ am__objects_1 = cso_cache/cso_cache.lo cso_cache/cso_context.lo \
 	rbug/rbug_texture.lo rbug/rbug_shader.lo rtasm/rtasm_cpu.lo \
 	rtasm/rtasm_execmem.lo rtasm/rtasm_x86sse.lo \
 	tgsi/tgsi_build.lo tgsi/tgsi_dump.lo tgsi/tgsi_exec.lo \
-	tgsi/tgsi_info.lo tgsi/tgsi_iterate.lo tgsi/tgsi_parse.lo \
-	tgsi/tgsi_sanity.lo tgsi/tgsi_scan.lo tgsi/tgsi_strings.lo \
-	tgsi/tgsi_text.lo tgsi/tgsi_transform.lo tgsi/tgsi_ureg.lo \
-	tgsi/tgsi_util.lo translate/translate.lo \
+	tgsi/tgsi_info.lo tgsi/tgsi_iterate.lo tgsi/tgsi_lowering.lo \
+	tgsi/tgsi_parse.lo tgsi/tgsi_sanity.lo tgsi/tgsi_scan.lo \
+	tgsi/tgsi_strings.lo tgsi/tgsi_text.lo tgsi/tgsi_transform.lo \
+	tgsi/tgsi_ureg.lo tgsi/tgsi_util.lo translate/translate.lo \
 	translate/translate_cache.lo translate/translate_generic.lo \
 	translate/translate_sse.lo util/u_debug.lo \
 	util/u_debug_describe.lo util/u_debug_flush.lo \
@@ -248,13 +250,14 @@ am__objects_1 = cso_cache/cso_cache.lo cso_cache/cso_context.lo \
 	util/u_draw.lo util/u_draw_quad.lo util/u_format.lo \
 	util/u_format_other.lo util/u_format_latc.lo \
 	util/u_format_s3tc.lo util/u_format_rgtc.lo \
-	util/u_format_etc.lo util/u_format_tests.lo \
-	util/u_format_yuv.lo util/u_format_zs.lo util/u_framebuffer.lo \
-	util/u_gen_mipmap.lo util/u_handle_table.lo util/u_hash.lo \
-	util/u_hash_table.lo util/u_helpers.lo util/u_index_modify.lo \
-	util/u_keymap.lo util/u_linear.lo util/u_linkage.lo \
-	util/u_network.lo util/u_math.lo util/u_mm.lo \
-	util/u_pstipple.lo util/u_ringbuffer.lo util/u_sampler.lo \
+	util/u_format_etc.lo util/u_format_bptc.lo \
+	util/u_format_tests.lo util/u_format_yuv.lo \
+	util/u_format_zs.lo util/u_framebuffer.lo util/u_gen_mipmap.lo \
+	util/u_handle_table.lo util/u_hash.lo util/u_hash_table.lo \
+	util/u_helpers.lo util/u_index_modify.lo util/u_keymap.lo \
+	util/u_linear.lo util/u_linkage.lo util/u_network.lo \
+	util/u_math.lo util/u_mm.lo util/u_pstipple.lo \
+	util/u_ringbuffer.lo util/u_sampler.lo \
 	util/u_simple_shaders.lo util/u_slab.lo util/u_snprintf.lo \
 	util/u_staging.lo util/u_suballoc.lo util/u_surface.lo \
 	util/u_surfaces.lo util/u_texture.lo util/u_tile.lo \
@@ -266,7 +269,7 @@ am__objects_1 = cso_cache/cso_cache.lo cso_cache/cso_context.lo \
 	vl/vl_vertex_buffers.lo vl/vl_video_buffer.lo \
 	vl/vl_deint_filter.lo
 am__objects_2 = indices/u_indices_gen.lo indices/u_unfilled_gen.lo \
-	util/u_format_srgb.lo util/u_format_table.lo
+	util/u_format_table.lo
 am__objects_3 = gallivm/lp_bld_arit.lo gallivm/lp_bld_arit_overflow.lo \
 	gallivm/lp_bld_assert.lo gallivm/lp_bld_bitarit.lo \
 	gallivm/lp_bld_const.lo gallivm/lp_bld_conv.lo \
@@ -388,7 +391,7 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = pipe-loader
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -423,6 +426,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
 CCASDEPMODE = @CCASDEPMODE@
@@ -438,6 +442,7 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+D3D_DRIVER_INSTALL_DIR = @D3D_DRIVER_INSTALL_DIR@
 DEFINES = @DEFINES@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -460,7 +465,6 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
 EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
-EGL_DRIVER_INSTALL_DIR = @EGL_DRIVER_INSTALL_DIR@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
@@ -533,11 +537,14 @@ LLVM_LIBS = @LLVM_LIBS@
 LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
+NINE_MAJOR = @NINE_MAJOR@
+NINE_MINOR = @NINE_MINOR@
+NINE_TINY = @NINE_TINY@
+NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NOUVEAU_CFLAGS = @NOUVEAU_CFLAGS@
@@ -548,10 +555,8 @@ OMX_CFLAGS = @OMX_CFLAGS@
 OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
-OPENCL_LIB_INSTALL_DIR = @OPENCL_LIB_INSTALL_DIR@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
-OSMESA_MESA_DEPS = @OSMESA_MESA_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
 OSMESA_PC_REQ = @OSMESA_PC_REQ@
 OSMESA_VERSION = @OSMESA_VERSION@
@@ -565,7 +570,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -584,7 +588,13 @@ SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
+VA_CFLAGS = @VA_CFLAGS@
+VA_LIBS = @VA_LIBS@
+VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
+VA_MAJOR = @VA_MAJOR@
+VA_MINOR = @VA_MINOR@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -648,6 +658,7 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
+ifGNUmake = @ifGNUmake@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -675,7 +686,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = subdir-objects
-SUBDIRS := pipe-loader
+@HAVE_LOADER_GALLIUM_TRUE@SUBDIRS := pipe-loader
 C_SOURCES := \
 	cso_cache/cso_cache.c \
 	cso_cache/cso_context.c \
@@ -753,6 +764,7 @@ C_SOURCES := \
 	tgsi/tgsi_exec.c \
 	tgsi/tgsi_info.c \
 	tgsi/tgsi_iterate.c \
+	tgsi/tgsi_lowering.c \
 	tgsi/tgsi_parse.c \
 	tgsi/tgsi_sanity.c \
 	tgsi/tgsi_scan.c \
@@ -789,6 +801,7 @@ C_SOURCES := \
 	util/u_format_s3tc.c \
 	util/u_format_rgtc.c \
 	util/u_format_etc.c \
+	util/u_format_bptc.c \
 	util/u_format_tests.c \
 	util/u_format_yuv.c \
 	util/u_format_zs.c \
@@ -838,7 +851,6 @@ C_SOURCES := \
 GENERATED_SOURCES := \
 	indices/u_indices_gen.c \
 	indices/u_unfilled_gen.c \
-	util/u_format_srgb.c \
 	util/u_format_table.c
 
 GALLIVM_SOURCES := \
@@ -884,6 +896,7 @@ GALLIVM_CPP_SOURCES := \
 
 GALLIUM_CFLAGS = \
 	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	$(DEFINES)
@@ -895,37 +908,29 @@ GALLIUM_CFLAGS = \
 # preprocessor is determined by the ordering of the -I flags.
 GALLIUM_DRIVER_CFLAGS = \
 	-I$(srcdir)/include \
+	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
+	-I$(top_srcdir)/src/gallium/winsys \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS)
 
 GALLIUM_DRIVER_CXXFLAGS = \
 	-I$(srcdir)/include \
+	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
+	-I$(top_srcdir)/src/gallium/winsys \
 	$(DEFINES) \
 	$(VISIBILITY_CXXFLAGS)
 
-GALLIUM_DRI_CFLAGS = \
+GALLIUM_TARGET_CFLAGS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/gallium/include \
-	-I$(top_srcdir)/src/gallium/auxiliary \
-	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/src/gallium/winsys \
-	-I$(top_srcdir)/src/mesa \
-	-I$(top_srcdir)/src/mapi \
-	$(DEFINES) \
-	$(PTHREAD_CFLAGS) \
-	$(LIBDRM_CFLAGS) \
-	$(VISIBILITY_CFLAGS)
-
-GALLIUM_VIDEO_CFLAGS = \
-	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src/loader \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
@@ -935,45 +940,12 @@ GALLIUM_VIDEO_CFLAGS = \
 	$(LIBDRM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
 
-GALLIUM_DRI_LINKER_FLAGS = -shared -shrext .so -module -avoid-version \
-	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/dri.sym \
-	$(GC_SECTIONS) $(am__append_1)
-GALLIUM_VDPAU_LINKER_FLAGS = -shared -module -no-undefined \
-	-version-number $(VDPAU_MAJOR):$(VDPAU_MINOR) \
-	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/vdpau.sym \
-	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_2)
-GALLIUM_XVMC_LINKER_FLAGS = -shared -module -no-undefined \
-	-version-number $(XVMC_MAJOR):$(XVMC_MINOR) \
-	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/xvmc.sym \
-	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_3)
-GALLIUM_OMX_LINKER_FLAGS = -shared -module -no-undefined \
-	-avoid-version \
-	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/omx.sym \
-	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_4)
 GALLIUM_COMMON_LIB_DEPS = \
 	-lm \
 	$(CLOCK_LIB) \
 	$(PTHREAD_LIBS) \
 	$(DLOPEN_LIBS)
 
-GALLIUM_DRI_LIB_DEPS = $(top_builddir)/src/mesa/libmesagallium.la \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(SELINUX_LIBS) $(LIBDRM_LIBS) $(EXPAT_LIBS) \
-	$(GALLIUM_COMMON_LIB_DEPS) $(am__append_5)
-GALLIUM_VDPAU_LIB_DEPS =  \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/gallium/state_trackers/vdpau/libvdpautracker.la \
-	$(VDPAU_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
-	$(am__append_6)
-GALLIUM_XVMC_LIB_DEPS =  \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/gallium/state_trackers/xvmc/libxvmctracker.la \
-	$(XVMC_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
-	$(am__append_7)
-GALLIUM_OMX_LIB_DEPS =  \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/gallium/state_trackers/omx/libomxtracker.la \
-	$(OMX_LIBS) $(GALLIUM_COMMON_LIB_DEPS) $(am__append_8)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
@@ -981,12 +953,16 @@ GALLIUM_WINSYS_CFLAGS = \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS)
 
+GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
+	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
+	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
+	$(am__append_1) $(am__append_2)
 noinst_LTLIBRARIES = libgallium.la
 AM_CFLAGS = -I$(top_srcdir)/src/gallium/auxiliary/util \
-	$(GALLIUM_CFLAGS) $(VISIBILITY_CFLAGS) $(am__append_9)
-AM_CXXFLAGS = $(VISIBILITY_CXXFLAGS) $(am__append_10)
+	$(GALLIUM_CFLAGS) $(VISIBILITY_CFLAGS) $(am__append_3)
+AM_CXXFLAGS = $(VISIBILITY_CXXFLAGS) $(am__append_4)
 libgallium_la_SOURCES = $(C_SOURCES) $(GENERATED_SOURCES) \
-	$(am__append_11)
+	$(am__append_5)
 all: all-recursive
 
 .SUFFIXES:
@@ -1229,6 +1205,8 @@ tgsi/tgsi_exec.lo: tgsi/$(am__dirstamp) tgsi/$(DEPDIR)/$(am__dirstamp)
 tgsi/tgsi_info.lo: tgsi/$(am__dirstamp) tgsi/$(DEPDIR)/$(am__dirstamp)
 tgsi/tgsi_iterate.lo: tgsi/$(am__dirstamp) \
 	tgsi/$(DEPDIR)/$(am__dirstamp)
+tgsi/tgsi_lowering.lo: tgsi/$(am__dirstamp) \
+	tgsi/$(DEPDIR)/$(am__dirstamp)
 tgsi/tgsi_parse.lo: tgsi/$(am__dirstamp) \
 	tgsi/$(DEPDIR)/$(am__dirstamp)
 tgsi/tgsi_sanity.lo: tgsi/$(am__dirstamp) \
@@ -1299,6 +1277,8 @@ util/u_format_s3tc.lo: util/$(am__dirstamp) \
 util/u_format_rgtc.lo: util/$(am__dirstamp) \
 	util/$(DEPDIR)/$(am__dirstamp)
 util/u_format_etc.lo: util/$(am__dirstamp) \
+	util/$(DEPDIR)/$(am__dirstamp)
+util/u_format_bptc.lo: util/$(am__dirstamp) \
 	util/$(DEPDIR)/$(am__dirstamp)
 util/u_format_tests.lo: util/$(am__dirstamp) \
 	util/$(DEPDIR)/$(am__dirstamp)
@@ -1377,8 +1357,6 @@ indices/u_indices_gen.lo: indices/$(am__dirstamp) \
 	indices/$(DEPDIR)/$(am__dirstamp)
 indices/u_unfilled_gen.lo: indices/$(am__dirstamp) \
 	indices/$(DEPDIR)/$(am__dirstamp)
-util/u_format_srgb.lo: util/$(am__dirstamp) \
-	util/$(DEPDIR)/$(am__dirstamp)
 util/u_format_table.lo: util/$(am__dirstamp) \
 	util/$(DEPDIR)/$(am__dirstamp)
 gallivm/$(am__dirstamp):
@@ -1613,6 +1591,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@tgsi/$(DEPDIR)/tgsi_exec.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tgsi/$(DEPDIR)/tgsi_info.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tgsi/$(DEPDIR)/tgsi_iterate.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tgsi/$(DEPDIR)/tgsi_lowering.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tgsi/$(DEPDIR)/tgsi_parse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tgsi/$(DEPDIR)/tgsi_sanity.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tgsi/$(DEPDIR)/tgsi_scan.Plo@am__quote@
@@ -1644,12 +1623,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_dump_defines.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_dump_state.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_bptc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_etc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_latc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_other.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_rgtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_s3tc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_srgb.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_table.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_tests.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@util/$(DEPDIR)/u_format_yuv.Plo@am__quote@
@@ -2077,10 +2056,6 @@ indices/u_indices_gen.c: $(srcdir)/indices/u_indices_gen.py
 
 indices/u_unfilled_gen.c: $(srcdir)/indices/u_unfilled_gen.py
 	$(AM_V_at)$(MKDIR_P) indices
-	$(AM_V_GEN) $(PYTHON2) $< > $@
-
-util/u_format_srgb.c: $(srcdir)/util/u_format_srgb.py
-	$(AM_V_at)$(MKDIR_P) util
 	$(AM_V_GEN) $(PYTHON2) $< > $@
 
 util/u_format_table.c: $(srcdir)/util/u_format_table.py $(srcdir)/util/u_format_pack.py $(srcdir)/util/u_format_parse.py $(srcdir)/util/u_format.csv

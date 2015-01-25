@@ -45,7 +45,7 @@ enum pipe_error st_translate_program(
    const ubyte inputSemanticName[],
    const ubyte inputSemanticIndex[],
    const GLuint interpMode[],
-   const GLboolean is_centroid[],
+   const GLuint interpLocation[],
    GLuint numOutputs,
    const GLuint outputMapping[],
    const ubyte outputSemanticName[],
@@ -61,11 +61,6 @@ void get_bitmap_visitor(struct st_fragment_program *fp,
                         struct glsl_to_tgsi_visitor *original,
                         int samplerIndex);
 
-struct gl_shader *st_new_shader(struct gl_context *ctx, GLuint name, GLuint type);
-
-struct gl_shader_program *
-st_new_shader_program(struct gl_context *ctx, GLuint name);
-
 GLboolean st_link_shader(struct gl_context *ctx, struct gl_shader_program *prog);
 
 void
@@ -73,6 +68,7 @@ st_translate_stream_output_info(struct glsl_to_tgsi_visitor *glsl_to_tgsi,
                                 const GLuint outputMapping[],
                                 struct pipe_stream_output_info *so);
 
+extern const unsigned _mesa_sysval_to_semantic[SYSTEM_VALUE_MAX];
 
 #ifdef __cplusplus
 }

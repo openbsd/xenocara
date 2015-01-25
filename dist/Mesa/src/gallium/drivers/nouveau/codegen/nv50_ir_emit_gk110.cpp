@@ -140,6 +140,7 @@ private:
    code[(0x##b) / 32] |= 1 << ((0x##b) % 32)
 
 #define FTZ_(b) if (i->ftz) code[(0x##b) / 32] |= 1 << ((0x##b) % 32)
+#define DNZ_(b) if (i->dnz) code[(0x##b) / 32] |= 1 << ((0x##b) % 32)
 
 #define SAT_(b) if (i->saturate) code[(0x##b) / 32] |= 1 << ((0x##b) % 32)
 
@@ -464,6 +465,7 @@ CodeEmitterGK110::emitFMAD(const Instruction *i)
    SAT_(35);
    RND_(36, F);
    FTZ_(38);
+   DNZ_(39);
 
    bool neg1 = (i->src(0).mod ^ i->src(1).mod).neg();
 
@@ -487,6 +489,7 @@ CodeEmitterGK110::emitFMUL(const Instruction *i)
       emitForm_L(i, 0x200, 0x2, Modifier(0));
 
       FTZ_(38);
+      DNZ_(39);
       SAT_(3a);
       if (neg)
          code[1] ^= 1 << 22;
@@ -499,6 +502,7 @@ CodeEmitterGK110::emitFMUL(const Instruction *i)
 
       RND_(2a, F);
       FTZ_(2f);
+      DNZ_(30);
       SAT_(35);
 
       if (code[0] & 0x1) {
@@ -1478,6 +1482,7 @@ CodeEmitterGK110::emitLOAD(const Instruction *i)
       offset &= 0xffff;
       code[0] = 0x00000002;
       code[1] = 0x7c800000 | (i->src(0).get()->reg.fileIndex << 7);
+      code[1] |= i->subOp << 15;
       break;
    default:
       assert(!"invalid memory file");

@@ -60,7 +60,7 @@ vlVdpVideoMixerCreate(VdpDevice device,
    if (!vmixer)
       return VDP_STATUS_RESOURCES;
 
-   vmixer->device = dev;
+   DeviceReference(&vmixer->device, dev);
 
    pipe_mutex_lock(dev->mutex);
 
@@ -160,6 +160,7 @@ no_params:
 no_handle:
    vl_compositor_cleanup_state(&vmixer->cstate);
    pipe_mutex_unlock(dev->mutex);
+   DeviceReference(&vmixer->device, NULL);
    FREE(vmixer);
    return ret;
 }
@@ -199,6 +200,7 @@ vlVdpVideoMixerDestroy(VdpVideoMixer mixer)
       FREE(vmixer->sharpness.filter);
    }
    pipe_mutex_unlock(vmixer->device->mutex);
+   DeviceReference(&vmixer->device, NULL);
 
    FREE(vmixer);
 
@@ -641,6 +643,7 @@ vlVdpVideoMixerSetAttributeValues(VdpVideoMixer mixer,
    const float *vdp_csc;
    float val;
    unsigned i;
+   VdpStatus ret;
 
    if (!(attributes && attribute_values))
       return VDP_STATUS_INVALID_POINTER;
@@ -674,8 +677,10 @@ vlVdpVideoMixerSetAttributeValues(VdpVideoMixer mixer,
       case VDP_VIDEO_MIXER_ATTRIBUTE_NOISE_REDUCTION_LEVEL:
 
          val = *(float*)attribute_values[i];
-         if (val < 0.f || val > 1.f)
-            return VDP_STATUS_INVALID_VALUE;
+         if (val < 0.f || val > 1.f) {
+            ret = VDP_STATUS_INVALID_VALUE;
+            goto fail;
+         }
 
          vmixer->noise_reduction.level = val * 10;
          vlVdpVideoMixerUpdateNoiseReductionFilter(vmixer);
@@ -683,41 +688,52 @@ vlVdpVideoMixerSetAttributeValues(VdpVideoMixer mixer,
 
       case VDP_VIDEO_MIXER_ATTRIBUTE_LUMA_KEY_MIN_LUMA:
          val = *(float*)attribute_values[i];
-         if (val < 0.f || val > 1.f)
-            return VDP_STATUS_INVALID_VALUE;
+         if (val < 0.f || val > 1.f) {
+            ret = VDP_STATUS_INVALID_VALUE;
+            goto fail;
+         }
          vmixer->luma_key_min = val;
          break;
       case VDP_VIDEO_MIXER_ATTRIBUTE_LUMA_KEY_MAX_LUMA:
          val = *(float*)attribute_values[i];
-         if (val < 0.f || val > 1.f)
-            return VDP_STATUS_INVALID_VALUE;
+         if (val < 0.f || val > 1.f) {
+            ret = VDP_STATUS_INVALID_VALUE;
+            goto fail;
+         }
          vmixer->luma_key_max = val;
          break;
 
       case VDP_VIDEO_MIXER_ATTRIBUTE_SHARPNESS_LEVEL:
 
          val = *(float*)attribute_values[i];
-         if (val < -1.f || val > 1.f)
-            return VDP_STATUS_INVALID_VALUE;
+         if (val < -1.f || val > 1.f) {
+            ret = VDP_STATUS_INVALID_VALUE;
+            goto fail;
+         }
 
          vmixer->sharpness.value = val;
          vlVdpVideoMixerUpdateSharpnessFilter(vmixer);
          break;
 
       case VDP_VIDEO_MIXER_ATTRIBUTE_SKIP_CHROMA_DEINTERLACE:
-         if (*(uint8_t*)attribute_values[i] > 1)
-            return VDP_STATUS_INVALID_VALUE;
+         if (*(uint8_t*)attribute_values[i] > 1) {
+            ret = VDP_STATUS_INVALID_VALUE;
+            goto fail;
+         }
          vmixer->skip_chroma_deint = *(uint8_t*)attribute_values[i];
          vlVdpVideoMixerUpdateDeinterlaceFilter(vmixer);
          break;
       default:
-         pipe_mutex_unlock(vmixer->device->mutex);
-         return VDP_STATUS_INVALID_VIDEO_MIXER_ATTRIBUTE;
+         ret = VDP_STATUS_INVALID_VIDEO_MIXER_ATTRIBUTE;
+         goto fail;
       }
    }
    pipe_mutex_unlock(vmixer->device->mutex);
 
    return VDP_STATUS_OK;
+fail:
+   pipe_mutex_unlock(vmixer->device->mutex);
+   return ret;
 }
 
 /**

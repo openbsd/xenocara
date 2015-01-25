@@ -45,6 +45,7 @@ void evergreen_init_atom_start_compute_cs(struct r600_context *rctx);
 void evergreen_init_compute_state_functions(struct r600_context *rctx);
 void evergreen_emit_cs_shader(struct r600_context *rctx, struct r600_atom * atom);
 
+struct r600_resource* r600_compute_buffer_alloc_vram(struct r600_screen *screen, unsigned size);
 struct pipe_resource *r600_compute_global_buffer_create(struct pipe_screen *screen, const struct pipe_resource *templ);
 void r600_compute_global_buffer_destroy(struct pipe_screen *screen, struct pipe_resource *res);
 void *r600_compute_global_transfer_map(
@@ -58,18 +59,5 @@ void r600_compute_global_transfer_unmap(struct pipe_context *ctx, struct pipe_tr
 void r600_compute_global_transfer_flush_region( struct pipe_context *, struct pipe_transfer *, const struct pipe_box *);
 void r600_compute_global_transfer_inline_write( struct pipe_context *, struct pipe_resource *, unsigned level,
                                                 unsigned usage, const struct pipe_box *, const void *data, unsigned stride, unsigned layer_stride);
-
-
-static inline void COMPUTE_DBG(struct r600_screen *rscreen, const char *fmt, ...)
-{
-	if (!(rscreen->b.debug_flags & DBG_COMPUTE)) {
-		return;
-	}
-
-	va_list ap;
-	va_start(ap, fmt);
-	_debug_vprintf(fmt, ap);
-	va_end(ap);
-}
 
 #endif

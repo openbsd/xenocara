@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <xf86drm.h>
 #include "radeon_drm_cs.h"
 #include "radeon_drm_bo.h"
@@ -80,9 +81,9 @@ void radeon_dump_cs_on_lockup(struct radeon_drm_cs *cs, struct radeon_cs_context
     }
     fprintf(dump, "/* To build this file you will need to copy radeon_ctx.h\n");
     fprintf(dump, " * in same directory. You can find radeon_ctx.h in mesa tree :\n");
-    fprintf(dump, " * mesa/src/gallium/winsys/radeon/tools/radeon_ctx.h\n");
+    fprintf(dump, " * mesa/src/gallium/winsys/radeon/drm/radeon_ctx.h\n");
     fprintf(dump, " * Build with :\n");
-    fprintf(dump, " * gcc -O0 -g %s -ldrm -o rlockup_0x%08x -I/usr/include/libdrm\n", fname, csc->cs_trace_id);
+    fprintf(dump, " * gcc -O0 -g `pkg-config --cflags --libs libdrm` %s -o rlockup_0x%08x \n", fname, csc->cs_trace_id);
     fprintf(dump, " */\n");
     fprintf(dump, " /* timeout on cs lockup likely happen at cs 0x%08x dw 0x%08x*/\n", ptr[1], ptr[0]);
     fprintf(dump, "#include <stdio.h>\n");
@@ -101,7 +102,7 @@ void radeon_dump_cs_on_lockup(struct radeon_drm_cs *cs, struct radeon_cs_context
             for (j = 0; j < ndw; j++) {
                 if (j && !(j % 8)) {
                     uint32_t offset = (j - 8) << 2;
-                    fprintf(dump, "  /* [0x%08x] va[0x%016llx] */\n   ", offset, offset + csc->relocs_bo[i]->va);
+                    fprintf(dump, "  /* [0x%08x] va[0x%016"PRIx64"] */\n   ", offset, offset + csc->relocs_bo[i]->va);
                 }
                 fprintf(dump, " 0x%08x,", ptr[j]);
             }
@@ -143,10 +144,10 @@ void radeon_dump_cs_on_lockup(struct radeon_drm_cs *cs, struct radeon_cs_context
 
         ptr = radeon_bo_do_map(csc->relocs_bo[i]);
         if (ptr) {
-            fprintf(dump, "    bo[%d] = bo_new(&ctx, %d, bo_%04d_data, 0x%016llx, 0x%08x);\n",
+            fprintf(dump, "    bo[%d] = bo_new(&ctx, %d, bo_%04d_data, 0x%016"PRIx64", 0x%08x);\n",
                     i, ndw, i, csc->relocs_bo[i]->va, csc->relocs_bo[i]->base.alignment);
         } else {
-            fprintf(dump, "    bo[%d] = bo_new(&ctx, %d, NULL, 0x%016llx, 0x%08x);\n",
+            fprintf(dump, "    bo[%d] = bo_new(&ctx, %d, NULL, 0x%016"PRIx64", 0x%08x);\n",
                     i, ndw, csc->relocs_bo[i]->va, csc->relocs_bo[i]->base.alignment);
         }
     }

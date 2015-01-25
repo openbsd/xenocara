@@ -31,7 +31,7 @@
 
 #include <assert.h>
 #include <string.h>
-#include "ralloc.h"
+#include "util/ralloc.h"
 
 void
 _mesa_warning(struct gl_context *ctx, const char *fmt, ...)
@@ -83,6 +83,33 @@ _mesa_new_shader(struct gl_context *ctx, GLuint name, GLenum type)
    return shader;
 }
 
+void
+_mesa_clear_shader_program_data(struct gl_shader_program *shProg)
+{
+   unsigned i;
+
+   shProg->NumUserUniformStorage = 0;
+   shProg->UniformStorage = NULL;
+   shProg->NumUniformRemapTable = 0;
+   shProg->UniformRemapTable = NULL;
+   shProg->UniformHash = NULL;
+
+   ralloc_free(shProg->InfoLog);
+   shProg->InfoLog = ralloc_strdup(shProg, "");
+
+   ralloc_free(shProg->UniformBlocks);
+   shProg->UniformBlocks = NULL;
+   shProg->NumUniformBlocks = 0;
+   for (i = 0; i < MESA_SHADER_STAGES; i++) {
+      ralloc_free(shProg->UniformBlockStageIndex[i]);
+      shProg->UniformBlockStageIndex[i] = NULL;
+   }
+
+   ralloc_free(shProg->AtomicBuffers);
+   shProg->AtomicBuffers = NULL;
+   shProg->NumAtomicBuffers = 0;
+}
+
 void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
 {
    memset(ctx, 0, sizeof(*ctx));
@@ -98,6 +125,7 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Extensions.ARB_ES3_compatibility = true;
    ctx->Extensions.ARB_explicit_attrib_location = true;
    ctx->Extensions.ARB_fragment_coord_conventions = true;
+   ctx->Extensions.ARB_fragment_layer_viewport = true;
    ctx->Extensions.ARB_gpu_shader5 = true;
    ctx->Extensions.ARB_sample_shading = true;
    ctx->Extensions.ARB_shader_bit_encoding = true;
@@ -163,5 +191,5 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    options.DefaultPragmas.Optimize = true;
 
    for (int sh = 0; sh < MESA_SHADER_STAGES; ++sh)
-      memcpy(&ctx->ShaderCompilerOptions[sh], &options, sizeof(options));
+      memcpy(&ctx->Const.ShaderCompilerOptions[sh], &options, sizeof(options));
 }

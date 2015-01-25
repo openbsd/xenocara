@@ -70,8 +70,7 @@ device::type() const {
    case PIPE_LOADER_DEVICE_PLATFORM:
       return CL_DEVICE_TYPE_GPU;
    default:
-      assert(0);
-      return 0;
+      unreachable("Unknown device type.");
    }
 }
 
@@ -84,8 +83,7 @@ device::vendor_id() const {
    case PIPE_LOADER_DEVICE_PCI:
       return ldev->u.pci.vendor_id;
    default:
-      assert(0);
-      return 0;
+      unreachable("Unknown device type.");
    }
 }
 
@@ -136,7 +134,7 @@ device::max_mem_input() const {
 cl_ulong
 device::max_const_buffer_size() const {
    return pipe->get_shader_param(pipe, PIPE_SHADER_COMPUTE,
-                                 PIPE_SHADER_CAP_MAX_CONSTS) * 16;
+                                 PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE);
 }
 
 cl_uint
@@ -161,6 +159,18 @@ cl_uint
 device::max_clock_frequency() const {
    return get_compute_param<uint32_t>(pipe,
                                       PIPE_COMPUTE_CAP_MAX_CLOCK_FREQUENCY)[0];
+}
+
+cl_uint
+device::max_compute_units() const {
+   return get_compute_param<uint32_t>(pipe,
+                                      PIPE_COMPUTE_CAP_MAX_COMPUTE_UNITS)[0];
+}
+
+bool
+device::image_support() const {
+   return get_compute_param<uint32_t>(pipe,
+                                      PIPE_COMPUTE_CAP_IMAGES_SUPPORTED)[0];
 }
 
 std::vector<size_t>

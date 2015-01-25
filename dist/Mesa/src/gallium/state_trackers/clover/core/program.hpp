@@ -28,6 +28,7 @@
 #include "core/object.hpp"
 #include "core/context.hpp"
 #include "core/module.hpp"
+#include "core/compiler.hpp"
 
 namespace clover {
    class program : public ref_counter, public _cl_program {
@@ -46,7 +47,8 @@ namespace clover {
       program &
       operator=(const program &prog) = delete;
 
-      void build(const ref_vector<device> &devs, const char *opts);
+      void build(const ref_vector<device> &devs, const char *opts,
+                 const header_map &headers = {});
 
       const bool has_source;
       const std::string &source() const;
@@ -60,7 +62,11 @@ namespace clover {
 
       const compat::vector<module::symbol> &symbols() const;
 
+      unsigned kernel_ref_count() const;
+
       const intrusive_ref<clover::context> context;
+
+      friend class kernel;
 
    private:
       std::vector<intrusive_ref<device>> _devices;
@@ -68,6 +74,7 @@ namespace clover {
       std::map<const device *, std::string> _logs;
       std::map<const device *, std::string> _opts;
       std::string _source;
+      ref_counter _kernel_ref_counter;
    };
 }
 

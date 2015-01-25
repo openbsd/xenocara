@@ -22,14 +22,8 @@
 
 include $(top_srcdir)/src/gallium/Automake.inc
 
-AM_CPPFLAGS = \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/gallium/state_trackers/xa \
-	-I$(top_srcdir)/src/gallium/winsys
-
 AM_CFLAGS = \
-	$(GALLIUM_CFLAGS) \
-	$(LIBDRM_CFLAGS)
+	$(GALLIUM_TARGET_CFLAGS)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xatracker.pc
@@ -40,25 +34,11 @@ nodist_EXTRA_libxatracker_la_SOURCES = dummy.cpp
 libxatracker_la_SOURCES =
 
 libxatracker_la_LIBADD = \
-	$(GALLIUM_PIPE_LOADER_LIBS) \
-	$(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader.la \
-	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
 	$(top_builddir)/src/gallium/state_trackers/xa/libxatracker.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(top_builddir)/src/util/libmesautil.la \
 	$(LIBDRM_LIBS) \
 	$(GALLIUM_COMMON_LIB_DEPS)
-
-if HAVE_DRI
-libxatracker_la_LIBADD += \
-	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
-endif
-
-if NEED_WINSYS_XLIB
-libxatracker_la_LIBADD += \
-	$(top_builddir)/src/gallium/winsys/sw/xlib/libws_xlib.la \
-	-lX11 -lXext -lXfixes \
-	$(LIBDRM_LIBS)
-endif
 
 libxatracker_la_LDFLAGS = \
 	-no-undefined \
@@ -66,8 +46,39 @@ libxatracker_la_LDFLAGS = \
 	$(GC_SECTIONS) \
 	$(LD_NO_UNDEFINED)
 
+if HAVE_LD_VERSION_SCRIPT
 libxatracker_la_LDFLAGS += \
 	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/xa/xa.sym
+endif
+
+if HAVE_GALLIUM_STATIC_TARGETS
+
+TARGET_DRIVERS =
+TARGET_CPPFLAGS =
+TARGET_LIB_DEPS = $(top_builddir)/src/loader/libloader.la
+
+include $(top_srcdir)/src/gallium/drivers/i915/Automake.inc
+
+include $(top_srcdir)/src/gallium/drivers/ilo/Automake.inc
+
+include $(top_srcdir)/src/gallium/drivers/nouveau/Automake.inc
+
+include $(top_srcdir)/src/gallium/drivers/svga/Automake.inc
+
+include $(top_srcdir)/src/gallium/drivers/freedreno/Automake.inc
+
+libxatracker_la_SOURCES += target.c
+libxatracker_la_CPPFLAGS = $(TARGET_CPPFLAGS)
+libxatracker_la_LIBADD += $(TARGET_LIB_DEPS)
+
+else # HAVE_GALLIUM_STATIC_TARGETS
+
+libxatracker_la_LIBADD += \
+	$(top_builddir)/src/gallium/auxiliary/pipe-loader/libpipe_loader.la \
+	$(GALLIUM_PIPE_LOADER_WINSYS_LIBS) \
+	$(GALLIUM_PIPE_LOADER_LIBS)
+
+endif # HAVE_GALLIUM_STATIC_TARGETS
 
 if HAVE_MESA_LLVM
 libxatracker_la_LIBADD += $(LLVM_LIBS)

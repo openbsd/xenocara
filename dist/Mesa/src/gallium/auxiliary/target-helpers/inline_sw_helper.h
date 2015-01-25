@@ -57,5 +57,69 @@ sw_screen_create(struct sw_winsys *winsys)
    return sw_screen_create_named(winsys, driver);
 }
 
+#if defined(GALLIUM_SOFTPIPE)
+#if defined(DRI_TARGET)
+#include "target-helpers/inline_debug_helper.h"
+#include "sw/dri/dri_sw_winsys.h"
+#include "dri_screen.h"
+
+const __DRIextension **__driDriverGetExtensions_swrast(void);
+
+PUBLIC const __DRIextension **__driDriverGetExtensions_swrast(void)
+{
+   globalDriverAPI = &galliumsw_driver_api;
+   return galliumsw_driver_extensions;
+}
+
+INLINE struct pipe_screen *
+drisw_create_screen(struct drisw_loader_funcs *lf)
+{
+   struct sw_winsys *winsys = NULL;
+   struct pipe_screen *screen = NULL;
+
+   winsys = dri_create_sw_winsys(lf);
+   if (winsys == NULL)
+      return NULL;
+
+   screen = sw_screen_create(winsys);
+   if (screen == NULL) {
+      winsys->destroy(winsys);
+      return NULL;
+   }
+
+   screen = debug_screen_wrap(screen);
+   return screen;
+}
+#endif // DRI_TARGET
+
+#if defined(NINE_TARGET)
+#include "sw/wrapper/wrapper_sw_winsys.h"
+#include "target-helpers/inline_debug_helper.h"
+
+extern struct pipe_screen *ninesw_create_screen(struct pipe_screen *screen);
+
+INLINE struct pipe_screen *
+ninesw_create_screen(struct pipe_screen *pscreen)
+{
+   struct sw_winsys *winsys = NULL;
+   struct pipe_screen *screen = NULL;
+
+   winsys = wrapper_sw_winsys_wrap_pipe_screen(pscreen);
+   if (winsys == NULL)
+      return NULL;
+
+   screen = sw_screen_create(winsys);
+   if (screen == NULL) {
+      winsys->destroy(winsys);
+      return NULL;
+   }
+
+   screen = debug_screen_wrap(screen);
+   return screen;
+}
+#endif // NINE_TARGET
+
+#endif // GALLIUM_SOFTPIPE
+
 
 #endif

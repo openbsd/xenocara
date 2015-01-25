@@ -28,6 +28,7 @@
  */
 
 #include "brw_vec4_gs_visitor.h"
+#include "gen6_gs_visitor.h"
 
 const unsigned MAX_GS_INPUT_VERTICES = 6;
 
@@ -58,8 +59,7 @@ vec4_gs_visitor::make_reg_for_system_value(ir_variable *ir)
       emit(GS_OPCODE_GET_INSTANCE_ID, *reg);
       break;
    default:
-      assert(!"not reached");
-      break;
+      unreachable("not reached");
    }
 
    return reg;
@@ -102,10 +102,11 @@ vec4_gs_visitor::setup_payload()
 {
    int attribute_map[BRW_VARYING_SLOT_COUNT * MAX_GS_INPUT_VERTICES];
 
-   /* If we are in dual instanced mode, then attributes are going to be
-    * interleaved, so one register contains two attribute slots.
+   /* If we are in dual instanced or single mode, then attributes are going
+    * to be interleaved, so one register contains two attribute slots.
     */
-   int attributes_per_reg = c->prog_data.dual_instanced_dispatch ? 2 : 1;
+   int attributes_per_reg =
+      c->prog_data.dispatch_mode == GEN7_GS_DISPATCH_MODE_DUAL_OBJECT ? 1 : 2;
 
    /* If a geometry shader tries to read from an input that wasn't written by
     * the vertex shader, that produces undefined results, but it shouldn't
@@ -130,8 +131,7 @@ vec4_gs_visitor::setup_payload()
 
    reg = setup_varying_inputs(reg, attribute_map, attributes_per_reg);
 
-   lower_attributes_to_hw_regs(attribute_map,
-                               c->prog_data.dual_instanced_dispatch);
+   lower_attributes_to_hw_regs(attribute_map, attributes_per_reg > 1);
 
    this->first_non_payload_grf = reg;
 }
@@ -150,7 +150,7 @@ vec4_gs_visitor::emit_prolog()
     */
    this->current_annotation = "clear r0.2";
    dst_reg r0(retype(brw_vec4_grf(0, 0), BRW_REGISTER_TYPE_UD));
-   vec4_instruction *inst = emit(GS_OPCODE_SET_DWORD_2_IMMED, r0, 0u);
+   vec4_instruction *inst = emit(GS_OPCODE_SET_DWORD_2, r0, 0u);
    inst->force_writemask_all = true;
 
    /* Create a virtual register to hold the vertex count */
@@ -209,7 +209,7 @@ void
 vec4_gs_visitor::emit_program_code()
 {
    /* We don't support NV_geometry_program4. */
-   assert(!"Unreached");
+   unreachable("Unreached");
 }
 
 
@@ -432,9 +432,47 @@ vec4_gs_visitor::emit_control_data_bits()
    emit(BRW_OPCODE_ENDIF);
 }
 
+void
+vec4_gs_visitor::set_stream_control_data_bits(unsigned stream_id)
+{
+   /* control_data_bits |= stream_id << ((2 * (vertex_count - 1)) % 32) */
+
+   /* Note: we are calling this *before* increasing vertex_count, so
+    * this->vertex_count == vertex_count - 1 in the formula above.
+    */
+
+   /* Stream mode uses 2 bits per vertex */
+   assert(c->control_data_bits_per_vertex == 2);
+
+   /* Must be a valid stream */
+   assert(stream_id >= 0 && stream_id < MAX_VERTEX_STREAMS);
+
+   /* Control data bits are initialized to 0 so we don't have to set any
+    * bits when sending vertices to stream 0.
+    */
+   if (stream_id == 0)
+      return;
+
+   /* reg::sid = stream_id */
+   src_reg sid(this, glsl_type::uint_type);
+   emit(MOV(dst_reg(sid), stream_id));
+
+   /* reg:shift_count = 2 * (vertex_count - 1) */
+   src_reg shift_count(this, glsl_type::uint_type);
+   emit(SHL(dst_reg(shift_count), this->vertex_count, 1u));
+
+   /* Note: we're relying on the fact that the GEN SHL instruction only pays
+    * attention to the lower 5 bits of its second source argument, so on this
+    * architecture, stream_id << 2 * (vertex_count - 1) is equivalent to
+    * stream_id << ((2 * (vertex_count - 1)) % 32).
+    */
+   src_reg mask(this, glsl_type::uint_type);
+   emit(SHL(dst_reg(mask), sid, shift_count));
+   emit(OR(dst_reg(this->control_data_bits), this->control_data_bits, mask));
+}
 
 void
-vec4_gs_visitor::visit(ir_emit_vertex *)
+vec4_gs_visitor::visit(ir_emit_vertex *ir)
 {
    this->current_annotation = "emit vertex: safety check";
 
@@ -497,6 +535,17 @@ vec4_gs_visitor::visit(ir_emit_vertex *)
 
       this->current_annotation = "emit vertex: vertex data";
       emit_vertex();
+
+      /* In stream mode we have to set control data bits for all vertices
+       * unless we have disabled control data bits completely (which we do
+       * do for GL_POINTS outputs that don't use streams).
+       */
+      if (c->control_data_header_size_bits > 0 &&
+          c->prog_data.control_data_format ==
+             GEN7_GS_CONTROL_DATA_FORMAT_GSCTL_SID) {
+          this->current_annotation = "emit vertex: Stream control data bits";
+          set_stream_control_data_bits(ir->stream_id());
+      }
 
       this->current_annotation = "emit vertex: increment vertex count";
       emit(ADD(dst_reg(this->vertex_count), this->vertex_count,
@@ -564,18 +613,12 @@ generate_assembly(struct brw_context *brw,
                   struct gl_program *prog,
                   struct brw_vec4_prog_data *prog_data,
                   void *mem_ctx,
-                  exec_list *instructions,
+                  const cfg_t *cfg,
                   unsigned *final_assembly_size)
 {
-   if (brw->gen >= 8) {
-      gen8_vec4_generator g(brw, shader_prog, prog, prog_data, mem_ctx,
-                            INTEL_DEBUG & DEBUG_GS);
-      return g.generate_assembly(instructions, final_assembly_size);
-   } else {
-      vec4_generator g(brw, shader_prog, prog, prog_data, mem_ctx,
-                       INTEL_DEBUG & DEBUG_GS);
-      return g.generate_assembly(instructions, final_assembly_size);
-   }
+   vec4_generator g(brw, shader_prog, prog, prog_data, mem_ctx,
+                    INTEL_DEBUG & DEBUG_GS);
+   return g.generate_assembly(cfg, final_assembly_size);
 }
 
 extern "C" const unsigned *
@@ -589,46 +632,74 @@ brw_gs_emit(struct brw_context *brw,
       struct brw_shader *shader =
          (brw_shader *) prog->_LinkedShaders[MESA_SHADER_GEOMETRY];
 
-      brw_dump_ir(brw, "geometry", prog, &shader->base, NULL);
+      brw_dump_ir("geometry", prog, &shader->base, NULL);
    }
 
-   /* Compile the geometry shader in DUAL_OBJECT dispatch mode, if we can do
-    * so without spilling. If the GS invocations count > 1, then we can't use
-    * dual object mode.
-    */
-   if (c->prog_data.invocations <= 1 &&
-       likely(!(INTEL_DEBUG & DEBUG_NO_DUAL_OBJECT_GS))) {
-      c->prog_data.dual_instanced_dispatch = false;
+   if (brw->gen >= 7) {
+      /* Compile the geometry shader in DUAL_OBJECT dispatch mode, if we can do
+       * so without spilling. If the GS invocations count > 1, then we can't use
+       * dual object mode.
+       */
+      if (c->prog_data.invocations <= 1 &&
+          likely(!(INTEL_DEBUG & DEBUG_NO_DUAL_OBJECT_GS))) {
+         c->prog_data.dispatch_mode = GEN7_GS_DISPATCH_MODE_DUAL_OBJECT;
 
-      vec4_gs_visitor v(brw, c, prog, mem_ctx, true /* no_spills */);
-      if (v.run()) {
-         return generate_assembly(brw, prog, &c->gp->program.Base,
-                                  &c->prog_data.base, mem_ctx, &v.instructions,
-                                  final_assembly_size);
+         vec4_gs_visitor v(brw, c, prog, mem_ctx, true /* no_spills */);
+         if (v.run()) {
+            return generate_assembly(brw, prog, &c->gp->program.Base,
+                                     &c->prog_data.base, mem_ctx, v.cfg,
+                                     final_assembly_size);
+         }
       }
    }
 
    /* Either we failed to compile in DUAL_OBJECT mode (probably because it
     * would have required spilling) or DUAL_OBJECT mode is disabled.  So fall
-    * back to DUAL_INSTANCED mode, which consumes fewer registers.
+    * back to DUAL_INSTANCED or SINGLE mode, which consumes fewer registers.
     *
-    * FIXME: In an ideal world we'd fall back to SINGLE mode, which would
-    * allow us to interleave general purpose registers (resulting in even less
-    * likelihood of spilling).  But at the moment, the vec4 generator and
-    * visitor classes don't have the infrastructure to interleave general
-    * purpose registers, so DUAL_INSTANCED is the best we can do.
+    * FIXME: Single dispatch mode requires that the driver can handle
+    * interleaving of input registers, but this is already supported (dual
+    * instance mode has the same requirement). However, to take full advantage
+    * of single dispatch mode to reduce register pressure we would also need to
+    * do interleaved outputs, but currently, the vec4 visitor and generator
+    * classes do not support this, so at the moment register pressure in
+    * single and dual instance modes is the same.
+    *
+    * From the Ivy Bridge PRM, Vol2 Part1 7.2.1.1 "3DSTATE_GS"
+    * "If InstanceCount>1, DUAL_OBJECT mode is invalid. Software will likely
+    * want to use DUAL_INSTANCE mode for higher performance, but SINGLE mode
+    * is also supported. When InstanceCount=1 (one instance per object) software
+    * can decide which dispatch mode to use. DUAL_OBJECT mode would likely be
+    * the best choice for performance, followed by SINGLE mode."
+    *
+    * So SINGLE mode is more performant when invocations == 1 and DUAL_INSTANCE
+    * mode is more performant when invocations > 1. Gen6 only supports
+    * SINGLE mode.
     */
-   c->prog_data.dual_instanced_dispatch = true;
+   if (c->prog_data.invocations <= 1 || brw->gen < 7)
+      c->prog_data.dispatch_mode = GEN7_GS_DISPATCH_MODE_SINGLE;
+   else
+      c->prog_data.dispatch_mode = GEN7_GS_DISPATCH_MODE_DUAL_INSTANCE;
 
-   vec4_gs_visitor v(brw, c, prog, mem_ctx, false /* no_spills */);
-   if (!v.run()) {
+   vec4_gs_visitor *gs = NULL;
+   const unsigned *ret = NULL;
+
+   if (brw->gen >= 7)
+      gs = new vec4_gs_visitor(brw, c, prog, mem_ctx, false /* no_spills */);
+   else
+      gs = new gen6_gs_visitor(brw, c, prog, mem_ctx, false /* no_spills */);
+
+   if (!gs->run()) {
       prog->LinkStatus = false;
-      ralloc_strcat(&prog->InfoLog, v.fail_msg);
-      return NULL;
+      ralloc_strcat(&prog->InfoLog, gs->fail_msg);
+   } else {
+      ret = generate_assembly(brw, prog, &c->gp->program.Base,
+                              &c->prog_data.base, mem_ctx, gs->cfg,
+                              final_assembly_size);
    }
 
-   return generate_assembly(brw, prog, &c->gp->program.Base, &c->prog_data.base,
-                            mem_ctx, &v.instructions, final_assembly_size);
+   delete gs;
+   return ret;
 }
 
 

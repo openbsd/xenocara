@@ -46,35 +46,7 @@
 #include "s_texfetch.h"
 #include "../../gallium/auxiliary/util/u_format_rgb9e5.h"
 #include "../../gallium/auxiliary/util/u_format_r11g11b10f.h"
-
-
-/**
- * Convert an 8-bit sRGB value from non-linear space to a
- * linear RGB value in [0, 1].
- * Implemented with a 256-entry lookup table.
- */
-static inline GLfloat
-nonlinear_to_linear(GLubyte cs8)
-{
-   static GLfloat table[256];
-   static GLboolean tableReady = GL_FALSE;
-   if (!tableReady) {
-      /* compute lookup table now */
-      GLuint i;
-      for (i = 0; i < 256; i++) {
-         const GLfloat cs = UBYTE_TO_FLOAT(i);
-         if (cs <= 0.04045) {
-            table[i] = cs / 12.92f;
-         }
-         else {
-            table[i] = (GLfloat) pow((cs + 0.055) / 1.055, 2.4);
-         }
-      }
-      tableReady = GL_TRUE;
-   }
-   return table[cs8];
-}
-
+#include "util/format_srgb.h"
 
 
 /* Texel fetch routines for all supported formats
@@ -210,7 +182,6 @@ texfetch_funcs[] =
    },
    FETCH_FUNCS(YCBCR),
    FETCH_FUNCS(YCBCR_REV),
-   FETCH_FUNCS(DUDV8),
 
    /* Array unorm formats */
    FETCH_FUNCS(A_UNORM8),
@@ -239,6 +210,7 @@ texfetch_funcs[] =
    FETCH_FUNCS(R8G8_SNORM),
    FETCH_NULL(G8R8_SNORM),
    FETCH_FUNCS(L8A8_SNORM),
+   FETCH_FUNCS(A8L8_SNORM),
 
    /* Array signed/normalized formats */
    FETCH_FUNCS(A_SNORM8),
@@ -257,10 +229,14 @@ texfetch_funcs[] =
    /* Packed sRGB formats */
    FETCH_FUNCS(A8B8G8R8_SRGB),
    FETCH_FUNCS(B8G8R8A8_SRGB),
+   FETCH_FUNCS(A8R8G8B8_SRGB),
    FETCH_NULL(B8G8R8X8_SRGB),
+   FETCH_NULL(X8R8G8B8_SRGB),
    FETCH_FUNCS(R8G8B8A8_SRGB),
    FETCH_FUNCS(R8G8B8X8_SRGB),
+   FETCH_FUNCS(X8B8G8R8_SRGB),
    FETCH_FUNCS(L8A8_SRGB),
+   FETCH_FUNCS(A8L8_SRGB),
 
    /* Array sRGB formats */
    FETCH_FUNCS(L_SRGB8),
@@ -538,6 +514,30 @@ texfetch_funcs[] =
    },
    {
       MESA_FORMAT_ETC2_SRGB8_PUNCHTHROUGH_ALPHA1,
+      fetch_compressed,
+      fetch_compressed,
+      fetch_compressed
+   },
+   {
+      MESA_FORMAT_BPTC_RGBA_UNORM,
+      fetch_compressed,
+      fetch_compressed,
+      fetch_compressed
+   },
+   {
+      MESA_FORMAT_BPTC_SRGB_ALPHA_UNORM,
+      fetch_compressed,
+      fetch_compressed,
+      fetch_compressed
+   },
+   {
+      MESA_FORMAT_BPTC_RGB_SIGNED_FLOAT,
+      fetch_compressed,
+      fetch_compressed,
+      fetch_compressed
+   },
+   {
+      MESA_FORMAT_BPTC_RGB_UNSIGNED_FLOAT,
       fetch_compressed,
       fetch_compressed,
       fetch_compressed

@@ -78,9 +78,12 @@ nv50_mt_choose_storage_type(struct nv50_miptree *mt, boolean compressed)
    case PIPE_FORMAT_Z16_UNORM:
       tile_flags = 0x6c + ms;
       break;
+   case PIPE_FORMAT_X8Z24_UNORM:
+   case PIPE_FORMAT_S8X24_UINT:
    case PIPE_FORMAT_S8_UINT_Z24_UNORM:
       tile_flags = 0x18 + ms;
       break;
+   case PIPE_FORMAT_X24S8_UINT:
    case PIPE_FORMAT_Z24X8_UNORM:
    case PIPE_FORMAT_Z24_UNORM_S8_UINT:
       tile_flags = 0x128 + ms;
@@ -88,6 +91,7 @@ nv50_mt_choose_storage_type(struct nv50_miptree *mt, boolean compressed)
    case PIPE_FORMAT_Z32_FLOAT:
       tile_flags = 0x40 + ms;
       break;
+   case PIPE_FORMAT_X32_S8X24_UINT:
    case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
       tile_flags = 0x60 + ms;
       break;
@@ -352,7 +356,12 @@ nv50_miptree_create(struct pipe_screen *pscreen,
    }
    bo_config.nv50.tile_mode = mt->level[0].tile_mode;
 
-   bo_flags = NOUVEAU_BO_VRAM | NOUVEAU_BO_NOSNOOP;
+   if (!bo_config.nv50.memtype && (pt->bind & PIPE_BIND_SHARED))
+      mt->base.domain = NOUVEAU_BO_GART;
+   else
+      mt->base.domain = NOUVEAU_BO_VRAM;
+
+   bo_flags = mt->base.domain | NOUVEAU_BO_NOSNOOP;
    if (mt->base.base.bind & (PIPE_BIND_CURSOR | PIPE_BIND_DISPLAY_TARGET))
       bo_flags |= NOUVEAU_BO_CONTIG;
 
@@ -362,7 +371,6 @@ nv50_miptree_create(struct pipe_screen *pscreen,
       FREE(mt);
       return NULL;
    }
-   mt->base.domain = NOUVEAU_BO_VRAM;
    mt->base.address = mt->base.bo->offset;
 
    return pt;
@@ -403,6 +411,8 @@ nv50_miptree_from_handle(struct pipe_screen *pscreen,
    mt->level[0].pitch = stride;
    mt->level[0].offset = 0;
    mt->level[0].tile_mode = mt->base.bo->config.nv50.tile_mode;
+
+   NOUVEAU_DRV_STAT(nouveau_screen(pscreen), tex_obj_current_count, 1);
 
    /* no need to adjust bo reference count */
    return &mt->base.base;

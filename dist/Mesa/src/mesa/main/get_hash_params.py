@@ -203,10 +203,10 @@ descriptor=[
   [ "COLOR_ARRAY_SIZE", "LOC_CUSTOM, TYPE_INT, 0, NO_EXTRA" ],
   [ "COLOR_ARRAY_TYPE", "ARRAY_ENUM(VertexAttrib[VERT_ATTRIB_COLOR0].Type), NO_EXTRA" ],
   [ "COLOR_ARRAY_STRIDE", "ARRAY_INT(VertexAttrib[VERT_ATTRIB_COLOR0].Stride), NO_EXTRA" ],
-  [ "TEXTURE_COORD_ARRAY", "LOC_CUSTOM, TYPE_BOOLEAN, offsetof(struct gl_client_array, Enabled), NO_EXTRA" ],
-  [ "TEXTURE_COORD_ARRAY_SIZE", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_client_array, Size), NO_EXTRA" ],
-  [ "TEXTURE_COORD_ARRAY_TYPE", "LOC_CUSTOM, TYPE_ENUM, offsetof(struct gl_client_array, Type), NO_EXTRA" ],
-  [ "TEXTURE_COORD_ARRAY_STRIDE", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_client_array, Stride), NO_EXTRA" ],
+  [ "TEXTURE_COORD_ARRAY", "LOC_CUSTOM, TYPE_BOOLEAN, offsetof(struct gl_vertex_attrib_array, Enabled), NO_EXTRA" ],
+  [ "TEXTURE_COORD_ARRAY_SIZE", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_vertex_attrib_array, Size), NO_EXTRA" ],
+  [ "TEXTURE_COORD_ARRAY_TYPE", "LOC_CUSTOM, TYPE_ENUM, offsetof(struct gl_vertex_attrib_array, Type), NO_EXTRA" ],
+  [ "TEXTURE_COORD_ARRAY_STRIDE", "LOC_CUSTOM, TYPE_INT, offsetof(struct gl_vertex_attrib_array, Stride), NO_EXTRA" ],
 
 # GL_ARB_multitexture
   [ "MAX_TEXTURE_UNITS", "CONTEXT_INT(Const.MaxTextureUnits), NO_EXTRA" ],
@@ -318,6 +318,9 @@ descriptor=[
   [ "PERFQUERY_COUNTER_NAME_LENGTH_MAX_INTEL", "CONST(MAX_PERFQUERY_COUNTER_NAME_LENGTH), extra_INTEL_performance_query" ],
   [ "PERFQUERY_COUNTER_DESC_LENGTH_MAX_INTEL", "CONST(MAX_PERFQUERY_COUNTER_DESC_LENGTH), extra_INTEL_performance_query" ],
   [ "PERFQUERY_GPA_EXTENDED_COUNTERS_INTEL", "CONST(PERFQUERY_HAVE_GPA_EXTENDED_COUNTERS), extra_INTEL_performance_query" ],
+
+# GL_KHR_context_flush_control
+  [ "CONTEXT_RELEASE_BEHAVIOR", "CONTEXT_ENUM(Const.ContextReleaseBehavior), NO_EXTRA" ],
 ]},
 
 # GLES3 is not a typo.
@@ -414,6 +417,8 @@ descriptor=[
   [ "AUX_BUFFERS", "BUFFER_INT(Visual.numAuxBuffers), NO_EXTRA" ],
   [ "BLUE_BIAS", "CONTEXT_FLOAT(Pixel.BlueBias), NO_EXTRA" ],
   [ "BLUE_SCALE", "CONTEXT_FLOAT(Pixel.BlueScale), NO_EXTRA" ],
+  [ "CLIP_DEPTH_MODE", "CONTEXT_ENUM(Transform.ClipDepthMode), extra_ARB_clip_control" ],
+  [ "CLIP_ORIGIN", "CONTEXT_ENUM(Transform.ClipOrigin), extra_ARB_clip_control" ],
   [ "CLIENT_ATTRIB_STACK_DEPTH", "CONTEXT_INT(ClientAttribStackDepth), NO_EXTRA" ],
   [ "COLOR_MATERIAL_FACE", "CONTEXT_ENUM(Light.ColorMaterialFace), NO_EXTRA" ],
   [ "COLOR_MATERIAL_PARAMETER", "CONTEXT_ENUM(Light.ColorMaterialMode), NO_EXTRA" ],
@@ -481,6 +486,7 @@ descriptor=[
   [ "MAX_LIST_NESTING", "CONST(MAX_LIST_NESTING), NO_EXTRA" ],
   [ "MAX_NAME_STACK_DEPTH", "CONST(MAX_NAME_STACK_DEPTH), NO_EXTRA" ],
   [ "MAX_PIXEL_MAP_TABLE", "CONST(MAX_PIXEL_MAP_TABLE), NO_EXTRA" ],
+  [ "MAX_UNIFORM_LOCATIONS", "CONTEXT_INT(Const.MaxUserAssignableUniformLocations), extra_ARB_explicit_uniform_location" ],
   [ "NAME_STACK_DEPTH", "CONTEXT_INT(Select.NameStackDepth), NO_EXTRA" ],
   [ "PACK_LSB_FIRST", "CONTEXT_BOOL(Pack.LsbFirst), NO_EXTRA" ],
   [ "PACK_SWAP_BYTES", "CONTEXT_BOOL(Pack.SwapBytes), NO_EXTRA" ],
@@ -541,6 +547,16 @@ descriptor=[
 # GL_EXT_compiled_vertex_array
   [ "ARRAY_ELEMENT_LOCK_FIRST_EXT", "CONTEXT_INT(Array.LockFirst), NO_EXTRA" ],
   [ "ARRAY_ELEMENT_LOCK_COUNT_EXT", "CONTEXT_INT(Array.LockCount), NO_EXTRA" ],
+
+# GL_ARB_compressed_texture_pixel_storage
+  [ "UNPACK_COMPRESSED_BLOCK_WIDTH", "CONTEXT_INT(Unpack.CompressedBlockWidth), NO_EXTRA" ],
+  [ "UNPACK_COMPRESSED_BLOCK_HEIGHT", "CONTEXT_INT(Unpack.CompressedBlockHeight), NO_EXTRA" ],
+  [ "UNPACK_COMPRESSED_BLOCK_DEPTH", "CONTEXT_INT(Unpack.CompressedBlockDepth), NO_EXTRA" ],
+  [ "UNPACK_COMPRESSED_BLOCK_SIZE", "CONTEXT_INT(Unpack.CompressedBlockSize), NO_EXTRA" ],
+  [ "PACK_COMPRESSED_BLOCK_WIDTH", "CONTEXT_INT(Pack.CompressedBlockWidth), NO_EXTRA" ],
+  [ "PACK_COMPRESSED_BLOCK_HEIGHT", "CONTEXT_INT(Pack.CompressedBlockHeight), NO_EXTRA" ],
+  [ "PACK_COMPRESSED_BLOCK_DEPTH", "CONTEXT_INT(Pack.CompressedBlockDepth), NO_EXTRA" ],
+  [ "PACK_COMPRESSED_BLOCK_SIZE", "CONTEXT_INT(Pack.CompressedBlockSize), NO_EXTRA" ],
 
 # GL_ARB_transpose_matrix
   [ "TRANSPOSE_MODELVIEW_MATRIX_ARB", "CONTEXT_MATRIX_T(ModelviewMatrixStack), NO_EXTRA" ],
@@ -611,7 +627,7 @@ descriptor=[
 # == GL_CURRENT_MATRIX_NV
   [ "CURRENT_MATRIX_ARB", "LOC_CUSTOM, TYPE_MATRIX, 0, extra_ARB_vertex_program_ARB_fragment_program" ],
 # == GL_CURRENT_MATRIX_NV
-  [ "TRANSPOSE_CURRENT_MATRIX_ARB", "LOC_CUSTOM, TYPE_MATRIX, 0, extra_ARB_vertex_program_ARB_fragment_program" ],
+  [ "TRANSPOSE_CURRENT_MATRIX_ARB", "LOC_CUSTOM, TYPE_MATRIX_T, 0, extra_ARB_vertex_program_ARB_fragment_program" ],
 # == GL_PROGRAM_ERROR_POSITION_NV
   [ "PROGRAM_ERROR_POSITION_ARB", "CONTEXT_INT(Program.ErrorPos), extra_ARB_vertex_program_ARB_fragment_program" ],
 
@@ -701,6 +717,9 @@ descriptor=[
   [ "MAX_GEOMETRY_INPUT_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_GEOMETRY].MaxInputComponents), extra_version_32" ],
   [ "MAX_GEOMETRY_OUTPUT_COMPONENTS", "CONTEXT_INT(Const.Program[MESA_SHADER_GEOMETRY].MaxOutputComponents), extra_version_32" ],
 
+# GL 4.4
+  [ "MAX_VERTEX_ATTRIB_STRIDE", "CONTEXT_ENUM(Const.MaxVertexAttribStride), NO_EXTRA" ],
+
 # GL_ARB_robustness
   [ "RESET_NOTIFICATION_STRATEGY_ARB", "CONTEXT_ENUM(Const.ResetStrategy), NO_EXTRA" ],
 
@@ -764,6 +783,13 @@ descriptor=[
 
 # GL_ARB_compute_shader
   [ "MAX_COMPUTE_WORK_GROUP_INVOCATIONS", "CONTEXT_INT(Const.MaxComputeWorkGroupInvocations), extra_ARB_compute_shader" ],
+  [ "MAX_COMPUTE_UNIFORM_BLOCKS", "CONST(MAX_COMPUTE_UNIFORM_BLOCKS), extra_ARB_compute_shader" ],
+  [ "MAX_COMPUTE_TEXTURE_IMAGE_UNITS", "CONST(MAX_COMPUTE_TEXTURE_IMAGE_UNITS), extra_ARB_compute_shader" ],
+  [ "MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS", "CONST(MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS), extra_ARB_compute_shader" ],
+  [ "MAX_COMPUTE_ATOMIC_COUNTERS", "CONST(MAX_COMPUTE_ATOMIC_COUNTERS), extra_ARB_compute_shader" ],
+  [ "MAX_COMPUTE_SHARED_MEMORY_SIZE", "CONST(MAX_COMPUTE_SHARED_MEMORY_SIZE), extra_ARB_compute_shader" ],
+  [ "MAX_COMPUTE_UNIFORM_COMPONENTS", "CONST(MAX_COMPUTE_UNIFORM_COMPONENTS), extra_ARB_compute_shader" ],
+  [ "MAX_COMPUTE_IMAGE_UNIFORMS", "CONST(MAX_COMPUTE_IMAGE_UNIFORMS), extra_ARB_compute_shader" ],
 
 # GL_ARB_gpu_shader5
   [ "MAX_GEOMETRY_SHADER_INVOCATIONS", "CONST(MAX_GEOMETRY_SHADER_INVOCATIONS), extra_ARB_gpu_shader5" ],

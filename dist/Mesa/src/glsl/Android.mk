@@ -39,6 +39,7 @@ LOCAL_SRC_FILES := \
 	$(LIBGLSL_FILES)
 
 LOCAL_C_INCLUDES := \
+	$(MESA_TOP)/src \
 	$(MESA_TOP)/src/mapi \
 	$(MESA_TOP)/src/mesa
 
@@ -59,10 +60,11 @@ LOCAL_SRC_FILES := \
 	$(GLSL_COMPILER_CXX_FILES)
 
 LOCAL_C_INCLUDES := \
+	$(MESA_TOP)/src \
 	$(MESA_TOP)/src/mapi \
 	$(MESA_TOP)/src/mesa
 
-LOCAL_STATIC_LIBRARIES := libmesa_glsl libmesa_glsl_utils
+LOCAL_STATIC_LIBRARIES := libmesa_glsl libmesa_glsl_utils libmesa_util
 
 LOCAL_MODULE_TAGS := eng
 LOCAL_MODULE := glsl_compiler

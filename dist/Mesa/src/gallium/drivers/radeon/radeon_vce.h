@@ -45,8 +45,6 @@
 #define RVCE_READWRITE(buf, domain) RVCE_CS(RVCE_RELOC(buf, RADEON_USAGE_READWRITE, domain) * 4)
 #define RVCE_END() *begin = (&enc->cs->buf[enc->cs->cdw] - begin) * 4; }
 
-#define RVCE_NUM_CPB_FRAMES 3
-
 struct r600_common_screen;
 
 /* driver dependent callback */
@@ -82,6 +80,7 @@ struct rvce_encoder {
 
 	unsigned			stream_handle;
 
+	struct pipe_screen		*screen;
 	struct radeon_winsys*		ws;
 	struct radeon_winsys_cs*	cs;
 
@@ -96,6 +95,7 @@ struct rvce_encoder {
 
 	struct rvce_cpb_slot		*cpb_array;
 	struct list_head		cpb_slots;
+	unsigned			cpb_num;
 
 	struct rvid_buffer		*fb;
 	struct rvid_buffer		cpb;

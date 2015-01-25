@@ -32,12 +32,10 @@ static bool
 opt_saturate_propagation_local(fs_visitor *v, bblock_t *block)
 {
    bool progress = false;
-   int ip = block->start_ip - 1;
+   int ip = block->end_ip + 1;
 
-   for (fs_inst *inst = (fs_inst *)block->start;
-        inst != block->end->next;
-        inst = (fs_inst *) inst->next) {
-      ip++;
+   foreach_inst_in_block_reverse(fs_inst, inst, block) {
+      ip--;
 
       if (inst->opcode != BRW_OPCODE_MOV ||
           inst->dst.file != GRF ||
@@ -49,29 +47,28 @@ opt_saturate_propagation_local(fs_visitor *v, bblock_t *block)
 
       int src_var = v->live_intervals->var_from_reg(&inst->src[0]);
       int src_end_ip = v->live_intervals->end[src_var];
-      if (src_end_ip > ip && !inst->dst.equals(inst->src[0]))
-         continue;
 
-      int scan_ip = ip;
       bool interfered = false;
-      for (fs_inst *scan_inst = (fs_inst *) inst->prev;
-           scan_inst != block->start->prev;
-           scan_inst = (fs_inst *) scan_inst->prev) {
-         scan_ip--;
-
+      foreach_inst_in_block_reverse_starting_from(fs_inst, scan_inst, inst, block) {
          if (scan_inst->dst.file == GRF &&
              scan_inst->dst.reg == inst->src[0].reg &&
              scan_inst->dst.reg_offset == inst->src[0].reg_offset &&
              !scan_inst->is_partial_write()) {
-            if (scan_inst->can_do_saturate()) {
-               scan_inst->saturate = true;
+            if (scan_inst->saturate) {
                inst->saturate = false;
                progress = true;
+            } else if (src_end_ip <= ip || inst->dst.equals(inst->src[0])) {
+               if (scan_inst->can_do_saturate()) {
+                  scan_inst->saturate = true;
+                  inst->saturate = false;
+                  progress = true;
+               }
             }
             break;
          }
-         for (int i = 0; i < 3; i++) {
-            if (scan_inst->src[i].file == GRF &&
+         for (int i = 0; i < scan_inst->sources; i++) {
+            if ((scan_inst->opcode != BRW_OPCODE_MOV || !scan_inst->saturate) &&
+                scan_inst->src[i].file == GRF &&
                 scan_inst->src[i].reg == inst->src[0].reg &&
                 scan_inst->src[i].reg_offset == inst->src[0].reg_offset) {
                interfered = true;
@@ -94,15 +91,11 @@ fs_visitor::opt_saturate_propagation()
 
    calculate_live_intervals();
 
-   cfg_t cfg(&instructions);
-
-   for (int b = 0; b < cfg.num_blocks; b++) {
-      progress = opt_saturate_propagation_local(this, cfg.blocks[b])
-                 || progress;
+   foreach_block (block, cfg) {
+      progress = opt_saturate_propagation_local(this, block) || progress;
    }
 
-   if (progress)
-      invalidate_live_intervals();
+   /* Live intervals are still valid. */
 
    return progress;
 }

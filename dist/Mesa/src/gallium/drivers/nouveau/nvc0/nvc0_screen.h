@@ -20,6 +20,9 @@
 
 #define NVC0_MAX_SURFACE_SLOTS 16
 
+#define NVC0_MAX_VIEWPORTS 16
+
+
 struct nvc0_context;
 
 struct nvc0_blitter;
@@ -69,8 +72,6 @@ struct nvc0_screen {
       uint8_t num_mp_pm_active[2];
       boolean mp_counters_enabled;
    } pm;
-
-   struct nouveau_mman *mm_VRAM_fe0;
 
    struct nouveau_object *eng3d; /* sqrt(1/2)|kepler> + sqrt(1/2)|fermi> */
    struct nouveau_object *eng2d;
