@@ -31,6 +31,7 @@
  */
 
 #include <stdbool.h>
+#include <inttypes.h>  /* for PRId64 macro */
 #include "glheader.h"
 #include "enums.h"
 #include "hash.h"
@@ -388,14 +389,14 @@ convert_clear_buffer_data(struct gl_context *ctx,
  * Default callback for the \c dd_function_table::NewBufferObject() hook.
  */
 static struct gl_buffer_object *
-_mesa_new_buffer_object( struct gl_context *ctx, GLuint name, GLenum target )
+_mesa_new_buffer_object(struct gl_context *ctx, GLuint name)
 {
    struct gl_buffer_object *obj;
 
    (void) ctx;
 
    obj = MALLOC_STRUCT(gl_buffer_object);
-   _mesa_initialize_buffer_object(ctx, obj, name, target);
+   _mesa_initialize_buffer_object(ctx, obj, name);
    return obj;
 }
 
@@ -493,12 +494,10 @@ _mesa_reference_buffer_object_(struct gl_context *ctx,
  * Initialize a buffer object to default values.
  */
 void
-_mesa_initialize_buffer_object( struct gl_context *ctx,
-				struct gl_buffer_object *obj,
-				GLuint name, GLenum target )
+_mesa_initialize_buffer_object(struct gl_context *ctx,
+                               struct gl_buffer_object *obj,
+                               GLuint name)
 {
-   (void) target;
-
    memset(obj, 0, sizeof(struct gl_buffer_object));
    mtx_init(&obj->Mutex, mtx_plain);
    obj->RefCount = 1;
@@ -832,6 +831,9 @@ _mesa_init_buffer_objects( struct gl_context *ctx )
    _mesa_reference_buffer_object(ctx, &ctx->UniformBuffer,
 				 ctx->Shared->NullBufferObj);
 
+   _mesa_reference_buffer_object(ctx, &ctx->AtomicBuffer,
+				 ctx->Shared->NullBufferObj);
+
    _mesa_reference_buffer_object(ctx, &ctx->DrawIndirectBuffer,
 				 ctx->Shared->NullBufferObj);
 
@@ -841,6 +843,14 @@ _mesa_init_buffer_objects( struct gl_context *ctx )
 				    ctx->Shared->NullBufferObj);
       ctx->UniformBufferBindings[i].Offset = -1;
       ctx->UniformBufferBindings[i].Size = -1;
+   }
+
+   for (i = 0; i < MAX_COMBINED_ATOMIC_BUFFERS; i++) {
+      _mesa_reference_buffer_object(ctx,
+				    &ctx->AtomicBufferBindings[i].BufferObject,
+				    ctx->Shared->NullBufferObj);
+      ctx->AtomicBufferBindings[i].Offset = -1;
+      ctx->AtomicBufferBindings[i].Size = -1;
    }
 }
 
@@ -857,6 +867,8 @@ _mesa_free_buffer_objects( struct gl_context *ctx )
 
    _mesa_reference_buffer_object(ctx, &ctx->UniformBuffer, NULL);
 
+   _mesa_reference_buffer_object(ctx, &ctx->AtomicBuffer, NULL);
+
    _mesa_reference_buffer_object(ctx, &ctx->DrawIndirectBuffer, NULL);
 
    for (i = 0; i < MAX_COMBINED_UNIFORM_BUFFERS; i++) {
@@ -864,6 +876,13 @@ _mesa_free_buffer_objects( struct gl_context *ctx )
 				    &ctx->UniformBufferBindings[i].BufferObject,
 				    NULL);
    }
+
+   for (i = 0; i < MAX_COMBINED_ATOMIC_BUFFERS; i++) {
+      _mesa_reference_buffer_object(ctx,
+				    &ctx->AtomicBufferBindings[i].BufferObject,
+				    NULL);
+   }
+
 }
 
 bool
@@ -885,7 +904,7 @@ _mesa_handle_bind_buffer_gen(struct gl_context *ctx,
        * never used before, allocate a buffer object now.
        */
       ASSERT(ctx->Driver.NewBufferObject);
-      buf = ctx->Driver.NewBufferObject(ctx, buffer, target);
+      buf = ctx->Driver.NewBufferObject(ctx, buffer);
       if (!buf) {
 	 _mesa_error(ctx, GL_OUT_OF_MEMORY, "%s", caller);
 	 return false;
@@ -1198,6 +1217,17 @@ _mesa_DeleteBuffers(GLsizei n, const GLuint *ids)
 
          if (ctx->UniformBuffer == bufObj) {
             _mesa_BindBuffer( GL_UNIFORM_BUFFER, 0 );
+         }
+
+         /* unbind Atomci Buffer binding points */
+         for (j = 0; j < ctx->Const.MaxAtomicBufferBindings; j++) {
+            if (ctx->AtomicBufferBindings[j].BufferObject == bufObj) {
+               _mesa_BindBufferBase( GL_ATOMIC_COUNTER_BUFFER, j, 0 );
+            }
+         }
+
+         if (ctx->UniformBuffer == bufObj) {
+            _mesa_BindBuffer( GL_ATOMIC_COUNTER_BUFFER, 0 );
          }
 
          /* unbind any pixel pack/unpack pointers bound to this buffer */
@@ -2620,6 +2650,12 @@ set_ubo_binding(struct gl_context *ctx,
    binding->Offset = offset;
    binding->Size = size;
    binding->AutomaticSize = autoSize;
+
+   /* If this is a real buffer object, mark it has having been used
+    * at some point as a UBO.
+    */
+   if (size >= 0)
+      bufObj->UsageHistory |= USAGE_UNIFORM_BUFFER;
 }
 
 /**
@@ -2674,7 +2710,7 @@ bind_buffer_range_uniform_buffer(struct gl_context *ctx,
 
    if (offset & (ctx->Const.UniformBufferOffsetAlignment - 1)) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glBindBufferRange(offset misalgned %d/%d)", (int) offset,
+                  "glBindBufferRange(offset misaligned %d/%d)", (int) offset,
 		  ctx->Const.UniformBufferOffsetAlignment);
       return;
    }
@@ -2732,6 +2768,7 @@ set_atomic_buffer_binding(struct gl_context *ctx,
    } else {
       binding->Offset = offset;
       binding->Size = size;
+      bufObj->UsageHistory |= USAGE_ATOMIC_COUNTER_BUFFER;
    }
 }
 
@@ -2760,7 +2797,7 @@ bind_atomic_buffer(struct gl_context *ctx,
 
    if (offset & (ATOMIC_COUNTER_SIZE - 1)) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "%s(offset misalgned %d/%d)", name, (int) offset,
+                  "%s(offset misaligned %d/%d)", name, (int) offset,
                   ATOMIC_COUNTER_SIZE);
       return;
    }
@@ -2793,8 +2830,8 @@ bind_buffers_check_offset_and_size(struct gl_context *ctx,
       *     value in <offsets> is less than zero (per binding)."
       */
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glBindBuffersRange(offsets[%u]=%lld < 0)",
-                  index, (long long int) offsets[index]);
+                  "glBindBuffersRange(offsets[%u]=%" PRId64 " < 0)",
+                  index, (int64_t) offsets[index]);
       return false;
    }
 
@@ -2805,8 +2842,8 @@ bind_buffers_check_offset_and_size(struct gl_context *ctx,
       *      value in <sizes> is less than or equal to zero (per binding)."
       */
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glBindBuffersRange(sizes[%u]=%lld <= 0)",
-                  index, (long long int) sizes[index]);
+                  "glBindBuffersRange(sizes[%u]=%" PRId64 " <= 0)",
+                  index, (int64_t) sizes[index]);
       return false;
    }
 
@@ -3001,11 +3038,11 @@ bind_uniform_buffers_range(struct gl_context *ctx, GLuint first, GLsizei count,
        */
       if (offsets[i] & (ctx->Const.UniformBufferOffsetAlignment - 1)) {
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glBindBuffersRange(offsets[%u]=%lld is misaligned; "
-                     "it must be a multiple of the value of "
+                     "glBindBuffersRange(offsets[%u]=%" PRId64
+                     " is misaligned; it must be a multiple of the value of "
                      "GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT=%u when "
                      "target=GL_UNIFORM_BUFFER)",
-                     i, (long long int) offsets[i],
+                     i, (int64_t) offsets[i],
                      ctx->Const.UniformBufferOffsetAlignment);
          continue;
       }
@@ -3239,19 +3276,19 @@ bind_xfb_buffers_range(struct gl_context *ctx,
        */
       if (offsets[i] & 0x3) {
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glBindBuffersRange(offsets[%u]=%lld is misaligned; "
-                     "it must be a multiple of 4 when "
+                     "glBindBuffersRange(offsets[%u]=%" PRId64
+                     " is misaligned; it must be a multiple of 4 when "
                      "target=GL_TRANSFORM_FEEDBACK_BUFFER)",
-                     i, (long long int) offsets[i]);
+                     i, (int64_t) offsets[i]);
          continue;
       }
 
       if (sizes[i] & 0x3) {
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glBindBuffersRange(sizes[%u]=%lld is misaligned; "
-                     "it must be a multiple of 4 when "
+                     "glBindBuffersRange(sizes[%u]=%" PRId64
+                     " is misaligned; it must be a multiple of 4 when "
                      "target=GL_TRANSFORM_FEEDBACK_BUFFER)",
-                     i, (long long int) sizes[i]);
+                     i, (int64_t) sizes[i]);
          continue;
       }
 
@@ -3457,10 +3494,10 @@ bind_atomic_buffers_range(struct gl_context *ctx,
        */
       if (offsets[i] & (ATOMIC_COUNTER_SIZE - 1)) {
          _mesa_error(ctx, GL_INVALID_VALUE,
-                     "glBindBuffersRange(offsets[%u]=%lld is misaligned; "
-                     "it must be a multiple of %d when "
+                     "glBindBuffersRange(offsets[%u]=%" PRId64
+                     " is misaligned; it must be a multiple of %d when "
                      "target=GL_ATOMIC_COUNTER_BUFFER)",
-                     i, (long long int) offsets[i], ATOMIC_COUNTER_SIZE);
+                     i, (int64_t) offsets[i], ATOMIC_COUNTER_SIZE);
          continue;
       }
 

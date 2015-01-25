@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ralloc.h"
+#include "util/ralloc.h"
 #include "glsl_types.h"
 #include "list.h"
 #include "ir_visitor.h"
@@ -59,31 +59,27 @@
  * types, this allows writing very straightforward, readable code.
  */
 enum ir_node_type {
-   /**
-    * Zero is unused so that the IR validator can detect cases where
-    * \c ir_instruction::ir_type has not been initialized.
-    */
-   ir_type_unset,
-   ir_type_variable,
-   ir_type_assignment,
-   ir_type_call,
-   ir_type_constant,
    ir_type_dereference_array,
    ir_type_dereference_record,
    ir_type_dereference_variable,
-   ir_type_discard,
+   ir_type_constant,
    ir_type_expression,
+   ir_type_swizzle,
+   ir_type_texture,
+   ir_type_variable,
+   ir_type_assignment,
+   ir_type_call,
    ir_type_function,
    ir_type_function_signature,
    ir_type_if,
    ir_type_loop,
    ir_type_loop_jump,
    ir_type_return,
-   ir_type_swizzle,
-   ir_type_texture,
+   ir_type_discard,
    ir_type_emit_vertex,
    ir_type_end_primitive,
-   ir_type_max /**< maximum ir_type enum number, for validation */
+   ir_type_max, /**< maximum ir_type enum number, for validation */
+   ir_type_unset = ir_type_max
 };
 
 
@@ -121,24 +117,58 @@ public:
     * Additional downcast functions will be added as needed.
     */
    /*@{*/
-   virtual class ir_variable *          as_variable()         { return NULL; }
-   virtual class ir_function *          as_function()         { return NULL; }
-   virtual class ir_dereference *       as_dereference()      { return NULL; }
-   virtual class ir_dereference_array *	as_dereference_array() { return NULL; }
-   virtual class ir_dereference_variable *as_dereference_variable() { return NULL; }
-   virtual class ir_dereference_record *as_dereference_record() { return NULL; }
-   virtual class ir_expression *        as_expression()       { return NULL; }
-   virtual class ir_rvalue *            as_rvalue()           { return NULL; }
-   virtual class ir_loop *              as_loop()             { return NULL; }
-   virtual class ir_assignment *        as_assignment()       { return NULL; }
-   virtual class ir_call *              as_call()             { return NULL; }
-   virtual class ir_return *            as_return()           { return NULL; }
-   virtual class ir_if *                as_if()               { return NULL; }
-   virtual class ir_swizzle *           as_swizzle()          { return NULL; }
-   virtual class ir_texture *           as_texture()          { return NULL; }
-   virtual class ir_constant *          as_constant()         { return NULL; }
-   virtual class ir_discard *           as_discard()          { return NULL; }
-   virtual class ir_jump *              as_jump()             { return NULL; }
+   class ir_rvalue *as_rvalue()
+   {
+      if (ir_type == ir_type_dereference_array ||
+          ir_type == ir_type_dereference_record ||
+          ir_type == ir_type_dereference_variable ||
+          ir_type == ir_type_constant ||
+          ir_type == ir_type_expression ||
+          ir_type == ir_type_swizzle ||
+          ir_type == ir_type_texture)
+         return (class ir_rvalue *) this;
+      return NULL;
+   }
+
+   class ir_dereference *as_dereference()
+   {
+      if (ir_type == ir_type_dereference_array ||
+          ir_type == ir_type_dereference_record ||
+          ir_type == ir_type_dereference_variable)
+         return (class ir_dereference *) this;
+      return NULL;
+   }
+
+   class ir_jump *as_jump()
+   {
+      if (ir_type == ir_type_loop_jump ||
+          ir_type == ir_type_return ||
+          ir_type == ir_type_discard)
+         return (class ir_jump *) this;
+      return NULL;
+   }
+
+   #define AS_CHILD(TYPE) \
+   class ir_##TYPE * as_##TYPE() \
+   { \
+      return ir_type == ir_type_##TYPE ? (ir_##TYPE *) this : NULL; \
+   }
+   AS_CHILD(variable)
+   AS_CHILD(function)
+   AS_CHILD(dereference_array)
+   AS_CHILD(dereference_variable)
+   AS_CHILD(dereference_record)
+   AS_CHILD(expression)
+   AS_CHILD(loop)
+   AS_CHILD(assignment)
+   AS_CHILD(call)
+   AS_CHILD(return)
+   AS_CHILD(if)
+   AS_CHILD(swizzle)
+   AS_CHILD(texture)
+   AS_CHILD(constant)
+   AS_CHILD(discard)
+   #undef AS_CHILD
    /*@}*/
 
    /**
@@ -152,9 +182,15 @@ public:
    virtual bool equals(ir_instruction *ir, enum ir_node_type ignore = ir_type_unset);
 
 protected:
+   ir_instruction(enum ir_node_type t)
+      : ir_type(t)
+   {
+   }
+
+private:
    ir_instruction()
    {
-      ir_type = ir_type_unset;
+      assert(!"Should not get here.");
    }
 };
 
@@ -176,11 +212,6 @@ public:
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
 
    virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
-
-   virtual ir_rvalue * as_rvalue()
-   {
-      return this;
-   }
 
    ir_rvalue *as_rvalue_to_saturate();
 
@@ -220,8 +251,7 @@ public:
     * for vector and scalar types that have all elements set to the value
     * zero (or \c false for booleans).
     *
-    * \sa ir_constant::has_value, ir_rvalue::is_one, ir_rvalue::is_negative_one,
-    *     ir_constant::is_basis
+    * \sa ir_constant::has_value, ir_rvalue::is_one, ir_rvalue::is_negative_one
     */
    virtual bool is_zero() const;
 
@@ -233,8 +263,7 @@ public:
     * for vector and scalar types that have all elements set to the value
     * one (or \c true for booleans).
     *
-    * \sa ir_constant::has_value, ir_rvalue::is_zero, ir_rvalue::is_negative_one,
-    *     ir_constant::is_basis
+    * \sa ir_constant::has_value, ir_rvalue::is_zero, ir_rvalue::is_negative_one
     */
    virtual bool is_one() const;
 
@@ -247,23 +276,8 @@ public:
     * negative one.  For boolean types, the result is always \c false.
     *
     * \sa ir_constant::has_value, ir_rvalue::is_zero, ir_rvalue::is_one
-    *     ir_constant::is_basis
     */
    virtual bool is_negative_one() const;
-
-   /**
-    * Determine if an r-value is a basis vector
-    *
-    * The base implementation of this function always returns \c false.  The
-    * \c ir_constant class over-rides this function to return \c true \b only
-    * for vector and scalar types that have one element set to the value one,
-    * and the other elements set to the value zero.  For boolean types, the
-    * result is always \c false.
-    *
-    * \sa ir_constant::has_value, ir_rvalue::is_zero, ir_rvalue::is_one,
-    *     is_constant::is_negative_one
-    */
-   virtual bool is_basis() const;
 
    /**
     * Determine if an r-value is an unsigned integer constant which can be
@@ -281,7 +295,7 @@ public:
    static ir_rvalue *error_value(void *mem_ctx);
 
 protected:
-   ir_rvalue();
+   ir_rvalue(enum ir_node_type t);
 };
 
 
@@ -328,6 +342,12 @@ enum ir_var_declaration_type {
     * re-declared by the shader.
     */
    ir_var_declared_implicitly,
+
+   /**
+    * Variable is implicitly generated by the compiler and should not be
+    * visible via the API.
+    */
+   ir_var_hidden,
 };
 
 /**
@@ -381,11 +401,6 @@ public:
    ir_variable(const struct glsl_type *, const char *, ir_variable_mode);
 
    virtual ir_variable *clone(void *mem_ctx, struct hash_table *ht) const;
-
-   virtual ir_variable *as_variable()
-   {
-      return this;
-   }
 
    virtual void accept(ir_visitor *v)
    {
@@ -449,7 +464,7 @@ public:
       assert(this->interface_type == NULL);
       this->interface_type = type;
       if (this->is_interface_instance()) {
-         this->max_ifc_array_access =
+         this->u.max_ifc_array_access =
             rzalloc_array(this, unsigned, type->length);
       }
    }
@@ -461,7 +476,7 @@ public:
     */
    void change_interface_type(const struct glsl_type *type)
    {
-      if (this->max_ifc_array_access != NULL) {
+      if (this->u.max_ifc_array_access != NULL) {
          /* max_ifc_array_access has already been allocated, so make sure the
           * new interface has the same number of fields as the old one.
           */
@@ -478,7 +493,7 @@ public:
     */
    void reinit_interface_type(const struct glsl_type *type)
    {
-      if (this->max_ifc_array_access != NULL) {
+      if (this->u.max_ifc_array_access != NULL) {
 #ifndef NDEBUG
          /* Redeclaring gl_PerVertex is only allowed if none of the built-ins
           * it defines have been accessed yet; so it's safe to throw away the
@@ -486,10 +501,10 @@ public:
           * zero.
           */
          for (unsigned i = 0; i < this->interface_type->length; i++)
-            assert(this->max_ifc_array_access[i] == 0);
+            assert(this->u.max_ifc_array_access[i] == 0);
 #endif
-         ralloc_free(this->max_ifc_array_access);
-         this->max_ifc_array_access = NULL;
+         ralloc_free(this->u.max_ifc_array_access);
+         this->u.max_ifc_array_access = NULL;
       }
       this->interface_type = NULL;
       init_interface_type(type);
@@ -501,6 +516,72 @@ public:
    }
 
    /**
+    * Get the max_ifc_array_access pointer
+    *
+    * A "set" function is not needed because the array is dynmically allocated
+    * as necessary.
+    */
+   inline unsigned *get_max_ifc_array_access()
+   {
+      assert(this->data._num_state_slots == 0);
+      return this->u.max_ifc_array_access;
+   }
+
+   inline unsigned get_num_state_slots() const
+   {
+      assert(!this->is_interface_instance()
+             || this->data._num_state_slots == 0);
+      return this->data._num_state_slots;
+   }
+
+   inline void set_num_state_slots(unsigned n)
+   {
+      assert(!this->is_interface_instance()
+             || n == 0);
+      this->data._num_state_slots = n;
+   }
+
+   inline ir_state_slot *get_state_slots()
+   {
+      return this->is_interface_instance() ? NULL : this->u.state_slots;
+   }
+
+   inline const ir_state_slot *get_state_slots() const
+   {
+      return this->is_interface_instance() ? NULL : this->u.state_slots;
+   }
+
+   inline ir_state_slot *allocate_state_slots(unsigned n)
+   {
+      assert(!this->is_interface_instance());
+
+      this->u.state_slots = ralloc_array(this, ir_state_slot, n);
+      this->data._num_state_slots = 0;
+
+      if (this->u.state_slots != NULL)
+         this->data._num_state_slots = n;
+
+      return this->u.state_slots;
+   }
+
+   inline bool is_name_ralloced() const
+   {
+      return this->name != ir_variable::tmp_name;
+   }
+
+   /**
+    * Enable emitting extension warnings for this variable
+    */
+   void enable_extension_warning(const char *extension);
+
+   /**
+    * Get the extension warning string for this variable
+    *
+    * If warnings are not enabled, \c NULL is returned.
+    */
+   const char *get_extension_warning() const;
+
+   /**
     * Declared type of the variable
     */
    const struct glsl_type *type;
@@ -509,19 +590,6 @@ public:
     * Declared name of the variable
     */
    const char *name;
-
-   /**
-    * For variables which satisfy the is_interface_instance() predicate, this
-    * points to an array of integers such that if the ith member of the
-    * interface block is an array, max_ifc_array_access[i] is the maximum
-    * array element of that member that has been accessed.  If the ith member
-    * of the interface block is not an array, max_ifc_array_access[i] is
-    * unused.
-    *
-    * For variables whose type is not an interface block, this pointer is
-    * NULL.
-    */
-   unsigned *max_ifc_array_access;
 
    struct ir_variable_data {
 
@@ -535,6 +603,7 @@ public:
       unsigned centroid:1;
       unsigned sample:1;
       unsigned invariant:1;
+      unsigned precise:1;
 
       /**
        * Has this variable been used for reading or writing?
@@ -633,6 +702,11 @@ public:
       unsigned location_frac:2;
 
       /**
+       * Layout of the matrix.  Uses glsl_matrix_layout values.
+       */
+      unsigned matrix_layout:2;
+
+      /**
        * Non-zero if this variable was created by lowering a named interface
        * block which was not an array.
        *
@@ -651,12 +725,65 @@ public:
       unsigned from_named_ifc_block_array:1;
 
       /**
+       * Non-zero if the variable must be a shader input. This is useful for
+       * constraints on function parameters.
+       */
+      unsigned must_be_shader_input:1;
+
+      /**
+       * Output index for dual source blending.
+       *
+       * \note
+       * The GLSL spec only allows the values 0 or 1 for the index in \b dual
+       * source blending.
+       */
+      unsigned index:1;
+
+      /**
        * \brief Layout qualifier for gl_FragDepth.
        *
        * This is not equal to \c ir_depth_layout_none if and only if this
        * variable is \c gl_FragDepth and a layout qualifier is specified.
        */
-      ir_depth_layout depth_layout;
+      ir_depth_layout depth_layout:3;
+
+      /**
+       * ARB_shader_image_load_store qualifiers.
+       */
+      unsigned image_read_only:1; /**< "readonly" qualifier. */
+      unsigned image_write_only:1; /**< "writeonly" qualifier. */
+      unsigned image_coherent:1;
+      unsigned image_volatile:1;
+      unsigned image_restrict:1;
+
+      /**
+       * Emit a warning if this variable is accessed.
+       */
+   private:
+      uint8_t warn_extension_index;
+
+   public:
+      /** Image internal format if specified explicitly, otherwise GL_NONE. */
+      uint16_t image_format;
+
+   private:
+      /**
+       * Number of state slots used
+       *
+       * \note
+       * This could be stored in as few as 7-bits, if necessary.  If it is made
+       * smaller, add an assertion to \c ir_variable::allocate_state_slots to
+       * be safe.
+       */
+      uint16_t _num_state_slots;
+
+   public:
+      /**
+       * Initial binding point for a sampler, atomic, or UBO.
+       *
+       * For array types, this represents the binding point for the first element.
+       */
+      int16_t binding;
 
       /**
        * Storage location of the base of this variable
@@ -679,38 +806,16 @@ public:
       int location;
 
       /**
-       * output index for dual source blending.
+       * Vertex stream output identifier.
        */
-      int index;
-
-      /**
-       * Initial binding point for a sampler or UBO.
-       *
-       * For array types, this represents the binding point for the first element.
-       */
-      int binding;
+      unsigned stream;
 
       /**
        * Location an atomic counter is stored at.
        */
       struct {
-         unsigned buffer_index;
          unsigned offset;
       } atomic;
-
-      /**
-       * ARB_shader_image_load_store qualifiers.
-       */
-      struct {
-         bool read_only; /**< "readonly" qualifier. */
-         bool write_only; /**< "writeonly" qualifier. */
-         bool coherent;
-         bool _volatile;
-         bool restrict_flag;
-
-         /** Image internal format if specified explicitly, otherwise GL_NONE. */
-         GLenum format;
-      } image;
 
       /**
        * Highest element accessed with a constant expression array index
@@ -719,28 +824,11 @@ public:
        */
       unsigned max_array_access;
 
+      /**
+       * Allow (only) ir_variable direct access private members.
+       */
+      friend class ir_variable;
    } data;
-
-   /**
-    * Built-in state that backs this uniform
-    *
-    * Once set at variable creation, \c state_slots must remain invariant.
-    * This is because, ideally, this array would be shared by all clones of
-    * this variable in the IR tree.  In other words, we'd really like for it
-    * to be a fly-weight.
-    *
-    * If the variable is not a uniform, \c num_state_slots will be zero and
-    * \c state_slots will be \c NULL.
-    */
-   /*@{*/
-   unsigned num_state_slots;    /**< Number of state slots used */
-   ir_state_slot *state_slots;  /**< State descriptors. */
-   /*@}*/
-
-   /**
-    * Emit a warning if this variable is accessed.
-    */
-   const char *warn_extension;
 
    /**
     * Value assigned in the initializer of a variable declared "const"
@@ -758,6 +846,33 @@ public:
    ir_constant *constant_initializer;
 
 private:
+   static const char *const warn_extension_table[];
+
+   union {
+      /**
+       * For variables which satisfy the is_interface_instance() predicate,
+       * this points to an array of integers such that if the ith member of
+       * the interface block is an array, max_ifc_array_access[i] is the
+       * maximum array element of that member that has been accessed.  If the
+       * ith member of the interface block is not an array,
+       * max_ifc_array_access[i] is unused.
+       *
+       * For variables whose type is not an interface block, this pointer is
+       * NULL.
+       */
+      unsigned *max_ifc_array_access;
+
+      /**
+       * Built-in state that backs this uniform
+       *
+       * Once set at variable creation, \c state_slots must remain invariant.
+       *
+       * If the variable is not a uniform, \c _num_state_slots will be zero
+       * and \c state_slots will be \c NULL.
+       */
+      ir_state_slot *state_slots;
+   } u;
+
    /**
     * For variables that are in an interface block or are an instance of an
     * interface block, this is the \c GLSL_TYPE_INTERFACE type for that block.
@@ -765,6 +880,30 @@ private:
     * \sa ir_variable::location
     */
    const glsl_type *interface_type;
+
+   /**
+    * Name used for anonymous compiler temporaries
+    */
+   static const char tmp_name[];
+
+public:
+   /**
+    * Should the construct keep names for ir_var_temporary variables?
+    *
+    * When this global is false, names passed to the constructor for
+    * \c ir_var_temporary variables will be dropped.  Instead, the variable will
+    * be named "compiler_temp".  This name will be in static storage.
+    *
+    * \warning
+    * \b NEVER change the mode of an \c ir_var_temporary.
+    *
+    * \warning
+    * This variable is \b not thread-safe.  It is global, \b not
+    * per-context. It begins life false.  A context can, at some point, make
+    * it true.  From that point on, it will be true forever.  This should be
+    * okay since it will only be set true while debugging.
+    */
+   static bool temporaries_allocate_names;
 };
 
 /**
@@ -917,11 +1056,6 @@ public:
 
    virtual ir_function *clone(void *mem_ctx, struct hash_table *ht) const;
 
-   virtual ir_function *as_function()
-   {
-      return this;
-   }
-
    virtual void accept(ir_visitor *v)
    {
       v->visit(this);
@@ -941,6 +1075,7 @@ public:
     */
    ir_function_signature *matching_signature(_mesa_glsl_parse_state *state,
                                              const exec_list *actual_param,
+                                             bool allow_builtins,
 					     bool *match_is_exact);
 
    /**
@@ -948,7 +1083,8 @@ public:
     * conversions into account.
     */
    ir_function_signature *matching_signature(_mesa_glsl_parse_state *state,
-                                             const exec_list *actual_param);
+                                             const exec_list *actual_param,
+                                             bool allow_builtins);
 
    /**
     * Find a signature that exactly matches a set of actual parameters without
@@ -984,17 +1120,11 @@ inline const char *ir_function_signature::function_name() const
 class ir_if : public ir_instruction {
 public:
    ir_if(ir_rvalue *condition)
-      : condition(condition)
+      : ir_instruction(ir_type_if), condition(condition)
    {
-      ir_type = ir_type_if;
    }
 
    virtual ir_if *clone(void *mem_ctx, struct hash_table *ht) const;
-
-   virtual ir_if *as_if()
-   {
-      return this;
-   }
 
    virtual void accept(ir_visitor *v)
    {
@@ -1027,11 +1157,6 @@ public:
 
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
 
-   virtual ir_loop *as_loop()
-   {
-      return this;
-   }
-
    /** List of ir_instruction that make up the body of the loop. */
    exec_list body_instructions;
 };
@@ -1061,11 +1186,6 @@ public:
    }
 
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
-
-   virtual ir_assignment * as_assignment()
-   {
-      return this;
-   }
 
    /**
     * Get a whole variable written by an assignment
@@ -1181,7 +1301,11 @@ enum ir_expression_operation {
     */
    /*@{*/
    ir_unop_dFdx,
+   ir_unop_dFdx_coarse,
+   ir_unop_dFdx_fine,
    ir_unop_dFdy,
+   ir_unop_dFdy_coarse,
+   ir_unop_dFdy_fine,
    /*@}*/
 
    /**
@@ -1220,12 +1344,20 @@ enum ir_expression_operation {
    ir_unop_find_lsb,
    /*@}*/
 
+   ir_unop_saturate,
    ir_unop_noise,
+
+   /**
+    * Interpolate fs input at centroid
+    *
+    * operand0 is the fs input.
+    */
+   ir_unop_interpolate_at_centroid,
 
    /**
     * A sentinel marking the last of the unary operations.
     */
-   ir_last_unop = ir_unop_noise,
+   ir_last_unop = ir_unop_interpolate_at_centroid,
 
    ir_binop_add,
    ir_binop_sub,
@@ -1344,9 +1476,25 @@ enum ir_expression_operation {
    ir_binop_vector_extract,
 
    /**
+    * Interpolate fs input at offset
+    *
+    * operand0 is the fs input
+    * operand1 is the offset from the pixel center
+    */
+   ir_binop_interpolate_at_offset,
+
+   /**
+    * Interpolate fs input at sample position
+    *
+    * operand0 is the fs input
+    * operand1 is the sample ID
+    */
+   ir_binop_interpolate_at_sample,
+
+   /**
     * A sentinel marking the last of the binary operations.
     */
-   ir_last_binop = ir_binop_vector_extract,
+   ir_last_binop = ir_binop_interpolate_at_sample,
 
    /**
     * \name Fused floating-point multiply-add, part of ARB_gpu_shader5.
@@ -1430,11 +1578,6 @@ public:
     */
    ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1, ir_rvalue *op2);
 
-   virtual ir_expression *as_expression()
-   {
-      return this;
-   }
-
    virtual bool equals(ir_instruction *ir, enum ir_node_type ignore = ir_type_unset);
 
    virtual ir_expression *clone(void *mem_ctx, struct hash_table *ht) const;
@@ -1514,9 +1657,8 @@ public:
    ir_call(ir_function_signature *callee,
 	   ir_dereference_variable *return_deref,
 	   exec_list *actual_parameters)
-      : return_deref(return_deref), callee(callee)
+      : ir_instruction(ir_type_call), return_deref(return_deref), callee(callee)
    {
-      ir_type = ir_type_call;
       assert(callee->return_type != NULL);
       actual_parameters->move_nodes_to(& this->actual_parameters);
       this->use_builtin = callee->is_builtin();
@@ -1525,11 +1667,6 @@ public:
    virtual ir_call *clone(void *mem_ctx, struct hash_table *ht) const;
 
    virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
-
-   virtual ir_call *as_call()
-   {
-      return this;
-   }
 
    virtual void accept(ir_visitor *v)
    {
@@ -1579,38 +1716,25 @@ public:
 /*@{*/
 class ir_jump : public ir_instruction {
 protected:
-   ir_jump()
+   ir_jump(enum ir_node_type t)
+      : ir_instruction(t)
    {
-      ir_type = ir_type_unset;
-   }
-
-public:
-   virtual ir_jump *as_jump()
-   {
-      return this;
    }
 };
 
 class ir_return : public ir_jump {
 public:
    ir_return()
-      : value(NULL)
+      : ir_jump(ir_type_return), value(NULL)
    {
-      this->ir_type = ir_type_return;
    }
 
    ir_return(ir_rvalue *value)
-      : value(value)
+      : ir_jump(ir_type_return), value(value)
    {
-      this->ir_type = ir_type_return;
    }
 
    virtual ir_return *clone(void *mem_ctx, struct hash_table *) const;
-
-   virtual ir_return *as_return()
-   {
-      return this;
-   }
 
    ir_rvalue *get_value() const
    {
@@ -1644,8 +1768,8 @@ public:
    };
 
    ir_loop_jump(jump_mode mode)
+      : ir_jump(ir_type_loop_jump)
    {
-      this->ir_type = ir_type_loop_jump;
       this->mode = mode;
    }
 
@@ -1678,14 +1802,14 @@ public:
 class ir_discard : public ir_jump {
 public:
    ir_discard()
+      : ir_jump(ir_type_discard)
    {
-      this->ir_type = ir_type_discard;
       this->condition = NULL;
    }
 
    ir_discard(ir_rvalue *cond)
+      : ir_jump(ir_type_discard)
    {
-      this->ir_type = ir_type_discard;
       this->condition = cond;
    }
 
@@ -1697,11 +1821,6 @@ public:
    }
 
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
-
-   virtual ir_discard *as_discard()
-   {
-      return this;
-   }
 
    ir_rvalue *condition;
 };
@@ -1752,10 +1871,10 @@ enum ir_texture_opcode {
 class ir_texture : public ir_rvalue {
 public:
    ir_texture(enum ir_texture_opcode op)
-      : op(op), sampler(NULL), coordinate(NULL), projector(NULL),
+      : ir_rvalue(ir_type_texture),
+        op(op), sampler(NULL), coordinate(NULL), projector(NULL),
         shadow_comparitor(NULL), offset(NULL)
    {
-      this->ir_type = ir_type_texture;
       memset(&lod_info, 0, sizeof(lod_info));
    }
 
@@ -1766,11 +1885,6 @@ public:
    virtual void accept(ir_visitor *v)
    {
       v->visit(this);
-   }
-
-   virtual ir_texture *as_texture()
-   {
-      return this;
    }
 
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
@@ -1864,11 +1978,6 @@ public:
 
    virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
 
-   virtual ir_swizzle *as_swizzle()
-   {
-      return this;
-   }
-
    /**
     * Construct an ir_swizzle from the textual representation.  Can fail.
     */
@@ -1910,17 +2019,18 @@ class ir_dereference : public ir_rvalue {
 public:
    virtual ir_dereference *clone(void *mem_ctx, struct hash_table *) const = 0;
 
-   virtual ir_dereference *as_dereference()
-   {
-      return this;
-   }
-
    bool is_lvalue() const;
 
    /**
     * Get the variable that is ultimately referenced by an r-value
     */
    virtual ir_variable *variable_referenced() const = 0;
+
+protected:
+   ir_dereference(enum ir_node_type t)
+      : ir_rvalue(t)
+   {
+   }
 };
 
 
@@ -1932,11 +2042,6 @@ public:
 					  struct hash_table *) const;
 
    virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
-
-   virtual ir_dereference_variable *as_dereference_variable()
-   {
-      return this;
-   }
 
    virtual bool equals(ir_instruction *ir, enum ir_node_type ignore = ir_type_unset);
 
@@ -1984,11 +2089,6 @@ public:
 
    virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
 
-   virtual ir_dereference_array *as_dereference_array()
-   {
-      return this;
-   }
-
    virtual bool equals(ir_instruction *ir, enum ir_node_type ignore = ir_type_unset);
 
    /**
@@ -2024,11 +2124,6 @@ public:
 					struct hash_table *) const;
 
    virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
-
-   virtual ir_dereference_record *as_dereference_record()
-   {
-      return this;
-   }
 
    /**
     * Get the variable that is ultimately referenced by an r-value
@@ -2095,11 +2190,6 @@ public:
 
    virtual ir_constant *constant_expression_value(struct hash_table *variable_context = NULL);
 
-   virtual ir_constant *as_constant()
-   {
-      return this;
-   }
-
    virtual void accept(ir_visitor *v)
    {
       v->visit(this);
@@ -2156,7 +2246,7 @@ public:
     * Determine whether a constant has the same value as another constant
     *
     * \sa ir_constant::is_zero, ir_constant::is_one,
-    * ir_constant::is_negative_one, ir_constant::is_basis
+    * ir_constant::is_negative_one
     */
    bool has_value(const ir_constant *) const;
 
@@ -2169,7 +2259,6 @@ public:
    virtual bool is_zero() const;
    virtual bool is_one() const;
    virtual bool is_negative_one() const;
-   virtual bool is_basis() const;
 
    /**
     * Return true for constants that could be stored as 16-bit unsigned values.
@@ -2206,9 +2295,11 @@ private:
  */
 class ir_emit_vertex : public ir_instruction {
 public:
-   ir_emit_vertex()
+   ir_emit_vertex(ir_rvalue *stream)
+      : ir_instruction(ir_type_emit_vertex),
+        stream(stream)
    {
-      ir_type = ir_type_emit_vertex;
+      assert(stream);
    }
 
    virtual void accept(ir_visitor *v)
@@ -2216,12 +2307,19 @@ public:
       v->visit(this);
    }
 
-   virtual ir_emit_vertex *clone(void *mem_ctx, struct hash_table *) const
+   virtual ir_emit_vertex *clone(void *mem_ctx, struct hash_table *ht) const
    {
-      return new(mem_ctx) ir_emit_vertex();
+      return new(mem_ctx) ir_emit_vertex(this->stream->clone(mem_ctx, ht));
    }
 
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
+
+   int stream_id() const
+   {
+      return stream->as_constant()->value.i[0];
+   }
+
+   ir_rvalue *stream;
 };
 
 /**
@@ -2230,9 +2328,11 @@ public:
  */
 class ir_end_primitive : public ir_instruction {
 public:
-   ir_end_primitive()
+   ir_end_primitive(ir_rvalue *stream)
+      : ir_instruction(ir_type_end_primitive),
+        stream(stream)
    {
-      ir_type = ir_type_end_primitive;
+      assert(stream);
    }
 
    virtual void accept(ir_visitor *v)
@@ -2240,12 +2340,19 @@ public:
       v->visit(this);
    }
 
-   virtual ir_end_primitive *clone(void *mem_ctx, struct hash_table *) const
+   virtual ir_end_primitive *clone(void *mem_ctx, struct hash_table *ht) const
    {
-      return new(mem_ctx) ir_end_primitive();
+      return new(mem_ctx) ir_end_primitive(this->stream->clone(mem_ctx, ht));
    }
 
    virtual ir_visitor_status accept(ir_hierarchical_visitor *);
+
+   int stream_id() const
+   {
+      return stream->as_constant()->value.i[0];
+   }
+
+   ir_rvalue *stream;
 };
 
 /*@}*/
@@ -2342,11 +2449,23 @@ prototype_string(const glsl_type *return_type, const char *name,
 const char *
 mode_string(const ir_variable *var);
 
+/**
+ * Built-in / reserved GL variables names start with "gl_"
+ */
+static inline bool
+is_gl_identifier(const char *s)
+{
+   return s && s[0] == 'g' && s[1] == 'l' && s[2] == '_';
+}
+
 extern "C" {
 #endif /* __cplusplus */
 
 extern void _mesa_print_ir(FILE *f, struct exec_list *instructions,
                            struct _mesa_glsl_parse_state *state);
+
+extern void
+fprint_ir(FILE *f, const void *instruction);
 
 #ifdef __cplusplus
 } /* extern "C" */

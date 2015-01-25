@@ -42,7 +42,6 @@
 #include "main/dispatch.h"
 #include "main/enums.h"
 #include "main/hash.h"
-#include "main/hash_table.h"
 #include "main/mtypes.h"
 #include "main/pipelineobj.h"
 #include "main/shaderapi.h"
@@ -52,7 +51,8 @@
 #include "program/program.h"
 #include "program/prog_print.h"
 #include "program/prog_parameter.h"
-#include "ralloc.h"
+#include "util/ralloc.h"
+#include "util/hash_table.h"
 #include <stdbool.h>
 #include "../glsl/glsl_parser_extras.h"
 #include "../glsl/ir.h"
@@ -70,7 +70,7 @@ GLbitfield
 _mesa_get_shader_flags(void)
 {
    GLbitfield flags = 0x0;
-   const char *env = _mesa_getenv("MESA_GLSL");
+   const char *env = getenv("MESA_GLSL");
 
    if (env) {
       if (strstr(env, "dump_on_error"))
@@ -119,9 +119,12 @@ _mesa_init_shader_state(struct gl_context *ctx)
    options.DefaultPragmas.Optimize = GL_TRUE;
 
    for (sh = 0; sh < MESA_SHADER_STAGES; ++sh)
-      memcpy(&ctx->ShaderCompilerOptions[sh], &options, sizeof(options));
+      memcpy(&ctx->Const.ShaderCompilerOptions[sh], &options, sizeof(options));
 
    ctx->Shader.Flags = _mesa_get_shader_flags();
+
+   if (ctx->Shader.Flags != 0)
+      ctx->Const.GenerateTemporaryNames = true;
 
    /* Extended for ARB_separate_shader_objects */
    ctx->Shader.RefCount = 1;
@@ -272,9 +275,8 @@ attach_shader(struct gl_context *ctx, GLuint program, GLuint shader)
 
    /* grow list */
    shProg->Shaders = (struct gl_shader **)
-      _mesa_realloc(shProg->Shaders,
-                    n * sizeof(struct gl_shader *),
-                    (n + 1) * sizeof(struct gl_shader *));
+      realloc(shProg->Shaders,
+              (n + 1) * sizeof(struct gl_shader *));
    if (!shProg->Shaders) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glAttachShader");
       return;
@@ -314,7 +316,7 @@ create_shader_program(struct gl_context *ctx)
 
    name = _mesa_HashFindFreeKeyBlock(ctx->Shared->ShaderObjects, 1);
 
-   shProg = ctx->Driver.NewShaderProgram(ctx, name);
+   shProg = ctx->Driver.NewShaderProgram(name);
 
    _mesa_HashInsert(ctx->Shared->ShaderObjects, name, shProg);
 
@@ -563,13 +565,15 @@ get_programiv(struct gl_context *ctx, GLuint program, GLenum pname, GLint *param
       *params = _mesa_longest_attribute_name_length(shProg);
       return;
    case GL_ACTIVE_UNIFORMS:
-      *params = shProg->NumUserUniformStorage;
+      *params = shProg->NumUserUniformStorage - shProg->NumHiddenUniforms;
       return;
    case GL_ACTIVE_UNIFORM_MAX_LENGTH: {
       unsigned i;
       GLint max_len = 0;
+      const unsigned num_uniforms =
+         shProg->NumUserUniformStorage - shProg->NumHiddenUniforms;
 
-      for (i = 0; i < shProg->NumUserUniformStorage; i++) {
+      for (i = 0; i < num_uniforms; i++) {
 	 /* Add one for the terminating NUL character for a non-array, and
 	  * 4 for the "[0]" and the NUL for an array.
 	  */
@@ -826,7 +830,7 @@ compile_shader(struct gl_context *ctx, GLuint shaderObj)
    if (!sh)
       return;
 
-   options = &ctx->ShaderCompilerOptions[sh->Stage];
+   options = &ctx->Const.ShaderCompilerOptions[sh->Stage];
 
    /* set default pragma state for shader */
    sh->Pragmas = options->DefaultPragmas;
@@ -1392,7 +1396,7 @@ _mesa_LinkProgram(GLhandleARB programObj)
 static GLcharARB *
 read_shader(const char *fname)
 {
-   const int max = 50*1000;
+   int shader_size = 0;
    FILE *f = fopen(fname, "r");
    GLcharARB *buffer, *shader;
    int len;
@@ -1401,8 +1405,19 @@ read_shader(const char *fname)
       return NULL;
    }
 
-   buffer = malloc(max);
-   len = fread(buffer, 1, max, f);
+   /* allocate enough room for the entire shader */
+   fseek(f, 0, SEEK_END);
+   shader_size = ftell(f);
+   rewind(f);
+   assert(shader_size);
+
+   /* add one for terminating zero */
+   shader_size++;
+
+   buffer = malloc(shader_size);
+   assert(buffer);
+
+   len = fread(buffer, 1, shader_size, f);
    buffer[len] = 0;
 
    fclose(f);
@@ -1877,6 +1892,12 @@ _mesa_copy_linked_program_data(gl_shader_stage type,
       dst_gp->OutputType = src->Geom.OutputType;
       dst->UsesClipDistanceOut = src->Geom.UsesClipDistance;
       dst_gp->UsesEndPrimitive = src->Geom.UsesEndPrimitive;
+      dst_gp->UsesStreams = src->Geom.UsesStreams;
+   }
+      break;
+   case MESA_SHADER_FRAGMENT: {
+      struct gl_fragment_program *dst_fp = (struct gl_fragment_program *) dst;
+      dst_fp->FragDepthLayout = src->FragDepthLayout;
    }
       break;
    case MESA_SHADER_COMPUTE: {

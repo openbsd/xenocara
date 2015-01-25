@@ -43,6 +43,7 @@
 
 struct dri_context;
 struct dri_drawable;
+struct pipe_loader_device;
 
 struct dri_screen
 {
@@ -64,11 +65,16 @@ struct dri_screen
    /** The screen's effective configuration options */
    driOptionCache optionCache;
 
+   struct st_config_options options;
+
    /* Which postprocessing filters are enabled. */
    unsigned pp_enabled[PP_FILTERS];
 
    /* drm */
    int fd;
+   boolean can_share_buffer;
+
+   struct pipe_loader_device *dev;
 
    /* gallium */
    boolean d_depth_bits_last;
@@ -134,7 +140,8 @@ dri_fill_st_visual(struct st_visual *stvis, struct dri_screen *screen,
 
 const __DRIconfig **
 dri_init_screen_helper(struct dri_screen *screen,
-                       struct pipe_screen *pscreen);
+                       struct pipe_screen *pscreen,
+                       const char* driver_name);
 
 void
 dri_destroy_screen_helper(struct dri_screen * screen);
@@ -142,6 +149,13 @@ dri_destroy_screen_helper(struct dri_screen * screen);
 void
 dri_destroy_screen(__DRIscreen * sPriv);
 
+extern struct pipe_screen *kms_swrast_create_screen(int fd);
+extern const struct __DriverAPIRec dri_kms_driver_api;
+
+extern const struct __DriverAPIRec galliumdrm_driver_api;
+extern const __DRIextension *galliumdrm_driver_extensions[];
+extern const struct __DriverAPIRec galliumsw_driver_api;
+extern const __DRIextension *galliumsw_driver_extensions[];
 extern const __DRIconfigOptionsExtension gallium_config_options;
 
 #endif

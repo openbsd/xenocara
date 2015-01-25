@@ -317,8 +317,6 @@ typedef enum
    /* GL_ARB_draw_buffers */
    OPCODE_DRAW_BUFFERS_ARB,
    /* GL_ATI_fragment_shader */
-   OPCODE_TEX_BUMP_PARAMETER_ATI,
-   /* GL_ATI_fragment_shader */
    OPCODE_BIND_FRAGMENT_SHADER_ATI,
    OPCODE_SET_FRAGMENT_SHADER_CONSTANTS_ATI,
    /* OpenGL 2.0 */
@@ -399,6 +397,9 @@ typedef enum
    OPCODE_PROGRAM_UNIFORM_MATRIX42F,
    OPCODE_PROGRAM_UNIFORM_MATRIX34F,
    OPCODE_PROGRAM_UNIFORM_MATRIX43F,
+
+   /* GL_ARB_clip_control */
+   OPCODE_CLIP_CONTROL,
 
    /* GL_ARB_color_buffer_float */
    OPCODE_CLAMP_COLOR,
@@ -520,6 +521,9 @@ union gl_dlist_node
    GLenum e;
    GLfloat f;
    GLsizei si;
+#if defined(__LP64__) && !defined(__x86_64__)
+   void *pad;
+#endif
 };
 
 
@@ -550,8 +554,9 @@ save_pointer(union gl_dlist_node *dest, void *src)
    unsigned i;
 
    STATIC_ASSERT(POINTER_DWORDS == 1 || POINTER_DWORDS == 2);
+#if 0
    STATIC_ASSERT(sizeof(union gl_dlist_node) == 4);
-
+#endif
    p.ptr = src;
 
    for (i = 0; i < POINTER_DWORDS; i++)
@@ -4977,36 +4982,6 @@ save_DrawBuffersARB(GLsizei count, const GLenum * buffers)
 }
 
 static void GLAPIENTRY
-save_TexBumpParameterfvATI(GLenum pname, const GLfloat *param)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   Node *n;
-
-   n = alloc_instruction(ctx, OPCODE_TEX_BUMP_PARAMETER_ATI, 5);
-   if (n) {
-      n[1].ui = pname;
-      n[2].f = param[0];
-      n[3].f = param[1];
-      n[4].f = param[2];
-      n[5].f = param[3];
-   }
-   if (ctx->ExecuteFlag) {
-      CALL_TexBumpParameterfvATI(ctx->Exec, (pname, param));
-   }
-}
-
-static void GLAPIENTRY
-save_TexBumpParameterivATI(GLenum pname, const GLint *param)
-{
-   GLfloat p[4];
-   p[0] = INT_TO_FLOAT(param[0]);
-   p[1] = INT_TO_FLOAT(param[1]);
-   p[2] = INT_TO_FLOAT(param[2]);
-   p[3] = INT_TO_FLOAT(param[3]);
-   save_TexBumpParameterfvATI(pname, p);
-}
-
-static void GLAPIENTRY
 save_BindFragmentShaderATI(GLuint id)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -7240,6 +7215,22 @@ save_ProgramUniformMatrix4fv(GLuint program, GLint location, GLsizei count,
 }
 
 static void GLAPIENTRY
+save_ClipControl(GLenum origin, GLenum depth)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_CLIP_CONTROL, 2);
+   if (n) {
+      n[1].e = origin;
+      n[2].e = depth;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ClipControl(ctx->Exec, (origin, depth));
+   }
+}
+
+static void GLAPIENTRY
 save_ClampColorARB(GLenum target, GLenum clamp)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -8649,20 +8640,14 @@ execute_list(struct gl_context *ctx, GLuint list)
                                           get_pointer(&n[5])));
             break;
 
+         case OPCODE_CLIP_CONTROL:
+            CALL_ClipControl(ctx->Exec, (n[1].e, n[2].e));
+            break;
+
          case OPCODE_CLAMP_COLOR:
             CALL_ClampColor(ctx->Exec, (n[1].e, n[2].e));
             break;
 
-         case OPCODE_TEX_BUMP_PARAMETER_ATI:
-            {
-               GLfloat values[4];
-               GLuint i, pname = n[1].ui;
-
-               for (i = 0; i < 4; i++)
-                  values[i] = n[1 + i].f;
-               CALL_TexBumpParameterfvATI(ctx->Exec, (pname, values));
-            }
-            break;
          case OPCODE_BIND_FRAGMENT_SHADER_ATI:
             CALL_BindFragmentShaderATI(ctx->Exec, (n[1].i));
             break;
@@ -9488,10 +9473,6 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
     */
    SET_BindProgramARB(table, save_BindProgramNV);
 
-   /* 244. GL_ATI_envmap_bumpmap */
-   SET_TexBumpParameterivATI(table, save_TexBumpParameterivATI);
-   SET_TexBumpParameterfvATI(table, save_TexBumpParameterfvATI);
-
    /* 245. GL_ATI_fragment_shader */
    SET_BindFragmentShaderATI(table, save_BindFragmentShaderATI);
    SET_SetFragmentShaderConstantATI(table, save_SetFragmentShaderConstantATI);
@@ -9596,6 +9577,9 @@ _mesa_initialize_save_table(const struct gl_context *ctx)
    SET_ClearColorIuiEXT(table, save_ClearColorIui);
    SET_TexParameterIiv(table, save_TexParameterIiv);
    SET_TexParameterIuiv(table, save_TexParameterIuiv);
+
+   /* GL_ARB_clip_control */
+   SET_ClipControl(table, save_ClipControl);
 
    /* GL_ARB_color_buffer_float */
    SET_ClampColor(table, save_ClampColorARB);

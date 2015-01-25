@@ -31,6 +31,8 @@
  */
 
 
+#include <inttypes.h>  /* for PRId64 macro */
+
 #include "main/imports.h"
 #include "main/mtypes.h"
 #include "main/arrayobj.h"
@@ -52,14 +54,14 @@
  * internal structure where somehow shared.
  */
 static struct gl_buffer_object *
-st_bufferobj_alloc(struct gl_context *ctx, GLuint name, GLenum target)
+st_bufferobj_alloc(struct gl_context *ctx, GLuint name)
 {
    struct st_buffer_object *st_obj = ST_CALLOC_STRUCT(st_buffer_object);
 
    if (!st_obj)
       return NULL;
 
-   _mesa_initialize_buffer_object(ctx, &st_obj->Base, name, target);
+   _mesa_initialize_buffer_object(ctx, &st_obj->Base, name);
 
    return &st_obj->Base;
 }
@@ -225,6 +227,9 @@ st_bufferobj_data(struct gl_context *ctx,
    case GL_UNIFORM_BUFFER:
       bind = PIPE_BIND_CONSTANT_BUFFER;
       break;
+   case GL_DRAW_INDIRECT_BUFFER:
+      bind = PIPE_BIND_COMMAND_ARGS_BUFFER;
+      break;
    default:
       bind = 0;
    }
@@ -241,20 +246,22 @@ st_bufferobj_data(struct gl_context *ctx,
       /* BufferData */
       switch (usage) {
       case GL_STATIC_DRAW:
-      case GL_STATIC_READ:
       case GL_STATIC_COPY:
       default:
 	 pipe_usage = PIPE_USAGE_DEFAULT;
          break;
       case GL_DYNAMIC_DRAW:
-      case GL_DYNAMIC_READ:
       case GL_DYNAMIC_COPY:
          pipe_usage = PIPE_USAGE_DYNAMIC;
          break;
       case GL_STREAM_DRAW:
-      case GL_STREAM_READ:
       case GL_STREAM_COPY:
          pipe_usage = PIPE_USAGE_STREAM;
+         break;
+      case GL_STATIC_READ:
+      case GL_DYNAMIC_READ:
+      case GL_STREAM_READ:
+         pipe_usage = PIPE_USAGE_STAGING;
          break;
       }
    }
@@ -268,7 +275,8 @@ st_bufferobj_data(struct gl_context *ctx,
    pipe_resource_reference( &st_obj->buffer, NULL );
 
    if (ST_DEBUG & DEBUG_BUFFER) {
-      debug_printf("Create buffer size %td bind 0x%x\n", size, bind);
+      debug_printf("Create buffer size %" PRId64 " bind 0x%x\n",
+                   (int64_t) size, bind);
    }
 
    if (size != 0) {

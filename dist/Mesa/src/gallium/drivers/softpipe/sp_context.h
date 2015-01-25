@@ -85,6 +85,8 @@ struct softpipe_context {
    struct pipe_viewport_state viewport;
    struct pipe_vertex_buffer vertex_buffer[PIPE_MAX_ATTRIBS];
    struct pipe_index_buffer index_buffer;
+   struct pipe_resource *mapped_vs_tex[PIPE_MAX_SHADER_SAMPLER_VIEWS];
+   struct pipe_resource *mapped_gs_tex[PIPE_MAX_SHADER_SAMPLER_VIEWS];
 
    struct draw_so_target *so_targets[PIPE_MAX_SO_BUFFERS];
    unsigned num_so_targets;
@@ -120,6 +122,9 @@ struct softpipe_context {
 
    /** Which vertex shader output slot contains point size */
    int psize_slot;
+
+   /** Which vertex shader output slot contains layer */
+   int layer_slot;
 
    /** The reduced version of the primitive supplied by the state tracker */
    unsigned reduced_api_prim;

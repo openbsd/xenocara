@@ -39,24 +39,6 @@
 #include "pipe/p_context.h"
 #include "state_tracker/st_context.h"
 
-static void
-dri_fill_st_options(struct st_config_options *options,
-                    const struct driOptionCache * optionCache)
-{
-   options->disable_blend_func_extended =
-      driQueryOptionb(optionCache, "disable_blend_func_extended");
-   options->disable_glsl_line_continuations =
-      driQueryOptionb(optionCache, "disable_glsl_line_continuations");
-   options->disable_shader_bit_encoding =
-      driQueryOptionb(optionCache, "disable_shader_bit_encoding");
-   options->force_glsl_extensions_warn =
-      driQueryOptionb(optionCache, "force_glsl_extensions_warn");
-   options->force_glsl_version =
-      driQueryOptioni(optionCache, "force_glsl_version");
-   options->force_s3tc_enable =
-      driQueryOptionb(optionCache, "force_s3tc_enable");
-}
-
 GLboolean
 dri_create_context(gl_api api, const struct gl_config * visual,
 		   __DRIcontext * cPriv,
@@ -90,9 +72,6 @@ dri_create_context(gl_api api, const struct gl_config * visual,
       attribs.major = major_version;
       attribs.minor = minor_version;
 
-      if ((flags & __DRI_CTX_FLAG_DEBUG) != 0)
-	 attribs.flags |= ST_CONTEXT_FLAG_DEBUG;
-
       if ((flags & __DRI_CTX_FLAG_FORWARD_COMPATIBLE) != 0)
 	 attribs.flags |= ST_CONTEXT_FLAG_FORWARD_COMPATIBLE;
       break;
@@ -100,6 +79,9 @@ dri_create_context(gl_api api, const struct gl_config * visual,
       *error = __DRI_CTX_ERROR_BAD_API;
       goto fail;
    }
+
+   if ((flags & __DRI_CTX_FLAG_DEBUG) != 0)
+      attribs.flags |= ST_CONTEXT_FLAG_DEBUG;
 
    if (flags & ~(__DRI_CTX_FLAG_DEBUG | __DRI_CTX_FLAG_FORWARD_COMPATIBLE)) {
       *error = __DRI_CTX_ERROR_UNKNOWN_FLAG;
@@ -125,7 +107,7 @@ dri_create_context(gl_api api, const struct gl_config * visual,
    ctx->cPriv = cPriv;
    ctx->sPriv = sPriv;
 
-   dri_fill_st_options(&attribs.options, &screen->optionCache);
+   attribs.options = screen->options;
    dri_fill_st_visual(&attribs.visual, screen, visual);
    ctx->st = stapi->create_context(stapi, &screen->base, &attribs, &ctx_err,
 				   st_share);

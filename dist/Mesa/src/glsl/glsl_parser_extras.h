@@ -40,8 +40,13 @@ struct glsl_switch_state {
    /** Temporary variables needed for switch statement. */
    ir_variable *test_var;
    ir_variable *is_fallthru_var;
-   ir_variable *is_break_var;
    class ast_switch_statement *switch_nesting_ast;
+
+   /** Used to detect if 'continue' was called inside a switch. */
+   ir_variable *continue_inside;
+
+   /** Used to set condition if 'default' label should be chosen. */
+   ir_variable *run_default;
 
    /** Table of constant values already used in case labels */
    struct hash_table *labels_ht;
@@ -119,6 +124,19 @@ struct _mesa_glsl_parse_state {
       return check_version(130, 300, locp, "bit-wise operations are forbidden");
    }
 
+   bool check_explicit_attrib_stream_allowed(YYLTYPE *locp)
+   {
+      if (!this->has_explicit_attrib_stream()) {
+         const char *const requirement = "GL_ARB_gpu_shader5 extension or GLSL 400";
+
+         _mesa_glsl_error(locp, this, "explicit stream requires %s",
+                          requirement);
+         return false;
+      }
+
+      return true;
+   }
+
    bool check_explicit_attrib_location_allowed(YYLTYPE *locp,
                                                const ir_variable *var)
    {
@@ -149,6 +167,26 @@ struct _mesa_glsl_parse_state {
       }
 
       return true;
+   }
+
+   bool check_explicit_uniform_location_allowed(YYLTYPE *locp,
+                                                const ir_variable *)
+   {
+      if (!this->has_explicit_attrib_location() ||
+          !this->ARB_explicit_uniform_location_enable) {
+         _mesa_glsl_error(locp, this,
+                          "uniform explicit location requires "
+                          "GL_ARB_explicit_uniform_location and either "
+                          "GL_ARB_explicit_attrib_location or GLSL 330.");
+         return false;
+      }
+
+      return true;
+   }
+
+   bool has_explicit_attrib_stream() const
+   {
+      return ARB_gpu_shader5_enable || is_version(400, 0);
    }
 
    bool has_explicit_attrib_location() const
@@ -188,7 +226,7 @@ struct _mesa_glsl_parse_state {
    /**
     * Number of nested struct_specifier levels
     *
-    * Outside a struct_specifer, this is zero.
+    * Outside a struct_specifier, this is zero.
     */
    unsigned struct_specifier_depth;
 
@@ -305,6 +343,9 @@ struct _mesa_glsl_parse_state {
       unsigned MaxGeometryImageUniforms;
       unsigned MaxFragmentImageUniforms;
       unsigned MaxCombinedImageUniforms;
+
+      /* ARB_viewport_array */
+      unsigned MaxViewports;
    } Const;
 
    /**
@@ -357,14 +398,20 @@ struct _mesa_glsl_parse_state {
    bool ARB_compute_shader_warn;
    bool ARB_conservative_depth_enable;
    bool ARB_conservative_depth_warn;
+   bool ARB_derivative_control_enable;
+   bool ARB_derivative_control_warn;
    bool ARB_draw_buffers_enable;
    bool ARB_draw_buffers_warn;
    bool ARB_draw_instanced_enable;
    bool ARB_draw_instanced_warn;
    bool ARB_explicit_attrib_location_enable;
    bool ARB_explicit_attrib_location_warn;
+   bool ARB_explicit_uniform_location_enable;
+   bool ARB_explicit_uniform_location_warn;
    bool ARB_fragment_coord_conventions_enable;
    bool ARB_fragment_coord_conventions_warn;
+   bool ARB_fragment_layer_viewport_enable;
+   bool ARB_fragment_layer_viewport_warn;
    bool ARB_gpu_shader5_enable;
    bool ARB_gpu_shader5_warn;
    bool ARB_sample_shading_enable;
@@ -424,6 +471,8 @@ struct _mesa_glsl_parse_state {
    bool AMD_shader_trinary_minmax_warn;
    bool AMD_vertex_shader_layer_enable;
    bool AMD_vertex_shader_layer_warn;
+   bool AMD_vertex_shader_viewport_index_enable;
+   bool AMD_vertex_shader_viewport_index_warn;
    bool EXT_separate_shader_objects_enable;
    bool EXT_separate_shader_objects_warn;
    bool EXT_shader_integer_mix_enable;
@@ -451,6 +500,8 @@ struct _mesa_glsl_parse_state {
 
    /** Atomic counter offsets by binding */
    unsigned atomic_counter_offsets[MAX_COMBINED_ATOMIC_BUFFERS];
+
+   bool allow_extension_directive_midshader;
 };
 
 # define YYLLOC_DEFAULT(Current, Rhs, N)			\

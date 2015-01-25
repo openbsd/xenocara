@@ -45,6 +45,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifndef RADEON_INFO_ACTIVE_CU_COUNT
+#define RADEON_INFO_ACTIVE_CU_COUNT 0x20
+#endif
+
 static struct util_hash_table *fd_tab = NULL;
 pipe_static_mutex(fd_tab_mutex);
 
@@ -93,13 +97,11 @@ static boolean radeon_set_fd_access(struct radeon_drm_cs *applier,
     if (enable) {
         if (value) {
             *owner = applier;
-            printf("radeon: Acquired access to %s.\n", request_name);
             pipe_mutex_unlock(*mutex);
             return TRUE;
         }
     } else {
         *owner = NULL;
-        printf("radeon: Released access to %s.\n", request_name);
     }
 
     pipe_mutex_unlock(*mutex);
@@ -323,6 +325,9 @@ static boolean do_winsys_init(struct radeon_drm_winsys *ws)
                          &ws->info.max_sclk);
     ws->info.max_sclk /= 1000;
 
+    radeon_get_drm_value(ws->fd, RADEON_INFO_SI_BACKEND_ENABLED_MASK, NULL,
+                         &ws->info.si_backend_enabled_mask);
+
     ws->num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
 
     /* Generation-specific queries. */
@@ -381,6 +386,35 @@ static boolean do_winsys_init(struct radeon_drm_winsys *ws)
     ws->info.r600_max_pipes = 2;
     radeon_get_drm_value(ws->fd, RADEON_INFO_MAX_PIPES, NULL,
                          &ws->info.r600_max_pipes);
+
+    radeon_get_drm_value(ws->fd, RADEON_INFO_ACTIVE_CU_COUNT, NULL,
+                         &ws->info.max_compute_units);
+
+    radeon_get_drm_value(ws->fd, RADEON_INFO_MAX_SE, NULL,
+                         &ws->info.max_se);
+
+    if (!ws->info.max_se) {
+        switch (ws->info.family) {
+        default:
+            ws->info.max_se = 1;
+            break;
+        case CHIP_CYPRESS:
+        case CHIP_HEMLOCK:
+        case CHIP_BARTS:
+        case CHIP_CAYMAN:
+        case CHIP_TAHITI:
+        case CHIP_PITCAIRN:
+        case CHIP_BONAIRE:
+            ws->info.max_se = 2;
+            break;
+        case CHIP_HAWAII:
+            ws->info.max_se = 4;
+            break;
+        }
+    }
+
+    radeon_get_drm_value(ws->fd, RADEON_INFO_MAX_SH_PER_SE, NULL,
+                         &ws->info.max_sh_per_se);
 
     radeon_get_drm_value(ws->fd, RADEON_INFO_ACCEL_WORKING2, NULL,
                          &ws->accel_working2);
@@ -635,7 +669,9 @@ radeon_drm_winsys_create(int fd, radeon_screen_create_t screen_create)
     ws->kman = radeon_bomgr_create(ws);
     if (!ws->kman)
         goto fail;
-    ws->cman = pb_cache_manager_create(ws->kman, 1000000, 2.0f, 0);
+
+    ws->cman = pb_cache_manager_create(ws->kman, 1000000, 2.0f, 0,
+                                       (ws->info.vram_size + ws->info.gart_size) / 8);
     if (!ws->cman)
         goto fail;
 

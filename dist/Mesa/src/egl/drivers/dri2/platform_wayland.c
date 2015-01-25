@@ -468,7 +468,7 @@ dri2_wl_get_buffers(__DRIdrawable * driDrawable,
    const unsigned int format = 32;
    int i;
 
-   attachments_with_format = calloc(count * 2, sizeof(unsigned int));
+   attachments_with_format = calloc(count, 2 * sizeof(unsigned int));
    if (!attachments_with_format) {
       *out_count = 0;
       return NULL;
@@ -964,6 +964,7 @@ static struct dri2_egl_display_vtbl dri2_wl_display_vtbl = {
    .copy_buffers = dri2_fallback_copy_buffers,
    .query_buffer_age = dri2_wl_query_buffer_age,
    .create_wayland_buffer_from_image = dri2_wl_create_wayland_buffer_from_image,
+   .get_sync_values = dri2_fallback_get_sync_values,
 };
 
 EGLBoolean

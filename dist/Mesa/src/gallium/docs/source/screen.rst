@@ -174,8 +174,10 @@ The integer capabilities:
 * ``PIPE_CAP_MIXED_FRAMEBUFFER_SIZES``: Whether it is allowed to have
   different sizes for fb color/zs attachments. This controls whether
   ARB_framebuffer_object is provided.
-* ``PIPE_CAP_TGSI_VS_LAYER``: Whether TGSI_SEMANTIC_LAYER is supported
-  as a vertex shader output.
+* ``PIPE_CAP_TGSI_VS_LAYER_VIEWPORT``: Whether ``TGSI_SEMANTIC_LAYER`` and
+  ``TGSI_SEMANTIC_VIEWPORT_INDEX`` are supported as vertex shader
+  outputs. Note that the viewport will only be used if multiple viewports are
+  exposed.
 * ``PIPE_CAP_MAX_GEOMETRY_OUTPUT_VERTICES``: The maximum number of vertices
   output by a single invocation of a geometry shader.
 * ``PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS``: The maximum number of
@@ -200,6 +202,37 @@ The integer capabilities:
 * ``PIPE_CAP_SAMPLE_SHADING``: Whether there is support for per-sample
   shading. The context->set_min_samples function will be expected to be
   implemented.
+* ``PIPE_CAP_TEXTURE_GATHER_OFFSETS``: Whether the ``TG4`` instruction can
+  accept 4 offsets.
+* ``PIPE_CAP_TGSI_VS_WINDOW_SPACE_POSITION``: Whether
+  TGSI_PROPERTY_VS_WINDOW_SPACE_POSITION is supported, which disables clipping
+  and viewport transformation.
+* ``PIPE_CAP_MAX_VERTEX_STREAMS``: The maximum number of vertex streams
+  supported by the geometry shader. If stream-out is supported, this should be
+  at least 1. If stream-out is not supported, this should be 0.
+* ``PIPE_CAP_DRAW_INDIRECT``: Whether the driver supports taking draw arguments
+  { count, instance_count, start, index_bias } from a PIPE_BUFFER resource.
+  See pipe_draw_info.
+* ``PIPE_CAP_TGSI_FS_FINE_DERIVATIVE``: Whether the fragment shader supports
+  the FINE versions of DDX/DDY.
+* ``PIPE_CAP_VENDOR_ID``: The vendor ID of the underlying hardware. If it's
+  not available one should return 0xFFFFFFFF.
+* ``PIPE_CAP_DEVICE_ID``: The device ID (PCI ID) of the underlying hardware.
+  0xFFFFFFFF if not available.
+* ``PIPE_CAP_ACCELERATED``: Whether the renderer is hardware accelerated.
+* ``PIPE_CAP_VIDEO_MEMORY``: The amount of video memory in megabytes.
+* ``PIPE_CAP_UMA``: If the device has a unified memory architecture or on-card
+  memory and GART.
+* ``PIPE_CAP_CONDITIONAL_RENDER_INVERTED``: Whether the driver supports inverted
+  condition for conditional rendering.
+* ``PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE``: The maximum supported vertex stride.
+* ``PIPE_CAP_SAMPLER_VIEW_TARGET``: Whether the sampler view's target can be
+  different than the underlying resource's, as permitted by
+  ARB_texture_view. For example a 2d array texture may be reinterpreted as a
+  cube (array) texture and vice-versa.
+* ``PIPE_CAP_CLIP_HALFZ``: Whether the driver supports the
+  pipe_rasterizer_state::clip_halfz being set to true. This is required
+  for enabling ARB_clip_control.
 
 
 .. _pipe_capf:
@@ -237,7 +270,9 @@ support different features.
 * ``PIPE_SHADER_CAP_MAX_TEX_INDIRECTIONS``: The maximum number of texture indirections.
 * ``PIPE_SHADER_CAP_MAX_CONTROL_FLOW_DEPTH``: The maximum nested control flow depth.
 * ``PIPE_SHADER_CAP_MAX_INPUTS``: The maximum number of input registers.
-* ``PIPE_SHADER_CAP_MAX_CONSTS``: The maximum number of constants.
+* ``PIPE_SHADER_CAP_MAX_OUTPUTS``: The maximum number of output registers.
+  This is valid for all shaders except the fragment shader.
+* ``PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE``: The maximum size per constant buffer in bytes.
 * ``PIPE_SHADER_CAP_MAX_CONST_BUFFERS``: Maximum number of constant buffers that can be bound
   to any shader stage using ``set_constant_buffer``. If 0 or 1, the pipe will
   only permit binding one constant buffer per shader, and the shaders will
@@ -256,7 +291,6 @@ file is still supported. In that case, the constbuf index is assumed
 to be 0.
 
 * ``PIPE_SHADER_CAP_MAX_TEMPS``: The maximum number of temporary registers.
-* ``PIPE_SHADER_CAP_MAX_ADDRS``: The maximum number of address registers.
 * ``PIPE_SHADER_CAP_MAX_PREDS``: The maximum number of predicate registers.
 * ``PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED``: Whether the continue opcode is supported.
 * ``PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR``: Whether indirect addressing
@@ -277,6 +311,8 @@ to be 0.
   program.  It should be one of the ``pipe_shader_ir`` enum values.
 * ``PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS``: The maximum number of texture
   sampler views. Must not be lower than PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS.
+* ``PIPE_SHADER_CAP_DOUBLES``: Whether double precision floating-point
+  operations are supported.
 
 
 .. _pipe_compute_cap:
@@ -289,8 +325,8 @@ pipe_screen::get_compute_param.
 
 * ``PIPE_COMPUTE_CAP_IR_TARGET``: A description of the target of the form
   ``processor-arch-manufacturer-os`` that will be passed on to the compiler.
-  This CAP is only relevant for drivers that specify PIPE_SHADER_IR_LLVM for
-  their preferred IR.
+  This CAP is only relevant for drivers that specify PIPE_SHADER_IR_LLVM
+  or PIPE_SHADER_IR_NATIVE for their preferred IR.
   Value type: null-terminated string.
 * ``PIPE_COMPUTE_CAP_GRID_DIMENSION``: Number of supported dimensions
   for grid and block coordinates.  Value type: ``uint64_t``.
@@ -315,6 +351,10 @@ pipe_screen::get_compute_param.
   allocation in bytes.  Value type: ``uint64_t``.
 * ``PIPE_COMPUTE_CAP_MAX_CLOCK_FREQUENCY``: Maximum frequency of the GPU
   clock in MHz. Value type: ``uint32_t``
+* ``PIPE_COMPUTE_CAP_MAX_COMPUTE_UNITS``: Maximum number of compute units
+  Value type: ``uint32_t``
+* ``PIPE_COMPUTE_CAP_IMAGES_SUPPORTED``: Whether images are supported
+  non-zero means yes, zero means no. Value type: ``uint32_t``
 
 .. _pipe_bind:
 
@@ -359,6 +399,9 @@ resources might be created and handled quite differently.
   bound to the graphics pipeline as a shader resource.
 * ``PIPE_BIND_COMPUTE_RESOURCE``: A buffer or texture that can be
   bound to the compute program as a shader resource.
+* ``PIPE_BIND_COMMAND_ARGS_BUFFER``: A buffer that may be sourced by the
+  GPU command processor. It can contain, for example, the arguments to
+  indirect draw calls.
 
 .. _pipe_usage:
 
@@ -447,6 +490,8 @@ Check if a resource can actually be created (but don't actually allocate any
 memory).  This is used to implement OpenGL's proxy textures.  Typically, a
 driver will simply check if the total size of the given resource is less than
 some limit.
+
+For PIPE_TEXTURE_CUBE, the pipe_resource::array_size field should be 6.
 
 
 .. _resource_create:

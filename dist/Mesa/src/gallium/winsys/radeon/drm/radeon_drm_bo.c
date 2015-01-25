@@ -24,7 +24,6 @@
  * of the Software.
  */
 
-#define _FILE_OFFSET_BITS 64
 #include "radeon_drm_cs.h"
 
 #include "util/u_hash_table.h"
@@ -477,6 +476,18 @@ const struct pb_vtbl radeon_bo_vtbl = {
     radeon_bo_get_base_buffer,
 };
 
+#ifndef RADEON_GEM_GTT_WC
+#define RADEON_GEM_GTT_WC		(1 << 2)
+#endif
+#ifndef RADEON_GEM_CPU_ACCESS
+/* BO is expected to be accessed by the CPU */
+#define RADEON_GEM_CPU_ACCESS		(1 << 3)
+#endif
+#ifndef RADEON_GEM_NO_CPU_ACCESS
+/* CPU access is not expected to work for this BO */
+#define RADEON_GEM_NO_CPU_ACCESS	(1 << 4)
+#endif
+
 static struct pb_buffer *radeon_bomgr_create_bo(struct pb_manager *_mgr,
                                                 pb_size size,
                                                 const struct pb_desc *desc)
@@ -497,6 +508,14 @@ static struct pb_buffer *radeon_bomgr_create_bo(struct pb_manager *_mgr,
     args.size = size;
     args.alignment = desc->alignment;
     args.initial_domain = rdesc->initial_domains;
+    args.flags = 0;
+
+    if (rdesc->flags & RADEON_FLAG_GTT_WC)
+        args.flags |= RADEON_GEM_GTT_WC;
+    if (rdesc->flags & RADEON_FLAG_CPU_ACCESS)
+        args.flags |= RADEON_GEM_CPU_ACCESS;
+    if (rdesc->flags & RADEON_FLAG_NO_CPU_ACCESS)
+        args.flags |= RADEON_GEM_NO_CPU_ACCESS;
 
     if (drmCommandWriteRead(rws->fd, DRM_RADEON_GEM_CREATE,
                             &args, sizeof(args))) {
@@ -504,6 +523,7 @@ static struct pb_buffer *radeon_bomgr_create_bo(struct pb_manager *_mgr,
         fprintf(stderr, "radeon:    size      : %d bytes\n", size);
         fprintf(stderr, "radeon:    alignment : %d bytes\n", desc->alignment);
         fprintf(stderr, "radeon:    domains   : %d\n", args.initial_domain);
+        fprintf(stderr, "radeon:    flags     : %d\n", args.flags);
         return NULL;
     }
 
@@ -784,7 +804,8 @@ radeon_winsys_bo_create(struct radeon_winsys *rws,
                         unsigned size,
                         unsigned alignment,
                         boolean use_reusable_pool,
-                        enum radeon_bo_domain domain)
+                        enum radeon_bo_domain domain,
+                        enum radeon_bo_flag flags)
 {
     struct radeon_drm_winsys *ws = radeon_drm_winsys(rws);
     struct radeon_bomgr *mgr = radeon_bomgr(ws->kman);
@@ -795,9 +816,18 @@ radeon_winsys_bo_create(struct radeon_winsys *rws,
     memset(&desc, 0, sizeof(desc));
     desc.base.alignment = alignment;
 
-    /* Additional criteria for the cache manager. */
-    desc.base.usage = domain;
+    /* Only set one usage bit each for domains and flags, or the cache manager
+     * might consider different sets of domains / flags compatible
+     */
+    if (domain == RADEON_DOMAIN_VRAM_GTT)
+        desc.base.usage = 1 << 2;
+    else
+        desc.base.usage = domain >> 1;
+    assert(flags < sizeof(desc.base.usage) * 8 - 3);
+    desc.base.usage |= 1 << (flags + 3);
+
     desc.initial_domains = domain;
+    desc.flags = flags;
 
     /* Assign a buffer manager. */
     if (use_reusable_pool)

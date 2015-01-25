@@ -126,8 +126,8 @@ nouveau_context_init(struct gl_context *ctx, gl_api api,
 	nouveau_fbo_functions_init(&functions);
 
 	/* Initialize the mesa context. */
-	_mesa_initialize_context(ctx, api, visual,
-                                 share_ctx, &functions);
+	if (!_mesa_initialize_context(ctx, api, visual, share_ctx, &functions))
+		return GL_FALSE;
 
 	nouveau_state_init(ctx);
 	nouveau_scratch_init(ctx);
@@ -188,6 +188,9 @@ nouveau_context_init(struct gl_context *ctx, gl_api api,
 	ctx->Extensions.EXT_texture_filter_anisotropic = true;
 	ctx->Extensions.NV_texture_env_combine4 = true;
 	ctx->Const.MaxColorAttachments = 1;
+
+	/* This effectively disables 3D textures */
+	ctx->Const.Max3DTextureLevels = 1;
 
 	return GL_TRUE;
 }

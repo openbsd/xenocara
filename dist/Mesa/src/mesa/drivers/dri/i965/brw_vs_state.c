@@ -82,11 +82,11 @@ brw_upload_vs_unit(struct brw_context *brw)
    vs->thread1.binding_table_entry_count =
       brw->vs.prog_data->base.base.binding_table.size_bytes / 4;
 
-   if (brw->vs.prog_data->base.total_scratch != 0) {
+   if (brw->vs.prog_data->base.base.total_scratch != 0) {
       vs->thread2.scratch_space_base_pointer =
 	 stage_state->scratch_bo->offset64 >> 10; /* reloc */
       vs->thread2.per_thread_scratch_space =
-	 ffs(brw->vs.prog_data->base.total_scratch) - 11;
+	 ffs(brw->vs.prog_data->base.base.total_scratch) - 11;
    } else {
       vs->thread2.scratch_space_base_pointer = 0;
       vs->thread2.per_thread_scratch_space = 0;
@@ -94,9 +94,9 @@ brw_upload_vs_unit(struct brw_context *brw)
 
    vs->thread3.urb_entry_read_length = brw->vs.prog_data->base.urb_read_length;
    vs->thread3.const_urb_entry_read_length
-      = brw->vs.prog_data->base.curb_read_length;
+      = brw->vs.prog_data->base.base.curb_read_length;
    vs->thread3.dispatch_grf_start_reg =
-      brw->vs.prog_data->base.dispatch_grf_start_reg;
+      brw->vs.prog_data->base.base.dispatch_grf_start_reg;
    vs->thread3.urb_entry_read_offset = 0;
 
    /* BRW_NEW_CURBE_OFFSETS, _NEW_TRANSFORM, BRW_NEW_VERTEX_PROGRAM */
@@ -119,7 +119,7 @@ brw_upload_vs_unit(struct brw_context *brw)
 	 vs->thread4.nr_urb_entries = brw->urb.nr_vs_entries >> 2;
 	 break;
       default:
-	 assert(0);
+         unreachable("not reached");
       }
    } else {
       switch (brw->urb.nr_vs_entries) {
@@ -132,7 +132,7 @@ brw_upload_vs_unit(struct brw_context *brw)
 	 assert(brw->is_g4x);
 	 break;
       default:
-	 assert(0);
+         unreachable("not reached");
       }
       vs->thread4.nr_urb_entries = brw->urb.nr_vs_entries;
    }
@@ -172,7 +172,7 @@ brw_upload_vs_unit(struct brw_context *brw)
    }
 
    /* Emit scratch space relocation */
-   if (brw->vs.prog_data->base.total_scratch != 0) {
+   if (brw->vs.prog_data->base.base.total_scratch != 0) {
       drm_intel_bo_emit_reloc(brw->batch.bo,
 			      stage_state->state_offset +
 			      offsetof(struct brw_vs_unit_state, thread2),

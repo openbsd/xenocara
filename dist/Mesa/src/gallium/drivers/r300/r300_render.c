@@ -784,8 +784,6 @@ static void r300_draw_vbo(struct pipe_context* pipe,
     struct r300_context* r300 = r300_context(pipe);
     struct pipe_draw_info info = *dinfo;
 
-    info.indexed = info.indexed;
-
     if (r300->skip_rendering ||
         !u_trim_pipe_prim(info.mode, &info.count)) {
         return;
@@ -907,7 +905,7 @@ static boolean r300_render_allocate_vertices(struct vbuf_render* render,
         r300->vbo = rws->buffer_create(rws,
                                        MAX2(R300_MAX_DRAW_VBO_SIZE, size),
                                        R300_BUFFER_ALIGNMENT, TRUE,
-                                       RADEON_DOMAIN_GTT);
+                                       RADEON_DOMAIN_GTT, 0);
         if (!r300->vbo) {
             return FALSE;
         }

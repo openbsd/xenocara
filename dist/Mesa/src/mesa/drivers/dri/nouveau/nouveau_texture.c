@@ -345,16 +345,19 @@ relayout_texture(struct gl_context *ctx, struct gl_texture_object *t)
 			height = minify(height, 1);
 		}
 
-		/* Get new storage. */
-		size = align(offset, 64);
+		if (t->BaseLevel <= last) {
+			/* Get new storage. */
+			size = align(offset, 64);
+			assert(size);
 
-		ret = nouveau_bo_new(context_dev(ctx), NOUVEAU_BO_MAP |
-				     NOUVEAU_BO_GART | NOUVEAU_BO_VRAM,
-				     0, size, NULL, &ss[last].bo);
-		assert(!ret);
+			ret = nouveau_bo_new(context_dev(ctx), NOUVEAU_BO_MAP |
+					     NOUVEAU_BO_GART | NOUVEAU_BO_VRAM,
+					     0, size, NULL, &ss[last].bo);
+			assert(!ret);
 
-		for (i = t->BaseLevel; i < last; i++)
-			nouveau_bo_ref(ss[last].bo, &ss[i].bo);
+			for (i = t->BaseLevel; i < last; i++)
+				nouveau_bo_ref(ss[last].bo, &ss[i].bo);
+		}
 	}
 }
 
@@ -410,6 +413,31 @@ get_teximage_placement(struct gl_texture_image *ti)
 }
 
 static void
+nouveau_compressed_copy(struct gl_context *ctx, GLint dims,
+			struct gl_texture_image *ti,
+			GLsizei width, GLsizei height, GLsizei depth,
+			const GLvoid *src, GLvoid *dst, int row_stride)
+{
+	struct compressed_pixelstore store;
+	int i;
+
+	_mesa_compute_compressed_pixelstore(dims, ti->TexFormat,
+					    width, height, depth,
+					    &ctx->Unpack, &store);
+
+	src += store.SkipBytes;
+
+	assert(store.CopySlices == 1);
+
+	/* copy rows of blocks */
+	for (i = 0; i < store.CopyRowsPerSlice; i++) {
+		memcpy(dst, src, store.CopyBytesPerRow);
+		dst += row_stride;
+		src += store.TotalBytesPerRow;
+	}
+}
+
+static void
 nouveau_teximage(struct gl_context *ctx, GLint dims,
 		 struct gl_texture_image *ti,
 		 GLsizei imageSize,
@@ -448,13 +476,19 @@ nouveau_teximage(struct gl_context *ctx, GLint dims,
 					  GL_MAP_WRITE_BIT,
 					  &map, &row_stride);
 
-		ret = _mesa_texstore(ctx, dims, ti->_BaseFormat,
-				     ti->TexFormat,
-				     row_stride,
-				     &map,
-				     ti->Width, ti->Height, depth,
-				     format, type, pixels, packing);
-		assert(ret);
+		if (compressed) {
+			nouveau_compressed_copy(ctx, dims, ti,
+						ti->Width, ti->Height, depth,
+						pixels, map, row_stride);
+		} else {
+			ret = _mesa_texstore(ctx, dims, ti->_BaseFormat,
+					     ti->TexFormat,
+					     row_stride,
+					     &map,
+					     ti->Width, ti->Height, depth,
+					     format, type, pixels, packing);
+			assert(ret);
+		}
 
 		nouveau_unmap_texture_image(ctx, ti, 0);
 		_mesa_unmap_teximage_pbo(ctx, packing);
@@ -499,7 +533,8 @@ static GLboolean
 nouveau_teximage_alloc(struct gl_context *ctx, struct gl_texture_image *ti)
 {
 	nouveau_teximage(ctx, 3, ti, 0, 0, 0, NULL,
-			 &ctx->DefaultPacking, GL_FALSE);
+			 &ctx->DefaultPacking,
+			 _mesa_is_format_compressed(ti->TexFormat));
 	return GL_TRUE;
 }
 
@@ -532,11 +567,18 @@ nouveau_texsubimage(struct gl_context *ctx, GLint dims,
 					  xoffset, yoffset, width, height,
 					  GL_MAP_WRITE_BIT, &map, &row_stride);
 
-		ret = _mesa_texstore(ctx, dims, ti->_BaseFormat, ti->TexFormat,
-				     row_stride, &map,
-                                     width, height, depth,
-				     format, type, pixels, packing);
-		assert(ret);
+		if (compressed) {
+			nouveau_compressed_copy(ctx, dims, ti,
+						width, height, depth,
+						pixels, map, row_stride);
+		} else {
+			ret = _mesa_texstore(ctx, dims, ti->_BaseFormat,
+					     ti->TexFormat,
+					     row_stride, &map,
+					     width, height, depth,
+					     format, type, pixels, packing);
+			assert(ret);
+		}
 
 		nouveau_unmap_texture_image(ctx, ti, 0);
 		_mesa_unmap_teximage_pbo(ctx, packing);

@@ -37,6 +37,7 @@
 #include "util/u_inlines.h"
 #include "pipe/p_screen.h"
 #include "pipe/p_format.h"
+#include "pipe-loader/pipe_loader.h"
 #include "state_tracker/st_gl_api.h" /* for st_gl_api_create */
 #include "state_tracker/drm_driver.h"
 
@@ -68,6 +69,7 @@ const __DRIconfigOptionsExtension gallium_config_options = {
          DRI_CONF_DISABLE_BLEND_FUNC_EXTENDED("false")
          DRI_CONF_DISABLE_SHADER_BIT_ENCODING("false")
          DRI_CONF_FORCE_GLSL_VERSION(0)
+         DRI_CONF_ALLOW_GLSL_EXTENSION_DIRECTIVE_MIDSHADER("false")
       DRI_CONF_SECTION_END
 
       DRI_CONF_SECTION_MISCELLANEOUS
@@ -77,6 +79,26 @@ const __DRIconfigOptionsExtension gallium_config_options = {
 };
 
 #define false 0
+
+static void
+dri_fill_st_options(struct st_config_options *options,
+                    const struct driOptionCache * optionCache)
+{
+   options->disable_blend_func_extended =
+      driQueryOptionb(optionCache, "disable_blend_func_extended");
+   options->disable_glsl_line_continuations =
+      driQueryOptionb(optionCache, "disable_glsl_line_continuations");
+   options->disable_shader_bit_encoding =
+      driQueryOptionb(optionCache, "disable_shader_bit_encoding");
+   options->force_glsl_extensions_warn =
+      driQueryOptionb(optionCache, "force_glsl_extensions_warn");
+   options->force_glsl_version =
+      driQueryOptioni(optionCache, "force_glsl_version");
+   options->force_s3tc_enable =
+      driQueryOptionb(optionCache, "force_s3tc_enable");
+   options->allow_glsl_extension_directive_midshader =
+      driQueryOptionb(optionCache, "allow_glsl_extension_directive_midshader");
+}
 
 static const __DRIconfig **
 dri_fill_in_modes(struct dri_screen *screen)
@@ -205,37 +227,6 @@ dri_fill_in_modes(struct dri_screen *screen)
    return (const __DRIconfig **)configs;
 }
 
-/* The Gallium way to force MSAA. */
-DEBUG_GET_ONCE_NUM_OPTION(msaa, "GALLIUM_MSAA", 0);
-
-/* The NVIDIA way to force MSAA. The same variable is used by the NVIDIA
- * driver. */
-DEBUG_GET_ONCE_NUM_OPTION(msaa_nv, "__GL_FSAA_MODE", 0);
-
-static void
-dri_force_msaa_visual(struct st_visual *stvis,
-                      struct pipe_screen *screen)
-{
-   int i;
-   int samples = debug_get_option_msaa();
-
-   if (!samples)
-      samples = debug_get_option_msaa_nv();
-
-   if (samples <= 1)
-      return; /* nothing to do */
-
-   /* Choose a supported sample count greater than or equal to samples. */
-   for (i = samples; i <= MSAA_VISUAL_MAX_SAMPLES; i++) {
-      if (screen->is_format_supported(screen, stvis->color_format,
-                                      PIPE_TEXTURE_2D, i,
-                                      PIPE_BIND_RENDER_TARGET)) {
-         stvis->samples = i;
-         break;
-      }
-   }
-}
-
 /**
  * Roughly the converse of dri_fill_in_modes.
  */
@@ -259,10 +250,6 @@ dri_fill_st_visual(struct st_visual *stvis, struct dri_screen *screen,
 
    if (mode->sampleBuffers) {
       stvis->samples = mode->samples;
-   }
-   else {
-      /* This must be done after stvis->color_format is set. */
-      dri_force_msaa_visual(stvis, screen->base.screen);
    }
 
    switch (mode->depthBits) {
@@ -387,6 +374,10 @@ dri_destroy_screen(__DRIscreen * sPriv)
 
    dri_destroy_screen_helper(screen);
 
+#if !GALLIUM_STATIC_TARGETS
+   pipe_loader_release(&screen->dev, 1);
+#endif // !GALLIUM_STATIC_TARGETS
+
    free(screen);
    sPriv->driverPrivate = NULL;
    sPriv->extensions = NULL;
@@ -405,7 +396,8 @@ dri_postprocessing_init(struct dri_screen *screen)
 
 const __DRIconfig **
 dri_init_screen_helper(struct dri_screen *screen,
-                       struct pipe_screen *pscreen)
+                       struct pipe_screen *pscreen,
+                       const char* driver_name)
 {
    screen->base.screen = pscreen;
    if (!screen->base.screen) {
@@ -428,13 +420,14 @@ dri_init_screen_helper(struct dri_screen *screen,
    driParseOptionInfo(&screen->optionCacheDefaults, gallium_config_options.xml);
 
    driParseConfigFiles(&screen->optionCache,
-		       &screen->optionCacheDefaults,
+                       &screen->optionCacheDefaults,
                        screen->sPriv->myNum,
-                       driver_descriptor.name);
+                       driver_name);
+
+   dri_fill_st_options(&screen->options, &screen->optionCache);
 
    /* Handle force_s3tc_enable. */
-   if (!util_format_s3tc_enabled &&
-       driQueryOptionb(&screen->optionCache, "force_s3tc_enable")) {
+   if (!util_format_s3tc_enabled && screen->options.force_s3tc_enable) {
       /* Ensure libtxc_dxtn has been loaded if available.
        * Forcing S3TC on before calling this would prevent loading
        * the library.
@@ -448,18 +441,12 @@ dri_init_screen_helper(struct dri_screen *screen,
 
    dri_postprocessing_init(screen);
 
-   /* gallium drivers don't declare what version of GL they support, so we
-    * check the computed Mesa context version after context creation and fail
-    * out then.
-    */
-   if (screen->st_api->profile_mask & ST_PROFILE_DEFAULT_MASK)
-      screen->sPriv->max_gl_compat_version = 30;
-   if (screen->st_api->profile_mask & ST_PROFILE_OPENGL_CORE_MASK)
-      screen->sPriv->max_gl_core_version = 33;
-   if (screen->st_api->profile_mask & ST_PROFILE_OPENGL_ES1_MASK)
-      screen->sPriv->max_gl_es1_version = 11;
-   if (screen->st_api->profile_mask & ST_PROFILE_OPENGL_ES2_MASK)
-      screen->sPriv->max_gl_es2_version = 30;
+   screen->st_api->query_versions(screen->st_api, &screen->base,
+                                  &screen->options,
+                                  &screen->sPriv->max_gl_core_version,
+                                  &screen->sPriv->max_gl_compat_version,
+                                  &screen->sPriv->max_gl_es1_version,
+                                  &screen->sPriv->max_gl_es2_version);
 
    return dri_fill_in_modes(screen);
 }

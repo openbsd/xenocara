@@ -59,6 +59,7 @@
 #define MESA_META_FRAMEBUFFER_SRGB     0x200000
 #define MESA_META_OCCLUSION_QUERY      0x400000
 #define MESA_META_DRAW_BUFFERS         0x800000
+#define MESA_META_DITHER              0x1000000
 /**\}*/
 
 /**
@@ -83,6 +84,9 @@ struct save_state
    /** MESA_META_BLEND */
    GLbitfield BlendEnabled;
    GLboolean ColorLogicOpEnabled;
+
+   /** MESA_META_DITHER */
+   GLboolean DitherFlag;
 
    /** MESA_META_COLOR_MASK */
    GLubyte ColorMask[MAX_DRAW_BUFFERS][4];
@@ -132,6 +136,9 @@ struct save_state
    GLfloat ModelviewMatrix[16];
    GLfloat ProjectionMatrix[16];
    GLfloat TextureMatrix[16];
+   /** GL_ARB_clip_control */
+   GLenum ClipOrigin;     /**< GL_LOWER_LEFT or GL_UPPER_LEFT */
+   GLenum ClipDepthMode;  /**< GL_NEGATIVE_ONE_TO_ONE or GL_ZERO_TO_ONE */
 
    /** MESA_META_CLIP */
    GLbitfield ClipPlanesEnabled;
@@ -231,26 +238,56 @@ struct blit_shader_table {
 /**
  * Indices in the blit_state->msaa_shaders[] array
  *
- * Note that setup_glsl_msaa_blit_shader() assumes that the _INT enums are one
- * more than the non-_INT version and _UINT is one beyond that.
+ * Note that setup_glsl_msaa_blit_shader() assumes that the _INT enums are five
+ * more than the corresponding non-_INT versions and _UINT are five beyond that.
  */
 enum blit_msaa_shader {
-   BLIT_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE,
-   BLIT_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_INT,
-   BLIT_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_UINT,
+   BLIT_1X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE,
+   BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE,
+   BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE,
+   BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE,
+   BLIT_16X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE,
+   BLIT_1X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_INT,
+   BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_INT,
+   BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_INT,
+   BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_INT,
+   BLIT_16X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_INT,
+   BLIT_1X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_UINT,
+   BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_UINT,
+   BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_UINT,
+   BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_UINT,
+   BLIT_16X_MSAA_SHADER_2D_MULTISAMPLE_RESOLVE_UINT,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_COPY,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_COPY_INT,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_COPY_UINT,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_DEPTH_RESOLVE,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_DEPTH_COPY,
-   BLIT_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE,
-   BLIT_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_INT,
-   BLIT_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_UINT,
+   BLIT_1X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE,
+   BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE,
+   BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE,
+   BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE,
+   BLIT_16X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE,
+   BLIT_1X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_INT,
+   BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_INT,
+   BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_INT,
+   BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_INT,
+   BLIT_16X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_INT,
+   BLIT_1X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_UINT,
+   BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_UINT,
+   BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_UINT,
+   BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_UINT,
+   BLIT_16X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_RESOLVE_UINT,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_COPY,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_COPY_INT,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_COPY_UINT,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_DEPTH_RESOLVE,
    BLIT_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_DEPTH_COPY,
+   BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_SCALED_RESOLVE,
+   BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_SCALED_RESOLVE,
+   BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_SCALED_RESOLVE,
+   BLIT_2X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_SCALED_RESOLVE,
+   BLIT_4X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_SCALED_RESOLVE,
+   BLIT_8X_MSAA_SHADER_2D_MULTISAMPLE_ARRAY_SCALED_RESOLVE,
    BLIT_MSAA_SHADER_COUNT,
 };
 
@@ -339,13 +376,23 @@ struct gen_mipmap_state
 };
 
 /**
+ * One of the FBO states for decompress_state. There will be one for each
+ * required renderbuffer format.
+ */
+struct decompress_fbo_state
+{
+   GLuint FBO, RBO;
+   GLint Width, Height;
+};
+
+/**
  * State for texture decompression
  */
 struct decompress_state
 {
    GLuint VAO;
-   GLuint VBO, FBO, RBO, Sampler;
-   GLint Width, Height;
+   struct decompress_fbo_state byteFBO, floatFBO;
+   GLuint VBO, Sampler;
 
    struct blit_shader_table shaders;
 };
@@ -436,6 +483,14 @@ _mesa_meta_and_swrast_BlitFramebuffer(struct gl_context *ctx,
                                       GLint dstX1, GLint dstY1,
                                       GLbitfield mask, GLenum filter);
 
+bool
+_mesa_meta_CopyImageSubData_uncompressed(struct gl_context *ctx,
+                                         struct gl_texture_image *src_tex_image,
+                                         int src_x, int src_y, int src_z,
+                                         struct gl_texture_image *dst_tex_image,
+                                         int dst_x, int dst_y, int dst_z,
+                                         int src_width, int src_height);
+
 extern void
 _mesa_meta_Clear(struct gl_context *ctx, GLbitfield buffers);
 
@@ -473,6 +528,13 @@ _mesa_meta_CopyTexSubImage(struct gl_context *ctx, GLuint dims,
                            GLsizei width, GLsizei height);
 
 extern void
+_mesa_meta_ClearTexSubImage(struct gl_context *ctx,
+                            struct gl_texture_image *texImage,
+                            GLint xoffset, GLint yoffset, GLint zoffset,
+                            GLsizei width, GLsizei height, GLsizei depth,
+                            const GLvoid *clearValue);
+
+extern void
 _mesa_meta_GetTexImage(struct gl_context *ctx,
                        GLenum format, GLenum type, GLvoid *pixels,
                        struct gl_texture_image *texImage);
@@ -482,6 +544,9 @@ _mesa_meta_DrawTex(struct gl_context *ctx, GLfloat x, GLfloat y, GLfloat z,
                    GLfloat width, GLfloat height);
 
 /* meta-internal functions */
+void
+_mesa_meta_drawbuffers_from_bitfield(GLbitfield bits);
+
 GLuint
 _mesa_meta_compile_shader_with_debug(struct gl_context *ctx, GLenum target,
                                      const GLcharARB *source);
@@ -559,7 +624,7 @@ void
 _mesa_meta_glsl_generate_mipmap_cleanup(struct gen_mipmap_state *mipmap);
 
 void
-_mesa_meta_bind_fbo_image(GLenum attachment,
+_mesa_meta_bind_fbo_image(GLenum target, GLenum attachment,
                           struct gl_texture_image *texImage, GLuint layer);
 
 #endif /* META_H */

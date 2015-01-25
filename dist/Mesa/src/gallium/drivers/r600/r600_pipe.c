@@ -30,7 +30,6 @@
 
 #include <errno.h>
 #include "pipe/p_shader_tokens.h"
-#include "util/u_blitter.h"
 #include "util/u_debug.h"
 #include "util/u_memory.h"
 #include "util/u_simple_shaders.h"
@@ -192,6 +191,9 @@ static struct pipe_context *r600_create_context(struct pipe_screen *screen, void
 	if (!rctx->isa || r600_isa_init(rctx, rctx->isa))
 		goto fail;
 
+	if (rscreen->b.debug_flags & DBG_FORCE_DMA)
+		rctx->b.b.resource_copy_region = rctx->b.dma_copy;
+
 	rctx->blitter = util_blitter_create(&rctx->b.b);
 	if (rctx->blitter == NULL)
 		goto fail;
@@ -260,7 +262,11 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
         case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
 	case PIPE_CAP_QUERY_PIPELINE_STATISTICS:
 	case PIPE_CAP_TEXTURE_MULTISAMPLE:
-        case PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT:
+	case PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT:
+	case PIPE_CAP_TGSI_VS_WINDOW_SPACE_POSITION:
+	case PIPE_CAP_TGSI_VS_LAYER_VIEWPORT:
+	case PIPE_CAP_SAMPLE_SHADING:
+	case PIPE_CAP_CLIP_HALFZ:
 		return 1;
 
 	case PIPE_CAP_COMPUTE:
@@ -301,8 +307,12 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 	/* Supported on Evergreen. */
 	case PIPE_CAP_SEAMLESS_CUBE_MAP_PER_TEXTURE:
 	case PIPE_CAP_CUBE_MAP_ARRAY:
-	case PIPE_CAP_TGSI_VS_LAYER:
+	case PIPE_CAP_TEXTURE_GATHER_SM5:
+	case PIPE_CAP_TEXTURE_QUERY_LOD:
+	case PIPE_CAP_TGSI_FS_FINE_DERIVATIVE:
 		return family >= CHIP_CEDAR ? 1 : 0;
+	case PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS:
+		return family >= CHIP_CEDAR ? 4 : 0;
 
 	/* Unsupported features. */
 	case PIPE_CAP_TGSI_FS_COORD_ORIGIN_LOWER_LEFT:
@@ -311,10 +321,10 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 	case PIPE_CAP_FRAGMENT_COLOR_CLAMPED:
 	case PIPE_CAP_VERTEX_COLOR_CLAMPED:
 	case PIPE_CAP_USER_VERTEX_BUFFERS:
-	case PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS:
-	case PIPE_CAP_TEXTURE_GATHER_SM5:
-	case PIPE_CAP_TEXTURE_QUERY_LOD:
-        case PIPE_CAP_SAMPLE_SHADING:
+	case PIPE_CAP_TEXTURE_GATHER_OFFSETS:
+	case PIPE_CAP_DRAW_INDIRECT:
+	case PIPE_CAP_CONDITIONAL_RENDER_INVERTED:
+	case PIPE_CAP_SAMPLER_VIEW_TARGET:
 		return 0;
 
 	/* Stream output. */
@@ -331,6 +341,11 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 		return 1024;
 	case PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS:
 		return 16384;
+	case PIPE_CAP_MAX_VERTEX_STREAMS:
+		return 1;
+
+	case PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE:
+		return 2047;
 
 	/* Texturing. */
 	case PIPE_CAP_MAX_TEXTURE_2D_LEVELS:
@@ -373,6 +388,17 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 		return PIPE_QUIRK_TEXTURE_BORDER_COLOR_SWIZZLE_R600;
 	case PIPE_CAP_ENDIANNESS:
 		return PIPE_ENDIAN_LITTLE;
+
+	case PIPE_CAP_VENDOR_ID:
+		return 0x1002;
+	case PIPE_CAP_DEVICE_ID:
+		return rscreen->b.info.pci_id;
+	case PIPE_CAP_ACCELERATED:
+		return 1;
+	case PIPE_CAP_VIDEO_MEMORY:
+		return rscreen->b.info.vram_size >> 20;
+	case PIPE_CAP_UMA:
+		return 0;
 	}
 	return 0;
 }
@@ -408,14 +434,22 @@ static int r600_get_shader_param(struct pipe_screen* pscreen, unsigned shader, e
 	case PIPE_SHADER_CAP_MAX_CONTROL_FLOW_DEPTH:
 		return 32;
 	case PIPE_SHADER_CAP_MAX_INPUTS:
-		return 32;
+		return shader == PIPE_SHADER_VERTEX ? 16 : 32;
+	case PIPE_SHADER_CAP_MAX_OUTPUTS:
+		return shader == PIPE_SHADER_FRAGMENT ? 8 : 32;
 	case PIPE_SHADER_CAP_MAX_TEMPS:
 		return 256; /* Max native temporaries. */
-	case PIPE_SHADER_CAP_MAX_ADDRS:
-		/* XXX Isn't this equal to TEMPS? */
-		return 1; /* Max native address registers */
-	case PIPE_SHADER_CAP_MAX_CONSTS:
-		return R600_MAX_CONST_BUFFER_SIZE;
+	case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
+		if (shader == PIPE_SHADER_COMPUTE) {
+			uint64_t max_const_buffer_size;
+			pscreen->get_compute_param(pscreen,
+				PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE,
+				&max_const_buffer_size);
+			return max_const_buffer_size;
+
+		} else {
+			return R600_MAX_CONST_BUFFER_SIZE;
+		}
 	case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
 		return R600_MAX_USER_CONST_BUFFERS;
 	case PIPE_SHADER_CAP_MAX_PREDS:
@@ -423,7 +457,7 @@ static int r600_get_shader_param(struct pipe_screen* pscreen, unsigned shader, e
 	case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
 		return 1;
 	case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
-		return 0;
+		return 1;
 	case PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR:
 	case PIPE_SHADER_CAP_INDIRECT_OUTPUT_ADDR:
 	case PIPE_SHADER_CAP_INDIRECT_TEMP_ADDR:
@@ -438,10 +472,16 @@ static int r600_get_shader_param(struct pipe_screen* pscreen, unsigned shader, e
 		return 16;
         case PIPE_SHADER_CAP_PREFERRED_IR:
 		if (shader == PIPE_SHADER_COMPUTE) {
+#if HAVE_LLVM < 0x0306
 			return PIPE_SHADER_IR_LLVM;
+#else
+			return PIPE_SHADER_IR_NATIVE;
+#endif
 		} else {
 			return PIPE_SHADER_IR_TGSI;
 		}
+	case PIPE_SHADER_CAP_DOUBLES:
+		return 0;
 	}
 	return 0;
 }
@@ -504,8 +544,8 @@ struct pipe_screen *r600_screen_create(struct radeon_winsys *ws)
 		rscreen->b.debug_flags |= DBG_COMPUTE;
 	if (debug_get_bool_option("R600_DUMP_SHADERS", FALSE))
 		rscreen->b.debug_flags |= DBG_FS | DBG_VS | DBG_GS | DBG_PS | DBG_CS;
-	if (debug_get_bool_option("R600_HYPERZ", FALSE))
-		rscreen->b.debug_flags |= DBG_HYPERZ;
+	if (!debug_get_bool_option("R600_HYPERZ", TRUE))
+		rscreen->b.debug_flags |= DBG_NO_HYPERZ;
 	if (debug_get_bool_option("R600_LLVM", FALSE))
 		rscreen->b.debug_flags |= DBG_LLVM;
 

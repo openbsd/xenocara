@@ -329,15 +329,15 @@ iter_declaration(
       if ((decl->SamplerView.ReturnTypeX == decl->SamplerView.ReturnTypeY) &&
           (decl->SamplerView.ReturnTypeX == decl->SamplerView.ReturnTypeZ) &&
           (decl->SamplerView.ReturnTypeX == decl->SamplerView.ReturnTypeW)) {
-         ENM(decl->SamplerView.ReturnTypeX, tgsi_type_names);
+         ENM(decl->SamplerView.ReturnTypeX, tgsi_return_type_names);
       } else {
-         ENM(decl->SamplerView.ReturnTypeX, tgsi_type_names);
+         ENM(decl->SamplerView.ReturnTypeX, tgsi_return_type_names);
          TXT(", ");
-         ENM(decl->SamplerView.ReturnTypeY, tgsi_type_names);
+         ENM(decl->SamplerView.ReturnTypeY, tgsi_return_type_names);
          TXT(", ");
-         ENM(decl->SamplerView.ReturnTypeZ, tgsi_type_names);
+         ENM(decl->SamplerView.ReturnTypeZ, tgsi_return_type_names);
          TXT(", ");
-         ENM(decl->SamplerView.ReturnTypeW, tgsi_type_names);
+         ENM(decl->SamplerView.ReturnTypeW, tgsi_return_type_names);
       }
    }
 
@@ -349,8 +349,9 @@ iter_declaration(
          ENM( decl->Interp.Interpolate, tgsi_interpolate_names );
       }
 
-      if (decl->Interp.Centroid) {
-         TXT( ", CENTROID" );
+      if (decl->Interp.Location != TGSI_INTERPOLATE_LOC_CENTER) {
+         TXT( ", " );
+         ENM( decl->Interp.Location, tgsi_interpolate_locations );
       }
 
       if (decl->Interp.CylindricalWrap) {
@@ -572,8 +573,11 @@ iter_instruction(
    }
 
    if (inst->Instruction.Texture) {
-      TXT( ", " );
-      ENM( inst->Texture.Texture, tgsi_texture_names );
+      if (!(inst->Instruction.Opcode >= TGSI_OPCODE_SAMPLE &&
+            inst->Instruction.Opcode <= TGSI_OPCODE_GATHER4)) {
+         TXT( ", " );
+         ENM( inst->Texture.Texture, tgsi_texture_names );
+      }
       for (i = 0; i < inst->Texture.NumOffsets; i++) {
          TXT( ", " );
          TXT(tgsi_file_name(inst->TexOffsets[i].File));

@@ -30,6 +30,7 @@
 #include "util/u_format.h"
 #include "util/u_format_s3tc.h"
 #include "util/u_video.h"
+#include "os/os_misc.h"
 #include "os/os_time.h"
 #include "pipe/p_defines.h"
 #include "pipe/p_screen.h"
@@ -111,7 +112,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_INTEGER:
       return 1;
    case PIPE_CAP_DEPTH_CLIP_DISABLE:
-      return 0;
+      return 1;
    case PIPE_CAP_MAX_STREAM_OUTPUT_BUFFERS:
       return PIPE_MAX_SO_BUFFERS;
    case PIPE_CAP_MAX_STREAM_OUTPUT_SEPARATE_COMPONENTS:
@@ -119,13 +120,18 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
       return 16*4;
    case PIPE_CAP_MAX_GEOMETRY_OUTPUT_VERTICES:
    case PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS:
-      return 0;
+      return 1024;
+   case PIPE_CAP_MAX_VERTEX_STREAMS:
+      return 1;
+   case PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE:
+      return 2048;
    case PIPE_CAP_PRIMITIVE_RESTART:
       return 1;
    case PIPE_CAP_SHADER_STENCIL_EXPORT:
       return 1;
    case PIPE_CAP_TGSI_INSTANCEID:
    case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
+   case PIPE_CAP_START_INSTANCE:
       return 1;
    case PIPE_CAP_SEAMLESS_CUBE_MAP:
    case PIPE_CAP_SEAMLESS_CUBE_MAP_PER_TEXTURE:
@@ -147,7 +153,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_MIXED_COLORBUFFER_FORMATS:
       return 0;
    case PIPE_CAP_GLSL_FEATURE_LEVEL:
-      return 140;
+      return 330;
    case PIPE_CAP_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION:
       return 0;
    case PIPE_CAP_COMPUTE:
@@ -156,6 +162,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_USER_INDEX_BUFFERS:
    case PIPE_CAP_USER_CONSTANT_BUFFERS:
    case PIPE_CAP_STREAM_OUTPUT_PAUSE_RESUME:
+   case PIPE_CAP_TGSI_VS_LAYER_VIEWPORT:
       return 1;
    case PIPE_CAP_CONSTANT_BUFFER_OFFSET_ALIGNMENT:
       return 16;
@@ -163,7 +170,6 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY:
    case PIPE_CAP_VERTEX_BUFFER_STRIDE_4BYTE_ALIGNED_ONLY:
    case PIPE_CAP_VERTEX_ELEMENT_SRC_OFFSET_4BYTE_ALIGNED_ONLY:
-   case PIPE_CAP_START_INSTANCE:
    case PIPE_CAP_TEXTURE_MULTISAMPLE:
       return 0;
    case PIPE_CAP_MIN_MAP_BUFFER_ALIGNMENT:
@@ -184,18 +190,45 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
       return 1;
    case PIPE_CAP_ENDIANNESS:
       return PIPE_ENDIAN_NATIVE;
-   case PIPE_CAP_TGSI_VS_LAYER:
    case PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS:
    case PIPE_CAP_TEXTURE_GATHER_SM5:
    case PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT:
    case PIPE_CAP_TEXTURE_QUERY_LOD:
    case PIPE_CAP_SAMPLE_SHADING:
+   case PIPE_CAP_TEXTURE_GATHER_OFFSETS:
+   case PIPE_CAP_TGSI_VS_WINDOW_SPACE_POSITION:
+   case PIPE_CAP_TGSI_FS_FINE_DERIVATIVE:
+   case PIPE_CAP_SAMPLER_VIEW_TARGET:
       return 0;
    case PIPE_CAP_FAKE_SW_MSAA:
       return 1;
    case PIPE_CAP_MIN_TEXTURE_GATHER_OFFSET:
    case PIPE_CAP_MAX_TEXTURE_GATHER_OFFSET:
       return 0;
+   case PIPE_CAP_DRAW_INDIRECT:
+      return 1;
+
+   case PIPE_CAP_VENDOR_ID:
+      return 0xFFFFFFFF;
+   case PIPE_CAP_DEVICE_ID:
+      return 0xFFFFFFFF;
+   case PIPE_CAP_ACCELERATED:
+      return 0;
+   case PIPE_CAP_VIDEO_MEMORY: {
+      /* XXX: Do we want to return the full amount fo system memory ? */
+      uint64_t system_memory;
+
+      if (!os_get_total_physical_memory(&system_memory))
+         return 0;
+
+      return (int)(system_memory >> 20);
+   }
+   case PIPE_CAP_UMA:
+      return 0;
+   case PIPE_CAP_CONDITIONAL_RENDER_INVERTED:
+      return 1;
+   case PIPE_CAP_CLIP_HALFZ:
+      return 1;
    }
    /* should only get here on unhandled cases */
    debug_printf("Unexpected PIPE_CAP %d query\n", param);
@@ -212,20 +245,10 @@ softpipe_get_shader_param(struct pipe_screen *screen, unsigned shader, enum pipe
       return tgsi_exec_get_shader_param(param);
    case PIPE_SHADER_VERTEX:
    case PIPE_SHADER_GEOMETRY:
-      switch (param) {
-      case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
-      case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
-         if (sp_screen->use_llvm)
-            /* Softpipe doesn't yet know how to tell draw/llvm about textures */
-            return 0;
-         else
-            return PIPE_MAX_SAMPLERS;
-      default:
-         if (sp_screen->use_llvm)
-            return draw_get_shader_param(shader, param);
-         else
-            return draw_get_shader_param_no_llvm(shader, param);
-      }
+      if (sp_screen->use_llvm)
+         return draw_get_shader_param(shader, param);
+      else
+         return draw_get_shader_param_no_llvm(shader, param);
    default:
       return 0;
    }
@@ -314,6 +337,11 @@ softpipe_is_format_supported( struct pipe_screen *screen,
    if (bind & PIPE_BIND_DEPTH_STENCIL) {
       if (format_desc->colorspace != UTIL_FORMAT_COLORSPACE_ZS)
          return FALSE;
+   }
+
+   if (format_desc->layout == UTIL_FORMAT_LAYOUT_BPTC) {
+      /* Software decoding is not hooked up. */
+      return FALSE;
    }
 
    /*

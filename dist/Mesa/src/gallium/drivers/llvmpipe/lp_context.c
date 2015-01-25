@@ -47,10 +47,6 @@
 #include "lp_setup.h"
 
 
-/** shared by all contexts */
-unsigned llvmpipe_variant_count;
-
-
 static void llvmpipe_destroy( struct pipe_context *pipe )
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context( pipe );
@@ -96,6 +92,9 @@ static void llvmpipe_destroy( struct pipe_context *pipe )
    }
 
    lp_delete_setup_variants(llvmpipe);
+
+   LLVMContextDispose(llvmpipe->context);
+   llvmpipe->context = NULL;
 
    align_free( llvmpipe );
 }
@@ -165,10 +164,15 @@ llvmpipe_create_context( struct pipe_screen *screen, void *priv )
    llvmpipe_init_context_resource_funcs( &llvmpipe->pipe );
    llvmpipe_init_surface_functions(llvmpipe);
 
+   llvmpipe->context = LLVMContextCreate();
+   if (!llvmpipe->context)
+      goto fail;
+
    /*
     * Create drawing context and plug our rendering stage into it.
     */
-   llvmpipe->draw = draw_create(&llvmpipe->pipe);
+   llvmpipe->draw = draw_create_with_llvm_context(&llvmpipe->pipe,
+                                                  llvmpipe->context);
    if (!llvmpipe->draw)
       goto fail;
 

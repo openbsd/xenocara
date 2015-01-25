@@ -77,6 +77,13 @@
 #define _3DPRIM_LINESTRIP_CONT_BF 0x14
 #define _3DPRIM_TRIFAN_NOSTIPPLE  0x15
 
+/* We use this offset to be able to pass native primitive types in struct
+ * _mesa_prim::mode.  Native primitive types are BRW_PRIM_OFFSET +
+ * native_type, which should be different from all GL types and still fit in
+ * the 8 bits avialable. */
+
+#define BRW_PRIM_OFFSET           0x80
+
 #define BRW_ANISORATIO_2     0
 #define BRW_ANISORATIO_4     1
 #define BRW_ANISORATIO_6     2
@@ -548,6 +555,10 @@
 /* Surface state DW4 */
 #define BRW_SURFACE_MIN_LOD_SHIFT	28
 #define BRW_SURFACE_MIN_LOD_MASK	INTEL_MASK(31, 28)
+#define BRW_SURFACE_MIN_ARRAY_ELEMENT_SHIFT	17
+#define BRW_SURFACE_MIN_ARRAY_ELEMENT_MASK	INTEL_MASK(27, 17)
+#define BRW_SURFACE_RENDER_TARGET_VIEW_EXTENT_SHIFT	8
+#define BRW_SURFACE_RENDER_TARGET_VIEW_EXTENT_MASK	INTEL_MASK(16, 8)
 #define BRW_SURFACE_MULTISAMPLECOUNT_1  (0 << 4)
 #define BRW_SURFACE_MULTISAMPLECOUNT_4  (2 << 4)
 #define GEN7_SURFACE_MULTISAMPLECOUNT_1         (0 << 3)
@@ -610,13 +621,69 @@
 #define HSW_SCS_BLUE                     6
 #define HSW_SCS_ALPHA                    7
 
-#define BRW_TEXCOORDMODE_WRAP            0
-#define BRW_TEXCOORDMODE_MIRROR          1
-#define BRW_TEXCOORDMODE_CLAMP           2
-#define BRW_TEXCOORDMODE_CUBE            3
-#define BRW_TEXCOORDMODE_CLAMP_BORDER    4
-#define BRW_TEXCOORDMODE_MIRROR_ONCE     5
-#define GEN8_TEXCOORDMODE_HALF_BORDER    6
+/* SAMPLER_STATE DW0 */
+#define BRW_SAMPLER_DISABLE                     (1 << 31)
+#define BRW_SAMPLER_LOD_PRECLAMP_ENABLE         (1 << 28)
+#define GEN6_SAMPLER_MIN_MAG_NOT_EQUAL          (1 << 27) /* Gen6 only */
+#define BRW_SAMPLER_BASE_MIPLEVEL_MASK          INTEL_MASK(26, 22)
+#define BRW_SAMPLER_BASE_MIPLEVEL_SHIFT         22
+#define BRW_SAMPLER_MIP_FILTER_MASK             INTEL_MASK(21, 20)
+#define BRW_SAMPLER_MIP_FILTER_SHIFT            20
+#define BRW_SAMPLER_MAG_FILTER_MASK             INTEL_MASK(19, 17)
+#define BRW_SAMPLER_MAG_FILTER_SHIFT            17
+#define BRW_SAMPLER_MIN_FILTER_MASK             INTEL_MASK(16, 14)
+#define BRW_SAMPLER_MIN_FILTER_SHIFT            14
+#define GEN4_SAMPLER_LOD_BIAS_MASK              INTEL_MASK(13, 3)
+#define GEN4_SAMPLER_LOD_BIAS_SHIFT             3
+#define GEN4_SAMPLER_SHADOW_FUNCTION_MASK       INTEL_MASK(2, 0)
+#define GEN4_SAMPLER_SHADOW_FUNCTION_SHIFT      0
+
+#define GEN7_SAMPLER_LOD_BIAS_MASK              INTEL_MASK(13, 1)
+#define GEN7_SAMPLER_LOD_BIAS_SHIFT             1
+#define GEN7_SAMPLER_EWA_ANISOTROPIC_ALGORITHM  (1 << 0)
+
+/* SAMPLER_STATE DW1 */
+#define GEN4_SAMPLER_MIN_LOD_MASK               INTEL_MASK(31, 22)
+#define GEN4_SAMPLER_MIN_LOD_SHIFT              22
+#define GEN4_SAMPLER_MAX_LOD_MASK               INTEL_MASK(21, 12)
+#define GEN4_SAMPLER_MAX_LOD_SHIFT              12
+#define GEN4_SAMPLER_CUBE_CONTROL_OVERRIDE      (1 << 9)
+/* Wrap modes are in DW1 on Gen4-6 and DW3 on Gen7+ */
+#define BRW_SAMPLER_TCX_WRAP_MODE_MASK          INTEL_MASK(8, 6)
+#define BRW_SAMPLER_TCX_WRAP_MODE_SHIFT         6
+#define BRW_SAMPLER_TCY_WRAP_MODE_MASK          INTEL_MASK(5, 3)
+#define BRW_SAMPLER_TCY_WRAP_MODE_SHIFT         3
+#define BRW_SAMPLER_TCZ_WRAP_MODE_MASK          INTEL_MASK(2, 0)
+#define BRW_SAMPLER_TCZ_WRAP_MODE_SHIFT         0
+
+#define GEN7_SAMPLER_MIN_LOD_MASK               INTEL_MASK(31, 20)
+#define GEN7_SAMPLER_MIN_LOD_SHIFT              20
+#define GEN7_SAMPLER_MAX_LOD_MASK               INTEL_MASK(19, 8)
+#define GEN7_SAMPLER_MAX_LOD_SHIFT              8
+#define GEN7_SAMPLER_SHADOW_FUNCTION_MASK       INTEL_MASK(3, 1)
+#define GEN7_SAMPLER_SHADOW_FUNCTION_SHIFT      1
+#define GEN7_SAMPLER_CUBE_CONTROL_OVERRIDE      (1 << 0)
+
+/* SAMPLER_STATE DW2 - border color pointer */
+
+/* SAMPLER_STATE DW3 */
+#define BRW_SAMPLER_MAX_ANISOTROPY_MASK         INTEL_MASK(21, 19)
+#define BRW_SAMPLER_MAX_ANISOTROPY_SHIFT        19
+#define BRW_SAMPLER_ADDRESS_ROUNDING_MASK       INTEL_MASK(18, 13)
+#define BRW_SAMPLER_ADDRESS_ROUNDING_SHIFT      13
+#define GEN7_SAMPLER_NON_NORMALIZED_COORDINATES (1 << 10)
+/* Gen7+ wrap modes reuse the same BRW_SAMPLER_TC*_WRAP_MODE enums. */
+#define GEN6_SAMPLER_NON_NORMALIZED_COORDINATES (1 << 0)
+
+enum brw_wrap_mode {
+   BRW_TEXCOORDMODE_WRAP         = 0,
+   BRW_TEXCOORDMODE_MIRROR       = 1,
+   BRW_TEXCOORDMODE_CLAMP        = 2,
+   BRW_TEXCOORDMODE_CUBE         = 3,
+   BRW_TEXCOORDMODE_CLAMP_BORDER = 4,
+   BRW_TEXCOORDMODE_MIRROR_ONCE  = 5,
+   GEN8_TEXCOORDMODE_HALF_BORDER = 6,
+};
 
 #define BRW_THREAD_PRIORITY_NORMAL   0
 #define BRW_THREAD_PRIORITY_HIGH     1
@@ -654,18 +721,20 @@ enum brw_compression {
 #define GEN6_COMPRESSION_1H		0
 #define GEN6_COMPRESSION_2H		2
 
-#define BRW_CONDITIONAL_NONE  0
-#define BRW_CONDITIONAL_Z     1
-#define BRW_CONDITIONAL_NZ    2
-#define BRW_CONDITIONAL_EQ    1	/* Z */
-#define BRW_CONDITIONAL_NEQ   2	/* NZ */
-#define BRW_CONDITIONAL_G     3
-#define BRW_CONDITIONAL_GE    4
-#define BRW_CONDITIONAL_L     5
-#define BRW_CONDITIONAL_LE    6
-#define BRW_CONDITIONAL_R     7
-#define BRW_CONDITIONAL_O     8
-#define BRW_CONDITIONAL_U     9
+enum PACKED brw_conditional_mod {
+   BRW_CONDITIONAL_NONE = 0,
+   BRW_CONDITIONAL_Z    = 1,
+   BRW_CONDITIONAL_NZ   = 2,
+   BRW_CONDITIONAL_EQ   = 1,	/* Z */
+   BRW_CONDITIONAL_NEQ  = 2,	/* NZ */
+   BRW_CONDITIONAL_G    = 3,
+   BRW_CONDITIONAL_GE   = 4,
+   BRW_CONDITIONAL_L    = 5,
+   BRW_CONDITIONAL_LE   = 6,
+   BRW_CONDITIONAL_R    = 7,    /* Gen <= 5 */
+   BRW_CONDITIONAL_O    = 8,
+   BRW_CONDITIONAL_U    = 9,
+};
 
 #define BRW_DEBUG_NONE        0
 #define BRW_DEBUG_BREAKPOINT  1
@@ -675,17 +744,21 @@ enum brw_compression {
 #define BRW_DEPENDENCY_NOTCHECKED     2
 #define BRW_DEPENDENCY_DISABLE        3
 
-#define BRW_EXECUTE_1     0
-#define BRW_EXECUTE_2     1
-#define BRW_EXECUTE_4     2
-#define BRW_EXECUTE_8     3
-#define BRW_EXECUTE_16    4
-#define BRW_EXECUTE_32    5
+enum PACKED brw_execution_size {
+   BRW_EXECUTE_1  = 0,
+   BRW_EXECUTE_2  = 1,
+   BRW_EXECUTE_4  = 2,
+   BRW_EXECUTE_8  = 3,
+   BRW_EXECUTE_16 = 4,
+   BRW_EXECUTE_32 = 5,
+};
 
-#define BRW_HORIZONTAL_STRIDE_0   0
-#define BRW_HORIZONTAL_STRIDE_1   1
-#define BRW_HORIZONTAL_STRIDE_2   2
-#define BRW_HORIZONTAL_STRIDE_4   3
+enum PACKED brw_horizontal_stride {
+   BRW_HORIZONTAL_STRIDE_0 = 0,
+   BRW_HORIZONTAL_STRIDE_1 = 1,
+   BRW_HORIZONTAL_STRIDE_2 = 2,
+   BRW_HORIZONTAL_STRIDE_4 = 3,
+};
 
 #define BRW_INSTRUCTION_NORMAL    0
 #define BRW_INSTRUCTION_SATURATE  1
@@ -727,15 +800,16 @@ enum opcode {
    BRW_OPCODE_ASR =	12,
    BRW_OPCODE_CMP =	16,
    BRW_OPCODE_CMPN =	17,
-   BRW_OPCODE_F32TO16 = 19,
-   BRW_OPCODE_F16TO32 = 20,
-   BRW_OPCODE_BFREV =	23,
-   BRW_OPCODE_BFE =	24,
-   BRW_OPCODE_BFI1 =	25,
-   BRW_OPCODE_BFI2 =	26,
+   BRW_OPCODE_CSEL =	18,  /**< Gen8+ */
+   BRW_OPCODE_F32TO16 = 19,  /**< Gen7 only */
+   BRW_OPCODE_F16TO32 = 20,  /**< Gen7 only */
+   BRW_OPCODE_BFREV =	23,  /**< Gen7+ */
+   BRW_OPCODE_BFE =	24,  /**< Gen7+ */
+   BRW_OPCODE_BFI1 =	25,  /**< Gen7+ */
+   BRW_OPCODE_BFI2 =	26,  /**< Gen7+ */
    BRW_OPCODE_JMPI =	32,
    BRW_OPCODE_IF =	34,
-   BRW_OPCODE_IFF =	35,
+   BRW_OPCODE_IFF =	35,  /**< Pre-Gen6 */
    BRW_OPCODE_ELSE =	36,
    BRW_OPCODE_ENDIF =	37,
    BRW_OPCODE_DO =	38,
@@ -743,14 +817,14 @@ enum opcode {
    BRW_OPCODE_BREAK =	40,
    BRW_OPCODE_CONTINUE = 41,
    BRW_OPCODE_HALT =	42,
-   BRW_OPCODE_MSAVE =	44,
-   BRW_OPCODE_MRESTORE = 45,
-   BRW_OPCODE_PUSH =	46,
-   BRW_OPCODE_POP =	47,
+   BRW_OPCODE_MSAVE =	44,  /**< Pre-Gen6 */
+   BRW_OPCODE_MRESTORE = 45, /**< Pre-Gen6 */
+   BRW_OPCODE_PUSH =	46,  /**< Pre-Gen6 */
+   BRW_OPCODE_POP =	47,  /**< Pre-Gen6 */
    BRW_OPCODE_WAIT =	48,
    BRW_OPCODE_SEND =	49,
    BRW_OPCODE_SENDC =	50,
-   BRW_OPCODE_MATH =	56,
+   BRW_OPCODE_MATH =	56,  /**< Gen6+ */
    BRW_OPCODE_ADD =	64,
    BRW_OPCODE_MUL =	65,
    BRW_OPCODE_AVG =	66,
@@ -762,11 +836,11 @@ enum opcode {
    BRW_OPCODE_MAC =	72,
    BRW_OPCODE_MACH =	73,
    BRW_OPCODE_LZD =	74,
-   BRW_OPCODE_FBH =	75,
-   BRW_OPCODE_FBL =	76,
-   BRW_OPCODE_CBIT =	77,
-   BRW_OPCODE_ADDC =	78,
-   BRW_OPCODE_SUBB =	79,
+   BRW_OPCODE_FBH =	75,  /**< Gen7+ */
+   BRW_OPCODE_FBL =	76,  /**< Gen7+ */
+   BRW_OPCODE_CBIT =	77,  /**< Gen7+ */
+   BRW_OPCODE_ADDC =	78,  /**< Gen7+ */
+   BRW_OPCODE_SUBB =	79,  /**< Gen7+ */
    BRW_OPCODE_SAD2 =	80,
    BRW_OPCODE_SADA2 =	81,
    BRW_OPCODE_DP4 =	84,
@@ -774,9 +848,10 @@ enum opcode {
    BRW_OPCODE_DP3 =	86,
    BRW_OPCODE_DP2 =	87,
    BRW_OPCODE_LINE =	89,
-   BRW_OPCODE_PLN =	90,
-   BRW_OPCODE_MAD =	91,
-   BRW_OPCODE_LRP =	92,
+   BRW_OPCODE_PLN =	90,  /**< G45+ */
+   BRW_OPCODE_MAD =	91,  /**< Gen6+ */
+   BRW_OPCODE_LRP =	92,  /**< Gen6+ */
+   BRW_OPCODE_NENOP =	125, /**< G45 only */
    BRW_OPCODE_NOP =	126,
 
    /* These are compiler backend opcodes that get translated into other
@@ -784,6 +859,7 @@ enum opcode {
     */
    FS_OPCODE_FB_WRITE = 128,
    FS_OPCODE_BLORP_FB_WRITE,
+   FS_OPCODE_REP_FB_WRITE,
    SHADER_OPCODE_RCP,
    SHADER_OPCODE_RSQ,
    SHADER_OPCODE_SQRT,
@@ -807,6 +883,20 @@ enum opcode {
    SHADER_OPCODE_LOD,
    SHADER_OPCODE_TG4,
    SHADER_OPCODE_TG4_OFFSET,
+
+   /**
+    * Combines multiple sources of size 1 into a larger virtual GRF.
+    * For example, parameters for a send-from-GRF message.  Or, updating
+    * channels of a size 4 VGRF used to store vec4s such as texturing results.
+    *
+    * This will be lowered into MOVs from each source to consecutive reg_offsets
+    * of the destination VGRF.
+    *
+    * src[0] may be BAD_FILE.  If so, the lowering pass skips emitting the MOV,
+    * but still reserves the first channel of the destination VGRF.  This can be
+    * used to reserve space for, say, a message header set up by the generators.
+    */
+   SHADER_OPCODE_LOAD_PAYLOAD,
 
    SHADER_OPCODE_SHADER_TIME_ADD,
 
@@ -836,6 +926,10 @@ enum opcode {
    FS_OPCODE_UNPACK_HALF_2x16_SPLIT_X,
    FS_OPCODE_UNPACK_HALF_2x16_SPLIT_Y,
    FS_OPCODE_PLACEHOLDER_HALT,
+   FS_OPCODE_INTERPOLATE_AT_CENTROID,
+   FS_OPCODE_INTERPOLATE_AT_SAMPLE,
+   FS_OPCODE_INTERPOLATE_AT_SHARED_OFFSET,
+   FS_OPCODE_INTERPOLATE_AT_PER_SLOT_OFFSET,
 
    VS_OPCODE_URB_WRITE,
    VS_OPCODE_PULL_CONSTANT_LOAD,
@@ -850,6 +944,14 @@ enum opcode {
     * "Slot {0,1} Offset" fields in the message header.
     */
    GS_OPCODE_URB_WRITE,
+
+   /**
+    * Write geometry shader output data to the URB and request a new URB
+    * handle (gen6).
+    *
+    * This opcode doesn't do an implied move from R0 to the first MRF.
+    */
+   GS_OPCODE_URB_WRITE_ALLOCATE,
 
    /**
     * Terminate the geometry shader thread by doing an empty URB write.
@@ -887,11 +989,9 @@ enum opcode {
    GS_OPCODE_SET_VERTEX_COUNT,
 
    /**
-    * Set DWORD 2 of dst to the immediate value in src.  Used by geometry
-    * shaders to initialize DWORD 2 of R0, which needs to be 0 in order for
-    * scratch reads and writes to operate correctly.
+    * Set DWORD 2 of dst to the value in src.
     */
-   GS_OPCODE_SET_DWORD_2_IMMED,
+   GS_OPCODE_SET_DWORD_2,
 
    /**
     * Prepare the dst register for storage in the "Channel Mask" fields of a
@@ -925,6 +1025,75 @@ enum opcode {
     * - dst is the GRF for gl_InvocationID.
     */
    GS_OPCODE_GET_INSTANCE_ID,
+
+   /**
+    * Send a FF_SYNC message to allocate initial URB handles (gen6).
+    *
+    * - dst will be used as the writeback register for the FF_SYNC operation.
+    *
+    * - src0 is the number of primitives written.
+    *
+    * - src1 is the value to hold in M0.0: number of SO vertices to write
+    *   and number of SO primitives needed. Its value will be overwritten
+    *   with the SVBI values if transform feedback is enabled.
+    *
+    * Note: This opcode uses an implicit MRF register for the ff_sync message
+    * header, so the caller is expected to set inst->base_mrf and initialize
+    * that MRF register to r0. This opcode will also write to this MRF register
+    * to include the allocated URB handle so it can then be reused directly as
+    * the header in the URB write operation we are allocating the handle for.
+    */
+   GS_OPCODE_FF_SYNC,
+
+   /**
+    * Move r0.1 (which holds PrimitiveID information in gen6) to a separate
+    * register.
+    *
+    * - dst is the GRF where PrimitiveID information will be moved.
+    */
+   GS_OPCODE_SET_PRIMITIVE_ID,
+
+   /**
+    * Write transform feedback data to the SVB by sending a SVB WRITE message.
+    * Used in gen6.
+    *
+    * - dst is the MRF register containing the message header.
+    *
+    * - src0 is the register where the vertex data is going to be copied from.
+    *
+    * - src1 is the destination register when write commit occurs.
+    */
+   GS_OPCODE_SVB_WRITE,
+
+   /**
+    * Set destination index in the SVB write message payload (M0.5). Used
+    * in gen6 for transform feedback.
+    *
+    * - dst is the header to save the destination indices for SVB WRITE.
+    * - src is the register that holds the destination indices value.
+    */
+   GS_OPCODE_SVB_SET_DST_INDEX,
+
+   /**
+    * Prepare Mx.0 subregister for being used in the FF_SYNC message header.
+    * Used in gen6 for transform feedback.
+    *
+    * - dst will hold the register with the final Mx.0 value.
+    *
+    * - src0 has the number of vertices emitted in SO (NumSOVertsToWrite)
+    *
+    * - src1 has the number of needed primitives for SO (NumSOPrimsNeeded)
+    *
+    * - src2 is the value to hold in M0: number of SO vertices to write
+    *   and number of SO primitives needed.
+    */
+   GS_OPCODE_FF_SYNC_SET_PRIMITIVES,
+};
+
+enum brw_derivative_quality {
+   BRW_DERIVATIVE_BY_HINT = 0,
+   BRW_DERIVATIVE_FINE = 1,
+   BRW_DERIVATIVE_COARSE = 2,
 };
 
 enum brw_urb_write_flags {
@@ -998,24 +1167,28 @@ operator|(brw_urb_write_flags x, brw_urb_write_flags y)
 }
 #endif
 
-#define BRW_PREDICATE_NONE             0
-#define BRW_PREDICATE_NORMAL           1
-#define BRW_PREDICATE_ALIGN1_ANYV             2
-#define BRW_PREDICATE_ALIGN1_ALLV             3
-#define BRW_PREDICATE_ALIGN1_ANY2H            4
-#define BRW_PREDICATE_ALIGN1_ALL2H            5
-#define BRW_PREDICATE_ALIGN1_ANY4H            6
-#define BRW_PREDICATE_ALIGN1_ALL4H            7
-#define BRW_PREDICATE_ALIGN1_ANY8H            8
-#define BRW_PREDICATE_ALIGN1_ALL8H            9
-#define BRW_PREDICATE_ALIGN1_ANY16H           10
-#define BRW_PREDICATE_ALIGN1_ALL16H           11
-#define BRW_PREDICATE_ALIGN16_REPLICATE_X     2
-#define BRW_PREDICATE_ALIGN16_REPLICATE_Y     3
-#define BRW_PREDICATE_ALIGN16_REPLICATE_Z     4
-#define BRW_PREDICATE_ALIGN16_REPLICATE_W     5
-#define BRW_PREDICATE_ALIGN16_ANY4H           6
-#define BRW_PREDICATE_ALIGN16_ALL4H           7
+enum PACKED brw_predicate {
+   BRW_PREDICATE_NONE                =  0,
+   BRW_PREDICATE_NORMAL              =  1,
+   BRW_PREDICATE_ALIGN1_ANYV         =  2,
+   BRW_PREDICATE_ALIGN1_ALLV         =  3,
+   BRW_PREDICATE_ALIGN1_ANY2H        =  4,
+   BRW_PREDICATE_ALIGN1_ALL2H        =  5,
+   BRW_PREDICATE_ALIGN1_ANY4H        =  6,
+   BRW_PREDICATE_ALIGN1_ALL4H        =  7,
+   BRW_PREDICATE_ALIGN1_ANY8H        =  8,
+   BRW_PREDICATE_ALIGN1_ALL8H        =  9,
+   BRW_PREDICATE_ALIGN1_ANY16H       = 10,
+   BRW_PREDICATE_ALIGN1_ALL16H       = 11,
+   BRW_PREDICATE_ALIGN1_ANY32H       = 12,
+   BRW_PREDICATE_ALIGN1_ALL32H       = 13,
+   BRW_PREDICATE_ALIGN16_REPLICATE_X =  2,
+   BRW_PREDICATE_ALIGN16_REPLICATE_Y =  3,
+   BRW_PREDICATE_ALIGN16_REPLICATE_Z =  4,
+   BRW_PREDICATE_ALIGN16_REPLICATE_W =  5,
+   BRW_PREDICATE_ALIGN16_ANY4H       =  6,
+   BRW_PREDICATE_ALIGN16_ALL4H       =  7,
+};
 
 #define BRW_ARCHITECTURE_REGISTER_FILE    0
 #define BRW_GENERAL_REGISTER_FILE         1
@@ -1079,23 +1252,24 @@ operator|(brw_urb_write_flags x, brw_urb_write_flags y)
 #define BRW_THREAD_ATOMIC     1
 #define BRW_THREAD_SWITCH     2
 
-#define BRW_VERTICAL_STRIDE_0                 0
-#define BRW_VERTICAL_STRIDE_1                 1
-#define BRW_VERTICAL_STRIDE_2                 2
-#define BRW_VERTICAL_STRIDE_4                 3
-#define BRW_VERTICAL_STRIDE_8                 4
-#define BRW_VERTICAL_STRIDE_16                5
-#define BRW_VERTICAL_STRIDE_32                6
-#define BRW_VERTICAL_STRIDE_64                7
-#define BRW_VERTICAL_STRIDE_128               8
-#define BRW_VERTICAL_STRIDE_256               9
-#define BRW_VERTICAL_STRIDE_ONE_DIMENSIONAL   0xF
+enum PACKED brw_vertical_stride {
+   BRW_VERTICAL_STRIDE_0               = 0,
+   BRW_VERTICAL_STRIDE_1               = 1,
+   BRW_VERTICAL_STRIDE_2               = 2,
+   BRW_VERTICAL_STRIDE_4               = 3,
+   BRW_VERTICAL_STRIDE_8               = 4,
+   BRW_VERTICAL_STRIDE_16              = 5,
+   BRW_VERTICAL_STRIDE_32              = 6,
+   BRW_VERTICAL_STRIDE_ONE_DIMENSIONAL = 0xF,
+};
 
-#define BRW_WIDTH_1       0
-#define BRW_WIDTH_2       1
-#define BRW_WIDTH_4       2
-#define BRW_WIDTH_8       3
-#define BRW_WIDTH_16      4
+enum PACKED brw_width {
+   BRW_WIDTH_1  = 0,
+   BRW_WIDTH_2  = 1,
+   BRW_WIDTH_4  = 2,
+   BRW_WIDTH_8  = 3,
+   BRW_WIDTH_16 = 4,
+};
 
 #define BRW_STATELESS_BUFFER_BOUNDARY_1K      0
 #define BRW_STATELESS_BUFFER_BOUNDARY_2K      1
@@ -1273,6 +1447,11 @@ enum brw_message_target {
 #define GEN7_DATAPORT_SCRATCH_WRITE                           ((1 << 18) | \
                                                                (1 << 17))
 #define GEN7_DATAPORT_SCRATCH_NUM_REGS_SHIFT                        12
+
+#define GEN7_PIXEL_INTERPOLATOR_LOC_SHARED_OFFSET     0
+#define GEN7_PIXEL_INTERPOLATOR_LOC_SAMPLE            1
+#define GEN7_PIXEL_INTERPOLATOR_LOC_CENTROID          2
+#define GEN7_PIXEL_INTERPOLATOR_LOC_PER_SLOT_OFFSET   3
 
 /* HSW */
 #define HSW_DATAPORT_DC_PORT0_OWORD_BLOCK_READ                      0
@@ -1468,10 +1647,14 @@ enum brw_message_target {
 # define GEN7_URB_ENTRY_SIZE_SHIFT                      16
 # define GEN7_URB_STARTING_ADDRESS_SHIFT                25
 
-/* "GS URB Entry Allocation Size" is a U9-1 field, so the maximum gs_size
+/* Gen7 "GS URB Entry Allocation Size" is a U9-1 field, so the maximum gs_size
  * is 2^9, or 512.  It's counted in multiples of 64 bytes.
  */
-#define GEN7_MAX_GS_URB_ENTRY_SIZE_BYTES		(512*64)
+#define GEN7_MAX_GS_URB_ENTRY_SIZE_BYTES                (512*64)
+/* Gen6 "GS URB Entry Allocation Size" is defined as a number of 1024-bit
+ * (128 bytes) URB rows and the maximum allowed value is 5 rows.
+ */
+#define GEN6_MAX_GS_URB_ENTRY_SIZE_BYTES                (5*128)
 
 #define _3DSTATE_PUSH_CONSTANT_ALLOC_VS         0x7912 /* GEN7+ */
 #define _3DSTATE_PUSH_CONSTANT_ALLOC_GS         0x7915 /* GEN7+ */
@@ -1622,6 +1805,7 @@ enum brw_message_target {
 # define GEN6_SF_SWIZZLE_ENABLE				(1 << 21)
 # define GEN6_SF_POINT_SPRITE_UPPERLEFT			(0 << 20)
 # define GEN6_SF_POINT_SPRITE_LOWERLEFT			(1 << 20)
+# define GEN9_SF_LINE_WIDTH_SHIFT			12 /* U11.7 */
 # define GEN6_SF_URB_ENTRY_READ_LENGTH_SHIFT		11
 # define GEN6_SF_URB_ENTRY_READ_OFFSET_SHIFT		4
 /* DW2 */
@@ -1726,10 +1910,17 @@ enum brw_message_target {
 /* DW12: attr 0-7 wrap shortest enables */
 /* DW13: attr 8-16 wrap shortest enables */
 
+/* DW4-5: Attribute active components (gen9) */
+#define GEN9_SBE_ACTIVE_COMPONENT_NONE			0
+#define GEN9_SBE_ACTIVE_COMPONENT_XY			1
+#define GEN9_SBE_ACTIVE_COMPONENT_XYZ			2
+#define GEN9_SBE_ACTIVE_COMPONENT_XYZW			3
+
 #define _3DSTATE_SBE_SWIZ                       0x7851 /* GEN8+ */
 
 #define _3DSTATE_RASTER                         0x7850 /* GEN8+ */
 /* DW1 */
+# define GEN9_RASTER_VIEWPORT_Z_FAR_CLIP_TEST_ENABLE    (1 << 26)
 # define GEN8_RASTER_FRONT_WINDING_CCW                  (1 << 21)
 # define GEN8_RASTER_CULL_BOTH                          (0 << 16)
 # define GEN8_RASTER_CULL_NONE                          (1 << 16)
@@ -1740,6 +1931,7 @@ enum brw_message_target {
 # define GEN8_RASTER_LINE_AA_ENABLE                     (1 << 2)
 # define GEN8_RASTER_SCISSOR_ENABLE                     (1 << 1)
 # define GEN8_RASTER_VIEWPORT_Z_CLIP_TEST_ENABLE        (1 << 0)
+# define GEN9_RASTER_VIEWPORT_Z_NEAR_CLIP_TEST_ENABLE   (1 << 0)
 
 /* Gen8 BLEND_STATE */
 /* DW0 */
@@ -1850,6 +2042,11 @@ enum brw_message_target {
 # define GEN8_WM_DS_BF_STENCIL_TEST_MASK_SHIFT          8
 # define GEN8_WM_DS_BF_STENCIL_WRITE_MASK_MASK          INTEL_MASK(7, 0)
 # define GEN8_WM_DS_BF_STENCIL_WRITE_MASK_SHIFT         0
+/* DW3 */
+# define GEN9_WM_DS_STENCIL_REF_MASK                    INTEL_MASK(15, 8)
+# define GEN9_WM_DS_STENCIL_REF_SHIFT                   8
+# define GEN9_WM_DS_BF_STENCIL_REF_MASK                 INTEL_MASK(7, 0)
+# define GEN9_WM_DS_BF_STENCIL_REF_SHIFT                0
 
 #define _3DSTATE_PS_EXTRA                       0x784F /* GEN8+ */
 /* DW1 */
@@ -2208,10 +2405,19 @@ enum brw_wm_barycentric_interp_mode {
 #define HSW_MOCS_WB_LLC_WB_ELLC         (2 << 1)
 #define HSW_MOCS_UC_LLC_WB_ELLC         (3 << 1)
 
-/* Broadwell: write-back or write-through; always use all the caches. */
-#define BDW_MOCS_WB 0x78
-#define BDW_MOCS_WT 0x58
+/* Broadwell: these defines always use all available caches (L3, LLC, eLLC),
+ * and let you force write-back (WB) or write-through (WT) caching, or leave
+ * it up to the page table entry (PTE) specified by the kernel.
+ */
+#define BDW_MOCS_WB  0x78
+#define BDW_MOCS_WT  0x58
+#define BDW_MOCS_PTE 0x18
 
-#include "intel_chipset.h"
+/* Skylake: MOCS is now an index into an array of 64 different configurable
+ * cache settings.  We still use only either write-back or write-through; and
+ * rely on the documented default values.
+ */
+#define SKL_MOCS_WB 9
+#define SKL_MOCS_WT 5
 
 #endif

@@ -140,14 +140,14 @@ extern GLfloat _mesa_ubyte_to_float_color_tab[256];
  *** UNCLAMPED_FLOAT_TO_UBYTE: clamp float to [0,1] and map to ubyte in [0,255]
  *** CLAMPED_FLOAT_TO_UBYTE: map float known to be in [0,1] to ubyte in [0,255]
  ***/
-#if defined(USE_IEEE) && !defined(DEBUG)
+#ifndef DEBUG
 /* This function/macro is sensitive to precision.  Test very carefully
  * if you change it!
  */
-#define UNCLAMPED_FLOAT_TO_UBYTE(UB, F)					\
+#define UNCLAMPED_FLOAT_TO_UBYTE(UB, FLT)				\
         do {								\
            fi_type __tmp;						\
-           __tmp.f = (F);						\
+           __tmp.f = (FLT);						\
            if (__tmp.i < 0)						\
               UB = (GLubyte) 0;						\
            else if (__tmp.i >= IEEE_ONE)				\
@@ -157,10 +157,10 @@ extern GLfloat _mesa_ubyte_to_float_color_tab[256];
               UB = (GLubyte) __tmp.i;					\
            }								\
         } while (0)
-#define CLAMPED_FLOAT_TO_UBYTE(UB, F)					\
+#define CLAMPED_FLOAT_TO_UBYTE(UB, FLT)					\
         do {								\
            fi_type __tmp;						\
-           __tmp.f = (F) * (255.0F/256.0F) + 32768.0F;			\
+           __tmp.f = (FLT) * (255.0F/256.0F) + 32768.0F;		\
            UB = (GLubyte) __tmp.i;					\
         } while (0)
 #else
@@ -184,12 +184,19 @@ static inline GLfloat UINT_AS_FLT(GLuint u)
    return tmp.f;
 }
 
+static inline unsigned FLT_AS_UINT(float f)
+{
+   fi_type tmp;
+   tmp.f = f;
+   return tmp.u;
+}
+
 /**
  * Convert a floating point value to an unsigned fixed point value.
  *
  * \param frac_bits   The number of bits used to store the fractional part.
  */
-static INLINE uint32_t
+static inline uint32_t
 U_FIXED(float value, uint32_t frac_bits)
 {
    value *= (1 << frac_bits);
@@ -201,7 +208,7 @@ U_FIXED(float value, uint32_t frac_bits)
  *
  * \param frac_bits   The number of bits used to store the fractional part.
  */
-static INLINE int32_t
+static inline int32_t
 S_FIXED(float value, uint32_t frac_bits)
 {
    return (int32_t) (value * (1 << frac_bits));
@@ -792,13 +799,6 @@ NORMALIZE_3FV(GLfloat v[3])
 }
 
 
-/** Is float value negative? */
-static inline GLboolean
-IS_NEGATIVE(float x)
-{
-   return signbit(x) != 0;
-}
-
 /** Test two floats have opposite signs */
 static inline GLboolean
 DIFFERENT_SIGNS(GLfloat x, GLfloat y)
@@ -818,7 +818,9 @@ DIFFERENT_SIGNS(GLfloat x, GLfloat y)
 #define ENUM_TO_BOOLEAN(E) ((E) ? GL_TRUE : GL_FALSE)
 
 /* Compute the size of an array */
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+#ifndef ARRAY_SIZE
+#  define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+#endif
 
 /* Stringify */
 #define STRINGIFY(x) #x

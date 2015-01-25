@@ -65,6 +65,12 @@ enum radeon_bo_domain { /* bitfield */
     RADEON_DOMAIN_VRAM_GTT = RADEON_DOMAIN_VRAM | RADEON_DOMAIN_GTT
 };
 
+enum radeon_bo_flag { /* bitfield */
+    RADEON_FLAG_GTT_WC =        (1 << 0),
+    RADEON_FLAG_CPU_ACCESS =    (1 << 1),
+    RADEON_FLAG_NO_CPU_ACCESS = (1 << 2),
+};
+
 enum radeon_bo_usage { /* bitfield */
     RADEON_USAGE_READ = 2,
     RADEON_USAGE_WRITE = 4,
@@ -198,6 +204,9 @@ struct radeon_info {
     uint64_t                    gart_size;
     uint64_t                    vram_size;
     uint32_t                    max_sclk;
+    uint32_t                    max_compute_units;
+    uint32_t                    max_se;
+    uint32_t                    max_sh_per_se;
 
     uint32_t                    drm_major; /* version */
     uint32_t                    drm_minor;
@@ -222,6 +231,7 @@ struct radeon_info {
 
     boolean                     si_tile_mode_array_valid;
     uint32_t                    si_tile_mode_array[32];
+    uint32_t                    si_backend_enabled_mask;
 
     boolean                     cik_macrotile_mode_array_valid;
     uint32_t                    cik_macrotile_mode_array[16];
@@ -284,7 +294,8 @@ struct radeon_winsys {
                                        unsigned size,
                                        unsigned alignment,
                                        boolean use_reusable_pool,
-                                       enum radeon_bo_domain domain);
+                                       enum radeon_bo_domain domain,
+                                       enum radeon_bo_flag flags);
 
     struct radeon_winsys_cs_handle *(*buffer_get_cs_handle)(
             struct pb_buffer *buf);

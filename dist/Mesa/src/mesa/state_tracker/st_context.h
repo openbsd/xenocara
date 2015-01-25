@@ -56,7 +56,7 @@ struct u_upload_mgr;
 
 struct st_state_flags {
    GLuint mesa;
-   GLuint st;
+   uint64_t st;
 };
 
 struct st_tracked_state {
@@ -86,6 +86,7 @@ struct st_context
    boolean has_stencil_export; /**< can do shader stencil export? */
    boolean has_time_elapsed;
    boolean has_shader_model3;
+   boolean has_etc1;
    boolean prefer_blit_based_texture_transfer;
 
    boolean needs_texcoord_semantic;
@@ -180,6 +181,7 @@ struct st_context
       void *vs;
       void *fs;
       void *vs_layered;
+      void *gs_layered;
    } clear;
 
    /** used for anything using util_draw_vertex_buffer */

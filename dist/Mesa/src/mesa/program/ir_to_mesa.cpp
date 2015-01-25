@@ -311,7 +311,6 @@ public:
 			  int mul_operand);
    bool try_emit_mad_for_and_not(ir_expression *ir,
 				 int mul_operand);
-   bool try_emit_sat(ir_expression *ir);
 
    void emit_swz(ir_expression *ir);
 
@@ -663,11 +662,7 @@ ir_to_mesa_visitor::get_temp(const glsl_type *type)
 variable_storage *
 ir_to_mesa_visitor::find_variable_storage(const ir_variable *var)
 {
-   variable_storage *entry;
-
-   foreach_list(node, &this->variables) {
-      entry = (variable_storage *) node;
-
+   foreach_in_list(variable_storage, entry, &this->variables) {
       if (entry->var == var)
 	 return entry;
    }
@@ -687,8 +682,8 @@ ir_to_mesa_visitor::visit(ir_variable *ir)
 
    if (ir->data.mode == ir_var_uniform && strncmp(ir->name, "gl_", 3) == 0) {
       unsigned int i;
-      const ir_state_slot *const slots = ir->state_slots;
-      assert(ir->state_slots != NULL);
+      const ir_state_slot *const slots = ir->get_state_slots();
+      assert(slots != NULL);
 
       /* Check if this statevar's setup in the STATE file exactly
        * matches how we'll want to reference it as a
@@ -696,7 +691,7 @@ ir_to_mesa_visitor::visit(ir_variable *ir)
        * temporary storage and hope that it'll get copy-propagated
        * out.
        */
-      for (i = 0; i < ir->num_state_slots; i++) {
+      for (i = 0; i < ir->get_num_state_slots(); i++) {
 	 if (slots[i].swizzle != SWIZZLE_XYZW) {
 	    break;
 	 }
@@ -704,7 +699,7 @@ ir_to_mesa_visitor::visit(ir_variable *ir)
 
       variable_storage *storage;
       dst_reg dst;
-      if (i == ir->num_state_slots) {
+      if (i == ir->get_num_state_slots()) {
 	 /* We'll set the index later. */
 	 storage = new(mem_ctx) variable_storage(ir, PROGRAM_STATE_VAR, -1);
 	 this->variables.push_tail(storage);
@@ -715,7 +710,7 @@ ir_to_mesa_visitor::visit(ir_variable *ir)
 	  * of the type.  However, this had better match the number of state
 	  * elements that we're going to copy into the new temporary.
 	  */
-	 assert((int) ir->num_state_slots == type_size(ir->type));
+	 assert((int) ir->get_num_state_slots() == type_size(ir->type));
 
 	 storage = new(mem_ctx) variable_storage(ir, PROGRAM_TEMPORARY,
 						 this->next_temp);
@@ -726,7 +721,7 @@ ir_to_mesa_visitor::visit(ir_variable *ir)
       }
 
 
-      for (unsigned int i = 0; i < ir->num_state_slots; i++) {
+      for (unsigned int i = 0; i < ir->get_num_state_slots(); i++) {
 	 int index = _mesa_add_state_reference(this->prog->Parameters,
 					       (gl_state_index *)slots[i].tokens);
 
@@ -746,7 +741,7 @@ ir_to_mesa_visitor::visit(ir_variable *ir)
       }
 
       if (storage->file == PROGRAM_TEMPORARY &&
-	  dst.index != storage->index + (int) ir->num_state_slots) {
+	  dst.index != storage->index + (int) ir->get_num_state_slots()) {
 	 linker_error(this->shader_program,
 		      "failed to load builtin uniform `%s' "
 		      "(%d/%d regs loaded)\n",
@@ -797,13 +792,11 @@ ir_to_mesa_visitor::visit(ir_function *ir)
       const ir_function_signature *sig;
       exec_list empty;
 
-      sig = ir->matching_signature(NULL, &empty);
+      sig = ir->matching_signature(NULL, &empty, false);
 
       assert(sig);
 
-      foreach_list(node, &sig->body) {
-	 ir_instruction *ir = (ir_instruction *) node;
-
+      foreach_in_list(ir_instruction, ir, &sig->body) {
 	 ir->accept(this);
       }
    }
@@ -868,50 +861,6 @@ ir_to_mesa_visitor::try_emit_mad_for_and_not(ir_expression *ir, int try_operand)
 
    this->result = get_temp(ir->type);
    emit(ir, OPCODE_MAD, dst_reg(this->result), a, b, a);
-
-   return true;
-}
-
-bool
-ir_to_mesa_visitor::try_emit_sat(ir_expression *ir)
-{
-   /* Saturates were only introduced to vertex programs in
-    * NV_vertex_program3, so don't give them to drivers in the VP.
-    */
-   if (this->prog->Target == GL_VERTEX_PROGRAM_ARB)
-      return false;
-
-   ir_rvalue *sat_src = ir->as_rvalue_to_saturate();
-   if (!sat_src)
-      return false;
-
-   sat_src->accept(this);
-   src_reg src = this->result;
-
-   /* If we generated an expression instruction into a temporary in
-    * processing the saturate's operand, apply the saturate to that
-    * instruction.  Otherwise, generate a MOV to do the saturate.
-    *
-    * Note that we have to be careful to only do this optimization if
-    * the instruction in question was what generated src->result.  For
-    * example, ir_dereference_array might generate a MUL instruction
-    * to create the reladdr, and return us a src reg using that
-    * reladdr.  That MUL result is not the value we're trying to
-    * saturate.
-    */
-   ir_expression *sat_src_expr = sat_src->as_expression();
-   ir_to_mesa_instruction *new_inst;
-   new_inst = (ir_to_mesa_instruction *)this->instructions.get_tail();
-   if (sat_src_expr && (sat_src_expr->operation == ir_binop_mul ||
-			sat_src_expr->operation == ir_binop_add ||
-			sat_src_expr->operation == ir_binop_dot)) {
-      new_inst->saturate = true;
-   } else {
-      this->result = get_temp(ir->type);
-      ir_to_mesa_instruction *inst;
-      inst = emit(ir, OPCODE_MOV, dst_reg(this->result), src);
-      inst->saturate = true;
-   }
 
    return true;
 }
@@ -1078,9 +1027,6 @@ ir_to_mesa_visitor::visit(ir_expression *ir)
 	 return;
    }
 
-   if (try_emit_sat(ir))
-      return;
-
    if (ir->operation == ir_quadop_vector) {
       this->emit_swz(ir);
       return;
@@ -1177,6 +1123,12 @@ ir_to_mesa_visitor::visit(ir_expression *ir)
       emit(ir, OPCODE_DDY, result_dst, op[0]);
       break;
 
+   case ir_unop_saturate: {
+      ir_to_mesa_instruction *inst = emit(ir, OPCODE_MOV,
+                                          result_dst, op[0]);
+      inst->saturate = true;
+      break;
+   }
    case ir_unop_noise: {
       const enum prog_opcode opcode =
 	 prog_opcode(OPCODE_NOISE1
@@ -1462,6 +1414,13 @@ ir_to_mesa_visitor::visit(ir_expression *ir)
    case ir_binop_carry:
    case ir_binop_borrow:
    case ir_binop_imul_high:
+   case ir_unop_interpolate_at_centroid:
+   case ir_binop_interpolate_at_offset:
+   case ir_binop_interpolate_at_sample:
+   case ir_unop_dFdx_coarse:
+   case ir_unop_dFdx_fine:
+   case ir_unop_dFdy_coarse:
+   case ir_unop_dFdy_fine:
       assert(!"not supported");
       break;
 
@@ -1868,8 +1827,7 @@ ir_to_mesa_visitor::visit(ir_constant *ir)
       src_reg temp_base = get_temp(ir->type);
       dst_reg temp = dst_reg(temp_base);
 
-      foreach_list(node, &ir->components) {
-	 ir_constant *field_value = (ir_constant *) node;
+      foreach_in_list(ir_constant, field_value, &ir->components) {
 	 int size = type_size(field_value->type);
 
 	 assert(size > 0);
@@ -2338,9 +2296,7 @@ set_branchtargets(ir_to_mesa_visitor *v,
 	 mesa_instructions[loop_stack[loop_stack_pos]].BranchTarget = i;
 	 break;
       case OPCODE_CAL:
-	 foreach_list(n, &v->function_signatures) {
-	    function_entry *entry = (function_entry *) n;
-
+	 foreach_in_list(function_entry, entry, &v->function_signatures) {
 	    if (entry->sig_id == mesa_instructions[i].BranchTarget) {
 	       mesa_instructions[i].BranchTarget = entry->inst;
 	       break;
@@ -2434,8 +2390,7 @@ add_uniform_to_shader::visit_field(const glsl_type *type, const char *name,
    }
 
    gl_register_file file;
-   if (type->is_sampler() ||
-       (type->is_array() && type->fields.array->is_sampler())) {
+   if (type->without_array()->is_sampler()) {
       file = PROGRAM_SAMPLER;
    } else {
       file = PROGRAM_UNIFORM;
@@ -2495,8 +2450,8 @@ _mesa_generate_parameters_list_for_uniforms(struct gl_shader_program
 {
    add_uniform_to_shader add(shader_program, params, sh->Stage);
 
-   foreach_list(node, sh->ir) {
-      ir_variable *var = ((ir_instruction *) node)->as_variable();
+   foreach_in_list(ir_instruction, node, sh->ir) {
+      ir_variable *var = node->as_variable();
 
       if ((var == NULL) || (var->data.mode != ir_var_uniform)
 	  || var->is_in_uniform_block() || (strncmp(var->name, "gl_", 3) == 0))
@@ -2550,12 +2505,7 @@ _mesa_associate_uniform_storage(struct gl_context *ctx,
 	    columns = storage->type->matrix_columns;
 	    break;
 	 case GLSL_TYPE_BOOL:
-	    if (ctx->Const.NativeIntegers) {
-	       format = (ctx->Const.UniformBooleanTrue == 1)
-		  ? uniform_bool_int_0_1 : uniform_bool_int_0_not0;
-	    } else {
-	       format = uniform_bool_float;
-	    }
+	    format = uniform_native;
 	    columns = 1;
 	    break;
 	 case GLSL_TYPE_SAMPLER:
@@ -2621,9 +2571,7 @@ ir_to_mesa_visitor::copy_propagate(void)
    int *acp_level = rzalloc_array(mem_ctx, int, this->next_temp * 4);
    int level = 0;
 
-   foreach_list(node, &this->instructions) {
-      ir_to_mesa_instruction *inst = (ir_to_mesa_instruction *) node;
-
+   foreach_in_list(ir_to_mesa_instruction, inst, &this->instructions) {
       assert(inst->dst.file != PROGRAM_TEMPORARY
 	     || inst->dst.index < this->next_temp);
 
@@ -2803,7 +2751,7 @@ get_mesa_program(struct gl_context *ctx,
    GLenum target = _mesa_shader_stage_to_program(shader->Stage);
    const char *target_string = _mesa_shader_stage_to_string(shader->Stage);
    struct gl_shader_compiler_options *options =
-         &ctx->ShaderCompilerOptions[shader->Stage];
+         &ctx->Const.ShaderCompilerOptions[shader->Stage];
 
    validate_ir_tree(shader->ir);
 
@@ -2825,10 +2773,7 @@ get_mesa_program(struct gl_context *ctx,
 
    prog->NumTemporaries = v.next_temp;
 
-   int num_instructions = 0;
-   foreach_list(node, &v.instructions) {
-      num_instructions++;
-   }
+   unsigned num_instructions = v.instructions.length();
 
    mesa_instructions =
       (struct prog_instruction *)calloc(num_instructions,
@@ -2842,9 +2787,7 @@ get_mesa_program(struct gl_context *ctx,
     */
    mesa_inst = mesa_instructions;
    i = 0;
-   foreach_list(node, &v.instructions) {
-      const ir_to_mesa_instruction *inst = (ir_to_mesa_instruction *) node;
-
+   foreach_in_list(const ir_to_mesa_instruction, inst, &v.instructions) {
       mesa_inst->Opcode = inst->op;
       mesa_inst->CondUpdate = inst->cond_update;
       if (inst->saturate)
@@ -2993,13 +2936,14 @@ _mesa_ir_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
       bool progress;
       exec_list *ir = prog->_LinkedShaders[i]->ir;
       const struct gl_shader_compiler_options *options =
-            &ctx->ShaderCompilerOptions[prog->_LinkedShaders[i]->Stage];
+            &ctx->Const.ShaderCompilerOptions[prog->_LinkedShaders[i]->Stage];
 
       do {
 	 progress = false;
 
 	 /* Lowering */
 	 do_mat_op_to_vec(ir);
+	 GLenum target = _mesa_shader_stage_to_program(prog->_LinkedShaders[i]->Stage);
 	 lower_instructions(ir, (MOD_TO_FRACT | DIV_TO_MUL_RCP | EXP_TO_EXP2
 				 | LOG_TO_LOG2 | INT_DIV_TO_MUL_RCP
 				 | ((options->EmitNoPow) ? POW_TO_EXP2 : 0)));
@@ -3074,7 +3018,7 @@ _mesa_glsl_link_shader(struct gl_context *ctx, struct gl_shader_program *prog)
 {
    unsigned int i;
 
-   _mesa_clear_shader_program_data(ctx, prog);
+   _mesa_clear_shader_program_data(prog);
 
    prog->LinkStatus = GL_TRUE;
 

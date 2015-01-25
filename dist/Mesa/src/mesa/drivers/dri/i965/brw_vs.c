@@ -38,7 +38,7 @@
 #include "program/prog_print.h"
 #include "program/prog_parameter.h"
 
-#include "glsl/ralloc.h"
+#include "util/ralloc.h"
 
 static inline void assign_vue_slot(struct brw_vue_map *vue_map,
                                    int varying)
@@ -233,8 +233,10 @@ do_vs_prog(struct brw_context *brw,
     */
    param_count += c.key.base.nr_userclip_plane_consts * 4;
 
-   stage_prog_data->param = rzalloc_array(NULL, const float *, param_count);
-   stage_prog_data->pull_param = rzalloc_array(NULL, const float *, param_count);
+   stage_prog_data->param =
+      rzalloc_array(NULL, const gl_constant_value *, param_count);
+   stage_prog_data->pull_param =
+      rzalloc_array(NULL, const gl_constant_value *, param_count);
 
    /* Setting nr_params here NOT to the size of the param and pull_param
     * arrays, but to the number of uniform components vec4_visitor
@@ -302,11 +304,12 @@ do_vs_prog(struct brw_context *brw,
                  "Try reducing the number of live vec4 values to "
                  "improve performance.\n");
 
-      prog_data.base.total_scratch
+      prog_data.base.base.total_scratch
          = brw_get_scratch_size(c.base.last_scratch*REG_SIZE);
 
       brw_get_scratch_bo(brw, &brw->vs.base.scratch_bo,
-			 prog_data.base.total_scratch * brw->max_vs_threads);
+			 prog_data.base.base.total_scratch *
+                         brw->max_vs_threads);
    }
 
    brw_upload_cache(&brw->cache, BRW_VS_PROG,
@@ -495,7 +498,7 @@ static void brw_upload_vs_prog(struct brw_context *brw)
               sizeof(brw->vue_map_geom_out)) != 0) {
       brw->vue_map_vs = brw->vs.prog_data->base.vue_map;
       brw->state.dirty.brw |= BRW_NEW_VUE_MAP_VS;
-      if (brw->gen < 7) {
+      if (brw->gen < 6) {
          /* No geometry shader support, so the VS VUE map is the VUE map for
           * the output of the "geometry" portion of the pipeline.
           */

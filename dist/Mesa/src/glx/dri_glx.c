@@ -40,7 +40,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "glxclient.h"
 #include "xf86dri.h"
 #include "dri2.h"
-#include "sarea.h"
+#include "dri_sarea.h"
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/mman.h>
@@ -460,8 +460,10 @@ CallCreateNewScreen(Display *dpy, int scrn, struct dri_screen *psc,
    configs = driConvertConfigs(psc->core, psc->base.configs, driver_configs);
    visuals = driConvertConfigs(psc->core, psc->base.visuals, driver_configs);
 
-   if (!configs || !visuals)
+   if (!configs || !visuals) {
+       ErrorMessageF("No matching fbConfigs or visuals found\n");
        goto handle_error;
+   }
 
    glx_config_destroy_list(psc->base.configs);
    psc->base.configs = configs;

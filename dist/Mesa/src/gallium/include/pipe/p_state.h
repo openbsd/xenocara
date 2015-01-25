@@ -205,6 +205,7 @@ struct pipe_stream_output_info
       unsigned num_components:3;  /** 1 to 4 */
       unsigned output_buffer:3;   /**< 0 to PIPE_MAX_SO_BUFFERS */
       unsigned dst_offset:16;     /**< offset into the buffer in dwords */
+      unsigned stream:2;          /**< 0 to 3 */
    } output[PIPE_MAX_SO_OUTPUTS];
 };
 
@@ -360,6 +361,7 @@ struct pipe_surface
 struct pipe_sampler_view
 {
    struct pipe_reference reference;
+   enum pipe_texture_target target; /**< PIPE_TEXTURE_x */
    enum pipe_format format;      /**< typed PIPE_FORMAT_x */
    struct pipe_resource *texture; /**< texture into which this is a view  */
    struct pipe_context *context; /**< context this view belongs to */
@@ -569,6 +571,28 @@ struct pipe_draw_info
     * be set via set_vertex_buffers manually.
     */
    struct pipe_stream_output_target *count_from_stream_output;
+
+   /* Indirect parameters resource: If not NULL, most values are taken
+    * from this buffer instead, which is laid out as follows:
+    *
+    * if indexed is TRUE:
+    *  struct {
+    *     uint32_t count;
+    *     uint32_t instance_count;
+    *     uint32_t start;
+    *     int32_t index_bias;
+    *     uint32_t start_instance;
+    *  };
+    * otherwise:
+    *  struct {
+    *     uint32_t count;
+    *     uint32_t instance_count;
+    *     uint32_t start;
+    *     uint32_t start_instance;
+    *  };
+    */
+   struct pipe_resource *indirect;
+   unsigned indirect_offset; /**< must be 4 byte aligned */
 };
 
 
@@ -592,8 +616,8 @@ struct pipe_blit_info
    boolean scissor_enable;
    struct pipe_scissor_state scissor;
 
-   boolean render_condition_enable; /**< whether to leave current render
-                                    condition enabled */
+   boolean render_condition_enable; /**< whether the blit should honor the
+                                    current render condition */
 };
 
 

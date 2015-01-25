@@ -153,15 +153,10 @@ struct llvmpipe_context {
    struct pipe_query *render_cond_query;
    uint render_cond_mode;
    boolean render_cond_cond;
+
+   /** The LLVMContext to use for LLVM related work */
+   LLVMContextRef context;
 };
-
-
-/**
- * Fragment and setup variant count, used to trigger garbage collection.
- * This is global since all variants in all contexts will be free when
- * we do garbage collection.
- */
-extern unsigned llvmpipe_variant_count;
 
 
 struct pipe_context *
@@ -171,7 +166,7 @@ struct pipe_resource *
 llvmpipe_user_buffer_create(struct pipe_screen *screen,
                             void *ptr,
                             unsigned bytes,
-			    unsigned bind_flags);
+                            unsigned bind_flags);
 
 
 static INLINE struct llvmpipe_context *

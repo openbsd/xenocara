@@ -44,14 +44,13 @@
 #include "texcompress_s3tc.h"
 #include "texstore.h"
 #include "format_unpack.h"
+#include "util/format_srgb.h"
 
 
 #if defined(_WIN32) || defined(WIN32)
 #define DXTN_LIBNAME "dxtn.dll"
 #define RTLD_LAZY 0
 #define RTLD_GLOBAL 0
-#elif defined(__DJGPP__)
-#define DXTN_LIBNAME "dxtn.dxe"
 #else
 #define DXTN_LIBNAME "libtxc_dxtn.so"
 #endif
@@ -419,9 +418,9 @@ fetch_srgb_dxt1(const GLubyte *map,
    if (fetch_ext_rgb_dxt1) {
       GLubyte tex[4];
       fetch_ext_rgb_dxt1(rowStride, map, i, j, tex);
-      texel[RCOMP] = _mesa_nonlinear_to_linear(tex[RCOMP]);
-      texel[GCOMP] = _mesa_nonlinear_to_linear(tex[GCOMP]);
-      texel[BCOMP] = _mesa_nonlinear_to_linear(tex[BCOMP]);
+      texel[RCOMP] = util_format_srgb_8unorm_to_linear_float(tex[RCOMP]);
+      texel[GCOMP] = util_format_srgb_8unorm_to_linear_float(tex[GCOMP]);
+      texel[BCOMP] = util_format_srgb_8unorm_to_linear_float(tex[BCOMP]);
       texel[ACOMP] = UBYTE_TO_FLOAT(tex[ACOMP]);
    }
    else {
@@ -436,9 +435,9 @@ fetch_srgba_dxt1(const GLubyte *map,
    if (fetch_ext_rgba_dxt1) {
       GLubyte tex[4];
       fetch_ext_rgba_dxt1(rowStride, map, i, j, tex);
-      texel[RCOMP] = _mesa_nonlinear_to_linear(tex[RCOMP]);
-      texel[GCOMP] = _mesa_nonlinear_to_linear(tex[GCOMP]);
-      texel[BCOMP] = _mesa_nonlinear_to_linear(tex[BCOMP]);
+      texel[RCOMP] = util_format_srgb_8unorm_to_linear_float(tex[RCOMP]);
+      texel[GCOMP] = util_format_srgb_8unorm_to_linear_float(tex[GCOMP]);
+      texel[BCOMP] = util_format_srgb_8unorm_to_linear_float(tex[BCOMP]);
       texel[ACOMP] = UBYTE_TO_FLOAT(tex[ACOMP]);
    }
    else {
@@ -453,9 +452,9 @@ fetch_srgba_dxt3(const GLubyte *map,
    if (fetch_ext_rgba_dxt3) {
       GLubyte tex[4];
       fetch_ext_rgba_dxt3(rowStride, map, i, j, tex);
-      texel[RCOMP] = _mesa_nonlinear_to_linear(tex[RCOMP]);
-      texel[GCOMP] = _mesa_nonlinear_to_linear(tex[GCOMP]);
-      texel[BCOMP] = _mesa_nonlinear_to_linear(tex[BCOMP]);
+      texel[RCOMP] = util_format_srgb_8unorm_to_linear_float(tex[RCOMP]);
+      texel[GCOMP] = util_format_srgb_8unorm_to_linear_float(tex[GCOMP]);
+      texel[BCOMP] = util_format_srgb_8unorm_to_linear_float(tex[BCOMP]);
       texel[ACOMP] = UBYTE_TO_FLOAT(tex[ACOMP]);
    }
    else {
@@ -470,9 +469,9 @@ fetch_srgba_dxt5(const GLubyte *map,
    if (fetch_ext_rgba_dxt5) {
       GLubyte tex[4];
       fetch_ext_rgba_dxt5(rowStride, map, i, j, tex);
-      texel[RCOMP] = _mesa_nonlinear_to_linear(tex[RCOMP]);
-      texel[GCOMP] = _mesa_nonlinear_to_linear(tex[GCOMP]);
-      texel[BCOMP] = _mesa_nonlinear_to_linear(tex[BCOMP]);
+      texel[RCOMP] = util_format_srgb_8unorm_to_linear_float(tex[RCOMP]);
+      texel[GCOMP] = util_format_srgb_8unorm_to_linear_float(tex[GCOMP]);
+      texel[BCOMP] = util_format_srgb_8unorm_to_linear_float(tex[BCOMP]);
       texel[ACOMP] = UBYTE_TO_FLOAT(tex[ACOMP]);
    }
    else {

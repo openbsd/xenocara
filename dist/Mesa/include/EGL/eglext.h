@@ -33,7 +33,7 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.opengl.org/registry/
 **
-** Khronos $Revision: 1.5 $ on $Date: 2014/07/09 21:08:51 $
+** Khronos $Revision: 1.6 $ on $Date: 2015/01/25 14:41:14 $
 */
 
 #include <EGL/eglplatform.h>
@@ -646,6 +646,7 @@ EGLAPI EGLuint64NV EGLAPIENTRY eglGetSystemTimeNV (void);
 #endif /* EGL_NV_system_time */
 
 #include <EGL/eglmesaext.h>
+#include <EGL/eglextchromium.h>
 
 #ifdef __cplusplus
 }

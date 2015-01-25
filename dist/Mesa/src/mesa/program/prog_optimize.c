@@ -114,7 +114,6 @@ get_src_arg_mask(const struct prog_instruction *inst,
    read_mask = 0x0;
    for (comp = 0; comp < 4; ++comp) {
       const GLuint coord = GET_SWZ(inst->SrcReg[arg].Swizzle, comp);
-      ASSERT(coord < 4);
       if (channel_mask & (1 << comp) && coord <= SWIZZLE_W)
          read_mask |= 1 << coord;
    }
@@ -260,7 +259,7 @@ _mesa_remove_dead_code_global(struct gl_program *prog)
    }
 
    removeInst =
-      calloc(1, prog->NumInstructions * sizeof(GLboolean));
+      calloc(prog->NumInstructions, sizeof(GLboolean));
 
    /* Determine which temps are read and written */
    for (i = 0; i < prog->NumInstructions; i++) {
@@ -284,11 +283,11 @@ _mesa_remove_dead_code_global(struct gl_program *prog)
 
 	    for (comp = 0; comp < 4; comp++) {
 	       const GLuint swz = GET_SWZ(inst->SrcReg[j].Swizzle, comp);
-	       ASSERT(swz < 4);
-               if ((read_mask & (1 << swz)) == 0)
-		  continue;
-               if (swz <= SWIZZLE_W)
+               if (swz <= SWIZZLE_W) {
+                  if ((read_mask & (1 << swz)) == 0)
+                     continue;
                   tempRead[index][swz] = GL_TRUE;
+               }
 	    }
          }
       }
@@ -602,7 +601,7 @@ _mesa_remove_dead_code_local(struct gl_program *prog)
    GLuint i, arg, rem = 0;
 
    removeInst =
-      calloc(1, prog->NumInstructions * sizeof(GLboolean));
+      calloc(prog->NumInstructions, sizeof(GLboolean));
 
    for (i = 0; i < prog->NumInstructions; i++) {
       const struct prog_instruction *inst = prog->Instructions + i;
@@ -743,7 +742,7 @@ _mesa_remove_extra_moves(struct gl_program *prog)
    }
 
    removeInst =
-      calloc(1, prog->NumInstructions * sizeof(GLboolean));
+      calloc(prog->NumInstructions, sizeof(GLboolean));
 
    /*
     * Look for sequences such as this:

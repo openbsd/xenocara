@@ -841,6 +841,9 @@
 #define   S_02880C_KILL_ENABLE(x)                      (((x) & 0x1) << 6)
 #define   G_02880C_KILL_ENABLE(x)                      (((x) >> 6) & 0x1)
 #define   C_02880C_KILL_ENABLE                         0xFFFFFFBF
+#define   S_02880C_MASK_EXPORT_ENABLE(x)               (((x) & 0x1) << 8)
+#define   G_02880C_MASK_EXPORT_ENABLE(x)               (((x) >> 8) & 0x1)
+#define   C_02880C_MASK_EXPORT_ENABLE                  0xFFFFFEFF
 #define   S_02880C_DUAL_EXPORT_ENABLE(x)               (((x) & 0x1) << 9)
 #define   G_02880C_DUAL_EXPORT_ENABLE(x)               (((x) >> 9) & 0x1)
 #define   C_02880C_DUAL_EXPORT_ENABLE                  0xFFFFFDFF
@@ -889,6 +892,7 @@
 #define   S_028A40_CUT_MODE(x)                         (((x) & 0x3) << 3)
 #define   G_028A40_CUT_MODE(x)                         (((x) >> 3) & 0x3)
 #define   C_028A40_CUT_MODE                            0xFFFFFFE7
+#define R_028A50_VGT_ENHANCE                         0x028A50
 #define R_028A6C_VGT_GS_OUT_PRIM_TYPE                0x028A6C
 #define   S_028A6C_OUTPRIM_TYPE(x)                     (((x) & 0x3F) << 0)
 #define     V_028A6C_OUTPRIM_TYPE_POINTLIST            0
@@ -2321,6 +2325,12 @@
 #define   S_028818_VPORT_Z_OFFSET_ENA(x)               (((x) & 0x1) << 5)
 #define   G_028818_VPORT_Z_OFFSET_ENA(x)               (((x) >> 5 & 0x1)
 #define   C_028818_VPORT_Z_OFFSET_ENA                  0xFFFFFFDF
+#define   S_028818_VTX_XY_FMT(x)                       (((x) & 0x1) << 8)
+#define   G_028818_VTX_XY_FMT(x)                       (((x) >> 8) & 0x1)
+#define   C_028818_VTX_XY_FMT                          0xFFFFFEFF
+#define   S_028818_VTX_Z_FMT(x)                        (((x) & 0x1) << 9)
+#define   G_028818_VTX_Z_FMT(x)                        (((x) >> 9) & 0x1)
+#define   C_028818_VTX_Z_FMT                           0xFFFFFDFF
 #define   S_028818_VTX_W0_FMT(x)                       (((x) & 0x1) << 10)
 #define   G_028818_VTX_W0_FMT(x)                       (((x) >> 10) & 0x1)
 #define   C_028818_VTX_W0_FMT                          0xFFFFFBFF
@@ -3740,6 +3750,17 @@
 #define SQ_TEX_INST_SAMPLE_C_G_L	0x1D
 #define SQ_TEX_INST_SAMPLE_C_G_LB	0x1E
 #define SQ_TEX_INST_SAMPLE_C_G_LZ	0x1F
+
+#define CM_R_028AA8_IA_MULTI_VGT_PARAM                0x028AA8
+#define   S_028AA8_PRIMGROUP_SIZE(x)                   (((x) & 0xFFFF) << 0)
+#define   G_028AA8_PRIMGROUP_SIZE(x)                   (((x) >> 0) & 0xFFFF)
+#define   C_028AA8_PRIMGROUP_SIZE                      0xFFFF0000
+#define   S_028AA8_PARTIAL_VS_WAVE_ON(x)               (((x) & 0x1) << 16)
+#define   G_028AA8_PARTIAL_VS_WAVE_ON(x)               (((x) >> 16) & 0x1)
+#define   C_028AA8_PARTIAL_VS_WAVE_ON                  0xFFFEFFFF
+#define   S_028AA8_SWITCH_ON_EOP(x)                    (((x) & 0x1) << 17)
+#define   G_028AA8_SWITCH_ON_EOP(x)                    (((x) >> 17) & 0x1)
+#define   C_028AA8_SWITCH_ON_EOP                       0xFFFDFFFF
 
 /* async DMA packets */
 #define DMA_PACKET(cmd, t, s, n)	((((cmd) & 0xF) << 28) |	\

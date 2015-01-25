@@ -79,9 +79,30 @@ enum glsl_interface_packing {
    GLSL_INTERFACE_PACKING_PACKED
 };
 
+enum glsl_matrix_layout {
+   /**
+    * The layout of the matrix is inherited from the object containing the
+    * matrix (the top level structure or the uniform block).
+    */
+   GLSL_MATRIX_LAYOUT_INHERITED,
+
+   /**
+    * Explicit column-major layout
+    *
+    * If a uniform block doesn't have an explicit layout set, it will default
+    * to this layout.
+    */
+   GLSL_MATRIX_LAYOUT_COLUMN_MAJOR,
+
+   /**
+    * Row-major layout
+    */
+   GLSL_MATRIX_LAYOUT_ROW_MAJOR
+};
+
 #ifdef __cplusplus
 #include "GL/gl.h"
-#include "ralloc.h"
+#include "util/ralloc.h"
 
 struct glsl_type {
    GLenum gl_type;
@@ -101,15 +122,17 @@ struct glsl_type {
     * easier to just ralloc_free 'mem_ctx' (or any of its ancestors). */
    static void* operator new(size_t size)
    {
-      if (glsl_type::mem_ctx == NULL) {
-	 glsl_type::mem_ctx = ralloc_context(NULL);
-	 assert(glsl_type::mem_ctx != NULL);
-      }
+      mtx_lock(&glsl_type::mutex);
+
+      /* mem_ctx should have been created by the static members */
+      assert(glsl_type::mem_ctx != NULL);
 
       void *type;
 
       type = ralloc_size(glsl_type::mem_ctx, size);
       assert(type != NULL);
+
+      mtx_unlock(&glsl_type::mutex);
 
       return type;
    }
@@ -118,7 +141,9 @@ struct glsl_type {
     * ralloc_free in that case. */
    static void operator delete(void *type)
    {
+      mtx_lock(&glsl_type::mutex);
       ralloc_free(type);
+      mtx_unlock(&glsl_type::mutex);
    }
 
    /**
@@ -128,16 +153,9 @@ struct glsl_type {
     * these will be 0.
     */
    /*@{*/
-   unsigned vector_elements:3; /**< 1, 2, 3, or 4 vector elements. */
-   unsigned matrix_columns:3;  /**< 1, 2, 3, or 4 matrix columns. */
+   uint8_t vector_elements;    /**< 1, 2, 3, or 4 vector elements. */
+   uint8_t matrix_columns;     /**< 1, 2, 3, or 4 matrix columns. */
    /*@}*/
-
-   /**
-    * Name of the data type
-    *
-    * Will never be \c NULL.
-    */
-   const char *name;
 
    /**
     * For \c GLSL_TYPE_ARRAY, this is the length of the array.  For
@@ -146,6 +164,13 @@ struct glsl_type {
     * \c fields.structure (below).
     */
    unsigned length;
+
+   /**
+    * Name of the data type
+    *
+    * Will never be \c NULL.
+    */
+   const char *name;
 
    /**
     * Subtype of composite data types.
@@ -256,6 +281,15 @@ struct glsl_type {
    unsigned component_slots() const;
 
    /**
+    * Calculate the number of unique values from glGetUniformLocation for the
+    * elements of the type.
+    *
+    * This is used to allocate slots in the UniformRemapTable, the amount of
+    * locations may not match with actual used storage space by the driver.
+    */
+   unsigned uniform_locations() const;
+
+   /**
     * Calculate the number of attribute slots required to hold this type
     *
     * This implements the language rules of GLSL 1.50 for counting the number
@@ -314,7 +348,8 @@ struct glsl_type {
     *     integers.
     * \endverbatim
     */
-   bool can_implicitly_convert_to(const glsl_type *desired) const;
+   bool can_implicitly_convert_to(const glsl_type *desired,
+                                  _mesa_glsl_parse_state *state) const;
 
    /**
     * Query whether or not a type is a scalar (non-vector and non-matrix).
@@ -458,6 +493,26 @@ struct glsl_type {
    }
 
    /**
+    * Query if a type is unnamed/anonymous (named by the parser)
+    */
+   bool is_anonymous() const
+   {
+      return !strncmp(name, "#anon", 5);
+   }
+
+   /**
+    * Get the type stripped of any arrays
+    *
+    * \return
+    * Pointer to the type of elements of the first non-array type for array
+    * types, or pointer to itself for non-array types.
+    */
+   const glsl_type *without_array() const
+   {
+      return this->is_array() ? this->fields.array : this;
+   }
+
+   /**
     * Return the amount of atomic counter storage required for a type.
     */
    unsigned atomic_size() const
@@ -567,6 +622,9 @@ struct glsl_type {
    bool record_compare(const glsl_type *b) const;
 
 private:
+
+   static mtx_t mutex;
+
    /**
     * ralloc context for all glsl_type allocations
     *
@@ -636,7 +694,6 @@ private:
 struct glsl_struct_field {
    const struct glsl_type *type;
    const char *name;
-   bool row_major;
 
    /**
     * For interface blocks, gl_varying_slot corresponding to the input/output
@@ -664,6 +721,17 @@ struct glsl_struct_field {
     * in ir_variable::sample). 0 otherwise.
     */
    unsigned sample:1;
+
+   /**
+    * Layout of the matrix.  Uses glsl_matrix_layout values.
+    */
+   unsigned matrix_layout:2;
+
+   /**
+    * For interface blocks, it has a value if this variable uses multiple vertex
+    * streams (as in ir_variable::stream). -1 otherwise.
+    */
+   int stream;
 };
 
 static inline unsigned int

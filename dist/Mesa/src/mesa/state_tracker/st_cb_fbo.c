@@ -450,6 +450,17 @@ st_update_renderbuffer_surface(struct st_context *st,
       last_layer = strb->rtt_face + strb->rtt_slice;
    }
 
+   /* Adjust for texture views */
+   if (strb->is_rtt && resource->array_size > 1 &&
+       strb->Base.TexImage->TexObject->Immutable) {
+      struct gl_texture_object *tex = strb->Base.TexImage->TexObject;
+      first_layer += tex->MinLayer;
+      if (!strb->rtt_layered)
+         last_layer += tex->MinLayer;
+      else
+         last_layer = MIN2(first_layer + tex->NumLayers - 1, last_layer);
+   }
+
    if (!strb->surface ||
        strb->surface->texture->nr_samples != strb->Base.NumSamples ||
        strb->surface->format != format ||
@@ -588,7 +599,7 @@ st_validate_attachment(struct gl_context *ctx,
    if (!ctx->Extensions.EXT_framebuffer_sRGB &&
        _mesa_get_format_color_encoding(texFormat) == GL_SRGB) {
       const mesa_format linearFormat = _mesa_get_srgb_format_linear(texFormat);
-      format = st_mesa_format_to_pipe_format(linearFormat);
+      format = st_mesa_format_to_pipe_format(st_context(ctx), linearFormat);
    }
 
    valid = screen->is_format_supported(screen, format,

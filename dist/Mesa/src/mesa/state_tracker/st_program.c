@@ -262,6 +262,10 @@ st_prepare_vertex_program(struct gl_context *ctx,
             stvp->output_semantic_name[slot] = TGSI_SEMANTIC_LAYER;
             stvp->output_semantic_index[slot] = 0;
             break;
+         case VARYING_SLOT_VIEWPORT:
+            stvp->output_semantic_name[slot] = TGSI_SEMANTIC_VIEWPORT_INDEX;
+            stvp->output_semantic_index[slot] = 0;
+            break;
 
          case VARYING_SLOT_TEX0:
          case VARYING_SLOT_TEX1:
@@ -271,17 +275,18 @@ st_prepare_vertex_program(struct gl_context *ctx,
          case VARYING_SLOT_TEX5:
          case VARYING_SLOT_TEX6:
          case VARYING_SLOT_TEX7:
-            stvp->output_semantic_name[slot] = st->needs_texcoord_semantic ?
-               TGSI_SEMANTIC_TEXCOORD : TGSI_SEMANTIC_GENERIC;
-            stvp->output_semantic_index[slot] = attr - VARYING_SLOT_TEX0;
-            break;
-
+            if (st->needs_texcoord_semantic) {
+               stvp->output_semantic_name[slot] = TGSI_SEMANTIC_TEXCOORD;
+               stvp->output_semantic_index[slot] = attr - VARYING_SLOT_TEX0;
+               break;
+            }
+            /* fall through */
          case VARYING_SLOT_VAR0:
          default:
             assert(attr < VARYING_SLOT_MAX);
             stvp->output_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
-            stvp->output_semantic_index[slot] = st->needs_texcoord_semantic ?
-               (attr - VARYING_SLOT_VAR0) : (attr - VARYING_SLOT_TEX0);
+            stvp->output_semantic_index[slot] =
+               st_get_generic_varying_index(st, attr);
             break;
          }
       }
@@ -347,7 +352,7 @@ st_translate_vertex_program(struct st_context *st,
                                    NULL, /* input semantic name */
                                    NULL, /* input semantic index */
                                    NULL, /* interp mode */
-                                   NULL, /* is centroid */
+                                   NULL, /* interp location */
                                    /* outputs */
                                    num_outputs,
                                    stvp->result_to_output,
@@ -389,13 +394,12 @@ st_translate_vertex_program(struct st_context *st,
                                       &vpv->tgsi.stream_output);
    }
 
-   vpv->driver_shader = pipe->create_vs_state(pipe, &vpv->tgsi);
-
    if (ST_DEBUG & DEBUG_TGSI) {
-      tgsi_dump( vpv->tgsi.tokens, 0 );
+      tgsi_dump(vpv->tgsi.tokens, 0);
       debug_printf("\n");
    }
 
+   vpv->driver_shader = pipe->create_vs_state(pipe, &vpv->tgsi);
    return vpv;
 
 fail:
@@ -477,6 +481,7 @@ st_translate_fragment_program(struct st_context *st,
    GLuint outputMapping[FRAG_RESULT_MAX];
    GLuint inputMapping[VARYING_SLOT_MAX];
    GLuint interpMode[PIPE_MAX_SHADER_INPUTS];  /* XXX size? */
+   GLuint interpLocation[PIPE_MAX_SHADER_INPUTS];
    GLuint attr;
    GLbitfield64 inputsRead;
    struct ureg_program *ureg;
@@ -485,7 +490,6 @@ st_translate_fragment_program(struct st_context *st,
 
    ubyte input_semantic_name[PIPE_MAX_SHADER_INPUTS];
    ubyte input_semantic_index[PIPE_MAX_SHADER_INPUTS];
-   GLboolean is_centroid[PIPE_MAX_SHADER_INPUTS];
    uint fs_num_inputs = 0;
 
    ubyte fs_output_semantic_name[PIPE_MAX_SHADER_OUTPUTS];
@@ -537,7 +541,15 @@ st_translate_fragment_program(struct st_context *st,
          const GLuint slot = fs_num_inputs++;
 
          inputMapping[attr] = slot;
-         is_centroid[slot] = (stfp->Base.IsCentroid & BITFIELD64_BIT(attr)) != 0;
+         if (stfp->Base.IsCentroid & BITFIELD64_BIT(attr))
+            interpLocation[slot] = TGSI_INTERPOLATE_LOC_CENTROID;
+         else if (stfp->Base.IsSample & BITFIELD64_BIT(attr))
+            interpLocation[slot] = TGSI_INTERPOLATE_LOC_SAMPLE;
+         else
+            interpLocation[slot] = TGSI_INTERPOLATE_LOC_CENTER;
+
+         if (key->persample_shading)
+            interpLocation[slot] = TGSI_INTERPOLATE_LOC_SAMPLE;
 
          switch (attr) {
          case VARYING_SLOT_POS:
@@ -569,6 +581,11 @@ st_translate_fragment_program(struct st_context *st,
             break;
          case VARYING_SLOT_PRIMITIVE_ID:
             input_semantic_name[slot] = TGSI_SEMANTIC_PRIMID;
+            input_semantic_index[slot] = 0;
+            interpMode[slot] = TGSI_INTERPOLATE_CONSTANT;
+            break;
+         case VARYING_SLOT_LAYER:
+            input_semantic_name[slot] = TGSI_SEMANTIC_LAYER;
             input_semantic_index[slot] = 0;
             interpMode[slot] = TGSI_INTERPOLATE_CONSTANT;
             break;
@@ -639,9 +656,8 @@ st_translate_fragment_program(struct st_context *st,
              * the user varyings on VAR0.  Otherwise, we use TEX0 as base index.
              */
             assert(attr >= VARYING_SLOT_TEX0);
-            input_semantic_index[slot] = st->needs_texcoord_semantic ?
-               (attr - VARYING_SLOT_VAR0) : (attr - VARYING_SLOT_TEX0);
             input_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
+            input_semantic_index[slot] = st_get_generic_varying_index(st, attr);
             if (attr == VARYING_SLOT_PNTC)
                interpMode[slot] = TGSI_INTERPOLATE_LINEAR;
             else
@@ -759,7 +775,7 @@ st_translate_fragment_program(struct st_context *st,
                            input_semantic_name,
                            input_semantic_index,
                            interpMode,
-                           is_centroid,
+                           interpLocation,
                            /* outputs */
                            fs_num_outputs,
                            outputMapping,
@@ -787,14 +803,14 @@ st_translate_fragment_program(struct st_context *st,
    variant->tgsi.tokens = ureg_get_tokens( ureg, NULL );
    ureg_destroy( ureg );
 
+   if (ST_DEBUG & DEBUG_TGSI) {
+      tgsi_dump(variant->tgsi.tokens, 0/*TGSI_DUMP_VERBOSE*/);
+      debug_printf("\n");
+   }
+
    /* fill in variant */
    variant->driver_shader = pipe->create_fs_state(pipe, &variant->tgsi);
    variant->key = *key;
-
-   if (ST_DEBUG & DEBUG_TGSI) {
-      tgsi_dump( variant->tgsi.tokens, 0/*TGSI_DUMP_VERBOSE*/ );
-      debug_printf("\n");
-   }
 
    if (deleteFP) {
       /* Free the temporary program made above */
@@ -958,16 +974,18 @@ st_translate_geometry_program(struct st_context *st,
          case VARYING_SLOT_TEX5:
          case VARYING_SLOT_TEX6:
          case VARYING_SLOT_TEX7:
-            stgp->input_semantic_name[slot] = st->needs_texcoord_semantic ?
-               TGSI_SEMANTIC_TEXCOORD : TGSI_SEMANTIC_GENERIC;
-            stgp->input_semantic_index[slot] = (attr - VARYING_SLOT_TEX0);
-            break;
+            if (st->needs_texcoord_semantic) {
+               stgp->input_semantic_name[slot] = TGSI_SEMANTIC_TEXCOORD;
+               stgp->input_semantic_index[slot] = attr - VARYING_SLOT_TEX0;
+               break;
+            }
+            /* fall through */
          case VARYING_SLOT_VAR0:
          default:
             assert(attr >= VARYING_SLOT_VAR0 && attr < VARYING_SLOT_MAX);
             stgp->input_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
-            stgp->input_semantic_index[slot] = st->needs_texcoord_semantic ?
-               (attr - VARYING_SLOT_VAR0) : (attr - VARYING_SLOT_TEX0);
+            stgp->input_semantic_index[slot] =
+               st_get_generic_varying_index(st, attr);
          break;
          }
       }
@@ -1053,17 +1071,19 @@ st_translate_geometry_program(struct st_context *st,
          case VARYING_SLOT_TEX5:
          case VARYING_SLOT_TEX6:
          case VARYING_SLOT_TEX7:
-            gs_output_semantic_name[slot] = st->needs_texcoord_semantic ?
-               TGSI_SEMANTIC_TEXCOORD : TGSI_SEMANTIC_GENERIC;
-            gs_output_semantic_index[slot] = (attr - VARYING_SLOT_TEX0);
-            break;
+            if (st->needs_texcoord_semantic) {
+               gs_output_semantic_name[slot] = TGSI_SEMANTIC_TEXCOORD;
+               gs_output_semantic_index[slot] = attr - VARYING_SLOT_TEX0;
+               break;
+            }
+            /* fall through */
          case VARYING_SLOT_VAR0:
          default:
             assert(slot < Elements(gs_output_semantic_name));
             assert(attr >= VARYING_SLOT_VAR0);
             gs_output_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
-            gs_output_semantic_index[slot] = st->needs_texcoord_semantic ?
-               (attr - VARYING_SLOT_VAR0) : (attr - VARYING_SLOT_TEX0);
+            gs_output_semantic_index[slot] =
+               st_get_generic_varying_index(st, attr);
          break;
          }
       }
@@ -1156,10 +1176,6 @@ st_translate_geometry_program(struct st_context *st,
                                       &stgp->tgsi.stream_output);
    }
 
-   /* fill in new variant */
-   gpv->driver_shader = pipe->create_gs_state(pipe, &stgp->tgsi);
-   gpv->key = *key;
-
    if ((ST_DEBUG & DEBUG_TGSI) && (ST_DEBUG & DEBUG_MESA)) {
       _mesa_print_program(&stgp->Base.Base);
       debug_printf("\n");
@@ -1170,6 +1186,9 @@ st_translate_geometry_program(struct st_context *st,
       debug_printf("\n");
    }
 
+   /* fill in new variant */
+   gpv->driver_shader = pipe->create_gs_state(pipe, &stgp->tgsi);
+   gpv->key = *key;
    return gpv;
 }
 

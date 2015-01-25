@@ -58,6 +58,9 @@ struct st_fp_variant_key
 
    /** for ARB_color_buffer_float */
    GLuint clamp_color:1;
+
+   /** for ARB_sample_shading */
+   GLuint persample_shading:1;
 };
 
 
@@ -265,6 +268,31 @@ st_reference_fragprog(struct st_context *st,
    _mesa_reference_program(st->ctx,
                            (struct gl_program **) ptr,
                            (struct gl_program *) prog);
+}
+
+/**
+ * This defines mapping from Mesa VARYING_SLOTs to TGSI GENERIC slots.
+ */
+static INLINE unsigned
+st_get_generic_varying_index(struct st_context *st, GLuint attr)
+{
+   if (attr >= VARYING_SLOT_VAR0) {
+      if (st->needs_texcoord_semantic)
+         return attr - VARYING_SLOT_VAR0;
+      else
+         return 9 + (attr - VARYING_SLOT_VAR0);
+   }
+   if (attr == VARYING_SLOT_PNTC) {
+      assert(!st->needs_texcoord_semantic);
+      return 8;
+   }
+   if (attr >= VARYING_SLOT_TEX0 && attr <= VARYING_SLOT_TEX7) {
+      assert(!st->needs_texcoord_semantic);
+      return attr - VARYING_SLOT_TEX0;
+   }
+
+   assert(0);
+   return 0;
 }
 
 
