@@ -1,3 +1,10 @@
+Geode 2.11.16 (2014-07-17)
+==========================
+No user-visible change:
+
+ * This release restores compatibility with xserver-1.15 and newer
+   by adding a missing xf86Modes.h include to src/geode_dcon.c
+
 Geode 2.11.15 (2013-10-09)
 ==========================
 No user-visible change:

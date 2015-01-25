@@ -78,9 +78,8 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/build-aux/ltmain.sh \
 	$(top_srcdir)/build-aux/missing $(top_srcdir)/configure \
 	COPYING ChangeLog INSTALL NEWS TODO build-aux/compile \
-	build-aux/config.guess build-aux/config.sub \
-	build-aux/install-sh build-aux/ltmain.sh build-aux/missing \
-	config.guess config.sub depcomp install-sh ltmain.sh missing
+	build-aux/config.guess build-aux/config.sub build-aux/depcomp \
+	build-aux/install-sh build-aux/ltmain.sh build-aux/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \

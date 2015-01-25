@@ -1,3 +1,31 @@
+commit 6ec1e2df7aeb78332fee0dd90900906e58aa790b
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Thu Jul 17 03:28:26 2014 +0300
+
+    Geode 2.11.16
+    
+    This release restores compatibility with xserver-1.15 and newer
+    by adding a missing xf86Modes.h include to src/geode_dcon.c
+    
+    VALIDATION PLATFORM
+     * Debian (X server 1.15.99.904) on FIC ION603A (Geode LX800).
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit 70b131d09b7d21df1d1ffcf6a4e50d3086924228
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sat Feb 8 14:58:26 2014 +0200
+
+    No need to conditionalize the xf86Modes.h include.
+
+commit 9707a7a5eac25536a5150fc12d9ace52420b4d36
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sat Feb 8 13:27:11 2014 +0200
+
+    Added conditional include to fix FTBFS on xserver 1.15 and up.
+    
+    Thanks to Maarten Lankhorst for the fix.
+
 commit c2d956a1e9bba7fa7877544f8e036ae78faa441f
 Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
 Date:   Wed Oct 9 14:48:45 2013 +0300
