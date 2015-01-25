@@ -464,6 +464,11 @@ wsconsReadInput(InputInfoPtr pInfo)
 	    ++event;
 	    continue;
 #endif
+#ifdef WSCONS_EVENT_SYNC
+	case WSCONS_EVENT_SYNC:
+	    ++event;
+	    continue;
+#endif
         default:
             LogMessageVerbSigSafe(X_WARNING, -1,
                                   "%s: bad wsmouse event type=%d\n", pInfo->name,
