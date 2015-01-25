@@ -47,7 +47,7 @@ extern const char *ProgramName;
 
 extern int auth_initialize ( char *authfilename );
 extern int auth_finalize ( void );
-extern int process_command ( const char *inputfilename, int lineno, int argc, char **argv );
+extern int process_command ( const char *inputfilename, int lineno, int argc, const char **argv );
 extern int print_help ( FILE *fp, const char *cmd );
 
 extern int verbose;

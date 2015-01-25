@@ -51,6 +51,8 @@ on the \fIiceauth\fP command line, or in scripts.
 .PP
 \fB\-u\fP           Print basic usage instructions
 .PP
+\fB\-V\fP           Print version and exit
+.PP
 .SH USAGE
 .PP
 When \fIiceauth\fP is run it will allow the following set of commands

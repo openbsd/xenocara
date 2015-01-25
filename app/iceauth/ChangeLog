@@ -1,3 +1,124 @@
+commit fba114e03845a4cfab966f0545e809fdba9e9365
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 16 22:12:11 2015 -0800
+
+    iceauth 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 04c0fe624bf0140e0f938942e48a01ce5c01b7be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:38:45 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6e38d6b6598f3beb36a5526f482a6356e85c4fd5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:38:45 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b0c12dd905053b38d81d44c222dbef999e992193
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 23:38:40 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2222cab2a3cc2615e7a3f2ec8665fdfcabc0436c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 16:15:19 2014 -0700
+
+    More constification cleanup
+    
+    Started by fixing gcc warning:
+    iceauth.c:47:1: warning: initialization discards ‘const’ qualifier from
+     pointer target type [enabled by default]
+     static char *defcmds[] = { "source", "-", NULL };  /* default command */
+     ^
+    
+    and chasing down the rabbit hole of the functions the command line
+    arguments can be passed through, until we came out the other side
+    const clean.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2e692217544b8712d7bb41776cfd7f1bcca1070b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 8 12:54:10 2013 -0800
+
+    Free old argv array if realloc fails to enlarge it
+    
+    Found by cppcheck:
+    [app/iceauth/process.c:302]: (error) Common realloc mistake:
+     'argv' nulled but not freed upon failure
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f6316d16b2239220dd9f043bcc628a503f89ab5c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 5 23:48:50 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Special case -u, since it's documented as printing the usage message
+    (sort of like an ancient --help), so shouldn't be called unrecognized.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit acee3b71b38ba4bcdd0b46557546e22dcdc320cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 5 23:34:20 2013 -0800
+
+    Add -V flag to print version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ad85d2eb4e44f21e8e38aa3bdec4acb139989218
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 5 23:26:24 2013 -0800
+
+    Fix "noexistent" typo in error message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e371fa337f256306fb93eaca7fbbe8ee5283dcfa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 5 23:20:34 2013 -0800
+
+    Actually print command list in usage message
+    
+    The xauth routine this was based on took three arguments:
+    a file pointer, a command name, and a prefix.
+    
+    If a command name is given, prints help on that command,
+    else if it's null, prints help on all commands.
+    
+    The iceauth version has only two arguments: file pointer & command name.
+    It was being called with file pointer & prefix, and since the prefix
+    matched no command names, no help was printed.
+    
+    Since the way iceauth's help list is structured doesn't make it easy
+    to add a prefix to every line, skip indentation for now and just pass
+    NULL for the command argument.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit c07d443d43e53cfe21b53a9a0eafcd6189432867
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 23 23:15:01 2013 -0700
