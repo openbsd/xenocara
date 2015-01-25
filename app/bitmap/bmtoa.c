@@ -130,10 +130,16 @@ main (int argc, char *argv[])
 		filename = NULL;
 		continue;
 	      case 'c':
-		if (++i >= argc) usage ();
+		if (++i >= argc) {
+		    fprintf(stderr, "%s: -chars requires an argument\n",
+			    ProgramName);
+		    usage ();
+		}
 		chars = argv[i];
 		continue;
 	      default:
+		fprintf(stderr, "%s: unrecognized option '%s'\n",
+			ProgramName, argv[i]);
 		usage ();
 	    }
 	} else {

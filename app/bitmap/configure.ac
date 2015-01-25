@@ -23,14 +23,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([bitmap], [1.0.7],
+AC_INIT([bitmap], [1.0.8],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [bitmap])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -56,7 +55,7 @@ AC_SUBST([MATH_LIBS])
 
 # Obtain compiler/linker options from dependencies
 PKG_CHECK_MODULES(BMTOA, [x11 xmu xproto >= 7.0.17])
-PKG_CHECK_MODULES(ATOBM, [xproto >= 7.0.17])
+PKG_CHECK_MODULES(ATOBM, [xproto >= 7.0.25])
 PKG_CHECK_MODULES(BITMAP, xbitmaps xaw7 xmu)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
@@ -67,5 +66,6 @@ AC_ARG_WITH(appdefaultdir,
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
            man/Makefile])
+AC_OUTPUT

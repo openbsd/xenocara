@@ -42,9 +42,11 @@ static char *ProgramName;
 static void doit(FILE *fp, const char *filename, const char *chars,
 		 int xhot, int yhot, const char *name);
 
-static void _X_NORETURN
-usage (void)
+static void _X_NORETURN _X_COLD
+usage (const char *msg)
 {
+    if (msg)
+	fprintf(stderr, "%s: %s\n", ProgramName, msg);
     fprintf (stderr, "usage:  %s [-options ...] [filename]\n\n%s\n",
 	     ProgramName,
              "where options include:\n"
@@ -55,6 +57,14 @@ usage (void)
     exit (1);
 }
 
+static void _X_NORETURN _X_COLD
+missing_arg (const char *option)
+{
+    char msg[32];
+
+    snprintf(msg, sizeof(msg), "%s requires an argument", option);
+    usage(msg);
+}
 
 static char *
 cify_name (char *name)
@@ -106,23 +116,25 @@ main (int argc, char *argv[])
 		filename = NULL;
 		continue;
 	      case 'c':
-		if (++i >= argc) usage ();
+		if (++i >= argc) missing_arg("-chars");
 		chars = argv[i];
 		continue;
 	      case 'n':
-		if (++i >= argc) usage ();
+		if (++i >= argc) missing_arg("-name");
 		name = argv[i];
 		continue;
 	      case 'x':
-		if (++i >= argc) usage ();
+		if (++i >= argc) missing_arg("-xhot");
 		xhot = atoi (argv[i]);
 		continue;
 	      case 'y':
-		if (++i >= argc) usage ();
+		if (++i >= argc) missing_arg("-yhot");
 		yhot = atoi (argv[i]);
 		continue;
 	      default:
-		usage ();
+		fprintf(stderr, "%s: unrecognized option '%s'\n",
+			ProgramName, argv[i]);
+		usage (NULL);
 	    }
 	} else {
 	    filename = arg;
@@ -155,6 +167,31 @@ main (int argc, char *argv[])
     exit (0);
 }
 
+struct _scan_list {
+    int allocated;
+    int used;
+    unsigned char *scanlines;
+    struct _scan_list *next;
+};
+
+#define NTOALLOC 16
+static inline struct _scan_list *
+_new_scan_list(int bytes_per_scanline) {
+    struct _scan_list *slist = (struct _scan_list *) calloc (1, sizeof(*slist));
+    if (!slist) {
+	return NULL;
+    }
+    slist->allocated = NTOALLOC * bytes_per_scanline;
+    slist->scanlines = (unsigned char *) calloc(slist->allocated, 1);
+    if (!slist->scanlines) {
+        free(slist);
+        return NULL;
+    }
+    slist->used = 0;
+    slist->next = NULL;
+
+    return slist;
+}
 
 static void
 doit (FILE *fp,
@@ -173,33 +210,10 @@ doit (FILE *fp,
 			(isascii(chars[1]) && isspace(chars[1]))) ? 0 : 1);
     int lineno = 0;
     int bytes_per_scanline = 0;
-    struct _scan_list {
-	int allocated;
-	int used;
-	unsigned char *scanlines;
-	struct _scan_list *next;
-    } *head = NULL, *slist = NULL;
+    struct _scan_list *head = NULL, *slist = NULL;
     static unsigned char masktable[] = {
 	0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
     int padded = 0;
-
-#define NTOALLOC 16
-#define NewSList() \
-	    slist = (struct _scan_list *) calloc (1, sizeof *slist); \
-	    if (!slist) { \
-		fprintf (stderr, "%s:  unable to allocate scan list\n", \
-			 ProgramName); \
-		return; \
-	    } \
-	    slist->allocated = NTOALLOC * bytes_per_scanline; \
-	    slist->scanlines = (unsigned char *) calloc(slist->allocated, 1); \
-	    if (!slist->scanlines) { \
-		fprintf (stderr, "%s:  unable to allocate char array\n", \
-			 ProgramName); \
-		return; \
-	    } \
-	    slist->used = 0; \
-	    slist->next = NULL;
 
     while (1) {
 	buf[0] = '\0';
@@ -233,8 +247,12 @@ doit (FILE *fp,
 	    width = len;
 	    padded = ((width & 7) != 0);
 	    bytes_per_scanline = (len + 7) / 8;
-	    NewSList ();
-	    head = slist;
+	    head = slist = _new_scan_list(bytes_per_scanline);
+
+            if (!slist) {
+                fprintf (stderr, "%s:  unable to allocate scan list\n", ProgramName);
+                return;
+            }
 	} else if (width != len) {
 	    fprintf (stderr,
 		     "%s:  line %d is %d characters wide instead of %d\n",
@@ -244,8 +262,13 @@ doit (FILE *fp,
 
 	if (slist->used + 1 >= slist->allocated) {
 	    struct _scan_list *old = slist;
-	    NewSList ();
-	    old->next = slist;
+	    old->next = slist = _new_scan_list(bytes_per_scanline);
+
+	    if (!slist) {
+	        fprintf (stderr, "%s:  unable to allocate scan list\n", ProgramName);
+		free(old);
+	        return;
+	    }
 	}
 
 	/* okay, parse the line and stick values into the scanline array */

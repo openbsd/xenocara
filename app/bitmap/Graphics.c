@@ -57,13 +57,19 @@ from The Open Group.
 # endif
 #endif
 
+#ifdef __clang__
+/* clang doesn't like (int)floor(d) */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wbad-function-cast"
+#endif
+
 /*****************************************************************************\
  *                                   Graphics                                *
 \*****************************************************************************/
 
 #define GetBit(image, x, y)\
     ((bit)((*(image->data + (x) / 8 + (y) * image->bytes_per_line) &\
-	    (1 << ((x) % 8))) ? 1 : 0))
+	    (1 << ((x) & 7))) ? 1 : 0))
 
 #if 0
 bit

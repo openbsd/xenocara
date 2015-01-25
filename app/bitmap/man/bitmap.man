@@ -612,20 +612,23 @@ purpose as well.  It can be freely incorporated with other
 applications and used as a standard editing tool.  The following are
 the resources provided by the bitmap widget.
 .sp
-.nf
+.TS
+lb lb
+l l.
 Bitmap Widget
 
-Header file 		Bitmap.h
-Class			bitmapWidgetClass
-Class Name		Bitmap
-Superclass		Bitmap
-
+Header file 	Bitmap.h
+Class   	bitmapWidgetClass
+Class Name	Bitmap
+Superclass	Bitmap
+.TE
 
 All the Simple Widget resources plus .\|.\|.
-.ta 1.6i 3.2i 4.8i
 
+.TS
+lb lb lb lb lb
+l l l l l.
 Name	Class	Type	Default Value
-
 foreground	Foreground	Pixel	XtDefaultForeground
 highlight	Highlight	Pixel	XtDefaultForeground
 framing	Framing	Pixel	XtDefaultForeground
@@ -648,7 +651,7 @@ button4Function	Button4Function	DrawingFunction	Invert
 button5Function	Button5Function	DrawingFunction	Invert
 filename	Filename	String	None ("")
 basename	Basename	String	None ("")
-.fi
+.TE
 
 .SH AUTHOR
 Davor Matic, MIT X Consortium

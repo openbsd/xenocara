@@ -41,6 +41,7 @@ from The Open Group.
 #include "BitmapP.h"
 #include "Bitmap.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -686,10 +687,14 @@ XmuWriteBitmapDataToFile(_Xconst _XtString filename,
     else
     	file = fopen(filename, "w+");
 
-    if (!basename || !strcmp(basename, "") || !strcmp(basename, "-"))
-	basename = StripFilename(filename);
-
     if (file) {
+	String new_basename;
+
+	if (!basename || !strcmp(basename, "") || !strcmp(basename, "-"))
+	    basename = new_basename = StripFilename(filename);
+	else
+	    new_basename = NULL;
+
 	fprintf(file, "#define %s_width %d\n", basename, width);
 	fprintf(file, "#define %s_height %d\n", basename, height);
 	if (QuerySet(x_hot, y_hot)) {
@@ -708,6 +713,7 @@ XmuWriteBitmapDataToFile(_Xconst _XtString filename,
 	if (file != stdout)
 	    fclose(file);
 
+	XtFree(new_basename);
 	return BitmapSuccess;
     }
 
@@ -902,20 +908,20 @@ Initialize(Widget wrequest, Widget wnew, ArgList argv, Cardinal *argc)
     {
 	int status;
 	XImage *image, *buffer;
-	unsigned char *image_data;
-	char *buffer_data;
+	unsigned char *image_data2;
+	char *buffer_data2;
 	unsigned int width, height;
 	int x_hot, y_hot;
 
 	status = XmuReadBitmapDataFromFile(new->bitmap.filename,
-					   &width, &height, &image_data,
+					   &width, &height, &image_data2,
 					   &x_hot, &y_hot);
 	if (status == BitmapSuccess) {
 
-	    buffer_data = CreateCleanData(Length(width, height));
+	    buffer_data2 = CreateCleanData(Length(width, height));
 
-	    image = CreateBitmapImage(new, (char *)image_data, width, height);
-	    buffer = CreateBitmapImage(new, buffer_data, width, height);
+	    image = CreateBitmapImage(new, (char *)image_data2, width, height);
+	    buffer = CreateBitmapImage(new, buffer_data2, width, height);
 
 	    TransferImageData(new->bitmap.image, buffer);
 
@@ -1102,7 +1108,7 @@ BWReadFile(Widget w, _Xconst _XtString filename, _Xconst _XtString basename) /* 
 	XtFree(BW->bitmap.filename);
 	BW->bitmap.filename = XtNewString(filename);
 	XtFree(BW->bitmap.basename);
-	BW->bitmap.basename= XtNewString(StripFilename(filename));
+	BW->bitmap.basename = StripFilename(filename);
 
 	BWUnmark(w);
 
@@ -1198,7 +1204,7 @@ BWWriteFile(Widget w, _Xconst _XtString filename, _Xconst _XtString basename)
 	XtFree(BW->bitmap.filename);
 	BW->bitmap.filename = XtNewString(filename);
 	XtFree(BW->bitmap.basename);
-	BW->bitmap.basename= XtNewString(StripFilename(filename));
+	BW->bitmap.basename = StripFilename(filename);
     }
     if (!basename) basename = BW->bitmap.basename;
     else {
@@ -1238,6 +1244,8 @@ BWGetFilepath(Widget w, String *str)
     String end;
 
     *str = XtNewString(BW->bitmap.filename);
+    assert(*str);
+
     end = strrchr(*str, '/');
 
     if (end)

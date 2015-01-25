@@ -1,3 +1,200 @@
+commit 2f5eae70cd2e9c1e09dcbd8a2a58eaf58207fe00
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 16 21:57:03 2015 -0800
+
+    bitmap 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dacae58710f7033d5295c50cf6262783350e938d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 29 18:28:00 2014 -0800
+
+    Stop memory leak in XmuWriteBitmapDataToFile()
+    
+    StripFilename() allocates a new string for its result, so after we're
+    done with it, free it instead of just losing the pointer to it.
+    
+    Fixes errors found by Oracle Parfait 1.5.1 bug checking tool:
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer basename allocated with StripFilename(filename)
+            at line 712 of Bitmap.c in function 'XmuWriteBitmapDataToFile'.
+              basename allocated at line 691 with StripFilename(filename).
+              basename leaks when i >= data_length at line 702.
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer basename allocated with StripFilename(filename)
+            at line 715 of Bitmap.c in function 'XmuWriteBitmapDataToFile'.
+              basename allocated at line 691 with StripFilename(filename).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8df1a843a3a9f92399113688a350873a141bf995
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 29 18:15:57 2014 -0800
+
+    Stop memory leaks from XtNewString(StripFilename(filename))
+    
+    StripFilename() already allocates a new string for its result,
+    we don't need to duplicate it and then lose the pointer to the
+    first one.
+    
+    Fixes errors found by Oracle Parfait 1.5.1 bug checking tool:
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer pointer allocated with StripFilename(filename)
+            at line 1119 of Bitmap.c in function 'BWReadFile'.
+              pointer allocated at line 1106 with StripFilename(filename).
+              pointer leaks when StripFilename(filename) != NULL at line 1106.
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer pointer allocated with StripFilename(filename)
+            at line 1119 of Bitmap.c in function 'BWReadFile'.
+              pointer allocated at line 1106 with StripFilename(filename).
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer pointer allocated with StripFilename(filename)
+            at line 1222 of Bitmap.c in function 'BWWriteFile'.
+              pointer allocated at line 1202 with StripFilename(filename).
+              pointer leaks when StripFilename(filename) != NULL at line 1202.
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer pointer allocated with StripFilename(filename)
+            at line 1222 of Bitmap.c in function 'BWWriteFile'.
+              pointer allocated at line 1202 with StripFilename(filename).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a0db0f6c7996b282aa9027d3b670597d88fe3353
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:14 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8fb1efccb5f24eab51cefafedb1a5a60217db35f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:03:13 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0911d130b870da0951b56f5103c6b4dfb9eeb28
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Jan 1 23:02:48 2014 -0800
+
+    Use '& 7' instead '% 8' to silence clang analyzer warning
+    
+    Graphics.c:569:10: warning: The result of the '<<' expression is undefined
+            while (!QueryFlood(BW, x, y, value) && (x < x_right))
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Graphics.c:470:7: note: expanded from macro 'QueryFlood'
+        ((GetBit(BW->bitmap.image, x, y) !=\
+          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Graphics.c:66:9: note: expanded from macro 'GetBit'
+                (1 << ((x) % 8))) ? 1 : 0))
+                 ~~^~~~~~~~~~~~
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit e3fe79502a4a1b0f0b148659948d541ce26ed7bf
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Jan 1 22:58:23 2014 -0800
+
+    Demacro modernization of NewSList to plug a memory leak during error handling
+    
+    atobm.c:248:6: warning: Potential leak of memory pointed to by 'slist'
+                NewSList ();
+                ^~~~~~~~~~~
+    atobm.c:209:3: note: expanded from macro 'NewSList'
+                    fprintf (stderr, "%s:  unable to allocate char array\n", \
+                    ^~~~~~~
+    atobm.c:259:6: warning: Potential leak of memory pointed to by 'old'
+                NewSList ();
+                ^~~~~~~~~~~
+    atobm.c:209:3: note: expanded from macro 'NewSList'
+                    fprintf (stderr, "%s:  unable to allocate char array\n", \
+                    ^~~~~~~
+    atobm.c:259:6: warning: Potential leak of memory pointed to by 'slist'
+                NewSList ();
+                ^~~~~~~~~~~
+    atobm.c:209:3: note: expanded from macro 'NewSList'
+                    fprintf (stderr, "%s:  unable to allocate char array\n", \
+                    ^~~~~~~
+    3 warnings generated.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit a59538d5d57bd2f8b2101e398a97fe8466b8eef7
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Jan 1 22:43:26 2014 -0800
+
+    Silence -Wbad-function-cast
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit e7086abb4576a777a4b0aff8553047077cdd08ce
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Jan 1 22:29:45 2014 -0800
+
+    Avoid shadow declarations
+    
+    Bitmap.c:906:17: warning: declaration shadows a local variable [-Wshadow]
+            unsigned char *image_data;
+                           ^
+    Bitmap.c:799:11: note: previous declaration is here
+        char *image_data, *buffer_data;
+              ^
+    Bitmap.c:907:8: warning: declaration shadows a local variable [-Wshadow]
+            char *buffer_data;
+                  ^
+    Bitmap.c:799:24: note: previous declaration is here
+        char *image_data, *buffer_data;
+                           ^
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 1e236565459d10c7ad85ebed285d2acfc4b15b69
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Wed Jan 1 22:27:36 2014 -0800
+
+    assert to avoid a NULL dereference
+    
+    Bitmap.c:1246:8: warning: Dereference of null pointer
+            **str = '\0';
+            ~~~~~~^~~~~~
+    1 warning generated.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 15d326027827c168511f923e72c64e2131515e19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 4 23:14:22 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 64bc2b97d408d6fea16716e37f7b5ff1661d57fd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 25 21:51:37 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a78fc882fac9a3334a77744be4c617b51997a5bb
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Jun 6 14:24:08 2013 -0400
+
+    Use table markup in preference to various low-level constructions.
+
 commit 10584a7e5f476c5adb5ec6de9f0b519380abd6df
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri May 17 21:12:44 2013 -0700
