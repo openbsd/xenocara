@@ -1179,6 +1179,7 @@ GLAPI void APIENTRY GLAPI_PREFIX(ClearBufferData)(GLenum target, GLenum internal
 GLAPI void APIENTRY GLAPI_PREFIX(ClearBufferSubData)(GLenum target, GLenum internalformat, GLintptr offset, GLsizeiptr size, GLenum format, GLenum type, const GLvoid *data);
 GLAPI void APIENTRY GLAPI_PREFIX(DispatchCompute)(GLuint num_groups_x, GLuint num_groups_y, GLuint num_groups_z);
 GLAPI void APIENTRY GLAPI_PREFIX(DispatchComputeIndirect)(GLintptr indirect);
+GLAPI void APIENTRY GLAPI_PREFIX(CopyImageSubData)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth);
 GLAPI void APIENTRY GLAPI_PREFIX(TextureView)(GLuint texture, GLenum target, GLuint origtexture, GLenum internalformat, GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers);
 GLAPI void APIENTRY GLAPI_PREFIX(BindVertexBuffer)(GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride);
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribBinding)(GLuint attribindex, GLuint bindingindex);
@@ -1192,12 +1193,15 @@ GLAPI void APIENTRY GLAPI_PREFIX(TexBufferRange)(GLenum target, GLenum internalf
 GLAPI void APIENTRY GLAPI_PREFIX(TexStorage2DMultisample)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations);
 GLAPI void APIENTRY GLAPI_PREFIX(TexStorage3DMultisample)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations);
 GLAPI void APIENTRY GLAPI_PREFIX(BufferStorage)(GLenum target, GLsizeiptr size, const GLvoid *data, GLbitfield flags);
+GLAPI void APIENTRY GLAPI_PREFIX(ClearTexImage)(GLuint texture, GLint level, GLenum format, GLenum type, const GLvoid *data);
+GLAPI void APIENTRY GLAPI_PREFIX(ClearTexSubImage)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *data);
 GLAPI void APIENTRY GLAPI_PREFIX(BindBuffersBase)(GLenum target, GLuint first, GLsizei count, const GLuint *buffers);
 GLAPI void APIENTRY GLAPI_PREFIX(BindBuffersRange)(GLenum target, GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizeiptr *sizes);
 GLAPI void APIENTRY GLAPI_PREFIX(BindImageTextures)(GLuint first, GLsizei count, const GLuint *textures);
 GLAPI void APIENTRY GLAPI_PREFIX(BindSamplers)(GLuint first, GLsizei count, const GLuint *samplers);
 GLAPI void APIENTRY GLAPI_PREFIX(BindTextures)(GLuint first, GLsizei count, const GLuint *textures);
 GLAPI void APIENTRY GLAPI_PREFIX(BindVertexBuffers)(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides);
+GLAPI void APIENTRY GLAPI_PREFIX(ClipControl)(GLenum origin, GLenum depth);
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateBufferData)(GLuint buffer);
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateBufferSubData)(GLuint buffer, GLintptr offset, GLsizeiptr length);
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateFramebuffer)(GLenum target, GLsizei numAttachments, const GLenum *attachments);
@@ -1205,70 +1209,70 @@ GLAPI void APIENTRY GLAPI_PREFIX(InvalidateSubFramebuffer)(GLenum target, GLsize
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateTexImage)(GLuint texture, GLint level);
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateTexSubImage)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth);
 GLAPI void APIENTRY GLAPI_PREFIX(PolygonOffsetEXT)(GLfloat factor, GLfloat bias);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_868)(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_869)(const GLfloat *coords);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_870)(GLint x, GLint y, GLint z, GLint width, GLint height);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_871)(const GLint *coords);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_872)(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_873)(const GLshort *coords);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_874)(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_875)(const GLfixed *coords);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_872)(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_873)(const GLfloat *coords);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_874)(GLint x, GLint y, GLint z, GLint width, GLint height);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_875)(const GLint *coords);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_876)(GLshort x, GLshort y, GLshort z, GLshort width, GLshort height);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_877)(const GLshort *coords);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_878)(GLfixed x, GLfixed y, GLfixed z, GLfixed width, GLfixed height);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_879)(const GLfixed *coords);
 GLAPI void APIENTRY GLAPI_PREFIX(PointSizePointerOES)(GLenum type, GLsizei stride, const GLvoid *pointer);
-GLbitfield APIENTRY GLAPI_PREFIX(_dispatch_stub_877)(GLfixed *mantissa, GLint *exponent);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_878)(GLclampf value, GLboolean invert);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_879)(GLenum pattern);
+GLbitfield APIENTRY GLAPI_PREFIX(_dispatch_stub_881)(GLfixed *mantissa, GLint *exponent);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_882)(GLclampf value, GLboolean invert);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_883)(GLenum pattern);
 GLAPI void APIENTRY GLAPI_PREFIX(ColorPointerEXT)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
 GLAPI void APIENTRY GLAPI_PREFIX(EdgeFlagPointerEXT)(GLsizei stride, GLsizei count, const GLboolean *pointer);
 GLAPI void APIENTRY GLAPI_PREFIX(IndexPointerEXT)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
 GLAPI void APIENTRY GLAPI_PREFIX(NormalPointerEXT)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
 GLAPI void APIENTRY GLAPI_PREFIX(TexCoordPointerEXT)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
 GLAPI void APIENTRY GLAPI_PREFIX(VertexPointerEXT)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_886)(GLenum target, GLsizei numAttachments, const GLenum *attachments);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_887)(GLuint pipeline, GLuint program);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_888)(GLuint pipeline);
-GLuint APIENTRY GLAPI_PREFIX(_dispatch_stub_889)(GLenum type, GLsizei count, const GLchar * const *strings);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_890)(GLsizei n, const GLuint *pipelines);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_891)(GLsizei n, GLuint *pipelines);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_892)(GLuint pipeline, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_893)(GLuint pipeline, GLenum pname, GLint *params);
-GLboolean APIENTRY GLAPI_PREFIX(_dispatch_stub_894)(GLuint pipeline);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_890)(GLenum target, GLsizei numAttachments, const GLenum *attachments);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_891)(GLuint pipeline, GLuint program);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_892)(GLuint pipeline);
+GLuint APIENTRY GLAPI_PREFIX(_dispatch_stub_893)(GLenum type, GLsizei count, const GLchar * const *strings);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_894)(GLsizei n, const GLuint *pipelines);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_895)(GLsizei n, GLuint *pipelines);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_896)(GLuint pipeline, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_897)(GLuint pipeline, GLenum pname, GLint *params);
+GLboolean APIENTRY GLAPI_PREFIX(_dispatch_stub_898)(GLuint pipeline);
 GLAPI void APIENTRY GLAPI_PREFIX(LockArraysEXT)(GLint first, GLsizei count);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_896)(GLuint program, GLint location, GLfloat x);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_897)(GLuint program, GLint location, GLsizei count, const GLfloat *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_898)(GLuint program, GLint location, GLint x);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_899)(GLuint program, GLint location, GLsizei count, const GLint *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_900)(GLuint program, GLint location, GLuint x);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_901)(GLuint program, GLint location, GLsizei count, const GLuint *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_902)(GLuint program, GLint location, GLfloat x, GLfloat y);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_903)(GLuint program, GLint location, GLsizei count, const GLfloat *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_904)(GLuint program, GLint location, GLint x, GLint y);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_905)(GLuint program, GLint location, GLsizei count, const GLint *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_906)(GLuint program, GLint location, GLuint x, GLuint y);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_907)(GLuint program, GLint location, GLsizei count, const GLuint *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_908)(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_909)(GLuint program, GLint location, GLsizei count, const GLfloat *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_910)(GLuint program, GLint location, GLint x, GLint y, GLint z);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_911)(GLuint program, GLint location, GLsizei count, const GLint *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_912)(GLuint program, GLint location, GLuint x, GLuint y, GLuint z);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_913)(GLuint program, GLint location, GLsizei count, const GLuint *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_914)(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_915)(GLuint program, GLint location, GLsizei count, const GLfloat *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_916)(GLuint program, GLint location, GLint x, GLint y, GLint z, GLint w);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_917)(GLuint program, GLint location, GLsizei count, const GLint *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_918)(GLuint program, GLint location, GLuint x, GLuint y, GLuint z, GLuint w);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_919)(GLuint program, GLint location, GLsizei count, const GLuint *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_920)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_921)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_922)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_923)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_900)(GLuint program, GLint location, GLfloat x);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_901)(GLuint program, GLint location, GLsizei count, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_902)(GLuint program, GLint location, GLint x);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_903)(GLuint program, GLint location, GLsizei count, const GLint *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_904)(GLuint program, GLint location, GLuint x);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_905)(GLuint program, GLint location, GLsizei count, const GLuint *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_906)(GLuint program, GLint location, GLfloat x, GLfloat y);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_907)(GLuint program, GLint location, GLsizei count, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_908)(GLuint program, GLint location, GLint x, GLint y);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_909)(GLuint program, GLint location, GLsizei count, const GLint *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_910)(GLuint program, GLint location, GLuint x, GLuint y);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_911)(GLuint program, GLint location, GLsizei count, const GLuint *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_912)(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_913)(GLuint program, GLint location, GLsizei count, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_914)(GLuint program, GLint location, GLint x, GLint y, GLint z);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_915)(GLuint program, GLint location, GLsizei count, const GLint *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_916)(GLuint program, GLint location, GLuint x, GLuint y, GLuint z);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_917)(GLuint program, GLint location, GLsizei count, const GLuint *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_918)(GLuint program, GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_919)(GLuint program, GLint location, GLsizei count, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_920)(GLuint program, GLint location, GLint x, GLint y, GLint z, GLint w);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_921)(GLuint program, GLint location, GLsizei count, const GLint *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_922)(GLuint program, GLint location, GLuint x, GLuint y, GLuint z, GLuint w);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_923)(GLuint program, GLint location, GLsizei count, const GLuint *value);
 void APIENTRY GLAPI_PREFIX(_dispatch_stub_924)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 void APIENTRY GLAPI_PREFIX(_dispatch_stub_925)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 void APIENTRY GLAPI_PREFIX(_dispatch_stub_926)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 void APIENTRY GLAPI_PREFIX(_dispatch_stub_927)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 void APIENTRY GLAPI_PREFIX(_dispatch_stub_928)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_929)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_930)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_931)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_932)(GLuint program, GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 GLAPI void APIENTRY GLAPI_PREFIX(UnlockArraysEXT)(void);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_930)(GLuint pipeline, GLbitfield stages, GLuint program);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_931)(GLuint pipeline);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_934)(GLuint pipeline, GLbitfield stages, GLuint program);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_935)(GLuint pipeline);
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageCallback)(GLDEBUGPROC callback, const GLvoid *userParam);
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageCallbackARB)(GLDEBUGPROCARB callback, const GLvoid *userParam);
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageControl)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled);
@@ -1302,8 +1306,8 @@ GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4iMESA)(GLint x, GLint y, GLint z, GLi
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4ivMESA)(const GLint *v);
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4sMESA)(GLshort x, GLshort y, GLshort z, GLshort w);
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4svMESA)(const GLshort *v);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_956)(const GLenum *mode, const GLint *first, const GLsizei *count, GLsizei primcount, GLint modestride);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_957)(const GLenum *mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, GLint modestride);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_960)(const GLenum *mode, const GLint *first, const GLsizei *count, GLsizei primcount, GLint modestride);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_961)(const GLenum *mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount, GLint modestride);
 GLAPI GLboolean APIENTRY GLAPI_PREFIX(AreProgramsResidentNV)(GLsizei n, const GLuint *ids, GLboolean *residences);
 GLAPI void APIENTRY GLAPI_PREFIX(ExecuteProgramNV)(GLenum target, GLuint id, const GLfloat *params);
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramParameterdvNV)(GLenum target, GLuint index, GLenum pname, GLdouble *params);
@@ -1377,9 +1381,9 @@ GLAPI GLuint APIENTRY GLAPI_PREFIX(GenFragmentShadersATI)(GLuint range);
 GLAPI void APIENTRY GLAPI_PREFIX(PassTexCoordATI)(GLuint dst, GLuint coord, GLenum swizzle);
 GLAPI void APIENTRY GLAPI_PREFIX(SampleMapATI)(GLuint dst, GLuint interp, GLenum swizzle);
 GLAPI void APIENTRY GLAPI_PREFIX(SetFragmentShaderConstantATI)(GLuint dst, const GLfloat *value);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1031)(GLenum face);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1032)(GLuint array);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1033)(GLsizei n, GLuint *arrays);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1035)(GLenum face);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1036)(GLuint array);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1037)(GLsizei n, GLuint *arrays);
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramNamedParameterdvNV)(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params);
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramNamedParameterfvNV)(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params);
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramNamedParameter4dNV)(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
@@ -1387,14 +1391,14 @@ GLAPI void APIENTRY GLAPI_PREFIX(ProgramNamedParameter4dvNV)(GLuint id, GLsizei 
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramNamedParameter4fNV)(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramNamedParameter4fvNV)(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v);
 GLAPI void APIENTRY GLAPI_PREFIX(PrimitiveRestartNV)(void);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1041)(GLenum coord, GLenum pname, GLfixed *params);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1042)(GLenum coord, GLenum pname, GLint param);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1043)(GLenum coord, GLenum pname, const GLfixed *params);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1044)(GLclampd zmin, GLclampd zmax);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1045)(GLenum coord, GLenum pname, GLfixed *params);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1046)(GLenum coord, GLenum pname, GLint param);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1047)(GLenum coord, GLenum pname, const GLfixed *params);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1048)(GLclampd zmin, GLclampd zmax);
 GLAPI void APIENTRY GLAPI_PREFIX(BindFramebufferEXT)(GLenum target, GLuint framebuffer);
 GLAPI void APIENTRY GLAPI_PREFIX(BindRenderbufferEXT)(GLenum target, GLuint renderbuffer);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1047)(GLenum target, GLenum pname, GLint param);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1048)(GLenum target, GLintptr offset, GLsizeiptr size);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1051)(GLenum target, GLenum pname, GLint param);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1052)(GLenum target, GLintptr offset, GLsizeiptr size);
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI1iEXT)(GLuint index, GLint x);
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI1i)(GLuint index, GLint x);
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI1uiEXT)(GLuint index, GLuint x);
@@ -1444,6 +1448,7 @@ GLAPI void APIENTRY GLAPI_PREFIX(ActiveProgramEXT)(GLuint program);
 GLAPI GLuint APIENTRY GLAPI_PREFIX(CreateShaderProgramEXT)(GLenum type, const GLchar *string);
 GLAPI void APIENTRY GLAPI_PREFIX(UseShaderProgramEXT)(GLenum type, GLuint program);
 GLAPI void APIENTRY GLAPI_PREFIX(TextureBarrierNV)(void);
+GLAPI void APIENTRY GLAPI_PREFIX(TextureBarrier)(void);
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUFiniNV)(void);
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUGetSurfaceivNV)(GLintptr surface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values);
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUInitNV)(const GLvoid *vdpDevice, const GLvoid *getProcAddress);
@@ -1454,19 +1459,19 @@ GLAPI GLintptr APIENTRY GLAPI_PREFIX(VDPAURegisterVideoSurfaceNV)(const GLvoid *
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUSurfaceAccessNV)(GLintptr surface, GLenum access);
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUUnmapSurfacesNV)(GLsizei numSurfaces, const GLintptr *surfaces);
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUUnregisterSurfaceNV)(GLintptr surface);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1094)(GLuint queryHandle);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1095)(GLuint queryId, GLuint *queryHandle);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1096)(GLuint queryHandle);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1097)(GLuint queryHandle);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1098)(GLuint *queryId);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1099)(GLuint queryId, GLuint *nextQueryId);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1100)(GLuint queryId, GLuint counterId, GLuint counterNameLength, GLchar *counterName, GLuint counterDescLength, GLchar *counterDesc, GLuint *counterOffset, GLuint *counterDataSize, GLuint *counterTypeEnum, GLuint *counterDataTypeEnum, GLuint64 *rawCounterMaxValue);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1101)(GLuint queryHandle, GLuint flags, GLsizei dataSize, GLvoid *data, GLuint *bytesWritten);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1102)(GLchar *queryName, GLuint *queryId);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1103)(GLuint queryId, GLuint queryNameLength, GLchar *queryName, GLuint *dataSize, GLuint *noCounters, GLuint *noInstances, GLuint *capsMask);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1104)(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1105)(GLenum target, GLuint index, GLsizei count, const GLfloat *params);
-void APIENTRY GLAPI_PREFIX(_dispatch_stub_1106)(GLenum target, GLuint index, GLsizei count, const GLfloat *params);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1098)(GLuint queryHandle);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1099)(GLuint queryId, GLuint *queryHandle);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1100)(GLuint queryHandle);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1101)(GLuint queryHandle);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1102)(GLuint *queryId);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1103)(GLuint queryId, GLuint *nextQueryId);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1104)(GLuint queryId, GLuint counterId, GLuint counterNameLength, GLchar *counterName, GLuint counterDescLength, GLchar *counterDesc, GLuint *counterOffset, GLuint *counterDataSize, GLuint *counterTypeEnum, GLuint *counterDataTypeEnum, GLuint64 *rawCounterMaxValue);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1105)(GLuint queryHandle, GLuint flags, GLsizei dataSize, GLvoid *data, GLuint *bytesWritten);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1106)(GLchar *queryName, GLuint *queryId);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1107)(GLuint queryId, GLuint queryNameLength, GLchar *queryName, GLuint *dataSize, GLuint *noCounters, GLuint *noInstances, GLuint *capsMask);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1108)(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1109)(GLenum target, GLuint index, GLsizei count, const GLfloat *params);
+void APIENTRY GLAPI_PREFIX(_dispatch_stub_1110)(GLenum target, GLuint index, GLsizei count, const GLfloat *params);
 GLAPI void APIENTRY GLAPI_PREFIX(EGLImageTargetRenderbufferStorageOES)(GLenum target, GLvoid *writeOffset);
 GLAPI void APIENTRY GLAPI_PREFIX(EGLImageTargetTexture2DOES)(GLenum target, GLvoid *writeOffset);
 GLAPI void APIENTRY GLAPI_PREFIX(AlphaFuncx)(GLenum func, GLclampx ref);
@@ -9538,1781 +9543,1816 @@ GLAPI void APIENTRY GLAPI_PREFIX(DispatchComputeIndirect)(GLintptr indirect)
    ((void (APIENTRY *)(GLintptr indirect)) _func)(indirect);
 }
 
-GLAPI void APIENTRY GLAPI_PREFIX(TextureView)(GLuint texture, GLenum target, GLuint origtexture, GLenum internalformat, GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers)
+GLAPI void APIENTRY GLAPI_PREFIX(CopyImageSubData)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth)
 {
    const struct mapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[842];
+   ((void (APIENTRY *)(GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth)) _func)(srcName, srcTarget, srcLevel, srcX, srcY, srcZ, dstName, dstTarget, dstLevel, dstX, dstY, dstZ, srcWidth, srcHeight, srcDepth);
+}
+
+GLAPI void APIENTRY GLAPI_PREFIX(TextureView)(GLuint texture, GLenum target, GLuint origtexture, GLenum internalformat, GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[843];
    ((void (APIENTRY *)(GLuint texture, GLenum target, GLuint origtexture, GLenum internalformat, GLuint minlevel, GLuint numlevels, GLuint minlayer, GLuint numlayers)) _func)(texture, target, origtexture, internalformat, minlevel, numlevels, minlayer, numlayers);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindVertexBuffer)(GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[843];
+   mapi_func _func = ((const mapi_func *) _tbl)[844];
    ((void (APIENTRY *)(GLuint bindingindex, GLuint buffer, GLintptr offset, GLsizei stride)) _func)(bindingindex, buffer, offset, stride);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribBinding)(GLuint attribindex, GLuint bindingindex)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[844];
+   mapi_func _func = ((const mapi_func *) _tbl)[845];
    ((void (APIENTRY *)(GLuint attribindex, GLuint bindingindex)) _func)(attribindex, bindingindex);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribFormat)(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[845];
+   mapi_func _func = ((const mapi_func *) _tbl)[846];
    ((void (APIENTRY *)(GLuint attribindex, GLint size, GLenum type, GLboolean normalized, GLuint relativeoffset)) _func)(attribindex, size, type, normalized, relativeoffset);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribIFormat)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[846];
+   mapi_func _func = ((const mapi_func *) _tbl)[847];
    ((void (APIENTRY *)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)) _func)(attribindex, size, type, relativeoffset);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribLFormat)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[847];
+   mapi_func _func = ((const mapi_func *) _tbl)[848];
    ((void (APIENTRY *)(GLuint attribindex, GLint size, GLenum type, GLuint relativeoffset)) _func)(attribindex, size, type, relativeoffset);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexBindingDivisor)(GLuint attribindex, GLuint divisor)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[848];
+   mapi_func _func = ((const mapi_func *) _tbl)[849];
    ((void (APIENTRY *)(GLuint attribindex, GLuint divisor)) _func)(attribindex, divisor);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawArraysIndirect)(GLenum mode, const GLvoid *indirect, GLsizei primcount, GLsizei stride)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[849];
+   mapi_func _func = ((const mapi_func *) _tbl)[850];
    ((void (APIENTRY *)(GLenum mode, const GLvoid *indirect, GLsizei primcount, GLsizei stride)) _func)(mode, indirect, primcount, stride);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElementsIndirect)(GLenum mode, GLenum type, const GLvoid *indirect, GLsizei primcount, GLsizei stride)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[850];
+   mapi_func _func = ((const mapi_func *) _tbl)[851];
    ((void (APIENTRY *)(GLenum mode, GLenum type, const GLvoid *indirect, GLsizei primcount, GLsizei stride)) _func)(mode, type, indirect, primcount, stride);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexBufferRange)(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[851];
+   mapi_func _func = ((const mapi_func *) _tbl)[852];
    ((void (APIENTRY *)(GLenum target, GLenum internalformat, GLuint buffer, GLintptr offset, GLsizeiptr size)) _func)(target, internalformat, buffer, offset, size);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexStorage2DMultisample)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[852];
+   mapi_func _func = ((const mapi_func *) _tbl)[853];
    ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, fixedsamplelocations);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexStorage3DMultisample)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[853];
+   mapi_func _func = ((const mapi_func *) _tbl)[854];
    ((void (APIENTRY *)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLboolean fixedsamplelocations)) _func)(target, samples, internalformat, width, height, depth, fixedsamplelocations);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BufferStorage)(GLenum target, GLsizeiptr size, const GLvoid *data, GLbitfield flags)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[854];
+   mapi_func _func = ((const mapi_func *) _tbl)[855];
    ((void (APIENTRY *)(GLenum target, GLsizeiptr size, const GLvoid *data, GLbitfield flags)) _func)(target, size, data, flags);
+}
+
+GLAPI void APIENTRY GLAPI_PREFIX(ClearTexImage)(GLuint texture, GLint level, GLenum format, GLenum type, const GLvoid *data)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[856];
+   ((void (APIENTRY *)(GLuint texture, GLint level, GLenum format, GLenum type, const GLvoid *data)) _func)(texture, level, format, type, data);
+}
+
+GLAPI void APIENTRY GLAPI_PREFIX(ClearTexSubImage)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *data)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[857];
+   ((void (APIENTRY *)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *data)) _func)(texture, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindBuffersBase)(GLenum target, GLuint first, GLsizei count, const GLuint *buffers)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[855];
+   mapi_func _func = ((const mapi_func *) _tbl)[858];
    ((void (APIENTRY *)(GLenum target, GLuint first, GLsizei count, const GLuint *buffers)) _func)(target, first, count, buffers);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindBuffersRange)(GLenum target, GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizeiptr *sizes)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[856];
+   mapi_func _func = ((const mapi_func *) _tbl)[859];
    ((void (APIENTRY *)(GLenum target, GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizeiptr *sizes)) _func)(target, first, count, buffers, offsets, sizes);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindImageTextures)(GLuint first, GLsizei count, const GLuint *textures)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[857];
+   mapi_func _func = ((const mapi_func *) _tbl)[860];
    ((void (APIENTRY *)(GLuint first, GLsizei count, const GLuint *textures)) _func)(first, count, textures);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindSamplers)(GLuint first, GLsizei count, const GLuint *samplers)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[858];
+   mapi_func _func = ((const mapi_func *) _tbl)[861];
    ((void (APIENTRY *)(GLuint first, GLsizei count, const GLuint *samplers)) _func)(first, count, samplers);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindTextures)(GLuint first, GLsizei count, const GLuint *textures)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[859];
+   mapi_func _func = ((const mapi_func *) _tbl)[862];
    ((void (APIENTRY *)(GLuint first, GLsizei count, const GLuint *textures)) _func)(first, count, textures);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindVertexBuffers)(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[860];
+   mapi_func _func = ((const mapi_func *) _tbl)[863];
    ((void (APIENTRY *)(GLuint first, GLsizei count, const GLuint *buffers, const GLintptr *offsets, const GLsizei *strides)) _func)(first, count, buffers, offsets, strides);
+}
+
+GLAPI void APIENTRY GLAPI_PREFIX(ClipControl)(GLenum origin, GLenum depth)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[864];
+   ((void (APIENTRY *)(GLenum origin, GLenum depth)) _func)(origin, depth);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateBufferData)(GLuint buffer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[861];
+   mapi_func _func = ((const mapi_func *) _tbl)[865];
    ((void (APIENTRY *)(GLuint buffer)) _func)(buffer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateBufferSubData)(GLuint buffer, GLintptr offset, GLsizeiptr length)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[862];
+   mapi_func _func = ((const mapi_func *) _tbl)[866];
    ((void (APIENTRY *)(GLuint buffer, GLintptr offset, GLsizeiptr length)) _func)(buffer, offset, length);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateFramebuffer)(GLenum target, GLsizei numAttachments, const GLenum *attachments)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[863];
+   mapi_func _func = ((const mapi_func *) _tbl)[867];
    ((void (APIENTRY *)(GLenum target, GLsizei numAttachments, const GLenum *attachments)) _func)(target, numAttachments, attachments);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateSubFramebuffer)(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[864];
+   mapi_func _func = ((const mapi_func *) _tbl)[868];
    ((void (APIENTRY *)(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)) _func)(target, numAttachments, attachments, x, y, width, height);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateTexImage)(GLuint texture, GLint level)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[865];
+   mapi_func _func = ((const mapi_func *) _tbl)[869];
    ((void (APIENTRY *)(GLuint texture, GLint level)) _func)(texture, level);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(InvalidateTexSubImage)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[866];
+   mapi_func _func = ((const mapi_func *) _tbl)[870];
    ((void (APIENTRY *)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth)) _func)(texture, level, xoffset, yoffset, zoffset, width, height, depth);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PolygonOffsetEXT)(GLfloat factor, GLfloat bias)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[867];
+   mapi_func _func = ((const mapi_func *) _tbl)[871];
    ((void (APIENTRY *)(GLfloat factor, GLfloat bias)) _func)(factor, bias);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PointSizePointerOES)(GLenum type, GLsizei stride, const GLvoid *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[876];
+   mapi_func _func = ((const mapi_func *) _tbl)[880];
    ((void (APIENTRY *)(GLenum type, GLsizei stride, const GLvoid *pointer)) _func)(type, stride, pointer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ColorPointerEXT)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[880];
+   mapi_func _func = ((const mapi_func *) _tbl)[884];
    ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(EdgeFlagPointerEXT)(GLsizei stride, GLsizei count, const GLboolean *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[881];
+   mapi_func _func = ((const mapi_func *) _tbl)[885];
    ((void (APIENTRY *)(GLsizei stride, GLsizei count, const GLboolean *pointer)) _func)(stride, count, pointer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(IndexPointerEXT)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[882];
+   mapi_func _func = ((const mapi_func *) _tbl)[886];
    ((void (APIENTRY *)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(type, stride, count, pointer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(NormalPointerEXT)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[883];
+   mapi_func _func = ((const mapi_func *) _tbl)[887];
    ((void (APIENTRY *)(GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(type, stride, count, pointer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexCoordPointerEXT)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[884];
+   mapi_func _func = ((const mapi_func *) _tbl)[888];
    ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexPointerEXT)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[885];
+   mapi_func _func = ((const mapi_func *) _tbl)[889];
    ((void (APIENTRY *)(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid *pointer)) _func)(size, type, stride, count, pointer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(LockArraysEXT)(GLint first, GLsizei count)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[895];
+   mapi_func _func = ((const mapi_func *) _tbl)[899];
    ((void (APIENTRY *)(GLint first, GLsizei count)) _func)(first, count);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(UnlockArraysEXT)(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[929];
+   mapi_func _func = ((const mapi_func *) _tbl)[933];
    ((void (APIENTRY *)(void)) _func)();
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageCallback)(GLDEBUGPROC callback, const GLvoid *userParam)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[932];
+   mapi_func _func = ((const mapi_func *) _tbl)[936];
    ((void (APIENTRY *)(GLDEBUGPROC callback, const GLvoid *userParam)) _func)(callback, userParam);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageCallbackARB)(GLDEBUGPROCARB callback, const GLvoid *userParam)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[932];
+   mapi_func _func = ((const mapi_func *) _tbl)[936];
    ((void (APIENTRY *)(GLDEBUGPROCARB callback, const GLvoid *userParam)) _func)(callback, userParam);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageControl)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[933];
+   mapi_func _func = ((const mapi_func *) _tbl)[937];
    ((void (APIENTRY *)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)) _func)(source, type, severity, count, ids, enabled);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageControlARB)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[933];
+   mapi_func _func = ((const mapi_func *) _tbl)[937];
    ((void (APIENTRY *)(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint *ids, GLboolean enabled)) _func)(source, type, severity, count, ids, enabled);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageInsert)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *buf)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[934];
+   mapi_func _func = ((const mapi_func *) _tbl)[938];
    ((void (APIENTRY *)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *buf)) _func)(source, type, id, severity, length, buf);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DebugMessageInsertARB)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB *buf)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[934];
+   mapi_func _func = ((const mapi_func *) _tbl)[938];
    ((void (APIENTRY *)(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLcharARB *buf)) _func)(source, type, id, severity, length, buf);
 }
 
 GLAPI GLuint APIENTRY GLAPI_PREFIX(GetDebugMessageLog)(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[935];
+   mapi_func _func = ((const mapi_func *) _tbl)[939];
    return ((GLuint (APIENTRY *)(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog)) _func)(count, bufsize, sources, types, ids, severities, lengths, messageLog);
 }
 
 GLAPI GLuint APIENTRY GLAPI_PREFIX(GetDebugMessageLogARB)(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLcharARB *messageLog)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[935];
+   mapi_func _func = ((const mapi_func *) _tbl)[939];
    return ((GLuint (APIENTRY *)(GLuint count, GLsizei bufsize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLcharARB *messageLog)) _func)(count, bufsize, sources, types, ids, severities, lengths, messageLog);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetObjectLabel)(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLchar *label)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[936];
+   mapi_func _func = ((const mapi_func *) _tbl)[940];
    ((void (APIENTRY *)(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei *length, GLchar *label)) _func)(identifier, name, bufSize, length, label);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetObjectPtrLabel)(const GLvoid *ptr, GLsizei bufSize, GLsizei *length, GLchar *label)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[937];
+   mapi_func _func = ((const mapi_func *) _tbl)[941];
    ((void (APIENTRY *)(const GLvoid *ptr, GLsizei bufSize, GLsizei *length, GLchar *label)) _func)(ptr, bufSize, length, label);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ObjectLabel)(GLenum identifier, GLuint name, GLsizei length, const GLchar *label)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[938];
+   mapi_func _func = ((const mapi_func *) _tbl)[942];
    ((void (APIENTRY *)(GLenum identifier, GLuint name, GLsizei length, const GLchar *label)) _func)(identifier, name, length, label);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ObjectPtrLabel)(const GLvoid *ptr, GLsizei length, const GLchar *label)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[939];
+   mapi_func _func = ((const mapi_func *) _tbl)[943];
    ((void (APIENTRY *)(const GLvoid *ptr, GLsizei length, const GLchar *label)) _func)(ptr, length, label);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PopDebugGroup)(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[940];
+   mapi_func _func = ((const mapi_func *) _tbl)[944];
    ((void (APIENTRY *)(void)) _func)();
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PushDebugGroup)(GLenum source, GLuint id, GLsizei length, const GLchar *message)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[941];
+   mapi_func _func = ((const mapi_func *) _tbl)[945];
    ((void (APIENTRY *)(GLenum source, GLuint id, GLsizei length, const GLchar *message)) _func)(source, id, length, message);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3fEXT)(GLfloat red, GLfloat green, GLfloat blue)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[942];
+   mapi_func _func = ((const mapi_func *) _tbl)[946];
    ((void (APIENTRY *)(GLfloat red, GLfloat green, GLfloat blue)) _func)(red, green, blue);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3f)(GLfloat red, GLfloat green, GLfloat blue)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[942];
+   mapi_func _func = ((const mapi_func *) _tbl)[946];
    ((void (APIENTRY *)(GLfloat red, GLfloat green, GLfloat blue)) _func)(red, green, blue);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3fvEXT)(const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[943];
+   mapi_func _func = ((const mapi_func *) _tbl)[947];
    ((void (APIENTRY *)(const GLfloat *v)) _func)(v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3fv)(const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[943];
+   mapi_func _func = ((const mapi_func *) _tbl)[947];
    ((void (APIENTRY *)(const GLfloat *v)) _func)(v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElementsEXT)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[944];
+   mapi_func _func = ((const mapi_func *) _tbl)[948];
    ((void (APIENTRY *)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElements)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[944];
+   mapi_func _func = ((const mapi_func *) _tbl)[948];
    ((void (APIENTRY *)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(FogCoordfEXT)(GLfloat coord)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[945];
+   mapi_func _func = ((const mapi_func *) _tbl)[949];
    ((void (APIENTRY *)(GLfloat coord)) _func)(coord);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(FogCoordf)(GLfloat coord)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[945];
+   mapi_func _func = ((const mapi_func *) _tbl)[949];
    ((void (APIENTRY *)(GLfloat coord)) _func)(coord);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(FogCoordfvEXT)(const GLfloat *coord)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[946];
+   mapi_func _func = ((const mapi_func *) _tbl)[950];
    ((void (APIENTRY *)(const GLfloat *coord)) _func)(coord);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(FogCoordfv)(const GLfloat *coord)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[946];
+   mapi_func _func = ((const mapi_func *) _tbl)[950];
    ((void (APIENTRY *)(const GLfloat *coord)) _func)(coord);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ResizeBuffersMESA)(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[947];
+   mapi_func _func = ((const mapi_func *) _tbl)[951];
    ((void (APIENTRY *)(void)) _func)();
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4dMESA)(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[948];
+   mapi_func _func = ((const mapi_func *) _tbl)[952];
    ((void (APIENTRY *)(GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4dvMESA)(const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[949];
+   mapi_func _func = ((const mapi_func *) _tbl)[953];
    ((void (APIENTRY *)(const GLdouble *v)) _func)(v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4fMESA)(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[950];
+   mapi_func _func = ((const mapi_func *) _tbl)[954];
    ((void (APIENTRY *)(GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4fvMESA)(const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[951];
+   mapi_func _func = ((const mapi_func *) _tbl)[955];
    ((void (APIENTRY *)(const GLfloat *v)) _func)(v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4iMESA)(GLint x, GLint y, GLint z, GLint w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[952];
+   mapi_func _func = ((const mapi_func *) _tbl)[956];
    ((void (APIENTRY *)(GLint x, GLint y, GLint z, GLint w)) _func)(x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4ivMESA)(const GLint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[953];
+   mapi_func _func = ((const mapi_func *) _tbl)[957];
    ((void (APIENTRY *)(const GLint *v)) _func)(v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4sMESA)(GLshort x, GLshort y, GLshort z, GLshort w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[954];
+   mapi_func _func = ((const mapi_func *) _tbl)[958];
    ((void (APIENTRY *)(GLshort x, GLshort y, GLshort z, GLshort w)) _func)(x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(WindowPos4svMESA)(const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[955];
+   mapi_func _func = ((const mapi_func *) _tbl)[959];
    ((void (APIENTRY *)(const GLshort *v)) _func)(v);
 }
 
 GLAPI GLboolean APIENTRY GLAPI_PREFIX(AreProgramsResidentNV)(GLsizei n, const GLuint *ids, GLboolean *residences)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[958];
+   mapi_func _func = ((const mapi_func *) _tbl)[962];
    return ((GLboolean (APIENTRY *)(GLsizei n, const GLuint *ids, GLboolean *residences)) _func)(n, ids, residences);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ExecuteProgramNV)(GLenum target, GLuint id, const GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[959];
+   mapi_func _func = ((const mapi_func *) _tbl)[963];
    ((void (APIENTRY *)(GLenum target, GLuint id, const GLfloat *params)) _func)(target, id, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramParameterdvNV)(GLenum target, GLuint index, GLenum pname, GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[960];
+   mapi_func _func = ((const mapi_func *) _tbl)[964];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLenum pname, GLdouble *params)) _func)(target, index, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramParameterfvNV)(GLenum target, GLuint index, GLenum pname, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[961];
+   mapi_func _func = ((const mapi_func *) _tbl)[965];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLenum pname, GLfloat *params)) _func)(target, index, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramStringNV)(GLuint id, GLenum pname, GLubyte *program)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[962];
+   mapi_func _func = ((const mapi_func *) _tbl)[966];
    ((void (APIENTRY *)(GLuint id, GLenum pname, GLubyte *program)) _func)(id, pname, program);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramivNV)(GLuint id, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[963];
+   mapi_func _func = ((const mapi_func *) _tbl)[967];
    ((void (APIENTRY *)(GLuint id, GLenum pname, GLint *params)) _func)(id, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetTrackMatrixivNV)(GLenum target, GLuint address, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[964];
+   mapi_func _func = ((const mapi_func *) _tbl)[968];
    ((void (APIENTRY *)(GLenum target, GLuint address, GLenum pname, GLint *params)) _func)(target, address, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetVertexAttribdvNV)(GLuint index, GLenum pname, GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[965];
+   mapi_func _func = ((const mapi_func *) _tbl)[969];
    ((void (APIENTRY *)(GLuint index, GLenum pname, GLdouble *params)) _func)(index, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetVertexAttribfvNV)(GLuint index, GLenum pname, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[966];
+   mapi_func _func = ((const mapi_func *) _tbl)[970];
    ((void (APIENTRY *)(GLuint index, GLenum pname, GLfloat *params)) _func)(index, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetVertexAttribivNV)(GLuint index, GLenum pname, GLint *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[967];
+   mapi_func _func = ((const mapi_func *) _tbl)[971];
    ((void (APIENTRY *)(GLuint index, GLenum pname, GLint *params)) _func)(index, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(LoadProgramNV)(GLenum target, GLuint id, GLsizei len, const GLubyte *program)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[968];
+   mapi_func _func = ((const mapi_func *) _tbl)[972];
    ((void (APIENTRY *)(GLenum target, GLuint id, GLsizei len, const GLubyte *program)) _func)(target, id, len, program);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramParameters4dvNV)(GLenum target, GLuint index, GLsizei num, const GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[969];
+   mapi_func _func = ((const mapi_func *) _tbl)[973];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei num, const GLdouble *params)) _func)(target, index, num, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramParameters4fvNV)(GLenum target, GLuint index, GLsizei num, const GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[970];
+   mapi_func _func = ((const mapi_func *) _tbl)[974];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLsizei num, const GLfloat *params)) _func)(target, index, num, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(RequestResidentProgramsNV)(GLsizei n, const GLuint *ids)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[971];
+   mapi_func _func = ((const mapi_func *) _tbl)[975];
    ((void (APIENTRY *)(GLsizei n, const GLuint *ids)) _func)(n, ids);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TrackMatrixNV)(GLenum target, GLuint address, GLenum matrix, GLenum transform)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[972];
+   mapi_func _func = ((const mapi_func *) _tbl)[976];
    ((void (APIENTRY *)(GLenum target, GLuint address, GLenum matrix, GLenum transform)) _func)(target, address, matrix, transform);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib1dNV)(GLuint index, GLdouble x)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[973];
+   mapi_func _func = ((const mapi_func *) _tbl)[977];
    ((void (APIENTRY *)(GLuint index, GLdouble x)) _func)(index, x);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib1dvNV)(GLuint index, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[974];
+   mapi_func _func = ((const mapi_func *) _tbl)[978];
    ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib1fNV)(GLuint index, GLfloat x)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[975];
+   mapi_func _func = ((const mapi_func *) _tbl)[979];
    ((void (APIENTRY *)(GLuint index, GLfloat x)) _func)(index, x);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib1fvNV)(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[976];
+   mapi_func _func = ((const mapi_func *) _tbl)[980];
    ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib1sNV)(GLuint index, GLshort x)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[977];
+   mapi_func _func = ((const mapi_func *) _tbl)[981];
    ((void (APIENTRY *)(GLuint index, GLshort x)) _func)(index, x);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib1svNV)(GLuint index, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[978];
+   mapi_func _func = ((const mapi_func *) _tbl)[982];
    ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib2dNV)(GLuint index, GLdouble x, GLdouble y)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[979];
+   mapi_func _func = ((const mapi_func *) _tbl)[983];
    ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y)) _func)(index, x, y);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib2dvNV)(GLuint index, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[980];
+   mapi_func _func = ((const mapi_func *) _tbl)[984];
    ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib2fNV)(GLuint index, GLfloat x, GLfloat y)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[981];
+   mapi_func _func = ((const mapi_func *) _tbl)[985];
    ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y)) _func)(index, x, y);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib2fvNV)(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[982];
+   mapi_func _func = ((const mapi_func *) _tbl)[986];
    ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib2sNV)(GLuint index, GLshort x, GLshort y)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[983];
+   mapi_func _func = ((const mapi_func *) _tbl)[987];
    ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y)) _func)(index, x, y);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib2svNV)(GLuint index, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[984];
+   mapi_func _func = ((const mapi_func *) _tbl)[988];
    ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib3dNV)(GLuint index, GLdouble x, GLdouble y, GLdouble z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[985];
+   mapi_func _func = ((const mapi_func *) _tbl)[989];
    ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y, GLdouble z)) _func)(index, x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib3dvNV)(GLuint index, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[986];
+   mapi_func _func = ((const mapi_func *) _tbl)[990];
    ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib3fNV)(GLuint index, GLfloat x, GLfloat y, GLfloat z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[987];
+   mapi_func _func = ((const mapi_func *) _tbl)[991];
    ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z)) _func)(index, x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib3fvNV)(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[988];
+   mapi_func _func = ((const mapi_func *) _tbl)[992];
    ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib3sNV)(GLuint index, GLshort x, GLshort y, GLshort z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[989];
+   mapi_func _func = ((const mapi_func *) _tbl)[993];
    ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y, GLshort z)) _func)(index, x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib3svNV)(GLuint index, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[990];
+   mapi_func _func = ((const mapi_func *) _tbl)[994];
    ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib4dNV)(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[991];
+   mapi_func _func = ((const mapi_func *) _tbl)[995];
    ((void (APIENTRY *)(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(index, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib4dvNV)(GLuint index, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[992];
+   mapi_func _func = ((const mapi_func *) _tbl)[996];
    ((void (APIENTRY *)(GLuint index, const GLdouble *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib4fNV)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[993];
+   mapi_func _func = ((const mapi_func *) _tbl)[997];
    ((void (APIENTRY *)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(index, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib4fvNV)(GLuint index, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[994];
+   mapi_func _func = ((const mapi_func *) _tbl)[998];
    ((void (APIENTRY *)(GLuint index, const GLfloat *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib4sNV)(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[995];
+   mapi_func _func = ((const mapi_func *) _tbl)[999];
    ((void (APIENTRY *)(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w)) _func)(index, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib4svNV)(GLuint index, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[996];
+   mapi_func _func = ((const mapi_func *) _tbl)[1000];
    ((void (APIENTRY *)(GLuint index, const GLshort *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib4ubNV)(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[997];
+   mapi_func _func = ((const mapi_func *) _tbl)[1001];
    ((void (APIENTRY *)(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w)) _func)(index, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttrib4ubvNV)(GLuint index, const GLubyte *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[998];
+   mapi_func _func = ((const mapi_func *) _tbl)[1002];
    ((void (APIENTRY *)(GLuint index, const GLubyte *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribPointerNV)(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[999];
+   mapi_func _func = ((const mapi_func *) _tbl)[1003];
    ((void (APIENTRY *)(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)) _func)(index, size, type, stride, pointer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs1dvNV)(GLuint index, GLsizei n, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1000];
+   mapi_func _func = ((const mapi_func *) _tbl)[1004];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs1fvNV)(GLuint index, GLsizei n, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1001];
+   mapi_func _func = ((const mapi_func *) _tbl)[1005];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs1svNV)(GLuint index, GLsizei n, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1002];
+   mapi_func _func = ((const mapi_func *) _tbl)[1006];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs2dvNV)(GLuint index, GLsizei n, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1003];
+   mapi_func _func = ((const mapi_func *) _tbl)[1007];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs2fvNV)(GLuint index, GLsizei n, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1004];
+   mapi_func _func = ((const mapi_func *) _tbl)[1008];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs2svNV)(GLuint index, GLsizei n, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1005];
+   mapi_func _func = ((const mapi_func *) _tbl)[1009];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs3dvNV)(GLuint index, GLsizei n, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1006];
+   mapi_func _func = ((const mapi_func *) _tbl)[1010];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs3fvNV)(GLuint index, GLsizei n, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1007];
+   mapi_func _func = ((const mapi_func *) _tbl)[1011];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs3svNV)(GLuint index, GLsizei n, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1008];
+   mapi_func _func = ((const mapi_func *) _tbl)[1012];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs4dvNV)(GLuint index, GLsizei n, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1009];
+   mapi_func _func = ((const mapi_func *) _tbl)[1013];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLdouble *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs4fvNV)(GLuint index, GLsizei n, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1010];
+   mapi_func _func = ((const mapi_func *) _tbl)[1014];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLfloat *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs4svNV)(GLuint index, GLsizei n, const GLshort *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1011];
+   mapi_func _func = ((const mapi_func *) _tbl)[1015];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLshort *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribs4ubvNV)(GLuint index, GLsizei n, const GLubyte *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1012];
+   mapi_func _func = ((const mapi_func *) _tbl)[1016];
    ((void (APIENTRY *)(GLuint index, GLsizei n, const GLubyte *v)) _func)(index, n, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetTexBumpParameterfvATI)(GLenum pname, GLfloat *param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1013];
+   mapi_func _func = ((const mapi_func *) _tbl)[1017];
    ((void (APIENTRY *)(GLenum pname, GLfloat *param)) _func)(pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetTexBumpParameterivATI)(GLenum pname, GLint *param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1014];
+   mapi_func _func = ((const mapi_func *) _tbl)[1018];
    ((void (APIENTRY *)(GLenum pname, GLint *param)) _func)(pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexBumpParameterfvATI)(GLenum pname, const GLfloat *param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1015];
+   mapi_func _func = ((const mapi_func *) _tbl)[1019];
    ((void (APIENTRY *)(GLenum pname, const GLfloat *param)) _func)(pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexBumpParameterivATI)(GLenum pname, const GLint *param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1016];
+   mapi_func _func = ((const mapi_func *) _tbl)[1020];
    ((void (APIENTRY *)(GLenum pname, const GLint *param)) _func)(pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(AlphaFragmentOp1ATI)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1017];
+   mapi_func _func = ((const mapi_func *) _tbl)[1021];
    ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(AlphaFragmentOp2ATI)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1018];
+   mapi_func _func = ((const mapi_func *) _tbl)[1022];
    ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(AlphaFragmentOp3ATI)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1019];
+   mapi_func _func = ((const mapi_func *) _tbl)[1023];
    ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)) _func)(op, dst, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BeginFragmentShaderATI)(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1020];
+   mapi_func _func = ((const mapi_func *) _tbl)[1024];
    ((void (APIENTRY *)(void)) _func)();
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindFragmentShaderATI)(GLuint id)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1021];
+   mapi_func _func = ((const mapi_func *) _tbl)[1025];
    ((void (APIENTRY *)(GLuint id)) _func)(id);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ColorFragmentOp1ATI)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1022];
+   mapi_func _func = ((const mapi_func *) _tbl)[1026];
    ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ColorFragmentOp2ATI)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1023];
+   mapi_func _func = ((const mapi_func *) _tbl)[1027];
    ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ColorFragmentOp3ATI)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1024];
+   mapi_func _func = ((const mapi_func *) _tbl)[1028];
    ((void (APIENTRY *)(GLenum op, GLuint dst, GLuint dstMask, GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod, GLuint arg2, GLuint arg2Rep, GLuint arg2Mod, GLuint arg3, GLuint arg3Rep, GLuint arg3Mod)) _func)(op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DeleteFragmentShaderATI)(GLuint id)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1025];
+   mapi_func _func = ((const mapi_func *) _tbl)[1029];
    ((void (APIENTRY *)(GLuint id)) _func)(id);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(EndFragmentShaderATI)(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1026];
+   mapi_func _func = ((const mapi_func *) _tbl)[1030];
    ((void (APIENTRY *)(void)) _func)();
 }
 
 GLAPI GLuint APIENTRY GLAPI_PREFIX(GenFragmentShadersATI)(GLuint range)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1027];
+   mapi_func _func = ((const mapi_func *) _tbl)[1031];
    return ((GLuint (APIENTRY *)(GLuint range)) _func)(range);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PassTexCoordATI)(GLuint dst, GLuint coord, GLenum swizzle)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1028];
+   mapi_func _func = ((const mapi_func *) _tbl)[1032];
    ((void (APIENTRY *)(GLuint dst, GLuint coord, GLenum swizzle)) _func)(dst, coord, swizzle);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(SampleMapATI)(GLuint dst, GLuint interp, GLenum swizzle)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1029];
+   mapi_func _func = ((const mapi_func *) _tbl)[1033];
    ((void (APIENTRY *)(GLuint dst, GLuint interp, GLenum swizzle)) _func)(dst, interp, swizzle);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(SetFragmentShaderConstantATI)(GLuint dst, const GLfloat *value)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1030];
+   mapi_func _func = ((const mapi_func *) _tbl)[1034];
    ((void (APIENTRY *)(GLuint dst, const GLfloat *value)) _func)(dst, value);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramNamedParameterdvNV)(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1034];
+   mapi_func _func = ((const mapi_func *) _tbl)[1038];
    ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params)) _func)(id, len, name, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetProgramNamedParameterfvNV)(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1035];
+   mapi_func _func = ((const mapi_func *) _tbl)[1039];
    ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params)) _func)(id, len, name, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramNamedParameter4dNV)(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1036];
+   mapi_func _func = ((const mapi_func *) _tbl)[1040];
    ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w)) _func)(id, len, name, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramNamedParameter4dvNV)(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1037];
+   mapi_func _func = ((const mapi_func *) _tbl)[1041];
    ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v)) _func)(id, len, name, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramNamedParameter4fNV)(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1038];
+   mapi_func _func = ((const mapi_func *) _tbl)[1042];
    ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)) _func)(id, len, name, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ProgramNamedParameter4fvNV)(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1039];
+   mapi_func _func = ((const mapi_func *) _tbl)[1043];
    ((void (APIENTRY *)(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v)) _func)(id, len, name, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PrimitiveRestartNV)(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1040];
+   mapi_func _func = ((const mapi_func *) _tbl)[1044];
    ((void (APIENTRY *)(void)) _func)();
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindFramebufferEXT)(GLenum target, GLuint framebuffer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1045];
+   mapi_func _func = ((const mapi_func *) _tbl)[1049];
    ((void (APIENTRY *)(GLenum target, GLuint framebuffer)) _func)(target, framebuffer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindRenderbufferEXT)(GLenum target, GLuint renderbuffer)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1046];
+   mapi_func _func = ((const mapi_func *) _tbl)[1050];
    ((void (APIENTRY *)(GLenum target, GLuint renderbuffer)) _func)(target, renderbuffer);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI1iEXT)(GLuint index, GLint x)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1049];
+   mapi_func _func = ((const mapi_func *) _tbl)[1053];
    ((void (APIENTRY *)(GLuint index, GLint x)) _func)(index, x);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI1i)(GLuint index, GLint x)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1049];
+   mapi_func _func = ((const mapi_func *) _tbl)[1053];
    ((void (APIENTRY *)(GLuint index, GLint x)) _func)(index, x);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI1uiEXT)(GLuint index, GLuint x)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1050];
+   mapi_func _func = ((const mapi_func *) _tbl)[1054];
    ((void (APIENTRY *)(GLuint index, GLuint x)) _func)(index, x);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI1ui)(GLuint index, GLuint x)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1050];
+   mapi_func _func = ((const mapi_func *) _tbl)[1054];
    ((void (APIENTRY *)(GLuint index, GLuint x)) _func)(index, x);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI2iEXT)(GLuint index, GLint x, GLint y)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1051];
+   mapi_func _func = ((const mapi_func *) _tbl)[1055];
    ((void (APIENTRY *)(GLuint index, GLint x, GLint y)) _func)(index, x, y);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI2i)(GLuint index, GLint x, GLint y)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1051];
+   mapi_func _func = ((const mapi_func *) _tbl)[1055];
    ((void (APIENTRY *)(GLuint index, GLint x, GLint y)) _func)(index, x, y);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI2ivEXT)(GLuint index, const GLint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1052];
+   mapi_func _func = ((const mapi_func *) _tbl)[1056];
    ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI2iv)(GLuint index, const GLint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1052];
+   mapi_func _func = ((const mapi_func *) _tbl)[1056];
    ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI2uiEXT)(GLuint index, GLuint x, GLuint y)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1053];
+   mapi_func _func = ((const mapi_func *) _tbl)[1057];
    ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y)) _func)(index, x, y);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI2ui)(GLuint index, GLuint x, GLuint y)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1053];
+   mapi_func _func = ((const mapi_func *) _tbl)[1057];
    ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y)) _func)(index, x, y);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI2uivEXT)(GLuint index, const GLuint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1054];
+   mapi_func _func = ((const mapi_func *) _tbl)[1058];
    ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI2uiv)(GLuint index, const GLuint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1054];
+   mapi_func _func = ((const mapi_func *) _tbl)[1058];
    ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI3iEXT)(GLuint index, GLint x, GLint y, GLint z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1055];
+   mapi_func _func = ((const mapi_func *) _tbl)[1059];
    ((void (APIENTRY *)(GLuint index, GLint x, GLint y, GLint z)) _func)(index, x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI3i)(GLuint index, GLint x, GLint y, GLint z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1055];
+   mapi_func _func = ((const mapi_func *) _tbl)[1059];
    ((void (APIENTRY *)(GLuint index, GLint x, GLint y, GLint z)) _func)(index, x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI3ivEXT)(GLuint index, const GLint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1056];
+   mapi_func _func = ((const mapi_func *) _tbl)[1060];
    ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI3iv)(GLuint index, const GLint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1056];
+   mapi_func _func = ((const mapi_func *) _tbl)[1060];
    ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI3uiEXT)(GLuint index, GLuint x, GLuint y, GLuint z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1057];
+   mapi_func _func = ((const mapi_func *) _tbl)[1061];
    ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y, GLuint z)) _func)(index, x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI3ui)(GLuint index, GLuint x, GLuint y, GLuint z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1057];
+   mapi_func _func = ((const mapi_func *) _tbl)[1061];
    ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y, GLuint z)) _func)(index, x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI3uivEXT)(GLuint index, const GLuint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1058];
+   mapi_func _func = ((const mapi_func *) _tbl)[1062];
    ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI3uiv)(GLuint index, const GLuint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1058];
+   mapi_func _func = ((const mapi_func *) _tbl)[1062];
    ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI4iEXT)(GLuint index, GLint x, GLint y, GLint z, GLint w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1059];
+   mapi_func _func = ((const mapi_func *) _tbl)[1063];
    ((void (APIENTRY *)(GLuint index, GLint x, GLint y, GLint z, GLint w)) _func)(index, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI4i)(GLuint index, GLint x, GLint y, GLint z, GLint w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1059];
+   mapi_func _func = ((const mapi_func *) _tbl)[1063];
    ((void (APIENTRY *)(GLuint index, GLint x, GLint y, GLint z, GLint w)) _func)(index, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI4ivEXT)(GLuint index, const GLint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1060];
+   mapi_func _func = ((const mapi_func *) _tbl)[1064];
    ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI4iv)(GLuint index, const GLint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1060];
+   mapi_func _func = ((const mapi_func *) _tbl)[1064];
    ((void (APIENTRY *)(GLuint index, const GLint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI4uiEXT)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1061];
+   mapi_func _func = ((const mapi_func *) _tbl)[1065];
    ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)) _func)(index, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI4ui)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1061];
+   mapi_func _func = ((const mapi_func *) _tbl)[1065];
    ((void (APIENTRY *)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)) _func)(index, x, y, z, w);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI4uivEXT)(GLuint index, const GLuint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1062];
+   mapi_func _func = ((const mapi_func *) _tbl)[1066];
    ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VertexAttribI4uiv)(GLuint index, const GLuint *v)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1062];
+   mapi_func _func = ((const mapi_func *) _tbl)[1066];
    ((void (APIENTRY *)(GLuint index, const GLuint *v)) _func)(index, v);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ClearColorIiEXT)(GLint r, GLint g, GLint b, GLint a)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1063];
+   mapi_func _func = ((const mapi_func *) _tbl)[1067];
    ((void (APIENTRY *)(GLint r, GLint g, GLint b, GLint a)) _func)(r, g, b, a);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ClearColorIuiEXT)(GLuint r, GLuint g, GLuint b, GLuint a)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1064];
+   mapi_func _func = ((const mapi_func *) _tbl)[1068];
    ((void (APIENTRY *)(GLuint r, GLuint g, GLuint b, GLuint a)) _func)(r, g, b, a);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BindBufferOffsetEXT)(GLenum target, GLuint index, GLuint buffer, GLintptr offset)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1065];
+   mapi_func _func = ((const mapi_func *) _tbl)[1069];
    ((void (APIENTRY *)(GLenum target, GLuint index, GLuint buffer, GLintptr offset)) _func)(target, index, buffer, offset);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(BeginPerfMonitorAMD)(GLuint monitor)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1066];
+   mapi_func _func = ((const mapi_func *) _tbl)[1070];
    ((void (APIENTRY *)(GLuint monitor)) _func)(monitor);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DeletePerfMonitorsAMD)(GLsizei n, GLuint *monitors)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1067];
+   mapi_func _func = ((const mapi_func *) _tbl)[1071];
    ((void (APIENTRY *)(GLsizei n, GLuint *monitors)) _func)(n, monitors);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(EndPerfMonitorAMD)(GLuint monitor)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1068];
+   mapi_func _func = ((const mapi_func *) _tbl)[1072];
    ((void (APIENTRY *)(GLuint monitor)) _func)(monitor);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GenPerfMonitorsAMD)(GLsizei n, GLuint *monitors)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1069];
+   mapi_func _func = ((const mapi_func *) _tbl)[1073];
    ((void (APIENTRY *)(GLsizei n, GLuint *monitors)) _func)(n, monitors);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetPerfMonitorCounterDataAMD)(GLuint monitor, GLenum pname, GLsizei dataSize, GLuint *data, GLint *bytesWritten)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1070];
+   mapi_func _func = ((const mapi_func *) _tbl)[1074];
    ((void (APIENTRY *)(GLuint monitor, GLenum pname, GLsizei dataSize, GLuint *data, GLint *bytesWritten)) _func)(monitor, pname, dataSize, data, bytesWritten);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetPerfMonitorCounterInfoAMD)(GLuint group, GLuint counter, GLenum pname, GLvoid *data)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1071];
+   mapi_func _func = ((const mapi_func *) _tbl)[1075];
    ((void (APIENTRY *)(GLuint group, GLuint counter, GLenum pname, GLvoid *data)) _func)(group, counter, pname, data);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetPerfMonitorCounterStringAMD)(GLuint group, GLuint counter, GLsizei bufSize, GLsizei *length, GLchar *counterString)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1072];
+   mapi_func _func = ((const mapi_func *) _tbl)[1076];
    ((void (APIENTRY *)(GLuint group, GLuint counter, GLsizei bufSize, GLsizei *length, GLchar *counterString)) _func)(group, counter, bufSize, length, counterString);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetPerfMonitorCountersAMD)(GLuint group, GLint *numCounters, GLint *maxActiveCounters, GLsizei countersSize, GLuint *counters)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1073];
+   mapi_func _func = ((const mapi_func *) _tbl)[1077];
    ((void (APIENTRY *)(GLuint group, GLint *numCounters, GLint *maxActiveCounters, GLsizei countersSize, GLuint *counters)) _func)(group, numCounters, maxActiveCounters, countersSize, counters);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetPerfMonitorGroupStringAMD)(GLuint group, GLsizei bufSize, GLsizei *length, GLchar *groupString)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1074];
+   mapi_func _func = ((const mapi_func *) _tbl)[1078];
    ((void (APIENTRY *)(GLuint group, GLsizei bufSize, GLsizei *length, GLchar *groupString)) _func)(group, bufSize, length, groupString);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetPerfMonitorGroupsAMD)(GLint *numGroups, GLsizei groupsSize, GLuint *groups)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1075];
+   mapi_func _func = ((const mapi_func *) _tbl)[1079];
    ((void (APIENTRY *)(GLint *numGroups, GLsizei groupsSize, GLuint *groups)) _func)(numGroups, groupsSize, groups);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(SelectPerfMonitorCountersAMD)(GLuint monitor, GLboolean enable, GLuint group, GLint numCounters, GLuint *counterList)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1076];
+   mapi_func _func = ((const mapi_func *) _tbl)[1080];
    ((void (APIENTRY *)(GLuint monitor, GLboolean enable, GLuint group, GLint numCounters, GLuint *counterList)) _func)(monitor, enable, group, numCounters, counterList);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetObjectParameterivAPPLE)(GLenum objectType, GLuint name, GLenum pname, GLint *value)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1077];
+   mapi_func _func = ((const mapi_func *) _tbl)[1081];
    ((void (APIENTRY *)(GLenum objectType, GLuint name, GLenum pname, GLint *value)) _func)(objectType, name, pname, value);
 }
 
 GLAPI GLenum APIENTRY GLAPI_PREFIX(ObjectPurgeableAPPLE)(GLenum objectType, GLuint name, GLenum option)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1078];
+   mapi_func _func = ((const mapi_func *) _tbl)[1082];
    return ((GLenum (APIENTRY *)(GLenum objectType, GLuint name, GLenum option)) _func)(objectType, name, option);
 }
 
 GLAPI GLenum APIENTRY GLAPI_PREFIX(ObjectUnpurgeableAPPLE)(GLenum objectType, GLuint name, GLenum option)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1079];
+   mapi_func _func = ((const mapi_func *) _tbl)[1083];
    return ((GLenum (APIENTRY *)(GLenum objectType, GLuint name, GLenum option)) _func)(objectType, name, option);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ActiveProgramEXT)(GLuint program)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1080];
+   mapi_func _func = ((const mapi_func *) _tbl)[1084];
    ((void (APIENTRY *)(GLuint program)) _func)(program);
 }
 
 GLAPI GLuint APIENTRY GLAPI_PREFIX(CreateShaderProgramEXT)(GLenum type, const GLchar *string)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1081];
+   mapi_func _func = ((const mapi_func *) _tbl)[1085];
    return ((GLuint (APIENTRY *)(GLenum type, const GLchar *string)) _func)(type, string);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(UseShaderProgramEXT)(GLenum type, GLuint program)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1082];
+   mapi_func _func = ((const mapi_func *) _tbl)[1086];
    ((void (APIENTRY *)(GLenum type, GLuint program)) _func)(type, program);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TextureBarrierNV)(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1083];
+   mapi_func _func = ((const mapi_func *) _tbl)[1087];
+   ((void (APIENTRY *)(void)) _func)();
+}
+
+GLAPI void APIENTRY GLAPI_PREFIX(TextureBarrier)(void)
+{
+   const struct mapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1087];
    ((void (APIENTRY *)(void)) _func)();
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUFiniNV)(void)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1084];
+   mapi_func _func = ((const mapi_func *) _tbl)[1088];
    ((void (APIENTRY *)(void)) _func)();
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUGetSurfaceivNV)(GLintptr surface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1085];
+   mapi_func _func = ((const mapi_func *) _tbl)[1089];
    ((void (APIENTRY *)(GLintptr surface, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)) _func)(surface, pname, bufSize, length, values);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUInitNV)(const GLvoid *vdpDevice, const GLvoid *getProcAddress)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1086];
+   mapi_func _func = ((const mapi_func *) _tbl)[1090];
    ((void (APIENTRY *)(const GLvoid *vdpDevice, const GLvoid *getProcAddress)) _func)(vdpDevice, getProcAddress);
 }
 
 GLAPI GLboolean APIENTRY GLAPI_PREFIX(VDPAUIsSurfaceNV)(GLintptr surface)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1087];
+   mapi_func _func = ((const mapi_func *) _tbl)[1091];
    return ((GLboolean (APIENTRY *)(GLintptr surface)) _func)(surface);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUMapSurfacesNV)(GLsizei numSurfaces, const GLintptr *surfaces)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1088];
+   mapi_func _func = ((const mapi_func *) _tbl)[1092];
    ((void (APIENTRY *)(GLsizei numSurfaces, const GLintptr *surfaces)) _func)(numSurfaces, surfaces);
 }
 
 GLAPI GLintptr APIENTRY GLAPI_PREFIX(VDPAURegisterOutputSurfaceNV)(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1089];
+   mapi_func _func = ((const mapi_func *) _tbl)[1093];
    return ((GLintptr (APIENTRY *)(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)) _func)(vdpSurface, target, numTextureNames, textureNames);
 }
 
 GLAPI GLintptr APIENTRY GLAPI_PREFIX(VDPAURegisterVideoSurfaceNV)(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1090];
+   mapi_func _func = ((const mapi_func *) _tbl)[1094];
    return ((GLintptr (APIENTRY *)(const GLvoid *vdpSurface, GLenum target, GLsizei numTextureNames, const GLuint *textureNames)) _func)(vdpSurface, target, numTextureNames, textureNames);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUSurfaceAccessNV)(GLintptr surface, GLenum access)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1091];
+   mapi_func _func = ((const mapi_func *) _tbl)[1095];
    ((void (APIENTRY *)(GLintptr surface, GLenum access)) _func)(surface, access);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUUnmapSurfacesNV)(GLsizei numSurfaces, const GLintptr *surfaces)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1092];
+   mapi_func _func = ((const mapi_func *) _tbl)[1096];
    ((void (APIENTRY *)(GLsizei numSurfaces, const GLintptr *surfaces)) _func)(numSurfaces, surfaces);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(VDPAUUnregisterSurfaceNV)(GLintptr surface)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1093];
+   mapi_func _func = ((const mapi_func *) _tbl)[1097];
    ((void (APIENTRY *)(GLintptr surface)) _func)(surface);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(EGLImageTargetRenderbufferStorageOES)(GLenum target, GLvoid *writeOffset)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1107];
+   mapi_func _func = ((const mapi_func *) _tbl)[1111];
    ((void (APIENTRY *)(GLenum target, GLvoid *writeOffset)) _func)(target, writeOffset);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(EGLImageTargetTexture2DOES)(GLenum target, GLvoid *writeOffset)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1108];
+   mapi_func _func = ((const mapi_func *) _tbl)[1112];
    ((void (APIENTRY *)(GLenum target, GLvoid *writeOffset)) _func)(target, writeOffset);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(AlphaFuncx)(GLenum func, GLclampx ref)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1109];
+   mapi_func _func = ((const mapi_func *) _tbl)[1113];
    ((void (APIENTRY *)(GLenum func, GLclampx ref)) _func)(func, ref);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ClearColorx)(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1110];
+   mapi_func _func = ((const mapi_func *) _tbl)[1114];
    ((void (APIENTRY *)(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha)) _func)(red, green, blue, alpha);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ClearDepthx)(GLclampx depth)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1111];
+   mapi_func _func = ((const mapi_func *) _tbl)[1115];
    ((void (APIENTRY *)(GLclampx depth)) _func)(depth);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Color4x)(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1112];
+   mapi_func _func = ((const mapi_func *) _tbl)[1116];
    ((void (APIENTRY *)(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)) _func)(red, green, blue, alpha);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(DepthRangex)(GLclampx zNear, GLclampx zFar)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1113];
+   mapi_func _func = ((const mapi_func *) _tbl)[1117];
    ((void (APIENTRY *)(GLclampx zNear, GLclampx zFar)) _func)(zNear, zFar);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Fogx)(GLenum pname, GLfixed param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1114];
+   mapi_func _func = ((const mapi_func *) _tbl)[1118];
    ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Fogxv)(GLenum pname, const GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1115];
+   mapi_func _func = ((const mapi_func *) _tbl)[1119];
    ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Frustumf)(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1116];
+   mapi_func _func = ((const mapi_func *) _tbl)[1120];
    ((void (APIENTRY *)(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)) _func)(left, right, bottom, top, zNear, zFar);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Frustumx)(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1117];
+   mapi_func _func = ((const mapi_func *) _tbl)[1121];
    ((void (APIENTRY *)(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)) _func)(left, right, bottom, top, zNear, zFar);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(LightModelx)(GLenum pname, GLfixed param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1118];
+   mapi_func _func = ((const mapi_func *) _tbl)[1122];
    ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(LightModelxv)(GLenum pname, const GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1119];
+   mapi_func _func = ((const mapi_func *) _tbl)[1123];
    ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Lightx)(GLenum light, GLenum pname, GLfixed param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1120];
+   mapi_func _func = ((const mapi_func *) _tbl)[1124];
    ((void (APIENTRY *)(GLenum light, GLenum pname, GLfixed param)) _func)(light, pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Lightxv)(GLenum light, GLenum pname, const GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1121];
+   mapi_func _func = ((const mapi_func *) _tbl)[1125];
    ((void (APIENTRY *)(GLenum light, GLenum pname, const GLfixed *params)) _func)(light, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(LineWidthx)(GLfixed width)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1122];
+   mapi_func _func = ((const mapi_func *) _tbl)[1126];
    ((void (APIENTRY *)(GLfixed width)) _func)(width);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(LoadMatrixx)(const GLfixed *m)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1123];
+   mapi_func _func = ((const mapi_func *) _tbl)[1127];
    ((void (APIENTRY *)(const GLfixed *m)) _func)(m);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Materialx)(GLenum face, GLenum pname, GLfixed param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1124];
+   mapi_func _func = ((const mapi_func *) _tbl)[1128];
    ((void (APIENTRY *)(GLenum face, GLenum pname, GLfixed param)) _func)(face, pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Materialxv)(GLenum face, GLenum pname, const GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1125];
+   mapi_func _func = ((const mapi_func *) _tbl)[1129];
    ((void (APIENTRY *)(GLenum face, GLenum pname, const GLfixed *params)) _func)(face, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(MultMatrixx)(const GLfixed *m)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1126];
+   mapi_func _func = ((const mapi_func *) _tbl)[1130];
    ((void (APIENTRY *)(const GLfixed *m)) _func)(m);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(MultiTexCoord4x)(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1127];
+   mapi_func _func = ((const mapi_func *) _tbl)[1131];
    ((void (APIENTRY *)(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q)) _func)(target, s, t, r, q);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Normal3x)(GLfixed nx, GLfixed ny, GLfixed nz)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1128];
+   mapi_func _func = ((const mapi_func *) _tbl)[1132];
    ((void (APIENTRY *)(GLfixed nx, GLfixed ny, GLfixed nz)) _func)(nx, ny, nz);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Orthof)(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1129];
+   mapi_func _func = ((const mapi_func *) _tbl)[1133];
    ((void (APIENTRY *)(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)) _func)(left, right, bottom, top, zNear, zFar);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Orthox)(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1130];
+   mapi_func _func = ((const mapi_func *) _tbl)[1134];
    ((void (APIENTRY *)(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)) _func)(left, right, bottom, top, zNear, zFar);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PointSizex)(GLfixed size)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1131];
+   mapi_func _func = ((const mapi_func *) _tbl)[1135];
    ((void (APIENTRY *)(GLfixed size)) _func)(size);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PolygonOffsetx)(GLfixed factor, GLfixed units)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1132];
+   mapi_func _func = ((const mapi_func *) _tbl)[1136];
    ((void (APIENTRY *)(GLfixed factor, GLfixed units)) _func)(factor, units);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Rotatex)(GLfixed angle, GLfixed x, GLfixed y, GLfixed z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1133];
+   mapi_func _func = ((const mapi_func *) _tbl)[1137];
    ((void (APIENTRY *)(GLfixed angle, GLfixed x, GLfixed y, GLfixed z)) _func)(angle, x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(SampleCoveragex)(GLclampx value, GLboolean invert)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1134];
+   mapi_func _func = ((const mapi_func *) _tbl)[1138];
    ((void (APIENTRY *)(GLclampx value, GLboolean invert)) _func)(value, invert);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Scalex)(GLfixed x, GLfixed y, GLfixed z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1135];
+   mapi_func _func = ((const mapi_func *) _tbl)[1139];
    ((void (APIENTRY *)(GLfixed x, GLfixed y, GLfixed z)) _func)(x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexEnvx)(GLenum target, GLenum pname, GLfixed param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1136];
+   mapi_func _func = ((const mapi_func *) _tbl)[1140];
    ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed param)) _func)(target, pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexEnvxv)(GLenum target, GLenum pname, const GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1137];
+   mapi_func _func = ((const mapi_func *) _tbl)[1141];
    ((void (APIENTRY *)(GLenum target, GLenum pname, const GLfixed *params)) _func)(target, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexParameterx)(GLenum target, GLenum pname, GLfixed param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1138];
+   mapi_func _func = ((const mapi_func *) _tbl)[1142];
    ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed param)) _func)(target, pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(Translatex)(GLfixed x, GLfixed y, GLfixed z)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1139];
+   mapi_func _func = ((const mapi_func *) _tbl)[1143];
    ((void (APIENTRY *)(GLfixed x, GLfixed y, GLfixed z)) _func)(x, y, z);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ClipPlanef)(GLenum plane, const GLfloat *equation)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1140];
+   mapi_func _func = ((const mapi_func *) _tbl)[1144];
    ((void (APIENTRY *)(GLenum plane, const GLfloat *equation)) _func)(plane, equation);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(ClipPlanex)(GLenum plane, const GLfixed *equation)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1141];
+   mapi_func _func = ((const mapi_func *) _tbl)[1145];
    ((void (APIENTRY *)(GLenum plane, const GLfixed *equation)) _func)(plane, equation);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetClipPlanef)(GLenum plane, GLfloat *equation)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1142];
+   mapi_func _func = ((const mapi_func *) _tbl)[1146];
    ((void (APIENTRY *)(GLenum plane, GLfloat *equation)) _func)(plane, equation);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetClipPlanex)(GLenum plane, GLfixed *equation)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1143];
+   mapi_func _func = ((const mapi_func *) _tbl)[1147];
    ((void (APIENTRY *)(GLenum plane, GLfixed *equation)) _func)(plane, equation);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetFixedv)(GLenum pname, GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1144];
+   mapi_func _func = ((const mapi_func *) _tbl)[1148];
    ((void (APIENTRY *)(GLenum pname, GLfixed *params)) _func)(pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetLightxv)(GLenum light, GLenum pname, GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1145];
+   mapi_func _func = ((const mapi_func *) _tbl)[1149];
    ((void (APIENTRY *)(GLenum light, GLenum pname, GLfixed *params)) _func)(light, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetMaterialxv)(GLenum face, GLenum pname, GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1146];
+   mapi_func _func = ((const mapi_func *) _tbl)[1150];
    ((void (APIENTRY *)(GLenum face, GLenum pname, GLfixed *params)) _func)(face, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetTexEnvxv)(GLenum target, GLenum pname, GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1147];
+   mapi_func _func = ((const mapi_func *) _tbl)[1151];
    ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed *params)) _func)(target, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(GetTexParameterxv)(GLenum target, GLenum pname, GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1148];
+   mapi_func _func = ((const mapi_func *) _tbl)[1152];
    ((void (APIENTRY *)(GLenum target, GLenum pname, GLfixed *params)) _func)(target, pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PointParameterx)(GLenum pname, GLfixed param)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1149];
+   mapi_func _func = ((const mapi_func *) _tbl)[1153];
    ((void (APIENTRY *)(GLenum pname, GLfixed param)) _func)(pname, param);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(PointParameterxv)(GLenum pname, const GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1150];
+   mapi_func _func = ((const mapi_func *) _tbl)[1154];
    ((void (APIENTRY *)(GLenum pname, const GLfixed *params)) _func)(pname, params);
 }
 
 GLAPI void APIENTRY GLAPI_PREFIX(TexParameterxv)(GLenum target, GLenum pname, const GLfixed *params)
 {
    const struct mapi_table *_tbl = entry_current_get();
-   mapi_func _func = ((const mapi_func *) _tbl)[1151];
+   mapi_func _func = ((const mapi_func *) _tbl)[1155];
    ((void (APIENTRY *)(GLenum target, GLenum pname, const GLfixed *params)) _func)(target, pname, params);
 }
 
@@ -14768,767 +14808,782 @@ STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DispatchCompute))"\n"
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DispatchComputeIndirect))"\n"
 "\t"STUB_ASM_CODE("841")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TextureView))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(CopyImageSubData))"\n"
 "\t"STUB_ASM_CODE("842")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindVertexBuffer))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TextureView))"\n"
 "\t"STUB_ASM_CODE("843")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribBinding))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindVertexBuffer))"\n"
 "\t"STUB_ASM_CODE("844")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribFormat))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribBinding))"\n"
 "\t"STUB_ASM_CODE("845")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribIFormat))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribFormat))"\n"
 "\t"STUB_ASM_CODE("846")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribLFormat))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribIFormat))"\n"
 "\t"STUB_ASM_CODE("847")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexBindingDivisor))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribLFormat))"\n"
 "\t"STUB_ASM_CODE("848")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiDrawArraysIndirect))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexBindingDivisor))"\n"
 "\t"STUB_ASM_CODE("849")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiDrawElementsIndirect))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiDrawArraysIndirect))"\n"
 "\t"STUB_ASM_CODE("850")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexBufferRange))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiDrawElementsIndirect))"\n"
 "\t"STUB_ASM_CODE("851")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexStorage2DMultisample))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexBufferRange))"\n"
 "\t"STUB_ASM_CODE("852")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexStorage3DMultisample))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexStorage2DMultisample))"\n"
 "\t"STUB_ASM_CODE("853")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BufferStorage))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexStorage3DMultisample))"\n"
 "\t"STUB_ASM_CODE("854")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindBuffersBase))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BufferStorage))"\n"
 "\t"STUB_ASM_CODE("855")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindBuffersRange))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearTexImage))"\n"
 "\t"STUB_ASM_CODE("856")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindImageTextures))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearTexSubImage))"\n"
 "\t"STUB_ASM_CODE("857")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindSamplers))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindBuffersBase))"\n"
 "\t"STUB_ASM_CODE("858")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindTextures))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindBuffersRange))"\n"
 "\t"STUB_ASM_CODE("859")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindVertexBuffers))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindImageTextures))"\n"
 "\t"STUB_ASM_CODE("860")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateBufferData))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindSamplers))"\n"
 "\t"STUB_ASM_CODE("861")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateBufferSubData))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindTextures))"\n"
 "\t"STUB_ASM_CODE("862")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateFramebuffer))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindVertexBuffers))"\n"
 "\t"STUB_ASM_CODE("863")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateSubFramebuffer))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClipControl))"\n"
 "\t"STUB_ASM_CODE("864")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateTexImage))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateBufferData))"\n"
 "\t"STUB_ASM_CODE("865")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateTexSubImage))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateBufferSubData))"\n"
 "\t"STUB_ASM_CODE("866")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PolygonOffsetEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateFramebuffer))"\n"
 "\t"STUB_ASM_CODE("867")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PointSizePointerOES))"\n"
-"\t"STUB_ASM_CODE("876")"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateSubFramebuffer))"\n"
+"\t"STUB_ASM_CODE("868")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ColorPointerEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateTexImage))"\n"
+"\t"STUB_ASM_CODE("869")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(InvalidateTexSubImage))"\n"
+"\t"STUB_ASM_CODE("870")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PolygonOffsetEXT))"\n"
+"\t"STUB_ASM_CODE("871")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PointSizePointerOES))"\n"
 "\t"STUB_ASM_CODE("880")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EdgeFlagPointerEXT))"\n"
-"\t"STUB_ASM_CODE("881")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(IndexPointerEXT))"\n"
-"\t"STUB_ASM_CODE("882")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(NormalPointerEXT))"\n"
-"\t"STUB_ASM_CODE("883")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexCoordPointerEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ColorPointerEXT))"\n"
 "\t"STUB_ASM_CODE("884")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexPointerEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EdgeFlagPointerEXT))"\n"
 "\t"STUB_ASM_CODE("885")"\n"
 
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(IndexPointerEXT))"\n"
+"\t"STUB_ASM_CODE("886")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(NormalPointerEXT))"\n"
+"\t"STUB_ASM_CODE("887")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexCoordPointerEXT))"\n"
+"\t"STUB_ASM_CODE("888")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexPointerEXT))"\n"
+"\t"STUB_ASM_CODE("889")"\n"
+
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LockArraysEXT))"\n"
-"\t"STUB_ASM_CODE("895")"\n"
+"\t"STUB_ASM_CODE("899")"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(UnlockArraysEXT))"\n"
-"\t"STUB_ASM_CODE("929")"\n"
+"\t"STUB_ASM_CODE("933")"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DebugMessageCallback))"\n"
-"\t"STUB_ASM_CODE("932")"\n"
+"\t"STUB_ASM_CODE("936")"\n"
 
 ".globl "GLAPI_PREFIX_STR(DebugMessageCallbackARB)"\n"
 ".set "GLAPI_PREFIX_STR(DebugMessageCallbackARB)", "GLAPI_PREFIX_STR(DebugMessageCallback)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DebugMessageControl))"\n"
-"\t"STUB_ASM_CODE("933")"\n"
+"\t"STUB_ASM_CODE("937")"\n"
 
 ".globl "GLAPI_PREFIX_STR(DebugMessageControlARB)"\n"
 ".set "GLAPI_PREFIX_STR(DebugMessageControlARB)", "GLAPI_PREFIX_STR(DebugMessageControl)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DebugMessageInsert))"\n"
-"\t"STUB_ASM_CODE("934")"\n"
+"\t"STUB_ASM_CODE("938")"\n"
 
 ".globl "GLAPI_PREFIX_STR(DebugMessageInsertARB)"\n"
 ".set "GLAPI_PREFIX_STR(DebugMessageInsertARB)", "GLAPI_PREFIX_STR(DebugMessageInsert)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetDebugMessageLog))"\n"
-"\t"STUB_ASM_CODE("935")"\n"
+"\t"STUB_ASM_CODE("939")"\n"
 
 ".globl "GLAPI_PREFIX_STR(GetDebugMessageLogARB)"\n"
 ".set "GLAPI_PREFIX_STR(GetDebugMessageLogARB)", "GLAPI_PREFIX_STR(GetDebugMessageLog)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectLabel))"\n"
-"\t"STUB_ASM_CODE("936")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectPtrLabel))"\n"
-"\t"STUB_ASM_CODE("937")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ObjectLabel))"\n"
-"\t"STUB_ASM_CODE("938")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ObjectPtrLabel))"\n"
-"\t"STUB_ASM_CODE("939")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PopDebugGroup))"\n"
 "\t"STUB_ASM_CODE("940")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PushDebugGroup))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectPtrLabel))"\n"
 "\t"STUB_ASM_CODE("941")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SecondaryColor3fEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ObjectLabel))"\n"
 "\t"STUB_ASM_CODE("942")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ObjectPtrLabel))"\n"
+"\t"STUB_ASM_CODE("943")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PopDebugGroup))"\n"
+"\t"STUB_ASM_CODE("944")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PushDebugGroup))"\n"
+"\t"STUB_ASM_CODE("945")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SecondaryColor3fEXT))"\n"
+"\t"STUB_ASM_CODE("946")"\n"
 
 ".globl "GLAPI_PREFIX_STR(SecondaryColor3f)"\n"
 ".set "GLAPI_PREFIX_STR(SecondaryColor3f)", "GLAPI_PREFIX_STR(SecondaryColor3fEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SecondaryColor3fvEXT))"\n"
-"\t"STUB_ASM_CODE("943")"\n"
+"\t"STUB_ASM_CODE("947")"\n"
 
 ".globl "GLAPI_PREFIX_STR(SecondaryColor3fv)"\n"
 ".set "GLAPI_PREFIX_STR(SecondaryColor3fv)", "GLAPI_PREFIX_STR(SecondaryColor3fvEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiDrawElementsEXT))"\n"
-"\t"STUB_ASM_CODE("944")"\n"
+"\t"STUB_ASM_CODE("948")"\n"
 
 ".globl "GLAPI_PREFIX_STR(MultiDrawElements)"\n"
 ".set "GLAPI_PREFIX_STR(MultiDrawElements)", "GLAPI_PREFIX_STR(MultiDrawElementsEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(FogCoordfEXT))"\n"
-"\t"STUB_ASM_CODE("945")"\n"
+"\t"STUB_ASM_CODE("949")"\n"
 
 ".globl "GLAPI_PREFIX_STR(FogCoordf)"\n"
 ".set "GLAPI_PREFIX_STR(FogCoordf)", "GLAPI_PREFIX_STR(FogCoordfEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(FogCoordfvEXT))"\n"
-"\t"STUB_ASM_CODE("946")"\n"
+"\t"STUB_ASM_CODE("950")"\n"
 
 ".globl "GLAPI_PREFIX_STR(FogCoordfv)"\n"
 ".set "GLAPI_PREFIX_STR(FogCoordfv)", "GLAPI_PREFIX_STR(FogCoordfvEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ResizeBuffersMESA))"\n"
-"\t"STUB_ASM_CODE("947")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4dMESA))"\n"
-"\t"STUB_ASM_CODE("948")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4dvMESA))"\n"
-"\t"STUB_ASM_CODE("949")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4fMESA))"\n"
-"\t"STUB_ASM_CODE("950")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4fvMESA))"\n"
 "\t"STUB_ASM_CODE("951")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4iMESA))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4dMESA))"\n"
 "\t"STUB_ASM_CODE("952")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4ivMESA))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4dvMESA))"\n"
 "\t"STUB_ASM_CODE("953")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4sMESA))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4fMESA))"\n"
 "\t"STUB_ASM_CODE("954")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4svMESA))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4fvMESA))"\n"
 "\t"STUB_ASM_CODE("955")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AreProgramsResidentNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4iMESA))"\n"
+"\t"STUB_ASM_CODE("956")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4ivMESA))"\n"
+"\t"STUB_ASM_CODE("957")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4sMESA))"\n"
 "\t"STUB_ASM_CODE("958")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ExecuteProgramNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(WindowPos4svMESA))"\n"
 "\t"STUB_ASM_CODE("959")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramParameterdvNV))"\n"
-"\t"STUB_ASM_CODE("960")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramParameterfvNV))"\n"
-"\t"STUB_ASM_CODE("961")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramStringNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AreProgramsResidentNV))"\n"
 "\t"STUB_ASM_CODE("962")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramivNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ExecuteProgramNV))"\n"
 "\t"STUB_ASM_CODE("963")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTrackMatrixivNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramParameterdvNV))"\n"
 "\t"STUB_ASM_CODE("964")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetVertexAttribdvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramParameterfvNV))"\n"
 "\t"STUB_ASM_CODE("965")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetVertexAttribfvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramStringNV))"\n"
 "\t"STUB_ASM_CODE("966")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetVertexAttribivNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramivNV))"\n"
 "\t"STUB_ASM_CODE("967")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LoadProgramNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTrackMatrixivNV))"\n"
 "\t"STUB_ASM_CODE("968")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramParameters4dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetVertexAttribdvNV))"\n"
 "\t"STUB_ASM_CODE("969")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramParameters4fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetVertexAttribfvNV))"\n"
 "\t"STUB_ASM_CODE("970")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(RequestResidentProgramsNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetVertexAttribivNV))"\n"
 "\t"STUB_ASM_CODE("971")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TrackMatrixNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LoadProgramNV))"\n"
 "\t"STUB_ASM_CODE("972")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1dNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramParameters4dvNV))"\n"
 "\t"STUB_ASM_CODE("973")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramParameters4fvNV))"\n"
 "\t"STUB_ASM_CODE("974")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1fNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(RequestResidentProgramsNV))"\n"
 "\t"STUB_ASM_CODE("975")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TrackMatrixNV))"\n"
 "\t"STUB_ASM_CODE("976")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1sNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1dNV))"\n"
 "\t"STUB_ASM_CODE("977")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1svNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1dvNV))"\n"
 "\t"STUB_ASM_CODE("978")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2dNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1fNV))"\n"
 "\t"STUB_ASM_CODE("979")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1fvNV))"\n"
 "\t"STUB_ASM_CODE("980")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2fNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1sNV))"\n"
 "\t"STUB_ASM_CODE("981")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib1svNV))"\n"
 "\t"STUB_ASM_CODE("982")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2sNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2dNV))"\n"
 "\t"STUB_ASM_CODE("983")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2svNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2dvNV))"\n"
 "\t"STUB_ASM_CODE("984")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3dNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2fNV))"\n"
 "\t"STUB_ASM_CODE("985")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2fvNV))"\n"
 "\t"STUB_ASM_CODE("986")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3fNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2sNV))"\n"
 "\t"STUB_ASM_CODE("987")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib2svNV))"\n"
 "\t"STUB_ASM_CODE("988")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3sNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3dNV))"\n"
 "\t"STUB_ASM_CODE("989")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3svNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3dvNV))"\n"
 "\t"STUB_ASM_CODE("990")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4dNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3fNV))"\n"
 "\t"STUB_ASM_CODE("991")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3fvNV))"\n"
 "\t"STUB_ASM_CODE("992")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4fNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3sNV))"\n"
 "\t"STUB_ASM_CODE("993")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib3svNV))"\n"
 "\t"STUB_ASM_CODE("994")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4sNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4dNV))"\n"
 "\t"STUB_ASM_CODE("995")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4svNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4dvNV))"\n"
 "\t"STUB_ASM_CODE("996")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4ubNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4fNV))"\n"
 "\t"STUB_ASM_CODE("997")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4ubvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4fvNV))"\n"
 "\t"STUB_ASM_CODE("998")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribPointerNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4sNV))"\n"
 "\t"STUB_ASM_CODE("999")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs1dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4svNV))"\n"
 "\t"STUB_ASM_CODE("1000")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs1fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4ubNV))"\n"
 "\t"STUB_ASM_CODE("1001")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs1svNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttrib4ubvNV))"\n"
 "\t"STUB_ASM_CODE("1002")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs2dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribPointerNV))"\n"
 "\t"STUB_ASM_CODE("1003")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs2fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs1dvNV))"\n"
 "\t"STUB_ASM_CODE("1004")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs2svNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs1fvNV))"\n"
 "\t"STUB_ASM_CODE("1005")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs3dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs1svNV))"\n"
 "\t"STUB_ASM_CODE("1006")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs3fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs2dvNV))"\n"
 "\t"STUB_ASM_CODE("1007")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs3svNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs2fvNV))"\n"
 "\t"STUB_ASM_CODE("1008")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs4dvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs2svNV))"\n"
 "\t"STUB_ASM_CODE("1009")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs4fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs3dvNV))"\n"
 "\t"STUB_ASM_CODE("1010")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs4svNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs3fvNV))"\n"
 "\t"STUB_ASM_CODE("1011")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs4ubvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs3svNV))"\n"
 "\t"STUB_ASM_CODE("1012")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTexBumpParameterfvATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs4dvNV))"\n"
 "\t"STUB_ASM_CODE("1013")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTexBumpParameterivATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs4fvNV))"\n"
 "\t"STUB_ASM_CODE("1014")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexBumpParameterfvATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs4svNV))"\n"
 "\t"STUB_ASM_CODE("1015")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexBumpParameterivATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribs4ubvNV))"\n"
 "\t"STUB_ASM_CODE("1016")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AlphaFragmentOp1ATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTexBumpParameterfvATI))"\n"
 "\t"STUB_ASM_CODE("1017")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AlphaFragmentOp2ATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTexBumpParameterivATI))"\n"
 "\t"STUB_ASM_CODE("1018")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AlphaFragmentOp3ATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexBumpParameterfvATI))"\n"
 "\t"STUB_ASM_CODE("1019")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BeginFragmentShaderATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexBumpParameterivATI))"\n"
 "\t"STUB_ASM_CODE("1020")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindFragmentShaderATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AlphaFragmentOp1ATI))"\n"
 "\t"STUB_ASM_CODE("1021")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ColorFragmentOp1ATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AlphaFragmentOp2ATI))"\n"
 "\t"STUB_ASM_CODE("1022")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ColorFragmentOp2ATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AlphaFragmentOp3ATI))"\n"
 "\t"STUB_ASM_CODE("1023")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ColorFragmentOp3ATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BeginFragmentShaderATI))"\n"
 "\t"STUB_ASM_CODE("1024")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DeleteFragmentShaderATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindFragmentShaderATI))"\n"
 "\t"STUB_ASM_CODE("1025")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EndFragmentShaderATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ColorFragmentOp1ATI))"\n"
 "\t"STUB_ASM_CODE("1026")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GenFragmentShadersATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ColorFragmentOp2ATI))"\n"
 "\t"STUB_ASM_CODE("1027")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PassTexCoordATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ColorFragmentOp3ATI))"\n"
 "\t"STUB_ASM_CODE("1028")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SampleMapATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DeleteFragmentShaderATI))"\n"
 "\t"STUB_ASM_CODE("1029")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SetFragmentShaderConstantATI))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EndFragmentShaderATI))"\n"
 "\t"STUB_ASM_CODE("1030")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramNamedParameterdvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GenFragmentShadersATI))"\n"
+"\t"STUB_ASM_CODE("1031")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PassTexCoordATI))"\n"
+"\t"STUB_ASM_CODE("1032")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SampleMapATI))"\n"
+"\t"STUB_ASM_CODE("1033")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SetFragmentShaderConstantATI))"\n"
 "\t"STUB_ASM_CODE("1034")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramNamedParameterfvNV))"\n"
-"\t"STUB_ASM_CODE("1035")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramNamedParameter4dNV))"\n"
-"\t"STUB_ASM_CODE("1036")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramNamedParameter4dvNV))"\n"
-"\t"STUB_ASM_CODE("1037")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramNamedParameter4fNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramNamedParameterdvNV))"\n"
 "\t"STUB_ASM_CODE("1038")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramNamedParameter4fvNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetProgramNamedParameterfvNV))"\n"
 "\t"STUB_ASM_CODE("1039")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PrimitiveRestartNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramNamedParameter4dNV))"\n"
 "\t"STUB_ASM_CODE("1040")"\n"
 
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramNamedParameter4dvNV))"\n"
+"\t"STUB_ASM_CODE("1041")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramNamedParameter4fNV))"\n"
+"\t"STUB_ASM_CODE("1042")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ProgramNamedParameter4fvNV))"\n"
+"\t"STUB_ASM_CODE("1043")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PrimitiveRestartNV))"\n"
+"\t"STUB_ASM_CODE("1044")"\n"
+
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindFramebufferEXT))"\n"
-"\t"STUB_ASM_CODE("1045")"\n"
+"\t"STUB_ASM_CODE("1049")"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindRenderbufferEXT))"\n"
-"\t"STUB_ASM_CODE("1046")"\n"
+"\t"STUB_ASM_CODE("1050")"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI1iEXT))"\n"
-"\t"STUB_ASM_CODE("1049")"\n"
+"\t"STUB_ASM_CODE("1053")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI1i)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI1i)", "GLAPI_PREFIX_STR(VertexAttribI1iEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI1uiEXT))"\n"
-"\t"STUB_ASM_CODE("1050")"\n"
+"\t"STUB_ASM_CODE("1054")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI1ui)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI1ui)", "GLAPI_PREFIX_STR(VertexAttribI1uiEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI2iEXT))"\n"
-"\t"STUB_ASM_CODE("1051")"\n"
+"\t"STUB_ASM_CODE("1055")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI2i)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI2i)", "GLAPI_PREFIX_STR(VertexAttribI2iEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI2ivEXT))"\n"
-"\t"STUB_ASM_CODE("1052")"\n"
+"\t"STUB_ASM_CODE("1056")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI2iv)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI2iv)", "GLAPI_PREFIX_STR(VertexAttribI2ivEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI2uiEXT))"\n"
-"\t"STUB_ASM_CODE("1053")"\n"
+"\t"STUB_ASM_CODE("1057")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI2ui)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI2ui)", "GLAPI_PREFIX_STR(VertexAttribI2uiEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI2uivEXT))"\n"
-"\t"STUB_ASM_CODE("1054")"\n"
+"\t"STUB_ASM_CODE("1058")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI2uiv)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI2uiv)", "GLAPI_PREFIX_STR(VertexAttribI2uivEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI3iEXT))"\n"
-"\t"STUB_ASM_CODE("1055")"\n"
+"\t"STUB_ASM_CODE("1059")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI3i)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI3i)", "GLAPI_PREFIX_STR(VertexAttribI3iEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI3ivEXT))"\n"
-"\t"STUB_ASM_CODE("1056")"\n"
+"\t"STUB_ASM_CODE("1060")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI3iv)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI3iv)", "GLAPI_PREFIX_STR(VertexAttribI3ivEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI3uiEXT))"\n"
-"\t"STUB_ASM_CODE("1057")"\n"
+"\t"STUB_ASM_CODE("1061")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI3ui)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI3ui)", "GLAPI_PREFIX_STR(VertexAttribI3uiEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI3uivEXT))"\n"
-"\t"STUB_ASM_CODE("1058")"\n"
+"\t"STUB_ASM_CODE("1062")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI3uiv)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI3uiv)", "GLAPI_PREFIX_STR(VertexAttribI3uivEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI4iEXT))"\n"
-"\t"STUB_ASM_CODE("1059")"\n"
+"\t"STUB_ASM_CODE("1063")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI4i)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI4i)", "GLAPI_PREFIX_STR(VertexAttribI4iEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI4ivEXT))"\n"
-"\t"STUB_ASM_CODE("1060")"\n"
+"\t"STUB_ASM_CODE("1064")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI4iv)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI4iv)", "GLAPI_PREFIX_STR(VertexAttribI4ivEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI4uiEXT))"\n"
-"\t"STUB_ASM_CODE("1061")"\n"
+"\t"STUB_ASM_CODE("1065")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI4ui)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI4ui)", "GLAPI_PREFIX_STR(VertexAttribI4uiEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VertexAttribI4uivEXT))"\n"
-"\t"STUB_ASM_CODE("1062")"\n"
+"\t"STUB_ASM_CODE("1066")"\n"
 
 ".globl "GLAPI_PREFIX_STR(VertexAttribI4uiv)"\n"
 ".set "GLAPI_PREFIX_STR(VertexAttribI4uiv)", "GLAPI_PREFIX_STR(VertexAttribI4uivEXT)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearColorIiEXT))"\n"
-"\t"STUB_ASM_CODE("1063")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearColorIuiEXT))"\n"
-"\t"STUB_ASM_CODE("1064")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindBufferOffsetEXT))"\n"
-"\t"STUB_ASM_CODE("1065")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BeginPerfMonitorAMD))"\n"
-"\t"STUB_ASM_CODE("1066")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DeletePerfMonitorsAMD))"\n"
 "\t"STUB_ASM_CODE("1067")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EndPerfMonitorAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearColorIuiEXT))"\n"
 "\t"STUB_ASM_CODE("1068")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GenPerfMonitorsAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindBufferOffsetEXT))"\n"
 "\t"STUB_ASM_CODE("1069")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorCounterDataAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BeginPerfMonitorAMD))"\n"
 "\t"STUB_ASM_CODE("1070")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorCounterInfoAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DeletePerfMonitorsAMD))"\n"
 "\t"STUB_ASM_CODE("1071")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorCounterStringAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EndPerfMonitorAMD))"\n"
 "\t"STUB_ASM_CODE("1072")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorCountersAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GenPerfMonitorsAMD))"\n"
 "\t"STUB_ASM_CODE("1073")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorGroupStringAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorCounterDataAMD))"\n"
 "\t"STUB_ASM_CODE("1074")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorGroupsAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorCounterInfoAMD))"\n"
 "\t"STUB_ASM_CODE("1075")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SelectPerfMonitorCountersAMD))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorCounterStringAMD))"\n"
 "\t"STUB_ASM_CODE("1076")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectParameterivAPPLE))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorCountersAMD))"\n"
 "\t"STUB_ASM_CODE("1077")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ObjectPurgeableAPPLE))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorGroupStringAMD))"\n"
 "\t"STUB_ASM_CODE("1078")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ObjectUnpurgeableAPPLE))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetPerfMonitorGroupsAMD))"\n"
 "\t"STUB_ASM_CODE("1079")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ActiveProgramEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SelectPerfMonitorCountersAMD))"\n"
 "\t"STUB_ASM_CODE("1080")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(CreateShaderProgramEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectParameterivAPPLE))"\n"
 "\t"STUB_ASM_CODE("1081")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(UseShaderProgramEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ObjectPurgeableAPPLE))"\n"
 "\t"STUB_ASM_CODE("1082")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TextureBarrierNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ObjectUnpurgeableAPPLE))"\n"
 "\t"STUB_ASM_CODE("1083")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUFiniNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ActiveProgramEXT))"\n"
 "\t"STUB_ASM_CODE("1084")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUGetSurfaceivNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(CreateShaderProgramEXT))"\n"
 "\t"STUB_ASM_CODE("1085")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUInitNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(UseShaderProgramEXT))"\n"
 "\t"STUB_ASM_CODE("1086")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUIsSurfaceNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TextureBarrierNV))"\n"
 "\t"STUB_ASM_CODE("1087")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUMapSurfacesNV))"\n"
+".globl "GLAPI_PREFIX_STR(TextureBarrier)"\n"
+".set "GLAPI_PREFIX_STR(TextureBarrier)", "GLAPI_PREFIX_STR(TextureBarrierNV)"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUFiniNV))"\n"
 "\t"STUB_ASM_CODE("1088")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAURegisterOutputSurfaceNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUGetSurfaceivNV))"\n"
 "\t"STUB_ASM_CODE("1089")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAURegisterVideoSurfaceNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUInitNV))"\n"
 "\t"STUB_ASM_CODE("1090")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUSurfaceAccessNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUIsSurfaceNV))"\n"
 "\t"STUB_ASM_CODE("1091")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUUnmapSurfacesNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUMapSurfacesNV))"\n"
 "\t"STUB_ASM_CODE("1092")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUUnregisterSurfaceNV))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAURegisterOutputSurfaceNV))"\n"
 "\t"STUB_ASM_CODE("1093")"\n"
 
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAURegisterVideoSurfaceNV))"\n"
+"\t"STUB_ASM_CODE("1094")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUSurfaceAccessNV))"\n"
+"\t"STUB_ASM_CODE("1095")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUUnmapSurfacesNV))"\n"
+"\t"STUB_ASM_CODE("1096")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(VDPAUUnregisterSurfaceNV))"\n"
+"\t"STUB_ASM_CODE("1097")"\n"
+
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EGLImageTargetRenderbufferStorageOES))"\n"
-"\t"STUB_ASM_CODE("1107")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EGLImageTargetTexture2DOES))"\n"
-"\t"STUB_ASM_CODE("1108")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AlphaFuncx))"\n"
-"\t"STUB_ASM_CODE("1109")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearColorx))"\n"
-"\t"STUB_ASM_CODE("1110")"\n"
-
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearDepthx))"\n"
 "\t"STUB_ASM_CODE("1111")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Color4x))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(EGLImageTargetTexture2DOES))"\n"
 "\t"STUB_ASM_CODE("1112")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DepthRangex))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(AlphaFuncx))"\n"
 "\t"STUB_ASM_CODE("1113")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Fogx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearColorx))"\n"
 "\t"STUB_ASM_CODE("1114")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Fogxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClearDepthx))"\n"
 "\t"STUB_ASM_CODE("1115")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Frustumf))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Color4x))"\n"
 "\t"STUB_ASM_CODE("1116")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Frustumx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DepthRangex))"\n"
 "\t"STUB_ASM_CODE("1117")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LightModelx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Fogx))"\n"
 "\t"STUB_ASM_CODE("1118")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LightModelxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Fogxv))"\n"
 "\t"STUB_ASM_CODE("1119")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Lightx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Frustumf))"\n"
 "\t"STUB_ASM_CODE("1120")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Lightxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Frustumx))"\n"
 "\t"STUB_ASM_CODE("1121")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LineWidthx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LightModelx))"\n"
 "\t"STUB_ASM_CODE("1122")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LoadMatrixx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LightModelxv))"\n"
 "\t"STUB_ASM_CODE("1123")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Materialx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Lightx))"\n"
 "\t"STUB_ASM_CODE("1124")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Materialxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Lightxv))"\n"
 "\t"STUB_ASM_CODE("1125")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultMatrixx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LineWidthx))"\n"
 "\t"STUB_ASM_CODE("1126")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiTexCoord4x))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LoadMatrixx))"\n"
 "\t"STUB_ASM_CODE("1127")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Normal3x))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Materialx))"\n"
 "\t"STUB_ASM_CODE("1128")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Orthof))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Materialxv))"\n"
 "\t"STUB_ASM_CODE("1129")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Orthox))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultMatrixx))"\n"
 "\t"STUB_ASM_CODE("1130")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PointSizex))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiTexCoord4x))"\n"
 "\t"STUB_ASM_CODE("1131")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PolygonOffsetx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Normal3x))"\n"
 "\t"STUB_ASM_CODE("1132")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Rotatex))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Orthof))"\n"
 "\t"STUB_ASM_CODE("1133")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SampleCoveragex))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Orthox))"\n"
 "\t"STUB_ASM_CODE("1134")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Scalex))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PointSizex))"\n"
 "\t"STUB_ASM_CODE("1135")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexEnvx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PolygonOffsetx))"\n"
 "\t"STUB_ASM_CODE("1136")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexEnvxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Rotatex))"\n"
 "\t"STUB_ASM_CODE("1137")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexParameterx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SampleCoveragex))"\n"
 "\t"STUB_ASM_CODE("1138")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Translatex))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Scalex))"\n"
 "\t"STUB_ASM_CODE("1139")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClipPlanef))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexEnvx))"\n"
 "\t"STUB_ASM_CODE("1140")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClipPlanex))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexEnvxv))"\n"
 "\t"STUB_ASM_CODE("1141")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetClipPlanef))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexParameterx))"\n"
 "\t"STUB_ASM_CODE("1142")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetClipPlanex))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(Translatex))"\n"
 "\t"STUB_ASM_CODE("1143")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetFixedv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClipPlanef))"\n"
 "\t"STUB_ASM_CODE("1144")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetLightxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(ClipPlanex))"\n"
 "\t"STUB_ASM_CODE("1145")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetMaterialxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetClipPlanef))"\n"
 "\t"STUB_ASM_CODE("1146")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTexEnvxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetClipPlanex))"\n"
 "\t"STUB_ASM_CODE("1147")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTexParameterxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetFixedv))"\n"
 "\t"STUB_ASM_CODE("1148")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PointParameterx))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetLightxv))"\n"
 "\t"STUB_ASM_CODE("1149")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PointParameterxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetMaterialxv))"\n"
 "\t"STUB_ASM_CODE("1150")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexParameterxv))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTexEnvxv))"\n"
 "\t"STUB_ASM_CODE("1151")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetTexParameterxv))"\n"
+"\t"STUB_ASM_CODE("1152")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PointParameterx))"\n"
+"\t"STUB_ASM_CODE("1153")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PointParameterxv))"\n"
+"\t"STUB_ASM_CODE("1154")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(TexParameterxv))"\n"
+"\t"STUB_ASM_CODE("1155")"\n"
 
 );
 #undef MAPI_TMP_STUB_ASM_GCC_NO_HIDDEN

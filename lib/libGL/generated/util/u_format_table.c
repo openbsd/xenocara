@@ -32,6 +32,7 @@
 #include "u_format_rgtc.h"
 #include "u_format_latc.h"
 #include "u_format_etc.h"
+#include "u_format_bptc.h"
 
 
 #include "pipe/p_compiler.h"
@@ -39,7 +40,7 @@
 #include "u_half.h"
 #include "u_format.h"
 #include "u_format_other.h"
-#include "u_format_srgb.h"
+#include "util/format_srgb.h"
 #include "u_format_yuv.h"
 #include "u_format_zs.h"
 
@@ -82,7 +83,7 @@ util_format_none_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const fl
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint8_t value = 0;
-         value |= (uint8_t)CLAMP(src[0], 0, 255);
+         value |= (uint8_t)CLAMP(src[0], 0.0f, 255.0f);
          *(uint8_t *)dst = value;
          src += 4;
          dst += 1;
@@ -1507,10 +1508,10 @@ union util_format_b5g5r5x1_unorm {
    uint16_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:5;
-      unsigned g:5;
-      unsigned r:5;
       unsigned x:1;
+      unsigned r:5;
+      unsigned g:5;
+      unsigned b:5;
 #else
       unsigned b:5;
       unsigned g:5;
@@ -1530,12 +1531,12 @@ util_format_b5g5r5x1_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
-         g = (value >> 6) & 0x1f;
-         r = (value >> 1) & 0x1f;
+         uint16_t g;
+         uint16_t b;
+         r = (value >> 10) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (float)(r * (1.0f/0x1f)); /* r */
          dst[1] = (float)(g * (1.0f/0x1f)); /* g */
          dst[2] = (float)(b * (1.0f/0x1f)); /* b */
@@ -1571,15 +1572,15 @@ util_format_b5g5r5x1_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0x1f)) << 11;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0x1f)) & 0x1f) << 6;
-         value |= (((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0x1f)) & 0x1f) << 1;
+         value |= (((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x1f)) & 0x1f) << 10;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x1f)) & 0x1f) << 5;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x1f)) & 0x1f;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0x1f)) & 0x1f;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0x1f)) & 0x1f) << 5;
-         value |= (((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0x1f)) & 0x1f) << 10;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x1f)) & 0x1f;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x1f)) & 0x1f) << 5;
+         value |= (((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x1f)) & 0x1f) << 10;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -1595,12 +1596,12 @@ util_format_b5g5r5x1_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsi
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
-         g = (value >> 6) & 0x1f;
-         r = (value >> 1) & 0x1f;
+         uint16_t g;
+         uint16_t b;
+         r = (value >> 10) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (float)(r * (1.0f/0x1f)); /* r */
          dst[1] = (float)(g * (1.0f/0x1f)); /* g */
          dst[2] = (float)(b * (1.0f/0x1f)); /* b */
@@ -1630,12 +1631,12 @@ util_format_b5g5r5x1_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
-         g = (value >> 6) & 0x1f;
-         r = (value >> 1) & 0x1f;
+         uint16_t g;
+         uint16_t b;
+         r = (value >> 10) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0x1f); /* r */
          dst[1] = (uint8_t)(((uint32_t)g) * 0xff / 0x1f); /* g */
          dst[2] = (uint8_t)(((uint32_t)b) * 0xff / 0x1f); /* b */
@@ -1671,9 +1672,9 @@ util_format_b5g5r5x1_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)(src[2] >> 3)) << 11;
-         value |= (((uint16_t)(src[1] >> 3)) & 0x1f) << 6;
-         value |= (((uint16_t)(src[0] >> 3)) & 0x1f) << 1;
+         value |= (((uint16_t)(src[0] >> 3)) & 0x1f) << 10;
+         value |= (((uint16_t)(src[1] >> 3)) & 0x1f) << 5;
+         value |= ((uint16_t)(src[2] >> 3)) & 0x1f;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
@@ -1694,10 +1695,10 @@ union util_format_b5g5r5a1_unorm {
    uint16_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:5;
-      unsigned g:5;
-      unsigned r:5;
       unsigned a:1;
+      unsigned r:5;
+      unsigned g:5;
+      unsigned b:5;
 #else
       unsigned b:5;
       unsigned g:5;
@@ -1717,14 +1718,14 @@ util_format_b5g5r5a1_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
-         uint16_t r;
          uint16_t a;
-         b = value >> 11;
-         g = (value >> 6) & 0x1f;
-         r = (value >> 1) & 0x1f;
-         a = (value) & 0x1;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = value >> 15;
+         r = (value >> 10) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (float)(r * (1.0f/0x1f)); /* r */
          dst[1] = (float)(g * (1.0f/0x1f)); /* g */
          dst[2] = (float)(b * (1.0f/0x1f)); /* b */
@@ -1762,17 +1763,17 @@ util_format_b5g5r5a1_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0x1f)) << 11;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0x1f)) & 0x1f) << 6;
-         value |= (((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0x1f)) & 0x1f) << 1;
-         value |= ((uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0x1)) & 0x1;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0x1)) << 15;
+         value |= (((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x1f)) & 0x1f) << 10;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x1f)) & 0x1f) << 5;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x1f)) & 0x1f;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0x1f)) & 0x1f;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0x1f)) & 0x1f) << 5;
-         value |= (((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0x1f)) & 0x1f) << 10;
-         value |= ((uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0x1)) << 15;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x1f)) & 0x1f;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x1f)) & 0x1f) << 5;
+         value |= (((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x1f)) & 0x1f) << 10;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0x1)) << 15;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -1788,14 +1789,14 @@ util_format_b5g5r5a1_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsi
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
-         uint16_t r;
          uint16_t a;
-         b = value >> 11;
-         g = (value >> 6) & 0x1f;
-         r = (value >> 1) & 0x1f;
-         a = (value) & 0x1;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = value >> 15;
+         r = (value >> 10) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (float)(r * (1.0f/0x1f)); /* r */
          dst[1] = (float)(g * (1.0f/0x1f)); /* g */
          dst[2] = (float)(b * (1.0f/0x1f)); /* b */
@@ -1827,14 +1828,14 @@ util_format_b5g5r5a1_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
-         uint16_t r;
          uint16_t a;
-         b = value >> 11;
-         g = (value >> 6) & 0x1f;
-         r = (value >> 1) & 0x1f;
-         a = (value) & 0x1;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = value >> 15;
+         r = (value >> 10) & 0x1f;
+         g = (value >> 5) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0x1f); /* r */
          dst[1] = (uint8_t)(((uint32_t)g) * 0xff / 0x1f); /* g */
          dst[2] = (uint8_t)(((uint32_t)b) * 0xff / 0x1f); /* b */
@@ -1872,10 +1873,10 @@ util_format_b5g5r5a1_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)(src[2] >> 3)) << 11;
-         value |= (((uint16_t)(src[1] >> 3)) & 0x1f) << 6;
-         value |= (((uint16_t)(src[0] >> 3)) & 0x1f) << 1;
-         value |= ((uint16_t)(src[3] >> 7)) & 0x1;
+         value |= ((uint16_t)(src[3] >> 7)) << 15;
+         value |= (((uint16_t)(src[0] >> 3)) & 0x1f) << 10;
+         value |= (((uint16_t)(src[1] >> 3)) & 0x1f) << 5;
+         value |= ((uint16_t)(src[2] >> 3)) & 0x1f;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
@@ -1897,10 +1898,10 @@ union util_format_b4g4r4a4_unorm {
    uint16_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:4;
-      unsigned g:4;
-      unsigned r:4;
       unsigned a:4;
+      unsigned r:4;
+      unsigned g:4;
+      unsigned b:4;
 #else
       unsigned b:4;
       unsigned g:4;
@@ -1920,14 +1921,14 @@ util_format_b4g4r4a4_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
-         uint16_t r;
          uint16_t a;
-         b = value >> 12;
-         g = (value >> 8) & 0xf;
-         r = (value >> 4) & 0xf;
-         a = (value) & 0xf;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = value >> 12;
+         r = (value >> 8) & 0xf;
+         g = (value >> 4) & 0xf;
+         b = (value) & 0xf;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = (float)(g * (1.0f/0xf)); /* g */
          dst[2] = (float)(b * (1.0f/0xf)); /* b */
@@ -1965,17 +1966,17 @@ util_format_b4g4r4a4_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xf)) << 12;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xf)) & 0xf) << 8;
-         value |= (((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) & 0xf) << 4;
-         value |= ((uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xf)) & 0xf;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xf)) << 12;
+         value |= (((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) & 0xf) << 8;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xf)) & 0xf) << 4;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xf)) & 0xf;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xf)) & 0xf;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xf)) & 0xf) << 4;
-         value |= (((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) & 0xf) << 8;
-         value |= ((uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xf)) << 12;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xf)) & 0xf;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xf)) & 0xf) << 4;
+         value |= (((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) & 0xf) << 8;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xf)) << 12;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -1991,14 +1992,14 @@ util_format_b4g4r4a4_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsi
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
-         uint16_t r;
          uint16_t a;
-         b = value >> 12;
-         g = (value >> 8) & 0xf;
-         r = (value >> 4) & 0xf;
-         a = (value) & 0xf;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = value >> 12;
+         r = (value >> 8) & 0xf;
+         g = (value >> 4) & 0xf;
+         b = (value) & 0xf;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = (float)(g * (1.0f/0xf)); /* g */
          dst[2] = (float)(b * (1.0f/0xf)); /* b */
@@ -2030,14 +2031,14 @@ util_format_b4g4r4a4_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
-         uint16_t r;
          uint16_t a;
-         b = value >> 12;
-         g = (value >> 8) & 0xf;
-         r = (value >> 4) & 0xf;
-         a = (value) & 0xf;
+         uint16_t r;
+         uint16_t g;
+         uint16_t b;
+         a = value >> 12;
+         r = (value >> 8) & 0xf;
+         g = (value >> 4) & 0xf;
+         b = (value) & 0xf;
          dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0xf); /* r */
          dst[1] = (uint8_t)(((uint32_t)g) * 0xff / 0xf); /* g */
          dst[2] = (uint8_t)(((uint32_t)b) * 0xff / 0xf); /* b */
@@ -2075,10 +2076,10 @@ util_format_b4g4r4a4_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)(src[2] >> 4)) << 12;
-         value |= (((uint16_t)(src[1] >> 4)) & 0xf) << 8;
-         value |= (((uint16_t)(src[0] >> 4)) & 0xf) << 4;
-         value |= ((uint16_t)(src[3] >> 4)) & 0xf;
+         value |= ((uint16_t)(src[3] >> 4)) << 12;
+         value |= (((uint16_t)(src[0] >> 4)) & 0xf) << 8;
+         value |= (((uint16_t)(src[1] >> 4)) & 0xf) << 4;
+         value |= ((uint16_t)(src[2] >> 4)) & 0xf;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
@@ -2100,10 +2101,10 @@ union util_format_b4g4r4x4_unorm {
    uint16_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:4;
-      unsigned g:4;
-      unsigned r:4;
       unsigned x:4;
+      unsigned r:4;
+      unsigned g:4;
+      unsigned b:4;
 #else
       unsigned b:4;
       unsigned g:4;
@@ -2123,12 +2124,12 @@ util_format_b4g4r4x4_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 12;
-         g = (value >> 8) & 0xf;
-         r = (value >> 4) & 0xf;
+         uint16_t g;
+         uint16_t b;
+         r = (value >> 8) & 0xf;
+         g = (value >> 4) & 0xf;
+         b = (value) & 0xf;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = (float)(g * (1.0f/0xf)); /* g */
          dst[2] = (float)(b * (1.0f/0xf)); /* b */
@@ -2164,15 +2165,15 @@ util_format_b4g4r4x4_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xf)) << 12;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xf)) & 0xf) << 8;
-         value |= (((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) & 0xf) << 4;
+         value |= (((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) & 0xf) << 8;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xf)) & 0xf) << 4;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xf)) & 0xf;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xf)) & 0xf;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xf)) & 0xf) << 4;
-         value |= (((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) & 0xf) << 8;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xf)) & 0xf;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xf)) & 0xf) << 4;
+         value |= (((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) & 0xf) << 8;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -2188,12 +2189,12 @@ util_format_b4g4r4x4_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsi
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 12;
-         g = (value >> 8) & 0xf;
-         r = (value >> 4) & 0xf;
+         uint16_t g;
+         uint16_t b;
+         r = (value >> 8) & 0xf;
+         g = (value >> 4) & 0xf;
+         b = (value) & 0xf;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = (float)(g * (1.0f/0xf)); /* g */
          dst[2] = (float)(b * (1.0f/0xf)); /* b */
@@ -2223,12 +2224,12 @@ util_format_b4g4r4x4_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 12;
-         g = (value >> 8) & 0xf;
-         r = (value >> 4) & 0xf;
+         uint16_t g;
+         uint16_t b;
+         r = (value >> 8) & 0xf;
+         g = (value >> 4) & 0xf;
+         b = (value) & 0xf;
          dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0xf); /* r */
          dst[1] = (uint8_t)(((uint32_t)g) * 0xff / 0xf); /* g */
          dst[2] = (uint8_t)(((uint32_t)b) * 0xff / 0xf); /* b */
@@ -2264,9 +2265,9 @@ util_format_b4g4r4x4_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)(src[2] >> 4)) << 12;
-         value |= (((uint16_t)(src[1] >> 4)) & 0xf) << 8;
-         value |= (((uint16_t)(src[0] >> 4)) & 0xf) << 4;
+         value |= (((uint16_t)(src[0] >> 4)) & 0xf) << 8;
+         value |= (((uint16_t)(src[1] >> 4)) & 0xf) << 4;
+         value |= ((uint16_t)(src[2] >> 4)) & 0xf;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
@@ -2287,9 +2288,9 @@ union util_format_b5g6r5_unorm {
    uint16_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:5;
-      unsigned g:6;
       unsigned r:5;
+      unsigned g:6;
+      unsigned b:5;
 #else
       unsigned b:5;
       unsigned g:6;
@@ -2308,12 +2309,12 @@ util_format_b5g6r5_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
+         uint16_t g;
+         uint16_t b;
+         r = value >> 11;
          g = (value >> 5) & 0x3f;
-         r = (value) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (float)(r * (1.0f/0x1f)); /* r */
          dst[1] = (float)(g * (1.0f/0x3f)); /* g */
          dst[2] = (float)(b * (1.0f/0x1f)); /* b */
@@ -2349,15 +2350,15 @@ util_format_b5g6r5_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0x1f)) << 11;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0x3f)) & 0x3f) << 5;
-         value |= ((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0x1f)) & 0x1f;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x1f)) << 11;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x3f)) & 0x3f) << 5;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x1f)) & 0x1f;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0x1f)) & 0x1f;
-         value |= (((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0x3f)) & 0x3f) << 5;
-         value |= ((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0x1f)) << 11;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x1f)) & 0x1f;
+         value |= (((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x3f)) & 0x3f) << 5;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x1f)) << 11;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -2373,12 +2374,12 @@ util_format_b5g6r5_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsign
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
+         uint16_t g;
+         uint16_t b;
+         r = value >> 11;
          g = (value >> 5) & 0x3f;
-         r = (value) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (float)(r * (1.0f/0x1f)); /* r */
          dst[1] = (float)(g * (1.0f/0x3f)); /* g */
          dst[2] = (float)(b * (1.0f/0x1f)); /* b */
@@ -2408,12 +2409,12 @@ util_format_b5g6r5_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
+         uint16_t g;
+         uint16_t b;
+         r = value >> 11;
          g = (value >> 5) & 0x3f;
-         r = (value) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0x1f); /* r */
          dst[1] = (uint8_t)(((uint32_t)g) * 0xff / 0x3f); /* g */
          dst[2] = (uint8_t)(((uint32_t)b) * 0xff / 0x1f); /* b */
@@ -2449,9 +2450,9 @@ util_format_b5g6r5_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride,
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint16_t)(src[2] >> 3)) << 11;
+         value |= ((uint16_t)(src[0] >> 3)) << 11;
          value |= (((uint16_t)(src[1] >> 2)) & 0x3f) << 5;
-         value |= ((uint16_t)(src[0] >> 3)) & 0x1f;
+         value |= ((uint16_t)(src[2] >> 3)) & 0x1f;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
@@ -2472,10 +2473,10 @@ union util_format_r10g10b10a2_unorm {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned r:10;
-      unsigned g:10;
-      unsigned b:10;
       unsigned a:2;
+      unsigned b:10;
+      unsigned g:10;
+      unsigned r:10;
 #else
       unsigned r:10;
       unsigned g:10;
@@ -2495,14 +2496,14 @@ util_format_r10g10b10a2_unorm_unpack_rgba_float(float *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (float)(r * (1.0f/0x3ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x3ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x3ff)); /* b */
@@ -2540,17 +2541,17 @@ util_format_r10g10b10a2_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)util_iround(CLAMP(src[0], 0, 1) * 0x3ff)) << 22;
-         value |= (((uint32_t)util_iround(CLAMP(src[1], 0, 1) * 0x3ff)) & 0x3ff) << 12;
-         value |= (((uint32_t)util_iround(CLAMP(src[2], 0, 1) * 0x3ff)) & 0x3ff) << 2;
-         value |= ((uint32_t)util_iround(CLAMP(src[3], 0, 1) * 0x3)) & 0x3;
+         value |= ((uint32_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0x3)) << 30;
+         value |= (((uint32_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 20;
+         value |= (((uint32_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 10;
+         value |= ((uint32_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x3ff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint32_t)util_iround(CLAMP(src[0], 0, 1) * 0x3ff)) & 0x3ff;
-         value |= (((uint32_t)util_iround(CLAMP(src[1], 0, 1) * 0x3ff)) & 0x3ff) << 10;
-         value |= (((uint32_t)util_iround(CLAMP(src[2], 0, 1) * 0x3ff)) & 0x3ff) << 20;
-         value |= ((uint32_t)util_iround(CLAMP(src[3], 0, 1) * 0x3)) << 30;
+         value |= ((uint32_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x3ff)) & 0x3ff;
+         value |= (((uint32_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 10;
+         value |= (((uint32_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 20;
+         value |= ((uint32_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0x3)) << 30;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -2566,14 +2567,14 @@ util_format_r10g10b10a2_unorm_fetch_rgba_float(float *dst, const uint8_t *src, u
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (float)(r * (1.0f/0x3ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x3ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x3ff)); /* b */
@@ -2605,14 +2606,14 @@ util_format_r10g10b10a2_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (uint8_t)(r >> 2); /* r */
          dst[1] = (uint8_t)(g >> 2); /* g */
          dst[2] = (uint8_t)(b >> 2); /* b */
@@ -2650,10 +2651,10 @@ util_format_r10g10b10a2_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)(((uint32_t)src[0]) * 0x3ff / 0xff)) << 22;
-         value |= (((uint32_t)(((uint32_t)src[1]) * 0x3ff / 0xff)) & 0x3ff) << 12;
-         value |= (((uint32_t)(((uint32_t)src[2]) * 0x3ff / 0xff)) & 0x3ff) << 2;
-         value |= ((uint32_t)(src[3] >> 6)) & 0x3;
+         value |= ((uint32_t)(src[3] >> 6)) << 30;
+         value |= (((uint32_t)(((uint32_t)src[2]) * 0x3ff / 0xff)) & 0x3ff) << 20;
+         value |= (((uint32_t)(((uint32_t)src[1]) * 0x3ff / 0xff)) & 0x3ff) << 10;
+         value |= ((uint32_t)(((uint32_t)src[0]) * 0x3ff / 0xff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -2675,10 +2676,10 @@ union util_format_b10g10r10a2_unorm {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:10;
-      unsigned g:10;
-      unsigned r:10;
       unsigned a:2;
+      unsigned r:10;
+      unsigned g:10;
+      unsigned b:10;
 #else
       unsigned b:10;
       unsigned g:10;
@@ -2698,14 +2699,14 @@ util_format_b10g10r10a2_unorm_unpack_rgba_float(float *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (float)(r * (1.0f/0x3ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x3ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x3ff)); /* b */
@@ -2743,17 +2744,17 @@ util_format_b10g10r10a2_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)util_iround(CLAMP(src[2], 0, 1) * 0x3ff)) << 22;
-         value |= (((uint32_t)util_iround(CLAMP(src[1], 0, 1) * 0x3ff)) & 0x3ff) << 12;
-         value |= (((uint32_t)util_iround(CLAMP(src[0], 0, 1) * 0x3ff)) & 0x3ff) << 2;
-         value |= ((uint32_t)util_iround(CLAMP(src[3], 0, 1) * 0x3)) & 0x3;
+         value |= ((uint32_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0x3)) << 30;
+         value |= (((uint32_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 20;
+         value |= (((uint32_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 10;
+         value |= ((uint32_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3ff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint32_t)util_iround(CLAMP(src[2], 0, 1) * 0x3ff)) & 0x3ff;
-         value |= (((uint32_t)util_iround(CLAMP(src[1], 0, 1) * 0x3ff)) & 0x3ff) << 10;
-         value |= (((uint32_t)util_iround(CLAMP(src[0], 0, 1) * 0x3ff)) & 0x3ff) << 20;
-         value |= ((uint32_t)util_iround(CLAMP(src[3], 0, 1) * 0x3)) << 30;
+         value |= ((uint32_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3ff)) & 0x3ff;
+         value |= (((uint32_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 10;
+         value |= (((uint32_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 20;
+         value |= ((uint32_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0x3)) << 30;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -2769,14 +2770,14 @@ util_format_b10g10r10a2_unorm_fetch_rgba_float(float *dst, const uint8_t *src, u
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (float)(r * (1.0f/0x3ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x3ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x3ff)); /* b */
@@ -2808,14 +2809,14 @@ util_format_b10g10r10a2_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (uint8_t)(r >> 2); /* r */
          dst[1] = (uint8_t)(g >> 2); /* g */
          dst[2] = (uint8_t)(b >> 2); /* b */
@@ -2853,10 +2854,10 @@ util_format_b10g10r10a2_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)(((uint32_t)src[2]) * 0x3ff / 0xff)) << 22;
-         value |= (((uint32_t)(((uint32_t)src[1]) * 0x3ff / 0xff)) & 0x3ff) << 12;
-         value |= (((uint32_t)(((uint32_t)src[0]) * 0x3ff / 0xff)) & 0x3ff) << 2;
-         value |= ((uint32_t)(src[3] >> 6)) & 0x3;
+         value |= ((uint32_t)(src[3] >> 6)) << 30;
+         value |= (((uint32_t)(((uint32_t)src[0]) * 0x3ff / 0xff)) & 0x3ff) << 20;
+         value |= (((uint32_t)(((uint32_t)src[1]) * 0x3ff / 0xff)) & 0x3ff) << 10;
+         value |= ((uint32_t)(((uint32_t)src[2]) * 0x3ff / 0xff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -2878,9 +2879,9 @@ union util_format_b2g3r3_unorm {
    uint8_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:2;
-      unsigned g:3;
       unsigned r:3;
+      unsigned g:3;
+      unsigned b:2;
 #else
       unsigned b:2;
       unsigned g:3;
@@ -2899,12 +2900,12 @@ util_format_b2g3r3_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t b;
-         uint8_t g;
          uint8_t r;
-         b = value >> 6;
-         g = (value >> 3) & 0x7;
-         r = (value) & 0x7;
+         uint8_t g;
+         uint8_t b;
+         r = value >> 5;
+         g = (value >> 2) & 0x7;
+         b = (value) & 0x3;
          dst[0] = (float)(r * (1.0f/0x7)); /* r */
          dst[1] = (float)(g * (1.0f/0x7)); /* g */
          dst[2] = (float)(b * (1.0f/0x3)); /* b */
@@ -2940,15 +2941,15 @@ util_format_b2g3r3_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = 0;
-         value |= ((uint8_t)util_iround(CLAMP(src[2], 0, 1) * 0x3)) << 6;
-         value |= (((uint8_t)util_iround(CLAMP(src[1], 0, 1) * 0x7)) & 0x7) << 3;
-         value |= ((uint8_t)util_iround(CLAMP(src[0], 0, 1) * 0x7)) & 0x7;
+         value |= ((uint8_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x7)) << 5;
+         value |= (((uint8_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x7)) & 0x7) << 2;
+         value |= ((uint8_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3)) & 0x3;
          *(uint8_t *)dst = value;
 #else
          uint8_t value = 0;
-         value |= ((uint8_t)util_iround(CLAMP(src[2], 0, 1) * 0x3)) & 0x3;
-         value |= (((uint8_t)util_iround(CLAMP(src[1], 0, 1) * 0x7)) & 0x7) << 2;
-         value |= ((uint8_t)util_iround(CLAMP(src[0], 0, 1) * 0x7)) << 5;
+         value |= ((uint8_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3)) & 0x3;
+         value |= (((uint8_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x7)) & 0x7) << 2;
+         value |= ((uint8_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x7)) << 5;
          *(uint8_t *)dst = value;
 #endif
          src += 4;
@@ -2964,12 +2965,12 @@ util_format_b2g3r3_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsign
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t b;
-         uint8_t g;
          uint8_t r;
-         b = value >> 6;
-         g = (value >> 3) & 0x7;
-         r = (value) & 0x7;
+         uint8_t g;
+         uint8_t b;
+         r = value >> 5;
+         g = (value >> 2) & 0x7;
+         b = (value) & 0x3;
          dst[0] = (float)(r * (1.0f/0x7)); /* r */
          dst[1] = (float)(g * (1.0f/0x7)); /* g */
          dst[2] = (float)(b * (1.0f/0x3)); /* b */
@@ -2999,12 +3000,12 @@ util_format_b2g3r3_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t b;
-         uint8_t g;
          uint8_t r;
-         b = value >> 6;
-         g = (value >> 3) & 0x7;
-         r = (value) & 0x7;
+         uint8_t g;
+         uint8_t b;
+         r = value >> 5;
+         g = (value >> 2) & 0x7;
+         b = (value) & 0x3;
          dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0x7); /* r */
          dst[1] = (uint8_t)(((uint32_t)g) * 0xff / 0x7); /* g */
          dst[2] = (uint8_t)(((uint32_t)b) * 0xff / 0x3); /* b */
@@ -3040,9 +3041,9 @@ util_format_b2g3r3_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride,
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = 0;
-         value |= ((uint8_t)(src[2] >> 6)) << 6;
-         value |= (((uint8_t)(src[1] >> 5)) & 0x7) << 3;
-         value |= ((uint8_t)(src[0] >> 5)) & 0x7;
+         value |= ((uint8_t)(src[0] >> 5)) << 5;
+         value |= (((uint8_t)(src[1] >> 5)) & 0x7) << 2;
+         value |= ((uint8_t)(src[2] >> 6)) & 0x3;
          *(uint8_t *)dst = value;
 #else
          uint8_t value = 0;
@@ -3372,8 +3373,8 @@ union util_format_l4a4_unorm {
    uint8_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned rgb:4;
       unsigned a:4;
+      unsigned rgb:4;
 #else
       unsigned rgb:4;
       unsigned a:4;
@@ -3391,10 +3392,10 @@ util_format_l4a4_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t rgb;
          uint8_t a;
-         rgb = value >> 4;
-         a = (value) & 0xf;
+         uint8_t rgb;
+         a = value >> 4;
+         rgb = (value) & 0xf;
          dst[0] = (float)(rgb * (1.0f/0xf)); /* r */
          dst[1] = (float)(rgb * (1.0f/0xf)); /* g */
          dst[2] = (float)(rgb * (1.0f/0xf)); /* b */
@@ -3428,13 +3429,13 @@ util_format_l4a4_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = 0;
-         value |= ((uint8_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) << 4;
-         value |= ((uint8_t)util_iround(CLAMP(src[3], 0, 1) * 0xf)) & 0xf;
+         value |= ((uint8_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xf)) << 4;
+         value |= ((uint8_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) & 0xf;
          *(uint8_t *)dst = value;
 #else
          uint8_t value = 0;
-         value |= ((uint8_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) & 0xf;
-         value |= ((uint8_t)util_iround(CLAMP(src[3], 0, 1) * 0xf)) << 4;
+         value |= ((uint8_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) & 0xf;
+         value |= ((uint8_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xf)) << 4;
          *(uint8_t *)dst = value;
 #endif
          src += 4;
@@ -3450,10 +3451,10 @@ util_format_l4a4_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t rgb;
          uint8_t a;
-         rgb = value >> 4;
-         a = (value) & 0xf;
+         uint8_t rgb;
+         a = value >> 4;
+         rgb = (value) & 0xf;
          dst[0] = (float)(rgb * (1.0f/0xf)); /* r */
          dst[1] = (float)(rgb * (1.0f/0xf)); /* g */
          dst[2] = (float)(rgb * (1.0f/0xf)); /* b */
@@ -3481,10 +3482,10 @@ util_format_l4a4_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride,
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t rgb;
          uint8_t a;
-         rgb = value >> 4;
-         a = (value) & 0xf;
+         uint8_t rgb;
+         a = value >> 4;
+         rgb = (value) & 0xf;
          dst[0] = (uint8_t)(((uint32_t)rgb) * 0xff / 0xf); /* r */
          dst[1] = (uint8_t)(((uint32_t)rgb) * 0xff / 0xf); /* g */
          dst[2] = (uint8_t)(((uint32_t)rgb) * 0xff / 0xf); /* b */
@@ -3518,8 +3519,8 @@ util_format_l4a4_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = 0;
-         value |= ((uint8_t)(src[0] >> 4)) << 4;
-         value |= ((uint8_t)(src[3] >> 4)) & 0xf;
+         value |= ((uint8_t)(src[3] >> 4)) << 4;
+         value |= ((uint8_t)(src[0] >> 4)) & 0xf;
          *(uint8_t *)dst = value;
 #else
          uint8_t value = 0;
@@ -3741,7 +3742,7 @@ util_format_l16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
+         value |= (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -3844,7 +3845,7 @@ util_format_a16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xffff);
+         value |= (uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff);
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -3947,7 +3948,7 @@ util_format_i16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
+         value |= (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -4071,13 +4072,13 @@ util_format_l16a16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff)) << 16;
-         value |= ((uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) << 16;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff)) & 0xffff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff)) & 0xffff;
-         value |= ((uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xffff)) << 16;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff)) << 16;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -4217,7 +4218,7 @@ util_format_a8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, cons
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint8_t value = 0;
-         value |= (uint8_t)((int8_t)util_iround(CLAMP(src[3], -1, 1) * 0x7f)) ;
+         value |= (uint8_t)((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) ;
          *(uint8_t *)dst = value;
          src += 4;
          dst += 1;
@@ -4320,7 +4321,7 @@ util_format_l8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, cons
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint8_t value = 0;
-         value |= (uint8_t)((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) ;
+         value |= (uint8_t)((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) ;
          *(uint8_t *)dst = value;
          src += 4;
          dst += 1;
@@ -4444,13 +4445,13 @@ util_format_l8a8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) << 8) ;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1, 1) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 8) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) & 0xff) ;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1, 1) * 0x7f)) << 8) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) << 8) ;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -4590,7 +4591,7 @@ util_format_i8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, cons
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint8_t value = 0;
-         value |= (uint8_t)((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) ;
+         value |= (uint8_t)((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) ;
          *(uint8_t *)dst = value;
          src += 4;
          dst += 1;
@@ -4693,7 +4694,7 @@ util_format_a16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)((int16_t)util_iround(CLAMP(src[3], -1, 1) * 0x7fff)) ;
+         value |= (uint16_t)((int16_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7fff)) ;
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -4796,7 +4797,7 @@ util_format_l16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) ;
+         value |= (uint16_t)((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) ;
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -4920,13 +4921,13 @@ util_format_l16a16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) << 16) ;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[3], -1, 1) * 0x7fff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) << 16) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7fff)) & 0xffff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) & 0xffff) ;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[3], -1, 1) * 0x7fff)) << 16) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7fff)) << 16) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -5066,7 +5067,7 @@ util_format_i16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) ;
+         value |= (uint16_t)((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) ;
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -7893,14 +7894,14 @@ util_format_r8sg8sb8ux8u_norm_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) << 24) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 24) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
          value |= ((float_to_ubyte(src[2])) & 0xff) << 8;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) & 0xff) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
          value |= ((float_to_ubyte(src[2])) & 0xff) << 16;
          *(uint32_t *)dst = value;
 #endif
@@ -8016,10 +8017,10 @@ union util_format_r10sg10sb10sa2u_norm {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      int r:10;
-      int g:10;
-      int b:10;
       unsigned a:2;
+      int b:10;
+      int g:10;
+      int r:10;
 #else
       int r:10;
       int g:10;
@@ -8039,14 +8040,14 @@ util_format_r10sg10sb10sa2u_norm_unpack_rgba_float(float *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          uint32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = (value) & 0x3;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = value >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)(r * (1.0f/0x1ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x1ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x1ff)); /* b */
@@ -8084,17 +8085,17 @@ util_format_r10sg10sb10sa2u_norm_pack_rgba_float(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x1ff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x1ff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1, 1) * 0x1ff)) & 0x3ff) << 2) ;
-         value |= ((uint32_t)util_iround(CLAMP(src[3], 0, 1) * 0x3)) & 0x3;
+         value |= ((uint32_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0x3)) << 30;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x1ff)) & 0x3ff) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x1ff)) & 0x3ff) << 10) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1, 1) * 0x1ff)) & 0x3ff) << 20) ;
-         value |= ((uint32_t)util_iround(CLAMP(src[3], 0, 1) * 0x3)) << 30;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 20) ;
+         value |= ((uint32_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0x3)) << 30;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -8110,14 +8111,14 @@ util_format_r10sg10sb10sa2u_norm_fetch_rgba_float(float *dst, const uint8_t *src
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          uint32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = (value) & 0x3;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = value >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)(r * (1.0f/0x1ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x1ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x1ff)); /* b */
@@ -8149,14 +8150,14 @@ util_format_r10sg10sb10sa2u_norm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned d
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          uint32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = (value) & 0x3;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = value >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (uint8_t)(MAX2(r, 0) >> 1); /* r */
          dst[1] = (uint8_t)(MAX2(g, 0) >> 1); /* g */
          dst[2] = (uint8_t)(MAX2(b, 0) >> 1); /* b */
@@ -8194,10 +8195,10 @@ util_format_r10sg10sb10sa2u_norm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)(((uint32_t)src[0]) * 0x1ff / 0xff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1ff / 0xff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[2]) * 0x1ff / 0xff)) & 0x3ff) << 2) ;
-         value |= ((uint32_t)(src[3] >> 6)) & 0x3;
+         value |= ((uint32_t)(src[3] >> 6)) << 30;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[2]) * 0x1ff / 0xff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1ff / 0xff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)(((uint32_t)src[0]) * 0x1ff / 0xff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -8219,9 +8220,9 @@ union util_format_r5sg5sb6u_norm {
    uint16_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      int r:5;
-      int g:5;
       unsigned b:6;
+      int g:5;
+      int r:5;
 #else
       int r:5;
       int g:5;
@@ -8240,12 +8241,12 @@ util_format_r5sg5sb6u_norm_unpack_rgba_float(float *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         int16_t r;
-         int16_t g;
          uint16_t b;
-         r = ((int16_t)(value) ) >> 11;
-         g = ((int16_t)(value << 5) ) >> 11;
-         b = (value) & 0x3f;
+         int16_t g;
+         int16_t r;
+         b = value >> 10;
+         g = ((int16_t)(value << 6) ) >> 11;
+         r = ((int16_t)(value << 11) ) >> 11;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = (float)(g * (1.0f/0xf)); /* g */
          dst[2] = (float)(b * (1.0f/0x3f)); /* b */
@@ -8281,15 +8282,15 @@ util_format_r5sg5sb6u_norm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= (uint16_t)(((uint16_t)util_iround(CLAMP(src[0], -1, 1) * 0xf)) << 11) ;
-         value |= (uint16_t)((((uint16_t)util_iround(CLAMP(src[1], -1, 1) * 0xf)) & 0x1f) << 6) ;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0x3f)) & 0x3f;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3f)) << 10;
+         value |= (uint16_t)((((uint16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0xf)) & 0x1f) << 5) ;
+         value |= (uint16_t)(((uint16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0xf)) & 0x1f) ;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= (uint16_t)(((uint16_t)util_iround(CLAMP(src[0], -1, 1) * 0xf)) & 0x1f) ;
-         value |= (uint16_t)((((uint16_t)util_iround(CLAMP(src[1], -1, 1) * 0xf)) & 0x1f) << 5) ;
-         value |= ((uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0x3f)) << 10;
+         value |= (uint16_t)(((uint16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0xf)) & 0x1f) ;
+         value |= (uint16_t)((((uint16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0xf)) & 0x1f) << 5) ;
+         value |= ((uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3f)) << 10;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -8305,12 +8306,12 @@ util_format_r5sg5sb6u_norm_fetch_rgba_float(float *dst, const uint8_t *src, unsi
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         int16_t r;
-         int16_t g;
          uint16_t b;
-         r = ((int16_t)(value) ) >> 11;
-         g = ((int16_t)(value << 5) ) >> 11;
-         b = (value) & 0x3f;
+         int16_t g;
+         int16_t r;
+         b = value >> 10;
+         g = ((int16_t)(value << 6) ) >> 11;
+         r = ((int16_t)(value << 11) ) >> 11;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = (float)(g * (1.0f/0xf)); /* g */
          dst[2] = (float)(b * (1.0f/0x3f)); /* b */
@@ -8340,12 +8341,12 @@ util_format_r5sg5sb6u_norm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         int16_t r;
-         int16_t g;
          uint16_t b;
-         r = ((int16_t)(value) ) >> 11;
-         g = ((int16_t)(value << 5) ) >> 11;
-         b = (value) & 0x3f;
+         int16_t g;
+         int16_t r;
+         b = value >> 10;
+         g = ((int16_t)(value << 6) ) >> 11;
+         r = ((int16_t)(value << 11) ) >> 11;
          dst[0] = (uint8_t)(((uint32_t)MAX2(r, 0)) * 0xff / 0xf); /* r */
          dst[1] = (uint8_t)(((uint32_t)MAX2(g, 0)) * 0xff / 0xf); /* g */
          dst[2] = (uint8_t)(((uint32_t)b) * 0xff / 0x3f); /* b */
@@ -8381,9 +8382,9 @@ util_format_r5sg5sb6u_norm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= (uint16_t)(((uint16_t)(src[0] >> 4)) << 11) ;
-         value |= (uint16_t)((((uint16_t)(src[1] >> 4)) & 0x1f) << 6) ;
-         value |= ((uint16_t)(src[2] >> 2)) & 0x3f;
+         value |= ((uint16_t)(src[2] >> 2)) << 10;
+         value |= (uint16_t)((((uint16_t)(src[1] >> 4)) & 0x1f) << 5) ;
+         value |= (uint16_t)(((uint16_t)(src[0] >> 4)) & 0x1f) ;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
@@ -8469,7 +8470,7 @@ util_format_r64_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
          union util_format_r64_float pixel;
          memcpy(&pixel, src, sizeof pixel);
-         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0, 1) * 0xff); /* r */
+         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0.0, 1.0) * 0xff); /* r */
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
          dst[3] = 255; /* a */
@@ -8601,15 +8602,15 @@ util_format_r64g64_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_strid
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r64g64_float pixel;
          memcpy(&pixel, src, sizeof pixel);
-         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0, 1) * 0xff); /* r */
-         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0, 1) * 0xff); /* g */
+         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0.0, 1.0) * 0xff); /* r */
+         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0.0, 1.0) * 0xff); /* g */
          dst[2] = 0; /* b */
          dst[3] = 255; /* a */
 #else
          union util_format_r64g64_float pixel;
          memcpy(&pixel, src, sizeof pixel);
-         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0, 1) * 0xff); /* r */
-         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0, 1) * 0xff); /* g */
+         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0.0, 1.0) * 0xff); /* r */
+         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0.0, 1.0) * 0xff); /* g */
          dst[2] = 0; /* b */
          dst[3] = 255; /* a */
 #endif
@@ -8753,16 +8754,16 @@ util_format_r64g64b64_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_st
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r64g64b64_float pixel;
          memcpy(&pixel, src, sizeof pixel);
-         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0, 1) * 0xff); /* r */
-         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0, 1) * 0xff); /* g */
-         dst[2] = (uint8_t)util_iround(CLAMP(pixel.chan.b, 0, 1) * 0xff); /* b */
+         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0.0, 1.0) * 0xff); /* r */
+         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0.0, 1.0) * 0xff); /* g */
+         dst[2] = (uint8_t)util_iround(CLAMP(pixel.chan.b, 0.0, 1.0) * 0xff); /* b */
          dst[3] = 255; /* a */
 #else
          union util_format_r64g64b64_float pixel;
          memcpy(&pixel, src, sizeof pixel);
-         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0, 1) * 0xff); /* r */
-         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0, 1) * 0xff); /* g */
-         dst[2] = (uint8_t)util_iround(CLAMP(pixel.chan.b, 0, 1) * 0xff); /* b */
+         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0.0, 1.0) * 0xff); /* r */
+         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0.0, 1.0) * 0xff); /* g */
+         dst[2] = (uint8_t)util_iround(CLAMP(pixel.chan.b, 0.0, 1.0) * 0xff); /* b */
          dst[3] = 255; /* a */
 #endif
          src += 24;
@@ -8911,17 +8912,17 @@ util_format_r64g64b64a64_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r64g64b64a64_float pixel;
          memcpy(&pixel, src, sizeof pixel);
-         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0, 1) * 0xff); /* r */
-         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0, 1) * 0xff); /* g */
-         dst[2] = (uint8_t)util_iround(CLAMP(pixel.chan.b, 0, 1) * 0xff); /* b */
-         dst[3] = (uint8_t)util_iround(CLAMP(pixel.chan.a, 0, 1) * 0xff); /* a */
+         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0.0, 1.0) * 0xff); /* r */
+         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0.0, 1.0) * 0xff); /* g */
+         dst[2] = (uint8_t)util_iround(CLAMP(pixel.chan.b, 0.0, 1.0) * 0xff); /* b */
+         dst[3] = (uint8_t)util_iround(CLAMP(pixel.chan.a, 0.0, 1.0) * 0xff); /* a */
 #else
          union util_format_r64g64b64a64_float pixel;
          memcpy(&pixel, src, sizeof pixel);
-         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0, 1) * 0xff); /* r */
-         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0, 1) * 0xff); /* g */
-         dst[2] = (uint8_t)util_iround(CLAMP(pixel.chan.b, 0, 1) * 0xff); /* b */
-         dst[3] = (uint8_t)util_iround(CLAMP(pixel.chan.a, 0, 1) * 0xff); /* a */
+         dst[0] = (uint8_t)util_iround(CLAMP(pixel.chan.r, 0.0, 1.0) * 0xff); /* r */
+         dst[1] = (uint8_t)util_iround(CLAMP(pixel.chan.g, 0.0, 1.0) * 0xff); /* g */
+         dst[2] = (uint8_t)util_iround(CLAMP(pixel.chan.b, 0.0, 1.0) * 0xff); /* b */
+         dst[3] = (uint8_t)util_iround(CLAMP(pixel.chan.a, 0.0, 1.0) * 0xff); /* a */
 #endif
          src += 32;
          dst += 4;
@@ -9564,7 +9565,7 @@ util_format_r32_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint32_t value = 0;
-         value |= (uint32_t)(CLAMP(src[0], 0, 1) * (double)0xffffffff);
+         value |= (uint32_t)(CLAMP(src[0], 0.0f, 1.0f) * (double)0xffffffff);
          *(uint32_t *)dst = value;
          src += 4;
          dst += 4;
@@ -9682,13 +9683,13 @@ util_format_r32g32_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32_unorm pixel;
-         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0, 1) * (double)0xffffffff);
-         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0, 1) * (double)0xffffffff);
+         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0.0f, 1.0f) * (double)0xffffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32_unorm pixel;
-         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0, 1) * (double)0xffffffff);
-         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0, 1) * (double)0xffffffff);
+         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0.0f, 1.0f) * (double)0xffffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -9832,15 +9833,15 @@ util_format_r32g32b32_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32_unorm pixel;
-         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0, 1) * (double)0xffffffff);
-         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0, 1) * (double)0xffffffff);
-         pixel.chan.b = (uint32_t)(CLAMP(src[2], 0, 1) * (double)0xffffffff);
+         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.b = (uint32_t)(CLAMP(src[2], 0.0f, 1.0f) * (double)0xffffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32_unorm pixel;
-         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0, 1) * (double)0xffffffff);
-         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0, 1) * (double)0xffffffff);
-         pixel.chan.b = (uint32_t)(CLAMP(src[2], 0, 1) * (double)0xffffffff);
+         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.b = (uint32_t)(CLAMP(src[2], 0.0f, 1.0f) * (double)0xffffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -9988,17 +9989,17 @@ util_format_r32g32b32a32_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32a32_unorm pixel;
-         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0, 1) * (double)0xffffffff);
-         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0, 1) * (double)0xffffffff);
-         pixel.chan.b = (uint32_t)(CLAMP(src[2], 0, 1) * (double)0xffffffff);
-         pixel.chan.a = (uint32_t)(CLAMP(src[3], 0, 1) * (double)0xffffffff);
+         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.b = (uint32_t)(CLAMP(src[2], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.a = (uint32_t)(CLAMP(src[3], 0.0f, 1.0f) * (double)0xffffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32a32_unorm pixel;
-         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0, 1) * (double)0xffffffff);
-         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0, 1) * (double)0xffffffff);
-         pixel.chan.b = (uint32_t)(CLAMP(src[2], 0, 1) * (double)0xffffffff);
-         pixel.chan.a = (uint32_t)(CLAMP(src[3], 0, 1) * (double)0xffffffff);
+         pixel.chan.r = (uint32_t)(CLAMP(src[0], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.g = (uint32_t)(CLAMP(src[1], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.b = (uint32_t)(CLAMP(src[2], 0.0f, 1.0f) * (double)0xffffffff);
+         pixel.chan.a = (uint32_t)(CLAMP(src[3], 0.0f, 1.0f) * (double)0xffffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -10130,7 +10131,7 @@ util_format_r32_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, c
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint32_t value = 0;
-         value |= (uint32_t)CLAMP(src[0], 0, 4294967295);
+         value |= (uint32_t)CLAMP(src[0], 0.0f, 4294967040.0f);
          *(uint32_t *)dst = value;
          src += 4;
          dst += 4;
@@ -10248,13 +10249,13 @@ util_format_r32g32_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32_uscaled pixel;
-         pixel.chan.r = (uint32_t)CLAMP(src[0], 0, 4294967295);
-         pixel.chan.g = (uint32_t)CLAMP(src[1], 0, 4294967295);
+         pixel.chan.r = (uint32_t)CLAMP(src[0], 0.0f, 4294967040.0f);
+         pixel.chan.g = (uint32_t)CLAMP(src[1], 0.0f, 4294967040.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32_uscaled pixel;
-         pixel.chan.r = (uint32_t)CLAMP(src[0], 0, 4294967295);
-         pixel.chan.g = (uint32_t)CLAMP(src[1], 0, 4294967295);
+         pixel.chan.r = (uint32_t)CLAMP(src[0], 0.0f, 4294967040.0f);
+         pixel.chan.g = (uint32_t)CLAMP(src[1], 0.0f, 4294967040.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -10398,15 +10399,15 @@ util_format_r32g32b32_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32_uscaled pixel;
-         pixel.chan.r = (uint32_t)CLAMP(src[0], 0, 4294967295);
-         pixel.chan.g = (uint32_t)CLAMP(src[1], 0, 4294967295);
-         pixel.chan.b = (uint32_t)CLAMP(src[2], 0, 4294967295);
+         pixel.chan.r = (uint32_t)CLAMP(src[0], 0.0f, 4294967040.0f);
+         pixel.chan.g = (uint32_t)CLAMP(src[1], 0.0f, 4294967040.0f);
+         pixel.chan.b = (uint32_t)CLAMP(src[2], 0.0f, 4294967040.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32_uscaled pixel;
-         pixel.chan.r = (uint32_t)CLAMP(src[0], 0, 4294967295);
-         pixel.chan.g = (uint32_t)CLAMP(src[1], 0, 4294967295);
-         pixel.chan.b = (uint32_t)CLAMP(src[2], 0, 4294967295);
+         pixel.chan.r = (uint32_t)CLAMP(src[0], 0.0f, 4294967040.0f);
+         pixel.chan.g = (uint32_t)CLAMP(src[1], 0.0f, 4294967040.0f);
+         pixel.chan.b = (uint32_t)CLAMP(src[2], 0.0f, 4294967040.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -10554,17 +10555,17 @@ util_format_r32g32b32a32_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32a32_uscaled pixel;
-         pixel.chan.r = (uint32_t)CLAMP(src[0], 0, 4294967295);
-         pixel.chan.g = (uint32_t)CLAMP(src[1], 0, 4294967295);
-         pixel.chan.b = (uint32_t)CLAMP(src[2], 0, 4294967295);
-         pixel.chan.a = (uint32_t)CLAMP(src[3], 0, 4294967295);
+         pixel.chan.r = (uint32_t)CLAMP(src[0], 0.0f, 4294967040.0f);
+         pixel.chan.g = (uint32_t)CLAMP(src[1], 0.0f, 4294967040.0f);
+         pixel.chan.b = (uint32_t)CLAMP(src[2], 0.0f, 4294967040.0f);
+         pixel.chan.a = (uint32_t)CLAMP(src[3], 0.0f, 4294967040.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32a32_uscaled pixel;
-         pixel.chan.r = (uint32_t)CLAMP(src[0], 0, 4294967295);
-         pixel.chan.g = (uint32_t)CLAMP(src[1], 0, 4294967295);
-         pixel.chan.b = (uint32_t)CLAMP(src[2], 0, 4294967295);
-         pixel.chan.a = (uint32_t)CLAMP(src[3], 0, 4294967295);
+         pixel.chan.r = (uint32_t)CLAMP(src[0], 0.0f, 4294967040.0f);
+         pixel.chan.g = (uint32_t)CLAMP(src[1], 0.0f, 4294967040.0f);
+         pixel.chan.b = (uint32_t)CLAMP(src[2], 0.0f, 4294967040.0f);
+         pixel.chan.a = (uint32_t)CLAMP(src[3], 0.0f, 4294967040.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -10696,7 +10697,7 @@ util_format_r32_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint32_t value = 0;
-         value |= (uint32_t)((int32_t)(CLAMP(src[0], -1, 1) * (double)0x7fffffff)) ;
+         value |= (uint32_t)((int32_t)(CLAMP(src[0], -1.0f, 1.0f) * (double)0x7fffffff)) ;
          *(uint32_t *)dst = value;
          src += 4;
          dst += 4;
@@ -10814,13 +10815,13 @@ util_format_r32g32_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32_snorm pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -1, 1) * (double)0x7fffffff);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -1, 1) * (double)0x7fffffff);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -1.0f, 1.0f) * (double)0x7fffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32_snorm pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -1, 1) * (double)0x7fffffff);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -1, 1) * (double)0x7fffffff);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -1.0f, 1.0f) * (double)0x7fffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -10964,15 +10965,15 @@ util_format_r32g32b32_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32_snorm pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -1, 1) * (double)0x7fffffff);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -1, 1) * (double)0x7fffffff);
-         pixel.chan.b = (int32_t)(CLAMP(src[2], -1, 1) * (double)0x7fffffff);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.b = (int32_t)(CLAMP(src[2], -1.0f, 1.0f) * (double)0x7fffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32_snorm pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -1, 1) * (double)0x7fffffff);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -1, 1) * (double)0x7fffffff);
-         pixel.chan.b = (int32_t)(CLAMP(src[2], -1, 1) * (double)0x7fffffff);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.b = (int32_t)(CLAMP(src[2], -1.0f, 1.0f) * (double)0x7fffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -11120,17 +11121,17 @@ util_format_r32g32b32a32_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32a32_snorm pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -1, 1) * (double)0x7fffffff);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -1, 1) * (double)0x7fffffff);
-         pixel.chan.b = (int32_t)(CLAMP(src[2], -1, 1) * (double)0x7fffffff);
-         pixel.chan.a = (int32_t)(CLAMP(src[3], -1, 1) * (double)0x7fffffff);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.b = (int32_t)(CLAMP(src[2], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.a = (int32_t)(CLAMP(src[3], -1.0f, 1.0f) * (double)0x7fffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32a32_snorm pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -1, 1) * (double)0x7fffffff);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -1, 1) * (double)0x7fffffff);
-         pixel.chan.b = (int32_t)(CLAMP(src[2], -1, 1) * (double)0x7fffffff);
-         pixel.chan.a = (int32_t)(CLAMP(src[3], -1, 1) * (double)0x7fffffff);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.b = (int32_t)(CLAMP(src[2], -1.0f, 1.0f) * (double)0x7fffffff);
+         pixel.chan.a = (int32_t)(CLAMP(src[3], -1.0f, 1.0f) * (double)0x7fffffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -11262,7 +11263,7 @@ util_format_r32_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, c
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint32_t value = 0;
-         value |= (uint32_t)((int32_t)CLAMP(src[0], -2147483648, 2147483647)) ;
+         value |= (uint32_t)((int32_t)CLAMP(src[0], -2147483648.0f, 2147483520.0f)) ;
          *(uint32_t *)dst = value;
          src += 4;
          dst += 4;
@@ -11380,13 +11381,13 @@ util_format_r32g32_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32_sscaled pixel;
-         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648, 2147483647);
-         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648, 2147483647);
+         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648.0f, 2147483520.0f);
+         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648.0f, 2147483520.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32_sscaled pixel;
-         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648, 2147483647);
-         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648, 2147483647);
+         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648.0f, 2147483520.0f);
+         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648.0f, 2147483520.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -11530,15 +11531,15 @@ util_format_r32g32b32_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32_sscaled pixel;
-         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648, 2147483647);
-         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648, 2147483647);
-         pixel.chan.b = (int32_t)CLAMP(src[2], -2147483648, 2147483647);
+         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648.0f, 2147483520.0f);
+         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648.0f, 2147483520.0f);
+         pixel.chan.b = (int32_t)CLAMP(src[2], -2147483648.0f, 2147483520.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32_sscaled pixel;
-         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648, 2147483647);
-         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648, 2147483647);
-         pixel.chan.b = (int32_t)CLAMP(src[2], -2147483648, 2147483647);
+         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648.0f, 2147483520.0f);
+         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648.0f, 2147483520.0f);
+         pixel.chan.b = (int32_t)CLAMP(src[2], -2147483648.0f, 2147483520.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -11686,17 +11687,17 @@ util_format_r32g32b32a32_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32a32_sscaled pixel;
-         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648, 2147483647);
-         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648, 2147483647);
-         pixel.chan.b = (int32_t)CLAMP(src[2], -2147483648, 2147483647);
-         pixel.chan.a = (int32_t)CLAMP(src[3], -2147483648, 2147483647);
+         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648.0f, 2147483520.0f);
+         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648.0f, 2147483520.0f);
+         pixel.chan.b = (int32_t)CLAMP(src[2], -2147483648.0f, 2147483520.0f);
+         pixel.chan.a = (int32_t)CLAMP(src[3], -2147483648.0f, 2147483520.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32a32_sscaled pixel;
-         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648, 2147483647);
-         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648, 2147483647);
-         pixel.chan.b = (int32_t)CLAMP(src[2], -2147483648, 2147483647);
-         pixel.chan.a = (int32_t)CLAMP(src[3], -2147483648, 2147483647);
+         pixel.chan.r = (int32_t)CLAMP(src[0], -2147483648.0f, 2147483520.0f);
+         pixel.chan.g = (int32_t)CLAMP(src[1], -2147483648.0f, 2147483520.0f);
+         pixel.chan.b = (int32_t)CLAMP(src[2], -2147483648.0f, 2147483520.0f);
+         pixel.chan.a = (int32_t)CLAMP(src[3], -2147483648.0f, 2147483520.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -12392,7 +12393,7 @@ util_format_r16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
+         value |= (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -12516,13 +12517,13 @@ util_format_r16g16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff)) << 16;
-         value |= ((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) << 16;
+         value |= ((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff)) & 0xffff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff)) & 0xffff;
-         value |= ((uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xffff)) << 16;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff)) << 16;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -12678,15 +12679,15 @@ util_format_r16g16b16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16_unorm pixel;
-         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
-         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xffff);
-         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xffff);
+         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16_unorm pixel;
-         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
-         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xffff);
-         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xffff);
+         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -12835,17 +12836,17 @@ util_format_r16g16b16a16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16a16_unorm pixel;
-         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
-         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xffff);
-         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xffff);
-         pixel.chan.a = (uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xffff);
+         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.a = (uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16a16_unorm pixel;
-         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
-         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xffff);
-         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xffff);
-         pixel.chan.a = (uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xffff);
+         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.a = (uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -12977,7 +12978,7 @@ util_format_r16_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, c
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)CLAMP(src[0], 0, 65535);
+         value |= (uint16_t)CLAMP(src[0], 0.0f, 65535.0f);
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -13101,13 +13102,13 @@ util_format_r16g16_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint16_t)CLAMP(src[0], 0, 65535)) << 16;
-         value |= ((uint16_t)CLAMP(src[1], 0, 65535)) & 0xffff;
+         value |= ((uint16_t)CLAMP(src[0], 0.0f, 65535.0f)) << 16;
+         value |= ((uint16_t)CLAMP(src[1], 0.0f, 65535.0f)) & 0xffff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint16_t)CLAMP(src[0], 0, 65535)) & 0xffff;
-         value |= ((uint16_t)CLAMP(src[1], 0, 65535)) << 16;
+         value |= ((uint16_t)CLAMP(src[0], 0.0f, 65535.0f)) & 0xffff;
+         value |= ((uint16_t)CLAMP(src[1], 0.0f, 65535.0f)) << 16;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -13263,15 +13264,15 @@ util_format_r16g16b16_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16_uscaled pixel;
-         pixel.chan.r = (uint16_t)CLAMP(src[0], 0, 65535);
-         pixel.chan.g = (uint16_t)CLAMP(src[1], 0, 65535);
-         pixel.chan.b = (uint16_t)CLAMP(src[2], 0, 65535);
+         pixel.chan.r = (uint16_t)CLAMP(src[0], 0.0f, 65535.0f);
+         pixel.chan.g = (uint16_t)CLAMP(src[1], 0.0f, 65535.0f);
+         pixel.chan.b = (uint16_t)CLAMP(src[2], 0.0f, 65535.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16_uscaled pixel;
-         pixel.chan.r = (uint16_t)CLAMP(src[0], 0, 65535);
-         pixel.chan.g = (uint16_t)CLAMP(src[1], 0, 65535);
-         pixel.chan.b = (uint16_t)CLAMP(src[2], 0, 65535);
+         pixel.chan.r = (uint16_t)CLAMP(src[0], 0.0f, 65535.0f);
+         pixel.chan.g = (uint16_t)CLAMP(src[1], 0.0f, 65535.0f);
+         pixel.chan.b = (uint16_t)CLAMP(src[2], 0.0f, 65535.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -13420,17 +13421,17 @@ util_format_r16g16b16a16_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16a16_uscaled pixel;
-         pixel.chan.r = (uint16_t)CLAMP(src[0], 0, 65535);
-         pixel.chan.g = (uint16_t)CLAMP(src[1], 0, 65535);
-         pixel.chan.b = (uint16_t)CLAMP(src[2], 0, 65535);
-         pixel.chan.a = (uint16_t)CLAMP(src[3], 0, 65535);
+         pixel.chan.r = (uint16_t)CLAMP(src[0], 0.0f, 65535.0f);
+         pixel.chan.g = (uint16_t)CLAMP(src[1], 0.0f, 65535.0f);
+         pixel.chan.b = (uint16_t)CLAMP(src[2], 0.0f, 65535.0f);
+         pixel.chan.a = (uint16_t)CLAMP(src[3], 0.0f, 65535.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16a16_uscaled pixel;
-         pixel.chan.r = (uint16_t)CLAMP(src[0], 0, 65535);
-         pixel.chan.g = (uint16_t)CLAMP(src[1], 0, 65535);
-         pixel.chan.b = (uint16_t)CLAMP(src[2], 0, 65535);
-         pixel.chan.a = (uint16_t)CLAMP(src[3], 0, 65535);
+         pixel.chan.r = (uint16_t)CLAMP(src[0], 0.0f, 65535.0f);
+         pixel.chan.g = (uint16_t)CLAMP(src[1], 0.0f, 65535.0f);
+         pixel.chan.b = (uint16_t)CLAMP(src[2], 0.0f, 65535.0f);
+         pixel.chan.a = (uint16_t)CLAMP(src[3], 0.0f, 65535.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -13562,7 +13563,7 @@ util_format_r16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) ;
+         value |= (uint16_t)((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) ;
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -13686,13 +13687,13 @@ util_format_r16g16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) << 16) ;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[1], -1, 1) * 0x7fff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) << 16) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff)) & 0xffff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) & 0xffff) ;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[1], -1, 1) * 0x7fff)) << 16) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff)) << 16) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -13848,15 +13849,15 @@ util_format_r16g16b16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16_snorm pixel;
-         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff);
-         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1, 1) * 0x7fff);
-         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1, 1) * 0x7fff);
+         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7fff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16_snorm pixel;
-         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff);
-         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1, 1) * 0x7fff);
-         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1, 1) * 0x7fff);
+         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7fff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -14005,17 +14006,17 @@ util_format_r16g16b16a16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16a16_snorm pixel;
-         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff);
-         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1, 1) * 0x7fff);
-         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1, 1) * 0x7fff);
-         pixel.chan.a = (int16_t)util_iround(CLAMP(src[3], -1, 1) * 0x7fff);
+         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.a = (int16_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7fff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16a16_snorm pixel;
-         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff);
-         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1, 1) * 0x7fff);
-         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1, 1) * 0x7fff);
-         pixel.chan.a = (int16_t)util_iround(CLAMP(src[3], -1, 1) * 0x7fff);
+         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.a = (int16_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7fff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -14147,7 +14148,7 @@ util_format_r16_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, c
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint16_t value = 0;
-         value |= (uint16_t)((int16_t)CLAMP(src[0], -32768, 32767)) ;
+         value |= (uint16_t)((int16_t)CLAMP(src[0], -32768.0f, 32767.0f)) ;
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
@@ -14271,13 +14272,13 @@ util_format_r16g16_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((int16_t)CLAMP(src[0], -32768, 32767)) << 16) ;
-         value |= (uint32_t)(((int16_t)CLAMP(src[1], -32768, 32767)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)CLAMP(src[0], -32768.0f, 32767.0f)) << 16) ;
+         value |= (uint32_t)(((int16_t)CLAMP(src[1], -32768.0f, 32767.0f)) & 0xffff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((int16_t)CLAMP(src[0], -32768, 32767)) & 0xffff) ;
-         value |= (uint32_t)(((int16_t)CLAMP(src[1], -32768, 32767)) << 16) ;
+         value |= (uint32_t)(((int16_t)CLAMP(src[0], -32768.0f, 32767.0f)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)CLAMP(src[1], -32768.0f, 32767.0f)) << 16) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -14433,15 +14434,15 @@ util_format_r16g16b16_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16_sscaled pixel;
-         pixel.chan.r = (int16_t)CLAMP(src[0], -32768, 32767);
-         pixel.chan.g = (int16_t)CLAMP(src[1], -32768, 32767);
-         pixel.chan.b = (int16_t)CLAMP(src[2], -32768, 32767);
+         pixel.chan.r = (int16_t)CLAMP(src[0], -32768.0f, 32767.0f);
+         pixel.chan.g = (int16_t)CLAMP(src[1], -32768.0f, 32767.0f);
+         pixel.chan.b = (int16_t)CLAMP(src[2], -32768.0f, 32767.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16_sscaled pixel;
-         pixel.chan.r = (int16_t)CLAMP(src[0], -32768, 32767);
-         pixel.chan.g = (int16_t)CLAMP(src[1], -32768, 32767);
-         pixel.chan.b = (int16_t)CLAMP(src[2], -32768, 32767);
+         pixel.chan.r = (int16_t)CLAMP(src[0], -32768.0f, 32767.0f);
+         pixel.chan.g = (int16_t)CLAMP(src[1], -32768.0f, 32767.0f);
+         pixel.chan.b = (int16_t)CLAMP(src[2], -32768.0f, 32767.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -14590,17 +14591,17 @@ util_format_r16g16b16a16_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16a16_sscaled pixel;
-         pixel.chan.r = (int16_t)CLAMP(src[0], -32768, 32767);
-         pixel.chan.g = (int16_t)CLAMP(src[1], -32768, 32767);
-         pixel.chan.b = (int16_t)CLAMP(src[2], -32768, 32767);
-         pixel.chan.a = (int16_t)CLAMP(src[3], -32768, 32767);
+         pixel.chan.r = (int16_t)CLAMP(src[0], -32768.0f, 32767.0f);
+         pixel.chan.g = (int16_t)CLAMP(src[1], -32768.0f, 32767.0f);
+         pixel.chan.b = (int16_t)CLAMP(src[2], -32768.0f, 32767.0f);
+         pixel.chan.a = (int16_t)CLAMP(src[3], -32768.0f, 32767.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16a16_sscaled pixel;
-         pixel.chan.r = (int16_t)CLAMP(src[0], -32768, 32767);
-         pixel.chan.g = (int16_t)CLAMP(src[1], -32768, 32767);
-         pixel.chan.b = (int16_t)CLAMP(src[2], -32768, 32767);
-         pixel.chan.a = (int16_t)CLAMP(src[3], -32768, 32767);
+         pixel.chan.r = (int16_t)CLAMP(src[0], -32768.0f, 32767.0f);
+         pixel.chan.g = (int16_t)CLAMP(src[1], -32768.0f, 32767.0f);
+         pixel.chan.b = (int16_t)CLAMP(src[2], -32768.0f, 32767.0f);
+         pixel.chan.a = (int16_t)CLAMP(src[3], -32768.0f, 32767.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -15359,7 +15360,7 @@ util_format_r8_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, co
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint8_t value = 0;
-         value |= (uint8_t)CLAMP(src[0], 0, 255);
+         value |= (uint8_t)CLAMP(src[0], 0.0f, 255.0f);
          *(uint8_t *)dst = value;
          src += 4;
          dst += 1;
@@ -15483,13 +15484,13 @@ util_format_r8g8_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= ((uint8_t)CLAMP(src[0], 0, 255)) << 8;
-         value |= ((uint8_t)CLAMP(src[1], 0, 255)) & 0xff;
+         value |= ((uint8_t)CLAMP(src[0], 0.0f, 255.0f)) << 8;
+         value |= ((uint8_t)CLAMP(src[1], 0.0f, 255.0f)) & 0xff;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= ((uint8_t)CLAMP(src[0], 0, 255)) & 0xff;
-         value |= ((uint8_t)CLAMP(src[1], 0, 255)) << 8;
+         value |= ((uint8_t)CLAMP(src[0], 0.0f, 255.0f)) & 0xff;
+         value |= ((uint8_t)CLAMP(src[1], 0.0f, 255.0f)) << 8;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -15645,15 +15646,15 @@ util_format_r8g8b8_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r8g8b8_uscaled pixel;
-         pixel.chan.r = (uint8_t)CLAMP(src[0], 0, 255);
-         pixel.chan.g = (uint8_t)CLAMP(src[1], 0, 255);
-         pixel.chan.b = (uint8_t)CLAMP(src[2], 0, 255);
+         pixel.chan.r = (uint8_t)CLAMP(src[0], 0.0f, 255.0f);
+         pixel.chan.g = (uint8_t)CLAMP(src[1], 0.0f, 255.0f);
+         pixel.chan.b = (uint8_t)CLAMP(src[2], 0.0f, 255.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r8g8b8_uscaled pixel;
-         pixel.chan.r = (uint8_t)CLAMP(src[0], 0, 255);
-         pixel.chan.g = (uint8_t)CLAMP(src[1], 0, 255);
-         pixel.chan.b = (uint8_t)CLAMP(src[2], 0, 255);
+         pixel.chan.r = (uint8_t)CLAMP(src[0], 0.0f, 255.0f);
+         pixel.chan.g = (uint8_t)CLAMP(src[1], 0.0f, 255.0f);
+         pixel.chan.b = (uint8_t)CLAMP(src[2], 0.0f, 255.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -15816,17 +15817,17 @@ util_format_r8g8b8a8_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stri
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint8_t)CLAMP(src[0], 0, 255)) << 24;
-         value |= (((uint8_t)CLAMP(src[1], 0, 255)) & 0xff) << 16;
-         value |= (((uint8_t)CLAMP(src[2], 0, 255)) & 0xff) << 8;
-         value |= ((uint8_t)CLAMP(src[3], 0, 255)) & 0xff;
+         value |= ((uint8_t)CLAMP(src[0], 0.0f, 255.0f)) << 24;
+         value |= (((uint8_t)CLAMP(src[1], 0.0f, 255.0f)) & 0xff) << 16;
+         value |= (((uint8_t)CLAMP(src[2], 0.0f, 255.0f)) & 0xff) << 8;
+         value |= ((uint8_t)CLAMP(src[3], 0.0f, 255.0f)) & 0xff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint8_t)CLAMP(src[0], 0, 255)) & 0xff;
-         value |= (((uint8_t)CLAMP(src[1], 0, 255)) & 0xff) << 8;
-         value |= (((uint8_t)CLAMP(src[2], 0, 255)) & 0xff) << 16;
-         value |= ((uint8_t)CLAMP(src[3], 0, 255)) << 24;
+         value |= ((uint8_t)CLAMP(src[0], 0.0f, 255.0f)) & 0xff;
+         value |= (((uint8_t)CLAMP(src[1], 0.0f, 255.0f)) & 0xff) << 8;
+         value |= (((uint8_t)CLAMP(src[2], 0.0f, 255.0f)) & 0xff) << 16;
+         value |= ((uint8_t)CLAMP(src[3], 0.0f, 255.0f)) << 24;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -15986,7 +15987,7 @@ util_format_r8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, cons
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint8_t value = 0;
-         value |= (uint8_t)((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) ;
+         value |= (uint8_t)((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) ;
          *(uint8_t *)dst = value;
          src += 4;
          dst += 1;
@@ -16110,13 +16111,13 @@ util_format_r8g8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) << 8) ;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 8) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) & 0xff) ;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f)) << 8) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) << 8) ;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -16272,15 +16273,15 @@ util_format_r8g8b8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r8g8b8_snorm pixel;
-         pixel.chan.r = (int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f);
-         pixel.chan.g = (int8_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f);
-         pixel.chan.b = (int8_t)util_iround(CLAMP(src[2], -1, 1) * 0x7f);
+         pixel.chan.r = (int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f);
+         pixel.chan.g = (int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f);
+         pixel.chan.b = (int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r8g8b8_snorm pixel;
-         pixel.chan.r = (int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f);
-         pixel.chan.g = (int8_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f);
-         pixel.chan.b = (int8_t)util_iround(CLAMP(src[2], -1, 1) * 0x7f);
+         pixel.chan.r = (int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f);
+         pixel.chan.g = (int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f);
+         pixel.chan.b = (int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -16443,17 +16444,17 @@ util_format_r8g8b8a8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) << 24) ;
-         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f)) & 0xff) << 16) ;
-         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1, 1) * 0x7f)) & 0xff) << 8) ;
-         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[3], -1, 1) * 0x7f)) & 0xff) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 24) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) & 0xff) ;
-         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f)) & 0xff) << 8) ;
-         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1, 1) * 0x7f)) & 0xff) << 16) ;
-         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[3], -1, 1) * 0x7f)) << 24) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) << 24) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -16613,7 +16614,7 @@ util_format_r8_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, co
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          uint8_t value = 0;
-         value |= (uint8_t)((int8_t)CLAMP(src[0], -128, 127)) ;
+         value |= (uint8_t)((int8_t)CLAMP(src[0], -128.0f, 127.0f)) ;
          *(uint8_t *)dst = value;
          src += 4;
          dst += 1;
@@ -16737,13 +16738,13 @@ util_format_r8g8_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= (uint16_t)(((int8_t)CLAMP(src[0], -128, 127)) << 8) ;
-         value |= (uint16_t)(((int8_t)CLAMP(src[1], -128, 127)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)CLAMP(src[0], -128.0f, 127.0f)) << 8) ;
+         value |= (uint16_t)(((int8_t)CLAMP(src[1], -128.0f, 127.0f)) & 0xff) ;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= (uint16_t)(((int8_t)CLAMP(src[0], -128, 127)) & 0xff) ;
-         value |= (uint16_t)(((int8_t)CLAMP(src[1], -128, 127)) << 8) ;
+         value |= (uint16_t)(((int8_t)CLAMP(src[0], -128.0f, 127.0f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)CLAMP(src[1], -128.0f, 127.0f)) << 8) ;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -16899,15 +16900,15 @@ util_format_r8g8b8_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r8g8b8_sscaled pixel;
-         pixel.chan.r = (int8_t)CLAMP(src[0], -128, 127);
-         pixel.chan.g = (int8_t)CLAMP(src[1], -128, 127);
-         pixel.chan.b = (int8_t)CLAMP(src[2], -128, 127);
+         pixel.chan.r = (int8_t)CLAMP(src[0], -128.0f, 127.0f);
+         pixel.chan.g = (int8_t)CLAMP(src[1], -128.0f, 127.0f);
+         pixel.chan.b = (int8_t)CLAMP(src[2], -128.0f, 127.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r8g8b8_sscaled pixel;
-         pixel.chan.r = (int8_t)CLAMP(src[0], -128, 127);
-         pixel.chan.g = (int8_t)CLAMP(src[1], -128, 127);
-         pixel.chan.b = (int8_t)CLAMP(src[2], -128, 127);
+         pixel.chan.r = (int8_t)CLAMP(src[0], -128.0f, 127.0f);
+         pixel.chan.g = (int8_t)CLAMP(src[1], -128.0f, 127.0f);
+         pixel.chan.b = (int8_t)CLAMP(src[2], -128.0f, 127.0f);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -17070,17 +17071,17 @@ util_format_r8g8b8a8_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_stri
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((int8_t)CLAMP(src[0], -128, 127)) << 24) ;
-         value |= (uint32_t)((((int8_t)CLAMP(src[1], -128, 127)) & 0xff) << 16) ;
-         value |= (uint32_t)((((int8_t)CLAMP(src[2], -128, 127)) & 0xff) << 8) ;
-         value |= (uint32_t)(((int8_t)CLAMP(src[3], -128, 127)) & 0xff) ;
+         value |= (uint32_t)(((int8_t)CLAMP(src[0], -128.0f, 127.0f)) << 24) ;
+         value |= (uint32_t)((((int8_t)CLAMP(src[1], -128.0f, 127.0f)) & 0xff) << 16) ;
+         value |= (uint32_t)((((int8_t)CLAMP(src[2], -128.0f, 127.0f)) & 0xff) << 8) ;
+         value |= (uint32_t)(((int8_t)CLAMP(src[3], -128.0f, 127.0f)) & 0xff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((int8_t)CLAMP(src[0], -128, 127)) & 0xff) ;
-         value |= (uint32_t)((((int8_t)CLAMP(src[1], -128, 127)) & 0xff) << 8) ;
-         value |= (uint32_t)((((int8_t)CLAMP(src[2], -128, 127)) & 0xff) << 16) ;
-         value |= (uint32_t)(((int8_t)CLAMP(src[3], -128, 127)) << 24) ;
+         value |= (uint32_t)(((int8_t)CLAMP(src[0], -128.0f, 127.0f)) & 0xff) ;
+         value |= (uint32_t)((((int8_t)CLAMP(src[1], -128.0f, 127.0f)) & 0xff) << 8) ;
+         value |= (uint32_t)((((int8_t)CLAMP(src[2], -128.0f, 127.0f)) & 0xff) << 16) ;
+         value |= (uint32_t)(((int8_t)CLAMP(src[3], -128.0f, 127.0f)) << 24) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -17239,7 +17240,7 @@ util_format_r32_fixed_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, con
       uint8_t *dst = dst_row;
       for(x = 0; x < width; x += 1) {
          union util_format_r32_fixed pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536, 65535) * (double)0x10000);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536.0f, 65535.0f) * (double)0x10000);
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 4;
@@ -17355,13 +17356,13 @@ util_format_r32g32_fixed_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32_fixed pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536, 65535) * (double)0x10000);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536, 65535) * (double)0x10000);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536.0f, 65535.0f) * (double)0x10000);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32_fixed pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536, 65535) * (double)0x10000);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536, 65535) * (double)0x10000);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536.0f, 65535.0f) * (double)0x10000);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -17505,15 +17506,15 @@ util_format_r32g32b32_fixed_pack_rgba_float(uint8_t *dst_row, unsigned dst_strid
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32_fixed pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536, 65535) * (double)0x10000);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536, 65535) * (double)0x10000);
-         pixel.chan.b = (int32_t)(CLAMP(src[2], -65536, 65535) * (double)0x10000);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.b = (int32_t)(CLAMP(src[2], -65536.0f, 65535.0f) * (double)0x10000);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32_fixed pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536, 65535) * (double)0x10000);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536, 65535) * (double)0x10000);
-         pixel.chan.b = (int32_t)(CLAMP(src[2], -65536, 65535) * (double)0x10000);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.b = (int32_t)(CLAMP(src[2], -65536.0f, 65535.0f) * (double)0x10000);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -17661,17 +17662,17 @@ util_format_r32g32b32a32_fixed_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r32g32b32a32_fixed pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536, 65535) * (double)0x10000);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536, 65535) * (double)0x10000);
-         pixel.chan.b = (int32_t)(CLAMP(src[2], -65536, 65535) * (double)0x10000);
-         pixel.chan.a = (int32_t)(CLAMP(src[3], -65536, 65535) * (double)0x10000);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.b = (int32_t)(CLAMP(src[2], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.a = (int32_t)(CLAMP(src[3], -65536.0f, 65535.0f) * (double)0x10000);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r32g32b32a32_fixed pixel;
-         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536, 65535) * (double)0x10000);
-         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536, 65535) * (double)0x10000);
-         pixel.chan.b = (int32_t)(CLAMP(src[2], -65536, 65535) * (double)0x10000);
-         pixel.chan.a = (int32_t)(CLAMP(src[3], -65536, 65535) * (double)0x10000);
+         pixel.chan.r = (int32_t)(CLAMP(src[0], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.g = (int32_t)(CLAMP(src[1], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.b = (int32_t)(CLAMP(src[2], -65536.0f, 65535.0f) * (double)0x10000);
+         pixel.chan.a = (int32_t)(CLAMP(src[3], -65536.0f, 65535.0f) * (double)0x10000);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -17768,10 +17769,10 @@ union util_format_r10g10b10x2_uscaled {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned r:10;
-      unsigned g:10;
-      unsigned b:10;
       unsigned x:2;
+      unsigned b:10;
+      unsigned g:10;
+      unsigned r:10;
 #else
       unsigned r:10;
       unsigned g:10;
@@ -17791,12 +17792,12 @@ util_format_r10g10b10x2_uscaled_unpack_rgba_float(float *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
          uint32_t b;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
+         uint32_t g;
+         uint32_t r;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -17832,15 +17833,15 @@ util_format_r10g10b10x2_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)CLAMP(src[0], 0, 1023)) << 22;
-         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 12;
-         value |= (((uint32_t)CLAMP(src[2], 0, 1023)) & 0x3ff) << 2;
+         value |= (((uint32_t)CLAMP(src[2], 0.0f, 1023.0f)) & 0x3ff) << 20;
+         value |= (((uint32_t)CLAMP(src[1], 0.0f, 1023.0f)) & 0x3ff) << 10;
+         value |= ((uint32_t)CLAMP(src[0], 0.0f, 1023.0f)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint32_t)CLAMP(src[0], 0, 1023)) & 0x3ff;
-         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 10;
-         value |= (((uint32_t)CLAMP(src[2], 0, 1023)) & 0x3ff) << 20;
+         value |= ((uint32_t)CLAMP(src[0], 0.0f, 1023.0f)) & 0x3ff;
+         value |= (((uint32_t)CLAMP(src[1], 0.0f, 1023.0f)) & 0x3ff) << 10;
+         value |= (((uint32_t)CLAMP(src[2], 0.0f, 1023.0f)) & 0x3ff) << 20;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -17856,12 +17857,12 @@ util_format_r10g10b10x2_uscaled_fetch_rgba_float(float *dst, const uint8_t *src,
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
          uint32_t b;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
+         uint32_t g;
+         uint32_t r;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -17891,12 +17892,12 @@ util_format_r10g10b10x2_uscaled_unpack_rgba_8unorm(uint8_t *dst_row, unsigned ds
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
          uint32_t b;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
+         uint32_t g;
+         uint32_t r;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (uint8_t)(((uint32_t)MIN2(r, 1)) * 0xff / 0x1); /* r */
          dst[1] = (uint8_t)(((uint32_t)MIN2(g, 1)) * 0xff / 0x1); /* g */
          dst[2] = (uint8_t)(((uint32_t)MIN2(b, 1)) * 0xff / 0x1); /* b */
@@ -17932,9 +17933,9 @@ util_format_r10g10b10x2_uscaled_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) << 22;
-         value |= (((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 12;
-         value |= (((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) & 0x3ff) << 2;
+         value |= (((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) & 0x3ff) << 20;
+         value |= (((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 10;
+         value |= ((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -17955,10 +17956,10 @@ union util_format_r10g10b10x2_snorm {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      int r:10;
-      int g:10;
-      int b:10;
       unsigned x:2;
+      int b:10;
+      int g:10;
+      int r:10;
 #else
       int r:10;
       int g:10;
@@ -17978,12 +17979,12 @@ util_format_r10g10b10x2_snorm_unpack_rgba_float(float *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
          int32_t b;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)(r * (1.0f/0x1ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x1ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x1ff)); /* b */
@@ -18019,15 +18020,15 @@ util_format_r10g10b10x2_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x1ff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x1ff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1, 1) * 0x1ff)) & 0x3ff) << 2) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x1ff)) & 0x3ff) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x1ff)) & 0x3ff) << 10) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1, 1) * 0x1ff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 20) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -18043,12 +18044,12 @@ util_format_r10g10b10x2_snorm_fetch_rgba_float(float *dst, const uint8_t *src, u
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
          int32_t b;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)(r * (1.0f/0x1ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x1ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x1ff)); /* b */
@@ -18078,12 +18079,12 @@ util_format_r10g10b10x2_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
          int32_t b;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (uint8_t)(MAX2(r, 0) >> 1); /* r */
          dst[1] = (uint8_t)(MAX2(g, 0) >> 1); /* g */
          dst[2] = (uint8_t)(MAX2(b, 0) >> 1); /* b */
@@ -18119,9 +18120,9 @@ util_format_r10g10b10x2_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)(((uint32_t)src[0]) * 0x1ff / 0xff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1ff / 0xff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[2]) * 0x1ff / 0xff)) & 0x3ff) << 2) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[2]) * 0x1ff / 0xff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1ff / 0xff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)(((uint32_t)src[0]) * 0x1ff / 0xff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -18142,8 +18143,8 @@ union util_format_a4r4_unorm {
    uint8_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned a:4;
       unsigned r:4;
+      unsigned a:4;
 #else
       unsigned a:4;
       unsigned r:4;
@@ -18161,10 +18162,10 @@ util_format_a4r4_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t a;
          uint8_t r;
-         a = value >> 4;
-         r = (value) & 0xf;
+         uint8_t a;
+         r = value >> 4;
+         a = (value) & 0xf;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
@@ -18198,13 +18199,13 @@ util_format_a4r4_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = 0;
-         value |= ((uint8_t)util_iround(CLAMP(src[3], 0, 1) * 0xf)) << 4;
-         value |= ((uint8_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) & 0xf;
+         value |= ((uint8_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) << 4;
+         value |= ((uint8_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xf)) & 0xf;
          *(uint8_t *)dst = value;
 #else
          uint8_t value = 0;
-         value |= ((uint8_t)util_iround(CLAMP(src[3], 0, 1) * 0xf)) & 0xf;
-         value |= ((uint8_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) << 4;
+         value |= ((uint8_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xf)) & 0xf;
+         value |= ((uint8_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) << 4;
          *(uint8_t *)dst = value;
 #endif
          src += 4;
@@ -18220,10 +18221,10 @@ util_format_a4r4_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t a;
          uint8_t r;
-         a = value >> 4;
-         r = (value) & 0xf;
+         uint8_t a;
+         r = value >> 4;
+         a = (value) & 0xf;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
@@ -18251,10 +18252,10 @@ util_format_a4r4_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride,
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t a;
          uint8_t r;
-         a = value >> 4;
-         r = (value) & 0xf;
+         uint8_t a;
+         r = value >> 4;
+         a = (value) & 0xf;
          dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0xf); /* r */
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
@@ -18288,8 +18289,8 @@ util_format_a4r4_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = 0;
-         value |= ((uint8_t)(src[3] >> 4)) << 4;
-         value |= ((uint8_t)(src[0] >> 4)) & 0xf;
+         value |= ((uint8_t)(src[0] >> 4)) << 4;
+         value |= ((uint8_t)(src[3] >> 4)) & 0xf;
          *(uint8_t *)dst = value;
 #else
          uint8_t value = 0;
@@ -18309,8 +18310,8 @@ union util_format_r4a4_unorm {
    uint8_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned r:4;
       unsigned a:4;
+      unsigned r:4;
 #else
       unsigned r:4;
       unsigned a:4;
@@ -18328,10 +18329,10 @@ util_format_r4a4_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t r;
          uint8_t a;
-         r = value >> 4;
-         a = (value) & 0xf;
+         uint8_t r;
+         a = value >> 4;
+         r = (value) & 0xf;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
@@ -18365,13 +18366,13 @@ util_format_r4a4_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = 0;
-         value |= ((uint8_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) << 4;
-         value |= ((uint8_t)util_iround(CLAMP(src[3], 0, 1) * 0xf)) & 0xf;
+         value |= ((uint8_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xf)) << 4;
+         value |= ((uint8_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) & 0xf;
          *(uint8_t *)dst = value;
 #else
          uint8_t value = 0;
-         value |= ((uint8_t)util_iround(CLAMP(src[0], 0, 1) * 0xf)) & 0xf;
-         value |= ((uint8_t)util_iround(CLAMP(src[3], 0, 1) * 0xf)) << 4;
+         value |= ((uint8_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xf)) & 0xf;
+         value |= ((uint8_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xf)) << 4;
          *(uint8_t *)dst = value;
 #endif
          src += 4;
@@ -18387,10 +18388,10 @@ util_format_r4a4_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t r;
          uint8_t a;
-         r = value >> 4;
-         a = (value) & 0xf;
+         uint8_t r;
+         a = value >> 4;
+         r = (value) & 0xf;
          dst[0] = (float)(r * (1.0f/0xf)); /* r */
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
@@ -18418,10 +18419,10 @@ util_format_r4a4_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride,
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = *(const uint8_t *)src;
-         uint8_t r;
          uint8_t a;
-         r = value >> 4;
-         a = (value) & 0xf;
+         uint8_t r;
+         a = value >> 4;
+         r = (value) & 0xf;
          dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0xf); /* r */
          dst[1] = 0; /* g */
          dst[2] = 0; /* b */
@@ -18455,8 +18456,8 @@ util_format_r4a4_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint8_t value = 0;
-         value |= ((uint8_t)(src[0] >> 4)) << 4;
-         value |= ((uint8_t)(src[3] >> 4)) & 0xf;
+         value |= ((uint8_t)(src[3] >> 4)) << 4;
+         value |= ((uint8_t)(src[0] >> 4)) & 0xf;
          *(uint8_t *)dst = value;
 #else
          uint8_t value = 0;
@@ -18810,10 +18811,10 @@ union util_format_r10g10b10a2_uscaled {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned r:10;
-      unsigned g:10;
-      unsigned b:10;
       unsigned a:2;
+      unsigned b:10;
+      unsigned g:10;
+      unsigned r:10;
 #else
       unsigned r:10;
       unsigned g:10;
@@ -18833,14 +18834,14 @@ util_format_r10g10b10a2_uscaled_unpack_rgba_float(float *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -18878,17 +18879,17 @@ util_format_r10g10b10a2_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)CLAMP(src[0], 0, 1023)) << 22;
-         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 12;
-         value |= (((uint32_t)CLAMP(src[2], 0, 1023)) & 0x3ff) << 2;
-         value |= ((uint32_t)CLAMP(src[3], 0, 3)) & 0x3;
+         value |= ((uint32_t)CLAMP(src[3], 0.0f, 3.0f)) << 30;
+         value |= (((uint32_t)CLAMP(src[2], 0.0f, 1023.0f)) & 0x3ff) << 20;
+         value |= (((uint32_t)CLAMP(src[1], 0.0f, 1023.0f)) & 0x3ff) << 10;
+         value |= ((uint32_t)CLAMP(src[0], 0.0f, 1023.0f)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint32_t)CLAMP(src[0], 0, 1023)) & 0x3ff;
-         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 10;
-         value |= (((uint32_t)CLAMP(src[2], 0, 1023)) & 0x3ff) << 20;
-         value |= ((uint32_t)CLAMP(src[3], 0, 3)) << 30;
+         value |= ((uint32_t)CLAMP(src[0], 0.0f, 1023.0f)) & 0x3ff;
+         value |= (((uint32_t)CLAMP(src[1], 0.0f, 1023.0f)) & 0x3ff) << 10;
+         value |= (((uint32_t)CLAMP(src[2], 0.0f, 1023.0f)) & 0x3ff) << 20;
+         value |= ((uint32_t)CLAMP(src[3], 0.0f, 3.0f)) << 30;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -18904,14 +18905,14 @@ util_format_r10g10b10a2_uscaled_fetch_rgba_float(float *dst, const uint8_t *src,
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -18943,14 +18944,14 @@ util_format_r10g10b10a2_uscaled_unpack_rgba_8unorm(uint8_t *dst_row, unsigned ds
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (uint8_t)(((uint32_t)MIN2(r, 1)) * 0xff / 0x1); /* r */
          dst[1] = (uint8_t)(((uint32_t)MIN2(g, 1)) * 0xff / 0x1); /* g */
          dst[2] = (uint8_t)(((uint32_t)MIN2(b, 1)) * 0xff / 0x1); /* b */
@@ -18988,10 +18989,10 @@ util_format_r10g10b10a2_uscaled_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) << 22;
-         value |= (((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 12;
-         value |= (((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) & 0x3ff) << 2;
-         value |= ((uint32_t)(((uint32_t)src[3]) * 0x1 / 0xff)) & 0x3;
+         value |= ((uint32_t)(((uint32_t)src[3]) * 0x1 / 0xff)) << 30;
+         value |= (((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) & 0x3ff) << 20;
+         value |= (((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 10;
+         value |= ((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -19013,10 +19014,10 @@ union util_format_r10g10b10a2_sscaled {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      int r:10;
-      int g:10;
-      int b:10;
       int a:2;
+      int b:10;
+      int g:10;
+      int r:10;
 #else
       int r:10;
       int g:10;
@@ -19036,14 +19037,14 @@ util_format_r10g10b10a2_sscaled_unpack_rgba_float(float *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          int32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -19081,17 +19082,17 @@ util_format_r10g10b10a2_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)CLAMP(src[0], -512, 511)) << 22) ;
-         value |= (uint32_t)((((uint32_t)CLAMP(src[1], -512, 511)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)CLAMP(src[2], -512, 511)) & 0x3ff) << 2) ;
-         value |= (uint32_t)(((uint32_t)CLAMP(src[3], -2, 1)) & 0x3) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[3], -2.0f, 1.0f)) << 30) ;
+         value |= (uint32_t)((((uint32_t)CLAMP(src[2], -512.0f, 511.0f)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)CLAMP(src[1], -512.0f, 511.0f)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[0], -512.0f, 511.0f)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)CLAMP(src[0], -512, 511)) & 0x3ff) ;
-         value |= (uint32_t)((((uint32_t)CLAMP(src[1], -512, 511)) & 0x3ff) << 10) ;
-         value |= (uint32_t)((((uint32_t)CLAMP(src[2], -512, 511)) & 0x3ff) << 20) ;
-         value |= (uint32_t)(((uint32_t)CLAMP(src[3], -2, 1)) << 30) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[0], -512.0f, 511.0f)) & 0x3ff) ;
+         value |= (uint32_t)((((uint32_t)CLAMP(src[1], -512.0f, 511.0f)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((((uint32_t)CLAMP(src[2], -512.0f, 511.0f)) & 0x3ff) << 20) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[3], -2.0f, 1.0f)) << 30) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -19107,14 +19108,14 @@ util_format_r10g10b10a2_sscaled_fetch_rgba_float(float *dst, const uint8_t *src,
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          int32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -19146,14 +19147,14 @@ util_format_r10g10b10a2_sscaled_unpack_rgba_8unorm(uint8_t *dst_row, unsigned ds
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          int32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (uint8_t)(((uint32_t)CLAMP(r, 0, 1)) * 0xff / 0x1); /* r */
          dst[1] = (uint8_t)(((uint32_t)CLAMP(g, 0, 1)) * 0xff / 0x1); /* g */
          dst[2] = (uint8_t)(((uint32_t)CLAMP(b, 0, 1)) * 0xff / 0x1); /* b */
@@ -19191,10 +19192,10 @@ util_format_r10g10b10a2_sscaled_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) & 0x3ff) << 2) ;
-         value |= (uint32_t)(((uint32_t)(((uint32_t)src[3]) * 0x1 / 0xff)) & 0x3) ;
+         value |= (uint32_t)(((uint32_t)(((uint32_t)src[3]) * 0x1 / 0xff)) << 30) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -19216,10 +19217,10 @@ union util_format_r10g10b10a2_snorm {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      int r:10;
-      int g:10;
-      int b:10;
       int a:2;
+      int b:10;
+      int g:10;
+      int r:10;
 #else
       int r:10;
       int g:10;
@@ -19239,14 +19240,14 @@ util_format_r10g10b10a2_snorm_unpack_rgba_float(float *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          int32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)(r * (1.0f/0x1ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x1ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x1ff)); /* b */
@@ -19284,17 +19285,17 @@ util_format_r10g10b10a2_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x1ff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x1ff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1, 1) * 0x1ff)) & 0x3ff) << 2) ;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[3], -1, 1) * 0x1)) & 0x3) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x1)) << 30) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x1ff)) & 0x3ff) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x1ff)) & 0x3ff) << 10) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1, 1) * 0x1ff)) & 0x3ff) << 20) ;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[3], -1, 1) * 0x1)) << 30) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x1)) << 30) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -19310,14 +19311,14 @@ util_format_r10g10b10a2_snorm_fetch_rgba_float(float *dst, const uint8_t *src, u
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          int32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)(r * (1.0f/0x1ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x1ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x1ff)); /* b */
@@ -19349,14 +19350,14 @@ util_format_r10g10b10a2_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t r;
-         int32_t g;
-         int32_t b;
          int32_t a;
-         r = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         b = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 30;
+         b = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         r = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (uint8_t)(MAX2(r, 0) >> 1); /* r */
          dst[1] = (uint8_t)(MAX2(g, 0) >> 1); /* g */
          dst[2] = (uint8_t)(MAX2(b, 0) >> 1); /* b */
@@ -19394,10 +19395,10 @@ util_format_r10g10b10a2_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)(((uint32_t)src[0]) * 0x1ff / 0xff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1ff / 0xff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[2]) * 0x1ff / 0xff)) & 0x3ff) << 2) ;
-         value |= (uint32_t)(((uint32_t)(src[3] >> 7)) & 0x3) ;
+         value |= (uint32_t)(((uint32_t)(src[3] >> 7)) << 30) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[2]) * 0x1ff / 0xff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1ff / 0xff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)(((uint32_t)src[0]) * 0x1ff / 0xff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -19419,10 +19420,10 @@ union util_format_b10g10r10a2_uscaled {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:10;
-      unsigned g:10;
-      unsigned r:10;
       unsigned a:2;
+      unsigned r:10;
+      unsigned g:10;
+      unsigned b:10;
 #else
       unsigned b:10;
       unsigned g:10;
@@ -19442,14 +19443,14 @@ util_format_b10g10r10a2_uscaled_unpack_rgba_float(float *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -19487,17 +19488,17 @@ util_format_b10g10r10a2_uscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)CLAMP(src[2], 0, 1023)) << 22;
-         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 12;
-         value |= (((uint32_t)CLAMP(src[0], 0, 1023)) & 0x3ff) << 2;
-         value |= ((uint32_t)CLAMP(src[3], 0, 3)) & 0x3;
+         value |= ((uint32_t)CLAMP(src[3], 0.0f, 3.0f)) << 30;
+         value |= (((uint32_t)CLAMP(src[0], 0.0f, 1023.0f)) & 0x3ff) << 20;
+         value |= (((uint32_t)CLAMP(src[1], 0.0f, 1023.0f)) & 0x3ff) << 10;
+         value |= ((uint32_t)CLAMP(src[2], 0.0f, 1023.0f)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint32_t)CLAMP(src[2], 0, 1023)) & 0x3ff;
-         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 10;
-         value |= (((uint32_t)CLAMP(src[0], 0, 1023)) & 0x3ff) << 20;
-         value |= ((uint32_t)CLAMP(src[3], 0, 3)) << 30;
+         value |= ((uint32_t)CLAMP(src[2], 0.0f, 1023.0f)) & 0x3ff;
+         value |= (((uint32_t)CLAMP(src[1], 0.0f, 1023.0f)) & 0x3ff) << 10;
+         value |= (((uint32_t)CLAMP(src[0], 0.0f, 1023.0f)) & 0x3ff) << 20;
+         value |= ((uint32_t)CLAMP(src[3], 0.0f, 3.0f)) << 30;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -19513,14 +19514,14 @@ util_format_b10g10r10a2_uscaled_fetch_rgba_float(float *dst, const uint8_t *src,
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -19552,14 +19553,14 @@ util_format_b10g10r10a2_uscaled_unpack_rgba_8unorm(uint8_t *dst_row, unsigned ds
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (uint8_t)(((uint32_t)MIN2(r, 1)) * 0xff / 0x1); /* r */
          dst[1] = (uint8_t)(((uint32_t)MIN2(g, 1)) * 0xff / 0x1); /* g */
          dst[2] = (uint8_t)(((uint32_t)MIN2(b, 1)) * 0xff / 0x1); /* b */
@@ -19597,10 +19598,10 @@ util_format_b10g10r10a2_uscaled_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) << 22;
-         value |= (((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 12;
-         value |= (((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) & 0x3ff) << 2;
-         value |= ((uint32_t)(((uint32_t)src[3]) * 0x1 / 0xff)) & 0x3;
+         value |= ((uint32_t)(((uint32_t)src[3]) * 0x1 / 0xff)) << 30;
+         value |= (((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) & 0x3ff) << 20;
+         value |= (((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 10;
+         value |= ((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -19622,10 +19623,10 @@ union util_format_b10g10r10a2_sscaled {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      int b:10;
-      int g:10;
-      int r:10;
       int a:2;
+      int r:10;
+      int g:10;
+      int b:10;
 #else
       int b:10;
       int g:10;
@@ -19645,14 +19646,14 @@ util_format_b10g10r10a2_sscaled_unpack_rgba_float(float *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t b;
-         int32_t g;
-         int32_t r;
          int32_t a;
-         b = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         r = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         a = ((int32_t)(value) ) >> 30;
+         r = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         b = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -19690,17 +19691,17 @@ util_format_b10g10r10a2_sscaled_pack_rgba_float(uint8_t *dst_row, unsigned dst_s
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)CLAMP(src[2], -512, 511)) << 22) ;
-         value |= (uint32_t)((((uint32_t)CLAMP(src[1], -512, 511)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)CLAMP(src[0], -512, 511)) & 0x3ff) << 2) ;
-         value |= (uint32_t)(((uint32_t)CLAMP(src[3], -2, 1)) & 0x3) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[3], -2.0f, 1.0f)) << 30) ;
+         value |= (uint32_t)((((uint32_t)CLAMP(src[0], -512.0f, 511.0f)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)CLAMP(src[1], -512.0f, 511.0f)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[2], -512.0f, 511.0f)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)CLAMP(src[2], -512, 511)) & 0x3ff) ;
-         value |= (uint32_t)((((uint32_t)CLAMP(src[1], -512, 511)) & 0x3ff) << 10) ;
-         value |= (uint32_t)((((uint32_t)CLAMP(src[0], -512, 511)) & 0x3ff) << 20) ;
-         value |= (uint32_t)(((uint32_t)CLAMP(src[3], -2, 1)) << 30) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[2], -512.0f, 511.0f)) & 0x3ff) ;
+         value |= (uint32_t)((((uint32_t)CLAMP(src[1], -512.0f, 511.0f)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((((uint32_t)CLAMP(src[0], -512.0f, 511.0f)) & 0x3ff) << 20) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[3], -2.0f, 1.0f)) << 30) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -19716,14 +19717,14 @@ util_format_b10g10r10a2_sscaled_fetch_rgba_float(float *dst, const uint8_t *src,
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t b;
-         int32_t g;
-         int32_t r;
          int32_t a;
-         b = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         r = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         a = ((int32_t)(value) ) >> 30;
+         r = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         b = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)r; /* r */
          dst[1] = (float)g; /* g */
          dst[2] = (float)b; /* b */
@@ -19755,14 +19756,14 @@ util_format_b10g10r10a2_sscaled_unpack_rgba_8unorm(uint8_t *dst_row, unsigned ds
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t b;
-         int32_t g;
-         int32_t r;
          int32_t a;
-         b = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         r = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         a = ((int32_t)(value) ) >> 30;
+         r = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         b = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (uint8_t)(((uint32_t)CLAMP(r, 0, 1)) * 0xff / 0x1); /* r */
          dst[1] = (uint8_t)(((uint32_t)CLAMP(g, 0, 1)) * 0xff / 0x1); /* g */
          dst[2] = (uint8_t)(((uint32_t)CLAMP(b, 0, 1)) * 0xff / 0x1); /* b */
@@ -19800,10 +19801,10 @@ util_format_b10g10r10a2_sscaled_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) & 0x3ff) << 2) ;
-         value |= (uint32_t)(((uint32_t)(((uint32_t)src[3]) * 0x1 / 0xff)) & 0x3) ;
+         value |= (uint32_t)(((uint32_t)(((uint32_t)src[3]) * 0x1 / 0xff)) << 30) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[0]) * 0x1 / 0xff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1 / 0xff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)(((uint32_t)src[2]) * 0x1 / 0xff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -19825,10 +19826,10 @@ union util_format_b10g10r10a2_snorm {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      int b:10;
-      int g:10;
-      int r:10;
       int a:2;
+      int r:10;
+      int g:10;
+      int b:10;
 #else
       int b:10;
       int g:10;
@@ -19848,14 +19849,14 @@ util_format_b10g10r10a2_snorm_unpack_rgba_float(float *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t b;
-         int32_t g;
-         int32_t r;
          int32_t a;
-         b = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         r = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         a = ((int32_t)(value) ) >> 30;
+         r = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         b = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)(r * (1.0f/0x1ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x1ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x1ff)); /* b */
@@ -19893,17 +19894,17 @@ util_format_b10g10r10a2_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[2], -1, 1) * 0x1ff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x1ff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x1ff)) & 0x3ff) << 2) ;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[3], -1, 1) * 0x1)) & 0x3) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x1)) << 30) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[2], -1, 1) * 0x1ff)) & 0x3ff) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1, 1) * 0x1ff)) & 0x3ff) << 10) ;
-         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[0], -1, 1) * 0x1ff)) & 0x3ff) << 20) ;
-         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[3], -1, 1) * 0x1)) << 30) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((((uint32_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x1ff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)(((uint32_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x1)) << 30) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -19919,14 +19920,14 @@ util_format_b10g10r10a2_snorm_fetch_rgba_float(float *dst, const uint8_t *src, u
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t b;
-         int32_t g;
-         int32_t r;
          int32_t a;
-         b = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         r = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         a = ((int32_t)(value) ) >> 30;
+         r = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         b = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (float)(r * (1.0f/0x1ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x1ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x1ff)); /* b */
@@ -19958,14 +19959,14 @@ util_format_b10g10r10a2_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         int32_t b;
-         int32_t g;
-         int32_t r;
          int32_t a;
-         b = ((int32_t)(value) ) >> 22;
-         g = ((int32_t)(value << 10) ) >> 22;
-         r = ((int32_t)(value << 20) ) >> 22;
-         a = ((int32_t)(value << 30) ) >> 30;
+         int32_t r;
+         int32_t g;
+         int32_t b;
+         a = ((int32_t)(value) ) >> 30;
+         r = ((int32_t)(value << 2) ) >> 22;
+         g = ((int32_t)(value << 12) ) >> 22;
+         b = ((int32_t)(value << 22) ) >> 22;
          dst[0] = (uint8_t)(MAX2(r, 0) >> 1); /* r */
          dst[1] = (uint8_t)(MAX2(g, 0) >> 1); /* g */
          dst[2] = (uint8_t)(MAX2(b, 0) >> 1); /* b */
@@ -20003,10 +20004,10 @@ util_format_b10g10r10a2_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((uint32_t)(((uint32_t)src[2]) * 0x1ff / 0xff)) << 22) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1ff / 0xff)) & 0x3ff) << 12) ;
-         value |= (uint32_t)((((uint32_t)(((uint32_t)src[0]) * 0x1ff / 0xff)) & 0x3ff) << 2) ;
-         value |= (uint32_t)(((uint32_t)(src[3] >> 7)) & 0x3) ;
+         value |= (uint32_t)(((uint32_t)(src[3] >> 7)) << 30) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[0]) * 0x1ff / 0xff)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((((uint32_t)(((uint32_t)src[1]) * 0x1ff / 0xff)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)(((uint32_t)src[2]) * 0x1ff / 0xff)) & 0x3ff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -26404,10 +26405,10 @@ union util_format_b10g10r10a2_uint {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:10;
-      unsigned g:10;
-      unsigned r:10;
       unsigned a:2;
+      unsigned r:10;
+      unsigned g:10;
+      unsigned b:10;
 #else
       unsigned b:10;
       unsigned g:10;
@@ -26427,14 +26428,14 @@ util_format_b10g10r10a2_uint_unpack_unsigned(unsigned *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (unsigned)r; /* r */
          dst[1] = (unsigned)g; /* g */
          dst[2] = (unsigned)b; /* b */
@@ -26472,10 +26473,10 @@ util_format_b10g10r10a2_uint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)MIN2(src[2], 1023)) << 22;
-         value |= (((uint32_t)MIN2(src[1], 1023)) & 0x3ff) << 12;
-         value |= (((uint32_t)MIN2(src[0], 1023)) & 0x3ff) << 2;
-         value |= ((uint32_t)MIN2(src[3], 3)) & 0x3;
+         value |= ((uint32_t)MIN2(src[3], 3)) << 30;
+         value |= (((uint32_t)MIN2(src[0], 1023)) & 0x3ff) << 20;
+         value |= (((uint32_t)MIN2(src[1], 1023)) & 0x3ff) << 10;
+         value |= ((uint32_t)MIN2(src[2], 1023)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -26498,14 +26499,14 @@ util_format_b10g10r10a2_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, u
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (unsigned)r; /* r */
          dst[1] = (unsigned)g; /* g */
          dst[2] = (unsigned)b; /* b */
@@ -26537,14 +26538,14 @@ util_format_b10g10r10a2_uint_unpack_signed(int *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
-         uint32_t r;
          uint32_t a;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t r;
+         uint32_t g;
+         uint32_t b;
+         a = value >> 30;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (int)r; /* r */
          dst[1] = (int)g; /* g */
          dst[2] = (int)b; /* b */
@@ -26582,10 +26583,10 @@ util_format_b10g10r10a2_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)CLAMP(src[2], 0, 1023)) << 22;
-         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 12;
-         value |= (((uint32_t)CLAMP(src[0], 0, 1023)) & 0x3ff) << 2;
-         value |= ((uint32_t)CLAMP(src[3], 0, 3)) & 0x3;
+         value |= ((uint32_t)CLAMP(src[3], 0, 3)) << 30;
+         value |= (((uint32_t)CLAMP(src[0], 0, 1023)) & 0x3ff) << 20;
+         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 10;
+         value |= ((uint32_t)CLAMP(src[2], 0, 1023)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -26671,15 +26672,15 @@ util_format_r8g8b8x8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) << 24) ;
-         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f)) & 0xff) << 16) ;
-         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1, 1) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 24) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) & 0xff) ;
-         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1, 1) * 0x7f)) & 0xff) << 8) ;
-         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1, 1) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -27355,10 +27356,10 @@ union util_format_b10g10r10x2_unorm {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:10;
-      unsigned g:10;
-      unsigned r:10;
       unsigned x:2;
+      unsigned r:10;
+      unsigned g:10;
+      unsigned b:10;
 #else
       unsigned b:10;
       unsigned g:10;
@@ -27378,12 +27379,12 @@ util_format_b10g10r10x2_unorm_unpack_rgba_float(float *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
          uint32_t r;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
+         uint32_t g;
+         uint32_t b;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (float)(r * (1.0f/0x3ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x3ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x3ff)); /* b */
@@ -27419,15 +27420,15 @@ util_format_b10g10r10x2_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)util_iround(CLAMP(src[2], 0, 1) * 0x3ff)) << 22;
-         value |= (((uint32_t)util_iround(CLAMP(src[1], 0, 1) * 0x3ff)) & 0x3ff) << 12;
-         value |= (((uint32_t)util_iround(CLAMP(src[0], 0, 1) * 0x3ff)) & 0x3ff) << 2;
+         value |= (((uint32_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 20;
+         value |= (((uint32_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 10;
+         value |= ((uint32_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3ff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint32_t)util_iround(CLAMP(src[2], 0, 1) * 0x3ff)) & 0x3ff;
-         value |= (((uint32_t)util_iround(CLAMP(src[1], 0, 1) * 0x3ff)) & 0x3ff) << 10;
-         value |= (((uint32_t)util_iround(CLAMP(src[0], 0, 1) * 0x3ff)) & 0x3ff) << 20;
+         value |= ((uint32_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0x3ff)) & 0x3ff;
+         value |= (((uint32_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 10;
+         value |= (((uint32_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0x3ff)) & 0x3ff) << 20;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -27443,12 +27444,12 @@ util_format_b10g10r10x2_unorm_fetch_rgba_float(float *dst, const uint8_t *src, u
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
          uint32_t r;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
+         uint32_t g;
+         uint32_t b;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (float)(r * (1.0f/0x3ff)); /* r */
          dst[1] = (float)(g * (1.0f/0x3ff)); /* g */
          dst[2] = (float)(b * (1.0f/0x3ff)); /* b */
@@ -27478,12 +27479,12 @@ util_format_b10g10r10x2_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t b;
-         uint32_t g;
          uint32_t r;
-         b = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         r = (value >> 2) & 0x3ff;
+         uint32_t g;
+         uint32_t b;
+         r = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         b = (value) & 0x3ff;
          dst[0] = (uint8_t)(r >> 2); /* r */
          dst[1] = (uint8_t)(g >> 2); /* g */
          dst[2] = (uint8_t)(b >> 2); /* b */
@@ -27519,9 +27520,9 @@ util_format_b10g10r10x2_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)(((uint32_t)src[2]) * 0x3ff / 0xff)) << 22;
-         value |= (((uint32_t)(((uint32_t)src[1]) * 0x3ff / 0xff)) & 0x3ff) << 12;
-         value |= (((uint32_t)(((uint32_t)src[0]) * 0x3ff / 0xff)) & 0x3ff) << 2;
+         value |= (((uint32_t)(((uint32_t)src[0]) * 0x3ff / 0xff)) & 0x3ff) << 20;
+         value |= (((uint32_t)(((uint32_t)src[1]) * 0x3ff / 0xff)) & 0x3ff) << 10;
+         value |= ((uint32_t)(((uint32_t)src[2]) * 0x3ff / 0xff)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -27596,15 +27597,15 @@ util_format_r16g16b16x16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16x16_unorm pixel;
-         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
-         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xffff);
-         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xffff);
+         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xffff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16x16_unorm pixel;
-         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff);
-         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0, 1) * 0xffff);
-         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0, 1) * 0xffff);
+         pixel.chan.r = (uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.g = (uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff);
+         pixel.chan.b = (uint16_t)util_iround(CLAMP(src[2], 0.0f, 1.0f) * 0xffff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -27753,15 +27754,15 @@ util_format_r16g16b16x16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_st
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          union util_format_r16g16b16x16_snorm pixel;
-         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff);
-         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1, 1) * 0x7fff);
-         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1, 1) * 0x7fff);
+         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7fff);
          memcpy(dst, &pixel, sizeof pixel);
 #else
          union util_format_r16g16b16x16_snorm pixel;
-         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff);
-         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1, 1) * 0x7fff);
-         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1, 1) * 0x7fff);
+         pixel.chan.r = (int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.g = (int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff);
+         pixel.chan.b = (int16_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7fff);
          memcpy(dst, &pixel, sizeof pixel);
 #endif
          src += 4;
@@ -28851,13 +28852,13 @@ util_format_r8a8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) << 8) ;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1, 1) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 8) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1, 1) * 0x7f)) & 0xff) ;
-         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1, 1) * 0x7f)) << 8) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) << 8) ;
          *(uint16_t *)dst = value;
 #endif
          src += 4;
@@ -29018,13 +29019,13 @@ util_format_r16a16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff)) << 16;
-         value |= ((uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) << 16;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff)) & 0xffff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= ((uint16_t)util_iround(CLAMP(src[0], 0, 1) * 0xffff)) & 0xffff;
-         value |= ((uint16_t)util_iround(CLAMP(src[3], 0, 1) * 0xffff)) << 16;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff)) << 16;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -29185,13 +29186,13 @@ util_format_r16a16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) << 16) ;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[3], -1, 1) * 0x7fff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) << 16) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7fff)) & 0xffff) ;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1, 1) * 0x7fff)) & 0xffff) ;
-         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[3], -1, 1) * 0x7fff)) << 16) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7fff)) << 16) ;
          *(uint32_t *)dst = value;
 #endif
          src += 4;
@@ -30560,10 +30561,10 @@ union util_format_r10g10b10a2_uint {
    uint32_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned r:10;
-      unsigned g:10;
-      unsigned b:10;
       unsigned a:2;
+      unsigned b:10;
+      unsigned g:10;
+      unsigned r:10;
 #else
       unsigned r:10;
       unsigned g:10;
@@ -30583,14 +30584,14 @@ util_format_r10g10b10a2_uint_unpack_unsigned(unsigned *dst_row, unsigned dst_str
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (unsigned)r; /* r */
          dst[1] = (unsigned)g; /* g */
          dst[2] = (unsigned)b; /* b */
@@ -30628,10 +30629,10 @@ util_format_r10g10b10a2_uint_pack_unsigned(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)MIN2(src[0], 1023)) << 22;
-         value |= (((uint32_t)MIN2(src[1], 1023)) & 0x3ff) << 12;
-         value |= (((uint32_t)MIN2(src[2], 1023)) & 0x3ff) << 2;
-         value |= ((uint32_t)MIN2(src[3], 3)) & 0x3;
+         value |= ((uint32_t)MIN2(src[3], 3)) << 30;
+         value |= (((uint32_t)MIN2(src[2], 1023)) & 0x3ff) << 20;
+         value |= (((uint32_t)MIN2(src[1], 1023)) & 0x3ff) << 10;
+         value |= ((uint32_t)MIN2(src[0], 1023)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -30654,14 +30655,14 @@ util_format_r10g10b10a2_uint_fetch_unsigned(unsigned *dst, const uint8_t *src, u
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (unsigned)r; /* r */
          dst[1] = (unsigned)g; /* g */
          dst[2] = (unsigned)b; /* b */
@@ -30693,14 +30694,14 @@ util_format_r10g10b10a2_uint_unpack_signed(int *dst_row, unsigned dst_stride, co
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = *(const uint32_t *)src;
-         uint32_t r;
-         uint32_t g;
-         uint32_t b;
          uint32_t a;
-         r = value >> 22;
-         g = (value >> 12) & 0x3ff;
-         b = (value >> 2) & 0x3ff;
-         a = (value) & 0x3;
+         uint32_t b;
+         uint32_t g;
+         uint32_t r;
+         a = value >> 30;
+         b = (value >> 20) & 0x3ff;
+         g = (value >> 10) & 0x3ff;
+         r = (value) & 0x3ff;
          dst[0] = (int)r; /* r */
          dst[1] = (int)g; /* g */
          dst[2] = (int)b; /* b */
@@ -30738,10 +30739,10 @@ util_format_r10g10b10a2_uint_pack_signed(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint32_t value = 0;
-         value |= ((uint32_t)CLAMP(src[0], 0, 1023)) << 22;
-         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 12;
-         value |= (((uint32_t)CLAMP(src[2], 0, 1023)) & 0x3ff) << 2;
-         value |= ((uint32_t)CLAMP(src[3], 0, 3)) & 0x3;
+         value |= ((uint32_t)CLAMP(src[3], 0, 3)) << 30;
+         value |= (((uint32_t)CLAMP(src[2], 0, 1023)) & 0x3ff) << 20;
+         value |= (((uint32_t)CLAMP(src[1], 0, 1023)) & 0x3ff) << 10;
+         value |= ((uint32_t)CLAMP(src[0], 0, 1023)) & 0x3ff;
          *(uint32_t *)dst = value;
 #else
          uint32_t value = 0;
@@ -30763,9 +30764,9 @@ union util_format_b5g6r5_srgb {
    uint16_t value;
    struct {
 #ifdef PIPE_ARCH_BIG_ENDIAN
-      unsigned b:5;
-      unsigned g:6;
       unsigned r:5;
+      unsigned g:6;
+      unsigned b:5;
 #else
       unsigned b:5;
       unsigned g:6;
@@ -30784,12 +30785,12 @@ util_format_b5g6r5_srgb_unpack_rgba_float(float *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
+         uint16_t g;
+         uint16_t b;
+         r = value >> 11;
          g = (value >> 5) & 0x3f;
-         r = (value) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = util_format_srgb_8unorm_to_linear_float(r << 3 | r >> 2); /* r */
          dst[1] = util_format_srgb_8unorm_to_linear_float(g << 2 | g >> 4); /* g */
          dst[2] = util_format_srgb_8unorm_to_linear_float(b << 3 | b >> 2); /* b */
@@ -30825,9 +30826,9 @@ util_format_b5g6r5_srgb_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, c
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= (util_format_linear_float_to_srgb_8unorm(src[2]) >> 3) << 11;
+         value |= (util_format_linear_float_to_srgb_8unorm(src[0]) >> 3) << 11;
          value |= ((util_format_linear_float_to_srgb_8unorm(src[1]) >> 2) & 0x3f) << 5;
-         value |= (util_format_linear_float_to_srgb_8unorm(src[0]) >> 3) & 0x1f;
+         value |= (util_format_linear_float_to_srgb_8unorm(src[2]) >> 3) & 0x1f;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
@@ -30849,12 +30850,12 @@ util_format_b5g6r5_srgb_fetch_rgba_float(float *dst, const uint8_t *src, unsigne
 {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
+         uint16_t g;
+         uint16_t b;
+         r = value >> 11;
          g = (value >> 5) & 0x3f;
-         r = (value) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = util_format_srgb_8unorm_to_linear_float(r << 3 | r >> 2); /* r */
          dst[1] = util_format_srgb_8unorm_to_linear_float(g << 2 | g >> 4); /* g */
          dst[2] = util_format_srgb_8unorm_to_linear_float(b << 3 | b >> 2); /* b */
@@ -30884,12 +30885,12 @@ util_format_b5g6r5_srgb_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = *(const uint16_t *)src;
-         uint16_t b;
-         uint16_t g;
          uint16_t r;
-         b = value >> 11;
+         uint16_t g;
+         uint16_t b;
+         r = value >> 11;
          g = (value >> 5) & 0x3f;
-         r = (value) & 0x1f;
+         b = (value) & 0x1f;
          dst[0] = util_format_srgb_to_linear_8unorm(r << 3 | r >> 2); /* r */
          dst[1] = util_format_srgb_to_linear_8unorm(g << 2 | g >> 4); /* g */
          dst[2] = util_format_srgb_to_linear_8unorm(b << 3 | b >> 2); /* b */
@@ -30925,9 +30926,9 @@ util_format_b5g6r5_srgb_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, 
       for(x = 0; x < width; x += 1) {
 #ifdef PIPE_ARCH_BIG_ENDIAN
          uint16_t value = 0;
-         value |= (util_format_linear_to_srgb_8unorm(src[2]) >> 3) << 11;
+         value |= (util_format_linear_to_srgb_8unorm(src[0]) >> 3) << 11;
          value |= ((util_format_linear_to_srgb_8unorm(src[1]) >> 2) & 0x3f) << 5;
-         value |= (util_format_linear_to_srgb_8unorm(src[0]) >> 3) & 0x1f;
+         value |= (util_format_linear_to_srgb_8unorm(src[2]) >> 3) & 0x1f;
          *(uint16_t *)dst = value;
 #else
          uint16_t value = 0;
@@ -30938,6 +30939,1732 @@ util_format_b5g6r5_srgb_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, 
 #endif
          src += 4;
          dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a8l8_unorm {
+   uint16_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      uint8_t a;
+      uint8_t rgb;
+#else
+      uint8_t a;
+      uint8_t rgb;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_a8l8_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = value >> 8;
+         rgb = (value) & 0xff;
+         dst[0] = ubyte_to_float(rgb); /* r */
+         dst[1] = ubyte_to_float(rgb); /* g */
+         dst[2] = ubyte_to_float(rgb); /* b */
+         dst[3] = ubyte_to_float(a); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = (value) & 0xff;
+         rgb = value >> 8;
+         dst[0] = ubyte_to_float(rgb); /* r */
+         dst[1] = ubyte_to_float(rgb); /* g */
+         dst[2] = ubyte_to_float(rgb); /* b */
+         dst[3] = ubyte_to_float(a); /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (float_to_ubyte(src[3])) << 8;
+         value |= (float_to_ubyte(src[0])) & 0xff;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (float_to_ubyte(src[3])) & 0xff;
+         value |= (float_to_ubyte(src[0])) << 8;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = value >> 8;
+         rgb = (value) & 0xff;
+         dst[0] = ubyte_to_float(rgb); /* r */
+         dst[1] = ubyte_to_float(rgb); /* g */
+         dst[2] = ubyte_to_float(rgb); /* b */
+         dst[3] = ubyte_to_float(a); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = (value) & 0xff;
+         rgb = value >> 8;
+         dst[0] = ubyte_to_float(rgb); /* r */
+         dst[1] = ubyte_to_float(rgb); /* g */
+         dst[2] = ubyte_to_float(rgb); /* b */
+         dst[3] = ubyte_to_float(a); /* a */
+#endif
+}
+
+static INLINE void
+util_format_a8l8_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = value >> 8;
+         rgb = (value) & 0xff;
+         dst[0] = rgb; /* r */
+         dst[1] = rgb; /* g */
+         dst[2] = rgb; /* b */
+         dst[3] = a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = (value) & 0xff;
+         rgb = value >> 8;
+         dst[0] = rgb; /* r */
+         dst[1] = rgb; /* g */
+         dst[2] = rgb; /* b */
+         dst[3] = a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (src[3]) << 8;
+         value |= (src[0]) & 0xff;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (src[3]) & 0xff;
+         value |= (src[0]) << 8;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a8l8_snorm {
+   uint16_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      int8_t a;
+      int8_t rgb;
+#else
+      int8_t a;
+      int8_t rgb;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_a8l8_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+         int16_t rgb;
+         a = ((int16_t)(value) ) >> 8;
+         rgb = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (float)(rgb * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+         int16_t rgb;
+         a = ((int16_t)(value << 8) ) >> 8;
+         rgb = ((int16_t)(value) ) >> 8;
+         dst[0] = (float)(rgb * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) << 8) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 8) ;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+         int16_t rgb;
+         a = ((int16_t)(value) ) >> 8;
+         rgb = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (float)(rgb * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+         int16_t rgb;
+         a = ((int16_t)(value << 8) ) >> 8;
+         rgb = ((int16_t)(value) ) >> 8;
+         dst[0] = (float)(rgb * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+#endif
+}
+
+static INLINE void
+util_format_a8l8_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+         int16_t rgb;
+         a = ((int16_t)(value) ) >> 8;
+         rgb = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = (uint8_t)(((uint32_t)MAX2(a, 0)) * 0xff / 0x7f); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+         int16_t rgb;
+         a = ((int16_t)(value << 8) ) >> 8;
+         rgb = ((int16_t)(value) ) >> 8;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = (uint8_t)(((uint32_t)MAX2(a, 0)) * 0xff / 0x7f); /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)(src[3] >> 1)) << 8) ;
+         value |= (uint16_t)(((int8_t)(src[0] >> 1)) & 0xff) ;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)(src[3] >> 1)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)(src[0] >> 1)) << 8) ;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a8l8_srgb {
+   uint16_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      uint8_t a;
+      uint8_t rgb;
+#else
+      uint8_t a;
+      uint8_t rgb;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_a8l8_srgb_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = value >> 8;
+         rgb = (value) & 0xff;
+         dst[0] = util_format_srgb_8unorm_to_linear_float(rgb); /* r */
+         dst[1] = util_format_srgb_8unorm_to_linear_float(rgb); /* g */
+         dst[2] = util_format_srgb_8unorm_to_linear_float(rgb); /* b */
+         dst[3] = ubyte_to_float(a); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = (value) & 0xff;
+         rgb = value >> 8;
+         dst[0] = util_format_srgb_8unorm_to_linear_float(rgb); /* r */
+         dst[1] = util_format_srgb_8unorm_to_linear_float(rgb); /* g */
+         dst[2] = util_format_srgb_8unorm_to_linear_float(rgb); /* b */
+         dst[3] = ubyte_to_float(a); /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_srgb_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (float_to_ubyte(src[3])) << 8;
+         value |= (util_format_linear_float_to_srgb_8unorm(src[0])) & 0xff;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (float_to_ubyte(src[3])) & 0xff;
+         value |= (util_format_linear_float_to_srgb_8unorm(src[0])) << 8;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_srgb_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = value >> 8;
+         rgb = (value) & 0xff;
+         dst[0] = util_format_srgb_8unorm_to_linear_float(rgb); /* r */
+         dst[1] = util_format_srgb_8unorm_to_linear_float(rgb); /* g */
+         dst[2] = util_format_srgb_8unorm_to_linear_float(rgb); /* b */
+         dst[3] = ubyte_to_float(a); /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = (value) & 0xff;
+         rgb = value >> 8;
+         dst[0] = util_format_srgb_8unorm_to_linear_float(rgb); /* r */
+         dst[1] = util_format_srgb_8unorm_to_linear_float(rgb); /* g */
+         dst[2] = util_format_srgb_8unorm_to_linear_float(rgb); /* b */
+         dst[3] = ubyte_to_float(a); /* a */
+#endif
+}
+
+static INLINE void
+util_format_a8l8_srgb_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = value >> 8;
+         rgb = (value) & 0xff;
+         dst[0] = util_format_srgb_to_linear_8unorm(rgb); /* r */
+         dst[1] = util_format_srgb_to_linear_8unorm(rgb); /* g */
+         dst[2] = util_format_srgb_to_linear_8unorm(rgb); /* b */
+         dst[3] = a; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+         uint16_t rgb;
+         a = (value) & 0xff;
+         rgb = value >> 8;
+         dst[0] = util_format_srgb_to_linear_8unorm(rgb); /* r */
+         dst[1] = util_format_srgb_to_linear_8unorm(rgb); /* g */
+         dst[2] = util_format_srgb_to_linear_8unorm(rgb); /* b */
+         dst[3] = a; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8l8_srgb_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (src[3]) << 8;
+         value |= (util_format_linear_to_srgb_8unorm(src[0])) & 0xff;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (src[3]) & 0xff;
+         value |= (util_format_linear_to_srgb_8unorm(src[0])) << 8;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a16l16_unorm {
+   uint32_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      uint16_t a;
+      uint16_t rgb;
+#else
+      uint16_t a;
+      uint16_t rgb;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_a16l16_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t rgb;
+         a = value >> 16;
+         rgb = (value) & 0xffff;
+         dst[0] = (float)(rgb * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0xffff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0xffff)); /* b */
+         dst[3] = (float)(a * (1.0f/0xffff)); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t rgb;
+         a = (value) & 0xffff;
+         rgb = value >> 16;
+         dst[0] = (float)(rgb * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0xffff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0xffff)); /* b */
+         dst[3] = (float)(a * (1.0f/0xffff)); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a16l16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff)) << 16;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) & 0xffff;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= ((uint16_t)util_iround(CLAMP(src[3], 0.0f, 1.0f) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) << 16;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a16l16_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t rgb;
+         a = value >> 16;
+         rgb = (value) & 0xffff;
+         dst[0] = (float)(rgb * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0xffff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0xffff)); /* b */
+         dst[3] = (float)(a * (1.0f/0xffff)); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t rgb;
+         a = (value) & 0xffff;
+         rgb = value >> 16;
+         dst[0] = (float)(rgb * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0xffff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0xffff)); /* b */
+         dst[3] = (float)(a * (1.0f/0xffff)); /* a */
+#endif
+}
+
+static INLINE void
+util_format_a16l16_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t rgb;
+         a = value >> 16;
+         rgb = (value) & 0xffff;
+         dst[0] = (uint8_t)(rgb >> 8); /* r */
+         dst[1] = (uint8_t)(rgb >> 8); /* g */
+         dst[2] = (uint8_t)(rgb >> 8); /* b */
+         dst[3] = (uint8_t)(a >> 8); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t a;
+         uint32_t rgb;
+         a = (value) & 0xffff;
+         rgb = value >> 16;
+         dst[0] = (uint8_t)(rgb >> 8); /* r */
+         dst[1] = (uint8_t)(rgb >> 8); /* g */
+         dst[2] = (uint8_t)(rgb >> 8); /* b */
+         dst[3] = (uint8_t)(a >> 8); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a16l16_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= ((uint16_t)(((uint32_t)src[3]) * 0xffff / 0xff)) << 16;
+         value |= ((uint16_t)(((uint32_t)src[0]) * 0xffff / 0xff)) & 0xffff;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= ((uint16_t)(((uint32_t)src[3]) * 0xffff / 0xff)) & 0xffff;
+         value |= ((uint16_t)(((uint32_t)src[0]) * 0xffff / 0xff)) << 16;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_g8r8_unorm {
+   uint16_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      uint8_t g;
+      uint8_t r;
+#else
+      uint8_t g;
+      uint8_t r;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_g8r8_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t g;
+         uint16_t r;
+         g = value >> 8;
+         r = (value) & 0xff;
+         dst[0] = ubyte_to_float(r); /* r */
+         dst[1] = ubyte_to_float(g); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t g;
+         uint16_t r;
+         g = (value) & 0xff;
+         r = value >> 8;
+         dst[0] = ubyte_to_float(r); /* r */
+         dst[1] = ubyte_to_float(g); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_g8r8_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (float_to_ubyte(src[1])) << 8;
+         value |= (float_to_ubyte(src[0])) & 0xff;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (float_to_ubyte(src[1])) & 0xff;
+         value |= (float_to_ubyte(src[0])) << 8;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_g8r8_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t g;
+         uint16_t r;
+         g = value >> 8;
+         r = (value) & 0xff;
+         dst[0] = ubyte_to_float(r); /* r */
+         dst[1] = ubyte_to_float(g); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t g;
+         uint16_t r;
+         g = (value) & 0xff;
+         r = value >> 8;
+         dst[0] = ubyte_to_float(r); /* r */
+         dst[1] = ubyte_to_float(g); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+static INLINE void
+util_format_g8r8_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t g;
+         uint16_t r;
+         g = value >> 8;
+         r = (value) & 0xff;
+         dst[0] = r; /* r */
+         dst[1] = g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 255; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t g;
+         uint16_t r;
+         g = (value) & 0xff;
+         r = value >> 8;
+         dst[0] = r; /* r */
+         dst[1] = g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 255; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_g8r8_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (src[1]) << 8;
+         value |= (src[0]) & 0xff;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (src[1]) & 0xff;
+         value |= (src[0]) << 8;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_g8r8_snorm {
+   uint16_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      int8_t g;
+      int8_t r;
+#else
+      int8_t g;
+      int8_t r;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_g8r8_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t g;
+         int16_t r;
+         g = ((int16_t)(value) ) >> 8;
+         r = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t g;
+         int16_t r;
+         g = ((int16_t)(value << 8) ) >> 8;
+         r = ((int16_t)(value) ) >> 8;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_g8r8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) << 8) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 8) ;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_g8r8_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t g;
+         int16_t r;
+         g = ((int16_t)(value) ) >> 8;
+         r = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t g;
+         int16_t r;
+         g = ((int16_t)(value << 8) ) >> 8;
+         r = ((int16_t)(value) ) >> 8;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+static INLINE void
+util_format_g8r8_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = *(const uint16_t *)src;
+         int16_t g;
+         int16_t r;
+         g = ((int16_t)(value) ) >> 8;
+         r = ((int16_t)(value << 8) ) >> 8;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(r, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(g, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 255; /* a */
+#else
+         uint16_t value = *(const uint16_t *)src;
+         int16_t g;
+         int16_t r;
+         g = ((int16_t)(value << 8) ) >> 8;
+         r = ((int16_t)(value) ) >> 8;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(r, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(g, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 255; /* a */
+#endif
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_g8r8_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)(src[1] >> 1)) << 8) ;
+         value |= (uint16_t)(((int8_t)(src[0] >> 1)) & 0xff) ;
+         *(uint16_t *)dst = value;
+#else
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)(src[1] >> 1)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)(src[0] >> 1)) << 8) ;
+         *(uint16_t *)dst = value;
+#endif
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_g16r16_unorm {
+   uint32_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      uint16_t g;
+      uint16_t r;
+#else
+      uint16_t g;
+      uint16_t r;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_g16r16_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t g;
+         uint32_t r;
+         g = value >> 16;
+         r = (value) & 0xffff;
+         dst[0] = (float)(r * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(g * (1.0f/0xffff)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t g;
+         uint32_t r;
+         g = (value) & 0xffff;
+         r = value >> 16;
+         dst[0] = (float)(r * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(g * (1.0f/0xffff)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_g16r16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= ((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff)) << 16;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) & 0xffff;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= ((uint16_t)util_iround(CLAMP(src[1], 0.0f, 1.0f) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)util_iround(CLAMP(src[0], 0.0f, 1.0f) * 0xffff)) << 16;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_g16r16_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t g;
+         uint32_t r;
+         g = value >> 16;
+         r = (value) & 0xffff;
+         dst[0] = (float)(r * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(g * (1.0f/0xffff)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t g;
+         uint32_t r;
+         g = (value) & 0xffff;
+         r = value >> 16;
+         dst[0] = (float)(r * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(g * (1.0f/0xffff)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+static INLINE void
+util_format_g16r16_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t g;
+         uint32_t r;
+         g = value >> 16;
+         r = (value) & 0xffff;
+         dst[0] = (uint8_t)(r >> 8); /* r */
+         dst[1] = (uint8_t)(g >> 8); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 255; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t g;
+         uint32_t r;
+         g = (value) & 0xffff;
+         r = value >> 16;
+         dst[0] = (uint8_t)(r >> 8); /* r */
+         dst[1] = (uint8_t)(g >> 8); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 255; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_g16r16_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= ((uint16_t)(((uint32_t)src[1]) * 0xffff / 0xff)) << 16;
+         value |= ((uint16_t)(((uint32_t)src[0]) * 0xffff / 0xff)) & 0xffff;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= ((uint16_t)(((uint32_t)src[1]) * 0xffff / 0xff)) & 0xffff;
+         value |= ((uint16_t)(((uint32_t)src[0]) * 0xffff / 0xff)) << 16;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_g16r16_snorm {
+   uint32_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      int16_t g;
+      int16_t r;
+#else
+      int16_t g;
+      int16_t r;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_g16r16_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g;
+         int32_t r;
+         g = ((int32_t)(value) ) >> 16;
+         r = ((int32_t)(value << 16) ) >> 16;
+         dst[0] = (float)(r * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7fff)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g;
+         int32_t r;
+         g = ((int32_t)(value << 16) ) >> 16;
+         r = ((int32_t)(value) ) >> 16;
+         dst[0] = (float)(r * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7fff)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_g16r16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff)) << 16) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) & 0xffff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7fff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7fff)) << 16) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_g16r16_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g;
+         int32_t r;
+         g = ((int32_t)(value) ) >> 16;
+         r = ((int32_t)(value << 16) ) >> 16;
+         dst[0] = (float)(r * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7fff)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g;
+         int32_t r;
+         g = ((int32_t)(value << 16) ) >> 16;
+         r = ((int32_t)(value) ) >> 16;
+         dst[0] = (float)(r * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7fff)); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+static INLINE void
+util_format_g16r16_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g;
+         int32_t r;
+         g = ((int32_t)(value) ) >> 16;
+         r = ((int32_t)(value << 16) ) >> 16;
+         dst[0] = (uint8_t)(MAX2(r, 0) >> 7); /* r */
+         dst[1] = (uint8_t)(MAX2(g, 0) >> 7); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 255; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g;
+         int32_t r;
+         g = ((int32_t)(value << 16) ) >> 16;
+         r = ((int32_t)(value) ) >> 16;
+         dst[0] = (uint8_t)(MAX2(r, 0) >> 7); /* r */
+         dst[1] = (uint8_t)(MAX2(g, 0) >> 7); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 255; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_g16r16_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)(((int16_t)(((uint32_t)src[1]) * 0x7fff / 0xff)) << 16) ;
+         value |= (uint32_t)(((int16_t)(((uint32_t)src[0]) * 0x7fff / 0xff)) & 0xffff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((int16_t)(((uint32_t)src[1]) * 0x7fff / 0xff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)(((uint32_t)src[0]) * 0x7fff / 0xff)) << 16) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a8b8g8r8_snorm {
+   uint32_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      int8_t a;
+      int8_t b;
+      int8_t g;
+      int8_t r;
+#else
+      int8_t a;
+      int8_t b;
+      int8_t g;
+      int8_t r;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_a8b8g8r8_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 24;
+         b = ((int32_t)(value << 8) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(b * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value << 24) ) >> 24;
+         b = ((int32_t)(value << 16) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value) ) >> 24;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(b * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8b8g8r8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) << 24) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[3], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 24) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a8b8g8r8_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 24;
+         b = ((int32_t)(value << 8) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(b * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value << 24) ) >> 24;
+         b = ((int32_t)(value << 16) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value) ) >> 24;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(b * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+#endif
+}
+
+static INLINE void
+util_format_a8b8g8r8_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value) ) >> 24;
+         b = ((int32_t)(value << 8) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(r, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(g, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(b, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = (uint8_t)(((uint32_t)MAX2(a, 0)) * 0xff / 0x7f); /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t a;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         a = ((int32_t)(value << 24) ) >> 24;
+         b = ((int32_t)(value << 16) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value) ) >> 24;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(r, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(g, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(b, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = (uint8_t)(((uint32_t)MAX2(a, 0)) * 0xff / 0x7f); /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8b8g8r8_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)(((int8_t)(src[3] >> 1)) << 24) ;
+         value |= (uint32_t)((((int8_t)(src[2] >> 1)) & 0xff) << 16) ;
+         value |= (uint32_t)((((int8_t)(src[1] >> 1)) & 0xff) << 8) ;
+         value |= (uint32_t)(((int8_t)(src[0] >> 1)) & 0xff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((int8_t)(src[3] >> 1)) & 0xff) ;
+         value |= (uint32_t)((((int8_t)(src[2] >> 1)) & 0xff) << 8) ;
+         value |= (uint32_t)((((int8_t)(src[1] >> 1)) & 0xff) << 16) ;
+         value |= (uint32_t)(((int8_t)(src[0] >> 1)) << 24) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_x8b8g8r8_snorm {
+   uint32_t value;
+   struct {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+      uint8_t x;
+      int8_t b;
+      int8_t g;
+      int8_t r;
+#else
+      uint8_t x;
+      int8_t b;
+      int8_t g;
+      int8_t r;
+#endif
+   } chan;
+};
+
+static INLINE void
+util_format_x8b8g8r8_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 8) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(b * (1.0f/0x7f)); /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 16) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value) ) >> 24;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(b * (1.0f/0x7f)); /* b */
+         dst[3] = 1; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_x8b8g8r8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) & 0xff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[2], -1.0f, 1.0f) * 0x7f)) & 0xff) << 8) ;
+         value |= (uint32_t)((((int8_t)util_iround(CLAMP(src[1], -1.0f, 1.0f) * 0x7f)) & 0xff) << 16) ;
+         value |= (uint32_t)(((int8_t)util_iround(CLAMP(src[0], -1.0f, 1.0f) * 0x7f)) << 24) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_x8b8g8r8_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 8) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(b * (1.0f/0x7f)); /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 16) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value) ) >> 24;
+         dst[0] = (float)(r * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(b * (1.0f/0x7f)); /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+static INLINE void
+util_format_x8b8g8r8_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 8) ) >> 24;
+         g = ((int32_t)(value << 16) ) >> 24;
+         r = ((int32_t)(value << 24) ) >> 24;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(r, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(g, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(b, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = 255; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b;
+         int32_t g;
+         int32_t r;
+         b = ((int32_t)(value << 16) ) >> 24;
+         g = ((int32_t)(value << 8) ) >> 24;
+         r = ((int32_t)(value) ) >> 24;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(r, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(g, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(b, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = 255; /* a */
+#endif
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_x8b8g8r8_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)((((int8_t)(src[2] >> 1)) & 0xff) << 16) ;
+         value |= (uint32_t)((((int8_t)(src[1] >> 1)) & 0xff) << 8) ;
+         value |= (uint32_t)(((int8_t)(src[0] >> 1)) & 0xff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)((((int8_t)(src[2] >> 1)) & 0xff) << 8) ;
+         value |= (uint32_t)((((int8_t)(src[1] >> 1)) & 0xff) << 16) ;
+         value |= (uint32_t)(((int8_t)(src[0] >> 1)) << 24) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
       }
       dst_row += dst_stride;
       src_row += src_stride/sizeof(*src_row);
@@ -31435,10 +33162,10 @@ util_format_b5g5r5x1_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 11},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 6},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 1},	/* z = r */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 1, 0}	/* w = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 1, 15},	/* x = x */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 10},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 5},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 0}	/* w = b */
    },
 #else
    {
@@ -31450,9 +33177,9 @@ util_format_b5g5r5x1_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -31497,10 +33224,10 @@ util_format_b5g5r5a1_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 11},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 6},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 1},	/* z = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 1, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 1, 15},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 10},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 5},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 0}	/* w = b */
    },
 #else
    {
@@ -31512,10 +33239,10 @@ util_format_b5g5r5a1_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -31559,10 +33286,10 @@ util_format_b4g4r4a4_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 12},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 8},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* z = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 12},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 8},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0}	/* w = b */
    },
 #else
    {
@@ -31574,10 +33301,10 @@ util_format_b4g4r4a4_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -31621,10 +33348,10 @@ util_format_b4g4r4x4_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 12},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 8},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* z = r */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 4, 0}	/* w = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 4, 12},	/* x = x */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 8},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0}	/* w = b */
    },
 #else
    {
@@ -31636,9 +33363,9 @@ util_format_b4g4r4x4_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -31683,9 +33410,9 @@ util_format_b5g6r5_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 11},	/* x = b */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 11},	/* x = r */
       {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 6, 5},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 0},	/* z = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 0},	/* z = b */
       {0, 0, 0, 0, 0}
    },
 #else
@@ -31698,9 +33425,9 @@ util_format_b5g6r5_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
       UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Z,	/* b */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -31745,10 +33472,10 @@ util_format_r10g10b10a2_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 22},	/* x = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 2},	/* z = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 0}	/* w = r */
    },
 #else
    {
@@ -31760,10 +33487,10 @@ util_format_r10g10b10a2_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -31807,10 +33534,10 @@ util_format_b10g10r10a2_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 22},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 2},	/* z = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 20},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 0}	/* w = b */
    },
 #else
    {
@@ -31822,10 +33549,10 @@ util_format_b10g10r10a2_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -31869,9 +33596,9 @@ util_format_b2g3r3_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 2, 6},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 3, 3},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 3, 0},	/* z = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 3, 5},	/* x = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 3, 2},	/* y = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 2, 0},	/* z = b */
       {0, 0, 0, 0, 0}
    },
 #else
@@ -31884,9 +33611,9 @@ util_format_b2g3r3_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
       UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Z,	/* b */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -32063,8 +33790,8 @@ util_format_l4a4_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* x = rgb */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0},	/* y = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0},	/* y = rgb */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -32078,10 +33805,10 @@ util_format_l4a4_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_X,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
-      UTIL_FORMAT_SWIZZLE_Y	/* a */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -33821,10 +35548,10 @@ util_format_r10sg10sb10sa2u_norm_description = {
    TRUE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 22},	/* x = r */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 2},	/* z = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 0}	/* w = r */
    },
 #else
    {
@@ -33836,10 +35563,10 @@ util_format_r10sg10sb10sa2u_norm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -33883,9 +35610,9 @@ util_format_r5sg5sb6u_norm_description = {
    TRUE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 5, 11},	/* x = r */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 5, 6},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 6, 0},	/* z = b */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 6, 10},	/* x = b */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 5, 5},	/* y = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 5, 0},	/* z = r */
       {0, 0, 0, 0, 0}
    },
 #else
@@ -33898,9 +35625,9 @@ util_format_r5sg5sb6u_norm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* r */
       UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -34121,8 +35848,8 @@ util_format_z24_unorm_s8_uint_description = {
    TRUE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 24, 8},	/* x = z */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 0},	/* y = s */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 24},	/* x = s */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 24, 0},	/* y = z */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -34136,8 +35863,8 @@ util_format_z24_unorm_s8_uint_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* z */
-      UTIL_FORMAT_SWIZZLE_Y,	/* s */
+      UTIL_FORMAT_SWIZZLE_Y,	/* z */
+      UTIL_FORMAT_SWIZZLE_X,	/* s */
       UTIL_FORMAT_SWIZZLE_NONE,	/* ignored */
       UTIL_FORMAT_SWIZZLE_NONE	/* ignored */
    },
@@ -34183,8 +35910,8 @@ util_format_s8_uint_z24_unorm_description = {
    TRUE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 24},	/* x = s */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 24, 0},	/* y = z */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 24, 8},	/* x = z */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 0},	/* y = s */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -34198,8 +35925,8 @@ util_format_s8_uint_z24_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Y,	/* z */
-      UTIL_FORMAT_SWIZZLE_X,	/* s */
+      UTIL_FORMAT_SWIZZLE_X,	/* z */
+      UTIL_FORMAT_SWIZZLE_Y,	/* s */
       UTIL_FORMAT_SWIZZLE_NONE,	/* ignored */
       UTIL_FORMAT_SWIZZLE_NONE	/* ignored */
    },
@@ -34245,8 +35972,8 @@ util_format_x24s8_uint_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 24, 8},	/* x = x */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 0},	/* y = s */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 24},	/* x = s */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 24, 0},	/* y = x */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -34261,7 +35988,7 @@ util_format_x24s8_uint_description = {
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
       UTIL_FORMAT_SWIZZLE_NONE,	/* z */
-      UTIL_FORMAT_SWIZZLE_Y,	/* s */
+      UTIL_FORMAT_SWIZZLE_X,	/* s */
       UTIL_FORMAT_SWIZZLE_NONE,	/* ignored */
       UTIL_FORMAT_SWIZZLE_NONE	/* ignored */
    },
@@ -34307,8 +36034,8 @@ util_format_s8x24_uint_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 24},	/* x = s */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 24, 0},	/* y = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 24, 8},	/* x = x */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 0},	/* y = s */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -34323,7 +36050,7 @@ util_format_s8x24_uint_description = {
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
       UTIL_FORMAT_SWIZZLE_NONE,	/* z */
-      UTIL_FORMAT_SWIZZLE_X,	/* s */
+      UTIL_FORMAT_SWIZZLE_Y,	/* s */
       UTIL_FORMAT_SWIZZLE_NONE,	/* ignored */
       UTIL_FORMAT_SWIZZLE_NONE	/* ignored */
    },
@@ -34369,8 +36096,8 @@ util_format_z24x8_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 24, 8},	/* x = z */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 8, 0},	/* y = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 8, 24},	/* x = x */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 24, 0},	/* y = z */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -34384,7 +36111,7 @@ util_format_z24x8_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* z */
+      UTIL_FORMAT_SWIZZLE_Y,	/* z */
       UTIL_FORMAT_SWIZZLE_NONE,	/* s */
       UTIL_FORMAT_SWIZZLE_NONE,	/* ignored */
       UTIL_FORMAT_SWIZZLE_NONE	/* ignored */
@@ -34431,8 +36158,8 @@ util_format_x8z24_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 8, 24},	/* x = x */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 24, 0},	/* y = z */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 24, 8},	/* x = z */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 8, 0},	/* y = x */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -34446,7 +36173,7 @@ util_format_x8z24_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Y,	/* z */
+      UTIL_FORMAT_SWIZZLE_X,	/* z */
       UTIL_FORMAT_SWIZZLE_NONE,	/* s */
       UTIL_FORMAT_SWIZZLE_NONE,	/* ignored */
       UTIL_FORMAT_SWIZZLE_NONE	/* ignored */
@@ -34494,8 +36221,8 @@ util_format_z32_float_s8x24_uint_description = {
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
       {UTIL_FORMAT_TYPE_FLOAT, FALSE, FALSE, 32, 32},	/* x = z */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 24},	/* y = s */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 24, 0},	/* z = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 24, 8},	/* y = x */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 0},	/* z = s */
       {0, 0, 0, 0, 0}
    },
 #else
@@ -34509,7 +36236,7 @@ util_format_z32_float_s8x24_uint_description = {
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
       UTIL_FORMAT_SWIZZLE_X,	/* z */
-      UTIL_FORMAT_SWIZZLE_Y,	/* s */
+      UTIL_FORMAT_SWIZZLE_Z,	/* s */
       UTIL_FORMAT_SWIZZLE_NONE,	/* ignored */
       UTIL_FORMAT_SWIZZLE_NONE	/* ignored */
    },
@@ -34556,8 +36283,8 @@ util_format_x32_s8x24_uint_description = {
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
       {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 32, 32},	/* x = x */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 24},	/* y = s */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 24, 0},	/* z = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 24, 8},	/* y = x */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 8, 0},	/* z = s */
       {0, 0, 0, 0, 0}
    },
 #else
@@ -34571,7 +36298,7 @@ util_format_x32_s8x24_uint_description = {
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
       UTIL_FORMAT_SWIZZLE_NONE,	/* z */
-      UTIL_FORMAT_SWIZZLE_Y,	/* s */
+      UTIL_FORMAT_SWIZZLE_Z,	/* s */
       UTIL_FORMAT_SWIZZLE_NONE,	/* ignored */
       UTIL_FORMAT_SWIZZLE_NONE	/* ignored */
    },
@@ -35796,6 +37523,182 @@ util_format_etc1_rgb8_description = {
    &util_format_etc1_rgb8_unpack_rgba_float,
    &util_format_etc1_rgb8_pack_rgba_float,
    &util_format_etc1_rgb8_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_bptc_rgba_unorm_description = {
+   PIPE_FORMAT_BPTC_RGBA_UNORM,
+   "PIPE_FORMAT_BPTC_RGBA_UNORM",
+   "bptc_rgba_unorm",
+   {4, 4, 128},	/* block */
+   UTIL_FORMAT_LAYOUT_BPTC,
+   1,	/* nr_channels */
+   FALSE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 128, 0},	/* x = x */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Z,	/* b */
+      UTIL_FORMAT_SWIZZLE_W	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_bptc_rgba_unorm_unpack_rgba_8unorm,
+   &util_format_bptc_rgba_unorm_pack_rgba_8unorm,
+   &util_format_bptc_rgba_unorm_fetch_rgba_8unorm,
+   &util_format_bptc_rgba_unorm_unpack_rgba_float,
+   &util_format_bptc_rgba_unorm_pack_rgba_float,
+   &util_format_bptc_rgba_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_bptc_srgba_description = {
+   PIPE_FORMAT_BPTC_SRGBA,
+   "PIPE_FORMAT_BPTC_SRGBA",
+   "bptc_srgba",
+   {4, 4, 128},	/* block */
+   UTIL_FORMAT_LAYOUT_BPTC,
+   1,	/* nr_channels */
+   FALSE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 128, 0},	/* x = x */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* sr */
+      UTIL_FORMAT_SWIZZLE_Y,	/* sg */
+      UTIL_FORMAT_SWIZZLE_Z,	/* sb */
+      UTIL_FORMAT_SWIZZLE_W	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_SRGB,
+   &util_format_bptc_srgba_unpack_rgba_8unorm,
+   &util_format_bptc_srgba_pack_rgba_8unorm,
+   &util_format_bptc_srgba_fetch_rgba_8unorm,
+   &util_format_bptc_srgba_unpack_rgba_float,
+   &util_format_bptc_srgba_pack_rgba_float,
+   &util_format_bptc_srgba_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_bptc_rgb_float_description = {
+   PIPE_FORMAT_BPTC_RGB_FLOAT,
+   "PIPE_FORMAT_BPTC_RGB_FLOAT",
+   "bptc_rgb_float",
+   {4, 4, 128},	/* block */
+   UTIL_FORMAT_LAYOUT_BPTC,
+   1,	/* nr_channels */
+   FALSE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 128, 0},	/* x = x */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Z,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_bptc_rgb_float_unpack_rgba_8unorm,
+   &util_format_bptc_rgb_float_pack_rgba_8unorm,
+   &util_format_bptc_rgb_float_fetch_rgba_8unorm,
+   &util_format_bptc_rgb_float_unpack_rgba_float,
+   &util_format_bptc_rgb_float_pack_rgba_float,
+   &util_format_bptc_rgb_float_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_bptc_rgb_ufloat_description = {
+   PIPE_FORMAT_BPTC_RGB_UFLOAT,
+   "PIPE_FORMAT_BPTC_RGB_UFLOAT",
+   "bptc_rgb_ufloat",
+   {4, 4, 128},	/* block */
+   UTIL_FORMAT_LAYOUT_BPTC,
+   1,	/* nr_channels */
+   FALSE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 128, 0},	/* x = x */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Z,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_bptc_rgb_ufloat_unpack_rgba_8unorm,
+   &util_format_bptc_rgb_ufloat_pack_rgba_8unorm,
+   &util_format_bptc_rgb_ufloat_fetch_rgba_8unorm,
+   &util_format_bptc_rgb_ufloat_unpack_rgba_float,
+   &util_format_bptc_rgb_ufloat_pack_rgba_float,
+   &util_format_bptc_rgb_ufloat_fetch_rgba_float,
    NULL, /* unpack_z_32unorm */
    NULL, /* pack_z_32unorm */
    NULL, /* unpack_z_float */
@@ -39503,10 +41406,10 @@ util_format_r10g10b10x2_uscaled_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 22},	/* x = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 2},	/* z = b */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 0}	/* w = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 30},	/* x = x */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 0}	/* w = r */
    },
 #else
    {
@@ -39518,9 +41421,9 @@ util_format_r10g10b10x2_uscaled_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -39565,10 +41468,10 @@ util_format_r10g10b10x2_snorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 22},	/* x = r */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 2},	/* z = b */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 0}	/* w = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 30},	/* x = x */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 0}	/* w = r */
    },
 #else
    {
@@ -39580,9 +41483,9 @@ util_format_r10g10b10x2_snorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -39937,8 +41840,8 @@ util_format_a4r4_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* x = a */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* x = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0},	/* y = a */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -39952,10 +41855,10 @@ util_format_a4r4_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
       UTIL_FORMAT_SWIZZLE_0,	/* g */
       UTIL_FORMAT_SWIZZLE_0,	/* b */
-      UTIL_FORMAT_SWIZZLE_X	/* a */
+      UTIL_FORMAT_SWIZZLE_Y	/* a */
    },
 #else
    {
@@ -39999,8 +41902,8 @@ util_format_r4a4_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* x = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0},	/* y = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 4},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 4, 0},	/* y = r */
       {0, 0, 0, 0, 0},
       {0, 0, 0, 0, 0}
    },
@@ -40014,10 +41917,10 @@ util_format_r4a4_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
       UTIL_FORMAT_SWIZZLE_0,	/* g */
       UTIL_FORMAT_SWIZZLE_0,	/* b */
-      UTIL_FORMAT_SWIZZLE_Y	/* a */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -40185,10 +42088,10 @@ util_format_r10g10b10a2_uscaled_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 22},	/* x = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 2},	/* z = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 0}	/* w = r */
    },
 #else
    {
@@ -40200,10 +42103,10 @@ util_format_r10g10b10a2_uscaled_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -40247,10 +42150,10 @@ util_format_r10g10b10a2_sscaled_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 22},	/* x = r */
-      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 2},	/* z = b */
-      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 0}	/* w = r */
    },
 #else
    {
@@ -40262,10 +42165,10 @@ util_format_r10g10b10a2_sscaled_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -40309,10 +42212,10 @@ util_format_r10g10b10a2_snorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 22},	/* x = r */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 2},	/* z = b */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 0}	/* w = r */
    },
 #else
    {
@@ -40324,10 +42227,10 @@ util_format_r10g10b10a2_snorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -40371,10 +42274,10 @@ util_format_b10g10r10a2_uscaled_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 22},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 2},	/* z = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 20},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, FALSE, 10, 0}	/* w = b */
    },
 #else
    {
@@ -40386,10 +42289,10 @@ util_format_b10g10r10a2_uscaled_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -40433,10 +42336,10 @@ util_format_b10g10r10a2_sscaled_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 22},	/* x = b */
-      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 2},	/* z = r */
-      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 20},	/* y = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, FALSE, 10, 0}	/* w = b */
    },
 #else
    {
@@ -40448,10 +42351,10 @@ util_format_b10g10r10a2_sscaled_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -40495,10 +42398,10 @@ util_format_b10g10r10a2_snorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 22},	/* x = b */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 2},	/* z = r */
-      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 20},	/* y = r */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 10, 0}	/* w = b */
    },
 #else
    {
@@ -40510,10 +42413,10 @@ util_format_b10g10r10a2_snorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -43101,10 +45004,10 @@ util_format_b10g10r10a2_uint_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 22},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 2},	/* z = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 20},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 0}	/* w = b */
    },
 #else
    {
@@ -43116,10 +45019,10 @@ util_format_b10g10r10a2_uint_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -43411,10 +45314,10 @@ util_format_b10g10r10x2_unorm_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 22},	/* x = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 2},	/* z = r */
-      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 0}	/* w = x */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 30},	/* x = x */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 20},	/* y = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 10, 0}	/* w = b */
    },
 #else
    {
@@ -43426,9 +45329,9 @@ util_format_b10g10r10x2_unorm_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_W,	/* b */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -44651,10 +46554,10 @@ util_format_r10g10b10a2_uint_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 22},	/* x = r */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 12},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 2},	/* z = b */
-      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 2, 0}	/* w = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 2, 30},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, FALSE, TRUE, 10, 0}	/* w = r */
    },
 #else
    {
@@ -44666,10 +46569,10 @@ util_format_r10g10b10a2_uint_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_X,	/* r */
-      UTIL_FORMAT_SWIZZLE_Y,	/* g */
-      UTIL_FORMAT_SWIZZLE_Z,	/* b */
-      UTIL_FORMAT_SWIZZLE_W	/* a */
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
    },
 #else
    {
@@ -44713,9 +46616,9 @@ util_format_b5g6r5_srgb_description = {
    FALSE,	/* is_mixed */
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 11},	/* x = b */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 11},	/* x = r */
       {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 6, 5},	/* y = g */
-      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 0},	/* z = r */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 5, 0},	/* z = b */
       {0, 0, 0, 0, 0}
    },
 #else
@@ -44728,9 +46631,9 @@ util_format_b5g6r5_srgb_description = {
 #endif
 #ifdef PIPE_ARCH_BIG_ENDIAN
    {
-      UTIL_FORMAT_SWIZZLE_Z,	/* sr */
+      UTIL_FORMAT_SWIZZLE_X,	/* sr */
       UTIL_FORMAT_SWIZZLE_Y,	/* sg */
-      UTIL_FORMAT_SWIZZLE_X,	/* sb */
+      UTIL_FORMAT_SWIZZLE_Z,	/* sb */
       UTIL_FORMAT_SWIZZLE_1	/* a */
    },
 #else
@@ -44748,6 +46651,626 @@ util_format_b5g6r5_srgb_description = {
    &util_format_b5g6r5_srgb_unpack_rgba_float,
    &util_format_b5g6r5_srgb_pack_rgba_float,
    &util_format_b5g6r5_srgb_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_a8l8_unorm_description = {
+   PIPE_FORMAT_A8L8_UNORM,
+   "PIPE_FORMAT_A8L8_UNORM",
+   "a8l8_unorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 8},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* y = rgb */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 8},	/* y = rgb */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a8l8_unorm_unpack_rgba_8unorm,
+   &util_format_a8l8_unorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a8l8_unorm_unpack_rgba_float,
+   &util_format_a8l8_unorm_pack_rgba_float,
+   &util_format_a8l8_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_a8l8_snorm_description = {
+   PIPE_FORMAT_A8L8_SNORM,
+   "PIPE_FORMAT_A8L8_SNORM",
+   "a8l8_snorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 8},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 0},	/* y = rgb */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 0},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 8},	/* y = rgb */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a8l8_snorm_unpack_rgba_8unorm,
+   &util_format_a8l8_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a8l8_snorm_unpack_rgba_float,
+   &util_format_a8l8_snorm_pack_rgba_float,
+   &util_format_a8l8_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_a8l8_srgb_description = {
+   PIPE_FORMAT_A8L8_SRGB,
+   "PIPE_FORMAT_A8L8_SRGB",
+   "a8l8_srgb",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 8},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* y = rgb */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 8},	/* y = rgb */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* sr */
+      UTIL_FORMAT_SWIZZLE_Y,	/* sg */
+      UTIL_FORMAT_SWIZZLE_Y,	/* sb */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* sr */
+      UTIL_FORMAT_SWIZZLE_Y,	/* sg */
+      UTIL_FORMAT_SWIZZLE_Y,	/* sb */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_SRGB,
+   &util_format_a8l8_srgb_unpack_rgba_8unorm,
+   &util_format_a8l8_srgb_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a8l8_srgb_unpack_rgba_float,
+   &util_format_a8l8_srgb_pack_rgba_float,
+   &util_format_a8l8_srgb_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_a16l16_unorm_description = {
+   PIPE_FORMAT_A16L16_UNORM,
+   "PIPE_FORMAT_A16L16_UNORM",
+   "a16l16_unorm",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 16, 16},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 16, 0},	/* y = rgb */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 16, 0},	/* x = a */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 16, 16},	/* y = rgb */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a16l16_unorm_unpack_rgba_8unorm,
+   &util_format_a16l16_unorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a16l16_unorm_unpack_rgba_float,
+   &util_format_a16l16_unorm_pack_rgba_float,
+   &util_format_a16l16_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_g8r8_unorm_description = {
+   PIPE_FORMAT_G8R8_UNORM,
+   "PIPE_FORMAT_G8R8_UNORM",
+   "g8r8_unorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 8},	/* x = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* x = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 8},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_g8r8_unorm_unpack_rgba_8unorm,
+   &util_format_g8r8_unorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_g8r8_unorm_unpack_rgba_float,
+   &util_format_g8r8_unorm_pack_rgba_float,
+   &util_format_g8r8_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_g8r8_snorm_description = {
+   PIPE_FORMAT_G8R8_SNORM,
+   "PIPE_FORMAT_G8R8_SNORM",
+   "g8r8_snorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 8},	/* x = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 0},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 0},	/* x = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 8},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_g8r8_snorm_unpack_rgba_8unorm,
+   &util_format_g8r8_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_g8r8_snorm_unpack_rgba_float,
+   &util_format_g8r8_snorm_pack_rgba_float,
+   &util_format_g8r8_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_g16r16_unorm_description = {
+   PIPE_FORMAT_G16R16_UNORM,
+   "PIPE_FORMAT_G16R16_UNORM",
+   "g16r16_unorm",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 16, 16},	/* x = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 16, 0},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 16, 0},	/* x = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 16, 16},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_g16r16_unorm_unpack_rgba_8unorm,
+   &util_format_g16r16_unorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_g16r16_unorm_unpack_rgba_float,
+   &util_format_g16r16_unorm_pack_rgba_float,
+   &util_format_g16r16_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_g16r16_snorm_description = {
+   PIPE_FORMAT_G16R16_SNORM,
+   "PIPE_FORMAT_G16R16_SNORM",
+   "g16r16_snorm",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 16, 16},	/* x = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 16, 0},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 16, 0},	/* x = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 16, 16},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_Y,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_g16r16_snorm_unpack_rgba_8unorm,
+   &util_format_g16r16_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_g16r16_snorm_unpack_rgba_float,
+   &util_format_g16r16_snorm_pack_rgba_float,
+   &util_format_g16r16_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_a8b8g8r8_snorm_description = {
+   PIPE_FORMAT_A8B8G8R8_SNORM,
+   "PIPE_FORMAT_A8B8G8R8_SNORM",
+   "a8b8g8r8_snorm",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   4,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 24},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 16},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 8},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 0}	/* w = r */
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 0},	/* x = a */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 8},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 16},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 24}	/* w = r */
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a8b8g8r8_snorm_unpack_rgba_8unorm,
+   &util_format_a8b8g8r8_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a8b8g8r8_snorm_unpack_rgba_float,
+   &util_format_a8b8g8r8_snorm_pack_rgba_float,
+   &util_format_a8b8g8r8_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uint */
+   NULL, /* pack_s_8uint */
+   NULL, /* unpack_rgba_uint */
+   NULL, /* pack_rgba_uint */
+   NULL, /* unpack_rgba_sint */
+   NULL, /* pack_rgba_sint */
+   NULL, /* fetch_rgba_uint */
+   NULL  /* fetch_rgba_sint */
+};
+
+const struct util_format_description
+util_format_x8b8g8r8_snorm_description = {
+   PIPE_FORMAT_X8B8G8R8_SNORM,
+   "PIPE_FORMAT_X8B8G8R8_SNORM",
+   "x8b8g8r8_snorm",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   4,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 8, 24},	/* x = x */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 16},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 8},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 0}	/* w = r */
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 8, 0},	/* x = x */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 8},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 16},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, FALSE, 8, 24}	/* w = r */
+   },
+#endif
+#ifdef PIPE_ARCH_BIG_ENDIAN
+   {
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      UTIL_FORMAT_SWIZZLE_W,	/* r */
+      UTIL_FORMAT_SWIZZLE_Z,	/* g */
+      UTIL_FORMAT_SWIZZLE_Y,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+#endif
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_x8b8g8r8_snorm_unpack_rgba_8unorm,
+   &util_format_x8b8g8r8_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_x8b8g8r8_snorm_unpack_rgba_float,
+   &util_format_x8b8g8r8_snorm_pack_rgba_float,
+   &util_format_x8b8g8r8_snorm_fetch_rgba_float,
    NULL, /* unpack_z_32unorm */
    NULL, /* pack_z_32unorm */
    NULL, /* unpack_z_float */
@@ -44956,6 +47479,14 @@ util_format_description(enum pipe_format format)
       return &util_format_latc2_snorm_description;
    case PIPE_FORMAT_ETC1_RGB8:
       return &util_format_etc1_rgb8_description;
+   case PIPE_FORMAT_BPTC_RGBA_UNORM:
+      return &util_format_bptc_rgba_unorm_description;
+   case PIPE_FORMAT_BPTC_SRGBA:
+      return &util_format_bptc_srgba_description;
+   case PIPE_FORMAT_BPTC_RGB_FLOAT:
+      return &util_format_bptc_rgb_float_description;
+   case PIPE_FORMAT_BPTC_RGB_UFLOAT:
+      return &util_format_bptc_rgb_ufloat_description;
    case PIPE_FORMAT_R64_FLOAT:
       return &util_format_r64_float_description;
    case PIPE_FORMAT_R64G64_FLOAT:
@@ -45268,6 +47799,26 @@ util_format_description(enum pipe_format format)
       return &util_format_r10g10b10a2_uint_description;
    case PIPE_FORMAT_B5G6R5_SRGB:
       return &util_format_b5g6r5_srgb_description;
+   case PIPE_FORMAT_A8L8_UNORM:
+      return &util_format_a8l8_unorm_description;
+   case PIPE_FORMAT_A8L8_SNORM:
+      return &util_format_a8l8_snorm_description;
+   case PIPE_FORMAT_A8L8_SRGB:
+      return &util_format_a8l8_srgb_description;
+   case PIPE_FORMAT_A16L16_UNORM:
+      return &util_format_a16l16_unorm_description;
+   case PIPE_FORMAT_G8R8_UNORM:
+      return &util_format_g8r8_unorm_description;
+   case PIPE_FORMAT_G8R8_SNORM:
+      return &util_format_g8r8_snorm_description;
+   case PIPE_FORMAT_G16R16_UNORM:
+      return &util_format_g16r16_unorm_description;
+   case PIPE_FORMAT_G16R16_SNORM:
+      return &util_format_g16r16_snorm_description;
+   case PIPE_FORMAT_A8B8G8R8_SNORM:
+      return &util_format_a8b8g8r8_snorm_description;
+   case PIPE_FORMAT_X8B8G8R8_SNORM:
+      return &util_format_x8b8g8r8_snorm_description;
    default:
       return NULL;
    }

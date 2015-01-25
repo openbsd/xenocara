@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.43 2014/07/09 21:32:40 jsg Exp $
+# $OpenBSD: Makefile,v 1.44 2015/01/25 15:09:12 jsg Exp $
 .include <bsd.xconf.mk>
 .include "config.mk"
 
@@ -76,8 +76,11 @@ CPPFLAGS += -D__GLX_ALIGN64 -DUSE_X86_64_ASM
 
 INCS= \
 	gl.h \
+	gl_mangle.h \
+	glcorearb.h \
 	glext.h \
 	glx.h \
+	glx_mangle.h \
 	glxext.h \
 	osmesa.h
 
@@ -114,11 +117,11 @@ GLX_SOURCES= \
 	glx_query.c \
 	drisw_glx.c \
 	dri_common.c \
+	dri_common_query_renderer.c \
 	dri_glx.c \
 	XF86dri.c \
 	glxhash.c \
 	dri2_glx.c \
-	dri2_query_renderer.c \
 	dri2.c \
 	query_renderer.c \
 	applegl_glx.c

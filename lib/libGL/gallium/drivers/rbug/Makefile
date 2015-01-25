@@ -1,11 +1,11 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:34 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2015/01/25 15:09:13 jsg Exp $
+
+GALLIUM=${.CURDIR}/../../../../../dist/Mesa/src/gallium
+.include "${GALLIUM}/drivers/rbug/Makefile.sources"
 
 LIB = rbug
 
 SRCS = \
-	rbug_core.c \
-	rbug_context.c \
-	rbug_objects.c \
-	rbug_screen.c
+	${C_SOURCES}
 
 .include <bsd.xorg.mk>

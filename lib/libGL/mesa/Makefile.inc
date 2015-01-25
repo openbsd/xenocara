@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.9 2014/07/09 21:32:41 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.10 2015/01/25 15:09:14 jsg Exp $
 .include "../config.mk"
 
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -14,6 +14,7 @@ CPPFLAGS+= \
 	-I${MESA_INCLUDE} \
 	-I${MESA_INCLUDE}/GL/internal \
 	-I${MESA} \
+	-I${MESA}/.. \
 	-I${MESA}/main \
 	-I${MESA}/math \
 	-I${MESA}/tnl \
@@ -65,6 +66,7 @@ MAIN_SOURCES = \
 	condrender.c \
 	context.c \
 	convolve.c \
+	copyimage.c \
 	cpuinfo.c \
 	debug.c \
 	depth.c \
@@ -84,13 +86,13 @@ MAIN_SOURCES = \
 	formats.c \
 	format_pack.c \
 	format_unpack.c \
+	format_utils.c \
 	framebuffer.c \
 	get.c \
 	genmipmap.c \
 	getstring.c \
 	glformats.c \
 	hash.c \
-	hash_table.c \
 	hint.c \
 	histogram.c \
 	image.c \
@@ -128,6 +130,7 @@ MAIN_SOURCES = \
 	stencil.c \
 	syncobj.c \
 	texcompress.c \
+	texcompress_bptc.c \
 	texcompress_cpal.c \
 	texcompress_rgtc.c \
 	texcompress_s3tc.c \
@@ -322,7 +325,6 @@ PROGRAM_SOURCES = \
 	prog_print.c \
 	prog_statevars.c \
 	programopt.c \
-	register_allocate.c \
 	symbol_table.c
 
 PROGRAM_CXX_SOURCES = \
@@ -332,14 +334,17 @@ SHADER_CXX_SOURCES = \
 	ir_to_mesa.cpp \
 	sampler.cpp
 
-.if ${MACHINE_ARCH} == i386
+.if ${MACHINE_ARCH} == i386 || ${MACHINE_ARCH} == amd64
 ASM_C_SOURCES= \
 	common_x86.c \
 	x86_xform.c \
 	3dnow.c \
 	sse.c \
-	x86sse.c
+	x86sse.c \
+	x86-64.c
+.endif
 
+.if ${MACHINE_ARCH} == i386
 ASM_SOURCES= \
 	common_x86_asm.S \
 	x86_xform2.S \
@@ -360,9 +365,6 @@ ASM_SOURCES= \
 	read_rgba_span_x86.S
 .endif
 .if ${MACHINE_ARCH} == amd64
-ASM_C_SOURCES= \
-	x86-64.c
-
 ASM_SOURCES =		\
 	xform4.S
 .endif
@@ -457,7 +459,7 @@ prog_execute.so: prog_execute.c
 	@rm -f ${.TARGET}.o
 
 
-lib${LIB}_pic.a:	${OBJS} $(DPADD)
+lib${LIB}_pic.a:	${OBJS} ${DPADD}
 	@rm -f lib${LIB}_pic.a
 	@${AR} cq lib${LIB}_pic.a `${LORDER} ${OBJS} | tsort -q`
 	${RANLIB} lib${LIB}_pic.a
@@ -491,9 +493,10 @@ x86_xform3.so: matypes.h
 x86_xform4.so: matypes.h
 .endif
 
-.if ${MACHINE_ARCH} == i386
+.if ${MACHINE_ARCH} == i386 || ${MACHINE_ARCH} == amd64
 .PATH: ${MESA}/x86
 .PATH: ${MESA}/x86/rtasm
+.PATH: ${MESA}/x86-64
 .endif
 .if ${MACHINE_ARCH} == powerpc
 .PATH: ${MESA}/ppc
@@ -501,12 +504,9 @@ x86_xform4.so: matypes.h
 .if ${MACHINE_ARCH} == sparc
 .PATH: ${MESA}/sparc
 .endif
-.if ${MACHINE_ARCH} == amd64
-.PATH: ${MESA}/x86-64
-.PATH: ${MESA}/x86
-.endif
 .PATH: ${MAPI}/glapi
 .PATH: ${MESA}/main
+.PATH: ${MESA}/../util
 .PATH: ${MESA}/math
 .PATH: ${MESA}/swrast
 .PATH: ${MESA}/swrast_setup

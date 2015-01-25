@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.20 2014/07/17 13:53:23 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.21 2015/01/25 15:09:12 jsg Exp $
 .include <bsd.xconf.mk>
 .include "../config.mk"
 
@@ -12,13 +12,14 @@ COMMON_GALLIUM_SOURCES = \
 	utils.c \
 	dri_util.c \
 	xmlconfig.c \
+	megadriver_stub.c
 
 COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
 	driverfuncs.c \
 	meta_blit.c \
+	meta_copy_image.c \
 	meta_generate_mipmap.c \
-	meta.c \
-	megadriver_stub.c
+	meta.c
 
 CPPFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING \
 	 $(INCLUDES) $(DRIVER_DEFINES)
@@ -28,9 +29,11 @@ INCLUDES = \
 	-I$(TOP)/include \
 	-I$(TOP)/include/GL/internal \
 	-I$(TOP)/src \
+	-I$(TOP)/src/gallium/state_trackers/dri \
 	-I$(TOP)/src/glsl \
 	-I$(TOP)/src/mesa \
 	-I$(TOP)/src/mesa/main \
+	-I$(TOP)/src/loader \
 	-I$(TOP)/src/mapi \
 	-I$(TOP)/src/mesa/math \
 	-I$(TOP)/src/mesa/transform \
@@ -54,9 +57,9 @@ CPPFLAGS += -DUSE_X86_64_ASM
 .endif
 
 LDADD?=	../../mesa/libmesa/libmesa_pic.a \
+	../../mesa/libmesautil/libmesautil_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
 	-L${X11BASE}/lib  -lexpat -ldrm -lm -lstdc++ -lc
-DPADD?=	../../mesa/libmesa/libmesa_pic.a
 
 .PATH: ${MESA}/drivers/dri/common
 .PATH: ${MESA}/drivers/common
@@ -81,7 +84,7 @@ all: ${LIB}
 
 OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}
 
-${LIB}:	${OBJS} $(DPADD)
+${LIB}:	${OBJS} ${DPADD}
 	${CC} -shared ${PICFLAG} -o $@ `${LORDER} ${OBJS}|tsort -q` ${LDADD}
 
 clean:

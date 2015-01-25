@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2014/07/09 21:32:42 jsg Exp $
+# $OpenBSD: Makefile,v 1.4 2015/01/25 15:09:14 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	glapi
@@ -77,8 +77,7 @@ obj: _xenocara_obj
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
-    ${MACHINE_ARCH} == "sparc"
+.if ${MACHINE_ARCH} == "powerpc" || ${MACHINE_ARCH} == "sparc"
 PICFLAG = -fPIC
 .endif
 .PATH: ${MESA}/main

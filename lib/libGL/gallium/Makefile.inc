@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.8 2014/09/07 15:32:18 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.9 2015/01/25 15:09:13 jsg Exp $
 .include <bsd.xconf.mk>
 .include "../config.mk"
 
@@ -24,6 +24,8 @@ lib${LIB}_pic.a: ${OBJS} ${DPADD}
 	@${AR} cq lib${LIB}_pic.a `${LORDER} ${OBJS} | tsort -q`
 	${RANLIB} lib${LIB}_pic.a
 
+CPPFLAGS+=-DPIPE_SEARCH_DIR=\"${X11BASE}/lib/modules/gallium-pipe\" \
+	-DGALLIUM_STATIC_TARGETS=1
 
 .if ${XENOCARA_BUILD_GALLIUM} == "llvm"
 

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2014/09/07 15:32:18 jsg Exp $
+# $OpenBSD: Makefile,v 1.9 2015/01/25 15:09:14 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	GLESv2
@@ -9,8 +9,8 @@ GL=	${.CURDIR}/../../dist/Mesa/Mesa/src/GL
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
 MESA_MAJOR=	10
-MESA_MINOR=	2
-MESA_TINY=	7
+MESA_MINOR=	4
+MESA_TINY=	3
 
 INCSDIR=	${X11BASE}/include/GLES2
 INCSDIR3=	${X11BASE}/include/GLES3
@@ -66,6 +66,7 @@ INCS= \
 
 INCS3= \
 	gl3.h \
+	gl31.h \
 	gl3ext.h \
 	gl3platform.h
 
@@ -95,8 +96,7 @@ obj: _xenocara_obj
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "powerpc" || \
-    ${MACHINE_ARCH} == "sparc"
+.if ${MACHINE_ARCH} == "powerpc" || ${MACHINE_ARCH} == "sparc"
 PICFLAG = -fPIC
 .endif
 

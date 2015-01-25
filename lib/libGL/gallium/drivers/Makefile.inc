@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.3 2013/09/05 15:11:59 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.4 2015/01/25 15:09:13 jsg Exp $
 
 GALLIUM=	${.CURDIR}/../../../../../dist/Mesa/src/gallium
 MESA=		${.CURDIR}/../../../../../dist/Mesa/src/mesa
@@ -7,6 +7,7 @@ CPPFLAGS+= \
 	-I${GALLIUM}/auxiliary \
 	-I${GALLIUM}/include \
 	-I${.CURDIR}/../../../../../dist/Mesa/include \
+	-I${.CURDIR}/../../../../../dist/Mesa/src \
 	-I${X11BASE}/include
 
 all: lib${LIB}_pic.a

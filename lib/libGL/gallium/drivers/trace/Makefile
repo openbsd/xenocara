@@ -1,12 +1,11 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:34 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2015/01/25 15:09:13 jsg Exp $
+
+GALLIUM=${.CURDIR}/../../../../../dist/Mesa/src/gallium
+.include "${GALLIUM}/drivers/trace/Makefile.sources"
 
 LIB = trace
 
 SRCS = \
-	tr_context.c \
-	tr_dump.c \
-	tr_dump_state.c \
-	tr_screen.c \
-	tr_texture.c
+	${C_SOURCES}
 
 .include <bsd.xorg.mk>

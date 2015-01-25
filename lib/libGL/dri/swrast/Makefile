@@ -1,14 +1,15 @@
-#	$OpenBSD: Makefile,v 1.7 2014/07/09 21:32:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2015/01/25 15:09:13 jsg Exp $
 
 LIB=	swrast_dri.so
 
-.if ${MACHINE_ARCH} == "m68k" || ${MACHINE_ARCH} == "sparc"
+.if ${MACHINE_ARCH} == "sparc"
 PICFLAG = -fPIC
 .endif
 
 SWRAST_COMMON_SOURCES = \
         driverfuncs.c \
 	meta_blit.c \
+	meta_copy_image.c \
 	meta_generate_mipmap.c \
 	meta.c \
 	dri_util.c \

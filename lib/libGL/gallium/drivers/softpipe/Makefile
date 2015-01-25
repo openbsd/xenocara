@@ -1,36 +1,11 @@
-# $OpenBSD: Makefile,v 1.2 2013/09/05 15:12:00 jsg Exp $
+# $OpenBSD: Makefile,v 1.3 2015/01/25 15:09:13 jsg Exp $
+
+GALLIUM=${.CURDIR}/../../../../../dist/Mesa/src/gallium
+.include "${GALLIUM}/drivers/softpipe/Makefile.sources"
 
 LIB = softpipe
 
 SRCS = \
-	sp_fs_exec.c \
-	sp_clear.c \
-	sp_fence.c \
-	sp_flush.c \
-	sp_query.c \
-	sp_context.c \
-	sp_draw_arrays.c \
-	sp_prim_vbuf.c \
-	sp_quad_pipe.c \
-	sp_quad_stipple.c \
-	sp_quad_depth_test.c \
-	sp_quad_fs.c \
-	sp_quad_blend.c \
-	sp_screen.c \
-        sp_setup.c \
-	sp_state_blend.c \
-	sp_state_clip.c \
-	sp_state_derived.c \
-	sp_state_sampler.c \
-	sp_state_shader.c \
-	sp_state_so.c \
-	sp_state_rasterizer.c \
-	sp_state_surface.c \
-	sp_state_vertex.c \
-	sp_texture.c \
-	sp_tex_sample.c \
-	sp_tex_tile_cache.c \
-	sp_tile_cache.c \
-	sp_surface.c
+	${C_SOURCES}
 
 .include <bsd.xorg.mk>

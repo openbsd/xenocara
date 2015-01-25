@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile,v 1.2 2013/04/14 10:23:04 mpi Exp $
+# $OpenBSD: Makefile,v 1.3 2015/01/25 15:09:14 jsg Exp $
 .include <bsd.xconf.mk>
 
-SUBDIR= libmesa
+SUBDIR= libmesa libmesautil
 
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
 SUBDIR+= libmesagallium
