@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xinit], [1.3.3],
+AC_INIT([xinit], [1.3.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xinit])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -173,9 +173,6 @@ if test "x$MCOOKIE" = x ; then
         MCOOKIE="$OPENSSL rand -hex 16"
     else
         case $host_os in
-            *openbsd*)
-                MCOOKIE='/usr/sbin/openssl rand -hex 16'
-                ;;
             *solaris*)
                 MCOOKIE="/usr/bin/od -X -A n -N 16 /dev/urandom | /usr/bin/tr -d ' '"
                 ;;

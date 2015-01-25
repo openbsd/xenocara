@@ -390,7 +390,7 @@ processTimeout(int timeout, const char *string)
 }
 
 static pid_t
-startServer(char *server[])
+startServer(char *server_argv[])
 {
     sigset_t mask, old;
     const char * const *cpp;
@@ -422,12 +422,12 @@ startServer(char *server[])
          * if client is xterm -L
          */
         setpgid(0,getpid());
-        Execute(server);
+        Execute(server_argv);
 
-        Error("unable to run server \"%s\"", server[0]);
+        Error("unable to run server \"%s\"", server_argv[0]);
 
         fprintf(stderr, "Use the -- option, or make sure that %s is in your path and\n", bindir);
-        fprintf(stderr, "that \"%s\" is a program or a link to the right type of server\n", server[0]);
+        fprintf(stderr, "that \"%s\" is a program or a link to the right type of server\n", server_argv[0]);
         fprintf(stderr, "for your display.  Possible server names include:\n\n");
         for (cpp = server_names; *cpp; cpp++)
             fprintf(stderr, "    %s\n", *cpp);
@@ -556,7 +556,7 @@ setWindowPath(void)
 }
 
 static pid_t
-startClient(char *client[])
+startClient(char *client_argv[])
 {
     clientpid = fork();
     if (clientpid == 0) {
@@ -568,8 +568,8 @@ startClient(char *client[])
             _exit(EXIT_FAILURE);
         }
         setpgid(0, getpid());
-        Execute(client);
-        Error("Unable to run program \"%s\"", client[0]);
+        Execute(client_argv);
+        Error("Unable to run program \"%s\"", client_argv[0]);
 
         fprintf(stderr, "Specify a program on the command line or make sure that %s\n", bindir);
         fprintf(stderr, "is in your path.\n\n");

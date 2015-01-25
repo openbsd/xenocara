@@ -14,7 +14,7 @@ XCOMM
 unset DBUS_SESSION_BUS_ADDRESS
 unset SESSION_MANAGER
 
-#if defined(__SCO__) || defined(__UNIXWARE__) || defined(__APPLE__)
+#ifdef __APPLE__
 
 XCOMM Check for /usr/bin/X11 and BINDIR in the path, if not add them.
 XCOMM This allows startx to be placed in a place like /usr/bin or /usr/local/bin
@@ -33,11 +33,7 @@ case $PATH in
 esac
 
 XCOMM Now the "old" compiled path
-#ifdef __APPLE__
 oldbindir=/usr/X11R6/bin
-#else
-oldbindir=/usr/bin/X11
-#endif
 
 if [ -d "$oldbindir" ] ; then
     case $PATH in
@@ -51,24 +47,8 @@ XCOMM so export the new PATH just in case the user changes the shell
 export PATH
 #endif
 
-#if defined(__SCO__) || defined(__UNIXWARE__)
-XCOMM Set up the XMERGE env var so that dos merge is happy under X
-
-if [ -f /usr/lib/merge/xmergeset.sh ]; then
-	. /usr/lib/merge/xmergeset.sh
-elif [ -f /usr/lib/merge/console.disp ]; then
-	XMERGE=`cat /usr/lib/merge/console.disp`
-	export XMERGE
-fi
-
-userclientrc=$HOME/.startxrc
-sysclientrc=LIBDIR/sys.startxrc
-scouserclientrc=$HOME/.xinitrc
-scosysclientrc=XINITDIR/xinitrc
-#else
 userclientrc=$HOME/.xinitrc
 sysclientrc=XINITDIR/xinitrc
-#endif
 
 userserverrc=$HOME/.xserverrc
 sysserverrc=XINITDIR/xserverrc
@@ -79,6 +59,7 @@ defaultserverargs=""
 defaultdisplay=":0"
 clientargs=""
 serverargs=""
+vtarg=""
 
 #ifdef __APPLE__
 
@@ -145,21 +126,6 @@ done
 defaultdisplay=":$d"
 unset d
 
-#if defined(__SCO__) || defined(__UNIXWARE__)
-
-XCOMM SCO -t option: do not start an X server
-case $1 in
-  -t)   if [ -n "$DISPLAY" ]; then
-                REMOTE_SERVER=TRUE
-                shift
-        else
-                echo "DISPLAY environment variable not set"
-                exit 1
-        fi
-        ;;
-esac
-#endif
-
 whoseargs="client"
 while [ x"$1" != x ]; do
     case "$1" in
@@ -209,12 +175,6 @@ if [ x"$client" = x ]; then
             client=$userclientrc
         elif [ -f "$sysclientrc" ]; then
             client=$sysclientrc
-#if defined(__SCO__) || defined(__UNIXWARE__)
-        elif [ -f "$scouserclientrc" ]; then
-            client=$scouserclientrc
-        elif [ -f "$scosysclientrc" ]; then
-            client=$scosysclientrc
-#endif
         fi
     fi
 fi
@@ -227,6 +187,17 @@ fi
 XCOMM process server arguments
 if [ x"$server" = x ]; then
     server=$defaultserver
+
+#ifdef __linux__
+    XCOMM When starting the defaultserver start X on the current tty to avoid
+    XCOMM the startx session being seen as inactive:
+    XCOMM "https://bugzilla.redhat.com/show_bug.cgi?id=806491"
+    tty=$(tty)
+    if expr match "$tty" '^/dev/tty[0-9]\+$' > /dev/null; then
+        tty_num=$(echo "$tty" | grep -oE '[0-9]+$')
+        vtarg="vt$tty_num"
+    fi
+#endif
 
     XCOMM For compatibility reasons, only use xserverrc if there were no server command line arguments
     if [ x"$serverargs" = x -a x"$display" = x ]; then
@@ -241,6 +212,17 @@ fi
 XCOMM if no server arguments, use defaults
 if [ x"$serverargs" = x ]; then
     serverargs=$defaultserverargs
+fi
+
+XCOMM if no vt is specified add vtarg (which may be empty)
+have_vtarg="no"
+for i in $serverargs; do
+    if expr match "$i" '^vt[0-9]\+$' > /dev/null; then
+        have_vtarg="yes"
+    fi
+done
+if [ "$have_vtarg" = "no" ]; then
+    serverargs="$serverargs $vtarg"
 fi
 
 XCOMM if no display, use default
@@ -319,20 +301,10 @@ EOF
     done
 fi
 
-#if defined(__SCO__) || defined(__UNIXWARE__)
-if [ "$REMOTE_SERVER" = "TRUE" ]; then
-        exec SHELL_CMD ${client}
-else
-        XINIT "$client" $clientargs -- "$server" $display $serverargs
-fi
-#else
-
 #if defined(__APPLE__) || defined(__CYGWIN__)
 eval XINIT \"$client\" $clientargs -- \"$server\" $display $serverargs
 #else
 XINIT "$client" $clientargs -- "$server" $display $serverargs
-#endif
-
 #endif
 retval=$?
 

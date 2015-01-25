@@ -700,7 +700,7 @@ uninstall-am: uninstall-launchagentsDATA uninstall-xinitrcPROGRAMS
 
 
 .cpp:
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
+	$(AM_V_GEN)$(RAWCPP) $(TRADITIONALCPPFLAGS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) > $@
 
 $(bundleidprefix).startx.plist.cpp: startx.plist.cpp
 	cp $< $@
