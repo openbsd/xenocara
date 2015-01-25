@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([sessreg], [1.0.8],
+AC_INIT([sessreg], [1.1.0],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [sessreg])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -31,7 +31,6 @@ AC_SYS_LARGEFILE
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -68,7 +67,7 @@ AC_CHECK_TYPES([
 AC_CHECK_FUNCS([pututline updwtmpx utmpxname])
 
 # Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(SESSREG, xproto)
+PKG_CHECK_MODULES(SESSREG, [xproto >= 7.0.25])
 
 AC_CONFIG_FILES([
 	Makefile

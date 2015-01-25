@@ -74,6 +74,7 @@
 
 #include <X11/Xos.h>
 #include <X11/Xfuncs.h>
+#include <X11/Xfuncproto.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -126,34 +127,45 @@ static int Xslot (char *ttys_file, char *servers_file, char *tty_line,
 		  char *host_name, int addp);
 #endif
 
-static int
+static void _X_NORETURN _X_COLD
 usage (int x)
 {
-	if (x) {
-		fprintf (stderr,
-                         "%s: usage %s {-a -d} [-w wtmp-file] [-u utmp-file]"
+	fprintf (stderr,
+		 "%s: usage %s {-a -d} [-w wtmp-file] [-u utmp-file]"
 #ifdef USE_LASTLOG
-                         " [-L lastlog-file]"
+		 " [-L lastlog-file]"
 #endif
-                         "\n"
-                         "             [-t ttys-file] [-l line-name] [-h host-name] [-V]\n"
-                         "             [-s slot-number] [-x servers-file] user-name\n",
-                         program_name, program_name);
-		exit (1);
-	}
-	return x;
+		 "\n"
+		 "             [-t ttys-file] [-l line-name] [-h host-name] [-V]\n"
+		 "             [-s slot-number] [-x servers-file] user-name\n",
+		 program_name, program_name);
+	exit (x);
 }
 
 static char *
 getstring (char ***avp, int *flagp)
 {
 	char	**a = *avp;
+	char	*flag = *a;
 
-	usage ((*flagp)++);
+	if (*flagp != 0) {
+		fprintf (stderr, "%s: cannot give more than one -%s option\n",
+			 program_name, flag);
+		usage (1);
+	}
+	*flagp = 1;
+	/* if the argument is given immediately following the flag,
+	   i.e. "sessreg -hfoo ...", not "sessreg -h foo ...",
+	   then return the rest of the string as the argument value */
 	if (*++*a)
 		return *a;
+	/* else use the next pointer in the argv list as the argument value */
 	++a;
-	usage (!*a);
+	if (!*a) {
+		fprintf (stderr, "%s: -%s requires an argument\n",
+			 program_name, flag);
+		usage (1);
+	}
 	*avp = a;
 	return *a;
 }
@@ -205,11 +217,19 @@ main (int argc, char **argv)
 			wtmp_file = getstring (&argv, &wflag);
 			if (!strcmp (wtmp_file, "none"))
 				wtmp_none = 1;
+#if defined(USE_UTMPX) && defined(HAVE_UPDWTMPX)
+			else
+				wtmpx_file = wtmp_file;
+#endif
 			break;
 		case 'u':
 			utmp_file = getstring (&argv, &uflag);
 			if (!strcmp (utmp_file, "none"))
 				utmp_none = 1;
+#if defined(USE_UTMPX) && defined(HAVE_UTMPXNAME)
+			else
+				utmpx_file = utmp_file;
+#endif
 			break;
 #ifdef USE_LASTLOG
 		case 'L':
@@ -245,17 +265,36 @@ main (int argc, char **argv)
 			printf("%s\n", PACKAGE_STRING);
 			exit (0);
 		default:
+			fprintf (stderr, "%s: unrecognized option '%s'\n",
+				 program_name, argv[0]);
 			usage (1);
 		}
 	}
-	usage (!(user_name = *argv++));
-	usage (*argv != NULL);
+	user_name = *argv++;
+	if (user_name == NULL) {
+		fprintf (stderr, "%s: missing required user-name argument\n",
+			 program_name);
+		usage (1);
+	}
+	if (*argv != NULL) {
+		fprintf (stderr, "%s: unrecognized argument '%s'\n",
+			 program_name, argv[0]);
+		usage (1);
+	}
 	/*
 	 * complain if neither aflag nor dflag are set,
 	 * or if both are set.
 	 */
-	usage (!(aflag ^ dflag));
-	usage (xflag && !lflag);
+	if (!(aflag ^ dflag)) {
+		fprintf (stderr, "%s: must specify exactly one of -a or -d\n",
+			 program_name);
+		usage (1);
+	}
+	if (xflag && !lflag) {
+		fprintf (stderr, "%s: must specify -l when -x is used\n",
+			 program_name);
+		usage (1);
+	}
 	/* set up default file names */
 	if (!wflag) {
 		wtmp_file = WTMP_FILE;
@@ -468,6 +507,7 @@ set_utmpx (struct utmpx *u, const char *line, const char *user,
 	static const char letters[] =
 	       "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+	memset (u, 0, sizeof (*u));
 	if (line)
 	{
 		if(strcmp(line, ":0") == 0)

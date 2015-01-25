@@ -1,4 +1,3 @@
-.\" $Xorg: sessreg.man,v 1.4 2001/02/09 02:05:40 xorgcvs Exp $
 .\" Copyright 1994, 1998  The Open Group
 .\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,15 +22,13 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xdm/sessreg.man,v 1.7 2001/04/23 20:31:09 dawes Exp $
-.\"
 .TH SESSREG __appmansuffix__ __xorgversion__
 .SH NAME
-sessreg \- manage utmp/wtmp entries for non-init clients
+sessreg \- manage __utmp_manpage__/__wtmp_manpage__ entries for non-init clients
 .SH SYNOPSIS
 .B sessreg
-[-w \fIwtmp-file\fP]
-[-u \fIutmp-file\fP]
+[-w \fI__wtmp_manpage__-file\fP]
+[-u \fI__utmp_manpage__-file\fP]
 [-L \fIlastlog-file\fP]
 [-l \fIline-name\fP]
 [-h \fIhost-name\fP]
@@ -44,8 +41,9 @@ sessreg \- manage utmp/wtmp entries for non-init clients
 \fIuser-name\fP
 .SH DESCRIPTION
 .PP
-\fISessreg\fP is a simple program for managing utmp/wtmp and lastlog
+\fISessreg\fP is a simple program for managing __utmp_manpage__/__wtmp_manpage__ and lastlog
 entries for xdm sessions.
+.\" __BEGIN_UTMP_ONLY__
 .PP
 System V has a better interface to utmp than BSD; it
 dynamically allocates entries in the file, instead of writing them at fixed
@@ -73,6 +71,16 @@ environment and ignores them.
 BSD and Linux also have a host-name field in the utmp file which doesn't
 exist in System V.  This option is also ignored by the System V version of
 \fIsessreg\fP.
+.\" __END_UTMP_ONLY__
+.\" __BEGIN_UTMPX_ONLY__
+.PP
+This version of \fIsessreg\fP is built using the modern POSIX
+.BR pututxline (3c)
+interfaces, which no longer require the slot-number, ttys-file, or
+Xservers-file mappings.  For compatibility with older versions and other
+operating systems, the \fB-s\fP, \fB-t\fP, and \fB-x\fP flags are accepted,
+but ignored.
+.\" __END_UTMPX_ONLY__
 .SH USAGE
 .PP
 In Xstartup, place a call like:
@@ -87,14 +95,14 @@ and in Xreset:
        sessreg -d -l $DISPLAY -x /etc/X11/xdm/Xservers $USER
 .fi
 .SH OPTIONS
-.IP "\fB-w\fP \fIwtmp-file\fP"
-This specifies an alternate wtmp file, instead of
+.IP "\fB-w\fP \fI__wtmp_manpage__-file\fP"
+This specifies an alternate __wtmp_manpage__ file, instead of
 .BR __wtmp_file__ .
-The special name "none" disables writing records to the wtmp file.
-.IP "\fB-u\fP \fIutmp-file\fP"
-This specifies an alternate utmp file, instead of
+The special name "none" disables writing records to the __wtmp_manpage__ file.
+.IP "\fB-u\fP \fI__utmp_manpage__-file\fP"
+This specifies an alternate __utmp_manpage__ file, instead of
 .BR __utmp_file__ .
-The special name "none" disables writing records to the utmp file.
+The special name "none" disables writing records to the __utmp_manpage__ file.
 .IP "\fB-L\fP \fIlastlog-file\fP"
 This specifies an alternate lastlog file, instead of
 .BR __lastlog_file__ ,
@@ -108,31 +116,50 @@ given to the users session (e.g. :0).  If none is specified, the
 terminal name will be determined with ttyname(__libmansuffix__) and stripped of leading
 components.
 .IP "\fB-h\fP \fIhost-name\fP"
-This is set for BSD hosts to indicate that the session was initiated from
+This is set to indicate that the session was initiated from
 a remote host.  In typical xdm usage, this options is not used.
 .IP "\fB-s\fP \fIslot-number\fP"
+.\" __BEGIN_UTMP_ONLY__
 Each potential session has a unique slot number in BSD systems, most are
 identified by the position of the \fIline-name\fP in the
 .BR __ttys_file__ file.
 This option overrides the default position determined with ttyslot(__libmansuffix__).
 This option is inappropriate for use with xdm, the -x option is more useful.
+.\" __END_UTMP_ONLY__
+.\" __BEGIN_UTMPX_ONLY__
+This option is accepted for compatibility, but does nothing in
+this version of \fIsessreg\fP.
+.\" __END_UTMPX_ONLY__
 .IP "\fB-x\fP \fIXservers-file\fP"
+.\" __BEGIN_UTMP_ONLY__
 As X sessions are one-per-display, and each display is entered in this file,
 this options sets the \fIslot-number\fP to be the number of lines in
 the \fIttys-file\fP plus the index into this file that the \fIline-name\fP
 is found.
+.\" __END_UTMP_ONLY__
+.\" __BEGIN_UTMPX_ONLY__
+This option is accepted for compatibility, but does nothing in
+this version of \fIsessreg\fP.
+.\" __END_UTMPX_ONLY__
 .IP "\fB-t\fP \fIttys-file\fP"
+.\" __BEGIN_UTMP_ONLY__
 This specifies an alternate file which the \fI-x\fP option will use to count
 the number of terminal sessions on a host.
+.\" __END_UTMP_ONLY__
+.\" __BEGIN_UTMPX_ONLY__
+This option is accepted for compatibility, but does nothing in
+this version of \fIsessreg\fP.
+.\" __END_UTMPX_ONLY__
 .IP "\fB-V\fP"
 This option causes the command to print its version and exit.
 .IP "\fB-a\fP"
-This session should be added to utmp/wtmp.
+This session should be added to __utmp_manpage__/__wtmp_manpage__.
 .IP "\fB-d\fP"
-This session should be deleted from utmp/wtmp.  One of -a/-d must
+This session should be deleted from __utmp_manpage__/__wtmp_manpage__.  One of -a/-d must
 be specified.
 .SH "SEE ALSO"
 .BR xdm (__appmansuffix__),
-.BR __utmp_manpage__ (__filemansuffix__)
+.BR __utmp_manpage__ (__filemansuffix__),
+.BR __wtmp_manpage__ (__filemansuffix__)
 .SH AUTHOR
 Keith Packard, MIT X Consortium

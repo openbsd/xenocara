@@ -1,3 +1,96 @@
+commit 0f904e33d53b0102e53685184bb59005be40fcf7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 19 21:00:17 2015 -0800
+
+    sessreg 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53ad5afe30a75c27604648912c57e5beeb77cca7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 14 15:22:25 2014 -0800
+
+    Include utmp.h if present, even if we're using utmpx interfaces
+    
+    For platforms which require type or structure definitions from utmp.h
+    when using lastlog or utmpx/wtmpx interfaces.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8fb21bdf15185e18e44b5dab6740720a50b9f0c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 4 18:32:07 2014 -0800
+
+    Attempt to modernize and better disentangle utmp vs. utmpx in the man page
+    
+    Also reduces the number of references to BSD vs. System V differences
+    from the early 90's which are no longer relevant today.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9d23df81ae6e5beb79237cb13b555ed689b1a76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 4 16:31:31 2014 -0800
+
+    Stop disabling utmpx & wtmpx calls when -u & -w arguments are passed
+    
+    The handling of the -u & -w flags would only set utmp_file & wtmp_file,
+    leaving utmpx_file & wtmpx_file set to NULL, disabling the calls to the
+    code to update those files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 929b2f60c36b80b7a8e6237d5e8ccc981a3a1e0d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 4 16:27:57 2014 -0800
+
+    If both utmp & utmpx interfaces are available, just use utmpx
+    
+    As we already do with wtmp & wtmpx, where only one of the interface sets
+    is compiled in at a time, stop building & potentially calling both the
+    utmp & utmpx interfaces, which could lead to confusion and corruption,
+    especially when xdm passed -u /.../utmpx and sessreg wrote utmp format
+    records to the file instead.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a234ecc502b3e08d8f81d51fb724d97e8045504
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 3 20:04:31 2014 -0800
+
+    Zero initialize struct utmpx, as we already do for struct utmp
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1dacc4b5554f794f8219356a0d2bd2dc6a499160
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 3 18:57:20 2014 -0800
+
+    Print which option was in error along with usage message
+    
+    In the process, try to make the code a little less painful to read.
+    Still, no love to whomever came up with (*++*a) style coding.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e73a94da99c25dc705be814fb18c306e9301a135
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:14:21 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5f54e23a2adf7342c50a0d910760698b95fd2b97
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:14:21 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 1d9c8df5bea05c2c4923fd985ce274104b42efeb
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 10 18:43:41 2013 -0800
