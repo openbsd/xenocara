@@ -1,3 +1,118 @@
+commit 87d628f8eec170ec13bb9feefb1ce05aed07d1d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 16 23:40:40 2015 -0800
+
+    mkfontscale 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47908fd7a0d061fdcd21e3498da4e223ca9136d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 20 23:23:54 2014 -0700
+
+    Remove extraneous duplicate checks for -r & -n options
+    
+    Flagged by cppcheck 1.65:
+    [mkfontscale.c:247]: (style) Expression is always false because
+     'else if' condition matches previous condition at line 224.
+    [mkfontscale.c:245]: (style) Expression is always false because
+     'else if' condition matches previous condition at line 227.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 48e541dc2f2fc3f4e99d3e168c28241ff5adff4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 19:39:49 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f14019d598c215e09cff88c739bbf7f4d6c6b89f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 19:39:49 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 399db42a151687f1181ae23d28a76d31125a2853
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Mar 18 23:14:47 2014 +0100
+
+    Only include config.h if it exists.
+    
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit eac564e0fc9052a39981ea47b271f7f3d2821944
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Jan 2 00:43:14 2014 -0800
+
+    Fix possible malloc allocation error found by clang static analysis
+    
+    list.c:238:23: warning: Call to 'malloc' has an allocation size of 0 bytes
+        ListPtr *sorted = malloc(l * sizeof(ListPtr));
+                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 423ffbe9c5552dfeffa81bb6e2f2b62ab6b17580
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Jan 2 00:39:25 2014 -0800
+
+    Plug a memory leak found by clang static analysis
+    
+    mkfontscale.c:635:25: warning: Potential leak of memory pointed to by 'notice'
+                    foundry = notice_foundry(notice);
+                    ~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+    mkfontscale.c:640:8: warning: Potential leak of memory pointed to by 'notice'
+        if(strcmp(slant, "i") == 0) {
+           ^~~~~~
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 880a0c4733e62e54e6a0f1238c7430727d23657b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 8 23:48:28 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 26c89de6cdf0a5b7122a630a5df37fd67a4163e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 8 23:28:16 2013 -0800
+
+    Make usage() always exit(1)
+    
+    Avoid duplicating exit(1) calls after every single call to usage()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 43ab9b11699acadbf09b8ed050a7a2f7e630dce4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 8 23:21:32 2013 -0800
+
+    Add -v flag to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e5788db7f179bf89d2e5e3c97c69058027cb93bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 8 22:56:02 2013 -0800
+
+    Add missing newline to usage output
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit f48de13423c7300f4da9f61993b624426b38ddc0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 16 22:50:54 2013 -0700
