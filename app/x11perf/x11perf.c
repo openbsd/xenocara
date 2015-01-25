@@ -853,7 +853,6 @@ ProcessTest(XParms xp, Test *test, int func, unsigned long pm, char *label)
     DisplayStatus(xp->d, "Calibrating", label, 0);
     reps = CalibrateTest(xp, test, seconds, &time);
     if (reps != 0) {
-	srand(1);	/* allow reproducible results */
 	XDestroySubwindows(xp->d, xp->w);
 	XClearWindow(xp->d, xp->w);
 	reps = (*test->init) (xp, &test->parms, reps);
