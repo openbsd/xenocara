@@ -556,10 +556,8 @@ OverlayKeyCreate(char *under, char *over)
         key->common.stmtType = StmtOverlayKeyDef;
         strncpy(key->over, over, XkbKeyNameLength);
         strncpy(key->under, under, XkbKeyNameLength);
-        if (over)
-            uFree(over);
-        if (under)
-            uFree(under);
+        uFree(over);
+        uFree(under);
     }
     return key;
 }
@@ -797,7 +795,7 @@ XKBParseFile(FILE * file, XkbFile ** pRtrn)
 {
     if (file)
     {
-        yyin = file;
+        scan_set_file(file);
         rtrnValue = NULL;
         if (yyparse() == 0)
         {

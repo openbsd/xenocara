@@ -47,9 +47,6 @@
 #include "tokens.h"
 #include <X11/extensions/XKBgeom.h>
 
-#ifdef __UNIXOS2__
-#define chdir _chdir2
-#endif
 
 #ifdef WIN32
 #define S_IRGRP 0
@@ -579,17 +576,37 @@ parseArgs(int argc, char *argv[])
         }
         else if (strncmp(argv[i], "-w", 2) == 0)
         {
-            if ((i >= (argc - 1)) || (!isdigit(argv[i + 1][0])))
+            unsigned long utmp;
+            char *tmp2;
+            /* If text is just after "-w" in the same word, then it must
+             * be a number and it is the warning level. Otherwise, if the
+             * next argument is a number, then it is the warning level,
+             * else the warning level is assumed to be 0.
+             */
+            if (argv[i][2] == '\0')
             {
                 warningLevel = 0;
-                if (isdigit(argv[i][1]))
-                    if (sscanf(&argv[i][1], "%i", &itmp) == 1)
-                        warningLevel = itmp;
+                if (i < argc - 1)
+                {
+                    utmp = strtoul(argv[i+1], &tmp2, 10);
+                    if (argv[i+1][0] != '\0' && *tmp2 == '\0')
+                    {
+                        warningLevel = utmp > 10 ? 10 : utmp;
+                        i++;
+                    }
+                }
             }
             else
             {
-                if (sscanf(argv[++i], "%i", &itmp) == 1)
-                    warningLevel = itmp;
+                utmp = strtoul(&argv[i][2], &tmp2, 10);
+                if (*tmp2 == '\0')
+                    warningLevel = utmp > 10 ? 10 : utmp;
+                else
+                {
+                    ERROR1("Unknown flag \"%s\" on command line\n", argv[i]);
+                    Usage(argc, argv);
+                    return False;
+                }
             }
         }
         else if ((strcmp(argv[i], "-xkb") == 0) && (!xkblist))
@@ -748,7 +765,7 @@ parseArgs(int argc, char *argv[])
             ACTION("Exiting\n");
             exit(1);
         }
-        sprintf(outputFile, "stdin.%s", fileTypeExt[outputFormat]);
+        snprintf(outputFile, len, "stdin.%s", fileTypeExt[outputFormat]);
     }
     else if ((outputFile == NULL) && (inputFile != NULL))
     {
@@ -776,7 +793,7 @@ parseArgs(int argc, char *argv[])
         }
         ext = strrchr(base, '.');
         if (ext == NULL)
-            sprintf(outputFile, "%s.%s", base, fileTypeExt[outputFormat]);
+            snprintf(outputFile, len, "%s.%s", base, fileTypeExt[outputFormat]);
         else
         {
             strcpy(outputFile, base);
@@ -883,8 +900,7 @@ main(int argc, char *argv[])
     XkbFileInfo result;
     Status status;
 
-    yyin = stdin;
-    uSetEntryFile(NullString);
+    scan_set_file(stdin);
     uSetDebugFile(NullString);
     uSetErrorFile(NullString);
 

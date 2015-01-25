@@ -108,7 +108,7 @@ SOFTWARE.
 #endif
 
 #ifdef WIN32
-# include <windows.h>
+# include <X11/Xwindows.h>
 # define FileName(file) file.cFileName
 # undef TEXT
 # undef ALTERNATE
@@ -292,8 +292,8 @@ AddDirectory(char *head, char *ptrn, char *rest, char *map)
 #else
     if ((dirp = opendir((head ? head : "."))) == NULL)
         return 0;
-    nMatch = 0;
 #endif
+    nMatch = 0;
 #ifdef WIN32
     do
 #else
@@ -302,18 +302,19 @@ AddDirectory(char *head, char *ptrn, char *rest, char *map)
     {
         char *tmp, *filename;
         struct stat sbuf;
+        size_t tmpsize;
 
         filename = FileName(file);
         if (!filename || filename[0] == '.')
             continue;
         if (ptrn && (!XkbNameMatchesPattern(filename, ptrn)))
             continue;
-        tmp =
-            (char *) uAlloc((head ? strlen(head) : 0) + strlen(filename) + 2);
+        tmpsize = (head ? strlen(head) : 0) + strlen(filename) + 2;
+        tmp = uAlloc(tmpsize);
         if (!tmp)
             continue;
-        sprintf(tmp, "%s%s%s", (head ? head : ""), (head ? "/" : ""),
-                filename);
+        snprintf(tmp, tmpsize, "%s%s%s",
+                 (head ? head : ""), (head ? "/" : ""), filename);
         if (stat(tmp, &sbuf) < 0)
         {
             uFree(tmp);

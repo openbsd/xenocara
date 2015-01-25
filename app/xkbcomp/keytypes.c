@@ -597,7 +597,7 @@ AddPreserve(XkbDescPtr xkb,
     if (!old)
     {
         WSGO1("Couldn't allocate preserve in %s\n", TypeTxt(type));
-        ACTION1("Preserve[%s] lost\n", PreserveIndexTxt(type, xkb, old));
+        ACTION1("Preserve[%s] lost\n", PreserveIndexTxt(type, xkb, new));
         return False;
     }
     *old = *new;
@@ -879,7 +879,7 @@ SetLevelName(KeyTypeInfo * type, ExprDef * arrayNdx, ExprDef * value)
 static Bool
 SetKeyTypeField(KeyTypeInfo * type,
                 XkbDescPtr xkb,
-                char *field,
+                const char *field,
                 ExprDef * arrayNdx, ExprDef * value, KeyTypesInfo * info)
 {
     ExprResult tmp;

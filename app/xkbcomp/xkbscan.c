@@ -24,6 +24,7 @@
 
  ********************************************************/
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <X11/Xos.h>
@@ -37,7 +38,7 @@
 
 unsigned int scanDebug;
 
-FILE *yyin = NULL;
+static FILE *yyin;
 
 static char scanFileBuf[1024] = {0};
 char *scanFile = scanFileBuf;
@@ -269,6 +270,14 @@ tokText(int tok)
 }
 #endif
 
+void
+scan_set_file(FILE *file)
+{
+    readBufLen = 0;
+    readBufPos = 0;
+    yyin = file;
+}
+
 static int
 scanchar(void)
 {
@@ -379,9 +388,9 @@ yyGetString(void)
         if (i < sizeof(scanBuf) - 1)
             scanBuf[i++] = ch;
     }
+    scanBuf[i] = '\0';
     if (ch == '"')
     {
-        scanBuf[i++] = '\0';
         scanStrLine = lineNum;
         return STRING;
     }
@@ -453,13 +462,12 @@ yyGetKeyName(void)
             else
                 return ERROR_TOK;
         }
-
         if (i < sizeof(scanBuf) - 1)
             scanBuf[i++] = ch;
     }
+    scanBuf[i] = '\0';
     if ((ch == '>') && (i < 5))
     {
-        scanBuf[i++] = '\0';
         scanStrLine = lineNum;
         return KEYNAME;
     }
