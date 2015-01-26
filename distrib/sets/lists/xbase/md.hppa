@@ -3,6 +3,7 @@
 ./usr/X11R6/bin/xdriinfo
 ./usr/X11R6/include/EGL/egl.h
 ./usr/X11R6/include/EGL/eglext.h
+./usr/X11R6/include/EGL/eglextchromium.h
 ./usr/X11R6/include/EGL/eglmesaext.h
 ./usr/X11R6/include/EGL/eglplatform.h
 ./usr/X11R6/include/GL/GLwDrawA.h
@@ -10,10 +11,13 @@
 ./usr/X11R6/include/GL/GLwMDrawA.h
 ./usr/X11R6/include/GL/GLwMDrawAP.h
 ./usr/X11R6/include/GL/gl.h
+./usr/X11R6/include/GL/gl_mangle.h
+./usr/X11R6/include/GL/glcorearb.h
 ./usr/X11R6/include/GL/glext.h
 ./usr/X11R6/include/GL/glu.h
 ./usr/X11R6/include/GL/glu_mangle.h
 ./usr/X11R6/include/GL/glx.h
+./usr/X11R6/include/GL/glx_mangle.h
 ./usr/X11R6/include/GL/glxext.h
 ./usr/X11R6/include/GL/internal/dri_interface.h
 ./usr/X11R6/include/GL/osmesa.h
@@ -25,6 +29,7 @@
 ./usr/X11R6/include/GLES2/gl2ext.h
 ./usr/X11R6/include/GLES2/gl2platform.h
 ./usr/X11R6/include/GLES3/gl3.h
+./usr/X11R6/include/GLES3/gl31.h
 ./usr/X11R6/include/GLES3/gl3ext.h
 ./usr/X11R6/include/GLES3/gl3platform.h
 ./usr/X11R6/include/KHR/khrplatform.h
