@@ -51,6 +51,8 @@ extern "C" {
  * @file xcb.h
  */
 
+#define XCB_PACKED __attribute__((__packed__))
+
 /**
  * @defgroup XCB_Core_API XCB Core API
  * @brief Core API of the XCB library.
@@ -317,7 +319,7 @@ typedef struct xcb_special_event xcb_special_event_t;
  */
 xcb_generic_event_t *xcb_poll_for_special_event(xcb_connection_t *c,
                                                 xcb_special_event_t *se);
- 
+
 /**
  * @brief Returns the next event from a special queue, blocking until one arrives
  */
@@ -328,7 +330,6 @@ xcb_generic_event_t *xcb_wait_for_special_event(xcb_connection_t *c,
  */
 typedef struct xcb_extension_t xcb_extension_t;  /**< Opaque structure used as key for xcb_get_extension_data_t. */
 
- 
 /**
  * @brief Listen for a special event
  */
@@ -396,7 +397,7 @@ void xcb_discard_reply(xcb_connection_t *c, unsigned int sequence);
  * The result must not be freed. This storage is managed by the cache
  * itself.
  */
-const xcb_query_extension_reply_t *xcb_get_extension_data(xcb_connection_t *c, xcb_extension_t *ext);
+const struct xcb_query_extension_reply_t *xcb_get_extension_data(xcb_connection_t *c, xcb_extension_t *ext);
 
 /**
  * @brief Prefetch of extension data into the extension cache
@@ -432,7 +433,7 @@ void xcb_prefetch_extension_data(xcb_connection_t *c, xcb_extension_t *ext);
  *
  * The result must not be freed.
  */
-const xcb_setup_t *xcb_get_setup(xcb_connection_t *c);
+const struct xcb_setup_t *xcb_get_setup(xcb_connection_t *c);
 
 /**
  * @brief Access the file descriptor of the connection.
@@ -452,7 +453,8 @@ int xcb_get_file_descriptor(xcb_connection_t *c);
  * Some errors that occur in the context of an xcb_connection_t
  * are unrecoverable. When such an error occurs, the
  * connection is shut down and further operations on the
- * xcb_connection_t have no effect.
+ * xcb_connection_t have no effect, but memory will not be freed until
+ * xcb_disconnect() is called on the xcb_connection_t.
  *
  * @return XCB_CONN_ERROR, because of socket errors, pipe errors or other stream errors.
  * @return XCB_CONN_CLOSED_EXT_NOTSUPPORTED, when extension not supported.
@@ -474,6 +476,11 @@ int xcb_connection_has_error(xcb_connection_t *c);
  * bidirectionally connected to an X server. If the connection
  * should be unauthenticated, @p auth_info must be @c
  * NULL.
+ *
+ * Always returns a non-NULL pointer to a xcb_connection_t, even on failure.
+ * Callers need to use xcb_connection_has_error() to check for failure.
+ * When finished, use xcb_disconnect() to close the connection and free
+ * the structure.
  */
 xcb_connection_t *xcb_connect_to_fd(int fd, xcb_auth_info_t *auth_info);
 
@@ -482,7 +489,7 @@ xcb_connection_t *xcb_connect_to_fd(int fd, xcb_auth_info_t *auth_info);
  * @param c: The connection.
  *
  * Closes the file descriptor and frees all memory associated with the
- * connection @c c.
+ * connection @c c. If @p c is @c NULL, nothing is done.
  */
 void xcb_disconnect(xcb_connection_t *c);
 
@@ -519,6 +526,11 @@ int xcb_parse_display(const char *name, char **host, int *display, int *screen);
  * variable. If a particular screen on that server is preferred, the
  * int pointed to by @p screenp (if not @c NULL) will be set to that
  * screen; otherwise the screen will be set to 0.
+ *
+ * Always returns a non-NULL pointer to a xcb_connection_t, even on failure.
+ * Callers need to use xcb_connection_has_error() to check for failure.
+ * When finished, use xcb_disconnect() to close the connection and free
+ * the structure.
  */
 xcb_connection_t *xcb_connect(const char *displayname, int *screenp);
 
@@ -533,6 +545,11 @@ xcb_connection_t *xcb_connect(const char *displayname, int *screenp);
  * authorization @p auth. If a particular screen on that server is
  * preferred, the int pointed to by @p screenp (if not @c NULL) will
  * be set to that screen; otherwise @p screenp will be set to 0.
+ *
+ * Always returns a non-NULL pointer to a xcb_connection_t, even on failure.
+ * Callers need to use xcb_connection_has_error() to check for failure.
+ * When finished, use xcb_disconnect() to close the connection and free
+ * the structure.
  */
 xcb_connection_t *xcb_connect_to_display_with_auth_info(const char *display, xcb_auth_info_t *auth, int *screen);
 

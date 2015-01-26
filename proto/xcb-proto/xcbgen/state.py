@@ -65,6 +65,8 @@ class Module(object):
         self.output = output
 
         self.imports = []
+        self.direct_imports = []
+        self.import_level = 0
         self.types = {}
         self.events = {}
         self.errors = {}
@@ -93,6 +95,7 @@ class Module(object):
     # Recursively resolve all types
     def resolve(self):
         for (name, item) in self.all:
+            self.pads = 0
             item.resolve(self)
 
     # Call all the output methods
@@ -106,6 +109,8 @@ class Module(object):
 
     # Keeps track of what's been imported so far.
     def add_import(self, name, namespace):
+        if self.import_level == 0:
+            self.direct_imports.append((name, namespace.header))
         self.imports.append((name, namespace.header))
 
     def has_import(self, name):

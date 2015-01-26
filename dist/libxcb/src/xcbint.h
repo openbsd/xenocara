@@ -53,7 +53,7 @@ enum lazy_reply_tag
 
 #define XCB_PAD(i) (-(i) & 3)
 
-#define XCB_SEQUENCE_COMPARE(a,op,b)	((int64_t) ((a) - (b)) op 0)
+#define XCB_SEQUENCE_COMPARE(a,op,b)    ((int64_t) ((a) - (b)) op 0)
 
 #ifndef offsetof
 #define offsetof(type,member) ((size_t) &((type *)0)->member)
@@ -80,7 +80,7 @@ void *_xcb_map_remove(_xcb_map *q, unsigned int key);
 /* xcb_out.c */
 
 #if HAVE_SENDMSG
-#define XCB_MAX_PASS_FD	16
+#define XCB_MAX_PASS_FD 16
 
 typedef struct _xcb_fd {
     int fd[XCB_MAX_PASS_FD];
@@ -194,6 +194,7 @@ void _xcb_ext_destroy(xcb_connection_t *c);
 extern const int error_connection;
 
 struct xcb_connection_t {
+    /* This must be the first field; see _xcb_conn_ret_error(). */
     int has_error;
 
     /* constant data */

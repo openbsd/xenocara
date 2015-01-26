@@ -1,8 +1,10 @@
-#	$OpenBSD: Makefile,v 1.5 2014/04/14 19:20:17 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.6 2015/01/26 21:32:11 matthieu Exp $
 
 DATADIR=	${X11BASE}/share
 PYTHON=		python${PYTHON_VERSION}
 PYTHONDIR=	${X11BASE}/lib/python${PYTHON_VERSION}/site-packages
+
+MANOPTIONS=	-c 'libxcb 1.11' -l 'X Version 11' -s 3
 
 SRCS= \
 	bigreq.c \
@@ -48,10 +50,10 @@ clean:
 .SUFFIXES: .xml .c .h
 
 .xml.c:
-	${PYTHON} ${LIBXCB}/src/c_client.py -p ${PYTHONDIR} $<
+	${PYTHON} ${LIBXCB}/src/c_client.py ${MANOPTIONS} -p ${PYTHONDIR} $<
 
 .xml.h:
-	${PYTHON} ${LIBXCB}/src/c_client.py -p ${PYTHONDIR} $<
+	${PYTHON} ${LIBXCB}/src/c_client.py ${MANOPTIONS} -p ${PYTHONDIR} $<
 
 
 .include <bsd.xorg.mk>

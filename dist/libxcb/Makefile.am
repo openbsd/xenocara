@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS=-I m4
 
-SUBDIRS=src tests doc
+SUBDIRS=src tests doc man
 
 pkgconfigdir = $(libdir)/pkgconfig
 
@@ -86,8 +86,14 @@ pkgconfig_DATA += xcb-xvmc.pc
 endif
 
 
+AM_TESTS_ENVIRONMENT = \
+	AM_SRCDIR=${srcdir}
+
+TESTS=check-pc-requires
+
 EXTRA_DIST = \
 tools/README \
 tools/api_conv.pl \
 tools/constants \
-autogen.sh
+autogen.sh \
+$(TESTS)
