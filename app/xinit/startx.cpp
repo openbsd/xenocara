@@ -193,7 +193,7 @@ if [ x"$server" = x ]; then
     XCOMM the startx session being seen as inactive:
     XCOMM "https://bugzilla.redhat.com/show_bug.cgi?id=806491"
     tty=$(tty)
-    if expr match "$tty" '^/dev/tty[0-9]\+$' > /dev/null; then
+    if expr "$tty" : '/dev/tty[0-9][0-9]*$' > /dev/null; then
         tty_num=$(echo "$tty" | grep -oE '[0-9]+$')
         vtarg="vt$tty_num"
     fi
@@ -217,7 +217,7 @@ fi
 XCOMM if no vt is specified add vtarg (which may be empty)
 have_vtarg="no"
 for i in $serverargs; do
-    if expr match "$i" '^vt[0-9]\+$' > /dev/null; then
+    if expr "$i" : 'vt[0-9][0-9]*$' > /dev/null; then
         have_vtarg="yes"
     fi
 done
