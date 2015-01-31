@@ -487,6 +487,7 @@ typedef enum
    /* The following three are meta instructions */
    OPCODE_ERROR,                /* raise compiled-in error */
    OPCODE_CONTINUE,
+   OPCODE_NOP,                  /* No-op (used for 8-byte alignment */
    OPCODE_END_OF_LIST,
    OPCODE_EXT_0
 } OpCode;
@@ -521,9 +522,6 @@ union gl_dlist_node
    GLenum e;
    GLfloat f;
    GLsizei si;
-#if defined(__LP64__) && !defined(__x86_64__)
-   void *pad;
-#endif
 };
 
 
@@ -554,9 +552,8 @@ save_pointer(union gl_dlist_node *dest, void *src)
    unsigned i;
 
    STATIC_ASSERT(POINTER_DWORDS == 1 || POINTER_DWORDS == 2);
-#if 0
    STATIC_ASSERT(sizeof(union gl_dlist_node) == 4);
-#endif
+
    p.ptr = src;
 
    for (i = 0; i < POINTER_DWORDS; i++)
@@ -1022,13 +1019,16 @@ memdup(const void *src, GLsizei bytes)
  * Allocate space for a display list instruction (opcode + payload space).
  * \param opcode  the instruction opcode (OPCODE_* value)
  * \param bytes   instruction payload size (not counting opcode)
- * \return pointer to allocated memory (the opcode space)
+ * \param align8  does the payload need to be 8-byte aligned?
+ *                This is only relevant in 64-bit environments.
+ * \return pointer to allocated memory (the payload will be at pointer+1)
  */
 static Node *
-dlist_alloc(struct gl_context *ctx, OpCode opcode, GLuint bytes)
+dlist_alloc(struct gl_context *ctx, OpCode opcode, GLuint bytes, bool align8)
 {
    const GLuint numNodes = 1 + (bytes + sizeof(Node) - 1) / sizeof(Node);
    const GLuint contNodes = 1 + POINTER_DWORDS;  /* size of continue info */
+   GLuint nopNode;
    Node *n;
 
    if (opcode < (GLuint) OPCODE_EXT_0) {
@@ -1042,7 +1042,20 @@ dlist_alloc(struct gl_context *ctx, OpCode opcode, GLuint bytes)
       }
    }
 
-   if (ctx->ListState.CurrentPos + numNodes + contNodes > BLOCK_SIZE) {
+   if (sizeof(void *) > sizeof(Node) && align8
+       && ctx->ListState.CurrentPos % 2 == 0) {
+      /* The opcode would get placed at node[0] and the payload would start
+       * at node[1].  But the payload needs to be at an even offset (8-byte
+       * multiple).
+       */
+      nopNode = 1;
+   }
+   else {
+      nopNode = 0;
+   }
+
+   if (ctx->ListState.CurrentPos + nopNode + numNodes + contNodes
+       > BLOCK_SIZE) {
       /* This block is full.  Allocate a new block and chain to it */
       Node *newblock;
       n = ctx->ListState.CurrentBlock + ctx->ListState.CurrentPos;
@@ -1052,13 +1065,34 @@ dlist_alloc(struct gl_context *ctx, OpCode opcode, GLuint bytes)
          _mesa_error(ctx, GL_OUT_OF_MEMORY, "Building display list");
          return NULL;
       }
+
+      /* a fresh block should be 8-byte aligned on 64-bit systems */
+      assert(((GLintptr) newblock) % sizeof(void *) == 0);
+
       save_pointer(&n[1], newblock);
       ctx->ListState.CurrentBlock = newblock;
       ctx->ListState.CurrentPos = 0;
+
+      /* Display list nodes are always 4 bytes.  If we need 8-byte alignment
+       * we have to insert a NOP so that the payload of the real opcode lands
+       * on an even location:
+       *   node[0] = OPCODE_NOP
+       *   node[1] = OPCODE_x;
+       *   node[2] = start of payload
+       */
+      nopNode = sizeof(void *) > sizeof(Node) && align8;
    }
 
    n = ctx->ListState.CurrentBlock + ctx->ListState.CurrentPos;
-   ctx->ListState.CurrentPos += numNodes;
+   if (nopNode) {
+      assert(ctx->ListState.CurrentPos % 2 == 0); /* even value */
+      n[0].opcode = OPCODE_NOP;
+      n++;
+      /* The "real" opcode will now be at an odd location and the payload
+       * will be at an even location.
+       */
+   }
+   ctx->ListState.CurrentPos += nopNode + numNodes;
 
    n[0].opcode = opcode;
 
@@ -1079,7 +1113,22 @@ dlist_alloc(struct gl_context *ctx, OpCode opcode, GLuint bytes)
 void *
 _mesa_dlist_alloc(struct gl_context *ctx, GLuint opcode, GLuint bytes)
 {
-   Node *n = dlist_alloc(ctx, (OpCode) opcode, bytes);
+   Node *n = dlist_alloc(ctx, (OpCode) opcode, bytes, false);
+   if (n)
+      return n + 1;  /* return pointer to payload area, after opcode */
+   else
+      return NULL;
+}
+
+
+/**
+ * Same as _mesa_dlist_alloc(), but return a pointer which is 8-byte
+ * aligned in 64-bit environments, 4-byte aligned otherwise.
+ */
+void *
+_mesa_dlist_alloc_aligned(struct gl_context *ctx, GLuint opcode, GLuint bytes)
+{
+   Node *n = dlist_alloc(ctx, (OpCode) opcode, bytes, true);
    if (n)
       return n + 1;  /* return pointer to payload area, after opcode */
    else
@@ -1129,7 +1178,7 @@ _mesa_dlist_alloc_opcode(struct gl_context *ctx,
 static inline Node *
 alloc_instruction(struct gl_context *ctx, OpCode opcode, GLuint nparams)
 {
-   return dlist_alloc(ctx, opcode, nparams * sizeof(Node));
+   return dlist_alloc(ctx, opcode, nparams * sizeof(Node), false);
 }
 
 
@@ -8907,6 +8956,9 @@ execute_list(struct gl_context *ctx, GLuint list)
          case OPCODE_CONTINUE:
             n = (Node *) get_pointer(&n[1]);
             break;
+         case OPCODE_NOP:
+            /* no-op */
+            break;
          case OPCODE_END_OF_LIST:
             done = GL_TRUE;
             break;
@@ -9946,6 +9998,9 @@ print_list(struct gl_context *ctx, GLuint list)
             printf("DISPLAY-LIST-CONTINUE\n");
             n = (Node *) get_pointer(&n[1]);
             break;
+         case OPCODE_NOP:
+            printf("NOP\n");
+            break;
          case OPCODE_END_OF_LIST:
             printf("END-LIST %u\n", list);
             done = GL_TRUE;
@@ -10092,6 +10147,8 @@ _mesa_init_display_list(struct gl_context *ctx)
    ctx->List.ListBase = 0;
 
    save_vtxfmt_init(&ctx->ListState.ListVtxfmt);
+
+   InstSize[OPCODE_NOP] = 1;
 }
 
 
