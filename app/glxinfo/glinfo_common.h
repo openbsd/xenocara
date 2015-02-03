@@ -63,6 +63,54 @@ struct bit_info
 };
 
 
+typedef enum
+{
+   Normal,
+   Wide,
+   Verbose
+} InfoMode;
+
+
+struct options
+{
+   InfoMode mode;
+   GLboolean findBest;
+   GLboolean limits;
+   GLboolean singleLine;
+   /* GLX only */
+   char *displayName;
+   GLboolean allowDirect;
+};
+
+
+/** list of known OpenGL versions */
+static const struct { int major, minor; } gl_versions[] = {
+   {4, 5},
+   {4, 4},
+   {4, 3},
+   {4, 2},
+   {4, 1},
+   {4, 0},
+
+   {3, 3},
+   {3, 2},
+   {3, 1},
+   {3, 0},
+
+   {2, 1},
+   {2, 0},
+
+   {1, 5},
+   {1, 4},
+   {1, 3},
+   {1, 2},
+   {1, 1},
+   {1, 0},
+
+   {0, 0} /* end of list */
+};
+
+
 void
 print_extension_list(const char *ext, GLboolean singleLine);
 
@@ -84,6 +132,10 @@ profile_mask_string(int mask);
 
 const char *
 context_flags_string(int mask);
+
+
+void
+parse_args(int argc, char *argv[], struct options *options);
 
 
 #endif /* GLINFO_COMMON_H */

@@ -1,3 +1,4 @@
+.\" $OpenBSD: glxinfo.1,v 1.2 2015/02/03 03:17:20 jsg Exp $
 .\" $TOG: xdpyinfo.man /main/22 1998/02/09 13:57:10 kaleb $
 .\" Copyright 1988, 1989, 1994, 1998  The Open Group
 .\" 
@@ -25,55 +26,54 @@
 .\"
 .\" $XFree86: xc/programs/glxinfo/glxinfo.man,v 1.5 2001/12/14 20:00:47 dawes Exp $
 .\"
-.TH GLXINFO 1 __vendorversion__
-.SH NAME
-glxinfo \- display info about a GLX extension and OpenGL renderer.
-.SH SYNOPSIS
-.B "glxinfo"
-[\-t]
-[\-v]
-[\-b]
-[\-display \fIdisplayname\fP]
-.SH DESCRIPTION
-.PP
-.I glxinfo
+.Dd $Mdocdate: February 3 2015 $
+.Dt GLXINFO 1
+.Os
+.Sh NAME
+.Nm glxinfo
+.Nd display info about a GLX extension and OpenGL renderer.
+.Sh SYNOPSIS
+.Nm glxinfo
+.Op Fl bhilstv
+.Op Fl display Ar displayname
+.Sh DESCRIPTION
+.Nm
 lists information about the GLX extension, OpenGL capable visuals, and the
 OpenGL renderer on an X server. The GLX and renderer info includes the version
-and extension attributes. The visual info lists the GLX visual attributes 
+and extension attributes. The visual info lists the GLX visual attributes
 available for each OpenGL capable visual (e.g. whether the visual is double
 buffered, the component sizes, Z-buffering depth, etc).
-.PP
+.Pp
 Command line options include:
-.TP 8
-.B \-t
+.Bl -tag -width Ds
+.It Fl b
+Find the 'best' visual and print its number.
+.It Fl h
+Print a short help message.
+.It Fl i
+Force an indirect rendering context.
+.It Fl l
+Print interesting OpenGL limits.
+.It Fl s
+Print a single extension per line.
+.It Fl t
 By default the visual info is presented in a concise 80 character wide
 tabular format. The -t option directs glxinfo to produce a wider, more readable
 tabular format.
-.TP 8
-.B \-v
+.It Fl v
 Directs glxinfo to generate a verbose format output style for
 the visual list similar to the info of xdpyinfo.
-.TP 8
-.B \-b
-Print the ID of the "best" visual on screen 0.
-.TP 8
-.B \-l
-Print interesting OpenGL limits.
-.TP 8
-.B \-i
-Use indirect rendering connection only.
-.TP 8
-.BI "\-display " "displayname"
+.It Fl display Ar displayname
 Specify the display to query.
-.PP
-.SH ENVIRONMENT
-.PP
-.TP 8
-.B DISPLAY
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width Ds -compact
+.It Ev DISPLAY
 To get the default host, display number, and screen.
-.SH "SEE ALSO"
+.El
+.Sh "SEE ALSO"
 xdpyinfo(1)
-.SH AUTHOR
+.Sh AUTHOR
 Brian Paul
 .br
-Modifications for __xservername__ added by Mark Paton
+Modifications for XFree86 added by Mark Paton

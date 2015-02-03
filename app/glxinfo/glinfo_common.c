@@ -573,6 +573,11 @@ print_limits(const char *extensions, const char *oglstring, int version,
       { 1, GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT, "GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT", "GL_ARB_texture_buffer_object" },
       { 1, GL_MAX_TEXTURE_BUFFER_SIZE, "GL_MAX_TEXTURE_BUFFER_SIZE", "GL_ARB_texture_buffer_object" },
 #endif
+#if defined (GL_ARB_texture_multisample)
+      { 1, GL_MAX_COLOR_TEXTURE_SAMPLES, "GL_MAX_COLOR_TEXTURE_SAMPLES", "GL_ARB_texture_multisample" },
+      { 1, GL_MAX_DEPTH_TEXTURE_SAMPLES, "GL_MAX_DEPTH_TEXTURE_SAMPLES", "GL_ARB_texture_multisample" },
+      { 1, GL_MAX_INTEGER_SAMPLES, "GL_MAX_INTEGER_SAMPLES", "GL_ARB_texture_multisample" },
+#endif
 #if defined (GL_ARB_uniform_buffer_object)
       { 1, GL_MAX_VERTEX_UNIFORM_BLOCKS, "GL_MAX_VERTEX_UNIFORM_BLOCKS", "GL_ARB_uniform_buffer_object" },
       { 1, GL_MAX_FRAGMENT_UNIFORM_BLOCKS, "GL_MAX_FRAGMENT_UNIFORM_BLOCKS", "GL_ARB_uniform_buffer_object" },
@@ -718,3 +723,71 @@ context_flags_string(int mask)
 }
 
 
+static void
+usage(void)
+{
+#ifdef _WIN32
+   printf("Usage: wglinfo [-v] [-t] [-h] [-b] [-l] [-s]\n");
+#else
+   printf("Usage: glxinfo [-v] [-t] [-h] [-b] [-l] [-s] [-i] [-display <dname>]\n");
+   printf("\t-display <dname>: Print GLX visuals on specified server.\n");
+   printf("\t-i: Force an indirect rendering context.\n");
+#endif
+   printf("\t-v: Print visuals info in verbose form.\n");
+   printf("\t-t: Print verbose table.\n");
+   printf("\t-h: This information.\n");
+   printf("\t-b: Find the 'best' visual and print its number.\n");
+   printf("\t-l: Print interesting OpenGL limits.\n");
+   printf("\t-s: Print a single extension per line.\n");
+}
+
+
+void
+parse_args(int argc, char *argv[], struct options *options)
+{
+   int i;
+
+   options->mode = Normal;
+   options->findBest = GL_FALSE;
+   options->limits = GL_FALSE;
+   options->singleLine = GL_FALSE;
+   options->displayName = NULL;
+   options->allowDirect = GL_TRUE;
+
+   for (i = 1; i < argc; i++) {
+#ifndef _WIN32
+      if (strcmp(argv[i], "-display") == 0 && i + 1 < argc) {
+         options->displayName = argv[i + 1];
+         i++;
+      }
+      else if (strcmp(argv[i], "-i") == 0) {
+         options->allowDirect = GL_FALSE;
+      }
+      else
+#endif
+      if (strcmp(argv[i], "-t") == 0) {
+         options->mode = Wide;
+      }
+      else if (strcmp(argv[i], "-v") == 0) {
+         options->mode = Verbose;
+      }
+      else if (strcmp(argv[i], "-b") == 0) {
+         options->findBest = GL_TRUE;
+      }
+      else if (strcmp(argv[i], "-l") == 0) {
+         options->limits = GL_TRUE;
+      }
+      else if (strcmp(argv[i], "-h") == 0) {
+         usage();
+         exit(0);
+      }
+      else if(strcmp(argv[i], "-s") == 0) {
+         options->singleLine = GL_TRUE;
+      }
+      else {
+         printf("Unknown option `%s'\n", argv[i]);
+         usage();
+         exit(0);
+      }
+   }
+}

@@ -63,13 +63,6 @@
 #define GLX_COLOR_INDEX_BIT		0x00000002
 #endif
 
-typedef enum
-{
-   Normal,
-   Wide,
-   Verbose
-} InfoMode;
-
 
 struct visual_attribs
 {
@@ -109,30 +102,6 @@ struct visual_attribs
 };
 
    
-/** list of known OpenGL versions */
-static const struct { int major, minor; } gl_versions[] = {
-   {1, 0},
-   {1, 1},
-   {1, 2},
-   {1, 3},
-   {1, 4},
-   {1, 5},
-   {2, 0},
-   {2, 1},
-   {3, 0},
-   {3, 1},
-   {3, 2},
-   {3, 3},
-   {4, 0},
-   {4, 1},
-   {4, 2},
-   {4, 3},
-   {4, 4},
-   {0, 0} /* end of list */
-};
-
-#define NUM_GL_VERSIONS ELEMENTS(gl_versions)
-
 /**
  * Version of the context that was created
  *
@@ -299,7 +268,7 @@ create_context_with_config(Display *dpy, GLXFBConfig config,
        * GL that we're aware of.  If we don't specify the version
        */
       int i;
-      for (i = NUM_GL_VERSIONS - 2; i > 0 ; i--) {
+      for (i = 0; gl_versions[i].major > 0; i++) {
           /* don't bother below GL 3.0 */
           if (gl_versions[i].major == 3 &&
               gl_versions[i].minor == 0)
@@ -370,6 +339,53 @@ choose_xvisinfo(Display *dpy, int scrnum)
       visinfo = glXChooseVisual(dpy, scrnum, attribDouble);
 
    return visinfo;
+}
+
+
+static void
+query_renderer(void)
+{
+#ifdef GLX_MESA_query_renderer
+    PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC queryInteger;
+    PFNGLXQUERYCURRENTRENDERERSTRINGMESAPROC queryString;
+    unsigned int v[3];
+
+    queryInteger = (PFNGLXQUERYCURRENTRENDERERINTEGERMESAPROC)
+	glXGetProcAddressARB((const GLubyte *)
+			     "glXQueryCurrentRendererIntegerMESA");
+    queryString = (PFNGLXQUERYCURRENTRENDERERSTRINGMESAPROC)
+	glXGetProcAddressARB((const GLubyte *)
+			     "glXQueryCurrentRendererStringMESA");
+
+    printf("Extended renderer info (GLX_MESA_query_renderer):\n");
+    queryInteger(GLX_RENDERER_VENDOR_ID_MESA, v);
+    printf("    Vendor: %s (0x%x)\n",
+	   queryString(GLX_RENDERER_VENDOR_ID_MESA), *v);
+    queryInteger(GLX_RENDERER_DEVICE_ID_MESA, v);
+    printf("    Device: %s (0x%x)\n",
+	   queryString(GLX_RENDERER_DEVICE_ID_MESA), *v);
+    queryInteger(GLX_RENDERER_VERSION_MESA, v);
+    printf("    Version: %d.%d.%d\n", v[0], v[1], v[2]);
+    queryInteger(GLX_RENDERER_ACCELERATED_MESA, v);
+    printf("    Accelerated: %s\n", *v ? "yes" : "no");
+    queryInteger(GLX_RENDERER_VIDEO_MEMORY_MESA, v);
+    printf("    Video memory: %dMB\n", *v);
+    queryInteger(GLX_RENDERER_UNIFIED_MEMORY_ARCHITECTURE_MESA, v);
+    printf("    Unified memory: %s\n", *v ? "yes" : "no");
+    queryInteger(GLX_RENDERER_PREFERRED_PROFILE_MESA, v);
+    printf("    Preferred profile: %s (0x%x)\n",
+	   *v == GLX_CONTEXT_CORE_PROFILE_BIT_ARB ? "core" :
+	   *v == GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB ? "compat" :
+	   "unknown", *v);
+    queryInteger(GLX_RENDERER_OPENGL_CORE_PROFILE_VERSION_MESA, v);
+    printf("    Max core profile version: %d.%d\n", v[0], v[1]);
+    queryInteger(GLX_RENDERER_OPENGL_COMPATIBILITY_PROFILE_VERSION_MESA, v);
+    printf("    Max compat profile version: %d.%d\n", v[0], v[1]);
+    queryInteger(GLX_RENDERER_OPENGL_ES_PROFILE_VERSION_MESA, v);
+    printf("    Max GLES1 profile version: %d.%d\n", v[0], v[1]);
+    queryInteger(GLX_RENDERER_OPENGL_ES2_PROFILE_VERSION_MESA, v);
+    printf("    Max GLES[23] profile version: %d.%d\n", v[0], v[1]);
+#endif
 }
 
 
@@ -524,6 +540,8 @@ print_screen_info(Display *dpy, int scrnum, Bool allowDirect,
          printf("GLX version: %u.%u\n", glxVersionMajor, glxVersionMinor);
          printf("GLX extensions:\n");
          print_extension_list(glxExtensions, singleLine);
+         if (strstr(glxExtensions, "GLX_MESA_query_renderer"))
+	    query_renderer();
          printf("OpenGL vendor string: %s\n", glVendor);
          printf("OpenGL renderer string: %s\n", glRenderer);
       } else
@@ -1204,76 +1222,24 @@ find_best_visual(Display *dpy, int scrnum)
 }
 
 
-static void
-usage(void)
-{
-   printf("Usage: glxinfo [-v] [-t] [-h] [-i] [-b] [-s] [-display <dname>]\n");
-   printf("\t-v: Print visuals info in verbose form.\n");
-   printf("\t-t: Print verbose table.\n");
-   printf("\t-display <dname>: Print GLX visuals on specified server.\n");
-   printf("\t-h: This information.\n");
-   printf("\t-i: Force an indirect rendering context.\n");
-   printf("\t-b: Find the 'best' visual and print its number.\n");
-   printf("\t-l: Print interesting OpenGL limits.\n");
-   printf("\t-s: Print a single extension per line.\n");
-}
-
-
 int
 main(int argc, char *argv[])
 {
-   char *displayName = NULL;
    Display *dpy;
    int numScreens, scrnum;
-   InfoMode mode = Normal;
-   Bool findBest = False;
-   Bool limits = False;
-   Bool allowDirect = True;
-   Bool singleLine = False;
+   struct options opts;
    Bool coreWorked;
-   int i;
 
-   for (i = 1; i < argc; i++) {
-      if (strcmp(argv[i], "-display") == 0 && i + 1 < argc) {
-         displayName = argv[i + 1];
-         i++;
-      }
-      else if (strcmp(argv[i], "-t") == 0) {
-         mode = Wide;
-      }
-      else if (strcmp(argv[i], "-v") == 0) {
-         mode = Verbose;
-      }
-      else if (strcmp(argv[i], "-b") == 0) {
-         findBest = True;
-      }
-      else if (strcmp(argv[i], "-i") == 0) {
-         allowDirect = False;
-      }
-      else if (strcmp(argv[i], "-l") == 0) {
-         limits = True;
-      }
-      else if (strcmp(argv[i], "-h") == 0) {
-         usage();
-         return 0;
-      }
-      else if (strcmp(argv[i], "-s") == 0) {
-         singleLine = True;
-      }
-      else {
-         printf("Unknown option `%s'\n", argv[i]);
-         usage();
-         return 0;
-      }
-   }
+   parse_args(argc, argv, &opts);
 
-   dpy = XOpenDisplay(displayName);
+   dpy = XOpenDisplay(opts.displayName);
    if (!dpy) {
-      fprintf(stderr, "Error: unable to open display %s\n", XDisplayName(displayName));
+      fprintf(stderr, "Error: unable to open display %s\n",
+              XDisplayName(opts.displayName));
       return -1;
    }
 
-   if (findBest) {
+   if (opts.findBest) {
       int b;
       mesa_hack(dpy, 0);
       b = find_best_visual(dpy, 0);
@@ -1284,14 +1250,18 @@ main(int argc, char *argv[])
       print_display_info(dpy);
       for (scrnum = 0; scrnum < numScreens; scrnum++) {
          mesa_hack(dpy, scrnum);
-         coreWorked = print_screen_info(dpy, scrnum, allowDirect, True, False, limits, singleLine, False);
-         print_screen_info(dpy, scrnum, allowDirect, False, False, limits, singleLine, coreWorked);
-         print_screen_info(dpy, scrnum, allowDirect, False, True, False, singleLine, True);
+         coreWorked = print_screen_info(dpy, scrnum, opts.allowDirect,
+                                        True, False, opts.limits,
+                                        opts.singleLine, False);
+         print_screen_info(dpy, scrnum, opts.allowDirect, False, False,
+                           opts.limits, opts.singleLine, coreWorked);
+         print_screen_info(dpy, scrnum, opts.allowDirect, False, True, False,
+                           opts.singleLine, True);
 
          printf("\n");
-         print_visual_info(dpy, scrnum, mode);
+         print_visual_info(dpy, scrnum, opts.mode);
 #ifdef GLX_VERSION_1_3
-         print_fbconfig_info(dpy, scrnum, mode);
+         print_fbconfig_info(dpy, scrnum, opts.mode);
 #endif
          if (scrnum + 1 < numScreens)
             printf("\n\n");
