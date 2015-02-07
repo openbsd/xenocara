@@ -26,15 +26,18 @@
  * Authors:
  *      Jérôme Glisse <jglisse@redhat.com>
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <stdbool.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/ioctl.h>
 #include "drm.h"
+#include "libdrm.h"
 #include "xf86drm.h"
 #include "radeon_drm.h"
 #include "radeon_surface.h"
@@ -363,6 +366,8 @@ static int r6_surface_init_2d(struct radeon_surface_manager *surf_man,
     xalign = (surf_man->hw_info.group_bytes * surf_man->hw_info.num_banks) /
              (tilew * surf->bpe * surf->nsamples);
     xalign = MAX2(tilew * surf_man->hw_info.num_banks, xalign);
+    if (surf->flags & RADEON_SURF_FMASK)
+	xalign = MAX2(128, xalign);
     yalign = tilew * surf_man->hw_info.num_pipes;
     if (surf->flags & RADEON_SURF_SCANOUT) {
         xalign = MAX2((surf->bpe == 1) ? 64 : 32, xalign);
@@ -592,7 +597,7 @@ static void eg_surf_minify(struct radeon_surface *surf,
     mtile_ps = (mtile_pr * surflevel->nblk_y) / mtileh;
 
     surflevel->offset = offset;
-    surflevel->pitch_bytes = surflevel->nblk_x * bpe * slice_pt;
+    surflevel->pitch_bytes = surflevel->nblk_x * bpe * surf->nsamples;
     surflevel->slice_size = mtile_ps * mtileb * slice_pt;
 
     surf->bo_size = offset + surflevel->slice_size * surflevel->nblk_z * surf->array_size;
@@ -1307,7 +1312,7 @@ static int si_surface_sanity(struct radeon_surface_manager *surf_man,
         /* default value */
         surf->mtilea = 1;
         surf->bankw = 1;
-        surf->bankw = 1;
+        surf->bankh = 1;
         surf->tile_split = 64;
         surf->stencil_tile_split = 64;
     }
@@ -1495,7 +1500,7 @@ static void si_surf_minify_2d(struct radeon_surface *surf,
     /* macro tile per slice */
     mtile_ps = (mtile_pr * surflevel->nblk_y) / yalign;
     surflevel->offset = offset;
-    surflevel->pitch_bytes = surflevel->nblk_x * bpe * slice_pt;
+    surflevel->pitch_bytes = surflevel->nblk_x * bpe * surf->nsamples;
     surflevel->slice_size = mtile_ps * mtileb * slice_pt;
 
     surf->bo_size = offset + surflevel->slice_size * surflevel->nblk_z * surf->array_size;
@@ -2134,7 +2139,7 @@ static int cik_surface_sanity(struct radeon_surface_manager *surf_man,
         /* default value */
         surf->mtilea = 1;
         surf->bankw = 1;
-        surf->bankw = 1;
+        surf->bankh = 1;
         surf->tile_split = 64;
         surf->stencil_tile_split = 64;
     }
@@ -2395,7 +2400,8 @@ static int cik_surface_best(struct radeon_surface_manager *surf_man,
 /* ===========================================================================
  * public API
  */
-struct radeon_surface_manager *radeon_surface_manager_new(int fd)
+drm_public struct radeon_surface_manager *
+radeon_surface_manager_new(int fd)
 {
     struct radeon_surface_manager *surf_man;
 
@@ -2443,7 +2449,8 @@ out_err:
     return NULL;
 }
 
-void radeon_surface_manager_free(struct radeon_surface_manager *surf_man)
+drm_public void
+radeon_surface_manager_free(struct radeon_surface_manager *surf_man)
 {
     free(surf_man);
 }
@@ -2515,8 +2522,9 @@ static int radeon_surface_sanity(struct radeon_surface_manager *surf_man,
     return 0;
 }
 
-int radeon_surface_init(struct radeon_surface_manager *surf_man,
-                        struct radeon_surface *surf)
+drm_public int
+radeon_surface_init(struct radeon_surface_manager *surf_man,
+                    struct radeon_surface *surf)
 {
     unsigned mode, type;
     int r;
@@ -2531,8 +2539,9 @@ int radeon_surface_init(struct radeon_surface_manager *surf_man,
     return surf_man->surface_init(surf_man, surf);
 }
 
-int radeon_surface_best(struct radeon_surface_manager *surf_man,
-                        struct radeon_surface *surf)
+drm_public int
+radeon_surface_best(struct radeon_surface_manager *surf_man,
+                    struct radeon_surface *surf)
 {
     unsigned mode, type;
     int r;

@@ -29,12 +29,14 @@
  *      Nicolai Haehnle <prefect_@gmx.net>
  *      Jérôme Glisse <glisse@freedesktop.org>
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include <sys/mman.h>
 #include <sys/ioctl.h>
 #include "radeon_cs.h"
 #include "radeon_cs_int.h"
@@ -42,6 +44,7 @@
 #include "radeon_cs_gem.h"
 #include "radeon_bo_gem.h"
 #include "drm.h"
+#include "libdrm.h"
 #include "xf86drm.h"
 #include "xf86atomic.h"
 #include "radeon_drm.h"
@@ -533,7 +536,7 @@ static int radeon_get_device_id(int fd, uint32_t *device_id)
     return r;
 }
 
-struct radeon_cs_manager *radeon_cs_manager_gem_ctor(int fd)
+drm_public struct radeon_cs_manager *radeon_cs_manager_gem_ctor(int fd)
 {
     struct radeon_cs_manager_gem *csm;
 
@@ -547,7 +550,7 @@ struct radeon_cs_manager *radeon_cs_manager_gem_ctor(int fd)
     return &csm->base;
 }
 
-void radeon_cs_manager_gem_dtor(struct radeon_cs_manager *csm)
+drm_public void radeon_cs_manager_gem_dtor(struct radeon_cs_manager *csm)
 {
     free(csm);
 }

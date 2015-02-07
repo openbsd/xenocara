@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2013/08/08 10:52:48 jsg Exp $
+# $OpenBSD: Makefile,v 1.11 2015/02/07 01:34:35 jsg Exp $
 .include <bsd.xconf.mk>
 .include "${.CURDIR}/Makefile.inc"
 
@@ -15,7 +15,8 @@ INCSDIR=	${X11BASE}/include/
 CPPFLAGS+=	-I${.CURDIR} \
 		-I${X11BASE}/include \
 		-I/usr/include/dev/pci/drm \
-		-DX_PRIVSEP
+		-DX_PRIVSEP \
+		-DHAVE_VISIBILITY
 
 INCS= 		xf86drm.h	\
 		xf86drmMode.h
