@@ -132,12 +132,6 @@ WSConsReadHwState(InputInfoPtr pInfo,
     struct wscons_event event;
     Bool v;
 
-    /* Reset cumulative values if buttons were not previously pressed */
-    if (!hw->left && !hw->right && !hw->middle) {
-        hw->cumulative_dx = hw->x;
-        hw->cumulative_dy = hw->y;
-    }
-
     while (WSConsReadEvent(pInfo, &event)) {
         switch (event.type) {
         case WSCONS_EVENT_MOUSE_UP:
@@ -187,9 +181,11 @@ WSConsReadHwState(InputInfoPtr pInfo,
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
             hw->x = event.value;
+            hw->cumulative_dx = hw->x;
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
             hw->y = priv->maxy - event.value + priv->miny;
+            hw->cumulative_dy = hw->y;
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
             hw->z = event.value;
@@ -218,6 +214,10 @@ WSConsReadHwState(InputInfoPtr pInfo,
             }
             break;
         case WSCONS_EVENT_SYNC:
+            if (hw->z == 0) {
+                hw->fingerWidth = 0;
+                hw->numFingers = 0;
+            }
             hw->millis = 1000 * event.time.tv_sec + event.time.tv_nsec / 1000000;
             SynapticsCopyHwState(hwRet, hw);
             return TRUE;
