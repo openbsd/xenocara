@@ -1143,7 +1143,7 @@ ProcShmAttachFd(ClientPtr client)
     shmdesc->is_fd = TRUE;
     shmdesc->addr = mmap(NULL, statb.st_size,
                          stuff->readOnly ? PROT_READ : PROT_READ|PROT_WRITE,
-                         MAP_SHARED,
+                         MAP_SHARED|__MAP_NOFAULT,
                          fd, 0);
 
     close(fd);
@@ -1234,7 +1234,7 @@ ProcShmCreateSegment(ClientPtr client)
     shmdesc->is_fd = TRUE;
     shmdesc->addr = mmap(NULL, stuff->size,
                          stuff->readOnly ? PROT_READ : PROT_READ|PROT_WRITE,
-                         MAP_SHARED,
+                         MAP_SHARED|__MAP_NOFAULT,
                          fd, 0);
 
     if ((shmdesc->addr == ((char *) -1))) {
