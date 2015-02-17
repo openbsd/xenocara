@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.60 2013/11/02 13:17:32 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.61 2015/02/17 08:21:14 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -466,7 +466,7 @@ wsReadEvent(InputInfoPtr pInfo, struct wscons_event *event)
 	len = read(pInfo->fd, event, sizeof(struct wscons_event));
 	if (len <= 0) {
 		if (errno != EAGAIN)
-			xf86IDrvMsg(pInfo, X_ERROR, "read error %s\n",
+			xf86IDrvMsgVerb(pInfo, X_ERROR, 4, "read error %s\n",
 			    strerror(errno));
 		rc = FALSE;
 	} else if (len != sizeof(struct wscons_event)) {
