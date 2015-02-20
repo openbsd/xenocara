@@ -34,9 +34,8 @@
 
 #include <stdio.h>
 
-#include "radeon/drm/radeon_winsys.h"
+#include "../../winsys/radeon/drm/radeon_winsys.h"
 
-#include "util/u_blitter.h"
 #include "util/u_double_list.h"
 #include "util/u_range.h"
 #include "util/u_slab.h"
@@ -68,19 +67,12 @@
 #define R600_CONTEXT_FLUSH_AND_INV_DB_META	(1 << 11)
 #define R600_CONTEXT_FLUSH_AND_INV_DB		(1 << 12)
 #define R600_CONTEXT_FLUSH_AND_INV_CB		(1 << 13)
-#define R600_CONTEXT_FLUSH_WITH_INV_L2		(1 << 14)
 /* engine synchronization */
 #define R600_CONTEXT_PS_PARTIAL_FLUSH		(1 << 16)
 #define R600_CONTEXT_WAIT_3D_IDLE		(1 << 17)
 #define R600_CONTEXT_WAIT_CP_DMA_IDLE		(1 << 18)
 #define R600_CONTEXT_VGT_FLUSH			(1 << 19)
 #define R600_CONTEXT_VGT_STREAMOUT_SYNC		(1 << 20)
-#define R600_CONTEXT_CS_PARTIAL_FLUSH		(1 << 21)
-/* other flags */
-#define R600_CONTEXT_FLAG_COMPUTE		(1u << 31)
-
-/* special primitive types */
-#define R600_PRIM_RECTANGLE_LIST	PIPE_PRIM_MAX
 
 /* Debug flags. */
 /* logging */
@@ -89,21 +81,18 @@
 #define DBG_COMPUTE		(1 << 2)
 #define DBG_VM			(1 << 3)
 #define DBG_TRACE_CS		(1 << 4)
-/* shader logging */
-#define DBG_FS			(1 << 5)
-#define DBG_VS			(1 << 6)
-#define DBG_GS			(1 << 7)
-#define DBG_PS			(1 << 8)
-#define DBG_CS			(1 << 9)
 /* features */
-#define DBG_NO_ASYNC_DMA	(1 << 10)
-#define DBG_NO_HYPERZ		(1 << 11)
-#define DBG_NO_DISCARD_RANGE	(1 << 12)
-#define DBG_NO_2D_TILING	(1 << 13)
-#define DBG_NO_TILING		(1 << 14)
-#define DBG_SWITCH_ON_EOP	(1 << 15)
-#define DBG_FORCE_DMA		(1 << 16)
-/* The maximum allowed bit is 20. */
+#define DBG_NO_ASYNC_DMA	(1 << 5)
+/* shaders */
+#define DBG_FS			(1 << 8)
+#define DBG_VS			(1 << 9)
+#define DBG_GS			(1 << 10)
+#define DBG_PS			(1 << 11)
+#define DBG_CS			(1 << 12)
+/* features */
+#define DBG_HYPERZ		(1 << 13)
+#define DBG_NO_DISCARD_RANGE	(1 << 14)
+/* The maximum allowed bit is 15. */
 
 #define R600_MAP_BUFFER_ALIGNMENT 64
 
@@ -120,19 +109,6 @@ struct radeon_shader_binary {
 	unsigned char *config;
 	unsigned config_size;
 
-	/** The number of bytes of config information for each global symbol.
-	 */
-	unsigned config_size_per_symbol;
-
-	/** Constant data accessed by the shader.  This will be uploaded
-	 * into a constant buffer. */
-	unsigned char *rodata;
-	unsigned rodata_size;
-
-	/** List of symbol offsets for the shader */
-	uint64_t *global_symbol_offsets;
-	unsigned global_symbol_count;
-
 	/** Set to 1 if the disassembly for this binary has been dumped to
 	 *  stderr. */
 	int disassembled;
@@ -144,7 +120,6 @@ struct r600_resource {
 	/* Winsys objects. */
 	struct pb_buffer		*buf;
 	struct radeon_winsys_cs_handle	*cs_buf;
-	uint64_t			gpu_address;
 
 	/* Resource state. */
 	enum radeon_bo_domain		domains;
@@ -204,7 +179,6 @@ struct r600_texture {
 
 	/* Depth buffer compression and fast clear. */
 	struct r600_resource		*htile_buffer;
-	bool				depth_cleared; /* if it was cleared at least once */
 	float				depth_clear_value;
 
 	bool				non_disp_tiling; /* R600-Cayman only */
@@ -384,20 +358,6 @@ struct r600_common_context {
 	boolean				saved_render_cond_cond;
 	unsigned			saved_render_cond_mode;
 
-	/* MSAA sample locations.
-	 * The first index is the sample index.
-	 * The second index is the coordinate: X, Y. */
-	float				sample_locations_1x[1][2];
-	float				sample_locations_2x[2][2];
-	float				sample_locations_4x[4][2];
-	float				sample_locations_8x[8][2];
-	float				sample_locations_16x[16][2];
-
-	/* The list of all texture buffer objects in this context.
-	 * This list is walked when a buffer is invalidated/reallocated and
-	 * the GPU addresses are updated. */
-	struct list_head		texture_buffers;
-
 	/* Copy one resource to another using async DMA. */
 	void (*dma_copy)(struct pipe_context *ctx,
 			 struct pipe_resource *dst,
@@ -445,10 +405,6 @@ struct pipe_resource *r600_buffer_create(struct pipe_screen *screen,
 					 unsigned alignment);
 
 /* r600_common_pipe.c */
-void r600_draw_rectangle(struct blitter_context *blitter,
-			 int x1, int y1, int x2, int y2, float depth,
-			 enum blitter_attrib_type type,
-			 const union pipe_color_union *attrib);
 bool r600_common_screen_init(struct r600_common_screen *rscreen,
 			     struct radeon_winsys *ws);
 void r600_destroy_common_screen(struct r600_common_screen *rscreen);
@@ -517,10 +473,7 @@ extern const uint32_t eg_sample_locs_4x[4];
 extern const unsigned eg_max_dist_4x;
 void cayman_get_sample_position(struct pipe_context *ctx, unsigned sample_count,
 				unsigned sample_index, float *out_value);
-void cayman_init_msaa(struct pipe_context *ctx);
-void cayman_emit_msaa_sample_locs(struct radeon_winsys_cs *cs, int nr_samples);
-void cayman_emit_msaa_config(struct radeon_winsys_cs *cs, int nr_samples,
-			     int ps_iter_samples);
+void cayman_emit_msaa_state(struct radeon_winsys_cs *cs, int nr_samples);
 
 
 /* Inline helpers. */
@@ -545,11 +498,6 @@ static inline unsigned r600_tex_aniso_filter(unsigned filter)
 	if (filter <= 8)   return 3;
 	 /* else */        return 4;
 }
-
-#define COMPUTE_DBG(rscreen, fmt, args...) \
-	do { \
-		if ((rscreen->b.debug_flags & DBG_COMPUTE)) fprintf(stderr, fmt, ##args); \
-	} while (0);
 
 #define R600_ERR(fmt, args...) \
 	fprintf(stderr, "EE %s:%d %s - "fmt, __FILE__, __LINE__, __func__, ##args)

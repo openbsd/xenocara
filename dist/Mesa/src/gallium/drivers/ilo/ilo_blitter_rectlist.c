@@ -28,11 +28,13 @@
 #include "util/u_draw.h"
 #include "util/u_pack_color.h"
 
-#include "ilo_draw.h"
-#include "ilo_state.h"
-#include "ilo_state_3d.h"
-#include "ilo_blit.h"
 #include "ilo_blitter.h"
+#include "ilo_3d.h"
+#include "ilo_3d_pipeline.h"
+#include "ilo_blit.h"
+#include "ilo_gpe.h"
+#include "ilo_gpe_gen6.h" /* for ve_init_cso_with_components and
+                             zs_align_surface */
 
 /**
  * Set the states that are invariant between all ops.
@@ -40,29 +42,46 @@
 static bool
 ilo_blitter_set_invariants(struct ilo_blitter *blitter)
 {
-   struct pipe_vertex_element velem;
+   struct pipe_screen *screen = blitter->ilo->base.screen;
+   struct pipe_resource templ;
+   struct pipe_vertex_element velems[2];
    struct pipe_viewport_state vp;
 
    if (blitter->initialized)
       return true;
 
-   /* only vertex X and Y */
-   memset(&velem, 0, sizeof(velem));
-   velem.src_format = PIPE_FORMAT_R32G32_FLOAT;
-   ilo_gpe_init_ve(blitter->ilo->dev, 1, &velem, &blitter->ve);
+   blitter->buffer.size = 4096;
 
-   /* generate VUE header */
-   ilo_gpe_init_ve_nosrc(blitter->ilo->dev,
+   /* allocate the vertex buffer */
+   memset(&templ, 0, sizeof(templ));
+   templ.target = PIPE_BUFFER;
+   templ.width0 = blitter->buffer.size;
+   templ.usage = PIPE_USAGE_STREAM;
+   templ.bind = PIPE_BIND_VERTEX_BUFFER;
+   blitter->buffer.res = screen->resource_create(screen, &templ);
+   if (!blitter->buffer.res)
+      return false;
+
+   /* do not increase reference count */
+   blitter->vb.states[0].buffer = blitter->buffer.res;
+
+   /* only vertex X and Y */
+   blitter->vb.states[0].stride = 2 * sizeof(float);
+   blitter->vb.enabled_mask = 0x1;
+   memset(&velems, 0, sizeof(velems));
+   velems[1].src_format = PIPE_FORMAT_R32G32_FLOAT;
+   ilo_gpe_init_ve(blitter->ilo->dev, 2, velems, &blitter->ve);
+
+   /* override first VE to be VUE header */
+   ve_init_cso_with_components(blitter->ilo->dev,
          GEN6_VFCOMP_STORE_0, /* Reserved */
          GEN6_VFCOMP_STORE_0, /* Render Target Array Index */
          GEN6_VFCOMP_STORE_0, /* Viewport Index */
          GEN6_VFCOMP_STORE_0, /* Point Width */
-         &blitter->ve.nosrc_cso);
-   blitter->ve.prepend_nosrc_cso = true;
+         &blitter->ve.cso[0]);
 
    /* a rectangle has 3 vertices in a RECTLIST */
    util_draw_init_info(&blitter->draw);
-   blitter->draw.mode = ILO_PRIM_RECTANGLES;
    blitter->draw.count = 3;
 
    /**
@@ -101,6 +120,10 @@ ilo_blitter_set_rectlist(struct ilo_blitter *blitter,
                          unsigned x, unsigned y,
                          unsigned width, unsigned height)
 {
+   unsigned usage = PIPE_TRANSFER_WRITE | PIPE_TRANSFER_UNSYNCHRONIZED;
+   float vertices[3][2];
+   struct pipe_box box;
+
    /*
     * From the Sandy Bridge PRM, volume 2 part 1, page 11:
     *
@@ -109,12 +132,28 @@ ilo_blitter_set_rectlist(struct ilo_blitter *blitter,
     *      by the definition of a rectangle. V0=LowerRight, V1=LowerLeft,
     *      V2=UpperLeft. Implied V3 = V0- V1+V2."
     */
-   blitter->vertices[0][0] = (float) (x + width);
-   blitter->vertices[0][1] = (float) (y + height);
-   blitter->vertices[1][0] = (float) x;
-   blitter->vertices[1][1] = (float) (y + height);
-   blitter->vertices[2][0] = (float) x;
-   blitter->vertices[2][1] = (float) y;
+   vertices[0][0] = (float) (x + width);
+   vertices[0][1] = (float) (y + height);
+   vertices[1][0] = (float) x;
+   vertices[1][1] = (float) (y + height);
+   vertices[2][0] = (float) x;
+   vertices[2][1] = (float) y;
+
+   /* buffer is full */
+   if (blitter->buffer.offset + sizeof(vertices) > blitter->buffer.size) {
+      if (!ilo_buffer_alloc_bo(ilo_buffer(blitter->buffer.res)))
+         usage &= ~PIPE_TRANSFER_UNSYNCHRONIZED;
+
+      blitter->buffer.offset = 0;
+   }
+
+   u_box_1d(blitter->buffer.offset, sizeof(vertices), &box);
+
+   blitter->ilo->base.transfer_inline_write(&blitter->ilo->base,
+         blitter->buffer.res, 0, usage, &box, vertices, 0, 0);
+
+   blitter->vb.states[0].buffer_offset = blitter->buffer.offset;
+   blitter->buffer.offset += sizeof(vertices);
 }
 
 static void
@@ -134,13 +173,11 @@ ilo_blitter_set_dsa(struct ilo_blitter *blitter,
 
 static void
 ilo_blitter_set_fb(struct ilo_blitter *blitter,
-                   struct pipe_resource *res, unsigned level,
+                   const struct pipe_resource *res, unsigned level,
                    const struct ilo_surface_cso *cso)
 {
-   struct ilo_texture *tex = ilo_texture(res);
-
-   blitter->fb.width = u_minify(tex->layout.width0, level);
-   blitter->fb.height = u_minify(tex->layout.height0, level);
+   blitter->fb.width = u_minify(res->width0, level);
+   blitter->fb.height = u_minify(res->height0, level);
 
    blitter->fb.num_samples = res->nr_samples;
    if (!blitter->fb.num_samples)
@@ -253,19 +290,53 @@ hiz_align_fb(struct ilo_blitter *blitter)
 
    if (blitter->fb.width % align_w || blitter->fb.height % align_h) {
       blitter->fb.width = align(blitter->fb.width, align_w);
-      blitter->fb.height = align(blitter->fb.height, align_h);
+      blitter->fb.height = align(blitter->fb.width, align_h);
+
+      assert(!blitter->fb.dst.is_rt);
+      zs_align_surface(blitter->ilo->dev, align_w, align_h,
+            &blitter->fb.dst.u.zs);
    }
 }
 
 static void
 hiz_emit_rectlist(struct ilo_blitter *blitter)
 {
+   struct ilo_3d *hw3d = blitter->ilo->hw3d;
+   struct ilo_3d_pipeline *p = hw3d->pipeline;
+
    hiz_align_fb(blitter);
 
    ilo_blitter_set_rectlist(blitter, 0, 0,
          blitter->fb.width, blitter->fb.height);
 
-   ilo_draw_rectlist(blitter->ilo);
+   ilo_3d_own_render_ring(hw3d);
+
+   /*
+    * From the Sandy Bridge PRM, volume 2 part 1, page 313:
+    *
+    *     "If other rendering operations have preceded this clear, a
+    *      PIPE_CONTROL with write cache flush enabled and Z-inhibit
+    *      disabled must be issued before the rectangle primitive used for
+    *      the depth buffer clear operation."
+    *
+    * From the Sandy Bridge PRM, volume 2 part 1, page 314:
+    *
+    *     "Depth buffer clear pass must be followed by a PIPE_CONTROL
+    *      command with DEPTH_STALL bit set and Then followed by Depth
+    *      FLUSH"
+    *
+    * But the pipeline has to be flushed both before and after not only
+    * because of these workarounds.  We need them for reasons such as
+    *
+    *  - we may sample from a texture that was rendered to
+    *  - we may sample from the fb shortly after
+    */
+   if (!ilo_cp_empty(p->cp))
+      ilo_3d_pipeline_emit_flush(p);
+
+   ilo_3d_pipeline_emit_rectlist(p, blitter);
+
+   ilo_3d_pipeline_emit_flush(p);
 }
 
 static bool
@@ -304,10 +375,9 @@ hiz_can_clear_zs(const struct ilo_blitter *blitter,
     * The truth is when HiZ is enabled, separate stencil is also enabled on
     * all GENs.  The depth buffer format cannot be combined depth/stencil.
     */
-   switch (tex->layout.format) {
+   switch (tex->bo_format) {
    case PIPE_FORMAT_Z16_UNORM:
-      if (ilo_dev_gen(blitter->ilo->dev) == ILO_GEN(6) &&
-          tex->base.width0 % 16)
+      if (blitter->ilo->dev->gen == ILO_GEN(6) && tex->base.width0 % 16)
          return false;
       break;
    case PIPE_FORMAT_Z24_UNORM_S8_UINT:
@@ -340,7 +410,7 @@ ilo_blitter_rectlist_clear_zs(struct ilo_blitter *blitter,
    if (!hiz_can_clear_zs(blitter, tex))
       return false;
 
-   clear_value = util_pack_z(tex->layout.format, depth);
+   clear_value = util_pack_z(tex->bo_format, depth);
 
    ilo_blit_resolve_surface(blitter->ilo, zs,
          ILO_TEXTURE_RENDER_WRITE | ILO_TEXTURE_CLEAR);

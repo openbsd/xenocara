@@ -29,7 +29,6 @@
 #include <deque>
 #include <list>
 #include <vector>
-#include <tr1/unordered_set>
 
 #include "codegen/nv50_ir_util.h"
 #include "codegen/nv50_ir_graph.h"
@@ -158,7 +157,6 @@ enum operation
    OP_VSHL,
    OP_VSEL,
    OP_CCTL, // cache control
-   OP_SHFL, // warp shuffle
    OP_LAST
 };
 
@@ -225,10 +223,6 @@ enum operation
 #define NV50_IR_SUBOP_PIXLD_OFFSET      3
 #define NV50_IR_SUBOP_PIXLD_CENT_OFFSET 4
 #define NV50_IR_SUBOP_PIXLD_SAMPLEID    5
-#define NV50_IR_SUBOP_SHFL_IDX  0
-#define NV50_IR_SUBOP_SHFL_UP   1
-#define NV50_IR_SUBOP_SHFL_DOWN 2
-#define NV50_IR_SUBOP_SHFL_BFLY 3
 #define NV50_IR_SUBOP_MADSP_SD     0xffff
 // Yes, we could represent those with DataType.
 // Or put the type into operation and have a couple 1000 values in that enum.
@@ -385,7 +379,6 @@ enum SVSemantic
    SV_LBASE,
    SV_SBASE,
    SV_VERTEX_STRIDE,
-   SV_INVOCATION_INFO,
    SV_UNDEFINED,
    SV_LAST
 };
@@ -582,10 +575,10 @@ public:
 
    static inline Value *get(Iterator&);
 
-   std::tr1::unordered_set<ValueRef *> uses;
+   std::list<ValueRef *> uses;
    std::list<ValueDef *> defs;
-   typedef std::tr1::unordered_set<ValueRef *>::iterator UseIterator;
-   typedef std::tr1::unordered_set<ValueRef *>::const_iterator UseCIterator;
+   typedef std::list<ValueRef *>::iterator UseIterator;
+   typedef std::list<ValueRef *>::const_iterator UseCIterator;
    typedef std::list<ValueDef *>::iterator DefIterator;
    typedef std::list<ValueDef *>::const_iterator DefCIterator;
 
@@ -799,7 +792,7 @@ public:
    int8_t flagsDef;
    int8_t flagsSrc;
 
-   uint32_t sched; // scheduling data (NOTE: maybe move to separate storage)
+   uint8_t sched; // scheduling data (NOTE: maybe move to separate storage)
 
    BasicBlock *bb;
 

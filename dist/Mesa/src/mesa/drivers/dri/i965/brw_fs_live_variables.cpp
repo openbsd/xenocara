@@ -56,7 +56,7 @@ void
 fs_live_variables::setup_one_read(bblock_t *block, fs_inst *inst,
                                   int ip, fs_reg reg)
 {
-   int var = var_from_reg(&reg);
+   int var = var_from_vgrf[reg.reg] + reg.reg_offset;
    assert(var < num_vars);
 
    /* In most cases, a register can be written over safely by the
@@ -85,11 +85,11 @@ fs_live_variables::setup_one_read(bblock_t *block, fs_inst *inst,
     * would get stomped by the first decode as well.
     */
    int end_ip = ip;
-   if (inst->exec_size == 16 && (reg.stride == 0 ||
-                                 reg.type == BRW_REGISTER_TYPE_UW ||
-                                 reg.type == BRW_REGISTER_TYPE_W ||
-                                 reg.type == BRW_REGISTER_TYPE_UB ||
-                                 reg.type == BRW_REGISTER_TYPE_B)) {
+   if (v->dispatch_width == 16 && (reg.stride == 0 ||
+                                   reg.type == BRW_REGISTER_TYPE_UW ||
+                                   reg.type == BRW_REGISTER_TYPE_W ||
+                                   reg.type == BRW_REGISTER_TYPE_UB ||
+                                   reg.type == BRW_REGISTER_TYPE_B)) {
       end_ip++;
    }
 
@@ -100,15 +100,15 @@ fs_live_variables::setup_one_read(bblock_t *block, fs_inst *inst,
     * channel) without having completely defined that variable within the
     * block.
     */
-   if (!BITSET_TEST(bd[block->num].def, var))
-      BITSET_SET(bd[block->num].use, var);
+   if (!BITSET_TEST(bd[block->block_num].def, var))
+      BITSET_SET(bd[block->block_num].use, var);
 }
 
 void
 fs_live_variables::setup_one_write(bblock_t *block, fs_inst *inst,
                                    int ip, fs_reg reg)
 {
-   int var = var_from_reg(&reg);
+   int var = var_from_vgrf[reg.reg] + reg.reg_offset;
    assert(var < num_vars);
 
    start[var] = MIN2(start[var], ip);
@@ -118,8 +118,8 @@ fs_live_variables::setup_one_write(bblock_t *block, fs_inst *inst,
     * screens off previous updates of that variable (VGRF channel).
     */
    if (inst->dst.file == GRF && !inst->is_partial_write()) {
-      if (!BITSET_TEST(bd[block->num].use, var))
-         BITSET_SET(bd[block->num].def, var);
+      if (!BITSET_TEST(bd[block->block_num].use, var))
+         BITSET_SET(bd[block->block_num].def, var);
    }
 }
 
@@ -137,14 +137,19 @@ fs_live_variables::setup_def_use()
 {
    int ip = 0;
 
-   foreach_block (block, cfg) {
-      assert(ip == block->start_ip);
-      if (block->num > 0)
-	 assert(cfg->blocks[block->num - 1]->end_ip == ip - 1);
+   for (int b = 0; b < cfg->num_blocks; b++) {
+      bblock_t *block = cfg->blocks[b];
 
-      foreach_inst_in_block(fs_inst, inst, block) {
+      assert(ip == block->start_ip);
+      if (b > 0)
+	 assert(cfg->blocks[b - 1]->end_ip == ip - 1);
+
+      for (fs_inst *inst = (fs_inst *)block->start;
+	   inst != block->end->next;
+	   inst = (fs_inst *)inst->next) {
+
 	 /* Set use[] for this instruction */
-	 for (unsigned int i = 0; i < inst->sources; i++) {
+	 for (unsigned int i = 0; i < 3; i++) {
             fs_reg reg = inst->src[i];
 
             if (reg.file != GRF)
@@ -184,27 +189,27 @@ fs_live_variables::compute_live_variables()
    while (cont) {
       cont = false;
 
-      foreach_block (block, cfg) {
+      for (int b = 0; b < cfg->num_blocks; b++) {
 	 /* Update livein */
 	 for (int i = 0; i < bitset_words; i++) {
-            BITSET_WORD new_livein = (bd[block->num].use[i] |
-                                      (bd[block->num].liveout[i] &
-                                       ~bd[block->num].def[i]));
-	    if (new_livein & ~bd[block->num].livein[i]) {
-               bd[block->num].livein[i] |= new_livein;
+            BITSET_WORD new_livein = (bd[b].use[i] |
+                                      (bd[b].liveout[i] & ~bd[b].def[i]));
+	    if (new_livein & ~bd[b].livein[i]) {
+               bd[b].livein[i] |= new_livein;
                cont = true;
 	    }
 	 }
 
 	 /* Update liveout */
-	 foreach_list_typed(bblock_link, child_link, link, &block->children) {
-	    bblock_t *child = child_link->block;
+	 foreach_list(block_node, &cfg->blocks[b]->children) {
+	    bblock_link *link = (bblock_link *)block_node;
+	    bblock_t *block = link->block;
 
 	    for (int i = 0; i < bitset_words; i++) {
-               BITSET_WORD new_liveout = (bd[child->num].livein[i] &
-                                          ~bd[block->num].liveout[i]);
+               BITSET_WORD new_liveout = (bd[block->block_num].livein[i] &
+                                          ~bd[b].liveout[i]);
                if (new_liveout) {
-                  bd[block->num].liveout[i] |= new_liveout;
+                  bd[b].liveout[i] |= new_liveout;
                   cont = true;
                }
 	    }
@@ -220,16 +225,16 @@ fs_live_variables::compute_live_variables()
 void
 fs_live_variables::compute_start_end()
 {
-   foreach_block (block, cfg) {
+   for (int b = 0; b < cfg->num_blocks; b++) {
       for (int i = 0; i < num_vars; i++) {
-	 if (BITSET_TEST(bd[block->num].livein, i)) {
-	    start[i] = MIN2(start[i], block->start_ip);
-	    end[i] = MAX2(end[i], block->start_ip);
+	 if (BITSET_TEST(bd[b].livein, i)) {
+	    start[i] = MIN2(start[i], cfg->blocks[b]->start_ip);
+	    end[i] = MAX2(end[i], cfg->blocks[b]->start_ip);
 	 }
 
-	 if (BITSET_TEST(bd[block->num].liveout, i)) {
-	    start[i] = MIN2(start[i], block->end_ip);
-	    end[i] = MAX2(end[i], block->end_ip);
+	 if (BITSET_TEST(bd[b].liveout, i)) {
+	    start[i] = MIN2(start[i], cfg->blocks[b]->end_ip);
+	    end[i] = MAX2(end[i], cfg->blocks[b]->end_ip);
 	 }
 
       }
@@ -242,7 +247,7 @@ fs_live_variables::var_from_reg(fs_reg *reg)
    return var_from_vgrf[reg->reg] + reg->reg_offset;
 }
 
-fs_live_variables::fs_live_variables(fs_visitor *v, const cfg_t *cfg)
+fs_live_variables::fs_live_variables(fs_visitor *v, cfg_t *cfg)
    : v(v), cfg(cfg)
 {
    mem_ctx = ralloc_context(NULL);
@@ -319,7 +324,8 @@ fs_visitor::calculate_live_intervals()
       virtual_grf_end[i] = -1;
    }
 
-   this->live_intervals = new(mem_ctx) fs_live_variables(this, cfg);
+   cfg_t cfg(&instructions);
+   this->live_intervals = new(mem_ctx) fs_live_variables(this, &cfg);
 
    /* Merge the per-component live ranges to whole VGRF live ranges. */
    for (int i = 0; i < live_intervals->num_vars; i++) {

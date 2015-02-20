@@ -26,6 +26,7 @@
 #include "glsl_symbol_table.h"
 #include "main/core.h"
 #include "main/uniforms.h"
+#include "program/prog_parameter.h"
 #include "program/prog_statevars.h"
 #include "program/prog_instruction.h"
 
@@ -160,6 +161,14 @@ static const struct gl_builtin_uniform_element gl_NormalScale_elements[] = {
    {NULL, {STATE_NORMAL_SCALE}, SWIZZLE_XXXX},
 };
 
+static const struct gl_builtin_uniform_element gl_BumpRotMatrix0MESA_elements[] = {
+   {NULL, {STATE_INTERNAL, STATE_ROT_MATRIX_0}, SWIZZLE_XYZW},
+};
+
+static const struct gl_builtin_uniform_element gl_BumpRotMatrix1MESA_elements[] = {
+   {NULL, {STATE_INTERNAL, STATE_ROT_MATRIX_1}, SWIZZLE_XYZW},
+};
+
 static const struct gl_builtin_uniform_element gl_FogParamsOptimizedMESA_elements[] = {
    {NULL, {STATE_INTERNAL, STATE_FOG_PARAMS_OPTIMIZED}, SWIZZLE_XYZW},
 };
@@ -276,6 +285,8 @@ static const struct gl_builtin_uniform_desc _mesa_builtin_uniform_desc[] = {
    STATEVAR(gl_NormalMatrix),
    STATEVAR(gl_NormalScale),
 
+   STATEVAR(gl_BumpRotMatrix0MESA),
+   STATEVAR(gl_BumpRotMatrix1MESA),
    STATEVAR(gl_FogParamsOptimizedMESA),
    STATEVAR(gl_CurrentAttribVertMESA),
    STATEVAR(gl_CurrentAttribFragMESA),
@@ -317,7 +328,7 @@ per_vertex_accumulator::add_field(int slot, const glsl_type *type,
    assert(this->num_fields < ARRAY_SIZE(this->fields));
    this->fields[this->num_fields].type = type;
    this->fields[this->num_fields].name = name;
-   this->fields[this->num_fields].matrix_layout = GLSL_MATRIX_LAYOUT_INHERITED;
+   this->fields[this->num_fields].row_major = false;
    this->fields[this->num_fields].location = slot;
    this->fields[this->num_fields].interpolation = INTERP_QUALIFIER_NONE;
    this->fields[this->num_fields].centroid = 0;
@@ -478,9 +489,12 @@ builtin_variable_generator::add_uniform(const glsl_type *type,
       &_mesa_builtin_uniform_desc[i];
 
    const unsigned array_count = type->is_array() ? type->length : 1;
+   uni->num_state_slots = array_count * statevar->num_elements;
 
    ir_state_slot *slots =
-      uni->allocate_state_slots(array_count * statevar->num_elements);
+      ralloc_array(uni, ir_state_slot, uni->num_state_slots);
+
+   uni->state_slots = slots;
 
    for (unsigned a = 0; a < array_count; a++) {
       for (unsigned j = 0; j < statevar->num_elements; j++) {
@@ -669,12 +683,6 @@ builtin_variable_generator::generate_constants()
    }
 
    if (state->is_version(430, 0) || state->ARB_compute_shader_enable) {
-      add_const("gl_MaxComputeAtomicCounterBuffers", MAX_COMPUTE_ATOMIC_COUNTER_BUFFERS);
-      add_const("gl_MaxComputeAtomicCounters", MAX_COMPUTE_ATOMIC_COUNTERS);
-      add_const("gl_MaxComputeImageUniforms", MAX_COMPUTE_IMAGE_UNIFORMS);
-      add_const("gl_MaxComputeTextureImageUnits", MAX_COMPUTE_TEXTURE_IMAGE_UNITS);
-      add_const("gl_MaxComputeUniformComponents", MAX_COMPUTE_UNIFORM_COMPONENTS);
-
       add_const_ivec3("gl_MaxComputeWorkGroupCount",
                       state->Const.MaxComputeWorkGroupCount[0],
                       state->Const.MaxComputeWorkGroupCount[1],
@@ -724,10 +732,6 @@ builtin_variable_generator::generate_constants()
       add_const("gl_MaxCombinedImageUniforms",
                 state->Const.MaxCombinedImageUniforms);
    }
-
-   if (state->is_version(410, 0) ||
-       state->ARB_viewport_array_enable)
-      add_const("gl_MaxViewports", state->Const.MaxViewports);
 }
 
 
@@ -758,6 +762,8 @@ builtin_variable_generator::generate_uniforms()
       add_uniform(mat4_t, "gl_ModelViewProjectionMatrixInverseTranspose");
       add_uniform(float_t, "gl_NormalScale");
       add_uniform(type("gl_LightModelParameters"), "gl_LightModel");
+      add_uniform(vec2_t, "gl_BumpRotMatrix0MESA");
+      add_uniform(vec2_t, "gl_BumpRotMatrix1MESA");
       add_uniform(vec4_t, "gl_FogParamsOptimizedMESA");
 
       const glsl_type *const mat4_array_type =
@@ -822,8 +828,6 @@ builtin_variable_generator::generate_vs_special_vars()
       add_system_value(SYSTEM_VALUE_INSTANCE_ID, int_t, "gl_InstanceID");
    if (state->AMD_vertex_shader_layer_enable)
       add_output(VARYING_SLOT_LAYER, int_t, "gl_Layer");
-   if (state->AMD_vertex_shader_viewport_index_enable)
-      add_output(VARYING_SLOT_VIEWPORT, int_t, "gl_ViewportIndex");
    if (compatibility) {
       add_input(VERT_ATTRIB_POS, vec4_t, "gl_Vertex");
       add_input(VERT_ATTRIB_NORMAL, vec3_t, "gl_Normal");
@@ -909,14 +913,14 @@ builtin_variable_generator::generate_fs_special_vars()
       ir_variable *const var =
          add_output(FRAG_RESULT_STENCIL, int_t, "gl_FragStencilRefARB");
       if (state->ARB_shader_stencil_export_warn)
-         var->enable_extension_warning("GL_ARB_shader_stencil_export");
+         var->warn_extension = "GL_ARB_shader_stencil_export";
    }
 
    if (state->AMD_shader_stencil_export_enable) {
       ir_variable *const var =
          add_output(FRAG_RESULT_STENCIL, int_t, "gl_FragStencilRefAMD");
       if (state->AMD_shader_stencil_export_warn)
-         var->enable_extension_warning("GL_AMD_shader_stencil_export");
+         var->warn_extension = "GL_AMD_shader_stencil_export";
    }
 
    if (state->ARB_sample_shading_enable) {
@@ -934,11 +938,6 @@ builtin_variable_generator::generate_fs_special_vars()
 
    if (state->ARB_gpu_shader5_enable) {
       add_system_value(SYSTEM_VALUE_SAMPLE_MASK_IN, array(int_t, 1), "gl_SampleMaskIn");
-   }
-
-   if (state->ARB_fragment_layer_viewport_enable) {
-      add_input(VARYING_SLOT_LAYER, int_t, "gl_Layer");
-      add_input(VARYING_SLOT_VIEWPORT, int_t, "gl_ViewportIndex");
    }
 }
 

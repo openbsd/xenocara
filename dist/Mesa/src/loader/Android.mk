@@ -25,7 +25,7 @@ LOCAL_PATH := $(call my-dir)
 include $(LOCAL_PATH)/Makefile.sources
 
 # ---------------------------------------
-# Build libmesa_loader
+# Build libloader
 # ---------------------------------------
 
 include $(CLEAR_VARS)
@@ -35,12 +35,14 @@ LOCAL_SRC_FILES := \
 
 # swrast only
 ifeq ($(MESA_GPU_DRIVERS),swrast)
-LOCAL_CFLAGS += -D__NOT_HAVE_DRM_H
+	LOCAL_CFLAGS += -D__NOT_HAVE_DRM_H
 else
-LOCAL_C_INCLUDES += $(TARGET_OUT_HEADERS)/libdrm
+LOCAL_C_INCLUDES += \
+	$(DRM_TOP)/include/drm \
+	$(DRM_TOP)
 endif
 
-LOCAL_MODULE := libmesa_loader
+LOCAL_MODULE := libloader
 
 include $(MESA_COMMON_MK)
 include $(BUILD_STATIC_LIBRARY)

@@ -26,7 +26,7 @@
 #include "linker.h"
 #include "ir_uniform.h"
 #include "link_uniform_block_active_visitor.h"
-#include "util/hash_table.h"
+#include "main/hash_table.h"
 #include "program.h"
 
 namespace {
@@ -68,8 +68,7 @@ private:
    }
 
    virtual void visit_field(const glsl_type *type, const char *name,
-                            bool row_major, const glsl_type *record_type,
-                            bool last_field)
+                            bool row_major, const glsl_type *record_type)
    {
       assert(this->index < this->num_variables);
 
@@ -77,7 +76,7 @@ private:
 
       v->Name = ralloc_strdup(mem_ctx, name);
       v->Type = type;
-      v->RowMajor = type->without_array()->is_matrix() && row_major;
+      v->RowMajor = row_major;
 
       if (this->is_array_instance) {
          v->IndexName = ralloc_strdup(mem_ctx, name);
@@ -93,31 +92,18 @@ private:
          unsigned len = strlen(close_bracket + 1) + 1;
 
          memmove(open_bracket, close_bracket + 1, len);
-      } else {
+     } else {
          v->IndexName = v->Name;
       }
 
       const unsigned alignment = record_type
-         ? record_type->std140_base_alignment(v->RowMajor)
-         : type->std140_base_alignment(v->RowMajor);
+	 ? record_type->std140_base_alignment(v->RowMajor)
+	 : type->std140_base_alignment(v->RowMajor);
       unsigned size = type->std140_size(v->RowMajor);
 
       this->offset = glsl_align(this->offset, alignment);
       v->Offset = this->offset;
-
-      /* If this is the last field of a structure, apply rule #9.  The
-       * GL_ARB_uniform_buffer_object spec says:
-       *
-       *     "The structure may have padding at the end; the base offset of
-       *     the member following the sub-structure is rounded up to the next
-       *     multiple of the base alignment of the structure."
-       *
-       * last_field won't be set if this is the last field of a UBO that is
-       * not a named instance.
-       */
       this->offset += size;
-      if (last_field)
-         this->offset = glsl_align(this->offset, 16);
 
       /* From the GL_ARB_uniform_buffer_object spec:
        *
@@ -183,12 +169,6 @@ link_uniform_blocks(void *mem_ctx,
     */
    struct hash_table *block_hash =
       _mesa_hash_table_create(mem_ctx, _mesa_key_string_equal);
-
-   if (block_hash == NULL) {
-      _mesa_error_no_memory(__func__);
-      linker_error(prog, "out of memory\n");
-      return 0;
-   }
 
    /* Determine which uniform blocks are active.
     */

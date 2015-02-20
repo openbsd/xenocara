@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
@@ -28,6 +27,4 @@ AM_CFLAGS = \
 
 noinst_LTLIBRARIES = libfbdev.la
 
-libfbdev_la_SOURCES = $(C_SOURCES)
-
-EXTRA_DIST = SConscript
+libfbdev_la_SOURCES = fbdev_sw_winsys.c

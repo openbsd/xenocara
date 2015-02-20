@@ -32,8 +32,6 @@ LOCAL_PATH := $(call my-dir)
 # 	MESA_GALLIUM_FILES.
 # 	X86_FILES
 include $(LOCAL_PATH)/Makefile.sources
-SRCDIR :=
-BUILDDIR :=
 
 include $(CLEAR_VARS)
 
@@ -48,16 +46,10 @@ ifeq ($(TARGET_ARCH),x86)
 endif # x86
 endif # MESA_ENABLE_ASM
 
-ifeq ($(ARCH_X86_HAVE_SSE4_1),true)
-LOCAL_CFLAGS := \
-       -DUSE_SSE41
-endif
-
 LOCAL_C_INCLUDES := \
 	$(call intermediates-dir-for STATIC_LIBRARIES,libmesa_program,,) \
 	$(MESA_TOP)/src/gallium/auxiliary \
 	$(MESA_TOP)/src/gallium/include \
-	$(MESA_TOP)/src \
 	$(MESA_TOP)/src/glsl \
 	$(MESA_TOP)/src/mapi
 

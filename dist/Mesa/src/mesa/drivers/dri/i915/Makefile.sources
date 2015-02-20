@@ -1,3 +1,7 @@
+# Paths are relative to TOP.
+i915_INCLUDES = \
+	src/mesa/drivers/dri/intel
+
 i915_FILES = \
 	i830_context.c \
 	i830_state.c \

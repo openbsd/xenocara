@@ -142,10 +142,6 @@ hash_table_insert(struct hash_table *ht, void *data, const void *key)
     struct hash_node *node;
 
     node = calloc(1, sizeof(*node));
-    if (node == NULL) {
-       _mesa_error_no_memory(__func__);
-       return;
-    }
 
     node->data = data;
     node->key = key;
@@ -171,10 +167,6 @@ hash_table_replace(struct hash_table *ht, void *data, const void *key)
     }
 
     hn = calloc(1, sizeof(*hn));
-    if (hn == NULL) {
-       _mesa_error_no_memory(__func__);
-       return false;
-    }
 
     hn->data = data;
     hn->key = key;

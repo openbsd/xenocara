@@ -1507,14 +1507,13 @@ CodeEmitterNVC0::emitOUT(const Instruction *i)
 
    // vertex stream
    if (i->src(1).getFile() == FILE_IMMEDIATE) {
-      unsigned int stream = SDATA(i->src(1)).u32;
-      assert(stream < 4);
-      if (stream) {
-         code[1] |= 0xc000;
-         code[0] |= stream << 26;
-      } else {
-         srcId(NULL, 26);
-      }
+      // Using immediate encoding here triggers an invalid opcode error
+      // or random results when error reporting is disabled.
+      // TODO: figure this out when we get multiple vertex streams
+      assert(SDATA(i->src(1)).u32 == 0);
+      srcId(NULL, 26);
+      // code[1] |= 0xc000;
+      // code[0] |= SDATA(i->src(1)).u32 << 26;
    } else {
       srcId(i->src(1), 26);
    }
@@ -1561,7 +1560,7 @@ CodeEmitterNVC0::emitINTERP(const Instruction *i)
    defId(i->def(0), 14);
 
    if (i->getSampleMode() == NV50_IR_INTERP_OFFSET)
-      srcId(i->src(i->op == OP_PINTERP ? 2 : 1), 32 + 17);
+      srcId(i->src(i->op == OP_PINTERP ? 2 : 1), 17);
    else
       code[1] |= 0x3f << 17;
 }
@@ -3028,7 +3027,7 @@ TargetNVC0::createCodeEmitterNVC0(Program::Type type)
 CodeEmitter *
 TargetNVC0::getCodeEmitter(Program::Type type)
 {
-   if (chipset >= NVISA_GK20A_CHIPSET)
+   if (chipset >= NVISA_GK110_CHIPSET)
       return createCodeEmitterGK110(type);
    return createCodeEmitterNVC0(type);
 }

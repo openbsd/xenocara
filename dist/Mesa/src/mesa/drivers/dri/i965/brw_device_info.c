@@ -28,6 +28,7 @@
 static const struct brw_device_info brw_device_info_i965 = {
    .gen = 4,
    .has_negative_rhw_bug = true,
+   .needs_unlit_centroid_workaround = true,
    .max_vs_threads = 16,
    .max_gs_threads = 2,
    .max_wm_threads = 8 * 4,
@@ -41,6 +42,7 @@ static const struct brw_device_info brw_device_info_g4x = {
    .has_pln = true,
    .has_compr4 = true,
    .has_surface_tile_offset = true,
+   .needs_unlit_centroid_workaround = true,
    .is_g4x = true,
    .max_vs_threads = 32,
    .max_gs_threads = 2,
@@ -55,6 +57,7 @@ static const struct brw_device_info brw_device_info_ilk = {
    .has_pln = true,
    .has_compr4 = true,
    .has_surface_tile_offset = true,
+   .needs_unlit_centroid_workaround = true,
    .max_vs_threads = 72,
    .max_gs_threads = 32,
    .max_wm_threads = 12 * 6,
@@ -107,11 +110,11 @@ static const struct brw_device_info brw_device_info_snb_gt2 = {
    .must_use_separate_stencil = true,               \
    .has_llc = true,                                 \
    .has_pln = true,                                 \
-   .has_surface_tile_offset = true
+   .has_surface_tile_offset = true,                 \
+   .needs_unlit_centroid_workaround = true
 
 static const struct brw_device_info brw_device_info_ivb_gt1 = {
    GEN7_FEATURES, .is_ivybridge = true, .gt = 1,
-   .needs_unlit_centroid_workaround = true,
    .max_vs_threads = 36,
    .max_gs_threads = 36,
    .max_wm_threads = 48,
@@ -125,7 +128,6 @@ static const struct brw_device_info brw_device_info_ivb_gt1 = {
 
 static const struct brw_device_info brw_device_info_ivb_gt2 = {
    GEN7_FEATURES, .is_ivybridge = true, .gt = 2,
-   .needs_unlit_centroid_workaround = true,
    .max_vs_threads = 128,
    .max_gs_threads = 128,
    .max_wm_threads = 172,
@@ -139,7 +141,6 @@ static const struct brw_device_info brw_device_info_ivb_gt2 = {
 
 static const struct brw_device_info brw_device_info_byt = {
    GEN7_FEATURES, .is_baytrail = true, .gt = 1,
-   .needs_unlit_centroid_workaround = true,
    .has_llc = false,
    .max_vs_threads = 36,
    .max_gs_threads = 36,
@@ -237,8 +238,8 @@ static const struct brw_device_info brw_device_info_bdw_gt3 = {
 static const struct brw_device_info brw_device_info_chv = {
    GEN8_FEATURES, .is_cherryview = 1, .gt = 1,
    .has_llc = false,
-   .max_vs_threads = 80,
-   .max_gs_threads = 80,
+   .max_vs_threads = 70,
+   .max_gs_threads = 70,
    .max_wm_threads = 102,
    .urb = {
       .size = 128,

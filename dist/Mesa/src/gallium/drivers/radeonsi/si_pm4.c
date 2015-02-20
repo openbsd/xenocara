@@ -24,7 +24,7 @@
  *      Christian König <christian.koenig@amd.com>
  */
 
-#include "radeon/r600_cs.h"
+#include "../radeon/r600_cs.h"
 #include "util/u_memory.h"
 #include "si_pipe.h"
 #include "sid.h"
@@ -103,6 +103,49 @@ void si_pm4_add_bo(struct si_pm4_state *state,
 	state->bo_priority[idx] = priority;
 }
 
+void si_pm4_sh_data_begin(struct si_pm4_state *state)
+{
+	si_pm4_cmd_begin(state, PKT3_NOP);
+}
+
+void si_pm4_sh_data_add(struct si_pm4_state *state, uint32_t dw)
+{
+	si_pm4_cmd_add(state, dw);
+}
+
+void si_pm4_sh_data_end(struct si_pm4_state *state, unsigned base, unsigned idx)
+{
+	unsigned offs = state->last_pm4 + 1;
+	unsigned reg = base + idx * 4;
+
+	/* Bail if no data was added */
+	if (state->ndw == offs) {
+		state->ndw--;
+		return;
+	}
+
+	si_pm4_cmd_end(state, false);
+
+	si_pm4_cmd_begin(state, PKT3_SET_SH_REG_OFFSET);
+	si_pm4_cmd_add(state, (reg - SI_SH_REG_OFFSET) >> 2);
+	state->relocs[state->nrelocs++] = state->ndw;
+	si_pm4_cmd_add(state, offs << 2);
+	si_pm4_cmd_add(state, 0);
+	si_pm4_cmd_end(state, false);
+}
+
+void si_pm4_inval_shader_cache(struct si_pm4_state *state)
+{
+	state->cp_coher_cntl |= S_0085F0_SH_ICACHE_ACTION_ENA(1);
+	state->cp_coher_cntl |= S_0085F0_SH_KCACHE_ACTION_ENA(1);
+}
+
+void si_pm4_inval_texture_cache(struct si_pm4_state *state)
+{
+	state->cp_coher_cntl |= S_0085F0_TC_ACTION_ENA(1);
+	state->cp_coher_cntl |= S_0085F0_TCL1_ACTION_ENA(1);
+}
+
 void si_pm4_free_state(struct si_context *sctx,
 		       struct si_pm4_state *state,
 		       unsigned idx)
@@ -118,6 +161,33 @@ void si_pm4_free_state(struct si_context *sctx,
 		r600_resource_reference(&state->bo[i], NULL);
 	}
 	FREE(state);
+}
+
+struct si_pm4_state * si_pm4_alloc_state(struct si_context *sctx)
+{
+	struct si_pm4_state *pm4 = CALLOC_STRUCT(si_pm4_state);
+
+        if (pm4 == NULL)
+                return NULL;
+
+	pm4->chip_class = sctx->b.chip_class;
+
+	return pm4;
+}
+
+uint32_t si_pm4_sync_flags(struct si_context *sctx)
+{
+	uint32_t cp_coher_cntl = 0;
+
+	for (int i = 0; i < NUMBER_OF_STATES; ++i) {
+		struct si_pm4_state *state = sctx->queued.array[i];
+
+		if (!state || sctx->emitted.array[i] == state)
+			continue;
+
+		cp_coher_cntl |= state->cp_coher_cntl;
+	}
+	return cp_coher_cntl;
 }
 
 unsigned si_pm4_dirty_dw(struct si_context *sctx)

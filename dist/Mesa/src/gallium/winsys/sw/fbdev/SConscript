@@ -11,10 +11,13 @@ if env['platform'] == 'linux':
     env.Append(CPPPATH = [
         '#/src/gallium/include',
         '#/src/gallium/auxiliary',
+        '#/src/gallium/drivers',
     ])
 
     ws_fbdev = env.ConvenienceLibrary(
         target = 'ws_fbdev',
-        source = env.ParseSourceList('Makefile.sources', 'C_SOURCES'),
+        source = [
+           'fbdev_sw_winsys.c',
+        ]
     )
     Export('ws_fbdev')

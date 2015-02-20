@@ -189,6 +189,8 @@ _mesa_components_in_format(GLenum format)
    case GL_RG:
    case GL_YCBCR_MESA:
    case GL_DEPTH_STENCIL_EXT:
+   case GL_DUDV_ATI:
+   case GL_DU8DV8_ATI:
    case GL_RG_INTEGER:
       return 2;
 
@@ -620,6 +622,36 @@ _mesa_is_enum_format_integer(GLenum format)
 }
 
 
+/**
+ * Test if the given type is an integer (non-normalized) format.
+ */
+GLboolean
+_mesa_is_type_integer(GLenum type)
+{
+   switch (type) {
+   case GL_INT:
+   case GL_UNSIGNED_INT:
+   case GL_SHORT:
+   case GL_UNSIGNED_SHORT:
+   case GL_BYTE:
+   case GL_UNSIGNED_BYTE:
+      return GL_TRUE;
+   default:
+      return GL_FALSE;
+   }
+}
+
+
+/**
+ * Test if the given format or type is an integer (non-normalized) format.
+ */
+extern GLboolean
+_mesa_is_enum_format_or_type_integer(GLenum format, GLenum type)
+{
+   return _mesa_is_enum_format_integer(format) || _mesa_is_type_integer(type);
+}
+
+
 GLboolean
 _mesa_is_type_unsigned(GLenum type)
 {
@@ -787,10 +819,6 @@ _mesa_is_color_format(GLenum format)
       case GL_COMPRESSED_SIGNED_RG11_EAC:
       case GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
       case GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
-      case GL_COMPRESSED_RGBA_BPTC_UNORM:
-      case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
-      case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
-      case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
       /* generic integer formats */
       case GL_RED_INTEGER_EXT:
       case GL_GREEN_INTEGER_EXT:
@@ -983,6 +1011,22 @@ _mesa_is_depth_or_stencil_format(GLenum format)
 
 
 /**
+ * Test if the given image format is a dudv format.
+ */
+GLboolean
+_mesa_is_dudv_format(GLenum format)
+{
+   switch (format) {
+      case GL_DUDV_ATI:
+      case GL_DU8DV8_ATI:
+         return GL_TRUE;
+      default:
+         return GL_FALSE;
+   }
+}
+
+
+/**
  * Test if an image format is a supported compressed format.
  * \param format the internal format token provided by the user.
  * \return GL_TRUE if compressed, GL_FALSE if uncompressed
@@ -1044,12 +1088,6 @@ _mesa_is_compressed_format(struct gl_context *ctx, GLenum format)
    case GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
    case GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
       return _mesa_is_gles3(ctx) || ctx->Extensions.ARB_ES3_compatibility;
-   case GL_COMPRESSED_RGBA_BPTC_UNORM:
-   case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM:
-   case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT:
-   case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT:
-      return _mesa_is_desktop_gl(ctx) &&
-         ctx->Extensions.ARB_texture_compression_bptc;
    case GL_PALETTE4_RGB8_OES:
    case GL_PALETTE4_RGBA8_OES:
    case GL_PALETTE4_R5_G6_B5_OES:
@@ -1601,6 +1639,23 @@ _mesa_error_check_format_and_type(const struct gl_context *ctx,
             return GL_NO_ERROR;
          else
             return GL_INVALID_ENUM;
+
+      case GL_DUDV_ATI:
+      case GL_DU8DV8_ATI:
+         if (!ctx->Extensions.ATI_envmap_bumpmap)
+            return GL_INVALID_ENUM;
+         switch (type) {
+            case GL_BYTE:
+            case GL_UNSIGNED_BYTE:
+            case GL_SHORT:
+            case GL_UNSIGNED_SHORT:
+            case GL_INT:
+            case GL_UNSIGNED_INT:
+            case GL_FLOAT:
+               return GL_NO_ERROR;
+            default:
+               return GL_INVALID_ENUM;
+         }
 
       /* integer-valued formats */
       case GL_RED_INTEGER_EXT:

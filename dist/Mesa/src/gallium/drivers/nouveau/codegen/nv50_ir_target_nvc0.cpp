@@ -29,8 +29,7 @@ Target *getTargetNVC0(unsigned int chipset)
    return new TargetNVC0(chipset);
 }
 
-TargetNVC0::TargetNVC0(unsigned int card) :
-   Target(card < 0x110, false, card >= 0xe4)
+TargetNVC0::TargetNVC0(unsigned int card) : Target(false, card >= 0xe4)
 {
    chipset = card;
    initOpInfo();
@@ -40,29 +39,26 @@ TargetNVC0::TargetNVC0(unsigned int card) :
 
 // lazyness -> will just hardcode everything for the time being
 
-#include "lib/gf100.asm.h"
-#include "lib/gk104.asm.h"
-#include "lib/gk110.asm.h"
+#include "target_lib_nvc0.asm.h"
+#include "target_lib_nve4.asm.h"
+#include "target_lib_nvf0.asm.h"
 
 void
 TargetNVC0::getBuiltinCode(const uint32_t **code, uint32_t *size) const
 {
    switch (chipset & ~0xf) {
    case 0xe0:
-      if (chipset < NVISA_GK20A_CHIPSET) {
-         *code = (const uint32_t *)&gk104_builtin_code[0];
-         *size = sizeof(gk104_builtin_code);
-         break;
-      }
-      /* fall-through for GK20A */
+      *code = (const uint32_t *)&nve4_builtin_code[0];
+      *size = sizeof(nve4_builtin_code);
+      break;
    case 0xf0:
    case 0x100:
-      *code = (const uint32_t *)&gk110_builtin_code[0];
-      *size = sizeof(gk110_builtin_code);
+      *code = (const uint32_t *)&nvf0_builtin_code[0];
+      *size = sizeof(nvf0_builtin_code);
       break;
    default:
-      *code = (const uint32_t *)&gf100_builtin_code[0];
-      *size = sizeof(gf100_builtin_code);
+      *code = (const uint32_t *)&nvc0_builtin_code[0];
+      *size = sizeof(nvc0_builtin_code);
       break;
    }
 }
@@ -74,14 +70,12 @@ TargetNVC0::getBuiltinOffset(int builtin) const
 
    switch (chipset & ~0xf) {
    case 0xe0:
-      if (chipset < NVISA_GK20A_CHIPSET)
-         return gk104_builtin_offsets[builtin];
-      /* fall-through for GK20A */
+      return nve4_builtin_offsets[builtin];
    case 0xf0:
    case 0x100:
-      return gk110_builtin_offsets[builtin];
+      return nvf0_builtin_offsets[builtin];
    default:
-      return gf100_builtin_offsets[builtin];
+      return nvc0_builtin_offsets[builtin];
    }
 }
 
@@ -240,7 +234,7 @@ TargetNVC0::getFileSize(DataFile file) const
 {
    switch (file) {
    case FILE_NULL:          return 0;
-   case FILE_GPR:           return (chipset >= NVISA_GK20A_CHIPSET) ? 255 : 63;
+   case FILE_GPR:           return (chipset >= NVISA_GK110_CHIPSET) ? 255 : 63;
    case FILE_PREDICATE:     return 7;
    case FILE_FLAGS:         return 1;
    case FILE_ADDRESS:       return 0;

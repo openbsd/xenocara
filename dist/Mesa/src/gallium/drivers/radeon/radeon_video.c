@@ -39,7 +39,7 @@
 #include "vl/vl_defines.h"
 #include "vl/vl_video_buffer.h"
 
-#include "radeon/drm/radeon_winsys.h"
+#include "../../winsys/radeon/drm/radeon_winsys.h"
 #include "r600_pipe_common.h"
 #include "radeon_video.h"
 #include "radeon_vce.h"
@@ -60,41 +60,45 @@ unsigned rvid_alloc_stream_handle()
 }
 
 /* create a buffer in the winsys */
-bool rvid_create_buffer(struct pipe_screen *screen, struct rvid_buffer *buffer,
-			unsigned size, unsigned usage)
+bool rvid_create_buffer(struct radeon_winsys *ws, struct rvid_buffer *buffer,
+			unsigned size, enum radeon_bo_domain domain)
 {
-	memset(buffer, 0, sizeof(*buffer));
-	buffer->usage = usage;
-	buffer->res = (struct r600_resource *)
-		pipe_buffer_create(screen, PIPE_BIND_CUSTOM, usage, size);
+	buffer->domain = domain;
 
-	return buffer->res != NULL;
+	buffer->buf = ws->buffer_create(ws, size, 4096, false, domain);
+	if (!buffer->buf)
+		return false;
+
+	buffer->cs_handle = ws->buffer_get_cs_handle(buffer->buf);
+	if (!buffer->cs_handle)
+		return false;
+
+	return true;
 }
 
 /* destroy a buffer */
 void rvid_destroy_buffer(struct rvid_buffer *buffer)
 {
-	pipe_resource_reference((struct pipe_resource **)&buffer->res, NULL);
+	pb_reference(&buffer->buf, NULL);
+	buffer->cs_handle = NULL;
 }
 
 /* reallocate a buffer, preserving its content */
-bool rvid_resize_buffer(struct pipe_screen *screen, struct radeon_winsys_cs *cs,
+bool rvid_resize_buffer(struct radeon_winsys *ws, struct radeon_winsys_cs *cs,
 			struct rvid_buffer *new_buf, unsigned new_size)
 {
-	struct r600_common_screen *rscreen = (struct r600_common_screen *)screen;
-	struct radeon_winsys* ws = rscreen->ws;
-	unsigned bytes = MIN2(new_buf->res->buf->size, new_size);
+	unsigned bytes = MIN2(new_buf->buf->size, new_size);
 	struct rvid_buffer old_buf = *new_buf;
 	void *src = NULL, *dst = NULL;
 
-	if (!rvid_create_buffer(screen, new_buf, new_size, new_buf->usage))
+	if (!rvid_create_buffer(ws, new_buf, new_size, new_buf->domain))
 		goto error;
 
-	src = ws->buffer_map(old_buf.res->cs_buf, cs, PIPE_TRANSFER_READ);
+	src = ws->buffer_map(old_buf.cs_handle, cs, PIPE_TRANSFER_READ);
 	if (!src)
 		goto error;
 
-	dst = ws->buffer_map(new_buf->res->cs_buf, cs, PIPE_TRANSFER_WRITE);
+	dst = ws->buffer_map(new_buf->cs_handle, cs, PIPE_TRANSFER_WRITE);
 	if (!dst)
 		goto error;
 
@@ -104,26 +108,28 @@ bool rvid_resize_buffer(struct pipe_screen *screen, struct radeon_winsys_cs *cs,
 		dst += bytes;
 		memset(dst, 0, new_size);
 	}
-	ws->buffer_unmap(new_buf->res->cs_buf);
-	ws->buffer_unmap(old_buf.res->cs_buf);
+	ws->buffer_unmap(new_buf->cs_handle);
+	ws->buffer_unmap(old_buf.cs_handle);
 	rvid_destroy_buffer(&old_buf);
 	return true;
 
 error:
 	if (src)
-		ws->buffer_unmap(old_buf.res->cs_buf);
+		ws->buffer_unmap(old_buf.cs_handle);
 	rvid_destroy_buffer(new_buf);
 	*new_buf = old_buf;
 	return false;
 }
 
 /* clear the buffer with zeros */
-void rvid_clear_buffer(struct pipe_context *context, struct rvid_buffer* buffer)
+void rvid_clear_buffer(struct radeon_winsys *ws, struct radeon_winsys_cs *cs, struct rvid_buffer* buffer)
 {
-	struct r600_common_context *rctx = (struct r600_common_context*)context;
+        void *ptr = ws->buffer_map(buffer->cs_handle, cs, PIPE_TRANSFER_WRITE);
+        if (!ptr)
+                return;
 
-	rctx->clear_buffer(context, &buffer->res->b.b, 0, buffer->res->buf->size, 0);
-	context->flush(context, NULL, 0);
+        memset(ptr, 0, buffer->buf->size);
+        ws->buffer_unmap(buffer->cs_handle);
 }
 
 /**
@@ -185,7 +191,7 @@ void rvid_join_surfaces(struct radeon_winsys* ws, unsigned bind,
 	/* TODO: 2D tiling workaround */
 	alignment *= 2;
 
-	pb = ws->buffer_create(ws, size, alignment, bind, RADEON_DOMAIN_VRAM, 0);
+	pb = ws->buffer_create(ws, size, alignment, bind, RADEON_DOMAIN_VRAM);
 	if (!pb)
 		return;
 
@@ -242,10 +248,8 @@ int rvid_get_video_param(struct pipe_screen *screen,
 			       profile != PIPE_VIDEO_PROFILE_VC1_MAIN;
 		case PIPE_VIDEO_CAP_PREFERS_INTERLACED:
 		case PIPE_VIDEO_CAP_SUPPORTS_INTERLACED:
-			/* MPEG2 only with shaders and no support for
-			   interlacing on R6xx style UVD */
-			return codec != PIPE_VIDEO_FORMAT_MPEG12 &&
-			       rscreen->family > CHIP_RV770;
+			/* and MPEG2 only with shaders */
+			return codec != PIPE_VIDEO_FORMAT_MPEG12;
 		default:
 			break;
 		}

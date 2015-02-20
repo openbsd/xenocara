@@ -28,7 +28,9 @@
  */
 
 #include "ir.h"
+#include "ir_visitor.h"
 #include "ir_basic_block.h"
+#include "glsl_types.h"
 
 /**
  * Calls a user function for every basic block in the instruction stream.
@@ -56,7 +58,8 @@ void call_for_basic_blocks(exec_list *instructions,
    ir_instruction *leader = NULL;
    ir_instruction *last = NULL;
 
-   foreach_in_list(ir_instruction, ir, instructions) {
+   foreach_list(n, instructions) {
+      ir_instruction *ir = (ir_instruction *) n;
       ir_if *ir_if;
       ir_loop *ir_loop;
       ir_function *ir_function;
@@ -87,7 +90,9 @@ void call_for_basic_blocks(exec_list *instructions,
 	  * and the body of main().  Perhaps those instructions ought
 	  * to live inside of main().
 	  */
-	 foreach_in_list(ir_function_signature, ir_sig, &ir_function->signatures) {
+	 foreach_list(func_node, &ir_function->signatures) {
+	    ir_function_signature *ir_sig = (ir_function_signature *) func_node;
+
 	    call_for_basic_blocks(&ir_sig->body, callback, data);
 	 }
       }

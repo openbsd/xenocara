@@ -39,24 +39,24 @@ struct ilo_context;
  */
 struct ilo_query {
    unsigned type;
-   unsigned index;
+   bool active;
 
    struct list_head list;
 
-   bool active;
+   /* storage for the collected data */
+   union pipe_query_result data;
 
    /* for queries that need to read hardware statistics */
-   int cmd_len; /* in dwords, as expected by ilo_cp */
-   bool in_pairs;
    struct intel_bo *bo;
-   int stride, count;
-   int used;
-
-   /* storage for the collected data */
-   union pipe_query_result result;
+   int reg_read, reg_total;
+   int reg_cmd_size; /* in dwords, as expected by ilo_cp */
 };
 
 void
 ilo_init_query_functions(struct ilo_context *ilo);
+
+bool
+ilo_query_alloc_bo(struct ilo_query *q, int reg_count, int repeat_count,
+                   struct intel_winsys *winsys);
 
 #endif /* ILO_QUERY_H */

@@ -212,7 +212,8 @@ static void r600_emit_streamout_begin(struct r600_common_context *rctx, struct r
 					 t[i]->b.buffer_size) >> 2);	/* BUFFER_SIZE (in DW) */
 			radeon_emit(cs, stride_in_dw[i]);		/* VTX_STRIDE (in DW) */
 		} else {
-			uint64_t va = r600_resource(t[i]->b.buffer)->gpu_address;
+			uint64_t va = r600_resource_va(rctx->b.screen,
+						       (void*)t[i]->b.buffer);
 
 			update_flags |= SURFACE_BASE_UPDATE_STRMOUT(i);
 
@@ -238,7 +239,8 @@ static void r600_emit_streamout_begin(struct r600_common_context *rctx, struct r
 		}
 
 		if (rctx->streamout.append_bitmask & (1 << i)) {
-			uint64_t va = t[i]->buf_filled_size->gpu_address +
+			uint64_t va = r600_resource_va(rctx->b.screen,
+						       (void*)t[i]->buf_filled_size) +
 				      t[i]->buf_filled_size_offset;
 
 			/* Append. */
@@ -284,7 +286,8 @@ void r600_emit_streamout_end(struct r600_common_context *rctx)
 		if (!t[i])
 			continue;
 
-		va = t[i]->buf_filled_size->gpu_address + t[i]->buf_filled_size_offset;
+		va = r600_resource_va(rctx->b.screen,
+				      (void*)t[i]->buf_filled_size) + t[i]->buf_filled_size_offset;
 		radeon_emit(cs, PKT3(PKT3_STRMOUT_BUFFER_UPDATE, 4, 0));
 		radeon_emit(cs, STRMOUT_SELECT_BUFFER(i) |
 			    STRMOUT_OFFSET_SOURCE(STRMOUT_OFFSET_NONE) |

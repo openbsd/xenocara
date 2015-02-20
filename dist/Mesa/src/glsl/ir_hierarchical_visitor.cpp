@@ -27,18 +27,16 @@
 ir_hierarchical_visitor::ir_hierarchical_visitor()
 {
    this->base_ir = NULL;
-   this->callback_enter = NULL;
-   this->callback_leave = NULL;
-   this->data_enter = NULL;
-   this->data_leave = NULL;
+   this->callback = NULL;
+   this->data = NULL;
    this->in_assignee = false;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit(ir_rvalue *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -46,8 +44,8 @@ ir_hierarchical_visitor::visit(ir_rvalue *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit(ir_variable *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -55,8 +53,8 @@ ir_hierarchical_visitor::visit(ir_variable *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit(ir_constant *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -64,8 +62,26 @@ ir_hierarchical_visitor::visit(ir_constant *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit(ir_loop_jump *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
+
+   return visit_continue;
+}
+
+ir_visitor_status
+ir_hierarchical_visitor::visit(ir_emit_vertex *ir)
+{
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
+
+   return visit_continue;
+}
+
+ir_visitor_status
+ir_hierarchical_visitor::visit(ir_end_primitive *ir)
+{
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -73,8 +89,8 @@ ir_hierarchical_visitor::visit(ir_loop_jump *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit(ir_dereference_variable *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -82,8 +98,8 @@ ir_hierarchical_visitor::visit(ir_dereference_variable *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_loop *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -91,17 +107,15 @@ ir_hierarchical_visitor::visit_enter(ir_loop *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_loop *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_function_signature *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -109,17 +123,15 @@ ir_hierarchical_visitor::visit_enter(ir_function_signature *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_function_signature *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_function *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -127,17 +139,15 @@ ir_hierarchical_visitor::visit_enter(ir_function *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_function *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_expression *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -145,17 +155,15 @@ ir_hierarchical_visitor::visit_enter(ir_expression *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_expression *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_texture *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -163,17 +171,15 @@ ir_hierarchical_visitor::visit_enter(ir_texture *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_texture *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_swizzle *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -181,17 +187,15 @@ ir_hierarchical_visitor::visit_enter(ir_swizzle *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_swizzle *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_dereference_array *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -199,17 +203,15 @@ ir_hierarchical_visitor::visit_enter(ir_dereference_array *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_dereference_array *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_dereference_record *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -217,17 +219,15 @@ ir_hierarchical_visitor::visit_enter(ir_dereference_record *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_dereference_record *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_assignment *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -235,17 +235,15 @@ ir_hierarchical_visitor::visit_enter(ir_assignment *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_assignment *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_call *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -253,17 +251,15 @@ ir_hierarchical_visitor::visit_enter(ir_call *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_call *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_return *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -271,17 +267,15 @@ ir_hierarchical_visitor::visit_enter(ir_return *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_return *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_discard *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -289,17 +283,15 @@ ir_hierarchical_visitor::visit_enter(ir_discard *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_discard *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
 ir_visitor_status
 ir_hierarchical_visitor::visit_enter(ir_if *ir)
 {
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
+   if (this->callback != NULL)
+      this->callback(ir, this->data);
 
    return visit_continue;
 }
@@ -307,45 +299,7 @@ ir_hierarchical_visitor::visit_enter(ir_if *ir)
 ir_visitor_status
 ir_hierarchical_visitor::visit_leave(ir_if *ir)
 {
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
-   return visit_continue;
-}
-
-ir_visitor_status
-ir_hierarchical_visitor::visit_enter(ir_emit_vertex *ir)
-{
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
-
-   return visit_continue;
-}
-
-ir_visitor_status
-ir_hierarchical_visitor::visit_leave(ir_emit_vertex *ir)
-{
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
-   return visit_continue;
-}
-
-ir_visitor_status
-ir_hierarchical_visitor::visit_enter(ir_end_primitive *ir)
-{
-   if (this->callback_enter != NULL)
-      this->callback_enter(ir, this->data_enter);
-
-   return visit_continue;
-}
-
-ir_visitor_status
-ir_hierarchical_visitor::visit_leave(ir_end_primitive *ir)
-{
-   if (this->callback_leave != NULL)
-      this->callback_leave(ir, this->data_leave);
-
+   (void) ir;
    return visit_continue;
 }
 
@@ -358,17 +312,13 @@ ir_hierarchical_visitor::run(exec_list *instructions)
 
 void
 visit_tree(ir_instruction *ir,
-	   void (*callback_enter)(class ir_instruction *ir, void *data),
-	   void *data_enter,
-	   void (*callback_leave)(class ir_instruction *ir, void *data),
-           void *data_leave)
+	   void (*callback)(class ir_instruction *ir, void *data),
+	   void *data)
 {
    ir_hierarchical_visitor v;
 
-   v.callback_enter = callback_enter;
-   v.callback_leave = callback_leave;
-   v.data_enter = data_enter;
-   v.data_leave = data_leave;
+   v.callback = callback;
+   v.data = data;
 
    ir->accept(&v);
 }

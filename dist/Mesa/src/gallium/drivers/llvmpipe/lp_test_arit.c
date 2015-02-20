@@ -33,7 +33,6 @@
 #include "util/u_pointer.h"
 #include "util/u_memory.h"
 #include "util/u_math.h"
-#include "util/u_cpu_detect.h"
 
 #include "gallivm/lp_bld.h"
 #include "gallivm/lp_bld_debug.h"
@@ -334,38 +333,6 @@ build_unary_test_func(struct gallivm_state *gallivm,
 
 
 /*
- * Flush denorms to zero.
- */
-static float
-flush_denorm_to_zero(float val)
-{
-   /*
-    * If we have a denorm manually set it to (+-)0.
-    * This is because the reference may or may not do the right thing
-    * otherwise because we want the result according to treating all
-    * denormals as zero (FTZ/DAZ). Not using fpclassify because
-    * a) some compilers are stuck at c89 (msvc)
-    * b) not sure it reliably works with non-standard ftz/daz mode
-    * And, right now we only disable denorms with jited code on x86/sse
-    * (albeit this should be classified as a bug) so to get results which
-    * match we must only flush them to zero here in that case too.
-    */
-   union fi fi_val;
-
-   fi_val.f = val;
-
-#if defined(PIPE_ARCH_SSE)
-   if (util_cpu_caps.has_sse) {
-      if ((fi_val.ui & 0x7f800000) == 0) {
-         fi_val.ui &= 0xff800000;
-      }
-   }
-#endif
-
-   return fi_val.f;
-}
-
-/*
  * Test one LLVM unary arithmetic builder function.
  */
 static boolean
@@ -387,15 +354,13 @@ test_unary(unsigned verbose, FILE *fp, const struct unary_test_t *test)
       in[i] = 1.0;
    }
 
-   gallivm = gallivm_create("test_module", LLVMGetGlobalContext());
+   gallivm = gallivm_create();
 
    test_func = build_unary_test_func(gallivm, test);
 
    gallivm_compile_module(gallivm);
 
    test_func_jit = (unary_func_t) gallivm_jit_function(gallivm, test_func);
-
-   gallivm_free_ir(gallivm);
 
    for (j = 0; j < (test->num_values + length - 1) / length; j++) {
       int num_vals = ((j + 1) * length <= test->num_values) ? length :
@@ -407,12 +372,9 @@ test_unary(unsigned verbose, FILE *fp, const struct unary_test_t *test)
 
       test_func_jit(out, in);
       for (i = 0; i < num_vals; ++i) {
-         float testval, ref;
+         float ref = test->ref(in[i]);
          double error, precision;
          bool pass;
-
-         testval = flush_denorm_to_zero(in[i]);
-         ref = flush_denorm_to_zero(test->ref(testval));
 
          if (util_inf_sign(ref) && util_inf_sign(out[i]) == util_inf_sign(ref)) {
             error = 0;
@@ -431,7 +393,6 @@ test_unary(unsigned verbose, FILE *fp, const struct unary_test_t *test)
             printf("%s(%.9g): ref = %.9g, out = %.9g, precision = %f bits, %s\n",
                   test->name, in[i], ref, out[i], precision,
                   pass ? "PASS" : "FAIL");
-            fflush(stdout);
          }
 
          if (!pass) {
@@ -439,6 +400,8 @@ test_unary(unsigned verbose, FILE *fp, const struct unary_test_t *test)
          }
       }
    }
+
+   gallivm_free_function(gallivm, test_func, test_func_jit);
 
    gallivm_destroy(gallivm);
 

@@ -26,6 +26,7 @@
  **************************************************************************/
 
 #include <assert.h>
+#include <error.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "testlib.h"
@@ -35,7 +36,7 @@ static void PrintGUID(const char *guid)
 	int i;
 	printf("\tguid: ");
 	for (i = 0; i < 4; ++i)
-		printf("%c,", guid[i] == 0 ? '0' : guid[i]);
+		printf("%C,", guid[i] == 0 ? '0' : guid[i]);
 	for (; i < 15; ++i)
 		printf("%x,", (unsigned char)guid[i]);
 	printf("%x\n", (unsigned int)guid[15]);
@@ -46,7 +47,7 @@ static void PrintComponentOrder(const char *co)
 	int i;
 	printf("\tcomponent_order:\n\t   ");
 	for (i = 0; i < 4; ++i)
-		printf("%c,", co[i] == 0 ? '0' : co[i]);
+		printf("%C,", co[i] == 0 ? '0' : co[i]);
 	for (; i < 31; ++i)
 		printf("%x,", (unsigned int)co[i]);
 	printf("%x\n", (unsigned int)co[31]);
@@ -86,8 +87,7 @@ int main(int argc, char **argv)
 	))
 	{
 		XCloseDisplay(display);
-		fprintf(stderr, "Error, unable to find a good port.\n");
-		exit(1);
+		error(1, 0, "Error, unable to find a good port.\n");
 	}
 
 	if (is_overlay)

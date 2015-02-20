@@ -27,8 +27,6 @@
 
 #include "r600_asm.h"
 
-#if HAVE_LLVM < 0x0306
-
 struct r600_kernel {
 	unsigned count;
 #ifdef HAVE_OPENCL
@@ -38,21 +36,13 @@ struct r600_kernel {
 	struct r600_bytecode bc;
 };
 
-#endif
-
 struct r600_pipe_compute {
 	struct r600_context *ctx;
 
-#if HAVE_LLVM < 0x0306
 	unsigned num_kernels;
 	struct r600_kernel *kernels;
+
 	struct r600_kernel *active_kernel;
-#endif
-
-	struct radeon_shader_binary binary;
-	struct r600_resource *code_bo;
-	struct r600_bytecode bc;
-
 	unsigned local_size;
 	unsigned private_size;
 	unsigned input_size;

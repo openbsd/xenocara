@@ -25,6 +25,8 @@
 #include "ir.h"
 #include "linker.h"
 #include "ir_uniform.h"
+#include "glsl_symbol_table.h"
+#include "program/hash_table.h"
 
 /* These functions are put in a "private" namespace instead of being marked
  * static so that the unit tests can access them.  See
@@ -60,8 +62,7 @@ void
 copy_constant_to_storage(union gl_constant_value *storage,
 			 const ir_constant *val,
 			 const enum glsl_base_type base_type,
-                         const unsigned int elements,
-                         unsigned int boolean_true)
+			 const unsigned int elements)
 {
    for (unsigned int i = 0; i < elements; i++) {
       switch (base_type) {
@@ -76,7 +77,7 @@ copy_constant_to_storage(union gl_constant_value *storage,
 	 storage[i].f = val->value.f[i];
 	 break;
       case GLSL_TYPE_BOOL:
-	 storage[i].b = val->value.b[i] ? boolean_true : 0;
+	 storage[i].b = int(val->value.b[i]);
 	 break;
       case GLSL_TYPE_ARRAY:
       case GLSL_TYPE_STRUCT:
@@ -157,7 +158,7 @@ set_block_binding(gl_shader_program *prog, const char *block_name, int binding)
 void
 set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
 			const char *name, const glsl_type *type,
-                        ir_constant *val, unsigned int boolean_true)
+			ir_constant *val)
 {
    if (type->is_record()) {
       ir_constant *field_constant;
@@ -169,7 +170,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
 	 const char *field_name = ralloc_asprintf(mem_ctx, "%s.%s", name,
 					    type->fields.structure[i].name);
 	 set_uniform_initializer(mem_ctx, prog, field_name,
-                                 field_type, field_constant, boolean_true);
+				 field_type, field_constant);
 	 field_constant = (ir_constant *)field_constant->next;
       }
       return;
@@ -180,8 +181,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
 	 const char *element_name = ralloc_asprintf(mem_ctx, "%s[%d]", name, i);
 
 	 set_uniform_initializer(mem_ctx, prog, element_name,
-                                 element_type, val->array_elements[i],
-                                 boolean_true);
+				 element_type, val->array_elements[i]);
       }
       return;
    }
@@ -206,8 +206,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
 	 copy_constant_to_storage(& storage->storage[idx],
 				  val->array_elements[i],
 				  base_type,
-                                  elements,
-                                  boolean_true);
+				  elements);
 
 	 idx += elements;
       }
@@ -215,8 +214,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
       copy_constant_to_storage(storage->storage,
 			       val,
 			       val->type->base_type,
-                               val->type->components(),
-                               boolean_true);
+			       val->type->components());
 
       if (storage->type->is_sampler()) {
          for (int sh = 0; sh < MESA_SHADER_STAGES; sh++) {
@@ -236,8 +234,7 @@ set_uniform_initializer(void *mem_ctx, gl_shader_program *prog,
 }
 
 void
-link_set_uniform_initializers(struct gl_shader_program *prog,
-                              unsigned int boolean_true)
+link_set_uniform_initializers(struct gl_shader_program *prog)
 {
    void *mem_ctx = NULL;
 
@@ -247,8 +244,8 @@ link_set_uniform_initializers(struct gl_shader_program *prog,
       if (shader == NULL)
 	 continue;
 
-      foreach_in_list(ir_instruction, node, shader->ir) {
-	 ir_variable *const var = node->as_variable();
+      foreach_list(node, shader->ir) {
+	 ir_variable *const var = ((ir_instruction *) node)->as_variable();
 
 	 if (!var || var->data.mode != ir_var_uniform)
 	    continue;
@@ -259,7 +256,8 @@ link_set_uniform_initializers(struct gl_shader_program *prog,
          if (var->data.explicit_binding) {
             const glsl_type *const type = var->type;
 
-            if (type->without_array()->is_sampler()) {
+            if (type->is_sampler()
+                || (type->is_array() && type->fields.array->is_sampler())) {
                linker::set_sampler_binding(prog, var->name, var->data.binding);
             } else if (var->is_in_uniform_block()) {
                const glsl_type *const iface_type = var->get_interface_type();
@@ -305,8 +303,7 @@ link_set_uniform_initializers(struct gl_shader_program *prog,
             }
          } else if (var->constant_value) {
             linker::set_uniform_initializer(mem_ctx, prog, var->name,
-                                            var->type, var->constant_value,
-                                            boolean_true);
+                                            var->type, var->constant_value);
          }
       }
    }

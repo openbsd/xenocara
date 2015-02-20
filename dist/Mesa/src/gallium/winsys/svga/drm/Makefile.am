@@ -26,14 +26,13 @@ include $(top_srcdir)/src/gallium/Automake.inc
 AM_CFLAGS = \
 	-I$(top_srcdir)/src/gallium/drivers/svga \
 	-I$(top_srcdir)/src/gallium/drivers/svga/include \
+	-I$(top_srcdir)/src/gallium/drivers \
 	$(GALLIUM_WINSYS_CFLAGS) \
 	$(LIBDRM_CFLAGS)
 
 #On some systems -std= must be added to CFLAGS to be the last -std=
-CFLAGS += -std=gnu99
+CFLAGS += -std=gnu99 -D_FILE_OFFSET_BITS=64
 
 noinst_LTLIBRARIES = libsvgadrm.la
 
 libsvgadrm_la_SOURCES = $(C_SOURCES)
-
-EXTRA_DIST = Android.mk SConscript

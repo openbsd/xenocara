@@ -62,7 +62,6 @@ header = """/**
 #include "main/condrender.h"
 #include "main/context.h"
 #include "main/convolve.h"
-#include "main/copyimage.h"
 #include "main/depth.h"
 #include "main/dlist.h"
 #include "main/drawpix.h"

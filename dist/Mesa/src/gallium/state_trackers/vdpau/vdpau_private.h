@@ -57,6 +57,7 @@
 #define QUOTEME(x) #x
 #define TOSTRING(x) QUOTEME(x)
 #define INFORMATION_STRING TOSTRING(INFORMATION)
+#define VL_HANDLES
 
 static inline enum pipe_video_chroma_format
 ChromaToPipe(VdpChromaType vdpau_type)
@@ -343,11 +344,9 @@ CheckSurfaceParams(struct pipe_screen *screen,
 
 typedef struct
 {
-   struct pipe_reference reference;
    struct vl_screen *vscreen;
    struct pipe_context *context;
    struct vl_compositor compositor;
-   struct pipe_sampler_view *dummy_sv;
    pipe_mutex mutex;
 
    struct {
@@ -454,7 +453,6 @@ void vlVdpSave4DelayedRendering(vlVdpDevice *dev, VdpOutputSurface surface, stru
 /* Internal function pointers */
 VdpGetErrorString vlVdpGetErrorString;
 VdpDeviceDestroy vlVdpDeviceDestroy;
-void vlVdpDeviceFree(vlVdpDevice *dev);
 VdpGetProcAddress vlVdpGetProcAddress;
 VdpGetApiVersion vlVdpGetApiVersion;
 VdpGetInformationString vlVdpGetInformationString;
@@ -542,16 +540,6 @@ static inline void VDPAU_MSG(unsigned int level, const char *fmt, ...)
       _debug_vprintf(fmt, ap);
       va_end(ap);
    }
-}
-
-static inline void
-DeviceReference(vlVdpDevice **ptr, vlVdpDevice *dev)
-{
-   vlVdpDevice *old_dev = *ptr;
-
-   if (pipe_reference(&(*ptr)->reference, &dev->reference))
-      vlVdpDeviceFree(old_dev);
-   *ptr = dev;
 }
 
 #endif /* VDPAU_PRIVATE_H */

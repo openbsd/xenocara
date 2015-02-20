@@ -109,7 +109,7 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 @HAVE_X11_DRIVER_TRUE@am__append_1 = drivers/x11
-@HAVE_DRICOMMON_TRUE@am__append_2 = drivers/dri
+@HAVE_DRI_TRUE@am__append_2 = drivers/dri
 @HAVE_OSMESA_TRUE@am__append_3 = drivers/osmesa
 DIST_COMMON = $(srcdir)/Makefile.sources $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(srcdir)/gl.pc.in \
@@ -127,9 +127,8 @@ DIST_COMMON = $(srcdir)/Makefile.sources $(srcdir)/Makefile.in \
 @HAVE_SPARC_ASM_TRUE@am__append_13 = -I$(builddir)/sparc -I$(srcdir)/sparc
 subdir = src/mesa
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
-	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
 	$(top_srcdir)/m4/ax_prog_bison.m4 \
 	$(top_srcdir)/m4/ax_prog_flex.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -154,21 +153,21 @@ am__libmesa_la_SOURCES_DIST = $(SRCDIR)main/api_arrayelt.c \
 	$(SRCDIR)main/clear.c $(SRCDIR)main/clip.c \
 	$(SRCDIR)main/colortab.c $(SRCDIR)main/compute.c \
 	$(SRCDIR)main/condrender.c $(SRCDIR)main/context.c \
-	$(SRCDIR)main/convolve.c $(SRCDIR)main/copyimage.c \
-	$(SRCDIR)main/cpuinfo.c $(SRCDIR)main/debug.c \
-	$(SRCDIR)main/depth.c $(SRCDIR)main/dlist.c \
-	$(SRCDIR)main/drawpix.c $(SRCDIR)main/drawtex.c \
-	$(SRCDIR)main/enable.c $(SRCDIR)main/errors.c \
-	$(SRCDIR)main/eval.c $(SRCDIR)main/execmem.c \
-	$(SRCDIR)main/extensions.c $(SRCDIR)main/fbobject.c \
-	$(SRCDIR)main/feedback.c $(SRCDIR)main/ffvertex_prog.c \
+	$(SRCDIR)main/convolve.c $(SRCDIR)main/cpuinfo.c \
+	$(SRCDIR)main/debug.c $(SRCDIR)main/depth.c \
+	$(SRCDIR)main/dlist.c $(SRCDIR)main/drawpix.c \
+	$(SRCDIR)main/drawtex.c $(SRCDIR)main/enable.c \
+	$(SRCDIR)main/errors.c $(SRCDIR)main/eval.c \
+	$(SRCDIR)main/execmem.c $(SRCDIR)main/extensions.c \
+	$(SRCDIR)main/fbobject.c $(SRCDIR)main/feedback.c \
+	$(SRCDIR)main/ffvertex_prog.c \
 	$(SRCDIR)main/ff_fragment_shader.cpp $(SRCDIR)main/fog.c \
 	$(SRCDIR)main/formatquery.c $(SRCDIR)main/formats.c \
 	$(SRCDIR)main/format_pack.c $(SRCDIR)main/format_unpack.c \
-	$(SRCDIR)main/format_utils.c $(SRCDIR)main/framebuffer.c \
-	$(SRCDIR)main/get.c $(SRCDIR)main/genmipmap.c \
-	$(SRCDIR)main/getstring.c $(SRCDIR)main/glformats.c \
-	$(SRCDIR)main/hash.c $(SRCDIR)main/hint.c \
+	$(SRCDIR)main/framebuffer.c $(SRCDIR)main/get.c \
+	$(SRCDIR)main/genmipmap.c $(SRCDIR)main/getstring.c \
+	$(SRCDIR)main/glformats.c $(SRCDIR)main/hash.c \
+	$(SRCDIR)main/hash_table.c $(SRCDIR)main/hint.c \
 	$(SRCDIR)main/histogram.c $(SRCDIR)main/image.c \
 	$(SRCDIR)main/imports.c $(SRCDIR)main/light.c \
 	$(SRCDIR)main/lines.c $(SRCDIR)main/matrix.c \
@@ -188,7 +187,6 @@ am__libmesa_la_SOURCES_DIST = $(SRCDIR)main/api_arrayelt.c \
 	$(SRCDIR)main/shader_query.cpp $(SRCDIR)main/shared.c \
 	$(SRCDIR)main/state.c $(SRCDIR)main/stencil.c \
 	$(SRCDIR)main/syncobj.c $(SRCDIR)main/texcompress.c \
-	$(SRCDIR)main/texcompress_bptc.c \
 	$(SRCDIR)main/texcompress_cpal.c \
 	$(SRCDIR)main/texcompress_rgtc.c \
 	$(SRCDIR)main/texcompress_s3tc.c \
@@ -244,7 +242,6 @@ am__libmesa_la_SOURCES_DIST = $(SRCDIR)main/api_arrayelt.c \
 	$(SRCDIR)swrast_setup/ss_triangle.c \
 	$(SRCDIR)drivers/common/driverfuncs.c \
 	$(SRCDIR)drivers/common/meta_blit.c \
-	$(SRCDIR)drivers/common/meta_copy_image.c \
 	$(SRCDIR)drivers/common/meta_generate_mipmap.c \
 	$(SRCDIR)drivers/common/meta.c $(SRCDIR)x86/common_x86.c \
 	$(SRCDIR)x86/x86_xform.c $(SRCDIR)x86/3dnow.c \
@@ -262,7 +259,9 @@ am__libmesa_la_SOURCES_DIST = $(SRCDIR)main/api_arrayelt.c \
 	$(SRCDIR)program/prog_parameter_layout.c \
 	$(SRCDIR)program/prog_print.c \
 	$(SRCDIR)program/prog_statevars.c \
-	$(SRCDIR)program/programopt.c $(SRCDIR)program/sampler.cpp \
+	$(SRCDIR)program/programopt.c \
+	$(SRCDIR)program/register_allocate.c \
+	$(SRCDIR)program/sampler.cpp \
 	$(SRCDIR)program/string_to_uint_map.cpp \
 	$(SRCDIR)program/symbol_table.c $(BUILDDIR)program/lex.yy.c \
 	$(BUILDDIR)program/program_parse.tab.c \
@@ -282,21 +281,20 @@ am__objects_2 = api_arrayelt.lo api_exec.lo api_loopback.lo \
 	api_validate.lo accum.lo arbprogram.lo atifragshader.lo \
 	attrib.lo arrayobj.lo blend.lo blit.lo bufferobj.lo buffers.lo \
 	clear.lo clip.lo colortab.lo compute.lo condrender.lo \
-	context.lo convolve.lo copyimage.lo cpuinfo.lo debug.lo \
-	depth.lo dlist.lo drawpix.lo drawtex.lo enable.lo errors.lo \
-	eval.lo execmem.lo extensions.lo fbobject.lo feedback.lo \
-	ffvertex_prog.lo ff_fragment_shader.lo fog.lo formatquery.lo \
-	formats.lo format_pack.lo format_unpack.lo format_utils.lo \
-	framebuffer.lo get.lo genmipmap.lo getstring.lo glformats.lo \
-	hash.lo hint.lo histogram.lo image.lo imports.lo light.lo \
-	lines.lo matrix.lo mipmap.lo mm.lo multisample.lo \
-	objectlabel.lo pack.lo pbo.lo performance_monitor.lo \
-	pipelineobj.lo pixel.lo pixelstore.lo pixeltransfer.lo \
-	points.lo polygon.lo queryobj.lo querymatrix.lo rastpos.lo \
-	readpix.lo remap.lo renderbuffer.lo samplerobj.lo scissor.lo \
-	set.lo shaderapi.lo shaderimage.lo shaderobj.lo \
-	shader_query.lo shared.lo state.lo stencil.lo syncobj.lo \
-	texcompress.lo texcompress_bptc.lo texcompress_cpal.lo \
+	context.lo convolve.lo cpuinfo.lo debug.lo depth.lo dlist.lo \
+	drawpix.lo drawtex.lo enable.lo errors.lo eval.lo execmem.lo \
+	extensions.lo fbobject.lo feedback.lo ffvertex_prog.lo \
+	ff_fragment_shader.lo fog.lo formatquery.lo formats.lo \
+	format_pack.lo format_unpack.lo framebuffer.lo get.lo \
+	genmipmap.lo getstring.lo glformats.lo hash.lo hash_table.lo \
+	hint.lo histogram.lo image.lo imports.lo light.lo lines.lo \
+	matrix.lo mipmap.lo mm.lo multisample.lo objectlabel.lo \
+	pack.lo pbo.lo performance_monitor.lo pipelineobj.lo pixel.lo \
+	pixelstore.lo pixeltransfer.lo points.lo polygon.lo \
+	queryobj.lo querymatrix.lo rastpos.lo readpix.lo remap.lo \
+	renderbuffer.lo samplerobj.lo scissor.lo set.lo shaderapi.lo \
+	shaderimage.lo shaderobj.lo shader_query.lo shared.lo state.lo \
+	stencil.lo syncobj.lo texcompress.lo texcompress_cpal.lo \
 	texcompress_rgtc.lo texcompress_s3tc.lo texcompress_fxt1.lo \
 	texcompress_etc.lo texenv.lo texformat.lo texgen.lo \
 	texgetimage.lo teximage.lo texobj.lo texparam.lo texstate.lo \
@@ -326,8 +324,8 @@ am__objects_7 = s_aaline.lo s_aatriangle.lo s_alpha.lo \
 	s_stencil.lo s_texcombine.lo s_texfetch.lo s_texfilter.lo \
 	s_texrender.lo s_texture.lo s_triangle.lo s_zoom.lo
 am__objects_8 = ss_context.lo ss_triangle.lo
-am__objects_9 = driverfuncs.lo meta_blit.lo meta_copy_image.lo \
-	meta_generate_mipmap.lo meta.lo
+am__objects_9 = driverfuncs.lo meta_blit.lo meta_generate_mipmap.lo \
+	meta.lo
 am__objects_10 = common_x86.lo x86_xform.lo 3dnow.lo sse.lo x86sse.lo \
 	sparc.lo x86-64.lo
 am__objects_11 = $(am__objects_2) $(am__objects_3) $(am__objects_4) \
@@ -338,8 +336,9 @@ am__objects_12 = arbprogparse.lo prog_hash_table.lo ir_to_mesa.lo \
 	prog_execute.lo prog_instruction.lo prog_noise.lo \
 	prog_optimize.lo prog_opt_constant_fold.lo prog_parameter.lo \
 	prog_parameter_layout.lo prog_print.lo prog_statevars.lo \
-	programopt.lo sampler.lo string_to_uint_map.lo symbol_table.lo \
-	lex.yy.lo program_parse.tab.lo
+	programopt.lo register_allocate.lo sampler.lo \
+	string_to_uint_map.lo symbol_table.lo lex.yy.lo \
+	program_parse.tab.lo
 am__objects_13 = xform4.lo
 @HAVE_X86_64_ASM_TRUE@@HAVE_X86_ASM_TRUE@am__objects_14 =  \
 @HAVE_X86_64_ASM_TRUE@@HAVE_X86_ASM_TRUE@	$(am__objects_13)
@@ -364,8 +363,7 @@ am__v_lt_1 =
 @NEED_LIBMESA_TRUE@am_libmesa_la_rpath =
 libmesa_sse41_la_LIBADD =
 am_libmesa_sse41_la_OBJECTS =  \
-	libmesa_sse41_la-streaming-load-memcpy.lo \
-	libmesa_sse41_la-sse_minmax.lo
+	libmesa_sse41_la-streaming-load-memcpy.lo
 libmesa_sse41_la_OBJECTS = $(am_libmesa_sse41_la_OBJECTS)
 libmesa_sse41_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -384,21 +382,21 @@ am__libmesagallium_la_SOURCES_DIST = $(SRCDIR)main/api_arrayelt.c \
 	$(SRCDIR)main/clear.c $(SRCDIR)main/clip.c \
 	$(SRCDIR)main/colortab.c $(SRCDIR)main/compute.c \
 	$(SRCDIR)main/condrender.c $(SRCDIR)main/context.c \
-	$(SRCDIR)main/convolve.c $(SRCDIR)main/copyimage.c \
-	$(SRCDIR)main/cpuinfo.c $(SRCDIR)main/debug.c \
-	$(SRCDIR)main/depth.c $(SRCDIR)main/dlist.c \
-	$(SRCDIR)main/drawpix.c $(SRCDIR)main/drawtex.c \
-	$(SRCDIR)main/enable.c $(SRCDIR)main/errors.c \
-	$(SRCDIR)main/eval.c $(SRCDIR)main/execmem.c \
-	$(SRCDIR)main/extensions.c $(SRCDIR)main/fbobject.c \
-	$(SRCDIR)main/feedback.c $(SRCDIR)main/ffvertex_prog.c \
+	$(SRCDIR)main/convolve.c $(SRCDIR)main/cpuinfo.c \
+	$(SRCDIR)main/debug.c $(SRCDIR)main/depth.c \
+	$(SRCDIR)main/dlist.c $(SRCDIR)main/drawpix.c \
+	$(SRCDIR)main/drawtex.c $(SRCDIR)main/enable.c \
+	$(SRCDIR)main/errors.c $(SRCDIR)main/eval.c \
+	$(SRCDIR)main/execmem.c $(SRCDIR)main/extensions.c \
+	$(SRCDIR)main/fbobject.c $(SRCDIR)main/feedback.c \
+	$(SRCDIR)main/ffvertex_prog.c \
 	$(SRCDIR)main/ff_fragment_shader.cpp $(SRCDIR)main/fog.c \
 	$(SRCDIR)main/formatquery.c $(SRCDIR)main/formats.c \
 	$(SRCDIR)main/format_pack.c $(SRCDIR)main/format_unpack.c \
-	$(SRCDIR)main/format_utils.c $(SRCDIR)main/framebuffer.c \
-	$(SRCDIR)main/get.c $(SRCDIR)main/genmipmap.c \
-	$(SRCDIR)main/getstring.c $(SRCDIR)main/glformats.c \
-	$(SRCDIR)main/hash.c $(SRCDIR)main/hint.c \
+	$(SRCDIR)main/framebuffer.c $(SRCDIR)main/get.c \
+	$(SRCDIR)main/genmipmap.c $(SRCDIR)main/getstring.c \
+	$(SRCDIR)main/glformats.c $(SRCDIR)main/hash.c \
+	$(SRCDIR)main/hash_table.c $(SRCDIR)main/hint.c \
 	$(SRCDIR)main/histogram.c $(SRCDIR)main/image.c \
 	$(SRCDIR)main/imports.c $(SRCDIR)main/light.c \
 	$(SRCDIR)main/lines.c $(SRCDIR)main/matrix.c \
@@ -418,7 +416,6 @@ am__libmesagallium_la_SOURCES_DIST = $(SRCDIR)main/api_arrayelt.c \
 	$(SRCDIR)main/shader_query.cpp $(SRCDIR)main/shared.c \
 	$(SRCDIR)main/state.c $(SRCDIR)main/stencil.c \
 	$(SRCDIR)main/syncobj.c $(SRCDIR)main/texcompress.c \
-	$(SRCDIR)main/texcompress_bptc.c \
 	$(SRCDIR)main/texcompress_cpal.c \
 	$(SRCDIR)main/texcompress_rgtc.c \
 	$(SRCDIR)main/texcompress_s3tc.c \
@@ -510,7 +507,9 @@ am__libmesagallium_la_SOURCES_DIST = $(SRCDIR)main/api_arrayelt.c \
 	$(SRCDIR)program/prog_parameter_layout.c \
 	$(SRCDIR)program/prog_print.c \
 	$(SRCDIR)program/prog_statevars.c \
-	$(SRCDIR)program/programopt.c $(SRCDIR)program/sampler.cpp \
+	$(SRCDIR)program/programopt.c \
+	$(SRCDIR)program/register_allocate.c \
+	$(SRCDIR)program/sampler.cpp \
 	$(SRCDIR)program/string_to_uint_map.cpp \
 	$(SRCDIR)program/symbol_table.c $(BUILDDIR)program/lex.yy.c \
 	$(BUILDDIR)program/program_parse.tab.c \
@@ -726,7 +725,6 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
 CCASDEPMODE = @CCASDEPMODE@
@@ -742,7 +740,6 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-D3D_DRIVER_INSTALL_DIR = @D3D_DRIVER_INSTALL_DIR@
 DEFINES = @DEFINES@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -765,6 +762,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
 EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
+EGL_DRIVER_INSTALL_DIR = @EGL_DRIVER_INSTALL_DIR@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
@@ -837,14 +835,11 @@ LLVM_LIBS = @LLVM_LIBS@
 LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-NINE_MAJOR = @NINE_MAJOR@
-NINE_MINOR = @NINE_MINOR@
-NINE_TINY = @NINE_TINY@
-NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NOUVEAU_CFLAGS = @NOUVEAU_CFLAGS@
@@ -855,8 +850,10 @@ OMX_CFLAGS = @OMX_CFLAGS@
 OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
+OPENCL_LIB_INSTALL_DIR = @OPENCL_LIB_INSTALL_DIR@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
+OSMESA_MESA_DEPS = @OSMESA_MESA_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
 OSMESA_PC_REQ = @OSMESA_PC_REQ@
 OSMESA_VERSION = @OSMESA_VERSION@
@@ -870,6 +867,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -888,13 +886,7 @@ SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
-VA_CFLAGS = @VA_CFLAGS@
-VA_LIBS = @VA_LIBS@
-VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
-VA_MAJOR = @VA_MAJOR@
-VA_MINOR = @VA_MINOR@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -958,7 +950,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-ifGNUmake = @ifGNUmake@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -991,8 +982,7 @@ gl_HEADERS = $(top_srcdir)/include/GL/*.h
 
 # include glapi_gen.mk for generating glapi headers for GLES
 GLAPI = $(top_srcdir)/src/mapi/glapi/gen
-BUILDDIR = $(top_builddir)/src/mesa/
-SRCDIR = $(top_srcdir)/src/mesa/
+BUILDDIR = $(builddir)/
 
 # this is part of MAIN_FILES
 MAIN_ES_FILES = \
@@ -1019,7 +1009,6 @@ MAIN_FILES = \
 	$(SRCDIR)main/condrender.c \
 	$(SRCDIR)main/context.c \
 	$(SRCDIR)main/convolve.c \
-	$(SRCDIR)main/copyimage.c \
 	$(SRCDIR)main/cpuinfo.c \
 	$(SRCDIR)main/debug.c \
 	$(SRCDIR)main/depth.c \
@@ -1040,13 +1029,13 @@ MAIN_FILES = \
 	$(SRCDIR)main/formats.c \
 	$(SRCDIR)main/format_pack.c \
 	$(SRCDIR)main/format_unpack.c \
-	$(SRCDIR)main/format_utils.c \
 	$(SRCDIR)main/framebuffer.c \
 	$(SRCDIR)main/get.c \
 	$(SRCDIR)main/genmipmap.c \
 	$(SRCDIR)main/getstring.c \
 	$(SRCDIR)main/glformats.c \
 	$(SRCDIR)main/hash.c \
+	$(SRCDIR)main/hash_table.c \
 	$(SRCDIR)main/hint.c \
 	$(SRCDIR)main/histogram.c \
 	$(SRCDIR)main/image.c \
@@ -1085,7 +1074,6 @@ MAIN_FILES = \
 	$(SRCDIR)main/stencil.c \
 	$(SRCDIR)main/syncobj.c \
 	$(SRCDIR)main/texcompress.c \
-	$(SRCDIR)main/texcompress_bptc.c \
 	$(SRCDIR)main/texcompress_cpal.c \
 	$(SRCDIR)main/texcompress_rgtc.c \
 	$(SRCDIR)main/texcompress_s3tc.c \
@@ -1268,6 +1256,7 @@ PROGRAM_FILES = \
 	$(SRCDIR)program/prog_print.c \
 	$(SRCDIR)program/prog_statevars.c \
 	$(SRCDIR)program/programopt.c \
+	$(SRCDIR)program/register_allocate.c \
 	$(SRCDIR)program/sampler.cpp \
 	$(SRCDIR)program/string_to_uint_map.cpp \
 	$(SRCDIR)program/symbol_table.c \
@@ -1313,7 +1302,6 @@ SPARC_FILES = \
 COMMON_DRIVER_FILES = \
 	$(SRCDIR)drivers/common/driverfuncs.c	\
 	$(SRCDIR)drivers/common/meta_blit.c	\
-	$(SRCDIR)drivers/common/meta_copy_image.c	\
 	$(SRCDIR)drivers/common/meta_generate_mipmap.c	\
 	$(SRCDIR)drivers/common/meta.c
 
@@ -1343,7 +1331,6 @@ MESA_GALLIUM_FILES = \
 ### Include directories
 INCLUDE_DIRS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/glsl \
 	-I$(top_builddir)/src/glsl \
 	-I$(top_srcdir)/src/glsl/glcpp \
@@ -1356,8 +1343,7 @@ INCLUDE_DIRS = \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary
 
-BUILT_SOURCES = main/get_hash.h main/format_info.c \
-	$(BUILDDIR)main/git_sha1.h \
+BUILT_SOURCES = main/get_hash.h $(BUILDDIR)main/git_sha1.h \
 	$(BUILDDIR)program/program_parse.tab.c \
 	$(BUILDDIR)program/lex.yy.c $(am__append_7)
 CLEANFILES = \
@@ -1379,26 +1365,27 @@ MESA_ASM_FILES_FOR_ARCH = $(am__append_8) $(am__append_10) \
 libmesa_la_SOURCES = \
 	$(MESA_FILES) \
 	$(PROGRAM_FILES) \
-	$(MESA_ASM_FILES_FOR_ARCH)
+        $(MESA_ASM_FILES_FOR_ARCH)
 
 libmesa_la_LIBADD = \
-	$(top_builddir)/src/glsl/libglsl.la \
-	$(ARCH_LIBS)
+        $(top_builddir)/src/glsl/libglsl.la \
+	$(ARCH_LIBS) \
+        $()
 
 libmesagallium_la_SOURCES = \
 	$(MESA_GALLIUM_FILES) \
 	$(PROGRAM_FILES) \
-	$(MESA_ASM_FILES_FOR_ARCH)
+        $(MESA_ASM_FILES_FOR_ARCH)
 
 libmesagallium_la_LIBADD = \
-	$(top_builddir)/src/glsl/libglsl.la \
-	$(ARCH_LIBS)
+        $(top_builddir)/src/glsl/libglsl.la \
+	$(ARCH_LIBS) \
+        $()
 
 libmesa_sse41_la_SOURCES = \
-	main/streaming-load-memcpy.c \
-	main/sse_minmax.c
+	main/streaming-load-memcpy.c
 
-libmesa_sse41_la_CFLAGS = $(AM_CFLAGS) $(SSE41_CFLAGS)
+libmesa_sse41_la_CFLAGS = $(AM_CFLAGS) -msse4.1
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gl.pc
 all: $(BUILT_SOURCES)
@@ -1519,7 +1506,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/condrender.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/context.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/convolve.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/copyimage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpuinfo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/depth.Plo@am__quote@
@@ -1541,7 +1527,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fog.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/format_pack.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/format_unpack.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/format_utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/formatquery.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/formats.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/framebuffer.Plo@am__quote@
@@ -1551,13 +1536,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getstring.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glformats.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hash_table.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hint.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/histogram.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/imports.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ir_to_mesa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lex.yy.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmesa_sse41_la-sse_minmax.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmesa_sse41_la-streaming-load-memcpy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/light.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lines.Plo@am__quote@
@@ -1572,7 +1557,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/matrix.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta_blit.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta_copy_image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/meta_generate_mipmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mipmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mm.Plo@am__quote@
@@ -1609,6 +1593,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rastpos.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/read_rgba_span_x86.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/readpix.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/register_allocate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/remap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/renderbuffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/s_aaline.Plo@am__quote@
@@ -1733,7 +1718,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t_vertex_sse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/t_vp_build.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/texcompress.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/texcompress_bptc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/texcompress_cpal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/texcompress_etc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/texcompress_fxt1.Plo@am__quote@
@@ -2114,13 +2098,6 @@ convolve.lo: $(SRCDIR)main/convolve.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o convolve.lo `test -f '$(SRCDIR)main/convolve.c' || echo '$(srcdir)/'`$(SRCDIR)main/convolve.c
 
-copyimage.lo: $(SRCDIR)main/copyimage.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT copyimage.lo -MD -MP -MF $(DEPDIR)/copyimage.Tpo -c -o copyimage.lo `test -f '$(SRCDIR)main/copyimage.c' || echo '$(srcdir)/'`$(SRCDIR)main/copyimage.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/copyimage.Tpo $(DEPDIR)/copyimage.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(SRCDIR)main/copyimage.c' object='copyimage.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o copyimage.lo `test -f '$(SRCDIR)main/copyimage.c' || echo '$(srcdir)/'`$(SRCDIR)main/copyimage.c
-
 cpuinfo.lo: $(SRCDIR)main/cpuinfo.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cpuinfo.lo -MD -MP -MF $(DEPDIR)/cpuinfo.Tpo -c -o cpuinfo.lo `test -f '$(SRCDIR)main/cpuinfo.c' || echo '$(srcdir)/'`$(SRCDIR)main/cpuinfo.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/cpuinfo.Tpo $(DEPDIR)/cpuinfo.Plo
@@ -2254,13 +2231,6 @@ format_unpack.lo: $(SRCDIR)main/format_unpack.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o format_unpack.lo `test -f '$(SRCDIR)main/format_unpack.c' || echo '$(srcdir)/'`$(SRCDIR)main/format_unpack.c
 
-format_utils.lo: $(SRCDIR)main/format_utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT format_utils.lo -MD -MP -MF $(DEPDIR)/format_utils.Tpo -c -o format_utils.lo `test -f '$(SRCDIR)main/format_utils.c' || echo '$(srcdir)/'`$(SRCDIR)main/format_utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/format_utils.Tpo $(DEPDIR)/format_utils.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(SRCDIR)main/format_utils.c' object='format_utils.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o format_utils.lo `test -f '$(SRCDIR)main/format_utils.c' || echo '$(srcdir)/'`$(SRCDIR)main/format_utils.c
-
 framebuffer.lo: $(SRCDIR)main/framebuffer.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT framebuffer.lo -MD -MP -MF $(DEPDIR)/framebuffer.Tpo -c -o framebuffer.lo `test -f '$(SRCDIR)main/framebuffer.c' || echo '$(srcdir)/'`$(SRCDIR)main/framebuffer.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/framebuffer.Tpo $(DEPDIR)/framebuffer.Plo
@@ -2302,6 +2272,13 @@ hash.lo: $(SRCDIR)main/hash.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(SRCDIR)main/hash.c' object='hash.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o hash.lo `test -f '$(SRCDIR)main/hash.c' || echo '$(srcdir)/'`$(SRCDIR)main/hash.c
+
+hash_table.lo: $(SRCDIR)main/hash_table.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT hash_table.lo -MD -MP -MF $(DEPDIR)/hash_table.Tpo -c -o hash_table.lo `test -f '$(SRCDIR)main/hash_table.c' || echo '$(srcdir)/'`$(SRCDIR)main/hash_table.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/hash_table.Tpo $(DEPDIR)/hash_table.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(SRCDIR)main/hash_table.c' object='hash_table.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o hash_table.lo `test -f '$(SRCDIR)main/hash_table.c' || echo '$(srcdir)/'`$(SRCDIR)main/hash_table.c
 
 hint.lo: $(SRCDIR)main/hint.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT hint.lo -MD -MP -MF $(DEPDIR)/hint.Tpo -c -o hint.lo `test -f '$(SRCDIR)main/hint.c' || echo '$(srcdir)/'`$(SRCDIR)main/hint.c
@@ -2561,13 +2538,6 @@ texcompress.lo: $(SRCDIR)main/texcompress.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(SRCDIR)main/texcompress.c' object='texcompress.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o texcompress.lo `test -f '$(SRCDIR)main/texcompress.c' || echo '$(srcdir)/'`$(SRCDIR)main/texcompress.c
-
-texcompress_bptc.lo: $(SRCDIR)main/texcompress_bptc.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT texcompress_bptc.lo -MD -MP -MF $(DEPDIR)/texcompress_bptc.Tpo -c -o texcompress_bptc.lo `test -f '$(SRCDIR)main/texcompress_bptc.c' || echo '$(srcdir)/'`$(SRCDIR)main/texcompress_bptc.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/texcompress_bptc.Tpo $(DEPDIR)/texcompress_bptc.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(SRCDIR)main/texcompress_bptc.c' object='texcompress_bptc.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o texcompress_bptc.lo `test -f '$(SRCDIR)main/texcompress_bptc.c' || echo '$(srcdir)/'`$(SRCDIR)main/texcompress_bptc.c
 
 texcompress_cpal.lo: $(SRCDIR)main/texcompress_cpal.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT texcompress_cpal.lo -MD -MP -MF $(DEPDIR)/texcompress_cpal.Tpo -c -o texcompress_cpal.lo `test -f '$(SRCDIR)main/texcompress_cpal.c' || echo '$(srcdir)/'`$(SRCDIR)main/texcompress_cpal.c
@@ -3269,13 +3239,6 @@ meta_blit.lo: $(SRCDIR)drivers/common/meta_blit.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta_blit.lo `test -f '$(SRCDIR)drivers/common/meta_blit.c' || echo '$(srcdir)/'`$(SRCDIR)drivers/common/meta_blit.c
 
-meta_copy_image.lo: $(SRCDIR)drivers/common/meta_copy_image.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta_copy_image.lo -MD -MP -MF $(DEPDIR)/meta_copy_image.Tpo -c -o meta_copy_image.lo `test -f '$(SRCDIR)drivers/common/meta_copy_image.c' || echo '$(srcdir)/'`$(SRCDIR)drivers/common/meta_copy_image.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta_copy_image.Tpo $(DEPDIR)/meta_copy_image.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(SRCDIR)drivers/common/meta_copy_image.c' object='meta_copy_image.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o meta_copy_image.lo `test -f '$(SRCDIR)drivers/common/meta_copy_image.c' || echo '$(srcdir)/'`$(SRCDIR)drivers/common/meta_copy_image.c
-
 meta_generate_mipmap.lo: $(SRCDIR)drivers/common/meta_generate_mipmap.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT meta_generate_mipmap.lo -MD -MP -MF $(DEPDIR)/meta_generate_mipmap.Tpo -c -o meta_generate_mipmap.lo `test -f '$(SRCDIR)drivers/common/meta_generate_mipmap.c' || echo '$(srcdir)/'`$(SRCDIR)drivers/common/meta_generate_mipmap.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/meta_generate_mipmap.Tpo $(DEPDIR)/meta_generate_mipmap.Plo
@@ -3444,6 +3407,13 @@ programopt.lo: $(SRCDIR)program/programopt.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o programopt.lo `test -f '$(SRCDIR)program/programopt.c' || echo '$(srcdir)/'`$(SRCDIR)program/programopt.c
 
+register_allocate.lo: $(SRCDIR)program/register_allocate.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT register_allocate.lo -MD -MP -MF $(DEPDIR)/register_allocate.Tpo -c -o register_allocate.lo `test -f '$(SRCDIR)program/register_allocate.c' || echo '$(srcdir)/'`$(SRCDIR)program/register_allocate.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/register_allocate.Tpo $(DEPDIR)/register_allocate.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(SRCDIR)program/register_allocate.c' object='register_allocate.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o register_allocate.lo `test -f '$(SRCDIR)program/register_allocate.c' || echo '$(srcdir)/'`$(SRCDIR)program/register_allocate.c
+
 symbol_table.lo: $(SRCDIR)program/symbol_table.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT symbol_table.lo -MD -MP -MF $(DEPDIR)/symbol_table.Tpo -c -o symbol_table.lo `test -f '$(SRCDIR)program/symbol_table.c' || echo '$(srcdir)/'`$(SRCDIR)program/symbol_table.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/symbol_table.Tpo $(DEPDIR)/symbol_table.Plo
@@ -3471,13 +3441,6 @@ libmesa_sse41_la-streaming-load-memcpy.lo: main/streaming-load-memcpy.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main/streaming-load-memcpy.c' object='libmesa_sse41_la-streaming-load-memcpy.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesa_sse41_la_CFLAGS) $(CFLAGS) -c -o libmesa_sse41_la-streaming-load-memcpy.lo `test -f 'main/streaming-load-memcpy.c' || echo '$(srcdir)/'`main/streaming-load-memcpy.c
-
-libmesa_sse41_la-sse_minmax.lo: main/sse_minmax.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesa_sse41_la_CFLAGS) $(CFLAGS) -MT libmesa_sse41_la-sse_minmax.lo -MD -MP -MF $(DEPDIR)/libmesa_sse41_la-sse_minmax.Tpo -c -o libmesa_sse41_la-sse_minmax.lo `test -f 'main/sse_minmax.c' || echo '$(srcdir)/'`main/sse_minmax.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmesa_sse41_la-sse_minmax.Tpo $(DEPDIR)/libmesa_sse41_la-sse_minmax.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main/sse_minmax.c' object='libmesa_sse41_la-sse_minmax.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmesa_sse41_la_CFLAGS) $(CFLAGS) -c -o libmesa_sse41_la-sse_minmax.lo `test -f 'main/sse_minmax.c' || echo '$(srcdir)/'`main/sse_minmax.c
 
 st_atom.lo: $(SRCDIR)state_tracker/st_atom.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT st_atom.lo -MD -MP -MF $(DEPDIR)/st_atom.Tpo -c -o st_atom.lo `test -f '$(SRCDIR)state_tracker/st_atom.c' || echo '$(srcdir)/'`$(SRCDIR)state_tracker/st_atom.c
@@ -4275,15 +4238,6 @@ main/get_hash.h: $(GLAPI)/gl_and_es_API.xml main/get_hash_params.py 	\
 	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/$(GET_HASH_GEN)		\
 		-f $< > $@.tmp;						\
 	mv $@.tmp $@;
-
-main/format_info.c: main/formats.csv                                    \
-                    main/format_parser.py main/format_info.py
-	$(AM_V_GEN)set -e;						\
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/main/format_info.py        \
-                   $< > $@.tmp;                                         \
-	mv $@.tmp $@;
-
-main/formats.c: main/format_info.c
 
 $(BUILDDIR)program/lex.yy.c: program/program_lexer.l
 	$(AM_V_at)$(MKDIR_P) program

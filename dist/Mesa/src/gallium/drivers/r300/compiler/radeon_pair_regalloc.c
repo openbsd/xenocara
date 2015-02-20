@@ -31,9 +31,9 @@
 #include <stdio.h>
 
 #include "main/glheader.h"
-#include "util/register_allocate.h"
+#include "program/register_allocate.h"
 #include "util/u_memory.h"
-#include "util/ralloc.h"
+#include "ralloc.h"
 
 #include "r300_fragprog_swizzle.h"
 #include "radeon_compiler.h"
@@ -387,8 +387,11 @@ static enum rc_reg_class variable_get_class(
 						 * instructions can't be
 						 * swizzle on r300/r400 GPUs.
 						 */
-						can_change_writemask = 0;
-						break;
+						if (!variable->C->is_r500) {
+							can_change_writemask = 0;
+							break;
+						}
+						old_swizzle = r.U.I.Src->Swizzle;
 					}
 					new_swizzle = rc_adjust_channels(
 						old_swizzle, conversion_swizzle);
@@ -569,15 +572,13 @@ static void do_advanced_regalloc(struct regalloc_state * s)
 	graph = ra_alloc_interference_graph(ra_state->regs,
 						node_count + s->NumInputs);
 
-	for (node_index = 0; node_index < node_count; node_index++) {
-		ra_set_node_class(graph, node_index, node_classes[node_index]);
-	}
-
 	/* Build the interference graph */
 	for (var_ptr = variables, node_index = 0; var_ptr;
 					var_ptr = var_ptr->Next,node_index++) {
 		struct rc_list * a, * b;
 		unsigned int b_index;
+
+		ra_set_node_class(graph, node_index, node_classes[node_index]);
 
 		for (a = var_ptr, b = var_ptr->Next, b_index = node_index + 1;
 						b; b = b->Next, b_index++) {
@@ -616,7 +617,7 @@ static void do_advanced_regalloc(struct regalloc_state * s)
 		input_node++;
 	}
 
-	if (!ra_allocate(graph)) {
+	if (!ra_allocate_no_spills(graph)) {
 		rc_error(s->C, "Ran out of hardware temporaries\n");
 		return;
 	}

@@ -32,14 +32,11 @@ LOCAL_SRC_FILES := \
 	$(common_FILES) \
 	$(android_FILES)
 
-LOCAL_CFLAGS := \
-	-DFEATURE_ES1=1 \
-	-DFEATURE_ES2=1 \
-	-DHAVE_ANDROID_BACKEND
+LOCAL_CFLAGS := -DHAVE_ANDROID_BACKEND
 
 LOCAL_C_INCLUDES := \
 	$(GALLIUM_TOP)/state_trackers/egl \
-	$(GALLIUM_TOP)/winsys \
+	$(GALLIUM_TOP)/winsys/sw \
 	$(MESA_TOP)/src/egl/main
 
 # swrast only

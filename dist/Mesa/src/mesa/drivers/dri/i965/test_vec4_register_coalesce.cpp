@@ -58,37 +58,39 @@ public:
 protected:
    virtual dst_reg *make_reg_for_system_value(ir_variable *ir)
    {
-      unreachable("Not reached");
+      assert(!"Not reached");
+      return NULL;
    }
 
    virtual void setup_payload()
    {
-      unreachable("Not reached");
+      assert(!"Not reached");
    }
 
    virtual void emit_prolog()
    {
-      unreachable("Not reached");
+      assert(!"Not reached");
    }
 
    virtual void emit_program_code()
    {
-      unreachable("Not reached");
+      assert(!"Not reached");
    }
 
    virtual void emit_thread_end()
    {
-      unreachable("Not reached");
+      assert(!"Not reached");
    }
 
    virtual void emit_urb_write_header(int mrf)
    {
-      unreachable("Not reached");
+      assert(!"Not reached");
    }
 
    virtual vec4_instruction *emit_urb_write_opcode(bool complete)
    {
-      unreachable("Not reached");
+      assert(!"Not reached");
+      unreachable();
    }
 };
 
@@ -119,7 +121,6 @@ _register_coalesce(vec4_visitor *v, const char *func)
       v->dump_instructions();
    }
 
-   v->calculate_cfg();
    v->opt_register_coalesce();
 
    if (print) {
@@ -242,5 +243,8 @@ TEST_F(register_coalesce_test, test_channel_mul_grf)
 
    register_coalesce(v);
 
-   EXPECT_EQ(mul->dst.reg, to.reg);
+   /* This path isn't supported yet in the reswizzling code, so we're checking
+    * that we haven't done anything bad to scalar non-DP[234]s.
+    */
+   EXPECT_NE(mul->dst.reg, to.reg);
 }

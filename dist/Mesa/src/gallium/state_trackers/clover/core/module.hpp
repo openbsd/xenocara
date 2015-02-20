@@ -68,35 +68,27 @@ namespace clover {
             sign_ext
          };
 
-         enum semantic {
-            general,
-            grid_dimension,
-            grid_offset
-         };
-
          argument(enum type type, size_t size,
                   size_t target_size, size_t target_align,
-                  enum ext_type ext_type,
-                  enum semantic semantic = general) :
+                  enum ext_type ext_type) :
             type(type), size(size),
             target_size(target_size), target_align(target_align),
-            ext_type(ext_type), semantic(semantic) { }
+            ext_type(ext_type) { }
 
          argument(enum type type, size_t size) :
             type(type), size(size),
             target_size(size), target_align(1),
-            ext_type(zero_ext), semantic(general) { }
+            ext_type(zero_ext) { }
 
          argument() : type(scalar), size(0),
                       target_size(0), target_align(1),
-                      ext_type(zero_ext), semantic(general) { }
+                      ext_type(zero_ext) { }
 
          type type;
          size_t size;
          size_t target_size;
          size_t target_align;
          ext_type ext_type;
-         semantic semantic;
       };
 
       struct symbol {
@@ -113,7 +105,6 @@ namespace clover {
 
       void serialize(compat::ostream &os) const;
       static module deserialize(compat::istream &is);
-      size_t size() const;
 
       compat::vector<symbol> syms;
       compat::vector<section> secs;

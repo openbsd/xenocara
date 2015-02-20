@@ -21,18 +21,19 @@
 //
 
 #include "core/program.hpp"
+#include "core/compiler.hpp"
 
 using namespace clover;
 
 program::program(clover::context &ctx, const std::string &source) :
-   has_source(true), context(ctx), _source(source), _kernel_ref_counter(0) {
+   has_source(true), context(ctx), _source(source) {
 }
 
 program::program(clover::context &ctx,
                  const ref_vector<device> &devs,
                  const std::vector<module> &binaries) :
    has_source(false), context(ctx),
-   _devices(devs), _kernel_ref_counter(0) {
+   _devices(devs) {
    for_each([&](device &dev, const module &bin) {
          _binaries.insert({ &dev, bin });
       },
@@ -40,8 +41,7 @@ program::program(clover::context &ctx,
 }
 
 void
-program::build(const ref_vector<device> &devs, const char *opts,
-               const header_map &headers) {
+program::build(const ref_vector<device> &devs, const char *opts) {
    if (has_source) {
       _devices = devs;
 
@@ -52,19 +52,15 @@ program::build(const ref_vector<device> &devs, const char *opts,
 
          _opts.insert({ &dev, opts });
 
-         compat::string log;
-
          try {
             auto module = (dev.ir_format() == PIPE_SHADER_IR_TGSI ?
                            compile_program_tgsi(_source) :
-                           compile_program_llvm(_source, headers,
-                                                dev.ir_format(),
-                                                dev.ir_target(), build_opts(dev),
-                                                log));
+                           compile_program_llvm(_source, dev.ir_format(),
+                                                dev.ir_target(), build_opts(dev)));
             _binaries.insert({ &dev, module });
-            _logs.insert({ &dev, log });
-         } catch (const build_error &) {
-            _logs.insert({ &dev, log });
+
+         } catch (build_error &e) {
+            _logs.insert({ &dev, e.what() });
             throw;
          }
       }
@@ -110,9 +106,4 @@ program::symbols() const {
       throw error(CL_INVALID_PROGRAM_EXECUTABLE);
 
    return _binaries.begin()->second.syms;
-}
-
-unsigned
-program::kernel_ref_count() const {
-   return _kernel_ref_counter.ref_count();
 }

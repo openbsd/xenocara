@@ -39,16 +39,21 @@ fs_visitor::dead_code_eliminate()
 {
    bool progress = false;
 
+   cfg_t cfg(&instructions);
+
    calculate_live_intervals();
 
    int num_vars = live_intervals->num_vars;
    BITSET_WORD *live = ralloc_array(NULL, BITSET_WORD, BITSET_WORDS(num_vars));
 
-   foreach_block (block, cfg) {
-      memcpy(live, live_intervals->bd[block->num].liveout,
+   for (int b = 0; b < cfg.num_blocks; b++) {
+      bblock_t *block = cfg.blocks[b];
+      memcpy(live, live_intervals->bd[b].liveout,
              sizeof(BITSET_WORD) * BITSET_WORDS(num_vars));
 
-      foreach_inst_in_block_reverse(fs_inst, inst, block) {
+      for (fs_inst *inst = (fs_inst *)block->end;
+           inst != block->start->prev;
+           inst = (fs_inst *)inst->prev) {
          if (inst->dst.file == GRF &&
              !inst->has_side_effects() &&
              !inst->writes_flag()) {
@@ -58,7 +63,7 @@ fs_visitor::dead_code_eliminate()
                int var = live_intervals->var_from_reg(&inst->dst);
                result_live = BITSET_TEST(live, var);
             } else {
-               int var = live_intervals->var_from_reg(&inst->dst);
+               int var = live_intervals->var_from_vgrf[inst->dst.reg];
                for (int i = 0; i < inst->regs_written; i++) {
                   result_live = result_live || BITSET_TEST(live, var + i);
                }
@@ -78,19 +83,19 @@ fs_visitor::dead_code_eliminate()
 
          if (inst->dst.file == GRF) {
             if (!inst->is_partial_write()) {
-               int var = live_intervals->var_from_reg(&inst->dst);
+               int var = live_intervals->var_from_vgrf[inst->dst.reg];
                for (int i = 0; i < inst->regs_written; i++) {
-                  BITSET_CLEAR(live, var + i);
+                  BITSET_CLEAR(live, var + inst->dst.reg_offset + i);
                }
             }
          }
 
-         for (int i = 0; i < inst->sources; i++) {
+         for (int i = 0; i < 3; i++) {
             if (inst->src[i].file == GRF) {
-               int var = live_intervals->var_from_reg(&inst->src[i]);
+               int var = live_intervals->var_from_vgrf[inst->src[i].reg];
 
                for (int j = 0; j < inst->regs_read(this, i); j++) {
-                  BITSET_SET(live, var + j);
+                  BITSET_SET(live, var + inst->src[i].reg_offset + j);
                }
             }
          }
@@ -100,9 +105,11 @@ fs_visitor::dead_code_eliminate()
    ralloc_free(live);
 
    if (progress) {
-      foreach_block_and_inst_safe (block, backend_instruction, inst, cfg) {
+      foreach_list_safe(node, &this->instructions) {
+         fs_inst *inst = (fs_inst *)node;
+
          if (inst->opcode == BRW_OPCODE_NOP) {
-            inst->remove(block);
+            inst->remove();
          }
       }
 

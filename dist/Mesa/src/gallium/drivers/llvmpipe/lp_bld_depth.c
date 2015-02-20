@@ -363,8 +363,7 @@ get_z_shift_and_mask(const struct util_format_description *format_desc,
       return FALSE;
 
    *width = format_desc->channel[z_swizzle].size;
-   /* & 31 is for the same reason as the 32-bit limit above */
-   *shift = format_desc->channel[z_swizzle].shift & 31;
+   *shift = format_desc->channel[z_swizzle].shift;
 
    if (*width == total_bits) {
       *mask = 0xffffffff;

@@ -242,8 +242,8 @@ lower_packed_varyings_visitor::lower_packed_varyings_visitor(
 void
 lower_packed_varyings_visitor::run(exec_list *instructions)
 {
-   foreach_in_list(ir_instruction, node, instructions) {
-      ir_variable *var = node->as_variable();
+   foreach_list (node, instructions) {
+      ir_variable *var = ((ir_instruction *) node)->as_variable();
       if (var == NULL)
          continue;
 
@@ -261,7 +261,6 @@ lower_packed_varyings_visitor::run(exec_list *instructions)
              !var->type->contains_integer());
 
       /* Change the old varying into an ordinary global. */
-      assert(var->data.mode != ir_var_temporary);
       var->data.mode = ir_var_auto;
 
       /* Create a reference to the old varying. */
@@ -614,7 +613,7 @@ public:
    explicit lower_packed_varyings_gs_splicer(void *mem_ctx,
                                              const exec_list *instructions);
 
-   virtual ir_visitor_status visit_leave(ir_emit_vertex *ev);
+   virtual ir_visitor_status visit(ir_emit_vertex *ev);
 
 private:
    /**
@@ -638,9 +637,10 @@ lower_packed_varyings_gs_splicer::lower_packed_varyings_gs_splicer(
 
 
 ir_visitor_status
-lower_packed_varyings_gs_splicer::visit_leave(ir_emit_vertex *ev)
+lower_packed_varyings_gs_splicer::visit(ir_emit_vertex *ev)
 {
-   foreach_in_list(ir_instruction, ir, this->instructions) {
+   foreach_list(node, this->instructions) {
+      ir_instruction *ir = (ir_instruction *) node;
       ev->insert_before(ir->clone(this->mem_ctx, NULL));
    }
    return visit_continue;
@@ -656,7 +656,7 @@ lower_packed_varyings(void *mem_ctx, unsigned locations_used,
    ir_function *main_func = shader->symbols->get_function("main");
    exec_list void_parameters;
    ir_function_signature *main_func_sig
-      = main_func->matching_signature(NULL, &void_parameters, false);
+      = main_func->matching_signature(NULL, &void_parameters);
    exec_list new_instructions;
    lower_packed_varyings_visitor visitor(mem_ctx, locations_used, mode,
                                          gs_input_vertices, &new_instructions);

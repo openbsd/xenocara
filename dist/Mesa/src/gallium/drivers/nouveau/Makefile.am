@@ -49,7 +49,4 @@ nouveau_compiler_SOURCES = \
 nouveau_compiler_LDADD = \
 	libnouveau.la \
 	../../auxiliary/libgallium.la \
-	$(top_builddir)/src/util/libmesautil.la \
 	$(GALLIUM_COMMON_LIB_DEPS)
-
-EXTRA_DIST = Android.mk codegen/lib nvc0/mme

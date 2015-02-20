@@ -104,8 +104,6 @@ fd_resource_transfer_map(struct pipe_context *pctx,
 	char *buf;
 	int ret = 0;
 
-	DBG("prsc=%p, level=%u, usage=%x", prsc, level, usage);
-
 	ptrans = util_slab_alloc(&ctx->transfer_pool);
 	if (!ptrans)
 		return NULL;
@@ -118,7 +116,7 @@ fd_resource_transfer_map(struct pipe_context *pctx,
 	ptrans->usage = usage;
 	ptrans->box = *box;
 	ptrans->stride = slice->pitch * rsc->cpp;
-	ptrans->layer_stride = slice->size0;
+	ptrans->layer_stride = ptrans->stride;
 
 	if (usage & PIPE_TRANSFER_READ)
 		op |= DRM_FREEDRENO_PREP_READ;
@@ -126,15 +124,18 @@ fd_resource_transfer_map(struct pipe_context *pctx,
 	if (usage & PIPE_TRANSFER_WRITE)
 		op |= DRM_FREEDRENO_PREP_WRITE;
 
+	if (usage & PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE)
+		op |= DRM_FREEDRENO_PREP_NOSYNC;
+
 	/* some state trackers (at least XA) don't do this.. */
 	if (!(usage & (PIPE_TRANSFER_FLUSH_EXPLICIT | PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE)))
 		fd_resource_transfer_flush_region(pctx, ptrans, box);
 
-	if (usage & PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE) {
-		realloc_bo(rsc, fd_bo_size(rsc->bo));
-	} else if (!(usage & PIPE_TRANSFER_UNSYNCHRONIZED)) {
+	if (!(usage & PIPE_TRANSFER_UNSYNCHRONIZED)) {
 		ret = fd_bo_cpu_prep(rsc->bo, ctx->screen->pipe, op);
-		if (ret)
+		if ((ret == -EBUSY) && (usage & PIPE_TRANSFER_DISCARD_WHOLE_RESOURCE))
+			realloc_bo(rsc, fd_bo_size(rsc->bo));
+		else if (ret)
 			goto fail;
 	}
 
@@ -198,39 +199,11 @@ setup_slices(struct fd_resource *rsc)
 
 	for (level = 0; level <= prsc->last_level; level++) {
 		struct fd_resource_slice *slice = fd_resource_slice(rsc, level);
+		uint32_t aligned_width = align(width, 32);
 
-		slice->pitch = align(width, 32);
+		slice->pitch = aligned_width;
 		slice->offset = size;
 		slice->size0 = slice->pitch * height * rsc->cpp;
-
-		size += slice->size0 * depth * prsc->array_size;
-
-		width = u_minify(width, 1);
-		height = u_minify(height, 1);
-		depth = u_minify(depth, 1);
-	}
-
-	return size;
-}
-
-/* 2d array and 3d textures seem to want their layers aligned to
- * page boundaries
- */
-static uint32_t
-setup_slices_array(struct fd_resource *rsc)
-{
-	struct pipe_resource *prsc = &rsc->base.b;
-	uint32_t level, size = 0;
-	uint32_t width = prsc->width0;
-	uint32_t height = prsc->height0;
-	uint32_t depth = prsc->depth0;
-
-	for (level = 0; level <= prsc->last_level; level++) {
-		struct fd_resource_slice *slice = fd_resource_slice(rsc, level);
-
-		slice->pitch = align(width, 32);
-		slice->offset = size;
-		slice->size0 = align(slice->pitch * height * rsc->cpp, 4096);
 
 		size += slice->size0 * depth * prsc->array_size;
 
@@ -273,16 +246,7 @@ fd_resource_create(struct pipe_screen *pscreen,
 
 	assert(rsc->cpp);
 
-	switch (tmpl->target) {
-	case PIPE_TEXTURE_3D:
-	case PIPE_TEXTURE_1D_ARRAY:
-	case PIPE_TEXTURE_2D_ARRAY:
-		size = setup_slices_array(rsc);
-		break;
-	default:
-		size = setup_slices(rsc);
-		break;
-	}
+	size = setup_slices(rsc);
 
 	realloc_bo(rsc, size);
 	if (!rsc->bo)
@@ -340,36 +304,7 @@ fail:
 	return NULL;
 }
 
-static void fd_blitter_pipe_begin(struct fd_context *ctx);
-static void fd_blitter_pipe_end(struct fd_context *ctx);
-
-/**
- * _copy_region using pipe (3d engine)
- */
-static bool
-fd_blitter_pipe_copy_region(struct fd_context *ctx,
-		struct pipe_resource *dst,
-		unsigned dst_level,
-		unsigned dstx, unsigned dsty, unsigned dstz,
-		struct pipe_resource *src,
-		unsigned src_level,
-		const struct pipe_box *src_box)
-{
-	/* not until we allow rendertargets to be buffers */
-	if (dst->target == PIPE_BUFFER || src->target == PIPE_BUFFER)
-		return false;
-
-	if (!util_blitter_is_copy_supported(ctx->blitter, dst, src))
-		return false;
-
-	fd_blitter_pipe_begin(ctx);
-	util_blitter_copy_texture(ctx->blitter,
-			dst, dst_level, dstx, dsty, dstz,
-			src, src_level, src_box);
-	fd_blitter_pipe_end(ctx);
-
-	return true;
-}
+static bool render_blit(struct pipe_context *pctx, struct pipe_blit_info *info);
 
 /**
  * Copy a block of pixels from one resource to another.
@@ -385,33 +320,40 @@ fd_resource_copy_region(struct pipe_context *pctx,
 		unsigned src_level,
 		const struct pipe_box *src_box)
 {
-	struct fd_context *ctx = fd_context(pctx);
-
 	/* TODO if we have 2d core, or other DMA engine that could be used
 	 * for simple copies and reasonably easily synchronized with the 3d
 	 * core, this is where we'd plug it in..
 	 */
-
-	/* try blit on 3d pipe: */
-	if (fd_blitter_pipe_copy_region(ctx,
-			dst, dst_level, dstx, dsty, dstz,
-			src, src_level, src_box))
-		return;
-
-	/* else fallback to pure sw: */
-	util_resource_copy_region(pctx,
-			dst, dst_level, dstx, dsty, dstz,
-			src, src_level, src_box);
+	struct pipe_blit_info info = {
+		.dst = {
+			.resource = dst,
+			.box = {
+				.x      = dstx,
+				.y      = dsty,
+				.z      = dstz,
+				.width  = src_box->width,
+				.height = src_box->height,
+				.depth  = src_box->depth,
+			},
+			.format = util_format_linear(dst->format),
+		},
+		.src = {
+			.resource = src,
+			.box      = *src_box,
+			.format   = util_format_linear(src->format),
+		},
+		.mask = PIPE_MASK_RGBA,
+		.filter = PIPE_TEX_FILTER_NEAREST,
+	};
+	render_blit(pctx, &info);
 }
 
-/**
- * Optimal hardware path for blitting pixels.
+/* Optimal hardware path for blitting pixels.
  * Scaling, format conversion, up- and downsampling (resolve) are allowed.
  */
 static void
 fd_blit(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
 {
-	struct fd_context *ctx = fd_context(pctx);
 	struct pipe_blit_info info = *blit_info;
 
 	if (info.src.resource->nr_samples > 1 &&
@@ -431,23 +373,23 @@ fd_blit(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
 		info.mask &= ~PIPE_MASK_S;
 	}
 
-	if (!util_blitter_is_blit_supported(ctx->blitter, &info)) {
-		DBG("blit unsupported %s -> %s",
-				util_format_short_name(info.src.resource->format),
-				util_format_short_name(info.dst.resource->format));
-		return;
-	}
-
-	fd_blitter_pipe_begin(ctx);
-	util_blitter_blit(ctx->blitter, &info);
-	fd_blitter_pipe_end(ctx);
+	render_blit(pctx, &info);
 }
 
-static void
-fd_blitter_pipe_begin(struct fd_context *ctx)
+static bool
+render_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
 {
-	util_blitter_save_vertex_buffer_slot(ctx->blitter, ctx->vtx.vertexbuf.vb);
-	util_blitter_save_vertex_elements(ctx->blitter, ctx->vtx.vtx);
+	struct fd_context *ctx = fd_context(pctx);
+
+	if (!util_blitter_is_blit_supported(ctx->blitter, info)) {
+		DBG("blit unsupported %s -> %s",
+				util_format_short_name(info->src.resource->format),
+				util_format_short_name(info->dst.resource->format));
+		return false;
+	}
+
+	util_blitter_save_vertex_buffer_slot(ctx->blitter, ctx->vertexbuf.vb);
+	util_blitter_save_vertex_elements(ctx->blitter, ctx->vtx);
 	util_blitter_save_vertex_shader(ctx->blitter, ctx->prog.vp);
 	util_blitter_save_rasterizer(ctx->blitter, ctx->rasterizer);
 	util_blitter_save_viewport(ctx->blitter, &ctx->viewport);
@@ -465,21 +407,15 @@ fd_blitter_pipe_begin(struct fd_context *ctx)
 			ctx->fragtex.num_textures, ctx->fragtex.textures);
 
 	fd_hw_query_set_stage(ctx, ctx->ring, FD_STAGE_BLIT);
-}
-
-static void
-fd_blitter_pipe_end(struct fd_context *ctx)
-{
+	util_blitter_blit(ctx->blitter, info);
 	fd_hw_query_set_stage(ctx, ctx->ring, FD_STAGE_NULL);
+
+	return true;
 }
 
 static void
-fd_flush_resource(struct pipe_context *pctx, struct pipe_resource *prsc)
+fd_flush_resource(struct pipe_context *ctx, struct pipe_resource *resource)
 {
-	struct fd_resource *rsc = fd_resource(prsc);
-
-	if (rsc->dirty)
-		fd_context_render(pctx);
 }
 
 void

@@ -34,5 +34,3 @@ AM_CPPFLAGS = \
 noinst_LTLIBRARIES = libxlib.la
 
 libxlib_la_SOURCES = $(C_SOURCES)
-
-EXTRA_DIST = SConscript

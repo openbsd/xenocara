@@ -241,11 +241,13 @@ brw_clear(struct gl_context *ctx, GLbitfield mask)
       }
    }
 
-   /* Clear color buffers with fast clear or at least rep16 writes. */
-   if (brw->gen >= 6 && brw->gen < 9 && (mask & BUFFER_BITS_COLOR)) {
-      if (brw_meta_fast_clear(brw, fb, mask, partial_clear)) {
-         debug_mask("blorp color", mask & BUFFER_BITS_COLOR);
-         mask &= ~BUFFER_BITS_COLOR;
+   /* BLORP is currently only supported on Gen6+. */
+   if (brw->gen >= 6 && brw->gen < 8) {
+      if (mask & BUFFER_BITS_COLOR) {
+         if (brw_blorp_clear_color(brw, fb, mask, partial_clear)) {
+            debug_mask("blorp color", mask & BUFFER_BITS_COLOR);
+            mask &= ~BUFFER_BITS_COLOR;
+         }
       }
    }
 

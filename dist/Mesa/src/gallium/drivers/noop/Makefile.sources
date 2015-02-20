@@ -1,4 +1,3 @@
 C_SOURCES := \
 	noop_pipe.c \
-	noop_public.h \
 	noop_state.c

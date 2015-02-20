@@ -135,7 +135,8 @@ ir_array_reference_visitor::get_variable_entry(ir_variable *var)
    if (var->type->is_unsized_array())
       return NULL;
 
-   foreach_in_list(variable_entry, entry, &this->variable_list) {
+   foreach_list(n, &this->variable_list) {
+      variable_entry *entry = (variable_entry *) n;
       if (entry->var == var)
 	 return entry;
    }
@@ -212,8 +213,8 @@ ir_array_reference_visitor::get_split_list(exec_list *instructions,
     * declarations, which need to be matched by name across shaders.
     */
    if (!linked) {
-      foreach_in_list(ir_instruction, node, instructions) {
-	 ir_variable *var = node->as_variable();
+      foreach_list(node, instructions) {
+	 ir_variable *var = ((ir_instruction *)node)->as_variable();
 	 if (var) {
 	    variable_entry *entry = get_variable_entry(var);
 	    if (entry)
@@ -223,7 +224,9 @@ ir_array_reference_visitor::get_split_list(exec_list *instructions,
    }
 
    /* Trim out variables we found that we can't split. */
-   foreach_in_list_safe(variable_entry, entry, &variable_list) {
+   foreach_list_safe(n, &variable_list) {
+      variable_entry *entry = (variable_entry *) n;
+
       if (debug) {
 	 printf("array %s@%p: decl %d, split %d\n",
 		entry->var->name, (void *) entry->var, entry->declaration,
@@ -267,7 +270,8 @@ ir_array_splitting_visitor::get_splitting_entry(ir_variable *var)
 {
    assert(var);
 
-   foreach_in_list(variable_entry, entry, this->variable_list) {
+   foreach_list(n, this->variable_list) {
+      variable_entry *entry = (variable_entry *) n;
       if (entry->var == var) {
 	 return entry;
       }
@@ -295,7 +299,7 @@ ir_array_splitting_visitor::split_deref(ir_dereference **deref)
    ir_constant *constant = deref_array->array_index->as_constant();
    assert(constant);
 
-   if (constant->value.i[0] >= 0 && constant->value.i[0] < (int)entry->size) {
+   if (constant->value.i[0] < (int)entry->size) {
       *deref = new(entry->mem_ctx)
 	 ir_dereference_variable(entry->components[constant->value.i[0]]);
    } else {
@@ -364,7 +368,8 @@ optimize_split_arrays(exec_list *instructions, bool linked)
    /* Replace the decls of the arrays to be split with their split
     * components.
     */
-   foreach_in_list(variable_entry, entry, &refs.variable_list) {
+   foreach_list(n, &refs.variable_list) {
+      variable_entry *entry = (variable_entry *) n;
       const struct glsl_type *type = entry->var->type;
       const struct glsl_type *subtype;
 

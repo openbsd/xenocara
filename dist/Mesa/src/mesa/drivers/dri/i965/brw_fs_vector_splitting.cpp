@@ -121,7 +121,8 @@ ir_vector_reference_visitor::get_variable_entry(ir_variable *var)
       break;
    }
 
-   foreach_in_list(variable_entry, entry, &variable_list) {
+   foreach_list(node, &this->variable_list) {
+      variable_entry *entry = (variable_entry *)node;
       if (entry->var == var)
 	 return entry;
    }
@@ -218,7 +219,8 @@ ir_vector_splitting_visitor::get_splitting_entry(ir_variable *var)
    if (!var->type->is_vector())
       return NULL;
 
-   foreach_in_list(variable_entry, entry, variable_list) {
+   foreach_list(node, &*this->variable_list) {
+      variable_entry *entry = (variable_entry *)node;
       if (entry->var == var) {
 	 return entry;
       }
@@ -312,7 +314,7 @@ ir_vector_splitting_visitor::visit_leave(ir_assignment *ir)
 	 break;
       default:
 	 ir->fprint(stderr);
-	 unreachable("not reached: non-channelwise dereference of LHS.");
+	 assert(!"not reached: non-channelwise dereference of LHS.");
       }
 
       ir->lhs = new(mem_ctx) ir_dereference_variable(lhs->components[elem]);
@@ -336,7 +338,9 @@ brw_do_vector_splitting(exec_list *instructions)
    visit_list_elements(&refs, instructions);
 
    /* Trim out variables we can't split. */
-   foreach_in_list_safe(variable_entry, entry, &refs.variable_list) {
+   foreach_list_safe(node, &refs.variable_list) {
+      variable_entry *entry = (variable_entry *)node;
+
       if (debug) {
 	 fprintf(stderr, "vector %s@%p: whole_access %d\n",
                  entry->var->name, (void *) entry->var,
@@ -356,24 +360,20 @@ brw_do_vector_splitting(exec_list *instructions)
    /* Replace the decls of the vectors to be split with their split
     * components.
     */
-   foreach_in_list(variable_entry, entry, &refs.variable_list) {
+   foreach_list(node, &refs.variable_list) {
+      variable_entry *entry = (variable_entry *)node;
       const struct glsl_type *type;
       type = glsl_type::get_instance(entry->var->type->base_type, 1, 1);
 
       entry->mem_ctx = ralloc_parent(entry->var);
 
       for (unsigned int i = 0; i < entry->var->type->vector_elements; i++) {
-         char *const name = ir_variable::temporaries_allocate_names
-            ? ralloc_asprintf(mem_ctx, "%s_%c",
-                              entry->var->name,
-                              "xyzw"[i])
-            : NULL;
+	 const char *name = ralloc_asprintf(mem_ctx, "%s_%c",
+					    entry->var->name,
+					    "xyzw"[i]);
 
 	 entry->components[i] = new(entry->mem_ctx) ir_variable(type, name,
 								ir_var_temporary);
-
-         ralloc_free(name);
-
 	 entry->var->insert_before(entry->components[i]);
       }
 

@@ -368,8 +368,6 @@ static int build_loop_info(struct radeon_compiler * c, struct loop_info * loop,
 			break;
 		}
 		case RC_OPCODE_BRK:
-		{
-			struct rc_src_register *src;
 			if(ptr->Next->U.I.Opcode != RC_OPCODE_ENDIF
 					|| ptr->Prev->U.I.Opcode != RC_OPCODE_IF
 					|| loop->Brk){
@@ -378,30 +376,20 @@ static int build_loop_info(struct radeon_compiler * c, struct loop_info * loop,
 			loop->Brk = ptr;
 			loop->If = ptr->Prev;
 			loop->EndIf = ptr->Next;
-			src = &loop->If->U.I.SrcReg[0];
-
-			for (loop->Cond = loop->If->Prev;
-				loop->Cond->U.I.Opcode != RC_OPCODE_BGNLOOP;
-				loop->Cond = loop->Cond->Prev) {
-
-				const struct rc_dst_register *dst = &loop->Cond->U.I.DstReg;
-				if (dst->File == src->File &&
-						dst->Index == src->Index &&
-						dst->WriteMask & (rc_swizzle_to_writemask(src->Swizzle))) {
-					if (loop->Cond->U.I.Opcode == RC_OPCODE_CMP) {
-						src = &loop->Cond->U.I.SrcReg[0];
-						continue;
-					}
-					break;
-				}
-			}
-
-			if (loop->Cond->U.I.Opcode == RC_OPCODE_BGNLOOP) {
-				rc_error(c, "%s: Cannot find condition for if\n", __FUNCTION__);
+			switch(loop->If->Prev->U.I.Opcode){
+			case RC_OPCODE_SLT:
+			case RC_OPCODE_SGE:
+			case RC_OPCODE_SGT:
+			case RC_OPCODE_SLE:
+			case RC_OPCODE_SEQ:
+			case RC_OPCODE_SNE:
+				break;
+			default:
 				return 0;
 			}
+			loop->Cond = loop->If->Prev;
 			break;
-		}
+
 		case RC_OPCODE_ENDLOOP:
 			loop->EndLoop = ptr;
 			break;

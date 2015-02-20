@@ -25,25 +25,6 @@
 
 using namespace clover;
 
-namespace {
-   void validate_build_program_common(const program &prog, cl_uint num_devs,
-                                      const cl_device_id *d_devs,
-                                      void (*pfn_notify)(cl_program, void *),
-                                      void *user_data) {
-
-      if ((!pfn_notify && user_data))
-         throw error(CL_INVALID_VALUE);
-
-      if (prog.kernel_ref_count())
-         throw error(CL_INVALID_OPERATION);
-
-      if (any_of([&](const device &dev) {
-               return !count(dev, prog.context().devices());
-            }, objs<allow_empty_tag>(d_devs, num_devs)))
-         throw error(CL_INVALID_DEVICE);
-   }
-}
-
 CLOVER_API cl_program
 clCreateProgramWithSource(cl_context d_ctx, cl_uint count,
                           const char **strings, const size_t *lengths,
@@ -125,28 +106,6 @@ clCreateProgramWithBinary(cl_context d_ctx, cl_uint n,
    return NULL;
 }
 
-CLOVER_API cl_program
-clCreateProgramWithBuiltInKernels(cl_context d_ctx, cl_uint n,
-                                  const cl_device_id *d_devs,
-                                  const char *kernel_names,
-                                  cl_int *r_errcode) try {
-   auto &ctx = obj(d_ctx);
-   auto devs = objs(d_devs, n);
-
-   if (any_of([&](const device &dev) {
-            return !count(dev, ctx.devices());
-         }, devs))
-      throw error(CL_INVALID_DEVICE);
-
-   // No currently supported built-in kernels.
-   throw error(CL_INVALID_VALUE);
-
-} catch (error &e) {
-   ret_error(r_errcode, e);
-   return NULL;
-}
-
-
 CLOVER_API cl_int
 clRetainProgram(cl_program d_prog) try {
    obj(d_prog).retain();
@@ -177,50 +136,16 @@ clBuildProgram(cl_program d_prog, cl_uint num_devs,
                 ref_vector<device>(prog.context().devices()));
    auto opts = (p_opts ? p_opts : "");
 
-   validate_build_program_common(prog, num_devs, d_devs, pfn_notify, user_data);
-
-   prog.build(devs, opts);
-   return CL_SUCCESS;
-} catch (error &e) {
-   if (e.get() == CL_COMPILE_PROGRAM_FAILURE)
-      return CL_BUILD_PROGRAM_FAILURE;
-   return e.get();
-}
-
-CLOVER_API cl_int
-clCompileProgram(cl_program d_prog, cl_uint num_devs,
-                 const cl_device_id *d_devs, const char *p_opts,
-                 cl_uint num_headers, const cl_program *d_header_progs,
-                 const char **header_names,
-                 void (*pfn_notify)(cl_program, void *),
-                 void *user_data) try {
-   auto &prog = obj(d_prog);
-   auto devs = (d_devs ? objs(d_devs, num_devs) :
-                ref_vector<device>(prog.context().devices()));
-   auto opts = (p_opts ? p_opts : "");
-   header_map headers;
-
-   validate_build_program_common(prog, num_devs, d_devs, pfn_notify, user_data);
-
-   if (bool(num_headers) != bool(header_names))
+   if (bool(num_devs) != bool(d_devs) ||
+       (!pfn_notify && user_data))
       throw error(CL_INVALID_VALUE);
 
-   if (!prog.has_source)
-      throw error(CL_INVALID_OPERATION);
+   if (any_of([&](const device &dev) {
+            return !count(dev, prog.context().devices());
+         }, devs))
+      throw error(CL_INVALID_DEVICE);
 
-
-   for_each([&](const char *name, const program &header) {
-         if (!header.has_source)
-            throw error(CL_INVALID_OPERATION);
-
-         if (!any_of(key_equals(name), headers))
-            headers.push_back(compat::pair<compat::string, compat::string>(
-                                 name, header.source()));
-      },
-      range(header_names, num_headers),
-      objs<allow_empty_tag>(d_header_progs, num_headers));
-
-   prog.build(devs, opts, headers);
+   prog.build(devs, opts);
    return CL_SUCCESS;
 
 } catch (error &e) {
@@ -229,11 +154,6 @@ clCompileProgram(cl_program d_prog, cl_uint num_devs,
 
 CLOVER_API cl_int
 clUnloadCompiler() {
-   return CL_SUCCESS;
-}
-
-CLOVER_API cl_int
-clUnloadPlatformCompiler(cl_platform_id d_platform) {
    return CL_SUCCESS;
 }
 
@@ -270,7 +190,10 @@ clGetProgramInfo(cl_program d_prog, cl_program_info param,
 
    case CL_PROGRAM_BINARY_SIZES:
       buf.as_vector<size_t>() = map([&](const device &dev) {
-            return prog.binary(dev).size();
+            compat::ostream::buffer_t bin;
+            compat::ostream s(bin);
+            prog.binary(dev).serialize(s);
+            return bin.size();
          },
          prog.devices());
       break;
@@ -283,17 +206,6 @@ clGetProgramInfo(cl_program d_prog, cl_program_info param,
             return bin;
          },
          prog.devices());
-      break;
-
-   case CL_PROGRAM_NUM_KERNELS:
-      buf.as_scalar<cl_uint>() = prog.symbols().size();
-      break;
-
-   case CL_PROGRAM_KERNEL_NAMES:
-      buf.as_string() = fold([](const std::string &a, const module::symbol &s) {
-            return ((a.empty() ? "" : a + ";") +
-                    std::string(s.name.begin(), s.name.size()));
-         }, std::string(), prog.symbols());
       break;
 
    default:

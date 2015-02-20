@@ -7,7 +7,3 @@ AM_CFLAGS = \
 noinst_LTLIBRARIES = libtrace.la
 
 libtrace_la_SOURCES = $(C_SOURCES)
-
-EXTRA_DIST = SConscript \
-	README \
-	trace.xsl

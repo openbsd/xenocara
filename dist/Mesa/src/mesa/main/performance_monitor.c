@@ -43,7 +43,7 @@
 #include "mtypes.h"
 #include "performance_monitor.h"
 #include "bitset.h"
-#include "util/ralloc.h"
+#include "ralloc.h"
 
 void
 _mesa_init_performance_monitors(struct gl_context *ctx)
@@ -162,6 +162,19 @@ static inline GLuint
 counterid_to_index(GLuint counterid)
 {
    return counterid - 1;
+}
+
+static inline GLuint
+index_to_counterid(GLuint index)
+{
+   return index + 1;
+}
+
+static inline bool
+counterid_valid(const struct gl_perf_monitor_group *group_obj,
+                GLuint counterid)
+{
+   return get_counter(group_obj, counterid_to_index(counterid)) != NULL;
 }
 
 /*****************************************************************************/
@@ -1023,11 +1036,6 @@ _mesa_CreatePerfQueryINTEL(GLuint queryId, GLuint *queryHandle)
    }
 
    m = new_performance_monitor(ctx, first);
-   if (m == NULL) {
-      _mesa_error_no_memory(__func__);
-      return;
-   }
-
    _mesa_HashInsert(ctx->PerfMonitor.Monitors, first, m);
    *queryHandle = first;
 

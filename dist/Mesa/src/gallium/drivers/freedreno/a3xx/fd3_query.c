@@ -68,7 +68,8 @@ occlusion_get_sample(struct fd_context *ctx, struct fd_ringbuffer *ring)
 			INDEX_SIZE_IGN, USE_VISIBILITY));
 	OUT_RING(ring, 0);             /* NumIndices */
 
-	fd_event_write(ctx, ring, ZPASS_DONE);
+	OUT_PKT3(ring, CP_EVENT_WRITE, 1);
+	OUT_RING(ring, ZPASS_DONE);
 
 	OUT_PKT0(ring, REG_A3XX_RBBM_PERFCTR_CTL, 1);
 	OUT_RING(ring, A3XX_RBBM_PERFCTR_CTL_ENABLE);
@@ -119,14 +120,14 @@ occlusion_predicate_accumulate_result(struct fd_context *ctx,
 
 static const struct fd_hw_sample_provider occlusion_counter = {
 		.query_type = PIPE_QUERY_OCCLUSION_COUNTER,
-		.active = FD_STAGE_DRAW,
+		.active = FD_STAGE_DRAW, /* | FD_STAGE_CLEAR ??? */
 		.get_sample = occlusion_get_sample,
 		.accumulate_result = occlusion_counter_accumulate_result,
 };
 
 static const struct fd_hw_sample_provider occlusion_predicate = {
 		.query_type = PIPE_QUERY_OCCLUSION_PREDICATE,
-		.active = FD_STAGE_DRAW,
+		.active = FD_STAGE_DRAW, /* | FD_STAGE_CLEAR ??? */
 		.get_sample = occlusion_get_sample,
 		.accumulate_result = occlusion_predicate_accumulate_result,
 };

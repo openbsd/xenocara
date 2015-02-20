@@ -56,10 +56,8 @@ void
 brw_blorp_blit_miptrees(struct brw_context *brw,
                         struct intel_mipmap_tree *src_mt,
                         unsigned src_level, unsigned src_layer,
-                        mesa_format src_format,
                         struct intel_mipmap_tree *dst_mt,
                         unsigned dst_level, unsigned dst_layer,
-                        mesa_format dst_format,
                         float src_x0, float src_y0,
                         float src_x1, float src_y1,
                         float dst_x0, float dst_y0,
@@ -86,8 +84,8 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
        mirror_x, mirror_y);
 
    brw_blorp_blit_params params(brw,
-                                src_mt, src_level, src_layer, src_format,
-                                dst_mt, dst_level, dst_layer, dst_format,
+                                src_mt, src_level, src_layer,
+                                dst_mt, dst_level, dst_layer,
                                 src_x0, src_y0,
                                 src_x1, src_y1,
                                 dst_x0, dst_y0,
@@ -100,8 +98,8 @@ brw_blorp_blit_miptrees(struct brw_context *brw,
 
 static void
 do_blorp_blit(struct brw_context *brw, GLbitfield buffer_bit,
-              struct intel_renderbuffer *src_irb, mesa_format src_format,
-              struct intel_renderbuffer *dst_irb, mesa_format dst_format,
+              struct intel_renderbuffer *src_irb,
+              struct intel_renderbuffer *dst_irb,
               GLfloat srcX0, GLfloat srcY0, GLfloat srcX1, GLfloat srcY1,
               GLfloat dstX0, GLfloat dstY0, GLfloat dstX1, GLfloat dstY1,
               GLenum filter, bool mirror_x, bool mirror_y)
@@ -113,14 +111,44 @@ do_blorp_blit(struct brw_context *brw, GLbitfield buffer_bit,
    /* Do the blit */
    brw_blorp_blit_miptrees(brw,
                            src_mt, src_irb->mt_level, src_irb->mt_layer,
-                           src_format,
                            dst_mt, dst_irb->mt_level, dst_irb->mt_layer,
-                           dst_format,
                            srcX0, srcY0, srcX1, srcY1,
                            dstX0, dstY0, dstX1, dstY1,
                            filter, mirror_x, mirror_y);
 
    dst_irb->need_downsample = true;
+}
+
+static bool
+color_formats_match(mesa_format src_format, mesa_format dst_format)
+{
+   mesa_format linear_src_format = _mesa_get_srgb_format_linear(src_format);
+   mesa_format linear_dst_format = _mesa_get_srgb_format_linear(dst_format);
+
+   /* Normally, we require the formats to be equal.  However, we also support
+    * blitting from ARGB to XRGB (discarding alpha), and from XRGB to ARGB
+    * (overriding alpha to 1.0 via blending).
+    */
+   return linear_src_format == linear_dst_format ||
+          (linear_src_format == MESA_FORMAT_B8G8R8X8_UNORM &&
+           linear_dst_format == MESA_FORMAT_B8G8R8A8_UNORM) ||
+          (linear_src_format == MESA_FORMAT_B8G8R8A8_UNORM &&
+           linear_dst_format == MESA_FORMAT_B8G8R8X8_UNORM);
+}
+
+static bool
+formats_match(GLbitfield buffer_bit, struct intel_renderbuffer *src_irb,
+              struct intel_renderbuffer *dst_irb)
+{
+   /* Note: don't just check gl_renderbuffer::Format, because in some cases
+    * multiple gl_formats resolve to the same native type in the miptree (for
+    * example MESA_FORMAT_Z24_UNORM_X8_UINT and MESA_FORMAT_Z24_UNORM_S8_UINT), and we can blit
+    * between those formats.
+    */
+   mesa_format src_format = find_miptree(buffer_bit, src_irb)->format;
+   mesa_format dst_format = find_miptree(buffer_bit, dst_irb)->format;
+
+   return color_formats_match(src_format, dst_format);
 }
 
 static bool
@@ -149,19 +177,19 @@ try_blorp_blit(struct brw_context *brw,
    /* Find buffers */
    struct intel_renderbuffer *src_irb;
    struct intel_renderbuffer *dst_irb;
-   struct intel_mipmap_tree *src_mt;
-   struct intel_mipmap_tree *dst_mt;
    switch (buffer_bit) {
    case GL_COLOR_BUFFER_BIT:
       src_irb = intel_renderbuffer(read_fb->_ColorReadBuffer);
       for (unsigned i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; ++i) {
          dst_irb = intel_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[i]);
+         if (dst_irb && !formats_match(buffer_bit, src_irb, dst_irb))
+            return false;
+      }
+      for (unsigned i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; ++i) {
+         dst_irb = intel_renderbuffer(ctx->DrawBuffer->_ColorDrawBuffers[i]);
 	 if (dst_irb)
-            do_blorp_blit(brw, buffer_bit,
-                          src_irb, src_irb->Base.Base.Format,
-                          dst_irb, dst_irb->Base.Base.Format,
-                          srcX0, srcY0, srcX1, srcY1,
-                          dstX0, dstY0, dstX1, dstY1,
+            do_blorp_blit(brw, buffer_bit, src_irb, dst_irb, srcX0, srcY0,
+                          srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
                           filter, mirror_x, mirror_y);
       }
       break;
@@ -170,19 +198,9 @@ try_blorp_blit(struct brw_context *brw,
          intel_renderbuffer(read_fb->Attachment[BUFFER_DEPTH].Renderbuffer);
       dst_irb =
          intel_renderbuffer(draw_fb->Attachment[BUFFER_DEPTH].Renderbuffer);
-      src_mt = find_miptree(buffer_bit, src_irb);
-      dst_mt = find_miptree(buffer_bit, dst_irb);
-
-      /* We can't handle format conversions between Z24 and other formats
-       * since we have to lie about the surface format. See the comments in
-       * brw_blorp_surface_info::set().
-       */
-      if ((src_mt->format == MESA_FORMAT_Z24_UNORM_X8_UINT) !=
-          (dst_mt->format == MESA_FORMAT_Z24_UNORM_X8_UINT))
+      if (!formats_match(buffer_bit, src_irb, dst_irb))
          return false;
-
-      do_blorp_blit(brw, buffer_bit, src_irb, MESA_FORMAT_NONE,
-                    dst_irb, MESA_FORMAT_NONE, srcX0, srcY0,
+      do_blorp_blit(brw, buffer_bit, src_irb, dst_irb, srcX0, srcY0,
                     srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
                     filter, mirror_x, mirror_y);
       break;
@@ -191,13 +209,14 @@ try_blorp_blit(struct brw_context *brw,
          intel_renderbuffer(read_fb->Attachment[BUFFER_STENCIL].Renderbuffer);
       dst_irb =
          intel_renderbuffer(draw_fb->Attachment[BUFFER_STENCIL].Renderbuffer);
-      do_blorp_blit(brw, buffer_bit, src_irb, MESA_FORMAT_NONE,
-                    dst_irb, MESA_FORMAT_NONE, srcX0, srcY0,
+      if (!formats_match(buffer_bit, src_irb, dst_irb))
+         return false;
+      do_blorp_blit(brw, buffer_bit, src_irb, dst_irb, srcX0, srcY0,
                     srcX1, srcY1, dstX0, dstY0, dstX1, dstY1,
                     filter, mirror_x, mirror_y);
       break;
    default:
-      unreachable("not reached");
+      assert(false);
    }
 
    return true;
@@ -228,8 +247,8 @@ brw_blorp_copytexsubimage(struct brw_context *brw,
    if (brw->gen < 6 || brw->gen >= 8)
       return false;
 
-   if (_mesa_get_format_base_format(src_rb->Format) !=
-       _mesa_get_format_base_format(dst_image->TexFormat)) {
+   if (_mesa_get_format_base_format(src_mt->format) !=
+       _mesa_get_format_base_format(dst_mt->format)) {
       return false;
    }
 
@@ -242,7 +261,7 @@ brw_blorp_copytexsubimage(struct brw_context *brw,
       return false;
    }
 
-   if (!brw->format_supported_as_render_target[dst_image->TexFormat])
+   if (!brw->format_supported_as_render_target[dst_mt->format])
       return false;
 
    /* Source clipping shouldn't be necessary, since copytexsubimage (in
@@ -277,9 +296,7 @@ brw_blorp_copytexsubimage(struct brw_context *brw,
 
    brw_blorp_blit_miptrees(brw,
                            src_mt, src_irb->mt_level, src_irb->mt_layer,
-                           src_rb->Format,
                            dst_mt, dst_level, dst_slice,
-                           dst_image->TexFormat,
                            srcX0, srcY0, srcX1, srcY1,
                            dstX0, dstY0, dstX1, dstY1,
                            GL_NEAREST, false, mirror_y);
@@ -302,9 +319,7 @@ brw_blorp_copytexsubimage(struct brw_context *brw,
       if (src_mt != dst_mt) {
          brw_blorp_blit_miptrees(brw,
                                  src_mt, src_irb->mt_level, src_irb->mt_layer,
-                                 src_mt->format,
                                  dst_mt, dst_level, dst_slice,
-                                 dst_mt->format,
                                  srcX0, srcY0, srcX1, srcY1,
                                  dstX0, dstY0, dstX1, dstY1,
                                  GL_NEAREST, false, mirror_y);
@@ -502,9 +517,10 @@ class brw_blorp_blit_program : public brw_blorp_eu_emitter
 {
 public:
    brw_blorp_blit_program(struct brw_context *brw,
-                          const brw_blorp_blit_prog_key *key, bool debug_flag);
+                          const brw_blorp_blit_prog_key *key);
 
-   const GLuint *compile(struct brw_context *brw, GLuint *program_size);
+   const GLuint *compile(struct brw_context *brw, GLuint *program_size,
+                         FILE *dump_file = stderr);
 
    brw_blorp_prog_data prog_data;
 
@@ -608,9 +624,8 @@ private:
 
 brw_blorp_blit_program::brw_blorp_blit_program(
       struct brw_context *brw,
-      const brw_blorp_blit_prog_key *key,
-      bool debug_flag)
-   : brw_blorp_eu_emitter(brw, debug_flag),
+      const brw_blorp_blit_prog_key *key)
+   : brw_blorp_eu_emitter(brw),
      brw(brw),
      key(key)
 {
@@ -618,7 +633,8 @@ brw_blorp_blit_program::brw_blorp_blit_program(
 
 const GLuint *
 brw_blorp_blit_program::compile(struct brw_context *brw,
-                                GLuint *program_size)
+                                GLuint *program_size,
+                                FILE *dump_file)
 {
    /* Sanity checks */
    if (key->dst_tiled_w && key->rt_samples > 0) {
@@ -773,7 +789,7 @@ brw_blorp_blit_program::compile(struct brw_context *brw,
     */
    render_target_write();
 
-   return get_program(program_size);
+   return get_program(program_size, dump_file);
 }
 
 void
@@ -967,8 +983,9 @@ brw_blorp_blit_program::compute_frag_coords()
          break;
       }
       default:
-         unreachable("Unrecognized sample count in "
-                     "brw_blorp_blit_program::compute_frag_coords()");
+         assert(!"Unrecognized sample count in "
+                "brw_blorp_blit_program::compute_frag_coords()");
+         break;
       }
       s_is_zero = false;
    } else {
@@ -1098,7 +1115,8 @@ brw_blorp_blit_program::encode_msaa(unsigned num_samples,
       /* We can't compensate for compressed layout since at this point in the
        * program we haven't read from the MCS buffer.
        */
-      unreachable("Bad layout in encode_msaa");
+      assert(!"Bad layout in encode_msaa");
+      break;
    case INTEL_MSAA_LAYOUT_UMS:
       /* No translation necessary. */
       break;
@@ -1184,7 +1202,8 @@ brw_blorp_blit_program::decode_msaa(unsigned num_samples,
       /* We can't compensate for compressed layout since at this point in the
        * program we don't have access to the MCS buffer.
        */
-      unreachable("Bad layout in encode_msaa");
+      assert(!"Bad layout in encode_msaa");
+      break;
    case INTEL_MSAA_LAYOUT_UMS:
       /* No translation necessary. */
       break;
@@ -1343,7 +1362,7 @@ brw_blorp_blit_program::single_to_blend()
  */
 inline int count_trailing_one_bits(unsigned value)
 {
-#ifdef HAVE___BUILTIN_CTZ
+#if defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 304) /* gcc 3.4 or later */
    return __builtin_ctz(~value);
 #else
    return _mesa_bitcount(value & ~(value + 1));
@@ -1643,7 +1662,8 @@ brw_blorp_blit_program::texel_fetch(struct brw_reg dst)
       }
       break;
    default:
-      unreachable("Should not get here.");
+      assert(!"Should not get here.");
+      break;
    };
 }
 
@@ -1835,10 +1855,8 @@ compute_msaa_layout_for_pipeline(struct brw_context *brw, unsigned num_samples,
 brw_blorp_blit_params::brw_blorp_blit_params(struct brw_context *brw,
                                              struct intel_mipmap_tree *src_mt,
                                              unsigned src_level, unsigned src_layer,
-                                             mesa_format src_format,
                                              struct intel_mipmap_tree *dst_mt,
                                              unsigned dst_level, unsigned dst_layer,
-                                             mesa_format dst_format,
                                              GLfloat src_x0, GLfloat src_y0,
                                              GLfloat src_x1, GLfloat src_y1,
                                              GLfloat dst_x0, GLfloat dst_y0,
@@ -1846,8 +1864,8 @@ brw_blorp_blit_params::brw_blorp_blit_params(struct brw_context *brw,
                                              GLenum filter,
                                              bool mirror_x, bool mirror_y)
 {
-   src.set(brw, src_mt, src_level, src_layer, src_format, false);
-   dst.set(brw, dst_mt, dst_level, dst_layer, dst_format, true);
+   src.set(brw, src_mt, src_level, src_layer, false);
+   dst.set(brw, dst_mt, dst_level, dst_layer, true);
 
    /* Even though we do multisample resolves at the time of the blit, OpenGL
     * specification defines them as if they happen at the time of rendering,
@@ -1911,7 +1929,8 @@ brw_blorp_blit_params::brw_blorp_blit_params(struct brw_context *brw,
       wm_prog_key.texture_data_type = BRW_REGISTER_TYPE_D;
       break;
    default:
-      unreachable("Unrecognized blorp format");
+      assert(!"Unrecognized blorp format");
+      break;
    }
 
    if (brw->gen > 6) {
@@ -2032,7 +2051,8 @@ brw_blorp_blit_params::brw_blorp_blit_params(struct brw_context *brw,
          y1 = ALIGN(y1 * 2, 4);
          break;
       default:
-         unreachable("Unrecognized sample count in brw_blorp_blit_params ctor");
+         assert(!"Unrecognized sample count in brw_blorp_blit_params ctor");
+         break;
       }
       wm_prog_key.use_kill = true;
    }
@@ -2122,10 +2142,9 @@ brw_blorp_blit_params::get_wm_prog(struct brw_context *brw,
    if (!brw_search_cache(&brw->cache, BRW_BLORP_BLIT_PROG,
                          &this->wm_prog_key, sizeof(this->wm_prog_key),
                          &prog_offset, prog_data)) {
-      brw_blorp_blit_program prog(brw, &this->wm_prog_key,
-                                  INTEL_DEBUG & DEBUG_BLORP);
+      brw_blorp_blit_program prog(brw, &this->wm_prog_key);
       GLuint program_size;
-      const GLuint *program = prog.compile(brw, &program_size);
+      const GLuint *program = prog.compile(brw, &program_size, stderr);
       brw_upload_cache(&brw->cache, BRW_BLORP_BLIT_PROG,
                        &this->wm_prog_key, sizeof(this->wm_prog_key),
                        program, program_size,
@@ -2133,4 +2152,15 @@ brw_blorp_blit_params::get_wm_prog(struct brw_context *brw,
                        &prog_offset, prog_data);
    }
    return prog_offset;
+}
+
+void
+brw_blorp_blit_test_compile(struct brw_context *brw,
+                            const brw_blorp_blit_prog_key *key,
+                            FILE *out)
+{
+   GLuint program_size;
+   brw_blorp_blit_program prog(brw, key);
+   INTEL_DEBUG |= DEBUG_BLORP;
+   prog.compile(brw, &program_size, out);
 }

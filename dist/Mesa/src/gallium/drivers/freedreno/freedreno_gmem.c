@@ -105,7 +105,7 @@ calculate_tiles(struct fd_context *ctx)
 		max_width /= 2;
 	}
 
-	if (fd_mesa_debug & FD_DBG_NOSCIS) {
+	if (fd_mesa_debug & FD_DBG_DSCIS) {
 		minx = 0;
 		miny = 0;
 		width = pfb->width;
@@ -128,17 +128,11 @@ calculate_tiles(struct fd_context *ctx)
 		bin_w = align(width / nbins_x, 32);
 	}
 
-	/* then find a bin width/height that satisfies the memory
-	 * constraints:
+	/* then find a bin height that satisfies the memory constraints:
 	 */
 	while ((bin_w * bin_h * cpp) > gmem_size) {
-		if (bin_w > bin_h) {
-			nbins_x++;
-			bin_w = align(width / nbins_x, 32);
-		} else {
-			nbins_y++;
-			bin_h = align(height / nbins_y, 32);
-		}
+		nbins_y++;
+		bin_h = align(height / nbins_y, 32);
 	}
 
 	DBG("using %d bins of size %dx%d", nbins_x*nbins_y, bin_w, bin_h);
@@ -314,8 +308,9 @@ render_sysmem(struct fd_context *ctx)
 }
 
 void
-fd_gmem_render_tiles(struct fd_context *ctx)
+fd_gmem_render_tiles(struct pipe_context *pctx)
 {
+	struct fd_context *ctx = fd_context(pctx);
 	struct pipe_framebuffer_state *pfb = &ctx->framebuffer;
 	uint32_t timestamp = 0;
 	bool sysmem = false;
@@ -324,7 +319,7 @@ fd_gmem_render_tiles(struct fd_context *ctx)
 		if (ctx->cleared || ctx->gmem_reason || (ctx->num_draws > 5)) {
 			DBG("GMEM: cleared=%x, gmem_reason=%x, num_draws=%u",
 				ctx->cleared, ctx->gmem_reason, ctx->num_draws);
-		} else if (!(fd_mesa_debug & FD_DBG_NOBYPASS)) {
+		} else if (!(fd_mesa_debug & FD_DBG_DBYPASS)) {
 			sysmem = true;
 		}
 	}
@@ -380,50 +375,28 @@ fd_gmem_render_tiles(struct fd_context *ctx)
 	ctx->max_scissor.minx = ctx->max_scissor.miny = ~0;
 	ctx->max_scissor.maxx = ctx->max_scissor.maxy = 0;
 
-	ctx->dirty = ~0;
-}
-
-/* tile needs restore if it isn't completely contained within the
- * cleared scissor:
- */
-static bool
-skip_restore(struct pipe_scissor_state *scissor, struct fd_tile *tile)
-{
-	unsigned minx = tile->xoff;
-	unsigned maxx = tile->xoff + tile->bin_w;
-	unsigned miny = tile->yoff;
-	unsigned maxy = tile->yoff + tile->bin_h;
-	return (minx >= scissor->minx) && (maxx <= scissor->maxx) &&
-			(miny >= scissor->miny) && (maxy <= scissor->maxy);
-}
-
-/* When deciding whether a tile needs mem2gmem, we need to take into
- * account the scissor rect(s) that were cleared.  To simplify we only
- * consider the last scissor rect for each buffer, since the common
- * case would be a single clear.
- */
-bool
-fd_gmem_needs_restore(struct fd_context *ctx, struct fd_tile *tile,
-		uint32_t buffers)
-{
-	if (!(ctx->restore & buffers))
-		return false;
-
-	/* if buffers partially cleared, then slow-path to figure out
-	 * if this particular tile needs restoring:
+	/* Note that because the per-tile setup and mem2gmem/gmem2mem are emitted
+	 * after the draw/clear calls, but executed before, we need to preemptively
+	 * flag some state as dirty before the first draw/clear call.
+	 *
+	 * TODO maybe we need to mark all state as dirty to not worry about state
+	 * being clobbered by other contexts?
 	 */
-	if ((buffers & FD_BUFFER_COLOR) &&
-			(ctx->partial_cleared & FD_BUFFER_COLOR) &&
-			skip_restore(&ctx->cleared_scissor.color, tile))
-		return false;
-	if ((buffers & FD_BUFFER_DEPTH) &&
-			(ctx->partial_cleared & FD_BUFFER_DEPTH) &&
-			skip_restore(&ctx->cleared_scissor.depth, tile))
-		return false;
-	if ((buffers & FD_BUFFER_STENCIL) &&
-			(ctx->partial_cleared & FD_BUFFER_STENCIL) &&
-			skip_restore(&ctx->cleared_scissor.stencil, tile))
-		return false;
+	ctx->dirty |= FD_DIRTY_ZSA |
+			FD_DIRTY_RASTERIZER |
+			FD_DIRTY_FRAMEBUFFER |
+			FD_DIRTY_SAMPLE_MASK |
+			FD_DIRTY_VIEWPORT |
+			FD_DIRTY_CONSTBUF |
+			FD_DIRTY_PROG |
+			FD_DIRTY_SCISSOR |
+			/* probably only needed if we need to mem2gmem on the next
+			 * draw..  but not sure if there is a good way to know?
+			 */
+			FD_DIRTY_VERTTEX |
+			FD_DIRTY_FRAGTEX |
+			FD_DIRTY_BLEND;
 
-	return true;
+	if (fd_mesa_debug & FD_DBG_DGMEM)
+		ctx->dirty = 0xffffffff;
 }

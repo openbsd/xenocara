@@ -32,8 +32,6 @@ namespace r600_sb {
 typedef sb_map<node*, unsigned> uc_map;
 
 // resource trackers for scheduler
-// rp = read port
-// uc = use count
 
 typedef sb_set<unsigned> kc_lines;
 

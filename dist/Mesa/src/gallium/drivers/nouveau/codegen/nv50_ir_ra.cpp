@@ -257,7 +257,6 @@ private:
       void texConstraintNV50(TexInstruction *);
       void texConstraintNVC0(TexInstruction *);
       void texConstraintNVE0(TexInstruction *);
-      void texConstraintGM107(TexInstruction *);
 
       std::list<Instruction *> constrList;
 
@@ -390,12 +389,11 @@ RegAlloc::PhiMovesPass::visit(BasicBlock *bb)
          pb->insertTail(new_FlowInstruction(func, OP_BRA, bb));
 
       for (phi = bb->getPhi(); phi && phi->op == OP_PHI; phi = phi->next) {
-         LValue *tmp = new_LValue(func, phi->getDef(0)->asLValue());
-         mov = new_Instruction(func, OP_MOV, typeOfSize(tmp->reg.size));
+         mov = new_Instruction(func, OP_MOV, TYPE_U32);
 
          mov->setSrc(0, phi->getSrc(j));
-         mov->setDef(0, tmp);
-         phi->setSrc(j, tmp);
+         mov->setDef(0, new_LValue(func, phi->getDef(0)->asLValue()));
+         phi->setSrc(j, mov->getDef(0));
 
          pb->insertBefore(pb->getExit(), mov);
       }
@@ -858,7 +856,6 @@ GCRA::coalesce(ArrayList& insns)
    case 0xe0:
    case 0xf0:
    case 0x100:
-   case 0x110:
       ret = doCoalesce(insns, JOIN_MASK_UNION);
       break;
    default:
@@ -985,7 +982,7 @@ GCRA::doCoalesce(ArrayList& insns, unsigned int mask)
             break;
          i = NULL;
          if (!insn->getDef(0)->uses.empty())
-            i = (*insn->getDef(0)->uses.begin())->getInsn();
+            i = insn->getDef(0)->uses.front()->getInsn();
          // if this is a contraint-move there will only be a single use
          if (i && i->op == OP_MERGE) // do we really still need this ?
             break;
@@ -1566,7 +1563,7 @@ SpillCodeInserter::run(const std::list<ValuePair>& lst)
          // Unspill at each use *before* inserting spill instructions,
          // we don't want to have the spill instructions in the use list here.
          while (!dval->uses.empty()) {
-            ValueRef *u = *dval->uses.begin();
+            ValueRef *u = dval->uses.front();
             Instruction *usei = u->getInsn();
             assert(usei);
             if (usei->isPseudo()) {
@@ -1715,14 +1712,6 @@ GCRA::resolveSplitsAndMerges()
          Value *v = merge->getSrc(s);
          v->reg.data.id = regs.bytesToId(v, reg);
          v->join = v;
-         // If the value is defined by a phi/union node, we also need to
-         // perform the same fixup on that node's sources, since after RA
-         // their registers should be identical.
-         if (v->getInsn()->op == OP_PHI || v->getInsn()->op == OP_UNION) {
-            Instruction *phi = v->getInsn();
-            for (int phis = 0; phi->srcExists(phis); ++phis)
-               phi->getSrc(phis)->join = v;
-         }
          reg += v->reg.size;
       }
    }
@@ -1907,41 +1896,6 @@ RegAlloc::InsertConstraintsPass::condenseSrcs(Instruction *insn,
 }
 
 void
-RegAlloc::InsertConstraintsPass::texConstraintGM107(TexInstruction *tex)
-{
-   int n, s;
-
-   if (isTextureOp(tex->op))
-      textureMask(tex);
-   condenseDefs(tex);
-
-   if (tex->op == OP_SUSTB || tex->op == OP_SUSTP) {
-      condenseSrcs(tex, 3, (3 + typeSizeof(tex->dType) / 4) - 1);
-   } else
-   if (isTextureOp(tex->op)) {
-      if (tex->op != OP_TXQ) {
-         s = tex->tex.target.getArgCount() - tex->tex.target.isMS();
-         if (tex->op == OP_TXD) {
-            // Indirect handle belongs in the first arg
-            if (tex->tex.rIndirectSrc >= 0)
-               s++;
-            if (!tex->tex.target.isArray() && tex->tex.useOffsets)
-               s++;
-         }
-         n = tex->srcCount(0xff) - s;
-      } else {
-         s = tex->srcCount(0xff);
-         n = 0;
-      }
-
-      if (s > 1)
-         condenseSrcs(tex, 0, s - 1);
-      if (n > 1) // NOTE: first call modified positions already
-         condenseSrcs(tex, 1, n);
-   }
-}
-
-void
 RegAlloc::InsertConstraintsPass::texConstraintNVE0(TexInstruction *tex)
 {
    if (isTextureOp(tex->op))
@@ -2047,9 +2001,6 @@ RegAlloc::InsertConstraintsPass::visit(BasicBlock *bb)
          case 0xf0:
          case 0x100:
             texConstraintNVE0(tex);
-            break;
-         case 0x110:
-            texConstraintGM107(tex);
             break;
          default:
             break;

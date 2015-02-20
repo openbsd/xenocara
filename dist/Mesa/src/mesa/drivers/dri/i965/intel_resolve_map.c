@@ -33,42 +33,50 @@
  * changed to the given value of \c need.
  */
 void
-intel_resolve_map_set(struct exec_list *resolve_map,
+intel_resolve_map_set(struct intel_resolve_map *head,
 		      uint32_t level,
 		      uint32_t layer,
 		      enum gen6_hiz_op need)
 {
-   foreach_list_typed(struct intel_resolve_map, map, link, resolve_map) {
-      if (map->level == level && map->layer == layer) {
-         map->need = need;
+   struct intel_resolve_map **tail = &head->next;
+   struct intel_resolve_map *prev = head;
+
+   while (*tail) {
+      if ((*tail)->level == level && (*tail)->layer == layer) {
+         (*tail)->need = need;
 	 return;
       }
+      prev = *tail;
+      tail = &(*tail)->next;
    }
 
-   struct intel_resolve_map *m = malloc(sizeof(struct intel_resolve_map));
-   exec_node_init(&m->link);
-   m->level = level;
-   m->layer = layer;
-   m->need = need;
-
-   exec_list_push_tail(resolve_map, &m->link);
+   *tail = malloc(sizeof(**tail));
+   (*tail)->prev = prev;
+   (*tail)->next = NULL;
+   (*tail)->level = level;
+   (*tail)->layer = layer;
+   (*tail)->need = need;
 }
 
 /**
  * \brief Get an element from the map.
  * \return null if element is not contained in map.
  */
-struct intel_resolve_map *
-intel_resolve_map_get(struct exec_list *resolve_map,
+struct intel_resolve_map*
+intel_resolve_map_get(struct intel_resolve_map *head,
 		      uint32_t level,
 		      uint32_t layer)
 {
-   foreach_list_typed(struct intel_resolve_map, map, link, resolve_map) {
-      if (map->level == level && map->layer == layer)
-         return map;
+   struct intel_resolve_map *item = head->next;
+
+   while (item) {
+      if (item->level == level && item->layer == layer)
+	 break;
+      else
+	 item = item->next;
    }
 
-   return NULL;
+   return item;
 }
 
 /**
@@ -77,7 +85,10 @@ intel_resolve_map_get(struct exec_list *resolve_map,
 void
 intel_resolve_map_remove(struct intel_resolve_map *elem)
 {
-   exec_node_remove(&elem->link);
+   if (elem->prev)
+      elem->prev->next = elem->next;
+   if (elem->next)
+      elem->next->prev = elem->prev;
    free(elem);
 }
 
@@ -85,11 +96,16 @@ intel_resolve_map_remove(struct intel_resolve_map *elem)
  * \brief Remove and free all elements of the map.
  */
 void
-intel_resolve_map_clear(struct exec_list *resolve_map)
+intel_resolve_map_clear(struct intel_resolve_map *head)
 {
-   foreach_in_list_safe(struct exec_node, node, resolve_map) {
-      free(node);
+   struct intel_resolve_map *next = head->next;
+   struct intel_resolve_map *trash;
+
+   while (next) {
+      trash = next;
+      next = next->next;
+      free(trash);
    }
 
-   exec_list_make_empty(resolve_map);
+   head->next = NULL;
 }

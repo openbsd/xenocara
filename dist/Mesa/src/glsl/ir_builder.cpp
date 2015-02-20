@@ -271,7 +271,11 @@ clamp(operand a, operand b, operand c)
 ir_expression *
 saturate(operand a)
 {
-   return expr(ir_unop_saturate, a);
+   void *mem_ctx = ralloc_parent(a.val);
+
+   return expr(ir_binop_max,
+	       expr(ir_binop_min, a, new(mem_ctx) ir_constant(1.0f)),
+	       new(mem_ctx) ir_constant(0.0f));
 }
 
 ir_expression *
@@ -494,24 +498,6 @@ ir_expression *
 b2f(operand a)
 {
    return expr(ir_unop_b2f, a);
-}
-
-ir_expression *
-interpolate_at_centroid(operand a)
-{
-   return expr(ir_unop_interpolate_at_centroid, a);
-}
-
-ir_expression *
-interpolate_at_offset(operand a, operand b)
-{
-   return expr(ir_binop_interpolate_at_offset, a, b);
-}
-
-ir_expression *
-interpolate_at_sample(operand a, operand b)
-{
-   return expr(ir_binop_interpolate_at_sample, a, b);
 }
 
 ir_expression *

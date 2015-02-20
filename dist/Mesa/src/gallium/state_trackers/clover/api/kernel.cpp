@@ -58,9 +58,7 @@ clCreateKernelsInProgram(cl_program d_prog, cl_uint count,
 
    if (rd_kerns)
       copy(map([&](const module::symbol &sym) {
-               return desc(new kernel(prog,
-                                      std::string(sym.name.begin(),
-                                                  sym.name.end()),
+               return desc(new kernel(prog, compat::string(sym.name),
                                       range(sym.args)));
             }, syms),
          rd_kerns);

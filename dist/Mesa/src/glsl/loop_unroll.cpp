@@ -64,7 +64,6 @@ class loop_unroll_count : public ir_hierarchical_visitor {
 public:
    int nodes;
    bool unsupported_variable_indexing;
-   bool array_indexed_by_induction_var_with_exact_iterations;
    /* If there are nested loops, the node count will be inaccurate. */
    bool nested_loop;
 
@@ -75,7 +74,6 @@ public:
       nodes = 0;
       nested_loop = false;
       unsupported_variable_indexing = false;
-      array_indexed_by_induction_var_with_exact_iterations = false;
 
       run(list);
    }
@@ -114,14 +112,6 @@ public:
          ir_variable *array = ir->array->variable_referenced();
          loop_variable *lv = ls->get(ir->array_index->variable_referenced());
          if (array && lv && lv->is_induction_var()) {
-            /* If an array is indexed by a loop induction variable, and the
-             * array size is exactly the number of loop iterations, this is
-             * probably a simple for-loop trying to access each element in
-             * turn; the application may expect it to be unrolled.
-             */
-            if (int(array->type->length) == ls->limiting_terminator->iterations)
-               array_indexed_by_induction_var_with_exact_iterations = true;
-
             switch (array->data.mode) {
             case ir_var_auto:
             case ir_var_temporary:
@@ -324,8 +314,7 @@ loop_unroll_visitor::visit_leave(ir_loop *ir)
    bool loop_too_large =
       count.nested_loop || count.nodes * iterations > max_iterations * 5;
 
-   if (loop_too_large && !count.unsupported_variable_indexing &&
-       !count.array_indexed_by_induction_var_with_exact_iterations)
+   if (loop_too_large && !count.unsupported_variable_indexing)
       return visit_continue;
 
    /* Note: the limiting terminator contributes 1 to ls->num_loop_jumps.
@@ -358,8 +347,10 @@ loop_unroll_visitor::visit_leave(ir_loop *ir)
       return visit_continue;
    }
 
-   /* recognize loops in the form produced by ir_lower_jumps */
-   foreach_in_list(ir_instruction, cur_ir, &ir->body_instructions) {
+   foreach_list(node, &ir->body_instructions) {
+      /* recognize loops in the form produced by ir_lower_jumps */
+      ir_instruction *cur_ir = (ir_instruction *) node;
+
       /* Skip the limiting terminator, since it will go away when we
        * unroll.
        */

@@ -86,7 +86,6 @@ public:
    virtual ir_visitor_status visit_enter(ir_expression *);
    virtual ir_visitor_status visit_enter(ir_if *);
    virtual ir_visitor_status visit_enter(ir_loop *);
-   virtual ir_visitor_status visit_enter(ir_texture *);
 
    virtual ir_visitor_status visit_leave(ir_assignment *);
 
@@ -228,7 +227,8 @@ write_mask_to_swizzle(unsigned write_mask)
    case WRITEMASK_Z: return SWIZZLE_Z;
    case WRITEMASK_W: return SWIZZLE_W;
    }
-   unreachable("not reached");
+   assert(!"not reached");
+   unreachable();
 }
 
 /**
@@ -349,18 +349,6 @@ ir_vectorize_visitor::visit_enter(ir_loop *ir)
    visit_list_elements(this, &ir->body_instructions);
    try_vectorize();
 
-   return visit_continue_with_parent;
-}
-
-/**
- * Upon entering an ir_texture, remove the current assignment from
- * further consideration. Vectorizing multiple texture lookups into one
- * is wrong.
- */
-ir_visitor_status
-ir_vectorize_visitor::visit_enter(ir_texture *)
-{
-   this->current_assignment = NULL;
    return visit_continue_with_parent;
 }
 

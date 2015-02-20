@@ -271,11 +271,8 @@ static void
 dri3_update_num_back(struct dri3_drawable *priv)
 {
    priv->num_back = 1;
-   if (priv->flipping) {
-      if (!priv->is_pixmap && !(priv->present_capabilities & XCB_PRESENT_CAPABILITY_ASYNC))
-         priv->num_back++;
+   if (priv->flipping)
       priv->num_back++;
-   }
    if (priv->swap_interval == 0)
       priv->num_back++;
 }
@@ -361,34 +358,12 @@ dri3_create_drawable(struct glx_screen *base, XID xDrawable,
    return &pdraw->base;
 }
 
-static void
-show_fps(struct dri3_drawable *draw, uint64_t current_ust)
-{
-   const uint64_t interval =
-      ((struct dri3_screen *) draw->base.psc)->show_fps_interval;
-
-   draw->frames++;
-
-   /* DRI3+Present together uses microseconds for UST. */
-   if (draw->previous_ust + interval * 1000000 <= current_ust) {
-      if (draw->previous_ust) {
-         fprintf(stderr, "libGL: FPS = %.1f\n",
-                 ((uint64_t) draw->frames * 1000000) /
-                 (double)(current_ust - draw->previous_ust));
-      }
-      draw->frames = 0;
-      draw->previous_ust = current_ust;
-   }
-}
-
 /*
  * Process one Present event
  */
 static void
 dri3_handle_present_event(struct dri3_drawable *priv, xcb_present_generic_event_t *ge)
 {
-   struct dri3_screen *psc = (struct dri3_screen *) priv->base.psc;
-
    switch (ge->evtype) {
    case XCB_PRESENT_CONFIGURE_NOTIFY: {
       xcb_present_configure_notify_event_t *ce = (void *) ge;
@@ -417,17 +392,11 @@ dri3_handle_present_event(struct dri3_drawable *priv, xcb_present_generic_event_
             break;
          }
          dri3_update_num_back(priv);
-
-         if (psc->show_fps_interval)
-            show_fps(priv, ce->ust);
-
-         priv->ust = ce->ust;
-         priv->msc = ce->msc;
       } else {
          priv->recv_msc_serial = ce->serial;
-         priv->notify_ust = ce->ust;
-         priv->notify_msc = ce->msc;
       }
+      priv->ust = ce->ust;
+      priv->msc = ce->msc;
       break;
    }
    case XCB_PRESENT_EVENT_IDLE_NOTIFY: {
@@ -501,8 +470,8 @@ dri3_wait_for_msc(__GLXDRIdrawable *pdraw, int64_t target_msc, int64_t divisor,
       }
    }
 
-   *ust = priv->notify_ust;
-   *msc = priv->notify_msc;
+   *ust = priv->ust;
+   *msc = priv->msc;
    *sbc = priv->recv_sbc;
 
    return 1;
@@ -531,15 +500,6 @@ dri3_wait_for_sbc(__GLXDRIdrawable *pdraw, int64_t target_sbc, int64_t *ust,
                   int64_t *msc, int64_t *sbc)
 {
    struct dri3_drawable *priv = (struct dri3_drawable *) pdraw;
-
-   /* From the GLX_OML_sync_control spec:
-    *
-    *     "If <target_sbc> = 0, the function will block until all previous
-    *      swaps requested with glXSwapBuffersMscOML for that window have
-    *      completed."
-    */
-   if (!target_sbc)
-      target_sbc = priv->send_sbc;
 
    while (priv->recv_sbc < target_sbc) {
       if (!dri3_wait_for_event(pdraw))
@@ -636,43 +596,21 @@ dri3_copy_sub_buffer(__GLXDRIdrawable *pdraw, int x, int y,
 {
    struct dri3_drawable *priv = (struct dri3_drawable *) pdraw;
    struct dri3_screen *psc = (struct dri3_screen *) pdraw->psc;
-   struct dri3_context *pcp = (struct dri3_context *) __glXGetCurrentContext();
    xcb_connection_t     *c = XGetXCBConnection(priv->base.psc->dpy);
-   struct dri3_buffer *back;
+   struct dri3_buffer *back = dri3_back_buffer(priv);
 
-   unsigned flags = __DRI2_FLUSH_DRAWABLE;
+   unsigned flags;
 
    /* Check we have the right attachments */
    if (!priv->have_back || priv->is_pixmap)
       return;
 
+   flags = __DRI2_FLUSH_DRAWABLE;
    if (flush)
       flags |= __DRI2_FLUSH_CONTEXT;
    dri3_flush(psc, priv, flags, __DRI2_THROTTLE_SWAPBUFFER);
 
-   back = dri3_back_buffer(priv);
    y = priv->height - y - height;
-
-   if (psc->is_different_gpu && (&pcp->base != &dummyContext) && pcp->base.psc == &psc->base) {
-      /* Update the linear buffer part of the back buffer
-       * for the dri3_copy_area operation
-       */
-      psc->image->blitImage(pcp->driContext,
-                            back->linear_buffer,
-                            back->image,
-                            0, 0, back->width,
-                            back->height,
-                            0, 0, back->width,
-                            back->height, __BLIT_FLAG_FLUSH);
-      /* We use blitImage to update our fake front,
-       */
-      if (priv->have_fake_front)
-         psc->image->blitImage(pcp->driContext,
-                               dri3_fake_front_buffer(priv)->image,
-                               back->image,
-                               x, y, width, height,
-                               x, y, width, height, __BLIT_FLAG_FLUSH);
-   }
 
    dri3_fence_reset(c, back);
    dri3_copy_area(c,
@@ -684,7 +622,7 @@ dri3_copy_sub_buffer(__GLXDRIdrawable *pdraw, int x, int y,
    /* Refresh the fake front (if present) after we just damaged the real
     * front.
     */
-   if (priv->have_fake_front && !psc->is_different_gpu) {
+   if (priv->have_fake_front) {
       dri3_fence_reset(c, dri3_fake_front_buffer(priv));
       dri3_copy_area(c,
                      dri3_back_buffer(priv)->pixmap,
@@ -717,62 +655,25 @@ dri3_copy_drawable(struct dri3_drawable *priv, Drawable dest, Drawable src)
 static void
 dri3_wait_x(struct glx_context *gc)
 {
-   struct dri3_context *pcp = (struct dri3_context *) gc;
    struct dri3_drawable *priv = (struct dri3_drawable *)
       GetGLXDRIDrawable(gc->currentDpy, gc->currentDrawable);
-   struct dri3_screen *psc;
-   struct dri3_buffer *front;
 
    if (priv == NULL || !priv->have_fake_front)
       return;
 
-   psc = (struct dri3_screen *) priv->base.psc;
-   front = dri3_fake_front_buffer(priv);
-
-   dri3_copy_drawable(priv, front->pixmap, priv->base.xDrawable);
-
-   /* In the psc->is_different_gpu case, the linear buffer has been updated,
-    * but not yet the tiled buffer.
-    * Copy back to the tiled buffer we use for rendering.
-    * Note that we don't need flushing.
-    */
-   if (psc->is_different_gpu && (&pcp->base != &dummyContext) && pcp->base.psc == &psc->base)
-      psc->image->blitImage(pcp->driContext,
-                            front->image,
-                            front->linear_buffer,
-                            0, 0, front->width,
-                            front->height,
-                            0, 0, front->width,
-                            front->height, 0);
+   dri3_copy_drawable(priv, dri3_fake_front_buffer(priv)->pixmap, priv->base.xDrawable);
 }
 
 static void
 dri3_wait_gl(struct glx_context *gc)
 {
-   struct dri3_context *pcp = (struct dri3_context *) gc;
    struct dri3_drawable *priv = (struct dri3_drawable *)
       GetGLXDRIDrawable(gc->currentDpy, gc->currentDrawable);
-   struct dri3_screen *psc;
-   struct dri3_buffer *front;
 
    if (priv == NULL || !priv->have_fake_front)
       return;
 
-   psc = (struct dri3_screen *) priv->base.psc;
-   front = dri3_fake_front_buffer(priv);
-
-   /* In the psc->is_different_gpu case, we update the linear_buffer
-    * before updating the real front.
-    */
-   if (psc->is_different_gpu && (&pcp->base != &dummyContext) && pcp->base.psc == &psc->base)
-      psc->image->blitImage(pcp->driContext,
-                            front->linear_buffer,
-                            front->image,
-                            0, 0, front->width,
-                            front->height,
-                            0, 0, front->width,
-                            front->height, __BLIT_FLAG_FLUSH);
-   dri3_copy_drawable(priv, priv->base.xDrawable, front->pixmap);
+   dri3_copy_drawable(priv, priv->base.xDrawable, dri3_fake_front_buffer(priv)->pixmap);
 }
 
 /**
@@ -840,7 +741,6 @@ dri3_alloc_render_buffer(struct glx_screen *glx_screen, Drawable draw,
    struct dri3_screen *psc = (struct dri3_screen *) glx_screen;
    Display *dpy = glx_screen->dpy;
    struct dri3_buffer *buffer;
-   __DRIimage *pixmap_buffer;
    xcb_connection_t *c = XGetXCBConnection(dpy);
    xcb_pixmap_t pixmap;
    xcb_sync_fence_t sync_fence;
@@ -853,15 +753,11 @@ dri3_alloc_render_buffer(struct glx_screen *glx_screen, Drawable draw,
     */
 
    fence_fd = xshmfence_alloc_shm();
-   if (fence_fd < 0) {
-      ErrorMessageF("DRI3 Fence object allocation failure %s\n", strerror(errno));
+   if (fence_fd < 0)
       return NULL;
-   }
    shm_fence = xshmfence_map_shm(fence_fd);
-   if (shm_fence == NULL) {
-      ErrorMessageF("DRI3 Fence object map failure %s\n", strerror(errno));
+   if (shm_fence == NULL)
       goto no_shm_fence;
-   }
 
    /* Allocate the image from the driver
     */
@@ -870,63 +766,28 @@ dri3_alloc_render_buffer(struct glx_screen *glx_screen, Drawable draw,
       goto no_buffer;
 
    buffer->cpp = dri3_cpp_for_format(format);
-   if (!buffer->cpp) {
-      ErrorMessageF("DRI3 buffer format %d invalid\n", format);
+   if (!buffer->cpp)
       goto no_image;
-   }
 
-   if (!psc->is_different_gpu) {
-      buffer->image = (*psc->image->createImage) (psc->driScreen,
-                                                  width, height,
-                                                  format,
-                                                  __DRI_IMAGE_USE_SHARE |
-                                                  __DRI_IMAGE_USE_SCANOUT,
-                                                  buffer);
-      pixmap_buffer = buffer->image;
+   buffer->image = (*psc->image->createImage) (psc->driScreen,
+                                               width, height,
+                                               format,
+                                               __DRI_IMAGE_USE_SHARE|__DRI_IMAGE_USE_SCANOUT,
+                                               buffer);
 
-      if (!buffer->image) {
-         ErrorMessageF("DRI3 gpu image creation failure\n");
-         goto no_image;
-      }
-   } else {
-      buffer->image = (*psc->image->createImage) (psc->driScreen,
-                                                  width, height,
-                                                  format,
-                                                  0,
-                                                  buffer);
 
-      if (!buffer->image) {
-         ErrorMessageF("DRI3 other gpu image creation failure\n");
-         goto no_image;
-      }
-
-      buffer->linear_buffer = (*psc->image->createImage) (psc->driScreen,
-                                                          width, height,
-                                                          format,
-                                                          __DRI_IMAGE_USE_SHARE |
-                                                          __DRI_IMAGE_USE_LINEAR,
-                                                          buffer);
-      pixmap_buffer = buffer->linear_buffer;
-
-      if (!buffer->linear_buffer) {
-         ErrorMessageF("DRI3 gpu linear image creation failure\n");
-         goto no_linear_buffer;
-      }
-   }
+   if (!buffer->image)
+      goto no_image;
 
    /* X wants the stride, so ask the image for it
     */
-   if (!(*psc->image->queryImage)(pixmap_buffer, __DRI_IMAGE_ATTRIB_STRIDE, &stride)) {
-      ErrorMessageF("DRI3 get image stride failed\n");
+   if (!(*psc->image->queryImage)(buffer->image, __DRI_IMAGE_ATTRIB_STRIDE, &stride))
       goto no_buffer_attrib;
-   }
 
    buffer->pitch = stride;
 
-   if (!(*psc->image->queryImage)(pixmap_buffer, __DRI_IMAGE_ATTRIB_FD, &buffer_fd)) {
-      ErrorMessageF("DRI3 get image FD failed\n");
+   if (!(*psc->image->queryImage)(buffer->image, __DRI_IMAGE_ATTRIB_FD, &buffer_fd))
       goto no_buffer_attrib;
-   }
 
    xcb_dri3_pixmap_from_buffer(c,
                                (pixmap = xcb_generate_id(c)),
@@ -956,17 +817,13 @@ dri3_alloc_render_buffer(struct glx_screen *glx_screen, Drawable draw,
    return buffer;
 
 no_buffer_attrib:
-   (*psc->image->destroyImage)(pixmap_buffer);
-no_linear_buffer:
-   if (psc->is_different_gpu)
-      (*psc->image->destroyImage)(buffer->image);
+   (*psc->image->destroyImage)(buffer->image);
 no_image:
    free(buffer);
 no_buffer:
    xshmfence_unmap_shm(shm_fence);
 no_shm_fence:
    close(fence_fd);
-   ErrorMessageF("DRI3 alloc_render_buffer failed\n");
    return NULL;
 }
 
@@ -986,8 +843,6 @@ dri3_free_render_buffer(struct dri3_drawable *pdraw, struct dri3_buffer *buffer)
    xcb_sync_destroy_fence(c, buffer->sync_fence);
    xshmfence_unmap_shm(buffer->shm_fence);
    (*psc->image->destroyImage)(buffer->image);
-   if (buffer->linear_buffer)
-      (*psc->image->destroyImage)(buffer->linear_buffer);
    free(buffer);
 }
 
@@ -1033,9 +888,6 @@ dri3_update_drawable(__DRIdrawable *driDrawable, void *loaderPrivate)
       xcb_get_geometry_reply_t                  *geom_reply;
       xcb_void_cookie_t                         cookie;
       xcb_generic_error_t                       *error;
-      xcb_present_query_capabilities_cookie_t   present_capabilities_cookie;
-      xcb_present_query_capabilities_reply_t    *present_capabilities_reply;
-
 
       /* Try to select for input on the window.
        *
@@ -1053,8 +905,6 @@ dri3_update_drawable(__DRIdrawable *driDrawable, void *loaderPrivate)
                                                 XCB_PRESENT_EVENT_MASK_CONFIGURE_NOTIFY|
                                                 XCB_PRESENT_EVENT_MASK_COMPLETE_NOTIFY|
                                                 XCB_PRESENT_EVENT_MASK_IDLE_NOTIFY);
-
-      present_capabilities_cookie = xcb_present_query_capabilities(c, priv->base.xDrawable);
 
       /* Create an XCB event queue to hold present events outside of the usual
        * application event queue
@@ -1084,16 +934,6 @@ dri3_update_drawable(__DRIdrawable *driDrawable, void *loaderPrivate)
        */
 
       error = xcb_request_check(c, cookie);
-
-      present_capabilities_reply = xcb_present_query_capabilities_reply(c,
-                                                                        present_capabilities_cookie,
-                                                                        NULL);
-
-      if (present_capabilities_reply) {
-         priv->present_capabilities = present_capabilities_reply->capabilities;
-         free(present_capabilities_reply);
-      } else
-         priv->present_capabilities = 0;
 
       if (error) {
          if (error->error_code != BadWindow) {
@@ -1278,9 +1118,7 @@ dri3_get_buffer(__DRIdrawable *driDrawable,
                 enum dri3_buffer_type buffer_type,
                 void *loaderPrivate)
 {
-   struct dri3_context *pcp = (struct dri3_context *) __glXGetCurrentContext();
    struct dri3_drawable *priv = loaderPrivate;
-   struct dri3_screen *psc = (struct dri3_screen *) priv->base.psc;
    xcb_connection_t     *c = XGetXCBConnection(priv->base.psc->dpy);
    struct dri3_buffer      *buffer;
    int                  buf_id;
@@ -1316,24 +1154,14 @@ dri3_get_buffer(__DRIdrawable *driDrawable,
       switch (buffer_type) {
       case dri3_buffer_back:
          if (buffer) {
-            if (!buffer->linear_buffer) {
-               dri3_fence_reset(c, new_buffer);
-               dri3_fence_await(c, buffer);
-               dri3_copy_area(c,
-                              buffer->pixmap,
-                              new_buffer->pixmap,
-                              dri3_drawable_gc(priv),
-                              0, 0, 0, 0, priv->width, priv->height);
+            dri3_fence_reset(c, new_buffer);
+            dri3_fence_await(c, buffer);
+            dri3_copy_area(c,
+                           buffer->pixmap,
+                           new_buffer->pixmap,
+                           dri3_drawable_gc(priv),
+                           0, 0, 0, 0, priv->width, priv->height);
             dri3_fence_trigger(c, new_buffer);
-            } else if ((&pcp->base != &dummyContext) && pcp->base.psc == &psc->base) {
-               psc->image->blitImage(pcp->driContext,
-                                     new_buffer->image,
-                                     buffer->image,
-                                     0, 0, priv->width,
-                                     priv->height,
-                                     0, 0, priv->width,
-                                     priv->height, 0);
-            }
             dri3_free_render_buffer(priv, buffer);
          }
          break;
@@ -1345,17 +1173,6 @@ dri3_get_buffer(__DRIdrawable *driDrawable,
                         dri3_drawable_gc(priv),
                         0, 0, 0, 0, priv->width, priv->height);
          dri3_fence_trigger(c, new_buffer);
-
-         if (new_buffer->linear_buffer && (&pcp->base != &dummyContext) && pcp->base.psc == &psc->base) {
-            dri3_fence_await(c, new_buffer);
-            psc->image->blitImage(pcp->driContext,
-                                  new_buffer->image,
-                                  new_buffer->linear_buffer,
-                                  0, 0, priv->width,
-                                  priv->height,
-                                  0, 0, priv->width,
-                                  priv->height, 0);
-         }
          break;
       }
       buffer = new_buffer;
@@ -1418,7 +1235,6 @@ dri3_get_buffers(__DRIdrawable *driDrawable,
                  struct __DRIimageList *buffers)
 {
    struct dri3_drawable *priv = loaderPrivate;
-   struct dri3_screen *psc = (struct dri3_screen *) priv->base.psc;
    struct dri3_buffer   *front, *back;
 
    buffers->image_mask = 0;
@@ -1436,15 +1252,7 @@ dri3_get_buffers(__DRIdrawable *driDrawable,
       buffer_mask |= __DRI_IMAGE_BUFFER_FRONT;
 
    if (buffer_mask & __DRI_IMAGE_BUFFER_FRONT) {
-      /* All pixmaps are owned by the server gpu.
-       * When we use a different gpu, we can't use the pixmap
-       * as buffer since it is potentially tiled a way
-       * our device can't understand. In this case, use
-       * a fake front buffer. Hopefully the pixmap
-       * content will get synced with the fake front
-       * buffer.
-       */
-      if (priv->is_pixmap && !psc->is_different_gpu)
+      if (priv->is_pixmap)
          front = dri3_get_pixmap_buffer(driDrawable,
                                         format,
                                         dri3_buffer_front,
@@ -1478,7 +1286,7 @@ dri3_get_buffers(__DRIdrawable *driDrawable,
    if (front) {
       buffers->image_mask |= __DRI_IMAGE_BUFFER_FRONT;
       buffers->front = front->image;
-      priv->have_fake_front = psc->is_different_gpu || !priv->is_pixmap;
+      priv->have_fake_front = !priv->is_pixmap;
    }
 
    if (back) {
@@ -1500,14 +1308,9 @@ static const __DRIimageLoaderExtension imageLoaderExtension = {
    .flushFrontBuffer    = dri3_flush_front_buffer,
 };
 
-const __DRIuseInvalidateExtension dri3UseInvalidate = {
-   .base = { __DRI_USE_INVALIDATE, 1 }
-};
-
 static const __DRIextension *loader_extensions[] = {
    &imageLoaderExtension.base,
    &systemTimeExtension.base,
-   &dri3UseInvalidate.base,
    NULL
 };
 
@@ -1519,12 +1322,11 @@ static int64_t
 dri3_swap_buffers(__GLXDRIdrawable *pdraw, int64_t target_msc, int64_t divisor,
                   int64_t remainder, Bool flush)
 {
-   struct dri3_context *pcp = (struct dri3_context *) __glXGetCurrentContext();
    struct dri3_drawable *priv = (struct dri3_drawable *) pdraw;
    struct dri3_screen *psc = (struct dri3_screen *) priv->base.psc;
    Display *dpy = priv->base.psc->dpy;
    xcb_connection_t *c = XGetXCBConnection(dpy);
-   struct dri3_buffer *back;
+   int buf_id = DRI3_BACK_ID(priv->cur_back);
    int64_t ret = 0;
 
    unsigned flags = __DRI2_FLUSH_DRAWABLE;
@@ -1532,57 +1334,23 @@ dri3_swap_buffers(__GLXDRIdrawable *pdraw, int64_t target_msc, int64_t divisor,
       flags |= __DRI2_FLUSH_CONTEXT;
    dri3_flush(psc, priv, flags, __DRI2_THROTTLE_SWAPBUFFER);
 
-   back = priv->buffers[DRI3_BACK_ID(priv->cur_back)];
-   if (psc->is_different_gpu && back) {
-      /* Update the linear buffer before presenting the pixmap */
-      psc->image->blitImage(pcp->driContext,
-                            back->linear_buffer,
-                            back->image,
-                            0, 0, back->width,
-                            back->height,
-                            0, 0, back->width,
-                            back->height, __BLIT_FLAG_FLUSH);
-      /* Update the fake front */
-      if (priv->have_fake_front)
-         psc->image->blitImage(pcp->driContext,
-                               priv->buffers[DRI3_FRONT_ID]->image,
-                               back->image,
-                               0, 0, priv->width,
-                               priv->height,
-                               0, 0, priv->width,
-                               priv->height, __BLIT_FLAG_FLUSH);
-   }
-
    dri3_flush_present_events(priv);
 
-   if (back && !priv->is_pixmap) {
-      dri3_fence_reset(c, back);
+   if (priv->buffers[buf_id] && !priv->is_pixmap) {
+      dri3_fence_reset(c, priv->buffers[buf_id]);
 
       /* Compute when we want the frame shown by taking the last known successful
-       * MSC and adding in a swap interval for each outstanding swap request.
-       * target_msc=divisor=remainder=0 means "Use glXSwapBuffers() semantic"
+       * MSC and adding in a swap interval for each outstanding swap request
        */
       ++priv->send_sbc;
-      if (target_msc == 0 && divisor == 0 && remainder == 0)
+      if (target_msc == 0)
          target_msc = priv->msc + priv->swap_interval * (priv->send_sbc - priv->recv_sbc);
-      else if (divisor == 0 && remainder > 0) {
-         /* From the GLX_OML_sync_control spec:
-          *
-          *     "If <divisor> = 0, the swap will occur when MSC becomes
-          *      greater than or equal to <target_msc>."
-          *
-          * Note that there's no mention of the remainder.  The Present extension
-          * throws BadValue for remainder != 0 with divisor == 0, so just drop
-          * the passed in value.
-          */
-         remainder = 0;
-      }
 
-      back->busy = 1;
-      back->last_swap = priv->send_sbc;
+      priv->buffers[buf_id]->busy = 1;
+      priv->buffers[buf_id]->last_swap = priv->send_sbc;
       xcb_present_pixmap(c,
                          priv->base.xDrawable,
-                         back->pixmap,
+                         priv->buffers[buf_id]->pixmap,
                          (uint32_t) priv->send_sbc,
                          0,                                    /* valid */
                          0,                                    /* update */
@@ -1590,7 +1358,7 @@ dri3_swap_buffers(__GLXDRIdrawable *pdraw, int64_t target_msc, int64_t divisor,
                          0,                                    /* y_off */
                          None,                                 /* target_crtc */
                          None,
-                         back->sync_fence,
+                         priv->buffers[buf_id]->sync_fence,
                          XCB_PRESENT_OPTION_NONE,
                          target_msc,
                          divisor,
@@ -1602,10 +1370,10 @@ dri3_swap_buffers(__GLXDRIdrawable *pdraw, int64_t target_msc, int64_t divisor,
        * to reset the fence and make future users block until
        * the X server is done copying the bits
        */
-      if (priv->have_fake_front && !psc->is_different_gpu) {
+      if (priv->have_fake_front) {
          dri3_fence_reset(c, priv->buffers[DRI3_FRONT_ID]);
          dri3_copy_area(c,
-                        back->pixmap,
+                        priv->buffers[buf_id]->pixmap,
                         priv->buffers[DRI3_FRONT_ID]->pixmap,
                         dri3_drawable_gc(priv),
                         0, 0, 0, 0, priv->width, priv->height);
@@ -1615,8 +1383,6 @@ dri3_swap_buffers(__GLXDRIdrawable *pdraw, int64_t target_msc, int64_t divisor,
       if (priv->stamp)
          ++(*priv->stamp);
    }
-
-   (*psc->f->invalidate)(priv->driDrawable);
 
    return ret;
 }
@@ -1818,12 +1584,7 @@ dri3_bind_extensions(struct dri3_screen *psc, struct glx_display * priv,
                                  "GLX_EXT_create_context_es2_profile");
 
    for (i = 0; extensions[i]; i++) {
-      /* when on a different gpu than the server, the server pixmaps
-       * can have a tiling mode we can't read. Thus we can't create
-       * a texture from them.
-       */
-      if (!psc->is_different_gpu &&
-         (strcmp(extensions[i]->name, __DRI_TEX_BUFFER) == 0)) {
+      if ((strcmp(extensions[i]->name, __DRI_TEX_BUFFER) == 0)) {
          psc->texBuffer = (__DRItexBufferExtension *) extensions[i];
          __glXEnableDirectExtension(&psc->base, "GLX_EXT_texture_from_pixmap");
       }
@@ -1832,9 +1593,6 @@ dri3_bind_extensions(struct dri3_screen *psc, struct glx_display * priv,
          psc->f = (__DRI2flushExtension *) extensions[i];
          /* internal driver extension, no GL extension exposed */
       }
-
-      if (strcmp(extensions[i]->name, __DRI_IMAGE) == 0)
-         psc->image = (__DRIimageExtension *) extensions[i];
 
       if ((strcmp(extensions[i]->name, __DRI2_CONFIG_QUERY) == 0))
          psc->config = (__DRI2configQueryExtension *) extensions[i];
@@ -1880,7 +1638,7 @@ dri3_create_screen(int screen, struct glx_display * priv)
    struct dri3_screen *psc;
    __GLXDRIscreen *psp;
    struct glx_config *configs = NULL, *visuals = NULL;
-   char *driverName, *deviceName, *tmp;
+   char *driverName, *deviceName;
    int i;
 
    psc = calloc(1, sizeof *psc);
@@ -1907,8 +1665,6 @@ dri3_create_screen(int screen, struct glx_display * priv)
 
       return NULL;
    }
-
-   psc->fd = loader_get_user_preferred_fd(psc->fd, &psc->is_different_gpu);
    deviceName = NULL;
 
    driverName = loader_get_driver_for_fd(psc->fd, 0);
@@ -1956,27 +1712,28 @@ dri3_create_screen(int screen, struct glx_display * priv)
       goto handle_error;
    }
 
-   dri3_bind_extensions(psc, priv, driverName);
+   extensions = (*psc->core->getExtensions)(psc->driScreen);
 
-   if (!psc->image || psc->image->base.version < 7 || !psc->image->createImageFromFds) {
-      ErrorMessageF("Version 7 or imageFromFds image extension not found\n");
+   for (i = 0; extensions[i]; i++) {
+      if (strcmp(extensions[i]->name, __DRI_IMAGE) == 0)
+         psc->image = (__DRIimageExtension *) extensions[i];
+   }
+
+   if (psc->image == NULL) {
+      ErrorMessageF("image extension not found\n");
       goto handle_error;
    }
+
+   dri3_bind_extensions(psc, priv, driverName);
 
    if (!psc->f || psc->f->base.version < 4) {
       ErrorMessageF("Version 4 or later of flush extension not found\n");
       goto handle_error;
    }
 
-   if (psc->is_different_gpu && psc->image->base.version < 9) {
-      ErrorMessageF("Different GPU, but image extension version 9 or later not found\n");
-      goto handle_error;
-   }
-
-   if (!psc->is_different_gpu && (
-       !psc->texBuffer || psc->texBuffer->base.version < 2 ||
-       !psc->texBuffer->setTexBuffer2
-       )) {
+   if (!psc->texBuffer || psc->texBuffer->base.version < 2 ||
+       !psc->texBuffer->setTexBuffer2)
+   {
       ErrorMessageF("Version 2 or later of texBuffer extension not found\n");
       goto handle_error;
    }
@@ -1984,10 +1741,8 @@ dri3_create_screen(int screen, struct glx_display * priv)
    configs = driConvertConfigs(psc->core, psc->base.configs, driver_configs);
    visuals = driConvertConfigs(psc->core, psc->base.visuals, driver_configs);
 
-   if (!configs || !visuals) {
-       ErrorMessageF("No matching fbConfigs or visuals found\n");
+   if (!configs || !visuals)
        goto handle_error;
-   }
 
    glx_config_destroy_list(psc->base.configs);
    psc->base.configs = configs;
@@ -2018,11 +1773,6 @@ dri3_create_screen(int screen, struct glx_display * priv)
 
    free(driverName);
    free(deviceName);
-
-   tmp = getenv("LIBGL_SHOW_FPS");
-   psc->show_fps_interval = tmp ? atoi(tmp) : 0;
-   if (psc->show_fps_interval < 0)
-      psc->show_fps_interval = 0;
 
    return &psc->base;
 

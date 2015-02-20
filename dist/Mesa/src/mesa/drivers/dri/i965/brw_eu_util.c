@@ -39,12 +39,13 @@ void brw_math_invert( struct brw_compile *p,
 			     struct brw_reg dst,
 			     struct brw_reg src)
 {
-   gen4_math(p,
+   brw_math( p,
 	     dst,
 	     BRW_MATH_FUNCTION_INV,
 	     0,
 	     src,
-	     BRW_MATH_PRECISION_FULL);
+	     BRW_MATH_PRECISION_FULL,
+	     BRW_MATH_DATA_VECTOR );
 }
 
 

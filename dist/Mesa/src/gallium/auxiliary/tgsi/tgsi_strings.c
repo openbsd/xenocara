@@ -122,10 +122,9 @@ const char *tgsi_property_names[TGSI_PROPERTY_COUNT] =
    "FS_DEPTH_LAYOUT",
    "VS_PROHIBIT_UCPS",
    "GS_INVOCATIONS",
-   "VS_POSITION_WINDOW_SPACE"
 };
 
-const char *tgsi_return_type_names[TGSI_RETURN_TYPE_COUNT] =
+const char *tgsi_type_names[5] =
 {
    "UNORM",
    "SNORM",
@@ -140,13 +139,6 @@ const char *tgsi_interpolate_names[TGSI_INTERPOLATE_COUNT] =
    "LINEAR",
    "PERSPECTIVE",
    "COLOR"
-};
-
-const char *tgsi_interpolate_locations[TGSI_INTERPOLATE_LOC_COUNT] =
-{
-   "CENTER",
-   "CENTROID",
-   "SAMPLE",
 };
 
 const char *tgsi_primitive_names[PIPE_PRIM_MAX] =
@@ -195,9 +187,8 @@ tgsi_strings_check(void)
    STATIC_ASSERT(Elements(tgsi_property_names) == TGSI_PROPERTY_COUNT);
    STATIC_ASSERT(Elements(tgsi_primitive_names) == PIPE_PRIM_MAX);
    STATIC_ASSERT(Elements(tgsi_interpolate_names) == TGSI_INTERPOLATE_COUNT);
-   STATIC_ASSERT(Elements(tgsi_return_type_names) == TGSI_RETURN_TYPE_COUNT);
    (void) tgsi_processor_type_names;
-   (void) tgsi_return_type_names;
+   (void) tgsi_type_names;
    (void) tgsi_immediate_type_names;
    (void) tgsi_fs_coord_origin_names;
    (void) tgsi_fs_coord_pixel_center_names;

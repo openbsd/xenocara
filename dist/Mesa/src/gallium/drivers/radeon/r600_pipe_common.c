@@ -27,7 +27,6 @@
 #include "r600_pipe_common.h"
 #include "r600_cs.h"
 #include "tgsi/tgsi_parse.h"
-#include "util/u_draw_quad.h"
 #include "util/u_memory.h"
 #include "util/u_format_s3tc.h"
 #include "util/u_upload_mgr.h"
@@ -39,69 +38,6 @@
 /*
  * pipe_context
  */
-
-void r600_draw_rectangle(struct blitter_context *blitter,
-			 int x1, int y1, int x2, int y2, float depth,
-			 enum blitter_attrib_type type,
-			 const union pipe_color_union *attrib)
-{
-	struct r600_common_context *rctx =
-		(struct r600_common_context*)util_blitter_get_pipe(blitter);
-	struct pipe_viewport_state viewport;
-	struct pipe_resource *buf = NULL;
-	unsigned offset = 0;
-	float *vb;
-
-	if (type == UTIL_BLITTER_ATTRIB_TEXCOORD) {
-		util_blitter_draw_rectangle(blitter, x1, y1, x2, y2, depth, type, attrib);
-		return;
-	}
-
-	/* Some operations (like color resolve on r6xx) don't work
-	 * with the conventional primitive types.
-	 * One that works is PT_RECTLIST, which we use here. */
-
-	/* setup viewport */
-	viewport.scale[0] = 1.0f;
-	viewport.scale[1] = 1.0f;
-	viewport.scale[2] = 1.0f;
-	viewport.scale[3] = 1.0f;
-	viewport.translate[0] = 0.0f;
-	viewport.translate[1] = 0.0f;
-	viewport.translate[2] = 0.0f;
-	viewport.translate[3] = 0.0f;
-	rctx->b.set_viewport_states(&rctx->b, 0, 1, &viewport);
-
-	/* Upload vertices. The hw rectangle has only 3 vertices,
-	 * I guess the 4th one is derived from the first 3.
-	 * The vertex specification should match u_blitter's vertex element state. */
-	u_upload_alloc(rctx->uploader, 0, sizeof(float) * 24, &offset, &buf, (void**)&vb);
-	vb[0] = x1;
-	vb[1] = y1;
-	vb[2] = depth;
-	vb[3] = 1;
-
-	vb[8] = x1;
-	vb[9] = y2;
-	vb[10] = depth;
-	vb[11] = 1;
-
-	vb[16] = x2;
-	vb[17] = y1;
-	vb[18] = depth;
-	vb[19] = 1;
-
-	if (attrib) {
-		memcpy(vb+4, attrib->f, sizeof(float)*4);
-		memcpy(vb+12, attrib->f, sizeof(float)*4);
-		memcpy(vb+20, attrib->f, sizeof(float)*4);
-	}
-
-	/* draw */
-	util_draw_vertex_buffer(&rctx->b, NULL, buf, blitter->vb_slot, offset,
-				R600_PRIM_RECTANGLE_LIST, 3, 2);
-	pipe_resource_reference(&buf, NULL);
-}
 
 void r600_need_dma_space(struct r600_common_context *ctx, unsigned num_dw)
 {
@@ -221,12 +157,9 @@ bool r600_common_context_init(struct r600_common_context *rctx,
         rctx->b.memory_barrier = r600_memory_barrier;
 	rctx->b.flush = r600_flush_from_st;
 
-	LIST_INITHEAD(&rctx->texture_buffers);
-
 	r600_init_context_texture_functions(rctx);
 	r600_streamout_init(rctx);
 	r600_query_init(rctx);
-	cayman_init_msaa(&rctx->b);
 
 	rctx->allocator_so_filled_size = u_suballocator_create(&rctx->b, 4096, 4,
 							       0, PIPE_USAGE_DEFAULT, TRUE);
@@ -305,6 +238,9 @@ static const struct debug_named_value common_debug_options[] = {
 	{ "vm", DBG_VM, "Print virtual addresses when creating resources" },
 	{ "trace_cs", DBG_TRACE_CS, "Trace cs and write rlockup_<csid>.c file with faulty cs" },
 
+	/* features */
+	{ "nodma", DBG_NO_ASYNC_DMA, "Disable asynchronous DMA" },
+
 	/* shaders */
 	{ "fs", DBG_FS, "Print fetch shaders" },
 	{ "vs", DBG_VS, "Print vertex shaders" },
@@ -312,15 +248,9 @@ static const struct debug_named_value common_debug_options[] = {
 	{ "ps", DBG_PS, "Print pixel shaders" },
 	{ "cs", DBG_CS, "Print compute shaders" },
 
-	/* features */
-	{ "nodma", DBG_NO_ASYNC_DMA, "Disable asynchronous DMA" },
-	{ "nohyperz", DBG_NO_HYPERZ, "Disable Hyper-Z" },
+	{ "hyperz", DBG_HYPERZ, "Enable Hyper-Z" },
 	/* GL uses the word INVALIDATE, gallium uses the word DISCARD */
 	{ "noinvalrange", DBG_NO_DISCARD_RANGE, "Disable handling of INVALIDATE_RANGE map flags" },
-	{ "no2d", DBG_NO_2D_TILING, "Disable 2D tiling" },
-	{ "notiling", DBG_NO_TILING, "Disable tiling" },
-	{ "switch_on_eop", DBG_SWITCH_ON_EOP, "Program WD/IA to switch on end-of-packet." },
-	{ "forcedma", DBG_FORCE_DMA, "Use asynchronous DMA for all operations when possible." },
 
 	DEBUG_NAMED_VALUE_END /* must be last */
 };
@@ -476,6 +406,12 @@ const char *r600_get_llvm_processor_name(enum radeon_family family)
 	case CHIP_PITCAIRN: return "pitcairn";
 	case CHIP_VERDE: return "verde";
 	case CHIP_OLAND: return "oland";
+#if HAVE_LLVM <= 0x0303
+	default:
+		fprintf(stderr, "%s: Unknown chipset = %i, defaulting to Southern Islands\n",
+			__func__, family);
+		return "SI";
+#else
 	case CHIP_HAINAN: return "hainan";
 	case CHIP_BONAIRE: return "bonaire";
 	case CHIP_KABINI: return "kabini";
@@ -488,6 +424,7 @@ const char *r600_get_llvm_processor_name(enum radeon_family family)
 		return "kabini";
 #endif
 	default: return "";
+#endif
 	}
 }
 
@@ -590,6 +527,7 @@ static int r600_get_compute_param(struct pipe_screen *screen,
 
 	case PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE:
 		if (ret) {
+			uint64_t max_global_size;
 			uint64_t *max_mem_alloc_size = ret;
 
 			/* XXX: The limit in older kernels is 256 MB.  We
@@ -606,23 +544,10 @@ static int r600_get_compute_param(struct pipe_screen *screen,
 		}
 		return sizeof(uint32_t);
 
-	case PIPE_COMPUTE_CAP_MAX_COMPUTE_UNITS:
-		if (ret) {
-			uint32_t *max_compute_units = ret;
-			*max_compute_units = MAX2(rscreen->info.max_compute_units, 1);
-		}
-		return sizeof(uint32_t);
-
-	case PIPE_COMPUTE_CAP_IMAGES_SUPPORTED:
-		if (ret) {
-			uint32_t *images_supported = ret;
-			*images_supported = 0;
-		}
-		return sizeof(uint32_t);
+	default:
+		fprintf(stderr, "unknown PIPE_COMPUTE_CAP %d\n", param);
+		return 0;
 	}
-
-        fprintf(stderr, "unknown PIPE_COMPUTE_CAP %d\n", param);
-        return 0;
 }
 
 static uint64_t r600_get_timestamp(struct pipe_screen *screen)

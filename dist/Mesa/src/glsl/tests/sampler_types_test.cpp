@@ -24,6 +24,7 @@
 #include "main/compiler.h"
 #include "main/mtypes.h"
 #include "main/macros.h"
+#include "ralloc.h"
 #include "ir.h"
 
 /**

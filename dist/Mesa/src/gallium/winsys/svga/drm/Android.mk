@@ -35,7 +35,8 @@ LOCAL_CFLAGS := -D_FILE_OFFSET_BITS=64
 LOCAL_C_INCLUDES := \
 	$(GALLIUM_TOP)/drivers/svga \
 	$(GALLIUM_TOP)/drivers/svga/include \
-	$(TARGET_OUT_HEADERS)/libdrm
+	$(DRM_TOP) \
+	$(DRM_TOP)/include/drm
 
 LOCAL_MODULE := libmesa_winsys_svga
 

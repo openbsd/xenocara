@@ -33,7 +33,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <xf86drm.h>
-#include <unistd.h>
 
 #ifdef HAVE_PIPE_LOADER_XCB
 
@@ -64,20 +63,6 @@ struct pipe_loader_drm_device {
 
 static struct pipe_loader_ops pipe_loader_drm_ops;
 
-#ifdef HAVE_PIPE_LOADER_XCB
-
-static xcb_screen_t *
-get_xcb_screen(xcb_screen_iterator_t iter, int screen)
-{
-    for (; iter.rem; --screen, xcb_screen_next(&iter))
-        if (screen == 0)
-            return iter.data;
-
-    return NULL;
-}
-
-#endif
-
 static void
 pipe_loader_drm_x_auth(int fd)
 {
@@ -92,9 +77,8 @@ pipe_loader_drm_x_auth(int fd)
    drm_magic_t magic;
    xcb_dri2_authenticate_cookie_t authenticate_cookie;
    xcb_dri2_authenticate_reply_t *authenticate;
-   int screen;
 
-   xcb_conn = xcb_connect(NULL, &screen);
+   xcb_conn = xcb_connect(NULL,  NULL);
 
    if(!xcb_conn)
       return;
@@ -105,8 +89,7 @@ pipe_loader_drm_x_auth(int fd)
     goto disconnect;
 
    s = xcb_setup_roots_iterator(xcb_setup);
-   connect_cookie = xcb_dri2_connect_unchecked(xcb_conn,
-                                               get_xcb_screen(s, screen)->root,
+   connect_cookie = xcb_dri2_connect_unchecked(xcb_conn, s.data->root,
                                                XCB_DRI2_DRIVER_TYPE_DRI);
    connect = xcb_dri2_connect_reply(xcb_conn, connect_cookie, NULL);
 
@@ -278,29 +261,6 @@ pipe_loader_drm_release(struct pipe_loader_device **dev)
    *dev = NULL;
 }
 
-static const struct drm_conf_ret *
-pipe_loader_drm_configuration(struct pipe_loader_device *dev,
-                              enum drm_conf conf)
-{
-   struct pipe_loader_drm_device *ddev = pipe_loader_drm_device(dev);
-   const struct drm_driver_descriptor *dd;
-
-   if (!ddev->lib)
-      return NULL;
-
-   dd = (const struct drm_driver_descriptor *)
-      util_dl_get_proc_address(ddev->lib, "driver_descriptor");
-
-   /* sanity check on the name */
-   if (!dd || strcmp(dd->name, ddev->base.driver_name) != 0)
-      return NULL;
-
-   if (!dd->configuration)
-      return NULL;
-
-   return dd->configuration(conf);
-}
-
 static struct pipe_screen *
 pipe_loader_drm_create_screen(struct pipe_loader_device *dev,
                               const char *library_paths)
@@ -325,6 +285,5 @@ pipe_loader_drm_create_screen(struct pipe_loader_device *dev,
 
 static struct pipe_loader_ops pipe_loader_drm_ops = {
    .create_screen = pipe_loader_drm_create_screen,
-   .configuration = pipe_loader_drm_configuration,
    .release = pipe_loader_drm_release
 };

@@ -110,7 +110,7 @@ vlVdpDecoderCreate(VdpDevice device,
       return VDP_STATUS_RESOURCES;
    }
 
-   DeviceReference(&vldecoder->device, dev);
+   vldecoder->device = dev;
 
    templat.entrypoint = PIPE_VIDEO_ENTRYPOINT_BITSTREAM;
    templat.chroma_format = PIPE_VIDEO_CHROMA_FORMAT_420;
@@ -141,7 +141,6 @@ error_handle:
 
 error_decoder:
    pipe_mutex_unlock(dev->mutex);
-   DeviceReference(&vldecoder->device, NULL);
    FREE(vldecoder);
    return ret;
 }
@@ -164,7 +163,6 @@ vlVdpDecoderDestroy(VdpDecoder decoder)
    pipe_mutex_destroy(vldecoder->mutex);
 
    vlRemoveDataHTAB(decoder);
-   DeviceReference(&vldecoder->device, NULL);
    FREE(vldecoder);
 
    return VDP_STATUS_OK;

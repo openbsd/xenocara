@@ -117,17 +117,28 @@ fd_set_framebuffer_state(struct pipe_context *pctx,
 {
 	struct fd_context *ctx = fd_context(pctx);
 	struct pipe_framebuffer_state *cso = &ctx->framebuffer;
+	unsigned i;
 
 	DBG("%d: cbufs[0]=%p, zsbuf=%p", ctx->needs_flush,
 			framebuffer->cbufs[0], framebuffer->zsbuf);
 
 	fd_context_render(pctx);
 
-	util_copy_framebuffer_state(cso, framebuffer);
+	for (i = 0; i < framebuffer->nr_cbufs; i++)
+		pipe_surface_reference(&cso->cbufs[i], framebuffer->cbufs[i]);
+	for (; i < ctx->framebuffer.nr_cbufs; i++)
+		pipe_surface_reference(&cso->cbufs[i], NULL);
+
+	cso->nr_cbufs = framebuffer->nr_cbufs;
 
 	if ((cso->width != framebuffer->width) ||
 			(cso->height != framebuffer->height))
 		ctx->needs_rb_fbd = true;
+
+	cso->width = framebuffer->width;
+	cso->height = framebuffer->height;
+
+	pipe_surface_reference(&cso->zsbuf, framebuffer->zsbuf);
 
 	ctx->dirty |= FD_DIRTY_FRAMEBUFFER;
 
@@ -177,7 +188,7 @@ fd_set_vertex_buffers(struct pipe_context *pctx,
 		const struct pipe_vertex_buffer *vb)
 {
 	struct fd_context *ctx = fd_context(pctx);
-	struct fd_vertexbuf_stateobj *so = &ctx->vtx.vertexbuf;
+	struct fd_vertexbuf_stateobj *so = &ctx->vertexbuf;
 	int i;
 
 	/* on a2xx, pitch is encoded in the vtx fetch instruction, so
@@ -237,18 +248,8 @@ static void
 fd_rasterizer_state_bind(struct pipe_context *pctx, void *hwcso)
 {
 	struct fd_context *ctx = fd_context(pctx);
-	struct pipe_scissor_state *old_scissor = fd_context_get_scissor(ctx);
-
 	ctx->rasterizer = hwcso;
 	ctx->dirty |= FD_DIRTY_RASTERIZER;
-
-	/* if scissor enable bit changed we need to mark scissor
-	 * state as dirty as well:
-	 * NOTE: we can do a shallow compare, since we only care
-	 * if it changed to/from &ctx->disable_scissor
-	 */
-	if (old_scissor != fd_context_get_scissor(ctx))
-		ctx->dirty |= FD_DIRTY_SCISSOR;
 }
 
 static void
@@ -296,7 +297,7 @@ static void
 fd_vertex_state_bind(struct pipe_context *pctx, void *hwcso)
 {
 	struct fd_context *ctx = fd_context(pctx);
-	ctx->vtx.vtx = hwcso;
+	ctx->vtx = hwcso;
 	ctx->dirty |= FD_DIRTY_VTXSTATE;
 }
 

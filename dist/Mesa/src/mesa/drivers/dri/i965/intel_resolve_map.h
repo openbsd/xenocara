@@ -24,7 +24,6 @@
 #pragma once
 
 #include <stdint.h>
-#include "glsl/list.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,29 +73,30 @@ enum gen6_hiz_op {
  *     necessary.
  */
 struct intel_resolve_map {
-   struct exec_node link;
-
    uint32_t level;
    uint32_t layer;
    enum gen6_hiz_op need;
+
+   struct intel_resolve_map *next;
+   struct intel_resolve_map *prev;
 };
 
 void
-intel_resolve_map_set(struct exec_list *resolve_map,
+intel_resolve_map_set(struct intel_resolve_map *head,
 		      uint32_t level,
 		      uint32_t layer,
 		      enum gen6_hiz_op need);
 
-struct intel_resolve_map *
-intel_resolve_map_get(struct exec_list *resolve_map,
+struct intel_resolve_map*
+intel_resolve_map_get(struct intel_resolve_map *head,
 		      uint32_t level,
 		      uint32_t layer);
 
 void
-intel_resolve_map_remove(struct intel_resolve_map *resolve_map);
+intel_resolve_map_remove(struct intel_resolve_map *elem);
 
 void
-intel_resolve_map_clear(struct exec_list *resolve_map);
+intel_resolve_map_clear(struct intel_resolve_map *head);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
@@ -29,4 +28,4 @@ AM_CFLAGS = \
 
 noinst_LTLIBRARIES = libws_wayland.la
 
-libws_wayland_la_SOURCES = $(C_SOURCES)
+libws_wayland_la_SOURCES = wayland_sw_winsys.c

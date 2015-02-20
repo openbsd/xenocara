@@ -25,14 +25,12 @@ AUTOMAKE_OPTIONS = subdir-objects
 include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
-AM_CFLAGS = \
-	$(GALLIUM_CFLAGS) \
-	$(VISIBILITY_CFLAGS)
-
+AM_CFLAGS = $(GALLIUM_CFLAGS)
 AM_CPPFLAGS = \
+	$(VISIBILITY_CFLAGS) \
 	-I$(top_srcdir)/src/egl/main \
 	-I$(top_builddir)/src/egl/wayland/wayland-drm/ \
-	-I$(top_srcdir)/src/gallium/winsys
+	-I$(top_srcdir)/include
 
 noinst_LTLIBRARIES = libegl.la
 libegl_la_SOURCES = $(common_FILES)
@@ -44,6 +42,8 @@ AM_CFLAGS += \
 	$(LIBDRM_CFLAGS) \
 	$(DRI2PROTO_CFLAGS)
 AM_CPPFLAGS += \
+	-I$(top_srcdir)/src/gallium/winsys \
+	-I$(top_srcdir)/src/gallium/drivers \
 	-I$(top_srcdir)/src/glx \
 	-I$(top_srcdir)/src/mapi \
 	-I$(top_srcdir)/src/mesa \
@@ -56,6 +56,7 @@ AM_CFLAGS += \
 	$(LIBDRM_CFLAGS) \
 	$(WAYLAND_CFLAGS)
 AM_CPPFLAGS += \
+	-I$(top_srcdir)/src/gallium/winsys \
 	-I$(top_srcdir)/src/egl/wayland/wayland-egl \
 	-I$(top_srcdir)/src/egl/wayland/wayland-drm \
 	-I$(top_builddir)/src/egl/wayland/wayland-drm \
@@ -64,10 +65,12 @@ endif
 
 if HAVE_EGL_PLATFORM_DRM
 libegl_la_SOURCES += $(drm_FILES)
+libegl_la_LIBADD = $(top_builddir)/src/loader/libloader.la
 AM_CFLAGS += \
 	$(LIBDRM_CFLAGS)
 AM_CPPFLAGS += \
 	-I$(top_srcdir)/src/loader \
+	-I$(top_srcdir)/src/gallium/winsys \
 	-I$(top_srcdir)/src/gbm/main \
 	-I$(top_srcdir)/src/gallium/state_trackers/gbm \
 	-DHAVE_DRM_BACKEND
@@ -76,35 +79,13 @@ endif
 if HAVE_EGL_PLATFORM_FBDEV
 libegl_la_SOURCES += $(fbdev_FILES)
 AM_CPPFLAGS += \
+	-I$(top_srcdir)/src/gallium/winsys/sw \
 	-DHAVE_FBDEV_BACKEND
 endif
 
 if HAVE_EGL_PLATFORM_NULL
 libegl_la_SOURCES += $(null_FILES)
 AM_CPPFLAGS += \
+	-I$(top_srcdir)/src/gallium/winsys/sw \
 	-DHAVE_NULL_BACKEND
 endif
-
-if HAVE_OPENGL
-AM_CPPFLAGS += \
-	-DFEATURE_GL=1
-endif
-
-if HAVE_OPENGL_ES1
-AM_CPPFLAGS += \
-	-DFEATURE_ES1=1
-endif
-
-if HAVE_OPENGL_ES2
-AM_CPPFLAGS += \
-	-DFEATURE_ES2=1
-endif
-
-if HAVE_OPENVG
-AM_CPPFLAGS += \
-	-DFEATURE_VG=1
-endif
-
-EXTRA_DIST = \
-	Android.mk SConscript \
-	$(android_FILES) $(gdi_FILES)

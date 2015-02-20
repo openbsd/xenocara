@@ -29,7 +29,8 @@
 #define ILO_BLITTER_H
 
 #include "ilo_common.h"
-#include "ilo_state.h"
+#include "ilo_context.h"
+#include "ilo_gpe.h"
 
 enum ilo_blitter_uses {
    ILO_BLITTER_USE_DSA           = 1 << 0,
@@ -48,7 +49,6 @@ enum ilo_blitter_rectlist_op {
 struct blitter_context;
 struct pipe_resource;
 struct pipe_surface;
-struct ilo_context;
 
 struct ilo_blitter {
    struct ilo_context *ilo;
@@ -62,8 +62,13 @@ struct ilo_blitter {
 
    bool initialized;
 
-   float vertices[3][2];
+   struct {
+      struct pipe_resource *res;
+      unsigned offset, size;
+   } buffer;
+
    struct ilo_ve_state ve;
+   struct ilo_vb_state vb;
    struct pipe_draw_info draw;
 
    struct ilo_viewport_cso viewport;

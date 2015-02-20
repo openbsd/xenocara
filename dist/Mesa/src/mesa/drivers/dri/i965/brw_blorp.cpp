@@ -78,18 +78,15 @@ void
 brw_blorp_surface_info::set(struct brw_context *brw,
                             struct intel_mipmap_tree *mt,
                             unsigned int level, unsigned int layer,
-                            mesa_format format, bool is_render_target)
+                            bool is_render_target)
 {
    brw_blorp_mip_info::set(mt, level, layer);
    this->num_samples = mt->num_samples;
-   this->array_layout = mt->array_layout;
+   this->array_spacing_lod0 = mt->array_spacing_lod0;
    this->map_stencil_as_y_tiled = false;
    this->msaa_layout = mt->msaa_layout;
 
-   if (format == MESA_FORMAT_NONE)
-      format = mt->format;
-
-   switch (format) {
+   switch (mt->format) {
    case MESA_FORMAT_S_UINT8:
       /* The miptree is a W-tiled stencil buffer.  Surface states can't be set
        * up for W tiling, so we'll need to use Y tiling and have the WM
@@ -118,7 +115,7 @@ brw_blorp_surface_info::set(struct brw_context *brw,
       this->brw_surfaceformat = BRW_SURFACEFORMAT_R16_UNORM;
       break;
    default: {
-      mesa_format linear_format = _mesa_get_srgb_format_linear(format);
+      mesa_format linear_format = _mesa_get_srgb_format_linear(mt->format);
       if (is_render_target) {
          assert(brw->format_supported_as_render_target[linear_format]);
          this->brw_surfaceformat = brw->render_target_format[linear_format];
@@ -238,7 +235,8 @@ retry:
       break;
    default:
       /* BLORP is not supported before Gen6. */
-      unreachable("not reached");
+      assert(false);
+      break;
    }
 
    /* Make sure we didn't wrap the batch unintentionally, and make sure we
@@ -276,7 +274,7 @@ retry:
    /* We've smashed all state compared to what the normal 3D pipeline
     * rendering tracks for GL.
     */
-   brw->state.dirty.brw = ~0ull;
+   brw->state.dirty.brw = ~0;
    brw->state.dirty.cache = ~0;
    brw->no_depth_or_stencil = false;
    brw->ib.type = -1;
@@ -327,13 +325,13 @@ brw_hiz_op_params::brw_hiz_op_params(struct intel_mipmap_tree *mt,
    x1 = depth.width;
    y1 = depth.height;
 
-   assert(intel_miptree_level_has_hiz(mt, level));
+   assert(intel_miptree_slice_has_hiz(mt, level, layer));
 
    switch (mt->format) {
    case MESA_FORMAT_Z_UNORM16:       depth_format = BRW_DEPTHFORMAT_D16_UNORM; break;
    case MESA_FORMAT_Z_FLOAT32: depth_format = BRW_DEPTHFORMAT_D32_FLOAT; break;
    case MESA_FORMAT_Z24_UNORM_X8_UINT:    depth_format = BRW_DEPTHFORMAT_D24_UNORM_X8_UINT; break;
-   default:                    unreachable("not reached");
+   default:                    assert(0); break;
    }
 }
 

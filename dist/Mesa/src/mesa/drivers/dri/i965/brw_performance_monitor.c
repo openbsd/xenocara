@@ -50,7 +50,7 @@
 #include "main/mtypes.h"
 #include "main/performance_monitor.h"
 
-#include "util/ralloc.h"
+#include "glsl/ralloc.h"
 
 #include "brw_context.h"
 #include "brw_defines.h"
@@ -610,10 +610,6 @@ gather_statistics_results(struct brw_context *brw,
       ctx->PerfMonitor.Groups[PIPELINE_STATS_COUNTERS].NumCounters;
 
    monitor->pipeline_stats_results = calloc(num_counters, sizeof(uint64_t));
-   if (monitor->pipeline_stats_results == NULL) {
-      _mesa_error_no_memory(__func__);
-      return;
-   }
 
    drm_intel_bo_map(monitor->pipeline_stats_bo, false);
    uint64_t *start = monitor->pipeline_stats_bo->virtual;
@@ -649,13 +645,14 @@ start_oa_counters(struct brw_context *brw)
    case 5:
       return; /* Ironlake counters are always running. */
    case 6:
-      counter_format = 0b001;
+      counter_format = 1; /* 0b001 */
       break;
    case 7:
-      counter_format = 0b101;
+      counter_format = 5; /* 0b101 */
       break;
    default:
-      unreachable("Tried to enable OA counters on an unsupported generation.");
+      assert(!"Tried to enable OA counters on an unsupported generation.");
+      return;
    }
 
    BEGIN_BATCH(3);
@@ -747,7 +744,7 @@ emit_mi_report_perf_count(struct brw_context *brw,
       OUT_BATCH(report_id);
       ADVANCE_BATCH();
    } else {
-      unreachable("Unsupported generation for performance counters.");
+      assert(!"Unsupported generation for performance counters.");
    }
 
    /* Reports apparently don't always get written unless we flush after. */
@@ -907,7 +904,7 @@ gather_oa_results(struct brw_context *brw,
       return;
    }
 
-   const ptrdiff_t snapshot_size = brw->perfmon.entries_per_oa_snapshot;
+   const int snapshot_size = brw->perfmon.entries_per_oa_snapshot;
 
    /* First, add the contributions from the "head" interval:
     * (snapshot taken at BeginPerfMonitor time,
@@ -1321,17 +1318,8 @@ brw_get_perf_monitor_result(struct gl_context *ctx,
       const int num_counters =
          ctx->PerfMonitor.Groups[PIPELINE_STATS_COUNTERS].NumCounters;
 
-      if (!monitor->pipeline_stats_results) {
+      if (!monitor->pipeline_stats_results)
          gather_statistics_results(brw, monitor);
-
-         /* Check if we did really get the results */
-         if (!monitor->pipeline_stats_results) {
-            if (bytes_written) {
-               *bytes_written = 0;
-            }
-            return;
-         }
-      }
 
       for (int i = 0; i < num_counters; i++) {
          if (BITSET_TEST(m->ActiveCounters[PIPELINE_STATS_COUNTERS], i)) {

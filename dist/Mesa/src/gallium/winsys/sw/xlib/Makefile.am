@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-include Makefile.sources
 include $(top_srcdir)/src/gallium/Automake.inc
 
 AM_CFLAGS = \
@@ -29,6 +28,4 @@ AM_CFLAGS = \
 
 noinst_LTLIBRARIES = libws_xlib.la
 
-libws_xlib_la_SOURCES = $(C_SOURCES)
-
-EXTRA_DIST = SConscript
+libws_xlib_la_SOURCES = xlib_sw_winsys.c

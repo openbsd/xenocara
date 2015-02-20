@@ -44,11 +44,9 @@ fd3_pipe2vtx(enum pipe_format format)
 		return VFMT_NORM_BYTE_8;
 
 	case PIPE_FORMAT_R8_UINT:
-	case PIPE_FORMAT_R8_USCALED:
 		return VFMT_UBYTE_8;
 
 	case PIPE_FORMAT_R8_SINT:
-	case PIPE_FORMAT_R8_SSCALED:
 		return VFMT_BYTE_8;
 
 	/* 16-bit buffers. */
@@ -60,11 +58,9 @@ fd3_pipe2vtx(enum pipe_format format)
 		return VFMT_NORM_SHORT_16;
 
 	case PIPE_FORMAT_R16_UINT:
-	case PIPE_FORMAT_R16_USCALED:
 		return VFMT_USHORT_16;
 
 	case PIPE_FORMAT_R16_SINT:
-	case PIPE_FORMAT_R16_SSCALED:
 		return VFMT_SHORT_16;
 
 	case PIPE_FORMAT_R16_FLOAT:
@@ -77,11 +73,9 @@ fd3_pipe2vtx(enum pipe_format format)
 		return VFMT_NORM_BYTE_8_8;
 
 	case PIPE_FORMAT_R8G8_UINT:
-	case PIPE_FORMAT_R8G8_USCALED:
 		return VFMT_UBYTE_8_8;
 
 	case PIPE_FORMAT_R8G8_SINT:
-	case PIPE_FORMAT_R8G8_SSCALED:
 		return VFMT_BYTE_8_8;
 
 	/* 24-bit buffers. */
@@ -92,11 +86,9 @@ fd3_pipe2vtx(enum pipe_format format)
 		return VFMT_NORM_BYTE_8_8_8;
 
 	case PIPE_FORMAT_R8G8B8_UINT:
-	case PIPE_FORMAT_R8G8B8_USCALED:
 		return VFMT_UBYTE_8_8_8;
 
 	case PIPE_FORMAT_R8G8B8_SINT:
-	case PIPE_FORMAT_R8G8B8_SSCALED:
 		return VFMT_BYTE_8_8_8;
 
 	/* 32-bit buffers. */
@@ -110,22 +102,18 @@ fd3_pipe2vtx(enum pipe_format format)
 		return VFMT_NORM_BYTE_8_8_8_8;
 
 	case PIPE_FORMAT_R8G8B8A8_UINT:
-	case PIPE_FORMAT_R8G8B8A8_USCALED:
 		return VFMT_UBYTE_8_8_8_8;
 
 	case PIPE_FORMAT_R8G8B8A8_SINT:
-	case PIPE_FORMAT_R8G8B8A8_SSCALED:
 		return VFMT_BYTE_8_8_8_8;
 
 	case PIPE_FORMAT_R16G16_SSCALED:
-	case PIPE_FORMAT_R16G16_SINT:
 		return VFMT_SHORT_16_16;
 
 	case PIPE_FORMAT_R16G16_FLOAT:
 		return VFMT_FLOAT_16_16;
 
 	case PIPE_FORMAT_R16G16_UINT:
-	case PIPE_FORMAT_R16G16_USCALED:
 		return VFMT_USHORT_16_16;
 
 	case PIPE_FORMAT_R16G16_UNORM:
@@ -134,21 +122,12 @@ fd3_pipe2vtx(enum pipe_format format)
 	case PIPE_FORMAT_R16G16_SNORM:
 		return VFMT_NORM_SHORT_16_16;
 
-	case PIPE_FORMAT_R32_UINT:
-	case PIPE_FORMAT_R32_USCALED:
-		return VFMT_UINT_32;
-
-	case PIPE_FORMAT_R32_SINT:
-	case PIPE_FORMAT_R32_SSCALED:
-		return VFMT_INT_32;
-
 	case PIPE_FORMAT_R10G10B10A2_UNORM:
 		return VFMT_NORM_UINT_10_10_10_2;
 
 	case PIPE_FORMAT_R10G10B10A2_SNORM:
 		return VFMT_NORM_INT_10_10_10_2;
 
-	case PIPE_FORMAT_R10G10B10A2_UINT:
 	case PIPE_FORMAT_R10G10B10A2_USCALED:
 		return VFMT_UINT_10_10_10_2;
 
@@ -159,12 +138,10 @@ fd3_pipe2vtx(enum pipe_format format)
 	case PIPE_FORMAT_R16G16B16_FLOAT:
 		return VFMT_FLOAT_16_16_16;
 
-	case PIPE_FORMAT_R16G16B16_SINT:
 	case PIPE_FORMAT_R16G16B16_SSCALED:
 		return VFMT_SHORT_16_16_16;
 
 	case PIPE_FORMAT_R16G16B16_UINT:
-	case PIPE_FORMAT_R16G16B16_USCALED:
 		return VFMT_USHORT_16_16_16;
 
 	case PIPE_FORMAT_R16G16B16_SNORM:
@@ -188,11 +165,9 @@ fd3_pipe2vtx(enum pipe_format format)
 		return VFMT_NORM_SHORT_16_16_16_16;
 
 	case PIPE_FORMAT_R16G16B16A16_UINT:
-	case PIPE_FORMAT_R16G16B16A16_USCALED:
 		return VFMT_USHORT_16_16_16_16;
 
 	case PIPE_FORMAT_R16G16B16A16_SINT:
-	case PIPE_FORMAT_R16G16B16A16_SSCALED:
 		return VFMT_SHORT_16_16_16_16;
 
 	case PIPE_FORMAT_R32G32_FLOAT:
@@ -204,28 +179,12 @@ fd3_pipe2vtx(enum pipe_format format)
 	case PIPE_FORMAT_R16G16B16A16_FLOAT:
 		return VFMT_FLOAT_16_16_16_16;
 
-	case PIPE_FORMAT_R32G32_UINT:
-	case PIPE_FORMAT_R32G32_USCALED:
-		return VFMT_UINT_32_32;
-
-	case PIPE_FORMAT_R32G32_SINT:
-	case PIPE_FORMAT_R32G32_SSCALED:
-		return VFMT_INT_32_32;
-
 	/* 96-bit buffers. */
 	case PIPE_FORMAT_R32G32B32_FLOAT:
 		return VFMT_FLOAT_32_32_32;
 
 	case PIPE_FORMAT_R32G32B32_FIXED:
 		return VFMT_FIXED_32_32_32;
-
-	case PIPE_FORMAT_R32G32B32_UINT:
-	case PIPE_FORMAT_R32G32B32_USCALED:
-		return VFMT_UINT_32_32_32;
-
-	case PIPE_FORMAT_R32G32B32_SINT:
-	case PIPE_FORMAT_R32G32B32_SSCALED:
-		return VFMT_INT_32_32_32;
 
 	/* 128-bit buffers. */
 	case PIPE_FORMAT_R32G32B32A32_FLOAT:
@@ -234,20 +193,26 @@ fd3_pipe2vtx(enum pipe_format format)
 	case PIPE_FORMAT_R32G32B32A32_FIXED:
 		return VFMT_FIXED_32_32_32_32;
 
-	case PIPE_FORMAT_R32G32B32A32_UINT:
-	case PIPE_FORMAT_R32G32B32A32_USCALED:
-		return VFMT_UINT_32_32_32_32;
-
-	case PIPE_FORMAT_R32G32B32A32_SINT:
-	case PIPE_FORMAT_R32G32B32A32_SSCALED:
-		return VFMT_INT_32_32_32_32;
-
-/* TODO normalized 32bit int formats do not appear to be supported
- * natively.. will require either shader variant or VFD_DECODE
- * gymnastics like the blob driver does..
+/* TODO probably need gles3 blob drivers to find the 32bit int formats:
 	case PIPE_FORMAT_R32G32B32A32_SNORM:
 	case PIPE_FORMAT_R32G32B32A32_UNORM:
- */
+	case PIPE_FORMAT_R32G32B32A32_SINT:
+	case PIPE_FORMAT_R32G32B32A32_UINT:
+
+	case PIPE_FORMAT_R32_UINT:
+	case PIPE_FORMAT_R32_SINT:
+	case PIPE_FORMAT_A32_UINT:
+	case PIPE_FORMAT_A32_SINT:
+	case PIPE_FORMAT_L32_UINT:
+	case PIPE_FORMAT_L32_SINT:
+	case PIPE_FORMAT_I32_UINT:
+	case PIPE_FORMAT_I32_SINT:
+
+	case PIPE_FORMAT_R32G32_SINT:
+	case PIPE_FORMAT_R32G32_UINT:
+	case PIPE_FORMAT_L32A32_UINT:
+	case PIPE_FORMAT_L32A32_SINT:
+*/
 
 	default:
 		return ~0;
@@ -264,9 +229,6 @@ fd3_pipe2tex(enum pipe_format format)
 	case PIPE_FORMAT_I8_UNORM:
 		return TFMT_NORM_UINT_8;
 
-	case PIPE_FORMAT_R8G8_UNORM:
-		return TFMT_NORM_UINT_8_8;
-
 	case PIPE_FORMAT_B8G8R8A8_UNORM:
 	case PIPE_FORMAT_B8G8R8X8_UNORM:
 	case PIPE_FORMAT_R8G8B8A8_UNORM:
@@ -278,11 +240,13 @@ fd3_pipe2tex(enum pipe_format format)
 		return TFMT_NORM_UINT_8_8_8_8;
 
 	case PIPE_FORMAT_Z24X8_UNORM:
-	case PIPE_FORMAT_Z24_UNORM_S8_UINT:
 		return TFMT_NORM_UINT_X8Z24;
 
+	case PIPE_FORMAT_Z24_UNORM_S8_UINT:
+		return TFMT_NORM_UINT_8_8_8_8;
+
 	case PIPE_FORMAT_Z16_UNORM:
-		return TFMT_NORM_USHORT_Z16;
+		return TFMT_NORM_UINT_8_8;
 
 	case PIPE_FORMAT_R16G16B16A16_FLOAT:
 	case PIPE_FORMAT_R16G16B16X16_FLOAT:
@@ -350,8 +314,6 @@ fd3_pipe2color(enum pipe_format format)
 
 	case PIPE_FORMAT_R8_UNORM:
 	case PIPE_FORMAT_L8_UNORM:
-		return RB_R8_UNORM;
-
 	case PIPE_FORMAT_A8_UNORM:
 		return RB_A8_UNORM;
 
@@ -381,9 +343,8 @@ fd3_gmem_restore_format(enum pipe_format format)
 	switch (format) {
 	case PIPE_FORMAT_Z24X8_UNORM:
 	case PIPE_FORMAT_Z24_UNORM_S8_UINT:
-		return PIPE_FORMAT_R8G8B8A8_UNORM;
 	case PIPE_FORMAT_Z16_UNORM:
-		return PIPE_FORMAT_R8G8_UNORM;
+		return PIPE_FORMAT_B8G8R8A8_UNORM;
 	default:
 		return format;
 	}

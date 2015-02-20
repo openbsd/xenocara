@@ -25,7 +25,7 @@ if HAVE_X11_DRIVER
 SUBDIRS += drivers/x11
 endif
 
-if HAVE_DRICOMMON
+if HAVE_DRI
 SUBDIRS += drivers/dri
 endif
 
@@ -64,7 +64,6 @@ include Makefile.sources
 
 BUILT_SOURCES = \
 	main/get_hash.h \
-        main/format_info.c \
 	$(BUILDDIR)main/git_sha1.h \
 	$(BUILDDIR)program/program_parse.tab.c \
 	$(BUILDDIR)program/lex.yy.c
@@ -81,15 +80,6 @@ main/get_hash.h: $(GLAPI)/gl_and_es_API.xml main/get_hash_params.py 	\
 	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/$(GET_HASH_GEN)		\
 		-f $< > $@.tmp;						\
 	mv $@.tmp $@;
-
-main/format_info.c: main/formats.csv                                    \
-                    main/format_parser.py main/format_info.py
-	$(AM_V_GEN)set -e;						\
-	$(PYTHON2) $(PYTHON_FLAGS) $(srcdir)/main/format_info.py        \
-                   $< > $@.tmp;                                         \
-	mv $@.tmp $@;
-
-main/formats.c: main/format_info.c
 
 noinst_LTLIBRARIES = $(ARCH_LIBS)
 if NEED_LIBMESA
@@ -135,25 +125,26 @@ endif
 libmesa_la_SOURCES = \
 	$(MESA_FILES) \
 	$(PROGRAM_FILES) \
-	$(MESA_ASM_FILES_FOR_ARCH)
+        $(MESA_ASM_FILES_FOR_ARCH)
 
 libmesa_la_LIBADD = \
-	$(top_builddir)/src/glsl/libglsl.la \
-	$(ARCH_LIBS)
+        $(top_builddir)/src/glsl/libglsl.la \
+	$(ARCH_LIBS) \
+        $()
 
 libmesagallium_la_SOURCES = \
 	$(MESA_GALLIUM_FILES) \
 	$(PROGRAM_FILES) \
-	$(MESA_ASM_FILES_FOR_ARCH)
+        $(MESA_ASM_FILES_FOR_ARCH)
 
 libmesagallium_la_LIBADD = \
-	$(top_builddir)/src/glsl/libglsl.la \
-	$(ARCH_LIBS)
+        $(top_builddir)/src/glsl/libglsl.la \
+	$(ARCH_LIBS) \
+        $()
 
 libmesa_sse41_la_SOURCES = \
-	main/streaming-load-memcpy.c \
-	main/sse_minmax.c
-libmesa_sse41_la_CFLAGS = $(AM_CFLAGS) $(SSE41_CFLAGS)
+	main/streaming-load-memcpy.c
+libmesa_sse41_la_CFLAGS = $(AM_CFLAGS) -msse4.1
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gl.pc

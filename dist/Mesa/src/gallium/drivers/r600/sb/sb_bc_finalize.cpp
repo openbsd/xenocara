@@ -38,18 +38,6 @@
 
 namespace r600_sb {
 
-void bc_finalizer::insert_rv6xx_load_ar_workaround(alu_group_node *b4) {
-
-	alu_group_node *g = sh.create_alu_group();
-	alu_node *a = sh.create_alu();
-
-	a->bc.set_op(ALU_OP0_NOP);
-	a->bc.last = 1;
-
-	g->push_back(a);
-	b4->insert_before(g);
-}
-
 int bc_finalizer::run() {
 
 	run_on(sh.root);
@@ -95,18 +83,14 @@ int bc_finalizer::run() {
 		last_cf = c;
 	}
 
-	if (!ctx.is_cayman() && last_cf->bc.op_ptr->flags & CF_ALU) {
+	if (last_cf->bc.op_ptr->flags & CF_ALU) {
 		last_cf = sh.create_cf(CF_OP_NOP);
 		sh.root->push_back(last_cf);
 	}
 
-	if (ctx.is_cayman()) {
-		if (!last_cf) {
-			cf_node *c = sh.create_cf(CF_OP_CF_END);
-			sh.root->push_back(c);
-		} else
-			last_cf->insert_after(sh.create_cf(CF_OP_CF_END));
-	} else
+	if (ctx.is_cayman())
+		last_cf->insert_after(sh.create_cf(CF_OP_CF_END));
+	else
 		last_cf->bc.end_of_program = 1;
 
 	for (unsigned t = EXP_PIXEL; t < EXP_TYPE_COUNT; ++t) {
@@ -121,8 +105,6 @@ int bc_finalizer::run() {
 }
 
 void bc_finalizer::finalize_loop(region_node* r) {
-
-	update_nstack(r);
 
 	cf_node *loop_start = sh.create_cf(CF_OP_LOOP_START_DX10);
 	cf_node *loop_end = sh.create_cf(CF_OP_LOOP_END);
@@ -223,12 +205,12 @@ void bc_finalizer::finalize_if(region_node* r) {
 }
 
 void bc_finalizer::run_on(container_node* c) {
-	node *prev_node = NULL;
+
 	for (node_iterator I = c->begin(), E = c->end(); I != E; ++I) {
 		node *n = *I;
 
 		if (n->is_alu_group()) {
-			finalize_alu_group(static_cast<alu_group_node*>(n), prev_node);
+			finalize_alu_group(static_cast<alu_group_node*>(n));
 		} else {
 			if (n->is_alu_clause()) {
 				cf_node *c = static_cast<cf_node*>(n);
@@ -263,22 +245,17 @@ void bc_finalizer::run_on(container_node* c) {
 			if (n->is_container())
 				run_on(static_cast<container_node*>(n));
 		}
-		prev_node = n;
 	}
 }
 
-void bc_finalizer::finalize_alu_group(alu_group_node* g, node *prev_node) {
+void bc_finalizer::finalize_alu_group(alu_group_node* g) {
 
 	alu_node *last = NULL;
-	alu_group_node *prev_g = NULL;
-	bool add_nop = false;
-	if (prev_node && prev_node->is_alu_group()) {
-		prev_g = static_cast<alu_group_node*>(prev_node);
-	}
 
 	for (node_iterator I = g->begin(), E = g->end(); I != E; ++I) {
 		alu_node *n = static_cast<alu_node*>(*I);
 		unsigned slot = n->bc.slot;
+
 		value *d = n->dst.empty() ? NULL : n->dst[0];
 
 		if (d && d->is_special_reg()) {
@@ -316,22 +293,17 @@ void bc_finalizer::finalize_alu_group(alu_group_node* g, node *prev_node) {
 
 		update_ngpr(n->bc.dst_gpr);
 
-		add_nop |= finalize_alu_src(g, n, prev_g);
+		finalize_alu_src(g, n);
 
 		last = n;
 	}
 
-	if (add_nop) {
-		if (sh.get_ctx().r6xx_gpr_index_workaround) {
-			insert_rv6xx_load_ar_workaround(g);
-		}
-	}
 	last->bc.last = 1;
 }
 
-bool bc_finalizer::finalize_alu_src(alu_group_node* g, alu_node* a, alu_group_node *prev) {
+void bc_finalizer::finalize_alu_src(alu_group_node* g, alu_node* a) {
 	vvec &sv = a->src;
-	bool add_nop = false;
+
 	FBC_DUMP(
 		sblog << "finalize_alu_src: ";
 		dump::dump_op(a);
@@ -358,15 +330,6 @@ bool bc_finalizer::finalize_alu_src(alu_group_node* g, alu_node* a, alu_group_no
 			if (!v->rel->is_const()) {
 				src.rel = 1;
 				update_ngpr(v->array->gpr.sel() + v->array->array_size -1);
-				if (prev && !add_nop) {
-					for (node_iterator pI = prev->begin(), pE = prev->end(); pI != pE; ++pI) {
-						alu_node *pn = static_cast<alu_node*>(*pI);
-						if (pn->bc.dst_gpr == src.sel) {
-							add_nop = true;
-							break;
-						}
-					}
-				}
 			} else
 				src.rel = 0;
 
@@ -424,81 +387,11 @@ bool bc_finalizer::finalize_alu_src(alu_group_node* g, alu_node* a, alu_group_no
 			assert(!"unknown value kind");
 			break;
 		}
-		if (prev && !add_nop) {
-			for (node_iterator pI = prev->begin(), pE = prev->end(); pI != pE; ++pI) {
-				alu_node *pn = static_cast<alu_node*>(*pI);
-				if (pn->bc.dst_rel) {
-					if (pn->bc.dst_gpr == src.sel) {
-						add_nop = true;
-						break;
-					}
-				}
-			}
-		}
 	}
 
 	while (si < 3) {
 		a->bc.src[si++].sel = 0;
 	}
-	return add_nop;
-}
-
-void bc_finalizer::copy_fetch_src(fetch_node &dst, fetch_node &src, unsigned arg_start)
-{
-	int reg = -1;
-
-	for (unsigned chan = 0; chan < 4; ++chan) {
-
-		dst.bc.dst_sel[chan] = SEL_MASK;
-
-		unsigned sel = SEL_MASK;
-
-		value *v = src.src[arg_start + chan];
-
-		if (!v || v->is_undef()) {
-			sel = SEL_MASK;
-		} else if (v->is_const()) {
-			literal l = v->literal_value;
-			if (l == literal(0))
-				sel = SEL_0;
-			else if (l == literal(1.0f))
-				sel = SEL_1;
-			else {
-				sblog << "invalid fetch constant operand  " << chan << " ";
-				dump::dump_op(&src);
-				sblog << "\n";
-				abort();
-			}
-
-		} else if (v->is_any_gpr()) {
-			unsigned vreg = v->gpr.sel();
-			unsigned vchan = v->gpr.chan();
-
-			if (reg == -1)
-				reg = vreg;
-			else if ((unsigned)reg != vreg) {
-				sblog << "invalid fetch source operand  " << chan << " ";
-				dump::dump_op(&src);
-				sblog << "\n";
-				abort();
-			}
-
-			sel = vchan;
-
-		} else {
-			sblog << "invalid fetch source operand  " << chan << " ";
-			dump::dump_op(&src);
-			sblog << "\n";
-			abort();
-		}
-
-		dst.bc.src_sel[chan] = sel;
-	}
-
-	if (reg >= 0)
-		update_ngpr(reg);
-
-	dst.bc.src_gpr = reg >= 0 ? reg : 0;
 }
 
 void bc_finalizer::emit_set_grad(fetch_node* f) {
@@ -512,25 +405,68 @@ void bc_finalizer::emit_set_grad(fetch_node* f) {
 		fetch_node *n = sh.create_fetch();
 		n->bc.set_op(ops[op]);
 
+		// FIXME extract this loop into a separate method and reuse it
+
+		int reg = -1;
+
 		arg_start += 4;
 
-		copy_fetch_src(*n, *f, arg_start);
+		for (unsigned chan = 0; chan < 4; ++chan) {
+
+			n->bc.dst_sel[chan] = SEL_MASK;
+
+			unsigned sel = SEL_MASK;
+
+			value *v = f->src[arg_start + chan];
+
+			if (!v || v->is_undef()) {
+				sel = SEL_MASK;
+			} else if (v->is_const()) {
+				literal l = v->literal_value;
+				if (l == literal(0))
+					sel = SEL_0;
+				else if (l == literal(1.0f))
+					sel = SEL_1;
+				else {
+					sblog << "invalid fetch constant operand  " << chan << " ";
+					dump::dump_op(f);
+					sblog << "\n";
+					abort();
+				}
+
+			} else if (v->is_any_gpr()) {
+				unsigned vreg = v->gpr.sel();
+				unsigned vchan = v->gpr.chan();
+
+				if (reg == -1)
+					reg = vreg;
+				else if ((unsigned)reg != vreg) {
+					sblog << "invalid fetch source operand  " << chan << " ";
+					dump::dump_op(f);
+					sblog << "\n";
+					abort();
+				}
+
+				sel = vchan;
+
+			} else {
+				sblog << "invalid fetch source operand  " << chan << " ";
+				dump::dump_op(f);
+				sblog << "\n";
+				abort();
+			}
+
+			n->bc.src_sel[chan] = sel;
+		}
+
+		if (reg >= 0)
+			update_ngpr(reg);
+
+		n->bc.src_gpr = reg >= 0 ? reg : 0;
 
 		f->insert_before(n);
 	}
 
-}
-
-void bc_finalizer::emit_set_texture_offsets(fetch_node &f) {
-	assert(f.src.size() == 8);
-
-	fetch_node *n = sh.create_fetch();
-
-	n->bc.set_op(FETCH_OP_SET_TEXTURE_OFFSETS);
-
-	copy_fetch_src(*n, f, 4);
-
-	f.insert_before(n);
 }
 
 void bc_finalizer::finalize_fetch(fetch_node* f) {
@@ -547,8 +483,6 @@ void bc_finalizer::finalize_fetch(fetch_node* f) {
 		src_count = 1;
 	} else if (flags & FF_USEGRAD) {
 		emit_set_grad(f);
-	} else if (flags & FF_USE_TEXTURE_OFFSETS) {
-		emit_set_texture_offsets(*f);
 	}
 
 	for (unsigned chan = 0; chan < src_count; ++chan) {

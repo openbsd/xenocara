@@ -41,8 +41,9 @@
 #include "util/u_inlines.h"
 #include "util/u_memory.h"
 #include "util/u_debug.h"
-#include "ilo/intel_winsys.h"
-#include "intel_drm_public.h"
+#include "../intel_winsys.h"
+
+#define BATCH_SZ (8192 * sizeof(uint32_t))
 
 struct intel_winsys {
    int fd;
@@ -138,11 +139,7 @@ probe_winsys(struct intel_winsys *winsys)
 
    info->devid = drm_intel_bufmgr_gem_get_devid(winsys->bufmgr);
 
-   if (drm_intel_get_aperture_sizes(winsys->fd,
-         &info->aperture_mappable, &info->aperture_total)) {
-      debug_error("failed to query aperture sizes");
-      return false;
-   }
+   info->max_batch_size = BATCH_SZ;
 
    get_param(winsys, I915_PARAM_HAS_LLC, &val);
    info->has_llc = val;
@@ -166,8 +163,6 @@ probe_winsys(struct intel_winsys *winsys)
 struct intel_winsys *
 intel_winsys_create_for_fd(int fd)
 {
-   /* so that we can have enough (up to 4094) relocs per bo */
-   const int batch_size = sizeof(uint32_t) * 8192;
    struct intel_winsys *winsys;
 
    winsys = CALLOC_STRUCT(intel_winsys);
@@ -176,7 +171,7 @@ intel_winsys_create_for_fd(int fd)
 
    winsys->fd = fd;
 
-   winsys->bufmgr = drm_intel_bufmgr_gem_init(winsys->fd, batch_size);
+   winsys->bufmgr = drm_intel_bufmgr_gem_init(winsys->fd, BATCH_SZ);
    if (!winsys->bufmgr) {
       debug_error("failed to create GEM buffer manager");
       FREE(winsys);
@@ -186,7 +181,6 @@ intel_winsys_create_for_fd(int fd)
    pipe_mutex_init(winsys->mutex);
 
    if (!probe_winsys(winsys)) {
-      pipe_mutex_destroy(winsys->mutex);
       drm_intel_bufmgr_destroy(winsys->bufmgr);
       FREE(winsys);
       return NULL;
@@ -194,7 +188,12 @@ intel_winsys_create_for_fd(int fd)
 
    /*
     * No need to implicitly set up a fence register for each non-linear reloc
-    * entry.  INTEL_RELOC_FENCE will be set on reloc entries that need them.
+    * entry.  When a fence register is needed for a reloc entry,
+    * drm_intel_bo_emit_reloc_fence() will be called explicitly.
+    *
+    * intel_bo_add_reloc() currently lacks "bool fenced" for this to work.
+    * But we never need a fence register on GEN4+ so we do not need to worry
+    * about it yet.
     */
    drm_intel_bufmgr_gem_enable_fenced_relocs(winsys->bufmgr);
 
@@ -255,53 +254,50 @@ intel_winsys_read_reg(struct intel_winsys *winsys,
 }
 
 struct intel_bo *
-intel_winsys_alloc_bo(struct intel_winsys *winsys,
-                      const char *name,
-                      enum intel_tiling_mode tiling,
-                      unsigned long pitch,
-                      unsigned long height,
-                      bool cpu_init)
+intel_winsys_alloc_buffer(struct intel_winsys *winsys,
+                          const char *name,
+                          unsigned long size,
+                          uint32_t initial_domain)
 {
-   const unsigned int alignment = 4096; /* always page-aligned */
-   unsigned long size;
+   const bool for_render =
+      (initial_domain & (INTEL_DOMAIN_RENDER | INTEL_DOMAIN_INSTRUCTION));
+   const int alignment = 4096; /* always page-aligned */
    drm_intel_bo *bo;
 
-   switch (tiling) {
-   case INTEL_TILING_X:
-      if (pitch % 512)
-         return NULL;
-      break;
-   case INTEL_TILING_Y:
-      if (pitch % 128)
-         return NULL;
-      break;
-   default:
-      break;
-   }
-
-   if (pitch > ULONG_MAX / height)
-      return NULL;
-
-   size = pitch * height;
-
-   if (cpu_init) {
-      bo = drm_intel_bo_alloc(winsys->bufmgr, name, size, alignment);
-   }
-   else {
+   if (for_render) {
       bo = drm_intel_bo_alloc_for_render(winsys->bufmgr,
             name, size, alignment);
    }
+   else {
+      bo = drm_intel_bo_alloc(winsys->bufmgr, name, size, alignment);
+   }
 
-   if (bo && tiling != INTEL_TILING_NONE) {
-      uint32_t real_tiling = tiling;
-      int err;
+   return (struct intel_bo *) bo;
+}
 
-      err = drm_intel_bo_set_tiling(bo, &real_tiling, pitch);
-      if (err || real_tiling != tiling) {
-         assert(!"tiling mismatch");
-         drm_intel_bo_unreference(bo);
-         return NULL;
-      }
+struct intel_bo *
+intel_winsys_alloc_texture(struct intel_winsys *winsys,
+                           const char *name,
+                           int width, int height, int cpp,
+                           enum intel_tiling_mode tiling,
+                           uint32_t initial_domain,
+                           unsigned long *pitch)
+{
+   const unsigned long flags =
+      (initial_domain & (INTEL_DOMAIN_RENDER | INTEL_DOMAIN_INSTRUCTION)) ?
+      BO_ALLOC_FOR_RENDER : 0;
+   uint32_t real_tiling = tiling;
+   drm_intel_bo *bo;
+
+   bo = drm_intel_bo_alloc_tiled(winsys->bufmgr, name,
+         width, height, cpp, &real_tiling, pitch, flags);
+   if (!bo)
+      return NULL;
+
+   if (real_tiling != tiling) {
+      assert(!"tiling mismatch");
+      drm_intel_bo_unreference(bo);
+      return NULL;
    }
 
    return (struct intel_bo *) bo;
@@ -311,7 +307,7 @@ struct intel_bo *
 intel_winsys_import_handle(struct intel_winsys *winsys,
                            const char *name,
                            const struct winsys_handle *handle,
-                           unsigned long height,
+                           int width, int height, int cpp,
                            enum intel_tiling_mode *tiling,
                            unsigned long *pitch)
 {
@@ -359,7 +355,6 @@ intel_winsys_export_handle(struct intel_winsys *winsys,
                            struct intel_bo *bo,
                            enum intel_tiling_mode tiling,
                            unsigned long pitch,
-                           unsigned long height,
                            struct winsys_handle *handle)
 {
    int err = 0;
@@ -511,7 +506,7 @@ intel_bo_map_gtt(struct intel_bo *bo)
 }
 
 void *
-intel_bo_map_gtt_async(struct intel_bo *bo)
+intel_bo_map_unsynchronized(struct intel_bo *bo)
 {
    int err;
 
@@ -550,37 +545,14 @@ intel_bo_pread(struct intel_bo *bo, unsigned long offset,
 int
 intel_bo_add_reloc(struct intel_bo *bo, uint32_t offset,
                    struct intel_bo *target_bo, uint32_t target_offset,
-                   uint32_t flags, uint64_t *presumed_offset)
+                   uint32_t read_domains, uint32_t write_domain,
+                   uint64_t *presumed_offset)
 {
-   uint32_t read_domains, write_domain;
    int err;
 
-   if (flags & INTEL_RELOC_WRITE) {
-      /*
-       * Because of the translation to domains, INTEL_RELOC_GGTT should only
-       * be set on GEN6 when the bo is written by MI_* or PIPE_CONTROL.  The
-       * kernel will translate it back to INTEL_RELOC_GGTT.
-       */
-      write_domain = (flags & INTEL_RELOC_GGTT) ?
-         I915_GEM_DOMAIN_INSTRUCTION : I915_GEM_DOMAIN_RENDER;
-      read_domains = write_domain;
-   } else {
-      write_domain = 0;
-      read_domains = I915_GEM_DOMAIN_RENDER |
-                     I915_GEM_DOMAIN_SAMPLER |
-                     I915_GEM_DOMAIN_INSTRUCTION |
-                     I915_GEM_DOMAIN_VERTEX;
-   }
-
-   if (flags & INTEL_RELOC_FENCE) {
-      err = drm_intel_bo_emit_reloc_fence(gem_bo(bo), offset,
-            gem_bo(target_bo), target_offset,
-            read_domains, write_domain);
-   } else {
-      err = drm_intel_bo_emit_reloc(gem_bo(bo), offset,
-            gem_bo(target_bo), target_offset,
-            read_domains, write_domain);
-   }
+   err = drm_intel_bo_emit_reloc(gem_bo(bo), offset,
+         gem_bo(target_bo), target_offset,
+         read_domains, write_domain);
 
    *presumed_offset = gem_bo(target_bo)->offset64 + target_offset;
 
@@ -610,13 +582,7 @@ intel_bo_wait(struct intel_bo *bo, int64_t timeout)
 {
    int err;
 
-   if (timeout >= 0) {
-      err = drm_intel_gem_bo_wait(gem_bo(bo), timeout);
-   } else {
-      drm_intel_bo_wait_rendering(gem_bo(bo));
-      err = 0;
-   }
-
+   err = drm_intel_gem_bo_wait(gem_bo(bo), timeout);
    /* consider the bo idle on errors */
    if (err && err != -ETIME)
       err = 0;

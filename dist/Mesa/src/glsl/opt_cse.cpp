@@ -173,7 +173,9 @@ dump_ae(exec_list *ae)
    int i = 0;
 
    printf("CSE: AE contents:\n");
-   foreach_in_list(ae_entry, entry, ae) {
+   foreach_list(node, ae) {
+      ae_entry *entry = (ae_entry *)node;
+
       printf("CSE:   AE %2d (%p): ", i, entry);
       (*entry->val)->print();
       printf("\n");
@@ -194,8 +196,6 @@ is_cse_candidate_visitor::visit(ir_dereference_variable *ir)
    if (ir->var->data.read_only) {
       return visit_continue;
    } else {
-      if (debug)
-         printf("CSE: non-candidate: var %s is not read only\n", ir->var->name);
       ok = false;
       return visit_stop;
    }
@@ -222,11 +222,8 @@ is_cse_candidate(ir_rvalue *ir)
    /* Our temporary variable assignment generation isn't ready to handle
     * anything bigger than a vector.
     */
-   if (!ir->type->is_vector() && !ir->type->is_scalar()) {
-      if (debug)
-         printf("CSE: non-candidate: not a vector/scalar\n");
+   if (!ir->type->is_vector() && !ir->type->is_scalar())
       return false;
-   }
 
    /* Only handle expressions and textures currently.  We may want to extend
     * to variable-index array dereferences at some point.
@@ -236,8 +233,6 @@ is_cse_candidate(ir_rvalue *ir)
    case ir_type_texture:
       break;
    default:
-      if (debug)
-         printf("CSE: non-candidate: not an expression/texture\n");
       return false;
    }
 
@@ -259,7 +254,9 @@ is_cse_candidate(ir_rvalue *ir)
 ir_rvalue *
 cse_visitor::try_cse(ir_rvalue *rvalue)
 {
-   foreach_in_list(ae_entry, entry, ae) {
+   foreach_list(node, ae) {
+      ae_entry *entry = (ae_entry *)node;
+
       if (debug) {
          printf("Comparing to AE %p: ", entry);
          (*entry->val)->print();
@@ -283,7 +280,7 @@ cse_visitor::try_cse(ir_rvalue *rvalue)
 
          ir_variable *var = new(rvalue) ir_variable(rvalue->type,
                                                     "cse",
-                                                    ir_var_temporary);
+                                                    ir_var_auto);
 
          /* Write the previous expression result into a new variable. */
          base_ir->insert_before(var);
@@ -306,7 +303,8 @@ cse_visitor::try_cse(ir_rvalue *rvalue)
           * updated so that any further elimination from inside gets its new
           * assignments put before our new assignment.
           */
-         foreach_in_list(ae_entry, fixup_entry, ae) {
+         foreach_list(fixup_node, ae) {
+            ae_entry *fixup_entry = (ae_entry *)fixup_node;
             if (contains_rvalue(assignment->rhs, *fixup_entry->val))
                fixup_entry->base_ir = assignment;
          }

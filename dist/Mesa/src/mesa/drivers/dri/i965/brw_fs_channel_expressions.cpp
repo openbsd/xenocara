@@ -75,18 +75,6 @@ channel_expressions_predicate(ir_instruction *ir)
    if (!expr)
       return false;
 
-   switch (expr->operation) {
-      /* these opcodes need to act on the whole vector,
-       * just like texturing.
-       */
-      case ir_unop_interpolate_at_centroid:
-      case ir_binop_interpolate_at_offset:
-      case ir_binop_interpolate_at_sample:
-         return false;
-      default:
-         break;
-   }
-
    for (i = 0; i < expr->get_num_operands(); i++) {
       if (expr->operands[i]->type->is_vector())
 	 return true;
@@ -165,16 +153,6 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    if (!found_vector)
       return visit_continue;
 
-   switch (expr->operation) {
-      case ir_unop_interpolate_at_centroid:
-      case ir_binop_interpolate_at_offset:
-      case ir_binop_interpolate_at_sample:
-         return visit_continue;
-
-      default:
-         break;
-   }
-
    /* Store the expression operands in temps so we can use them
     * multiple times.
     */
@@ -237,16 +215,11 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    case ir_unop_sin_reduced:
    case ir_unop_cos_reduced:
    case ir_unop_dFdx:
-   case ir_unop_dFdx_coarse:
-   case ir_unop_dFdx_fine:
    case ir_unop_dFdy:
-   case ir_unop_dFdy_coarse:
-   case ir_unop_dFdy_fine:
    case ir_unop_bitfield_reverse:
    case ir_unop_bit_count:
    case ir_unop_find_msb:
    case ir_unop_find_lsb:
-   case ir_unop_saturate:
       for (i = 0; i < vector_elements; i++) {
 	 ir_rvalue *op0 = get_element(op_var[0], i);
 
@@ -336,7 +309,8 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    case ir_binop_logic_or:
       ir->fprint(stderr);
       fprintf(stderr, "\n");
-      unreachable("not reached: expression operates on scalars only");
+      assert(!"not reached: expression operates on scalars only");
+      break;
    case ir_binop_all_equal:
    case ir_binop_any_nequal: {
       ir_expression *last = NULL;
@@ -368,7 +342,8 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
       break;
    }
    case ir_unop_noise:
-      unreachable("noise should have been broken down to function call");
+      assert(!"noise should have been broken down to function call");
+      break;
 
    case ir_binop_bfm: {
       /* Does not need to be scalarized, since its result will be identical
@@ -385,7 +360,8 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    }
 
    case ir_binop_ubo_load:
-      unreachable("not yet supported");
+      assert(!"not yet supported");
+      break;
 
    case ir_triop_fma:
    case ir_triop_lrp:
@@ -436,15 +412,14 @@ ir_channel_expressions_visitor::visit_leave(ir_assignment *ir)
    case ir_triop_vector_insert:
    case ir_quadop_bitfield_insert:
    case ir_quadop_vector:
-      unreachable("should have been lowered");
+      assert(!"should have been lowered");
+      break;
 
    case ir_unop_unpack_half_2x16_split_x:
    case ir_unop_unpack_half_2x16_split_y:
    case ir_binop_pack_half_2x16_split:
-   case ir_unop_interpolate_at_centroid:
-   case ir_binop_interpolate_at_offset:
-   case ir_binop_interpolate_at_sample:
-      unreachable("not reached: expression operates on scalars only");
+      assert(!"not reached: expression operates on scalars only");
+      break;
    }
 
    ir->remove();

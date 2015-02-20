@@ -191,114 +191,47 @@ u_vbuf_create_vertex_elements(struct u_vbuf *mgr, unsigned count,
                               const struct pipe_vertex_element *attribs);
 static void u_vbuf_delete_vertex_elements(struct u_vbuf *mgr, void *cso);
 
-static const struct {
-   enum pipe_format from, to;
-} vbuf_format_fallbacks[] = {
-   { PIPE_FORMAT_R32_FIXED,            PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R32G32_FIXED,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R32G32B32_FIXED,      PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R32G32B32A32_FIXED,   PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R16_FLOAT,            PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R16G16_FLOAT,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R16G16B16_FLOAT,      PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R16G16B16A16_FLOAT,   PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R64_FLOAT,            PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R64G64_FLOAT,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R64G64B64_FLOAT,      PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R64G64B64A64_FLOAT,   PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R32_UNORM,            PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R32G32_UNORM,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R32G32B32_UNORM,      PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R32G32B32A32_UNORM,   PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R32_SNORM,            PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R32G32_SNORM,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R32G32B32_SNORM,      PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R32G32B32A32_SNORM,   PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R32_USCALED,          PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R32G32_USCALED,       PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R32G32B32_USCALED,    PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R32G32B32A32_USCALED, PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R32_SSCALED,          PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R32G32_SSCALED,       PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R32G32B32_SSCALED,    PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R32G32B32A32_SSCALED, PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R16_UNORM,            PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R16G16_UNORM,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R16G16B16_UNORM,      PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R16G16B16A16_UNORM,   PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R16_SNORM,            PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R16G16_SNORM,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R16G16B16_SNORM,      PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R16G16B16A16_SNORM,   PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R16_USCALED,          PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R16G16_USCALED,       PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R16G16B16_USCALED,    PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R16G16B16A16_USCALED, PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R16_SSCALED,          PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R16G16_SSCALED,       PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R16G16B16_SSCALED,    PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R16G16B16A16_SSCALED, PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R8_UNORM,             PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R8G8_UNORM,           PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R8G8B8_UNORM,         PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R8G8B8A8_UNORM,       PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R8_SNORM,             PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R8G8_SNORM,           PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R8G8B8_SNORM,         PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R8G8B8A8_SNORM,       PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R8_USCALED,           PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R8G8_USCALED,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R8G8B8_USCALED,       PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R8G8B8A8_USCALED,     PIPE_FORMAT_R32G32B32A32_FLOAT },
-   { PIPE_FORMAT_R8_SSCALED,           PIPE_FORMAT_R32_FLOAT },
-   { PIPE_FORMAT_R8G8_SSCALED,         PIPE_FORMAT_R32G32_FLOAT },
-   { PIPE_FORMAT_R8G8B8_SSCALED,       PIPE_FORMAT_R32G32B32_FLOAT },
-   { PIPE_FORMAT_R8G8B8A8_SSCALED,     PIPE_FORMAT_R32G32B32A32_FLOAT },
-};
 
-boolean u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps)
+void u_vbuf_get_caps(struct pipe_screen *screen, struct u_vbuf_caps *caps)
 {
-   unsigned i;
-   boolean fallback = FALSE;
+   caps->format_fixed32 =
+      screen->is_format_supported(screen, PIPE_FORMAT_R32_FIXED, PIPE_BUFFER,
+                                  0, PIPE_BIND_VERTEX_BUFFER);
 
-   /* I'd rather have a bitfield of which formats are supported and a static
-    * table of the translations indexed by format, but since we don't have C99
-    * we can't easily make a sparsely-populated table indexed by format.  So,
-    * we construct the sparse table here.
-    */
-   for (i = 0; i < PIPE_FORMAT_COUNT; i++)
-      caps->format_translation[i] = i;
+   caps->format_float16 =
+      screen->is_format_supported(screen, PIPE_FORMAT_R16_FLOAT, PIPE_BUFFER,
+                                  0, PIPE_BIND_VERTEX_BUFFER);
 
-   for (i = 0; i < Elements(vbuf_format_fallbacks); i++) {
-      enum pipe_format format = vbuf_format_fallbacks[i].from;
+   caps->format_float64 =
+      screen->is_format_supported(screen, PIPE_FORMAT_R64_FLOAT, PIPE_BUFFER,
+                                  0, PIPE_BIND_VERTEX_BUFFER);
 
-      if (!screen->is_format_supported(screen, format, PIPE_BUFFER, 0,
-                                       PIPE_BIND_VERTEX_BUFFER)) {
-         caps->format_translation[format] = vbuf_format_fallbacks[i].to;
-         fallback = TRUE;
-      }
-   }
+   caps->format_norm32 =
+      screen->is_format_supported(screen, PIPE_FORMAT_R32_UNORM, PIPE_BUFFER,
+                                  0, PIPE_BIND_VERTEX_BUFFER) &&
+      screen->is_format_supported(screen, PIPE_FORMAT_R32_SNORM, PIPE_BUFFER,
+                                  0, PIPE_BIND_VERTEX_BUFFER);
+
+   caps->format_scaled32 =
+      screen->is_format_supported(screen, PIPE_FORMAT_R32_USCALED, PIPE_BUFFER,
+                                  0, PIPE_BIND_VERTEX_BUFFER) &&
+      screen->is_format_supported(screen, PIPE_FORMAT_R32_SSCALED, PIPE_BUFFER,
+                                  0, PIPE_BIND_VERTEX_BUFFER);
 
    caps->buffer_offset_unaligned =
       !screen->get_param(screen,
-                         PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY);
+                        PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY);
+
    caps->buffer_stride_unaligned =
-     !screen->get_param(screen,
+      !screen->get_param(screen,
                         PIPE_CAP_VERTEX_BUFFER_STRIDE_4BYTE_ALIGNED_ONLY);
+
    caps->velem_src_offset_unaligned =
       !screen->get_param(screen,
-                         PIPE_CAP_VERTEX_ELEMENT_SRC_OFFSET_4BYTE_ALIGNED_ONLY);
+                        PIPE_CAP_VERTEX_ELEMENT_SRC_OFFSET_4BYTE_ALIGNED_ONLY);
+
    caps->user_vertex_buffers =
       screen->get_param(screen, PIPE_CAP_USER_VERTEX_BUFFERS);
-
-   if (!caps->buffer_offset_unaligned ||
-       !caps->buffer_stride_unaligned ||
-       !caps->velem_src_offset_unaligned ||
-       !caps->user_vertex_buffers) {
-      fallback = TRUE;
-   }
-
-   return fallback;
 }
 
 struct u_vbuf *
@@ -357,8 +290,7 @@ u_vbuf_set_vertex_elements_internal(struct u_vbuf *mgr, unsigned count,
    assert(ve);
 
    if (ve != mgr->ve)
-      pipe->bind_vertex_elements_state(pipe, ve->driver_cso);
-
+	   pipe->bind_vertex_elements_state(pipe, ve->driver_cso);
    return ve;
 }
 
@@ -732,6 +664,9 @@ static void u_vbuf_translate_end(struct u_vbuf *mgr)
    }
 }
 
+#define FORMAT_REPLACE(what, withwhat) \
+    case PIPE_FORMAT_##what: format = PIPE_FORMAT_##withwhat; break
+
 static void *
 u_vbuf_create_vertex_elements(struct u_vbuf *mgr, unsigned count,
                               const struct pipe_vertex_element *attribs)
@@ -760,7 +695,62 @@ u_vbuf_create_vertex_elements(struct u_vbuf *mgr, unsigned count,
          ve->noninstance_vb_mask_any |= 1 << ve->ve[i].vertex_buffer_index;
       }
 
-      format = mgr->caps.format_translation[format];
+      /* Choose a native format.
+       * For now we don't care about the alignment, that's going to
+       * be sorted out later. */
+      if (!mgr->caps.format_fixed32) {
+         switch (format) {
+            FORMAT_REPLACE(R32_FIXED,           R32_FLOAT);
+            FORMAT_REPLACE(R32G32_FIXED,        R32G32_FLOAT);
+            FORMAT_REPLACE(R32G32B32_FIXED,     R32G32B32_FLOAT);
+            FORMAT_REPLACE(R32G32B32A32_FIXED,  R32G32B32A32_FLOAT);
+            default:;
+         }
+      }
+      if (!mgr->caps.format_float16) {
+         switch (format) {
+            FORMAT_REPLACE(R16_FLOAT,           R32_FLOAT);
+            FORMAT_REPLACE(R16G16_FLOAT,        R32G32_FLOAT);
+            FORMAT_REPLACE(R16G16B16_FLOAT,     R32G32B32_FLOAT);
+            FORMAT_REPLACE(R16G16B16A16_FLOAT,  R32G32B32A32_FLOAT);
+            default:;
+         }
+      }
+      if (!mgr->caps.format_float64) {
+         switch (format) {
+            FORMAT_REPLACE(R64_FLOAT,           R32_FLOAT);
+            FORMAT_REPLACE(R64G64_FLOAT,        R32G32_FLOAT);
+            FORMAT_REPLACE(R64G64B64_FLOAT,     R32G32B32_FLOAT);
+            FORMAT_REPLACE(R64G64B64A64_FLOAT,  R32G32B32A32_FLOAT);
+            default:;
+         }
+      }
+      if (!mgr->caps.format_norm32) {
+         switch (format) {
+            FORMAT_REPLACE(R32_UNORM,           R32_FLOAT);
+            FORMAT_REPLACE(R32G32_UNORM,        R32G32_FLOAT);
+            FORMAT_REPLACE(R32G32B32_UNORM,     R32G32B32_FLOAT);
+            FORMAT_REPLACE(R32G32B32A32_UNORM,  R32G32B32A32_FLOAT);
+            FORMAT_REPLACE(R32_SNORM,           R32_FLOAT);
+            FORMAT_REPLACE(R32G32_SNORM,        R32G32_FLOAT);
+            FORMAT_REPLACE(R32G32B32_SNORM,     R32G32B32_FLOAT);
+            FORMAT_REPLACE(R32G32B32A32_SNORM,  R32G32B32A32_FLOAT);
+            default:;
+         }
+      }
+      if (!mgr->caps.format_scaled32) {
+         switch (format) {
+            FORMAT_REPLACE(R32_USCALED,         R32_FLOAT);
+            FORMAT_REPLACE(R32G32_USCALED,      R32G32_FLOAT);
+            FORMAT_REPLACE(R32G32B32_USCALED,   R32G32B32_FLOAT);
+            FORMAT_REPLACE(R32G32B32A32_USCALED,R32G32B32A32_FLOAT);
+            FORMAT_REPLACE(R32_SSCALED,         R32_FLOAT);
+            FORMAT_REPLACE(R32G32_SSCALED,      R32G32_FLOAT);
+            FORMAT_REPLACE(R32G32B32_SSCALED,   R32G32B32_FLOAT);
+            FORMAT_REPLACE(R32G32B32A32_SSCALED,R32G32B32A32_FLOAT);
+            default:;
+         }
+      }
 
       driver_attribs[i].src_format = format;
       ve->native_format[i] = format;
@@ -1023,23 +1013,22 @@ static boolean u_vbuf_mapping_vertex_buffer_blocks(struct u_vbuf *mgr)
 
 static void u_vbuf_get_minmax_index(struct pipe_context *pipe,
                                     struct pipe_index_buffer *ib,
-                                    boolean primitive_restart,
-                                    unsigned restart_index,
-                                    unsigned start, unsigned count,
+                                    const struct pipe_draw_info *info,
                                     int *out_min_index,
                                     int *out_max_index)
 {
    struct pipe_transfer *transfer = NULL;
    const void *indices;
    unsigned i;
+   unsigned restart_index = info->restart_index;
 
    if (ib->user_buffer) {
       indices = (uint8_t*)ib->user_buffer +
-                ib->offset + start * ib->index_size;
+                ib->offset + info->start * ib->index_size;
    } else {
       indices = pipe_buffer_map_range(pipe, ib->buffer,
-                                      ib->offset + start * ib->index_size,
-                                      count * ib->index_size,
+                                      ib->offset + info->start * ib->index_size,
+                                      info->count * ib->index_size,
                                       PIPE_TRANSFER_READ, &transfer);
    }
 
@@ -1048,8 +1037,8 @@ static void u_vbuf_get_minmax_index(struct pipe_context *pipe,
       const unsigned *ui_indices = (const unsigned*)indices;
       unsigned max_ui = 0;
       unsigned min_ui = ~0U;
-      if (primitive_restart) {
-         for (i = 0; i < count; i++) {
+      if (info->primitive_restart) {
+         for (i = 0; i < info->count; i++) {
             if (ui_indices[i] != restart_index) {
                if (ui_indices[i] > max_ui) max_ui = ui_indices[i];
                if (ui_indices[i] < min_ui) min_ui = ui_indices[i];
@@ -1057,7 +1046,7 @@ static void u_vbuf_get_minmax_index(struct pipe_context *pipe,
          }
       }
       else {
-         for (i = 0; i < count; i++) {
+         for (i = 0; i < info->count; i++) {
             if (ui_indices[i] > max_ui) max_ui = ui_indices[i];
             if (ui_indices[i] < min_ui) min_ui = ui_indices[i];
          }
@@ -1070,8 +1059,8 @@ static void u_vbuf_get_minmax_index(struct pipe_context *pipe,
       const unsigned short *us_indices = (const unsigned short*)indices;
       unsigned max_us = 0;
       unsigned min_us = ~0U;
-      if (primitive_restart) {
-         for (i = 0; i < count; i++) {
+      if (info->primitive_restart) {
+         for (i = 0; i < info->count; i++) {
             if (us_indices[i] != restart_index) {
                if (us_indices[i] > max_us) max_us = us_indices[i];
                if (us_indices[i] < min_us) min_us = us_indices[i];
@@ -1079,7 +1068,7 @@ static void u_vbuf_get_minmax_index(struct pipe_context *pipe,
          }
       }
       else {
-         for (i = 0; i < count; i++) {
+         for (i = 0; i < info->count; i++) {
             if (us_indices[i] > max_us) max_us = us_indices[i];
             if (us_indices[i] < min_us) min_us = us_indices[i];
          }
@@ -1092,8 +1081,8 @@ static void u_vbuf_get_minmax_index(struct pipe_context *pipe,
       const unsigned char *ub_indices = (const unsigned char*)indices;
       unsigned max_ub = 0;
       unsigned min_ub = ~0U;
-      if (primitive_restart) {
-         for (i = 0; i < count; i++) {
+      if (info->primitive_restart) {
+         for (i = 0; i < info->count; i++) {
             if (ub_indices[i] != restart_index) {
                if (ub_indices[i] > max_ub) max_ub = ub_indices[i];
                if (ub_indices[i] < min_ub) min_ub = ub_indices[i];
@@ -1101,7 +1090,7 @@ static void u_vbuf_get_minmax_index(struct pipe_context *pipe,
          }
       }
       else {
-         for (i = 0; i < count; i++) {
+         for (i = 0; i < info->count; i++) {
             if (ub_indices[i] > max_ub) max_ub = ub_indices[i];
             if (ub_indices[i] < min_ub) min_ub = ub_indices[i];
          }
@@ -1143,7 +1132,6 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
    uint32_t used_vb_mask = mgr->ve->used_vb_mask;
    uint32_t user_vb_mask = mgr->user_vb_mask & used_vb_mask;
    uint32_t incompatible_vb_mask = mgr->incompatible_vb_mask & used_vb_mask;
-   struct pipe_draw_info new_info;
 
    /* Normal draw. No fallback and no user buffers. */
    if (!incompatible_vb_mask &&
@@ -1159,62 +1147,33 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
       return;
    }
 
-   new_info = *info;
-
-   /* Fallback. We need to know all the parameters. */
-   if (new_info.indirect) {
-      struct pipe_transfer *transfer = NULL;
-      int *data;
-
-      if (new_info.indexed) {
-         data = pipe_buffer_map_range(pipe, new_info.indirect,
-                                      new_info.indirect_offset, 20,
-                                      PIPE_TRANSFER_READ, &transfer);
-         new_info.index_bias = data[3];
-         new_info.start_instance = data[4];
-      }
-      else {
-         data = pipe_buffer_map_range(pipe, new_info.indirect,
-                                      new_info.indirect_offset, 16,
-                                      PIPE_TRANSFER_READ, &transfer);
-         new_info.start_instance = data[3];
-      }
-
-      new_info.count = data[0];
-      new_info.instance_count = data[1];
-      new_info.start = data[2];
-      pipe_buffer_unmap(pipe, transfer);
-      new_info.indirect = NULL;
-   }
-
-   if (new_info.indexed) {
+   if (info->indexed) {
       /* See if anything needs to be done for per-vertex attribs. */
       if (u_vbuf_need_minmax_index(mgr)) {
          int max_index;
 
-         if (new_info.max_index != ~0) {
-            min_index = new_info.min_index;
-            max_index = new_info.max_index;
+         if (info->max_index != ~0) {
+            min_index = info->min_index;
+            max_index = info->max_index;
          } else {
-            u_vbuf_get_minmax_index(mgr->pipe, &mgr->index_buffer,
-                                    new_info.primitive_restart,
-                                    new_info.restart_index, new_info.start,
-                                    new_info.count, &min_index, &max_index);
+            u_vbuf_get_minmax_index(mgr->pipe, &mgr->index_buffer, info,
+                                    &min_index, &max_index);
          }
 
          assert(min_index <= max_index);
 
-         start_vertex = min_index + new_info.index_bias;
+         start_vertex = min_index + info->index_bias;
          num_vertices = max_index + 1 - min_index;
 
          /* Primitive restart doesn't work when unrolling indices.
           * We would have to break this drawing operation into several ones. */
          /* Use some heuristic to see if unrolling indices improves
           * performance. */
-         if (!new_info.primitive_restart &&
-             num_vertices > new_info.count*2 &&
-             num_vertices - new_info.count > 32 &&
+         if (!info->primitive_restart &&
+             num_vertices > info->count*2 &&
+             num_vertices-info->count > 32 &&
              !u_vbuf_mapping_vertex_buffer_blocks(mgr)) {
+            /*printf("num_vertices=%i count=%i\n", num_vertices, info->count);*/
             unroll_indices = TRUE;
             user_vb_mask &= ~(mgr->nonzero_stride_vb_mask &
                               mgr->ve->noninstance_vb_mask_any);
@@ -1226,8 +1185,8 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
          min_index = 0;
       }
    } else {
-      start_vertex = new_info.start;
-      num_vertices = new_info.count;
+      start_vertex = info->start;
+      num_vertices = info->count;
       min_index = 0;
    }
 
@@ -1236,19 +1195,11 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
        incompatible_vb_mask ||
        mgr->ve->incompatible_elem_mask) {
       if (!u_vbuf_translate_begin(mgr, start_vertex, num_vertices,
-                                  new_info.start_instance,
-                                  new_info.instance_count, new_info.start,
-                                  new_info.count, min_index, unroll_indices)) {
+                                  info->start_instance, info->instance_count,
+                                  info->start, info->count, min_index,
+                                  unroll_indices)) {
          debug_warn_once("u_vbuf_translate_begin() failed");
          return;
-      }
-
-      if (unroll_indices) {
-         new_info.indexed = FALSE;
-         new_info.index_bias = 0;
-         new_info.min_index = 0;
-         new_info.max_index = new_info.count - 1;
-         new_info.start = 0;
       }
 
       user_vb_mask &= ~(incompatible_vb_mask |
@@ -1258,8 +1209,8 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
    /* Upload user buffers. */
    if (user_vb_mask) {
       if (u_vbuf_upload_buffers(mgr, start_vertex, num_vertices,
-                                new_info.start_instance,
-                                new_info.instance_count) != PIPE_OK) {
+                                info->start_instance,
+                                info->instance_count) != PIPE_OK) {
          debug_warn_once("u_vbuf_upload_buffers() failed");
          return;
       }
@@ -1291,7 +1242,18 @@ void u_vbuf_draw_vbo(struct u_vbuf *mgr, const struct pipe_draw_info *info)
    u_upload_unmap(mgr->uploader);
    u_vbuf_set_driver_vertex_buffers(mgr);
 
-   pipe->draw_vbo(pipe, &new_info);
+   if (unlikely(unroll_indices)) {
+      struct pipe_draw_info new_info = *info;
+      new_info.indexed = FALSE;
+      new_info.index_bias = 0;
+      new_info.min_index = 0;
+      new_info.max_index = info->count - 1;
+      new_info.start = 0;
+
+      pipe->draw_vbo(pipe, &new_info);
+   } else {
+      pipe->draw_vbo(pipe, info);
+   }
 
    if (mgr->using_translate) {
       u_vbuf_translate_end(mgr);

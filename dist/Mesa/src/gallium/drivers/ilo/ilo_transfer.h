@@ -32,20 +32,11 @@
 
 #include "ilo_common.h"
 
-/*
- * Direct mappings are always page aligned, but ILO_TRANSFER_MAP_STAGING is
- * not.
- */
-#define ILO_TRANSFER_MAP_BUFFER_ALIGNMENT 64
-
 enum ilo_transfer_map_method {
-   /* map() / map_gtt() / map_gtt_async() */
+   /* map() / map_gtt() / map_unsynchronized() */
    ILO_TRANSFER_MAP_CPU,
    ILO_TRANSFER_MAP_GTT,
-   ILO_TRANSFER_MAP_GTT_ASYNC,
-
-   /* use staging resource */
-   ILO_TRANSFER_MAP_STAGING,
+   ILO_TRANSFER_MAP_UNSYNC,
 
    /* use staging system buffer */
    ILO_TRANSFER_MAP_SW_CONVERT,
@@ -56,11 +47,9 @@ struct ilo_transfer {
    struct pipe_transfer base;
 
    enum ilo_transfer_map_method method;
-   /* pipe_resource, system memory, or garbage depending on the method */
-   union {
-      struct pipe_resource *res;
-      void *sys;
-   } staging;
+   void *ptr;
+
+   void *staging_sys;
 };
 
 struct ilo_context;

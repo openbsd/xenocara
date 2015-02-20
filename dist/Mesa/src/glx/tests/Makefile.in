@@ -80,16 +80,12 @@ host_triplet = @host@
 target_triplet = @target@
 @HAVE_SHARED_GLAPI_TRUE@TESTS = glx-test$(EXEEXT)
 @HAVE_SHARED_GLAPI_TRUE@check_PROGRAMS = glx-test$(EXEEXT)
-@HAVE_DRI2_TRUE@@HAVE_SHARED_GLAPI_TRUE@am__append_1 = \
-@HAVE_DRI2_TRUE@@HAVE_SHARED_GLAPI_TRUE@	query_renderer_implementation_unittest.cpp
-
 subdir = src/glx/tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/bin/depcomp $(top_srcdir)/bin/test-driver
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
-	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
 	$(top_srcdir)/m4/ax_prog_bison.m4 \
 	$(top_srcdir)/m4/ax_prog_flex.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -103,17 +99,16 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__glx_test_SOURCES_DIST = clientinfo_unittest.cpp \
 	create_context_unittest.cpp enum_sizes.cpp fake_glx_screen.cpp \
-	indirect_api.cpp query_renderer_unittest.cpp \
-	query_renderer_implementation_unittest.cpp
-@HAVE_DRI2_TRUE@@HAVE_SHARED_GLAPI_TRUE@am__objects_1 = query_renderer_implementation_unittest.$(OBJEXT)
+	indirect_api.cpp query_renderer_implementation_unittest.cpp \
+	query_renderer_unittest.cpp
 @HAVE_SHARED_GLAPI_TRUE@am_glx_test_OBJECTS =  \
 @HAVE_SHARED_GLAPI_TRUE@	clientinfo_unittest.$(OBJEXT) \
 @HAVE_SHARED_GLAPI_TRUE@	create_context_unittest.$(OBJEXT) \
 @HAVE_SHARED_GLAPI_TRUE@	enum_sizes.$(OBJEXT) \
 @HAVE_SHARED_GLAPI_TRUE@	fake_glx_screen.$(OBJEXT) \
 @HAVE_SHARED_GLAPI_TRUE@	indirect_api.$(OBJEXT) \
-@HAVE_SHARED_GLAPI_TRUE@	query_renderer_unittest.$(OBJEXT) \
-@HAVE_SHARED_GLAPI_TRUE@	$(am__objects_1)
+@HAVE_SHARED_GLAPI_TRUE@	query_renderer_implementation_unittest.$(OBJEXT) \
+@HAVE_SHARED_GLAPI_TRUE@	query_renderer_unittest.$(OBJEXT)
 glx_test_OBJECTS = $(am_glx_test_OBJECTS)
 am__DEPENDENCIES_1 =
 @HAVE_SHARED_GLAPI_TRUE@glx_test_DEPENDENCIES =  \
@@ -398,7 +393,6 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
 CCASDEPMODE = @CCASDEPMODE@
@@ -414,7 +408,6 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-D3D_DRIVER_INSTALL_DIR = @D3D_DRIVER_INSTALL_DIR@
 DEFINES = @DEFINES@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -437,6 +430,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
 EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
+EGL_DRIVER_INSTALL_DIR = @EGL_DRIVER_INSTALL_DIR@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
@@ -509,14 +503,11 @@ LLVM_LIBS = @LLVM_LIBS@
 LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-NINE_MAJOR = @NINE_MAJOR@
-NINE_MINOR = @NINE_MINOR@
-NINE_TINY = @NINE_TINY@
-NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NOUVEAU_CFLAGS = @NOUVEAU_CFLAGS@
@@ -527,8 +518,10 @@ OMX_CFLAGS = @OMX_CFLAGS@
 OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
+OPENCL_LIB_INSTALL_DIR = @OPENCL_LIB_INSTALL_DIR@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
+OSMESA_MESA_DEPS = @OSMESA_MESA_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
 OSMESA_PC_REQ = @OSMESA_PC_REQ@
 OSMESA_VERSION = @OSMESA_VERSION@
@@ -542,6 +535,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -560,13 +554,7 @@ SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
-VA_CFLAGS = @VA_CFLAGS@
-VA_LIBS = @VA_LIBS@
-VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
-VA_MAJOR = @VA_MAJOR@
-VA_MINOR = @VA_MINOR@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -630,7 +618,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-ifGNUmake = @ifGNUmake@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -669,12 +656,15 @@ top_srcdir = @top_srcdir@
 @HAVE_SHARED_GLAPI_TRUE@	$(LIBDRM_CFLAGS) \
 @HAVE_SHARED_GLAPI_TRUE@	$(X11_CFLAGS)
 
-@HAVE_SHARED_GLAPI_TRUE@glx_test_SOURCES = clientinfo_unittest.cpp \
-@HAVE_SHARED_GLAPI_TRUE@	create_context_unittest.cpp \
-@HAVE_SHARED_GLAPI_TRUE@	enum_sizes.cpp fake_glx_screen.cpp \
-@HAVE_SHARED_GLAPI_TRUE@	indirect_api.cpp \
-@HAVE_SHARED_GLAPI_TRUE@	query_renderer_unittest.cpp \
-@HAVE_SHARED_GLAPI_TRUE@	$(am__append_1)
+@HAVE_SHARED_GLAPI_TRUE@glx_test_SOURCES = \
+@HAVE_SHARED_GLAPI_TRUE@	clientinfo_unittest.cpp		\
+@HAVE_SHARED_GLAPI_TRUE@	create_context_unittest.cpp	\
+@HAVE_SHARED_GLAPI_TRUE@	enum_sizes.cpp			\
+@HAVE_SHARED_GLAPI_TRUE@	fake_glx_screen.cpp		\
+@HAVE_SHARED_GLAPI_TRUE@	indirect_api.cpp		\
+@HAVE_SHARED_GLAPI_TRUE@	query_renderer_implementation_unittest.cpp	\
+@HAVE_SHARED_GLAPI_TRUE@	query_renderer_unittest.cpp
+
 @HAVE_SHARED_GLAPI_TRUE@glx_test_LDADD = \
 @HAVE_SHARED_GLAPI_TRUE@	$(top_builddir)/src/glx/libglx.la \
 @HAVE_SHARED_GLAPI_TRUE@	$(top_builddir)/src/gtest/libgtest.la \

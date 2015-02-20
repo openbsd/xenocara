@@ -15,7 +15,6 @@
 #include "r600_pipe.h"
 #include "radeon_llvm.h"
 #include "radeon_llvm_emit.h"
-#include "radeon_elf_util.h"
 
 #include <stdio.h>
 
@@ -23,6 +22,7 @@
 
 #define CONSTANT_BUFFER_0_ADDR_SPACE 8
 #define CONSTANT_BUFFER_1_ADDR_SPACE (CONSTANT_BUFFER_0_ADDR_SPACE + R600_UCP_CONST_BUFFER)
+#define CONSTANT_TXQ_BUFFER (CONSTANT_BUFFER_0_ADDR_SPACE + R600_TXQ_CONST_BUFFER)
 #define LLVM_R600_BUFFER_INFO_CONST_BUFFER \
 	(CONSTANT_BUFFER_0_ADDR_SPACE + R600_BUFFER_INFO_CONST_BUFFER)
 
@@ -366,6 +366,7 @@ static void llvm_emit_epilogue(struct lp_build_tgsi_context * bld_base)
 			case TGSI_SEMANTIC_CLIPVERTEX: {
 				LLVMValueRef args[3];
 				unsigned reg_index;
+				unsigned base_vector_chan;
 				LLVMValueRef adjusted_elements[4];
 				for (reg_index = 0; reg_index < 2; reg_index ++) {
 					for (chan = 0; chan < TGSI_NUM_CHANNELS; chan++) {
@@ -689,7 +690,7 @@ static void llvm_emit_tex(
 		if (emit_data->inst->Dst[0].Register.WriteMask & 4) {
 			LLVMValueRef offset = lp_build_const_int32(bld_base->base.gallivm, 0);
 			LLVMValueRef ZLayer = LLVMBuildExtractElement(gallivm->builder,
-				llvm_load_const_buffer(bld_base, offset, LLVM_R600_BUFFER_INFO_CONST_BUFFER),
+				llvm_load_const_buffer(bld_base, offset, CONSTANT_TXQ_BUFFER),
 				lp_build_const_int32(gallivm, 0), "");
 
 			emit_data->output[0] = LLVMBuildInsertElement(gallivm->builder, emit_data->output[0], ZLayer, lp_build_const_int32(gallivm, 2), "");
@@ -818,57 +819,6 @@ LLVMModuleRef r600_tgsi_llvm(
 #define R_028868_SQ_PGM_RESOURCES_VS                 0x028868
 #define R_028850_SQ_PGM_RESOURCES_PS                 0x028850
 
-void r600_shader_binary_read_config(const struct radeon_shader_binary *binary,
-					struct r600_bytecode *bc,
-					uint64_t symbol_offset,
-					boolean *use_kill)
-{
-	unsigned i;
-	const unsigned char *config =
-		radeon_shader_binary_config_start(binary, symbol_offset);
-
-	for (i = 0; i < binary->config_size_per_symbol; i+= 8) {
-		unsigned reg =
-			util_le32_to_cpu(*(uint32_t*)(config + i));
-		unsigned value =
-			util_le32_to_cpu(*(uint32_t*)(config + i + 4));
-		switch (reg) {
-		/* R600 / R700 */
-		case R_028850_SQ_PGM_RESOURCES_PS:
-		case R_028868_SQ_PGM_RESOURCES_VS:
-		/* Evergreen / Northern Islands */
-		case R_028844_SQ_PGM_RESOURCES_PS:
-		case R_028860_SQ_PGM_RESOURCES_VS:
-		case R_0288D4_SQ_PGM_RESOURCES_LS:
-			bc->ngpr = MAX2(bc->ngpr, G_028844_NUM_GPRS(value));
-			bc->nstack = MAX2(bc->nstack, G_028844_STACK_SIZE(value));
-			break;
-		case R_02880C_DB_SHADER_CONTROL:
-			*use_kill = G_02880C_KILL_ENABLE(value);
-			break;
-		case CM_R_0288E8_SQ_LDS_ALLOC:
-			bc->nlds_dw = value;
-			break;
-		}
-	}
-
-}
-
-unsigned r600_create_shader(struct r600_bytecode *bc,
-		const struct radeon_shader_binary *binary,
-		boolean *use_kill)
-
-{
-	assert(binary->code_size % 4 == 0);
-	bc->bytecode = CALLOC(1, binary->code_size);
-	memcpy(bc->bytecode, binary->code, binary->code_size);
-	bc->ndw = binary->code_size / 4;
-
-	r600_shader_binary_read_config(binary, bc, 0, use_kill);
-
-	return 0;
-}
-
 unsigned r600_llvm_compile(
 	LLVMModuleRef mod,
 	enum radeon_family family,
@@ -879,11 +829,40 @@ unsigned r600_llvm_compile(
 	unsigned r;
 	struct radeon_shader_binary binary;
 	const char * gpu_family = r600_get_llvm_processor_name(family);
+	unsigned i;
 
 	memset(&binary, 0, sizeof(struct radeon_shader_binary));
 	r = radeon_llvm_compile(mod, &binary, gpu_family, dump);
 
-	r = r600_create_shader(bc, &binary, use_kill);
+	assert(binary.code_size % 4 == 0);
+	bc->bytecode = CALLOC(1, binary.code_size);
+	memcpy(bc->bytecode, binary.code, binary.code_size);
+	bc->ndw = binary.code_size / 4;
+
+	for (i = 0; i < binary.config_size; i+= 8) {
+		unsigned reg =
+			util_le32_to_cpu(*(uint32_t*)(binary.config + i));
+		unsigned value =
+			util_le32_to_cpu(*(uint32_t*)(binary.config + i + 4));
+		switch (reg) {
+		/* R600 / R700 */
+		case R_028850_SQ_PGM_RESOURCES_PS:
+		case R_028868_SQ_PGM_RESOURCES_VS:
+		/* Evergreen / Northern Islands */
+		case R_028844_SQ_PGM_RESOURCES_PS:
+		case R_028860_SQ_PGM_RESOURCES_VS:
+		case R_0288D4_SQ_PGM_RESOURCES_LS:
+			bc->ngpr = G_028844_NUM_GPRS(value);
+			bc->nstack = G_028844_STACK_SIZE(value);
+			break;
+		case R_02880C_DB_SHADER_CONTROL:
+			*use_kill = G_02880C_KILL_ENABLE(value);
+			break;
+		case CM_R_0288E8_SQ_LDS_ALLOC:
+			bc->nlds_dw = value;
+			break;
+		}
+	}
 
 	FREE(binary.code);
 	FREE(binary.config);

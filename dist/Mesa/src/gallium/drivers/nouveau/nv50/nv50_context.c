@@ -23,6 +23,10 @@
 #include "pipe/p_defines.h"
 #include "util/u_framebuffer.h"
 
+#ifdef NV50_WITH_DRAW_MODULE
+#include "draw/draw_context.h"
+#endif
+
 #include "nv50/nv50_context.h"
 #include "nv50/nv50_screen.h"
 #include "nv50/nv50_resource.h"
@@ -145,6 +149,10 @@ nv50_destroy(struct pipe_context *pipe)
 
    nv50_context_unreference_resources(nv50);
 
+#ifdef NV50_WITH_DRAW_MODULE
+   draw_destroy(nv50->draw);
+#endif
+
    FREE(nv50->blit);
 
    nouveau_context_destroy(&nv50->base);
@@ -180,12 +188,7 @@ nv50_invalidate_resource_storage(struct nouveau_context *ctx,
       }
    }
 
-   if (res->bind & (PIPE_BIND_VERTEX_BUFFER |
-                    PIPE_BIND_INDEX_BUFFER |
-                    PIPE_BIND_CONSTANT_BUFFER |
-                    PIPE_BIND_STREAM_OUTPUT |
-                    PIPE_BIND_SAMPLER_VIEW)) {
-
+   if (res->bind & PIPE_BIND_VERTEX_BUFFER) {
       assert(nv50->num_vtxbufs <= PIPE_MAX_ATTRIBS);
       for (i = 0; i < nv50->num_vtxbufs; ++i) {
          if (nv50->vtxbuf[i].buffer == res) {
@@ -195,11 +198,14 @@ nv50_invalidate_resource_storage(struct nouveau_context *ctx,
                return ref;
          }
       }
-
+   }
+   if (res->bind & PIPE_BIND_INDEX_BUFFER) {
       if (nv50->idxbuf.buffer == res)
          if (!--ref)
             return ref;
+   }
 
+   if (res->bind & PIPE_BIND_SAMPLER_VIEW) {
       for (s = 0; s < 3; ++s) {
       assert(nv50->num_textures[s] <= PIPE_MAX_SAMPLERS);
       for (i = 0; i < nv50->num_textures[s]; ++i) {
@@ -212,11 +218,12 @@ nv50_invalidate_resource_storage(struct nouveau_context *ctx,
          }
       }
       }
+   }
 
+   if (res->bind & PIPE_BIND_CONSTANT_BUFFER) {
       for (s = 0; s < 3; ++s) {
-      for (i = 0; i < NV50_MAX_PIPE_CONSTBUFS; ++i) {
-         if (!(nv50->constbuf_valid[s] & (1 << i)))
-            continue;
+      assert(nv50->num_vtxbufs <= NV50_MAX_PIPE_CONSTBUFS);
+      for (i = 0; i < nv50->num_vtxbufs; ++i) {
          if (!nv50->constbuf[s][i].user &&
              nv50->constbuf[s][i].u.buf == res) {
             nv50->dirty |= NV50_NEW_CONSTBUF;
@@ -301,6 +308,13 @@ nv50_create(struct pipe_screen *pscreen, void *priv)
    nv50_init_resource_functions(pipe);
 
    nv50->base.invalidate_resource_storage = nv50_invalidate_resource_storage;
+
+#ifdef NV50_WITH_DRAW_MODULE
+   /* no software fallbacks implemented */
+   nv50->draw = draw_create(pipe);
+   assert(nv50->draw);
+   draw_set_rasterize_stage(nv50->draw, nv50_draw_render_stage(nv50));
+#endif
 
    if (screen->base.device->chipset < 0x84 ||
        debug_get_bool_option("NOUVEAU_PMPEG", FALSE)) {

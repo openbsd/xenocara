@@ -23,19 +23,18 @@
 
 extern "C" {
 #include "main/macros.h"
-#include "util/register_allocate.h"
+#include "program/register_allocate.h"
 } /* extern "C" */
 
 #include "brw_vec4.h"
 #include "brw_vs.h"
-#include "brw_cfg.h"
 
 using namespace brw;
 
 namespace brw {
 
 static void
-assign(unsigned int *reg_hw_locations, backend_reg *reg)
+assign(unsigned int *reg_hw_locations, reg *reg)
 {
    if (reg->file == GRF) {
       reg->reg = reg_hw_locations[reg->reg];
@@ -57,7 +56,9 @@ vec4_visitor::reg_allocate_trivial()
       virtual_grf_used[i] = false;
    }
 
-   foreach_block_and_inst(block, vec4_instruction, inst, cfg) {
+   foreach_list(node, &this->instructions) {
+      vec4_instruction *inst = (vec4_instruction *) node;
+
       if (inst->dst.file == GRF)
 	 virtual_grf_used[inst->dst.reg] = true;
 
@@ -77,7 +78,9 @@ vec4_visitor::reg_allocate_trivial()
    }
    prog_data->total_grf = next;
 
-   foreach_block_and_inst(block, vec4_instruction, inst, cfg) {
+   foreach_list(node, &this->instructions) {
+      vec4_instruction *inst = (vec4_instruction *) node;
+
       assign(hw_reg_mapping, &inst->dst);
       assign(hw_reg_mapping, &inst->src[0]);
       assign(hw_reg_mapping, &inst->src[1]);
@@ -208,7 +211,7 @@ vec4_visitor::reg_allocate()
 
    setup_payload_interference(g, first_payload_node, node_count);
 
-   if (!ra_allocate(g)) {
+   if (!ra_allocate_no_spills(g)) {
       /* Failed to allocate registers.  Spill a reg, and the caller will
        * loop back into here to try again.
        */
@@ -238,7 +241,9 @@ vec4_visitor::reg_allocate()
 				  hw_reg_mapping[i] + virtual_grf_sizes[i]);
    }
 
-   foreach_block_and_inst(block, vec4_instruction, inst, cfg) {
+   foreach_list(node, &this->instructions) {
+      vec4_instruction *inst = (vec4_instruction *)node;
+
       assign(hw_reg_mapping, &inst->dst);
       assign(hw_reg_mapping, &inst->src[0]);
       assign(hw_reg_mapping, &inst->src[1]);
@@ -264,7 +269,9 @@ vec4_visitor::evaluate_spill_costs(float *spill_costs, bool *no_spill)
     * spill/unspill we'll have to do, and guess that the insides of
     * loops run 10 times.
     */
-   foreach_block_and_inst(block, vec4_instruction, inst, cfg) {
+   foreach_list(node, &this->instructions) {
+      vec4_instruction *inst = (vec4_instruction *) node;
+
       for (unsigned int i = 0; i < 3; i++) {
 	 if (inst->src[i].file == GRF) {
 	    spill_costs[inst->src[i].reg] += loop_scale;
@@ -328,7 +335,9 @@ vec4_visitor::spill_reg(int spill_reg_nr)
    unsigned int spill_offset = c->last_scratch++;
 
    /* Generate spill/unspill instructions for the objects being spilled. */
-   foreach_block_and_inst(block, vec4_instruction, inst, cfg) {
+   foreach_list(node, &this->instructions) {
+      vec4_instruction *inst = (vec4_instruction *) node;
+
       for (unsigned int i = 0; i < 3; i++) {
          if (inst->src[i].file == GRF && inst->src[i].reg == spill_reg_nr) {
             src_reg spill_reg = inst->src[i];
@@ -343,12 +352,12 @@ vec4_visitor::spill_reg(int spill_reg_nr)
                temp.writemask |= (1 << BRW_GET_SWZ(inst->src[i].swizzle, c));
             assert(temp.writemask != 0);
 
-            emit_scratch_read(block, inst, temp, spill_reg, spill_offset);
+            emit_scratch_read(inst, temp, spill_reg, spill_offset);
          }
       }
 
       if (inst->dst.file == GRF && inst->dst.reg == spill_reg_nr) {
-         emit_scratch_write(block, inst, spill_offset);
+         emit_scratch_write(inst, spill_offset);
       }
    }
 

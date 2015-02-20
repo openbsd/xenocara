@@ -46,8 +46,7 @@ namespace clover {
          exec_context &
          operator=(const exec_context &) = delete;
 
-         void *bind(intrusive_ptr<command_queue> _q,
-                    const std::vector<size_t> &grid_offset);
+         void *bind(intrusive_ptr<command_queue> _q);
          void unbind();
 
          kernel &kern;
@@ -69,8 +68,7 @@ namespace clover {
    public:
       class argument {
       public:
-         static std::unique_ptr<argument>
-         create(const module::argument &marg);
+         argument();
 
          argument(const argument &arg) = delete;
          argument &
@@ -94,8 +92,6 @@ namespace clover {
          virtual void unbind(exec_context &ctx) = 0;
 
       protected:
-         argument();
-
          bool _set;
       };
 
@@ -229,7 +225,6 @@ namespace clover {
       std::vector<std::unique_ptr<argument>> _args;
       std::string _name;
       exec_context exec;
-      const ref_holder program_ref;
    };
 }
 

@@ -36,7 +36,7 @@
 #include "hash.h"
 #include "mtypes.h"
 #include "version.h"
-#include "util/hash_table.h"
+#include "hash_table.h"
 
 static mtx_t DynamicIDMutex = _MTX_INITIALIZER_NP;
 static GLuint NextDynamicID = 1;
@@ -676,39 +676,20 @@ debug_pop_group(struct gl_debug_state *debug)
 
 
 /**
- * Lock and return debug state for the context.  The debug state will be
- * allocated and initialized upon the first call.  When NULL is returned, the
- * debug state is not locked.
+ * Return debug state for the context.  The debug state will be allocated
+ * and initialized upon the first call.
  */
 static struct gl_debug_state *
-_mesa_lock_debug_state(struct gl_context *ctx)
+_mesa_get_debug_state(struct gl_context *ctx)
 {
-   mtx_lock(&ctx->DebugMutex);
-
    if (!ctx->Debug) {
       ctx->Debug = debug_create();
       if (!ctx->Debug) {
-         GET_CURRENT_CONTEXT(cur);
-         mtx_unlock(&ctx->DebugMutex);
-
-         /*
-          * This function may be called from other threads.  When that is the
-          * case, we cannot record this OOM error.
-          */
-         if (ctx == cur)
-            _mesa_error(ctx, GL_OUT_OF_MEMORY, "allocating debug state");
-
-         return NULL;
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "allocating debug state");
       }
    }
 
    return ctx->Debug;
-}
-
-static void
-_mesa_unlock_debug_state(struct gl_context *ctx)
-{
-   mtx_unlock(&ctx->DebugMutex);
 }
 
 /**
@@ -718,7 +699,7 @@ _mesa_unlock_debug_state(struct gl_context *ctx)
 bool
 _mesa_set_debug_state_int(struct gl_context *ctx, GLenum pname, GLint val)
 {
-   struct gl_debug_state *debug = _mesa_lock_debug_state(ctx);
+   struct gl_debug_state *debug = _mesa_get_debug_state(ctx);
 
    if (!debug)
       return false;
@@ -735,8 +716,6 @@ _mesa_set_debug_state_int(struct gl_context *ctx, GLenum pname, GLint val)
       break;
    }
 
-   _mesa_unlock_debug_state(ctx);
-
    return true;
 }
 
@@ -750,12 +729,9 @@ _mesa_get_debug_state_int(struct gl_context *ctx, GLenum pname)
    struct gl_debug_state *debug;
    GLint val;
 
-   mtx_lock(&ctx->DebugMutex);
    debug = ctx->Debug;
-   if (!debug) {
-      mtx_unlock(&ctx->DebugMutex);
+   if (!debug)
       return 0;
-   }
 
    switch (pname) {
    case GL_DEBUG_OUTPUT:
@@ -780,8 +756,6 @@ _mesa_get_debug_state_int(struct gl_context *ctx, GLenum pname)
       break;
    }
 
-   mtx_unlock(&ctx->DebugMutex);
-
    return val;
 }
 
@@ -795,12 +769,9 @@ _mesa_get_debug_state_ptr(struct gl_context *ctx, GLenum pname)
    struct gl_debug_state *debug;
    void *val;
 
-   mtx_lock(&ctx->DebugMutex);
    debug = ctx->Debug;
-   if (!debug) {
-      mtx_unlock(&ctx->DebugMutex);
+   if (!debug)
       return NULL;
-   }
 
    switch (pname) {
    case GL_DEBUG_CALLBACK_FUNCTION_ARB:
@@ -815,49 +786,9 @@ _mesa_get_debug_state_ptr(struct gl_context *ctx, GLenum pname)
       break;
    }
 
-   mtx_unlock(&ctx->DebugMutex);
-
    return val;
 }
 
-/**
- * Insert a debug message.  The mutex is assumed to be locked, and will be
- * unlocked by this call.
- */
-static void
-log_msg_locked_and_unlock(struct gl_context *ctx,
-                          enum mesa_debug_source source,
-                          enum mesa_debug_type type, GLuint id,
-                          enum mesa_debug_severity severity,
-                          GLint len, const char *buf)
-{
-   struct gl_debug_state *debug = ctx->Debug;
-
-   if (!debug_is_message_enabled(debug, source, type, id, severity)) {
-      _mesa_unlock_debug_state(ctx);
-      return;
-   }
-
-   if (ctx->Debug->Callback) {
-      GLenum gl_source = debug_source_enums[source];
-      GLenum gl_type = debug_type_enums[type];
-      GLenum gl_severity = debug_severity_enums[severity];
-      GLDEBUGPROC callback = ctx->Debug->Callback;
-      const void *data = ctx->Debug->CallbackData;
-
-      /*
-       * When ctx->Debug->SyncOutput is GL_FALSE, the client is prepared for
-       * unsynchronous calls.  When it is GL_TRUE, we will not spawn threads.
-       * In either case, we can call the callback unlocked.
-       */
-      _mesa_unlock_debug_state(ctx);
-      callback(gl_source, gl_type, id, gl_severity, len, buf, data);
-   }
-   else {
-      debug_log_message(ctx->Debug, source, type, id, severity, len, buf);
-      _mesa_unlock_debug_state(ctx);
-   }
-}
 
 /**
  * Log a client or driver debug message.
@@ -867,12 +798,24 @@ log_msg(struct gl_context *ctx, enum mesa_debug_source source,
         enum mesa_debug_type type, GLuint id,
         enum mesa_debug_severity severity, GLint len, const char *buf)
 {
-   struct gl_debug_state *debug = _mesa_lock_debug_state(ctx);
+   struct gl_debug_state *debug = _mesa_get_debug_state(ctx);
 
    if (!debug)
       return;
 
-   log_msg_locked_and_unlock(ctx, source, type, id, severity, len, buf);
+   if (!debug_is_message_enabled(debug, source, type, id, severity))
+      return;
+
+   if (debug->Callback) {
+       GLenum gl_type = debug_type_enums[type];
+       GLenum gl_severity = debug_severity_enums[severity];
+
+      debug->Callback(debug_source_enums[source], gl_type, id, gl_severity,
+                      len, buf, debug->CallbackData);
+      return;
+   }
+
+   debug_log_message(debug, source, type, id, severity, len, buf);
 }
 
 
@@ -1013,7 +956,7 @@ _mesa_GetDebugMessageLog(GLuint count, GLsizei logSize, GLenum *sources,
       return 0;
    }
 
-   debug = _mesa_lock_debug_state(ctx);
+   debug = _mesa_get_debug_state(ctx);
    if (!debug)
       return 0;
 
@@ -1047,8 +990,6 @@ _mesa_GetDebugMessageLog(GLuint count, GLsizei logSize, GLenum *sources,
 
       debug_delete_messages(debug, 1);
    }
-
-   _mesa_unlock_debug_state(ctx);
 
    return ret;
 }
@@ -1086,7 +1027,7 @@ _mesa_DebugMessageControl(GLenum gl_source, GLenum gl_type,
       return;
    }
 
-   debug = _mesa_lock_debug_state(ctx);
+   debug = _mesa_get_debug_state(ctx);
    if (!debug)
       return;
 
@@ -1098,8 +1039,6 @@ _mesa_DebugMessageControl(GLenum gl_source, GLenum gl_type,
    else {
       debug_set_message_enable_all(debug, source, type, severity, enabled);
    }
-
-   _mesa_unlock_debug_state(ctx);
 }
 
 
@@ -1107,11 +1046,10 @@ void GLAPIENTRY
 _mesa_DebugMessageCallback(GLDEBUGPROC callback, const void *userParam)
 {
    GET_CURRENT_CONTEXT(ctx);
-   struct gl_debug_state *debug = _mesa_lock_debug_state(ctx);
+   struct gl_debug_state *debug = _mesa_get_debug_state(ctx);
    if (debug) {
       debug->Callback = callback;
       debug->CallbackData = userParam;
-      _mesa_unlock_debug_state(ctx);
    }
 }
 
@@ -1121,9 +1059,17 @@ _mesa_PushDebugGroup(GLenum source, GLuint id, GLsizei length,
                      const GLchar *message)
 {
    GET_CURRENT_CONTEXT(ctx);
+   struct gl_debug_state *debug = _mesa_get_debug_state(ctx);
    const char *callerstr = "glPushDebugGroup";
-   struct gl_debug_state *debug;
    struct gl_debug_message *emptySlot;
+
+   if (!debug)
+      return;
+
+   if (debug->GroupStackDepth >= MAX_DEBUG_GROUP_STACK_DEPTH-1) {
+      _mesa_error(ctx, GL_STACK_OVERFLOW, "%s", callerstr);
+      return;
+   }
 
    switch(source) {
    case GL_DEBUG_SOURCE_APPLICATION:
@@ -1140,15 +1086,10 @@ _mesa_PushDebugGroup(GLenum source, GLuint id, GLsizei length,
    if (!validate_length(ctx, callerstr, length))
       return; /* GL_INVALID_VALUE */
 
-   debug = _mesa_lock_debug_state(ctx);
-   if (!debug)
-      return;
-
-   if (debug->GroupStackDepth >= MAX_DEBUG_GROUP_STACK_DEPTH-1) {
-      _mesa_unlock_debug_state(ctx);
-      _mesa_error(ctx, GL_STACK_OVERFLOW, "%s", callerstr);
-      return;
-   }
+   log_msg(ctx, gl_enum_to_debug_source(source),
+           MESA_DEBUG_TYPE_PUSH_GROUP, id,
+           MESA_DEBUG_SEVERITY_NOTIFICATION, length,
+           message);
 
    /* pop reuses the message details from push so we store this */
    emptySlot = debug_get_group_message(debug);
@@ -1160,12 +1101,6 @@ _mesa_PushDebugGroup(GLenum source, GLuint id, GLsizei length,
                        length, message);
 
    debug_push_group(debug);
-
-   log_msg_locked_and_unlock(ctx,
-         gl_enum_to_debug_source(source),
-         MESA_DEBUG_TYPE_PUSH_GROUP, id,
-         MESA_DEBUG_SEVERITY_NOTIFICATION, length,
-         message);
 }
 
 
@@ -1173,43 +1108,35 @@ void GLAPIENTRY
 _mesa_PopDebugGroup(void)
 {
    GET_CURRENT_CONTEXT(ctx);
+   struct gl_debug_state *debug = _mesa_get_debug_state(ctx);
    const char *callerstr = "glPopDebugGroup";
-   struct gl_debug_state *debug;
-   struct gl_debug_message *gdmessage, msg;
+   struct gl_debug_message *gdmessage;
 
-   debug = _mesa_lock_debug_state(ctx);
    if (!debug)
       return;
 
    if (debug->GroupStackDepth <= 0) {
-      _mesa_unlock_debug_state(ctx);
       _mesa_error(ctx, GL_STACK_UNDERFLOW, "%s", callerstr);
       return;
    }
 
    debug_pop_group(debug);
 
-   /* make a shallow copy */
    gdmessage = debug_get_group_message(debug);
-   msg = *gdmessage;
-   gdmessage->message = NULL;
-   gdmessage->length = 0;
+   log_msg(ctx, gdmessage->source,
+           gl_enum_to_debug_type(GL_DEBUG_TYPE_POP_GROUP),
+           gdmessage->id,
+           gl_enum_to_debug_severity(GL_DEBUG_SEVERITY_NOTIFICATION),
+           gdmessage->length, gdmessage->message);
 
-   log_msg_locked_and_unlock(ctx,
-         msg.source,
-         gl_enum_to_debug_type(GL_DEBUG_TYPE_POP_GROUP),
-         msg.id,
-         gl_enum_to_debug_severity(GL_DEBUG_SEVERITY_NOTIFICATION),
-         msg.length, msg.message);
-
-   debug_message_clear(&msg);
+   debug_message_clear(gdmessage);
 }
 
 
 void
 _mesa_init_errors(struct gl_context *ctx)
 {
-   mtx_init(&ctx->DebugMutex, mtx_plain);
+   /* no-op */
 }
 
 
@@ -1221,8 +1148,6 @@ _mesa_free_errors_data(struct gl_context *ctx)
       /* set to NULL just in case it is used before context is completely gone. */
       ctx->Debug = NULL;
    }
-
-   mtx_destroy(&ctx->DebugMutex);
 }
 
 
@@ -1245,7 +1170,7 @@ output_if_debug(const char *prefixString, const char *outputString,
       /* If MESA_LOG_FILE env var is set, log Mesa errors, warnings,
        * etc to the named file.  Otherwise, output to stderr.
        */
-      const char *logFile = getenv("MESA_LOG_FILE");
+      const char *logFile = _mesa_getenv("MESA_LOG_FILE");
       if (logFile)
          fout = fopen(logFile, "w");
       if (!fout)
@@ -1258,7 +1183,7 @@ output_if_debug(const char *prefixString, const char *outputString,
          debug = 1;
 #else
       /* in release builds, be silent unless MESA_DEBUG is set */
-      debug = getenv("MESA_DEBUG") != NULL;
+      debug = _mesa_getenv("MESA_DEBUG") != NULL;
 #endif
    }
 
@@ -1269,7 +1194,7 @@ output_if_debug(const char *prefixString, const char *outputString,
          fprintf(fout, "\n");
       fflush(fout);
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(_WIN32_WCE)
       /* stderr from windows applications without console is not usually 
        * visible, so communicate with the debugger instead */ 
       {
@@ -1363,7 +1288,7 @@ should_output(struct gl_context *ctx, GLenum error, const char *fmtString)
    /* Check debug environment variable only once:
     */
    if (debug == -1) {
-      const char *debugEnv = getenv("MESA_DEBUG");
+      const char *debugEnv = _mesa_getenv("MESA_DEBUG");
 
 #ifdef DEBUG
       if (debugEnv && strstr(debugEnv, "silent"))
@@ -1437,8 +1362,6 @@ _mesa_error( struct gl_context *ctx, GLenum error, const char *fmtString, ... )
    debug_get_id(&error_msg_id);
 
    do_output = should_output(ctx, error, fmtString);
-
-   mtx_lock(&ctx->DebugMutex);
    if (ctx->Debug) {
       do_log = debug_is_message_enabled(ctx->Debug,
                                         MESA_DEBUG_SOURCE_API,
@@ -1449,7 +1372,6 @@ _mesa_error( struct gl_context *ctx, GLenum error, const char *fmtString, ... )
    else {
       do_log = GL_FALSE;
    }
-   mtx_unlock(&ctx->DebugMutex);
 
    if (do_output || do_log) {
       char s[MAX_DEBUG_MESSAGE_LENGTH], s2[MAX_DEBUG_MESSAGE_LENGTH];

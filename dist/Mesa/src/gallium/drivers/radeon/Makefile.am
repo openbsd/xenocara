@@ -13,21 +13,22 @@ libradeon_la_SOURCES = \
 
 if NEED_RADEON_LLVM
 
-AM_CFLAGS += \
+noinst_LTLIBRARIES += libllvmradeon.la
+
+libllvmradeon_la_CFLAGS = \
+	$(GALLIUM_DRIVER_CFLAGS) \
+	$(RADEON_CFLAGS) \
 	$(LLVM_CFLAGS)
 
-libradeon_la_SOURCES += \
+libllvmradeon_la_SOURCES = \
 	$(LLVM_C_FILES)
 
-libradeon_la_LIBADD = \
+libllvmradeon_la_LIBADD = \
 	$(CLOCK_LIB) \
 	$(LLVM_LIBS) \
 	$(ELF_LIB)
 
-libradeon_la_LDFLAGS = \
+libllvmradeon_la_LDFLAGS = \
 	$(LLVM_LDFLAGS)
 
 endif
-
-EXTRA_DIST = Android.mk \
-	LLVM_REVISION.txt

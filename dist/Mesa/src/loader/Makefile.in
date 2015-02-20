@@ -102,34 +102,16 @@ host_triplet = @host@
 target_triplet = @target@
 DIST_COMMON = $(srcdir)/Makefile.sources $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/bin/depcomp
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@am__append_1 = \
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@	-I$(top_srcdir)/src/mesa/drivers/dri/common/ \
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@	-I$(top_builddir)/src/mesa/drivers/dri/common/ \
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@	-I$(top_srcdir)/src/mesa/ \
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@	-I$(top_srcdir)/src/mapi/ \
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@	-DUSE_DRICONF
-
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@am__append_2 = \
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@	$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c
-
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@am__append_3 = \
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@	-lm \
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@	$(EXPAT_LIBS)
-
-@HAVE_LIBDRM_FALSE@am__append_4 = \
+@HAVE_LIBDRM_FALSE@am__append_1 = \
 @HAVE_LIBDRM_FALSE@	-D__NOT_HAVE_DRM_H
 
-@HAVE_LIBDRM_TRUE@am__append_5 = \
+@HAVE_LIBDRM_TRUE@am__append_2 = \
 @HAVE_LIBDRM_TRUE@	$(LIBDRM_CFLAGS)
-
-@HAVE_LIBDRM_TRUE@am__append_6 = \
-@HAVE_LIBDRM_TRUE@	$(LIBDRM_LIBS)
 
 subdir = src/loader
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
-	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
 	$(top_srcdir)/m4/ax_prog_bison.m4 \
 	$(top_srcdir)/m4/ax_prog_flex.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -143,16 +125,10 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-@HAVE_LIBDRM_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1)
-libloader_la_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3)
-am__libloader_la_SOURCES_DIST = loader.c pci_id_driver_map.c \
-	$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c
+@HAVE_LIBDRM_TRUE@libloader_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = libloader_la-loader.lo \
 	libloader_la-pci_id_driver_map.lo
-@HAVE_DRICOMMON_TRUE@@NEED_OPENGL_COMMON_TRUE@am__objects_2 = libloader_la-xmlconfig.lo
-am_libloader_la_OBJECTS = $(am__objects_1) $(am__objects_2)
+am_libloader_la_OBJECTS = $(am__objects_1)
 libloader_la_OBJECTS = $(am_libloader_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -193,7 +169,7 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libloader_la_SOURCES)
-DIST_SOURCES = $(am__libloader_la_SOURCES_DIST)
+DIST_SOURCES = $(libloader_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -227,7 +203,6 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
 CCASDEPMODE = @CCASDEPMODE@
@@ -243,7 +218,6 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-D3D_DRIVER_INSTALL_DIR = @D3D_DRIVER_INSTALL_DIR@
 DEFINES = @DEFINES@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -266,6 +240,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
 EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
+EGL_DRIVER_INSTALL_DIR = @EGL_DRIVER_INSTALL_DIR@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
@@ -338,14 +313,11 @@ LLVM_LIBS = @LLVM_LIBS@
 LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-NINE_MAJOR = @NINE_MAJOR@
-NINE_MINOR = @NINE_MINOR@
-NINE_TINY = @NINE_TINY@
-NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NOUVEAU_CFLAGS = @NOUVEAU_CFLAGS@
@@ -356,8 +328,10 @@ OMX_CFLAGS = @OMX_CFLAGS@
 OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
+OPENCL_LIB_INSTALL_DIR = @OPENCL_LIB_INSTALL_DIR@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
+OSMESA_MESA_DEPS = @OSMESA_MESA_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
 OSMESA_PC_REQ = @OSMESA_PC_REQ@
 OSMESA_VERSION = @OSMESA_VERSION@
@@ -371,6 +345,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -389,13 +364,7 @@ SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
-VA_CFLAGS = @VA_CFLAGS@
-VA_LIBS = @VA_LIBS@
-VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
-VA_MAJOR = @VA_MAJOR@
-VA_MINOR = @VA_MINOR@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -459,7 +428,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-ifGNUmake = @ifGNUmake@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -492,10 +460,12 @@ LOADER_C_FILES := \
 
 noinst_LTLIBRARIES = libloader.la
 libloader_la_CPPFLAGS = $(DEFINES) -I$(top_srcdir)/include \
-	-I$(top_srcdir)/src $(VISIBILITY_CFLAGS) $(LIBUDEV_CFLAGS) \
-	$(am__append_1) $(am__append_4) $(am__append_5)
-libloader_la_SOURCES = $(LOADER_C_FILES) $(am__append_2)
-libloader_la_LIBADD = $(am__append_3) $(am__append_6)
+	$(VISIBILITY_CFLAGS) $(LIBUDEV_CFLAGS) $(am__append_1) \
+	$(am__append_2)
+@HAVE_LIBDRM_TRUE@libloader_la_LIBADD = \
+@HAVE_LIBDRM_TRUE@	$(LIBDRM_LIBS)
+
+libloader_la_SOURCES = $(LOADER_C_FILES)
 all: all-am
 
 .SUFFIXES:
@@ -554,7 +524,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libloader_la-loader.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libloader_la-pci_id_driver_map.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libloader_la-xmlconfig.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -590,13 +559,6 @@ libloader_la-pci_id_driver_map.lo: pci_id_driver_map.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pci_id_driver_map.c' object='libloader_la-pci_id_driver_map.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libloader_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libloader_la-pci_id_driver_map.lo `test -f 'pci_id_driver_map.c' || echo '$(srcdir)/'`pci_id_driver_map.c
-
-libloader_la-xmlconfig.lo: $(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libloader_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libloader_la-xmlconfig.lo -MD -MP -MF $(DEPDIR)/libloader_la-xmlconfig.Tpo -c -o libloader_la-xmlconfig.lo `test -f '$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c' || echo '$(srcdir)/'`$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libloader_la-xmlconfig.Tpo $(DEPDIR)/libloader_la-xmlconfig.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c' object='libloader_la-xmlconfig.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libloader_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libloader_la-xmlconfig.lo `test -f '$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c' || echo '$(srcdir)/'`$(top_srcdir)/src/mesa/drivers/dri/common/xmlconfig.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

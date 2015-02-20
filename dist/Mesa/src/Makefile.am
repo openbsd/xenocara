@@ -19,13 +19,11 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-SUBDIRS = gtest util mapi
+SUBDIRS = gtest loader mapi
 
 if NEED_OPENGL_COMMON
 SUBDIRS += glsl mesa
 endif
-
-SUBDIRS += loader
 
 if HAVE_DRI_GLX
 SUBDIRS += glx
@@ -48,7 +46,18 @@ SUBDIRS += egl/main
 endif
 
 if HAVE_GALLIUM
-SUBDIRS += gallium
+SUBDIRS +=			\
+	gallium/auxiliary	\
+	gallium/drivers		\
+	gallium/state_trackers	\
+	gallium/winsys		\
+	gallium/targets
+
+if HAVE_GALLIUM_TESTS
+SUBDIRS +=			\
+	gallium/tests/trivial	\
+	gallium/tests/unit
+endif
 endif
 
 EXTRA_DIST = getopt

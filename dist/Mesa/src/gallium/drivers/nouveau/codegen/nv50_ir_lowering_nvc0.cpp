@@ -24,9 +24,9 @@
 #include "codegen/nv50_ir_build_util.h"
 
 #include "codegen/nv50_ir_target_nvc0.h"
-#include "codegen/nv50_ir_lowering_nvc0.h"
 
 #include <limits>
+#include <tr1/unordered_set>
 
 namespace nv50_ir {
 
@@ -39,6 +39,20 @@ namespace nv50_ir {
 #define QUADOP(q, r, s, t)                      \
    ((QOP_##q << 6) | (QOP_##r << 4) |           \
     (QOP_##s << 2) | (QOP_##t << 0))
+
+class NVC0LegalizeSSA : public Pass
+{
+private:
+   virtual bool visit(BasicBlock *);
+   virtual bool visit(Function *);
+
+   // we want to insert calls to the builtin library only after optimization
+   void handleDIV(Instruction *); // integer division, modulus
+   void handleRCPRSQ(Instruction *); // double precision float recip/rsqrt
+
+private:
+   BuildUtil bld;
+};
 
 void
 NVC0LegalizeSSA::handleDIV(Instruction *i)
@@ -105,6 +119,50 @@ NVC0LegalizeSSA::visit(BasicBlock *bb)
    return true;
 }
 
+class NVC0LegalizePostRA : public Pass
+{
+public:
+   NVC0LegalizePostRA(const Program *);
+
+private:
+   virtual bool visit(Function *);
+   virtual bool visit(BasicBlock *);
+
+   void replaceZero(Instruction *);
+   bool tryReplaceContWithBra(BasicBlock *);
+   void propagateJoin(BasicBlock *);
+
+   struct TexUse
+   {
+      TexUse(Instruction *use, const Instruction *tex)
+         : insn(use), tex(tex), level(-1) { }
+      Instruction *insn;
+      const Instruction *tex; // or split / mov
+      int level;
+   };
+   struct Limits
+   {
+      Limits() { }
+      Limits(int min, int max) : min(min), max(max) { }
+      int min, max;
+   };
+   bool insertTextureBarriers(Function *);
+   inline bool insnDominatedBy(const Instruction *, const Instruction *) const;
+   void findFirstUses(const Instruction *tex, const Instruction *def,
+                      std::list<TexUse>&,
+                      std::tr1::unordered_set<const Instruction *>&);
+   void findOverwritingDefs(const Instruction *tex, Instruction *insn,
+                            const BasicBlock *term,
+                            std::list<TexUse>&);
+   void addTexUse(std::list<TexUse>&, Instruction *, const Instruction *);
+   const Instruction *recurseDef(const Instruction *);
+
+private:
+   LValue *rZero;
+   LValue *carry;
+   const bool needTexBar;
+};
+
 NVC0LegalizePostRA::NVC0LegalizePostRA(const Program *prog)
    : rZero(NULL),
      carry(NULL),
@@ -150,7 +208,7 @@ NVC0LegalizePostRA::findOverwritingDefs(const Instruction *texi,
    while (insn->op == OP_MOV && insn->getDef(0)->equals(insn->getSrc(0)))
       insn = insn->getSrc(0)->getUniqueInsn();
 
-   if (!insn->bb->reachableBy(texi->bb, term))
+   if (!insn || !insn->bb->reachableBy(texi->bb, term))
       return;
 
    switch (insn->op) {
@@ -309,6 +367,7 @@ NVC0LegalizePostRA::insertTextureBarriers(Function *fn)
       }
    }
    delete[] uses;
+   uses = NULL;
 
    // insert the barriers
    for (size_t i = 0; i < useVec.size(); ++i) {
@@ -329,8 +388,11 @@ NVC0LegalizePostRA::insertTextureBarriers(Function *fn)
       }
    }
 
-   if (fn->getProgram()->optLevel < 3)
+   if (fn->getProgram()->optLevel < 3) {
+      if (uses)
+         delete[] uses;
       return true;
+   }
 
    std::vector<Limits> limitT, limitB, limitS; // entry, exit, single
 
@@ -415,6 +477,8 @@ NVC0LegalizePostRA::insertTextureBarriers(Function *fn)
             prev = i;
       }
    }
+   if (uses)
+      delete[] uses;
    return true;
 }
 
@@ -504,7 +568,6 @@ NVC0LegalizePostRA::visit(BasicBlock *bb)
             i->setDef(0, NULL);
          if (i->src(0).getFile() == FILE_IMMEDIATE)
             i->setSrc(0, rZero); // initial value must be 0
-         replaceZero(i);
       } else
       if (i->isNop()) {
          bb->remove(i);
@@ -530,6 +593,53 @@ NVC0LegalizePostRA::visit(BasicBlock *bb)
 
    return true;
 }
+
+class NVC0LoweringPass : public Pass
+{
+public:
+   NVC0LoweringPass(Program *);
+
+private:
+   virtual bool visit(Function *);
+   virtual bool visit(BasicBlock *);
+   virtual bool visit(Instruction *);
+
+   bool handleRDSV(Instruction *);
+   bool handleWRSV(Instruction *);
+   bool handleEXPORT(Instruction *);
+   bool handleOUT(Instruction *);
+   bool handleDIV(Instruction *);
+   bool handleMOD(Instruction *);
+   bool handleSQRT(Instruction *);
+   bool handlePOW(Instruction *);
+   bool handleTEX(TexInstruction *);
+   bool handleTXD(TexInstruction *);
+   bool handleTXQ(TexInstruction *);
+   bool handleManualTXD(TexInstruction *);
+   bool handleTXLQ(TexInstruction *);
+   bool handleATOM(Instruction *);
+   bool handleCasExch(Instruction *, bool needCctl);
+   void handleSurfaceOpNVE4(TexInstruction *);
+
+   void checkPredicate(Instruction *);
+
+   void readTessCoord(LValue *dst, int c);
+
+   Value *loadResInfo32(Value *ptr, uint32_t off);
+   Value *loadMsInfo32(Value *ptr, uint32_t off);
+   Value *loadTexHandle(Value *ptr, unsigned int slot);
+
+   void adjustCoordinatesMS(TexInstruction *);
+   void processSurfaceCoordsNVE4(TexInstruction *);
+
+private:
+   const Target *const targ;
+
+   BuildUtil bld;
+
+   Symbol *gMemBase;
+   LValue *gpEmitAddress;
+};
 
 NVC0LoweringPass::NVC0LoweringPass(Program *prog) : targ(prog->getTarget())
 {
@@ -577,59 +687,11 @@ NVC0LoweringPass::handleTEX(TexInstruction *i)
    const int lyr = arg - (i->tex.target.isMS() ? 2 : 1);
    const int chipset = prog->getTarget()->getChipset();
 
-   // Arguments to the TEX instruction are a little insane. Even though the
-   // encoding is identical between SM20 and SM30, the arguments mean
-   // different things between Fermi and Kepler+. A lot of arguments are
-   // optional based on flags passed to the instruction. This summarizes the
-   // order of things.
-   //
-   // Fermi:
-   //  array/indirect
-   //  coords
-   //  sample
-   //  lod bias
-   //  depth compare
-   //  offsets:
-   //    - tg4: 8 bits each, either 2 (1 offset reg) or 8 (2 offset reg)
-   //    - other: 4 bits each, single reg
-   //
-   // Kepler+:
-   //  indirect handle
-   //  array (+ offsets for txd in upper 16 bits)
-   //  coords
-   //  sample
-   //  lod bias
-   //  depth compare
-   //  offsets (same as fermi, except txd which takes it with array)
-   //
-   // Maxwell (tex):
-   //  array
-   //  coords
-   //  indirect handle
-   //  sample
-   //  lod bias
-   //  depth compare
-   //  offsets
-   //
-   // Maxwell (txd):
-   //  indirect handle
-   //  coords
-   //  array + offsets
-   //  derivatives
-
    if (chipset >= NVISA_GK104_CHIPSET) {
       if (i->tex.rIndirectSrc >= 0 || i->tex.sIndirectSrc >= 0) {
-         // XXX this ignores tsc, and assumes a 1:1 mapping
-         assert(i->tex.rIndirectSrc >= 0);
-         Value *hnd = loadTexHandle(
-               bld.mkOp2v(OP_SHL, TYPE_U32, bld.getSSA(),
-                          i->getIndirectR(), bld.mkImm(2)),
-               i->tex.r);
-         i->tex.r = 0xff;
-         i->tex.s = 0x1f;
-         i->setIndirectR(hnd);
-         i->setIndirectS(NULL);
-      } else if (i->tex.r == i->tex.s) {
+         WARN("indirect TEX not implemented\n");
+      }
+      if (i->tex.r == i->tex.s) {
          i->tex.r += prog->driver->io.texBindBase / 4;
          i->tex.s  = 0; // only a single cX[] value possible here
       } else {
@@ -649,50 +711,22 @@ NVC0LoweringPass::handleTEX(TexInstruction *i)
          const int sat = (i->op == OP_TXF) ? 1 : 0;
          DataType sTy = (i->op == OP_TXF) ? TYPE_U32 : TYPE_F32;
          bld.mkCvt(OP_CVT, TYPE_U16, layer, sTy, src)->saturate = sat;
-         if (i->op != OP_TXD || chipset < NVISA_GM107_CHIPSET) {
-            for (int s = dim; s >= 1; --s)
-               i->setSrc(s, i->getSrc(s - 1));
-            i->setSrc(0, layer);
-         } else {
-            i->setSrc(dim, layer);
-         }
-      }
-      // Move the indirect reference to the first place
-      if (i->tex.rIndirectSrc >= 0 && (
-                i->op == OP_TXD || chipset < NVISA_GM107_CHIPSET)) {
-         Value *hnd = i->getIndirectR();
-
-         i->setIndirectR(NULL);
-         i->moveSources(0, 1);
-         i->setSrc(0, hnd);
-         i->tex.rIndirectSrc = 0;
-         i->tex.sIndirectSrc = -1;
+         for (int s = dim; s >= 1; --s)
+            i->setSrc(s, i->getSrc(s - 1));
+         i->setSrc(0, layer);
       }
    } else
    // (nvc0) generate and move the tsc/tic/array source to the front
    if (i->tex.target.isArray() || i->tex.rIndirectSrc >= 0 || i->tex.sIndirectSrc >= 0) {
       LValue *src = new_LValue(func, FILE_GPR); // 0xttxsaaaa
 
-      Value *ticRel = i->getIndirectR();
-      Value *tscRel = i->getIndirectS();
-
-      if (ticRel) {
-         i->setSrc(i->tex.rIndirectSrc, NULL);
-         if (i->tex.r)
-            ticRel = bld.mkOp2v(OP_ADD, TYPE_U32, bld.getScratch(),
-                                ticRel, bld.mkImm(i->tex.r));
-      }
-      if (tscRel) {
-         i->setSrc(i->tex.sIndirectSrc, NULL);
-         if (i->tex.s)
-            tscRel = bld.mkOp2v(OP_ADD, TYPE_U32, bld.getScratch(),
-                                tscRel, bld.mkImm(i->tex.s));
-      }
-
       Value *arrayIndex = i->tex.target.isArray() ? i->getSrc(lyr) : NULL;
       for (int s = dim; s >= 1; --s)
          i->setSrc(s, i->getSrc(s - 1));
       i->setSrc(0, arrayIndex);
+
+      Value *ticRel = i->getIndirectR();
+      Value *tscRel = i->getIndirectS();
 
       if (arrayIndex) {
          int sat = (i->op == OP_TXF) ? 1 : 0;
@@ -702,10 +736,14 @@ NVC0LoweringPass::handleTEX(TexInstruction *i)
          bld.loadImm(src, 0);
       }
 
-      if (ticRel)
+      if (ticRel) {
+         i->setSrc(i->tex.rIndirectSrc, NULL);
          bld.mkOp3(OP_INSBF, TYPE_U32, src, ticRel, bld.mkImm(0x0917), src);
-      if (tscRel)
+      }
+      if (tscRel) {
+         i->setSrc(i->tex.sIndirectSrc, NULL);
          bld.mkOp3(OP_INSBF, TYPE_U32, src, tscRel, bld.mkImm(0x0710), src);
+      }
 
       i->setSrc(0, src);
    }
@@ -721,14 +759,12 @@ NVC0LoweringPass::handleTEX(TexInstruction *i)
    if (i->tex.useOffsets) {
       int n, c;
       int s = i->srcCount(0xff, true);
-      if (i->op != OP_TXD || chipset < NVISA_GK104_CHIPSET) {
-         if (i->tex.target.isShadow())
-            s--;
-         if (i->srcExists(s)) // move potential predicate out of the way
-            i->moveSources(s, 1);
-         if (i->tex.useOffsets == 4 && i->srcExists(s + 1))
-            i->moveSources(s + 1, 1);
-      }
+      if (i->tex.target.isShadow())
+         s--;
+      if (i->srcExists(s)) // move potential predicate out of the way
+         i->moveSources(s, 1);
+      if (i->tex.useOffsets == 4 && i->srcExists(s + 1))
+         i->moveSources(s + 1, 1);
       if (i->op == OP_TXG) {
          // Either there is 1 offset, which goes into the 2 low bytes of the
          // first source, or there are 4 offsets, which go into 2 sources (8
@@ -754,28 +790,10 @@ NVC0LoweringPass::handleTEX(TexInstruction *i)
          assert(i->tex.useOffsets == 1);
          for (c = 0; c < 3; ++c) {
             ImmediateValue val;
-            if (!i->offset[0][c].getImmediate(val))
-               assert(!"non-immediate offset passed to non-TXG");
+            assert(i->offset[0][c].getImmediate(val));
             imm |= (val.reg.data.u32 & 0xf) << (c * 4);
          }
-         if (i->op == OP_TXD && chipset >= NVISA_GK104_CHIPSET) {
-            // The offset goes into the upper 16 bits of the array index. So
-            // create it if it's not already there, and INSBF it if it already
-            // is.
-            s = (i->tex.rIndirectSrc >= 0) ? 1 : 0;
-            if (chipset >= NVISA_GM107_CHIPSET)
-               s += dim;
-            if (i->tex.target.isArray()) {
-               bld.mkOp3(OP_INSBF, TYPE_U32, i->getSrc(s),
-                         bld.loadImm(NULL, imm), bld.mkImm(0xc10),
-                         i->getSrc(s));
-            } else {
-               i->moveSources(s, 1);
-               i->setSrc(s, bld.loadImm(NULL, imm << 16));
-            }
-         } else {
-            i->setSrc(s, bld.loadImm(NULL, imm));
-         }
+         i->setSrc(s, bld.loadImm(NULL, imm));
       }
    }
 
@@ -861,38 +879,20 @@ bool
 NVC0LoweringPass::handleTXD(TexInstruction *txd)
 {
    int dim = txd->tex.target.getDim();
-   unsigned arg = txd->tex.target.getArgCount();
-   unsigned expected_args = arg;
-   const int chipset = prog->getTarget()->getChipset();
-
-   if (chipset >= NVISA_GK104_CHIPSET) {
-      if (!txd->tex.target.isArray() && txd->tex.useOffsets)
-         expected_args++;
-      if (txd->tex.rIndirectSrc >= 0 || txd->tex.sIndirectSrc >= 0)
-         expected_args++;
-   } else {
-      if (txd->tex.useOffsets)
-         expected_args++;
-      if (!txd->tex.target.isArray() && (
-                txd->tex.rIndirectSrc >= 0 || txd->tex.sIndirectSrc >= 0))
-         expected_args++;
-   }
-
-   if (expected_args > 4 ||
-       dim > 2 ||
-       txd->tex.target.isShadow() ||
-       txd->tex.target.isCube())
-      txd->op = OP_TEX;
+   int arg = txd->tex.target.getArgCount();
 
    handleTEX(txd);
    while (txd->srcExists(arg))
       ++arg;
 
    txd->tex.derivAll = true;
-   if (txd->op == OP_TEX)
+   if (dim > 2 ||
+       txd->tex.target.isCube() ||
+       arg > 4 ||
+       txd->tex.target.isShadow() ||
+       txd->tex.useOffsets)
       return handleManualTXD(txd);
 
-   assert(arg == expected_args);
    for (int c = 0; c < dim; ++c) {
       txd->setSrc(arg + c * 2 + 0, txd->dPdx[c]);
       txd->setSrc(arg + c * 2 + 1, txd->dPdy[c]);
@@ -1440,14 +1440,7 @@ NVC0LoweringPass::handleRDSV(Instruction *i)
    switch (sv) {
    case SV_POSITION:
       assert(prog->getType() == Program::TYPE_FRAGMENT);
-      if (i->srcExists(1)) {
-         // Pass offset through to the interpolation logic
-         ld = bld.mkInterp(NV50_IR_INTERP_LINEAR | NV50_IR_INTERP_OFFSET,
-                           i->getDef(0), addr, NULL);
-         ld->setSrc(1, i->getSrc(1));
-      } else {
-         bld.mkInterp(NV50_IR_INTERP_LINEAR, i->getDef(0), addr, NULL);
-      }
+      bld.mkInterp(NV50_IR_INTERP_LINEAR, i->getDef(0), addr, NULL);
       break;
    case SV_FACE:
    {
@@ -1593,21 +1586,14 @@ NVC0LoweringPass::handleEXPORT(Instruction *i)
 bool
 NVC0LoweringPass::handleOUT(Instruction *i)
 {
-   Instruction *prev = i->prev;
-   ImmediateValue stream, prevStream;
-
-   // Only merge if the stream ids match. Also, note that the previous
-   // instruction would have already been lowered, so we take arg1 from it.
-   if (i->op == OP_RESTART && prev && prev->op == OP_EMIT &&
-       i->src(0).getImmediate(stream) &&
-       prev->src(1).getImmediate(prevStream) &&
-       stream.reg.data.u32 == prevStream.reg.data.u32) {
+   if (i->op == OP_RESTART && i->prev && i->prev->op == OP_EMIT) {
       i->prev->subOp = NV50_IR_SUBOP_EMIT_RESTART;
       delete_Instruction(prog, i);
    } else {
       assert(gpEmitAddress);
       i->setDef(0, gpEmitAddress);
-      i->setSrc(1, i->getSrc(0));
+      if (i->srcExists(0))
+         i->setSrc(1, i->getSrc(0));
       i->setSrc(0, gpEmitAddress);
    }
    return true;
@@ -1695,20 +1681,6 @@ NVC0LoweringPass::visit(Instruction *i)
          } else {
             i->op = OP_VFETCH;
             assert(prog->getType() != Program::TYPE_FRAGMENT); // INTERP
-         }
-      } else if (i->src(0).getFile() == FILE_MEMORY_CONST) {
-         if (i->src(0).isIndirect(1)) {
-            Value *ptr;
-            if (i->src(0).isIndirect(0))
-               ptr = bld.mkOp3v(OP_INSBF, TYPE_U32, bld.getSSA(),
-                                i->getIndirect(0, 1), bld.mkImm(0x1010),
-                                i->getIndirect(0, 0));
-            else
-               ptr = bld.mkOp2v(OP_SHL, TYPE_U32, bld.getSSA(),
-                                i->getIndirect(0, 1), bld.mkImm(16));
-            i->setIndirect(0, 1, NULL);
-            i->setIndirect(0, 0, ptr);
-            i->subOp = NV50_IR_SUBOP_LDC_IS;
          }
       }
       break;

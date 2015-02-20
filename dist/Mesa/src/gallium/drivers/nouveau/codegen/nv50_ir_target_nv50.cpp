@@ -29,7 +29,7 @@ Target *getTargetNV50(unsigned int chipset)
    return new TargetNV50(chipset);
 }
 
-TargetNV50::TargetNV50(unsigned int card) : Target(true, true, false)
+TargetNV50::TargetNV50(unsigned int card) : Target(true, false)
 {
    chipset = card;
 
@@ -275,10 +275,9 @@ TargetNV50::insnCanLoad(const Instruction *i, int s,
       return false;
 
    // NOTE: don't rely on flagsDef
-   if (sf == FILE_IMMEDIATE)
-      for (int d = 0; i->defExists(d); ++d)
-         if (i->def(d).getFile() == FILE_FLAGS)
-            return false;
+   for (int d = 0; i->defExists(d); ++d)
+      if (i->def(d).getFile() == FILE_FLAGS)
+         return false;
 
    unsigned mode = 0;
 
@@ -538,7 +537,7 @@ recordLocation(uint16_t *locs, uint8_t *masks,
    case TGSI_SEMANTIC_VERTEXID: locs[SV_VERTEX_ID] = addr; break;
    case TGSI_SEMANTIC_PRIMID: locs[SV_PRIMITIVE_ID] = addr; break;
    case TGSI_SEMANTIC_LAYER: locs[SV_LAYER] = addr; break;
-   case TGSI_SEMANTIC_VIEWPORT_INDEX: locs[SV_VIEWPORT_INDEX] = addr; break;
+   case NV50_SEMANTIC_VIEWPORTINDEX: locs[SV_VIEWPORT_INDEX] = addr; break;
    default:
       break;
    }

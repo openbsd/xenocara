@@ -16,7 +16,7 @@ sources = [
     graw_util,
 ]
 
-env.Prepend(LIBS = [mesautil, gallium])
+env.Prepend(LIBS = [gallium])
 
 # TODO: write a wrapper function http://www.scons.org/wiki/WrapperFunctions
 graw = env.SharedLibrary(

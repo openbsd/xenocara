@@ -36,7 +36,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-
 VPATH = @srcdir@
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -105,23 +104,22 @@ target_triplet = @target@
 DIST_COMMON = $(srcdir)/Makefile.sources \
 	$(top_srcdir)/src/gallium/Automake.inc $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/bin/depcomp \
-	$(noinst_HEADERS) $(top_srcdir)/bin/test-driver
-@HAVE_DRISW_TRUE@am__append_1 = \
-@HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
-
-@NEED_WINSYS_XLIB_TRUE@am__append_2 = \
-@NEED_WINSYS_XLIB_TRUE@	$(top_builddir)/src/gallium/winsys/sw/xlib/libws_xlib.la \
-@NEED_WINSYS_XLIB_TRUE@	-lX11 -lXext -lXfixes \
-@NEED_WINSYS_XLIB_TRUE@	$(LIBDRM_LIBS)
-
+	$(top_srcdir)/bin/test-driver
+@HAVE_MESA_LLVM_TRUE@am__append_1 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_2 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_3 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_4 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_5 = $(LLVM_LIBS)
+@HAVE_MESA_LLVM_TRUE@am__append_6 = $(LLVM_LIBS)
+@HAVE_MESA_LLVM_TRUE@am__append_7 = $(LLVM_LIBS)
+@HAVE_MESA_LLVM_TRUE@am__append_8 = $(LLVM_LIBS)
 check_PROGRAMS = lp_test_format$(EXEEXT) lp_test_arit$(EXEEXT) \
 	lp_test_blend$(EXEEXT) lp_test_conv$(EXEEXT) \
 	lp_test_printf$(EXEEXT)
 subdir = src/gallium/drivers/llvmpipe
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
-	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
 	$(top_srcdir)/m4/ax_prog_bison.m4 \
 	$(top_srcdir)/m4/ax_prog_flex.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -135,7 +133,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libllvmpipe_la_LIBADD =
-am__objects_1 = lp_bld_alpha.lo lp_bld_blend_aos.lo lp_bld_blend.lo \
+am__objects_1 = lp_bld_alpha.lo lp_bld_blend.lo lp_bld_blend_aos.lo \
 	lp_bld_blend_logicop.lo lp_bld_depth.lo lp_bld_interp.lo \
 	lp_clear.lo lp_context.lo lp_draw_arrays.lo lp_fence.lo \
 	lp_flush.lo lp_jit.lo lp_memory.lo lp_perf.lo lp_query.lo \
@@ -143,8 +141,8 @@ am__objects_1 = lp_bld_alpha.lo lp_bld_blend_aos.lo lp_bld_blend.lo \
 	lp_scene_queue.lo lp_screen.lo lp_setup.lo lp_setup_line.lo \
 	lp_setup_point.lo lp_setup_tri.lo lp_setup_vbuf.lo \
 	lp_state_blend.lo lp_state_clip.lo lp_state_derived.lo \
-	lp_state_fs.lo lp_state_gs.lo lp_state_rasterizer.lo \
-	lp_state_sampler.lo lp_state_setup.lo lp_state_so.lo \
+	lp_state_fs.lo lp_state_setup.lo lp_state_gs.lo \
+	lp_state_rasterizer.lo lp_state_sampler.lo lp_state_so.lo \
 	lp_state_surface.lo lp_state_vertex.lo lp_state_vs.lo \
 	lp_surface.lo lp_tex_sample.lo lp_texture.lo
 am_libllvmpipe_la_OBJECTS = $(am__objects_1)
@@ -163,8 +161,8 @@ lp_test_arit_OBJECTS = $(am_lp_test_arit_OBJECTS)
 am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = libllvmpipe.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/util/libmesautil.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 lp_test_arit_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_lp_test_blend_OBJECTS = lp_test_blend.$(OBJEXT) \
 	lp_test_main.$(OBJEXT)
@@ -249,7 +247,6 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-HEADERS = $(noinst_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -482,7 +479,6 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
 CCASDEPMODE = @CCASDEPMODE@
@@ -498,7 +494,6 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-D3D_DRIVER_INSTALL_DIR = @D3D_DRIVER_INSTALL_DIR@
 DEFINES = @DEFINES@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -521,6 +516,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
 EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
+EGL_DRIVER_INSTALL_DIR = @EGL_DRIVER_INSTALL_DIR@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
@@ -593,14 +589,11 @@ LLVM_LIBS = @LLVM_LIBS@
 LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-NINE_MAJOR = @NINE_MAJOR@
-NINE_MINOR = @NINE_MINOR@
-NINE_TINY = @NINE_TINY@
-NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NOUVEAU_CFLAGS = @NOUVEAU_CFLAGS@
@@ -611,8 +604,10 @@ OMX_CFLAGS = @OMX_CFLAGS@
 OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
+OPENCL_LIB_INSTALL_DIR = @OPENCL_LIB_INSTALL_DIR@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
+OSMESA_MESA_DEPS = @OSMESA_MESA_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
 OSMESA_PC_REQ = @OSMESA_PC_REQ@
 OSMESA_VERSION = @OSMESA_VERSION@
@@ -626,6 +621,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -644,13 +640,7 @@ SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
-VA_CFLAGS = @VA_CFLAGS@
-VA_LIBS = @VA_LIBS@
-VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
-VA_MAJOR = @VA_MAJOR@
-VA_MINOR = @VA_MINOR@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -714,7 +704,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-ifGNUmake = @ifGNUmake@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -743,50 +732,27 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 C_SOURCES := \
 	lp_bld_alpha.c \
-	lp_bld_alpha.h \
-	lp_bld_blend_aos.c \
 	lp_bld_blend.c \
-	lp_bld_blend.h \
+	lp_bld_blend_aos.c \
 	lp_bld_blend_logicop.c \
 	lp_bld_depth.c \
-	lp_bld_depth.h \
 	lp_bld_interp.c \
-	lp_bld_interp.h \
 	lp_clear.c \
-	lp_clear.h \
 	lp_context.c \
-	lp_context.h \
-	lp_debug.h \
 	lp_draw_arrays.c \
 	lp_fence.c \
-	lp_fence.h \
 	lp_flush.c \
-	lp_flush.h \
 	lp_jit.c \
-	lp_jit.h \
-	lp_limits.h \
 	lp_memory.c \
-	lp_memory.h \
 	lp_perf.c \
-	lp_perf.h \
-	lp_public.h \
 	lp_query.c \
-	lp_query.h \
 	lp_rast.c \
 	lp_rast_debug.c \
-	lp_rast.h \
-	lp_rast_priv.h \
 	lp_rast_tri.c \
-	lp_rast_tri_tmp.h \
 	lp_scene.c \
-	lp_scene.h \
 	lp_scene_queue.c \
-	lp_scene_queue.h \
 	lp_screen.c \
-	lp_screen.h \
 	lp_setup.c \
-	lp_setup_context.h \
-	lp_setup.h \
 	lp_setup_line.c \
 	lp_setup_point.c \
 	lp_setup_tri.c \
@@ -795,27 +761,20 @@ C_SOURCES := \
 	lp_state_clip.c \
 	lp_state_derived.c \
 	lp_state_fs.c \
-	lp_state_fs.h \
+	lp_state_setup.c \
 	lp_state_gs.c \
-	lp_state.h \
 	lp_state_rasterizer.c \
 	lp_state_sampler.c \
-	lp_state_setup.c \
-	lp_state_setup.h \
 	lp_state_so.c \
 	lp_state_surface.c \
 	lp_state_vertex.c \
 	lp_state_vs.c \
 	lp_surface.c \
-	lp_surface.h \
 	lp_tex_sample.c \
-	lp_tex_sample.h \
-	lp_texture.c \
-	lp_texture.h
+	lp_texture.c
 
 GALLIUM_CFLAGS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	$(DEFINES)
@@ -827,29 +786,37 @@ GALLIUM_CFLAGS = \
 # preprocessor is determined by the ordering of the -I flags.
 GALLIUM_DRIVER_CFLAGS = \
 	-I$(srcdir)/include \
-	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/src/gallium/winsys \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS)
 
 GALLIUM_DRIVER_CXXFLAGS = \
 	-I$(srcdir)/include \
-	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src/gallium/include \
+	-I$(top_srcdir)/src/gallium/auxiliary \
+	-I$(top_srcdir)/src/gallium/drivers \
+	$(DEFINES) \
+	$(VISIBILITY_CXXFLAGS)
+
+GALLIUM_DRI_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
 	-I$(top_srcdir)/src/gallium/winsys \
+	-I$(top_srcdir)/src/mesa \
+	-I$(top_srcdir)/src/mapi \
 	$(DEFINES) \
-	$(VISIBILITY_CXXFLAGS)
+	$(PTHREAD_CFLAGS) \
+	$(LIBDRM_CFLAGS) \
+	$(VISIBILITY_CFLAGS)
 
-GALLIUM_TARGET_CFLAGS = \
+GALLIUM_VIDEO_CFLAGS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/loader \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
@@ -859,12 +826,45 @@ GALLIUM_TARGET_CFLAGS = \
 	$(LIBDRM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
 
+GALLIUM_DRI_LINKER_FLAGS = -shared -shrext .so -module -avoid-version \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/dri.sym \
+	$(GC_SECTIONS) $(am__append_1)
+GALLIUM_VDPAU_LINKER_FLAGS = -shared -module -no-undefined \
+	-version-number $(VDPAU_MAJOR):$(VDPAU_MINOR) \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/vdpau.sym \
+	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_2)
+GALLIUM_XVMC_LINKER_FLAGS = -shared -module -no-undefined \
+	-version-number $(XVMC_MAJOR):$(XVMC_MINOR) \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/xvmc.sym \
+	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_3)
+GALLIUM_OMX_LINKER_FLAGS = -shared -module -no-undefined \
+	-avoid-version \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/omx.sym \
+	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_4)
 GALLIUM_COMMON_LIB_DEPS = \
 	-lm \
 	$(CLOCK_LIB) \
 	$(PTHREAD_LIBS) \
 	$(DLOPEN_LIBS)
 
+GALLIUM_DRI_LIB_DEPS = $(top_builddir)/src/mesa/libmesagallium.la \
+	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(SELINUX_LIBS) $(LIBDRM_LIBS) $(EXPAT_LIBS) \
+	$(GALLIUM_COMMON_LIB_DEPS) $(am__append_5)
+GALLIUM_VDPAU_LIB_DEPS =  \
+	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(top_builddir)/src/gallium/state_trackers/vdpau/libvdpautracker.la \
+	$(VDPAU_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
+	$(am__append_6)
+GALLIUM_XVMC_LIB_DEPS =  \
+	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(top_builddir)/src/gallium/state_trackers/xvmc/libxvmctracker.la \
+	$(XVMC_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
+	$(am__append_7)
+GALLIUM_OMX_LIB_DEPS =  \
+	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(top_builddir)/src/gallium/state_trackers/omx/libomxtracker.la \
+	$(OMX_LIBS) $(GALLIUM_COMMON_LIB_DEPS) $(am__append_8)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
@@ -872,10 +872,6 @@ GALLIUM_WINSYS_CFLAGS = \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS)
 
-GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
-	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
-	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_1) $(am__append_2)
 AM_CFLAGS = \
 	$(GALLIUM_DRIVER_CFLAGS) \
 	$(LLVM_CFLAGS)
@@ -887,15 +883,13 @@ AM_CXXFLAGS = \
 noinst_LTLIBRARIES = libllvmpipe.la
 libllvmpipe_la_SOURCES = $(C_SOURCES)
 libllvmpipe_la_LDFLAGS = $(LLVM_LDFLAGS)
-noinst_HEADERS = lp_test.h
 TESTS = $(check_PROGRAMS)
 TEST_LIBS = \
-	libllvmpipe.la \
-	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/util/libmesautil.la \
-	$(LLVM_LIBS) \
-	$(DLOPEN_LIBS) \
-	$(PTHREAD_LIBS)
+	    libllvmpipe.la \
+	    $(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	    $(LLVM_LIBS) \
+	    $(DLOPEN_LIBS) \
+	    $(PTHREAD_LIBS)
 
 lp_test_format_SOURCES = lp_test_format.c lp_test_main.c
 lp_test_format_LDADD = $(TEST_LIBS)
@@ -912,7 +906,6 @@ nodist_EXTRA_lp_test_conv_SOURCES = dummy.cpp
 lp_test_printf_SOURCES = lp_test_printf.c lp_test_main.c
 lp_test_printf_LDADD = $(TEST_LIBS)
 nodist_EXTRA_lp_test_printf_SOURCES = dummy.cpp
-EXTRA_DIST = SConscript
 all: all-am
 
 .SUFFIXES:
@@ -1372,7 +1365,7 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES)
 installdirs:
 install: install-am
 install-exec: install-exec-am

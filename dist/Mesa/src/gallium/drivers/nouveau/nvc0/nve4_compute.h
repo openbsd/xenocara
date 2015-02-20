@@ -88,6 +88,7 @@ nve4_cp_launch_desc_set_cb(struct nve4_cp_launch_desc *desc,
 
    assert(index < 8);
    assert(!(base & 0xff));
+   assert(size <= 65536);
 
    desc->cb[index].address_l = address;
    desc->cb[index].address_h = address >> 32;

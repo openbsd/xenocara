@@ -36,21 +36,6 @@ namespace clover {
       //       source.  Get rid of this as soon as everything can be
       //       compiled as C++11.
 
-      namespace detail {
-         template<typename R, typename S>
-         bool
-         ranges_equal(const R &a, const S &b) {
-            if (a.size() != b.size())
-               return false;
-
-            for (size_t i = 0; i < a.size(); ++i)
-               if (a[i] != b[i])
-                  return false;
-
-            return true;
-         }
-      }
-
       template<typename T>
       class vector {
       protected:
@@ -81,88 +66,65 @@ namespace clover {
          typedef std::ptrdiff_t difference_type;
          typedef std::size_t size_type;
 
-         vector() : p(NULL), _size(0), _capacity(0) {
+         vector() : p(NULL), n(0) {
          }
 
-         vector(const vector &v) :
-            p(alloc(v._size, v.p, v._size)),
-            _size(v._size), _capacity(v._size) {
+         vector(const vector &v) : p(alloc(v.n, v.p, v.n)), n(v.n) {
          }
 
-         vector(const_iterator p, size_type n) :
-            p(alloc(n, p, n)), _size(n), _capacity(n) {
+         vector(iterator p, size_type n) : p(alloc(n, p, n)), n(n) {
          }
 
          template<typename C>
          vector(const C &v) :
-            p(alloc(v.size(), NULL, 0)), _size(0),
-            _capacity(v.size()) {
-            for (typename C::const_iterator it = v.begin(); it != v.end(); ++it)
-               new(&p[_size++]) T(*it);
+            p(alloc(v.size(), &*v.begin(), v.size())), n(v.size()) {
          }
 
          ~vector() {
-            free(_size, p);
+            free(n, p);
          }
 
          vector &
          operator=(const vector &v) {
-            free(_size, p);
+            free(n, p);
 
-            p = alloc(v._size, v.p, v._size);
-            _size = v._size;
-            _capacity = v._size;
+            p = alloc(v.n, v.p, v.n);
+            n = v.n;
 
             return *this;
          }
 
-         bool
-         operator==(const vector &v) const {
-            return detail::ranges_equal(*this, v);
-         }
-
          void
-         reserve(size_type n) {
-            if (_capacity < n) {
-               T *q = alloc(n, p, _size);
-               free(_size, p);
+         reserve(size_type m) {
+            if (n < m) {
+               T *q = alloc(m, p, n);
+               free(n, p);
 
                p = q;
-               _capacity = n;
+               n = m;
             }
          }
 
          void
-         resize(size_type n, T x = T()) {
-            if (n <= _size) {
-               for (size_type i = n; i < _size; ++i)
-                  p[i].~T();
+         resize(size_type m, T x = T()) {
+            size_type n = size();
 
-            } else {
-               reserve(n);
+            reserve(m);
 
-               for (size_type i = _size; i < n; ++i)
-                  new(&p[i]) T(x);
-            }
-
-            _size = n;
+            for (size_type i = n; i < m; ++i)
+               new(&p[i]) T(x);
          }
 
          void
          push_back(const T &x) {
-            reserve(_size + 1);
-            new(&p[_size]) T(x);
-            ++_size;
+            size_type n = size();
+            reserve(n + 1);
+            new(&p[n]) T(x);
          }
 
          size_type
          size() const {
-            return _size;
-         }
-
-         size_type
-         capacity() const {
-            return _capacity;
+            return n;
          }
 
          iterator
@@ -177,12 +139,12 @@ namespace clover {
 
          iterator
          end() {
-            return p + _size;
+            return p + n;
          }
 
          const_iterator
          end() const {
-            return p + _size;
+            return p + n;
          }
 
          reference
@@ -197,8 +159,7 @@ namespace clover {
 
       private:
          iterator p;
-         size_type _size;
-         size_type _capacity;
+         size_type n;
       };
 
       template<typename T>
@@ -217,11 +178,6 @@ namespace clover {
 
          template<typename C>
          vector_ref(C &v) : p(&*v.begin()), n(v.size()) {
-         }
-
-         bool
-         operator==(const vector_ref &v) const {
-            return detail::ranges_equal(*this, v);
          }
 
          size_type
@@ -307,95 +263,22 @@ namespace clover {
          size_t offset;
       };
 
-      class string {
+      class string : public vector_ref<const char> {
       public:
-         typedef char *iterator;
-         typedef const char *const_iterator;
-         typedef char value_type;
-         typedef char &reference;
-         typedef const char &const_reference;
-         typedef std::ptrdiff_t difference_type;
-         typedef std::size_t size_type;
-
-         string() : v() {
-         }
-
-         string(const char *p) : v(p, std::strlen(p)) {
+         string(const char *p) : vector_ref(p, std::strlen(p)) {
          }
 
          template<typename C>
-         string(const C &v) : v(v) {
+         string(const C &v) : vector_ref(v) {
          }
 
          operator std::string() const {
-            return std::string(v.begin(), v.end());
-         }
-
-         bool
-         operator==(const string &s) const {
-            return this->v == s.v;
-         }
-
-         void
-         reserve(size_type n) {
-            v.reserve(n);
-         }
-
-         void
-         resize(size_type n, char x = char()) {
-            v.resize(n, x);
-         }
-
-         void
-         push_back(char x) {
-            v.push_back(x);
-         }
-
-         size_type
-         size() const {
-            return v.size();
-         }
-
-         size_type
-         capacity() const {
-            return v.capacity();
-         }
-
-         iterator
-         begin() {
-            return v.begin();
-         }
-
-         const_iterator
-         begin() const {
-            return v.begin();
-         }
-
-         iterator
-         end() {
-            return v.end();
-         }
-
-         const_iterator
-         end() const {
-            return v.end();
-         }
-
-         reference
-         operator[](size_type i) {
-            return v[i];
-         }
-
-         const_reference
-         operator[](size_type i) const {
-            return v[i];
+            return std::string(begin(), end());
          }
 
          const char *
          c_str() const {
-            v.reserve(size() + 1);
-            *v.end() = 0;
-            return v.begin();
+            return begin();
          }
 
          const char *
@@ -407,19 +290,20 @@ namespace clover {
 
             return end();
          }
-
-      private:
-         mutable vector<char> v;
       };
 
-      template<typename T, typename S>
-      struct pair {
-         pair(T first, S second) :
-            first(first), second(second) {}
+      template<typename T>
+      bool
+      operator==(const vector_ref<T> &a, const vector_ref<T> &b) {
+         if (a.size() != b.size())
+            return false;
 
-         T first;
-         S second;
-      };
+         for (size_t i = 0; i < a.size(); ++i)
+            if (a[i] != b[i])
+               return false;
+
+         return true;
+      }
 
       class exception {
       public:

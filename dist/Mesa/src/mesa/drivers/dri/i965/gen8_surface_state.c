@@ -62,7 +62,8 @@ vertical_alignment(struct intel_mipmap_tree *mt)
    case 16:
       return GEN8_SURFACE_VALIGN_16;
    default:
-      unreachable("Unsupported vertical surface alignment.");
+      assert(!"Unsupported vertical surface alignment.");
+      return GEN8_SURFACE_VALIGN_4;
    }
 }
 
@@ -77,18 +78,9 @@ horizontal_alignment(struct intel_mipmap_tree *mt)
    case 16:
       return GEN8_SURFACE_HALIGN_16;
    default:
-      unreachable("Unsupported horizontal surface alignment.");
+      assert(!"Unsupported horizontal surface alignment.");
+      return GEN8_SURFACE_HALIGN_4;
    }
-}
-
-static uint32_t *
-allocate_surface_state(struct brw_context *brw, uint32_t *out_offset)
-{
-   int dwords = brw->gen >= 9 ? 16 : 13;
-   uint32_t *surf = brw_state_batch(brw, AUB_TRACE_SURFACE_STATE,
-                                    dwords * 4, 64, out_offset);
-   memset(surf, 0, dwords * 4);
-   return surf;
 }
 
 static void
@@ -102,7 +94,9 @@ gen8_emit_buffer_surface_state(struct brw_context *brw,
                                unsigned mocs,
                                bool rw)
 {
-   uint32_t *surf = allocate_surface_state(brw, out_offset);
+   uint32_t *surf = brw_state_batch(brw, AUB_TRACE_SURFACE_STATE,
+                                    13 * 4, 64, out_offset);
+   memset(surf, 0, 13 * 4);
 
    surf[0] = BRW_SURFACE_BUFFER << BRW_SURFACE_TYPE_SHIFT |
              surface_format << BRW_SURFACE_FORMAT_SHIFT |
@@ -143,7 +137,6 @@ gen8_update_texture_surface(struct gl_context *ctx,
    struct intel_mipmap_tree *aux_mt = NULL;
    uint32_t aux_mode = 0;
    mesa_format format = intelObj->_Format;
-   uint32_t mocs_wb = brw->gen >= 9 ? SKL_MOCS_WB : BDW_MOCS_WB;
 
    if (tObj->Target == GL_TEXTURE_BUFFER) {
       brw_update_buffer_texture_surface(ctx, unit, surf_offset);
@@ -178,7 +171,8 @@ gen8_update_texture_surface(struct gl_context *ctx,
 
    uint32_t tex_format = translate_tex_format(brw, format, sampler->sRGBDecode);
 
-   uint32_t *surf = allocate_surface_state(brw, surf_offset);
+   uint32_t *surf = brw_state_batch(brw, AUB_TRACE_SURFACE_STATE,
+                                    13 * 4, 64, surf_offset);
 
    surf[0] = translate_tex_target(tObj->Target) << BRW_SURFACE_TYPE_SHIFT |
              tex_format << BRW_SURFACE_FORMAT_SHIFT |
@@ -194,7 +188,7 @@ gen8_update_texture_surface(struct gl_context *ctx,
    if (mt->logical_depth0 > 1 && tObj->Target != GL_TEXTURE_3D)
       surf[0] |= GEN8_SURFACE_IS_ARRAY;
 
-   surf[1] = SET_FIELD(mocs_wb, GEN8_SURFACE_MOCS) | mt->qpitch >> 2;
+   surf[1] = SET_FIELD(BDW_MOCS_WB, GEN8_SURFACE_MOCS) | mt->qpitch >> 2;
 
    surf[2] = SET_FIELD(mt->logical_width0 - 1, GEN7_SURFACE_WIDTH) |
              SET_FIELD(mt->logical_height0 - 1, GEN7_SURFACE_HEIGHT);
@@ -274,12 +268,8 @@ gen8_create_raw_surface(struct brw_context *brw, drm_intel_bo *bo,
 }
 
 /**
- * Creates a null renderbuffer surface.
- *
- * This is used when the shader doesn't write to any color output.  An FB
- * write to target 0 will still be emitted, because that's how the thread is
- * terminated (and computed depth is returned), so we need to have the
- * hardware discard the target 0 color output..
+ * Create the constant buffer surface.  Vertex/fragment shader constants will be
+ * read from this buffer with Data Port Read instructions/messages.
  */
 static void
 gen8_update_null_renderbuffer_surface(struct brw_context *brw, unsigned unit)
@@ -291,8 +281,9 @@ gen8_update_null_renderbuffer_surface(struct brw_context *brw, unsigned unit)
    uint32_t surf_index =
       brw->wm.prog_data->binding_table.render_target_start + unit;
 
-   uint32_t *surf =
-      allocate_surface_state(brw, &brw->wm.base.surf_offset[surf_index]);
+   uint32_t *surf = brw_state_batch(brw, AUB_TRACE_SURFACE_STATE, 13 * 4, 64,
+                                    &brw->wm.base.surf_offset[surf_index]);
+   memset(surf, 0, 13 * 4);
 
    surf[0] = BRW_SURFACE_NULL << BRW_SURFACE_TYPE_SHIFT |
              BRW_SURFACEFORMAT_B8G8R8A8_UNORM << BRW_SURFACE_FORMAT_SHIFT |
@@ -329,10 +320,9 @@ gen8_update_renderbuffer_surface(struct brw_context *brw,
       irb->mt_layer : (irb->mt_layer / MAX2(mt->num_samples, 1));
    GLenum gl_target =
       rb->TexImage ? rb->TexImage->TexObject->Target : GL_TEXTURE_2D;
+
    uint32_t surf_index =
       brw->wm.prog_data->binding_table.render_target_start + unit;
-   /* FINISHME: Use PTE MOCS on Skylake. */
-   uint32_t mocs = brw->gen >= 9 ? SKL_MOCS_WT : BDW_MOCS_PTE;
 
    intel_miptree_used_for_rendering(mt);
 
@@ -375,8 +365,8 @@ gen8_update_renderbuffer_surface(struct brw_context *brw,
       aux_mode = GEN8_SURFACE_AUX_MODE_MCS;
    }
 
-   uint32_t *surf =
-      allocate_surface_state(brw, &brw->wm.base.surf_offset[surf_index]);
+   uint32_t *surf = brw_state_batch(brw, AUB_TRACE_SURFACE_STATE, 13 * 4, 64,
+                                    &brw->wm.base.surf_offset[surf_index]);
 
    surf[0] = (surf_type << BRW_SURFACE_TYPE_SHIFT) |
              (is_array ? GEN7_SURFACE_IS_ARRAY : 0) |
@@ -385,7 +375,7 @@ gen8_update_renderbuffer_surface(struct brw_context *brw,
              horizontal_alignment(mt) |
              surface_tiling_mode(tiling);
 
-   surf[1] = SET_FIELD(mocs, GEN8_SURFACE_MOCS) | mt->qpitch >> 2;
+   surf[1] = SET_FIELD(BDW_MOCS_WT, GEN8_SURFACE_MOCS) | mt->qpitch >> 2;
 
    surf[2] = SET_FIELD(width - 1, GEN7_SURFACE_WIDTH) |
              SET_FIELD(height - 1, GEN7_SURFACE_HEIGHT);

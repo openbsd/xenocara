@@ -7,5 +7,3 @@ AM_CFLAGS = \
 noinst_LTLIBRARIES = libidentity.la
 
 libidentity_la_SOURCES = $(C_SOURCES)
-
-EXTRA_DIST = SConscript

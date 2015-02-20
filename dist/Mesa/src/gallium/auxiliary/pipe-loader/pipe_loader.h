@@ -34,7 +34,6 @@
 #define PIPE_LOADER_H
 
 #include "pipe/p_compiler.h"
-#include "state_tracker/drm_driver.h"
 
 #ifdef HAVE_PIPE_LOADER_XLIB
 #include <X11/Xlib.h>
@@ -93,16 +92,6 @@ pipe_loader_probe(struct pipe_loader_device **devs, int ndev);
 struct pipe_screen *
 pipe_loader_create_screen(struct pipe_loader_device *dev,
                           const char *library_paths);
-
-/**
- * Query the configuration parameters for the specified device.
- *
- * \param dev Device that will be queried.
- * \param conf The drm_conf id of the option to be queried.
- */
-const struct drm_conf_ret *
-pipe_loader_configuration(struct pipe_loader_device *dev,
-                          enum drm_conf conf);
 
 /**
  * Release resources allocated for a list of devices.
@@ -165,17 +154,6 @@ pipe_loader_sw_probe_null(struct pipe_loader_device **devs);
  */
 int
 pipe_loader_sw_probe(struct pipe_loader_device **devs, int ndev);
-
-/**
- * Get a software device wrapped atop another device.
- *
- * This function is platform-specific.
- *
- * \sa pipe_loader_probe
- */
-boolean
-pipe_loader_sw_probe_wrapped(struct pipe_loader_device **dev,
-                             struct pipe_screen *screen);
 
 #ifdef HAVE_PIPE_LOADER_DRM
 

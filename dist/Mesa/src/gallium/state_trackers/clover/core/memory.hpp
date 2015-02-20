@@ -26,7 +26,6 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <stack>
 
 #include "core/object.hpp"
 #include "core/queue.hpp"
@@ -62,7 +61,7 @@ namespace clover {
       cl_mem_flags _flags;
       size_t _size;
       void *_host_ptr;
-      std::stack<std::function<void ()>> _destroy_notify;
+      std::function<void ()> _destroy_notify;
 
    protected:
       std::string data;

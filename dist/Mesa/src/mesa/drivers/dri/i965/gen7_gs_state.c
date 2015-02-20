@@ -26,6 +26,39 @@
 #include "brw_defines.h"
 #include "intel_batchbuffer.h"
 
+
+static void
+gen7_upload_gs_push_constants(struct brw_context *brw)
+{
+   const struct brw_stage_state *stage_state = &brw->gs.base;
+   /* BRW_NEW_GEOMETRY_PROGRAM */
+   const struct brw_geometry_program *gp =
+      (struct brw_geometry_program *) brw->geometry_program;
+
+   if (gp) {
+      /* CACHE_NEW_GS_PROG */
+      const struct brw_vec4_prog_data *prog_data = &brw->gs.prog_data->base;
+      struct brw_stage_state *stage_state = &brw->gs.base;
+
+      gen6_upload_vec4_push_constants(brw, &gp->program.Base, prog_data,
+                                      stage_state, AUB_TRACE_VS_CONSTANTS);
+   }
+
+   gen7_upload_constant_state(brw, stage_state, gp, _3DSTATE_CONSTANT_GS);
+}
+
+const struct brw_tracked_state gen7_gs_push_constants = {
+   .dirty = {
+      .mesa  = _NEW_TRANSFORM | _NEW_PROGRAM_CONSTANTS,
+      .brw   = (BRW_NEW_BATCH |
+                BRW_NEW_GEOMETRY_PROGRAM |
+                BRW_NEW_PUSH_CONSTANT_ALLOCATION),
+      .cache = CACHE_NEW_GS_PROG,
+   },
+   .emit = gen7_upload_gs_push_constants,
+};
+
+
 static void
 upload_gs_state(struct brw_context *brw)
 {
@@ -61,10 +94,10 @@ upload_gs_state(struct brw_context *brw)
                 ((brw->gs.prog_data->base.base.binding_table.size_bytes / 4) <<
                  GEN6_GS_BINDING_TABLE_ENTRY_COUNT_SHIFT));
 
-      if (brw->gs.prog_data->base.base.total_scratch) {
+      if (brw->gs.prog_data->base.total_scratch) {
          OUT_RELOC(stage_state->scratch_bo,
                    I915_GEM_DOMAIN_RENDER, I915_GEM_DOMAIN_RENDER,
-                   ffs(brw->gs.prog_data->base.base.total_scratch) - 11);
+                   ffs(brw->gs.prog_data->base.total_scratch) - 11);
       } else {
          OUT_BATCH(0);
       }
@@ -77,7 +110,7 @@ upload_gs_state(struct brw_context *brw)
          (prog_data->urb_read_length <<
           GEN6_GS_URB_READ_LENGTH_SHIFT) |
          (0 << GEN6_GS_URB_ENTRY_READ_OFFSET_SHIFT) |
-         (prog_data->base.dispatch_grf_start_reg <<
+         (prog_data->dispatch_grf_start_reg <<
           GEN6_GS_DISPATCH_START_GRF_SHIFT);
 
       /* Note: the meaning of the GEN7_GS_REORDER_TRAILING bit changes between
@@ -112,7 +145,9 @@ upload_gs_state(struct brw_context *brw)
           GEN7_GS_CONTROL_DATA_HEADER_SIZE_SHIFT) |
          ((brw->gs.prog_data->invocations - 1) <<
           GEN7_GS_INSTANCE_CONTROL_SHIFT) |
-         brw->gs.prog_data->dispatch_mode |
+         (brw->gs.prog_data->dual_instanced_dispatch ?
+          GEN7_GS_DISPATCH_MODE_DUAL_INSTANCE :
+          GEN7_GS_DISPATCH_MODE_DUAL_OBJECT) |
          GEN6_GS_STATISTICS_ENABLE |
          (brw->gs.prog_data->include_primitive_id ?
           GEN7_GS_INCLUDE_PRIMITIVE_ID : 0) |

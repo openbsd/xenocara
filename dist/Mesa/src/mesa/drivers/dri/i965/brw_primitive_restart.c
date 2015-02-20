@@ -62,7 +62,8 @@ can_cut_index_handle_restart_index(struct gl_context *ctx,
       cut_index_will_work = ctx->Array.RestartIndex == 0xffffffff;
       break;
    default:
-      unreachable("not reached");
+      cut_index_will_work = false;
+      assert(0);
    }
 
    return cut_index_will_work;
@@ -135,6 +136,14 @@ brw_handle_primitive_restart(struct gl_context *ctx,
 
    /* We only need to handle cases where there is an index buffer. */
    if (ib == NULL) {
+      return GL_FALSE;
+   }
+
+   /* If the driver has requested software handling of primitive restarts,
+    * then the VBO module has already taken care of things, and we can
+    * just draw as normal.
+    */
+   if (ctx->Const.PrimitiveRestartInSoftware) {
       return GL_FALSE;
    }
 

@@ -53,15 +53,12 @@ nvc0_mt_choose_storage_type(struct nv50_miptree *mt, boolean compressed)
       else
          tile_flags = 0x01;
       break;
-   case PIPE_FORMAT_X8Z24_UNORM:
-   case PIPE_FORMAT_S8X24_UINT:
    case PIPE_FORMAT_S8_UINT_Z24_UNORM:
       if (compressed)
          tile_flags = 0x51 + ms;
       else
          tile_flags = 0x46;
       break;
-   case PIPE_FORMAT_X24S8_UINT:
    case PIPE_FORMAT_Z24X8_UNORM:
    case PIPE_FORMAT_Z24_UNORM_S8_UINT:
       if (compressed)
@@ -75,7 +72,6 @@ nvc0_mt_choose_storage_type(struct nv50_miptree *mt, boolean compressed)
       else
          tile_flags = 0x7b;
       break;
-   case PIPE_FORMAT_X32_S8X24_UINT:
    case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
       if (compressed)
          tile_flags = 0xce + ms;
@@ -299,7 +295,7 @@ nvc0_miptree_create(struct pipe_screen *pscreen,
    }
    bo_config.nvc0.tile_mode = mt->level[0].tile_mode;
 
-   if (!bo_config.nvc0.memtype && (pt->usage == PIPE_USAGE_STAGING || pt->bind & PIPE_BIND_SHARED))
+   if (!bo_config.nvc0.memtype && pt->usage == PIPE_USAGE_STAGING)
       mt->base.domain = NOUVEAU_BO_GART;
    else
       mt->base.domain = NOUVEAU_BO_VRAM;

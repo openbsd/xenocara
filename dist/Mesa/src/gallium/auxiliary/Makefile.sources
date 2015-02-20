@@ -1,3 +1,5 @@
+SUBDIRS := pipe-loader
+
 C_SOURCES := \
 	cso_cache/cso_cache.c \
 	cso_cache/cso_context.c \
@@ -75,7 +77,6 @@ C_SOURCES := \
 	tgsi/tgsi_exec.c \
 	tgsi/tgsi_info.c \
 	tgsi/tgsi_iterate.c \
-	tgsi/tgsi_lowering.c \
 	tgsi/tgsi_parse.c \
 	tgsi/tgsi_sanity.c \
 	tgsi/tgsi_scan.c \
@@ -112,7 +113,6 @@ C_SOURCES := \
 	util/u_format_s3tc.c \
 	util/u_format_rgtc.c \
 	util/u_format_etc.c \
-	util/u_format_bptc.c \
 	util/u_format_tests.c \
 	util/u_format_yuv.c \
 	util/u_format_zs.c \
@@ -162,6 +162,7 @@ C_SOURCES := \
 GENERATED_SOURCES := \
 	indices/u_indices_gen.c \
 	indices/u_unfilled_gen.c \
+	util/u_format_srgb.c \
 	util/u_format_table.c
 
 GALLIVM_SOURCES := \

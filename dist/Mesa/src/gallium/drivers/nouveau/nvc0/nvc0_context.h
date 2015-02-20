@@ -10,6 +10,10 @@
 #include "util/u_inlines.h"
 #include "util/u_dynarray.h"
 
+#ifdef NVC0_WITH_DRAW_MODULE
+#include "draw/draw_vertex.h"
+#endif
+
 #include "nvc0/nvc0_winsys.h"
 #include "nvc0/nvc0_stateobj.h"
 #include "nvc0/nvc0_screen.h"
@@ -176,10 +180,8 @@ struct nvc0_context {
    struct pipe_blend_color blend_colour;
    struct pipe_stencil_ref stencil_ref;
    struct pipe_poly_stipple stipple;
-   struct pipe_scissor_state scissors[NVC0_MAX_VIEWPORTS];
-   unsigned scissors_dirty;
-   struct pipe_viewport_state viewports[NVC0_MAX_VIEWPORTS];
-   unsigned viewports_dirty;
+   struct pipe_scissor_state scissor;
+   struct pipe_viewport_state viewport;
    struct pipe_clip_state clip;
 
    unsigned sample_mask;
@@ -192,17 +194,21 @@ struct nvc0_context {
    unsigned num_tfbbufs;
 
    struct pipe_query *cond_query;
-   boolean cond_cond; /* inverted rendering condition */
+   boolean cond_cond;
    uint cond_mode;
-   uint32_t cond_condmode; /* the calculated condition */
 
    struct nvc0_blitctx *blit;
 
    struct pipe_surface *surfaces[2][NVC0_MAX_SURFACE_SLOTS];
    uint16_t surfaces_dirty[2];
    uint16_t surfaces_valid[2];
+   uint32_t vport_int[2];
 
    struct util_dynarray global_residents;
+
+#ifdef NVC0_WITH_DRAW_MODULE
+   struct draw_context *draw;
+#endif
 };
 
 static INLINE struct nvc0_context *

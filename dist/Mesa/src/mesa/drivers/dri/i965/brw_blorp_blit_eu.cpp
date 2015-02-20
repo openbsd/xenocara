@@ -21,18 +21,13 @@
  * IN THE SOFTWARE.
  */
 
-#include "util/ralloc.h"
+#include "glsl/ralloc.h"
 #include "brw_blorp_blit_eu.h"
 #include "brw_blorp.h"
-#include "brw_cfg.h"
 
-brw_blorp_eu_emitter::brw_blorp_eu_emitter(struct brw_context *brw,
-                                           bool debug_flag)
-   : mem_ctx(ralloc_context(NULL)),
-     generator(brw, mem_ctx,
-               rzalloc(mem_ctx, struct brw_wm_prog_key),
-               rzalloc(mem_ctx, struct brw_wm_prog_data),
-               NULL, NULL, false, debug_flag)
+brw_blorp_eu_emitter::brw_blorp_eu_emitter(struct brw_context *brw)
+   : mem_ctx(ralloc_context(NULL)), c(rzalloc(mem_ctx, struct brw_wm_compile)),
+     generator(brw, c, NULL, NULL, false)
 {
 }
 
@@ -42,12 +37,19 @@ brw_blorp_eu_emitter::~brw_blorp_eu_emitter()
 }
 
 const unsigned *
-brw_blorp_eu_emitter::get_program(unsigned *program_size)
+brw_blorp_eu_emitter::get_program(unsigned *program_size, FILE *dump_file)
 {
-   cfg_t cfg(&insts);
-   generator.generate_code(&cfg, 16);
+   const unsigned *res;
 
-   return generator.get_assembly(program_size);
+   if (unlikely(INTEL_DEBUG & DEBUG_BLORP)) {
+      fprintf(stderr, "Native code for BLORP blit:\n");
+      res = generator.generate_assembly(NULL, &insts, program_size, dump_file);
+      fprintf(stderr, "\n");
+   } else {
+      res = generator.generate_assembly(NULL, &insts, program_size);
+   }
+
+   return res;
 }
 
 /**
@@ -82,11 +84,11 @@ brw_blorp_eu_emitter::emit_texture_lookup(const struct brw_reg &dst,
                                           unsigned base_mrf,
                                           unsigned msg_length)
 {
-   fs_inst *inst = new (mem_ctx) fs_inst(op, dst, brw_message_reg(base_mrf),
-                                         fs_reg(0u));
+   fs_inst *inst = new (mem_ctx) fs_inst(op, dst, brw_message_reg(base_mrf));
 
    inst->base_mrf = base_mrf;
    inst->mlen = msg_length;
+   inst->sampler = 0;
    inst->header_present = false;
 
    insts.push_tail(inst);
@@ -98,7 +100,7 @@ brw_blorp_eu_emitter::emit_render_target_write(const struct brw_reg &src0,
                                                unsigned msg_length,
                                                bool use_header)
 {
-   fs_inst *inst = new (mem_ctx) fs_inst(FS_OPCODE_BLORP_FB_WRITE, 16);
+   fs_inst *inst = new (mem_ctx) fs_inst(FS_OPCODE_BLORP_FB_WRITE);
 
    inst->src[0] = src0;
    inst->base_mrf = msg_reg_nr;
@@ -121,7 +123,7 @@ brw_blorp_eu_emitter::emit_combine(enum opcode combine_opcode,
 }
 
 fs_inst *
-brw_blorp_eu_emitter::emit_cmp(enum brw_conditional_mod op,
+brw_blorp_eu_emitter::emit_cmp(int op,
                                const struct brw_reg &x,
                                const struct brw_reg &y)
 {

@@ -141,9 +141,9 @@ ValueRef::set(Value *refVal)
    if (value == refVal)
       return;
    if (value)
-      value->uses.erase(this);
+      value->uses.remove(this);
    if (refVal)
-      refVal->uses.insert(this);
+      refVal->uses.push_back(this);
 
    value = refVal;
 }
@@ -206,7 +206,7 @@ ValueDef::replace(const ValueRef &repVal, bool doSet)
       return;
 
    while (!value->uses.empty()) {
-      ValueRef *ref = *value->uses.begin();
+      ValueRef *ref = value->uses.front();
       ref->set(repVal.get());
       ref->mod *= repVal.mod;
    }

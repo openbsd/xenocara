@@ -25,10 +25,25 @@
 
 LOCAL_PATH := $(call my-dir)
 
-include $(LOCAL_PATH)/Makefile.sources
-
-SOURCES := \
-	${LIBEGL_C_FILES}
+# from Makefile
+SOURCES = \
+	eglapi.c \
+	eglarray.c \
+	eglconfig.c \
+	eglcontext.c \
+	eglcurrent.c \
+	egldisplay.c \
+	egldriver.c \
+	eglfallbacks.c \
+	eglglobals.c \
+	eglimage.c \
+	egllog.c \
+	eglmisc.c \
+	eglmode.c \
+	eglscreen.c \
+	eglstring.c \
+	eglsurface.c \
+	eglsync.c
 
 # ---------------------------------------
 # Build libGLES_mesa
@@ -143,7 +158,6 @@ LOCAL_STATIC_LIBRARIES := \
 	libmesa_st_egl \
 	$(gallium_DRIVERS) \
 	libmesa_st_mesa \
-	libmesa_util \
 	libmesa_glsl \
 	libmesa_glsl_utils \
 	libmesa_gallium \
@@ -153,7 +167,7 @@ endif # MESA_BUILD_GALLIUM
 
 LOCAL_STATIC_LIBRARIES := \
 	$(LOCAL_STATIC_LIBRARIES) \
-	libmesa_loader
+	libloader
 
 LOCAL_MODULE := libGLES_mesa
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/egl

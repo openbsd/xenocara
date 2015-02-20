@@ -61,7 +61,7 @@ brw_upload_binding_table(struct brw_context *brw,
 
    if (prog_data->binding_table.size_bytes == 0) {
       /* There are no surfaces; skip making the binding table altogether. */
-      if (stage_state->bind_bo_offset == 0 && brw->gen < 9)
+      if (stage_state->bind_bo_offset == 0)
          return;
 
       stage_state->bind_bo_offset = 0;
@@ -215,10 +215,7 @@ gen6_upload_binding_table_pointers(struct brw_context *brw)
              GEN6_BINDING_TABLE_MODIFY_PS |
              (4 - 2));
    OUT_BATCH(brw->vs.base.bind_bo_offset); /* vs */
-   if (brw->ff_gs.prog_active)
-      OUT_BATCH(brw->ff_gs.bind_bo_offset); /* gs */
-   else
-      OUT_BATCH(brw->gs.base.bind_bo_offset); /* gs */
+   OUT_BATCH(brw->ff_gs.bind_bo_offset); /* gs */
    OUT_BATCH(brw->wm.base.bind_bo_offset); /* wm/ps */
    ADVANCE_BATCH();
 }
@@ -235,5 +232,7 @@ const struct brw_tracked_state gen6_binding_table_pointers = {
    },
    .emit = gen6_upload_binding_table_pointers,
 };
+
+/* Gen7+ code lives in gen7_{vs,gs,wm}_state.c. */
 
 /** @} */

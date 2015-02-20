@@ -139,7 +139,7 @@ nouveau_codegen(int chipset, int type, struct tgsi_token tokens[],
 int
 main(int argc, char *argv[])
 {
-   struct tgsi_token tokens[4096];
+   struct tgsi_token tokens[1024];
    int i, chipset = 0, type = -1;
    const char *filename = NULL;
    FILE *f;
@@ -195,10 +195,8 @@ main(int argc, char *argv[])
       return 1;
    }
 
-   if (!tgsi_text_translate(text, tokens, Elements(tokens))) {
-      _debug_printf("Failed to parse TGSI shader\n");
+   if (!tgsi_text_translate(text, tokens, Elements(tokens)))
       return 1;
-   }
 
    if (chipset >= 0x50) {
       i = nouveau_codegen(chipset, type, tokens, &size, &code);

@@ -32,8 +32,10 @@
  */
 
 #include "ir.h"
+#include "ir_visitor.h"
 #include "ir_rvalue_visitor.h"
 #include "ir_expression_flattening.h"
+#include "glsl_types.h"
 
 class ir_expression_flattening_visitor : public ir_rvalue_visitor {
 public:
@@ -57,7 +59,9 @@ do_expression_flattening(exec_list *instructions,
 {
    ir_expression_flattening_visitor v(predicate);
 
-   foreach_in_list(ir_instruction, ir, instructions) {
+   foreach_list(n, instructions) {
+      ir_instruction *ir = (ir_instruction *) n;
+
       ir->accept(&v);
    }
 }

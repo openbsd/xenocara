@@ -192,6 +192,18 @@ llvm_middle_end_prepare( struct draw_pt_middle_end *middle,
     */
    fpme->vertex_size = sizeof(struct vertex_header) + nr * 4 * sizeof(float);
 
+   /* Get the number of float[4] attributes per vertex.
+    * Note: this must be done after draw_pt_emit_prepare() since that
+    * can effect the vertex size.
+    */
+   nr = MAX2(vs->info.num_inputs, draw_total_vs_outputs(draw));
+
+   /* Always leave room for the vertex header whether we need it or
+    * not.  It's hard to get rid of it in particular because of the
+    * viewport code in draw_pt_post_vs.c.
+    */
+   fpme->vertex_size = sizeof(struct vertex_header) + nr * 4 * sizeof(float);
+
    /* return even number */
    *max_vertices = *max_vertices & ~1;
 
@@ -375,8 +387,7 @@ llvm_pipeline_generic(struct draw_pt_middle_end *middle,
                                        fpme->vertex_size,
                                        draw->pt.vertex_buffer,
                                        draw->instance_id,
-                                       draw->start_index,
-                                       draw->start_instance);
+                                       draw->start_index);
    else
       clipped = fpme->current_variant->jit_func_elts( &fpme->llvm->jit_context,
                                             llvm_vert_info.verts,
@@ -387,8 +398,7 @@ llvm_pipeline_generic(struct draw_pt_middle_end *middle,
                                             fpme->vertex_size,
                                             draw->pt.vertex_buffer,
                                             draw->instance_id,
-                                            draw->pt.user.eltBias,
-                                            draw->start_instance);
+                                            draw->pt.user.eltBias);
 
    /* Finished with fetch and vs:
     */

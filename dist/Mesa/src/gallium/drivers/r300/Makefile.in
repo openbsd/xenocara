@@ -83,21 +83,20 @@ DIST_COMMON = $(srcdir)/Makefile.sources \
 	$(top_srcdir)/src/gallium/Automake.inc $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/bin/depcomp \
 	$(top_srcdir)/bin/test-driver
-@HAVE_DRISW_TRUE@am__append_1 = \
-@HAVE_DRISW_TRUE@	$(top_builddir)/src/gallium/winsys/sw/dri/libswdri.la
-
-@NEED_WINSYS_XLIB_TRUE@am__append_2 = \
-@NEED_WINSYS_XLIB_TRUE@	$(top_builddir)/src/gallium/winsys/sw/xlib/libws_xlib.la \
-@NEED_WINSYS_XLIB_TRUE@	-lX11 -lXext -lXfixes \
-@NEED_WINSYS_XLIB_TRUE@	$(LIBDRM_LIBS)
-
+@HAVE_MESA_LLVM_TRUE@am__append_1 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_2 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_3 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_4 = $(LLVM_LDFLAGS)
+@HAVE_MESA_LLVM_TRUE@am__append_5 = $(LLVM_LIBS)
+@HAVE_MESA_LLVM_TRUE@am__append_6 = $(LLVM_LIBS)
+@HAVE_MESA_LLVM_TRUE@am__append_7 = $(LLVM_LIBS)
+@HAVE_MESA_LLVM_TRUE@am__append_8 = $(LLVM_LIBS)
 check_PROGRAMS = r300_compiler_tests$(EXEEXT)
 TESTS = r300_compiler_tests$(EXEEXT)
 subdir = src/gallium/drivers/r300
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_gnu_make.m4 \
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_check_compile_flag.m4 \
 	$(top_srcdir)/m4/ax_gcc_builtin.m4 \
-	$(top_srcdir)/m4/ax_gcc_func_attribute.m4 \
 	$(top_srcdir)/m4/ax_prog_bison.m4 \
 	$(top_srcdir)/m4/ax_prog_flex.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/libtool.m4 \
@@ -110,59 +109,62 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-libr300_la_LIBADD =
-am__dirstamp = $(am__leading_dot)dirstamp
-am__objects_1 = r300_blit.lo r300_chipset.lo r300_context.lo \
-	r300_debug.lo r300_emit.lo r300_flush.lo r300_fs.lo \
-	r300_hyperz.lo r300_query.lo r300_render.lo \
-	r300_render_stencilref.lo r300_render_translate.lo \
-	r300_resource.lo r300_screen_buffer.lo r300_screen.lo \
-	r300_state.lo r300_state_derived.lo r300_texture.lo \
-	r300_texture_desc.lo r300_tgsi_to_rc.lo r300_transfer.lo \
-	r300_vs.lo r300_vs_draw.lo compiler/memory_pool.lo \
-	compiler/r300_fragprog.lo compiler/r300_fragprog_emit.lo \
-	compiler/r300_fragprog_swizzle.lo compiler/r3xx_fragprog.lo \
-	compiler/r3xx_vertprog.lo compiler/r3xx_vertprog_dump.lo \
-	compiler/r500_fragprog.lo compiler/r500_fragprog_emit.lo \
-	compiler/radeon_code.lo compiler/radeon_compiler.lo \
-	compiler/radeon_compiler_util.lo compiler/radeon_dataflow.lo \
-	compiler/radeon_dataflow_deadcode.lo \
-	compiler/radeon_dataflow_swizzles.lo \
-	compiler/radeon_emulate_branches.lo \
-	compiler/radeon_emulate_loops.lo \
-	compiler/radeon_inline_literals.lo compiler/radeon_list.lo \
-	compiler/radeon_opcodes.lo compiler/radeon_optimize.lo \
-	compiler/radeon_pair_dead_sources.lo \
-	compiler/radeon_pair_regalloc.lo \
-	compiler/radeon_pair_schedule.lo \
-	compiler/radeon_pair_translate.lo \
-	compiler/radeon_program_alu.lo compiler/radeon_program.lo \
-	compiler/radeon_program_pair.lo \
-	compiler/radeon_program_print.lo \
-	compiler/radeon_program_tex.lo \
-	compiler/radeon_remove_constants.lo \
-	compiler/radeon_rename_regs.lo compiler/radeon_variable.lo \
-	compiler/radeon_vert_fc.lo
-am_libr300_la_OBJECTS = $(am__objects_1)
-libr300_la_OBJECTS = $(am_libr300_la_OBJECTS)
+libr300_helper_la_LIBADD =
+am__objects_1 = ralloc.lo register_allocate.lo
+am_libr300_helper_la_OBJECTS = $(am__objects_1)
+libr300_helper_la_OBJECTS = $(am_libr300_helper_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-am__objects_2 = compiler/tests/r300_compiler_tests-r300_compiler_tests.$(OBJEXT) \
+libr300_la_LIBADD =
+am__dirstamp = $(am__leading_dot)dirstamp
+am__objects_2 = r300_blit.lo r300_chipset.lo r300_context.lo \
+	r300_debug.lo r300_emit.lo r300_flush.lo r300_fs.lo \
+	r300_hyperz.lo r300_query.lo r300_render.lo \
+	r300_render_stencilref.lo r300_render_translate.lo \
+	r300_resource.lo r300_screen.lo r300_screen_buffer.lo \
+	r300_state.lo r300_state_derived.lo r300_vs.lo r300_vs_draw.lo \
+	r300_texture.lo r300_texture_desc.lo r300_tgsi_to_rc.lo \
+	r300_transfer.lo compiler/radeon_code.lo \
+	compiler/radeon_compiler.lo compiler/radeon_compiler_util.lo \
+	compiler/radeon_emulate_branches.lo \
+	compiler/radeon_emulate_loops.lo \
+	compiler/radeon_inline_literals.lo compiler/radeon_program.lo \
+	compiler/radeon_program_print.lo compiler/radeon_opcodes.lo \
+	compiler/radeon_program_alu.lo compiler/radeon_program_pair.lo \
+	compiler/radeon_program_tex.lo \
+	compiler/radeon_pair_translate.lo \
+	compiler/radeon_pair_schedule.lo \
+	compiler/radeon_pair_regalloc.lo \
+	compiler/radeon_pair_dead_sources.lo \
+	compiler/radeon_dataflow.lo \
+	compiler/radeon_dataflow_deadcode.lo \
+	compiler/radeon_dataflow_swizzles.lo compiler/radeon_list.lo \
+	compiler/radeon_optimize.lo \
+	compiler/radeon_remove_constants.lo \
+	compiler/radeon_rename_regs.lo compiler/radeon_vert_fc.lo \
+	compiler/radeon_variable.lo compiler/r3xx_fragprog.lo \
+	compiler/r300_fragprog.lo compiler/r300_fragprog_swizzle.lo \
+	compiler/r300_fragprog_emit.lo compiler/r500_fragprog.lo \
+	compiler/r500_fragprog_emit.lo compiler/r3xx_vertprog.lo \
+	compiler/r3xx_vertprog_dump.lo compiler/memory_pool.lo
+am_libr300_la_OBJECTS = $(am__objects_2)
+libr300_la_OBJECTS = $(am_libr300_la_OBJECTS)
+am__objects_3 = compiler/tests/r300_compiler_tests-r300_compiler_tests.$(OBJEXT) \
 	compiler/tests/r300_compiler_tests-radeon_compiler_optimize_tests.$(OBJEXT) \
 	compiler/tests/r300_compiler_tests-radeon_compiler_regalloc_tests.$(OBJEXT) \
 	compiler/tests/r300_compiler_tests-radeon_compiler_util_tests.$(OBJEXT) \
 	compiler/tests/r300_compiler_tests-rc_test_helpers.$(OBJEXT) \
 	compiler/tests/r300_compiler_tests-unit_test.$(OBJEXT)
-am_r300_compiler_tests_OBJECTS = $(am__objects_2)
+am_r300_compiler_tests_OBJECTS = $(am__objects_3)
 r300_compiler_tests_OBJECTS = $(am_r300_compiler_tests_OBJECTS)
 am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
-r300_compiler_tests_DEPENDENCIES = libr300.la \
+r300_compiler_tests_DEPENDENCIES = libr300.la libr300-helper.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/util/libmesautil.la $(am__DEPENDENCIES_2)
+	$(am__DEPENDENCIES_2)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -197,8 +199,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libr300_la_SOURCES) $(r300_compiler_tests_SOURCES)
-DIST_SOURCES = $(libr300_la_SOURCES) $(r300_compiler_tests_SOURCES)
+SOURCES = $(libr300_helper_la_SOURCES) $(libr300_la_SOURCES) \
+	$(r300_compiler_tests_SOURCES)
+DIST_SOURCES = $(libr300_helper_la_SOURCES) $(libr300_la_SOURCES) \
+	$(r300_compiler_tests_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -436,7 +440,6 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BSYMBOLIC = @BSYMBOLIC@
 CC = @CC@
 CCAS = @CCAS@
 CCASDEPMODE = @CCASDEPMODE@
@@ -452,7 +455,6 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-D3D_DRIVER_INSTALL_DIR = @D3D_DRIVER_INSTALL_DIR@
 DEFINES = @DEFINES@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -475,6 +477,7 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGL_CFLAGS = @EGL_CFLAGS@
 EGL_CLIENT_APIS = @EGL_CLIENT_APIS@
+EGL_DRIVER_INSTALL_DIR = @EGL_DRIVER_INSTALL_DIR@
 EGL_LIB_DEPS = @EGL_LIB_DEPS@
 EGL_NATIVE_PLATFORM = @EGL_NATIVE_PLATFORM@
 EGREP = @EGREP@
@@ -547,14 +550,11 @@ LLVM_LIBS = @LLVM_LIBS@
 LLVM_VERSION = @LLVM_VERSION@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAKE = @MAKE@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MESA_LLVM = @MESA_LLVM@
 MKDIR_P = @MKDIR_P@
-NINE_MAJOR = @NINE_MAJOR@
-NINE_MINOR = @NINE_MINOR@
-NINE_TINY = @NINE_TINY@
-NINE_VERSION = @NINE_VERSION@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NOUVEAU_CFLAGS = @NOUVEAU_CFLAGS@
@@ -565,8 +565,10 @@ OMX_CFLAGS = @OMX_CFLAGS@
 OMX_LIBS = @OMX_LIBS@
 OMX_LIB_INSTALL_DIR = @OMX_LIB_INSTALL_DIR@
 OPENCL_LIBNAME = @OPENCL_LIBNAME@
+OPENCL_LIB_INSTALL_DIR = @OPENCL_LIB_INSTALL_DIR@
 OSMESA_LIB = @OSMESA_LIB@
 OSMESA_LIB_DEPS = @OSMESA_LIB_DEPS@
+OSMESA_MESA_DEPS = @OSMESA_MESA_DEPS@
 OSMESA_PC_LIB_PRIV = @OSMESA_PC_LIB_PRIV@
 OSMESA_PC_REQ = @OSMESA_PC_REQ@
 OSMESA_VERSION = @OSMESA_VERSION@
@@ -580,6 +582,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PERL = @PERL@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
@@ -598,13 +601,7 @@ SELINUX_CFLAGS = @SELINUX_CFLAGS@
 SELINUX_LIBS = @SELINUX_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SSE41_CFLAGS = @SSE41_CFLAGS@
 STRIP = @STRIP@
-VA_CFLAGS = @VA_CFLAGS@
-VA_LIBS = @VA_LIBS@
-VA_LIB_INSTALL_DIR = @VA_LIB_INSTALL_DIR@
-VA_MAJOR = @VA_MAJOR@
-VA_MINOR = @VA_MINOR@
 VDPAU_CFLAGS = @VDPAU_CFLAGS@
 VDPAU_LIBS = @VDPAU_LIBS@
 VDPAU_LIB_INSTALL_DIR = @VDPAU_LIB_INSTALL_DIR@
@@ -668,7 +665,6 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 htmldir = @htmldir@
-ifGNUmake = @ifGNUmake@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
@@ -698,118 +694,78 @@ top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = subdir-objects
 C_SOURCES := \
 	r300_blit.c \
-	r300_cb.h \
 	r300_chipset.c \
-	r300_chipset.h \
 	r300_context.c \
-	r300_context.h \
-	r300_cs.h \
 	r300_debug.c \
-	r300_defines.h \
 	r300_emit.c \
-	r300_emit.h \
 	r300_flush.c \
 	r300_fs.c \
-	r300_fs.h \
 	r300_hyperz.c \
-	r300_public.h \
 	r300_query.c \
-	r300_reg.h \
 	r300_render.c \
 	r300_render_stencilref.c \
 	r300_render_translate.c \
 	r300_resource.c \
-	r300_screen_buffer.c \
-	r300_screen_buffer.h \
 	r300_screen.c \
-	r300_screen.h \
-	r300_shader_semantics.h \
+	r300_screen_buffer.c \
 	r300_state.c \
 	r300_state_derived.c \
-	r300_state_inlines.h \
-	r300_texture.c \
-	r300_texture_desc.c \
-	r300_texture_desc.h \
-	r300_texture.h \
-	r300_tgsi_to_rc.c \
-	r300_tgsi_to_rc.h \
-	r300_transfer.c \
-	r300_transfer.h \
 	r300_vs.c \
 	r300_vs_draw.c \
-	r300_vs.h \
+	r300_texture.c \
+	r300_texture_desc.c \
+	r300_tgsi_to_rc.c \
+	r300_transfer.c \
 	\
-	compiler/memory_pool.c \
-	compiler/memory_pool.h \
-	compiler/r300_fragprog.c \
-	compiler/r300_fragprog_emit.c \
-	compiler/r300_fragprog.h \
-	compiler/r300_fragprog_swizzle.c \
-	compiler/r300_fragprog_swizzle.h \
-	compiler/r3xx_fragprog.c \
-	compiler/r3xx_vertprog.c \
-	compiler/r3xx_vertprog_dump.c \
-	compiler/r500_fragprog.c \
-	compiler/r500_fragprog_emit.c \
-	compiler/r500_fragprog.h \
 	compiler/radeon_code.c \
-	compiler/radeon_code.h \
 	compiler/radeon_compiler.c \
-	compiler/radeon_compiler.h \
 	compiler/radeon_compiler_util.c \
-	compiler/radeon_compiler_util.h \
+	compiler/radeon_emulate_branches.c \
+	compiler/radeon_emulate_loops.c \
+	compiler/radeon_inline_literals.c \
+	compiler/radeon_program.c \
+	compiler/radeon_program_print.c \
+	compiler/radeon_opcodes.c \
+	compiler/radeon_program_alu.c \
+	compiler/radeon_program_pair.c \
+	compiler/radeon_program_tex.c \
+	compiler/radeon_pair_translate.c \
+	compiler/radeon_pair_schedule.c \
+	compiler/radeon_pair_regalloc.c \
+	compiler/radeon_pair_dead_sources.c \
 	compiler/radeon_dataflow.c \
 	compiler/radeon_dataflow_deadcode.c \
-	compiler/radeon_dataflow.h \
 	compiler/radeon_dataflow_swizzles.c \
-	compiler/radeon_emulate_branches.c \
-	compiler/radeon_emulate_branches.h \
-	compiler/radeon_emulate_loops.c \
-	compiler/radeon_emulate_loops.h \
-	compiler/radeon_inline_literals.c \
 	compiler/radeon_list.c \
-	compiler/radeon_list.h \
-	compiler/radeon_opcodes.c \
-	compiler/radeon_opcodes.h \
 	compiler/radeon_optimize.c \
-	compiler/radeon_pair_dead_sources.c \
-	compiler/radeon_pair_regalloc.c \
-	compiler/radeon_pair_schedule.c \
-	compiler/radeon_pair_translate.c \
-	compiler/radeon_program_alu.c \
-	compiler/radeon_program_alu.h \
-	compiler/radeon_program.c \
-	compiler/radeon_program_constants.h \
-	compiler/radeon_program.h \
-	compiler/radeon_program_pair.c \
-	compiler/radeon_program_pair.h \
-	compiler/radeon_program_print.c \
-	compiler/radeon_program_tex.c \
-	compiler/radeon_program_tex.h \
-	compiler/radeon_regalloc.h \
 	compiler/radeon_remove_constants.c \
-	compiler/radeon_remove_constants.h \
 	compiler/radeon_rename_regs.c \
-	compiler/radeon_rename_regs.h \
-	compiler/radeon_swizzle.h \
+	compiler/radeon_vert_fc.c \
 	compiler/radeon_variable.c \
-	compiler/radeon_variable.h \
-	compiler/radeon_vert_fc.c
+	compiler/r3xx_fragprog.c \
+	compiler/r300_fragprog.c \
+	compiler/r300_fragprog_swizzle.c \
+	compiler/r300_fragprog_emit.c \
+	compiler/r500_fragprog.c \
+	compiler/r500_fragprog_emit.c \
+	compiler/r3xx_vertprog.c \
+	compiler/r3xx_vertprog_dump.c \
+	compiler/memory_pool.c
 
 COMPILER_TESTS_SOURCES := \
 	compiler/tests/r300_compiler_tests.c \
-	compiler/tests/r300_compiler_tests.h \
 	compiler/tests/radeon_compiler_optimize_tests.c \
 	compiler/tests/radeon_compiler_regalloc_tests.c \
 	compiler/tests/radeon_compiler_util_tests.c \
 	compiler/tests/rc_test_helpers.c \
-	compiler/tests/rc_test_helpers.h \
-	compiler/tests/unit_test.c \
-	compiler/tests/unit_test.h
+	compiler/tests/unit_test.c
+
+HELPER_SOURCES := \
+	ralloc.c \
+	register_allocate.c
 
 GALLIUM_CFLAGS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	$(DEFINES)
@@ -821,29 +777,37 @@ GALLIUM_CFLAGS = \
 # preprocessor is determined by the ordering of the -I flags.
 GALLIUM_DRIVER_CFLAGS = \
 	-I$(srcdir)/include \
-	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
-	-I$(top_srcdir)/src/gallium/winsys \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS)
 
 GALLIUM_DRIVER_CXXFLAGS = \
 	-I$(srcdir)/include \
-	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src/gallium/include \
+	-I$(top_srcdir)/src/gallium/auxiliary \
+	-I$(top_srcdir)/src/gallium/drivers \
+	$(DEFINES) \
+	$(VISIBILITY_CXXFLAGS)
+
+GALLIUM_DRI_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
 	-I$(top_srcdir)/src/gallium/winsys \
+	-I$(top_srcdir)/src/mesa \
+	-I$(top_srcdir)/src/mapi \
 	$(DEFINES) \
-	$(VISIBILITY_CXXFLAGS)
+	$(PTHREAD_CFLAGS) \
+	$(LIBDRM_CFLAGS) \
+	$(VISIBILITY_CFLAGS)
 
-GALLIUM_TARGET_CFLAGS = \
+GALLIUM_VIDEO_CFLAGS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src/loader \
 	-I$(top_srcdir)/src/gallium/include \
 	-I$(top_srcdir)/src/gallium/auxiliary \
 	-I$(top_srcdir)/src/gallium/drivers \
@@ -853,12 +817,45 @@ GALLIUM_TARGET_CFLAGS = \
 	$(LIBDRM_CFLAGS) \
 	$(VISIBILITY_CFLAGS)
 
+GALLIUM_DRI_LINKER_FLAGS = -shared -shrext .so -module -avoid-version \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/dri.sym \
+	$(GC_SECTIONS) $(am__append_1)
+GALLIUM_VDPAU_LINKER_FLAGS = -shared -module -no-undefined \
+	-version-number $(VDPAU_MAJOR):$(VDPAU_MINOR) \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/vdpau.sym \
+	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_2)
+GALLIUM_XVMC_LINKER_FLAGS = -shared -module -no-undefined \
+	-version-number $(XVMC_MAJOR):$(XVMC_MINOR) \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/xvmc.sym \
+	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_3)
+GALLIUM_OMX_LINKER_FLAGS = -shared -module -no-undefined \
+	-avoid-version \
+	-Wl,--version-script=$(top_srcdir)/src/gallium/targets/omx.sym \
+	$(GC_SECTIONS) $(LD_NO_UNDEFINED) $(am__append_4)
 GALLIUM_COMMON_LIB_DEPS = \
 	-lm \
 	$(CLOCK_LIB) \
 	$(PTHREAD_LIBS) \
 	$(DLOPEN_LIBS)
 
+GALLIUM_DRI_LIB_DEPS = $(top_builddir)/src/mesa/libmesagallium.la \
+	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(SELINUX_LIBS) $(LIBDRM_LIBS) $(EXPAT_LIBS) \
+	$(GALLIUM_COMMON_LIB_DEPS) $(am__append_5)
+GALLIUM_VDPAU_LIB_DEPS =  \
+	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(top_builddir)/src/gallium/state_trackers/vdpau/libvdpautracker.la \
+	$(VDPAU_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
+	$(am__append_6)
+GALLIUM_XVMC_LIB_DEPS =  \
+	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(top_builddir)/src/gallium/state_trackers/xvmc/libxvmctracker.la \
+	$(XVMC_LIBS) $(LIBDRM_LIBS) $(GALLIUM_COMMON_LIB_DEPS) \
+	$(am__append_7)
+GALLIUM_OMX_LIB_DEPS =  \
+	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
+	$(top_builddir)/src/gallium/state_trackers/omx/libomxtracker.la \
+	$(OMX_LIBS) $(GALLIUM_COMMON_LIB_DEPS) $(am__append_8)
 GALLIUM_WINSYS_CFLAGS = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/gallium/include \
@@ -866,12 +863,7 @@ GALLIUM_WINSYS_CFLAGS = \
 	$(DEFINES) \
 	$(VISIBILITY_CFLAGS)
 
-GALLIUM_PIPE_LOADER_WINSYS_LIBS =  \
-	$(top_builddir)/src/gallium/winsys/sw/null/libws_null.la \
-	$(top_builddir)/src/gallium/winsys/sw/wrapper/libwsw.la \
-	$(am__append_1) $(am__append_2)
 AM_CFLAGS = \
-	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/mesa/program \
 	-I$(top_srcdir)/src/mesa \
 	-I$(top_srcdir)/src/glsl \
@@ -880,22 +872,25 @@ AM_CFLAGS = \
 	$(LLVM_CFLAGS) \
 	$(RADEON_CFLAGS)
 
-noinst_LTLIBRARIES = libr300.la
-r300_compiler_tests_LDADD = libr300.la \
+noinst_LTLIBRARIES = libr300.la libr300-helper.la
+r300_compiler_tests_LDADD = libr300.la libr300-helper.la \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
-	$(top_builddir)/src/util/libmesautil.la \
 	$(GALLIUM_COMMON_LIB_DEPS)
 
 r300_compiler_tests_CPPFLAGS = \
-	-DTEST_PATH=\"$(top_srcdir)/src/gallium/drivers/r300/compiler/tests\" \
 	-I$(top_srcdir)/src/gallium/drivers/r300/compiler
 
 r300_compiler_tests_SOURCES = $(COMPILER_TESTS_SOURCES)
 libr300_la_SOURCES = $(C_SOURCES)
-EXTRA_DIST = Android.mk \
-	compiler/tests/omod_two_writers.test \
-	compiler/tests/regalloc_tex_1d_swizzle.test
 
+# These two files are included in libmesagallium, which is included in the dri
+# targets. So, they were added directly to r300g the dri-r300 target would have
+# duplicated symbols, and if they weren't the other *-r300 targets would fail
+# with undefined symbols.
+#
+# Solve this by building them into a separate helper library that can be linked
+# in place of libmesagallium.
+libr300_helper_la_SOURCES = $(HELPER_SOURCES)
 all: all-am
 
 .SUFFIXES:
@@ -942,41 +937,20 @@ clean-noinstLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
+
+libr300-helper.la: $(libr300_helper_la_OBJECTS) $(libr300_helper_la_DEPENDENCIES) $(EXTRA_libr300_helper_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK)  $(libr300_helper_la_OBJECTS) $(libr300_helper_la_LIBADD) $(LIBS)
 compiler/$(am__dirstamp):
 	@$(MKDIR_P) compiler
 	@: > compiler/$(am__dirstamp)
 compiler/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) compiler/$(DEPDIR)
 	@: > compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/memory_pool.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/r300_fragprog.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/r300_fragprog_emit.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/r300_fragprog_swizzle.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/r3xx_fragprog.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/r3xx_vertprog.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/r3xx_vertprog_dump.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/r500_fragprog.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/r500_fragprog_emit.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_code.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_compiler.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_compiler_util.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_dataflow.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_dataflow_deadcode.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_dataflow_swizzles.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_emulate_branches.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
@@ -984,37 +958,61 @@ compiler/radeon_emulate_loops.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_inline_literals.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_list.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_opcodes.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_optimize.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_pair_dead_sources.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_pair_regalloc.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_pair_schedule.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_pair_translate.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_program_alu.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_program.lo: compiler/$(am__dirstamp) \
-	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_program_pair.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_program_print.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_opcodes.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_program_alu.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_program_pair.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_program_tex.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_pair_translate.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_pair_schedule.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_pair_regalloc.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_pair_dead_sources.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_dataflow.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_dataflow_deadcode.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_dataflow_swizzles.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_list.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_optimize.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_remove_constants.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_rename_regs.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/radeon_vert_fc.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
 compiler/radeon_variable.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
-compiler/radeon_vert_fc.lo: compiler/$(am__dirstamp) \
+compiler/r3xx_fragprog.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/r300_fragprog.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/r300_fragprog_swizzle.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/r300_fragprog_emit.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/r500_fragprog.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/r500_fragprog_emit.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/r3xx_vertprog.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/r3xx_vertprog_dump.lo: compiler/$(am__dirstamp) \
+	compiler/$(DEPDIR)/$(am__dirstamp)
+compiler/memory_pool.lo: compiler/$(am__dirstamp) \
 	compiler/$(DEPDIR)/$(am__dirstamp)
 
 libr300.la: $(libr300_la_OBJECTS) $(libr300_la_DEPENDENCIES) $(EXTRA_libr300_la_DEPENDENCIES) 
@@ -1089,6 +1087,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r300_transfer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r300_vs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r300_vs_draw.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ralloc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/register_allocate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/memory_pool.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/r300_fragprog.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compiler/$(DEPDIR)/r300_fragprog_emit.Plo@am__quote@
