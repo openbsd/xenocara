@@ -1,6 +1,0 @@
-{
-	global:
-		__vaDriverInit_*_*;
-	local:
-		*;
-};

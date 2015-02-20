@@ -26,9 +26,8 @@ extern "C" {
 #include "brw_context.h"
 }
 #include "brw_vs.h"
-#include "brw_gs.h"
+#include "brw_vec4_gs.h"
 #include "brw_fs.h"
-#include "brw_cfg.h"
 #include "glsl/ir_optimization.h"
 #include "glsl/glsl_parser_extras.h"
 #include "main/shaderapi.h"
@@ -47,6 +46,17 @@ brw_new_shader(struct gl_context *ctx, GLuint name, GLuint type)
    }
 
    return &shader->base;
+}
+
+struct gl_shader_program *
+brw_new_shader_program(struct gl_context *ctx, GLuint name)
+{
+   struct gl_shader_program *prog = rzalloc(NULL, struct gl_shader_program);
+   if (prog) {
+      prog->Name = name;
+      _mesa_init_shader_program(ctx, prog);
+   }
+   return prog;
 }
 
 /**
@@ -111,7 +121,7 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
 
    for (stage = 0; stage < ARRAY_SIZE(shProg->_LinkedShaders); stage++) {
       const struct gl_shader_compiler_options *options =
-         &ctx->Const.ShaderCompilerOptions[stage];
+         &ctx->ShaderCompilerOptions[stage];
       struct brw_shader *shader =
 	 (struct brw_shader *)shProg->_LinkedShaders[stage];
 
@@ -202,17 +212,17 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
        * too late.  At that point, the values for the built-in uniforms won't
        * get sent to the shader.
        */
-      foreach_in_list(ir_instruction, node, shader->base.ir) {
-	 ir_variable *var = node->as_variable();
+      foreach_list(node, shader->base.ir) {
+	 ir_variable *var = ((ir_instruction *) node)->as_variable();
 
 	 if ((var == NULL) || (var->data.mode != ir_var_uniform)
 	     || (strncmp(var->name, "gl_", 3) != 0))
 	    continue;
 
-	 const ir_state_slot *const slots = var->get_state_slots();
-	 assert(slots != NULL);
+	 const ir_state_slot *const slots = var->state_slots;
+	 assert(var->state_slots != NULL);
 
-	 for (unsigned int i = 0; i < var->get_num_state_slots(); i++) {
+	 for (unsigned int i = 0; i < var->num_state_slots; i++) {
 	    _mesa_add_state_reference(prog->Parameters,
 				      (gl_state_index *) slots[i].tokens);
 	 }
@@ -228,6 +238,12 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
       _mesa_reference_program(ctx, &shader->base.Program, prog);
 
       brw_add_texrect_params(prog);
+
+      /* This has to be done last.  Any operation that can cause
+       * prog->ParameterValues to get reallocated (e.g., anything that adds a
+       * program constant) has to happen before creating this linkage.
+       */
+      _mesa_associate_uniform_storage(ctx, shProg, prog->Parameters);
 
       _mesa_reference_program(ctx, &prog, NULL);
 
@@ -262,15 +278,15 @@ brw_link_shader(struct gl_context *ctx, struct gl_shader_program *shProg)
 }
 
 
-enum brw_reg_type
+int
 brw_type_for_base_type(const struct glsl_type *type)
 {
    switch (type->base_type) {
    case GLSL_TYPE_FLOAT:
       return BRW_REGISTER_TYPE_F;
    case GLSL_TYPE_INT:
-      return BRW_REGISTER_TYPE_D;
    case GLSL_TYPE_BOOL:
+      return BRW_REGISTER_TYPE_D;
    case GLSL_TYPE_UINT:
       return BRW_REGISTER_TYPE_UD;
    case GLSL_TYPE_ARRAY:
@@ -288,13 +304,14 @@ brw_type_for_base_type(const struct glsl_type *type)
    case GLSL_TYPE_VOID:
    case GLSL_TYPE_ERROR:
    case GLSL_TYPE_INTERFACE:
-      unreachable("not reached");
+      assert(!"not reached");
+      break;
    }
 
    return BRW_REGISTER_TYPE_F;
 }
 
-enum brw_conditional_mod
+uint32_t
 brw_conditional_for_comparison(unsigned int op)
 {
    switch (op) {
@@ -313,7 +330,8 @@ brw_conditional_for_comparison(unsigned int op)
    case ir_binop_any_nequal: /* same as nequal for scalars */
       return BRW_CONDITIONAL_NZ;
    default:
-      unreachable("not reached: bad operation for comparison");
+      assert(!"not reached: bad operation for comparison");
+      return BRW_CONDITIONAL_NZ;
    }
 }
 
@@ -342,20 +360,24 @@ brw_math_function(enum opcode op)
    case SHADER_OPCODE_INT_REMAINDER:
       return BRW_MATH_FUNCTION_INT_DIV_REMAINDER;
    default:
-      unreachable("not reached: unknown math function");
+      assert(!"not reached: unknown math function");
+      return 0;
    }
 }
 
 uint32_t
-brw_texture_offset(struct gl_context *ctx, int *offsets,
-                   unsigned num_components)
+brw_texture_offset(struct gl_context *ctx, ir_constant *offset)
 {
    /* If the driver does not support GL_ARB_gpu_shader5, the offset
     * must be constant.
     */
-   assert(offsets != NULL || ctx->Extensions.ARB_gpu_shader5);
+   assert(offset != NULL || ctx->Extensions.ARB_gpu_shader5);
 
-   if (!offsets) return 0;  /* nonconstant offset; caller will handle it. */
+   if (!offset) return 0;  /* nonconstant offset; caller will handle it. */
+
+   signed char offsets[3];
+   for (unsigned i = 0; i < offset->type->vector_elements; i++)
+      offsets[i] = (signed char) offset->value.i[i];
 
    /* Combine all three offsets into a single unsigned dword:
     *
@@ -364,7 +386,7 @@ brw_texture_offset(struct gl_context *ctx, int *offsets,
     *    bits  3:0 - R Offset (Z component)
     */
    unsigned offset_bits = 0;
-   for (unsigned i = 0; i < num_components; i++) {
+   for (unsigned i = 0; i < offset->type->vector_elements; i++) {
       const unsigned shift = 4 * (2 - i);
       offset_bits |= (offsets[i] << shift) & (0xF << shift);
    }
@@ -428,11 +450,6 @@ brw_instruction_name(enum opcode op)
       return "tg4";
    case SHADER_OPCODE_TG4_OFFSET:
       return "tg4_offset";
-   case SHADER_OPCODE_SHADER_TIME_ADD:
-      return "shader_time_add";
-
-   case SHADER_OPCODE_LOAD_PAYLOAD:
-      return "load_payload";
 
    case SHADER_OPCODE_GEN4_SCRATCH_READ:
       return "gen4_scratch_read";
@@ -494,32 +511,20 @@ brw_instruction_name(enum opcode op)
 
    case GS_OPCODE_URB_WRITE:
       return "gs_urb_write";
-   case GS_OPCODE_URB_WRITE_ALLOCATE:
-      return "gs_urb_write_allocate";
    case GS_OPCODE_THREAD_END:
       return "gs_thread_end";
    case GS_OPCODE_SET_WRITE_OFFSET:
       return "set_write_offset";
    case GS_OPCODE_SET_VERTEX_COUNT:
       return "set_vertex_count";
-   case GS_OPCODE_SET_DWORD_2:
-      return "set_dword_2";
+   case GS_OPCODE_SET_DWORD_2_IMMED:
+      return "set_dword_2_immed";
    case GS_OPCODE_PREPARE_CHANNEL_MASKS:
       return "prepare_channel_masks";
    case GS_OPCODE_SET_CHANNEL_MASKS:
       return "set_channel_masks";
    case GS_OPCODE_GET_INSTANCE_ID:
       return "get_instance_id";
-   case GS_OPCODE_FF_SYNC:
-      return "ff_sync";
-   case GS_OPCODE_SET_PRIMITIVE_ID:
-      return "set_primitive_id";
-   case GS_OPCODE_SVB_WRITE:
-      return "gs_svb_write";
-   case GS_OPCODE_SVB_SET_DST_INDEX:
-      return "gs_svb_set_dst_index";
-   case GS_OPCODE_FF_SYNC_SET_PRIMITIVES:
-      return "gs_ff_sync_set_primitives";
 
    default:
       /* Yes, this leaks.  It's in debug code, it should never occur, and if
@@ -541,47 +546,8 @@ backend_visitor::backend_visitor(struct brw_context *brw,
         (struct brw_shader *)shader_prog->_LinkedShaders[stage] : NULL),
      shader_prog(shader_prog),
      prog(prog),
-     stage_prog_data(stage_prog_data),
-     cfg(NULL),
-     stage(stage)
+     stage_prog_data(stage_prog_data)
 {
-}
-
-bool
-backend_reg::is_zero() const
-{
-   if (file != IMM)
-      return false;
-
-   return fixed_hw_reg.dw1.d == 0;
-}
-
-bool
-backend_reg::is_one() const
-{
-   if (file != IMM)
-      return false;
-
-   return type == BRW_REGISTER_TYPE_F
-          ? fixed_hw_reg.dw1.f == 1.0
-          : fixed_hw_reg.dw1.d == 1;
-}
-
-bool
-backend_reg::is_null() const
-{
-   return file == HW_REG &&
-          fixed_hw_reg.file == BRW_ARCHITECTURE_REGISTER_FILE &&
-          fixed_hw_reg.nr == BRW_ARF_NULL;
-}
-
-
-bool
-backend_reg::is_accumulator() const
-{
-   return file == HW_REG &&
-          fixed_hw_reg.file == BRW_ARCHITECTURE_REGISTER_FILE &&
-          fixed_hw_reg.nr == BRW_ARF_ACCUMULATOR;
 }
 
 bool
@@ -710,148 +676,27 @@ backend_instruction::reads_accumulator_implicitly() const
 }
 
 bool
-backend_instruction::writes_accumulator_implicitly(struct brw_context *brw) const
-{
-   return writes_accumulator ||
-          (brw->gen < 6 &&
-           ((opcode >= BRW_OPCODE_ADD && opcode < BRW_OPCODE_NOP) ||
-            (opcode >= FS_OPCODE_DDX && opcode <= FS_OPCODE_LINTERP &&
-             opcode != FS_OPCODE_CINTERP)));
-}
-
-bool
 backend_instruction::has_side_effects() const
 {
    switch (opcode) {
    case SHADER_OPCODE_UNTYPED_ATOMIC:
-   case FS_OPCODE_FB_WRITE:
       return true;
    default:
       return false;
    }
 }
 
-#ifndef NDEBUG
-static bool
-inst_is_in_block(const bblock_t *block, const backend_instruction *inst)
-{
-   bool found = false;
-   foreach_inst_in_block (backend_instruction, i, block) {
-      if (inst == i) {
-         found = true;
-      }
-   }
-   return found;
-}
-#endif
-
-static void
-adjust_later_block_ips(bblock_t *start_block, int ip_adjustment)
-{
-   for (bblock_t *block_iter = start_block->next();
-        !block_iter->link.is_tail_sentinel();
-        block_iter = block_iter->next()) {
-      block_iter->start_ip += ip_adjustment;
-      block_iter->end_ip += ip_adjustment;
-   }
-}
-
-void
-backend_instruction::insert_after(bblock_t *block, backend_instruction *inst)
-{
-   assert(inst_is_in_block(block, this) || !"Instruction not in block");
-
-   block->end_ip++;
-
-   adjust_later_block_ips(block, 1);
-
-   exec_node::insert_after(inst);
-}
-
-void
-backend_instruction::insert_before(bblock_t *block, backend_instruction *inst)
-{
-   assert(inst_is_in_block(block, this) || !"Instruction not in block");
-
-   block->end_ip++;
-
-   adjust_later_block_ips(block, 1);
-
-   exec_node::insert_before(inst);
-}
-
-void
-backend_instruction::insert_before(bblock_t *block, exec_list *list)
-{
-   assert(inst_is_in_block(block, this) || !"Instruction not in block");
-
-   unsigned num_inst = list->length();
-
-   block->end_ip += num_inst;
-
-   adjust_later_block_ips(block, num_inst);
-
-   exec_node::insert_before(list);
-}
-
-void
-backend_instruction::remove(bblock_t *block)
-{
-   assert(inst_is_in_block(block, this) || !"Instruction not in block");
-
-   adjust_later_block_ips(block, -1);
-
-   if (block->start_ip == block->end_ip) {
-      block->cfg->remove_block(block);
-   } else {
-      block->end_ip--;
-   }
-
-   exec_node::remove();
-}
-
 void
 backend_visitor::dump_instructions()
 {
-   dump_instructions(NULL);
-}
-
-void
-backend_visitor::dump_instructions(const char *name)
-{
-   FILE *file = stderr;
-   if (name && geteuid() != 0) {
-      file = fopen(name, "w");
-      if (!file)
-         file = stderr;
-   }
-
    int ip = 0;
-   foreach_block_and_inst(block, backend_instruction, inst, cfg) {
-      if (!name)
-         fprintf(stderr, "%d: ", ip++);
-      dump_instruction(inst, file);
-   }
-
-   if (file != stderr) {
-      fclose(file);
+   foreach_list(node, &this->instructions) {
+      backend_instruction *inst = (backend_instruction *)node;
+      fprintf(stderr, "%d: ", ip++);
+      dump_instruction(inst);
    }
 }
 
-void
-backend_visitor::calculate_cfg()
-{
-   if (this->cfg)
-      return;
-   cfg = new(mem_ctx) cfg_t(&this->instructions);
-}
-
-void
-backend_visitor::invalidate_cfg()
-{
-   ralloc_free(this->cfg);
-   this->cfg = NULL;
-}
 
 /**
  * Sets up the starting offsets for the groups of binding table entries

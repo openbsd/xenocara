@@ -19,7 +19,6 @@ Run the test suite for mesa's GLSL pre-processor.
 
 Valid options include:
 
-	--testdir=<DIR>	Use tests in the given <DIR> (default is ".")
 	--valgrind	Run the test suite a second time under valgrind
 EOF
 }
@@ -28,29 +27,22 @@ test_specific_args ()
 {
     test="$1"
 
-    tr "\r" "\n" < "$test" | grep 'glcpp-args:' | sed -e 's,^.*glcpp-args: *,,'
+    grep 'glcpp-args:' "$test" | sed -e 's,^.*glcpp-args: *,,'
 }
 
 # Parse command-line options
 for option; do
-    case "${option}" in
-        "--help")
-            usage
-            exit 0
-            ;;
-        "--valgrind")
-	    do_valgrind=yes
-            ;;
-        "--testdir="*)
-            testdir="${option#--testdir=}"
-            ;;
-        *)
-	    echo "Unrecognized option: $option" >&2
-	    echo >&2
-	    usage
-	    exit 1
-            ;;
-        esac
+    if [ "${option}" = '--help' ] ; then
+	usage
+	exit 0
+    elif [ "${option}" = '--valgrind' ] ; then
+	do_valgrind=yes
+    else
+	echo "Unrecognized option: $option" >&2
+	echo >&2
+	usage
+	exit 1
+    fi
 done
 
 total=0
@@ -59,7 +51,7 @@ clean=0
 
 echo "====== Testing for correctness ======"
 for test in $testdir/*.c; do
-    printf "Testing $test..."
+    echo -n "Testing $test..."
     $glcpp $(test_specific_args $test) < $test > $test.out 2>&1
     total=$((total+1))
     if cmp $test.expected $test.out >/dev/null 2>&1; then
@@ -78,7 +70,7 @@ echo ""
 if [ "$do_valgrind" = "yes" ]; then
     echo "====== Testing for valgrind cleanliness ======"
     for test in $testdir/*.c; do
-	printf "Testing $test with valgrind..."
+	echo -n "Testing $test with valgrind..."
 	valgrind --error-exitcode=31 --log-file=$test.valgrind-errors $glcpp $(test_specific_args $test) < $test >/dev/null 2>&1
 	if [ "$?" = "31" ]; then
 	    echo "ERRORS"

@@ -92,23 +92,6 @@ util_format_is_luminance(enum pipe_format format)
 }
 
 boolean
-util_format_is_alpha(enum pipe_format format)
-{
-   const struct util_format_description *desc =
-      util_format_description(format);
-
-   if ((desc->colorspace == UTIL_FORMAT_COLORSPACE_RGB ||
-        desc->colorspace == UTIL_FORMAT_COLORSPACE_SRGB) &&
-       desc->swizzle[0] == UTIL_FORMAT_SWIZZLE_0 &&
-       desc->swizzle[1] == UTIL_FORMAT_SWIZZLE_0 &&
-       desc->swizzle[2] == UTIL_FORMAT_SWIZZLE_0 &&
-       desc->swizzle[3] == UTIL_FORMAT_SWIZZLE_X) {
-      return TRUE;
-   }
-   return FALSE;
-}
-
-boolean
 util_format_is_pure_integer(enum pipe_format format)
 {
    const struct util_format_description *desc = util_format_description(format);
@@ -204,17 +187,6 @@ util_format_is_intensity(enum pipe_format format)
    return FALSE;
 }
 
-boolean
-util_format_is_subsampled_422(enum pipe_format format)
-{
-   const struct util_format_description *desc =
-      util_format_description(format);
-
-   return desc->layout == UTIL_FORMAT_LAYOUT_SUBSAMPLED &&
-      desc->block.width == 2 &&
-      desc->block.height == 1 &&
-      desc->block.bits == 32;
-}
 
 boolean
 util_format_is_supported(enum pipe_format format, unsigned bind)
@@ -513,10 +485,6 @@ util_format_fits_8unorm(const struct util_format_description *format_desc)
           format_desc->format == PIPE_FORMAT_LATC2_SNORM)
          return FALSE;
       return TRUE;
-   case UTIL_FORMAT_LAYOUT_BPTC:
-      if (format_desc->format == PIPE_FORMAT_BPTC_RGBA_UNORM)
-         return TRUE;
-      return FALSE;
 
    case UTIL_FORMAT_LAYOUT_PLAIN:
       /*

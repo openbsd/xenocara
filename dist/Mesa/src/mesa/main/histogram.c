@@ -24,8 +24,10 @@
 
 
 #include "glheader.h"
-#include "context.h"
+#include "bufferobj.h"
+#include "colormac.h"
 #include "histogram.h"
+#include "macros.h"
 #include "main/dispatch.h"
 
 

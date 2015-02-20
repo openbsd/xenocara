@@ -242,7 +242,7 @@ brw_get_vertex_surface_type(struct brw_context *brw,
       case GL_UNSIGNED_INT: return uint_types_direct[size];
       case GL_UNSIGNED_SHORT: return ushort_types_direct[size];
       case GL_UNSIGNED_BYTE: return ubyte_types_direct[size];
-      default: unreachable("not reached");
+      default: assert(0); return 0;
       }
    } else if (glarray->Type == GL_UNSIGNED_INT_10F_11F_11F_REV) {
       return BRW_SURFACEFORMAT_R11G11B10_FLOAT;
@@ -294,7 +294,7 @@ brw_get_vertex_surface_type(struct brw_context *brw,
                : BRW_SURFACEFORMAT_R10G10B10A2_UNORM;
          }
          return BRW_SURFACEFORMAT_R10G10B10A2_UINT;
-      default: unreachable("not reached");
+      default: assert(0); return 0;
       }
    }
    else {
@@ -339,7 +339,7 @@ brw_get_vertex_surface_type(struct brw_context *brw,
           * INT32_MAX, which will be scaled down by 1/65536 by the VS.
           */
          return int_types_scale[size];
-      default: unreachable("not reached");
+      default: assert(0); return 0;
       }
    }
 }
@@ -351,7 +351,7 @@ brw_get_index_type(GLenum type)
    case GL_UNSIGNED_BYTE:  return BRW_INDEX_BYTE;
    case GL_UNSIGNED_SHORT: return BRW_INDEX_WORD;
    case GL_UNSIGNED_INT:   return BRW_INDEX_DWORD;
-   default: unreachable("not reached");
+   default: assert(0); return 0;
    }
 }
 
@@ -502,7 +502,10 @@ brw_prepare_vertices(struct brw_context *brw)
 	 /* This is a common place to reach if the user mistakenly supplies
 	  * a pointer in place of a VBO offset.  If we just let it go through,
 	  * we may end up dereferencing a pointer beyond the bounds of the
-	  * GTT.
+	  * GTT.  We would hope that the VBO's max_index would save us, but
+	  * Mesa appears to hand us min/max values not clipped to the
+	  * array object's _MaxElement, and _MaxElement frequently appears
+	  * to be wrong anyway.
 	  *
 	  * The VBO spec allows application termination in this case, and it's
 	  * probably a service to the poor programmer to do so rather than
@@ -601,73 +604,16 @@ brw_prepare_vertices(struct brw_context *brw)
    brw->vb.nr_buffers = j;
 }
 
-void
-brw_prepare_shader_draw_parameters(struct brw_context *brw)
-{
-   /* For non-indirect draws, upload gl_BaseVertex. */
-   if (brw->vs.prog_data->uses_vertexid && brw->draw.draw_params_bo == NULL) {
-      intel_upload_data(brw, &brw->draw.gl_basevertex, 4, 4,
-			&brw->draw.draw_params_bo,
-                        &brw->draw.draw_params_offset);
-   }
-}
-
-/**
- * Emit a VERTEX_BUFFER_STATE entry (part of 3DSTATE_VERTEX_BUFFERS).
- */
-static void
-emit_vertex_buffer_state(struct brw_context *brw,
-                         unsigned buffer_nr,
-                         drm_intel_bo *bo,
-                         unsigned bo_ending_address,
-                         unsigned bo_offset,
-                         unsigned stride,
-                         unsigned step_rate)
-{
-   struct gl_context *ctx = &brw->ctx;
-   uint32_t dw0;
-
-   if (brw->gen >= 6) {
-      dw0 = (buffer_nr << GEN6_VB0_INDEX_SHIFT) |
-            (step_rate ? GEN6_VB0_ACCESS_INSTANCEDATA
-                       : GEN6_VB0_ACCESS_VERTEXDATA);
-   } else {
-      dw0 = (buffer_nr << BRW_VB0_INDEX_SHIFT) |
-            (step_rate ? BRW_VB0_ACCESS_INSTANCEDATA
-                       : BRW_VB0_ACCESS_VERTEXDATA);
-   }
-
-   if (brw->gen >= 7)
-      dw0 |= GEN7_VB0_ADDRESS_MODIFYENABLE;
-
-   if (brw->gen == 7)
-      dw0 |= GEN7_MOCS_L3 << 16;
-
-   WARN_ONCE(stride >= (brw->gen >= 5 ? 2048 : 2047),
-             "VBO stride %d too large, bad rendering may occur\n",
-             stride);
-   OUT_BATCH(dw0 | (stride << BRW_VB0_PITCH_SHIFT));
-   OUT_RELOC(bo, I915_GEM_DOMAIN_VERTEX, 0, bo_offset);
-   if (brw->gen >= 5) {
-      OUT_RELOC(bo, I915_GEM_DOMAIN_VERTEX, 0, bo_ending_address);
-   } else {
-      OUT_BATCH(0);
-   }
-   OUT_BATCH(step_rate);
-}
-
 static void brw_emit_vertices(struct brw_context *brw)
 {
-   GLuint i;
+   struct gl_context *ctx = &brw->ctx;
+   GLuint i, nr_elements;
 
    brw_prepare_vertices(brw);
-   brw_prepare_shader_draw_parameters(brw);
 
    brw_emit_query_begin(brw);
 
-   unsigned nr_elements = brw->vb.nr_enabled;
-   if (brw->vs.prog_data->uses_vertexid || brw->vs.prog_data->uses_instanceid)
-      ++nr_elements;
+   nr_elements = brw->vb.nr_enabled + brw->vs.prog_data->uses_vertexid;
 
    /* If the VS doesn't read any inputs (calculating vertex position from
     * a state variable for some reason, for example), emit a single pad
@@ -701,33 +647,47 @@ static void brw_emit_vertices(struct brw_context *brw)
    /* Now emit VB and VEP state packets.
     */
 
-   unsigned nr_buffers =
-      brw->vb.nr_buffers + brw->vs.prog_data->uses_vertexid;
-
-   if (nr_buffers) {
+   if (brw->vb.nr_buffers) {
       if (brw->gen >= 6) {
-	 assert(nr_buffers <= 33);
+	 assert(brw->vb.nr_buffers <= 33);
       } else {
-	 assert(nr_buffers <= 17);
+	 assert(brw->vb.nr_buffers <= 17);
       }
 
-      BEGIN_BATCH(1 + 4 * nr_buffers);
-      OUT_BATCH((_3DSTATE_VERTEX_BUFFERS << 16) | (4 * nr_buffers - 1));
+      BEGIN_BATCH(1 + 4*brw->vb.nr_buffers);
+      OUT_BATCH((_3DSTATE_VERTEX_BUFFERS << 16) | (4*brw->vb.nr_buffers - 1));
       for (i = 0; i < brw->vb.nr_buffers; i++) {
 	 struct brw_vertex_buffer *buffer = &brw->vb.buffers[i];
-         emit_vertex_buffer_state(brw, i, buffer->bo, buffer->bo->size - 1,
-                                  buffer->offset, buffer->stride,
-                                  buffer->step_rate);
+	 uint32_t dw0;
 
-      }
+	 if (brw->gen >= 6) {
+	    dw0 = buffer->step_rate
+	             ? GEN6_VB0_ACCESS_INSTANCEDATA
+	             : GEN6_VB0_ACCESS_VERTEXDATA;
+	    dw0 |= i << GEN6_VB0_INDEX_SHIFT;
+	 } else {
+	    dw0 = buffer->step_rate
+	             ? BRW_VB0_ACCESS_INSTANCEDATA
+	             : BRW_VB0_ACCESS_VERTEXDATA;
+	    dw0 |= i << BRW_VB0_INDEX_SHIFT;
+	 }
 
-      if (brw->vs.prog_data->uses_vertexid) {
-         emit_vertex_buffer_state(brw, brw->vb.nr_buffers,
-                                  brw->draw.draw_params_bo,
-                                  brw->draw.draw_params_bo->size - 1,
-                                  brw->draw.draw_params_offset,
-                                  0,  /* stride */
-                                  0); /* step rate */
+	 if (brw->gen >= 7)
+	    dw0 |= GEN7_VB0_ADDRESS_MODIFYENABLE;
+
+         if (brw->gen == 7)
+	    dw0 |= GEN7_MOCS_L3 << 16;
+
+         WARN_ONCE(buffer->stride >= (brw->gen >= 5 ? 2048 : 2047),
+                   "VBO stride %d too large, bad rendering may occur\n",
+                   buffer->stride);
+	 OUT_BATCH(dw0 | (buffer->stride << BRW_VB0_PITCH_SHIFT));
+	 OUT_RELOC(buffer->bo, I915_GEM_DOMAIN_VERTEX, 0, buffer->offset);
+	 if (brw->gen >= 5) {
+	    OUT_RELOC(buffer->bo, I915_GEM_DOMAIN_VERTEX, 0, buffer->bo->size - 1);
+	 } else
+	    OUT_BATCH(0);
+	 OUT_BATCH(buffer->step_rate);
       }
       ADVANCE_BATCH();
    }
@@ -813,35 +773,18 @@ static void brw_emit_vertices(struct brw_context *brw)
                 (BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_3_SHIFT));
    }
 
-   if (brw->vs.prog_data->uses_vertexid || brw->vs.prog_data->uses_instanceid) {
+   if (brw->vs.prog_data->uses_vertexid) {
       uint32_t dw0 = 0, dw1 = 0;
-      uint32_t comp0 = BRW_VE1_COMPONENT_STORE_0;
-      uint32_t comp1 = BRW_VE1_COMPONENT_STORE_0;
-      uint32_t comp2 = BRW_VE1_COMPONENT_STORE_0;
-      uint32_t comp3 = BRW_VE1_COMPONENT_STORE_0;
 
-      if (brw->vs.prog_data->uses_vertexid) {
-         comp0 = BRW_VE1_COMPONENT_STORE_SRC;
-         comp2 = BRW_VE1_COMPONENT_STORE_VID;
-      }
-
-      if (brw->vs.prog_data->uses_instanceid) {
-         comp3 = BRW_VE1_COMPONENT_STORE_IID;
-      }
-
-      dw1 = (comp0 << BRW_VE1_COMPONENT_0_SHIFT) |
-            (comp1 << BRW_VE1_COMPONENT_1_SHIFT) |
-            (comp2 << BRW_VE1_COMPONENT_2_SHIFT) |
-            (comp3 << BRW_VE1_COMPONENT_3_SHIFT);
+      dw1 = ((BRW_VE1_COMPONENT_STORE_VID << BRW_VE1_COMPONENT_0_SHIFT) |
+	     (BRW_VE1_COMPONENT_STORE_IID << BRW_VE1_COMPONENT_1_SHIFT) |
+	     (BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_2_SHIFT) |
+	     (BRW_VE1_COMPONENT_STORE_0 << BRW_VE1_COMPONENT_3_SHIFT));
 
       if (brw->gen >= 6) {
-         dw0 |= GEN6_VE0_VALID |
-                brw->vb.nr_buffers << GEN6_VE0_INDEX_SHIFT |
-                BRW_SURFACEFORMAT_R32_UINT << BRW_VE0_FORMAT_SHIFT;
+	 dw0 |= GEN6_VE0_VALID;
       } else {
-         dw0 |= BRW_VE0_VALID |
-                brw->vb.nr_buffers << BRW_VE0_INDEX_SHIFT |
-                BRW_SURFACEFORMAT_R32_UINT << BRW_VE0_FORMAT_SHIFT;
+	 dw0 |= BRW_VE0_VALID;
 	 dw1 |= (i * 4) << BRW_VE1_DST_OFFSET_SHIFT;
       }
 

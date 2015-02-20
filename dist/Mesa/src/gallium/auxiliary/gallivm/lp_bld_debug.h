@@ -76,10 +76,6 @@ lp_build_name(LLVMValueRef val, const char *format, ...)
 }
 
 
-const char *
-lp_get_module_id(LLVMModuleRef module);
-
-
 void
 lp_debug_dump_value(LLVMValueRef value);
 

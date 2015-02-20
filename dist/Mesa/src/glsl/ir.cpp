@@ -23,10 +23,10 @@
 #include <string.h>
 #include "main/core.h" /* for MAX2 */
 #include "ir.h"
+#include "ir_visitor.h"
 #include "glsl_types.h"
 
-ir_rvalue::ir_rvalue(enum ir_node_type t)
-   : ir_instruction(t)
+ir_rvalue::ir_rvalue()
 {
    this->type = glsl_type::error_type;
 }
@@ -42,6 +42,11 @@ bool ir_rvalue::is_one() const
 }
 
 bool ir_rvalue::is_negative_one() const
+{
+   return false;
+}
+
+bool ir_rvalue::is_basis() const
 {
    return false;
 }
@@ -148,8 +153,8 @@ ir_assignment::whole_variable_written()
 
 ir_assignment::ir_assignment(ir_dereference *lhs, ir_rvalue *rhs,
 			     ir_rvalue *condition, unsigned write_mask)
-   : ir_instruction(ir_type_assignment)
 {
+   this->ir_type = ir_type_assignment;
    this->condition = condition;
    this->rhs = rhs;
    this->lhs = lhs;
@@ -168,8 +173,8 @@ ir_assignment::ir_assignment(ir_dereference *lhs, ir_rvalue *rhs,
 
 ir_assignment::ir_assignment(ir_rvalue *lhs, ir_rvalue *rhs,
 			     ir_rvalue *condition)
-   : ir_instruction(ir_type_assignment)
 {
+   this->ir_type = ir_type_assignment;
    this->condition = condition;
    this->rhs = rhs;
 
@@ -193,8 +198,8 @@ ir_assignment::ir_assignment(ir_rvalue *lhs, ir_rvalue *rhs,
 ir_expression::ir_expression(int op, const struct glsl_type *type,
 			     ir_rvalue *op0, ir_rvalue *op1,
 			     ir_rvalue *op2, ir_rvalue *op3)
-   : ir_rvalue(ir_type_expression)
 {
+   this->ir_type = ir_type_expression;
    this->type = type;
    this->operation = ir_expression_operation(op);
    this->operands[0] = op0;
@@ -210,8 +215,9 @@ ir_expression::ir_expression(int op, const struct glsl_type *type,
 }
 
 ir_expression::ir_expression(int op, ir_rvalue *op0)
-   : ir_rvalue(ir_type_expression)
 {
+   this->ir_type = ir_type_expression;
+
    this->operation = ir_expression_operation(op);
    this->operands[0] = op0;
    this->operands[1] = NULL;
@@ -243,14 +249,8 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
    case ir_unop_sin_reduced:
    case ir_unop_cos_reduced:
    case ir_unop_dFdx:
-   case ir_unop_dFdx_coarse:
-   case ir_unop_dFdx_fine:
    case ir_unop_dFdy:
-   case ir_unop_dFdy_coarse:
-   case ir_unop_dFdy_fine:
    case ir_unop_bitfield_reverse:
-   case ir_unop_interpolate_at_centroid:
-   case ir_unop_saturate:
       this->type = op0->type;
       break;
 
@@ -324,8 +324,9 @@ ir_expression::ir_expression(int op, ir_rvalue *op0)
 }
 
 ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1)
-   : ir_rvalue(ir_type_expression)
 {
+   this->ir_type = ir_type_expression;
+
    this->operation = ir_expression_operation(op);
    this->operands[0] = op0;
    this->operands[1] = op1;
@@ -404,8 +405,6 @@ ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1)
    case ir_binop_rshift:
    case ir_binop_bfm:
    case ir_binop_ldexp:
-   case ir_binop_interpolate_at_offset:
-   case ir_binop_interpolate_at_sample:
       this->type = op0->type;
       break;
 
@@ -421,8 +420,9 @@ ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1)
 
 ir_expression::ir_expression(int op, ir_rvalue *op0, ir_rvalue *op1,
                              ir_rvalue *op2)
-   : ir_rvalue(ir_type_expression)
 {
+   this->ir_type = ir_type_expression;
+
    this->operation = ir_expression_operation(op);
    this->operands[0] = op0;
    this->operands[1] = op1;
@@ -509,11 +509,7 @@ static const char *const operator_strs[] = {
    "sin_reduced",
    "cos_reduced",
    "dFdx",
-   "dFdxCoarse",
-   "dFdxFine",
    "dFdy",
-   "dFdyCoarse",
-   "dFdyFine",
    "packSnorm2x16",
    "packSnorm4x8",
    "packUnorm2x16",
@@ -530,9 +526,7 @@ static const char *const operator_strs[] = {
    "bit_count",
    "find_msb",
    "find_lsb",
-   "sat",
    "noise",
-   "interpolate_at_centroid",
    "+",
    "-",
    "*",
@@ -566,8 +560,6 @@ static const char *const operator_strs[] = {
    "ubo_load",
    "ldexp",
    "vector_extract",
-   "interpolate_at_offset",
-   "interpolate_at_sample",
    "fma",
    "lrp",
    "csel",
@@ -618,25 +610,25 @@ ir_expression::get_operator(const char *str)
 }
 
 ir_constant::ir_constant()
-   : ir_rvalue(ir_type_constant)
 {
+   this->ir_type = ir_type_constant;
 }
 
 ir_constant::ir_constant(const struct glsl_type *type,
 			 const ir_constant_data *data)
-   : ir_rvalue(ir_type_constant)
 {
    assert((type->base_type >= GLSL_TYPE_UINT)
 	  && (type->base_type <= GLSL_TYPE_BOOL));
 
+   this->ir_type = ir_type_constant;
    this->type = type;
    memcpy(& this->value, data, sizeof(this->value));
 }
 
 ir_constant::ir_constant(float f, unsigned vector_elements)
-   : ir_rvalue(ir_type_constant)
 {
    assert(vector_elements <= 4);
+   this->ir_type = ir_type_constant;
    this->type = glsl_type::get_instance(GLSL_TYPE_FLOAT, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.f[i] = f;
@@ -647,9 +639,9 @@ ir_constant::ir_constant(float f, unsigned vector_elements)
 }
 
 ir_constant::ir_constant(unsigned int u, unsigned vector_elements)
-   : ir_rvalue(ir_type_constant)
 {
    assert(vector_elements <= 4);
+   this->ir_type = ir_type_constant;
    this->type = glsl_type::get_instance(GLSL_TYPE_UINT, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.u[i] = u;
@@ -660,9 +652,9 @@ ir_constant::ir_constant(unsigned int u, unsigned vector_elements)
 }
 
 ir_constant::ir_constant(int integer, unsigned vector_elements)
-   : ir_rvalue(ir_type_constant)
 {
    assert(vector_elements <= 4);
+   this->ir_type = ir_type_constant;
    this->type = glsl_type::get_instance(GLSL_TYPE_INT, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.i[i] = integer;
@@ -673,9 +665,9 @@ ir_constant::ir_constant(int integer, unsigned vector_elements)
 }
 
 ir_constant::ir_constant(bool b, unsigned vector_elements)
-   : ir_rvalue(ir_type_constant)
 {
    assert(vector_elements <= 4);
+   this->ir_type = ir_type_constant;
    this->type = glsl_type::get_instance(GLSL_TYPE_BOOL, vector_elements, 1);
    for (unsigned i = 0; i < vector_elements; i++) {
       this->value.b[i] = b;
@@ -686,8 +678,8 @@ ir_constant::ir_constant(bool b, unsigned vector_elements)
 }
 
 ir_constant::ir_constant(const ir_constant *c, unsigned i)
-   : ir_rvalue(ir_type_constant)
 {
+   this->ir_type = ir_type_constant;
    this->type = c->type->get_base_type();
 
    switch (this->type->base_type) {
@@ -700,8 +692,8 @@ ir_constant::ir_constant(const ir_constant *c, unsigned i)
 }
 
 ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
-   : ir_rvalue(ir_type_constant)
 {
+   this->ir_type = ir_type_constant;
    this->type = type;
 
    assert(type->is_scalar() || type->is_vector() || type->is_matrix()
@@ -710,7 +702,8 @@ ir_constant::ir_constant(const struct glsl_type *type, exec_list *value_list)
    if (type->is_array()) {
       this->array_elements = ralloc_array(this, ir_constant *, type->length);
       unsigned i = 0;
-      foreach_in_list(ir_constant, value, value_list) {
+      foreach_list(node, value_list) {
+	 ir_constant *value = (ir_constant *) node;
 	 assert(value->as_constant() != NULL);
 
 	 this->array_elements[i++] = value;
@@ -1011,7 +1004,9 @@ ir_constant::copy_offset(ir_constant *src, int offset)
    case GLSL_TYPE_STRUCT: {
       assert (src->type == this->type);
       this->components.make_empty();
-      foreach_in_list(ir_constant, orig, &src->components) {
+      foreach_list(node, &src->components) {
+	 ir_constant *const orig = (ir_constant *) node;
+
 	 this->components.push_tail(orig->clone(this, NULL));
       }
       break;
@@ -1186,6 +1181,49 @@ ir_constant::is_negative_one() const
 }
 
 bool
+ir_constant::is_basis() const
+{
+   if (!this->type->is_scalar() && !this->type->is_vector())
+      return false;
+
+   if (this->type->is_boolean())
+      return false;
+
+   unsigned ones = 0;
+   for (unsigned c = 0; c < this->type->vector_elements; c++) {
+      switch (this->type->base_type) {
+      case GLSL_TYPE_FLOAT:
+	 if (this->value.f[c] == 1.0)
+	    ones++;
+	 else if (this->value.f[c] != 0.0)
+	    return false;
+	 break;
+      case GLSL_TYPE_INT:
+	 if (this->value.i[c] == 1)
+	    ones++;
+	 else if (this->value.i[c] != 0)
+	    return false;
+	 break;
+      case GLSL_TYPE_UINT:
+	 if (int(this->value.u[c]) == 1)
+	    ones++;
+	 else if (int(this->value.u[c]) != 0)
+	    return false;
+	 break;
+      default:
+	 /* The only other base types are structures, arrays, samplers, and
+	  * booleans.  Samplers cannot be constants, and the others should
+	  * have been filtered out above.
+	  */
+	 assert(!"Should not get here.");
+	 return false;
+      }
+   }
+
+   return ones == 1;
+}
+
+bool
 ir_constant::is_uint16_constant() const
 {
    if (!type->is_integer())
@@ -1195,16 +1233,16 @@ ir_constant::is_uint16_constant() const
 }
 
 ir_loop::ir_loop()
-   : ir_instruction(ir_type_loop)
 {
+   this->ir_type = ir_type_loop;
 }
 
 
 ir_dereference_variable::ir_dereference_variable(ir_variable *var)
-   : ir_dereference(ir_type_dereference_variable)
 {
    assert(var != NULL);
 
+   this->ir_type = ir_type_dereference_variable;
    this->var = var;
    this->type = var->type;
 }
@@ -1212,8 +1250,8 @@ ir_dereference_variable::ir_dereference_variable(ir_variable *var)
 
 ir_dereference_array::ir_dereference_array(ir_rvalue *value,
 					   ir_rvalue *array_index)
-   : ir_dereference(ir_type_dereference_array)
 {
+   this->ir_type = ir_type_dereference_array;
    this->array_index = array_index;
    this->set_array(value);
 }
@@ -1221,10 +1259,10 @@ ir_dereference_array::ir_dereference_array(ir_rvalue *value,
 
 ir_dereference_array::ir_dereference_array(ir_variable *var,
 					   ir_rvalue *array_index)
-   : ir_dereference(ir_type_dereference_array)
 {
    void *ctx = ralloc_parent(var);
 
+   this->ir_type = ir_type_dereference_array;
    this->array_index = array_index;
    this->set_array(new(ctx) ir_dereference_variable(var));
 }
@@ -1251,10 +1289,10 @@ ir_dereference_array::set_array(ir_rvalue *value)
 
 ir_dereference_record::ir_dereference_record(ir_rvalue *value,
 					     const char *field)
-   : ir_dereference(ir_type_dereference_record)
 {
    assert(value != NULL);
 
+   this->ir_type = ir_type_dereference_record;
    this->record = value;
    this->field = ralloc_strdup(this, field);
    this->type = this->record->type->field_type(field);
@@ -1263,10 +1301,10 @@ ir_dereference_record::ir_dereference_record(ir_rvalue *value,
 
 ir_dereference_record::ir_dereference_record(ir_variable *var,
 					     const char *field)
-   : ir_dereference(ir_type_dereference_record)
 {
    void *ctx = ralloc_parent(var);
 
+   this->ir_type = ir_type_dereference_record;
    this->record = new(ctx) ir_dereference_variable(var);
    this->field = ralloc_strdup(this, field);
    this->type = this->record->type->field_type(field);
@@ -1383,22 +1421,24 @@ ir_swizzle::init_mask(const unsigned *comp, unsigned count)
 
 ir_swizzle::ir_swizzle(ir_rvalue *val, unsigned x, unsigned y, unsigned z,
 		       unsigned w, unsigned count)
-   : ir_rvalue(ir_type_swizzle), val(val)
+   : val(val)
 {
    const unsigned components[4] = { x, y, z, w };
+   this->ir_type = ir_type_swizzle;
    this->init_mask(components, count);
 }
 
 ir_swizzle::ir_swizzle(ir_rvalue *val, const unsigned *comp,
 		       unsigned count)
-   : ir_rvalue(ir_type_swizzle), val(val)
+   : val(val)
 {
+   this->ir_type = ir_type_swizzle;
    this->init_mask(comp, count);
 }
 
 ir_swizzle::ir_swizzle(ir_rvalue *val, ir_swizzle_mask mask)
-   : ir_rvalue(ir_type_swizzle)
 {
+   this->ir_type = ir_type_swizzle;
    this->val = val;
    this->mask = mask;
    this->type = glsl_type::get_instance(val->type->base_type,
@@ -1495,44 +1535,18 @@ ir_swizzle::variable_referenced() const
 }
 
 
-bool ir_variable::temporaries_allocate_names = false;
-
-const char ir_variable::tmp_name[] = "compiler_temp";
-
 ir_variable::ir_variable(const struct glsl_type *type, const char *name,
 			 ir_variable_mode mode)
-   : ir_instruction(ir_type_variable)
+   : max_ifc_array_access(NULL)
 {
+   this->ir_type = ir_type_variable;
    this->type = type;
-
-   if (mode == ir_var_temporary && !ir_variable::temporaries_allocate_names)
-      name = NULL;
-
-   /* The ir_variable clone method may call this constructor with name set to
-    * tmp_name.
-    */
-   assert(name != NULL
-          || mode == ir_var_temporary
-          || mode == ir_var_function_in
-          || mode == ir_var_function_out
-          || mode == ir_var_function_inout);
-   assert(name != ir_variable::tmp_name
-          || mode == ir_var_temporary);
-   if (mode == ir_var_temporary
-       && (name == NULL || name == ir_variable::tmp_name)) {
-      this->name = ir_variable::tmp_name;
-   } else {
-      this->name = ralloc_strdup(this, name);
-   }
-
-   this->u.max_ifc_array_access = NULL;
-
+   this->name = ralloc_strdup(this, name);
    this->data.explicit_location = false;
    this->data.has_initializer = false;
    this->data.location = -1;
    this->data.location_frac = 0;
-   this->data.binding = 0;
-   this->data.warn_extension_index = 0;
+   this->warn_extension = NULL;
    this->constant_value = NULL;
    this->constant_initializer = NULL;
    this->data.origin_upper_left = false;
@@ -1547,12 +1561,13 @@ ir_variable::ir_variable(const struct glsl_type *type, const char *name,
    this->data.mode = mode;
    this->data.interpolation = INTERP_QUALIFIER_NONE;
    this->data.max_array_access = 0;
+   this->data.atomic.buffer_index = 0;
    this->data.atomic.offset = 0;
-   this->data.image_read_only = false;
-   this->data.image_write_only = false;
-   this->data.image_coherent = false;
-   this->data.image_volatile = false;
-   this->data.image_restrict = false;
+   this->data.image.read_only = false;
+   this->data.image.write_only = false;
+   this->data.image.coherent = false;
+   this->data.image._volatile = false;
+   this->data.image.restrict_flag = false;
 
    if (type != NULL) {
       if (type->base_type == GLSL_TYPE_SAMPLER)
@@ -1595,39 +1610,13 @@ ir_variable::determine_interpolation_mode(bool flat_shade)
       return INTERP_QUALIFIER_SMOOTH;
 }
 
-const char *const ir_variable::warn_extension_table[] = {
-   "",
-   "GL_ARB_shader_stencil_export",
-   "GL_AMD_shader_stencil_export",
-};
-
-void
-ir_variable::enable_extension_warning(const char *extension)
-{
-   for (unsigned i = 0; i < Elements(warn_extension_table); i++) {
-      if (strcmp(warn_extension_table[i], extension) == 0) {
-         this->data.warn_extension_index = i;
-         return;
-      }
-   }
-
-   assert(!"Should not get here.");
-   this->data.warn_extension_index = 0;
-}
-
-const char *
-ir_variable::get_extension_warning() const
-{
-   return this->data.warn_extension_index == 0
-      ? NULL : warn_extension_table[this->data.warn_extension_index];
-}
 
 ir_function_signature::ir_function_signature(const glsl_type *return_type,
                                              builtin_available_predicate b)
-   : ir_instruction(ir_type_function_signature),
-     return_type(return_type), is_defined(false), is_intrinsic(false),
+   : return_type(return_type), is_defined(false), is_intrinsic(false),
      builtin_avail(b), _function(NULL)
 {
+   this->ir_type = ir_type_function_signature;
    this->origin = NULL;
 }
 
@@ -1684,11 +1673,11 @@ ir_function_signature::qualifiers_match(exec_list *params)
 	  a->data.interpolation != b->data.interpolation ||
 	  a->data.centroid != b->data.centroid ||
           a->data.sample != b->data.sample ||
-          a->data.image_read_only != b->data.image_read_only ||
-          a->data.image_write_only != b->data.image_write_only ||
-          a->data.image_coherent != b->data.image_coherent ||
-          a->data.image_volatile != b->data.image_volatile ||
-          a->data.image_restrict != b->data.image_restrict) {
+          a->data.image.read_only != b->data.image.read_only ||
+          a->data.image.write_only != b->data.image.write_only ||
+          a->data.image.coherent != b->data.image.coherent ||
+          a->data.image._volatile != b->data.image._volatile ||
+          a->data.image.restrict_flag != b->data.image.restrict_flag) {
 
 	 /* parameter a's qualifiers don't match */
 	 return a->name;
@@ -1710,8 +1699,8 @@ ir_function_signature::replace_parameters(exec_list *new_params)
 
 
 ir_function::ir_function(const char *name)
-   : ir_instruction(ir_type_function)
 {
+   this->ir_type = ir_type_function;
    this->name = ralloc_strdup(this, name);
 }
 
@@ -1719,7 +1708,8 @@ ir_function::ir_function(const char *name)
 bool
 ir_function::has_user_signature()
 {
-   foreach_in_list(ir_function_signature, sig, &this->signatures) {
+   foreach_list(n, &this->signatures) {
+      ir_function_signature *const sig = (ir_function_signature *) n;
       if (!sig->is_builtin())
 	 return true;
    }
@@ -1730,7 +1720,7 @@ ir_function::has_user_signature()
 ir_rvalue *
 ir_rvalue::error_value(void *mem_ctx)
 {
-   ir_rvalue *v = new(mem_ctx) ir_rvalue(ir_type_unset);
+   ir_rvalue *v = new(mem_ctx) ir_rvalue;
 
    v->type = glsl_type::error_type;
    return v;
@@ -1740,8 +1730,8 @@ ir_rvalue::error_value(void *mem_ctx)
 void
 visit_exec_list(exec_list *list, ir_visitor *visitor)
 {
-   foreach_in_list_safe(ir_instruction, node, list) {
-      node->accept(visitor);
+   foreach_list_safe(n, list) {
+      ((ir_instruction *) n)->accept(visitor);
    }
 }
 
@@ -1762,7 +1752,8 @@ steal_memory(ir_instruction *ir, void *new_ctx)
     */
    if (constant != NULL) {
       if (constant->type->is_record()) {
-	 foreach_in_list(ir_constant, field, &constant->components) {
+	 foreach_list(n, &constant->components) {
+	    ir_constant *field = (ir_constant *) n;
 	    steal_memory(field, ir);
 	 }
       } else if (constant->type->is_array()) {
@@ -1779,8 +1770,8 @@ steal_memory(ir_instruction *ir, void *new_ctx)
 void
 reparent_ir(exec_list *list, void *mem_ctx)
 {
-   foreach_in_list(ir_instruction, node, list) {
-      visit_tree(node, steal_memory, mem_ctx);
+   foreach_list(node, list) {
+      visit_tree((ir_instruction *) node, steal_memory, mem_ctx);
    }
 }
 

@@ -38,7 +38,7 @@
 #include "program/program.h"
 #include "program/programopt.h"
 #include "tnl/tnl.h"
-#include "util/ralloc.h"
+#include "glsl/ralloc.h"
 #include "glsl/ir.h"
 
 #include "brw_context.h"
@@ -52,6 +52,25 @@ get_new_program_id(struct intel_screen *screen)
    unsigned id = screen->program_id++;
    pthread_mutex_unlock(&m);
    return id;
+}
+
+static void brwBindProgram( struct gl_context *ctx,
+			    GLenum target,
+			    struct gl_program *prog )
+{
+   struct brw_context *brw = brw_context(ctx);
+
+   switch (target) {
+   case GL_VERTEX_PROGRAM_ARB:
+      brw->state.dirty.brw |= BRW_NEW_VERTEX_PROGRAM;
+      break;
+   case MESA_GEOMETRY_PROGRAM:
+      brw->state.dirty.brw |= BRW_NEW_GEOMETRY_PROGRAM;
+      break;
+   case GL_FRAGMENT_PROGRAM_ARB:
+      brw->state.dirty.brw |= BRW_NEW_FRAGMENT_PROGRAM;
+      break;
+   }
 }
 
 static struct gl_program *brwNewProgram( struct gl_context *ctx,
@@ -108,7 +127,8 @@ static struct gl_program *brwNewProgram( struct gl_context *ctx,
    }
 
    default:
-      unreachable("Unsupported target in brwNewProgram()");
+      assert(!"Unsupported target in brwNewProgram()");
+      return NULL;
    }
 }
 
@@ -118,6 +138,14 @@ static void brwDeleteProgram( struct gl_context *ctx,
    _mesa_delete_program( ctx, prog );
 }
 
+
+static GLboolean
+brwIsProgramNative(struct gl_context *ctx,
+		   GLenum target,
+		   struct gl_program *prog)
+{
+   return true;
+}
 
 static GLboolean
 brwProgramStringNotify(struct gl_context *ctx,
@@ -164,7 +192,8 @@ brwProgramStringNotify(struct gl_context *ctx,
        * this function should only ever be called with a target of
        * GL_VERTEX_PROGRAM_ARB or GL_FRAGMENT_PROGRAM_ARB.
        */
-      unreachable("Unexpected target in brwProgramStringNotify");
+      assert(!"Unexpected target in brwProgramStringNotify");
+      break;
    }
 
    brw_add_texrect_params(prog);
@@ -223,11 +252,14 @@ void brwInitFragProgFuncs( struct dd_function_table *functions )
 {
    assert(functions->ProgramStringNotify == _tnl_program_string);
 
+   functions->BindProgram = brwBindProgram;
    functions->NewProgram = brwNewProgram;
    functions->DeleteProgram = brwDeleteProgram;
+   functions->IsProgramNative = brwIsProgramNative;
    functions->ProgramStringNotify = brwProgramStringNotify;
 
    functions->NewShader = brw_new_shader;
+   functions->NewShaderProgram = brw_new_shader_program;
    functions->LinkShader = brw_link_shader;
 }
 
@@ -555,7 +587,8 @@ brw_stage_prog_data_free(const void *p)
 }
 
 void
-brw_dump_ir(const char *stage, struct gl_shader_program *shader_prog,
+brw_dump_ir(struct brw_context *brw, const char *stage,
+            struct gl_shader_program *shader_prog,
             struct gl_shader *shader, struct gl_program *prog)
 {
    if (shader_prog) {

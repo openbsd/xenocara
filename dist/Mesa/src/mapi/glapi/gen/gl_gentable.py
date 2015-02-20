@@ -42,7 +42,7 @@ header = """/* GLXEXT is the define used in the xserver when the GLX extension i
 #endif
 
 #if (defined(GLXEXT) && defined(HAVE_BACKTRACE)) \\
-	|| (!defined(GLXEXT) && defined(DEBUG) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__OpenBSD__) && !defined(__NetBSD__) && !defined(__DragonFly__))
+	|| (!defined(GLXEXT) && defined(DEBUG) && !defined(_WIN32_WCE) && !defined(__CYGWIN__) && !defined(__MINGW32__) && !defined(__OpenBSD__) && !defined(__NetBSD__))
 #define USE_BACKTRACE
 #endif
 
@@ -100,7 +100,7 @@ static void
 __glapi_gentable_set_remaining_noop(struct _glapi_table *disp) {
     GLuint entries = _glapi_get_dispatch_table_size();
     void **dispatch = (void **) disp;
-    unsigned i;
+    int i;
 
     /* ISO C is annoying sometimes */
     union {_glapi_proc p; void *v;} p;
@@ -113,7 +113,7 @@ __glapi_gentable_set_remaining_noop(struct _glapi_table *disp) {
 
 struct _glapi_table *
 _glapi_create_table_from_handle(void *handle, const char *symbol_prefix) {
-    struct _glapi_table *disp = calloc(_glapi_get_dispatch_table_size(), sizeof(_glapi_proc));
+    struct _glapi_table *disp = calloc(1, _glapi_get_dispatch_table_size() * sizeof(_glapi_proc));
     char symboln[512];
 
     if(!disp)
@@ -134,11 +134,7 @@ body_template = """
     if(!disp->%(name)s) {
         void ** procp = (void **) &disp->%(name)s;
         snprintf(symboln, sizeof(symboln), "%%s%(entry_point)s", symbol_prefix);
-#ifdef _WIN32
-        *procp = GetProcAddress(handle, symboln);
-#else
         *procp = dlsym(handle, symboln);
-#endif
     }
 """
 
@@ -147,7 +143,7 @@ class PrintCode(gl_XML.gl_print_base):
     def __init__(self):
         gl_XML.gl_print_base.__init__(self)
 
-        self.name = "gl_gentable.py (from Mesa)"
+        self.name = "gl_gen_table.py (from Mesa)"
         self.license = license.bsd_license_template % ( \
 """Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
 (C) Copyright IBM Corporation 2004, 2005

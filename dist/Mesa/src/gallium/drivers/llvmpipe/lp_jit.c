@@ -57,6 +57,12 @@ lp_jit_create_types(struct lp_fragment_shader_variant *lp)
       viewport_type = LLVMStructTypeInContext(lc, elem_types,
                                               Elements(elem_types), 0);
 
+#if HAVE_LLVM < 0x0300
+      LLVMAddTypeName(gallivm->module, "viewport", viewport_type);
+
+      LLVMInvalidateStructLayout(gallivm->target, viewport_type);
+#endif
+
       LP_CHECK_MEMBER_OFFSET(struct lp_jit_viewport, min_depth,
                              gallivm->target, viewport_type,
                              LP_JIT_VIEWPORT_MIN_DEPTH);
@@ -84,6 +90,11 @@ lp_jit_create_types(struct lp_fragment_shader_variant *lp)
 
       texture_type = LLVMStructTypeInContext(lc, elem_types,
                                              Elements(elem_types), 0);
+#if HAVE_LLVM < 0x0300
+      LLVMAddTypeName(gallivm->module, "texture", texture_type);
+
+      LLVMInvalidateStructLayout(gallivm->target, texture_type);
+#endif
 
       LP_CHECK_MEMBER_OFFSET(struct lp_jit_texture, width,
                              gallivm->target, texture_type,
@@ -127,6 +138,11 @@ lp_jit_create_types(struct lp_fragment_shader_variant *lp)
 
       sampler_type = LLVMStructTypeInContext(lc, elem_types,
                                              Elements(elem_types), 0);
+#if HAVE_LLVM < 0x0300
+      LLVMAddTypeName(gallivm->module, "sampler", sampler_type);
+
+      LLVMInvalidateStructLayout(gallivm->target, sampler_type);
+#endif
 
       LP_CHECK_MEMBER_OFFSET(struct lp_jit_sampler, min_lod,
                              gallivm->target, sampler_type,
@@ -166,6 +182,12 @@ lp_jit_create_types(struct lp_fragment_shader_variant *lp)
 
       context_type = LLVMStructTypeInContext(lc, elem_types,
                                              Elements(elem_types), 0);
+
+#if HAVE_LLVM < 0x0300
+      LLVMInvalidateStructLayout(gallivm->target, context_type);
+
+      LLVMAddTypeName(gallivm->module, "context", context_type);
+#endif
 
       LP_CHECK_MEMBER_OFFSET(struct lp_jit_context, constants,
                              gallivm->target, context_type,
@@ -215,6 +237,12 @@ lp_jit_create_types(struct lp_fragment_shader_variant *lp)
       thread_data_type = LLVMStructTypeInContext(lc, elem_types,
                                                  Elements(elem_types), 0);
 
+#if HAVE_LLVM < 0x0300
+      LLVMInvalidateStructLayout(gallivm->target, thread_data_type);
+
+      LLVMAddTypeName(gallivm->module, "thread_data", thread_data_type);
+#endif
+
       lp->jit_thread_data_ptr_type = LLVMPointerType(thread_data_type, 0);
    }
 
@@ -231,10 +259,10 @@ lp_jit_screen_cleanup(struct llvmpipe_screen *screen)
 }
 
 
-boolean
+void
 lp_jit_screen_init(struct llvmpipe_screen *screen)
 {
-   return lp_build_init();
+   lp_build_init();
 }
 
 

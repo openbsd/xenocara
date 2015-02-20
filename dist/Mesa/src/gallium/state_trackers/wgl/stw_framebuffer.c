@@ -27,7 +27,9 @@
 
 #include <windows.h>
 
+#include "pipe/p_format.h"
 #include "pipe/p_screen.h"
+#include "util/u_format.h"
 #include "util/u_memory.h"
 #include "hud/hud_context.h"
 #include "state_tracker/st_api.h"
@@ -66,8 +68,9 @@ stw_framebuffer_from_hwnd_locked(
  * must be held, by this order.  If there are still references to the
  * framebuffer, nothing will happen.
  */
-static void
-stw_framebuffer_destroy_locked(struct stw_framebuffer *fb)
+static INLINE void
+stw_framebuffer_destroy_locked(
+   struct stw_framebuffer *fb )
 {
    struct stw_framebuffer **link;
 
@@ -85,30 +88,30 @@ stw_framebuffer_destroy_locked(struct stw_framebuffer *fb)
    *link = fb->next;
    fb->next = NULL;
 
-   if (fb->shared_surface)
-      stw_dev->stw_winsys->shared_surface_close(stw_dev->screen,
-                                                fb->shared_surface);
+   if(fb->shared_surface)
+      stw_dev->stw_winsys->shared_surface_close(stw_dev->screen, fb->shared_surface);
 
    stw_st_destroy_framebuffer_locked(fb->stfb);
-
+   
    pipe_mutex_unlock( fb->mutex );
 
    pipe_mutex_destroy( fb->mutex );
-
+   
    FREE( fb );
 }
 
 
 void
-stw_framebuffer_release(struct stw_framebuffer *fb)
+stw_framebuffer_release(
+   struct stw_framebuffer *fb)
 {
    assert(fb);
    pipe_mutex_unlock( fb->mutex );
 }
 
 
-static void
-stw_framebuffer_get_size(struct stw_framebuffer *fb)
+static INLINE void
+stw_framebuffer_get_size( struct stw_framebuffer *fb )
 {
    LONG width, height;
    RECT client_rect;
@@ -151,8 +154,8 @@ stw_framebuffer_get_size(struct stw_framebuffer *fb)
 
    if (width != fb->width || height != fb->height) {
       fb->must_resize = TRUE;
-      fb->width = width;
-      fb->height = height;
+      fb->width = width; 
+      fb->height = height; 
    }
 
    client_pos.x = 0;
@@ -188,34 +191,35 @@ stw_framebuffer_get_size(struct stw_framebuffer *fb)
  * @sa http://msdn.microsoft.com/en-us/library/ms644960(VS.85).aspx
  */
 LRESULT CALLBACK
-stw_call_window_proc(int nCode, WPARAM wParam, LPARAM lParam)
+stw_call_window_proc(
+   int nCode,
+   WPARAM wParam,
+   LPARAM lParam )
 {
    struct stw_tls_data *tls_data;
    PCWPSTRUCT pParams = (PCWPSTRUCT)lParam;
    struct stw_framebuffer *fb;
-
+   
    tls_data = stw_tls_get_data();
-   if (!tls_data)
+   if(!tls_data)
       return 0;
-
+   
    if (nCode < 0 || !stw_dev)
        return CallNextHookEx(tls_data->hCallWndProcHook, nCode, wParam, lParam);
 
    if (pParams->message == WM_WINDOWPOSCHANGED) {
       /* We handle WM_WINDOWPOSCHANGED instead of WM_SIZE because according to
-       * http://blogs.msdn.com/oldnewthing/archive/2008/01/15/7113860.aspx
-       * WM_SIZE is generated from WM_WINDOWPOSCHANGED by DefWindowProc so it
-       * can be masked out by the application.
-       */
+       * http://blogs.msdn.com/oldnewthing/archive/2008/01/15/7113860.aspx 
+       * WM_SIZE is generated from WM_WINDOWPOSCHANGED by DefWindowProc so it 
+       * can be masked out by the application. */
       LPWINDOWPOS lpWindowPos = (LPWINDOWPOS)pParams->lParam;
-      if ((lpWindowPos->flags & SWP_SHOWWINDOW) ||
-          !(lpWindowPos->flags & SWP_NOMOVE) ||
-          !(lpWindowPos->flags & SWP_NOSIZE)) {
+      if((lpWindowPos->flags & SWP_SHOWWINDOW) || 
+         !(lpWindowPos->flags & SWP_NOMOVE) ||
+         !(lpWindowPos->flags & SWP_NOSIZE)) {
          fb = stw_framebuffer_from_hwnd( pParams->hwnd );
-         if (fb) {
-            /* Size in WINDOWPOS includes the window frame, so get the size
-             * of the client area via GetClientRect.
-             */
+         if(fb) {
+            /* Size in WINDOWPOS includes the window frame, so get the size 
+             * of the client area via GetClientRect.  */
             stw_framebuffer_get_size(fb);
             stw_framebuffer_release(fb);
          }
@@ -224,7 +228,7 @@ stw_call_window_proc(int nCode, WPARAM wParam, LPARAM lParam)
    else if (pParams->message == WM_DESTROY) {
       pipe_mutex_lock( stw_dev->fb_mutex );
       fb = stw_framebuffer_from_hwnd_locked( pParams->hwnd );
-      if (fb)
+      if(fb)
          stw_framebuffer_destroy_locked(fb);
       pipe_mutex_unlock( stw_dev->fb_mutex );
    }
@@ -234,7 +238,9 @@ stw_call_window_proc(int nCode, WPARAM wParam, LPARAM lParam)
 
 
 struct stw_framebuffer *
-stw_framebuffer_create(HDC hdc, int iPixelFormat)
+stw_framebuffer_create(
+   HDC hdc,
+   int iPixelFormat )
 {
    HWND hWnd;
    struct stw_framebuffer *fb;
@@ -242,9 +248,9 @@ stw_framebuffer_create(HDC hdc, int iPixelFormat)
 
    /* We only support drawing to a window. */
    hWnd = WindowFromDC( hdc );
-   if (!hWnd)
+   if(!hWnd)
       return NULL;
-
+   
    fb = CALLOC_STRUCT( stw_framebuffer );
    if (fb == NULL)
       return NULL;
@@ -253,11 +259,10 @@ stw_framebuffer_create(HDC hdc, int iPixelFormat)
    fb->iPixelFormat = iPixelFormat;
 
    /*
-    * We often need a displayable pixel format to make GDI happy. Set it
-    * here (always 1, i.e., out first pixel format) where appropriate.
+    * We often need a displayable pixel format to make GDI happy. Set it here (always 1, i.e.,
+    * out first pixel format) where appropriat.
     */
-   fb->iDisplayablePixelFormat = iPixelFormat <= stw_dev->pixelformat_count
-      ? iPixelFormat : 1;
+   fb->iDisplayablePixelFormat = iPixelFormat <= stw_dev->pixelformat_count ? iPixelFormat : 1;
 
    fb->pfi = pfi = stw_pixelformat_get_info( iPixelFormat );
    fb->stfb = stw_st_create_framebuffer( fb );
@@ -299,13 +304,13 @@ stw_framebuffer_create(HDC hdc, int iPixelFormat)
    return fb;
 }
 
-
 /**
  * Have ptr reference fb.  The referenced framebuffer should be locked.
  */
 void
-stw_framebuffer_reference(struct stw_framebuffer **ptr,
-                          struct stw_framebuffer *fb)
+stw_framebuffer_reference(
+   struct stw_framebuffer **ptr,
+   struct stw_framebuffer *fb)
 {
    struct stw_framebuffer *old_fb = *ptr;
 
@@ -331,24 +336,25 @@ stw_framebuffer_reference(struct stw_framebuffer **ptr,
  * Update the framebuffer's size if necessary.
  */
 void
-stw_framebuffer_update(struct stw_framebuffer *fb)
+stw_framebuffer_update(
+   struct stw_framebuffer *fb)
 {
    assert(fb->stfb);
    assert(fb->height);
    assert(fb->width);
-
-   /* XXX: It would be nice to avoid checking the size again -- in theory
-    * stw_call_window_proc would have cought the resize and stored the right
-    * size already, but unfortunately threads created before the DllMain is
+   
+   /* XXX: It would be nice to avoid checking the size again -- in theory  
+    * stw_call_window_proc would have cought the resize and stored the right 
+    * size already, but unfortunately threads created before the DllMain is 
     * called don't get a DLL_THREAD_ATTACH notification, and there is no way
     * to know of their existing without using the not very portable PSAPI.
     */
    stw_framebuffer_get_size(fb);
-}
+}                      
 
 
 void
-stw_framebuffer_cleanup(void)
+stw_framebuffer_cleanup( void )
 {
    struct stw_framebuffer *fb;
    struct stw_framebuffer *next;
@@ -361,14 +367,14 @@ stw_framebuffer_cleanup(void)
    fb = stw_dev->fb_head;
    while (fb) {
       next = fb->next;
-
+      
       pipe_mutex_lock(fb->mutex);
       stw_framebuffer_destroy_locked(fb);
-
+      
       fb = next;
    }
    stw_dev->fb_head = NULL;
-
+   
    pipe_mutex_unlock( stw_dev->fb_mutex );
 }
 
@@ -395,7 +401,8 @@ stw_framebuffer_from_hdc_locked(
  * Given an hdc, return the corresponding stw_framebuffer.
  */
 struct stw_framebuffer *
-stw_framebuffer_from_hdc(HDC hdc)
+stw_framebuffer_from_hdc(
+   HDC hdc )
 {
    struct stw_framebuffer *fb;
 
@@ -414,7 +421,8 @@ stw_framebuffer_from_hdc(HDC hdc)
  * Given an hdc, return the corresponding stw_framebuffer.
  */
 struct stw_framebuffer *
-stw_framebuffer_from_hwnd(HWND hwnd)
+stw_framebuffer_from_hwnd(
+   HWND hwnd )
 {
    struct stw_framebuffer *fb;
 
@@ -427,7 +435,9 @@ stw_framebuffer_from_hwnd(HWND hwnd)
 
 
 BOOL APIENTRY
-DrvSetPixelFormat(HDC hdc, LONG iPixelFormat)
+DrvSetPixelFormat(
+   HDC hdc,
+   LONG iPixelFormat )
 {
    uint count;
    uint index;
@@ -442,7 +452,7 @@ DrvSetPixelFormat(HDC hdc, LONG iPixelFormat)
       return FALSE;
 
    fb = stw_framebuffer_from_hdc_locked(hdc);
-   if (fb) {
+   if(fb) {
       /*
        * SetPixelFormat must be called only once.  However ignore 
        * pbuffers, for which the framebuffer object is created first.
@@ -455,36 +465,37 @@ DrvSetPixelFormat(HDC hdc, LONG iPixelFormat)
    }
 
    fb = stw_framebuffer_create(hdc, iPixelFormat);
-   if (!fb) {
+   if(!fb) {
       return FALSE;
    }
-
+      
    stw_framebuffer_release( fb );
 
-   /* Some applications mistakenly use the undocumented wglSetPixelFormat
-    * function instead of SetPixelFormat, so we call SetPixelFormat here to
+   /* Some applications mistakenly use the undocumented wglSetPixelFormat 
+    * function instead of SetPixelFormat, so we call SetPixelFormat here to 
     * avoid opengl32.dll's wglCreateContext to fail */
    if (GetPixelFormat(hdc) == 0) {
       BOOL bRet = SetPixelFormat(hdc, iPixelFormat, NULL);
       assert(bRet);
    }
-
+   
    return TRUE;
 }
 
 
 int
-stw_pixelformat_get(HDC hdc)
+stw_pixelformat_get(
+   HDC hdc )
 {
    int iPixelFormat = 0;
    struct stw_framebuffer *fb;
 
    fb = stw_framebuffer_from_hdc(hdc);
-   if (fb) {
+   if(fb) {
       iPixelFormat = fb->iPixelFormat;
       stw_framebuffer_release(fb);
    }
-
+   
    return iPixelFormat;
 }
 
@@ -507,19 +518,17 @@ DrvPresentBuffers(HDC hdc, PGLPRESENTBUFFERSDATA data)
 
    res = (struct pipe_resource *)data->pPrivateData;
 
-   if (data->hSharedSurface != fb->hSharedSurface) {
-      if (fb->shared_surface) {
+   if(data->hSharedSurface != fb->hSharedSurface) {
+      if(fb->shared_surface) {
          stw_dev->stw_winsys->shared_surface_close(screen, fb->shared_surface);
          fb->shared_surface = NULL;
       }
 
       fb->hSharedSurface = data->hSharedSurface;
 
-      if (data->hSharedSurface &&
+      if(data->hSharedSurface &&
          stw_dev->stw_winsys->shared_surface_open) {
-         fb->shared_surface =
-            stw_dev->stw_winsys->shared_surface_open(screen,
-                                                     fb->hSharedSurface);
+         fb->shared_surface = stw_dev->stw_winsys->shared_surface_open(screen, fb->hSharedSurface);
       }
    }
 
@@ -555,7 +564,7 @@ stw_framebuffer_present_locked(HDC hdc,
                                struct stw_framebuffer *fb,
                                struct pipe_resource *res)
 {
-   if (stw_dev->callbacks.wglCbPresentBuffers &&
+   if(stw_dev->callbacks.wglCbPresentBuffers &&
       stw_dev->stw_winsys->compose) {
       GLCBPRESENTBUFFERSDATA data;
 
@@ -586,7 +595,8 @@ stw_framebuffer_present_locked(HDC hdc,
 
 
 BOOL APIENTRY
-DrvSwapBuffers(HDC hdc)
+DrvSwapBuffers(
+   HDC hdc )
 {
    struct stw_context *ctx;
    struct stw_framebuffer *fb;
@@ -618,9 +628,11 @@ DrvSwapBuffers(HDC hdc)
 
 
 BOOL APIENTRY
-DrvSwapLayerBuffers(HDC hdc, UINT fuPlanes)
+DrvSwapLayerBuffers(
+   HDC hdc,
+   UINT fuPlanes )
 {
-   if (fuPlanes & WGL_SWAP_MAIN_PLANE)
+   if(fuPlanes & WGL_SWAP_MAIN_PLANE)
       return DrvSwapBuffers(hdc);
 
    return FALSE;

@@ -263,13 +263,16 @@ update_blend( struct st_context *st )
          blend->rt[i].colormask |= PIPE_MASK_A;
    }
 
-   blend->dither = ctx->Color.DitherFlag;
+   if (ctx->Color.DitherFlag)
+      blend->dither = 1;
 
    if (ctx->Multisample.Enabled) {
       /* unlike in gallium/d3d10 these operations are only performed
          if msaa is enabled */
-      blend->alpha_to_coverage = ctx->Multisample.SampleAlphaToCoverage;
-      blend->alpha_to_one = ctx->Multisample.SampleAlphaToOne;
+      if (ctx->Multisample.SampleAlphaToCoverage)
+         blend->alpha_to_coverage = 1;
+      if (ctx->Multisample.SampleAlphaToOne)
+         blend->alpha_to_one = 1;
    }
 
    cso_set_blend(st->cso_context, blend);

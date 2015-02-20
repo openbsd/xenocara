@@ -40,7 +40,6 @@
 #include "main/image.h"
 #include "main/bufferobj.h"
 #include "main/macros.h"
-#include "main/varray.h"
 
 #include "vbo/vbo.h"
 
@@ -235,7 +234,7 @@ st_draw_vbo(struct gl_context *ctx,
        * so we only set these fields for indexed drawing:
        */
       info.primitive_restart = ctx->Array._PrimitiveRestart;
-      info.restart_index = _mesa_primitive_restart_index(ctx, ib->type);
+      info.restart_index = ctx->Array.RestartIndex;
    }
    else {
       /* Transform feedback drawing is always non-indexed. */
@@ -243,14 +242,6 @@ st_draw_vbo(struct gl_context *ctx,
       if (tfb_vertcount) {
          st_transform_feedback_draw_init(tfb_vertcount, &info);
       }
-   }
-
-   if (indirect) {
-      info.indirect = st_buffer_object(indirect)->buffer;
-
-      /* Primitive restart is not handled by the VBO module in this case. */
-      info.primitive_restart = ctx->Array._PrimitiveRestart;
-      info.restart_index = ctx->Array.RestartIndex;
    }
 
    /* do actual drawing */
@@ -265,7 +256,6 @@ st_draw_vbo(struct gl_context *ctx,
          info.min_index = info.start;
          info.max_index = info.start + info.count - 1;
       }
-      info.indirect_offset = prims[i].indirect_offset;
 
       if (ST_DEBUG & DEBUG_DRAW) {
          debug_printf("st/draw: mode %s  start %u  count %u  indexed %d\n",
@@ -275,7 +265,7 @@ st_draw_vbo(struct gl_context *ctx,
                       info.indexed);
       }
 
-      if (info.count_from_stream_output || info.indirect) {
+      if (info.count_from_stream_output) {
          cso_draw_vbo(st->cso_context, &info);
       }
       else if (info.primitive_restart) {

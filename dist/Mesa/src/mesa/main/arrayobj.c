@@ -230,7 +230,7 @@ _mesa_initialize_vao(struct gl_context *ctx,
    obj->RefCount = 1;
 
    /* Init the individual arrays */
-   for (i = 0; i < Elements(obj->VertexAttrib); i++) {
+   for (i = 0; i < Elements(obj->_VertexAttrib); i++) {
       switch (i) {
       case VERT_ATTRIB_WEIGHT:
          init_array(ctx, obj, VERT_ATTRIB_WEIGHT, 1, GL_FLOAT);
@@ -288,6 +288,52 @@ remove_array_object( struct gl_context *ctx, struct gl_vertex_array_object *obj 
       /* remove from hash table */
       _mesa_HashRemove(ctx->Array.Objects, obj->Name);
    }
+}
+
+
+
+/**
+ * Helper for _mesa_update_vao_max_element().
+ * \return  min(vao->_VertexAttrib[*]._MaxElement).
+ */
+static GLuint
+compute_max_element(struct gl_vertex_array_object *vao, GLbitfield64 enabled)
+{
+   GLuint min = ~((GLuint)0);
+
+   while (enabled) {
+      struct gl_client_array *client_array;
+      GLint attrib = ffsll(enabled) - 1;
+      enabled ^= BITFIELD64_BIT(attrib);
+
+      client_array = &vao->_VertexAttrib[attrib];
+      assert(client_array->Enabled);
+      _mesa_update_array_max_element(client_array);
+      min = MIN2(min, client_array->_MaxElement);
+   }
+
+   return min;
+}
+
+
+/**
+ * Examine vertex arrays to update the gl_vertex_array_object::_MaxElement field.
+ */
+void
+_mesa_update_vao_max_element(struct gl_context *ctx,
+                                      struct gl_vertex_array_object *vao)
+{
+   GLbitfield64 enabled;
+
+   if (!ctx->VertexProgram._Current ||
+       ctx->VertexProgram._Current == ctx->VertexProgram._TnlProgram) {
+      enabled = _mesa_array_object_get_enabled_ff(vao);
+   } else {
+      enabled = _mesa_array_object_get_enabled_arb(vao);
+   }
+
+   /* _MaxElement is one past the last legal array element */
+   vao->_MaxElement = compute_max_element(vao, enabled);
 }
 
 
@@ -379,21 +425,6 @@ bind_vertex_array(struct gl_context *ctx, GLuint id, GLboolean genRequired)
          newObj->ARBsemantics = genRequired;
          newObj->EverBound = GL_TRUE;
       }
-   }
-
-   if (ctx->Array.DrawMethod == DRAW_ARRAYS) {
-      /* The _DrawArrays pointer is pointing at the VAO being unbound and
-       * that VAO may be in the process of being deleted. If it's not going
-       * to be deleted, this will have no effect, because the pointer needs
-       * to be updated by the VBO module anyway.
-       *
-       * Before the VBO module can update the pointer, we have to set it
-       * to NULL for drivers not to set up arrays which are not bound,
-       * or to prevent a crash if the VAO being unbound is going to be
-       * deleted.
-       */
-      ctx->Array._DrawArrays = NULL;
-      ctx->Array.DrawMethod = DRAW_NONE;
    }
 
    ctx->NewState |= _NEW_ARRAY;

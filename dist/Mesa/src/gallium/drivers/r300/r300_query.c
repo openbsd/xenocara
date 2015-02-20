@@ -30,8 +30,7 @@
 #include <stdio.h>
 
 static struct pipe_query *r300_create_query(struct pipe_context *pipe,
-                                            unsigned query_type,
-                                            unsigned index)
+                                            unsigned query_type)
 {
     struct r300_context *r300 = r300_context(pipe);
     struct r300_screen *r300screen = r300->screen;
@@ -59,7 +58,7 @@ static struct pipe_query *r300_create_query(struct pipe_context *pipe,
         q->num_pipes = r300screen->info.r300_num_gb_pipes;
 
     q->buf = r300->rws->buffer_create(r300->rws, 4096, 4096, TRUE,
-                                      RADEON_DOMAIN_GTT, 0);
+                                      RADEON_DOMAIN_GTT);
     if (!q->buf) {
         FREE(q);
         return NULL;

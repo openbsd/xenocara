@@ -2038,15 +2038,12 @@ generate_mipmap_compressed(struct gl_context *ctx, GLenum target,
 
    components = _mesa_format_num_components(temp_format);
 
-   switch (_mesa_get_format_datatype(srcImage->TexFormat)) {
-   case GL_FLOAT:
-      temp_datatype = GL_FLOAT;
-      break;
-   case GL_SIGNED_NORMALIZED:
-      /* Revisit this if we get compressed formats with >8 bits per component */
+   /* Revisit this if we get compressed formats with >8 bits per component */
+   if (_mesa_get_format_datatype(srcImage->TexFormat)
+       == GL_SIGNED_NORMALIZED) {
       temp_datatype = GL_BYTE;
-      break;
-   default:
+   }
+   else {
       temp_datatype = GL_UNSIGNED_BYTE;
    }
 

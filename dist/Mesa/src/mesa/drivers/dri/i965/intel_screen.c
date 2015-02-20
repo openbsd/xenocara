@@ -37,7 +37,7 @@
 #include "main/fbobject.h"
 #include "main/version.h"
 #include "swrast/s_renderbuffer.h"
-#include "util/ralloc.h"
+#include "glsl/ralloc.h"
 
 #include "utils.h"
 #include "xmlpool.h"
@@ -84,7 +84,6 @@ DRI_CONF_BEGIN
       DRI_CONF_FORCE_GLSL_EXTENSIONS_WARN("false")
       DRI_CONF_DISABLE_GLSL_LINE_CONTINUATIONS("false")
       DRI_CONF_DISABLE_BLEND_FUNC_EXTENDED("false")
-      DRI_CONF_ALLOW_GLSL_EXTENSION_DIRECTIVE_MIDSHADER("false")
 
       DRI_CONF_OPT_BEGIN_B(shader_precompile, "true")
 	 DRI_CONF_DESC(en, "Perform code generation at shader link time.")
@@ -96,6 +95,7 @@ DRI_CONF_END
 #include "intel_batchbuffer.h"
 #include "intel_buffers.h"
 #include "intel_bufmgr.h"
+#include "intel_chipset.h"
 #include "intel_fbo.h"
 #include "intel_mipmap_tree.h"
 #include "intel_screen.h"
@@ -216,17 +216,11 @@ static struct intel_image_format intel_image_formats[] = {
    { __DRI_IMAGE_FOURCC_ARGB8888, __DRI_IMAGE_COMPONENTS_RGBA, 1,
      { { 0, 0, 0, __DRI_IMAGE_FORMAT_ARGB8888, 4 } } },
 
-   { __DRI_IMAGE_FOURCC_ABGR8888, __DRI_IMAGE_COMPONENTS_RGBA, 1,
-     { { 0, 0, 0, __DRI_IMAGE_FORMAT_ABGR8888, 4 } } },
-
    { __DRI_IMAGE_FOURCC_SARGB8888, __DRI_IMAGE_COMPONENTS_RGBA, 1,
      { { 0, 0, 0, __DRI_IMAGE_FORMAT_SARGB8, 4 } } },
 
    { __DRI_IMAGE_FOURCC_XRGB8888, __DRI_IMAGE_COMPONENTS_RGB, 1,
      { { 0, 0, 0, __DRI_IMAGE_FORMAT_XRGB8888, 4 }, } },
-
-   { __DRI_IMAGE_FOURCC_XBGR8888, __DRI_IMAGE_COMPONENTS_RGB, 1,
-     { { 0, 0, 0, __DRI_IMAGE_FORMAT_XBGR8888, 4 }, } },
 
    { __DRI_IMAGE_FOURCC_RGB565, __DRI_IMAGE_COMPONENTS_RGB, 1,
      { { 0, 0, 0, __DRI_IMAGE_FORMAT_RGB565, 2 } } },
@@ -851,6 +845,10 @@ brw_query_renderer_integer(__DRIscreen *psp, int param, unsigned int *value)
    case __DRI2_RENDERER_UNIFIED_MEMORY_ARCHITECTURE:
       value[0] = 1;
       return 0;
+   case __DRI2_RENDERER_PREFERRED_PROFILE:
+      value[0] = (psp->max_gl_core_version != 0)
+         ? (1U << __DRI_API_OPENGL_CORE) : (1U << __DRI_API_OPENGL);
+      return 0;
    default:
       return driQueryRendererIntegerCommon(psp, param, value);
    }
@@ -1266,11 +1264,15 @@ set_max_gl_versions(struct intel_screen *screen)
    __DRIscreen *psp = screen->driScrnPriv;
 
    switch (screen->devinfo->gen) {
-   case 9:
    case 8:
    case 7:
-   case 6:
       psp->max_gl_core_version = 33;
+      psp->max_gl_compat_version = 30;
+      psp->max_gl_es1_version = 11;
+      psp->max_gl_es2_version = 30;
+      break;
+   case 6:
+      psp->max_gl_core_version = 31;
       psp->max_gl_compat_version = 30;
       psp->max_gl_es1_version = 11;
       psp->max_gl_es2_version = 30;
@@ -1283,7 +1285,8 @@ set_max_gl_versions(struct intel_screen *screen)
       psp->max_gl_es2_version = 20;
       break;
    default:
-      unreachable("unrecognized intel_screen::gen");
+      assert(!"unrecognized intel_screen::gen");
+      break;
    }
 }
 

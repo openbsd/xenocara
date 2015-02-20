@@ -157,7 +157,9 @@ compile_fs(struct svga_context *svga,
       }
    }
 
-   if (svga_shader_too_large(svga, variant)) {
+   if (variant->nr_tokens * sizeof(variant->tokens[0])
+       + sizeof(SVGA3dCmdDefineShader) + sizeof(SVGA3dCmdHeader)
+       >= SVGA_CB_MAX_COMMAND_SIZE) {
       /* too big, use dummy shader */
       debug_printf("Shader too large (%lu bytes),"
                    " using dummy shader instead.\n",
@@ -338,7 +340,7 @@ make_fs_key(const struct svga_context *svga,
                                     == PIPE_SPRITE_COORD_LOWER_LEFT);
 
    /* SVGA_NEW_FRAME_BUFFER */
-   if (fs->base.info.properties[TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS]) {
+   if (fs->base.info.color0_writes_all_cbufs) {
       /* Replicate color0 output to N colorbuffers */
       key->write_color0_to_n_cbufs = svga->curr.framebuffer.nr_cbufs;
    }
@@ -402,6 +404,14 @@ emit_hw_fs(struct svga_context *svga, unsigned dirty)
 
    if (variant != svga->state.hw_draw.fs) {
       if (svga_have_gb_objects(svga)) {
+         /*
+          * Bind is necessary here only because pipebuffer_fenced may move
+          * the shader contents around....
+          */
+         ret = SVGA3D_BindGBShader(svga->swc, variant->gb_shader);
+         if (ret != PIPE_OK)
+            return ret;
+
          ret = SVGA3D_SetGBShader(svga->swc, SVGA3D_SHADERTYPE_PS,
                                   variant->gb_shader);
          if (ret != PIPE_OK)

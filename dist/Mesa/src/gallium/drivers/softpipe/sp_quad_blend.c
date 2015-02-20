@@ -923,8 +923,9 @@ blend_fallback(struct quad_stage *qs,
    struct softpipe_context *softpipe = qs->softpipe;
    const struct pipe_blend_state *blend = softpipe->blend;
    unsigned cbuf;
-   boolean write_all =
-      softpipe->fs_variant->info.properties[TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS];
+   boolean write_all;
+
+   write_all = softpipe->fs_variant->info.color0_writes_all_cbufs;
 
    for (cbuf = 0; cbuf < softpipe->framebuffer.nr_cbufs; cbuf++) {
       if (softpipe->framebuffer.cbufs[cbuf]) {
@@ -934,7 +935,7 @@ blend_fallback(struct quad_stage *qs,
          struct softpipe_cached_tile *tile
             = sp_get_cached_tile(softpipe->cbuf_cache[cbuf],
                                  quads[0]->input.x0, 
-                                 quads[0]->input.y0, quads[0]->input.layer);
+                                 quads[0]->input.y0);
          const boolean clamp = bqs->clamp[cbuf];
          const float *blend_color;
          const boolean dual_source_blend = util_blend_state_is_dual(blend, cbuf);
@@ -1037,7 +1038,7 @@ blend_single_add_src_alpha_inv_src_alpha(struct quad_stage *qs,
    struct softpipe_cached_tile *tile
       = sp_get_cached_tile(qs->softpipe->cbuf_cache[0],
                            quads[0]->input.x0, 
-                           quads[0]->input.y0, quads[0]->input.layer);
+                           quads[0]->input.y0);
 
    for (q = 0; q < nr; q++) {
       struct quad_header *quad = quads[q];
@@ -1111,7 +1112,7 @@ blend_single_add_one_one(struct quad_stage *qs,
    struct softpipe_cached_tile *tile
       = sp_get_cached_tile(qs->softpipe->cbuf_cache[0],
                            quads[0]->input.x0, 
-                           quads[0]->input.y0, quads[0]->input.layer);
+                           quads[0]->input.y0);
 
    for (q = 0; q < nr; q++) {
       struct quad_header *quad = quads[q];
@@ -1179,7 +1180,7 @@ single_output_color(struct quad_stage *qs,
    struct softpipe_cached_tile *tile
       = sp_get_cached_tile(qs->softpipe->cbuf_cache[0],
                            quads[0]->input.x0, 
-                           quads[0]->input.y0, quads[0]->input.layer);
+                           quads[0]->input.y0);
 
    for (q = 0; q < nr; q++) {
       struct quad_header *quad = quads[q];

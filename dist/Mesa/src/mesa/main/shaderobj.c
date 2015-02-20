@@ -40,7 +40,7 @@
 #include "program/program.h"
 #include "program/prog_parameter.h"
 #include "program/hash_table.h"
-#include "util/ralloc.h"
+#include "ralloc.h"
 
 /**********************************************************************/
 /*** Shader object functions                                        ***/
@@ -235,8 +235,8 @@ _mesa_reference_shader_program(struct gl_context *ctx,
    }
 }
 
-static void
-init_shader_program(struct gl_shader_program *prog)
+void
+_mesa_init_shader_program(struct gl_context *ctx, struct gl_shader_program *prog)
 {
    prog->Type = GL_SHADER_PROGRAM_MESA;
    prog->RefCount = 1;
@@ -248,8 +248,6 @@ init_shader_program(struct gl_shader_program *prog)
    prog->Geom.VerticesOut = 0;
    prog->Geom.InputType = GL_TRIANGLES;
    prog->Geom.OutputType = GL_TRIANGLE_STRIP;
-   prog->Geom.UsesEndPrimitive = false;
-   prog->Geom.UsesStreams = false;
 
    prog->TransformFeedback.BufferMode = GL_INTERLEAVED_ATTRIBS;
 
@@ -261,13 +259,13 @@ init_shader_program(struct gl_shader_program *prog)
  * Called via ctx->Driver.NewShaderProgram()
  */
 static struct gl_shader_program *
-_mesa_new_shader_program(GLuint name)
+_mesa_new_shader_program(struct gl_context *ctx, GLuint name)
 {
    struct gl_shader_program *shProg;
    shProg = rzalloc(NULL, struct gl_shader_program);
    if (shProg) {
       shProg->Name = name;
-      init_shader_program(shProg);
+      _mesa_init_shader_program(ctx, shProg);
    }
    return shProg;
 }
@@ -277,11 +275,11 @@ _mesa_new_shader_program(GLuint name)
  * Clear (free) the shader program state that gets produced by linking.
  */
 void
-_mesa_clear_shader_program_data(struct gl_shader_program *shProg)
+_mesa_clear_shader_program_data(struct gl_context *ctx,
+                                struct gl_shader_program *shProg)
 {
-   unsigned i;
-
    if (shProg->UniformStorage) {
+      unsigned i;
       for (i = 0; i < shProg->NumUserUniformStorage; ++i)
          _mesa_uniform_detach_all_driver_storage(&shProg->UniformStorage[i]);
       ralloc_free(shProg->UniformStorage);
@@ -303,18 +301,6 @@ _mesa_clear_shader_program_data(struct gl_shader_program *shProg)
    assert(shProg->InfoLog != NULL);
    ralloc_free(shProg->InfoLog);
    shProg->InfoLog = ralloc_strdup(shProg, "");
-
-   ralloc_free(shProg->UniformBlocks);
-   shProg->UniformBlocks = NULL;
-   shProg->NumUniformBlocks = 0;
-   for (i = 0; i < MESA_SHADER_STAGES; i++) {
-      ralloc_free(shProg->UniformBlockStageIndex[i]);
-      shProg->UniformBlockStageIndex[i] = NULL;
-   }
-
-   ralloc_free(shProg->AtomicBuffers);
-   shProg->AtomicBuffers = NULL;
-   shProg->NumAtomicBuffers = 0;
 }
 
 
@@ -331,7 +317,7 @@ _mesa_free_shader_program_data(struct gl_context *ctx,
 
    assert(shProg->Type == GL_SHADER_PROGRAM_MESA);
 
-   _mesa_clear_shader_program_data(shProg);
+   _mesa_clear_shader_program_data(ctx, shProg);
 
    if (shProg->AttributeBindings) {
       string_to_uint_map_dtor(shProg->AttributeBindings);

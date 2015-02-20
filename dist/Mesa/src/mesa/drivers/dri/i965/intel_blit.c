@@ -85,7 +85,8 @@ br13_for_cpp(int cpp)
       return BR13_8;
       break;
    default:
-      unreachable("not reached");
+      assert(0);
+      return 0;
    }
 }
 
@@ -342,10 +343,9 @@ intelEmitCopyBlit(struct brw_context *brw,
        dst_buffer, dst_pitch, dst_offset, dst_x, dst_y, w, h);
 
    /* Blit pitch must be dword-aligned.  Otherwise, the hardware appears to drop
-    * the low bits.  Offsets must be naturally aligned.
+    * the low bits.
     */
-   if (src_pitch % 4 != 0 || src_offset % cpp != 0 ||
-       dst_pitch % 4 != 0 || dst_offset % cpp != 0)
+   if (src_pitch % 4 != 0 || dst_pitch % 4 != 0)
       return false;
 
    /* For big formats (such as floating point), do the copy using 16 or 32bpp

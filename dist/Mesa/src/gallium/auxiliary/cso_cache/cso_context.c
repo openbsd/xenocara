@@ -239,8 +239,18 @@ static void cso_init_vbuf(struct cso_context *cso)
 {
    struct u_vbuf_caps caps;
 
+   u_vbuf_get_caps(cso->pipe->screen, &caps);
+
    /* Install u_vbuf if there is anything unsupported. */
-   if (u_vbuf_get_caps(cso->pipe->screen, &caps)) {
+   if (!caps.buffer_offset_unaligned ||
+       !caps.buffer_stride_unaligned ||
+       !caps.velem_src_offset_unaligned ||
+       !caps.format_fixed32 ||
+       !caps.format_float16 ||
+       !caps.format_float64 ||
+       !caps.format_norm32 ||
+       !caps.format_scaled32 ||
+       !caps.user_vertex_buffers) {
       cso->vbuf = u_vbuf_create(cso->pipe, &caps,
                                 cso->aux_vertex_buffer_index);
    }
@@ -322,7 +332,7 @@ void cso_release_all( struct cso_context *ctx )
       ctx->pipe->bind_vs_state( ctx->pipe, NULL );
       ctx->pipe->bind_vertex_elements_state( ctx->pipe, NULL );
 
-      if (ctx->has_streamout)
+      if (ctx->pipe->set_stream_output_targets)
          ctx->pipe->set_stream_output_targets(ctx->pipe, 0, NULL, NULL);
    }
 

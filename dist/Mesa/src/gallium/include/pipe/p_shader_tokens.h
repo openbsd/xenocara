@@ -103,11 +103,6 @@ enum tgsi_file_type {
 #define TGSI_INTERPOLATE_COLOR         3 /* special color case for smooth/flat */
 #define TGSI_INTERPOLATE_COUNT         4
 
-#define TGSI_INTERPOLATE_LOC_CENTER    0
-#define TGSI_INTERPOLATE_LOC_CENTROID  1
-#define TGSI_INTERPOLATE_LOC_SAMPLE    2
-#define TGSI_INTERPOLATE_LOC_COUNT     3
-
 #define TGSI_CYLINDRICAL_WRAP_X (1 << 0)
 #define TGSI_CYLINDRICAL_WRAP_Y (1 << 1)
 #define TGSI_CYLINDRICAL_WRAP_Z (1 << 2)
@@ -143,9 +138,9 @@ struct tgsi_declaration_dimension
 struct tgsi_declaration_interp
 {
    unsigned Interpolate : 4;   /**< one of TGSI_INTERPOLATE_x */
-   unsigned Location    : 2;   /**< one of TGSI_INTERPOLATE_LOC_x */
+   unsigned Centroid    : 1;   /**< centroid sampling? */
    unsigned CylindricalWrap:4; /**< TGSI_CYLINDRICAL_WRAP_x flags */
-   unsigned Padding     : 22;
+   unsigned Padding     : 23;
 };
 
 #define TGSI_SEMANTIC_POSITION   0
@@ -192,21 +187,12 @@ struct tgsi_declaration_resource {
    unsigned Padding     : 22;
 };
 
-enum tgsi_return_type {
-   TGSI_RETURN_TYPE_UNORM = 0,
-   TGSI_RETURN_TYPE_SNORM,
-   TGSI_RETURN_TYPE_SINT,
-   TGSI_RETURN_TYPE_UINT,
-   TGSI_RETURN_TYPE_FLOAT,
-   TGSI_RETURN_TYPE_COUNT
-};
-
 struct tgsi_declaration_sampler_view {
    unsigned Resource    : 8; /**< one of TGSI_TEXTURE_ */
-   unsigned ReturnTypeX : 6; /**< one of enum tgsi_return_type */
-   unsigned ReturnTypeY : 6; /**< one of enum tgsi_return_type */
-   unsigned ReturnTypeZ : 6; /**< one of enum tgsi_return_type */
-   unsigned ReturnTypeW : 6; /**< one of enum tgsi_return_type */
+   unsigned ReturnTypeX : 6; /**< one of enum pipe_type */
+   unsigned ReturnTypeY : 6; /**< one of enum pipe_type */
+   unsigned ReturnTypeZ : 6; /**< one of enum pipe_type */
+   unsigned ReturnTypeW : 6; /**< one of enum pipe_type */
 };
 
 struct tgsi_declaration_array {
@@ -251,8 +237,7 @@ union tgsi_immediate_data
 #define TGSI_PROPERTY_FS_DEPTH_LAYOUT        6
 #define TGSI_PROPERTY_VS_PROHIBIT_UCPS       7
 #define TGSI_PROPERTY_GS_INVOCATIONS         8
-#define TGSI_PROPERTY_VS_WINDOW_SPACE_POSITION 9
-#define TGSI_PROPERTY_COUNT                  10
+#define TGSI_PROPERTY_COUNT                  9
 
 struct tgsi_property {
    unsigned Type         : 4;  /**< TGSI_TOKEN_TYPE_PROPERTY */
@@ -361,10 +346,7 @@ struct tgsi_property_data {
 #define TGSI_OPCODE_UIF                 75
 #define TGSI_OPCODE_ELSE                77
 #define TGSI_OPCODE_ENDIF               78
-
-#define TGSI_OPCODE_DDX_FINE            79
-#define TGSI_OPCODE_DDY_FINE            80
-
+                                /* gap */
 #define TGSI_OPCODE_PUSHA               81
 #define TGSI_OPCODE_POPA                82
 #define TGSI_OPCODE_CEIL                83
@@ -489,11 +471,7 @@ struct tgsi_property_data {
 #define TGSI_OPCODE_IMSB                190
 #define TGSI_OPCODE_UMSB                191
 
-#define TGSI_OPCODE_INTERP_CENTROID     192
-#define TGSI_OPCODE_INTERP_SAMPLE       193
-#define TGSI_OPCODE_INTERP_OFFSET       194
-
-#define TGSI_OPCODE_LAST                195
+#define TGSI_OPCODE_LAST                192
 
 #define TGSI_SAT_NONE            0  /* do not saturate */
 #define TGSI_SAT_ZERO_ONE        1  /* clamp to [0,1] */

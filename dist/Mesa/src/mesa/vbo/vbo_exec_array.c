@@ -36,8 +36,6 @@
 #include "main/enums.h"
 #include "main/macros.h"
 #include "main/transformfeedback.h"
-#include "main/sse_minmax.h"
-#include "x86/common_x86_asm.h"
 
 #include "vbo_context.h"
 
@@ -121,16 +119,10 @@ vbo_get_minmax_index(struct gl_context *ctx,
          }
       }
       else {
-#if defined(USE_SSE41)
-         if (cpu_has_sse4_1) {
-            _mesa_uint_array_min_max(ui_indices, &min_ui, &max_ui, count);
+         for (i = 0; i < count; i++) {
+            if (ui_indices[i] > max_ui) max_ui = ui_indices[i];
+            if (ui_indices[i] < min_ui) min_ui = ui_indices[i];
          }
-         else
-#endif
-            for (i = 0; i < count; i++) {
-               if (ui_indices[i] > max_ui) max_ui = ui_indices[i];
-               if (ui_indices[i] < min_ui) min_ui = ui_indices[i];
-            }
       }
       *min_index = min_ui;
       *max_index = max_ui;
@@ -570,6 +562,38 @@ vbo_bind_arrays(struct gl_context *ctx)
    }
 }
 
+
+/**
+ * Handle a draw case that potentially has primitive restart enabled.
+ *
+ * If primitive restart is enabled, and PrimitiveRestartInSoftware is
+ * set, then vbo_sw_primitive_restart is used to handle the primitive
+ * restart case in software.
+ */
+static void
+vbo_handle_primitive_restart(struct gl_context *ctx,
+                             const struct _mesa_prim *prim,
+                             GLuint nr_prims,
+                             const struct _mesa_index_buffer *ib,
+                             GLboolean index_bounds_valid,
+                             GLuint min_index,
+                             GLuint max_index)
+{
+   struct vbo_context *vbo = vbo_context(ctx);
+
+   if ((ib != NULL) &&
+       ctx->Const.PrimitiveRestartInSoftware &&
+       ctx->Array._PrimitiveRestart) {
+      /* Handle primitive restart in software */
+      vbo_sw_primitive_restart(ctx, prim, nr_prims, ib, NULL);
+   } else {
+      /* Call driver directly for draw_prims */
+      vbo->draw_prims(ctx, prim, nr_prims, ib,
+                      index_bounds_valid, min_index, max_index, NULL, NULL);
+   }
+}
+
+
 /**
  * Helper function called by the other DrawArrays() functions below.
  * This is where we handle primitive restart for drawing non-indexed
@@ -596,8 +620,7 @@ vbo_draw_arrays(struct gl_context *ctx, GLenum mode, GLint start,
    prim[0].is_indirect = 0;
 
    /* Implement the primitive restart index */
-   if (ctx->Array.PrimitiveRestart && !ctx->Array.PrimitiveRestartFixedIndex &&
-       ctx->Array.RestartIndex < count) {
+   if (ctx->Array.PrimitiveRestart && ctx->Array.RestartIndex < count) {
       GLuint primCount = 0;
 
       if (ctx->Array.RestartIndex == start) {
@@ -988,8 +1011,8 @@ vbo_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
     */
 
    check_buffers_are_unmapped(exec->array.inputs);
-   vbo->draw_prims(ctx, prim, 1, &ib,
-                   index_bounds_valid, start, end, NULL, NULL);
+   vbo_handle_primitive_restart(ctx, prim, 1, &ib,
+                                index_bounds_valid, start, end);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH) {
       _mesa_flush(ctx);
@@ -1009,12 +1032,7 @@ vbo_exec_DrawRangeElementsBaseVertex(GLenum mode,
 {
    static GLuint warnCount = 0;
    GLboolean index_bounds_valid = GL_TRUE;
-
-   /* This is only useful to catch invalid values in the "end" parameter
-    * like ~0.
-    */
-   GLuint max_element = 2 * 1000 * 1000 * 1000; /* just a big number */
-
+   GLuint max_element;
    GET_CURRENT_CONTEXT(ctx);
 
    if (MESA_VERBOSE & VERBOSE_DRAW)
@@ -1026,6 +1044,25 @@ vbo_exec_DrawRangeElementsBaseVertex(GLenum mode,
    if (!_mesa_validate_DrawRangeElements( ctx, mode, start, end, count,
                                           type, indices, basevertex ))
       return;
+
+   if (ctx->Const.CheckArrayBounds) {
+      /* _MaxElement was computed, so we can use it.
+       * This path is used for drivers which need strict bounds checking.
+       */
+      max_element = ctx->Array.VAO->_MaxElement;
+   }
+   else {
+      /* Generally, hardware drivers don't need to know the buffer bounds
+       * if all vertex attributes are in VBOs.
+       * However, if none of vertex attributes are in VBOs, _MaxElement
+       * is always set to some random big number anyway, so bounds checking
+       * is mostly useless.
+       *
+       * This is only useful to catch invalid values in the "end" parameter
+       * like ~0.
+       */
+      max_element = 2 * 1000 * 1000 * 1000; /* just a big number */
+   }
 
    if ((int) end + basevertex < 0 ||
        start + basevertex >= max_element) {
@@ -1276,7 +1313,7 @@ vbo_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
    if (primcount == 0)
       return;
 
-   prim = calloc(primcount, sizeof(*prim));
+   prim = calloc(1, primcount * sizeof(*prim));
    if (prim == NULL) {
       _mesa_error(ctx, GL_OUT_OF_MEMORY, "glMultiDrawElements");
       return;
@@ -1349,8 +1386,8 @@ vbo_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
       }
 
       check_buffers_are_unmapped(exec->array.inputs);
-      vbo->draw_prims(ctx, prim, primcount, &ib,
-                      false, ~0, ~0, NULL, NULL);
+      vbo_handle_primitive_restart(ctx, prim, primcount, &ib,
+                                   GL_FALSE, ~0, ~0);
    } else {
       /* render one prim at a time */
       for (i = 0; i < primcount; i++) {
@@ -1378,8 +1415,8 @@ vbo_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
 	    prim[0].basevertex = 0;
 
          check_buffers_are_unmapped(exec->array.inputs);
-         vbo->draw_prims(ctx, prim, 1, &ib,
-                         false, ~0, ~0, NULL, NULL);
+         vbo_handle_primitive_restart(ctx, prim, 1, &ib,
+                                      GL_FALSE, ~0, ~0);
       }
    }
 
@@ -1441,6 +1478,8 @@ vbo_draw_transform_feedback(struct gl_context *ctx, GLenum mode,
 
    if (ctx->Driver.GetTransformFeedbackVertexCount &&
        (ctx->Const.AlwaysUseGetTransformFeedbackVertexCount ||
+        (ctx->Const.PrimitiveRestartInSoftware &&
+         ctx->Array._PrimitiveRestart) ||
         !vbo_all_varyings_in_vbos(exec->array.inputs))) {
       GLsizei n = ctx->Driver.GetTransformFeedbackVertexCount(ctx, obj, stream);
       vbo_draw_arrays(ctx, mode, 0, n, numInstances, 0);
@@ -1851,12 +1890,6 @@ _mesa_DrawArrays(GLenum mode, GLint first, GLsizei count)
    vbo_exec_DrawArrays(mode, first, count);
 }
 
-void GLAPIENTRY
-_mesa_DrawArraysInstanced(GLenum mode, GLint first, GLsizei count,
-                          GLsizei primcount)
-{
-   vbo_exec_DrawArraysInstanced(mode, first, count, primcount);
-}
 
 void GLAPIENTRY
 _mesa_DrawElements(GLenum mode, GLsizei count, GLenum type,

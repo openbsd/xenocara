@@ -40,7 +40,6 @@
 
 
 #include "pipe/p_compiler.h"
-#include "util/u_debug.h"
 
 
 #ifdef __cplusplus
@@ -62,46 +61,46 @@ extern "C" {
 #endif
 
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) 
 
 #if _MSC_VER < 1400 && !defined(__cplusplus)
-
-static INLINE float cosf( float f )
+ 
+static INLINE float cosf( float f ) 
 {
    return (float) cos( (double) f );
 }
 
-static INLINE float sinf( float f )
+static INLINE float sinf( float f ) 
 {
    return (float) sin( (double) f );
 }
 
-static INLINE float ceilf( float f )
+static INLINE float ceilf( float f ) 
 {
    return (float) ceil( (double) f );
 }
 
-static INLINE float floorf( float f )
+static INLINE float floorf( float f ) 
 {
    return (float) floor( (double) f );
 }
 
-static INLINE float powf( float f, float g )
+static INLINE float powf( float f, float g ) 
 {
    return (float) pow( (double) f, (double) g );
 }
 
-static INLINE float sqrtf( float f )
+static INLINE float sqrtf( float f ) 
 {
    return (float) sqrt( (double) f );
 }
 
-static INLINE float fabsf( float f )
+static INLINE float fabsf( float f ) 
 {
    return (float) fabs( (double) f );
 }
 
-static INLINE float logf( float f )
+static INLINE float logf( float f ) 
 {
    return (float) log( (double) f );
 }
@@ -237,8 +236,7 @@ union di {
  * Extract the IEEE float32 exponent.
  */
 static INLINE signed
-util_get_float32_exponent(float x)
-{
+util_get_float32_exponent(float x) {
    union fi f;
 
    f.f = x;
@@ -538,8 +536,7 @@ unsigned ffs( unsigned u )
  * Find last bit set in a word.  The least significant bit is 1.
  * Return 0 if no bits are set.
  */
-static INLINE unsigned
-util_last_bit(unsigned u)
+static INLINE unsigned util_last_bit(unsigned u)
 {
 #if defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 304)
    return u == 0 ? 0 : 32 - __builtin_clz(u);
@@ -558,10 +555,9 @@ util_last_bit(unsigned u)
  * significant bit is 1.
  * Return 0 if no bits are set.
  */
-static INLINE unsigned
-util_last_bit_signed(int i)
+static INLINE unsigned util_last_bit_signed(int i)
 {
-#if defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 407) && !defined(__INTEL_COMPILER)
+#if defined(__GNUC__) && ((__GNUC__ * 100 + __GNUC_MINOR__) >= 407)
    return 31 - __builtin_clrsb(i);
 #else
    if (i >= 0)
@@ -577,10 +573,9 @@ util_last_bit_signed(int i)
  *   int i = u_bit_scan(&mymask);
  *   ... process element i
  * }
- *
+ * 
  */
-static INLINE int
-u_bit_scan(unsigned *mask)
+static INLINE int u_bit_scan(unsigned *mask)
 {
    int i = ffs(*mask) - 1;
    *mask &= ~(1 << i);
@@ -597,14 +592,6 @@ fui( float f )
    union fi fi;
    fi.f = f;
    return fi.ui;
-}
-
-static INLINE float
-uif(uint32_t ui)
-{
-        union fi fi;
-        fi.ui = ui;
-        return fi.f;
 }
 
 
@@ -727,18 +714,6 @@ util_bitcount(unsigned n)
 #endif
 }
 
-
-static INLINE unsigned
-util_bitcount64(uint64_t n)
-{
-#ifdef HAVE___BUILTIN_POPCOUNTLL
-   return __builtin_popcountll(n);
-#else
-   return util_bitcount(n) + util_bitcount(n >> 32);
-#endif
-}
-
-
 /**
  * Reverse bits in n
  * Algorithm taken from:
@@ -799,7 +774,7 @@ util_bswap64(uint64_t n)
 #if defined(HAVE___BUILTIN_BSWAP64)
    return __builtin_bswap64(n);
 #else
-   return ((uint64_t)util_bswap32((uint32_t)n) << 32) |
+   return ((uint64_t)util_bswap32(n) << 32) |
           util_bswap32((n >> 32));
 #endif
 }
@@ -815,23 +790,6 @@ util_bswap16(uint16_t n)
           (n << 8);
 }
 
-static INLINE void*
-util_memcpy_cpu_to_le32(void * restrict dest, const void * restrict src, size_t n)
-{
-#ifdef PIPE_ARCH_BIG_ENDIAN
-   size_t i, e;
-   assert(n % 4 == 0);
-
-   for (i = 0, e = n / 4; i < e; i++) {
-      uint32_t * restrict d = (uint32_t* restrict)dest;
-      const uint32_t * restrict s = (const uint32_t* restrict)src;
-      d[i] = util_bswap32(s[i]);
-   }
-   return dest;
-#else
-   return memcpy(dest, src, n);
-#endif
-}
 
 /**
  * Clamp X to [MIN, MAX].
@@ -902,14 +860,12 @@ do {                                     \
 #endif
 
 
-static INLINE uint32_t
-util_unsigned_fixed(float value, unsigned frac_bits)
+static INLINE uint32_t util_unsigned_fixed(float value, unsigned frac_bits)
 {
    return value < 0 ? 0 : (uint32_t)(value * (1<<frac_bits));
 }
 
-static INLINE int32_t
-util_signed_fixed(float value, unsigned frac_bits)
+static INLINE int32_t util_signed_fixed(float value, unsigned frac_bits)
 {
    return (int32_t)(value * (1<<frac_bits));
 }

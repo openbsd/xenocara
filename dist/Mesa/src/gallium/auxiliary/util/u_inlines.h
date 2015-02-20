@@ -565,9 +565,6 @@ util_pipe_tex_to_tgsi_tex(enum pipe_texture_target pipe_tex_target,
                           unsigned nr_samples)
 {
    switch (pipe_tex_target) {
-   case PIPE_BUFFER:
-      return TGSI_TEXTURE_BUFFER;
-
    case PIPE_TEXTURE_1D:
       assert(nr_samples <= 1);
       return TGSI_TEXTURE_1D;
@@ -627,11 +624,10 @@ static INLINE unsigned
 util_max_layer(const struct pipe_resource *r, unsigned level)
 {
    switch (r->target) {
+   case PIPE_TEXTURE_CUBE:
+      return 6 - 1;
    case PIPE_TEXTURE_3D:
       return u_minify(r->depth0, level) - 1;
-   case PIPE_TEXTURE_CUBE:
-      assert(r->array_size == 6);
-      /* fall-through */
    case PIPE_TEXTURE_1D_ARRAY:
    case PIPE_TEXTURE_2D_ARRAY:
    case PIPE_TEXTURE_CUBE_ARRAY:

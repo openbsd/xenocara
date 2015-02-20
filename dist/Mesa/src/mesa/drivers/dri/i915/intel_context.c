@@ -56,7 +56,7 @@
 #include "intel_mipmap_tree.h"
 
 #include "utils.h"
-#include "util/ralloc.h"
+#include "../glsl/ralloc.h"
 
 int INTEL_DEBUG = (0);
 
@@ -507,6 +507,7 @@ intelInitContext(struct intel_context *intel,
 
    _mesa_meta_init(ctx);
 
+   intel->hw_stencil = mesaVis && mesaVis->stencilBits && mesaVis->depthBits == 24;
    intel->hw_stipple = 1;
 
    intel->RenderIndex = ~0;

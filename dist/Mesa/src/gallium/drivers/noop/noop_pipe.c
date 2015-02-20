@@ -46,7 +46,7 @@ struct noop_pipe_screen {
 struct noop_query {
 	unsigned	query;
 };
-static struct pipe_query *noop_create_query(struct pipe_context *ctx, unsigned query_type, unsigned index)
+static struct pipe_query *noop_create_query(struct pipe_context *ctx, unsigned query_type)
 {
 	struct noop_query *query = CALLOC_STRUCT(noop_query);
 

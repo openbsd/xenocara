@@ -40,28 +40,25 @@ struct gallivm_state
 {
    LLVMModuleRef module;
    LLVMExecutionEngineRef engine;
+   LLVMModuleProviderRef provider;
    LLVMTargetDataRef target;
    LLVMPassManagerRef passmgr;
    LLVMContextRef context;
    LLVMBuilderRef builder;
-   LLVMMCJITMemoryManagerRef memorymgr;
-   struct lp_generated_code *code;
    unsigned compiled;
 };
 
 
-boolean
+void
 lp_build_init(void);
 
 
 struct gallivm_state *
-gallivm_create(const char *name, LLVMContextRef context);
+gallivm_create(void);
 
 void
 gallivm_destroy(struct gallivm_state *gallivm);
 
-void
-gallivm_free_ir(struct gallivm_state *gallivm);
 
 void
 gallivm_verify_function(struct gallivm_state *gallivm,
@@ -73,6 +70,11 @@ gallivm_compile_module(struct gallivm_state *gallivm);
 func_pointer
 gallivm_jit_function(struct gallivm_state *gallivm,
                      LLVMValueRef func);
+
+void
+gallivm_free_function(struct gallivm_state *gallivm,
+                      LLVMValueRef func,
+                      const void * code);
 
 void
 lp_set_load_alignment(LLVMValueRef Inst,

@@ -170,8 +170,9 @@ ir_reader::scan_for_prototypes(exec_list *instructions, s_expression *expr)
       return;
    }
 
-   foreach_in_list(s_list, sub, &list->subexpressions) {
-      if (!sub->is_list())
+   foreach_list(n, &list->subexpressions) {
+      s_list *sub = SX_AS_LIST(n);
+      if (sub == NULL)
 	 continue; // not a (function ...); ignore it.
 
       s_symbol *tag = SX_AS_SYMBOL(sub->subexpressions.get_head());
@@ -316,7 +317,8 @@ ir_reader::read_instructions(exec_list *instructions, s_expression *expr,
       return;
    }
 
-   foreach_in_list(s_expression, sub, &list->subexpressions) {
+   foreach_list(n, &list->subexpressions) {
+      s_expression *sub = (s_expression *) n;
       ir_instruction *ir = read_instruction(sub, loop_ctx);
       if (ir != NULL) {
 	 /* Global variable declarations should be moved to the top, before
@@ -403,8 +405,9 @@ ir_reader::read_declaration(s_expression *expr)
    ir_variable *var = new(mem_ctx) ir_variable(type, s_name->value(),
 					       ir_var_auto);
 
-   foreach_in_list(s_symbol, qualifier, &s_quals->subexpressions) {
-      if (!qualifier->is_symbol()) {
+   foreach_list(n, &s_quals->subexpressions) {
+      s_symbol *qualifier = SX_AS_SYMBOL(n);
+      if (qualifier == NULL) {
 	 ir_read_error(expr, "qualifier list must contain only symbols");
 	 return NULL;
       }
@@ -434,12 +437,6 @@ ir_reader::read_declaration(s_expression *expr)
 	 var->data.mode = ir_var_function_inout;
       } else if (strcmp(qualifier->value(), "temporary") == 0) {
 	 var->data.mode = ir_var_temporary;
-      } else if (strcmp(qualifier->value(), "stream1") == 0) {
-	 var->data.stream = 1;
-      } else if (strcmp(qualifier->value(), "stream2") == 0) {
-	 var->data.stream = 2;
-      } else if (strcmp(qualifier->value(), "stream3") == 0) {
-	 var->data.stream = 3;
       } else if (strcmp(qualifier->value(), "smooth") == 0) {
 	 var->data.interpolation = INTERP_QUALIFIER_SMOOTH;
       } else if (strcmp(qualifier->value(), "flat") == 0) {
@@ -661,10 +658,11 @@ ir_reader::read_call(s_expression *expr)
 
    exec_list parameters;
 
-   foreach_in_list(s_expression, e, &params->subexpressions) {
-      ir_rvalue *param = read_rvalue(e);
+   foreach_list(n, &params->subexpressions) {
+      s_expression *expr = (s_expression *) n;
+      ir_rvalue *param = read_rvalue(expr);
       if (param == NULL) {
-	 ir_read_error(e, "when reading parameter to function call");
+	 ir_read_error(expr, "when reading parameter to function call");
 	 return NULL;
       }
       parameters.push_tail(param);
@@ -677,8 +675,7 @@ ir_reader::read_call(s_expression *expr)
       return NULL;
    }
 
-   ir_function_signature *callee =
-      f->matching_signature(state, &parameters, true);
+   ir_function_signature *callee = f->matching_signature(state, &parameters);
    if (callee == NULL) {
       ir_read_error(expr, "couldn't find matching signature for function "
                     "%s", name->value());
@@ -724,9 +721,10 @@ ir_reader::read_expression(s_expression *expr)
       ir_read_error(expr, "invalid operator: %s", s_op->value());
       return NULL;
    }
-
-   /* Skip "expression" <type> <operation> by subtracting 3. */
-   int num_operands = (int) ((s_list *) expr)->subexpressions.length() - 3;
+    
+   int num_operands = -3; /* skip "expression" <type> <operation> */
+   foreach_list(n, &((s_list *) expr)->subexpressions)
+      ++num_operands;
 
    int expected_operands = ir_expression::get_num_operands(op);
    if (num_operands != expected_operands) {
@@ -800,7 +798,8 @@ ir_reader::read_constant(s_expression *expr)
    if (type->is_array()) {
       unsigned elements_supplied = 0;
       exec_list elements;
-      foreach_in_list(s_expression, elt, &values->subexpressions) {
+      foreach_list(n, &values->subexpressions) {
+	 s_expression *elt = (s_expression *) n;
 	 ir_constant *ir_elt = read_constant(elt);
 	 if (ir_elt == NULL)
 	    return NULL;
@@ -820,11 +819,13 @@ ir_reader::read_constant(s_expression *expr)
 
    // Read in list of values (at most 16).
    unsigned k = 0;
-   foreach_in_list(s_expression, expr, &values->subexpressions) {
+   foreach_list(n, &values->subexpressions) {
       if (k >= 16) {
 	 ir_read_error(values, "expected at most 16 numbers");
 	 return NULL;
       }
+
+      s_expression *expr = (s_expression *) n;
 
       if (type->base_type == GLSL_TYPE_FLOAT) {
 	 s_number *value = SX_AS_NUMBER(expr);
@@ -1108,17 +1109,10 @@ ir_reader::read_texture(s_expression *expr)
 ir_emit_vertex *
 ir_reader::read_emit_vertex(s_expression *expr)
 {
-   s_expression *s_stream = NULL;
-
-   s_pattern pat[] = { "emit-vertex", s_stream };
+   s_pattern pat[] = { "emit-vertex" };
 
    if (MATCH(expr, pat)) {
-      ir_rvalue *stream = read_dereference(s_stream);
-      if (stream == NULL) {
-         ir_read_error(NULL, "when reading stream info in emit-vertex");
-         return NULL;
-      }
-      return new(mem_ctx) ir_emit_vertex(stream);
+      return new(mem_ctx) ir_emit_vertex();
    }
    ir_read_error(NULL, "when reading emit-vertex");
    return NULL;
@@ -1127,17 +1121,10 @@ ir_reader::read_emit_vertex(s_expression *expr)
 ir_end_primitive *
 ir_reader::read_end_primitive(s_expression *expr)
 {
-   s_expression *s_stream = NULL;
-
-   s_pattern pat[] = { "end-primitive", s_stream };
+   s_pattern pat[] = { "end-primitive" };
 
    if (MATCH(expr, pat)) {
-      ir_rvalue *stream = read_dereference(s_stream);
-      if (stream == NULL) {
-         ir_read_error(NULL, "when reading stream info in end-primitive");
-         return NULL;
-      }
-      return new(mem_ctx) ir_end_primitive(stream);
+      return new(mem_ctx) ir_end_primitive();
    }
    ir_read_error(NULL, "when reading end-primitive");
    return NULL;

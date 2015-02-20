@@ -115,7 +115,7 @@ ureg_get_tokens( struct ureg_program *ureg,
 /*
  * Returns the number of currently declared outputs.
  */
-unsigned
+const unsigned
 ureg_get_nr_outputs( const struct ureg_program *ureg );
 
 
@@ -184,10 +184,6 @@ void
 ureg_property_fs_depth_layout(struct ureg_program *ureg,
                               unsigned fs_depth_layout);
 
-void
-ureg_property_vs_window_space_position(struct ureg_program *ureg,
-                                       boolean vs_window_space_position);
-
 
 /***********************************************************************
  * Build shader declarations:
@@ -199,7 +195,7 @@ ureg_DECL_fs_input_cyl_centroid(struct ureg_program *,
                        unsigned semantic_index,
                        unsigned interp_mode,
                        unsigned cylindrical_wrap,
-                       unsigned interp_location);
+                       unsigned centroid);
 
 static INLINE struct ureg_src
 ureg_DECL_fs_input_cyl(struct ureg_program *ureg,

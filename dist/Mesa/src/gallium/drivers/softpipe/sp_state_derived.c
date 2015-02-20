@@ -142,12 +142,6 @@ softpipe_get_vertex_info(struct softpipe_context *softpipe)
                                softpipe->psize_slot);
       }
 
-      softpipe->layer_slot = draw_find_shader_output(softpipe->draw,
-                                         TGSI_SEMANTIC_LAYER, 0);
-      if (softpipe->layer_slot >= 0) {
-         draw_emit_vertex_attr(vinfo, EMIT_4F, INTERP_CONSTANT, softpipe->layer_slot);
-      }
-
       draw_compute_vertex_size(vinfo);
    }
 
@@ -402,7 +396,6 @@ softpipe_update_derived(struct softpipe_context *softpipe, unsigned prim)
    if (softpipe->dirty & (SP_NEW_BLEND |
                           SP_NEW_DEPTH_STENCIL_ALPHA |
                           SP_NEW_FRAMEBUFFER |
-                          SP_NEW_STIPPLE |
                           SP_NEW_FS))
       sp_build_quad_pipeline(softpipe);
 

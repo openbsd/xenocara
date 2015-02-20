@@ -55,7 +55,7 @@
 
 #define FILE_DEBUG_FLAG DEBUG_PRIMS
 
-static const GLuint prim_to_hw_prim[GL_TRIANGLE_STRIP_ADJACENCY+1] = {
+const GLuint prim_to_hw_prim[GL_TRIANGLE_STRIP_ADJACENCY+1] = {
    _3DPRIM_POINTLIST,
    _3DPRIM_LINELIST,
    _3DPRIM_LINELOOP,
@@ -86,15 +86,6 @@ static const GLenum reduced_prim[GL_POLYGON+1] = {
    GL_TRIANGLES
 };
 
-uint32_t
-get_hw_prim_for_gl_prim(int mode)
-{
-   if (mode >= BRW_PRIM_OFFSET)
-      return mode - BRW_PRIM_OFFSET;
-   else
-      return prim_to_hw_prim[mode];
-}
-
 
 /* When the primitive changes, set a state bit and re-validate.  Not
  * the nicest and would rather deal with this by having all the
@@ -105,7 +96,7 @@ static void brw_set_prim(struct brw_context *brw,
                          const struct _mesa_prim *prim)
 {
    struct gl_context *ctx = &brw->ctx;
-   uint32_t hw_prim = get_hw_prim_for_gl_prim(prim->mode);
+   uint32_t hw_prim = prim_to_hw_prim[prim->mode];
 
    DBG("PRIM: %s\n", _mesa_lookup_enum_by_nr(prim->mode));
 
@@ -142,7 +133,7 @@ static void gen6_set_prim(struct brw_context *brw,
 
    DBG("PRIM: %s\n", _mesa_lookup_enum_by_nr(prim->mode));
 
-   hw_prim = get_hw_prim_for_gl_prim(prim->mode);
+   hw_prim = prim_to_hw_prim[prim->mode];
 
    if (hw_prim != brw->primitive) {
       brw->primitive = hw_prim;
@@ -176,14 +167,15 @@ static void brw_emit_prim(struct brw_context *brw,
 {
    int verts_per_instance;
    int vertex_access_type;
+   int start_vertex_location;
+   int base_vertex_location;
    int indirect_flag;
 
    DBG("PRIM: %s %d %d\n", _mesa_lookup_enum_by_nr(prim->mode),
        prim->start, prim->count);
 
-   int start_vertex_location = prim->start;
-   int base_vertex_location = prim->basevertex;
-
+   start_vertex_location = prim->start;
+   base_vertex_location = prim->basevertex;
    if (prim->indexed) {
       vertex_access_type = brw->gen >= 7 ?
          GEN7_3DPRIM_VERTEXBUFFER_ACCESS_RANDOM :
@@ -301,6 +293,40 @@ static void brw_merge_inputs( struct brw_context *brw,
    }
 }
 
+/*
+ * \brief Resolve buffers before drawing.
+ *
+ * Resolve the depth buffer's HiZ buffer, resolve the depth buffer of each
+ * enabled depth texture, and flush the render cache for any dirty textures.
+ *
+ * (In the future, this will also perform MSAA resolves).
+ */
+static void
+brw_predraw_resolve_buffers(struct brw_context *brw)
+{
+   struct gl_context *ctx = &brw->ctx;
+   struct intel_renderbuffer *depth_irb;
+   struct intel_texture_object *tex_obj;
+
+   /* Resolve the depth buffer's HiZ buffer. */
+   depth_irb = intel_get_renderbuffer(ctx->DrawBuffer, BUFFER_DEPTH);
+   if (depth_irb)
+      intel_renderbuffer_resolve_hiz(brw, depth_irb);
+
+   /* Resolve depth buffer and render cache of each enabled texture. */
+   int maxEnabledUnit = ctx->Texture._MaxEnabledTexImageUnit;
+   for (int i = 0; i <= maxEnabledUnit; i++) {
+      if (!ctx->Texture.Unit[i]._Current)
+	 continue;
+      tex_obj = intel_texture_object(ctx->Texture.Unit[i]._Current);
+      if (!tex_obj || !tex_obj->mt)
+	 continue;
+      intel_miptree_all_slices_resolve_depth(brw, tex_obj->mt);
+      intel_miptree_resolve_color(brw, tex_obj->mt);
+      brw_render_cache_set_check_flush(brw, tex_obj->mt->bo);
+   }
+}
+
 /**
  * \brief Call this after drawing to mark which buffers need resolving
  *
@@ -397,6 +423,12 @@ static bool brw_try_draw_prims( struct gl_context *ctx,
     */
    brw_workaround_depthstencil_alignment(brw, 0);
 
+   /* Resolves must occur after updating renderbuffers, updating context state,
+    * and finalizing textures but before setting up any hardware state for
+    * this draw call.
+    */
+   brw_predraw_resolve_buffers(brw);
+
    /* Bind all inputs, derive varying and size information:
     */
    brw_merge_inputs( brw, arrays );
@@ -410,11 +442,11 @@ static bool brw_try_draw_prims( struct gl_context *ctx,
 
    for (i = 0; i < nr_prims; i++) {
       int estimated_max_prim_size;
-      const int sampler_state_size = 16;
 
       estimated_max_prim_size = 512; /* batchbuffer commands */
-      estimated_max_prim_size += BRW_MAX_TEX_UNIT *
-         (sampler_state_size + sizeof(struct gen5_sampler_default_color));
+      estimated_max_prim_size += (BRW_MAX_TEX_UNIT *
+				  (sizeof(struct brw_sampler_state) +
+				   sizeof(struct gen5_sampler_default_color)));
       estimated_max_prim_size += 1024; /* gen6 VS push constants */
       estimated_max_prim_size += 1024; /* gen6 WM push constants */
       estimated_max_prim_size += 512; /* misc. pad */
@@ -426,43 +458,22 @@ static bool brw_try_draw_prims( struct gl_context *ctx,
       intel_batchbuffer_require_space(brw, estimated_max_prim_size, RENDER_RING);
       intel_batchbuffer_save_state(brw);
 
-      if (brw->num_instances != prims[i].num_instances ||
-          brw->basevertex != prims[i].basevertex) {
+      if (brw->num_instances != prims[i].num_instances) {
          brw->num_instances = prims[i].num_instances;
+         brw->state.dirty.brw |= BRW_NEW_VERTICES;
+         brw_merge_inputs(brw, arrays);
+      }
+      if (brw->basevertex != prims[i].basevertex) {
          brw->basevertex = prims[i].basevertex;
-         if (i > 0) { /* For i == 0 we just did this before the loop */
-            brw->state.dirty.brw |= BRW_NEW_VERTICES;
-            brw_merge_inputs(brw, arrays);
-         }
+         brw->state.dirty.brw |= BRW_NEW_VERTICES;
+         brw_merge_inputs(brw, arrays);
       }
-
-      brw->draw.gl_basevertex =
-         prims[i].indexed ? prims[i].basevertex : prims[i].start;
-
-      drm_intel_bo_unreference(brw->draw.draw_params_bo);
-
-      if (prims[i].is_indirect) {
-         /* Point draw_params_bo at the indirect buffer. */
-         brw->draw.draw_params_bo =
-            intel_buffer_object(ctx->DrawIndirectBuffer)->buffer;
-         drm_intel_bo_reference(brw->draw.draw_params_bo);
-         brw->draw.draw_params_offset =
-            prims[i].indirect_offset + (prims[i].indexed ? 12 : 8);
-      } else {
-         /* Set draw_params_bo to NULL so brw_prepare_vertices knows it
-          * has to upload gl_BaseVertex and such if they're needed.
-          */
-         brw->draw.draw_params_bo = NULL;
-         brw->draw.draw_params_offset = 0;
-      }
-
       if (brw->gen < 6)
 	 brw_set_prim(brw, &prims[i]);
       else
 	 gen6_set_prim(brw, &prims[i]);
 
 retry:
-
       /* Note that before the loop, brw->state.dirty.brw was set to != 0, and
        * that the state updated in the loop outside of this block is that in
        * *_set_prim or intel_batchbuffer_flush(), which only impacts
@@ -528,11 +539,6 @@ void brw_draw_prims( struct gl_context *ctx,
    const struct gl_client_array **arrays = ctx->Array._DrawArrays;
 
    assert(unused_tfb_object == NULL);
-
-   if (ctx->Query.CondRenderQuery) {
-      perf_debug("Conditional rendering is implemented in software and may "
-                 "stall.  This should be fixed in the driver.\n");
-   }
 
    if (!_mesa_check_conditional_render(ctx))
       return;

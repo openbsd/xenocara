@@ -367,6 +367,7 @@ EXPORTS
 	wglUseFontBitmapsW
 	wglUseFontOutlinesA
 	wglUseFontOutlinesW
+	wglGetExtensionsStringARB
 	DrvCopyContext
 	DrvCreateContext
 	DrvCreateLayerContext

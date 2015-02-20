@@ -73,7 +73,8 @@ translate_tex_target(GLenum target)
       return BRW_SURFACE_CUBE;
 
    default:
-      unreachable("not reached");
+      assert(0);
+      return 0;
    }
 }
 
@@ -296,7 +297,7 @@ brw_update_texture_surface(struct gl_context *ctx,
    struct gl_sampler_object *sampler = _mesa_get_samplerobj(ctx, unit);
    uint32_t *surf;
 
-   /* BRW_NEW_TEXTURE_BUFFER */
+   /* BRW_NEW_UNIFORM_BUFFER */
    if (tObj->Target == GL_TEXTURE_BUFFER) {
       brw_update_buffer_texture_surface(ctx, unit, surf_offset);
       return;
@@ -389,7 +390,7 @@ brw_create_constant_surface(struct brw_context *brw,
  * Set up a binding table entry for use by stream output logic (transform
  * feedback).
  *
- * buffer_size_minus_1 must be less than BRW_MAX_NUM_BUFFER_ENTRIES.
+ * buffer_size_minus_1 must me less than BRW_MAX_NUM_BUFFER_ENTRIES.
  */
 void
 brw_update_sol_surface(struct brw_context *brw,
@@ -448,7 +449,9 @@ brw_update_sol_surface(struct brw_context *brw,
       surface_format = BRW_SURFACEFORMAT_R32G32B32A32_FLOAT;
       break;
    default:
-      unreachable("Invalid vector size for transform feedback output");
+      assert(!"Invalid vector size for transform feedback output");
+      surface_format = BRW_SURFACEFORMAT_R32_FLOAT;
+      break;
    }
 
    surf[0] = BRW_SURFACE_BUFFER << BRW_SURFACE_TYPE_SHIFT |
@@ -479,16 +482,42 @@ brw_update_sol_surface(struct brw_context *brw,
 static void
 brw_upload_wm_pull_constants(struct brw_context *brw)
 {
-   struct brw_stage_state *stage_state = &brw->wm.base;
+   struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FRAGMENT_PROGRAM */
    struct brw_fragment_program *fp =
       (struct brw_fragment_program *) brw->fragment_program;
+   struct gl_program_parameter_list *params = fp->program.Base.Parameters;
+   const int size = brw->wm.prog_data->base.nr_pull_params * sizeof(float);
+   const int surf_index =
+      brw->wm.prog_data->base.binding_table.pull_constants_start;
+   unsigned int i;
+
+   _mesa_load_state_parameters(ctx, params);
+
    /* CACHE_NEW_WM_PROG */
-   struct brw_stage_prog_data *prog_data = &brw->wm.prog_data->base;
+   if (brw->wm.prog_data->base.nr_pull_params == 0) {
+      if (brw->wm.base.surf_offset[surf_index]) {
+	 brw->wm.base.surf_offset[surf_index] = 0;
+	 brw->state.dirty.brw |= BRW_NEW_SURFACES;
+      }
+      return;
+   }
 
    /* _NEW_PROGRAM_CONSTANTS */
-   brw_upload_pull_constants(brw, BRW_NEW_SURFACES, &fp->program.Base,
-                             stage_state, prog_data, true);
+   drm_intel_bo *const_bo = NULL;
+   uint32_t const_offset;
+   float *constants = intel_upload_space(brw, size, 64,
+                                         &const_bo, &const_offset);
+   for (i = 0; i < brw->wm.prog_data->base.nr_pull_params; i++) {
+      constants[i] = *brw->wm.prog_data->base.pull_param[i];
+   }
+
+   brw_create_constant_surface(brw, const_bo, const_offset, size,
+                               &brw->wm.base.surf_offset[surf_index],
+                               true);
+   drm_intel_bo_unreference(const_bo);
+
+   brw->state.dirty.brw |= BRW_NEW_SURFACES;
 }
 
 const struct brw_tracked_state brw_wm_pull_constants = {
@@ -500,14 +529,6 @@ const struct brw_tracked_state brw_wm_pull_constants = {
    .emit = brw_upload_wm_pull_constants,
 };
 
-/**
- * Creates a null renderbuffer surface.
- *
- * This is used when the shader doesn't write to any color output.  An FB
- * write to target 0 will still be emitted, because that's how the thread is
- * terminated (and computed depth is returned), so we need to have the
- * hardware discard the target 0 color output..
- */
 static void
 brw_update_null_renderbuffer_surface(struct brw_context *brw, unsigned int unit)
 {
@@ -535,7 +556,6 @@ brw_update_null_renderbuffer_surface(struct brw_context *brw, unsigned int unit)
    drm_intel_bo *bo = NULL;
    unsigned pitch_minus_1 = 0;
    uint32_t multisampling_state = 0;
-   /* CACHE_NEW_WM_PROG */
    uint32_t surf_index =
       brw->wm.prog_data->binding_table.render_target_start + unit;
 
@@ -621,7 +641,6 @@ brw_update_renderbuffer_surface(struct brw_context *brw,
    uint32_t format = 0;
    /* _NEW_BUFFERS */
    mesa_format rb_format = _mesa_get_render_format(ctx, intel_rb_format(irb));
-   /* CACHE_NEW_WM_PROG */
    uint32_t surf_index =
       brw->wm.prog_data->binding_table.render_target_start + unit;
 
@@ -739,7 +758,7 @@ const struct brw_tracked_state brw_renderbuffer_surfaces = {
       .mesa = (_NEW_COLOR |
                _NEW_BUFFERS),
       .brw = BRW_NEW_BATCH,
-      .cache = CACHE_NEW_WM_PROG,
+      .cache = 0
    },
    .emit = brw_update_renderbuffer_surfaces,
 };
@@ -766,8 +785,6 @@ update_stage_texture_surfaces(struct brw_context *brw,
    struct gl_context *ctx = &brw->ctx;
 
    uint32_t *surf_offset = stage_state->surf_offset;
-
-   /* CACHE_NEW_*_PROG */
    if (for_gather)
       surf_offset += stage_state->prog_data->binding_table.gather_texture_start;
    else
@@ -828,11 +845,11 @@ const struct brw_tracked_state brw_texture_surfaces = {
    .dirty = {
       .mesa = _NEW_TEXTURE,
       .brw = BRW_NEW_BATCH |
-             BRW_NEW_TEXTURE_BUFFER |
+             BRW_NEW_UNIFORM_BUFFER |
              BRW_NEW_VERTEX_PROGRAM |
              BRW_NEW_GEOMETRY_PROGRAM |
              BRW_NEW_FRAGMENT_PROGRAM,
-      .cache = CACHE_NEW_VS_PROG | CACHE_NEW_GS_PROG | CACHE_NEW_WM_PROG,
+      .cache = 0
    },
    .emit = brw_update_texture_surfaces,
 };
@@ -923,7 +940,7 @@ brw_upload_abo_surfaces(struct brw_context *brw,
                                    &surf_offsets[i], true);
    }
 
-   if (prog->NumAtomicBuffers)
+   if (prog->NumUniformBlocks)
       brw->state.dirty.brw |= BRW_NEW_SURFACES;
 }
 

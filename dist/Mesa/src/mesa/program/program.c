@@ -100,6 +100,7 @@ _mesa_init_program(struct gl_context *ctx)
    /* right now by default we don't have a geometry program */
    _mesa_reference_geomprog(ctx, &ctx->GeometryProgram.Current,
                             NULL);
+   ctx->GeometryProgram.Cache = _mesa_new_program_cache();
 
    /* XXX probably move this stuff */
    ctx->ATIFragmentShader.Enabled = GL_FALSE;
@@ -120,6 +121,7 @@ _mesa_free_program_data(struct gl_context *ctx)
    _mesa_reference_fragprog(ctx, &ctx->FragmentProgram.Current, NULL);
    _mesa_delete_shader_cache(ctx, ctx->FragmentProgram.Cache);
    _mesa_reference_geomprog(ctx, &ctx->GeometryProgram.Current, NULL);
+   _mesa_delete_program_cache(ctx, ctx->GeometryProgram.Cache);
 
    /* XXX probably move this stuff */
    if (ctx->ATIFragmentShader.Current) {
@@ -224,24 +226,27 @@ _mesa_find_line_column(const GLubyte *string, const GLubyte *pos,
 
 
 /**
- * Initialize a new gl_program object.
+ * Initialize a new vertex/fragment program object.
  */
-static void
-init_program_struct(struct gl_program *prog, GLenum target, GLuint id)
+static struct gl_program *
+_mesa_init_program_struct( struct gl_context *ctx, struct gl_program *prog,
+                           GLenum target, GLuint id)
 {
-   GLuint i;
+   (void) ctx;
+   if (prog) {
+      GLuint i;
+      memset(prog, 0, sizeof(*prog));
+      prog->Id = id;
+      prog->Target = target;
+      prog->RefCount = 1;
+      prog->Format = GL_PROGRAM_FORMAT_ASCII_ARB;
 
-   assert(prog);
+      /* default mapping from samplers to texture units */
+      for (i = 0; i < MAX_SAMPLERS; i++)
+         prog->SamplerUnits[i] = i;
+   }
 
-   memset(prog, 0, sizeof(*prog));
-   prog->Id = id;
-   prog->Target = target;
-   prog->RefCount = 1;
-   prog->Format = GL_PROGRAM_FORMAT_ASCII_ARB;
-
-   /* default mapping from samplers to texture units */
-   for (i = 0; i < MAX_SAMPLERS; i++)
-      prog->SamplerUnits[i] = i;
+   return prog;
 }
 
 
@@ -249,15 +254,13 @@ init_program_struct(struct gl_program *prog, GLenum target, GLuint id)
  * Initialize a new fragment program object.
  */
 struct gl_program *
-_mesa_init_fragment_program(struct gl_context *ctx,
-                            struct gl_fragment_program *prog,
-                            GLenum target, GLuint id)
+_mesa_init_fragment_program( struct gl_context *ctx, struct gl_fragment_program *prog,
+                             GLenum target, GLuint id)
 {
-   if (prog) {
-      init_program_struct(&prog->Base, target, id);
-      return &prog->Base;
-   }
-   return NULL;
+   if (prog)
+      return _mesa_init_program_struct( ctx, &prog->Base, target, id );
+   else
+      return NULL;
 }
 
 
@@ -265,15 +268,13 @@ _mesa_init_fragment_program(struct gl_context *ctx,
  * Initialize a new vertex program object.
  */
 struct gl_program *
-_mesa_init_vertex_program(struct gl_context *ctx,
-                          struct gl_vertex_program *prog,
-                          GLenum target, GLuint id)
+_mesa_init_vertex_program( struct gl_context *ctx, struct gl_vertex_program *prog,
+                           GLenum target, GLuint id)
 {
-   if (prog) {
-      init_program_struct(&prog->Base, target, id);
-      return &prog->Base;
-   }
-   return NULL;
+   if (prog)
+      return _mesa_init_program_struct( ctx, &prog->Base, target, id );
+   else
+      return NULL;
 }
 
 
@@ -282,14 +283,13 @@ _mesa_init_vertex_program(struct gl_context *ctx,
  */
 struct gl_program *
 _mesa_init_compute_program(struct gl_context *ctx,
-                           struct gl_compute_program *prog,
-                           GLenum target, GLuint id)
+                           struct gl_compute_program *prog, GLenum target,
+                           GLuint id)
 {
-   if (prog) {
-      init_program_struct(&prog->Base, target, id);
-      return &prog->Base;
-   }
-   return NULL;
+   if (prog)
+      return _mesa_init_program_struct( ctx, &prog->Base, target, id );
+   else
+      return NULL;
 }
 
 
@@ -297,15 +297,13 @@ _mesa_init_compute_program(struct gl_context *ctx,
  * Initialize a new geometry program object.
  */
 struct gl_program *
-_mesa_init_geometry_program(struct gl_context *ctx,
-                            struct gl_geometry_program *prog,
-                            GLenum target, GLuint id)
+_mesa_init_geometry_program( struct gl_context *ctx, struct gl_geometry_program *prog,
+                             GLenum target, GLuint id)
 {
-   if (prog) {
-      init_program_struct(&prog->Base, target, id);
-      return &prog->Base;
-   }
-   return NULL;
+   if (prog)
+      return _mesa_init_program_struct( ctx, &prog->Base, target, id );
+   else
+      return NULL;
 }
 
 
@@ -555,7 +553,6 @@ _mesa_clone_program(struct gl_context *ctx, const struct gl_program *prog)
          gpc->Invocations = gp->Invocations;
          gpc->OutputType = gp->OutputType;
          gpc->UsesEndPrimitive = gp->UsesEndPrimitive;
-         gpc->UsesStreams = gp->UsesStreams;
       }
       break;
    default:

@@ -52,7 +52,7 @@
 #include "main/errors.h"
 #include "main/macros.h"
 
-const char __dri2ConfigOptions[] =
+PUBLIC const char __dri2ConfigOptions[] =
    DRI_CONF_BEGIN
       DRI_CONF_SECTION_PERFORMANCE
          DRI_CONF_VBLANK_MODE(DRI_CONF_VBLANK_DEF_INTERVAL_1)
@@ -376,17 +376,19 @@ driCreateContextAttribs(__DRIscreen *screen, int api,
        return NULL;
     }
 
-    /* The latest version of EGL_KHR_create_context spec says:
+    /* The EGL_KHR_create_context spec says:
      *
-     *     "If the EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR flag bit is set in
-     *     EGL_CONTEXT_FLAGS_KHR, then a <debug context> will be created.
-     *     [...] This bit is supported for OpenGL and OpenGL ES contexts.
+     *     "Flags are only defined for OpenGL context creation, and specifying
+     *     a flags value other than zero for other types of contexts,
+     *     including OpenGL ES contexts, will generate an error."
      *
-     * None of the other flags have any meaning in an ES context, so this seems safe.
+     * The GLX_EXT_create_context_es2_profile specification doesn't say
+     * anything specific about this case.  However, none of the known flags
+     * have any meaning in an ES context, so this seems safe.
      */
     if (mesa_api != API_OPENGL_COMPAT
         && mesa_api != API_OPENGL_CORE
-        && (flags & ~__DRI_CTX_FLAG_DEBUG)) {
+        && flags != 0) {
 	*error = __DRI_CTX_ERROR_BAD_FLAG;
 	return NULL;
     }
@@ -567,18 +569,14 @@ static int driUnbindContext(__DRIcontext *pcp)
     if (pcp == NULL)
 	return GL_FALSE;
 
-    /*
-    ** Call driUnbindContext before checking for valid drawables
-    ** to handle surfaceless contexts properly.
-    */
-    pcp->driScreenPriv->driver->UnbindContext(pcp);
-
     pdp = pcp->driDrawablePriv;
     prp = pcp->driReadablePriv;
 
     /* already unbound */
     if (!pdp && !prp)
 	return GL_TRUE;
+
+    pcp->driScreenPriv->driver->UnbindContext(pcp);
 
     assert(pdp);
     if (pdp->refcount == 0) {
@@ -679,7 +677,7 @@ dri2ReleaseBuffer(__DRIscreen *screen, __DRIbuffer *buffer)
 
 
 static int
-dri2ConfigQueryb(__DRIscreen *screen, const char *var, unsigned char *val)
+dri2ConfigQueryb(__DRIscreen *screen, const char *var, GLboolean *val)
 {
    if (!driCheckOption(&screen->optionCache, var, DRI_BOOL))
       return -1;
@@ -690,7 +688,7 @@ dri2ConfigQueryb(__DRIscreen *screen, const char *var, unsigned char *val)
 }
 
 static int
-dri2ConfigQueryi(__DRIscreen *screen, const char *var, int *val)
+dri2ConfigQueryi(__DRIscreen *screen, const char *var, GLint *val)
 {
    if (!driCheckOption(&screen->optionCache, var, DRI_INT) &&
        !driCheckOption(&screen->optionCache, var, DRI_ENUM))
@@ -702,7 +700,7 @@ dri2ConfigQueryi(__DRIscreen *screen, const char *var, int *val)
 }
 
 static int
-dri2ConfigQueryf(__DRIscreen *screen, const char *var, float *val)
+dri2ConfigQueryf(__DRIscreen *screen, const char *var, GLfloat *val)
 {
    if (!driCheckOption(&screen->optionCache, var, DRI_FLOAT))
       return -1;
@@ -734,7 +732,7 @@ driSwapBuffers(__DRIdrawable *pdp)
 
 /** Core interface */
 const __DRIcoreExtension driCoreExtension = {
-    .base = { __DRI_CORE, 1 },
+    .base = { __DRI_CORE, __DRI_CORE_VERSION },
 
     .createNewScreen            = NULL,
     .destroyScreen              = driDestroyScreen,

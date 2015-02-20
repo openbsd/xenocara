@@ -51,27 +51,25 @@ create_fs_variant(struct softpipe_context *softpipe,
                   const struct sp_fragment_shader_variant_key *key)
 {
    struct sp_fragment_shader_variant *var;
-   struct pipe_shader_state *curfs = &fs->shader;
+   struct pipe_shader_state *stipple_fs = NULL, *curfs = &fs->shader;
+   unsigned unit = 0;
+
+#if DO_PSTIPPLE_IN_HELPER_MODULE
+   if (key->polygon_stipple) {
+      /* get new shader that implements polygon stippling */
+      stipple_fs = util_pstipple_create_fragment_shader(&softpipe->pipe,
+                                                        curfs, &unit);
+      curfs = stipple_fs;
+   }
+#endif
 
    /* codegen, create variant object */
-   var = softpipe_create_fs_variant_exec(softpipe);
+   var = softpipe_create_fs_variant_exec(softpipe, curfs);
 
    if (var) {
       var->key = *key;
-
-#if DO_PSTIPPLE_IN_HELPER_MODULE
-      if (key->polygon_stipple) {
-         /* get new shader that implements polygon stippling */
-         var->tokens = 
-            util_pstipple_create_fragment_shader(curfs->tokens,
-                                                 &var->stipple_sampler_unit);
-      }
-      else
-#endif
-      {
-         var->tokens = tgsi_dup_tokens(curfs->tokens);
-         var->stipple_sampler_unit = 0;
-      }
+      var->tokens = tgsi_dup_tokens(curfs->tokens);
+      var->stipple_sampler_unit = unit;
 
       tgsi_scan_shader(var->tokens, &var->info);
 
@@ -90,6 +88,11 @@ create_fs_variant(struct softpipe_context *softpipe,
       /* insert variant into linked list */
       var->next = fs->variants;
       fs->variants = var;
+   }
+
+   if (stipple_fs) {
+      FREE((void *) stipple_fs->tokens);
+      FREE(stipple_fs);
    }
 
    return var;
@@ -132,7 +135,7 @@ softpipe_create_fs_state(struct pipe_context *pipe,
    state->draw_shader = draw_create_fragment_shader(softpipe->draw,
                                                     &state->shader);
    if (!state->draw_shader) {
-      tgsi_free_tokens(state->shader.tokens);
+      FREE((void *) state->shader.tokens);
       FREE(state);
       return NULL;
    }
@@ -194,7 +197,7 @@ softpipe_delete_fs_state(struct pipe_context *pipe, void *fs)
 
    draw_delete_fragment_shader(softpipe->draw, state->draw_shader);
 
-   tgsi_free_tokens(state->shader.tokens);
+   FREE((void *) state->shader.tokens);
    FREE(state);
 }
 
@@ -226,7 +229,7 @@ softpipe_create_vs_state(struct pipe_context *pipe,
 
 fail:
    if (state) {
-      tgsi_free_tokens(state->shader.tokens);
+      FREE( (void *)state->shader.tokens );
       FREE( state->draw_data );
       FREE( state );
    }
@@ -256,7 +259,7 @@ softpipe_delete_vs_state(struct pipe_context *pipe, void *vs)
    struct sp_vertex_shader *state = (struct sp_vertex_shader *) vs;
 
    draw_delete_vertex_shader(softpipe->draw, state->draw_data);
-   tgsi_free_tokens(state->shader.tokens);
+   FREE( (void *)state->shader.tokens );
    FREE( state );
 }
 
@@ -296,7 +299,7 @@ softpipe_create_gs_state(struct pipe_context *pipe,
 
 fail:
    if (state) {
-      tgsi_free_tokens(state->shader.tokens);
+      FREE( (void *)state->shader.tokens );
       FREE( state->draw_data );
       FREE( state );
    }
@@ -329,7 +332,7 @@ softpipe_delete_gs_state(struct pipe_context *pipe, void *gs)
    draw_delete_geometry_shader(softpipe->draw,
                                (state) ? state->draw_data : 0);
 
-   tgsi_free_tokens(state->shader.tokens);
+   FREE((void *) state->shader.tokens);
    FREE(state);
 }
 

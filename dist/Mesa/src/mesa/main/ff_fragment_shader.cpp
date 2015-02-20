@@ -220,6 +220,7 @@ static GLuint translate_source( GLenum src )
 #define MODE_MODULATE_SUBTRACT_ATI      12  /* r = a0 * a2 - a1 */
 #define MODE_ADD_PRODUCTS               13  /* r = a0 * a1 + a2 * a3 */
 #define MODE_ADD_PRODUCTS_SIGNED        14  /* r = a0 * a1 + a2 * a3 - 0.5 */
+#define MODE_BUMP_ENVMAP_ATI            15  /* special */
 #define MODE_UNKNOWN                    16
 
 /**
@@ -249,6 +250,7 @@ static GLuint translate_mode( GLenum envMode, GLenum mode )
    case GL_MODULATE_ADD_ATI: return MODE_MODULATE_ADD_ATI;
    case GL_MODULATE_SIGNED_ADD_ATI: return MODE_MODULATE_SIGNED_ADD_ATI;
    case GL_MODULATE_SUBTRACT_ATI: return MODE_MODULATE_SUBTRACT_ATI;
+   case GL_BUMP_ENVMAP_ATI: return MODE_BUMP_ENVMAP_ATI;
    default:
       assert(0);
       return MODE_UNKNOWN;
@@ -281,6 +283,7 @@ need_saturate( GLuint mode )
    case MODE_MODULATE_SUBTRACT_ATI:
    case MODE_ADD_PRODUCTS:
    case MODE_ADD_PRODUCTS_SIGNED:
+   case MODE_BUMP_ENVMAP_ATI:
       return GL_TRUE;
    default:
       assert(0);
@@ -452,6 +455,16 @@ static GLuint make_state_key( struct gl_context *ctx,  struct state_key *key )
          key->unit[i].OptRGB[j].Source = translate_source(comb->SourceRGB[j]);
          key->unit[i].OptA[j].Source = translate_source(comb->SourceA[j]);
       }
+
+      if (key->unit[i].ModeRGB == MODE_BUMP_ENVMAP_ATI) {
+         /* requires some special translation */
+         key->unit[i].NumArgsRGB = 2;
+         key->unit[i].ScaleShiftRGB = 0;
+         key->unit[i].OptRGB[0].Operand = OPR_SRC_COLOR;
+         key->unit[i].OptRGB[0].Source = SRC_TEXTURE;
+         key->unit[i].OptRGB[1].Operand = OPR_SRC_COLOR;
+         key->unit[i].OptRGB[1].Source = texUnit->BumpTarget - GL_TEXTURE0 + SRC_TEXTURE0;
+       }
    }
 
    /* _NEW_LIGHT | _NEW_FOG */
@@ -665,7 +678,7 @@ static GLboolean args_match( const struct state_key *key, GLuint unit )
 }
 
 static ir_rvalue *
-smear(ir_rvalue *val)
+smear(texenv_fragment_program *p, ir_rvalue *val)
 {
    if (!val->type->is_scalar())
       return val;
@@ -722,7 +735,7 @@ emit_combine(texenv_fragment_program *p,
       tmp1 = mul(src[1], new(p->mem_ctx) ir_constant(2.0f));
       tmp1 = add(tmp1, new(p->mem_ctx) ir_constant(-1.0f));
 
-      return dot(swizzle_xyz(smear(tmp0)), swizzle_xyz(smear(tmp1)));
+      return dot(swizzle_xyz(smear(p, tmp0)), swizzle_xyz(smear(p, tmp1)));
    }
    case MODE_MODULATE_ADD_ATI:
       return add(mul(src[0], src[2]), src[1]);
@@ -740,6 +753,11 @@ emit_combine(texenv_fragment_program *p,
    case MODE_ADD_PRODUCTS_SIGNED:
       return add(add(mul(src[0], src[1]), mul(src[2], src[3])),
 		 new(p->mem_ctx) ir_constant(-0.5f));
+
+   case MODE_BUMP_ENVMAP_ATI:
+      /* special - not handled here */
+      assert(0);
+      return src[0];
    default: 
       assert(0);
       return src[0];
@@ -757,6 +775,10 @@ emit_texenv(texenv_fragment_program *p, GLuint unit)
    GLuint rgb_shift, alpha_shift;
 
    if (!key->unit[unit].enabled) {
+      return get_source(p, SRC_PREVIOUS, 0);
+   }
+   if (key->unit[unit].ModeRGB == MODE_BUMP_ENVMAP_ATI) {
+      /* this isn't really a env stage delivering a color and handled elsewhere */
       return get_source(p, SRC_PREVIOUS, 0);
    }
    
@@ -804,7 +826,7 @@ emit_texenv(texenv_fragment_program *p, GLuint unit)
 			 key->unit[unit].NumArgsRGB,
 			 key->unit[unit].ModeRGB,
 			 key->unit[unit].OptRGB);
-      val = smear(val);
+      val = smear(p, val);
       if (rgb_saturate)
 	 val = saturate(val);
 
@@ -816,7 +838,7 @@ emit_texenv(texenv_fragment_program *p, GLuint unit)
 				    key->unit[unit].NumArgsRGB,
 				    key->unit[unit].ModeRGB,
 				    key->unit[unit].OptRGB);
-      val = smear(val);
+      val = smear(p, val);
       if (rgb_saturate)
 	 val = saturate(val);
       p->emit(assign(temp_var, val));
@@ -829,7 +851,7 @@ emit_texenv(texenv_fragment_program *p, GLuint unit)
 			 key->unit[unit].NumArgsRGB,
 			 key->unit[unit].ModeRGB,
 			 key->unit[unit].OptRGB);
-      val = swizzle_xyz(smear(val));
+      val = swizzle_xyz(smear(p, val));
       if (rgb_saturate)
 	 val = saturate(val);
       p->emit(assign(temp_var, val, WRITEMASK_XYZ));
@@ -838,7 +860,7 @@ emit_texenv(texenv_fragment_program *p, GLuint unit)
 			 key->unit[unit].NumArgsA,
 			 key->unit[unit].ModeA,
 			 key->unit[unit].OptA);
-      val = swizzle_w(smear(val));
+      val = swizzle_w(smear(p, val));
       if (alpha_saturate)
 	 val = saturate(val);
       p->emit(assign(temp_var, val, WRITEMASK_W));
@@ -855,15 +877,14 @@ emit_texenv(texenv_fragment_program *p, GLuint unit)
 	 shift = new(p->mem_ctx) ir_constant((float)(1 << rgb_shift));
       }
       else {
-         ir_constant_data const_data;
-
-         const_data.f[0] = float(1 << rgb_shift);
-         const_data.f[1] = float(1 << rgb_shift);
-         const_data.f[2] = float(1 << rgb_shift);
-         const_data.f[3] = float(1 << alpha_shift);
-
-         shift = new(p->mem_ctx) ir_constant(glsl_type::vec4_type,
-                                             &const_data);
+	 float const_data[4] = {
+	    float(1 << rgb_shift),
+	    float(1 << rgb_shift),
+	    float(1 << rgb_shift),
+	    float(1 << alpha_shift)
+	 };
+	 shift = new(p->mem_ctx) ir_constant(glsl_type::vec4_type,
+					     (ir_constant_data *)const_data);
       }
 
       return saturate(mul(deref, shift));
@@ -914,54 +935,54 @@ static void load_texture( texenv_fragment_program *p, GLuint unit )
    switch (texTarget) {
    case TEXTURE_1D_INDEX:
       if (p->state->unit[unit].shadow)
-	 sampler_type = glsl_type::sampler1DShadow_type;
+	 sampler_type = p->shader->symbols->get_type("sampler1DShadow");
       else
-	 sampler_type = glsl_type::sampler1D_type;
+	 sampler_type = p->shader->symbols->get_type("sampler1D");
       coords = 1;
       break;
    case TEXTURE_1D_ARRAY_INDEX:
       if (p->state->unit[unit].shadow)
-	 sampler_type = glsl_type::sampler1DArrayShadow_type;
+	 sampler_type = p->shader->symbols->get_type("sampler1DArrayShadow");
       else
-	 sampler_type = glsl_type::sampler1DArray_type;
+	 sampler_type = p->shader->symbols->get_type("sampler1DArray");
       coords = 2;
       break;
    case TEXTURE_2D_INDEX:
       if (p->state->unit[unit].shadow)
-	 sampler_type = glsl_type::sampler2DShadow_type;
+	 sampler_type = p->shader->symbols->get_type("sampler2DShadow");
       else
-	 sampler_type = glsl_type::sampler2D_type;
+	 sampler_type = p->shader->symbols->get_type("sampler2D");
       coords = 2;
       break;
    case TEXTURE_2D_ARRAY_INDEX:
       if (p->state->unit[unit].shadow)
-	 sampler_type = glsl_type::sampler2DArrayShadow_type;
+	 sampler_type = p->shader->symbols->get_type("sampler2DArrayShadow");
       else
-	 sampler_type = glsl_type::sampler2DArray_type;
+	 sampler_type = p->shader->symbols->get_type("sampler2DArray");
       coords = 3;
       break;
    case TEXTURE_RECT_INDEX:
       if (p->state->unit[unit].shadow)
-	 sampler_type = glsl_type::sampler2DRectShadow_type;
+	 sampler_type = p->shader->symbols->get_type("sampler2DRectShadow");
       else
-	 sampler_type = glsl_type::sampler2DRect_type;
+	 sampler_type = p->shader->symbols->get_type("sampler2DRect");
       coords = 2;
       break;
    case TEXTURE_3D_INDEX:
       assert(!p->state->unit[unit].shadow);
-      sampler_type = glsl_type::sampler3D_type;
+      sampler_type = p->shader->symbols->get_type("sampler3D");
       coords = 3;
       break;
    case TEXTURE_CUBE_INDEX:
       if (p->state->unit[unit].shadow)
-	 sampler_type = glsl_type::samplerCubeShadow_type;
+	 sampler_type = p->shader->symbols->get_type("samplerCubeShadow");
       else
-	 sampler_type = glsl_type::samplerCube_type;
+	 sampler_type = p->shader->symbols->get_type("samplerCube");
       coords = 3;
       break;
    case TEXTURE_EXTERNAL_INDEX:
       assert(!p->state->unit[unit].shadow);
-      sampler_type = glsl_type::samplerExternalOES_type;
+      sampler_type = p->shader->symbols->get_type("samplerExternalOES");
       coords = 2;
       break;
    }
@@ -1050,6 +1071,56 @@ load_texunit_sources( texenv_fragment_program *p, GLuint unit )
    }
 
    return GL_TRUE;
+}
+
+/**
+ * Generate instructions for loading bump map textures.
+ */
+static void
+load_texunit_bumpmap( texenv_fragment_program *p, GLuint unit )
+{
+   const struct state_key *key = p->state;
+   GLuint bumpedUnitNr = key->unit[unit].OptRGB[1].Source - SRC_TEXTURE0;
+   ir_rvalue *bump;
+   ir_rvalue *texcoord;
+   ir_variable *rot_mat_0, *rot_mat_1;
+
+   rot_mat_0 = p->shader->symbols->get_variable("gl_BumpRotMatrix0MESA");
+   assert(rot_mat_0);
+   rot_mat_1 = p->shader->symbols->get_variable("gl_BumpRotMatrix1MESA");
+   assert(rot_mat_1);
+
+   ir_variable *tc_array = p->shader->symbols->get_variable("gl_TexCoord");
+   assert(tc_array);
+   texcoord = new(p->mem_ctx) ir_dereference_variable(tc_array);
+   ir_rvalue *index = new(p->mem_ctx) ir_constant(bumpedUnitNr);
+   texcoord = new(p->mem_ctx) ir_dereference_array(texcoord, index);
+   tc_array->data.max_array_access = MAX2(tc_array->data.max_array_access, unit);
+
+   load_texenv_source( p, unit + SRC_TEXTURE0, unit );
+
+   /* Apply rot matrix and add coords to be available in next phase.
+    * dest = Arg1 + (Arg0.xx * rotMat0) + (Arg0.yy * rotMat1)
+    * note only 2 coords are affected the rest are left unchanged (mul by 0)
+    */
+   ir_rvalue *bump_x, *bump_y;
+
+   texcoord = smear(p, texcoord);
+
+   /* bump_texcoord = texcoord */
+   ir_variable *bumped = p->make_temp(texcoord->type, "bump_texcoord");
+   p->emit(bumped);
+   p->emit(assign(bumped, texcoord));
+
+   /* bump_texcoord.xy += arg0.x * rotmat0 + arg0.y * rotmat1 */
+   bump = get_source(p, key->unit[unit].OptRGB[0].Source, unit);
+   bump_x = mul(swizzle_x(bump), rot_mat_0);
+   bump_y = mul(swizzle_y(bump->clone(p->mem_ctx, NULL)), rot_mat_1);
+
+   p->emit(assign(bumped, add(swizzle_xy(bumped), add(bump_x, bump_y)),
+		  WRITEMASK_XY));
+
+   p->texcoord_tex[bumpedUnitNr] = bumped;
 }
 
 /**
@@ -1142,6 +1213,14 @@ emit_instructions(texenv_fragment_program *p)
    GLuint unit;
 
    if (key->enabled_units) {
+      /* Zeroth pass - bump map textures first */
+      for (unit = 0; unit < key->nr_enabled_units; unit++) {
+	 if (key->unit[unit].enabled &&
+             key->unit[unit].ModeRGB == MODE_BUMP_ENVMAP_ATI) {
+	    load_texunit_bumpmap(p, unit);
+	 }
+      }
+
       /* First pass - to support texture_env_crossbar, first identify
        * all referenced texture sources and emit texld instructions
        * for each:
@@ -1212,7 +1291,7 @@ create_new_program(struct gl_context *ctx, struct state_key *key)
    p.top_instructions = p.shader->ir;
    p.instructions = p.shader->ir;
    p.state = key;
-   p.shader_program = ctx->Driver.NewShaderProgram(0);
+   p.shader_program = ctx->Driver.NewShaderProgram(ctx, 0);
 
    /* Tell the linker to ignore the fact that we're building a
     * separate shader, in case we're in a GLES2 context that would
@@ -1241,7 +1320,7 @@ create_new_program(struct gl_context *ctx, struct state_key *key)
    state->symbols->add_function(main_f);
 
    ir_function_signature *main_sig =
-      new(p.mem_ctx) ir_function_signature(glsl_type::void_type);
+      new(p.mem_ctx) ir_function_signature(p.shader->symbols->get_type("void"));
    main_sig->is_defined = true;
    main_f->add_signature(main_sig);
 
@@ -1252,7 +1331,7 @@ create_new_program(struct gl_context *ctx, struct state_key *key)
    validate_ir_tree(p.shader->ir);
 
    const struct gl_shader_compiler_options *options =
-      &ctx->Const.ShaderCompilerOptions[MESA_SHADER_FRAGMENT];
+      &ctx->ShaderCompilerOptions[MESA_SHADER_FRAGMENT];
 
    while (do_common_optimization(p.shader->ir, false, false, options,
                                  ctx->Const.NativeIntegers))

@@ -339,6 +339,7 @@ i915_disassemble_program(struct debug_stream *stream,
 
    assert((program[0] & 0x1ff) + 2 == sz);
 
+   program++;
    for (i = 1; i < sz; i += 3, program += 3) {
       unsigned opcode = program[0] & (0x1f << 24);
 

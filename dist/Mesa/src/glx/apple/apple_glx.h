@@ -32,6 +32,7 @@
 
 #include <stdbool.h>
 #include <GL/gl.h>
+#include <GL/glxint.h>
 #include <X11/Xlib.h>
 
 #define XP_NO_X_HEADERS

@@ -180,7 +180,7 @@ brw_get_depthstencil_tile_masks(struct intel_mipmap_tree *depth_mt,
    if (depth_mt) {
       intel_miptree_get_tile_masks(depth_mt, &tile_mask_x, &tile_mask_y, false);
 
-      if (intel_miptree_level_has_hiz(depth_mt, depth_level)) {
+      if (intel_miptree_slice_has_hiz(depth_mt, depth_level, depth_layer)) {
          uint32_t hiz_tile_mask_x, hiz_tile_mask_y;
          intel_miptree_get_tile_masks(depth_mt->hiz_mt,
                                       &hiz_tile_mask_x, &hiz_tile_mask_y,
@@ -261,10 +261,10 @@ brw_workaround_depthstencil_alignment(struct brw_context *brw,
    if (stencil_irb)
       brw->depthstencil.stencil_mt = get_stencil_miptree(stencil_irb);
 
-   /* Gen6+ doesn't require the workarounds, since we always program the
+   /* Gen7+ doesn't require the workarounds, since we always program the
     * surface state at the start of the whole surface.
     */
-   if (brw->gen >= 6)
+   if (brw->gen >= 7)
       return;
 
    /* Check if depth buffer is in depth/stencil format.  If so, then it's only
@@ -902,7 +902,7 @@ brw_upload_invariant_state(struct brw_context *brw)
    const uint32_t _3DSTATE_PIPELINE_SELECT =
       is_965 ? CMD_PIPELINE_SELECT_965 : CMD_PIPELINE_SELECT_GM45;
    BEGIN_BATCH(1);
-   OUT_BATCH(_3DSTATE_PIPELINE_SELECT << 16 | (brw->gen >= 9 ? (3 << 8) : 0));
+   OUT_BATCH(_3DSTATE_PIPELINE_SELECT << 16 | 0);
    ADVANCE_BATCH();
 
    if (brw->gen < 6) {
@@ -929,7 +929,8 @@ brw_upload_invariant_state(struct brw_context *brw)
    const uint32_t _3DSTATE_VF_STATISTICS =
       is_965 ? GEN4_3DSTATE_VF_STATISTICS : GM45_3DSTATE_VF_STATISTICS;
    BEGIN_BATCH(1);
-   OUT_BATCH(_3DSTATE_VF_STATISTICS << 16 | 1);
+   OUT_BATCH(_3DSTATE_VF_STATISTICS << 16 |
+	     (unlikely(INTEL_DEBUG & DEBUG_STATS) ? 1 : 0));
    ADVANCE_BATCH();
 }
 

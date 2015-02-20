@@ -73,7 +73,7 @@ read_atom(void *ctx, const char *&src, char *&symbol_buffer)
    } else {
       // Check if the atom is a number.
       char *float_end = NULL;
-      float f = _mesa_strtof(src, &float_end);
+      float f = glsl_strtof(src, &float_end);
       if (float_end != src) {
          char *int_end = NULL;
          int i = strtol(src, &int_end, 10);
@@ -162,7 +162,8 @@ void s_symbol::print()
 void s_list::print()
 {
    printf("(");
-   foreach_in_list(s_expression, expr, &this->subexpressions) {
+   foreach_list(n, &this->subexpressions) {
+      s_expression *expr = (s_expression *) n;
       expr->print();
       if (!expr->next->is_tail_sentinel())
 	 printf(" ");
@@ -200,10 +201,11 @@ s_match(s_expression *top, unsigned n, s_pattern *pattern, bool partial)
       return false;
 
    unsigned i = 0;
-   foreach_in_list(s_expression, expr, &list->subexpressions) {
+   foreach_list(node, &list->subexpressions) {
       if (i >= n)
 	 return partial; /* More actual items than the pattern expected */
 
+      s_expression *expr = (s_expression *) node;
       if (expr == NULL || !pattern[i].match(expr))
 	 return false;
 

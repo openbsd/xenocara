@@ -1666,7 +1666,15 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    partial_mask |= !variant->opaque;
    i32_zero = lp_build_const_int32(gallivm, 0);
 
+#if HAVE_LLVM < 0x0302
+   /*
+    * undef triggers a crash in LLVMBuildTrunc in convert_from_blend_type in some
+    * cases (seen with r10g10b10a2, 128bit wide vectors) (only used for 1d case).
+    */
+   undef_src_val = lp_build_zero(gallivm, fs_type);
+#else
    undef_src_val = lp_build_undef(gallivm, fs_type);
+#endif
 
    row_type.length = fs_type.length;
    vector_width    = dst_type.floating ? lp_native_vector_width : lp_integer_vector_width;
@@ -2152,7 +2160,7 @@ generate_fragment(struct llvmpipe_context *lp,
    struct gallivm_state *gallivm = variant->gallivm;
    const struct lp_fragment_shader_variant_key *key = &variant->key;
    struct lp_shader_input inputs[PIPE_MAX_SHADER_INPUTS];
-   char func_name[64];
+   char func_name[256];
    struct lp_type fs_type;
    struct lp_type blend_type;
    LLVMTypeRef fs_elem_type;
@@ -2204,8 +2212,14 @@ generate_fragment(struct llvmpipe_context *lp,
    }
 
    /* check if writes to cbuf[0] are to be copied to all cbufs */
-   cbuf0_write_all =
-     shader->info.base.properties[TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS];
+   cbuf0_write_all = FALSE;
+   for (i = 0;i < shader->info.base.num_properties; i++) {
+      if (shader->info.base.properties[i].name ==
+          TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS) {
+         cbuf0_write_all = TRUE;
+         break;
+      }
+   }
 
    /* TODO: actually pick these based on the fs and color buffer
     * characteristics. */
@@ -2233,8 +2247,8 @@ generate_fragment(struct llvmpipe_context *lp,
 
    blend_vec_type = lp_build_vec_type(gallivm, blend_type);
 
-   util_snprintf(func_name, sizeof(func_name), "fs%u_variant%u_%s",
-                 shader->no, variant->no, partial_mask ? "partial" : "whole");
+   util_snprintf(func_name, sizeof(func_name), "fs%u_variant%u_%s", 
+		 shader->no, variant->no, partial_mask ? "partial" : "whole");
 
    arg_types[0] = variant->jit_context_ptr_type;       /* context */
    arg_types[1] = int32_type;                          /* x */
@@ -2315,8 +2329,6 @@ generate_fragment(struct llvmpipe_context *lp,
       LLVMValueRef mask_store = lp_build_array_alloca(gallivm, mask_type,
                                                       num_loop, "mask_store");
       LLVMValueRef color_store[PIPE_MAX_COLOR_BUFS][TGSI_NUM_CHANNELS];
-      boolean pixel_center_integer =
-         shader->info.base.properties[TGSI_PROPERTY_FS_COORD_PIXEL_CENTER];
 
       /*
        * The shader input interpolation info is not explicitely baked in the
@@ -2327,7 +2339,7 @@ generate_fragment(struct llvmpipe_context *lp,
                                gallivm,
                                shader->info.base.num_inputs,
                                inputs,
-                               pixel_center_integer,
+                               shader->info.base.pixel_center_integer,
                                builder, fs_type,
                                a0_ptr, dadx_ptr, dady_ptr,
                                x, y);
@@ -2426,6 +2438,8 @@ generate_fragment(struct llvmpipe_context *lp,
    LLVMBuildRetVoid(builder);
 
    gallivm_verify_function(gallivm, function);
+
+   variant->nr_instrs += lp_build_count_instructions(function);
 }
 
 
@@ -2544,16 +2558,12 @@ generate_variant(struct llvmpipe_context *lp,
    struct lp_fragment_shader_variant *variant;
    const struct util_format_description *cbuf0_format_desc;
    boolean fullcolormask;
-   char module_name[64];
 
    variant = CALLOC_STRUCT(lp_fragment_shader_variant);
    if(!variant)
       return NULL;
 
-   util_snprintf(module_name, sizeof(module_name), "fs%u_variant%u",
-                 shader->no, shader->variants_created);
-
-   variant->gallivm = gallivm_create(module_name, lp->context);
+   variant->gallivm = gallivm_create();
    if (!variant->gallivm) {
       FREE(variant);
       return NULL;
@@ -2615,8 +2625,6 @@ generate_variant(struct llvmpipe_context *lp,
 
    gallivm_compile_module(variant->gallivm);
 
-   variant->nr_instrs += lp_build_count_ir_module(variant->gallivm->module);
-
    if (variant->function[RAST_EDGE_TEST]) {
       variant->jit_function[RAST_EDGE_TEST] = (lp_jit_frag_func)
             gallivm_jit_function(variant->gallivm,
@@ -2630,8 +2638,6 @@ generate_variant(struct llvmpipe_context *lp,
    } else if (!variant->jit_function[RAST_WHOLE]) {
       variant->jit_function[RAST_WHOLE] = variant->jit_function[RAST_EDGE_TEST];
    }
-
-   gallivm_free_ir(variant->gallivm);
 
    return variant;
 }
@@ -2757,6 +2763,8 @@ void
 llvmpipe_remove_shader_variant(struct llvmpipe_context *lp,
                                struct lp_fragment_shader_variant *variant)
 {
+   unsigned i;
+
    if (gallivm_debug & GALLIVM_DEBUG_IR) {
       debug_printf("llvmpipe: del fs #%u var #%u v created #%u v cached"
                    " #%u v total cached #%u\n",
@@ -2765,6 +2773,15 @@ llvmpipe_remove_shader_variant(struct llvmpipe_context *lp,
                    variant->shader->variants_created,
                    variant->shader->variants_cached,
                    lp->nr_fs_variants);
+   }
+
+   /* free all the variant's JIT'd functions */
+   for (i = 0; i < Elements(variant->function); i++) {
+      if (variant->function[i]) {
+         gallivm_free_function(variant->gallivm,
+                               variant->function[i],
+                               variant->jit_function[i]);
+      }
    }
 
    gallivm_destroy(variant->gallivm);
@@ -3156,6 +3173,8 @@ llvmpipe_update_fs(struct llvmpipe_context *lp)
       dt = t1 - t0;
       LP_COUNT_ADD(llvm_compile_time, dt);
       LP_COUNT_ADD(nr_llvm_compiles, 2);  /* emit vs. omit in/out test */
+
+      llvmpipe_variant_count++;
 
       /* Put the new variant into the list */
       if (variant) {

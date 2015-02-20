@@ -74,7 +74,8 @@ public:
 signature_entry *
 ir_dead_functions_visitor::get_signature_entry(ir_function_signature *sig)
 {
-   foreach_in_list(signature_entry, entry, &this->signature_list) {
+   foreach_list(n, &this->signature_list) {
+      signature_entry *entry = (signature_entry *) n;
       if (entry->signature == sig)
 	 return entry;
    }
@@ -122,7 +123,9 @@ do_dead_functions(exec_list *instructions)
     * the unused ones, and remove function definitions that have no more
     * signatures.
     */
-    foreach_in_list_safe(signature_entry, entry, &v.signature_list) {
+    foreach_list_safe(n, &v.signature_list) {
+      signature_entry *entry = (signature_entry *) n;
+
       if (!entry->used) {
 	 entry->signature->remove();
 	 delete entry->signature;
@@ -134,7 +137,8 @@ do_dead_functions(exec_list *instructions)
    /* We don't just do this above when we nuked a signature because of
     * const pointers.
     */
-   foreach_in_list_safe(ir_instruction, ir, instructions) {
+   foreach_list_safe(n, instructions) {
+      ir_instruction *ir = (ir_instruction *) n;
       ir_function *func = ir->as_function();
 
       if (func && func->signatures.is_empty()) {

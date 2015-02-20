@@ -48,7 +48,6 @@ struct analysis_context
 
    unsigned num_imms;
    float imm[LP_MAX_TGSI_IMMEDIATES][4];
-   unsigned sample_target[PIPE_MAX_SHADER_SAMPLER_VIEWS];
 
    struct lp_tgsi_channel_info temp[32][4];
 };
@@ -130,24 +129,13 @@ analyse_tex(struct analysis_context *ctx,
       case TGSI_TEXTURE_SHADOW2D:
       case TGSI_TEXTURE_SHADOWRECT:
       case TGSI_TEXTURE_2D_ARRAY:
-      case TGSI_TEXTURE_2D_MSAA:
       case TGSI_TEXTURE_3D:
       case TGSI_TEXTURE_CUBE:
          readmask = TGSI_WRITEMASK_XYZ;
          break;
       case TGSI_TEXTURE_SHADOW2D_ARRAY:
       case TGSI_TEXTURE_SHADOWCUBE:
-      case TGSI_TEXTURE_2D_ARRAY_MSAA:
-      case TGSI_TEXTURE_CUBE_ARRAY:
          readmask = TGSI_WRITEMASK_XYZW;
-         /* modifier would be in another not analyzed reg so just say indirect */
-         if (modifier != LP_BLD_TEX_MODIFIER_NONE) {
-            indirect = TRUE;
-         }
-         break;
-      case TGSI_TEXTURE_SHADOWCUBE_ARRAY:
-         readmask = TGSI_WRITEMASK_XYZW;
-         indirect = TRUE;
          break;
       default:
          assert(0);
@@ -208,44 +196,19 @@ analyse_sample(struct analysis_context *ctx,
 
    if (info->num_texs < Elements(info->tex)) {
       struct lp_tgsi_texture_info *tex_info = &info->tex[info->num_texs];
-      unsigned target = ctx->sample_target[inst->Src[1].Register.Index];
       boolean indirect = FALSE;
       boolean shadow = FALSE;
       unsigned readmask;
 
-      switch (target) {
-      /* note no shadow targets here */
-      case TGSI_TEXTURE_BUFFER:
-      case TGSI_TEXTURE_1D:
-         readmask = TGSI_WRITEMASK_X;
-         break;
-      case TGSI_TEXTURE_1D_ARRAY:
-      case TGSI_TEXTURE_2D:
-      case TGSI_TEXTURE_RECT:
-         readmask = TGSI_WRITEMASK_XY;
-         break;
-      case TGSI_TEXTURE_2D_ARRAY:
-      case TGSI_TEXTURE_2D_MSAA:
-      case TGSI_TEXTURE_3D:
-      case TGSI_TEXTURE_CUBE:
-         readmask = TGSI_WRITEMASK_XYZ;
-         break;
-      case TGSI_TEXTURE_CUBE_ARRAY:
-      case TGSI_TEXTURE_2D_ARRAY_MSAA:
-         readmask = TGSI_WRITEMASK_XYZW;
-         break;
-      default:
-         assert(0);
-         return;
-      }
+      /*
+       * We don't really get much information here, in particular not
+       * the target info, hence no useful writemask neither. Maybe should just
+       * forget the whole function.
+       */
+      readmask = TGSI_WRITEMASK_XYZW;
 
-      tex_info->target = target;
       tex_info->texture_unit = inst->Src[1].Register.Index;
       tex_info->sampler_unit = inst->Src[2].Register.Index;
-
-      if (tex_info->texture_unit != tex_info->sampler_unit) {
-         info->sampler_texture_units_different = TRUE;
-      }
 
       if (modifier == LP_BLD_TEX_MODIFIER_EXPLICIT_DERIV ||
           modifier == LP_BLD_TEX_MODIFIER_EXPLICIT_LOD ||
@@ -332,15 +295,6 @@ analyse_instruction(struct analysis_context *ctx,
          break;
       case TGSI_OPCODE_TXP:
          analyse_tex(ctx, inst, LP_BLD_TEX_MODIFIER_PROJECTED);
-         break;
-      case TGSI_OPCODE_TEX2:
-         analyse_tex(ctx, inst, LP_BLD_TEX_MODIFIER_NONE);
-         break;
-      case TGSI_OPCODE_TXB2:
-         analyse_tex(ctx, inst, LP_BLD_TEX_MODIFIER_LOD_BIAS);
-         break;
-      case TGSI_OPCODE_TXL2:
-         analyse_tex(ctx, inst, LP_BLD_TEX_MODIFIER_EXPLICIT_LOD);
          break;
       case TGSI_OPCODE_SAMPLE:
          analyse_sample(ctx, inst, LP_BLD_TEX_MODIFIER_NONE, FALSE);
@@ -550,14 +504,7 @@ lp_build_tgsi_info(const struct tgsi_token *tokens,
       tgsi_parse_token(&parse);
 
       switch (parse.FullToken.Token.Type) {
-      case TGSI_TOKEN_TYPE_DECLARATION: {
-         struct tgsi_full_declaration *decl = &parse.FullToken.FullDeclaration;
-         if (decl->Declaration.File == TGSI_FILE_SAMPLER_VIEW) {
-            for (index = decl->Range.First; index <= decl->Range.Last; index++) {
-               ctx->sample_target[index] = decl->SamplerView.Resource;
-            }
-         }
-      }
+      case TGSI_TOKEN_TYPE_DECLARATION:
          break;
 
       case TGSI_TOKEN_TYPE_INSTRUCTION:

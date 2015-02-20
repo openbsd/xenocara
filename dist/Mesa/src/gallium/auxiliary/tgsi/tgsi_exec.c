@@ -689,7 +689,7 @@ tgsi_exec_machine_bind_shader(
       struct tgsi_exec_vector *outputs;
 
       inputs = align_malloc(sizeof(struct tgsi_exec_vector) *
-                            TGSI_MAX_PRIM_VERTICES * PIPE_MAX_SHADER_INPUTS,
+                            TGSI_MAX_PRIM_VERTICES * PIPE_MAX_ATTRIBS,
                             16);
 
       if (!inputs)
@@ -789,11 +789,6 @@ tgsi_exec_machine_bind_shader(
          break;
 
       case TGSI_TOKEN_TYPE_PROPERTY:
-         if (mach->Processor == TGSI_PROCESSOR_GEOMETRY) {
-            if (parse.FullToken.FullProperty.Property.PropertyName == TGSI_PROPERTY_GS_MAX_OUTPUT_VERTICES) {
-               mach->MaxOutputVertices = parse.FullToken.FullProperty.u[0].Data;
-            }
-         }
          break;
 
       default:
@@ -828,8 +823,8 @@ tgsi_exec_machine_create( void )
    mach->MaxGeometryShaderOutputs = TGSI_MAX_TOTAL_VERTICES;
    mach->Predicates = &mach->Temps[TGSI_EXEC_TEMP_P0];
 
-   mach->Inputs = align_malloc(sizeof(struct tgsi_exec_vector) * PIPE_MAX_SHADER_INPUTS, 16);
-   mach->Outputs = align_malloc(sizeof(struct tgsi_exec_vector) * PIPE_MAX_SHADER_OUTPUTS, 16);
+   mach->Inputs = align_malloc(sizeof(struct tgsi_exec_vector) * PIPE_MAX_ATTRIBS, 16);
+   mach->Outputs = align_malloc(sizeof(struct tgsi_exec_vector) * PIPE_MAX_ATTRIBS, 16);
    if (!mach->Inputs || !mach->Outputs)
       goto fail;
 
@@ -1626,9 +1621,6 @@ emit_vertex(struct tgsi_exec_machine *mach)
          if ((mach->ExecMask & (1 << i)))
    */
    if (mach->ExecMask) {
-      if (mach->Primitives[mach->Temps[TEMP_PRIMITIVE_I].xyzw[TEMP_PRIMITIVE_C].u[0]] >= mach->MaxOutputVertices)
-         return;
-
       mach->Temps[TEMP_OUTPUT_I].xyzw[TEMP_OUTPUT_C].u[0] += mach->NumOutputs;
       mach->Primitives[mach->Temps[TEMP_PRIMITIVE_I].xyzw[TEMP_PRIMITIVE_C].u[0]]++;
    }
@@ -1949,8 +1941,7 @@ exec_txd(struct tgsi_exec_machine *mach,
    case TGSI_TEXTURE_3D:
    case TGSI_TEXTURE_CUBE:
    case TGSI_TEXTURE_CUBE_ARRAY:
-   case TGSI_TEXTURE_SHADOWCUBE:
-      /* only TEXTURE_CUBE_ARRAY and TEXTURE_SHADOWCUBE actually need W */
+      /* only TEXTURE_CUBE_ARRAY actually needs W */
       FETCH(&r[0], 0, TGSI_CHAN_X);
       FETCH(&r[1], 0, TGSI_CHAN_Y);
       FETCH(&r[2], 0, TGSI_CHAN_Z);
@@ -2005,7 +1996,6 @@ exec_txf(struct tgsi_exec_machine *mach,
    case TGSI_TEXTURE_3D:
    case TGSI_TEXTURE_2D_ARRAY:
    case TGSI_TEXTURE_SHADOW2D_ARRAY:
-   case TGSI_TEXTURE_2D_ARRAY_MSAA:
       IFETCH(&r[2], 0, TGSI_CHAN_Z);
       /* fallthrough */
    case TGSI_TEXTURE_2D:
@@ -2014,7 +2004,6 @@ exec_txf(struct tgsi_exec_machine *mach,
    case TGSI_TEXTURE_SHADOW2D:
    case TGSI_TEXTURE_SHADOWRECT:
    case TGSI_TEXTURE_1D_ARRAY:
-   case TGSI_TEXTURE_2D_MSAA:
       IFETCH(&r[1], 0, TGSI_CHAN_Y);
       /* fallthrough */
    case TGSI_TEXTURE_BUFFER:

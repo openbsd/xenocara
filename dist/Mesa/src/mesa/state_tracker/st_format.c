@@ -54,7 +54,7 @@
  * Translate Mesa format to Gallium format.
  */
 enum pipe_format
-st_mesa_format_to_pipe_format(struct st_context *st, mesa_format mesaFormat)
+st_mesa_format_to_pipe_format(mesa_format mesaFormat)
 {
    switch (mesaFormat) {
    case MESA_FORMAT_A8B8G8R8_UNORM:
@@ -83,18 +83,12 @@ st_mesa_format_to_pipe_format(struct st_context *st, mesa_format mesaFormat)
       return PIPE_FORMAT_B2G3R3_UNORM;
    case MESA_FORMAT_B10G10R10A2_UNORM:
       return PIPE_FORMAT_B10G10R10A2_UNORM;
-   case MESA_FORMAT_R10G10B10A2_UNORM:
-      return PIPE_FORMAT_R10G10B10A2_UNORM;
    case MESA_FORMAT_L4A4_UNORM:
       return PIPE_FORMAT_L4A4_UNORM;
    case MESA_FORMAT_L8A8_UNORM:
-      return PIPE_FORMAT_LA88_UNORM;
-   case MESA_FORMAT_A8L8_UNORM:
-      return PIPE_FORMAT_AL88_UNORM;
+      return PIPE_FORMAT_L8A8_UNORM;
    case MESA_FORMAT_L16A16_UNORM:
-      return PIPE_FORMAT_LA1616_UNORM;
-   case MESA_FORMAT_A16L16_UNORM:
-      return PIPE_FORMAT_AL1616_UNORM;
+      return PIPE_FORMAT_L16A16_UNORM;
    case MESA_FORMAT_A_UNORM8:
       return PIPE_FORMAT_A8_UNORM;
    case MESA_FORMAT_A_UNORM16:
@@ -146,21 +140,17 @@ st_mesa_format_to_pipe_format(struct st_context *st, mesa_format mesaFormat)
    case MESA_FORMAT_SRGBA_DXT5:
       return PIPE_FORMAT_DXT5_SRGBA;
    case MESA_FORMAT_L8A8_SRGB:
-      return PIPE_FORMAT_LA88_SRGB;
-   case MESA_FORMAT_A8L8_SRGB:
-      return PIPE_FORMAT_AL88_SRGB;
+      return PIPE_FORMAT_L8A8_SRGB;
    case MESA_FORMAT_L_SRGB8:
       return PIPE_FORMAT_L8_SRGB;
    case MESA_FORMAT_BGR_SRGB8:
       return PIPE_FORMAT_R8G8B8_SRGB;
    case MESA_FORMAT_A8B8G8R8_SRGB:
-      return PIPE_FORMAT_ABGR8888_SRGB;
-   case MESA_FORMAT_R8G8B8A8_SRGB:
-      return PIPE_FORMAT_RGBA8888_SRGB;
+      return PIPE_FORMAT_A8B8G8R8_SRGB;
    case MESA_FORMAT_B8G8R8A8_SRGB:
-      return PIPE_FORMAT_BGRA8888_SRGB;
-   case MESA_FORMAT_A8R8G8B8_SRGB:
-      return PIPE_FORMAT_ARGB8888_SRGB;
+      return PIPE_FORMAT_B8G8R8A8_SRGB;
+   case MESA_FORMAT_R8G8B8A8_SRGB:
+      return PIPE_FORMAT_R8G8B8A8_SRGB;
    case MESA_FORMAT_RGBA_FLOAT32:
       return PIPE_FORMAT_R32G32B32A32_FLOAT;
    case MESA_FORMAT_RGBA_FLOAT16:
@@ -199,13 +189,9 @@ st_mesa_format_to_pipe_format(struct st_context *st, mesa_format mesaFormat)
    case MESA_FORMAT_R_UNORM16:
       return PIPE_FORMAT_R16_UNORM;
    case MESA_FORMAT_R8G8_UNORM:
-      return PIPE_FORMAT_RG88_UNORM;
-   case MESA_FORMAT_G8R8_UNORM:
-      return PIPE_FORMAT_GR88_UNORM;
+      return PIPE_FORMAT_R8G8_UNORM;
    case MESA_FORMAT_R16G16_UNORM:
-      return PIPE_FORMAT_RG1616_UNORM;
-   case MESA_FORMAT_G16R16_UNORM:
-      return PIPE_FORMAT_GR1616_UNORM;
+      return PIPE_FORMAT_R16G16_UNORM;
    case MESA_FORMAT_RGBA_UNORM16:
       return PIPE_FORMAT_R16G16B16A16_UNORM;
 
@@ -335,49 +321,30 @@ st_mesa_format_to_pipe_format(struct st_context *st, mesa_format mesaFormat)
    case MESA_FORMAT_LA_LATC2_SNORM:
       return PIPE_FORMAT_LATC2_SNORM;
 
-   /* The destination RGBA format mustn't be changed, because it's also
-    * a destination format of the unpack/decompression function. */
    case MESA_FORMAT_ETC1_RGB8:
-      return st->has_etc1 ? PIPE_FORMAT_ETC1_RGB8 : PIPE_FORMAT_R8G8B8A8_UNORM;
-
-   case MESA_FORMAT_BPTC_RGBA_UNORM:
-      return PIPE_FORMAT_BPTC_RGBA_UNORM;
-   case MESA_FORMAT_BPTC_SRGB_ALPHA_UNORM:
-      return PIPE_FORMAT_BPTC_SRGBA;
-   case MESA_FORMAT_BPTC_RGB_SIGNED_FLOAT:
-      return PIPE_FORMAT_BPTC_RGB_FLOAT;
-   case MESA_FORMAT_BPTC_RGB_UNSIGNED_FLOAT:
-      return PIPE_FORMAT_BPTC_RGB_UFLOAT;
+      return PIPE_FORMAT_ETC1_RGB8;
 
    /* signed normalized formats */
    case MESA_FORMAT_R_SNORM8:
       return PIPE_FORMAT_R8_SNORM;
    case MESA_FORMAT_R8G8_SNORM:
-      return PIPE_FORMAT_RG88_SNORM;
-   case MESA_FORMAT_G8R8_SNORM:
-      return PIPE_FORMAT_GR88_SNORM;
+      return PIPE_FORMAT_R8G8_SNORM;
    case MESA_FORMAT_R8G8B8A8_SNORM:
-      return PIPE_FORMAT_RGBA8888_SNORM;
-   case MESA_FORMAT_A8B8G8R8_SNORM:
-      return PIPE_FORMAT_ABGR8888_SNORM;
+      return PIPE_FORMAT_R8G8B8A8_SNORM;
 
    case MESA_FORMAT_A_SNORM8:
       return PIPE_FORMAT_A8_SNORM;
    case MESA_FORMAT_L_SNORM8:
       return PIPE_FORMAT_L8_SNORM;
    case MESA_FORMAT_L8A8_SNORM:
-      return PIPE_FORMAT_LA88_SNORM;
-   case MESA_FORMAT_A8L8_SNORM:
-      return PIPE_FORMAT_AL88_SNORM;
+      return PIPE_FORMAT_L8A8_SNORM;
    case MESA_FORMAT_I_SNORM8:
       return PIPE_FORMAT_I8_SNORM;
 
    case MESA_FORMAT_R_SNORM16:
       return PIPE_FORMAT_R16_SNORM;
    case MESA_FORMAT_R16G16_SNORM:
-      return PIPE_FORMAT_RG1616_SNORM;
-   case MESA_FORMAT_G16R16_SNORM:
-      return PIPE_FORMAT_GR1616_SNORM;
+      return PIPE_FORMAT_R16G16_SNORM;
    case MESA_FORMAT_RGBA_SNORM16:
       return PIPE_FORMAT_R16G16B16A16_SNORM;
 
@@ -404,13 +371,9 @@ st_mesa_format_to_pipe_format(struct st_context *st, mesa_format mesaFormat)
    case MESA_FORMAT_B5G5R5X1_UNORM:
       return PIPE_FORMAT_B5G5R5X1_UNORM;
    case MESA_FORMAT_R8G8B8X8_SNORM:
-      return PIPE_FORMAT_RGBX8888_SNORM;
-   case MESA_FORMAT_X8B8G8R8_SNORM:
-      return PIPE_FORMAT_XBGR8888_SNORM;
+      return PIPE_FORMAT_R8G8B8X8_SNORM;
    case MESA_FORMAT_R8G8B8X8_SRGB:
-      return PIPE_FORMAT_RGBX8888_SRGB;
-   case MESA_FORMAT_X8B8G8R8_SRGB:
-      return PIPE_FORMAT_XBGR8888_SRGB;
+      return PIPE_FORMAT_R8G8B8X8_SRGB;
    case MESA_FORMAT_RGBX_UINT8:
       return PIPE_FORMAT_R8G8B8X8_UINT;
    case MESA_FORMAT_RGBX_SINT8:
@@ -435,29 +398,7 @@ st_mesa_format_to_pipe_format(struct st_context *st, mesa_format mesaFormat)
       return PIPE_FORMAT_R32G32B32X32_SINT;
 
    case MESA_FORMAT_B8G8R8X8_SRGB:
-      return PIPE_FORMAT_BGRX8888_SRGB;
-   case MESA_FORMAT_X8R8G8B8_SRGB:
-      return PIPE_FORMAT_XRGB8888_SRGB;
-
-   /* ETC2 formats are emulated as uncompressed ones.
-    * The destination formats mustn't be changed, because they are also
-    * destination formats of the unpack/decompression function. */
-   case MESA_FORMAT_ETC2_RGB8:
-   case MESA_FORMAT_ETC2_RGBA8_EAC:
-   case MESA_FORMAT_ETC2_RGB8_PUNCHTHROUGH_ALPHA1:
-      return PIPE_FORMAT_R8G8B8A8_UNORM;
-   case MESA_FORMAT_ETC2_SRGB8:
-   case MESA_FORMAT_ETC2_SRGB8_ALPHA8_EAC:
-   case MESA_FORMAT_ETC2_SRGB8_PUNCHTHROUGH_ALPHA1:
-      return PIPE_FORMAT_B8G8R8A8_SRGB;
-   case MESA_FORMAT_ETC2_R11_EAC:
-      return PIPE_FORMAT_R16_UNORM;
-   case MESA_FORMAT_ETC2_RG11_EAC:
-      return PIPE_FORMAT_R16G16_UNORM;
-   case MESA_FORMAT_ETC2_SIGNED_R11_EAC:
-      return PIPE_FORMAT_R16_SNORM;
-   case MESA_FORMAT_ETC2_SIGNED_RG11_EAC:
-      return PIPE_FORMAT_R16G16_SNORM;
+      return PIPE_FORMAT_B8G8R8X8_SRGB;
 
    default:
       return PIPE_FORMAT_NONE;
@@ -498,18 +439,12 @@ st_pipe_format_to_mesa_format(enum pipe_format format)
       return MESA_FORMAT_B2G3R3_UNORM;
    case PIPE_FORMAT_B10G10R10A2_UNORM:
       return MESA_FORMAT_B10G10R10A2_UNORM;
-   case PIPE_FORMAT_R10G10B10A2_UNORM:
-      return MESA_FORMAT_R10G10B10A2_UNORM;
    case PIPE_FORMAT_L4A4_UNORM:
       return MESA_FORMAT_L4A4_UNORM;
-   case PIPE_FORMAT_LA88_UNORM:
+   case PIPE_FORMAT_L8A8_UNORM:
       return MESA_FORMAT_L8A8_UNORM;
-   case PIPE_FORMAT_AL88_UNORM:
-      return MESA_FORMAT_A8L8_UNORM;
-   case PIPE_FORMAT_LA1616_UNORM:
+   case PIPE_FORMAT_L16A16_UNORM:
       return MESA_FORMAT_L16A16_UNORM;
-   case PIPE_FORMAT_AL1616_UNORM:
-      return MESA_FORMAT_A16L16_UNORM;
    case PIPE_FORMAT_A8_UNORM:
       return MESA_FORMAT_A_UNORM8;
    case PIPE_FORMAT_A16_UNORM:
@@ -566,22 +501,16 @@ st_pipe_format_to_mesa_format(enum pipe_format format)
       return MESA_FORMAT_SRGBA_DXT3;
    case PIPE_FORMAT_DXT5_SRGBA:
       return MESA_FORMAT_SRGBA_DXT5;
-   case PIPE_FORMAT_LA88_SRGB:
+   case PIPE_FORMAT_L8A8_SRGB:
       return MESA_FORMAT_L8A8_SRGB;
-   case PIPE_FORMAT_AL88_SRGB:
-      return MESA_FORMAT_A8L8_SRGB;
    case PIPE_FORMAT_L8_SRGB:
       return MESA_FORMAT_L_SRGB8;
    case PIPE_FORMAT_R8G8B8_SRGB:
       return MESA_FORMAT_BGR_SRGB8;
-   case PIPE_FORMAT_ABGR8888_SRGB:
+   case PIPE_FORMAT_A8B8G8R8_SRGB:
       return MESA_FORMAT_A8B8G8R8_SRGB;
-   case PIPE_FORMAT_RGBA8888_SRGB:
-      return MESA_FORMAT_R8G8B8A8_SRGB;
-   case PIPE_FORMAT_BGRA8888_SRGB:
+   case PIPE_FORMAT_B8G8R8A8_SRGB:
       return MESA_FORMAT_B8G8R8A8_SRGB;
-   case PIPE_FORMAT_ARGB8888_SRGB:
-      return MESA_FORMAT_A8R8G8B8_SRGB;
    case PIPE_FORMAT_R32G32B32A32_FLOAT:
       return MESA_FORMAT_RGBA_FLOAT32;
    case PIPE_FORMAT_R16G16B16A16_FLOAT:
@@ -619,14 +548,10 @@ st_pipe_format_to_mesa_format(enum pipe_format format)
       return MESA_FORMAT_R_UNORM8;
    case PIPE_FORMAT_R16_UNORM:
       return MESA_FORMAT_R_UNORM16;
-   case PIPE_FORMAT_RG88_UNORM:
+   case PIPE_FORMAT_R8G8_UNORM:
       return MESA_FORMAT_R8G8_UNORM;
-   case PIPE_FORMAT_GR88_UNORM:
-      return MESA_FORMAT_G8R8_UNORM;
-   case PIPE_FORMAT_RG1616_UNORM:
+   case PIPE_FORMAT_R16G16_UNORM:
       return MESA_FORMAT_R16G16_UNORM;
-   case PIPE_FORMAT_GR1616_UNORM:
-      return MESA_FORMAT_G16R16_UNORM;
 
    case PIPE_FORMAT_A8_UINT:
       return MESA_FORMAT_A_UINT8;
@@ -756,44 +681,27 @@ st_pipe_format_to_mesa_format(enum pipe_format format)
    case PIPE_FORMAT_ETC1_RGB8:
       return MESA_FORMAT_ETC1_RGB8;
 
-   case PIPE_FORMAT_BPTC_RGBA_UNORM:
-      return MESA_FORMAT_BPTC_RGBA_UNORM;
-   case PIPE_FORMAT_BPTC_SRGBA:
-      return MESA_FORMAT_BPTC_SRGB_ALPHA_UNORM;
-   case PIPE_FORMAT_BPTC_RGB_FLOAT:
-      return MESA_FORMAT_BPTC_RGB_SIGNED_FLOAT;
-   case PIPE_FORMAT_BPTC_RGB_UFLOAT:
-      return MESA_FORMAT_BPTC_RGB_UNSIGNED_FLOAT;
-
    /* signed normalized formats */
    case PIPE_FORMAT_R8_SNORM:
       return MESA_FORMAT_R_SNORM8;
-   case PIPE_FORMAT_RG88_SNORM:
+   case PIPE_FORMAT_R8G8_SNORM:
       return MESA_FORMAT_R8G8_SNORM;
-   case PIPE_FORMAT_GR88_SNORM:
-      return MESA_FORMAT_G8R8_SNORM;
-   case PIPE_FORMAT_RGBA8888_SNORM:
+   case PIPE_FORMAT_R8G8B8A8_SNORM:
       return MESA_FORMAT_R8G8B8A8_SNORM;
-   case PIPE_FORMAT_ABGR8888_SNORM:
-      return MESA_FORMAT_A8B8G8R8_SNORM;
 
    case PIPE_FORMAT_A8_SNORM:
       return MESA_FORMAT_A_SNORM8;
    case PIPE_FORMAT_L8_SNORM:
       return MESA_FORMAT_L_SNORM8;
-   case PIPE_FORMAT_LA88_SNORM:
+   case PIPE_FORMAT_L8A8_SNORM:
       return MESA_FORMAT_L8A8_SNORM;
-   case PIPE_FORMAT_AL88_SNORM:
-      return MESA_FORMAT_A8L8_SNORM;
    case PIPE_FORMAT_I8_SNORM:
       return MESA_FORMAT_I_SNORM8;
 
    case PIPE_FORMAT_R16_SNORM:
       return MESA_FORMAT_R_SNORM16;
-   case PIPE_FORMAT_RG1616_SNORM:
+   case PIPE_FORMAT_R16G16_SNORM:
       return MESA_FORMAT_R16G16_SNORM;
-   case PIPE_FORMAT_GR1616_SNORM:
-      return MESA_FORMAT_G16R16_SNORM;
    case PIPE_FORMAT_R16G16B16A16_SNORM:
       return MESA_FORMAT_RGBA_SNORM16;
 
@@ -820,14 +728,10 @@ st_pipe_format_to_mesa_format(enum pipe_format format)
       return MESA_FORMAT_B4G4R4X4_UNORM;
    case PIPE_FORMAT_B5G5R5X1_UNORM:
       return MESA_FORMAT_B5G5R5X1_UNORM;
-   case PIPE_FORMAT_RGBX8888_SNORM:
+   case PIPE_FORMAT_R8G8B8X8_SNORM:
       return MESA_FORMAT_R8G8B8X8_SNORM;
-   case PIPE_FORMAT_XBGR8888_SNORM:
-      return MESA_FORMAT_X8B8G8R8_SNORM;
-   case PIPE_FORMAT_RGBX8888_SRGB:
+   case PIPE_FORMAT_R8G8B8X8_SRGB:
       return MESA_FORMAT_R8G8B8X8_SRGB;
-   case PIPE_FORMAT_XBGR8888_SRGB:
-      return MESA_FORMAT_X8B8G8R8_SRGB;
    case PIPE_FORMAT_R8G8B8X8_UINT:
       return MESA_FORMAT_RGBX_UINT8;
    case PIPE_FORMAT_R8G8B8X8_SINT:
@@ -851,10 +755,10 @@ st_pipe_format_to_mesa_format(enum pipe_format format)
    case PIPE_FORMAT_R32G32B32X32_SINT:
       return MESA_FORMAT_RGBX_SINT32;
 
-   case PIPE_FORMAT_BGRX8888_SRGB:
+   case PIPE_FORMAT_B8G8R8X8_SRGB:
       return MESA_FORMAT_B8G8R8X8_SRGB;
-   case PIPE_FORMAT_XRGB8888_SRGB:
-      return MESA_FORMAT_X8R8G8B8_SRGB;
+   case PIPE_FORMAT_R8G8B8A8_SRGB:
+      return MESA_FORMAT_R8G8B8A8_SRGB;
 
    default:
       return MESA_FORMAT_NONE;
@@ -867,21 +771,13 @@ st_pipe_format_to_mesa_format(enum pipe_format format)
  * Mesa formats to Gallium formats and back again.
  */
 static void
-test_format_conversion(struct st_context *st)
+test_format_conversion(void)
 {
    GLuint i;
 
    /* test all Mesa formats */
    for (i = 1; i < MESA_FORMAT_COUNT; i++) {
-      enum pipe_format pf;
-
-      /* ETC formats are translated differently, skip them. */
-      if (_mesa_is_format_etc2(i))
-         continue;
-      if (i == MESA_FORMAT_ETC1_RGB8 && !st->has_etc1)
-         continue;
-
-      pf = st_mesa_format_to_pipe_format(st, i);
+      enum pipe_format pf = st_mesa_format_to_pipe_format(i);
       if (pf != PIPE_FORMAT_NONE) {
          mesa_format mf = st_pipe_format_to_mesa_format(pf);
          assert(mf == i);
@@ -891,13 +787,8 @@ test_format_conversion(struct st_context *st)
    /* Test all Gallium formats */
    for (i = 1; i < PIPE_FORMAT_COUNT; i++) {
       mesa_format mf = st_pipe_format_to_mesa_format(i);
-
-      /* ETC formats are translated differently, skip them. */
-      if (i == PIPE_FORMAT_ETC1_RGB8 && !st->has_etc1)
-         continue;
-
       if (mf != MESA_FORMAT_NONE) {
-         enum pipe_format pf = st_mesa_format_to_pipe_format(st, mf);
+         enum pipe_format pf = st_mesa_format_to_pipe_format(mf);
          assert(pf == i);
       }
    }
@@ -931,7 +822,6 @@ struct format_mapping
 
 #define DEFAULT_SRGBA_FORMATS \
       PIPE_FORMAT_B8G8R8A8_SRGB, \
-      PIPE_FORMAT_R8G8B8A8_SRGB, \
       PIPE_FORMAT_A8R8G8B8_SRGB, \
       PIPE_FORMAT_A8B8G8R8_SRGB, \
       0
@@ -967,16 +857,15 @@ static const struct format_mapping format_map[] = {
    },
    {
       { GL_RGB10_A2, 0 },
-      { PIPE_FORMAT_B10G10R10A2_UNORM, PIPE_FORMAT_R10G10B10A2_UNORM,
-        DEFAULT_RGBA_FORMATS }
+      { PIPE_FORMAT_B10G10R10A2_UNORM, DEFAULT_RGBA_FORMATS }
    },
    {
       { 4, GL_RGBA, GL_RGBA8, 0 },
-      { DEFAULT_RGBA_FORMATS }
+      { PIPE_FORMAT_R8G8B8A8_UNORM, DEFAULT_RGBA_FORMATS }
    },
    {
       { GL_BGRA, 0 },
-      { DEFAULT_RGBA_FORMATS }
+      { PIPE_FORMAT_B8G8R8A8_UNORM, DEFAULT_RGBA_FORMATS }
    },
    {
       { 3, GL_RGB, GL_RGB8, 0 },
@@ -1342,24 +1231,6 @@ static const struct format_mapping format_map[] = {
    {
       { GL_ETC1_RGB8_OES, 0 },
       { PIPE_FORMAT_ETC1_RGB8, 0 }
-   },
-
-   /* BPTC */
-   {
-      { GL_COMPRESSED_RGBA_BPTC_UNORM, 0 },
-      { PIPE_FORMAT_BPTC_RGBA_UNORM, 0 },
-   },
-   {
-      { GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM, 0 },
-      { PIPE_FORMAT_BPTC_SRGBA, 0 },
-   },
-   {
-      { GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT, 0 },
-      { PIPE_FORMAT_BPTC_RGB_FLOAT, 0 },
-   },
-   {
-      { GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT, 0 },
-      { PIPE_FORMAT_BPTC_RGB_UFLOAT, 0 },
    },
 
    /* signed/unsigned integer formats.
@@ -1804,7 +1675,7 @@ st_choose_format(struct st_context *st, GLenum internalFormat,
    {
       static boolean firstCall = TRUE;
       if (firstCall) {
-         test_format_conversion(st);
+         test_format_conversion();
          firstCall = FALSE;
       }
    }
@@ -1870,10 +1741,9 @@ st_choose_renderbuffer_format(struct st_context *st,
  * If no format is supported, return PIPE_FORMAT_NONE.
  */
 enum pipe_format
-st_choose_matching_format(struct st_context *st, unsigned bind,
+st_choose_matching_format(struct pipe_screen *screen, unsigned bind,
 			  GLenum format, GLenum type, GLboolean swapBytes)
 {
-   struct pipe_screen *screen = st->pipe->screen;
    mesa_format mesa_format;
 
    for (mesa_format = 1; mesa_format < MESA_FORMAT_COUNT; mesa_format++) {
@@ -1889,8 +1759,7 @@ st_choose_matching_format(struct st_context *st, unsigned bind,
 
       if (_mesa_format_matches_format_and_type(mesa_format, format, type,
                                                swapBytes)) {
-         enum pipe_format format =
-            st_mesa_format_to_pipe_format(st, mesa_format);
+         enum pipe_format format = st_mesa_format_to_pipe_format(mesa_format);
 
          if (format &&
              screen->is_format_supported(screen, format, PIPE_TEXTURE_2D, 0,
@@ -1960,14 +1829,16 @@ st_ChooseTextureFormat(struct gl_context *ctx, GLenum target,
        * with the "format".
        */
       if (iformat == baseFormat && iformat == basePackFormat) {
-         pFormat = st_choose_matching_format(st, bindings, format, type,
+         pFormat = st_choose_matching_format(st->pipe->screen, bindings,
+                                             format, type,
                                              ctx->Unpack.SwapBytes);
 
          if (pFormat != PIPE_FORMAT_NONE)
             return st_pipe_format_to_mesa_format(pFormat);
 
          /* try choosing format again, this time without render target bindings */
-         pFormat = st_choose_matching_format(st, PIPE_BIND_SAMPLER_VIEW,
+         pFormat = st_choose_matching_format(st->pipe->screen,
+                                             PIPE_BIND_SAMPLER_VIEW,
                                              format, type,
                                              ctx->Unpack.SwapBytes);
          if (pFormat != PIPE_FORMAT_NONE)

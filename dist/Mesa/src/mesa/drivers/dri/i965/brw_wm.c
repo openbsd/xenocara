@@ -40,7 +40,7 @@
 #include "program/program.h"
 #include "intel_mipmap_tree.h"
 
-#include "util/ralloc.h"
+#include "glsl/ralloc.h"
 
 /**
  * Return a bitfield where bit n is set if barycentric interpolation mode n
@@ -146,8 +146,7 @@ bool do_wm_prog(struct brw_context *brw,
 		struct brw_wm_prog_key *key)
 {
    struct gl_context *ctx = &brw->ctx;
-   void *mem_ctx = ralloc_context(NULL);
-   struct brw_wm_prog_data prog_data;
+   struct brw_wm_compile *c;
    const GLuint *program;
    struct gl_shader *fs = NULL;
    GLuint program_size;
@@ -155,8 +154,7 @@ bool do_wm_prog(struct brw_context *brw,
    if (prog)
       fs = prog->_LinkedShaders[MESA_SHADER_FRAGMENT];
 
-   memset(&prog_data, 0, sizeof(prog_data));
-   prog_data.uses_kill = fp->program.UsesKill;
+   c = rzalloc(NULL, struct brw_wm_compile);
 
    /* Allocate the references to the uniforms that will end up in the
     * prog_data associated with the compiled program, and which will be freed
@@ -170,39 +168,44 @@ bool do_wm_prog(struct brw_context *brw,
    }
    /* The backend also sometimes adds params for texture size. */
    param_count += 2 * ctx->Const.Program[MESA_SHADER_FRAGMENT].MaxTextureImageUnits;
-   prog_data.base.param =
-      rzalloc_array(NULL, const gl_constant_value *, param_count);
-   prog_data.base.pull_param =
-      rzalloc_array(NULL, const gl_constant_value *, param_count);
-   prog_data.base.nr_params = param_count;
+   c->prog_data.base.param = rzalloc_array(NULL, const float *, param_count);
+   c->prog_data.base.pull_param =
+      rzalloc_array(NULL, const float *, param_count);
+   c->prog_data.base.nr_params = param_count;
 
-   prog_data.barycentric_interp_modes =
-      brw_compute_barycentric_interp_modes(brw, key->flat_shade,
-                                           key->persample_shading,
+   memcpy(&c->key, key, sizeof(*key));
+
+   c->prog_data.barycentric_interp_modes =
+      brw_compute_barycentric_interp_modes(brw, c->key.flat_shade,
+                                           c->key.persample_shading,
                                            &fp->program);
 
-   program = brw_wm_fs_emit(brw, mem_ctx, key, &prog_data,
-                            &fp->program, prog, &program_size);
-   if (program == NULL) {
-      ralloc_free(mem_ctx);
+   program = brw_wm_fs_emit(brw, c, &fp->program, prog, &program_size);
+   if (program == NULL)
       return false;
-   }
 
-   if (prog_data.base.total_scratch) {
+   /* Scratch space is used for register spilling */
+   if (c->last_scratch) {
+      perf_debug("Fragment shader triggered register spilling.  "
+                 "Try reducing the number of live scalar values to "
+                 "improve performance.\n");
+
+      c->prog_data.total_scratch = brw_get_scratch_size(c->last_scratch);
+
       brw_get_scratch_bo(brw, &brw->wm.base.scratch_bo,
-			 prog_data.base.total_scratch * brw->max_wm_threads);
+			 c->prog_data.total_scratch * brw->max_wm_threads);
    }
 
    if (unlikely(INTEL_DEBUG & DEBUG_WM))
       fprintf(stderr, "\n");
 
    brw_upload_cache(&brw->cache, BRW_WM_PROG,
-		    key, sizeof(struct brw_wm_prog_key),
+		    &c->key, sizeof(c->key),
 		    program, program_size,
-		    &prog_data, sizeof(prog_data),
+		    &c->prog_data, sizeof(c->prog_data),
 		    &brw->wm.base.prog_offset, &brw->wm.prog_data);
 
-   ralloc_free(mem_ctx);
+   ralloc_free(c);
 
    return true;
 }

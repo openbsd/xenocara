@@ -189,7 +189,8 @@ exec_delete(struct sp_fragment_shader_variant *var,
 
 
 struct sp_fragment_shader_variant *
-softpipe_create_fs_variant_exec(struct softpipe_context *softpipe)
+softpipe_create_fs_variant_exec(struct softpipe_context *softpipe,
+                                const struct pipe_shader_state *templ)
 {
    struct sp_exec_fragment_shader *shader;
 

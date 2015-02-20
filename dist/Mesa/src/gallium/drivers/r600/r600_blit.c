@@ -21,9 +21,8 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "r600_pipe.h"
-#include "compute_memory_pool.h"
-#include "evergreen_compute.h"
 #include "util/u_surface.h"
+#include "util/u_blitter.h"
 #include "util/u_format.h"
 #include "evergreend.h"
 
@@ -43,11 +42,12 @@ enum r600_blitter_op /* bitmask */
 	R600_COPY_TEXTURE  = R600_SAVE_FRAGMENT_STATE | R600_SAVE_FRAMEBUFFER | R600_SAVE_TEXTURES |
 			     R600_DISABLE_RENDER_COND,
 
-	R600_BLIT          = R600_SAVE_FRAGMENT_STATE | R600_SAVE_FRAMEBUFFER | R600_SAVE_TEXTURES,
+	R600_BLIT          = R600_SAVE_FRAGMENT_STATE | R600_SAVE_FRAMEBUFFER | R600_SAVE_TEXTURES |
+			     R600_DISABLE_RENDER_COND,
 
 	R600_DECOMPRESS    = R600_SAVE_FRAGMENT_STATE | R600_SAVE_FRAMEBUFFER | R600_DISABLE_RENDER_COND,
 
-	R600_COLOR_RESOLVE = R600_SAVE_FRAGMENT_STATE | R600_SAVE_FRAMEBUFFER
+	R600_COLOR_RESOLVE = R600_SAVE_FRAGMENT_STATE | R600_SAVE_FRAMEBUFFER | R600_DISABLE_RENDER_COND
 };
 
 static void r600_blitter_begin(struct pipe_context *ctx, enum r600_blitter_op op)
@@ -431,8 +431,7 @@ static void r600_clear(struct pipe_context *ctx, unsigned buffers,
 		 */
 		/* Only use htile for first level */
 		if (rtex->htile_buffer && !level &&
-                   fb->zsbuf->u.tex.first_layer == 0 &&
-                   fb->zsbuf->u.tex.last_layer == util_max_layer(&rtex->resource.b.b, level)) {
+		    util_max_layer(&rtex->resource.b.b, level) == 0) {
 			if (rtex->depth_clear_value != depth) {
 				rtex->depth_clear_value = depth;
 				rctx->db_state.atom.dirty = true;
@@ -443,8 +442,7 @@ static void r600_clear(struct pipe_context *ctx, unsigned buffers,
 	}
 
 	r600_blitter_begin(ctx, R600_CLEAR);
-	util_blitter_clear(rctx->blitter, fb->width, fb->height,
-			   util_framebuffer_get_num_layers(fb),
+	util_blitter_clear(rctx->blitter, fb->width, fb->height, 1,
 			   buffers, color, depth, stencil);
 	r600_blitter_end(ctx);
 
@@ -516,52 +514,29 @@ static void r600_copy_buffer(struct pipe_context *ctx, struct pipe_resource *dst
  * into a single global resource (r600_screen::global_pool).  The means
  * they don't have their own cs_buf handle, so they cannot be passed
  * to r600_copy_buffer() and must be handled separately.
+ *
+ * XXX: It should be possible to implement this function using
+ * r600_copy_buffer() by passing the memory_pool resource as both src
+ * and dst and updating dstx and src_box to point to the correct offsets.
+ * This would likely perform better than the current implementation.
  */
 static void r600_copy_global_buffer(struct pipe_context *ctx,
 				    struct pipe_resource *dst, unsigned
 				    dstx, struct pipe_resource *src,
 				    const struct pipe_box *src_box)
 {
-	struct r600_context *rctx = (struct r600_context*)ctx;
-	struct compute_memory_pool *pool = rctx->screen->global_pool;
-	struct pipe_box new_src_box = *src_box;
+	struct pipe_box dst_box; struct pipe_transfer *src_pxfer,
+	*dst_pxfer;
 
-	if (src->bind & PIPE_BIND_GLOBAL) {
-		struct r600_resource_global *rsrc =
-			(struct r600_resource_global *)src;
-		struct compute_memory_item *item = rsrc->chunk;
+	u_box_1d(dstx, src_box->width, &dst_box);
+	void *src_ptr = ctx->transfer_map(ctx, src, 0, PIPE_TRANSFER_READ,
+					  src_box, &src_pxfer);
+	void *dst_ptr = ctx->transfer_map(ctx, dst, 0, PIPE_TRANSFER_WRITE,
+					  &dst_box, &dst_pxfer);
+	memcpy(dst_ptr, src_ptr, src_box->width);
 
-		if (is_item_in_pool(item)) {
-			new_src_box.x += 4 * item->start_in_dw;
-			src = (struct pipe_resource *)pool->bo;
-		} else {
-			if (item->real_buffer == NULL) {
-				item->real_buffer = (struct r600_resource*)
-					r600_compute_buffer_alloc_vram(pool->screen,
-								       item->size_in_dw * 4);
-			}
-			src = (struct pipe_resource*)item->real_buffer;
-		}
-	}
-	if (dst->bind & PIPE_BIND_GLOBAL) {
-		struct r600_resource_global *rdst =
-			(struct r600_resource_global *)dst;
-		struct compute_memory_item *item = rdst->chunk;
-
-		if (is_item_in_pool(item)) {
-			dstx += 4 * item->start_in_dw;
-			dst = (struct pipe_resource *)pool->bo;
-		} else {
-			if (item->real_buffer == NULL) {
-				item->real_buffer = (struct r600_resource*)
-					r600_compute_buffer_alloc_vram(pool->screen,
-								       item->size_in_dw * 4);
-			}
-			dst = (struct pipe_resource*)item->real_buffer;
-		}
-	}
-
-	r600_copy_buffer(ctx, dst, dstx, src, &new_src_box);
+	ctx->transfer_unmap(ctx, src_pxfer);
+	ctx->transfer_unmap(ctx, dst_pxfer);
 }
 
 static void r600_clear_buffer(struct pipe_context *ctx, struct pipe_resource *dst,
@@ -590,13 +565,23 @@ static void r600_clear_buffer(struct pipe_context *ctx, struct pipe_resource *ds
 	}
 }
 
-void r600_resource_copy_region(struct pipe_context *ctx,
-			       struct pipe_resource *dst,
-			       unsigned dst_level,
-			       unsigned dstx, unsigned dsty, unsigned dstz,
-			       struct pipe_resource *src,
-			       unsigned src_level,
-			       const struct pipe_box *src_box)
+static bool util_format_is_subsampled_2x1_32bpp(enum pipe_format format)
+{
+	const struct util_format_description *desc = util_format_description(format);
+
+	return desc->layout == UTIL_FORMAT_LAYOUT_SUBSAMPLED &&
+	       desc->block.width == 2 &&
+	       desc->block.height == 1 &&
+	       desc->block.bits == 32;
+}
+
+static void r600_resource_copy_region(struct pipe_context *ctx,
+				      struct pipe_resource *dst,
+				      unsigned dst_level,
+				      unsigned dstx, unsigned dsty, unsigned dstz,
+				      struct pipe_resource *src,
+				      unsigned src_level,
+				      const struct pipe_box *src_box)
 {
 	struct r600_context *rctx = (struct r600_context *)ctx;
 	struct pipe_surface *dst_view, dst_templ;
@@ -664,7 +649,7 @@ void r600_resource_copy_region(struct pipe_context *ctx,
 
 		src_force_level = src_level;
 	} else if (!util_blitter_is_copy_supported(rctx->blitter, dst, src)) {
-		if (util_format_is_subsampled_422(src->format)) {
+		if (util_format_is_subsampled_2x1_32bpp(src->format)) {
 
 			src_templ.format = PIPE_FORMAT_R8G8B8A8_UINT;
 			dst_templ.format = PIPE_FORMAT_R8G8B8A8_UINT;
@@ -807,8 +792,7 @@ static bool do_hardware_msaa_resolve(struct pipe_context *ctx,
 	    info->src.box.depth == 1 &&
 	    dst->surface.level[info->dst.level].mode >= RADEON_SURF_MODE_1D &&
 	    (!dst->cmask.size || !dst->dirty_level_mask) /* dst cannot be fast-cleared */) {
-		r600_blitter_begin(ctx, R600_COLOR_RESOLVE |
-				   (info->render_condition_enable ? 0 : R600_DISABLE_RENDER_COND));
+		r600_blitter_begin(ctx, R600_COLOR_RESOLVE);
 		util_blitter_custom_resolve_color(rctx->blitter,
 						  info->dst.resource, info->dst.level,
 						  info->dst.box.z,
@@ -840,12 +824,7 @@ static void r600_blit(struct pipe_context *ctx,
 		return; /* error */
 	}
 
-	if (rctx->screen->b.debug_flags & DBG_FORCE_DMA &&
-	    util_try_blit_via_copy_region(ctx, info))
-		return;
-
-	r600_blitter_begin(ctx, R600_BLIT |
-			   (info->render_condition_enable ? 0 : R600_DISABLE_RENDER_COND));
+	r600_blitter_begin(ctx, R600_BLIT);
 	util_blitter_blit(rctx->blitter, info);
 	r600_blitter_end(ctx);
 }

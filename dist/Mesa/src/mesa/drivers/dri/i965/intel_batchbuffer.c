@@ -224,6 +224,12 @@ brw_finish_batch(struct brw_context *brw)
    if (brw->batch.ring == RENDER_RING)
       brw_perf_monitor_finish_batch(brw);
 
+   if (brw->curbe.curbe_bo) {
+      drm_intel_gem_bo_unmap_gtt(brw->curbe.curbe_bo);
+      drm_intel_bo_unreference(brw->curbe.curbe_bo);
+      brw->curbe.curbe_bo = NULL;
+   }
+
    /* Mark that the current program cache BO has been used by the GPU.
     * It will be reallocated if we need to put new programs in for the
     * next batch.
@@ -648,15 +654,6 @@ intel_batchbuffer_emit_mi_flush(struct brw_context *brw)
    } else {
       int flags = PIPE_CONTROL_NO_WRITE | PIPE_CONTROL_WRITE_FLUSH;
       if (brw->gen >= 6) {
-         if (brw->gen == 9) {
-            /* Hardware workaround: SKL
-             *
-             * Emit Pipe Control with all bits set to zero before emitting
-             * a Pipe Control with VF Cache Invalidate set.
-             */
-            brw_emit_pipe_control_flush(brw, 0);
-         }
-
          flags |= PIPE_CONTROL_INSTRUCTION_FLUSH |
                   PIPE_CONTROL_DEPTH_CACHE_FLUSH |
                   PIPE_CONTROL_VF_CACHE_INVALIDATE |

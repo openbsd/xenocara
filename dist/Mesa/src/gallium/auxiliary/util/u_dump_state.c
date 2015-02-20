@@ -759,9 +759,6 @@ util_dump_draw_info(FILE *stream, const struct pipe_draw_info *state)
 
    util_dump_member(stream, ptr, state, count_from_stream_output);
 
-   util_dump_member(stream, ptr, state, indirect);
-   util_dump_member(stream, uint, state, indirect_offset);
-
    util_dump_struct_end(stream);
 }
 

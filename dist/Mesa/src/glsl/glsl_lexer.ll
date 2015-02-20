@@ -23,7 +23,7 @@
  */
 #include <ctype.h>
 #include <limits.h>
-#include "util/strtod.h"
+#include "strtod.h"
 #include "ast.h"
 #include "glsl_parser_extras.h"
 #include "glsl_parser.h"
@@ -81,8 +81,7 @@ static int classify_identifier(struct _mesa_glsl_parse_state *, const char *);
 			  "illegal use of reserved word `%s'", yytext);	\
 	 return ERROR_TOK;						\
       } else {								\
-	 void *mem_ctx = yyextra;					\
-	 yylval->identifier = ralloc_strdup(mem_ctx, yytext);		\
+	 yylval->identifier = strdup(yytext);				\
 	 return classify_identifier(yyextra, yytext);			\
       }									\
    } while (0)
@@ -153,11 +152,7 @@ literal_integer(char *text, int len, struct _mesa_glsl_parse_state *state,
 %option never-interactive
 %option prefix="_mesa_glsl_lexer_"
 %option extra-type="struct _mesa_glsl_parse_state *"
-%option warn nodefault
 
-	/* Note: When adding any start conditions to this list, you must also
-	 * update the "Internal compiler error" catch-all rule near the end of
-	 * this file. */
 %x PP PRAGMA
 
 DEC_INT		[1-9][0-9]*
@@ -233,8 +228,7 @@ HASH		^{SPC}#{SPC}
 <PP>[ \t\r]*			{ }
 <PP>:				return COLON;
 <PP>[_a-zA-Z][_a-zA-Z0-9]*	{
-				   void *mem_ctx = yyextra;
-				   yylval->identifier = ralloc_strdup(mem_ctx, yytext);
+				   yylval->identifier = strdup(yytext);
 				   return IDENTIFIER;
 				}
 <PP>[1-9][0-9]*			{
@@ -242,7 +236,6 @@ HASH		^{SPC}#{SPC}
 				    return INTCONSTANT;
 				}
 <PP>\n				{ BEGIN 0; yylineno++; yycolumn = 0; return EOL; }
-<PP>.				{ return yytext[0]; }
 
 \n		{ yylineno++; yycolumn = 0; }
 
@@ -345,9 +338,6 @@ samplerExternalOES		{
 			     return IDENTIFIER;
 		}
 
-   /* keywords available with ARB_gpu_shader5 */
-precise		KEYWORD_WITH_ALT(400, 0, 400, 0, yyextra->ARB_gpu_shader5_enable, PRECISE);
-
    /* keywords available with ARB_shader_image_load_store */
 image1D         KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGE1D);
 image2D         KEYWORD_WITH_ALT(130, 300, 420, 0, yyextra->ARB_shader_image_load_store_enable, IMAGE2D);
@@ -403,7 +393,6 @@ layout		{
 		      || yyextra->AMD_conservative_depth_enable
 		      || yyextra->ARB_conservative_depth_enable
 		      || yyextra->ARB_explicit_attrib_location_enable
-		      || yyextra->ARB_explicit_uniform_location_enable
                       || yyextra->has_separate_shader_objects()
 		      || yyextra->ARB_uniform_buffer_object_enable
 		      || yyextra->ARB_fragment_coord_conventions_enable
@@ -411,8 +400,7 @@ layout		{
                       || yyextra->ARB_compute_shader_enable) {
 		      return LAYOUT_TOK;
 		   } else {
-		      void *mem_ctx = yyextra;
-		      yylval->identifier = ralloc_strdup(mem_ctx, yytext);
+		      yylval->identifier = strdup(yytext);
 		      return classify_identifier(yyextra, yytext);
 		   }
 		}
@@ -451,23 +439,23 @@ layout		{
 			}
 
 [0-9]+\.[0-9]+([eE][+-]?[0-9]+)?[fF]?	{
-			    yylval->real = _mesa_strtof(yytext, NULL);
+			    yylval->real = glsl_strtof(yytext, NULL);
 			    return FLOATCONSTANT;
 			}
 \.[0-9]+([eE][+-]?[0-9]+)?[fF]?		{
-			    yylval->real = _mesa_strtof(yytext, NULL);
+			    yylval->real = glsl_strtof(yytext, NULL);
 			    return FLOATCONSTANT;
 			}
 [0-9]+\.([eE][+-]?[0-9]+)?[fF]?		{
-			    yylval->real = _mesa_strtof(yytext, NULL);
+			    yylval->real = glsl_strtof(yytext, NULL);
 			    return FLOATCONSTANT;
 			}
 [0-9]+[eE][+-]?[0-9]+[fF]?		{
-			    yylval->real = _mesa_strtof(yytext, NULL);
+			    yylval->real = glsl_strtof(yytext, NULL);
 			    return FLOATCONSTANT;
 			}
 [0-9]+[fF]		{
-			    yylval->real = _mesa_strtof(yytext, NULL);
+			    yylval->real = glsl_strtof(yytext, NULL);
 			    return FLOATCONSTANT;
 			}
 

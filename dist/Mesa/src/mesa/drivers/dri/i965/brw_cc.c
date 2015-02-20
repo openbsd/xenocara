@@ -97,7 +97,7 @@ brw_fix_xRGB_alpha(GLenum function)
 }
 
 /**
- * Creates a CC unit packet from the current blend state.
+ * Creates the state cache entry for the given CC unit key.
  */
 static void upload_cc_unit(struct brw_context *brw)
 {

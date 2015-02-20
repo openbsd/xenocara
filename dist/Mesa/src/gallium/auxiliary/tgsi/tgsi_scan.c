@@ -187,15 +187,15 @@ tgsi_scan_shader(const struct tgsi_token *tokens,
                   info->input_semantic_name[reg] = (ubyte) semName;
                   info->input_semantic_index[reg] = (ubyte) semIndex;
                   info->input_interpolate[reg] = (ubyte)fulldecl->Interp.Interpolate;
-                  info->input_interpolate_loc[reg] = (ubyte)fulldecl->Interp.Location;
+                  info->input_centroid[reg] = (ubyte)fulldecl->Interp.Centroid;
                   info->input_cylindrical_wrap[reg] = (ubyte)fulldecl->Interp.CylindricalWrap;
                   info->num_inputs++;
 
-                  if (semName == TGSI_SEMANTIC_PRIMID)
-                     info->uses_primid = TRUE;
-                  else if (procType == TGSI_PROCESSOR_FRAGMENT) {
+                  if (procType == TGSI_PROCESSOR_FRAGMENT) {
                      if (semName == TGSI_SEMANTIC_POSITION)
                         info->reads_position = TRUE;
+                     else if (semName == TGSI_SEMANTIC_PRIMID)
+                        info->uses_primid = TRUE;
                      else if (semName == TGSI_SEMANTIC_FACE)
                         info->uses_frontface = TRUE;
                   }
@@ -277,10 +277,13 @@ tgsi_scan_shader(const struct tgsi_token *tokens,
          {
             const struct tgsi_full_property *fullprop
                = &parse.FullToken.FullProperty;
-            unsigned name = fullprop->Property.PropertyName;
 
-            assert(name < Elements(info->properties));
-            info->properties[name] = fullprop->u[0].Data;
+            info->properties[info->num_properties].name =
+               fullprop->Property.PropertyName;
+            memcpy(info->properties[info->num_properties].data,
+                   fullprop->u, 8 * sizeof(unsigned));;
+
+            ++info->num_properties;
          }
          break;
 
@@ -292,19 +295,36 @@ tgsi_scan_shader(const struct tgsi_token *tokens,
    info->uses_kill = (info->opcode_count[TGSI_OPCODE_KILL_IF] ||
                       info->opcode_count[TGSI_OPCODE_KILL]);
 
-   /* The dimensions of the IN decleration in geometry shader have
-    * to be deduced from the type of the input primitive.
-    */
-   if (procType == TGSI_PROCESSOR_GEOMETRY) {
-      unsigned input_primitive =
-            info->properties[TGSI_PROPERTY_GS_INPUT_PRIM];
-      int num_verts = u_vertices_per_prim(input_primitive);
-      int j;
-      info->file_count[TGSI_FILE_INPUT] = num_verts;
-      info->file_max[TGSI_FILE_INPUT] =
-            MAX2(info->file_max[TGSI_FILE_INPUT], num_verts - 1);
-      for (j = 0; j < num_verts; ++j) {
-         info->file_mask[TGSI_FILE_INPUT] |= (1 << j);
+   /* extract simple properties */
+   for (i = 0; i < info->num_properties; ++i) {
+      switch (info->properties[i].name) {
+      case TGSI_PROPERTY_FS_COORD_ORIGIN:
+         info->origin_lower_left = info->properties[i].data[0];
+         break;
+      case TGSI_PROPERTY_FS_COORD_PIXEL_CENTER:
+         info->pixel_center_integer = info->properties[i].data[0];
+         break;
+      case TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS:
+         info->color0_writes_all_cbufs = info->properties[i].data[0];
+         break;
+      case TGSI_PROPERTY_GS_INPUT_PRIM:
+         /* The dimensions of the IN decleration in geometry shader have
+          * to be deduced from the type of the input primitive.
+          */
+         if (procType == TGSI_PROCESSOR_GEOMETRY) {
+            unsigned input_primitive = info->properties[i].data[0];
+            int num_verts = u_vertices_per_prim(input_primitive);
+            int j;
+            info->file_count[TGSI_FILE_INPUT] = num_verts;
+            info->file_max[TGSI_FILE_INPUT] =
+               MAX2(info->file_max[TGSI_FILE_INPUT], num_verts - 1);
+            for (j = 0; j < num_verts; ++j) {
+               info->file_mask[TGSI_FILE_INPUT] |= (1 << j);
+            }
+         }
+         break;
+      default:
+         ;
       }
    }
 

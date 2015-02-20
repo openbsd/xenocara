@@ -30,6 +30,7 @@
 
 
 #include "glheader.h"
+#include "colormac.h"
 #include "context.h"
 #include "enums.h"
 #include "feedback.h"

@@ -229,13 +229,15 @@ public:
 static void
 destroy_links(exec_list *list, function *f)
 {
-   foreach_in_list_safe(call_node, node, list) {
+   foreach_list_safe(node, list) {
+      struct call_node *n = (struct call_node *) node;
+
       /* If this is the right function, remove it.  Note that the loop cannot
        * terminate now.  There can be multiple links to a function if it is
        * either called multiple times or calls multiple times.
        */
-      if (node->func == f)
-	 node->remove();
+      if (n->func == f)
+	 n->remove();
    }
 }
 

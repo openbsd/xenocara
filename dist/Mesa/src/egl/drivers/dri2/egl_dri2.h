@@ -138,10 +138,6 @@ struct dri2_egl_display_vtbl {
 
    struct wl_buffer* (*create_wayland_buffer_from_image)(
                         _EGLDriver *drv, _EGLDisplay *dpy, _EGLImage *img);
-
-   EGLBoolean (*get_sync_values)(_EGLDisplay *display, _EGLSurface *surface,
-                                 EGLuint64KHR *ust, EGLuint64KHR *msc,
-                                 EGLuint64KHR *sbc);
 };
 
 struct dri2_egl_display
@@ -184,7 +180,6 @@ struct dri2_egl_display
 
 #ifdef HAVE_X11_PLATFORM
    xcb_connection_t         *conn;
-   int                      screen;
 #endif
 
 #ifdef HAVE_WAYLAND_PLATFORM

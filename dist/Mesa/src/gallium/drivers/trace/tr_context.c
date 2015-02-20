@@ -127,8 +127,7 @@ trace_context_draw_vbo(struct pipe_context *_pipe,
 
 static INLINE struct pipe_query *
 trace_context_create_query(struct pipe_context *_pipe,
-                           unsigned query_type,
-                           unsigned index)
+                           unsigned query_type)
 {
    struct trace_context *tr_ctx = trace_context(_pipe);
    struct pipe_context *pipe = tr_ctx->pipe;
@@ -138,9 +137,8 @@ trace_context_create_query(struct pipe_context *_pipe,
 
    trace_dump_arg(ptr, pipe);
    trace_dump_arg(query_type, query_type);
-   trace_dump_arg(int, index);
 
-   query = pipe->create_query(pipe, query_type, index);
+   query = pipe->create_query(pipe, query_type);
 
    trace_dump_ret(ptr, query);
 

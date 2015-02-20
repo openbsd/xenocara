@@ -83,7 +83,7 @@ struct osmesa_context
 };
 
 
-static inline OSMesaContext
+static INLINE OSMesaContext
 OSMESA_CONTEXT(struct gl_context *ctx)
 {
    /* Just cast, since we're using structure containment */

@@ -50,8 +50,7 @@ static struct llvmpipe_query *llvmpipe_query( struct pipe_query *p )
 
 static struct pipe_query *
 llvmpipe_create_query(struct pipe_context *pipe, 
-                      unsigned type,
-                      unsigned index)
+                      unsigned type)
 {
    struct llvmpipe_query *pq;
 

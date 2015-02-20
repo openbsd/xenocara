@@ -104,42 +104,6 @@ void st_invalidate_state(struct gl_context * ctx, GLuint new_state)
    _vbo_InvalidateState(ctx, new_state);
 }
 
-
-static void
-st_destroy_context_priv(struct st_context *st)
-{
-   uint shader, i;
-
-   st_destroy_atoms( st );
-   st_destroy_draw( st );
-   st_destroy_clear(st);
-   st_destroy_bitmap(st);
-   st_destroy_drawpix(st);
-   st_destroy_drawtex(st);
-
-   for (shader = 0; shader < Elements(st->state.sampler_views); shader++) {
-      for (i = 0; i < Elements(st->state.sampler_views[0]); i++) {
-         pipe_sampler_view_release(st->pipe,
-                                   &st->state.sampler_views[shader][i]);
-      }
-   }
-
-   if (st->default_texture) {
-      st->ctx->Driver.DeleteTexture(st->ctx, st->default_texture);
-      st->default_texture = NULL;
-   }
-
-   u_upload_destroy(st->uploader);
-   if (st->indexbuf_uploader) {
-      u_upload_destroy(st->indexbuf_uploader);
-   }
-   if (st->constbuf_uploader) {
-      u_upload_destroy(st->constbuf_uploader);
-   }
-   free( st );
-}
-
-
 static struct st_context *
 st_create_context_priv( struct gl_context *ctx, struct pipe_context *pipe,
 		const struct st_config_options *options)
@@ -225,9 +189,6 @@ st_create_context_priv( struct gl_context *ctx, struct pipe_context *pipe,
    st->has_stencil_export =
       screen->get_param(screen, PIPE_CAP_SHADER_STENCIL_EXPORT);
    st->has_shader_model3 = screen->get_param(screen, PIPE_CAP_SM3);
-   st->has_etc1 = screen->is_format_supported(screen, PIPE_FORMAT_ETC1_RGB8,
-                                              PIPE_TEXTURE_2D, 0,
-                                              PIPE_BIND_SAMPLER_VIEW);
    st->prefer_blit_based_texture_transfer = screen->get_param(screen,
                               PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER);
 
@@ -237,50 +198,12 @@ st_create_context_priv( struct gl_context *ctx, struct pipe_context *pipe,
       !!(screen->get_param(screen, PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK) &
          (PIPE_QUIRK_TEXTURE_BORDER_COLOR_SWIZZLE_NV50 |
           PIPE_QUIRK_TEXTURE_BORDER_COLOR_SWIZZLE_R600));
-   st->has_time_elapsed =
-      screen->get_param(screen, PIPE_CAP_QUERY_TIME_ELAPSED);
 
    /* GL limits and extensions */
-   st_init_limits(st->pipe->screen, &ctx->Const, &ctx->Extensions);
-   st_init_extensions(st->pipe->screen, &ctx->Const,
-                      &ctx->Extensions, &st->options, ctx->Mesa_DXTn);
-
-   /* Enable shader-based fallbacks for ARB_color_buffer_float if needed. */
-   if (screen->get_param(screen, PIPE_CAP_VERTEX_COLOR_UNCLAMPED)) {
-      if (!screen->get_param(screen, PIPE_CAP_VERTEX_COLOR_CLAMPED)) {
-         st->clamp_vert_color_in_shader = GL_TRUE;
-      }
-
-      if (!screen->get_param(screen, PIPE_CAP_FRAGMENT_COLOR_CLAMPED)) {
-         st->clamp_frag_color_in_shader = GL_TRUE;
-      }
-
-      /* For drivers which cannot do color clamping, it's better to just
-       * disable ARB_color_buffer_float in the core profile, because
-       * the clamping is deprecated there anyway. */
-      if (ctx->API == API_OPENGL_CORE &&
-          (st->clamp_frag_color_in_shader || st->clamp_vert_color_in_shader)) {
-         st->clamp_vert_color_in_shader = GL_FALSE;
-         st->clamp_frag_color_in_shader = GL_FALSE;
-         ctx->Extensions.ARB_color_buffer_float = GL_FALSE;
-      }
-   }
-
-   /* called after _mesa_create_context/_mesa_init_point, fix default user
-    * settable max point size up
-    */
-   st->ctx->Point.MaxSize = MAX2(ctx->Const.MaxPointSize,
-                                 ctx->Const.MaxPointSizeAA);
+   st_init_limits(st);
+   st_init_extensions(st);
 
    _mesa_compute_version(ctx);
-
-   if (ctx->Version == 0) {
-      /* This can happen when a core profile was requested, but the driver
-       * does not support some features of GL 3.1 or later.
-       */
-      st_destroy_context_priv(st);
-      return NULL;
-   }
 
    _mesa_initialize_dispatch_tables(ctx);
    _mesa_initialize_vbo_vtxfmt(ctx);
@@ -303,7 +226,6 @@ struct st_context *st_create_context(gl_api api, struct pipe_context *pipe,
    struct gl_context *ctx;
    struct gl_context *shareCtx = share ? share->ctx : NULL;
    struct dd_function_table funcs;
-   struct st_context *st;
 
    memset(&funcs, 0, sizeof(funcs));
    st_init_driver_functions(&funcs);
@@ -319,14 +241,43 @@ struct st_context *st_create_context(gl_api api, struct pipe_context *pipe,
     * driver prefers DP4 or MUL/MAD for vertex transformation.
     */
    if (debug_get_option_mesa_mvp_dp4())
-      ctx->Const.ShaderCompilerOptions[MESA_SHADER_VERTEX].OptimizeForAOS = GL_TRUE;
+      ctx->ShaderCompilerOptions[MESA_SHADER_VERTEX].OptimizeForAOS = GL_TRUE;
 
-   st = st_create_context_priv(ctx, pipe, options);
-   if (!st) {
-      _mesa_destroy_context(ctx);
+   return st_create_context_priv(ctx, pipe, options);
+}
+
+
+static void st_destroy_context_priv( struct st_context *st )
+{
+   uint shader, i;
+
+   st_destroy_atoms( st );
+   st_destroy_draw( st );
+   st_destroy_clear(st);
+   st_destroy_bitmap(st);
+   st_destroy_drawpix(st);
+   st_destroy_drawtex(st);
+
+   for (shader = 0; shader < Elements(st->state.sampler_views); shader++) {
+      for (i = 0; i < Elements(st->state.sampler_views[0]); i++) {
+         pipe_sampler_view_release(st->pipe,
+                                   &st->state.sampler_views[shader][i]);
+      }
    }
 
-   return st;
+   if (st->default_texture) {
+      st->ctx->Driver.DeleteTexture(st->ctx, st->default_texture);
+      st->default_texture = NULL;
+   }
+
+   u_upload_destroy(st->uploader);
+   if (st->indexbuf_uploader) {
+      u_upload_destroy(st->indexbuf_uploader);
+   }
+   if (st->constbuf_uploader) {
+      u_upload_destroy(st->constbuf_uploader);
+   }
+   free( st );
 }
 
 

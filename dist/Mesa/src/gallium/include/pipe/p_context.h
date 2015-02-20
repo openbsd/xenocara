@@ -109,8 +109,7 @@ struct pipe_context {
     */
    /*@{*/
    struct pipe_query *(*create_query)( struct pipe_context *pipe,
-                                       unsigned query_type,
-                                       unsigned index );
+                                       unsigned query_type );
 
    void (*destroy_query)(struct pipe_context *pipe,
                          struct pipe_query *q);

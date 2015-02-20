@@ -252,7 +252,7 @@ void
 lp_jit_screen_cleanup(struct llvmpipe_screen *screen);
 
 
-boolean
+void
 lp_jit_screen_init(struct llvmpipe_screen *screen);
 
 

@@ -804,7 +804,7 @@ get_border_color(const struct gl_sampler_object *samp,
 /**
  * Put z into texel according to GL_DEPTH_MODE.
  */
-static inline void
+static INLINE void
 apply_depth_mode(GLenum depthMode, GLfloat z, GLfloat texel[4])
 {
    switch (depthMode) {

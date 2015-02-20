@@ -158,7 +158,7 @@ stw_pixelformat_add(
    pfi->pfd.dwFlags |= PFD_SUPPORT_COMPOSITION;
 
    if (doublebuffer)
-      pfi->pfd.dwFlags |= PFD_DOUBLEBUFFER | PFD_SWAP_EXCHANGE;
+      pfi->pfd.dwFlags |= PFD_DOUBLEBUFFER | PFD_SWAP_COPY;
    
    pfi->pfd.iPixelType = PFD_TYPE_RGBA;
 
@@ -214,14 +214,13 @@ stw_pixelformat_add(
 /**
  * Add the depth/stencil/accum/ms variants for a particular color format.
  */
-static unsigned
+static void
 add_color_format_variants(const struct stw_pf_color_info *color,
                           boolean extended)
 {
    struct pipe_screen *screen = stw_dev->screen;
    unsigned ms, db, ds, acc;
    unsigned bind_flags = PIPE_BIND_RENDER_TARGET;
-   unsigned num_added = 0;
 
    if (!extended) {
       bind_flags |= PIPE_BIND_DISPLAY_TARGET;
@@ -229,7 +228,7 @@ add_color_format_variants(const struct stw_pf_color_info *color,
 
    if (!screen->is_format_supported(screen, color->format,
                                     PIPE_TEXTURE_2D, 0, bind_flags)) {
-      return 0;
+      return;
    }
 
    for (ms = 0; ms < Elements(stw_pf_multisample); ms++) {
@@ -254,13 +253,10 @@ add_color_format_variants(const struct stw_pf_color_info *color,
             for (acc = 0; acc < 2; acc++) {
                stw_pixelformat_add(stw_dev, extended, color, depth,
                                    acc * 16, doublebuffer, samples);
-               num_added++;
             }
          }
       }
    }
-
-   return num_added;
 }
 
 
@@ -268,16 +264,14 @@ void
 stw_pixelformat_init( void )
 {
    unsigned i;
-   unsigned num_formats = 0;
 
    assert( !stw_dev->pixelformat_count );
    assert( !stw_dev->pixelformat_extended_count );
 
    /* normal, displayable formats */
    for (i = 0; i < Elements(stw_pf_color); i++) {
-      num_formats += add_color_format_variants(&stw_pf_color[i], FALSE);
+      add_color_format_variants(&stw_pf_color[i], FALSE);
    }
-   assert(num_formats > 0);
 
    /* extended, pbuffer-only formats */
    for (i = 0; i < Elements(stw_pf_color_extended); i++) {
@@ -303,7 +297,7 @@ stw_pixelformat_get_extended_count( void )
 const struct stw_pixelformat_info *
 stw_pixelformat_get_info( int iPixelFormat )
 {
-   unsigned index;
+   int index;
 
    if (iPixelFormat <= 0) {
       return NULL;

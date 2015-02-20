@@ -40,12 +40,10 @@
 static void
 rbug_destroy(struct pipe_context *_pipe)
 {
-   struct rbug_screen *rb_screen = rbug_screen(_pipe->screen);
    struct rbug_context *rb_pipe = rbug_context(_pipe);
    struct pipe_context *pipe = rb_pipe->pipe;
 
-   rbug_screen_remove_from_list(rb_screen, contexts, rb_pipe);
-
+   remove_from_list(&rb_pipe->list);
    pipe_mutex_lock(rb_pipe->call_mutex);
    pipe->destroy(pipe);
    rb_pipe->pipe = NULL;
@@ -136,19 +134,15 @@ rbug_draw_vbo(struct pipe_context *_pipe, const struct pipe_draw_info *info)
 
 static struct pipe_query *
 rbug_create_query(struct pipe_context *_pipe,
-                  unsigned query_type,
-                  unsigned index)
+                  unsigned query_type)
 {
    struct rbug_context *rb_pipe = rbug_context(_pipe);
    struct pipe_context *pipe = rb_pipe->pipe;
-   struct pipe_query *query;
 
    pipe_mutex_lock(rb_pipe->call_mutex);
-   query = pipe->create_query(pipe,
-                              query_type,
-                              index);
+   return pipe->create_query(pipe,
+                             query_type);
    pipe_mutex_unlock(rb_pipe->call_mutex);
-   return query;
 }
 
 static void
@@ -760,7 +754,7 @@ rbug_set_vertex_buffers(struct pipe_context *_pipe,
 
    pipe_mutex_lock(rb_pipe->call_mutex);
 
-   if (num_buffers && _buffers) {
+   if (num_buffers) {
       memcpy(unwrapped_buffers, _buffers, num_buffers * sizeof(*_buffers));
       for (i = 0; i < num_buffers; i++)
          unwrapped_buffers[i].buffer = rbug_resource_unwrap(_buffers[i].buffer);
@@ -805,49 +799,6 @@ rbug_set_sample_mask(struct pipe_context *_pipe,
    pipe_mutex_unlock(rb_pipe->call_mutex);
 }
 
-static struct pipe_stream_output_target *
-rbug_create_stream_output_target(struct pipe_context *_pipe,
-                                 struct pipe_resource *_res,
-                                 unsigned buffer_offset, unsigned buffer_size)
-{
-   struct rbug_context *rb_pipe = rbug_context(_pipe);
-   struct pipe_context *pipe = rb_pipe->pipe;
-   struct pipe_resource *res = rbug_resource_unwrap(_res);
-   struct pipe_stream_output_target *target;
-
-   pipe_mutex_lock(rb_pipe->call_mutex);
-   target = pipe->create_stream_output_target(pipe, res, buffer_offset,
-                                              buffer_size);
-   pipe_mutex_unlock(rb_pipe->call_mutex);
-   return target;
-}
-
-static void
-rbug_stream_output_target_destroy(struct pipe_context *_pipe,
-                                  struct pipe_stream_output_target *target)
-{
-   struct rbug_context *rb_pipe = rbug_context(_pipe);
-   struct pipe_context *pipe = rb_pipe->pipe;
-
-   pipe_mutex_lock(rb_pipe->call_mutex);
-   pipe->stream_output_target_destroy(pipe, target);
-   pipe_mutex_unlock(rb_pipe->call_mutex);
-}
-
-static void
-rbug_set_stream_output_targets(struct pipe_context *_pipe,
-                               unsigned num_targets,
-                               struct pipe_stream_output_target **targets,
-                               const unsigned *offsets)
-{
-   struct rbug_context *rb_pipe = rbug_context(_pipe);
-   struct pipe_context *pipe = rb_pipe->pipe;
-
-   pipe_mutex_lock(rb_pipe->call_mutex);
-   pipe->set_stream_output_targets(pipe, num_targets, targets, offsets);
-   pipe_mutex_unlock(rb_pipe->call_mutex);
-}
-
 static void
 rbug_resource_copy_region(struct pipe_context *_pipe,
                           struct pipe_resource *_dst,
@@ -876,26 +827,6 @@ rbug_resource_copy_region(struct pipe_context *_pipe,
                               src,
                               src_level,
                               src_box);
-   pipe_mutex_unlock(rb_pipe->call_mutex);
-}
-
-static void
-rbug_blit(struct pipe_context *_pipe, const struct pipe_blit_info *_blit_info)
-{
-   struct rbug_context *rb_pipe = rbug_context(_pipe);
-   struct rbug_resource *rb_resource_dst = rbug_resource(_blit_info->dst.resource);
-   struct rbug_resource *rb_resource_src = rbug_resource(_blit_info->src.resource);
-   struct pipe_context *pipe = rb_pipe->pipe;
-   struct pipe_resource *dst = rb_resource_dst->resource;
-   struct pipe_resource *src = rb_resource_src->resource;
-   struct pipe_blit_info blit_info;
-
-   blit_info = *_blit_info;
-   blit_info.dst.resource = dst;
-   blit_info.src.resource = src;
-
-   pipe_mutex_lock(rb_pipe->call_mutex);
-   pipe->blit(pipe, &blit_info);
    pipe_mutex_unlock(rb_pipe->call_mutex);
 }
 
@@ -1219,11 +1150,7 @@ rbug_context_create(struct pipe_screen *_screen, struct pipe_context *pipe)
    rb_pipe->base.set_vertex_buffers = rbug_set_vertex_buffers;
    rb_pipe->base.set_index_buffer = rbug_set_index_buffer;
    rb_pipe->base.set_sample_mask = rbug_set_sample_mask;
-   rb_pipe->base.create_stream_output_target = rbug_create_stream_output_target;
-   rb_pipe->base.stream_output_target_destroy = rbug_stream_output_target_destroy;
-   rb_pipe->base.set_stream_output_targets = rbug_set_stream_output_targets;
    rb_pipe->base.resource_copy_region = rbug_resource_copy_region;
-   rb_pipe->base.blit = rbug_blit;
    rb_pipe->base.flush_resource = rbug_flush_resource;
    rb_pipe->base.clear = rbug_clear;
    rb_pipe->base.clear_render_target = rbug_clear_render_target;

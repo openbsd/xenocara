@@ -54,8 +54,7 @@ union tile_address {
       unsigned x:TILE_ADDR_BITS;     /* 16K / TILE_SIZE */
       unsigned y:TILE_ADDR_BITS;     /* 16K / TILE_SIZE */
       unsigned invalid:1;
-      unsigned layer:8;
-      unsigned pad:7;
+      unsigned pad:15;
    } bits;
    unsigned value;
 };
@@ -83,14 +82,12 @@ struct softpipe_tile_cache
 {
    struct pipe_context *pipe;
    struct pipe_surface *surface;  /**< the surface we're caching */
-   struct pipe_transfer **transfer;
-   void **transfer_map;
-   int num_maps;
+   struct pipe_transfer *transfer;
+   void *transfer_map;
 
    union tile_address tile_addrs[NUM_ENTRIES];
    struct softpipe_cached_tile *entries[NUM_ENTRIES];
-   uint *clear_flags;
-   uint clear_flags_size;
+   uint clear_flags[(MAX_WIDTH / TILE_SIZE) * (MAX_HEIGHT / TILE_SIZE) / 32];
    union pipe_color_union clear_color; /**< for color bufs */
    uint64_t clear_val;        /**< for z+stencil */
    boolean depth_stencil; /**< Is the surface a depth/stencil format? */
@@ -130,14 +127,14 @@ sp_find_cached_tile(struct softpipe_tile_cache *tc,
 
 static INLINE union tile_address
 tile_address( unsigned x,
-              unsigned y, unsigned layer )
+              unsigned y )
 {
    union tile_address addr;
 
    addr.value = 0;
    addr.bits.x = x / TILE_SIZE;
    addr.bits.y = y / TILE_SIZE;
-   addr.bits.layer = layer;
+      
    return addr;
 }
 
@@ -145,9 +142,9 @@ tile_address( unsigned x,
  */
 static INLINE struct softpipe_cached_tile *
 sp_get_cached_tile(struct softpipe_tile_cache *tc, 
-                   int x, int y, int layer )
+                   int x, int y )
 {
-   union tile_address addr = tile_address( x, y, layer );
+   union tile_address addr = tile_address( x, y );
 
    if (tc->last_tile_addr.value == addr.value)
       return tc->last_tile;

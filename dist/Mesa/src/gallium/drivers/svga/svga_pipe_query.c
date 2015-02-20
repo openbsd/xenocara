@@ -74,9 +74,7 @@ svga_get_query_result(struct pipe_context *pipe,
 
 
 static struct pipe_query *
-svga_create_query(struct pipe_context *pipe,
-                  unsigned query_type,
-                  unsigned index)
+svga_create_query( struct pipe_context *pipe, unsigned query_type )
 {
    struct svga_context *svga = svga_context( pipe );
    struct svga_screen *svgascreen = svga_screen(pipe->screen);

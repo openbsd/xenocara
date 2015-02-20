@@ -424,7 +424,6 @@ struct ast_type_qualifier {
    union {
       struct {
 	 unsigned invariant:1;
-         unsigned precise:1;
 	 unsigned constant:1;
 	 unsigned attribute:1;
 	 unsigned varying:1;
@@ -509,8 +508,6 @@ struct ast_type_qualifier {
          /** \name Layout qualifiers for GL_ARB_gpu_shader5 */
          /** \{ */
          unsigned invocations:1;
-         unsigned stream:1; /**< Has stream value assigned  */
-         unsigned explicit_stream:1; /**< stream value assigned explicitly by shader code */
          /** \} */
       }
       /** \brief Set of flags, accessed by name. */
@@ -543,9 +540,6 @@ struct ast_type_qualifier {
 
    /** Maximum output vertices in GLSL 1.50 geometry shaders. */
    int max_vertices;
-
-   /** Stream in GLSL 1.50 geometry shaders. */
-   unsigned stream;
 
    /** Input or output primitive type in GLSL 1.50 geometry shaders */
    GLenum prim_type;
@@ -751,11 +745,13 @@ public:
    exec_list declarations;
 
    /**
-    * Flags for redeclarations. In these cases, no type is specified, to
-    * `type` is allowed to be NULL. In all other cases, this would be an error.
+    * Special flag for vertex shader "invariant" declarations.
+    *
+    * Vertex shaders can contain "invariant" variable redeclarations that do
+    * not include a type.  For example, "invariant gl_Position;".  This flag
+    * is used to note these cases when no type is specified.
     */
-   int invariant;     /** < `invariant` redeclaration */
-   int precise;       /** < `precise` redeclaration */
+   int invariant;
 };
 
 

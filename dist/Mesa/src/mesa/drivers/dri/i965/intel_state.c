@@ -70,7 +70,8 @@ intel_translate_shadow_compare_func(GLenum func)
       return BRW_COMPAREFUNCTION_NEVER;
    }
 
-   unreachable("Invalid shadow comparison function.");
+   assert(!"Invalid shadow comparison function.");
+   return BRW_COMPAREFUNCTION_NEVER;
 }
 
 int
@@ -95,7 +96,8 @@ intel_translate_compare_func(GLenum func)
       return BRW_COMPAREFUNCTION_ALWAYS;
    }
 
-   unreachable("Invalid comparison function.");
+   assert(!"Invalid comparison function.");
+   return BRW_COMPAREFUNCTION_ALWAYS;
 }
 
 int

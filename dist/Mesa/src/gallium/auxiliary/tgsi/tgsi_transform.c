@@ -109,7 +109,6 @@ tgsi_transform_shader(const struct tgsi_token *tokens_in,
                       struct tgsi_transform_context *ctx)
 {
    uint procType;
-   boolean first_instruction = TRUE;
 
    /* input shader */
    struct tgsi_parse_context parse;
@@ -167,28 +166,10 @@ tgsi_transform_shader(const struct tgsi_token *tokens_in,
             struct tgsi_full_instruction *fullinst
                = &parse.FullToken.FullInstruction;
 
-            if (first_instruction && ctx->prolog) {
-               ctx->prolog(ctx);
-            }
-
-            /* XXX Note: we may also want to look for a main/top-level
-             * TGSI_OPCODE_RET instruction in the future.
-             */
-            if (fullinst->Instruction.Opcode == TGSI_OPCODE_END
-                && ctx->epilog) {
-               /* Emit caller's epilog */
-               ctx->epilog(ctx);
-               /* Emit END */
+            if (ctx->transform_instruction)
+               ctx->transform_instruction(ctx, fullinst);
+            else
                ctx->emit_instruction(ctx, fullinst);
-            }
-            else {
-               if (ctx->transform_instruction)
-                  ctx->transform_instruction(ctx, fullinst);
-               else
-                  ctx->emit_instruction(ctx, fullinst);
-            }
-
-            first_instruction = FALSE;
          }
          break;
 
@@ -230,6 +211,10 @@ tgsi_transform_shader(const struct tgsi_token *tokens_in,
       default:
          assert( 0 );
       }
+   }
+
+   if (ctx->epilog) {
+      ctx->epilog(ctx);
    }
 
    tgsi_parse_free (&parse);

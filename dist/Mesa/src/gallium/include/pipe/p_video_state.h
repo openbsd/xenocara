@@ -371,8 +371,6 @@ struct pipe_h264_enc_picture_desc
    unsigned pic_order_cnt;
    unsigned ref_idx_l0;
    unsigned ref_idx_l1;
-
-   bool not_referenced;
 };
 
 #ifdef __cplusplus

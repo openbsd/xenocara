@@ -209,12 +209,13 @@ static void upload_sf_unit( struct brw_context *brw )
       sf->sf6.cull_mode = BRW_CULLMODE_NONE;
       break;
    default:
-      unreachable("not reached");
+      assert(0);
+      break;
    }
 
    /* _NEW_LINE */
-   sf->sf6.line_width =
-      CLAMP(ctx->Line.Width, 1.0, ctx->Const.MaxLineWidth) * (1<<1);
+   /* XXX use ctx->Const.Min/MaxLineWidth here */
+   sf->sf6.line_width = CLAMP(ctx->Line.Width, 1.0, 5.0) * (1<<1);
 
    sf->sf6.line_endcap_aa_region_width = 1;
    if (ctx->Line.SmoothFlag)

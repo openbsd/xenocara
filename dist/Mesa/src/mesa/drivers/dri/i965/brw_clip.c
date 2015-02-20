@@ -42,7 +42,7 @@
 #include "brw_state.h"
 #include "brw_clip.h"
 
-#include "util/ralloc.h"
+#include "glsl/ralloc.h"
 
 #define FRONT_UNFILLED_BIT  0x1
 #define BACK_UNFILLED_BIT   0x2
@@ -55,6 +55,7 @@ static void compile_clip_prog( struct brw_context *brw,
    const GLuint *program;
    void *mem_ctx;
    GLuint program_size;
+   GLuint i;
 
    memset(&c, 0, sizeof(c));
 
@@ -86,7 +87,7 @@ static void compile_clip_prog( struct brw_context *brw,
    /* For some reason the thread is spawned with only 4 channels
     * unmasked.
     */
-   brw_set_default_mask_control(&c.func, BRW_MASK_DISABLE);
+   brw_set_mask_control(&c.func, BRW_MASK_DISABLE);
 
 
    /* Would ideally have the option of producing a program which could
@@ -106,10 +107,11 @@ static void compile_clip_prog( struct brw_context *brw,
       brw_emit_point_clip( &c );
       break;
    default:
-      unreachable("not reached");
+      assert(0);
+      return;
    }
 
-   brw_compact_instructions(&c.func, 0, 0, NULL);
+	
 
    /* get the program
     */
@@ -117,7 +119,9 @@ static void compile_clip_prog( struct brw_context *brw,
 
    if (unlikely(INTEL_DEBUG & DEBUG_CLIP)) {
       fprintf(stderr, "clip:\n");
-      brw_disassemble(brw, c.func.store, 0, program_size, stderr);
+      for (i = 0; i < program_size / sizeof(struct brw_instruction); i++)
+	 brw_disasm(stderr, &((struct brw_instruction *)program)[i],
+		    brw->gen);
       fprintf(stderr, "\n");
    }
 

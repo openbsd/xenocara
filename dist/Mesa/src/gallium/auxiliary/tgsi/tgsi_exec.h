@@ -193,6 +193,7 @@ struct tgsi_sampler
 #define TGSI_EXEC_NUM_TEMP_R        4
 
 #define TGSI_EXEC_TEMP_ADDR         (TGSI_EXEC_NUM_TEMPS + 8)
+#define TGSI_EXEC_NUM_ADDRS         1
 
 /* predicate register */
 #define TGSI_EXEC_TEMP_P0           (TGSI_EXEC_NUM_TEMPS + 9)
@@ -212,11 +213,11 @@ struct tgsi_sampler
  * input register files, this is the stride between two 1D
  * arrays.
  */
-#define TGSI_EXEC_MAX_INPUT_ATTRIBS PIPE_MAX_SHADER_INPUTS
+#define TGSI_EXEC_MAX_INPUT_ATTRIBS 17
 
-/* The maximum number of bytes per constant buffer.
+/* The maximum number of constant vectors per constant buffer.
  */
-#define TGSI_EXEC_MAX_CONST_BUFFER_SIZE  (4096 * sizeof(float[4]))
+#define TGSI_EXEC_MAX_CONST_BUFFER  4096
 
 /* The maximum number of vertices per primitive */
 #define TGSI_MAX_PRIM_VERTICES 6
@@ -296,7 +297,6 @@ struct tgsi_exec_machine
    unsigned                      *Primitives;
    unsigned                       NumOutputs;
    unsigned                       MaxGeometryShaderOutputs;
-   unsigned                       MaxOutputVertices;
 
    /* FRAGMENT processor only. */
    const struct tgsi_interp_coef *InterpCoefs;
@@ -426,14 +426,14 @@ tgsi_exec_get_shader_param(enum pipe_shader_cap param)
       return TGSI_EXEC_MAX_NESTING;
    case PIPE_SHADER_CAP_MAX_INPUTS:
       return TGSI_EXEC_MAX_INPUT_ATTRIBS;
-   case PIPE_SHADER_CAP_MAX_OUTPUTS:
-      return 32;
-   case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
-      return TGSI_EXEC_MAX_CONST_BUFFER_SIZE;
+   case PIPE_SHADER_CAP_MAX_CONSTS:
+      return TGSI_EXEC_MAX_CONST_BUFFER;
    case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
       return PIPE_MAX_CONSTANT_BUFFERS;
    case PIPE_SHADER_CAP_MAX_TEMPS:
       return TGSI_EXEC_NUM_TEMPS;
+   case PIPE_SHADER_CAP_MAX_ADDRS:
+      return TGSI_EXEC_NUM_ADDRS;
    case PIPE_SHADER_CAP_MAX_PREDS:
       return TGSI_EXEC_NUM_PREDS;
    case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
@@ -449,19 +449,11 @@ tgsi_exec_get_shader_param(enum pipe_shader_cap param)
       return 1;
    case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
       return PIPE_MAX_SAMPLERS;
-   case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
-      return PIPE_MAX_SHADER_SAMPLER_VIEWS;
-   case PIPE_SHADER_CAP_PREFERRED_IR:
-      return PIPE_SHADER_IR_TGSI;
    case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
       return 1;
-   case PIPE_SHADER_CAP_DOUBLES:
+   default:
       return 0;
    }
-   /* if we get here, we missed a shader cap above (and should have seen
-    * a compiler warning.)
-    */
-   return 0;
 }
 
 #if defined __cplusplus

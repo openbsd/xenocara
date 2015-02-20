@@ -45,7 +45,7 @@ struct tgsi_shader_info
    ubyte input_semantic_name[PIPE_MAX_SHADER_INPUTS]; /**< TGSI_SEMANTIC_x */
    ubyte input_semantic_index[PIPE_MAX_SHADER_INPUTS];
    ubyte input_interpolate[PIPE_MAX_SHADER_INPUTS];
-   ubyte input_interpolate_loc[PIPE_MAX_SHADER_INPUTS];
+   ubyte input_centroid[PIPE_MAX_SHADER_INPUTS];
    ubyte input_usage_mask[PIPE_MAX_SHADER_INPUTS];
    ubyte input_cylindrical_wrap[PIPE_MAX_SHADER_INPUTS];
    ubyte output_semantic_name[PIPE_MAX_SHADER_OUTPUTS]; /**< TGSI_SEMANTIC_x */
@@ -76,6 +76,9 @@ struct tgsi_shader_info
    boolean uses_vertexid;
    boolean uses_primid;
    boolean uses_frontface;
+   boolean origin_lower_left;
+   boolean pixel_center_integer;
+   boolean color0_writes_all_cbufs;
    boolean writes_viewport_index;
    boolean writes_layer;
    boolean is_msaa_sampler[PIPE_MAX_SAMPLERS];
@@ -88,7 +91,11 @@ struct tgsi_shader_info
     */
    unsigned indirect_files;
 
-   unsigned properties[TGSI_PROPERTY_COUNT]; /* index with TGSI_PROPERTY_ */
+   struct {
+      unsigned name;
+      unsigned data[8];
+   } properties[TGSI_PROPERTY_COUNT];
+   uint num_properties;
 };
 
 extern void

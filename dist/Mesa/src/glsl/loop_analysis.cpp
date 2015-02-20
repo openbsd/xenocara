@@ -227,7 +227,8 @@ loop_analysis::visit_enter(ir_call *)
    /* Mark every loop that we're currently analyzing as containing an ir_call
     * (even those at outer nesting levels).
     */
-   foreach_in_list(loop_variable_state, ls, &this->state) {
+   foreach_list(node, &this->state) {
+      loop_variable_state *const ls = (loop_variable_state *) node;
       ls->contains_calls = true;
    }
 
@@ -245,7 +246,9 @@ loop_analysis::visit(ir_dereference_variable *ir)
 
    bool nested = false;
 
-   foreach_in_list(loop_variable_state, ls, &this->state) {
+   foreach_list(node, &this->state) {
+      loop_variable_state *const ls = (loop_variable_state *) node;
+
       ir_variable *var = ir->variable_referenced();
       loop_variable *lv = ls->get_or_insert(var, this->in_assignee);
 
@@ -285,10 +288,10 @@ loop_analysis::visit_leave(ir_loop *ir)
    if (ls->contains_calls)
       return visit_continue;
 
-   foreach_in_list(ir_instruction, node, &ir->body_instructions) {
+   foreach_list(node, &ir->body_instructions) {
       /* Skip over declarations at the start of a loop.
        */
-      if (node->as_variable())
+      if (((ir_instruction *) node)->as_variable())
 	 continue;
 
       ir_if *if_stmt = ((ir_instruction *) node)->as_if();
@@ -300,7 +303,9 @@ loop_analysis::visit_leave(ir_loop *ir)
    }
 
 
-   foreach_in_list_safe(loop_variable, lv, &ls->variables) {
+   foreach_list_safe(node, &ls->variables) {
+      loop_variable *lv = (loop_variable *) node;
+
       /* Move variables that are already marked as being loop constant to
        * a separate list.  These trivially don't need to be tested.
        */
@@ -328,7 +333,9 @@ loop_analysis::visit_leave(ir_loop *ir)
    do {
       progress = false;
 
-      foreach_in_list_safe(loop_variable, lv, &ls->variables) {
+      foreach_list_safe(node, &ls->variables) {
+	 loop_variable *lv = (loop_variable *) node;
+
 	 if (lv->conditional_or_nested_assignment || (lv->num_assignments > 1))
 	    continue;
 
@@ -352,7 +359,9 @@ loop_analysis::visit_leave(ir_loop *ir)
    /* The remaining variables that are not loop invariant might be loop
     * induction variables.
     */
-   foreach_in_list_safe(loop_variable, lv, &ls->variables) {
+   foreach_list_safe(node, &ls->variables) {
+      loop_variable *lv = (loop_variable *) node;
+
       /* If there is more than one assignment to a variable, it cannot be a
        * loop induction variable.  This isn't strictly true, but this is a
        * very simple induction variable detector, and it can't handle more
@@ -393,7 +402,8 @@ loop_analysis::visit_leave(ir_loop *ir)
     * Also figure out which terminator (if any) produces the smallest
     * iteration count--this is the limiting terminator.
     */
-   foreach_in_list(loop_terminator, t, &ls->terminators) {
+   foreach_list(node, &ls->terminators) {
+      loop_terminator *t = (loop_terminator *) node;
       ir_if *if_stmt = t->ir;
 
       /* If-statements can be either 'if (expr)' or 'if (deref)'.  We only care
@@ -579,10 +589,8 @@ get_basic_induction_increment(ir_assignment *ir, hash_table *var_hash)
 	 loop_variable *lv =
 	    (loop_variable *) hash_table_find(var_hash, inc_var);
 
-         if (lv == NULL || !lv->is_loop_constant()) {
-            assert(lv != NULL);
-            inc = NULL;
-         }
+	 if (!lv->is_loop_constant())
+	    inc = NULL;
       } else
 	 inc = NULL;
    }

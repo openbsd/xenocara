@@ -103,7 +103,7 @@ _mesa_multi_bind_lookup_bufferobj(struct gl_context *ctx,
 extern void
 _mesa_initialize_buffer_object(struct gl_context *ctx,
                                struct gl_buffer_object *obj,
-                               GLuint name);
+                               GLuint name, GLenum target);
 
 extern void
 _mesa_reference_buffer_object_(struct gl_context *ctx,

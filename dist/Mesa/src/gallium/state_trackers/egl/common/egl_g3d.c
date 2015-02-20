@@ -548,18 +548,14 @@ egl_g3d_initialize(_EGLDriver *drv, _EGLDisplay *dpy)
       goto fail;
    }
 
-#if FEATURE_GL
-   dpy->ClientAPIs |= EGL_OPENGL_BIT;
-#endif
-#if FEATURE_ES1
-   dpy->ClientAPIs |= EGL_OPENGL_ES_BIT;
-#endif
-#if FEATURE_ES2
-   dpy->ClientAPIs |= EGL_OPENGL_ES2_BIT;
-#endif
-#if FEATURE_VG
-   dpy->ClientAPIs |= EGL_OPENVG_BIT;
-#endif
+   if (gdpy->loader->profile_masks[ST_API_OPENGL] & ST_PROFILE_DEFAULT_MASK)
+      dpy->ClientAPIs |= EGL_OPENGL_BIT;
+   if (gdpy->loader->profile_masks[ST_API_OPENGL] & ST_PROFILE_OPENGL_ES1_MASK)
+      dpy->ClientAPIs |= EGL_OPENGL_ES_BIT;
+   if (gdpy->loader->profile_masks[ST_API_OPENGL] & ST_PROFILE_OPENGL_ES2_MASK)
+      dpy->ClientAPIs |= EGL_OPENGL_ES2_BIT;
+   if (gdpy->loader->profile_masks[ST_API_OPENVG] & ST_PROFILE_DEFAULT_MASK)
+      dpy->ClientAPIs |= EGL_OPENVG_BIT;
 
    gdpy->smapi = egl_g3d_create_st_manager(dpy);
    if (!gdpy->smapi) {

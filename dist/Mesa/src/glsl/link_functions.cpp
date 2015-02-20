@@ -145,7 +145,8 @@ public:
       struct hash_table *ht = hash_table_ctor(0, hash_table_pointer_hash,
 					      hash_table_pointer_compare);
       exec_list formal_parameters;
-      foreach_in_list(const ir_instruction, original, &sig->parameters) {
+      foreach_list_const(node, &sig->parameters) {
+	 const ir_instruction *const original = (ir_instruction *) node;
 	 assert(const_cast<ir_instruction *>(original)->as_variable());
 
 	 ir_instruction *copy = original->clone(linked, ht);
@@ -154,10 +155,10 @@ public:
 
       linked_sig->replace_parameters(&formal_parameters);
 
-      linked_sig->is_intrinsic = sig->is_intrinsic;
-
       if (sig->is_defined) {
-         foreach_in_list(const ir_instruction, original, &sig->body) {
+         foreach_list_const(node, &sig->body) {
+            const ir_instruction *const original = (ir_instruction *) node;
+
             ir_instruction *copy = original->clone(linked, ht);
             linked_sig->body.push_tail(copy);
          }
@@ -245,19 +246,11 @@ public:
                /* Similarly, we need implicit sizes of arrays within interface
                 * blocks to be sized by the maximal access in *any* shader.
                 */
-               unsigned *const linked_max_ifc_array_access =
-                  var->get_max_ifc_array_access();
-               unsigned *const ir_max_ifc_array_access =
-                  ir->var->get_max_ifc_array_access();
-
-               assert(linked_max_ifc_array_access != NULL);
-               assert(ir_max_ifc_array_access != NULL);
-
                for (unsigned i = 0; i < var->get_interface_type()->length;
                     i++) {
-                  linked_max_ifc_array_access[i] =
-                     MAX2(linked_max_ifc_array_access[i],
-                          ir_max_ifc_array_access[i]);
+                  var->max_ifc_array_access[i] =
+                     MAX2(var->max_ifc_array_access[i],
+                          ir->var->max_ifc_array_access[i]);
                }
             }
 	 }
@@ -317,7 +310,7 @@ find_matching_signature(const char *name, const exec_list *actual_parameters,
 	 continue;
 
       ir_function_signature *sig =
-         f->matching_signature(NULL, actual_parameters, use_builtin);
+         f->matching_signature(NULL, actual_parameters);
 
       if ((sig == NULL) ||
           (!sig->is_defined && !sig->is_intrinsic))

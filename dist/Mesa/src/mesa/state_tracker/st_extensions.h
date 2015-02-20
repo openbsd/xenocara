@@ -31,17 +31,10 @@
 
 
 struct st_context;
-struct pipe_screen;
 
-extern void st_init_limits(struct pipe_screen *screen,
-                           struct gl_constants *c,
-                           struct gl_extensions *extensions);
+extern void st_init_limits(struct st_context *st);
 
-extern void st_init_extensions(struct pipe_screen *screen,
-                               struct gl_constants *consts,
-                               struct gl_extensions *extensions,
-                               struct st_config_options *options,
-                               boolean has_lib_dxtc);
+extern void st_init_extensions(struct st_context *st);
 
 
 #endif /* ST_EXTENSIONS_H */

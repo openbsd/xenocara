@@ -47,6 +47,10 @@
 #define DEBUG_CLIP 0
 
 
+#ifndef IS_NEGATIVE
+#define IS_NEGATIVE(X) ((X) < 0.0)
+#endif
+
 #ifndef DIFFERENT_SIGNS
 #define DIFFERENT_SIGNS(x, y) ((x) * (y) <= 0.0F && (x) - (y) != 0.0F)
 #endif
@@ -433,7 +437,7 @@ do_clip_tri( struct draw_stage *stage,
          if (util_is_inf_or_nan(dp))
             return; //discard nan
 
-	 if (dp_prev >= 0.0f) {
+	 if (!IS_NEGATIVE(dp_prev)) {
             assert(outcount < MAX_CLIPPED_VERTICES);
             if (outcount >= MAX_CLIPPED_VERTICES)
                return;
@@ -457,7 +461,7 @@ do_clip_tri( struct draw_stage *stage,
             new_edge = &outEdges[outcount];
 	    outlist[outcount++] = new_vert;
 
-	    if (dp < 0.0f) {
+	    if (IS_NEGATIVE(dp)) {
 	       /* Going out of bounds.  Avoid division by zero as we
 		* know dp != dp_prev from DIFFERENT_SIGNS, above.
 		*/

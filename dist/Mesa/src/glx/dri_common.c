@@ -144,7 +144,7 @@ driOpenDriver(const char *driverName)
       if (handle != NULL)
          break;
       else
-         InfoMessageF("dlopen %s failed (%s)\n", realDriverName, dlerror());
+         ErrorMessageF("dlopen %s failed (%s)\n", realDriverName, dlerror());
    }
 
    if (!handle)

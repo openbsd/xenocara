@@ -49,6 +49,13 @@ struct llvmpipe_context;
 struct sw_displaytarget;
 
 
+/** A 1D/2D/3D image, one mipmap level */
+struct llvmpipe_texture_image
+{
+   void *data;
+};
+
+
 /**
  * llvmpipe subclass of pipe_resource.  A texture, drawing surface,
  * vertex buffer, const buffer, etc.
@@ -64,10 +71,10 @@ struct llvmpipe_resource
    unsigned row_stride[LP_MAX_TEXTURE_LEVELS];
    /** Image stride (for cube maps, array or 3D textures) in bytes */
    unsigned img_stride[LP_MAX_TEXTURE_LEVELS];
+   /** Number of 3D slices or cube faces per level */
+   unsigned num_slices_faces[LP_MAX_TEXTURE_LEVELS];
    /** Offset to start of mipmap level, in bytes */
-   unsigned mip_offsets[LP_MAX_TEXTURE_LEVELS];
-   /** allocated total size (for non-display target texture resources only) */
-   unsigned total_alloc_size;
+   unsigned linear_mip_offsets[LP_MAX_TEXTURE_LEVELS];
 
    /**
     * Display target, for textures with the PIPE_BIND_DISPLAY_TARGET
@@ -78,7 +85,7 @@ struct llvmpipe_resource
    /**
     * Malloc'ed data for regular textures, or a mapping to dt above.
     */
-   void *tex_data;
+   struct llvmpipe_texture_image linear_img;
 
    /**
     * Data for non-texture resources.
@@ -144,7 +151,6 @@ llvmpipe_resource_is_texture(const struct pipe_resource *resource)
    case PIPE_TEXTURE_RECT:
    case PIPE_TEXTURE_3D:
    case PIPE_TEXTURE_CUBE:
-   case PIPE_TEXTURE_CUBE_ARRAY:
       return TRUE;
    default:
       assert(0);
@@ -166,7 +172,6 @@ llvmpipe_resource_is_1d(const struct pipe_resource *resource)
    case PIPE_TEXTURE_RECT:
    case PIPE_TEXTURE_3D:
    case PIPE_TEXTURE_CUBE:
-   case PIPE_TEXTURE_CUBE_ARRAY:
       return FALSE;
    default:
       assert(0);
@@ -218,6 +223,22 @@ llvmpipe_resource_size(const struct pipe_resource *resource);
 ubyte *
 llvmpipe_get_texture_image_address(struct llvmpipe_resource *lpr,
                                    unsigned face_slice, unsigned level);
+
+void *
+llvmpipe_get_texture_image(struct llvmpipe_resource *resource,
+                           unsigned face_slice, unsigned level,
+                           enum lp_texture_usage usage);
+
+void *
+llvmpipe_get_texture_image_all(struct llvmpipe_resource *lpr,
+                               unsigned level,
+                               enum lp_texture_usage usage);
+
+ubyte *
+llvmpipe_get_texture_tile_linear(struct llvmpipe_resource *lpr,
+                                 unsigned face_slice, unsigned level,
+                                 enum lp_texture_usage usage,
+                                 unsigned x, unsigned y);
 
 
 extern void

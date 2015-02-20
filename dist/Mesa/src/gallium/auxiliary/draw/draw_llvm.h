@@ -274,8 +274,7 @@ typedef int
                       unsigned stride,
                       struct pipe_vertex_buffer *vertex_buffers,
                       unsigned instance_id,
-                      unsigned vertex_id_offset,
-                      unsigned start_instance);
+                      unsigned vertex_id_offset);
 
 
 typedef int
@@ -288,8 +287,7 @@ typedef int
                            unsigned stride,
                            struct pipe_vertex_buffer *vertex_buffers,
                            unsigned instance_id,
-                           unsigned vertex_id_offset,
-                           unsigned start_instance);
+                           unsigned vertex_id_offset);
 
 
 typedef int
@@ -461,9 +459,6 @@ struct llvm_geometry_shader {
 struct draw_llvm {
    struct draw_context *draw;
 
-   LLVMContextRef context;
-   boolean context_owned;
-
    struct draw_jit_context jit_context;
    struct draw_gs_jit_context gs_jit_context;
 
@@ -491,7 +486,7 @@ llvm_geometry_shader(struct draw_geometry_shader *gs)
 
 
 struct draw_llvm *
-draw_llvm_create(struct draw_context *draw, LLVMContextRef llvm_context);
+draw_llvm_create(struct draw_context *draw);
 
 void
 draw_llvm_destroy(struct draw_llvm *llvm);

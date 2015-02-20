@@ -88,7 +88,7 @@ st_texture_create(struct st_context *st,
    pt.width0 = width0;
    pt.height0 = height0;
    pt.depth0 = depth0;
-   pt.array_size = layers;
+   pt.array_size = (target == PIPE_TEXTURE_CUBE ? 6 : layers);
    pt.usage = PIPE_USAGE_DEFAULT;
    pt.bind = bind;
    pt.flags = 0;
@@ -197,8 +197,7 @@ st_gl_texture_dims_to_pipe_dims(GLenum texture,
  * Check if a texture image can be pulled into a unified mipmap texture.
  */
 GLboolean
-st_texture_match_image(struct st_context *st,
-                       const struct pipe_resource *pt,
+st_texture_match_image(const struct pipe_resource *pt,
                        const struct gl_texture_image *image)
 {
    GLuint ptWidth, ptHeight, ptDepth, ptLayers;
@@ -210,7 +209,7 @@ st_texture_match_image(struct st_context *st,
 
    /* Check if this image's format matches the established texture's format.
     */
-   if (st_mesa_format_to_pipe_format(st, image->TexFormat) != pt->format)
+   if (st_mesa_format_to_pipe_format(image->TexFormat) != pt->format)
       return GL_FALSE;
 
    st_gl_texture_dims_to_pipe_dims(image->TexObject->Target,
@@ -260,13 +259,6 @@ st_texture_image_map(struct st_context *st, struct st_texture_image *stImage,
    else
       level = stImage->base.Level;
 
-   if (stObj->base.Immutable) {
-      level += stObj->base.MinLevel;
-      z += stObj->base.MinLayer;
-      if (stObj->pt->array_size > 1)
-         d = MIN2(d, stObj->base.NumLayers);
-   }
-
    z += stImage->base.Face;
 
    map = pipe_transfer_map_3d(st->pipe, stImage->pt, level, usage,
@@ -277,15 +269,14 @@ st_texture_image_map(struct st_context *st, struct st_texture_image *stImage,
          unsigned new_size = z + 1;
 
          stImage->transfer = realloc(stImage->transfer,
-                     new_size * sizeof(struct st_texture_image_transfer));
+                                     new_size * sizeof(void*));
          memset(&stImage->transfer[stImage->num_transfers], 0,
-                (new_size - stImage->num_transfers) *
-                sizeof(struct st_texture_image_transfer));
+               (new_size - stImage->num_transfers) * sizeof(void*));
          stImage->num_transfers = new_size;
       }
 
-      assert(!stImage->transfer[z].transfer);
-      stImage->transfer[z].transfer = *transfer;
+      assert(!stImage->transfer[z]);
+      stImage->transfer[z] = *transfer;
    }
    return map;
 }
@@ -296,13 +287,8 @@ st_texture_image_unmap(struct st_context *st,
                        struct st_texture_image *stImage, unsigned slice)
 {
    struct pipe_context *pipe = st->pipe;
-   struct st_texture_object *stObj =
-      st_texture_object(stImage->base.TexObject);
-   struct pipe_transfer **transfer;
-
-   if (stObj->base.Immutable)
-      slice += stObj->base.MinLayer;
-   transfer = &stImage->transfer[slice + stImage->base.Face].transfer;
+   struct pipe_transfer **transfer =
+      &stImage->transfer[slice + stImage->base.Face];
 
    DBG("%s\n", __FUNCTION__);
 
@@ -408,14 +394,6 @@ st_texture_image_copy(struct pipe_context *pipe,
    src_box.width = width;
    src_box.height = height;
    src_box.depth = 1;
-
-   if (src->target == PIPE_TEXTURE_1D_ARRAY ||
-       src->target == PIPE_TEXTURE_2D_ARRAY ||
-       src->target == PIPE_TEXTURE_CUBE_ARRAY) {
-      face = 0;
-      depth = src->array_size;
-   }
-
    /* Loop over 3D image slices */
    /* could (and probably should) use "true" 3d box here -
       but drivers can't quite handle it yet */
@@ -519,14 +497,12 @@ st_texture_release_sampler_view(struct st_context *st,
 }
 
 void
-st_texture_release_all_sampler_views(struct st_context *st,
-                                     struct st_texture_object *stObj)
+st_texture_release_all_sampler_views(struct st_texture_object *stObj)
 {
    GLuint i;
 
-   /* XXX This should use sampler_views[i]->pipe, not st->pipe */
    for (i = 0; i < stObj->num_sampler_views; ++i)
-      pipe_sampler_view_release(st->pipe, &stObj->sampler_views[i]);
+      pipe_sampler_view_reference(&stObj->sampler_views[i], NULL);
 }
 
 

@@ -69,7 +69,8 @@ upload_clip_state(struct brw_context *brw)
             dw1 |= GEN7_CLIP_CULLMODE_BOTH;
             break;
          default:
-            unreachable("Should not get here: invalid CullFlag");
+            assert(!"Should not get here: invalid CullFlag");
+            break;
          }
       } else {
          dw1 |= GEN7_CLIP_CULLMODE_NONE;
@@ -97,58 +98,17 @@ upload_clip_state(struct brw_context *brw)
            GEN6_USER_CLIP_CLIP_DISTANCES_SHIFT);
 
    dw2 |= GEN6_CLIP_GB_TEST;
-
-   /* We need to disable guardband clipping if the guardband (which we always
-    * program to the maximum screen-space bounding box of 8K x 8K) will be
-    * smaller than the viewport.
-    *
-    * Closely examining the clip determination formulas in the documentation
-    * reveals that objects will be discarded entirely if they're outside the
-    * (small) guardband, even if they're within the (large) viewport:
-    *
-    *     TR = TR_GB || TR_VPXY || TR_VPZ || TR_UC || TR_NEGW
-    *     TA   = !TR && TA_GB && TA_VPZ && TA_NEGW
-    *     MC = !(TA || TR)
-    *
-    * (TA is "Trivial Accept", TR is "Trivial Reject", MC is "Must Clip".)
-    *
-    * Disabling guardband clipping removes the TR_GB condition, which means
-    * they'll be considered MC ("Must Clip") unless they're rejected for
-    * some other reason.
-    *
-    * Note that there is no TA_VPXY condition.  If there were, objects entirely
-    * inside a 16384x16384 viewport would be trivially accepted, breaking the
-    * "objects must have a screenspace bounding box not exceeding 8K in the X
-    * or Y direction" restriction.  Instead, they're clipped.
-    */
    for (unsigned i = 0; i < ctx->Const.MaxViewports; i++) {
-      if (ctx->ViewportArray[i].Width > 8192 ||
-          ctx->ViewportArray[i].Height > 8192) {
+      if (ctx->ViewportArray[i].X != 0 ||
+          ctx->ViewportArray[i].Y != 0 ||
+          ctx->ViewportArray[i].Width != (float) fb->Width ||
+          ctx->ViewportArray[i].Height != (float) fb->Height) {
          dw2 &= ~GEN6_CLIP_GB_TEST;
-         break;
-      }
-   }
-
-   /* If the viewport dimensions are smaller than the drawable dimensions,
-    * we have to disable guardband clipping prior to Gen8.  We always program
-    * the guardband to a fixed size, which is almost always larger than the
-    * viewport.  Any geometry which intersects the viewport but lies within
-    * the guardband would bypass the 3D clipping stage, so it wouldn't be
-    * clipped to the viewport.  Rendering would happen beyond the viewport,
-    * but still inside the drawable.
-    *
-    * Gen8+ introduces a viewport extents test which restricts rendering to
-    * the viewport, so we can ignore this restriction.
-    */
-   if (brw->gen < 8) {
-      for (unsigned i = 0; i < ctx->Const.MaxViewports; i++) {
-         if (ctx->ViewportArray[i].X != 0 ||
-             ctx->ViewportArray[i].Y != 0 ||
-             ctx->ViewportArray[i].Width != (float) fb->Width ||
-             ctx->ViewportArray[i].Height != (float) fb->Height) {
-            dw2 &= ~GEN6_CLIP_GB_TEST;
-            break;
+         if (brw->gen >= 8) {
+            perf_debug("Disabling GB clipping due to lack of Gen8 viewport "
+                       "clipping setup code.  This should be fixed.\n");
          }
+         break;
       }
    }
 
@@ -160,16 +120,10 @@ upload_clip_state(struct brw_context *brw)
                  "having the GS not write primitives would likely");
    }
 
-   uint32_t enable;
-   if (brw->primitive == _3DPRIM_RECTLIST)
-      enable = 0;
-   else
-      enable = GEN6_CLIP_ENABLE;
-
    BEGIN_BATCH(4);
    OUT_BATCH(_3DSTATE_CLIP << 16 | (4 - 2));
    OUT_BATCH(dw1);
-   OUT_BATCH(enable |
+   OUT_BATCH(GEN6_CLIP_ENABLE |
 	     GEN6_CLIP_API_OGL |
 	     GEN6_CLIP_MODE_NORMAL |
 	     GEN6_CLIP_XY_TEST |

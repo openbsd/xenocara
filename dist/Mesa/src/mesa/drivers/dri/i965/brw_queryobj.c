@@ -151,7 +151,8 @@ brw_queryobj_get_results(struct gl_context *ctx,
       break;
 
    default:
-      unreachable("Unrecognized query target in brw_queryobj_get_results()");
+      assert(!"Unrecognized query target in brw_queryobj_get_results()");
+      break;
    }
    drm_intel_bo_unmap(query->bo);
 
@@ -259,7 +260,8 @@ brw_begin_query(struct gl_context *ctx, struct gl_query_object *q)
       break;
 
    default:
-      unreachable("Unrecognized query target in brw_begin_query()");
+      assert(!"Unrecognized query target in brw_begin_query()");
+      break;
    }
 }
 
@@ -316,7 +318,8 @@ brw_end_query(struct gl_context *ctx, struct gl_query_object *q)
       break;
 
    default:
-      unreachable("Unrecognized query target in brw_end_query()");
+      assert(!"Unrecognized query target in brw_end_query()");
+      break;
    }
 }
 

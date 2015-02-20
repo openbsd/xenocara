@@ -60,7 +60,6 @@ having three separate program parameter arrays.
 #include "prog_parameter.h"
 #include "prog_statevars.h"
 #include "prog_instruction.h"
-#include "prog_optimize.h"
 #include "program_parser.h"
 
 
@@ -84,9 +83,6 @@ _mesa_parse_arb_fragment_program(struct gl_context* ctx, GLenum target,
       /* Error in the program. Just return. */
       return;
    }
-
-   if ((ctx->_Shader->Flags & GLSL_NO_OPT) == 0)
-      _mesa_optimize_program(ctx, &prog);
 
    free(program->Base.String);
 
@@ -180,9 +176,6 @@ _mesa_parse_arb_vertex_program(struct gl_context *ctx, GLenum target,
       _mesa_error(ctx, GL_INVALID_OPERATION, "glProgramString(bad program)");
       return;
    }
-
-   if ((ctx->_Shader->Flags & GLSL_NO_OPT) == 0)
-      _mesa_optimize_program(ctx, &prog);
 
    free(program->Base.String);
 

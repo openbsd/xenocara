@@ -40,7 +40,7 @@
 #include "swrast/swrast.h"
 #include "swrast_setup/swrast_setup.h"
 #include "tnl/tnl.h"
-#include "util/ralloc.h"
+#include "../glsl/ralloc.h"
 
 #include "i915_reg.h"
 #include "i915_program.h"
@@ -109,8 +109,7 @@ intel_init_texture_formats(struct gl_context *ctx)
    ctx->TextureFormatSupported[MESA_FORMAT_B5G5R5A1_UNORM] = true;
    ctx->TextureFormatSupported[MESA_FORMAT_B5G6R5_UNORM] = true;
    ctx->TextureFormatSupported[MESA_FORMAT_L_UNORM8] = true;
-   if (intel->gen == 3)
-      ctx->TextureFormatSupported[MESA_FORMAT_A_UNORM8] = true;
+   ctx->TextureFormatSupported[MESA_FORMAT_A_UNORM8] = true;
    ctx->TextureFormatSupported[MESA_FORMAT_I_UNORM8] = true;
    ctx->TextureFormatSupported[MESA_FORMAT_L8A8_UNORM] = true;
 
@@ -254,10 +253,10 @@ i915CreateContext(int api,
    /* FINISHME: Are there other options that should be enabled for software
     * FINISHME: vertex shaders?
     */
-   ctx->Const.ShaderCompilerOptions[MESA_SHADER_VERTEX].EmitCondCodes = true;
+   ctx->ShaderCompilerOptions[MESA_SHADER_VERTEX].EmitCondCodes = true;
 
    struct gl_shader_compiler_options *const fs_options =
-      & ctx->Const.ShaderCompilerOptions[MESA_SHADER_FRAGMENT];
+      & ctx->ShaderCompilerOptions[MESA_SHADER_FRAGMENT];
    fs_options->MaxIfDepth = 0;
    fs_options->EmitNoNoise = true;
    fs_options->EmitNoPow = true;

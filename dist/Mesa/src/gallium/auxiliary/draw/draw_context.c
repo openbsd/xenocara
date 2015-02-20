@@ -81,8 +81,7 @@ draw_get_option_use_llvm(void)
  * Create new draw module context with gallivm state for LLVM JIT.
  */
 static struct draw_context *
-draw_create_context(struct pipe_context *pipe, void *context,
-                    boolean try_llvm)
+draw_create_context(struct pipe_context *pipe, boolean try_llvm)
 {
    struct draw_context *draw = CALLOC_STRUCT( draw_context );
    if (draw == NULL)
@@ -93,7 +92,9 @@ draw_create_context(struct pipe_context *pipe, void *context,
 
 #if HAVE_LLVM
    if (try_llvm && draw_get_option_use_llvm()) {
-      draw->llvm = draw_llvm_create(draw, (LLVMContextRef)context);
+      draw->llvm = draw_llvm_create(draw);
+      if (!draw->llvm)
+         goto err_destroy;
    }
 #endif
 
@@ -121,18 +122,9 @@ err_out:
 struct draw_context *
 draw_create(struct pipe_context *pipe)
 {
-   return draw_create_context(pipe, NULL, TRUE);
+   return draw_create_context(pipe, TRUE);
 }
 
-
-#if HAVE_LLVM
-struct draw_context *
-draw_create_with_llvm_context(struct pipe_context *pipe,
-                              void *context)
-{
-   return draw_create_context(pipe, context, TRUE);
-}
-#endif
 
 /**
  * Create a new draw context, without LLVM JIT.
@@ -140,7 +132,7 @@ draw_create_with_llvm_context(struct pipe_context *pipe,
 struct draw_context *
 draw_create_no_llvm(struct pipe_context *pipe)
 {
-   return draw_create_context(pipe, NULL, FALSE);
+   return draw_create_context(pipe, FALSE);
 }
 
 
@@ -826,15 +818,11 @@ draw_current_shader_uses_viewport_index(const struct draw_context *draw)
 
 /**
  * Return the index of the shader output which will contain the
- * clip vertex position.
- * Note we don't support clipvertex output in the gs. For clipping
- * to work correctly hence we return ordinary position output instead.
+ * vertex position.
  */
 uint
 draw_current_shader_clipvertex_output(const struct draw_context *draw)
 {
-   if (draw->gs.geometry_shader)
-      return draw->gs.position_output;
    return draw->vs.clipvertex_output;
 }
 

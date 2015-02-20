@@ -210,7 +210,6 @@ initialize_context(struct gl_context *ctx, gl_api api)
       break;
    }
 
-   ctx->Const.GenerateTemporaryNames = true;
    ctx->Driver.NewShader = _mesa_new_shader;
 }
 
@@ -403,8 +402,6 @@ main(int argc, char **argv)
    }
 
    if ((status == EXIT_SUCCESS) && do_link)  {
-      _mesa_clear_shader_program_data(whole_program);
-
       link_shaders(ctx, whole_program);
       status = (whole_program->LinkStatus) ? EXIT_SUCCESS : EXIT_FAILURE;
 

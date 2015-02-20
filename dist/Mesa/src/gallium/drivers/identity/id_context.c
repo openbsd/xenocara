@@ -57,15 +57,13 @@ identity_draw_vbo(struct pipe_context *_pipe,
 
 static struct pipe_query *
 identity_create_query(struct pipe_context *_pipe,
-                      unsigned query_type,
-                      unsigned index)
+                      unsigned query_type)
 {
    struct identity_context *id_pipe = identity_context(_pipe);
    struct pipe_context *pipe = id_pipe->pipe;
 
    return pipe->create_query(pipe,
-                             query_type,
-                             index);
+                             query_type);
 }
 
 static void

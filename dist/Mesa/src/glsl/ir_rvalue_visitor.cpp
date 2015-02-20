@@ -123,7 +123,8 @@ ir_rvalue_base_visitor::rvalue_visit(ir_assignment *ir)
 ir_visitor_status
 ir_rvalue_base_visitor::rvalue_visit(ir_call *ir)
 {
-   foreach_in_list_safe(ir_rvalue, param, &ir->actual_parameters) {
+   foreach_list_safe(n, &ir->actual_parameters) {
+      ir_rvalue *param = (ir_rvalue *) n;
       ir_rvalue *new_param = param;
       handle_rvalue(&new_param);
 
@@ -148,19 +149,6 @@ ir_rvalue_base_visitor::rvalue_visit(ir_if *ir)
    return visit_continue;
 }
 
-ir_visitor_status
-ir_rvalue_base_visitor::rvalue_visit(ir_emit_vertex *ir)
-{
-   handle_rvalue(&ir->stream);
-   return visit_continue;
-}
-
-ir_visitor_status
-ir_rvalue_base_visitor::rvalue_visit(ir_end_primitive *ir)
-{
-   handle_rvalue(&ir->stream);
-   return visit_continue;
-}
 
 ir_visitor_status
 ir_rvalue_visitor::visit_leave(ir_expression *ir)
@@ -217,18 +205,6 @@ ir_rvalue_visitor::visit_leave(ir_if *ir)
 }
 
 ir_visitor_status
-ir_rvalue_visitor::visit_leave(ir_emit_vertex *ir)
-{
-   return rvalue_visit(ir);
-}
-
-ir_visitor_status
-ir_rvalue_visitor::visit_leave(ir_end_primitive *ir)
-{
-   return rvalue_visit(ir);
-}
-
-ir_visitor_status
 ir_rvalue_enter_visitor::visit_enter(ir_expression *ir)
 {
    return rvalue_visit(ir);
@@ -278,18 +254,6 @@ ir_rvalue_enter_visitor::visit_enter(ir_return *ir)
 
 ir_visitor_status
 ir_rvalue_enter_visitor::visit_enter(ir_if *ir)
-{
-   return rvalue_visit(ir);
-}
-
-ir_visitor_status
-ir_rvalue_enter_visitor::visit_enter(ir_emit_vertex *ir)
-{
-   return rvalue_visit(ir);
-}
-
-ir_visitor_status
-ir_rvalue_enter_visitor::visit_enter(ir_end_primitive *ir)
 {
    return rvalue_visit(ir);
 }

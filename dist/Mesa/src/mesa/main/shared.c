@@ -30,6 +30,7 @@
 #include "imports.h"
 #include "mtypes.h"
 #include "hash.h"
+#include "hash_table.h"
 #include "atifragshader.h"
 #include "bufferobj.h"
 #include "shared.h"
@@ -41,7 +42,6 @@
 #include "shaderobj.h"
 #include "syncobj.h"
 
-#include "util/hash_table.h"
 
 /**
  * Allocate and initialize a shared context state structure.
@@ -86,7 +86,7 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
    shared->SamplerObjects = _mesa_NewHashTable();
 
    /* Allocate the default buffer object */
-   shared->NullBufferObj = ctx->Driver.NewBufferObject(ctx, 0);
+   shared->NullBufferObj = ctx->Driver.NewBufferObject(ctx, 0, 0);
 
    /* Create default texture objects */
    for (i = 0; i < NUM_TEXTURE_TARGETS; i++) {
@@ -113,7 +113,7 @@ _mesa_alloc_shared_state(struct gl_context *ctx)
    assert(shared->DefaultTex[TEXTURE_1D_INDEX]->RefCount == 1);
 
    /* Mutex and timestamp for texobj state validation */
-   mtx_init(&shared->TexMutex, mtx_recursive);
+   mtx_init(&shared->TexMutex, mtx_plain);
    shared->TextureStateStamp = 0;
 
    shared->FrameBuffers = _mesa_NewHashTable();

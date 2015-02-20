@@ -33,7 +33,8 @@
 
 
 struct sp_fragment_shader_variant *
-softpipe_create_fs_variant_exec(struct softpipe_context *softpipe);
+softpipe_create_fs_variant_exec(struct softpipe_context *softpipe,
+                                const struct pipe_shader_state *templ);
 
 
 struct tgsi_interp_coef;

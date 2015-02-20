@@ -33,8 +33,6 @@
 #include "glapi.h"
 #include "glxclient.h"
 
-#ifndef GLX_USE_APPLEGL
-
 extern struct _glapi_table *__glXNewIndirectAPI(void);
 
 /*
@@ -490,5 +488,3 @@ indirect_create_screen(int screen, struct glx_display * priv)
 
    return psc;
 }
-
-#endif
