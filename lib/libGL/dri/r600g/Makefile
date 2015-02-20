@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2015/01/25 15:09:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2015/02/20 23:31:05 jsg Exp $
 
 LIB=	r600_dri.so
 
@@ -27,7 +27,6 @@ DRIVER_DEFINES = \
 DRIDRM_SOURCES = \
 	dri_context.c \
 	dri_drawable.c \
-	dri_query_renderer.c \
 	dri_screen.c \
 	dri2.c
 
@@ -38,7 +37,7 @@ COMMON_GALLIUM_SOURCES = \
 	xmlconfig.c
 
 GALLIUM_DRI_SOURCES = \
-	target.c
+	drm_target.c
 
 SRCS = \
 	${DRIDRM_SOURCES} \
@@ -49,14 +48,13 @@ LDADD=	\
 	../../mesa/libmesagallium/libmesagallium_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
 	${DRIVER_LIBS} \
-	../../mesa/libmesautil/libmesautil_pic.a \
 	../../gallium/libgallium/libgallium_pic.a \
 	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc -ldrm_radeon -lxcb-dri2
 
 .include "../../gallium/Makefile.inc"
 .include <bsd.xorg.mk>
 
-.PATH: ${GALLIUM}/state_trackers/dri
-.PATH: ${GALLIUM}/targets/dri
+.PATH: ${GALLIUM}/state_trackers/dri/common
+.PATH: ${GALLIUM}/state_trackers/dri/drm
 .PATH: ${GALLIUM}/targets/r600/common
 .PATH: ${GALLIUM}/winsys/radeon/drm

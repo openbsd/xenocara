@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.11 2015/01/25 15:09:12 jsg Exp $
+# $OpenBSD: Makefile,v 1.12 2015/02/20 23:31:04 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	EGL
@@ -10,8 +10,8 @@ LOADER=	${.CURDIR}/../../dist/Mesa/src/loader
 MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 
 MESA_MAJOR=	10
-MESA_MINOR=	4
-MESA_TINY=	3
+MESA_MINOR=	2
+MESA_TINY=	9
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 EGL_DRIVER_SEARCH_DIR=	${X11BASE}/lib/modules/egl
@@ -23,7 +23,6 @@ KHRINCSDIR=	${X11BASE}/include/KHR
 INCS= \
 	egl.h \
 	eglext.h \
-	eglextchromium.h \
 	eglmesaext.h \
 	eglplatform.h
 

@@ -36,7 +36,7 @@
  * @author Jose Fonseca <jfonseca@vmware.com>
  */
 
-#include "format_srgb.h"
+#include "u_format_srgb.h"
 
 const float
 util_format_srgb_8unorm_to_linear_float_table[256] = {

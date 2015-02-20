@@ -49,7 +49,6 @@
 #include "main/condrender.h"
 #include "main/context.h"
 #include "main/convolve.h"
-#include "main/copyimage.h"
 #include "main/depth.h"
 #include "main/dlist.h"
 #include "main/drawpix.h"
@@ -156,13 +155,9 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_ClearColorIiEXT(exec, _mesa_ClearColorIiEXT);
       SET_ClearColorIuiEXT(exec, _mesa_ClearColorIuiEXT);
       SET_ClearDepth(exec, _mesa_ClearDepth);
-      SET_ClearTexImage(exec, _mesa_ClearTexImage);
-      SET_ClearTexSubImage(exec, _mesa_ClearTexSubImage);
-      SET_ClipControl(exec, _mesa_ClipControl);
       SET_ColorMaski(exec, _mesa_ColorMaski);
       SET_CompressedTexImage1D(exec, _mesa_CompressedTexImage1D);
       SET_CompressedTexSubImage1D(exec, _mesa_CompressedTexSubImage1D);
-      SET_CopyImageSubData(exec, _mesa_CopyImageSubData);
       SET_CopyTexImage1D(exec, _mesa_CopyTexImage1D);
       SET_CopyTexSubImage1D(exec, _mesa_CopyTexSubImage1D);
       SET_CreateProgramObjectARB(exec, _mesa_CreateProgramObjectARB);
@@ -814,6 +809,8 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_GetProgramStringARB(exec, _mesa_GetProgramStringARB);
       SET_GetProgramivARB(exec, _mesa_GetProgramivARB);
       SET_GetSeparableFilter(exec, _mesa_GetSeparableFilter);
+      SET_GetTexBumpParameterfvATI(exec, _mesa_GetTexBumpParameterfvATI);
+      SET_GetTexBumpParameterivATI(exec, _mesa_GetTexBumpParameterivATI);
       SET_GetTexGendv(exec, _mesa_GetTexGendv);
       SET_GetnColorTableARB(exec, _mesa_GetnColorTableARB);
       SET_GetnConvolutionFilterARB(exec, _mesa_GetnConvolutionFilterARB);
@@ -986,6 +983,8 @@ _mesa_initialize_exec_table(struct gl_context *ctx)
       SET_SeparableFilter2D(exec, _mesa_SeparableFilter2D);
       SET_SetFragmentShaderConstantATI(exec, _mesa_SetFragmentShaderConstantATI);
       SET_StencilFuncSeparateATI(exec, _mesa_StencilFuncSeparateATI);
+      SET_TexBumpParameterfvATI(exec, _mesa_TexBumpParameterfvATI);
+      SET_TexBumpParameterivATI(exec, _mesa_TexBumpParameterivATI);
       SET_TexCoord1d(exec, _mesa_TexCoord1d);
       SET_TexCoord1dv(exec, _mesa_TexCoord1dv);
       SET_TexCoord1i(exec, _mesa_TexCoord1i);

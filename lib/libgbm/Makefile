@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2015/01/25 15:09:14 jsg Exp $
+# $OpenBSD: Makefile,v 1.4 2015/02/20 23:31:06 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	gbm
@@ -11,8 +11,8 @@ MESA_INCLUDE=		${.CURDIR}/../../dist/Mesa/include
 DEFAULT_DRIVER_DIR=     ${X11BASE}/lib/modules/dri
 
 MESA_MAJOR=	10
-MESA_MINOR=	4
-MESA_TINY=	3
+MESA_MINOR=	2
+MESA_TINY=	9
 
 INCSDIR=	${X11BASE}/include
 

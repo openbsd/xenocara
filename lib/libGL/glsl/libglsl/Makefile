@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.9 2015/01/25 15:09:14 jsg Exp $
+# $OpenBSD: Makefile,v 1.10 2015/02/20 23:31:06 jsg Exp $
 .include <bsd.xconf.mk>
 .include "../../config.mk"
 
@@ -16,9 +16,12 @@ LIBGLCPP_SOURCES = \
 
 GLCPP_SOURCES = \
 	$(LIBGLCPP_SOURCES) \
+	ralloc.c \
 	glcpp.c
 
 C_SOURCES = \
+	strtod.c \
+	ralloc.c \
 	$(LIBGLCPP_SOURCES)
 
 GENERATED_CXX_SOURCES = \
@@ -70,7 +73,6 @@ CXX_SOURCES = \
 	loop_controls.cpp \
 	loop_unroll.cpp \
 	lower_clip_distance.cpp \
-	lower_const_arrays_to_uniforms.cpp \
 	lower_discard.cpp \
 	lower_discard_flow.cpp \
 	lower_if_to_cond_assign.cpp \
@@ -88,7 +90,6 @@ CXX_SOURCES = \
 	lower_vec_index_to_swizzle.cpp \
 	lower_vector.cpp \
 	lower_vector_insert.cpp \
-	lower_vertex_id.cpp \
 	lower_output_reads.cpp \
 	lower_ubo_reference.cpp \
 	opt_algebraic.cpp \
@@ -99,7 +100,6 @@ CXX_SOURCES = \
 	opt_copy_propagation.cpp \
 	opt_copy_propagation_elements.cpp \
 	opt_cse.cpp \
-	opt_dead_builtin_variables.cpp \
 	opt_dead_builtin_varyings.cpp \
 	opt_dead_code.cpp \
 	opt_dead_code_local.cpp \
@@ -108,9 +108,7 @@ CXX_SOURCES = \
 	opt_flip_matrices.cpp \
 	opt_function_inlining.cpp \
 	opt_if_simplification.cpp \
-	opt_minmax.cpp \
 	opt_noop_swizzle.cpp \
-	opt_rebalance_tree.cpp \
 	opt_redundant_jumps.cpp \
 	opt_structure_splitting.cpp \
 	opt_swizzle_swizzle.cpp \

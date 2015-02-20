@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.10 2015/01/25 15:09:14 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.11 2015/02/20 23:31:06 jsg Exp $
 .include "../config.mk"
 
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -66,7 +66,6 @@ MAIN_SOURCES = \
 	condrender.c \
 	context.c \
 	convolve.c \
-	copyimage.c \
 	cpuinfo.c \
 	debug.c \
 	depth.c \
@@ -86,13 +85,13 @@ MAIN_SOURCES = \
 	formats.c \
 	format_pack.c \
 	format_unpack.c \
-	format_utils.c \
 	framebuffer.c \
 	get.c \
 	genmipmap.c \
 	getstring.c \
 	glformats.c \
 	hash.c \
+	hash_table.c \
 	hint.c \
 	histogram.c \
 	image.c \
@@ -130,7 +129,6 @@ MAIN_SOURCES = \
 	stencil.c \
 	syncobj.c \
 	texcompress.c \
-	texcompress_bptc.c \
 	texcompress_cpal.c \
 	texcompress_rgtc.c \
 	texcompress_s3tc.c \
@@ -325,6 +323,7 @@ PROGRAM_SOURCES = \
 	prog_print.c \
 	prog_statevars.c \
 	programopt.c \
+	register_allocate.c \
 	symbol_table.c
 
 PROGRAM_CXX_SOURCES = \

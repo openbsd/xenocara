@@ -1,12 +1,12 @@
-# $OpenBSD: config.mk,v 1.3 2015/01/25 15:09:12 jsg Exp $
+# $OpenBSD: config.mk,v 1.4 2015/02/20 23:31:04 jsg Exp $
 
 MESA_MAJOR=	10
-MESA_MINOR=	4
-MESA_TINY=	3
+MESA_MINOR=	2
+MESA_TINY=	9
 
 CPP=	cpp -notraditional
 
-CFLAGS+= -std=c99
+CFLAGS+= -std=gnu99
 
 CPPFLAGS+= \
 	-DPACKAGE_VERSION=\"${MESA_MAJOR}.${MESA_MINOR}.${MESA_TINY}\" \

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.21 2015/01/25 15:09:12 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.22 2015/02/20 23:31:04 jsg Exp $
 .include <bsd.xconf.mk>
 .include "../config.mk"
 
@@ -11,15 +11,14 @@ DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 COMMON_GALLIUM_SOURCES = \
 	utils.c \
 	dri_util.c \
-	xmlconfig.c \
-	megadriver_stub.c
+	xmlconfig.c
 
 COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
 	driverfuncs.c \
 	meta_blit.c \
-	meta_copy_image.c \
 	meta_generate_mipmap.c \
-	meta.c
+	meta.c \
+	megadriver_stub.c
 
 CPPFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING \
 	 $(INCLUDES) $(DRIVER_DEFINES)
@@ -57,7 +56,6 @@ CPPFLAGS += -DUSE_X86_64_ASM
 .endif
 
 LDADD?=	../../mesa/libmesa/libmesa_pic.a \
-	../../mesa/libmesautil/libmesautil_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
 	-L${X11BASE}/lib  -lexpat -ldrm -lm -lstdc++ -lc
 

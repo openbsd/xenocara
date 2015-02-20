@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2015/01/25 15:09:13 jsg Exp $
+# $OpenBSD: Makefile,v 1.4 2015/02/20 23:31:05 jsg Exp $
 
 MESA=		${.CURDIR}/../../../dist/Mesa/src/mesa
 GLAPI=		${.CURDIR}/../../../dist/Mesa/src/mapi/glapi
@@ -7,7 +7,6 @@ XMLPOOL=	${MESA}/drivers/dri/common/xmlpool
 AUX=		${.CURDIR}/../../../dist/Mesa/src/gallium/auxiliary
 DEV=		${.CURDIR}/../../../dist/Mesa/src/gallium/drivers
 GLSL=		${.CURDIR}/../../../dist/Mesa/src/glsl
-UTIL=		${.CURDIR}/../../../dist/Mesa/src/util
 COMP=		${.CURDIR}/../glsl/builtin_compiler/obj
 
 # py-libxml required as well...
@@ -34,12 +33,8 @@ GEN_XMLPOOL= \
 
 # src/gallium/auxiliary/util/
 GEN_UTIL= \
-	util/u_indices_gen.c util/u_unfilled_gen.c \
+	util/u_indices_gen.c util/u_unfilled_gen.c util/u_format_srgb.c \
 	util/u_format_table.c
-
-# src/util
-GEN_MESA_UTIL= \
-	mesa_util/format_srgb.c
 
 # src/glsl
 YACC_GLSL= glsl/glsl_lexer.cpp glsl/glsl_parser.cpp
@@ -53,14 +48,14 @@ GEN_GLCPP= ${YACC_GLCPP}
 # src/mesa/main
 GEN_MAIN= \
 	main/api_exec.c main/enums.c main/get_hash.h main/git_sha1.h \
-	main/dispatch.h main/remap_helper.h main/format_info.c
+	main/dispatch.h main/remap_helper.h
 
 # src/mesa/program
 YACC_PROG= program/lex.yy.c program/program_parse.tab.c
 GEN_PROG= ${YACC_PROG}
 
 GENERATED= \
-	${GEN_GLX} ${GEN_GLAPI} ${GEN_XMLPOOL} ${GEN_UTIL} ${GEN_MESA_UTIL} \
+	${GEN_GLX} ${GEN_GLAPI} ${GEN_XMLPOOL} ${GEN_UTIL} \
 	${GEN_GLSL} ${GEN_GLCPP} ${GEN_MAIN} ${GEN_PROG}
 
 all: ${GENERATED}
@@ -145,11 +140,11 @@ util/u_indices_gen.c: u_indices_gen.py
 util/u_unfilled_gen.c: u_unfilled_gen.py
 	${PYTHON} ${PYTHON_FLAGS} ${AUX}/indices/u_unfilled_gen.py > $@
 
+util/u_format_srgb.c: ${AUX}/util/u_format_srgb.py
+	${PYTHON} ${PYTHON_FLAGS} ${AUX}/util/u_format_srgb.py > $@
+
 util/u_format_table.c: u_format_table.py u_format_pack.py u_format_parse.py u_format.csv
 	${PYTHON} ${PYTHON_FLAGS} ${AUX}/util/u_format_table.py ${AUX}/util/u_format.csv > $@
-
-mesa_util/format_srgb.c: format_srgb.py
-	${PYTHON} ${PYTHON_FLAGS} ${UTIL}/format_srgb.py > $@
 
 glsl/glsl_lexer.cpp: ${GLSL}/glsl_lexer.ll
 	$(FLEX) -o $@ ${GLSL}/glsl_lexer.ll
@@ -192,10 +187,6 @@ main/remap_helper.h: gl_and_es_API.xml remap_helper.py
 	$(PYTHON) $(PYTHON_FLAGS) ${GLAPI}/gen/remap_helper.py \
 	    -f ${GLAPI}/gen/gl_and_es_API.xml > $@
 
-main/format_info.c: formats.csv format_parser.py format_info.py
-	$(PYTHON) $(PYTHON_FLAGS) ${MESA}/main/format_info.py \
-	    ${MESA}/main/formats.csv > $@
-
 .SUFFIXES: .py .xml
 
 .PATH:	${MESA}/main
@@ -204,6 +195,5 @@ main/format_info.c: formats.csv format_parser.py format_info.py
 .PATH:	${XMLPOOL}
 .PATH:	${AUX}/indices
 .PATH:	${AUX}/util
-.PATH:	${UTIL}
 
 .include <bsd.xorg.mk>

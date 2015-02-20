@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.6 2015/01/25 15:09:13 jsg Exp $
+# $OpenBSD: Makefile,v 1.7 2015/02/20 23:31:05 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	gallium
@@ -94,7 +94,6 @@ C_SOURCES = \
 	tgsi_exec.c \
 	tgsi_info.c \
 	tgsi_iterate.c \
-	tgsi_lowering.c \
 	tgsi_parse.c \
 	tgsi_sanity.c \
 	tgsi_scan.c \
@@ -127,11 +126,11 @@ C_SOURCES = \
 	u_draw_quad.c \
 	u_format.c \
 	u_format_etc.c \
-	u_format_bptc.c \
 	u_format_other.c \
 	u_format_latc.c \
 	u_format_s3tc.c \
 	u_format_rgtc.c \
+	u_format_srgb.c \
 	u_format_table.c \
 	u_format_tests.c \
 	u_format_yuv.c \
