@@ -6,7 +6,6 @@
 ./usr/X11R6/bin/xdriinfo
 ./usr/X11R6/include/EGL/egl.h
 ./usr/X11R6/include/EGL/eglext.h
-./usr/X11R6/include/EGL/eglextchromium.h
 ./usr/X11R6/include/EGL/eglmesaext.h
 ./usr/X11R6/include/EGL/eglplatform.h
 ./usr/X11R6/include/GL/GLwDrawA.h
@@ -15,7 +14,6 @@
 ./usr/X11R6/include/GL/GLwMDrawAP.h
 ./usr/X11R6/include/GL/gl.h
 ./usr/X11R6/include/GL/gl_mangle.h
-./usr/X11R6/include/GL/glcorearb.h
 ./usr/X11R6/include/GL/glext.h
 ./usr/X11R6/include/GL/glu.h
 ./usr/X11R6/include/GL/glu_mangle.h
