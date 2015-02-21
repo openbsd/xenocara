@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2015/01/25 15:09:13 jsg Exp $
+# $OpenBSD: Makefile,v 1.6 2015/02/21 00:39:06 jsg Exp $
 
 GALLIUM=${.CURDIR}/../../../../../dist/Mesa/src/gallium
 .include "${GALLIUM}/drivers/r300/Makefile.sources"
@@ -17,4 +17,5 @@ CPPFLAGS+= -I${.CURDIR}/compiler -I${MESA}/../../include \
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA}/program
+.PATH: ${MESA}/../glsl
 .PATH: ${MESA}/../gallium/drivers/r300/compiler
