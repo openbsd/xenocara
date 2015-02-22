@@ -200,6 +200,14 @@ The integer capabilities:
 * ``PIPE_CAP_SAMPLE_SHADING``: Whether there is support for per-sample
   shading. The context->set_min_samples function will be expected to be
   implemented.
+* ``PIPE_CAP_VENDOR_ID``: The vendor ID of the underlying hardware. If it's
+  not available one should return 0xFFFFFFFF.
+* ``PIPE_CAP_DEVICE_ID``: The device ID (PCI ID) of the underlying hardware.
+  0xFFFFFFFF if not available.
+* ``PIPE_CAP_ACCELERATED``: Whether the renderer is hardware accelerated.
+* ``PIPE_CAP_VIDEO_MEMORY``: The amount of video memory in megabytes.
+* ``PIPE_CAP_UMA``: If the device has a unified memory architecture or on-card
+  memory and GART.
 
 
 .. _pipe_capf:

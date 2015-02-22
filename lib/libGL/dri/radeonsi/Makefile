@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2015/02/20 23:31:05 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2015/02/22 09:30:33 jsg Exp $
 
 LIB=	radeonsi_dri.so
 
@@ -27,6 +27,7 @@ DRIVER_DEFINES = \
 DRIDRM_SOURCES = \
 	dri_context.c \
 	dri_drawable.c \
+	dri_query_renderer.c \
 	dri_screen.c \
 	dri2.c
 
@@ -54,6 +55,7 @@ LDADD=	\
 .include "../../gallium/Makefile.inc"
 .include <bsd.xorg.mk>
 
+.PATH: ${GALLIUM}/state_trackers/dri
 .PATH: ${GALLIUM}/state_trackers/dri/common
 .PATH: ${GALLIUM}/state_trackers/dri/drm
 .PATH: ${GALLIUM}/targets/radeonsi/common

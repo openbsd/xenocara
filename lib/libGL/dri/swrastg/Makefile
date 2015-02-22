@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.12 2015/02/20 23:31:05 jsg Exp $
+#	$OpenBSD: Makefile,v 1.13 2015/02/22 09:30:33 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	swrast_dri.so
@@ -34,6 +34,7 @@ WINSYS_SOURCES = \
 DRISW_SOURCES = \
 	dri_context.c \
 	dri_drawable.c \
+	dri_query_renderer.c \
 	dri_screen.c \
 	drisw.c
 
@@ -61,6 +62,7 @@ LDADD=	\
 .include "../../gallium/Makefile.inc"
 .include <bsd.xorg.mk>
 
+.PATH: ${GALLIUM}/state_trackers/dri
 .PATH: ${GALLIUM}/state_trackers/dri/common
 .PATH: ${GALLIUM}/state_trackers/dri/sw
 .PATH: ${GALLIUM}/targets/dri-swrast
