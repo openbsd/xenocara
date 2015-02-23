@@ -1,6 +1,8 @@
-# $OpenBSD: Makefile,v 1.1 2015/01/25 15:09:13 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2015/02/23 23:39:27 jsg Exp $
 
+.if ${MACHINE} == i386 || ${MACHINE} == amd64
 SUBDIR= radeon
+.endif
 
 build depend all install clean cleandir: _SUBDIRUSE
 
