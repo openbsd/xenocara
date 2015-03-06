@@ -217,6 +217,14 @@ WSConsReadHwState(InputInfoPtr pInfo,
             if (hw->z == 0) {
                 hw->fingerWidth = 0;
                 hw->numFingers = 0;
+            } else if (hw->numFingers == 0) {
+                /*
+                 * Because W may be 0 already, a two-finger touch on a
+                 * Synaptics touchpad doesn't necessarily produce an update
+                 * event for W.
+                 */
+                hw->fingerWidth = 5;
+                hw->numFingers = 2;
             }
             hw->millis = 1000 * event.time.tv_sec + event.time.tv_nsec / 1000000;
             SynapticsCopyHwState(hwRet, hw);
