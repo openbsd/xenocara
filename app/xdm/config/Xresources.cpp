@@ -45,7 +45,7 @@ xlogin*failFace:        Luxi Sans-12:bold:dpi=75
 XHASHendif
 
 XHASHif !(defined(bpp1) || defined(bpp4) || defined(bpp8) || defined(bpp15))
-XHASH if PLANES < 4 || defined(Hp300Architecture)
+XHASH if PLANES < 4
 XHASH  ifndef bpp1
 XHASH   define bpp1
 XHASH  endif
@@ -124,10 +124,9 @@ XHASHendif
 XHASHifdef bpp15
 xlogin*logoFileName: BITMAPDIR/**//OpenBSD_15bpp.xpm
 XHASHendif
-#if ! defined(Hp300Architecture)
+
 xlogin*useShape: true
 xlogin*logoPadding: 10
-#endif /* Hp300Architecture */
 
 ! uncomment to disable logins
 ! xlogin.Login.allowRootLogin:	false
