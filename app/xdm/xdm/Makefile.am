@@ -25,10 +25,13 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(CWARNFLAGS) $(XDM_CFLAGS) $(SYSTEMD_DAEMON_CFLAGS)
 
 AM_LDFLAGS = $(XDM_LIBS) $(SYSTEMD_DAEMON_LIBS)
+
 # The xdm binary needs to export symbols so that they can be used from
 # libXdmGreet.so loaded through a dlopen call from session.c
 if DYNAMIC_GREETER
 AM_LDFLAGS = $(AM_LDFLAGS) -export-dynamic
+else
+LDADD = ../greeter/libXdmGreet.la
 endif
 
 xdm_SOURCES =		\
