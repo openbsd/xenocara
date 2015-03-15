@@ -111,6 +111,7 @@ from The Open Group.
 /* added by Amit Margalit Oct 1996 */
 # define XtNhiColor		"hiColor"
 # define XtNshdColor		"shdColor"
+# define XtNinpColor		"inpColor"
 # define XtNframeWidth		"frameWidth"
 # define XtCFrameWidth		"FrameWidth"
 # define XtNinnerFramesWidth	"innerFramesWidth"

@@ -83,8 +83,8 @@ xlogin*shdColor: #384c70
 xlogin*greetColor: #000000
 XHASHif defined(bpp4) || defined(bpp8) || defined(bpp15)
 ! flood fill
-!xlogin*background: #2559a5
 xlogin*background: #5272b6
+xlogin*inpColor: #5272b6
 XHASHendif
 xlogin*failColor: red
 

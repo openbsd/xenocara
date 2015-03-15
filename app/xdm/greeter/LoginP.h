@@ -95,6 +95,7 @@ typedef struct {
 # endif
 	Pixel		hipixel;	/* frame hilite pixel */
 	Pixel		shdpixel;	/* shadow frame pixel */
+	Pixel		inppixel;	/* input field bg pixel */
 	GC		textGC;		/* pointer to GraphicsContext */
 	GC		bgGC;		/* pointer to GraphicsContext */
 	GC		xorGC;		/* pointer to GraphicsContext */
@@ -105,6 +106,7 @@ typedef struct {
 # endif
 	GC		hiGC;		/* for hilight part of frame */
 	GC		shdGC;		/* for shaded part of frame */
+	GC		inpGC;		/* for input field of frame */
 	char		*greeting;	/* greeting */
 	char		*unsecure_greet;/* message displayed when insecure */
 	char		*namePrompt;	/* name prompt */

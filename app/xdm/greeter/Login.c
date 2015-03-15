@@ -156,6 +156,8 @@ static XtResource resources[] = {
 	offset(hipixel), XtRString,	XtDefaultForeground},
     {XtNshdColor, XtCForeground, XtRPixel, sizeof (Pixel),
 	offset(shdpixel), XtRString,	XtDefaultForeground},
+    {XtNinpColor, XtCForeground, XtRPixel, sizeof (Pixel),
+	offset(inppixel), XtRString,	XtDefaultBackground},
     {XtNframeWidth, XtCFrameWidth, XtRInt, sizeof(int),
         offset(outframewidth), XtRImmediate, (XtPointer) 1},
     {XtNinnerFramesWidth, XtCFrameWidth, XtRInt, sizeof(int),
@@ -325,7 +327,7 @@ XmuXftTextWidth(Display *dpy, XftFont *font, FcChar8 *string, int len);
 			  F_ASCENT(greet) + Y_INC(w)) + \
 			 (n * PROMPT_SPACE_Y(w)))
 #define PROMPT_W(w)	(w->core.width - (2 * TEXT_X_INC(w)))
-#define PROMPT_H(w)	(3 * Y_INC(w) / 2)
+#define PROMPT_H(w)	(5 * Y_INC(w) / 4)
 #define VALUE_X(w,n)	(PROMPT_X(w) + CUR_PROMPT_W(w,n))
 #define CURSOR_W	5
 #define MAX_VALUE_W(w,n) (PROMPT_W(w) - VALUE_X (w,n) - CURSOR_W - 1 - \
@@ -336,7 +338,7 @@ XmuXftTextWidth(Display *dpy, XftFont *font, FcChar8 *string, int len);
 #define FAIL_X(w)	ERROR_X(w, w->login.fail)
 #define FAIL_Y(w)	(PROMPT_Y(w,1) + 2 * FAIL_Y_INC (w) + F_ASCENT(fail))
 
-#define ERROR_W(w,m)	(STRING_WIDTH (fail, m))
+#define ERROR_W(w,m)	(STRING_WIDTH (fail, m) + LOGO_W(w))
 
 #define FAIL_W(w)	max(ERROR_W(w, w->login.failMsg), \
 			    ERROR_W(w, w->login.passwdChangeMsg))
@@ -744,14 +746,15 @@ draw_it (LoginWidget w)
 	int in_width = PROMPT_W(w) - VALUE_X(w,p) - LOGO_W(w);
 	int in_height = PROMPT_H(w) + w->login.inframeswidth + 2;
 
-	GC topLeftGC, botRightGC;
+	GC topLeftGC, botRightGC, inpGC;
 
 	if ((PROMPT_STATE(w, p) == LOGIN_PROMPT_ECHO_ON) ||
 	    (PROMPT_STATE(w, p) == LOGIN_PROMPT_ECHO_OFF)) {
 	    topLeftGC = w->login.shdGC;
 	    botRightGC = w->login.hiGC;
+	    inpGC = w->login.inpGC;
 	} else {
-	    topLeftGC = botRightGC = w->login.bgGC;
+	    topLeftGC = botRightGC = inpGC = w->login.bgGC;
 	}
 
 	/* draw borders of editboxes */
@@ -775,6 +778,11 @@ draw_it (LoginWidget w)
 		      in_frame_x + i-1,         in_frame_y + in_height-i,
 		      in_frame_x + in_width-i,  in_frame_y + in_height-i);
 	}
+	XFillRectangle(XtDisplay (w), XtWindow (w), inpGC,
+	    in_frame_x + w->login.inframeswidth,
+	    in_frame_y + w->login.inframeswidth,
+	    in_width - 2*w->login.inframeswidth,
+	    in_height - 2*w->login.inframeswidth);
     }
 
     if (GREETING(w)[0]) {
@@ -1682,6 +1690,11 @@ static void Initialize (
     valuemask = GCForeground | GCBackground;
     w->login.shdGC = XtGetGC(gnew, valuemask, &myXGCV);
 
+    myXGCV.foreground = w->login.inppixel;
+    myXGCV.background = w->core.background_pixel;
+    valuemask = GCForeground | GCBackground;
+    w->login.inpGC = XtGetGC(gnew, valuemask, &myXGCV);
+
     myXGCV.foreground = TEXT_COLOR(text);
     myXGCV.background = w->core.background_pixel;
     valuemask = GCForeground | GCBackground;
@@ -1692,10 +1705,10 @@ static void Initialize (
     }
 #endif
     w->login.textGC = XtGetGC(gnew, valuemask, &myXGCV);
-    myXGCV.foreground = w->core.background_pixel;
+    myXGCV.foreground = w->login.inppixel;
     w->login.bgGC = XtGetGC(gnew, valuemask, &myXGCV);
 
-    myXGCV.foreground = TEXT_COLOR(text) ^ w->core.background_pixel;
+    myXGCV.foreground = TEXT_COLOR(text) ^ w->login.inppixel;
     myXGCV.function = GXxor;
     xvaluemask = valuemask | GCFunction;
     w->login.xorGC = XtGetGC (gnew, xvaluemask, &myXGCV);
@@ -1961,6 +1974,7 @@ static void Destroy (Widget gw)
 #endif
     XtReleaseGC(gw, w->login.hiGC);
     XtReleaseGC(gw, w->login.shdGC);
+    XtReleaseGC(gw, w->login.inpGC);
 
 #ifdef XPM
     if (True == w->login.logoValid)
