@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.21 2013/06/26 07:25:19 mpi Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.22 2015/03/15 19:09:22 matthieu Exp $
 .include <bsd.own.mk>
 
 XDMCONFIGDIR=/etc/X11/xdm
@@ -24,10 +24,8 @@ CONFIGURE_ARGS= --enable-privsep \
 # avoid clobbering installed config files
 realinstall:
 	exec ${MAKE} ${_lt_libs} install-strip \
-		dist_xdmconfigDATA_INSTALL=: \
-		dist_xdmscriptSCRIPT_INSTALL=: \
-		xdmscriptSCRIPT_INSTALL=: \
-		xdmconfigDATA_INSTALL=:
+		INSTALL_DATA=: \
+		INSTALL_SCRIPT=:
 
 XDMCONFIGFILES= \
 	xdm-config Xresources Xservers Xaccess
@@ -39,6 +37,7 @@ afterinstall:
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_4bpp.xpm $(DESTDIR)$(PIXMAPDIR)
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_8bpp.xpm $(DESTDIR)$(PIXMAPDIR)
 	$(INSTALL_DATA) ${.CURDIR}/config/OpenBSD_15bpp.xpm $(DESTDIR)$(PIXMAPDIR)
+	cd man ; $(INSTALL_DATA) xdm.1 $(DESTDIR)$(MANDIR)1/
 	@cd config ; for f in $(XDMCONFIGFILES); do \
 	  if ! test -f $(DESTDIR)$(XDMCONFIGDIR)/$$f ; then \
 	    if test -f $$f; then d=; else d="$(.CURDIR)/config/"; fi; \
