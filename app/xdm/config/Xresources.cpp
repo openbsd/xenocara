@@ -1,4 +1,4 @@
-! $Xorg: Xresources,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
+! $OpenBSD: Xresources.cpp,v 1.12 2015/03/15 18:43:18 matthieu Exp $
 !
 !
 !
@@ -109,18 +109,12 @@ XHASHendif
 XHASHifdef bpp1
 xlogin*logoFileName: BITMAPDIR/**//OpenBSD_1bpp.xpm
 XHASHendif
-#if ! defined(SparcArchitecture)
-XHASHif defined(bpp4) || defined(bpp8)
-xlogin*logoFileName: BITMAPDIR/**//OpenBSD_4bpp.xpm
-XHASHendif
-#else /* sparc */
 XHASHifdef bpp4
 xlogin*logoFileName: BITMAPDIR/**//OpenBSD_4bpp.xpm
 XHASHendif
 XHASHifdef bpp8
 xlogin*logoFileName: BITMAPDIR/**//OpenBSD_8bpp.xpm
 XHASHendif
-#endif
 XHASHifdef bpp15
 xlogin*logoFileName: BITMAPDIR/**//OpenBSD_15bpp.xpm
 XHASHendif
