@@ -1,4 +1,4 @@
-! $OpenBSD: Xresources.cpp,v 1.12 2015/03/15 18:43:18 matthieu Exp $
+! $OpenBSD: Xresources.cpp,v 1.13 2015/03/16 20:41:21 matthieu Exp $
 !
 !
 !
@@ -20,28 +20,28 @@ xlogin*login.translations: #override BS
 	Ctrl<Key>Return: set-session-argument(failsafe) finish-field()NLBS
 	<Key>Return: set-session-argument() finish-field()
 
-xlogin*greeting: Welcome to CLIENTHOST
+xlogin*greeting: CLIENTHOST
 xlogin*namePrompt: \040\040\040\040\040\040\040Login:
-xlogin*fail: Login incorrect or forbidden by policy
+xlogin*fail: Login incorrect or forbidden
 
 XHASHif WIDTH > 800
 xlogin*greetFont: -adobe-helvetica-bold-o-normal--24-240-75-75-p-138-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--18-180-75-75-p-98-iso8859-1
 xlogin*promptFont: -adobe-helvetica-bold-r-normal--18-180-75-75-p-103-iso8859-1
 xlogin*failFont: -adobe-helvetica-bold-r-normal--18-180-75-75-p-103-iso8859-1
-xlogin*greetFace:       Luxi Sans-22:bold:italic:dpi=75
-xlogin*face:            Luxi Sans-16:dpi=75
-xlogin*promptFace:      Luxi Sans-16:bold:dpi=75
-xlogin*failFace:        Luxi Sans-16:bold:dpi=75
+xlogin*greetFace:       DejaVu Sans Condensed-22:bold:italic:dpi=75
+xlogin*face:            DejaVu Sans Condensed-16:dpi=75
+xlogin*promptFace:      DejaVu Sans Condensed-16:bold:dpi=75
+xlogin*failFace:        DejaVu Sans Condensed-16:bold:dpi=75
 XHASHelse
 xlogin*greetFont: -adobe-helvetica-bold-o-normal--17-120-100-100-p-92-iso8859-1
 xlogin*font: -adobe-helvetica-medium-r-normal--12-120-75-75-p-67-iso8859-1
 xlogin*promptFont: -adobe-helvetica-bold-r-normal--12-120-75-75-p-70-iso8859-1
 xlogin*failFont: -adobe-helvetica-bold-o-normal--14-140-75-75-p-82-iso8859-1
-xlogin*greetFace:       Luxi Sans-18:bold:italic:dpi=75
-xlogin*face:            Luxi Sans-12:dpi=75
-xlogin*promptFace:      Luxi Sans-12:bold:dpi=75
-xlogin*failFace:        Luxi Sans-12:bold:dpi=75
+xlogin*greetFace:       DejaVu Sans Condensed-18:bold:italic:dpi=75
+xlogin*face:            DejaVu Sans Condensed-12:dpi=75
+xlogin*promptFace:      DejaVu Sans Condensed-12:bold:dpi=75
+xlogin*failFace:        DejaVu Sans Condensed-12:bold:dpi=75
 XHASHendif
 
 XHASHif !(defined(bpp1) || defined(bpp4) || defined(bpp8) || defined(bpp15))
@@ -69,27 +69,29 @@ XHASH endif
 XHASHendif  //**/* If manual override */**//
 
 XHASHifndef bpp1
-xlogin*borderWidth: 2
-xlogin*frameWidth: 5
-xlogin*innerFramesWidth: 2
+xlogin*borderWidth: 1
+xlogin*frameWidth: 2
+xlogin*innerFramesWidth: 0
+
+xlogin.Login.sepWidth: 0
 
 ! top/left border
-xlogin*hiColor: #6d9df2
+xlogin*hiColor: #667788
 
 ! bottom/right border
-xlogin*shdColor: #384c70
+xlogin*shdColor: #667788
 
 ! 'Welcome to..' text color
-xlogin*greetColor: #000000
+xlogin*greetColor: #fef886
 XHASHif defined(bpp4) || defined(bpp8) || defined(bpp15)
 ! flood fill
-xlogin*background: #5272b6
-xlogin*inpColor: #5272b6
+xlogin*background: #798a99
+xlogin*inpColor: #99aab9
 XHASHendif
-xlogin*failColor: red
+xlogin*failColor: #aa0000
 
 ! 'Login:' and 'Password:'
-*Foreground: #fbfeff
+*Foreground: #eeeeff
 
 ! border/shadow
 *Background: #000000
