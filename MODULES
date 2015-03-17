@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.319 2015/03/13 20:45:53 matthieu Exp $
+# $OpenBSD: MODULES,v 1.320 2015/03/17 20:58:11 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -167,7 +167,7 @@ font/schumacher-misc		1.1.2
 font/screen-cyrillic		1.0.4
 font/sony-misc			1.0.3
 font/sun-misc			1.0.3
-font/util			1.3.0
+font/util			1.3.1		needs-update
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
@@ -184,7 +184,7 @@ lib/libXdamage			1.1.4	7.7+
 lib/libXdmcp			1.1.1	7.7
 lib/libXext			1.3.3	7.7+
 lib/libXfixes			5.0.1	7.7+
-lib/libXfont			1.5.0	7.7+
+lib/libXfont			1.5.1	7.7+
 lib/libXfontcache		1.0.5
 lib/libXft			2.3.2	7.7+
 lib/libXi			1.7.4	7.7+
@@ -197,7 +197,7 @@ lib/libXres			1.0.7	7.7+
 lib/libXt			1.1.4	7.7+
 lib/libXtst			1.2.2	7.7+
 lib/libXv			1.0.10	7.7+
-lib/libXvMC			1.0.8	7.7+
+lib/libXvMC			1.0.9	7.7+	needs-update
 lib/libXxf86dga			1.1.4	7.7+
 lib/libXxf86misc		1.0.2
 lib/libXxf86vm			1.1.34	7.7+	needs-update
@@ -232,7 +232,7 @@ proto/inputproto		2.3.1	7.7+
 proto/kbproto			1.0.6	7.7
 proto/pmproto			1.0.3		deprecated
 proto/presentproto		1.0	7.7+
-proto/randrproto		1.4.0	7.7+
+proto/randrproto		1.4.1	7.7+	needs-update
 proto/recordproto		1.14.2	7.7
 proto/renderproto		0.11.1	7.7
 proto/resourceproto		1.2.0	7.7
