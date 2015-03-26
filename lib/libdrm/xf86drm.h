@@ -79,6 +79,7 @@ extern "C" {
 #define DRM_DIR_NAME  "/dev"
 #define DRM_DEV_NAME  "%s/drm%d"
 #define DRM_CONTROL_DEV_NAME  "%s/drmC%d"
+#define DRM_RENDER_DEV_NAME  "%s/drmR%d"
 #define DRM_PROC_NAME "/proc/dri/" /* For backward Linux compatibility */
 
 #define DRM_ERR_NO_DEVICE  (-1001)
@@ -551,7 +552,15 @@ do {	register unsigned int __old __asm("o0");		\
 /* General user-level programmer's API: unprivileged */
 extern int           drmAvailable(void);
 extern int           drmOpen(const char *name, const char *busid);
-extern int drmOpenControl(int minor);
+
+#define DRM_NODE_PRIMARY 0
+#define DRM_NODE_CONTROL 1
+#define DRM_NODE_RENDER  2
+extern int           drmOpenWithType(const char *name, const char *busid,
+                                     int type);
+
+extern int           drmOpenControl(int minor);
+extern int           drmOpenRender(int minor);
 extern int           drmClose(int fd);
 extern drmVersionPtr drmGetVersion(int fd);
 extern drmVersionPtr drmGetLibVersion(int fd);
@@ -703,6 +712,7 @@ extern int  drmSLLookupNeighbors(void *l, unsigned long key,
 				 unsigned long *next_key, void **next_value);
 
 extern int drmOpenOnce(void *unused, const char *BusID, int *newlyopened);
+extern int drmOpenOnceWithType(const char *BusID, int *newlyopened, int type);
 extern void drmCloseOnce(int fd);
 extern void drmMsg(const char *format, ...) DRM_PRINTFLIKE(1, 2);
 
@@ -734,9 +744,13 @@ typedef struct _drmEventContext {
 extern int drmHandleEvent(int fd, drmEventContextPtr evctx);
 
 extern char *drmGetDeviceNameFromFd(int fd);
+extern int drmGetNodeTypeFromFd(int fd);
 
 extern int drmPrimeHandleToFD(int fd, uint32_t handle, uint32_t flags, int *prime_fd);
 extern int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle);
+
+extern char *drmGetPrimaryDeviceNameFromFd(int fd);
+extern char *drmGetRenderDeviceNameFromFd(int fd);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }
