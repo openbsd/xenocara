@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xmalloc.c,v 1.14 2015/01/19 14:54:16 okan Exp $
+ * $OpenBSD: xmalloc.c,v 1.15 2015/03/28 23:12:47 okan Exp $
  */
 
 #include <sys/types.h>
@@ -58,6 +58,18 @@ xcalloc(size_t no, size_t siz)
 	if ((p = calloc(no, siz)) == NULL)
 		err(1, "calloc");
 
+	return(p);
+}
+
+void *
+xreallocarray(void *ptr, size_t nmemb, size_t size)
+{
+	void	*p;
+
+	p = reallocarray(ptr, nmemb, size);
+	if (p == NULL)
+		errx(1, "xreallocarray: out of memory (new_size %zu bytes)",
+		    nmemb * size);
 	return(p);
 }
 

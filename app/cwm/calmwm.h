@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.285 2015/03/26 21:41:43 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.286 2015/03/28 23:12:47 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -559,6 +559,7 @@ void			 u_spawn(char *);
 
 void			*xcalloc(size_t, size_t);
 void			*xmalloc(size_t);
+void			*xreallocarray(void *, size_t, size_t);
 char			*xstrdup(const char *);
 int			 xasprintf(char **, const char *, ...)
 			    __attribute__((__format__ (printf, 2, 3)))
