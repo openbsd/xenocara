@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.97 2015/01/19 14:54:16 okan Exp $
+ * $OpenBSD: xutil.c,v 1.98 2015/03/28 21:55:48 okan Exp $
  */
 
 #include <sys/types.h>
@@ -332,6 +332,7 @@ xu_ewmh_net_desktop_names(struct screen_ctx *sc)
 
 	XChangeProperty(X_Dpy, sc->rootwin, ewmh[_NET_DESKTOP_NAMES],
 	    cwmh[UTF8_STRING], 8, PropModeReplace, (unsigned char *)p, len);
+	free(p);
 }
 
 /* Application Window Properties */
