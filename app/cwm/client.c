@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.190 2015/01/23 19:35:11 okan Exp $
+ * $OpenBSD: client.c,v 1.191 2015/03/29 00:21:05 okan Exp $
  */
 
 #include <sys/types.h>
@@ -887,6 +887,7 @@ client_mwm_hints(struct client_ctx *cc)
 		    !(mwmh->decorations & MWM_DECOR_ALL) &&
 		    !(mwmh->decorations & MWM_DECOR_BORDER))
 			cc->bwidth = 0;
+		XFree(mwmh);
 	}
 }
 
