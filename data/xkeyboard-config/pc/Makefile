@@ -1,7 +1,7 @@
-#	$OpenBSD: Makefile,v 1.4 2014/12/28 16:41:04 shadchin Exp $
+#	$OpenBSD: Makefile,v 1.5 2015/03/30 17:11:29 shadchin Exp $
 
 XKC_TOP =		../../..
-PACKAGE_VERSION =	2.13
+PACKAGE_VERSION =	2.14
 PKGCONFIG =		xkeyboard-config.pc
 EXTRA_PKGCONFIG_SUBST =	-e 's,@VERSION@,${PACKAGE_VERSION},g' \
 			-e 's,@xkb_base@,${XKB_BASE},g'
