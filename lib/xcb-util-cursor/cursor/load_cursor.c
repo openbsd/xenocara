@@ -207,6 +207,8 @@ xcb_cursor_t xcb_cursor_load_cursor(xcb_cursor_context_t *c, const char *name) {
     if (fd == -1 || core_char > -1) {
         if (core_char == -1)
             core_char = cursor_shape_to_id(name);
+        if (core_char == -1)
+            return XCB_NONE;
 
         cid = xcb_generate_id(c->conn);
         xcb_create_glyph_cursor(c->conn, cid, c->cursor_font, c->cursor_font, core_char, core_char + 1, 0, 0, 0, 65535, 65535, 65535);

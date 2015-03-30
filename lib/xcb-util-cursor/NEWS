@@ -1,3 +1,12 @@
+Release 0.1.2  (2015-03-35)
+===========================
+
+- Use CFSwapInt32LittleToHost from CoreFoundation.h on Mac OS X to implement
+  le32toh.
+- Check submodules before running autoconf.
+- darwin: Use OSByteOrder.h rather than CF.
+- Perform safety check before trying to load glyph cursorHEADmaster
+
 Release 0.1.1  (2013-11-12)
 ===========================
 

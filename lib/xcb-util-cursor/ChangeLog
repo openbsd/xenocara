@@ -1,3 +1,51 @@
+commit 8eb844d39a06f42019dede515c70e7a0b155357d
+Author: Michael Stapelberg <michael@stapelberg.de>
+Date:   Wed Mar 25 23:06:23 2015 +0100
+
+    set version to 0.1.2
+
+commit cf26479ece9ab9e04616bc10ba674d88a284e5b0
+Author: Martin Gräßlin <mgraesslin@kde.org>
+Date:   Tue Mar 17 18:41:07 2015 +0100
+
+    Perform safety check before trying to load glyph cursor
+    
+    The passed in cursor name to xcb_cursor_load_cursor might not match
+    one of the predefined font cursor values. Without the check the
+    call to create glyph cursor will fail with a BadValue error, but
+    the library returns the id allocated for the xcb_cursor_t. A user
+    of the library gets a value which looks like a valid cursor, but
+    when using it for e.g. a cursor value in xcb_create_window it raises
+    a BadCursor error.
+
+commit f03cc278c6cce0cf721adf9c3764d3c5fba63392
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat Apr 5 15:50:28 2014 -0700
+
+    darwin: Use OSByteOrder.h rather than CF.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit a08bbf0e20995d29cbf890957c898059d4a9ece2
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Mon Aug 12 13:53:10 2013 +0200
+
+    Check submodules before running autoconf.
+    
+    Exit early with an informative message if the submodules are missing,
+    since they are needed.  Without this autoconf throws a bunch of
+    uninformative errors which does not point to the actual problem.
+    This was taken from util-keysyms.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+    Reviewed-By: Arnaud Fontaine <arnau@debian.org>
+
+commit d25806902ee6050ec3d52480d0bc8f4889942350
+Author: Marcus Crestani <crestani@informatik.uni-tuebingen.de>
+Date:   Mon Dec 23 23:30:04 2013 +0100
+
+    Use CFSwapInt32LittleToHost from CoreFoundation.h on Mac OS X to implement le32toh.
+
 commit f557760c56ba4eb44063936d8fa49473532e21c6
 Author: Michael Stapelberg <michael@stapelberg.de>
 Date:   Tue Nov 12 21:47:50 2013 +0100

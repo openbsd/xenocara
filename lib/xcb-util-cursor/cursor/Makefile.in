@@ -186,6 +186,7 @@ CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DOT = @DOT@
 DOXYGEN = @DOXYGEN@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
@@ -201,6 +202,7 @@ FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GPERF = @GPERF@
 GREP = @GREP@
+HAVE_DOT = @HAVE_DOT@
 INSTALL = @INSTALL@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
@@ -733,7 +735,7 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgconfigDATA \
 	uninstall-xcbincludeHEADERS
 
 
-# shape_to_id.c: ${srcdir}/shape_to_id.gperf
+# shape_to_id.c: shape_to_id.gperf
 #	$(AM_V_GEN)if $(GPERF) $(GPERFFLAGS) shape_to_id.gperf >$@t; then \
 #	  mv $@t $@; \
 #	elif $(GPERF) --version >/dev/null 2>&1; then \
