@@ -11,7 +11,7 @@
 /* #undef ENABLE_LIBXML2 */
 
 /* Additional font directories */
-#define FC_ADD_FONTS "/usr/local/lib/X11/fonts"
+#define FC_ADD_FONTS "/usr/local/share/fonts"
 
 /* Architecture prefix to use for cache file names */
 /* #undef FC_ARCHITECTURE */
