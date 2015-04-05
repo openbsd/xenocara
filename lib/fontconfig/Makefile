@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2015/03/31 09:42:56 ajacoutot Exp $
+#	$OpenBSD: Makefile,v 1.4 2015/04/05 16:05:34 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../dist/fontconfig
 FC_DEFAULT_FONTS = ${X11BASE}/lib/X11/fonts
@@ -29,7 +29,7 @@ fonts.conf:	${FONTCONFIG}/fonts.conf.in
 		-e s,@FC_CACHEDIR@,${FC_CACHEDIR}, \
 		< ${FONTCONFIG}/fonts.conf.in > $@
 
-clean: _SUBDIRUSE
+cleandir clean: _SUBDIRUSE
 	rm -f fonts.conf 
 
 .include <bsd.subdir.mk>
