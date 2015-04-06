@@ -413,6 +413,7 @@ SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 VERSION = @VERSION@
 WCHAR32 = @WCHAR32@
 X11_CFLAGS = @X11_CFLAGS@
@@ -619,7 +620,7 @@ libX11_la_LIBADD = \
 @LINT_TRUE@	-DXCMSDIR=\"$(X11dir)\"
 @MAKE_LINT_LIB_TRUE@lintlibdir = $(libdir)
 @MAKE_LINT_LIB_TRUE@lintlib_DATA = $(LINTLIB)
-@MAKE_LINT_LIB_TRUE@lintlib_src = $(libX11_la_SOURCES) xcms/*.c xkb/*.c
+@MAKE_LINT_LIB_TRUE@lintlib_src = $(libX11_la_SOURCES) $(srcdir)/xcms/*.c $(srcdir)/xkb/*.c
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

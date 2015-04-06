@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libX11], [1.6.2],
+AC_INIT([libX11], [1.6.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libX11])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([src/config.h include/X11/XlibConf.h])
@@ -431,17 +431,18 @@ AX_DEFINE_DIR(XLOCALEDIR, X11_LOCALEDIR, [Location of libX11 locale data])
 AC_SUBST(X11_LOCALEDIR)
 
 locales="\
- am_ET.UTF-8  armscii-8   C           el_GR.UTF-8  en_US.UTF-8  fi_FI.UTF-8 \
- georgian-academy         georgian-ps ibm-cp1133   iscii-dev    isiri-3342 \
- iso8859-1    iso8859-10  iso8859-11  iso8859-13   iso8859-14   iso8859-15 \
- iso8859-2    iso8859-3   iso8859-4   iso8859-5    iso8859-6    iso8859-7 \
- iso8859-8    iso8859-9   iso8859-9e  ja           ja.JIS       ja_JP.UTF-8\
- ja.SJIS      km_KH.UTF-8 ko          koi8-c       koi8-r       koi8-u     \
- ko_KR.UTF-8  microsoft-cp1251        microsoft-cp1255     microsoft-cp1256 \
- mulelao-1    nokhchi-1   pt_BR.UTF-8 ru_RU.UTF-8  sr_CS.UTF-8              \
- tatar-cyr    th_TH       th_TH.UTF-8 tscii-0      vi_VN.tcvn   vi_VN.viscii \
- zh_CN        zh_CN.gb18030           zh_CN.gbk    zh_CN.UTF-8  zh_HK.big5 \
- zh_HK.big5hkscs          zh_HK.UTF-8 zh_TW        zh_TW.big5   zh_TW.UTF-8"
+ am_ET.UTF-8  armscii-8   C           cs_CZ.UTF-8  el_GR.UTF-8  en_US.UTF-8 \
+ fi_FI.UTF-8  georgian-academy        georgian-ps  ibm-cp1133   iscii-dev \
+ isiri-3342   iso8859-1   iso8859-10  iso8859-11   iso8859-13   iso8859-14 \
+ iso8859-15   iso8859-2   iso8859-3   iso8859-4    iso8859-5    iso8859-6 \
+ iso8859-7    iso8859-8   iso8859-9   iso8859-9e   ja           ja.JIS \
+ ja_JP.UTF-8  ja.SJIS     km_KH.UTF-8 ko           koi8-c       koi8-r \
+ koi8-u       ko_KR.UTF-8 microsoft-cp1251         microsoft-cp1255 \
+ microsoft-cp1256         mulelao-1   nokhchi-1    pt_BR.UTF-8  ru_RU.UTF-8 \
+ sr_CS.UTF-8  tatar-cyr   th_TH       th_TH.UTF-8  tscii-0      vi_VN.tcvn \
+ vi_VN.viscii zh_CN       zh_CN.gb18030            zh_CN.gbk    zh_CN.UTF-8 \
+ zh_HK.big5   zh_HK.big5hkscs         zh_HK.UTF-8  zh_TW        zh_TW.big5 \
+ zh_TW.UTF-8"
 AC_SUBST(locales)
 
 XKEYSYMDB="${X11_DATADIR}/XKeysymDB"
@@ -467,7 +468,6 @@ AC_CONFIG_FILES([Makefile
 		modules/lc/def/Makefile
 		modules/lc/gen/Makefile
 		modules/lc/Utf8/Makefile
-		modules/lc/xlocale/Makefile
 		modules/om/Makefile
 		modules/om/generic/Makefile
 		src/xkb/Makefile

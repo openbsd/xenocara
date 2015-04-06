@@ -74,27 +74,6 @@ xthread_t (*_Xthread_self_fn)(void) = NULL;
 
 #endif /* XTHREADS */
 
-/* check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
- * systems are broken and return EWOULDBLOCK when they should return EAGAIN
- */
-#ifdef WIN32
-#define ETEST() (WSAGetLastError() == WSAEWOULDBLOCK)
-#else
-#ifdef __CYGWIN__ /* Cygwin uses ENOBUFS to signal socket is full */
-#define ETEST() (errno == EAGAIN || errno == EWOULDBLOCK || errno == ENOBUFS)
-#else
-#if defined(EAGAIN) && defined(EWOULDBLOCK)
-#define ETEST() (errno == EAGAIN || errno == EWOULDBLOCK)
-#else
-#ifdef EAGAIN
-#define ETEST() (errno == EAGAIN)
-#else
-#define ETEST() (errno == EWOULDBLOCK)
-#endif /* EAGAIN */
-#endif /* EAGAIN && EWOULDBLOCK */
-#endif /* __CYGWIN__ */
-#endif /* WIN32 */
-
 #ifdef WIN32
 #define ECHECK(err) (WSAGetLastError() == err)
 #define ESET(val) WSASetLastError(val)
@@ -105,18 +84,6 @@ xthread_t (*_Xthread_self_fn)(void) = NULL;
 #else
 #define ECHECK(err) (errno == err)
 #define ESET(val) errno = val
-#endif
-#endif
-
-#if defined(LOCALCONN) || defined(LACHMAN)
-#ifdef EMSGSIZE
-#define ESZTEST() (ECHECK(EMSGSIZE) || ECHECK(ERANGE))
-#else
-#define ESZTEST() ECHECK(ERANGE)
-#endif
-#else
-#ifdef EMSGSIZE
-#define ESZTEST() ECHECK(EMSGSIZE)
 #endif
 #endif
 
@@ -431,8 +398,7 @@ _XUnregisterInternalConnection(
 		 watch=watch->next, wd++) {
 		(*watch->fn) (dpy, watch->client_data, fd, False, wd);
 	    }
-	    if (info_list->watch_data)
-		Xfree (info_list->watch_data);
+	    Xfree (info_list->watch_data);
 	    Xfree (info_list);
 	    break;
 	}
@@ -1515,8 +1481,9 @@ char *_XAllocScratch(
 	unsigned long nbytes)
 {
 	if (nbytes > dpy->scratch_length) {
-	    if (dpy->scratch_buffer) Xfree (dpy->scratch_buffer);
-	    if ((dpy->scratch_buffer = Xmalloc(nbytes)))
+	    Xfree (dpy->scratch_buffer);
+	    dpy->scratch_buffer = Xmalloc(nbytes);
+	    if (dpy->scratch_buffer)
 		dpy->scratch_length = nbytes;
 	    else dpy->scratch_length = 0;
 	}
@@ -1544,8 +1511,8 @@ void _XFreeTemp(
     char *buf,
     unsigned long nbytes)
 {
-    if (dpy->scratch_buffer)
-	Xfree(dpy->scratch_buffer);
+
+    Xfree(dpy->scratch_buffer);
     dpy->scratch_buffer = buf;
     dpy->scratch_length = nbytes;
 }

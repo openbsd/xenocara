@@ -249,6 +249,7 @@ SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 VERSION = @VERSION@
 WCHAR32 = @WCHAR32@
 X11_CFLAGS = @X11_CFLAGS@
@@ -362,8 +363,7 @@ noinst_LTLIBRARIES = libi18n.la
 @XLIB_LOADABLE_I18N_FALSE@LC_LIBS = \
 @XLIB_LOADABLE_I18N_FALSE@	${top_builddir}/modules/lc/def/libxlcDef.la \
 @XLIB_LOADABLE_I18N_FALSE@	${top_builddir}/modules/lc/gen/libxlibi18n.la \
-@XLIB_LOADABLE_I18N_FALSE@	${top_builddir}/modules/lc/Utf8/libxlcUTF8Load.la \
-@XLIB_LOADABLE_I18N_FALSE@	${top_builddir}/modules/lc/xlocale/libxlocale.la
+@XLIB_LOADABLE_I18N_FALSE@	${top_builddir}/modules/lc/Utf8/libxlcUTF8Load.la
 
 @XLIB_LOADABLE_I18N_FALSE@OM_LIBS = \
 @XLIB_LOADABLE_I18N_FALSE@	${top_builddir}/modules/om/generic/libxomGeneric.la

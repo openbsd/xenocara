@@ -277,6 +277,7 @@ SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
+TRADITIONALCPPFLAGS = @TRADITIONALCPPFLAGS@
 VERSION = @VERSION@
 WCHAR32 = @WCHAR32@
 X11_CFLAGS = @X11_CFLAGS@
@@ -357,6 +358,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @XLIB_LOADABLE_I18N_FALSE@ORDER = modules src
 @XLIB_LOADABLE_I18N_TRUE@ORDER = src modules
+# Order: nls before specs
 SUBDIRS = include $(ORDER) nls man
 ACLOCAL_AMFLAGS = -I m4
 pkgconfigdir = $(libdir)/pkgconfig

@@ -169,9 +169,6 @@ XkbSelectEventDetails(Display *dpy,
         /* doesn't.   Make sure that we always request the stuff */
         /* that the implicit support needs, and just filter out anything */
         /* the client doesn't want later */
-        req->affectWhich = 0;
-        req->selectAll = 0;
-        req->clear = 0;
         req->affectMap = (CARD16) affect;
         req->map = (CARD16) details | (XkbAllClientInfoMask & affect);
         req->affectWhich = XkbMapNotifyMask;
@@ -699,9 +696,7 @@ XkbGetPerClientControls(Display *dpy, unsigned *ctrls)
 
     if ((dpy->flags & XlibDisplayNoXkb) ||
         (!dpy->xkb_info && !XkbUseExtension(dpy, NULL, NULL)) ||
-        (*ctrls & ~(XkbPCF_GrabsUseXKBStateMask |
-                    XkbPCF_LookupStateWhenGrabbed |
-                    XkbPCF_SendEventUsesXKBState)))
+        (ctrls == NULL))
         return False;
     LockDisplay(dpy);
     xkbi = dpy->xkb_info;
@@ -719,10 +714,9 @@ XkbGetPerClientControls(Display *dpy, unsigned *ctrls)
     }
     UnlockDisplay(dpy);
     SyncHandle();
-    if (ctrls)
-        *ctrls = (rep.value & (XkbPCF_GrabsUseXKBStateMask |
-                               XkbPCF_LookupStateWhenGrabbed |
-                               XkbPCF_SendEventUsesXKBState));
+    *ctrls = (rep.value & (XkbPCF_GrabsUseXKBStateMask |
+                           XkbPCF_LookupStateWhenGrabbed |
+                           XkbPCF_SendEventUsesXKBState));
     return (True);
 }
 

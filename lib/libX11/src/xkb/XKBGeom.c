@@ -269,10 +269,9 @@ _XkbReadGeomProperties(XkbReadBufferPtr buf,
             ok = _XkbGetReadBufferCountedString(buf, &name) && ok;
             ok = _XkbGetReadBufferCountedString(buf, &value) && ok;
             ok = ok && (XkbAddGeomProperty(geom, name, value) != NULL);
-            if (name)
-                _XkbFree(name);
-            if (value)
-                _XkbFree(value);
+
+	    _XkbFree(name);
+	    _XkbFree(value);
         }
         if (ok)
             rtrn = Success;
@@ -322,8 +321,8 @@ _XkbReadGeomColors(XkbReadBufferPtr buf,
                 rtrn = BadLength;
             else if (XkbAddGeomColor(geom, spec, geom->num_colors) == NULL)
                 rtrn = BadAlloc;
-            if (spec)
-                _XkbFree(spec);
+
+            _XkbFree(spec);
             if (rtrn != Success)
                 return rtrn;
         }
@@ -476,9 +475,9 @@ _XkbReadGeomOverlay(XkbReadBufferPtr buf,
         if (rowWire == NULL)
             return BadLength;
         row = XkbAddGeomOverlayRow(ol, rowWire->rowUnder, rowWire->nKeys);
-        row->row_under = rowWire->rowUnder;
         if (!row)
             return BadAlloc;
+        row->row_under = rowWire->rowUnder;
         if (rowWire->nKeys < 1)
             continue;
         keyWire = (xkbOverlayKeyWireDesc *)

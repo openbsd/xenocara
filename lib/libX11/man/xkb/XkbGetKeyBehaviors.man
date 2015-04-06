@@ -21,7 +21,7 @@
 .\"
 .TH XkbGetKeyBehaviors __libmansuffix__ __xorgversion__ "XKB FUNCTIONS"
 .SH NAME
-XkbGetKeyBehaviors \- Obtain the behaviors (the behaviors array) for a subset of the keys in 
+XkbGetKeyBehaviors \- Obtain the behaviors (the behaviors array) for a subset of the keys in
 a keyboard description from the server
 .SH SYNOPSIS
 .HP

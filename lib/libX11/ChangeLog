@@ -1,3 +1,1341 @@
+commit 5a499ca7b064bf7e6a4fcc169f22862dce0c60c5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 9 15:28:29 2015 -0700
+
+    libX11 1.6.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c8e19b393defd53f046ddc2da3a16881221b3c34
+Author: Joonas Javanainen <joonas.javanainen@gmail.com>
+Date:   Thu Feb 5 17:31:04 2015 +0200
+
+    Fix XErrorEvent struct field order in man page
+    
+    In the man page the field "resourceid" was in a different place than
+    in the actual struct layout in Xlib.h
+    
+    Signed-off-by: Joonas Javanainen <joonas.javanainen@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ddf3b09bb262d01b56fbaade421ac85b0e60a69f
+Author: Ran Benita <ran234@gmail.com>
+Date:   Tue Feb 3 13:23:50 2015 -0500
+
+    compose: fix the description of modifiers in compose sequences
+    
+    The Compose format has a feature which allows specifying certain
+    modifiers must (or must not) be present with a given keysym in the
+    sequence.
+    
+    The grammar in imLcPrs.c and the Compose man page both do not match what
+    the code actually does (see the handling of the variables
+    `modifier_mask` and `modifier` in parseline() in imLcPrs.c, which are
+    eventually matched as `ev->state & modifier_mask == modifier`).
+    
+    Also explicitly list the accepted modifier names, since they are
+    not standard (e.g. "Ctrl" instead of "Control").
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 129f13f385c50e3d8b53ea7441b17386b0f36aeb
+Author: Ran Benita <ran234@gmail.com>
+Date:   Tue Feb 3 13:23:49 2015 -0500
+
+    xkb: fix misleading comment about consumed modifiers
+    
+    In the spec and the man page the `mods_rtrn` argument is described as
+    "backfilled with unconsumed modifiers" but actually it is backfilled
+    with the *consumed* modifiers. This is also mentioned a few lines below
+    in each case.
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 446f5f7f41317a85a0cd0efa5e6a1b37bc99fba2
+Author: Ingo Schwarze <schwarze@usta.de>
+Date:   Tue Dec 9 10:44:13 2014 +0100
+
+    Fix pasto in XkbGetKeyBehaviors(3) manual
+    
+    Reviewed-by: Thomas Klausner <wiz@NetBSD.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f3831dde6972e4da9e018c6a5f4013d8756a5e78
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Sun Nov 23 21:35:36 2014 +0100
+
+    nls: Sorting compose sequences rigorously in mirroring pairs, as is custom.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+
+commit a51681b60c84109fe19f5d449e13080522499324
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Thu Sep 19 16:42:01 2013 +0200
+
+    nls: Remove a duplicate locale name, and sort some others more strictly.
+    
+    Also improve the grammar of the initial comment.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 426b7f850f5376db96a4b12420ee141603fcc3cd
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Fri Sep 20 12:37:29 2013 +0200
+
+    nls: Add a comment to the block of accented Hebrew letters.
+    
+    And align them in a nicer manner.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 7474c6f1ee78dd097b1d0b4c7e3e4ea41317e335
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Fri Sep 20 12:05:09 2013 +0200
+
+    nls: Add one lowercase compose variant for ®, to mirror those for ©.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 18dcd13514fa538afefa78c93523d9dbd4688e74
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Sat Sep 7 20:10:43 2013 +0200
+
+    nls: Adding the visual composing characters to two comment lines.
+    
+    The lines around them also contain the characters in the comments.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 18d8307575af748913d5da17e3de45da2a22ede4
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Sat Sep 7 20:09:32 2013 +0200
+
+    nls: Grouping a lone superscript minus together with its mates.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 33301cc45e6a2b8aa841ed6325547af970f8c4db
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Sat Sep 7 19:53:38 2013 +0200
+
+    nls: Grouping the compose sequences for Dstroke/dstroke together.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 78fe1becb6c18fa33c0d5f04005b45d856f8952a
+Author: Gioele Barabucci <gioele@svario.it>
+Date:   Sun Sep 21 23:05:55 2014 +0200
+
+    Add compose sequence for U+20B9 INDIAN RUPEE SIGN
+    
+    The compose sequence for the new Indian Rupee sign is modelled after
+    the sequence for the Euro sign.
+    
+    Signed-off-by: Gioele Barabucci <gioele@svario.it>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 6101b967b641355dd863fd1ce52c6a7d58bcbe68
+Author: Gabriel Souza Franco <gabrielfrancosouza@gmail.com>
+Date:   Thu Jul 31 22:23:28 2014 -0300
+
+    Add double-arrow compose sequence
+    
+    Signed-off-by: Gabriel Souza Franco <gabrielfrancosouza@gmail.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 368a6401c6a3275d3497fec38a3dcbc38cd9df60
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Fri Aug 1 18:30:42 2014 -0400
+
+    Add cs_CZ.UTF-8 locale to configure.ac
+    
+    Commit cf4d5989383a should have included this.
+    
+    Reported-by: Colin Harrison <colin.harrison@virgin.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit cf4d5989383acc4ed1b7eebadde9f380f2129766
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Tue Jul 29 15:02:56 2014 -0400
+
+    Add nls for cs_CZ.UTF-8
+    
+    Based on the iso8859-2 compose, and a bug report by Vladimír Marek,
+    override the en_US.UTF-8 use of <dead_caron> <u> to enter »ǔ« instead
+    to enter »ů«, and likewise for the majuscule, for the Czech locale.
+    
+    This evidently is the norm for Czech keyboards.
+    
+    Fixes bz#81875.
+    
+    The XI18N_OBJS and XLC_LOCALE.pre files are empty, as they are for
+    several other locales.  That may require an update.
+    
+    Reported-by:  Vladimír Marek <vlmarek@volny.cz>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit d9f569572bd14db31921471e7b877523b5cf1e4c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 26 12:17:47 2014 -0700
+
+    Fix source paths for out-of-tree lintlib builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0885cad1e4a9ed57266582be320be55259c881bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 20 09:21:20 2014 -0700
+
+    specs/XKB: Markup fractions as <{super,sub}script> instead of <emphasis>
+    
+    Matches the way they were styled in original doc, before conversion
+    to DocBook.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0a9e9d56bb003315787201ee525b4d00fd54e06
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 23:55:47 2014 -0700
+
+    specs/XKB: acknowledge my contributions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9c0be82017f513e2eb63d59b095f1cf1955f2e2b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 23:53:48 2014 -0700
+
+    specs/XKB: Trim leading spaces off text lines
+    
+    perl -i -p -e 's{/\*(\S)}{/* \1}g;' *.xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 75b0b10990f38d966c6fcc821bf15e58c5a90c91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 20:30:55 2014 -0700
+
+    specs/XKB: Add olinks to libX11 for "X Library Functions Affected by Xkb"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5009621799444e9d1d284719f871d00be13e7330
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 12:34:28 2014 -0700
+
+    specs/XKB: Fix miscelleanous typos & spelling errors
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ac219bf1522a592bd3e3283b1a6ea3dfd2c3c48c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 00:46:41 2014 -0700
+
+    specs/XKB: add some more indexterms by hand
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5c3aa4c69e65ecf2e56d5e26f3833fb5d31973c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 00:48:02 2014 -0700
+
+    specs/XKB: fixup various formatting issues in <programlisting>s
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 70c648ff852fd9bc784967cfc77ea70bd7f14c8d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 23:56:29 2014 -0700
+
+    specs/XKB: fixup various formatting issues in <literallayout>s
+    
+    Including translating some that are really just lists into
+    <simplelist> markup.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 94b56774784ac00b9db02403aecea10bb0814c10
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 23:18:52 2014 -0700
+
+    specs/XKB: add some more links by hand
+    
+    random bits where a link looked handy
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a15a934cdb07ed1b991bd0ef633f32ee00b1833
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 23:16:31 2014 -0700
+
+    specs/XKB: add links for terms in definition list under figure 1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 92b86fc3c50fbb7ab2e36af10a2fb3fe6284f58c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 22:52:16 2014 -0700
+
+    specs/XKB: add links to more tables listing section references
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 06a4483a05053b4f8d8c0d4cc0513c68ea912676
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 22:49:34 2014 -0700
+
+    specs/XKB: Table 4.1: remove page numbers & unnecessary para tags
+    
+    Page numbers refer to old doc format, didn't translate to new one
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 61bd55c6d1ab211b89d604bd05555dc417f6e53d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 11:55:51 2014 -0700
+
+    specs/XKB: remove unwanted white space around C -&gt; struct references
+    
+    perl -i -0 -p -e 's{\s*-&gt;\s*}{-&gt;}g' *xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2be0cc0b2abbcc98cfd150210dea415a04787251
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 22:26:20 2014 -0700
+
+    specs/XKB: replace -&gt; with &rarr; when used as arrow, not in C structs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bf1f3d6f6f995303624679ae546f507c70967dc0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 22:21:10 2014 -0700
+
+    specs/XKB: replace =&gt; with &rArr; for double arrows
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c7ee427fc0a72abd4a4f147ab16a5d1128a6a2ba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 11:33:35 2014 -0700
+
+    specs/XKB: Markup some ranges with &ndash; instead of -
+
+commit ec4075303c6c0d1d64bfe378e585968f9a137da7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 22:10:45 2014 -0700
+
+    specs/XKB: Markup some subtractions with &minus; instead of -
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 441a267e461132a38abed205245f028686526f1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 22:04:40 2014 -0700
+
+    specs/XKB: make sure all files have DOCTYPEs so standard entities work
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 88fd70bee410f290b4f540405fdc7ecd85c26f25
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 21:55:41 2014 -0700
+
+    specs/XKB: Markup quoted terms as <quote> instead of with ""
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3576587ff10334a8f48c34b4fe5b7e829dec9a1b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 19 09:01:26 2014 -0700
+
+    specs/XKB: fixup newlines between tags and punctuation
+    
+    Get rid of unwanted whitespace before punctuation by moving them to the
+    lines with the tags, instead of before & after.
+    
+    perl -i -0 -p -e 's{\>\s*\n([\.,;:])}{>\1\n}g' *xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d5ec492cd28c206423337f926503349702af5a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 21:29:33 2014 -0700
+
+    specs/XKB: fixup newlines between tags and parens
+    
+    Get rid of unwanted whitespace inside parens by moving them to the
+    lines with the tags, instead of before & after.
+    
+    perl -i -0 -p \
+         -e 's{(?<!--) \(\s*\n\<}{\n(<}g;' \
+         -e 's{\>\s*\n\)([\.,;]?)(?! [^\n]*--)}{>)\1\n}g' *xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 59d688f4c787250e0b401a92b1db0437d8c60f2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 18 21:09:24 2014 -0700
+
+    specs/XKB: Markup key terms as <firstterm> instead of <emphasis>
+    
+    Also add <indexterm> entries for most of them, to make their definitions
+    or introductions easy to find from the index.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 861f3087ee0f501362a67501f384c2ca4c7bfe73
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 10 20:00:53 2014 -0700
+
+    specs/XKB: Manual fixup of type markup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6b96259dabe52701fd1bcaa0625b574180c4e769
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 10 15:00:30 2014 -0700
+
+    specs/XKB: Manual fixup of parameter markup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5526dce6812a84102f556fdde8f2b52b21c8bcdc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 10 13:40:40 2014 -0700
+
+    specs/XKB: Manual fixup of struct name/field markup
+    
+    Handles typos that caused the scripts to miss matches, misnamed structs, etc.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c36ee1a4db4e7876526190b8ab6b0da5867f76f7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 9 23:26:37 2014 -0700
+
+    specs/XKB: Manual fixup of symbol name markup
+    
+    Handles typos that caused the scripts to miss matches, misnamed masks, etc.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eb1453a0c69606b8af96b90ddccf1b93a069fb35
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 9 00:03:23 2014 -0700
+
+    specs/XKB: Manual fixup of function name markup
+    
+    Handles typos that caused the scripts to miss matches, functions like
+    malloc & free from other libraries, function name patterns, etc.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 252d99c87b60ac6f3f2b36f292f9b3880daabe26
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 10 19:42:31 2014 -0700
+
+    specs/XKB: Markup protocol requests as <systemitem> instead of <emphasis>
+    
+    No great fit in DocBook, so follow what we used in Xlib spec.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed60df10aad15057577d5714c955d22d2a446e51
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 10 15:45:57 2014 -0700
+
+    specs/XKB: Markup keyboard keys as <keycap> instead of <emphasis>
+    
+    Also uses <guilabel> for LED names/labels, for lack of a better fit
+    in DocBook.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f57b91ee497414083cc1bf481d28eb9ad9f965fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 10 15:41:19 2014 -0700
+
+    specs/XKB: Markup characters & strings as <literal> instead of <emphasis>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cfd4279c9b59d7e87c9f7c67692c87973adb7667
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 10 11:08:14 2014 -0700
+
+    specs/XKB: Markup structs as <struct{name,field}> instead of <emphasis>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a014bb4cc013b0d1b76524b7868e860c7e7ebc79
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 9 23:30:54 2014 -0700
+
+    specs/XKB: Markup symbol names in table entries too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 907f7ad7a7a977bf4f19daa3143d47c4d07ca33d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 8 23:35:48 2014 -0700
+
+    specs/XKB: Markup *Ptr as <type> instead of <emphasis>
+    
+    perl -i -p -e 's{<emphasis>(\w*Ptr)</emphasis>}{<type>\1</type>}g' *xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f6c00629fd4b713082cc11f9150f7aafd272c89
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 8 23:34:29 2014 -0700
+
+    specs/XKB: Markup *Rec as <structname> instead of <emphasis>
+    
+    perl -i -p -e \
+     's{<emphasis>(\w*Rec)</emphasis>}{<structname>\1</structname>}g' *xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83839e37802b8b752c77859a95de60ad757feb79
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 8 23:29:49 2014 -0700
+
+    specs/XKB: Markup XKB macros as <symbol> instead of <emphasis>
+    
+    Performed via:
+     perl -n -e 'printf "s{<emphasis>\\s*%s\\s*</emphasis>}{<symbol>%s</symbol>};\n", $1, $1 if m{^#define\s+([^\s\(]*)}' \
+      /usr/include/X11/extensions/XK*h /usr/include/X11/XKBlib.h \
+      | sort -u > xkb-defines.pl
+     perl -i -p -f xkb-defines.pl *.xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e397ed37ce4cc70621de347de3a795df88d4506
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 8 22:53:12 2014 -0700
+
+    specs/XKB: Use ° instead of o for degrees.
+    
+    Conversion from framemaker turned superscripted "o" into plain "o".
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3b8364c21f5119105a2c14ae8cc75a11494cb7a7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 8 22:46:03 2014 -0700
+
+    specs/XKB: Markup keysyms as <keysym> instead of <emphasis>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 33bef065683c8f910f3722730503c0c0699ee8be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 8 22:26:56 2014 -0700
+
+    specs/XKB: Markup NULL as <symbol> instead of <emphasis>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f10aa1e09468bd28454d85ac8ab55d9dc7178029
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 8 22:22:29 2014 -0700
+
+    specs/XKB: Markup function args as <parameter> instead of <emphasis>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 79ba58cceb69521fcb313c69233cf93a9fcb177f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 7 23:56:13 2014 -0700
+
+    specs/XKB: Convert remaining error names to errorname tags
+    
+    Most were caught by applying libX11 lists, but BadKeyboard & XKB*_Bad*
+    are XKB-specific.   (Plus some were badly split across tag boundaries.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 42b2f5388c399949ece377f9cc9c479c06964972
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 7 23:16:56 2014 -0700
+
+    specs/XKB: manually fixup some more emphasis tagging mismatches
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3b2f47d44a55d93c65455ff183f3b47da04b1de1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 7 23:02:31 2014 -0700
+
+    specs/XKB: re-normalize <emphasis> layout in xml files
+    
+    Same script as before, just with <!-- xref --> comments out of the way
+    now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce95f152eda509263874c53fb7c6b4a6bdab2c29
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 7 22:59:25 2014 -0700
+
+    specs/XKB: Remove remaining xref comments
+    
+    All the places marked by these have been turned into the appropriate
+    link, xref, or olink tags now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6590b66e19af8dff68888ac403ac82f5d585b4e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 7 22:56:36 2014 -0700
+
+    specs/XKB: make olinks to xkbproto for references in section 10.13
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fcda446877a62e7443d7bc704ba3610e90d1e755
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 7 22:22:28 2014 -0700
+
+    specs/XKB: Add <figure> tags and make Figure references link to them
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 087a2338476719e340dc3d5af0df6fdc4a26ce7a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 7 21:30:01 2014 -0700
+
+    specs/XKB: Turn Table references into links
+    
+    Adds id attributes to all table tags so we can link to them
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 135fa07b74cb50172c6a75768d499cd87ddb336e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 21:29:59 2014 -0700
+
+    specs/XKB: Turn section references into xref links
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53e931d79926af8a3996253efd8b5f6c21d9e5d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 21:17:18 2014 -0700
+
+    specs/XKB: Turn Chapter references into xref links
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b7f00ce5bcb0c00696bb82503ab548e14f04d17d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 20:40:18 2014 -0700
+
+    specs/XKB: Apply <emphasis> to semantic tag transformations from Xlib spec
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b00a7ddff2744238fbfe31c2298b02028a45a6ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 20:34:51 2014 -0700
+
+    specs/XKB: Markup function names as <function> instead of <emphasis>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfbb58b7679221cb5c9212665209ea9099ad079a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 20:25:46 2014 -0700
+
+    specs/XKB: normalize <emphasis> layout in xml files
+    
+    - Stop placing <emphasis> on empty space, commas, and periods.
+    - Move periods & commas after closing </emphasis> tag
+    - move <emphasis> open & close tags to same line, instead of mirroring
+      nroff layout.
+    
+    Simplifies automating further transformations of these tags.
+    
+    Performed via:
+     perl -i -0 -p \
+        -e 's{<emphasis>(\s*)</emphasis>}{}msg;' \
+        -e 's{<emphasis>([\s\.,]*)</emphasis>\s*}{\1}msg;' \
+        -e 's{\n([\.,])\s*}{\1\n}msg;' \
+        -e 's{([^\.])([\.,])\s*</emphasis>}{\1</emphasis>\2}msg;' \
+        -e 's{\s*<emphasis>\n\s*}{\n<emphasis>}msg;' *xml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b16ee69a0103109a661a88140a1765dcd7bda634
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 15:57:41 2014 -0700
+
+    specs/XKB: Convert to funcsynopsis+variablelist instead of informaltable
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b41d43d4cf0c0a1a049a171ee8cf6fd8a3ee4335
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 19:29:38 2014 -0700
+
+    specs/XKB: Add index
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72ae1d793be078db521dda60af578ece71f364de
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 13:21:40 2014 -0700
+
+    specs/XKB: Fix various markup issues in functiondecl tables
+    
+    - Merge some functionargdecl entries incorrectly split across rows
+    - Add missing parameter name markup to some functionargdecls
+    - Add missing function prototype markup to a functiondecl
+    - Remove stray emphasis tags in a functiondecl
+    
+    Allows them to correctly convert to funcsynopsis markup in next step.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9fdb973012de80ac60dbc59c39162f4e839fc5a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 12:15:23 2014 -0700
+
+    specs/XKB: Convert header filenames to filename tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5525e8433f93bce464412f27cffa203ea628f368
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 8 00:05:32 2014 -0700
+
+    specs/libX11: disengender a user reference
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d8679eae9317b389ad4acb0430360ee0663e2af8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 11 18:41:42 2014 -0700
+
+    specs/libX11: Correct value of IconicState to match Xutil.h
+    
+    Xutil.h has always had a value of 3 for IconicState, since 2 was
+    previously used for the long-obsolete ZoomState, so make the spec
+    match what programs have used for decades.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 7ce2b0f12a48fb832f457cbafb0e1144ef557f9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 11 10:34:08 2014 -0700
+
+    Use C99 named initializers to fill in events passed to XSendEvent
+    
+    Forces compiler to zero-fill unset fields in the struct (fixing bug 81236)
+    and allows optimizer to order field initialization to best fit cache layout
+    or other considerations.
+    
+    Before & after output of gcc -S on AMD64 shows insertion of "rep stosq"
+    instructions to rapidly zero-fill structs.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 169805e1dc8743b37b00e24cf3a5eb8748f733ad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 11:13:49 2014 -0700
+
+    Fix validation of ctrls parameter to XkbGetPerClientControls()
+    
+    Nothing in the XKB spec states that the memory pointed to by ctrls has to
+    be initialized to any given value when passed to the function, only that
+    it is set by the function to the values returned by the X server:
+    http://www.x.org/releases/X11R7.7/doc/libX11/XKB/xkblib.html#The_Miscellaneous_Per_client_Controls
+    
+    The check for the incoming value seems to be copied from
+    XkbSetPerClientControls without explanation.
+    
+    Instead change it to checking if ctrls is non-NULL, since there's no
+    point asking the X server to return a value the caller won't even see.
+    
+    Found while investigating report from cppcheck-1.65:
+    [src/xkb/XKB.c:699] -> [src/xkb/XKB.c:719]: (warning) Possible null pointer
+     dereference: ctrls - otherwise it is redundant to check it against null.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e362fac92c6688fb42b195ccad16d7a337a34c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 10:54:57 2014 -0700
+
+    Fix map->num_types check in XkbAddKeyType()
+    
+    Check is intended to ensure we allocate at least XkbNumRequiredTypes
+    in map, but was accidentally marked with a ! causing the wrong check.
+    
+    Reported-by: Harms <wharms@bfs,de>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ff9a5c199251a84fa59d14fd48dadb3f8920b54b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 15:08:21 2014 -0700
+
+    specs/libX11: Add missing spaces to 'unsignedint' & 'unsignedlong' types
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a06ea86773568926c36ae650b188fc818d540db7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 15:04:27 2014 -0700
+
+    specs/libX11: Fix height & width in parameter lists to be two separate entries
+    
+    "unsigned int width, unsigned int height", not a single parameter "height"
+    of type "unsignedintwidth,".
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e4db5e503682b3304fe82e4b17b419a8e0f0a9f2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 6 14:38:10 2014 -0700
+
+    specs/libX11: Fix x & y in parameter lists to be two separate parameters
+    
+    "int x, int y" not a single parameter y of type "intx"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa8bda0db2c6d82515b90ceb4a7d6403e38895e9
+Author: walter harms <wharms@bfs.de>
+Date:   Sat Jun 7 12:03:17 2014 +0200
+
+    lcDefConv.c: fix use before check
+    
+    * Do not use variables before checked for NULL.
+    * remove some superfluid spaces (Mark Kettenis)
+    
+    Signed-off-by: Harms <wharms@bfs,de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0670e5d3ae330e611ecb05303d579a4f8a3d114
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 16 15:16:10 2014 -0700
+
+    Start adding Unicode 7.0 support to compose table
+    
+    New characters defined in http://www.unicode.org/charts/PDF/U1F300.pdf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a4679baaa18142576d42d423afe816447f08336c
+Author: walter harms <wharms@bfs.de>
+Date:   Sat Jun 7 11:54:34 2014 +0200
+
+    rm redundant null checks
+    
+    remove more redundant NULL checks
+    note that _XkbFree() is really Xfree()
+    
+    Signed-off-by: Harms <wharms@bfs,de>
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 602d7f5030fe93b2fe7f29fb7310deb6f50cb6df
+Author: walter harms <wharms@bfs.de>
+Date:   Sat Jun 7 15:17:27 2014 +0200
+
+    libX11: rm redundante NULL checks
+    
+    This patch removes the last remaining  NULL checks for Xfree()
+    
+    Signed-off-by: Harms <wharms@bfs,de>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d81fed46144d089bdfa1d916a28dffc9ebffe1e4
+Author: walter harms <wharms@bfs.de>
+Date:   Fri Jun 6 22:53:05 2014 +0200
+
+    Remove more redundant null checks before Xfree()
+    
+    Signed-off-by: Harms <wharms@bfs,de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0b7fd7dbec136bae317bd9a329309eaa089beee3
+Author: walter harms <wharms@bfs.de>
+Date:   Thu Jun 5 18:37:40 2014 +0200
+
+    Remove redundant null checks before free
+    
+    This patch removes some redundant null checks before free.
+    It should not change the code otherwise. Be aware that this
+    is only the first series.
+    
+    Signed-off-by: Harms <wharms@bfs,de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d452fad5068ba92b964e92bc46708046f4044aa
+Author: walter harms <wharms@bfs.de>
+Date:   Wed Jun 4 17:12:31 2014 +0200
+
+    libX11/lcUTF8.c fix: dereferenced before check
+    
+    * Do not use variables before checked for NULL.
+    
+    Signed-off-by: Harms <wharms@bfs,de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3808f51517a720e7ff738208af60865779dd6ef
+Author: walter harms <wharms@bfs.de>
+Date:   Wed Jun 4 17:10:20 2014 +0200
+
+    libX11/XKBNames.c fix: dereferenced before check
+    
+    * Do not use variables before checked for NULL.
+    
+    Signed-off-by: Harms <wharms@bfs,de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b3c9f6a17e430aabe16aecbe097f7312a0f6ff78
+Author: walter harms <wharms@bfs.de>
+Date:   Wed Jun 4 17:08:12 2014 +0200
+
+    libX11/lcGenConv.c fix: dereferenced before check
+    
+    * Do not use variables before checked for NULL.
+    
+    Signed-off-by: Harms <wharms@bfs,de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c6bc28d433243c32b3f74955f1478451b4fd27b5
+Author: Andreas Schwab <schwab@linux-m68k.org>
+Date:   Sun Jan 19 16:59:13 2014 +0100
+
+    Restore lost tabs in sed commands
+    
+    Signed-off-by: Andreas Schwab <schwab@linux-m68k.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3dc0d17339e61eaf0b51b8907510984e3bf23cb
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Thu Sep 19 11:01:11 2013 +0200
+
+    nls: Transform Brazilian compose file to an include plus three overrides.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 16c87dda4da2271aaecc5d8b6fe6ecd072cc584c
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Fri Sep 6 12:10:01 2013 +0200
+
+    nls: Adding the missing compose sequences with <comma> for O with ogonek.
+    
+    All other vowels with ogoneks can already be composed using <comma>.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 655b60f48376069750b151c46da836fdd411c83b
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Fri Sep 6 12:04:24 2013 +0200
+
+    nls: Adding the missing postfix sequences for composing vowels with ogoneks.
+    
+    It existed for lowercase i, but not for uppercase I nor the other vowels.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 7f8f9a36ef901f31279c385caf960a22daeb33fe
+Author: Owen W. Taylor <otaylor@fishsoup.net>
+Date:   Fri May 9 18:21:05 2014 -0400
+
+    Fix XNextRequest() after direct usage of XCB
+    
+    When XCB owns the X socket, dpy->request is not updated, so
+    NextRequest() and XNextRequest() return the wrong value. There's
+    nothing we can do to fix NextRequest() while retaining ABI compat,
+    but change XNextRequest() to grab the socket back from XCB,
+    updating dpy->request.
+    
+    Signed-off-by: Owen W. Taylor <otaylor@fishsoup.net>
+    Reviewed-by: Uli Schlachter <psychon@znc.in>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f9e734ea96556fe750a4baf354d42d5a87bcd14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 4 11:54:59 2014 -0700
+
+    Add missing .TE tags to end tables in Xkb man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 280274e5292e013b43e552274111fab434f5ed4e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 4 11:23:17 2014 -0700
+
+    XCreateGC.man: simplify table to work with Solaris tbl
+    
+    Having every table cell be a text diversion (T{...T}) was too much for
+    Solaris tbl to handle, and thus "man XCreateGC" would print the error
+    /usr/man/man3x11/XCreateGC.3x11: line 402: Too many text block diversions
+    tbl quits
+    and not display the table of mask bits or any text in the man page after
+    that table.   Since the #define column doesn't need special handling,
+    making it not use text diversions brings the table under the tbl limit.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 93bb325a54025dd15f4744abce54b358960420f9
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Tue May 20 17:30:10 2014 -0400
+
+    Revert "nls: Adding compose sequences (with <parenleft> first) that GTK also has."
+    
+    Parenleft is already in use for sequences of the form <(> <letter> <)>
+    to generate circled letters.
+    
+    Eg, <Multikey> <parenleft> <a> <parenright> generates ⓐ.
+    
+    This reverts commit f020235f4bd91fb6eade82f8c9f7b85a57981768.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 060707851be918f2f507a26d17b016f764ddf2b4
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Fri Sep 6 11:42:59 2013 +0200
+
+    nls: Adding accessible compose sequences for Ș and Ț (with comma below).
+    
+    Compose sequences with <dead_belowcomma> exist, but very few keyboard
+    layouts contain that symbol.  So a more usual character is needed to be
+    able to easily compose Ș, ș, Ț and ț.  The semicolon is normally only
+    used for composing letters with ogoneks -- but only vowels take ogoneks,
+    so the character is free for consonants, and thus <semicolon> is used
+    here to compose commas below.  It is somewhat fitting, because on most
+    Romanian keyboards the Ș is placed on that key, and the Ț next to it.
+    
+    (Oh -- the more obvious sequences with <comma> were already taken for
+    composing S and T with cedillas.)
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit ca435c2f753aa2961fb35ac448cdb2cc77112755
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Tue Sep 3 21:10:33 2013 +0200
+
+    nls: Ordering some compose sequences in a more customary way.
+    
+    The custom seems to be: pairing the ones that have only the sequence of
+    two keys reversed, and putting the one with the diacritic first first.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit f020235f4bd91fb6eade82f8c9f7b85a57981768
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Tue Sep 3 20:44:42 2013 +0200
+
+    nls: Adding compose sequences (with <parenleft> first) that GTK also has.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit bda0b3b5bd19154206dc40166364e73d4b6b1374
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Tue Sep 3 11:14:16 2013 +0200
+
+    nls: Allowing Romanian Ă and ă to be composed also with lowercase <u>.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 8be4610939b833587954957f5963eb4191b43d19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 13 23:22:48 2014 -0700
+
+    Fix "follwing" typo in en_US.UTF-8/Compose comment
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6f30e9034f29c3ae6ad7e617b3d5e903aa107b6a
+Author: Reuben Thomas <rrt@sc3d.org>
+Date:   Mon Jan 27 14:18:24 2014 +0000
+
+    en_US.UTF-8/Compose: Fix apparent copy-paste-o, changing capital to small A.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d6bd988bc00494914b38b95ee5df77ac4f32f19f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 3 12:38:48 2014 +1000
+
+    man: fix man page for XkbGetMap
+    
+    Returned structure must be freed with XkbFreeKeyboard().
+    
+    Reported-by: Morten Bøgeskov <mb@dbc.dk>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a6dcf2201a05adbff54122df05a1e6325936abb6
+Author: Ran Benita <ran234@gmail.com>
+Date:   Tue Feb 11 13:26:16 2014 +0200
+
+    Remove dead USE_OWN_COMPOSE-protected code
+    
+    The build doesn't provide any way to define this option. It also refers
+    to files (imComp.h) and functions (e.g. XimCompInitTables(),
+    XimCompProcessSym()) which are not found anywhere, and the ordinary
+    Compose implementation in xim doesn't use any of it.
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b64bee2ddb7b96f00713a8b8435f11ad9ac1c9e0
+Author: Ran Benita <ran234@gmail.com>
+Date:   Sun Feb 16 15:24:58 2014 +0200
+
+    nls: always use XCOMM instead of # for comments in Compose.pre files
+    
+    Lines starting with # are considered as preprocessor directives in the
+    .pre files.
+    
+    Fixes warnings like:
+    <stdin>:3:0: error: invalid preprocessing directive #Khmer
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 470e2289a3ebc59c5a35e54e1adeb0f261d5bf88
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 6 13:48:08 2014 -0800
+
+    Fix typos in Xrm.c comments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aacf95dacc7c598e7297894580d4d655593813b2
+Author: Marko Myllynen <myllynen@redhat.com>
+Date:   Mon Jan 13 16:43:18 2014 +0200
+
+    Annotate Finnish Compose map with Unicode code points
+    
+    Scripted annotation, no functional changes.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 20fdccd81b54678376d49e00edfebbbe94951f07
+Author: Teemu Likonen <tlikonen@iki.fi>
+Date:   Fri Jul 20 19:21:04 2012 +0300
+
+    Fix "RING ABOVE" key in the Finnish compose file
+    
+    The Finnish keyboard standard defines that <dead_abovering> <space> must
+    insert the character U+02DA RING ABOVE. Currently the Finnish Compose
+    file inserts U+00B0 DEGREE SIGN even though the line's comment says
+    "RING ABOVE". This commit changes the character to U+02DA RING ABOVE.
+    
+    Signed-off-by: Teemu Likonen <tlikonen@iki.fi>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 8757e2ac8e04f2932ff437127f3e2ae9ac20c1d7
+Author: Ran Benita <ran234@gmail.com>
+Date:   Wed Jan 29 02:11:47 2014 +0200
+
+    nls: remove duplicate 'ohorn' and 'uhorn' compose sequences
+    
+    Since <Ohorn> == <U01A0> and <ohorn> == <U01A1>, when translated to
+    keysyms:
+    
+     #define XK_Ohorn                      0x10001a0  /* U+01A0 LATIN CAPITAL LETTER O WITH HORN */
+     #define XK_ohorn                      0x10001a1  /* U+01A1 LATIN SMALL LETTER O WITH HORN */
+    
+    (and similarly for uhorn), there is no need to have both names. Remove
+    the unicode literal ones.
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit b98998cb3bea7cb3005f2e9d5bc5332d14b1d5d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 18 22:35:18 2014 -0800
+
+    Add RANDR 1.4 requests & events to XErrorDB
+    
+    Checked against randrproto.txt & randr.h
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 321392ded15a7ee9d177d4ebe8846336ba76741c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 3 20:04:33 2014 -0800
+
+    Remove unused ETEST & ESZTEST macros from XlibInt.c
+    
+    Left behind when 15e5eaf62897 removed support for building without XCB.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit 1ffc0c5503d4f419fdbc765243832a53491bf5bc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 26 09:26:13 2013 -0800
+
+    _XkbReadGeomOverlay: check for NULL first, then use pointer
+    
+    Flagged by cppcheck 1.62:
+    [lib/libX11/src/xkb/XKBGeom.c:479] -> [lib/libX11/src/xkb/XKBGeom.c:480]:
+     (warning) Possible null pointer dereference: row - otherwise it is
+     redundant to check it against null.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ddf5f130cc29bb3bf8b9c757dcbac31bc56e9379
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 26 09:22:49 2013 -0800
+
+    XkbSelectEventDetails: remove unnecessary assignments
+    
+    clear & selectAll are set to 0 already a few lines earlier,
+    affectWhich is set to XkbMapNotifyMask a few lines later.
+    None are used between the other assignments and the removed ones.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d69b0a83e62f8f6fbdd952fc49cdbdf8825e1e6
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Thu Oct 7 18:46:08 2010 +0100
+
+    Don't try so hard to find a matching font with the given encoding
+    
+    See http://sourceware.org/bugzilla/show_bug.cgi?id=10948
+    
+    Currently, if the locale is UTF-8, no CJK fonts are installed, and someone
+    does XCreateFontSet() with a font name of "*", we end up asking the server
+    to list the (non-existent) fonts 11 times for each CJK encoding, which can
+    take a while.
+    
+    A * wildcard can match multiple components in a XLFD name in XListFonts(),
+    so there's no need to try adding more than one to get a match.
+    
+    We do try once with a leading '*-' in case the fontname isn't a full
+    well-formed XLFD name, maybe even that isn't needed?
+    
+    (See also http://invisible-island.net/xterm/xterm.faq.html#slow_menus)
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7e163300735d4bcd3386b86eec112acdad139c59
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 2 21:51:27 2013 -0800
+
+    unifdef -UISC
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e43c262d13cab2b759665f9f13bdedbc7afbfd4
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Thu Sep 19 13:20:05 2013 +0200
+
+    nls: Fix transposed locale identifier for Khmer.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0e45f64766c0557c8e99a979c70ca6f55664dae7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 16 20:21:54 2013 -0800
+
+    Drop X_LOCALE fallback for OS'es without setlocale()
+    
+    C89 or bust!   This was documented as being needed for "only Lynx,
+    Linux-libc5, OS/2" and has never been enabled in modular builds,
+    since none of those platforms have had anyone step up to add support
+    since the X11R7 conversion to autotools.
+    
+    Mostly performed with unifdef -UX_LOCALE, followed by removal of files
+    left without any purpose, and manual cleanup of remaining references.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 6cb02b166361200da35ba14f52cd9aaa493eb0ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Oct 23 10:37:53 2013 -0700
+
+    Xcms file parsing should not require the impossible to succeed
+    
+    The field2 helper function, to split lines from Xcms.txt files into
+    two tab delimited fields, contained a check:
+    
+        if ((*pBuf != '\n') || (*pBuf != '\0')) {
+            return(XcmsFailure);
+    
+    which would cause it to return failure unless *pBuf had a value that
+    was simultaneously equal to both \n & \0, and no one wants to live in
+    a world where that could ever be true.
+    
+    This has gone unnoticed since 1991, since this only caused lines
+    in Xcms.txt that started with whitespace to be rejected, but now
+    gcc -Wlogicalop has brought it to our attention, and
+    https://bugs.freedesktop.org/show_bug.cgi?id=70803 was filed.
+    
+    Now that we see it, and cannot unsee it, we change it to use the
+    same logic as the check at other points in this function, to return
+    failure only if we hit \n or \0 before we find the first non-whitespace
+    character, so that lines starting with whitespace will have the space
+    skipped over to get to the color name to be defined.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 18a5278b008e9faa59b346fcab18a8d74b875fda
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Sep 28 17:33:52 2013 -0400
+
+    makekeys: don't need to use target-specific CFLAGS
+    
+    It's the only thing built in that directory, so we can use AM_CFLAGS
+    and AM_CPPFLAGS as usual.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5dcb40f28d59587597d2ff6e6ac64c71cfe6ff7b
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Tue Sep 17 12:50:42 2013 -0400
+
+    nls/en_US.UTF-8/Compose.pre: Fix typo.
+    
+    Fix typo added in 215ce6a67863, s/actute/acute/.
+    
+    Fixes bug #69476.  Reported by Jean Krohn.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
 commit cb107760df33ffc8630677e66e2e50aa37950a5c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Sep 8 18:37:01 2013 -0700
