@@ -191,7 +191,7 @@ xcb_aux_change_keyboard_control (xcb_connection_t            *c,
                                  const xcb_params_keyboard_t *params);
 
 int
-xcb_aux_parse_color(char *color_name,
+xcb_aux_parse_color(const char *color_name,
 		    uint16_t *red,  uint16_t *green,  uint16_t *blue);
 
 xcb_void_cookie_t

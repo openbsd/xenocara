@@ -1,3 +1,168 @@
+commit acf790d7752f36e450d476ad79807d4012ec863b
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Sep 24 19:48:33 2014 +0900
+
+    Release 0.4.0
+
+commit 030c7a864d4ec775261ae1eab7682ba2540245c1
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Mon Feb 17 18:17:06 2014 +0900
+
+    Follow changes in m4 submodule.
+
+commit 984aa2d66d74e611e842afc81624a537bb8d7f28
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 13 17:24:39 2014 -0500
+
+    Pick-up changes in m4 submodule
+    
+    Better to have all util repos at same m4 level
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 4a6cde4f80c8c2168d217f0d64d31835167f0803
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 13 17:07:22 2014 -0500
+
+    config: remove old dead code for documentation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 218448233fc37b694d9721176f771f2a52afe70e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 9 12:01:47 2014 -0500
+
+    config: remove the dependency on X11 Protocol
+    
+    The XPROTO_CFLAGS variable is not used.
+    The dependency on libxcb is sufficient as it depends on xproto.
+    This package compiles even if xproto is uninstalled after configuration.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit aea9992778d9e3999714943fa429f64fbc1c3841
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 9 11:36:17 2014 -0500
+
+    config: add missing COPYING file
+    
+    This file is mandatory. It reflects the copyright statements found
+    in the source code as written by their respective owners.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit b2af8b1f198b9254c51588970df1f26d05d0d0d3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 9 10:49:23 2014 -0500
+
+    config: drop the check for sys/types.h
+    
+    All the X supported systems do have this header file.
+    None of the xorg modules have this check, so it is safe to remove.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 37b11560dffc042833f2d20f87d577edfd861613
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 9 11:21:25 2014 -0500
+
+    config: remove AC_TYPE_SSIZE_T
+    
+    This is not needed as we have standard headers and C99.
+    This result in no change to the defines used at compile time.
+    
+    http://www.gnu.org/software/autoconf/manual/autoconf.html
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 95e997ca45fc1c4235eea7a211c6ab2fa5e489f8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 9 10:41:18 2014 -0500
+
+    config: use AC_CONFIG_HEADERS to create a config.h file
+    
+    This file contains C preprocessor #define statements which replace
+    the current -Ds added to each compilation invocation.
+    
+    This makes the gcc output command easier to read and prevents exceeding
+    the max line limits on some computers. This is the preferred method
+    in al the xorg modules.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 80ce6834e2374711eba834386643a354565a84f2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 9 10:34:02 2014 -0500
+
+    config: add bug URL to AC_INIT
+    
+    Use same layout as libxcb.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit 758240ad77c545d9f9ea02e6d079a80e82038240
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Mon Aug 12 13:53:10 2013 +0200
+
+    Check submodules before running autoconf.
+    
+    Exit early with an informative message if the submodules are missing,
+    since they are needed.  Without this autoconf throws a bunch of
+    uninformative errors which does not point to the actual problem.
+    This was taken from util-keysyms.
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+    Reviewed-By: Arnaud Fontaine <arnau@debian.org>
+
+commit 3703b4d52d9af12d493ed358483017eff8ad838c
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Dec 11 12:08:54 2013 -0800
+
+    xcb_aux_parse_color should take const char *
+    
+    This elimiantes warnings when passing string constants
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 658d289f643769e3398470e9b85df16c3568e6f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 20 21:54:32 2013 -0700
+
+    atoms.c: #include <stdio.h> for vsnprintf case, not just vasprintf
+    
+    Both forms of v*printf() function need <stdio.h>, so include it
+    unconditionally.  Fixes https://bugs.freedesktop.org/show_bug.cgi?id=64807
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Arnaud Fontaine <arnau@debian.org>
+
+commit d5a1a62b48d0dc646ef2bcc2941b8d4d068a4d41
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit dce56879ce1d8e823e88706a6e85f4145cd91955
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 16 13:20:43 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit aa48ef789187a9a8bbad605c299ce1622cce1783
 Author: Arnaud Fontaine <arnau@debian.org>
 Date:   Wed May 30 21:03:46 2012 +0900

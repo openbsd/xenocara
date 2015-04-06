@@ -1,9 +1,12 @@
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* Rely on vasprintf (GNU extension) instead of vsnprintf if
    possible... */
-#ifdef HAVE_VASPRINTF
 #define _GNU_SOURCE
 #include <stdio.h>
-#endif
 
 #include <xcb/xcb.h>
 #include <stdlib.h>

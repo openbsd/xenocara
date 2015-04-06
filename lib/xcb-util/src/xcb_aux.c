@@ -29,6 +29,10 @@
  * prior written authorization from the authors.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -302,7 +306,7 @@ xcb_aux_change_keyboard_control (xcb_connection_t            *c,
    in which case load the components.  Otherwise, a lookup_color request
    will be needed, so return false. */
 int
-xcb_aux_parse_color(char *color_name,
+xcb_aux_parse_color(const char *color_name,
 		    uint16_t *red,  uint16_t *green,  uint16_t *blue)
 {
     int n, r, g, b, i;

@@ -1,3 +1,12 @@
+Release 0.4.0 (2014-10-15)
+==========================
+
+- Remove AM_MAINTAINER_MODE.
+- Use AC_CONFIG_HEADERS to create a config.h file.
+- Add missing COPYING file.
+- Remove the dependency on X11 Protocol.
+- #include <stdio.h> for vsnprintf case, not just vasprintf (#64807).
+
 Release 0.3.9 (2012-05-30)
 ==========================
 
