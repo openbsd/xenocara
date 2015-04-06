@@ -1,3 +1,66 @@
+commit ab0d28935987d48e9359023e82f9d56aa7e4bc95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 14 10:10:05 2015 -0700
+
+    libXvMC 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ac79f0132dfd268bc6e9ff2dcdea55e00b65a92
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 14 10:12:10 2013 -0800
+
+    Rename local err variable in XW_RSYM macro to avoid shadow warnings
+    
+    Clears many warnings of the form:
+    
+    XvMCWrapper.c: In function 'initW':
+    XvMCWrapper.c:362:5: warning: declaration of 'err' shadows a previous local [-Wshadow]
+    XvMCWrapper.c:267:11: warning: shadowed declaration is here [-Wshadow]
+    
+    due to variable declared in macro block sharing "err" name with a
+    variable declared in the function calling the macro.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4dd267a98790f4404b7607d9362d4346f55f49fb
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Wed Oct 24 02:07:56 2012 -0500
+
+    Fix linking with -Wl,--no-undefined on Linux
+    
+    libXvMCW uses dlopen and friends, therefore it must be linked against
+    libdl on systems where it exists as a separate library.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 62bc54e6995618b7134f5cbe3a4290e41a4cb44a
+Author: Michael Joost <mehl@michael-joost.de>
+Date:   Mon Nov 18 16:11:26 2013 +0100
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9a39e26871e1f8ddb7086a53aba0b66a6fa6c7a9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 22:39:18 2013 -0700
+
+    Require ANSI C89 pre-processor, drop pre-C89 token pasting support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 1fb06ecf88155452ece93ac309435106f9569d54
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jun 13 22:57:03 2013 -0700
