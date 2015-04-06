@@ -1,3 +1,9 @@
+Release 0.4.0 (2014-10-01)
+==========================
+
+- Duplicate keycodes are unnecessary.
+- Fix handling of error connections.
+
 Release 0.3.9 (2012-05-30)
 ==========================
 

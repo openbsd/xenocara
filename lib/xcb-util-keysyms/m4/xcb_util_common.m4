@@ -2,7 +2,7 @@
 # -----------------------------------------------------------------
 #
 # Defines default options for xcb-util libraries.  xorg/util/macros >=
-# 1.6.0 is  required for  cross-platform compiler  flags and  to build
+# 1.16.0 is  required for  cross-platform compiler  flags and  to build
 # library documentation.
 #
 AC_DEFUN([XCB_UTIL_COMMON], [
@@ -35,9 +35,9 @@ fi
 
 # Call macros from Xorg util-macros
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.6.0 or later before running autoconf/autogen])])
+          [m4_fatal([must install xorg-macros 1.16.0 or later before running autoconf/autogen])])
 
-XORG_MACROS_VERSION([1.6.0])
+XORG_MACROS_VERSION([1.16.0])
 XORG_DEFAULT_OPTIONS
 XORG_ENABLE_DEVEL_DOCS
 XORG_WITH_DOXYGEN

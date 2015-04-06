@@ -77,7 +77,7 @@ xcb_key_symbols_alloc (xcb_connection_t *c)
   xcb_keycode_t     min_keycode;
   xcb_keycode_t     max_keycode;
 
-  if (!c)
+  if (!c || xcb_connection_has_error(c))
     return NULL;
 
   syms = malloc (sizeof (xcb_key_symbols_t));
@@ -198,10 +198,13 @@ xcb_keysym_t xcb_key_symbols_get_keysym (xcb_key_symbols_t *syms,
   xcb_keycode_t max_keycode;
   int        per;
   
-  if (!syms)
+  if (!syms || xcb_connection_has_error(syms->c))
     return keysym_null;
   
   xcb_key_symbols_get_reply (syms, NULL);
+
+  if (!syms->u.reply)
+    return keysym_null;
   
   keysyms = xcb_get_keyboard_mapping_keysyms (syms->u.reply);
   min_keycode = xcb_get_setup (syms->c)->min_keycode;
@@ -245,14 +248,17 @@ xcb_key_symbols_get_keycode(xcb_key_symbols_t *syms,
   int j, nresult = 0;
   xcb_keycode_t i, min, max, *result = NULL, *result_np = NULL;
 
-  if(syms)
+  if(syms && !xcb_connection_has_error(syms->c))
   {
       xcb_key_symbols_get_reply (syms, NULL);
       min = xcb_get_setup(syms->c)->min_keycode;
       max = xcb_get_setup(syms->c)->max_keycode;
 
-      for(j = 0; j < syms->u.reply->keysyms_per_keycode; j++)
-          for(i = min; i && i <= max; i++)
+      if (!syms->u.reply)
+        return NULL;
+
+      for(i = min; i && i <= max; i++)
+          for(j = 0; j < syms->u.reply->keysyms_per_keycode; j++)
           {
               ks = xcb_key_symbols_get_keysym(syms, i, j);
               if(ks == keysym)
@@ -270,6 +276,7 @@ xcb_key_symbols_get_keycode(xcb_key_symbols_t *syms,
                   result = result_np;
                   result[nresult - 1] = i;
                   result[nresult] = XCB_NO_SYMBOL;
+                  break;
               }
           }
   }
@@ -297,7 +304,7 @@ int
 xcb_refresh_keyboard_mapping (xcb_key_symbols_t         *syms,
 			   xcb_mapping_notify_event_t *event)
 {
-  if (event->request == XCB_MAPPING_KEYBOARD && syms) {
+  if (event->request == XCB_MAPPING_KEYBOARD && syms && !xcb_connection_has_error(syms->c)) {
     if (syms->tag == TAG_VALUE) {
       xcb_keycode_t     min_keycode;
       xcb_keycode_t     max_keycode;

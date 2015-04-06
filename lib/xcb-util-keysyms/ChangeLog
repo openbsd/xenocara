@@ -1,3 +1,90 @@
+commit 0e51ee5570a6a80bdf98770b975dfe8a57f4eeb1
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Sep 24 20:03:48 2014 +0900
+
+    Release 0.4.0
+
+commit 79fc93047b97fc038a92b48dcd1ca0ec3896c9aa
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Oct 1 12:05:30 2014 +0900
+
+    Remove old/outdated documentation crufts.
+
+commit 03a23b71e44ca73baae1b2da8d6783ee193b82c8
+Author: Arnaud Fontaine <arnau@debian.org>
+Date:   Wed Sep 24 20:01:47 2014 +0900
+
+    Pick-up changes in m4 submodule as it's better to have all util repos at same m4 level.
+
+commit ae88512d7f142a50a75a48ff52320e5e1f3ad236
+Author: Uli Schlachter <psychon@znc.in>
+Date:   Sat Nov 16 12:33:40 2013 +0100
+
+    Fix handling of error connections
+    
+    When an xcb_connection_t goes into an error state, all operations on it will
+    fail. This means that after a call to xcb_key_symbols_get_reply(), syms->u.reply
+    would still be a NULL pointer and that xcb_get_setup() returns a NULL pointer.
+    
+    The only way for xcb_get_setup() to return NULL is for an error connection, but
+    xcb_get_keyboard_mapping_reply() could also fail for other reasons. So to fix
+    this, all functions need to check for error connections and if syms->u.reply is
+    not NULL.
+    
+    This was tested with the following C code:
+    
+      #include <xcb_keysyms.h>
+      #include <stdio.h>
+      #include <stdlib.h>
+    
+      int main()
+      {
+      	xcb_connection_t *c = xcb_connect(NULL, NULL);
+      	xcb_key_symbols_t *syms = xcb_key_symbols_alloc(c);
+      	/* The above sent a GetKeyboardMapping request. Let's now break the
+      	 * connection so that it cannot get the reply.
+      	 */
+      	uint32_t max = xcb_get_maximum_request_length(c);
+      	xcb_screen_t *s = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
+      	size_t len = (max << 2) * 2;
+      	void *p = malloc(len);
+    
+      	printf("Sending request of length %d*2=%d\n",
+      			xcb_get_maximum_request_length(c), len);
+      	xcb_change_property(c, XCB_PROP_MODE_REPLACE, s->root,
+      			XCB_ATOM_STRING, XCB_ATOM_STRING, 8, len, p);
+      	free(p);
+    
+      	if (!xcb_connection_has_error(c))
+      		puts("Connection did not break :(");
+    
+      	/* Crash? */
+      	free(xcb_key_symbols_get_keycode(syms, 0xff14));
+    
+      	return 0;
+      }
+    
+    Reference: https://awesome.naquadah.org/bugs/index.php?do=details&task_id=1195
+    Signed-off-by: Uli Schlachter <psychon@znc.in>
+
+commit 3d7b2ba8299cb2d0e2f5e58f61c1a60625f2d015
+Author: Bastien Dejean <nihilhill@gmail.com>
+Date:   Wed Jan 2 21:13:12 2013 +0100
+
+    Duplicate keycodes are unnecessary
+    
+    When multiple keysym matches occur on one keycode, we do not want to
+    return that keycode multiple times.
+    
+    Signed-off-by: Bastien Dejean <nihilhill@gmail.com>
+    Signed-off-by: Michael Stapelberg <michael+xcb@stapelberg.de>
+
+commit e527fdc914d4b4fa816ea9e563c6abf6505b39d3
+Author: Michael Stapelberg <michael@stapelberg.de>
+Date:   Wed Oct 10 09:09:38 2012 +0200
+
+    autogen.sh: verify that git submodules are initialized
+
 commit 12fc61fbbdf1ca2df25281a7d8e00f2dab75d1c2
 Author: Arnaud Fontaine <arnau@debian.org>
 Date:   Wed May 30 21:07:38 2012 +0900
