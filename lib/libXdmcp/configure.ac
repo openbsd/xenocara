@@ -22,23 +22,26 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXdmcp], [1.1.1],
+AC_INIT([libXdmcp], [1.1.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXdmcp])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+# Set common system defines for POSIX extensions, such as _GNU_SOURCE
+# Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
+# to avoid autoconf errors.
+AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
-# Require xorg-macros minimum of 1.12 for DocBook external references
+# Require xorg-macros minimum of 1.16 for unit testing with memory checks
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.12 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.12)
+          [m4_fatal([must install xorg-macros 1.16 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.16)
 XORG_DEFAULT_OPTIONS
 XORG_ENABLE_DOCS
 XORG_WITH_XMLTO(0.0.22)
@@ -53,6 +56,7 @@ AC_PROG_LN_S
 AC_SEARCH_LIBS([recvfrom],[socket])
 
 # Checks for library functions.
+AC_CHECK_LIB([bsd], [arc4random_buf])
 AC_CHECK_FUNCS([srand48 lrand48 arc4random_buf])
 
 # Obtain compiler/linker options for depedencies
@@ -71,7 +75,11 @@ AM_CONDITIONAL(HASXDMAUTH,test x$HASXDMAUTH = xyes)
 XORG_WITH_LINT
 XORG_LINT_LIBRARY([Xdmcp])
 
+#  --enable-unit-tests
+XORG_ENABLE_UNIT_TESTS([yes])
+
 AC_CONFIG_FILES([Makefile
 		doc/Makefile
+		test/Makefile
 		xdmcp.pc])
 AC_OUTPUT
