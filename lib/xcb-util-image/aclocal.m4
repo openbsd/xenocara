@@ -1286,7 +1286,7 @@ dnl DEALINGS IN THE SOFTWARE.
 # See the "minimum version" comment for each macro you use to see what
 # version you require.
 m4_defun([XORG_MACROS_VERSION],[
-m4_define([vers_have], [1.17.1])
+m4_define([vers_have], [1.19.0])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,
@@ -1336,6 +1336,7 @@ if test `${RAWCPP} < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
 	AC_MSG_RESULT([no])
 else
 	if test `${RAWCPP} -traditional < conftest.$ac_ext | grep -c 'preserve   \"'` -eq 1 ; then
+		TRADITIONALCPPFLAGS="-traditional"
 		RAWCPPFLAGS="${RAWCPPFLAGS} -traditional"
 		AC_MSG_RESULT([yes])
 	else
@@ -1344,6 +1345,7 @@ else
 fi
 rm -f conftest.$ac_ext
 AC_SUBST(RAWCPPFLAGS)
+AC_SUBST(TRADITIONALCPPFLAGS)
 ]) # XORG_PROG_RAWCPP
 
 # XORG_MANPAGE_SECTIONS()
@@ -1868,9 +1870,10 @@ AM_CONDITIONAL([HAVE_ASCIIDOC], [test "$have_asciidoc" = yes])
 ]) # XORG_WITH_ASCIIDOC
 
 # XORG_WITH_DOXYGEN([MIN-VERSION], [DEFAULT])
-# --------------------------------
+# -------------------------------------------
 # Minimum version: 1.5.0
 # Minimum version for optional DEFAULT argument: 1.11.0
+# Minimum version for optional DOT checking: 1.18.0
 #
 # Documentation tools are not always available on all platforms and sometimes
 # not at the appropriate level. This macro enables a module to test for the
@@ -1890,6 +1893,7 @@ AM_CONDITIONAL([HAVE_ASCIIDOC], [test "$have_asciidoc" = yes])
 #
 AC_DEFUN([XORG_WITH_DOXYGEN],[
 AC_ARG_VAR([DOXYGEN], [Path to doxygen command])
+AC_ARG_VAR([DOT], [Path to the dot graphics utility])
 m4_define([_defopt], m4_default([$2], [auto]))
 AC_ARG_WITH(doxygen,
 	AS_HELP_STRING([--with-doxygen],
@@ -1933,6 +1937,20 @@ m4_ifval([$1],
             AC_MSG_ERROR([doxygen version $doxygen_version found, but $1 needed])
         fi])
 fi])
+
+dnl Check for DOT if we have doxygen. The caller decides if it is mandatory
+dnl HAVE_DOT is a variable that can be used in your doxygen.in config file:
+dnl 	HAVE_DOT = @HAVE_DOT@
+HAVE_DOT=no
+if test "x$have_doxygen" = "xyes"; then
+  AC_PATH_PROG([DOT], [dot])
+    if test "x$DOT" != "x"; then
+      HAVE_DOT=yes
+    fi
+fi
+
+AC_SUBST([HAVE_DOT])
+AM_CONDITIONAL([HAVE_DOT], [test "$HAVE_DOT" = "yes"])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "$have_doxygen" = yes])
 ]) # XORG_WITH_DOXYGEN
 
@@ -2114,6 +2132,29 @@ m4_ifval([$1],
 fi])
 AM_CONDITIONAL([HAVE_FOP], [test "$have_fop" = yes])
 ]) # XORG_WITH_FOP
+
+# XORG_WITH_M4([MIN-VERSION])
+# ---------------------------
+# Minimum version: 1.19.0
+#
+# This macro attempts to locate an m4 macro processor which supports
+# -I option and is only useful for modules relying on M4 in order to
+# expand macros in source code files.
+#
+# Interface to module:
+# M4:	 	returns the path of the m4 program found
+#		returns the path set by the user in the environment
+#
+AC_DEFUN([XORG_WITH_M4], [
+AC_CACHE_CHECK([for m4 that supports -I option], [ac_cv_path_M4],
+   [AC_PATH_PROGS_FEATURE_CHECK([M4], [m4 gm4],
+       [[$ac_path_M4 -I. /dev/null > /dev/null 2>&1 && \
+         ac_cv_path_M4=$ac_path_M4 ac_path_M4_found=:]],
+   [AC_MSG_ERROR([could not find m4 that supports -I option])],
+   [$PATH:/usr/gnu/bin])])
+
+AC_SUBST([M4], [$ac_cv_path_M4])
+]) # XORG_WITH_M4
 
 # XORG_WITH_PS2PDF([DEFAULT])
 # ----------------
@@ -2569,7 +2610,8 @@ AC_ARG_ENABLE(malloc0returnsnull,
 
 AC_MSG_CHECKING([whether malloc(0) returns NULL])
 if test "x$MALLOC_ZERO_RETURNS_NULL" = xauto; then
-	AC_RUN_IFELSE([AC_LANG_PROGRAM([
+AC_CACHE_VAL([xorg_cv_malloc0_returns_null],
+	[AC_RUN_IFELSE([AC_LANG_PROGRAM([
 #include <stdlib.h>
 ],[
     char *m0, *r0, *c0, *p;
@@ -2579,9 +2621,9 @@ if test "x$MALLOC_ZERO_RETURNS_NULL" = xauto; then
     c0 = calloc(0,10);
     exit((m0 == 0 || r0 == 0 || c0 == 0) ? 0 : 1);
 ])],
-		[MALLOC_ZERO_RETURNS_NULL=yes],
-		[MALLOC_ZERO_RETURNS_NULL=no],
-		[MALLOC_ZERO_RETURNS_NULL=yes])
+		[xorg_cv_malloc0_returns_null=yes],
+		[xorg_cv_malloc0_returns_null=no])])
+MALLOC_ZERO_RETURNS_NULL=$xorg_cv_malloc0_returns_null
 fi
 AC_MSG_RESULT([$MALLOC_ZERO_RETURNS_NULL])
 
@@ -2870,7 +2912,7 @@ AC_LANG_CASE(
 		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wmissing-prototypes])
 		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wnested-externs])
 		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wbad-function-cast])
-		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wold-style-definition])
+		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wold-style-definition], [-fd])
 		XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wdeclaration-after-statement])
 	]
 )
@@ -2879,16 +2921,17 @@ AC_LANG_CASE(
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wunused])
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wuninitialized])
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wshadow])
-XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wcast-qual])
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wmissing-noreturn])
 XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wmissing-format-attribute])
+# XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wredundant-decls])
+XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wlogical-op])
 
 # These are currently disabled because they are noisy.  They will be enabled
 # in the future once the codebase is sufficiently modernized to silence
 # them.  For now, I don't want them to drown out the other warnings.
-# XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wlogical-op])
 # XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wparentheses])
 # XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wcast-align])
+# XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wcast-qual])
 
 # Turn some warnings into errors, so we don't accidently get successful builds
 # when there are problems that should be fixed.

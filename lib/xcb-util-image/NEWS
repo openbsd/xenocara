@@ -1,3 +1,17 @@
+Release 0.4.0 (2014-10-15)
+==========================
+
+- Corrected return value documentation for xcb_image_shm_put().
+- Added additional format tests for XY_PIXMAP bit planes.
+- Changed test_xcb_image to work with XY_PIXMAP with nontrivial planemask.
+- Fixed get_image to handle xy format with nontrivial plane_mask.
+- Fixed endianness bug in xy pixmap getimage.
+- Use AC_CONFIG_HEADERS to create a config.h file.
+- Add missing COPYING file.
+- Using X11 Protocol headers, so XPROTO_CFLAGS is required.
+- Move test cases into their own directory.
+- Fix compilation when NDEBUG is defined.
+
 Release 0.3.9 (2012-05-30)
 ==========================
 

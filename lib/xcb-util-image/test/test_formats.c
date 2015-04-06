@@ -26,6 +26,10 @@
  * prior written authorization from the authors.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -105,14 +109,17 @@ typedef struct {
 	const char *name;
 	xcb_image_format_t format;
 	uint8_t depth;
+	uint32_t plane_mask;
 } format_t;
 
 static format_t formats[] = {
-	{"z-pixmap", XCB_IMAGE_FORMAT_Z_PIXMAP, 24},
-	{"xy-bitmap", XCB_IMAGE_FORMAT_XY_BITMAP, 1},
-	{"xy-pixmap-1", XCB_IMAGE_FORMAT_XY_PIXMAP, 1},
-	{"xy-pixmap-24", XCB_IMAGE_FORMAT_XY_PIXMAP, 24},
-	{0, 0, 0}
+	{"z-pixmap", XCB_IMAGE_FORMAT_Z_PIXMAP, 24, 0},
+	{"xy-bitmap", XCB_IMAGE_FORMAT_XY_BITMAP, 1, 0},
+	{"xy-pixmap-1", XCB_IMAGE_FORMAT_XY_PIXMAP, 1, 0},
+	{"xy-pixmap-24", XCB_IMAGE_FORMAT_XY_PIXMAP, 24, 0},
+	{"xy-pixmap-24-1", XCB_IMAGE_FORMAT_XY_PIXMAP, 24, 1},
+	{"xy-pixmap-24-12", XCB_IMAGE_FORMAT_XY_PIXMAP, 24, 0xaaaaaaaa},
+	{0, 0, 0, 0}
 };
 
 static format_t *
@@ -158,6 +165,8 @@ int main(int argc, char **argv)
 	depth = format->depth;
 
 	im = create_image(c, depth, format->format);
+        if (format->format == XCB_IMAGE_FORMAT_XY_PIXMAP && format->plane_mask != 0 && depth > 1)
+                im->plane_mask = format->plane_mask;
 	d = create_window(c, root);
 	if(format->format == XCB_IMAGE_FORMAT_XY_PIXMAP && depth == 1)
 	{

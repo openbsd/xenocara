@@ -501,7 +501,7 @@ xcb_image_subimage(xcb_image_t *  image,
  * @param src_height The height of the subimage, in pixels.
  * @param send_event Indicates whether or not a completion event
  * should occur when the image write is complete.
- * @return 1 is no problems occurs.
+ * @return a pointer to the source image if no problem occurs, otherwise 0.
  *
  * This function combines an image in memory with a shape of the
  * specified drawable. The section of the image defined by the @p x, @p y,
@@ -513,8 +513,6 @@ xcb_image_subimage(xcb_image_t *  image,
  * bits. For XYPixmap and ZPixmap, the depth must match the depth of
  * the drawable, or a ``BadMatch'' error results.
  *
- * If a problem occurs, the function returns @c 0. Otherwise, it
- * returns @c 1.
  * @ingroup xcb__image_t
  */
 xcb_image_t *

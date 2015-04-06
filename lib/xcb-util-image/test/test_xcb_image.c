@@ -28,16 +28,21 @@
 
 /* gcc -g -O2 -Wall `pkg-config --cflags --libs xcb` -o test xcb_image.o test_xcb_image.c */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <xcb/xcb.h>
 
 #include <xcb/xcb_aux.h>
 #include "xcb_image.h"
 
-#define W_W 64
-#define W_H 64
+#define W_W 128
+#define W_H 128
 
 static void
 reflect_window (xcb_connection_t *c,
@@ -55,13 +60,17 @@ reflect_window (xcb_connection_t *c,
   int32_t     y;
   int         format;
 
-  format = XCB_IMAGE_FORMAT_Z_PIXMAP;
+  format = XCB_IMAGE_FORMAT_XY_PIXMAP;
 
   printf ("get_image %d %d\n", width, height);
   image = xcb_image_get (c, win,
 			 0, 0, width, height,
-			 ~0,
+			 0xaaaaaaaa,
 			 format);
+  if (!image) {
+      printf("xcb_image_get failed: exiting\n");
+      exit(1);
+  }
 
   printf ("Create image summary:\n");
   printf (" * format................: %d\n", image->format);
@@ -71,6 +80,7 @@ reflect_window (xcb_connection_t *c,
   printf (" * depth.................: %d\n", image->depth);
   printf (" * bytes/line............: %d\n", image->stride);
   printf (" * bits/pixel (or unit)..: %d\n", image->bpp);
+  printf (" * plane_mask............: %#x\n", image->plane_mask);
 
   printf ("bpl %d %d\n", image->stride, image->height);
 
@@ -159,6 +169,11 @@ main (int argc, char *argv[])
 		   screen->root_visual,      /* visual              */
 		   mask, valwin);                 /* masks, not used yet */
 
+  /* From the tutorial: set the window title. */
+  xcb_change_property (c, XCB_PROP_MODE_REPLACE, win,
+                       XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
+                       strlen ("drew"), "drew");
+
   /* Map the window on the screen */
   xcb_map_window (c, win);
 
@@ -195,6 +210,11 @@ main (int argc, char *argv[])
 		   XCB_WINDOW_CLASS_INPUT_OUTPUT,/* class               */
 		   screen->root_visual,      /* visual              */
 		   mask, valwin);                 /* masks, not used yet */
+  /* From the tutorial: set the window title. */
+  xcb_change_property (c, XCB_PROP_MODE_REPLACE, new_win,
+                       XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
+                       strlen ("got"), "got");
+
 
   
 

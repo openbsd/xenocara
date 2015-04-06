@@ -24,6 +24,10 @@
  * authorization from the authors.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -58,6 +62,9 @@ main (int argc, char *argv[])
   int              screen_nbr;
   xcb_generic_event_t *e;
   uint8_t format;
+  xcb_image_t *img;
+  xcb_shm_query_version_reply_t *rep;
+  xcb_shm_segment_info_t shminfo;
   
   /* Open the connexion to the X server and get the first screen */
   c = xcb_connect (NULL, &screen_nbr);
@@ -81,10 +88,6 @@ main (int argc, char *argv[])
 
   /* Shm test */
   printf ("shm test begin\n");
-  xcb_image_t *img = 0;
-  xcb_shm_query_version_reply_t *rep;
-  xcb_shm_segment_info_t shminfo;
-
   rep = xcb_shm_query_version_reply (c,
 				 xcb_shm_query_version (c),
 				 NULL);
