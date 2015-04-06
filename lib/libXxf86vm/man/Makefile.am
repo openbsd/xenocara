@@ -32,6 +32,7 @@ XF86VM_shadows =			\
 	XF86VidModeQueryVersion		\
 	XF86VidModeGetModeLine		\
 	XF86VidModeGetAllModeLines	\
+	XF86VidModeAddModeLine	        \
 	XF86VidModeDeleteModeLine	\
 	XF86VidModeModModeLine		\
 	XF86VidModeSwitchMode		\

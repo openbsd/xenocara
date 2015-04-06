@@ -5,94 +5,104 @@
 .ie t \fB\^\\$1\^\fR\\$2
 .el \fI\^\\$1\^\fP\\$2
 ..
+.de EX
+.RS
+.nf
+.sp 1
+.ft CW
+..
+.de EE
+.ft
+.sp 1
+.fi
+.RE
+..
 .TH XF86VIDMODE __libmansuffix__ __vendorversion__
 .SH NAME
-XF86VidModeQueryExtension, XF86VidModeQueryVersion, XF86VidModeSetClientVersion, XF86VidModeGetModeLine, XF86VidModeGetAllModeLines, XF86VidModeDeleteModeLine, XF86VidModeModModeLine, XF86VidModeValidateModeLine, XF86VidModeSwitchMode, XF86VidModeSwitchToMode, XF86VidModeLockModeSwitch, XF86VidModeGetMonitor, XF86VidModeGetViewPort, XF86VidModeSetViewPort, XF86VidModeGetDotClocks, XF86VidModeGetGamma, XF86VidModeSetGamma, XF86VidModeGetGammaRamp, XF86VidModeSetGammaRamp, XF86VidModeGetGammaRampSize, XF86VidModeGetPermissions \- Extension library for the XFree86-VidMode X extension
-.SH SYNTAX
+XF86VidModeQueryExtension, XF86VidModeQueryVersion, XF86VidModeSetClientVersion, XF86VidModeGetModeLine, XF86VidModeGetAllModeLines, XF86VidModeAddModeLine, XF86VidModeDeleteModeLine, XF86VidModeModModeLine, XF86VidModeValidateModeLine, XF86VidModeSwitchMode, XF86VidModeSwitchToMode, XF86VidModeLockModeSwitch, XF86VidModeGetMonitor, XF86VidModeGetViewPort, XF86VidModeSetViewPort, XF86VidModeGetDotClocks, XF86VidModeGetGamma, XF86VidModeSetGamma, XF86VidModeGetGammaRamp, XF86VidModeSetGammaRamp, XF86VidModeGetGammaRampSize, XF86VidModeGetPermissions \- Extension library for the XFree86-VidMode X extension
+.SH SYNOPSIS
 .nf
-.LP
+
 \&#include <X11/extensions/xf86vmode.h>
-.LP
+
 Bool XF86VidModeQueryExtension(
     Display *\fIdisplay\fP\^,
     int *\fIevent_base_return\fP\^,
     int *\fIerror_base_return\fP\^);
-.LP
+
 Bool XF86VidModeQueryVersion(
     Display *\fIdisplay\fP\^,
     int *\fImajor_version_return\fP\^,
     int *\fIminor_version_return\fP\^);
-.LP
+
 Bool XF86VidModeSetClientVersion(
     Display *\fIdisplay\fP\^);
-.LP
+
 Bool XF86VidModeGetModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int *\fIdotclock_return\fP\^,
     XF86VidModeModeLine *\fImodeline\fP\^);
-.LP
+
 Bool XF86VidModeGetAllModeLines(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int *\fImodecount_return\fP\^,
     XF86VidModeModeInfo ***\fImodesinfo\fP\^);
-.ig
-.LP
+
 Bool XF86VidModeAddModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeInfo *\fImodeline\fP\,
     XF86VidModeModeInfo *\fIaftermode\fP\^);
-..
-.LP
+
 Bool XF86VidModeDeleteModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeInfo *\fImodeline\fP\^);
-.LP
+
 Bool XF86VidModeModModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeLine *\fImodeline\fP\^);
-.LP
+
 Status XF86VidModeValidateModeLine(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeLine *\fImodeline\fP\^);
-.LP
+
 Bool XF86VidModeSwitchMode(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int \fIzoom\fP\^);
-.LP
+
 Bool XF86VidModeSwitchToMode(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeModeInfo *\fImodeline\fP\^);
-.LP
+
 Bool XF86VidModeLockModeSwitch(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int \fIlock\fP\^);
-.LP
+
 Bool XF86VidModeGetMonitor(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeMonitor *\fImonitor\fP\^);
-.LP
+
 Bool XF86VidModeGetViewPort(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int *\fIx_return\fP\^,
     int *\fIy_return\fP\^);
-.LP
+
 Bool XF86VidModeSetViewPort(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     int \fIx\fP\^,
     int \fIy\fP\^);
-.LP
+
 XF86VidModeGetDotClocks(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
@@ -100,17 +110,17 @@ XF86VidModeGetDotClocks(
     int *\fInumber of clocks return\fP\^,
     int *\fImax dot clock return\fP\^,
     int **\fIclocks return\fP\^);
-.LP
+
 XF86VidModeGetGamma(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeGamma *\fIGamma\fP\^);
-.LP
+
 XF86VidModeSetGamma(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
     XF86VidModeGamma *\fIGamma\fP\^);
-.LP
+
 XF86VidModeGetGammaRamp(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
@@ -118,7 +128,7 @@ XF86VidModeGetGammaRamp(
     unsigned short *\fIred array\fP\^,
     unsigned short *\fIgreen array\fP\^,
     unsigned short *\fIblue array\fP\^);
-.LP
+
 XF86VidModeSetGammaRamp(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
@@ -126,7 +136,7 @@ XF86VidModeSetGammaRamp(
     unsigned short *\fIred array\fP\^,
     unsigned short *\fIgreen array\fP\^,
     unsigned short *\fIblue array\fP\^);
-.LP
+
 XF86VidModeGetGammaRampSize(
     Display *\fIdisplay\fP\^,
     int \fIscreen\fP\^,
@@ -156,11 +166,9 @@ the next mode, otherwise switch to the previous mode.
 Indicates that mode switching should be locked, if non-zero.
 .IP \fImodeline\fP 2i
 Specifies or returns the timing values for a video mode.
-.ig
 .IP \fIaftermode\fP 2i
 Specifies the timing values for the video mode after which the
 new mode will added.
-..
 .IP \fImodesinfo\fP 2i
 Returns the timing values and dotclocks for all of the available
 video modes.
@@ -175,72 +183,73 @@ Specifies the desired Y location for the viewport.
 .IP \fIy_return\fP 2i
 Returns the current Y location of the viewport.
 .SH STRUCTURES
-.nf
-.ta 2.25i 3.5i
 \fIVideo Mode Settings:\fP
+.EX
 typedef struct {
-    unsigned short	hdisplay;	/\(** Number of display pixels horizontally */
-    unsigned short	hsyncstart;	/\(** Horizontal sync start */
-    unsigned short	hsyncend;	/\(** Horizontal sync end */
-    unsigned short	htotal;	/\(** Total horizontal pixels */
-    unsigned short	vdisplay;	/\(** Number of display pixels vertically */
-    unsigned short	vsyncstart;	/\(** Vertical sync start */
-    unsigned short	vsyncend;	/\(** Vertical sync start */
-    unsigned short	vtotal;	/\(** Total vertical pixels */
-    unsigned int	flags;	/\(** Mode flags */
-    int	privsize;	/\(** Size of private */
-    INT32	*private;	/\(** Server privates */
+    unsigned short      hdisplay;       /\(** Number of display pixels horizontally */
+    unsigned short      hsyncstart;     /\(** Horizontal sync start */
+    unsigned short      hsyncend;       /\(** Horizontal sync end */
+    unsigned short      htotal;         /\(** Total horizontal pixels */
+    unsigned short      vdisplay;       /\(** Number of display pixels vertically */
+    unsigned short      vsyncstart;     /\(** Vertical sync start */
+    unsigned short      vsyncend;       /\(** Vertical sync start */
+    unsigned short      vtotal;         /\(** Total vertical pixels */
+    unsigned int        flags;          /\(** Mode flags */
+    int privsize;                       /\(** Size of private */
+    INT32       *private;               /\(** Server privates */
 } XF86VidModeModeLine;
-.sp
+
 typedef struct {
-    unsigned int	dotclock;	/\(** Pixel clock */
-    unsigned short	hdisplay;	/\(** Number of display pixels horizontally */
-    unsigned short	hsyncstart;	/\(** Horizontal sync start */
-    unsigned short	hsyncend;	/\(** Horizontal sync end */
-    unsigned short	htotal;	/\(** Total horizontal pixels */
-    unsigned short	vdisplay;	/\(** Number of display pixels vertically */
-    unsigned short	vsyncstart;	/\(** Vertical sync start */
-    unsigned short	vsyncend;	/\(** Vertical sync start */
-    unsigned short	vtotal;	/\(** Total vertical pixels */
-    unsigned int	flags;	/\(** Mode flags */
-    int	privsize;	/\(** Size of private */
-    INT32	*private;	/\(** Server privates */
+    unsigned int        dotclock;       /\(** Pixel clock */
+    unsigned short      hdisplay;       /\(** Number of display pixels horizontally */
+    unsigned short      hsyncstart;     /\(** Horizontal sync start */
+    unsigned short      hsyncend;       /\(** Horizontal sync end */
+    unsigned short      htotal;         /\(** Total horizontal pixels */
+    unsigned short      vdisplay;       /\(** Number of display pixels vertically */
+    unsigned short      vsyncstart;     /\(** Vertical sync start */
+    unsigned short      vsyncend;       /\(** Vertical sync start */
+    unsigned short      vtotal;         /\(** Total vertical pixels */
+    unsigned int        flags;          /\(** Mode flags */
+    int privsize;                       /\(** Size of private */
+    INT32       *private;               /\(** Server privates */
 } XF86VidModeModeInfo;
+.EE
 .LP
 \fIMonitor information:\fP
+.EX
 typedef struct {
-    char*	vendor;	/\(** Name of manufacturer */
-    char*	model;	/\(** Model name */
-    float	EMPTY;	/\(** unused, for backward compatibility */
-    unsigned char	nhsync;	/\(** Number of horiz sync ranges */
-    XF86VidModeSyncRange*	hsync;	/\(** Horizontal sync ranges */
-    unsigned char	nvsync;	/\(** Number of vert sync ranges */
-    XF86VidModeSyncRange*	vsync;	/\(** Vertical sync ranges */
+    char*       vendor;                /\(** Name of manufacturer */
+    char*       model;                 /\(** Model name */
+    float       EMPTY;                 /\(** unused, for backward compatibility */
+    unsigned char nhsync;              /\(** Number of horiz sync ranges */
+    XF86VidModeSyncRange* hsync;       /\(** Horizontal sync ranges */
+    unsigned char nvsync;              /\(** Number of vert sync ranges */
+    XF86VidModeSyncRange* vsync;       /\(** Vertical sync ranges */
 } XF86VidModeMonitor;
-.sp
+
 typedef struct {
-    float	hi;	/\(** Top of range */
-    float	lo;	/\(** Bottom of range */
+    float       hi;     /\(** Top of range */
+    float       lo;     /\(** Bottom of range */
 } XF86VidModeSyncRange;
-.LP
+
 typedef struct {
-    int type;			/\(** of event */
-    unsigned long serial;	/\(** # of last request processed by server */
-    Bool send_event;		/\(** true if this came from a SendEvent req */
-    Display *display;		/\(** Display the event was read from */
-    Window root;		/\(** root window of event screen */
-    int state;			/\(** What happened */
-    int kind;			/\(** What happened */
-    Bool forced;		/\(** extents of new region */
-    Time time;			/\(** event timestamp */
+    int type;                   /\(** of event */
+    unsigned long serial;       /\(** # of last request processed by server */
+    Bool send_event;            /\(** true if this came from a SendEvent req */
+    Display *display;           /\(** Display the event was read from */
+    Window root;                /\(** root window of event screen */
+    int state;                  /\(** What happened */
+    int kind;                   /\(** What happened */
+    Bool forced;                /\(** extents of new region */
+    Time time;                  /\(** event timestamp */
 } XF86VidModeNotifyEvent;
-.LP
+
 typedef struct {
-    float red;			/\(** Red Gamma value */
-    float green;		/\(** Green Gamma value */
-    float blue;			/\(** Blue Gamma value */
+    float red;                  /\(** Red Gamma value */
+    float green;                /\(** Green Gamma value */
+    float blue;                 /\(** Blue Gamma value */
 } XF86VidModeGamma;
-.fi
+.EE
 .SH DESCRIPTION
 These functions provide an interface to the server extension
 \fIXFree86-VidModeExtension\fP
@@ -282,7 +291,6 @@ function can be used to change the settings of the current video mode
 provided the requested settings are valid (e.g. they don't exceed the
 capabilities of the monitor).
 .PP
-.ig
 To add a mode to the list of available modes, the
 .ZN XF86VidModeAddModeLine
 function can be used.
@@ -302,7 +310,6 @@ If the
 parameter is zero, the mode will be added
 after the current mode.
 .PP
-..
 Modes can be deleted with the
 .ZN XF86VidModeDeleteModeLine
 function.  The specified mode must match an existing mode.

@@ -41,17 +41,6 @@ from Kaleb S. KEITHLEY.
 #include <X11/extensions/extutil.h>
 #include <limits.h>
 
-#ifndef HAVE__XEATDATAWORDS
-static inline void _XEatDataWords(Display *dpy, unsigned long n)
-{
-# ifndef LONG64
-    if (n >= (ULONG_MAX >> 2))
-        _XIOError(dpy);
-# endif
-    _XEatData (dpy, n << 2);
-}
-#endif
-
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -215,10 +204,9 @@ XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock,
 		       XF86VidModeModeLine* modeline)
 {
     XExtDisplayInfo *info = find_display (dpy);
-    xXF86VidModeGetModeLineReply rep;
-    xXF86OldVidModeGetModeLineReply oldrep;
     xXF86VidModeGetModeLineReq *req;
     int majorVersion, minorVersion;
+    CARD32 remaining_len;
     Bool result = True;
 
     XF86VidModeCheckExtension (dpy, info, False);
@@ -230,13 +218,17 @@ XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock,
     req->xf86vidmodeReqType = X_XF86VidModeGetModeLine;
     req->screen = screen;
 
-    if (majorVersion < 2) {
+    if (_X_UNLIKELY(majorVersion < 2)) {
+	xXF86OldVidModeGetModeLineReply oldrep;
+
 	if (!_XReply(dpy, (xReply *)&oldrep,
             (SIZEOF(xXF86OldVidModeGetModeLineReply) - SIZEOF(xReply)) >> 2, xFalse)) {
 	    UnlockDisplay(dpy);
 	    SyncHandle();
 	    return False;
 	}
+	remaining_len = oldrep.length -
+	    ((SIZEOF(xXF86OldVidModeGetModeLineReply) - SIZEOF(xReply)) >> 2);
 	*dotclock = oldrep.dotclock;
 	modeline->hdisplay   = oldrep.hdisplay;
 	modeline->hsyncstart = oldrep.hsyncstart;
@@ -250,12 +242,16 @@ XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock,
 	modeline->flags      = oldrep.flags;
 	modeline->privsize   = oldrep.privsize;
     } else {
+	xXF86VidModeGetModeLineReply rep;
+
 	if (!_XReply(dpy, (xReply *)&rep,
             (SIZEOF(xXF86VidModeGetModeLineReply) - SIZEOF(xReply)) >> 2, xFalse)) {
 	    UnlockDisplay(dpy);
 	    SyncHandle();
 	    return False;
 	}
+	remaining_len = rep.length -
+	    ((SIZEOF(xXF86VidModeGetModeLineReply) - SIZEOF(xReply)) >> 2);
 	*dotclock = rep.dotclock;
 	modeline->hdisplay   = rep.hdisplay;
 	modeline->hsyncstart = rep.hsyncstart;
@@ -276,8 +272,7 @@ XF86VidModeGetModeLine(Display* dpy, int screen, int* dotclock,
 	else
 	    modeline->private = NULL;
 	if (modeline->private == NULL) {
-	    _XEatDataWords(dpy, rep.length -
-		((SIZEOF(xXF86VidModeGetModeLineReply) - SIZEOF(xReply)) >> 2));
+	    _XEatDataWords(dpy, remaining_len);
 	    result = False;
 	} else
 	    _XRead(dpy, (char*)modeline->private, modeline->privsize * sizeof(INT32));
@@ -299,7 +294,7 @@ XF86VidModeGetAllModeLines(Display* dpy, int screen, int* modecount,
     XF86VidModeModeInfo *mdinfptr, **modelines;
     xXF86VidModeModeInfo xmdline;
     xXF86OldVidModeModeInfo oldxmdline;
-    int i;
+    unsigned int i;
     int majorVersion, minorVersion;
     Bool protocolBug = False;
 
@@ -351,7 +346,7 @@ XF86VidModeGetAllModeLines(Display* dpy, int screen, int* modecount,
 
     for (i = 0; i < rep.modecount; i++) {
         modelines[i] = mdinfptr++;
-	if (majorVersion < 2) {
+	if (_X_UNLIKELY(majorVersion < 2)) {
             _XRead(dpy, (char*)&oldxmdline, sizeof(xXF86OldVidModeModeInfo));
 	    modelines[i]->dotclock   = oldxmdline.dotclock;
 	    modelines[i]->hdisplay   = oldxmdline.hdisplay;
@@ -422,7 +417,6 @@ XF86VidModeGetAllModeLines(Display* dpy, int screen, int* modecount,
 /*
  * GetReq replacement for use with VidMode protocols earlier than 2.0
  */
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define GetOldReq(name, oldname, req) \
         WORD64ALIGN\
 	if ((dpy->bufptr + SIZEOF(x##oldname##Req)) > dpy->bufmax)\
@@ -432,18 +426,6 @@ XF86VidModeGetAllModeLines(Display* dpy, int screen, int* modecount,
 	req->length = (SIZEOF(x##oldname##Req))>>2;\
 	dpy->bufptr += SIZEOF(x##oldname##Req);\
 	dpy->request++
-
-#else  /* non-ANSI C uses empty comment instead of "##" for token concatenation */
-#define GetOldReq(name, oldname, req) \
-        WORD64ALIGN\
-	if ((dpy->bufptr + SIZEOF(x/**/oldname/**/Req)) > dpy->bufmax)\
-		_XFlush(dpy);\
-	req = (x/**/oldname/**/Req *)(dpy->last_req = dpy->bufptr);\
-	req->reqType = X_/**/name;\
-	req->length = (SIZEOF(x/**/oldname/**/Req))>>2;\
-	dpy->bufptr += SIZEOF(x/**/oldname/**/Req);\
-	dpy->request++
-#endif
 
 Bool
 XF86VidModeAddModeLine(Display *dpy, int screen,
@@ -459,7 +441,7 @@ XF86VidModeAddModeLine(Display *dpy, int screen,
     XF86VidModeQueryVersion(dpy, &majorVersion, &minorVersion);
 
     LockDisplay(dpy);
-    if (majorVersion < 2) {
+    if (_X_UNLIKELY(majorVersion < 2)) {
 	GetOldReq(XF86VidModeAddModeLine, XF86OldVidModeAddModeLine, oldreq);
 	oldreq->reqType = info->codes->major_opcode;
 	oldreq->xf86vidmodeReqType = X_XF86VidModeAddModeLine;
@@ -569,7 +551,7 @@ XF86VidModeDeleteModeLine(Display *dpy, int screen,
     XF86VidModeQueryVersion(dpy, &majorVersion, &minorVersion);
 
     LockDisplay(dpy);
-    if (majorVersion < 2) {
+    if (_X_UNLIKELY(majorVersion < 2)) {
 	GetOldReq(XF86VidModeDeleteModeLine, XF86OldVidModeDeleteModeLine, oldreq);
 	oldreq->reqType = info->codes->major_opcode;
 	oldreq->xf86vidmodeReqType = X_XF86VidModeDeleteModeLine;
@@ -630,7 +612,7 @@ XF86VidModeModModeLine(Display *dpy, int screen, XF86VidModeModeLine* modeline)
     XF86VidModeQueryVersion(dpy, &majorVersion, &minorVersion);
 
     LockDisplay(dpy);
-    if (majorVersion < 2) {
+    if (_X_UNLIKELY(majorVersion < 2)) {
 	GetOldReq(XF86VidModeModModeLine, XF86OldVidModeModModeLine, oldreq);
 	oldreq->reqType = info->codes->major_opcode;
 	oldreq->xf86vidmodeReqType = X_XF86VidModeModModeLine;
@@ -692,7 +674,7 @@ XF86VidModeValidateModeLine(Display *dpy, int screen,
 
     LockDisplay(dpy);
 
-    if (majorVersion < 2) {
+    if (_X_UNLIKELY(majorVersion < 2)) {
 	GetOldReq(XF86VidModeValidateModeLine, XF86OldVidModeValidateModeLine, oldreq);
 	oldreq->reqType = info->codes->major_opcode;
 	oldreq->xf86vidmodeReqType = X_XF86VidModeValidateModeLine;
@@ -784,7 +766,7 @@ XF86VidModeSwitchToMode(Display* dpy, int screen, XF86VidModeModeInfo* modeline)
      */
 
     XF86VidModeQueryVersion(dpy, &majorVersion, &minorVersion);
-    if (majorVersion == 0 && minorVersion < 8) {
+    if (_X_UNLIKELY(majorVersion == 0 && minorVersion < 8)) {
 	protocolBug = True;
 #ifdef DEBUG
 	fprintf(stderr, "XF86VidModeSwitchToMode: Warning: Xserver is"
@@ -794,7 +776,7 @@ XF86VidModeSwitchToMode(Display* dpy, int screen, XF86VidModeModeInfo* modeline)
     }
 
     LockDisplay(dpy);
-    if (majorVersion < 2) {
+    if (_X_UNLIKELY(majorVersion < 2)) {
 	GetOldReq(XF86VidModeSwitchToMode, XF86OldVidModeSwitchToMode, oldreq);
 	oldreq->reqType = info->codes->major_opcode;
 	oldreq->xf86vidmodeReqType = X_XF86VidModeSwitchToMode;
@@ -1029,7 +1011,7 @@ XF86VidModeGetDotClocks(Display* dpy, int screen, int *flagsPtr,
     XExtDisplayInfo *info = find_display (dpy);
     xXF86VidModeGetDotClocksReply rep;
     xXF86VidModeGetDotClocksReq *req;
-    int i, *dotclocks;
+    int *dotclocks;
     CARD32 dotclk;
     Bool result = True;
 
@@ -1058,6 +1040,8 @@ XF86VidModeGetDotClocks(Display* dpy, int screen, int *flagsPtr,
         result = False;
     }
     else {
+	unsigned int i;
+
 	for (i = 0; i < rep.clocks; i++) {
 	    _XRead(dpy, (char*)&dotclk, 4);
 	    dotclocks[i] = dotclk;
