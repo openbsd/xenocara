@@ -674,7 +674,7 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", fingerHigh);
     pars->tap_time = xf86SetIntOption(opts, "MaxTapTime", 180);
     pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", tapMove);
-    pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
+    pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 100);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->clickpad = xf86SetBoolOption(opts, "ClickPad", pars->clickpad);       /* Probed */
     if (pars->clickpad)
@@ -2049,13 +2049,10 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             SetTapState(priv, TS_SINGLETAP, now);
         break;
     case TS_2B:
-        if (touch) {
+        if (touch)
             SetTapState(priv, TS_3, now);
-        }
-        else if (is_timeout) {
-            SetTapState(priv, TS_START, now);
-            priv->tap_button_state = TBS_BUTTON_DOWN_UP;
-        }
+        else if (is_timeout)
+            SetTapState(priv, TS_SINGLETAP, now);
         break;
     case TS_SINGLETAP:
         if (touch)
@@ -3209,20 +3206,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
                (hw->down ? 0x10 : 0) |
                (hw->multi[2] ? 0x20 : 0) | (hw->multi[3] ? 0x40 : 0));
 
-    if (priv->tap_button > 0) {
-        int tap_mask = 1 << (priv->tap_button - 1);
-
-        if (priv->tap_button_state == TBS_BUTTON_DOWN_UP) {
-            if (tap_mask != (priv->lastButtons & tap_mask)) {
-                xf86PostButtonEvent(pInfo->dev, FALSE, priv->tap_button, TRUE,
-                                    0, 0);
-                priv->lastButtons |= tap_mask;
-            }
-            priv->tap_button_state = TBS_BUTTON_UP;
-        }
-        if (priv->tap_button_state == TBS_BUTTON_DOWN)
-            buttons |= tap_mask;
-    }
+    if (priv->tap_button > 0 && priv->tap_button_state == TBS_BUTTON_DOWN)
+        buttons |= 1 << (priv->tap_button - 1);
 
     /* Post events */
     if (finger >= FS_TOUCHED && (dx || dy) && !ignore_motion)

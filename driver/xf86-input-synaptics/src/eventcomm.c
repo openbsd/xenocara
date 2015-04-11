@@ -320,6 +320,15 @@ event_query_is_touchpad(struct libevdev *evdev, BOOL test_grab)
         libevdev_has_event_code(evdev, EV_ABS, BTN_TOOL_PEN)) /* Don't match wacom tablets */
         goto unwind;
 
+    if (libevdev_has_event_code(evdev, EV_ABS, ABS_MT_SLOT)) {
+        if (libevdev_get_num_slots(evdev) == -1)
+            goto unwind; /* Ignore fake MT devices */
+
+        if (!libevdev_has_event_code(evdev, EV_ABS, ABS_MT_POSITION_X) ||
+            !libevdev_has_event_code(evdev, EV_ABS, ABS_MT_POSITION_Y))
+            goto unwind;
+    }
+
     ret = TRUE;
 
  unwind:
@@ -437,6 +446,11 @@ event_query_axis_ranges(InputInfoPtr pInfo)
     event_get_abs(proto_data->evdev, ABS_Y, &priv->miny, &priv->maxy,
                   &priv->synpara.hyst_y, &priv->resy);
 
+    if (priv->minx == priv->maxx || priv->miny == priv->maxy) {
+        xf86IDrvMsg(pInfo, X_ERROR, "Kernel bug: min == max on ABS_X/Y\n");
+        return;
+    }
+
     priv->has_pressure = libevdev_has_event_code(proto_data->evdev, EV_ABS, ABS_PRESSURE);
     priv->has_width = libevdev_has_event_code(proto_data->evdev, EV_ABS, ABS_TOOL_WIDTH);
 
@@ -458,6 +472,11 @@ event_query_axis_ranges(InputInfoPtr pInfo)
                       &priv->maxx, &priv->synpara.hyst_x, &priv->resx);
         event_get_abs(proto_data->evdev, ABS_MT_POSITION_Y, &priv->miny,
                       &priv->maxy, &priv->synpara.hyst_y, &priv->resy);
+
+        if (priv->minx == priv->maxx || priv->miny == priv->maxy) {
+            xf86IDrvMsg(pInfo, X_ERROR, "Kernel bug: min == max on ABS_MT_POSITION_X/Y\n");
+            return;
+        }
 
         proto_data->st_to_mt_offset[0] = priv->minx - st_minx;
         proto_data->st_to_mt_scale[0] =

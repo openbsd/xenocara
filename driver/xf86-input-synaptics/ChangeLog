@@ -1,3 +1,70 @@
+commit 6f8d4bac14ac8f3fd2714f0a8a9e37c5136a4013
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 27 11:26:55 2015 +1000
+
+    synaptics 1.8.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 15caf2b53407379f8e677d48a022f4b46b97d83a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 24 15:41:39 2015 +1000
+
+    eventcomm: ignore fake and broken MT devices
+    
+    An MT device without X/Y is not a touchpad. And neither are fake MT devices.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    (cherry picked from commit fc9f490a2c87e6f87b0f483cd6bf5f526dddbb8d)
+
+commit ef8daaf696584f7c1d3e9f192de18b5b9f923bdc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 23 11:38:15 2015 +1000
+
+    eventcomm: prevent possibly division by zero
+    
+    This came up as a kernel bug, but it's valid to create uinput devices with a
+    min == max range for x/y. Technically valid, but effectively useless, so catch
+    it, complain and hobble on along.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    (cherry picked from commit 30866b97be6939b895327b930154ef758eed7ff8)
+
+commit 90c6d7fc60f3db1bd9db1c7702062fcaef3b3352
+Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Date:   Thu Jan 15 22:04:17 2015 +0100
+
+    Add a delay between the second button down-up event of double taps
+    
+    Some applications ignore the second tap of double taps because of the
+    lack of a delay between the button down and button up events.
+    
+    Prevent this by replacing the transition from TS_2B to TS_START with a
+    transition from TS_2B to TS_SINGLETAP that emits only a button down
+    event. The button up event will be emitted when transitioning from
+    TS_SINGLETAP to TS_START.
+    
+    In addition, decrease the default value of MaxDoubleTapTime from 180 ms
+    to 100 ms in order to make double taps faster.
+    
+    Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 37d34f0356cc556dd8a49ec5d1ed64d49417a9b2)
+
+commit 649b77f0ce617fd1ec073b281636e304e80b56c0
+Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Date:   Thu Jan 15 22:04:16 2015 +0100
+
+    Update machine state diagram
+    
+    The diagram didn't entirely reflect the current state of the code.
+    
+    Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit a357647d3fb918b94efbda98138fb0240a949ef2)
+
 commit d50c4bab8ae2836a0f38b29a5d22be2e950e4d08
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Sep 18 07:40:13 2014 +1000

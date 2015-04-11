@@ -137,7 +137,6 @@ enum TapState {
 enum TapButtonState {
     TBS_BUTTON_UP,              /* "Virtual tap button" is up */
     TBS_BUTTON_DOWN,            /* "Virtual tap button" is down */
-    TBS_BUTTON_DOWN_UP          /* Send button down event + set up state */
 };
 
 enum TouchpadModel {
