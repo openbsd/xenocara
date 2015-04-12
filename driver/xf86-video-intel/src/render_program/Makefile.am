@@ -174,6 +174,14 @@ INTEL_G7B =				\
 	exa_wm_yuv_rgb.g7b		\
 	$(NULL)
 
+INTEL_G8A =				\
+	exa_wm_src_affine.g8a 		\
+	exa_wm_src_sample_argb.g8a 	\
+	exa_wm_src_sample_planar.g8a 	\
+	exa_wm_write.g8a 		\
+	exa_wm_yuv_rgb.g8a		\
+	$(NULL)
+
 INTEL_G8B =				\
 	exa_wm_src_affine.g8b 		\
 	exa_wm_src_sample_argb.g8b 	\
@@ -194,6 +202,7 @@ EXTRA_DIST = 		\
 	$(INTEL_G6I)	\
 	$(INTEL_G7A)	\
 	$(INTEL_G7B)	\
+	$(INTEL_G8A)	\
 	$(INTEL_G8B)
 
 if HAVE_GEN4ASM
@@ -210,7 +219,7 @@ SUFFIXES = .g4a .g4b .g5a .g5b .g6a .g6b .g7a .g7b .g8b
 
 .g7a.g7b:
 	$(AM_V_GEN)m4 -I$(srcdir) -s $< > $*.g7m && @INTEL_GEN4ASM@ -g 7 -o $@ $*.g7m && rm $*.g7m
-.g7a.g8b:
+.g8a.g8b:
 	$(AM_V_GEN)m4 -I$(srcdir) -s $< > $*.g8m && @INTEL_GEN4ASM@ -g 8 -o $@ $*.g8m && rm $*.g8m
 
 $(INTEL_G4B): $(INTEL_GEN4ASM) $(INTEL_G4I)

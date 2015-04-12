@@ -48,24 +48,24 @@ static void clear(struct test_display *dpy, struct test_target *tt)
 
 static void ref_tests(struct test *t, int reps, int sets, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 
 	printf("Testing area fills (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
-			int x = rand() % (2*real.width) - real.width;
-			int y = rand() % (2*real.height) - real.height;
-			int w = rand() % real.width;
-			int h = rand() % real.height;
+			int x = rand() % (2*out.width) - out.width;
+			int y = rand() % (2*out.height) - out.height;
+			int w = rand() % out.width;
+			int h = rand() % out.height;
 			int op = ops[rand() % sizeof(ops)];
 			int s_red = rand() % 0xff;
 			int s_green = rand() % 0xff;
@@ -76,7 +76,7 @@ static void ref_tests(struct test *t, int reps, int sets, enum target target)
 			int m_blue = rand() % 0xff;
 			int m_alpha = rand() % 0xff;
 
-			fill_rect(&t->real, real.picture,
+			fill_rect(&t->out, out.picture,
 				  op, x, y, w, h,
 				  s_red, s_green, s_blue, s_alpha,
 				  m_red, m_green, m_blue, m_alpha);
@@ -87,15 +87,15 @@ static void ref_tests(struct test *t, int reps, int sets, enum target target)
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 

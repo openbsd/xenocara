@@ -192,7 +192,7 @@ decode_mi(struct kgem *kgem, uint32_t offset)
 }
 
 static int
-decode_2d(struct kgem *kgem, uint32_t offset)
+__decode_2d(struct kgem *kgem, uint32_t offset)
 {
 	static const struct {
 		uint32_t opcode;
@@ -369,9 +369,199 @@ decode_2d(struct kgem *kgem, uint32_t offset)
 	return 1;
 }
 
+static int
+__decode_2d_gen8(struct kgem *kgem, uint32_t offset)
+{
+	static const struct {
+		uint32_t opcode;
+		int min_len;
+		int max_len;
+		const char *name;
+	} opcodes[] = {
+		{ 0x43, 8, 8, "SRC_COPY_BLT" },
+		{ 0x01, 8, 8, "XY_SETUP_BLT" },
+		{ 0x11, 10, 10, "XY_SETUP_MONO_PATTERN_SL_BLT" },
+		{ 0x03, 3, 3, "XY_SETUP_CLIP_BLT" },
+		{ 0x24, 2, 2, "XY_PIXEL_BLT" },
+		{ 0x25, 3, 3, "XY_SCANLINES_BLT" },
+		{ 0x26, 4, 4, "Y_TEXT_BLT" },
+		{ 0x31, 5, 134, "XY_TEXT_IMMEDIATE_BLT" },
+		{ 0x50, 7, 7, "XY_COLOR_BLT" },
+		{ 0x51, 6, 6, "XY_PAT_BLT" },
+		{ 0x76, 8, 8, "XY_PAT_CHROMA_BLT" },
+		{ 0x72, 7, 135, "XY_PAT_BLT_IMMEDIATE" },
+		{ 0x77, 9, 137, "XY_PAT_CHROMA_BLT_IMMEDIATE" },
+		{ 0x52, 9, 9, "XY_MONO_PAT_BLT" },
+		{ 0x59, 7, 7, "XY_MONO_PAT_FIXED_BLT" },
+		{ 0x53, 8, 8, "XY_SRC_COPY_BLT" },
+		{ 0x54, 8, 8, "XY_MONO_SRC_COPY_BLT" },
+		{ 0x71, 9, 137, "XY_MONO_SRC_COPY_IMMEDIATE_BLT" },
+		{ 0x55, 9, 9, "XY_FULL_BLT" },
+		{ 0x55, 9, 137, "XY_FULL_IMMEDIATE_PATTERN_BLT" },
+		{ 0x56, 9, 9, "XY_FULL_MONO_SRC_BLT" },
+		{ 0x75, 10, 138, "XY_FULL_MONO_SRC_IMMEDIATE_PATTERN_BLT" },
+		{ 0x57, 12, 12, "XY_FULL_MONO_PATTERN_BLT" },
+		{ 0x58, 12, 12, "XY_FULL_MONO_PATTERN_MONO_SRC_BLT" },
+	};
+
+	unsigned int op, len;
+	const char *format = NULL;
+	uint32_t *data = kgem->batch + offset;
+	struct drm_i915_gem_relocation_entry *reloc;
+
+	/* Special case the two most common ops that we detail in full */
+	switch ((data[0] & 0x1fc00000) >> 22) {
+	case 0x50:
+		kgem_debug_print(data, offset, 0,
+			  "XY_COLOR_BLT (rgb %sabled, alpha %sabled, dst tile %d)\n",
+			  (data[0] & (1 << 20)) ? "en" : "dis",
+			  (data[0] & (1 << 21)) ? "en" : "dis",
+			  (data[0] >> 11) & 1);
+
+		len = (data[0] & 0x000000ff) + 2;
+		assert(len == 7);
+
+		switch ((data[1] >> 24) & 0x3) {
+		case 0:
+			format="8";
+			break;
+		case 1:
+			format="565";
+			break;
+		case 2:
+			format="1555";
+			break;
+		case 3:
+			format="8888";
+			break;
+		}
+
+		kgem_debug_print(data, offset, 1, "format %s, rop %x, pitch %d, "
+			  "clipping %sabled\n", format,
+			  (data[1] >> 16) & 0xff,
+			  (short)(data[1] & 0xffff),
+			  data[1] & (1 << 30) ? "en" : "dis");
+		kgem_debug_print(data, offset, 2, "(%d,%d)\n",
+			  data[2] & 0xffff, data[2] >> 16);
+		kgem_debug_print(data, offset, 3, "(%d,%d)\n",
+			  data[3] & 0xffff, data[3] >> 16);
+		reloc = kgem_debug_get_reloc_entry(kgem, offset+4);
+		kgem_debug_print(data, offset, 4, "dst offset 0x%016llx [handle=%d, delta=%d, read=%x, write=%x (fenced? %d, tiling? %d)]\n",
+				(long long)*(uint64_t *)&data[4],
+				reloc->target_handle, reloc->delta,
+				reloc->read_domains, reloc->write_domain,
+				kgem_debug_handle_is_fenced(kgem, reloc->target_handle),
+				kgem_debug_handle_tiling(kgem, reloc->target_handle));
+		kgem_debug_print(data, offset, 6, "color\n");
+		return len;
+
+	case 0x53:
+		kgem_debug_print(data, offset, 0,
+			  "XY_SRC_COPY_BLT (rgb %sabled, alpha %sabled, "
+			  "src tile %d, dst tile %d)\n",
+			  (data[0] & (1 << 20)) ? "en" : "dis",
+			  (data[0] & (1 << 21)) ? "en" : "dis",
+			  (data[0] >> 15) & 1,
+			  (data[0] >> 11) & 1);
+
+		len = (data[0] & 0x000000ff) + 2;
+		assert(len == 10);
+
+		switch ((data[1] >> 24) & 0x3) {
+		case 0:
+			format="8";
+			break;
+		case 1:
+			format="565";
+			break;
+		case 2:
+			format="1555";
+			break;
+		case 3:
+			format="8888";
+			break;
+		}
+
+		kgem_debug_print(data, offset, 1, "format %s, rop %x, dst pitch %d, "
+				 "clipping %sabled\n", format,
+				 (data[1] >> 16) & 0xff,
+				 (short)(data[1] & 0xffff),
+				 data[1] & (1 << 30) ? "en" : "dis");
+		kgem_debug_print(data, offset, 2, "dst (%d,%d)\n",
+				 data[2] & 0xffff, data[2] >> 16);
+		kgem_debug_print(data, offset, 3, "dst (%d,%d)\n",
+				 data[3] & 0xffff, data[3] >> 16);
+		reloc = kgem_debug_get_reloc_entry(kgem, offset+4);
+		assert(reloc);
+		kgem_debug_print(data, offset, 4, "dst offset 0x%016llx [handle=%d, delta=%d, read=%x, write=%x, (fenced? %d, tiling? %d)]\n",
+				(long long)*(uint64_t *)&data[4],
+				reloc->target_handle, reloc->delta,
+				reloc->read_domains, reloc->write_domain,
+				kgem_debug_handle_is_fenced(kgem, reloc->target_handle),
+				kgem_debug_handle_tiling(kgem, reloc->target_handle));
+
+		kgem_debug_print(data, offset, 6, "src (%d,%d)\n",
+				 data[6] & 0xffff, data[6] >> 16);
+		kgem_debug_print(data, offset, 7, "src pitch %d\n",
+				 (short)(data[7] & 0xffff));
+		reloc = kgem_debug_get_reloc_entry(kgem, offset+8);
+		assert(reloc);
+		kgem_debug_print(data, offset, 8, "src offset 0x%016llx [handle=%d, delta=%d, read=%x, write=%x (fenced? %d, tiling? %d)]\n",
+				(long long)*(uint64_t *)&data[8],
+				reloc->target_handle, reloc->delta,
+				reloc->read_domains, reloc->write_domain,
+				kgem_debug_handle_is_fenced(kgem, reloc->target_handle),
+				kgem_debug_handle_tiling(kgem, reloc->target_handle));
+
+		return len;
+	}
+
+	for (op = 0; op < ARRAY_SIZE(opcodes); op++) {
+		if ((data[0] & 0x1fc00000) >> 22 == opcodes[op].opcode) {
+			unsigned int i;
+
+			len = 1;
+			kgem_debug_print(data, offset, 0, "%s\n", opcodes[op].name);
+			if (opcodes[op].max_len > 1) {
+				len = (data[0] & 0x000000ff) + 2;
+				assert(len >= opcodes[op].min_len &&
+				       len <= opcodes[op].max_len);
+			}
+
+			for (i = 1; i < len; i++)
+				kgem_debug_print(data, offset, i, "dword %d\n", i);
+
+			return len;
+		}
+	}
+
+	kgem_debug_print(data, offset, 0, "2D UNKNOWN\n");
+	assert(0);
+	return 1;
+}
+
+static int (*decode_2d(int gen))(struct kgem*, uint32_t)
+{
+	if (gen >= 0100)
+		return __decode_2d_gen8;
+	else
+		return __decode_2d;
+}
+
+static int kgem_nop_decode_3d(struct kgem *kgem, uint32_t offset)
+{
+    uint32_t *data = kgem->batch + offset;
+    return (data[0] & 0xf) + 2;
+}
+
+static void kgem_nop_finish_state(struct kgem *kgem)
+{
+}
+
 static int (*decode_3d(int gen))(struct kgem*, uint32_t)
 {
 	if (gen >= 0100) {
+		return kgem_nop_decode_3d;
 	} else if (gen >= 070) {
 		return kgem_gen7_decode_3d;
 	} else if (gen >= 060) {
@@ -391,6 +581,7 @@ static int (*decode_3d(int gen))(struct kgem*, uint32_t)
 static void (*finish_state(int gen))(struct kgem*)
 {
 	if (gen >= 0100) {
+		return kgem_nop_finish_state;
 	} else if (gen >= 070) {
 		return kgem_gen7_finish_state;
 	} else if (gen >= 060) {
@@ -412,7 +603,7 @@ void __kgem_batch_debug(struct kgem *kgem, uint32_t nbatch)
 	int (*const decode[])(struct kgem *, uint32_t) = {
 		decode_mi,
 		decode_nop,
-		decode_2d,
+		decode_2d(kgem->gen),
 		decode_3d(kgem->gen),
 	};
 	uint32_t offset = 0;

@@ -116,32 +116,35 @@ DOTS__SIMPLE(FbBits * dst,
 	     FbBits and, FbBits xor)
 {
 	uint32_t *pts = (uint32_t *) ptsOrig;
-	BITS *bits = (BITS *) dst, *p;
+	BITS *bits = (BITS *) dst;
 	BITS bxor = (BITS) xor;
-	FbStride bitsStride = dstStride * (sizeof(FbBits) / sizeof(BITS));
+	unsigned bitsStride = dstStride * (sizeof(FbBits) / sizeof(BITS));
 
 	bits += bitsStride * (yorg + yoff) + (xorg + xoff);
+#if __x86_64__
 	while (npt >= 2) {
 		union {
 			uint32_t pt32[2];
 			uint64_t pt64;
 		} pt;
+
 		pt.pt64 = *(uint64_t *)pts;
-
-		p = bits + intToY(pt.pt32[0]) * bitsStride + intToX(pt.pt32[0]);
-		WRITE(p, bxor);
-
-		p = bits + intToY(pt.pt32[1]) * bitsStride + intToX(pt.pt32[1]);
-		WRITE(p, bxor);
+		bits[intToY(pt.pt32[0]) * bitsStride + intToX(pt.pt32[0])] = bxor;
+		bits[intToY(pt.pt32[1]) * bitsStride + intToX(pt.pt32[1])] = bxor;
 
 		pts += 2;
 		npt -= 2;
 	}
 	if (npt) {
 		uint32_t pt = *pts;
-		p = bits + intToY(pt) * bitsStride + intToX(pt);
-		WRITE(p, bxor);
+		bits[intToY(pt) * bitsStride + intToX(pt)] = bxor;
 	}
+#else
+	while (npt--) {
+		uint32_t pt = *pts++;
+		bits[intToY(pt) * bitsStride + intToX(pt)] = bxor;
+	}
+#endif
 }
 
 #undef RROP

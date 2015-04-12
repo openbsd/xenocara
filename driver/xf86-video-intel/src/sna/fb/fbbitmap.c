@@ -178,11 +178,11 @@ fbBitmapToRegion(PixmapPtr pixmap)
 	} else
 		region->extents.x1 = region->extents.x2 = 0;
 
-	DBG(("%s: region extents=(%d, %d), (%d, %d) x %ld\n",
+	DBG(("%s: region extents=(%d, %d), (%d, %d) x %d\n",
 	     __FUNCTION__,
 	     region->extents.x1, region->extents.y1,
 	     region->extents.x2, region->extents.y2,
-	     (long)RegionNumRects(region)));
+	     region_num_rects(region)));
 
 	return region;
 }

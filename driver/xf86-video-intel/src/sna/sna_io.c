@@ -117,8 +117,9 @@ read_boxes_inplace__cpu(struct kgem *kgem,
 	if (sigtrap_get())
 		return false;
 
+	DBG(("%s x %d\n", __FUNCTION__, n));
+
 	if (bo->tiling == I915_TILING_X) {
-		assert(kgem->memcpy_from_tiled_x);
 		do {
 			memcpy_from_tiled_x(kgem, src, dst, bpp, src_pitch, dst_pitch,
 					    box->x1, box->y1,
@@ -211,10 +212,13 @@ static bool download_inplace(struct kgem *kgem,
 	if (FORCE_INPLACE)
 		return FORCE_INPLACE > 0;
 
+	if (cpu)
+		return true;
+
 	if (kgem->can_blt_cpu && kgem->max_cpu_size)
 		return false;
 
-	return !__kgem_bo_is_busy(kgem, bo) || cpu;
+	return !__kgem_bo_is_busy(kgem, bo);
 }
 
 void sna_read_boxes(struct sna *sna, PixmapPtr dst, struct kgem_bo *src_bo,
@@ -254,7 +258,7 @@ void sna_read_boxes(struct sna *sna, PixmapPtr dst, struct kgem_bo *src_bo,
 	 * this path.
 	 */
 
-	if (download_inplace(kgem, dst, src_bo, box ,nbox)) {
+	if (download_inplace(kgem, dst, src_bo, box, nbox)) {
 fallback:
 		read_boxes_inplace(kgem, dst, src_bo, box, nbox);
 		return;
@@ -286,18 +290,17 @@ fallback:
 	/* Try to avoid switching rings... */
 	if (!can_blt || kgem->ring == KGEM_RENDER ||
 	    upload_too_large(sna, extents.x2 - extents.x1, extents.y2 - extents.y1)) {
-		PixmapRec tmp;
+		DrawableRec tmp;
 
-		tmp.drawable.width  = extents.x2 - extents.x1;
-		tmp.drawable.height = extents.y2 - extents.y1;
-		tmp.drawable.depth  = dst->drawable.depth;
-		tmp.drawable.bitsPerPixel = dst->drawable.bitsPerPixel;
-		tmp.devPrivate.ptr = NULL;
+		tmp.width  = extents.x2 - extents.x1;
+		tmp.height = extents.y2 - extents.y1;
+		tmp.depth  = dst->drawable.depth;
+		tmp.bitsPerPixel = dst->drawable.bitsPerPixel;
 
-		assert(tmp.drawable.width);
-		assert(tmp.drawable.height);
+		assert(tmp.width);
+		assert(tmp.height);
 
-		if (must_tile(sna, tmp.drawable.width, tmp.drawable.height)) {
+		if (must_tile(sna, tmp.width, tmp.height)) {
 			BoxRec tile, stack[64], *clipped, *c;
 			int step;
 
@@ -329,8 +332,8 @@ fallback:
 						x2 = extents.x2;
 					tile.x2 = x2;
 
-					tmp.drawable.width  = tile.x2 - tile.x1;
-					tmp.drawable.height = tile.y2 - tile.y1;
+					tmp.width  = tile.x2 - tile.x1;
+					tmp.height = tile.y2 - tile.y1;
 
 					c = clipped;
 					for (n = 0; n < nbox; n++) {
@@ -350,9 +353,9 @@ fallback:
 						continue;
 
 					dst_bo = kgem_create_buffer_2d(kgem,
-								       tmp.drawable.width,
-								       tmp.drawable.height,
-								       tmp.drawable.bitsPerPixel,
+								       tmp.width,
+								       tmp.height,
+								       tmp.bitsPerPixel,
 								       KGEM_BUFFER_LAST,
 								       &ptr);
 					if (!dst_bo) {
@@ -362,7 +365,7 @@ fallback:
 					}
 
 					if (!sna->render.copy_boxes(sna, GXcopy,
-								    dst, src_bo, 0, 0,
+								    &dst->drawable, src_bo, 0, 0,
 								    &tmp, dst_bo, -tile.x1, -tile.y1,
 								    clipped, c-clipped, COPY_LAST)) {
 						kgem_bo_destroy(&sna->kgem, dst_bo);
@@ -376,7 +379,7 @@ fallback:
 
 					if (sigtrap_get() == 0) {
 						while (c-- != clipped) {
-							memcpy_blt(ptr, dst->devPrivate.ptr, tmp.drawable.bitsPerPixel,
+							memcpy_blt(ptr, dst->devPrivate.ptr, tmp.bitsPerPixel,
 								   dst_bo->pitch, dst->devKind,
 								   c->x1 - tile.x1,
 								   c->y1 - tile.y1,
@@ -395,16 +398,16 @@ fallback:
 				free(clipped);
 		} else {
 			dst_bo = kgem_create_buffer_2d(kgem,
-						       tmp.drawable.width,
-						       tmp.drawable.height,
-						       tmp.drawable.bitsPerPixel,
+						       tmp.width,
+						       tmp.height,
+						       tmp.bitsPerPixel,
 						       KGEM_BUFFER_LAST,
 						       &ptr);
 			if (!dst_bo)
 				goto fallback;
 
 			if (!sna->render.copy_boxes(sna, GXcopy,
-						    dst, src_bo, 0, 0,
+						    &dst->drawable, src_bo, 0, 0,
 						    &tmp, dst_bo, -extents.x1, -extents.y1,
 						    box, nbox, COPY_LAST)) {
 				kgem_bo_destroy(&sna->kgem, dst_bo);
@@ -416,7 +419,7 @@ fallback:
 
 			if (sigtrap_get() == 0) {
 				for (n = 0; n < nbox; n++) {
-					memcpy_blt(ptr, dst->devPrivate.ptr, tmp.drawable.bitsPerPixel,
+					memcpy_blt(ptr, dst->devPrivate.ptr, tmp.bitsPerPixel,
 						   dst_bo->pitch, dst->devKind,
 						   box[n].x1 - extents.x1,
 						   box[n].y1 - extents.y1,
@@ -636,11 +639,16 @@ fallback:
 
 static bool upload_inplace__tiled(struct kgem *kgem, struct kgem_bo *bo)
 {
-	if (!kgem->memcpy_to_tiled_x)
+	DBG(("%s: tiling=%d\n", __FUNCTION__, bo->tiling));
+	switch (bo->tiling) {
+	case I915_TILING_Y:
 		return false;
-
-	if (bo->tiling != I915_TILING_X)
-		return false;
+	case I915_TILING_X:
+		if (!kgem->memcpy_to_tiled_x)
+			return false;
+	default:
+		break;
+	}
 
 	return kgem_bo_can_map__cpu(kgem, bo, true);
 }
@@ -654,7 +662,7 @@ write_boxes_inplace__tiled(struct kgem *kgem,
 	uint8_t *dst;
 
 	assert(kgem_bo_can_map__cpu(kgem, bo, true));
-	assert(bo->tiling == I915_TILING_X);
+	assert(bo->tiling != I915_TILING_Y);
 
 	dst = kgem_bo_map__cpu(kgem, bo);
 	if (dst == NULL)
@@ -665,13 +673,23 @@ write_boxes_inplace__tiled(struct kgem *kgem,
 	if (sigtrap_get())
 		return false;
 
-	do {
-		memcpy_to_tiled_x(kgem, src, dst, bpp, stride, bo->pitch,
-				  box->x1 + src_dx, box->y1 + src_dy,
-				  box->x1 + dst_dx, box->y1 + dst_dy,
-				  box->x2 - box->x1, box->y2 - box->y1);
-		box++;
-	} while (--n);
+	if (bo->tiling) {
+		do {
+			memcpy_to_tiled_x(kgem, src, dst, bpp, stride, bo->pitch,
+					  box->x1 + src_dx, box->y1 + src_dy,
+					  box->x1 + dst_dx, box->y1 + dst_dy,
+					  box->x2 - box->x1, box->y2 - box->y1);
+			box++;
+		} while (--n);
+	} else {
+		do {
+			memcpy_blt(src, dst, bpp, stride, bo->pitch,
+				   box->x1 + src_dx, box->y1 + src_dy,
+				   box->x1 + dst_dx, box->y1 + dst_dy,
+				   box->x2 - box->x1, box->y2 - box->y1);
+			box++;
+		} while (--n);
+	}
 
 	sigtrap_put();
 	return true;
@@ -822,23 +840,22 @@ bool sna_write_boxes(struct sna *sna, PixmapPtr dst,
 	/* Try to avoid switching rings... */
 	if (!can_blt || kgem->ring == KGEM_RENDER ||
 	    upload_too_large(sna, extents.x2 - extents.x1, extents.y2 - extents.y1)) {
-		PixmapRec tmp;
+		DrawableRec tmp;
 
-		tmp.drawable.width  = extents.x2 - extents.x1;
-		tmp.drawable.height = extents.y2 - extents.y1;
-		tmp.drawable.depth  = dst->drawable.depth;
-		tmp.drawable.bitsPerPixel = dst->drawable.bitsPerPixel;
-		tmp.devPrivate.ptr = NULL;
+		tmp.width  = extents.x2 - extents.x1;
+		tmp.height = extents.y2 - extents.y1;
+		tmp.depth  = dst->drawable.depth;
+		tmp.bitsPerPixel = dst->drawable.bitsPerPixel;
 
-		assert(tmp.drawable.width);
-		assert(tmp.drawable.height);
+		assert(tmp.width);
+		assert(tmp.height);
 
 		DBG(("%s: upload (%d, %d)x(%d, %d), max %dx%d\n",
 		     __FUNCTION__,
 		     extents.x1, extents.y1,
-		     tmp.drawable.width, tmp.drawable.height,
+		     tmp.width, tmp.height,
 		     sna->render.max_3d_size, sna->render.max_3d_size));
-		if (must_tile(sna, tmp.drawable.width, tmp.drawable.height)) {
+		if (must_tile(sna, tmp.width, tmp.height)) {
 			BoxRec tile, stack[64], *clipped;
 			int cpp, step;
 
@@ -875,13 +892,13 @@ tile:
 						x2 = extents.x2;
 					tile.x2 = x2;
 
-					tmp.drawable.width  = tile.x2 - tile.x1;
-					tmp.drawable.height = tile.y2 - tile.y1;
+					tmp.width  = tile.x2 - tile.x1;
+					tmp.height = tile.y2 - tile.y1;
 
 					src_bo = kgem_create_buffer_2d(kgem,
-								       tmp.drawable.width,
-								       tmp.drawable.height,
-								       tmp.drawable.bitsPerPixel,
+								       tmp.width,
+								       tmp.height,
+								       tmp.bitsPerPixel,
 								       KGEM_BUFFER_WRITE_INPLACE,
 								       &ptr);
 					if (!src_bo) {
@@ -904,7 +921,7 @@ tile:
 							     src_dx, src_dy,
 							     c->x1 - tile.x1,
 							     c->y1 - tile.y1));
-							memcpy_blt(src, ptr, tmp.drawable.bitsPerPixel,
+							memcpy_blt(src, ptr, tmp.bitsPerPixel,
 								   stride, src_bo->pitch,
 								   c->x1 + src_dx,
 								   c->y1 + src_dy,
@@ -918,7 +935,7 @@ tile:
 						if (c != clipped)
 							n = sna->render.copy_boxes(sna, GXcopy,
 										   &tmp, src_bo, -tile.x1, -tile.y1,
-										   dst, dst_bo, dst_dx, dst_dy,
+										   &dst->drawable, dst_bo, dst_dx, dst_dy,
 										   clipped, c - clipped, 0);
 						else
 							n = 1;
@@ -940,9 +957,9 @@ tile:
 				free(clipped);
 		} else {
 			src_bo = kgem_create_buffer_2d(kgem,
-						       tmp.drawable.width,
-						       tmp.drawable.height,
-						       tmp.drawable.bitsPerPixel,
+						       tmp.width,
+						       tmp.height,
+						       tmp.bitsPerPixel,
 						       KGEM_BUFFER_WRITE_INPLACE,
 						       &ptr);
 			if (!src_bo)
@@ -957,7 +974,7 @@ tile:
 					     src_dx, src_dy,
 					     box[n].x1 - extents.x1,
 					     box[n].y1 - extents.y1));
-					memcpy_blt(src, ptr, tmp.drawable.bitsPerPixel,
+					memcpy_blt(src, ptr, tmp.bitsPerPixel,
 						   stride, src_bo->pitch,
 						   box[n].x1 + src_dx,
 						   box[n].y1 + src_dy,
@@ -969,7 +986,7 @@ tile:
 
 				n = sna->render.copy_boxes(sna, GXcopy,
 							   &tmp, src_bo, -extents.x1, -extents.y1,
-							   dst, dst_bo, dst_dx, dst_dy,
+							   &dst->drawable, dst_bo, dst_dx, dst_dy,
 							   box, nbox, 0);
 				sigtrap_put();
 			} else
@@ -1325,23 +1342,22 @@ bool sna_write_boxes__xor(struct sna *sna, PixmapPtr dst,
 	/* Try to avoid switching rings... */
 	if (!can_blt || kgem->ring == KGEM_RENDER ||
 	    upload_too_large(sna, extents.x2 - extents.x1, extents.y2 - extents.y1)) {
-		PixmapRec tmp;
+		DrawableRec tmp;
 
-		tmp.drawable.width  = extents.x2 - extents.x1;
-		tmp.drawable.height = extents.y2 - extents.y1;
-		tmp.drawable.depth  = dst->drawable.depth;
-		tmp.drawable.bitsPerPixel = dst->drawable.bitsPerPixel;
-		tmp.devPrivate.ptr = NULL;
+		tmp.width  = extents.x2 - extents.x1;
+		tmp.height = extents.y2 - extents.y1;
+		tmp.depth  = dst->drawable.depth;
+		tmp.bitsPerPixel = dst->drawable.bitsPerPixel;
 
-		assert(tmp.drawable.width);
-		assert(tmp.drawable.height);
+		assert(tmp.width);
+		assert(tmp.height);
 
 		DBG(("%s: upload (%d, %d)x(%d, %d), max %dx%d\n",
 		     __FUNCTION__,
 		     extents.x1, extents.y1,
-		     tmp.drawable.width, tmp.drawable.height,
+		     tmp.width, tmp.height,
 		     sna->render.max_3d_size, sna->render.max_3d_size));
-		if (must_tile(sna, tmp.drawable.width, tmp.drawable.height)) {
+		if (must_tile(sna, tmp.width, tmp.height)) {
 			BoxRec tile, stack[64], *clipped;
 			int step;
 
@@ -1374,13 +1390,13 @@ tile:
 						x2 = extents.x2;
 					tile.x2 = x2;
 
-					tmp.drawable.width  = tile.x2 - tile.x1;
-					tmp.drawable.height = tile.y2 - tile.y1;
+					tmp.width  = tile.x2 - tile.x1;
+					tmp.height = tile.y2 - tile.y1;
 
 					src_bo = kgem_create_buffer_2d(kgem,
-								       tmp.drawable.width,
-								       tmp.drawable.height,
-								       tmp.drawable.bitsPerPixel,
+								       tmp.width,
+								       tmp.height,
+								       tmp.bitsPerPixel,
 								       KGEM_BUFFER_WRITE_INPLACE,
 								       &ptr);
 					if (!src_bo) {
@@ -1403,7 +1419,7 @@ tile:
 							     src_dx, src_dy,
 							     c->x1 - tile.x1,
 							     c->y1 - tile.y1));
-							memcpy_xor(src, ptr, tmp.drawable.bitsPerPixel,
+							memcpy_xor(src, ptr, tmp.bitsPerPixel,
 								   stride, src_bo->pitch,
 								   c->x1 + src_dx,
 								   c->y1 + src_dy,
@@ -1418,7 +1434,7 @@ tile:
 						if (c != clipped)
 							n = sna->render.copy_boxes(sna, GXcopy,
 										   &tmp, src_bo, -tile.x1, -tile.y1,
-										   dst, dst_bo, dst_dx, dst_dy,
+										   &dst->drawable, dst_bo, dst_dx, dst_dy,
 										   clipped, c - clipped, 0);
 						else
 							n = 1;
@@ -1441,9 +1457,9 @@ tile:
 				free(clipped);
 		} else {
 			src_bo = kgem_create_buffer_2d(kgem,
-						       tmp.drawable.width,
-						       tmp.drawable.height,
-						       tmp.drawable.bitsPerPixel,
+						       tmp.width,
+						       tmp.height,
+						       tmp.bitsPerPixel,
 						       KGEM_BUFFER_WRITE_INPLACE,
 						       &ptr);
 			if (!src_bo)
@@ -1458,7 +1474,7 @@ tile:
 					     src_dx, src_dy,
 					     box[n].x1 - extents.x1,
 					     box[n].y1 - extents.y1));
-					memcpy_xor(src, ptr, tmp.drawable.bitsPerPixel,
+					memcpy_xor(src, ptr, tmp.bitsPerPixel,
 						   stride, src_bo->pitch,
 						   box[n].x1 + src_dx,
 						   box[n].y1 + src_dy,
@@ -1471,7 +1487,7 @@ tile:
 
 				n = sna->render.copy_boxes(sna, GXcopy,
 							   &tmp, src_bo, -extents.x1, -extents.y1,
-							   dst, dst_bo, dst_dx, dst_dy,
+							   &dst->drawable, dst_bo, dst_dx, dst_dy,
 							   box, nbox, 0);
 				sigtrap_put();
 			} else
@@ -1730,10 +1746,10 @@ indirect_replace(struct sna *sna,
 
 	DBG(("%s: size=%d vs %d\n",
 	     __FUNCTION__,
-	     (int)pixmap->devKind * pixmap->drawable.height >> 12,
+	     stride * pixmap->drawable.height >> 12,
 	     kgem->half_cpu_cache_pages));
 
-	if ((int)pixmap->devKind * pixmap->drawable.height >> 12 > kgem->half_cpu_cache_pages)
+	if (stride * pixmap->drawable.height >> 12 > kgem->half_cpu_cache_pages)
 		return false;
 
 	if (!kgem_bo_can_blt(kgem, bo) &&
@@ -1762,8 +1778,8 @@ indirect_replace(struct sna *sna,
 		box.y2 = pixmap->drawable.height;
 
 		ret = sna->render.copy_boxes(sna, GXcopy,
-					     pixmap, src_bo, 0, 0,
-					     pixmap, bo, 0, 0,
+					     &pixmap->drawable, src_bo, 0, 0,
+					     &pixmap->drawable, bo, 0, 0,
 					     &box, 1, 0);
 		sigtrap_put();
 	} else

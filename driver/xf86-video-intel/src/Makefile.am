@@ -34,6 +34,10 @@ AM_CFLAGS = \
 	@NOWARNFLAGS@ \
 	$(NULL)
 
+if VALGRIND
+AM_CFLAGS += $(VALGRIND_CFLAGS)
+endif
+
 intel_drv_la_LTLIBRARIES = intel_drv.la
 intel_drv_la_LDFLAGS = -module -avoid-version
 intel_drv_ladir = $(moduledir)/drivers
@@ -52,6 +56,10 @@ endif
 NULL:=#
 
 intel_drv_la_SOURCES = \
+	backlight.c \
+	backlight.h \
+	fd.h \
+	fd.c \
 	i915_pciids.h \
 	intel_list.h \
 	intel_options.h \

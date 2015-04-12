@@ -69,13 +69,13 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@BUILD_TOOLS_TRUE@am__append_1 = tools
-@HAVE_X11_TRUE@am__append_2 = test
+@HAVE_X11_TRUE@am__append_1 = test
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
-	config.guess config.sub depcomp install-sh ltmain.sh missing
+	compile config.guess config.sub depcomp install-sh ltmain.sh \
+	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -123,7 +123,7 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
-DIST_SUBDIRS = man xvmc src tools test
+DIST_SUBDIRS = man libobj xvmc src tools test
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -195,6 +195,8 @@ DRI1_CFLAGS = @DRI1_CFLAGS@
 DRI1_LIBS = @DRI1_LIBS@
 DRI2_CFLAGS = @DRI2_CFLAGS@
 DRI2_LIBS = @DRI2_LIBS@
+DRI3_CFLAGS = @DRI3_CFLAGS@
+DRI3_LIBS = @DRI3_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -223,8 +225,13 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTEL_GEN4ASM = @INTEL_GEN4ASM@
+IVO_CFLAGS = @IVO_CFLAGS@
+IVO_EXTRA_CFLAGS = @IVO_EXTRA_CFLAGS@
+IVO_EXTRA_LIBS = @IVO_EXTRA_LIBS@
+IVO_LIBS = @IVO_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEXEC_PATH = @LIBEXEC_PATH@
 LIBGLAMOR_CFLAGS = @LIBGLAMOR_CFLAGS@
 LIBGLAMOR_EGL_CFLAGS = @LIBGLAMOR_EGL_CFLAGS@
 LIBGLAMOR_EGL_LIBS = @LIBGLAMOR_EGL_LIBS@
@@ -263,23 +270,24 @@ PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PREFIX_PATH = @PREFIX_PATH@
+PRESENT_CFLAGS = @PRESENT_CFLAGS@
+PRESENT_LIBS = @PRESENT_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
-TOOL_CFLAGS = @TOOL_CFLAGS@
-TOOL_LIBS = @TOOL_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VERSION = @VERSION@
 X11_CFLAGS = @X11_CFLAGS@
+X11_DRI3_CFLAGS = @X11_DRI3_CFLAGS@
+X11_DRI3_LIBS = @X11_DRI3_LIBS@
 X11_LIBS = @X11_LIBS@
-XCB_CFLAGS = @XCB_CFLAGS@
-XCB_LIBS = @XCB_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -339,7 +347,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
-SUBDIRS = man xvmc src $(am__append_1) $(am__append_2)
+SUBDIRS = man libobj xvmc src tools $(am__append_1)
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

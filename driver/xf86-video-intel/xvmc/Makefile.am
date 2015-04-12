@@ -24,9 +24,7 @@ libIntelXvMC_la_SOURCES = \
         intel_batchbuffer.h \
 	$(NULL)
 
-AM_CFLAGS = @XORG_CFLAGS@ @DRM_CFLAGS@ @DRI2_CFLAGS@ \
-	    @XVMCLIB_CFLAGS@ @XCB_CFLAGS@ \
-	    -I$(top_srcdir)/src -DTRUE=1 -DFALSE=0
+AM_CFLAGS = $(XVMCLIB_CFLAGS) $(XORG_CFLAGS) -I$(top_srcdir)/src -DTRUE=1 -DFALSE=0
 
 libIntelXvMC_la_LDFLAGS = -version-number 1:0:0
-libIntelXvMC_la_LIBADD = @DRI2_LIBS@ @DRM_LIBS@ @XVMCLIB_LIBS@ @XCB_LIBS@ @DRMINTEL_LIBS@ -lpthread
+libIntelXvMC_la_LIBADD = $(XVMCLIB_LIBS) -lpthread

@@ -71,9 +71,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = intel-virtual-output$(EXEEXT)
+@BUILD_TOOLS_TRUE@bin_PROGRAMS = intel-virtual-output$(EXEEXT)
+@BUILD_BACKLIGHT_HELPER_TRUE@libexec_PROGRAMS = xf86-video-intel-backlight-helper$(EXEEXT)
 subdir = tools
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/org.x.xf86-video-intel.backlight-helper.policy.in \
 	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
@@ -84,11 +86,13 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = org.x.xf86-video-intel.backlight-helper.policy
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(drivermandir)"
-PROGRAMS = $(bin_PROGRAMS)
-am_intel_virtual_output_OBJECTS = virtual.$(OBJEXT)
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(libexecdir)" \
+	"$(DESTDIR)$(drivermandir)" "$(DESTDIR)$(policydir)"
+PROGRAMS = $(bin_PROGRAMS) $(libexec_PROGRAMS)
+am_intel_virtual_output_OBJECTS =  \
+	intel_virtual_output-virtual.$(OBJEXT)
 intel_virtual_output_OBJECTS = $(am_intel_virtual_output_OBJECTS)
 am__DEPENDENCIES_1 =
 intel_virtual_output_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -96,6 +100,15 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+intel_virtual_output_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(intel_virtual_output_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_xf86_video_intel_backlight_helper_OBJECTS =  \
+	backlight_helper.$(OBJEXT)
+xf86_video_intel_backlight_helper_OBJECTS =  \
+	$(am_xf86_video_intel_backlight_helper_OBJECTS)
+xf86_video_intel_backlight_helper_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -130,8 +143,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(intel_virtual_output_SOURCES)
-DIST_SOURCES = $(intel_virtual_output_SOURCES)
+SOURCES = $(intel_virtual_output_SOURCES) \
+	$(xf86_video_intel_backlight_helper_SOURCES)
+DIST_SOURCES = $(intel_virtual_output_SOURCES) \
+	$(xf86_video_intel_backlight_helper_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -164,7 +179,7 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-DATA = $(driverman_DATA)
+DATA = $(driverman_DATA) $(nodist_policy_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -197,6 +212,8 @@ DRI1_CFLAGS = @DRI1_CFLAGS@
 DRI1_LIBS = @DRI1_LIBS@
 DRI2_CFLAGS = @DRI2_CFLAGS@
 DRI2_LIBS = @DRI2_LIBS@
+DRI3_CFLAGS = @DRI3_CFLAGS@
+DRI3_LIBS = @DRI3_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -225,8 +242,13 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTEL_GEN4ASM = @INTEL_GEN4ASM@
+IVO_CFLAGS = @IVO_CFLAGS@
+IVO_EXTRA_CFLAGS = @IVO_EXTRA_CFLAGS@
+IVO_EXTRA_LIBS = @IVO_EXTRA_LIBS@
+IVO_LIBS = @IVO_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEXEC_PATH = @LIBEXEC_PATH@
 LIBGLAMOR_CFLAGS = @LIBGLAMOR_CFLAGS@
 LIBGLAMOR_EGL_CFLAGS = @LIBGLAMOR_EGL_CFLAGS@
 LIBGLAMOR_EGL_LIBS = @LIBGLAMOR_EGL_LIBS@
@@ -265,23 +287,24 @@ PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PREFIX_PATH = @PREFIX_PATH@
+PRESENT_CFLAGS = @PRESENT_CFLAGS@
+PRESENT_LIBS = @PRESENT_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
-TOOL_CFLAGS = @TOOL_CFLAGS@
-TOOL_LIBS = @TOOL_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VERSION = @VERSION@
 X11_CFLAGS = @X11_CFLAGS@
+X11_DRI3_CFLAGS = @X11_DRI3_CFLAGS@
+X11_DRI3_LIBS = @X11_DRI3_LIBS@
 X11_LIBS = @X11_LIBS@
-XCB_CFLAGS = @XCB_CFLAGS@
-XCB_LIBS = @XCB_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -342,19 +365,34 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = \
 	@CWARNFLAGS@ \
-	$(TOOL_CFLAGS) \
 	@NOWARNFLAGS@ \
 	$(NULL)
 
 drivermandir = $(DRIVER_MAN_DIR)
-driverman_DATA = intel-virtual-output.$(DRIVER_MAN_SUFFIX)
+policydir = $(datarootdir)/polkit-1/actions
+@BUILD_TOOLS_TRUE@driverman_DATA = intel-virtual-output.$(DRIVER_MAN_SUFFIX)
+@BUILD_BACKLIGHT_HELPER_TRUE@nodist_policy_DATA = org.x.xf86-video-intel.backlight-helper.policy
+@BUILD_BACKLIGHT_HELPER_TRUE@backlight_helper = $(libexecdir)/xf86-video-intel-backlight-helper
+intel_virtual_output_CFLAGS = \
+	@CWARNFLAGS@ \
+	$(IVO_CFLAGS) \
+	@NOWARNFLAGS@ \
+	$(NULL)
+
 intel_virtual_output_SOURCES = \
 	virtual.c \
 	$(NULL)
 
-intel_virtual_output_LDADD = $(TOOL_LIBS)
-EXTRA_DIST = intel-virtual-output.man
-CLEANFILES = $(driverman_DATA)
+intel_virtual_output_LDADD = \
+	$(IVO_LIBS) \
+	$(NULL)
+
+xf86_video_intel_backlight_helper_SOURCES = \
+	backlight_helper.c \
+	$(NULL)
+
+EXTRA_DIST = intel-virtual-output.man org.x.xf86-video-intel.backlight-helper.policy.in
+CLEANFILES = $(driverman_DATA) $(nodist_policy_DATA)
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
@@ -392,6 +430,8 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+org.x.xf86-video-intel.backlight-helper.policy: $(top_builddir)/config.status $(srcdir)/org.x.xf86-video-intel.backlight-helper.policy.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
@@ -438,9 +478,58 @@ clean-binPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+install-libexecPROGRAMS: $(libexec_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	@list='$(libexec_PROGRAMS)'; test -n "$(libexecdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libexecdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libexecdir)" || exit 1; \
+	fi; \
+	for p in $$list; do echo "$$p $$p"; done | \
+	sed 's/$(EXEEXT)$$//' | \
+	while read p p1; do if test -f $$p || test -f $$p1; \
+	  then echo "$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n;h' -e 's|.*|.|' \
+	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
+	sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
+	    else { print "f", $$3 "/" $$4, $$1; } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	    test -z "$$files" || { \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(libexecdir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(libexecdir)$$dir" || exit $$?; \
+	    } \
+	; done
+
+uninstall-libexecPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libexec_PROGRAMS)'; test -n "$(libexecdir)" || list=; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
+	      -e 's/$$/$(EXEEXT)/' `; \
+	test -n "$$list" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(libexecdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(libexecdir)" && rm -f $$files
+
+clean-libexecPROGRAMS:
+	@list='$(libexec_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
 intel-virtual-output$(EXEEXT): $(intel_virtual_output_OBJECTS) $(intel_virtual_output_DEPENDENCIES) $(EXTRA_intel_virtual_output_DEPENDENCIES) 
 	@rm -f intel-virtual-output$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(intel_virtual_output_OBJECTS) $(intel_virtual_output_LDADD) $(LIBS)
+	$(AM_V_CCLD)$(intel_virtual_output_LINK) $(intel_virtual_output_OBJECTS) $(intel_virtual_output_LDADD) $(LIBS)
+xf86-video-intel-backlight-helper$(EXEEXT): $(xf86_video_intel_backlight_helper_OBJECTS) $(xf86_video_intel_backlight_helper_DEPENDENCIES) $(EXTRA_xf86_video_intel_backlight_helper_DEPENDENCIES) 
+	@rm -f xf86-video-intel-backlight-helper$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(xf86_video_intel_backlight_helper_OBJECTS) $(xf86_video_intel_backlight_helper_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -448,7 +537,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/virtual.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backlight_helper.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_virtual_output-virtual.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -470,6 +560,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+intel_virtual_output-virtual.o: virtual.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_virtual_output_CFLAGS) $(CFLAGS) -MT intel_virtual_output-virtual.o -MD -MP -MF $(DEPDIR)/intel_virtual_output-virtual.Tpo -c -o intel_virtual_output-virtual.o `test -f 'virtual.c' || echo '$(srcdir)/'`virtual.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/intel_virtual_output-virtual.Tpo $(DEPDIR)/intel_virtual_output-virtual.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='virtual.c' object='intel_virtual_output-virtual.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_virtual_output_CFLAGS) $(CFLAGS) -c -o intel_virtual_output-virtual.o `test -f 'virtual.c' || echo '$(srcdir)/'`virtual.c
+
+intel_virtual_output-virtual.obj: virtual.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_virtual_output_CFLAGS) $(CFLAGS) -MT intel_virtual_output-virtual.obj -MD -MP -MF $(DEPDIR)/intel_virtual_output-virtual.Tpo -c -o intel_virtual_output-virtual.obj `if test -f 'virtual.c'; then $(CYGPATH_W) 'virtual.c'; else $(CYGPATH_W) '$(srcdir)/virtual.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/intel_virtual_output-virtual.Tpo $(DEPDIR)/intel_virtual_output-virtual.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='virtual.c' object='intel_virtual_output-virtual.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(intel_virtual_output_CFLAGS) $(CFLAGS) -c -o intel_virtual_output-virtual.obj `if test -f 'virtual.c'; then $(CYGPATH_W) 'virtual.c'; else $(CYGPATH_W) '$(srcdir)/virtual.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -497,6 +601,27 @@ uninstall-drivermanDATA:
 	@list='$(driverman_DATA)'; test -n "$(drivermandir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(drivermandir)'; $(am__uninstall_files_from_dir)
+install-nodist_policyDATA: $(nodist_policy_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(nodist_policy_DATA)'; test -n "$(policydir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(policydir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(policydir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(policydir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(policydir)" || exit $$?; \
+	done
+
+uninstall-nodist_policyDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nodist_policy_DATA)'; test -n "$(policydir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(policydir)'; $(am__uninstall_files_from_dir)
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -598,7 +723,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(drivermandir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(drivermandir)" "$(DESTDIR)$(policydir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -632,9 +757,11 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@BUILD_BACKLIGHT_HELPER_FALSE@install-exec-hook:
 clean: clean-am
 
-clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libexecPROGRAMS \
+	clean-libtool mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -654,14 +781,15 @@ info: info-am
 
 info-am:
 
-install-data-am: install-drivermanDATA
+install-data-am: install-drivermanDATA install-nodist_policyDATA
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS
-
+install-exec-am: install-binPROGRAMS install-libexecPROGRAMS
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-exec-hook
 install-html: install-html-am
 
 install-html-am:
@@ -700,25 +828,30 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-drivermanDATA
+uninstall-am: uninstall-binPROGRAMS uninstall-drivermanDATA \
+	uninstall-libexecPROGRAMS uninstall-nodist_policyDATA
 
-.MAKE: install-am install-strip
+.MAKE: install-am install-exec-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-binPROGRAMS \
-	clean-generic clean-libtool cscopelist ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-drivermanDATA install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
+	clean-generic clean-libexecPROGRAMS clean-libtool cscopelist \
+	ctags distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-binPROGRAMS \
+	install-data install-data-am install-drivermanDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-exec-hook \
+	install-html install-html-am install-info install-info-am \
+	install-libexecPROGRAMS install-man install-nodist_policyDATA \
 	install-pdf install-pdf-am install-ps install-ps-am \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-drivermanDATA
+	uninstall-binPROGRAMS uninstall-drivermanDATA \
+	uninstall-libexecPROGRAMS uninstall-nodist_policyDATA
 
+@BUILD_BACKLIGHT_HELPER_TRUE@install-exec-hook:
+@BUILD_BACKLIGHT_HELPER_TRUE@	-chown root $(DESTDIR)$(backlight_helper) && chmod u+s $(DESTDIR)$(backlight_helper)
 .man.$(DRIVER_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 

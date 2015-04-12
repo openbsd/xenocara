@@ -35,6 +35,13 @@
 #include <pthread.h>
 #include <signal.h>
 
+#ifdef HAVE_VALGRIND
+#include <valgrind.h>
+static inline bool valgrind_active(void) { return RUNNING_ON_VALGRIND; }
+#else
+static inline bool valgrind_active(void) { return false; }
+#endif
+
 static int max_threads = -1;
 
 static struct thread {
@@ -53,7 +60,9 @@ static void *__run__(void *arg)
 
 	/* Disable all signals in the slave threads as X uses them for IO */
 	sigfillset(&signals);
-	pthread_sigmask(SIG_BLOCK, &signals, NULL);
+	sigdelset(&signals, SIGBUS);
+	sigdelset(&signals, SIGSEGV);
+	pthread_sigmask(SIG_SETMASK, &signals, NULL);
 
 	pthread_mutex_lock(&t->mutex);
 	while (1) {
@@ -65,6 +74,7 @@ static void *__run__(void *arg)
 		t->func(t->arg);
 
 		pthread_mutex_lock(&t->mutex);
+		t->arg = NULL;
 		t->func = NULL;
 		pthread_cond_signal(&t->cond);
 	}
@@ -128,6 +138,9 @@ void sna_threads_init(void)
 	if (max_threads != -1)
 		return;
 
+	if (valgrind_active())
+		goto bail;
+
 	max_threads = num_cores();
 	if (max_threads == 0)
 		max_threads = sysconf(_SC_NPROCESSORS_ONLN) / 2;
@@ -141,51 +154,62 @@ void sna_threads_init(void)
 	if (threads == NULL)
 		goto bail;
 
-	for (n = 0; n < max_threads; n++) {
+	for (n = 1; n < max_threads; n++) {
 		pthread_mutex_init(&threads[n].mutex, NULL);
 		pthread_cond_init(&threads[n].cond, NULL);
 
 		threads[n].func = NULL;
+		threads[n].arg = NULL;
 		if (pthread_create(&threads[n].thread, NULL,
 				   __run__, &threads[n]))
 			goto bail;
 	}
 
+	threads[0].thread = pthread_self();
 	return;
 
 bail:
 	max_threads = 0;
 }
 
-void sna_threads_run(void (*func)(void *arg), void *arg)
+void sna_threads_run(int id, void (*func)(void *arg), void *arg)
 {
+	assert(max_threads > 0);
+	assert(pthread_self() == threads[0].thread);
+	assert(id > 0 && id < max_threads);
+
+	assert(threads[id].func == NULL);
+
+	pthread_mutex_lock(&threads[id].mutex);
+	threads[id].func = func;
+	threads[id].arg = arg;
+	pthread_cond_signal(&threads[id].cond);
+	pthread_mutex_unlock(&threads[id].mutex);
+}
+
+void sna_threads_trap(int sig)
+{
+	pthread_t t = pthread_self();
 	int n;
 
-	assert(max_threads > 0);
+	if (max_threads == 0)
+		return;
 
-	for (n = 0; n < max_threads; n++) {
-		if (threads[n].func)
-			continue;
+	if (t == threads[0].thread)
+		return;
 
-		pthread_mutex_lock(&threads[n].mutex);
-		if (threads[n].func) {
-			pthread_mutex_unlock(&threads[n].mutex);
-			continue;
-		}
+	for (n = 1; threads[n].thread != t; n++)
+		;
 
-		goto execute;
-	}
+	ERR(("%s: thread[%d] caught signal %d\n", __func__, n, sig));
 
-	n = rand() % max_threads;
 	pthread_mutex_lock(&threads[n].mutex);
-	while (threads[n].func)
-		pthread_cond_wait(&threads[n].cond, &threads[n].mutex);
-
-execute:
-	threads[n].func = func;
-	threads[n].arg = arg;
+	threads[n].arg = (void *)(intptr_t)sig;
+	threads[n].func = NULL;
 	pthread_cond_signal(&threads[n].cond);
 	pthread_mutex_unlock(&threads[n].mutex);
+
+	pthread_exit(&sig);
 }
 
 void sna_threads_wait(void)
@@ -193,16 +217,39 @@ void sna_threads_wait(void)
 	int n;
 
 	assert(max_threads > 0);
+	assert(pthread_self() == threads[0].thread);
 
-	for (n = 0; n < max_threads; n++) {
-		if (threads[n].func == NULL)
-			continue;
+	for (n = 1; n < max_threads; n++) {
+		if (threads[n].func != NULL) {
+			pthread_mutex_lock(&threads[n].mutex);
+			while (threads[n].func)
+				pthread_cond_wait(&threads[n].cond, &threads[n].mutex);
+			pthread_mutex_unlock(&threads[n].mutex);
+		}
 
-		pthread_mutex_lock(&threads[n].mutex);
-		while (threads[n].func)
-			pthread_cond_wait(&threads[n].cond, &threads[n].mutex);
-		pthread_mutex_unlock(&threads[n].mutex);
+		if (threads[n].arg != NULL) {
+			DBG(("%s: thread[%d] died from signal %d\n", __func__, n, (int)(intptr_t)threads[n].arg));
+			sna_threads_kill();
+			return;
+		}
 	}
+}
+
+void sna_threads_kill(void)
+{
+	int n;
+
+	ERR(("%s: kill %d threads\n", __func__, max_threads));
+	assert(max_threads > 0);
+	assert(pthread_self() == threads[0].thread);
+
+	for (n = 1; n < max_threads; n++)
+		pthread_cancel(threads[n].thread);
+
+	for (n = 1; n < max_threads; n++)
+		pthread_join(threads[n].thread, NULL);
+
+	max_threads = 0;
 }
 
 int sna_use_threads(int width, int height, int threshold)
@@ -210,6 +257,9 @@ int sna_use_threads(int width, int height, int threshold)
 	int num_threads;
 
 	if (max_threads <= 0)
+		return 1;
+
+	if (height <= 1)
 		return 1;
 
 	if (width < 128)
@@ -221,6 +271,9 @@ int sna_use_threads(int width, int height, int threshold)
 
 	if (num_threads > max_threads)
 		num_threads = max_threads;
+	if (num_threads > height)
+		num_threads = height;
+
 	return num_threads;
 }
 
@@ -260,11 +313,14 @@ void sna_image_composite(pixman_op_t        op,
 
 	num_threads = sna_use_threads(width, height, 32);
 	if (num_threads <= 1) {
-		pixman_image_composite(op, src, mask, dst,
-				       src_x, src_y,
-				       mask_x, mask_y,
-				       dst_x, dst_y,
-				       width, height);
+		if (sigtrap_get() == 0) {
+			pixman_image_composite(op, src, mask, dst,
+					       src_x, src_y,
+					       mask_x, mask_y,
+					       dst_x, dst_y,
+					       width, height);
+			sigtrap_put();
+		}
 	} else {
 		struct thread_composite data[num_threads];
 		int y, dy, n;
@@ -289,27 +345,31 @@ void sna_image_composite(pixman_op_t        op,
 		data[0].width = width;
 		data[0].height = dy;
 
-		for (n = 1; n < num_threads; n++) {
-			data[n] = data[0];
-			data[n].src_y += y - dst_y;
-			data[n].mask_y += y - dst_y;
-			data[n].dst_y = y;
-			y += dy;
+		if (sigtrap_get() == 0) {
+			for (n = 1; n < num_threads; n++) {
+				data[n] = data[0];
+				data[n].src_y += y - dst_y;
+				data[n].mask_y += y - dst_y;
+				data[n].dst_y = y;
+				y += dy;
 
-			sna_threads_run(thread_composite, &data[n]);
-		}
+				sna_threads_run(n, thread_composite, &data[n]);
+			}
 
-		assert(y < dst_y + height);
-		if (y + dy > dst_y + height)
-			dy = dst_y + height - y;
+			assert(y < dst_y + height);
+			if (y + dy > dst_y + height)
+				dy = dst_y + height - y;
 
-		data[0].src_y += y - dst_y;
-		data[0].mask_y += y - dst_y;
-		data[0].dst_y = y;
-		data[0].height = dy;
+			data[0].src_y += y - dst_y;
+			data[0].mask_y += y - dst_y;
+			data[0].dst_y = y;
+			data[0].height = dy;
 
-		thread_composite(&data[0]);
+			thread_composite(&data[0]);
 
-		sna_threads_wait();
+			sna_threads_wait();
+			sigtrap_put();
+		} else
+			sna_threads_kill();
 	}
 }

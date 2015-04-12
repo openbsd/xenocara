@@ -147,9 +147,8 @@ typedef struct _intel_xvmc_driver {
 	} alloc;
 	intel_xvmc_drm_map_t batchbuffer;
 
-	sigset_t sa_mask;
+	sigset_t sa_mask, old_mask;
 	pthread_mutex_t ctxmutex;
-	int locked;
 
 	int num_ctx;
 	intel_xvmc_context_ptr ctx_list;
@@ -194,33 +193,17 @@ extern struct _intel_xvmc_driver i965_xvmc_mc_driver;
 extern struct _intel_xvmc_driver xvmc_vld_driver;
 extern struct _intel_xvmc_driver *xvmc_driver;
 
-#define SET_BLOCKED_SIGSET()   do {    \
-        sigset_t bl_mask;                       \
-        sigfillset(&bl_mask);           \
-        sigdelset(&bl_mask, SIGFPE);    \
-        sigdelset(&bl_mask, SIGILL);    \
-        sigdelset(&bl_mask, SIGSEGV);   \
-        sigdelset(&bl_mask, SIGBUS);    \
-        sigdelset(&bl_mask, SIGKILL);   \
-        pthread_sigmask(SIG_SETMASK, &bl_mask, &xvmc_driver->sa_mask); \
-    } while (0)
+static inline void LOCK_HARDWARE(drm_context_t ctx)
+{
+        pthread_mutex_lock(&xvmc_driver->ctxmutex);
+        pthread_sigmask(SIG_SETMASK, &xvmc_driver->sa_mask, &xvmc_driver->old_mask);
+}
 
-#define RESTORE_BLOCKED_SIGSET() do {    \
-        pthread_sigmask(SIG_SETMASK, &xvmc_driver->sa_mask, NULL); \
-    } while (0)
-
-#define PPTHREAD_MUTEX_LOCK() do {             \
-        SET_BLOCKED_SIGSET();                  \
-        pthread_mutex_lock(&xvmc_driver->ctxmutex);       \
-    } while (0)
-
-#define PPTHREAD_MUTEX_UNLOCK() do {           \
-        pthread_mutex_unlock(&xvmc_driver->ctxmutex);     \
-        RESTORE_BLOCKED_SIGSET();              \
-    } while (0)
-
-extern void LOCK_HARDWARE(drm_context_t);
-extern void UNLOCK_HARDWARE(drm_context_t);
+static inline void UNLOCK_HARDWARE(drm_context_t ctx)
+{
+        pthread_sigmask(SIG_SETMASK, &xvmc_driver->old_mask, NULL);
+        pthread_mutex_unlock(&xvmc_driver->ctxmutex);
+}
 
 static inline const char *intel_xvmc_decoder_string(int flag)
 {

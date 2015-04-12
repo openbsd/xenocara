@@ -36,7 +36,7 @@
 static inline bool is_uncached(struct sna *sna,
 			       struct kgem_bo *bo)
 {
-	return bo->scanout && !sna->kgem.has_wt;
+	return bo->io || (bo->scanout && !sna->kgem.has_wt);
 }
 
 inline static bool can_switch_to_blt(struct sna *sna,
@@ -56,6 +56,9 @@ inline static bool can_switch_to_blt(struct sna *sna,
 		return true;
 
 	if (bo && RQ_IS_BLT(bo->rq))
+		return true;
+
+	if (sna->render_state.gt < 2)
 		return true;
 
 	return kgem_ring_is_idle(&sna->kgem, KGEM_BLT);
@@ -173,24 +176,25 @@ static inline bool prefer_blt_fill(struct sna *sna,
 	if (PREFER_RENDER)
 		return PREFER_RENDER < 0;
 
-	if (flags & (FILL_POINTS | FILL_SPANS) &&
-	    can_switch_to_blt(sna, bo, 0))
-		return true;
-
 	if (untiled_tlb_miss(bo))
 		return true;
 
 	if (force_blt_ring(sna))
 		return true;
 
-	if (kgem_bo_is_render(bo))
-		return false;
+	if ((flags & (FILL_POINTS | FILL_SPANS)) == 0) {
+		if (kgem_bo_is_render(bo))
+			return false;
 
-	if (prefer_render_ring(sna, bo))
-		return false;
+		if (prefer_render_ring(sna, bo))
+			return false;
 
-	if (!prefer_blt_ring(sna, bo, 0))
-		return false;
+		if (!prefer_blt_ring(sna, bo, 0))
+			return false;
+	} else {
+	    if (can_switch_to_blt(sna, bo, 0))
+		    return true;
+	}
 
 	return prefer_blt_bo(sna, bo);
 }

@@ -56,9 +56,7 @@ static const XvImageRec Images[] = {
 	XVMC_YUV,
 };
 
-static int sna_video_textured_stop(ClientPtr client,
-				   XvPortPtr port,
-				   DrawablePtr draw)
+static int sna_video_textured_stop(ddStopVideo_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 
@@ -71,10 +69,7 @@ static int sna_video_textured_stop(ClientPtr client,
 }
 
 static int
-sna_video_textured_set_attribute(ClientPtr client,
-				 XvPortPtr port,
-				 Atom attribute,
-				 INT32 value)
+sna_video_textured_set_attribute(ddSetPortAttribute_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 
@@ -100,10 +95,7 @@ sna_video_textured_set_attribute(ClientPtr client,
 }
 
 static int
-sna_video_textured_get_attribute(ClientPtr client,
-				 XvPortPtr port,
-				 Atom attribute,
-				 INT32 *value)
+sna_video_textured_get_attribute(ddGetPortAttribute_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 
@@ -120,13 +112,7 @@ sna_video_textured_get_attribute(ClientPtr client,
 }
 
 static int
-sna_video_textured_best_size(ClientPtr client,
-			     XvPortPtr port,
-			     CARD8 motion,
-			     CARD16 vid_w, CARD16 vid_h,
-			     CARD16 drw_w, CARD16 drw_h,
-			     unsigned int *p_w,
-			     unsigned int *p_h)
+sna_video_textured_best_size(ddQueryBestSize_ARGS)
 {
 	if (vid_w > (drw_w << 1))
 		drw_w = vid_w >> 1;
@@ -153,23 +139,13 @@ sna_video_textured_best_size(ClientPtr client,
  * compositing.  It's a new argument to the function in the 1.1 server.
  */
 static int
-sna_video_textured_put_image(ClientPtr client,
-			     DrawablePtr draw,
-			     XvPortPtr port,
-			     GCPtr gc,
-			     INT16 src_x, INT16 src_y,
-			     CARD16 src_w, CARD16 src_h,
-			     INT16 drw_x, INT16 drw_y,
-			     CARD16 drw_w, CARD16 drw_h,
-			     XvImagePtr format,
-			     unsigned char *buf,
-			     Bool sync,
-			     CARD16 width, CARD16 height)
+sna_video_textured_put_image(ddPutImage_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
 	struct sna_video_frame frame;
 	PixmapPtr pixmap = get_drawable_pixmap(draw);
+	unsigned int flags;
 	BoxRec dstBox;
 	RegionRec clip;
 	xf86CrtcPtr crtc;
@@ -192,16 +168,10 @@ sna_video_textured_put_image(ClientPtr client,
 	     drw_x, drw_y, drw_w, drw_h,
 	     format->id, width, height, sync));
 
-	DBG(("%s: region %ld:(%d, %d), (%d, %d)\n", __FUNCTION__,
-	     (long)RegionNumRects(&clip),
+	DBG(("%s: region %d:(%d, %d), (%d, %d)\n", __FUNCTION__,
+	     region_num_rects(&clip),
 	     clip.extents.x1, clip.extents.y1,
 	     clip.extents.x2, clip.extents.y2));
-
-	if (!sna_pixmap_move_to_gpu(pixmap, MOVE_READ | MOVE_WRITE)) {
-		DBG(("%s: attempting to render to a non-GPU pixmap\n",
-		     __FUNCTION__));
-		return BadAlloc;
-	}
 
 	sna_video_frame_init(video, format->id, width, height, &frame);
 
@@ -210,6 +180,18 @@ sna_video_textured_put_image(ClientPtr client,
 				   src_w, src_h, drw_w, drw_h,
 				   &clip))
 		return Success;
+
+	flags = MOVE_WRITE | __MOVE_FORCE;
+	if (clip.data)
+		flags |= MOVE_READ;
+
+	if (!sna_pixmap_move_area_to_gpu(pixmap, &clip.extents, flags)) {
+		DBG(("%s: attempting to render to a non-GPU pixmap\n",
+		     __FUNCTION__));
+		return BadAlloc;
+	}
+
+	sna_video_frame_set_rotation(video, &frame, RR_Rotate_0);
 
 	if (xvmc_passthrough(format->id)) {
 		DBG(("%s: using passthough, name=%d\n",
@@ -268,13 +250,7 @@ sna_video_textured_put_image(ClientPtr client,
 }
 
 static int
-sna_video_textured_query(ClientPtr client,
-			 XvPortPtr port,
-			 XvImagePtr format,
-			 unsigned short *w,
-			 unsigned short *h,
-			 int *pitches,
-			 int *offsets)
+sna_video_textured_query(ddQueryImageAttributes_ARGS)
 {
 	int size, tmp;
 
@@ -383,8 +359,10 @@ void sna_video_textured_setup(struct sna *sna, ScreenPtr screen)
 	adaptor->pAttributes = (XvAttributeRec *)Attributes;
 	adaptor->nImages = ARRAY_SIZE(Images);
 	adaptor->pImages = (XvImageRec *)Images;
+#if XORG_XV_VERSION < 2
 	adaptor->ddAllocatePort = sna_xv_alloc_port;
 	adaptor->ddFreePort = sna_xv_free_port;
+#endif
 	adaptor->ddPutVideo = NULL;
 	adaptor->ddPutStill = NULL;
 	adaptor->ddGetVideo = NULL;
@@ -403,7 +381,6 @@ void sna_video_textured_setup(struct sna *sna, ScreenPtr screen)
 		v->sna = sna;
 		v->textured = true;
 		v->alignment = 4;
-		v->rotation = RR_Rotate_0;
 		v->SyncToVblank = (sna->flags & SNA_NO_WAIT) == 0;
 
 		RegionNull(&v->clip);
@@ -425,4 +402,6 @@ void sna_video_textured_setup(struct sna *sna, ScreenPtr screen)
 	xvBrightness = MAKE_ATOM("XV_BRIGHTNESS");
 	xvContrast = MAKE_ATOM("XV_CONTRAST");
 	xvSyncToVblank = MAKE_ATOM("XV_SYNC_TO_VBLANK");
+
+	DBG(("%s: '%s' initialized %d ports\n", __FUNCTION__, adaptor->name, adaptor->nPorts));
 }

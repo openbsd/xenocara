@@ -103,21 +103,6 @@ unsigned int mb_bytes_420[] = {
 	768			/* 111111 */
 };
 
-void LOCK_HARDWARE(drm_context_t ctx)
-{
-	PPTHREAD_MUTEX_LOCK();
-	assert(!xvmc_driver->locked);
-
-	xvmc_driver->locked = 1;
-}
-
-void UNLOCK_HARDWARE(drm_context_t ctx)
-{
-	xvmc_driver->locked = 0;
-
-	PPTHREAD_MUTEX_UNLOCK();
-}
-
 static int
 dri2_connect(Display *display)
 {
@@ -340,8 +325,14 @@ _X_EXPORT Status XvMCCreateContext(Display * display, XvPortID port,
 		return ret;
 	}
 
-
+	sigfillset(&xvmc_driver->sa_mask);
+	sigdelset(&xvmc_driver->sa_mask, SIGFPE);
+	sigdelset(&xvmc_driver->sa_mask, SIGILL);
+	sigdelset(&xvmc_driver->sa_mask, SIGSEGV);
+	sigdelset(&xvmc_driver->sa_mask, SIGBUS);
+	sigdelset(&xvmc_driver->sa_mask, SIGKILL);
 	pthread_mutex_init(&xvmc_driver->ctxmutex, NULL);
+
 	intel_xvmc_dump_open();
 
 	return Success;

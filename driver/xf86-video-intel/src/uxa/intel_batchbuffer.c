@@ -185,13 +185,21 @@ void intel_batch_emit_flush(ScrnInfoPtr scrn)
 	assert (!intel->in_batch_atomic);
 
 	/* Big hammer, look to the pipelined flushes in future. */
-	if ((INTEL_INFO(intel)->gen >= 060)) {
+	if ((INTEL_INFO(intel)->gen >= 0100)) {
+		/* Only BLT supported */
+		BEGIN_BATCH_BLT(4);
+		OUT_BATCH(MI_FLUSH_DW | 2);
+		OUT_BATCH(0); /* address low */
+		OUT_BATCH(0); /* address high */
+		OUT_BATCH(0); /* dword data */
+		ADVANCE_BATCH();
+	} else if ((INTEL_INFO(intel)->gen >= 060)) {
 		if (intel->current_batch == BLT_BATCH) {
 			BEGIN_BATCH_BLT(4);
 			OUT_BATCH(MI_FLUSH_DW | 2);
-			OUT_BATCH(0);
-			OUT_BATCH(0);
-			OUT_BATCH(0);
+			OUT_BATCH(0); /* address */
+			OUT_BATCH(0); /* qword low */
+			OUT_BATCH(0); /* qword high */
 			ADVANCE_BATCH();
 		} else  {
 			if ((INTEL_INFO(intel)->gen == 060)) {

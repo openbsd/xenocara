@@ -73,9 +73,9 @@ static void _assert_pixmap_contains_box(PixmapPtr pixmap, BoxPtr box, const char
 
 static void apply_damage(struct sna_composite_op *op, RegionPtr region)
 {
-	DBG(("%s: damage=%p, region=%ldx[(%d, %d), (%d, %d)]\n",
+	DBG(("%s: damage=%p, region=%dx[(%d, %d), (%d, %d)]\n",
 	     __FUNCTION__, op->damage,
-	     (long)REGION_NUM_RECTS(region),
+	     region_num_rects(region),
 	     region->extents.x1, region->extents.y1,
 	     region->extents.x2, region->extents.y2));
 
@@ -120,13 +120,16 @@ composite_aligned_boxes(struct sna *sna,
 	BoxRec stack_boxes[64], *boxes;
 	pixman_region16_t region, clip;
 	struct sna_composite_op tmp;
+	int16_t dst_x, dst_y;
 	bool ret = true;
 	int dx, dy, n, num_boxes;
 
 	if (NO_ALIGNED_BOXES)
 		return false;
 
-	DBG(("%s\n", __FUNCTION__));
+	DBG(("%s: pixmap=%ld, nboxes=%d, dx=(%d, %d)\n", __FUNCTION__,
+	    get_drawable_pixmap(dst->pDrawable)->drawable.serialNumber,
+	    ntrap, dst->pDrawable->x, dst->pDrawable->y));
 
 	boxes = stack_boxes;
 	if (ntrap > (int)ARRAY_SIZE(stack_boxes)) {
@@ -168,19 +171,20 @@ composite_aligned_boxes(struct sna *sna,
 	if (num_boxes == 0)
 		goto free_boxes;
 
-	DBG(("%s: extents (%d, %d), (%d, %d) offset of (%d, %d)\n",
+	trapezoid_origin(&traps[0].left, &dst_x, &dst_y);
+
+	DBG(("%s: extents (%d, %d), (%d, %d) offset of (%d, %d), origin (%d, %d)\n",
 	     __FUNCTION__,
 	     region.extents.x1, region.extents.y1,
 	     region.extents.x2, region.extents.y2,
 	     region.extents.x1 - boxes[0].x1,
-	     region.extents.y1 - boxes[0].y1));
-
-	src_x += region.extents.x1 - boxes[0].x1;
-	src_y += region.extents.y1 - boxes[0].y1;
+	     region.extents.y1 - boxes[0].y1,
+	     dst_x, dst_y));
 
 	if (!sna_compute_composite_region(&clip,
 					  src, NULL, dst,
-					  src_x,  src_y,
+					  src_x + region.extents.x1 - dst_x - dx,
+					  src_y + region.extents.y1 - dst_y - dy,
 					  0, 0,
 					  region.extents.x1 - dx, region.extents.y1 - dy,
 					  region.extents.x2 - region.extents.x1,
@@ -193,24 +197,37 @@ composite_aligned_boxes(struct sna *sna,
 	if (op == PictOpClear && sna->clear)
 		src = sna->clear;
 
+	DBG(("%s: clipped extents (%d, %d), (%d, %d);  now offset by (%d, %d), orgin (%d, %d)\n",
+	     __FUNCTION__,
+	     clip.extents.x1, clip.extents.y1,
+	     clip.extents.x2, clip.extents.y2,
+	     clip.extents.x1 - boxes[0].x1,
+	     clip.extents.y1 - boxes[0].y1,
+	     dst_x, dst_y));
+
 	if (force_fallback ||
 	    !sna->render.composite(sna, op, src, NULL, dst,
-				   src_x,  src_y,
+				   src_x + clip.extents.x1 - dst_x,
+				   src_y + clip.extents.y1 - dst_y,
 				   0, 0,
 				   clip.extents.x1,  clip.extents.y1,
 				   clip.extents.x2 - clip.extents.x1,
 				   clip.extents.y2 - clip.extents.y1,
-				   COMPOSITE_PARTIAL, memset(&tmp, 0, sizeof(tmp)))) {
+				   (clip.data || num_boxes > 1) ?  COMPOSITE_PARTIAL : 0,
+				   memset(&tmp, 0, sizeof(tmp)))) {
 		unsigned int flags;
-		pixman_box16_t *b;
+		const pixman_box16_t *b;
 		int i, count;
 
 		DBG(("%s: composite render op not supported\n",
 		     __FUNCTION__));
 
 		flags = MOVE_READ | MOVE_WRITE;
-		if (n == 1 && op <= PictOpSrc)
-			flags = MOVE_WRITE | MOVE_INPLACE_HINT;
+		if (op <= PictOpSrc) {
+			flags |= MOVE_INPLACE_HINT;
+			if (n == 1)
+				flags &= ~MOVE_READ;
+		}
 
 		if (!sna_drawable_move_region_to_cpu(dst->pDrawable, &clip, flags))
 			goto done;
@@ -229,17 +246,19 @@ composite_aligned_boxes(struct sna *sna,
 		}
 
 		DBG(("%s: fbComposite()\n", __FUNCTION__));
+		src_x -= dst_x - dx;
+		src_y -= dst_y - dy;
 		if (maskFormat) {
 			pixman_region_init_rects(&region, boxes, num_boxes);
 			RegionIntersect(&region, &region, &clip);
 
 			if (sigtrap_get() == 0) {
-				b = REGION_RECTS(&region);
-				count = REGION_NUM_RECTS(&region);
+				b = region_rects(&region);
+				count = region_num_rects(&region);
 				for (i = 0; i < count; i++) {
 					fbComposite(op, src, NULL, dst,
-						    src_x + b[i].x1 - boxes[0].x1,
-						    src_y + b[i].y1 - boxes[0].y1,
+						    src_x + b[i].x1,
+						    src_y + b[i].y1,
 						    0, 0,
 						    b[i].x1, b[i].y1,
 						    b[i].x2 - b[i].x1, b[i].y2 - b[i].y1);
@@ -251,15 +270,18 @@ composite_aligned_boxes(struct sna *sna,
 			for (n = 0; n < num_boxes; n++) {
 				pixman_region_init_rects(&region, &boxes[n], 1);
 				RegionIntersect(&region, &region, &clip);
-				b = REGION_RECTS(&region);
-				count = REGION_NUM_RECTS(&region);
-				for (i = 0; i < count; i++) {
-					fbComposite(op, src, NULL, dst,
-						    src_x + b[i].x1 - boxes[0].x1,
-						    src_y + b[i].y1 - boxes[0].y1,
-						    0, 0,
-						    b[i].x1, b[i].y1,
-						    b[i].x2 - b[i].x1, b[i].y2 - b[i].y1);
+				b = region_rects(&region);
+				count = region_num_rects(&region);
+				if (sigtrap_get() == 0) {
+					for (i = 0; i < count; i++) {
+						fbComposite(op, src, NULL, dst,
+							    src_x + b[i].x1,
+							    src_y + b[i].y1,
+							    0, 0,
+							    b[i].x1, b[i].y1,
+							    b[i].x2 - b[i].x1, b[i].y2 - b[i].y1);
+					}
+					sigtrap_put();
 				}
 				pixman_region_fini(&region);
 				pixman_region_fini(&region);
@@ -274,10 +296,10 @@ composite_aligned_boxes(struct sna *sna,
 	    num_boxes == 1) {
 		pixman_region_init_rects(&region, boxes, num_boxes);
 		RegionIntersect(&region, &region, &clip);
-		if (REGION_NUM_RECTS(&region)) {
+		if (region_num_rects(&region)) {
 			tmp.boxes(sna, &tmp,
-				  REGION_RECTS(&region),
-				  REGION_NUM_RECTS(&region));
+				  region_rects(&region),
+				  region_num_rects(&region));
 			apply_damage(&tmp, &region);
 		}
 		pixman_region_fini(&region);
@@ -285,10 +307,10 @@ composite_aligned_boxes(struct sna *sna,
 		for (n = 0; n < num_boxes; n++) {
 			pixman_region_init_rects(&region, &boxes[n], 1);
 			RegionIntersect(&region, &region, &clip);
-			if (REGION_NUM_RECTS(&region)) {
+			if (region_num_rects(&region)) {
 				tmp.boxes(sna, &tmp,
-					  REGION_RECTS(&region),
-					  REGION_NUM_RECTS(&region));
+					  region_rects(&region),
+					  region_num_rects(&region));
 				apply_damage(&tmp, &region);
 			}
 			pixman_region_fini(&region);
@@ -324,10 +346,10 @@ composite_unaligned_box(struct sna *sna,
 
 		pixman_region_init_rects(&region, box, 1);
 		RegionIntersect(&region, &region, clip);
-		if (REGION_NUM_RECTS(&region))
+		if (region_num_rects(&region))
 			tmp->boxes(sna, tmp,
-				   REGION_RECTS(&region),
-				   REGION_NUM_RECTS(&region),
+				   region_rects(&region),
+				   region_num_rects(&region),
 				   opacity);
 		pixman_region_fini(&region);
 	} else
@@ -466,7 +488,7 @@ composite_unaligned_trap(struct sna *sna,
 
 			pixman_region_init_rects(&region, &box, 1);
 			RegionIntersect(&region, &region, clip);
-			if (REGION_NUM_RECTS(&region))
+			if (region_num_rects(&region))
 				apply_damage(&tmp->base, &region);
 			RegionUninit(&region);
 		} else
@@ -675,8 +697,8 @@ pixsolid_opacity(struct pixman_inplace *pi,
 		*pi->bits = pi->color;
 	else
 		*pi->bits = mul_4x8_8(pi->color, opacity);
-	pixman_image_composite(pi->op, pi->source, NULL, pi->image,
-			       0, 0, 0, 0, pi->dx + x, pi->dy + y, w, h);
+	sna_image_composite(pi->op, pi->source, NULL, pi->image,
+			    0, 0, 0, 0, pi->dx + x, pi->dy + y, w, h);
 }
 
 static void
@@ -765,7 +787,7 @@ composite_unaligned_boxes_inplace__solid(struct sna *sna,
 	     __FUNCTION__, n));
 	do {
 		RegionRec clip;
-		BoxPtr extents;
+		const BoxRec *extents;
 		int count;
 
 		clip.extents.x1 = pixman_fixed_to_int(t->left.p1.x);
@@ -789,52 +811,55 @@ composite_unaligned_boxes_inplace__solid(struct sna *sna,
 			continue;
 		}
 
-		RegionTranslate(&clip, dx, dy);
-		count = REGION_NUM_RECTS(&clip);
-		extents = REGION_RECTS(&clip);
-		while (count--) {
-			int16_t y1 = dy + pixman_fixed_to_int(t->top);
-			uint16_t fy1 = pixman_fixed_frac(t->top);
-			int16_t y2 = dy + pixman_fixed_to_int(t->bottom);
-			uint16_t fy2 = pixman_fixed_frac(t->bottom);
+		if (sigtrap_get() == 0) {
+			RegionTranslate(&clip, dx, dy);
+			count = region_num_rects(&clip);
+			extents = region_rects(&clip);
+			while (count--) {
+				int16_t y1 = dy + pixman_fixed_to_int(t->top);
+				uint16_t fy1 = pixman_fixed_frac(t->top);
+				int16_t y2 = dy + pixman_fixed_to_int(t->bottom);
+				uint16_t fy2 = pixman_fixed_frac(t->bottom);
 
-			DBG(("%s: t=(%d, %d), (%d, %d), extents (%d, %d), (%d, %d)\n",
-			     __FUNCTION__,
-			     pixman_fixed_to_int(t->left.p1.x),
-			     pixman_fixed_to_int(t->top),
-			     pixman_fixed_to_int(t->right.p2.x),
-			     pixman_fixed_to_int(t->bottom),
-			     extents->x1, extents->y1,
-			     extents->x2, extents->y2));
+				DBG(("%s: t=(%d, %d), (%d, %d), extents (%d, %d), (%d, %d)\n",
+				     __FUNCTION__,
+				     pixman_fixed_to_int(t->left.p1.x),
+				     pixman_fixed_to_int(t->top),
+				     pixman_fixed_to_int(t->right.p2.x),
+				     pixman_fixed_to_int(t->bottom),
+				     extents->x1, extents->y1,
+				     extents->x2, extents->y2));
 
-			if (y1 < extents->y1)
-				y1 = extents->y1, fy1 = 0;
-			if (y2 >= extents->y2)
-				y2 = extents->y2, fy2 = 0;
+				if (y1 < extents->y1)
+					y1 = extents->y1, fy1 = 0;
+				if (y2 >= extents->y2)
+					y2 = extents->y2, fy2 = 0;
 
-			if (y1 < y2) {
-				if (fy1) {
+				if (y1 < y2) {
+					if (fy1) {
+						lerp32_unaligned_box_row(pixmap, color, extents,
+									 t, dx, y1, 1,
+									 SAMPLES_Y - grid_coverage(SAMPLES_Y, fy1));
+						y1++;
+					}
+
+					if (y2 > y1)
+						lerp32_unaligned_box_row(pixmap, color, extents,
+									 t, dx, y1, y2 - y1,
+									 SAMPLES_Y);
+
+					if (fy2)
+						lerp32_unaligned_box_row(pixmap, color,  extents,
+									 t, dx, y2, 1,
+									 grid_coverage(SAMPLES_Y, fy2));
+				} else if (y1 == y2 && fy2 > fy1) {
 					lerp32_unaligned_box_row(pixmap, color, extents,
 								 t, dx, y1, 1,
-								 SAMPLES_Y - grid_coverage(SAMPLES_Y, fy1));
-					y1++;
+								 grid_coverage(SAMPLES_Y, fy2) - grid_coverage(SAMPLES_Y, fy1));
 				}
-
-				if (y2 > y1)
-					lerp32_unaligned_box_row(pixmap, color, extents,
-								 t, dx, y1, y2 - y1,
-								 SAMPLES_Y);
-
-				if (fy2)
-					lerp32_unaligned_box_row(pixmap, color,  extents,
-								 t, dx, y2, 1,
-								 grid_coverage(SAMPLES_Y, fy2));
-			} else if (y1 == y2 && fy2 > fy1) {
-				lerp32_unaligned_box_row(pixmap, color, extents,
-							 t, dx, y1, 1,
-							 grid_coverage(SAMPLES_Y, fy2) - grid_coverage(SAMPLES_Y, fy1));
+				extents++;
 			}
-			extents++;
+			sigtrap_put();
 		}
 
 		RegionUninit(&clip);
@@ -846,7 +871,7 @@ pixman:
 	do {
 		struct pixman_inplace pi;
 		RegionRec clip;
-		BoxPtr extents;
+		const BoxRec *extents;
 		int count;
 
 		clip.extents.x1 = pixman_fixed_to_int(t->left.p1.x);
@@ -877,37 +902,40 @@ pixman:
 		pi.color = color;
 		pi.op = op;
 
-		count = REGION_NUM_RECTS(&clip);
-		extents = REGION_RECTS(&clip);
-		while (count--) {
-			int16_t y1 = pixman_fixed_to_int(t->top);
-			uint16_t fy1 = pixman_fixed_frac(t->top);
-			int16_t y2 = pixman_fixed_to_int(t->bottom);
-			uint16_t fy2 = pixman_fixed_frac(t->bottom);
+		if (sigtrap_get() == 0) {
+			count = region_num_rects(&clip);
+			extents = region_rects(&clip);
+			while (count--) {
+				int16_t y1 = pixman_fixed_to_int(t->top);
+				uint16_t fy1 = pixman_fixed_frac(t->top);
+				int16_t y2 = pixman_fixed_to_int(t->bottom);
+				uint16_t fy2 = pixman_fixed_frac(t->bottom);
 
-			if (y1 < extents->y1)
-				y1 = extents->y1, fy1 = 0;
-			if (y2 >= extents->y2)
-				y2 = extents->y2, fy2 = 0;
-			if (y1 < y2) {
-				if (fy1) {
+				if (y1 < extents->y1)
+					y1 = extents->y1, fy1 = 0;
+				if (y2 >= extents->y2)
+					y2 = extents->y2, fy2 = 0;
+				if (y1 < y2) {
+					if (fy1) {
+						pixsolid_unaligned_box_row(&pi, extents, t, y1, 1,
+									   SAMPLES_Y - grid_coverage(SAMPLES_Y, fy1));
+						y1++;
+					}
+
+					if (y2 > y1)
+						pixsolid_unaligned_box_row(&pi, extents, t, y1, y2 - y1,
+									   SAMPLES_Y);
+
+					if (fy2)
+						pixsolid_unaligned_box_row(&pi, extents, t, y2, 1,
+									   grid_coverage(SAMPLES_Y, fy2));
+				} else if (y1 == y2 && fy2 > fy1) {
 					pixsolid_unaligned_box_row(&pi, extents, t, y1, 1,
-								   SAMPLES_Y - grid_coverage(SAMPLES_Y, fy1));
-					y1++;
+								   grid_coverage(SAMPLES_Y, fy2) - grid_coverage(SAMPLES_Y, fy1));
 				}
-
-				if (y2 > y1)
-					pixsolid_unaligned_box_row(&pi, extents, t, y1, y2 - y1,
-								   SAMPLES_Y);
-
-				if (fy2)
-					pixsolid_unaligned_box_row(&pi, extents, t, y2, 1,
-								   grid_coverage(SAMPLES_Y, fy2));
-			} else if (y1 == y2 && fy2 > fy1) {
-				pixsolid_unaligned_box_row(&pi, extents, t, y1, 1,
-							   grid_coverage(SAMPLES_Y, fy2) - grid_coverage(SAMPLES_Y, fy1));
+				extents++;
 			}
-			extents++;
+			sigtrap_put();
 		}
 
 		RegionUninit(&clip);
@@ -1048,7 +1076,7 @@ composite_unaligned_boxes_inplace(struct sna *sna,
 {
 	if (!force_fallback &&
 	    (is_gpu(sna, dst->pDrawable, PREFER_GPU_SPANS) ||
-	     picture_is_gpu(sna, src))) {
+	     picture_is_gpu(sna, src, PREFER_GPU_SPANS))) {
 		DBG(("%s: fallback -- not forcing\n", __FUNCTION__));
 		return false;
 	}
@@ -1059,7 +1087,7 @@ composite_unaligned_boxes_inplace(struct sna *sna,
 	src_y -= pixman_fixed_to_int(t[0].left.p1.y);
 	do {
 		RegionRec clip;
-		BoxPtr extents;
+		const BoxRec *extents;
 		int count;
 		int num_threads;
 
@@ -1115,37 +1143,40 @@ composite_unaligned_boxes_inplace(struct sna *sna,
 			pi.bits = pixman_image_get_data(pi.mask);
 			pi.op = op;
 
-			count = REGION_NUM_RECTS(&clip);
-			extents = REGION_RECTS(&clip);
-			while (count--) {
-				int16_t y1 = pixman_fixed_to_int(t->top);
-				uint16_t fy1 = pixman_fixed_frac(t->top);
-				int16_t y2 = pixman_fixed_to_int(t->bottom);
-				uint16_t fy2 = pixman_fixed_frac(t->bottom);
+			if (sigtrap_get() == 0) {
+				count = region_num_rects(&clip);
+				extents = region_rects(&clip);
+				while (count--) {
+					int16_t y1 = pixman_fixed_to_int(t->top);
+					uint16_t fy1 = pixman_fixed_frac(t->top);
+					int16_t y2 = pixman_fixed_to_int(t->bottom);
+					uint16_t fy2 = pixman_fixed_frac(t->bottom);
 
-				if (y1 < extents->y1)
-					y1 = extents->y1, fy1 = 0;
-				if (y2 > extents->y2)
-					y2 = extents->y2, fy2 = 0;
-				if (y1 < y2) {
-					if (fy1) {
+					if (y1 < extents->y1)
+						y1 = extents->y1, fy1 = 0;
+					if (y2 > extents->y2)
+						y2 = extents->y2, fy2 = 0;
+					if (y1 < y2) {
+						if (fy1) {
+							pixmask_unaligned_box_row(&pi, extents, t, y1, 1,
+										  SAMPLES_Y - grid_coverage(SAMPLES_Y, fy1));
+							y1++;
+						}
+
+						if (y2 > y1)
+							pixmask_unaligned_box_row(&pi, extents, t, y1, y2 - y1,
+										  SAMPLES_Y);
+
+						if (fy2)
+							pixmask_unaligned_box_row(&pi, extents, t, y2, 1,
+										  grid_coverage(SAMPLES_Y, fy2));
+					} else if (y1 == y2 && fy2 > fy1) {
 						pixmask_unaligned_box_row(&pi, extents, t, y1, 1,
-									  SAMPLES_Y - grid_coverage(SAMPLES_Y, fy1));
-						y1++;
+									  grid_coverage(SAMPLES_Y, fy2) - grid_coverage(SAMPLES_Y, fy1));
 					}
-
-					if (y2 > y1)
-						pixmask_unaligned_box_row(&pi, extents, t, y1, y2 - y1,
-									  SAMPLES_Y);
-
-					if (fy2)
-						pixmask_unaligned_box_row(&pi, extents, t, y2, 1,
-									  grid_coverage(SAMPLES_Y, fy2));
-				} else if (y1 == y2 && fy2 > fy1) {
-					pixmask_unaligned_box_row(&pi, extents, t, y1, 1,
-								  grid_coverage(SAMPLES_Y, fy2) - grid_coverage(SAMPLES_Y, fy1));
+					extents++;
 				}
-				extents++;
+				sigtrap_put();
 			}
 
 			pixman_image_unref(pi.image);
@@ -1169,19 +1200,23 @@ composite_unaligned_boxes_inplace(struct sna *sna,
 			dy = (clip.extents.y2 - clip.extents.y1 + num_threads - 1) / num_threads;
 			num_threads = (clip.extents.y2 - clip.extents.y1 + dy - 1) / dy;
 
-			for (i = 1; i < num_threads; i++) {
-				thread[i] = thread[0];
-				thread[i].y1 = y;
-				thread[i].y2 = y += dy;
-				sna_threads_run(rectilinear_inplace_thread, &thread[i]);
-			}
+			if (sigtrap_get() == 0) {
+				for (i = 1; i < num_threads; i++) {
+					thread[i] = thread[0];
+					thread[i].y1 = y;
+					thread[i].y2 = y += dy;
+					sna_threads_run(i, rectilinear_inplace_thread, &thread[i]);
+				}
 
-			assert(y < clip.extents.y2);
-			thread[0].y1 = y;
-			thread[0].y2 = clip.extents.y2;
-			rectilinear_inplace_thread(&thread[0]);
+				assert(y < clip.extents.y2);
+				thread[0].y1 = y;
+				thread[0].y2 = clip.extents.y2;
+				rectilinear_inplace_thread(&thread[0]);
 
-			sna_threads_wait();
+				sna_threads_wait();
+				sigtrap_put();
+			} else
+				sna_threads_kill();
 
 			pixman_image_unref(thread[0].dst);
 			pixman_image_unref(thread[0].src);

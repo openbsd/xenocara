@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-intel],
-        [2.99.910],
+        [2.99.916],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-intel])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -61,6 +61,35 @@ m4_ifndef([XORG_DRIVER_CHECK_EXT],
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_SYS_LARGEFILE
+
+# Check for common libc routines redefined by os.h
+AC_CHECK_FUNCS([strlcpy strlcat strndup], [], [])
+
+# Platform specific settings
+case $host_os in
+  *linux*)
+    backlight_helper=yes
+    ;;
+esac
+
+AC_ARG_ENABLE(backlight,
+              AS_HELP_STRING([--disable-backlight],
+			     [Enable control over the backlight [default=yes]]),
+              [backlight="$enableval"],
+              [backlight="yes"])
+if test "x$backlight" = "xyes"; then
+	AC_DEFINE(USE_BACKLIGHT, 1, [Enable control of the backlight])
+fi
+
+AC_ARG_ENABLE(backlight-helper,
+              AS_HELP_STRING([--disable-backlight-helper],
+			     [Enable building the backlight helper executable for running X under a normal user [default=auto]]),
+              [backlight_helper="$enableval"],)
+AM_CONDITIONAL(BUILD_BACKLIGHT_HELPER, [test "x$backlight" = "xyes" -a "x$backlight_helper" = "xyes"])
+if test "x$backlight_helper" = "xyes"; then
+	tools_msg="$tools_msg xf86-video-intel-backlight-helper"
+	AC_DEFINE(USE_BACKLIGHT_HELPER, 1, [Enable use of the backlight helper interfaces])
+fi
 
 # Are we in a git checkout?
 dot_git=no
@@ -176,19 +205,44 @@ if test "x$UDEV" != "xno"; then
 	fi
 fi
 
-PKG_CHECK_MODULES(X11, [x11 xrender xrandr xext xfixes pixman-1], [x11="yes"], [x11="no"])
+PKG_CHECK_MODULES(X11, [x11 xrender xrandr xext xfixes cairo cairo-xlib-xrender pixman-1 libpng], [x11="yes"], [x11="no"])
 AM_CONDITIONAL(HAVE_X11, test "x$x11" = "xyes")
 
-PKG_CHECK_MODULES(TOOL, [xinerama xrandr xdamage xfixes xcursor xtst xrender xext x11 pixman-1], [tools="yes"], [tools="no"])
+cpuid="yes"
+AC_TRY_LINK([
+	#include <cpuid.h>
+	#include <stddef.h>
+	],
+	[
+	int eax, ebx, ecx, edx;
+	if (__get_cpuid_max(0, NULL) < 4)
+		return 0;
+	__cpuid_count(4, 0, eax, ebx, ecx, edx);
+	],
+	[cpuid="yes"],
+	[cpuid="no"]
+)
+if test "x$cpuid" = "xyes"; then
+	AC_DEFINE(HAVE_CPUID_H,1,[Found a useable cpuid.h])
+fi
 
-if test "x$tools" = "xyes"; then
-  AC_CHECK_HEADER([sys/ipc.h], [], [tools=no])
-  AC_CHECK_HEADER([sys/shm.h], [], [tools=no])
-  AC_CHECK_HEADER([sys/timerfd.h], [], [tools=no])
+shm=yes
+AC_CHECK_HEADERS([sys/ipc.h sys/ipc.h], [], [shm="no"])
+AC_CHECK_HEADERS([X11/extensions/XShm.h], [], [shm="no"], [
+#include <X11/Xlibint.h>
+#include <X11/Xproto.h>
+])
+AC_CHECK_HEADERS([X11/extensions/shmproto.h X11/extensions/shmstr.h], [], [], [
+#include <X11/Xlibint.h>
+#include <X11/Xproto.h>
+])
+if test "x$ac_cv_header_X11_extensions_shmproto_h" != "xyes" -a "x$ac_cv_header_X11_extensions_shmstr_h" != "xyes"; then
+	shm="no"
+fi
 
-  if test "$ac_cv_header_sys_ipc_h" = "yes" -a "$ac_cv_header_sys_shm_h" = "yes"; then
-      AC_MSG_CHECKING(whether shmctl IPC_RMID allows subsequent attaches)
-      AC_TRY_RUN([
+if test "x$shm" = "xyes"; then
+	AC_MSG_CHECKING(whether shmctl IPC_RMID allows subsequent attaches)
+	AC_TRY_RUN([
 		  #include <sys/types.h>
 		  #include <sys/ipc.h>
 		  #include <sys/shm.h>
@@ -213,14 +267,54 @@ if test "x$tools" = "xyes"; then
 		  AC_MSG_RESULT(yes),
 		  AC_MSG_RESULT(no),
 		  AC_MSG_RESULT(assuming no))
-      fi
-
-      AC_CHECK_HEADERS([X11/extensions/XShm.h X11/extensions/shmproto.h X11/extensions/shmstr.h], [], [tools=no],
-		       [#include <X11/Xlibint.h>
-			#include <X11/Xproto.h>])
+	AC_DEFINE([HAVE_MIT_SHM], 1, [Define to 1 if MIT-SHM is available])
 fi
 
-AM_CONDITIONAL(BUILD_TOOLS, test "x$tools" = "xyes")
+PKG_CHECK_MODULES(X11_DRI3, [xcb-dri3 xcb-sync xcb-present x11-xcb xshmfence x11 xrender xext libdrm], [x11_dri3="yes"], [x11_dri3="no"])
+AM_CONDITIONAL(X11_DRI3, test "x$x11_dri3" = "xyes" -a "x$shm" = "xyes")
+AM_CONDITIONAL(X11_SHM, test "x$shm" = "xyes")
+
+AC_ARG_ENABLE(tools,
+              AS_HELP_STRING([--disable-tools],
+			     [Enable building and installing the miscellaneous tools [default=auto]]),
+              [tools="$enableval"], [tools="auto"])
+if test "x$shm" != "xyes"; then
+	if test "x$tools" = "xyes"; then
+		AC_MSG_ERROR([Incomplete requirements for extra tools, X11 MIT-SHM extension required])
+	fi
+	tools="no"
+fi
+if test "x$tools" != "xno"; then
+	ivo_requires="xrandr xdamage xfixes xcursor xtst xrender xext x11 pixman-1"
+	extra_cflags=""
+
+	ignore="xinerama"
+	PKG_CHECK_MODULES(IVO_EXTRA, [$ignore],
+			  [AC_CHECK_HEADERS([X11/extensions/Xinerama.h], [ivo_requires="$ignore $ivo_requires"], [],
+					    [#include <X11/Xlibint.h>
+					     #include <X11/Xproto.h>
+					    ])], [ignore=""])
+
+	ignore="xcb-dri3 xcb-sync x11-xcb xshmfence x11"
+	PKG_CHECK_MODULES(IVO_EXTRA, [$ignore], [ivo_requires="$ivo_requires $ignore"; extra_cflags="-DDRI3"], [ignore=""])
+
+	PKG_CHECK_MODULES(IVO, [$ivo_requires], [ivo="yes"], [ivo="no"])
+	AC_CHECK_HEADER([sys/timerfd.h], [], [ivo="no"])
+	if test "x$ivo" = "xno"; then
+		if test "x$tools" = "xyes"; then
+			AC_MSG_ERROR([Incomplete requirements for intel-virtual-output, requires $ivo_requires])
+		fi
+		tools="no"
+	fi
+
+	IVO_CFLAGS="$IVO_CFLAGS $extra_cflags"
+fi
+if test "x$tools" != "xno"; then
+      tools_msg="$tools_msg intel-virtual-output"
+fi
+AC_MSG_CHECKING([whether to build additional tools])
+AC_MSG_RESULT([$tools])
+AM_CONDITIONAL(BUILD_TOOLS, test "x$tools" != "xno")
 
 # Define a configure option for an alternate module directory
 AC_ARG_WITH(xorg-module-dir,
@@ -231,7 +325,24 @@ AC_ARG_WITH(xorg-module-dir,
 
 AC_ARG_ENABLE(dri,
 	      AS_HELP_STRING([--disable-dri],
-			     [Disable DRI support [[default=auto]]]))
+			     [Disable DRI support [[default=auto]]]),
+	      [DRI=$enableval],
+	      [DRI=auto])
+AC_ARG_ENABLE(dri1,
+	      AS_HELP_STRING([--disable-dri1],
+			     [Disable DRI1 support [[default=yes]]]),
+	      [DRI1=$enableval],
+	      [DRI1=yes])
+AC_ARG_ENABLE(dri2,
+	      AS_HELP_STRING([--disable-dri2],
+			     [Disable DRI2 support [[default=yes]]]),
+	      [DRI2=$enableval],
+	      [DRI2=yes])
+AC_ARG_ENABLE(dri3,
+	      AS_HELP_STRING([--disable-dri3],
+			     [Disable DRI3 support [[default=yes]]]),
+	      [DRI3=$enableval],
+	      [DRI3=yes])
 
 AC_ARG_ENABLE(xvmc, AS_HELP_STRING([--disable-xvmc],
                                   [Disable XvMC support [[default=yes]]]),
@@ -275,7 +386,6 @@ fi
 # Store the list of server defined optional extensions in REQUIRED_MODULES
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
-XORG_DRIVER_CHECK_EXT(XF86DRI, xextproto x11)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Obtain compiler/linker options for the driver dependencies
@@ -293,13 +403,14 @@ if test "x$SNA" != "xno"; then
 	AC_CHECK_HEADERS([sys/sysinfo.h], AC_CHECK_MEMBERS([struct sysinfo.totalram], [], [], [[#include <sys/sysinfo.h>]]))
 fi
 
+uxa_requires_libdrm=2.4.52
 AC_ARG_ENABLE(uxa,
 	      AS_HELP_STRING([--enable-uxa],
-			     [Enable Unified Acceleration Architecture (UXA) [default=yes]]),
+			     [Enable Unified Acceleration Architecture (UXA) [default=auto]]),
 	      [UXA="$enableval"],
 	      [UXA=auto])
 if test "x$UXA" = "xauto"; then
-	if ! pkg-config --exists 'libdrm_intel >= 2.4.29'; then
+	if ! pkg-config --exists "libdrm_intel >= $uxa_requires_libdrm"; then
 		UXA=no
 	fi
 	if ! pkg-config --exists 'pixman-1 >= 0.24.0'; then
@@ -308,7 +419,7 @@ if test "x$UXA" = "xauto"; then
 fi
 if test "x$UXA" != "xno"; then
 	AC_DEFINE(USE_UXA, 1, [Enable UXA support])
-	PKG_CHECK_MODULES(DRMINTEL, [libdrm_intel >= 2.4.29])
+	PKG_CHECK_MODULES(DRMINTEL, [libdrm_intel >= $uxa_requires_libdrm])
 	required_pixman_version=0.24
 	UXA=yes
 fi
@@ -322,12 +433,18 @@ if test "x$GLAMOR" != "xno"; then
 	if test "x$UXA" != "xyes"; then
 		AC_MSG_ERROR([Glamor acceleration requested but UXA is not enabled])
 	fi
-	PKG_CHECK_MODULES(LIBGLAMOR, [glamor >= 0.6.0])
-	PKG_CHECK_MODULES(LIBGLAMOR_EGL, [glamor-egl])
+	if pkg-config --exists "xorg-server >= 1.15.99.901"; then
+		GLAMOR="yes (using Xorg glamor module)"
+	else
+		PKG_CHECK_MODULES(LIBGLAMOR, [glamor >= 0.6.0])
+		PKG_CHECK_MODULES(LIBGLAMOR_EGL, [glamor-egl])
+		GLAMOR="yes (using libglamor)"
+	fi
 	AC_DEFINE(USE_GLAMOR, 1, [Enable glamor acceleration])
 fi
 
 PKG_CHECK_MODULES(XORG, [xorg-server >= $required_xorg_server_version xproto fontsproto pixman-1 >= $required_pixman_version $REQUIRED_MODULES])
+ABI_VERSION=`$PKG_CONFIG --variable=abi_videodrv xorg-server`
 
 if test "x$ONLY_UMS" = "xyes"; then
 	UMS="yes"
@@ -391,15 +508,15 @@ if test "x$UMS" = "xyes"; then
 	AC_DEFINE(UMS,1,[Assume UMS support])
 fi
 
-
-DRI1=no
-if test "x$enable_dri" != "xno" -a "x$UMS" = "xyes"; then
-	PKG_CHECK_MODULES(DRI1, [xf86driproto], [DRI1="yes"], [DRI1="no"])
+have_dri1=no
+XORG_DRIVER_CHECK_EXT(XF86DRI, xf86driproto)
+if test "x$_EXT_CHECK" != "xno" -a "x$DRI" != "xno" -a "x$DRI1" != "xno" -a "x$UMS" = "xyes"; then
+	PKG_CHECK_MODULES(DRI1, [xf86driproto], [have_dri1=$DRI], [have_dri1=no])
         save_CFLAGS="$CFLAGS"
         save_CPPFLAGS="$CPPFLAGS"
         CFLAGS="$CFLAGS $XORG_CFLAGS $DRI1_CFLAGS $DRM_CFLAGS"
         CPPFLAGS="$CPPFLAGS $XORG_CFLAGS $DRI1_CFLAGS $DRM_CFLAGS"
-        AC_CHECK_HEADERS([dri.h sarea.h dristruct.h], [DRI1="yes"], [DRI1="no"],
+        AC_CHECK_HEADERS([dri.h sarea.h dristruct.h], [], [have_dri1=no],
                 [/* for dri.h */
                  #include <xf86str.h>
                  /* for dristruct.h */
@@ -411,52 +528,76 @@ if test "x$enable_dri" != "xno" -a "x$UMS" = "xyes"; then
                  # include <sarea.h>
                  #endif
                 ])
-        CFLAGS="$save_CFLAGS $DEBUGFLAGS"
+        CFLAGS="$save_CFLAGS"
         CPPFLAGS="$save_CPPFLAGS"
 fi
 
 AC_MSG_CHECKING([whether to include DRI1 support])
-AC_MSG_RESULT([$DRI1])
+AC_MSG_RESULT([$have_dri1])
 
-AM_CONDITIONAL(DRI1, test "x$DRI1" != "xno")
-if test "x$DRI1" != "xno"; then
+AM_CONDITIONAL(DRI1, test "x$have_dri1" != "xno")
+if test "x$have_dri1" != "xno"; then
         AC_DEFINE(HAVE_DRI1,1,[Enable DRI1 driver support])
 	dri_msg="$dri_msg DRI1"
 else
         DRI1_CFLAGS=""
         DRI1_LIBS=""
 
-        if test "x$enable_dri" = "xyes" -a "x$UMS" = "xyes"; then
+        if test "x$DRI" = "xyes" -a "x$UMS" = "xyes" -a "x$DRI1" != "xno"; then
                 AC_MSG_ERROR([DRI1 requested but prerequisites not found])
         fi
 fi
 
-DRI2=no
-if test "x$enable_dri" != "xno"; then
-	PKG_CHECK_MODULES(DRI2, [dri2proto >= 2.6], DRI2="yes", DRI2="no")
-	dridriverdir=`$PKG_CONFIG --variable=dridriverdir dri`
-	if test "x$dridriverdir" = "x"; then
-		dridriverdir="$libdir/dri"
-	fi
-	AC_DEFINE_DIR(DRI_DRIVER_PATH, dridriverdir, [Default DRI2 driver path])
+have_dri2=no
+have_dri3=no
+if test "x$DRI" != "xno"; then
 	if test "x$DRI2" != "xno"; then
+		PKG_CHECK_MODULES(DRI2, [dri2proto >= 2.6], [have_dri2=$DRI], [have_dri2=no])
+	fi
+	if test "x$have_dri2" != "xno"; then
 		save_CFLAGS=$CFLAGS
 		CFLAGS="$XORG_CFLAGS $DRM_CFLAGS $DRI1_CFLAGS $DRI2_CFLAGS"
-		AC_CHECK_HEADERS([dri2.h], DRI2="yes", DRI2="no", [
+		AC_CHECK_HEADERS([dri2.h], [], [have_dri2=no], [
 #include <dixstruct.h>
 #include <drm.h>
 ])
 		CFLAGS=$save_CFLAGS
 	fi
+	if test "x$have_dri2" != "xno"; then
+		dridriverdir=`$PKG_CONFIG --variable=dridriverdir dri`
+		if test "x$dridriverdir" = "x"; then
+			dridriverdir="$libdir/dri"
+		fi
+		AC_DEFINE_DIR(DRI_DRIVER_PATH, dridriverdir, [Default have_dri2 driver path])
+	fi
+
+	if test "x$DRI3" != "xno"; then
+		XORG_DRIVER_CHECK_EXT(DRI3, dri3proto)
+		if test "x$_EXT_CHECK" != "xno"; then
+			PKG_CHECK_MODULES(DRI3, [dri3proto], [have_dri3=$DRI], [])
+		fi
+	fi
+	if test "x$have_dri3" != "xno"; then
+		save_CFLAGS=$CFLAGS
+		CFLAGS="$XORG_CFLAGS $DRI3_CFLAGS"
+		AC_CHECK_DECL(DRI3, [], [have_dri3=no], [#include <xorg-server.h>])
+		AC_CHECK_HEADERS([misyncstr.h misyncshm.h], [], [have_dri3=no], [
+#include <xorg-server.h>
+#include <xf86str.h>
+#include <misync.h>
+])
+		CFLAGS=$save_CFLAGS
+	fi
 fi
+
 AC_MSG_CHECKING([whether to include DRI2 support])
-AM_CONDITIONAL(DRI2, test "x$DRI2" = "xyes")
-AC_MSG_RESULT([$DRI2])
-if test "x$DRI2" != "xno"; then
+AM_CONDITIONAL(DRI2, test "x$have_dri2" != "xno")
+AC_MSG_RESULT([$have_dri2])
+if test "x$have_dri2" != "xno"; then
         AC_DEFINE(HAVE_DRI2,1,[Enable DRI2 driver support])
 	dri_msg="$dri_msg DRI2"
 else
-	if test "x$enable_dri" = "xyes" -a "x$KMS" = "xyes"; then
+	if test "x$DRI" = "xyes" -a "x$DRI2" != "xno" -a "x$KMS" = "xyes"; then
 		AC_MSG_ERROR([DRI2 requested but prerequisites not found])
 	fi
 
@@ -464,7 +605,41 @@ else
 	UXA=no
 fi
 
+AC_MSG_CHECKING([whether to include DRI3 support])
+AM_CONDITIONAL(DRI3, test "x$have_dri3" != "xno")
+AC_MSG_RESULT([$have_dri3])
+if test "x$have_dri3" != "xno"; then
+        AC_DEFINE(HAVE_DRI3,1,[Enable DRI3 driver support])
+	dri_msg="$dri_msg DRI3"
+else
+	if test "x$DRI" = "xyes" -a "x$DRI3" != "xno" -a "x$KMS" = "xyes"; then
+		AC_MSG_ERROR([DRI3 requested but prerequisites not found])
+	fi
+fi
+
 AC_CHECK_HEADERS([X11/extensions/dpmsconst.h])
+
+PRESENT="no"
+XORG_DRIVER_CHECK_EXT(PRESENT, presentproto)
+if test "x$_EXT_CHECK" != "xno"; then
+	PKG_CHECK_MODULES(PRESENT, [presentproto], [PRESENT="yes"], [])
+fi
+if test "x$PRESENT" != "xno"; then
+	save_CFLAGS=$CFLAGS
+	CFLAGS="$XORG_CFLAGS $PRESENT_CFLAGS"
+	AC_CHECK_HEADERS([present.h], [], [PRESENT="no"], [
+#include <xorg-server.h>
+#include <xf86str.h>
+])
+	CFLAGS=$save_CFLAGS
+fi
+AC_MSG_CHECKING([whether to include PRESENT support])
+AM_CONDITIONAL(PRESENT, test "x$PRESENT" != "xno")
+AC_MSG_RESULT([$PRESENT])
+if test "x$PRESENT" != "xno"; then
+        AC_DEFINE(HAVE_PRESENT,1,[Enable PRESENT driver support])
+	dri_msg="$dri_msg Present"
+fi
 
 AC_MSG_CHECKING([whether to include UXA support])
 AC_MSG_RESULT([$UXA])
@@ -479,8 +654,7 @@ AM_CONDITIONAL(SNA, test "x$SNA" != "xno")
 AC_MSG_RESULT([$SNA])
 
 if test "$XVMC" = "yes"; then
-	PKG_CHECK_MODULES(XVMCLIB, [xvmc dri2proto x11], [], [XVMC="no"])
-	PKG_CHECK_MODULES(XCB, [x11-xcb xcb-dri2 xcb-aux], [], [XVMC="no"])
+	PKG_CHECK_MODULES(XVMCLIB, [xvmc dri2proto x11 x11-xcb xcb-dri2 xcb-aux libdrm_intel], [], [XVMC="no"])
 fi
 AC_MSG_CHECKING([whether to include XvMC support])
 AC_MSG_RESULT([$XVMC])
@@ -495,7 +669,7 @@ fi
 
 AC_ARG_WITH(default-accel,
 	    AS_HELP_STRING([--with-default-accel],
-			   [Select the default acceleration method [default=sna if enabled, otherwise uxa]]),
+			   [Select the default acceleration method out of glamor, none, sna, or uxa  [default is sna if enabled, otherwise uxa]]),
 			   [accel="$withval"],
 			   [accel="auto"])
 if test "x$accel" = "xyes"; then
@@ -547,13 +721,27 @@ fi
 
 if test "x$have_accel" = "xnone"; then
 	if test "x$KMS" = "xyes"; then
-		AC_MSG_ERROR([Invalid default acceleration option])
+		if test "x$SNA" != "xno" -o "x$UXA" != "xno"; then
+			AC_DEFINE(DEFAULT_ACCEL_METHOD, NOACCEL, [Default acceleration method])
+		else
+			AC_MSG_ERROR([Invalid default acceleration option])
+		fi
 	fi
 	accel="none"
 fi
 AC_MSG_RESULT($accel)
 
 xp_msg=""
+
+AC_ARG_ENABLE(tear-free,
+	      AS_HELP_STRING([--enable-tear-free],
+			     [Enable use of TearFree by default [default=no]]),
+	      [TEARFREE="$enableval"],
+	      [TEARFREE="no"])
+if test "x$TEARFREE" = "xyes"; then
+	AC_DEFINE(TEARFREE,1,[Enable "TearFree" by default])
+	xp_msg="$xp_msg TearFree"
+fi
 
 AC_ARG_ENABLE(rendernode,
 	      AS_HELP_STRING([--enable-rendernode],
@@ -575,17 +763,6 @@ AM_CONDITIONAL(USE_CREATE2, test "x$CREATE2" = "xyes")
 if test "x$CREATE2" = "xyes"; then
 	AC_DEFINE(USE_CREATE2,1,[Assume "create2" support])
 	xp_msg="$xp_msg create2"
-fi
-
-AC_ARG_ENABLE(userptr,
-	      AS_HELP_STRING([--enable-userptr],
-			     [Enable use of userptr (experimental) [default=no]]),
-	      [USERPTR="$enableval"],
-	      [USERPTR="no"])
-AM_CONDITIONAL(USE_USERPTR, test "x$USERPTR" = "xyes")
-if test "x$USERPTR" = "xyes"; then
-	AC_DEFINE(USE_USERPTR,1,[Assume "userptr" support])
-	xp_msg="$xp_msg userptr"
 fi
 
 AC_ARG_ENABLE(async-swap,
@@ -666,13 +843,19 @@ if test "x$debug_msg" = "x"; then
 	debug_msg=" none"
 fi
 
+AC_CONFIG_LIBOBJ_DIR(libobj)
+AC_REPLACE_FUNCS(getline)
+
 DRIVER_NAME="intel"
 AC_SUBST([DRIVER_NAME])
 AC_SUBST([moduledir])
+AC_DEFINE_DIR([PREFIX_PATH], prefix, [installation prefix])
+AC_DEFINE_DIR([LIBEXEC_PATH], libexecdir, [libexec directory])
 
 AC_CONFIG_FILES([
                 Makefile
                 man/Makefile
+		libobj/Makefile
                 src/Makefile
                 src/legacy/Makefile
                 src/legacy/i810/Makefile
@@ -688,11 +871,21 @@ AC_CONFIG_FILES([
                 xvmc/shader/vld/Makefile
 		test/Makefile
 		tools/Makefile
+		tools/org.x.xf86-video-intel.backlight-helper.policy
 ])
 AC_OUTPUT
 
+echo ""
+echo ""
+test -e `pwd $0`/README && cat `pwd $0`/README
+
 accel_msg=""
 if test "x$SNA" != "xno"; then
+	if test "$accel" = "none"; then
+		accel_msg="$accel_msg *none"
+	else
+		accel_msg="$accel_msg none"
+	fi
 	if test "$accel" = "sna"; then
 		accel_msg="$accel_msg *sna"
 	else
@@ -700,6 +893,13 @@ if test "x$SNA" != "xno"; then
 	fi
 fi
 if test "x$UXA" != "xno"; then
+	if test "x$SNA" = "xno"; then
+		if test "$accel" = "none"; then
+			accel_msg="$accel_msg *none"
+		else
+			accel_msg="$accel_msg none"
+		fi
+	fi
 	if test "$accel" = "uxa"; then
 		accel_msg="$accel_msg *uxa"
 	else
@@ -718,14 +918,13 @@ if test "x$dri_msg" = "x"; then
 	dri_msg=" none"
 fi
 
-if test "x$tools" = "xyes"; then
-	tools_msg=" intel-virtual-output"
-else
+if test "x$tools_msg" = "x"; then
 	tools_msg=" none"
 fi
 
 echo ""
 echo "AC_PACKAGE_STRING will be compiled with:"
+echo "  Xorg Video ABI version: $ABI_VERSION"
 echo "  Acceleration backends:$accel_msg"
 echo "  Additional debugging support?$debug_msg"
 echo "  Support for Kernel Mode Setting? $KMS"

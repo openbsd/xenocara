@@ -403,5 +403,10 @@ static inline void list_move_tail(struct list *list, struct list *head)
 #define container_of(ptr, type, member) \
 	((type *)((char *)(ptr) - (char *) &((type *)0)->member))
 
+static inline int list_is_singular(const struct list *list)
+{
+	return list->next == list->prev;
+}
+
 #endif /* _INTEL_LIST_H_ */
 

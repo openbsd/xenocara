@@ -56,7 +56,7 @@ static const char *trapezoid_name(enum trapezoid trapezoid)
 
 static void
 show_cells(char *buf,
-	   const uint32_t *real, const uint32_t *ref,
+	   const uint32_t *out, const uint32_t *ref,
 	   int x, int y, int w, int h)
 {
 	int i, j, len = 0;
@@ -69,7 +69,7 @@ show_cells(char *buf,
 			if (i < 0 || i >= w)
 				continue;
 
-			len += sprintf(buf+len, "%08x ", real[j*w+i]);
+			len += sprintf(buf+len, "%08x ", out[j*w+i]);
 		}
 
 		len += sprintf(buf+len, "\t");
@@ -143,7 +143,7 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target, 
 {
 	struct test_target tt;
 	XImage image;
-	uint32_t *cells = malloc(t->real.width*t->real.height*4);
+	uint32_t *cells = malloc(t->out.width*t->out.height*4);
 	struct {
 		uint16_t x, y;
 	} *pixels = malloc(reps*sizeof(*pixels));
@@ -154,7 +154,7 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target, 
 	       use_window ? "window" : "pixmap");
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &tt);
+	test_target_create_render(&t->out, target, &tt);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
@@ -172,8 +172,8 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target, 
 				ty = rand() % (tt.height - 1);
 			} while (tx == x && ty == y);
 
-			fill_rect(&t->real, tt.picture,
-				  use_window ? t->real.format : tt.format,
+			fill_rect(&t->out, tt.picture,
+				  use_window ? t->out.format : tt.format,
 				  PictOpSrc, x, y, 1, 1,
 				  0, 0, MASK_NONE,
 				  use_window, tx, ty,
@@ -181,17 +181,17 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target, 
 
 			pixels[r].x = x;
 			pixels[r].y = y;
-			cells[y*t->real.width+x] = color(red, green, blue, alpha);
+			cells[y*t->out.width+x] = color(red, green, blue, alpha);
 		}
 
-		test_init_image(&image, &t->real.shm, tt.format, 1, 1);
+		test_init_image(&image, &t->out.shm, tt.format, 1, 1);
 
 		for (r = 0; r < reps; r++) {
 			uint32_t result;
 			uint32_t x = pixels[r].x;
 			uint32_t y = pixels[r].y;
 
-			XShmGetImage(t->real.dpy, tt.draw, &image,
+			XShmGetImage(t->out.dpy, tt.draw, &image,
 				     x, y, AllPlanes);
 
 			result = *(uint32_t *)image.data;
@@ -209,7 +209,7 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target, 
 	}
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &tt);
+	test_target_destroy_render(&t->out, &tt);
 
 	free(pixels);
 	free(cells);
@@ -265,7 +265,7 @@ static void area_tests(struct test *t, int reps, int sets, enum target target, i
 {
 	struct test_target tt;
 	XImage image;
-	uint32_t *cells = calloc(sizeof(uint32_t), t->real.width*t->real.height);
+	uint32_t *cells = calloc(sizeof(uint32_t), t->out.width*t->out.height);
 	int r, s, x, y;
 
 	printf("Testing area sets (%s using %s source): ",
@@ -273,10 +273,10 @@ static void area_tests(struct test *t, int reps, int sets, enum target target, i
 	       use_window ? "window" : "pixmap");
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &tt);
-	clear(&t->real, &tt);
+	test_target_create_render(&t->out, target, &tt);
+	clear(&t->out, &tt);
 
-	test_init_image(&image, &t->real.shm, tt.format, tt.width, tt.height);
+	test_init_image(&image, &t->out.shm, tt.format, tt.width, tt.height);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
@@ -308,8 +308,8 @@ static void area_tests(struct test *t, int reps, int sets, enum target target, i
 				tx = ty = 0;
 			}
 
-			fill_rect(&t->real, tt.picture,
-				  use_window ? t->real.format : tt.format,
+			fill_rect(&t->out, tt.picture,
+				  use_window ? t->out.format : tt.format,
 				  PictOpSrc, x, y, w, h,
 				  0, 0, MASK_NONE,
 				  use_window, tx, ty,
@@ -323,7 +323,7 @@ static void area_tests(struct test *t, int reps, int sets, enum target target, i
 
 		}
 
-		XShmGetImage(t->real.dpy, tt.draw, &image, 0, 0, AllPlanes);
+		XShmGetImage(t->out.dpy, tt.draw, &image, 0, 0, AllPlanes);
 
 		for (y = 0; y < tt.height; y++) {
 			for (x = 0; x < tt.width; x++) {
@@ -351,7 +351,7 @@ static void area_tests(struct test *t, int reps, int sets, enum target target, i
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &tt);
+	test_target_destroy_render(&t->out, &tt);
 	free(cells);
 }
 
@@ -362,7 +362,7 @@ static void rect_tests(struct test *t,
 		       enum target target,
 		       int use_window)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 
 	printf("Testing area fills (offset %dx%d, mask %s) (%s using %s source): ",
@@ -370,9 +370,9 @@ static void rect_tests(struct test *t,
 	       use_window ? "window" : "pixmap");
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
-	set_mask(&t->real, &real, mask);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
+	set_mask(&t->out, &out, mask);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
@@ -389,19 +389,19 @@ static void rect_tests(struct test *t,
 			int tx, ty, try = 50;
 
 			do {
-				x = rand() % (real.width - 1);
-				y = rand() % (real.height - 1);
-				w = 1 + rand() % (real.width - x - 1);
-				h = 1 + rand() % (real.height - y - 1);
-				tx = w == real.width ? 0 : rand() % (real.width - w);
-				ty = h == real.height ? 0 : rand() % (real.height - h);
+				x = rand() % (out.width - 1);
+				y = rand() % (out.height - 1);
+				w = 1 + rand() % (out.width - x - 1);
+				h = 1 + rand() % (out.height - y - 1);
+				tx = w == out.width ? 0 : rand() % (out.width - w);
+				ty = h == out.height ? 0 : rand() % (out.height - h);
 			} while (((tx+w > x && tx < x+w) &&
 				  (ty+h > y && ty < y+h)) &&
 				 --try);
 
 			if (try) {
-				fill_rect(&t->real, real.picture,
-					  use_window ? t->real.format : real.format,
+				fill_rect(&t->out, out.picture,
+					  use_window ? t->out.format : out.format,
 					  op, x, y, w, h,
 					  dx, dy, mask,
 					  use_window, tx, ty,
@@ -416,15 +416,15 @@ static void rect_tests(struct test *t,
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 
@@ -508,7 +508,7 @@ static void trap_tests(struct test *t,
 		       int reps, int sets,
 		       enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	XTrapezoid *traps;
 	int max_traps = 65536;
 	int r, s, n;
@@ -523,9 +523,9 @@ static void trap_tests(struct test *t,
 	       test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
-	set_mask(&t->real, &real, mask);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
+	set_mask(&t->out, &out, mask);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
@@ -539,17 +539,17 @@ static void trap_tests(struct test *t,
 			int blue = rand() % 0xff;
 			int alpha = rand() % 0xff;
 			int num_traps = rand() % max_traps;
-			int srcx = rand() % 2*real.width - real.width;
-			int srcy = rand() % 2*real.height - real.height;
-			int srcw = rand() % real.width;
-			int srch = rand() % real.height;
+			int srcx = rand() % 2*out.width - out.width;
+			int srcy = rand() % 2*out.height - out.height;
+			int srcw = rand() % out.width;
+			int srch = rand() % out.height;
 
 			for (n = 0; n < num_traps; n++)
 				random_trapezoid(&traps[n], 0,
-						 0, 0, real.width, real.height);
+						 0, 0, out.width, out.height);
 
 
-			fill_traps(&t->real, real.picture, real.format,
+			fill_traps(&t->out, out.picture, out.format,
 				   op, traps, num_traps, mask,
 				   srcx, srcy, srcw, srch,
 				   red, green, blue, alpha);
@@ -561,15 +561,15 @@ static void trap_tests(struct test *t,
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 	free(traps);
 }

@@ -9,7 +9,7 @@
 
 static void
 show_cells(char *buf,
-	   const uint32_t *real, const uint32_t *ref,
+	   const uint32_t *out, const uint32_t *ref,
 	   int x, int y, int w, int h)
 {
 	int i, j, len = 0;
@@ -22,7 +22,7 @@ show_cells(char *buf,
 			if (i < 0 || i >= w)
 				continue;
 
-			len += sprintf(buf+len, "%08x ", real[j*w+i]);
+			len += sprintf(buf+len, "%08x ", out[j*w+i]);
 		}
 
 		len += sprintf(buf+len, "\t");
@@ -85,13 +85,13 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target)
 {
 	struct test_target tt;
 	XImage image;
-	uint32_t *cells = malloc(t->real.width*t->real.height*4);
+	uint32_t *cells = malloc(t->out.width*t->out.height*4);
 	struct {
 		uint16_t x, y;
 	} *pixels = malloc(reps*sizeof(*pixels));
 	int r, s;
 
-	test_target_create_render(&t->real, target, &tt);
+	test_target_create_render(&t->out, target, &tt);
 
 	printf("Testing setting of single pixels (%s): ",
 	       test_target_name(target));
@@ -106,7 +106,7 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target)
 			uint8_t blue = rand();
 			uint8_t alpha = rand();
 
-			fill_rect(&t->real, tt.picture, tt.format,
+			fill_rect(&t->out, tt.picture, tt.format,
 				  0, 0, 0,
 				  PictOpSrc, x, y, 1, 1,
 				  red, green, blue, alpha);
@@ -116,14 +116,14 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target)
 			cells[y*tt.width+x] = color(red, green, blue, alpha);
 		}
 
-		test_init_image(&image, &t->real.shm, tt.format, 1, 1);
+		test_init_image(&image, &t->out.shm, tt.format, 1, 1);
 
 		for (r = 0; r < reps; r++) {
 			uint32_t x = pixels[r].x;
 			uint32_t y = pixels[r].y;
 			uint32_t result;
 
-			XShmGetImage(t->real.dpy, tt.draw, &image,
+			XShmGetImage(t->out.dpy, tt.draw, &image,
 				     x, y, AllPlanes);
 
 			result = *(uint32_t *)image.data;
@@ -142,7 +142,7 @@ static void pixel_tests(struct test *t, int reps, int sets, enum target target)
 	}
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &tt);
+	test_target_destroy_render(&t->out, &tt);
 	free(pixels);
 	free(cells);
 }
@@ -158,16 +158,16 @@ static void area_tests(struct test *t, int reps, int sets, enum target target)
 {
 	struct test_target tt;
 	XImage image;
-	uint32_t *cells = calloc(sizeof(uint32_t), t->real.width*t->real.height);
+	uint32_t *cells = calloc(sizeof(uint32_t), t->out.width*t->out.height);
 	int r, s, x, y;
 
 	printf("Testing area sets (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &tt);
-	clear(&t->real, &tt);
+	test_target_create_render(&t->out, target, &tt);
+	clear(&t->out, &tt);
 
-	test_init_image(&image, &t->real.shm, tt.format, tt.width, tt.height);
+	test_init_image(&image, &t->out.shm, tt.format, tt.width, tt.height);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
@@ -181,7 +181,7 @@ static void area_tests(struct test *t, int reps, int sets, enum target target)
 			x = rand() % (2*tt.width) - tt.width;
 			y = rand() % (2*tt.height) - tt.height;
 
-			fill_rect(&t->real, tt.picture, tt.format,
+			fill_rect(&t->out, tt.picture, tt.format,
 				  0, 0, 0,
 				  PictOpSrc, x, y, w, h,
 				  red, green, blue, alpha);
@@ -204,7 +204,7 @@ static void area_tests(struct test *t, int reps, int sets, enum target target)
 				    color(red, green, blue, alpha));
 		}
 
-		XShmGetImage(t->real.dpy, tt.draw, &image, 0, 0, AllPlanes);
+		XShmGetImage(t->out.dpy, tt.draw, &image, 0, 0, AllPlanes);
 
 		for (y = 0; y < tt.height; y++) {
 			for (x = 0; x < tt.width; x++) {
@@ -232,20 +232,20 @@ static void area_tests(struct test *t, int reps, int sets, enum target target)
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &tt);
+	test_target_destroy_render(&t->out, &tt);
 	free(cells);
 }
 
 static void rect_tests(struct test *t, int reps, int sets, enum target target, int use_window)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 	printf("Testing area fills (%s, using %s source): ",
 	       test_target_name(target), use_window ? "window" : "pixmap");
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
@@ -261,19 +261,19 @@ static void rect_tests(struct test *t, int reps, int sets, enum target target, i
 			int try = 50;
 
 			do {
-				x = rand() % (real.width - 1);
-				y = rand() % (real.height - 1);
-				w = 1 + rand() % (real.width - x - 1);
-				h = 1 + rand() % (real.height - y - 1);
-				tmpx = w == real.width ? 0 : rand() % (real.width - w);
-				tmpy = h == real.height ? 0 : rand() % (real.height - h);
+				x = rand() % (out.width - 1);
+				y = rand() % (out.height - 1);
+				w = 1 + rand() % (out.width - x - 1);
+				h = 1 + rand() % (out.height - y - 1);
+				tmpx = w == out.width ? 0 : rand() % (out.width - w);
+				tmpy = h == out.height ? 0 : rand() % (out.height - h);
 			} while (((tmpx+w > x && tmpx < x+w) ||
 				  (tmpy+h > y && tmpy < y+h)) &&
 				 --try);
 
 
 			if (try) {
-				fill_rect(&t->real, real.picture, real.format,
+				fill_rect(&t->out, out.picture, out.format,
 					  use_window, tmpx, tmpy,
 					  PictOpSrc, x, y, w, h,
 					  red, green, blue, alpha);
@@ -285,15 +285,15 @@ static void rect_tests(struct test *t, int reps, int sets, enum target target, i
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 

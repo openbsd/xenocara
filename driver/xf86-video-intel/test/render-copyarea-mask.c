@@ -75,14 +75,14 @@ static void clear(struct test_display *dpy, struct test_target *tt)
 
 static void rect_tests(struct test *t, int reps, int sets, enum target target, int use_window)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 	printf("Testing area fills (%s, using %s source): ",
 	       test_target_name(target), use_window ? "window" : "pixmap");
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
@@ -99,12 +99,12 @@ static void rect_tests(struct test *t, int reps, int sets, enum target target, i
 			int try = 50;
 
 			do {
-				x = rand() % (real.width - 1);
-				y = rand() % (real.height - 1);
-				w = 1 + rand() % (real.width - x - 1);
-				h = 1 + rand() % (real.height - y - 1);
-				tmpx = w == real.width ? 0 : rand() % (real.width - w);
-				tmpy = h == real.height ? 0 : rand() % (real.height - h);
+				x = rand() % (out.width - 1);
+				y = rand() % (out.height - 1);
+				w = 1 + rand() % (out.width - x - 1);
+				h = 1 + rand() % (out.height - y - 1);
+				tmpx = w == out.width ? 0 : rand() % (out.width - w);
+				tmpy = h == out.height ? 0 : rand() % (out.height - h);
 			} while (((tmpx+w > x && tmpx < x+w) ||
 				  (tmpy+h > y && tmpy < y+h)) &&
 				 --try);
@@ -115,7 +115,7 @@ static void rect_tests(struct test *t, int reps, int sets, enum target target, i
 			mask_h = rand() % h;
 
 			if (try) {
-				fill_rect(&t->real, real.picture, real.format,
+				fill_rect(&t->out, out.picture, out.format,
 					  use_window, tmpx, tmpy,
 					  PictOpSrc, x, y, w, h,
 					  mask_x, mask_y, mask_w, mask_h,
@@ -129,15 +129,15 @@ static void rect_tests(struct test *t, int reps, int sets, enum target target, i
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 

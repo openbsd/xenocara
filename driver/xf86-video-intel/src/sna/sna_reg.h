@@ -47,6 +47,7 @@
 #define XY_SETUP_BLT			(2<<29|0x01<<22)
 #define XY_SETUP_MONO_PATTERN_SL_BLT	(2<<29|0x11<<22)
 #define XY_SETUP_CLIP			(2<<29|0x03<<22|1)
+#define XY_PIXEL_BLT			(2<<29|0x24<<22)
 #define XY_SCANLINE_BLT			(2<<29|0x25<<22|1)
 #define XY_TEXT_IMMEDIATE_BLT		(2<<29|0x31<<22|(1<<16))
 #define XY_SRC_COPY_BLT_CMD		(2<<29|0x53<<22)

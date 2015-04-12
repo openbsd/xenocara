@@ -54,33 +54,33 @@ static void clear(struct test_target *tt)
 
 static void unclipped_tests(struct test *t, int reps, int sets, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 
 	printf("Testing unclipped stippled fills (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&ref);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
-			int x = rand() % real.width;
-			int y = rand() % real.height;
-			int w = rand() % (real.width - x);
-			int h = rand() % (real.height - y);
-			int tx = rand() % (2*real.width) - real.width;
-			int ty = rand() % (2*real.height) - real.height;
+			int x = rand() % out.width;
+			int y = rand() % out.height;
+			int w = rand() % (out.width - x);
+			int h = rand() % (out.height - y);
+			int tx = rand() % (2*out.width) - out.width;
+			int ty = rand() % (2*out.height) - out.height;
 			uint8_t stipple = rand() % 4;
 			uint8_t opaque = rand() % 1;
 			uint8_t alu = rand() % (GXset + 1);
 			uint32_t fg = rand();
 			uint32_t bg = rand();
 
-			fill_rect(&real, alu, NULL, 0,
+			fill_rect(&out, alu, NULL, 0,
 				  stipple, opaque, tx, ty,
 				  x, y, w, h,
 				  fg, bg);
@@ -91,47 +91,47 @@ static void unclipped_tests(struct test *t, int reps, int sets, enum target targ
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 
 static void simple_clip_tests(struct test *t, int reps, int sets, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 
 	printf("Testing simple clipped stippled fills (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&ref);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
-			int x = rand() % (2*real.width) - real.width;
-			int y = rand() % (2*real.height) - real.height;
-			int w = rand() % (2*real.width);
-			int h = rand() % (2*real.height);
-			int tx = rand() % (2*real.width) - real.width;
-			int ty = rand() % (2*real.height) - real.height;
+			int x = rand() % (2*out.width) - out.width;
+			int y = rand() % (2*out.height) - out.height;
+			int w = rand() % (2*out.width);
+			int h = rand() % (2*out.height);
+			int tx = rand() % (2*out.width) - out.width;
+			int ty = rand() % (2*out.height) - out.height;
 			uint8_t stipple = rand() % 4;
 			uint8_t opaque = rand() % 1;
 			uint8_t alu = rand() % (GXset + 1);
 			uint32_t fg = rand();
 			uint32_t bg = rand();
 
-			fill_rect(&real, alu, NULL, 0,
+			fill_rect(&out, alu, NULL, 0,
 				  stipple, opaque, tx, ty,
 				  x, y, w, h,
 				  fg, bg);
@@ -142,29 +142,29 @@ static void simple_clip_tests(struct test *t, int reps, int sets, enum target ta
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 
 static void complex_clip_tests(struct test *t, int reps, int sets, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	XRectangle *clip;
 	int nclip, r, s;
 
 	printf("Testing complex clipped stippled fills (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&ref);
@@ -173,26 +173,26 @@ static void complex_clip_tests(struct test *t, int reps, int sets, enum target t
 		nclip = (rand() % 16) + 2;
 		clip = malloc(sizeof(XRectangle)*nclip);
 		for (r = 0; r < nclip; r++) {
-			clip[r].x = rand() % real.width;
-			clip[r].y = rand() % real.height;
-			clip[r].width = rand() % (real.width - clip[r].x);
-			clip[r].height = rand() % (real.height - clip[r].y);
+			clip[r].x = rand() % out.width;
+			clip[r].y = rand() % out.height;
+			clip[r].width = rand() % (out.width - clip[r].x);
+			clip[r].height = rand() % (out.height - clip[r].y);
 		}
 
 		for (r = 0; r < reps; r++) {
-			int x = rand() % (2*real.width) - real.width;
-			int y = rand() % (2*real.height) - real.height;
-			int w = rand() % (2*real.width);
-			int h = rand() % (2*real.height);
-			int tx = rand() % (2*real.width) - real.width;
-			int ty = rand() % (2*real.height) - real.height;
+			int x = rand() % (2*out.width) - out.width;
+			int y = rand() % (2*out.height) - out.height;
+			int w = rand() % (2*out.width);
+			int h = rand() % (2*out.height);
+			int tx = rand() % (2*out.width) - out.width;
+			int ty = rand() % (2*out.height) - out.height;
 			uint8_t stipple = rand() % 4;
 			uint8_t opaque = rand() % 1;
 			uint8_t alu = rand() % (GXset + 1);
 			uint32_t fg = rand();
 			uint32_t bg = rand();
 
-			fill_rect(&real, alu, clip, nclip,
+			fill_rect(&out, alu, clip, nclip,
 				  stipple, opaque, tx, ty,
 				  x, y, w, h,
 				  fg, bg);
@@ -203,9 +203,9 @@ static void complex_clip_tests(struct test *t, int reps, int sets, enum target t
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 
 		free(clip);
@@ -213,7 +213,7 @@ static void complex_clip_tests(struct test *t, int reps, int sets, enum target t
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 

@@ -87,12 +87,11 @@ intel_glamor_create_screen_resources(ScreenPtr screen)
 static Bool
 intel_glamor_enabled(intel_screen_private *intel)
 {
-	enum { SNA, UXA, GLAMOR } default_accel_method = DEFAULT_ACCEL_METHOD;
 	const char *s;
 
 	s = xf86GetOptValString(intel->Options, OPTION_ACCEL_METHOD);
 	if (s == NULL)
-		return default_accel_method == GLAMOR;
+		return IS_DEFAULT_ACCEL_METHOD(GLAMOR);
 
 	return strcasecmp(s, "glamor") == 0;
 }
@@ -219,7 +218,13 @@ intel_glamor_init(ScreenPtr screen)
 	if ((intel->uxa_flags & UXA_GLAMOR_EGL_INITIALIZED) == 0)
 		goto fail;
 
-	if (!glamor_init(screen, GLAMOR_INVERTED_Y_AXIS | GLAMOR_USE_EGL_SCREEN)) {
+	if (!glamor_init(screen,
+#if defined(GLAMOR_NO_DRI3)
+			 /* Not doing DRI3 yet, since Present support hasn't landed. */
+			 GLAMOR_NO_DRI3 |
+#endif
+			 GLAMOR_INVERTED_Y_AXIS |
+			 GLAMOR_USE_EGL_SCREEN)) {
 		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 			   "Failed to initialize glamor.\n");
 		goto fail;
@@ -242,7 +247,7 @@ intel_glamor_init(ScreenPtr screen)
 
   fail:
 	xf86DrvMsg(scrn->scrnIndex, X_INFO,
-		   "Use standard UXA acceleration.\n");
+		   "Use legacy UXA acceleration.\n");
 	return FALSE;
 }
 

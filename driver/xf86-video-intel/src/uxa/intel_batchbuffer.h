@@ -108,6 +108,8 @@ intel_batch_emit_reloc(intel_screen_private *intel,
 		       uint32_t read_domains,
 		       uint32_t write_domains, uint32_t delta, int needs_fence)
 {
+	uint64_t offset;
+
 	if (needs_fence)
 		drm_intel_bo_emit_reloc_fence(intel->batch_bo,
 					      intel->batch_used * 4,
@@ -118,7 +120,11 @@ intel_batch_emit_reloc(intel_screen_private *intel,
 					bo, delta,
 					read_domains, write_domains);
 
-	intel_batch_emit_dword(intel, bo->offset + delta);
+	offset = bo->offset64 + delta;
+
+	intel_batch_emit_dword(intel, offset);
+	if (INTEL_INFO(intel)->gen >= 0100)
+		intel_batch_emit_dword(intel, offset >> 32);
 }
 
 static inline void

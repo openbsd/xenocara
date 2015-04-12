@@ -85,14 +85,14 @@ static void draw_line(struct test_display *dpy, struct test_target *tt,
 static void line_tests(struct test *t, enum target target)
 {
 	char buf[1024];
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int a, b, alu, lw, style, cap;
 
 	printf("Testing drawing of single line segments (%s): ",
 	       test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
+	test_target_create_render(&t->out, target, &out);
 	test_target_create_render(&t->ref, target, &ref);
 
 	style = LineSolid;
@@ -108,18 +108,18 @@ static void line_tests(struct test *t, enum target target)
 							points[b].x, points[b].y,
 							lw, cap, alu);
 
-						clear(&t->real, &real);
+						clear(&t->out, &out);
 						clear(&t->ref, &ref);
 
-						draw_line(&t->real, &real, alu, lw, style, cap,
+						draw_line(&t->out, &out, alu, lw, style, cap,
 							  &points[a], &points[b], 64, 64);
 						draw_line(&t->ref, &ref, alu, lw, style, cap,
 							  &points[a], &points[b], 64, 64);
 
 						test_compare(t,
-							     real.draw, real.format,
+							     out.draw, out.format,
 							     ref.draw, ref.format,
-							     0, 0, real.width, real.height,
+							     0, 0, out.width, out.height,
 							     buf);
 					}
 				}
@@ -127,7 +127,7 @@ static void line_tests(struct test *t, enum target target)
 		}
 	}
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 
 	printf("\n");

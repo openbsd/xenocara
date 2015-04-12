@@ -93,10 +93,10 @@ fbPolyPoint(DrawablePtr drawable, GCPtr gc,
 		     int xoff, int yoff,
 		     FbBits and, FbBits xor);
 
-	DBG(("%s x %d, clip=[(%d, %d), (%d, %d)]x%ld\n", __FUNCTION__, n,
+	DBG(("%s x %d, clip=[(%d, %d), (%d, %d)]x%d\n", __FUNCTION__, n,
 	     gc->pCompositeClip->extents.x1, gc->pCompositeClip->extents.y1,
 	     gc->pCompositeClip->extents.x2, gc->pCompositeClip->extents.y2,
-	     (long)RegionNumRects(gc->pCompositeClip)));
+	     region_num_rects(gc->pCompositeClip)));
 
 	if (mode == CoordModePrevious)
 		fbFixCoordModePrevious(n, pt);

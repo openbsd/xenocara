@@ -30,169 +30,169 @@ static void clear(struct test_display *dpy, struct test_target *tt)
 
 static void zrect_tests(struct test *t, int reps, int sets, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 
 	printf("Testing empty rects (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
-			int x = rand() % (2*real.width) - real.width;
-			int y = rand() % (2*real.height) - real.height;
+			int x = rand() % (2*out.width) - out.width;
+			int y = rand() % (2*out.height) - out.height;
 			uint8_t alu = rand() % (GXset + 1);
 			uint32_t fg = rand();
 			uint32_t lw = rand() % 4;
 
-			draw_rect(&t->real, real.draw, alu,
+			draw_rect(&t->out, out.draw, alu,
 				  x, y, 0, 0, fg, lw);
 			draw_rect(&t->ref, ref.draw, alu,
 				  x, y, 0, 0, fg, lw);
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 
 static void hrect_tests(struct test *t, int reps, int sets, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 
 	printf("Testing horizontal rects (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
-			int x = rand() % (2*real.width) - real.width;
-			int y = rand() % (2*real.height) - real.height;
-			int w = rand() % (2*real.width);
+			int x = rand() % (2*out.width) - out.width;
+			int y = rand() % (2*out.height) - out.height;
+			int w = rand() % (2*out.width);
 			uint8_t alu = rand() % (GXset + 1);
 			uint32_t fg = rand();
 			uint32_t lw = rand() % 4;
 
-			draw_rect(&t->real, real.draw, alu,
+			draw_rect(&t->out, out.draw, alu,
 				  x, y, w, 0, fg, lw);
 			draw_rect(&t->ref, ref.draw, alu,
 				  x, y, w, 0, fg, lw);
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 
 static void vrect_tests(struct test *t, int reps, int sets, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 
 	printf("Testing vertical rects (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
-			int x = rand() % (2*real.width) - real.width;
-			int y = rand() % (2*real.height) - real.height;
-			int h = rand() % (2*real.width);
+			int x = rand() % (2*out.width) - out.width;
+			int y = rand() % (2*out.height) - out.height;
+			int h = rand() % (2*out.width);
 			uint8_t alu = rand() % (GXset + 1);
 			uint32_t fg = rand();
 			uint32_t lw = rand() % 4;
 
-			draw_rect(&t->real, real.draw, alu,
+			draw_rect(&t->out, out.draw, alu,
 				  x, y, 0, h, fg, lw);
 			draw_rect(&t->ref, ref.draw, alu,
 				  x, y, 0, h, fg, lw);
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 
 static void rect_tests(struct test *t, int reps, int sets, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	int r, s;
 
 	printf("Testing general (%s): ", test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&t->real, target, &real);
-	clear(&t->real, &real);
+	test_target_create_render(&t->out, target, &out);
+	clear(&t->out, &out);
 
 	test_target_create_render(&t->ref, target, &ref);
 	clear(&t->ref, &ref);
 
 	for (s = 0; s < sets; s++) {
 		for (r = 0; r < reps; r++) {
-			int x = rand() % (2*real.width) - real.width;
-			int y = rand() % (2*real.height) - real.height;
-			int w = rand() % (2*real.width);
-			int h = rand() % (2*real.height);
+			int x = rand() % (2*out.width) - out.width;
+			int y = rand() % (2*out.height) - out.height;
+			int w = rand() % (2*out.width);
+			int h = rand() % (2*out.height);
 			uint8_t alu = rand() % (GXset + 1);
 			uint32_t fg = rand();
 			uint32_t lw = rand() % 4;
 
-			draw_rect(&t->real, real.draw, alu,
+			draw_rect(&t->out, out.draw, alu,
 				  x, y, w, h, fg, lw);
 			draw_rect(&t->ref, ref.draw, alu,
 				  x, y, w, h, fg, lw);
 		}
 
 		test_compare(t,
-			     real.draw, real.format,
+			     out.draw, out.format,
 			     ref.draw, ref.format,
-			     0, 0, real.width, real.height,
+			     0, 0, out.width, out.height,
 			     "");
 	}
 
 	printf("passed [%d iterations x %d]\n", reps, sets);
 
-	test_target_destroy_render(&t->real, &real);
+	test_target_destroy_render(&t->out, &out);
 	test_target_destroy_render(&t->ref, &ref);
 }
 

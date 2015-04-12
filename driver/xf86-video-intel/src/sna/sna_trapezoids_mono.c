@@ -119,9 +119,9 @@ static void _assert_pixmap_contains_box(PixmapPtr pixmap, BoxPtr box, const char
 
 static void apply_damage(struct sna_composite_op *op, RegionPtr region)
 {
-	DBG(("%s: damage=%p, region=%ldx[(%d, %d), (%d, %d)]\n",
+	DBG(("%s: damage=%p, region=%dx[(%d, %d), (%d, %d)]\n",
 	     __FUNCTION__, op->damage,
-	     (long)REGION_NUM_RECTS(region),
+	     region_num_rects(region),
 	     region->extents.x1, region->extents.y1,
 	     region->extents.x2, region->extents.y2));
 
@@ -444,10 +444,10 @@ mono_span(struct mono *c, int x1, int x2, BoxPtr box)
 
 		pixman_region_init_rects(&region, box, 1);
 		RegionIntersect(&region, &region, &c->clip);
-		if (REGION_NUM_RECTS(&region)) {
+		if (region_num_rects(&region)) {
 			c->op.boxes(c->sna, &c->op,
-				    REGION_RECTS(&region),
-				    REGION_NUM_RECTS(&region));
+				    region_rects(&region),
+				    region_num_rects(&region));
 			apply_damage(&c->op, &region);
 		}
 		pixman_region_fini(&region);
@@ -505,10 +505,10 @@ thread_mono_span_clipped(struct mono *c, int x1, int x2, BoxPtr box)
 
 	pixman_region_init_rects(&region, box, 1);
 	RegionIntersect(&region, &region, &c->clip);
-	if (REGION_NUM_RECTS(&region))
+	if (region_num_rects(&region))
 		thread_mono_span_add_boxes(c,
-					   REGION_RECTS(&region),
-					   REGION_NUM_RECTS(&region));
+					   region_rects(&region),
+					   region_num_rects(&region));
 	pixman_region_fini(&region);
 }
 
@@ -852,7 +852,7 @@ mono_trapezoids_span_converter(struct sna *sna,
 			threads[n].extents.y1 = y;
 			threads[n].extents.y2 = y += h;
 
-			sna_threads_run(mono_span_thread, &threads[n]);
+			sna_threads_run(n, mono_span_thread, &threads[n]);
 		}
 
 		threads[0].extents.y1 = y;
@@ -1168,7 +1168,10 @@ unbounded_pass:
 		mono.span = mono_span__fast;
 	else
 		mono.span = mono_span;
-	mono_render(&mono);
+	if (sigtrap_get() == 0) {
+		mono_render(&mono);
+		sigtrap_put();
+	}
 	mono_fini(&mono);
 
 	if (op) {

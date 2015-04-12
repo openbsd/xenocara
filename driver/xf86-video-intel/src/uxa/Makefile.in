@@ -86,8 +86,17 @@ host_triplet = @host@
 @DRI2_TRUE@	$(CLOCK_GETTIME_LIBS) \
 @DRI2_TRUE@	$(NULL)
 
-@XVMC_TRUE@am__append_7 = -I$(top_srcdir)/xvmc
-@XVMC_TRUE@am__append_8 = \
+@DRI3_TRUE@am__append_7 = \
+@DRI3_TRUE@	intel_dri3.c \
+@DRI3_TRUE@	intel_sync.c \
+@DRI3_TRUE@	$(NULL)
+
+@PRESENT_TRUE@am__append_8 = \
+@PRESENT_TRUE@	intel_present.c \
+@PRESENT_TRUE@	$(NULL)
+
+@XVMC_TRUE@am__append_9 = -I$(top_srcdir)/xvmc
+@XVMC_TRUE@am__append_10 = \
 @XVMC_TRUE@	intel_hwmc.c \
 @XVMC_TRUE@	$(NULL)
 
@@ -121,16 +130,20 @@ am__libuxa_la_SOURCES_DIST = brw_defines.h brw_structs.h common.h \
 	i915_render.c i915_video.c i965_reg.h i965_3d.c i965_video.c \
 	i965_render.c uxa_module.h uxa.c uxa.h uxa-accel.c \
 	uxa-glamor.h uxa-glyphs.c uxa-render.c uxa-priv.h \
-	uxa-unaccel.c intel_glamor.c intel_dri.c intel_hwmc.c
+	uxa-unaccel.c intel_glamor.c intel_dri.c intel_dri3.c \
+	intel_sync.c intel_present.c intel_hwmc.c
 @GLAMOR_TRUE@am__objects_1 = intel_glamor.lo
 @DRI2_TRUE@am__objects_2 = intel_dri.lo
-@XVMC_TRUE@am__objects_3 = intel_hwmc.lo
+@DRI3_TRUE@am__objects_3 = intel_dri3.lo intel_sync.lo
+@PRESENT_TRUE@am__objects_4 = intel_present.lo
+@XVMC_TRUE@am__objects_5 = intel_hwmc.lo
 am_libuxa_la_OBJECTS = intel_batchbuffer.lo intel_display.lo \
 	intel_driver.lo intel_memory.lo intel_uxa.lo intel_video.lo \
 	i830_3d.lo i830_render.lo i915_3d.lo i915_render.lo \
 	i915_video.lo i965_3d.lo i965_video.lo i965_render.lo uxa.lo \
 	uxa-accel.lo uxa-glyphs.lo uxa-render.lo uxa-unaccel.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3)
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5)
 libuxa_la_OBJECTS = $(am_libuxa_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -209,6 +222,8 @@ DRI1_CFLAGS = @DRI1_CFLAGS@
 DRI1_LIBS = @DRI1_LIBS@
 DRI2_CFLAGS = @DRI2_CFLAGS@
 DRI2_LIBS = @DRI2_LIBS@
+DRI3_CFLAGS = @DRI3_CFLAGS@
+DRI3_LIBS = @DRI3_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -237,8 +252,13 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTEL_GEN4ASM = @INTEL_GEN4ASM@
+IVO_CFLAGS = @IVO_CFLAGS@
+IVO_EXTRA_CFLAGS = @IVO_EXTRA_CFLAGS@
+IVO_EXTRA_LIBS = @IVO_EXTRA_LIBS@
+IVO_LIBS = @IVO_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEXEC_PATH = @LIBEXEC_PATH@
 LIBGLAMOR_CFLAGS = @LIBGLAMOR_CFLAGS@
 LIBGLAMOR_EGL_CFLAGS = @LIBGLAMOR_EGL_CFLAGS@
 LIBGLAMOR_EGL_LIBS = @LIBGLAMOR_EGL_LIBS@
@@ -277,23 +297,24 @@ PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PREFIX_PATH = @PREFIX_PATH@
+PRESENT_CFLAGS = @PRESENT_CFLAGS@
+PRESENT_LIBS = @PRESENT_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
-TOOL_CFLAGS = @TOOL_CFLAGS@
-TOOL_LIBS = @TOOL_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VERSION = @VERSION@
 X11_CFLAGS = @X11_CFLAGS@
+X11_DRI3_CFLAGS = @X11_DRI3_CFLAGS@
+X11_DRI3_LIBS = @X11_DRI3_LIBS@
 X11_LIBS = @X11_LIBS@
-XCB_CFLAGS = @XCB_CFLAGS@
-XCB_LIBS = @XCB_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -356,7 +377,7 @@ AM_CFLAGS = @CWARNFLAGS@ $(XORG_CFLAGS) $(DRM_CFLAGS) \
 	$(PCIACCESS_CFLAGS) $(UDEV_CFLAGS) $(DRM_CFLAGS) \
 	$(DRMINTEL_CFLAGS) -I$(top_srcdir)/xvmc -I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/render_program $(am__append_1) \
-	$(am__append_4) $(am__append_7)
+	$(am__append_4) $(am__append_9)
 noinst_LTLIBRARIES = libuxa.la
 libuxa_la_LIBADD = $(UDEV_LIBS) $(DRMINTEL_LIBS) $(DRM_LIBS) \
 	$(am__append_2) $(am__append_6)
@@ -368,7 +389,7 @@ libuxa_la_SOURCES = brw_defines.h brw_structs.h common.h intel.h \
 	i965_reg.h i965_3d.c i965_video.c i965_render.c uxa_module.h \
 	uxa.c uxa.h uxa-accel.c uxa-glamor.h uxa-glyphs.c uxa-render.c \
 	uxa-priv.h uxa-unaccel.c $(am__append_3) $(am__append_5) \
-	$(am__append_8)
+	$(am__append_7) $(am__append_8) $(am__append_10)
 all: all-am
 
 .SUFFIXES:
@@ -434,10 +455,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_batchbuffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_dri.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_dri3.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_glamor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_memory.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_present.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_sync.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_uxa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uxa-accel.Plo@am__quote@

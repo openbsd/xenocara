@@ -1,3 +1,11 @@
 These are no substitute for xts, rendercheck and cairo-test-suite. They
 are intended to exercise corner cases in the batch management of long
 drawing commands and more explicit checking of the acceleration paths.
+
+Useful tools:
+
+# Packed YUV Xv tester
+gst-launch-1.0 videotestsrc pattern=snow ! 'video/x-raw,format=UYVY,width=640,height=360' ! xvimagesink
+
+# Planar YUV Xv tester
+gst-launch-1.0 videotestsrc pattern=snow ! 'video/x-raw,format=I420,width=640,height=360' ! xvimagesink

@@ -9,6 +9,7 @@ const OptionInfoRec intel_options[] = {
 	{OPTION_ACCEL_METHOD,	"AccelMethod",	OPTV_STRING,	{0},	0},
 	{OPTION_BACKLIGHT,	"Backlight",	OPTV_STRING,	{0},	0},
 	{OPTION_DRI,		"DRI",		OPTV_STRING,	{0},	0},
+	{OPTION_PRESENT,	"Present",	OPTV_BOOLEAN,	{0},	1},
 	{OPTION_COLOR_KEY,	"ColorKey",	OPTV_INTEGER,	{0},	0},
 	{OPTION_VIDEO_KEY,	"VideoKey",	OPTV_INTEGER,	{0},	0},
 	{OPTION_TILING_2D,	"Tiling",	OPTV_BOOLEAN,	{0},	1},
@@ -20,6 +21,7 @@ const OptionInfoRec intel_options[] = {
 	{OPTION_PREFER_OVERLAY, "XvPreferOverlay", OPTV_BOOLEAN, {0}, 0},
 	{OPTION_HOTPLUG,	"HotPlug",	OPTV_BOOLEAN,	{0},	1},
 	{OPTION_REPROBE,	"ReprobeOutputs", OPTV_BOOLEAN,	{0},	0},
+	{OPTION_DELETE_DP12,	"DeleteUnusedDP12Displays", OPTV_BOOLEAN,	{0},	0},
 #ifdef INTEL_XVMC
 	{OPTION_XVMC,		"XvMC",		OPTV_BOOLEAN,	{0},	1},
 #endif

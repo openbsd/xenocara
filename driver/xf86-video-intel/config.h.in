@@ -15,7 +15,7 @@
 /* Default acceleration method */
 #undef DEFAULT_ACCEL_METHOD
 
-/* Default DRI2 driver path */
+/* Default have_dri2 driver path */
 #undef DRI_DRIVER_PATH
 
 /* Enable XvMC support */
@@ -32,6 +32,9 @@
 
 /* Enable if your compiler supports the Intel __sync_* atomic primitives */
 #undef HAVE_ATOMIC_PRIMITIVES
+
+/* Found a useable cpuid.h */
+#undef HAVE_CPUID_H
 
 /* Define to 1 if you have the <dgaproc.h> header file. */
 #undef HAVE_DGAPROC_H
@@ -51,11 +54,17 @@
 /* Define to 1 if you have the <dri2.h> header file. */
 #undef HAVE_DRI2_H
 
+/* Enable DRI3 driver support */
+#undef HAVE_DRI3
+
 /* Define to 1 if you have the <dristruct.h> header file. */
 #undef HAVE_DRISTRUCT_H
 
 /* Define to 1 if you have the <dri.h> header file. */
 #undef HAVE_DRI_H
+
+/* Define to 1 if you have the `getline' function. */
+#undef HAVE_GETLINE
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -65,6 +74,21 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <misyncshm.h> header file. */
+#undef HAVE_MISYNCSHM_H
+
+/* Define to 1 if you have the <misyncstr.h> header file. */
+#undef HAVE_MISYNCSTR_H
+
+/* Define to 1 if MIT-SHM is available */
+#undef HAVE_MIT_SHM
+
+/* Enable PRESENT driver support */
+#undef HAVE_PRESENT
+
+/* Define to 1 if you have the <present.h> header file. */
+#undef HAVE_PRESENT_H
 
 /* Define to 1 if you have the <sarea.h> header file. */
 #undef HAVE_SAREA_H
@@ -81,8 +105,20 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the `strlcat' function. */
+#undef HAVE_STRLCAT
+
+/* Define to 1 if you have the `strlcpy' function. */
+#undef HAVE_STRLCPY
+
+/* Define to 1 if you have the `strndup' function. */
+#undef HAVE_STRNDUP
+
 /* Define to 1 if `totalram' is a member of `struct sysinfo'. */
 #undef HAVE_STRUCT_SYSINFO_TOTALRAM
+
+/* Define to 1 if you have the <sys/ipc.h> header file. */
+#undef HAVE_SYS_IPC_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
@@ -114,6 +150,9 @@
 /* Define to 1 if you have the <X11/extensions/shmstr.h> header file. */
 #undef HAVE_X11_EXTENSIONS_SHMSTR_H
 
+/* Define to 1 if you have the <X11/extensions/Xinerama.h> header file. */
+#undef HAVE_X11_EXTENSIONS_XINERAMA_H
+
 /* Define to 1 if you have the <X11/extensions/XShm.h> header file. */
 #undef HAVE_X11_EXTENSIONS_XSHM_H
 
@@ -125,6 +164,9 @@
 
 /* Assume KMS support */
 #undef KMS
+
+/* libexec directory */
+#undef LIBEXEC_PATH
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
@@ -163,14 +205,26 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
+/* installation prefix */
+#undef PREFIX_PATH
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Enable "TearFree" by default */
+#undef TEARFREE
 
 /* Assume UMS support */
 #undef UMS
 
 /* Assume asynchronous swap support */
 #undef USE_ASYNC_SWAP
+
+/* Enable control of the backlight */
+#undef USE_BACKLIGHT
+
+/* Enable use of the backlight helper interfaces */
+#undef USE_BACKLIGHT_HELPER
 
 /* Assume "create2" support */
 #undef USE_CREATE2
@@ -186,9 +240,6 @@
 
 /* Enable SNA support */
 #undef USE_SNA
-
-/* Assume "userptr" support */
-#undef USE_USERPTR
 
 /* Enable UXA support */
 #undef USE_UXA

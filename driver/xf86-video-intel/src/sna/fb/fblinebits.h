@@ -30,8 +30,8 @@ POLYLINE(DrawablePtr drawable, GCPtr gc, int mode, int n_0, DDXPointPtr pt_0)
 	int xoff = drawable->x;
 	int yoff = drawable->y;
 	unsigned int bias = miGetZeroLineBias(drawable->pScreen);
-	const BoxRec *clip = RegionRects(gc->pCompositeClip);
-	const BoxRec *const last_clip = clip + RegionNumRects(gc->pCompositeClip);
+	const BoxRec *clip = region_rects(gc->pCompositeClip);
+	const BoxRec *const last_clip = clip + region_num_rects(gc->pCompositeClip);
 
 	FbBits *dst;
 	int dstStride;
@@ -148,8 +148,8 @@ POLYSEGMENT(DrawablePtr drawable, GCPtr gc, int n_0, xSegment *seg_0)
 	int xoff = drawable->x;
 	int yoff = drawable->y;
 	unsigned int bias = miGetZeroLineBias(drawable->pScreen);
-	const BoxRec *clip = RegionRects(gc->pCompositeClip);
-	const BoxRec *const last_clip = clip + RegionNumRects(gc->pCompositeClip);
+	const BoxRec *clip = region_rects(gc->pCompositeClip);
+	const BoxRec *const last_clip = clip + region_num_rects(gc->pCompositeClip);
 
 	FbBits *dst;
 	int dstStride;

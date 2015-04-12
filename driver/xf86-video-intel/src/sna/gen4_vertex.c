@@ -42,7 +42,9 @@ void gen4_vertex_align(struct sna *sna, const struct sna_composite_op *op)
 {
 	int vertex_index;
 
+	assert(op->floats_per_vertex);
 	assert(op->floats_per_rect == 3*op->floats_per_vertex);
+	assert(sna->render.vertex_used <= sna->render.vertex_size);
 
 	vertex_index = (sna->render.vertex_used + op->floats_per_vertex - 1) / op->floats_per_vertex;
 	if ((int)sna->render.vertex_size - vertex_index * op->floats_per_vertex < 2*op->floats_per_rect) {
@@ -52,6 +54,7 @@ void gen4_vertex_align(struct sna *sna, const struct sna_composite_op *op)
 			kgem_submit(&sna->kgem);
 			_kgem_set_mode(&sna->kgem, KGEM_RENDER);
 		}
+		assert(sna->render.vertex_used < sna->render.vertex_size);
 
 		vertex_index = (sna->render.vertex_used + op->floats_per_vertex - 1) / op->floats_per_vertex;
 		assert(vertex_index * op->floats_per_vertex <= sna->render.vertex_size);
@@ -118,25 +121,25 @@ int gen4_vertex_finish(struct sna *sna)
 		kgem_bo_destroy(&sna->kgem, bo);
 		hint |= CREATE_CACHED | CREATE_NO_THROTTLE;
 	} else {
-		if (kgem_is_idle(&sna->kgem)) {
-			sna->render.vertices = sna->render.vertex_data;
-			sna->render.vertex_size = ARRAY_SIZE(sna->render.vertex_data);
+		assert(sna->render.vertex_size == ARRAY_SIZE(sna->render.vertex_data));
+		assert(sna->render.vertices == sna->render.vertex_data);
+		if (kgem_is_idle(&sna->kgem))
 			return 0;
-		}
 	}
 
 	size = 256*1024;
 	assert(!sna->render.active);
 	sna->render.vertices = NULL;
 	sna->render.vbo = kgem_create_linear(&sna->kgem, size, hint);
-	while (sna->render.vbo == NULL && size > 16*1024) {
+	while (sna->render.vbo == NULL && size > sizeof(sna->render.vertex_data)) {
 		size /= 2;
 		sna->render.vbo = kgem_create_linear(&sna->kgem, size, hint);
 	}
 	if (sna->render.vbo == NULL)
 		sna->render.vbo = kgem_create_linear(&sna->kgem,
 						     256*1024, CREATE_GTT_MAP);
-	if (sna->render.vbo)
+	if (sna->render.vbo &&
+	    kgem_check_bo(&sna->kgem, sna->render.vbo, NULL))
 		sna->render.vertices = kgem_bo_map(&sna->kgem, sna->render.vbo);
 	if (sna->render.vertices == NULL) {
 		if (sna->render.vbo) {
@@ -164,11 +167,12 @@ int gen4_vertex_finish(struct sna *sna)
 	if (size >= UINT16_MAX)
 		size = UINT16_MAX - 1;
 
-	DBG(("%s: create vbo handle=%d, size=%d\n",
-	     __FUNCTION__, sna->render.vbo->handle, size));
+	DBG(("%s: create vbo handle=%d, size=%d floats [%d bytes]\n",
+	     __FUNCTION__, sna->render.vbo->handle, size, __kgem_bo_size(sna->render.vbo)));
+	assert(size > sna->render.vertex_used);
 
 	sna->render.vertex_size = size;
-	return sna->render.vertex_size - sna->render.vertex_used;
+	return size - sna->render.vertex_used;
 }
 
 void gen4_vertex_close(struct sna *sna)
@@ -319,7 +323,7 @@ emit_texcoord(struct sna *sna,
 	      int16_t x, int16_t y)
 {
 	if (channel->is_solid) {
-		OUT_VERTEX_F(x);
+		OUT_VERTEX_F(0.5);
 		return;
 	}
 
@@ -376,6 +380,63 @@ emit_primitive(struct sna *sna,
 		    r->dst.x,  r->dst.y);
 }
 
+sse2 inline static float *
+vemit_texcoord(float *v,
+	      const struct sna_composite_channel *channel,
+	      int16_t x, int16_t y)
+{
+	if (channel->is_solid) {
+		*v++ = 0.5;
+	} else {
+		x += channel->offset[0];
+		y += channel->offset[1];
+
+		if (channel->is_affine) {
+			float s, t;
+
+			sna_get_transformed_coordinates(x, y,
+							channel->transform,
+							&s, &t);
+			*v++ = s * channel->scale[0];
+			*v++ = t * channel->scale[1];
+		} else {
+			float s, t, w;
+
+			sna_get_transformed_coordinates_3d(x, y,
+							   channel->transform,
+							   &s, &t, &w);
+			*v++ = s * channel->scale[0];
+			*v++ = t * channel->scale[1];
+			*v++ = w;
+		}
+	}
+
+	return v;
+}
+
+sse2 force_inline static float *
+vemit_vertex(float *v,
+	     const struct sna_composite_op *op,
+	     int16_t x, int16_t y)
+{
+	*v++ = pack_2s(x, y);
+	return vemit_texcoord(v, &op->src, x, y);
+}
+
+sse2 fastcall static void
+emit_boxes(const struct sna_composite_op *op,
+	   const BoxRec *box, int nbox,
+	   float *v)
+{
+	do {
+		v = vemit_vertex(v, op, box->x2, box->y2);
+		v = vemit_vertex(v, op, box->x1, box->y2);
+		v = vemit_vertex(v, op, box->x1, box->y1);
+
+		box++;
+	} while (--nbox);
+}
+
 sse2 force_inline static void
 emit_vertex_mask(struct sna *sna,
 		 const struct sna_composite_op *op,
@@ -406,6 +467,32 @@ emit_primitive_mask(struct sna *sna,
 			 r->mask.x, r->mask.y,
 			 r->dst.x,  r->dst.y);
 }
+
+sse2 force_inline static float *
+vemit_vertex_mask(float *v,
+		  const struct sna_composite_op *op,
+		  int16_t x, int16_t y)
+{
+	*v++ = pack_2s(x, y);
+	v = vemit_texcoord(v, &op->src, x, y);
+	v = vemit_texcoord(v, &op->mask, x, y);
+	return v;
+}
+
+sse2 fastcall static void
+emit_boxes_mask(const struct sna_composite_op *op,
+		const BoxRec *box, int nbox,
+		float *v)
+{
+	do {
+		v = vemit_vertex_mask(v, op, box->x2, box->y2);
+		v = vemit_vertex_mask(v, op, box->x1, box->y2);
+		v = vemit_vertex_mask(v, op, box->x1, box->y1);
+
+		box++;
+	} while (--nbox);
+}
+
 
 sse2 fastcall static void
 emit_primitive_solid(struct sna *sna,
@@ -1836,6 +1923,7 @@ unsigned gen4_choose_composite_emitter(struct sna *sna, struct sna_composite_op 
 			}
 		} else {
 			tmp->prim_emit = emit_primitive_mask;
+			tmp->emit_boxes = emit_boxes_mask;
 			tmp->floats_per_vertex = 1;
 			vb = 0;
 			if (tmp->mask.is_solid) {
@@ -1942,6 +2030,7 @@ unsigned gen4_choose_composite_emitter(struct sna *sna, struct sna_composite_op 
 			DBG(("%s: projective src, no mask\n", __FUNCTION__));
 			assert(!tmp->src.is_solid);
 			tmp->prim_emit = emit_primitive;
+			tmp->emit_boxes = emit_boxes;
 			tmp->floats_per_vertex = 4;
 			vb = 3;
 		}
@@ -1961,10 +2050,10 @@ emit_span_vertex(struct sna *sna,
 }
 
 sse2 fastcall static void
-emit_composite_spans_primitive(struct sna *sna,
-			       const struct sna_composite_spans_op *op,
-			       const BoxRec *box,
-			       float opacity)
+emit_span_primitive(struct sna *sna,
+		    const struct sna_composite_spans_op *op,
+		    const BoxRec *box,
+		    float opacity)
 {
 	emit_span_vertex(sna, op, box->x2, box->y2);
 	OUT_VERTEX_F(opacity);
@@ -1974,6 +2063,25 @@ emit_composite_spans_primitive(struct sna *sna,
 
 	emit_span_vertex(sna, op, box->x1, box->y1);
 	OUT_VERTEX_F(opacity);
+}
+
+sse2 fastcall static void
+emit_span_boxes(const struct sna_composite_spans_op *op,
+		const struct sna_opacity_box *b, int nbox,
+		float *v)
+{
+	do {
+		v = vemit_vertex(v, &op->base, b->box.x2, b->box.y2);
+		*v++ = b->alpha;
+
+		v = vemit_vertex(v, &op->base, b->box.x1, b->box.y2);
+		*v++ = b->alpha;
+
+		v = vemit_vertex(v, &op->base, b->box.x1, b->box.y1);
+		*v++ = b->alpha;
+
+		b++;
+	} while (--nbox);
 }
 
 sse2 fastcall static void
@@ -3084,7 +3192,8 @@ unsigned gen4_choose_spans_emitter(struct sna *sna,
 		vb = 1 << 2 | 2;
 	} else {
 		DBG(("%s: projective transform\n", __FUNCTION__));
-		tmp->prim_emit = emit_composite_spans_primitive;
+		tmp->prim_emit = emit_span_primitive;
+		tmp->emit_boxes = emit_span_boxes;
 		tmp->base.floats_per_vertex = 5;
 		vb = 1 << 2 | 3;
 	}

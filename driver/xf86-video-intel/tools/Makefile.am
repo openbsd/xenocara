@@ -20,23 +20,44 @@
 
 AM_CFLAGS = \
 	@CWARNFLAGS@ \
-	$(TOOL_CFLAGS) \
 	@NOWARNFLAGS@ \
 	$(NULL)
 
 drivermandir = $(DRIVER_MAN_DIR)
+policydir = $(datarootdir)/polkit-1/actions
 
+if BUILD_TOOLS
 bin_PROGRAMS = intel-virtual-output
 driverman_DATA = intel-virtual-output.$(DRIVER_MAN_SUFFIX)
+endif
 
+if BUILD_BACKLIGHT_HELPER
+libexec_PROGRAMS = xf86-video-intel-backlight-helper
+nodist_policy_DATA = org.x.xf86-video-intel.backlight-helper.policy
+
+backlight_helper = $(libexecdir)/xf86-video-intel-backlight-helper
+install-exec-hook:
+	-chown root $(DESTDIR)$(backlight_helper) && chmod u+s $(DESTDIR)$(backlight_helper)
+endif
+
+intel_virtual_output_CFLAGS = \
+	@CWARNFLAGS@ \
+	$(IVO_CFLAGS) \
+	@NOWARNFLAGS@ \
+	$(NULL)
 intel_virtual_output_SOURCES = \
 	virtual.c \
 	$(NULL)
+intel_virtual_output_LDADD = \
+	$(IVO_LIBS) \
+	$(NULL)
 
-intel_virtual_output_LDADD = $(TOOL_LIBS)
+xf86_video_intel_backlight_helper_SOURCES = \
+	backlight_helper.c \
+	$(NULL)
 
-EXTRA_DIST = intel-virtual-output.man
-CLEANFILES = $(driverman_DATA)
+EXTRA_DIST = intel-virtual-output.man org.x.xf86-video-intel.backlight-helper.policy.in
+CLEANFILES = $(driverman_DATA) $(nodist_policy_DATA)
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man

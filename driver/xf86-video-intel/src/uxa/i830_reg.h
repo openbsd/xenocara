@@ -70,32 +70,32 @@
 #define COLOR_BLT_WRITE_ALPHA	(1<<21)
 #define COLOR_BLT_WRITE_RGB	(1<<20)
 
-#define XY_COLOR_BLT_CMD		((2<<29)|(0x50<<22)|(0x4))
+#define XY_COLOR_BLT_CMD		((2<<29)|(0x50<<22))
 #define XY_COLOR_BLT_WRITE_ALPHA	(1<<21)
 #define XY_COLOR_BLT_WRITE_RGB		(1<<20)
 #define XY_COLOR_BLT_TILED		(1<<11)
 
-#define XY_SETUP_CLIP_BLT_CMD		((2<<29)|(3<<22)|1)
+#define XY_SETUP_CLIP_BLT_CMD		((2<<29)|(3<<22))
 
-#define XY_SRC_COPY_BLT_CMD		((2<<29)|(0x53<<22)|6)
+#define XY_SRC_COPY_BLT_CMD		((2<<29)|(0x53<<22))
 #define XY_SRC_COPY_BLT_WRITE_ALPHA	(1<<21)
 #define XY_SRC_COPY_BLT_WRITE_RGB	(1<<20)
 #define XY_SRC_COPY_BLT_SRC_TILED	(1<<15)
 #define XY_SRC_COPY_BLT_DST_TILED	(1<<11)
 
-#define SRC_COPY_BLT_CMD		((2<<29)|(0x43<<22)|0x4)
+#define SRC_COPY_BLT_CMD		((2<<29)|(0x43<<22))
 #define SRC_COPY_BLT_WRITE_ALPHA	(1<<21)
 #define SRC_COPY_BLT_WRITE_RGB		(1<<20)
 
 #define XY_PAT_BLT_IMMEDIATE		((2<<29)|(0x72<<22))
 
-#define XY_MONO_PAT_BLT_CMD		((0x2<<29)|(0x52<<22)|0x7)
+#define XY_MONO_PAT_BLT_CMD		((0x2<<29)|(0x52<<22))
 #define XY_MONO_PAT_VERT_SEED		((1<<10)|(1<<9)|(1<<8))
 #define XY_MONO_PAT_HORT_SEED		((1<<14)|(1<<13)|(1<<12))
 #define XY_MONO_PAT_BLT_WRITE_ALPHA	(1<<21)
 #define XY_MONO_PAT_BLT_WRITE_RGB	(1<<20)
 
-#define XY_MONO_SRC_BLT_CMD		((0x2<<29)|(0x54<<22)|(0x6))
+#define XY_MONO_SRC_BLT_CMD		((0x2<<29)|(0x54<<22))
 #define XY_MONO_SRC_BLT_WRITE_ALPHA	(1<<21)
 #define XY_MONO_SRC_BLT_WRITE_RGB	(1<<20)
 

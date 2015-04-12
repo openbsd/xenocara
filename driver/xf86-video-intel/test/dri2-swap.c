@@ -28,7 +28,7 @@ static int dri2_open(Display *dpy)
 
 	printf ("Connecting to %s driver on %s\n", driver, device);
 
-	fd = open("/dev/dri/card0", O_RDWR);
+	fd = open(device, O_RDWR);
 	if (fd < 0)
 		return -1;
 

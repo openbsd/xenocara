@@ -70,10 +70,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@SNA_TRUE@am__append_1 = sna
-@SNA_TRUE@am__append_2 = sna/libsna.la
-@UXA_TRUE@am__append_3 = uxa
-@UXA_TRUE@am__append_4 = uxa/libuxa.la
+@VALGRIND_TRUE@am__append_1 = $(VALGRIND_CFLAGS)
+@SNA_TRUE@am__append_2 = sna
+@SNA_TRUE@am__append_3 = sna/libsna.la
+@UXA_TRUE@am__append_4 = uxa
+@UXA_TRUE@am__append_5 = uxa/libuxa.la
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -119,10 +120,10 @@ am__installdirs = "$(DESTDIR)$(intel_drv_ladir)"
 LTLIBRARIES = $(intel_drv_la_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 intel_drv_la_DEPENDENCIES = legacy/liblegacy.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__append_2) $(am__append_4)
+	$(am__DEPENDENCIES_1) $(am__append_3) $(am__append_5)
 am__objects_1 =
-am_intel_drv_la_OBJECTS = intel_device.lo intel_options.lo \
-	intel_module.lo $(am__objects_1)
+am_intel_drv_la_OBJECTS = backlight.lo fd.lo intel_device.lo \
+	intel_options.lo intel_module.lo $(am__objects_1)
 intel_drv_la_OBJECTS = $(am_intel_drv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -242,6 +243,8 @@ DRI1_CFLAGS = @DRI1_CFLAGS@
 DRI1_LIBS = @DRI1_LIBS@
 DRI2_CFLAGS = @DRI2_CFLAGS@
 DRI2_LIBS = @DRI2_LIBS@
+DRI3_CFLAGS = @DRI3_CFLAGS@
+DRI3_LIBS = @DRI3_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -270,8 +273,13 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTEL_GEN4ASM = @INTEL_GEN4ASM@
+IVO_CFLAGS = @IVO_CFLAGS@
+IVO_EXTRA_CFLAGS = @IVO_EXTRA_CFLAGS@
+IVO_EXTRA_LIBS = @IVO_EXTRA_LIBS@
+IVO_LIBS = @IVO_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEXEC_PATH = @LIBEXEC_PATH@
 LIBGLAMOR_CFLAGS = @LIBGLAMOR_CFLAGS@
 LIBGLAMOR_EGL_CFLAGS = @LIBGLAMOR_EGL_CFLAGS@
 LIBGLAMOR_EGL_LIBS = @LIBGLAMOR_EGL_LIBS@
@@ -310,23 +318,24 @@ PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PREFIX_PATH = @PREFIX_PATH@
+PRESENT_CFLAGS = @PRESENT_CFLAGS@
+PRESENT_LIBS = @PRESENT_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
-TOOL_CFLAGS = @TOOL_CFLAGS@
-TOOL_LIBS = @TOOL_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VERSION = @VERSION@
 X11_CFLAGS = @X11_CFLAGS@
+X11_DRI3_CFLAGS = @X11_DRI3_CFLAGS@
+X11_DRI3_LIBS = @X11_DRI3_LIBS@
 X11_LIBS = @X11_LIBS@
-XCB_CFLAGS = @XCB_CFLAGS@
-XCB_LIBS = @XCB_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -385,28 +394,26 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = render_program legacy $(am__append_1) $(am__append_3)
+SUBDIRS = render_program legacy $(am__append_2) $(am__append_4)
 
 # this is obnoxious:
 # -module lets us name the module exactly how we want
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = \
-	@CWARNFLAGS@ \
-	$(XORG_CFLAGS) \
-	$(DRM_CFLAGS) \
-	$(PCIACCESS_CFLAGS) \
-	@NOWARNFLAGS@ \
-	$(NULL)
-
+AM_CFLAGS = @CWARNFLAGS@ $(XORG_CFLAGS) $(DRM_CFLAGS) \
+	$(PCIACCESS_CFLAGS) @NOWARNFLAGS@ $(NULL) $(am__append_1)
 intel_drv_la_LTLIBRARIES = intel_drv.la
 intel_drv_la_LDFLAGS = -module -avoid-version
 intel_drv_ladir = $(moduledir)/drivers
 intel_drv_la_LIBADD = legacy/liblegacy.la $(PCIACCESS_LIBS) \
-	$(XORG_LIBS) $(am__append_2) $(am__append_4)
+	$(XORG_LIBS) $(am__append_3) $(am__append_5)
 NULL := #
 intel_drv_la_SOURCES = \
+	backlight.c \
+	backlight.h \
+	fd.h \
+	fd.c \
 	i915_pciids.h \
 	intel_list.h \
 	intel_options.h \
@@ -501,6 +508,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backlight.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_device.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_module.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_options.Plo@am__quote@

@@ -43,19 +43,19 @@ static void _render_copy(struct test_target *tt,
 	XFreePixmap(tt->dpy->dpy, tmp);
 }
 
-static void render_copy(struct test_target *real,
+static void render_copy(struct test_target *out,
 			struct test_target *ref)
 {
-	int x = rand() % (2*real->width) - real->width;
-	int y = rand() % (2*real->height) - real->height;
-	int w = rand() % (2*real->width);
-	int h = rand() % (2*real->height);
+	int x = rand() % (2*out->width) - out->width;
+	int y = rand() % (2*out->height) - out->height;
+	int w = rand() % (2*out->width);
+	int h = rand() % (2*out->height);
 	int red = rand() & 0xff;
 	int green = rand() & 0xff;
 	int blue = rand() & 0xff;
 	int alpha = rand() & 0xff;
 
-	_render_copy(real, x, y, w, h, red, green, blue, alpha);
+	_render_copy(out, x, y, w, h, red, green, blue, alpha);
 	_render_copy(ref, x, y, w, h, red, green, blue, alpha);
 }
 
@@ -79,36 +79,36 @@ static void clear(struct test_target *tt)
 		  0, 0, tt->width, tt->height);
 }
 
-static void basic_fill(struct test_target *real,
+static void basic_fill(struct test_target *out,
 		       struct test_target *ref)
 {
-	int x = rand() % (2*real->width) - real->width;
-	int y = rand() % (2*real->height) - real->height;
-	int w = rand() % (2*real->width);
-	int h = rand() % (2*real->height);
+	int x = rand() % (2*out->width) - out->width;
+	int y = rand() % (2*out->height) - out->height;
+	int w = rand() % (2*out->width);
+	int h = rand() % (2*out->height);
 	int color = rand();
 	int alu = rand() % 16;
 
-	fill_rect(real, alu, color, x, y, w, h);
+	fill_rect(out, alu, color, x, y, w, h);
 	fill_rect(ref, alu, color, x, y, w, h);
 }
 
-static void basic_copy(struct test_target *real,
+static void basic_copy(struct test_target *out,
 		       struct test_target *ref)
 {
-	int sx = rand() % (2*real->width) - ref->width;
-	int sy = rand() % (2*real->height) - ref->height;
-	int dx = rand() % (2*real->width) - ref->width;
-	int dy = rand() % (2*real->height) - ref->height;
-	int w = rand() % (2*real->width);
-	int h = rand() % (2*real->height);
+	int sx = rand() % (2*out->width) - ref->width;
+	int sy = rand() % (2*out->height) - ref->height;
+	int dx = rand() % (2*out->width) - ref->width;
+	int dy = rand() % (2*out->height) - ref->height;
+	int w = rand() % (2*out->width);
+	int h = rand() % (2*out->height);
 	XGCValues val;
 
 	val.function = rand() % 16;
 
-	XChangeGC(real->dpy->dpy, real->gc, GCFunction, &val);
-	XCopyArea(real->dpy->dpy,
-		  real->draw, real->draw, real->gc,
+	XChangeGC(out->dpy->dpy, out->gc, GCFunction, &val);
+	XCopyArea(out->dpy->dpy,
+		  out->draw, out->draw, out->gc,
 		  sx, sy, w, h, dx, dy);
 
 	XChangeGC(ref->dpy->dpy, ref->gc, GCFunction, &val);
@@ -142,23 +142,23 @@ static void _put(struct test_target *tt,
 	}
 }
 
-static void basic_put(struct test_target *real,
+static void basic_put(struct test_target *out,
 		      struct test_target *ref)
 {
-	int x = rand() % (2*real->width) - real->width;
-	int y = rand() % (2*real->height) - real->height;
-	int w = rand() % real->width;
-	int h = rand() % real->height;
+	int x = rand() % (2*out->width) - out->width;
+	int y = rand() % (2*out->height) - out->height;
+	int w = rand() % out->width;
+	int h = rand() % out->height;
 	int color = rand();
 	int alu = rand() % 16;
 
-	_put(real, x, y, w, h, color, alu);
+	_put(out, x, y, w, h, color, alu);
 	_put(ref, x, y, w, h, color, alu);
 }
 
 static void rect_tests(struct test *test, int iterations, enum target target)
 {
-	struct test_target real, ref;
+	struct test_target out, ref;
 	void (* const ops[])(struct test_target *, struct test_target *) = {
 		basic_copy,
 		basic_fill,
@@ -171,24 +171,24 @@ static void rect_tests(struct test *test, int iterations, enum target target)
 	       test_target_name(target));
 	fflush(stdout);
 
-	test_target_create_render(&test->real, target, &real);
+	test_target_create_render(&test->out, target, &out);
 	test_target_create_render(&test->ref, target, &ref);
 
-	clear(&real);
+	clear(&out);
 	clear(&ref);
 
 	for (n = 0; n < iterations; n++)
-		ops[rand() % ARRAY_SIZE(ops)](&real, &ref);
+		ops[rand() % ARRAY_SIZE(ops)](&out, &ref);
 
 	test_compare(test,
-		     real.draw, real.format,
+		     out.draw, out.format,
 		     ref.draw, ref.format,
-		     0, 0, real.width, real.height,
+		     0, 0, out.width, out.height,
 		     "");
 
 	printf("passed [%d iterations]\n", n);
 
-	test_target_destroy_render(&test->real, &real);
+	test_target_destroy_render(&test->out, &out);
 	test_target_destroy_render(&test->ref, &ref);
 }
 

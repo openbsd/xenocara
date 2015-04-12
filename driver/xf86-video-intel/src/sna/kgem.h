@@ -50,6 +50,8 @@ struct kgem_bo {
 #define RQ(rq) ((struct kgem_request *)((uintptr_t)(rq) & ~3))
 #define RQ_RING(rq) ((uintptr_t)(rq) & 3)
 #define RQ_IS_BLT(rq) (RQ_RING(rq) == KGEM_BLT)
+#define MAKE_REQUEST(rq, ring) ((struct kgem_request *)((uintptr_t)(rq) | (ring)))
+
 	struct drm_i915_gem_exec_object2 *exec;
 
 	struct kgem_bo *proxy;
@@ -74,6 +76,7 @@ struct kgem_bo {
 	uint32_t handle;
 	uint32_t target_handle;
 	uint32_t delta;
+	uint32_t active_scanout;
 	union {
 		struct {
 			uint32_t count:27;
@@ -95,6 +98,7 @@ struct kgem_bo {
 	uint32_t io : 1;
 	uint32_t flush : 1;
 	uint32_t scanout : 1;
+	uint32_t prime : 1;
 	uint32_t purged : 1;
 };
 #define DOMAIN_NONE 0
@@ -117,7 +121,7 @@ enum {
 
 struct kgem {
 	int fd;
-	int wedged;
+	unsigned wedged;
 	unsigned gen;
 
 	uint32_t unique_id;
@@ -167,6 +171,8 @@ struct kgem {
 	uint32_t need_purge:1;
 	uint32_t need_retire:1;
 	uint32_t need_throttle:1;
+	uint32_t needs_semaphore:1;
+	uint32_t needs_reservation:1;
 	uint32_t scanout_busy:1;
 	uint32_t busy:1;
 
@@ -189,7 +195,7 @@ struct kgem {
 
 	uint16_t fence_max;
 	uint16_t half_cpu_cache_pages;
-	uint32_t aperture_total, aperture_high, aperture_low, aperture_mappable;
+	uint32_t aperture_total, aperture_high, aperture_low, aperture_mappable, aperture_fenceable;
 	uint32_t aperture, aperture_fenced, aperture_max_fence;
 	uint32_t max_upload_tile_size, max_copy_tile_size;
 	uint32_t max_gpu_size, max_cpu_size;
@@ -267,8 +273,15 @@ unsigned kgem_can_create_2d(struct kgem *kgem, int width, int height, int depth)
 #define KGEM_CAN_CREATE_CPU	0x2
 #define KGEM_CAN_CREATE_LARGE	0x4
 #define KGEM_CAN_CREATE_GTT	0x8
+#define KGEM_CAN_CREATE_TILED	0x10
 
-uint32_t kgem_get_unique_id(struct kgem *kgem);
+bool kgem_check_surface_size(struct kgem *kgem,
+			     uint32_t width,
+			     uint32_t height,
+			     uint32_t bpp,
+			     uint32_t tiling,
+			     uint32_t pitch,
+			     uint32_t size);
 
 struct kgem_bo *
 kgem_replace_bo(struct kgem *kgem,
@@ -309,6 +322,21 @@ uint32_t kgem_bo_get_binding(struct kgem_bo *bo, uint32_t format);
 void kgem_bo_set_binding(struct kgem_bo *bo, uint32_t format, uint16_t offset);
 
 bool kgem_retire(struct kgem *kgem);
+void kgem_retire__buffers(struct kgem *kgem);
+
+static inline bool kgem_bo_discard_cache(struct kgem_bo *bo, bool force)
+{
+	if (bo == NULL || bo->proxy == NULL)
+		return false;
+
+	if (force)
+		return true;
+
+	if (bo->proxy->rq)
+		return false;
+
+	return bo->snoop;
+}
 
 bool __kgem_ring_is_idle(struct kgem *kgem, int ring);
 static inline bool kgem_ring_is_idle(struct kgem *kgem, int ring)
@@ -542,17 +570,26 @@ static inline bool kgem_bo_is_snoop(struct kgem_bo *bo)
 }
 
 void kgem_bo_undo(struct kgem *kgem, struct kgem_bo *bo);
+void kgem_bo_pair_undo(struct kgem *kgem, struct kgem_bo *a, struct kgem_bo *b);
 
 bool __kgem_busy(struct kgem *kgem, int handle);
 
-static inline void kgem_bo_mark_busy(struct kgem_bo *bo, int ring)
+static inline void kgem_bo_mark_busy(struct kgem *kgem, struct kgem_bo *bo, int ring)
 {
 	assert(bo->refcnt);
-	bo->rq = (struct kgem_request *)((uintptr_t)bo->rq | ring);
+	bo->needs_flush = true;
+	if (bo->rq) {
+		bo->rq = MAKE_REQUEST(RQ(bo->rq), ring);
+	} else {
+		bo->rq = MAKE_REQUEST(kgem, ring);
+		list_add(&bo->request, &kgem->flushing);
+		kgem->need_retire = true;
+	}
 }
 
 inline static void __kgem_bo_clear_busy(struct kgem_bo *bo)
 {
+	DBG(("%s: handle=%d\n", __FUNCTION__, bo->handle));
 	bo->rq = NULL;
 	list_del(&bo->request);
 
@@ -630,6 +667,8 @@ static inline void __kgem_bo_mark_dirty(struct kgem_bo *bo)
 	     bo->handle, bo->proxy != NULL));
 
 	assert(bo->refcnt);
+	assert(bo->exec);
+	assert(bo->rq);
 
 	bo->exec->flags |= LOCAL_EXEC_OBJECT_WRITE;
 	bo->needs_flush = bo->gpu_dirty = true;
@@ -652,8 +691,9 @@ static inline void kgem_bo_mark_dirty(struct kgem_bo *bo)
 
 static inline bool kgem_bo_mapped(struct kgem *kgem, struct kgem_bo *bo)
 {
-	DBG(("%s: map=%p:%p, tiling=%d, domain=%d\n",
-	     __FUNCTION__, bo->map__gtt, bo->map__cpu, bo->tiling, bo->domain));
+	DBG(("%s: handle=%d, map=%p:%p, tiling=%d, domain=%d\n",
+	     __FUNCTION__, bo->handle, bo->map__gtt, bo->map__cpu, bo->tiling, bo->domain));
+	assert(bo->proxy == NULL);
 
 	if (bo->tiling == I915_TILING_NONE && (bo->domain == DOMAIN_CPU || kgem->has_llc))
 		return bo->map__cpu != NULL;
@@ -663,11 +703,13 @@ static inline bool kgem_bo_mapped(struct kgem *kgem, struct kgem_bo *bo)
 
 static inline bool kgem_bo_can_map(struct kgem *kgem, struct kgem_bo *bo)
 {
-	DBG(("%s: map=%p:%p, tiling=%d, domain=%d, offset=%ld\n",
-	     __FUNCTION__, bo->map__gtt, bo->map__cpu, bo->tiling, bo->domain, (long)bo->presumed_offset));
+	DBG(("%s: handle=%d, map=%p:%p, tiling=%d, domain=%d, offset=%ld\n",
+	     __FUNCTION__, bo->handle, bo->map__gtt, bo->map__cpu, bo->tiling, bo->domain, (long)bo->presumed_offset));
 
 	if (!bo->tiling && (kgem->has_llc || bo->domain == DOMAIN_CPU))
 		return true;
+
+	assert(bo->proxy == NULL);
 
 	if (bo->map__gtt != NULL)
 		return true;
@@ -682,14 +724,22 @@ static inline bool kgem_bo_can_map__cpu(struct kgem *kgem,
 					struct kgem_bo *bo,
 					bool write)
 {
+	DBG(("%s: handle=%d\n", __FUNCTION__, bo->handle));
 	assert(bo->refcnt);
 
-	if (bo->purged || (bo->scanout && write))
+	if (bo->purged || (bo->scanout && write)) {
+		DBG(("%s: no, writing to scanout? %d, or is stolen [inaccessible via CPU]? %d\n",
+		     __FUNCTION__, bo->scanout && write, bo->purged));
 		return false;
+	}
 
-	if (kgem->has_llc)
+	if (kgem->has_llc) {
+		DBG(("%s: yes, has LLC and target is in LLC\n", __FUNCTION__));
 		return true;
+	}
 
+	DBG(("%s: non-LLC - CPU domain? %d, clean? %d\n",
+	     __FUNCTION__, bo->domain == DOMAIN_CPU, !write || bo->exec == NULL));
 	if (bo->domain != DOMAIN_CPU)
 		return false;
 
@@ -712,6 +762,7 @@ struct kgem_bo *kgem_create_buffer_2d(struct kgem *kgem,
 bool kgem_buffer_is_inplace(struct kgem_bo *bo);
 void kgem_buffer_read_sync(struct kgem *kgem, struct kgem_bo *bo);
 
+int kgem_is_wedged(struct kgem *kgem);
 void kgem_throttle(struct kgem *kgem);
 #define MAX_INACTIVE_TIME 10
 bool kgem_expire_cache(struct kgem *kgem);
@@ -738,6 +789,11 @@ memcpy_to_tiled_x(struct kgem *kgem,
 		  int16_t dst_x, int16_t dst_y,
 		  uint16_t width, uint16_t height)
 {
+	assert(kgem->memcpy_to_tiled_x);
+	assert(src_x >= 0 && src_y >= 0);
+	assert(dst_x >= 0 && dst_y >= 0);
+	assert(8*src_stride >= (src_x+width) * bpp);
+	assert(8*dst_stride >= (dst_x+width) * bpp);
 	return kgem->memcpy_to_tiled_x(src, dst, bpp,
 				       src_stride, dst_stride,
 				       src_x, src_y,
@@ -753,6 +809,11 @@ memcpy_from_tiled_x(struct kgem *kgem,
 		    int16_t dst_x, int16_t dst_y,
 		    uint16_t width, uint16_t height)
 {
+	assert(kgem->memcpy_from_tiled_x);
+	assert(src_x >= 0 && src_y >= 0);
+	assert(dst_x >= 0 && dst_y >= 0);
+	assert(8*src_stride >= (src_x+width) * bpp);
+	assert(8*dst_stride >= (dst_x+width) * bpp);
 	return kgem->memcpy_from_tiled_x(src, dst, bpp,
 					 src_stride, dst_stride,
 					 src_x, src_y,

@@ -80,6 +80,19 @@ libuxa_la_LIBADD += \
 	$(NULL)
 endif
 
+if DRI3
+libuxa_la_SOURCES += \
+	intel_dri3.c \
+	intel_sync.c \
+	$(NULL)
+endif
+
+if PRESENT
+libuxa_la_SOURCES += \
+	intel_present.c \
+	$(NULL)
+endif
+
 if XVMC
 AM_CFLAGS += -I$(top_srcdir)/xvmc
 libuxa_la_SOURCES += \

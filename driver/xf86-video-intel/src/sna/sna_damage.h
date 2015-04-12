@@ -25,6 +25,7 @@ struct sna_damage {
 #define DAMAGE_IS_ALL(ptr) (((uintptr_t)(ptr))&1)
 #define DAMAGE_MARK_ALL(ptr) ((struct sna_damage *)(((uintptr_t)(ptr))|1))
 #define DAMAGE_PTR(ptr) ((struct sna_damage *)(((uintptr_t)(ptr))&~1))
+#define DAMAGE_REGION(ptr) (&DAMAGE_PTR(ptr)->region)
 
 struct sna_damage *sna_damage_create(void);
 
@@ -141,10 +142,12 @@ _sna_damage_all(struct sna_damage *damage,
 }
 
 static inline void sna_damage_all(struct sna_damage **damage,
-				  int width, int height)
+				  PixmapPtr pixmap)
 {
 	if (!DAMAGE_IS_ALL(*damage))
-		*damage = _sna_damage_all(*damage, width, height);
+		*damage = _sna_damage_all(*damage,
+					  pixmap->drawable.width,
+					  pixmap->drawable.height);
 }
 
 fastcall struct sna_damage *_sna_damage_subtract(struct sna_damage *damage,
@@ -205,23 +208,27 @@ sna_damage_overlaps_box(const struct sna_damage *damage,
 	return true;
 }
 
-int _sna_damage_contains_box(struct sna_damage *damage,
+int _sna_damage_contains_box(struct sna_damage **damage,
 			     const BoxRec *box);
-static inline int sna_damage_contains_box(struct sna_damage *damage,
+static inline int sna_damage_contains_box(struct sna_damage **damage,
 					  const BoxRec *box)
 {
-	if (DAMAGE_IS_ALL(damage))
+	if (DAMAGE_IS_ALL(*damage))
 		return PIXMAN_REGION_IN;
+	if (*damage == NULL)
+		return PIXMAN_REGION_OUT;
 
 	return _sna_damage_contains_box(damage, box);
 }
-static inline int sna_damage_contains_box__offset(struct sna_damage *damage,
+static inline int sna_damage_contains_box__offset(struct sna_damage **damage,
 						  const BoxRec *box, int dx, int dy)
 {
 	BoxRec b;
 
-	if (DAMAGE_IS_ALL(damage))
+	if (DAMAGE_IS_ALL(*damage))
 		return PIXMAN_REGION_IN;
+	if (*damage == NULL)
+		return PIXMAN_REGION_OUT;
 
 	b = *box;
 	b.x1 += dx; b.x2 += dx;
@@ -238,9 +245,9 @@ sna_damage_contains_box__no_reduce(const struct sna_damage *damage,
 	return _sna_damage_contains_box__no_reduce(damage, box);
 }
 
-int _sna_damage_get_boxes(struct sna_damage *damage, BoxPtr *boxes);
+int _sna_damage_get_boxes(struct sna_damage *damage, const BoxRec **boxes);
 static inline int
-sna_damage_get_boxes(struct sna_damage *damage, BoxPtr *boxes)
+sna_damage_get_boxes(struct sna_damage *damage, const BoxRec **boxes)
 {
 	assert(damage);
 
@@ -262,20 +269,20 @@ static inline void sna_damage_reduce(struct sna_damage **damage)
 }
 
 static inline void sna_damage_reduce_all(struct sna_damage **_damage,
-					 int width, int height)
+					 PixmapPtr pixmap)
 {
 	struct sna_damage *damage = *_damage;
-
-	DBG(("%s(width=%d, height=%d)\n", __FUNCTION__, width, height));
 
 	if (damage == NULL || DAMAGE_IS_ALL(damage))
 		return;
 
+	DBG(("%s(width=%d, height=%d)\n", __FUNCTION__, pixmap->drawable.width, pixmap->drawable.height));
+
 	if (damage->mode == DAMAGE_ADD) {
 		if (damage->extents.x1 <= 0 &&
 		    damage->extents.y1 <= 0 &&
-		    damage->extents.x2 >= width &&
-		    damage->extents.y2 >= height) {
+		    damage->extents.x2 >= pixmap->drawable.width &&
+		    damage->extents.y2 >= pixmap->drawable.height) {
 			if (damage->dirty) {
 				damage = *_damage = _sna_damage_reduce(damage);
 				if (damage == NULL)
@@ -283,7 +290,9 @@ static inline void sna_damage_reduce_all(struct sna_damage **_damage,
 			}
 
 			if (damage->region.data == NULL)
-				*_damage = _sna_damage_all(damage, width, height);
+				*_damage = _sna_damage_all(damage,
+							   pixmap->drawable.width,
+							   pixmap->drawable.height);
 		}
 	} else
 		*_damage = _sna_damage_reduce(damage);

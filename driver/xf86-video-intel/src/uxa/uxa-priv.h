@@ -53,7 +53,7 @@
 #include "fb.h"
 #include "fboverlay.h"
 #ifdef RENDER
-//#include "fbpict.h"
+#include "fbpict.h"
 #include "glyphstr.h"
 #endif
 #include "damage.h"
@@ -299,21 +299,6 @@ uxa_add_traps(PicturePtr pPicture,
 extern const GCOps uxa_ops;
 
 #ifdef RENDER
-
-/* XXX these are in fbpict.h, which is not installed */
-void
-fbComposite(CARD8 op,
-	    PicturePtr pSrc,
-	    PicturePtr pMask,
-	    PicturePtr pDst,
-	    INT16 xSrc,
-	    INT16 ySrc,
-	    INT16 xMask,
-	    INT16 yMask, INT16 xDst, INT16 yDst, CARD16 width, CARD16 height);
-
-void
-fbAddTraps(PicturePtr pPicture,
-	   INT16 xOff, INT16 yOff, int ntrap, xTrap * traps);
 
 void
 uxa_check_composite(CARD8 op,

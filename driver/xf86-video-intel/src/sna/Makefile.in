@@ -71,15 +71,21 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @VALGRIND_TRUE@am__append_1 = $(VALGRIND_CFLAGS)
-@DRI2_TRUE@am__append_2 = @DRI2_CFLAGS@
-@DRI2_TRUE@am__append_3 = sna_dri.c
+@DRI2_TRUE@am__append_2 = $(DRI2_CFLAGS)
+@DRI2_TRUE@am__append_3 = sna_dri2.c
 @DRI2_TRUE@am__append_4 = $(DRI2_LIBS) @CLOCK_GETTIME_LIBS@
-@XVMC_TRUE@am__append_5 = \
+@DRI3_TRUE@am__append_5 = $(DRI3_CFLAGS)
+@DRI3_TRUE@am__append_6 = sna_dri3.c
+@DRI3_TRUE@am__append_7 = $(DRI3_LIBS)
+@PRESENT_TRUE@am__append_8 = $(PRESENT_CFLAGS)
+@PRESENT_TRUE@am__append_9 = sna_present.c
+@PRESENT_TRUE@am__append_10 = $(PRESENT_LIBS)
+@XVMC_TRUE@am__append_11 = \
 @XVMC_TRUE@	sna_video_hwmc.h \
 @XVMC_TRUE@	sna_video_hwmc.c \
 @XVMC_TRUE@	$(NULL)
 
-@FULL_DEBUG_TRUE@am__append_6 = \
+@FULL_DEBUG_TRUE@am__append_12 = \
 @FULL_DEBUG_TRUE@	kgem_debug.c \
 @FULL_DEBUG_TRUE@	kgem_debug.h \
 @FULL_DEBUG_TRUE@	kgem_debug_gen2.c \
@@ -107,8 +113,12 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 @DRI2_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
+@DRI3_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1)
+@PRESENT_TRUE@am__DEPENDENCIES_4 = $(am__DEPENDENCIES_1)
 libsna_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	brw/libbrw.la fb/libfb.la $(am__DEPENDENCIES_2)
+	brw/libbrw.la fb/libfb.la ../../libobj/libcompat.la \
+	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3) \
+	$(am__DEPENDENCIES_4)
 am__libsna_la_SOURCES_DIST = atomic.h blt.c compiler.h kgem.c kgem.h \
 	rop.h sna.h sna_accel.c sna_acpi.c sna_blt.c sna_composite.c \
 	sna_cpu.c sna_cpuid.h sna_damage.c sna_damage.h sna_display.c \
@@ -126,13 +136,15 @@ am__libsna_la_SOURCES_DIST = atomic.h blt.c compiler.h kgem.c kgem.h \
 	gen5_render.c gen5_render.h gen6_common.c gen6_common.h \
 	gen6_render.c gen6_render.h gen7_render.c gen7_render.h \
 	gen8_eu.c gen8_eu.h gen8_render.c gen8_render.h gen8_vertex.c \
-	gen8_vertex.h sna_dri.c sna_video_hwmc.h sna_video_hwmc.c \
-	kgem_debug.c kgem_debug.h kgem_debug_gen2.c kgem_debug_gen3.c \
-	kgem_debug_gen4.c kgem_debug_gen5.c kgem_debug_gen6.c \
-	kgem_debug_gen7.c
-@DRI2_TRUE@am__objects_1 = sna_dri.lo
-@XVMC_TRUE@am__objects_2 = sna_video_hwmc.lo
-@FULL_DEBUG_TRUE@am__objects_3 = kgem_debug.lo kgem_debug_gen2.lo \
+	gen8_vertex.h sna_dri2.c sna_dri3.c sna_present.c \
+	sna_video_hwmc.h sna_video_hwmc.c kgem_debug.c kgem_debug.h \
+	kgem_debug_gen2.c kgem_debug_gen3.c kgem_debug_gen4.c \
+	kgem_debug_gen5.c kgem_debug_gen6.c kgem_debug_gen7.c
+@DRI2_TRUE@am__objects_1 = sna_dri2.lo
+@DRI3_TRUE@am__objects_2 = sna_dri3.lo
+@PRESENT_TRUE@am__objects_3 = sna_present.lo
+@XVMC_TRUE@am__objects_4 = sna_video_hwmc.lo
+@FULL_DEBUG_TRUE@am__objects_5 = kgem_debug.lo kgem_debug_gen2.lo \
 @FULL_DEBUG_TRUE@	kgem_debug_gen3.lo kgem_debug_gen4.lo \
 @FULL_DEBUG_TRUE@	kgem_debug_gen5.lo kgem_debug_gen6.lo \
 @FULL_DEBUG_TRUE@	kgem_debug_gen7.lo
@@ -148,7 +160,8 @@ am_libsna_la_OBJECTS = blt.lo kgem.lo sna_accel.lo sna_acpi.lo \
 	gen3_render.lo gen4_common.lo gen4_render.lo gen4_source.lo \
 	gen4_vertex.lo gen5_render.lo gen6_common.lo gen6_render.lo \
 	gen7_render.lo gen8_eu.lo gen8_render.lo gen8_vertex.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3)
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5)
 libsna_la_OBJECTS = $(am_libsna_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -268,6 +281,8 @@ DRI1_CFLAGS = @DRI1_CFLAGS@
 DRI1_LIBS = @DRI1_LIBS@
 DRI2_CFLAGS = @DRI2_CFLAGS@
 DRI2_LIBS = @DRI2_LIBS@
+DRI3_CFLAGS = @DRI3_CFLAGS@
+DRI3_LIBS = @DRI3_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -296,8 +311,13 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTEL_GEN4ASM = @INTEL_GEN4ASM@
+IVO_CFLAGS = @IVO_CFLAGS@
+IVO_EXTRA_CFLAGS = @IVO_EXTRA_CFLAGS@
+IVO_EXTRA_LIBS = @IVO_EXTRA_LIBS@
+IVO_LIBS = @IVO_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEXEC_PATH = @LIBEXEC_PATH@
 LIBGLAMOR_CFLAGS = @LIBGLAMOR_CFLAGS@
 LIBGLAMOR_EGL_CFLAGS = @LIBGLAMOR_EGL_CFLAGS@
 LIBGLAMOR_EGL_LIBS = @LIBGLAMOR_EGL_LIBS@
@@ -336,23 +356,24 @@ PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PREFIX_PATH = @PREFIX_PATH@
+PRESENT_CFLAGS = @PRESENT_CFLAGS@
+PRESENT_LIBS = @PRESENT_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
-TOOL_CFLAGS = @TOOL_CFLAGS@
-TOOL_LIBS = @TOOL_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VERSION = @VERSION@
 X11_CFLAGS = @X11_CFLAGS@
+X11_DRI3_CFLAGS = @X11_DRI3_CFLAGS@
+X11_DRI3_LIBS = @X11_DRI3_LIBS@
 X11_LIBS = @X11_LIBS@
-XCB_CFLAGS = @XCB_CFLAGS@
-XCB_LIBS = @XCB_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -415,11 +436,12 @@ SUBDIRS = brw fb
 AM_CFLAGS = @CWARNFLAGS@ -I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/render_program $(XORG_CFLAGS) \
 	$(UDEV_CFLAGS) $(DRM_CFLAGS) $(NULL) $(am__append_1) \
-	$(am__append_2) @NOWARNFLAGS@
+	$(am__append_2) $(am__append_5) $(am__append_8) @NOWARNFLAGS@
 noinst_LTLIBRARIES = libsna.la
 libsna_la_LDFLAGS = -pthread
 libsna_la_LIBADD = $(UDEV_LIBS) -lm $(DRM_LIBS) brw/libbrw.la \
-	fb/libfb.la $(am__append_4)
+	fb/libfb.la ../../libobj/libcompat.la $(am__append_4) \
+	$(am__append_7) $(am__append_10)
 libsna_la_SOURCES = atomic.h blt.c compiler.h kgem.c kgem.h rop.h \
 	sna.h sna_accel.c sna_acpi.c sna_blt.c sna_composite.c \
 	sna_cpu.c sna_cpuid.h sna_damage.c sna_damage.h sna_display.c \
@@ -437,8 +459,8 @@ libsna_la_SOURCES = atomic.h blt.c compiler.h kgem.c kgem.h rop.h \
 	gen5_render.c gen5_render.h gen6_common.c gen6_common.h \
 	gen6_render.c gen6_render.h gen7_render.c gen7_render.h \
 	gen8_eu.c gen8_eu.h gen8_render.c gen8_render.h gen8_vertex.c \
-	gen8_vertex.h $(NULL) $(am__append_3) $(am__append_5) \
-	$(am__append_6)
+	gen8_vertex.h $(NULL) $(am__append_3) $(am__append_6) \
+	$(am__append_9) $(am__append_11) $(am__append_12)
 all: all-recursive
 
 .SUFFIXES:
@@ -523,11 +545,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_damage.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_display_fake.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_dri.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_dri2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_dri3.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_glyphs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_gradient.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_present.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_stream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sna_threads.Plo@am__quote@

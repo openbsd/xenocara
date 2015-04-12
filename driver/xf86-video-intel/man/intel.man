@@ -25,8 +25,11 @@ the 830M and later.
 .B intel
 supports the i810, i810-DC100, i810e, i815, i830M, 845G, 852GM, 855GM,
 865G, 915G, 915GM, 945G, 945GM, 965G, 965Q, 946GZ, 965GM, 945GME,
-G33, Q33, Q35, G35, GM45, G45, Q45, G43, G41 chipsets, and Pineview-M in
-Atom N400 series, Pineview-D in Atom D400/D500 series.
+G33, Q33, Q35, G35, GM45, G45, Q45, G43, G41 chipsets, Pineview-M in
+Atom N400 series, Pineview-D in Atom D400/D500 series,
+Intel(R) HD Graphics: 2000-6000,
+Intel(R) Iris(TM) Graphics: 5100/6100, and
+Intel(R) Iris(TM) Pro Graphics: 5200/6200/P6300.
 
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -121,6 +124,11 @@ Disable or enable acceleration.
 .IP
 Default: acceleration is enabled.
 .TP
+.BI "Option \*qPresent\*q \*q" boolean \*q
+Enable use of hardware counters and flow control for the Present extension.
+.IP
+Default: Enabled
+.TP
 .BI "Option \*qAccelMethod\*q \*q" string \*q
 Select acceleration method.
 There are a couple of backends available for accelerating the DDX. \*qUXA\*q (Unified
@@ -145,9 +153,11 @@ the screen is then performed synchronously with the vertical refresh of the
 display so that the entire update is completed before the display starts its
 refresh. That is only one frame is ever visible, preventing an unsightly tear
 between two visible and differing frames. Note that this replicates what the
-compositing manager should be doing, so it is not advisable to enable both.
-However, some compositing managers do cause tearing, and if the outputs are
-rotated, there may will still be tearing without TearFree enabled.
+compositing manager should be doing, however TearFree will redirect the
+compositor updates (and those of fullscreen games) directly on to the scanout
+thus incurring no additional overhead in the composited case. Also note that
+not all compositing managers prevent tearing, and if the outputs are
+rotated, there will still be tearing without TearFree enabled.
 .IP
 Default: TearFree is disabled.
 .TP
@@ -491,7 +501,7 @@ video windows).
 
 The xf86-video-intel driver is part of the X.Org and Freedesktop.org
 umbrella projects.  Details on bug reporting can be found at
-http://www.intellinuxgraphics.org/how_to_report_bug.html.  Mailing
+https://01.org/linuxgraphics/documentation/how-report-bugs.  Mailing
 lists are also commonly used to report experiences and ask questions
 about configuration and other topics.  See lists.freedesktop.org for
 more information (the xorg@lists.freedesktop.org mailing list is the

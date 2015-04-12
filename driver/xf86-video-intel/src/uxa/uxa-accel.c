@@ -942,8 +942,8 @@ uxa_copy_plane(DrawablePtr pSrc, DrawablePtr pDst, GCPtr pGC,
 	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
 
 	if (uxa_screen->info->flags & UXA_USE_GLAMOR) {
+		RegionPtr region = NULL;
 		int ok = 0;
-		RegionPtr region;
 
 		if (uxa_prepare_access(pDst, UXA_GLAMOR_ACCESS_RW)) {
 			if (uxa_prepare_access(pSrc, UXA_GLAMOR_ACCESS_RO)) {

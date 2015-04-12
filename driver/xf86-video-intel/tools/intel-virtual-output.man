@@ -17,7 +17,7 @@ the primary display to extend onto the remote outputs.
 
 The xf86-video-intel driver is part of the X.Org and Freedesktop.org
 umbrella projects.  Details on bug reporting can be found at
-http://www.intellinuxgraphics.org/how_to_report_bug.html.  Mailing
+https://01.org/linuxgraphics/documentation/how-report-bugs.  Mailing
 lists are also commonly used to report experiences and ask questions
 about configuration and other topics.  See lists.freedesktop.org for
 more information (the xorg@lists.freedesktop.org mailing list is the

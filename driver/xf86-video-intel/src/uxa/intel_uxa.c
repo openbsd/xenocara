@@ -156,19 +156,15 @@ intel_get_aperture_space(ScrnInfoPtr scrn, drm_intel_bo ** bo_table,
 }
 
 static unsigned int
-intel_uxa_pixmap_compute_size(PixmapPtr pixmap,
-			      int w, int h,
-			      uint32_t *tiling,
-			      int *stride,
-			      unsigned usage)
+intel_uxa_compute_size(struct intel_screen_private *intel,
+		       int w, int h, int bpp, unsigned usage,
+		       uint32_t *tiling, int *stride)
 {
-	ScrnInfoPtr scrn = xf86ScreenToScrn(pixmap->drawable.pScreen);
-	intel_screen_private *intel = intel_get_screen_private(scrn);
 	int pitch, size;
 
 	if (*tiling != I915_TILING_NONE) {
 		/* First check whether tiling is necessary. */
-		pitch = (w * pixmap->drawable.bitsPerPixel + 7) / 8;
+		pitch = (w * bpp  + 7) / 8;
 		pitch = ALIGN(pitch, 64);
 		size = pitch * ALIGN (h, 2);
 		if (INTEL_INFO(intel)->gen < 040) {
@@ -197,7 +193,7 @@ intel_uxa_pixmap_compute_size(PixmapPtr pixmap,
 		}
 	}
 
-	pitch = (w * pixmap->drawable.bitsPerPixel + 7) / 8;
+	pitch = (w * bpp + 7) / 8;
 	if (!(usage & INTEL_CREATE_PIXMAP_DRI2) && pitch <= 256)
 		*tiling = I915_TILING_NONE;
 
@@ -241,6 +237,58 @@ intel_uxa_pixmap_compute_size(PixmapPtr pixmap,
 	}
 
 	return size;
+}
+
+drm_intel_bo *intel_allocate_framebuffer(ScrnInfoPtr scrn,
+					 int width, int height, int cpp,
+					 int *out_stride,
+					 uint32_t *out_tiling)
+{
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+	uint32_t tiling;
+	int stride, size;
+	drm_intel_bo *bo;
+
+	if (intel->tiling & INTEL_TILING_FB)
+		tiling = I915_TILING_X;
+	else
+		tiling = I915_TILING_NONE;
+
+retry:
+	size = intel_uxa_compute_size(intel,
+				      width, height,
+				      intel->cpp*8, 0,
+				      &tiling, &stride);
+	if (!intel_check_display_stride(scrn, stride, tiling)) {
+		if (tiling != I915_TILING_NONE) {
+			tiling = I915_TILING_NONE;
+			goto retry;
+		}
+
+		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+			   "Front buffer stride %d kB "
+			   "exceeds display limit\n", stride / 1024);
+		return NULL;
+	}
+
+	bo = drm_intel_bo_alloc(intel->bufmgr, "front buffer", size, 0);
+	if (bo == NULL)
+		return FALSE;
+
+	if (tiling != I915_TILING_NONE)
+		drm_intel_bo_set_tiling(bo, &tiling, stride);
+
+	xf86DrvMsg(scrn->scrnIndex, X_INFO,
+		   "Allocated new frame buffer %dx%d stride %d, %s\n",
+		   width, height, stride,
+		   tiling == I915_TILING_NONE ? "untiled" : "tiled");
+
+	drm_intel_bo_disable_reuse(bo);
+
+	intel_set_gem_max_sizes(scrn);
+	*out_stride = stride;
+	*out_tiling = tiling;
+	return bo;
 }
 
 static Bool
@@ -324,9 +372,10 @@ static void intel_uxa_solid(PixmapPtr pixmap, int x1, int y1, int x2, int y2)
 	pitch = intel_pixmap_pitch(pixmap);
 
 	{
-		BEGIN_BATCH_BLT(6);
+		int len = INTEL_INFO(intel)->gen >= 0100 ? 7 : 6;
+		BEGIN_BATCH_BLT(len);
 
-		cmd = XY_COLOR_BLT_CMD;
+		cmd = XY_COLOR_BLT_CMD | (len - 2);
 
 		if (pixmap->drawable.bitsPerPixel == 32)
 			cmd |=
@@ -462,9 +511,10 @@ intel_uxa_copy(PixmapPtr dest, int src_x1, int src_y1, int dst_x1,
 	src_pitch = intel_pixmap_pitch(intel->render_source);
 
 	{
-		BEGIN_BATCH_BLT(8);
+		int len = INTEL_INFO(intel)->gen >= 0100 ? 10 : 8;
+		BEGIN_BATCH_BLT(len);
 
-		cmd = XY_SRC_COPY_BLT_CMD;
+		cmd = XY_SRC_COPY_BLT_CMD | (len - 2);
 
 		if (dest->drawable.bitsPerPixel == 32)
 			cmd |=
@@ -509,10 +559,10 @@ static void intel_uxa_done(PixmapPtr pixmap)
 	ScrnInfoPtr scrn = xf86ScreenToScrn(pixmap->drawable.pScreen);
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
-	if (IS_GEN6(intel) || IS_GEN7(intel)) {
+	if (INTEL_INFO(intel)->gen >= 060) {
 		/* workaround a random BLT hang */
 		BEGIN_BATCH_BLT(3);
-		OUT_BATCH(XY_SETUP_CLIP_BLT_CMD);
+		OUT_BATCH(XY_SETUP_CLIP_BLT_CMD | (3 - 2));
 		OUT_BATCH(0);
 		OUT_BATCH(0);
 		ADVANCE_BATCH();
@@ -631,18 +681,38 @@ dri_bo *intel_get_pixmap_bo(PixmapPtr pixmap)
 	return intel->bo;
 }
 
+static unsigned intel_get_tile_width(intel_screen_private *intel, int tiling, int pitch)
+{
+	unsigned long tile_width;
+
+	if (tiling == I915_TILING_NONE)
+		return 4;
+
+	tile_width = (tiling == I915_TILING_Y) ? 128 : 512;
+	if (INTEL_INFO(intel)->gen >= 040)
+		return tile_width;
+
+	while (tile_width < pitch)
+		tile_width <<= 1;
+
+	return tile_width;
+}
+
 void intel_set_pixmap_bo(PixmapPtr pixmap, dri_bo * bo)
 {
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pixmap->drawable.pScreen);
+	intel_screen_private *intel = intel_get_screen_private(scrn);
 	struct intel_pixmap *priv;
 
 	priv = intel_get_pixmap_private(pixmap);
 	if (priv == NULL && bo == NULL)
-	    return;
+		return;
 
 	if (priv != NULL) {
 		if (priv->bo == bo)
 			return;
 
+free_priv:
 		dri_bo_unreference(priv->bo);
 		list_del(&priv->batch);
 
@@ -651,9 +721,9 @@ void intel_set_pixmap_bo(PixmapPtr pixmap, dri_bo * bo)
 	}
 
 	if (bo != NULL) {
-		uint32_t tiling;
-		uint32_t swizzle_mode;
-		int ret;
+		uint32_t tiling, swizzle_mode;
+		unsigned tile_width;
+		int size, stride;
 
 		priv = calloc(1, sizeof (struct intel_pixmap));
 		if (priv == NULL)
@@ -665,15 +735,51 @@ void intel_set_pixmap_bo(PixmapPtr pixmap, dri_bo * bo)
 		priv->bo = bo;
 		priv->stride = intel_pixmap_pitch(pixmap);
 
-		ret = drm_intel_bo_get_tiling(bo, &tiling, &swizzle_mode);
-		if (ret != 0) {
-			FatalError("Couldn't get tiling on bo %p: %s\n",
-				   bo, strerror(-ret));
+		if (drm_intel_bo_get_tiling(bo, &tiling, &swizzle_mode)) {
+			bo = NULL;
+			goto free_priv;
 		}
 
 		priv->tiling = tiling;
 		priv->busy = -1;
 		priv->offscreen = 1;
+
+		stride = (pixmap->drawable.width * pixmap->drawable.bitsPerPixel + 7) / 8;
+		tile_width = intel_get_tile_width(intel, tiling, stride);
+		stride = ALIGN(stride, tile_width);
+
+		if (priv->stride < stride ||
+		    priv->stride & (tile_width - 1) ||
+		    priv->stride >= KB(32)) {
+			xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+				   "%s: stride on buffer object does not match constraints: stride=%d, must be greater than %d, but less than %d, and have alignment at least %d\n",
+				   __FUNCTION__, priv->stride, stride, KB(32), tile_width);
+			bo = NULL;
+			goto free_priv;
+		}
+
+		if (tiling != I915_TILING_NONE) {
+			int height;
+
+			if (IS_GEN2(intel))
+				height = 16;
+			else if (tiling == I915_TILING_X)
+				height = 8;
+			else
+				height = 32;
+
+			height = ALIGN(pixmap->drawable.height, 2*height);
+			size = intel_get_fence_size(intel, priv->stride * height);
+		} else
+			size = priv->stride * pixmap->drawable.height;
+
+		if (bo->size < size || bo->size > intel->max_bo_size) {
+			xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+				   "%s: size of buffer object does not match constraints: size=%ld, must be greater than %d, but less than %d\n",
+				   __FUNCTION__, (long)bo->size, size, intel->max_bo_size);
+			bo = NULL;
+			goto free_priv;
+		}
 	}
 
   BAIL:
@@ -798,8 +904,10 @@ static Bool intel_uxa_put_image(PixmapPtr pixmap,
 			dri_bo *bo;
 
 			/* Replace busy bo. */
-			size = intel_uxa_pixmap_compute_size (pixmap, w, h,
-							      &tiling, &stride, 0);
+			size = intel_uxa_compute_size(intel,
+						      w, h,
+						      pixmap->drawable.bitsPerPixel, pixmap->usage_hint,
+						      &tiling, &stride);
 			if (size > intel->max_gtt_map_size)
 				return FALSE;
 
@@ -1059,7 +1167,9 @@ intel_uxa_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 		    if (h <= 16 && tiling == I915_TILING_Y)
 			tiling = I915_TILING_X;
 		}
-		size = intel_uxa_pixmap_compute_size(pixmap, w, h, &tiling, &stride, usage);
+		size = intel_uxa_compute_size(intel,
+					      w, h, pixmap->drawable.bitsPerPixel, usage,
+					      &tiling, &stride);
 
 		/* Fail very large allocations.  Large BOs will tend to hit SW fallbacks
 		 * frequently, and also will tend to fail to successfully map when doing
@@ -1150,6 +1260,7 @@ Bool intel_uxa_create_screen_resources(ScreenPtr screen)
 	PixmapPtr pixmap;
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	dri_bo *bo = intel->front_buffer;
+	int old_width, old_height, old_pitch;
 
 	if (!uxa_resources_init(screen))
 		return FALSE;
@@ -1158,23 +1269,34 @@ Bool intel_uxa_create_screen_resources(ScreenPtr screen)
 		return FALSE;
 
 	pixmap = screen->GetScreenPixmap(screen);
+	old_width = pixmap->drawable.width;
+	old_height = pixmap->drawable.height;
+	old_pitch = pixmap->devKind;
+
+	if (!screen->ModifyPixmapHeader(pixmap,
+					scrn->virtualX,
+					scrn->virtualY,
+					-1, -1,
+					intel->front_pitch,
+					NULL))
+		return FALSE;
+
 	intel_set_pixmap_bo(pixmap, bo);
 	if (intel_get_pixmap_private(pixmap) == NULL)
-		return FALSE;
-
-	intel_get_pixmap_private(pixmap)->pinned |= PIN_SCANOUT;
-	screen->ModifyPixmapHeader(pixmap,
-				   scrn->virtualX,
-				   scrn->virtualY,
-				   -1, -1,
-				   intel->front_pitch,
-				   NULL);
-	scrn->displayWidth = intel->front_pitch / intel->cpp;
+		goto err;
 
 	if (!intel_glamor_create_screen_resources(screen))
-		return FALSE;
+		goto err;
+
+	intel_get_pixmap_private(pixmap)->pinned |= PIN_SCANOUT;
+	scrn->displayWidth = intel->front_pitch / intel->cpp;
 
 	return TRUE;
+
+err:
+	screen->ModifyPixmapHeader(pixmap,
+				   old_width, old_height, -1, -1, old_pitch, NULL);
+	return FALSE;
 }
 
 #ifdef CREATE_PIXMAP_USAGE_SHARED
@@ -1200,7 +1322,10 @@ intel_uxa_share_pixmap_backing(PixmapPtr ppix, ScreenPtr slave, void **fd_handle
 
 	        tiling = I915_TILING_NONE;
 
-		size = intel_uxa_pixmap_compute_size(ppix, ppix->drawable.width, ppix->drawable.height, &tiling, &stride, INTEL_CREATE_PIXMAP_DRI2);
+		size = intel_uxa_compute_size(intel,
+					      ppix->drawable.width, ppix->drawable.height,
+					      ppix->drawable.bitsPerPixel, INTEL_CREATE_PIXMAP_DRI2,
+					      &tiling, &stride);
 
 		newbo = drm_intel_bo_alloc_for_render(intel->bufmgr,
 						      "pixmap",
@@ -1296,6 +1421,17 @@ intel_limits_init(intel_screen_private *intel)
 	}
 }
 
+static Bool intel_option_accel_none(intel_screen_private *intel)
+{
+	const char *s;
+
+	s = xf86GetOptValString(intel->Options, OPTION_ACCEL_METHOD);
+	if (s == NULL)
+		return IS_DEFAULT_ACCEL_METHOD(NOACCEL);
+
+	return strcasecmp(s, "none") == 0;
+}
+
 static Bool intel_option_accel_blt(intel_screen_private *intel)
 {
 	const char *s;
@@ -1354,7 +1490,7 @@ Bool intel_uxa_init(ScreenPtr screen)
 
 	/* Composite */
 	if (intel_option_accel_blt(intel)) {
-	} else if (IS_GEN2(intel)) {
+	} else if (INTEL_INFO(intel)->gen < 030) {
 		intel->uxa_driver->check_composite = i830_check_composite;
 		intel->uxa_driver->check_composite_target = i830_check_composite_target;
 		intel->uxa_driver->check_composite_texture = i830_check_composite_texture;
@@ -1364,7 +1500,7 @@ Bool intel_uxa_init(ScreenPtr screen)
 
 		intel->vertex_flush = i830_vertex_flush;
 		intel->batch_commit_notify = i830_batch_commit_notify;
-	} else if (IS_GEN3(intel)) {
+	} else if (INTEL_INFO(intel)->gen < 040) {
 		intel->uxa_driver->check_composite = i915_check_composite;
 		intel->uxa_driver->check_composite_target = i915_check_composite_target;
 		intel->uxa_driver->check_composite_texture = i915_check_composite_texture;
@@ -1374,7 +1510,7 @@ Bool intel_uxa_init(ScreenPtr screen)
 
 		intel->vertex_flush = i915_vertex_flush;
 		intel->batch_commit_notify = i915_batch_commit_notify;
-	} else {
+	} else if (INTEL_INFO(intel)->gen < 0100) {
 		intel->uxa_driver->check_composite = i965_check_composite;
 		intel->uxa_driver->check_composite_texture = i965_check_composite_texture;
 		intel->uxa_driver->prepare_composite = i965_prepare_composite;
@@ -1385,9 +1521,9 @@ Bool intel_uxa_init(ScreenPtr screen)
 		intel->batch_flush = i965_batch_flush;
 		intel->batch_commit_notify = i965_batch_commit_notify;
 
-		if (IS_GEN4(intel)) {
+		if (INTEL_INFO(intel)->gen < 050) {
 			intel->context_switch = gen4_context_switch;
-		} else if (IS_GEN5(intel)) {
+		} else if (INTEL_INFO(intel)->gen < 060) {
 			intel->context_switch = gen5_context_switch;
 		} else {
 			intel->context_switch = gen6_context_switch;
@@ -1417,8 +1553,12 @@ Bool intel_uxa_init(ScreenPtr screen)
 		return FALSE;
 	}
 
+	if (intel_option_accel_none(intel))
+		intel->force_fallback = 1;
+
 	uxa_set_fallback_debug(screen, intel->fallback_debug);
 	uxa_set_force_fallback(screen, intel->force_fallback);
 
+	intel->flush_rendering = intel_flush_rendering;
 	return TRUE;
 }

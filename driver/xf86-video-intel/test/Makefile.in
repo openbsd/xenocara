@@ -57,13 +57,25 @@ host_triplet = @host@
 @DRI2_TRUE@	dri2-test \
 @DRI2_TRUE@	$(NULL)
 
-check_PROGRAMS = $(am__EXEEXT_2)
+@X11_DRI3_TRUE@am__append_2 = \
+@X11_DRI3_TRUE@	dri3-test \
+@X11_DRI3_TRUE@	present-test \
+@X11_DRI3_TRUE@	$(NULL)
+
+check_PROGRAMS = $(am__EXEEXT_3)
 noinst_PROGRAMS = lowlevel-blt-bench$(EXEEXT)
-@DRI2_TRUE@am__append_2 = \
+@DRI2_TRUE@am__append_3 = \
 @DRI2_TRUE@	dri2.c \
 @DRI2_TRUE@	dri2.h \
 @DRI2_TRUE@	$(NULL)
 
+@X11_DRI3_TRUE@am__append_4 = \
+@X11_DRI3_TRUE@	dri3.c \
+@X11_DRI3_TRUE@	dri3.h \
+@X11_DRI3_TRUE@	$(NULL)
+
+@X11_DRI3_TRUE@am__append_5 = $(X11_DRI3_CFLAGS)
+@X11_DRI3_TRUE@am__append_6 = $(X11_DRI3_LIBS)
 subdir = test
 DIST_COMMON = README $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -81,10 +93,11 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libtest_la_LIBADD =
 am__libtest_la_SOURCES_DIST = test.h test_display.c test_image.c \
-	test_log.c test_render.c dri2.c dri2.h
+	test_log.c test_render.c dri2.c dri2.h dri3.c dri3.h
 @DRI2_TRUE@am__objects_1 = dri2.lo
+@X11_DRI3_TRUE@am__objects_2 = dri3.lo
 am_libtest_la_OBJECTS = test_display.lo test_image.lo test_log.lo \
-	test_render.lo $(am__objects_1)
+	test_render.lo $(am__objects_1) $(am__objects_2)
 libtest_la_OBJECTS = $(am_libtest_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -92,147 +105,197 @@ am__v_lt_0 = --silent
 am__v_lt_1 = 
 @DRI2_TRUE@am__EXEEXT_1 = dri2-race$(EXEEXT) dri2-swap$(EXEEXT) \
 @DRI2_TRUE@	dri2-test$(EXEEXT)
-am__EXEEXT_2 = basic-fillrect$(EXEEXT) basic-tiledrect$(EXEEXT) \
+@X11_DRI3_TRUE@am__EXEEXT_2 = dri3-test$(EXEEXT) present-test$(EXEEXT)
+am__EXEEXT_3 = basic-fillrect$(EXEEXT) basic-tiledrect$(EXEEXT) \
 	basic-stippledrect$(EXEEXT) basic-rectangle$(EXEEXT) \
 	basic-string$(EXEEXT) basic-copyarea$(EXEEXT) \
 	basic-copyarea-size$(EXEEXT) basic-putimage$(EXEEXT) \
 	basic-lines$(EXEEXT) basic-stress$(EXEEXT) \
-	render-fill$(EXEEXT) render-trapezoid$(EXEEXT) \
-	render-trapezoid-image$(EXEEXT) render-fill-copy$(EXEEXT) \
-	render-composite-solid$(EXEEXT) \
+	cursor-test$(EXEEXT) render-fill$(EXEEXT) \
+	render-trapezoid$(EXEEXT) render-trapezoid-image$(EXEEXT) \
+	render-fill-copy$(EXEEXT) render-composite-solid$(EXEEXT) \
 	render-composite-solid-mask$(EXEEXT) render-copyarea$(EXEEXT) \
 	render-copyarea-mask$(EXEEXT) render-copyarea-size$(EXEEXT) \
 	render-copy-alphaless$(EXEEXT) mixed-stress$(EXEEXT) \
-	$(am__EXEEXT_1)
+	shm-test$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2)
 PROGRAMS = $(noinst_PROGRAMS)
 basic_copyarea_SOURCES = basic-copyarea.c
 basic_copyarea_OBJECTS = basic-copyarea.$(OBJEXT)
 basic_copyarea_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
+@X11_DRI3_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 basic_copyarea_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_copyarea_size_SOURCES = basic-copyarea-size.c
 basic_copyarea_size_OBJECTS = basic-copyarea-size.$(OBJEXT)
 basic_copyarea_size_LDADD = $(LDADD)
 basic_copyarea_size_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_fillrect_SOURCES = basic-fillrect.c
 basic_fillrect_OBJECTS = basic-fillrect.$(OBJEXT)
 basic_fillrect_LDADD = $(LDADD)
 basic_fillrect_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_lines_SOURCES = basic-lines.c
 basic_lines_OBJECTS = basic-lines.$(OBJEXT)
 basic_lines_LDADD = $(LDADD)
 basic_lines_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_putimage_SOURCES = basic-putimage.c
 basic_putimage_OBJECTS = basic-putimage.$(OBJEXT)
 basic_putimage_LDADD = $(LDADD)
 basic_putimage_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_rectangle_SOURCES = basic-rectangle.c
 basic_rectangle_OBJECTS = basic-rectangle.$(OBJEXT)
 basic_rectangle_LDADD = $(LDADD)
 basic_rectangle_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_stippledrect_SOURCES = basic-stippledrect.c
 basic_stippledrect_OBJECTS = basic-stippledrect.$(OBJEXT)
 basic_stippledrect_LDADD = $(LDADD)
 basic_stippledrect_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_stress_SOURCES = basic-stress.c
 basic_stress_OBJECTS = basic-stress.$(OBJEXT)
 basic_stress_LDADD = $(LDADD)
 basic_stress_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_string_SOURCES = basic-string.c
 basic_string_OBJECTS = basic-string.$(OBJEXT)
 basic_string_LDADD = $(LDADD)
 basic_string_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 basic_tiledrect_SOURCES = basic-tiledrect.c
 basic_tiledrect_OBJECTS = basic-tiledrect.$(OBJEXT)
 basic_tiledrect_LDADD = $(LDADD)
 basic_tiledrect_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
+cursor_test_SOURCES = cursor-test.c
+cursor_test_OBJECTS = cursor-test.$(OBJEXT)
+cursor_test_LDADD = $(LDADD)
+cursor_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 dri2_race_SOURCES = dri2-race.c
 dri2_race_OBJECTS = dri2-race.$(OBJEXT)
 dri2_race_LDADD = $(LDADD)
 dri2_race_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 dri2_swap_SOURCES = dri2-swap.c
 dri2_swap_OBJECTS = dri2-swap.$(OBJEXT)
 dri2_swap_LDADD = $(LDADD)
 dri2_swap_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 dri2_test_SOURCES = dri2-test.c
 dri2_test_OBJECTS = dri2-test.$(OBJEXT)
 dri2_test_LDADD = $(LDADD)
 dri2_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
+dri3_test_SOURCES = dri3-test.c
+dri3_test_OBJECTS = dri3-test.$(OBJEXT)
+dri3_test_LDADD = $(LDADD)
+dri3_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 lowlevel_blt_bench_SOURCES = lowlevel-blt-bench.c
 lowlevel_blt_bench_OBJECTS = lowlevel-blt-bench.$(OBJEXT)
 lowlevel_blt_bench_LDADD = $(LDADD)
 lowlevel_blt_bench_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 mixed_stress_SOURCES = mixed-stress.c
 mixed_stress_OBJECTS = mixed-stress.$(OBJEXT)
 mixed_stress_LDADD = $(LDADD)
 mixed_stress_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
+present_test_SOURCES = present-test.c
+present_test_OBJECTS = present-test.$(OBJEXT)
+present_test_LDADD = $(LDADD)
+present_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_composite_solid_SOURCES = render-composite-solid.c
 render_composite_solid_OBJECTS = render-composite-solid.$(OBJEXT)
 render_composite_solid_LDADD = $(LDADD)
 render_composite_solid_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_composite_solid_mask_SOURCES = render-composite-solid-mask.c
 render_composite_solid_mask_OBJECTS =  \
 	render-composite-solid-mask.$(OBJEXT)
 render_composite_solid_mask_LDADD = $(LDADD)
 render_composite_solid_mask_DEPENDENCIES = libtest.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 render_copy_alphaless_SOURCES = render-copy-alphaless.c
 render_copy_alphaless_OBJECTS = render-copy-alphaless.$(OBJEXT)
 render_copy_alphaless_LDADD = $(LDADD)
 render_copy_alphaless_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_copyarea_SOURCES = render-copyarea.c
 render_copyarea_OBJECTS = render-copyarea.$(OBJEXT)
 render_copyarea_LDADD = $(LDADD)
 render_copyarea_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_copyarea_mask_SOURCES = render-copyarea-mask.c
 render_copyarea_mask_OBJECTS = render-copyarea-mask.$(OBJEXT)
 render_copyarea_mask_LDADD = $(LDADD)
 render_copyarea_mask_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_copyarea_size_SOURCES = render-copyarea-size.c
 render_copyarea_size_OBJECTS = render-copyarea-size.$(OBJEXT)
 render_copyarea_size_LDADD = $(LDADD)
 render_copyarea_size_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_fill_SOURCES = render-fill.c
 render_fill_OBJECTS = render-fill.$(OBJEXT)
 render_fill_LDADD = $(LDADD)
 render_fill_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_fill_copy_SOURCES = render-fill-copy.c
 render_fill_copy_OBJECTS = render-fill-copy.$(OBJEXT)
 render_fill_copy_LDADD = $(LDADD)
 render_fill_copy_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_trapezoid_SOURCES = render-trapezoid.c
 render_trapezoid_OBJECTS = render-trapezoid.$(OBJEXT)
 render_trapezoid_LDADD = $(LDADD)
 render_trapezoid_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 render_trapezoid_image_SOURCES = render-trapezoid-image.c
 render_trapezoid_image_OBJECTS = render-trapezoid-image.$(OBJEXT)
 render_trapezoid_image_LDADD = $(LDADD)
 render_trapezoid_image_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
+shm_test_SOURCES = shm-test.c
+shm_test_OBJECTS = shm-test.$(OBJEXT)
+shm_test_LDADD = $(LDADD)
+shm_test_DEPENDENCIES = libtest.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -270,21 +333,24 @@ am__v_CCLD_1 =
 SOURCES = $(libtest_la_SOURCES) basic-copyarea.c basic-copyarea-size.c \
 	basic-fillrect.c basic-lines.c basic-putimage.c \
 	basic-rectangle.c basic-stippledrect.c basic-stress.c \
-	basic-string.c basic-tiledrect.c dri2-race.c dri2-swap.c \
-	dri2-test.c lowlevel-blt-bench.c mixed-stress.c \
-	render-composite-solid.c render-composite-solid-mask.c \
-	render-copy-alphaless.c render-copyarea.c \
-	render-copyarea-mask.c render-copyarea-size.c render-fill.c \
-	render-fill-copy.c render-trapezoid.c render-trapezoid-image.c
+	basic-string.c basic-tiledrect.c cursor-test.c dri2-race.c \
+	dri2-swap.c dri2-test.c dri3-test.c lowlevel-blt-bench.c \
+	mixed-stress.c present-test.c render-composite-solid.c \
+	render-composite-solid-mask.c render-copy-alphaless.c \
+	render-copyarea.c render-copyarea-mask.c \
+	render-copyarea-size.c render-fill.c render-fill-copy.c \
+	render-trapezoid.c render-trapezoid-image.c shm-test.c
 DIST_SOURCES = $(am__libtest_la_SOURCES_DIST) basic-copyarea.c \
 	basic-copyarea-size.c basic-fillrect.c basic-lines.c \
 	basic-putimage.c basic-rectangle.c basic-stippledrect.c \
-	basic-stress.c basic-string.c basic-tiledrect.c dri2-race.c \
-	dri2-swap.c dri2-test.c lowlevel-blt-bench.c mixed-stress.c \
+	basic-stress.c basic-string.c basic-tiledrect.c cursor-test.c \
+	dri2-race.c dri2-swap.c dri2-test.c dri3-test.c \
+	lowlevel-blt-bench.c mixed-stress.c present-test.c \
 	render-composite-solid.c render-composite-solid-mask.c \
 	render-copy-alphaless.c render-copyarea.c \
 	render-copyarea-mask.c render-copyarea-size.c render-fill.c \
-	render-fill-copy.c render-trapezoid.c render-trapezoid-image.c
+	render-fill-copy.c render-trapezoid.c render-trapezoid-image.c \
+	shm-test.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -322,6 +388,8 @@ DRI1_CFLAGS = @DRI1_CFLAGS@
 DRI1_LIBS = @DRI1_LIBS@
 DRI2_CFLAGS = @DRI2_CFLAGS@
 DRI2_LIBS = @DRI2_LIBS@
+DRI3_CFLAGS = @DRI3_CFLAGS@
+DRI3_LIBS = @DRI3_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
@@ -350,8 +418,13 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTEL_GEN4ASM = @INTEL_GEN4ASM@
+IVO_CFLAGS = @IVO_CFLAGS@
+IVO_EXTRA_CFLAGS = @IVO_EXTRA_CFLAGS@
+IVO_EXTRA_LIBS = @IVO_EXTRA_LIBS@
+IVO_LIBS = @IVO_LIBS@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEXEC_PATH = @LIBEXEC_PATH@
 LIBGLAMOR_CFLAGS = @LIBGLAMOR_CFLAGS@
 LIBGLAMOR_EGL_CFLAGS = @LIBGLAMOR_EGL_CFLAGS@
 LIBGLAMOR_EGL_LIBS = @LIBGLAMOR_EGL_LIBS@
@@ -390,23 +463,24 @@ PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
 PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
 PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
+PREFIX_PATH = @PREFIX_PATH@
+PRESENT_CFLAGS = @PRESENT_CFLAGS@
+PRESENT_LIBS = @PRESENT_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
-TOOL_CFLAGS = @TOOL_CFLAGS@
-TOOL_LIBS = @TOOL_LIBS@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
 VALGRIND_CFLAGS = @VALGRIND_CFLAGS@
 VALGRIND_LIBS = @VALGRIND_LIBS@
 VERSION = @VERSION@
 X11_CFLAGS = @X11_CFLAGS@
+X11_DRI3_CFLAGS = @X11_DRI3_CFLAGS@
+X11_DRI3_LIBS = @X11_DRI3_LIBS@
 X11_LIBS = @X11_LIBS@
-XCB_CFLAGS = @XCB_CFLAGS@
-XCB_LIBS = @XCB_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -468,16 +542,18 @@ top_srcdir = @top_srcdir@
 stress_TESTS = basic-fillrect basic-tiledrect basic-stippledrect \
 	basic-rectangle basic-string basic-copyarea \
 	basic-copyarea-size basic-putimage basic-lines basic-stress \
-	render-fill render-trapezoid render-trapezoid-image \
-	render-fill-copy render-composite-solid \
+	cursor-test render-fill render-trapezoid \
+	render-trapezoid-image render-fill-copy render-composite-solid \
 	render-composite-solid-mask render-copyarea \
 	render-copyarea-mask render-copyarea-size \
-	render-copy-alphaless mixed-stress $(NULL) $(am__append_1)
-AM_CFLAGS = @CWARNFLAGS@ $(X11_CFLAGS) $(DRM_CFLAGS)
-LDADD = libtest.la $(X11_LIBS) $(DRM_LIBS) $(CLOCK_GETTIME_LIBS)
+	render-copy-alphaless mixed-stress shm-test $(NULL) \
+	$(am__append_1) $(am__append_2)
+AM_CFLAGS = @CWARNFLAGS@ $(X11_CFLAGS) $(DRM_CFLAGS) $(am__append_5)
+LDADD = libtest.la $(X11_LIBS) $(DRM_LIBS) $(CLOCK_GETTIME_LIBS) \
+	$(am__append_6)
 noinst_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = test.h test_display.c test_image.c test_log.c \
-	test_render.c $(NULL) $(am__append_2)
+	test_render.c $(NULL) $(am__append_3) $(am__append_4)
 EXTRA_DIST = README mkvsync.sh tearing.mp4 virtual.conf
 all: all-am
 
@@ -574,6 +650,9 @@ basic-string$(EXEEXT): $(basic_string_OBJECTS) $(basic_string_DEPENDENCIES) $(EX
 basic-tiledrect$(EXEEXT): $(basic_tiledrect_OBJECTS) $(basic_tiledrect_DEPENDENCIES) $(EXTRA_basic_tiledrect_DEPENDENCIES) 
 	@rm -f basic-tiledrect$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(basic_tiledrect_OBJECTS) $(basic_tiledrect_LDADD) $(LIBS)
+cursor-test$(EXEEXT): $(cursor_test_OBJECTS) $(cursor_test_DEPENDENCIES) $(EXTRA_cursor_test_DEPENDENCIES) 
+	@rm -f cursor-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(cursor_test_OBJECTS) $(cursor_test_LDADD) $(LIBS)
 dri2-race$(EXEEXT): $(dri2_race_OBJECTS) $(dri2_race_DEPENDENCIES) $(EXTRA_dri2_race_DEPENDENCIES) 
 	@rm -f dri2-race$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(dri2_race_OBJECTS) $(dri2_race_LDADD) $(LIBS)
@@ -583,12 +662,18 @@ dri2-swap$(EXEEXT): $(dri2_swap_OBJECTS) $(dri2_swap_DEPENDENCIES) $(EXTRA_dri2_
 dri2-test$(EXEEXT): $(dri2_test_OBJECTS) $(dri2_test_DEPENDENCIES) $(EXTRA_dri2_test_DEPENDENCIES) 
 	@rm -f dri2-test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(dri2_test_OBJECTS) $(dri2_test_LDADD) $(LIBS)
+dri3-test$(EXEEXT): $(dri3_test_OBJECTS) $(dri3_test_DEPENDENCIES) $(EXTRA_dri3_test_DEPENDENCIES) 
+	@rm -f dri3-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(dri3_test_OBJECTS) $(dri3_test_LDADD) $(LIBS)
 lowlevel-blt-bench$(EXEEXT): $(lowlevel_blt_bench_OBJECTS) $(lowlevel_blt_bench_DEPENDENCIES) $(EXTRA_lowlevel_blt_bench_DEPENDENCIES) 
 	@rm -f lowlevel-blt-bench$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(lowlevel_blt_bench_OBJECTS) $(lowlevel_blt_bench_LDADD) $(LIBS)
 mixed-stress$(EXEEXT): $(mixed_stress_OBJECTS) $(mixed_stress_DEPENDENCIES) $(EXTRA_mixed_stress_DEPENDENCIES) 
 	@rm -f mixed-stress$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mixed_stress_OBJECTS) $(mixed_stress_LDADD) $(LIBS)
+present-test$(EXEEXT): $(present_test_OBJECTS) $(present_test_DEPENDENCIES) $(EXTRA_present_test_DEPENDENCIES) 
+	@rm -f present-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(present_test_OBJECTS) $(present_test_LDADD) $(LIBS)
 render-composite-solid$(EXEEXT): $(render_composite_solid_OBJECTS) $(render_composite_solid_DEPENDENCIES) $(EXTRA_render_composite_solid_DEPENDENCIES) 
 	@rm -f render-composite-solid$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(render_composite_solid_OBJECTS) $(render_composite_solid_LDADD) $(LIBS)
@@ -619,6 +704,9 @@ render-trapezoid$(EXEEXT): $(render_trapezoid_OBJECTS) $(render_trapezoid_DEPEND
 render-trapezoid-image$(EXEEXT): $(render_trapezoid_image_OBJECTS) $(render_trapezoid_image_DEPENDENCIES) $(EXTRA_render_trapezoid_image_DEPENDENCIES) 
 	@rm -f render-trapezoid-image$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(render_trapezoid_image_OBJECTS) $(render_trapezoid_image_LDADD) $(LIBS)
+shm-test$(EXEEXT): $(shm_test_OBJECTS) $(shm_test_DEPENDENCIES) $(EXTRA_shm_test_DEPENDENCIES) 
+	@rm -f shm-test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(shm_test_OBJECTS) $(shm_test_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -636,12 +724,16 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/basic-stress.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/basic-string.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/basic-tiledrect.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cursor-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dri2-race.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dri2-swap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dri2-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dri2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dri3-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dri3.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lowlevel-blt-bench.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mixed-stress.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/present-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/render-composite-solid-mask.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/render-composite-solid.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/render-copy-alphaless.Po@am__quote@
@@ -652,6 +744,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/render-fill.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/render-trapezoid-image.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/render-trapezoid.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/shm-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_display.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_log.Plo@am__quote@

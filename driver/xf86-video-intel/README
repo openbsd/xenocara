@@ -1,6 +1,6 @@
 xf86-video-intel
 Open-source X.org graphics driver for Intel graphics
-http://www.intellinuxgraphics.com/
+https://01.org/linuxgraphics/
 
 What is xf86-video-intel
 ------------------------
@@ -15,13 +15,16 @@ Intel graphics chipsets including:
 	G/Q33,G/Q35,G41,G/Q43,G/GM/Q45
 	PineView-M (Atom N400 series)
 	PineView-D (Atom D400/D500 series)
+	Intel(R) HD Graphics: 2000-6000,
+	Intel(R) Iris(TM) Graphics: 5100/6100, and
+	Intel(R) Iris(TM) Pro Graphics: 5200/6200/P6300.
 
 Where to get more information about the driver
 ----------------------------------------------
 The primary source of information about this and other open-source
 drivers for Intel graphics is:
 
-	http://intellinuxgraphics.org/
+	https://01.org/linuxgraphics/
 
 Documentation specific to the xf86-video-intel driver including
 possible configuration options for the xorg.conf file can be found in
@@ -42,7 +45,7 @@ xf86-video-intel:
 
 To report bugs encountered with the driver, see:
 
-	http://intellinuxgraphics.org/how_to_report_bug.html
+	https://01.org/linuxgraphics/documentation/how-report-bugs
 
 To see bugs that are targeted to be fixed in the next release:
 

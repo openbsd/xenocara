@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <png.h>
 
 #include "test.h"
 
@@ -29,7 +30,7 @@ int pixel_difference(uint32_t a, uint32_t b)
 
 static void
 show_pixels(char *buf,
-	    const XImage *real, const XImage *ref,
+	    const XImage *out, const XImage *ref,
 	    int x, int y, int w, int h)
 {
 	int i, j, len = 0;
@@ -44,9 +45,9 @@ show_pixels(char *buf,
 
 			len += sprintf(buf+len,
 				       "%08x ",
-				       *(uint32_t*)(real->data +
-						    j*real->bytes_per_line +
-						    i*real->bits_per_pixel/8));
+				       *(uint32_t*)(out->data +
+						    j*out->bytes_per_line +
+						    i*out->bits_per_pixel/8));
 		}
 
 		len += sprintf(buf+len, "\t");
@@ -58,8 +59,8 @@ show_pixels(char *buf,
 			len += sprintf(buf+len,
 				       "%08x ",
 				       *(uint32_t*)(ref->data +
-						    j*real->bytes_per_line +
-						    i*real->bits_per_pixel/8));
+						    j*out->bytes_per_line +
+						    i*out->bits_per_pixel/8));
 		}
 
 		len += sprintf(buf+len, "\n");
@@ -67,92 +68,167 @@ show_pixels(char *buf,
 }
 
 static void test_compare_fallback(struct test *t,
-				  Drawable real_draw, XRenderPictFormat *real_format,
+				  Drawable out_draw, XRenderPictFormat *out_format,
 				  Drawable ref_draw, XRenderPictFormat *ref_format,
 				  int x, int y, int w, int h)
 {
-	XImage *real_image, *ref_image;
-	char *real, *ref;
+	XImage *out_image, *ref_image;
+	char *out, *ref;
 	char buf[600];
 	uint32_t mask;
 	int i, j;
 
-	die_unless(real_format->depth == ref_format->depth);
+	die_unless(out_format->depth == ref_format->depth);
 
-	real_image = XGetImage(t->real.dpy, real_draw,
+	out_image = XGetImage(t->out.dpy, out_draw,
 			       x, y, w, h,
 			       AllPlanes, ZPixmap);
-	real = real_image->data;
+	out = out_image->data;
 
 	ref_image = XGetImage(t->ref.dpy, ref_draw,
 			      x, y, w, h,
 			      AllPlanes, ZPixmap);
 	ref = ref_image->data;
 
-	mask = depth_mask(real_image->depth);
+	mask = depth_mask(out_image->depth);
 
 	/* Start with an exact comparison. However, one quicky desires
 	 * a fuzzy comparator to hide hardware inaccuracies...
 	 */
 	for (j = 0; j < h; j++) {
 		for (i = 0; i < w; i++) {
-			uint32_t a = ((uint32_t *)real)[i] & mask;
+			uint32_t a = ((uint32_t *)out)[i] & mask;
 			uint32_t b = ((uint32_t *)ref)[i] & mask;
 			if (a != b && pixel_difference(a, b) > MAX_DELTA) {
 				show_pixels(buf,
-					    real_image, ref_image,
+					    out_image, ref_image,
 					    i, j, w, h);
 				die("discrepancy found at (%d+%d, %d+%d): found %08x, expected %08x (delta: %d)\n%s",
 				    x,i, y,j, a, b, pixel_difference(a, b), buf);
 			}
 		}
-		real += real_image->bytes_per_line;
+		out += out_image->bytes_per_line;
 		ref += ref_image->bytes_per_line;
 	}
 
-	XDestroyImage(real_image);
+	XDestroyImage(out_image);
 	XDestroyImage(ref_image);
 }
 
+static void
+unpremultiply_data (png_structp png, png_row_infop row_info, png_bytep data)
+{
+	unsigned int i;
+
+	for (i = 0; i < row_info->rowbytes; i += 4) {
+		uint8_t *b = &data[i];
+		uint32_t pixel;
+		uint8_t  alpha;
+
+		memcpy (&pixel, b, sizeof (uint32_t));
+		alpha = (pixel & 0xff000000) >> 24;
+		if (alpha == 0) {
+			b[0] = (pixel & 0xff0000) >> 16;
+			b[1] = (pixel & 0x00ff00) >>  8;
+			b[2] = (pixel & 0x0000ff) >>  0;
+			b[3] = 0xff;
+		} else {
+			b[0] = (((pixel & 0xff0000) >> 16) * 255 + alpha / 2) / alpha;
+			b[1] = (((pixel & 0x00ff00) >>  8) * 255 + alpha / 2) / alpha;
+			b[2] = (((pixel & 0x0000ff) >>  0) * 255 + alpha / 2) / alpha;
+			b[3] = alpha;
+		}
+	}
+}
+
+static void save_image(XImage *image, const char *filename)
+{
+	FILE *file;
+	png_struct *png = NULL;
+	png_info *info = NULL;
+	png_byte **rows = NULL;
+	int i;
+
+	file = fopen(filename, "w");
+	if (file == NULL)
+		return;
+
+	png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (png == NULL)
+		goto out;
+
+	info = png_create_info_struct(png);
+	if (info == NULL)
+		goto out;
+
+	rows = png_malloc(png, sizeof(png_byte *) * image->height);
+	if (rows == NULL)
+		goto out;
+	for (i = 0; i < image->height; i++)
+		rows[i] = (png_byte *)(image->data + image->bytes_per_line * i);
+
+	if (setjmp(png_jmpbuf(png)))
+		goto out;
+
+	png_set_IHDR(png, info,
+		     image->width, image->height, 8,
+		     PNG_COLOR_TYPE_RGB_ALPHA,
+		     PNG_INTERLACE_NONE,
+		     PNG_COMPRESSION_TYPE_DEFAULT,
+		     PNG_FILTER_TYPE_DEFAULT);
+
+	png_init_io(png, file);
+	png_write_info(png, info);
+	png_set_write_user_transform_fn(png, unpremultiply_data);
+	png_write_image(png, rows);
+	png_write_end(png, info);
+
+out:
+	if (rows)
+		png_free(png, rows);
+	png_destroy_write_struct(&png, &info);
+	fclose(file);
+}
+
 void test_compare(struct test *t,
-		  Drawable real_draw, XRenderPictFormat *real_format,
+		  Drawable out_draw, XRenderPictFormat *out_format,
 		  Drawable ref_draw, XRenderPictFormat *ref_format,
 		  int x, int y, int w, int h,
 		  const char *info)
 {
-	XImage real_image, ref_image;
+	XImage out_image, ref_image;
 	Pixmap tmp;
-	char *real, *ref;
+	char *out, *ref;
 	char buf[600];
 	uint32_t mask;
 	int i, j;
 	XGCValues gcv;
 	GC gc;
 
-	if (w * h * 4 > t->real.max_shm_size)
+	if (w * h * 4 > t->out.max_shm_size)
 		return test_compare_fallback(t,
-					     real_draw, real_format,
+					     out_draw, out_format,
 					     ref_draw, ref_format,
 					     x, y, w, h);
 
-	test_init_image(&real_image, &t->real.shm, real_format, w, h);
+	test_init_image(&out_image, &t->out.shm, out_format, w, h);
 	test_init_image(&ref_image, &t->ref.shm, ref_format, w, h);
 
 	gcv.graphics_exposures = 0;
 
-	die_unless(real_image.depth == ref_image.depth);
-	die_unless(real_image.bits_per_pixel == ref_image.bits_per_pixel);
-	die_unless(real_image.bits_per_pixel == 32);
+	die_unless(out_image.depth == ref_image.depth);
+	die_unless(out_image.bits_per_pixel == ref_image.bits_per_pixel);
+	die_unless(out_image.bits_per_pixel == 32);
 
-	mask = depth_mask(real_image.depth);
+	mask = depth_mask(out_image.depth);
 
-	tmp = XCreatePixmap(t->real.dpy, real_draw, w, h, real_image.depth);
-	gc = XCreateGC(t->real.dpy, tmp, GCGraphicsExposures, &gcv);
-	XCopyArea(t->real.dpy, real_draw, tmp, gc, x, y, w, h, 0, 0);
-	XShmGetImage(t->real.dpy, tmp, &real_image, 0, 0, AllPlanes);
-	XFreeGC(t->real.dpy, gc);
-	XFreePixmap(t->real.dpy, tmp);
-	real = real_image.data;
+	tmp = XCreatePixmap(t->out.dpy, out_draw, w, h, out_image.depth);
+	gc = XCreateGC(t->out.dpy, tmp, GCGraphicsExposures, &gcv);
+	XCopyArea(t->out.dpy, out_draw, tmp, gc, x, y, w, h, 0, 0);
+	XShmGetImage(t->out.dpy, tmp, &out_image, 0, 0, AllPlanes);
+	XFreeGC(t->out.dpy, gc);
+	XFreePixmap(t->out.dpy, tmp);
+	out = out_image.data;
 
 	tmp = XCreatePixmap(t->ref.dpy, ref_draw, w, h, ref_image.depth);
 	gc = XCreateGC(t->ref.dpy, tmp, GCGraphicsExposures, &gcv);
@@ -167,17 +243,19 @@ void test_compare(struct test *t,
 	 */
 	for (j = 0; j < h; j++) {
 		for (i = 0; i < w; i++) {
-			uint32_t a = ((uint32_t *)real)[i] & mask;
+			uint32_t a = ((uint32_t *)out)[i] & mask;
 			uint32_t b = ((uint32_t *)ref)[i] & mask;
 			if (a != b && pixel_difference(a, b) > MAX_DELTA) {
 				show_pixels(buf,
-					    &real_image, &ref_image,
+					    &out_image, &ref_image,
 					    i, j, w, h);
+				save_image(&out_image, "out.png");
+				save_image(&ref_image,  "ref.png");
 				die("discrepancy found at (%d+%d, %d+%d): found %08x, expected %08x (delta: %d)\n%s%s\n",
 				    x,i, y,j, a, b, pixel_difference(a, b), buf, info);
 			}
 		}
-		real += real_image.bytes_per_line;
+		out += out_image.bytes_per_line;
 		ref += ref_image.bytes_per_line;
 	}
 }

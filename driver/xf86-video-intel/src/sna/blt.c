@@ -233,55 +233,47 @@ memcpy_to_tiled_x__swizzle_0(const void *src, void *dst, int bpp,
 	const unsigned tile_size = 4096;
 
 	const unsigned cpp = bpp / 8;
-	const unsigned stride_tiles = dst_stride / tile_width;
-	const unsigned swizzle_pixels = tile_width / cpp;
-	const unsigned tile_pixels = ffs(tile_width / cpp) - 1;
-	const unsigned tile_mask = (1 << tile_pixels) - 1;
-
-	unsigned x, y;
+	const unsigned tile_pixels = tile_width / cpp;
+	const unsigned tile_shift = ffs(tile_pixels) - 1;
+	const unsigned tile_mask = tile_pixels - 1;
 
 	DBG(("%s(bpp=%d): src=(%d, %d), dst=(%d, %d), size=%dx%d, pitch=%d/%d\n",
 	     __FUNCTION__, bpp, src_x, src_y, dst_x, dst_y, width, height, src_stride, dst_stride));
+	assert(src != dst);
 
-	src = (const uint8_t *)src + src_y * src_stride + src_x * cpp;
+	if (src_x | src_y)
+		src = (const uint8_t *)src + src_y * src_stride + src_x * cpp;
+	assert(src_stride >= width * cpp);
+	src_stride -= width * cpp;
 
-	for (y = 0; y < height; ++y) {
-		const uint32_t dy = y + dst_y;
-		const uint32_t tile_row =
-			(dy / tile_height * stride_tiles * tile_size +
-			 (dy & (tile_height-1)) * tile_width);
-		const uint8_t *src_row = (const uint8_t *)src + src_stride * y;
-		uint32_t dx = dst_x, offset;
+	while (height--) {
+		unsigned w = width * cpp;
+		uint8_t *tile_row = dst;
 
-		x = width * cpp;
-		if (dx & (swizzle_pixels - 1)) {
-			const uint32_t swizzle_bound_pixels = ALIGN(dx + 1, swizzle_pixels);
-			const uint32_t length = min(dst_x + width, swizzle_bound_pixels) - dx;
-			offset = tile_row +
-				(dx >> tile_pixels) * tile_size +
-				(dx & tile_mask) * cpp;
-			memcpy((char *)dst + offset, src_row, length * cpp);
+		tile_row += dst_y / tile_height * dst_stride * tile_height;
+		tile_row += (dst_y & (tile_height-1)) * tile_width;
+		if (dst_x) {
+			tile_row += (dst_x >> tile_shift) * tile_size;
+			if (dst_x & tile_mask) {
+				const unsigned x = (dst_x & tile_mask) * cpp;
+				const unsigned len = min(tile_width - x, w);
+				memcpy(tile_row + x, src, len);
 
-			src_row += length * cpp;
-			x -= length * cpp;
-			dx += length;
+				tile_row += tile_size;
+				src = (const uint8_t *)src + len;
+				w -= len;
+			}
 		}
-		while (x >= 512) {
-			assert((dx & tile_mask) == 0);
-			offset = tile_row + (dx >> tile_pixels) * tile_size;
+		while (w >= tile_width) {
+			memcpy(tile_row, src, tile_width);
 
-			memcpy((char *)dst + offset, src_row, 512);
-
-			src_row += 512;
-			x -= 512;
-			dx += swizzle_pixels;
+			tile_row += tile_size;
+			src = (const uint8_t *)src + tile_width;
+			w -= tile_width;
 		}
-		if (x) {
-			offset = tile_row +
-				(dx >> tile_pixels) * tile_size +
-				(dx & tile_mask) * cpp;
-			memcpy((char *)dst + offset, src_row, x);
-		}
+		memcpy(tile_row, src, w);
+		src = (const uint8_t *)src + src_stride + w;
+		dst_y++;
 	}
 }
 
@@ -297,55 +289,47 @@ memcpy_from_tiled_x__swizzle_0(const void *src, void *dst, int bpp,
 	const unsigned tile_size = 4096;
 
 	const unsigned cpp = bpp / 8;
-	const unsigned stride_tiles = src_stride / tile_width;
-	const unsigned swizzle_pixels = tile_width / cpp;
-	const unsigned tile_pixels = ffs(tile_width / cpp) - 1;
-	const unsigned tile_mask = (1 << tile_pixels) - 1;
-
-	unsigned x, y;
+	const unsigned tile_pixels = tile_width / cpp;
+	const unsigned tile_shift = ffs(tile_pixels) - 1;
+	const unsigned tile_mask = tile_pixels - 1;
 
 	DBG(("%s(bpp=%d): src=(%d, %d), dst=(%d, %d), size=%dx%d, pitch=%d/%d\n",
 	     __FUNCTION__, bpp, src_x, src_y, dst_x, dst_y, width, height, src_stride, dst_stride));
+	assert(src != dst);
 
-	dst = (uint8_t *)dst + dst_y * dst_stride + dst_x * cpp;
+	if (dst_x | dst_y)
+		dst = (uint8_t *)dst + dst_y * dst_stride + dst_x * cpp;
+	assert(dst_stride >= width * cpp);
+	dst_stride -= width * cpp;
 
-	for (y = 0; y < height; ++y) {
-		const uint32_t sy = y + src_y;
-		const uint32_t tile_row =
-			(sy / tile_height * stride_tiles * tile_size +
-			 (sy & (tile_height-1)) * tile_width);
-		uint8_t *dst_row = (uint8_t *)dst + dst_stride * y;
-		uint32_t sx = src_x, offset;
+	while (height--) {
+		unsigned w = width * cpp;
+		const uint8_t *tile_row = src;
 
-		x = width * cpp;
-		if (sx & (swizzle_pixels - 1)) {
-			const uint32_t swizzle_bound_pixels = ALIGN(sx + 1, swizzle_pixels);
-			const uint32_t length = min(src_x + width, swizzle_bound_pixels) - sx;
-			offset = tile_row +
-				(sx >> tile_pixels) * tile_size +
-				(sx & tile_mask) * cpp;
-			memcpy(dst_row, (const char *)src + offset, length * cpp);
+		tile_row += src_y / tile_height * src_stride * tile_height;
+		tile_row += (src_y & (tile_height-1)) * tile_width;
+		if (src_x) {
+			tile_row += (src_x >> tile_shift) * tile_size;
+			if (src_x & tile_mask) {
+				const unsigned x = (src_x & tile_mask) * cpp;
+				const unsigned len = min(tile_width - x, w);
+				memcpy(dst, tile_row + x, len);
 
-			dst_row += length * cpp;
-			x -= length * cpp;
-			sx += length;
+				tile_row += tile_size;
+				dst = (uint8_t *)dst + len;
+				w -= len;
+			}
 		}
-		while (x >= 512) {
-			assert((sx & tile_mask) == 0);
-			offset = tile_row + (sx >> tile_pixels) * tile_size;
+		while (w >= tile_width) {
+			memcpy(dst, tile_row, tile_width);
 
-			memcpy(dst_row, (const char *)src + offset, 512);
-
-			dst_row += 512;
-			x -= 512;
-			sx += swizzle_pixels;
+			tile_row += tile_size;
+			dst = (uint8_t *)dst + tile_width;
+			w -= tile_width;
 		}
-		if (x) {
-			offset = tile_row +
-				(sx >> tile_pixels) * tile_size +
-				(sx & tile_mask) * cpp;
-			memcpy(dst_row, (const char *)src + offset, x);
-		}
+		memcpy(dst, tile_row, w);
+		dst = (uint8_t *)dst + dst_stride + w;
+		src_y++;
 	}
 }
 
@@ -796,6 +780,7 @@ memmove_box(const void *src, void *dst,
 	    const BoxRec *box,
 	    int dx, int dy)
 {
+#define FORCE_MEMMOVE 0
 	union {
 		uint8_t u8;
 		uint16_t u16;
@@ -808,6 +793,7 @@ memmove_box(const void *src, void *dst,
 
 	assert(src);
 	assert(dst);
+	assert(src != dst);
 	assert(bpp >= 8);
 	assert(box->x2 > box->x1);
 	assert(box->y2 > box->y1);
@@ -821,10 +807,11 @@ memmove_box(const void *src, void *dst,
 	width = box->y1 * stride + box->x1 * bpp;
 	src_bytes = (const uint8_t *)src + width;
 	dst_bytes = (uint8_t *)dst + width;
+	assert(dst_bytes != src_bytes);
 
 	width = (box->x2 - box->x1) * bpp;
 	height = (box->y2 - box->y1);
-	assert(width <= 8*stride);
+	assert(width <= stride);
 	if (width == stride) {
 		width *= height;
 		height = 1;
@@ -865,8 +852,9 @@ memmove_box(const void *src, void *dst,
 			break;
 
 		default:
-			if (dst_bytes < src_bytes + width &&
-			    src_bytes < dst_bytes + width) {
+			if (FORCE_MEMMOVE ||
+			    (dst_bytes < src_bytes + width &&
+			     src_bytes < dst_bytes + width)) {
 				do {
 					memmove(dst_bytes, src_bytes, width);
 					src_bytes += stride;
@@ -919,8 +907,9 @@ memmove_box(const void *src, void *dst,
 			break;
 
 		default:
-			if (dst_bytes < src_bytes + width &&
-			    src_bytes < dst_bytes + width) {
+			if (FORCE_MEMMOVE ||
+			    (dst_bytes < src_bytes + width &&
+			     src_bytes < dst_bytes + width)) {
 				do {
 					memmove(dst_bytes, src_bytes, width);
 					src_bytes -= stride;

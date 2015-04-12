@@ -122,9 +122,7 @@ static bool sna_video_overlay_update_attrs(struct sna_video *video)
 	return drmIoctl(video->sna->kgem.fd, DRM_IOCTL_I915_OVERLAY_ATTRS, &attrs) == 0;
 }
 
-static int sna_video_overlay_stop(ClientPtr client,
-				  XvPortPtr port,
-				  DrawablePtr draw)
+static int sna_video_overlay_stop(ddStopVideo_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
@@ -139,9 +137,9 @@ static int sna_video_overlay_stop(ClientPtr client,
 		       DRM_IOCTL_I915_OVERLAY_PUT_IMAGE,
 		       &request);
 
-	if (video->bo)
-		kgem_bo_destroy(&sna->kgem, video->bo);
-	video->bo = NULL;
+	if (video->bo[0])
+		kgem_bo_destroy(&sna->kgem, video->bo[0]);
+	video->bo[0] = NULL;
 
 	sna_video_free_buffers(video);
 	sna_window_set_port((WindowPtr)draw, NULL);
@@ -149,10 +147,7 @@ static int sna_video_overlay_stop(ClientPtr client,
 }
 
 static int
-sna_video_overlay_set_attribute(ClientPtr client,
-				XvPortPtr port,
-				Atom attribute,
-				INT32 value)
+sna_video_overlay_set_attribute(ddSetPortAttribute_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
@@ -202,6 +197,7 @@ sna_video_overlay_set_attribute(ClientPtr client,
 		video->gamma5 = value;
 	} else if (attribute == xvColorKey) {
 		video->color_key = value;
+		RegionEmpty(&video->clip);
 		DBG(("COLORKEY\n"));
 	} else
 		return BadMatch;
@@ -218,17 +214,11 @@ sna_video_overlay_set_attribute(ClientPtr client,
 	if (!sna_video_overlay_update_attrs(video))
 		return BadValue;
 
-	if (attribute == xvColorKey)
-		RegionEmpty(&video->clip);
-
 	return Success;
 }
 
 static int
-sna_video_overlay_get_attribute(ClientPtr client,
-				XvPortPtr port,
-				Atom attribute,
-				INT32 *value)
+sna_video_overlay_get_attribute(ddGetPortAttribute_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
@@ -271,12 +261,7 @@ sna_video_overlay_get_attribute(ClientPtr client,
 }
 
 static int
-sna_video_overlay_best_size(ClientPtr client,
-			    XvPortPtr port,
-			    CARD8 motion,
-			    CARD16 vid_w, CARD16 vid_h,
-			    CARD16 drw_w, CARD16 drw_h,
-			    unsigned int *p_w, unsigned int *p_h)
+sna_video_overlay_best_size(ddQueryBestSize_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
@@ -455,28 +440,17 @@ sna_video_overlay_show(struct sna *sna,
 		return false;
 	}
 
-	if (video->bo != frame->bo) {
-		if (video->bo)
-			kgem_bo_destroy(&sna->kgem, video->bo);
-		video->bo = kgem_bo_reference(frame->bo);
+	if (video->bo[0] != frame->bo) {
+		if (video->bo[0])
+			kgem_bo_destroy(&sna->kgem, video->bo[0]);
+		video->bo[0] = kgem_bo_reference(frame->bo);
 	}
 
 	return true;
 }
 
 static int
-sna_video_overlay_put_image(ClientPtr client,
-			    DrawablePtr draw,
-			    XvPortPtr port,
-			    GCPtr gc,
-			    INT16 src_x, INT16 src_y,
-			    CARD16 src_w, CARD16 src_h,
-			    INT16 drw_x, INT16 drw_y,
-			    CARD16 drw_w, CARD16 drw_h,
-			    XvImagePtr format,
-			    unsigned char *buf,
-			    Bool sync,
-			    CARD16 width, CARD16 height)
+sna_video_overlay_put_image(ddPutImage_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
@@ -518,8 +492,8 @@ sna_video_overlay_put_image(ClientPtr client,
 	     drw_x, drw_y, drw_w, drw_h,
 	     format->id, width, height, sync));
 
-	DBG(("%s: region %ld:(%d, %d), (%d, %d)\n", __FUNCTION__,
-	     (long)RegionNumRects(&clip),
+	DBG(("%s: region %d:(%d, %d), (%d, %d)\n", __FUNCTION__,
+	     region_num_rects(&clip),
 	     clip.extents.x1, clip.extents.y1,
 	     clip.extents.x2, clip.extents.y2));
 
@@ -535,7 +509,7 @@ sna_video_overlay_put_image(ClientPtr client,
 		goto invisible;
 
 	/* overlay can't handle rotation natively, store it for the copy func */
-	video->rotation = crtc->rotation;
+	sna_video_frame_set_rotation(video, &frame, crtc->rotation);
 
 	if (xvmc_passthrough(format->id)) {
 		DBG(("%s: using passthough, name=%d\n",
@@ -583,8 +557,8 @@ sna_video_overlay_put_image(ClientPtr client,
 				       __sna_pixmap_get_bo(sna->front),
 				       sna->front->drawable.bitsPerPixel,
 				       video->color_key,
-				       RegionRects(&clip),
-				       RegionNumRects(&clip)))
+				       region_rects(&clip),
+				       region_num_rects(&clip)))
 			RegionCopy(&video->clip, &clip);
 		sna_window_set_port((WindowPtr)draw, port);
 	} else {
@@ -604,18 +578,16 @@ invisible:
 	/*
 	 * If the video isn't visible on any CRTC, turn it off
 	 */
+#if XORG_XV_VERSION < 2
 	sna_video_overlay_stop(client, port, draw);
+#else
+	sna_video_overlay_stop(port, draw);
+#endif
 	return Success;
 }
 
 static int
-sna_video_overlay_query(ClientPtr client,
-			XvPortPtr port,
-			XvImagePtr format,
-			unsigned short *w,
-			unsigned short *h,
-			int *pitches,
-			int *offsets)
+sna_video_overlay_query(ddQueryImageAttributes_ARGS)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna_video_frame frame;
@@ -644,6 +616,7 @@ sna_video_overlay_query(ClientPtr client,
 	case FOURCC_XVMC:
 		*h = (*h + 1) & ~1;
 		sna_video_frame_init(video, format->id, *w, *h, &frame);
+		sna_video_frame_set_rotation(video, &frame, RR_Rotate_0);
 		size = sizeof(uint32_t);
 		if (pitches) {
 			pitches[0] = frame.pitch[1];
@@ -771,8 +744,10 @@ void sna_video_overlay_setup(struct sna *sna, ScreenPtr screen)
 	adaptor->pAttributes = (XvAttributeRec *)Attributes;
 	adaptor->nImages = ARRAY_SIZE(Images);
 	adaptor->pImages = (XvImageRec *)Images;
+#if XORG_XV_VERSION < 2
 	adaptor->ddAllocatePort = sna_xv_alloc_port;
 	adaptor->ddFreePort = sna_xv_free_port;
+#endif
 	adaptor->ddPutVideo = NULL;
 	adaptor->ddPutStill = NULL;
 	adaptor->ddGetVideo = NULL;
@@ -821,7 +796,6 @@ void sna_video_overlay_setup(struct sna *sna, ScreenPtr screen)
 	video->gamma2 = 0x202020;
 	video->gamma1 = 0x101010;
 	video->gamma0 = 0x080808;
-	video->rotation = RR_Rotate_0;
 	RegionNull(&video->clip);
 
 	xvColorKey = MAKE_ATOM("XV_COLORKEY");
@@ -843,4 +817,6 @@ void sna_video_overlay_setup(struct sna *sna, ScreenPtr screen)
 	}
 
 	sna_video_overlay_update_attrs(video);
+
+	DBG(("%s: '%s' initialized %d ports\n", __FUNCTION__, adaptor->name, adaptor->nPorts));
 }

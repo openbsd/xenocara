@@ -53,14 +53,14 @@ static void target_fini(struct test_display *t, struct draw *tt)
 int main(int argc, char **argv)
 {
 	struct test test;
-	struct draw real, ref;
+	struct draw out, ref;
 	int size, i;
 
 	test_init(&test, argc, argv);
 
 	/* Copy back and forth betwenn two pixmaps, gradually getting larger */
 	for (size = 1; size <= SIZE; size = (size * 3 + 1) / 2) {
-		target_init(&test.real, &real, size);
+		target_init(&test.out, &out, size);
 		target_init(&test.ref, &ref, size);
 
 		printf("size=%d\n", size);
@@ -78,10 +78,10 @@ int main(int argc, char **argv)
 
 				int order = rand() & 1;
 
-				XRenderComposite(test.real.dpy, PictOpSrc,
-						 order ? real.pa : real.pb,
+				XRenderComposite(test.out.dpy, PictOpSrc,
+						 order ? out.pa : out.pb,
 						 0,
-						 (!order) ? real.pa : real.pb,
+						 (!order) ? out.pa : out.pb,
 						 sx, sy,
 						 0, 0,
 						 dx, dy,
@@ -99,17 +99,17 @@ int main(int argc, char **argv)
 		}
 
 		test_compare(&test,
-			     real.a, real.format,
+			     out.a, out.format,
 			     ref.a, ref.format,
 			     0, 0, size, size,
 			     "");
 		test_compare(&test,
-			     real.b, real.format,
+			     out.b, out.format,
 			     ref.b, ref.format,
 			     0, 0, size, size,
 			     "");
 
-		target_fini(&test.real, &real);
+		target_fini(&test.out, &out);
 		target_fini(&test.ref, &ref);
 	}
 

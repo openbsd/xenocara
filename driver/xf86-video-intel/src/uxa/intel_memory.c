@@ -137,11 +137,10 @@ intel_get_fence_pitch(intel_screen_private *intel, unsigned long pitch,
 	return i;
 }
 
-static Bool
-intel_check_display_stride(ScrnInfoPtr scrn, int stride, Bool tiling)
+Bool intel_check_display_stride(ScrnInfoPtr scrn, int stride, Bool tiling)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
-	int limit = KB(32);
+	int limit;
 
 	/* 8xx spec has always 8K limit, but tests show larger limit in
 	   non-tiling mode, which makes large monitor work. */
@@ -154,22 +153,11 @@ intel_check_display_stride(ScrnInfoPtr scrn, int stride, Bool tiling)
 			limit = KB(16);
 		else
 			limit = KB(32);
-	}
+	} else
+		limit = KB(32);
 
-	if (stride <= limit)
-		return TRUE;
-	else
-		return FALSE;
+	return stride <= limit;
 }
-
-/*
- * Pad to accelerator requirement
- */
-static inline int intel_pad_drawable_width(int width)
-{
-	return ALIGN(width, 64);
-}
-
 
 static size_t
 agp_aperture_size(struct pci_device *dev, int gen)
@@ -177,7 +165,7 @@ agp_aperture_size(struct pci_device *dev, int gen)
 	return dev->regions[gen < 030 ? 0 : 2].size;
 }
 
-static void intel_set_gem_max_sizes(ScrnInfoPtr scrn)
+void intel_set_gem_max_sizes(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	size_t agp_size = agp_aperture_size(intel->PciInfo,
@@ -201,87 +189,4 @@ static void intel_set_gem_max_sizes(ScrnInfoPtr scrn)
 	 * thrashing.
 	 */
 	intel->max_bo_size = intel->max_gtt_map_size;
-}
-
-/**
- * Allocates a framebuffer for a screen.
- *
- * Used once for each X screen, so once with RandR 1.2 and twice with classic
- * dualhead.
- */
-drm_intel_bo *intel_allocate_framebuffer(ScrnInfoPtr scrn,
-					int width, int height, int cpp,
-					unsigned long *out_pitch,
-					uint32_t *out_tiling)
-{
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-	drm_intel_bo *front_buffer;
-	uint32_t tiling_mode;
-	unsigned long pitch;
-
-	if (intel->tiling & INTEL_TILING_FB)
-		tiling_mode = I915_TILING_X;
-	else
-		tiling_mode = I915_TILING_NONE;
-
-	width = intel_pad_drawable_width(width);
-	if (!intel_check_display_stride(scrn, width * intel->cpp,
-					tiling_mode != I915_TILING_NONE))
-	    tiling_mode = I915_TILING_NONE;
-	if (!intel_check_display_stride(scrn, width * intel->cpp,
-					tiling_mode != I915_TILING_NONE)) {
-		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-			   "Expected front buffer stride %d kB "
-			   "will exceed display limit\n",
-			   width * intel->cpp / 1024);
-		return NULL;
-	}
-
-retry:
-	front_buffer = drm_intel_bo_alloc_tiled(intel->bufmgr, "front buffer",
-						width, height, intel->cpp,
-						&tiling_mode, &pitch, 0);
-	if (front_buffer == NULL) {
-		if (tiling_mode != I915_TILING_NONE) {
-			tiling_mode = I915_TILING_NONE;
-			goto retry;
-		}
-		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-			   "Failed to allocate framebuffer.\n");
-		return NULL;
-	}
-
-	if (!intel_check_display_stride(scrn, pitch,
-				       tiling_mode != I915_TILING_NONE)) {
-		drm_intel_bo_unreference(front_buffer);
-		if (tiling_mode != I915_TILING_NONE) {
-			tiling_mode = I915_TILING_NONE;
-			goto retry;
-		}
-
-		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-			   "Front buffer stride %ld kB "
-			   "exceeds display limit\n", pitch / 1024);
-		return NULL;
-	}
-
-	/* If we could have used tiling but failed, warn */
-	if (intel->tiling & INTEL_TILING_FB &&
-	    tiling_mode != I915_TILING_X &&
-	    intel_check_display_stride(scrn, pitch, I915_TILING_X))
-		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-			   "Failed to set tiling on frontbuffer.\n");
-
-	xf86DrvMsg(scrn->scrnIndex, X_INFO,
-		   "Allocated new frame buffer %dx%d stride %ld, %s\n",
-		   width, height, pitch,
-		   tiling_mode == I915_TILING_NONE ? "untiled" : "tiled");
-
-	drm_intel_bo_disable_reuse(front_buffer);
-
-	intel_set_gem_max_sizes(scrn);
-	*out_pitch = pitch;
-	*out_tiling = tiling_mode;
-
-	return front_buffer;
 }

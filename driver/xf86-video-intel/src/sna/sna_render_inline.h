@@ -92,6 +92,9 @@ is_gpu(struct sna *sna, DrawablePtr drawable, unsigned prefer)
 	if (priv->cpu_bo && kgem_bo_is_busy(priv->cpu_bo))
 		return true;
 
+	if (DAMAGE_IS_ALL(priv->cpu_damage))
+		return false;
+
 	return priv->gpu_bo && kgem_bo_is_busy(priv->gpu_bo);
 }
 
@@ -110,6 +113,26 @@ too_small(struct sna_pixmap *priv)
 }
 
 static inline bool
+is_gpu_dst(struct sna_pixmap *priv)
+{
+	assert(priv);
+
+	if (too_small(priv))
+		return false;
+
+	if (priv->gpu_bo && kgem_bo_is_busy(priv->gpu_bo))
+		return true;
+
+	if (priv->cpu_bo && kgem_bo_is_busy(priv->cpu_bo))
+		return true;
+
+	if (DAMAGE_IS_ALL(priv->cpu_damage))
+		return false;
+
+	return priv->gpu_damage != NULL || !priv->cpu;
+}
+
+static inline bool
 unattached(DrawablePtr drawable)
 {
 	struct sna_pixmap *priv = sna_pixmap_from_drawable(drawable);
@@ -117,11 +140,33 @@ unattached(DrawablePtr drawable)
 }
 
 static inline bool
-picture_is_gpu(struct sna *sna, PicturePtr picture)
+picture_is_gpu(struct sna *sna, PicturePtr picture, unsigned flags)
 {
-	if (!picture || !picture->pDrawable)
+	if (!picture)
 		return false;
-	return is_gpu(sna, picture->pDrawable, PREFER_GPU_RENDER);
+
+	if (!picture->pDrawable) {
+		switch (flags) {
+		case PREFER_GPU_RENDER:
+			switch (picture->pSourcePict->type) {
+			case SourcePictTypeSolidFill:
+			case SourcePictTypeLinear:
+				return false;
+			default:
+				return true;
+			}
+		case PREFER_GPU_SPANS:
+			return true;
+		default:
+			return false;
+		}
+	} else {
+		if (picture->repeat &&
+		    (picture->pDrawable->width | picture->pDrawable->height) == 1)
+			return flags == PREFER_GPU_SPANS;
+	}
+
+	return is_gpu(sna, picture->pDrawable, flags);
 }
 
 static inline bool
@@ -133,7 +178,7 @@ picture_is_cpu(struct sna *sna, PicturePtr picture)
 	return !is_gpu(sna, picture->pDrawable, PREFER_GPU_RENDER);
 }
 
-static inline bool sna_blt_compare_depth(DrawablePtr src, DrawablePtr dst)
+static inline bool sna_blt_compare_depth(const DrawableRec *src, const DrawableRec *dst)
 {
 	if (src->depth == dst->depth)
 		return true;
@@ -274,5 +319,48 @@ untransformed(PicturePtr p)
 	return !p->transform || pixman_transform_is_int_translate(p->transform);
 }
 
+inline static void
+boxes_extents(const BoxRec *box, int n, BoxRec *extents)
+{
+	*extents = box[0];
+	while (--n) {
+		box++;
+
+		if (box->x1 < extents->x1)
+			extents->x1 = box->x1;
+		if (box->x2 > extents->x2)
+			extents->x2 = box->x2;
+
+		if (box->y1 < extents->y1)
+			extents->y1 = box->y1;
+		if (box->y2 > extents->y2)
+			extents->y2 = box->y2;
+	}
+}
+
+inline static bool
+overlaps(struct sna *sna,
+	 struct kgem_bo *src_bo, int16_t src_dx, int16_t src_dy,
+	 struct kgem_bo *dst_bo, int16_t dst_dx, int16_t dst_dy,
+	 const BoxRec *box, int n, unsigned flags,
+	 BoxRec *extents)
+{
+	if (src_bo != dst_bo)
+		return false;
+
+	if (flags & COPY_NO_OVERLAP)
+		return false;
+
+	boxes_extents(box, n, extents);
+	return (extents->x2 + src_dx > extents->x1 + dst_dx &&
+		extents->x1 + src_dx < extents->x2 + dst_dx &&
+		extents->y2 + src_dy > extents->y1 + dst_dy &&
+		extents->y1 + src_dy < extents->y2 + dst_dy);
+}
+
+static inline long get_picture_id(PicturePtr picture)
+{
+	return picture && picture->pDrawable ? get_drawable_pixmap(picture->pDrawable)->drawable.serialNumber : 0;
+}
 
 #endif /* SNA_RENDER_INLINE_H */
