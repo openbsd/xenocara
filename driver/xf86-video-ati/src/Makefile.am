@@ -88,7 +88,6 @@ EXTRA_DIST = \
 	bicubic_table.h \
 	bicubic_table.py \
 	radeon_bo_helper.h \
-	radeon_drm.h \
 	radeon_exa_render.c \
 	radeon_exa_funcs.c \
 	radeon_exa_shared.h \

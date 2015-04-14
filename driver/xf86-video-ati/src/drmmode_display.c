@@ -36,7 +36,6 @@
 #include "xf86cmap.h"
 #include "radeon.h"
 #include "radeon_reg.h"
-#include "radeon_drm.h"
 #include "sarea.h"
 
 #include "drmmode_display.h"
@@ -247,7 +246,7 @@ int drmmode_get_current_ust(int drm_fd, CARD64 *ust)
 }
 
 static void
-drmmode_crtc_dpms(xf86CrtcPtr crtc, int mode)
+drmmode_do_crtc_dpms(xf86CrtcPtr crtc, int mode)
 {
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 	ScrnInfoPtr scrn = crtc->scrn;
@@ -306,6 +305,12 @@ drmmode_crtc_dpms(xf86CrtcPtr crtc, int mode)
 		}
 	}
 	drmmode_crtc->dpms_mode = mode;
+}
+
+static void
+drmmode_crtc_dpms(xf86CrtcPtr crtc, int mode)
+{
+	/* Nothing to do. drmmode_do_crtc_dpms() is called as appropriate */
 }
 
 static PixmapPtr
@@ -958,8 +963,8 @@ drmmode_output_destroy(xf86OutputPtr output)
 	}
 	for (i = 0; i < drmmode_output->mode_output->count_encoders; i++) {
 		drmModeFreeEncoder(drmmode_output->mode_encoders[i]);
-		free(drmmode_output->mode_encoders);
 	}
+	free(drmmode_output->mode_encoders);
 	free(drmmode_output->props);
 	drmModeFreeConnector(drmmode_output->mode_output);
 	free(drmmode_output);
@@ -973,9 +978,14 @@ drmmode_output_dpms(xf86OutputPtr output, int mode)
 	drmModeConnectorPtr koutput = drmmode_output->mode_output;
 	drmmode_ptr drmmode = drmmode_output->drmmode;
 
+	if (mode != DPMSModeOn && output->crtc)
+		drmmode_do_crtc_dpms(output->crtc, mode);
+
 	drmModeConnectorSetProperty(drmmode->fd, koutput->connector_id,
 				    drmmode_output->dpms_enum_id, mode);
-	return;
+
+	if (mode == DPMSModeOn && output->crtc)
+		drmmode_do_crtc_dpms(output->crtc, mode);
 }
 
 
@@ -1833,6 +1843,7 @@ Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 
 		/* Skip disabled CRTCs */
 		if (!crtc->enabled) {
+			drmmode_do_crtc_dpms(crtc, DPMSModeOff);
 			drmModeSetCrtc(drmmode->fd, drmmode_crtc->mode_crtc->crtc_id,
 				       0, 0, 0, NULL, 0, NULL);
 			continue;
@@ -1939,19 +1950,23 @@ static void drmmode_load_palette(ScrnInfoPtr pScrn, int numColors,
 
 Bool drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn)
 {
-    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-                  "Initializing kms color map\n");
-    if (!miCreateDefColormap(pScreen))
-        return FALSE;
-    /* all radeons support 10 bit CLUTs */
-    if (!xf86HandleColormaps(pScreen, 256, 10,
-                             drmmode_load_palette, NULL,
-                             CMAP_PALETTED_TRUECOLOR
+    xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
+
+    if (xf86_config->num_crtc) {
+	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
+		       "Initializing kms color map\n");
+	if (!miCreateDefColormap(pScreen))
+	    return FALSE;
+	/* all radeons support 10 bit CLUTs */
+	if (!xf86HandleColormaps(pScreen, 256, 10,
+				 drmmode_load_palette, NULL,
+				 CMAP_PALETTED_TRUECOLOR
 #if 0 /* This option messes up text mode! (eich@suse.de) */
-                             | CMAP_LOAD_EVEN_IF_OFFSCREEN
+				 | CMAP_LOAD_EVEN_IF_OFFSCREEN
 #endif
-                             | CMAP_RELOAD_ON_MODE_SWITCH))
-         return FALSE;
+				 | CMAP_RELOAD_ON_MODE_SWITCH))
+	    return FALSE;
+    }
     return TRUE;
 }
 

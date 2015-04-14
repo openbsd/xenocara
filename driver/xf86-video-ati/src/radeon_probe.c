@@ -202,6 +202,10 @@ RADEONDriverFunc(ScrnInfoPtr scrn, xorgDriverFuncOp op, void *data)
 	    flag = (CARD32 *)data;
 	    (*flag) = 0;
 	    return TRUE;
+#if XORG_VERSION_CURRENT > XORG_VERSION_NUMERIC(1,15,99,0,0)
+	case SUPPORTS_SERVER_FDS:
+	    return TRUE;
+#endif
 	default:
 	    return FALSE;
     }
@@ -272,6 +276,7 @@ radeon_platform_probe(DriverPtr pDriver,
             pRADEONEnt = pPriv->ptr;
             pRADEONEnt->HasSecondary = TRUE;
         }
+        pRADEONEnt->platform_dev = dev;
     }
 
     free(pEnt);

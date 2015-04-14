@@ -188,7 +188,7 @@ void RADEONInitVideo(ScreenPtr pScreen)
 	xf86XVScreenInit(pScreen, adaptors, num_adaptors);
 
     if(texturedAdaptor) {
-	XF86MCAdaptorPtr xvmcAdaptor = RADEONCreateAdaptorXvMC(pScreen, texturedAdaptor->name);
+	XF86MCAdaptorPtr xvmcAdaptor = RADEONCreateAdaptorXvMC(pScreen, (char *)texturedAdaptor->name);
 	if(xvmcAdaptor) {
 	    if(!xf86XvMCScreenInit(pScreen, 1, &xvmcAdaptor))
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "[XvMC] Failed to initialize extension.\n");

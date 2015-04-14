@@ -37,7 +37,6 @@
 #include "r600_reg.h"
 #include "r600_state.h"
 
-#include "radeon_drm.h"
 #include "radeon_vbo.h"
 #include "radeon_exa_shared.h"
 

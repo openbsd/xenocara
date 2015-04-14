@@ -37,11 +37,16 @@
 #define _RADEON_PROBE_H_ 1
 
 #include <stdint.h>
+#include "xorg-server.h"
 #include "xf86str.h"
 #include "xf86DDC.h"
 #include "randrstr.h"
 
 #include "xf86Crtc.h"
+
+#ifdef XSERVER_PLATFORM_BUS
+#include "xf86platformBus.h"
+#endif
 
 #include "compat-api.h"
 #include "exa.h"
@@ -111,6 +116,7 @@ typedef enum {
     CHIP_FAMILY_KAVERI,
     CHIP_FAMILY_KABINI,
     CHIP_FAMILY_HAWAII,
+    CHIP_FAMILY_MULLINS,
     CHIP_FAMILY_LAST
 } RADEONChipFamily;
 
@@ -136,6 +142,9 @@ typedef struct
     int fd_ref;
     unsigned long     fd_wakeup_registered; /* server generation for which fd has been registered for wakeup handling */
     int fd_wakeup_ref;
+#ifdef XSERVER_PLATFORM_BUS
+    struct xf86_platform_device *platform_dev;
+#endif
 } RADEONEntRec, *RADEONEntPtr;
 
 extern const OptionInfoRec *RADEONOptionsWeak(void);

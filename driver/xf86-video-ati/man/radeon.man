@@ -208,6 +208,9 @@ KABINI APUs
 .TP 12
 .B HAWAII
 Radeon R9 series
+.TP 12
+.B MULLINS
+MULLINS APUs
 .PD
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -222,12 +225,11 @@ are supported:
 Selects software cursor.  The default is
 .B off.
 .TP
-.BI "Option \*qNoAccel\*q \*q" boolean \*q
+.BI "Option \*qAccel\*q \*q" boolean \*q
 Enables or disables all hardware acceleration.
 .br
-The default is to
-.B enable
-hardware acceleration.
+The default is
+.B on.
 .TP
 .BI "Option \*qZaphodHeads\*q \*q" string \*q
 Specify the RandR output(s) to use with zaphod mode for a particular driver
@@ -248,7 +250,7 @@ this enables 1D tiling mode.
 The default value is
 .B on
 for R/RV3XX, R/RV4XX, R/RV5XX, RS6XX, RS740, R/RV6XX, R/RV7XX, RS780, RS880,
-EVERGREEN, CAYMAN, ARUBA, and Southern Islands and
+EVERGREEN, CAYMAN, ARUBA, Southern Islands, and Sea Islands and
 .B off
 for R/RV/RS1XX, R/RV/RS2XX, RS3XX, and RS690/RS780/RS880 when fast fb feature is enabled.
 .TP
@@ -257,11 +259,13 @@ The framebuffer can be addressed either in linear, 1D, or 2D tiled modes. 2D til
 provide significant performance benefits over 1D tiling with 3D applications.  Tiling
 will be disabled if the drm module is too old or if the current display configuration
 does not support it. KMS ColorTiling2D is only supported on R600 and newer chips and requires
-Mesa 9.0 or newer for R6xx-ARUBA and Mesa 9.2 or newer for Southern Islands.
+Mesa 9.0 or newer for R6xx-ARUBA, Mesa 9.2 or newer for Southern Islands, and Mesa
+10.1 or newer for Sea Islands.
 .br
 The default value is
 .B on
-for R/RV6XX, R/RV7XX, RS780, RS880, EVERGREEN, CAYMAN, ARUBA, and Southern Islands.
+for R/RV6XX, R/RV7XX, RS780, RS880, EVERGREEN, CAYMAN, ARUBA, Southern Islands, and
+Sea Islands.
 .TP
 .BI "Option \*qEnablePageFlip\*q \*q" boolean \*q
 Enable DRI2 page flipping.  The default is
@@ -271,9 +275,9 @@ Pageflipping is supported on all radeon hardware.
 .BI "Option \*qAccelMethod\*q \*q" "string" \*q
 Chooses between available acceleration architectures.  Valid values are
 .B EXA
-and
-.B glamor.
-The default is
+(for pre-TAHITI GPUs) and
+.B glamor
+(for R300 or higher). The default is
 .B glamor
 as of TAHITI, otherwise
 .B EXA.

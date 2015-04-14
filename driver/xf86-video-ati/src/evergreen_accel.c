@@ -37,7 +37,6 @@
 #include "evergreen_reg.h"
 #include "evergreen_state.h"
 
-#include "radeon_drm.h"
 #include "radeon_vbo.h"
 #include "radeon_exa_shared.h"
 
@@ -561,7 +560,7 @@ evergreen_set_alu_consts(ScrnInfoPtr pScrn, const_config_t *const_conf, uint32_t
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
     {
-	    uint32_t count = size << 4, *p = const_conf->cpu_ptr;
+	    uint32_t count = size << 6, *p = const_conf->cpu_ptr;
 
 	    while(count--) {
 		    *p = cpu_to_le32(*p);

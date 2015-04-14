@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [7.3.0],
+        [7.5.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-ati])
 
@@ -71,7 +71,7 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
 # Checks for libraries.
-PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.46])
+PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.58])
 PKG_CHECK_MODULES(LIBDRM_RADEON, [libdrm_radeon])
 
 # Obtain compiler/linker options for the driver dependencies
@@ -104,13 +104,26 @@ AC_ARG_ENABLE(glamor,
 			     [Disable glamor, a new GL-based acceleration [default=enabled]]),
 	      [GLAMOR="$enableval"],
 	      [GLAMOR=yes])
-AC_MSG_RESULT([$GLAMOR])
-AM_CONDITIONAL(GLAMOR, test x$GLAMOR != xno)
+
 if test "x$GLAMOR" != "xno"; then
-	PKG_CHECK_MODULES(LIBGLAMOR, [glamor >= 0.6.0])
-	PKG_CHECK_MODULES(LIBGLAMOR_EGL, [glamor-egl])
+	AC_CHECK_HEADERS([glamor.h], [GLAMOR_H="yes"], [GLAMOR_H="no"], [#include "xorg-server.h"])
+
+	if test "x$GLAMOR_H" = xyes; then
+		AC_CHECK_DECL(GLAMOR_NO_DRI3,
+			      [GLAMOR_XSERVER="yes"], [GLAMOR_XSERVER="no"],
+			      [#include "xorg-server.h"
+			       #include "glamor.h"])
+	fi
+
+	if test "x$GLAMOR_XSERVER" != xyes; then
+		PKG_CHECK_MODULES(LIBGLAMOR, [glamor >= 0.6.0])
+		PKG_CHECK_MODULES(LIBGLAMOR_EGL, [glamor-egl])
+	fi
 	AC_DEFINE(USE_GLAMOR, 1, [Enable glamor acceleration])
+else
+	AC_MSG_RESULT([$GLAMOR])
 fi
+AM_CONDITIONAL(GLAMOR, test x$GLAMOR != xno)
 
 AC_CHECK_HEADERS([list.h],
 		 [have_list_h="yes"], [have_list_h="no"],

@@ -36,7 +36,6 @@
 #include "radeon.h"
 #include "radeon_reg.h"
 #include "r600_reg.h"
-#include "radeon_drm.h"
 #include "radeon_bo_helper.h"
 #include "radeon_probe.h"
 #include "radeon_version.h"

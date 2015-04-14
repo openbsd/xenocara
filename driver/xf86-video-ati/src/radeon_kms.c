@@ -59,7 +59,7 @@ extern SymTabRec RADEONChipsets[];
 static Bool radeon_setup_kernel_mem(ScreenPtr pScreen);
 
 const OptionInfoRec RADEONOptions_KMS[] = {
-    { OPTION_NOACCEL,        "NoAccel",          OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_ACCEL,          "Accel",            OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_SW_CURSOR,      "SWcursor",         OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_PAGE_FLIP,      "EnablePageFlip",   OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_COLOR_TILING,   "ColorTiling",      OPTV_BOOLEAN, {0}, FALSE },
@@ -180,7 +180,11 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
         pRADEONEnt = pPriv->ptr;
         pRADEONEnt->fd_ref--;
         if (!pRADEONEnt->fd_ref) {
-            drmClose(pRADEONEnt->fd);
+#ifdef XF86_PDEV_SERVER_FD
+            if (!(pRADEONEnt->platform_dev &&
+                    pRADEONEnt->platform_dev->flags & XF86_PDEV_SERVER_FD))
+#endif
+                drmClose(pRADEONEnt->fd);
             pRADEONEnt->fd = 0;
         }
     }
@@ -208,6 +212,12 @@ radeonShadowWindow(ScreenPtr screen, CARD32 row, CARD32 offset, int mode,
     return ((uint8_t *)info->front_bo->ptr + row * stride + offset);
 }
 
+static void
+radeonUpdatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
+{
+    shadowUpdatePacked(pScreen, pBuf);
+}
+
 static Bool RADEONCreateScreenResources_KMS(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
@@ -228,7 +238,7 @@ static Bool RADEONCreateScreenResources_KMS(ScreenPtr pScreen)
     if (info->r600_shadow_fb) {
 	pixmap = pScreen->GetScreenPixmap(pScreen);
 
-	if (!shadowAdd(pScreen, pixmap, shadowUpdatePackedWeak(),
+	if (!shadowAdd(pScreen, pixmap, radeonUpdatePacked,
 		       radeonShadowWindow, 0, NULL))
 	    return FALSE;
     }
@@ -323,9 +333,6 @@ static Bool RADEONIsFastFBWorking(ScrnInfoPtr pScrn)
     int r;
     uint32_t tmp = 0;
 
-#ifndef RADEON_INFO_FASTFB_WORKING
-#define RADEON_INFO_FASTFB_WORKING 0x14
-#endif
     memset(&ginfo, 0, sizeof(ginfo));
     ginfo.request = RADEON_INFO_FASTFB_WORKING;
     ginfo.value = (uintptr_t)&tmp;
@@ -345,9 +352,6 @@ static Bool RADEONIsFusionGARTWorking(ScrnInfoPtr pScrn)
     int r;
     uint32_t tmp;
 
-#ifndef RADEON_INFO_FUSION_GART_WORKING
-#define RADEON_INFO_FUSION_GART_WORKING 0x0c
-#endif
     memset(&ginfo, 0, sizeof(ginfo));
     ginfo.request = RADEON_INFO_FUSION_GART_WORKING;
     ginfo.value = (uintptr_t)&tmp;
@@ -367,13 +371,6 @@ static Bool RADEONIsAccelWorking(ScrnInfoPtr pScrn)
     int r;
     uint32_t tmp;
 
-#ifndef RADEON_INFO_ACCEL_WORKING
-#define RADEON_INFO_ACCEL_WORKING 0x03
-#endif
-#ifndef RADEON_INFO_ACCEL_WORKING2
-#define RADEON_INFO_ACCEL_WORKING2 0x05
-#endif
-
     memset(&ginfo, 0, sizeof(ginfo));
     if (info->dri2.pKernelDRMVersion->version_minor >= 5)
 	ginfo.request = RADEON_INFO_ACCEL_WORKING2;
@@ -390,8 +387,12 @@ static Bool RADEONIsAccelWorking(ScrnInfoPtr pScrn)
         }
         return FALSE;
     }
-    if (tmp)
+    if (info->ChipFamily == CHIP_FAMILY_HAWAII) {
+        if (tmp == 2 || tmp == 3)
+            return TRUE;
+    } else if (tmp) {
         return TRUE;
+    }
     return FALSE;
 }
 
@@ -489,8 +490,7 @@ static Bool RADEONPreInitAccel_KMS(ScrnInfoPtr pScrn)
 	info->is_fast_fb = TRUE;
     }
 
-    if (xf86ReturnOptValBool(info->Options, OPTION_NOACCEL,
-			     info->ChipFamily == CHIP_FAMILY_HAWAII) ||
+    if (!xf86ReturnOptValBool(info->Options, OPTION_ACCEL, TRUE) ||
 	(!RADEONIsAccelWorking(pScrn))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "GPU accel disabled or not working, using shadowfb for KMS\n");
@@ -581,23 +581,24 @@ static Bool RADEONPreInitChipType_KMS(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
-static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
+static int radeon_get_drm_master_fd(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
+#ifdef XF86_PDEV_SERVER_FD
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+#endif
     struct pci_device *dev = info->PciInfo;
     char *busid;
-    drmSetVersion sv;
-    int err;
+    int fd;
 
-    if (pRADEONEnt->fd) {
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		   " reusing fd for second head\n");
-
-	info->dri2.drm_fd = pRADEONEnt->fd;
-	pRADEONEnt->fd_ref++;
-	goto out;
+#ifdef XF86_PDEV_SERVER_FD
+    if (pRADEONEnt->platform_dev) {
+        fd = xf86_get_platform_device_int_attrib(pRADEONEnt->platform_dev,
+                                                 ODEV_ATTRIB_FD, -1);
+        if (fd != -1)
+            return fd;
     }
+#endif
 
 #if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,9,99,901,0)
     XNFasprintf(&busid, "pci:%04x:%02x:%02x.%d",
@@ -607,16 +608,35 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
 		      dev->domain, dev->bus, dev->dev, dev->func);
 #endif
 
-    info->dri2.drm_fd = drmOpen(NULL, busid);
-    if (info->dri2.drm_fd == -1) {
-
+    fd = drmOpen(NULL, busid);
+    if (fd == -1)
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "[drm] Failed to open DRM device for %s: %s\n",
 		   busid, strerror(errno));
-	free(busid);
-	return FALSE;
-    }
+
     free(busid);
+    return fd;
+}
+
+static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
+{
+    RADEONInfoPtr  info   = RADEONPTR(pScrn);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+    drmSetVersion sv;
+    int err;
+
+    if (pRADEONEnt->fd) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   " reusing fd for second head\n");
+
+	info->drmmode.fd = info->dri2.drm_fd = pRADEONEnt->fd;
+	pRADEONEnt->fd_ref++;
+        return TRUE;
+    }
+
+    info->dri2.drm_fd = radeon_get_drm_master_fd(pScrn);
+    if (info->dri2.drm_fd == -1)
+	return FALSE;
 
     /* Check that what we opened was a master or a master-capable FD,
      * by setting the version of the interface we'll use to talk to it.
@@ -638,7 +658,6 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
 
     pRADEONEnt->fd = info->dri2.drm_fd;
     pRADEONEnt->fd_ref = 1;
- out:
     info->drmmode.fd = info->dri2.drm_fd;
     return TRUE;
 }
@@ -652,10 +671,6 @@ static Bool r600_get_tile_config(ScrnInfoPtr pScrn)
 
     if (info->ChipFamily < CHIP_FAMILY_R600)
 	return FALSE;
-
-#ifndef RADEON_INFO_TILING_CONFIG
-#define RADEON_INFO_TILING_CONFIG 0x6
-#endif
 
     memset(&ginfo, 0, sizeof(ginfo));
     ginfo.request = RADEON_INFO_TILING_CONFIG;
@@ -781,6 +796,9 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
     uint32_t tiling = 0;
     int cpp;
 
+    if (flags & PROBE_DETECT)
+        return TRUE;
+
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONPreInit_KMS\n");
     if (pScrn->numEntities != 1) return FALSE;
@@ -865,13 +883,13 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 	     * with proper bit, in the meantime you need to set tiling option in
 	     * xorg configuration files
 	     */
-	    info->ChipFamily <= CHIP_FAMILY_HAINAN &&
+	    info->ChipFamily <= CHIP_FAMILY_MULLINS &&
 	    !info->is_fast_fb;
 
 	/* 2D color tiling */
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
 		info->allowColorTiling2D = xf86ReturnOptValBool(info->Options, OPTION_COLOR_TILING_2D,
-                                                                info->ChipFamily <= CHIP_FAMILY_HAINAN);
+                                                                info->ChipFamily <= CHIP_FAMILY_MULLINS);
 	}
 
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
@@ -1097,6 +1115,41 @@ static Bool RADEONSaveScreen_KMS(ScreenPtr pScreen, int mode)
     return TRUE;
 }
 
+static Bool radeon_set_drm_master(ScrnInfoPtr pScrn)
+{
+    RADEONInfoPtr  info  = RADEONPTR(pScrn);
+#ifdef XF86_PDEV_SERVER_FD
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+#endif
+    int err;
+
+#ifdef XF86_PDEV_SERVER_FD
+    if (pRADEONEnt->platform_dev &&
+            (pRADEONEnt->platform_dev->flags & XF86_PDEV_SERVER_FD))
+        return TRUE;
+#endif
+
+    err = drmSetMaster(info->dri2.drm_fd);
+    if (err)
+        ErrorF("Unable to retrieve master\n");
+
+    return err == 0;
+}
+
+static void radeon_drop_drm_master(ScrnInfoPtr pScrn)
+{
+    RADEONInfoPtr  info  = RADEONPTR(pScrn);
+#ifdef XF86_PDEV_SERVER_FD
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+
+    if (pRADEONEnt->platform_dev &&
+            (pRADEONEnt->platform_dev->flags & XF86_PDEV_SERVER_FD))
+        return;
+#endif
+
+    drmDropMaster(info->dri2.drm_fd);
+}
+
 /* Called at the end of each server generation.  Restore the original
  * text mode, unmap video memory, and unwrap and call the saved
  * CloseScreen function.
@@ -1123,7 +1176,7 @@ static Bool RADEONCloseScreen_KMS(CLOSE_SCREEN_ARGS_DECL)
     if (info->accel_state->use_vbos)
         radeon_vbo_free_lists(pScrn);
 
-    drmDropMaster(info->dri2.drm_fd);
+    radeon_drop_drm_master(pScrn);
 
     drmmode_fini(pScrn, &info->drmmode);
     if (info->dri2.enabled)
@@ -1156,9 +1209,8 @@ Bool RADEONScreenInit_KMS(SCREEN_INIT_ARGS_DECL)
     ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     int            subPixelOrder = SubPixelUnknown;
-    char*          s;
+    const char *s;
     void *front_ptr;
-    int ret;
 
     pScrn->fbOffset = 0;
 
@@ -1169,11 +1221,9 @@ Bool RADEONScreenInit_KMS(SCREEN_INIT_ARGS_DECL)
 			  pScrn->defaultVisual)) return FALSE;
     miSetPixmapDepths ();
 
-    ret = drmSetMaster(info->dri2.drm_fd);
-    if (ret) {
-        ErrorF("Unable to retrieve master\n");
+    if (!radeon_set_drm_master(pScrn))
         return FALSE;
-    }
+
     info->directRenderingEnabled = FALSE;
     if (info->r600_shadow_fb == FALSE)
         info->directRenderingEnabled = radeon_dri2_screen_init(pScreen);
@@ -1386,15 +1436,12 @@ Bool RADEONEnterVT_KMS(VT_FUNC_ARGS_DECL)
 {
     SCRN_INFO_PTR(arg);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
-    int ret;
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONEnterVT_KMS\n");
 
+    radeon_set_drm_master(pScrn);
 
-    ret = drmSetMaster(info->dri2.drm_fd);
-    if (ret)
-	ErrorF("Unable to retrieve master\n");
     info->accel_state->XInited3D = FALSE;
     info->accel_state->engineMode = EXA_ENGINEMODE_UNKNOWN;
 
@@ -1415,7 +1462,7 @@ void RADEONLeaveVT_KMS(VT_FUNC_ARGS_DECL)
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONLeaveVT_KMS\n");
 
-    drmDropMaster(info->dri2.drm_fd);
+    radeon_drop_drm_master(pScrn);
 
     xf86RotateFreeShadow(pScrn);
 

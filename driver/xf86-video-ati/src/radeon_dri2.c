@@ -409,7 +409,14 @@ radeon_dri2_copy_region2(ScreenPtr pScreen,
     dst_drawable = &dst_private->pixmap->drawable;
 
     if (src_private->attachment == DRI2BufferFrontLeft) {
-        src_drawable = drawable;
+#ifdef USE_DRI2_PRIME
+	if (drawable->pScreen != pScreen) {
+	    src_drawable = DRI2UpdatePrime(drawable, src_buffer);
+	    if (!src_drawable)
+		return;
+	} else
+#endif
+	    src_drawable = drawable;
     }
     if (dst_private->attachment == DRI2BufferFrontLeft) {
 #ifdef USE_DRI2_PRIME

@@ -1,3 +1,501 @@
+commit 068a59e010ce6bfcd54f5a18cc08c55c54b8618d
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Wed Oct 1 23:38:52 2014 -0400
+
+    radeon: bump version for release
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 5fee565e420d3efbf72fdf4f63c3d5d93d8ceddb
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Wed Oct 1 23:36:31 2014 -0400
+
+    radeon: require libdrm_radeon 2.4.58 for latest SI/CI pci ids
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 56c7fb8ada4cd9cf096c6b06a8d368d286d74e68
+Author: Thomas DeRensis <tderensis@gmail.com>
+Date:   Wed Sep 10 21:20:32 2014 -0400
+
+    radeon: fix build warnings regarding const qualifier
+    
+    Signed-off-by: Thomas DeRensis <tderensis@gmail.com>
+
+commit b9a9b244336ed50d7df4f36135f875a3bb6ca948
+Author: Thomas DeRensis <tderensis@gmail.com>
+Date:   Thu Sep 4 21:45:19 2014 -0400
+
+    radeon: fix a leak in radeon_vbo_get_bo()
+    
+    The dma_bo struct was never freed in the error path. Reported by cppcheck.
+    
+    Signed-off-by: Thomas DeRensis <tderensis@gmail.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit ba5fcc4d6b6eae3f2c55c6229a53d24d160789c1
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Thu Aug 21 11:32:45 2014 -0400
+
+    radeon/kms: fix mullins pci id
+    
+    strange errant change from:
+    39fef269f521c92a2a31c80447e9401bacb3797a
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit efef34930650d6d80f7b527f4cee76d9e5954ace
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Thu Aug 21 11:30:17 2014 -0400
+
+    radeon/kms: add new SI pci ids
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 39fef269f521c92a2a31c80447e9401bacb3797a
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Thu Aug 21 11:27:49 2014 -0400
+
+    radeon/kms: add new CIK pci ids
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 7dab6b2fe9cf690b0dae1c127d0374322bd8278e
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Aug 20 17:51:35 2014 +0900
+
+    Revert "glamor: Set environment variable RADEON_THREAD=0"
+    
+    This reverts commit 4b5060f357a3cb248c9359c92c1e9c42ef6434c8.
+    
+    Further testing shows that disabling the thread is only a moderate win in
+    some cases, but a much bigger loss in some other cases.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 1ff383360886c5cee1bb75abcc20675aca0336a6
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Aug 12 12:27:12 2014 -0400
+
+    radeon: fix warnings when building against older xservers
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 94202cbfbca05a503acdc1cca2f8409d141173af
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Aug 1 21:55:40 2014 +0200
+
+    radeon: enable hawaii accel conditionally (v3)
+    
+    Only if the kernel has the new CP firmware.
+    
+    v2: check value of ACCEL_WORKING2
+    v3 (Andreas Boll):
+     - check for value 2 or 3 of ACCEL_WORKING2
+     - update man page
+    
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com> (v2)
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+
+commit 03930edd49f6b8a8d79910c7be5408b47db9649b
+Author: Andreas Boll <andreas.boll.dev@gmail.com>
+Date:   Mon Aug 4 16:23:13 2014 +0200
+
+    radeon: remove definitions already present in radeon_drm.h
+    
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+
+commit 91849fba0742ef61ba327e71fc3ce8f754af0a6f
+Author: Andreas Boll <andreas.boll.dev@gmail.com>
+Date:   Mon Aug 4 16:23:12 2014 +0200
+
+    radeon: drop radeon_drm.h
+    
+    Now we use libdrm's radeon_drm.h.
+    
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+
+commit b4658901bf1d619f8ff9b5f94344894f935ee6c8
+Author: Andreas Boll <andreas.boll.dev@gmail.com>
+Date:   Mon Aug 4 16:23:11 2014 +0200
+
+    radeon: move RADEON_TILING_{MASK, LINEAR} from radeon_drm.h to radeon.h
+    
+    This allows us to drop radeon_drm.h from xf86-video-ati and use instead
+    radeon_drm.h from libdrm.
+    
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+
+commit 656bae7361c1e018553ef6d6d8c9efad616a4513
+Author: Andreas Boll <andreas.boll.dev@gmail.com>
+Date:   Mon Aug 4 16:23:10 2014 +0200
+
+    radeon: drop redundant radeon_drm.h includes
+    
+    Already included via radeon.h.
+    
+    Signed-off-by: Andreas Boll <andreas.boll.dev@gmail.com>
+
+commit fbf575cb010e558a87fad0de45660738c8180896
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jul 30 17:03:24 2014 +0900
+
+    Add Emacs .dir-local.el file
+    
+    Based on the one from the Gallium radeon winsys, but enabling tabs for
+    indentation.
+
+commit 4b5060f357a3cb248c9359c92c1e9c42ef6434c8
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Jun 19 18:27:59 2014 +0900
+
+    glamor: Set environment variable RADEON_THREAD=0
+    
+    Reviewed-by: Marek Olšák <marek.olsak@amd.com>
+
+commit 9b54caf6509a9c02dd17c9c43d6be8f7ddc98054
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Mon Jul 28 15:55:12 2014 +0200
+
+    configure: Include xorg-server.h before glamor.h
+    
+    glamor.h cannot be included without first including xorg-server.h, this also
+    applies to including it from configure snippets.
+    
+    Without this the configure glamor checks fail on systems with the latest
+    glibc, throwing this error:
+    
+    In file included from /usr/include/xorg/misc.h:115:0,
+                     from /usr/include/xorg/screenint.h:50,
+                     from /usr/include/xorg/scrnintstr.h:50,
+                     from /usr/include/xorg/glamor.h:32,
+                     from conftest.c:61:
+    /usr/include/xorg/os.h:579:2: error: expected identifier or '(' before
+    '__exten
+     strndup(const char *str, size_t n);
+      ^
+    
+    This is caused by HAVE_STRNDUP not being set (it is set from xorg-server.h),
+    causing os.h to redefine it.
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit c4ae0e2cbcc0e2ebf9f13ee92d59b5120254a1dc
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Jun 30 10:20:12 2014 +0900
+
+    Handle CRTC DPMS from output DPMS hooks
+    
+    This fixes at least two issues:
+    
+    The CRTC DPMS hook isn't called after a modeset, so the vertical blank
+    interrupt emulation code considered the CRTC disabled after a modeset. As
+    a side effect, page flipping was no longer used after a modeset.
+    
+    This change also makes sure the vertical blank interrupt emulation code
+    runs before the hardware CRTC is disabled and after it's enabled from the
+    output DPMS hook. The wrong order could cause gnome-shell to hang after
+    a suspend/resume and/or DPMS off/on cycle.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit c0c3cac8613e31e310242695d0955b452f116e25
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Wed Jun 25 16:21:57 2014 +0200
+
+    bump version post release
+
+commit 906a0ec9224146098bb4581486129d2934d36495
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Wed Jun 25 16:10:21 2014 +0200
+
+    bump version for release
+
+commit cc615d06db0332fc6e673b55632bcc7bf957b44b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jun 4 16:58:53 2014 +0900
+
+    Rename Option "NoAccel" to "Accel"
+    
+    Removes the need for a double negation when forcing acceleration on.
+    
+    Note that this change is backwards compatible, as the option parser
+    automagically handles the 'No' prefix.
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 851b2cf8714618843725f6d067915375485ade9d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 09:34:32 2014 -0400
+
+    kms: Use own thunk function instead of shadowUpdatePackedWeak
+    
+    I plan to delete the Weak functions from a future server.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit b2dba2906f0b2284f17f53fd5251ba0f03d52a8b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu May 15 16:07:53 2014 +0900
+
+    Don't disable acceleration on >= SI on attempts to force EXA
+    
+    Also make this case clear in the log file:
+    
+     (WW) RADEON(0): EXA not supported, using glamor
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit be1469cc23aba46daf3293b3d09c5f2e792e7f42
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri May 2 17:48:07 2014 -0400
+
+    radeon: enable tiling for mullins
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 2ae8e4b8d12f5c9bab6655eb8cd3c5c1d5cfb10e
+Author: Samuel Li <samuel.li@amd.com>
+Date:   Tue Nov 12 15:30:42 2013 -0500
+
+    radeon: add Mullins pci ids.
+    
+    Signed-off-by: Samuel Li <samuel.li@amd.com>
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 5c86a3461597647224c33d5190b4531aeeb2655f
+Author: Samuel Li <samuel.li@amd.com>
+Date:   Thu Apr 17 15:17:28 2014 -0400
+
+    radeon: add support for Mullins.
+    
+    Signed-off-by: Samuel Li <samuel.li@amd.com>
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit fdb90ffc50acbb7d5ba0598470f9feeac6ce55fc
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri May 2 17:45:45 2014 -0400
+
+    radeon: require libdrm_radeon 2.4.54 for mullins support
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 06e3c8c53ef4bd159f5864eabf726438d008b49a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Apr 23 13:39:42 2014 +1000
+
+    radeon: fix use-after-free in modesetting cleanup
+    
+    noticed while looking at something else.
+    
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit dbac18c361f9e514ecb40d0617f9d68b65a542e0
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Apr 28 17:51:56 2014 +0900
+
+    Revert "Adapt to load_cursor_argb signature change in xserver 1.15.99.902"
+    
+    This reverts commit 48d3dbc8a0d3bfde88f46e402e530438f9317715.
+    
+    xserver Git has been updated to be backwards compatible with the
+    previous API.
+
+commit c84230d686c078aac1dc98d82153f8b02521b2e1
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Apr 25 09:17:51 2014 +0900
+
+    dri2: Handle PRIME for source buffer as well in radeon_dri2_copy_region2
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=77810
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 48d3dbc8a0d3bfde88f46e402e530438f9317715
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Apr 15 17:45:35 2014 +0900
+
+    Adapt to load_cursor_argb signature change in xserver 1.15.99.902
+    
+    Apart from the compiler warning below, not doing this may result in
+    accidentally using software cursors.
+    
+    ../../src/drmmode_display.c:808:5: warning: initialization from incompatible pointer type [enabled by default]
+         .load_cursor_argb = drmmode_load_cursor_argb,
+         ^
+    ../../src/drmmode_display.c:808:5: warning: (near initialization for 'drmmode_crtc_funcs.load_cursor_argb') [enabled by default]
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 409786a8f780d78a83bf0bddea5d37117ff6fa39
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Apr 10 11:43:04 2014 +0900
+
+    glamor: Fix test for creating shared pixmaps
+    
+    The pixmap usage hint is not a bitmask in general. The test for
+    CREATE_PIXMAP_USAGE_SHARED was incorrectly triggering for a glamor internal
+    usage hint being added in the xserver tree.
+    
+    Tested-by: Ed Tomlinson <edtoml@gmail.com>
+
+commit aecf1c4e5f4718adcfb85836830d065d3f4f97a5
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Apr 10 15:10:56 2014 +0900
+
+    dri2: Fix conflicting CreatePixmap usage flag definitions
+    
+    RADEON_CREATE_PIXMAP_TILING_MICRO_SQUARE was the same as
+    RADEON_CREATE_PIXMAP_DRI2.
+    
+    Disambiguate the definitions and rearrange them to try and prevent this
+    from happening again.
+    
+    Tested-by: Ed Tomlinson <edtoml@gmail.com>
+
+commit b50da3b96c212086cb58501dbe988d64f1f35b6d
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Fri Apr 11 09:44:37 2014 +0200
+
+    Fix building on older servers without xf86platformBus.h
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit ed0cfbb4fe77146b0b38f777bc28f3a4ea6da07f
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Fri Mar 7 13:27:30 2014 +0100
+
+    Add support for server managed fds
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 3d7861fe112f25874319d4cdc12b745fbcd359cf
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Mon Mar 17 10:38:13 2014 +0100
+
+    Add radeon_get_drm_master_fd helper function
+    
+    This is a preparation patch for adding server-managed-fd support without it
+    turning into a goto fest.
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit a63342ad15408071437c80b411d14196f3288aed
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Mon Mar 17 10:36:55 2014 +0100
+
+    radeon_open_drm_master get rid of unnecessary goto
+    
+    Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+
+commit bdc412044f6ced056cd57320d1b2ee0d967c2191
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu Mar 13 16:40:19 2014 +0900
+
+    Build against glamor in the xserver tree if available
+
+commit 921a153f9964ca452e1241f76c7f7d653f42ceaf
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Tue Mar 11 12:24:13 2014 -0400
+
+    update man page to reflect tiling changes for CI parts
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 5eee8a4d5c86bb1cc34d8caf2f2b64b53c241fa5
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Mon Mar 10 16:20:09 2014 -0400
+
+    radeon: enable tiling by default on CIK
+    
+    Now that mesa 10.1 is released, we can enable this by
+    default for CIK parts.  Tiling improves memory bandwidth
+    utilization.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 691ec3d99c30111a4789830dfccb6eb5d3c40187
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Mon Mar 10 16:17:34 2014 -0400
+
+    radeon: require libdrm 2.4.51
+    
+    Required for proper tiling support on CIK parts.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 515bcf14d514f9dcaaf30fd0bf1ef6dd6ba9a0cd
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 4 12:34:26 2014 +0900
+
+    Allow enabling glamor on R500 (and R300) class 3D engines as well.
+    
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=75709
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit ea6d0affe52d82becadab6fb1c87f9261b0605a2
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Feb 24 13:12:21 2014 +0900
+
+    Only log debugging output about initializing colormaps when we're doing so
+    
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 8da17f30c70f4494ce22ad781a1cee17041812f3
+Author: Jérôme Glisse <jglisse@redhat.com>
+Date:   Mon Feb 24 14:50:25 2014 -0500
+
+    evergreen: fix shader constant upload on ppc
+    
+    The number of dword we have to swap is (16*4) ie 16 vectors of
+    4 floats each not 16 floats. Never hit this issue before because
+    we never had more than 4 constant vector.
+    
+    Signed-off-by: Jérôme Glisse <jglisse@redhat.com>
+
+commit cadb6b493942a84bfeb298751dce0dee39257a06
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri Feb 21 08:33:21 2014 -0500
+
+    radeon: don't install colormap handling if there are no crtcs
+    
+    Fixes a crash on cards with 0 crtcs.
+    
+    Discussion:
+    http://lists.freedesktop.org/archives/dri-devel/2014-February/054186.html
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 7cd972a85705341dd8306eefc558ed9e5def05d7
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Thu Feb 20 11:14:03 2014 +0100
+
+    return immediately in preinit when called with PROBE_DETECT
+    
+    This fixes a crash with Xorg -configure.
+    
+    Bug:
+    https://bugs.launchpad.net/ubuntu/+source/xorg/+bug/1278046
+    
+    Signed-off-by: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 8de6f7b2f476d3baa9c7e2bb3544e4bafaad46b7
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri Jan 24 11:04:30 2014 -0500
+
+    bump version post release
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit 0333f5bda27dc0ec2edc180c7a4dc9a432f13f97
 Author: Alex Deucher <alexander.deucher@amd.com>
 Date:   Fri Jan 24 10:19:49 2014 -0500
