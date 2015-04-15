@@ -104,8 +104,16 @@
 
 #ifdef __APPLE__
 #define GLX_LIB "/opt/X11/lib/libGL.1.dylib"
+#elif defined(__OpenBSD__)
+#define GLX_LIB "libGL.so"
+#define EGL_LIB "libEGL.so"
+#define GLESV1_LIB "libGLESv1_CM.so"
+#define GLESV2_LIB "libGLESv2.so"
 #else
 #define GLX_LIB "libGL.so.1"
+#define EGL_LIB "libEGL.so.1"
+#define GLESV1_LIB "libGLESv1_CM.so.1"
+#define GLESV2_LIB "libGLESv2.so.2"
 #endif
 
 struct api {
@@ -380,7 +388,7 @@ epoxy_current_context_is_glx(void)
         return true;
 
 #if PLATFORM_HAS_EGL
-    sym = do_dlsym(&api.egl_handle, "libEGL.so.1", "eglGetCurrentContext",
+    sym = do_dlsym(&api.egl_handle, EGL_LIB, "eglGetCurrentContext",
                    false);
     if (sym && epoxy_egl_get_current_gl_context_api() != EGL_NONE)
         return false;
@@ -416,7 +424,7 @@ epoxy_conservative_has_gl_extension(const char *ext)
 void *
 epoxy_egl_dlsym(const char *name)
 {
-    return do_dlsym(&api.egl_handle, "libEGL.so.1", name, true);
+    return do_dlsym(&api.egl_handle, EGL_LIB, name, true);
 }
 
 void *
@@ -446,7 +454,7 @@ epoxy_gles1_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        return do_dlsym(&api.gles1_handle, "libGLESv1_CM.so.1", name, true);
+        return do_dlsym(&api.gles1_handle, GLESV1_LIB, name, true);
     }
 }
 
@@ -456,7 +464,7 @@ epoxy_gles2_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        return do_dlsym(&api.gles2_handle, "libGLESv2.so.2", name, true);
+        return do_dlsym(&api.gles2_handle, GLESV2_LIB, name, true);
     }
 }
 
@@ -476,7 +484,7 @@ epoxy_gles3_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        void *func = do_dlsym(&api.gles2_handle, "libGLESv2.so.2", name, false);
+        void *func = do_dlsym(&api.gles2_handle, GLESV2_LIB, name, false);
 
         if (func)
             return func;
@@ -564,7 +572,7 @@ epoxy_get_bootstrap_proc_address(const char *name)
      * non-X11 ES2 context from loading a bunch of X11 junk).
      */
 #if PLATFORM_HAS_EGL
-    get_dlopen_handle(&api.egl_handle, "libEGL.so.1", false);
+    get_dlopen_handle(&api.egl_handle, EGL_LIB, false);
     if (api.egl_handle) {
         switch (epoxy_egl_get_current_gl_context_api()) {
         case EGL_OPENGL_API:
@@ -575,7 +583,7 @@ epoxy_get_bootstrap_proc_address(const char *name)
              * us.  Try the GLES2 implementation first, and fall back
              * to GLES1 otherwise.
              */
-            get_dlopen_handle(&api.gles2_handle, "libGLESv2.so.2", false);
+            get_dlopen_handle(&api.gles2_handle, GLESV2_LIB, false);
             if (api.gles2_handle)
                 return epoxy_gles2_dlsym(name);
             else
