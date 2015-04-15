@@ -37,6 +37,12 @@
 ./usr/X11R6/include/X11/dri/xf86dristr.h
 ./usr/X11R6/include/X11/extensions/dri2proto.h
 ./usr/X11R6/include/X11/extensions/dri2tokens.h
+./usr/X11R6/include/epoxy/egl.h
+./usr/X11R6/include/epoxy/egl_generated.h
+./usr/X11R6/include/epoxy/gl.h
+./usr/X11R6/include/epoxy/gl_generated.h
+./usr/X11R6/include/epoxy/glx.h
+./usr/X11R6/include/epoxy/glx_generated.h
 ./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/txc_dxtn.h
@@ -60,7 +66,7 @@
 ./usr/X11R6/lib/libICE.so.10.0
 ./usr/X11R6/lib/libSM.so.9.0
 ./usr/X11R6/lib/libX11-xcb.so.2.0
-./usr/X11R6/lib/libX11.so.16.0
+./usr/X11R6/lib/libX11.so.16.1
 ./usr/X11R6/lib/libXRes.so.5.0
 ./usr/X11R6/lib/libXau.so.10.0
 ./usr/X11R6/lib/libXaw.so.15.0
@@ -93,6 +99,8 @@
 ./usr/X11R6/lib/libdmx.so.2.0
 ./usr/X11R6/lib/libdrm.a
 ./usr/X11R6/lib/libdrm.so.6.0
+./usr/X11R6/lib/libepoxy.a
+./usr/X11R6/lib/libepoxy.so.1.0
 ./usr/X11R6/lib/libfontconfig.so.9.1
 ./usr/X11R6/lib/libfontenc.so.4.0
 ./usr/X11R6/lib/libfreetype.so.23.0
@@ -143,6 +151,7 @@
 ./usr/X11R6/lib/pkgconfig/dri.pc
 ./usr/X11R6/lib/pkgconfig/dri2proto.pc
 ./usr/X11R6/lib/pkgconfig/egl.pc
+./usr/X11R6/lib/pkgconfig/epoxy.pc
 ./usr/X11R6/lib/pkgconfig/gbm.pc
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glesv1_cm.pc
@@ -189,6 +198,7 @@
 ./usr/X11R6/man/man3/XF86MiscSetMouseSettings.3
 ./usr/X11R6/man/man3/XF86MiscSetSaver.3
 ./usr/X11R6/man/man3/XF86VM.3
+./usr/X11R6/man/man3/XF86VidModeAddModeLine.3
 ./usr/X11R6/man/man3/XF86VidModeDeleteModeLine.3
 ./usr/X11R6/man/man3/XF86VidModeGetAllModeLines.3
 ./usr/X11R6/man/man3/XF86VidModeGetDotClocks.3

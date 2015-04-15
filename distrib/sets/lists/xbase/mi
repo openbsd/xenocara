@@ -178,6 +178,7 @@
 ./usr/X11R6/include/KHR
 ./usr/X11R6/include/X11
 ./usr/X11R6/include/X11/dri
+./usr/X11R6/include/epoxy
 ./usr/X11R6/include/pixman-1
 ./usr/X11R6/include/xcb
 ./usr/X11R6/lib
