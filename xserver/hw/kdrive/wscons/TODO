@@ -1,7 +1,0 @@
-- find bugs
-- finish kbd support
-	- xkb ?
-- add -shadow to force shadow 
-- support pseudo-color and other strange framebuffer layouts
-- better mouse support (wheel,...)
-- man page

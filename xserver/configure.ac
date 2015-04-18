@@ -433,7 +433,6 @@ case $host_os in
 	# configurations.  We don't want to run thousands of lines of
 	# potentially signal-unsafe code for no particular benefit.
 	USE_SIGIO_BY_DEFAULT="no"
-	KDRIVE_HW=yes
 	;;
   *linux*)
 	DRI=yes
@@ -2465,19 +2464,6 @@ if test "$KDRIVE" = yes; then
 		KDRIVE_MOUSE=yes
 	    fi
 	    ;;
-	*openbsd*)
-	    KDRIVE_OS_LIB='$(top_builddir)/hw/kdrive/openbsd/libopenbsd.la'
-	    KDRIVEOPENBSD=yes
-	    if test "x$KDRIVE_EVDEV" = xauto; then
-		KDRIVE_EVDEV=no
-	    fi
-	    if test "x$KDRIVE_KBD" = xauto; then
-		KDRIVE_KBD=yes
-	    fi
-	    if test "x$KDRIVE_MOUSE" = xauto; then
-		KDRIVE_MOUSE=yes
-	    fi
-	    ;;
 	*)
 	    if test "x$KDRIVE_EVDEV" = xauto; then
 		KDRIVE_EVDEV=no
@@ -2505,13 +2491,11 @@ AC_SUBST([KDRIVE_PURE_LIBS])
 AC_SUBST([KDRIVE_LOCAL_LIBS])
 AC_SUBST([KDRIVE_LIBS])
 AM_CONDITIONAL(KDRIVELINUX, [test "x$KDRIVELINUX" = xyes])
-AM_CONDITIONAL(KDRIVEOPENBSD, [test "x$KDRIVEOPENBSD" = xyes])
 AM_CONDITIONAL(KDRIVE_EVDEV, [test "x$KDRIVE_EVDEV" = xyes])
 AM_CONDITIONAL(KDRIVE_KBD,   [test "x$KDRIVE_KBD" = xyes])
 AM_CONDITIONAL(KDRIVE_MOUSE, [test "x$KDRIVE_MOUSE" = xyes])
 AM_CONDITIONAL(TSLIB, [test "x$HAVE_TSLIB" = xyes])
 AM_CONDITIONAL(KDRIVEFBDEV, [test "x$XFBDEV" = xyes])
-AM_CONDITIONAL(KDRIVEWSCONS, [test x"$ac_cv_header_dev_wscons_wsconsio_h" = xyes])
 AM_CONDITIONAL(XEPHYR, [test "x$KDRIVE" = xyes && test "x$XEPHYR" = xyes])
 AM_CONDITIONAL(BUILD_KDRIVEFBDEVLIB, [test "x$KDRIVE" = xyes && test "x$KDRIVEFBDEVLIB" = xyes])
 AM_CONDITIONAL(XFAKESERVER, [test "x$KDRIVE" = xyes && test "x$XFAKE" = xyes])
@@ -2683,9 +2667,7 @@ hw/kdrive/ephyr/man/Makefile
 hw/kdrive/fake/Makefile
 hw/kdrive/fbdev/Makefile
 hw/kdrive/linux/Makefile
-hw/kdrive/openbsd/Makefile
 hw/kdrive/src/Makefile
-hw/kdrive/wscons/Makefile
 hw/xwayland/Makefile
 test/Makefile
 test/xi1/Makefile

@@ -475,24 +475,20 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @BUILD_KDRIVEFBDEVLIB_TRUE@FBDEV_SUBDIRS = fbdev
-@KDRIVEWSCONS_TRUE@WSCONS_SUBDIRS = wscons
 @XFAKESERVER_TRUE@XFAKE_SUBDIRS = fake
 @XEPHYR_TRUE@XEPHYR_SUBDIRS = ephyr
 @KDRIVELINUX_TRUE@LINUX_SUBDIRS = linux
-@KDRIVEOPENBSD_TRUE@OPENBSD_SUBDIRS = openbsd
 SERVER_SUBDIRS = \
 	$(FBDEV_SUBDIRS)	\
-	$(WSCONS_SUBDIRS)	\
 	$(XEPHYR_SUBDIRS)       \
 	$(XFAKE_SUBDIRS)
 
 SUBDIRS = \
 	src			\
 	$(LINUX_SUBDIRS)	\
-	$(OPENBSD_SUBDIRS)	\
 	$(SERVER_SUBDIRS)
 
-DIST_SUBDIRS = fbdev ephyr src linux fake openbsd wscons
+DIST_SUBDIRS = fbdev ephyr src linux fake
 all: all-recursive
 
 .SUFFIXES:

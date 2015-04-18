@@ -715,8 +715,6 @@ BUILD_KDRIVEFBDEVLIB_FALSE
 BUILD_KDRIVEFBDEVLIB_TRUE
 XEPHYR_FALSE
 XEPHYR_TRUE
-KDRIVEWSCONS_FALSE
-KDRIVEWSCONS_TRUE
 KDRIVEFBDEV_FALSE
 KDRIVEFBDEV_TRUE
 TSLIB_FALSE
@@ -727,8 +725,6 @@ KDRIVE_KBD_FALSE
 KDRIVE_KBD_TRUE
 KDRIVE_EVDEV_FALSE
 KDRIVE_EVDEV_TRUE
-KDRIVEOPENBSD_FALSE
-KDRIVEOPENBSD_TRUE
 KDRIVELINUX_FALSE
 KDRIVELINUX_TRUE
 KDRIVE_LIBS
@@ -22623,7 +22619,6 @@ $as_echo "#define WSCONS_SUPPORT 1" >>confdefs.h
 	# configurations.  We don't want to run thousands of lines of
 	# potentially signal-unsafe code for no particular benefit.
 	USE_SIGIO_BY_DEFAULT="no"
-	KDRIVE_HW=yes
 	;;
   *linux*)
 	DRI=yes
@@ -31305,19 +31300,6 @@ fi
 		KDRIVE_MOUSE=yes
 	    fi
 	    ;;
-	*openbsd*)
-	    KDRIVE_OS_LIB='$(top_builddir)/hw/kdrive/openbsd/libopenbsd.la'
-	    KDRIVEOPENBSD=yes
-	    if test "x$KDRIVE_EVDEV" = xauto; then
-		KDRIVE_EVDEV=no
-	    fi
-	    if test "x$KDRIVE_KBD" = xauto; then
-		KDRIVE_KBD=yes
-	    fi
-	    if test "x$KDRIVE_MOUSE" = xauto; then
-		KDRIVE_MOUSE=yes
-	    fi
-	    ;;
 	*)
 	    if test "x$KDRIVE_EVDEV" = xauto; then
 		KDRIVE_EVDEV=no
@@ -31350,14 +31332,6 @@ fi
 else
   KDRIVELINUX_TRUE='#'
   KDRIVELINUX_FALSE=
-fi
-
- if test "x$KDRIVEOPENBSD" = xyes; then
-  KDRIVEOPENBSD_TRUE=
-  KDRIVEOPENBSD_FALSE='#'
-else
-  KDRIVEOPENBSD_TRUE='#'
-  KDRIVEOPENBSD_FALSE=
 fi
 
  if test "x$KDRIVE_EVDEV" = xyes; then
@@ -31398,14 +31372,6 @@ fi
 else
   KDRIVEFBDEV_TRUE='#'
   KDRIVEFBDEV_FALSE=
-fi
-
- if test x"$ac_cv_header_dev_wscons_wsconsio_h" = xyes; then
-  KDRIVEWSCONS_TRUE=
-  KDRIVEWSCONS_FALSE='#'
-else
-  KDRIVEWSCONS_TRUE='#'
-  KDRIVEWSCONS_FALSE=
 fi
 
  if test "x$KDRIVE" = xyes && test "x$XEPHYR" = xyes; then
@@ -31664,7 +31630,7 @@ $as_echo "$as_me: WARNING:
              ***********************************************" >&2;}
 fi
 
-ac_config_files="$ac_config_files Makefile glx/Makefile include/Makefile composite/Makefile damageext/Makefile dbe/Makefile dix/Makefile doc/Makefile doc/dtrace/Makefile man/Makefile fb/Makefile glamor/Makefile record/Makefile config/Makefile mi/Makefile miext/Makefile miext/sync/Makefile miext/damage/Makefile miext/shadow/Makefile miext/rootless/Makefile os/Makefile pseudoramiX/Makefile randr/Makefile render/Makefile xkb/Makefile Xext/Makefile Xi/Makefile xfixes/Makefile exa/Makefile dri3/Makefile present/Makefile hw/Makefile hw/xfree86/Makefile hw/xfree86/Xorg.sh hw/xfree86/common/Makefile hw/xfree86/common/xf86Build.h hw/xfree86/ddc/Makefile hw/xfree86/dixmods/Makefile hw/xfree86/doc/Makefile hw/xfree86/dri/Makefile hw/xfree86/dri2/Makefile hw/xfree86/exa/Makefile hw/xfree86/exa/man/Makefile hw/xfree86/fbdevhw/Makefile hw/xfree86/fbdevhw/man/Makefile hw/xfree86/glamor_egl/Makefile hw/xfree86/i2c/Makefile hw/xfree86/int10/Makefile hw/xfree86/loader/Makefile hw/xfree86/man/Makefile hw/xfree86/modes/Makefile hw/xfree86/os-support/Makefile hw/xfree86/os-support/bsd/Makefile hw/xfree86/os-support/bus/Makefile hw/xfree86/os-support/hurd/Makefile hw/xfree86/os-support/misc/Makefile hw/xfree86/os-support/linux/Makefile hw/xfree86/os-support/solaris/Makefile hw/xfree86/os-support/stub/Makefile hw/xfree86/parser/Makefile hw/xfree86/ramdac/Makefile hw/xfree86/shadowfb/Makefile hw/xfree86/vbe/Makefile hw/xfree86/vgahw/Makefile hw/xfree86/x86emu/Makefile hw/xfree86/utils/Makefile hw/xfree86/utils/man/Makefile hw/xfree86/utils/cvt/Makefile hw/xfree86/utils/gtf/Makefile hw/dmx/config/Makefile hw/dmx/config/man/Makefile hw/dmx/doc/Makefile hw/dmx/doxygen/doxygen.conf hw/dmx/doxygen/Makefile hw/dmx/examples/Makefile hw/dmx/input/Makefile hw/dmx/glxProxy/Makefile hw/dmx/Makefile hw/dmx/man/Makefile hw/vfb/Makefile hw/vfb/man/Makefile hw/xnest/Makefile hw/xnest/man/Makefile hw/xwin/Makefile hw/xwin/glx/Makefile hw/xwin/man/Makefile hw/xquartz/Makefile hw/xquartz/GL/Makefile hw/xquartz/bundle/Makefile hw/xquartz/man/Makefile hw/xquartz/mach-startup/Makefile hw/xquartz/pbproxy/Makefile hw/xquartz/xpr/Makefile hw/kdrive/Makefile hw/kdrive/ephyr/Makefile hw/kdrive/ephyr/man/Makefile hw/kdrive/fake/Makefile hw/kdrive/fbdev/Makefile hw/kdrive/linux/Makefile hw/kdrive/openbsd/Makefile hw/kdrive/src/Makefile hw/kdrive/wscons/Makefile hw/xwayland/Makefile test/Makefile test/xi1/Makefile test/xi2/Makefile xserver.ent xorg-server.pc"
+ac_config_files="$ac_config_files Makefile glx/Makefile include/Makefile composite/Makefile damageext/Makefile dbe/Makefile dix/Makefile doc/Makefile doc/dtrace/Makefile man/Makefile fb/Makefile glamor/Makefile record/Makefile config/Makefile mi/Makefile miext/Makefile miext/sync/Makefile miext/damage/Makefile miext/shadow/Makefile miext/rootless/Makefile os/Makefile pseudoramiX/Makefile randr/Makefile render/Makefile xkb/Makefile Xext/Makefile Xi/Makefile xfixes/Makefile exa/Makefile dri3/Makefile present/Makefile hw/Makefile hw/xfree86/Makefile hw/xfree86/Xorg.sh hw/xfree86/common/Makefile hw/xfree86/common/xf86Build.h hw/xfree86/ddc/Makefile hw/xfree86/dixmods/Makefile hw/xfree86/doc/Makefile hw/xfree86/dri/Makefile hw/xfree86/dri2/Makefile hw/xfree86/exa/Makefile hw/xfree86/exa/man/Makefile hw/xfree86/fbdevhw/Makefile hw/xfree86/fbdevhw/man/Makefile hw/xfree86/glamor_egl/Makefile hw/xfree86/i2c/Makefile hw/xfree86/int10/Makefile hw/xfree86/loader/Makefile hw/xfree86/man/Makefile hw/xfree86/modes/Makefile hw/xfree86/os-support/Makefile hw/xfree86/os-support/bsd/Makefile hw/xfree86/os-support/bus/Makefile hw/xfree86/os-support/hurd/Makefile hw/xfree86/os-support/misc/Makefile hw/xfree86/os-support/linux/Makefile hw/xfree86/os-support/solaris/Makefile hw/xfree86/os-support/stub/Makefile hw/xfree86/parser/Makefile hw/xfree86/ramdac/Makefile hw/xfree86/shadowfb/Makefile hw/xfree86/vbe/Makefile hw/xfree86/vgahw/Makefile hw/xfree86/x86emu/Makefile hw/xfree86/utils/Makefile hw/xfree86/utils/man/Makefile hw/xfree86/utils/cvt/Makefile hw/xfree86/utils/gtf/Makefile hw/dmx/config/Makefile hw/dmx/config/man/Makefile hw/dmx/doc/Makefile hw/dmx/doxygen/doxygen.conf hw/dmx/doxygen/Makefile hw/dmx/examples/Makefile hw/dmx/input/Makefile hw/dmx/glxProxy/Makefile hw/dmx/Makefile hw/dmx/man/Makefile hw/vfb/Makefile hw/vfb/man/Makefile hw/xnest/Makefile hw/xnest/man/Makefile hw/xwin/Makefile hw/xwin/glx/Makefile hw/xwin/man/Makefile hw/xquartz/Makefile hw/xquartz/GL/Makefile hw/xquartz/bundle/Makefile hw/xquartz/man/Makefile hw/xquartz/mach-startup/Makefile hw/xquartz/pbproxy/Makefile hw/xquartz/xpr/Makefile hw/kdrive/Makefile hw/kdrive/ephyr/Makefile hw/kdrive/ephyr/man/Makefile hw/kdrive/fake/Makefile hw/kdrive/fbdev/Makefile hw/kdrive/linux/Makefile hw/kdrive/src/Makefile hw/xwayland/Makefile test/Makefile test/xi1/Makefile test/xi2/Makefile xserver.ent xorg-server.pc"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -32252,10 +32218,6 @@ if test -z "${KDRIVELINUX_TRUE}" && test -z "${KDRIVELINUX_FALSE}"; then
   as_fn_error $? "conditional \"KDRIVELINUX\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${KDRIVEOPENBSD_TRUE}" && test -z "${KDRIVEOPENBSD_FALSE}"; then
-  as_fn_error $? "conditional \"KDRIVEOPENBSD\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
 if test -z "${KDRIVE_EVDEV_TRUE}" && test -z "${KDRIVE_EVDEV_FALSE}"; then
   as_fn_error $? "conditional \"KDRIVE_EVDEV\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -32274,10 +32236,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${KDRIVEFBDEV_TRUE}" && test -z "${KDRIVEFBDEV_FALSE}"; then
   as_fn_error $? "conditional \"KDRIVEFBDEV\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${KDRIVEWSCONS_TRUE}" && test -z "${KDRIVEWSCONS_FALSE}"; then
-  as_fn_error $? "conditional \"KDRIVEWSCONS\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${XEPHYR_TRUE}" && test -z "${XEPHYR_FALSE}"; then
@@ -33277,9 +33235,7 @@ do
     "hw/kdrive/fake/Makefile") CONFIG_FILES="$CONFIG_FILES hw/kdrive/fake/Makefile" ;;
     "hw/kdrive/fbdev/Makefile") CONFIG_FILES="$CONFIG_FILES hw/kdrive/fbdev/Makefile" ;;
     "hw/kdrive/linux/Makefile") CONFIG_FILES="$CONFIG_FILES hw/kdrive/linux/Makefile" ;;
-    "hw/kdrive/openbsd/Makefile") CONFIG_FILES="$CONFIG_FILES hw/kdrive/openbsd/Makefile" ;;
     "hw/kdrive/src/Makefile") CONFIG_FILES="$CONFIG_FILES hw/kdrive/src/Makefile" ;;
-    "hw/kdrive/wscons/Makefile") CONFIG_FILES="$CONFIG_FILES hw/kdrive/wscons/Makefile" ;;
     "hw/xwayland/Makefile") CONFIG_FILES="$CONFIG_FILES hw/xwayland/Makefile" ;;
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "test/xi1/Makefile") CONFIG_FILES="$CONFIG_FILES test/xi1/Makefile" ;;
