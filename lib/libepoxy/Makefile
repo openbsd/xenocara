@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2015/04/15 07:58:59 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2015/04/22 17:31:47 miod Exp $
 .include <bsd.xconf.mk>
 
 EPOXY=	${.CURDIR}/../../dist/libepoxy
@@ -56,6 +56,10 @@ obj: _xenocara_obj
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
+
+.if ${MACHINE_ARCH} == "sparc"
+PICFLAG = -fPIC
+.endif
 
 epoxy.pc: ${EPOXY}/epoxy.pc.in Makefile
 	sed -e 's,@prefix@,$(X11BASE),' \
