@@ -214,6 +214,7 @@ long getResolutionResource(AppInfo *app, char *instanceName, char *className,
 	 resolution = DefaultResolution;
       }
    }
+   free(s);
    return(resolution);
 }
 #undef DefaultResolution
