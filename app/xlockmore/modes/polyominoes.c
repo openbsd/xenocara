@@ -1469,7 +1469,7 @@ make_one_sided_pentomino(void) {
   int i,j,t,u;
 
   j=0;
-  for (i=0;i<18;i++) {
+  for (i=0;i<12;i++) {
     one_sided_pentomino[j] = pentomino[i];
     for (t=0;t<8;t++)
       if (one_sided_pentomino[j].transform_list[t]>=4) {
