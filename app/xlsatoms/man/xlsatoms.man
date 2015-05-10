@@ -54,6 +54,9 @@ stop at the first undefined atom at or above \fIlow\fP.
 .B \-name \fIstring\fP
 This option specifies the name of an atom to list.  If the atom does not
 exist, a message will be printed on the standard error.
+.TP 8
+.B "-version"
+Print out the program version and exit.
 .PP
 .SH "SEE ALSO"
 X(__miscmansuffix__), Xserver(__appmansuffix__), xprop(__appmansuffix__)

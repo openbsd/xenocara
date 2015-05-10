@@ -27,6 +27,10 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Peter Harris, Open Text Corporation
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,19 +51,19 @@ static void list_atoms ( xcb_connection_t *c, const char *format, int mask,
 			 long low, long high );
 
 static void 
-usage(void)
+usage(const char *errmsg)
 {
-    fprintf (stderr, "usage:  %s [-options...]\n\n", ProgramName);
-    fprintf (stderr, "where options include:\n");
-    fprintf (stderr,
-	     "    -display dpy            X server to which to connect\n");
-    fprintf (stderr,
-	     "    -format string          printf-style format to use\n");
-    fprintf (stderr,
-	     "    -range [num]-[num]      atom values to list\n");
-    fprintf (stderr,
-	     "    -name string            name of single atom to print\n");
-    putc ('\n', stderr);
+    if (errmsg != NULL)
+	fprintf (stderr, "%s: %s\n\n", ProgramName, errmsg);
+
+    fprintf (stderr, "usage:  %s [-options...]\n\n%s\n", ProgramName,
+	     "where options include:\n"
+	     "    -display dpy            X server to which to connect\n"
+	     "    -format string          printf-style format to use\n"
+	     "    -range [num]-[num]      atom values to list\n"
+	     "    -name string            name of single atom to print\n"
+	     "    -version                print program version\n"
+	);
     exit (1);
 }
 
@@ -81,30 +85,38 @@ main(int argc, char *argv[])
 	    if (arg[0] == '-') {
 		switch (arg[1]) {
 		  case 'd':			/* -display dpy */
-		    if (++i >= argc) usage ();
+		    if (++i >= argc) usage ("-display requires an argument");
 		    if (!doit) displayname = argv[i];
 		    continue;
 		  case 'f':			/* -format string */
-		    if (++i >= argc) usage ();
+		    if (++i >= argc) usage ("-format requires an argument");
 		    if (doit) format = argv[i];
 		    continue;
 		  case 'r':			/* -range num-[num] */
-		    if (++i >= argc) usage ();
+		    if (++i >= argc) usage ("-range requires an argument");
 		    if (doit) {
 			do_range (c, format, argv[i]);
 			didit = 1;
 		    }
 		    continue;
 		  case 'n':			/* -name string */
-		    if (++i >= argc) usage ();
+		    if (++i >= argc) usage ("-name requires an argument");
 		    if (doit) {
 			do_name (c, format, argv[i]);
 			didit = 1;
 		    }
 		    continue;
+		  case 'v':
+		    if (strcmp(arg, "-version") == 0) {
+			puts(PACKAGE_STRING);
+			exit(0);
+		    }
+		    /* else FALLTHROUGH to unrecognized arg case below */
 		}
 	    }
-	    usage ();
+	    fprintf (stderr, "%s: unrecognized argument %s\n\n",
+		     ProgramName, arg);
+	    usage (NULL);
 	}
 	if (!doit) {
 	    DisplayString = displayname;

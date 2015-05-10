@@ -1,3 +1,64 @@
+commit 8b773cc5ccc8568f3b089229b5ae85ebaca94836
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 23:49:40 2015 -0700
+
+    xlsatoms 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a58064faa6cc5488e514debd3dfc023741d6a9ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:43:41 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d684b13c7b3b8fbdda6d84dae342ad901672eb1c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:38:12 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9bb0fa36540533e776c59c0d33ed3f404956f44a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:27:59 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0859ea63708679d9e759f3302ef869bf5b657370
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:27:59 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 86dc282447607b0087cfa936f2216fc224d88599
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 22:27:53 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a43915d29ba56cd11d92c89720153fba3e92be4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 23 11:35:47 2013 -0800
+
+    Combine usage message into single string/call
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d828ec2c209ea031891cbc7ab9c9d2f6832ebc4d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 31 16:48:11 2012 -0700
