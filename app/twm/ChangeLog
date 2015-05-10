@@ -1,3 +1,87 @@
+commit b52e4041054b580bace70d9db5e7e3d90b33ad6d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 22:36:31 2015 -0700
+
+    twm 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f68d82c5f6cff9b22dc3335f956453679b207ad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 31 09:50:11 2014 -0800
+
+    Remove custom version of system(3c) for Solaris
+    
+    Was originally added in 1993 with the comment:
+     make f.exec do the right thing to get working xterms under Solaris2.
+    
+    Doesn't seem to be needed any more on modern Solaris.
+    As a bonus, gets rid of error found by Oracle Parfait 1.5.1 that
+    if the execl() call fails, the function falls through and returns
+    an uninitialized value for status and then both parent & child
+    go back to running the same code.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 032fc6a734516189e11b43e0b4680d15b62c5e66
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 31 00:49:34 2014 -0800
+
+    Only use results from GetWindowProperty if it returned success
+    
+    Since Xlib prior to 1.6 didn't always clear values on failure, don't
+    assume they're safe to use unless we succeeded.
+    
+    Reported by Oracle Parfait 1.5.1:
+    Error: Uninitialised memory (CWE 456)
+       Possible access to uninitialised memory '&nPixels'
+            at line 963 of src/parse.c in function 'put_pixel_on_root'.
+              &nPixels allocated at line 953.
+       Possible access to uninitialised memory '&retProp'
+            at line 962 of src/parse.c in function 'put_pixel_on_root'.
+              &retProp allocated at line 954.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 76f6ad6e96b1ce62a32767bc0478a17b8b9204d7
+Author: Laurent Carlier <lordheavym@gmail.com>
+Date:   Mon Aug 4 16:39:24 2014 +0200
+
+    Update manpage with the proper location of system.twmrc file
+    
+    Signed-off-by: Laurent Carlier <lordheavym@gmail.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0cb43e864b2e9972630556e98caa24abf8928122
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:06:21 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c33c83fb83be7f6402b615b4b32b5dc2036b951d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:06:21 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9c09c3e3577460fcef44e7abe51d22fcbda10ea8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 25 21:51:37 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 46c4255ba661145df429d9dc190355a9661da3c1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Sep 6 18:59:24 2013 -0700

@@ -33,6 +33,8 @@ CLEANFILES = $(appman_DATA)
 
 SUFFIXES = .$(APP_MAN_SUFFIX) .man
 
+MAN_SUBSTS += 	-e 's|__datadir__|$(datadir)|g'
+
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(APP_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@

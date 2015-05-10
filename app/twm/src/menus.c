@@ -2337,28 +2337,6 @@ NeedToDefer(MenuRoot *root)
 
 
 
-#if defined(sun) && defined(SVR4)
-#include <sys/wait.h>
-
-/**
- * execute the string by /bin/sh
- *  \param s  the string containing the command
- */
-static int
-System (const char *s)
-{
-    int pid, status;
-    if ((pid = fork ()) == 0) {
-	(void) setpgrp();
-	execl ("/bin/sh", "sh", "-c", s, NULL);
-    } else
-	waitpid (pid, &status, 0);
-    return status;
-}
-#define system(s) System(s)
-
-#endif
-
 static void
 Execute(const char *s)
 {
