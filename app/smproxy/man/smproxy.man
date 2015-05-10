@@ -27,7 +27,7 @@
 smproxy \- Session Manager Proxy
 .SH SYNOPSIS
 .B smproxy
-[-clientId id] [-restore saveFile]
+[-clientId id] [-restore saveFile] [-version]
 .SH OPTIONS
 .TP 8
 .B \-clientId \fIid\fP
@@ -35,6 +35,9 @@ Specifies the session ID used by \fIsmproxy\fP in the previous session.
 .TP 8
 .B \-restore \fIsaveFile\fP
 Specifies the file used by \fIsmproxy\fP to save state in the previous session.
+.TP 8
+.B \-version
+Prints the program version and exits.
 .SH DESCRIPTION
 .PP
 \fIsmproxy\fP allows X applications that do not support X11R6 session

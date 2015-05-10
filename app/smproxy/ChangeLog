@@ -1,3 +1,99 @@
+commit 31b7fe5cc4e3f39f7265800a78a397935163990b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 22:32:22 2015 -0700
+
+    smproxy 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83e5545ee56d73a0b1b37683397b303371c9256a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 5 17:30:50 2014 -0800
+
+    Remove unneeded checks for X_NOT_POSIX
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0c22454c28f44db23370f70719f6d84d92be7f22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 71de8086f5c28016cd8aa2bdf7c473efd71535cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cd8b8001b6b9e11ba27a300cd03d70cab0271bf0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 23:26:31 2013 -0800
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5eb28e5bbb97a1c1faa0d77c85c8d566e3e4fcdf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 23:23:26 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53a484fbd297a03bfbe7d656818c94a4c4b071fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 23:08:06 2013 -0800
+
+    Simplify & unify variants of unique_filename
+    
+    Variants depend on whether system has mkstemp, mktemp or tempnam
+    Also fixes some const char warnings in this code.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d00b208df92061f0049bfcd993ab1f92dc8aa2cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 22:44:06 2013 -0800
+
+    Convert sprintf calls to asprintf or snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d59fe3c0501ec07b725004de86c1a8adac966092
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 22:33:18 2013 -0800
+
+    Add local copy of asprintf()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 747e066281b78909e5c9703f639c0813b14c385f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 22:06:44 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6f90cf3021d5c8755963ab5d88d477774cd5bd43
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 23 21:56:29 2013 -0800
+
+    Replace #ifdef X_NOT_POSIX with explicit check for mktemp function
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ddbc7f6b08643fb852d98810a1149b09e80e68fe
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jun 29 20:43:37 2011 -0700

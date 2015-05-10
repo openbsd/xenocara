@@ -221,12 +221,12 @@ CheckFullyQuantifiedName(char *name, int *newstring)
 	}
 	else
 	{
-	    int bytes = strlen (name) + strlen (firstDot + 1) + 2;
 	    char *newptr;
 
-	    newptr = (char *) malloc (bytes);
-	    sprintf (newptr, "%s.%s", name, firstDot + 1);
-
+	    if (asprintf (&newptr, "%s.%s", name, firstDot + 1) == -1) {
+                *newstring = 0;
+                return NULL;
+            }
 	    *newstring = 1;
 	    return (newptr);
 	}
@@ -255,7 +255,7 @@ FinishSaveYourself(WinInfo *winInfo, Bool has_WM_SAVEYOURSELF)
 	prop1val.value = (SmPointer) winInfo->wm_command[0];
 	prop1val.length = strlen (winInfo->wm_command[0]);
     
-	sprintf (userId, "%ld", (long)getuid());
+	snprintf (userId, sizeof(userId), "%ld", (long)getuid());
 	prop2.name = SmUserID;
 	prop2.type = SmARRAY8;
 	prop2.num_vals = 1;
@@ -265,7 +265,8 @@ FinishSaveYourself(WinInfo *winInfo, Bool has_WM_SAVEYOURSELF)
     
 	fullyQuantifiedName = CheckFullyQuantifiedName (
 	    (char *) winInfo->wm_client_machine.value, &newstring);
-	sprintf (restartService, "rstart-rsh/%s", fullyQuantifiedName);
+	snprintf (restartService, sizeof(restartService),
+                  "rstart-rsh/%s", fullyQuantifiedName);
 	if (newstring)
 	    free (fullyQuantifiedName);
 
@@ -882,7 +883,7 @@ ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
     Bool success = True;
     SmProp prop1, prop2, prop3, *props[3];
     SmPropValue prop1val, prop2val, prop3val;
-    char discardCommand[80];
+    char *discardCommand;
     int numVals, i;
     static int first_time = 1;
 
@@ -898,7 +899,7 @@ ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
 	prop1val.value = Argv[0];
 	prop1val.length = strlen (Argv[0]);
 
-	sprintf (userId, "%ld", (long)getuid());
+	snprintf (userId, sizeof(userId), "%ld", (long)getuid());
 	prop2.name = SmUserID;
 	prop2.type = SmARRAY8;
 	prop2.num_vals = 1;
@@ -971,7 +972,10 @@ ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
     prop1.num_vals = numVals;
 
 
-    sprintf (discardCommand, "rm %s", filename);
+    if (asprintf (&discardCommand, "rm %s", filename) == -1) {
+	success = False;
+	goto finishUp;
+    }
     prop2.name = SmDiscardCommand;
     prop2.type = SmARRAY8;
     prop2.num_vals = 1;
@@ -984,6 +988,7 @@ ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
 
     SmcSetProperties (smcConn, 2, props);
     free ((char *) prop1.vals);
+    free (discardCommand);
 
  finishUp:
 
@@ -1163,21 +1168,36 @@ main (int argc, char *argv[])
 		continue;
 
 	      case 'c':				/* -clientId */
-		if (++i >= argc) goto usage;
+		if (++i >= argc) {
+		    fprintf (stderr, "%s: -clientId requires an argument\n",
+			     argv[0]);
+		    goto usage;
+		}
 		client_id = argv[i];
 		continue;
 
 	      case 'r':				/* -restore */
-		if (++i >= argc) goto usage;
+		if (++i >= argc) {
+		    fprintf (stderr, "%s: -restore requires an argument\n",
+			     argv[0]);
+		    goto usage;
+		}
 		restore_filename = argv[i];
 		continue;
+
+	      case 'v':
+		puts (PACKAGE_STRING);
+		exit (0);
 	    }
 	}
+
+	fprintf (stderr, "%s: unrecognized argument: %s\n", argv[0], argv[i]);
 
     usage:
 
 	fprintf (stderr,
-	    "usage:  %s [-clientId id] [-restore file] [-debug]\n", argv[0]);
+	    "usage:  %s [-clientId id] [-restore file] [-debug] [-version]\n",
+		 argv[0]);
 	exit (1);
     }
 

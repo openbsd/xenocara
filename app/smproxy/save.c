@@ -39,11 +39,51 @@ static int write_counted_string ( FILE *file, char *string );
 static int read_byte ( FILE *file, unsigned char *bp );
 static int read_short ( FILE *file, unsigned short *shortp );
 static int read_counted_string ( FILE *file, char **stringp );
-#ifndef HAVE_MKSTEMP
-static char * unique_filename ( char *path, char *prefix );
-#else
-static char * unique_filename ( char *path, char *prefix, int *pFd );
+
+#ifndef HAVE_ASPRINTF
+# include <stdarg.h>
+
+/* sprintf variant found in newer libc's which allocates string to print to */
+_X_HIDDEN int _X_ATTRIBUTE_PRINTF(2,3)
+asprintf(char ** ret, const char *format, ...)
+{
+    char buf[256];
+    int len;
+    va_list ap;
+
+    va_start(ap, format);
+    len = vsnprintf(buf, sizeof(buf), format, ap);
+    va_end(ap);
+
+    if (len < 0)
+	return -1;
+
+    if (len < sizeof(buf))
+    {
+	*ret = strdup(buf);
+    }
+    else
+    {
+	*ret = malloc(len + 1); /* snprintf doesn't count trailing '\0' */
+	if (*ret != NULL)
+	{
+	    va_start(ap, format);
+	    len = vsnprintf(*ret, len + 1, format, ap);
+	    va_end(ap);
+	    if (len < 0) {
+		free(*ret);
+		*ret = NULL;
+	    }
+	}
+    }
+
+    if (*ret == NULL)
+	return -1;
+
+    return len;
+}
 #endif
+
 
 
 static int
@@ -301,45 +341,40 @@ ReadProxyFile(char *filename)
 
 
 
-#ifndef HAVE_MKSTEMP
 static char *
-unique_filename(char *path, char *prefix)
-#else
-static char *
-unique_filename(char *path, char *prefix, int *pFd)
-#endif
+unique_filename(const char *path, const char *prefix, int *pFd)
 {
-#ifndef HAVE_MKSTEMP
-#ifndef X_NOT_POSIX
-    return ((char *) tempnam (path, prefix));
+    char *tempFile = NULL;
+    int tempFd = 0;
+
+#if defined(HAVE_MKSTEMP) || defined(HAVE_MKTEMP)
+    if (asprintf (&tempFile, "%s/%sXXXXXX", path, prefix) == -1)
+	return NULL;
+#endif
+
+#ifdef HAVE_MKSTEMP
+    tempFd = mkstemp(tempFile);
 #else
-    char tempFile[PATH_MAX];
-    char *tmp;
 
-    sprintf (tempFile, "%s/%sXXXXXX", path, prefix);
-    tmp = (char *) mktemp (tempFile);
-    if (tmp)
-    {
-	char *ptr = (char *) malloc (strlen (tmp) + 1);
-	strcpy (ptr, tmp);
-	return (ptr);
-    }
-    else
+# ifdef HAVE_MKTEMP
+    if (mktemp(tempFile) == NULL)
+	tempFd = -1;
+# else /* fallback to tempnam */
+    tempFile = tempnam (path, prefix);
+# endif /* HAVE_MKTEMP */
+
+    if (tempFd != -1 && tempFile != NULL)
+	tempFd = open(tempFile, O_RDWR | O_CREAT | O_EXCL, 0600);
+#endif
+
+    if (tempFd == -1) {
+	free(tempFile);
 	return (NULL);
-#endif
-#else 
-    char tempFile[PATH_MAX];
-    char *ptr;
-
-    sprintf (tempFile, "%s/%sXXXXXX", path, prefix);
-    ptr = (char *)malloc(strlen(tempFile) + 1);
-    if (ptr != NULL) 
-    {
-	strcpy(ptr, tempFile);
-	*pFd =  mkstemp(ptr);
     }
-    return ptr;
-#endif
+
+    *pFd = tempFd;
+    return tempFile;
+
 }
 
 
@@ -349,10 +384,8 @@ WriteProxyFile(void)
 {
     FILE *proxyFile = NULL;
     char *filename = NULL;
-#ifdef HAVE_MKSTEMP
-    int fd;
-#endif
-    char *path;
+    int fd = -1;
+    const char *path;
     WinInfo *winptr;
     Bool success = False;
 
@@ -364,19 +397,12 @@ WriteProxyFile(void)
 	    path = ".";
     }
 
-#ifndef HAVE_MKSTEMP
-    if ((filename = unique_filename (path, ".prx")) == NULL)
-	goto bad;
-
-    if (!(proxyFile = fopen (filename, "wb")))
-	goto bad;
-#else
     if ((filename = unique_filename (path, ".prx", &fd)) == NULL)
 	goto bad;
 
     if (!(proxyFile = fdopen(fd, "wb"))) 
 	goto bad;
-#endif
+
     if (!write_short (proxyFile, SAVEFILE_VERSION))
 	goto bad;
 
@@ -399,6 +425,8 @@ WriteProxyFile(void)
 
     if (proxyFile)
 	fclose (proxyFile);
+    else if (fd != -1)
+	close (fd);
 
     if (success)
 	return (filename);
