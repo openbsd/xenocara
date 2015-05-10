@@ -44,11 +44,6 @@
 #define UNBUFFERED_BIT	0x10
 #define BINARY_BIT	0x20
 
-/*
- * Prototypes
- */
-static int calculate_line(void*, int);
-static int calculate_column(void*, int, int);
 
 /*
  * Initialization
@@ -160,12 +155,13 @@ LispPopInput(LispObj *stream)
  * Low level functions
  */
 static int
-calculate_line(void *data, int size)
+calculate_line(const void *data, int size)
 {
     int line = 0;
-    char *str, *ptr;
+    const char *str, *ptr;
 
-    for (str = (char*)data, ptr = (char*)data + size; str < ptr; str++)
+    for (str = (const char *)data, ptr = (const char *)data + size;
+         str < ptr; str++)
 	if (*ptr == '\n')
 	    ++line;
 
@@ -173,12 +169,13 @@ calculate_line(void *data, int size)
 }
 
 static int
-calculate_column(void *data, int size, int column)
+calculate_column(const void *data, int size, int column)
 {
-    char *str, *ptr;
+    const char *str, *ptr;
 
     /* search for newline in data */
-    for (str = (char*)data, ptr = (char*)data + size - 1; ptr >= str; ptr--)
+    for (str = (const char *)data, ptr = (const char *)data + size - 1;
+         ptr >= str; ptr--)
 	if (*ptr == '\n')
 	    break;
 
@@ -225,7 +222,7 @@ LispFdopen(int descriptor, int mode)
 }
 
 LispFile *
-LispFopen(char *path, int mode)
+LispFopen(const char *path, int mode)
 {
     LispFile *file;
     int descriptor;
@@ -467,13 +464,13 @@ LispFgets(LispFile *file, char *string, int size)
 }
 
 int
-LispFputs(LispFile *file, char *buffer)
+LispFputs(LispFile *file, const char *buffer)
 {
     return (LispFwrite(file, buffer, strlen(buffer)));
 }
 
 int
-LispSputs(LispString *string, char *buffer)
+LispSputs(LispString *string, const char *buffer)
 {
     return (LispSwrite(string, buffer, strlen(buffer)));
 }
@@ -557,7 +554,7 @@ LispFread(LispFile *file, void *data, int size)
 }
 
 int
-LispFwrite(LispFile *file, void *data, int size)
+LispFwrite(LispFile *file, const void *data, int size)
 {
     if (!file->writable || size < 0)
 	return (EOF);
@@ -567,7 +564,7 @@ LispFwrite(LispFile *file, void *data, int size)
 
     if (file->buffered) {
 	int length, bytes;
-	char *buffer = (char*)data;
+	const char *buffer = (const char *)data;
 
 	length = 0;
 	if (size + file->length > pagesize) {
@@ -633,7 +630,7 @@ LispFwrite(LispFile *file, void *data, int size)
 }
 
 int
-LispSwrite(LispString *string, void *data, int size)
+LispSwrite(LispString *string, const void *data, int size)
 {
     int bytes;
 
@@ -676,7 +673,7 @@ LispSwrite(LispString *string, void *data, int size)
     return (size);
 }
 
-char *
+const char *
 LispGetSstring(LispString *string, int *length)
 {
     if (string->string == NULL || string->length <= 0) {
@@ -707,13 +704,13 @@ LispGetSstring(LispString *string, int *length)
 }
 
 int
-LispRename(char *from, char *to)
+LispRename(const char *from, const char *to)
 {
     return (rename(from, to));
 }
 
 int
-LispUnlink(char *name)
+LispUnlink(const char *name)
 {
     return (unlink(name));
 }

@@ -88,18 +88,18 @@ void LispPopInput(LispObj*);
 
 	/* functions that read/write using the LispFile structure */
 LispFile *LispFdopen(int, int);
-LispFile *LispFopen(char*, int);
+LispFile *LispFopen(const char*, int);
 void LispFclose(LispFile*);
 int LispFflush(LispFile*);
 int LispFungetc(LispFile*, int);
 int LispFgetc(LispFile*);
 int LispFputc(LispFile*, int);
 char *LispFgets(LispFile*, char*, int);
-int LispFputs(LispFile*, char*);
+int LispFputs(LispFile*, const char*);
 int LispFread(LispFile*, void*, int);
-int LispFwrite(LispFile*, void*, int);
-int LispRename(char*, char*);
-int LispUnlink(char*);
+int LispFwrite(LispFile*, const void*, int);
+int LispRename(const char*, const char*);
+int LispUnlink(const char*);
 
 	/* io wrappers */
 io_write_fn LispSetFileWrite(LispFile*, io_write_fn);
@@ -107,9 +107,9 @@ io_write_fn LispSetFileWrite(LispFile*, io_write_fn);
 	/* functions that read/write using the LispString structure */
 int LispSgetc(LispString*);
 int LispSputc(LispString*, int);
-int LispSputs(LispString*, char*);
-int LispSwrite(LispString*, void*, int);
+int LispSputs(LispString*, const char*);
+int LispSwrite(LispString*, const void*, int);
 
-char *LispGetSstring(LispString*, int*);
+const char *LispGetSstring(LispString*, int*);
 
 #endif /* Lisp_io_h */

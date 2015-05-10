@@ -61,7 +61,7 @@ LispPackageInit(void)
 }
 
 LispObj *
-LispFindPackageFromString(char *string)
+LispFindPackageFromString(const char *string)
 {
     LispObj *list, *package, *nick;
 
@@ -97,9 +97,9 @@ LispFindPackage(LispObj *name)
 }
 
 int
-LispCheckAtomString(char *string)
+LispCheckAtomString(const char *string)
 {
-    char *ptr;
+    const char *ptr;
 
     if (*string == '\0')
 	return (0);

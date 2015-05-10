@@ -184,7 +184,7 @@ GetString(Widget w)
  */
 
 FileAccess
-MaybeCreateFile(char *file)
+MaybeCreateFile(const char *file)
 {
     Boolean exists;
     int fd;
@@ -200,7 +200,7 @@ MaybeCreateFile(char *file)
 
 
 FileAccess
-CheckFilePermissions(char *file, Boolean *exists)
+CheckFilePermissions(const char *file, Boolean *exists)
 {
     char temp[BUFSIZ], *ptr;
 
@@ -230,7 +230,7 @@ CheckFilePermissions(char *file, Boolean *exists)
 }
 
 xedit_flist_item *
-AddTextSource(Widget source, char *name, char *filename, int flags,
+AddTextSource(Widget source, const char *name, const char *filename, int flags,
 	      FileAccess file_access)
 {
     xedit_flist_item *item;
@@ -367,7 +367,7 @@ KillTextSource(xedit_flist_item *item)
 }
 
 xedit_flist_item *
-FindTextSource(Widget source, char *filename)
+FindTextSource(Widget source, const char *filename)
 {
     unsigned i;
 

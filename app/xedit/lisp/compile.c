@@ -144,7 +144,7 @@ Com_C_r(LispCom *com, LispBuiltin *builtin)
  */
 {
     LispObj *list;
-    char *desc;
+    const char *desc;
 
     list = ARGUMENT(0);
 

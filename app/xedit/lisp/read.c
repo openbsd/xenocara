@@ -106,7 +106,7 @@ static int LispGetLine(LispObj*);
 #else
 #define PRINTF_FORMAT	/**/
 #endif
-static void LispReadError(LispObj*, int, char*, ...);
+static void LispReadError(LispObj*, int, const char*, ...);
 #undef PRINTF_FORMAT
 static void LispReadFixCircle(LispObj*, read_info*);
 static LispObj *LispReadLabelCircle(LispObj*, read_info*);
@@ -140,42 +140,42 @@ static LispObj *LispEvalFeature(LispObj*);
 /*
  * Initialization
  */
-static char *Char_Nul[] = {"Null", "Nul", NULL};
-static char *Char_Soh[] = {"Soh", NULL};
-static char *Char_Stx[] = {"Stx", NULL};
-static char *Char_Etx[] = {"Etx", NULL};
-static char *Char_Eot[] = {"Eot", NULL};
-static char *Char_Enq[] = {"Enq", NULL};
-static char *Char_Ack[] = {"Ack", NULL};
-static char *Char_Bel[] = {"Bell", "Bel", NULL};
-static char *Char_Bs[]  = {"Backspace", "Bs", NULL};
-static char *Char_Tab[] = {"Tab", NULL};
-static char *Char_Nl[]  = {"Newline", "Nl", "Lf", "Linefeed", NULL};
-static char *Char_Vt[]  = {"Vt", NULL};
-static char *Char_Np[]  = {"Page", "Np", NULL};
-static char *Char_Cr[]  = {"Return", "Cr", NULL};
-static char *Char_Ff[]  = {"So", "Ff", NULL};
-static char *Char_Si[]  = {"Si", NULL};
-static char *Char_Dle[] = {"Dle", NULL};
-static char *Char_Dc1[] = {"Dc1", NULL};
-static char *Char_Dc2[] = {"Dc2", NULL};
-static char *Char_Dc3[] = {"Dc3", NULL};
-static char *Char_Dc4[] = {"Dc4", NULL};
-static char *Char_Nak[] = {"Nak", NULL};
-static char *Char_Syn[] = {"Syn", NULL};
-static char *Char_Etb[] = {"Etb", NULL};
-static char *Char_Can[] = {"Can", NULL};
-static char *Char_Em[]  = {"Em", NULL};
-static char *Char_Sub[] = {"Sub", NULL};
-static char *Char_Esc[] = {"Escape", "Esc", NULL};
-static char *Char_Fs[]  = {"Fs", NULL};
-static char *Char_Gs[]  = {"Gs", NULL};
-static char *Char_Rs[]  = {"Rs", NULL};
-static char *Char_Us[]  = {"Us", NULL};
-static char *Char_Sp[]  = {"Space", "Sp", NULL};
-static char *Char_Del[] = {"Rubout", "Del", "Delete", NULL};
+static const char * const Char_Nul[] = {"Null", "Nul", NULL};
+static const char * const Char_Soh[] = {"Soh", NULL};
+static const char * const Char_Stx[] = {"Stx", NULL};
+static const char * const Char_Etx[] = {"Etx", NULL};
+static const char * const Char_Eot[] = {"Eot", NULL};
+static const char * const Char_Enq[] = {"Enq", NULL};
+static const char * const Char_Ack[] = {"Ack", NULL};
+static const char * const Char_Bel[] = {"Bell", "Bel", NULL};
+static const char * const Char_Bs[]  = {"Backspace", "Bs", NULL};
+static const char * const Char_Tab[] = {"Tab", NULL};
+static const char * const Char_Nl[]  = {"Newline", "Nl", "Lf", "Linefeed", NULL};
+static const char * const Char_Vt[]  = {"Vt", NULL};
+static const char * const Char_Np[]  = {"Page", "Np", NULL};
+static const char * const Char_Cr[]  = {"Return", "Cr", NULL};
+static const char * const Char_Ff[]  = {"So", "Ff", NULL};
+static const char * const Char_Si[]  = {"Si", NULL};
+static const char * const Char_Dle[] = {"Dle", NULL};
+static const char * const Char_Dc1[] = {"Dc1", NULL};
+static const char * const Char_Dc2[] = {"Dc2", NULL};
+static const char * const Char_Dc3[] = {"Dc3", NULL};
+static const char * const Char_Dc4[] = {"Dc4", NULL};
+static const char * const Char_Nak[] = {"Nak", NULL};
+static const char * const Char_Syn[] = {"Syn", NULL};
+static const char * const Char_Etb[] = {"Etb", NULL};
+static const char * const Char_Can[] = {"Can", NULL};
+static const char * const Char_Em[]  = {"Em", NULL};
+static const char * const Char_Sub[] = {"Sub", NULL};
+static const char * const Char_Esc[] = {"Escape", "Esc", NULL};
+static const char * const Char_Fs[]  = {"Fs", NULL};
+static const char * const Char_Gs[]  = {"Gs", NULL};
+static const char * const Char_Rs[]  = {"Rs", NULL};
+static const char * const Char_Us[]  = {"Us", NULL};
+static const char * const Char_Sp[]  = {"Space", "Sp", NULL};
+static const char * const Char_Del[] = {"Rubout", "Del", "Delete", NULL};
 
-LispCharInfo LispChars[256] = {
+const LispCharInfo LispChars[256] = {
     {Char_Nul},
     {Char_Soh},
     {Char_Stx},
@@ -597,9 +597,10 @@ LispGetLine(LispObj *stream)
 }
 
 static void
-LispReadError(LispObj *stream, int line, char *fmt, ...)
+LispReadError(LispObj *stream, int line, const char *fmt, ...)
 {
-    char string[128], *buffer_string;
+    char string[128];
+    const char *buffer_string;
     LispObj *buffer = LSTRINGSTREAM("", STREAM_READ | STREAM_WRITE, 0);
     int length;
     va_list ap;
@@ -1721,7 +1722,7 @@ LispReadCharacter(read_info *info)
 	    stk[len++] = ch;
     }
     if (len > 1) {
-	char **names;
+	const char * const *names;
 	int found = 0;
 	stk[len] = '\0';
 

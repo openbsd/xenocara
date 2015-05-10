@@ -484,7 +484,8 @@ Lisp_ParseNamestring(LispBuiltin *builtin)
     if (STRINGP(object)) {
 	LispObj *cons, *cdr;
 	char *name = THESTR(object), *ptr, *str, data[PATH_MAX + 1],
-	      string[PATH_MAX + 1], *namestr, *typestr, *send;
+	      string[PATH_MAX + 1], *send;
+	const char *namestr, *typestr;
 	long start, end, length, alength, namelen, typelen;
 
 	LispCheckSequenceStartEnd(builtin, object, ostart, oend,

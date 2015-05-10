@@ -64,9 +64,9 @@ static void LispDebuggerCommand(LispObj *obj);
  * Initialization
  */
 static struct {
-    char *name;
+    const char *name;
     int action;
-} commands[] = {
+} const commands[] = {
     {"help",		DebuggerHelp},
     {"abort",		DebuggerAbort},
     {"backtrace",	DebuggerBacktrace},
@@ -91,15 +91,15 @@ static struct {
 };
 
 static struct {
-    char *name;
+    const char *name;
     int subaction;
-} info_commands[] = {
+} const info_commands[] = {
     {"breakpoints",	DebuggerInfoBreakpoints},
     {"stack",		DebuggerInfoBacktrace},
     {"watchpoints",	DebuggerInfoBreakpoints},
 };
 
-static char debugger_help[] =
+static const char *debugger_help =
 "Available commands are:\n\
 \n\
 help		- This message.\n\
@@ -120,7 +120,7 @@ up		- Set environment to frame that called the current one.\n\
 \n\
 Commands may be abbreviated.\n";
 
-static char debugger_info_help[] =
+static const char *debugger_info_help =
 "Available subcommands are:\n\
 \n\
 breakpoints	- List and prints status of breakpoints, and watchpoints.\n\
@@ -407,7 +407,7 @@ LispDebuggerCommand(LispObj *args)
 	else {
 	    for (i = matches = 0; i < sizeof(commands) / sizeof(commands[0]);
 		 i++) {
-		char *str = commands[i].name;
+		const char *str = commands[i].name;
 
 		ptr = cmd;
 		while (*ptr && *ptr == *str) {
@@ -450,7 +450,7 @@ LispDebuggerCommand(LispObj *args)
 		for (i = matches = 0;
 		     i < sizeof(info_commands) / sizeof(info_commands[0]);
 		     i++) {
-		    char *str = info_commands[i].name;
+		    const char *str = info_commands[i].name;
 
 		    ptr = arg;
 		    while (*ptr && *ptr == *str) {

@@ -22,10 +22,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xedit], [1.2.1],
+AC_INIT([xedit], [1.2.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xedit])
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-bzip2 subdir-objects])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -35,7 +34,7 @@ XORG_DEFAULT_OPTIONS
 
 AC_CONFIG_HEADERS([config.h])
 
-AM_PROG_CC_C_O
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_PROG_RANLIB
 PKG_PROG_PKG_CONFIG
 
@@ -47,6 +46,9 @@ AC_ARG_WITH(lispdir, AS_HELP_STRING([--with-lispdir=PATH],
 	    [ lispdir=${libdir}/X11/xedit/lisp ])
 LISPDIR=$lispdir
 AC_SUBST(LISPDIR)
+
+AC_CHECK_DECLS([_SC_PAGESIZE])
+AC_CHECK_FUNCS([getpagesize])
 
 AC_CHECK_FUNC(realpath, [], [have_realpath=yes])
 AM_CONDITIONAL(NEED_REALPATH, test x$have_realpath = xyes)

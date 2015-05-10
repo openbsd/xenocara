@@ -36,9 +36,9 @@
 
 void LispPackageInit(void);
 LispObj *LispFindPackage(LispObj*);
-LispObj *LispFindPackageFromString(char*);
+LispObj *LispFindPackageFromString(const char*);
 /* returns 1 if string can safely be read back */
-int LispCheckAtomString(char*);
+int LispCheckAtomString(const char*);
 
 LispObj *Lisp_DoAllSymbols(LispBuiltin*);
 LispObj *Lisp_DoExternalSymbols(LispBuiltin*);

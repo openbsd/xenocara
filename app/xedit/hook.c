@@ -1142,59 +1142,60 @@ print:
 
 fail:
     if (etype != T_NONE) {
+	const char *errptr;
 	switch (etype) {
 	    case T_OPTION:
-		ptr = "Option needs a command";
+		errptr = "Option needs a command";
 		break;
 	    case T_ICASE:
-		ptr = "Icase needs an command defined or none for search";
+		errptr = "Icase needs an command defined or none for search";
 		break;
 	    case T_COMMAND:
-		ptr = "Command incorrectly specified";
+		errptr = "Command incorrectly specified";
 		break;
 	    case T_REPLACE:
-		ptr = "Can only search backwards";
+		errptr = "Can only search backwards";
 		break;
 	    case T_SEARCH:
-		ptr = "Badly placed search/replace specifier";
+		errptr = "Badly placed search/replace specifier";
 		break;
 	    case T_BACKSLASH:
-		ptr = "A single backslash cannot be the last command character";
+		errptr = "A single backslash cannot be the last command character";
 		break;
 	    case T_DIRECTION:
-		ptr = "Regular expression must be separeted by / or ? not both";
+		errptr = "Regular expression must be separeted by / or ? not both";
 		break;
 	    case T_COMMA:
-		ptr = "Badly placed comma";
+		errptr = "Badly placed comma";
 		break;
 	    case T_OFFSET:
-		ptr = "Badly placed line offset specifier";
+		errptr = "Badly placed line offset specifier";
 		break;
 	    case T_INCREMENT:
-		ptr = "Badly placed line offset increment specifier";
+		errptr = "Badly placed line offset increment specifier";
 		break;
 	    case T_NUMBER:
-		ptr = "Numeric argument not expected";
+		errptr = "Numeric argument not expected";
 		break;
 	    case T_UNFINISHED:
-		ptr = "Unfinished command";
+		errptr = "Unfinished command";
 		break;
 	    case T_RANGE:
-		ptr = "Bad line range";
+		errptr = "Bad line range";
 		break;
 	    case T_BACKREF:
 		/* This may be an internal re error, but most likely the
 		 * user asked for something like "s/re0(re1)re2/\2/" */
-		ptr = "Bad backreference";
+		errptr = "Bad backreference";
 		break;
 	    case T_EDIT:
-		ptr = "Failed to replace text";
+		errptr = "Failed to replace text";
 		break;
 	    default:
-		ptr = "Unknown error";
+		errptr = "Unknown error";
 		break;
 	}
-	XeditPrintf("Error: %s.\n", ptr);
+	XeditPrintf("Error: %s.\n", errptr);
     }
     if (redisplay)
 	XawTextEnableRedisplay(w);

@@ -78,13 +78,13 @@ typedef struct _LispMac LispMac;
 	/* make a gc never released variable with a static string argument */
 #define STATIC_ATOM(string)	LispNewStaticAtom(string)
 
-#define STRING(str)		LispNewString(str, strlen(str), 0)
-#define LSTRING(str, size)	LispNewString(str, size, 0)
+#define STRING(str)		LispNewString(str, strlen(str))
+#define LSTRING(str, size)	LispNewString(str, size)
 
 	/* string must be from the LispXXX allocation functions,
 	 * and LispMused not yet called on it */
-#define STRING2(str)		LispNewString(str, strlen(str), 1)
-#define LSTRING2(str, size)	LispNewString(str, size, 1)
+#define STRING2(str)		LispNewStringAlloced(str, strlen(str))
+#define LSTRING2(str, size)	LispNewStringAlloced(str, size)
 
 #define VECTOR(objects)		LispNewVector(objects)
 
@@ -92,13 +92,13 @@ typedef struct _LispMac LispMac;
 	 * string be allocated from the LispXXX allocation functions,
 	 * and LispMused not yet called on it */
 #define STRINGSTREAM(str, flag)			\
-	LispNewStringStream(str, flag, strlen(str), 0)
+	LispNewStringStream(str, flag, strlen(str))
 #define STRINGSTREAM2(str, flag)		\
-	LispNewStringStream(str, flag, strlen(str), 1)
+	LispNewStringStreamAlloced(str, flag, strlen(str))
 #define LSTRINGSTREAM(str, flag, length)	\
-	LispNewStringStream(str, flag, length, 0)
+	LispNewStringStream(str, flag, length)
 #define LSTRINGSTREAM2(str, flag, length)	\
-	LispNewStringStream(str, flag, length, 1)
+	LispNewStringStreamAlloced(str, flag, length)
 
 #define FILESTREAM(file, path, flag)	\
 	LispNewFileStream(file, path, flag)
@@ -664,7 +664,7 @@ struct _LispBuiltin {
     /* these fields must be set */
     LispFunType type;
     LispFunPtr function;
-    char *declaration;
+    const char *declaration;
 
     /* this field is optional, set if the function returns multiple values */
     int multiple_values;
@@ -700,12 +700,13 @@ LispObj *LispApply3(LispObj*, LispObj*, LispObj*, LispObj*);
 
 LispObj *LispNew(LispObj*, LispObj*);
 LispObj *LispNewSymbol(LispAtom*);
-LispObj *LispNewAtom(char*, int);
+LispObj *LispNewAtom(const char*, int);
 LispObj *LispNewFunction(LispObj*);
 LispObj *LispNewFunctionQuote(LispObj*);
-LispObj *LispNewStaticAtom(char*);
+LispObj *LispNewStaticAtom(const char*);
 LispObj *LispNewDFloat(double);
-LispObj *LispNewString(char*, long, int);
+LispObj *LispNewString(const char*, long);
+LispObj *LispNewStringAlloced(char*, long);
 LispObj *LispNewInteger(long);
 LispObj *LispNewRatio(long, long);
 LispObj *LispNewVector(LispObj*);
@@ -717,24 +718,25 @@ LispObj *LispNewLambda(LispObj*, LispObj*, LispObj*, LispFunType);
 LispObj *LispNewStruct(LispObj*, LispObj*);
 LispObj *LispNewComplex(LispObj*, LispObj*);
 LispObj *LispNewOpaque(void*, int);
-LispObj *LispNewKeyword(char*);
+LispObj *LispNewKeyword(const char*);
 LispObj *LispNewPathname(LispObj*);
-LispObj *LispNewStringStream(char*, int, long, int);
+LispObj *LispNewStringStream(const char*, int, long);
+LispObj *LispNewStringStreamAlloced(char*, int, long);
 LispObj *LispNewFileStream(LispFile*, LispObj*, int);
 LispObj *LispNewPipeStream(LispPipe*, LispObj*, int);
 LispObj *LispNewBignum(mpi*);
 LispObj *LispNewBigratio(mpr*);
 
-LispAtom *LispGetAtom(char*);
+LispAtom *LispGetAtom(const char*);
 
 /* This function does not allocate a copy of it's argument, but the argument
  * itself. The argument string should never change. */
-LispAtom *LispGetPermAtom(char*);
+LispAtom *LispGetPermAtom(const char*);
 
 void *LispMalloc(size_t);
 void *LispCalloc(size_t, size_t);
 void *LispRealloc(void*, size_t);
-char *LispStrdup(char*);
+char *LispStrdup(const char*);
 void LispFree(void*);
 /* LispMused means memory is now safe from LispDestroy, and should not be
  * freed in case of an error */
@@ -749,18 +751,16 @@ char *LispStrObj(LispObj*);
 #else
 #define PRINTF_FORMAT	/**/
 #endif
-void LispDestroy(char *fmt, ...) PRINTF_FORMAT;
+void LispDestroy(const char *fmt, ...) PRINTF_FORMAT;
 	/* continuable error */
-void LispContinuable(char *fmt, ...) PRINTF_FORMAT;
-void LispMessage(char *fmt, ...) PRINTF_FORMAT;
-void LispWarning(char *fmt, ...) PRINTF_FORMAT;
+void LispContinuable(const char *fmt, ...) PRINTF_FORMAT;
+void LispMessage(const char *fmt, ...) PRINTF_FORMAT;
+void LispWarning(const char *fmt, ...) PRINTF_FORMAT;
 #undef PRINTF_FORMAT
 
-LispObj *LispSetVariable(LispObj*, LispObj*, char*, int);
+LispObj *LispSetVariable(LispObj*, LispObj*, const char*, int);
 
-int LispRegisterOpaqueType(char*);
-
-int LispPrintString(LispObj*, char*);
+int LispRegisterOpaqueType(const char*);
 
 void LispProtect(LispObj*, LispObj*);
 void LispUProtect(LispObj*, LispObj*);

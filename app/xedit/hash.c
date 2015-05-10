@@ -53,7 +53,6 @@
  * Prototypes
  */
 static int hash_equal(hash_table *hash, hash_key *left, hash_key *right);
-static unsigned int hash_data(char *value, unsigned int length);
 static unsigned int hash_value(hash_key *key);
 
 
@@ -75,9 +74,9 @@ hash_equal(hash_table *hash, hash_key *left, hash_key *right)
 }
 
 static unsigned int
-hash_data(char *value, unsigned int length)
+hash_data(const char *value, unsigned int length)
 {
-    char		*ptr;
+    const char		*ptr;
     unsigned int	i, key;
 
     for (i = key = 0, ptr = value; i < length; i++)
@@ -181,7 +180,7 @@ hash_get(hash_table *hash, hash_key *name)
 }
 
 hash_entry *
-hash_check(hash_table *hash, char *name, unsigned int length)
+hash_check(hash_table *hash, const char *name, unsigned int length)
 {
     unsigned int	key;
     hash_entry		*entry;

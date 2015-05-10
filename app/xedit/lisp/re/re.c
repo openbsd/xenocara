@@ -1665,7 +1665,7 @@ done:
 int
 reerror(int ecode, const re_cod *preg, char *ebuffer, int ebuffer_size)
 {
-    static char *errors[] = {
+    static const char *errors[] = {
 	"No error",
 	"Failed to match",			/* NOMATCH */
 
@@ -1687,7 +1687,7 @@ reerror(int ecode, const re_cod *preg, char *ebuffer, int ebuffer_size)
 	"Assertion error - you found a bug",	/* ASSERT */
 	"Invalid argument"			/* INVARG */
     };
-    char *str;
+    const char *str;
 
     if (ecode >= 0 && ecode < sizeof(errors) / sizeof(errors[0]))
 	str = errors[ecode];

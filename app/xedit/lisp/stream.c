@@ -613,7 +613,7 @@ Lisp_GetOutputStreamString(LispBuiltin *builtin)
  */
 {
     int length;
-    char *string;
+    const char *string;
     LispObj *string_output_stream, *result;
 
     string_output_stream = ARGUMENT(0);

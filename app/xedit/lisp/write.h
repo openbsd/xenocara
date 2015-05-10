@@ -53,7 +53,7 @@ int LispGetColumn(LispObj*);
 
 int LispWriteChar(LispObj*, int);
 int LispWriteChars(LispObj*, int, int);
-int LispWriteStr(LispObj*, char*, long);
+int LispWriteStr(LispObj*, const char*, long);
 
 	/* write any lisp object to stream */
 int LispWriteObject(LispObj*, LispObj*);

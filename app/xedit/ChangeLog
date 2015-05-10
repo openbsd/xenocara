@@ -1,3 +1,108 @@
+commit 436a71e7390c51134f4fac629bf8d4a98b0592c5
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Feb 21 13:43:04 2015 -0800
+
+    xedit 1.2.2
+
+commit b8a142f798be57cd7f0d41b502f6960a9ffbae19
+Author: Ted Tanberry <ted.tanberry@gmail.com>
+Date:   Sun Aug 10 22:25:08 2014 +0200
+
+    Include AM_PROG_AR to detect 'ar' instead of hard-coding it
+    
+    see Gentoo bug https://bugs.gentoo.org/show_bug.cgi?id=486470
+    
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 46a906557fcf321592d543d818bc8054aad0ee89
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 9 20:32:53 2014 -0700
+
+    Use automake subdir-objects option
+    
+    Stops automake from issuing a ton of warnings about how this will be the
+    default soon.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c63319d249cb796b735ec56904c088c56a5171f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 9 20:26:15 2014 -0700
+
+    Check for pagesize options via autoconf instead of per-platform #ifdefs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f0f4a2c5495eec2d81a4381fb962fad93b2ddde
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 9 20:05:27 2014 -0700
+
+    Copious const cleanup
+    
+    Removes 1554 gcc warnings of "discards ‘const’ qualifier"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 40615f52b8fe7478599ce4948ccc751aa0a34397
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 9 19:23:59 2014 -0700
+
+    Require OS to provide rename(2), as all POSIX.1-1990 & later OS'es do
+    
+    Sorry SVR1-SVR3.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 28fa5649850622482d068b56ff46a023bc14c264
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 79ade2eda265d40c1485c3578e3b8e65e37daeae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b79cac135ca7b788892ff199231be2bfce62a4a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 3 00:21:27 2014 -0700
+
+    Fix man page tbl markup
+    
+    '\" t is needed to work with Solaris man/nroff commands
+    Other changes fix issues found on all platforms
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 24b3001f0d857fa40225efc1db169b29e88b4b4d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 17 11:28:21 2013 -0500
+
+    Remove obsolete Imake SIGNALRETURNSINT
+    
+    Assume signal handlers return void, as C89 requires
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 505fc48999ca2c7040a47900697d95c6ab78d009
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Sat Jul 6 15:40:00 2013 +0200
+
+    Drop CRAY support
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit bde5fc6b3c493365139eb4451cd1829bf48f7ac2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 12 17:01:02 2013 -0800

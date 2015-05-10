@@ -98,11 +98,7 @@ static LispObj *XeditSearch(LispBuiltin*, XawTextScanDirection);
 /*
  * Initialization
  */
-#ifdef SIGNALRETURNSINT
-static int (*old_sigalrm)(int);
-#else
 static void (*old_sigalrm)(int);
-#endif
 
 EditModeInfo *mode_infos;
 Cardinal num_mode_infos;
@@ -177,12 +173,7 @@ ControlGPredicate(Display *display, XEvent *event, XPointer arguments)
 }
 
 /*ARGSUSED*/
-static
-#ifdef SIGNALRETURNSINT
-int
-#else
-void
-#endif
+static void
 SigalrmHandler(int signum)
 {
     XEvent event;
@@ -201,9 +192,6 @@ SigalrmHandler(int signum)
     }
     else
 	alarm(1);
-#ifdef SIGNALRETURNSINT
-    return (0);
-#endif
 }
 
 static ssize_t

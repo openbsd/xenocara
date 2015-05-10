@@ -29,6 +29,10 @@
 
 /* $XFree86: xc/programs/xedit/lisp/lisp.c,v 1.87tsi Exp $ */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #ifdef sun
@@ -43,27 +47,6 @@
 
 #ifndef X_NOT_POSIX
 #include <unistd.h>	/* for sysconf(), and getpagesize() */
-#endif
-
-#if defined(linux)
-#define HAS_GETPAGESIZE
-#define HAS_SC_PAGESIZE	/* _SC_PAGESIZE may be an enum for Linux */
-#endif
-
-#if defined(CSRG_BASED)
-#define HAS_GETPAGESIZE
-#endif
-
-#if defined(sun)
-#define HAS_GETPAGESIZE
-#endif
-
-#if defined(QNX4)
-#define HAS_GETPAGESIZE
-#endif
-
-#if defined(__QNXNTO__)
-#define HAS_SC_PAGESIZE
 #endif
 
 #include "lisp/bytecode.h"
@@ -158,13 +141,7 @@ static INLINE void LispProt(LispObj*);
 
 static LispObj *LispCheckNeedProtect(LispObj*);
 
-static
-#ifdef SIGNALRETURNSINT
-int
-#else
-void
-#endif
-LispSignalHandler(int);
+static void LispSignalHandler(int);
 
 /*
  * Initialization
@@ -642,7 +619,7 @@ LispGetPageSize(void)
 
     /* Try each supported method in the preferred order */
 
-#if defined(_SC_PAGESIZE) || defined(HAS_SC_PAGESIZE)
+#if defined(_SC_PAGESIZE) || defined(HAVE_DECL__SC_PAGESIZE)
     pagesize = sysconf(_SC_PAGESIZE);
 #endif
 
@@ -651,7 +628,7 @@ LispGetPageSize(void)
 	pagesize = sysconf(_SC_PAGE_SIZE);
 #endif
 
-#ifdef HAS_GETPAGESIZE
+#ifdef HAVE_GETPAGESIZE
     if (pagesize == -1)
 	pagesize = getpagesize();
 #endif
@@ -668,7 +645,7 @@ LispGetPageSize(void)
 }
 
 void
-LispDestroy(char *fmt, ...)
+LispDestroy(const char *fmt, ...)
 {
     static char Error[] = "*** ";
 
@@ -726,7 +703,7 @@ LispDestroy(char *fmt, ...)
     LispTopLevel();
 
     if (!lisp__data.running) {
-	static char Fatal[] = "*** Fatal: nowhere to longjmp.\n";
+	static const char *Fatal = "*** Fatal: nowhere to longjmp.\n";
 
 	LispFputs(Stderr, Fatal);
 	LispFflush(Stderr);
@@ -737,11 +714,11 @@ LispDestroy(char *fmt, ...)
 }
 
 void
-LispContinuable(char *fmt, ...)
+LispContinuable(const char *fmt, ...)
 {
     va_list ap;
     char string[128];
-    static char Error[] = "*** Error: ";
+    static const char *Error = "*** Error: ";
 
     if (Stderr->column)
 	LispFputc(Stderr, '\n');
@@ -763,7 +740,7 @@ LispContinuable(char *fmt, ...)
 }
 
 void
-LispMessage(char *fmt, ...)
+LispMessage(const char *fmt, ...)
 {
     va_list ap;
     char string[128];
@@ -779,11 +756,11 @@ LispMessage(char *fmt, ...)
 }
 
 void
-LispWarning(char *fmt, ...)
+LispWarning(const char *fmt, ...)
 {
     va_list ap;
     char string[128];
-    static char Warning[] = "*** Warning: ";
+    static const char *Warning = "*** Warning: ";
 
     if (Stderr->column)
 	LispFputc(Stderr, '\n');
@@ -1235,7 +1212,7 @@ index_found:
 }
 
 char *
-LispStrdup(char *str)
+LispStrdup(const char *str)
 {
     char *ptr = LispMalloc(strlen(str) + 1);
 
@@ -1270,7 +1247,7 @@ free_done:
 }
 
 LispObj *
-LispSetVariable(LispObj *var, LispObj *val, char *fname, int eval)
+LispSetVariable(LispObj *var, LispObj *val, const char *fname, int eval)
 {
     if (!SYMBOLP(var))
 	LispDestroy("%s: %s is not a symbol", fname, STROBJ(var));
@@ -1281,7 +1258,7 @@ LispSetVariable(LispObj *var, LispObj *val, char *fname, int eval)
 }
 
 int
-LispRegisterOpaqueType(char *desc)
+LispRegisterOpaqueType(const char *desc)
 {
     int length;
     LispOpaque *opaque;
@@ -1323,7 +1300,7 @@ LispIntToOpaqueType(int type)
 }
 
 hash_key *
-LispGetAtomKey(char *string, int perm)
+LispGetAtomKey(const char *string, int perm)
 {
     int length;
     hash_entry *entry;
@@ -1334,7 +1311,7 @@ LispGetAtomKey(char *string, int perm)
 	entry = LispCalloc(1, sizeof(hash_entry));
 	entry->key = LispCalloc(1, sizeof(hash_key));
 	if (perm)
-	    entry->key->value = string;
+	    entry->key->value = (char *) string;
 	else
 	    entry->key->value = LispStrdup(string);
 	entry->key->length = length;
@@ -1350,7 +1327,7 @@ LispGetAtomKey(char *string, int perm)
 }
 
 LispAtom *
-LispDoGetAtom(char *str, int perm)
+LispDoGetAtom(const char *str, int perm)
 {
     int length;
     LispAtom *atom;
@@ -1624,13 +1601,13 @@ LispRemAtomStructProperty(LispAtom *atom)
 }
 
 LispAtom *
-LispGetAtom(char *str)
+LispGetAtom(const char *str)
 {
     return (LispDoGetAtom(str, 0));
 }
 
 LispAtom *
-LispGetPermAtom(char *str)
+LispGetPermAtom(const char *str)
 {
     return (LispDoGetAtom(str, 1));
 }
@@ -1869,15 +1846,15 @@ LispListProtectedArguments(LispArgList *alist)
 }
 
 LispArgList *
-LispCheckArguments(LispFunType type, LispObj *list, char *name, int builtin)
+LispCheckArguments(LispFunType type, LispObj *list, const char *name, int builtin)
 {
-    static char *types[4] = {"LAMBDA-LIST", "FUNCTION", "MACRO", "SETF-METHOD"};
-    static char *fnames[4] = {"LAMBDA", "DEFUN", "DEFMACRO", "DEFSETF"};
+    static const char *types[4] = {"LAMBDA-LIST", "FUNCTION", "MACRO", "SETF-METHOD"};
+    static const char *fnames[4] = {"LAMBDA", "DEFUN", "DEFMACRO", "DEFSETF"};
 #define IKEY		0
 #define IOPTIONAL	1
 #define IREST		2
 #define IAUX		3
-    static char *keys[4] = {"&KEY", "&OPTIONAL", "&REST", "&AUX"};
+    static const char *keys[4] = {"&KEY", "&OPTIONAL", "&REST", "&AUX"};
     int rest, optional, key, aux, count;
     LispArgList *alist;
     LispObj *spec, *sform, *defval, *default_value;
@@ -2639,7 +2616,7 @@ LispNew(LispObj *car, LispObj *cdr)
 }
 
 LispObj *
-LispNewAtom(char *str, int intern)
+LispNewAtom(const char *str, int intern)
 {
     LispObj *object;
     LispAtom *atom = LispDoGetAtom(str, 0);
@@ -2667,7 +2644,7 @@ LispNewAtom(char *str, int intern)
 }
 
 LispObj *
-LispNewStaticAtom(char *str)
+LispNewStaticAtom(const char *str)
 {
     LispObj *object;
     LispAtom *atom = LispDoGetAtom(str, 1);
@@ -2784,9 +2761,17 @@ LispNewDFloat(double value)
 }
 
 LispObj *
-LispNewString(char *str, long length, int alloced)
+LispNewString(const char *str, long length)
 {
-    char *cstring;
+    char *cstring = LispMalloc(length + 1);
+    memcpy(cstring, str, length);
+    cstring[length] = '\0';
+    return LispNewStringAlloced(cstring, length);
+}
+
+LispObj *
+LispNewStringAlloced(char *cstring, long length)
+{
     LispObj *string = objseg.freeobj;
 
     if (string == NIL)
@@ -2794,13 +2779,6 @@ LispNewString(char *str, long length, int alloced)
     else {
 	objseg.freeobj = CDR(string);
 	--objseg.nfree;
-    }
-    if (alloced)
-	cstring = str;
-    else {
-	cstring = LispMalloc(length + 1);
-	memcpy(cstring, str, length);
-	cstring[length] = '\0';
     }
     LispMused(cstring);
     string->type = LispString_t;
@@ -2982,7 +2960,7 @@ LispNewOpaque(void *data, int type)
 
 /* string argument must be static, or allocated */
 LispObj *
-LispNewKeyword(char *string)
+LispNewKeyword(const char *string)
 {
     LispObj *keyword;
 
@@ -3033,18 +3011,22 @@ LispNewPathname(LispObj *obj)
 }
 
 LispObj *
-LispNewStringStream(char *string, int flags, long length, int alloced)
+LispNewStringStream(const char *string, int flags, long length)
+{
+    char *newstring = LispMalloc(length + 1);
+    memcpy(newstring, string, length);
+    newstring[length] = '\0';
+
+    return LispNewStringStreamAlloced(newstring, flags, length);
+}
+
+LispObj *
+LispNewStringStreamAlloced(char *string, int flags, long length)
 {
     LispObj *stream = LispNew(NIL, NIL);
 
     SSTREAMP(stream) = LispCalloc(1, sizeof(LispString));
-    if (alloced)
-	SSTREAMP(stream)->string = string;
-    else {
-	SSTREAMP(stream)->string = LispMalloc(length + 1);
-	memcpy(SSTREAMP(stream)->string, string, length);
-	SSTREAMP(stream)->string[length] = '\0';
-    }
+    SSTREAMP(stream)->string = string;
 
     stream->type = LispStream_t;
 
@@ -5009,23 +4991,16 @@ LispUpdateResults(LispObj *cod, LispObj *res)
     LispSetVar(RES[0], res);
 }
 
-#ifdef SIGNALRETURNSINT
-int
-#else
 void
-#endif
 LispSignalHandler(int signum)
 {
     LispSignal(signum);
-#ifdef SIGNALRETURNSINT
-    return (0);
-#endif
 }
 
 void
 LispSignal(int signum)
 {
-    char *errstr;
+    const char *errstr;
     char buffer[32];
 
     if (lisp__disable_int) {
@@ -5400,15 +5375,15 @@ LispBegin(void)
 #ifdef LISPDIR
     {
 	int length;
-	char *pathname = LISPDIR;
+	const char *pathname = LISPDIR;
 
 	length = strlen(pathname);
 	if (length && pathname[length - 1] != '/') {
-	    pathname = LispMalloc(length + 2);
+	    char *fixed_pathname = LispMalloc(length + 2);
 
-	    strcpy(pathname, LISPDIR);
-	    strcpy(pathname + length, "/");
-	    path = LSTRING2(pathname, length + 1);
+	    strcpy(fixed_pathname, LISPDIR);
+	    strcpy(fixed_pathname + length, "/");
+	    path = LSTRING2(fixed_pathname, length + 1);
 	}
 	else
 	    path = LSTRING(pathname, length);
@@ -5460,7 +5435,7 @@ LispEnd(void)
 }
 
 void
-LispSetPrompt(char *prompt)
+LispSetPrompt(const char *prompt)
 {
     lisp__data.prompt = prompt;
 }

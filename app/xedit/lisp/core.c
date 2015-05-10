@@ -1853,7 +1853,8 @@ Lisp_Gensym(LispBuiltin *builtin)
  gensym &optional arg
  */
 {
-    char *preffix = "G", name[132];
+    const char *preffix = "G";
+    char name[132];
     long counter = LONGINT_VALUE(Ogensym_counter->data.atom->property->value);
     LispObj *symbol;
 

@@ -118,12 +118,12 @@ typedef struct {
 /*
  * Prototypes
  */
-static void merge_arguments(FmtArgs*, FmtDefs*, int*);
+static void merge_arguments(FmtArgs*, const FmtDefs*, int*);
 static char *parse_arguments(char*, FmtArgs*, int*, LispObj**, int*);
 static void merge_error(FmtArgs*, int);
 static void parse_error(FmtArgs*, int);
 static void generic_error(FmtArgs*, int);
-static void format_error(FmtArgs*, char*);
+static void format_error(FmtArgs*, const char*);
 
 static int format_object(LispObj*, LispObj*);
 
@@ -155,7 +155,7 @@ static void LispFormat(LispObj*, FmtInfo*);
 /*
  * Initialization
  */
-static FmtDefs AsciiDefs = {
+static const FmtDefs AsciiDefs = {
     4,
     {
 	{0, 0},			/* mincol */
@@ -165,7 +165,7 @@ static FmtDefs AsciiDefs = {
     },
 };
 
-static FmtDefs IntegerDefs = {
+static const FmtDefs IntegerDefs = {
     4,
     {
 	{0, 0},			/* mincol */
@@ -175,7 +175,7 @@ static FmtDefs IntegerDefs = {
     },
 };
 
-static FmtDefs RadixDefs = {
+static const FmtDefs RadixDefs = {
     5,
     {
 	{0, 10},		/* radix */
@@ -186,11 +186,11 @@ static FmtDefs RadixDefs = {
     },
 };
 
-static FmtDefs NoneDefs = {
+static const FmtDefs NoneDefs = {
     0,
 };
 
-static FmtDefs FixedFloatDefs = {
+static const FmtDefs FixedFloatDefs = {
     5,
     {
 	{0, 0},			/* w */
@@ -201,7 +201,7 @@ static FmtDefs FixedFloatDefs = {
     },
 };
 
-static FmtDefs ExponentialFloatDefs = {
+static const FmtDefs ExponentialFloatDefs = {
     7,
     {
 	{0, 0},			/* w */
@@ -216,7 +216,7 @@ static FmtDefs ExponentialFloatDefs = {
     },
 };
 
-static FmtDefs DollarFloatDefs = {
+static const FmtDefs DollarFloatDefs = {
     4,
     {
 	{0, 2},			/* d */
@@ -226,14 +226,14 @@ static FmtDefs DollarFloatDefs = {
     },
 };
 
-static FmtDefs OneDefs = {
+static const FmtDefs OneDefs = {
     1,
     {
 	{0, 1},
     },
 };
 
-static FmtDefs TabulateDefs = {
+static const FmtDefs TabulateDefs = {
     2,
     {
 	{0, 0},			/* colnum */
@@ -247,10 +247,10 @@ extern LispObj *Oprint_escape;
  * Implementation
  */
 static void
-merge_arguments(FmtArgs *arguments, FmtDefs *defaults, int *code)
+merge_arguments(FmtArgs *arguments, const FmtDefs *defaults, int *code)
 {
     int count;
-    FmtDef *defaul;
+    const FmtDef *defaul;
     FmtArg *argument;
 
     defaul = &(defaults->defaults[0]);
@@ -428,7 +428,7 @@ parse_arguments(char *format, FmtArgs *arguments,
 static void
 parse_error(FmtArgs *args, int code)
 {
-    static char *errors[] = {
+    static const char * const errors[] = {
 	NULL,
 	"too many parameters to directive",
 	"too many @ parameters",
@@ -445,7 +445,7 @@ parse_error(FmtArgs *args, int code)
 static void
 merge_error(FmtArgs *args, int code)
 {
-    static char *errors[] = {
+    static const char * const errors[] = {
 	NULL,
 	"too many parameters to directive",
 	"argument must be a character",
@@ -458,7 +458,7 @@ merge_error(FmtArgs *args, int code)
 static void
 generic_error(FmtArgs *args, int code)
 {
-    static char *errors[] = {
+    static const char * const errors[] = {
 	NULL,
 	"radix must be in the range 2 to 36, inclusive",
 	"parameter must be positive",
@@ -470,7 +470,7 @@ generic_error(FmtArgs *args, int code)
 }
 
 static void
-format_error(FmtArgs *args, char *str)
+format_error(FmtArgs *args, const char *str)
 {
     char *message;
     int errorlen, formatlen;
@@ -565,7 +565,7 @@ format_ascii(LispObj *stream, LispObj *object, FmtArgs *args)
 	    length = format_object(stream, object);
 	else {
 	    int size;
-	    char *str = LispGetSstring(SSTREAMP(string), &size);
+	    const char *str = LispGetSstring(SSTREAMP(string), &size);
 
 	    LispWriteStr(stream, str, size);
 	}
@@ -1499,7 +1499,8 @@ format_justify(LispObj *stream, FmtInfo *info)
 {
     GC_ENTER();
     FmtInfo justify_info;
-    char **formats, *format, *next_format, *str;
+    char **formats, *format, *next_format;
+    const char *str;
     LispObj *string, *strings = NIL, *cons;
     int atsign = info->args.atsign,
 	collon = info->args.collon,
@@ -1723,7 +1724,7 @@ static void
 LispFormat(LispObj *stream, FmtInfo *info)
 {
     FmtArgs *args;
-    FmtDefs *defs = NULL;
+    const FmtDefs *defs = NULL;
     LispObj *object, *arguments;
     char stk[256], *format, *next_format;
     int length, num_arguments, code, need_update, need_argument, hash, head;
@@ -2109,7 +2110,7 @@ Lisp_Format(LispBuiltin *builtin)
     /* else if printing to string-stream, return a string */
     else if (stream->data.stream.type == LispStreamString) {
 	int length;
-	char *string;
+	const char *string;
 
 	string = LispGetSstring(SSTREAMP(stream), &length);
 	stream = LSTRING(string, length);

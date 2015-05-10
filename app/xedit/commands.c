@@ -29,9 +29,6 @@
 #include <X11/Xfuncs.h>
 #include <X11/Xos.h>
 #include "xedit.h"
-#ifdef CRAY
-#include <unistd.h>
-#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
@@ -161,20 +158,6 @@ makeBackupName(String buf, String filename, unsigned len)
 
     return (strcmp(filename, buf) ? buf : NULL);
 }
-  
-#if defined(USG) && !defined(CRAY)
-int rename (from, to)
-    char *from, *to;
-{
-    (void) unlink (to);
-    if (link (from, to) == 0) {
-        unlink (from);
-        return 0;
-    } else {
-        return -1;
-    }
-}
-#endif
 
 /*ARGSUSED*/
 void
@@ -204,7 +187,7 @@ DoSave(Widget w, XtPointer client_data, XtPointer call_data)
     Widget source = XawTextGetSource(textwindow);
     char buffer[BUFSIZ];
     struct stat st;
-    static char *nothing_saved = " -- nothing saved.\n";
+    static const char *nothing_saved = " -- nothing saved.\n";
 
     if (!filename) {
 	XmuSnprintf(buffer, sizeof(buffer), "%s%s",

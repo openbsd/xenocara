@@ -64,7 +64,7 @@ struct _hash_table {
 hash_table *hash_new(unsigned int length, hash_compare compare);
 hash_entry *hash_put(hash_table *hash, hash_entry *entry);
 hash_entry *hash_get(hash_table *hash, hash_key *name);
-hash_entry * hash_check(hash_table *hash, char *name, unsigned int length);
+hash_entry * hash_check(hash_table *hash, const char *name, unsigned int length);
 void hash_rem(hash_table *hash, hash_entry *entry);
 /* Removes from hash table but doesn't release any memory */
 hash_entry *hash_rem_no_free(hash_table *hash, hash_entry *entry);

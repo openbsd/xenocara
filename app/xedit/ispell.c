@@ -181,13 +181,8 @@ static void ReplaceIspell(Widget, XtPointer, XtPointer);
 static void RevertIspell(Widget, XtPointer, XtPointer);
 static void SelectIspell(Widget, XtPointer, XtPointer);
 static void ToggleTerseIspell(Widget, XtPointer, XtPointer);
-#ifndef SIGNALRETURNSINT
 static void timeout_signal(int);
 static void (*old_timeout)(int);
-#else
-static int timeout_signal(int);
-static int (*old_timeout)(int);
-#endif
 static void UndoIspell(Widget, XtPointer, XtPointer);
 
 Bool _XawTextSrcUndo(TextSrcObject, XawTextPosition*);
@@ -312,7 +307,6 @@ IsUpper(int ch)
 #endif
 
 /*ARGSUSED*/
-#ifndef SIGNALRETURNSINT
 static void
 timeout_signal(int unused)
 {
@@ -322,19 +316,6 @@ timeout_signal(int unused)
     kill(ispell.pid, SIGTERM);
     errno = olderrno;
 }
-#else
-static int
-timeout_signal(int unused)
-{
-    int olderrno = errno;
-
-    WRITES("Warning: Timeout waiting ispell process to die.\n");
-    kill(ispell.pid, SIGTERM);
-    
-    errno = olderrno;
-    return (0);
-}
-#endif
 
 static void
 IspellSetSelection(XawTextPosition left, XawTextPosition right)

@@ -436,7 +436,7 @@ static INLINE int cmp_br_br(mpr*, mpr*);
  */
 static n_real zero, one, two;
 
-static char *fatal_error_strings[] = {
+static const char *fatal_error_strings[] = {
 #define DIVIDE_BY_ZERO			0
     "divide by zero",
 #define FLOATING_POINT_OVERFLOW		1
@@ -445,7 +445,7 @@ static char *fatal_error_strings[] = {
     "floating point exception"
 };
 
-static char *fatal_object_error_strings[] = {
+static const char *fatal_object_error_strings[] = {
 #define NOT_A_NUMBER			0
     "is not a number",
 #define NOT_A_REAL_NUMBER		1

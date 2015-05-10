@@ -90,7 +90,7 @@ static int LispWriteCharacter(LispObj*, LispObj*, write_info*);
 static int LispWriteString(LispObj*, LispObj*, write_info*);
 static int LispWriteFloat(LispObj*, LispObj*);
 static int LispWriteAtom(LispObj*, LispObj*, write_info*);
-static int LispDoWriteAtom(LispObj*, char*, int, int);
+static int LispDoWriteAtom(LispObj*, const char*, int, int);
 static int LispWriteList(LispObj*, LispObj*, write_info*, int);
 static int LispWriteArray(LispObj*, LispObj*, write_info*);
 static int LispWriteStruct(LispObj*, LispObj*, write_info*);
@@ -861,7 +861,8 @@ LispDoWriteObject(LispObj *stream, LispObj *object, write_info *info, int paren)
 {
     long print_level;
     int length = 0;
-    char stk[64], *string = NULL;
+    char stk[64];
+    const char *string = NULL;
 
 write_again:
     switch (OBJECT_TYPE(object)) {
@@ -1195,7 +1196,7 @@ LispWriteChars(LispObj *stream, int character, int count)
 
 /* write a string to stream */
 int
-LispWriteStr(LispObj *stream, char *buffer, long length)
+LispWriteStr(LispObj *stream, const char *buffer, long length)
 {
     LispFile *file;
     LispString *string;
@@ -1207,7 +1208,7 @@ LispWriteStr(LispObj *stream, char *buffer, long length)
 }
 
 static int
-LispDoWriteAtom(LispObj *stream, char *string, int length, int print_case)
+LispDoWriteAtom(LispObj *stream, const char *string, int length, int print_case)
 {
     int bytes = 0, cap = 0;
     char buffer[128], *ptr;
@@ -1653,30 +1654,30 @@ LispFormatRomanInteger(LispObj *stream, long value, int new_roman)
 int
 LispFormatEnglishInteger(LispObj *stream, long number, int ordinal)
 {
-    static char *ds[] = {
+    static const char *ds[] = {
 	"",	      "one",	   "two",	 "three",      "four",
 	"five",       "six",	   "seven",	 "eight",      "nine",
 	"ten",	      "eleven",    "twelve",	 "thirteen",   "fourteen",
 	"fifteen",    "sixteen",   "seventeen",  "eighteen",   "nineteen"
     };
-    static char *dsth[] = {
+    static const char *dsth[] = {
 	"",	      "first",	   "second",	  "third",	"fourth",
 	"fifth",      "sixth",	   "seventh",	  "eighth",	"ninth",
 	"tenth",      "eleventh",  "twelfth",	  "thirteenth", "fourteenth",
 	 "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth"
     };
-    static char *hs[] = {
+    static const char *hs[] = {
 	"",	      "",	   "twenty",	  "thirty",	"forty",
 	"fifty",      "sixty",	   "seventy",	  "eighty",	"ninety"
     };
-    static char *hsth[] = {
+    static const char *hsth[] = {
 	"",	      "",	   "twentieth",   "thirtieth",	"fortieth",
        "fiftieth",    "sixtieth",  "seventieth",  "eightieth",	"ninetieth"
     };
-    static char *ts[] = {
+    static const char *ts[] = {
 	"",	      "thousand",   "million"
     };
-    static char *tsth[] = {
+    static const char *tsth[] = {
 	"",	     "thousandth", "millionth"
     };
     char stk[256];
@@ -1704,7 +1705,7 @@ LispFormatEnglishInteger(LispObj *stream, long number, int ordinal)
     }
     for (;;) {
 	int count, temp;
-	char *t, *h, *d;
+	const char *t, *h, *d;
 	long value = number;
 
 	for (count = 0; value >= 1000; value /= 1000, count++)
@@ -1811,7 +1812,7 @@ LispFormatCharacter(LispObj *stream, LispObj *object,
     if (atsign && !collon)
 	length += LispWriteStr(stream, "#\\", 2);
     if ((atsign || collon) && (ch <= ' ' || ch == 0177)) {
-	char *name = LispChars[ch].names[0];
+	const char *name = LispChars[ch].names[0];
 
 	length += LispWriteStr(stream, name, strlen(name));
     }

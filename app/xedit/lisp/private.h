@@ -68,6 +68,7 @@
 	(LispObj *)lisp__data.features->data.atom->property->value :	\
 	NIL)
 #define PACK	lisp__data.packlist
+#undef PACKAGE /* avoid conflicts with autoconf's #define in config.h */
 #define PACKAGE	lisp__data.package->data.atom->property->value
 #define MOD	lisp__data.modlist
 #define COD	lisp__data.codlist
@@ -373,7 +374,7 @@ struct _LispMac {
     } mem;		/* memory from Lisp*Alloc, to be release in error */
     LispModule *module;
     LispObj *modules;
-    char *prompt;
+    const char *prompt;
 
     LispObj *features;
 
@@ -388,13 +389,8 @@ struct _LispMac {
 #endif
     LispObj *prolist;		/* protect objects list */
 
-#ifdef SIGNALRETURNSINT
-    int (*sigint)(int);
-    int (*sigfpe)(int);
-#else
     void (*sigint)(int);
     void (*sigfpe)(int);
-#endif
 
     int destroyed;		/* reached LispDestroy, used by unwind-protect */
     int running;		/* there is somewhere to siglongjmp */
@@ -412,7 +408,7 @@ struct _LispMac {
 };
 
 struct _LispCharInfo {
-    char **names;
+    const char * const *names;
 };
 
 
@@ -421,7 +417,7 @@ struct _LispCharInfo {
  */
 void LispUseArgList(LispArgList*);
 void LispFreeArgList(LispArgList*);
-LispArgList *LispCheckArguments(LispFunType, LispObj*, char*, int);
+LispArgList *LispCheckArguments(LispFunType, LispObj*, const char*, int);
 LispObj *LispListProtectedArguments(LispArgList*);
 
 LispObj *LispGetDoc(LispObj*);
@@ -446,8 +442,7 @@ void LispExportSymbol(LispObj*);
 void LispImportSymbol(LispObj*);
 
 	/* always returns the same string */
-hash_key *LispGetAtomKey(char*, int);
-char *LispGetAtomString(char*, int);
+hash_key *LispGetAtomKey(const char*, int);
 
 /* destructive fast reverse, note that don't receive a LispMac* argument */
 LispObj *LispReverse(LispObj *list);
@@ -469,7 +464,7 @@ void LispBlockUnwind(LispBlock*);
 void LispUpdateResults(LispObj*, LispObj*);
 void LispTopLevel(void);
 
-LispAtom *LispDoGetAtom(char *str, int);
+LispAtom *LispDoGetAtom(const char *str, int);
 	/* get value from atom's property list */
 LispObj *LispGetAtomProperty(LispAtom*, LispObj*);
 	/* put value in atom's property list */
@@ -520,7 +515,7 @@ void LispMoreProtects(void);
 
 /* Initialization */
 extern int LispArgList_t;
-extern LispCharInfo LispChars[256];
+extern const LispCharInfo LispChars[256];
 
 /* This function will return if the interpreter cannot be stopped */
 extern void LispSignal(int);

@@ -36,7 +36,7 @@ void LispBegin(void);
 void LispEnd(void);
 void *LispExecute(char*);
 void LispMachine(void);
-void LispSetPrompt(char*);
+void LispSetPrompt(const char*);
 void LispSetInteractive(int);
 void LispSetExitOnError(int);
 void LispDebug(int);		/* argument is boolean to enable/disable */
