@@ -1,3 +1,133 @@
+commit 352f4da35ea9c0cce3812f96279315e31d1420ec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 22:27:46 2015 -0700
+
+    setxkbmap 1.3.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0eed7d27baad8078bc68f62dfea1e94116e4d67
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:16:31 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 984218d77c14128039d16db34a997263402d97f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:16:31 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bbd3f086e2a4c90d0b44c02c92cf778a36ed97ef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 21:16:11 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 56346c72127303a445a273217f7633c2afb29cfc
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Thu Aug 29 12:31:37 2013 +0200
+
+    Fixing a small mistake in the man page -- s/comp/map/.
+    
+    And seizing the opportunity to tweak some of the wording.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit cd14edbc245ca7a34c6a7143ac40014a5bede217
+Author: Benno Schulenberg <bensberg@justemail.net>
+Date:   Thu Aug 29 12:18:20 2013 +0200
+
+    Printing the program's version number on -version.
+    
+    Also unwrap a help-text line, as it looks neater and stays within
+    80 characters, and alphabetize the -help option in the man page.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@justemail.net>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    
+    [squashed in: include "config.h" directive]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f5ffd59830ff5f4a4f337d56e7e8b4a1930a46e8
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Tue Jul 2 00:06:55 2013 +0200
+
+    Ensure consistency between the manpage and the output of the -h option
+    
+    This is in addition to the correction [1] for bug #524510 reported by Debian [2].
+    
+    [1] http://cgit.freedesktop.org/xorg/app/setxkbmap/commit/?id=2011f509c56b73cc62105c689d702f279f522017
+    
+    [2] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=524510
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit cdc2551ef6d644073e3583177ead69ed32045bae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 10 20:31:57 2013 -0800
+
+    Use C99 struct initializer for cmdNames in applyComponentNames
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 19734cfead4b8c7a5d592fe0fe5634cb4a1ed34d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 10 20:31:56 2013 -0800
+
+    Make len a size_t instead of converting back & forth to an int
+    
+    Gets rid of a number of clang warnings:
+    setxkbmap.c:689:28: warning: implicit conversion loses integer precision:
+        'unsigned long' to 'int' [-Wshorten-64-to-32]
+            len = strlen(orig) + 1;
+                ~ ~~~~~~~~~~~~~^~~
+    setxkbmap.c:701:39: warning: implicit conversion changes signedness:
+        'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+            orig = (char *) realloc(orig, len);
+                            ~~~~~~~       ^~~
+    setxkbmap.c:707:32: warning: implicit conversion changes signedness:
+        'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+            orig = (char *) calloc(len, 1);
+                            ~~~~~~ ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3d5ce417ba1a8973b04516b0395f15e6500c60ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 10 20:31:55 2013 -0800
+
+    Move global rules variable into applyRules, the only function that uses it
+    
+    Clears gcc warning:
+    setxkbmap.c: In function `tryLoadRules':
+    setxkbmap.c:811: warning: declaration of 'rules' shadows a global declaration
+    setxkbmap.c:132: warning: shadowed declaration is here
+    
+    No longer marked static, since the function is called exactly once, so
+    storing the value across calls seems pointless.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit cac515f47457d9acac39ca43316f9e2af6a5b1b9
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 22 21:34:26 2012 -0700

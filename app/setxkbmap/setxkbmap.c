@@ -24,6 +24,9 @@
 
  ********************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <locale.h>
@@ -129,7 +132,6 @@ static settings_t settings = {
 
 static XkbConfigRtrnRec cfgResult;
 
-static XkbRF_RulesPtr rules = NULL;
 static XkbRF_VarDefsRec rdefs;
 
 static Bool clearOptions = False;
@@ -246,7 +248,7 @@ usage(int argc, char **argv)
         "  -device <deviceid>  Specifies the device ID to use\n"
         "  -display <dpy>      Specifies display to use\n"
         "  -geometry <name>    Specifies geometry component name\n"
-        "  -I<dir>             Add <dir> to list of directories to be used\n"
+        "  -I <dir>            Add <dir> to list of directories to be used\n"
         "  -keycodes <name>    Specifies keycodes component name\n"
         "  -keymap <name>      Specifies name of keymap to load\n"
         "  -layout <name>      Specifies layout used to choose component names\n"
@@ -258,8 +260,8 @@ usage(int argc, char **argv)
         "  -symbols <name>     Specifies symbols component name\n"
         "  -synch              Synchronize request with X server\n"
         "  -types <name>       Specifies types component name\n"
-        "  -v[erbose] [<lvl>]  Sets verbosity (1..10).  Higher values yield\n"
-        "                      more messages\n"
+        "  -v[erbose] [<lvl>]  Sets verbosity (1..10); higher values yield more messages\n"
+        "  -version            Print the program's version number\n"
         "  -variant <name>     Specifies layout variant used to choose component names\n",
         argv[0]
     );
@@ -473,6 +475,11 @@ parseArgs(int argc, char **argv)
             synch = True;
         else if (streq(argv[i], "-types"))
             ok = setOptString(&i, argc, argv, &settings.types, FROM_CMD_LINE);
+        else if (streq(argv[i], "-version"))
+        {
+            MSG1("setxkbmap %s\n", PACKAGE_VERSION);
+            exit(0);
+        }
         else if (streq(argv[i], "-verbose") || (streq(argv[i], "-v")))
         {
             if ((i < argc - 1) && (isdigit(argv[i + 1][0])))
@@ -684,7 +691,8 @@ addStringToOptions(char *opt_str, list_t *opts)
 char *
 stringFromOptions(char *orig, list_t *newOpts)
 {
-    int len, i, nOut;
+    size_t len;
+    int i, nOut;
 
     if (orig)
         len = strlen(orig) + 1;
@@ -829,6 +837,7 @@ applyRules(void)
 {
     int i;
     char *rfName;
+    XkbRF_RulesPtr rules = NULL;
 
     if (settings.model.src || settings.layout.src || settings.variant.src
         || options.item)
@@ -1017,13 +1026,15 @@ applyComponentNames(void)
     /* Upload the new description to the server. */
     if (dpy && !print && !query)
     {
-        XkbComponentNamesRec cmdNames;
-        cmdNames.types = settings.types.value;
-        cmdNames.compat = settings.compat.value;
-        cmdNames.symbols = settings.symbols.value;
-        cmdNames.keycodes = settings.keycodes.value;
-        cmdNames.geometry = settings.geometry.value;
-        cmdNames.keymap = settings.keymap.value;
+        XkbComponentNamesRec cmdNames = {
+            .keymap = settings.keymap.value,
+            .keycodes = settings.keycodes.value,
+            .types = settings.types.value,
+            .compat = settings.compat.value,
+            .symbols = settings.symbols.value,
+            .geometry = settings.geometry.value
+        };
+
         xkb = XkbGetKeyboardByName(dpy, deviceSpec, &cmdNames,
                                    XkbGBN_AllComponentsMask,
                                    XkbGBN_AllComponentsMask &

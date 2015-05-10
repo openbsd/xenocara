@@ -24,9 +24,6 @@ only as needed.  The source for all of the components can be found in
 .IR __xkbconfigroot__ .
 .SH OPTIONS
 .TP 8
-.B \-help
-Prints a message describing the valid input to \fIsetxkbmap\fP.
-.TP 8
 .B \-compat \fIname\fP
 Specifies the name of the compatibility map component used to construct
 a keyboard layout.
@@ -46,6 +43,9 @@ Specifies the display to be updated with the new keyboard layout.
 .B \-geometry \fIname\fP
 Specifies the name of the geometry component used to construct
 a keyboard layout.
+.TP 8
+.B \-help
+Prints a message describing the valid input to \fIsetxkbmap\fP.
 .TP 8
 .B \-I \fIdirectory\fP
 Adds a directory to the list of directories to be used to search for
@@ -116,20 +116,23 @@ Specifies level of verbosity in output messages.  Valid levels range from
 0 (least verbose) to 10 (most verbose).  The default verbosity level is 5.
 If no level is specified, each \fI-v\fP or \fI-verbose\fP flag raises the
 level by 1.
+.TP 8
+.B \-version
+Prints the program's version number.
 .SH USING WITH xkbcomp
 If you have an Xserver and a client shell running on different computers and
-XKB configuration files on those machines are different you can get
-problems specifying a keyboard map by model, layout, options names.
-This is because \fBsetxkbcomp\fP converts these names to names of XKB
-configuration files according to files that are on the client side computer,
-then it sends the file names to the server where the \fBxkbcomp\fP has to
+some XKB configuration files on those machines are different, you can get
+problems specifying a keyboard map by model, layout, and options names.
+This is because \fBsetxkbmap\fP converts its arguments to names of XKB
+configuration files according to files that are on the client-side computer,
+then sends these file names to the server where \fBxkbcomp\fP has to
 compose a complete keyboard map using files which the server has.
-Thus if the sets of files differ significantly the names that the
+Thus if the sets of files differ in some way, the names that
 \fBsetxkbmap\fP generates can be unacceptable on the server side.  You can
 solve this problem by running the \fBxkbcomp\fP on the client side too.
 With the \fI-print\fP option \fBsetxkbmap\fP just prints the file names
 in an appropriate format to its stdout and this output can be piped
-directly to the \fBxkbcomp\fP input. For example, the command
+directly to the \fBxkbcomp\fP input.  For example, the command
 
 \fBsetxkbmap us -print | xkbcomp - $DISPLAY\fP
 
