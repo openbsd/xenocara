@@ -1,3 +1,69 @@
+commit d3a33f66615cbf727866d3db5cf20475d4bb1f77
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 23:04:02 2015 -0700
+
+    xdriinfo 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4676f2fa92057c94a39830fb1215e9944f958c91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:28:43 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c30dda24d012670959ddb78914ac53489a88ab61
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:28:43 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 70c75b22f4dee883941495e8dbc6dfa58c1991dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 23:15:30 2013 -0800
+
+    Add -version option to print program version
+    
+    Add both -version & -display to man page, since options were not
+    previously documented.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3bac938bf49e6e543ffeaf7bbc0e6c17f5b30416
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 22:45:18 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit db27eef6c2ab78bbae9fabcccd5720d3dfef44d9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3392e966c444c39bdcb89131dcd9822f1f135667
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 1c67a45b6d9974469e3cbfc6da06e88d8b11ded2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Nov 8 23:02:10 2010 -0800

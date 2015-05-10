@@ -22,6 +22,10 @@
  * 
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #define GLX_GLXEXT_PROTOTYPES
 #include <GL/glx.h>
 #include <GL/glxext.h>
@@ -44,7 +48,7 @@ void printUsage (void);
 
 void printUsage (void) {
     fprintf (stderr,
-"Usage: xdriinfo [-display <dpy>] [command]\n"
+"Usage: xdriinfo [-display <dpy>] [-version] [command]\n"
 "Commands:\n"
 "  nscreens               print the number of screens on display\n"
 "  driver screen          print the DRI driver name of screen\n"
@@ -79,12 +83,19 @@ int main (int argc, char *argv[]) {
 	} else if (!strcmp (argv[i], "options")) {
 	    func = OPTIONS;
 	    argPtr = &funcArg;
+	} else if (!strcmp (argv[i], "-version")) {
+	    puts(PACKAGE_STRING);
+	    return 0;
 	} else {
+	    fprintf (stderr, "%s: unrecognized argument '%s'\n",
+		     argv[0], argv[i]);
 	    printUsage ();
 	    return 1;
 	}
 	if (argPtr) {
 	    if (++i == argc) {
+		fprintf (stderr, "%s: '%s' requires an argument\n",
+			 argv[0], argv[i-1]);
 		printUsage ();
 		return 1;
 	    }

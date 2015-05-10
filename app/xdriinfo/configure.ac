@@ -22,14 +22,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xdriinfo], [1.0.4],
+AC_INIT([xdriinfo], [1.0.5],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xdriinfo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -45,7 +44,7 @@ AC_SEARCH_LIBS([glXGetProcAddressARB], [GL], [],
 	AC_MSG_FAILURE([cannot find GL library - make sure Mesa or other OpenGL package is installed]),
 	[$XDRIINFO_LIBS])
 
-# libGL depends on libm
-XDRIINFO_LIBS="${XDRIINFO_LIBS} -lm"
-
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT
