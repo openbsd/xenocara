@@ -665,7 +665,7 @@ XRenderCompositeText32 (Display			    *dpy,
 	    len += (SIZEOF (xGlyphElt) + 4) >> 2;
 	}
 	nchars = elts[i].nchars;
-	elen = SIZEOF(xGlyphElt) * ((nchars + MAX_32) / MAX_32) + nchars *4;
+	elen = SIZEOF(xGlyphElt) * ((nchars + MAX_32-1) / MAX_32) + nchars *4;
 	len += (elen + 3) >> 2;
     }
 
