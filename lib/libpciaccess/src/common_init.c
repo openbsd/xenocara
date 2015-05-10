@@ -52,7 +52,7 @@ pci_system_init( void )
 {
     int err = ENOSYS;
 
-#ifdef linux
+#ifdef __linux__
     err = pci_system_linux_sysfs_create();
 #elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
     err = pci_system_freebsd_create();
@@ -62,8 +62,10 @@ pci_system_init( void )
     err = pci_system_openbsd_create();
 #elif defined(__sun)
     err = pci_system_solx_devfs_create();
-#elif defined(__GNU__)
+#elif defined(__GNU__) || defined(__CYGWIN__)
     err = pci_system_x86_create();
+#else
+# error "Unsupported OS"
 #endif
 
     return err;

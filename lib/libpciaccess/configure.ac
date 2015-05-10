@@ -23,7 +23,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libpciaccess],[0.13.2],
+AC_INIT([libpciaccess],[0.13.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess],[libpciaccess])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -76,13 +76,17 @@ case $host_os in
 		;;
 	*netbsd*)
 		case $host in
-		*i386*)
-			PCIACCESS_LIBS="-li386 -lpci"
+		*i[3-9]86*)
+			PCIACCESS_LIBS="$PCIACCESS_LIBS -li386"
 			;;
 		*x86_64*|*amd64*)
-			PCIACCESS_LIBS="-lx86_64 -lpci"
+			PCIACCESS_LIBS="$PCIACCESS_LIBS -lx86_64"
+			;;
+		*alpha*)
+			PCIACCESS_LIBS="$PCIACCESS_LIBS -lalpha"
 			;;
 		esac
+		PCIACCESS_LIBS="$PCIACCESS_LIBS -lpci"
 		netbsd=yes
 		;;
 	*openbsd*)
@@ -95,6 +99,10 @@ case $host_os in
 	gnu*)
 		gnu=yes
 		;;
+	*cygwin*)
+		cygwin=yes
+		PCIACCESS_LIBS="$PCIACCESS_LIBS"
+		;;
 esac
 
 AM_CONDITIONAL(LINUX, [test "x$linux" = xyes])
@@ -103,6 +111,7 @@ AM_CONDITIONAL(NETBSD, [test "x$netbsd" = xyes])
 AM_CONDITIONAL(OPENBSD, [test "x$openbsd" = xyes])
 AM_CONDITIONAL(SOLARIS, [test "x$solaris" = xyes])
 AM_CONDITIONAL(GNU, [test "x$gnu" = xyes])
+AM_CONDITIONAL(CYGWIN, [test "x$cygwin" = xyes])
 
 AC_SYS_LARGEFILE
 

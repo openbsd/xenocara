@@ -59,7 +59,7 @@
 
 #include <inttypes.h>
 
-#if __GNUC__ >= 3
+#if (__GNUC__ >= 3) || (__SUNPRO_C >= 0x5130)
 #define __deprecated __attribute__((deprecated))
 #else
 #define __deprecated

@@ -1,89 +1,210 @@
-commit c11e31f123775105431cb16192018107070a807f
-Merge: 1f06c66 fa7cca6
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Jun 13 18:45:06 2010 +0200
-
-    Merge remote branch 'origin/master' into obsd
-
-commit fa7cca617583eb93a862c5ebbb5a56843210e5a8
+commit bbd1acdd1d25b9a68f4b7913a4094af20d7cf78f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
-Date:   Fri Jun 4 16:58:56 2010 -0700
+Date:   Thu Apr 30 21:44:41 2015 -0700
 
-    Delay allocation of agp_info so we don't leak it on prior errors
-    
-       Memory leak of pointer 'agp_info'
-            at line 119 of src/common_capability.c in function 'pci_fill_capabilities_generic'.
-              'agp_info' allocated at line 107 with calloc(1, 12).
-              'agp_info' leaks when err != 0 at line 118.
-            at line 124 of src/common_capability.c in function 'pci_fill_capabilities_generic'.
-              'agp_info' allocated at line 107 with calloc(1, 12).
-              'agp_info' leaks when err != 0 at line 123.
-    
-    [ This bug was found by the Parfait bug checking tool.
-      For more information see http://research.sun.com/projects/parfait ]
+    libpciaccess 0.13.4
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-commit 1f06c66a8901a381ca6ea8fc8b4ff0931699d90a
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Mon May 24 19:03:30 2010 +0200
+commit d0c53bdc0b35a5416fc30a610b7401978871a5f1
+Author: Tobias Nygren <tnn@NetBSD.org>
+Date:   Mon Feb 16 10:22:35 2015 +0100
 
-    add missed file in previous commit
-
-commit 168a3c10fc0e1b61c05932d2c8e6d329b8ababc1
-Author: Mark Kettenis <mark.kettenis@xs4all.nl>
-Date:   Tue Apr 20 22:13:08 2010 +0200
-
-    Add VGA Arbiter support for OpenBSD.
-
-commit ec5494ba02dbd7f046f588bda1f6522b8a1c385b
-Merge: 5edd00f b8295f4
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Apr 3 19:00:54 2010 +0200
-
-    Merge remote branch 'origin/master' into obsd
-
-commit b8295f4776912d4c3cef836eb0f158e07b432a25
-Author: Gaetan Nadon <memsize@videotron.ca>
-Date:   Mon Mar 29 16:50:34 2010 -0400
-
-    config: update AC_PREREQ statement to 2.60
+    Bug 89151: Fix build on NetBSD/alpha and NetBSD/sparc64.
     
-    Unrelated to the previous patches, the new value simply reflects
-    the reality that the minimum level for autoconf to configure
-    all x.org modules is 2.60 dated June 2006.
+    This patch is required for building on NetBSD/alpha (needs platform
+    specific -lalpha) and NetBSD/sparc64 (no platform specific library,
+    just -lpci). The patch also generalizes to support all NetBSD
+    platforms with pci bus.
     
-    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    https://bugs.freedesktop.org/show_bug.cgi?id=89151
     
-    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
 
-commit a624de7af1d4c0956ecd485e3ae193f93bd78c57
-Author: Gaetan Nadon <memsize@videotron.ca>
-Date:   Mon Mar 29 14:53:49 2010 -0400
+commit 1972e9223764618aedc5adc32b64b2c043d1b826
+Author: Eero Tamminen <eero.t.tamminen@intel.com>
+Date:   Tue Feb 10 14:55:22 2015 +0000
 
-    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    Check for __linux__ instead of linux during compilation
     
-    Automake always includes it in the tarball.
+    "__linux__" is the POSIX define for checking for Linux OS, "linux" is
+    deprecated and apparently not supported by Android.
     
-    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
-
-commit 5edd00ff475f1c719846d0b48749266c3ed97100
-Merge: 3e258c1 af2be74
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Feb 14 11:04:06 2010 +0100
-
-    Merge remote branch 'origin/master' into obsd
-
-commit af2be74979aeab9a2fc4c933462e97ce70f816b6
-Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
-Date:   Tue Jan 19 18:37:43 2010 +0100
-
-    libpciaccess x86 backend
+    Besides correcting the define, patch adds error for the case OS isn't
+    recognized.
     
-    This adds support on x86 for OSes that do not have a PCI interface,
-    tinkering with I/O ports, and makes use of it on GNU/Hurd.
+    Signed-off-by: Eero Tamminen <eero.t.tamminen@intel.com>
     
-    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    v2: Drop double negative from commit msg. Spotted by Mateusz Jończyk.
+    [Emil Velikov: Remove irrelevant Android details from commit msg.]
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed340abc37b07cb9fc788ae77d837088c54cd16a
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Tue Feb 10 14:55:21 2015 +0000
+
+    Include config.h before any other headers.
+    
+    The former has a series of defines which in some cases are crusial to be
+    set before including any system headers.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6329ef9e5d6f36ca3f7258279f6640037b71926a
+Author: Chih-Wei Huang <cwhuang@linux.org.tw>
+Date:   Tue Feb 10 14:55:20 2015 +0000
+
+    Add missing guards around config.h inclusion
+    
+    In some cases the header may not exist, leading to compilation issues.
+    Add the ifdef HAVE_CONFIG_H, as it is those in other parts of the
+    project.
+    
+    [Emil Velikov: Split out from a larger commit, rework commit message]
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e42ee2a075a8b7c62b190815be42ea26c9d8c03f
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Tue Feb 10 14:55:19 2015 +0000
+
+    Include the POSIX fcntl.h instead of sys/fcntl.h
+    
+    The former is part of the POSIX standard, and (unlike the latter) is
+    more widely available.
+    
+    v2: Drop gracious d in header name. Spotted by Alan.
+    
+    Cc: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f99c2e4199ce37f6f94428df504427f67c3ec543
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 3 15:59:10 2015 -0800
+
+    libpciaccess 0.13.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9b1bf11c81881c9cc6e6145011cf229978f109f4
+Author: Mark Kettenis <kettenis@openbsd.org>
+Date:   Mon Sep 29 22:34:25 2014 +0200
+
+    Use PCIOCREADMASK on OpenBSD.
+    
+    If the machdep.allowaperture sysctl(8) variable is set to 0, writing to PCI
+    config space is not allowed.  So instead of writing 0xffffffff to the BARs
+    in order to determine their size, use the PCIOCREADMASK ioctl(2) which
+    returns the mask of changeable bits that was saved by the kernel when the
+    devices was initially probed.
+    
+    Reviewed-by: Matthieu Herrb <matthieu@herbb.eu>
+    Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit b7e42643d2ee6521cf23e6dfe49a8369ba4bf9bb
+Author: Matthew Green <mrg@NetBSD.org>
+Date:   Sat Jul 26 22:09:30 2014 +0200
+
+    Implement the kernel_has_driver() method for NetBSD.
+    
+    This has the benefit of stopping the "vesa" driver from loading on
+    hardware that has been claimed by a kernel driver and thus shouldn't
+    be using "vesa".
+    
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit 1654a0462723b3b75d7a4a20bedfc653cc3e1f1a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 2 16:41:10 2014 -0700
+
+    Solaris: Fix fd leak in pci_device_solx_devfs_map_range()
+    
+    Caching fd's for reuse is most effective when you actually stick the
+    newly opened fd in the cache, instead of letting it leak at the end
+    of the function.
+    
+    Regression introduced by yours truly in commit 9f2d95e61896f41adb.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Randy Fishel <randy.fishel@oracle.com>
+
+commit ee4e253a3f1a62e2f3f89f5339590fd4e6cde7c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 9 19:25:10 2014 -0700
+
+    Enable use of __attribute__((deprecated)) with Solaris Studio 12.4 compiler
+    
+    Support for this attribute is added in the 12.4 beta release.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9c068896914b4132a24839c9ef7f9fcd6282d88
+Author: Marcin Ko?cielnicki <koriakin@0x04.net>
+Date:   Wed Feb 5 09:01:25 2014 +0100
+
+    Fix IO access functions on linux+sysfs.
+    
+    The offsets on the resourceX files are relative to BAR base - don't add
+    the base address ourselves.
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit b29e9be9aff5c5a9ec5e2bcfc48044081b82742b
+Author: Samuel Pitoiset <samuel.pitoiset@gmail.com>
+Date:   Wed Jan 29 18:44:40 2014 +0100
+
+    Fix a compilation error on GNU Hurd platforms.
+    
+    This fixes a typo (unAMp instead of unMAp) introduced in the Windows/Cygwin
+    support patch.
+    
+    Reviewed-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+
+commit 6bfccc7ec4f0705595385f6684b6849663f781b4
+Author: Samuel Pitoiset <samuel.pitoiset@gmail.com>
+Date:   Sat Jan 18 17:19:14 2014 +0100
+
+    Windows/Cygwin: Add support through the WinIo library
+    
+    V2:
+    - Add support for unmapping
+    - Add a README.cygwin
+    
+    Reviewed-by: Martin Peres <martin.peres@free.fr>
+    Reviewed-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+
+commit 06f562584a885eff7366dca82caf746e62b5a21f
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Aug 14 19:45:46 2013 +0200
+
+    Improve NetBSD i386 detection.
+    
+    Sometimes, other values are reported for the CPU part, like
+    "i486--netbsdelf").
+    
+    From: Mark Davies <markd@NetBSD.org>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-By:  Matt Dew <marcoz@osource.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4427be3de93f359ab106a649a43e41319625e1e7
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jul 21 11:44:14 2013 +0200
+
+    Fix zlib handling on NetBSD.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit aa7925c4a798b9ed2cd43bd3c99c2df2a1824311
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
@@ -407,139 +528,56 @@ Date:   Wed Apr 18 15:30:30 2012 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
     Reviewed-by: Jay Cotton <jay.cotton@oracle.com>
 
-commit ebb3c6b69f4e8a844ff95d4e880dde9ede3de347
+commit 2ff2996dcb4cfd83da6df4504b68b492b983204b
 Author: Julien Cristau <jcristau@debian.org>
-Date:   Sun Jan 17 14:33:13 2010 +0000
+Date:   Mon Apr 9 19:05:27 2012 +0200
 
-    COPYING: add Red Hat's copyright notice
-
-commit b775e6fa006d78cac21bbfe52f1f721947ddc6ca
-Author: Alan Coopersmith <alan.coopersmith@sun.com>
-Date:   Thu Jan 14 20:48:20 2010 -0800
-
-    Update Sun license notices to current X.Org standard form
+    Bump to 0.13.1
     
-    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
 
-commit 3e258c1338e98bd401f486734da7d029ecc28e0c
-Merge: fe420ad fac83b8
+commit 6f9d9f1e1b093939bc459be606fba72f1d6dfc76
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Dec 20 01:09:34 2009 +0100
+Date:   Mon Apr 2 08:22:23 2012 +0200
 
-    Merge remote branch 'origin/master' into obsd
+    Fix pci_io_handle allocation routines.
     
-    Conflicts:
-    	.gitignore
-    	INSTALL
+    The previous version of new_io_handle()  would invalidate all previous
+    allocations when realloc moves the base pointer of the ios array.
+    Since I cannot figure out where this array is useful, just get rid of
+    it, providing sound stable memory allocation.
+    
+    Fixes vgaHWSaveFonts() in 1.12 xserver on OpenBSD, but other
+    sub-systems relaying on pci_io could be affected too.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Tested-by: Tormod Volden <debian.tormod@gmail.com>
 
-commit fe420ad413982c7ac54c0b6f1dd641fb5dbd37d7
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Dec 20 01:08:31 2009 +0100
+commit 725f5669bc03ed9a766e2c51c465e082172e6dae
+Author: Thordur Bjornsson <thib@secnorth.net>
+Date:   Wed Mar 14 14:45:52 2012 +0100
 
-    Add stub openbsd vga arbiter
+    Fix openbsd_pci.c:pci_device_vgaarb_set_target();
+    
+    A return (0) got lost, add it back.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by:  Mark Kettenis <mark.kettenis@xs4all.nl>
 
-commit fac83b8116e19d4efbf8438d1cc485656cca5c60
+commit b16336c0b389ace07f7418f5a021bfbc68fec2b6
 Author: Adam Jackson <ajax@redhat.com>
-Date:   Mon Dec 14 17:27:12 2009 -0500
+Date:   Mon Mar 5 11:01:01 2012 -0500
 
-    libpciaccess 0.11.0
+    linux: Fix out[bwl] macros on non-I/O architectures
     
     Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-commit 947ab16f2938e8883503ef679a40684dfe2a90e5
+commit fa15fbcdbcfed09ea269ca3fb5f0e3dc2446e66f
+Merge: d2dc9f9 bf70556
 Author: Adam Jackson <ajax@redhat.com>
-Date:   Mon Dec 14 16:26:31 2009 -0500
+Date:   Mon Mar 5 11:00:14 2012 -0500
 
-    Fix I/O handle array allocator to work for devices past the first
-    
-    Signed-off-by: Adam Jackson <ajax@redhat.com>
-
-commit d4e008eeb9af7773edadd259cf55da43411f1a7f
-Author: Adam Jackson <ajax@redhat.com>
-Date:   Mon Dec 14 16:19:35 2009 -0500
-
-    Fix pci_device_open_io() to actually return something useful
-    
-    Remember, code review just means we're all inept.
-    
-    Signed-off-by: Adam Jackson <ajax@redhat.com>
-
-commit 5e8d4c19b4f618e22b6e8e1ad3294d8708067474
-Author: Adam Jackson <ajax@redhat.com>
-Date:   Wed Nov 18 13:53:49 2009 -0500
-
-    I/O port access routines
-    
-    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
-    Acked-by: Matt Turner <mattst88@gmail.com>
-    Signed-off-by: Adam Jackson <ajax@redhat.com>
-
-commit b2fbe63bdf3522c5d3df5eda2ca3c3b8770c02c9
-Author: Adam Jackson <ajax@redhat.com>
-Date:   Wed Nov 18 14:12:57 2009 -0500
-
-    Add pci_device_get_parent_bridge()
-    
-    Copied from linuxPci.c in the X server.
-    
-    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
-    Signed-off-by: Adam Jackson <ajax@redhat.com>
-
-commit b2b3c3bfdac23c1c8e33f47b28f22c1d4a78cc71
-Author: Gaetan Nadon <memsize@videotron.ca>
-Date:   Fri Nov 27 20:56:05 2009 -0500
-
-    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
-    
-    Now that the INSTALL file is generated.
-    Allows running make maintainer-clean.
-
-commit 57f4d11fef7021e77549a70cbf40ca43e60ea55f
-Author: Gaetan Nadon <memsize@videotron.ca>
-Date:   Wed Oct 28 14:09:10 2009 -0400
-
-    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
-    
-    Add missing INSTALL file. Use standard GNU file on building tarball
-    README may have been updated
-    Remove AUTHORS file as it is empty and no content available yet.
-    Remove NEWS file as it is empty and no content available yet.
-
-commit caa398b5305cb4c5299e283b9833ed2251698893
-Author: Gaetan Nadon <memsize@videotron.ca>
-Date:   Tue Oct 27 15:07:25 2009 -0400
-
-    Deploy the new XORG_DEFAULT_OPTIONS #24242
-    
-    This macro aggregate a number of existing macros that sets commmon
-    X.Org components configuration options. It shields the configuration file from
-    future changes.
-
-commit b8284cb2097601d5934773ab75db388b9fa5a9db
-Author: Gaetan Nadon <memsize@videotron.ca>
-Date:   Mon Oct 26 22:08:43 2009 -0400
-
-    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
-    
-    ChangeLog filename is known to Automake and requires no further
-    coding in the makefile.
-
-commit 28830993636cc5820842345b511d301af33d9c49
-Author: Gaetan Nadon <memsize@videotron.ca>
-Date:   Thu Oct 22 12:34:20 2009 -0400
-
-    .gitignore: use common defaults with custom section # 24239
-    
-    Using common defaults will reduce errors and maintenance.
-    Only the very small or inexistent custom section need periodic maintenance
-    when the structure of the component changes. Do not edit defaults.
-
-commit 5be41c13ed1f89b25389d71e0bd1e59033f8ca01
-Merge: 8deac52 97d6777
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Fri Sep 25 21:19:41 2009 +0200
-
-    Merge remote branch 'origin/master' into obsd
+    Merge branch 'master' of ssh://git.freedesktop.org/git/xorg/lib/libpciaccess
 
 commit bf705561d347bc5459bc0af033595c66541cac3e
 Author: Jeremy Huddleston <jeremyhu@apple.com>
@@ -548,6 +586,18 @@ Date:   Sat Mar 3 18:19:11 2012 -0800
     configure.ac: Bump to 0.13
     
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d2dc9f9daa45504f035b169aba94d0b154fd29f0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Feb 27 11:19:50 2012 -0500
+
+    Use O_CLOEXEC for internal file descriptors
+    
+    Well, almost all of them.  zlib doesn't support "e" in the mode string
+    in gzopen() though it will silently accept and ignore it, and Solaris appears
+    not to support "e" in the mode string at all.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
 commit f550c1347d3518874fe1c1d417a57322ee6b52db
 Author: Adam Jackson <ajax@redhat.com>
@@ -1027,6 +1077,238 @@ Date:   Sat Aug 21 19:54:04 2010 -0400
     
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
+commit fa3f1c1ea8ce4b45976e11520856cfa164f8b92d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jul 21 09:39:26 2010 +1000
+
+    libpciaccess 0.12.0 - bump version for release
+
+commit 2f98724d1e603268360d704b3c8823b93d5fecb4
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue Jul 20 22:14:22 2010 +0200
+
+    Fix long standing MTRR bug.
+    
+    Add an include that makes the file common_vgaarb.c see the same
+    struct pci_system as the file linux_sysfs.c.
+    
+    Without this fix, on a MTRR system, the vgaarb_fd member
+    would overwrite the mtrr_fd member and cause the MTRR_IOC_ADD_ENTRY call
+    to be issued to the incorrect device causing the infamous
+    "Inappropriate ioctl for device (25)" error.
+    
+    This error would cause MTRR setup to fail on all systems relying on it
+    and is severe enough to warrant a new release.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e5159771bd0a013201dcef760e9320071c6df59e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 12 13:09:33 2010 +1000
+
+    pciaccess: fix use after free.
+    
+    Using the pointer passed to realloc earlier isn't a recipe for success.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 3f59728ddc6f7d2cb17d434e81ac76c9288d0aef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 19 10:36:24 2010 -0700
+
+    Let libtool handle library flags for scanpci on Solaris
+    
+    Stop hardcoding -ldevinfo since configure/libtool already know to add it
+    for static linking, and ELF dependencies handle it for dynamic linking
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e0ae5251cd030b201c14f5888a539aa40f17abfb
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Sat May 22 18:23:33 2010 +0300
+
+    vgaarb: read back vga count when setting new decoding
+    
+    Decode kernel operation can also change vga refcount, so we need to read back
+    the information when calling it.
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+
+commit 0f153de858032c95ea5844aa6e0f1c8dad7531da
+Author: Tiago Vignatti <tiago.vignatti@nokia.com>
+Date:   Wed May 12 13:12:47 2010 +0300
+
+    vgaarb: decode should send new information to the kernel
+    
+    This was introduced in e360c11c.
+    
+    Signed-off-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+
+commit fa7cca617583eb93a862c5ebbb5a56843210e5a8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 4 16:58:56 2010 -0700
+
+    Delay allocation of agp_info so we don't leak it on prior errors
+    
+       Memory leak of pointer 'agp_info'
+            at line 119 of src/common_capability.c in function 'pci_fill_capabilities_generic'.
+              'agp_info' allocated at line 107 with calloc(1, 12).
+              'agp_info' leaks when err != 0 at line 118.
+            at line 124 of src/common_capability.c in function 'pci_fill_capabilities_generic'.
+              'agp_info' allocated at line 107 with calloc(1, 12).
+              'agp_info' leaks when err != 0 at line 123.
+    
+    [ This bug was found by the Parfait bug checking tool.
+      For more information see http://research.sun.com/projects/parfait ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b8295f4776912d4c3cef836eb0f158e07b432a25
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 16:50:34 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a624de7af1d4c0956ecd485e3ae193f93bd78c57
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:49 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit af2be74979aeab9a2fc4c933462e97ce70f816b6
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Tue Jan 19 18:37:43 2010 +0100
+
+    libpciaccess x86 backend
+    
+    This adds support on x86 for OSes that do not have a PCI interface,
+    tinkering with I/O ports, and makes use of it on GNU/Hurd.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit ebb3c6b69f4e8a844ff95d4e880dde9ede3de347
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Jan 17 14:33:13 2010 +0000
+
+    COPYING: add Red Hat's copyright notice
+
+commit b775e6fa006d78cac21bbfe52f1f721947ddc6ca
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 20:48:20 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit fac83b8116e19d4efbf8438d1cc485656cca5c60
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 14 17:27:12 2009 -0500
+
+    libpciaccess 0.11.0
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 947ab16f2938e8883503ef679a40684dfe2a90e5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 14 16:26:31 2009 -0500
+
+    Fix I/O handle array allocator to work for devices past the first
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit d4e008eeb9af7773edadd259cf55da43411f1a7f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 14 16:19:35 2009 -0500
+
+    Fix pci_device_open_io() to actually return something useful
+    
+    Remember, code review just means we're all inept.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 5e8d4c19b4f618e22b6e8e1ad3294d8708067474
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 18 13:53:49 2009 -0500
+
+    I/O port access routines
+    
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Acked-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit b2fbe63bdf3522c5d3df5eda2ca3c3b8770c02c9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 18 14:12:57 2009 -0500
+
+    Add pci_device_get_parent_bridge()
+    
+    Copied from linuxPci.c in the X server.
+    
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit b2b3c3bfdac23c1c8e33f47b28f22c1d4a78cc71
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 57f4d11fef7021e77549a70cbf40ca43e60ea55f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit caa398b5305cb4c5299e283b9833ed2251698893
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit b8284cb2097601d5934773ab75db388b9fa5a9db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:43 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 28830993636cc5820842345b511d301af33d9c49
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:20 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 97d677746cd70ec9eb1f33483cc829a0063953bc
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Fri Sep 25 10:25:56 2009 +1000
@@ -1068,13 +1350,6 @@ Date:   Thu Sep 17 17:38:56 2009 -0700
     
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
-commit 8deac52eb2469cd0596ce57f9e36fa35cc4f16ca
-Merge: 413f9e6 42b879a
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Sep 5 17:19:11 2009 +0200
-
-    Merge commit 'origin/master' into obsd
-
 commit 42b879a203c1c16daa9d0c610c6a217ead7a5829
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Wed Sep 2 19:03:11 2009 +1000
@@ -1092,13 +1367,6 @@ Author: Thomas Klausner <wiz@netbsd.org>
 Date:   Mon Aug 31 09:13:27 2009 +1000
 
     pciaccess: fix vga arb stubs
-
-commit 413f9e6a2436afa58d97f4cace5b1e83123e22c7
-Merge: 1e74594 d062dd7
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Aug 29 17:19:16 2009 +0200
-
-    Merge commit 'origin/master' into obsd
 
 commit d062dd78baeb28ef2cc59f4fb4a7d82ecd5adf60
 Author: Dave Airlie <airlied@redhat.com>
@@ -1141,13 +1409,6 @@ Author: Dave Airlie <airlied@redhat.com>
 Date:   Fri Aug 21 13:27:11 2009 +1000
 
     Merge remote branch 'origin/vga-arbiter'
-
-commit 1e745943dbe8241f984882feaa440e45ca2ce5d5
-Merge: af9c33c 7636348
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Tue Aug 18 21:12:35 2009 +0200
-
-    Merge commit 'origin/master' into obsd
 
 commit ef8aca5da46155e9ea0d1227215921ad9ce59150
 Author: Tiago Vignatti <tiago.vignatti@nokia.com>
@@ -1318,13 +1579,6 @@ Date:   Thu Jul 16 15:36:30 2009 +1000
 
     add support for finding if something has a kernel driver
 
-commit af9c33cb9749e973d552bda527a0d7186e00218e
-Merge: 54abb24 2bda5b7
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Jul 5 14:54:06 2009 +0200
-
-    Merge commit 'origin/master' into obsd
-
 commit 2bda5b733bb12854760750c08138db95e77aea0c
 Author: Jesse Barnes <jbarnes@virtuousgeek.org>
 Date:   Tue Jun 30 15:24:45 2009 -0700
@@ -1391,25 +1645,11 @@ Date:   Wed May 13 17:44:46 2009 -0300
     Import libvgaaccess (VGA Arbiter) implementation from C3SL repository:
         http://git.c3sl.ufpr.br/
 
-commit 54abb242f06b552a797bef9d7a2e3e920227d3d4
-Merge: 0b8c628 8ba6b02
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Fri May 8 12:12:55 2009 +0200
-
-    Merge commit 'origin/master' into obsd
-
 commit 8ba6b02ecfa5b03bbf2807e8262bb1253a026493
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Fri May 1 15:04:19 2009 -0700
 
     Don't try to write boot_vga since that fails with EACCES
-
-commit 0b8c628f9b76ce368b761516203eaaebc926c1d3
-Merge: 5c563d8 b2838fb
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Fri May 1 18:43:27 2009 +0200
-
-    Merge commit 'origin/master' into obsd
 
 commit b2838fb61c3542f107014b285cbda097acae1e12
 Author: Dave Airlie <airlied@redhat.com>
@@ -1422,13 +1662,6 @@ Date:   Wed Mar 4 15:55:11 2009 +1000
     are looking at is the boot VGA device.
     
     Signed-off-by: Dave Airlie <airlied@redhat.com>
-
-commit 5c563d8b441a62ae780329ce076a8eadde1c1666
-Merge: 2ccbfd4 f14c6cd
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Apr 26 18:23:01 2009 +0200
-
-    Merge commit 'origin/master' into obsd
 
 commit f14c6cd626273bd2f8b102ff661d11926619a99b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -1529,27 +1762,11 @@ Date:   Tue Apr 14 21:53:26 2009 +0200
     Makes X capable of discovering PCI devices
     in other domains (on macppc or sparc64 for example).
 
-commit 2ccbfd440049df5a657d3d476c6596f5a00b58ad
-Author: Mark Kettenis <mark.kettenis@xs4all.nl>
-Date:   Tue Apr 14 21:53:26 2009 +0200
-
-    Make libpciaccess on OpenBSD domain-aware.
-    
-    Makes X capable of discovering PCI devices
-    in other domains (on macppc or sparc64 for example).
-
 commit 9ba94caf57e3a8c3e9c6f3f5f068f4a7a7b3ff9d
 Author: Darren Smith <darren.smith@juno.com>
 Date:   Tue Apr 14 10:46:26 2009 -0400
 
     Be more paranoid about reading bridge info (#20786)
-
-commit c82a4b35d1d5d340c5173a48483b6c8240bafe97
-Merge: aa70b0f 72e75b0
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Mar 1 19:07:57 2009 +0100
-
-    Merge commit 'origin/master' into obsd
 
 commit 72e75b00e4f3f7df3badb10c916126253204ae45
 Author: Robert Noland <rnoland@2hip.net>
@@ -1562,13 +1779,6 @@ Date:   Fri Feb 27 00:34:28 2009 -0600
     	-Use the new PCIOCGETBAR ioctl if it exists
     	  rather than frob the BARs ourself
     	-Write must also be a power of two
-
-commit aa70b0f3a6da8d12e98047f40e6e9ac9227d3048
-Merge: 93a60da 5855cf5
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Wed Feb 4 22:26:05 2009 +0100
-
-    Merge commit 'origin/master' into obsd
 
 commit 5855cf5a2cc7ee920b42052372ab734003799d00
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -1592,23 +1802,6 @@ Date:   Thu Jan 22 16:14:22 2009 -0800
     
     Based on code provided by Dan.Mick@sun.com
 
-commit 93a60da61d7225e41bf8bdf0cd1c5b2b7f33a871
-Merge: fe76d7d 4ed838a
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Dec 20 18:11:38 2008 +0100
-
-    Merge commit 'xenocara/obsd' into obsd
-
-commit fe76d7d98ddcbc0a86e70a24b1fac147fc37b972
-Merge: 7ac4cc8 0488a28
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Dec 20 18:10:48 2008 +0100
-
-    Merge commit 'origin/master' into obsd
-    
-    Conflicts:
-    	src/openbsd_pci.c
-
 commit 0488a2830a6a0d27d9be032607eda954a8c99801
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Sun Dec 7 19:18:29 2008 +0100
@@ -1617,16 +1810,6 @@ Date:   Sun Dec 7 19:18:29 2008 +0100
     
     This is the same error as in pci_device_openbsd_write() that actually
     prevented it to write anything.
-
-commit 4ed838a238e4016b03e8a045b30d91cd974f836b
-Merge: 7ac4cc8 565c8fc
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Dec 7 19:06:30 2008 +0100
-
-    Merge commit 'origin/master' into obsd
-    
-    Conflicts:
-    	src/openbsd_pci.c
 
 commit 565c8fcbf39a56319cee4f77f689dfc79e0c6614
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
@@ -1639,60 +1822,11 @@ Date:   Sun Dec 7 19:00:22 2008 +0100
     - failure to set non-cacheable attributes is not fatal
     - fix a logic error in pci_write()
 
-commit 7ac4cc8666fc217118ea3070e9c82ae7d2d79380
-Merge: e36e659 b167c08
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Tue Nov 25 12:45:37 2008 +0100
-
-    Merge branch 'obsd' of ssh://xenocara.org/git/xenocara/lib/libpciaccess into obsd
-
-commit b167c081b307ffede0bf69d913dc81260484fd55
-Merge: 635454a 8222fb8
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Tue Nov 25 12:43:54 2008 +0100
-
-    Merge commit 'origin/master' into obsd
-
 commit 8222fb8534cf09e433f0f3d68c35d6c390fbba5e
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Tue Nov 25 12:42:15 2008 +0100
 
     Fix a logic error in pci_device_openbsd_write().
-
-commit e36e6594075d6abe1846bde9239682b64436aee7
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Nov 23 13:51:36 2008 +0100
-
-    Sync with OpenBSD CVS
-    
-    When trying to map a piece of device memory with a cacheability attribue
-    (e.g.  the graphics aperture on most video cards), don't error if we
-    failed to set the mtrr but the map succeeded. Instead print a warning (other
-    osen handle this case similarly).
-    
-    Libraries shouldn't use fprintf(stderr, ...); but libpciaccess is really
-    quite poorly designed.
-    
-    This diff means that mine and drahn's laptops work with xserver 1.5.
-    
-    ok kettenis@
-    
-    - Add a method to read the legacy BIOS region on alpha/amd64/i386
-    - Restrict MTRR calls to amd64/i386.
-    ok kettenis@
-
-commit 7b5ec3b76177c11f35832f2895b2cabdad822cfd
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Nov 23 13:48:37 2008 +0100
-
-    Makefile.bsd-wrapper: sync with OpenBSD CVS.
-
-commit 635454aaf902b9fa6ee71c0654cd4ab2ad48b17c
-Merge: 73839a1 613c1e6
-Author: Matthieu Herrb <matthieu@deville.herrb.net>
-Date:   Sat Nov 22 13:45:21 2008 +0100
-
-    Merge commit 'origin/master' into obsd
 
 commit 613c1e6d09930bab47f2c6983f220df002c2e2ce
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -1711,13 +1845,6 @@ Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Nov 18 19:54:42 2008 -0800
 
     Fill in byte swapping routines for big-endian Solaris machines
-
-commit 73839a161401b7ddeaffb4c899055dd7a35a498d
-Merge: da53e25 7aca946
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Nov 2 14:56:22 2008 +0100
-
-    Merge commit 'origin/master' into obsd
 
 commit 7aca9465a61934d57781352f4fcc42b779392cd0
 Author: Julien Cristau <jcristau@debian.org>
@@ -1764,13 +1891,6 @@ Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 17 13:48:46 2008 -0700
 
     Add scanpci man page from Xorg
-
-commit da53e257e7c4bf34ad8d075156dd52de40b15286
-Merge: 80ab24d f537fc5
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Fri Oct 17 15:24:45 2008 +0200
-
-    Merge branch 'master' into obsd
 
 commit f537fc50e014063d1a1297bfd82680ae3f170281
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -1837,19 +1957,6 @@ Date:   Sat Oct 11 20:22:28 2008 +0200
     
     X.Org bug#17882 <http://bugs.freedesktop.org/show_bug.cgi?id=17882>
 
-commit 80ab24d1e0071b22c1df3730df898b1a39af00db
-Merge: 5514b85 968289f
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Tue Sep 23 22:40:21 2008 +0200
-
-    Merge branch 'master' into obsd
-
-commit 5514b85eca455a429c4704a7301a776284ffb96a
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Tue Sep 23 22:39:06 2008 +0200
-
-    add a read rom method and mark mtrr code as i386/amd64 only.
-
 commit 968289fc3137ac0863c62d3c343153fa3e4aeb10
 Author: John Tapsell <johnflux@gmail.com>
 Date:   Tue Sep 23 17:26:09 2008 +0300
@@ -1858,25 +1965,6 @@ Date:   Tue Sep 23 17:26:09 2008 +0300
     
     Use the standard AC_CHECK_HEADERS, which works for cross-compiling as
     well as in various other locations.
-
-commit e2d352a907b5fcb7d68de3fce5c7a38cf5adef81
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Sep 21 12:26:46 2008 +0200
-
-    Enable pciids and zlib support.
-
-commit ac6ce934a0c71e50985c3a1c0dbd3bcae0ceb945
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sun Sep 21 12:21:01 2008 +0200
-
-    Bump major for zlib support
-
-commit 849abdbf0c00be4b8b4a4ddfbb3d3f5773184b44
-Merge: 81e2ee6 79ed418
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Sep 20 18:31:35 2008 +0200
-
-    Merge branch 'master' into obsd
 
 commit 79ed41882fd721a15c8b0bea7efeb98864d85dfb
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
@@ -1887,13 +1975,6 @@ Date:   Sat Sep 20 18:28:59 2008 +0200
     And fix pci_system_cleanup() to make it possible to call pci_system_init()
     again.
     ok kettenis at openbsd.
-
-commit 81e2ee60b8bab0b8046acfa95b95f56ddc5d943a
-Merge: 15b27bc 45015ab
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat Aug 9 12:14:30 2008 +0200
-
-    Merge branch 'master' into obsd
 
 commit 45015ab30b36bdaefd3f3aeab73d287023928826
 Author: Kel Modderman <kel@otaku42.de>
@@ -1945,26 +2026,6 @@ Author: Eric Anholt <eric@anholt.net>
 Date:   Thu Jun 5 11:39:06 2008 -0700
 
     Catch and recover from yet another linux kernel bug in mprotect.
-
-commit 15b27bc2d50aa6fb4b129fe1ebc10a865804d828
-Merge: 8f029e8 95a9cae
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat May 24 16:06:35 2008 +0200
-
-    Merge branch 'obsd' of ssh://xenocara.org/git/xenocara/lib/libpciaccess into obsd
-
-commit 8f029e8b82b801c652c7b8a1392260401e78c4ae
-Merge: a8f1e4f 4586bb6
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Sat May 24 16:01:37 2008 +0200
-
-    Merge branch 'master' into obsd
-    
-    Conflicts:
-    
-    	src/common_interface.c
-    	src/openbsd_pci.c
-    	src/pciaccess_private.h
 
 commit 4586bb6766983d040bff38b43dc458c47e0ca21f
 Author: Adam Jackson <ajax@redhat.com>
@@ -2030,35 +2091,11 @@ Date:   Fri Mar 28 17:01:29 2008 -0700
 
     Fix function prototypes for C++
 
-commit 95a9cae5c8feb30861d4f64c82804d799a4fe952
-Merge: 09fcad7 a5c8620
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Wed Mar 26 22:35:19 2008 +0100
-
-    Merge branch 'master' into obsd
-
-commit 09fcad77f791038a9a07ed9b5d264c5bc70d0f96
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Wed Mar 26 22:34:41 2008 +0100
-
-    regen
-
 commit a5c862029846ddd5cecf44819f2a967e2a1672a9
 Author: Stuart Bennett <sb476@cam.ac.uk>
 Date:   Fri Mar 14 11:58:33 2008 -0400
 
     Bug #13988: Fix reads from "0"-sized ROMs.
-
-commit 3f0859aadb6eafd0b40ca49a9924ded472d11f5d
-Merge: a8f1e4f d898072
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Wed Mar 12 21:38:03 2008 +0100
-
-    Merge branch 'master' into obsd
-    
-    Conflicts:
-    
-    	src/openbsd_pci.c
 
 commit d898072e28ac35f5b3569f48f2e90a9ef8eee2ca
 Author: Mark Kettenis <mark.kettenis@xs4all.nl>
@@ -2091,18 +2128,6 @@ Author: Doug Chapman <doug.chapman@hp.com>
 Date:   Thu Mar 6 14:22:17 2008 -0500
 
     Bug #14818: Actually return the PCI vendor name, instead of NULL.
-
-commit a8f1e4f53269edb8bef0eb2bc07d84ec6d78eae0
-Author: Matthieu Herrb <matthieu.herrb@laas.fr>
-Date:   Mon Mar 3 00:14:15 2008 +0100
-
-    BSD Makefile
-
-commit 336ea5ee17443bbe061a0cb568c50dbace9c71bd
-Author: Mark Kettenis <mark.kettenis@xs4all.nl>
-Date:   Mon Mar 3 00:13:01 2008 +0100
-
-    OpenBSD support
 
 commit adc46f65d7a097ea0e8427a2496586a420c99d55
 Author: Julien Cristau <jcristau@debian.org>

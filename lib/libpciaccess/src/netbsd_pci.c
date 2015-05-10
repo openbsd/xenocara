@@ -16,14 +16,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <sys/param.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #ifdef HAVE_MTRR
 #include <machine/sysarch.h>
@@ -733,6 +733,7 @@ pci_device_netbsd_open_legacy_io(struct pci_io_handle *ret,
 
 	ret->base = base;
 	ret->size = size;
+	ret->is_legacy = 1;
 	return ret;
 #elif defined(__amd64__)
 	struct x86_64_iopl_args ia;
@@ -743,6 +744,7 @@ pci_device_netbsd_open_legacy_io(struct pci_io_handle *ret,
 
 	ret->base = base;
 	ret->size = size;
+	ret->is_legacy = 1;
 	return ret;
 #else
 	return NULL;
@@ -841,6 +843,29 @@ pci_device_netbsd_unmap_legacy(struct pci_device *dev, void *addr,
 	return pci_device_netbsd_unmap_range(dev, &map);
 }
 
+static int
+pci_device_netbsd_has_kernel_driver(struct pci_device *dev)
+{
+#ifdef PCI_IOC_DRVNAME
+	/*
+	 * NetBSD PCI_IOC_DRVNAME appears at the same time as pci_drvname(3)
+	 */
+	char drvname[16];
+
+	if (dev->bus >= nbuses)
+		return 0;
+
+	/*
+	 * vga(4) should be considered "not bound".
+	 */
+	if (pci_drvname(buses[dev->bus].fd, dev->dev, dev->func,
+			drvname, sizeof drvname) == 0 &&
+	    strncmp(drvname, "vga", 3) != 0)
+		return 1;
+#endif
+	return 0;
+}
+
 static const struct pci_system_methods netbsd_pci_methods = {
 	.destroy = pci_system_netbsd_destroy,
 	.destroy_device = NULL,
@@ -865,6 +890,7 @@ static const struct pci_system_methods netbsd_pci_methods = {
 	.write8 = pci_device_netbsd_write8,
 	.map_legacy = pci_device_netbsd_map_legacy,
 	.unmap_legacy = pci_device_netbsd_unmap_legacy,
+	.has_kernel_driver = pci_device_netbsd_has_kernel_driver,
 };
 
 int

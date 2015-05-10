@@ -33,6 +33,10 @@
  * \author Eric Anholt <eric@anholt.net>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,7 +49,6 @@
 #include <sys/mman.h>
 #include <sys/memrange.h>
 
-#include "config.h"
 #include "pciaccess.h"
 #include "pciaccess_private.h"
 
@@ -579,6 +582,7 @@ pci_device_freebsd_open_legacy_io(struct pci_io_handle *ret,
 
 	ret->base = base;
 	ret->size = size;
+	ret->is_legacy = 1;
 	return ret;
 #elif defined(PCI_MAGIC_IO_RANGE)
 	ret->memory = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED,
@@ -588,6 +592,7 @@ pci_device_freebsd_open_legacy_io(struct pci_io_handle *ret,
 
 	ret->base = base;
 	ret->size = size;
+	ret->is_legacy = 1;
 	return ret;
 #else
 	return NULL;

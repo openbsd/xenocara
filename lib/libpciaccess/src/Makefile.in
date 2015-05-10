@@ -122,22 +122,24 @@ am__libpciaccess_la_SOURCES_DIST = common_bridge.c common_iterator.c \
 	common_init.c common_interface.c common_io.c \
 	common_capability.c common_device_name.c common_map.c \
 	pciaccess_private.h common_vgaarb_stub.c common_vgaarb.c \
-	freebsd_pci.c x86_pci.c linux_sysfs.c linux_devmem.c \
+	x86_pci.c freebsd_pci.c linux_sysfs.c linux_devmem.c \
 	linux_devmem.h netbsd_pci.c openbsd_pci.c solx_devfs.c \
 	pci_tools.h
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@SOLARIS_TRUE@am__objects_1 = common_vgaarb_stub.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_1 =  \
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@	common_vgaarb.lo
-@FREEBSD_FALSE@@GNU_TRUE@am__objects_1 = common_vgaarb_stub.lo
-@FREEBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_FALSE@@SOLARIS_TRUE@am__objects_2 = solx_devfs.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_TRUE@am__objects_2 = openbsd_pci.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_2 = netbsd_pci.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_2 = linux_sysfs.lo \
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@	linux_devmem.lo
-@FREEBSD_FALSE@@GNU_TRUE@am__objects_2 = x86_pci.lo
-@FREEBSD_TRUE@am__objects_2 = freebsd_pci.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@SOLARIS_TRUE@am__objects_1 = common_vgaarb_stub.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_1 = common_vgaarb.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_TRUE@am__objects_1 =  \
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_TRUE@	common_vgaarb_stub.lo
+@CYGWIN_FALSE@@FREEBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
+@CYGWIN_TRUE@am__objects_1 = common_vgaarb_stub.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_FALSE@@SOLARIS_TRUE@am__objects_2 = solx_devfs.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_TRUE@am__objects_2 = openbsd_pci.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_2 = netbsd_pci.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_2 = linux_sysfs.lo \
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@	linux_devmem.lo
+@CYGWIN_FALSE@@FREEBSD_FALSE@@GNU_TRUE@am__objects_2 = x86_pci.lo
+@CYGWIN_FALSE@@FREEBSD_TRUE@am__objects_2 = freebsd_pci.lo
+@CYGWIN_TRUE@am__objects_2 = x86_pci.lo
 am_libpciaccess_la_OBJECTS = common_bridge.lo common_iterator.lo \
 	common_init.lo common_interface.lo common_io.lo \
 	common_capability.lo common_device_name.lo common_map.lo \
@@ -337,6 +339,7 @@ top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(CWARNFLAGS) @PCIACCESS_CFLAGS@
 lib_LTLIBRARIES = libpciaccess.la
+@CYGWIN_TRUE@OS_SUPPORT = x86_pci.c
 @FREEBSD_TRUE@OS_SUPPORT = freebsd_pci.c
 @GNU_TRUE@OS_SUPPORT = x86_pci.c
 @LINUX_TRUE@OS_SUPPORT = linux_sysfs.c linux_devmem.c linux_devmem.h
@@ -344,6 +347,7 @@ lib_LTLIBRARIES = libpciaccess.la
 @OPENBSD_TRUE@OS_SUPPORT = openbsd_pci.c
 # VGA Arbiter code is included in openbsd_pci.c
 @SOLARIS_TRUE@OS_SUPPORT = solx_devfs.c pci_tools.h
+@CYGWIN_TRUE@VGA_ARBITER = common_vgaarb_stub.c
 @FREEBSD_TRUE@VGA_ARBITER = common_vgaarb_stub.c
 @GNU_TRUE@VGA_ARBITER = common_vgaarb_stub.c
 @LINUX_TRUE@VGA_ARBITER = common_vgaarb.c

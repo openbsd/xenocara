@@ -56,6 +56,11 @@ OS_SUPPORT = x86_pci.c
 VGA_ARBITER = common_vgaarb_stub.c
 endif
 
+if CYGWIN
+OS_SUPPORT = x86_pci.c
+VGA_ARBITER = common_vgaarb_stub.c
+endif
+
 libpciaccess_la_SOURCES = common_bridge.c \
 	common_iterator.c \
 	common_init.c \

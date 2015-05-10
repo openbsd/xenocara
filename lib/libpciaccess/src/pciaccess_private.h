@@ -42,7 +42,7 @@
  * know of any OS we support where this isn't available in a sufficiently
  * new version, so warn unconditionally.
  */
-#include <sys/fcntl.h>
+#include <fcntl.h>
 
 #ifndef O_CLOEXEC
 #warning O_CLOEXEC not available, please upgrade.
@@ -109,6 +109,7 @@ struct pci_io_handle {
     pciaddr_t size;
     void *memory;
     int fd;
+    int is_legacy;
 };
 
 struct pci_device_private {

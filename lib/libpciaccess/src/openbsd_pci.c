@@ -464,6 +464,7 @@ pci_device_openbsd_open_legacy_io(struct pci_io_handle *ret,
 		ret->base = legacy_io_handle->base;
 		ret->size = legacy_io_handle->size;
 		ret->memory = legacy_io_handle->memory;
+		ret->is_legacy = 1;
 		return ret;
 	}
 #if defined(__i386__)

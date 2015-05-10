@@ -34,6 +34,10 @@
 
 #define _GNU_SOURCE
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -56,8 +60,6 @@
 #define outl(x,y) do {} while (0)
 #define iopl(x) -1
 #endif
-
-#include "config.h"
 
 #ifdef HAVE_MTRR
 #include <asm/mtrr.h>
@@ -759,6 +761,7 @@ pci_device_linux_sysfs_open_device_io(struct pci_io_handle *ret,
 
     ret->base = base;
     ret->size = size;
+    ret->is_legacy = 0;
 
     return ret;
 }
@@ -796,6 +799,7 @@ pci_device_linux_sysfs_open_legacy_io(struct pci_io_handle *ret,
 
     ret->base = base;
     ret->size = size;
+    ret->is_legacy = 1;
 
     return ret;
 }
@@ -813,10 +817,14 @@ pci_device_linux_sysfs_read32(struct pci_io_handle *handle, uint32_t port)
 {
     uint32_t ret;
 
-    if (handle->fd > -1)
-	pread(handle->fd, &ret, 4, port + handle->base);
-    else
+    if (handle->fd > -1) {
+	if (handle->is_legacy)
+	    pread(handle->fd, &ret, 4, port + handle->base);
+	else
+	    pread(handle->fd, &ret, 4, port);
+    } else {
 	ret = inl(port + handle->base);
+    }
 	
     return ret;
 }
@@ -826,10 +834,14 @@ pci_device_linux_sysfs_read16(struct pci_io_handle *handle, uint32_t port)
 {
     uint16_t ret;
 
-    if (handle->fd > -1)
-	pread(handle->fd, &ret, 2, port + handle->base);
-    else
+    if (handle->fd > -1) {
+	if (handle->is_legacy)
+	    pread(handle->fd, &ret, 2, port + handle->base);
+	else
+	    pread(handle->fd, &ret, 2, port);
+    } else {
 	ret = inw(port + handle->base);
+    }
 
     return ret;
 }
@@ -839,10 +851,14 @@ pci_device_linux_sysfs_read8(struct pci_io_handle *handle, uint32_t port)
 {
     uint8_t ret;
 
-    if (handle->fd > -1)
-	pread(handle->fd, &ret, 1, port + handle->base);
-    else
+    if (handle->fd > -1) {
+	if (handle->is_legacy)
+	    pread(handle->fd, &ret, 1, port + handle->base);
+	else
+	    pread(handle->fd, &ret, 1, port);
+    } else {
 	ret = inb(port + handle->base);
+    }
 
     return ret;
 }
@@ -851,30 +867,42 @@ static void
 pci_device_linux_sysfs_write32(struct pci_io_handle *handle, uint32_t port,
 			       uint32_t data)
 {
-    if (handle->fd > -1)
-	pwrite(handle->fd, &data, 4, port + handle->base);
-    else
+    if (handle->fd > -1) {
+	if (handle->is_legacy)
+	    pwrite(handle->fd, &data, 4, port + handle->base);
+	else
+	    pwrite(handle->fd, &data, 4, port);
+    } else {
 	outl(data, port + handle->base);
+    }
 }
 
 static void
 pci_device_linux_sysfs_write16(struct pci_io_handle *handle, uint32_t port,
 			       uint16_t data)
 {
-    if (handle->fd > -1)
-	pwrite(handle->fd, &data, 2, port + handle->base);
-    else
+    if (handle->fd > -1) {
+	if (handle->is_legacy)
+	    pwrite(handle->fd, &data, 2, port + handle->base);
+	else
+	    pwrite(handle->fd, &data, 2, port);
+    } else {
 	outw(data, port + handle->base);
+    }
 }
 
 static void
 pci_device_linux_sysfs_write8(struct pci_io_handle *handle, uint32_t port,
 			      uint8_t data)
 {
-    if (handle->fd > -1)
-	pwrite(handle->fd, &data, 1, port + handle->base);
-    else
+    if (handle->fd > -1) {
+	if (handle->is_legacy)
+	    pwrite(handle->fd, &data, 1, port + handle->base);
+	else
+	    pwrite(handle->fd, &data, 1, port);
+    } else {
 	outb(data, port + handle->base);
+    }
 }
 
 static int
