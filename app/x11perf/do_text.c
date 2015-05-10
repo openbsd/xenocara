@@ -35,7 +35,7 @@ static int charsPerLine, totalLines;
 
 
 int 
-InitText(XParms xp, Parms p, int reps)
+InitText(XParms xp, Parms p, int64_t reps)
 {
     int		i, j;
     char	ch;
@@ -119,7 +119,7 @@ InitText(XParms xp, Parms p, int reps)
 } /* GetRealChar */
 
 int 
-InitText16(XParms xp, Parms p, int reps)
+InitText16(XParms xp, Parms p, int64_t reps)
 {
     register int	i, j;
     register char	*pbuf0, *pbuf1, *pbuf2;
@@ -218,7 +218,7 @@ InitText16(XParms xp, Parms p, int reps)
 }
 
 void 
-DoText(XParms xp, Parms p, int reps)
+DoText(XParms xp, Parms p, int64_t reps)
 {
     int     i, line, startLine;
 
@@ -240,7 +240,7 @@ DoText(XParms xp, Parms p, int reps)
 }
 
 void 
-DoText16(XParms xp, Parms p, int reps)
+DoText16(XParms xp, Parms p, int64_t reps)
 {
     int     i, line, startLine;
 
@@ -262,7 +262,7 @@ DoText16(XParms xp, Parms p, int reps)
 }
 
 void 
-DoPolyText(XParms xp, Parms p, int reps)
+DoPolyText(XParms xp, Parms p, int64_t reps)
 {
     int     i, line, startLine;
 
@@ -284,7 +284,7 @@ DoPolyText(XParms xp, Parms p, int reps)
 }
 
 void 
-DoPolyText16(XParms xp, Parms p, int reps)
+DoPolyText16(XParms xp, Parms p, int64_t reps)
 {
     int     i, line, startLine;
 
@@ -306,7 +306,7 @@ DoPolyText16(XParms xp, Parms p, int reps)
 }
 
 void 
-DoImageText(XParms xp, Parms p, int reps)
+DoImageText(XParms xp, Parms p, int64_t reps)
 {
     int     i, line, startLine;
 
@@ -328,7 +328,7 @@ DoImageText(XParms xp, Parms p, int reps)
 }
 
 void 
-DoImageText16(XParms xp, Parms p, int reps)
+DoImageText16(XParms xp, Parms p, int64_t reps)
 {
     int     i, line, startLine;
 
@@ -405,7 +405,7 @@ static XftDraw	*aadraw;
 static XftColor	aacolor;
 
 int 
-InitAAText(XParms xp, Parms p, int reps)
+InitAAText(XParms xp, Parms p, int64_t reps)
 {
     int			i, j;
     char		ch;
@@ -471,7 +471,7 @@ InitAAText(XParms xp, Parms p, int reps)
 }
 
 void 
-DoAAText(XParms xp, Parms p, int reps)
+DoAAText(XParms xp, Parms p, int64_t reps)
 {
     int     i, line, startLine;
 

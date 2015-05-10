@@ -29,7 +29,7 @@ static XPoint *points;
 static GC      pgc;
 
 int 
-InitTrapezoids(XParms xp, Parms p, int reps)
+InitTrapezoids(XParms xp, Parms p, int64_t reps)
 {
     int     i, numPoints;
     int     rows;
@@ -78,7 +78,7 @@ InitTrapezoids(XParms xp, Parms p, int reps)
 }
 
 void 
-DoTrapezoids(XParms xp, Parms p, int reps)
+DoTrapezoids(XParms xp, Parms p, int64_t reps)
 {
     int     i, j;
     XPoint  *curPoint;
@@ -118,7 +118,7 @@ static Pixmap		    maskPixmap;
 static Picture		    mask;
 
 int
-InitFixedTraps(XParms xp, Parms p, int reps)
+InitFixedTraps(XParms xp, Parms p, int64_t reps)
 {
     int     i, numTraps;
     int     rows;
@@ -230,7 +230,7 @@ InitFixedTraps(XParms xp, Parms p, int reps)
 }
 
 void 
-DoFixedTraps(XParms xp, Parms p, int reps)
+DoFixedTraps(XParms xp, Parms p, int64_t reps)
 {
     int		i;
     Picture	white, black, src, dst;
@@ -264,7 +264,7 @@ EndFixedTraps (XParms xp, Parms p)
 }
 
 int
-InitFixedTrapezoids(XParms xp, Parms p, int reps)
+InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 {
     int     i, numTraps;
     int     rows;
@@ -364,7 +364,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int reps)
 }
 
 void 
-DoFixedTrapezoids(XParms xp, Parms p, int reps)
+DoFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 {
     int		i;
     Picture	white, black, src, dst;

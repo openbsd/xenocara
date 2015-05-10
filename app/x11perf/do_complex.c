@@ -36,7 +36,7 @@ static GC       pgc;
 #endif /* QNX4 */
 
 int 
-InitComplexPoly(XParms xp, Parms p, int reps)
+InitComplexPoly(XParms xp, Parms p, int64_t reps)
 {
     int     i, j, numPoints;
     int     x, y;
@@ -96,7 +96,7 @@ InitComplexPoly(XParms xp, Parms p, int reps)
 }
 
 void 
-DoComplexPoly(XParms xp, Parms p, int reps)
+DoComplexPoly(XParms xp, Parms p, int64_t reps)
 {
     int     i, j;
     XPoint  *curPoint;
@@ -123,7 +123,7 @@ EndComplexPoly(XParms xp, Parms p)
 }
 
 int 
-InitGeneralPoly(XParms xp, Parms p, int reps)
+InitGeneralPoly(XParms xp, Parms p, int64_t reps)
 {
     int     i, j, numPoints;
     int	    nsides;
@@ -169,7 +169,7 @@ InitGeneralPoly(XParms xp, Parms p, int reps)
 }
 
 void 
-DoGeneralPoly(XParms xp, Parms p, int reps)
+DoGeneralPoly(XParms xp, Parms p, int64_t reps)
 {
     int     i, j;
     int	    nsides;

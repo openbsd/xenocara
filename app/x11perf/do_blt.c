@@ -30,6 +30,7 @@ static Pixmap   pix;
 static XImage   *image;
 static XPoint   points[NUMPOINTS];
 static XSegment *segsa, *segsb;
+static XSegment *segsa2, *segsb2;
 
 #define NegMod(x, y) ((y) - (((-x)-1) % (7)) - 1)
 
@@ -62,7 +63,7 @@ InitBltLines(void)
 }
 
 int 
-InitScroll(XParms xp, Parms p, int reps)
+InitScroll(XParms xp, Parms p, int64_t reps)
 {
     InitBltLines();
     XDrawLines(xp->d, xp->w, xp->fggc, points, NUMPOINTS, CoordModeOrigin);
@@ -70,7 +71,7 @@ InitScroll(XParms xp, Parms p, int reps)
 }
 
 void 
-DoScroll(XParms xp, Parms p, int reps)
+DoScroll(XParms xp, Parms p, int64_t reps)
 {
     int i, size, x, y, xorg, yorg, delta;
 
@@ -123,18 +124,20 @@ EndScroll(XParms xp, Parms p)
 }
 
 static void 
-InitCopyLocations(XParms xp, Parms p, int reps)
+InitCopyLocations(int size, int mul, int div, 
+		  int64_t reps, XSegment **ap, XSegment **bp)
 {
-    int x1, y1, x2, y2, size, i;
+    int x1, y1, x2, y2, i;
     int xinc, yinc;
     int width, height;
+    XSegment *a, *b;
 
+    size = size * mul / div;
     /* Try to exercise all alignments of src and destination equally, as well
        as all 4 top-to-bottom/bottom-to-top, left-to-right, right-to-left
        copying directions.  Computation done here just to make sure slow
        machines aren't measuring anything but the XCopyArea calls.
     */
-    size = p->special;
     xinc = (size & ~3) + 1;
     yinc = xinc + 3;
 
@@ -146,13 +149,13 @@ InitCopyLocations(XParms xp, Parms p, int reps)
     x2 = width;
     y2 = height;
     
-    segsa = (XSegment *)malloc(reps * sizeof(XSegment));
-    segsb = (XSegment *)malloc(reps * sizeof(XSegment));
+    *ap = a = (XSegment *)malloc(reps * sizeof(XSegment));
+    *bp = b = (XSegment *)malloc(reps * sizeof(XSegment));
     for (i = 0; i != reps; i++) {
-	segsa[i].x1 = x1;
-	segsa[i].y1 = y1;
-	segsa[i].x2 = x2;
-	segsa[i].y2 = y2;
+	a[i].x1 = x1 * div / mul;
+	a[i].y1 = y1 * div / mul;
+	a[i].x2 = x2 * div / mul;
+	a[i].y2 = y2 * div / mul;
 
 	/* Move x2, y2, location backward */
 	x2 -= xinc;
@@ -164,10 +167,10 @@ InitCopyLocations(XParms xp, Parms p, int reps)
 	    }
 	}
 
-	segsb[i].x1 = x1;
-	segsb[i].y1 = y1;
-	segsb[i].x2 = x2;
-	segsb[i].y2 = y2;
+	b[i].x1 = x1 * div / mul;
+	b[i].y1 = y1 * div / mul;
+	b[i].x2 = x2 * div / mul;
+	b[i].y2 = y2 * div / mul;
 
 	/* Move x1, y1 location forward */
 	x1 += xinc;
@@ -183,15 +186,15 @@ InitCopyLocations(XParms xp, Parms p, int reps)
 
 
 int 
-InitCopyWin(XParms xp, Parms p, int reps)
+InitCopyWin(XParms xp, Parms p, int64_t reps)
 {
     (void) InitScroll(xp, p, reps);
-    InitCopyLocations(xp, p, reps);
+    InitCopyLocations(p->special, 1, 1, reps, &segsa, &segsb);
     return reps;
 }
 
 int 
-InitCopyPix(XParms xp, Parms p, int reps)
+InitCopyPix(XParms xp, Parms p, int64_t reps)
 {
     GC		pixgc;
     (void) InitCopyWin(xp, p, reps);
@@ -206,7 +209,7 @@ InitCopyPix(XParms xp, Parms p, int reps)
 }
 
 int 
-InitGetImage(XParms xp, Parms p, int reps)
+InitGetImage(XParms xp, Parms p, int64_t reps)
 {
     (void) InitCopyWin(xp, p, reps);
 
@@ -221,7 +224,7 @@ InitGetImage(XParms xp, Parms p, int reps)
 }
 
 int 
-InitPutImage(XParms xp, Parms p, int reps)
+InitPutImage(XParms xp, Parms p, int64_t reps)
 {
     if(!InitGetImage(xp, p, reps))return False;
     XClearWindow(xp->d, xp->w);
@@ -229,7 +232,7 @@ InitPutImage(XParms xp, Parms p, int reps)
 }
 
 static void 
-CopyArea(XParms xp, Parms p, int reps, Drawable src, Drawable dst)
+CopyArea(XParms xp, Parms p, int64_t reps, Drawable src, Drawable dst)
 {
     int i, size;
     XSegment *sa, *sb;
@@ -249,33 +252,33 @@ CopyArea(XParms xp, Parms p, int reps, Drawable src, Drawable dst)
 }
 
 void 
-DoCopyWinWin(XParms xp, Parms p, int reps)
+DoCopyWinWin(XParms xp, Parms p, int64_t reps)
 {
     CopyArea(xp, p, reps, xp->w, xp->w);
 }
 
 void 
-DoCopyPixWin(XParms xp, Parms p, int reps)
+DoCopyPixWin(XParms xp, Parms p, int64_t reps)
 {
     CopyArea(xp, p, reps, pix, xp->w);
 }
 
 void 
-DoCopyWinPix(XParms xp, Parms p, int reps)
+DoCopyWinPix(XParms xp, Parms p, int64_t reps)
 {
     CopyArea(xp, p, reps, xp->w, pix);
     xp->p = pix;	/* HardwareSync will now sync on pixmap */
 }
 
 void 
-DoCopyPixPix(XParms xp, Parms p, int reps)
+DoCopyPixPix(XParms xp, Parms p, int64_t reps)
 {
     CopyArea(xp, p, reps, pix, pix);
     xp->p = pix;	/* HardwareSync will now sync on pixmap */
 }
 
 void 
-DoGetImage(XParms xp, Parms p, int reps)
+DoGetImage(XParms xp, Parms p, int64_t reps)
 {
     int i, size;
     XSegment *sa, *sb;
@@ -316,7 +319,7 @@ rectangle.
 }
 
 void 
-DoPutImage(XParms xp, Parms p, int reps)
+DoPutImage(XParms xp, Parms p, int64_t reps)
 {
     int i, size;
     XSegment *sa, *sb;
@@ -365,7 +368,7 @@ shmerrorhandler(Display *d, XErrorEvent *e)
 }
 
 static int
-InitShmImage(XParms xp, Parms p, int reps, Bool read_only)
+InitShmImage(XParms xp, Parms p, int64_t reps, Bool read_only)
 {
     int	image_size;
 
@@ -447,7 +450,7 @@ InitShmImage(XParms xp, Parms p, int reps, Bool read_only)
 }
 
 int
-InitShmPutImage(XParms xp, Parms p, int reps)
+InitShmPutImage(XParms xp, Parms p, int64_t reps)
 {
     if (!InitShmImage(xp, p, reps, True)) return False;
     XClearWindow(xp->d, xp->w);
@@ -455,13 +458,13 @@ InitShmPutImage(XParms xp, Parms p, int reps)
 }
 
 int
-InitShmGetImage(XParms xp, Parms p, int reps)
+InitShmGetImage(XParms xp, Parms p, int64_t reps)
 {
     return InitShmImage(xp, p, reps, False);
 }
 
-void
-DoShmPutImage(XParms xp, Parms p, int reps)
+void 
+DoShmPutImage(XParms xp, Parms p, int64_t reps)
 {
     int i, size;
     XSegment *sa, *sb;
@@ -481,7 +484,7 @@ DoShmPutImage(XParms xp, Parms p, int reps)
 }
 
 void
-DoShmGetImage(XParms xp, Parms p, int reps)
+DoShmGetImage(XParms xp, Parms p, int64_t reps)
 {
     int i, size;
     XSegment *sa, *sb;
@@ -539,6 +542,11 @@ EndCopyWin(XParms xp, Parms p)
     EndScroll(xp, p);
     free(segsa);
     free(segsb);
+    if (segsa2)
+	free (segsa2);
+    if (segsb2)
+	free (segsb2);
+    segsa = segsb = segsa2 = segsb2 = NULL;
 }
 
 void 
@@ -560,13 +568,13 @@ EndGetImage(XParms xp, Parms p)
 }
 
 int
-InitCopyPlane(XParms xp, Parms p, int reps)
+InitCopyPlane(XParms xp, Parms p, int64_t reps)
 {
     XGCValues   gcv;
     GC		pixgc;
 
     InitBltLines();
-    InitCopyLocations(xp, p, reps);
+    InitCopyLocations(p->special, 1, 1, reps, &segsa, &segsb);
 
     /* Create pixmap to write stuff into, and initialize it */
     pix = XCreatePixmap(xp->d, xp->w, WIDTH, HEIGHT, 
@@ -587,7 +595,7 @@ InitCopyPlane(XParms xp, Parms p, int reps)
 }
 
 void 
-DoCopyPlane(XParms xp, Parms p, int reps)
+DoCopyPlane(XParms xp, Parms p, int64_t reps)
 {
     int		i, size;
     XSegment    *sa, *sb;
@@ -611,21 +619,28 @@ DoCopyPlane(XParms xp, Parms p, int reps)
 static Picture	winPict, pixPict;
 
 int
-InitCompositeWin(XParms xp, Parms p, int reps)
+InitCompositeWin(XParms xp, Parms p, int64_t reps)
 {
     XRenderPictFormat	*format;
+
     (void) InitScroll (xp, p, reps);
-    InitCopyLocations (xp, p, reps);
+    InitCopyLocations(p->special, 1, 1, reps, &segsa, &segsb);
+    if (p->fillStyle) {
+	int mul = 0x10000;
+	int div = p->fillStyle;
+	InitCopyLocations (p->special, mul, div, reps, &segsa2, &segsb2);
+    }
     format = XRenderFindVisualFormat (xp->d, xp->vinfo.visual);
     winPict = XRenderCreatePicture (xp->d, xp->w, format, 0, NULL);
     return reps;
 }
 
 int
-InitCompositePix(XParms xp, Parms p, int reps)
+InitCompositePix(XParms xp, Parms p, int64_t reps)
 {
     XRenderPictFormat	*format = NULL;
     int			depth;
+    static XRenderColor c = { 0xffff, 0x0000, 0xffff, 0xffff };
 
     (void) InitCompositeWin (xp, p, reps);
     
@@ -664,11 +679,22 @@ InitCompositePix(XParms xp, Parms p, int reps)
 		      winPict, None, pixPict,
 		      0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
     
+    XRenderFillRectangle (xp->d, PictOpSrc,
+			  pixPict, &c, 0, 0, WIDTH, HEIGHT);
 #if 1
-    XRenderComposite (xp->d, PictOpOver,
+    XRenderComposite (xp->d, PictOpSrc,
 		      winPict, None, pixPict,
 		      0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
 #endif
+    if (p->fillStyle) {
+	XTransform		transform;
+	memset (&transform, '\0', sizeof (transform));
+	transform.matrix[0][0] = ((long long) 0x10000 * 0x10000) / p->fillStyle;
+	transform.matrix[1][1] = ((long long) 0x10000 * 0x10000) / p->fillStyle;
+	transform.matrix[2][2] = 0x10000;
+	XRenderSetPictureTransform (xp->d, pixPict, &transform);
+	XRenderSetPictureFilter (xp->d, pixPict, FilterBilinear, NULL, 0);
+    }
     return reps;
 }
 
@@ -688,38 +714,45 @@ EndCompositeWin (XParms xp, Parms p)
 }
 
 static void 
-CompositeArea(XParms xp, Parms p, int reps, Picture src, Picture dst)
+CompositeArea(XParms xp, Parms p, int64_t reps, Picture src, Picture dst)
 {
     int i, size;
     XSegment *sa, *sb;
+    XSegment *sa2, *sb2;
+    
 
     size = p->special;
-    for (sa = segsa, sb = segsb, i = 0; i != reps; i++, sa++, sb++) {
+    sa = segsa;
+    sb = segsb;
+    sa2 = segsa2 ? segsa2 : segsa;
+    sb2 = segsb2 ? segsb2 : segsb;
+    for (i = 0; i < reps; i++) {
 	XRenderComposite (xp->d, xp->func,
 			  src, None, dst,
-			  sa->x1, sa->y1, 0, 0, 
-			  sa->x2, sa->y2, size, size);
+			  sa2->x1, sa2->y1, 0, 0, sa->x2, sa->y2, size, size);
 	XRenderComposite (xp->d, xp->func,
 			  src, None, dst,
-			  sa->x2, sa->y2, 0, 0, sa->x1, sa->y1, size, size);
+			  sa2->x2, sa2->y2, 0, 0, sa->x1, sa->y1, size, size);
 	XRenderComposite (xp->d, xp->func,
 			  src, None, dst,
-			  sb->x2, sb->y2, 0, 0, sb->x1, sb->y1, size, size);
+			  sb2->x2, sb2->y2, 0, 0, sb->x1, sb->y1, size, size);
 	XRenderComposite (xp->d, xp->func,
 			  src, None, dst,
-			  sb->x1, sb->y1, 0, 0, sb->x2, sb->y2, size, size);
+			  sb2->x1, sb2->y1, 0, 0, sb->x2, sb->y2, size, size);
 	CheckAbort ();
+	sa++; sb++;
+	sa2++; sb2++;
     }
 }
 
 void
-DoCompositeWinWin (XParms xp, Parms p, int reps)
+DoCompositeWinWin (XParms xp, Parms p, int64_t reps)
 {
     CompositeArea (xp, p, reps, winPict, winPict);
 }
 
 void
-DoCompositePixWin (XParms xp, Parms p, int reps)
+DoCompositePixWin (XParms xp, Parms p, int64_t reps)
 {
     CompositeArea (xp, p, reps, pixPict, winPict);
 }

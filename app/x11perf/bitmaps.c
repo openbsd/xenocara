@@ -24,7 +24,7 @@ SOFTWARE.
 #include "x11perf.h"
 #include "bitmaps.h"
 
-static unsigned char bitmap8x8[] = {
+static const unsigned char bitmap8x8[] = {
     0xCC, 0x66, 0x33, 0x99, 0xCC, 0x66, 0x33, 0x99
 /* Alternate maps for testing out your stipple code.  Only the above should
    be used for timing, though.
@@ -33,13 +33,13 @@ static unsigned char bitmap8x8[] = {
 */
 };
 
-static unsigned char bitmap4x4[] = {
+static const unsigned char bitmap4x4[] = {
    0x03, 0x06, 0x0c, 0x09
 };
 
 #define oddbit_width 17
 #define oddbit_height 15
-static unsigned char oddbit_bits[] = {
+static const unsigned char oddbit_bits[] = {
    0x01, 0x00, 0x01, 0xc2, 0x87, 0x00, 0x34, 0x58, 0x00, 0x08, 0x20, 0x00,
    0x38, 0x38, 0x00, 0x44, 0x44, 0x00, 0x84, 0x42, 0x00, 0x04, 0x41, 0x00,
    0x84, 0x42, 0x00, 0x44, 0x44, 0x00, 0x28, 0x28, 0x00, 0x18, 0x30, 0x00,
@@ -49,7 +49,7 @@ static unsigned char oddbit_bits[] = {
 #define mensetmanus_width 161
 #define mensetmanus_height 145
 
-static unsigned char mensetmanus_bits[] = {
+static const unsigned char mensetmanus_bits[] = {
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  0x00, 0xc0, 0x7f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -308,7 +308,7 @@ static unsigned char mensetmanus_bits[] = {
 #define escherknot_width 216
 #define escherknot_height 208
 
-static unsigned char escherknot_bits[] = {
+static const unsigned char escherknot_bits[] = {
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -791,20 +791,21 @@ void SetFillStyle(XParms xp, Parms p)
 
 	if (!p->font) {
 	    /* Little 8x8 stipple */
-	    stipple = XCreateBitmapFromData(xp->d, xp->w, (char *)bitmap8x8, 8, 8);
+	    stipple = XCreateBitmapFromData(xp->d, xp->w,
+					    (const char *)bitmap8x8, 8, 8);
 	} else if (!strcmp (p->font, "escherknot")) {
 	    /* Enormous stipple which is x4 bits wide */
 	    stipple = XCreateBitmapFromData(xp->d, xp->w,
-			(char *)escherknot_bits, escherknot_width, escherknot_height);
+			(const char *)escherknot_bits, escherknot_width, escherknot_height);
 	    xorg = -3;
 	} else if (!strcmp (p->font, "OddTile")) {
 	    /* Odd sized tile */
 	    stipple = XCreateBitmapFromData(xp->d, xp->w,
-			(char *)oddbit_bits, oddbit_width, oddbit_height);
+			(const char *)oddbit_bits, oddbit_width, oddbit_height);
 	} else {
 	    /* Enormous stipple.  Well, pretty big. */
 	    stipple = XCreateBitmapFromData(xp->d, xp->w,
-		       (char *)mensetmanus_bits, mensetmanus_width, mensetmanus_height);
+		       (const char *)mensetmanus_bits, mensetmanus_width, mensetmanus_height);
 	}
 
 	gcv.stipple = stipple;

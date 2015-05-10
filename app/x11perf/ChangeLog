@@ -1,3 +1,133 @@
+commit 294ea038fe9cefd690f06f6b5f48507c266b4d24
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 22:42:25 2015 -0700
+
+    x11perf 1.6.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bb2c3601b2bc1f4adcd21c79501fc514ae1688f3
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sat Jan 10 10:46:46 2015 +0100
+
+    remove srand(1) call as nothing calls any rand like functions in x11perf
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Thomas Klausner  <wiz@NetBSD.org>
+
+commit 2b5c1ff8926b82675c8db1f44de4c910dd9265a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 25 14:10:02 2014 -0700
+
+    Combine help_message array into a single string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2179b566688838439d6388e1468af404e06d7350
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 25 13:57:43 2014 -0700
+
+    Mark bitmap data as const
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ebaf6141a9932f934c87fce0c6f91c5ca25d1f3c
+Author: Peter Harris <pharris@opentext.com>
+Date:   Wed Mar 26 13:45:59 2014 -0400
+
+    Fix name collision in -rgb*text
+    
+    Prepend a c to the test names of the "core" versions, to match the
+    -aa*text and -caa*text tests.
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+
+commit cb8d37dc33f2044636a04b0f81ebb4023daa93a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:08:51 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6333588e55df50cea89171352dcf15db969af69d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:08:51 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1999b37e12fc358aa21f8dac2d11edff43377fc0
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Mar 10 09:12:45 2014 -0700
+
+    Add '-pause' option to delay between runs
+    
+    This lets the package cool down to get more consistent performance numbers.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit f640487e27a3904831ff85033a2869e981e9d942
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Mar 5 19:11:25 2014 -0800
+
+    Switch to 64-bit ints
+
+commit 9ba0ce7d849bbd94644664b60b50bd1e2d5813b7
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Mar 29 13:48:02 2008 -0700
+
+    Add scaling composite tests
+
+commit 21c0d1903161a88d09c64811cf97dda3a8a8e751
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Mar 29 13:47:40 2008 -0700
+
+    Fix reported pixmap format name
+
+commit 734c164464a3b5d9d9dd2dc3993de85b1f63c2ff
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Mar 29 11:45:29 2008 -0700
+
+    Add up/down scaling composite tests
+
+commit ccd5cd064817595cfd0e04a926b73fb17fe31092
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 23 10:09:59 2013 -0800
+
+    Assume signal handlers return void, as C89 requires
+    
+    Drops use of autoconf's obsolete AC_TYPE_SIGNAL
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b1f22217f6c513be07612d8ed88fe5540ce7be48
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 20 23:25:16 2013 -0800
+
+    Drop imake fallback for RETSIGTYPE definition
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47479aabdb82907929d76ac87ca71f44819791f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 20 23:22:29 2013 -0800
+
+    Mark usage & AbortTest as _X_NORETURN
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5340bddccdd21fd34aae996ac3347ddb71f00de6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 18:53:17 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 84bfc56a89929999db92925c078d9e2f801b1689
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jul 27 18:29:38 2011 -0700

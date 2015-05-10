@@ -162,14 +162,14 @@ GenerateLines(XParms xp, Parms p, Bool ddashed)
 }
  
 int 
-InitLines(XParms xp, Parms p, int reps)
+InitLines(XParms xp, Parms p, int64_t reps)
 {
     GenerateLines(xp, p, False);
 	return reps;
 }
 
 static int 
-GenerateWideLines(XParms xp, Parms p, int reps, Bool ddashed)
+GenerateWideLines(XParms xp, Parms p, int64_t reps, Bool ddashed)
 {
     int size;
 
@@ -193,13 +193,13 @@ GenerateWideLines(XParms xp, Parms p, int reps, Bool ddashed)
 }
 
 int 
-InitWideLines(XParms xp, Parms p, int reps)
+InitWideLines(XParms xp, Parms p, int64_t reps)
 {
     return GenerateWideLines(xp, p, reps, False);
 }
  
 int 
-InitDashedLines(XParms xp, Parms p, int reps)
+InitDashedLines(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
 
@@ -215,7 +215,7 @@ InitDashedLines(XParms xp, Parms p, int reps)
 }
 
 int 
-InitWideDashedLines(XParms xp, Parms p, int reps)
+InitWideDashedLines(XParms xp, Parms p, int64_t reps)
 {
     int		size;
     XGCValues   gcv;
@@ -236,7 +236,7 @@ InitWideDashedLines(XParms xp, Parms p, int reps)
 }
 
 int 
-InitDoubleDashedLines(XParms xp, Parms p, int reps)
+InitDoubleDashedLines(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
 
@@ -252,7 +252,7 @@ InitDoubleDashedLines(XParms xp, Parms p, int reps)
 }
 
 int 
-InitWideDoubleDashedLines(XParms xp, Parms p, int reps)
+InitWideDoubleDashedLines(XParms xp, Parms p, int64_t reps)
 {
     int		size;
     XGCValues   gcv;
@@ -273,7 +273,7 @@ InitWideDoubleDashedLines(XParms xp, Parms p, int reps)
 }
 
 void 
-DoLines(XParms xp, Parms p, int reps)
+DoLines(XParms xp, Parms p, int64_t reps)
 {
     int i;
 

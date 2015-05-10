@@ -32,7 +32,7 @@ SOFTWARE.
 static Atom XA_PK_TEMP;
 
 void 
-DoNoOp(XParms xp, Parms p, int reps)
+DoNoOp(XParms xp, Parms p, int64_t reps)
 {
     int     i;
 
@@ -44,7 +44,7 @@ DoNoOp(XParms xp, Parms p, int reps)
 
 
 void 
-DoGetAtom(XParms xp, Parms p, int reps)
+DoGetAtom(XParms xp, Parms p, int64_t reps)
 {
     char    *atom;
     int     i;
@@ -57,7 +57,7 @@ DoGetAtom(XParms xp, Parms p, int reps)
 }
 
 void 
-DoQueryPointer(XParms xp, Parms p, int reps)
+DoQueryPointer(XParms xp, Parms p, int64_t reps)
 {
     int     i;
     Window  w;
@@ -71,7 +71,7 @@ DoQueryPointer(XParms xp, Parms p, int reps)
 }
 
 int 
-InitGetProperty(XParms xp, Parms p, int reps)
+InitGetProperty(XParms xp, Parms p, int64_t reps)
 {
     long foo[4];
 
@@ -87,7 +87,7 @@ InitGetProperty(XParms xp, Parms p, int reps)
 }
 
 void 
-DoGetProperty(XParms xp, Parms p, int reps)
+DoGetProperty(XParms xp, Parms p, int64_t reps)
 {
     int     i;
     int     actual_format;

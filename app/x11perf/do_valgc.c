@@ -31,7 +31,7 @@ SOFTWARE.
 static Window win[2];
 
 int 
-InitGC(XParms xp, Parms p, int reps)
+InitGC(XParms xp, Parms p, int64_t reps)
 {
     win[0] = XCreateSimpleWindow(
 	xp->d, xp->w, 10, 10, 10, 10, 1, xp->foreground, xp->background);
@@ -42,7 +42,7 @@ InitGC(XParms xp, Parms p, int reps)
 }
 
 void 
-DoChangeGC(XParms xp, Parms p, int reps)
+DoChangeGC(XParms xp, Parms p, int64_t reps)
 {
     int		i;
     XGCValues   gcv;

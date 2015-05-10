@@ -166,14 +166,14 @@ GenerateSegments(XParms xp, Parms p, Bool ddashed)
 }
    
 int 
-InitSegments(XParms xp, Parms p, int reps)
+InitSegments(XParms xp, Parms p, int64_t reps)
 {
     GenerateSegments(xp, p, False);
     return reps;
 }
 
 int 
-InitDashedSegments(XParms xp, Parms p, int reps)
+InitDashedSegments(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
 
@@ -191,7 +191,7 @@ InitDashedSegments(XParms xp, Parms p, int reps)
 }
 
 int 
-InitDoubleDashedSegments(XParms xp, Parms p, int reps)
+InitDoubleDashedSegments(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
 
@@ -209,7 +209,7 @@ InitDoubleDashedSegments(XParms xp, Parms p, int reps)
 }
 
 int 
-InitHorizSegments(XParms xp, Parms p, int reps)
+InitHorizSegments(XParms xp, Parms p, int64_t reps)
 {
     int     size;
     int     half;
@@ -265,7 +265,7 @@ InitHorizSegments(XParms xp, Parms p, int reps)
 }
 
 int 
-InitWideHorizSegments(XParms xp, Parms p, int reps)
+InitWideHorizSegments(XParms xp, Parms p, int64_t reps)
 {
     int size;
 
@@ -282,7 +282,7 @@ InitWideHorizSegments(XParms xp, Parms p, int reps)
  
 
 int 
-InitVertSegments(XParms xp, Parms p, int reps)
+InitVertSegments(XParms xp, Parms p, int64_t reps)
 {
     int     size;
     int     half;
@@ -340,7 +340,7 @@ InitVertSegments(XParms xp, Parms p, int reps)
 }
 
 int 
-InitWideVertSegments(XParms xp, Parms p, int reps)
+InitWideVertSegments(XParms xp, Parms p, int64_t reps)
 {
     int size;
 
@@ -357,7 +357,7 @@ InitWideVertSegments(XParms xp, Parms p, int reps)
  
 
 void 
-DoSegments(XParms xp, Parms p, int reps)
+DoSegments(XParms xp, Parms p, int64_t reps)
 {
     int i;
 

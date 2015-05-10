@@ -42,7 +42,7 @@ ComputeSizes(XParms xp, Parms p)
 }
 
 int 
-CreateParents(XParms xp, Parms p, int reps)
+CreateParents(XParms xp, Parms p, int64_t reps)
 {
     int     i;
 
@@ -84,7 +84,7 @@ CreateParents(XParms xp, Parms p, int reps)
 
 
 void 
-MapParents(XParms xp, Parms p, int reps)
+MapParents(XParms xp, Parms p, int64_t reps)
 {
     int i;
 
@@ -105,7 +105,7 @@ MapParentsCleanup(XParms xp, Parms p)
 
 
 int 
-InitCreate(XParms xp, Parms p, int reps)
+InitCreate(XParms xp, Parms p, int64_t reps)
 {
     reps = CreateParents(xp, p, reps);
     MapParents(xp, p, reps);
@@ -129,7 +129,7 @@ CreateChildGroup(XParms xp, Parms p, Window parent)
 }
 
 void 
-CreateChildren(XParms xp, Parms p, int reps)
+CreateChildren(XParms xp, Parms p, int64_t reps)
 {
     int     i;
 
@@ -158,7 +158,7 @@ EndCreate(XParms xp, Parms p)
 
 
 int 
-InitMap(XParms xp, Parms p, int reps)
+InitMap(XParms xp, Parms p, int64_t reps)
 {
     reps = CreateParents(xp, p, reps);
     CreateChildren(xp, p, reps);
@@ -166,7 +166,7 @@ InitMap(XParms xp, Parms p, int reps)
 }
 
 void 
-UnmapParents(XParms xp, Parms p, int reps)
+UnmapParents(XParms xp, Parms p, int64_t reps)
 {
     int i;
 
@@ -186,7 +186,7 @@ UnmapParentsCleanup(XParms xp, Parms p)
 }
 
 int 
-InitDestroy(XParms xp, Parms p, int reps)
+InitDestroy(XParms xp, Parms p, int64_t reps)
 {
     reps = CreateParents(xp, p, reps);
     CreateChildren(xp, p, reps);
@@ -195,7 +195,7 @@ InitDestroy(XParms xp, Parms p, int reps)
 }
 
 void 
-DestroyParents(XParms xp, Parms p, int reps)
+DestroyParents(XParms xp, Parms p, int64_t reps)
 {
     int i;
 
@@ -219,7 +219,7 @@ RenewParents(XParms xp, Parms p)
 }
 
 int 
-InitPopups(XParms xp, Parms p, int reps)
+InitPopups(XParms xp, Parms p, int64_t reps)
 {
 #ifdef CHILDROOT
     XWindowAttributes    xwa;
@@ -260,7 +260,7 @@ InitPopups(XParms xp, Parms p, int reps)
 }
 
 void 
-DoPopUps(XParms xp, Parms p, int reps)
+DoPopUps(XParms xp, Parms p, int64_t reps)
 {
     int i;
     for (i = 0; i != reps; i++) {

@@ -27,7 +27,7 @@ static XPoint   *points;
 static GC       pgc;
 
 int 
-InitDots(XParms xp, Parms p, int reps)
+InitDots(XParms xp, Parms p, int64_t reps)
 {
     int i;
 
@@ -43,7 +43,7 @@ InitDots(XParms xp, Parms p, int reps)
 }
 
 void 
-DoDots(XParms xp, Parms p, int reps)
+DoDots(XParms xp, Parms p, int64_t reps)
 {
     int     i;
 

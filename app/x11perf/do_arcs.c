@@ -90,14 +90,14 @@ GenerateCircles(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
 }
 
 int 
-InitCircles(XParms xp, Parms p, int reps)
+InitCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateCircles(xp, p, False, False);
     return reps;
 }
 
 int 
-InitPartCircles(XParms xp, Parms p, int reps)
+InitPartCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateCircles(xp, p, True, False);
     return reps;
@@ -105,7 +105,7 @@ InitPartCircles(XParms xp, Parms p, int reps)
 
 
 int 
-InitChordPartCircles(XParms xp, Parms p, int reps)
+InitChordPartCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateCircles(xp, p, True, False);
     XSetArcMode(xp->d, xp->bggc, ArcChord);
@@ -115,7 +115,7 @@ InitChordPartCircles(XParms xp, Parms p, int reps)
 
 
 int 
-InitSlicePartCircles(XParms xp, Parms p, int reps)
+InitSlicePartCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateCircles(xp, p, True, False);
     XSetArcMode(xp->d, xp->bggc, ArcPieSlice);
@@ -146,21 +146,21 @@ GenerateWideCircles(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
 }
 
 int 
-InitWideCircles(XParms xp, Parms p, int reps)
+InitWideCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateWideCircles (xp, p, False, False);
     return reps;
 }
  
 int 
-InitPartWideCircles(XParms xp, Parms p, int reps)
+InitPartWideCircles(XParms xp, Parms p, int64_t reps)
 {
     GenerateWideCircles (xp, p, True, False);
     return reps;
 }
  
 int 
-InitDashedCircles(XParms xp, Parms p, int reps)
+InitDashedCircles(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
 
@@ -176,7 +176,7 @@ InitDashedCircles(XParms xp, Parms p, int reps)
 }
 
 int 
-InitWideDashedCircles(XParms xp, Parms p, int reps)
+InitWideDashedCircles(XParms xp, Parms p, int64_t reps)
 {
     int		size;
     XGCValues   gcv;
@@ -197,7 +197,7 @@ InitWideDashedCircles(XParms xp, Parms p, int reps)
 }
 
 int 
-InitDoubleDashedCircles(XParms xp, Parms p, int reps)
+InitDoubleDashedCircles(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
 
@@ -213,7 +213,7 @@ InitDoubleDashedCircles(XParms xp, Parms p, int reps)
 }
 
 int 
-InitWideDoubleDashedCircles(XParms xp, Parms p, int reps)
+InitWideDoubleDashedCircles(XParms xp, Parms p, int64_t reps)
 {
     int		size;
     XGCValues   gcv;
@@ -306,7 +306,7 @@ GenerateEllipses(XParms xp, Parms p, int partialArcs, Bool ddashed)
 }
 
 int 
-InitEllipses(XParms xp, Parms p, int reps)
+InitEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateEllipses(xp, p, False, False);
     return reps;
@@ -314,7 +314,7 @@ InitEllipses(XParms xp, Parms p, int reps)
 
 
 int 
-InitPartEllipses(XParms xp, Parms p, int reps)
+InitPartEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateEllipses(xp, p, True, False);
     return reps;
@@ -322,7 +322,7 @@ InitPartEllipses(XParms xp, Parms p, int reps)
 
 
 int 
-InitChordPartEllipses(XParms xp, Parms p, int reps)
+InitChordPartEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateEllipses(xp, p, True, False);
     XSetArcMode(xp->d, xp->bggc, ArcChord);
@@ -332,7 +332,7 @@ InitChordPartEllipses(XParms xp, Parms p, int reps)
 
 
 int 
-InitSlicePartEllipses(XParms xp, Parms p, int reps)
+InitSlicePartEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateEllipses(xp, p, True, False);
     XSetArcMode(xp->d, xp->bggc, ArcPieSlice);
@@ -364,21 +364,21 @@ GenerateWideEllipses(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
 }
 
 int 
-InitWideEllipses(XParms xp, Parms p, int reps)
+InitWideEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateWideEllipses(xp, p, False, False);
     return reps;
 }
  
 int 
-InitPartWideEllipses(XParms xp, Parms p, int reps)
+InitPartWideEllipses(XParms xp, Parms p, int64_t reps)
 {
     GenerateWideEllipses(xp, p, True, False);
     return reps;
 }
  
 int 
-InitDashedEllipses(XParms xp, Parms p, int reps)
+InitDashedEllipses(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
 
@@ -394,7 +394,7 @@ InitDashedEllipses(XParms xp, Parms p, int reps)
 }
 
 int 
-InitWideDashedEllipses(XParms xp, Parms p, int reps)
+InitWideDashedEllipses(XParms xp, Parms p, int64_t reps)
 {
     int		size;
     XGCValues   gcv;
@@ -415,7 +415,7 @@ InitWideDashedEllipses(XParms xp, Parms p, int reps)
 }
 
 int 
-InitDoubleDashedEllipses(XParms xp, Parms p, int reps)
+InitDoubleDashedEllipses(XParms xp, Parms p, int64_t reps)
 {
     char dashes[2];
 
@@ -431,7 +431,7 @@ InitDoubleDashedEllipses(XParms xp, Parms p, int reps)
 }
 
 int 
-InitWideDoubleDashedEllipses(XParms xp, Parms p, int reps)
+InitWideDoubleDashedEllipses(XParms xp, Parms p, int64_t reps)
 {
     int		size;
     XGCValues   gcv;
@@ -452,7 +452,7 @@ InitWideDoubleDashedEllipses(XParms xp, Parms p, int reps)
 }
 
 void 
-DoArcs(XParms xp, Parms p, int reps)
+DoArcs(XParms xp, Parms p, int64_t reps)
 {
     int i;
 
@@ -471,7 +471,7 @@ DoArcs(XParms xp, Parms p, int reps)
 }
 
 void 
-DoFilledArcs(XParms xp, Parms p, int reps)
+DoFilledArcs(XParms xp, Parms p, int64_t reps)
 {
     int i;
 

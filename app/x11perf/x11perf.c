@@ -24,6 +24,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <ctype.h>
 #include <signal.h>
+#include <stdint.h>
 
 #ifndef VMS
 #include <X11/Xatom.h>
@@ -45,7 +46,7 @@ static Pixmap   tileToQuery     = None;
 static char *displayName;
 int	abortTest;
 
-typedef struct _RopNames { char	*name; int  rop; } RopNameRec, *RopNamePtr;
+typedef struct _RopNames { const char	*name; int  rop; } RopNameRec, *RopNamePtr;
 
 static RopNameRec ropNames[] = {
 	{ "clear",    	  GXclear },		/* 0 */
@@ -92,7 +93,7 @@ static RopNameRec formatNames[] = {
     { "NATIVE",	  PictStandardNative },
 };
 
-static char *(visualClassNames)[] = {
+static const char *(visualClassNames)[] = {
     "StaticGray",
     "GrayScale",
     "StaticColor",
@@ -104,6 +105,7 @@ static char *(visualClassNames)[] = {
 static Bool     labels		= False;
 static int      repeat		= 5;
 static int	seconds		= 5;
+static int      delay           = 0;
 
 static Window   status;     /* Status window and GC */
 static GC       tgc;
@@ -126,9 +128,9 @@ static int  formats[NUM_FORMATS] = { PictStandardNative };
 static int  numPlanemasks = 1;
 static unsigned long planemasks[256] = { (unsigned long)~0 };
 
-static char *foreground = NULL;
-static char *background = NULL;
-static char *ddbackground = NULL;
+static const char *foreground = NULL;
+static const char *background = NULL;
+static const char *ddbackground = NULL;
 static int clips = 0;
 
 static int numSubWindows = 7;
@@ -164,6 +166,9 @@ static int GetNumbers(int argi, int argc, char **argv, unsigned long *intsp,
 static int GetRops(int argi, int argc, char **argv, int *ropsp, int *nump);
 static int GetPops(int argi, int argc, char **argv, int *popsp, int *nump);
 static int GetFormats(int argi, int argc, char **argv, int *formatsp, int *nump);
+static int FormatFromName (char *name);
+static char *NameFromFormat (int format);
+
 
 /************************************************
 *	    time related stuff			*
@@ -282,7 +287,7 @@ RoundTo3Digits(double d)
 
 
 static void 
-ReportTimes(double usecs, long long n, char *str, int average)
+ReportTimes(double usecs, int64_t n, char *str, int average)
 {
     double msecsperobj, objspersec;
 
@@ -296,15 +301,15 @@ ReportTimes(double usecs, long long n, char *str, int average)
         objspersec =  RoundTo3Digits(objspersec);
 
         if (average) {
-	    printf("%7lld trep @ %8.4f msec (%8.1f/sec): %s\n",
-		    n, msecsperobj, objspersec, str);
+	    printf("%11lld trep @ %8.4f msec (%8.1f/sec): %s\n", 
+                   (long long) n, msecsperobj, objspersec, str);
 	} else {
-	    printf("%7lld reps @ %8.4f msec (%8.1f/sec): %s\n",
-	        n, msecsperobj, objspersec, str);
+	    printf("%11lld reps @ %8.4f msec (%8.1f/sec): %s\n", 
+                   (long long) n, msecsperobj, objspersec, str);
 	}
     } else {
 	printf("%6lld %sreps @ 0.0 msec (unmeasurably fast): %s\n",
-	    n, average ? "t" : "", str);
+               (long long) n, average ? "t" : "", str);
     }
 
 }
@@ -316,7 +321,7 @@ ReportTimes(double usecs, long long n, char *str, int average)
 ************************************************/
 
 static char *program_name;
-static void usage(void);
+static void usage(void) _X_NORETURN;
 
 /*
  * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obselete)
@@ -438,17 +443,7 @@ Open_Display(char *display_name)
     return(d);
 }
 
-
-/* defined by autoconf AC_TYPE_SIGNAL, need to define for Imake */
-#ifndef RETSIGTYPE 
-# ifdef SIGNALRETURNSINT
-#  define RETSIGTYPE int
-# else
-#  define RETSIGTYPE void
-# endif
-#endif
-
-static RETSIGTYPE
+static void
 Cleanup(int sig)
 {
     abortTest = sig;
@@ -473,42 +468,39 @@ AbortTest(void)
 static void 
 usage(void)
 {
-    char    **cpp;
     int     i = 0;
-    static char *help_message[] = {
-"where options include:",
-"    -display <host:display>   the X server to contact",
-"    -sync                     do the tests in synchronous mode",
-"    -pack                     pack rectangles right next to each other",
-"    -repeat <n>               do tests <n> times (default = 5)",
-"    -time <s>                 do tests for <s> seconds each (default = 5)",
+    static const char *help_message =
+"where options include:\n"
+"    -display <host:display>   the X server to contact\n"
+"    -sync                     do the tests in synchronous mode\n"
+"    -pack                     pack rectangles right next to each other\n"
+"    -repeat <n>               do tests <n> times (default = 5)\n"
+"    -time <s>                 do tests for <s> seconds each (default = 5)\n"
+"    -pause <s>                pause for <s> seconds between each run\n"
 /*
-"    -draw                     draw after each test -- pmax only",
+"    -draw                     draw after each test -- pmax only\n"
 */
-"    -all                      do all tests",
-"    -range <test1>[,<test2>]  like all, but do <test1> to <test2>",
-"    -labels                   generate test labels for use by fillblnk",
-"    -fg                       the foreground color to use",
-"    -bg                       the background color to use",
-"    -clips <default>          default number of clip windows per test",
-"    -ddbg                     the background color to use for DoubleDash",
-"    -rop <rop0 rop1 ...>      use the given rops to draw (default = GXcopy)",
-"    -pm <pm0 pm1 ...>         use the given planemasks to draw (default = ~0)",
-"    -depth <depth>            use a visual with <depth> planes per pixel",
-"    -vclass <class>           the visual class to use (default = root)",
-"    -reps <n>                 fix the rep count (default = auto scale)",
-"    -subs <s0 s1 ...>         a list of the number of sub-windows to use",
-"    -v1.2                     perform only v1.2 tests using old semantics",
-"    -v1.3                     perform only v1.3 tests using old semantics",
-"    -su                       request save unders on windows",
-"    -bs <backing_store_hint>  WhenMapped or Always (default = NotUseful)",
-NULL};
+"    -all                      do all tests\n"
+"    -range <test1>[,<test2>]  like all, but do <test1> to <test2>\n"
+"    -labels                   generate test labels for use by fillblnk\n"
+"    -fg                       the foreground color to use\n"
+"    -bg                       the background color to use\n"
+"    -clips <default>          default number of clip windows per test\n"
+"    -ddbg                     the background color to use for DoubleDash\n"
+"    -rop <rop0 rop1 ...>      use the given rops to draw (default = GXcopy)\n"
+"    -pm <pm0 pm1 ...>         use the given planemasks to draw (default = ~0)\n"
+"    -depth <depth>            use a visual with <depth> planes per pixel\n"
+"    -vclass <class>           the visual class to use (default = root)\n"
+"    -reps <n>                 fix the rep count (default = auto scale)\n"
+"    -subs <s0 s1 ...>         a list of the number of sub-windows to use\n"
+"    -v1.2                     perform only v1.2 tests using old semantics\n"
+"    -v1.3                     perform only v1.3 tests using old semantics\n"
+"    -su                       request save unders on windows\n"
+"    -bs <backing_store_hint>  WhenMapped or Always (default = NotUseful)\n"
+;
 
     fflush(stdout);
-    fprintf(stderr, "usage: %s [-options ...]\n", program_name);
-    for (cpp = help_message; *cpp; cpp++) {
-	fprintf(stderr, "%s\n", *cpp);
-    }
+    fprintf(stderr, "usage: %s [-options ...]\n%s", program_name, help_message);
     while (test[i].option != NULL) {
 	if (test[i].versions & xparms.version ) {
 	    fprintf(stderr, "    %-24s   %s\n",
@@ -533,7 +525,7 @@ NullProc(XParms xp, Parms p)
 }
 
 int 
-NullInitProc(XParms xp, Parms p, int reps)
+NullInitProc(XParms xp, Parms p, int64_t reps)
 {
     return reps;
 }
@@ -555,7 +547,7 @@ HardwareSync(XParms xp)
 }
 
 static void 
-DoHardwareSync(XParms xp, Parms p, int reps)    
+DoHardwareSync(XParms xp, Parms p, int64_t reps)    
 {
     int i;
     
@@ -633,7 +625,7 @@ DestroyClipWindows(XParms xp, int clips)
 
 
 static double 
-DoTest(XParms xp, Test *test, int reps)
+DoTest(XParms xp, Test *test, int64_t reps)
 {
     double  time;
     unsigned int ret_width, ret_height;
@@ -657,7 +649,7 @@ DoTest(XParms xp, Test *test, int reps)
 }
 
 
-static int 
+static int64_t
 CalibrateTest(XParms xp, Test *test, int seconds, double *usecperobj)
 {
 #define goal    2500000.0   /* Try to get up to 2.5 seconds		    */
@@ -665,7 +657,7 @@ CalibrateTest(XParms xp, Test *test, int seconds, double *usecperobj)
 #define tick      10000.0   /* Assume clock not faster than .01 seconds     */
 
     double  usecs;
-    int     reps, didreps;  /* Reps desired, reps performed		    */
+    int64_t reps, didreps;  /* Reps desired, reps performed		    */
     int     exponent;
 
     /* Attempt to get an idea how long each rep lasts by getting enough
@@ -798,7 +790,7 @@ DestroyPerfGCs(XParms xp)
 }
 
 static unsigned long 
-AllocateColor(Display *display, char *name, unsigned long pixel)
+AllocateColor(Display *display, const char *name, unsigned long pixel)
 {
     XColor      color;
 
@@ -823,7 +815,7 @@ AllocateColor(Display *display, char *name, unsigned long pixel)
 
 
 static void 
-DisplayStatus(Display *d, char *message, char *test, int try)
+DisplayStatus(Display *d, const char *message, const char *test, int try)
 {
     char    s[500];
 
@@ -878,11 +870,13 @@ ProcessTest(XParms xp, Test *test, int func, unsigned long pm, char *label)
 	    totalTime += time;
 	    ReportTimes (time, reps * test->parms.objects,
 		    label, False);
+            if (delay)
+                sleep(delay);
 	}
 	if (repeat > 1) {
 	    ReportTimes(totalTime,
-		repeat * reps * test->parms.objects,
-		label, True);
+                        repeat * reps * test->parms.objects,
+                        label, True);
 	}
 	(*test->cleanup) (xp, &test->parms);
 	DestroyClipWindows(xp, test->clips);
@@ -996,6 +990,13 @@ main(int argc, char *argv[])
 		usage ();
 	    seconds = atoi (argv[i]);
 	    if (seconds <= 0)
+	       usage ();
+        } else if (strcmp (argv[i], "-pause") == 0) {
+            ++i;
+	    if (argc <= i)
+		usage ();
+	    delay = atoi (argv[i]);
+	    if (delay < 0)
 	       usage ();
 	} else if (strcmp(argv[i], "-fg") == 0) {
 	    i++;
@@ -1398,10 +1399,11 @@ main(int argc, char *argv[])
 					     LABELP(i));
 				}
 			    } else {
+				char *name = NameFromFormat (formats[format]);
 				sprintf (label, "(%s %s) %s",
-					popNames[pops[pop]].name,
-					formatNames[formats[format]].name,
-					LABELP(i));
+					 popNames[pops[pop]].name,
+					 name,
+					 LABELP(i));
 			    }
 			    ProcessTest (&xparms, &test[i], pops[pop], formats[format], label);
 			}
@@ -1461,7 +1463,7 @@ atox (char *s)
     return v;
 }
 
-static int 
+static int
 GetNumbers (int argi, int argc, char **argv, unsigned long *intsp, int *nump)
 {
     char    *words[256];
@@ -1549,6 +1551,26 @@ GetPops (int argi, int argc, char **argv, int *popsp, int *nump)
 }
 
 static int
+FormatFromName (char *name)
+{
+    int i;
+    for (i = 0; i < NUM_FORMATS; i++)
+	if (!strcmp (name, formatNames[i].name))
+	    return formatNames[i].rop;
+    return -1;
+}
+
+static char *
+NameFromFormat (int format)
+{
+    int i;
+    for (i = 0; i < NUM_FORMATS; i++)
+	if (formatNames[i].rop == format)
+	    return formatNames[i].name;
+    return NULL;
+}
+
+static int
 GetFormats (int argi, int argc, char **argv, int *formatsp, int *nump)
 {
     char    *words[256];
@@ -1564,16 +1586,12 @@ GetFormats (int argi, int argc, char **argv, int *formatsp, int *nump)
 	    *nump = NUM_FORMATS;
 	    break;
 	}
-	for (format = 0; format < NUM_FORMATS; format++) {
-	    if (!strcmp (words[i], formatNames[format].name)) {
-		formatsp[i] = formatNames[format].rop;
-		break;
-	    }
-	}
-	if (format == NUM_FORMATS) {
+	format = FormatFromName (words[i]);
+	if (format < 0) {
 	    usage ();
 	    fprintf (stderr, "unknown format name %s\n", words[i]);
 	}
+	formatsp[i] = format;
     }
     return count;
 }

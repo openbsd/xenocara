@@ -56,7 +56,7 @@ Distance(XPoint p1, XPoint p2)
 */
     
 int 
-InitTriangles(XParms xp, Parms p, int reps)
+InitTriangles(XParms xp, Parms p, int64_t reps)
 {
     int     i, j, numPoints;
     int     rows;
@@ -132,7 +132,7 @@ InitTriangles(XParms xp, Parms p, int reps)
 #ifndef POLYTRIANGLE_HACK
 
 void 
-DoTriangles(XParms xp, Parms p, int reps)
+DoTriangles(XParms xp, Parms p, int64_t reps)
 {
     int     i, j;
     XPoint  *curPoint;
@@ -207,7 +207,7 @@ XPolyTriangle(register Display *dpy,
 }
 
 void 
-DoTriangles(XParms xp, Parms p, int reps)
+DoTriangles(XParms xp, Parms p, int64_t reps)
 {
     int     i, j;
     XPoint  *curPoint;

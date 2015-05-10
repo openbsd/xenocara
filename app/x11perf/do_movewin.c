@@ -34,7 +34,7 @@ static int delta1;		/* Private global data for DoResizeWindows */
 #define STACK (4*(HEIGHT-10)/CHILDSIZE)
 
 int 
-InitMoveWindows(XParms xp, Parms p, int reps)
+InitMoveWindows(XParms xp, Parms p, int64_t reps)
 {
     int     i = 0;
 
@@ -63,7 +63,7 @@ InitMoveWindows(XParms xp, Parms p, int reps)
 }
 
 void 
-DoMoveWindows(XParms xp, Parms p, int reps)
+DoMoveWindows(XParms xp, Parms p, int64_t reps)
 {
     int     i, j;
 
@@ -90,7 +90,7 @@ EndMoveWindows(XParms xp, Parms p)
 }
 
 void 
-DoResizeWindows(XParms xp, Parms p, int reps)
+DoResizeWindows(XParms xp, Parms p, int64_t reps)
 {
     int     i, j, delta2;
 
@@ -107,7 +107,7 @@ DoResizeWindows(XParms xp, Parms p, int reps)
 }
 
 int
-InitCircWindows(XParms xp, Parms p, int reps)
+InitCircWindows(XParms xp, Parms p, int64_t reps)
 {
     int     i;
     int     pos;
@@ -127,7 +127,7 @@ InitCircWindows(XParms xp, Parms p, int reps)
 }
 
 void 
-DoCircWindows(XParms xp, Parms p, int reps)
+DoCircWindows(XParms xp, Parms p, int64_t reps)
 {
     int     i, j;
 
@@ -147,7 +147,7 @@ EndCircWindows(XParms xp, Parms p)
 
 
 int 
-InitMoveTree(XParms xp, Parms p, int reps)
+InitMoveTree(XParms xp, Parms p, int64_t reps)
 {
     int     i = 0;
 
@@ -180,7 +180,7 @@ InitMoveTree(XParms xp, Parms p, int reps)
 }
 
 void 
-DoMoveTree(XParms xp, Parms p, int reps)
+DoMoveTree(XParms xp, Parms p, int64_t reps)
 {
     int     i;
 

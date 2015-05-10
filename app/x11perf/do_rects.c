@@ -28,7 +28,7 @@ static XRectangle   *rects;
 static GC	    pgc;
 
 int 
-InitRectangles(XParms xp, Parms p, int reps)
+InitRectangles(XParms xp, Parms p, int64_t reps)
 {
     int i;
     int size = p->special;
@@ -84,7 +84,7 @@ InitRectangles(XParms xp, Parms p, int reps)
 }
 
 void 
-DoRectangles(XParms xp, Parms p, int reps)
+DoRectangles(XParms xp, Parms p, int64_t reps)
 {
     int i;
 
@@ -99,7 +99,7 @@ DoRectangles(XParms xp, Parms p, int reps)
 }
 
 void 
-DoOutlineRectangles(XParms xp, Parms  p, int reps)
+DoOutlineRectangles(XParms xp, Parms  p, int64_t reps)
 {
     int	i;
 
