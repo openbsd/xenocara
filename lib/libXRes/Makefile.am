@@ -1,4 +1,3 @@
-# 
 #
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #

@@ -1,5 +1,3 @@
-dnl 
-dnl  $Id: configure.ac,v 1.7 2013/05/31 18:38:27 matthieu Exp $
 #
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #
