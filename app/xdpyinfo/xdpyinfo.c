@@ -141,14 +141,11 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <stdlib.h>
 
-/* Turn a NULL pointer string into an empty string */
-#define NULLSTR(x) (((x)!=NULL)?(x):(""))
-
 static char *ProgramName;
 static Bool queryExtensions = False;
 
 static int
-silent_errors(Display *dpy, XErrorEvent *ev)
+silent_errors(_X_UNUSED Display *dpy, _X_UNUSED XErrorEvent *ev)
 {
     return 0;
 }
@@ -159,7 +156,7 @@ static int print_event_mask(char *buf, int lastcol, int indent, long mask);
 
 static int StrCmp(const void *a, const  void *b)
 {
-    return strcmp(*(char **)a, *(char **)b);
+    return strcmp(*(const char * const *)a, *(const char * const *)b);
 }
 
 static void
@@ -1466,18 +1463,29 @@ main(int argc, char *argv[])
 	size_t len = strlen(arg);
 
 	if (!strncmp("-display", arg, len)) {
-	    if (++i >= argc) usage ();
+	    if (++i >= argc) {
+		fprintf (stderr, "%s: -display requires an argument\n",
+			 ProgramName);
+		usage ();
+	    }
 	    displayname = argv[i];
 	} else if (!strncmp("-queryExtensions", arg, len)) {
 	    queryExtensions = True;
 	} else if (!strncmp("-ext", arg, len)) {
-	    if (++i >= argc) usage ();
+	    if (++i >= argc) {
+		fprintf (stderr, "%s: -ext requires an argument\n",
+			 ProgramName);
+		usage ();
+	    }
 	    mark_extension_for_printing(argv[i]);
         } else if (!strncmp("-version", arg, len)) {
             printf("%s\n", PACKAGE_STRING);
             exit (0);
-	} else
+	} else {
+	    fprintf (stderr, "%s: unrecognized argument '%s'\n",
+		     ProgramName, arg);
 	    usage ();
+	}
     }
 
     dpy = XOpenDisplay (displayname);

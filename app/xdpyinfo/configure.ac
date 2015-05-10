@@ -21,11 +21,15 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
+# Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xdpyinfo], [1.3.1],
+AC_INIT([xdpyinfo], [1.3.2],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xdpyinfo])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -33,10 +37,8 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AC_CONFIG_HEADERS([config.h])
-
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XDPYINFO, [xext x11 xtst x11-xcb xcb xproto >= 7.0.17])
+PKG_CHECK_MODULES(XDPYINFO, [xext x11 xtst x11-xcb xcb xproto >= 7.0.22])
 
 # This is used below to allow <X11/Xlib.h> to be found
 PKG_CHECK_MODULES(DPY_X11, x11)

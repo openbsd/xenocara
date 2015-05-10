@@ -1,3 +1,91 @@
+commit 122dfb8dbff5238f5272781f940c5a6f24086137
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 23:00:15 2015 -0700
+
+    xdpyinfo 1.3.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 86c2e6f13b5c77b193762ff7e0628d7957e6bf0b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 17 23:06:01 2015 -0800
+
+    Delete unused NULLSTR macro
+    
+    Spotted by clang:
+    
+    xdpyinfo.c:145:9: warning: macro is not used [-Wunused-macros]
+            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ea2adab785079f7b87a459654696d2fff248a52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 17 23:00:56 2015 -0800
+
+    Mark required arguments to Xlib error handler as unused
+    
+    Quiets clang warnings:
+    
+    xdpyinfo.c:151:24: warning: unused parameter 'dpy' [-Wunused-parameter]
+    silent_errors(Display *dpy, XErrorEvent *ev)
+                           ^
+    xdpyinfo.c:151:42: warning: unused parameter 'ev' [-Wunused-parameter]
+    silent_errors(Display *dpy, XErrorEvent *ev)
+                                             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bec84d9dd1b6d5f3fcee4cccd704759c5c18544a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:27:58 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d236a8cdd4b8c3b8dd49c04d2d9d6dcbd4e6bb53
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:27:58 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 38ee48cebce6343c65bde078cea883373fb78b75
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:27:54 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73cd9d89408ef08b7bbe4f3fb0ae94517441b045
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 22:31:41 2013 -0800
+
+    Sprinkle consts in StrCmp to quiet cast warnings
+    
+    Makes gcc stop saying:
+    xdpyinfo.c: In function ‘StrCmp’:
+    xdpyinfo.c:162:20: warning: cast discards ‘__attribute__((const))’ qualifier from pointer target type [-Wcast-qual]
+    xdpyinfo.c:162:39: warning: cast discards ‘__attribute__((const))’ qualifier from pointer target type [-Wcast-qual]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca6adf351b4fc317c4dfc4c8e723b84fd676d4e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 22:30:18 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b980cacaa342cbbaa3012f06ffc2c9a9c21d33ee
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon May 20 18:48:42 2013 -0700
