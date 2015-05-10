@@ -1,3 +1,132 @@
+commit 152d7f3992fc0982006f7024589c1491feb273ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 22:49:23 2015 -0700
+
+    xcmsdb 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa02eb3d4f0c5722b8f9012ec08512daa7420184
+Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Date:   Sun Jan 4 12:51:10 2015 -0800
+
+    _XcmsGetProperty: don't deal with uninitialized values, fail instead
+    
+    Import commit 502d414118c97d35a44f8e295709682022876331 from the
+    master copy of this code in libX11.
+    
+    Signed-off-by: Erkki Seppälä <erkki.seppala@vincit.fi>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 88135312d0cdfd624dfdd029539959849302a1f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 3 14:56:48 2015 -0800
+
+    Only use results from GetWindowProperty if it returned Success
+    
+    Since Xlib prior to 1.6 didn't always clear values on failure, don't
+    assume they're safe to use unless we succeeded.
+    
+    Reported by Oracle Parfait 1.5.1:
+    Error: Uninitialised memory
+       Uninitialised memory variable (CWE 457): Possible access to uninitialised memory variable 'ret_format'
+            at line 743 of app/xcmsdb/xcmsdb.c in function 'RemoveSCCData'.
+              ret_format allocated at line 733.
+            at line 757 of app/xcmsdb/xcmsdb.c in function 'RemoveSCCData'.
+              ret_format allocated at line 733.
+       Uninitialised memory variable (CWE 457): Possible access to uninitialised memory variable 'ret_prop'
+            at line 748 of app/xcmsdb/xcmsdb.c in function 'RemoveSCCData'.
+              ret_prop allocated at line 731.
+            at line 762 of app/xcmsdb/xcmsdb.c in function 'RemoveSCCData'.
+              ret_prop allocated at line 731.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit 09bb2c8287e6cafc7acb8e1680ce7b0cc5e36a3d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 31 10:20:07 2014 -0800
+
+    Strip trailing whitespace from source files
+    
+    git ls-files | xargs gsed -i 's/[ \t]*$//'
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1a67ecc569db633a43cf2bbd7c5633b4455b4f4b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:14:40 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e083547f90259fe7e855a4fcad1dd22253b7a2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:14:40 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dee634b8eb0d1777baf48cfc12d892db778be587
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 21:44:20 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 953e12eab18c50001fcabeac9f3a9008a2858bc1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 21:39:00 2013 -0800
+
+    Remove break statements immediately after return statements
+    
+    Silences clang -Wunreachable-code warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c715abbca4885d03e8f9d6b71cf8fb54e5be5667
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 21:34:01 2013 -0800
+
+    Fix const char * warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit 93fcd59757e87cb79db8a98e0379c0a90eddae4c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 21:26:54 2013 -0800
+
+    Add -version option to print program version
+    
+    Adds both -version and previously undocumented -help to man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dfd9fa8720cb8001d6569cd8b4d65819ff9d5ba5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 21:22:38 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9ee59de6b0ab352e22d89edee361af40b85a1c79
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 21:13:41 2013 -0800
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit db25a4a75d4a3ea5c904ec63669c47bd5f467d98
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 14 18:39:28 2012 -0800

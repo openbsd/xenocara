@@ -33,6 +33,7 @@ xcmsdb \- Device Color Characterization utility for X Color Management System
 .B xcmsdb
 [ \fB\-query\fP ] [ \fB\-remove\fP ]
 [ \fB\-format\032\fP|\fB16\fP|\fB8\fP ]
+[ \fB\-help\fP ] [ \fB\-version\fP ]
 [ \fIfilename\fP ]
 .SH DESCRIPTION
 .I xcmsdb
@@ -85,6 +86,12 @@ XDCCC_LINEAR_RGB_CORRECTION property.
 Precision of encoded floating point values increases with the increase
 in bits per entry.
 The default is 32 bits per entry.
+.TP 8
+.B \-help
+This option prints a summary of the available options and exits.
+.TP 8
+.B \-version
+This option prints the program version and exits.
 .SH "SEE ALSO"
 xprop(__appmansuffix__), Xlib documentation
 .SH ENVIRONMENT

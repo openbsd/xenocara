@@ -27,7 +27,7 @@
  *	DESCRIPTION
  *		TekCMS API routine that reads screen data from a file
  *	        and then loads the data on the root window of the screen.
- *		
+ *
  *
  *
  */
@@ -62,7 +62,7 @@
  */
 
 typedef struct _DefineEntry {
-    char	*pString;
+    const char	*pString;
     int		define;
 } DefineEntry;
 
@@ -151,7 +151,7 @@ static DefineEntry VisualClassTbl[] = {
 static int
 StrToDefine(DefineEntry pde[],	/* IN: table of X string-define pairs     */
 				/*     last entry must contain pair "", 0 */
-	    char *pstring)	/* IN: string to be looked up in that table */
+	   const char *pstring)	/* IN: string to be looked up in that table */
 /*
  *	DESCRIPTION
  *		Converts a string to an integer define.
@@ -184,7 +184,7 @@ StrToDefine(DefineEntry pde[],	/* IN: table of X string-define pairs     */
  *
  *	SYNOPSIS
  */
-static char *
+static const char *
 DefineToStr(DefineEntry pde[],	/* IN: table of X string-define pairs */
 				/*     last entry must contain pair "", 0 */
 	    int id)		/* IN: id to be looked up in that table	*/
@@ -221,7 +221,7 @@ DefineToStr(DefineEntry pde[],	/* IN: table of X string-define pairs */
  *	SYNOPSIS
  */
 static int
-SCKeyOf(char *string)
+SCKeyOf(const char *string)
 /*
  *	DESCRIPTION
  *		Converts a string to an integer define.
@@ -250,7 +250,7 @@ SCKeyOf(char *string)
  *	SYNOPSIS
  */
 static int
-SCScrnClassOf(char *string)
+SCScrnClassOf(const char *string)
 /*
  *	DESCRIPTION
  *		Converts a string to an integer define.
@@ -278,7 +278,7 @@ SCScrnClassOf(char *string)
  *
  *	SYNOPSIS
  */
-static char *
+static const char *
 SCScrnClassStringOf(int id)
 /*
  *	DESCRIPTION
@@ -294,8 +294,8 @@ SCScrnClassStringOf(int id)
 
 /* close the stream and return any memory allocated. */
 /*ARGSUSED*/
-static void 
-closeS(FILE *stream, XDCCC_Correction *pCorrection) 
+static void
+closeS(FILE *stream, XDCCC_Correction *pCorrection)
 {
     XDCCC_Correction* pNext;
     if (stream) {
@@ -342,14 +342,14 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 	    switch (SCKeyOf(keyword)) {
 	      case XYZTORGBMAT_BEGIN :
 		if (VisualFlag != VIDEO_RGB) {
-		  fprintf(stderr, 
+		  fprintf(stderr,
 			 "Line %d: Keyword XYZTORGBMAT_BEGIN mismatch for visual %s.\n",
 			  linenum, SCScrnClassStringOf(VisualFlag));
 		  return (0);
 		}
 		if (state != 0) {
 		  fprintf(stderr,
-			  "Line %d: Extraneous keyword %s.\n", 
+			  "Line %d: Extraneous keyword %s.\n",
 			  linenum, keyword);
 		  return (0);
 		}
@@ -359,14 +359,14 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 		break;
 	      case XYZTORGBMAT_END :
 		if (VisualFlag != VIDEO_RGB) {
-		  fprintf(stderr, 
+		  fprintf(stderr,
 			  "Line %d: Keyword XYZTORGBMAT_END mismatch for visual %s.\n",
 			  linenum, SCScrnClassStringOf(VisualFlag));
 		  return (0);
 		}
 		if ((state != 1) || (count != 9)) {
 		  fprintf(stderr,
-			  "Line %d: Incomplete XYZtoRGB matrix -- Premature %s\n", 
+			  "Line %d: Incomplete XYZtoRGB matrix -- Premature %s\n",
 			  linenum, keyword);
 		  return (0);
 		}
@@ -385,7 +385,7 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 		  return (0);
 		}
 		if (state != 0) {
-		    fprintf(stderr, "Line %d: Extraneous keyword %s.\n", 
+		    fprintf(stderr, "Line %d: Extraneous keyword %s.\n",
 			    linenum, keyword);
 		    return (0);
 		}
@@ -395,14 +395,14 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 		break;
 	      case RGBTOXYZMAT_END :
 		if (VisualFlag != VIDEO_RGB) {
-		    fprintf(stderr, 
+		    fprintf(stderr,
 			   "Line %d: Keyword RGBTOXYZMAT_END mismatch for visual %s.\n",
 			    linenum, SCScrnClassStringOf(VisualFlag));
 		    return (0);
 		}
 		if ((state != 1) || (count != 9)) {
-		    fprintf(stderr, 
-			   "Line %d: Incomplete RGBtoXYZ matrix -- Premature %s\n", 
+		    fprintf(stderr,
+			   "Line %d: Incomplete RGBtoXYZ matrix -- Premature %s\n",
 			    linenum, keyword);
 		    return (0);
 		}
@@ -423,7 +423,7 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 		}
 		if (state != 0) {
 		  fprintf(stderr,
-			  "Line %d: Extraneous keyword %s.\n", 
+			  "Line %d: Extraneous keyword %s.\n",
 			  linenum, keyword);
 		  return (0);
 		}
@@ -440,7 +440,7 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 		}
 		if ((state != 1) || (count != 3)) {
 		    fprintf(stderr,
-			"Line %d: Incomplete white point -- Premature %s\n", 
+			"Line %d: Incomplete white point -- Premature %s\n",
 			    linenum, keyword);
 		    return (0);
 		}
@@ -453,7 +453,7 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 		    if (sscanf(ptoken, "%lf", pElement) != 1) {
 			if (VisualFlag == VIDEO_RGB) {
 			    fprintf(stderr,
-				    "Line %d: Invalid matrix value %s.", 
+				    "Line %d: Invalid matrix value %s.",
 				    linenum, ptoken);
 			} else {
 			    fprintf(stderr,
@@ -466,7 +466,7 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 		    if (VisualFlag == VIDEO_RGB) {
 			if (++count > 9) {
 			    fprintf(stderr,
-				   "Line %d: Extra matrix value %s\n", 
+				   "Line %d: Extra matrix value %s\n",
 				    linenum, ptoken);
 			    return (0);
 			}
@@ -481,11 +481,10 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 		}
 		break;
 	      case COLORIMETRIC_BEGIN :
-		fprintf(stderr, 
-			"Line %d: Extraneous keyword %s.\n", 
+		fprintf(stderr,
+			"Line %d: Extraneous keyword %s.\n",
 			linenum, keyword);
 		return (0);
-/* NOTREACHED */break;	
 	      case COLORIMETRIC_END :
 		if (state != 2) {
 		    fprintf(stderr,
@@ -502,13 +501,11 @@ ProcessColorimetric(FILE *stream, XDCCC_Matrix *pMatrix, int VisualFlag)
 			"Line %d: Unexpected keyword %s\n",
 			linenum, keyword);
 		return (0);
-/* NOTREACHED */break;		
 	    }
 	} else if (ntok < 0) {
 	    /* mismatch */
 	    fprintf(stderr, "Line %d: Unrecognized keyword\n", linenum);
 	    return (0);
-/* NOTREACHED */break;		
 	}
     }
     return (0);
@@ -536,7 +533,7 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
 	    switch (SCKeyOf(keyword)) {
 	      case ITBL_BEGIN :
 		if (state != 0) {
-		    fprintf(stderr,"Line %d: unexpected keyword %s\n", 
+		    fprintf(stderr,"Line %d: unexpected keyword %s\n",
 			   linenum, keyword);
 		    return (0);
 		}
@@ -557,7 +554,7 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
 		}
 		if (strcmp(tableStr, "GREEN") == 0) {
 		    if (pCorrection->nTables != 3) {
-			fprintf(stderr,"Line %d: incorrect number of tables\n", 
+			fprintf(stderr,"Line %d: incorrect number of tables\n",
 			linenum);
 			return (0);
 		    }
@@ -611,7 +608,7 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
 			return (0);
 		    }
 		    pCorrection->pRedTbl->nEntries = size;
-		    pCorrection->pRedTbl->pBase = 
+		    pCorrection->pRedTbl->pBase =
 			 (IntensityRec *) calloc (size, sizeof(IntensityRec));
 		    if (!pCorrection->pRedTbl->pBase) {
 			fprintf(stderr,
@@ -641,14 +638,14 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
 		}
 		do {
 		    /********************************************************
-		     * Note: tableType should only be 0 or 1 at this point. 
+		     * Note: tableType should only be 0 or 1 at this point.
 		     *       0 indicates value and intensity stored.
-		     *       1 indicates only intensity stored. 
+		     *       1 indicates only intensity stored.
 		     ********************************************************/
 		    if (pCorrection->tableType) {
 			if (sscanf(ptoken, "%lf", &pIRec->intensity) != 1) {
 			    fprintf(stderr,
-			   "Line %d: invalid Intensity Profile value %s\n", 
+			   "Line %d: invalid Intensity Profile value %s\n",
 				  linenum, ptoken);
 			    return (0);
 			}
@@ -689,10 +686,9 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
 		} while(ptoken != NULL);
 		break;
 	      case IPROFILE_BEGIN :
-		fprintf(stderr,"Line %d: extraneous keyword %s\n", 
+		fprintf(stderr,"Line %d: extraneous keyword %s\n",
 			  linenum, keyword);
 		return (0);
-/* NOTREACHED */break;
 	      case IPROFILE_END :
 		if ((state != 0) || (nTbl != pCorrection->nTables)) {
 		    fprintf(stderr,
@@ -708,7 +704,6 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
 		fprintf(stderr,"Line %d: unexpected keyword %s\n",
 		      linenum, keyword);
 		return (0);
-/* NOTREACHED */break;
 	    }
 	} /* else its was just a blank line */
     }
@@ -840,13 +835,13 @@ LoadMatrix(Display *pDpy, Window root, XDCCC_Matrix *pMatrix)
 	*pCard32++ = (unsigned long) (*pValue++ * (XcmsFloat) XDCCC_NUMBER);
     }
     MatricesAtom = XInternAtom (pDpy, XDCCC_MATRIX_ATOM_NAME, False);
-    XChangeProperty (pDpy, root, MatricesAtom, XA_INTEGER, 32, 
+    XChangeProperty (pDpy, root, MatricesAtom, XA_INTEGER, 32,
 		     PropModeReplace, (unsigned char *)Card32Array, 18);
 }
 
 
 static int
-LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection, 
+LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection,
 		int targetFormat)
 {
     unsigned char  *pCard8;
@@ -919,13 +914,13 @@ LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection,
 		} else {
 		    PutTableType1Card8(pCorrection->pRedTbl, &pCard8);
 		}
-		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 8, 
+		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 8,
 			i ? PropModeAppend : PropModeReplace,
 			(unsigned char *)pCard8Array, total);
 		free(pCard8Array);
 		break;
 	      case 16:
-		total = 5 + (pCorrection->pRedTbl->nEntries * 
+		total = 5 + (pCorrection->pRedTbl->nEntries *
 			(pCorrection->tableType == 0 ? 2 : 1));
 		if ((pCard16 = pCard16Array = (unsigned short *) calloc (total,
 			sizeof (unsigned short))) == NULL) {
@@ -941,13 +936,13 @@ LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection,
 		} else {
 		    PutTableType1Card16(pCorrection->pRedTbl, &pCard16);
 		}
-		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 16, 
+		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 16,
 			i ? PropModeAppend : PropModeReplace,
 			(unsigned char *)pCard16Array, total);
 		free(pCard16Array);
 		break;
 	      case 32:
-		total = 4 + (pCorrection->pRedTbl->nEntries * 
+		total = 4 + (pCorrection->pRedTbl->nEntries *
 			(pCorrection->tableType == 0 ? 2 : 1));
 		if ((pCard32 = pCard32Array =
 			(unsigned long *) calloc (total,
@@ -963,7 +958,7 @@ LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection,
 		} else {
 		    PutTableType1Card32(pCorrection->pRedTbl, &pCard32);
 		}
-		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 32, 
+		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 32,
 			i ? PropModeAppend : PropModeReplace,
 			(unsigned char *)pCard32Array, total);
 		free(pCard32Array);
@@ -1016,7 +1011,7 @@ LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection,
 		    PutTableType1Card8(pCorrection->pGreenTbl, &pCard8);
 		    PutTableType1Card8(pCorrection->pBlueTbl, &pCard8);
 		}
-		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 8, 
+		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 8,
 			i ? PropModeAppend : PropModeReplace,
 			(unsigned char *)pCard8Array, total);
 		free(pCard8Array);
@@ -1045,7 +1040,7 @@ LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection,
 		    PutTableType1Card16(pCorrection->pGreenTbl, &pCard16);
 		    PutTableType1Card16(pCorrection->pBlueTbl, &pCard16);
 		}
-		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 16, 
+		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 16,
 			i ? PropModeAppend : PropModeReplace,
 			(unsigned char *)pCard16Array, total);
 		free(pCard16Array);
@@ -1073,7 +1068,7 @@ LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection,
 		    PutTableType1Card32(pCorrection->pGreenTbl, &pCard32);
 		    PutTableType1Card32(pCorrection->pBlueTbl, &pCard32);
 		}
-		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 32, 
+		XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 32,
 			i ? PropModeAppend : PropModeReplace,
 			(unsigned char *)pCard32Array, total);
 		free(pCard32Array);
@@ -1096,7 +1091,7 @@ LoadCorrections(Display *pDpy, Window root, XDCCC_Correction *pCorrection,
 #ifdef GRAY
 
 static int
-LoadDataGray(Display *pDpy, window root, int tableType, 
+LoadDataGray(Display *pDpy, window root, int tableType,
 	     LINEAR_RGB_SCCData *pScreenData, int targetFormat)
 {
     unsigned char *ret_prop;
@@ -1122,15 +1117,15 @@ LoadDataGray(Display *pDpy, window root, int tableType,
 	*pCard32++ = (unsigned long) (*pValue++ * (XcmsFloat) XDCCC_NUMBER);
     }
     MatricesAtom = XInternAtom (pDpy,XDCCC_SCREENWHITEPT_ATOM_NAME,False);
-    XChangeProperty (pDpy, root, MatricesAtom, XA_INTEGER, 32, 
+    XChangeProperty (pDpy, root, MatricesAtom, XA_INTEGER, 32,
 		     PropModeReplace, (unsigned char *)Card32Array, 3);
 
     /* Now store the XDCCC_GRAY_CORRECTION */
     CorrectAtom = XInternAtom (pDpy, XDCCC_GRAY_CORRECT_ATOM_NAME, False);
 
     if (tableType == CORR_TYPE_NONE) {
-	XGetWindowProperty (pDpy, root, CorrectAtom, 
-			    0, 5, False, XA_INTEGER, 
+	XGetWindowProperty (pDpy, root, CorrectAtom,
+			    0, 5, False, XA_INTEGER,
 			    &ret_atom, &ret_format, &ret_len, &ret_after,
 			    &ret_prop);
 	if (ret_format != 0) {
@@ -1163,7 +1158,7 @@ LoadDataGray(Display *pDpy, window root, int tableType,
 	} else { /* tableType == 1 */
 	    PutTableType1Card8(pScreenData->pRedTbl, &pCard8);
 	}
-	XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 8, 
+	XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 8,
 			 PropModeReplace, (unsigned char *)pCard8Array,
 			 total);
 	free (pCard8Array);
@@ -1184,7 +1179,7 @@ LoadDataGray(Display *pDpy, window root, int tableType,
 	} else { /* tableType == 1 */
 	    PutTableType1Card16(pScreenData->pRedTbl, &pCard16);
 	}
-	XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 16, 
+	XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 16,
 			 PropModeReplace, (unsigned char *)pCard16Array,
 			 total);
 	free (pCard16Array);
@@ -1204,7 +1199,7 @@ LoadDataGray(Display *pDpy, window root, int tableType,
 	} else { /* tableType == 1 */
 	    PutTableType1Card32(pScreenData->pRedTbl, &pCard32);
 	}
-	XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 32, 
+	XChangeProperty (pDpy, root, CorrectAtom, XA_INTEGER, 32,
 			 PropModeReplace, (unsigned char *)pCard32Array,
 			 total);
 	free (pCard32Array);
@@ -1300,7 +1295,7 @@ ParseVisualOptions(Display *pDpy, XDCCC_Correction *pCorrection, char *pbuf)
 			"Line %d: invalid depth specified, %s\n",
 			linenum, value);
 		return (0);
-	    } 
+	    }
 	    pCorrection->visual_info_mask |= VisualDepthMask;
 	    break;
 	  case  KEY_CLASS:
@@ -1362,7 +1357,7 @@ ParseVisualOptions(Display *pDpy, XDCCC_Correction *pCorrection, char *pbuf)
 			"Line %d: invalid colormap_size specified -- %s\n",
 			linenum, value);
 		return (0);
-	    } 
+	    }
 	    pCorrection->visual_info_mask |= VisualColormapSizeMask;
 	    break;
 	  case  KEY_BITS_PER_RGB:
@@ -1371,7 +1366,7 @@ ParseVisualOptions(Display *pDpy, XDCCC_Correction *pCorrection, char *pbuf)
 			"Line %d: invalid bits_per_rgb specified -- %s\n",
 			linenum, value);
 		return (0);
-	    } 
+	    }
 	    pCorrection->visual_info_mask |= VisualBitsPerRGBMask;
 	    break;
 	  default:
@@ -1401,7 +1396,7 @@ ParseVisualOptions(Display *pDpy, XDCCC_Correction *pCorrection, char *pbuf)
     memcpy((char*)&pCorrection->visual_info, (char*)vinfo,
 	    sizeof(XVisualInfo));
     return (1);
-} 
+}
 
 
 /************************************************************************
@@ -1417,7 +1412,8 @@ ParseVisualOptions(Display *pDpy, XDCCC_Correction *pCorrection, char *pbuf)
  *	SYNOPSIS
  */
 int
-LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
+LoadSCCData(Display *pDpy, int screenNumber, const char *filename,
+            int targetFormat)
 
 /*
  *	DESCRIPTION
@@ -1429,7 +1425,7 @@ LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
  *		Returns 0 if failed; otherwise 1.
  *
  */
-{    
+{
     FILE *stream;
     char *pStr;
     char buf[BUFSIZ];
@@ -1465,7 +1461,7 @@ LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
     }
 
     /*
-     * Advance to starting keyword 
+     * Advance to starting keyword
      * Anything before this keyword is just treated as comments.
      */
 
@@ -1518,7 +1514,7 @@ LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
 		    screenNumber = atoi(token2);
 
 		    if (screenNumber < 0) {
-			fprintf(stderr,"Invalid Screen Number %d\n", 
+			fprintf(stderr,"Invalid Screen Number %d\n",
 				screenNumber);
 		    }
 		    else {
@@ -1537,7 +1533,7 @@ LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
 		    closeS (stream, CorrectionHead);
 		    return (0);
 		}
-		if (!ProcessColorimetric(stream, 
+		if (!ProcessColorimetric(stream,
 					 &matrix, VisualFlag)) {
 		    closeS (stream, CorrectionHead);
 		    return (0);
@@ -1575,7 +1571,7 @@ LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
 			    linenum, buf);
 		    closeS (stream, CorrectionHead);
 		    return (0);
-		} 
+		}
 
 		if ((VisualFlag == VIDEO_RGB) && (token2 == (char *)NULL)) {
 		    fprintf(stderr,
@@ -1603,7 +1599,7 @@ LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
 		if (token3 != (char*)NULL) {
 		    if (!ParseVisualOptions(pDpy, pCurrent, token3)) {
 			goto ByPassThisIProfile;
-		    } 
+		    }
 		}
 
 		switch (pCurrent->nTables) {
@@ -1690,7 +1686,7 @@ IProfileProcessed:
 	      case SC_END :
 		if (!(state & 0x02)) {
 		    fprintf(stderr,
-			    "File %s is missing Colorimetric data.\n", 
+			    "File %s is missing Colorimetric data.\n",
 			    filename);
 		    closeS (stream, CorrectionHead);
 		    return (0);
@@ -1720,9 +1716,9 @@ IProfileProcessed:
 		}
 		closeS (stream, CorrectionHead);
 		return (1);
-/* NOTREACHED */    break;
+
 	      default :
-		fprintf(stderr,"Line %d: extraneous keyword %s\n", 
+		fprintf(stderr,"Line %d: extraneous keyword %s\n",
 			linenum, keyword);
 		closeS (stream, CorrectionHead);
 		return (0);

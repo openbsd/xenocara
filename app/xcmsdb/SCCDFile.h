@@ -139,7 +139,7 @@ typedef struct _XDCCC_Correction {
     struct _XDCCC_Correction*	next;
 } XDCCC_Correction;
 
-extern int LoadSCCData(Display *pDpy, int screenNumber, char *filename, 
+extern int LoadSCCData(Display *pDpy, int screenNumber, const char *filename,
 		       int targetFormat);
 
 #endif /* SCCDFILE_H */
