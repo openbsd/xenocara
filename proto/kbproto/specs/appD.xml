@@ -599,7 +599,7 @@ class, or feedback
 
 <literallayout class='monospaced'>1     10          type
 1     BITMASK          flags
-     #x02     XkbSA_DfltBtnAbsolute
+     #x04     XkbSA_DfltBtnAbsolute
 1     BITMASK          affect
      #x01     XkbSA_AffectDfltBtn
 1     INT8          value
