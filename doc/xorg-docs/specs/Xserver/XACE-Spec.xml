@@ -576,7 +576,7 @@
 		</row>
 		<row>
 		  <entry><literal>DixForceAccess</literal></entry>
-		  <entry>The device cursor is being overriden by a grab.</entry>
+		  <entry>The device cursor is being overridden by a grab.</entry>
 		  <entry>GrabPointer, GrabButton</entry>
 		</row>
 		<row>
@@ -1036,7 +1036,7 @@
 
 	<section id="audit_avail_hook">
 	  <title>Auditing Hooks</title>
-	  <para>Two hooks provide basic auditing support.  The begin hook is called immediately before an incoming client request is dispatched and before the dispatch hook is called (refer to <xref linkend="core_dispatch_hook"/>).  The end hook is called immedately after the processing of the request has finished.  The hook argument is a pointer to a structure of type <type>XaceKeyAvailRec</type>.  This structure contains a
+	  <para>Two hooks provide basic auditing support.  The begin hook is called immediately before an incoming client request is dispatched and before the dispatch hook is called (refer to <xref linkend="core_dispatch_hook"/>).  The end hook is called immediately after the processing of the request has finished.  The hook argument is a pointer to a structure of type <type>XaceKeyAvailRec</type>.  This structure contains a
 	  <structfield>client</structfield> field of type <type>ClientPtr</type>,
 	  and a <structfield>requestResult</structfield> field of type <type>int</type>.</para>
 	  <para>The <structfield>client</structfield> field refers to client making the request.</para>

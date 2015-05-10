@@ -292,7 +292,7 @@ setxkbmap -model logicordless -layout "us,cz,de" \
       <title>Basic Global Options</title>
 
       <para>
-For a list of available options, with a short decription of what they do,
+For a list of available options, with a short description of what they do,
 see the section starting with <quote><literal>! option</literal></quote> in the
 <filename>rules/*.lst</filename> files.
       </para>

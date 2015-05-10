@@ -32,7 +32,7 @@
 .TH XSTANDARDS __miscmansuffix__ __xorgversion__
 .SH NAME
 XStandards \- X Window System Standards and Specifications
-.SH SYNOPSIS
+.SH DESCRIPTION
 The major goal of the X Consortium was to promote cooperation within the
 computer industry in the creation of standard software interfaces at
 all layers in the X Window System environment.

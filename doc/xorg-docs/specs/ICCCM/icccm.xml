@@ -5486,7 +5486,7 @@ The root window of the screen on which the colormap is installed
     <row>
       <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[0]</entry>
       <entry>
-the timestampe of the event that caused the client to start or stop
+the timestamp of the event that caused the client to start or stop
 installing colormaps
       </entry>
     </row>
@@ -6828,7 +6828,7 @@ Contain the window ID of the client leader window
 
 <para>
 A client must withdraw all of its top-level windows on the same display
-before modifiying either the WM_CLIENT_LEADER or the SM_CLIENT_ID property
+before modifying either the WM_CLIENT_LEADER or the SM_CLIENT_ID property
 of its client leader window.
 </para>
 
@@ -8533,7 +8533,7 @@ request has been added.
   <listitem>
     <para>
 <!-- .bP -->
-[P49] A convention on discrimated names has been added.
+[P49] A convention on discriminated names has been added.
     </para>
   </listitem>
   <listitem>

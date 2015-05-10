@@ -77,6 +77,13 @@ S:	Obsolete - only used by Xprint
 rstart
 S:	Obsolete - use ssh instead
 
+xauth
+P:	Dr. Tilmann Bubeck
+M:	t.bubeck@reinform.de
+L:	xorg-devel@lists.x.org
+W:	http://wiki.x.org
+S:	Maintained
+
 xbiff
 P:	Matthieu Herrb
 M:	matthieu.herrb@laas.fr
@@ -159,6 +166,12 @@ S:	Maintained
 xmh
 S:	Obsolete - use exmh instead
 
+xsetmode
+S:	Obsolete - use xinput instead
+
+xsetpointer
+S:	Obsolete - use xinput instead (for Xorg < 1.4, can't work after that)
+
 xsetroot
 P:	Matthieu Herrb
 M:	matthieu.herrb@laas.fr
@@ -218,7 +231,7 @@ L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
 
-xkbfile, xkbui
+xkbfile
 P:	Daniel Stone
 M:	daniel@fooishbar.org
 L:	xorg-devel@lists.x.org
@@ -226,6 +239,9 @@ W:	http://wiki.x.org
 S:	Maintained
 S:	XKB being overhauled
 S:	Please contact Daniel if you're planning to work on this
+
+xkbui
+S:	Obsolete
 
 Xmu
 Xpm
@@ -486,7 +502,7 @@ Solaris (x86 & sparc)
 P:	Alan Coopersmith
 M:	alan.coopersmith@oracle.com
 L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org & http://opensolaris.org/os/community/x_win/
+W:	http://wiki.x.org & http://solaris-x11.java.net/
 S:	Maintained
 
 USL (UnixWare 7.1.x, OpenServer 6)
@@ -717,11 +733,11 @@ W:	http://wiki.x.org
 S:	Deactivated
 
 xf86-input-vmmouse
-P:	Thomas Hellstrom
-M:	thellstrom@vmware.com
+P:	VMware Linux Graphics Maintainer
+M:	linux-graphics-maintainer@vmware.com
 L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org
-S:	Maintained
+W:	http://wiki.x.org/wiki/vmware
+S:	Supported
 
 xf86-input-void
 P:	Peter Hutterer
@@ -902,6 +918,13 @@ L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
 
+xf86-video-omap
+P:	Rob Clark
+M:	robclark@freedesktop.org
+L:	xorg-devel@lists.x.org
+W:	http://wiki.x.org
+S:	Maintained
+
 xf86-video-qxl
 P:	?
 M:	?
@@ -1074,10 +1097,10 @@ xf86-video-via
 S:	Obsolete - use xf86-video-openchrome or xf86-video-unichrome instead
 
 xf86-video-vmware
-P:	Thomas Hellstrom
-M:	thellstrom@vmware.com
+P:	VMware Linux Graphics Maintainer
+M:	linux-graphics-maintainer@vmware.com
 L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org
+W:	http://wiki.x.org/vmware
 S:	Maintained
 
 xf86-video-voodoo

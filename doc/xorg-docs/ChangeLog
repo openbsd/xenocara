@@ -1,3 +1,140 @@
+commit 703974aee2f4e380076427b4b04da407b663ed2c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 30 23:09:58 2015 -0700
+
+    xorg-docs 1.7.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f4ec2fcbd61cfb72478aadbbe3d6823e741338f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 11 21:13:37 2014 -0700
+
+    Fix various typos & spelling errors across the docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 36941875d69b6b6f8c224884b3a4acef14e7a33c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 11 20:49:03 2014 -0700
+
+    X.man: disengender a user reference
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97524d3f26c380c2d3ca364675a3a8b4828422cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 54a1d7d9fd4752f6ae778cbfb169a971f86d1706
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee30cb781c46215e84aa736ca842d8853247e3cd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 25 14:15:43 2014 -0400
+
+    Fix typo in Release Notes.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 66e800c69fa5348b01e4b9670d6274ba392db7e5
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Thu Oct 10 10:56:25 2013 +0200
+
+    Change maintainer info of xf86-video-vmware
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit 777f9489a84ea66969c56d19ac5fa00df55f27c3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 13 10:30:53 2013 -0700
+
+    List libxkbui as Obsolete in MAINTAINERS file
+    
+    Only known user was the xorgcfg gui, which was removed in Xorg 1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 0aa1894228cc8d0477db7b44bb266d210e4f8d10
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 13 10:10:59 2013 -0700
+
+    List xsetmode & xsetpointer as Obsolete in MAINTAINERS file
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1bd74028e5855f463693c1e1565689b3fb4b5bca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 12 21:12:17 2013 -0700
+
+    MAINTAINERS: Update URL to Solaris X11 distro web page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c3ac1b19a9f22f6bbc44b74af3bf850069a3268e
+Author: Dr. Tilmann Bubeck <t.bubeck@reinform.de>
+Date:   Tue Jan 22 21:58:17 2013 +0100
+
+    Added Dr. Tilmann Bubeck as maintainer of xauth
+    
+    Added Dr. Tilmann Bubeck as maintainer of xauth with a new entry.
+
+commit 0aef008fada9bca21bdc869b723feb4864dd2374
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 04:53:49 2012 -0400
+
+    Rename SYNOOPSIS to DESCRIPTION...
+    
+    ...so doclifter won't be confused by not seeing function of synopsis markup.
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit 3fe24732152467cbe77ae5b80db9349639d3397f
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 04:49:14 2012 -0400
+
+    Rename SYNIOPSIS to OVERVIEW...
+    
+    ...so doclifter won't get confused by not finding a command or function
+    syntax there.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit 3a812de74d7a412d572730244b60f749efdf36ce
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 02:22:38 2012 -0400
+
+    Clean up presentation-level markup so DocBook conversion can work.
+
+commit 58cdf67e3e2a0bad898728da24c7b6fce9d7af38
+Author: Rob Clark <rob@ti.com>
+Date:   Thu Jun 14 06:47:04 2012 -0500
+
+    add maintainers entry for xf86-video-omap
+    
+    Signed-off-by: Rob Clark <rob@ti.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca828f8812767620747b4914974e09719aecbec6
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Fri Jun 8 11:20:03 2012 +0200
+
+    Updated VMware maintainer email and vmware driver status
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
 commit 4685143df66c83c0b7be67de013f3ab5b06a3b1d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Jun 4 21:39:52 2012 -0700

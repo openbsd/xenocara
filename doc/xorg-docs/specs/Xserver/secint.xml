@@ -141,7 +141,7 @@ disconnect time for reasons described below.
 
 <para>
 Now that we know what needs to be done and why, let's walk through the
-sequnce of events.
+sequence of events.
 </para>
 
 <para>
@@ -279,7 +279,7 @@ extensions don't exist.
 
 <para>
 To prevent untrusted clients from using extensions by guessing their major
-opcode, one of two new Proc vectors are used by untusted clients,
+opcode, one of two new Proc vectors are used by untrusted clients,
 <function>UntrusedProcVector</function> and
 <function>SwappedUntrustedProcVector</function>. These have the same contents
 as <function>ProcVector</function> and

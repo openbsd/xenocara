@@ -92,7 +92,7 @@ main modules:
 	    <para>
 Tables that defines translation from keyboard scan codes into reasonable
 symbolic names, maximum, minimum legal keycodes, symbolic aliases and
-description of physically present LED-indicators. The primary sence of
+description of physically present LED-indicators. The primary sense of
 this component is to allow definitions of maps of symbols (see below)
 to be independent of physical keyboard scancodes. There are two main
 naming conventions for symbolic names (always four bytes long):
@@ -670,7 +670,7 @@ the first case (the Lock itself is included in the list of modifiers but
 combinations with this modifier aren't mentioned in the map statements)
 the internal capitalization rules will be applied to the symbol from the first
 level. But in the second case the capitalization will be applied to the symbol
-chosen accordingly to he first modifier - and this can be the symbol from the
+chosen accordingly to the first modifier - and this can be the symbol from the
 first as well as from the second level.
 	</para>
 

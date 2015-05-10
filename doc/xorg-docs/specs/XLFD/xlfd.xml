@@ -434,7 +434,7 @@ as appropriate.
 <!-- .LP -->
 The
 <function>FontName</function>
-is a structured, parsable string (of type STRING8)
+is a structured, parseable string (of type STRING8)
 whose Backus-Naur Form syntax description is as follows:
 </para>
 <!-- .IN "FontName Syntax" -->

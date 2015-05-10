@@ -52,7 +52,7 @@
 .TH XSECURITY __miscmansuffix__ __xorgversion__
 .SH NAME
 Xsecurity \- X display access control
-.SH SYNOPSIS
+.SH OVERVIEW
 .PP
 X provides mechanism for implementing many access control systems.
 The sample implementation includes five mechanisms:

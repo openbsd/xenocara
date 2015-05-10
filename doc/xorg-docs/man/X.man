@@ -1,3 +1,4 @@
+.\" t
 .\"
 .\" Copyright (c) 1994, 2004  The Open Group
 .\" Copyright \(co 2000  The XFree86 Project, Inc.
@@ -34,7 +35,7 @@
 .TH X __miscmansuffix__ __vendorversion__
 .SH NAME
 X \- a portable, network-transparent window system
-.SH SYNOPSIS
+.SH OVERVIEW
 .PP
 The X Window System is a network transparent window system which runs
 on a wide range of computing and graphics machines.  It should be
@@ -45,17 +46,16 @@ implementations are also available for a wide range of platforms.
 The X.Org Foundation requests that the following names be used when
 referring to this software:
 .sp
-.ce 5
+.TS
+center;
+c.
 X
-.br
 X Window System
-.br
 X Version 11
-.br
 X Window System, Version 11
-.br
 X11
-.PP
+.TE
+.sp
 .I "X Window System"
 is a trademark of The Open Group.
 .SH DESCRIPTION
@@ -148,8 +148,9 @@ nice interface.  For this reason, \fIxinit\fP is not intended for end users.
 From the user's perspective, every X server has a \fIdisplay name\fP of the
 form:
 .sp
-.ce 1
+.RS
 \fIhostname:displaynumber.screennumber\fP
+.RE
 .sp
 This information is used by the application to determine how it should
 connect to the server and which screen it should use by default
@@ -184,11 +185,12 @@ in your DISPLAY environment variable.  This variable is set automatically
 by the \fIxterm\fP terminal emulator.  However, when you log into another
 machine on a network, you may need to set DISPLAY by hand to point to your
 display.  For example,
-.sp
+.PP
 .nf
     % setenv DISPLAY myws:0
     $ DISPLAY=myws:0; export DISPLAY
 .fi
+.PP
 The \fIssh\fP program can be used to start an X program on a remote machine;
 it automatically sets the DISPLAY variable correctly.
 .PP
@@ -228,18 +230,18 @@ addresses, and IPv6 addresses are all allowed.  For example:
 .SH "ACCESS CONTROL"
 An X server can use several types of access control.  Mechanisms provided
 in Release 7 are:
-.nf
-.br
-.ta 3.4i
-    Host Access	Simple host-based access control.
-    MIT\-MAGIC\-COOKIE\-1	Shared plain-text "cookies".
-    XDM\-AUTHORIZATION\-1	Secure DES based private-keys.
-    SUN\-DES\-1	Based on Sun's secure rpc system.
-    Server Interpreted	Server-dependent methods of access control
-.fi
+.TS
+l l.
+Host Access     	Simple host-based access control.
+MIT\-MAGIC\-COOKIE\-1	Shared plain-text "cookies".
+XDM\-AUTHORIZATION\-1	Secure DES based private-keys.
+SUN\-DES\-1     	Based on Sun's secure rpc system.
+Server Interpreted	Server-dependent methods of access control
+.TE
 .PP
 \fIXdm\fP initializes access control for the server and also places
 authorization information in a file accessible to the user.
+.PP
 Normally, the list of hosts from
 which connections are always accepted should be empty, so that only clients
 with are explicitly authorized can connect to the display.  When you add
@@ -498,6 +500,7 @@ the prefix "rgb:" and has the following syntax:
         \fI<red>\fP, \fI<green>\fP, \fI<blue>\fP := \fIh\fP | \fIhh\fP | \fIhhh\fP | \fIhhhh\fP
         \fIh\fP := single hexadecimal digits
 .fi
+.sp
 Note that \fIh\fP indicates the value scaled in 4 bits,
 \fIhh\fP the value scaled in 8 bits,
 \fIhhh\fP the value scaled in 12 bits,
@@ -507,30 +510,32 @@ and are assumed to be gamma corrected.
 .PP
 The eight primary colors can be represented as:
 .sp
-.ta 2.5i
-.nf
-    black	rgb:0/0/0
-    red	rgb:ffff/0/0
-    green	rgb:0/ffff/0
-    blue	rgb:0/0/ffff
-    yellow	rgb:ffff/ffff/0
-    magenta	rgb:ffff/0/ffff
-    cyan	rgb:0/ffff/ffff
-    white	rgb:ffff/ffff/ffff
-.fi
+.TS
+center;
+l l.
+black	rgb:0/0/0
+red	rgb:ffff/0/0
+green	rgb:0/ffff/0
+blue	rgb:0/0/ffff
+yellow	rgb:ffff/ffff/0
+magenta	rgb:ffff/0/ffff
+cyan	rgb:0/ffff/ffff
+white	rgb:ffff/ffff/ffff
+.TE
 .PP
 For backward compatibility, an older syntax for RGB Device is
 supported, but its continued use is not encouraged.
 The syntax is an initial sharp sign character followed by
 a numeric specification, in one of the following formats:
 .sp
-.ta 3i
-.nf
-\&    #RGB	(4 bits each)
-\&    #RRGGBB	(8 bits each)
-\&    #RRRGGGBBB	(12 bits each)
-\&    #RRRRGGGGBBBB	(16 bits each)
-.fi
+.TS
+center;
+l l.
+#RGB    	(4 bits each)
+#RRGGBB  	(8 bits each)
+#RRRGGGBBB	(12 bits each)
+#RRRRGGGGBBBB	(16 bits each)
+.TE
 .PP
 The R, G, and B represent single hexadecimal digits.
 When fewer than 16 bits each are specified,
@@ -559,15 +564,16 @@ followed by a possibly signed integer string.
 The standard device-independent string specifications have
 the following syntax:
 .sp
-.ta 3.5i
-.nf
-    CIEXYZ:\fI<X>/<Y>/<Z>\fP	(\fInone\fP, 1, \fInone\fP)
-    CIEuvY:\fI<u>/<v>/<Y>\fP	(~.6, ~.6, 1)
-    CIExyY:\fI<x>/<y>/<Y>\fP	(~.75, ~.85, 1)
-    CIELab:\fI<L>/<a>/<b>\fP	(100, \fInone\fP, \fInone\fP)
-    CIELuv:\fI<L>/<u>/<v>\fP	(100, \fInone\fP, \fInone\fP)
-    TekHVC:\fI<H>/<V>/<C>\fP	(360, 100, 100)
-.fi
+.TS
+center;
+l l.
+CIEXYZ:\fI<X>/<Y>/<Z>\fP	(\fInone\fP, 1, \fInone\fP)
+CIEuvY:\fI<u>/<v>/<Y>\fP	(~.6, ~.6, 1)
+CIExyY:\fI<x>/<y>/<Y>\fP	(~.75, ~.85, 1)
+CIELab:\fI<L>/<a>/<b>\fP	(100, \fInone\fP, \fInone\fP)
+CIELuv:\fI<L>/<u>/<v>\fP	(100, \fInone\fP, \fInone\fP)
+TekHVC:\fI<H>/<V>/<C>\fP	(360, 100, 100)
+.TE
 .PP
 All of the values (C, H, V, X, Y, Z, a, b, u, v, y, x) are
 floating point values.  Some of the values are constrained to
@@ -733,19 +739,18 @@ second letter for historical reasons.
 The precise syntax for resources is:
 .PP
 .nf
-.ta 1.8i 2.0i
-ResourceLine	=	Comment | IncludeFile | ResourceSpec | <empty line>
-Comment	=	"!" {<any character except null or newline>}
-IncludeFile	=	"#" WhiteSpace "include" WhiteSpace FileName WhiteSpace
-FileName	=	<valid filename for operating system>
-ResourceSpec	=	WhiteSpace ResourceName WhiteSpace ":" WhiteSpace Value
-ResourceName	=	[Binding] {Component Binding} ComponentName
-Binding	=	"\&." | "*"
-WhiteSpace	=	{<space> | <horizontal tab>}
-Component	=	"?" | ComponentName
-ComponentName	=	NameChar {NameChar}
-NameChar	=	"a"\-"z" | "A"\-"Z" | "0"\-"9" | "_" | "\-"
-Value	=	{<any character except null or unescaped newline>}
+ResourceLine    =       Comment | IncludeFile | ResourceSpec | <empty line>
+Comment         =       "!" {<any character except null or newline>}
+IncludeFile     =       "#" WhiteSpace "include" WhiteSpace FileName WhiteSpace
+FileName        =       <valid filename for operating system>
+ResourceSpec    =       WhiteSpace ResourceName WhiteSpace ":" WhiteSpace Value
+ResourceName    =       [Binding] {Component Binding} ComponentName
+Binding         =       "\&." | "*"
+WhiteSpace      =       {<space> | <horizontal tab>}
+Component       =       "?" | ComponentName
+ComponentName   =       NameChar {NameChar}
+NameChar        =       "a"\-"z" | "A"\-"Z" | "0"\-"9" | "_" | "\-"
+Value           =       {<any character except null or unescaped newline>}
 .fi
 .PP
 Elements separated by vertical bar (|) are alternatives.
@@ -954,12 +959,10 @@ ways of automatically loading resources. See the \fIXlib\fP
 manual section \fIResource Manager Functions\fP for more information.
 .SH ENVIRONMENT
 .TP
-.SM
 .B DISPLAY
 This is the only mandatory environment variable. It must point to an
 X server. See section "Display Names" above.
 .TP
-.SM
 .B XAUTHORITY
 This must point to a file that contains authorization data. The default
 is \fI$HOME/.Xauthority\fP. See
@@ -968,12 +971,10 @@ is \fI$HOME/.Xauthority\fP. See
 .BR xdm (__appmansuffix__),
 .BR Xau (3).
 .TP
-.SM
 .B ICEAUTHORITY
 This must point to a file that contains authorization data. The default
 is \fI$HOME/.ICEauthority\fP.
 .TP
-.SM
 .BR LC_ALL ", " LC_CTYPE ", " LANG
 The first non-empty value among these three determines the current
 locale's facet for character handling, and in particular the default
@@ -982,26 +983,22 @@ text encoding. See
 .BR setlocale (3),
 .BR locale (1).
 .TP
-.SM
 .B XMODIFIERS
 This variable can be set to contain additional information important
 for the current locale setting. Typically set to \fI@im=<input-method>\fP
 to enable a particular input method. See
 .BR XSetLocaleModifiers (__libmansuffix__).
 .TP
-.SM
 .B XLOCALEDIR
 This must point to a directory containing the locale.alias file and
 Compose and XLC_LOCALE file hierarchies for all locales. The default value
 is\fI __datadir__/X11/locale\fP.
 .TP
-.SM
 .B XENVIRONMENT
 This must point to a file containing X resources. The default is
 \fI$HOME/.Xdefaults\-<hostname>\fP. Unlike \fI$HOME/.Xresources\fP,
 it is consulted each time an X application starts.
 .TP
-.SM
 .B XFILESEARCHPATH
 This must contain a colon separated list of path templates, where libXt
 will search for resource files. The default value consists of
@@ -1042,7 +1039,6 @@ A path template is transformed to a pathname by substituting:
     %c => the locale's encoding (part after '.')
 .fi
 .TP
-.SM
 .B XUSERFILESEARCHPATH
 This must contain a colon separated list of path templates,
 where libXt will search for user dependent resource files. The default
@@ -1076,34 +1072,28 @@ A path template is transformed to a pathname by substituting:
     %c => the locale's encoding (part after '.')
 .fi
 .TP
-.SM
 .B XAPPLRESDIR
-This must point to a base directory where the user stores his application
+This must point to a base directory where the user stores the application
 dependent resource files. The default value is \fI$HOME\fP. Only used if
 XUSERFILESEARCHPATH is not set.
 .TP
-.SM
 .B XKEYSYMDB
 This must point to a file containing nonstandard keysym definitions.
 The default value is\fI __datadir__/X11/XKeysymDB\fP.
 .TP
-.SM
 .B XCMSDB
 This must point to a color name database file. The default value is
 \fI __libdir__/X11/Xcms.txt\fP.
 .TP
-.SM
 .B RESOURCE_NAME
 This serves as main identifier for resources belonging to the program
 being executed. It defaults to the basename of pathname of the program.
 .TP
-.SM
 .B SESSION_MANAGER
 Denotes the session manager to which the application should connect. See
 .BR xsm (__appmansuffix__),
 .BR rstart (__appmansuffix__).
 .TP
-.SM
 .B XF86BIGFONT_DISABLE
 Setting this variable to a non-empty value disables the XFree86\-Bigfont
 extension. This extension is a mechanism to reduce the memory consumption
@@ -1133,8 +1123,7 @@ of big fonts by use of shared memory.
 .br
 .B _XKB_COMP_LED
 .B _XKB_COMP_FAIL_BEEP
-.TP
-.SM
+.PP
 These variables influence the X Keyboard Extension.
 .SH EXAMPLES
 The following is a collection of sample command lines for some of the

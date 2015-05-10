@@ -135,7 +135,7 @@ AppGroup's root window ID, and if it is the same, True is returned.
 If neither case is true, then False is returned.
 </para>
 <para>
-XagConnectionInfo returns an abreviated version of the connection
+XagConnectionInfo returns an abbreviated version of the connection
 setup information. When an embedded AppGroup is created the server
 returns only the information about the [UI] screen that the
 application is embedded within in the connection setup in order to

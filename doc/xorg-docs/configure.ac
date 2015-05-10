@@ -23,14 +23,13 @@ dnl  Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xorg-docs],
-        [1.7],
+        [1.7.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xorg-docs])
 AC_CONFIG_SRCDIR([Makefile.am])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require xorg-macros minimum of 1.12 for XORG_WITH_XSLTPROC
 m4_ifndef([XORG_MACROS_VERSION],
