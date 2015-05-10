@@ -1,3 +1,107 @@
+commit 067a731285be33097edc6cd48af5ef3c6457b457
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 23:19:38 2015 -0700
+
+    xgamma 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b8b6f0d06c40725ca6db6caa31f613ab189bc0ed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:36:52 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d8d3a0e756cef7d154ed4009bc5a651b94a7f96
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:36:52 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b5048012f1197400c98d58f2234ba674099174b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 24 10:34:23 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a4e873be460f96629f574c7e127ad3868f7c7e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 24 10:27:44 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3643c69e12c2294f5eafae06d10ce7f76c5daad9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 24 10:16:40 2014 -0700
+
+    Combine usage message fprintfs into a single call
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3a0e14080f81fbfb7b2df2fc8a775b2dc8506cb3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 24 10:10:54 2014 -0700
+
+    Fix const char warnings in calls to isabbreviation()
+    
+    gcc warned on every call:
+    
+    xgamma.c: In function ‘main’:
+    xgamma.c:107:6: warning: passing argument 1 of ‘isabbreviation’ discards
+     ‘const’ qualifier from pointer target type [enabled by default]
+          if (isabbreviation ("-display", arg, 1)) {
+          ^
+    xgamma.c:70:1: note: expected ‘char *’ but argument is of type ‘const char *’
+     isabbreviation(char *arg, char *s, size_t minslen)
+     ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cab5c584f1dcc125a7fd2a014785dc8adcd3c683
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 24 10:09:22 2014 -0700
+
+    Fix size/sign conversion warnings in isabbreviation()
+    
+    clang said:
+    xgamma.c:85:26: warning: implicit conversion changes signedness: 'int' to
+          'size_t' (aka 'unsigned long') [-Wsign-conversion]
+        if (strncmp (arg, s, slen) == 0) return (True);
+            ~~~~~~~          ^~~~
+    xgamma.c:78:14: warning: implicit conversion loses integer precision: 'size_t'
+          (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+        arglen = strlen (arg);
+               ~ ^~~~~~~~~~~~
+    xgamma.c:79:12: warning: implicit conversion loses integer precision: 'size_t'
+          (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+        slen = strlen (s);
+             ~ ^~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d05b29e9e1431f11cb2c2cb960380586c6ba494
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 24 10:06:37 2014 -0700
+
+    Add noreturn attribute to Syntax function
+    
+    Suggested by clang:
+    xgamma.c:48:1: warning: function 'Syntax' could be declared with attribute
+          'noreturn' [-Wmissing-noreturn]
+    {
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d99cd9262291137a9e742166fdfedfeb74f08e57
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 22 22:35:48 2012 -0700

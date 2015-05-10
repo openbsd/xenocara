@@ -23,7 +23,7 @@
 xgamma - Alter a monitor's gamma correction through the X server
 .SH SYNOPSIS
 .B "xgamma"
-[-display \fIdisplay\fP] [-screen \fIscreen\fP] [-quiet]
+[-display \fIdisplay\fP] [-screen \fIscreen\fP] [-quiet] [-version]
 [-gamma f.f | [[-rgamma f.f] [-ggamma f.f] [-bgamma f.f]]]
 .SH DESCRIPTION
 .PP
@@ -60,6 +60,10 @@ Silence the normal output of
 .TP 8
 .B "-help"
 Print out the `Usage:' command syntax summary.
+.PP
+.TP 8
+.B "-version"
+Print out the program version and exit.
 .PP
 .TP 8
 .B "-gamma f.f"
