@@ -60,7 +60,7 @@ FSQueryXBitmaps8(
     Font		  fid,
     FSBitmapFormat	  format,
     Bool		  range_type,
-    unsigned char	 *str,
+    const unsigned char	 *str,
     unsigned long	  str_len,
     FSOffset		**offsets,
     unsigned char	**glyphdata)
@@ -129,7 +129,7 @@ FSQueryXBitmaps16(
     Font		  fid,
     FSBitmapFormat	  format,
     Bool		  range_type,
-    FSChar2b		 *str,
+    const FSChar2b	 *str,
     unsigned long	  str_len,
     FSOffset		**offsets,
     unsigned char	**glyphdata)

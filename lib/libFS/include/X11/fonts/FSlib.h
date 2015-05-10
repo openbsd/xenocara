@@ -249,10 +249,10 @@ extern FSSyncHandler FSSetAfterFunction(FSServer *, FSSyncHandler);
 
 extern const char * FSServerName ( const char *server );
 extern char ** FSListExtensions ( FSServer *svr, int *next );
-extern int FSQueryExtension ( FSServer *svr, char *name, int *major_opcode,
+extern int FSQueryExtension ( FSServer *svr, const char *name, int *major_opcode,
 			      int *first_event, int *first_error );
 
-extern char ** FSListCatalogues ( FSServer *svr, char *pattern,
+extern char ** FSListCatalogues ( FSServer *svr, const char *pattern,
 				  int maxNames, int *actualCount );
 extern char ** FSGetCatalogues ( FSServer *svr, int *num );
 
@@ -267,7 +267,7 @@ extern char ** FSListFontsWithXInfo ( FSServer *svr, const char *pattern,
 				      FSPropOffset ***offsets,
 				      unsigned char ***prop_data );
 extern Font FSOpenBitmapFont ( FSServer *svr, FSBitmapFormat hint,
-			       FSBitmapFormatMask fmask, char *name,
+			       FSBitmapFormatMask fmask, const char *name,
 			       Font *otherid );
 
 extern int FSSync ( FSServer *svr, Bool discard );
@@ -278,7 +278,6 @@ extern int FSGetErrorDatabaseText ( FSServer *svr, const char *name,
 				    const char *type, const char *defaultp,
 				    char *buffer, int nbytes );
 extern int FSGetErrorText ( FSServer *svr, int code, char *buffer,
-
 			    int nbytes );
 extern int FSFlush ( FSServer *svr );
 extern int FSFreeFontNames ( char **list );
@@ -286,18 +285,18 @@ extern int FSFreeCatalogues ( char **list );
 extern int FSFreeExtensionList ( char **list );
 extern int FSNextEvent ( FSServer *svr, FSEvent *event );
 extern int FSQueryXBitmaps8 ( FSServer *svr, Font fid, FSBitmapFormat format,
-			      int range_type, unsigned char *str,
+			      int range_type, const unsigned char *str,
 			      unsigned long str_len, FSOffset **offsets,
 			      unsigned char **glyphdata );
 extern int FSQueryXBitmaps16 ( FSServer *svr, Font fid, FSBitmapFormat format,
-			       int range_type, FSChar2b *str,
+			       int range_type, const FSChar2b *str,
 			       unsigned long str_len, FSOffset **offsets,
 			       unsigned char **glyphdata );
 extern int FSQueryXExtents8 ( FSServer *svr, Font fid, int range_type,
-			      unsigned char *str, unsigned long str_len,
+			      const unsigned char *str, unsigned long str_len,
 			      FSXCharInfo **extents );
 extern int FSQueryXExtents16 ( FSServer *svr, Font fid, int range_type,
-			       FSChar2b *str, unsigned long str_len,
+			       const FSChar2b *str, unsigned long str_len,
 			       FSXCharInfo **extents );
 extern int FSQueryXInfo ( FSServer *svr, Font fid, FSXFontInfoHeader *info,
 			  FSPropInfo *props, FSPropOffset **offsets,

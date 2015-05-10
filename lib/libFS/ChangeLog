@@ -1,3 +1,76 @@
+commit a9db12661e7412dd935706c92db6d7bc46238782
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 30 21:14:46 2015 -0700
+
+    libFS 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f1c9c18e2601151e3dfa7f83b4748edd2a5a3a6e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 5 17:49:30 2014 -0800
+
+    Use 'imdent' to realign cpp indentation levels in FSlibos.h
+    
+    Parts were indented, others weren't, now is more consistent.
+    'git diff -w' shows no non-whitespace changes in this commit
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f2c0bb056dbfbc2ca5b753b8de87b6c73742a990
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 5 17:48:18 2014 -0800
+
+    Remove unneeded checks for #ifndef X_NOT_POSIX
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aef4c4f1330dc01d535cd88b9805c3d5d164b070
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 11 20:24:22 2014 -0700
+
+    Fix typos & wording issues in source comments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dcf25b1ed387d7019d2cf7703eeb33554987d63f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 5 14:20:07 2014 -0700
+
+    Fix some sign/size conversion warnings from clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa577a18f189fe454995306d38059570e1ad8bf2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 4 23:36:45 2014 -0700
+
+    Constify some more strings in API arguments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e0f1b91edb97759e2c07ec233c2ce8639c8e0fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 23 23:20:03 2014 -0700
+
+    Constify pattern argument to FSListCatalogues
+    
+    The contents of pattern are simply copied to the request sent to
+    the font server and never touched again, so can be labeled read-only.
+    
+    Fixes compiler warning building xfsinfo:
+    
+    xfsinfo.c: In function ‘print_catalogue_info’:
+    xfsinfo.c:158:5: warning: passing argument 2 of ‘FSListCatalogues’ discards
+     ‘const’ qualifier from pointer target type [enabled by default]
+         char      **cats = FSListCatalogues(svr, "*", 1000, &n);
+         ^
+    In file included from xfsinfo.c:66:0:
+    FSlib.h:255:16: note: expected ‘char *’ but argument is of type ‘const char *’
+     extern char ** FSListCatalogues ( FSServer *svr, char *pattern,
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 88be5c37c40070305e64c4b8dc0a1c1f6ca80440
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 16 10:44:14 2014 -0700

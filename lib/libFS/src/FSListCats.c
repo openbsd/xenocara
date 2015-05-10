@@ -57,7 +57,7 @@ in this Software without prior written authorization from The Open Group.
 char      **
 FSListCatalogues(
     FSServer	*svr,
-    char	*pattern,
+    const char	*pattern,
     int		 maxNames,
     int		*actualCount)
 {
@@ -68,7 +68,7 @@ FSListCatalogues(
     char       *c;
     fsListCataloguesReply rep;
     fsListCataloguesReq *req;
-    long        rlen;
+    unsigned long rlen;
 
     GetReq(ListCatalogues, req);
     req->maxNames = maxNames;
@@ -94,11 +94,11 @@ FSListCatalogues(
 		FSfree(clist);
 	    if (c)
 		FSfree(c);
-	    _FSEatData(svr, (unsigned long) rlen);
+	    _FSEatData(svr, rlen);
 	    SyncHandle();
 	    return (char **) NULL;
 	}
-	_FSReadPad(svr, c, rlen);
+	_FSReadPad(svr, c, (long) rlen);
 	/* unpack */
 	length = *c;
 	for (i = 0; i < rep.num_catalogues; i++) {

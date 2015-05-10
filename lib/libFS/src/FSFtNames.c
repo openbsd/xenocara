@@ -62,13 +62,13 @@ FSListFonts(
     int		*actualCount)
 {
     long        nbytes;
-    int         i,
+    unsigned int i,
                 length;
     char      **flist;
     char       *c;
     fsListFontsReply rep;
     fsListFontsReq *req;
-    long        rlen;
+    unsigned long rlen;
 
     GetReq(ListFonts, req);
     req->maxNames = maxNames;
@@ -94,11 +94,11 @@ FSListFonts(
 		FSfree(flist);
 	    if (c)
 		FSfree(c);
-	    _FSEatData(svr, (unsigned long) rlen);
+	    _FSEatData(svr, rlen);
 	    SyncHandle();
 	    return (char **) NULL;
 	}
-	_FSReadPad(svr, c, rlen);
+	_FSReadPad(svr, c, (long) rlen);
 	/* unpack */
 	length = *(unsigned char *)c;
 	for (i = 0; i < rep.nFonts; i++) {

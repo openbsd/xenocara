@@ -59,7 +59,7 @@ FSOpenBitmapFont(
     FSServer		*svr,
     FSBitmapFormat	 hint,
     FSBitmapFormatMask	 fmask,
-    char		*name,
+    const char		*name,
     Font		*otherid)
 {
     unsigned int nbytes;

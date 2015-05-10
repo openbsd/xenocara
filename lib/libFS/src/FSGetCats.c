@@ -65,7 +65,7 @@ FSGetCatalogues(
     int         i,
                 length;
     fsReq      *req;
-    long        rlen;
+    unsigned long rlen;
 
     GetEmptyReq(GetCatalogues, req);
 
@@ -87,11 +87,11 @@ FSGetCatalogues(
 		FSfree(list);
 	    if (c)
 		FSfree(c);
-	    _FSEatData(svr, (unsigned long) rlen);
+	    _FSEatData(svr, rlen);
 	    SyncHandle();
 	    return (char **) NULL;
 	}
-	_FSReadPad(svr, c, rlen);
+	_FSReadPad(svr, c, (long) rlen);
 	/*
 	 * unpack the strings
 	 */

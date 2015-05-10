@@ -152,7 +152,7 @@ extern FSServer *_FSHeadOfServerList;
 	req = (fsResourceReq *) (svr->last_req = svr->bufptr);\
 	req->reqType = FS_##name;\
 	req->length = 2;\
-	req->id = (rid);\
+	req->id = (CARD32) (rid);\
 	svr->bufptr += SIZEOF(fsResourceReq);\
 	svr->request++
 

@@ -70,7 +70,7 @@ static const char *FSErrorList[] = {
      /* FSBadLength	 */ "BadLength, request too large or internal FSlib length error",
      /* FSBadImplementation */ "BadImplementation, request unsupported",
 };
-static int FSErrorListSize = sizeof(FSErrorList);
+#define FSErrorListSize sizeof(FSErrorList)
 
 
 /* ARGSUSED */

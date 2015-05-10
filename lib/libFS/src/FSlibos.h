@@ -58,203 +58,201 @@ in this Software without prior written authorization from The Open Group.
 
 #ifndef WIN32
 
-#if defined(__SCO__) || defined(__UNIXWARE__)
-#include <stdint.h>	/* For SIZE_MAX */
-#endif
+# if defined(__SCO__) || defined(__UNIXWARE__)
+#  include <stdint.h>	/* For SIZE_MAX */
+# endif
 
 /*
  * makedepend screws up on #undef OPEN_MAX, so we define a new symbol
  */
 
-#ifndef FS_OPEN_MAX
+# ifndef FS_OPEN_MAX
 
-#ifndef X_NOT_POSIX
-#ifdef _POSIX_SOURCE
-#include <limits.h>
-#else
-#define _POSIX_SOURCE
-#include <limits.h>
-#undef _POSIX_SOURCE
-#endif
-#endif
-#ifndef SIZE_MAX
-# ifdef ULONG_MAX
-#  define SIZE_MAX ULONG_MAX
-# else
-#  define SIZE_MAX UINT_MAX
-# endif
-#endif
-#ifndef OPEN_MAX
-#ifdef SVR4
-#define OPEN_MAX 256
-#else
-#include <sys/param.h>
-#ifndef OPEN_MAX
-#ifdef __OSF1__
-#define OPEN_MAX 256
-#else
-#ifdef NOFILE
-#define OPEN_MAX NOFILE
-#else
-#if !defined(__UNIXOS2__) && !defined(__QNX__)
-#ifdef __GNU__
-#define OPEN_MAX (sysconf(_SC_OPEN_MAX))
-#else /* !__GNU__ */
-#define OPEN_MAX NOFILES_MAX
-#endif /* __GNU__ */
-#else /* !__UNIXOS2__ && !__QNX__ */
-#define OPEN_MAX 256
-#endif /* __UNIXOS2__ */
-#endif
-#endif
-#endif
-#endif
-#endif
+#  ifdef _POSIX_SOURCE
+#   include <limits.h>
+#  else
+#   define _POSIX_SOURCE
+#   include <limits.h>
+#   undef _POSIX_SOURCE
+#  endif
+#  ifndef SIZE_MAX
+#   ifdef ULONG_MAX
+#    define SIZE_MAX ULONG_MAX
+#   else
+#    define SIZE_MAX UINT_MAX
+#   endif
+#  endif
+#  ifndef OPEN_MAX
+#   ifdef SVR4
+#    define OPEN_MAX 256
+#   else
+#    include <sys/param.h>
+#    ifndef OPEN_MAX
+#     ifdef __OSF1__
+#      define OPEN_MAX 256
+#     else
+#      ifdef NOFILE
+#       define OPEN_MAX NOFILE
+#      else
+#       if !defined(__UNIXOS2__) && !defined(__QNX__)
+#        ifdef __GNU__
+#         define OPEN_MAX (sysconf(_SC_OPEN_MAX))
+#        else /* !__GNU__ */
+#         define OPEN_MAX NOFILES_MAX
+#        endif /* __GNU__ */
+#       else /* !__UNIXOS2__ && !__QNX__ */
+#        define OPEN_MAX 256
+#       endif /* __UNIXOS2__ */
+#      endif
+#     endif
+#    endif
+#   endif
+#  endif
 
-#ifdef __GNU__
-#define FS_OPEN_MAX 256
-#else /*!__GNU__*/
-#if OPEN_MAX > 256
-#define FS_OPEN_MAX 256
-#else
-#define FS_OPEN_MAX OPEN_MAX
-#endif
-#endif /*__GNU__*/
+#  ifdef __GNU__
+#   define FS_OPEN_MAX 256
+#  else /*!__GNU__*/
+#   if OPEN_MAX > 256
+#    define FS_OPEN_MAX 256
+#   else
+#    define FS_OPEN_MAX OPEN_MAX
+#   endif
+#  endif /*__GNU__*/
 
-#endif /* FS_OPEN_MAX */
+# endif /* FS_OPEN_MAX */
 
 /* Utek leaves kernel macros around in include files (bleah) */
 
-#ifdef dirty
-#undef dirty
-#endif
+# ifdef dirty
+#  undef dirty
+# endif
 
-#define NMSKBITS 32
-#define MSKCNT ((FS_OPEN_MAX + NMSKBITS - 1) / NMSKBITS)
+# define NMSKBITS 32
+# define MSKCNT ((FS_OPEN_MAX + NMSKBITS - 1) / NMSKBITS)
 
-#ifdef LONG64
+# ifdef LONG64
 typedef unsigned int FdSet[MSKCNT];
-#else
+# else
 typedef unsigned long FdSet[MSKCNT];
-#endif
+# endif
 
-#if (MSKCNT==1)
-#define BITMASK(i) (1 << (i))
-#define MASKIDX(i) 0
-#endif
+# if (MSKCNT==1)
+#  define BITMASK(i) (1 << (i))
+#  define MASKIDX(i) 0
+# endif
 
-#if (MSKCNT>1)
-#define BITMASK(i) (1 << ((i) & (NMSKBITS - 1)))
-#define MASKIDX(i) ((i) / NMSKBITS)
-#endif
+# if (MSKCNT>1)
+#  define BITMASK(i) (1 << ((i) & (NMSKBITS - 1)))
+#  define MASKIDX(i) ((i) / NMSKBITS)
+# endif
 
-#define MASKWORD(buf, i) buf[MASKIDX(i)]
-#define BITSET(buf, i) MASKWORD(buf, i) |= BITMASK(i)
-#define BITCLEAR(buf, i) MASKWORD(buf, i) &= ~BITMASK(i)
-#define GETBIT(buf, i) (MASKWORD(buf, i) & BITMASK(i))
+# define MASKWORD(buf, i) buf[MASKIDX(i)]
+# define BITSET(buf, i) MASKWORD(buf, i) |= BITMASK(i)
+# define BITCLEAR(buf, i) MASKWORD(buf, i) &= ~BITMASK(i)
+# define GETBIT(buf, i) (MASKWORD(buf, i) & BITMASK(i))
 
-#if (MSKCNT==1)
-#define COPYBITS(src, dst) dst[0] = src[0]
-#define CLEARBITS(buf) buf[0] = 0
-#define MASKANDSETBITS(dst, b1, b2) dst[0] = (b1[0] & b2[0])
-#define ORBITS(dst, b1, b2) dst[0] = (b1[0] | b2[0])
-#define UNSETBITS(dst, b1) (dst[0] &= ~b1[0])
-#define _FSANYSET(src) (src[0])
-#endif
+# if (MSKCNT==1)
+#  define COPYBITS(src, dst) dst[0] = src[0]
+#  define CLEARBITS(buf) buf[0] = 0
+#  define MASKANDSETBITS(dst, b1, b2) dst[0] = (b1[0] & b2[0])
+#  define ORBITS(dst, b1, b2) dst[0] = (b1[0] | b2[0])
+#  define UNSETBITS(dst, b1) (dst[0] &= ~b1[0])
+#  define _FSANYSET(src) (src[0])
+# endif
 
-#if (MSKCNT==2)
-#define COPYBITS(src, dst) { dst[0] = src[0]; dst[1] = src[1]; }
-#define CLEARBITS(buf) { buf[0] = 0; buf[1] = 0; }
-#define MASKANDSETBITS(dst, b1, b2)  {\
+# if (MSKCNT==2)
+#  define COPYBITS(src, dst) { dst[0] = src[0]; dst[1] = src[1]; }
+#  define CLEARBITS(buf) { buf[0] = 0; buf[1] = 0; }
+#  define MASKANDSETBITS(dst, b1, b2)  {\
 		      dst[0] = (b1[0] & b2[0]);\
 		      dst[1] = (b1[1] & b2[1]); }
-#define ORBITS(dst, b1, b2)  {\
+#  define ORBITS(dst, b1, b2)  {\
 		      dst[0] = (b1[0] | b2[0]);\
 		      dst[1] = (b1[1] | b2[1]); }
-#define UNSETBITS(dst, b1) {\
+#  define UNSETBITS(dst, b1) {\
                       dst[0] &= ~b1[0]; \
                       dst[1] &= ~b1[1]; }
-#define _FSANYSET(src) (src[0] || src[1])
-#endif
+#  define _FSANYSET(src) (src[0] || src[1])
+# endif
 
-#if (MSKCNT==3)
-#define COPYBITS(src, dst) { dst[0] = src[0]; dst[1] = src[1]; \
+# if (MSKCNT==3)
+#  define COPYBITS(src, dst) { dst[0] = src[0]; dst[1] = src[1]; \
 			     dst[2] = src[2]; }
-#define CLEARBITS(buf) { buf[0] = 0; buf[1] = 0; buf[2] = 0; }
-#define MASKANDSETBITS(dst, b1, b2)  {\
+#  define CLEARBITS(buf) { buf[0] = 0; buf[1] = 0; buf[2] = 0; }
+#  define MASKANDSETBITS(dst, b1, b2)  {\
 		      dst[0] = (b1[0] & b2[0]);\
 		      dst[1] = (b1[1] & b2[1]);\
 		      dst[2] = (b1[2] & b2[2]); }
-#define ORBITS(dst, b1, b2)  {\
+#  define ORBITS(dst, b1, b2)  {\
 		      dst[0] = (b1[0] | b2[0]);\
 		      dst[1] = (b1[1] | b2[1]);\
 		      dst[2] = (b1[2] | b2[2]); }
-#define UNSETBITS(dst, b1) {\
+#  define UNSETBITS(dst, b1) {\
                       dst[0] &= ~b1[0]; \
                       dst[1] &= ~b1[1]; \
                       dst[2] &= ~b1[2]; }
-#define _FSANYSET(src) (src[0] || src[1] || src[2])
-#endif
+#  define _FSANYSET(src) (src[0] || src[1] || src[2])
+# endif
 
-#if (MSKCNT==4)
-#define COPYBITS(src, dst) dst[0] = src[0]; dst[1] = src[1]; \
+# if (MSKCNT==4)
+#  define COPYBITS(src, dst) dst[0] = src[0]; dst[1] = src[1]; \
 			   dst[2] = src[2]; dst[3] = src[3]
-#define CLEARBITS(buf) buf[0] = 0; buf[1] = 0; buf[2] = 0; buf[3] = 0
-#define MASKANDSETBITS(dst, b1, b2)  \
+#  define CLEARBITS(buf) buf[0] = 0; buf[1] = 0; buf[2] = 0; buf[3] = 0
+#  define MASKANDSETBITS(dst, b1, b2)  \
                       dst[0] = (b1[0] & b2[0]);\
                       dst[1] = (b1[1] & b2[1]);\
                       dst[2] = (b1[2] & b2[2]);\
                       dst[3] = (b1[3] & b2[3])
-#define ORBITS(dst, b1, b2)  \
+#  define ORBITS(dst, b1, b2)  \
                       dst[0] = (b1[0] | b2[0]);\
                       dst[1] = (b1[1] | b2[1]);\
                       dst[2] = (b1[2] | b2[2]);\
                       dst[3] = (b1[3] | b2[3])
-#define UNSETBITS(dst, b1) \
+#  define UNSETBITS(dst, b1) \
                       dst[0] &= ~b1[0]; \
                       dst[1] &= ~b1[1]; \
                       dst[2] &= ~b1[2]; \
                       dst[3] &= ~b1[3]
-#define _FSANYSET(src) (src[0] || src[1] || src[2] || src[3])
-#endif
+#  define _FSANYSET(src) (src[0] || src[1] || src[2] || src[3])
+# endif
 
-#if (MSKCNT>4)
-#define COPYBITS(src, dst) memmove((caddr_t) dst, (caddr_t) src, sizeof(FdSet))
-#define CLEARBITS(buf) bzero((caddr_t) buf, sizeof(FdSet))
-#define MASKANDSETBITS(dst, b1, b2)  \
+# if (MSKCNT>4)
+#  define COPYBITS(src, dst) memmove((caddr_t) dst, (caddr_t) src, sizeof(FdSet))
+#  define CLEARBITS(buf) bzero((caddr_t) buf, sizeof(FdSet))
+#  define MASKANDSETBITS(dst, b1, b2)  \
 		      { int cri;			\
 			for (cri=0; cri<MSKCNT; cri++)	\
 		          dst[cri] = (b1[cri] & b2[cri]) }
-#define ORBITS(dst, b1, b2)  \
+#  define ORBITS(dst, b1, b2)  \
 		      { int cri;			\
 		      for (cri=0; cri<MSKCNT; cri++)	\
 		          dst[cri] = (b1[cri] | b2[cri]) }
-#define UNSETBITS(dst, b1) \
+#  define UNSETBITS(dst, b1) \
 		      { int cri;			\
 		      for (cri=0; cri<MSKCNT; cri++)	\
 		          dst[cri] &= ~b1[cri];  }
-#if (MSKCNT==8)
-#define _FSANYSET(src) (src[0] || src[1] || src[2] || src[3] || \
+#  if (MSKCNT==8)
+#   define _FSANYSET(src) (src[0] || src[1] || src[2] || src[3] || \
 			src[4] || src[5] || src[6] || src[7])
-#endif
+#  endif
 /*
  * If MSKCNT>4 and not 8, then _FSANYSET is a routine defined in FSlibInt.c.
  *
  * #define _FSANYSET(src) (src[0] || src[1] || src[2] || src[3] || src[4] ...)
  */
-#endif
+# endif
 
 
 #else
 
-#include <X11/Xwinsock.h>
-#include <X11/Xw32defs.h>
+# include <X11/Xwinsock.h>
+# include <X11/Xw32defs.h>
 
 typedef fd_set FdSet;
 
-#define CLEARBITS(set) FD_ZERO(&set)
-#define BITSET(set,s) FD_SET(s,&set)
-#define _FSANYSET(set) set.fd_count
+# define CLEARBITS(set) FD_ZERO(&set)
+# define BITSET(set,s) FD_SET(s,&set)
+# define _FSANYSET(set) set.fd_count
 
 #endif
 
@@ -281,15 +279,15 @@ typedef fd_set FdSet;
  */
 
 #ifdef MALLOC_0_RETURNS_NULL
-#define FSmalloc(size) malloc(((size) > 0 ? (size) : 1))
-#define FSrealloc(ptr, size) realloc((ptr), ((size) > 0 ? (size) : 1))
-#define FScalloc(nelem, elsize) calloc(((nelem) > 0 ? (nelem) : 1), (elsize))
+# define FSmalloc(size) malloc(((size) > 0 ? (size) : 1))
+# define FSrealloc(ptr, size) realloc((ptr), ((size) > 0 ? (size) : 1))
+# define FScalloc(nelem, elsize) calloc(((nelem) > 0 ? (nelem) : 1), (elsize))
 
 #else
 
-#define FSmalloc(size) malloc((size))
-#define FSrealloc(ptr, size) realloc((ptr), (size))
-#define FScalloc(nelem, elsize) calloc((nelem), (elsize))
+# define FSmalloc(size) malloc((size))
+# define FSrealloc(ptr, size) realloc((ptr), (size))
+# define FScalloc(nelem, elsize) calloc((nelem), (elsize))
 #endif
 
 #define SearchString(string, char) index((string), (char))

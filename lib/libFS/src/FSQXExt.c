@@ -70,7 +70,7 @@ FSQueryXExtents8(
     FSServer		 *svr,
     Font		  fid,
     Bool		  range_type,
-    unsigned char	 *str,
+    const unsigned char	 *str,
     unsigned long	  str_len,
     FSXCharInfo		**extents)
 {
@@ -116,7 +116,7 @@ FSQueryXExtents16(
     FSServer		 *svr,
     Font		  fid,
     Bool		  range_type,
-    FSChar2b		 *str,
+    const FSChar2b	 *str,
     unsigned long	  str_len,
     FSXCharInfo		**extents)
 {

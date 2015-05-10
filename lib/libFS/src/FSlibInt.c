@@ -316,7 +316,7 @@ _FSReadPad(
 
     if (size == 0)
 	return;
-    iov[0].iov_len = (int) size;
+    iov[0].iov_len = size;
     iov[0].iov_base = data;
     /*
      * The following hack is used to provide 32 bit long-word aligned padding.
@@ -462,7 +462,7 @@ _FSSend(
 #ifdef undef
 /*
  * _FSAllocID - normal resource ID allocation routine.  A client
- * can roll his own and instatantiate it if he wants, but must
+ * can roll their own and instantiate it if they want, but must
  * follow the rules.
  */
 FSID
@@ -707,7 +707,7 @@ _FSEnq(
 }
 
 /*
- * EventToWire in seperate file in that often not needed.
+ * EventToWire in separate file that is often not needed.
  */
 
 /*ARGSUSED*/

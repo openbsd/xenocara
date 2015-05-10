@@ -57,7 +57,7 @@ in this Software without prior written authorization from The Open Group.
 Bool
 FSQueryExtension(
     FSServer	*svr,
-    char	*name,
+    const char	*name,
     int		*major_opcode,
     int		*first_event,
     int		*first_error)
