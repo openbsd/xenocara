@@ -1,10 +1,10 @@
 
   /*\
    *
-   *		              COPYRIGHT 1990
-   *		        DIGITAL EQUIPMENT CORPORATION
-   *		           MAYNARD, MASSACHUSETTS
-   *			    ALL RIGHTS RESERVED.
+   *                          COPYRIGHT 1990
+   *                    DIGITAL EQUIPMENT CORPORATION
+   *                       MAYNARD, MASSACHUSETTS
+   *                        ALL RIGHTS RESERVED.
    *
    * THE INFORMATION IN THIS SOFTWARE IS SUBJECT TO CHANGE WITHOUT NOTICE AND
    * SHOULD NOT BE CONSTRUED AS A COMMITMENT BY DIGITAL EQUIPMENT CORPORATION.
@@ -25,145 +25,39 @@
    * software without specific, written prior permission.
   \*/
 
-#define DEBUG_VAR_LOCAL
 #include 	"utils.h"
 #include	<ctype.h>
 #include	<stdlib.h>
 
-unsigned int DEBUG_VAR;
-
-/***====================================================================***/
-/***                  FUNCTION ENTRY TRACKING                           ***/
 /***====================================================================***/
 
-static	FILE	*entryFile=	NULL;
-static	int	 uEntryLevel;
-
-Boolean
-uSetEntryFile(const char *name)
-{
-    if ((entryFile!=NULL)&&(entryFile!=stderr)) {
-	fprintf(entryFile,"switching to %s\n",name?name:"stderr");
-	fclose(entryFile);
-    }
-    if (name!=NullString)	entryFile=	fopen(name,"w");
-    else			entryFile=	stderr;
-    if (entryFile==NULL) {
-	entryFile=	stderr;
-	return(False);
-    }
-    return(True);
-}
-
-void
-uEntry(int l, const char *s,...)
-{
-int	i;
-va_list ap;
-
-    va_start(ap, s);
-    for (i=0;i<uEntryLevel;i++) {
-	putc(' ',entryFile);
-    }
-    vfprintf(entryFile,s,ap);
-    uEntryLevel+= l;
-    va_end(ap);
-    return;
-}
-
-void
-uExit(int l, const char *rtVal)
-{
-int	i;
-
-    uEntryLevel-= l;
-    if (uEntryLevel<0)	uEntryLevel=	0;
-    for (i=0;i<uEntryLevel;i++) {
-	putc(' ',entryFile);
-    }
-    fprintf(entryFile,"---> 0x%p\n",rtVal);
-    return;
-}
-
-/***====================================================================***/
-/***			PRINT FUNCTIONS					***/
-/***====================================================================***/
-
-	FILE	*uDebugFile=		NULL;
-	int	 uDebugIndentLevel=	0;
-	int	 uDebugIndentSize=	4;
-
-Boolean
-uSetDebugFile(const char *name)
-{
-    if ((uDebugFile!=NULL)&&(uDebugFile!=stderr)) {
-	fprintf(uDebugFile,"switching to %s\n",name?name:"stderr");
-	fclose(uDebugFile);
-    }
-    if (name!=NullString)	uDebugFile=	fopen(name,"w");
-    else			uDebugFile=	stderr;
-    if (uDebugFile==NULL) {
-	uDebugFile=	stderr;
-	return(False);
-    }
-    return(True);
-}
-
-void
-uDebug(const char *s,...)
-{
-int	i;
-va_list ap;
-
-    va_start(ap, s);
-    for (i=(uDebugIndentLevel*uDebugIndentSize);i>0;i--) {
-	putc(' ',uDebugFile);
-    }
-    vfprintf(uDebugFile,s,ap);
-    fflush(uDebugFile);
-    va_end(ap);
-    return;
-}
-
-void
-uDebugNOI(const char *s,...)
-{
-va_list ap;
-
-    va_start(ap, s);
-    vfprintf(uDebugFile,s,ap);
-    fflush(uDebugFile);
-    va_end(ap);
-    return;
-}
-
-/***====================================================================***/
-
-static	FILE	*errorFile=	NULL;
+static FILE *errorFile = NULL;
 
 Boolean
 uSetErrorFile(const char *name)
 {
-    if ((errorFile!=NULL)&&(errorFile!=stderr)) {
-	fprintf(errorFile,"switching to %s\n",name?name:"stderr");
-	fclose(errorFile);
+    if ((errorFile != NULL) && (errorFile != stderr)) {
+        fprintf(errorFile, "switching to %s\n", name ? name : "stderr");
+        fclose(errorFile);
     }
-    if (name!=NullString)	errorFile=	fopen(name,"w");
-    else			errorFile=	stderr;
-    if (errorFile==NULL) {
-	errorFile=	stderr;
-	return(False);
+    if (name != NullString)
+        errorFile = fopen(name, "w");
+    else
+        errorFile = stderr;
+    if (errorFile == NULL) {
+        errorFile = stderr;
+        return (False);
     }
-    return(True);
+    return (True);
 }
 
 void
-uInformation(const char *s,...)
+uInformation(const char *s, ...)
 {
     va_list ap;
 
     va_start(ap, s);
-    vfprintf(errorFile,s,ap);
+    vfprintf(errorFile, s, ap);
     fflush(errorFile);
     va_end(ap);
     return;
@@ -172,13 +66,13 @@ uInformation(const char *s,...)
 /***====================================================================***/
 
 void
-uAction(const char *s,...)
+uAction(const char *s, ...)
 {
     va_list ap;
 
     va_start(ap, s);
-    fprintf(errorFile,"                  ");
-    vfprintf(errorFile,s,ap);
+    fprintf(errorFile, "                  ");
+    vfprintf(errorFile, s, ap);
     fflush(errorFile);
     va_end(ap);
     return;
@@ -187,13 +81,13 @@ uAction(const char *s,...)
 /***====================================================================***/
 
 void
-uWarning(const char *s,...)
+uWarning(const char *s, ...)
 {
     va_list ap;
 
     va_start(ap, s);
-    fprintf(errorFile,"Warning:          ");
-    vfprintf(errorFile,s,ap);
+    fprintf(errorFile, "Warning:          ");
+    vfprintf(errorFile, s, ap);
     fflush(errorFile);
     va_end(ap);
     return;
@@ -202,13 +96,13 @@ uWarning(const char *s,...)
 /***====================================================================***/
 
 void
-uError(const char *s,...)
+uError(const char *s, ...)
 {
     va_list ap;
 
     va_start(ap, s);
-    fprintf(errorFile,"Error:            ");
-    vfprintf(errorFile,s,ap);
+    fprintf(errorFile, "Error:            ");
+    vfprintf(errorFile, s, ap);
     fflush(errorFile);
     va_end(ap);
     return;
@@ -217,13 +111,13 @@ uError(const char *s,...)
 /***====================================================================***/
 
 void
-uInternalError(const char *s,...)
+uInternalError(const char *s, ...)
 {
     va_list ap;
 
     va_start(ap, s);
-    fprintf(errorFile,"Internal error:   ");
-    vfprintf(errorFile,s,ap);
+    fprintf(errorFile, "Internal error:   ");
+    vfprintf(errorFile, s, ap);
     fflush(errorFile);
     va_end(ap);
     return;
@@ -235,44 +129,28 @@ uInternalError(const char *s,...)
 int
 uStrCaseCmp(const char *str1, const char *str2)
 {
-    char buf1[512],buf2[512];
+    char buf1[512], buf2[512];
+
     char c, *s;
+
     register int n;
 
-    for (n=0, s = buf1; (c = *str1++); n++) {
-	if (isupper(c))
-	    c = tolower(c);
-	if (n>510)
-	    break;
-	*s++ = c;
+    for (n = 0, s = buf1; (c = *str1++); n++) {
+        if (isupper(c))
+            c = tolower(c);
+        if (n > 510)
+            break;
+        *s++ = c;
     }
     *s = '\0';
-    for (n=0, s = buf2; (c = *str2++); n++) {
-	if (isupper(c))
-	    c = tolower(c);
-	if (n>510)
-	    break;
-	*s++ = c;
+    for (n = 0, s = buf2; (c = *str2++); n++) {
+        if (isupper(c))
+            c = tolower(c);
+        if (n > 510)
+            break;
+        *s++ = c;
     }
     *s = '\0';
     return (strcmp(buf1, buf2));
 }
-
-int
-uStrCasePrefix(const char *prefix, const char *str)
-{
-    char c1;
-    char c2;
-    while (((c1=*prefix)!='\0')&&((c2=*str)!='\0')) {
-	if (isupper(c1))	c1= tolower(c1);
-	if (isupper(c2))	c2= tolower(c2);
-	if (c1!=c2)
-	    return 0;
-	prefix++; str++;
-    }
-    if (c1!='\0')
-	return 0;
-    return 1;
-}
-
 #endif

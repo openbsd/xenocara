@@ -25,7 +25,7 @@
  ********************************************************/
 
 #ifndef XKBEVD_H
-#define	XKBEVD_H 1
+#define XKBEVD_H 1
 
 #include <stdio.h>
 #include <X11/Xlib.h>
@@ -35,62 +35,62 @@
 
 #include "utils.h"
 
-extern	FILE *		yyin;
-extern	char *	 	scanFile;
-extern	int	 	lineNum;
-extern	int	 	scanInt;
-extern	char *		scanIntStr;
-extern	int	 	scanIntClass;
-extern	char *		scanStr;
-extern	int	 	scanStrLine;
+extern  FILE *          yyin;
+extern  char *          scanFile;
+extern  int             lineNum;
+extern  int             scanInt;
+extern  char *          scanIntStr;
+extern  int             scanIntClass;
+extern  char *          scanStr;
+extern  int             scanStrLine;
 
-extern	Display *	dpy;
-extern	int		xkbOpcode;
-extern	int		xkbEventCode;
-extern	Bool		detectableRepeat;
+extern  Display *       dpy;
+extern  int             xkbOpcode;
+extern  int             xkbEventCode;
+extern  Bool            detectableRepeat;
 
-extern	XkbDescPtr	xkb;
+extern  XkbDescPtr      xkb;
 
-#define	UnknownAction	0
-#define	NoAction	1
-#define	EchoAction	2
-#define	PrintEvAction	3
-#define	ShellAction	4
-#define	SoundAction	5
+#define UnknownAction   0
+#define NoAction        1
+#define EchoAction      2
+#define PrintEvAction   3
+#define ShellAction     4
+#define SoundAction     5
 
 typedef struct _ActDef {
-	int		type;
-	char *		text;
-	unsigned	priv;
+        int             type;
+        char *          text;
+        unsigned        priv;
 } ActDefRec,*ActDefPtr;
 
-#define	EventDef	0
-#define	VariableDef	1
+#define EventDef        0
+#define VariableDef     1
 
 typedef struct _CfgEntry {
-	unsigned char	entry_type;
-	unsigned char	event_type;
-	union {
-	    char *	str;
-	    Atom	atom;
-	    unsigned	priv;
-	} 			name;
-	ActDefRec		action;
-	struct _CfgEntry *	next;
+        unsigned char   entry_type;
+        unsigned char   event_type;
+        union {
+            char *      str;
+            Atom        atom;
+            unsigned    priv;
+        }                       name;
+        ActDefRec               action;
+        struct _CfgEntry *      next;
 } CfgEntryRec,*CfgEntryPtr;
 
 extern void InterpretConfigs(
-	CfgEntryPtr	/* cfgs */
+        CfgEntryPtr     /* cfgs */
 );
 
 extern char *SubstituteEventArgs(
-    char *		/* cmd */,
-    XkbEvent *		/* ev */
+    char *              /* cmd */,
+    XkbEvent *          /* ev */
 );
 
 extern void PrintXkbEvent(
-	FILE *		/* file */,
-	XkbEvent *	/* ev */
+        FILE *          /* file */,
+        XkbEvent *      /* ev */
 );
 
 extern int setScanState ( const char * file, int line );

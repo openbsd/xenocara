@@ -63,7 +63,6 @@
 #ifdef DEBUG
 #define	YYDEBUG 1
 #endif
-#define	DEBUG_VAR parseDebug
 #include "xkbevd.h"
 #include <stdlib.h>
 %}

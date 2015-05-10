@@ -1,3 +1,134 @@
+commit 4a494c0d8beb710d8f3df941f05e4b8af42deac0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 23:37:10 2015 -0700
+
+    xkbevd 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 08dbb15647fe32a14f8cc76fba6f8754cdfc76ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:45:27 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81b5fc692bb016450d09a9cebe9d4cd70bec1ed5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:45:27 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6a3adf875fd2d70ee0b231212c800df030d1a8f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 14:41:07 2014 -0700
+
+    Remove unused macro lowbit()
+    
+    Flagged by clang:
+    
+    xkbevd.c:32:9: warning: macro is not used [-Wunused-macros]
+            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ac3a491ad7cebd2df90e9d934ad858fc1bc38cf3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 14:09:27 2014 -0700
+
+    Add xev & xkbwatch to SEE ALSO list in man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7027d4644cb5333ae041bebb0724ddb62fd7686
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 13:59:30 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d4c472d81e2ee735ed2b642cd7290fb5830ee60
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 13:53:14 2014 -0700
+
+    Remove unnecessary cast of getenv return value to char *
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 33fd917bcd564a5526216a286867a528018f425d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 13:50:29 2014 -0700
+
+    Convert sources to X.Org standard coding style
+    
+    Via util/modular/x-indent-all.sh
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bd55f70b8740a630fa42d17e4f3345b3601542e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 12:24:40 2014 -0700
+
+    Convert sprintf calls to snprintf
+    
+    Remaining sprintf calls in evargs.c are printing into buffers passed
+    through multiple levels of function calls, and need arguments added
+    to those functions to pass through buffer sizes as well.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 980f5d224fb747d059bd9692d1676142d19f2e07
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 12:02:59 2014 -0700
+
+    Remove unused debugging & function tracing frameworks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3df592c85e40983ce8bf13afed6df15ffb93bb40
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 11:55:44 2014 -0700
+
+    Delete unused uStrCasePrefix function
+    
+    Flagged by cppcheck 1.64:
+    [utils.c:262]: (style) The function 'uStrCasePrefix' is never used.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01774fb58330733858ff41ceabe2d646d127d4f3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 25 11:53:28 2014 -0700
+
+    unifdef -Unotyet
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 238f5fdc3331c5636cf3b397163554d6fbd0754c
+Author: Bjarni Ingi Gislason <bjarniig@rhi.hi.is>
+Date:   Fri Mar 23 19:31:20 2012 +0100
+
+    man: whitespace fixes
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 034844a1c33c947d49bcad09084cbb9640eb8afb
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Mar 23 19:26:39 2012 +0100
+
+    man: fix broken escape sequence (\P instead of \fP)
+    
+    Debian bug#664962
+    
+    Reported-by: Bjarni Ingi Gislason <bjarniig@rhi.hi.is>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
 commit 34557c33a9711f15f771599f5320ab8f01f0d117
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 22 22:39:25 2012 -0700
