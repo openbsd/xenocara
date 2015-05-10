@@ -10,10 +10,13 @@
 #include <string.h>
 #include <ctype.h>
 
-static void _X_NORETURN
+static char *progname;
+
+static void _X_NORETURN _X_COLD
 PrintUsage(void)
 {
-    fprintf(stderr, "Usage:  xvinfo [-display host:dpy] [-short] [-version]\n");
+    fprintf(stderr, "Usage: %s [-display host:dpy] [-short] [-version]\n",
+            progname);
     exit(0);
 }
 
@@ -33,14 +36,20 @@ main(int argc, char *argv[])
     char *disname = NULL;
     char shortmode = 0;
 
+    progname = argv[0];
+
     if ((argc > 4))
         PrintUsage();
 
     if (argc != 1) {
         for (i = 1; i < argc; i++) {
             if (!strcmp(argv[i], "-display")) {
-                disname = argv[i + 1];
-                i++;
+                if (++i >= argc) {
+                    fprintf (stderr, "%s: missing argument to -display\n",
+                             progname);
+                    PrintUsage();
+                }
+                disname = argv[i];
             }
             else if (!strcmp(argv[i], "-short"))
                 shortmode = 1;
@@ -49,19 +58,21 @@ main(int argc, char *argv[])
                 exit(0);
             }
             else {
+                fprintf (stderr, "%s: unrecognized argument '%s'\n",
+                         progname, argv[i]);
                 PrintUsage();
             }
         }
     }
 
     if (!(dpy = XOpenDisplay(disname))) {
-        fprintf(stderr, "xvinfo:  Unable to open display %s\n",
+        fprintf(stderr, "%s:  Unable to open display %s\n", progname,
                 (disname != NULL) ? disname : XDisplayName(NULL));
         exit(-1);
     }
 
     if ((Success != XvQueryExtension(dpy, &ver, &rev, &reqB, &eventB, &errorB))) {
-        fprintf(stderr, "xvinfo: No X-Video Extension on %s\n",
+        fprintf(stderr, "%s: No X-Video Extension on %s\n", progname,
                 (disname != NULL) ? disname : XDisplayName(NULL));
         exit(0);
     }
@@ -170,7 +181,7 @@ main(int argc, char *argv[])
             XvQueryEncodings(dpy, ainfo[j].base_id, &nencode, &encodings);
 
             if (encodings && nencode) {
-                int ImageEncodings = 0;
+                unsigned int ImageEncodings = 0;
 
                 for (n = 0; n < nencode; n++) {
                     if (!strcmp(encodings[n].name, "XV_IMAGE"))
@@ -196,8 +207,6 @@ main(int argc, char *argv[])
                 }
 
                 if (ImageEncodings && (ainfo[j].type & XvImageMask)) {
-                    char imageName[5];
-
                     for (n = 0; n < nencode; n++) {
                         if (!strcmp(encodings[n].name, "XV_IMAGE")) {
                             fprintf(stdout,
@@ -214,7 +223,10 @@ main(int argc, char *argv[])
                             numImages);
 
                     for (n = 0; n < numImages; n++) {
-                        sprintf(imageName, "%c%c%c%c", formats[n].id & 0xff,
+                        char imageName[5];
+
+                        snprintf(imageName, sizeof(imageName), "%c%c%c%c",
+                                 formats[n].id & 0xff,
                                 (formats[n].id >> 8) & 0xff,
                                 (formats[n].id >> 16) & 0xff,
                                 (formats[n].id >> 24) & 0xff);

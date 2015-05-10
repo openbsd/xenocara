@@ -23,14 +23,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xvinfo], [1.1.2],
+AC_INIT([xvinfo], [1.1.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xvinfo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -39,7 +38,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XVINFO, [xv x11 xproto >= 7.0.17])
+PKG_CHECK_MODULES(XVINFO, [xv x11 xproto >= 7.0.25])
 
 AC_CONFIG_FILES([
 	Makefile

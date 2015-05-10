@@ -1,3 +1,88 @@
+commit ec76226d2986b1a77c9c021bb9b41e59bd839ed4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 30 23:03:01 2015 -0700
+
+    xvinfo 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5f47bf1a212b957009a85207338ee5b1d6ec6340
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:36:56 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9798300fc71af02f8725bc7b4da47a4b8676f5ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:32:31 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 169e0dd0a3e1740d7621d214494374c99dbc75ce
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 3 23:32:31 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca5ed1edbb7a71ea166868b80dd02a210c2a8f05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 18 22:17:03 2013 -0700
+
+    Make ImageEncodings unsigned
+    
+    Starts at 0 and increments to count encodings - should never go negative.
+    
+    Fixes clang warnings:
+    
+    xvinfo.c:184:31: warning: implicit conversion changes signedness: 'int' to
+          'unsigned int' [-Wsign-conversion]
+                    if (nencode - ImageEncodings) {
+                                ~ ^~~~~~~~~~~~~~
+    
+    xvinfo.c:186:39: warning: implicit conversion changes signedness: 'int' to
+          'unsigned int' [-Wsign-conversion]
+                                nencode - ImageEncodings);
+                                        ~ ^~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8a4d6f5bd95f5ad7608a7871bc6822935e4a191b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 18 22:12:12 2013 -0700
+
+    Convert sprintf call to use snprintf
+    
+    Should be impossible to overflow with previous sprintf code, but
+    still safer to avoid bugs if something changes in the future.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d61cb117c170b23b9fbaf619c2a1e54b9f987a90
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 7 10:47:47 2013 -0700
+
+    Use progname for error messages as well
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af9ea390e95320e683c761cbd61eaf1c0dbaefed
+Author: Stéphane Aulery <lkppo@free.fr>
+Date:   Sun Jul 7 03:15:39 2013 +0200
+
+    Use real program name for help message
+    
+    Signed-off-by: Stéphane Aulery <lkppo@free.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6114ecae7d7aa0bed41d01d360b193f27a500942
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 10 16:44:06 2013 -0800
