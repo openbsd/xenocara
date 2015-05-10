@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.327 2015/05/03 09:21:47 matthieu Exp $
+# $OpenBSD: MODULES,v 1.328 2015/05/10 19:56:06 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -22,51 +22,51 @@ app/oclock		1.0.3
 app/rgb			1.0.6
 app/scripts		1.0.1
 app/sessreg		1.1.0	7.7+
-app/setxkbmap		1.3.1	7.7+	needs-update
+app/setxkbmap		1.3.1	7.7+
 app/showfont		1.0.5
-app/smproxy		1.0.6	7.7+	needs-update
-app/twm			1.0.9		needs-update
+app/smproxy		1.0.6	7.7+
+app/twm			1.0.9
 app/viewres		1.0.4
-app/x11perf		1.6.0	7.7+	needs-update
+app/x11perf		1.6.0	7.7+
 app/xauth		1.0.9	7.7+
 app/xbacklight		1.2.1	7.7+
 app/xbiff		1.0.3
 app/xcalc		1.0.6
 app/xclipboard		1.1.3
 app/xclock		1.0.7
-app/xcmsdb		1.0.5	7.7+	needs-update
-app/xcompmgr		1.1.7		needs-update
+app/xcmsdb		1.0.5	7.7+
+app/xcompmgr		1.1.7
 app/xconsole		1.0.6
 app/xdm			1.1.11
-app/xdpyinfo		1.3.2	7.7+	needs-update
-app/xdriinfo		1.0.5	7.7+	needs-update
-app/xedit		1.2.2		needs-update
-app/xev			1.2.2	7.7+	needs-update
+app/xdpyinfo		1.3.2	7.7+
+app/xdriinfo		1.0.5	7.7+
+app/xedit		1.2.2
+app/xev			1.2.2	7.7+
 app/xeyes		1.1.1
 app/xf86dga		1.0.3
 app/xfd			1.1.2
 app/xfontsel		1.0.5
 app/xfsinfo		1.0.5
 app/xfwp		1.0.3
-app/xgamma		1.0.6	7.7+	needs-update
-app/xgc			1.0.5		needs-update
-app/xhost		1.0.7	7.7+	needs-update
+app/xgamma		1.0.6	7.7+
+app/xgc			1.0.5
+app/xhost		1.0.7	7.7+
 app/xinit		1.3.4
 app/xinput		1.6.1	7.7+
 app/xkbcomp		1.3.0	7.7+
-app/xkbevd		1.1.4	7.7+	needs-update
-app/xkbprint		1.0.4		needs-update
+app/xkbevd		1.1.4	7.7+
+app/xkbprint		1.0.4
 app/xkbutils		1.0.4	7.7+
 app/xkill		1.0.4	7.7+
 app/xload		1.1.2
 app/xlogo		1.0.4
-app/xlsatoms		1.1.2	7.7+	needs-update
+app/xlsatoms		1.1.2	7.7+
 app/xlsclients		1.1.3	7.7+
-app/xlsfonts		1.0.5		needs-update
-app/xmag		1.0.6		needs-update
-app/xman		1.1.4		needs-update
+app/xlsfonts		1.0.5
+app/xmag		1.0.6
+app/xman		1.1.4
 app/xmessage		1.0.4
-app/xmodmap		1.0.9	7.7+	needs-update
+app/xmodmap		1.0.9	7.7+
 app/xmore		1.0.2
 app/xpr			1.0.4	7.7
 app/xprop		1.2.2	7.7+
@@ -78,14 +78,14 @@ app/xsetroot		1.1.1	7.7+
 app/xsm			1.0.3
 app/xstdcmap		1.0.3
 app/xvidtune		1.0.3
-app/xvinfo		1.1.3	7.7+	needs-update
+app/xvinfo		1.1.3	7.7+
 app/xwd			1.0.6	7.7+
 app/xwininfo		1.1.3	7.7+
 app/xwud		1.0.4	7.7
 
 data/bitmaps		1.1.1	7.7
 
-doc/xorg-docs		1.7.1	7.7+	needs-update
+doc/xorg-docs		1.7.1	7.7+
 
 driver/xf86-input-acecad	1.5.0
 driver/xf86-input-elographics	1.4.1
@@ -104,25 +104,25 @@ driver/xf86-video-ark		0.7.5	7.7+
 driver/xf86-video-ast		0.99.9	7.7+
 driver/xf86-video-ati		7.5.0	7.7+
 driver/xf86-video-chips		1.2.5
-driver/xf86-video-cirrus	1.5.1	7.7+
+driver/xf86-video-cirrus	1.5.3	7.7+	needs-update
 driver/xf86-video-dummy		0.3.7	7.7+
 driver/xf86-video-geode		2.11.16	7.7+
 driver/xf86-video-glint		1.2.8	7.7+
 driver/xf86-video-i128		1.3.6	7.7+
 driver/xf86-video-i740		1.3.5		needs-update
 driver/xf86-video-intel		2.99.916	7.7+ needs-update
-driver/xf86-video-mach64	6.9.4	7.7+
+driver/xf86-video-mach64	6.9.5	7.7+	needs-update
 driver/xf86-video-mga		1.6.4	7.7+	needs-update
 driver/xf86-video-modesetting	0.9.0
-driver/xf86-video-neomagic	1.2.8	7.7+
+driver/xf86-video-neomagic	1.2.9	7.7+	needs-update
 driver/xf86-video-nv		2.1.20	7.7+
 driver/xf86-video-openchrome	0.3.3	7.7+	needs-update-and-dri
 driver/xf86-video-r128		6.10.0	7.7+	needs-update
 driver/xf86-video-rendition	4.2.5
 driver/xf86-video-s3		0.6.5
 driver/xf86-video-s3virge	1.10.6
-driver/xf86-video-savage	2.3.7	7.7+
-driver/xf86-video-siliconmotion	1.7.7	7.7+
+driver/xf86-video-savage	2.3.8	7.7+	needs-update
+driver/xf86-video-siliconmotion	1.7.8	7.7+	needs-update
 driver/xf86-video-sis		0.10.7	7.7+
 driver/xf86-video-sunffb	1.2.2	7.7+
 driver/xf86-video-tdfx		1.4.6	7.7+	needs-update
@@ -171,13 +171,13 @@ font/util			1.3.1		needs-update
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
-lib/libFS			1.0.7	7.7+	needs-update
+lib/libFS			1.0.7	7.7+
 lib/libICE			1.0.9	7.7+
 lib/libSM			1.2.2	7.7+
 lib/libX11			1.6.3	7.7+
 lib/libXScrnSaver		1.2.2	7.7
 lib/libXau			1.0.8	7.7+
-lib/libXaw			1.0.13	7.7+	needs-update
+lib/libXaw			1.0.13	7.7+
 lib/libXcomposite		0.4.4	7.7+
 lib/libXcursor			1.1.14	7.7+
 lib/libXdamage			1.1.4	7.7+
@@ -193,9 +193,9 @@ lib/libXmu			1.1.2	7.7+
 lib/libXpm			3.5.11	7.7+
 lib/libXpresent			1.0.0		needs-import
 lib/libXrandr			1.4.2	7.7+
-lib/libXrender			0.9.9	7.7+	needs-update
+lib/libXrender			0.9.9	7.7+
 lib/libXres			1.0.7	7.7+
-lib/libXt			1.1.5	7.7+	needs-update
+lib/libXt			1.1.5	7.7+
 lib/libXtst			1.2.2	7.7+
 lib/libXv			1.0.10	7.7+
 lib/libXvMC			1.0.9	7.7+
@@ -204,11 +204,11 @@ lib/libXxf86misc		1.0.2
 lib/libXxf86vm			1.1.4	7.7+
 lib/libdmx			1.1.3	7.7+
 lib/libepoxy			1.2
-lib/libfontenc			1.1.3	7.7+	needs-update
-lib/libpciaccess		0.13.4	7.7+	needs-update
+lib/libfontenc			1.1.3	7.7+
+lib/libpciaccess		0.13.4	7.7+
 lib/libpthread-stubs		0.3	7.7
 lib/libxcb			1.11	7.7+
-lib/libxkbfile			1.0.9	7.7	needs-update
+lib/libxkbfile			1.0.9	7.7
 lib/libxkbui			1.0.2
 lib/libxshmfence		1.2		needs-import
 lib/libxtrans			1.3.5	7.7+
@@ -231,7 +231,7 @@ proto/fontcacheproto		0.1.3
 proto/fontsproto		2.1.3	7.7
 proto/glproto			1.4.17	7.7+
 proto/inputproto		2.3.1	7.7+
-proto/kbproto			1.0.7	7.7+	needs-update
+proto/kbproto			1.0.7	7.7+
 proto/pmproto			1.0.3
 proto/presentproto		1.0	7.7+
 proto/randrproto		1.4.1	7.7+
