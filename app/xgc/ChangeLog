@@ -1,3 +1,52 @@
+commit 54f109228e566759799894ff4d6ef4bac74c9aac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 23:25:45 2015 -0700
+
+    xgc 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a17909006e1a545286f92a3465782086a0739ffd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:37:18 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bbbe7620f0964366697dc0db7b1f5175886b3aed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:37:18 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da8d7ffba24611182df5e9518278754df5f030b8
+Author: Christian Weisgerber <naddy@mips.inka.de>
+Date:   Tue Dec 3 23:23:51 2013 +0100
+
+    Remove include of Version 7 <sys/timeb.h> header
+    
+    I don't know if there are any extant operating systems that still
+    require <sys/timeb.h> for getrusage().
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit d96e5ffd26c44cc7ef454e5d1496957293ef7e3e
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Aug 13 12:36:39 2013 +0200
+
+    configure: look for gram.c in $srcdir
+    
+    That's where it is when building from the tarball.  Regression from
+    ff668395fc408f540604bd534e323b483f52a4ea.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit bb714a16b2e79bc391184bafce6046a897baf293
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 12 18:18:15 2013 -0800
