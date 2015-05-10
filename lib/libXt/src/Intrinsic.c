@@ -81,6 +81,9 @@ in this Software without prior written authorization from The Open Group.
 #ifndef VMS
 #include <sys/stat.h>
 #endif /* VMS */
+#ifdef WIN32
+#include <direct.h>            /* for _getdrives() */
+#endif
 
 #include <stdlib.h>
 

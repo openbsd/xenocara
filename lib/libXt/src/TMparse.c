@@ -1472,10 +1472,10 @@ static String ParseRepeat(
 {
 
     /*** Parse the repetitions, for double click etc... ***/
-    if (*str != '(' || !(isdigit(str[1]) || str[1] == '+' || str[1] == ')'))
+    if (*str != '(' || !(isdigit((unsigned char)str[1]) || str[1] == '+' || str[1] == ')'))
 	return str;
     str++;
-    if (isdigit(*str)) {
+    if (isdigit((unsigned char)*str)) {
 	String start = str;
 	char repStr[7];
 	size_t len;

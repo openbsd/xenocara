@@ -133,7 +133,7 @@ Cardinal XtAsprintf(
     ...)
 {
     char buf[256];
-    Cardinal len;
+    int len;
     va_list ap;
 
     va_start(ap, format);
