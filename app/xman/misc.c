@@ -526,7 +526,9 @@ Format(ManpageGlobals * man_globals, const char *entry)
 
         if (fgets(line, sizeof(line), file) != NULL) {
             if (strncmp(line, ".so ", 4) == 0) {
-                line[strlen(line) - 1] = '\0';
+                size_t len = strlen(line); /* must be >= 4 to pass strncmp */
+                if (line[len - 1] == '\n')
+                    line[len - 1] = '\0';
                 fclose(file);
                 remove(filename);
                 if (line[4] != '/') {

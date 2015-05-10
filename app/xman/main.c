@@ -204,8 +204,8 @@ main(int argc, char **argv)
 
 /*
  * We need to keep track of the number of manual pages that are shown on
- * the screen so that if this user does not have a top box then when he
- * removes all his manual pages we can kill off the xman process.
+ * the screen so that if this user does not have a top box then when they
+ * remove all their manual pages we can kill off the xman process.
  * To make things easier we will consider the top box a shown manual page
  * here, but since you cannot remove it, man_page_shown only goes to zero when
  * no top box is present.

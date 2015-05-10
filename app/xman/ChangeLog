@@ -1,3 +1,117 @@
+commit 27ae1a020119b5254c0238ef60a1ba602befba56
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 6 19:06:48 2015 -0800
+
+    xman 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e70edc503ad153c4223995ae5fb4adf980b01bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 12 19:25:49 2014 -0800
+
+    Ask groff for text instead of postscript on Solaris
+    
+    In the last case fallback to groff in #ifdef HANDLE_ROFFSEQ, it
+    was just running "groff -man", which generates postscript output,
+    which xman displays as a text dump of the postscript source, not
+    very readable.
+    
+    Hit on Solaris since it wasn't caught by the earlier checks for
+    CSRG_BASED, linux, __CYGWIN__, and __DARWIN__, which cover most
+    other cases.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ddb35139f98bcf276ef328db00961dc5a1b4ecf7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 11 20:12:43 2014 -0700
+
+    Fix typos & wording issues in source comments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b07a3b3bc4c039bf0c2b03c3c60eae7c86c6fc6e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:35:02 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c9919b02bb41013789dc28f63285483ca8b18740
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:35:01 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6ae31ee1da66ecdd9ad049a5aa4fe82aca209c8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:34:53 2014 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3a9f82775946f056e997df4528e5ff536edf4a5
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Thu May 22 00:16:59 2014 +0200
+
+    Fix shadow warning.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit bb926ce84421b1fc9795c229ce32332b77a4b18d
+Author: Jörg Sonnenberger <joerg@NetBSD.org>
+Date:   Thu May 22 00:15:36 2014 +0200
+
+    Fix tautology to the intended check.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit 15382f62a734d5b4bde30378dab525deadae72c2
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Wed Feb 19 14:51:34 2014 +0000
+
+    Use same FORMAT command on cygwin as on linux in HANDLE_ROFFSEQ case as well
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+commit a2976b6403ce3a98e8bb4f8db8c1703588800ee8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 18 23:23:44 2013 -0700
+
+    Ensure fgets read at least one byte before modifying string
+    
+    If a file has a \0 byte (binary file, strange encoding, corruption),
+    fgets() can return a string starting with a \0 byte - check for that
+    before checking to see if the byte before the \0 is a \n, so we don't
+    reach back before the start of our memory buffer.
+    
+    Also check that the penultimate byte is a \n before we chop it off,
+    in case we're reading from a file missing a newline, or a line longer
+    than fit in the buffer provided to fgets().
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 617209a03a219abfd0fc626be1a038d20443178b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 8 09:11:57 2013 -0700
+
+    Fix "no search will be preformed" typo in dialog box message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 46c0034ae501360edb541082d0eadb23babf302e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Sep 6 23:46:22 2013 -0700

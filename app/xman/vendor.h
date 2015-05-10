@@ -163,12 +163,12 @@ from the X Consortium.
 #  define FORMAT	"mandoc -Tascii"
 # elif defined(CSRG_BASED)
 #  define FORMAT	"nroff -mandoc"
-# elif defined(linux)
+# elif defined(linux) || defined(__CYGWIN__)
 #  define FORMAT	"GROFF_NO_SGR= groff -Tlatin1 -mandoc"
 # elif defined(__DARWIN__)
 #  define FORMAT	"nroff -man"
 # else
-#  define FORMAT	"groff -man"
+#  define FORMAT	"GROFF_NO_SGR= groff -Tlatin1 -man"
 # endif
 # define DEFAULT_MANROFFSEQ "et"
 #endif /*HANDLE_ROFFSEQ */

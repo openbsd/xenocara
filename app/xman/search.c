@@ -120,7 +120,7 @@ SearchString(ManpageGlobals * man_globals)
         return (XawDialogGetValueString(dialog));
 
     PopupWarning(man_globals,
-                 "Could not get the search string, no search will be preformed.");
+                 "Could not get the search string, no search will be performed.");
     return (NULL);
 }
 
@@ -240,8 +240,10 @@ DoSearch(ManpageGlobals * man_globals, int type)
         count = 0;
         flag = FALSE;
         while ((fgets(cmp_str, BUFSIZ, file) != NULL) && (count < LOOKLINES)) {
-            if (cmp_str[strlen(cmp_str) - 1] == '\n')   /* strip off the '\n' */
-                cmp_str[strlen(cmp_str) - 1] = '\0';
+            size_t len = strlen(cmp_str);
+
+            if (len > 0 && cmp_str[len - 1] == '\n')  /* strip off the '\n' */
+                cmp_str[len - 1] = '\0';
 
             if (streq(cmp_str, string_buf)) {
                 flag = TRUE;
@@ -252,7 +254,7 @@ DoSearch(ManpageGlobals * man_globals, int type)
 
         /*
          * If the file is less than this number of lines then assume that there is
-         * nothing apropriate found. This does not confuse the apropos filter.
+         * nothing appropriate found. This does not confuse the apropos filter.
          */
 
         if (flag) {

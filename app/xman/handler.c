@@ -320,7 +320,7 @@ SaveFormattedPage(Widget w, XEvent * event, String * params,
  * If we are not active then take no action.
  */
 
-    if (man_globals->tempfile == NULL)
+    if (man_globals->tempfile[0] == '\0')
         return;
 
     switch (params[0][0]) {
@@ -587,17 +587,17 @@ Search(Widget w, XEvent * event, String * params, Cardinal * num_params)
         case 'O':
         case 'o':
             if (file != NULL) {
-                Widget w;
+                Widget w2;
                 char *label;
 
-                w = CreateManpage(file);
-                if (w) {
+                w2 = CreateManpage(file);
+                if (w2) {
                     man_pages_shown++;
 
                     /* Put title into new manual page. */
 
                     label = man_globals->manpage_title;
-                    man_globals = GetGlobals(w);
+                    man_globals = GetGlobals(w2);
                     strcpy(man_globals->manpage_title, label);
                     ChangeLabel(man_globals->label, label);
                 }

@@ -655,8 +655,8 @@ MakeSaveWidgets(ManpageGlobals * man_globals, Widget parent)
 /*      Function Name: FormUpWidgets
  *      Description: Sizes widgets to look nice.
  *      Arguments: parent - the common parent of all the widgets.
- *                 full_size - array of widget names that will he full size.
- *                 half_size - array of widget names that will he half size.
+ *                 full_size - array of widget names that will be full size.
+ *                 half_size - array of widget names that will be half size.
  *      Returns: none
  */
 

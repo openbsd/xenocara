@@ -290,7 +290,12 @@ ReadMandescFile(SectionList ** section_list, char *path)
     snprintf(mandesc_file, sizeof(mandesc_file), "%s/%s", path, MANDESC);
     if ((descfile = fopen(mandesc_file, "r")) != NULL) {
         while (fgets(string, BUFSIZ, descfile) != NULL) {
-            string[strlen(string) - 1] = '\0';  /* Strip off the CR. */
+            size_t len = strlen(string);
+
+            if (len == 0)
+                continue;
+            if (string[len - 1] == '\n')
+                string[len - 1] = '\0';  /* Strip off the CR. */
 
             if (streq(string, NO_SECTION_DEFAULTS)) {
                 use_defaults = FALSE;
