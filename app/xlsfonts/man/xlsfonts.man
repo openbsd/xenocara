@@ -66,6 +66,10 @@ systems).
 .TP
 \fB\-fn \fIpattern\fB\fR
 This option specifies the font name pattern to match.
+.TP
+.B -v
+This option indicates that xlsfonts should print out the program version
+and exit.
 .SH "SEE ALSO"
 \fBX\fR(__miscmansuffix__), \fBXserver\fR(__appmansuffix__), \fBxset\fR(__appmansuffix__), \fBxfd\fR(__appmansuffix__), X Logical Font Description Conventions
 .SH ENVIRONMENT

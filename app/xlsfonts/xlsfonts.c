@@ -1,7 +1,5 @@
 /*
- * $Xorg: xlsfonts.c,v 1.4 2001/02/09 02:05:54 xorgcvs Exp $
- *
- * 
+
 Copyright 1989, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,8 +21,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
- * */
-/* $XFree86: xc/programs/xlsfonts/xlsfonts.c,v 1.9 2003/09/08 14:25:33 eich Exp $ */
+
+ */
+
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -73,8 +75,11 @@ static void ComputeFontType(XFontStruct *fs);
 static void print_character_metrics(register XFontStruct *info);
 static void do_query_font (Display *dpy, char *name);
 
-void usage(void)
+void usage(const char *errmsg)
 {
+    if (errmsg != NULL)
+        fprintf (stderr, "%s: %s\n\n", program_name, errmsg);
+
     fprintf (stderr, "usage:  %s [-options] [-fn pattern]\n%s", program_name,
     "where options include:\n"
     "    -l[l[l]]                 give long info about each font\n"
@@ -87,6 +92,7 @@ void usage(void)
     "    -n columns               number of columns if multi column\n"
     "    -display displayname     X server to contact\n"
     "    -d displayname           (alias for -display displayname)\n"
+    "    -v                       print program version\n"
     "\n");
     Close_Display();
     exit(EXIT_FAILURE);
@@ -103,7 +109,8 @@ int main(int argc, char **argv)
 
     for (argv++, argc--; argc; argv++, argc--) {
         if (argv[0][0] == '-') {
-            if (argcnt > 0) usage ();
+            if (argcnt > 0)
+                usage ("options may not be specified after font names");
             for (i=1; argv[0][i]; i++)
                 switch(argv[0][i]) {
                 case 'l':
@@ -119,19 +126,23 @@ int main(int argc, char **argv)
                     columns = 1;
                     break;
                 case 'f': /* "-fn" */
-                    if (--argc <= 0) usage ();
-                    if (argv[0][i+1] != 'n') usage ();
+                    if (argv[0][i+1] != 'n') {
+                        fprintf (stderr, "%s: unrecognized argument %s\n\n",
+                                 program_name, argv[0]);
+                        usage(NULL);
+                    }
+                    if (--argc <= 0) usage ("-fn requires an argument");
                     argcnt++;
                     argv++;
                     get_list(argv[0]);
                     goto next;
                 case 'w':
-                    if (--argc <= 0) usage ();
+                    if (--argc <= 0) usage ("-w requires an argument");
                     argv++;
                     max_output_line_width = atoi(argv[0]);
                     goto next;
                 case 'n':
-                    if (--argc <= 0) usage ();
+                    if (--argc <= 0) usage ("-n requires an argument");
                     argv++;
                     columns = atoi(argv[0]);
                     goto next;
@@ -141,12 +152,20 @@ int main(int argc, char **argv)
                 case 'u':
                     sort_output = False;
                     break;
+                case 'v':
+                    puts(PACKAGE_STRING);
+                    exit(0);
                 default:
-                    usage();
+                    fprintf (stderr, "%s: unrecognized argument -%c\n\n",
+                             program_name, argv[0][i]);
+                    usage(NULL);
                     break;
                 }
-            if (i == 1)
-                usage();
+            if (i == 1) {
+                fprintf (stderr, "%s: unrecognized argument %s\n\n",
+                         program_name, argv[0]);
+                usage(NULL);
+            }
         } else {
             argcnt++;
             get_list(argv[0]);

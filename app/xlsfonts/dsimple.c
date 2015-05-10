@@ -1,4 +1,3 @@
-/* $Xorg: dsimple.c,v 1.4 2001/02/09 02:05:54 xorgcvs Exp $ */
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xlsfonts/dsimple.c,v 3.6 2001/12/14 20:02:09 dawes Exp $ */
 
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
@@ -75,7 +73,7 @@ Get_Display_Name(int *pargc/* MODIFIED */, char **argv/* MODIFIED */)
 	char *arg = argv[i];
 
 	if (!strcmp (arg, "-display") || !strcmp (arg, "-d")) {
-	    if (++i >= argc) usage ();
+	    if (++i >= argc) usage ("-display requires an argument");
 
 	    displayname = argv[i];
 	    *pargc -= 2;

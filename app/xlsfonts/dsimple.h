@@ -1,4 +1,3 @@
-/* $Xorg: dsimple.h,v 1.4 2001/02/09 02:05:54 xorgcvs Exp $ */
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xlsfonts/dsimple.h,v 1.8 2002/12/24 17:43:01 tsi Exp $ */
 
 /*
  * dsimple.h:      This file contains the definitions needed to use the
@@ -62,7 +60,7 @@ extern int screen;                           /* The current screen */
 
 void Setup_Display_And_Screen(int *, char **);
 void Close_Display(void);
-void usage(void) _X_NORETURN;
+void usage(const char *errmsg) _X_NORETURN;
 
 #define X_USAGE "[host:display]"              /* X arguments handled by
 						 Get_Display_Name */
