@@ -1,3 +1,61 @@
+commit 42f3a39c3085afd9ef904ae39102fd49bbc2e4a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 30 21:39:51 2015 -0700
+
+    libfontenc 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit de1843aaf76015c9d99416f3122d169fe331b849
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 17 19:37:28 2015 -0800
+
+    Initialize aliases array in parseEncodingFile()
+    
+    The static analyzer insisted there were code paths that entries in this
+    array could be read without them being initialized.  While I couldn't
+    see any way that would happen, this makes sure it can't and makes the
+    analyzer quiet.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c377d91157601df90936e49167ce28a548c9b740
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 17 19:18:41 2015 -0800
+
+    Reformat code to X.Org standard style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8eefb5a18de41b693c00767458ee51f034201ebf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 17 18:46:49 2015 -0800
+
+    Replace strcpy+strcat calls with snprintf calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5221fc11307eb1230ae2643c6e423b0f7867fde
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 17 18:36:07 2015 -0800
+
+    Replace sprintf call with snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0037a42107b952c9d903719615747e760e4e7247
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 26 09:40:00 2013 -0800
+
+    Initialize both value1 & value2, not value1 twice
+    
+    Flagged by cppcheck 1.62:
+    [src/encparse.c:303] -> [src/encparse.c:303]: (performance, inconclusive)
+     Variable 'value1' is reassigned a value before the old one has been used
+     if variable is no semaphore variable.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3acba630d8b57084f7e92c15732408711ed5137a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 25 20:52:11 2013 -0700
