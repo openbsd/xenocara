@@ -1,5 +1,5 @@
 .ds q \N'34'
-.TH xcompmgr 1
+.TH xcompmgr 1 __xorgversion__
 .SH NAME
 xcompmgr \- sample X compositing manager
 .SH SYNOPSIS
@@ -48,7 +48,7 @@ When \-c is specified, enables a smooth fade effect for transient windows like
 menus, and for all windows on hide and restore events.
 .TP
 .BI \-n
-Simple client-side compositing.
+Simple client-side compositing. This is the default mode.
 .TP
 .BI \-s
 Server-side compositing with hard-edged shadows.

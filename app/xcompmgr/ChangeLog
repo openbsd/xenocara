@@ -1,3 +1,69 @@
+commit e99e56944915a99981ec28d7525347bf9da7fb94
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 22:56:13 2015 -0700
+
+    xcompmgr 1.1.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 14bfab3bb34f5ab75f2ac6c4acb3b67201e89a69
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 20 17:57:04 2014 -0700
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c1110fbe18dcf91228449c3a4ce706edbfb90c7
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sun Oct 19 11:22:06 2014 +0200
+
+    man: note that -n is the default mode.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit adbf9fb95c6c327bda55a81d5950a7855d8e29fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:18:53 2014 -0700
+
+    Remove empty AUTHORS & NEWS files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 65fedb9ea217134a842b7b34cf425c24ca6ca3b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Also includes support for builds outside $srcdir as found in most
+    other X.Org autogen.sh files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ab7d664354275f5d6b58276c0f3f959d6f6ff17
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc4110113cedab8e07c68a6a20d6d34394b6f15e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 26 22:11:17 2013 -0800
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3dbfa0b9f63c38068443abb7751a7c8b516febda
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 14 19:22:36 2012 -0800

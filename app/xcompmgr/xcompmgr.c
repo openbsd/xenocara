@@ -1958,27 +1958,44 @@ ev_window (XEvent *ev)
 #endif
 
 static void
-usage (char *program)
+usage (const char *program)
 {
     fprintf (stderr, "%s v%s\n", program, PACKAGE_VERSION);
-    fprintf (stderr, "usage: %s [options]\n", program);
-    fprintf (stderr, "Options\n");
-    fprintf (stderr, "   -d display\n      Specifies which display should be managed.\n");
-    fprintf (stderr, "   -r radius\n      Specifies the blur radius for client-side shadows. (default 12)\n");
-    fprintf (stderr, "   -o opacity\n      Specifies the translucency for client-side shadows. (default .75)\n");
-    fprintf (stderr, "   -l left-offset\n      Specifies the left offset for client-side shadows. (default -15)\n");
-    fprintf (stderr, "   -t top-offset\n      Specifies the top offset for clinet-side shadows. (default -15)\n");
-    fprintf (stderr, "   -I fade-in-step\n      Specifies the opacity change between steps while fading in. (default 0.028)\n");
-    fprintf (stderr, "   -O fade-out-step\n      Specifies the opacity change between steps while fading out. (default 0.03)\n");
-    fprintf (stderr, "   -D fade-delta-time\n      Specifies the time between steps in a fade in milliseconds. (default 10)\n");
-    fprintf (stderr, "   -a\n      Use automatic server-side compositing. Faster, but no special effects.\n");
-    fprintf (stderr, "   -c\n      Draw client-side shadows with fuzzy edges.\n");
-    fprintf (stderr, "   -C\n      Avoid drawing shadows on dock/panel windows.\n");
-    fprintf (stderr, "   -f\n      Fade windows in/out when opening/closing.\n");
-    fprintf (stderr, "   -F\n      Fade windows during opacity changes.\n");
-    fprintf (stderr, "   -n\n      Normal client-side compositing with transparency support\n");
-    fprintf (stderr, "   -s\n      Draw server-side shadows with sharp edges.\n");
-    fprintf (stderr, "   -S\n      Enable synchronous operation (for debugging).\n");
+    fprintf (stderr, "usage: %s [options]\n%s\n", program,
+    "Options:\n"
+    "   -d display\n"
+    "      Specifies which display should be managed.\n"
+    "   -r radius\n"
+    "      Specifies the blur radius for client-side shadows. (default 12)\n"
+    "   -o opacity\n"
+    "      Specifies the translucency for client-side shadows. (default .75)\n"
+    "   -l left-offset\n"
+    "      Specifies the left offset for client-side shadows. (default -15)\n"
+    "   -t top-offset\n"
+    "      Specifies the top offset for clinet-side shadows. (default -15)\n"
+    "   -I fade-in-step\n"
+    "      Specifies the opacity change between steps while fading in. (default 0.028)\n"
+    "   -O fade-out-step\n"
+    "      Specifies the opacity change between steps while fading out. (default 0.03)\n"
+    "   -D fade-delta-time\n"
+    "      Specifies the time between steps in a fade in milliseconds. (default 10)\n"
+    "   -a\n"
+    "      Use automatic server-side compositing. Faster, but no special effects.\n"
+    "   -c\n"
+    "      Draw client-side shadows with fuzzy edges.\n"
+    "   -C\n"
+    "      Avoid drawing shadows on dock/panel windows.\n"
+    "   -f\n"
+    "      Fade windows in/out when opening/closing.\n"
+    "   -F\n"
+    "      Fade windows during opacity changes.\n"
+    "   -n\n"
+    "      Normal client-side compositing with transparency support\n"
+    "   -s\n"
+    "      Draw server-side shadows with sharp edges.\n"
+    "   -S\n"
+    "      Enable synchronous operation (for debugging).\n"
+        );
     exit (1);
 }
 

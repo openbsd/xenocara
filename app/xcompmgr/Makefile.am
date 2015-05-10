@@ -1,20 +1,19 @@
+SUBDIRS = man
+
 bin_PROGRAMS = xcompmgr
-man_MANS = xcompmgr.1
 
 AM_CFLAGS = $(CWARNFLAGS) $(XCOMPMGR_CFLAGS)
 xcompmgr_LDADD = $(XCOMPMGR_LIBS) -lm
 
-EXTRA_DIST = \
-	autogen.sh \
-	ChangeLog \
-	${man_MANS}
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-MAINTAINERCLEANFILES=ChangeLog
+.PHONY: ChangeLog INSTALL
 
-.PHONY: ChangeLog
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 
