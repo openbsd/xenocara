@@ -85,14 +85,14 @@ from The Open Group.
 #endif
 
 /* highlight mode */
-typedef enum { drag, resize, done } hlMode; 
+typedef enum { drag, resize, done } hlMode;
 
 /* highlight data structure */
-typedef struct { 
+typedef struct {
   Boolean   newScale;
   hlMode    selectMode;
   GC        gc;
-  XWindowAttributes win_info;   
+  XWindowAttributes win_info;
   XImage     *image;
   Position  homeX, homeY, x, y;
   Dimension width, height;
@@ -106,7 +106,7 @@ static XtAppContext app;
 static Cursor ulAngle, urAngle, lrAngle, llAngle;
 static Display *dpy;
 static int scr;
-static GC selectGC; 
+static GC selectGC;
 static XGCValues selectGCV;
 static Widget toplevel, root;
 static Atom wm_delete_window;
@@ -170,7 +170,7 @@ static XrmOptionDescRec optionDesc[] = {
   {"-bd",         "*borderColor", XrmoptionSepArg, (XtPointer)NULL},
   {"-bg",         "*background",   XrmoptionSepArg, (XtPointer)NULL},
   {"-bw",         "*borderWidth", XrmoptionSepArg, (XtPointer)NULL},
-  
+
   {"-geometry", "*geometry", XrmoptionSepArg, (XtPointer)NULL},
   {"-mag",      "*mag",                XrmoptionSepArg, (XtPointer)NULL},
   {"-source",   "*source",             XrmoptionSepArg, (XtPointer)NULL},
@@ -196,10 +196,10 @@ static XtActionsRec actions_table[] = {
 
 
 /*
- * Error() -- Error handler:  Catch a bad match in magnifing an
+ * Error() -- Error handler:  Catch a bad match in magnifying an
  *            area that contains bits of different depths.
  */
-static int 
+static int
 Error(Display *dpy, XErrorEvent *err)
 {
   (void) XmuPrintDefaultErrorMessage (dpy, err, stderr);
@@ -209,7 +209,7 @@ Error(Display *dpy, XErrorEvent *err)
 
 /*
  * CloseAP() -- Close this dialog.  If its the last one exit the program.
- *          
+ *
  */
 static void			/* ARGSUSED */
 CloseAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
@@ -219,7 +219,7 @@ CloseAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
   if (event->type != ClientMessage) {
     n = 0;			/* get user data */
     XtSetArg(wargs[0], XtNuserData, &data); n++;
-    XtGetValues(w, wargs, n); 
+    XtGetValues(w, wargs, n);
     w = data->scaleShell;
   }
   XtPopdown(w);
@@ -230,7 +230,7 @@ CloseAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 /*
  * SetCmapPropsAP() -- Put the scale widget first in WM_COLORMAP_WINDOWS
- *                     
+ *
  */
 static void			/* ARGSUSED */
 SetCmapPropsAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
@@ -250,7 +250,7 @@ SetCmapPropsAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 /*
  * UnsetCmapPropsAP() -- Put the shell first in WM_COLORMAP_WINDOWS
- *                     
+ *
  */
 static void			/* ARGSUSED */
 UnsetCmapPropsAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
@@ -289,7 +289,7 @@ ReplaceAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
   Arg wargs[2]; int n; hlPtr data;
   n = 0;			/* get user data */
   XtSetArg(wargs[0], XtNuserData, &data); n++;
-  XtGetValues(w, wargs, n); 
+  XtGetValues(w, wargs, n);
   StartRootPtrGrab(False, data);
 }
 
@@ -317,13 +317,13 @@ PopupPixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
     XtSetArg(wargs[n], XtNheight, &scale_height); n++;
     XtGetValues(w, wargs, n);
     XtTranslateCoords(w, -1, -1, &scale_x, &scale_y);
-    
+
     XtRealizeWidget(data->pixShell); /* to get the right height  */
 
     n = 0;
     XtSetArg(wargs[n], XtNheight, &label_height); n++;
     XtGetValues(data->pixShell, wargs, n);
-    
+
     if ((double) event->xbutton.y / (double) scale_height > 0.5) {
 	label_x = scale_x;
 	label_y = scale_y;
@@ -366,11 +366,12 @@ UpdatePixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
     else {
 	color.pixel = pixel;
 	XQueryColor(dpy, data->win_info.colormap, &color);
-	sprintf(string, "Pixel %ld at (%d,%d) colored (%x,%x,%x).", 
-		pixel, x + data->x, y + data->y,
-		color.red, color.green, color.blue);
+	snprintf(string, sizeof(string),
+		 "Pixel %ld at (%d,%d) colored (%x,%x,%x).",
+		 pixel, x + data->x, y + data->y,
+		 color.red, color.green, color.blue);
 	n = 0;
-	XtSetArg(wargs[n], XtNlabel, string); n++;    
+	XtSetArg(wargs[n], XtNlabel, string); n++;
 	XtSetValues(data->pixLabel, wargs, n);
 	XtPopup(data->pixShell, XtGrabNone);
     }
@@ -387,7 +388,7 @@ PopdownPixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
   int n;
   Arg wargs[3];
   hlPtr data = NULL;
-  
+
   n = 0;
   XtSetArg(wargs[0], XtNuserData, &data); n++;
   XtGetValues(w, wargs, n);
@@ -400,14 +401,14 @@ PopdownPixelAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 static void			/* ARGSUSED */
 SelectRegionAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
-{    
-/***** NOT SURE WHAT TO DO WITH THIS 
+{
+/***** NOT SURE WHAT TO DO WITH THIS
     if (app_resources.unmap)
 	XtUnmapWidget(toplevel);
     Redisplay(XtDisplay(w), RootWindow(XtDisplay(w),
 				       DefaultScreen(XtDisplay(w))),
-	      source.width, source.height, 
-	      app_resources.freq, app_resources.puls, 
+	      source.width, source.height,
+	      app_resources.freq, app_resources.puls,
 	      ul_angle, lr_angle,
 	      app_resources.grab);
 
@@ -418,19 +419,19 @@ SelectRegionAP(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 
-/* 
+/*
  * CheckPoints() -- Change the cursor for the correct quadrant.
- *                  Make sure the first point is less than the second 
+ *                  Make sure the first point is less than the second
  *                  for drawing the selection rectangle.
  *
  */
-static void 
+static void
 CheckPoints(Position *x1, Position *x2, Position *y1, Position *y2)
 {
-  Position tmp; 
+  Position tmp;
   Boolean above, left;
   Cursor newC;
-  above = (*y2 < *y1); left = (*x2 < *x1); 
+  above = (*y2 < *y1); left = (*x2 < *x1);
   if (above&&left) newC = ulAngle;
   else if (above&&!left) newC = urAngle;
   else if (!above&&!left) newC = lrAngle;
@@ -453,24 +454,24 @@ HighlightTO(XtPointer closure, XtIntervalId *id)	/* ARGSUSED */
   hlPtr data = (hlPtr)closure;
   XGrabServer(dpy);
   if (data->selectMode == drag) {
-    XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc, 
+    XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc,
 		   data->x, data->y, data->width, data->height);
     XFlush(dpy);
     HLSLEEP;
-    XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc, 
+    XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc,
 		   data->x, data->y, data->width, data->height);
   }
-  else if (data->selectMode == resize) {	
+  else if (data->selectMode == resize) {
     Position x1 = data->homeX,
              x2 = data->x,
              y1 = data->homeY,
              y2 = data->y;
     CheckPoints(&x1, &x2, &y1, &y2);
-    XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc, 
+    XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc,
 		   x1, y1, x2 - x1, y2 - y1);
     XFlush(dpy);
     HLSLEEP;
-    XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc, 
+    XDrawRectangle(dpy, DefaultRootWindow(dpy), data->gc,
 		   x1, y1, x2 - x1, y2 - y1);
   }
   XUngrabServer(dpy);
@@ -545,7 +546,7 @@ PasteCB(Widget w, XtPointer clientData, XtPointer callData)
 /*
  * SetupGC() -- Graphics context for magnification selection.
  */
-static void 
+static void
 SetupGC(void)
 {
     selectGCV.function = GXxor;
@@ -553,16 +554,16 @@ SetupGC(void)
     selectGCV.subwindow_mode = IncludeInferiors;
     selectGC = XtGetGC(toplevel, GCFunction|GCForeground|GCSubwindowMode,
 		       &selectGCV);
-}  
+}
 
 
 
 /*
- * FindWindow() -- Determin window the pointer is over.
+ * FindWindow() -- Determine window the pointer is over.
  *
  */
-static Window 
-FindWindow(int x, int y)	/* Locatation of cursor */
+static Window
+FindWindow(int x, int y)	/* Location of cursor */
 {
   XWindowAttributes wa;
   Window findW = DefaultRootWindow(dpy), stopW, childW;
@@ -571,7 +572,7 @@ FindWindow(int x, int y)	/* Locatation of cursor */
   stopW = findW;
 
   while (stopW) {
-    XTranslateCoordinates(dpy, findW, stopW, 
+    XTranslateCoordinates(dpy, findW, stopW,
 			  x, y, &x, &y, &childW);
     findW = stopW;
     /* If child is not InputOutput (for example, InputOnly) */
@@ -591,15 +592,15 @@ FindWindow(int x, int y)	/* Locatation of cursor */
 /*
  * ResizeEH() -- Event Handler for resize of selection box.
  */
-static void 
-ResizeEH(Widget w, XtPointer closure, XEvent *event, 
+static void
+ResizeEH(Widget w, XtPointer closure, XEvent *event,
 	 Boolean *continue_to_dispatch)	/* ARGSUSED */
 {
   hlPtr data = (hlPtr)closure;
   switch (event->type) {
   case MotionNotify:
     data->x = event->xmotion.x_root;
-    data->y = event->xmotion.y_root; 
+    data->y = event->xmotion.y_root;
     break;
   case ButtonRelease:
     GetImageAndAttributes(FindWindow(event->xmotion.x_root,
@@ -611,7 +612,7 @@ ResizeEH(Widget w, XtPointer closure, XEvent *event,
 	     data);
     if (data->newScale)
       PopupNewScale(data);
-    else 
+    else
       SWSetImage(data->scaleInstance, data->image);
     XtUngrabPointer(w, CurrentTime);
 /*****
@@ -628,10 +629,10 @@ ResizeEH(Widget w, XtPointer closure, XEvent *event,
 
 
 /*
- * DragEH() -- Event Handler for draging selection box.
+ * DragEH() -- Event Handler for dragging selection box.
  */
-static void 
-DragEH(Widget w, XtPointer closure, XEvent *event, 
+static void
+DragEH(Widget w, XtPointer closure, XEvent *event,
        Boolean *continue_to_dispatch) /* ARGSUSED */
 {
   hlPtr data = (hlPtr)closure;
@@ -647,9 +648,9 @@ DragEH(Widget w, XtPointer closure, XEvent *event,
        *          where the depth of the window does not match the depth of
        *          the root window.
        */
-      GetImageAndAttributes(FindWindow(event->xmotion.x_root, 
+      GetImageAndAttributes(FindWindow(event->xmotion.x_root,
 			  event->xmotion.y_root),
-	       event->xbutton.x_root, 
+	       event->xbutton.x_root,
 	       event->xbutton.y_root,
 	       srcWidth, srcHeight, data);
       if (data->newScale)
@@ -664,21 +665,21 @@ DragEH(Widget w, XtPointer closure, XEvent *event,
     }
 
     break;
-  case ButtonPress:	
+  case ButtonPress:
     if (event->xbutton.button == Button2) {	/* turn on resize mode */
-      data->homeX = event->xbutton.x_root; 
+      data->homeX = event->xbutton.x_root;
       data->homeY = event->xbutton.y_root;
       data->x = event->xbutton.x_root + srcWidth;
-      data->y = event->xbutton.y_root + srcHeight;      
+      data->y = event->xbutton.y_root + srcHeight;
       data->selectMode = resize;
       XtRemoveRawEventHandler(w, PointerMotionMask|ButtonPressMask|
 			   ButtonReleaseMask, True, DragEH, (XtPointer)data);
       XChangeActivePointerGrab
 	(dpy, PointerMotionMask|ButtonPressMask|ButtonReleaseMask,
 	 lrAngle, CurrentTime);
-      XWarpPointer(dpy, None, None, 0, 0, 0, 0, 
+      XWarpPointer(dpy, None, None, 0, 0, 0, 0,
 		   srcWidth, srcHeight);
-      XtAddEventHandler(w, PointerMotionMask|ButtonReleaseMask, 
+      XtAddEventHandler(w, PointerMotionMask|ButtonReleaseMask,
 			True, ResizeEH, (XtPointer)data);
     }
     break;
@@ -690,11 +691,11 @@ DragEH(Widget w, XtPointer closure, XEvent *event,
 
 /*
  * StartRootPtrGrab() -- Bring up the selection box.
- *              
+ *
  */
 static void
-StartRootPtrGrab(int new, 	/* do we cretate a new scale instance? */
-		 hlPtr data)	/* highligh data */
+StartRootPtrGrab(int new, 	/* do we create a new scale instance? */
+		 hlPtr data)	/* highlight data */
 {
   Window    rootR, childR;
   int       rootX, rootY, winX, winY;
@@ -704,7 +705,7 @@ StartRootPtrGrab(int new, 	/* do we cretate a new scale instance? */
     (root, False,
      PointerMotionMask|ButtonPressMask|ButtonReleaseMask,
      GrabModeAsync, GrabModeAsync, None, ulAngle, CurrentTime);
-  XQueryPointer(dpy, DefaultRootWindow(dpy), &rootR, &childR, 
+  XQueryPointer(dpy, DefaultRootWindow(dpy), &rootR, &childR,
 		&rootX, &rootY, &winX, &winY, &mask);
   if (new) {
     numXmags++;
@@ -719,7 +720,7 @@ StartRootPtrGrab(int new, 	/* do we cretate a new scale instance? */
   hlData->width      = srcWidth;
   hlData->height     = srcHeight;
   XtAddRawEventHandler
-    (root, PointerMotionMask|ButtonPressMask|ButtonReleaseMask, 
+    (root, PointerMotionMask|ButtonPressMask|ButtonReleaseMask,
      True, DragEH, (XtPointer)hlData);
   (void) XtAppAddTimeOut(app, HLINTERVAL, HighlightTO, (XtPointer)hlData);
 }
@@ -728,7 +729,7 @@ StartRootPtrGrab(int new, 	/* do we cretate a new scale instance? */
 
 /*
  * CreateRoot() -- Create a root window widget. If the user specified x and y
- *                 in his source geometry then use this to directly get the
+ *                 in the source geometry then use this to directly get the
  *                 image.
  */
 static void
@@ -737,7 +738,7 @@ CreateRoot(void)
   hlPtr data;
   root = XtCreateWidget("root", rootWindowWidgetClass, toplevel, NULL, 0);
   XtRealizeWidget(root);
-  if (XValue & srcStat && YValue &srcStat) { 
+  if (XValue & srcStat && YValue &srcStat) {
     numXmags = 1;
     data = (hlPtr)XtMalloc(sizeof(hlStruct));
     data = data;
@@ -748,7 +749,7 @@ CreateRoot(void)
     data->gc         = selectGC;
     data->width      = srcWidth;
     data->height     = srcHeight;
-    GetImageAndAttributes(RootWindow(dpy, scr), srcX, srcY, srcWidth, 
+    GetImageAndAttributes(RootWindow(dpy, scr), srcX, srcY, srcWidth,
 			  srcHeight, data);
     PopupNewScale(data);
     return;
@@ -756,13 +757,13 @@ CreateRoot(void)
 }
 
 
-/* 
+/*
  * GetImageAndAttributes() -- Get the image bits from the screen.
- *               We will also determin here the colormap, depth, and
- *               visual to be used for the magnification image.  
+ *               We will also determine here the colormap, depth, and
+ *               visual to be used for the magnification image.
  */
-static void 
-GetImageAndAttributes(Window w, int x, int y, int width, int height, 
+static void
+GetImageAndAttributes(Window w, int x, int y, int width, int height,
 		      hlPtr data)
 {
     /* get parameters of window being magnified */
@@ -841,22 +842,22 @@ GetImageAndAttributes(Window w, int x, int y, int width, int height,
  *               This function was taken from xwd (thanks Bob...)
  */
 #define lowbit(x) ((x) & (~(x) + 1))
-static int 
+static int
 Get_XColors(XWindowAttributes *win_info, XColor **colors)
 {
     int i, ncolors;
- 
+
     if (!win_info->colormap)
         return(0);
- 
+
     ncolors = win_info->visual->map_entries;
     if (!(*colors = (XColor *) XtMalloc (sizeof(XColor) * ncolors)))
       XtError("Out of memory!");
- 
+
     if (win_info->visual->class == DirectColor ||
         win_info->visual->class == TrueColor) {
         Pixel red, green, blue, red1, green1, blue1;
- 
+
         red = green = blue = 0;
         red1 = lowbit(win_info->visual->red_mask);
         green1 = lowbit(win_info->visual->green_mask);
@@ -880,9 +881,9 @@ Get_XColors(XWindowAttributes *win_info, XColor **colors)
           (*colors)[i].pad = 0;
         }
     }
- 
+
     XQueryColors(dpy, win_info->colormap, *colors, ncolors);
- 
+
     return(ncolors);
 }
 
@@ -899,12 +900,12 @@ GetMaxIntensity(hlPtr data)
   XColor *colors = NULL, *mptr, *tptr;
   int i, ncolors;
 
-  if (data->win_info.colormap == DefaultColormap(dpy, scr)) 
+  if (data->win_info.colormap == DefaultColormap(dpy, scr))
     return WhitePixel(dpy, scr);
-  ncolors = Get_XColors(&data->win_info, &colors); 
+  ncolors = Get_XColors(&data->win_info, &colors);
   mptr = tptr = colors; tptr++;
   for (i=1; i<ncolors; i++) {
-    if ((int)Intensity(mptr) < (int)Intensity(tptr)) 
+    if ((int)Intensity(mptr) < (int)Intensity(tptr))
       mptr = tptr;
     tptr++;
   }
@@ -924,13 +925,13 @@ GetMinIntensity(hlPtr data)
   XColor *colors = NULL, *mptr, *tptr;
   int i, ncolors;
 
-  if (data->win_info.colormap == DefaultColormap(dpy, scr)) 
+  if (data->win_info.colormap == DefaultColormap(dpy, scr))
     return BlackPixel(dpy, scr);
-  ncolors = Get_XColors(&data->win_info, &colors); 
+  ncolors = Get_XColors(&data->win_info, &colors);
   mptr = tptr = colors; tptr++;
   for (i=1; i<ncolors; i++)  {
     if ((int)Intensity(mptr) > (int)Intensity(tptr))
-      mptr = tptr; 
+      mptr = tptr;
     tptr++;
   }
   /* Null pointer protection */
@@ -948,13 +949,13 @@ static Widget pane1, pane2, pane3, cclose, replace, new, select_w, paste;
 /*
  * PopupNewScale() -- Create and popup a new scale composite.
  */
-static void		
+static void
 PopupNewScale(hlPtr data)
 {
   Arg warg;
 
-  data->scaleShell = 
-    XtVaCreatePopupShell("xmag", topLevelShellWidgetClass, toplevel, 
+  data->scaleShell =
+    XtVaCreatePopupShell("xmag", topLevelShellWidgetClass, toplevel,
 			 XtNgeometry, (XtArgVal)options.geometry,
 			 XtNtitle, (XtArgVal)options.title,
 			 NULL);
@@ -981,8 +982,8 @@ PopupNewScale(hlPtr data)
 			       (Arg *) NULL, 0);
   pane3 = XtCreateManagedWidget("pane2", panedWidgetClass, pane1,
 				(Arg *) NULL, 0);
-  data->scaleInstance = 
-    XtVaCreateManagedWidget("scale", scaleWidgetClass, 
+  data->scaleInstance =
+    XtVaCreateManagedWidget("scale", scaleWidgetClass,
 			    pane3,
 			    XtNvisual, (XtArgVal)data->win_info.visual,
 			    XtNcolormap, (XtArgVal)data->win_info.colormap,
@@ -996,17 +997,17 @@ PopupNewScale(hlPtr data)
      XtParseTranslationTable ("<Message>WM_PROTOCOLS: close()"));
   XtSetArg(warg, XtNuserData, data);
   XtSetValues(data->scaleInstance, &warg, 1);
-  data->pixShell = 
-    XtVaCreatePopupShell("pixShell", overrideShellWidgetClass, 
+  data->pixShell =
+    XtVaCreatePopupShell("pixShell", overrideShellWidgetClass,
 			 toplevel,
 			 XtNvisual, (XtArgVal)data->win_info.visual,
 			 XtNcolormap, (XtArgVal)data->win_info.colormap,
 			 XtNdepth, (XtArgVal)data->win_info.depth,
 			 XtNborderWidth, (XtPointer)0,
 			 NULL);
-  data->pixLabel = 
-    XtVaCreateManagedWidget("pixLabel", labelWidgetClass, 
-			    data->pixShell, 
+  data->pixLabel =
+    XtVaCreateManagedWidget("pixLabel", labelWidgetClass,
+			    data->pixShell,
 			    XtNforeground, (XtPointer)GetMaxIntensity(data),
 			    XtNbackground, (XtPointer)GetMinIntensity(data),
 			    XtNborderWidth, (XtPointer)0,
@@ -1018,7 +1019,7 @@ PopupNewScale(hlPtr data)
       (dpy, XtWindow(data->scaleShell), &wm_delete_window, 1);
   }
   if (data->win_info.colormap != DefaultColormap(dpy, scr)) {
-    data->cmapWinList[0] = data->scaleShell; 
+    data->cmapWinList[0] = data->scaleShell;
     data->cmapWinList[1] = data->scaleInstance;
     XtSetWMColormapWindows(data->scaleShell, data->cmapWinList, 2);
   }
@@ -1045,10 +1046,10 @@ RedoOldScale(hlPtr data)
   XtSetArg(wargs[n], XtNvisual, &oldVis); n++;
   XtSetArg(wargs[n], XtNdepth, &oldDepth); n++;
   XtSetArg(wargs[n], XtNcolormap, &oldCmap); n++;
-  XtGetValues(data->scaleInstance, wargs, n);  
+  XtGetValues(data->scaleInstance, wargs, n);
   if (oldVis == data->win_info.visual && oldDepth == data->win_info.depth
       && oldCmap == data->win_info.colormap) {
-    SWSetImage(data->scaleInstance, data->image);    
+    SWSetImage(data->scaleInstance, data->image);
     return;
   }
   /* get width and height, save and reuse them */
@@ -1063,7 +1064,7 @@ RedoOldScale(hlPtr data)
   XtSetArg(wargs[n], XtNforeground, GetMaxIntensity(data)); n++;
   XtSetArg(wargs[n], XtNbackground, GetMinIntensity(data)); n++;
   XtSetValues(data->pixLabel, wargs, n);
-  SWSetImage(data->scaleInstance, data->image); 
+  SWSetImage(data->scaleInstance, data->image);
   XtRealizeWidget(data->scaleInstance);
   XtManageChild(data->scaleInstance);
 }
@@ -1085,13 +1086,13 @@ InitCursors(void)
 
 
 /*
- * ParseSourceGeom() -- Determin dimensions of area to magnify from resources.
+ * ParseSourceGeom() -- Determine dimensions of area to magnify from resources.
  */
-static void 
+static void
 ParseSourceGeom(void)
 {
 				/* source */
-  srcStat = 
+  srcStat =
     XParseGeometry(options.source, &srcX, &srcY, &srcWidth, &srcHeight);
   if (!srcWidth) srcWidth = SRCWIDTH;
   if (!srcHeight) srcHeight = SRCHEIGHT;
@@ -1105,11 +1106,11 @@ ParseSourceGeom(void)
 /*
  * Main program.
  */
-int 
+int
 main(int argc, char *argv[])
 {
   XSetErrorHandler(Error);
-    
+
 				/* SUPPRESS 594 */
   toplevel = XtAppInitialize(&app, "Xmag", optionDesc, XtNumber(optionDesc),
 			     &argc, argv, NULL,
@@ -1124,7 +1125,7 @@ main(int argc, char *argv[])
 	    "usage:  xmag [-source geom] [-mag magfactor] [-toolkitoption]\n");
     exit(1);
   }
-  
+
 
   ParseSourceGeom();
   XtAppAddActions(app, actions_table, XtNumber(actions_table));

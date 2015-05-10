@@ -108,19 +108,19 @@ extern WidgetClass scaleWidgetClass;
 typedef struct _ScaleClassRec *ScaleWidgetClass;
 typedef struct _ScaleRec      *ScaleWidget;
 
-extern int SWGetImagePixel ( Widget w, Position x, Position y, 
-			     Position *img_x, Position *img_y, 
+extern int SWGetImagePixel ( Widget w, Position x, Position y,
+			     Position *img_x, Position *img_y,
 			     Pixel *img_pixel );
-extern void SWUnscale ( Widget w, XEvent *event, String *params, 
+extern void SWUnscale ( Widget w, XEvent *event, String *params,
 			Cardinal *num_params );
-extern void SWAutoscale ( Widget w, XEvent *event, String *params, 
+extern void SWAutoscale ( Widget w, XEvent *event, String *params,
 			  Cardinal *num_params );
-extern void SWInitialSize ( Widget w, XEvent *event, String *params, 
+extern void SWInitialSize ( Widget w, XEvent *event, String *params,
 			    Cardinal *num_params );
 extern void SWSetImage ( Widget w, XImage *image );
-extern void RequestSelection ( Widget w, XEvent *event, String *params, 
+extern void RequestSelection ( Widget w, XEvent *event, String *params,
 			       Cardinal *num_params );
-extern void GrabSelection ( Widget w, XEvent *event, String *params, 
+extern void GrabSelection ( Widget w, XEvent *event, String *params,
 			    Cardinal *num_params );
 extern Pixmap SWGetPixmap ( Widget w );
 

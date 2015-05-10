@@ -41,7 +41,7 @@ from The Open Group.
 
 /*ARGSUSED*/
 static Boolean
-ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type, 
+ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 		 XtPointer *value, unsigned long *length, int *format)
 {
     Boolean success;
@@ -50,8 +50,8 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 	ScaleWidget sw = (ScaleWidget) w;
 	Pixmap *pixmap = (Pixmap *) XtMalloc(sizeof(Pixmap));
 	*pixmap = XCreatePixmap(XtDisplay(w), XtWindow(w),
-				sw->scale.image->width, 
-				sw->scale.image->height, 
+				sw->scale.image->width,
+				sw->scale.image->height,
 				sw->scale.image->depth);
 	XPutImage(XtDisplay(w), *pixmap, sw->scale.gc, sw->scale.image,
 		  0, 0, 0, 0, sw->scale.image->width, sw->scale.image->height);
@@ -81,7 +81,7 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
     return success;
 }
 
-void 
+void
 SWGrabSelection(Widget w, Time time)
 {
     (void) XtOwnSelection(w, XA_PRIMARY, time, ConvertSelection, NULL, NULL);
@@ -90,8 +90,8 @@ SWGrabSelection(Widget w, Time time)
 
 /*ARGSUSED*/
 static void
-SelectionCallback(Widget w, XtPointer client_data, Atom *selection, 
-		  Atom *type, XtPointer value, unsigned long *length, 
+SelectionCallback(Widget w, XtPointer client_data, Atom *selection,
+		  Atom *type, XtPointer value, unsigned long *length,
 		  int *format)
 {
 
@@ -105,7 +105,7 @@ SelectionCallback(Widget w, XtPointer client_data, Atom *selection,
 	pixmap = (Pixmap *) value;
 	XGetGeometry(XtDisplay(w), *pixmap, &root, &x, &y,
 		     &width, &height, &border_width, &depth);
-	image = XGetImage(XtDisplay(w), *pixmap, 0, 0, width, height, 
+	image = XGetImage(XtDisplay(w), *pixmap, 0, 0, width, height,
 			  AllPlanes, ZPixmap);
 	SWAutoscale(w, NULL, NULL, NULL);
 	SWSetImage(w, image);
@@ -114,7 +114,7 @@ SelectionCallback(Widget w, XtPointer client_data, Atom *selection,
     }
 }
 
-void 
+void
 SWRequestSelection(Widget w, Time time)
 {
     XtGetSelectionValue(w, XA_PRIMARY, XA_PIXMAP, SelectionCallback, NULL,

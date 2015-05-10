@@ -105,18 +105,18 @@ static void ClassInitialize ( void );
 static void GetGC ( ScaleWidget sw );
 static void GetInitialScaleValues ( ScaleWidget sw );
 static void GetRectangleBuffer ( ScaleWidget sw, Cardinal buffer_size );
-static void Initialize ( Widget request, Widget new, ArgList args, 
+static void Initialize ( Widget request, Widget new, ArgList args,
 			 Cardinal *num_args );
 static void BuildTable ( ScaleWidget sw );
 static void FlushRectangles ( ScaleWidget sw, Drawable drawable, GC gc );
-static void FillRectangle ( ScaleWidget sw, Drawable drawable, GC gc, 
-			    Position x, Position y, 
+static void FillRectangle ( ScaleWidget sw, Drawable drawable, GC gc,
+			    Position x, Position y,
 			    Dimension width, Dimension height );
-static void ScaleImage ( ScaleWidget sw, Drawable drawable, 
-			 Position img_x, Position img_y, 
-			 Position dst_x, Position dst_y, 
+static void ScaleImage ( ScaleWidget sw, Drawable drawable,
+			 Position img_x, Position img_y,
+			 Position dst_x, Position dst_y,
 			 Dimension img_width, Dimension img_height );
-static int FindPixel ( ScaleWidget sw, Position x, Position y, 
+static int FindPixel ( ScaleWidget sw, Position x, Position y,
 		       Position *img_x, Position *img_y, Pixel *img_pixel );
 static void Redisplay ( Widget w, XEvent *event, Region region );
 static void TryResize ( ScaleWidget sw );
@@ -130,11 +130,11 @@ static void PositionImage ( ScaleWidget sw );
 static void Resize ( Widget w );
 static void Realize ( Widget wid, Mask *vmask, XSetWindowAttributes *attr );
 static void Destroy ( Widget w );
-static Boolean SetValues ( Widget current, Widget request, Widget new, 
+static Boolean SetValues ( Widget current, Widget request, Widget new,
 			   ArgList args, Cardinal *num_args );
 
 
- 
+
 static XtActionsRec actions[] =
 {
 {"unscale", SWUnscale},
@@ -187,13 +187,13 @@ ScaleClassRec scaleClassRec = {
     /* display_accelerator	*/	XtInheritDisplayAccelerator,
     /* extension		*/	NULL
   },
-  { 
+  {
     /* change_sensitive		*/	XtInheritChangeSensitive,
   }
 };
- 
+
 WidgetClass scaleWidgetClass = (WidgetClass) &scaleClassRec;
-    
+
 
 
 /*
@@ -201,25 +201,25 @@ WidgetClass scaleWidgetClass = (WidgetClass) &scaleClassRec;
  */
 
 
-static void 
+static void
 ClassInitialize(void)
 {
-} 
+}
 
 
 
-static void 
+static void
 GetGC(ScaleWidget sw)
 {
     XGCValues values;
-    
+
     values.foreground = sw->scale.foreground_pixel;
     values.background = sw->core.background_pixel;
     values.function = GXcopy;
-    
+
     sw->scale.gc = XtGetGC((Widget) sw,
-			   GCForeground | 
-			   GCBackground | 
+			   GCForeground |
+			   GCBackground |
 			   GCFunction,
 			   &values);
 }
@@ -227,7 +227,7 @@ GetGC(ScaleWidget sw)
 
 
 
-static void 
+static void
 GetInitialScaleValues(ScaleWidget sw)
 {
     if (sw->scale.proportional) {
@@ -244,7 +244,7 @@ GetInitialScaleValues(ScaleWidget sw)
 
 
 
-static void 
+static void
 GetRectangleBuffer(ScaleWidget sw, Cardinal buffer_size)
     /*
      * This procedure will realloc a new rectangles buffer.
@@ -257,7 +257,7 @@ GetRectangleBuffer(ScaleWidget sw, Cardinal buffer_size)
 	XtWarning("buffer size has to be a positive number greater than zero");
     }
     sw->scale.rectangles = (XRectangle *)
-	XtRealloc((char *) sw->scale.rectangles, 
+	XtRealloc((char *) sw->scale.rectangles,
 		  buffer_size * sizeof(XRectangle));
     sw->scale.buffer_size = buffer_size;
 }
@@ -265,29 +265,29 @@ GetRectangleBuffer(ScaleWidget sw, Cardinal buffer_size)
 
 
 /* ARGSUSED */
-static void 
+static void
 Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 {
     ScaleWidget new_sw = (ScaleWidget) new;
-    
+
     new_sw->scale.table.x = (Position *) NULL;
     new_sw->scale.table.y = (Position *) NULL;
     new_sw->scale.table.width = (Dimension *) NULL;
     new_sw->scale.table.height = (Dimension *) NULL;
-    
+
     new_sw->scale.nrectangles = 0;
     new_sw->scale.rectangles = (XRectangle *) NULL;
-    
+
     GetRectangleBuffer(new_sw, new_sw->scale.buffer_size);
-    
+
     GetGC(new_sw);
-    
+
     if (new_sw->scale.image != NULL) {
 	if (new_sw->core.width == 0)
-	    new_sw->core.width = 
+	    new_sw->core.width =
 		new_sw->scale.image->width + 2 * new_sw->scale.internal_width;
 	if (new_sw->core.height == 0)
-	    new_sw->core.height = 
+	    new_sw->core.height =
 		new_sw->scale.image->height + 2 *new_sw->scale.internal_height;
     }
     else {
@@ -296,14 +296,14 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 	if (new_sw->core.height == 0)
 	    new_sw->core.height = 1 + 2 * new_sw->scale.internal_height;
 	new_sw->scale.image = XCreateImage(XtDisplay(new),
-				       DefaultVisual(XtDisplay(new), 
+				       DefaultVisual(XtDisplay(new),
 					        DefaultScreen(XtDisplay(new))),
-				       1, XYBitmap, 0, 
+				       1, XYBitmap, 0,
 				       XtCalloc(1, sizeof(char)),
 				       1, 1, 8, 0);
     }
 
-    if ((new_sw->scale.aspect_ratio = 
+    if ((new_sw->scale.aspect_ratio =
 	 atof(new_sw->scale.aspect_ratio_str)) < 0.0) {
 	new_sw->scale.aspect_ratio = 1.0;
 	XtWarning("AspectRatio has to be a positive number. (forced to 1.0)");
@@ -314,18 +314,18 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 	new_sw->scale.precision = 0.001;
 	XtWarning("Precision has to be a positive number. (forced to 0.001)");
     }
-    
+
     if (new_sw->scale.scale_x_str == DefaultScaleFactor
-	|| 
+	||
 	new_sw->scale.scale_y_str == DefaultScaleFactor)
 	GetInitialScaleValues(new_sw);
     else {
-	if ((new_sw->scale.scale_x = 
+	if ((new_sw->scale.scale_x =
 	     atof(new_sw->scale.scale_x_str)) < 0.0) {
 	    new_sw->scale.scale_x = 1.0;
 	    XtWarning("ScaleValue has to be a positive number. (forced to 1.0)");
 	}
-	if ((new_sw->scale.scale_y = 
+	if ((new_sw->scale.scale_y =
 	     atof(new_sw->scale.scale_y_str)) < 0.0) {
 	    new_sw->scale.scale_y = 1.0;
 	    XtWarning("ScaleValue has to be a positive number. (forced to 1.0)");
@@ -335,29 +335,29 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 
 
 
-static void 
+static void
 BuildTable(ScaleWidget sw)
-    /* 
+    /*
      * This procedure builds scaling table for image in the scale struct
      * Requires image, scale_x and scale_y to be set properly
      */
 {
     Position x, y;
-    
+
     XtFree((char *) sw->scale.table.x);
     XtFree((char *) sw->scale.table.y);
     XtFree((char *) sw->scale.table.width);
     XtFree((char *) sw->scale.table.height);
-    sw->scale.table.x = 
+    sw->scale.table.x =
 	(Position *) XtMalloc(sizeof(Position) * sw->scale.image->width);
-    sw->scale.table.y = 
+    sw->scale.table.y =
 	(Position *) XtMalloc(sizeof(Position) * sw->scale.image->height);
-    sw->scale.table.width = 
+    sw->scale.table.width =
 	(Dimension *) XtMalloc(sizeof(Dimension) * sw->scale.image->width);
-    sw->scale.table.height = 
+    sw->scale.table.height =
 	(Dimension *) XtMalloc(sizeof(Dimension) * sw->scale.image->height);
-    
-    /* Build the scaling table */	
+
+    /* Build the scaling table */
     for (x = 0; x < sw->scale.image->width; x++) {
 	sw->scale.table.x[(int) x] = (Position) myrint(sw->scale.scale_x * x);
 	sw->scale.table.width[(int) x] = (Dimension)
@@ -372,22 +372,22 @@ BuildTable(ScaleWidget sw)
 
 
 
-static void 
+static void
 FlushRectangles(ScaleWidget sw, Drawable drawable, GC gc)
 {
-    XFillRectangles(XtDisplay(sw), drawable, gc, 
+    XFillRectangles(XtDisplay(sw), drawable, gc,
 		    sw->scale.rectangles, sw->scale.nrectangles);
-    
+
     sw->scale.nrectangles = 0;
 }
 
 
 
-static void 
-FillRectangle(ScaleWidget sw, Drawable drawable, GC gc, 
+static void
+FillRectangle(ScaleWidget sw, Drawable drawable, GC gc,
 	      Position x, Position y, Dimension width, Dimension height)
 {
-    
+
     if (sw->scale.nrectangles == sw->scale.buffer_size)
 	FlushRectangles(sw, drawable, gc);
 
@@ -401,11 +401,11 @@ FillRectangle(ScaleWidget sw, Drawable drawable, GC gc,
 
 
 
-static void 
-ScaleImage(ScaleWidget sw, Drawable drawable, Position img_x, Position img_y, 
-	   Position dst_x, Position dst_y, 
+static void
+ScaleImage(ScaleWidget sw, Drawable drawable, Position img_x, Position img_y,
+	   Position dst_x, Position dst_y,
 	   Dimension img_width, Dimension img_height)
-    /* 
+    /*
      * This procedure scales image into the specified drawable
      * It assumes scaling table was already built
      */
@@ -414,18 +414,18 @@ ScaleImage(ScaleWidget sw, Drawable drawable, Position img_x, Position img_y,
     XGCValues gcv;
     Position x, y;
     Pixel pixel;
-    
+
     /* Clip the img coordinates */
     img_x = min(max(img_x, 0), (Position) sw->scale.image->width - 1);
     img_y = min(max(img_y, 0), (Position) sw->scale.image->height - 1);
-    img_width = 
+    img_width =
       min(img_width, (Dimension)(sw->scale.image->width - (Dimension)img_x));
-    img_height = 
+    img_height =
       min(img_height, (Dimension)(sw->scale.image->height - (Dimension)img_y));
 
-    if (sw->scale.scale_x == 1.0 && sw->scale.scale_y == 1.0) 
-	XPutImage(XtDisplay(sw), drawable, sw->scale.gc, sw->scale.image, 
-		  img_x, img_y, dst_x, dst_y, 
+    if (sw->scale.scale_x == 1.0 && sw->scale.scale_y == 1.0)
+	XPutImage(XtDisplay(sw), drawable, sw->scale.gc, sw->scale.image,
+		  img_x, img_y, dst_x, dst_y,
 		  img_width, img_height);
     else {
 	dst_x = dst_x - sw->scale.table.x[(int) img_x];
@@ -438,29 +438,29 @@ ScaleImage(ScaleWidget sw, Drawable drawable, Position img_x, Position img_y,
 
 	/* make sure gc knows the right background */
 	gcv.background = sw->core.background_pixel;
-	XChangeGC(XtDisplay(sw), gc, GCBackground, &gcv);	
+	XChangeGC(XtDisplay(sw), gc, GCBackground, &gcv);
 
 	/* Set the background of drawable.  If the most frequent color
 	   is the background color it can speed up scaling process. */
 	gcv.foreground = gcv.background;
 	XChangeGC(XtDisplay(sw), gc, GCForeground, &gcv);
-	XFillRectangle(XtDisplay(sw), drawable, gc, 
-		       sw->scale.table.x[(int) img_x] + dst_x, 
-		       sw->scale.table.y[(int) img_y] + dst_y, 
-		       sw->scale.table.x[(int) img_x + img_width - 1] - 
-		       sw->scale.table.x[(int) img_x], 
-		       sw->scale.table.y[(int) img_y + img_height - 1] - 
+	XFillRectangle(XtDisplay(sw), drawable, gc,
+		       sw->scale.table.x[(int) img_x] + dst_x,
+		       sw->scale.table.y[(int) img_y] + dst_y,
+		       sw->scale.table.x[(int) img_x + img_width - 1] -
+		       sw->scale.table.x[(int) img_x],
+		       sw->scale.table.y[(int) img_y + img_height - 1] -
 		       sw->scale.table.y[(int) img_y]);
-	
+
 	if (sw->scale.image->format == XYBitmap) {
 	    for (x = img_x; x < img_x + (Position)img_width; x++)
 		for (y = img_y; y < img_y + (Position)img_height; y++) {
 		    pixel = XGetPixel(sw->scale.image, x, y);
 		    if (pixel) /* Do not draw background */
-			FillRectangle(sw, drawable, sw->scale.gc, 
-				      sw->scale.table.x[(int) x] + dst_x, 
-				      sw->scale.table.y[(int) y] + dst_y, 
-				      sw->scale.table.width[(int) x], 
+			FillRectangle(sw, drawable, sw->scale.gc,
+				      sw->scale.table.x[(int) x] + dst_x,
+				      sw->scale.table.y[(int) y] + dst_y,
+				      sw->scale.table.width[(int) x],
 				      sw->scale.table.height[(int) y]);
 		}
 	    FlushRectangles(sw, drawable, sw->scale.gc);
@@ -475,9 +475,9 @@ ScaleImage(ScaleWidget sw, Drawable drawable, Position img_x, Position img_y,
 			    XChangeGC(XtDisplay(sw), gc, GCForeground, &gcv);
 			}
 			XFillRectangle(XtDisplay(sw), drawable, gc,
-				       sw->scale.table.x[(int) x] + dst_x, 
-				       sw->scale.table.y[(int) y] + dst_y, 
-				       sw->scale.table.width[(int) x], 
+				       sw->scale.table.x[(int) x] + dst_x,
+				       sw->scale.table.y[(int) y] + dst_y,
+				       sw->scale.table.width[(int) x],
 				       sw->scale.table.height[(int) y]);
 		    }
 		}
@@ -488,21 +488,21 @@ ScaleImage(ScaleWidget sw, Drawable drawable, Position img_x, Position img_y,
 
 
 
-static int 
-FindPixel(ScaleWidget sw, Position x, Position y, 
+static int
+FindPixel(ScaleWidget sw, Position x, Position y,
 	  Position *img_x, Position *img_y, Pixel *img_pixel)
           /* (x,y) == (0,0) where image starts in sw window*/
 {
-    if (*img_x < 0 || *img_x >= sw->scale.image->width 
+    if (*img_x < 0 || *img_x >= sw->scale.image->width
 	||
 	*img_y < 0 || *img_y >= sw->scale.image->height)
 	return (-1);
-    
+
     if (sw->scale.table.x[(int) *img_x] >= x) {
 	--*img_x;
 	return FindPixel(sw, x, y, img_x, img_y, img_pixel);
     }
-    if (sw->scale.table.x[(int) *img_x] + 
+    if (sw->scale.table.x[(int) *img_x] +
 	(Position)sw->scale.table.width[(int) *img_x] < x) {
 	++*img_x;
 	return FindPixel(sw, x, y, img_x, img_y, img_pixel);
@@ -511,38 +511,38 @@ FindPixel(ScaleWidget sw, Position x, Position y,
 	--*img_y;
 	return FindPixel(sw, x, y, img_x, img_y, img_pixel);
     }
-    if (sw->scale.table.y[(int) *img_y] + 
+    if (sw->scale.table.y[(int) *img_y] +
 	(Position)sw->scale.table.height[(int) *img_y] < y) {
 	++*img_y;
 	return FindPixel(sw, x, y, img_x, img_y, img_pixel);
     }
-    
+
     *img_pixel = XGetPixel(sw->scale.image, *img_x, *img_y);
-    
+
     return (0);
 }
 
 
 
-int 
-SWGetImagePixel(Widget w, Position x, Position y, 
+int
+SWGetImagePixel(Widget w, Position x, Position y,
 		Position *img_x, Position *img_y, Pixel *img_pixel)
 {
     ScaleWidget sw = (ScaleWidget) w;
-    
+
     x -= sw->scale.x;
     y -= sw->scale.y;
-    
+
     *img_x = (Position) floor(x / sw->scale.scale_x);
     *img_y = (Position) floor(y / sw->scale.scale_y);
-    
+
     return FindPixel(sw, x, y, img_x, img_y, img_pixel);
 }
 
 
 
 /* ARGSUSED */
-static void 
+static void
 Redisplay(Widget w, XEvent *event, Region region)
 {
     ScaleWidget sw = (ScaleWidget) w;
@@ -560,7 +560,7 @@ Redisplay(Widget w, XEvent *event, Region region)
 	    x = event->xexpose.x - sw->scale.x;
 	    width = event->xexpose.width;
 	}
-	
+
 	if (event->xexpose.y < sw->scale.y) {
 	    y = 0;
 	    height = event->xexpose.height -
@@ -570,22 +570,22 @@ Redisplay(Widget w, XEvent *event, Region region)
 	    y = event->xexpose.y - sw->scale.y;
 	    height = event->xexpose.height;
 	}
-	
-	img_x = min(max((Position) floor((float) x 
+
+	img_x = min(max((Position) floor((float) x
 					 / (float) sw->scale.scale_x), 0),
 		    (Position) sw->scale.image->width - 1);
 
 	img_y = min(max((Position) floor((float) y
 					 / (float) sw->scale.scale_y), 0),
 		    (Position) sw->scale.image->height - 1);
-	
-	if (sw->core.visible) {  
+
+	if (sw->core.visible) {
 	    ScaleImage(sw, XtWindow(w),
 		       img_x, img_y,
 		       sw->scale.x + sw->scale.table.x[(int) img_x],
 		       sw->scale.y + sw->scale.table.y[(int) img_y],
 		       (Dimension) ceil((float) width
-					/ sw->scale.scale_x) + 1, 
+					/ sw->scale.scale_x) + 1,
 		       (Dimension) ceil((float) height
 					/ sw->scale.scale_y) + 1);
 	}
@@ -594,23 +594,23 @@ Redisplay(Widget w, XEvent *event, Region region)
 
 
 
-static void 
+static void
 TryResize(ScaleWidget sw)
 {
     Dimension width, height;
     XtGeometryResult result;
 
-    width = (Dimension) 
+    width = (Dimension)
 	floor(sw->scale.image->width * sw->scale.scale_x)
 	    + 2 * sw->scale.internal_width;
-    height = (Dimension) 
+    height = (Dimension)
 	floor(sw->scale.image->height * sw->scale.scale_y)
 	    + 2 * sw->scale.internal_height;
-    
-    while ((result =   
+
+    while ((result =
 /* SUPPRESS 530 */XtMakeResizeRequest((Widget)sw,width,height,&width,&height))
-	   == XtGeometryAlmost);  
-    
+	   == XtGeometryAlmost);
+
     if (result != XtGeometryNo) {
 	sw->core.width = width;
 	sw->core.height = height;
@@ -619,7 +619,7 @@ TryResize(ScaleWidget sw)
 
 
 
-static void 
+static void
 Precision(ScaleWidget sw)
 {
     if (sw->scale.scale_x != 1.0)
@@ -633,14 +633,14 @@ Precision(ScaleWidget sw)
 
 
 
-static void 
+static void
 Proportional(ScaleWidget sw)
 {
     float scale_x, scale_y;
 
     scale_x = sw->scale.scale_y / sw->scale.aspect_ratio;
     scale_y = sw->scale.scale_x * sw->scale.aspect_ratio;
-    
+
     if (scale_x <= sw->scale.scale_x && scale_y <= sw->scale.scale_y) {
 	if (scale_x > scale_y)
 	    sw->scale.scale_x = scale_x;
@@ -653,24 +653,24 @@ Proportional(ScaleWidget sw)
 	sw->scale.scale_y = scale_y;
     else {
 	float x_ratio, y_ratio;
-	
+
 	x_ratio = scale_x / sw->scale.scale_x;
 	y_ratio = scale_y / sw->scale.scale_y;
-	
+
 	if (x_ratio < y_ratio)
 	    sw->scale.scale_y /= x_ratio;
 	else
 	    sw->scale.scale_x /= y_ratio;
     }
 
-    if (fabs(sw->scale.scale_x / sw->scale.scale_y * sw->scale.aspect_ratio 
+    if (fabs(sw->scale.scale_x / sw->scale.scale_y * sw->scale.aspect_ratio
 	    - 1.0) > sw->scale.precision)
 	XtWarning("can not preserve aspect ratio");
 }
 
 
 
-static void 
+static void
 GetScaledSize(ScaleWidget sw)
 {
     sw->scale.width = (Dimension)
@@ -681,14 +681,14 @@ GetScaledSize(ScaleWidget sw)
 
 
 
-static void 
+static void
 GetScaleValues(ScaleWidget sw)
 {
     /*
      * Make sure to subtract internal width and height.
      */
-    
-    sw->scale.scale_x = 
+
+    sw->scale.scale_x =
 	(float) max((int)(sw->core.width - 2 * sw->scale.internal_width), 1)
 	    / (float) sw->scale.image->width;
 
@@ -699,19 +699,19 @@ GetScaleValues(ScaleWidget sw)
 
 
 
-static void 
+static void
 Unscale(ScaleWidget sw)
 {
     sw->scale.scale_x = sw->scale.scale_y = 1.0;
- 
-    GetScaledSize(sw);		
-    
+
+    GetScaledSize(sw);
+
     BuildTable(sw);
 }
 
 
 
-static void 
+static void
 Autoscale(ScaleWidget sw)
 {
     GetScaleValues(sw);
@@ -721,27 +721,27 @@ Autoscale(ScaleWidget sw)
     Precision(sw);
 
     GetScaledSize(sw);
-    
+
     BuildTable(sw);
 }
 
 
 
-static void 
+static void
 PositionImage(ScaleWidget sw)
 {
     /*
      * Set as if for ForgegGravity (that is center the image)
      */
-    sw->scale.x = (Position) 
+    sw->scale.x = (Position)
 	(sw->core.width - sw->scale.width) / 2;
     sw->scale.y = (Position)
 	(sw->core.height - sw->scale.height) / 2;
-    
+
 /*****
-    if (sw->scale.gravity & WestGravity) { 
+    if (sw->scale.gravity & WestGravity) {
     }
-    if (sw->scale.gravity & EastGravity) { 
+    if (sw->scale.gravity & EastGravity) {
     }
     if (sw->scale.gravity & NorthGravity) {
     }
@@ -752,38 +752,38 @@ PositionImage(ScaleWidget sw)
 
 
 
-static void 
+static void
 Resize(Widget w)
 {
     ScaleWidget sw = (ScaleWidget) w;
-    
+
     if (sw->scale.autoscale) Autoscale(sw);
-    
+
     PositionImage(sw);
 }
 
 
 
-static void 
+static void
 Realize(Widget wid, Mask *vmask, XSetWindowAttributes *attr)
 {
   ScaleWidget sw = (ScaleWidget) wid;
   XtCreateWindow(wid, (unsigned int) InputOutput,
 		 (Visual *) sw->scale.visual, *vmask, attr);
 }
- 
+
 
 
-static void 
+static void
 Destroy(Widget w)
 {
-    ScaleWidget sw = (ScaleWidget) w; 
+    ScaleWidget sw = (ScaleWidget) w;
 
     XtFree((char *) sw->scale.table.x);
     XtFree((char *) sw->scale.table.y);
     XtFree((char *) sw->scale.table.width);
     XtFree((char *) sw->scale.table.height);
-    
+
     XtFree((char *) sw->scale.rectangles);
 
     XtReleaseGC(w, sw->scale.gc);
@@ -794,8 +794,8 @@ Destroy(Widget w)
 
 
 /* ARGSUSED */
-static Boolean 
-SetValues(Widget current, Widget request, Widget new, 
+static Boolean
+SetValues(Widget current, Widget request, Widget new,
 	  ArgList args, Cardinal *num_args)
 {
     ScaleWidget cur_sw = (ScaleWidget) current;
@@ -803,30 +803,30 @@ SetValues(Widget current, Widget request, Widget new,
     ScaleWidget new_sw = (ScaleWidget) new;
     Boolean redisplay = False;
     Cardinal i;
-    
+
     for (i = 0; i < *num_args; i++) {
 	if (streq(XtNbackground, args[i].name)) {
-	    XSetBackground(XtDisplay(new), new_sw->scale.gc, 
+	    XSetBackground(XtDisplay(new), new_sw->scale.gc,
 			   new_sw->core.background_pixel);
 	}
 	if (streq(XtNforeground, args[i].name)) {
-	    XSetForeground(XtDisplay(new), new_sw->scale.gc, 
+	    XSetForeground(XtDisplay(new), new_sw->scale.gc,
 			   new_sw->scale.foreground_pixel);
 	}
 	if (streq(XtNimage, args[i].name)) {
 	    XDestroyImage(cur_sw->scale.image);
 	    if (new_sw->scale.image == NULL)
 		new_sw->scale.image = XCreateImage(XtDisplay(new),
-						DefaultVisual(XtDisplay(new), 
+						DefaultVisual(XtDisplay(new),
 						DefaultScreen(XtDisplay(new))),
-						   1, XYBitmap, 0, 
+						   1, XYBitmap, 0,
 						   XtCalloc(1, sizeof(char)),
 						   1, 1, 8, 0);
 	    else
-		new_sw->scale.image = 
-		    XSubImage(new_sw->scale.image, 
-			      0, 0, 
-			      new_sw->scale.image->width, 
+		new_sw->scale.image =
+		    XSubImage(new_sw->scale.image,
+			      0, 0,
+			      new_sw->scale.image->width,
 			      new_sw->scale.image->height);
 
 	    if (new_sw->scale.resize)
@@ -841,7 +841,7 @@ SetValues(Widget current, Widget request, Widget new,
 	    redisplay = True;
 	}
 
-	if (streq(XtNuserData, args[i].name)) 
+	if (streq(XtNuserData, args[i].name))
 	  new_sw->scale.userData = (XtPointer)args[i].value;
 
 	if (streq(XtNbufferSize, args[i].name)) {
@@ -851,7 +851,7 @@ SetValues(Widget current, Widget request, Widget new,
 	}
 
 	if (streq(XtNaspectRatio, args[i].name)) {
-	    if ((new_sw->scale.aspect_ratio = 
+	    if ((new_sw->scale.aspect_ratio =
 		 atof(new_sw->scale.aspect_ratio_str)) < 0.0) {
 		new_sw->scale.aspect_ratio = cur_sw->scale.aspect_ratio;
 		XtWarning("AspectRatio has to be a positive number.");
@@ -867,7 +867,7 @@ SetValues(Widget current, Widget request, Widget new,
 		}
 	    }
 	}
-	
+
 	if (streq(XtNproportional, args[i].name)) {
 	    if (new_sw->scale.proportional != cur_sw->scale.proportional) {
 		if (new_sw->scale.proportional) Proportional(new_sw);
@@ -878,21 +878,21 @@ SetValues(Widget current, Widget request, Widget new,
 		redisplay = True;
 	    }
 	}
-	
+
 	if (streq(XtNscaleX, args[i].name)
-	    || 
+	    ||
 	    streq(XtNscaleY, args[i].name)) {
 	    if (new_sw->scale.scale_x_str == DefaultScaleFactor
-		|| 
+		||
 		new_sw->scale.scale_y_str == DefaultScaleFactor)
 		GetInitialScaleValues(new_sw);
 	    else {
-		if ((new_sw->scale.scale_x = 
+		if ((new_sw->scale.scale_x =
 		     atof(new_sw->scale.scale_x_str)) < 0.0) {
 		    new_sw->scale.scale_x = cur_sw->scale.scale_x;
 		    XtWarning("ScaleValue has to be a positive number.");
 		}
-		if ((new_sw->scale.scale_y = 
+		if ((new_sw->scale.scale_y =
 		     atof(new_sw->scale.scale_y_str)) < 0.0) {
 		    new_sw->scale.scale_y = cur_sw->scale.scale_y;
 		    XtWarning("ScaleValue has to be a positive number.");
@@ -901,24 +901,24 @@ SetValues(Widget current, Widget request, Widget new,
 	    if (new_sw->scale.scale_x != cur_sw->scale.scale_x
 		||
 		new_sw->scale.scale_y != cur_sw->scale.scale_y) {
-		
+
 		/*?*?*?*?*?*?*?*?*?*?*?*?*?*?**?*?*?*?*?*?*?*?*?***?*/
 		fprintf(stderr, "================>>%f %f\n",
 			new_sw->scale.scale_x, new_sw->scale.scale_y);
-		
+
 		if (new_sw->scale.proportional) Proportional(new_sw);
 		Precision(new_sw);
 		if (new_sw->scale.resize)
 		    TryResize(new_sw);
-		GetScaledSize(new_sw);		
+		GetScaledSize(new_sw);
 		BuildTable(new_sw);
 		PositionImage(new_sw);
 		redisplay = True;
 	    }
 	}
-	
+
 	if (streq(XtNprecision, args[i].name)) {
-	    if ((new_sw->scale.precision = 
+	    if ((new_sw->scale.precision =
 		 atof(new_sw->scale.precision_str)) < 0.0) {
 		new_sw->scale.precision = cur_sw->scale.precision;
 		XtWarning("Precision has to be a positive number.");
@@ -926,19 +926,19 @@ SetValues(Widget current, Widget request, Widget new,
 	    if (new_sw->scale.precision != cur_sw->scale.precision) {
 		if (new_sw->scale.proportional) Proportional(new_sw);
 		Precision(new_sw);
-		GetScaledSize(new_sw);		
+		GetScaledSize(new_sw);
 		BuildTable(new_sw);
 		PositionImage(new_sw);
 		redisplay = True;
 	    }
 	}
-    }		    
+    }
     return(redisplay);
 }
 
 
 
-void 
+void
 SWUnscale(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     ScaleWidget sw = (ScaleWidget) w;
@@ -950,7 +950,7 @@ SWUnscale(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 
-void 
+void
 SWAutoscale(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     ScaleWidget sw = (ScaleWidget) w;
@@ -962,18 +962,18 @@ SWAutoscale(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 
-void 
+void
 SWInitialSize(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     ScaleWidget sw = (ScaleWidget) w;
-    
+
     GetInitialScaleValues(sw);
 
     if (sw->scale.proportional) Proportional(sw);
     Precision(sw);
     if (sw->scale.resize)
 	TryResize(sw);
-    GetScaledSize(sw);		
+    GetScaledSize(sw);
     BuildTable(sw);
     PositionImage(sw);
     XClearArea(XtDisplay(w), XtWindow(w), 0, 0, 0, 0, True);
@@ -981,12 +981,12 @@ SWInitialSize(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 
-void 
+void
 SWSetImage(Widget w, XImage *image)
 {
     int n;
     Arg wargs[2];
-    
+
     n = 0;
     XtSetArg(wargs[n], XtNimage, (XtArgVal) image); n++;
     XtSetValues(w, wargs, n);
@@ -995,7 +995,7 @@ SWSetImage(Widget w, XImage *image)
 
 
 
-void 
+void
 RequestSelection(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     SWRequestSelection(w, event->xbutton.time);
@@ -1003,7 +1003,7 @@ RequestSelection(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 
-void 
+void
 GrabSelection(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     SWGrabSelection(w, event->xbutton.time);
@@ -1011,20 +1011,20 @@ GrabSelection(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 
-Pixmap 
+Pixmap
 SWGetPixmap(Widget w)
 {
     ScaleWidget sw = (ScaleWidget) w;
     Pixmap pixmap;
 
-    pixmap = XCreatePixmap(XtDisplay(w), XtWindow(w), 
-			   sw->scale.width, 
-			   sw->scale.height, 
+    pixmap = XCreatePixmap(XtDisplay(w), XtWindow(w),
+			   sw->scale.width,
+			   sw->scale.height,
 			   sw->scale.image->depth);
-    ScaleImage(sw, pixmap, 
-	       0, 0, 0, 0, 
-	       (Dimension) sw->scale.image->width, 
+    ScaleImage(sw, pixmap,
+	       0, 0, 0, 0,
+	       (Dimension) sw->scale.image->width,
 	       (Dimension) sw->scale.image->height);
-    
+
     return(pixmap);
 }

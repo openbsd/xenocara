@@ -76,7 +76,7 @@ RootWindowClassRec rootWindowClassRec = {
 WidgetClass rootWindowWidgetClass = (WidgetClass)&rootWindowClassRec;
 
 /*ARGSUSED*/
-static void 
+static void
 Realize(Widget w, XtValueMask *value_mask, XSetWindowAttributes *attributes)
 {
     w->core.window = RootWindowOfScreen(w->core.screen);
