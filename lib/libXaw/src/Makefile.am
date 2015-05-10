@@ -84,18 +84,18 @@ if SHARED_LIBS
 if !PLATFORM_WIN32
 install-exec-hook::
 if PLATFORM_DARWIN
-	-rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.6.@LIBEXT@ libXaw.6.@LIBEXT@)
+	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
+	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && $(LN_S) libXaw6.6.@LIBEXT@ libXaw.6.@LIBEXT@)
 else
-	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.@LIBEXT@.6 libXaw.@LIBEXT@.6)
+	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
+	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && $(LN_S) libXaw6.@LIBEXT@.6 libXaw.@LIBEXT@.6)
 endif
 
 uninstall-local::
 if PLATFORM_DARWIN
-	-rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
+	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
 else
-	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
+	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
 endif
 endif
 
@@ -125,18 +125,18 @@ if SHARED_LIBS
 if !PLATFORM_WIN32
 install-exec-hook::
 if PLATFORM_DARWIN
-	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
+	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
+	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && ln -s libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
 else
-	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
-	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.15.0 libXaw.@LIBEXT@.15.0)
+	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
+	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.15.0 libXaw.@LIBEXT@.15.0)
 endif
 
 #uninstall-local::
 #if PLATFORM_DARWIN
-#	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
+#	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
 #else
-#	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
+#	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
 #endif
 endif
 

@@ -270,7 +270,6 @@ LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
@@ -456,16 +455,16 @@ COMMON_CPPFLAGS = \
 
 #uninstall-local::
 #if PLATFORM_DARWIN
-#	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
+#	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
 #else
-#	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
+#	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
 #endif
 EXTRA_DIST = sharedlib.c
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -490,9 +489,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
+$(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
+$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
@@ -1494,20 +1493,20 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-local
 
 
 @BUILD_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
-@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
-@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.6.@LIBEXT@ libXaw.6.@LIBEXT@)
-@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
-@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw6.@LIBEXT@.6 libXaw.@LIBEXT@.6)
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && $(LN_S) libXaw6.6.@LIBEXT@ libXaw.6.@LIBEXT@)
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && $(LN_S) libXaw6.@LIBEXT@.6 libXaw.@LIBEXT@.6)
 
 @BUILD_XAW6_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@uninstall-local::
-@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
-@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.6.@LIBEXT@
+@BUILD_XAW6_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.6
 
 @BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.15.0 libXaw.@LIBEXT@.15.0)
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && ln -s libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_at)rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	$(AM_V_GEN)(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.15.0 libXaw.@LIBEXT@.15.0)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
