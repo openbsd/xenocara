@@ -84,7 +84,7 @@ enum EventMaskIndex {
     NUM_EVENT_MASKS
 };
 
-static void usage (void) _X_NORETURN;
+static void usage (const char *errmsg) _X_NORETURN;
 
 static void
 prologue (XEvent *eventp, const char *event_name)
@@ -875,7 +875,7 @@ set_sizehints (XSizeHints *hintp, int min_width, int min_height,
 }
 
 static void
-usage (void)
+usage (const char *errmsg)
 {
     static const char *msg[] = {
 "    -display displayname                X server to contact",
@@ -890,12 +890,15 @@ usage (void)
 "    -event event_mask                   select 'event_mask' events",
 "           Supported event masks: keyboard mouse expose visibility structure",
 "                                  substructure focus property colormap",
-"                                  owner_grab_button randr",
+"                                  owner_grab_button randr button",
 "           This option can be specified multiple times to select multiple",
 "           event masks.",
 "",
 NULL};
     const char **cpp;
+
+    if (errmsg != NULL)
+        fprintf (stderr, "%s: %s\n", ProgramName, errmsg);
 
     fprintf (stderr, "usage:  %s [-options ...]\n", ProgramName);
     fprintf (stderr, "where options include:\n");
@@ -907,7 +910,7 @@ NULL};
 }
 
 static int
-parse_backing_store (char *s)
+parse_backing_store (const char *s)
 {
     size_t len = strlen (s);
 
@@ -915,7 +918,9 @@ parse_backing_store (char *s)
     if (strncasecmp (s, "WhenMapped", len) == 0) return (WhenMapped);
     if (strncasecmp (s, "Always", len) == 0) return (Always);
 
-    usage ();
+    fprintf (stderr, "%s: unrecognized argument '%s' for -bs\n",
+             ProgramName, s);
+    usage (NULL);
 }
 
 static Bool
@@ -935,6 +940,9 @@ parse_event_mask (const char *s, long event_masks[])
           LeaveWindowMask | PointerMotionMask | Button1MotionMask |
           Button2MotionMask | Button3MotionMask | Button4MotionMask |
           Button5MotionMask | ButtonMotionMask },
+	{ "button",
+          EVENT_MASK_INDEX_CORE,
+          ButtonPressMask | ButtonReleaseMask },
         { "expose",
           EVENT_MASK_INDEX_CORE,
           ExposureMask },
@@ -974,6 +982,9 @@ parse_event_mask (const char *s, long event_masks[])
                 return True;
         }
     }
+
+    if (s != NULL)
+	fprintf (stderr, "%s: unrecognized event mask '%s'\n", ProgramName, s);
 
     return False;
 }
@@ -1019,37 +1030,41 @@ main (int argc, char **argv)
 	if (arg[0] == '-') {
 	    switch (arg[1]) {
 	      case 'd':			/* -display host:dpy */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-display requires an argument");
 		displayname = argv[i];
 		continue;
 	      case 'g':			/* -geometry geom */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-geometry requires an argument");
 		geom = argv[i];
 		continue;
 	      case 'b':
 		switch (arg[2]) {
 		  case 'w':		/* -bw pixels */
-		    if (++i >= argc) usage ();
+		    if (++i >= argc) usage ("-bw requires an argument");
 		    borderwidth = atoi (argv[i]);
 		    continue;
 		  case 's':		/* -bs type */
-		    if (++i >= argc) usage ();
+		    if (++i >= argc) usage ("-bs requires an argument");
 		    attr.backing_store = parse_backing_store (argv[i]);
 		    mask |= CWBackingStore;
 		    continue;
 		  default:
-		    usage ();
+		    goto unrecognized;
 		}
 	      case 'i':			/* -id */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-id requires an argument");
 		sscanf(argv[i], "0x%lx", &w);
 		if (!w)
 		    sscanf(argv[i], "%lu", &w);
-		if (!w)
-		    usage ();
+		if (!w) {
+		    fprintf (stderr,
+			     "%s: unable to parse argument '%s' for -id\n",
+			     ProgramName, argv[i]);
+		    usage (NULL);
+		}
 		continue;
 	      case 'n':			/* -name */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-name requires an argument");
 		name = argv[i];
 		continue;
 	      case 'r':
@@ -1061,7 +1076,7 @@ main (int argc, char **argv)
 		    reverse = True;
 		    continue;
 		  default:
-		    usage ();
+		    goto unrecognized;
 		}
 		continue;
 	      case 's':			/* -s */
@@ -1069,16 +1084,23 @@ main (int argc, char **argv)
 		mask |= CWSaveUnder;
 		continue;
 	      case 'e':			/* -event */
-		if (++i >= argc) usage ();
+		if (++i >= argc) usage ("-event requires an argument");
 		if (!parse_event_mask (argv[i], event_masks))
-		    usage ();
+		    usage (NULL);
 		event_mask_specified = True;
 		continue;
+	      case 'v':
+		puts(PACKAGE_STRING);
+		exit(0);
 	      default:
-		usage ();
+		goto unrecognized;
 	    }				/* end switch on - */
-	} else
-	  usage ();
+	} else {
+	  unrecognized:
+	    fprintf (stderr, "%s: unrecognized argument '%s'\n",
+		     ProgramName, arg);
+	    usage (NULL);
+	}
     }					/* end for over argc */
 
     /* if no -event options were specified, pretend all of them were */

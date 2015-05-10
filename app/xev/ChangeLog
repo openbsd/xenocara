@@ -1,3 +1,68 @@
+commit a92082cb05bb3d6d3f0bebb951133774ca2dd412
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 23:11:22 2015 -0700
+
+    xev 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 740bf3bdfc20f3fabf7205e04f6fcf224c6a54ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:29:55 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3239b4ca117c815e7ea7e99697649b98a50193a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:29:55 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3083d6f51221ce6ab56eb14b71bbda08c320efc1
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Wed Feb 12 19:27:26 2014 +0100
+
+    Add event filter for button events
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b2cde1725132e0f0f3cdd2019745d130235282c3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 27 18:18:38 2013 -0800
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5eb60b2f71fb673bb6bb34a956c2f3114a59e152
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 27 18:15:37 2013 -0800
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a687c0900872326b864baeb4d6b056153a0cc8c1
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Jan 29 15:05:51 2013 -0800
+
+    man: Add -event to the command synopsis
+    
+    Commit d33b2c81bd931d581e5ce4b36f99ee60a76e740d added an option, -event, to
+    allow the user to select which events to display.  I remembered to add it to the
+    man page's OPTIONS, section, but not to the command summary in the SYNOPSIS
+    section.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit ea6c49b7635e21ab97c5ee41963d5024466e0106
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Jan 29 13:42:40 2013 -0800

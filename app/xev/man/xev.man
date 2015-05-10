@@ -6,6 +6,8 @@ xev - print contents of X events
 [\-display \fIdisplayname\fP] [\-geometry \fIgeom\fP]
 [\-bw \fIpixels\fP] [\-bs \fI{NotUseful,WhenMapped,Always}\fP]
 [\-id \fIwindowid\fP] [\-root] [\-s] [\-name \fIstring\fP] [\-rv]
+[\-version]
+[\-event \fIevent_mask\fP [\-event \fIevent_mask\fP ...]]
 .SH DESCRIPTION
 .PP
 \fIXev\fP creates a window and then asks the X server to send it
@@ -60,7 +62,10 @@ The
 option can be specified multiple times to select multiple types of events.
 When not specified, all events are selected.
 Available event masks: keyboard mouse expose visibility structure substructure
-focus property colormap owner_grab_button randr
+focus property colormap owner_grab_button randr button
+.TP 8
+.B \-version
+This option prints the program version and exits.
 .SH "SEE ALSO"
 X(__miscmansuffix__), xwininfo(__appmansuffix__), xdpyinfo(__appmansuffix__), Xlib Programmers Manual, X Protocol
 Specification
