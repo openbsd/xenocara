@@ -140,7 +140,7 @@ extern struct modtab {
     int value;
 } modifier_table[];
 
-#define AllocStruct(s) ((s *) malloc (sizeof (s)))
+#define AllocStruct(s) (malloc (sizeof (s)))
 
 #define MAXKEYSYMNAMESIZE 80		/* absurdly large */
 

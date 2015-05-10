@@ -1,3 +1,73 @@
+commit 1e0d98566d01fb5da9836e1fc402fb28f8d8b499
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 17 00:06:59 2015 -0700
+
+    xmodmap 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d50db4361a57062f9c0c0a1c6c18d296e11dd4bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 1 23:20:34 2014 -0700
+
+    Remove unneeded casts on malloc, realloc, and free calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 02f145f175894399fed33992e4e7e5a87d7e7a2a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 1 23:15:29 2014 -0700
+
+    Avoid null pointer use if malloc() fails
+    
+    Error: Null pointer dereference (CWE 476)
+       Read from null pointer str
+            at line 282 of handle.c in function 'parse_number'.
+              Function copy_to_scratch may return constant 'NULL' at line 98,
+               called at line 875 in function 'do_pointer'.
+              Constant 'NULL' passed into function parse_number, argument str,
+               from call at line 876.
+              Null pointer introduced at line 98 in function 'copy_to_scratch'.
+    
+    [ This bug was found by the Parfait 1.4.0 bug checking tool.
+      http://labs.oracle.com/pls/apex/f?p=labs:49:::::P49_PROJECT_ID:13 ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e320555a2281ff6b5ad9409480a62c976a289dc1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 00:13:58 2014 -0700
+
+    Print which option was in error along with usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 82f549d1c8780538fb115ee2768d2f4024d302b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:49:27 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 156921246c26f5e12790d52b8b9f395a56f61c87
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:41:50 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c624c9c29ed4af8f941108368786ddb5f0d55ba6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 23:41:50 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e09a9195be80bd29c59f56e641dda52789d837b5
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Sep 8 10:05:00 2013 -0700

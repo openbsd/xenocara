@@ -86,6 +86,11 @@ unhandled argument is given to
 This option indicates that a help message describing the expression grammar 
 used in files and with \-e expressions should be printed on the standard error.
 .TP 8
+.B \-version
+This option indicates that
+.I xmodmap
+should print its version information and exit.
+.TP 8
 .B \-verbose
 This option indicates that 
 .I xmodmap

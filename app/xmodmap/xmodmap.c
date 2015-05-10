@@ -116,17 +116,34 @@ static const char help_message[] =
 "    -pp                          print pointer map\n"
 "    -help                        print this usage message\n"
 "    -grammar                     print out short help on allowable input\n"
+"    -version                     print program version\n"
 "    -                            read standard input\n"
 "\n";
 
 
-static void 
-_X_NORETURN
+static void
+_X_NORETURN _X_COLD
 usage(int exitcode)
 {
     fprintf (stderr, "usage:  %s [-options ...] [filename]\n", ProgramName);
     fprintf (stderr, "%s\n", help_message);
     Exit (exitcode);
+}
+
+static void
+_X_NORETURN _X_COLD
+missing_arg(const char *arg)
+{
+    fprintf (stderr, "%s: %s requires an argument\n\n", ProgramName, arg);
+    usage(1);
+}
+
+static void
+_X_NORETURN _X_COLD
+unknown_arg(const char *arg)
+{
+    fprintf (stderr, "%s: unrecognized argument %s\n\n", ProgramName, arg);
+    usage(1);
 }
 
 static const char grammar_message[] = 
@@ -186,7 +203,7 @@ main(int argc, char *argv[])
 	if (arg[0] == '-') {
 	    switch (arg[1]) {
 	    case 'd':			/* -display host:dpy */
-		if (++i >= argc) usage (1);
+		if (++i >= argc) missing_arg(arg);
 		displayname = argv[i];
 		break;
 	    case 'g':			/* -grammar */
@@ -195,6 +212,11 @@ main(int argc, char *argv[])
 	    case 'h':			/* -help */
 	    case '?':
 		usage(0);
+	    case 'v':
+		if (strcmp(arg, "-version") == 0) {
+		    puts(PACKAGE_STRING);
+		    exit(0);
+		}
 	    }
 	}
     }
@@ -234,7 +256,7 @@ main(int argc, char *argv[])
 		continue;
 	      case 'e':			/* -e expression */
 		didAnything = True;
-		if (++i >= argc) usage (1);
+		if (++i >= argc) missing_arg(arg);
 		process_line (argv[i]);
 		continue;
 	      case 'p':			/* -p... */
@@ -252,14 +274,14 @@ main(int argc, char *argv[])
 			printKeyTableExprs = True;
 			break;
 		    default:
-			usage (1);
+			unknown_arg(arg);
 		    }
 		    break;
 		  case 'p':		/* -pp */
 		    printPointerMap = True;
 		    break;
 		  default:
-		    usage (1);
+		    unknown_arg(arg);
 		    /* NOTREACHED */
 		}
 		didAnything = True;
@@ -302,7 +324,7 @@ main(int argc, char *argv[])
 	      case 'c': {
 		  char *cmd;
 		  didAnything = True;
-		  if (++i >= argc) usage (1);
+		  if (++i >= argc) missing_arg(arg);
 		  if (asprintf (&cmd, "remove %s = %s",
 				  ((arg[1] == 's') ? "shift" :
 				   ((arg[1] == 'l') ? "lock" :
@@ -312,7 +334,7 @@ main(int argc, char *argv[])
 		  continue;
 	      }
 	      default:
-		usage (1);
+		unknown_arg(arg);
 		/*NOTREACHED*/
 	    }
 	} else if (arg[0] == '+') {	/* old xmodmap args */
@@ -324,7 +346,7 @@ main(int argc, char *argv[])
 	      case '5': {
 		  char *cmd;
 		  didAnything = True;
-		  if (++i >= argc) usage (1);
+		  if (++i >= argc) missing_arg(arg);
 		  if (asprintf (&cmd, "add mod%c = %s", arg[1], argv[i]) == -1)
 		      FatalError("Could not allocate memory for add cmd");
 		  process_line (cmd);
@@ -340,7 +362,7 @@ main(int argc, char *argv[])
 	      case 'c': {
 		  char *cmd;
 		  didAnything = True;
-		  if (++i >= argc) usage (1);
+		  if (++i >= argc) missing_arg(arg);
 		  if (asprintf (&cmd, "add %s = %s",
 				  ((arg[1] == 's') ? "shift" :
 				   ((arg[1] == 'l') ? "lock" :
@@ -350,7 +372,7 @@ main(int argc, char *argv[])
 		  continue;
 	      }
 	      default:
-		usage (1);
+		unknown_arg(arg);
 	    }
 	} else {
 	    didAnything = True;
