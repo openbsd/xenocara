@@ -23,14 +23,15 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xkbprint], [1.0.3],
+AC_INIT([xkbprint], [1.0.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xkbprint])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
+# Needed for asprintf on GNU libc
+AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -38,7 +39,12 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-# Checks for pkg-config packages
-PKG_CHECK_MODULES(XKBPRINT, xkbfile x11)
+AC_CHECK_FUNCS([asprintf])
 
-AC_OUTPUT([Makefile])
+# Checks for pkg-config packages
+PKG_CHECK_MODULES(XKBPRINT, [xkbfile x11 xproto >= 7.0.17])
+
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

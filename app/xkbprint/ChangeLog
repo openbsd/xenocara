@@ -1,3 +1,294 @@
+commit facf56074567094349d9050e99a659d8e3a1b0ce
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 16 23:41:38 2015 -0700
+
+    xkbprint 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e4c1258143bf09de5453faafe2c6f0bc107a1523
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b12d476447952ab0a5a7a30d35d43de6f7418f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 59d82dc7c5dd4a6ca2098ba51fb9683fb03720ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:33:34 2014 -0700
+
+    Remove old CVS id tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 545db04829433b7d30de75ea03dc4495a91a8ab6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 20:16:42 2014 -0700
+
+    Add -version option to print program version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8e86b50311c3b926d2bb1e00fb5343f3e76d55b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 19:51:00 2014 -0700
+
+    Fix some sign/size conversion warnings from clang
+    
+    psgeom.c:1320:17: warning: implicit conversion changes signedness:
+     'int' to 'unsigned long' [-Wsign-conversion]
+        if ((sym & (~0xff)) == 0x700) {
+                 ~  ^~~~~
+    psgeom.c:1666:31: warning: implicit conversion changes signedness:
+     'int' to 'unsigned long' [-Wsign-conversion]
+                else if (((sym & (~0xff)) == 0) && isprint(sym) && (!isspace(sym))) {
+                               ~  ^~~~~
+    psgeom.c:1860:27: warning: implicit conversion loses integer precision:
+     'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+                    int len = strlen(top->label[i]);
+                        ~~~   ^~~~~~~~~~~~~~~~~~~~~
+    xkbprint.c:460:19: warning: implicit conversion loses integer precision:
+     'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+            int len = strlen(inputFile);
+                ~~~   ^~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 641a71f594688d870540be47ddff339d746a4fa0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 19:40:34 2014 -0700
+
+    Remove unused INPUT_* definitions
+    
+    Flagged by clang:
+    xkbprint.c:62:9: warning: macro is not used [-Wunused-macros]
+            ^
+    xkbprint.c:61:9: warning: macro is not used [-Wunused-macros]
+            ^
+    xkbprint.c:60:9: warning: macro is not used [-Wunused-macros]
+            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4bbc62129724cdc61f601e4f1c98490bca403619
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 19:18:08 2014 -0700
+
+    Move some local variables to the scope in which they live
+    
+    Helps both human readers and static code analyzers realize they're not
+    used outside these scopes.
+    
+    Flagged by cppcheck 1.64:
+    [psgeom.c:1761]: (style) The scope of the variable 'keycode' can be reduced.
+    [psgeom.c:1858]: (style) The scope of the variable 'len' can be reduced.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d186165440c5a370af7551f5958baae2f0b3725
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 19:00:09 2014 -0700
+
+    Combine IsoKeyCaps array of strings into a single string
+    
+    Packs more efficiently in binary, reduces number of calls to output,
+    gets rid of ~4k array of pointers to each string in data segment to
+    initialize on program load.
+    
+    "xkbprint -if IsoKeyCaps" generates identical IsoKeyCaps.pfa files
+    before & after this change.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bac53a94fec22563294cb57413e8d394df06c70a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 27 21:51:01 2014 -0700
+
+    Replace calls to index() with calls to strchr()
+    
+    Both were in use in different functions, adopt the ANSI C standard
+    function for all calls.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ee01f266fd315e5bee624ec9d54357ffa593dfc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 27 21:50:29 2014 -0700
+
+    Combine repeated sequences of fprintf() calls into single calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7aa5ea85d57b90c1ee3244facd2dfd4d3ff1cd5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 27 21:04:05 2014 -0700
+
+    Replace remaining sprintf calls with snprintf()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfb6044479e8e974e848f47969f75b84865fea13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 27 20:55:33 2014 -0700
+
+    Replace several malloc+sprintf pairs with asprintf() calls
+    
+    Includes fallback uAsprintf() for systems without asprintf yet
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7848ba1d292f55553058c1f17596baa1094cdae5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 27 20:39:48 2014 -0700
+
+    Add printf & noreturn attributes recommended by gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8a7b707f6f841655498c753701ee38f12ba630cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 27 20:35:49 2014 -0700
+
+    Replace uStrCaseCmp() with direct calls to strcasecmp()
+    
+    strcasecmp is available in Unix98 and later, so part of the X.Org base
+    platform requirements.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e144ec9018cabd1d9904fb6d04382d2cf06ec3dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 27 20:32:42 2014 -0700
+
+    Replace uStringDup() with direct calls to strdup()
+    
+    strdup is available in Unix98 and later, so part of the X.Org base
+    platform requirements.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cefec39d93846c2d034be9a89f48466831eddde6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 27 20:30:20 2014 -0700
+
+    Replace custom uAlloc/uCalloc with plain malloc/calloc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ab92831be0e862622105f015fe8c390715d2aae9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 16:15:00 2014 -0700
+
+    Replace sole call to uFree() with direct call to free()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4ae1b3d5f5330a8f7bd8880860a204000081095c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 16:13:23 2014 -0700
+
+    Remove unused uTmpAlloc & uTmpFree fallbacks for alloca
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9a66d6ba4d0edd2d2d12cd0271aaecc43b6067d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 16:12:05 2014 -0700
+
+    Remove unused uRealloc & uRecalloc functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dbbc677985e3a853f2e52b8a9d09660d3fa6d983
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 16:10:33 2014 -0700
+
+    Remove unused uStrCasePrefix fallback for strncasecmp
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7ca2572623fee8db916eff668ef3c852f2ce124a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 16:09:29 2014 -0700
+
+    Remove unused debugging & function tracing frameworks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b883af48e9624e2215d1e790ca0da4969480ce13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 16:06:05 2014 -0700
+
+    Remove unused uASSERT macro
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5256304812e89c1c02bed093d11f96d97216bdbe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 16:03:30 2014 -0700
+
+    Fix many const char * warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e1b1ecd2e9858dca67ed1da90799f1ea34fc9b71
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 10:17:12 2014 -0700
+
+    unifdef -Unotyet -UNOTYET
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9456437718d78b942333bdf74124c027ba35039f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 10:13:31 2014 -0700
+
+    Convert sources to X.Org standard coding style
+    
+    Via util/modular/x-indent-all.sh
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7ebdc6c2ed2917dd48687aa16c6909186a575e2d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d762e97a2c6745017912b19fe443ed814d557a51
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a65ad77d80a1037889d4ba8aa061d109a0d15c2c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 93479193971679781c302dcfda3f653ea67fb452
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jan 7 19:09:37 2011 -0800
