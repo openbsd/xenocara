@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.63 2015/05/17 04:34:01 kspillner Exp $ */
+/*	$OpenBSD: parse.y,v 1.64 2015/05/17 04:39:50 kspillner Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -156,6 +156,17 @@ main		: FONTNAME STRING		{
 			}
 			conf_autogroup(conf, $2, NULL, $3);
 			free($3);
+		}
+		| AUTOGROUP NUMBER STRING ',' STRING {
+			if ($2 < 0 || $2 > 9) {
+				yyerror("invalid autogroup");
+				free($3);
+				free($5);
+				YYERROR;
+			}
+			conf_autogroup(conf, $2, $3, $5);
+			free($3);
+			free($5);
 		}
 		| IGNORE STRING {
 			conf_ignore(conf, $2);
