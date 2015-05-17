@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.286 2015/03/28 23:12:47 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.287 2015/05/17 04:34:01 kspillner Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -500,7 +500,8 @@ void			 menuq_clear(struct menu_q *);
 int			 parse_config(const char *, struct conf *);
 
 void			 conf_atoms(void);
-void			 conf_autogroup(struct conf *, int, const char *);
+void			 conf_autogroup(struct conf *, int, const char *,
+			     const char *);
 int			 conf_bind_kbd(struct conf *, const char *,
     			     const char *);
 int			 conf_bind_mouse(struct conf *, const char *,

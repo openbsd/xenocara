@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.185 2015/03/26 21:41:43 okan Exp $
+ * $OpenBSD: conf.c,v 1.186 2015/05/17 04:34:01 kspillner Exp $
  */
 
 #include <sys/types.h>
@@ -71,19 +71,28 @@ conf_cmd_remove(struct conf *c, const char *name)
 	}
 }
 void
-conf_autogroup(struct conf *c, int num, const char *val)
+conf_autogroup(struct conf *c, int num, const char *name, const char *class)
 {
 	struct autogroupwin	*aw;
 	char			*p;
 
 	aw = xmalloc(sizeof(*aw));
 
-	if ((p = strchr(val, ',')) == NULL) {
-		aw->name = NULL;
-		aw->class = xstrdup(val);
+	if ((p = strchr(class, ',')) == NULL) {
+		if (name == NULL)
+			aw->name = NULL;
+		else
+			aw->name = xstrdup(name);
+
+		aw->class = xstrdup(class);
 	} else {
 		*(p++) = '\0';
-		aw->name = xstrdup(val);
+
+		if (name == NULL)
+			aw->name = xstrdup(class);
+		else
+			aw->name = xstrdup(name);
+
 		aw->class = xstrdup(p);
 	}
 	aw->num = num;
