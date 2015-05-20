@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.191 2015/03/29 00:21:05 okan Exp $
+ * $OpenBSD: client.c,v 1.192 2015/05/20 23:54:39 okan Exp $
  */
 
 #include <sys/types.h>
@@ -882,8 +882,8 @@ client_mwm_hints(struct client_ctx *cc)
 	struct mwm_hints	*mwmh;
 
 	if (xu_getprop(cc->win, cwmh[_MOTIF_WM_HINTS], cwmh[_MOTIF_WM_HINTS],
-	    PROP_MWM_HINTS_ELEMENTS, (unsigned char **)&mwmh) == MWM_NUMHINTS) {
-		if (mwmh->flags & MWM_HINTS_DECORATIONS &&
+	    MWM_HINTS_ELEMENTS, (unsigned char **)&mwmh) == MWM_HINTS_ELEMENTS) {
+		if (mwmh->flags & MWM_FLAGS_DECORATIONS &&
 		    !(mwmh->decorations & MWM_DECOR_ALL) &&
 		    !(mwmh->decorations & MWM_DECOR_BORDER))
 			cc->bwidth = 0;
