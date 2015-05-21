@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.105 2015/01/19 14:54:16 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.106 2015/05/21 00:37:04 okan Exp $
  */
 
 #include <sys/types.h>
@@ -435,9 +435,11 @@ kbfunc_client_nogroup(struct client_ctx *cc, union arg *arg)
 void
 kbfunc_client_grouptoggle(struct client_ctx *cc, union arg *arg)
 {
-	/* XXX for stupid X apps like xpdf and gvim */
-	XGrabKeyboard(X_Dpy, cc->win, True,
-	    GrabModeAsync, GrabModeAsync, CurrentTime);
+	if (arg->i == 0) {
+		/* XXX for stupid X apps like xpdf and gvim */
+		XGrabKeyboard(X_Dpy, cc->win, True,
+		    GrabModeAsync, GrabModeAsync, CurrentTime);
+	}
 
 	group_toggle_membership_enter(cc);
 }
