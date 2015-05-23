@@ -1,3 +1,39 @@
+commit f0a61bc00011b0497edc79cf6fa11ae88a227df9
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 8 11:48:52 2015 +0200
+
+    Bump to 1.2.9
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit b9399b8880e97af8b66d981ad3edd498e76d2e16
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 8 11:47:58 2015 +0200
+
+    Fix compiler warning with recent X servers
+    
+    xf86GetOptValString was changed to return const char *.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 6661bdd4551e4e63e983685464a277845aed3012
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Sun Sep 21 09:51:37 2014 +1000
+
+    neomagic: fix build against master X server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 74a9a343f6e156d24539b81f1224b7410acf0e38
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 14:07:53 2014 -0400
+
+    Use own thunk functions instead of vgaHW*Weak
+    
+    I plan to remove the Weak functions from a future server
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit a559a07989265a84ee31530a2b002899b40389ae
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Fri Aug 16 11:12:14 2013 -0700

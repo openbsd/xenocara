@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-neomagic],
-        [1.2.8],
+        [1.2.9],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/Neomagic],
         [xf86-video-neomagic])
 AC_CONFIG_SRCDIR([Makefile.am])
