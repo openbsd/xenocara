@@ -218,6 +218,7 @@ typedef struct {
     CARD32		Option2;
     CARD32		Option3;
     long                Clock;
+    unsigned char	Pan_Ctl;
     Bool                PIXPLLCSaved;
     unsigned char       PllM;
     unsigned char       PllN;
@@ -313,16 +314,6 @@ typedef struct {
 #define ISTV1(p) (p->pMgaHwInfo && ((p->pMgaHwInfo->ulCapsFirstOutput) & MGAHWINFOCAPS_OUTPUT_TV))
 #define ISTV2(p) (p->pMgaHwInfo && ((p->pMgaHwInfo->ulCapsSecondOutput) & MGAHWINFOCAPS_OUTPUT_TV))
 
-#ifdef DISABLE_VGA_IO
-typedef struct mgaSave {
-#ifdef XSERVER_LIBPCIACCESS
-    struct pci_device * pvp;
-#else
-    pciVideoPtr pvp;
-#endif
-    Bool enable;
-} MgaSave, *MgaSavePtr;
-#endif
 
 
 typedef enum {

@@ -849,6 +849,43 @@ MGAGSetPCLK( ScrnInfoPtr pScrn, long f_out )
 
 	if(MGAISGx50(pMga)) {
 	    pReg->Clock = f_out;
+	    if (pMga->Chipset == PCI_CHIP_MGAG550) {
+		if (f_out < 45000) {
+		    pReg->Pan_Ctl = 0x00;
+		} else if (f_out < 55000) {
+		    pReg->Pan_Ctl = 0x08;
+		} else if (f_out < 70000) {
+		    pReg->Pan_Ctl = 0x10;
+		} else if (f_out < 85000) {
+		    pReg->Pan_Ctl = 0x18;
+		} else if (f_out < 100000) {
+		    pReg->Pan_Ctl = 0x20;
+		} else if (f_out < 115000) {
+		    pReg->Pan_Ctl = 0x28;
+		} else if (f_out < 125000) {
+		    pReg->Pan_Ctl = 0x30;
+		} else {
+		    pReg->Pan_Ctl = 0x38;
+		}
+	    } else {
+		if (f_out < 45000) {
+		    pReg->Pan_Ctl = 0x00;
+		} else if (f_out < 65000) {
+		    pReg->Pan_Ctl = 0x08;
+		} else if (f_out < 85000) {
+		    pReg->Pan_Ctl = 0x10;
+		} else if (f_out < 105000) {
+		    pReg->Pan_Ctl = 0x18;
+		} else if (f_out < 135000) {
+		    pReg->Pan_Ctl = 0x20;
+		} else if (f_out < 160000) {
+		    pReg->Pan_Ctl = 0x28;
+		} else if (f_out < 175000) {
+		    pReg->Pan_Ctl = 0x30;
+		} else {
+		    pReg->Pan_Ctl = 0x38;
+		}
+	    }
 	    return;
 	}
 
@@ -1395,6 +1432,7 @@ MGA_NOT_HAL(
 	     * To test this we check for Clock == 0.
 	     */
 	    MGAG450SetPLLFreq(pScrn, mgaReg->Clock);
+	    outMGAdac(MGA1064_PAN_CTL, mgaReg->Pan_Ctl);
 	    mgaReg->PIXPLLCSaved = FALSE;
 	}
 
@@ -1583,6 +1621,7 @@ MGAGSave(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, MGARegPtr mgaReg,
 	 * VESA modes (s.o.). MATROX: hint, hint.
 	 */
 	if (MGAISGx50(pMga)) {
+	    mgaReg->Pan_Ctl = inMGAdac(MGA1064_PAN_CTL);
 	    mgaReg->Clock = MGAG450SavePLLFreq(pScrn);
 	}
 

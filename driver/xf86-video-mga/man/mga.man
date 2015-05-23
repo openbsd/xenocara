@@ -22,11 +22,7 @@ TrueColor.  Multi\-card configurations are supported.  XVideo is supported
 on G200 and newer systems, with either
 .B TexturedVideo
 or video overlay.  The second head of dual\-head cards is supported for the
-G450 and G550.  Support for the second head on G400 cards requires a
-binary\-only "mga_hal" module that is available from Matrox
-<http://www.matrox.com>, and may be on the CD supplied with the card.  That
-module also provides various other enhancements, and may be necessary to
-use the DVI (digital) output on the G550 (and other cards).
+G450 and G550.
 .SH "SUPPORTED HARDWARE"
 The
 .B mga
@@ -116,10 +112,6 @@ stable.  EXA is a newer acceleration architecture with better performance for
 the Render and Composite extensions, but the rendering code for it is newer and
 possibly unstable.  The default is
 .B XAA.
-.TP
-.BI "Option \*qNoHal\*q \*q" boolean \*q
-Disable or enable loading the "mga_hal" module.  Default: the module is
-loaded when available and when using hardware that it supports.
 .TP
 .BI "Option \*qOverclockMem\*q"
 Set clocks to values used by some commercial X Servers (G100, G200 and G400

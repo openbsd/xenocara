@@ -1165,9 +1165,6 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
    pDRIInfo->frameBufferStride = pScrn->displayWidth*(pScrn->bitsPerPixel/8);
    pDRIInfo->ddxDrawableTableEntry = MGA_MAX_DRAWABLES;
 
-   pDRIInfo->wrap.ValidateTree = NULL;
-   pDRIInfo->wrap.PostValidateTree = NULL;
-
    pDRIInfo->createDummyCtx = TRUE;
    pDRIInfo->createDummyCtxPriv = FALSE;
 

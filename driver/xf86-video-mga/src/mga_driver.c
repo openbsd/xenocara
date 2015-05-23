@@ -123,12 +123,6 @@ static Bool	MGACloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool	MGASaveScreen(ScreenPtr pScreen, int mode);
 static Bool	MGASaveScreenCrtc2(ScreenPtr pScreen, int mode);
 
-/* This shouldn't be needed since RAC will disable all I/O for MGA cards. */
-#ifdef DISABLE_VGA_IO
-static void     VgaIOSave(int i, void *arg);
-static void     VgaIORestore(int i, void *arg);
-#endif
-
 /* Optional functions */
 static void	MGAFreeScreen(FREE_SCREEN_ARGS_DECL);
 static ModeStatus MGAValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
@@ -667,13 +661,6 @@ MGAPciProbe(DriverPtr drv, int entity_num, struct pci_device * dev,
     ScrnInfoPtr pScrn = NULL;
     EntityInfoPtr pEnt;
     MGAPtr pMga;
-#ifdef DISABLE_VGA_IO
-    MgaSavePtr smga;
-
-
-    smga = xnfalloc(sizeof(MgaSave));
-    smga->pvp = dev;
-#endif
 
     if (pci_device_has_kernel_driver(dev)) {
 	/* If it's a G200 server chip, it's probably on KMS, so bail; if not,
@@ -697,11 +684,7 @@ MGAPciProbe(DriverPtr drv, int entity_num, struct pci_device * dev,
     /* Allocate a ScrnInfoRec and claim the slot */
     pScrn = xf86ConfigPciEntity(pScrn, 0, entity_num, MGAPciChipsets,
 				NULL,
-#ifndef DISABLE_VGA_IO
 				NULL, NULL, NULL, NULL
-#else
-				VgaIOSave, VgaIOSave, VgaIORestore, smga
-#endif
 				);
     if (pScrn != NULL) {
 	/* Fill in what we can of the ScrnInfoRec */
@@ -838,22 +821,11 @@ MGAProbe(DriverPtr drv, int flags)
 	ScrnInfoPtr pScrn = NULL;
 	EntityInfoPtr pEnt;
 	int attrib_no;
-#ifdef DISABLE_VGA_IO
-	MgaSavePtr smga;
-#endif
 
 	/* Allocate a ScrnInfoRec and claim the slot */
-#ifndef DISABLE_VGA_IO
 	pScrn = xf86ConfigPciEntity(pScrn, 0,usedChips[i],
 				    MGAPciChipsets, NULL, NULL,
 				    NULL, NULL, NULL);
-#else
-	smga = xnfalloc(sizeof(MgaSave));
-	smga->pvp = xf86GetPciInfoForEntity(usedChips[i]);
-	pScrn = xf86ConfigPciEntity(pScrn, 0,usedChips[i],
-				    MGAPciChipsets, NULL,VgaIOSave,
-				    VgaIOSave, VgaIORestore,smga);
-#endif
         if (pScrn != NULL) {
 	    MGAPtr pMga;
 
@@ -1389,90 +1361,6 @@ MGAdoDDC(ScrnInfoPtr pScrn)
     return MonInfo;
 }
 
-#ifdef DISABLE_VGA_IO
-static void
-VgaIOSave(int i, void *arg)
-{
-    MgaSavePtr sMga = arg;
-#ifndef XSERVER_LIBPCIACCESS
-    PCITAG tag = pciTag(sMga->pvp->bus,sMga->pvp->device,sMga->pvp->func);
-#endif
-    uint32_t temp;
-
-#ifdef DEBUG
-    ErrorF("mga: VgaIOSave: %d:%d:%d\n", sMga->pvp->bus, sMga->pvp->device,
-	   sMga->pvp->func);
-#endif
-#ifdef XSERVER_LIBPCIACCESS
-    pci_device_cfg_read_u32(pMga->PciInfo, & temp, PCI_OPTION_REG);
-#else
-    temp = pciReadLong(tag, PCI_OPTION_REG);
-#endif
-    sMga->enable = (temp & 0x100) != 0;
-}
-
-static void
-VgaIORestore(int i, void *arg)
-{
-    MgaSavePtr sMga = arg;
-#ifndef XSERVER_LIBPCIACCESS
-    PCITAG tag = pciTag(sMga->pvp->bus,sMga->pvp->device,sMga->pvp->func);
-#endif
-
-#ifdef DEBUG
-    ErrorF("mga: VgaIORestore: %d:%d:%d\n", sMga->pvp->bus, sMga->pvp->device,
-	   sMga->pvp->func);
-#endif
-#ifdef XSERVER_LIBPCIACCESS
-    pci_device_cfg_write_bits(pMga->PciInfo, 0x00000100, sMga->enable,
-			      PCI_OPTION_REG);
-#else
-    pciSetBitsLong(tag, PCI_OPTION_REG, 0x100, sMga->enable ? 0x100 : 0x000);
-#endif
-}
-
-static void
-VgaIODisable(void *arg)
-{
-    MGAPtr pMga = arg;
-
-#ifdef DEBUG
-    ErrorF("mga: VgaIODisable: %d:%d:%d, %s, xf86ResAccessEnter is %s\n",
-	   pMga->PciInfo->bus, pMga->PciInfo->device, pMga->PciInfo->func,
-	   pMga->Primary ? "primary" : "secondary",
-	   BOOLTOSTRING(xf86ResAccessEnter));
-#endif
-    /* Turn off the vgaioen bit. */
-#ifdef XSERVER_LIBPCIACCESS
-    pci_device_cfg_write_bits(pMga->PciInfo, 0x00000100, 0x00000000,
-			      PCI_OPTION_REG);
-#else
-    pciSetBitsLong(pMga->PciTag, PCI_OPTION_REG, 0x100, 0x000);
-#endif
-}
-
-static void
-VgaIOEnable(void *arg)
-{
-    MGAPtr pMga = arg;
-
-#ifdef DEBUG
-    ErrorF("mga: VgaIOEnable: %d:%d:%d, %s, xf86ResAccessEnter is %s\n",
-	   pMga->PciInfo->bus, pMga->PciInfo->device, pMga->PciInfo->func,
-	   pMga->Primary ? "primary" : "secondary",
-	   BOOLTOSTRING(xf86ResAccessEnter));
-#endif
-    /* Turn on the vgaioen bit. */
-    if (pMga->Primary) {
-#ifdef XSERVER_LIBPCIACCESS
-	pci_device_cfg_write_bits(pMga->PciInfo, 0x00000100, 0x00000100,
-				  PCI_OPTION_REG);
-#else
-	pciSetBitsLong(pMga->PciTag, PCI_OPTION_REG, 0x100, 0x100);
-#endif
-    }
-}
-#endif /* DISABLE_VGA_IO */
 
 void
 MGAProbeDDC(ScrnInfoPtr pScrn, int index)
@@ -1587,19 +1475,9 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
 
     pMga->Primary = xf86IsPrimaryPci(pMga->PciInfo);
 
-#ifndef DISABLE_VGA_IO
 #ifndef XSERVER_LIBPCIACCESS
     xf86SetOperatingState(resVgaIo, pMga->pEnt->index, ResUnusedOpr);
     xf86SetOperatingState(resVgaMem, pMga->pEnt->index, ResDisableOpr);
-#endif
-#else
-    /*
-     * Set our own access functions, which control the vgaioen bit.
-     */
-    pMga->Access.AccessDisable = VgaIODisable;
-    pMga->Access.AccessEnable = VgaIOEnable;
-    pMga->Access.arg = pMga;
-    xf86SetAccessFuncs(pMga->pEnt, &pMga->Access, &pMga->Access);
 #endif
 
     /* Set pScrn->monitor */
@@ -3620,7 +3498,7 @@ void
 MGAAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
     SCRN_INFO_PTR(arg);
-    int Base, tmp, count;
+    int Base, tmp, count, last_vcount;
 
     MGAFBLayout *pLayout;
     MGAPtr pMga;
@@ -3650,8 +3528,14 @@ MGAAdjustFrame(ADJUST_FRAME_ARGS_DECL)
         while (INREG8(0x1FDA) & 0x08);
         while (!(INREG8(0x1FDA) & 0x08));
         /* wait until we're past the start (fixseg.c in the DDK) */
-        count = INREG(MGAREG_VCOUNT) + 2;
-        while(INREG(MGAREG_VCOUNT) < count);
+        last_vcount = INREG(MGAREG_VCOUNT);
+        count = last_vcount + 2;
+        while (1) {
+           int vcount = INREG(MGAREG_VCOUNT);
+           if (vcount >= count) break;
+           if (vcount < last_vcount) break;
+           last_vcount = vcount;
+        }
 
         OUTREG16(MGAREG_CRTC_INDEX, (Base & 0x00FF00) | 0x0C);
         OUTREG16(MGAREG_CRTC_INDEX, ((Base & 0x0000FF) << 8) | 0x0D);
