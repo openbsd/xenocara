@@ -382,9 +382,11 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 
 	/* Find the PCI info for this screen */
 	pCir->PciInfo = xf86GetPciInfoForEntity(pCir->pEnt->index);
+#ifndef XSERVER_LIBPCIACCESS
 	pCir->PciTag = pciTag(PCI_DEV_BUS(pCir->PciInfo),
 			      PCI_DEV_DEV(pCir->PciInfo),
 			      PCI_DEV_FUNC(pCir->PciInfo));
+#endif
 
 	if (xf86LoadSubModule(pScrn, "int10")) {
 	    xf86Int10InfoPtr int10InfoPtr;

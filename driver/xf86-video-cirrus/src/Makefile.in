@@ -70,6 +70,17 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@XAA_TRUE@am__append_1 = \
+@XAA_TRUE@         alp_xaa.c \
+@XAA_TRUE@         alp_xaam.c
+
+@USE_EXA_TRUE@am__append_2 = \
+@USE_EXA_TRUE@         alp_exa.c
+
+@XAA_TRUE@am__append_3 = \
+@XAA_TRUE@         lg_xaa.c \
+@XAA_TRUE@         lg_xaa.h
+
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -116,9 +127,10 @@ LTLIBRARIES = $(cirrus_alpine_la_LTLIBRARIES) \
 cirrus_alpine_la_LIBADD =
 am__cirrus_alpine_la_SOURCES_DIST = alp_driver.c alp.h alp_hwcurs.c \
 	alp_i2c.c alp_xaa.c alp_xaam.c alp_exa.c
-@USE_EXA_TRUE@am__objects_1 = alp_exa.lo
+@XAA_TRUE@am__objects_1 = alp_xaa.lo alp_xaam.lo
+@USE_EXA_TRUE@am__objects_2 = alp_exa.lo
 am_cirrus_alpine_la_OBJECTS = alp_driver.lo alp_hwcurs.lo alp_i2c.lo \
-	alp_xaa.lo alp_xaam.lo $(am__objects_1)
+	$(am__objects_1) $(am__objects_2)
 cirrus_alpine_la_OBJECTS = $(am_cirrus_alpine_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -136,8 +148,11 @@ cirrus_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(cirrus_drv_la_LDFLAGS) $(LDFLAGS) -o $@
 cirrus_laguna_la_LIBADD =
+am__cirrus_laguna_la_SOURCES_DIST = lg_driver.c lg.h lg_hwcurs.c \
+	lg_i2c.c lg_xaa.c lg_xaa.h
+@XAA_TRUE@am__objects_3 = lg_xaa.lo
 am_cirrus_laguna_la_OBJECTS = lg_driver.lo lg_hwcurs.lo lg_i2c.lo \
-	lg_xaa.lo
+	$(am__objects_3)
 cirrus_laguna_la_OBJECTS = $(am_cirrus_laguna_la_OBJECTS)
 cirrus_laguna_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -180,7 +195,7 @@ am__v_CCLD_1 =
 SOURCES = $(cirrus_alpine_la_SOURCES) $(cirrus_drv_la_SOURCES) \
 	$(cirrus_laguna_la_SOURCES)
 DIST_SOURCES = $(am__cirrus_alpine_la_SOURCES_DIST) \
-	$(cirrus_drv_la_SOURCES) $(cirrus_laguna_la_SOURCES)
+	$(cirrus_drv_la_SOURCES) $(am__cirrus_laguna_la_SOURCES_DIST)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -243,7 +258,6 @@ LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
@@ -267,6 +281,8 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -349,37 +365,21 @@ cirrus_drv_la_SOURCES = \
          cir_pcirename.h \
          compat-api.h
 
-@USE_EXA_TRUE@ALPINE_EXA_SRCS = \
-@USE_EXA_TRUE@         alp_exa.c
-
 cirrus_alpine_la_LTLIBRARIES = cirrus_alpine.la
 cirrus_alpine_la_LDFLAGS = -module -avoid-version
 cirrus_alpine_ladir = @moduledir@/drivers
-cirrus_alpine_la_SOURCES = \
-         alp_driver.c \
-         alp.h \
-         alp_hwcurs.c \
-         alp_i2c.c \
-         alp_xaa.c \
-         alp_xaam.c \
-         $(ALPINE_EXA_SRCS)
-
+cirrus_alpine_la_SOURCES = alp_driver.c alp.h alp_hwcurs.c alp_i2c.c \
+	$(am__append_1) $(am__append_2)
 cirrus_laguna_la_LTLIBRARIES = cirrus_laguna.la
 cirrus_laguna_la_LDFLAGS = -module -avoid-version
 cirrus_laguna_ladir = @moduledir@/drivers
-cirrus_laguna_la_SOURCES = \
-         lg_driver.c \
-         lg.h \
-         lg_hwcurs.c \
-         lg_i2c.c \
-         lg_xaa.c \
-         lg_xaa.h
-
+cirrus_laguna_la_SOURCES = lg_driver.c lg.h lg_hwcurs.c lg_i2c.c \
+	$(am__append_3)
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -404,9 +404,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
+$(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
+$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 install-cirrus_alpine_laLTLIBRARIES: $(cirrus_alpine_la_LTLIBRARIES)

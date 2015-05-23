@@ -518,9 +518,11 @@ AlpPreInit(ScrnInfoPtr pScrn, int flags)
 	pCir->Chipset = pCir->pEnt->chipset;
 	/* Find the PCI info for this screen */
 	pCir->PciInfo = xf86GetPciInfoForEntity(pCir->pEnt->index);
+#ifndef XSERVER_LIBPCIACCESS
 	pCir->PciTag = pciTag(PCI_DEV_BUS(pCir->PciInfo),
 			      PCI_DEV_DEV(pCir->PciInfo),
 			      PCI_DEV_FUNC(pCir->PciInfo));
+#endif
 
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
     if (!xf86IsPc98())

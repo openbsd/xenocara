@@ -37,11 +37,6 @@ cirrus_drv_la_SOURCES = \
          cir_pcirename.h \
          compat-api.h
 
-if USE_EXA
-ALPINE_EXA_SRCS = \
-         alp_exa.c
-endif
-
 cirrus_alpine_la_LTLIBRARIES = cirrus_alpine.la
 cirrus_alpine_la_LDFLAGS = -module -avoid-version
 cirrus_alpine_ladir = @moduledir@/drivers
@@ -49,11 +44,16 @@ cirrus_alpine_la_SOURCES = \
          alp_driver.c \
          alp.h \
          alp_hwcurs.c \
-         alp_i2c.c \
+         alp_i2c.c
+if XAA
+cirrus_alpine_la_SOURCES += \
          alp_xaa.c \
-         alp_xaam.c \
-         $(ALPINE_EXA_SRCS)
-
+         alp_xaam.c
+endif
+if USE_EXA
+cirrus_alpine_la_SOURCES += \
+         alp_exa.c
+endif
 
 cirrus_laguna_la_LTLIBRARIES = cirrus_laguna.la
 cirrus_laguna_la_LDFLAGS = -module -avoid-version
@@ -62,6 +62,9 @@ cirrus_laguna_la_SOURCES = \
          lg_driver.c \
          lg.h \
          lg_hwcurs.c \
-         lg_i2c.c \
+         lg_i2c.c
+if XAA
+cirrus_laguna_la_SOURCES += \
          lg_xaa.c \
          lg_xaa.h
+endif
