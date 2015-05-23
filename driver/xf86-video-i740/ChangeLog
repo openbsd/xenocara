@@ -1,3 +1,28 @@
+commit 1f13c18a17914a6e919e604d1dc5589eb18f0141
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Feb 21 12:28:33 2015 -0800
+
+    xf86-video-i740 1.3.5
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit b4a3e260f5123d6fbd4670776232af5405a7c5a2
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Thu Jun 13 23:42:36 2013 +0200
+
+    Fix loading the driver without XAA
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit 084aa23643bf4245c917e3d672576bc9e5717017
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 9 22:21:52 2013 -0500
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit c754f573590b74b16d0deb9f86d6505bffa028bf
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000
