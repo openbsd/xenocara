@@ -531,9 +531,8 @@ ATIPreInit
 
 #ifndef AVOID_CPIO
 
-    xf86Int10InfoPtr pInt10Info = NULL;
     vbeInfoPtr       pVBE = NULL;
-    pointer          pInt10Module, pDDCModule = NULL, pVBEModule = NULL;
+    pointer          pVBEModule = NULL;
 
 #endif /* AVOID_CPIO */
 
@@ -659,42 +658,21 @@ ATIPreInit
 #endif /* TV_OUT */
 
     /*
-     * If there is an ix86-style BIOS, ensure its initialisation entry point
-     * has been executed, and retrieve DDC and VBE information from it.
+     * If VBE setup works, grab DDC from it
      */
-    if (!(pInt10Module = xf86LoadSubModule(pScreenInfo, "int10")))
-    {
-        xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
-            "Unable to load int10 module.\n");
-    }
-    else if (!(pInt10Info = xf86InitInt10(pATI->iEntity)))
-    {
-        xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
-             "Unable to initialise int10 interface.\n");
+    if (!(pVBEModule = xf86LoadSubModule(pScreenInfo, "vbe"))) {
+	xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
+		   "Unable to load vbe module.\n");
     }
     else
     {
-        if (!(pDDCModule = xf86LoadSubModule(pScreenInfo, "ddc")))
-        {
-            xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
-                "Unable to load ddc module.\n");
-        }
-        else
-        if (!(pVBEModule = xf86LoadSubModule(pScreenInfo, "vbe")))
-        {
-            xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
-                "Unable to load vbe module.\n");
-        }
-        else
-        {
-            if ((pVBE = VBEInit(pInt10Info, pATI->iEntity)))
-            {
-                ConfiguredMonitor = vbeDoEDID(pVBE, pDDCModule);
-            }
-        }
+	if ((pVBE = VBEInit(NULL, pATI->iEntity)))
+	    ConfiguredMonitor = vbeDoEDID(pVBE, NULL);
 
-        if (!(flags & PROBE_DETECT))
+        if (pVBE && !(flags & PROBE_DETECT))
         {
+	    xf86Int10InfoPtr pInt10Info = pVBE->pInt10;
+
             /* Validate, then make a private copy of, the initialised BIOS */
             CARD8 *pBIOS = xf86int10Addr(pInt10Info, pInt10Info->BIOSseg << 4);
 
@@ -719,13 +697,7 @@ ATIPreInit
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
     xf86UnloadSubModule(pVBEModule);
 #endif
-    /* De-activate int10 */
-    xf86FreeInt10(pInt10Info);
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
-    xf86UnloadSubModule(pInt10Module);
-#endif
 #else
-    pATI->pInt10 = pInt10Info;
     pATI->pVBE = pVBE;
     pVBE = NULL;
     pInt10Info = NULL;
@@ -737,10 +709,6 @@ ATIPreInit
         xf86SetDDCproperties(pScreenInfo, ConfiguredMonitor);
     }
 
-    /* DDC module is no longer needed at this point */
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
-    xf86UnloadSubModule(pDDCModule);
-#endif
 #endif /* AVOID_CPIO */
 
     if (flags & PROBE_DETECT)
@@ -1116,12 +1084,14 @@ ATIPreInit
         }
     }
 
+#ifndef XSERVER_LIBPCIACCESS
     if (!xf86LinearVidMem())
     {
         xf86DrvMsg(pScreenInfo->scrnIndex, X_ERROR,
             "A linear aperture is not available.\n");
         goto bail;
     }
+#endif
 
     /*
      * Set colour weights.

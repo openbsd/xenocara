@@ -46,6 +46,4 @@ typedef enum
     ATI_AUDIO_NONE
 } ATIAudioType;
 
-extern const char *ATIAudioNames[];
-
 #endif /* ___ATIAUDIO_H___ */

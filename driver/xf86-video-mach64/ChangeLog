@@ -1,3 +1,91 @@
+commit 8f920350a736012ce2a7469d8252f5f5bf72cef3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon May 4 15:50:09 2015 -0400
+
+    mach64 6.9.5
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 810572536e153ac9e4615a35e2ab99dc266806da
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sat Nov 15 11:29:54 2014 +1000
+
+    mach64: fix build probably not required with pci access anyways
+
+commit e538ff6b2108117a7ae6644a844c6ce10fc0f1ee
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Nov 27 23:53:31 2013 -0800
+
+    Drop dependence on xf86PciInfo.h
+    
+    It is about time we stop using this deprecated file and include pciids
+    locally.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 2c83b465b336a012f2d2716940bf483358388000
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Jun 3 13:01:23 2013 -0400
+
+    Deal with pPict->pDrawable == NULL for source-only pictures.
+    
+    Falling back to software rendering for such source pictures
+    (solid/gradient).
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit ec6ee6a112dc38cab563779583944dba9393f385
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Apr 3 09:14:54 2013 -0400
+
+    Bump minimum xserver to 1.4
+    
+    Due to the previous change we no longer support servers where ddc is not
+    a server builtin.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit fa18180cc5f6d84168ffca6b7b8e467a5c72da14
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Apr 2 11:15:47 2013 -0400
+
+    preinit: Don't bother explicitly loading int10, vbe will do it for us
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 80e62cc1dfb80c3170e43c3941b56d0a84bddc3b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 19 22:37:07 2012 -0800
+
+    Remove unused atiaudio.c & ATIAudioNames declaration
+    
+    Defined a string array, which is not used anywhere.
+    
+    atiaudio.h remains for now, though for the enum it defines, only one
+    reference to it remains, initializing the Audio to ATI_AUDIO_NONE, so
+    it may be a candidate for further cleanup in the future.
+    
+    Reported by Solaris linker -z guidance option:
+    ld: guidance: removal of unused file recommended: atiaudio.o
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 233270a78d41d9df5614e17d73c8c4add391459b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 19 22:33:48 2012 -0800
+
+    Remove unused atidecoder.c & atidecoder.h
+    
+    Defined a enum & string array, neither of which were used anywhere.
+    
+    Reported by Solaris linker -z guidance option:
+    ld: guidance: removal of unused file recommended: atidecoder.o
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit 0d8639f3cd4128ae856ae27f3787c1da224bb564
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Dec 19 22:14:08 2012 -0800
