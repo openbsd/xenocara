@@ -12,7 +12,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86DDC.h"
 #include "xf86xv.h"
@@ -72,6 +71,19 @@
 #define PCI_MEM_BASE(p, region) \
     (p)->memBase[region]
 #endif
+
+#define PCI_VENDOR_3DFX			0x121A
+
+#define PCI_CHIP_VOODOO_GRAPHICS	0x0001
+#define PCI_CHIP_VOODOO2		0x0002
+#define PCI_CHIP_BANSHEE		0x0003
+#define PCI_CHIP_VELOCITY		0x0004
+#define PCI_CHIP_VOODOO3		0x0005
+#define PCI_CHIP_VOODOO4		0x0007
+#define PCI_CHIP_VOODOO5		0x0009
+
+#define PCI_CARD_VOODOO3_2000		0x0036
+#define PCI_CARD_VOODOO3_3000		0x003A
 
 struct _TDFXRec;
 typedef struct _TDFXRec *TDFXPtr;
@@ -216,7 +228,7 @@ typedef struct _TDFXRec {
   unsigned long MMIOAddr[MAXCHIPS];
   EntityInfoPtr pEnt;
   int numChips;
-#ifndef XSERVER_PCIACCESS
+#ifndef XSERVER_LIBPCIACCESS
   PCITAG PciTag[MAXCHIPS];
 #endif
   Bool Primary;

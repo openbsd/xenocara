@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-tdfx],
-        [1.4.5],
+        [1.4.6],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-tdfx])
 AC_CONFIG_SRCDIR([Makefile.am])

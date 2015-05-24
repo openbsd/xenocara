@@ -1,3 +1,102 @@
+commit 278042ff4c469f24ab7bc28e517e8a78e2821ddc
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Feb 22 13:26:24 2015 -0800
+
+    xf86-video-tdfx 1.4.6
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 2f71b05e29ae13a0fb6fbc74f4f76c78b6ddb0d7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 29 09:15:49 2014 -0400
+
+    dri: Stop (uselessly) initializing the ValidateTree hooks
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit d8873445199bf1d229503ff1d12c6a2f3f23c863
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Thu Oct 3 15:35:05 2013 +0200
+
+    Add more PCI IDs for supported chips
+    
+    Add support for Velocity and Voodoo4 chips.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit b15c1e8ef9858c85ead44ded22c7d48bd8ffa501
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Thu Oct 3 14:25:45 2013 +0200
+
+    Unmap MMIO ranges for all chips
+    
+    This is relevant on SLI setups, where each chip has their own MMIO
+    range.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 828c151064083e4488a4cb3854f8dcb23265e5cb
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Wed Oct 2 21:22:33 2013 +0200
+
+    Use the PCI ID macros instead of hardcoded values
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 58b2ac6dd1487580f49869f582a8852b003a34fa
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Tue Oct 1 05:36:34 2013 +0200
+
+    Remove unreachable breaks after return statements
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 774461a4ac92c39c3b3ec975a887540dfa791eae
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Fri Sep 27 19:20:11 2013 +0200
+
+    Use new pci_device_(un)map_range functions instead of deprecated ones
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 646137de571a9df950d3a3edb454803268fd5f98
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Fri Sep 27 19:06:31 2013 +0200
+
+    Rename XSERVER_PCIACCESS to XSERVER_LIBPCIACCESS
+    
+    Using the wrong macro name means that the code uses an obsolete typedef
+    that issues warnings.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 457bd576a4895f0d3a65e550dbe2470177bf650d
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Fri Sep 27 18:52:01 2013 +0200
+
+    Define local PCI IDs instead of using xf86PciInfo.h
+    
+    The header file is deprecated and issues a warning now. Stop using
+    it, and move the definitions to the local tree as recommended by the
+    warning.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 10498d2730c651eb7a1890eb9e728269732e9dad
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:59 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit a1037f73cf5da0ee3fec1867a5f20305d9267e63
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

@@ -149,17 +149,20 @@ static void TDFXDisplayPowerManagementSet(ScrnInfoPtr pScrn,
 
 #ifdef XSERVER_LIBPCIACCESS
 #define TDFX_DEVICE_MATCH(d, sub, i) \
-    { 0x121A, (d), PCI_MATCH_ANY, (sub), 0, 0, (i) }
+    { PCI_VENDOR_3DFX, (d), PCI_MATCH_ANY, (sub), 0, 0, (i) }
 
 static const struct pci_id_match tdfx_device_match[] = {
     TDFX_DEVICE_MATCH(PCI_CHIP_BANSHEE, PCI_MATCH_ANY, Banshee),
 
+    TDFX_DEVICE_MATCH(PCI_CHIP_VELOCITY, PCI_MATCH_ANY, Voodoo3_Unknown),
+
     /* There are *many* missing PCI IDs here.
      */
-    TDFX_DEVICE_MATCH(PCI_CHIP_VOODOO3, 0x0036, Voodoo3_2000),
-    TDFX_DEVICE_MATCH(PCI_CHIP_VOODOO3, 0x003A, Voodoo3_3000),
+    TDFX_DEVICE_MATCH(PCI_CHIP_VOODOO3, PCI_CARD_VOODOO3_2000, Voodoo3_2000),
+    TDFX_DEVICE_MATCH(PCI_CHIP_VOODOO3, PCI_CARD_VOODOO3_3000, Voodoo3_3000),
 
     TDFX_DEVICE_MATCH(PCI_CHIP_VOODOO3, PCI_MATCH_ANY, Voodoo3_Unknown),
+    TDFX_DEVICE_MATCH(PCI_CHIP_VOODOO4, PCI_MATCH_ANY, Voodoo5),
     TDFX_DEVICE_MATCH(PCI_CHIP_VOODOO5, PCI_MATCH_ANY, Voodoo5),
     { 0, 0, 0 }
 };
@@ -198,7 +201,9 @@ _X_EXPORT DriverRec TDFX = {
 /* Chipsets */
 static SymTabRec TDFXChipsets[] = {
   { PCI_CHIP_BANSHEE, "3dfx Banshee"},
+  { PCI_CHIP_VELOCITY, "3dfx Velocity"},
   { PCI_CHIP_VOODOO3, "3dfx Voodoo3"},
+  { PCI_CHIP_VOODOO4, "3dfx Voodoo4"},
   { PCI_CHIP_VOODOO5, "3dfx Voodoo5"},
   { -1, NULL }
 };
@@ -206,7 +211,9 @@ static SymTabRec TDFXChipsets[] = {
 #ifndef XSERVER_LIBPCIACCESS
 static PciChipsets TDFXPciChipsets[] = {
   { PCI_CHIP_BANSHEE, PCI_CHIP_BANSHEE, RES_SHARED_VGA },
+  { PCI_CHIP_VELOCITY, PCI_CHIP_VELOCITY, RES_SHARED_VGA },
   { PCI_CHIP_VOODOO3, PCI_CHIP_VOODOO3, RES_SHARED_VGA },
+  { PCI_CHIP_VOODOO4, PCI_CHIP_VOODOO4, RES_SHARED_VGA },
   { PCI_CHIP_VOODOO5, PCI_CHIP_VOODOO5, RES_SHARED_VGA },
   { -1, -1, RES_UNDEFINED }
 };
@@ -1050,6 +1057,7 @@ TDFXPreInit(ScrnInfoPtr pScrn, int flags)
     case PCI_CHIP_BANSHEE:
       pTDFX->MaxClock = 270000;
       break;
+    case PCI_CHIP_VELOCITY:
     case PCI_CHIP_VOODOO3:
       switch(match->subsysCard) {
       case PCI_CARD_VOODOO3_2000:
@@ -1063,6 +1071,7 @@ TDFXPreInit(ScrnInfoPtr pScrn, int flags)
 	break;
       }
       break;
+    case PCI_CHIP_VOODOO4:
     case PCI_CHIP_VOODOO5:
       pTDFX->MaxClock = 350000;
       break;
@@ -1078,7 +1087,9 @@ TDFXPreInit(ScrnInfoPtr pScrn, int flags)
     case PCI_CHIP_BANSHEE:
       clockRanges->interlaceAllowed = FALSE;
       break;
+    case PCI_CHIP_VELOCITY:
     case PCI_CHIP_VOODOO3:
+    case PCI_CHIP_VOODOO4:
     case PCI_CHIP_VOODOO5:
       clockRanges->interlaceAllowed = TRUE;
       break;
@@ -1253,11 +1264,11 @@ TDFXMapMem(ScrnInfoPtr pScrn)
      * FIXME: don't have any such hardware to test.
      */
     for (i = 0; i < pTDFX->numChips; i++) {
-	err = pci_device_map_memory_range(pTDFX->PciInfo[i],
-					  pTDFX->MMIOAddr[i],
-					  TDFXIOMAPSIZE,
-					  TRUE,
-					  & pTDFX->MMIOBase[i]);
+	err = pci_device_map_range(pTDFX->PciInfo[i],
+				   pTDFX->MMIOAddr[i],
+				   TDFXIOMAPSIZE,
+				   PCI_DEV_MAP_FLAG_WRITABLE,
+				   & pTDFX->MMIOBase[i]);
 	if (err) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Unable to map MMIO region for card %u (%d).\n",
@@ -1267,11 +1278,11 @@ TDFXMapMem(ScrnInfoPtr pScrn)
     }
     
 
-    err = pci_device_map_memory_range(pTDFX->PciInfo[0],
-				      pTDFX->LinearAddr[0],
-				      pTDFX->FbMapSize,
-				      TRUE,
-				      & pTDFX->FbBase);
+    err = pci_device_map_range(pTDFX->PciInfo[0],
+			       pTDFX->LinearAddr[0],
+			       pTDFX->FbMapSize,
+			       PCI_DEV_MAP_FLAG_WRITABLE,
+			       & pTDFX->FbBase);
     if (err) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Unable to map framebuffer (%d).\n", err);
@@ -1307,8 +1318,15 @@ TDFXUnmapMem(ScrnInfoPtr pScrn)
   pTDFX = TDFXPTR(pScrn);
 
 #ifdef XSERVER_LIBPCIACCESS
-    pci_device_unmap_region(pTDFX->PciInfo[0], 0);
-    pci_device_unmap_region(pTDFX->PciInfo[0], 1);
+    pci_device_unmap_range(pTDFX->PciInfo[0],
+                           pTDFX->FbBase,
+                           pTDFX->FbMapSize);
+
+    for (i = 0; i < pTDFX->numChips; i++) {
+        pci_device_unmap_range(pTDFX->PciInfo[i],
+                               pTDFX->MMIOBase[i],
+                               TDFXIOMAPSIZE);
+    }
 
     (void) memset(pTDFX->MMIOBase, 0, sizeof(pTDFX->MMIOBase));
     pTDFX->FbBase = NULL;
@@ -2260,7 +2278,7 @@ TDFXScreenInit(SCREEN_INIT_ARGS_DECL) {
   }
 
   scanlines = (pTDFX->backOffset - pTDFX->fbOffset) / pTDFX->stride;
-  if(pTDFX->ChipType < PCI_CHIP_VOODOO5) {
+  if(pTDFX->ChipType < PCI_CHIP_VOODOO4) {
       if (scanlines > 2047) 
 	scanlines = 2047;
   } else {
@@ -2581,14 +2599,13 @@ TDFXValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags) {
     switch (pTDFX->ChipType) {
       case PCI_CHIP_BANSHEE:
         return MODE_BAD;
-        break;
+      case PCI_CHIP_VELOCITY:
       case PCI_CHIP_VOODOO3:
+      case PCI_CHIP_VOODOO4:
       case PCI_CHIP_VOODOO5:
         return MODE_OK;
-        break;
       default:
         return MODE_BAD;
-        break;
     }
   }
   /* In clock doubled mode widths must be divisible by 16 instead of 8 */
