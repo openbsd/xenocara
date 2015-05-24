@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.231 2015/05/10 19:56:06 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.232 2015/05/24 10:05:19 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.5.5
@@ -14,7 +14,7 @@ Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		10.2.9
-Current Vers:	10.5.4
+Current Vers:	10.5.6
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
@@ -31,8 +31,8 @@ Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
 
 Package:	DejaVu Fonts
-Version:	2.34
-Current Vers:	2.34
+Version:	2.35
+Current Vers:	2.35
 Maintainer:	Freedesktop.org
 Archive Site:	http://dejavu-fonts.org/
 

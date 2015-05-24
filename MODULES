@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.328 2015/05/10 19:56:06 matthieu Exp $
+# $OpenBSD: MODULES,v 1.329 2015/05/24 10:05:19 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -101,32 +101,32 @@ driver/xf86-input-vmmouse	13.0.99	7.7+	needs-update
 driver/xf86-input-void		1.4.1	7.7+	needs-update
 driver/xf86-video-apm		1.2.5
 driver/xf86-video-ark		0.7.5	7.7+
-driver/xf86-video-ast		0.99.9	7.7+
+driver/xf86-video-ast		1.0.1	7.7+
 driver/xf86-video-ati		7.5.0	7.7+
 driver/xf86-video-chips		1.2.5
-driver/xf86-video-cirrus	1.5.3	7.7+	needs-update
+driver/xf86-video-cirrus	1.5.3	7.7+
 driver/xf86-video-dummy		0.3.7	7.7+
 driver/xf86-video-geode		2.11.16	7.7+
 driver/xf86-video-glint		1.2.8	7.7+
 driver/xf86-video-i128		1.3.6	7.7+
-driver/xf86-video-i740		1.3.5		needs-update
+driver/xf86-video-i740		1.3.5
 driver/xf86-video-intel		2.99.916	7.7+ needs-update
-driver/xf86-video-mach64	6.9.5	7.7+	needs-update
-driver/xf86-video-mga		1.6.4	7.7+	needs-update
+driver/xf86-video-mach64	6.9.5	7.7+
+driver/xf86-video-mga		1.6.4	7.7+
 driver/xf86-video-modesetting	0.9.0
-driver/xf86-video-neomagic	1.2.9	7.7+	needs-update
+driver/xf86-video-neomagic	1.2.9	7.7+
 driver/xf86-video-nv		2.1.20	7.7+
 driver/xf86-video-openchrome	0.3.3	7.7+	needs-update-and-dri
 driver/xf86-video-r128		6.10.0	7.7+	needs-update
 driver/xf86-video-rendition	4.2.5
 driver/xf86-video-s3		0.6.5
 driver/xf86-video-s3virge	1.10.6
-driver/xf86-video-savage	2.3.8	7.7+	needs-update
-driver/xf86-video-siliconmotion	1.7.8	7.7+	needs-update
+driver/xf86-video-savage	2.3.8	7.7+
+driver/xf86-video-siliconmotion	1.7.8	7.7+
 driver/xf86-video-sis		0.10.7	7.7+
 driver/xf86-video-sunffb	1.2.2	7.7+
-driver/xf86-video-tdfx		1.4.6	7.7+	needs-update
-driver/xf86-video-trident	1.3.7	7.7+	needs-update
+driver/xf86-video-tdfx		1.4.6	7.7+
+driver/xf86-video-trident	1.3.7	7.7+
 driver/xf86-video-tseng		1.2.5
 driver/xf86-video-vesa		2.3.3	7.7+
 driver/xf86-video-vmware	13.1.0	7.7+
@@ -167,7 +167,7 @@ font/schumacher-misc		1.1.2
 font/screen-cyrillic		1.0.4
 font/sony-misc			1.0.3
 font/sun-misc			1.0.3
-font/util			1.3.1		needs-update
+font/util			1.3.1
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
