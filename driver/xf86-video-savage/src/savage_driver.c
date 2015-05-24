@@ -1083,7 +1083,7 @@ static Bool SavagePreInit(ScrnInfoPtr pScrn, int flags)
     MessageType from = X_DEFAULT;
     int i;
     ClockRangePtr clockRanges;
-    char *s = NULL;
+    const char *s = NULL;
     unsigned char config1, m, n, n1, n2, sr8, cr66 = 0, tmp;
     int mclk;
     vgaHWPtr hwp;
@@ -4579,6 +4579,12 @@ SavageDDC1Read(ScrnInfoPtr pScrn)
     return ((unsigned int) (tmp & 0x08));
 }
 
+static void
+SavageDDC1SetSpeed(ScrnInfoPtr pScrn, xf86ddcSpeed speed)
+{
+    vgaHWddc1SetSpeed(pScrn, speed);
+}
+
 static Bool
 SavageDDC1(ScrnInfoPtr pScrn)
 {
@@ -4592,7 +4598,8 @@ SavageDDC1(ScrnInfoPtr pScrn)
     InI2CREG(byte,psav->I2CPort);
     OutI2CREG(byte | 0x12,psav->I2CPort);
 
-    pMon = xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn),vgaHWddc1SetSpeedWeak(),SavageDDC1Read);
+    pMon = xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn), SavageDDC1SetSpeed,
+			   SavageDDC1Read);
     if (!pMon)
         return FALSE;
     

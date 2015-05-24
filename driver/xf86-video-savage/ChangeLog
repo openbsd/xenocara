@@ -1,3 +1,50 @@
+commit f8f24e6856e2627f6620a8fd0474366d057496d2
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 8 12:08:50 2015 +0200
+
+    Bump to 2.3.8
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 1b58f8ab061f52d8aab9758b4dfa7e48e76b847a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 8 12:07:42 2015 +0200
+
+    Fix compiler warnings with recent X servers
+    
+    savage_driver.c:1228:12: warning: assignment discards 'const' qualifier from pointer target type
+         if ((s = xf86GetOptValString(psav->Options, OPTION_ROTATE))) {
+                ^
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit d28cd83c7b0b4a943efbe5ddf257c8ee2646ea73
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 29 09:15:26 2014 -0400
+
+    dri: Stop (uselessly) initializing the ValidateTree hooks
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 16a672d1ba183601d513c4cdca32b47e926a6d1e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 14:11:46 2014 -0400
+
+    Use own thunk function instead of vgaHW*Weak
+    
+    I plan to remove the Weak functions from a future server.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 2e9217bb88b76cebfcd2b65b76c8733f80da77ea
+Author: Jeremy White <jwhite@codeweavers.com>
+Date:   Thu Mar 21 10:59:13 2013 -0500
+
+    Include xf86Modes.h to use functions from hw/xfree86/modes/xf86Modes.c.
+    
+    Signed-off-by: Jeremy White <jwhite@codeweavers.com>
+    Reviewed-by: Robert Morell <rmorell@nvidia.com>
+
 commit d27abbf74fee30ddb9a3ca0d597ca0ce16a1bc35
 Author: Tormod Volden <debian.tormod@gmail.com>
 Date:   Tue Sep 24 23:14:35 2013 +0200

@@ -875,9 +875,6 @@ Bool SAVAGEDRIScreenInit( ScreenPtr pScreen )
    psav->coreWakeupHandler = pDRIInfo->wrap.WakeupHandler;
    pDRIInfo->wrap.WakeupHandler = SAVAGEWakeupHandler;
 
-   pDRIInfo->wrap.ValidateTree = NULL;
-   pDRIInfo->wrap.PostValidateTree = NULL;
-
    pDRIInfo->createDummyCtx = TRUE;
    pDRIInfo->createDummyCtxPriv = FALSE;
 
