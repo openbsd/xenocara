@@ -1,3 +1,220 @@
+commit d531cac475980908ea52309846221a974b8e7efd
+Author: Y.C. Chen <yc_chen@aspeedtech.com>
+Date:   Fri Aug 8 16:51:07 2014 +0800
+
+    Bump Version to 1.0.1
+
+commit 85be2b8ecd69ebf24334ddfb1822bbbf0b41376a
+Author: Y.C. Chen <yc_chen@aspeedtech.com>
+Date:   Fri Aug 8 16:36:04 2014 +0800
+
+    Update DP501FW Code
+
+commit d0d76062f781896793bc51565e2dd5e4be047319
+Author: Y.C. Chen <yc_chen@aspeedtech.com>
+Date:   Fri Aug 8 16:04:22 2014 +0800
+
+     Fixed 1600x900 cannot display properly
+
+commit 94640946015eb6611ff9bf8daf49e10479351fac
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 17:09:42 2014 +0200
+
+    Add _AST_H_ define to ast.h
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 364364910d1cc9be67120b8d28ab79abd82dbf04
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 17:08:56 2014 +0200
+
+    Move firmware for DP501 to a separate file
+    
+    This makes ast_vgatools.c much more readable.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 5bdd2cac0b8db58ab442375f5c9e9b4349f39c02
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 15:35:43 2014 +0200
+
+    Fix ABI version conflict in xf86UnclaimPciSlot()
+    
+    xf86UnclaimPciSlot() received a GDevPtr as 2nd argument with
+    ABI_VIDEODRV_VERSION 13.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 06245e228319c63a48ddd0313cf39d9c8e93cfc7
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 15:10:20 2014 +0200
+
+    Fix typo
+    
+    Chontel -> Chrontel
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 72a9703ae45fda895b658a97d125d8f62ff664aa
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 14:31:39 2014 +0200
+
+    Include local headers only when needed
+    
+    Move inclusion of local headers from ast.h to the individual
+    files. Include only those headers which are needed.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 8fb9e1008473bc91b036dba5e9fb85f12bad7753
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 14:09:10 2014 +0200
+
+    Clean up namespace in ast_tool.c
+    
+    - Made sure exported functions have 'AST' in their name.
+      This avoids name space conflicts with the server or other drivers.
+    - Placed declaration of exported functions in a header file.
+      This ensures that changes to the function type or arguments are followed
+      thru everywhere.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 00fa895306c14bc320c9eb47368b20e6738ba430
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 14:05:17 2014 +0200
+
+    Clean up namespace in ast_accel.c
+    
+    - Made sure exported functions have 'AST' in their name.
+      This avoids name space conflicts with the server or other drivers.
+    - Placed declaration of exported functions in a header file.
+      This ensures that changes to the function type or arguments are followed
+      thru everywhere.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit a70eac7e6e5b23fa5cc140c29880a4abdf54adeb
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 13:57:25 2014 +0200
+
+    Clean up namespace in ast_mode.c
+    
+    - Make local functions static
+      This sometimes helps the compiler to optimize.
+    - Made sure exported functions have 'AST' in their name.
+      This avoids name space conflicts with the server or other drivers.
+    - Placed declaration of exported functions in a header file.
+      This ensures that changes to the function type or arguments are followed
+      thru everywhere.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 28f815fe8b56138f32a98e3712b61e930b5e892e
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 13:47:39 2014 +0200
+
+    Clean up namespace in ast_cursor.c
+    
+    - Make sure exported functions have 'AST' in their name.
+      This avoids name space conflicts with the server or other drivers.
+    - Place declaration of exported functions in a header file.
+      This ensures that changes to the function type or arguments are followed
+      thru everywhere.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit f6a2ba02b2ac8c8a8b66902dd3ac5324971a43fe
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 12:21:57 2014 +0200
+
+    Clean up namespace in ast_2dtool.c
+    
+    - Make local functions static
+      This sometimes helps the compiler to optimize.
+    - Make sure exported functions have 'AST' in their name.
+      This avoids name space conflicts with the server or other drivers.
+    - Place declaration of exported functions in a header file.
+      This ensures that changes to the function type or arguments are followed
+      thru everywhere.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit a833ba0b6cd6b6a449ddfed0b4753bc6f8dcb305
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Apr 24 17:25:03 2014 +0200
+
+    Clean up namespace in ast_vgatools.c
+    
+    - Make local functions static
+      This sometimes helps the compiler to optimize.
+    - Make sure exported functions have 'AST' in their name.
+      This avoids name space conflicts with the server or other drivers.
+    - Place declaration of exported functions in a header file.
+      This ensures that changes to the function type or arguments are followed
+      thru everywhere.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit e87938b319fd864f3f65527240d45a8ae234193f
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Apr 24 17:27:30 2014 +0200
+
+    Remove unused functions from ast_vgatools.c
+    
+    SetI2CReg(), GetI2CReg()
+    wait_fw_ready(), read_data() and clear_cmd() are used nowhere
+    currently.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 7c7fc069b7a50813c3ff88706e5616418f9ec76b
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 12:37:49 2014 +0200
+
+    Fix compiler warnings: add DrawablePtr argument to ASTPutImage
+    
+    An archaeological survey revealed that this ABI change took place
+    in 2006 already.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit 0ddf408f17cee58d643f4fd2f683f6530f5027af
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 11:41:07 2014 +0200
+
+    Fix compiler warnings: get rid of deprecated IOADDRESS
+    
+    For newer ABI versions IOADDRESS can be replaced by int
+    which is big enough to hold an PIO offset.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
+commit e855e6806ea94a2296076924ee9460b5081bd6da
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Apr 22 11:38:10 2014 +0200
+
+    Fix compiler warnings: get rid if xf86PciInfo.h
+    
+    xf86PciInfo.h is not needed in the ASpeed driver at all.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Acked-by: Y.C. Chen <yc_chen@aspeedtech.com>
+
 commit ed39dc7c3cff7aa248fc3c8d697400371313745c
 Author: Y.C. Chen <yc_chen@aspeedtech.com>
 Date:   Wed Mar 19 09:51:45 2014 +0800

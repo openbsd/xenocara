@@ -43,4 +43,5 @@ ast_drv_la_SOURCES =	\
 	ast_tool.c 	\
 	ast_vgatool.c 	\
 	ast_vgatool.h   \
+	ast_dp501fw.h	\
         compat-api.h

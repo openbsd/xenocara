@@ -19,6 +19,10 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+
+#ifndef _AST_H_
+# define _AST_H_
+
 /* Compiler Options */
 #define	Accel_2D
 /* #define MMIO_2D */
@@ -261,9 +265,11 @@ typedef struct _ASTRec {
     unsigned long	FbMapSize;
     unsigned long	MMIOMapSize;
 
-    IOADDRESS		IODBase;        	/* Base of PIO memory area */
-    IOADDRESS		PIOOffset;
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
     IOADDRESS		RelocateIO;
+#else
+    int			RelocateIO;
+#endif
 
     VIDEOMODE 		VideoModeInfo;
     ASTRegRec       SavedReg;
@@ -303,8 +309,56 @@ typedef struct _ASTRec {
 
 #define ASTPTR(p) ((ASTRecPtr)((p)->driverPrivate))
 
-/* Include Files */
-#include "ast_mode.h"
-#include "ast_vgatool.h"
-#include "ast_2dtool.h"
-#include "ast_cursor.h"
+/* ast_vgatool.c */
+extern Bool bASTIsVGAEnabled(ScrnInfoPtr pScrn);
+extern Bool ASTGetVGA2EDID(ScrnInfoPtr pScrn, unsigned char *pEDIDBuffer);
+extern void ASTDisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode, int flags);
+extern void vASTLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices, LOCO *colors, VisualPtr pVisual);
+extern void ASTBlankScreen(ScrnInfoPtr pScreen, Bool unblack);
+extern void vAST1000DisplayOn(ScrnInfoPtr pScrn);
+extern void vAST1000DisplayOff(ScrnInfoPtr pScrn);
+extern void vASTSetStartAddressCRT1(ASTRecPtr pAST, ULONG base);
+extern void ASTGetScratchOptions(ScrnInfoPtr pScrn);
+void ASTGetChipType(ScrnInfoPtr pScrn);
+ULONG ASTGetMaxDCLK(ScrnInfoPtr pScrn);
+ULONG ASTGetVRAMInfo(ScrnInfoPtr pScrn);
+void ASTGetDRAMInfo(ScrnInfoPtr pScrn);
+Bool bASTRegInit(ScrnInfoPtr pScrn);
+void vASTOpenKey(ScrnInfoPtr pScrn);
+Bool ASTReadEDID_M68K(ScrnInfoPtr pScrn, BYTE *pEDIDData);
+UCHAR ASTGetLinkMaxCLK(ScrnInfoPtr pScrn);
+Bool ASTGetVGAEDID(ScrnInfoPtr pScrn, unsigned char *pEDIDBuffer);
+Bool bASTInitAST1180(ScrnInfoPtr pScrn);
+void ASTGetAST1180DRAMInfo(ScrnInfoPtr pScrn);
+void vASTEnableVGAMMIO(ScrnInfoPtr pScrn);
+Bool ASTInitVGA(ScrnInfoPtr pScrn, ULONG Flags);
+
+/* ast_2dtool.c */
+void vASTWaitEngIdle(ScrnInfoPtr pScrn, ASTRecPtr pAST);
+UCHAR *pASTjRequestCMDQ(ASTRecPtr pAST, ULONG ulDataLen);
+Bool bASTEnable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST);
+void vASTDisable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST);
+
+/* ast_cursor.c */
+#ifdef  HWC
+Bool ASTCursorInit(ScreenPtr pScreen);
+Bool bASTInitHWC(ScrnInfoPtr pScrn, ASTRecPtr pAST);
+void ASTDisableHWC(ScrnInfoPtr pScrn);
+#endif
+
+/* ast_mode.c */
+Bool ASTSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode);
+
+/* ast_accel.c */
+#ifdef HAVE_XAA_H
+Bool ASTAccelInit(ScreenPtr pScreen);
+#endif
+void ASTDisplayVideo(ScrnInfoPtr pScrn, ASTPortPrivPtr pPriv, RegionPtr clipBoxes, int id);
+
+/* ast_tool.c */
+Bool ASTMapMem(ScrnInfoPtr pScrn);
+Bool ASTUnmapMem(ScrnInfoPtr pScrn);
+Bool ASTMapMMIO(ScrnInfoPtr pScrn);
+void ASTUnmapMMIO(ScrnInfoPtr pScrn);
+
+#endif /* _AST_H_ */

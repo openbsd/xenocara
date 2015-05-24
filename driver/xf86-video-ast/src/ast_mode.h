@@ -59,6 +59,7 @@
 #define VCLK119     		0x17
 #define VCLK85_5     		0x18
 #define VCLK97_75     		0x19
+#define VCLK118_25     		0x1A
 
 /* Flags Definition */
 #define Charx8Dot               0x00000001

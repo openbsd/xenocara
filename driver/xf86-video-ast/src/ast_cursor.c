@@ -36,7 +36,6 @@
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 /* framebuffer offscreen manager */
@@ -51,12 +50,11 @@
 
 /* Driver specific headers */
 #include "ast.h"
+#include "ast_vgatool.h"
+#include "ast_cursor.h"
 
 #ifdef	HWC
 /* Prototype type declaration */
-Bool ASTCursorInit(ScreenPtr pScreen);
-Bool bInitHWC(ScrnInfoPtr pScrn, ASTRecPtr pAST);
-void ASTDisableHWC(ScrnInfoPtr pScrn);
 static void ASTShowCursor(ScrnInfoPtr pScrn);
 static void ASTHideCursor(ScrnInfoPtr pScrn);
 static void ASTSetCursorPosition(ScrnInfoPtr pScrn, int x, int y);
@@ -112,7 +110,7 @@ ASTCursorInit(ScreenPtr pScreen)
 
 }
 
-Bool bInitHWC(ScrnInfoPtr pScrn, ASTRecPtr pAST)
+Bool bASTInitHWC(ScrnInfoPtr pScrn, ASTRecPtr pAST)
 {
     ScreenPtr	pScreen;
 

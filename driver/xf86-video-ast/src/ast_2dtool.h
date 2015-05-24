@@ -621,3 +621,5 @@ typedef struct {
         addr->PKT_SC_dwHeader  = (ULONG)(PKT_SINGLE_CMD_HEADER + CMDQREG_LINE_NUMBER); 	\
         addr->PKT_SC_dwData[0] = (ULONG)(no);					\
       }
+
+Bool bASTGetLineTerm(_LINEInfo *LineInfo, LINEPARAM *dsLineParam);
