@@ -1,3 +1,119 @@
+commit 70d3d3a384651e5d22840a0de8644eb8b10c5775
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 9 16:56:51 2015 +0200
+
+    Bump to 1.7.8
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit b22c590a546b2ea5f256e7654c4a6b165b320e80
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 8 13:40:46 2015 +0200
+
+    Fix a couple const-ness warnings
+    
+    smi_accel.c: In function 'SMI_GEReset':
+    smi_accel.c:51:1: warning: passing argument 4 of 'SMI_GEReset' discards 'const' qualifier from pointer target type
+      WaitIdle();
+     ^
+    smi_accel.c:38:1: note: expected 'char *' but argument is of type 'const char *'
+     SMI_GEReset(ScrnInfoPtr pScrn, int from_timeout, int line, char *file)
+     ^
+    [...]
+    smi_driver.c: In function 'SMI_DetectPanelSize':
+    smi_driver.c:1011:12: warning: assignment discards 'const' qualifier from pointer target type
+         if ((s = xf86GetOptValString(pSmi->Options, OPTION_PANEL_SIZE)) != NULL) {
+                ^
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit ca1c4c19d688d215b52f4e7e2a634c0cbcfff3c1
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 8 13:41:01 2015 +0200
+
+    Fix SwitchMode and AdjustFrame hooks
+    
+    smi_driver.c: In function 'SMI_Probe':
+    smi_driver.c:360:24: warning: assignment from incompatible pointer type
+       pScrn->SwitchMode    = SMI_SwitchMode;
+                            ^
+    smi_driver.c:361:24: warning: assignment from incompatible pointer type
+       pScrn->AdjustFrame   = SMI_AdjustFrame;
+                            ^
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit d06454e89384957fa2b77ff35b35108dc657a510
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 8 13:27:56 2015 +0200
+
+    Fix BlockHandler declaration
+    
+    smi_video.c: In function 'SMI_SetupVideo':
+    smi_video.c:940:24: warning: assignment from incompatible pointer type
+         pSmi->BlockHandler = pScreen->BlockHandler;
+                            ^
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 6073828547bdff86d147ab54accb12bc4230d6aa
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 8 13:26:00 2015 +0200
+
+    Fix shadow compiler warning
+    
+    smi_video.c: In function 'SetAttrSAA7111':
+    smi_video.c:795:6: warning: declaration of 'i' shadows a parameter [-Wshadow]
+      int i;
+          ^
+    smi_video.c:723:39: warning: shadowed declaration is here [-Wshadow]
+     SetAttrSAA7111(ScrnInfoPtr pScrn, int i, int value)
+                                           ^
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit c31d7f853d7469085f96f1e37923c260884c611c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 30 10:34:07 2014 -0400
+
+    Remove dependency on xf86PciInfo.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 08d459d2b548ce89264f45c7018f1cda9f08d795
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 30 10:31:52 2014 -0400
+
+    Fix a typo
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit b0b287209cfba5c64c7584b1a82ed2a2f1eab7e6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 30 10:28:48 2014 -0400
+
+    Fix build against xserver 1.17
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9b563415326e02f0b89f716c29b2fc22f393fb96
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 14:01:02 2014 -0400
+
+    Use own thunk function instead of vgaHW*Weak
+    
+    I plan to remove the Weak functions from a future server.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit f19d7e463c30f1364e82e8c9f87b8a8407d53680
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 9 22:59:39 2013 -0500
+
+    Remove miInitializeBackingStore()
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 2beb25bd41508ab5e2af39c696485fcb5f0ca7d6
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

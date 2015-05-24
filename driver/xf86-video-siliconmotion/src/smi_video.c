@@ -792,12 +792,12 @@ SetAttrSAA7111(ScrnInfoPtr pScrn, int i, int value)
     /* debug: show registers */
     {
 	I2CByte i2c_bytes[32];
-	int i;
+	int j;
 	xf86I2CReadBytes(&(pPort->I2CDev), 0, i2c_bytes, 32);
 	DEBUG("SAA7111 Registers\n");
-	for (i=0; i<32; i++) {
-	    DEBUG("%02X=%02X ", i, i2c_bytes[i]);
-	    if ((i&7) == 7) DEBUG("\n");
+	for (j=0; j<32; j++) {
+	    DEBUG("%02X=%02X ", j, i2c_bytes[j]);
+	    if ((j&7) == 7) DEBUG("\n");
 	}
     }
 

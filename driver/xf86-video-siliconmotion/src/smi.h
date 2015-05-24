@@ -37,7 +37,6 @@ authorization from the XFree86 Project and Silicon Motion.
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86Cursor.h"
 #include "vgaHW.h"
@@ -67,6 +66,15 @@ authorization from the XFree86 Project and Silicon Motion.
 /******************************************************************************/
 /*			D E F I N I T I O N S				      */
 /******************************************************************************/
+
+#define PCI_VENDOR_SMI		0x126F
+#define PCI_CHIP_SMI910		0x0910
+#define PCI_CHIP_SMI810		0x0810
+#define PCI_CHIP_SMI820		0x0820
+#define PCI_CHIP_SMI710		0x0710
+#define PCI_CHIP_SMI712		0x0712
+#define PCI_CHIP_SMI720		0x0720
+#define PCI_CHIP_SMI731		0x0730
 
 #ifndef SMI_DEBUG
 #define SMI_DEBUG		0
@@ -221,7 +229,7 @@ typedef struct
     CARD8 *		DataPortBase;	/* Base of data port */
     int			DataPortSize;	/* Size of data port */
     CARD8 *		IOBase;		/* Base of MMIO VGA ports */
-    IOADDRESS		PIOBase;	/* Base of I/O ports */
+    unsigned int	PIOBase;	/* Base of I/O ports */
     unsigned char *	FBBase;		/* Base of FB */
     CARD32		fbMapOffset;    /* offset for fb mapping */
     CARD32		FBOffset;	/* Current visual FB starting
@@ -268,8 +276,7 @@ typedef struct
     Bool		interlaced;	/* True: Interlaced Video */
     XF86VideoAdaptorPtr	ptrAdaptor;	/* Pointer to VideoAdapter
 					   structure */
-    void (*BlockHandler)(int i, pointer blockData, pointer pTimeout,
-					 pointer pReadMask);
+    void (*BlockHandler)(BLOCKHANDLER_ARGS_DECL);
 #if SMI501_CLI_DEBUG
     /* SMI 501/502 Command List Interpreter */
     Bool		 batch_active;
@@ -365,7 +372,7 @@ Bool SMI_I2CInit(ScrnInfoPtr pScrn);
 
 /* smi_accel.c */
 void SMI_AccelSync(ScrnInfoPtr pScrn);
-void SMI_GEReset(ScrnInfoPtr pScrn, int from_timeout, int line, char *file);
+void SMI_GEReset(ScrnInfoPtr pScrn, int from_timeout, int line, const char *file);
 void SMI_EngineReset(ScrnInfoPtr);
 void SMI_SetClippingRectangle(ScrnInfoPtr, int, int, int, int);
 void SMI_DisableClipping(ScrnInfoPtr);
@@ -383,8 +390,8 @@ Bool SMI_HWCursorInit(ScreenPtr pScrn);
 /* smi_driver.c */
 Bool SMI_MapMem(ScrnInfoPtr pScrn);
 void SMI_UnmapMem(ScrnInfoPtr pScrn);
-void SMI_AdjustFrame(int scrnIndex, int x, int y, int flags);
-Bool SMI_SwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
+void SMI_AdjustFrame(ADJUST_FRAME_ARGS_DECL);
+Bool SMI_SwitchMode(SWITCH_MODE_ARGS_DECL);
 void SMI_LoadPalette(ScrnInfoPtr pScrn, int numColors, int *indicies,
 		     LOCO *colors, VisualPtr pVisual);
 xf86MonPtr SMI_ddc1(ScrnInfoPtr pScrn);

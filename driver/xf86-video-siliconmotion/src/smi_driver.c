@@ -1002,7 +1002,7 @@ SMI_LeaveVT(VT_FUNC_ARGS_DECL)
 static void
 SMI_DetectPanelSize(ScrnInfoPtr pScrn)
 {
-    char	*s;
+    const char	*s;
     int		 width, height;
     SMIPtr	 pSmi = SMIPTR(pScrn);
 
@@ -1899,9 +1899,10 @@ SMI_SaveScreen(ScreenPtr pScreen, int mode)
 }
 
 void
-SMI_AdjustFrame(int scrnIndex, int x, int y, int flags)
+SMI_AdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    xf86CrtcConfigPtr crtcConf = XF86_CRTC_CONFIG_PTR(xf86Screens[scrnIndex]);
+    SCRN_INFO_PTR(arg);
+    xf86CrtcConfigPtr crtcConf = XF86_CRTC_CONFIG_PTR(pScrn);
     xf86CrtcPtr compat_crtc = crtcConf->output[crtcConf->compat_output]->crtc;
 
     ENTER();
@@ -1912,10 +1913,10 @@ SMI_AdjustFrame(int scrnIndex, int x, int y, int flags)
 }
 
 Bool
-SMI_SwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+SMI_SwitchMode(SWITCH_MODE_ARGS_DECL)
 {
     Bool ret;
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     SMIPtr pSmi = SMIPTR(pScrn);
 
     ENTER();

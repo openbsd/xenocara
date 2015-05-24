@@ -572,6 +572,12 @@ SMILynx_ddc1Read(ScrnInfoPtr pScrn)
     LEAVE(ret);
 }
 
+static void
+SMILynx_ddc1SetSpeed(ScrnInfoPtr pScrn, xf86ddcSpeed speed)
+{
+    vgaHWddc1SetSpeed(pScrn, speed);
+}
+
 xf86MonPtr
 SMILynx_ddc1(ScrnInfoPtr pScrn)
 {
@@ -585,7 +591,7 @@ SMILynx_ddc1(ScrnInfoPtr pScrn)
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x72, tmp | 0x20);
 
     pMon = xf86PrintEDID(xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn),
-					 vgaHWddc1SetSpeedWeak(),
+					 SMILynx_ddc1SetSpeed,
 					 SMILynx_ddc1Read));
     VGAOUT8_INDEX(pSmi, VGA_SEQ_INDEX, VGA_SEQ_DATA, 0x72, tmp);
 

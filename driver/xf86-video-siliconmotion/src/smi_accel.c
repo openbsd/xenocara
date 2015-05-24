@@ -35,7 +35,7 @@ authorization from the XFree86 Project and silicon Motion.
 #include "smi_501.h"
 
 void
-SMI_GEReset(ScrnInfoPtr pScrn, int from_timeout, int line, char *file)
+SMI_GEReset(ScrnInfoPtr pScrn, int from_timeout, int line, const char *file)
 {
     SMIPtr	pSmi = SMIPTR(pScrn);
     int32_t	tmp;
