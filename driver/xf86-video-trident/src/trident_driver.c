@@ -45,7 +45,6 @@
 #include "xf86Resources.h"
 #include "xf86RAC.h"
 #endif
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86cmap.h"
 #include "vgaHW.h"
@@ -979,6 +978,18 @@ TRIDENTProbeDDC(ScrnInfoPtr pScrn, int index)
 	ConfiguredMonitor = vbeDoEDID(pVbe, NULL);
 	vbeFree(pVbe);
     }
+}
+
+static void
+TRIDENTProtect(ScrnInfoPtr pScrn, Bool on)
+{
+    vgaHWProtect(pScrn, on);
+}
+
+static void
+TRIDENTBlankScreen(ScrnInfoPtr pScrn, Bool on)
+{
+    vgaHWBlankScreen(pScrn, on);
 }
 
 /* Mandatory */
@@ -1987,8 +1998,7 @@ TRIDENTPreInit(ScrnInfoPtr pScrn, int flags)
     if (!pScrn->progClock) {
 	pScrn->numClocks = NoClocks;
 	xf86GetClocks(pScrn, NoClocks, TRIDENTClockSelect,
-			  vgaHWProtectWeak(),
-			  vgaHWBlankScreenWeak(),
+			  TRIDENTProtect, TRIDENTBlankScreen,
 			  vgaIOBase + 0x0A, 0x08, 1, 28322);
 	from = X_PROBED;
 	xf86ShowClocks(pScrn, from);
@@ -2756,40 +2766,20 @@ TRIDENTRestore(ScrnInfoPtr pScrn)
 static Bool
 TRIDENTCreateScreenResources(ScreenPtr pScreen)
 {
-	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-	TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
-	PixmapPtr pPixmap;
-	Bool ret;
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
+    TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
+    Bool ret;
 
-	pScreen->CreateScreenResources = pTrident->CreateScreenResources;
-	ret = pScreen->CreateScreenResources(pScreen);
-	pScreen->CreateScreenResources = TRIDENTCreateScreenResources;
+    pScreen->CreateScreenResources = pTrident->CreateScreenResources;
+    ret = pScreen->CreateScreenResources(pScreen);
+    pTrident->CreateScreenResources = pScreen->CreateScreenResources;
+    pScreen->CreateScreenResources = TRIDENTCreateScreenResources;
 
-	if (!ret)
-		return FALSE;
+    if (ret)
+	ret = shadowAdd(pScreen, pScreen->GetScreenPixmap(pScreen),
+			TRIDENTShadowUpdate, NULL, 0, 0);
 
-	pPixmap = pScreen->GetScreenPixmap(pScreen);
-
-	if (!shadowAdd(pScreen, pPixmap, TRIDENTShadowUpdate,
-		NULL, 0, NULL)) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
-
-static Bool
-TRIDENTShadowInit(ScreenPtr pScreen)
-{
-	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-	TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
-
-	if (!shadowSetup(pScreen))
-		return FALSE;
-	pTrident->CreateScreenResources = pScreen->CreateScreenResources;
-	pScreen->CreateScreenResources = TRIDENTCreateScreenResources;
-
-	return TRUE;
+    return ret;
 }
 
 /* Mandatory */
@@ -3115,7 +3105,10 @@ TRIDENTScreenInit(SCREEN_INIT_ARGS_DECL)
 	} else {
 	  pTrident->RefreshArea = TRIDENTRefreshArea;
 	}
-	TRIDENTShadowInit(pScreen);
+	if (!shadowSetup(pScreen))
+	    return FALSE;
+	pTrident->CreateScreenResources = pScreen->CreateScreenResources;
+	pScreen->CreateScreenResources = TRIDENTCreateScreenResources;
     }
 
     xf86DPMSInit(pScreen, (DPMSSetProcPtr)TRIDENTDisplayPowerManagementSet, 0);
@@ -3303,8 +3296,11 @@ TRIDENTCloseScreen(CLOSE_SCREEN_ARGS_DECL)
     }	
     if (pTrident->CursorInfoRec)
 	xf86DestroyCursorInfoRec(pTrident->CursorInfoRec);
-    if (pTrident->ShadowPtr)
+    if (pTrident->ShadowPtr) {
+	shadowRemove(pScreen, pScreen->GetScreenPixmap(pScreen));
 	free(pTrident->ShadowPtr);
+	pScreen->CreateScreenResources = pTrident->CreateScreenResources;
+    }
     if (pTrident->DGAModes)
 	free(pTrident->DGAModes);
     pScrn->vtSema = FALSE;

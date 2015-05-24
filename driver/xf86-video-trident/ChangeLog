@@ -1,3 +1,51 @@
+commit 64c02f307d7146641adf65e31bcaa2d1238479e7
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Mar 30 10:06:15 2015 -0700
+
+    xf86-video-trident 1.3.7
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 562c38ca017c34509525ee558c761cb8aee0d401
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 29 09:30:43 2014 -0400
+
+    Stop using deprecated xf86PciInfo.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9f8e49e04bce04dac5effa4716e3caaa0874f848
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jul 29 09:27:48 2014 -0400
+
+    shadow: shadowInit -> shadowAdd/Remove
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 2650c0bf05c30183d7fd31902e96260e6b8bf028
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 21 13:56:03 2014 -0400
+
+    Use own thunk functions instead of vgaHW*Weak
+    
+    I plan to remove the Weak functions from a future server.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 48c15909691e28ad2c188a2978b1c8ef3d9d8760
+Author: Timo Aaltonen <tjaalton@ubuntu.com>
+Date:   Wed Sep 26 11:01:26 2012 +0300
+
+    Fix loading the driver without XAA
+
+commit 30787294c837aefa8820b6f76f00fe30d4e54181
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:55:01 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 3098fe7193cbfe4a885a60b93e71796b70e4fa2a
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

@@ -66,7 +66,7 @@ DGAFunctionRec TRIDENTDGAFuncs = {
    NULL
 #endif
 #else
-   NULL, NULL, NULL, NULL
+   NULL, NULL, NULL
 #endif
 };
 
