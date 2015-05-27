@@ -25,7 +25,6 @@
 
 #include "xf86str.h"
 
-extern Bool ATIGetRec(ScrnInfoPtr);
 extern Bool ATIPreInit(ScrnInfoPtr, int);
 
 #endif /* ___ATIPREINIT_H___ */
