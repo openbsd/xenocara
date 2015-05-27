@@ -59,7 +59,7 @@
 /*
  * FreeScreen handles the clean-up.
  */
-static Bool
+Bool
 Mach64GetRec(ScrnInfoPtr pScrn)
 {
     if (!pScrn->driverPrivate) {
@@ -556,7 +556,9 @@ ATIPreInit
 #endif
 
     pATI->iEntity = pEntity->index;
+#ifndef XSERVER_LIBPCIACCESS
     pATI->Chip = pEntity->chipset;
+#endif
     pVideo = xf86GetPciInfoForEntity(pATI->iEntity);
 
     free(pEntity);
