@@ -376,6 +376,7 @@
 ./usr/X11R6/man
 ./usr/X11R6/man/man1
 ./usr/X11R6/man/man3
+./usr/X11R6/man/man3/XF86VidModeAddModeLine.3
 ./usr/X11R6/man/man4
 ./usr/X11R6/man/man5
 ./usr/X11R6/man/man7
