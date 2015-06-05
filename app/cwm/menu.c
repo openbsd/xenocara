@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.79 2015/03/28 22:09:10 okan Exp $
+ * $OpenBSD: menu.c,v 1.80 2015/06/05 14:54:04 okan Exp $
  */
 
 #include <sys/types.h>
@@ -338,7 +338,7 @@ menu_draw(struct menu_ctx *mc, struct menu_q *menuq, struct menu_q *resultq)
 	int			 n, xsave, ysave;
 
 	if (mc->list) {
-		if (TAILQ_EMPTY(resultq) && mc->list) {
+		if (TAILQ_EMPTY(resultq)) {
 			/* Copy them all over. */
 			TAILQ_FOREACH(mi, menuq, entry)
 				TAILQ_INSERT_TAIL(resultq, mi,
