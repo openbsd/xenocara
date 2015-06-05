@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.80 2015/06/05 14:54:04 okan Exp $
+ * $OpenBSD: menu.c,v 1.81 2015/06/05 15:01:51 okan Exp $
  */
 
 #include <sys/types.h>
@@ -109,8 +109,10 @@ menu_filter(struct screen_ctx *sc, struct menu_q *menuq, const char *prompt,
 		mc.hasprompt = 1;
 	} else {
 		evmask = MENUMASK;
-		mc.list = 1;
 	}
+
+	if (mc.flags & CWM_MENU_LIST)
+		mc.list = 1;
 
 	if (initial != NULL)
 		(void)strlcpy(mc.searchstr, initial, sizeof(mc.searchstr));

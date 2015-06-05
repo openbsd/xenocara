@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.87 2015/05/21 00:37:04 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.88 2015/06/05 15:01:51 okan Exp $
  */
 
 #include <sys/types.h>
@@ -191,7 +191,7 @@ mousefunc_menu_group(struct client_ctx *cc, union arg *arg)
 	if (TAILQ_EMPTY(&menuq))
 		return;
 
-	if ((mi = menu_filter(sc, &menuq, NULL, NULL, 0,
+	if ((mi = menu_filter(sc, &menuq, NULL, NULL, CWM_MENU_LIST,
 	    NULL, NULL)) != NULL) {
 		gc = (struct group_ctx *)mi->ctx;
 		(group_holds_only_hidden(gc)) ?
@@ -225,7 +225,7 @@ mousefunc_menu_unhide(struct client_ctx *cc, union arg *arg)
 	if (TAILQ_EMPTY(&menuq))
 		return;
 
-	if ((mi = menu_filter(sc, &menuq, NULL, NULL, 0,
+	if ((mi = menu_filter(sc, &menuq, NULL, NULL, CWM_MENU_LIST,
 	    NULL, NULL)) != NULL) {
 		cc = (struct client_ctx *)mi->ctx;
 		client_unhide(cc);
@@ -251,7 +251,7 @@ mousefunc_menu_cmd(struct client_ctx *cc, union arg *arg)
 	if (TAILQ_EMPTY(&menuq))
 		return;
 
-	if ((mi = menu_filter(sc, &menuq, NULL, NULL, 0,
+	if ((mi = menu_filter(sc, &menuq, NULL, NULL, CWM_MENU_LIST,
 	    NULL, NULL)) != NULL)
 		u_spawn(((struct cmd *)mi->ctx)->path);
 
