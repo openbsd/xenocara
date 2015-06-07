@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.329 2015/05/24 10:05:19 matthieu Exp $
+# $OpenBSD: MODULES,v 1.330 2015/06/07 12:14:11 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -106,7 +106,7 @@ driver/xf86-video-ati		7.5.0	7.7+
 driver/xf86-video-chips		1.2.5
 driver/xf86-video-cirrus	1.5.3	7.7+
 driver/xf86-video-dummy		0.3.7	7.7+
-driver/xf86-video-geode		2.11.16	7.7+
+driver/xf86-video-geode		2.11.17	7.7+	needs-update
 driver/xf86-video-glint		1.2.8	7.7+
 driver/xf86-video-i128		1.3.6	7.7+
 driver/xf86-video-i740		1.3.5
@@ -192,7 +192,7 @@ lib/libXinerama			1.1.3	7.7+
 lib/libXmu			1.1.2	7.7+
 lib/libXpm			3.5.11	7.7+
 lib/libXpresent			1.0.0		needs-import
-lib/libXrandr			1.4.2	7.7+
+lib/libXrandr			1.5.0	7.7+	needs-update
 lib/libXrender			0.9.9	7.7+
 lib/libXres			1.0.7	7.7+
 lib/libXt			1.1.5	7.7+
@@ -234,7 +234,7 @@ proto/inputproto		2.3.1	7.7+
 proto/kbproto			1.0.7	7.7+
 proto/pmproto			1.0.3
 proto/presentproto		1.0	7.7+
-proto/randrproto		1.4.1	7.7+
+proto/randrproto		1.5.0	7.7+	needs-update
 proto/recordproto		1.14.2	7.7
 proto/renderproto		0.11.1	7.7
 proto/resourceproto		1.2.0	7.7
