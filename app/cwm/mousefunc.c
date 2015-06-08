@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.90 2015/06/08 15:11:29 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.91 2015/06/08 15:41:27 okan Exp $
  */
 
 #include <sys/types.h>
@@ -204,23 +204,18 @@ mousefunc_menu_unhide(struct client_ctx *cc, union arg *arg)
 	struct client_ctx	*old_cc;
 	struct menu		*mi;
 	struct menu_q		 menuq;
-	char			*wname;
 
 	old_cc = client_current();
 
 	TAILQ_INIT(&menuq);
 	TAILQ_FOREACH(cc, &sc->clientq, entry) {
 		if (cc->flags & CLIENT_HIDDEN) {
-			wname = (cc->label) ? cc->label : cc->name;
-			if (wname == NULL)
-				continue;
-			menuq_add(&menuq, cc, "(%d) %s",
-			    cc->group ? cc->group->num : 0, wname);
+			menuq_add(&menuq, cc, NULL);
 		}
 	}
 
 	if ((mi = menu_filter(sc, &menuq, NULL, NULL, CWM_MENU_LIST,
-	    NULL, NULL)) != NULL) {
+	    NULL, search_print_client)) != NULL) {
 		cc = (struct client_ctx *)mi->ctx;
 		client_unhide(cc);
 		if (old_cc != NULL)
