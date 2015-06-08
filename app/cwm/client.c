@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.192 2015/05/20 23:54:39 okan Exp $
+ * $OpenBSD: client.c,v 1.193 2015/06/08 15:11:29 okan Exp $
  */
 
 #include <sys/types.h>
@@ -874,6 +874,9 @@ client_applysizehints(struct client_ctx *cc)
 
 	cc->geom.w = MAX(cc->geom.w, 1);
 	cc->geom.h = MAX(cc->geom.h, 1);
+
+	cc->dim.w = (cc->geom.w - cc->hint.basew) / cc->hint.incw;
+	cc->dim.h = (cc->geom.h - cc->hint.baseh) / cc->hint.inch;
 }
 
 static void

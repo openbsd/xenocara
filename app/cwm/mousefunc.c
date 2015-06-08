@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.89 2015/06/07 19:10:00 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.90 2015/06/08 15:11:29 okan Exp $
  */
 
 #include <sys/types.h>
@@ -53,9 +53,7 @@ mousefunc_sweep_draw(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	char			 s[14]; /* fits " nnnn x nnnn \0" */
 
-	(void)snprintf(s, sizeof(s), " %4d x %-4d ",
-	    (cc->geom.w - cc->hint.basew) / cc->hint.incw,
-	    (cc->geom.h - cc->hint.baseh) / cc->hint.inch);
+	(void)snprintf(s, sizeof(s), " %4d x %-4d ", cc->dim.w, cc->dim.h);
 
 	XReparentWindow(X_Dpy, sc->menuwin, cc->win, 0, 0);
 	XMoveResizeWindow(X_Dpy, sc->menuwin, 0, 0,
