@@ -1,0 +1,3 @@
+#! /bin/sh
+# $OpenBSD: xserverrc,v 1.1 2015/06/15 16:17:46 matthieu Exp $
+exec /usr/X11R6/bin/X -nolisten tcp "$@"
