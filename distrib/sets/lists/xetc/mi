@@ -11,7 +11,6 @@
 ./etc/X11/xdm/Xwilling
 ./etc/X11/xdm/xdm-config
 ./etc/X11/xinit/xinitrc
-./etc/X11/xinit/xserverrc
 ./etc/X11/xsm/system.xsm
 ./etc/fonts/conf.d/10-autohint.conf
 ./etc/fonts/conf.d/10-scale-bitmap-fonts.conf
