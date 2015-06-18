@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.63 2014/11/27 11:37:45 ajacoutot Exp $
+# $OpenBSD: Makefile,v 1.64 2015/06/18 11:46:16 deraadt Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -123,6 +123,9 @@ dist:
 		env MACHINE=${MACHINE} ksh ./maketars ${OSrev} ${OSREV} && \
 		{ env MACHINE=${MACHINE} ksh ./checkflist ${OSREV} || true ; }
 
+checkdist:
+	cd distrib/sets && \
+		{ env MACHINE=${MACHINE} ksh ./checkflist ${OSREV} || true ; }
 
 distrib-dirs:
 .if defined(DESTDIR) && ${DESTDIR} != ""
