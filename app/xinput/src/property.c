@@ -832,12 +832,28 @@ int set_prop(Display *display, int argc, char *argv[], char *name,
 
 int disable(Display *display, int argc, char *argv[], char *name, char *desc)
 {
-    char *new_argv[3] = { argv[0], "Device Enabled", "0" };
+    char *new_argv[3] = { NULL, "Device Enabled", "0" };
+
+    if (argc != 1) {
+        fprintf(stderr, "Usage: xinput %s %s\n", name, desc);
+        return EXIT_FAILURE;
+    }
+
+    new_argv[0] = argv[0];
+
     return set_prop(display, 3, new_argv, name, desc);
 }
 
 int enable(Display *display, int argc, char *argv[], char *name, char *desc)
 {
-    char *new_argv[3] = { argv[0], "Device Enabled", "1" };
+    char *new_argv[3] = { NULL, "Device Enabled", "1" };
+
+    if (argc != 1) {
+        fprintf(stderr, "Usage: xinput %s %s\n", name, desc);
+        return EXIT_FAILURE;
+    }
+
+    new_argv[0] = argv[0];
+
     return set_prop(display, 3, new_argv, name, desc);
 }
