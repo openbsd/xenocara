@@ -9,4 +9,4 @@ XCOMM you can add them here as well.  Each X terminal line should
 XCOMM look like:
 XCOMM	XTerminalName:0 foreign
 XCOMM
-:0 local BINDIR/X :0 DEFAULTVT -nolisten tcp
+:0 local BINDIR/X :0 DEFAULTVT

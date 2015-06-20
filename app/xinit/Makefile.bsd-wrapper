@@ -1,7 +1,3 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2015/06/15 16:17:46 matthieu Exp $
-
-afterinstall:
-	$(INSTALL) -m 644 ${.CURDIR}/openbsd/xserverrc \
-		$(DESTDIR)/etc/X11/xinit
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2015/06/20 10:12:39 matthieu Exp $
 
 .include <bsd.xorg.mk>
