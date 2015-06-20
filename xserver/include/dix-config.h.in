@@ -493,6 +493,15 @@
 /* Ask fontsproto to make font path element names const */
 #define FONT_PATH_ELEMENT_NAME_CONST    1
 
+/* Listen on TCP socket */
+#undef LISTEN_TCP
+
+/* Listen on Unix socket */
+#undef LISTEN_UNIX
+
+/* Listen on local socket */
+#undef LISTEN_LOCAL
+
 /* Build GLAMOR */
 #undef GLAMOR
 

@@ -1320,6 +1320,9 @@ with_builder_addr
 with_os_name
 with_os_vendor
 with_builderstring
+enable_listen_tcp
+enable_listen_unix
+enable_listen_local
 with_fontrootdir
 with_fontmiscdir
 with_fontotfdir
@@ -2164,6 +2167,9 @@ Optional Features:
   --enable-use-sigio-by-default
   Enable SIGIO input handlers by default (default: $USE_SIGIO_BY_DEFAULT)
 
+  --enable-listen-tcp     Listen on TCP by default (default:disabled)
+  --disable-listen-unix   Listen on Unix by default (default:enabled)
+  --disable-listen-local  Listen on local by default (default:enabled)
   --enable-sparkle        Enable updating of X11.app using the Sparkle
                           Framework (default: disabled)
   --enable-install-libxf86config
@@ -22752,6 +22758,28 @@ if test "${with_builderstring+set}" = set; then :
 
 fi
 
+# Check whether --enable-listen-tcp was given.
+if test "${enable_listen_tcp+set}" = set; then :
+  enableval=$enable_listen_tcp; LISTEN_TCP=$enableval
+else
+  LISTEN_TCP=no
+fi
+
+# Check whether --enable-listen-unix was given.
+if test "${enable_listen_unix+set}" = set; then :
+  enableval=$enable_listen_unix; LISTEN_UNIX=$enableval
+else
+  LISTEN_UNIX=yes
+fi
+
+
+# Check whether --enable-listen-local was given.
+if test "${enable_listen_local+set}" = set; then :
+  enableval=$enable_listen_local; LISTEN_LOCAL=$enableval
+else
+  LISTEN_LOCAL=yes
+fi
+
 
 
 
@@ -25183,6 +25211,22 @@ $as_echo "#define RES 1" >>confdefs.h
 
 	REQUIRED_MODULES="$REQUIRED_MODULES $RESOURCEPROTO"
 	SDK_REQUIRED_MODULES="$SDK_REQUIRED_MODULES $RESOURCEPROTO"
+fi
+
+if test "x$LISTEN_TCP" = xyes; then
+
+$as_echo "#define LISTEN_TCP 1" >>confdefs.h
+
+fi
+if test "x$LISTEN_UNIX" = xyes; then
+
+$as_echo "#define LISTEN_UNIX 1" >>confdefs.h
+
+fi
+if test "x$LISTEN_LOCAL" = xyes; then
+
+$as_echo "#define LISTEN_LOCAL 1" >>confdefs.h
+
 fi
 
 # The XRes extension may support client ID tracking only if it has

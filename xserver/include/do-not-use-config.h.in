@@ -418,6 +418,15 @@
 /* Enable KDrive mouse driver */
 #undef KDRIVE_MOUSE
 
+/* Listen on local socket */
+#undef LISTEN_LOCAL
+
+/* Listen on TCP socket */
+#undef LISTEN_TCP
+
+/* Listen on Unix socket */
+#undef LISTEN_UNIX
+
 /* Support os-specific local connections */
 #undef LOCALCONN
 
