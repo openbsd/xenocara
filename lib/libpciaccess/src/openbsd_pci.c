@@ -192,12 +192,18 @@ pci_device_openbsd_map_range(struct pci_device *dev,
 	struct mem_range_desc mr;
 	struct mem_range_op mo;
 	int prot = PROT_READ;
+	off_t addr = map->base;
 
 	if (map->flags & PCI_DEV_MAP_FLAG_WRITABLE)
 		prot |= PROT_WRITE;
 
+#ifdef MEMRANGE_WC_RANGE
+	if (map->flags & PCI_DEV_MAP_FLAG_WRITABLE)
+		addr += MEMRANGE_WC_RANGE;
+#endif
+
 	map->memory = mmap(NULL, map->size, prot, MAP_SHARED, aperturefd,
-	    map->base);
+	    addr);
 	if (map->memory == MAP_FAILED)
 		return  errno;
 #if defined(__i386__) || defined(__amd64__)
