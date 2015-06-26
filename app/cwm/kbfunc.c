@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.107 2015/06/08 15:43:13 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.108 2015/06/26 17:17:46 okan Exp $
  */
 
 #include <sys/types.h>
@@ -57,7 +57,7 @@ void
 kbfunc_client_moveresize(struct client_ctx *cc, union arg *arg)
 {
 	struct screen_ctx	*sc = cc->sc;
-	struct geom		 xine;
+	struct geom		 area;
 	int			 x, y, flags, amt;
 	unsigned int		 mx, my;
 
@@ -101,15 +101,15 @@ kbfunc_client_moveresize(struct client_ctx *cc, union arg *arg)
 		if (cc->geom.y > sc->view.h - 1)
 			cc->geom.y = sc->view.h - 1;
 
-		xine = screen_find_xinerama(sc,
+		area = screen_area(sc,
 		    cc->geom.x + cc->geom.w / 2,
 		    cc->geom.y + cc->geom.h / 2, CWM_GAP);
 		cc->geom.x += client_snapcalc(cc->geom.x,
 		    cc->geom.x + cc->geom.w + (cc->bwidth * 2),
-		    xine.x, xine.x + xine.w, sc->snapdist);
+		    area.x, area.x + area.w, sc->snapdist);
 		cc->geom.y += client_snapcalc(cc->geom.y,
 		    cc->geom.y + cc->geom.h + (cc->bwidth * 2),
-		    xine.y, xine.y + xine.h, sc->snapdist);
+		    area.y, area.y + area.h, sc->snapdist);
 
 		client_move(cc);
 		xu_ptr_getpos(cc->win, &x, &y);
