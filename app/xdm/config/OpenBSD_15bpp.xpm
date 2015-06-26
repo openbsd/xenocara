@@ -1,8 +1,8 @@
 /* XPM */
-/* $OpenBSD: OpenBSD_15bpp.xpm,v 1.20 2015/06/23 04:07:12 deraadt Exp $ */
+/* $OpenBSD: OpenBSD_15bpp.xpm,v 1.21 2015/06/26 16:18:26 mikeb Exp $ */
 static char *OpenBSD_15bpp[] = {
 "240 175 6434 2",
-"  	c #5071B4",
+"  	c none",
 ". 	c #4C6AA8",
 "+ 	c #4A66A0",
 "@ 	c #476096",
