@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.17 2014/02/07 19:40:52 bcallah Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.18 2015/06/27 21:50:55 miod Exp $
 
 .include <bsd.xconf.mk>
 
@@ -22,5 +22,11 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 
 realinstall:
 	(cd hw/kdrive/ephyr ; make install)
+
+.if ${MACHINE_CPU} == "mips64"
+# disable cache file, because the compiler flags will not match
+CONFIGURE_ARGS+=	--cache-file=/dev/null
+CFLAGS+=	-Wa,-xgot
+.endif
 
 .include <bsd.xorg.mk>

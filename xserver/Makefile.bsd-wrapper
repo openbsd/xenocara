@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.54 2015/05/31 13:23:03 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.55 2015/06/27 21:50:55 miod Exp $
 
 .include <bsd.xconf.mk>
 
@@ -8,17 +8,10 @@ DIST= ${.CURDIR}
 NO_XORG_MACHINES=	alpha aviion hppa64 landisk  \
 			octeon solbourne vax
 
-NO_XF86UTIL_MACHINES=	landisk luna88k mac68k octeon sgi sparc vax
-
 .for M in ${NO_XORG_MACHINES} 
 NO_XORG_${M} = --disable-xorg
 .endfor
 NO_XORG_OPTION=${NO_XORG_${MACHINE}}
-
-.for M in ${NO_XF86UTIL_MACHINES}
-NO_XF86_UTIL_${M} = --disable-xfree86-utils
-.endfor
-NO_XF86_UTIL_OPTION=${NO_XF86_UTIL_${MACHINE}}
 
 .if ${XENOCARA_BUILD_GL:L} != "yes"
 GLX_OPTION=	--disable-glx
@@ -41,8 +34,14 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--enable-install-setuid --enable-privsep \
 		--enable-xcsecurity \
 		--without-fop --without-xmlto --without-xsltproc \
-		--disable-dmx ${NO_XORG_OPTION} ${NO_XF86_UTIL_OPTION} \
+		--disable-dmx ${NO_XORG_OPTION} \
 		--disable-unit-tests \
 		${DRI_OPTION}
+
+.if ${MACHINE_CPU} == "mips64"
+# disable cache file, because the compiler flags will not match
+CONFIGURE_ARGS+=	--cache-file=/dev/null
+CFLAGS+=	-Wa,-xgot
+.endif
 
 .include <bsd.xorg.mk>
