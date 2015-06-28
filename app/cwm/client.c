@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.195 2015/06/28 19:50:46 okan Exp $
+ * $OpenBSD: client.c,v 1.196 2015/06/28 19:54:37 okan Exp $
  */
 
 #include <sys/types.h>
@@ -41,21 +41,6 @@ static void			 client_mwm_hints(struct client_ctx *);
 static int			 client_inbound(struct client_ctx *, int, int);
 
 struct client_ctx	*curcc = NULL;
-
-struct client_ctx *
-client_find(Window win)
-{
-	struct screen_ctx	*sc;
-	struct client_ctx	*cc;
-
-	TAILQ_FOREACH(sc, &Screenq, entry) {
-		TAILQ_FOREACH(cc, &sc->clientq, entry) {
-			if (cc->win == win)
-				return(cc);
-		}
-	}
-	return(NULL);
-}
 
 struct client_ctx *
 client_init(Window win, struct screen_ctx *sc)
@@ -140,6 +125,21 @@ client_init(Window win, struct screen_ctx *sc)
 	XUngrabServer(X_Dpy);
 
 	return(cc);
+}
+
+struct client_ctx *
+client_find(Window win)
+{
+	struct screen_ctx	*sc;
+	struct client_ctx	*cc;
+
+	TAILQ_FOREACH(sc, &Screenq, entry) {
+		TAILQ_FOREACH(cc, &sc->clientq, entry) {
+			if (cc->win == win)
+				return(cc);
+		}
+	}
+	return(NULL);
 }
 
 void
