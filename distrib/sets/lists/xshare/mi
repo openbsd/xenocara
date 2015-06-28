@@ -619,6 +619,7 @@
 ./usr/X11R6/include/freetype2/ftcid.h
 ./usr/X11R6/include/freetype2/fterrdef.h
 ./usr/X11R6/include/freetype2/fterrors.h
+./usr/X11R6/include/freetype2/ftfntfmt.h
 ./usr/X11R6/include/freetype2/ftgasp.h
 ./usr/X11R6/include/freetype2/ftglyph.h
 ./usr/X11R6/include/freetype2/ftgxval.h
@@ -644,7 +645,6 @@
 ./usr/X11R6/include/freetype2/fttrigon.h
 ./usr/X11R6/include/freetype2/fttypes.h
 ./usr/X11R6/include/freetype2/ftwinfnt.h
-./usr/X11R6/include/freetype2/ftxf86.h
 ./usr/X11R6/include/freetype2/t1tables.h
 ./usr/X11R6/include/freetype2/ttnameid.h
 ./usr/X11R6/include/freetype2/tttables.h
