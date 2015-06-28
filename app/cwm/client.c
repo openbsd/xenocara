@@ -15,13 +15,12 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.194 2015/06/26 17:17:46 okan Exp $
+ * $OpenBSD: client.c,v 1.195 2015/06/28 19:50:46 okan Exp $
  */
 
 #include <sys/types.h>
 #include <sys/queue.h>
 
-#include <assert.h>
 #include <err.h>
 #include <errno.h>
 #include <limits.h>
@@ -635,8 +634,8 @@ match:
 
 	/* Now, do some garbage collection. */
 	if (cc->nameqlen > CLIENT_MAXNAMEQLEN) {
-		wn = TAILQ_FIRST(&cc->nameq);
-		assert(wn != NULL);
+		if ((wn = TAILQ_FIRST(&cc->nameq)) == NULL)
+			errx(1, "client_setname: window name queue empty");
 		TAILQ_REMOVE(&cc->nameq, wn, entry);
 		free(wn->name);
 		free(wn);
