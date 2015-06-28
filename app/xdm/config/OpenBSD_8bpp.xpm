@@ -1,9 +1,9 @@
 /* XPM */
-/* $OpenBSD: OpenBSD_8bpp.xpm,v 1.20 2015/06/23 04:07:12 deraadt Exp $ */
+/* $OpenBSD: OpenBSD_8bpp.xpm,v 1.21 2015/06/28 09:09:08 matthieu Exp $ */
 static char *OpenBSD_8bpp[] = {
 "240 175 128 2",
 "  	c None",
-". 	c #5071B4",
+". 	c None",
 "+ 	c #FEF886",
 "@ 	c #221E22",
 "# 	c #262226",
