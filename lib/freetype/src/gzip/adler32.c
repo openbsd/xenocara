@@ -3,6 +3,8 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+/* @(#) $Id: adler32.c,v 1.7 2015/06/28 08:27:48 dcoppa Exp $ */
+
 #include "zlib.h"
 
 #define BASE 65521L /* largest prime smaller than 65536 */

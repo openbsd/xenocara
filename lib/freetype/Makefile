@@ -1,9 +1,9 @@
-#	$OpenBSD: Makefile,v 1.38 2015/01/10 17:17:22 dcoppa Exp $
+#	$OpenBSD: Makefile,v 1.39 2015/06/28 08:27:44 dcoppa Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 17.4.11
+FT_VERSION_INFO= 18.0.12
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
 .ifmake includes
@@ -18,7 +18,7 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	ftcid.c ftfstype.c ftgasp.c ftglyph.c \
 	ftgxval.c ftlcdfil.c ftotval.c ftpatent.c \
         ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c ftsynth.c ftsystem.c \
-        fttype1.c ftwinfnt.c ftxf86.c autofit.c bdf.c cff.c \
+        fttype1.c ftwinfnt.c ftfntfmt.c autofit.c bdf.c cff.c \
         ftgzip.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
         raster.c sfnt.c smooth.c truetype.c type1.c type1cid.c type42.c \
 	winfnt.c
