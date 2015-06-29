@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.108 2015/06/26 17:17:46 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.109 2015/06/29 14:24:40 okan Exp $
  */
 
 #include <sys/types.h>
@@ -329,17 +329,16 @@ kbfunc_ssh(struct client_ctx *cc, union arg *arg)
 	int			 l;
 	size_t			 len;
 
-	if ((fp = fopen(Conf.known_hosts, "r")) == NULL) {
-		warn("kbfunc_ssh: %s", Conf.known_hosts);
-		return;
-	}
-
 	TAILQ_FOREACH(cmd, &Conf.cmdq, entry) {
 		if (strcmp(cmd->name, "term") == 0)
 			break;
 	}
-
 	TAILQ_INIT(&menuq);
+
+	if ((fp = fopen(Conf.known_hosts, "r")) == NULL) {
+		warn("kbfunc_ssh: %s", Conf.known_hosts);
+		goto menu;
+	}
 
 	lbuf = NULL;
 	while ((buf = fgetln(fp, &len))) {
@@ -366,7 +365,7 @@ kbfunc_ssh(struct client_ctx *cc, union arg *arg)
 	}
 	free(lbuf);
 	(void)fclose(fp);
-
+menu:
 	if ((mi = menu_filter(sc, &menuq, "ssh", NULL, CWM_MENU_DUMMY,
 	    search_match_exec, NULL)) != NULL) {
 		if (mi->text[0] == '\0')
