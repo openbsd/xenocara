@@ -102,7 +102,7 @@
 ./usr/X11R6/lib/libepoxy.so.1.0
 ./usr/X11R6/lib/libfontconfig.so.9.1
 ./usr/X11R6/lib/libfontenc.so.4.0
-./usr/X11R6/lib/libfreetype.so.23.0
+./usr/X11R6/lib/libfreetype.so.24.0
 ./usr/X11R6/lib/libgbm.so.0.0
 ./usr/X11R6/lib/libglapi.a
 ./usr/X11R6/lib/libglapi.so.0.0
