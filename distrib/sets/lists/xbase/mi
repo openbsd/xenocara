@@ -284,7 +284,6 @@
 ./usr/X11R6/lib/libfontenc.a
 ./usr/X11R6/lib/libfontenc.la
 ./usr/X11R6/lib/libfreetype.a
-./usr/X11R6/lib/libgbm.a
 ./usr/X11R6/lib/libpciaccess.a
 ./usr/X11R6/lib/libpciaccess.la
 ./usr/X11R6/lib/libpthread-stubs.a

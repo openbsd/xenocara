@@ -650,7 +650,6 @@
 ./usr/X11R6/include/freetype2/tttables.h
 ./usr/X11R6/include/freetype2/tttags.h
 ./usr/X11R6/include/freetype2/ttunpat.h
-./usr/X11R6/include/gbm.h
 ./usr/X11R6/include/pciaccess.h
 ./usr/X11R6/include/xcb/bigreq.h
 ./usr/X11R6/include/xcb/composite.h

@@ -269,3 +269,4 @@
 ./var/cache/fontconfig/bc06c1eea3e636f72101cafc3fb39508-le64.cache-4
 ./var/cache/fontconfig/c5f5d66d15c24edc3e863c27139db87e-le64.cache-4
 ./var/cache/fontconfig/f22309b238134d3cca63435f528976cd-le64.cache-4
+./usr/X11R6/lib/libgbm.a

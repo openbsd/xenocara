@@ -177,3 +177,4 @@
 ./var/cache/fontconfig/d929d2c542e4f6652ca46d613e4b360e-be32d8.cache-4
 ./var/cache/fontconfig/f8033d5e4c6effb98c84b18a50eef42d-be32d8.cache-4
 ./var/db/xkb
+./usr/X11R6/lib/libgbm.a
