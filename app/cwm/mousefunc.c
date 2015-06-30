@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.92 2015/06/26 17:17:46 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.93 2015/06/30 18:54:12 okan Exp $
  */
 
 #include <sys/types.h>
@@ -239,7 +239,7 @@ mousefunc_menu_cmd(struct client_ctx *cc, union arg *arg)
 		menuq_add(&menuq, cmd, "%s", cmd->name);
 
 	if ((mi = menu_filter(sc, &menuq, NULL, NULL, CWM_MENU_LIST,
-	    NULL, NULL)) != NULL)
+	    NULL, search_print_cmd)) != NULL)
 		u_spawn(((struct cmd *)mi->ctx)->path);
 
 	menuq_clear(&menuq);
