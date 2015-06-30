@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.196 2015/06/28 19:54:37 okan Exp $
+ * $OpenBSD: client.c,v 1.197 2015/06/30 14:01:43 okan Exp $
  */
 
 #include <sys/types.h>
@@ -55,7 +55,8 @@ client_init(Window win, struct screen_ctx *sc)
 		return(NULL);
 
 	if (sc == NULL) {
-		sc = screen_find(wattr.root);
+		if ((sc = screen_find(wattr.root)) == NULL)
+			return(NULL);
 		mapped = 1;
 	} else {
 		if (wattr.override_redirect || wattr.map_state != IsViewable)
