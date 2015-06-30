@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.187 2015/05/21 00:37:04 okan Exp $
+ * $OpenBSD: conf.c,v 1.188 2015/06/30 18:42:50 okan Exp $
  */
 
 #include <sys/types.h>
@@ -33,9 +33,9 @@
 #include "calmwm.h"
 
 static const char	*conf_bind_getmask(const char *, unsigned int *);
-static void	 	 conf_cmd_remove(struct conf *, const char *);
-static void	 	 conf_unbind_kbd(struct conf *, struct binding *);
-static void	 	 conf_unbind_mouse(struct conf *, struct binding *);
+static void		 conf_cmd_remove(struct conf *, const char *);
+static void		 conf_unbind_kbd(struct conf *, struct binding *);
+static void		 conf_unbind_mouse(struct conf *, struct binding *);
 
 int
 conf_cmd_add(struct conf *c, const char *name, const char *path)
