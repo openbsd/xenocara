@@ -35,8 +35,6 @@
 ./usr/X11R6/include/X11/dri/xf86dri.h
 ./usr/X11R6/include/X11/dri/xf86driproto.h
 ./usr/X11R6/include/X11/dri/xf86dristr.h
-./usr/X11R6/include/X11/extensions/dri2proto.h
-./usr/X11R6/include/X11/extensions/dri2tokens.h
 ./usr/X11R6/include/epoxy/egl.h
 ./usr/X11R6/include/epoxy/egl_generated.h
 ./usr/X11R6/include/epoxy/gl.h
@@ -103,7 +101,6 @@
 ./usr/X11R6/lib/libfontconfig.so.9.1
 ./usr/X11R6/lib/libfontenc.so.4.0
 ./usr/X11R6/lib/libfreetype.so.24.0
-./usr/X11R6/lib/libgbm.so.0.0
 ./usr/X11R6/lib/libglapi.a
 ./usr/X11R6/lib/libglapi.so.0.0
 ./usr/X11R6/lib/libpciaccess.so.2.0
@@ -148,10 +145,8 @@
 ./usr/X11R6/lib/libxkbfile.so.6.0
 ./usr/X11R6/lib/libxkbui.so.5.0
 ./usr/X11R6/lib/pkgconfig/dri.pc
-./usr/X11R6/lib/pkgconfig/dri2proto.pc
 ./usr/X11R6/lib/pkgconfig/egl.pc
 ./usr/X11R6/lib/pkgconfig/epoxy.pc
-./usr/X11R6/lib/pkgconfig/gbm.pc
 ./usr/X11R6/lib/pkgconfig/gl.pc
 ./usr/X11R6/lib/pkgconfig/glesv1_cm.pc
 ./usr/X11R6/lib/pkgconfig/glesv2.pc
@@ -219,7 +214,6 @@
 ./usr/X11R6/man/man3/XF86VidModeSwitchToMode.3
 ./usr/X11R6/man/man3/XF86VidModeValidateModeLine.3
 ./usr/X11R6/man/man3/XFree86-DGA.3
-./usr/X11R6/share/doc/dri2proto/dri2proto.txt
 ./var/cache/fontconfig/0fe0af1d5898cfe43064332244d1dc15-be32d8.cache-4
 ./var/cache/fontconfig/1bd20f0f0c9d7d1d5fd55b69fcc2b3a3-be32d8.cache-4
 ./var/cache/fontconfig/2cee944125173ffd13126fb55c9a0dc1-be32d8.cache-4
@@ -231,4 +225,3 @@
 ./var/cache/fontconfig/be2547a64937fd44a1f33dfd1eea53e8-be32d8.cache-4
 ./var/cache/fontconfig/d929d2c542e4f6652ca46d613e4b360e-be32d8.cache-4
 ./var/cache/fontconfig/f8033d5e4c6effb98c84b18a50eef42d-be32d8.cache-4
-./usr/X11R6/lib/libgbm.a

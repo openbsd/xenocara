@@ -42,6 +42,7 @@
 ./usr/X11R6/include/epoxy/gl_generated.h
 ./usr/X11R6/include/epoxy/glx.h
 ./usr/X11R6/include/epoxy/glx_generated.h
+./usr/X11R6/include/gbm.h
 ./usr/X11R6/include/pixman-1/pixman-version.h
 ./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/txc_dxtn.h
@@ -104,6 +105,7 @@
 ./usr/X11R6/lib/libfontconfig.so.9.1
 ./usr/X11R6/lib/libfontenc.so.4.0
 ./usr/X11R6/lib/libfreetype.so.24.0
+./usr/X11R6/lib/libgbm.a
 ./usr/X11R6/lib/libgbm.so.0.0
 ./usr/X11R6/lib/libglapi.a
 ./usr/X11R6/lib/libglapi.so.0.0
@@ -177,4 +179,3 @@
 ./var/cache/fontconfig/d929d2c542e4f6652ca46d613e4b360e-be32d8.cache-4
 ./var/cache/fontconfig/f8033d5e4c6effb98c84b18a50eef42d-be32d8.cache-4
 ./var/db/xkb
-./usr/X11R6/lib/libgbm.a
