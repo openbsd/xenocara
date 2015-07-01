@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.117 2015/06/30 14:01:43 okan Exp $
+ * $OpenBSD: xevents.c,v 1.118 2015/07/01 14:36:42 okan Exp $
  */
 
 /*
@@ -279,7 +279,7 @@ xev_handle_keypress(XEvent *ee)
 		if ((kb->modmask | modshift) != e->state)
 			continue;
 
-		if (kb->press.keysym == (modshift == 0 ? keysym : skeysym))
+		if (kb->press.keysym == ((modshift == 0) ? keysym : skeysym))
 			break;
 	}
 

@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.85 2015/06/30 18:42:50 okan Exp $
+ * $OpenBSD: menu.c,v 1.86 2015/07/01 14:36:42 okan Exp $
  */
 
 #include <sys/types.h>
@@ -411,8 +411,7 @@ menu_draw(struct menu_ctx *mc, struct menu_q *menuq, struct menu_q *resultq)
 		n = 0;
 
 	TAILQ_FOREACH(mi, resultq, resultentry) {
-		char *text = mi->print[0] != '\0' ?
-		    mi->print : mi->text;
+		char *text = (mi->print[0] != '\0') ? mi->print : mi->text;
 		int y = n * (sc->xftfont->height + 1) + sc->xftfont->ascent + 1;
 
 		/* Stop drawing when menu doesn't fit inside the screen. */
@@ -444,12 +443,12 @@ menu_draw_entry(struct menu_ctx *mc, struct menu_q *resultq,
 	if (mi == NULL)
 		return;
 
-	color = active ? CWM_COLOR_MENU_FG : CWM_COLOR_MENU_BG;
-	text = mi->print[0] != '\0' ? mi->print : mi->text;
+	color = (active) ? CWM_COLOR_MENU_FG : CWM_COLOR_MENU_BG;
+	text = (mi->print[0] != '\0') ? mi->print : mi->text;
 	XftDrawRect(sc->xftdraw, &sc->xftcolor[color], 0,
 	    (sc->xftfont->height + 1) * entry, mc->geom.w,
 	    (sc->xftfont->height + 1) + sc->xftfont->descent);
-	color = active ? CWM_COLOR_MENU_FONT_SEL : CWM_COLOR_MENU_FONT;
+	color = (active) ? CWM_COLOR_MENU_FONT_SEL : CWM_COLOR_MENU_FONT;
 	xu_xft_draw(sc, text, color,
 	    0, (sc->xftfont->height + 1) * entry + sc->xftfont->ascent + 1);
 }

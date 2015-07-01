@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.189 2015/06/30 18:44:29 okan Exp $
+ * $OpenBSD: conf.c,v 1.190 2015/07/01 14:36:42 okan Exp $
  */
 
 #include <sys/types.h>
@@ -346,8 +346,8 @@ conf_client(struct client_ctx *cc)
 		}
 	}
 
-	cc->bwidth = ignore ? 0 : Conf.bwidth;
-	cc->flags |= ignore ? CLIENT_IGNORE : 0;
+	cc->bwidth = (ignore) ? 0 : Conf.bwidth;
+	cc->flags |= (ignore) ? CLIENT_IGNORE : 0;
 }
 
 static const struct {
