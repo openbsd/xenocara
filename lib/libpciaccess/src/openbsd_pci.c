@@ -198,7 +198,7 @@ pci_device_openbsd_map_range(struct pci_device *dev,
 		prot |= PROT_WRITE;
 
 #ifdef MEMRANGE_WC_RANGE
-	if (map->flags & PCI_DEV_MAP_FLAG_WRITABLE)
+	if (map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE)
 		addr += MEMRANGE_WC_RANGE;
 #endif
 
