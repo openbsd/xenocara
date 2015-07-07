@@ -16,7 +16,9 @@
 
 #include <sys/param.h>
 #include <sys/ioctl.h>
+#if defined(__i386__) || defined(__amd64__)
 #include <sys/memrange.h>
+#endif
 #include <sys/mman.h>
 #include <sys/pciio.h>
 #include <sys/sysctl.h>
@@ -189,8 +191,6 @@ static int
 pci_device_openbsd_map_range(struct pci_device *dev,
     struct pci_device_mapping *map)
 {
-	struct mem_range_desc mr;
-	struct mem_range_op mo;
 	int prot = PROT_READ;
 	off_t addr = map->base;
 
@@ -210,6 +210,9 @@ pci_device_openbsd_map_range(struct pci_device *dev,
 	/* No need to set an MTRR if it's the default mode. */
 	if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) ||
 	    (map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE)) {
+		struct mem_range_desc mr;
+		struct mem_range_op mo;
+
 		mr.mr_base = map->base;
 		mr.mr_len = map->size;
 		mr.mr_flags = 0;
@@ -236,11 +239,11 @@ pci_device_openbsd_unmap_range(struct pci_device *dev,
     struct pci_device_mapping *map)
 {
 #if defined(__i386__) || defined(__amd64__)
-	struct mem_range_desc mr;
-	struct mem_range_op mo;
-
 	if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) ||
 	    (map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE)) {
+		struct mem_range_desc mr;
+		struct mem_range_op mo;
+
 		mr.mr_base = map->base;
 		mr.mr_len = map->size;
 		mr.mr_flags = MDF_UNCACHEABLE;
