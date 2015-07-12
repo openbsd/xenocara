@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.112 2015/07/03 17:11:16 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.113 2015/07/12 14:31:47 okan Exp $
  */
 
 #include <sys/types.h>
@@ -183,6 +183,31 @@ kbfunc_menu_cmd(struct client_ctx *cc, union arg *arg)
 	if ((mi = menu_filter(sc, &menuq, "application", NULL, 0,
 	    search_match_text, search_print_cmd)) != NULL)
 		u_spawn(((struct cmd *)mi->ctx)->path);
+
+	menuq_clear(&menuq);
+}
+
+void
+kbfunc_menu_group(struct client_ctx *cc, union arg *arg)
+{
+	struct screen_ctx	*sc = cc->sc;
+	struct group_ctx	*gc;
+	struct menu		*mi;
+	struct menu_q		 menuq;
+
+	TAILQ_INIT(&menuq);
+	TAILQ_FOREACH(gc, &sc->groupq, entry) {
+		if (group_holds_only_sticky(gc))
+			continue;
+		menuq_add(&menuq, gc, "%d %s", gc->num, gc->name);
+	}
+
+	if ((mi = menu_filter(sc, &menuq, "group", NULL, CWM_MENU_LIST,
+	    search_match_text, search_print_group)) != NULL) {
+		gc = (struct group_ctx *)mi->ctx;
+		(group_holds_only_hidden(gc)) ?
+		    group_show(gc) : group_hide(gc);
+	}
 
 	menuq_clear(&menuq);
 }
