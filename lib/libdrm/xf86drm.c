@@ -62,7 +62,7 @@
 #endif
 
 #include "xf86drm.h"
-#include "libdrm.h"
+#include "libdrm_macros.h"
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
 #define DRM_MAJOR 145
@@ -110,11 +110,6 @@ drmDebugPrint(const char *format, va_list ap)
     return vfprintf(stderr, format, ap);
 }
 
-typedef int DRM_PRINTFLIKE(1, 0) (*debug_msg_func_t)(const char *format,
-						     va_list ap);
-
-static debug_msg_func_t drm_debug_print = drmDebugPrint;
-
 void
 drmMsg(const char *format, ...)
 {
@@ -126,16 +121,10 @@ drmMsg(const char *format, ...)
 	if (drm_server_info) {
 	  drm_server_info->debug_print(format,ap);
 	} else {
-	  drm_debug_print(format, ap);
+	  drmDebugPrint(format, ap);
 	}
 	va_end(ap);
     }
-}
-
-void
-drmSetDebugMsgFunction(debug_msg_func_t debug_msg_ptr)
-{
-    drm_debug_print = debug_msg_ptr;
 }
 
 static void *drmHashTable = NULL; /* Context switch callbacks */
@@ -147,16 +136,12 @@ void *drmGetHashTable(void)
 
 void *drmMalloc(int size)
 {
-    void *pt;
-    if ((pt = malloc(size)))
-	memset(pt, 0, size);
-    return pt;
+    return calloc(1, size);
 }
 
 void drmFree(void *pt)
 {
-    if (pt)
-	free(pt);
+    free(pt);
 }
 
 /**
@@ -273,6 +258,7 @@ static int drmMatchBusID(const char *id1, const char *id2, int pci_domain_ok)
  * If any other failure happened then it will output error mesage using
  * drmMsg() call.
  */
+#if !defined(UDEV)
 static int chown_check_return(const char *path, uid_t owner, gid_t group)
 {
 	int rv;
@@ -288,6 +274,7 @@ static int chown_check_return(const char *path, uid_t owner, gid_t group)
 			path, errno, strerror(errno));
 	return -1;
 }
+#endif
 
 /**
  * Open the DRM device, creating it if necessary.
@@ -358,7 +345,7 @@ static int drmOpenDevice(dev_t dev, int minor, int type)
     }
 
     if (drm_server_info) {
-	group = (serv_group >= 0) ? serv_group : DRM_DEV_GID;
+	group = ((int)serv_group >= 0) ? serv_group : DRM_DEV_GID;
 	chown_check_return(buf, user, group);
 	chmod(buf, devmode);
     }
@@ -1735,7 +1722,7 @@ int drmAgpEnable(int fd, unsigned long mode)
 {
     drm_agp_mode_t m;
 
-    memclear(mode);
+    memclear(m);
     m.mode = mode;
     if (drmIoctl(fd, DRM_IOCTL_AGP_ENABLE, &m))
 	return -errno;
@@ -2758,6 +2745,8 @@ int drmPrimeHandleToFD(int fd, uint32_t handle, uint32_t flags, int *prime_fd)
 	struct drm_prime_handle args;
 	int ret;
 
+	memclear(args);
+	args.fd = -1;
 	args.handle = handle;
 	args.flags = flags;
 	ret = drmIoctl(fd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &args);
@@ -2773,8 +2762,8 @@ int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle)
 	struct drm_prime_handle args;
 	int ret;
 
+	memclear(args);
 	args.fd = prime_fd;
-	args.flags = 0;
 	ret = drmIoctl(fd, DRM_IOCTL_PRIME_FD_TO_HANDLE, &args);
 	if (ret)
 		return ret;

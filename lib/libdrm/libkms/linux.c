@@ -39,9 +39,9 @@
 #include <xf86drm.h>
 #include <string.h>
 #include <unistd.h>
-
 #include <sys/stat.h>
 
+#include "libdrm_macros.h"
 #include "internal.h"
 
 #define PATH_SIZE 512
@@ -215,7 +215,7 @@ linux_from_udev(int fd, struct kms_driver **out)
 }
 #endif
 
-int
+drm_private int
 linux_create(int fd, struct kms_driver **out)
 {
 	if (!dumb_create(fd, out))

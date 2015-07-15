@@ -22,13 +22,18 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <assert.h>
 
 #include "xf86drm.h"
+#include "libdrm_macros.h"
 #include "mm.h"
 
-void mmDumpMemInfo(const struct mem_block *heap)
+drm_private void mmDumpMemInfo(const struct mem_block *heap)
 {
 	drmMsg("Memory heap %p:\n", (void *)heap);
 	if (heap == 0) {
@@ -54,7 +59,7 @@ void mmDumpMemInfo(const struct mem_block *heap)
 	drmMsg("End of memory blocks\n");
 }
 
-struct mem_block *mmInit(int ofs, int size)
+drm_private struct mem_block *mmInit(int ofs, int size)
 {
 	struct mem_block *heap, *block;
 
@@ -159,8 +164,8 @@ static struct mem_block *SliceBlock(struct mem_block *p,
 	return p;
 }
 
-struct mem_block *mmAllocMem(struct mem_block *heap, int size, int align2,
-			     int startSearch)
+drm_private struct mem_block *mmAllocMem(struct mem_block *heap, int size,
+					 int align2, int startSearch)
 {
 	struct mem_block *p;
 	const int mask = (1 << align2) - 1;
@@ -191,18 +196,6 @@ struct mem_block *mmAllocMem(struct mem_block *heap, int size, int align2,
 	return p;
 }
 
-struct mem_block *mmFindBlock(struct mem_block *heap, int start)
-{
-	struct mem_block *p;
-
-	for (p = heap->next; p != heap; p = p->next) {
-		if (p->ofs == start)
-			return p;
-	}
-
-	return NULL;
-}
-
 static int Join2Blocks(struct mem_block *p)
 {
 	/* XXX there should be some assertions here */
@@ -227,7 +220,7 @@ static int Join2Blocks(struct mem_block *p)
 	return 0;
 }
 
-int mmFreeMem(struct mem_block *b)
+drm_private int mmFreeMem(struct mem_block *b)
 {
 	if (!b)
 		return 0;
@@ -254,7 +247,7 @@ int mmFreeMem(struct mem_block *b)
 	return 0;
 }
 
-void mmDestroy(struct mem_block *heap)
+drm_private void mmDestroy(struct mem_block *heap)
 {
 	struct mem_block *p;
 

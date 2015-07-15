@@ -49,13 +49,8 @@
 #include "drm.h"
 #include "i915_drm.h"
 #include "mm.h"
-#include "libdrm.h"
+#include "libdrm_macros.h"
 #include "libdrm_lists.h"
-
-/* Support gcc's __FUNCTION__ for people using other compilers */
-#if !defined(__GNUC__) && !defined(__FUNCTION__)
-# define __FUNCTION__ __func__ /* C99 */
-#endif
 
 #define DBG(...) do {					\
 	if (bufmgr_fake->bufmgr.debug)			\
@@ -249,7 +244,7 @@ FENCE_LTE(unsigned a, unsigned b)
 	return 0;
 }
 
-drm_public void
+void
 drm_intel_bufmgr_fake_set_fence_callback(drm_intel_bufmgr *bufmgr,
 					 unsigned int (*emit) (void *priv),
 					 void (*wait) (unsigned int fence,
@@ -278,7 +273,7 @@ _fence_emit_internal(drm_intel_bufmgr_fake *bufmgr_fake)
 	ret = drmCommandWriteRead(bufmgr_fake->fd, DRM_I915_IRQ_EMIT,
 				  &ie, sizeof(ie));
 	if (ret) {
-		drmMsg("%s: drm_i915_irq_emit: %d\n", __FUNCTION__, ret);
+		drmMsg("%s: drm_i915_irq_emit: %d\n", __func__, ret);
 		abort();
 	}
 
@@ -545,7 +540,7 @@ evict_lru(drm_intel_bufmgr_fake *bufmgr_fake, unsigned int max_fence)
 {
 	struct block *block, *tmp;
 
-	DBG("%s\n", __FUNCTION__);
+	DBG("%s\n", __func__);
 
 	DRMLISTFOREACHSAFE(block, tmp, &bufmgr_fake->lru) {
 		drm_intel_bo_fake *bo_fake = (drm_intel_bo_fake *) block->bo;
@@ -572,7 +567,7 @@ evict_mru(drm_intel_bufmgr_fake *bufmgr_fake)
 {
 	struct block *block, *tmp;
 
-	DBG("%s\n", __FUNCTION__);
+	DBG("%s\n", __func__);
 
 	DRMLISTFOREACHSAFEREVERSE(block, tmp, &bufmgr_fake->lru) {
 		drm_intel_bo_fake *bo_fake = (drm_intel_bo_fake *) block->bo;
@@ -632,7 +627,7 @@ clear_fenced(drm_intel_bufmgr_fake *bufmgr_fake, unsigned int fence_cookie)
 		}
 	}
 
-	DBG("%s: %d\n", __FUNCTION__, ret);
+	DBG("%s: %d\n", __func__, ret);
 	return ret;
 }
 
@@ -717,7 +712,7 @@ evict_and_alloc_block(drm_intel_bo *bo)
 		if (alloc_block(bo))
 			return 1;
 
-	DBG("%s 0x%lx bytes failed\n", __FUNCTION__, bo->size);
+	DBG("%s 0x%lx bytes failed\n", __func__, bo->size);
 
 	return 0;
 }
@@ -772,7 +767,7 @@ drm_intel_fake_bo_wait_rendering(drm_intel_bo *bo)
  *  -- just evict everything
  *  -- and wait for idle
  */
-drm_public void
+void
 drm_intel_bufmgr_fake_contended_lock_take(drm_intel_bufmgr *bufmgr)
 {
 	drm_intel_bufmgr_fake *bufmgr_fake = (drm_intel_bufmgr_fake *) bufmgr;
@@ -868,7 +863,7 @@ drm_intel_fake_bo_alloc_tiled(drm_intel_bufmgr * bufmgr,
 				       4096);
 }
 
-drm_public drm_intel_bo *
+drm_intel_bo *
 drm_intel_bo_fake_alloc_static(drm_intel_bufmgr *bufmgr,
 			       const char *name,
 			       unsigned long offset,
@@ -963,7 +958,7 @@ drm_intel_fake_bo_unreference(drm_intel_bo *bo)
  * Set the buffer as not requiring backing store, and instead get the callback
  * invoked whenever it would be set dirty.
  */
-drm_public void
+void
 drm_intel_bo_fake_disable_backing_store(drm_intel_bo *bo,
 					void (*invalidate_cb) (drm_intel_bo *bo,
 							       void *ptr),
@@ -1027,12 +1022,12 @@ static int
 		    bo_fake->name, bo_fake->bo.size / 1024);
 
 		if (bo->virtual != NULL) {
-			drmMsg("%s: already mapped\n", __FUNCTION__);
+			drmMsg("%s: already mapped\n", __func__);
 			abort();
 		} else if (bo_fake->flags & (BM_NO_BACKING_STORE | BM_PINNED)) {
 
 			if (!bo_fake->block && !evict_and_alloc_block(bo)) {
-				DBG("%s: alloc failed\n", __FUNCTION__);
+				DBG("%s: alloc failed\n", __func__);
 				bufmgr_fake->fail = 1;
 				return 1;
 			} else {
@@ -1417,7 +1412,7 @@ drm_intel_bo_fake_post_submit(drm_intel_bo *bo)
 	bo_fake->write_domain = 0;
 }
 
-drm_public void
+void
 drm_intel_bufmgr_fake_set_exec_callback(drm_intel_bufmgr *bufmgr,
 					     int (*exec) (drm_intel_bo *bo,
 							  unsigned int used,
@@ -1540,7 +1535,7 @@ drm_intel_fake_check_aperture_space(drm_intel_bo ** bo_array, int count)
  * Used by the X Server on LeaveVT, when the card memory is no longer our
  * own.
  */
-drm_public void
+void
 drm_intel_bufmgr_fake_evict_all(drm_intel_bufmgr *bufmgr)
 {
 	drm_intel_bufmgr_fake *bufmgr_fake = (drm_intel_bufmgr_fake *) bufmgr;
@@ -1575,7 +1570,7 @@ drm_intel_bufmgr_fake_evict_all(drm_intel_bufmgr *bufmgr)
 	pthread_mutex_unlock(&bufmgr_fake->lock);
 }
 
-drm_public void
+void
 drm_intel_bufmgr_fake_set_last_dispatch(drm_intel_bufmgr *bufmgr,
 					volatile unsigned int
 					*last_dispatch)
@@ -1585,7 +1580,7 @@ drm_intel_bufmgr_fake_set_last_dispatch(drm_intel_bufmgr *bufmgr,
 	bufmgr_fake->last_dispatch = (volatile int *)last_dispatch;
 }
 
-drm_public drm_intel_bufmgr *
+drm_intel_bufmgr *
 drm_intel_bufmgr_fake_init(int fd, unsigned long low_offset,
 			   void *low_virtual, unsigned long size,
 			   volatile unsigned int *last_dispatch)
