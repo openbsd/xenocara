@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.39 2015/06/28 08:27:44 dcoppa Exp $
+#	$OpenBSD: Makefile,v 1.40 2015/07/19 10:39:19 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -29,26 +29,20 @@ CLEANFILES+=	freetype-config freetype2.pc
 
 obj:	_xenocara_obj
 
-build:
-	cd ${.CURDIR} && ${MAKE} clean
-	cd ${.CURDIR} && ${SUDO} ${MAKE} includes
-	cd ${.CURDIR} && ${MAKE} depend
-	cd ${.CURDIR} && ${MAKE} all
-	cd ${.CURDIR} && ${SUDO} ${MAKE} install
+beforedepend:	freetype-config freetype2.pc includes-root
 
-includes:: _SUBDIRUSE
+includes: _SUBDIRUSE
 	@cmp -s ${DESTDIR}${X11BASE}/include/freetype2/ft2build.h \
 	  ${.CURDIR}/include/ft2build.h || \
 	${INSTALL_DATA} ${.CURDIR}/include/ft2build.h \
 	  ${DESTDIR}${X11BASE}/include/freetype2/ft2build.h
-
-depend:	freetype-config freetype2.pc
-
-includes::
 	@cmp -s ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h \
 	  ${.CURDIR}/builds/unix/ftconfig.h || \
 	${INSTALL_DATA} ${.CURDIR}/builds/unix/ftconfig.h \
 	  ${DESTDIR}${X11BASE}/include/freetype2/config/ftconfig.h
+
+includes-root:
+	cd ${.CURDIR} && exec ${SUDO} ${MAKE} includes
 
 install-pc: freetype2.pc
 	${INSTALL_DATA} freetype2.pc ${DESTDIR}${LIBDIR}/pkgconfig
