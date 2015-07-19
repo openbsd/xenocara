@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.65 2015/07/01 20:10:39 deraadt Exp $
+# $OpenBSD: Makefile,v 1.66 2015/07/19 10:44:05 matthieu Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -29,12 +29,18 @@ SUBDIR+= distrib/notes
 
 NOOBJ=
 
+.if defined(DESTDIR)
+build:
+	@echo "Cannot run ${MAKE} build with DESTDIR set"
+	@exit 2
+.else
 build: 
 	exec ${SUDO} ${MAKE} bootstrap-root
 	cd util/macros && exec ${MAKE} -f Makefile.bsd-wrapper
 	exec ${SUDO} ${MAKE} beforebuild
 	exec ${MAKE} realbuild
 	exec ${SUDO} ${MAKE} afterbuild
+.endif
 
 realbuild: _SUBDIRUSE
 	# that's all folks
