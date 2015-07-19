@@ -1,7 +1,6 @@
-# $OpenBSD: Makefile,v 1.1 2006/11/29 17:41:32 matthieu Exp $ 
+# $OpenBSD: Makefile,v 1.2 2015/07/19 10:41:31 matthieu Exp $ 
 
 SUBDIR= GL/gl GL/glx GLU GLw
 
 .include <bsd.subdir.mk>
-
-build: _SUBDIRUSE
+.include <bsd.xorg.mk>
