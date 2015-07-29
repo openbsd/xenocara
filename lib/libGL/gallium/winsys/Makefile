@@ -1,6 +1,7 @@
-# $OpenBSD: Makefile,v 1.2 2015/02/23 23:39:27 jsg Exp $
+# $OpenBSD: Makefile,v 1.3 2015/07/29 05:49:16 mpi Exp $
 
-.if ${MACHINE} == i386 || ${MACHINE} == amd64
+.if ${MACHINE} == i386 || ${MACHINE} == amd64 || \
+    ${MACHINE} == macppc || ${MACHINE} == sparc64
 SUBDIR= radeon
 .endif
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.18 2013/09/05 15:11:56 jsg Exp $
+#	$OpenBSD: Makefile,v 1.19 2015/07/29 05:49:16 mpi Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_GALLIUM} == "llvm"
@@ -14,7 +14,8 @@ SUBDIR+= radeon r200
 .endif
 
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
-.if ${MACHINE} == i386 || ${MACHINE} == amd64
+.if ${MACHINE} == i386 || ${MACHINE} == amd64 || \
+    ${MACHINE} == macppc || ${MACHINE} == sparc64
 SUBDIR+= r300g r600g
 .endif
 .endif
