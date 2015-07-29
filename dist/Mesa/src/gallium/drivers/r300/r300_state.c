@@ -225,6 +225,12 @@ static unsigned blend_discard_conditionally(unsigned eqRGB, unsigned eqA,
 
 /* The hardware colormask is clunky a must be swizzled depending on the format.
  * This was figured out by trial-and-error. */
+static unsigned argb_cmask(unsigned mask)
+{
+   return ((mask & (PIPE_MASK_R | PIPE_MASK_G | PIPE_MASK_B)) << 1) |
+          ((mask & PIPE_MASK_A) >> 3);
+}
+
 static unsigned bgra_cmask(unsigned mask)
 {
     return ((mask & PIPE_MASK_R) << 2) |
@@ -471,6 +477,8 @@ static void* r300_create_blend_state(struct pipe_context* pipe,
     /* Build a command buffer. */
     {
         unsigned (*func[COLORMASK_NUM_SWIZZLES])(unsigned) = {
+            argb_cmask,
+            argb_cmask,
             bgra_cmask,
             rgba_cmask,
             rrrr_cmask,
@@ -482,7 +490,8 @@ static void* r300_create_blend_state(struct pipe_context* pipe,
         };
 
         for (i = 0; i < COLORMASK_NUM_SWIZZLES; i++) {
-            boolean has_alpha = i != COLORMASK_RGBX && i != COLORMASK_BGRX;
+            boolean has_alpha = i != COLORMASK_RGBX && i != COLORMASK_BGRX &&
+                i != COLORMASK_XRGB;
 
             BEGIN_CB(blend->cb_clamp[i], 8);
             OUT_CB_REG(R300_RB3D_ROPCNTL, rop);
@@ -1667,6 +1676,7 @@ r300_create_sampler_view_custom(struct pipe_context *pipe,
     boolean dxtc_swizzle = r300_screen(pipe->screen)->caps.dxtc_swizzle;
 
     if (view) {
+        enum pipe_format format = r300_get_hw_format(templ->format, texture->bind);
         unsigned hwformat;
 
         view->base = *templ;
@@ -1682,24 +1692,24 @@ r300_create_sampler_view_custom(struct pipe_context *pipe,
         view->swizzle[2] = templ->swizzle_b;
         view->swizzle[3] = templ->swizzle_a;
 
-        hwformat = r300_translate_texformat(templ->format,
+        hwformat = r300_translate_texformat(format,
                                             view->swizzle,
                                             is_r500,
                                             dxtc_swizzle);
 
         if (hwformat == ~0) {
             fprintf(stderr, "r300: Ooops. Got unsupported format %s in %s.\n",
-                    util_format_short_name(templ->format), __func__);
+                    util_format_short_name(format), __func__);
         }
         assert(hwformat != ~0);
 
 	r300_texture_setup_format_state(r300_screen(pipe->screen), tex,
-					templ->format, 0,
+					format, 0,
 	                                width0_override, height0_override,
 					&view->format);
         view->format.format1 |= hwformat;
         if (is_r500) {
-            view->format.format2 |= r500_tx_format_msb_bit(templ->format);
+            view->format.format2 |= r500_tx_format_msb_bit(format);
         }
     }
 

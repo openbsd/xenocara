@@ -162,10 +162,10 @@ dri2_drawable_get_buffers(struct dri_drawable *drawable,
        * may occur as the stvis->color_format.
        */
       switch(format) {
-      case PIPE_FORMAT_B8G8R8A8_UNORM:
+      case PIPE_FORMAT_BGRA8888_UNORM:
 	 depth = 32;
 	 break;
-      case PIPE_FORMAT_B8G8R8X8_UNORM:
+      case PIPE_FORMAT_BGRX8888_UNORM:
 	 depth = 24;
 	 break;
       case PIPE_FORMAT_B5G6R5_UNORM:
@@ -444,10 +444,10 @@ dri2_allocate_buffer(__DRIscreen *sPriv,
 
    switch (format) {
       case 32:
-         pf = PIPE_FORMAT_B8G8R8A8_UNORM;
+         pf = PIPE_FORMAT_BGRA8888_UNORM;
          break;
       case 24:
-         pf = PIPE_FORMAT_B8G8R8X8_UNORM;
+         pf = PIPE_FORMAT_BGRX8888_UNORM;
          break;
       case 16:
          pf = PIPE_FORMAT_Z16_UNORM;
@@ -590,13 +590,13 @@ dri2_create_image_from_winsys(__DRIscreen *_screen,
       pf = PIPE_FORMAT_B5G6R5_UNORM;
       break;
    case __DRI_IMAGE_FORMAT_XRGB8888:
-      pf = PIPE_FORMAT_B8G8R8X8_UNORM;
+      pf = PIPE_FORMAT_BGRX8888_UNORM;
       break;
    case __DRI_IMAGE_FORMAT_ARGB8888:
-      pf = PIPE_FORMAT_B8G8R8A8_UNORM;
+      pf = PIPE_FORMAT_BGRA8888_UNORM;
       break;
    case __DRI_IMAGE_FORMAT_ABGR8888:
-      pf = PIPE_FORMAT_R8G8B8A8_UNORM;
+      pf = PIPE_FORMAT_RGBA8888_UNORM;
       break;
    default:
       pf = PIPE_FORMAT_NONE;
@@ -711,13 +711,13 @@ dri2_create_image(__DRIscreen *_screen,
       pf = PIPE_FORMAT_B5G6R5_UNORM;
       break;
    case __DRI_IMAGE_FORMAT_XRGB8888:
-      pf = PIPE_FORMAT_B8G8R8X8_UNORM;
+      pf = PIPE_FORMAT_BGRX8888_UNORM;
       break;
    case __DRI_IMAGE_FORMAT_ARGB8888:
-      pf = PIPE_FORMAT_B8G8R8A8_UNORM;
+      pf = PIPE_FORMAT_BGRA8888_UNORM;
       break;
    case __DRI_IMAGE_FORMAT_ABGR8888:
-      pf = PIPE_FORMAT_R8G8B8A8_UNORM;
+      pf = PIPE_FORMAT_RGBA8888_UNORM;
       break;
    default:
       pf = PIPE_FORMAT_NONE;

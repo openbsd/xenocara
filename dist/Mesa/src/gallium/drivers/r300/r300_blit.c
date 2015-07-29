@@ -185,7 +185,9 @@ static void r300_set_clear_color(struct r300_context *r300,
     union util_color uc;
 
     memset(&uc, 0, sizeof(uc));
-    util_pack_color(color->f, fb->cbufs[0]->format, &uc);
+    util_pack_color(color->f,
+                    r300_get_hw_format(fb->cbufs[0]->format, PIPE_BIND_RENDER_TARGET),
+                    &uc);
 
     if (fb->cbufs[0]->format == PIPE_FORMAT_R16G16B16A16_FLOAT ||
         fb->cbufs[0]->format == PIPE_FORMAT_R16G16B16X16_FLOAT) {

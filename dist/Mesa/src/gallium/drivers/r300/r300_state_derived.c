@@ -815,9 +815,12 @@ static void r300_merge_textures_and_samplers(struct r300_context* r300)
 
     for (i = 0; i < count; i++) {
         if (state->sampler_views[i] && state->sampler_states[i]) {
+            enum pipe_format format;
+
             state->tx_enable |= 1 << i;
 
             view = state->sampler_views[i];
+            format = r300_get_hw_format(view->base.format, view->base.texture->bind);
             tex = r300_resource(view->base.texture);
             sampler = state->sampler_states[i];
 
@@ -828,7 +831,7 @@ static void r300_merge_textures_and_samplers(struct r300_context* r300)
 
             /* Set the border color. */
             texstate->border_color =
-                r300_get_border_color(view->base.format,
+                r300_get_border_color(format,
                                       sampler->state.border_color.f,
                                       r300->screen->caps.is_r500);
 
@@ -852,7 +855,7 @@ static void r300_merge_textures_and_samplers(struct r300_context* r300)
                 offset = tex->tex.offset_in_bytes[base_level];
 
                 r300_texture_setup_format_state(r300->screen, tex,
-                                                view->base.format,
+                                                format,
                                                 base_level,
                                                 view->width0_override,
 		                                view->height0_override,
@@ -865,11 +868,11 @@ static void r300_merge_textures_and_samplers(struct r300_context* r300)
             texstate->format.format1 |= view->texcache_region;
 
             /* Depth textures are kinda special. */
-            if (util_format_is_depth_or_stencil(view->base.format)) {
+            if (util_format_is_depth_or_stencil(format)) {
                 unsigned char depth_swizzle[4];
 
                 if (!r300->screen->caps.is_r500 &&
-                    util_format_get_blocksizebits(view->base.format) == 32) {
+                    util_format_get_blocksizebits(format) == 32) {
                     /* X24x8 is sampled as Y16X16 on r3xx-r4xx.
                      * The depth here is at the Y component. */
                     for (j = 0; j < 4; j++)
@@ -894,7 +897,7 @@ static void r300_merge_textures_and_samplers(struct r300_context* r300)
             }
 
             if (r300->screen->caps.dxtc_swizzle &&
-                util_format_is_compressed(view->base.format)) {
+                util_format_is_compressed(format)) {
                 texstate->filter1 |= R400_DXTC_SWIZZLE_ENABLE;
             }
 
@@ -940,7 +943,7 @@ static void r300_merge_textures_and_samplers(struct r300_context* r300)
             }
 
             /* Float textures only support nearest and mip-nearest filtering. */
-            if (util_format_is_float(view->base.format)) {
+            if (util_format_is_float(format)) {
                 /* No MAG linear filtering. */
                 if ((texstate->filter0 & R300_TX_MAG_FILTER_MASK) ==
                     R300_TX_MAG_FILTER_LINEAR) {

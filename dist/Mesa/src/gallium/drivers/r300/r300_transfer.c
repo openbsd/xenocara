@@ -22,6 +22,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
 #include "r300_transfer.h"
+#include "r300_texture.h"
 #include "r300_texture_desc.h"
 #include "r300_screen_buffer.h"
 
@@ -110,8 +111,8 @@ r300_texture_transfer_map(struct pipe_context *ctx,
     struct r300_context *r300 = r300_context(ctx);
     struct r300_resource *tex = r300_resource(texture);
     struct r300_transfer *trans;
+    enum pipe_format format = texture->format;
     boolean referenced_cs, referenced_hw;
-    enum pipe_format format = tex->b.b.format;
     char *map;
 
     referenced_cs =
@@ -135,8 +136,9 @@ r300_texture_transfer_map(struct pipe_context *ctx,
          * for this transfer.
          * Also make write transfers pipelined. */
         if (tex->tex.microtile || tex->tex.macrotile[level] ||
+            r300_get_hw_format(format, texture->bind) != format ||
             (referenced_hw && !(usage & PIPE_TRANSFER_READ) &&
-             r300_is_blit_supported(texture->format))) {
+             r300_is_blit_supported(format))) {
             struct pipe_resource base;
 
             if (r300->blitter->running) {

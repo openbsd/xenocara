@@ -45,6 +45,8 @@ struct r300_vertex_shader;
 struct r300_stencilref_context;
 
 enum colormask_swizzle {
+    COLORMASK_ARGB,
+    COLORMASK_XRGB,
     COLORMASK_BGRA,
     COLORMASK_RGBA,
     COLORMASK_RRRR,

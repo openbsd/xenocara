@@ -39,6 +39,9 @@ unsigned r300_get_swizzle_combined(const unsigned char *swizzle_format,
                                    const unsigned char *swizzle_view,
                                    boolean dxtc_swizzle);
 
+enum pipe_format r300_get_hw_format(enum pipe_format api_format,
+                                    unsigned bind);
+
 uint32_t r300_translate_texformat(enum pipe_format format,
                                   const unsigned char *swizzle_view,
                                   boolean is_r500,

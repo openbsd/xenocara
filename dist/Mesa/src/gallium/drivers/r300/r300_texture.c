@@ -90,6 +90,25 @@ unsigned r300_get_swizzle_combined(const unsigned char *swizzle_format,
     return result;
 }
 
+
+enum pipe_format r300_get_hw_format(enum pipe_format api_format,
+                                    unsigned bind)
+{
+    if (bind & (PIPE_BIND_RENDER_TARGET | PIPE_BIND_SCANOUT | PIPE_BIND_SHARED) &&
+        !(bind & (PIPE_BIND_TRANSFER_READ | PIPE_BIND_TRANSFER_WRITE))) {
+        switch (api_format) {
+        case PIPE_FORMAT_A8R8G8B8_UNORM:
+           return PIPE_FORMAT_B8G8R8A8_UNORM;
+        case PIPE_FORMAT_X8R8G8B8_UNORM:
+           return PIPE_FORMAT_B8G8R8X8_UNORM;
+        default:
+           break;
+        }
+    }
+
+    return api_format;
+}
+
 /* Translate a pipe_format into a useful texture format for sampling.
  *
  * Some special formats are translated directly using R300_EASY_TX_FORMAT,
@@ -444,10 +463,14 @@ static uint32_t r300_translate_colorformat(enum pipe_format format)
             return R300_COLOR_FORMAT_ARGB4444;
 
         /* 32-bit buffers. */
+        case PIPE_FORMAT_A8R8G8B8_UNORM:
+        /*case PIPE_FORMAT_A8R8G8B8_SNORM:*/
         case PIPE_FORMAT_B8G8R8A8_UNORM:
         /*case PIPE_FORMAT_B8G8R8A8_SNORM:*/
         case PIPE_FORMAT_B8G8R8X8_UNORM:
         /*case PIPE_FORMAT_B8G8R8X8_SNORM:*/
+        case PIPE_FORMAT_X8R8G8B8_UNORM:
+        /*case PIPE_FORMAT_X8R8G8B8_SNORM:*/
         case PIPE_FORMAT_R8G8B8A8_UNORM:
         case PIPE_FORMAT_R8G8B8A8_SNORM:
         case PIPE_FORMAT_R8G8B8X8_UNORM:
@@ -667,6 +690,10 @@ static uint32_t r300_translate_out_fmt(enum pipe_format format)
                 R300_C2_SEL_R | R300_C3_SEL_A;
 
         /* ARGB outputs. */
+        case PIPE_FORMAT_X8R8G8B8_UNORM:
+        /*case PIPE_FORMAT_X8R8G8B8_SNORM:*/
+        case PIPE_FORMAT_A8R8G8B8_UNORM:
+        /*case PIPE_FORMAT_A8R8G8B8_SNORM:*/
         case PIPE_FORMAT_A16_UNORM:
         case PIPE_FORMAT_A16_SNORM:
         case PIPE_FORMAT_A16_FLOAT:
@@ -769,6 +796,14 @@ static uint32_t r300_translate_colormask_swizzle(enum pipe_format format)
     case PIPE_FORMAT_R16G16_FLOAT:
     case PIPE_FORMAT_R32G32_FLOAT:
         return COLORMASK_GRRG;
+
+    case PIPE_FORMAT_A8R8G8B8_UNORM:
+    /*case PIPE_FORMAT_A8R8G8B8_SNORM:*/
+        return COLORMASK_ARGB;
+
+    case PIPE_FORMAT_X8R8G8B8_UNORM:
+    /*case PIPE_FORMAT_X8R8G8B8_SNORM:*/
+        return COLORMASK_XRGB;
 
     case PIPE_FORMAT_B5G5R5X1_UNORM:
     case PIPE_FORMAT_B4G4R4X4_UNORM:
@@ -936,14 +971,17 @@ static void r300_texture_setup_fb_state(struct r300_surface *surf)
         surf->pitch_zmask = tex->tex.zmask_stride_in_pixels[level];
         surf->pitch_hiz = tex->tex.hiz_stride_in_pixels[level];
     } else {
+        enum pipe_format hwformat = r300_get_hw_format(surf->base.format,
+                                                       surf->base.texture->bind);
+
         surf->pitch =
                 stride |
-                r300_translate_colorformat(surf->base.format) |
+                r300_translate_colorformat(hwformat) |
                 R300_COLOR_TILE(tex->tex.macrotile[level]) |
                 R300_COLOR_MICROTILE(tex->tex.microtile);
-        surf->format = r300_translate_out_fmt(surf->base.format);
+        surf->format = r300_translate_out_fmt(hwformat);
         surf->colormask_swizzle =
-            r300_translate_colormask_swizzle(surf->base.format);
+            r300_translate_colormask_swizzle(hwformat);
         surf->pitch_cmask = tex->tex.cmask_stride_in_pixels;
     }
 }
