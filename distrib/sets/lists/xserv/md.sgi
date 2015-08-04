@@ -3,6 +3,8 @@
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
 ./usr/X11R6/bin/Xvfb
+./usr/X11R6/bin/cvt
+./usr/X11R6/bin/gtf
 ./usr/X11R6/include/xorg/BT.h
 ./usr/X11R6/include/xorg/IBM.h
 ./usr/X11R6/include/xorg/TI.h
@@ -190,6 +192,8 @@
 ./usr/X11R6/man/man1/Xorg.1
 ./usr/X11R6/man/man1/Xserver.1
 ./usr/X11R6/man/man1/Xvfb.1
+./usr/X11R6/man/man1/cvt.1
+./usr/X11R6/man/man1/gtf.1
 ./usr/X11R6/man/man4/exa.4
 ./usr/X11R6/man/man4/fbdevhw.4
 ./usr/X11R6/man/man4/kbd.4
