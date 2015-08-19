@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.22 2015/02/20 23:31:04 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.23 2015/08/19 23:00:12 matthieu Exp $
 .include <bsd.xconf.mk>
 .include "../config.mk"
 
@@ -14,10 +14,6 @@ COMMON_GALLIUM_SOURCES = \
 	xmlconfig.c
 
 COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
-	driverfuncs.c \
-	meta_blit.c \
-	meta_generate_mipmap.c \
-	meta.c \
 	megadriver_stub.c
 
 CPPFLAGS+= -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING \

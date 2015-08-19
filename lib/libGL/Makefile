@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.45 2015/02/20 23:31:04 jsg Exp $
+# $OpenBSD: Makefile,v 1.46 2015/08/19 23:00:12 matthieu Exp $
 .include <bsd.xconf.mk>
 .include "config.mk"
 
@@ -8,7 +8,7 @@ MAKE_FLAGS+= XENOCARA_BUILD_GALLIUM=${XENOCARA_BUILD_GALLIUM}
 .endif
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-SUBDIR+=glsl mesa dri
+SUBDIR+=glsl mesa dri osmesa
 .endif
 
 LIB=	GL

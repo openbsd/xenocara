@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.11 2015/02/20 23:31:06 jsg Exp $
+# $OpenBSD: Makefile.inc,v 1.12 2015/08/19 23:00:12 matthieu Exp $
 .include "../config.mk"
 
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -378,6 +378,8 @@ SPARC_SOURCES =			\
 
 COMMON_DRIVER_SOURCES = \
 	driverfuncs.c		\
+	meta_blit.c		\
+	meta_generate_mipmap.c	\
 	meta.c
 
 MESA_SOURCES = \
