@@ -17,7 +17,7 @@ typedef XID GLXPixmap;
 typedef XID GLXDrawable;
 typedef XID GLXWindow;
 typedef XID GLXPbuffer;
-typedef void ( *__GLXextFuncPtr)(void);
+typedef void (APIENTRY *__GLXextFuncPtr)(void);
 typedef XID GLXVideoCaptureDeviceNV;
 typedef unsigned int GLXVideoDeviceNV;
 typedef XID GLXVideoSourceSGIX;
@@ -104,6 +104,7 @@ typedef struct {
 
 #define GLX_3DFX_multisample 1
 #define GLX_AMD_gpu_association 1
+#define GLX_ARB_context_flush_control 1
 #define GLX_ARB_create_context 1
 #define GLX_ARB_create_context_profile 1
 #define GLX_ARB_create_context_robustness 1
@@ -133,6 +134,7 @@ typedef struct {
 #define GLX_MESA_query_renderer 1
 #define GLX_MESA_release_buffers 1
 #define GLX_MESA_set_3dfx_mode 1
+#define GLX_NV_copy_buffer 1
 #define GLX_NV_copy_image 1
 #define GLX_NV_delay_before_swap 1
 #define GLX_NV_float_buffer 1
@@ -140,7 +142,7 @@ typedef struct {
 #define GLX_NV_present_video 1
 #define GLX_NV_swap_group 1
 #define GLX_NV_video_capture 1
-#define GLX_NV_video_output 1
+#define GLX_NV_video_out 1
 #define GLX_OML_swap_method 1
 #define GLX_OML_sync_control 1
 #define GLX_SGIS_blended_overlay 1
@@ -162,6 +164,7 @@ typedef struct {
 #define GLX_SUN_get_transparent_index 1
 
 #define GLX_EXTENSION_NAME                                       "GLX"
+#define GLX_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB                    0
 #define GLX_PbufferClobber                                       0
 #define GLX_STEREO_NOTIFY_EXT                                    0x00000000
 #define GLX_SYNC_FRAME_SGIX                                      0x00000000
@@ -229,6 +232,8 @@ typedef struct {
 #define GLX_CONTEXT_MINOR_VERSION_ARB                            0x2092
 #define GLX_CONTEXT_FLAGS_ARB                                    0x2094
 #define GLX_CONTEXT_ALLOW_BUFFER_BYTE_ORDER_MISMATCH_ARB         0x2095
+#define GLX_CONTEXT_RELEASE_BEHAVIOR_ARB                         0x2097
+#define GLX_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB                   0x2098
 #define GLX_FLOAT_COMPONENTS_NV                                  0x20B0
 #define GLX_RGBA_UNSIGNED_FLOAT_TYPE_EXT                         0x20B1
 #define GLX_FRAMEBUFFER_SRGB_CAPABLE_ARB                         0x20B2
@@ -450,14 +455,18 @@ typedef void (GLAPIENTRY *PFNGLXBINDTEXIMAGEEXTPROC)(Display * dpy, GLXDrawable 
 typedef int (GLAPIENTRY *PFNGLXBINDVIDEOCAPTUREDEVICENVPROC)(Display * dpy, unsigned int video_capture_slot, GLXVideoCaptureDeviceNV device);
 typedef int (GLAPIENTRY *PFNGLXBINDVIDEODEVICENVPROC)(Display * dpy, unsigned int video_slot, unsigned int video_device, const int * attrib_list);
 typedef int (GLAPIENTRY *PFNGLXBINDVIDEOIMAGENVPROC)(Display * dpy, GLXVideoDeviceNV VideoDevice, GLXPbuffer pbuf, int iVideoBuffer);
+typedef void (GLAPIENTRY *PFNGLXBLITCONTEXTFRAMEBUFFERAMDPROC)(GLXContext dstCtx, GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 typedef int (GLAPIENTRY *PFNGLXCHANNELRECTSGIXPROC)(Display * display, int screen, int channel, int x, int y, int w, int h);
 typedef int (GLAPIENTRY *PFNGLXCHANNELRECTSYNCSGIXPROC)(Display * display, int screen, int channel, GLenum synctype);
 typedef GLXFBConfig * (GLAPIENTRY *PFNGLXCHOOSEFBCONFIGPROC)(Display * dpy, int screen, const int * attrib_list, int * nelements);
 typedef GLXFBConfigSGIX * (GLAPIENTRY *PFNGLXCHOOSEFBCONFIGSGIXPROC)(Display * dpy, int screen, int * attrib_list, int * nelements);
 typedef XVisualInfo * (GLAPIENTRY *PFNGLXCHOOSEVISUALPROC)(Display * dpy, int screen, int * attribList);
+typedef void (GLAPIENTRY *PFNGLXCOPYBUFFERSUBDATANVPROC)(Display * dpy, GLXContext readCtx, GLXContext writeCtx, GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
 typedef void (GLAPIENTRY *PFNGLXCOPYCONTEXTPROC)(Display * dpy, GLXContext src, GLXContext dst, unsigned long mask);
 typedef void (GLAPIENTRY *PFNGLXCOPYIMAGESUBDATANVPROC)(Display * dpy, GLXContext srcCtx, GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLXContext dstCtx, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth);
 typedef void (GLAPIENTRY *PFNGLXCOPYSUBBUFFERMESAPROC)(Display * dpy, GLXDrawable drawable, int x, int y, int width, int height);
+typedef GLXContext (GLAPIENTRY *PFNGLXCREATEASSOCIATEDCONTEXTAMDPROC)(unsigned int id, GLXContext share_list);
+typedef GLXContext (GLAPIENTRY *PFNGLXCREATEASSOCIATEDCONTEXTATTRIBSAMDPROC)(unsigned int id, GLXContext share_context, const int * attribList);
 typedef GLXContext (GLAPIENTRY *PFNGLXCREATECONTEXTPROC)(Display * dpy, XVisualInfo * vis, GLXContext shareList, Bool direct);
 typedef GLXContext (GLAPIENTRY *PFNGLXCREATECONTEXTATTRIBSARBPROC)(Display * dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int * attrib_list);
 typedef GLXContext (GLAPIENTRY *PFNGLXCREATECONTEXTWITHCONFIGSGIXPROC)(Display * dpy, GLXFBConfigSGIX config, int render_type, GLXContext share_list, Bool direct);
@@ -471,6 +480,7 @@ typedef GLXPixmap (GLAPIENTRY *PFNGLXCREATEPIXMAPPROC)(Display * dpy, GLXFBConfi
 typedef GLXWindow (GLAPIENTRY *PFNGLXCREATEWINDOWPROC)(Display * dpy, GLXFBConfig config, Window win, const int * attrib_list);
 typedef void (GLAPIENTRY *PFNGLXCUSHIONSGIPROC)(Display * dpy, Window window, float cushion);
 typedef Bool (GLAPIENTRY *PFNGLXDELAYBEFORESWAPNVPROC)(Display * dpy, GLXDrawable drawable, GLfloat seconds);
+typedef Bool (GLAPIENTRY *PFNGLXDELETEASSOCIATEDCONTEXTAMDPROC)(GLXContext ctx);
 typedef void (GLAPIENTRY *PFNGLXDESTROYCONTEXTPROC)(Display * dpy, GLXContext ctx);
 typedef void (GLAPIENTRY *PFNGLXDESTROYGLXPBUFFERSGIXPROC)(Display * dpy, GLXPbufferSGIX pbuf);
 typedef void (GLAPIENTRY *PFNGLXDESTROYGLXPIXMAPPROC)(Display * dpy, GLXPixmap pixmap);
@@ -485,7 +495,9 @@ typedef void (GLAPIENTRY *PFNGLXFREECONTEXTEXTPROC)(Display * dpy, GLXContext co
 typedef unsigned int (GLAPIENTRY *PFNGLXGETAGPOFFSETMESAPROC)(const void * pointer);
 typedef const char * (GLAPIENTRY *PFNGLXGETCLIENTSTRINGPROC)(Display * dpy, int name);
 typedef int (GLAPIENTRY *PFNGLXGETCONFIGPROC)(Display * dpy, XVisualInfo * visual, int attrib, int * value);
+typedef unsigned int (GLAPIENTRY *PFNGLXGETCONTEXTGPUIDAMDPROC)(GLXContext ctx);
 typedef GLXContextID (GLAPIENTRY *PFNGLXGETCONTEXTIDEXTPROC)(const GLXContext context);
+typedef GLXContext (GLAPIENTRY *PFNGLXGETCURRENTASSOCIATEDCONTEXTAMDPROC)(void);
 typedef GLXContext (GLAPIENTRY *PFNGLXGETCURRENTCONTEXTPROC)(void);
 typedef Display * (GLAPIENTRY *PFNGLXGETCURRENTDISPLAYPROC)(void);
 typedef Display * (GLAPIENTRY *PFNGLXGETCURRENTDISPLAYEXTPROC)(void);
@@ -496,6 +508,8 @@ typedef int (GLAPIENTRY *PFNGLXGETFBCONFIGATTRIBPROC)(Display * dpy, GLXFBConfig
 typedef int (GLAPIENTRY *PFNGLXGETFBCONFIGATTRIBSGIXPROC)(Display * dpy, GLXFBConfigSGIX config, int attribute, int * value);
 typedef GLXFBConfigSGIX (GLAPIENTRY *PFNGLXGETFBCONFIGFROMVISUALSGIXPROC)(Display * dpy, XVisualInfo * vis);
 typedef GLXFBConfig * (GLAPIENTRY *PFNGLXGETFBCONFIGSPROC)(Display * dpy, int screen, int * nelements);
+typedef unsigned int (GLAPIENTRY *PFNGLXGETGPUIDSAMDPROC)(unsigned int maxCount, unsigned int * ids);
+typedef int (GLAPIENTRY *PFNGLXGETGPUINFOAMDPROC)(unsigned int id, int property, GLenum dataType, unsigned int size, void * data);
 typedef Bool (GLAPIENTRY *PFNGLXGETMSCRATEOMLPROC)(Display * dpy, GLXDrawable drawable, int32_t * numerator, int32_t * denominator);
 typedef __GLXextFuncPtr (GLAPIENTRY *PFNGLXGETPROCADDRESSPROC)(const GLubyte * procName);
 typedef __GLXextFuncPtr (GLAPIENTRY *PFNGLXGETPROCADDRESSARBPROC)(const GLubyte * procName);
@@ -515,9 +529,11 @@ typedef Bool (GLAPIENTRY *PFNGLXISDIRECTPROC)(Display * dpy, GLXContext ctx);
 typedef Bool (GLAPIENTRY *PFNGLXJOINSWAPGROUPNVPROC)(Display * dpy, GLXDrawable drawable, GLuint group);
 typedef void (GLAPIENTRY *PFNGLXJOINSWAPGROUPSGIXPROC)(Display * dpy, GLXDrawable drawable, GLXDrawable member);
 typedef void (GLAPIENTRY *PFNGLXLOCKVIDEOCAPTUREDEVICENVPROC)(Display * dpy, GLXVideoCaptureDeviceNV device);
+typedef Bool (GLAPIENTRY *PFNGLXMAKEASSOCIATEDCONTEXTCURRENTAMDPROC)(GLXContext ctx);
 typedef Bool (GLAPIENTRY *PFNGLXMAKECONTEXTCURRENTPROC)(Display * dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx);
 typedef Bool (GLAPIENTRY *PFNGLXMAKECURRENTPROC)(Display * dpy, GLXDrawable drawable, GLXContext ctx);
 typedef Bool (GLAPIENTRY *PFNGLXMAKECURRENTREADSGIPROC)(Display * dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx);
+typedef void (GLAPIENTRY *PFNGLXNAMEDCOPYBUFFERSUBDATANVPROC)(Display * dpy, GLXContext readCtx, GLXContext writeCtx, GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
 typedef int (GLAPIENTRY *PFNGLXQUERYCHANNELDELTASSGIXPROC)(Display * display, int screen, int channel, int * x, int * y, int * w, int * h);
 typedef int (GLAPIENTRY *PFNGLXQUERYCHANNELRECTSGIXPROC)(Display * display, int screen, int channel, int * dx, int * dy, int * dw, int * dh);
 typedef int (GLAPIENTRY *PFNGLXQUERYCONTEXTPROC)(Display * dpy, GLXContext ctx, int attribute, int * value);
@@ -577,6 +593,8 @@ extern EPOXY_IMPORTEXPORT int (EPOXY_CALLSPEC *epoxy_glXBindVideoDeviceNV)(Displ
 
 extern EPOXY_IMPORTEXPORT int (EPOXY_CALLSPEC *epoxy_glXBindVideoImageNV)(Display * dpy, GLXVideoDeviceNV VideoDevice, GLXPbuffer pbuf, int iVideoBuffer);
 
+extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXBlitContextFramebufferAMD)(GLXContext dstCtx, GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+
 extern EPOXY_IMPORTEXPORT int (EPOXY_CALLSPEC *epoxy_glXChannelRectSGIX)(Display * display, int screen, int channel, int x, int y, int w, int h);
 
 extern EPOXY_IMPORTEXPORT int (EPOXY_CALLSPEC *epoxy_glXChannelRectSyncSGIX)(Display * display, int screen, int channel, GLenum synctype);
@@ -587,11 +605,17 @@ extern EPOXY_IMPORTEXPORT GLXFBConfigSGIX * (EPOXY_CALLSPEC *epoxy_glXChooseFBCo
 
 extern EPOXY_IMPORTEXPORT XVisualInfo * (EPOXY_CALLSPEC *epoxy_glXChooseVisual)(Display * dpy, int screen, int * attribList);
 
+extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXCopyBufferSubDataNV)(Display * dpy, GLXContext readCtx, GLXContext writeCtx, GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
+
 extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXCopyContext)(Display * dpy, GLXContext src, GLXContext dst, unsigned long mask);
 
 extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXCopyImageSubDataNV)(Display * dpy, GLXContext srcCtx, GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLXContext dstCtx, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei width, GLsizei height, GLsizei depth);
 
 extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXCopySubBufferMESA)(Display * dpy, GLXDrawable drawable, int x, int y, int width, int height);
+
+extern EPOXY_IMPORTEXPORT GLXContext (EPOXY_CALLSPEC *epoxy_glXCreateAssociatedContextAMD)(unsigned int id, GLXContext share_list);
+
+extern EPOXY_IMPORTEXPORT GLXContext (EPOXY_CALLSPEC *epoxy_glXCreateAssociatedContextAttribsAMD)(unsigned int id, GLXContext share_context, const int * attribList);
 
 extern EPOXY_IMPORTEXPORT GLXContext (EPOXY_CALLSPEC *epoxy_glXCreateContext)(Display * dpy, XVisualInfo * vis, GLXContext shareList, Bool direct);
 
@@ -618,6 +642,8 @@ extern EPOXY_IMPORTEXPORT GLXWindow (EPOXY_CALLSPEC *epoxy_glXCreateWindow)(Disp
 extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXCushionSGI)(Display * dpy, Window window, float cushion);
 
 extern EPOXY_IMPORTEXPORT Bool (EPOXY_CALLSPEC *epoxy_glXDelayBeforeSwapNV)(Display * dpy, GLXDrawable drawable, GLfloat seconds);
+
+extern EPOXY_IMPORTEXPORT Bool (EPOXY_CALLSPEC *epoxy_glXDeleteAssociatedContextAMD)(GLXContext ctx);
 
 extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXDestroyContext)(Display * dpy, GLXContext ctx);
 
@@ -647,7 +673,11 @@ extern EPOXY_IMPORTEXPORT const char * (EPOXY_CALLSPEC *epoxy_glXGetClientString
 
 extern EPOXY_IMPORTEXPORT int (EPOXY_CALLSPEC *epoxy_glXGetConfig)(Display * dpy, XVisualInfo * visual, int attrib, int * value);
 
+extern EPOXY_IMPORTEXPORT unsigned int (EPOXY_CALLSPEC *epoxy_glXGetContextGPUIDAMD)(GLXContext ctx);
+
 extern EPOXY_IMPORTEXPORT GLXContextID (EPOXY_CALLSPEC *epoxy_glXGetContextIDEXT)(const GLXContext context);
+
+extern EPOXY_IMPORTEXPORT GLXContext (EPOXY_CALLSPEC *epoxy_glXGetCurrentAssociatedContextAMD)(void);
 
 extern EPOXY_IMPORTEXPORT GLXContext (EPOXY_CALLSPEC *epoxy_glXGetCurrentContext)(void);
 
@@ -668,6 +698,10 @@ extern EPOXY_IMPORTEXPORT int (EPOXY_CALLSPEC *epoxy_glXGetFBConfigAttribSGIX)(D
 extern EPOXY_IMPORTEXPORT GLXFBConfigSGIX (EPOXY_CALLSPEC *epoxy_glXGetFBConfigFromVisualSGIX)(Display * dpy, XVisualInfo * vis);
 
 extern EPOXY_IMPORTEXPORT GLXFBConfig * (EPOXY_CALLSPEC *epoxy_glXGetFBConfigs)(Display * dpy, int screen, int * nelements);
+
+extern EPOXY_IMPORTEXPORT unsigned int (EPOXY_CALLSPEC *epoxy_glXGetGPUIDsAMD)(unsigned int maxCount, unsigned int * ids);
+
+extern EPOXY_IMPORTEXPORT int (EPOXY_CALLSPEC *epoxy_glXGetGPUInfoAMD)(unsigned int id, int property, GLenum dataType, unsigned int size, void * data);
 
 extern EPOXY_IMPORTEXPORT Bool (EPOXY_CALLSPEC *epoxy_glXGetMscRateOML)(Display * dpy, GLXDrawable drawable, int32_t * numerator, int32_t * denominator);
 
@@ -707,11 +741,15 @@ extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXJoinSwapGroupSGIX)(Disp
 
 extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXLockVideoCaptureDeviceNV)(Display * dpy, GLXVideoCaptureDeviceNV device);
 
+extern EPOXY_IMPORTEXPORT Bool (EPOXY_CALLSPEC *epoxy_glXMakeAssociatedContextCurrentAMD)(GLXContext ctx);
+
 extern EPOXY_IMPORTEXPORT Bool (EPOXY_CALLSPEC *epoxy_glXMakeContextCurrent)(Display * dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx);
 
 extern EPOXY_IMPORTEXPORT Bool (EPOXY_CALLSPEC *epoxy_glXMakeCurrent)(Display * dpy, GLXDrawable drawable, GLXContext ctx);
 
 extern EPOXY_IMPORTEXPORT Bool (EPOXY_CALLSPEC *epoxy_glXMakeCurrentReadSGI)(Display * dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx);
+
+extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXNamedCopyBufferSubDataNV)(Display * dpy, GLXContext readCtx, GLXContext writeCtx, GLuint readBuffer, GLuint writeBuffer, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size);
 
 extern EPOXY_IMPORTEXPORT int (EPOXY_CALLSPEC *epoxy_glXQueryChannelDeltasSGIX)(Display * display, int screen, int channel, int * x, int * y, int * w, int * h);
 
@@ -807,14 +845,18 @@ extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXWaitX)(void);
 #define glXBindVideoCaptureDeviceNV epoxy_glXBindVideoCaptureDeviceNV
 #define glXBindVideoDeviceNV epoxy_glXBindVideoDeviceNV
 #define glXBindVideoImageNV epoxy_glXBindVideoImageNV
+#define glXBlitContextFramebufferAMD epoxy_glXBlitContextFramebufferAMD
 #define glXChannelRectSGIX epoxy_glXChannelRectSGIX
 #define glXChannelRectSyncSGIX epoxy_glXChannelRectSyncSGIX
 #define glXChooseFBConfig epoxy_glXChooseFBConfig
 #define glXChooseFBConfigSGIX epoxy_glXChooseFBConfigSGIX
 #define glXChooseVisual epoxy_glXChooseVisual
+#define glXCopyBufferSubDataNV epoxy_glXCopyBufferSubDataNV
 #define glXCopyContext epoxy_glXCopyContext
 #define glXCopyImageSubDataNV epoxy_glXCopyImageSubDataNV
 #define glXCopySubBufferMESA epoxy_glXCopySubBufferMESA
+#define glXCreateAssociatedContextAMD epoxy_glXCreateAssociatedContextAMD
+#define glXCreateAssociatedContextAttribsAMD epoxy_glXCreateAssociatedContextAttribsAMD
 #define glXCreateContext epoxy_glXCreateContext
 #define glXCreateContextAttribsARB epoxy_glXCreateContextAttribsARB
 #define glXCreateContextWithConfigSGIX epoxy_glXCreateContextWithConfigSGIX
@@ -828,6 +870,7 @@ extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXWaitX)(void);
 #define glXCreateWindow epoxy_glXCreateWindow
 #define glXCushionSGI epoxy_glXCushionSGI
 #define glXDelayBeforeSwapNV epoxy_glXDelayBeforeSwapNV
+#define glXDeleteAssociatedContextAMD epoxy_glXDeleteAssociatedContextAMD
 #define glXDestroyContext epoxy_glXDestroyContext
 #define glXDestroyGLXPbufferSGIX epoxy_glXDestroyGLXPbufferSGIX
 #define glXDestroyGLXPixmap epoxy_glXDestroyGLXPixmap
@@ -842,7 +885,9 @@ extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXWaitX)(void);
 #define glXGetAGPOffsetMESA epoxy_glXGetAGPOffsetMESA
 #define glXGetClientString epoxy_glXGetClientString
 #define glXGetConfig epoxy_glXGetConfig
+#define glXGetContextGPUIDAMD epoxy_glXGetContextGPUIDAMD
 #define glXGetContextIDEXT epoxy_glXGetContextIDEXT
+#define glXGetCurrentAssociatedContextAMD epoxy_glXGetCurrentAssociatedContextAMD
 #define glXGetCurrentContext epoxy_glXGetCurrentContext
 #define glXGetCurrentDisplay epoxy_glXGetCurrentDisplay
 #define glXGetCurrentDisplayEXT epoxy_glXGetCurrentDisplayEXT
@@ -853,6 +898,8 @@ extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXWaitX)(void);
 #define glXGetFBConfigAttribSGIX epoxy_glXGetFBConfigAttribSGIX
 #define glXGetFBConfigFromVisualSGIX epoxy_glXGetFBConfigFromVisualSGIX
 #define glXGetFBConfigs epoxy_glXGetFBConfigs
+#define glXGetGPUIDsAMD epoxy_glXGetGPUIDsAMD
+#define glXGetGPUInfoAMD epoxy_glXGetGPUInfoAMD
 #define glXGetMscRateOML epoxy_glXGetMscRateOML
 #define glXGetProcAddress epoxy_glXGetProcAddress
 #define glXGetProcAddressARB epoxy_glXGetProcAddressARB
@@ -872,9 +919,11 @@ extern EPOXY_IMPORTEXPORT void (EPOXY_CALLSPEC *epoxy_glXWaitX)(void);
 #define glXJoinSwapGroupNV epoxy_glXJoinSwapGroupNV
 #define glXJoinSwapGroupSGIX epoxy_glXJoinSwapGroupSGIX
 #define glXLockVideoCaptureDeviceNV epoxy_glXLockVideoCaptureDeviceNV
+#define glXMakeAssociatedContextCurrentAMD epoxy_glXMakeAssociatedContextCurrentAMD
 #define glXMakeContextCurrent epoxy_glXMakeContextCurrent
 #define glXMakeCurrent epoxy_glXMakeCurrent
 #define glXMakeCurrentReadSGI epoxy_glXMakeCurrentReadSGI
+#define glXNamedCopyBufferSubDataNV epoxy_glXNamedCopyBufferSubDataNV
 #define glXQueryChannelDeltasSGIX epoxy_glXQueryChannelDeltasSGIX
 #define glXQueryChannelRectSGIX epoxy_glXQueryChannelRectSGIX
 #define glXQueryContext epoxy_glXQueryContext
