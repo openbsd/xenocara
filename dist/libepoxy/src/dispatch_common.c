@@ -104,16 +104,42 @@
 
 #ifdef __APPLE__
 #define GLX_LIB "/opt/X11/lib/libGL.1.dylib"
+#elif defined(ANDROID)
+#define GLX_LIB "libGLESv2.so"
 #elif defined(__OpenBSD__)
 #define GLX_LIB "libGL.so"
-#define EGL_LIB "libEGL.so"
-#define GLESV1_LIB "libGLESv1_CM.so"
-#define GLESV2_LIB "libGLESv2.so"
 #else
 #define GLX_LIB "libGL.so.1"
+#endif
+
+#if defined(ANDROID) || defined(__OpenBSD__)
+#define EGL_LIB "libEGL.so"
+#define GLES1_LIB "libGLESv1_CM.so"
+#define GLES2_LIB "libGLESv2.so"
+#else
 #define EGL_LIB "libEGL.so.1"
-#define GLESV1_LIB "libGLESv1_CM.so.1"
-#define GLESV2_LIB "libGLESv2.so.2"
+#define GLES1_LIB "libGLESv1_CM.so.1"
+#define GLES2_LIB "libGLESv2.so.2"
+#endif
+
+#ifdef __GNUC__
+#define CONSTRUCT(_func) static void _func (void) __attribute__((constructor));
+#define DESTRUCT(_func) static void _func (void) __attribute__((destructor));
+#elif defined (_MSC_VER) && (_MSC_VER >= 1500)
+#define CONSTRUCT(_func) \
+  static void _func(void); \
+  static int _func ## _wrapper(void) { _func(); return 0; } \
+  __pragma(section(".CRT$XCU",read)) \
+  __declspec(allocate(".CRT$XCU")) static int (* _array ## _func)(void) = _func ## _wrapper;
+
+#define DESTRUCT(_func) \
+  static void _func(void); \
+  static int _func ## _constructor(void) { atexit (_func); return 0; } \
+  __pragma(section(".CRT$XCU",read)) \
+  __declspec(allocate(".CRT$XCU")) static int (* _array ## _func)(void) = _func ## _constructor;
+
+#else
+#error "You will need constructor support for your compiler"
 #endif
 
 struct api {
@@ -161,18 +187,21 @@ struct api {
 static struct api api = {
 #ifndef _WIN32
     .mutex = PTHREAD_MUTEX_INITIALIZER,
+#else
+	0,
 #endif
 };
 
 static bool library_initialized;
+
+static bool epoxy_current_context_is_glx(void);
 
 #if PLATFORM_HAS_EGL
 static EGLenum
 epoxy_egl_get_current_gl_context_api(void);
 #endif
 
-static void
-library_init(void) __attribute__((constructor));
+CONSTRUCT (library_init)
 
 static void
 library_init(void)
@@ -244,6 +273,24 @@ epoxy_is_desktop_gl(void)
     const char *es_prefix = "OpenGL ES";
     const char *version;
 
+#if PLATFORM_HAS_EGL
+    /* PowerVR's OpenGL ES implementation (and perhaps other) don't
+     * comply with the standard, which states that
+     * "glGetString(GL_VERSION)" should return a string starting with
+     * "OpenGL ES". Therefore, to distinguish desktop OpenGL from
+     * OpenGL ES, we must also check the context type through EGL (we
+     * can do that as PowerVR is only usable through EGL).
+     */
+    if (!epoxy_current_context_is_glx()) {
+        switch (epoxy_egl_get_current_gl_context_api()) {
+        case EGL_OPENGL_API:     return true;
+        case EGL_OPENGL_ES_API:  return false;
+        case EGL_NONE:
+        default:  break;
+        }
+    }
+#endif
+
     if (api.begin_count)
         return true;
 
@@ -290,7 +337,7 @@ epoxy_gl_version(void)
     return epoxy_internal_gl_version(0);
 }
 
-PUBLIC int
+int
 epoxy_conservative_gl_version(void)
 {
     if (api.begin_count)
@@ -327,12 +374,13 @@ epoxy_internal_has_gl_extension(const char *ext, bool invalid_op_mode)
         return epoxy_extension_in_string(exts, ext);
     } else {
         int num_extensions;
+        int i;
 
         glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
         if (num_extensions == 0)
             return invalid_op_mode;
 
-        for (int i = 0; i < num_extensions; i++) {
+        for (i = 0; i < num_extensions; i++) {
             const char *gl_ext = (const char *)glGetStringi(GL_EXTENSIONS, i);
             if (strcmp(ext, gl_ext) == 0)
                 return true;
@@ -373,7 +421,7 @@ epoxy_current_context_is_glx(void)
     sym = dlsym(NULL, "eglGetCurrentContext");
     if (sym) {
         if (epoxy_egl_get_current_gl_context_api() != EGL_NONE)
-            return true;
+            return false;
     } else {
         (void)dlerror();
     }
@@ -454,7 +502,7 @@ epoxy_gles1_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        return do_dlsym(&api.gles1_handle, GLESV1_LIB, name, true);
+        return do_dlsym(&api.gles1_handle, GLES1_LIB, name, true);
     }
 }
 
@@ -464,7 +512,7 @@ epoxy_gles2_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        return do_dlsym(&api.gles2_handle, GLESV2_LIB, name, true);
+        return do_dlsym(&api.gles2_handle, GLES2_LIB, name, true);
     }
 }
 
@@ -484,7 +532,7 @@ epoxy_gles3_dlsym(const char *name)
     if (epoxy_current_context_is_glx()) {
         return epoxy_get_proc_address(name);
     } else {
-        void *func = do_dlsym(&api.gles2_handle, GLESV2_LIB, name, false);
+        void *func = do_dlsym(&api.gles2_handle, GLES2_LIB, name, false);
 
         if (func)
             return func;
@@ -501,7 +549,13 @@ void *
 epoxy_get_core_proc_address(const char *name, int core_version)
 {
 #ifdef _WIN32
-    int core_symbol_support = 10;
+    int core_symbol_support = 11;
+#elif defined(ANDROID)
+    /**
+     * All symbols must be resolved through eglGetProcAddress
+     * on Android
+     */
+    int core_symbol_support = 0;
 #else
     int core_symbol_support = 12;
 #endif
@@ -583,7 +637,7 @@ epoxy_get_bootstrap_proc_address(const char *name)
              * us.  Try the GLES2 implementation first, and fall back
              * to GLES1 otherwise.
              */
-            get_dlopen_handle(&api.gles2_handle, GLESV2_LIB, false);
+            get_dlopen_handle(&api.gles2_handle, GLES2_LIB, false);
             if (api.gles2_handle)
                 return epoxy_gles2_dlsym(name);
             else
@@ -623,26 +677,7 @@ epoxy_get_proc_address(const char *name)
 #endif
 }
 
-void
-epoxy_print_failure_reasons(const char *name,
-                            const char **provider_names,
-                            const int *providers)
-{
-    int i;
-
-    fprintf(stderr, "No provider of %s found.  Requires one of:\n", name);
-
-    for (i = 0; providers[i] != 0; i++)
-        fprintf(stderr, "    %s\n",
-                provider_names[providers[i]]);
-
-    if (providers[0] == 0) {
-        fprintf(stderr, "    No known providers.  This is likely a bug "
-                "in libepoxy code generation\n");
-    }
-}
-
-WRAPPER_VISIBILITY void
+WRAPPER_VISIBILITY (void)
 WRAPPER(epoxy_glBegin)(GLenum primtype)
 {
 #ifdef _WIN32
@@ -656,7 +691,7 @@ WRAPPER(epoxy_glBegin)(GLenum primtype)
     epoxy_glBegin_unwrapped(primtype);
 }
 
-WRAPPER_VISIBILITY void
+WRAPPER_VISIBILITY (void)
 WRAPPER(epoxy_glEnd)(void)
 {
     epoxy_glEnd_unwrapped();
