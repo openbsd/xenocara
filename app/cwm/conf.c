@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.191 2015/07/12 14:31:47 okan Exp $
+ * $OpenBSD: conf.c,v 1.192 2015/08/20 14:45:15 okan Exp $
  */
 
 #include <sys/types.h>
@@ -224,18 +224,18 @@ static const struct {
 	{ "M-j",	"movedown" },
 	{ "M-k",	"moveup" },
 	{ "M-l",	"moveright" },
-	{ "M-H",	"bigmoveleft" },
-	{ "M-J",	"bigmovedown" },
-	{ "M-K",	"bigmoveup" },
-	{ "M-L",	"bigmoveright" },
+	{ "MS-h",	"bigmoveleft" },
+	{ "MS-j",	"bigmovedown" },
+	{ "MS-k",	"bigmoveup" },
+	{ "MS-l",	"bigmoveright" },
 	{ "CM-h",	"resizeleft" },
 	{ "CM-j",	"resizedown" },
 	{ "CM-k",	"resizeup" },
 	{ "CM-l",	"resizeright" },
-	{ "CM-H",	"bigresizeleft" },
-	{ "CM-J",	"bigresizedown" },
-	{ "CM-K",	"bigresizeup" },
-	{ "CM-L",	"bigresizeright" },
+	{ "CMS-h",	"bigresizeleft" },
+	{ "CMS-j",	"bigresizedown" },
+	{ "CMS-k",	"bigresizeup" },
+	{ "CMS-l",	"bigresizeright" },
 	{ "C-Left",	"ptrmoveleft" },
 	{ "C-Down",	"ptrmovedown" },
 	{ "C-Up",	"ptrmoveup" },
