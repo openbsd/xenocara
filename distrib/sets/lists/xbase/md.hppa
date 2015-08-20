@@ -65,6 +65,7 @@
 ./usr/X11R6/lib/libGLw.a
 ./usr/X11R6/lib/libGLw.so.6.0
 ./usr/X11R6/lib/libICE.so.10.0
+./usr/X11R6/lib/libOSMesa.so.8.0
 ./usr/X11R6/lib/libSM.so.9.0
 ./usr/X11R6/lib/libX11-xcb.so.2.0
 ./usr/X11R6/lib/libX11.so.16.1
@@ -101,7 +102,7 @@
 ./usr/X11R6/lib/libdrm.a
 ./usr/X11R6/lib/libdrm.so.7.0
 ./usr/X11R6/lib/libepoxy.a
-./usr/X11R6/lib/libepoxy.so.1.0
+./usr/X11R6/lib/libepoxy.so.2.0
 ./usr/X11R6/lib/libfontconfig.so.9.1
 ./usr/X11R6/lib/libfontenc.so.4.0
 ./usr/X11R6/lib/libfreetype.so.24.0
