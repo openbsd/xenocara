@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.192 2015/08/20 14:45:15 okan Exp $
+ * $OpenBSD: conf.c,v 1.193 2015/08/21 15:55:39 okan Exp $
  */
 
 #include <sys/types.h>
@@ -40,7 +40,7 @@ static void		 conf_unbind_mouse(struct conf *, struct binding *);
 int
 conf_cmd_add(struct conf *c, const char *name, const char *path)
 {
-	struct cmd	*cmd, *prev;
+	struct cmd	*cmd;
 
 	cmd = xmalloc(sizeof(*cmd));
 
@@ -54,13 +54,6 @@ conf_cmd_add(struct conf *c, const char *name, const char *path)
 	conf_cmd_remove(c, name);
 
 	TAILQ_INSERT_TAIL(&c->cmdq, cmd, entry);
-
-	/* keep queue sorted by name */
-	while ((prev = TAILQ_PREV(cmd, cmd_q, entry)) &&
-	    (strcmp(prev->name, cmd->name) > 0)) {
-		TAILQ_REMOVE(&c->cmdq, cmd, entry);
-		TAILQ_INSERT_BEFORE(prev, cmd, entry);
-	}
 
 	return(1);
 }
