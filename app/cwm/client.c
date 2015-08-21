@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.199 2015/08/21 15:52:49 okan Exp $
+ * $OpenBSD: client.c,v 1.200 2015/08/21 16:14:39 okan Exp $
  */
 
 #include <sys/types.h>
@@ -299,7 +299,7 @@ client_toggle_maximize(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	struct geom		 area;
 
-	if (cc->flags & (CLIENT_FREEZE|CLIENT_STICKY))
+	if (cc->flags & CLIENT_FREEZE)
 		return;
 
 	if ((cc->flags & CLIENT_MAXFLAGS) == CLIENT_MAXIMIZED) {
@@ -344,7 +344,7 @@ client_toggle_vmaximize(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	struct geom		 area;
 
-	if (cc->flags & (CLIENT_FREEZE|CLIENT_STICKY))
+	if (cc->flags & CLIENT_FREEZE)
 		return;
 
 	if (cc->flags & CLIENT_VMAXIMIZED) {
@@ -376,7 +376,7 @@ client_toggle_hmaximize(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	struct geom		 area;
 
-	if (cc->flags & (CLIENT_FREEZE|CLIENT_STICKY))
+	if (cc->flags & CLIENT_FREEZE)
 		return;
 
 	if (cc->flags & CLIENT_HMAXIMIZED) {
