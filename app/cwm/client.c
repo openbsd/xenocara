@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.200 2015/08/21 16:14:39 okan Exp $
+ * $OpenBSD: client.c,v 1.201 2015/08/21 16:30:02 okan Exp $
  */
 
 #include <sys/types.h>
@@ -237,6 +237,8 @@ client_toggle_freeze(struct client_ctx *cc)
 		cc->flags &= ~CLIENT_FREEZE;
 	else
 		cc->flags |= CLIENT_FREEZE;
+
+	xu_ewmh_set_net_wm_state(cc);
 }
 
 void

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.99 2015/03/28 23:12:47 okan Exp $
+ * $OpenBSD: xutil.c,v 1.100 2015/08/21 16:30:02 okan Exp $
  */
 
 #include <sys/types.h>
@@ -374,6 +374,9 @@ xu_ewmh_handle_net_wm_state_msg(struct client_ctx *cc, int action,
 		int property;
 		void (*toggle)(struct client_ctx *);
 	} handlers[] = {
+		{ _CWM_WM_STATE_FREEZE,
+			CLIENT_FREEZE,
+			client_toggle_freeze },
 		{ _NET_WM_STATE_STICKY,
 			CLIENT_STICKY,
 			client_toggle_sticky },
@@ -421,6 +424,8 @@ xu_ewmh_restore_net_wm_state(struct client_ctx *cc)
 
 	atoms = xu_ewmh_get_net_wm_state(cc, &n);
 	for (i = 0; i < n; i++) {
+		if (atoms[i] == ewmh[_CWM_WM_STATE_FREEZE])
+			client_toggle_freeze(cc);
 		if (atoms[i] == ewmh[_NET_WM_STATE_STICKY])
 			client_toggle_sticky(cc);
 		if (atoms[i] == ewmh[_NET_WM_STATE_MAXIMIZED_HORZ])
@@ -446,7 +451,8 @@ xu_ewmh_set_net_wm_state(struct client_ctx *cc)
 	oatoms = xu_ewmh_get_net_wm_state(cc, &n);
 	atoms = xreallocarray(NULL, (n + _NET_WM_STATES_NITEMS), sizeof(Atom));
 	for (i = j = 0; i < n; i++) {
-		if (oatoms[i] != ewmh[_NET_WM_STATE_STICKY] &&
+		if (oatoms[i] != ewmh[_CWM_WM_STATE_FREEZE] &&
+		    oatoms[i] != ewmh[_NET_WM_STATE_STICKY] &&
 		    oatoms[i] != ewmh[_NET_WM_STATE_MAXIMIZED_HORZ] &&
 		    oatoms[i] != ewmh[_NET_WM_STATE_MAXIMIZED_VERT] &&
 		    oatoms[i] != ewmh[_NET_WM_STATE_HIDDEN] &&
@@ -455,6 +461,8 @@ xu_ewmh_set_net_wm_state(struct client_ctx *cc)
 			atoms[j++] = oatoms[i];
 	}
 	free(oatoms);
+	if (cc->flags & CLIENT_FREEZE)
+		atoms[j++] = ewmh[_CWM_WM_STATE_FREEZE];
 	if (cc->flags & CLIENT_STICKY)
 		atoms[j++] = ewmh[_NET_WM_STATE_STICKY];
 	if (cc->flags & CLIENT_HIDDEN)
