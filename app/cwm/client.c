@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.201 2015/08/21 16:30:02 okan Exp $
+ * $OpenBSD: client.c,v 1.202 2015/08/21 16:52:37 okan Exp $
  */
 
 #include <sys/types.h>
@@ -669,7 +669,7 @@ client_cycle(struct screen_ctx *sc, int flags)
 		    client_next(newcc);
 
 		/* Only cycle visible and non-ignored windows. */
-		if ((newcc->flags & (CLIENT_HIDDEN|CLIENT_IGNORE))
+		if ((newcc->flags & (CLIENT_HIDDEN | CLIENT_IGNORE))
 		    || ((flags & CWM_INGROUP) &&
 			(newcc->group != oldcc->group)))
 			again = 1;
@@ -729,7 +729,7 @@ client_placecalc(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	int			 xslack, yslack;
 
-	if (cc->hint.flags & (USPosition|PPosition)) {
+	if (cc->hint.flags & (USPosition | PPosition)) {
 		/*
 		 * Ignore XINERAMA screens, just make sure it's somewhere
 		 * in the virtual desktop. else it stops people putting xterms

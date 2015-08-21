@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.76 2015/06/30 14:01:43 okan Exp $
+ * $OpenBSD: screen.c,v 1.77 2015/08/21 16:52:37 okan Exp $
  */
 
 #include <sys/types.h>
@@ -67,12 +67,12 @@ screen_init(int which)
 	xu_ewmh_net_virtual_roots(sc);
 
 	rootattr.cursor = Conf.cursor[CF_NORMAL];
-	rootattr.event_mask = SubstructureRedirectMask|SubstructureNotifyMask|
-	    PropertyChangeMask|EnterWindowMask|LeaveWindowMask|
-	    ColormapChangeMask|BUTTONMASK;
+	rootattr.event_mask = SubstructureRedirectMask |
+	    SubstructureNotifyMask | PropertyChangeMask | EnterWindowMask |
+	    LeaveWindowMask | ColormapChangeMask | BUTTONMASK;
 
 	XChangeWindowAttributes(X_Dpy, sc->rootwin,
-	    CWEventMask|CWCursor, &rootattr);
+	    (CWEventMask | CWCursor), &rootattr);
 
 	/* Deal with existing clients. */
 	if (XQueryTree(X_Dpy, sc->rootwin, &w0, &w1, &wins, &nwins)) {
