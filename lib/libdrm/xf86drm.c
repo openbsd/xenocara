@@ -64,6 +64,16 @@
 #include "xf86drm.h"
 #include "libdrm_macros.h"
 
+#ifdef __OpenBSD__
+#define DRM_PRIMARY_MINOR_NAME	"drm"
+#define DRM_CONTROL_MINOR_NAME	"drmC"
+#define DRM_RENDER_MINOR_NAME	"drmR"
+#else
+#define DRM_PRIMARY_MINOR_NAME	"card"
+#define DRM_CONTROL_MINOR_NAME	"controlD"
+#define DRM_RENDER_MINOR_NAME	"renderD"
+#endif
+
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
 #define DRM_MAJOR 145
 #endif
@@ -72,8 +82,20 @@
 #define DRM_MAJOR 34
 #endif
 
+#ifdef __OpenBSD__
+#ifdef __i386__
+#define DRM_MAJOR 88
+#else
+#define DRM_MAJOR 87
+#endif
+#endif /* __OpenBSD__ */
+
 #ifndef DRM_MAJOR
 #define DRM_MAJOR 226		/* Linux */
+#endif
+
+#ifdef __OpenBSD__
+#define X_PRIVSEP
 #endif
 
 /*
@@ -274,6 +296,18 @@ static int chown_check_return(const char *path, uid_t owner, gid_t group)
 			path, errno, strerror(errno));
 	return -1;
 }
+#endif
+
+#ifdef X_PRIVSEP
+static int
+_priv_open_device(const char *path)
+{
+	drmMsg("_priv_open_device\n");
+	return open(path, O_RDWR, 0);
+}
+
+int priv_open_device(const char *)
+	__attribute__((weak, alias ("_priv_open_device")));
 #endif
 
 /**
@@ -528,11 +562,11 @@ static const char *drmGetMinorName(int type)
 {
     switch (type) {
     case DRM_NODE_PRIMARY:
-        return "drm";
+        return DRM_PRIMARY_MINOR_NAME;
     case DRM_NODE_CONTROL:
-        return "drmC";
+        return DRM_CONTROL_MINOR_NAME;
     case DRM_NODE_RENDER:
-        return "drmR";
+        return DRM_RENDER_MINOR_NAME;
     default:
         return NULL;
     }
@@ -2626,7 +2660,7 @@ int drmOpenOnceWithType(const char *BusID, int *newlyopened, int type)
 	}
 
     fd = drmOpenWithType(NULL, BusID, type);
-    if (fd <= 0 || nr_fds == DRM_MAX_FDS)
+    if (fd < 0 || nr_fds == DRM_MAX_FDS)
 	return fd;
    
     connection[nr_fds].BusID = strdup(BusID);
@@ -2705,18 +2739,6 @@ char *drmGetDeviceNameFromFd(int fd)
 
 	return strdup(name);
 }
-
-#ifdef X_PRIVSEP
-static int
-_priv_open_device(const char *path)
-{
-	drmMsg("_priv_open_device\n");
-	return open(path, O_RDWR, 0);
-}
-
-int priv_open_device(const char *)
-	__attribute__((weak, alias ("_priv_open_device")));
-#endif
 
 int drmGetNodeTypeFromFd(int fd)
 {

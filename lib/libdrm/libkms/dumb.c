@@ -26,8 +26,9 @@
  **************************************************************************/
 
 
-#define HAVE_STDINT_H
-#define _FILE_OFFSET_BITS 64
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <errno.h>
 #include <stdio.h>
@@ -35,11 +36,9 @@
 #include <string.h>
 #include "internal.h"
 
-#include <sys/mman.h>
 #include <sys/ioctl.h>
 #include "xf86drm.h"
-
-#include "i915_drm.h"
+#include "libdrm_macros.h"
 
 struct dumb_bo
 {
@@ -148,7 +147,7 @@ dumb_bo_map(struct kms_bo *_bo, void **out)
 	if (ret)
 		return ret;
 
-	map = mmap(0, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, arg.offset);
+	map = drm_mmap(0, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, arg.offset);
 	if (map == MAP_FAILED)
 		return -errno;
 
@@ -176,7 +175,7 @@ dumb_bo_destroy(struct kms_bo *_bo)
 
 	if (bo->base.ptr) {
 		/* XXX Sanity check map_count */
-		munmap(bo->base.ptr, bo->base.size);
+		drm_munmap(bo->base.ptr, bo->base.size);
 		bo->base.ptr = NULL;
 	}
 

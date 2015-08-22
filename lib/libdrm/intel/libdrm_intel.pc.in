@@ -6,5 +6,6 @@ includedir=@includedir@
 Name: libdrm_intel
 Description: Userspace interface to intel kernel DRM services
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -ldrm -ldrm_intel
-Cflags: -I${includedir} -I/usr/include/dev/pci/drm
+Requires: libdrm
+Libs: -L${libdir} -ldrm_intel
+Cflags: -I${includedir} -I${includedir}/libdrm

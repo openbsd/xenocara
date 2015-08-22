@@ -1,0 +1,6 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2015/08/22 00:30:35 jsg Exp $
+
+SHARED_LIBS=	drm 7.0 drm_radeon 4.0 drm_intel 5.0 \
+		drm_amdgpu 1.0 drm_nouveau 2.0
+
+.include <bsd.xorg.mk>

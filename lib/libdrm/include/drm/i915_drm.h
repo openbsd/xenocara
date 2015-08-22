@@ -208,12 +208,19 @@ typedef struct _drm_i915_sarea {
 #define DRM_I915_GEM_SET_TILING	0x21
 #define DRM_I915_GEM_GET_TILING	0x22
 #define DRM_I915_GEM_GET_APERTURE 0x23
+#ifdef __OpenBSD__
+#define DRM_I915_GEM_EXECBUFFER2	0x24
+#define DRM_I915_GEM_MADVISE		0x25
+#define DRM_I915_GEM_MMAP_GTT		0x26
+#define DRM_I915_GET_PIPE_FROM_CRTC_ID	0x29
+#else
 #define DRM_I915_GEM_MMAP_GTT	0x24
 #define DRM_I915_GET_PIPE_FROM_CRTC_ID	0x25
 #define DRM_I915_GEM_MADVISE	0x26
+#define DRM_I915_GEM_EXECBUFFER2	0x29
+#endif
 #define DRM_I915_OVERLAY_PUT_IMAGE	0x27
 #define DRM_I915_OVERLAY_ATTRS	0x28
-#define DRM_I915_GEM_EXECBUFFER2	0x29
 #define DRM_I915_GET_SPRITE_COLORKEY	0x2a
 #define DRM_I915_SET_SPRITE_COLORKEY	0x2b
 #define DRM_I915_GEM_WAIT	0x2c
@@ -270,7 +277,7 @@ typedef struct _drm_i915_sarea {
 #define DRM_IOCTL_I915_OVERLAY_PUT_IMAGE	DRM_IOW(DRM_COMMAND_BASE + DRM_I915_OVERLAY_PUT_IMAGE, struct drm_intel_overlay_put_image)
 #define DRM_IOCTL_I915_OVERLAY_ATTRS	DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_OVERLAY_ATTRS, struct drm_intel_overlay_attrs)
 #define DRM_IOCTL_I915_SET_SPRITE_COLORKEY DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_SET_SPRITE_COLORKEY, struct drm_intel_sprite_colorkey)
-#define DRM_IOCTL_I915_GET_SPRITE_COLORKEY DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_SET_SPRITE_COLORKEY, struct drm_intel_sprite_colorkey)
+#define DRM_IOCTL_I915_GET_SPRITE_COLORKEY DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_GET_SPRITE_COLORKEY, struct drm_intel_sprite_colorkey)
 #define DRM_IOCTL_I915_GEM_WAIT		DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_GEM_WAIT, struct drm_i915_gem_wait)
 #define DRM_IOCTL_I915_GEM_CONTEXT_CREATE	DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GEM_CONTEXT_CREATE, struct drm_i915_gem_context_create)
 #define DRM_IOCTL_I915_GEM_CONTEXT_DESTROY	DRM_IOW (DRM_COMMAND_BASE + DRM_I915_GEM_CONTEXT_DESTROY, struct drm_i915_gem_context_destroy)
@@ -603,6 +610,7 @@ struct drm_i915_gem_relocation_entry {
 #define I915_GEM_DOMAIN_GTT		0x00000040
 /** @} */
 
+#ifndef __OpenBSD__
 struct drm_i915_gem_exec_object {
 	/**
 	 * User's handle for a buffer to be bound into the GTT for this
@@ -652,6 +660,7 @@ struct drm_i915_gem_execbuffer {
 	/** This is a struct drm_clip_rect *cliprects */
 	__u64 cliprects_ptr;
 };
+#endif
 
 struct drm_i915_gem_exec_object2 {
 	/**
@@ -698,11 +707,13 @@ struct drm_i915_gem_execbuffer2 {
 	__u32 batch_start_offset;
 	/** Bytes used in batchbuffer from batch_start_offset */
 	__u32 batch_len;
+#ifndef __OpenBSD__
 	__u32 DR1;
 	__u32 DR4;
 	__u32 num_cliprects;
 	/** This is a struct drm_clip_rect *cliprects */
 	__u64 cliprects_ptr;
+#endif
 #define I915_EXEC_RING_MASK              (7<<0)
 #define I915_EXEC_DEFAULT                (0<<0)
 #define I915_EXEC_RENDER                 (1<<0)

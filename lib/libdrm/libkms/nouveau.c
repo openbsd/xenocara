@@ -26,8 +26,9 @@
  **************************************************************************/
 
 
-#define HAVE_STDINT_H
-#define _FILE_OFFSET_BITS 64
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <errno.h>
 #include <stdio.h>
@@ -35,9 +36,9 @@
 #include <string.h>
 #include "internal.h"
 
-#include <sys/mman.h>
 #include <sys/ioctl.h>
 #include "xf86drm.h"
+#include "libdrm_macros.h"
 
 #include "nouveau_drm.h"
 
@@ -154,7 +155,7 @@ nouveau_bo_map(struct kms_bo *_bo, void **out)
 		return 0;
 	}
 
-	map = mmap(0, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, bo->map_handle);
+	map = drm_mmap(0, bo->base.size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->base.kms->fd, bo->map_handle);
 	if (map == MAP_FAILED)
 		return -errno;
 
@@ -182,7 +183,7 @@ nouveau_bo_destroy(struct kms_bo *_bo)
 
 	if (bo->base.ptr) {
 		/* XXX Sanity check map_count */
-		munmap(bo->base.ptr, bo->base.size);
+		drm_munmap(bo->base.ptr, bo->base.size);
 		bo->base.ptr = NULL;
 	}
 

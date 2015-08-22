@@ -38,7 +38,6 @@
 #include "config.h"
 #endif
 
-#define HAVE_LIBDRM_ATOMIC_PRIMITIVES 1
 #if HAVE_LIBDRM_ATOMIC_PRIMITIVES
 
 #define HAS_ATOMIC_OPS 1

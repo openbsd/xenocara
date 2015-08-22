@@ -67,16 +67,18 @@ struct kms_bo
 	unsigned handle;
 };
 
-int linux_create(int fd, struct kms_driver **out);
+drm_private int linux_create(int fd, struct kms_driver **out);
 
-int vmwgfx_create(int fd, struct kms_driver **out);
+drm_private int vmwgfx_create(int fd, struct kms_driver **out);
 
-int intel_create(int fd, struct kms_driver **out);
+drm_private int intel_create(int fd, struct kms_driver **out);
 
-int dumb_create(int fd, struct kms_driver **out);
+drm_private int dumb_create(int fd, struct kms_driver **out);
 
-int nouveau_create(int fd, struct kms_driver **out);
+drm_private int nouveau_create(int fd, struct kms_driver **out);
 
-int radeon_create(int fd, struct kms_driver **out);
+drm_private int radeon_create(int fd, struct kms_driver **out);
+
+drm_private int exynos_create(int fd, struct kms_driver **out);
 
 #endif

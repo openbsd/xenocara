@@ -7,4 +7,4 @@ Name: libdrm
 Description: Userspace interface to kernel DRM services
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -ldrm
-Cflags: -I${includedir} -I/usr/include/dev/pci/drm
+Cflags: -I${includedir} -I${includedir}/libdrm
