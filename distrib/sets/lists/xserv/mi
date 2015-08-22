@@ -8,4 +8,6 @@
 ./usr/X11R6/lib/modules/multimedia
 ./usr/X11R6/share/aclocal/xorg-macros.m4
 ./var/db
+./var/db/xkb
+./var/db/xkb/README.compiled
 ./var/log

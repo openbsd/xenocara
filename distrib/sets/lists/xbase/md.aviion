@@ -46,6 +46,7 @@
 ./usr/X11R6/include/txc_dxtn.h
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
+./usr/X11R6/include/xorg
 ./usr/X11R6/lib/libEGL.a
 ./usr/X11R6/lib/libEGL.so.0.0
 ./usr/X11R6/lib/libFS.so.10.0
@@ -95,7 +96,7 @@
 ./usr/X11R6/lib/libXxf86misc.so.6.0
 ./usr/X11R6/lib/libXxf86vm.so.6.0
 ./usr/X11R6/lib/libdmx.so.2.0
-./usr/X11R6/lib/libdrm.a
+./usr/X11R6/lib/libdrm.la
 ./usr/X11R6/lib/libdrm.so.7.0
 ./usr/X11R6/lib/libepoxy.a
 ./usr/X11R6/lib/libepoxy.so.2.0

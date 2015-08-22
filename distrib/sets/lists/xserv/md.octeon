@@ -3,5 +3,3 @@
 ./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xserver.1
 ./usr/X11R6/man/man1/Xvfb.1
-./var/db/xkb
-./var/db/xkb/README.compiled
