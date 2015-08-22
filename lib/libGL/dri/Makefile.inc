@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.23 2015/08/19 23:00:12 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.24 2015/08/22 00:50:54 jsg Exp $
 .include <bsd.xconf.mk>
 .include "../config.mk"
 
@@ -39,7 +39,7 @@ INCLUDES = \
 	-I$(TOP)/src/egl/drivers/dri \
 	-I${.CURDIR}/../../generated \
 	-I$(X11BASE)/include \
-	-I/usr/include/dev/pci/drm
+	-I$(X11BASE)/include/libdrm
 
 .if ${MACHINE_ARCH} == "i386"
 CPPFLAGS += \

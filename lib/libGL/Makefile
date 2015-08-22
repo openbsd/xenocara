@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.46 2015/08/19 23:00:12 matthieu Exp $
+# $OpenBSD: Makefile,v 1.47 2015/08/22 00:50:54 jsg Exp $
 .include <bsd.xconf.mk>
 .include "config.mk"
 
@@ -48,7 +48,7 @@ CPPFLAGS+= \
 	-I${GLX} \
 	-I${LOADER} \
 	-I${X11BASE}/include \
-	-I/usr/include/dev/pci/drm \
+	-I${X11BASE}/include/libdrm \
 	-I${.CURDIR}/generated \
 	-I${.CURDIR}/generated/glx \
 	-DGLX_INDIRECT_RENDERING \

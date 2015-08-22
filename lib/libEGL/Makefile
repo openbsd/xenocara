@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.12 2015/02/20 23:31:04 jsg Exp $
+# $OpenBSD: Makefile,v 1.13 2015/08/22 00:50:54 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	EGL
@@ -83,7 +83,7 @@ CPPFLAGS+= \
 	-I${EGL}/main \
 	-I${LOADER} \
 	-I${X11BASE}/include \
-	-I/usr/include/dev/pci/drm \
+	-I${X11BASE}/include/libdrm \
 	-DHAVE_PTHREAD \
 	-DHAVE_X11_PLATFORM \
 	-D_EGL_NATIVE_PLATFORM=_EGL_PLATFORM_X11 \

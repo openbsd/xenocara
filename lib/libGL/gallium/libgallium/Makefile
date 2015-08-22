@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.7 2015/02/20 23:31:05 jsg Exp $
+# $OpenBSD: Makefile,v 1.8 2015/08/22 00:50:54 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	gallium
@@ -13,7 +13,7 @@ CPPFLAGS+= \
 	-I${.CURDIR}/../../../../dist/Mesa/include \
 	-I${.CURDIR}/../../../../dist/Mesa/src \
 	-I${X11BASE}/include \
-	-I/usr/include/dev/pci/drm
+	-I${X11BASE}/include/libdrm 
 
 C_SOURCES = \
 	cso_cache.c \

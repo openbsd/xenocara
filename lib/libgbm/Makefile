@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2015/02/20 23:31:06 jsg Exp $
+# $OpenBSD: Makefile,v 1.5 2015/08/22 00:50:54 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	gbm
@@ -35,7 +35,7 @@ CPPFLAGS+= \
 	-I${GBM}/main \
 	-I${LOADER} \
 	-I${X11BASE}/include \
-	-I/usr/include/dev/pci/drm \
+	-I${X11BASE}/include/libdrm \
 	-DHAVE_PTHREAD \
 	-D_OS_UNIX=1 \
 	-DMODULEDIR=\"${X11BASE}/lib/modules/gbm\" \

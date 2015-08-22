@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.10 2015/02/20 23:31:06 jsg Exp $
+# $OpenBSD: Makefile,v 1.11 2015/08/22 00:50:54 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=	GLESv2
@@ -35,7 +35,7 @@ CPPFLAGS+= \
 	-I${MAPI}/glapi \
 	-I${.CURDIR}/generated \
 	-I${X11BASE}/include \
-	-I/usr/include/dev/pci/drm \
+	-I${X11BASE}/include/libdrm \
 	-DGLX_INDIRECT_RENDERING \
 	-DPTHREADS \
 	-DHAVE_PTHREAD \

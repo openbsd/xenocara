@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2015/01/25 15:09:13 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2015/08/22 00:50:54 jsg Exp $
 
 GALLIUM=${.CURDIR}/../../../../../../dist/Mesa/src/gallium
 .include "${GALLIUM}/winsys/radeon/drm/Makefile.sources"
@@ -13,7 +13,7 @@ CPPFLAGS+= \
 	-I${GALLIUM}/include \
 	-I${.CURDIR}/../../../../../../dist/Mesa/include \
 	-I${X11BASE}/include \
-	-I/usr/include/dev/pci/drm
+	-I${X11BASE}/include/libdrm
 
 all: lib${LIB}_pic.a
 

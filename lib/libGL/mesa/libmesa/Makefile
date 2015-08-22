@@ -1,9 +1,9 @@
-# $OpenBSD: Makefile,v 1.4 2014/07/09 21:32:41 jsg Exp $
+# $OpenBSD: Makefile,v 1.5 2015/08/22 00:50:54 jsg Exp $
 
 LIB=	mesa
 
 CPPFLAGS+= \
-	-I/usr/include/dev/pci/drm \
+	-I${X11BASE}/include/libdrm \
 	-I${.CURDIR}/../generated \
 	-I${.CURDIR}/../generated/main \
 	-DGLX_INDIRECT_RENDERING \

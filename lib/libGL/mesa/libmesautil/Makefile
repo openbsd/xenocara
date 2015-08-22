@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2015/01/25 15:09:14 jsg Exp $
+# $OpenBSD: Makefile,v 1.2 2015/08/22 00:50:54 jsg Exp $
 
 UTIL=${.CURDIR}/../../../../dist/Mesa/src/util
 .include "${UTIL}/Makefile.sources"
@@ -6,7 +6,7 @@ UTIL=${.CURDIR}/../../../../dist/Mesa/src/util
 LIB=	mesautil
 
 CPPFLAGS+= \
-	-I/usr/include/dev/pci/drm \
+	-I${X11BASE}/include/libdrm \
 	-I${.CURDIR}/../generated \
 	-I${.CURDIR}/../generated/main \
 	-I${UTIL} \
