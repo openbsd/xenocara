@@ -2098,13 +2098,7 @@ chipsPreInitHiQV(ScrnInfoPtr pScrn, int flags)
     pScrn->progClock = TRUE;
     cPtr->ClockType = HiQV_STYLE | TYPE_PROGRAMMABLE;
 
-    if (cPtr->pEnt->device->textClockFreq > 0) {
-	SaveClk->Clock = cPtr->pEnt->device->textClockFreq;
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
-		   "Using textclock freq: %7.3f.\n",
-		   SaveClk->Clock/1000.0);
-    } else
-	SaveClk->Clock = 0;
+    SaveClk->Clock = 0;
 
     xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Using programmable clocks\n");
 
@@ -2807,13 +2801,7 @@ chipsPreInitWingine(ScrnInfoPtr pScrn, int flags)
 
     if (cPtr->ClockType & TYPE_PROGRAMMABLE) {
 	pScrn->numClocks = NoClocks;
-	if(cPtr->pEnt->device->textClockFreq > 0) {
-	    SaveClk->Clock = cPtr->pEnt->device->textClockFreq;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
-		       "Using textclock freq: %7.3f.\n",
-		       SaveClk->Clock/1000.0);
-	} else
-	   SaveClk->Clock = CRT_TEXT_CLK_FREQ;
+	SaveClk->Clock = CRT_TEXT_CLK_FREQ;
 	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Using programmable clocks\n");
     } else {  /* TYPE_PROGRAMMABLE */
 	SaveClk->Clock = chipsGetHWClock(pScrn);
@@ -3500,14 +3488,8 @@ chipsPreInit655xx(ScrnInfoPtr pScrn, int flags)
 
     if (cPtr->ClockType & TYPE_PROGRAMMABLE) {
 	pScrn->numClocks = NoClocks;
-	if (cPtr->pEnt->device->textClockFreq > 0) {
-	    SaveClk->Clock = cPtr->pEnt->device->textClockFreq;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
-		       "Using textclock freq: %7.3f.\n",
-		       SaveClk->Clock/1000.0);
-	} else
-	   SaveClk->Clock = ((cPtr->PanelType & ChipsLCDProbed) ? 
-				 LCD_TEXT_CLK_FREQ : CRT_TEXT_CLK_FREQ);
+	SaveClk->Clock = ((cPtr->PanelType & ChipsLCDProbed) ? 
+			 LCD_TEXT_CLK_FREQ : CRT_TEXT_CLK_FREQ);
 	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Using programmable clocks\n");
     } else {  /* TYPE_PROGRAMMABLE */
 	SaveClk->Clock = chipsGetHWClock(pScrn);
