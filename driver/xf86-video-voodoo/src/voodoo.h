@@ -23,7 +23,9 @@ typedef struct {
   
   Bool		      Voodoo2;		/* Set if Voodoo2 */
   pciVideoPtr	      PciInfo;		/* PCI data */
+#ifndef XSERVER_LIBPCIACCESS
   PCITAG	      PciTag;
+#endif
   CARD32	      PhysBase;
   
   CARD32	      Width;		/* Current width */
