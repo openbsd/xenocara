@@ -213,4 +213,14 @@ static inline void FreePixmap(PixmapPtr pixmap)
 
 #endif
 
+#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,16,99,1,0)
+#include <mi.h>
+#define miHandleExposures(pSrcDrawable, pDstDrawable, \
+                         pGC, srcx, srcy, width, height, \
+                         dstx, dsty, plane) \
+       miHandleExposures(pSrcDrawable, pDstDrawable, \
+                         pGC, srcx, srcy, width, height, \
+                         dstx, dsty)
+#endif
+
 #endif
