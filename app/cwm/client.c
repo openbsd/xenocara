@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.202 2015/08/21 16:52:37 okan Exp $
+ * $OpenBSD: client.c,v 1.203 2015/08/23 17:31:20 okan Exp $
  */
 
 #include <sys/types.h>
@@ -493,9 +493,6 @@ client_ptrsave(struct client_ctx *cc)
 void
 client_hide(struct client_ctx *cc)
 {
-	if (cc->flags & CLIENT_STICKY)
-		return;
-
 	XUnmapWindow(X_Dpy, cc->win);
 
 	cc->flags &= ~CLIENT_ACTIVE;
@@ -509,9 +506,6 @@ client_hide(struct client_ctx *cc)
 void
 client_unhide(struct client_ctx *cc)
 {
-	if (cc->flags & CLIENT_STICKY)
-		return;
-
 	XMapRaised(X_Dpy, cc->win);
 
 	cc->flags &= ~CLIENT_HIDDEN;
