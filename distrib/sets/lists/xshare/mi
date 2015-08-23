@@ -1358,6 +1358,7 @@
 ./usr/X11R6/man/man3/XExposeEvent.3
 ./usr/X11R6/man/man3/XExtendedMaxRequestSize.3
 ./usr/X11R6/man/man3/XExtentsOfFontSet.3
+./usr/X11R6/man/man3/XF86VidModeAddModeLine.3
 ./usr/X11R6/man/man3/XFetchBuffer.3
 ./usr/X11R6/man/man3/XFetchBytes.3
 ./usr/X11R6/man/man3/XFetchName.3
