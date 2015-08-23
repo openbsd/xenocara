@@ -3514,7 +3514,7 @@ S3VEnableMmio(ScrnInfoPtr pScrn)
 {
   vgaHWPtr hwp;
   S3VPtr ps3v;
-  IOADDRESS vgaCRIndex, vgaCRReg;
+  unsigned int vgaCRIndex, vgaCRReg;
   unsigned char val;
   unsigned int PIOOffset = 0;
 
@@ -3583,7 +3583,7 @@ S3VDisableMmio(ScrnInfoPtr pScrn)
 {
   vgaHWPtr hwp;
   S3VPtr ps3v;
-  IOADDRESS vgaCRIndex, vgaCRReg;
+  unsigned int vgaCRIndex, vgaCRReg;
   
   PVERB5("	S3VDisableMmio\n");
   
