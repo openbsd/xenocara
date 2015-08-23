@@ -254,7 +254,6 @@ typedef struct _VIA {
     struct pci_device *PciInfo;
     int mmio_bar;
     int fb_bar;
-    PCITAG PciTag;
 #else
     pciVideoPtr PciInfo;
     PCITAG PciTag;
