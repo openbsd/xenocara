@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.66 2015/07/19 10:44:05 matthieu Exp $
+# $OpenBSD: Makefile,v 1.67 2015/08/23 18:50:33 deraadt Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -126,8 +126,7 @@ dist-rel:
 
 dist:
 	cd distrib/sets && \
-		env MACHINE=${MACHINE} ksh ./maketars ${OSrev} ${OSREV} && \
-		{ env MACHINE=${MACHINE} ksh ./checkflist ${OSREV} || true ; }
+		env MACHINE=${MACHINE} ksh ./maketars ${OSrev} ${OSREV}
 
 checkdist:
 	@cd distrib/sets && \
