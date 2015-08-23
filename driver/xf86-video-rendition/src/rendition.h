@@ -14,9 +14,6 @@
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -66,4 +63,8 @@
 
 #include "compat-api.h"
 /* end of __RENDITION_H__ */
+
+#define PCI_CHIP_V1000 0x0001
+#define PCI_CHIP_V2x00 0x2000
+
 #endif

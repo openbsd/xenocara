@@ -1371,6 +1371,18 @@ renditionMapMem(ScrnInfoPtr pScreenInfo)
        /* Override on users request */
     WriteCombine
 	= xf86ReturnOptValBool(pRendition->Options, OPTION_FBWC, WriteCombine);
+#ifdef XSERVER_LIBPCIACCESS
+    mapOption = PCI_DEV_MAP_FLAG_WRITABLE;
+    if (WriteCombine)
+	mapOption |= PCI_DEV_MAP_FLAG_WRITE_COMBINE;
+
+    err = pci_device_map_range(pRendition->PciInfo,
+			       pRendition->PciInfo->regions[0].base_addr,
+			       pRendition->PciInfo->regions[0].size,
+			       mapOption, (void *)&pRendition->board.vmem_base);
+
+    return (err == 0);
+#else
     if (WriteCombine) {
 	xf86DrvMsg(pScreenInfo->scrnIndex, X_CONFIG,
 		   ("Requesting Write-Combined memory access\n"));
@@ -1381,12 +1393,6 @@ renditionMapMem(ScrnInfoPtr pScreenInfo)
 	mapOption = VIDMEM_MMIO;
     }
 
-#ifdef XSERVER_LIBPCIACCESS
-    err = pci_device_map_region(pRendition->PciInfo, 0, TRUE);
-    pRendition->board.vmem_base = pRendition->PciInfo->regions[0].memory;
-
-    return (err == 0);
-#else
     pRendition->board.vmem_base=
         xf86MapPciMem(pScreenInfo->scrnIndex, mapOption,
 		      pRendition->pcitag,
@@ -1415,7 +1421,7 @@ renditionUnmapMem(ScrnInfoPtr pScreenInfo)
 #else
     pci_device_unmap_range(pRendition->PciInfo, 
 			   pRendition->board.vmem_base,
-			   pScreenInfo->videoRam * 1024);
+			   pRendition->PciInfo->regions[0].size);
 #endif
     return TRUE;
 #ifdef DEBUG0
