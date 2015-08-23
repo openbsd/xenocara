@@ -31,7 +31,11 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -322,7 +326,6 @@ map_pci_mem(ScrnInfoPtr pScrni, int vram,
             struct pci_device *dev, int bar, int size)
 {
     void *ptr;
-    void **result = (void **) &ptr;
     int map_size = size ? size : dev->regions[bar].size;
 
     int err = pci_device_map_range(dev,
@@ -330,11 +333,17 @@ map_pci_mem(ScrnInfoPtr pScrni, int vram,
                                    map_size,
                                    PCI_DEV_MAP_FLAG_WRITABLE |
                                    (vram ? PCI_DEV_MAP_FLAG_WRITE_COMBINE : 0),
-                                   result);
+                                   &ptr);
 
     if (err)
         return NULL;
     return ptr;
+}
+
+static inline int
+unmap_pci_mem(ScrnInfoPtr pScrni, struct pci_device *dev, void *ptr, int size)
+{
+    return pci_device_unmap_range(dev, ptr, size);
 }
 #endif
 
@@ -373,8 +382,24 @@ GXMapMem(ScrnInfoPtr pScrni)
 
     gfx_gx2_scratch_base = pGeode->FBAvail - 0x4000;
 
+#ifndef XSERVER_LIBPCIACCESS
     XpressROMPtr = xf86MapVidMem(index, VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);
-
+#else
+    {
+#ifndef __OpenBSD__
+        int fd = open("/dev/mem", O_RDWR);
+        if (fd < 0) {
+            xf86DrvMsg(index, X_ERROR, "Failed to open /dev/mem: %s\n",
+                       strerror(errno));
+            return FALSE;
+        }
+        XpressROMPtr = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0xF0000);
+        close(fd);
+#else
+        XpressROMPtr = NULL;
+#endif
+    }
+#endif
     pGeode->FBBase = gfx_virt_fbptr;
 
     if ((!gfx_virt_regptr) || (!gfx_virt_gpptr) ||
@@ -395,9 +420,9 @@ GXMapMem(ScrnInfoPtr pScrni)
 */
 
 static Bool
-GXCheckVGA(ScrnInfoPtr pScrni)
+GXCheckVGA(ScrnInfoPtr pScrni, EntityInfoPtr pEnt)
 {
-
+#ifndef XSERVER_LIBPCIACCESS
     unsigned char *ptr;
     const char *vgasig = "IBM VGA Compatible";
     int ret;
@@ -413,6 +438,11 @@ GXCheckVGA(ScrnInfoPtr pScrni)
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) ptr, strlen(vgasig));
 
     return ret ? FALSE : TRUE;
+#else
+    pciVideoPtr pci = xf86GetPciInfoForEntity(pEnt->index);
+
+    return pci_device_is_boot_vga(pci);
+#endif
 }
 
 static Bool
@@ -443,7 +473,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode == NULL)
         return FALSE;
 
-    useVGA = GXCheckVGA(pScrni);
+    useVGA = GXCheckVGA(pScrni, pEnt);
 
     if (flags & PROBE_DETECT) {
         GeodeProbeDDC(pScrni, pEnt->index);
@@ -591,12 +621,18 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     panelgeo = xf86GetOptValString(GeodeOptions, GX_OPTION_PANEL_GEOMETRY);
 
     if ((s = xf86GetOptValString(GeodeOptions, GX_OPTION_ACCEL_METHOD))) {
+#if defined(XF86XAA) && defined(XF86EXA)
         if (!xf86NameCmp(s, "XAA"))
             pGeode->useEXA = FALSE;
         else if (xf86NameCmp(s, "EXA"))
             xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
                        "Unknown accleration method %s.  Defaulting to XAA.\n",
                        s);
+#elif defined(XF86EXA)
+        pGeode->useEXA = TRUE;
+#else
+        pGeode->useEXA = FALSE;
+#endif
     }
 
     xf86DrvMsg(pScrni->scrnIndex, X_INFO,
@@ -752,11 +788,21 @@ GXUnmapMem(ScrnInfoPtr pScrni)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     /* unmap all the memory map's */
-
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_regptr, GX_CPU_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_gpptr, GX_GP_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_vidptr, GX_VID_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, gfx_virt_fbptr, pGeode->FBAvail);
+#else
+    pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
+
+    unmap_pci_mem(pScrni, pci, gfx_virt_regptr, GX_CPU_REG_SIZE);
+    unmap_pci_mem(pScrni, pci, gfx_virt_gpptr, GX_GP_REG_SIZE);
+    unmap_pci_mem(pScrni, pci, gfx_virt_vidptr, GX_VID_REG_SIZE);
+    unmap_pci_mem(pScrni, pci, gfx_virt_fbptr, pGeode->FBAvail);
+
+    munmap(XpressROMPtr, 0x10000);
+#endif
     return TRUE;
 }
 

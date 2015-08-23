@@ -22,6 +22,9 @@
  * contributors may be used to endorse or promote products derived from this
  * software without specific prior written permission.
  */
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "xf86.h"
 #include "geode.h"

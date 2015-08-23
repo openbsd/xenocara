@@ -31,8 +31,12 @@
 #include "config.h"
 #endif
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -155,7 +159,6 @@ map_pci_mem(ScrnInfoPtr pScrni, int vram,
             struct pci_device *dev, int bar, int size)
 {
     void *ptr;
-    void **result = (void **) &ptr;
     int map_size = size ? size : dev->regions[bar].size;
 
     int err = pci_device_map_range(dev,
@@ -163,7 +166,7 @@ map_pci_mem(ScrnInfoPtr pScrni, int vram,
                                    map_size,
                                    PCI_DEV_MAP_FLAG_WRITABLE |
                                    (vram ? PCI_DEV_MAP_FLAG_WRITE_COMBINE : 0),
-                                   result);
+                                   &ptr);
 
     if (err)
         return NULL;
@@ -235,7 +238,25 @@ LXMapMem(ScrnInfoPtr pScrni)
                              pGeode->FBAvail);
     gp_set_command_buffer_base(cmd_bfr_phys, 0, pGeode->CmdBfrSize);
 
+#ifndef XSERVER_LIBPCIACCESS
     XpressROMPtr = xf86MapVidMem(index, VIDMEM_FRAMEBUFFER, 0xF0000, 0x10000);
+#else
+    {
+#ifndef  __OpenBSD__
+        int fd = open("/dev/mem", O_RDWR);
+
+        if (fd < 0) {
+            xf86DrvMsg(index, X_ERROR, "Failed to open /dev/mem: %s\n",
+                       strerror(errno));
+            return FALSE;
+        }
+        XpressROMPtr = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0xF0000);
+        close(fd);
+#else
+        XpressROMPtr = NULL;
+#endif
+    }
+#endif
 
     pGeode->FBBase = cim_fb_ptr;
 
@@ -253,9 +274,9 @@ LXMapMem(ScrnInfoPtr pScrni)
 */
 
 static Bool
-LXCheckVGA(ScrnInfoPtr pScrni)
+LXCheckVGA(ScrnInfoPtr pScrni, EntityInfoPtr pEnt)
 {
-
+#ifndef XSERVER_LIBPCIACCESS
     unsigned char *ptr;
     const char *vgasig = "IBM VGA Compatible";
     int ret;
@@ -271,6 +292,11 @@ LXCheckVGA(ScrnInfoPtr pScrni)
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) ptr, strlen(vgasig));
 
     return ret ? FALSE : TRUE;
+#else
+    pciVideoPtr pci = xf86GetPciInfoForEntity(pEnt->index);
+
+    return pci_device_is_boot_vga(pci);
+#endif
 }
 
 static Bool
@@ -310,7 +336,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode == NULL)
         return FALSE;
 
-    pGeode->useVGA = LXCheckVGA(pScrni);
+    pGeode->useVGA = LXCheckVGA(pScrni, pEnt);
     pGeode->VGAActive = FALSE;
     pGeode->pEnt = pEnt;
 
@@ -611,6 +637,8 @@ LXUnmapMem(ScrnInfoPtr pScrni)
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vg_ptr, LX_VG_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vid_ptr, LX_VID_REG_SIZE);
     xf86UnMapVidMem(pScrni->scrnIndex, (pointer) cim_vip_ptr, LX_VIP_REG_SIZE);
+
+    xf86UnMapVidMem(pScrni->scrnIndex, XpressROMPtr, 0x10000);
 #else
     GeodeRec *pGeode = GEODEPTR(pScrni);
     pciVideoPtr pci = xf86GetPciInfoForEntity(pGeode->pEnt->index);
@@ -620,9 +648,9 @@ LXUnmapMem(ScrnInfoPtr pScrni)
     unmap_pci_mem(pScrni, pci, cim_vid_ptr, LX_VID_REG_SIZE);
     unmap_pci_mem(pScrni, pci, cim_vip_ptr, LX_VIP_REG_SIZE);
     unmap_pci_mem(pScrni, pci, cim_fb_ptr, pGeode->FBAvail + CIM_CMD_BFR_SZ);
-#endif
 
-    xf86UnMapVidMem(pScrni->scrnIndex, XpressROMPtr, 0x10000);
+    munmap(XpressROMPtr, 0x10000);
+#endif
 
     return TRUE;
 }
