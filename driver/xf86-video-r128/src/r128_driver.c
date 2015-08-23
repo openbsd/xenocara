@@ -1955,9 +1955,6 @@ Bool R128PreInit(ScrnInfoPtr pScrn, int flags)
     }
 
     info->PciInfo      = xf86GetPciInfoForEntity(info->pEnt->index);
-    info->PciTag       = pciTag(PCI_DEV_BUS(info->PciInfo),
-				PCI_DEV_DEV(info->PciInfo),
-				PCI_DEV_FUNC(info->PciInfo));
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "PCI bus %d card %d func %d\n",
@@ -1966,6 +1963,9 @@ Bool R128PreInit(ScrnInfoPtr pScrn, int flags)
 	       PCI_DEV_FUNC(info->PciInfo));
 
 #ifndef XSERVER_LIBPCIACCESS
+    info->PciTag       = pciTag(PCI_DEV_BUS(info->PciInfo),
+				PCI_DEV_DEV(info->PciInfo),
+				PCI_DEV_FUNC(info->PciInfo));
     if (xf86RegisterResources(info->pEnt->index, 0, ResNone)) goto fail;
     if (xf86SetOperatingState(resVga, info->pEnt->index, ResUnusedOpr)) goto fail;
 
