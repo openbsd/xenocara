@@ -4,6 +4,7 @@
 ./usr/X11R6/include/xorg
 ./usr/X11R6/lib/libFS.so.10.0
 ./usr/X11R6/lib/libICE.so.10.0
+./usr/X11R6/lib/libOSMesa.a
 ./usr/X11R6/lib/libOSMesa.so.8.0
 ./usr/X11R6/lib/libSM.so.9.0
 ./usr/X11R6/lib/libX11-xcb.so.2.0
@@ -82,6 +83,7 @@
 ./usr/X11R6/lib/libxcb.so.3.1
 ./usr/X11R6/lib/libxkbfile.so.6.0
 ./usr/X11R6/lib/libxkbui.so.5.0
+./usr/X11R6/lib/pkgconfig/osmesa.pc
 ./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man/man1/bdftruncate.1

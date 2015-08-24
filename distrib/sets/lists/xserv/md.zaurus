@@ -1,3 +1,4 @@
+./etc/X11/xorg.conf
 ./usr/X11R6/bin/X
 ./usr/X11R6/bin/Xephyr
 ./usr/X11R6/bin/Xnest
@@ -73,4 +74,4 @@
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man5/xorg.conf.d.5
 ./usr/X11R6/share/aclocal/xorg-server.m4
-./etc/X11/xorg.conf
+./var/db/xkb/README.compiled

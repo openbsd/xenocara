@@ -73,3 +73,4 @@
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man5/xorg.conf.d.5
 ./usr/X11R6/share/aclocal/xorg-server.m4
+./var/db/xkb/README.compiled

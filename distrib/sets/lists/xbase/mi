@@ -214,7 +214,6 @@
 ./usr/X11R6/lib/libFS.la
 ./usr/X11R6/lib/libICE.a
 ./usr/X11R6/lib/libICE.la
-./usr/X11R6/lib/libOSMesa.a
 ./usr/X11R6/lib/libSM.a
 ./usr/X11R6/lib/libSM.la
 ./usr/X11R6/lib/libX11-xcb.a
@@ -333,7 +332,6 @@
 ./usr/X11R6/lib/libxkbui.la
 ./usr/X11R6/lib/locate
 ./usr/X11R6/lib/locate/xorg.db
-./usr/X11R6/lib/pkgconfig/osmesa.pc
 ./usr/X11R6/lib/pkgconfig/presentproto.pc
 ./usr/X11R6/lib/pkgconfig/pthread-stubs.pc
 ./usr/X11R6/lib/pkgconfig/x11-xcb.pc

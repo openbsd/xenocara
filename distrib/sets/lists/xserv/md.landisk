@@ -7,3 +7,4 @@
 ./usr/X11R6/man/man1/Xserver.1
 ./usr/X11R6/man/man1/Xvfb.1
 ./usr/X11R6/man/man3/XFree86-DGA.3
+./var/db/xkb/README.compiled

@@ -62,6 +62,7 @@
 ./usr/X11R6/lib/libGLw.a
 ./usr/X11R6/lib/libGLw.so.6.0
 ./usr/X11R6/lib/libICE.so.10.0
+./usr/X11R6/lib/libOSMesa.a
 ./usr/X11R6/lib/libOSMesa.so.8.0
 ./usr/X11R6/lib/libSM.so.9.0
 ./usr/X11R6/lib/libX11-xcb.so.2.0
@@ -155,6 +156,7 @@
 ./usr/X11R6/lib/pkgconfig/glu.pc
 ./usr/X11R6/lib/pkgconfig/glw.pc
 ./usr/X11R6/lib/pkgconfig/libdrm.pc
+./usr/X11R6/lib/pkgconfig/osmesa.pc
 ./usr/X11R6/lib/pkgconfig/pixman-1.pc
 ./usr/X11R6/lib/pkgconfig/xf86driproto.pc
 ./usr/X11R6/lib/xorg/protocol.txt
