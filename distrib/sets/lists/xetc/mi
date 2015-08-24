@@ -34,4 +34,4 @@
 ./etc/fonts/conf.d/69-unifont.conf
 ./etc/fonts/conf.d/80-delicious.conf
 ./etc/fonts/conf.d/90-synthetic.conf
-./usr/share/sysmerge/xetcsum
+./var/sysmerge/xetcsum

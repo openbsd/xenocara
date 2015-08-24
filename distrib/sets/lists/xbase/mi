@@ -427,9 +427,9 @@
 ./usr/X11R6/share/xcb/xcb.xsd
 ./usr/X11R6/share/xcb/xkb.xml
 ./usr/share
-./usr/share/sysmerge
-./usr/share/sysmerge/xetc.tgz
 ./var
 ./var/cache
 ./var/cache/fontconfig
 ./var/cache/fontconfig/CACHEDIR.TAG
+./var/sysmerge
+./var/sysmerge/xetc.tgz

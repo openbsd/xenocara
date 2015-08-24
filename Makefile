@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.67 2015/08/23 18:50:33 deraadt Exp $
+# $OpenBSD: Makefile,v 1.68 2015/08/24 10:41:21 ajacoutot Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -59,10 +59,10 @@ beforeinstall beforebuild:
 afterinstall afterbuild:
 	exec ${MAKE} fix-appd
 	/usr/sbin/makewhatis -Qv ${DESTDIR}/usr/X11R6/man
-	touch ${DESTDIR}/usr/share/sysmerge/xetcsum
+	touch ${DESTDIR}/var/sysmerge/xetcsum
 	cd ${DESTDIR}/ && \
 		sort ${.CURDIR}/distrib/sets/lists/xetc/{mi,md.${MACHINE}} | \
-		xargs sha256 -h ${DESTDIR}/usr/share/sysmerge/xetcsum || true
+		xargs sha256 -h ${DESTDIR}/var/sysmerge/xetcsum || true
 	cd distrib/sets && exec ${MAKE}
 
 install-mk:

@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile,v 1.3 2014/08/28 17:11:19 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2015/08/24 10:41:21 ajacoutot Exp $
 
 DB = /usr/X11R6/lib/locate/xorg.db
-XETC = ${DESTDIR}/usr/share/sysmerge/xetc.tgz
+XETC = ${DESTDIR}/var/sysmerge/xetc.tgz
 
 all: tarxetc makedb
 
