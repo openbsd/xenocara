@@ -424,7 +424,6 @@
 ./usr/X11R6/share/xcb
 ./usr/X11R6/share/xcb/xcb.xsd
 ./usr/X11R6/share/xcb/xkb.xml
-./usr/share
 ./var
 ./var/cache
 ./var/cache/fontconfig
