@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.203 2015/08/23 17:31:20 okan Exp $
+ * $OpenBSD: client.c,v 1.204 2015/08/24 14:57:19 okan Exp $
  */
 
 #include <sys/types.h>
@@ -233,6 +233,9 @@ client_current(void)
 void
 client_toggle_freeze(struct client_ctx *cc)
 {
+	if (cc->flags & CLIENT_FULLSCREEN)
+		return;
+
 	if (cc->flags & CLIENT_FREEZE)
 		cc->flags &= ~CLIENT_FREEZE;
 	else
