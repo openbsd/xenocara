@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.116 2015/08/25 19:49:19 okan Exp $
+ * $OpenBSD: group.c,v 1.117 2015/08/25 19:52:02 okan Exp $
  */
 
 #include <sys/types.h>
@@ -131,8 +131,6 @@ group_init(struct screen_ctx *sc, int num)
 	gc->name = xstrdup(num_to_name[num]);
 	gc->num = num;
 	TAILQ_INIT(&gc->clientq);
-
-	fprintf(stderr, "%d: %s\n", gc->num, gc->name);
 
 	TAILQ_INSERT_TAIL(&sc->groupq, gc, entry);
 
