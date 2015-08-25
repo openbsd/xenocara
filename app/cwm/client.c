@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.205 2015/08/24 15:42:57 okan Exp $
+ * $OpenBSD: client.c,v 1.206 2015/08/25 18:29:10 okan Exp $
  */
 
 #include <sys/types.h>
@@ -120,9 +120,17 @@ client_init(Window win, struct screen_ctx *sc)
 	else
 		client_unhide(cc);
 
-	if (mapped)
-		group_autogroup(cc);
-
+	if (mapped) {
+		if (group_restore(cc))
+			goto out;
+		if (group_autogroup(cc))
+			goto out;
+		if (Conf.flags & CONF_STICKY_GROUPS)
+			group_assign(sc->group_active, cc);
+		else
+			group_assign(NULL, cc);
+	}
+out:
 	XSync(X_Dpy, False);
 	XUngrabServer(X_Dpy);
 
