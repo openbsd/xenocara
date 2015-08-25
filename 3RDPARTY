@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.239 2015/08/22 01:08:35 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.240 2015/08/25 19:07:13 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.6
@@ -8,13 +8,13 @@ Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
 Version:	314
-Current Vers:	318
+Current Vers:	319
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		10.2.9
-Current Vers:	10.6.4
+Current Vers:	10.6.5
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
