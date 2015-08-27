@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.119 2015/08/27 17:43:44 okan Exp $
+ * $OpenBSD: group.c,v 1.120 2015/08/27 18:53:15 okan Exp $
  */
 
 #include <sys/types.h>
@@ -45,15 +45,15 @@ const char *num_to_name[] = {
 void
 group_assign(struct group_ctx *gc, struct client_ctx *cc)
 {
-	if (cc->group != NULL)
-		TAILQ_REMOVE(&cc->group->clientq, cc, group_entry);
+	if (cc->gc != NULL)
+		TAILQ_REMOVE(&cc->gc->clientq, cc, group_entry);
 
 	if ((gc != NULL) && (gc->num == 0))
 		gc = NULL;
 
-	cc->group = gc;
+	cc->gc = gc;
 
-	if (cc->group != NULL)
+	if (cc->gc != NULL)
 		TAILQ_INSERT_TAIL(&gc->clientq, cc, group_entry);
 
 	xu_ewmh_net_wm_desktop(cc);
@@ -162,7 +162,7 @@ group_movetogroup(struct client_ctx *cc, int idx)
 			break;
 	}
 
-	if (cc->group == gc)
+	if (cc->gc == gc)
 		return;
 	if (group_holds_only_hidden(gc))
 		client_hide(cc);
@@ -175,7 +175,7 @@ group_toggle_membership_enter(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	struct group_ctx	*gc = sc->group_active;
 
-	if (gc == cc->group) {
+	if (gc == cc->gc) {
 		group_assign(NULL, cc);
 		cc->flags |= CLIENT_UNGROUP;
 	} else {
