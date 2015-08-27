@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.206 2015/08/25 18:29:10 okan Exp $
+ * $OpenBSD: client.c,v 1.207 2015/08/27 18:40:09 okan Exp $
  */
 
 #include <sys/types.h>
@@ -658,6 +658,10 @@ client_cycle(struct screen_ctx *sc, int flags)
 {
 	struct client_ctx	*newcc, *oldcc;
 	int			 again = 1;
+
+	/* For X apps that ignore events. */
+	XGrabKeyboard(X_Dpy, sc->rootwin, True,
+	    GrabModeAsync, GrabModeAsync, CurrentTime);
 
 	if (TAILQ_EMPTY(&sc->clientq))
 		return;

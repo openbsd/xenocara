@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.115 2015/08/21 16:14:39 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.116 2015/08/27 18:40:09 okan Exp $
  */
 
 #include <sys/types.h>
@@ -219,13 +219,7 @@ kbfunc_menu_group(struct client_ctx *cc, union arg *arg)
 void
 kbfunc_client_cycle(struct client_ctx *cc, union arg *arg)
 {
-	struct screen_ctx	*sc = cc->sc;
-
-	/* XXX for X apps that ignore events */
-	XGrabKeyboard(X_Dpy, sc->rootwin, True,
-	    GrabModeAsync, GrabModeAsync, CurrentTime);
-
-	client_cycle(sc, arg->i);
+	client_cycle(cc->sc, arg->i);
 }
 
 void
@@ -464,7 +458,7 @@ void
 kbfunc_client_grouptoggle(struct client_ctx *cc, union arg *arg)
 {
 	if (arg->i == 0) {
-		/* XXX for stupid X apps like xpdf and gvim */
+		/* For X apps that steal events. */
 		XGrabKeyboard(X_Dpy, cc->win, True,
 		    GrabModeAsync, GrabModeAsync, CurrentTime);
 	}
