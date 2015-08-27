@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.118 2015/08/25 20:35:49 okan Exp $
+ * $OpenBSD: group.c,v 1.119 2015/08/27 17:43:44 okan Exp $
  */
 
 #include <sys/types.h>
@@ -283,6 +283,9 @@ group_cycle(struct screen_ctx *sc, int flags)
 		else if (!group_holds_only_hidden(newgc))
 			group_hide(newgc);
 	}
+
+	if (showgroup == NULL)
+		return;
 
 	group_hide(oldgc);
 
