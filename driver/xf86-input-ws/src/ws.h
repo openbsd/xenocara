@@ -32,6 +32,8 @@ extern int ws_debug_level;
 
 #define WS_NOMAP	0
 
+#define NWSEVENTS	16	/* size of buffer */
+
 /* axis specific data for wheel */
 typedef struct {
 	int negative;
@@ -84,6 +86,10 @@ typedef struct WSDevice {
 		Time expires;		/* time of expiry */
 		Time timeout;
 	} emulateWheel;
+
+	struct wscons_event	events[NWSEVENTS];
+	size_t			events_count;
+	size_t			events_pos;
 } WSDeviceRec, *WSDevicePtr;
 
 /* Middle mouse button emulation */

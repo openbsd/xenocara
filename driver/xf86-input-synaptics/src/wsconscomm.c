@@ -36,6 +36,14 @@ extern int priv_open_device(const char *);
 
 #define DEFAULT_WSMOUSE_DEV		"/dev/wsmouse0"
 
+#define NWSEVENTS	16
+
+struct wsconscomm_proto_data {
+    struct wscons_event	events[NWSEVENTS];
+    size_t		events_count;
+    size_t		events_pos;
+};
+
 static Bool
 WSConsIsTouchpad(InputInfoPtr pInfo, const char *device)
 {
@@ -72,23 +80,42 @@ out:
     return rc;
 }
 
-static Bool
-WSConsReadEvent(InputInfoPtr pInfo, struct wscons_event *event)
+static size_t
+WSConsReadEvents(InputInfoPtr pInfo)
 {
-    Bool rc = TRUE;
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct wsconscomm_proto_data *proto_data = priv->proto_data;
     ssize_t len;
 
-    len = read(pInfo->fd, event, sizeof(struct wscons_event));
+    proto_data->events_count = proto_data->events_pos = 0;
+    len = read(pInfo->fd, proto_data->events, sizeof(proto_data->events));
     if (len <= 0) {
         if (errno != EAGAIN)
             xf86IDrvMsg(pInfo, X_ERROR, "read error %s\n", strerror(errno));
-        rc = FALSE;
     } else if (len % sizeof(struct wscons_event)) {
         xf86IDrvMsg(pInfo, X_ERROR, "read error, invalid number of bytes\n");
-        rc = FALSE;
+    } else {
+        proto_data->events_count = len / sizeof(struct wscons_event);
     }
 
-    return rc;
+    return proto_data->events_count;
+}
+
+static struct wscons_event *
+WSConsGetEvent(InputInfoPtr pInfo)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct wsconscomm_proto_data *proto_data = priv->proto_data;
+    struct wscons_event *event;
+
+    if (proto_data->events_count == 0 && WSConsReadEvents(pInfo) == 0)
+        return NULL;
+
+    event = &proto_data->events[proto_data->events_pos];
+    proto_data->events_pos++;
+    proto_data->events_count--;
+
+    return event;
 }
 
 static Bool
@@ -128,16 +155,17 @@ WSConsReadHwState(InputInfoPtr pInfo,
     struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct wsconscomm_proto_data *proto_data = priv->proto_data;
     struct SynapticsHwState *hw = comm->hwState;
-    struct wscons_event event;
+    struct wscons_event *event;
     Bool v;
 
-    while (WSConsReadEvent(pInfo, &event)) {
-        switch (event.type) {
+    while ((event = WSConsGetEvent(pInfo)) != NULL) {
+        switch (event->type) {
         case WSCONS_EVENT_MOUSE_UP:
         case WSCONS_EVENT_MOUSE_DOWN:
-            v = (event.type == WSCONS_EVENT_MOUSE_DOWN) ? TRUE : FALSE;
-            switch (event.value) {
+            v = (event->type == WSCONS_EVENT_MOUSE_DOWN) ? TRUE : FALSE;
+            switch (event->value) {
             case 0:
                 hw->left = v;
                 break;
@@ -180,25 +208,25 @@ WSConsReadHwState(InputInfoPtr pInfo,
             }
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
-            hw->x = event.value;
+            hw->x = event->value;
             hw->cumulative_dx = hw->x;
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
-            hw->y = priv->maxy - event.value + priv->miny;
+            hw->y = priv->maxy - event->value + priv->miny;
             hw->cumulative_dy = hw->y;
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
-            hw->z = event.value;
+            hw->z = event->value;
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_W:
             if (priv->model == MODEL_ELANTECH) {
                 /* Elantech touchpads report number of fingers directly. */
                 hw->fingerWidth = 5;
-                hw->numFingers = event.value;
+                hw->numFingers = event->value;
                 break;
             }
             /* XXX magic number mapping which is mirrored in pms driver */
-            switch (event.value) {
+            switch (event->value) {
             case 0:
                 hw->fingerWidth = 5;
                 hw->numFingers = 2;
@@ -208,7 +236,7 @@ WSConsReadHwState(InputInfoPtr pInfo,
                 hw->numFingers = 3;
                 break;
             case 4 ... 5:
-                hw->fingerWidth = event.value;
+                hw->fingerWidth = event->value;
                 hw->numFingers = 1;
                 break;
             }
@@ -226,7 +254,8 @@ WSConsReadHwState(InputInfoPtr pInfo,
                 hw->fingerWidth = 5;
                 hw->numFingers = 2;
             }
-            hw->millis = 1000 * event.time.tv_sec + event.time.tv_nsec / 1000000;
+            hw->millis = 1000 * event->time.tv_sec +
+                event->time.tv_nsec / 1000000;
             SynapticsCopyHwState(hwRet, hw);
             return TRUE;
         default:
@@ -263,7 +292,16 @@ WSConsReadDevDimensions(InputInfoPtr pInfo)
     struct wsmouse_calibcoords wsmc;
     int wsmouse_type;
 
+    priv->proto_data = calloc(1, sizeof(struct wsconscomm_proto_data));
+    if (priv->proto_data == NULL) {
+        xf86IDrvMsg(pInfo, X_ERROR, "failed to allocate protocol data (%s)\n",
+            strerror(errno));
+        return;
+    }
+
     if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &wsmc) != 0) {
+        free(priv->proto_data);
+        priv->proto_data = NULL;
         xf86IDrvMsg(pInfo, X_ERROR, "failed to query axis range (%s)\n",
             strerror(errno));
         return;

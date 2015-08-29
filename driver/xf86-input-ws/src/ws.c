@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.61 2015/02/17 08:21:14 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.62 2015/08/29 08:48:29 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -457,78 +457,94 @@ wsDeviceOff(DeviceIntPtr pWS)
 	pWS->public.on = FALSE;
 }
 
-static Bool
-wsReadEvent(InputInfoPtr pInfo, struct wscons_event *event)
+static size_t
+wsReadEvents(InputInfoPtr pInfo)
 {
-	Bool rc = TRUE;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	ssize_t len;
 
-	len = read(pInfo->fd, event, sizeof(struct wscons_event));
-	if (len <= 0) {
+	priv->events_count = priv->events_pos = 0;
+	len = read(pInfo->fd, priv->events, sizeof(priv->events));
+	if (len < 0) {
 		if (errno != EAGAIN)
-			xf86IDrvMsgVerb(pInfo, X_ERROR, 4, "read error %s\n",
+			xf86IDrvMsg(pInfo, X_ERROR, "read error %s\n",
 			    strerror(errno));
-		rc = FALSE;
-	} else if (len != sizeof(struct wscons_event)) {
+	} else if (len % sizeof(struct wscons_event)) {
 		xf86IDrvMsg(pInfo, X_ERROR,
 		    "read error, invalid number of bytes\n");
-		rc = FALSE;
+	} else {
+		priv->events_count = len / sizeof(struct wscons_event);
 	}
 
-	return rc;
+	return priv->events_count;
+}
+
+static struct wscons_event *
+wsGetEvent(InputInfoPtr pInfo)
+{
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
+	struct wscons_event *event;
+
+	if (priv->events_count == 0 && wsReadEvents(pInfo) == 0)
+		return NULL;
+
+	event = &priv->events[priv->events_pos];
+	priv->events_pos++;
+	priv->events_count--;
+
+	return event;
 }
 
 static Bool
 wsReadHwState(InputInfoPtr pInfo, wsHwState *hw)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
-	struct wscons_event event;
+	struct wscons_event *event;
 
 	bzero(hw, sizeof(wsHwState));
-
 	hw->buttons = priv->lastButtons;
 	hw->ax = priv->old_ax;
 	hw->ay = priv->old_ay;
 
-	while (wsReadEvent(pInfo, &event)) {
-		switch (event.type) {
+	while ((event = wsGetEvent(pInfo)) != NULL) {
+		switch (event->type) {
 		case WSCONS_EVENT_MOUSE_UP:
-			hw->buttons &= ~(1 << event.value);
-			DBG(4, ErrorF("Button %d up %x\n", event.value,
+			hw->buttons &= ~(1 << event->value);
+			DBG(4, ErrorF("Button %d up %x\n", event->value,
 			    hw->buttons));
 			break;
 		case WSCONS_EVENT_MOUSE_DOWN:
-			hw->buttons |= (1 << event.value);
-			DBG(4, ErrorF("Button %d down %x\n", event.value,
+			hw->buttons |= (1 << event->value);
+			DBG(4, ErrorF("Button %d down %x\n", event->value,
 			    hw->buttons));
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_X:
-			hw->dx = event.value;
-			DBG(4, ErrorF("Relative X %d\n", event.value));
+			hw->dx = event->value;
+			DBG(4, ErrorF("Relative X %d\n", event->value));
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_Y:
-			hw->dy = -event.value;
-			DBG(4, ErrorF("Relative Y %d\n", event.value));
+			hw->dy = -event->value;
+			DBG(4, ErrorF("Relative Y %d\n", event->value));
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_Z:
-			hw->dz = event.value;
-			DBG(4, ErrorF("Relative Z %d\n", event.value));
+			hw->dz = event->value;
+			DBG(4, ErrorF("Relative Z %d\n", event->value));
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_W:
-			hw->dw = event.value;
-			DBG(4, ErrorF("Relative W %d\n", event.value));
+			hw->dw = event->value;
+			DBG(4, ErrorF("Relative W %d\n", event->value));
 			break;
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
-			hw->ax = event.value;
+			hw->ax = event->value;
 			if (priv->inv_x)
 				hw->ax = priv->max_x - hw->ax + priv->min_x;
-			DBG(4, ErrorF("Absolute X %d\n", event.value));
+			DBG(4, ErrorF("Absolute X %d\n", event->value));
 			break;
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
-			hw->ay = event.value;
+			hw->ay = event->value;
 			if (priv->inv_y)
 				hw->ay = priv->max_y - hw->ay + priv->min_y;
-			DBG(4, ErrorF("Absolute Y %d\n", event.value));
+			DBG(4, ErrorF("Absolute Y %d\n", event->value));
 			break;
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_W:
@@ -539,7 +555,7 @@ wsReadHwState(InputInfoPtr pInfo, wsHwState *hw)
 			return TRUE;
 		default:
 			xf86IDrvMsg(pInfo, X_WARNING,
-			    "bad wsmouse event type=%d\n", event.type);
+			    "bad wsmouse event type=%d\n", event->type);
 			continue;
 		}
 #ifdef __NetBSD__
