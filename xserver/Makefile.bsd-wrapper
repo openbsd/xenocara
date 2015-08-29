@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.55 2015/06/27 21:50:55 miod Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.56 2015/08/29 17:49:14 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -37,11 +37,5 @@ CONFIGURE_ARGS=	--localstatedir=/var --sysconfdir=/etc/X11 \
 		--disable-dmx ${NO_XORG_OPTION} \
 		--disable-unit-tests \
 		${DRI_OPTION}
-
-.if ${MACHINE_CPU} == "mips64"
-# disable cache file, because the compiler flags will not match
-CONFIGURE_ARGS+=	--cache-file=/dev/null
-CFLAGS+=	-Wa,-xgot
-.endif
 
 .include <bsd.xorg.mk>
