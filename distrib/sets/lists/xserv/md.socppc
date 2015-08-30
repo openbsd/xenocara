@@ -52,6 +52,9 @@
 ./usr/X11R6/lib/modules/multimedia/tda9885_drv.so
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.la
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
+./usr/X11R6/lib/pkgconfig/libdrm_amdgpu.pc
+./usr/X11R6/lib/pkgconfig/libdrm_nouveau.pc
+./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
 ./usr/X11R6/lib/pkgconfig/xorg-mouse.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/man/man1/Xephyr.1
