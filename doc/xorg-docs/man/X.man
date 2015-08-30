@@ -219,7 +219,7 @@ The hostname part of the display name should be the empty string.
 For example:  \fI:0\fP, \fI:1\fP, and \fI:0.1\fP.  The most efficient
 local transport will be chosen.
 .TP 8
-.I TCP\/IP
+.I TCP/IP
 .br
 The hostname part of the display name should be the server machine's
 hostname or IP address.  Full Internet names, abbreviated names, IPv4
@@ -482,7 +482,7 @@ implementation dependent.
 If the name is not found, the color is looked up in the
 X server's database.
 The text form of this database is commonly stored in the file
-\fI\__datadir__/X11/rgb.txt\fP.
+\fI__datadir__/X11/rgb.txt\fP.
 .PP
 A numerical color specification
 consists of a color space name and a set of values in the following syntax:
@@ -1159,7 +1159,7 @@ A wide variety of error messages are generated from various programs.
 The default error handler in \fIXlib\fP (also used by many toolkits) uses
 standard resources to construct diagnostic messages when errors occur.  The
 defaults for these messages are usually stored in
-\fI\__datadir__/X11/XErrorDB\fP.  If this file is not present,
+\fI__datadir__/X11/XErrorDB\fP.  If this file is not present,
 error messages will be rather terse and cryptic.
 .PP
 When the X Toolkit Intrinsics encounter errors converting resource strings to

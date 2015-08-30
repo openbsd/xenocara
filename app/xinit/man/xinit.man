@@ -117,7 +117,7 @@ This will start up a server named \fIX\fP, and will append the given
 arguments to the default \fIxterm\fP command.  It will ignore \fI\.xinitrc\fP.
 .TP 8
 .B "xinit \-e widgets \-\^\- ./Xorg \-l \-c"
-This will use the command \fI\.\/Xorg \-l \-c\fP to start the server and will
+This will use the command \fI\./Xorg \-l \-c\fP to start the server and will
 append the arguments \fI\-e widgets\fP to the default \fIxterm\fP command.
 .TP 8
 .B "xinit /usr/ucb/rsh fasthost cpupig \-display ws:1 \-\^\-  :1 \-a 2 \-t 5"
