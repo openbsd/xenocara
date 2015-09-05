@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.445 2014/12/28 22:52:30 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.451 2015/08/18 00:55:19 tom Exp $ */
 
 /*
- * Copyright 1998-2013,2014 by Thomas E. Dickey
+ * Copyright 1998-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -534,7 +534,7 @@ xtermSpecialFont(TScreen *screen, unsigned attr_flags, unsigned draw_flags, unsi
 	TRACE(("pixel_size = %d\n", pixel_size));
 	TRACE(("spacing    = %s\n", props->spacing));
 	old_props.res_x = res_x;
-	old_props.res_x = res_y;
+	old_props.res_y = res_y;
 	old_props.pixel_size = pixel_size;
 	old_props.spacing = old_spacing;
 	sprintf(old_spacing, "%.*s", (int) sizeof(old_spacing) - 2, props->spacing);
@@ -865,25 +865,36 @@ xtermCloseFont(XtermWidget xw, XTermFonts * fnt)
 }
 
 /*
+ * Close and free the font (as well as any aliases).
+ */
+static void
+xtermCloseFont2(XtermWidget xw, XTermFonts * fnts, int which)
+{
+    XFontStruct *thisFont = fnts[which].fs;
+    int k;
+
+    if (thisFont != 0) {
+	xtermCloseFont(xw, &fnts[which]);
+	for (k = 0; k < fMAX; ++k) {
+	    if (k != which) {
+		if (thisFont == fnts[k].fs) {
+		    xtermFreeFontInfo(&fnts[k]);
+		}
+	    }
+	}
+    }
+}
+
+/*
  * Close the listed fonts, noting that some may use copies of the pointer.
  */
 void
 xtermCloseFonts(XtermWidget xw, XTermFonts * fnts)
 {
-    int j, k;
+    int j;
 
     for (j = 0; j < fMAX; ++j) {
-	/*
-	 * Need to save the pointer since xtermCloseFont zeroes it
-	 */
-	XFontStruct *thisFont = fnts[j].fs;
-	if (thisFont != 0) {
-	    xtermCloseFont(xw, &fnts[j]);
-	    for (k = j + 1; k < fMAX; ++k) {
-		if (thisFont == fnts[k].fs)
-		    xtermFreeFontInfo(&fnts[k]);
-	    }
-	}
+	xtermCloseFont2(xw, fnts, j);
     }
 }
 
@@ -1162,7 +1173,7 @@ xtermLoadFont(XtermWidget xw,
 	    TRACE(("...got a matching bold font\n"));
 	    cache_menu_font_name(screen, fontnum, fBold, myfonts.f_b);
 	} else {
-	    xtermCloseFont(xw, &fnts[fBold]);
+	    xtermCloseFont2(xw, fnts, fBold);
 	    fnts[fBold] = fnts[fNorm];
 	    TRACE(("...did not get a matching bold font\n"));
 	}
@@ -1225,7 +1236,7 @@ xtermLoadFont(XtermWidget xw,
 
 	    if (derived
 		&& !compatibleWideCounts(fnts[fWide].fs, fnts[fWBold].fs)) {
-		xtermCloseFont(xw, &fnts[fWBold]);
+		xtermCloseFont2(xw, fnts, fWBold);
 	    }
 	    if (fnts[fWBold].fs == 0) {
 		FREE_FNAME(f_wb);
@@ -1277,7 +1288,7 @@ xtermLoadFont(XtermWidget xw,
     if (!same_font_size(xw, fnts[fNorm].fs, fnts[fBold].fs)
 	&& (is_fixed_font(fnts[fNorm].fs) && is_fixed_font(fnts[fBold].fs))) {
 	TRACE(("...ignoring mismatched normal/bold fonts\n"));
-	xtermCloseFont(xw, &fnts[fBold]);
+	xtermCloseFont2(xw, fnts, fBold);
 	xtermCopyFontInfo(&fnts[fBold], &fnts[fNorm]);
     }
 
@@ -1289,7 +1300,7 @@ xtermLoadFont(XtermWidget xw,
 		    && is_fixed_font(fnts[fWide].fs)
 		    && is_fixed_font(fnts[fWBold].fs)))) {
 	    TRACE(("...ignoring mismatched normal/bold wide fonts\n"));
-	    xtermCloseFont(xw, &fnts[fWBold]);
+	    xtermCloseFont2(xw, fnts, fWBold);
 	    xtermCopyFontInfo(&fnts[fWBold], &fnts[fWide]);
 	}
     });
@@ -1860,37 +1871,42 @@ HandleLoadVTFonts(Widget w,
 	char name_buf[80];
 	char class_buf[80];
 	String name = (String) ((*param_count > 0) ? params[0] : empty);
-	char *myName = (char *) MyStackAlloc(strlen(name) + 1, name_buf);
-	String convert = (String) ((*param_count > 1) ? params[1] : myName);
-	char *myClass = (char *) MyStackAlloc(strlen(convert) + 1, class_buf);
-	int n;
+	char *myName = MyStackAlloc(strlen(name) + 1, name_buf);
 
 	TRACE(("HandleLoadVTFonts(%d)\n", *param_count));
-	strcpy(myName, name);
-	strcpy(myClass, convert);
-	if (*param_count == 1)
-	    myClass[0] = x_toupper(myClass[0]);
+	if (myName != 0) {
+	    String convert = (String) ((*param_count > 1) ? params[1] : myName);
+	    char *myClass = MyStackAlloc(strlen(convert) + 1, class_buf);
+	    int n;
 
-	if (xtermLoadVTFonts(xw, myName, myClass)) {
-	    /*
-	     * When switching fonts, try to preserve the font-menu selection, since
-	     * it is less surprising to do that (if the font-switching can be
-	     * undone) than to switch to "Default".
-	     */
-	    int font_number = screen->menu_font_number;
-	    if (font_number > fontMenu_lastBuiltin)
-		font_number = fontMenu_lastBuiltin;
-	    for (n = 0; n < NMENUFONTS; ++n) {
-		screen->menu_font_sizes[n] = 0;
+	    strcpy(myName, name);
+	    if (myClass != 0) {
+		strcpy(myClass, convert);
+		if (*param_count == 1)
+		    myClass[0] = x_toupper(myClass[0]);
+
+		if (xtermLoadVTFonts(xw, myName, myClass)) {
+		    /*
+		     * When switching fonts, try to preserve the font-menu
+		     * selection, since it is less surprising to do that (if
+		     * the font-switching can be undone) than to switch to
+		     * "Default".
+		     */
+		    int font_number = screen->menu_font_number;
+		    if (font_number > fontMenu_lastBuiltin)
+			font_number = fontMenu_lastBuiltin;
+		    for (n = 0; n < NMENUFONTS; ++n) {
+			screen->menu_font_sizes[n] = 0;
+		    }
+		    SetVTFont(xw, font_number, True,
+			      ((font_number == fontMenu_default)
+			       ? &(xw->misc.default_font)
+			       : NULL));
+		}
+		MyStackFree(myClass, class_buf);
 	    }
-	    SetVTFont(xw, font_number, True,
-		      ((font_number == fontMenu_default)
-		       ? &(xw->misc.default_font)
-		       : NULL));
+	    MyStackFree(myName, name_buf);
 	}
-
-	MyStackFree(myName, name_buf);
-	MyStackFree(myClass, class_buf);
     }
 }
 #endif /* OPT_LOAD_VTFONTS */
@@ -3086,7 +3102,7 @@ dec2ucs(unsigned ch)
 
 #endif /* OPT_WIDE_CHARS */
 
-#if OPT_SHIFT_FONTS
+#if OPT_RENDERFONT || OPT_SHIFT_FONTS
 static int
 lookupOneFontSize(XtermWidget xw, int fontnum)
 {
@@ -3128,6 +3144,7 @@ lookupFontSizes(XtermWidget xw)
 	(void) lookupOneFontSize(xw, n);
     }
 }
+#endif /* OPT_RENDERFONT || OPT_SHIFT_FONTS */
 
 #if OPT_RENDERFONT
 static double
@@ -3263,6 +3280,7 @@ useFaceSizes(XtermWidget xw)
 }
 #endif /* OPT_RENDERFONT */
 
+#if OPT_SHIFT_FONTS
 /*
  * Find the index of a larger/smaller font (according to the sign of 'relative'
  * and its magnitude), starting from the 'old' index.
@@ -3386,7 +3404,7 @@ HandleSmallerFont(Widget w GCC_UNUSED,
 	}
     }
 }
-#endif
+#endif /* OPT_SHIFT_FONTS */
 
 int
 xtermGetFont(const char *param)

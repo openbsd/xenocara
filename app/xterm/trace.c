@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.157 2014/12/25 22:01:07 tom Exp $ */
+/* $XTermId: trace.c,v 1.159 2015/03/02 02:00:48 tom Exp $ */
 
 /*
- * Copyright 1997-2013,2014 by Thomas E. Dickey
+ * Copyright 1997-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -860,7 +860,7 @@ TraceResizeRequest(const char *fn, int ln, Widget w,
 }
 
 #define XRES_S(name) Trace(#name " = %s\n", NonNull(resp->name))
-#define XRES_B(name) Trace(#name " = %s\n", BtoS(resp->name))
+#define XRES_B(name) Trace(#name " = %s\n", MtoS(resp->name))
 #define XRES_I(name) Trace(#name " = %d\n", resp->name)
 
 void

@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: fonts.sh,v 1.11 2011/12/11 16:21:22 tom Exp $
+# $XTermId: fonts.sh,v 1.12 2015/08/10 20:43:05 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2003,2011 by Thomas E. Dickey
+# Copyright 1999-2011,2015 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -31,8 +31,7 @@
 # sale, use or other dealings in this Software without prior written
 # authorization.
 # -----------------------------------------------------------------------------
-# Demonstrate the use of dynamic colors by setting the background successively
-# to different values.
+# Demonstrate control sequence which sets relative fonts.
 
 ESC=""
 CMD='/bin/echo'

@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# $XTermId: resize.pl,v 1.4 2014/02/26 20:20:29 tom Exp $
+# $XTermId: resize.pl,v 1.5 2014/10/07 21:10:15 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #

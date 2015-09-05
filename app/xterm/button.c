@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.491 2014/12/28 22:15:03 tom Exp $ */
+/* $XTermId: button.c,v 1.494 2015/08/27 23:47:56 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3853,8 +3853,9 @@ _ConvertSelectionHelper(Widget w,
 	char *the_data = (char *) screen->selection_data;
 	char *the_next;
 
-	TRACE(("converting %ld:'%s'\n", screen->selection_length,
-	       visibleChars(screen->selection_data, screen->selection_length)));
+	TRACE(("converting %ld:'%s'\n",
+	       (long) screen->selection_length,
+	       visibleChars(screen->selection_data, (unsigned) screen->selection_length)));
 	/*
 	 * For most selections, we can convert in one pass.  It is possible
 	 * that some applications contain embedded nulls, e.g., using xterm's
@@ -4165,7 +4166,7 @@ _OwnSelection(XtermWidget xw,
 
     TRACE(("_OwnSelection count %d, length %ld value %s\n", count,
 	   screen->selection_length,
-	   visibleChars(screen->selection_data, screen->selection_length)));
+	   visibleChars(screen->selection_data, (unsigned) screen->selection_length)));
     selections = MapSelections(xw, selections, count);
 
     if (count > screen->sel_atoms_size) {
@@ -4926,6 +4927,20 @@ formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
     }
 }
 
+static char *
+formatStrlen(char *target, char *source, int freeit)
+{
+    if (source != 0) {
+	sprintf(target, "%u", (unsigned) strlen(source));
+	if (freeit) {
+	    free(source);
+	}
+    } else {
+	strcpy(target, "0");
+    }
+    return target;
+}
+
 /* substitute data into format, reallocating the result */
 static char *
 expandFormat(XtermWidget xw,
@@ -4970,21 +4985,20 @@ expandFormat(XtermWidget xw,
 				finish->col + 1);
 			value = numbers;
 			break;
+		    case 'R':
+			value = formatStrlen(numbers, x_strrtrim(data), 1);
+			break;
+		    case 'r':
+			value = x_strrtrim(data);
+			break;
 		    case 'S':
-			sprintf(numbers, "%u", (unsigned) strlen(data));
-			value = numbers;
+			value = formatStrlen(numbers, data, 0);
 			break;
 		    case 's':
 			value = data;
 			break;
 		    case 'T':
-			if ((value = x_strtrim(data)) != 0) {
-			    sprintf(numbers, "%u", (unsigned) strlen(value));
-			    free(value);
-			} else {
-			    strcpy(numbers, "0");
-			}
-			value = numbers;
+			value = formatStrlen(numbers, x_strtrim(data), 1);
 			break;
 		    case 't':
 			value = x_strtrim(data);

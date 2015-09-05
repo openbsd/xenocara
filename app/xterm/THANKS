@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.14 2014/07/12 14:41:17 tom Exp $
+-- $XTermId: THANKS,v 1.15 2015/08/28 08:17:31 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -61,7 +61,6 @@ Denis Zaitsev
 Dennis Preiser
 Dennis Schneider
 Dimitrios Christidis
-Dr Werner Fink
 Ed Schouten
 Eddy De Greef
 Edward S Arthur
@@ -74,6 +73,7 @@ Frank Giessler
 Frank Guangxin Liu
 Frank Liu
 Gael Roualland
+George Nachman
 George Peter Staplin
 Gertjan Halkes
 Greg Badros
@@ -120,6 +120,8 @@ Marius Tolzmann
 Mark Waggoner
 Markus Kuhn
 Martin Pirker
+Martin Tournoij
+Matthew Green
 Matthias Baake
 Matthias Scheler
 Matthieu Herrb
@@ -188,6 +190,7 @@ Tor Lillqvist
 Torrey Lyons
 Victor Stinner
 Vincent Lefevre
+Werner Fink
 Werner Lemberg
 Will Day
 Zdenek Sekera

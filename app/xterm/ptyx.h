@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.821 2014/12/28 21:50:14 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.823 2015/02/16 00:25:27 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -367,6 +367,9 @@ typedef struct {
 #define	ANSI_OSC	0x9D
 #define	ANSI_PM		0x9E
 #define	ANSI_APC	0x9F
+
+#define L_CURL		'{'
+#define R_CURL		'}'
 
 #define MIN_DECID  52			/* can emulate VT52 */
 #define MAX_DECID 525			/* ...through VT525 */

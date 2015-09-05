@@ -1,7 +1,7 @@
-/* $XTermId: graphics.c,v 1.62 2014/12/23 00:08:58 Ross.Combs Exp $ */
+/* $XTermId: graphics.c,v 1.68 2015/07/13 08:58:48 Ross.Combs Exp $ */
 
 /*
- * Copyright 2013,2014 by Ross Combs
+ * Copyright 2013-2014,2015 by Ross Combs
  *
  *                         All Rights Reserved
  *
@@ -52,13 +52,14 @@
  * graphics TODO list
  *
  * ReGIS:
- * - find a suitable default alphabet zero font instead of scaling Xft fonts
+ * - ship a default alphabet zero font instead of scaling Xft fonts
  * - input and output cursors
  * - mouse input
- * - investigate second graphic page for ReGIS -- does it also apply to text and sixel graphics? are the contents preserved?
+ * - fix graphic pages for ReGIS -- they should also apply to text and sixel graphics
  * - fix interpolated curves to more closely match implementation (identical despite direction and starting point)
  * - non-ASCII alphabets
- * - enter/leave during a command
+ * - enter/leave anywhere in a command
+ * - locator key definitions (DECLKD)
  * - command display mode
  * - re-rasterization on resize
  * - macros
@@ -94,7 +95,9 @@
  * - ability to show non-scroll-mode sixel graphics in a separate window
  * - ability to show ReGIS graphics in a separate window
  * - ability to show Tektronix graphics in VT100 window
- * - truncate graphics at bottom edge of window?
+ * - truncate graphics at bottom edge of terminal?
+ * - locator events (DECEFR DECSLE DECELR DECLRP)
+ * - locator controller mode (CSI6i / CSI7i)
  *
  * new escape sequences:
  * - way to query text font size without "window ops" (or make "window ops" permissions more fine grained)
@@ -690,6 +693,7 @@ init_graphic(Graphic *graphic,
 
     TRACE(("initializing graphic object\n"));
 
+    graphic->hidden = 0;
     graphic->dirty = 1;
     for (i = 0U; i < max_pixels; i++)
 	graphic->pixels[i] = COLOR_HOLE;
@@ -804,15 +808,24 @@ get_new_or_matching_graphic(XtermWidget xw,
     unsigned ii;
 
     FOR_EACH_SLOT(ii) {
-	if ((graphic = getActiveSlot(ii)) &&
-	    graphic->type == type &&
-	    graphic->bufferid == bufferid &&
-	    graphic->charrow == charrow &&
-	    graphic->charcol == charcol &&
-	    graphic->actual_width == actual_width &&
-	    graphic->actual_height == actual_height) {
-	    TRACE(("found existing graphic index=%u id=%u\n", ii, graphic->id));
-	    return graphic;
+	TRACE(("checking slot=%u for graphic at %d,%d %dx%d bufferid=%d type=%u\n", ii,
+	       charrow, charcol,
+	       actual_width, actual_height,
+	       bufferid, type));
+	if ((graphic = getActiveSlot(ii))) {
+	    if (graphic->type == type &&
+		graphic->bufferid == bufferid &&
+		graphic->charrow == charrow &&
+		graphic->charcol == charcol &&
+		graphic->actual_width == actual_width &&
+		graphic->actual_height == actual_height) {
+		TRACE(("found existing graphic slot=%u id=%u\n", ii, graphic->id));
+		return graphic;
+	    }
+	    TRACE(("not a match: graphic at %d,%d %dx%d bufferid=%d type=%u\n",
+		   graphic->charrow, graphic->charcol,
+		   graphic->actual_width, graphic->actual_height,
+		   graphic->bufferid, graphic->type));
 	}
     }
 
@@ -820,6 +833,10 @@ get_new_or_matching_graphic(XtermWidget xw,
     if ((graphic = get_new_graphic(xw, charrow, charcol, type))) {
 	graphic->actual_width = actual_width;
 	graphic->actual_height = actual_height;
+	TRACE(("no match; created graphic at %d,%d %dx%d bufferid=%d type=%u\n",
+	       graphic->charrow, graphic->charcol,
+	       graphic->actual_width, graphic->actual_height,
+	       graphic->bufferid, graphic->type));
     }
     return graphic;
 }
@@ -1340,6 +1357,8 @@ refresh_graphics(XtermWidget xw,
 		continue;
 	    }
 	}
+	if (graphic->hidden)
+	    continue;
 	ordered_graphics[active_count++] = graphic;
     }
 
@@ -1688,6 +1707,8 @@ scroll_displayed_graphics(XtermWidget xw, int rows)
 	    continue;
 	if (graphic->bufferid != screen->whichBuf)
 	    continue;
+	if (graphic->hidden)
+	    continue;
 
 	graphic->charrow -= rows;
     }
@@ -1715,6 +1736,8 @@ pixelarea_clear_displayed_graphics(TScreen const *screen,
 	if (!(graphic = getActiveSlot(ii)))
 	    continue;
 	if (graphic->bufferid != screen->whichBuf)
+	    continue;
+	if (graphic->hidden)
 	    continue;
 
 	graph_x = graphic->charcol * FontWidth(screen);

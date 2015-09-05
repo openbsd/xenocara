@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.206 2014/07/14 23:42:59 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.209 2015/08/10 23:40:17 tom Exp $ */
 
 /*
- * Copyright 1997-2013,2014 by Thomas E. Dickey
+ * Copyright 1997-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -44,6 +44,7 @@
 #undef DEF_ALT_SENDS_ESC	/* CF_ARG_ENABLE(alt-sends-esc) */
 #undef DEF_BACKARO_BS		/* CF_ARG_DISABLE(backarrow-key) */
 #undef DEF_BACKARO_ERASE	/* CF_ARG_ENABLE(backarrow-is-erase) */
+#undef DEF_INITIAL_ERASE	/* CF_ARG_DISABLE(initial-erase) */
 #undef DEF_META_SENDS_ESC	/* CF_ARG_ENABLE(meta-sends-esc) */
 #undef DFT_COLORMODE		/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID		/* AC_ARG_WITH(default-terminal-id) */
@@ -101,6 +102,7 @@
 #undef HAVE_WCSWIDTH		/* AC_CHECK_FUNCS(wcswidth) */
 #undef HAVE_WCWIDTH		/* AC_CHECK_FUNCS(wcwidth) */
 #undef HAVE_X11_DECKEYSYM_H	/* AC_CHECK_HEADERS(X11/DECkeysym.h) */
+#undef HAVE_X11_EXTENSIONS_XINERAMA_H /* AC_CHECK_HEADERS(X11/extensions/Xinerama.h) */
 #undef HAVE_X11_EXTENSIONS_XKB_H /* AC_CHECK_HEADERS(X11/extensions/XKB.h) */
 #undef HAVE_X11_SUNKEYSYM_H	/* AC_CHECK_HEADERS(X11/Sunkeysym.h) */
 #undef HAVE_X11_XF86KEYSYM_H	/* AC_CHECK_HEADERS(X11/XF86keysym.h) */
@@ -122,6 +124,7 @@
 #undef OPT_BOX_CHARS		/* CF_ARG_DISABLE(boxchars) */
 #undef OPT_BROKEN_OSC		/* CF_ARG_ENABLE(broken-osc) */
 #undef OPT_BROKEN_ST		/* CF_ARG_DISABLE(broken-st) */
+#undef OPT_BUILTIN_XPMS		/* CF_ARG_ENABLE(builtin-xpms) */
 #undef OPT_C1_PRINT		/* CF_ARG_DISABLE(c1-print) */
 #undef OPT_COLOR_CLASS		/* CF_ARG_DISABLE(color-class) */
 #undef OPT_DABBREV		/* CF_ARG_ENABLE(dabbrev) */

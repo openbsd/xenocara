@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2013)
-               updated for XTerm Patch #314 (2014/12/17)
+                    invisible-island.net (2006-2015)
+               updated for XTerm Patch #318 (2015/08/19)
 
 
 
@@ -39,6 +39,59 @@ Pm   A multiple numeric parameter composed of any number of single
      ues for the parameters are listed with Ps .
 
 Pt   A text parameter composed of printable characters.
+
+Control Bytes, Characters, and Sequences
+
+ECMA-48 (aka "ISO 6429") documents C1 (8-bit) and C0 (7-bit) codes.
+Those are respectively codes 128 to 159 and 0 to 31.  ECMA-48 avoids
+referring to these codes as characters, because that term is associated
+with graphic characters.  Instead, it uses "bytes" and "codes", with
+occasional lapses to "characters" where the meaning cannot be mistaken.
+
+Controls (including the escape code 27) are processed once:
+
+o This means that a C1 control can be mistaken for badly-formed UTF-8
+  when the terminal runs in UTF-8 mode because C1 controls are valid
+  continuation bytes of a UTF-8 encoded (multibyte) value.
+
+o It is not possible to use a C1 control obtained from decoding the
+  UTF-8 text, because that would require reprocessing the data.  Conse-
+  quently there is no ambiguity in the way this document uses the term
+  "character" to refer to bytes in a control sequence.
+
+The order of processing is a necessary consequence of the way ECMA-48 is
+designed:
+
+o Each byte sent to the terminal can be unambiguously determined to fall
+  into one of a few categories (C0, C1 and graphic characters).
+
+o ECMA-48 is modal; once it starts processing a control sequence, the
+  terminal continues until the sequence is complete, or some byte is
+  found which is not allowed in the sequence.
+
+o Intermediate, parameter and final bytes may use the same codes as
+  graphic characters, but they are processed as part of a control
+  sequence and are not actually graphic characters.
+
+o Eight-bit controls can have intermediate, etc., bytes in the range 160
+  to 255.  Those can be treated as their counterparts in the range 32 to
+  127.
+
+o Single-byte controls can be handled separately from multi-byte control
+  sequences because ECMA-48's rules are unambiguous.
+
+  As a special case, ECMA-48 (section 9) mentions that the control func-
+  tions shift-in and shift-out are allowed to occur within a 7-bit
+  multibyte control sequence because those cannot alter the meaning of
+  the control sequence.
+
+o Some controls (such as OSC ) introduce a string mode, which is ended
+  on a ST  (string terminator).
+
+  Again, the terminal should accept single-byte controls within the
+  string.  However, xterm has a resource setting brokenLinuxOSC to allow
+  recovery from applications which rely upon malformed palette sequences
+  used by the Linux console.
 
 C1 (8-Bit) Control Characters
 
@@ -210,6 +263,7 @@ DCS $ q Pt ST
             " q     -> DECSCA
             " p     -> DECSCL
             r       -> DECSTBM
+            s       -> DECSLRM
             m       -> SGR
             SP q    -> DECSCUSR
           xterm responds with DCS 1 $ r Pt ST for valid requests,
@@ -311,12 +365,12 @@ CSI Ps b  Repeat the preceding graphic character Ps times (REP).
 CSI Ps c  Send Device Attributes (Primary DA).
             Ps = 0  or omitted -> request attributes from terminal.  The
           response depends on the decTerminalID resource setting.
-            -> CSI ? 1 ; 2 c  (``VT100 with Advanced Video Option'')
-            -> CSI ? 1 ; 0 c  (``VT101 with No Options'')
-            -> CSI ? 6 c  (``VT102'')
-            -> CSI ? 6 2 ; Psc  (``VT220'')
-            -> CSI ? 6 3 ; Psc  (``VT320'')
-            -> CSI ? 6 4 ; Psc  (``VT420'')
+            -> CSI ? 1 ; 2 c  ("VT100 with Advanced Video Option")
+            -> CSI ? 1 ; 0 c  ("VT101 with No Options")
+            -> CSI ? 6 c  ("VT102")
+            -> CSI ? 6 2 ; Psc  ("VT220")
+            -> CSI ? 6 3 ; Psc  ("VT320")
+            -> CSI ? 6 4 ; Psc  ("VT420")
           The VT100-style response parameters do not mean anything by
           themselves.  VT220 (and higher) parameters do, telling the
           host what features the terminal supports:
@@ -340,16 +394,16 @@ CSI > Ps c
           this to VT100.
             -> CSI  > Pp ; Pv ; Pc c
           where Pp denotes the terminal type
-            Pp = 0  -> ``VT100''.
-            Pp = 1  -> ``VT220''.
-            Pp = 2  -> ``VT240''.
-            Pp = 1 8 -> ``VT330''.
-            Pp = 1 9 -> ``VT340''.
-            Pp = 2 4 -> ``VT320''.
-            Pp = 4 1 -> ``VT420''.
-            Pp = 6 1 -> ``VT510''.
-            Pp = 6 4 -> ``VT520''.
-            Pp = 6 5 -> ``VT525''.
+            Pp = 0  -> "VT100".
+            Pp = 1  -> "VT220".
+            Pp = 2  -> "VT240".
+            Pp = 1 8 -> "VT330".
+            Pp = 1 9 -> "VT340".
+            Pp = 2 4 -> "VT320".
+            Pp = 4 1 -> "VT420".
+            Pp = 6 1 -> "VT510".
+            Pp = 6 4 -> "VT520".
+            Pp = 6 5 -> "VT525".
           and Pv is the firmware version (for xterm, this was originally
           the XFree86 patch number, starting with 95).  In a DEC termi-
           nal, Pc indicates the ROM cartridge registration number and is
@@ -646,7 +700,7 @@ CSI > Ps; Ps m
           initial values.
 CSI Ps n  Device Status Report (DSR).
             Ps = 5  -> Status Report.
-          Result (``OK'') is CSI 0 n
+          Result ("OK") is CSI 0 n
             Ps = 6  -> Report Cursor Position (CPR) [row;column].
           Result is CSI r ; c R
 
@@ -896,7 +950,7 @@ CSI Ps * x
 CSI Pi ; Pg ; Pt; Pl; Pb; Pr * y
           Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
           Response is
-          DCS Pt ! x x x x ST
+          DCS Pi ! x x x x ST
             Pi is the request id.
             Pg is the page number.
             Pt; Pl; Pb; Pr denotes the rectangle.
@@ -962,17 +1016,17 @@ CSI Ps ' |
             Pe = 8  -> M4 button down.
             Pe = 9  -> M4 button up.
             Pe = 1 0  -> locator outside filter rectangle.
-          The ``button'' parameter is a bitmask indicating which buttons
+          The "button" parameter is a bitmask indicating which buttons
           are pressed:
             Pb = 0  <- no buttons down.
             Pb & 1  <- right button down.
             Pb & 2  <- middle button down.
             Pb & 4  <- left button down.
             Pb & 8  <- M4 button down.
-          The ``row'' and ``column'' parameters are the coordinates of
-          the locator position in the xterm window, encoded as ASCII
-          decimal.
-          The ``page'' parameter is not used by xterm.
+          The "row" and "column" parameters are the coordinates of the
+          locator position in the xterm window, encoded as ASCII deci-
+          mal.
+          The "page" parameter is not used by xterm.
 CSI Pm ' }
           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
 CSI Pm ' ~
@@ -1017,16 +1071,8 @@ OSC Ps ; Pt BEL
               Pc = 3  <- resource colorRV (REVERSE).
               Pc = 4  <- resource colorIT (ITALIC).
 
-            Ps = 6 ; c; f -> Enable/disable Special Color Number c.  The
-          second parameter tells xterm to enable the corresponding color
-          mode if nonzero, disable it if zero.
-
-              Pc = 0  <- resource colorBDMode (BOLD).
-              Pc = 1  <- resource colorULMode (UNDERLINE).
-              Pc = 2  <- resource colorBLMode (BLINK).
-              Pc = 3  <- resource colorRVMode (REVERSE).
-              Pc = 4  <- resource colorITMode (ITALIC).
-              Pc = 5  <- resource colorAttrMode (Override ANSI).
+            Ps = 6 ; c; f -> Enable/disable Special Color Number c.  OSC
+          6  is the same as OSC 1 0 6 .
 
           The 10 colors (below) which may be set or queried using 1 0
           through 1 9  are denoted dynamic colors, since the correspond-
@@ -1108,6 +1154,17 @@ OSC Ps ; Pt BEL
           spond to the special colors which can be set using an OSC 5
           control (or by adding the maximum number of colors using an
           OSC 4  control).
+
+            Ps = 1 0 6 ; c; f -> Enable/disable Special Color Number c.
+          The second parameter tells xterm to enable the corresponding
+          color mode if nonzero, disable it if zero.
+
+              Pc = 0  <- resource colorBDMode (BOLD).
+              Pc = 1  <- resource colorULMode (UNDERLINE).
+              Pc = 2  <- resource colorBLMode (BLINK).
+              Pc = 3  <- resource colorRVMode (REVERSE).
+              Pc = 4  <- resource colorITMode (ITALIC).
+              Pc = 5  <- resource colorAttrMode (Override ANSI).
 
           The dynamic colors can also be reset to their default
           (resource) values:
@@ -1263,11 +1320,12 @@ pose keys:
                        ---------+-----------------
 
 
-Older versions of xterm implement different escape sequences for F1
-through F4.  These can be activated by setting the oldXtermFKeys
-resource.  However, since they do not correspond to any hardware termi-
-nal, they have been deprecated.  (The DEC VT220 reserves F1 through F5
-for local functions such as Setup).
+Note that F1 through F4 are prefixed with SS3 , while the other keys are
+prefixed with CSI .  Older versions of xterm implement different escape
+sequences for F1 through F4, with a CSI  prefix.  These can be activated
+by setting the oldXtermFKeys resource.  However, since they do not cor-
+respond to any hardware terminal, they have been deprecated.  (The DEC
+VT220 reserves F1 through F5 for local functions such as Setup).
 
                        Key        Escape Sequence
                        ---------+-----------------
@@ -1278,8 +1336,11 @@ for local functions such as Setup).
                        ---------+-----------------
 
 In normal mode, i.e., a Sun/PC keyboard when the sunKeyboard resource is
-false, xterm recognizes function key modifiers which are parameters
-appended before the final character of the control sequence.
+false (and none of the other keyboard resources such as oldXtermFKeys
+resource is set), xterm encodes function key modifiers as parameters
+appended before the final character of the control sequence.  As a spe-
+cial case, the SS3  sent before F1 through F4 is altered to CSI  when
+sending a function key modifier as a parameter.
 
                     Code     Modifiers
                   ---------+---------------------------
@@ -1801,7 +1862,7 @@ ESC K     Erase from the cursor to the end of the line.
 ESC Y Ps Ps
           Move the cursor to given row and column.
 ESC Z     Identify.
-            -> ESC  /  Z  (``I am a VT52.'').
+            -> ESC  /  Z  ("I am a VT52.").
 ESC =     Enter alternate keypad mode.
 ESC >     Exit alternate keypad mode.
 ESC <     Exit VT52 mode (Enter VT100 mode).

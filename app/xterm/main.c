@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.767 2014/12/29 00:17:32 tom Exp $ */
+/* $XTermId: main.c,v 1.773 2015/08/26 23:39:36 tom Exp $ */
 
 /*
- * Copyright 2002-2013,2014 by Thomas E. Dickey
+ * Copyright 2002-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1296,7 +1296,7 @@ static OptionHelp xtermOptions[] = {
 { NULL, NULL }};
 /* *INDENT-ON* */
 
-static const char *message[] =
+static const char *const message[] =
 {
     "Fonts should be fixed width and, if both normal and bold are specified, should",
     "have the same size.  If only a normal font is specified, it will be used for",
@@ -1615,7 +1615,7 @@ Help(void)
 {
     OptionHelp *opt;
     OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
-    const char **cpp;
+    const char *const *cpp;
 
     printf("%s usage:\n    %s [-options ...] [-e command args]\n\n",
 	   xtermVersion(), ProgramName);
@@ -1952,7 +1952,7 @@ main(int argc, char *argv[]ENVP_ARG)
 {
 #if OPT_MAXIMIZE
 #define DATA(name) { #name, es##name }
-    static FlagList tblFullscreen[] =
+    static const FlagList tblFullscreen[] =
     {
 	DATA(Always),
 	DATA(Never)
@@ -2201,8 +2201,6 @@ main(int argc, char *argv[]ENVP_ARG)
 	setEffectiveUser(save_ruid);
 	TRACE_IDS;
 #endif
-	init_colored_cursor();
-
 	toplevel = xtermOpenApplication(&app_con,
 					my_class,
 					optionDescList,
@@ -2881,7 +2879,7 @@ pty_search(int *pty)
  */
 
 #if OPT_TEK4014
-static const char *tekterm[] =
+static const char *const tekterm[] =
 {
     "tek4014",
     "tek4015",			/* 4014 with APL character set support */
@@ -2900,7 +2898,7 @@ static const char *tekterm[] =
  * The VT420 has up to 48 lines on the screen.
  */
 
-static const char *vtterm[] =
+static const char *const vtterm[] =
 {
 #ifdef USE_X11TERM
     "x11term",			/* for people who want special term name */
@@ -3320,7 +3318,7 @@ spawnXTerm(XtermWidget xw)
 #if USE_NO_DEV_TTY
     int no_dev_tty = False;
 #endif
-    const char **envnew;	/* new environment */
+    const char *const *envnew;	/* new environment */
     char buf[64];
     char *TermName = NULL;
 #ifdef TTYSIZE_STRUCT
@@ -3393,6 +3391,7 @@ spawnXTerm(XtermWidget xw)
 	    ttyfd = -1;
 	    errno = ENXIO;
 	}
+	shell_path = 0;
 	memset(&pw, 0, sizeof(pw));
 #if OPT_PTY_HANDSHAKE
 	got_handshake_size = False;
@@ -3680,7 +3679,7 @@ spawnXTerm(XtermWidget xw)
     added_utmp_entry = False;
 #if defined(USE_UTEMPTER)
 #undef UTMP
-    if (!resource.utmpInhibit) {
+    if ((xw->misc.login_shell || !command_to_exec) && !resource.utmpInhibit) {
 	struct UTMP_STR dummy;
 
 	/* Note: utempter may trim it anyway */

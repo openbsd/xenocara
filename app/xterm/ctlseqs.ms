@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.315 2014/12/17 10:16:03 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.324 2015/08/19 23:20:41 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2013,2014 by Thomas E. Dickey
+.\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #314
-.ds RF 2014/12/17
+.ds LF Patch #318
+.ds RF 2015/08/19
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -114,6 +114,13 @@
 \\$*
 .br
 ..
+.\" Escape single quotes in literal strings from groff's Unicode transform.
+.ie \n(.g .ds AQ \(aq
+.el       .ds AQ '
+.ie \n(.g .ds `` \(lq
+.el       .ds `` ``
+.ie \n(.g .ds '' \(rq
+.el       .ds '' ''
 .ds CH \" as nothing
 .ds LH \*(XT Control Sequences
 .nr s 6*\n(PS/10
@@ -330,7 +337,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2013)
+invisible-island.net (2006-2015)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -350,6 +357,62 @@ parameters, separated by \*; character(s).
 Individual values for the parameters are listed with \*(Ps .
 .IP \*(Pt
 A text parameter composed of printable characters.
+.
+.Sh "Control Bytes, Characters, and Sequences"
+.LP
+ECMA-48 (aka "ISO 6429") documents C1 (8-bit) and C0 (7-bit) codes.
+Those are respectively codes 128 to 159 and 0 to 31.
+ECMA-48 avoids referring to these codes as characters,
+because that term is associated with \fIgraphic characters\fP.
+Instead, it uses \*(``bytes\*('' and \*(``codes\*('',
+with occasional lapses to \*(``characters\*(''
+where the meaning cannot be mistaken.
+.LP
+Controls (including the escape code 27) are processed once:
+.bP
+This means that a C1 control can be mistaken for badly-formed UTF-8
+when the terminal runs
+in UTF-8 mode because C1 controls are valid \fIcontinuation bytes\fP of
+a UTF-8 encoded (multibyte) value.
+.bP
+It is not possible to use a C1 control obtained from decoding the UTF-8 text,
+because that would require reprocessing the data.
+Consequently there is no ambiguity in the way
+this document uses the term \*(``character\*('' to refer to
+bytes in a control sequence.
+.LP
+The order of processing is a necessary consequence of the way ECMA-48
+is designed:
+.bP
+Each byte sent to the terminal can be unambiguously determined to
+fall into one of a few categories (C0, C1 and graphic characters).
+.bP
+ECMA-48 is \fImodal\fP; once it starts processing a control sequence,
+the terminal continues until the sequence is complete,
+or some byte is found which is not allowed in the sequence.
+.bP
+Intermediate, parameter and final bytes may
+use the same codes as graphic characters,
+but they are processed as part of a control sequence and are not actually
+graphic characters.
+.bP
+Eight-bit controls can have intermediate, etc., bytes in the range 160 to 255.
+Those can be treated as their counterparts in the range 32 to 127.
+.bP
+Single-byte controls can be handled separately from multi-byte
+control sequences because ECMA-48's rules are unambiguous.
+.IP
+As a special case, ECMA-48 (section 9) mentions that the control functions
+shift-in and shift-out are allowed to occur within a 7-bit multibyte control
+sequence because those cannot alter the meaning of the control sequence.
+.bP
+Some controls (such as \*(Os) introduce a string mode,
+which is ended on a \*(ST (string terminator).
+.IP
+Again, the terminal should accept single-byte controls within the string.
+However, \fIxterm\fP has a resource setting \fBbrokenLinuxOSC\fP to allow
+recovery from applications which rely upon malformed palette sequences
+used by the Linux console.
 .
 .Sh "C1 (8-Bit) Control Characters"
 .LP
@@ -641,6 +704,7 @@ The string following the "q" is one of the following:
   \*(c"\*q	\(-> DECSCA
   \*(c"\*p	\(-> DECSCL
   \*r		\(-> DECSTBM
+  \*(cs		\(-> DECSLRM
   \*m		\(-> SGR
   \*(Sp\*q	\(-> DECSCUSR
 .br
@@ -807,12 +871,12 @@ Repeat the preceding graphic character \*(Ps times (REP).
 Send Device Attributes (Primary DA).
   \*(Ps = \*0 or omitted \(-> request attributes from terminal.
 The response depends on the \fBdecTerminalID\fP resource setting.
-  \(->\ \*(Cs\*?\*1\*;\*2\*c (``VT100 with Advanced Video Option'')
-  \(->\ \*(Cs\*?\*1\*;\*0\*c (``VT101 with No Options'')
-  \(->\ \*(Cs\*?\*6\*c (``VT102'')
-  \(->\ \*(Cs\*?\*6\*2\*;\*(Ps\*c (``VT220'')
-  \(->\ \*(Cs\*?\*6\*3\*;\*(Ps\*c (``VT320'')
-  \(->\ \*(Cs\*?\*6\*4\*;\*(Ps\*c (``VT420'')
+  \(->\ \*(Cs\*?\*1\*;\*2\*c (\*(``VT100 with Advanced Video Option\*('')
+  \(->\ \*(Cs\*?\*1\*;\*0\*c (\*(``VT101 with No Options\*('')
+  \(->\ \*(Cs\*?\*6\*c (\*(``VT102\*('')
+  \(->\ \*(Cs\*?\*6\*2\*;\*(Ps\*c (\*(``VT220\*('')
+  \(->\ \*(Cs\*?\*6\*3\*;\*(Ps\*c (\*(``VT320\*('')
+  \(->\ \*(Cs\*?\*6\*4\*;\*(Ps\*c (\*(``VT420\*('')
 .br
 The VT100-style response parameters do not mean anything by themselves.
 VT220 (and higher) parameters do, telling the host what features the terminal supports:
@@ -837,16 +901,16 @@ It should apply only to VT220 and up, but \fIxterm\fP extends this to VT100.
   \(-> \*(Cs\*s\*>\*(Pp\*s\*;\*(Pv\*s\*;\*(Pc\*s\*c
 .br
 where \*(Pp denotes the terminal type
-  \*(Pp = \*0 \(-> ``VT100''.
-  \*(Pp = \*1 \(-> ``VT220''.
-  \*(Pp = \*2 \(-> ``VT240''.
-  \*(Pp = \*18 \(-> ``VT330''.
-  \*(Pp = \*19 \(-> ``VT340''.
-  \*(Pp = \*24 \(-> ``VT320''.
-  \*(Pp = \*41 \(-> ``VT420''.
-  \*(Pp = \*61 \(-> ``VT510''.
-  \*(Pp = \*64 \(-> ``VT520''.
-  \*(Pp = \*65 \(-> ``VT525''.
+  \*(Pp = \*0 \(-> \*(``VT100\*(''.
+  \*(Pp = \*1 \(-> \*(``VT220\*(''.
+  \*(Pp = \*2 \(-> \*(``VT240\*(''.
+  \*(Pp = \*18 \(-> \*(``VT330\*(''.
+  \*(Pp = \*19 \(-> \*(``VT340\*(''.
+  \*(Pp = \*24 \(-> \*(``VT320\*(''.
+  \*(Pp = \*41 \(-> \*(``VT420\*(''.
+  \*(Pp = \*61 \(-> \*(``VT510\*(''.
+  \*(Pp = \*64 \(-> \*(``VT520\*(''.
+  \*(Pp = \*65 \(-> \*(``VT525\*(''.
 .br
 and \*(Pv is the firmware version (for \fIxterm\fP, this was originally
 the XFree86 patch number, starting with 95).
@@ -1153,7 +1217,7 @@ If no parameters are given, all resources are reset to their initial values.
 Device Status Report (DSR).
   \*(Ps = \*5 \(-> Status Report.
 .br
-Result (``OK'') is
+Result (\*(``OK\*('') is
 \*(Cs\*0\*n
   \*(Ps = \*6 \(-> Report Cursor Position (CPR) [row;column].
 .br
@@ -1464,7 +1528,7 @@ Select Attribute Change Extent (DECSACE).
 Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
 Response is
 .br
-\*(Dc\*(Pt\*s\*!x\*sx\*sx\*sx\*s\*(ST
+\*(Dc\*(Pi\*s\*!x\*sx\*sx\*sx\*s\*(ST
 .br
   \*(Pi is the request id.
   \*(Pg is the page number.
@@ -1541,17 +1605,17 @@ Valid values for the event:
   \*(Pe = \*9 \(-> M4 button up.
   \*(Pe = \*1\*0 \(-> locator outside filter rectangle.
 .br
-The ``\fIbutton\fP'' parameter is a bitmask indicating which buttons are pressed:
+The \*(``\fIbutton\fP\*('' parameter is a bitmask indicating which buttons are pressed:
   \*(Pb = \*0 \(<- no buttons down.
   \*(Pb & \*1 \(<- right button down.
   \*(Pb & \*2 \(<- middle button down.
   \*(Pb & \*4 \(<- left button down.
   \*(Pb & \*8 \(<- M4 button down.
 .br
-The ``\fIrow\fP'' and ``\fIcolumn\fP'' parameters are the coordinates of the locator
+The \*(``\fIrow\fP\*('' and \*(``\fIcolumn\fP\*('' parameters are the coordinates of the locator
 position in the \fI\*(xt\fP window, encoded as ASCII decimal.
 .br
-The ``\fIpage\fP'' parameter is not used by \*(xt.
+The \*(``\fIpage\fP\*('' parameter is not used by \*(xt.
 .
 .IP \\*(Cs\\*(Pm\\*s\\*(qu\\*}
 Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
@@ -1608,17 +1672,7 @@ to these codes in an \*(Os\*4 control:
 .in -2n
 .sP
   \*(Ps = \*6\*;\fIc\fP\*;\fIf\fP \(-> Enable/disable Special Color Number \fIc\fP.
-The second parameter tells \fIxterm\fP to enable the corresponding color
-mode if nonzero, disable it if zero.
-.sP
-.in +2n
-  \*(Pc = \*0 \(<- resource \fBcolorBDMode\fP (BOLD).
-  \*(Pc = \*1 \(<- resource \fBcolorULMode\fP (UNDERLINE).
-  \*(Pc = \*2 \(<- resource \fBcolorBLMode\fP (BLINK).
-  \*(Pc = \*3 \(<- resource \fBcolorRVMode\fP (REVERSE).
-  \*(Pc = \*4 \(<- resource \fBcolorITMode\fP (ITALIC).
-  \*(Pc = \*5 \(<- resource \fBcolorAttrMode\fP (Override ANSI).
-.in -2n
+\*(Os\*6 is the same as \*(Os\*1\*0\*6.
 .sP
 The 10 colors (below) which may be set or queried
 using \*1\*0 through \*1\*9 are
@@ -1716,6 +1770,19 @@ Any number of \fIc\fP parameters may be given.
 These parameters correspond to the special colors which can be set
 using an \*(Os\*5 control (or by adding the maximum number of colors
 using an \*(Os\*4 control).
+.sP
+  \*(Ps = \*1\*0\*6\*;\fIc\fP\*;\fIf\fP \(-> Enable/disable Special Color Number \fIc\fP.
+The second parameter tells \fIxterm\fP to enable the corresponding color
+mode if nonzero, disable it if zero.
+.sP
+.in +2n
+  \*(Pc = \*0 \(<- resource \fBcolorBDMode\fP (BOLD).
+  \*(Pc = \*1 \(<- resource \fBcolorULMode\fP (UNDERLINE).
+  \*(Pc = \*2 \(<- resource \fBcolorBLMode\fP (BLINK).
+  \*(Pc = \*3 \(<- resource \fBcolorRVMode\fP (REVERSE).
+  \*(Pc = \*4 \(<- resource \fBcolorITMode\fP (ITALIC).
+  \*(Pc = \*5 \(<- resource \fBcolorAttrMode\fP (Override ANSI).
+.in -2n
 .sP
 The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*0 \(-> Reset VT100 text foreground color.
@@ -1912,9 +1979,13 @@ F12	\*(Cs\*2\*4\*(c~
 _
 .TE
 .sP
-Older versions of \fIxterm\fP implement different escape sequences for F1 through F4.
+Note that F1 through F4 are prefixed with \*(S3,
+while the other keys are prefixed with \*(Cs.
+Older versions of \fIxterm\fP implement different escape sequences
+for F1 through F4, with a \*(Cs prefix.
 These can be activated by setting the \fBoldXtermFKeys\fP resource.
-However, since they do not correspond to any hardware terminal, they have been deprecated.
+However, since they do not correspond to any hardware terminal,
+they have been deprecated.
 (The DEC VT220 reserves F1 through F5 for local functions such as \fBSetup\fP).
 .TS H
 center;
@@ -1931,10 +2002,14 @@ F4	\*(Cs\*1\*4\*(c~
 _
 .TE
 In normal mode, i.e., a Sun/PC keyboard
-when the \fBsunKeyboard\fP resource is false,
-\fIxterm\fP recognizes function key modifiers
-which are parameters appended before the final character
-of the control sequence.
+when the \fBsunKeyboard\fP resource is false
+(and none of the other keyboard resources
+such as \fBoldXtermFKeys\fP resource is set),
+\fIxterm\fP encodes function key modifiers
+as parameters appended before the \fIfinal\fP character of the control sequence.
+As a special case,
+the \*(S3 sent before F1 through F4 is altered to \*(Cs when sending
+a function key modifier as a parameter.
 .TS H
 center;
 cf3w(2c)	lf3w(2c) .
@@ -2642,7 +2717,7 @@ Erase from the cursor to the end of the line.
 Move the cursor to given row and column.
 .IP \\*(Es\\*Z
 Identify.
-  \(-> \*(Es\*s\*/\*s\*Z (``I am a VT52.'').
+  \(-> \*(Es\*s\*/\*s\*Z (\*(``I am a VT52.\*('').
 .IP \\*(Es\\*=
 Enter alternate keypad mode.
 .IP \\*(Es\\*>

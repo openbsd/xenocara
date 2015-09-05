@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.505 2014/11/13 01:04:40 tom Exp $ */
+/* $XTermId: screen.c,v 1.512 2015/03/22 14:47:02 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1119,8 +1119,10 @@ ScrnInsertLine(XtermWidget xw, ScrnBuf sb, int last, int where, unsigned n)
     TRACE(("ScrnInsertLine(last %d, where %d, n %d, size %d)\n",
 	   last, where, n, size));
 
+    if ((int) n > last)
+	n = (unsigned) last;
+
     assert(where >= 0);
-    assert(last >= (int) n);
     assert(last >= where);
 
     assert((int) n > 0);
@@ -1262,7 +1264,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
     assert((int) n >= 0);
-    assert(last >= (int) n);
+    assert((last + 1) >= (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
 	int xx = screen->cur_row;
@@ -1324,7 +1326,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
     assert((int) n >= 0);
-    assert(last > (int) n);
+    assert(last >= (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
 	int kl;
@@ -2493,6 +2495,8 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 
 		for (row = source->top - 1; row < source->bottom; ++row) {
 		    ld = getLineData(screen, row);
+		    if (ld == 0)
+			continue;
 		    j = (Cardinal) (row - (source->top - 1));
 		    for (col = source->left - 1; col < source->right; ++col) {
 			k = (Cardinal) (col - (source->left - 1));
@@ -2503,6 +2507,8 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect *source, int nparam, int *params)
 		}
 		for (row = target.top - 1; row < target.bottom; ++row) {
 		    ld = getLineData(screen, row);
+		    if (ld == 0)
+			continue;
 		    j = (Cardinal) (row - (target.top - 1));
 		    for (col = target.left - 1; col < target.right; ++col) {
 			k = (Cardinal) (col - (target.left - 1));

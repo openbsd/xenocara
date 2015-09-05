@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.73 2014/11/13 01:02:46 tom Exp $ */
+/* $XTermId: trace.h,v 1.75 2015/03/02 02:01:01 tom Exp $ */
 
 /*
- * Copyright 1997-2013,2014 by Thomas E. Dickey
+ * Copyright 1997-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -159,6 +159,9 @@ extern void TraceScreen(XtermWidget /* xw */, int /* whichBuf */);
 #define init_Ires(name) \
 	TRACE(("init " #name " = %d\n", \
 		wnew->name = request->name))
+#define init_Mres(name) \
+	TRACE(("init " #name " = %s\n", \
+		MtoS(wnew->name = request->name)))
 #define init_Sres(name) \
 	TRACE(("init " #name " = \"%s\"\n", \
 		(wnew->name = x_strtrim(request->name)) != NULL \
@@ -175,6 +178,7 @@ extern void TraceScreen(XtermWidget /* xw */, int /* whichBuf */);
 #define init_Dres(name)    wnew->name = request->name
 #define init_Dres2(name,i) wnew->name[i] = request->name[i]
 #define init_Ires(name)    wnew->name = request->name
+#define init_Mres(name)    wnew->name = request->name
 #define init_Sres(name)    wnew->name = x_strtrim(request->name)
 #define init_Sres2(name,i) wnew->name(i) = x_strtrim(request->name(i))
 #define init_Tres(offset)  fill_Tres(wnew, request, offset)

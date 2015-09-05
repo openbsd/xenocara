@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2013,2014 by Thomas E. Dickey                              *
+ * Copyright 1997-2014,2015 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1557 2014/12/29 00:55:21 tom Exp $
+  $XTermId: xterm.log.html,v 1.1624 2015/08/28 08:40:19 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,18 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_320">Patch #320 - 2015/08/28</a></li>
+
+    <li><a href="#xterm_319">Patch #319 - 2015/08/19</a></li>
+
+    <li><a href="#xterm_318">Patch #318 - 2015/04/12</a></li>
+
+    <li><a href="#xterm_317">Patch #317 - 2015/03/27</a></li>
+
+    <li><a href="#xterm_316">Patch #316 - 2015/03/07</a></li>
+
+    <li><a href="#xterm_315">Patch #315 - 2015/03/02</a></li>
+
     <li><a href="#xterm_314">Patch #314 - 2014/12/28</a></li>
 
     <li><a href="#xterm_313">Patch #313 - 2014/11/28</a></li>
@@ -913,6 +925,249 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_320" id="xterm_320">Patch #320 -
+  2015/08/28</a></h1>
+
+  <ul>
+    <li>correct documentation for <code>%t</code> format (report by
+    Martin Tournoij).</li>
+
+    <li>add <code>%R</code> for consistency to
+    <code>exec-formatted()</code> and
+    <code>insert-formatted()</code> actions.</li>
+
+    <li>add <code>%r</code> format to <code>exec-formatted()</code>
+    and <code>insert-formatted()</code> actions (patch by Martin
+    Tournoij).</li>
+
+    <li>Amend fix for Debian #794201 (report forwarded from
+    Christian Jachmann by Emanuel Haupt, Debian #797008).</li>
+  </ul>
+
+  <h1><a name="xterm_319" id="xterm_319">Patch #319 -
+  2015/08/19</a></h1>
+
+  <ul>
+    <li>add a section to <code>ctlseqs.ms</code> discussing control
+    sequences and ECMA-48, to explain why C1 controls do not occur
+    in the decoded characters from UTF-8 byte streams (prompted by
+    discussion with Poul-Henning Kamp).</li>
+
+    <li>modify check for cursor-theme from <a href=
+    "#xterm_301">patch #301</a> to also check if the resource
+    <code>Xcursor.theme</code> is set to a nonempty value before
+    fallback to xterm's own dummy theme (request by Robert
+    Kloefkorn).</li>
+
+    <li>explain in <code>ctlseqs.ms</code> that some keys which
+    normally send SS3-prefixes are changed to CSI-prefixes if
+    key-modifiers are passed as parameters (report by George
+    Nachman).</li>
+
+    <li>correct double-free of font information when multiple
+    problems are found, particularly for the wide fonts loaded via
+    the <code>-wc</code> option (report/testcase by Nelson
+    Beebe).</li>
+
+    <li>make configure option <code>--enable-builtin-xpms</code>
+    actually work (report by William Bulley).</li>
+
+    <li>correct combination of <code>-ls</code> and <code>-e</code>
+    options for utempter configuration (Debian #794201).</li>
+
+    <li>NetBSD build-fix for OPT_RENDERFONT versus OPT_SHIFT_FONTS
+    (patch by Matthew Green, forwarded by Thomas Klausner).</li>
+
+    <li>fix a few minor bugs found with Coverity.</li>
+
+    <li>update pixelvector handling (Ross Combs):
+
+      <ul>
+        <li>split pixel-based and coord-based functions with common
+        parts factored out to a "raw" function</li>
+
+        <li>add a "step" variant which loads a single PV digit</li>
+      </ul>
+    </li>
+
+    <li>make the graphic dirty upon resize or clear, fixing some
+    missing refreshes (patch by Ross Combs)</li>
+
+    <li>fixes scrolling to use user coordinates and move in the
+    correct direction (patch by Ross Combs)</li>
+
+    <li>several fixes/improvements for ReGIS whitespace and
+    page-handling (patch by Ross Combs).</li>
+  </ul>
+
+  <h1><a name="xterm_318" id="xterm_318">Patch #318 -
+  2015/04/12</a></h1>
+
+  <ul>
+    <li>rename new(er) configure option
+    <code>--enable-initial-erase</code> to
+    <code>--enable-pty-erase</code>, since that conflicted with an
+    existing option (report by Jens Schweikhardt).</li>
+
+    <li>fix cut/paste error in <code>--with-builtin-xpms</code>
+    configure option (reports by Jens Schweikhardt, Ross
+    Combs).</li>
+
+    <li>fix minor formatting issue in xterm manual (report by Jens
+    Schweikhardt).</li>
+
+    <li>eliminate unnecessary "#(vi" markers in autoconf macros by
+    using "(" to begin case-statement cases (suggested by Jens
+    Schweikhardt).</li>
+
+    <li>minor fixes to improve <code>const</code> usage (Ross
+    Combs).</li>
+  </ul>
+
+  <h1><a name="xterm_317" id="xterm_317">Patch #317 -
+  2015/03/27</a></h1>
+
+  <ul>
+    <li>adapt example for <code>exec-formatted</code> from <a href=
+    "http://lukas.zapletalovi.com/2013/07/hidden-gems-of-xterm.html">
+    Luk&aacute;&scaron; Zapletal's</a> webpage to manual (Debian
+    #780008).</li>
+
+    <li>add a short usage section to the xterm manual, including
+    notes on setting the window title (Debian #742477).</li>
+
+    <li>revise a change made to <code>ICH</code> in <a href=
+    "#xterm_314">patch #314</a> to address limit-checks
+    (reports/testcases by Zolt&aacute;n K&eacute;ri and Joe
+    Peterson, also reported by Christian Weisgerber).</li>
+  </ul>
+
+  <h1><a name="xterm_316" id="xterm_316">Patch #316 -
+  2015/03/07</a></h1>
+
+  <ul>
+    <li>revert change to make <code>DCH</code> honor top/bottom
+    scrolling margins. For the record, both the VT420 and VT520
+    reference manuals incorrectly state that <em>"DCH has no effect
+    outside the scrolling margins."</em></li>
+
+    <li>fix regression in <code>DCH</code> introduced in adjustment
+    for limit-check in <a href="#xterm_314">patch #315</a>
+    (report/testcase by Zolt&aacute;n K&eacute;ri, also reported by
+    Christian Weisgerber).</li>
+
+    <li>correct default value for configure option
+    <code>--enable-initial-erase</code>; it should be "False", but
+    in <a href="#xterm_315">patch #315</a> it was "Maybe", which
+    differed from default set in <a href="#xterm_192">patch
+    #192</a>.</li>
+  </ul>
+
+  <h1><a name="xterm_315" id="xterm_315">Patch #315 -
+  2015/03/02</a></h1>
+
+  <ul>
+    <li>change default for <code>--enable-narrowproto</code> for
+    Cygwin to "no" to better match contemporary configurations
+    (report by Jens Schweikhardt, prompted by <a href=
+    "http://stackoverflow.com/questions/28137618/what-is-a-narrow-prototype-and-why-would-i-need-one/28334574?noredirect=1#comment45022128_28334574">
+    discussion</a>).</li>
+
+    <li>provide <code>OSC&nbsp;106</code> as an alternative to
+    <code>OSC&nbsp;6</code>, avoiding conflict with one of
+    Terminal.app's undocumented escape sequences (report by Egmont
+    Koblinger).</li>
+
+    <li>fix an off-by-one in comparison when autowrap and
+    left/right margins are combined (report by George
+    Nachman).</li>
+
+    <li>modify <code>DECBI</code> and <code>DECFI</code> to work
+    outside the left/right margins, since the vague VT520 reference
+    manual could support that interpretation (suggested by George
+    Nachman).</li>
+
+    <li>correct response for <code>DECSCUSR</code> in
+    <code>DECRQSS</code> (report/analysis by George Nachman).</li>
+
+    <li>add <code>DECSLRM</code> to list for <code>DECRQSS</code>
+    in ctlseqs.ms (report by George Nachman).</li>
+
+    <li>improve limit-checks versus assert's in the debugging
+    version (reports by George Nachman).</li>
+
+    <li>correct a problem with multiple writes to the right-margin
+    when autowrap is turned off (report by George Nachman, also
+    reported in Gnome #744819 by Ulf Magnusson).</li>
+
+    <li>modify <code>DCH</code> to honor top/bottom and left/right
+    margins (report by George Nachman).</li>
+
+    <li>correct off-by-one in comparison so that <code>DL</code>
+    honors left/right margins (report by George Nachman).</li>
+
+    <li>correct logic of <code>DECSCL</code>, which always set
+    8-bit controls as a side-effect (report by George
+    Nachman).</li>
+
+    <li>correct loop limit for <code>DECSED&nbsp;1</code>, when
+    <code>DECSCA</code> is enabled (report by George Nachman).</li>
+
+    <li>fix a entry in csi_table for &ldquo;<code>$</code>&rdquo;,
+    needed for <code><em>CSI</em>&nbsp;[&nbsp;$&nbsp;z</code>
+    (report by George Nachman).</li>
+
+    <li>remove restriction from <a href="#xterm_279">patch #279</a>
+    changes on <code>DECIC</code> and <code>DECDC</code> to
+    left-right mode (report by George Nachman).</li>
+
+    <li>correct PID value returned in response to DECRQCRA
+    (report/analysis by George Nachman).</li>
+
+    <li>fix an ifdef'ing problem, where
+    <code>--disable-dec-locator</code> would turn off logic needed
+    for <code>DECIC</code> and <code>DECDC</code> (report by George
+    Nachman).</li>
+
+    <li>correct order of parameters in report for
+    <code><em>CSI</em>&nbsp;1&nbsp;9&nbsp;t</code>, which gives the
+    screensize in characters (report by George Nachman).</li>
+
+    <li>add null pointer checks for a case in DECCRA where part of
+    the target rectangle lies outside the screen limits (report by
+    George Nachman).</li>
+
+    <li>remove extra "6" for selective erase from DA1 response
+    (report by George Nachman).</li>
+
+    <li>support Xinerama screen specification in geometry parsing
+    (patch by Nicolas George).</li>
+
+    <li>add configure option <code>--enable-initial-erase</code> to
+    set <code>ptyInitialErase</code> consistently with manpage, as
+    well as adding a table in manpage to clarify the relationship
+    between the resources related to the backarrow key (Debian
+    #775952).</li>
+
+    <li>add configure <code>--enable-builtin-xpms</code> to
+    simplify compiling-in the icons introduced in <a href=
+    "#xterm_284">patch #284</a> (prompted by discussion with
+    William Bulley).</li>
+
+    <li>fix/improve autoconf macros:
+
+      <ul>
+        <li>CF_WITH_APP_DEFAULTS, add paths for OSX</li>
+
+        <li>CF_WITH_MAN2HTML, configure option "--with-man2html"
+        provides "man2html" as alternative to groff's man/html
+        conversion</li>
+      </ul>
+    </li>
+
+    <li>fix some minor issues in manpage (Jens Schweikhardt).</li>
+  </ul>
+
   <h1><a name="xterm_314" id="xterm_314">Patch #314 -
   2014/12/28</a></h1>
 
@@ -1124,7 +1379,7 @@
   <ul>
     <li>mention <code>xclip</code> in manpage as an alternative
     workaround for copying clipboard data, noting that
-    <code>selectToClipboard</code> (from <a href="#xterm_209">patch
+    <code>selectToClipboard</code> (see <a href="#xterm_209">patch
     #209</a>) is the recommended approach (Debian #639094).</li>
 
     <li>correct comparison in do_select_regex() of working position

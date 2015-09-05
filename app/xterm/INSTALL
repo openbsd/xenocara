@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.152 2014/07/12 22:40:36 Steve.Wall Exp $
+-- $XTermId: INSTALL,v 1.158 2015/08/10 23:38:32 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2013,2014 by Thomas E. Dickey
+-- Copyright 1997-2014,2015 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -385,12 +385,24 @@ The options (in alphabetic order):
 
 	This sets the default resource value, which is shown in the manpage.
 
-  --enable-broken-osc     allow broken Linux OSC-strings],
+  --enable-broken-osc     allow broken Linux OSC-strings
 
 	Compile-in code to accommodate scripts that write Linux's malformed
 	palette control strings without checking.  The result makes xterm
 	appear to freeze.  This workaround makes xterm ignore the strings,
 	and is compiled-in by default for Linux.
+
+  --enable-builtin-xpms   compile-in icon data
+
+	Compile-in X pixmap data for these icons:
+		filled-xterm
+		mini.xterm
+		xterm-color
+		xterm
+	at these sizes
+		16x16
+		32x32
+		48x48
 
   --enable-dabbrev        enable dynamic-abbreviation support
 
@@ -476,6 +488,10 @@ The options (in alphabetic order):
 	For instance
 
 		configure --disable-imake --disable-narrowproto
+
+  --enable-pty-erase      set default ptyInitialErase resource (default: false)
+
+	This sets the default resource value, which is shown in the manpage.
 
   --enable-readline-mouse enable support for mouse in readline applications
 
@@ -676,6 +692,19 @@ The options (in alphabetic order):
 	the default is "hicolor".  If this option is not given, the desktop
 	file will use the pixmap files.
 
+  --with-man2html[=XXX]   use XXX rather than groff
+
+	Specify an alternative program to use for converting manpages and
+	control sequences document to html.  If the option is given, its
+	default value is "man2html", otherwise it is "groff" with groff's
+	special options.  The "man2html" script reads formatted nroff output
+	from its standard input, and writes html to its standard output.  Other
+	input/output conventions are not currently supported.
+
+	See
+		http://invisible-island.net/scripts
+	for an up-to-date version of "man2html".
+
   --with-neXtaw           link with neXT Athena library
 
   	Look for, compile and link with the neXT Athena widget library.
@@ -765,6 +794,9 @@ The options (in alphabetic order):
 
 	Use --without-xterm-symlink to disable a link to "xterm" if none
 	is wanted.
+
+	Corresponding links are also made for "resize", "uxterm" and
+	"koi8rxterm", as well as the xterm manpage.
 
   --with-terminal-id[=V]  set default decTerminalID (default: vt100)
 

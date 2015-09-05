@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.587 2014/12/17 10:10:02 tom Exp $
+.\" $XTermId: xterm.man,v 1.617 2015/08/28 08:48:38 tom Exp $
 .\"
-.\" Copyright 1996-2013,2014 by Thomas E. Dickey
+.\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -54,7 +54,7 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
+.\" Updated by Thomas E. Dickey for XFree86, July 1996 - February 2006.
 .\"
 .ds N Xterm
 .ds n xterm
@@ -443,7 +443,7 @@ Set the \fIvt100\fP resource \fBcutToBeginningOfLine\fP to \*(``true\*(''.
 .B "\-cc \fIcharacterclassrange\fP:\fIvalue\fP[,...]"
 This sets classes indicated by the given ranges for using in selecting by
 words.
-See the section specifying character classes.
+See the section specifying character classes
 and discussion of the \fIcharClass\fP resource.
 .TP 8
 .B "\-cjk_width"
@@ -678,6 +678,7 @@ a reference, if available.
 Turn on the \fBuseInsertMode\fP resource,
 which forces use of insert mode by adding appropriate entries to the TERMCAP
 environment variable.
+(This option is ignored on most systems, because TERMCAP is not used).
 .TP 8
 .B +im
 Turn off the \fBuseInsertMode\fP resource.
@@ -695,7 +696,7 @@ that \fI\*n\fP's \fBallowSendEvents\fP resource is enabled.
 .TP 8
 .B "\-itc"
 Set the \fIvt100\fP resource \fBcolorITMode\fR to \*(``false\*('',
-disabling the display of characters with italic attribute as italic.
+disabling the display of characters with italic attribute as color.
 .TP 8
 .B "+itc"
 Set the \fIvt100\fP resource \fBcolorITMode\fR to \*(``true\*('',
@@ -1024,7 +1025,7 @@ not set up session manager callbacks.
 .TP 8
 .B \-sp
 This option indicates that Sun/PC keyboard should be assumed,
-providing mapping for keypad \*(``+' to \*(``,', and
+providing mapping for keypad \*(``+\*('' to \*(``,\*('', and
 CTRL-F1 to F13, CTRL-F2 to F14, etc.
 .TP 8
 .B +sp
@@ -1233,7 +1234,7 @@ which it did not open for its own use.
 It is possible (though probably not portable) to have an application
 which passes an open file descriptor down to \fI\*n\fP past the
 initialization or the \fB\-S\fP option to a process running in the \fI\*n\fP.
-.SS OLD OPTIONS
+.SS Old Options
 .PP
 The following command line arguments are provided for compatibility with
 older versions.
@@ -1270,7 +1271,7 @@ It is equivalent to
 This option specifies the width in pixels of the border surrounding the window.
 It is equivalent to \fB\-borderwidth\fP or \fB\-bw\fP.
 .
-.SS X TOOLKIT OPTIONS
+.SS X Toolkit Options
 .PP
 The following standard X Toolkit command line arguments are commonly used
 with \fI\*n\fP:
@@ -1316,6 +1317,10 @@ This is the same as \fB\-fn\fP.
 .B \-geometry \fIgeometry\fP
 This option specifies the preferred size and position of the VT102 window;
 see \fIX(__miscmansuffix__)\fP.
+.IP
+The normal geometry specification can be suffixed with \fB@\fP followed by a
+Xinerama screen specification; it can be either \fBg\fP for the global
+screen (default), \fBc\fP for the current screen or a screen number.
 .TP 8
 .B \-iconic
 This option indicates that \fI\*n\fP should ask the window manager to
@@ -1352,13 +1357,85 @@ useful for setting resources that do not have separate command line options.
 .SH RESOURCES
 The program understands all of the core X Toolkit resource names and classes.
 Application specific resources (e.g., \*(``\fB__default_class__.\fP\fINAME\fP\*('') follow:
+.SS Application Resources
 .TP 8
 .B "backarrowKeyIsErase (\fPclass\fB BackarrowKeyIsErase)"
 Tie the VTxxx \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
-together by setting the DECBKM state according to whether the initial value of
-\fIstty\fP erase is a backspace (8) or delete (127) character.
+together by setting the DECBKM state according to whether
+the \fIinitial erase\fP character is a backspace (8) or delete (127) character.
 A \*(``false\*('' value disables this feature.
 The default is \*(``__backarrow_is_erase__\*(''.
+.IP
+Here are tables showing how the initial settings for
+.RS
+.bP
+\fBbackarrowKeyIsErase\fP (BKIE),
+.bP
+\fBbackarrowKey\fP (BK), and
+.bP
+\fBptyInitialErase\fP (PIE), along with the
+.bP
+\fIstty\fP erase character (^H for backspace, ^? for delete)
+.RE
+.IP
+will affect DECBKM.  First, \fI\*n\fP obtains the initial \fIerase\fP character:
+.RS
+.bP
+\fI\*n\fP's internal value is ^H
+.bP
+\fI\*n\fP asks the operating system for the value which \fBstty\fP shows
+.bP
+the \fBttyModes\fP resource may override \fIerase\fP
+.bP
+if \fBptyInitialErase\fP is false, \fI\*n\fP will look in the terminal database
+.RE
+.IP
+Summarizing that as a table:
+.TS
+l l l l
+_ _ _ _
+l c c c.
+\fBPIE\fR	\fBstty\fR	\fBtermcap\fR	\fIerase\fP
+false	^H	^H	^H
+false	^H	^?	^?
+false	^?	^H	^H
+false	^?	^?	^?
+true	^H	^H	^H
+true	^H	^?	^H
+true	^?	^H	^?
+true	^?	^?	^?
+.TE
+.IP
+Using that \fIerase\fP character, \fI\*n\fP allows further choices:
+.RS
+.bP
+if \fBbackarrowKeyIsErase\fP is true, \fI\*n\fP uses the \fIerase\fP
+character for the initial state of \fBDECBKM\fP
+.bP
+if \fBbackarrowKeyIsErase\fP is false, \fI\*n\fP sets \fBDECBKM\fP
+to 2 (internal).  This ties together \fBbackarrowKey\fP
+and the control sequence for \fBDECBKM\fP
+.bP
+applications can send a control sequence to set/reset \fBDECBKM\fP control set
+.bP
+the \*(``Backarrow Key (BS/DEL)\*('' menu entry toggles \fBDECBKM\fP
+.RE
+.IP
+Summarizing the initialization details:
+.TS
+l l l l l
+_ _ _ _ _
+c l l c c.
+\fIerase\fR	\fBBKIE\fR	\fBBK\fR	\fBDECBKM\fP	\fIresult\fP
+^?	false	false	2	^H
+^?	false	true	2	^?
+^?	true	false	0	^?
+^?	true	true	1	^?
+^H	false	false	2	^H
+^H	false	true	2	^?
+^H	true	false	0	^H
+^H	true	true	1	^H
+.TE
 .TP 8
 .B "fullscreen (\fPclass\fB Fullscreen)"
 Specifies whether or not \fI\*n\fP should ask the window manager to
@@ -1430,16 +1507,16 @@ mini.\*n_16x16,
 mini.\*n_32x32,
 mini.\*n_48x48
 .bP
-filled-\*n_16x16
-filled-\*n_32x32
+filled-\*n_16x16,
+filled-\*n_32x32,
 filled-\*n_48x48
 .bP
-\*n_16x16
-\*n_32x32
+\*n_16x16,
+\*n_32x32,
 \*n_48x48
 .bP
-\*n-color_16x16
-\*n-color_32x32
+\*n-color_16x16,
+\*n-color_32x32,
 \*n-color_48x48
 .RE
 .IP
@@ -1560,8 +1637,8 @@ a reference, if available.
 In either case, the result is applied to the TERMCAP variable
 which \fI\*n\fP sets.
 .IP
-See also the \fBttyModes\fP resource, which may modify this.
-The default is \*(``false\*(''.
+See also the \fBttyModes\fP resource, which may override this.
+The default is \*(``__initial_erase__\*(''.
 .TP 8
 .B "ptySttySize (\fPclass\fB PtySttySize)
 If \*(``true\*('', \fI\*n\fP will reset the screen size after
@@ -1629,7 +1706,7 @@ See also the \fBkeyboardType\fP resource.
 .B "sunKeyboard (\fPclass\fB SunKeyboard)"
 Specifies whether or not Sun/PC keyboard layout should be assumed rather
 than DEC VT220.
-This causes the keypad \*(``+' to be mapped to \*(``,'.
+This causes the keypad \*(``+\*('' to be mapped to \*(``,\*(''.
 and
 CTRL F1-F10 to F11-F20, depending on the setting of the \fBctrlFKeys\fP
 resource, so \fI\*n\fP emulates a DEC VT220 more accurately.
@@ -1711,6 +1788,7 @@ i.e., \fI\*n\fP initializes the terminal to match that value.
 Force use of insert mode by adding appropriate entries to the TERMCAP
 environment variable.
 This is useful if the system termcap is broken.
+(This resource is ignored on most systems, because TERMCAP is not used).
 The default is \*(``false\*(''.
 .TP 8
 .B "utmpDisplayId (\fPclass\fB UtmpDisplayId)"
@@ -1824,7 +1902,7 @@ The default is \*(``true\*(''.
 .B "allowFontOps (\fPclass\fB AllowFontOps)"
 Specifies whether control sequences that set/query the font should be allowed.
 The default is \*(``true\*(''.
-.TP 5
+.TP 8
 .B "allowPasteControls (\fPclass\fB AllowPasteControls)"
 If true, allow control characters such as BEL and CAN to be pasted.
 Formatting characters (tab, newline) are always allowed.
@@ -2371,7 +2449,7 @@ Note that:
 .bP
 Setting \fBcolorMode\fR off disables all colors, including italic.
 .bP
-The \fBitalicULMode\fP resource overrides \fBcolorITMode\fP. 
+The \fBitalicULMode\fP resource overrides \fBcolorITMode\fP.
 .RE
 .TP 8
 .B "colorMode (\fPclass\fB ColorMode)"
@@ -2717,10 +2795,10 @@ via a control sequence.
 The corresponding terminfo capabilities \fBsmm\fP (set meta mode)
 and \fBrmm\fP (reset meta mode)
 have been recognized by \fIbash\fP for some time.
-Interestingly enough, \fIbash\fP's notion of "meta mode"
+Interestingly enough, \fIbash\fP's notion of \*(``meta mode\*(''
 differs from the standard definition (in the \fIterminfo\fP manual),
 which describes the change to the eighth bit of a character.
-It happens that \fIbash\fP views "meta mode"
+It happens that \fIbash\fP views \*(``meta mode\*(''
 as the ESC character that \fI\*n\fP puts before a character when a
 special meta key is pressed.
 \fIbash\fP's early documentation talks about the ESC character
@@ -3674,7 +3752,7 @@ The default is \*(``0\*(''.
 .TP 8
 .B "printerExtent (\fPclass\fB PrinterExtent)"
 Controls whether a print page function will print the entire page (true), or
-only the the portion within the scrolling margins (false).
+only the portion within the scrolling margins (false).
 The default is \*(``false\*(''.
 .TP 8
 .B "printerFormFeed (\fPclass\fB PrinterFormFeed)"
@@ -4155,7 +4233,7 @@ If set to zero, no visual bell is displayed.
 This is useful for very slow displays, e.g., an LCD display on a laptop.
 .TP 8
 .B "visualBellLine (\fPclass\fB VisualBellLine)"
-Specifies whether to flash only the current line when displaying a visual bell.
+Specifies whether to flash only the current line when displaying a visual bell
 rather than flashing the entire screen:
 The default is \*(``false\*('',
 which tells \fI\*n\fP to flash the entire screen.
@@ -4542,7 +4620,7 @@ Once the VT102 window is created,
 .I \*n
 allows you to select text and copy it within the same or other windows.
 .
-.SS "SELECTION"
+.SS "Selection"
 .PP
 The selection functions are invoked when the pointer buttons are used with no
 modifiers, and when they are used with the \*(``shift\*('' key.
@@ -4607,7 +4685,7 @@ you may regard each as a \*(``file\*('' whose contents you know.
 The terminal emulator and other text programs should be treating it as if it
 were a text file, i.e., the text is delimited by new lines.
 .
-.SS "SCROLLING"
+.SS "Scrolling"
 .PP
 The scroll region displays the position and amount of text currently showing
 in the window (highlighted) relative to the amount of text actually saved.
@@ -4626,7 +4704,7 @@ pointer position.
 Clicking button two moves the display to a position in the saved text
 that corresponds to the pointer's position in the scrollbar.
 .
-.SS "TEKTRONIX POINTER"
+.SS "Tektronix Pointer"
 .PP
 Unlike the VT102 window, the Tektronix window does not allow the copying of
 text.
@@ -4648,7 +4726,7 @@ for details).
 .SH SELECT/PASTE
 X clients provide select and paste support by responding to requests conveyed
 by the server.
-.SS PRIMARY
+.SS Primary
 When configured to use the primary selection,
 (the default) \fI\*n\fP can
 provide the selection data in ways which help to retain character
@@ -4665,7 +4743,7 @@ asserted ownership, it relies on cut-buffers to pass the data.
 But cut-buffers handle only ISO-8859-1 data
 (officially \- some clients ignore the rules).
 .
-.SS CLIPBOARD
+.SS Clipboard
 When configured to use the clipboard (see resource \fBselectToClipboard\fP),
 the problem with persistence of ownership is bypassed.
 Otherwise, there is no difference regarding the data which can be
@@ -4676,7 +4754,7 @@ The PRIMARY token is a standard X feature, documented in the ICCCM
 which states
 .RS
 .PP
-The selection named by the atom PRIMARY is used for all commands that take only a single argument and is the principal means of communication between clients that use the selection mechanism. 
+The selection named by the atom PRIMARY is used for all commands that take only a single argument and is the principal means of communication between clients that use the selection mechanism.
 .RE
 .PP
 However, many applications use CLIPBOARD in imitation of other windowing
@@ -4689,7 +4767,7 @@ Without using this feature, one can use workarounds such as the
 \fIxclip\fP program to show the contents of the X clipboard within an
 \fI\*n\fP window.
 .
-.SS SELECTION TARGETS
+.SS Selection Targets
 The different types of data which are passed depend on what the receiving
 client asks for.
 These are termed \fIselection targets\fP.
@@ -4884,7 +4962,7 @@ It corresponds to more than one resource setting:
 .BR "sunKeyboard" ","
 .BR "sunFunctionKeys" ","
 .BR "scoFunctionKeys" " and"
-.BR "hpFunctionKeys "."
+.BR "hpFunctionKeys" "."
 .RE
 .TP
 Commands for process signalling:
@@ -4913,7 +4991,7 @@ suspending the process.
 Quit (quit)
 Stop processing X events except to support the \fB-hold\fP option,
 and then send a SIGHUP signal to the
-the process group of the process running under
+process group of the process running under
 .I \*n
 (usually the shell).
 .RE
@@ -5317,7 +5395,7 @@ subresources, then the checkmark also is disabled.
 .IP
 The standard \fB__default_class__\fP app-defaults file defines both sets of fonts,
 while the \fBU__default_class__\fP app-defaults file defines only one set.
-assuming the standard app-defaults files,
+Assuming the standard app-defaults files,
 this command will launch \fI\*n\fP able to switch between UTF-8
 and ISO-8859-1 encoded fonts:
 .NS
@@ -5489,7 +5567,7 @@ of the \fBcharClass\fP (class \fICharClass\fP) resource.
 .PP
 This resource is a
 series of comma-separated
-of \fIrange\fP:\fIvalue\fP pairs.
+\fIrange\fP:\fIvalue\fP pairs.
 The
 \fIrange\fP is either a single number or \fIlow\fP-\fIhigh\fP in the range of 0
 to 65535, corresponding to the code for the character or characters to be
@@ -5585,7 +5663,7 @@ for the vt100 or tek4014 widgets.
 Changing the \fBtranslations\fP resource
 for events other than key and button events is not expected,
 and will cause unpredictable behavior.
-.SS ACTIONS
+.SS Actions
 The following
 actions are provided for use within the \fIvt100\fP or \fItek4014\fP
 \fBtranslations\fP resources:
@@ -5674,6 +5752,76 @@ by echoing the event's position
 ^X ESC G <line+\*(`` \*(''> <col+\*(`` \*(''>
 .in -8
 .TP 8
+.B "exec-formatted(\fIformat\fP, \fIsourcename\fP [, ...])"
+Execute an external command,
+using the current selection for part of the command's parameters.
+The first parameter, \fIformat\fP gives the basic command.
+Succeeding parameters specify the selection source as in \fBinsert-selection\fP.
+.IP
+The \fIformat\fP parameter allows these substitutions:
+.RS
+.TP 5
+%%
+inserts a "%".
+.TP 5
+%P
+the screen-position at the beginning of the highlighted region,
+as a semicolon-separated pair of integers using the
+values that the CUP control sequence would use.
+.TP 5
+%p
+the screen-position after the beginning of the highlighted region,
+using the same convention as \*(``%P\*(''.
+.TP 5
+%S
+the length of the string that \*(``%s\*('' would insert.
+.TP 5
+%s
+the content of the selection, unmodified.
+.TP 5
+%T
+the length of the string that \*(``%t\*('' would insert.
+.TP 5
+%t
+the selection, trimmed of leading/trailing whitespace.
+Embedded spaces (and newlines) are copied as is.
+.TP 5
+%R
+the length of the string that \*(``%r\*('' would insert.
+.TP 5
+%r
+the selection, trimmed of trailing whitespace.
+.TP 5
+%V
+the video attributes at the beginning of the highlighted region,
+as a semicolon-separated list of integers using the
+values that the SGR control sequence would use.
+.TP 5
+%v
+the video attributes after the end of the highlighted region,
+using the same convention as \*(``%V\*(''.
+.RE
+.IP
+After constructing the command-string,
+\fI\*n\fP forks a subprocess and executes the command,
+which completes independently of \fI\*n\fP.
+.IP
+For example, this translation would invoke a new \fI\*n\fP process
+to view a file whose name is selected while holding the shift key down.
+The new process is started when the mouse button is released:
+.NS
+*VT100*translations: #override Shift \\
+    <Btn1Up>: exec-formatted("xterm -e view '%t'", SELECT)
+.NE
+.TP 8
+.B "exec-selectable(\fIformat\fP, \fIonClicks\fP)"
+Execute an external command,
+using data copied from the screen for part of the command's parameters.
+The first parameter, \fIformat\fP gives
+the basic command as in \fBexec-formatted\fP.
+The second parameter specifies the method for copying
+the data as in the \fBonClicks\fP resource.
+.TP 8
 .B "fullscreen(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBfullscreen\fP resource.
 .TP 8
@@ -5720,62 +5868,6 @@ send an ESC byte before the key, or
 send the key unaltered.
 .RE
 .TP 8
-.B "exec-formatted(\fIformat\fP, \fIsourcename\fP [, ...])"
-Execute an external command,
-using the current selection for part of the command's parameters.
-The first parameter, \fIformat\fP gives the basic command.
-Succeeding parameters specify the selection source as in \fBinsert-selection\fP.
-.IP
-The \fIformat\fP parameter allows these substitutions:
-.RS
-.TP 5
-%%
-inserts a "%".
-.TP 5
-%P
-the screen-position at the beginning of the highlighted region,
-as a semicolon-separated pair of integers using the
-values that the CUP control sequence would use.
-.TP 5
-%p
-the screen-position after the beginning of the highlighted region,
-using the same convention as \*(``%P\*(''.
-.TP 5
-%S
-the length of the string that \*(``%s\*('' would insert.
-.TP 5
-%s
-the content of the selection, unmodified.
-.TP 5
-%T
-the length of the string that \*(``%t\*('' would insert.
-.TP 5
-%t
-the selection, trimmed of leading/trailing whitespace, and newlines
-changed to single spaces.
-.TP 5
-%V
-the video attributes at the beginning of the highlighted region,
-as a semicolon-separated list of integers using the
-values that the SGR control sequence would use.
-.TP 5
-%v
-the video attributes after the end of the highlighted region,
-using the same convention as \*(``%V\*(''.
-.RE
-.IP
-After constructing the command-string,
-\fI\*n\fP forks a subprocess and executes the command,
-which completes independently of \*n.
-.TP 8
-.B "exec-selectable(\fIformat\fP, \fIonClicks\fP)"
-Execute an external command,
-using data copied from the screen for part of the command's parameters.
-The first parameter, \fIformat\fP gives
-the basic command as in \fBexec-formatted\fP.
-The second parameter specifies the method for copying
-the data as in the \fBonClicks\fP resource.
-.TP 8
 .B "insert-formatted(\fIformat\fP, \fIsourcename\fP [, ...])"
 Insert the current selection or data related to it, formatted.
 The first parameter, \fIformat\fP gives the template for the data
@@ -5800,7 +5892,7 @@ Cut buffers are
 typically named \fICUT_BUFFER0\fP through \fICUT_BUFFER7\fP.
 .TP 8
 .B "insert-seven-bit()"
-This action is a synonym for \fBinsert()\fP
+This action is a synonym for \fBinsert()\fP.
 The term \*(``seven-bit\*('' is misleading:
 it only implies that \fI\*n\fP does not try to add 128 to the key's value
 as in \fBinsert-eight-bit()\fP.
@@ -6316,7 +6408,7 @@ The Tektronix window also has the following action:
 .B "gin-press(\fIl/L/m/M/r/R\fP)"
 This action sends the indicated graphics input code.
 .
-.SS DEFAULT KEY BINDINGS
+.SS Default Key Bindings
 .PP
 The default bindings in the VT102 window use the SELECT token,
 which is set by the \fBselectToClipboard\fP resource.
@@ -6415,7 +6507,7 @@ whether the toolbar support is compiled into \fI\*n\fP.
 .PP
 Below is shown a sample of
 how the \fBkeymap()\fP action may be used to add special
-keys for entering commonly-typed works:
+keys for entering commonly-typed words:
 .NS
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
@@ -6425,7 +6517,7 @@ keys for entering commonly-typed works:
         <Key>F19:       string("continue") string(0x0d) \\n\\\&
         <Key>F20:       string("print ") insert-selection(PRIMARY, CUT_BUFFER0)
 .NE
-.SS DEFAULT SCROLLBAR BINDINGS
+.SS Default Scrollbar Bindings
 .PP
 Key bindings are normally associated with the \fBvt100\fP or \fBtek4014\fP
 widgets which act as terminal emulators.
@@ -6488,10 +6580,176 @@ That can be set up by altering the translations resource, e.g.,
         <BtnUp>:        NotifyScroll(Proportional) EndScroll()
 .NE
 .SH "CONTROL SEQUENCES AND KEYBOARD"
-The \fIXterm Control Sequences\fP document lists the control sequences which
+Applications can send sequences of characters to the terminal to change its
+behavior.
+Often they are referred to as
+\*(``ANSI escape sequences\*('' or just plain
+\*(``escape sequences\*('' but both terms are misleading:
+.bP
+ANSI x3.64 (obsolete) which was replaced by ISO 6429 (ECMA-48) gave rules
+for the \fIformat\fP of these sequences of characters.
+.bP
+While the original VT100 was claimed to be ANSI-compatible (against x3.64),
+there is no freely available version of the ANSI standard to show where
+the VT100 differs.
+Most of the documents which mention the ANSI standard have
+additions not found in the original (such as those
+based on \fBansi.sys\fP).
+So this discussion focuses on the ISO standards.
+.bP
+The standard describes only sequences sent from the host to the terminal.
+There is no standard for sequences sent by special keys from the terminal
+to the host.
+By convention (and referring to existing terminals), the format of those
+sequences usually conforms to the host-to-terminal standard.
+.bP
+Some of \fI\*n\fP's sequences do not fit into the standard scheme.
+Technically those are \*(``unspecified\*(''.
+As an example,
+DEC Screen Alignment Test (DECALN) is this three-character sequence:
+.NS
+\fIESC\fP # 8
+.NE
+.PP
+.bP
+Some sequences fit into the standard format,
+but are not listed in the standard.
+These include the sequences used for setting up scrolling margins
+and doing forward/reverse scrolling.
+.bP
+Some of the sequences (in particular, the single-character functions
+such as tab and backspace)
+do not include the \fIescape\fP character.
+.PP
+With all of that in mind, the standard refers to these sequences of
+characters as \*(``control sequences\*(''.
+.PP
+The \fI\*N Control Sequences\fP document lists the control sequences which
 an application can send \fI\*n\fP to make it perform various operations.
 Most of these operations are standardized, from either the DEC or Tektronix
 terminals, or from more widely used standards such as ISO-6429.
+.PP
+A few examples of usage are given in this section.
+.SS Window Titles
+.PP
+Some scripts use \fBecho\fP with options \fB\-e\fP and \fB\-n\fP to tell
+the shell to interpret the string \*(``\\e\*('' as the \fIescape\fP character and
+to suppress a trailing newline on output.
+Those are not portable, not recommended.
+Instead, use \fBprintf\fP (POSIX).
+.PP
+For example, to set the \fIwindow title\fP to \*(``Hello world!\*('',
+you could use one of these commands in a script:
+.NS
+printf '\\033]2;Hello world!\\033\\'
+printf '\\033]2;Hello world!\\007'
+printf '\\033]2;%s\\033\\' "Hello world!"
+printf '\\033]2;%s\\007' "Hello world!"
+.NE
+.PP
+The \fBprintf\fP command interprets the octal value \*(``\\033\*('' for
+\fIescape\fP, and (since it was not given in the format) omits a trailing
+newline from the output.
+.PP
+Some programs (such as \fBscreen\fP(1)) set both window- and icon-titles
+at the same time, using a slightly different control sequence.
+.
+.SS Special Keys
+.PP
+\fI\*N\fP, like any VT100-compatible terminal emulator,
+has two modes for the \fIspecial keys\fP (cursor-keys, numeric keypad,
+and certain function-keys):
+.bP
+\fInormal mode\fP, which makes the special keys transmit 
+\*(``useful\*('' sequences such as the control sequence for cursor-up
+when pressing the up-arrow, and
+.bP
+\fIapplication mode\fP,
+which uses a different control sequence that cannot be mistaken for
+the 
+\*(``useful\*('' sequences.
+.PP
+The main difference between the two modes is that normal mode sequences
+start with \fICSI\fP (\fIescape\ [\fP) and application mode sequences
+start with \fISS3\fP (\fIescape\ O\fP).
+.PP
+The terminal is initialized into one of these two modes (usually the
+normal mode), based on the terminal description (termcap or terminfo).
+The terminal description also has capabilities (strings) defined for
+the keypad mode used in curses applications.
+.PP
+There is a problem in using the terminal description for applications
+that are not intended to be full-screen curses applications:
+the definitions of special keys are only correct for this keypad mode.
+For example, some shells
+(unlike \fBksh\fP(1), which appears to be hard-coded, not even using termcap)
+allow their users to customize key-bindings,
+assigning shell actions to special keys.
+.bP
+\fBbash\fP(1) allows \fIconstant\fP strings to be assigned
+to functions.
+This is only successful if the terminal is initialized to application
+mode by default,
+because \fBbash\fP lacks flexibility in this area.
+It uses a (less expressive than \fBbash\fP's)
+\fBreadline\fP scripting language for setting up key bindings,
+which relies upon the user to statically enumerate the possible bindings for
+given values of $TERM.
+.bP
+\fBzsh\fP(1) provides an analogous feature,
+but it accepts runtime expressions,
+as well as providing a \fB$terminfo\fP array for scripts.
+In particular, one can use the terminal database,
+transforming when defining a key-binding.
+By transforming the output so that \fICSI\fP and \fISS3\fP are equated,
+\fBzsh\fP can use the terminal database to obtain useful definitions
+for its command-line use regardless of whether the terminal uses
+normal or application mode initially.
+Here is an example:
+.NS
+[[ "$terminfo[kcuu1]" == "^[O"* ]] && \\
+bindkey -M viins "${terminfo[kcuu1]/O/[}" \\
+vi-up-line-or-history
+.NE
+.
+.
+.SS Changing Colors
+.PP
+A few shell programs provide the ability for users to add color and other
+video attributes to the shell prompt strings.
+Users can do this by setting $PS1 (the primary prompt string).
+Again, \fBbash\fP and \fBzsh\fP have provided features not found in \fBksh\fP.
+There is a problem, however: the prompt's width on the screen will not
+necessarily be the same as the number of characters.
+Because there is no guidance in the POSIX standard, each shell addresses
+the problem in a different way:
+.bP
+\fBbash\fP treats characters within 
+\*(``\\[\*('' and
+\*(``\\]\*(''
+as nonprinting (using no width on the screen).
+.bP
+\fBzsh\fP treats characters within 
+\*(``%{\*('' and
+\*(``%}\*(''
+as nonprinting.
+.PP
+In addition to the difference in syntax,
+the shells provide different methods for obtaining useful escape sequences:
+.bP
+As noted in \fISpecial Keys\fP, \fBzsh\fP initializes the $terminfo array
+with the terminal capabilities.
+.IP
+It also provides a function \fBechoti\fP which works like \fBtput\fP(1)
+to convert a terminal capability with its parameters into a string
+that can be written to the terminal.
+.bP
+Shells lacking a comparable feature (such as \fBbash\fP) can always
+use the program \fBtput\fP to do this transformation.
+.PP
+Hard-coded escape sequences are supported by each shell,
+but are not recommended because those rely upon particular configurations
+and cannot be easily moved between different user environments.
 .
 .
 .SH ENVIRONMENT
@@ -6860,6 +7118,8 @@ tty(4)
 http://invisible-island.net/xterm/xterm.html
 .br
 http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+.br
+http://invisible-island.net/xterm/xterm.faq.html
 .
 .
 .SH AUTHORS
@@ -6873,6 +7133,7 @@ Jim Gettys (MIT-Athena), Bob Scheifler (MIT X Consortium), Doug Mink (SAO),
 Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena),
 Jason Bacon,
+Ross Combs,
 Stephen P. Wall,
 David Wexelblat, and
 Thomas Dickey (invisible-island.net).

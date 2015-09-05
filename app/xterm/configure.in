@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.327 2014/12/20 02:27:59 tom Exp $
+dnl $XTermId: configure.in,v 1.336 2015/08/10 23:45:36 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2013,2014 by Thomas E. Dickey
+dnl Copyright 1997-2014,2015 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -44,11 +44,11 @@ CF_CHECK_CACHE
 dnl Only add to this case statement when a system has a compiler that is not
 dnl detected by AC_PROG_CC.
 case "$host_os" in
-openedition)	: ${CFLAGS="-O2 -Wc,dll -Wl,EDIT=NO"}
+(openedition)	: ${CFLAGS="-O2 -Wc,dll -Wl,EDIT=NO"}
 		: ${CPPFLAGS="-D_ALL_SOURCE"}
 		: ${LIBS="/usr/lib/Xaw.x /usr/lib/SM.x /usr/lib/ICE.x /usr/lib/X11.x"}
 		: ${CC=c89};;
-darwin*)
+(darwin*)
 		: ${LDFLAGS}="${LDFLAGS} -Wl,-bind_at_load";;
 esac
 
@@ -59,8 +59,6 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM
 AC_CHECK_PROGS(LINT, tdlint lint alint)
-
-CF_WITH_MAN2HTML
 
 ###	checks for compiler characteristics
 CF_XOPEN_SOURCE
@@ -280,13 +278,14 @@ AC_CHECK_FUNCS(Xutf8LookupString, [],[
 ])
 
 CF_WITH_IMAKE_CFLAGS($(MAIN_DEFINES) $(VENDORMANDEFS))
+CF_WITH_MAN2HTML
 
 # If we have already established that there is a full termcap implementation,
 # suppress the definitions for terminfo that we make have imported from the
 # imake-file.
 if test "x$cf_cv_lib_tgetent" != xno || test "x$cf_cv_lib_part_tgetent" != xno ; then
 	case "$IMAKE_CFLAGS" in
-	*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
+	(*-DUSE_TERMINFO\ -DHAVE_TIGETSTR*)
 		CF_UNDO_CFLAGS(IMAKE_CFLAGS,terminfo,[-DUSE_TERMINFO[[ 	]]*-DHAVE_TIGETSTR[[ 	]]*])
 		CF_UNDO_CFLAGS(CPPFLAGS,terminfo,[-DUSE_TERMINFO[[ 	]]*-DHAVE_TIGETSTR[[ 	]]*])
 		;;
@@ -302,7 +301,7 @@ AC_ARG_WITH(terminal-id,
 	[default_termid=vt420])
 AC_MSG_RESULT($default_termid)
 case $default_termid in
-vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
+(vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 	;;
 esac
 AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid",[default terminal-id])
@@ -338,6 +337,13 @@ AC_ARG_ENABLE(delete-is-del,
 	[delete_is_del=$enableval],
 	[delete_is_del=maybe])
 CF_XBOOL_RESULT(DEFDELETE_DEL,delete_is_del,[Define to 1 if default backspace/DEL setting is DEL])
+
+AC_MSG_CHECKING(for default pty initial erase setting)
+AC_ARG_ENABLE(pty-erase,
+	[  --enable-pty-erase      set default ptyInitialErase resource (default: maybe)],
+	[initial_erase=$enableval],
+	[initial_erase=False])
+CF_XBOOL_RESULT(DEF_INITIAL_ERASE,initial_erase,[Define to 1 if default pty initial erase setting is TRUE])
 
 AC_MSG_CHECKING(if alt should send ESC)
 CF_ARG_ENABLE(alt-sends-esc,
@@ -459,10 +465,10 @@ test "$enable_blink_curs" = no && AC_DEFINE(OPT_BLINK_CURS,0,[Define to 0 to dis
 
 AC_MSG_CHECKING(if you want to ignore Linux's broken palette-strings)
 
-case $host_os in #(vi
-linux*)
-	assume_broken_osc=yes ;; #(vi
-*)
+case $host_os in
+(linux*)
+	assume_broken_osc=yes ;;
+(*)
 	assume_broken_osc=no ;;
 esac
 
@@ -485,6 +491,14 @@ CF_ARG_ENABLE(broken-st,
 	[enable_broken_st=yes])
 AC_MSG_RESULT($enable_broken_st)
 test "$enable_broken_st" = no && AC_DEFINE(OPT_BROKEN_ST,0,[Define to 0 to disallow broken string-terminators])
+
+AC_MSG_CHECKING(if you want to compile-in icon data)
+CF_ARG_ENABLE(builtin-xpms,
+	[  --enable-builtin-xpms   compile-in icon data],
+	[enable_builtin_xpms=yes],
+	[enable_builtin_xpms=no])
+AC_MSG_RESULT($enable_builtin_xpms)
+test "$enable_builtin_xpms" = yes && AC_DEFINE(OPT_BUILTIN_XPMS,1,[Define to 1 to compile-in icon data])
 
 AC_MSG_CHECKING(if you want printable 128-159)
 CF_ARG_DISABLE(c1-print,
@@ -570,9 +584,9 @@ CF_ARG_ENABLE(double-buffer,
 AC_MSG_RESULT($enable_double_bfr)
 if test "$enable_double_bfr" = yes ; then
 	case "x$LIBS" in
-	*Xext*)
+	(*Xext*)
 		;;
-	*)
+	(*)
 		CF_X_EXT 
 		;;
 	esac
@@ -971,6 +985,8 @@ CF_ARG_DISABLE(ziconbeep,
 AC_MSG_RESULT($enable_ziconbeep)
 test "$enable_ziconbeep" = no && AC_DEFINE(OPT_ZICONBEEP,0,[Define to 0 to disable -ziconbeep option])
 
+###############################################################################
+CF_XINERAMA
 ###############################################################################
 CF_HELP_MESSAGE(Testing/development Options:)
 

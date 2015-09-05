@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.79 2014/05/02 23:32:27 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.81 2015/02/16 01:51:51 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -61,8 +61,14 @@
 #endif
 
 #if !OPT_DEC_LOCATOR
-#undef  CASE_CSI_TICK_STATE
-#define CASE_CSI_TICK_STATE CASE_CSI_IGNORE
+#undef  CASE_DECEFR
+#define CASE_DECEFR CASE_CSI_IGNORE
+#undef  CASE_DECELR
+#define CASE_DECELR CASE_CSI_IGNORE
+#undef  CASE_DECSLE
+#define CASE_DECSLE CASE_CSI_IGNORE
+#undef  CASE_DECRQLP
+#define CASE_DECRQLP CASE_CSI_IGNORE
 #endif
 
 #if !OPT_WIDE_CHARS
@@ -454,7 +460,7 @@ CASE_CSI_EX_STATE,
 CASE_CSI_QUOTE_STATE,
 CASE_CSI_IGNORE,
 /*	$		%		&		'	*/
-CASE_CSI_IGNORE,
+CASE_CSI_DOLLAR_STATE,
 CASE_CSI_IGNORE,
 CASE_CSI_IGNORE,
 CASE_CSI_TICK_STATE,
@@ -614,7 +620,7 @@ CASE_CSI_EX_STATE,
 CASE_CSI_QUOTE_STATE,
 CASE_CSI_IGNORE,
 /*      currency        yen             brokenbar       section         */
-CASE_CSI_IGNORE,
+CASE_CSI_DOLLAR_STATE,
 CASE_CSI_IGNORE,
 CASE_CSI_IGNORE,
 CASE_CSI_TICK_STATE,
@@ -2028,7 +2034,6 @@ CASE_IGNORE,
 };
 #endif
 
-#if OPT_DEC_LOCATOR
 Const PARSE_T csi_tick_table[] =	/* CSI ... ' */
 {
 /*	NUL		SOH		STX		ETX	*/
@@ -2352,7 +2357,6 @@ CASE_DECIC,
 CASE_DECDC,
 CASE_IGNORE,
 };
-#endif	/* OPT_DEC_LOCATOR */
 
 #if OPT_DEC_RECTOPS
 Const PARSE_T csi_dollar_table[] =	/* CSI ... $ */

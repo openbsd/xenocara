@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.h,v 1.28 2012/11/26 21:55:10 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.29 2015/08/27 23:31:23 Martin.Tournoij Exp $ */
 
 /*
- * Copyright 2000-2011,2012 by Thomas E. Dickey
+ * Copyright 2000-2012,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -53,6 +53,7 @@ extern char *x_getlogin(uid_t /* uid */, struct passwd * /* in_out */);
 extern char *x_strdup(const char * /* s */);
 extern char *x_strindex(char * /* s1 */, const char * /* s2 */);
 extern char *x_strtrim(const char * /* s */);
+extern char *x_strrtrim(const char * /* s */);
 extern char x_toupper(int /* ch */);
 extern int x_hex2int(int /* ch */);
 extern int x_strcasecmp(const char * /* s1 */, const char * /* s2 */);

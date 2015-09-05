@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.719 2014/12/28 22:17:58 tom Exp $ */
+/* $XTermId: misc.c,v 1.728 2015/08/19 00:54:21 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -701,11 +701,11 @@ make_hidden_cursor(XtermWidget xw)
  * until the window is initialized.
  */
 void
-init_colored_cursor(void)
+init_colored_cursor(Display *dpy)
 {
 #ifdef HAVE_LIB_XCURSOR
-    const char *theme = "index.theme";
-    const char *pattern = "xtermXXXXXXXX";
+    static const char theme[] = "index.theme";
+    static const char pattern[] = "xtermXXXXXXXX";
     const char *tmp_dir;
     char *filename;
     char *env = getenv("XCURSOR_THEME");
@@ -713,6 +713,15 @@ init_colored_cursor(void)
     FILE *fp;
 
     xterm_cursor_theme = 0;
+    /*
+     * The environment variable overrides a (possible) resource Xcursor.theme
+     */
+    if (IsEmpty(env)) {
+	env = XGetDefault(dpy, "Xcursor", "theme");
+    }
+    /*
+     * If neither found, provide our own default theme.
+     */
     if (IsEmpty(env)) {
 	if ((tmp_dir = getenv("TMPDIR")) == 0) {
 	    tmp_dir = P_tmpdir;
@@ -749,6 +758,8 @@ init_colored_cursor(void)
 	    }
 	}
     }
+#else
+    (void) dpy;
 #endif /* HAVE_LIB_XCURSOR */
 }
 
@@ -915,16 +926,19 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	} else {
 	    unsigned myargc = *nparams + 1;
 	    char **myargv = TypeMallocN(char *, myargc + 1);
-	    unsigned n = 0;
 
-	    myargv[n++] = child_exe;
+	    if (myargv != 0) {
+		unsigned n = 0;
 
-	    while (n < myargc) {
-		myargv[n++] = (char *) *params++;
+		myargv[n++] = child_exe;
+
+		while (n < myargc) {
+		    myargv[n++] = (char *) *params++;
+		}
+
+		myargv[n] = 0;
+		execv(child_exe, myargv);
 	    }
-
-	    myargv[n] = 0;
-	    execv(child_exe, myargv);
 
 	    /* If we get here, we've failed */
 	    xtermWarning("exec of '%s': %s\n", child_exe, SysErrorMsg(errno));
@@ -2005,7 +2019,7 @@ StartLog(XtermWidget xw)
 	    if ((log_default = x_strdup(log_def_name)) == NULL)
 		return;
 #else
-	    const char *log_def_name = "XtermLog.XXXXXX";
+	    static const char log_def_name[] = "XtermLog.XXXXXX";
 	    if ((log_default = x_strdup(log_def_name)) == NULL)
 		return;
 
@@ -3609,6 +3623,8 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	    xw->misc.palette_changed = True;
 	break;
     case 6:
+	/* FALLTHRU */
+    case OSC_Reset(6):
 	TRACE(("parse colorXXMode:%s\n", buf));
 	while (*buf != '\0') {
 	    long which = 0;
@@ -4108,7 +4124,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		else if (isCursorBar(screen))
 		    code = STEADY_BAR;
 #if OPT_BLINK_CURS
-		if (screen->cursor_blink_esc == 0)
+		if (screen->cursor_blink_esc != 0)
 		    code -= 1;
 #endif
 		sprintf(reply, "%d%s", code, cp);
@@ -4238,7 +4254,7 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    parse_decudk(xw, cp);
 		}
 		break;
-	    case '{':		/* DECDLD (no '}' case though) */
+	    case L_CURL:	/* DECDLD */
 		if (screen->vtXX_level >= 2) {	/* VT220 */
 		    parse_decdld(&params, cp);
 		}
@@ -4773,7 +4789,7 @@ xtermLoadIcon(XtermWidget xw)
 	    myData = BuiltInXPM(xterm_xpms, XtNumber(xterm_xpms));
 	if (myData == 0)
 	    myData = &mini_xterm_xpms[XtNumber(mini_xterm_xpms) - 1];
-	data = (char **) myData->data,
+	data = (char **) myData->data;
 #else
 	data = (char **) &mini_xterm_48x48_xpm;
 #endif
@@ -5095,7 +5111,7 @@ Panic(const char *s GCC_UNUSED, int a GCC_UNUSED)
 const char *
 SysErrorMsg(int code)
 {
-    static char unknown[] = "unknown error";
+    static const char unknown[] = "unknown error";
     char *s = strerror(code);
     return s ? s : unknown;
 }
@@ -6009,6 +6025,8 @@ xtermOpenApplication(XtAppContext * app_context_return,
 			     fallback_resources,
 			     NULL, 0);
 #endif /* OPT_SESSION_MGT */
+    init_colored_cursor(XtDisplay(result));
+
     XtSetErrorHandler((XtErrorHandler) 0);
 
     return result;

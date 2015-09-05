@@ -1,8 +1,8 @@
-/* $XTermId: graphics.h,v 1.20 2014/11/28 19:48:36 tom Exp $ */
+/* $XTermId: graphics.h,v 1.22 2015/04/23 00:47:24 tom Exp $ */
 
 /*
- * Copyright 2013,2014 by Ross Combs
- * Copyright 2013,2014 by Thomas E. Dickey
+ * Copyright 2013-2014,2015 by Ross Combs
+ * Copyright 2013-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -73,6 +73,7 @@ typedef struct {
     unsigned id;                /* sequential id used for preserving layering */
     int valid;                  /* if the graphic has been initialized */
     int dirty;                  /* if the graphic needs to be redrawn */
+    int hidden;                 /* if the graphic should not be displayed */
 } Graphic;
 
 extern Graphic *get_new_graphic(XtermWidget xw, int charrow, int charcol, unsigned type);

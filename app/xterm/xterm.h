@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.753 2014/12/23 00:08:58 Ross.Combs Exp $ */
+/* $XTermId: xterm.h,v 1.758 2015/08/19 00:26:56 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -893,6 +893,7 @@ extern void VTInitTranslations (void);
 extern void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */) GCC_NORETURN;
 extern void VTRun (XtermWidget /* xw */);
 extern void dotext (XtermWidget /* xw */, int  /* charset */, IChar * /* buf */, Cardinal  /* len */);
+extern void getKeymapResources(Widget /* w */, const char * /*mapName */, const char * /* mapClass */, const char * /* type */, void * /* result */, size_t /* size */);
 extern void lookupSelectUnit(XtermWidget /* xw */, Cardinal /* item */, String /* value */);
 extern void releaseCursorGCs(XtermWidget /*xw*/);
 extern void releaseWindowGCs(XtermWidget /*xw*/, VTwin * /*win*/);
@@ -1085,7 +1086,7 @@ extern void free_string(String value);
 extern void hide_tek_window (void);
 extern void hide_vt_window (void);
 extern void ice_error (IceConn /* iceConn */);
-extern void init_colored_cursor (void);
+extern void init_colored_cursor (Display * /* dpy */);
 extern void reset_decudk (XtermWidget /* xw */);
 extern void set_tek_visibility (Bool  /* on */);
 extern void set_vt_visibility (Bool  /* on */);
@@ -1388,6 +1389,18 @@ extern void xtermScroll (XtermWidget /* xw */, int /* amount */);
 extern void xtermScrollLR (XtermWidget /* xw */, int /* amount */, Bool /* toLeft */);
 extern void xtermSizeHints (XtermWidget  /* xw */, int /* scrollbarWidth */);
 
+struct Xinerama_geometry {
+    int x;
+    int y;
+    unsigned w;
+    unsigned h;
+    int scr_x;
+    int scr_y;
+    int scr_w;
+    int scr_h;
+};
+extern int XParseXineramaGeometry(Display * /* display */, char * /* parsestring */, struct Xinerama_geometry * /* ret */);
+
 #if OPT_ISO_COLORS
 
 extern unsigned extract_fg (XtermWidget /* xw */, unsigned  /* color */, unsigned  /* flags */);
@@ -1528,7 +1541,8 @@ unsigned visual_width(const IChar * /* str */, Cardinal  /* len */);
 #define visual_width(a, b) (b)
 #endif
 
-#define BtoS(b)    (((b) == Maybe) ? "maybe" : ((b) ? "on" : "off"))
+#define BtoS(b)    ((b) ? "on" : "off")
+#define MtoS(b)    (((b) == Maybe) ? "maybe" : BtoS(b))
 #define NonNull(s) ((s) ? (s) : "<null>")
 
 #define UIntSet(dst,bits) dst = dst | (unsigned) (bits)

@@ -1,7 +1,7 @@
-/* $XTermId: version.c,v 1.1 2013/01/01 12:10:44 tom Exp $ */
+/* $XTermId: version.c,v 1.2 2015/04/10 08:35:33 tom Exp $ */
 
 /*
- * Copyright 2013 by Thomas E. Dickey
+ * Copyright 2013,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -39,21 +39,22 @@
  * places.  It is derived (when possible) from the __vendorversion__ symbol
  * that some newer imake configurations define.
  */
-char *
+const char *
 xtermVersion(void)
 {
-    static char vendor_version[] = __vendorversion__;
-    static char *result;
+    static const char vendor_version[] = __vendorversion__;
+    static char *buffer;
+    const char *result;
 
-    if (result == 0) {
-	char *vendor = vendor_version;
+    if (buffer == 0) {
+	const char *vendor = vendor_version;
 	char first[BUFSIZ];
 	char second[BUFSIZ];
 
-	result = CastMallocN(char, strlen(vendor) + 9);
-	if (result == 0)
+	buffer = CastMallocN(char, strlen(vendor) + 9);
+	if (buffer == 0) {
 	    result = vendor;
-	else {
+	} else {
 	    /* some vendors leave trash in this string */
 	    for (;;) {
 		if (!strncmp(vendor, "Version ", (size_t) 8))
@@ -64,11 +65,15 @@ xtermVersion(void)
 		    break;
 	    }
 	    if (strlen(vendor) < BUFSIZ &&
-		sscanf(vendor, "%[0-9.] %[A-Za-z_0-9.]", first, second) == 2)
-		sprintf(result, "%s %s(%d)", second, first, XTERM_PATCH);
-	    else
-		sprintf(result, "%s(%d)", vendor, XTERM_PATCH);
+		sscanf(vendor, "%[0-9.] %[A-Za-z_0-9.]", first, second) == 2) {
+		sprintf(buffer, "%s %s(%d)", second, first, XTERM_PATCH);
+	    } else {
+		sprintf(buffer, "%s(%d)", vendor, XTERM_PATCH);
+	    }
+	    result = buffer;
 	}
+    } else {
+	result = buffer;
     }
     return result;
 }

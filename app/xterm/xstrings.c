@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.60 2014/05/03 12:46:53 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.62 2015/08/27 23:30:42 Martin.Tournoij Exp $ */
 
 /*
- * Copyright 2000-2013,2014 by Thomas E. Dickey
+ * Copyright 2000-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -474,6 +474,33 @@ x_strtrim(const char *source)
 }
 
 /*
+ * Trims trailing whitespace from a copy of the string.
+ */
+char *
+x_strrtrim(const char *source)
+{
+    char *result;
+    char *s;
+
+    if (source != 0 && *source != '\0') {
+	char *t = x_strdup(source);
+	if (t != 0) {
+	    s = t;
+	    if (*t != '\0') {
+		s = t + strlen(t);
+		while (s != t && IsSpace(CharOf(s[-1]))) {
+		    *--s = '\0';
+		}
+	    }
+	}
+	result = t;
+    } else {
+	result = x_strdup("");
+    }
+    return result;
+}
+
+/*
  * Avoid using system locale for upper/lowercase conversion, since there are
  * a few locales where toupper(tolower(c)) != c.
  */
@@ -485,7 +512,7 @@ x_toupper(int ch)
 
     if (result == '\0') {
 	unsigned n;
-	const char *s = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	static const char s[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 	for (n = 0; n < sizeof(table); ++n) {
 	    table[n] = (char) n;
