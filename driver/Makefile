@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.63 2015/05/24 08:04:18 matthieu Exp $
+# $OpenBSD: Makefile,v 1.64 2015/09/07 21:26:01 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -58,7 +58,7 @@ VIDEO_DRV_amd64= \
 	xf86-video-s3virge xf86-video-savage xf86-video-siliconmotion \
 	xf86-video-sis xf86-video-tdfx xf86-video-trident \
 	xf86-video-tseng xf86-video-vesa xf86-video-vmware \
-	xf86-video-wsudl
+	xf86-video-wsfb xf86-video-wsudl
 
 VIDEO_DRV_armish= \
 	xf86-video-wsfb	xf86-video-wsudl
