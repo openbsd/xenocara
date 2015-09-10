@@ -78,6 +78,8 @@
 ./usr/X11R6/lib/modules/drivers/vmware_drv.so
 ./usr/X11R6/lib/modules/drivers/voodoo_drv.la
 ./usr/X11R6/lib/modules/drivers/voodoo_drv.so
+./usr/X11R6/lib/modules/drivers/wsfb_drv.la
+./usr/X11R6/lib/modules/drivers/wsfb_drv.so
 ./usr/X11R6/lib/modules/drivers/wsudl_drv.la
 ./usr/X11R6/lib/modules/drivers/wsudl_drv.so
 ./usr/X11R6/lib/modules/extensions/libglx.la
