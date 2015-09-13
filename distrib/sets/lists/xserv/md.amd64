@@ -193,6 +193,7 @@
 ./usr/X11R6/man/man4/vmware.4
 ./usr/X11R6/man/man4/void.4
 ./usr/X11R6/man/man4/ws.4
+./usr/X11R6/man/man4/wsfb.4
 ./usr/X11R6/man/man4/wsudl.4
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man5/xorg.conf.d.5
