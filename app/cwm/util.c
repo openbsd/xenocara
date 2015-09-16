@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: util.c,v 1.17 2015/01/19 14:54:16 okan Exp $
+ * $OpenBSD: util.c,v 1.18 2015/09/16 17:58:25 okan Exp $
  */
 
 #include <sys/types.h>
@@ -31,15 +31,12 @@
 
 #include "calmwm.h"
 
-#define MAXARGLEN 20
-
 void
 u_spawn(char *argstr)
 {
 	switch (fork()) {
 	case 0:
 		u_exec(argstr);
-		err(1, "%s", argstr);
 		break;
 	case -1:
 		warn("fork");
@@ -51,8 +48,10 @@ u_spawn(char *argstr)
 void
 u_exec(char *argstr)
 {
+#define MAXARGLEN 20
 	char	*args[MAXARGLEN], **ap = args;
 	char	**end = &args[MAXARGLEN - 1], *tmp;
+	char	*s = argstr;
 
 	while (ap < end && (*ap = strsep(&argstr, " \t")) != NULL) {
 		if (**ap == '\0')
@@ -75,8 +74,33 @@ u_exec(char *argstr)
 			}
 		}
 	}
-
 	*ap = NULL;
+
 	(void)setsid();
 	(void)execvp(args[0], args);
+	err(1, "%s", s);
+}
+
+char *
+u_argv(char * const *argv)
+{
+	size_t	 siz = 0;
+	int	 i;
+	char	*p;
+
+	if (argv == 0)
+		return(NULL);
+
+	for (i = 0; argv[i]; i++)
+		siz += strlen(argv[i]) + 1;
+	if (siz == 0)
+		return(NULL);
+
+	p = xmalloc(siz);
+	strlcpy(p, argv[0], siz);
+	for (i = 1; argv[i]; i++) {
+		strlcat(p, " ", siz);
+		strlcat(p, argv[i], siz);
+	}
+	return(p);
 }

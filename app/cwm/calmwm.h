@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.304 2015/08/27 18:53:14 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.305 2015/09/16 17:58:25 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -88,7 +88,7 @@
 
 #define CWM_QUIT		0x0000
 #define CWM_RUNNING		0x0001
-#define CWM_RESTART		0x0002
+#define CWM_EXECWM		0x0002
 
 union arg {
 	char	*c;
@@ -334,6 +334,7 @@ extern Display				*X_Dpy;
 extern Time				 Last_Event_Time;
 extern struct screen_ctx_q		 Screenq;
 extern struct conf			 Conf;
+extern char				*wm_argv;
 extern const char			*homedir;
 extern int				 HasRandr, Randr_ev;
 
@@ -581,6 +582,7 @@ void 			 xu_ewmh_handle_net_wm_state_msg(struct client_ctx *,
 void 			 xu_ewmh_set_net_wm_state(struct client_ctx *);
 void 			 xu_ewmh_restore_net_wm_state(struct client_ctx *);
 
+char			*u_argv(char * const *);
 void			 u_exec(char *);
 void			 u_spawn(char *);
 

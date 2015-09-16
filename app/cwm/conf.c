@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.197 2015/08/24 15:42:57 okan Exp $
+ * $OpenBSD: conf.c,v 1.198 2015/09/16 17:58:25 okan Exp $
  */
 
 #include <sys/types.h>
@@ -400,7 +400,7 @@ static const struct {
 	{ "vmaximize", kbfunc_client_toggle_vmaximize, CWM_WIN, {0} },
 	{ "hmaximize", kbfunc_client_toggle_hmaximize, CWM_WIN, {0} },
 	{ "freeze", kbfunc_client_toggle_freeze, CWM_WIN, {0} },
-	{ "restart", kbfunc_cwm_status, 0, {.i = CWM_RESTART} },
+	{ "restart", kbfunc_cwm_status, 0, {.i = CWM_EXECWM} },
 	{ "quit", kbfunc_cwm_status, 0, {.i = CWM_QUIT} },
 	{ "exec", kbfunc_exec, 0, {.i = CWM_EXEC_PROGRAM} },
 	{ "exec_wm", kbfunc_exec, 0, {.i = CWM_EXEC_WM} },
