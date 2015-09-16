@@ -308,6 +308,9 @@ xwl_unrealize_window(WindowPtr window)
         xorg_list_del(&xwl_window->link_damage);
     DamageUnregister(xwl_window->damage);
     DamageDestroy(xwl_window->damage);
+    if (xwl_window->frame_callback)
+        wl_callback_destroy(xwl_window->frame_callback);
+
     free(xwl_window);
     dixSetPrivate(&window->devPrivates, &xwl_window_private_key, NULL);
 
@@ -321,20 +324,35 @@ xwl_save_screen(ScreenPtr pScreen, int on)
 }
 
 static void
+frame_callback(void *data,
+               struct wl_callback *callback,
+               uint32_t time)
+{
+    struct xwl_window *xwl_window = data;
+    xwl_window->frame_callback = NULL;
+}
+
+static const struct wl_callback_listener frame_listener = {
+    frame_callback
+};
+
+static void
 xwl_screen_post_damage(struct xwl_screen *xwl_screen)
 {
-    struct xwl_window *xwl_window;
+    struct xwl_window *xwl_window, *next_xwl_window;
     RegionPtr region;
     BoxPtr box;
-    int count, i;
     struct wl_buffer *buffer;
     PixmapPtr pixmap;
 
-    xorg_list_for_each_entry(xwl_window, &xwl_screen->damage_window_list,
-                             link_damage) {
-        region = DamageRegion(xwl_window->damage);
-        count = RegionNumRects(region);
+    xorg_list_for_each_entry_safe(xwl_window, next_xwl_window,
+                                  &xwl_screen->damage_window_list, link_damage) {
+        /* If we're waiting on a frame callback from the server,
+         * don't attach a new buffer. */
+        if (xwl_window->frame_callback)
+            continue;
 
+        region = DamageRegion(xwl_window->damage);
         pixmap = (*xwl_screen->screen->GetWindowPixmap) (xwl_window->window);
 
 #if GLAMOR_HAS_GBM
@@ -345,17 +363,19 @@ xwl_screen_post_damage(struct xwl_screen *xwl_screen)
             buffer = xwl_shm_pixmap_get_wl_buffer(pixmap);
 
         wl_surface_attach(xwl_window->surface, buffer, 0, 0);
-        for (i = 0; i < count; i++) {
-            box = &RegionRects(region)[i];
-            wl_surface_damage(xwl_window->surface,
-                              box->x1, box->y1,
-                              box->x2 - box->x1, box->y2 - box->y1);
-        }
+
+        box = RegionExtents(region);
+        wl_surface_damage(xwl_window->surface, box->x1, box->y1,
+                          box->x2 - box->x1, box->y2 - box->y1);
+
+        xwl_window->frame_callback = wl_surface_frame(xwl_window->surface);
+        wl_callback_add_listener(xwl_window->frame_callback, &frame_listener, xwl_window);
+
         wl_surface_commit(xwl_window->surface);
         DamageEmpty(xwl_window->damage);
-    }
 
-    xorg_list_init(&xwl_screen->damage_window_list);
+        xorg_list_del(&xwl_window->link_damage);
+    }
 }
 
 static void
@@ -463,7 +483,7 @@ listen_on_fds(struct xwl_screen *xwl_screen)
     int i;
 
     for (i = 0; i < xwl_screen->listen_fd_count; i++)
-        ListenOnOpenFD(xwl_screen->listen_fds[i], TRUE);
+        ListenOnOpenFD(xwl_screen->listen_fds[i], FALSE);
 }
 
 static void
@@ -493,9 +513,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     int ret, bpc, green_bpc, i;
 
     xwl_screen = calloc(sizeof *xwl_screen, 1);
-    xwl_screen->wm_fd = -1;
     if (xwl_screen == NULL)
         return FALSE;
+    xwl_screen->wm_fd = -1;
 
     if (!dixRegisterPrivateKey(&xwl_screen_private_key, PRIVATE_SCREEN, 0))
         return FALSE;
@@ -636,6 +656,7 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     return ret;
 }
 
+_X_NORETURN
 static void _X_ATTRIBUTE_PRINTF(1, 0)
 xwl_log_handler(const char *format, va_list args)
 {
@@ -681,4 +702,6 @@ InitOutput(ScreenInfo * screen_info, int argc, char **argv)
     if (AddScreen(xwl_screen_init, argc, argv) == -1) {
         FatalError("Couldn't add screen\n");
     }
+
+    LocalAccessScopeUser();
 }

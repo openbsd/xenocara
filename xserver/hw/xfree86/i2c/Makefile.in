@@ -73,89 +73,14 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
-am__install_max = 40
-am__nobase_strip_setup = \
-  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
-am__nobase_strip = \
-  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
-am__nobase_list = $(am__nobase_strip_setup); \
-  for p in $$list; do echo "$$p $$p"; done | \
-  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
-  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
-    if (++n[$$2] == $(am__install_max)) \
-      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
-    END { for (dir in files) print dir, files[dir] }'
-am__base_list = \
-  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
-  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__uninstall_files_from_dir = { \
-  test -z "$$files" \
-    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
-    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
-         $(am__cd) "$$dir" && rm -f $$files; }; \
-  }
-am__installdirs = "$(DESTDIR)$(multimediadir)" "$(DESTDIR)$(sdkdir)"
-LTLIBRARIES = $(multimedia_LTLIBRARIES) $(noinst_LTLIBRARIES)
-bt829_drv_la_LIBADD =
-am_bt829_drv_la_OBJECTS = bt829.lo bt829_module.lo
-bt829_drv_la_OBJECTS = $(am_bt829_drv_la_OBJECTS)
+LTLIBRARIES = $(noinst_LTLIBRARIES)
+libi2c_la_LIBADD =
+am_libi2c_la_OBJECTS = xf86i2c.lo
+libi2c_la_OBJECTS = $(am_libi2c_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-bt829_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(bt829_drv_la_LDFLAGS) $(LDFLAGS) -o $@
-fi1236_drv_la_LIBADD =
-am_fi1236_drv_la_OBJECTS = fi1236.lo fi1236_module.lo tda9885.lo
-fi1236_drv_la_OBJECTS = $(am_fi1236_drv_la_OBJECTS)
-fi1236_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(fi1236_drv_la_LDFLAGS) $(LDFLAGS) -o $@
-libi2c_la_LIBADD =
-am_libi2c_la_OBJECTS = xf86i2c.lo
-libi2c_la_OBJECTS = $(am_libi2c_la_OBJECTS)
-msp3430_drv_la_LIBADD =
-am_msp3430_drv_la_OBJECTS = msp3430.lo msp3430_module.lo
-msp3430_drv_la_OBJECTS = $(am_msp3430_drv_la_OBJECTS)
-msp3430_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(msp3430_drv_la_LDFLAGS) $(LDFLAGS) -o \
-	$@
-tda8425_drv_la_LIBADD =
-am_tda8425_drv_la_OBJECTS = tda8425.lo tda8425_module.lo
-tda8425_drv_la_OBJECTS = $(am_tda8425_drv_la_OBJECTS)
-tda8425_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(tda8425_drv_la_LDFLAGS) $(LDFLAGS) -o \
-	$@
-tda9850_drv_la_LIBADD =
-am_tda9850_drv_la_OBJECTS = tda9850.lo tda9850_module.lo
-tda9850_drv_la_OBJECTS = $(am_tda9850_drv_la_OBJECTS)
-tda9850_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(tda9850_drv_la_LDFLAGS) $(LDFLAGS) -o \
-	$@
-tda9885_drv_la_LIBADD =
-am_tda9885_drv_la_OBJECTS = tda9885.lo tda9885_module.lo
-tda9885_drv_la_OBJECTS = $(am_tda9885_drv_la_OBJECTS)
-tda9885_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(tda9885_drv_la_LDFLAGS) $(LDFLAGS) -o \
-	$@
-uda1380_drv_la_LIBADD =
-am_uda1380_drv_la_OBJECTS = uda1380.lo uda1380_module.lo
-uda1380_drv_la_OBJECTS = $(am_uda1380_drv_la_OBJECTS)
-uda1380_drv_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(uda1380_drv_la_LDFLAGS) $(LDFLAGS) -o \
-	$@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -190,19 +115,41 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(bt829_drv_la_SOURCES) $(fi1236_drv_la_SOURCES) \
-	$(libi2c_la_SOURCES) $(msp3430_drv_la_SOURCES) \
-	$(tda8425_drv_la_SOURCES) $(tda9850_drv_la_SOURCES) \
-	$(tda9885_drv_la_SOURCES) $(uda1380_drv_la_SOURCES)
-DIST_SOURCES = $(bt829_drv_la_SOURCES) $(fi1236_drv_la_SOURCES) \
-	$(libi2c_la_SOURCES) $(msp3430_drv_la_SOURCES) \
-	$(tda8425_drv_la_SOURCES) $(tda9850_drv_la_SOURCES) \
-	$(tda9885_drv_la_SOURCES) $(uda1380_drv_la_SOURCES)
+SOURCES = $(libi2c_la_SOURCES)
+DIST_SOURCES = $(libi2c_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__uninstall_files_from_dir = { \
+  test -z "$$files" \
+    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
+    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
+         $(am__cd) "$$dir" && rm -f $$files; }; \
+  }
+am__installdirs = "$(DESTDIR)$(sdkdir)"
 HEADERS = $(sdk_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -315,6 +262,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -553,38 +501,10 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libi2c.la
-multimediadir = $(moduledir)/multimedia
-multimedia_LTLIBRARIES = \
-	bt829_drv.la		\
-	fi1236_drv.la		\
-	msp3430_drv.la		\
-	tda8425_drv.la		\
-	tda9850_drv.la		\
-	tda9885_drv.la		\
-	uda1380_drv.la
-
 libi2c_la_SOURCES = xf86i2c.c
 AM_CPPFLAGS = $(XORG_INCS)
 AM_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS)
-sdk_HEADERS = xf86i2c.h bt829.h fi1236.h msp3430.h tda8425.h tda9850.h tda9885.h uda1380.h i2c_def.h
-
-#
-# i2c drivers
-#
-bt829_drv_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
-bt829_drv_la_SOURCES = bt829.c bt829.h bt829_module.c
-fi1236_drv_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
-fi1236_drv_la_SOURCES = fi1236.c fi1236.h fi1236_module.c tda9885.c
-msp3430_drv_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
-msp3430_drv_la_SOURCES = msp3430.c msp3430.h msp3430_module.c
-tda8425_drv_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
-tda8425_drv_la_SOURCES = tda8425.c tda8425.h tda8425_module.c
-tda9850_drv_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
-tda9850_drv_la_SOURCES = tda9850.c tda9850.h tda9850_module.c
-tda9885_drv_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
-tda9885_drv_la_SOURCES = tda9885.c tda9885.h tda9885_module.c
-uda1380_drv_la_LDFLAGS = -module -avoid-version $(LD_NO_UNDEFINED_FLAG)
-uda1380_drv_la_SOURCES = uda1380.c uda1380.h uda1380_module.c
+sdk_HEADERS = xf86i2c.h i2c_def.h
 all: all-am
 
 .SUFFIXES:
@@ -619,40 +539,6 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-multimediaLTLIBRARIES: $(multimedia_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	@list='$(multimedia_LTLIBRARIES)'; test -n "$(multimediadir)" || list=; \
-	list2=; for p in $$list; do \
-	  if test -f $$p; then \
-	    list2="$$list2 $$p"; \
-	  else :; fi; \
-	done; \
-	test -z "$$list2" || { \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(multimediadir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(multimediadir)" || exit 1; \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(multimediadir)'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(multimediadir)"; \
-	}
-
-uninstall-multimediaLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(multimedia_LTLIBRARIES)'; test -n "$(multimediadir)" || list=; \
-	for p in $$list; do \
-	  $(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(multimediadir)/$$f'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(multimediadir)/$$f"; \
-	done
-
-clean-multimediaLTLIBRARIES:
-	-test -z "$(multimedia_LTLIBRARIES)" || rm -f $(multimedia_LTLIBRARIES)
-	@list='$(multimedia_LTLIBRARIES)'; \
-	locs=`for p in $$list; do echo $$p; done | \
-	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
-	      sort -u`; \
-	test -z "$$locs" || { \
-	  echo rm -f $${locs}; \
-	  rm -f $${locs}; \
-	}
 
 clean-noinstLTLIBRARIES:
 	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
@@ -664,22 +550,8 @@ clean-noinstLTLIBRARIES:
 	  echo rm -f $${locs}; \
 	  rm -f $${locs}; \
 	}
-bt829_drv.la: $(bt829_drv_la_OBJECTS) $(bt829_drv_la_DEPENDENCIES) $(EXTRA_bt829_drv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(bt829_drv_la_LINK) -rpath $(multimediadir) $(bt829_drv_la_OBJECTS) $(bt829_drv_la_LIBADD) $(LIBS)
-fi1236_drv.la: $(fi1236_drv_la_OBJECTS) $(fi1236_drv_la_DEPENDENCIES) $(EXTRA_fi1236_drv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(fi1236_drv_la_LINK) -rpath $(multimediadir) $(fi1236_drv_la_OBJECTS) $(fi1236_drv_la_LIBADD) $(LIBS)
 libi2c.la: $(libi2c_la_OBJECTS) $(libi2c_la_DEPENDENCIES) $(EXTRA_libi2c_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK)  $(libi2c_la_OBJECTS) $(libi2c_la_LIBADD) $(LIBS)
-msp3430_drv.la: $(msp3430_drv_la_OBJECTS) $(msp3430_drv_la_DEPENDENCIES) $(EXTRA_msp3430_drv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(msp3430_drv_la_LINK) -rpath $(multimediadir) $(msp3430_drv_la_OBJECTS) $(msp3430_drv_la_LIBADD) $(LIBS)
-tda8425_drv.la: $(tda8425_drv_la_OBJECTS) $(tda8425_drv_la_DEPENDENCIES) $(EXTRA_tda8425_drv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(tda8425_drv_la_LINK) -rpath $(multimediadir) $(tda8425_drv_la_OBJECTS) $(tda8425_drv_la_LIBADD) $(LIBS)
-tda9850_drv.la: $(tda9850_drv_la_OBJECTS) $(tda9850_drv_la_DEPENDENCIES) $(EXTRA_tda9850_drv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(tda9850_drv_la_LINK) -rpath $(multimediadir) $(tda9850_drv_la_OBJECTS) $(tda9850_drv_la_LIBADD) $(LIBS)
-tda9885_drv.la: $(tda9885_drv_la_OBJECTS) $(tda9885_drv_la_DEPENDENCIES) $(EXTRA_tda9885_drv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(tda9885_drv_la_LINK) -rpath $(multimediadir) $(tda9885_drv_la_OBJECTS) $(tda9885_drv_la_LIBADD) $(LIBS)
-uda1380_drv.la: $(uda1380_drv_la_OBJECTS) $(uda1380_drv_la_DEPENDENCIES) $(EXTRA_uda1380_drv_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(uda1380_drv_la_LINK) -rpath $(multimediadir) $(uda1380_drv_la_OBJECTS) $(uda1380_drv_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -687,20 +559,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bt829.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bt829_module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fi1236.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fi1236_module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/msp3430.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/msp3430_module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tda8425.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tda8425_module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tda9850.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tda9850_module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tda9885.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tda9885_module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uda1380.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/uda1380_module.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86i2c.Plo@am__quote@
 
 .c.o:
@@ -851,7 +709,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(multimediadir)" "$(DESTDIR)$(sdkdir)"; do \
+	for dir in "$(DESTDIR)$(sdkdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -886,8 +744,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-multimediaLTLIBRARIES \
-	clean-noinstLTLIBRARIES mostlyclean-am
+clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -907,7 +765,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-multimediaLTLIBRARIES install-sdkHEADERS
+install-data-am: install-sdkHEADERS
 
 install-dvi: install-dvi-am
 
@@ -953,25 +811,23 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-multimediaLTLIBRARIES uninstall-sdkHEADERS
+uninstall-am: uninstall-sdkHEADERS
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-multimediaLTLIBRARIES \
-	clean-noinstLTLIBRARIES cscopelist ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-multimediaLTLIBRARIES install-pdf install-pdf-am \
+	clean-libtool clean-noinstLTLIBRARIES cscopelist ctags \
+	distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
 	install-ps install-ps-am install-sdkHEADERS install-strip \
 	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-multimediaLTLIBRARIES \
-	uninstall-sdkHEADERS
+	tags uninstall uninstall-am uninstall-sdkHEADERS
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

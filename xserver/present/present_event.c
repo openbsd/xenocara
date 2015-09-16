@@ -173,8 +173,8 @@ present_send_complete_notify(WindowPtr window, CARD8 kind, CARD8 mode, CARD32 se
             }
         }
     }
-    if (complete_notify && kind == PresentCompleteKindPixmap)
-        (*complete_notify)(window, mode, serial, ust, msc);
+    if (complete_notify)
+        (*complete_notify)(window, kind, mode, serial, ust, msc);
 }
 
 void

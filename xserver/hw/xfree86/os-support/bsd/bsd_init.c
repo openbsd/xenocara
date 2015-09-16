@@ -668,7 +668,7 @@ int
 xf86ProcessArgument(int argc, char *argv[], int i)
 {
     /*
-     * Keep server from detaching from controlling tty.  This is useful 
+     * Keep server from detaching from controlling tty.  This is useful
      * when debugging (so the server can receive keyboard signals.
      */
     if (!strcmp(argv[i], "-keeptty")) {

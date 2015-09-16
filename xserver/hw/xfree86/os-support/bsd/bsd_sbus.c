@@ -79,7 +79,7 @@ xf86SbusProbe(void)
 		break;
 	}
 
-	sbusInfo.fd = -1;
+	sbusInfo.fd = fd;
 }
 
 _X_EXPORT int
@@ -160,13 +160,14 @@ xf86SbusUseBuiltinMode(ScrnInfoPtr pScrn, sbusDevicePtr psdp)
 _X_EXPORT void *
 xf86MapSbusMem(sbusDevicePtr psdp, unsigned long Base, unsigned long Size)
 {
-	return xf86MapVidMem(0, 0, Base, Size);
+	return mmap((void *)Base, (size_t)Size, PROT_READ|PROT_WRITE,
+		0, psdp->fd, 0);
 }
 
 _X_EXPORT void
 xf86UnmapSbusMem(sbusDevicePtr psdp, void *Base, unsigned long Size)
 {
-	xf86UnMapVidMem(0, Base, Size);
+	munmap(Base, (size_t)Size);
 }
 
 _X_EXPORT void

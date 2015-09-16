@@ -1,9 +1,9 @@
 
 /* xf86DDC.h
  *
- * This file contains all information to interpret a standard EDIC block 
- * transmitted by a display device via DDC (Display Data Channel). So far 
- * there is no information to deal with optional EDID blocks.  
+ * This file contains all information to interpret a standard EDIC block
+ * transmitted by a display device via DDC (Display Data Channel). So far
+ * there is no information to deal with optional EDID blocks.
  * DDC is a Trademark of VESA (Video Electronics Standard Association).
  *
  * Copyright 1998 by Egbert Eich <Egbert.Eich@Physik.TU-Darmstadt.DE>
@@ -47,11 +47,6 @@ extern _X_EXPORT Bool xf86SetDDCproperties(ScrnInfoPtr pScreen, xf86MonPtr DDC);
 
 extern _X_EXPORT Bool
  xf86MonitorIsHDMI(xf86MonPtr mon);
-
-extern _X_EXPORT xf86MonPtr xf86DoDisplayID(ScrnInfoPtr pScrn, I2CBusPtr pBus);
-
-extern _X_EXPORT void
- xf86DisplayIDMonitorSet(int scrnIndex, MonPtr mon, xf86MonPtr DDC);
 
 extern _X_EXPORT DisplayModePtr
 FindDMTMode(int hsize, int vsize, int refresh, Bool rb);

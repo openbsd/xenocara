@@ -260,7 +260,7 @@ ShmDestroyPixmap(PixmapPtr pPixmap)
     pScreen->DestroyPixmap = ShmDestroyPixmap;
 
     if (shmdesc)
-	ShmDetachSegment(shmdesc, pPixmap->drawable.id);
+	ShmDetachSegment(shmdesc, 0);
 
     return ret;
 }
@@ -404,7 +404,7 @@ ProcShmAttach(ClientPtr client)
         }
 
         /* The attach was performed with root privs. We must
-         * do manual checking of access rights for the credentials 
+         * do manual checking of access rights for the credentials
          * of the client */
 
         if (shm_access(client, &(SHM_PERM(buf)), stuff->readOnly) == -1) {
@@ -427,7 +427,7 @@ ProcShmAttach(ClientPtr client)
 
  /*ARGSUSED*/ static int
 ShmDetachSegment(void *value, /* must conform to DeleteType */
-                 XID shmseg)
+                 XID unused)
 {
     ShmDescPtr shmdesc = (ShmDescPtr) value;
     ShmDescPtr *prev;
@@ -971,6 +971,12 @@ ProcPanoramiXShmCreatePixmap(ClientPtr client)
                                                        stuff->offset);
 
         if (pMap) {
+            result = XaceHook(XACE_RESOURCE_ACCESS, client, stuff->pid,
+                              RT_PIXMAP, pMap, RT_NONE, NULL, DixCreateAccess);
+            if (result != Success) {
+                pDraw->pScreen->DestroyPixmap(pMap);
+                return result;
+            }
             dixSetPrivate(&pMap->devPrivates, shmPixmapPrivateKey, shmdesc);
             shmdesc->refcnt++;
             pMap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
@@ -1147,7 +1153,7 @@ ProcShmAttachFd(ClientPtr client)
                          fd, 0);
 
     close(fd);
-    if ((shmdesc->addr == ((char *) -1))) {
+    if (shmdesc->addr == ((char *) -1)) {
         free(shmdesc);
         return BadAccess;
     }
@@ -1237,7 +1243,7 @@ ProcShmCreateSegment(ClientPtr client)
                          MAP_SHARED|__MAP_NOFAULT,
                          fd, 0);
 
-    if ((shmdesc->addr == ((char *) -1))) {
+    if (shmdesc->addr == ((char *) -1)) {
         close(fd);
         free(shmdesc);
         return BadAccess;

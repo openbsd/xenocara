@@ -124,7 +124,7 @@ am__installdirs = "$(DESTDIR)$(moduledir)"
 LTLIBRARIES = $(module_LTLIBRARIES)
 libglamoregl_la_DEPENDENCIES = $(top_builddir)/glamor/libglamor.la
 am_libglamoregl_la_OBJECTS = glamor_egl.lo glamor_eglmodule.lo \
-	glamor_xv.lo
+	glamor_xf86_xv.lo
 libglamoregl_la_OBJECTS = $(am_libglamoregl_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -286,6 +286,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -527,7 +528,7 @@ module_LTLIBRARIES = libglamoregl.la
 libglamoregl_la_SOURCES = \
 	$(top_srcdir)/glamor/glamor_egl.c \
 	$(top_srcdir)/glamor/glamor_eglmodule.c \
-	$(top_srcdir)/glamor/glamor_xv.c \
+	glamor_xf86_xv.c \
 	$()
 
 libglamoregl_la_LDFLAGS = \
@@ -541,6 +542,7 @@ libglamoregl_la_LIBADD = \
 
 AM_CPPFLAGS = $(XORG_INCS) \
 	-I$(top_srcdir)/dri3 \
+	-I$(top_srcdir)/glamor \
 	$()
 
 AM_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS) $(GLAMOR_CFLAGS) $(GBM_CFLAGS)
@@ -623,7 +625,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_egl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_eglmodule.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_xv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_xf86_xv.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -659,13 +661,6 @@ glamor_eglmodule.lo: $(top_srcdir)/glamor/glamor_eglmodule.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/glamor/glamor_eglmodule.c' object='glamor_eglmodule.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o glamor_eglmodule.lo `test -f '$(top_srcdir)/glamor/glamor_eglmodule.c' || echo '$(srcdir)/'`$(top_srcdir)/glamor/glamor_eglmodule.c
-
-glamor_xv.lo: $(top_srcdir)/glamor/glamor_xv.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT glamor_xv.lo -MD -MP -MF $(DEPDIR)/glamor_xv.Tpo -c -o glamor_xv.lo `test -f '$(top_srcdir)/glamor/glamor_xv.c' || echo '$(srcdir)/'`$(top_srcdir)/glamor/glamor_xv.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/glamor_xv.Tpo $(DEPDIR)/glamor_xv.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(top_srcdir)/glamor/glamor_xv.c' object='glamor_xv.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o glamor_xv.lo `test -f '$(top_srcdir)/glamor/glamor_xv.c' || echo '$(srcdir)/'`$(top_srcdir)/glamor/glamor_xv.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

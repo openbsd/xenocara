@@ -91,7 +91,7 @@ present_flip_pending_pixmap(ScreenPtr screen)
 
     if (!screen_priv->flip_pending)
         return NULL;
-        
+
     return screen_priv->flip_pending->pixmap;
 }
 
@@ -291,14 +291,18 @@ present_window_to_crtc_msc(WindowPtr window, RRCrtcPtr crtc, uint64_t window_msc
     if (crtc != window_priv->crtc) {
         uint64_t        old_ust, old_msc;
 
-        /* The old CRTC may have been turned off, in which case
-         * we'll just use whatever previous MSC we'd seen from this CRTC
-         */
+        if (window_priv->crtc == PresentCrtcNeverSet) {
+            window_priv->msc_offset = 0;
+        } else {
+            /* The old CRTC may have been turned off, in which case
+             * we'll just use whatever previous MSC we'd seen from this CRTC
+             */
 
-        if (present_get_ust_msc(window->drawable.pScreen, window_priv->crtc, &old_ust, &old_msc) != Success)
-            old_msc = window_priv->msc;
+            if (present_get_ust_msc(window->drawable.pScreen, window_priv->crtc, &old_ust, &old_msc) != Success)
+                old_msc = window_priv->msc;
 
-        window_priv->msc_offset += new_msc - old_msc;
+            window_priv->msc_offset += new_msc - old_msc;
+        }
         window_priv->crtc = crtc;
     }
 
@@ -368,7 +372,7 @@ present_set_tree_pixmap_visit(WindowPtr window, void *data)
     (*screen->SetWindowPixmap)(window, visit->new);
     return WT_WALKCHILDREN;
 }
-    
+
 static void
 present_set_tree_pixmap(WindowPtr window, PixmapPtr pixmap)
 {
@@ -395,7 +399,8 @@ present_set_abort_flip(ScreenPtr screen)
         present_set_tree_pixmap(screen_priv->flip_window,
                                   (*screen->GetScreenPixmap)(screen));
 
-    present_set_tree_pixmap(screen->root, (*screen->GetScreenPixmap)(screen));
+    if (screen->root)
+        present_set_tree_pixmap(screen->root, (*screen->GetScreenPixmap)(screen));
 
     screen_priv->flip_pending->abort_flip = TRUE;
 }
@@ -404,20 +409,20 @@ static void
 present_unflip(ScreenPtr screen)
 {
     present_screen_priv_ptr screen_priv = present_screen_priv(screen);
+    PixmapPtr pixmap = (*screen->GetScreenPixmap)(screen);
 
     assert (!screen_priv->unflip_event_id);
     assert (!screen_priv->flip_pending);
 
     if (screen_priv->flip_window)
-        present_set_tree_pixmap(screen_priv->flip_window,
-                                  (*screen->GetScreenPixmap)(screen));
+        present_set_tree_pixmap(screen_priv->flip_window, pixmap);
 
-    present_set_tree_pixmap(screen->root, (*screen->GetScreenPixmap)(screen));
+    present_set_tree_pixmap(screen->root, pixmap);
 
     /* Update the screen pixmap with the current flip pixmap contents
      */
     if (screen_priv->flip_pixmap && screen_priv->flip_window) {
-        present_copy_region(&screen_priv->flip_window->drawable,
+        present_copy_region(&pixmap->drawable,
                             screen_priv->flip_pixmap,
                             NULL, 0, 0);
     }
@@ -725,7 +730,7 @@ present_pixmap(WindowPtr window,
         if (!pixmap)
             target_crtc = window_priv->crtc;
 
-        if (!target_crtc)
+        if (!target_crtc || target_crtc == PresentCrtcNeverSet)
             target_crtc = present_get_crtc(window);
     }
 
@@ -866,19 +871,18 @@ present_pixmap(WindowPtr window,
     vblank->queued = TRUE;
     if ((pixmap && target_msc >= crtc_msc) || (!pixmap && target_msc > crtc_msc)) {
         ret = present_queue_vblank(screen, target_crtc, vblank->event_id, target_msc);
-        if (ret != Success) {
-            xorg_list_del(&vblank->event_queue);
-            vblank->queued = FALSE;
-            goto failure;
-        }
-    } else
-        present_execute(vblank, ust, crtc_msc);
+        if (ret == Success)
+            return Success;
+
+        DebugPresent(("present_queue_vblank failed\n"));
+    }
+
+    present_execute(vblank, ust, crtc_msc);
 
     return Success;
 
 no_mem:
     ret = BadAlloc;
-failure:
     vblank->notifies = NULL;
     present_vblank_destroy(vblank);
     return ret;
@@ -936,11 +940,12 @@ present_flip_destroy(ScreenPtr screen)
 {
     present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
 
-    /* XXX this needs to be synchronous for server reset */
-
-    /* Do the actual cleanup once the flip has been performed by the hardware */
+    /* Reset window pixmaps back to the screen pixmap */
     if (screen_priv->flip_pending)
         present_set_abort_flip(screen);
+
+    /* Drop reference to any pending flip or unflip pixmaps. */
+    present_flip_idle(screen);
 }
 
 void

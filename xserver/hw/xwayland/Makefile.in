@@ -53,6 +53,9 @@ host_triplet = @host@
 bin_PROGRAMS = Xwayland$(EXEEXT)
 @GLAMOR_EGL_TRUE@am__append_1 = xwayland-glamor.c
 @GLAMOR_EGL_TRUE@am__append_2 = $(GLAMOR_LIBS) $(GBM_LIBS) -lEGL -lGL
+@GLAMOR_EGL_FALSE@Xwayland_DEPENDENCIES = $(glamor_lib) \
+@GLAMOR_EGL_FALSE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+@GLAMOR_EGL_FALSE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 subdir = hw/xwayland
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -256,6 +259,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -508,7 +512,6 @@ Xwayland_SOURCES = xwayland.c xwayland-input.c xwayland-cursor.c \
 	$(top_srcdir)/mi/miinitext.c $(am__append_1)
 Xwayland_LDADD = $(glamor_lib) $(XWAYLAND_LIBS) $(XWAYLAND_SYS_LIBS) \
 	$(XSERVER_SYS_LIBS) $(am__append_2)
-Xwayland_DEPENDENCIES = $(XWAYLAND_LIBS)
 Xwayland_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 @GLAMOR_EGL_TRUE@nodist_Xwayland_SOURCES = \
 @GLAMOR_EGL_TRUE@	drm-client-protocol.h			\
@@ -516,6 +519,7 @@ Xwayland_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 
 @GLAMOR_EGL_TRUE@CLEANFILES = $(nodist_Xwayland_SOURCES)
 @GLAMOR_EGL_TRUE@glamor_lib = $(top_builddir)/glamor/libglamor.la
+@GLAMOR_EGL_TRUE@Xwayland_DEPENDENCIES = $(glamor_lib)
 EXTRA_DIST = drm.xml
 all: all-am
 

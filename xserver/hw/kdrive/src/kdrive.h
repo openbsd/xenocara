@@ -89,6 +89,8 @@ typedef struct _KdScreenInfo {
     ScreenPtr pScreen;
     void *driver;
     Rotation randr;             /* rotation and reflection */
+    int x;
+    int y;
     int width;
     int height;
     int rate;
@@ -130,6 +132,7 @@ typedef struct _KdCardFuncs {
     void (*getColors) (ScreenPtr, int, xColorItem *);
     void (*putColors) (ScreenPtr, int, xColorItem *);
 
+    void (*closeScreen) (ScreenPtr);    /* close ScreenRec */
 } KdCardFuncs;
 
 #define KD_MAX_PSEUDO_DEPTH 8
@@ -326,19 +329,6 @@ extern const int kdNumMonitorTimings;
 typedef struct _KdPointerMatrix {
     int matrix[2][3];
 } KdPointerMatrix;
-
-/*
- * This is the only completely portable way to
- * compute this info.
- */
-
-#ifndef BitsPerPixel
-#define BitsPerPixel(d) (\
-    PixmapWidthPaddingInfo[d].notPower2 ? \
-    (PixmapWidthPaddingInfo[d].bytesPerPixel * 8) : \
-    ((1 << PixmapWidthPaddingInfo[d].padBytesLog2) * 8 / \
-    (PixmapWidthPaddingInfo[d].padRoundUp+1)))
-#endif
 
 extern DevPrivateKeyRec kdScreenPrivateKeyRec;
 

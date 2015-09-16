@@ -66,23 +66,10 @@ typedef WINAPI HRESULT(*SHGETFOLDERPATHPROC) (HWND hwndOwner,
 /*
  * References to external symbols
  */
-#ifdef XWIN_CLIPBOARD
-extern Bool g_fUnicodeClipboard;
-extern Bool g_fClipboardLaunched;
-extern Bool g_fClipboardStarted;
-extern pthread_t g_ptClipboardProc;
-extern HWND g_hwndClipboard;
-extern Bool g_fClipboard;
-#endif
 
 /*
  * Function prototypes
  */
-
-#ifdef XWIN_CLIPBOARD
-static void
- winClipboardShutdown(void);
-#endif
 
 static Bool
  winCheckDisplayNumber(void);
@@ -124,31 +111,6 @@ static PixmapFormatRec g_PixmapFormats[] = {
 };
 
 const int NUMFORMATS = sizeof(g_PixmapFormats) / sizeof(g_PixmapFormats[0]);
-
-#ifdef XWIN_CLIPBOARD
-static void
-winClipboardShutdown(void)
-{
-    /* Close down clipboard resources */
-    if (g_fClipboard && g_fClipboardLaunched && g_fClipboardStarted) {
-        /* Synchronously destroy the clipboard window */
-        if (g_hwndClipboard != NULL) {
-            SendMessage(g_hwndClipboard, WM_DESTROY, 0, 0);
-            /* NOTE: g_hwndClipboard is set to NULL in winclipboardthread.c */
-        }
-        else
-            return;
-
-        /* Wait for the clipboard thread to exit */
-        pthread_join(g_ptClipboardProc, NULL);
-
-        g_fClipboardLaunched = FALSE;
-        g_fClipboardStarted = FALSE;
-
-        winDebug("winClipboardShutdown - Clipboard thread has exited.\n");
-    }
-}
-#endif
 
 static const ExtensionModule xwinExtensions[] = {
 #ifdef GLXEXT
@@ -666,9 +628,9 @@ OsVendorInit(void)
 
     if (!g_fLogInited) {
         /* keep this order. If LogInit fails it calls Abort which then calls
-         * ddxGiveUp where LogInit is called again and creates an infinite 
-         * recursion. If we set g_fLogInited to TRUE before the init we 
-         * avoid the second call 
+         * ddxGiveUp where LogInit is called again and creates an infinite
+         * recursion. If we set g_fLogInited to TRUE before the init we
+         * avoid the second call
          */
         g_fLogInited = TRUE;
         g_pszLogFile = LogInit(g_pszLogFile, NULL);
@@ -773,12 +735,6 @@ winUseMsg(void)
            "\t\t1 - Shadow GDI\n"
            "\t\t2 - Shadow DirectDraw\n"
            "\t\t4 - Shadow DirectDraw4 Non-Locking\n"
-#ifdef XWIN_PRIMARYFB
-           "\t\t8 - Primary DirectDraw - obsolete\n"
-#endif
-#ifdef XWIN_NATIVEGDI
-           "\t\t16 - Native GDI - experimental\n"
-#endif
         );
 
     ErrorF("-fullscreen\n" "\tRun the server in fullscreen mode.\n");
@@ -837,6 +793,10 @@ winUseMsg(void)
 #ifdef XWIN_CLIPBOARD
     ErrorF("-nounicodeclipboard\n"
            "\tDo not use Unicode clipboard even if on a NT-based platform.\n");
+
+    ErrorF("-[no]primary\n"
+           "\tWhen clipboard integration is enabled, map the X11 PRIMARY selection\n"
+           "\tto the Windows clipboard. Default is enabled.\n");
 #endif
 
     ErrorF("-refresh rate_in_Hz\n"
@@ -929,7 +889,7 @@ ddxUseMsg(void)
 /* See Porting Layer Definition - p. 20 */
 /*
  * Do any global initialization, then initialize each screen.
- * 
+ *
  * NOTE: We use ddxProcessArgument, so we don't need to touch argc and argv
  */
 
@@ -1048,7 +1008,7 @@ winCheckDisplayNumber(void)
     int nDisp;
     HANDLE mutex;
     char name[MAX_PATH];
-    char *pszPrefix = '\0';
+    const char *pszPrefix = '\0';
     OSVERSIONINFO osvi = { 0 };
 
     /* Check display range */

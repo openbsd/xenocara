@@ -132,7 +132,6 @@ typedef struct _Picture {
     unsigned int polyEdge:1;
     unsigned int polyMode:1;
     unsigned int freeCompClip:1;
-    unsigned int clientClipType:2;
     unsigned int componentAlpha:1;
     unsigned int repeatType:2;
     unsigned int filter:3;
@@ -145,7 +144,7 @@ typedef struct _Picture {
     DDXPointRec alphaOrigin;
 
     DDXPointRec clipOrigin;
-    void *clientClip;
+    RegionPtr clientClip;
 
     unsigned long serialNumber;
 
@@ -474,9 +473,6 @@ SetPictureClipRegion(PicturePtr pPicture,
 
 extern _X_EXPORT int
  SetPictureTransform(PicturePtr pPicture, PictTransform * transform);
-
-extern _X_EXPORT void
- CopyPicture(PicturePtr pSrc, Mask mask, PicturePtr pDst);
 
 extern _X_EXPORT void
  ValidatePicture(PicturePtr pPicture);

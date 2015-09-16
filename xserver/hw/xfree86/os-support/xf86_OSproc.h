@@ -14,19 +14,19 @@
  * documentation for any purpose is hereby granted without fee, provided that
  * the above copyright notice appear in all copies and that both that
  * copyright notice and this permission notice appear in supporting
- * documentation, and that the names of the above listed copyright holders 
- * not be used in advertising or publicity pertaining to distribution of 
+ * documentation, and that the names of the above listed copyright holders
+ * not be used in advertising or publicity pertaining to distribution of
  * the software without specific, written prior permission.  The above listed
- * copyright holders make no representations about the suitability of this 
- * software for any purpose.  It is provided "as is" without express or 
+ * copyright holders make no representations about the suitability of this
+ * software for any purpose.  It is provided "as is" without express or
  * implied warranty.
  *
- * THE ABOVE LISTED COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD 
- * TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
- * AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDERS BE 
- * LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY 
- * DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER 
- * IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING 
+ * THE ABOVE LISTED COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD
+ * TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS, IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY
+ * DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+ * IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
  * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
@@ -36,7 +36,7 @@
  *
  * Copyright 1997
  * Digital Equipment Corporation. All rights reserved.
- * This software is furnished under license and may be used and copied only in 
+ * This software is furnished under license and may be used and copied only in
  * accordance with the following terms and conditions.  Subject to these
  * conditions, you may download, copy, install, use, modify and distribute
  * this software in source and/or binary form. No title or ownership is
@@ -46,7 +46,7 @@
  *    this copyright notice and list of conditions as they appear in the
  *    source file.
  *
- * 2) No right is granted to use any trade name, trademark, or logo of Digital 
+ * 2) No right is granted to use any trade name, trademark, or logo of Digital
  *    Equipment Corporation. Neither the "Digital Equipment Corporation"
  *    name nor any trademark or logo of Digital Equipment Corporation may be
  *    used to endorse or promote products derived from this software without
@@ -58,9 +58,9 @@
  *    In no event shall DIGITAL be liable for any damages whatsoever, and in
  *    particular, DIGITAL shall not be liable for special, indirect,
  *    consequential, or incidental damages or damages for lost profits, loss
- *    of revenue or loss of use, whether such damages arise in contract, 
+ *    of revenue or loss of use, whether such damages arise in contract,
  *    negligence, tort, under statute, in equity, at law or otherwise, even
- *    if advised of the possibility of such damage. 
+ *    if advised of the possibility of such damage.
  *
  */
 
@@ -72,24 +72,6 @@
  * that they can can be used without pulling in all of the OS specific
  * stuff like sys/stat.h, etc. This casues problem for loadable modules.
  */
-
-/*
- * Flags for xf86MapVidMem().  Multiple flags can be or'd together.  The
- * flags may be used as hints.  For example it would be permissible to
- * enable write combining for memory marked only for framebuffer use.
- */
-
-#define VIDMEM_FRAMEBUFFER	0x01    /* memory for framebuffer use */
-#define VIDMEM_MMIO		0x02    /* memory for I/O use */
-#define VIDMEM_MMIO_32BIT	0x04    /* memory accesses >= 32bit */
-#define VIDMEM_READSIDEEFFECT	0x08    /* reads can have side-effects */
-#define VIDMEM_SPARSE		0x10    /* sparse mapping required
-                                         * assumed when VIDMEM_MMIO is
-                                         * set. May be used with
-                                         * VIDMEM_FRAMEBUFFER) */
-#define VIDMEM_READONLY		0x20    /* read-only mapping
-                                         * used when reading BIOS images
-                                         * through xf86MapVidMem() */
 
 /*
  * OS-independent modem state flags for xf86SetSerialModemState() and
@@ -130,14 +112,6 @@
 _XFUNCPROTOBEGIN
 
 /* public functions */
-extern _X_EXPORT Bool xf86LinearVidMem(void);
-extern _X_EXPORT _X_DEPRECATED Bool xf86CheckMTRR(int);
-extern _X_EXPORT _X_DEPRECATED void *xf86MapVidMem(int, int, unsigned long,
-                                                     unsigned long);
-extern _X_EXPORT _X_DEPRECATED void xf86UnMapVidMem(int, void *,
-                                                    unsigned long);
-extern _X_EXPORT int xf86ReadBIOS(unsigned long, unsigned long, unsigned char *,
-                                  int);
 extern _X_EXPORT Bool xf86EnableIO(void);
 extern _X_EXPORT void xf86DisableIO(void);
 

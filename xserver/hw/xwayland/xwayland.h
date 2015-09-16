@@ -27,7 +27,6 @@
 #define XWAYLAND_H
 
 #include <dix-config.h>
-#include <xorg-server.h>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -103,6 +102,7 @@ struct xwl_window {
     WindowPtr window;
     DamagePtr damage;
     struct xorg_list link_damage;
+    struct wl_callback *frame_callback;
 };
 
 #define MODIFIER_META 0x01
@@ -115,16 +115,14 @@ struct xwl_seat {
     struct wl_pointer *wl_pointer;
     struct wl_keyboard *wl_keyboard;
     struct wl_array keys;
-    struct wl_surface *cursor;
     struct xwl_window *focus_window;
     uint32_t id;
     uint32_t pointer_enter_serial;
     struct xorg_list link;
     CursorPtr x_cursor;
-
-    wl_fixed_t horizontal_scroll;
-    wl_fixed_t vertical_scroll;
-    uint32_t scroll_time;
+    struct wl_surface *cursor;
+    struct wl_callback *cursor_frame_cb;
+    Bool cursor_needs_update;
 
     size_t keymap_size;
     char *keymap;

@@ -77,12 +77,8 @@ typedef struct _pattern {
 static char *FindModule(const char *, const char *, const char **, PatternPtr);
 static Bool CheckVersion(const char *, XF86ModuleVersionInfo *,
                          const XF86ModReqInfo *);
-static void UnloadModuleOrDriver(ModuleDescPtr mod);
 static char *LoaderGetCanonicalName(const char *, PatternPtr);
 static void RemoveChild(ModuleDescPtr);
-static ModuleDescPtr doLoadModule(const char *, const char *, const char **,
-                                  const char **, void *,
-                                  const XF86ModReqInfo *, int *, int *);
 
 const ModuleVersions LoaderVersionInfo = {
     XORG_VERSION_CURRENT,
@@ -197,7 +193,6 @@ static const char *stdSubdirs[] = {
     "",
     "input/",
     "drivers/",
-    "multimedia/",
     "extensions/",
     "internal/",
     NULL
@@ -585,7 +580,6 @@ CheckVersion(const char *module, XF86ModuleVersionInfo * data,
              const XF86ModReqInfo * req)
 {
     int vercode[4];
-    char verstr[4];
     long ver = data->xf86version;
     MessageType errtype;
 
@@ -593,42 +587,15 @@ CheckVersion(const char *module, XF86ModuleVersionInfo * data,
             data->modname ? data->modname : "UNKNOWN!",
             data->vendor ? data->vendor : "UNKNOWN!");
 
-    /* Check for the different scheme used in XFree86 4.0.x releases:
-     * ((((((((major << 7) | minor) << 7) | subminor) << 5) | beta) << 5) | alpha)
-     * Since it wasn't used in 4.1.0 or later, limit to versions in the 4.0.x
-     * range, which limits the overlap with the new version scheme to conflicts
-     * with 6.71.8.764 through 6.72.39.934.
-     */
-    if ((ver > (4 << 24)) && (ver < ((4 << 24) + (1 << 17)))) {
-        /* 4.0.x and earlier */
-        verstr[1] = verstr[3] = 0;
-        verstr[2] = (ver & 0x1f) ? (ver & 0x1f) + 'a' - 1 : 0;
-        ver >>= 5;
-        verstr[0] = (ver & 0x1f) ? (ver & 0x1f) + 'A' - 1 : 0;
-        ver >>= 5;
-        vercode[2] = ver & 0x7f;
-        ver >>= 7;
-        vercode[1] = ver & 0x7f;
-        ver >>= 7;
-        vercode[0] = ver;
-        xf86ErrorF("\tcompiled for %d.%d", vercode[0], vercode[1]);
-        if (vercode[2] != 0)
-            xf86ErrorF(".%d", vercode[2]);
-        xf86ErrorF("%s%s, module version = %d.%d.%d\n", verstr, verstr + 2,
-                   data->majorversion, data->minorversion, data->patchlevel);
-    }
-    else {
-        vercode[0] = ver / 10000000;
-        vercode[1] = (ver / 100000) % 100;
-        vercode[2] = (ver / 1000) % 100;
-        vercode[3] = ver % 1000;
-        xf86ErrorF("\tcompiled for %d.%d.%d", vercode[0], vercode[1],
-                   vercode[2]);
-        if (vercode[3] != 0)
-            xf86ErrorF(".%d", vercode[3]);
-        xf86ErrorF(", module version = %d.%d.%d\n", data->majorversion,
-                   data->minorversion, data->patchlevel);
-    }
+    vercode[0] = ver / 10000000;
+    vercode[1] = (ver / 100000) % 100;
+    vercode[2] = (ver / 1000) % 100;
+    vercode[3] = ver % 1000;
+    xf86ErrorF("\tcompiled for %d.%d.%d", vercode[0], vercode[1], vercode[2]);
+    if (vercode[3] != 0)
+        xf86ErrorF(".%d", vercode[3]);
+    xf86ErrorF(", module version = %d.%d.%d\n", data->majorversion,
+               data->minorversion, data->patchlevel);
 
     if (data->moduleclass)
         xf86ErrorFVerb(2, "\tModule class: %s\n", data->moduleclass);
@@ -783,8 +750,8 @@ LoadSubModule(void *_parent, const char *module,
         return NULL;
     }
 
-    submod = doLoadModule(module, NULL, subdirlist, patternlist, options,
-                          modreq, errmaj, errmin);
+    submod = LoadModule(module, NULL, subdirlist, patternlist, options,
+                        modreq, errmaj, errmin);
     if (submod && submod != (ModuleDescPtr) 1) {
         parent->child = AddSibling(parent->child, submod);
         submod->parent = parent;
@@ -847,10 +814,47 @@ static const char *compiled_in_modules[] = {
     NULL
 };
 
-static ModuleDescPtr
-doLoadModule(const char *module, const char *path, const char **subdirlist,
-             const char **patternlist, void *options,
-             const XF86ModReqInfo * modreq, int *errmaj, int *errmin)
+/*
+ * LoadModule: load a module
+ *
+ * module       The module name.  Normally this is not a filename but the
+ *              module's "canonical name.  A full pathname is, however,
+ *              also accepted.
+ * path         A comma separated list of module directories.
+ * subdirlist   A NULL terminated list of subdirectories to search.  When
+ *              NULL, the default "stdSubdirs" list is used.  The default
+ *              list is also substituted for entries with value DEFAULT_LIST.
+ * patternlist  A NULL terminated list of regular expressions used to find
+ *              module filenames.  Each regex should contain exactly one
+ *              subexpression that corresponds to the canonical module name.
+ *              When NULL, the default "stdPatterns" list is used.  The
+ *              default list is also substituted for entries with value
+ *              DEFAULT_LIST.
+ * options      A NULL terminated list of Options that are passed to the
+ *              module's SetupProc function.
+ * modreq       An optional XF86ModReqInfo* containing
+ *              version/ABI/vendor-ABI requirements to check for when
+ *              loading the module.  The following fields of the
+ *              XF86ModReqInfo struct are checked:
+ *                majorversion - must match the module's majorversion exactly
+ *                minorversion - the module's minorversion must be >= this
+ *                patchlevel   - the module's minorversion.patchlevel must be
+ *                               >= this.  Patchlevel is ignored when
+ *                               minorversion is not set.
+ *                abiclass     - (string) must match the module's abiclass
+ *                abiversion   - must be consistent with the module's
+ *                               abiversion (major equal, minor no older)
+ *                moduleclass  - string must match the module's moduleclass
+ *                               string
+ *              "don't care" values are ~0 for numbers, and NULL for strings
+ * errmaj       Major error return.
+ * errmin       Minor error return.
+ *
+ */
+ModuleDescPtr
+LoadModule(const char *module, const char *path, const char **subdirlist,
+           const char **patternlist, void *options,
+           const XF86ModReqInfo * modreq, int *errmaj, int *errmin)
 {
     XF86ModuleData *initdata = NULL;
     char **pathlist = NULL;
@@ -914,7 +918,7 @@ doLoadModule(const char *module, const char *path, const char **subdirlist,
         goto LoadModule_fail;
     }
 
-    /* 
+    /*
      * if the module name is not a full pathname, we need to
      * check the elements in the path
      */
@@ -934,7 +938,7 @@ doLoadModule(const char *module, const char *path, const char **subdirlist,
         }
     }
 
-    /* 
+    /*
      * did we find the module?
      */
     if (!found) {
@@ -1038,61 +1042,11 @@ doLoadModule(const char *module, const char *path, const char **subdirlist,
     return ret;
 }
 
-/*
- * LoadModule: load a module
- *
- * module       The module name.  Normally this is not a filename but the
- *              module's "canonical name.  A full pathname is, however,
- *              also accepted.
- * path         A comma separated list of module directories.
- * subdirlist   A NULL terminated list of subdirectories to search.  When
- *              NULL, the default "stdSubdirs" list is used.  The default
- *              list is also substituted for entries with value DEFAULT_LIST.
- * patternlist  A NULL terminated list of regular expressions used to find
- *              module filenames.  Each regex should contain exactly one
- *              subexpression that corresponds to the canonical module name.
- *              When NULL, the default "stdPatterns" list is used.  The
- *              default list is also substituted for entries with value
- *              DEFAULT_LIST.
- * options      A NULL terminated list of Options that are passed to the
- *              module's SetupProc function.
- * modreq       An optional XF86ModReqInfo* containing
- *              version/ABI/vendor-ABI requirements to check for when
- *              loading the module.  The following fields of the
- *              XF86ModReqInfo struct are checked:
- *                majorversion - must match the module's majorversion exactly
- *                minorversion - the module's minorversion must be >= this
- *                patchlevel   - the module's minorversion.patchlevel must be
- *                               >= this.  Patchlevel is ignored when
- *                               minorversion is not set.
- *                abiclass     - (string) must match the module's abiclass
- *                abiversion   - must be consistent with the module's
- *                               abiversion (major equal, minor no older)
- *                moduleclass  - string must match the module's moduleclass
- *                               string
- *              "don't care" values are ~0 for numbers, and NULL for strings
- * errmaj       Major error return.
- * errmin       Minor error return.
- *
- */
-ModuleDescPtr
-LoadModule(const char *module, const char *path, const char **subdirlist,
-           const char **patternlist, void *options,
-           const XF86ModReqInfo * modreq, int *errmaj, int *errmin)
-{
-    return doLoadModule(module, path, subdirlist, patternlist, options,
-                        modreq, errmaj, errmin);
-}
-
 void
-UnloadModule(void *mod)
+UnloadModule(void *_mod)
 {
-    UnloadModuleOrDriver((ModuleDescPtr) mod);
-}
+    ModuleDescPtr mod = _mod;
 
-static void
-UnloadModuleOrDriver(ModuleDescPtr mod)
-{
     if (mod == (ModuleDescPtr) 1)
         return;
 
@@ -1112,9 +1066,9 @@ UnloadModuleOrDriver(ModuleDescPtr mod)
     }
 
     if (mod->child)
-        UnloadModuleOrDriver(mod->child);
+        UnloadModule(mod->child);
     if (mod->sib)
-        UnloadModuleOrDriver(mod->sib);
+        UnloadModule(mod->sib);
     free(mod->path);
     free(mod->name);
     free(mod);
@@ -1129,7 +1083,7 @@ UnloadSubModule(void *_mod)
     if (mod == (ModuleDescPtr) 1)
         return;
     RemoveChild(mod);
-    UnloadModuleOrDriver(mod);
+    UnloadModule(mod);
 }
 
 static void

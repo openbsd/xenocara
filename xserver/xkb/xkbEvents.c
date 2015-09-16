@@ -6,19 +6,19 @@ software and its documentation for any purpose and without
 fee is hereby granted, provided that the above copyright
 notice appear in all copies and that both that copyright
 notice and this permission notice appear in supporting
-documentation, and that the name of Silicon Graphics not be 
-used in advertising or publicity pertaining to distribution 
+documentation, and that the name of Silicon Graphics not be
+used in advertising or publicity pertaining to distribution
 of the software without specific prior written permission.
-Silicon Graphics makes no representation about the suitability 
+Silicon Graphics makes no representation about the suitability
 of this software for any purpose. It is provided "as is"
 without any express or implied warranty.
 
-SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
-SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
 AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
-GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
-DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
-DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
 OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
 THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -237,7 +237,6 @@ XkbSendStateNotify(DeviceIntPtr kbd, xkbStateNotify * pSN)
 
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (interest->stateNotifyMask & changed)) {
             pSN->sequenceNumber = interest->client->sequence;
@@ -400,7 +399,6 @@ XkbSendControlsNotify(DeviceIntPtr kbd, xkbControlsNotify * pCN)
     pCN->numGroups = xkbi->desc->ctrls->num_groups;
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (interest->ctrlsNotifyMask & changedControls)) {
             if (!initialized) {
@@ -447,7 +445,6 @@ XkbSendIndicatorNotify(DeviceIntPtr kbd, int xkbType, xkbIndicatorNotify * pEv)
     changed = pEv->changed;
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (((xkbType == XkbIndicatorStateNotify) &&
               (interest->iStateNotifyMask & changed)) ||
@@ -528,7 +525,6 @@ XkbHandleBell(BOOL force,
     initialized = 0;
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (interest->bellNotifyMask)) {
             if (!initialized) {
@@ -581,7 +577,6 @@ XkbSendAccessXNotify(DeviceIntPtr kbd, xkbAccessXNotify * pEv)
     db_delay = pEv->debounceDelay;
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (interest->accessXNotifyMask & (1 << pEv->detail))) {
             if (!initialized) {
@@ -627,7 +622,6 @@ XkbSendNamesNotify(DeviceIntPtr kbd, xkbNamesNotify * pEv)
     changedVirtualMods = pEv->changedVirtualMods;
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (interest->namesNotifyMask & pEv->changed)) {
             if (!initialized) {
@@ -671,7 +665,6 @@ XkbSendCompatMapNotify(DeviceIntPtr kbd, xkbCompatMapNotify * pEv)
     initialized = 0;
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (interest->compatNotifyMask)) {
             if (!initialized) {
@@ -722,7 +715,6 @@ XkbSendActionMessage(DeviceIntPtr kbd, xkbActionMessage * pEv)
     pEv->group = xkbi->state.group;
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (interest->actionMessageMask)) {
             if (!initialized) {
@@ -766,7 +758,6 @@ XkbSendExtensionDeviceNotify(DeviceIntPtr dev,
     state = pEv->ledState;
     while (interest) {
         if ((!interest->client->clientGone) &&
-            (interest->client->requestVector != InitialVector) &&
             (interest->client->xkbClientFlags & _XkbClientInitialized) &&
             (interest->extDevNotifyMask & reason)) {
             if (!initialized) {

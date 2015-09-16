@@ -51,19 +51,21 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @ENABLE_UNIT_TESTS_TRUE@noinst_PROGRAMS = list$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@	string$(EXEEXT) $(am__EXEEXT_1)
+@ENABLE_UNIT_TESTS_TRUE@	string$(EXEEXT) $(am__EXEEXT_1) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__EXEEXT_2)
 # Tests that require at least some DDX functions in order to fully link
 # For now, requires xf86 ddx, could be adjusted to use another
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_1 = xi1 xi2
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_2 = xkb input xtest misc fixes xfree86 hashtabletest os signal-logging touch
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_3 = -I$(top_srcdir)/hw/xfree86/parser \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_2 = xkb input xtest misc fixes xfree86 os signal-logging touch
+@ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__append_3 = hashtabletest
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_4 = -I$(top_srcdir)/hw/xfree86/parser \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/ddc \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/i2c -I$(top_srcdir)/hw/xfree86/modes \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/ramdac -I$(top_srcdir)/hw/xfree86/dri \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	-I$(top_srcdir)/hw/xfree86/dri2 -I$(top_srcdir)/dri3
 
-@ENABLE_UNIT_TESTS_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@am__append_4 = $(OS_LIB) $(DIX_LIB)
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_5 = \
+@ENABLE_UNIT_TESTS_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@am__append_5 = $(OS_LIB) $(DIX_LIB)
+@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_6 = \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/loader/libloader.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/os-support/libxorgos.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/common/libcommon.la \
@@ -76,10 +78,10 @@ host_triplet = @host@
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            $(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@            @XORG_LIBS@
 
-@DRI_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_6 = $(top_builddir)/hw/xfree86/dri/libdri.la
-@DRI2_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_7 = $(top_builddir)/hw/xfree86/dri2/libdri2.la
-@DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_8 = $(top_builddir)/dri3/libdri3.la
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_9 = \
+@DRI_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_7 = $(top_builddir)/hw/xfree86/dri/libdri.la
+@DRI2_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_8 = $(top_builddir)/hw/xfree86/dri2/libdri2.la
+@DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@am__append_9 = $(top_builddir)/dri3/libdri3.la
+@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_10 = \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/damageext/libdamageext.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/fb/libfb.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/fb/libwfb.la \
@@ -95,26 +97,26 @@ host_triplet = @host@
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/xkb/libxkb.la \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/xkb/libxkbstubs.la
 
-@COMPOSITE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_10 = \
+@COMPOSITE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_11 = \
 @COMPOSITE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/composite/libcomposite.la
 
-@DBE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_11 = \
+@DBE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_12 = \
 @DBE_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/dbe/libdbe.la
 
-@ENABLE_UNIT_TESTS_TRUE@@GLX_TRUE@@XORG_FALSE@am__append_12 = \
+@ENABLE_UNIT_TESTS_TRUE@@GLX_TRUE@@XORG_FALSE@am__append_13 = \
 @ENABLE_UNIT_TESTS_TRUE@@GLX_TRUE@@XORG_FALSE@            $(top_builddir)/glx/libglx.la
 
-@ENABLE_UNIT_TESTS_TRUE@@RECORD_TRUE@@XORG_FALSE@am__append_13 = \
+@ENABLE_UNIT_TESTS_TRUE@@RECORD_TRUE@@XORG_FALSE@am__append_14 = \
 @ENABLE_UNIT_TESTS_TRUE@@RECORD_TRUE@@XORG_FALSE@            $(top_builddir)/record/librecord.la
 
-@DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_14 = \
+@DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@am__append_15 = \
 @DRI3_TRUE@@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_builddir)/dri3/libdri3.la
 
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XQUARTZ_TRUE@am__append_15 = \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XQUARTZ_TRUE@am__append_16 = \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XQUARTZ_TRUE@            $(top_builddir)/miext/rootless/librootless.la
 
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XQUARTZ_TRUE@am__append_16 = -lXplugin
-@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XWIN_MULTIWINDOWEXTWM_TRUE@am__append_17 = \
+@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XQUARTZ_TRUE@am__append_17 = -lXplugin
+@ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XWIN_MULTIWINDOWEXTWM_TRUE@am__append_18 = \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@@XWIN_MULTIWINDOWEXTWM_TRUE@            $(top_builddir)/miext/rootless/librootless.la
 
 subdir = test
@@ -166,10 +168,10 @@ am__v_lt_1 =
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	misc$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	fixes$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	xfree86$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	hashtabletest$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	os$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	signal-logging$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_TRUE@	touch$(EXEEXT)
+@ENABLE_UNIT_TESTS_TRUE@@RES_TRUE@@XORG_TRUE@am__EXEEXT_2 = hashtabletest$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 fixes_SOURCES = fixes.c
 fixes_OBJECTS = fixes.$(OBJEXT)
@@ -414,6 +416,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -658,11 +661,11 @@ top_srcdir = @top_srcdir@
 @ENABLE_UNIT_TESTS_TRUE@AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
 @ENABLE_UNIT_TESTS_TRUE@AM_CPPFLAGS = $(XORG_INCS) \
 @ENABLE_UNIT_TESTS_TRUE@	-I$(top_srcdir)/miext/cw \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_3)
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_4)
 @ENABLE_UNIT_TESTS_TRUE@TEST_LDADD = libxservertest.la \
 @ENABLE_UNIT_TESTS_TRUE@	$(XORG_SYS_LIBS) $(XSERVER_SYS_LIBS) \
-@ENABLE_UNIT_TESTS_TRUE@	$(GLX_SYS_LIBS) $(am__append_4) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_16)
+@ENABLE_UNIT_TESTS_TRUE@	$(GLX_SYS_LIBS) $(am__append_5) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_17)
 @ENABLE_UNIT_TESTS_TRUE@xkb_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@input_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@xtest_LDADD = $(TEST_LDADD)
@@ -674,12 +677,12 @@ top_srcdir = @top_srcdir@
 @ENABLE_UNIT_TESTS_TRUE@hashtabletest_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@os_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@libxservertest_la_LIBADD = $(XSERVER_LIBS) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_5) $(am__append_6) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_7) $(am__append_8) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_9) $(am__append_10) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_11) $(am__append_12) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_13) $(am__append_14) \
-@ENABLE_UNIT_TESTS_TRUE@	$(am__append_15) $(am__append_17)
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_6) $(am__append_7) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_8) $(am__append_9) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_10) $(am__append_11) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_12) $(am__append_13) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_14) $(am__append_15) \
+@ENABLE_UNIT_TESTS_TRUE@	$(am__append_16) $(am__append_18)
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@nodist_libxservertest_la_SOURCES = \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            ddxstubs.c \
 @ENABLE_UNIT_TESTS_TRUE@@XORG_FALSE@            $(top_srcdir)/mi/miinitext.c

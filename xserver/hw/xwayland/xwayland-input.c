@@ -43,7 +43,7 @@ static int
 xwl_pointer_proc(DeviceIntPtr device, int what)
 {
 #define NBUTTONS 10
-#define NAXES 2
+#define NAXES 4
     BYTE map[NBUTTONS + 1];
     int i = 0;
     Atom btn_labels[NBUTTONS] = { 0 };
@@ -67,8 +67,10 @@ xwl_pointer_proc(DeviceIntPtr device, int what)
 
         axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
         axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
+        axes_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HWHEEL);
+        axes_labels[3] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_WHEEL);
 
-        if (!InitValuatorClassDeviceStruct(device, 2, btn_labels,
+        if (!InitValuatorClassDeviceStruct(device, NAXES, btn_labels,
                                            GetMotionHistorySize(), Absolute))
             return BadValue;
 
@@ -77,6 +79,13 @@ xwl_pointer_proc(DeviceIntPtr device, int what)
                                0, 0xFFFF, 10000, 0, 10000, Absolute);
         InitValuatorAxisStruct(device, 1, axes_labels[1],
                                0, 0xFFFF, 10000, 0, 10000, Absolute);
+        InitValuatorAxisStruct(device, 2, axes_labels[2],
+                               NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
+        InitValuatorAxisStruct(device, 3, axes_labels[3],
+                               NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
+
+        SetScrollValuator(device, 2, SCROLL_TYPE_HORIZONTAL, 1.0, SCROLL_FLAG_NONE);
+        SetScrollValuator(device, 3, SCROLL_TYPE_VERTICAL, 1.0, SCROLL_FLAG_PREFERRED);
 
         if (!InitPtrFeedbackClassDeviceStruct(device, xwl_pointer_control))
             return BadValue;
@@ -152,6 +161,15 @@ pointer_handle_enter(void *data, struct wl_pointer *pointer,
     ScreenPtr pScreen = xwl_seat->xwl_screen->screen;
     ValuatorMask mask;
 
+    /* There's a race here where if we create and then immediately
+     * destroy a surface, we might end up in a state where the Wayland
+     * compositor sends us an event for a surface that doesn't exist.
+     *
+     * Don't process enter events in this case.
+     */
+    if (surface == NULL)
+        return;
+
     xwl_seat->xwl_screen->serial = serial;
     xwl_seat->pointer_enter_serial = serial;
 
@@ -224,6 +242,9 @@ pointer_handle_button(void *data, struct wl_pointer *pointer, uint32_t serial,
     xwl_seat->xwl_screen->serial = serial;
 
     switch (button) {
+    case BTN_LEFT:
+        index = 1;
+        break;
     case BTN_MIDDLE:
         index = 2;
         break;
@@ -231,7 +252,9 @@ pointer_handle_button(void *data, struct wl_pointer *pointer, uint32_t serial,
         index = 3;
         break;
     default:
-        index = button - BTN_LEFT + 1;
+        /* Skip indexes 4-7: they are used for vertical and horizontal scroll.
+           The rest of the buttons go in order: BTN_SIDE becomes 8, etc. */
+        index = 8 + button - BTN_SIDE;
         break;
     }
 
@@ -245,54 +268,24 @@ pointer_handle_axis(void *data, struct wl_pointer *pointer,
                     uint32_t time, uint32_t axis, wl_fixed_t value)
 {
     struct xwl_seat *xwl_seat = data;
-    int index, count;
-    int i, val;
+    int index;
     const int divisor = 10;
     ValuatorMask mask;
 
-    if (time - xwl_seat->scroll_time > 2000) {
-        xwl_seat->vertical_scroll = 0;
-        xwl_seat->horizontal_scroll = 0;
-    }
-    xwl_seat->scroll_time = time;
-
-    /* FIXME: Need to do proper smooth scrolling here! */
     switch (axis) {
     case WL_POINTER_AXIS_VERTICAL_SCROLL:
-        xwl_seat->vertical_scroll += value / divisor;
-        val = wl_fixed_to_int(xwl_seat->vertical_scroll);
-        xwl_seat->vertical_scroll -= wl_fixed_from_int(val);
-
-        if (val <= -1)
-            index = 4;
-        else if (val >= 1)
-            index = 5;
-        else
-            return;
+        index = 3;
         break;
     case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
-        xwl_seat->horizontal_scroll += value / divisor;
-        val = wl_fixed_to_int(xwl_seat->horizontal_scroll);
-        xwl_seat->horizontal_scroll -= wl_fixed_from_int(val);
-
-        if (val <= -1)
-            index = 6;
-        else if (val >= 1)
-            index = 7;
-        else
-            return;
+        index = 2;
         break;
     default:
         return;
     }
 
     valuator_mask_zero(&mask);
-
-    count = abs(val);
-    for (i = 0; i < count; i++) {
-        QueuePointerEvents(xwl_seat->pointer, ButtonPress, index, 0, &mask);
-        QueuePointerEvents(xwl_seat->pointer, ButtonRelease, index, 0, &mask);
-    }
+    valuator_mask_set_double(&mask, index, wl_fixed_to_double(value) / divisor);
+    QueuePointerEvents(xwl_seat->pointer, MotionNotify, 0, POINTER_RELATIVE, &mask);
 }
 
 static const struct wl_pointer_listener pointer_listener = {
@@ -491,31 +484,43 @@ seat_handle_capabilities(void *data, struct wl_seat *seat,
 {
     struct xwl_seat *xwl_seat = data;
 
-    if (caps & WL_SEAT_CAPABILITY_POINTER && xwl_seat->pointer == NULL) {
+    if (caps & WL_SEAT_CAPABILITY_POINTER && xwl_seat->wl_pointer == NULL) {
         xwl_seat->wl_pointer = wl_seat_get_pointer(seat);
         wl_pointer_add_listener(xwl_seat->wl_pointer,
                                 &pointer_listener, xwl_seat);
-        xwl_seat_set_cursor(xwl_seat);
-        xwl_seat->pointer =
-            add_device(xwl_seat, "xwayland-pointer", xwl_pointer_proc);
-    }
-    else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && xwl_seat->pointer) {
+
+        if (xwl_seat->pointer)
+            EnableDevice(xwl_seat->pointer, TRUE);
+        else {
+            xwl_seat_set_cursor(xwl_seat);
+            xwl_seat->pointer =
+                add_device(xwl_seat, "xwayland-pointer", xwl_pointer_proc);
+        }
+    } else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && xwl_seat->wl_pointer) {
         wl_pointer_release(xwl_seat->wl_pointer);
-        RemoveDevice(xwl_seat->pointer, FALSE);
-        xwl_seat->pointer = NULL;
+        xwl_seat->wl_pointer = NULL;
+
+        if (xwl_seat->pointer)
+            DisableDevice(xwl_seat->pointer, TRUE);
     }
 
-    if (caps & WL_SEAT_CAPABILITY_KEYBOARD && xwl_seat->keyboard == NULL) {
+    if (caps & WL_SEAT_CAPABILITY_KEYBOARD && xwl_seat->wl_keyboard == NULL) {
         xwl_seat->wl_keyboard = wl_seat_get_keyboard(seat);
         wl_keyboard_add_listener(xwl_seat->wl_keyboard,
                                  &keyboard_listener, xwl_seat);
-        xwl_seat->keyboard =
-            add_device(xwl_seat, "xwayland-keyboard", xwl_keyboard_proc);
-    }
-    else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && xwl_seat->keyboard) {
+
+        if (xwl_seat->keyboard)
+            EnableDevice(xwl_seat->keyboard, TRUE);
+        else {
+            xwl_seat->keyboard =
+                add_device(xwl_seat, "xwayland-keyboard", xwl_keyboard_proc);
+        }
+    } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && xwl_seat->wl_keyboard) {
         wl_keyboard_release(xwl_seat->wl_keyboard);
-        RemoveDevice(xwl_seat->keyboard, FALSE);
-        xwl_seat->keyboard = NULL;
+        xwl_seat->wl_keyboard = NULL;
+
+        if (xwl_seat->keyboard)
+            DisableDevice(xwl_seat->keyboard, TRUE);
     }
 
     xwl_seat->xwl_screen->expecting_event--;
@@ -541,7 +546,7 @@ create_input_device(struct xwl_screen *xwl_screen, uint32_t id)
 
     xwl_seat = calloc(sizeof *xwl_seat, 1);
     if (xwl_seat == NULL) {
-        ErrorF("create_input ENOMEM");
+        ErrorF("create_input ENOMEM\n");
         return;
     }
 
@@ -564,6 +569,8 @@ xwl_seat_destroy(struct xwl_seat *xwl_seat)
     RemoveDevice(xwl_seat->keyboard, FALSE);
     wl_seat_destroy(xwl_seat->seat);
     wl_surface_destroy(xwl_seat->cursor);
+    if (xwl_seat->cursor_frame_cb)
+        wl_callback_destroy(xwl_seat->cursor_frame_cb);
     wl_array_release(&xwl_seat->keys);
     free(xwl_seat);
 }

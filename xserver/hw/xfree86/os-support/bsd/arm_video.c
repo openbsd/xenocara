@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/bsd/ppc_video.c,v 1.6 2003/10/07 23:14:55 herrb Exp $ */
-/* $OpenBSD: arm_video.c,v 1.12 2015/05/27 15:11:12 matthieu Exp $ */
+/* $OpenBSD: arm_video.c,v 1.13 2015/09/16 19:10:23 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -69,55 +69,14 @@
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
 
-#ifndef MAP_FAILED
-#define MAP_FAILED ((caddr_t)-1)
-#endif
-
 /***************************************************************************/
 /* Video Memory Mapping section                                            */
 /***************************************************************************/
 
-static void* armMapVidMem(int, unsigned long, unsigned long, int flags);
-static void armUnmapVidMem(int, void *, unsigned long);
-
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
-    pVidMem->linearSupported = TRUE;
-    pVidMem->mapMem = armMapVidMem;
-    pVidMem->unmapMem = armUnmapVidMem;
     pVidMem->initialised = TRUE;
-}
-
-
-volatile unsigned char *ioBase = MAP_FAILED;
-
-static void*
-armMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
-{
-    int fd = xf86Info.consoleFd;
-    void *base;
-#ifdef DEBUG
-    xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d",
-                Base, Size, fd);
-#endif
-
-    base = mmap(0, Size,
-                (flags & VIDMEM_READONLY) ?
-                PROT_READ : (PROT_READ | PROT_WRITE),
-                MAP_SHARED, fd, Base);
-    if (base == MAP_FAILED)
-        FatalError("%s: could not mmap screen [s=%lx,a=%lx] (%s)",
-                   "xf86MapVidMem", Size, Base, strerror(errno));
-    
-    return base;
-}
-
-static void
-armUnmapVidMem(int ScreenNum, void *Base, unsigned long Size)
-{
-
-    munmap(Base, Size);
 }
 
 int

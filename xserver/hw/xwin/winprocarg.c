@@ -31,19 +31,18 @@ from The Open Group.
 #include <xwin-config.h>
 #endif
 
+#ifdef HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 #include <../xfree86/common/xorgVersion.h>
 #include "win.h"
 #include "winconfig.h"
 #include "winmsg.h"
 #include "winmonitors.h"
 
-/*
- * References to external symbols
- */
-
 #ifdef XWIN_CLIPBOARD
-extern Bool g_fUnicodeClipboard;
-extern Bool g_fClipboard;
+#include "winclipboard/winclipboard.h"
 #endif
 
 /*
@@ -716,6 +715,26 @@ ddxProcessArgument(int argc, char *argv[], int i)
         /* Indicate that we have processed this argument */
         return 1;
     }
+
+    /*
+     * Look for the '-primary' argument
+     */
+    if (IS_OPTION("-primary")) {
+        fPrimarySelection = TRUE;
+
+        /* Indicate that we have processed this argument */
+        return 1;
+    }
+
+    /*
+     * Look for the '-noprimary' argument
+     */
+    if (IS_OPTION("-noprimary")) {
+        fPrimarySelection = FALSE;
+
+        /* Indicate that we have processed this argument */
+        return 1;
+    }
 #endif
 
     /*
@@ -1166,6 +1185,16 @@ winLogVersionInfo(void)
     ErrorF("Vendor: %s\n", XVENDORNAME);
     ErrorF("Release: %d.%d.%d.%d\n", XORG_VERSION_MAJOR,
            XORG_VERSION_MINOR, XORG_VERSION_PATCH, XORG_VERSION_SNAP);
+#ifdef HAVE_SYS_UTSNAME_H
+    {
+        struct utsname name;
+
+        if (uname(&name) >= 0) {
+            ErrorF("OS: %s %s %s %s %s\n", name.sysname, name.nodename,
+                   name.release, name.version, name.machine);
+        }
+    }
+#endif
     if (strlen(BUILDERSTRING))
         ErrorF("%s\n", BUILDERSTRING);
     ErrorF("Contact: %s\n", BUILDERADDR);

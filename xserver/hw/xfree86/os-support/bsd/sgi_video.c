@@ -34,53 +34,17 @@
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
 
-#ifndef MAP_FAILED
-#define MAP_FAILED ((caddr_t)-1)
-#endif
 
 /***************************************************************************/
 /* Video Memory Mapping section                                            */
 /***************************************************************************/
 
-static void *sgiMapVidMem(int, unsigned long, unsigned long, int);
-static void sgiUnmapVidMem(int, void *, unsigned long);
-
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
-	pVidMem->linearSupported = TRUE;
-	pVidMem->mapMem = sgiMapVidMem;
-	pVidMem->unmapMem = sgiUnmapVidMem;
 	pVidMem->initialised = TRUE;
 }
 
-static void *
-sgiMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, 
-		 int flags)
-{
-	int fd = xf86Info.consoleFd;
-	void *base;
-
-#ifdef DEBUG
-	xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d", 
-		    Base, Size, fd);
-#endif
-
-	base = mmap(0, Size,
-		    (flags & VIDMEM_READONLY) ?
-		     PROT_READ : (PROT_READ | PROT_WRITE),
-		    MAP_SHARED, fd, Base);
-	if (base == MAP_FAILED)
-		FatalError("%s: could not mmap screen [s=%x,a=%x] (%s)",
-			   "xf86MapVidMem", Size, Base, strerror(errno));
-	return base;
-}
-
-static void
-sgiUnmapVidMem(int ScreenNum, void *Base, unsigned long Size)
-{
-	munmap(Base, Size);
-}
 
 _X_EXPORT int
 xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,

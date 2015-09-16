@@ -26,13 +26,13 @@ Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -208,9 +208,11 @@ OsInit(void)
          * for failures to load libraries/modules at runtime so we can clean up
          * after ourselves.
          */
-        int failure_signal = SIGQUIT;
+        {
+            int failure_signal = SIGQUIT;
 
-        dlinfo(RTLD_SELF, RTLD_DI_SETSIGNAL, &failure_signal);
+            dlinfo(RTLD_SELF, RTLD_DI_SETSIGNAL, &failure_signal);
+        }
 #endif
 
 #if !defined(XQUARTZ)    /* STDIN is already /dev/null and STDOUT/STDERR is managed by console_redirect.c */
@@ -225,9 +227,9 @@ OsInit(void)
         fclose(stdin);
         fclose(stdout);
 # endif
-        /* 
-         * If a write of zero bytes to stderr returns non-zero, i.e. -1, 
-         * then writing to stderr failed, and we'll write somewhere else 
+        /*
+         * If a write of zero bytes to stderr returns non-zero, i.e. -1,
+         * then writing to stderr failed, and we'll write somewhere else
          * instead. (Apparently this never happens in the Real World.)
          */
         if (write(2, fname, 0) == -1) {

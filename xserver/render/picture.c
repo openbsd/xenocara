@@ -16,7 +16,7 @@
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL SuSE
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Author:  Keith Packard, SuSE, Inc.
@@ -41,6 +41,9 @@
 #include "servermd.h"
 #include "picturestr.h"
 #include "xace.h"
+#ifdef PANORAMIX
+#include "panoramiXsrv.h"
+#endif
 
 DevPrivateKeyRec PictureScreenPrivateKeyRec;
 DevPrivateKeyRec PictureWindowPrivateKeyRec;
@@ -731,7 +734,6 @@ SetPictureToDefaults(PicturePtr pPicture)
     pPicture->polyEdge = PolyEdgeSharp;
     pPicture->polyMode = PolyModePrecise;
     pPicture->freeCompClip = FALSE;
-    pPicture->clientClipType = CT_NONE;
     pPicture->componentAlpha = FALSE;
     pPicture->repeatType = RepeatNone;
 
@@ -1008,6 +1010,38 @@ CreateConicalGradientPicture(Picture pid, xPointFixed * center, xFixed angle,
     return pPicture;
 }
 
+static int
+cpAlphaMap(void **result, XID id, ScreenPtr screen, ClientPtr client, Mask mode)
+{
+#ifdef PANORAMIX
+    if (!noPanoramiXExtension) {
+        PanoramiXRes *res;
+        int err = dixLookupResourceByType((void **)&res, id, XRT_PICTURE,
+                                          client, mode);
+        if (err != Success)
+            return err;
+        id = res->info[screen->myNum].id;
+    }
+#endif
+    return dixLookupResourceByType(result, id, PictureType, client, mode);
+}
+
+static int
+cpClipMask(void **result, XID id, ScreenPtr screen, ClientPtr client, Mask mode)
+{
+#ifdef PANORAMIX
+    if (!noPanoramiXExtension) {
+        PanoramiXRes *res;
+        int err = dixLookupResourceByType((void **)&res, id, XRT_PIXMAP,
+                                          client, mode);
+        if (err != Success)
+            return err;
+        id = res->info[screen->myNum].id;
+    }
+#endif
+    return dixLookupResourceByType(result, id, RT_PIXMAP, client, mode);
+}
+
 #define NEXT_VAL(_type) (vlist ? (_type) *vlist++ : (_type) ulist++->val)
 
 #define NEXT_PTR(_type) ((_type) ulist++->ptr)
@@ -1054,9 +1088,8 @@ ChangePicture(PicturePtr pPicture,
                 if (pid == None)
                     pAlpha = 0;
                 else {
-                    error = dixLookupResourceByType((void **) &pAlpha, pid,
-                                                    PictureType, client,
-                                                    DixReadAccess);
+                    error = cpAlphaMap((void **) &pAlpha, pid, pScreen,
+                                       client, DixReadAccess);
                     if (error != Success) {
                         client->errorValue = pid;
                         break;
@@ -1113,9 +1146,8 @@ ChangePicture(PicturePtr pPicture,
                 }
                 else {
                     clipType = CT_PIXMAP;
-                    error = dixLookupResourceByType((void **) &pPixmap, pid,
-                                                    RT_PIXMAP, client,
-                                                    DixReadAccess);
+                    error = cpClipMask((void **) &pPixmap, pid, pScreen,
+                                       client, DixReadAccess);
                     if (error != Success) {
                         client->errorValue = pid;
                         break;
@@ -1330,87 +1362,6 @@ SetPictureTransform(PicturePtr pPicture, PictTransform * transform)
     }
 
     return Success;
-}
-
-void
-CopyPicture(PicturePtr pSrc, Mask mask, PicturePtr pDst)
-{
-    PictureScreenPtr ps = GetPictureScreen(pSrc->pDrawable->pScreen);
-    Mask origMask = mask;
-
-    pDst->serialNumber |= GC_CHANGE_SERIAL_BIT;
-    pDst->stateChanges |= mask;
-
-    while (mask) {
-        Mask bit = lowbit(mask);
-
-        switch (bit) {
-        case CPRepeat:
-            pDst->repeat = pSrc->repeat;
-            pDst->repeatType = pSrc->repeatType;
-            break;
-        case CPAlphaMap:
-            if (pSrc->alphaMap &&
-                pSrc->alphaMap->pDrawable->type == DRAWABLE_PIXMAP)
-                pSrc->alphaMap->refcnt++;
-            if (pDst->alphaMap)
-                FreePicture((void *) pDst->alphaMap, (XID) 0);
-            pDst->alphaMap = pSrc->alphaMap;
-            break;
-        case CPAlphaXOrigin:
-            pDst->alphaOrigin.x = pSrc->alphaOrigin.x;
-            break;
-        case CPAlphaYOrigin:
-            pDst->alphaOrigin.y = pSrc->alphaOrigin.y;
-            break;
-        case CPClipXOrigin:
-            pDst->clipOrigin.x = pSrc->clipOrigin.x;
-            break;
-        case CPClipYOrigin:
-            pDst->clipOrigin.y = pSrc->clipOrigin.y;
-            break;
-        case CPClipMask:
-            switch (pSrc->clientClipType) {
-            case CT_NONE:
-                (*ps->ChangePictureClip) (pDst, CT_NONE, NULL, 0);
-                break;
-            case CT_REGION:
-                if (!pSrc->clientClip) {
-                    (*ps->ChangePictureClip) (pDst, CT_NONE, NULL, 0);
-                }
-                else {
-                    RegionPtr clientClip;
-                    RegionPtr srcClientClip = (RegionPtr) pSrc->clientClip;
-
-                    clientClip = RegionCreate(RegionExtents(srcClientClip),
-                                              RegionNumRects(srcClientClip));
-                    (*ps->ChangePictureClip) (pDst, CT_REGION, clientClip, 0);
-                }
-                break;
-            default:
-                /* XXX: CT_PIXMAP unimplemented */
-                break;
-            }
-            break;
-        case CPGraphicsExposure:
-            pDst->graphicsExposures = pSrc->graphicsExposures;
-            break;
-        case CPPolyEdge:
-            pDst->polyEdge = pSrc->polyEdge;
-            break;
-        case CPPolyMode:
-            pDst->polyMode = pSrc->polyMode;
-            break;
-        case CPDither:
-            break;
-        case CPComponentAlpha:
-            pDst->componentAlpha = pSrc->componentAlpha;
-            break;
-        }
-        mask &= ~bit;
-    }
-
-    (*ps->ChangePicture) (pDst, origMask);
 }
 
 static void

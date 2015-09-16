@@ -50,22 +50,9 @@ of the copyright holder.
 
 #include "../../Xext/xvdix.h"
 
-#define VIDEO_NO_CLIPPING			0x00000001
-#define VIDEO_INVERT_CLIPLIST			0x00000002
 #define VIDEO_OVERLAID_IMAGES			0x00000004
 #define VIDEO_OVERLAID_STILLS			0x00000008
 #define VIDEO_CLIP_TO_VIEWPORT			0x00000010
-
-typedef XvImageRec KdImageRec, *KdImagePtr;
-
-typedef struct {
-    KdScreenInfo *screen;
-    int id;
-    unsigned short width, height;
-    int *pitches;               /* bytes */
-    int *offsets;               /* in bytes from start of framebuffer */
-    DevUnion devPrivate;
-} KdSurfaceRec, *KdSurfacePtr;
 
 typedef int (*PutVideoFuncPtr) (KdScreenInfo * screen, DrawablePtr pDraw,
                                 short vid_x, short vid_y, short drw_x,
@@ -121,7 +108,7 @@ typedef enum {
 
 typedef struct {
     int id;
-    char *name;
+    const char *name;
     unsigned short width, height;
     XvRationalRec rate;
 } KdVideoEncodingRec, *KdVideoEncodingPtr;
@@ -131,12 +118,10 @@ typedef struct {
     short class;
 } KdVideoFormatRec, *KdVideoFormatPtr;
 
-typedef XvAttributeRec KdAttributeRec, *KdAttributePtr;
-
 typedef struct {
     unsigned int type;
     int flags;
-    char *name;
+    const char *name;
     int nEncodings;
     KdVideoEncodingPtr pEncodings;
     int nFormats;
@@ -144,9 +129,9 @@ typedef struct {
     int nPorts;
     DevUnion *pPortPrivates;
     int nAttributes;
-    KdAttributePtr pAttributes;
+    XvAttributePtr pAttributes;
     int nImages;
-    KdImagePtr pImages;
+    XvImagePtr pImages;
     PutVideoFuncPtr PutVideo;
     PutStillFuncPtr PutStill;
     GetVideoFuncPtr GetVideo;
@@ -161,16 +146,7 @@ typedef struct {
 } KdVideoAdaptorRec, *KdVideoAdaptorPtr;
 
 Bool
- KdXVScreenInit(ScreenPtr pScreen, KdVideoAdaptorPtr * Adaptors, int num);
-
-typedef int (*KdXVInitGenericAdaptorPtr) (KdScreenInfo * screen,
-                                          KdVideoAdaptorPtr ** Adaptors);
-
-int
- KdXVRegisterGenericAdaptorDriver(KdXVInitGenericAdaptorPtr InitFunc);
-
-int
- KdXVListGenericAdaptors(KdScreenInfo * screen, KdVideoAdaptorPtr ** Adaptors);
+ KdXVScreenInit(ScreenPtr pScreen, KdVideoAdaptorPtr Adaptors, int num);
 
 void
 
@@ -185,9 +161,6 @@ KdXVCopyPlanarData(KdScreenInfo * screen, CARD8 *src, CARD8 *dst, int randr,
                    int srcH, int height, int top, int left, int h, int w,
                    int id);
 
-void
- KXVPaintRegion(DrawablePtr pDraw, RegionPtr pRgn, Pixel fg);
-
 KdVideoAdaptorPtr KdXVAllocateVideoAdaptorRec(KdScreenInfo * screen);
 
 void KdXVFreeVideoAdaptorRec(KdVideoAdaptorPtr ptr);
@@ -199,10 +172,10 @@ void KdXVDisable(ScreenPtr);
 /*** These are DDX layer privates ***/
 
 typedef struct {
-    CreateWindowProcPtr CreateWindow;
     DestroyWindowProcPtr DestroyWindow;
     ClipNotifyProcPtr ClipNotify;
     WindowExposuresProcPtr WindowExposures;
+    CloseScreenProcPtr CloseScreen;
 } KdXVScreenRec, *KdXVScreenPtr;
 
 typedef struct {

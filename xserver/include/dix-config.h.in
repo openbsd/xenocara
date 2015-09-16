@@ -57,9 +57,6 @@
 /* Support SHM */
 #undef HAS_SHM
 
-/* Define to 1 if you have the <asm/mtrr.h> header file. */
-#undef HAVE_ASM_MTRR_H
-
 /* Has backtrace support */
 #undef HAVE_BACKTRACE
 
@@ -74,6 +71,10 @@
 
 /* Define to 1 if you have the <dbm.h> header file. */
 #undef HAVE_DBM_H
+
+/* Define to 1 if you have the declaration of `program_invocation_short_name', and
+   to 0 if you don't. */
+#undef HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -102,6 +103,9 @@
 
 /* Define to 1 if you have the `getpeerucred' function. */
 #undef HAVE_GETPEERUCRED
+
+/* Define to 1 if you have the `getprogname' function. */
+#undef HAVE_GETPROGNAME
 
 /* Define to 1 if you have the `getzoneid' function. */
 #undef HAVE_GETZONEID
@@ -384,8 +388,14 @@
 /* Vendor name */
 #undef XVENDORNAME
 
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
 /* Enable GNU and other extensions to the C environment for GLIBC */
 #undef _GNU_SOURCE
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
@@ -507,5 +517,17 @@
 
 /* Build glamor's GBM-based EGL support */
 #undef GLAMOR_HAS_GBM
+
+/* byte order */
+#undef X_BYTE_ORDER
+
+/* Listen on TCP socket */
+#undef LISTEN_TCP
+
+/* Listen on Unix socket */
+#undef LISTEN_UNIX
+
+/* Listen on local socket */
+#undef LISTEN_LOCAL
 
 #endif /* _DIX_CONFIG_H_ */

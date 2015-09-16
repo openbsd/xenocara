@@ -129,20 +129,11 @@
 /* Cygwin has /dev/windows for signaling new win32 messages */
 #undef HAS_DEVWINDOWS
 
-/* Define to 1 if NetBSD built-in MTRR support is available */
-#undef HAS_MTRR_BUILTIN
-
-/* MTRR support available */
-#undef HAS_MTRR_SUPPORT
-
 /* Support SHM */
 #undef HAS_SHM
 
 /* Use Windows sockets */
 #undef HAS_WINSOCK
-
-/* Define to 1 if you have the <asm/mtrr.h> header file. */
-#undef HAVE_ASM_MTRR_H
 
 /* Define to 1 if you have the `authdes_create' function. */
 #undef HAVE_AUTHDES_CREATE
@@ -167,6 +158,10 @@
 
 /* Have D-Bus support */
 #undef HAVE_DBUS
+
+/* Define to 1 if you have the declaration of `program_invocation_short_name',
+   and to 0 if you don't. */
+#undef HAVE_DECL_PROGRAM_INVOCATION_SHORT_NAME
 
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
@@ -202,6 +197,9 @@
 /* Define to 1 if you have the `getpeerucred' function. */
 #undef HAVE_GETPEERUCRED
 
+/* Define to 1 if you have the `getprogname' function. */
+#undef HAVE_GETPROGNAME
+
 /* Define to 1 if you have the `getresuid' function. */
 #undef HAVE_GETRESUID
 
@@ -229,6 +227,9 @@
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
+/* Define to 1 if libudev is available. */
+#undef HAVE_LIBUDEV
+
 /* Have libunwind support */
 #undef HAVE_LIBUNWIND
 
@@ -243,9 +244,6 @@
 
 /* Define to 1 if you have the <linux/fb.h> header file. */
 #undef HAVE_LINUX_FB_H
-
-/* Define to 1 if you have the <machine/mtrr.h> header file. */
-#undef HAVE_MACHINE_MTRR_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -350,9 +348,6 @@
 /* Define to 1 if you have the <sys/linker.h> header file. */
 #undef HAVE_SYS_LINKER_H
 
-/* Define to 1 if you have the <sys/memrange.h> header file. */
-#undef HAVE_SYS_MEMRANGE_H
-
 /* Define to 1 if you have the <sys/mkdev.h> header file. */
 #undef HAVE_SYS_MKDEV_H
 
@@ -394,7 +389,7 @@
 /* Define to 1 if you have the `walkcontext' function. */
 #undef HAVE_WALKCONTEXT
 
-/* Have X Shared Memory Fence library */
+/* Have xshmfence support */
 #undef HAVE_XSHMFENCE
 
 /* Support IPv6 for TCP connections */
@@ -545,7 +540,7 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Where to install Xorg.bin and Xorg.wrap */
+/* Where to install the Xorg binary and Xorg.wrap */
 #undef SUID_WRAPPER_DIR
 
 /* Define to 1 on systems derived from System V Release 4 */
@@ -739,9 +734,6 @@
 /* Support Record extension */
 #undef XRECORD
 
-/* Build registry module */
-#undef XREGISTRY
-
 /* Build SELinux extension */
 #undef XSELINUX
 
@@ -771,6 +763,9 @@
 
 /* Short vendor name */
 #undef XVENDORNAMESHORT
+
+/* byte order */
+#undef X_BYTE_ORDER
 
 /* Use X server privilege separation */
 #undef X_PRIVSEP

@@ -29,19 +29,19 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
  *
- * Copyright 1987, 1988, 1989 by 
+ * Copyright 1987, 1988, 1989 by
  * Digital Equipment Corporation, Maynard, Massachusetts,
- * 
+ *
  *                         All Rights Reserved
- * 
- * Permission to use, copy, modify, and distribute this software and its 
- * documentation for any purpose and without fee is hereby granted, 
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies and that
- * both that copyright notice and this permission notice appear in 
+ * both that copyright notice and this permission notice appear in
  * supporting documentation, and that the name of Digital not be
  * used in advertising or publicity pertaining to distribution of the
- * software without specific, written prior permission.  
- * 
+ * software without specific, written prior permission.
+ *
  * DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
  * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
  * DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
@@ -49,7 +49,7 @@ in this Software without prior written authorization from The Open Group.
  * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
- * 
+ *
  ******************************************************************/
 
 /* The panoramix components contained the following notice */
@@ -80,7 +80,7 @@ dealings in this Software without prior written authorization from Digital
 Equipment Corporation.
 
 ******************************************************************/
- /* 
+ /*
   * Aug '86: Susan Angebranndt -- original code
   * July '87: Adam de Boor -- substantially modified and commented
   * Summer '89: Joel McCormack -- so fast you wouldn't believe it possible.
@@ -105,64 +105,6 @@ Equipment Corporation.
 #include    "globals.h"
 
 int RootlessMiValidateTree(WindowPtr pRoot, WindowPtr pChild, VTKind kind);
-
-/*
- * Compute the visibility of a shaped window
- */
-static int
-RootlessShapedWindowIn(RegionPtr universe,
-                       RegionPtr bounding, BoxPtr rect, int x, int y)
-{
-    BoxRec box;
-    register BoxPtr boundBox;
-    int nbox;
-    Bool someIn, someOut;
-    register int t, x1, y1, x2, y2;
-
-    nbox = RegionNumRects(bounding);
-    boundBox = RegionRects(bounding);
-    someIn = someOut = FALSE;
-    x1 = rect->x1;
-    y1 = rect->y1;
-    x2 = rect->x2;
-    y2 = rect->y2;
-    while (nbox--) {
-        if ((t = boundBox->x1 + x) < x1)
-            t = x1;
-        box.x1 = t;
-        if ((t = boundBox->y1 + y) < y1)
-            t = y1;
-        box.y1 = t;
-        if ((t = boundBox->x2 + x) > x2)
-            t = x2;
-        box.x2 = t;
-        if ((t = boundBox->y2 + y) > y2)
-            t = y2;
-        box.y2 = t;
-        if (box.x1 > box.x2)
-            box.x2 = box.x1;
-        if (box.y1 > box.y2)
-            box.y2 = box.y1;
-        switch (RegionContainsRect(universe, &box)) {
-        case rgnIN:
-            if (someOut)
-                return rgnPART;
-            someIn = TRUE;
-            break;
-        case rgnOUT:
-            if (someIn)
-                return rgnPART;
-            someOut = TRUE;
-            break;
-        default:
-            return rgnPART;
-        }
-        boundBox++;
-    }
-    if (someIn)
-        return rgnIN;
-    return rgnOUT;
-}
 
 #define HasParentRelativeBorder(w) (!(w)->borderIsPixel && \
 				    HasBorder(w) && \
@@ -229,10 +171,9 @@ RootlessComputeClips(WindowPtr pParent, ScreenPtr pScreen,
             RegionPtr pBounding;
 
             if ((pBounding = wBoundingShape(pParent))) {
-                switch (RootlessShapedWindowIn(universe,
-                                               pBounding, &borderSize,
-                                               pParent->drawable.x,
-                                               pParent->drawable.y)) {
+                switch (miShapedWindowIn(universe, pBounding, &borderSize,
+                                         pParent->drawable.x,
+                                         pParent->drawable.y)) {
                 case rgnIN:
                     newVis = VisibilityUnobscured;
                     break;
@@ -515,9 +456,9 @@ RootlessTreeObscured(WindowPtr pParent)
  *
  *-----------------------------------------------------------------------
  */
-/* 
+/*
    Quartz version: used for validate from root in rootless mode.
-   We need to make sure top-level windows don't clip each other, 
+   We need to make sure top-level windows don't clip each other,
    and that top-level windows aren't clipped to the root window.
 */
  /*ARGSUSED*/
@@ -550,9 +491,9 @@ RootlessMiValidateTree(WindowPtr pRoot, /* Parent to validate */
         ErrorF("ValidateTree: BUSTED!\n");
     }
 
-    /* 
-     * Recursively compute the clips for all children of the root. 
-     * They don't clip against each other or the root itself, so 
+    /*
+     * Recursively compute the clips for all children of the root.
+     * They don't clip against each other or the root itself, so
      * childClip is always reset to that child's size.
      */
 
@@ -579,7 +520,7 @@ RootlessMiValidateTree(WindowPtr pRoot, /* Parent to validate */
 
     RegionUninit(&childClip);
 
-    /* The root is never clipped by its children, so nothing on the root 
+    /* The root is never clipped by its children, so nothing on the root
        is ever exposed by moving or mapping its children. */
     RegionNull(&pRoot->valdata->after.exposed);
     RegionNull(&pRoot->valdata->after.borderExposed);

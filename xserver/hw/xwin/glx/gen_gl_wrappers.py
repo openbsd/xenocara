@@ -100,13 +100,16 @@ reg = Registry()
 tree = etree.parse(regFilename)
 reg.loadElementTree(tree)
 
-allVersions = '.*'
+if shim:
+    versions = '1\.[012]'
+else:
+    versions = '.*'
 
 genOpts = CGeneratorOptions(
         apiname           = prefix,
         profile           = 'compatibility',
-        versions          = allVersions,
-        emitversions      = allVersions,
+        versions          = versions,
+        emitversions      = versions,
         defaultExtensions = prefix,                   # Default extensions for GL
         protectFile       = protect,
         protectFeature    = protect,
@@ -119,6 +122,36 @@ if (errFilename):
 else:
     errWarn = sys.stderr
 diag = open(diagFilename, 'w')
+
+def ParseCmdRettype(cmd):
+    proto=noneStr(cmd.elem.find('proto'))
+    rettype=noneStr(proto.text)
+    if rettype.lower()!="void ":
+        plist = ([t for t in proto.itertext()])
+        rettype = ''.join(plist[:-1])
+    rettype=rettype.strip()
+    return rettype
+
+def ParseCmdParams(cmd):
+    params = cmd.elem.findall('param')
+    plist=[]
+    for param in params:
+        # construct the formal parameter definition from ptype and name
+        # elements, also using any text found around these in the
+        # param element, in the order it appears in the document
+        paramtype = ''
+        # also extract the formal parameter name from the name element
+        paramname = ''
+        for t in param.iter():
+            if t.tag == 'ptype' or t.tag == 'param':
+                paramtype = paramtype + noneStr(t.text)
+            if t.tag == 'name':
+                paramname = t.text + '_'
+                paramtype = paramtype + ' ' + paramname
+            if t.tail is not None:
+                paramtype = paramtype + t.tail.strip()
+        plist.append((paramtype, paramname))
+    return plist
 
 class PreResolveOutputGenerator(OutputGenerator):
     def __init__(self,
@@ -176,25 +209,15 @@ class WrapperOutputGenerator(OutputGenerator):
         if prefix == 'wgl' and not name in used_wgl_ext_fns:
             return
 
-        proto=noneStr(cmd.elem.find('proto'))
-        rettype=noneStr(proto.text)
-        if rettype.lower()!="void ":
-            plist = ([t for t in proto.itertext()])
-            rettype = ''.join(plist[:-1])
-        rettype=rettype.strip()
+        rettype=ParseCmdRettype(cmd)
+
         if staticwrappers: self.outFile.write("static ")
         self.outFile.write("%s %sWrapper("%(rettype, name))
-        params = cmd.elem.findall('param')
-        plist=[]
-        for param in params:
-            paramlist = ([t for t in param.itertext()])
-            paramtype = ''.join(paramlist[:-1])
-            paramname = paramlist[-1]
-            plist.append((paramtype, paramname))
+        plist=ParseCmdParams(cmd)
         Comma=""
         if len(plist):
             for ptype, pname in plist:
-                self.outFile.write("%s%s%s_"%(Comma, ptype, pname))
+                self.outFile.write("%s%s"%(Comma, ptype))
                 Comma=", "
         else:
             self.outFile.write("void")
@@ -215,7 +238,7 @@ class WrapperOutputGenerator(OutputGenerator):
 
             Comma=""
             for ptype, pname in plist:
-                self.outFile.write("%s%s_"%(Comma, pname))
+                self.outFile.write("%s%s"%(Comma, pname))
                 Comma=", "
 
         # for GL 1.2+ functions, generate stdcall wrappers which use wglGetProcAddress()
@@ -241,7 +264,7 @@ class WrapperOutputGenerator(OutputGenerator):
 
             Comma=""
             for ptype, pname in plist:
-                self.outFile.write("%s%s_"%(Comma, pname))
+                self.outFile.write("%s%s"%(Comma, pname))
                 Comma=", "
         self.outFile.write(" );\n}\n\n")
 
@@ -257,7 +280,7 @@ class ThunkOutputGenerator(OutputGenerator):
         pass
     def beginFeature(self, interface, emit):
         OutputGenerator.beginFeature(self, interface, emit)
-        self.OldVersion = self.featureName.startswith('GL_VERSION_1_0') or self.featureName.startswith('GL_VERSION_1_1')
+        self.OldVersion = (self.featureName in ['GL_VERSION_1_0', 'GL_VERSION_1_1'])
     def endFeature(self):
         OutputGenerator.endFeature(self)
     def genType(self, typeinfo, name):
@@ -267,24 +290,14 @@ class ThunkOutputGenerator(OutputGenerator):
     def genCmd(self, cmd, name):
         OutputGenerator.genCmd(self, cmd, name)
 
-        proto=noneStr(cmd.elem.find('proto'))
-        rettype=noneStr(proto.text)
-        if rettype.lower()!="void ":
-            plist = ([t for t in proto.itertext()])
-            rettype = ''.join(plist[:-1])
-        rettype=rettype.strip()
+        rettype=ParseCmdRettype(cmd)
         self.outFile.write("%s %sWrapper("%(rettype, name))
-        params = cmd.elem.findall('param')
-        plist=[]
-        for param in params:
-            paramlist = ([t for t in param.itertext()])
-            paramtype = ''.join(paramlist[:-1])
-            paramname = paramlist[-1]
-            plist.append((paramtype, paramname))
+        plist=ParseCmdParams(cmd)
+
         Comma=""
         if len(plist):
             for ptype, pname in plist:
-                self.outFile.write("%s%s%s_"%(Comma, ptype, pname))
+                self.outFile.write("%s%s"%(Comma, ptype))
                 Comma=", "
         else:
             self.outFile.write("void")
@@ -300,7 +313,7 @@ class ThunkOutputGenerator(OutputGenerator):
 
             Comma=""
             for ptype, pname in plist:
-                self.outFile.write("%s%s_"%(Comma, pname))
+                self.outFile.write("%s%s"%(Comma, pname))
                 Comma=", "
 
         # for GL 1.2+ functions, generate wrappers which use wglGetProcAddress()
@@ -314,7 +327,7 @@ class ThunkOutputGenerator(OutputGenerator):
 
             Comma=""
             for ptype, pname in plist:
-                self.outFile.write("%s%s_"%(Comma, pname))
+                self.outFile.write("%s%s"%(Comma, pname))
                 Comma=", "
         self.outFile.write(" );\n}\n\n")
 
@@ -355,7 +368,7 @@ class ShimOutputGenerator(OutputGenerator):
         pass
     def beginFeature(self, interface, emit):
         OutputGenerator.beginFeature(self, interface, emit)
-        self.OldVersion = self.featureName.startswith('GL_VERSION_1_0') or self.featureName.startswith('GL_VERSION_1_1') or self.featureName.startswith('GL_VERSION_1_2') or self.featureName.startswith('GL_ARB_imaging') or self.featureName.startswith('GL_ARB_multitexture') or self.featureName.startswith('GL_ARB_texture_compression')
+        self.OldVersion = (self.featureName in ['GL_VERSION_1_0', 'GL_VERSION_1_1', 'GL_VERSION_1_2', 'GL_ARB_imaging', 'GL_ARB_multitexture', 'GL_ARB_texture_compression'])
     def endFeature(self):
         OutputGenerator.endFeature(self)
     def genType(self, typeinfo, name):
@@ -369,24 +382,14 @@ class ShimOutputGenerator(OutputGenerator):
             return
 
         # for GL functions which are in the ABI, generate a shim which calls the function via GetProcAddress
-        proto=noneStr(cmd.elem.find('proto'))
-        rettype=noneStr(proto.text)
-        if rettype.lower()!="void ":
-            plist = ([t for t in proto.itertext()])
-            rettype = ''.join(plist[:-1])
-        rettype=rettype.strip()
+        rettype=ParseCmdRettype(cmd)
         self.outFile.write("%s %s("%(rettype, name))
-        params = cmd.elem.findall('param')
-        plist=[]
-        for param in params:
-            paramlist = ([t for t in param.itertext()])
-            paramtype = ''.join(paramlist[:-1])
-            paramname = paramlist[-1]
-            plist.append((paramtype, paramname))
+        plist=ParseCmdParams(cmd)
+
         Comma=""
         if len(plist):
             for ptype, pname in plist:
-                self.outFile.write("%s%s%s_"%(Comma, ptype, pname))
+                self.outFile.write("%s%s"%(Comma, ptype))
                 Comma=", "
         else:
             self.outFile.write("void")
@@ -398,7 +401,7 @@ class ShimOutputGenerator(OutputGenerator):
         if len(plist):
             Comma=""
             for ptype, pname in plist:
-                self.outFile.write("%s %s %s_"%(Comma, ptype, pname))
+                self.outFile.write("%s %s"%(Comma, ptype))
                 Comma=", "
         else:
             self.outFile.write("void")
@@ -414,7 +417,7 @@ class ShimOutputGenerator(OutputGenerator):
 
         Comma=""
         for ptype, pname in plist:
-            self.outFile.write("%s%s_"%(Comma, pname))
+            self.outFile.write("%s%s"%(Comma, pname))
             Comma=", "
 
         self.outFile.write(" );\n}\n\n")

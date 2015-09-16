@@ -74,9 +74,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libhurd_la_LIBADD =
-am_libhurd_la_OBJECTS = hurd_bell.lo hurd_init.lo hurd_mmap.lo \
-	hurd_video.lo VTsw_noop.lo posix_tty.lo vidmem.lo \
-	sigiostubs.lo pm_noop.lo kmod_noop.lo agp_noop.lo
+am_libhurd_la_OBJECTS = hurd_bell.lo hurd_init.lo hurd_video.lo \
+	VTsw_noop.lo posix_tty.lo vidmem.lo sigiostubs.lo pm_noop.lo \
+	kmod_noop.lo agp_noop.lo
 libhurd_la_OBJECTS = $(am_libhurd_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -234,6 +234,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -472,7 +473,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libhurd.la
-libhurd_la_SOURCES = hurd_bell.c hurd_init.c hurd_mmap.c \
+libhurd_la_SOURCES = hurd_bell.c hurd_init.c \
 		hurd_video.c \
 		$(srcdir)/../shared/VTsw_noop.c \
 		$(srcdir)/../shared/posix_tty.c \
@@ -542,7 +543,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/agp_noop.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_bell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_init.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_mmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kmod_noop.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pm_noop.Plo@am__quote@

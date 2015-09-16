@@ -26,13 +26,13 @@ Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -152,14 +152,14 @@ extern _X_EXPORT void UpdateCurrentTime(void);
 
 extern _X_EXPORT void UpdateCurrentTimeIf(void);
 
-extern _X_EXPORT int dixDestroyPixmap(void */*value */ ,
-                                      XID /*pid */ );
+extern _X_EXPORT int dixDestroyPixmap(void *value,
+                                      XID pid);
 
-extern _X_EXPORT void InitClient(ClientPtr /*client */ ,
-                                 int /*i */ ,
-                                 void */*ospriv */ );
+extern _X_EXPORT void InitClient(ClientPtr client,
+                                 int i,
+                                 void *ospriv);
 
-extern _X_EXPORT ClientPtr NextAvailableClient(void */*ospriv */ );
+extern _X_EXPORT ClientPtr NextAvailableClient(void *ospriv);
 
 extern _X_EXPORT void SendErrorToClient(ClientPtr /*client */ ,
                                         unsigned int /*majorCode */ ,
@@ -208,11 +208,11 @@ extern _X_EXPORT int AlterSaveSetForClient(ClientPtr /*client */ ,
 
 extern _X_EXPORT void DeleteWindowFromAnySaveSet(WindowPtr /*pWin */ );
 
-extern _X_EXPORT void BlockHandler(void */*pTimeout */ ,
-                                   void */*pReadmask */ );
+extern _X_EXPORT void BlockHandler(void *pTimeout,
+                                   void *pReadmask);
 
-extern _X_EXPORT void WakeupHandler(int /*result */ ,
-                                    void */*pReadmask */ );
+extern _X_EXPORT void WakeupHandler(int result,
+                                    void *pReadmask);
 
 void
  EnableLimitedSchedulingLatency(void);
@@ -220,21 +220,17 @@ void
 void
  DisableLimitedSchedulingLatency(void);
 
-typedef void (*WakeupHandlerProcPtr) (void */* blockData */ ,
-                                      int /* result */ ,
-                                      void */* pReadmask */ );
+typedef void (*WakeupHandlerProcPtr) (void *blockData,
+                                      int result,
+                                      void *pReadmask);
 
-extern _X_EXPORT Bool RegisterBlockAndWakeupHandlers(BlockHandlerProcPtr
-                                                     /*blockHandler */ ,
-                                                     WakeupHandlerProcPtr
-                                                     /*wakeupHandler */ ,
-                                                     void */*blockData */ );
+extern _X_EXPORT Bool RegisterBlockAndWakeupHandlers(BlockHandlerProcPtr blockHandler,
+                                                     WakeupHandlerProcPtr wakeupHandler,
+                                                     void *blockData);
 
-extern _X_EXPORT void RemoveBlockAndWakeupHandlers(BlockHandlerProcPtr
-                                                   /*blockHandler */ ,
-                                                   WakeupHandlerProcPtr
-                                                   /*wakeupHandler */ ,
-                                                   void */*blockData */ );
+extern _X_EXPORT void RemoveBlockAndWakeupHandlers(BlockHandlerProcPtr blockHandler,
+                                                   WakeupHandlerProcPtr wakeupHandler,
+                                                   void *blockData);
 
 extern _X_EXPORT void InitBlockAndWakeupHandlers(void);
 
@@ -242,22 +238,17 @@ extern _X_EXPORT void ProcessWorkQueue(void);
 
 extern _X_EXPORT void ProcessWorkQueueZombies(void);
 
-extern _X_EXPORT Bool QueueWorkProc(Bool (* /*function */ )(
-                                                               ClientPtr
-                                                               /*clientUnused */
-                                                               ,
-                                                               void *
-                                                               /*closure */ ),
-                                    ClientPtr /*client */ ,
-                                    void */*closure */
-    );
+extern _X_EXPORT Bool QueueWorkProc(Bool (*function)(ClientPtr clientUnused,
+                                                     void *closure),
+                                    ClientPtr client,
+                                    void *closure);
 
-typedef Bool (*ClientSleepProcPtr) (ClientPtr /*client */ ,
-                                    void */*closure */ );
+typedef Bool (*ClientSleepProcPtr) (ClientPtr client,
+                                    void *closure);
 
-extern _X_EXPORT Bool ClientSleep(ClientPtr /*client */ ,
-                                  ClientSleepProcPtr /* function */ ,
-                                  void */*closure */ );
+extern _X_EXPORT Bool ClientSleep(ClientPtr client,
+                                  ClientSleepProcPtr function,
+                                  void *closure);
 
 #ifndef ___CLIENTSIGNAL_DEFINED___
 #define ___CLIENTSIGNAL_DEFINED___
@@ -267,6 +258,12 @@ extern _X_EXPORT Bool ClientSignal(ClientPtr /*client */ );
 extern _X_EXPORT void ClientWakeup(ClientPtr /*client */ );
 
 extern _X_EXPORT Bool ClientIsAsleep(ClientPtr /*client */ );
+
+extern _X_EXPORT void SendGraphicsExpose(ClientPtr /*client */ ,
+                                         RegionPtr /*pRgn */ ,
+                                         XID /*drawable */ ,
+                                         int /*major */ ,
+                                         int  /*minor */);
 
 /* atom.c */
 
@@ -449,8 +446,8 @@ extern void
 RecalculateDeliverableEvents(WindowPtr /* pWin */ );
 
 extern _X_EXPORT int
-OtherClientGone(void */* value */ ,
-                XID /* id */ );
+OtherClientGone(void *value,
+                XID id);
 
 extern void
 DoFocusEvents(DeviceIntPtr /* dev */ ,

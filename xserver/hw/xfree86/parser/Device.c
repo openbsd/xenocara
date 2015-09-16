@@ -1,17 +1,17 @@
-/* 
- * 
+/*
+ *
  * Copyright (c) 1997  Metro Link Incorporated
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"), 
+ * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
@@ -19,11 +19,11 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  * Except as contained in this notice, the name of the Metro Link shall not be
  * used in advertising or otherwise to promote the sale, use or other dealings
  * in this Software without prior written authorization from Metro Link.
- * 
+ *
  */
 /*
  * Copyright (c) 1997-2003 by The XFree86 Project, Inc.
@@ -83,7 +83,6 @@ xf86ConfigSymTabRec DeviceTab[] = {
     {CARD, "card"},
     {DRIVER, "driver"},
     {BUSID, "busid"},
-    {TEXTCLOCKFRQ, "textclockfreq"},
     {IRQ, "irq"},
     {SCREEN, "screen"},
     {-1, ""},
@@ -212,11 +211,6 @@ xf86parseDeviceSection(void)
             ptr->dev_clocks = i;
             xf86unGetToken(token);
             break;
-        case TEXTCLOCKFRQ:
-            if ((token = xf86getSubToken(&(ptr->dev_comment))) != NUMBER)
-                Error(NUMBER_MSG, "TextClockFreq");
-            ptr->dev_textclockfreq = (int) (xf86_lex_val.realnum * 1000.0 + 0.5);
-            break;
         case MATCHSEAT:
             if (xf86getSubToken(&(ptr->dev_comment)) != STRING)
                 Error(QUOTE_MSG, "MatchSeat");
@@ -311,10 +305,6 @@ xf86printDeviceSection(FILE * cf, XF86ConfDevicePtr ptr)
             for (i = 0; i < ptr->dev_clocks; i++)
                 fprintf(cf, "%.1f ", (double) ptr->dev_clock[i] / 1000.0);
             fprintf(cf, "\n");
-        }
-        if (ptr->dev_textclockfreq) {
-            fprintf(cf, "\tTextClockFreq %.1f\n",
-                    (double) ptr->dev_textclockfreq / 1000.0);
         }
         if (ptr->dev_busid)
             fprintf(cf, "\tBusID       \"%s\"\n", ptr->dev_busid);

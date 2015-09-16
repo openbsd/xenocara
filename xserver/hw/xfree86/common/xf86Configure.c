@@ -267,7 +267,6 @@ configureDeviceSection(int screennum)
     for (i = 0; (i < MAXDACSPEEDS) && (i < CONF_MAXDACSPEEDS); i++)
         ptr->dev_dacSpeeds[i] = DevToConfig[screennum].GDev.dacSpeeds[i];
     ptr->dev_videoram = DevToConfig[screennum].GDev.videoRam;
-    ptr->dev_textclockfreq = DevToConfig[screennum].GDev.textClockFreq;
     ptr->dev_bios_base = DevToConfig[screennum].GDev.BiosBase;
     ptr->dev_mem_base = DevToConfig[screennum].GDev.MemBase;
     ptr->dev_io_base = DevToConfig[screennum].GDev.IOBase;
@@ -680,8 +679,8 @@ DoConfigure(void)
                 if (primary)
                     continue;
                 /* not primary: assign it to next device of same driver */
-                /* 
-                 * NOTE: we assume that devices in DevToConfig 
+                /*
+                 * NOTE: we assume that devices in DevToConfig
                  * and xf86Screens[] have the same order except
                  * for the primary device which always comes first.
                  */

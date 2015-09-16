@@ -177,6 +177,9 @@ DeviceSetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             if (!isfinite(f[i]))
                 return BadValue;
 
+	if (!dev->valuator)
+		return BadMatch;
+
         if (!checkonly)
             DeviceSetTransform(dev, f);
     }
@@ -1214,63 +1217,6 @@ QueryMinMaxKeyCodes(KeyCode *minCode, KeyCode *maxCode)
     }
 }
 
-/* Notably, this function does not expand the destination's keycode range, or
- * notify clients. */
-Bool
-SetKeySymsMap(KeySymsPtr dst, KeySymsPtr src)
-{
-    int i, j;
-    KeySym *tmp;
-    int rowDif = src->minKeyCode - dst->minKeyCode;
-
-    /* if keysym map size changes, grow map first */
-    if (src->mapWidth < dst->mapWidth) {
-        for (i = src->minKeyCode; i <= src->maxKeyCode; i++) {
-#define SI(r, c) (((r - src->minKeyCode) * src->mapWidth) + (c))
-#define DI(r, c) (((r - dst->minKeyCode) * dst->mapWidth) + (c))
-            for (j = 0; j < src->mapWidth; j++)
-                dst->map[DI(i, j)] = src->map[SI(i, j)];
-            for (j = src->mapWidth; j < dst->mapWidth; j++)
-                dst->map[DI(i, j)] = NoSymbol;
-#undef SI
-#undef DI
-        }
-        return TRUE;
-    }
-    else if (src->mapWidth > dst->mapWidth) {
-        i = sizeof(KeySym) * src->mapWidth *
-            (dst->maxKeyCode - dst->minKeyCode + 1);
-        tmp = calloc(sizeof(KeySym), i);
-        if (!tmp)
-            return FALSE;
-
-        if (dst->map) {
-            for (i = 0; i <= dst->maxKeyCode - dst->minKeyCode; i++)
-                memmove(&tmp[i * src->mapWidth], &dst->map[i * dst->mapWidth],
-                        dst->mapWidth * sizeof(KeySym));
-            free(dst->map);
-        }
-        dst->mapWidth = src->mapWidth;
-        dst->map = tmp;
-    }
-    else if (!dst->map) {
-        i = sizeof(KeySym) * src->mapWidth *
-            (dst->maxKeyCode - dst->minKeyCode + 1);
-        tmp = calloc(sizeof(KeySym), i);
-        if (!tmp)
-            return FALSE;
-
-        dst->map = tmp;
-        dst->mapWidth = src->mapWidth;
-    }
-
-    memmove(&dst->map[rowDif * dst->mapWidth], src->map,
-            (src->maxKeyCode - src->minKeyCode + 1) *
-            dst->mapWidth * sizeof(KeySym));
-
-    return TRUE;
-}
-
 Bool
 InitButtonClassDeviceStruct(DeviceIntPtr dev, int numButtons, Atom *labels,
                             CARD8 *map)
@@ -2257,7 +2203,7 @@ ProcBell(ClientPtr client)
     for (dev = inputInfo.devices; dev; dev = dev->next) {
         if ((dev == keybd ||
              (!IsMaster(dev) && GetMaster(dev, MASTER_KEYBOARD) == keybd)) &&
-            dev->kbdfeed && dev->kbdfeed->BellProc) {
+            ((dev->kbdfeed && dev->kbdfeed->BellProc) || dev->xkb_interest)) {
 
             rc = XaceHook(XACE_DEVICE_ACCESS, client, dev, DixBellAccess);
             if (rc != Success)
@@ -2679,7 +2625,7 @@ GetPairedDevice(DeviceIntPtr dev)
  *   slave.
  * - MASTER_KEYBOARD: the master keyboard for this device or NULL for a
  *   floating slave
- * - MASTER_POINTER: the master keyboard for this device or NULL for a
+ * - MASTER_POINTER: the master pointer for this device or NULL for a
  *   floating slave
  * - POINTER_OR_FLOAT: the master pointer for this device or the device for
  *   a floating slave

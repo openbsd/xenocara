@@ -98,17 +98,19 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__Xephyr_SOURCES_DIST = ephyr.c ephyr.h ephyrlog.h ephyr_draw.c os.c \
-	ephyrinit.c hostx.c hostx.h ephyrvideo.c ephyrdriext.c \
-	ephyrdriext.h ephyrdri.c ephyrdri.h ephyrglxext.c \
-	ephyrglxext.h ephyrhostglx.c ephyrhostglx.h ephyr_glamor_glx.c \
-	ephyr_glamor_glx.h
+	ephyrinit.c ephyrcursor.c hostx.c hostx.h ephyrvideo.c \
+	ephyrdriext.c ephyrdriext.h ephyrdri.c ephyrdri.h \
+	ephyrglxext.c ephyrglxext.h ephyrhostglx.c ephyrhostglx.h \
+	ephyr_glamor_glx.c ephyr_glamor_glx.h ephyr_glamor_xv.c
 @XV_TRUE@am__objects_1 = ephyrvideo.$(OBJEXT)
 @DRI_TRUE@am__objects_2 = ephyrdriext.$(OBJEXT) ephyrdri.$(OBJEXT) \
 @DRI_TRUE@	ephyrglxext.$(OBJEXT) ephyrhostglx.$(OBJEXT)
-@GLAMOR_TRUE@am__objects_3 = ephyr_glamor_glx.$(OBJEXT)
+@GLAMOR_TRUE@@XV_TRUE@am__objects_3 = ephyr_glamor_xv.$(OBJEXT)
+@GLAMOR_TRUE@am__objects_4 = ephyr_glamor_glx.$(OBJEXT) \
+@GLAMOR_TRUE@	$(am__objects_3)
 am_Xephyr_OBJECTS = ephyr.$(OBJEXT) ephyr_draw.$(OBJEXT) os.$(OBJEXT) \
-	ephyrinit.$(OBJEXT) hostx.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3)
+	ephyrinit.$(OBJEXT) ephyrcursor.$(OBJEXT) hostx.$(OBJEXT) \
+	$(am__objects_1) $(am__objects_2) $(am__objects_4)
 Xephyr_OBJECTS = $(am_Xephyr_OBJECTS)
 @GLAMOR_TRUE@am__DEPENDENCIES_1 = $(top_builddir)/glamor/libglamor.la \
 @GLAMOR_TRUE@	$(top_builddir)/glamor/libglamor_egl_stubs.la
@@ -309,6 +311,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -551,9 +554,11 @@ AM_CPPFLAGS = @KDRIVE_INCS@ @KDRIVE_CFLAGS@ @XEPHYR_INCS@ \
 	@XEPHYR_CFLAGS@ -I$(top_srcdir) -I$(top_srcdir)/glamor \
 	-I$(top_srcdir)/exa $(am__append_1)
 @XV_TRUE@XV_SRCS = ephyrvideo.c
+@GLAMOR_TRUE@@XV_TRUE@GLAMOR_XV_SRCS = ephyr_glamor_xv.c
 @GLAMOR_TRUE@GLAMOR_SRCS = \
 @GLAMOR_TRUE@	ephyr_glamor_glx.c \
 @GLAMOR_TRUE@	ephyr_glamor_glx.h \
+@GLAMOR_TRUE@	$(GLAMOR_XV_SRCS)  \
 @GLAMOR_TRUE@	$()
 
 @DRI_TRUE@DRI_SRCS = \
@@ -574,6 +579,7 @@ Xephyr_SOURCES = \
 	ephyr_draw.c \
 	os.c \
 	ephyrinit.c \
+	ephyrcursor.c \
 	hostx.c \
 	hostx.h \
 	$(XV_SRCS) \
@@ -687,6 +693,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_draw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_glamor_glx.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyr_glamor_xv.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrcursor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdri.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrdriext.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ephyrglxext.Po@am__quote@

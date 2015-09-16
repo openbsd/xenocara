@@ -26,7 +26,6 @@ Xwayland_LDADD =				\
 	$(XWAYLAND_LIBS)			\
 	$(XWAYLAND_SYS_LIBS)			\
 	$(XSERVER_SYS_LIBS)
-Xwayland_DEPENDENCIES = $(XWAYLAND_LIBS)
 Xwayland_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 
 
@@ -44,6 +43,7 @@ xwayland-glamor.c : $(nodist_Xwayland_SOURCES)
 glamor_lib = $(top_builddir)/glamor/libglamor.la
 
 Xwayland_LDADD += $(GLAMOR_LIBS) $(GBM_LIBS) -lEGL -lGL
+Xwayland_DEPENDENCIES = $(glamor_lib)
 endif
 
 EXTRA_DIST = drm.xml

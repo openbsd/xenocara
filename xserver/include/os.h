@@ -26,13 +26,13 @@ Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -67,15 +67,11 @@ SOFTWARE.
 typedef struct _FontPathRec *FontPathPtr;
 typedef struct _NewClientRec *NewClientPtr;
 
-#ifndef xalloc
+#ifndef xnfalloc
 #define xnfalloc(size) XNFalloc((unsigned long)(size))
 #define xnfcalloc(_num, _size) XNFcalloc((unsigned long)(_num)*(unsigned long)(_size))
 #define xnfrealloc(ptr, size) XNFrealloc((void *)(ptr), (unsigned long)(size))
 
-#define xalloc(size) Xalloc((unsigned long)(size))
-#define xcalloc(_num, _size) Xcalloc((unsigned long)(_num)*(unsigned long)(_size))
-#define xrealloc(ptr, size) Xrealloc((void *)(ptr), (unsigned long)(size))
-#define xfree(ptr) Xfree((void *)(ptr))
 #define xstrdup(s) Xstrdup(s)
 #define xnfstrdup(s) XNFstrdup(s)
 #endif
@@ -139,8 +135,8 @@ extern _X_EXPORT const char *ClientAuthorized(ClientPtr /*client */ ,
                                               unsigned int /*string_n */ ,
                                               char * /*auth_string */ );
 
-extern _X_EXPORT Bool EstablishNewConnections(ClientPtr /*clientUnused */ ,
-                                              void */*closure */ );
+extern _X_EXPORT Bool EstablishNewConnections(ClientPtr clientUnused,
+                                              void *closure);
 
 extern _X_EXPORT void CheckConnections(void);
 
@@ -173,14 +169,14 @@ extern _X_EXPORT Bool AddClientOnOpenFD(int /* fd */ );
 extern _X_EXPORT CARD32 GetTimeInMillis(void);
 extern _X_EXPORT CARD64 GetTimeInMicros(void);
 
-extern _X_EXPORT void AdjustWaitForDelay(void */*waitTime */ ,
-                                         unsigned long /*newdelay */ );
+extern _X_EXPORT void AdjustWaitForDelay(void *waitTime,
+                                         unsigned long newdelay);
 
 typedef struct _OsTimerRec *OsTimerPtr;
 
-typedef CARD32 (*OsTimerCallback) (OsTimerPtr /* timer */ ,
-                                   CARD32 /* time */ ,
-                                   void */* arg */ );
+typedef CARD32 (*OsTimerCallback) (OsTimerPtr timer,
+                                   CARD32 time,
+                                   void *arg);
 
 extern _X_EXPORT void TimerInit(void);
 
@@ -189,11 +185,11 @@ extern _X_EXPORT Bool TimerForce(OsTimerPtr /* timer */ );
 #define TimerAbsolute (1<<0)
 #define TimerForceOld (1<<1)
 
-extern _X_EXPORT OsTimerPtr TimerSet(OsTimerPtr /* timer */ ,
-                                     int /* flags */ ,
-                                     CARD32 /* millis */ ,
-                                     OsTimerCallback /* func */ ,
-                                     void */* arg */ );
+extern _X_EXPORT OsTimerPtr TimerSet(OsTimerPtr timer,
+                                     int flags,
+                                     CARD32 millis,
+                                     OsTimerCallback func,
+                                     void *arg);
 
 extern _X_EXPORT void TimerCheck(void);
 extern _X_EXPORT void TimerCancel(OsTimerPtr /* pTimer */ );
@@ -210,40 +206,9 @@ extern _X_EXPORT void UseMsg(void);
 
 extern _X_EXPORT void ProcessCommandLine(int /*argc */ , char * /*argv */ []);
 
-extern _X_EXPORT int set_font_authorizations(char ** /* authorizations */ ,
-                                             int * /*authlen */ ,
-                                             void */* client */ );
-
-#ifndef _HAVE_XALLOC_DECLS
-#define _HAVE_XALLOC_DECLS
-
-/*
- * Use malloc(3) instead.
- */
-extern _X_EXPORT void *
-Xalloc(unsigned long /*amount */ ) _X_DEPRECATED;
-
-/*
- * Use calloc(3) instead
- */
-extern _X_EXPORT void *
-Xcalloc(unsigned long /*amount */ ) _X_DEPRECATED;
-
-/*
- * Use realloc(3) instead
- */
-extern _X_EXPORT void *
-Xrealloc(void * /*ptr */ , unsigned long /*amount */ )
- _X_DEPRECATED;
-
-/*
- * Use free(3) instead
- */
-extern _X_EXPORT void
-Xfree(void * /*ptr */ )
-    _X_DEPRECATED;
-
-#endif
+extern _X_EXPORT int set_font_authorizations(char **authorizations,
+                                             int *authlen,
+                                             void *client);
 
 /*
  * This function malloc(3)s buffer, terminating the server if there is not
@@ -398,18 +363,18 @@ AddHost(ClientPtr /*client */ ,
         const void * /*pAddr */ );
 
 extern _X_EXPORT Bool
-ForEachHostInFamily(int /*family */ ,
-                    Bool (* /*func */ )(
-                                           unsigned char * /* addr */ ,
-                                           short /* len */ ,
-                                           void */* closure */ ),
-                    void */*closure */ );
+ForEachHostInFamily(int family,
+                    Bool (*func)(
+                                           unsigned char *addr,
+                                           short len,
+                                           void *closure),
+                    void *closure);
 
 extern _X_EXPORT int
-RemoveHost(ClientPtr /*client */ ,
-           int /*family */ ,
-           unsigned /*length */ ,
-           void */*pAddr */ );
+RemoveHost(ClientPtr client,
+           int family,
+           unsigned length,
+           void *pAddr);
 
 extern _X_EXPORT int
 GetHosts(void ** /*data */ ,
@@ -421,9 +386,6 @@ typedef struct sockaddr *sockaddrPtr;
 
 extern _X_EXPORT int
 InvalidHost(sockaddrPtr /*saddr */ , int /*len */ , ClientPtr client);
-
-extern _X_EXPORT int
-LocalClientCred(ClientPtr, int *, int *);
 
 #define LCC_UID_SET	(1 << 0)
 #define LCC_GID_SET	(1 << 1)
@@ -458,10 +420,27 @@ extern _X_EXPORT void
 ResetHosts(const char *display);
 
 extern _X_EXPORT void
+EnableLocalAccess(void);
+
+extern _X_EXPORT void
+DisableLocalAccess(void);
+
+extern _X_EXPORT void
 EnableLocalHost(void);
 
 extern _X_EXPORT void
 DisableLocalHost(void);
+
+#ifndef NO_LOCAL_CLIENT_CRED
+extern _X_EXPORT void
+EnableLocalUser(void);
+
+extern _X_EXPORT void
+DisableLocalUser(void);
+
+extern _X_EXPORT void
+LocalAccessScopeUser(void);
+#endif
 
 extern _X_EXPORT void
 AccessUsingXdmcp(void);
@@ -471,7 +450,7 @@ DefineSelf(int /*fd */ );
 
 #if XDMCP
 extern _X_EXPORT void
-AugmentSelf(void */*from */ , int /*len */ );
+AugmentSelf(void *from, int len);
 
 extern _X_EXPORT void
 RegisterAuthorizations(void);

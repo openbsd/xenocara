@@ -198,6 +198,12 @@ __glXdirectContextDestroy(__GLXcontext * context)
     free(context);
 }
 
+static int
+__glXdirectContextLoseCurrent(__GLXcontext * context)
+{
+    return GL_TRUE;
+}
+
 _X_HIDDEN __GLXcontext *
 __glXdirectContextCreate(__GLXscreen * screen,
                          __GLXconfig * modes, __GLXcontext * shareContext)
@@ -209,6 +215,7 @@ __glXdirectContextCreate(__GLXscreen * screen,
         return NULL;
 
     context->destroy = __glXdirectContextDestroy;
+    context->loseCurrent = __glXdirectContextLoseCurrent;
 
     return context;
 }
@@ -233,13 +240,13 @@ DoCreateContext(__GLXclientState * cl, GLXContextID gcId,
     LEGAL_NEW_RESOURCE(gcId, client);
 
     /*
-     ** Find the display list space that we want to share.  
+     ** Find the display list space that we want to share.
      **
      ** NOTE: In a multithreaded X server, we would need to keep a reference
-     ** count for each display list so that if one client detroyed a list that 
-     ** another client was using, the list would not really be freed until it 
-     ** was no longer in use.  Since this sample implementation has no support 
-     ** for multithreaded servers, we don't do this.  
+     ** count for each display list so that if one client detroyed a list that
+     ** another client was using, the list would not really be freed until it
+     ** was no longer in use.  Since this sample implementation has no support
+     ** for multithreaded servers, we don't do this.
      */
     if (shareList == None) {
         shareglxc = 0;
@@ -413,7 +420,9 @@ __glXDisp_DestroyContext(__GLXclientState * cl, GLbyte * pc)
                          &glxc, &err))
         return err;
 
-    FreeResourceByType(req->context, __glXContextRes, FALSE);
+    glxc->idExists = GL_FALSE;
+    if (!glxc->currentClient)
+        FreeResourceByType(req->context, __glXContextRes, FALSE);
 
     return Success;
 }
@@ -992,7 +1001,7 @@ __glXDisp_GetVisualConfigs(__GLXclientState * cl, GLbyte * pc)
         buf[p++] = modes->level;
 
         assert(p == GLX_VIS_CONFIG_UNPAIRED);
-        /* 
+        /*
          ** Add token/value pairs for extensions.
          */
         buf[p++] = GLX_VISUAL_CAVEAT_EXT;
@@ -1041,7 +1050,7 @@ __glXDisp_GetVisualConfigs(__GLXclientState * cl, GLbyte * pc)
  * and interface into the driver on the server-side to get GLXFBConfigs,
  * so we "invent" some based on the \c __GLXvisualConfig structures that
  * the driver does supply.
- * 
+ *
  * The reply format for both \c glXGetFBConfigs and \c glXGetFBConfigsSGIX
  * is the same, so this routine pulls double duty.
  */
@@ -1907,44 +1916,55 @@ DoGetDrawableAttributes(__GLXclientState * cl, XID drawId)
 {
     ClientPtr client = cl->client;
     xGLXGetDrawableAttributesReply reply;
-    __GLXdrawable *pGlxDraw;
+    __GLXdrawable *pGlxDraw = NULL;
+    DrawablePtr pDraw;
     CARD32 attributes[14];
-    int numAttribs = 0, error;
+    int num = 0, error;
 
     if (!validGlxDrawable(client, drawId, GLX_DRAWABLE_ANY,
-                          DixGetAttrAccess, &pGlxDraw, &error))
-        return error;
+                          DixGetAttrAccess, &pGlxDraw, &error)) {
+        /* hack for GLX 1.2 naked windows */
+        int err = dixLookupWindow((WindowPtr *)&pDraw, drawId, client,
+                                  DixGetAttrAccess);
+        if (err != Success)
+            return error;
+    }
+    if (pGlxDraw)
+        pDraw = pGlxDraw->pDraw;
 
-    attributes[0] = GLX_TEXTURE_TARGET_EXT;
-    attributes[1] = pGlxDraw->target == GL_TEXTURE_2D ? GLX_TEXTURE_2D_EXT :
-        GLX_TEXTURE_RECTANGLE_EXT;
-    numAttribs++;
-    attributes[2] = GLX_Y_INVERTED_EXT;
-    attributes[3] = GL_FALSE;
-    numAttribs++;
-    attributes[4] = GLX_EVENT_MASK;
-    attributes[5] = pGlxDraw->eventMask;
-    numAttribs++;
-    attributes[6] = GLX_WIDTH;
-    attributes[7] = pGlxDraw->pDraw->width;
-    numAttribs++;
-    attributes[8] = GLX_HEIGHT;
-    attributes[9] = pGlxDraw->pDraw->height;
-    numAttribs++;
-    attributes[10] = GLX_FBCONFIG_ID;
-    attributes[11] = pGlxDraw->config->fbconfigID;
-    numAttribs++;
-    if (pGlxDraw->type == GLX_DRAWABLE_PBUFFER) {
-        attributes[12] = GLX_PRESERVED_CONTENTS;
-        attributes[13] = GL_TRUE;
-        numAttribs++;
+    attributes[2*num] = GLX_Y_INVERTED_EXT;
+    attributes[2*num+1] = GL_FALSE;
+    num++;
+    attributes[2*num] = GLX_WIDTH;
+    attributes[2*num+1] = pDraw->width;
+    num++;
+    attributes[2*num] = GLX_HEIGHT;
+    attributes[2*num+1] = pDraw->height;
+    num++;
+    if (pGlxDraw) {
+        attributes[2*num] = GLX_TEXTURE_TARGET_EXT;
+        attributes[2*num+1] = pGlxDraw->target == GL_TEXTURE_2D ?
+            GLX_TEXTURE_2D_EXT :
+            GLX_TEXTURE_RECTANGLE_EXT;
+        num++;
+        attributes[2*num] = GLX_EVENT_MASK;
+        attributes[2*num+1] = pGlxDraw->eventMask;
+        num++;
+        attributes[2*num] = GLX_FBCONFIG_ID;
+        attributes[2*num+1] = pGlxDraw->config->fbconfigID;
+        num++;
+        if (pGlxDraw->type == GLX_DRAWABLE_PBUFFER) {
+            attributes[2*num] = GLX_PRESERVED_CONTENTS;
+            attributes[2*num+1] = GL_TRUE;
+            num++;
+        }
     }
 
     reply = (xGLXGetDrawableAttributesReply) {
         .type = X_Reply,
         .sequenceNumber = client->sequence,
-        .length = numAttribs << 1,
-        .numAttribs = numAttribs
+        .length = num << 1,
+        .numAttribs = num
     };
 
     if (client->swapped) {
@@ -2521,12 +2541,15 @@ __glXsendSwapEvent(__GLXdrawable *drawable, int type, CARD64 ust,
 
 #if PRESENT
 static void
-__glXpresentCompleteNotify(WindowPtr window, CARD8 present_mode, CARD32 serial,
-                           uint64_t ust, uint64_t msc)
+__glXpresentCompleteNotify(WindowPtr window, CARD8 present_kind, CARD8 present_mode,
+                           CARD32 serial, uint64_t ust, uint64_t msc)
 {
     __GLXdrawable *drawable;
     int glx_type;
     int rc;
+
+    if (present_kind != PresentCompleteKindPixmap)
+        return;
 
     rc = dixLookupResourceByType((void **) &drawable, window->drawable.id,
                                  __glXDrawableRes, serverClient, DixGetAttrAccess);
@@ -2538,7 +2561,7 @@ __glXpresentCompleteNotify(WindowPtr window, CARD8 present_mode, CARD32 serial,
         glx_type = GLX_FLIP_COMPLETE_INTEL;
     else
         glx_type = GLX_BLIT_COMPLETE_INTEL;
-        
+
     __glXsendSwapEvent(drawable, glx_type, ust, msc, serial);
 }
 

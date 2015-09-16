@@ -242,7 +242,7 @@ struct _xf86Crtc {
     /**
      * Desired state of this CRTC
      *
-     * Set when this CRTC should be driving one or more outputs 
+     * Set when this CRTC should be driving one or more outputs
      */
     Bool enabled;
 
@@ -304,7 +304,7 @@ struct _xf86Crtc {
      */
     Bool cursor_argb;
     /**
-     * Track whether cursor is within CRTC range 
+     * Track whether cursor is within CRTC range
      */
     Bool cursor_in_range;
     /**
@@ -608,7 +608,7 @@ struct _xf86Output {
 #else
     void *randr_output;
 #endif
-    /** 
+    /**
      * Desired initial panning
      * Added in ABI version 2
      */
@@ -732,6 +732,8 @@ xf86CompatOutput(ScrnInfoPtr pScrn)
 {
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
 
+    if (config->compat_output < 0)
+        return NULL;
     return config->output[config->compat_output];
 }
 
@@ -922,7 +924,7 @@ extern _X_EXPORT void
  xf86CrtcSetScreenSubpixelOrder(ScreenPtr pScreen);
 
 /*
- * Get a standard string name for a connector type 
+ * Get a standard string name for a connector type
  */
 extern _X_EXPORT const char *xf86ConnectorGetName(xf86ConnectorType connector);
 
@@ -947,7 +949,7 @@ extern _X_EXPORT Bool
  * Called when anything on the screen is reconfigured.
  *
  * Reloads cursor images as needed, then adjusts cursor positions.
- * 
+ *
  * Driver should call this from crtc commit function.
  */
 extern _X_EXPORT void

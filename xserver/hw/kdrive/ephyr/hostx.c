@@ -1,8 +1,8 @@
 /*
  * Xephyr - A kdrive X server thats runs in a host X window.
  *          Authored by Matthew Allum <mallum@o-hand.com>
- * 
- * Copyright © 2004 Nokia 
+ *
+ * Copyright © 2004 Nokia
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -51,6 +51,7 @@
 #include <xcb/xcb_image.h>
 #include <xcb/shape.h>
 #include <xcb/xcb_keysyms.h>
+#include <xcb/randr.h>
 #ifdef XF86DRI
 #include <xcb/xf86dri.h>
 #include <xcb/glx.h>
@@ -70,6 +71,8 @@ struct EphyrHostXVars {
     xcb_visualtype_t *visual;
     Window winroot;
     xcb_gcontext_t  gc;
+    xcb_render_pictformat_t argb_format;
+    xcb_cursor_t empty_cursor;
     int depth;
     Bool use_sw_cursor;
     Bool use_fullscreen;
@@ -79,8 +82,6 @@ struct EphyrHostXVars {
     KdScreenInfo **screens;
 
     long damage_debug_msec;
-
-    unsigned long cmap[256];
 };
 
 /* memset ( missing> ) instead of below  */
@@ -104,12 +105,15 @@ static void
 #define host_depth_matches_server(_vars) (HostX.depth == (_vars)->server_depth)
 
 int
-hostx_want_screen_size(KdScreenInfo *screen, int *width, int *height)
+hostx_want_screen_geometry(KdScreenInfo *screen, int *width, int *height, int *x, int *y)
 {
     EphyrScrPriv *scrpriv = screen->driver;
 
     if (scrpriv && (scrpriv->win_pre_existing != None ||
+                    scrpriv->output != NULL ||
                     HostX.use_fullscreen == TRUE)) {
+        *x = scrpriv->win_x;
+        *y = scrpriv->win_y;
         *width = scrpriv->win_width;
         *height = scrpriv->win_height;
         return 1;
@@ -119,7 +123,7 @@ hostx_want_screen_size(KdScreenInfo *screen, int *width, int *height)
 }
 
 void
-hostx_add_screen(KdScreenInfo *screen, unsigned long win_id, int screen_num)
+hostx_add_screen(KdScreenInfo *screen, unsigned long win_id, int screen_num, Bool use_geometry, const char *output)
 {
     EphyrScrPriv *scrpriv = screen->driver;
     int index = HostX.n_screens;
@@ -131,6 +135,8 @@ hostx_add_screen(KdScreenInfo *screen, unsigned long win_id, int screen_num)
 
     scrpriv->screen = screen;
     scrpriv->win_pre_existing = win_id;
+    scrpriv->win_explicit_position = use_geometry;
+    scrpriv->output = output;
 }
 
 void
@@ -171,7 +177,7 @@ hostx_set_win_title(KdScreenInfo *screen, const char *extra_text)
 
         memset(buf, 0, BUF_LEN + 1);
         snprintf(buf, BUF_LEN, "Xephyr on %s.%d %s",
-                 HostX.server_dpy_name,
+                 HostX.server_dpy_name ? HostX.server_dpy_name : ":0",
                  scrpriv->mynum, (extra_text != NULL) ? extra_text : "");
 
         xcb_icccm_set_wm_name(HostX.conn,
@@ -196,6 +202,12 @@ hostx_use_sw_cursor(void)
     HostX.use_sw_cursor = TRUE;
 }
 
+xcb_cursor_t
+hostx_get_empty_cursor(void)
+{
+    return HostX.empty_cursor;
+}
+
 int
 hostx_want_preexisting_window(KdScreenInfo *screen)
 {
@@ -206,6 +218,119 @@ hostx_want_preexisting_window(KdScreenInfo *screen)
     }
     else {
         return 0;
+    }
+}
+
+void
+hostx_get_output_geometry(const char *output,
+                          int *x, int *y,
+                          int *width, int *height)
+{
+    int i, name_len = 0, output_found = FALSE;
+    char *name = NULL;
+    xcb_generic_error_t *error;
+    xcb_randr_query_version_cookie_t version_c;
+    xcb_randr_query_version_reply_t *version_r;
+    xcb_randr_get_screen_resources_cookie_t screen_resources_c;
+    xcb_randr_get_screen_resources_reply_t *screen_resources_r;
+    xcb_randr_output_t *randr_outputs;
+    xcb_randr_get_output_info_cookie_t output_info_c;
+    xcb_randr_get_output_info_reply_t *output_info_r;
+    xcb_randr_get_crtc_info_cookie_t crtc_info_c;
+    xcb_randr_get_crtc_info_reply_t *crtc_info_r;
+
+    /* First of all, check for extension */
+    if (!xcb_get_extension_data(HostX.conn, &xcb_randr_id)->present)
+    {
+        fprintf(stderr, "\nHost X server does not support RANDR extension (or it's disabled).\n");
+        exit(1);
+    }
+
+    /* Check RandR version */
+    version_c = xcb_randr_query_version(HostX.conn, 1, 2);
+    version_r = xcb_randr_query_version_reply(HostX.conn,
+                                              version_c,
+                                              &error);
+
+    if (error != NULL || version_r == NULL)
+    {
+        fprintf(stderr, "\nFailed to get RandR version supported by host X server.\n");
+        exit(1);
+    }
+    else if (version_r->major_version < 1 || version_r->minor_version < 2)
+    {
+        free(version_r);
+        fprintf(stderr, "\nHost X server doesn't support RandR 1.2, needed for -output usage.\n");
+        exit(1);
+    }
+
+    free(version_r);
+
+    /* Get list of outputs from screen resources */
+    screen_resources_c = xcb_randr_get_screen_resources(HostX.conn,
+                                                        HostX.winroot);
+    screen_resources_r = xcb_randr_get_screen_resources_reply(HostX.conn,
+                                                              screen_resources_c,
+                                                              NULL);
+    randr_outputs = xcb_randr_get_screen_resources_outputs(screen_resources_r);
+
+    for (i = 0; !output_found && i < screen_resources_r->num_outputs; i++)
+    {
+        /* Get info on the output */
+        output_info_c = xcb_randr_get_output_info(HostX.conn,
+                                                  randr_outputs[i],
+                                                  XCB_CURRENT_TIME);
+        output_info_r = xcb_randr_get_output_info_reply(HostX.conn,
+                                                        output_info_c,
+                                                        NULL);
+
+        /* Get output name */
+        name_len = xcb_randr_get_output_info_name_length(output_info_r);
+        name = malloc(name_len + 1);
+        strncpy(name, (char*)xcb_randr_get_output_info_name(output_info_r), name_len);
+        name[name_len] = '\0';
+
+        if (!strcmp(name, output))
+        {
+            output_found = TRUE;
+
+            /* Check if output is connected */
+            if (output_info_r->crtc == XCB_NONE)
+            {
+                free(name);
+                free(output_info_r);
+                free(screen_resources_r);
+                fprintf(stderr, "\nOutput %s is currently disabled (or not connected).\n", output);
+                exit(1);
+            }
+
+            /* Get CRTC from output info */
+            crtc_info_c = xcb_randr_get_crtc_info(HostX.conn,
+                                                  output_info_r->crtc,
+                                                  XCB_CURRENT_TIME);
+            crtc_info_r = xcb_randr_get_crtc_info_reply(HostX.conn,
+                                                        crtc_info_c,
+                                                        NULL);
+
+            /* Get CRTC geometry */
+            *x = crtc_info_r->x;
+            *y = crtc_info_r->y;
+            *width = crtc_info_r->width;
+            *height = crtc_info_r->height;
+
+            free(crtc_info_r);
+        }
+
+        free(name);
+        free(output_info_r);
+    }
+
+    free(screen_resources_r);
+
+    if (!output_found)
+    {
+        fprintf(stderr, "\nOutput %s not available in host X server.\n", output);
+        exit(1);
     }
 }
 
@@ -287,9 +412,10 @@ hostx_set_title(char *title)
 int
 hostx_init(void)
 {
-    uint32_t attr;
-    xcb_cursor_t empty_cursor;
+    uint32_t attrs[2];
+    uint32_t attr_mask = 0;
     xcb_pixmap_t cursor_pxm;
+    xcb_gcontext_t cursor_gc;
     uint16_t red, green, blue;
     uint32_t pixel;
     int index;
@@ -298,8 +424,9 @@ hostx_init(void)
     size_t class_len;
     const xcb_query_extension_reply_t *shm_rep;
     xcb_screen_t *xscreen;
+    xcb_rectangle_t rect = { 0, 0, 1, 1 };
 
-    attr =
+    attrs[0] =
         XCB_EVENT_MASK_BUTTON_PRESS
         | XCB_EVENT_MASK_BUTTON_RELEASE
         | XCB_EVENT_MASK_POINTER_MOTION
@@ -307,6 +434,7 @@ hostx_init(void)
         | XCB_EVENT_MASK_KEY_RELEASE
         | XCB_EVENT_MASK_EXPOSURE
         | XCB_EVENT_MASK_STRUCTURE_NOTIFY;
+    attr_mask |= XCB_CW_EVENT_MASK;
 
     EPHYR_DBG("mark");
 #ifdef GLAMOR
@@ -315,7 +443,7 @@ hostx_init(void)
     else
 #endif
         HostX.conn = xcb_connect(NULL, &HostX.screen);
-    if (xcb_connection_has_error(HostX.conn)) {
+    if (!HostX.conn || xcb_connection_has_error(HostX.conn)) {
         fprintf(stderr, "\nXephyr cannot open host display. Is DISPLAY set?\n");
         exit(1);
     }
@@ -325,9 +453,18 @@ hostx_init(void)
     HostX.gc = xcb_generate_id(HostX.conn);
     HostX.depth = xscreen->root_depth;
 #ifdef GLAMOR
-    if (ephyr_glamor)
+    if (ephyr_glamor) {
         HostX.visual = ephyr_glamor_get_visual();
-    else
+        if (HostX.visual->visual_id != xscreen->root_visual) {
+            attrs[1] = xcb_generate_id(HostX.conn);
+            attr_mask |= XCB_CW_COLORMAP;
+            xcb_create_colormap(HostX.conn,
+                                XCB_COLORMAP_ALLOC_NONE,
+                                attrs[1],
+                                HostX.winroot,
+                                HostX.visual->visual_id);
+        }
+    } else
 #endif
         HostX.visual = xcb_aux_find_visual_by_id(xscreen,xscreen->root_visual);
 
@@ -347,6 +484,8 @@ hostx_init(void)
         scrpriv->win = xcb_generate_id(HostX.conn);
         scrpriv->server_depth = HostX.depth;
         scrpriv->ximg = NULL;
+        scrpriv->win_x = 0;
+        scrpriv->win_y = 0;
 
         if (scrpriv->win_pre_existing != XCB_WINDOW_NONE) {
             xcb_get_geometry_reply_t *prewin_geom;
@@ -379,9 +518,9 @@ hostx_init(void)
                               scrpriv->win_height,
                               0,
                               XCB_WINDOW_CLASS_COPY_FROM_PARENT,
-                              XCB_COPY_FROM_PARENT,
-                              XCB_CW_EVENT_MASK,
-                              &attr);
+                              HostX.visual->visual_id,
+                              attr_mask,
+                              attrs);
         }
         else {
             xcb_create_window(HostX.conn,
@@ -391,9 +530,9 @@ hostx_init(void)
                               0,0,100,100, /* will resize */
                               0,
                               XCB_WINDOW_CLASS_COPY_FROM_PARENT,
-                              XCB_COPY_FROM_PARENT,
-                              XCB_CW_EVENT_MASK,
-                              &attr);
+                              HostX.visual->visual_id,
+                              attr_mask,
+                              attrs);
 
             hostx_set_win_title(screen,
                                 "(ctrl+shift grabs mouse and keyboard)");
@@ -404,6 +543,17 @@ hostx_init(void)
 
                 hostx_set_fullscreen_hint();
             }
+            else if (scrpriv->output) {
+                hostx_get_output_geometry(scrpriv->output,
+                                          &scrpriv->win_x,
+                                          &scrpriv->win_y,
+                                          &scrpriv->win_width,
+                                          &scrpriv->win_height);
+
+                HostX.use_fullscreen = TRUE;
+                hostx_set_fullscreen_hint();
+            }
+
 
             tmpstr = getenv("RESOURCE_NAME");
             if (tmpstr && (!ephyrResNameFromCmd))
@@ -451,18 +601,25 @@ hostx_init(void)
 
     xcb_change_gc(HostX.conn, HostX.gc, XCB_GC_FOREGROUND, &pixel);
 
+    cursor_pxm = xcb_generate_id(HostX.conn);
+    xcb_create_pixmap(HostX.conn, 1, cursor_pxm, HostX.winroot, 1, 1);
+    cursor_gc = xcb_generate_id(HostX.conn);
+    pixel = 0;
+    xcb_create_gc(HostX.conn, cursor_gc, cursor_pxm,
+                  XCB_GC_FOREGROUND, &pixel);
+    xcb_poly_fill_rectangle(HostX.conn, cursor_pxm, cursor_gc, 1, &rect);
+    xcb_free_gc(HostX.conn, cursor_gc);
+    HostX.empty_cursor = xcb_generate_id(HostX.conn);
+    xcb_create_cursor(HostX.conn,
+                      HostX.empty_cursor,
+                      cursor_pxm, cursor_pxm,
+                      0,0,0,
+                      0,0,0,
+                      1,1);
+    xcb_free_pixmap(HostX.conn, cursor_pxm);
     if (!hostx_want_host_cursor ()) {
         CursorVisible = TRUE;
         /* Ditch the cursor, we provide our 'own' */
-        cursor_pxm = xcb_generate_id(HostX.conn);
-        xcb_create_pixmap(HostX.conn, 1, cursor_pxm, HostX.winroot, 1, 1);
-        empty_cursor = xcb_generate_id(HostX.conn);
-        xcb_create_cursor(HostX.conn,
-                          empty_cursor,
-                          cursor_pxm, cursor_pxm,
-                          0,0,0,
-                          0,0,0,
-                          1,1);
         for (index = 0; index < HostX.n_screens; index++) {
             KdScreenInfo *screen = HostX.screens[index];
             EphyrScrPriv *scrpriv = screen->driver;
@@ -470,9 +627,8 @@ hostx_init(void)
             xcb_change_window_attributes(HostX.conn,
                                          scrpriv->win,
                                          XCB_CW_CURSOR,
-                                         &empty_cursor);
+                                         &HostX.empty_cursor);
         }
-        xcb_free_pixmap(HostX.conn, cursor_pxm);
     }
 
     /* Try to get share memory ximages for a little bit more speed */
@@ -593,9 +749,12 @@ hostx_calculate_color_shift(unsigned long mask)
 }
 
 void
-hostx_set_cmap_entry(unsigned char idx,
+hostx_set_cmap_entry(ScreenPtr pScreen, unsigned char idx,
                      unsigned char r, unsigned char g, unsigned char b)
 {
+    KdScreenPriv(pScreen);
+    KdScreenInfo *screen = pScreenPriv->screen;
+    EphyrScrPriv *scrpriv = screen->driver;
 /* need to calculate the shifts for RGB because server could be BGR. */
 /* XXX Not sure if this is correct for 8 on 16, but this works for 8 on 24.*/
     static int rshift, bshift, gshift = 0;
@@ -607,7 +766,7 @@ hostx_set_cmap_entry(unsigned char idx,
         gshift = hostx_calculate_color_shift(HostX.visual->green_mask);
         bshift = hostx_calculate_color_shift(HostX.visual->blue_mask);
     }
-    HostX.cmap[idx] = ((r << rshift) & HostX.visual->red_mask) |
+    scrpriv->cmap[idx] = ((r << rshift) & HostX.visual->red_mask) |
         ((g << gshift) & HostX.visual->green_mask) |
         ((b << bshift) & HostX.visual->blue_mask);
 }
@@ -626,6 +785,7 @@ hostx_set_cmap_entry(unsigned char idx,
  */
 void *
 hostx_screen_init(KdScreenInfo *screen,
+                  int x, int y,
                   int width, int height, int buffer_height,
                   int *bytes_per_line, int *bits_per_pixel)
 {
@@ -637,8 +797,8 @@ hostx_screen_init(KdScreenInfo *screen,
         exit(1);
     }
 
-    EPHYR_DBG("host_screen=%p wxh=%dx%d, buffer_height=%d",
-              host_screen, width, height, buffer_height);
+    EPHYR_DBG("host_screen=%p x=%d, y=%d, wxh=%dx%d, buffer_height=%d",
+              screen, x, y, width, height, buffer_height);
 
     if (scrpriv->ximg != NULL) {
         /* Free up the image data if previously used
@@ -706,6 +866,11 @@ hostx_screen_init(KdScreenInfo *screen,
                                                     ~0,
                                                     NULL);
 
+        /* Match server byte order so that the image can be converted to
+         * the native byte order by xcb_image_put() before drawing */
+        if (host_depth_matches_server(scrpriv))
+            scrpriv->ximg->byte_order = IMAGE_BYTE_ORDER;
+
         scrpriv->ximg->data =
             malloc(scrpriv->ximg->stride * buffer_height);
     }
@@ -729,10 +894,25 @@ hostx_screen_init(KdScreenInfo *screen,
 
     xcb_map_window(HostX.conn, scrpriv->win);
 
+    /* Set explicit window position if it was informed in
+     * -screen option (WxH+X or WxH+X+Y). Otherwise, accept the
+     * position set by WM.
+     * The trick here is putting this code after xcb_map_window() call,
+     * so these values won't be overriden by WM. */
+    if (scrpriv->win_explicit_position)
+    {
+        uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
+        uint32_t values[2] = {x, y};
+        xcb_configure_window(HostX.conn, scrpriv->win, mask, values);
+    }
+
+
     xcb_aux_sync(HostX.conn);
 
     scrpriv->win_width = width;
     scrpriv->win_height = height;
+    scrpriv->win_x = x;
+    scrpriv->win_y = y;
 
 #ifdef GLAMOR
     if (ephyr_glamor) {
@@ -800,15 +980,15 @@ hostx_paint_rect(KdScreenInfo *screen,
         hostx_paint_debug_rect(screen, dx, dy, width, height);
     }
 
-    /* 
+    /*
      * If the depth of the ephyr server is less than that of the host,
      * the kdrive fb does not point to the ximage data but to a buffer
      * ( fb_data ), we shift the various bits from this onto the XImage
      * so they match the host.
      *
-     * Note, This code is pretty new ( and simple ) so may break on 
-     *       endian issues, 32 bpp host etc. 
-     *       Not sure if 8bpp case is right either. 
+     * Note, This code is pretty new ( and simple ) so may break on
+     *       endian issues, 32 bpp host etc.
+     *       Not sure if 8bpp case is right either.
      *       ... and it will be slower than the matching depth case.
      */
 
@@ -843,7 +1023,7 @@ hostx_paint_rect(KdScreenInfo *screen,
                     unsigned char pixel =
                         *(unsigned char *) (scrpriv->fb_data + idx);
                     xcb_image_put_pixel(scrpriv->ximg, x, y,
-                                        HostX.cmap[pixel]);
+                                        scrpriv->cmap[pixel]);
                     break;
                 }
                 default:
@@ -859,8 +1039,11 @@ hostx_paint_rect(KdScreenInfo *screen,
                           sx, sy, dx, dy, width, height, FALSE);
     }
     else {
-        xcb_image_put(HostX.conn, scrpriv->win, HostX.gc, scrpriv->ximg,
-                      dx, dy, 0);
+        /* This is slow and could be done better */
+        xcb_image_t *img = xcb_image_native (HostX.conn, scrpriv->ximg, 1);
+        xcb_image_put(HostX.conn, scrpriv->win, HostX.gc, img, 0, 0, 0);
+        if (scrpriv->ximg != img)
+            xcb_image_destroy(img);
     }
 
     xcb_aux_sync(HostX.conn);
@@ -1232,10 +1415,12 @@ ephyr_glamor_init(ScreenPtr screen)
     ephyr_glamor_set_window_size(scrpriv->glamor,
                                  scrpriv->win_width, scrpriv->win_height);
 
-    glamor_init(screen,
-                GLAMOR_USE_SCREEN |
-                GLAMOR_USE_PICTURE_SCREEN |
-                GLAMOR_INVERTED_Y_AXIS);
+    if (!glamor_init(screen,
+                     GLAMOR_USE_SCREEN |
+                     GLAMOR_USE_PICTURE_SCREEN)) {
+        FatalError("Failed to initialize glamor\n");
+        return FALSE;
+    }
 
     return TRUE;
 }

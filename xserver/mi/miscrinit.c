@@ -45,7 +45,7 @@ from The Open Group.
 
 /* We use this structure to propogate some information from miScreenInit to
  * miCreateScreenResources.  miScreenInit allocates the structure, fills it
- * in, and puts it into pScreen->devPrivate.  miCreateScreenResources 
+ * in, and puts it into pScreen->devPrivate.  miCreateScreenResources
  * extracts the info and frees the structure.  We could've accomplished the
  * same thing by adding fields to the screen structure, but they would have
  * ended up being redundant, and would have exposed this mi implementation
@@ -259,13 +259,12 @@ miScreenInit(ScreenPtr pScreen, void *pbits,  /* pointer to screen bits */
     /* CreateColormap, DestroyColormap, InstallColormap, UninstallColormap */
     /* ListInstalledColormaps, StoreColors, ResolveColor */
     /* BitmapToRegion */
-    pScreen->SendGraphicsExpose = miSendGraphicsExpose;
     pScreen->BlockHandler = (ScreenBlockHandlerProcPtr) NoopDDA;
     pScreen->WakeupHandler = (ScreenWakeupHandlerProcPtr) NoopDDA;
     pScreen->MarkWindow = miMarkWindow;
     pScreen->MarkOverlappedWindows = miMarkOverlappedWindows;
     pScreen->MoveWindow = miMoveWindow;
-    pScreen->ResizeWindow = miSlideAndSizeWindow;
+    pScreen->ResizeWindow = miResizeWindow;
     pScreen->GetLayerWindow = miGetLayerWindow;
     pScreen->HandleExposures = miHandleValidateExposures;
     pScreen->ReparentWindow = (ReparentWindowProcPtr) 0;

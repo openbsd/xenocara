@@ -26,13 +26,13 @@ Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -144,14 +144,13 @@ typedef struct _Window {
     Mask eventMask;             /* mask from the creating client */
     PixUnion background;
     PixUnion border;
-    void *backStorage;          /* null when BS disabled */
     WindowOptPtr optional;
     unsigned backgroundState:2; /* None, Relative, Pixel, Pixmap */
     unsigned borderIsPixel:1;
     unsigned cursorIsNone:1;    /* else real cursor (might inherit) */
     unsigned backingStore:2;
+    unsigned backStorage:1;     /* if bs is allocated */
     unsigned saveUnder:1;
-    unsigned DIXsaveUnder:1;
     unsigned bitGravity:4;
     unsigned winGravity:4;
     unsigned overrideRedirect:1;

@@ -42,6 +42,9 @@
 #include "winmsg.h"
 #include "winmonitors.h"
 #include "inputstr.h"
+#ifdef XWIN_CLIPBOARD
+#include "winclipboard/winclipboard.h"
+#endif
 
 /*
  * Global variables
@@ -160,11 +163,7 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
          */
         if (s_pScreenInfo->fFullScreen
             && (s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
-                || s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL
-#ifdef XWIN_PRIMARYFB
-                || s_pScreenInfo->dwEngine == WIN_SERVER_PRIMARY_DD
-#endif
-            )) {
+                || s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL)) {
             break;
         }
 
@@ -188,11 +187,7 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (s_pScreenInfo->dwBPP !=
             GetDeviceCaps(s_pScreenPriv->hdcScreen, BITSPIXEL)) {
             if ((s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD ||
-                 s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL
-#ifdef XWIN_PRIMARYFB
-                 || s_pScreenInfo->dwEngine == WIN_SERVER_PRIMARY_DD
-#endif
-                )) {
+                 s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL)) {
                 /* Cannot display the visual until the depth is restored */
                 ErrorF("winWindowProc - Disruptive change in depth\n");
 
@@ -408,7 +403,7 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 
         /*
-         * NOTE: Scrollbars may have moved if they were at the 
+         * NOTE: Scrollbars may have moved if they were at the
          * far right/bottom, so we query their current position.
          */
 
@@ -626,7 +621,7 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         int iBorderHeight, iBorderWidth;
 
 #if CYGDEBUG
-        winDebug("winWindowProc - WM_GETMINMAXINFO - pScreenInfo: %08x\n",
+        winDebug("winWindowProc - WM_GETMINMAXINFO - pScreenInfo: %p\n",
                  s_pScreenInfo);
 #endif
 
@@ -1058,12 +1053,12 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (winIsFakeCtrl_L(message, wParam, lParam))
             return 0;
 
-        /* 
+        /*
          * Discard presses generated from Windows auto-repeat
          */
         if (lParam & (1 << 30)) {
             switch (wParam) {
-                /* ago: Pressing LControl while RControl is pressed is 
+                /* ago: Pressing LControl while RControl is pressed is
                  * Indicated as repeat. Fix this!
                  */
             case VK_CONTROL:
@@ -1220,6 +1215,12 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             else
                 ShowWindow(s_pScreenPriv->hwndScreen, SW_SHOW);
             s_pScreenPriv->fRootWindowShown = !s_pScreenPriv->fRootWindowShown;
+            return 0;
+#endif
+
+#ifdef XWIN_CLIPBOARD
+        case ID_APP_MONITOR_PRIMARY:
+            fPrimarySelection = !fPrimarySelection;
             return 0;
 #endif
 

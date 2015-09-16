@@ -273,6 +273,20 @@ miPointerSetCursorPosition(DeviceIntPtr pDev, ScreenPtr pScreen,
     return TRUE;
 }
 
+void
+miRecolorCursor(DeviceIntPtr pDev, ScreenPtr pScr,
+                CursorPtr pCurs, Bool displayed)
+{
+    /*
+     * This is guaranteed to correct any color-dependent state which may have
+     * been bound up in private state created by RealizeCursor
+     */
+    pScr->UnrealizeCursor(pDev, pScr, pCurs);
+    pScr->RealizeCursor(pDev, pScr, pCurs);
+    if (displayed)
+        pScr->DisplayCursor(pDev, pScr, pCurs);
+}
+
 /**
  * Set up sprite information for the device.
  * This function will be called once for each device after it is initialized
@@ -539,10 +553,15 @@ miPointerMoveNoEvent(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
  * The coordinates provided are always absolute. The parameter mode whether
  * it was relative or absolute movement that landed us at those coordinates.
  *
+ * If the cursor was constrained by a barrier, ET_Barrier* events may be
+ * generated and appended to the InternalEvent list provided.
+ *
  * @param pDev The device to move
  * @param mode Movement mode (Absolute or Relative)
  * @param[in,out] screenx The x coordinate in desktop coordinates
  * @param[in,out] screeny The y coordinate in desktop coordinates
+ * @param[in,out] nevents The number of events in events (before/after)
+ * @param[in,out] events The list of events before/after being constrained
  */
 ScreenPtr
 miPointerSetPosition(DeviceIntPtr pDev, int mode, double *screenx,
@@ -579,8 +598,8 @@ miPointerSetPosition(DeviceIntPtr pDev, int mode, double *screenx,
         int constrained_x, constrained_y;
         int current_x, current_y; /* current position in per-screen coord */
 
-        current_x = MIPOINTER(pDev)->x - pScreen->y;
-        current_y = MIPOINTER(pDev)->y - pScreen->x;
+        current_x = MIPOINTER(pDev)->x - pScreen->x;
+        current_y = MIPOINTER(pDev)->y - pScreen->y;
 
         input_constrain_cursor(pDev, pScreen,
                                current_x, current_y, x, y,

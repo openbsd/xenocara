@@ -226,7 +226,7 @@ glamor_get_spans_gl(DrawablePtr drawable, int wmax,
         BoxPtr                  box = glamor_pixmap_box_at(pixmap_priv, box_x, box_y);
         glamor_pixmap_fbo       *fbo = glamor_pixmap_fbo_at(pixmap_priv, box_x, box_y);
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->fb);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo->fb);
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
 
         d = dst;
@@ -325,9 +325,6 @@ glamor_set_spans_gl(DrawablePtr drawable, GCPtr gc, char *src,
     glamor_format_for_pixmap(pixmap, &format, &type);
 
     glamor_make_current(glamor_priv);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 

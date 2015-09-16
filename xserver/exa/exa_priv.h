@@ -214,18 +214,6 @@ typedef struct {
     DevPrivateKeyRec gcPrivateKeyRec;
 } ExaScreenPrivRec, *ExaScreenPrivPtr;
 
-/*
- * This is the only completely portable way to
- * compute this info.
- */
-#ifndef BitsPerPixel
-#define BitsPerPixel(d) (\
-    PixmapWidthPaddingInfo[d].notPower2 ? \
-    (PixmapWidthPaddingInfo[d].bytesPerPixel * 8) : \
-    ((1 << PixmapWidthPaddingInfo[d].padBytesLog2) * 8 / \
-    (PixmapWidthPaddingInfo[d].padRoundUp+1)))
-#endif
-
 extern DevPrivateKeyRec exaScreenPrivateKeyRec;
 
 #define exaScreenPrivateKey (&exaScreenPrivateKeyRec)
@@ -467,12 +455,11 @@ ExaCheckAddTraps(PicturePtr pPicture,
 static _X_INLINE Bool
 exaGCReadsDestination(DrawablePtr pDrawable, unsigned long planemask,
                       unsigned int fillStyle, unsigned char alu,
-                      unsigned int clientClipType)
+                      Bool clientClip)
 {
     return ((alu != GXcopy && alu != GXclear && alu != GXset &&
              alu != GXcopyInverted) || fillStyle == FillStippled ||
-            clientClipType != CT_NONE ||
-            !EXA_PM_IS_SOLID(pDrawable, planemask));
+            clientClip != FALSE || !EXA_PM_IS_SOLID(pDrawable, planemask));
 }
 
 void
@@ -482,7 +469,7 @@ Bool
 
 exaFillRegionTiled(DrawablePtr pDrawable, RegionPtr pRegion, PixmapPtr pTile,
                    DDXPointPtr pPatOrg, CARD32 planemask, CARD32 alu,
-                   unsigned int clientClipType);
+                   Bool clientClip);
 
 void
 

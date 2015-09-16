@@ -78,6 +78,7 @@ compCloseScreen(ScreenPtr pScreen)
     pScreen->PositionWindow = cs->PositionWindow;
 
     pScreen->GetImage = cs->GetImage;
+    pScreen->GetSpans = cs->GetSpans;
     pScreen->SourceValidate = cs->SourceValidate;
 
     free(cs);
@@ -119,12 +120,12 @@ compChangeWindowAttributes(WindowPtr pWin, unsigned long mask)
         pScreen->backingStoreSupport != NotUseful) {
         if (pWin->backingStore != NotUseful && !pWin->backStorage) {
             compRedirectWindow(serverClient, pWin, CompositeRedirectAutomatic);
-            pWin->backStorage = (void *) (intptr_t) 1;
+            pWin->backStorage = TRUE;
         }
         else if (pWin->backingStore == NotUseful && pWin->backStorage) {
             compUnredirectWindow(serverClient, pWin,
                                  CompositeRedirectAutomatic);
-            pWin->backStorage = NULL;
+            pWin->backStorage = FALSE;
         }
     }
 
@@ -148,6 +149,21 @@ compGetImage(DrawablePtr pDrawable,
     (*pScreen->GetImage) (pDrawable, sx, sy, w, h, format, planemask, pdstLine);
     cs->GetImage = pScreen->GetImage;
     pScreen->GetImage = compGetImage;
+}
+
+static void
+compGetSpans(DrawablePtr pDrawable, int wMax, DDXPointPtr ppt, int *pwidth,
+             int nspans, char *pdstStart)
+{
+    ScreenPtr pScreen = pDrawable->pScreen;
+    CompScreenPtr cs = GetCompScreen(pScreen);
+
+    pScreen->GetSpans = cs->GetSpans;
+    if (pDrawable->type == DRAWABLE_WINDOW)
+        compPaintChildrenToWindow((WindowPtr) pDrawable);
+    (*pScreen->GetSpans) (pDrawable, wMax, ppt, pwidth, nspans, pdstStart);
+    cs->GetSpans = pScreen->GetSpans;
+    pScreen->GetSpans = compGetSpans;
 }
 
 static void
@@ -193,7 +209,7 @@ compFindVisuallessDepth(ScreenPtr pScreen, int d)
         }
     }
     /*
-     * If there isn't one, then it's gonna be hard to have 
+     * If there isn't one, then it's gonna be hard to have
      * an associated visual
      */
     return 0;
@@ -431,6 +447,9 @@ compScreenInit(ScreenPtr pScreen)
 
     cs->GetImage = pScreen->GetImage;
     pScreen->GetImage = compGetImage;
+
+    cs->GetSpans = pScreen->GetSpans;
+    pScreen->GetSpans = compGetSpans;
 
     cs->SourceValidate = pScreen->SourceValidate;
     pScreen->SourceValidate = compSourceValidate;

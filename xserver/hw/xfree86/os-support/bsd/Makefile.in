@@ -77,11 +77,10 @@ libbsd_la_LIBADD =
 am__libbsd_la_SOURCES_DIST = $(srcdir)/../shared/posix_tty.c \
 	$(srcdir)/../shared/sigio.c $(srcdir)/../shared/vidmem.c \
 	bsd_VTsw.c bsd_init.c bsd_bell.c alpha_video.c bsd_ev56.c \
-	bsd_axp.c $(srcdir)/../shared/xf86Axp.c arm_video.c \
-	$(srcdir)/../shared/ioperm_noop.c hppa_video.c i386_video.c \
-	luna88k_video.c ppc_video.c sgi_video.c sparc64_video.c \
-	bsd_sbus.c $(srcdir)/../shared/agp_noop.c bsd_agp.c \
-	$(srcdir)/../shared/pm_noop.c $(srcdir)/bsd_apm.c \
+	arm_video.c $(srcdir)/../shared/ioperm_noop.c hppa_video.c \
+	i386_video.c luna88k_video.c ppc_video.c sgi_video.c \
+	sparc64_video.c bsd_sbus.c $(srcdir)/../shared/agp_noop.c \
+	bsd_agp.c $(srcdir)/../shared/pm_noop.c $(srcdir)/bsd_apm.c \
 	$(srcdir)/bsd_kqueue_apm.c $(srcdir)/../shared/kmod_noop.c \
 	bsd_kmod.c
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_FALSE@@I386_VIDEO_FALSE@@LUNA88K_VIDEO_FALSE@@PPC_VIDEO_FALSE@@SGI_VIDEO_FALSE@@SPARC64_VIDEO_TRUE@am__objects_1 = sparc64_video.lo \
@@ -98,8 +97,7 @@ am__libbsd_la_SOURCES_DIST = $(srcdir)/../shared/posix_tty.c \
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_FALSE@@HPPA_VIDEO_TRUE@	ioperm_noop.lo
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_TRUE@am__objects_1 = arm_video.lo \
 @ALPHA_VIDEO_FALSE@@ARM_VIDEO_TRUE@	ioperm_noop.lo
-@ALPHA_VIDEO_TRUE@am__objects_1 = alpha_video.lo bsd_ev56.lo \
-@ALPHA_VIDEO_TRUE@	bsd_axp.lo xf86Axp.lo
+@ALPHA_VIDEO_TRUE@am__objects_1 = alpha_video.lo bsd_ev56.lo
 @AGP_FALSE@am__objects_2 = agp_noop.lo
 @AGP_TRUE@am__objects_2 = bsd_agp.lo
 @BSD_APM_FALSE@@BSD_KQUEUE_APM_FALSE@am__objects_3 = pm_noop.lo
@@ -267,6 +265,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -518,9 +517,7 @@ noinst_LTLIBRARIES = libbsd.la
 # Cheat here and piggyback other alpha bits on ALPHA_VIDEO.
 @ALPHA_VIDEO_TRUE@ARCH_SOURCES = \
 @ALPHA_VIDEO_TRUE@	alpha_video.c \
-@ALPHA_VIDEO_TRUE@	bsd_ev56.c \
-@ALPHA_VIDEO_TRUE@	bsd_axp.c \
-@ALPHA_VIDEO_TRUE@	$(srcdir)/../shared/xf86Axp.c
+@ALPHA_VIDEO_TRUE@	bsd_ev56.c
 
 @ARM_VIDEO_TRUE@ARCH_SOURCES = arm_video.c \
 @ARM_VIDEO_TRUE@	$(srcdir)/../shared/ioperm_noop.c
@@ -629,7 +626,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_VTsw.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_agp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_apm.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_axp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_bell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_ev56.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_init.Plo@am__quote@
@@ -648,7 +644,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigio.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sparc64_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vidmem.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Axp.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -691,13 +686,6 @@ vidmem.lo: $(srcdir)/../shared/vidmem.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/vidmem.c' object='vidmem.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o vidmem.lo `test -f '$(srcdir)/../shared/vidmem.c' || echo '$(srcdir)/'`$(srcdir)/../shared/vidmem.c
-
-xf86Axp.lo: $(srcdir)/../shared/xf86Axp.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xf86Axp.lo -MD -MP -MF $(DEPDIR)/xf86Axp.Tpo -c -o xf86Axp.lo `test -f '$(srcdir)/../shared/xf86Axp.c' || echo '$(srcdir)/'`$(srcdir)/../shared/xf86Axp.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/xf86Axp.Tpo $(DEPDIR)/xf86Axp.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/xf86Axp.c' object='xf86Axp.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Axp.lo `test -f '$(srcdir)/../shared/xf86Axp.c' || echo '$(srcdir)/'`$(srcdir)/../shared/xf86Axp.c
 
 ioperm_noop.lo: $(srcdir)/../shared/ioperm_noop.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ioperm_noop.lo -MD -MP -MF $(DEPDIR)/ioperm_noop.Tpo -c -o ioperm_noop.lo `test -f '$(srcdir)/../shared/ioperm_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/ioperm_noop.c

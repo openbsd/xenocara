@@ -56,8 +56,6 @@
 #include "dbus-core.h"
 #include "systemd-logind.h"
 
-#include "compiler.h"
-
 #include "loaderProcs.h"
 #ifdef XFreeXDGA
 #include "dgaproc.h"
@@ -239,12 +237,6 @@ xf86PrintBanner(void)
                    "\tto make sure that you have the latest version.\n");
 }
 
-static void
-xf86PrintMarkers(void)
-{
-    LogPrintMarkers();
-}
-
 Bool
 xf86PrivsElevated(void)
 {
@@ -320,14 +312,6 @@ xf86CreateRootWindow(WindowPtr pWin)
 
     DebugF("xf86CreateRootWindow(%p)\n", pWin);
 
-    if (pScreen->CreateWindow != xf86CreateRootWindow) {
-        /* Can't find hook we are hung on */
-        xf86DrvMsg(pScreen->myNum, X_WARNING /* X_ERROR */ ,
-                   "xf86CreateRootWindow %p called when not in pScreen->CreateWindow %p n",
-                   (void *) xf86CreateRootWindow,
-                   (void *) pScreen->CreateWindow);
-    }
-
     /* Unhook this function ... */
     pScreen->CreateWindow = create_window;
     dixSetPrivate(&pScreen->devPrivates, xf86CreateRootWindowKey, NULL);
@@ -355,15 +339,8 @@ xf86CreateRootWindow(WindowPtr pWin)
             ret &= (err == Success);
 
         }
-        else {
-            xf86Msg(X_ERROR, "xf86CreateRootWindow unexpectedly called with "
-                    "non-root window %p (parent %p)\n",
-                    (void *) pWin, (void *) pWin->parent);
-            ret = FALSE;
-        }
     }
 
-    DebugF("xf86CreateRootWindow() returns %d\n", ret);
     return ret;
 }
 
@@ -427,7 +404,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             xf86ServerName = argv[0];
 
         xf86PrintBanner();
-        xf86PrintMarkers();
+        LogPrintMarkers();
         if (xf86LogFile) {
             time_t t;
             const char *ct;

@@ -76,13 +76,12 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libxf86modes_la_LIBADD =
 am__libxf86modes_la_SOURCES_DIST = xf86Crtc.c xf86Crtc.h xf86Cursors.c \
-	xf86cvt.c xf86gtf.c xf86DisplayIDModes.c xf86EdidModes.c \
-	xf86Modes.c xf86Modes.h xf86RandR12.c xf86RandR12.h \
-	xf86Rotate.c xf86DiDGA.c
+	xf86cvt.c xf86gtf.c xf86EdidModes.c xf86Modes.c xf86Modes.h \
+	xf86RandR12.c xf86RandR12.h xf86Rotate.c xf86DiDGA.c
 @DGA_TRUE@am__objects_1 = xf86DiDGA.lo
 am_libxf86modes_la_OBJECTS = xf86Crtc.lo xf86Cursors.lo xf86cvt.lo \
-	xf86gtf.lo xf86DisplayIDModes.lo xf86EdidModes.lo xf86Modes.lo \
-	xf86RandR12.lo xf86Rotate.lo $(am__objects_1)
+	xf86gtf.lo xf86EdidModes.lo xf86Modes.lo xf86RandR12.lo \
+	xf86Rotate.lo $(am__objects_1)
 libxf86modes_la_OBJECTS = $(am_libxf86modes_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -269,6 +268,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -514,7 +514,6 @@ libxf86modes_la_SOURCES = \
 	xf86Cursors.c \
 	xf86cvt.c \
 	xf86gtf.c \
-	xf86DisplayIDModes.c \
 	xf86EdidModes.c \
 	xf86Modes.c \
 	xf86Modes.h \
@@ -592,7 +591,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Crtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Cursors.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86DiDGA.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86DisplayIDModes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86EdidModes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Modes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86RandR12.Plo@am__quote@

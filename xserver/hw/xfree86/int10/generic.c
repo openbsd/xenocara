@@ -20,6 +20,42 @@
 
 #define ALLOC_ENTRIES(x) ((V_RAM / x) - 1)
 
+#include <string.h>             /* needed for memmove */
+
+static __inline__ uint32_t
+ldl_u(uint32_t * p)
+{
+    uint32_t ret;
+
+    memmove(&ret, p, sizeof(*p));
+    return ret;
+}
+
+static __inline__ uint16_t
+ldw_u(uint16_t * p)
+{
+    uint16_t ret;
+
+    memmove(&ret, p, sizeof(*p));
+    return ret;
+}
+
+static __inline__ void
+stl_u(uint32_t val, uint32_t * p)
+{
+    uint32_t tmp = val;
+
+    memmove(p, &tmp, sizeof(*p));
+}
+
+static __inline__ void
+stw_u(uint16_t val, uint16_t * p)
+{
+    uint16_t tmp = val;
+
+    memmove(p, &tmp, sizeof(*p));
+}
+
 static uint8_t read_b(xf86Int10InfoPtr pInt, int addr);
 static uint16_t read_w(xf86Int10InfoPtr pInt, int addr);
 static uint32_t read_l(xf86Int10InfoPtr pInt, int addr);
@@ -62,6 +98,20 @@ static void UnmapVRam(xf86Int10InfoPtr pInt);
 #endif
 
 static void *sysMem = NULL;
+
+static Bool
+readIntVec(struct pci_device *dev, unsigned char *buf, int len)
+{
+    void *map;
+
+    if (pci_device_map_legacy(dev, 0, len, 0, &map))
+        return FALSE;
+
+    memcpy(buf, map, len);
+    pci_device_unmap_legacy(dev, map, len);
+
+    return TRUE;
+}
 
 xf86Int10InfoPtr
 xf86ExtendedInitInt10(int entityIndex, int Flags)
@@ -108,7 +158,7 @@ xf86ExtendedInitInt10(int entityIndex, int Flags)
                               PCI_DEV_MAP_FLAG_WRITABLE, &sysMem);
     INTPriv(pInt)->sysMem = sysMem;
 
-    if (xf86ReadBIOS(0, 0, base, LOW_PAGE_SIZE) < 0) {
+    if (!readIntVec(pInt->dev, base, LOW_PAGE_SIZE)) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Cannot read int vect\n");
         goto error1;
     }

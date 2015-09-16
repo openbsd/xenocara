@@ -85,27 +85,19 @@ am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
 	winmultiwindowicons.c winprefs.c winprefsyacc.y winprefslex.l \
 	winprocarg.c winscrinit.c winshaddd.c winshadddnl.c \
 	winshadgdi.c wintaskbar.c wintrayicon.c winvalargs.c \
-	winwakeup.c winwindow.c winwndproc.c ddraw.h winclipboard.h \
-	winconfig.h win.h winglobals.h winkeybd.h winkeynames.h \
-	winlayouts.h winmessages.h winmonitors.h winmsg.h winms.h \
+	winwakeup.c winwindow.c winwndproc.c ddraw.h winconfig.h win.h \
+	winglobals.h winkeybd.h winkeynames.h winlayouts.h \
+	winmessages.h winmonitors.h winmsg.h winms.h \
 	winmultiwindowclass.h winmultiwindowicons.h winprefs.h \
-	winresource.h winwindow.h XWin.rc $(top_srcdir)/mi/miinitext.c \
-	winclipboardinit.c winclipboardtextconv.c winclipboardthread.c \
-	winclipboardwndproc.c winclipboardwrappers.c \
-	winclipboardxevents.c winmultiwindowshape.c \
+	winresource.h winwindow.h windisplay.c windisplay.h XWin.rc \
+	$(top_srcdir)/mi/miinitext.c winclipboardinit.c \
+	winclipboardwrappers.c winmultiwindowshape.c \
 	winmultiwindowwindow.c winmultiwindowwm.c \
 	winmultiwindowwndproc.c propertystore.h winSetAppUserModelID.c \
 	winwin32rootless.c winwin32rootlesswindow.c \
-	winwin32rootlesswndproc.c winwindowswm.c winclip.c winfillsp.c \
-	winfont.c wingc.c wingetsp.c winnativegdi.c winpixmap.c \
-	winpolyline.c winrop.c winsetsp.c winpfbdd.c winrandr.c \
-	winvideo.c
+	winwin32rootlesswndproc.c winwindowswm.c winrandr.c winvideo.c
 @XWIN_CLIPBOARD_TRUE@am__objects_1 = winclipboardinit.$(OBJEXT) \
-@XWIN_CLIPBOARD_TRUE@	winclipboardtextconv.$(OBJEXT) \
-@XWIN_CLIPBOARD_TRUE@	winclipboardthread.$(OBJEXT) \
-@XWIN_CLIPBOARD_TRUE@	winclipboardwndproc.$(OBJEXT) \
-@XWIN_CLIPBOARD_TRUE@	winclipboardwrappers.$(OBJEXT) \
-@XWIN_CLIPBOARD_TRUE@	winclipboardxevents.$(OBJEXT)
+@XWIN_CLIPBOARD_TRUE@	winclipboardwrappers.$(OBJEXT)
 @XWIN_MULTIWINDOW_TRUE@am__objects_2 = winmultiwindowshape.$(OBJEXT) \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowwindow.$(OBJEXT) \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowwm.$(OBJEXT) \
@@ -116,16 +108,9 @@ am__XWin_SOURCES_DIST = InitInput.c InitOutput.c winallpriv.c \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswindow.$(OBJEXT) \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswndproc.$(OBJEXT) \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwindowswm.$(OBJEXT)
-@XWIN_NATIVEGDI_TRUE@am__objects_4 = winclip.$(OBJEXT) \
-@XWIN_NATIVEGDI_TRUE@	winfillsp.$(OBJEXT) winfont.$(OBJEXT) \
-@XWIN_NATIVEGDI_TRUE@	wingc.$(OBJEXT) wingetsp.$(OBJEXT) \
-@XWIN_NATIVEGDI_TRUE@	winnativegdi.$(OBJEXT) \
-@XWIN_NATIVEGDI_TRUE@	winpixmap.$(OBJEXT) winpolyline.$(OBJEXT) \
-@XWIN_NATIVEGDI_TRUE@	winrop.$(OBJEXT) winsetsp.$(OBJEXT)
-@XWIN_PRIMARYFB_TRUE@am__objects_5 = winpfbdd.$(OBJEXT)
-@XWIN_RANDR_TRUE@am__objects_6 = winrandr.$(OBJEXT)
-@XWIN_XV_TRUE@am__objects_7 = winvideo.$(OBJEXT)
-am__objects_8 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
+@XWIN_RANDR_TRUE@am__objects_4 = winrandr.$(OBJEXT)
+@XWIN_XV_TRUE@am__objects_5 = winvideo.$(OBJEXT)
+am__objects_6 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	winallpriv.$(OBJEXT) winauth.$(OBJEXT) winblock.$(OBJEXT) \
 	wincmap.$(OBJEXT) winconfig.$(OBJEXT) wincreatewnd.$(OBJEXT) \
 	wincursor.$(OBJEXT) windialogs.$(OBJEXT) winengine.$(OBJEXT) \
@@ -138,16 +123,16 @@ am__objects_8 = InitInput.$(OBJEXT) InitOutput.$(OBJEXT) \
 	winscrinit.$(OBJEXT) winshaddd.$(OBJEXT) winshadddnl.$(OBJEXT) \
 	winshadgdi.$(OBJEXT) wintaskbar.$(OBJEXT) \
 	wintrayicon.$(OBJEXT) winvalargs.$(OBJEXT) winwakeup.$(OBJEXT) \
-	winwindow.$(OBJEXT) winwndproc.$(OBJEXT) XWin.$(OBJEXT) \
-	miinitext.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
-	$(am__objects_6) $(am__objects_7)
-am_XWin_OBJECTS = $(am__objects_8)
+	winwindow.$(OBJEXT) winwndproc.$(OBJEXT) windisplay.$(OBJEXT) \
+	XWin.$(OBJEXT) miinitext.$(OBJEXT) $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5)
+am_XWin_OBJECTS = $(am__objects_6)
 XWin_OBJECTS = $(am_XWin_OBJECTS)
-am__DEPENDENCIES_1 =
-am__DEPENDENCIES_2 = $(top_builddir)/pseudoramiX/libPseudoramiX.la \
+am__DEPENDENCIES_1 = $(top_builddir)/pseudoramiX/libPseudoramiX.la \
 	$(top_builddir)/Xext/libXextdpmsstubs.la \
 	$(top_builddir)/Xi/libXistubs.la
+am__DEPENDENCIES_2 =
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -397,6 +382,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -638,17 +624,14 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @XWIN_CLIPBOARD_TRUE@SRCS_CLIPBOARD = \
 @XWIN_CLIPBOARD_TRUE@	winclipboardinit.c \
-@XWIN_CLIPBOARD_TRUE@	winclipboardtextconv.c \
-@XWIN_CLIPBOARD_TRUE@	winclipboardthread.c \
-@XWIN_CLIPBOARD_TRUE@	winclipboardwndproc.c \
-@XWIN_CLIPBOARD_TRUE@	winclipboardwrappers.c \
-@XWIN_CLIPBOARD_TRUE@	winclipboardxevents.c
+@XWIN_CLIPBOARD_TRUE@	winclipboardwrappers.c
 
 @XWIN_CLIPBOARD_TRUE@DEFS_CLIPBOARD = -DXWIN_CLIPBOARD
+@XWIN_CLIPBOARD_TRUE@CLIPBOARD_LIBS = $(top_builddir)/hw/xwin/winclipboard/libXWinclipboard.la
 @XWIN_GLX_WINDOWS_TRUE@GLX_DIR = glx
 @XWIN_GLX_WINDOWS_TRUE@DEFS_GLX_WINDOWS = -DXWIN_GLX_WINDOWS
 @XWIN_GLX_WINDOWS_TRUE@XWIN_GLX_LIBS = $(top_builddir)/hw/xwin/glx/libXwinGLX.la
-@XWIN_GLX_WINDOWS_TRUE@XWIN_GLX_LINK_FLAGS = -lopengl32
+@XWIN_GLX_WINDOWS_TRUE@XWIN_GLX_SYS_LIBS = -lopengl32
 @XWIN_MULTIWINDOW_TRUE@SRCS_MULTIWINDOW = \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowshape.c \
 @XWIN_MULTIWINDOW_TRUE@	winmultiwindowwindow.c \
@@ -658,7 +641,7 @@ top_srcdir = @top_srcdir@
 @XWIN_MULTIWINDOW_TRUE@	winSetAppUserModelID.c
 
 @XWIN_MULTIWINDOW_TRUE@DEFS_MULTIWINDOW = -DXWIN_MULTIWINDOW
-@XWIN_MULTIWINDOW_TRUE@MULTIWINDOW_LIBS = -lshlwapi -lole32
+@XWIN_MULTIWINDOW_TRUE@MULTIWINDOW_SYS_LIBS = -lshlwapi -lole32
 @XWIN_MULTIWINDOWEXTWM_TRUE@SRCS_MULTIWINDOWEXTWM = \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootless.c \
 @XWIN_MULTIWINDOWEXTWM_TRUE@	winwin32rootlesswindow.c \
@@ -667,23 +650,6 @@ top_srcdir = @top_srcdir@
 
 @XWIN_MULTIWINDOWEXTWM_TRUE@DEFS_MULTIWINDOWEXTWM = -DXWIN_MULTIWINDOWEXTWM
 @XWIN_MULTIWINDOWEXTWM_TRUE@MULTIWINDOWEXTWM_LIBS = $(top_builddir)/miext/rootless/librootless.la
-@XWIN_NATIVEGDI_TRUE@SRCS_NATIVEGDI = \
-@XWIN_NATIVEGDI_TRUE@	winclip.c \
-@XWIN_NATIVEGDI_TRUE@	winfillsp.c \
-@XWIN_NATIVEGDI_TRUE@	winfont.c \
-@XWIN_NATIVEGDI_TRUE@	wingc.c \
-@XWIN_NATIVEGDI_TRUE@	wingetsp.c \
-@XWIN_NATIVEGDI_TRUE@	winnativegdi.c \
-@XWIN_NATIVEGDI_TRUE@	winpixmap.c \
-@XWIN_NATIVEGDI_TRUE@	winpolyline.c \
-@XWIN_NATIVEGDI_TRUE@	winrop.c \
-@XWIN_NATIVEGDI_TRUE@	winsetsp.c
-
-@XWIN_NATIVEGDI_TRUE@DEFS_NATIVEGDI = -DXWIN_NATIVEGDI
-@XWIN_PRIMARYFB_TRUE@SRCS_PRIMARYFB = \
-@XWIN_PRIMARYFB_TRUE@	winpfbdd.c
-
-@XWIN_PRIMARYFB_TRUE@DEFS_PRIMARYFB = -DXWIN_PRIMARYFB
 @XWIN_RANDR_TRUE@SRCS_RANDR = \
 @XWIN_RANDR_TRUE@	winrandr.c
 
@@ -729,7 +695,6 @@ SRCS = InitInput.c \
 	winwindow.c \
 	winwndproc.c \
 	ddraw.h \
-	winclipboard.h \
 	winconfig.h \
 	win.h \
 	winglobals.h \
@@ -745,6 +710,8 @@ SRCS = InitInput.c \
 	winprefs.h \
 	winresource.h \
 	winwindow.h \
+	windisplay.c \
+	windisplay.h \
 	XWin.rc \
 	$(top_srcdir)/mi/miinitext.c \
 	$(SRCS_CLIPBOARD) \
@@ -757,8 +724,24 @@ SRCS = InitInput.c \
 
 XWin_SOURCES = $(SRCS)
 AM_CPPFLAGS = -I$(top_srcdir)/miext/rootless
-XWin_DEPENDENCIES = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_LIBS) $(XSERVER_LIBS)
-XWin_LDADD = $(MULTIWINDOW_LIBS) $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_GLX_LINK_FLAGS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
+XWin_DEPENDENCIES = \
+	$(MULTIWINDOWEXTWM_LIBS) \
+	$(XWIN_GLX_LIBS) \
+	$(XWIN_LIBS) \
+	$(CLIPBOARD_LIBS) \
+	$(XSERVER_LIBS)
+
+XWin_LDADD = \
+	$(MULTIWINDOWEXTWM_LIBS) \
+	$(XWIN_GLX_LIBS) \
+	$(XWIN_LIBS) \
+	$(CLIPBOARD_LIBS) \
+	$(XSERVER_LIBS) \
+	$(XWIN_GLX_SYS_LIBS) \
+	$(XSERVER_SYS_LIBS) \
+	$(XWIN_SYS_LIBS) \
+	$(MULTIWINDOW_SYS_LIBS)
+
 XWin_LDFLAGS = -mwindows -Wl,--disable-stdcall-fixup $(LD_EXPORT_SYMBOLS_FLAG)
 BUILT_SOURCES = winprefsyacc.h winprefsyacc.c winprefslex.c
 CLEANFILES = $(BUILT_SOURCES)
@@ -777,8 +760,8 @@ EXTRA_DIST = \
 	XWin.rc \
 	XWin.exe.manifest
 
-SUBDIRS = man $(GLX_DIR) .
-DIST_SUBDIRS = man glx .
+SUBDIRS = man $(GLX_DIR) winclipboard .
+DIST_SUBDIRS = man glx winclipboard .
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -877,24 +860,16 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winallpriv.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winauth.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winblock.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winclip.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winclipboardinit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winclipboardtextconv.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winclipboardthread.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winclipboardwndproc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winclipboardwrappers.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winclipboardxevents.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wincmap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winconfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wincreatewnd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wincursor.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/windialogs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/windisplay.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winengine.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winerror.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winfillsp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winfont.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wingc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wingetsp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winglobals.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winkeybd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winkeyhook.Po@am__quote@
@@ -909,18 +884,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowwindow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowwm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winmultiwindowwndproc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winnativegdi.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winpfbdd.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winpixmap.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winpolyline.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefslex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprefsyacc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winprocarg.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winrandr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winrop.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winscrinit.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winsetsp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winshaddd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winshadddnl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/winshadgdi.Po@am__quote@

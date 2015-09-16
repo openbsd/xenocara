@@ -194,7 +194,7 @@ Bool noGEExtension = FALSE;
 
 Bool CoreDump;
 
-Bool enableIndirectGLX = TRUE;
+Bool enableIndirectGLX = FALSE;
 
 #ifdef PANORAMIX
 Bool PanoramiXExtensionDisabledHack = FALSE;
@@ -553,8 +553,8 @@ UseMsg(void)
     ErrorF("-fn string             default font name\n");
     ErrorF("-fp string             default font path\n");
     ErrorF("-help                  prints message with these options\n");
-    ErrorF("+iglx                  Allow creating indirect GLX contexts (default)\n");
-    ErrorF("-iglx                  Prohibit creating indirect GLX contexts\n");
+    ErrorF("+iglx                  Allow creating indirect GLX contexts\n");
+    ErrorF("-iglx                  Prohibit creating indirect GLX contexts (default)\n");
     ErrorF("-I                     ignore all remaining arguments\n");
 #ifdef RLIMIT_DATA
     ErrorF("-ld int                limit data space to N Kb\n");
@@ -1140,24 +1140,6 @@ set_font_authorizations(char **authorizations, int *authlen, void *client)
 }
 
 void *
-Xalloc(unsigned long amount)
-{
-    /*
-     * Xalloc used to return NULL when large amount of memory is requested. In
-     * order to catch the buggy callers this warning has been added, slated to
-     * removal by anyone who touches this code (or just looks at it) in 2011.
-     *
-     * -- Mikhail Gusarov
-     */
-    if ((long) amount <= 0)
-        ErrorF("Warning: Xalloc: "
-               "requesting unpleasantly large amount of memory: %lu bytes.\n",
-               amount);
-
-    return malloc(amount);
-}
-
-void *
 XNFalloc(unsigned long amount)
 {
     void *ptr = malloc(amount);
@@ -1165,12 +1147,6 @@ XNFalloc(unsigned long amount)
     if (!ptr)
         FatalError("Out of memory");
     return ptr;
-}
-
-void *
-Xcalloc(unsigned long amount)
-{
-    return calloc(1, amount);
 }
 
 void *
@@ -1184,24 +1160,6 @@ XNFcalloc(unsigned long amount)
 }
 
 void *
-Xrealloc(void *ptr, unsigned long amount)
-{
-    /*
-     * Xrealloc used to return NULL when large amount of memory is requested. In
-     * order to catch the buggy callers this warning has been added, slated to
-     * removal by anyone who touches this code (or just looks at it) in 2011.
-     *
-     * -- Mikhail Gusarov
-     */
-    if ((long) amount <= 0)
-        ErrorF("Warning: Xrealloc: "
-               "requesting unpleasantly large amount of memory: %lu bytes.\n",
-               amount);
-
-    return realloc(ptr, amount);
-}
-
-void *
 XNFrealloc(void *ptr, unsigned long amount)
 {
     void *ret = realloc(ptr, amount);
@@ -1209,12 +1167,6 @@ XNFrealloc(void *ptr, unsigned long amount)
     if (!ret)
         FatalError("XNFrealloc: Out of memory");
     return ret;
-}
-
-void
-Xfree(void *ptr)
-{
-    free(ptr);
 }
 
 char *
@@ -1442,6 +1394,7 @@ System(const char *command)
     switch (pid = fork()) {
     case -1:                   /* error */
         p = -1;
+        break;
     case 0:                    /* child */
         if (setgid(getgid()) == -1)
             _exit(127);
@@ -2159,6 +2112,7 @@ FormatUInt64Hex(uint64_t num, char *string)
     string[len] = '\0';
 }
 
+#if !defined(WIN32) || defined(__CYGWIN__)
 /* Move a file descriptor out of the way of our select mask; this
  * is useful for file descriptors which will never appear in the
  * select mask to avoid reducing the number of clients that can
@@ -2182,3 +2136,4 @@ os_move_fd(int fd)
     close(fd);
     return newfd;
 }
+#endif

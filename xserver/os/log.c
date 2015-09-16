@@ -127,7 +127,7 @@ static char __crashreporter_info_buff__[4096] = { 0 };
 static const char *__crashreporter_info__ __attribute__ ((__used__)) =
     &__crashreporter_info_buff__[0];
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
-// This is actually a toolchain requirement, but I'm not sure the correct check,        
+// This is actually a toolchain requirement, but I'm not sure the correct check,
 // but it should be fine to just only include it for Leopard and later.  This line
 // just tells the linker to never strip this symbol (such as for space optimization)
 asm(".desc ___crashreporter_info__, 0x10");
@@ -189,15 +189,15 @@ strlen_sigsafe(const char *s)
  * string.
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
 const char *
 LogInit(const char *fname, const char *backup)
 {
     char *logFileName = NULL;
 
     if (fname && *fname) {
-#if __GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ > 2
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-#endif
         if (asprintf(&logFileName, fname, display) == -1)
             FatalError("Cannot allocate space for the log file name\n");
 
@@ -208,9 +208,6 @@ LogInit(const char *fname, const char *backup)
                 char *suffix;
                 char *oldLog;
 
-#if __GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__ > 2
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-#endif
                 if ((asprintf(&suffix, backup, display) == -1) ||
                     (asprintf(&oldLog, "%s%s", logFileName, suffix) == -1))
                     FatalError("Cannot allocate space for the log file name\n");
@@ -254,13 +251,17 @@ LogInit(const char *fname, const char *backup)
 
     return logFileName;
 }
+#pragma GCC diagnostic pop
 
 void
 LogClose(enum ExitCode error)
 {
     if (logFile) {
-        ErrorFSigSafe("Server terminated %s (%d). Closing log file.\n",
-               (error == EXIT_NO_ERROR) ? "successfully" : "with error", error);
+        int msgtype = (error == EXIT_NO_ERROR) ? X_INFO : X_ERROR;
+        LogMessageVerbSigSafe(msgtype, -1,
+                "Server terminated %s (%d). Closing log file.\n",
+                (error == EXIT_NO_ERROR) ? "successfully" : "with error",
+                error);
         fclose(logFile);
         logFile = NULL;
         logFileFd = -1;
@@ -354,6 +355,7 @@ vpnprintf(char *string, int size_in, const char *f, va_list args)
     uint64_t ui;
     int64_t si;
     size_t size = size_in;
+    int precision;
 
     for (; f_idx < f_len && s_idx < size - 1; f_idx++) {
         int length_modifier = 0;
@@ -364,9 +366,29 @@ vpnprintf(char *string, int size_in, const char *f, va_list args)
 
         f_idx++;
 
-        /* silently swallow digit length modifiers */
-        while (f_idx < f_len && ((f[f_idx] >= '0' && f[f_idx] <= '9') || f[f_idx] == '.'))
+        /* silently swallow minimum field width */
+        if (f[f_idx] == '*') {
             f_idx++;
+            va_arg(args, int);
+        } else {
+            while (f_idx < f_len && ((f[f_idx] >= '0' && f[f_idx] <= '9')))
+                f_idx++;
+        }
+
+        /* is there a precision? */
+        precision = size;
+        if (f[f_idx] == '.') {
+            f_idx++;
+            if (f[f_idx] == '*') {
+                f_idx++;
+                /* precision is supplied in an int argument */
+                precision = va_arg(args, int);
+            } else {
+                /* silently swallow precision digits */
+                while (f_idx < f_len && ((f[f_idx] >= '0' && f[f_idx] <= '9')))
+                    f_idx++;
+            }
+        }
 
         /* non-digit length modifiers */
         if (f_idx < f_len) {
@@ -382,9 +404,8 @@ vpnprintf(char *string, int size_in, const char *f, va_list args)
         switch (f[f_idx]) {
         case 's':
             string_arg = va_arg(args, char*);
-            p_len = strlen_sigsafe(string_arg);
 
-            for (i = 0; i < p_len && s_idx < size - 1; i++)
+            for (i = 0; string_arg[i] != 0 && s_idx < size - 1 && s_idx < precision; i++)
                 string[s_idx++] = string_arg[i];
             break;
 

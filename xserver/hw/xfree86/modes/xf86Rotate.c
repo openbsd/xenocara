@@ -35,7 +35,6 @@
 
 #include "xf86.h"
 #include "xf86DDC.h"
-#include "fb.h"
 #include "windowstr.h"
 #include "xf86Crtc.h"
 #include "xf86Modes.h"
@@ -234,12 +233,22 @@ xf86RotateBlockHandler(ScreenPtr pScreen,
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
 
-    xf86RotateRedisplay(pScreen);
+    /* Unwrap before redisplay in case the software
+     * cursor layer wants to add its block handler to the
+     * chain
+     */
     pScreen->BlockHandler = xf86_config->BlockHandler;
+
+    xf86RotateRedisplay(pScreen);
+
     (*pScreen->BlockHandler) (pScreen, pTimeout, pReadmask);
-    /* cannot avoid re-wrapping until all wrapping is audited */
-    xf86_config->BlockHandler = pScreen->BlockHandler;
-    pScreen->BlockHandler = xf86RotateBlockHandler;
+
+    /* Re-wrap if we still need this hook */
+    if (xf86_config->rotation_damage != NULL) {
+        xf86_config->BlockHandler = pScreen->BlockHandler;
+        pScreen->BlockHandler = xf86RotateBlockHandler;
+    } else
+        xf86_config->BlockHandler = NULL;
 }
 
 void
@@ -300,6 +309,8 @@ xf86RotateCloseScreen(ScreenPtr screen)
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     int c;
 
+    /* This has already been destroyed when the root window was destroyed */
+    xf86_config->rotation_damage = NULL;
     for (c = 0; c < xf86_config->num_crtc; c++)
         xf86RotateDestroy(xf86_config->crtc[c]);
 }

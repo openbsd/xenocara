@@ -1,8 +1,8 @@
 /*
  * Xephyr - A kdrive X server thats runs in a host X window.
  *          Authored by Matthew Allum <mallum@o-hand.com>
- * 
- * Copyright © 2004 Nokia 
+ *
+ * Copyright © 2004 Nokia
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -73,13 +73,17 @@ typedef struct _ephyrScrPriv {
     xcb_window_t win_pre_existing;    /* Set via -parent option like xnest */
     xcb_window_t peer_win;            /* Used for GL; should be at most one */
     xcb_image_t *ximg;
+    Bool win_explicit_position;
+    int win_x, win_y;
     int win_width, win_height;
     int server_depth;
+    const char *output;         /* Set via -output option */
     unsigned char *fb_data;     /* only used when host bpp != server bpp */
     xcb_shm_segment_info_t shminfo;
 
     KdScreenInfo *screen;
     int mynum;                  /* Screen number */
+    unsigned long cmap[256];
 
     /**
      * Per-screen Xlib-using state for glamor (private to
@@ -129,6 +133,9 @@ void
 
 void
  ephyrScreenFini(KdScreenInfo * screen);
+
+void
+ephyrCloseScreen(ScreenPtr pScreen);
 
 void
  ephyrCardFini(KdCardInfo * card);
@@ -191,8 +198,6 @@ extern KdOsFuncs EphyrOsFuncs;
 
 extern Bool ephyrCursorInit(ScreenPtr pScreen);
 
-extern void ephyrCursorEnable(ScreenPtr pScreen);
-
 extern int ephyrBufferHeight(KdScreenInfo * screen);
 
 /* ephyr_draw.c */
@@ -220,5 +225,15 @@ void ephyr_glamor_host_paint_rect(ScreenPtr pScreen);
 /*ephyvideo.c*/
 
 Bool ephyrInitVideo(ScreenPtr pScreen);
+
+/* ephyr_glamor_xv.c */
+#ifdef GLAMOR
+void ephyr_glamor_xv_init(ScreenPtr screen);
+#else /* !GLAMOR */
+static inline void
+ephyr_glamor_xv_init(ScreenPtr screen)
+{
+}
+#endif /* !GLAMOR */
 
 #endif

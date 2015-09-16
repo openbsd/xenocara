@@ -36,12 +36,10 @@
 #include <dix-config.h>
 #endif
 
-#include "xf86xv.h"
-#define GLAMOR_FOR_XORG
 #include "glamor_priv.h"
 
 #include <X11/extensions/Xv.h>
-#include "fourcc.h"
+#include "../hw/xfree86/common/fourcc.h"
 /* Reference color space transform data */
 typedef struct tagREF_TRANSFORM {
     float RefLuma;
@@ -90,7 +88,28 @@ static const char *xv_ps = GLAMOR_DEFAULT_PRECISION
     "gl_FragColor = temp1;\n"
     "}\n";
 
-void
+#define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
+
+XvAttributeRec glamor_xv_attributes[] = {
+    {XvSettable | XvGettable, -1000, 1000, (char *)"XV_BRIGHTNESS"},
+    {XvSettable | XvGettable, -1000, 1000, (char *)"XV_CONTRAST"},
+    {XvSettable | XvGettable, -1000, 1000, (char *)"XV_SATURATION"},
+    {XvSettable | XvGettable, -1000, 1000, (char *)"XV_HUE"},
+    {XvSettable | XvGettable, 0, 1, (char *)"XV_COLORSPACE"},
+    {0, 0, 0, NULL}
+};
+int glamor_xv_num_attributes = ARRAY_SIZE(glamor_xv_attributes) - 1;
+
+Atom glamorBrightness, glamorContrast, glamorSaturation, glamorHue,
+    glamorColorspace, glamorGamma;
+
+XvImageRec glamor_xv_images[] = {
+    XVIMAGE_YV12,
+    XVIMAGE_I420,
+};
+int glamor_xv_num_images = ARRAY_SIZE(glamor_xv_images);
+
+static void
 glamor_init_xv_shader(ScreenPtr screen)
 {
     glamor_screen_private *glamor_priv;
@@ -113,42 +132,16 @@ glamor_init_xv_shader(ScreenPtr screen)
 }
 
 #define ClipValue(v,min,max) ((v) < (min) ? (min) : (v) > (max) ? (max) : (v))
-#define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
-static Atom xvBrightness, xvContrast, xvSaturation, xvHue, xvColorspace,
-    xvGamma;
-
-#define NUM_ATTRIBUTES 5
-static XF86AttributeRec Attributes_glamor[NUM_ATTRIBUTES + 1] = {
-    {XvSettable | XvGettable, -1000, 1000, "XV_BRIGHTNESS"},
-    {XvSettable | XvGettable, -1000, 1000, "XV_CONTRAST"},
-    {XvSettable | XvGettable, -1000, 1000, "XV_SATURATION"},
-    {XvSettable | XvGettable, -1000, 1000, "XV_HUE"},
-    {XvSettable | XvGettable, 0, 1, "XV_COLORSPACE"},
-    {0, 0, 0, NULL}
-};
-
-#define NUM_FORMATS 3
-
-static XF86VideoFormatRec Formats[NUM_FORMATS] = {
-    {15, TrueColor}, {16, TrueColor}, {24, TrueColor}
-};
-
-#define NUM_IMAGES 2
-
-static XF86ImageRec Images[NUM_IMAGES] = {
-    XVIMAGE_YV12,
-    XVIMAGE_I420,
-};
+void
+glamor_xv_stop_video(glamor_port_private *port_priv)
+{
+}
 
 static void
-glamor_xv_stop_video(ScrnInfoPtr pScrn, void *data, Bool cleanup)
+glamor_xv_free_port_data(glamor_port_private *port_priv)
 {
-    glamor_port_private *port_priv = (glamor_port_private *) data;
     int i;
-
-    if (!cleanup)
-        return;
 
     for (i = 0; i < 3; i++) {
         if (port_priv->src_pix[i]) {
@@ -156,48 +149,46 @@ glamor_xv_stop_video(ScrnInfoPtr pScrn, void *data, Bool cleanup)
             port_priv->src_pix[i] = NULL;
         }
     }
+    RegionUninit(&port_priv->clip);
+    RegionNull(&port_priv->clip);
 }
 
-static int
-glamor_xv_set_port_attribute(ScrnInfoPtr pScrn,
-                             Atom attribute, INT32 value, void *data)
+int
+glamor_xv_set_port_attribute(glamor_port_private *port_priv,
+                             Atom attribute, INT32 value)
 {
-    glamor_port_private *port_priv = (glamor_port_private *) data;
-
-    if (attribute == xvBrightness)
+    if (attribute == glamorBrightness)
         port_priv->brightness = ClipValue(value, -1000, 1000);
-    else if (attribute == xvHue)
+    else if (attribute == glamorHue)
         port_priv->hue = ClipValue(value, -1000, 1000);
-    else if (attribute == xvContrast)
+    else if (attribute == glamorContrast)
         port_priv->contrast = ClipValue(value, -1000, 1000);
-    else if (attribute == xvSaturation)
+    else if (attribute == glamorSaturation)
         port_priv->saturation = ClipValue(value, -1000, 1000);
-    else if (attribute == xvGamma)
+    else if (attribute == glamorGamma)
         port_priv->gamma = ClipValue(value, 100, 10000);
-    else if (attribute == xvColorspace)
+    else if (attribute == glamorColorspace)
         port_priv->transform_index = ClipValue(value, 0, 1);
     else
         return BadMatch;
     return Success;
 }
 
-static int
-glamor_xv_get_port_attribute(ScrnInfoPtr pScrn,
-                             Atom attribute, INT32 *value, void *data)
+int
+glamor_xv_get_port_attribute(glamor_port_private *port_priv,
+                             Atom attribute, INT32 *value)
 {
-    glamor_port_private *port_priv = (glamor_port_private *) data;
-
-    if (attribute == xvBrightness)
+    if (attribute == glamorBrightness)
         *value = port_priv->brightness;
-    else if (attribute == xvHue)
+    else if (attribute == glamorHue)
         *value = port_priv->hue;
-    else if (attribute == xvContrast)
+    else if (attribute == glamorContrast)
         *value = port_priv->contrast;
-    else if (attribute == xvSaturation)
+    else if (attribute == glamorSaturation)
         *value = port_priv->saturation;
-    else if (attribute == xvGamma)
+    else if (attribute == glamorGamma)
         *value = port_priv->gamma;
-    else if (attribute == xvColorspace)
+    else if (attribute == glamorColorspace)
         *value = port_priv->transform_index;
     else
         return BadMatch;
@@ -205,20 +196,8 @@ glamor_xv_get_port_attribute(ScrnInfoPtr pScrn,
     return Success;
 }
 
-static void
-glamor_xv_query_best_size(ScrnInfoPtr pScrn,
-                          Bool motion,
-                          short vid_w, short vid_h,
-                          short drw_w, short drw_h,
-                          unsigned int *p_w, unsigned int *p_h, void *data)
-{
-    *p_w = drw_w;
-    *p_h = drw_h;
-}
-
-static int
-glamor_xv_query_image_attributes(ScrnInfoPtr pScrn,
-                                 int id,
+int
+glamor_xv_query_image_attributes(int id,
                                  unsigned short *w, unsigned short *h,
                                  int *pitches, int *offsets)
 {
@@ -229,15 +208,14 @@ glamor_xv_query_image_attributes(ScrnInfoPtr pScrn,
     switch (id) {
     case FOURCC_YV12:
     case FOURCC_I420:
-        *h = *h;
-        *w = *w;
-        size = *w;
+        *h = ALIGN(*h, 2);
+        size = ALIGN(*w, 4);
         if (pitches)
             pitches[0] = size;
         size *= *h;
         if (offsets)
             offsets[1] = size;
-        tmp = *w >> 1;
+        tmp = ALIGN(*w >> 1, 4);
         if (pitches)
             pitches[1] = pitches[2] = tmp;
         tmp *= (*h >> 1);
@@ -258,8 +236,8 @@ static REF_TRANSFORM trans[2] = {
     {1.1643, 0.0, 1.7927, -0.2132, -0.5329, 2.1124, 0.0}        /* BT.709 */
 };
 
-static void
-glamor_display_textured_video(glamor_port_private *port_priv)
+void
+glamor_xv_render(glamor_port_private *port_priv)
 {
     ScreenPtr screen = port_priv->pPixmap->drawable.pScreen;
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
@@ -281,6 +259,9 @@ glamor_display_textured_video(glamor_port_private *port_priv)
     float bright, cont, gamma;
     int ref = port_priv->transform_index;
     GLint uloc, sampler_loc;
+
+    if (!glamor_priv->xv_prog)
+        glamor_init_xv_shader(screen);
 
     cont = RTFContrast(port_priv->contrast);
     bright = RTFBrightness(port_priv->brightness);
@@ -361,6 +342,7 @@ glamor_display_textured_video(glamor_port_private *port_priv)
                           GL_FALSE, 2 * sizeof(float), vertices);
 
     glEnableVertexAttribArray(GLAMOR_VERTEX_POS);
+    glEnable(GL_SCISSOR_TEST);
     for (i = 0; i < nBox; i++) {
         float off_x = box[i].x1 - port_priv->drw_x;
         float off_y = box[i].y1 - port_priv->drw_y;
@@ -381,32 +363,37 @@ glamor_display_textured_video(glamor_port_private *port_priv)
 
         glamor_set_normalize_vcoords(pixmap_priv,
                                      dst_xscale, dst_yscale,
-                                     dstx,
+                                     dstx - dstw,
                                      dsty,
                                      dstx + dstw,
-                                     dsty + dsth,
-                                     glamor_priv->yInverted, vertices);
+                                     dsty + dsth * 2,
+                                     vertices);
 
         glamor_set_normalize_tcoords(src_pixmap_priv[0],
                                      src_xscale[0],
                                      src_yscale[0],
-                                     srcx,
+                                     srcx - srcw,
                                      srcy,
                                      srcx + srcw,
-                                     srcy + srch,
-                                     glamor_priv->yInverted, texcoords);
+                                     srcy + srch * 2,
+                                     texcoords);
 
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glScissor(dstx, dsty, dstw, dsth);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 3);
     }
+    glDisable(GL_SCISSOR_TEST);
 
     glDisableVertexAttribArray(GLAMOR_VERTEX_POS);
     glDisableVertexAttribArray(GLAMOR_VERTEX_SOURCE);
 
     DamageDamageRegion(port_priv->pDraw, &port_priv->clip);
+
+    glamor_xv_free_port_data(port_priv);
 }
 
-static int
-glamor_xv_put_image(ScrnInfoPtr pScrn,
+int
+glamor_xv_put_image(glamor_port_private *port_priv,
+                    DrawablePtr pDrawable,
                     short src_x, short src_y,
                     short drw_x, short drw_y,
                     short src_w, short src_h,
@@ -416,37 +403,14 @@ glamor_xv_put_image(ScrnInfoPtr pScrn,
                     short width,
                     short height,
                     Bool sync,
-                    RegionPtr clipBoxes, void *data, DrawablePtr pDrawable)
+                    RegionPtr clipBoxes)
 {
-    ScreenPtr screen = pDrawable->pScreen;
-    glamor_port_private *port_priv = (glamor_port_private *) data;
-    INT32 x1, x2, y1, y2;
+    ScreenPtr pScreen = pDrawable->pScreen;
     int srcPitch, srcPitch2;
-    BoxRec dstBox;
     int top, nlines;
     int s2offset, s3offset, tmp;
 
     s2offset = s3offset = srcPitch2 = 0;
-
-    /* Clip */
-    x1 = src_x;
-    x2 = src_x + src_w;
-    y1 = src_y;
-    y2 = src_y + src_h;
-
-    dstBox.x1 = drw_x;
-    dstBox.x2 = drw_x + drw_w;
-    dstBox.y1 = drw_y;
-    dstBox.y2 = drw_y + drw_h;
-    if (!xf86XVClipVideoHelper
-        (&dstBox, &x1, &x2, &y1, &y2, clipBoxes, width, height))
-        return Success;
-
-    if ((x1 >= x2) || (y1 >= y2))
-        return Success;
-
-    srcPitch = width;
-    srcPitch2 = width >> 1;
 
     if (!port_priv->src_pix[0] ||
         (width != port_priv->src_pix_w || height != port_priv->src_pix_h)) {
@@ -457,11 +421,11 @@ glamor_xv_put_image(ScrnInfoPtr pScrn,
                 glamor_destroy_pixmap(port_priv->src_pix[i]);
 
         port_priv->src_pix[0] =
-            glamor_create_pixmap(screen, width, height, 8, 0);
+            glamor_create_pixmap(pScreen, width, height, 8, 0);
         port_priv->src_pix[1] =
-            glamor_create_pixmap(screen, width >> 1, height >> 1, 8, 0);
+            glamor_create_pixmap(pScreen, width >> 1, height >> 1, 8, 0);
         port_priv->src_pix[2] =
-            glamor_create_pixmap(screen, width >> 1, height >> 1, 8, 0);
+            glamor_create_pixmap(pScreen, width >> 1, height >> 1, 8, 0);
         port_priv->src_pix_w = width;
         port_priv->src_pix_h = height;
 
@@ -470,12 +434,14 @@ glamor_xv_put_image(ScrnInfoPtr pScrn,
             return BadAlloc;
     }
 
-    top = (y1 >> 16) & ~1;
-    nlines = ((y2 + 0xffff) >> 16) - top;
+    top = (src_y) & ~1;
+    nlines = (src_y + src_h) - top;
 
     switch (id) {
     case FOURCC_YV12:
     case FOURCC_I420:
+        srcPitch = ALIGN(width, 4);
+        srcPitch2 = ALIGN(width >> 1, 4);
         s2offset = srcPitch * height;
         s3offset = s2offset + (srcPitch2 * ((height + 1) >> 1));
         s2offset += ((top >> 1) * srcPitch2);
@@ -486,18 +452,18 @@ glamor_xv_put_image(ScrnInfoPtr pScrn,
             s3offset = tmp;
         }
         glamor_upload_sub_pixmap_to_texture(port_priv->src_pix[0],
-                                            0, 0, srcPitch, nlines,
-                                            port_priv->src_pix[0]->devKind,
+                                            0, 0, width, nlines,
+                                            srcPitch,
                                             buf + (top * srcPitch), 0);
 
         glamor_upload_sub_pixmap_to_texture(port_priv->src_pix[1],
-                                            0, 0, srcPitch2, (nlines + 1) >> 1,
-                                            port_priv->src_pix[1]->devKind,
+                                            0, 0, width >> 1, (nlines + 1) >> 1,
+                                            srcPitch2,
                                             buf + s2offset, 0);
 
         glamor_upload_sub_pixmap_to_texture(port_priv->src_pix[2],
-                                            0, 0, srcPitch2, (nlines + 1) >> 1,
-                                            port_priv->src_pix[2]->devKind,
+                                            0, 0, width >> 1, (nlines + 1) >> 1,
+                                            srcPitch2,
                                             buf + s3offset, 0);
         break;
     default:
@@ -505,13 +471,11 @@ glamor_xv_put_image(ScrnInfoPtr pScrn,
     }
 
     if (pDrawable->type == DRAWABLE_WINDOW)
-        port_priv->pPixmap = (*screen->GetWindowPixmap) ((WindowPtr) pDrawable);
+        port_priv->pPixmap = pScreen->GetWindowPixmap((WindowPtr) pDrawable);
     else
         port_priv->pPixmap = (PixmapPtr) pDrawable;
 
-    if (!RegionEqual(&port_priv->clip, clipBoxes)) {
-        RegionCopy(&port_priv->clip, clipBoxes);
-    }
+    RegionCopy(&port_priv->clip, clipBoxes);
 
     port_priv->src_x = src_x;
     port_priv->src_y = src_y;
@@ -524,83 +488,30 @@ glamor_xv_put_image(ScrnInfoPtr pScrn,
     port_priv->w = width;
     port_priv->h = height;
     port_priv->pDraw = pDrawable;
-    glamor_display_textured_video(port_priv);
+    glamor_xv_render(port_priv);
     return Success;
 }
 
-static XF86VideoEncodingRec DummyEncodingGLAMOR[1] = {
-    {
-     0,
-     "XV_IMAGE",
-     8192, 8192,
-     {1, 1}
-     }
-};
-
-XF86VideoAdaptorPtr
-glamor_xv_init(ScreenPtr screen, int num_texture_ports)
+void
+glamor_xv_init_port(glamor_port_private *port_priv)
 {
-    glamor_port_private *port_priv;
-    XF86VideoAdaptorPtr adapt;
-    int i;
+    port_priv->brightness = 0;
+    port_priv->contrast = 0;
+    port_priv->saturation = 0;
+    port_priv->hue = 0;
+    port_priv->gamma = 1000;
+    port_priv->transform_index = 0;
 
-    glamor_init_xv_shader(screen);
+    REGION_NULL(pScreen, &port_priv->clip);
+}
 
-    adapt = calloc(1, sizeof(XF86VideoAdaptorRec) + num_texture_ports *
-                   (sizeof(glamor_port_private) + sizeof(DevUnion)));
-    if (adapt == NULL)
-        return NULL;
-
-    xvBrightness = MAKE_ATOM("XV_BRIGHTNESS");
-    xvContrast = MAKE_ATOM("XV_CONTRAST");
-    xvSaturation = MAKE_ATOM("XV_SATURATION");
-    xvHue = MAKE_ATOM("XV_HUE");
-    xvGamma = MAKE_ATOM("XV_GAMMA");
-    xvColorspace = MAKE_ATOM("XV_COLORSPACE");
-
-    adapt->type = XvWindowMask | XvInputMask | XvImageMask;
-    adapt->flags = 0;
-    adapt->name = "GLAMOR Textured Video";
-    adapt->nEncodings = 1;
-    adapt->pEncodings = DummyEncodingGLAMOR;
-
-    adapt->nFormats = NUM_FORMATS;
-    adapt->pFormats = Formats;
-    adapt->nPorts = num_texture_ports;
-    adapt->pPortPrivates = (DevUnion *) (&adapt[1]);
-
-    adapt->pAttributes = Attributes_glamor;
-    adapt->nAttributes = NUM_ATTRIBUTES;
-
-    port_priv =
-        (glamor_port_private *) (&adapt->pPortPrivates[num_texture_ports]);
-    adapt->pImages = Images;
-    adapt->nImages = NUM_IMAGES;
-    adapt->PutVideo = NULL;
-    adapt->PutStill = NULL;
-    adapt->GetVideo = NULL;
-    adapt->GetStill = NULL;
-    adapt->StopVideo = glamor_xv_stop_video;
-    adapt->SetPortAttribute = glamor_xv_set_port_attribute;
-    adapt->GetPortAttribute = glamor_xv_get_port_attribute;
-    adapt->QueryBestSize = glamor_xv_query_best_size;
-    adapt->PutImage = glamor_xv_put_image;
-    adapt->ReputImage = NULL;
-    adapt->QueryImageAttributes = glamor_xv_query_image_attributes;
-
-    for (i = 0; i < num_texture_ports; i++) {
-        glamor_port_private *pPriv = &port_priv[i];
-
-        pPriv->brightness = 0;
-        pPriv->contrast = 0;
-        pPriv->saturation = 0;
-        pPriv->hue = 0;
-        pPriv->gamma = 1000;
-        pPriv->transform_index = 0;
-
-        REGION_NULL(pScreen, &pPriv->clip);
-
-        adapt->pPortPrivates[i].ptr = (void *) (pPriv);
-    }
-    return adapt;
+void
+glamor_xv_core_init(ScreenPtr screen)
+{
+    glamorBrightness = MAKE_ATOM("XV_BRIGHTNESS");
+    glamorContrast = MAKE_ATOM("XV_CONTRAST");
+    glamorSaturation = MAKE_ATOM("XV_SATURATION");
+    glamorHue = MAKE_ATOM("XV_HUE");
+    glamorGamma = MAKE_ATOM("XV_GAMMA");
+    glamorColorspace = MAKE_ATOM("XV_COLORSPACE");
 }

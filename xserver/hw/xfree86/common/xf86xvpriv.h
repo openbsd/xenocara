@@ -45,6 +45,7 @@ typedef struct {
     Bool (*EnterVT) (ScrnInfoPtr);
     void (*LeaveVT) (ScrnInfoPtr);
     xf86ModeSetProc *ModeSet;
+    CloseScreenProcPtr CloseScreen;
 } XF86XVScreenRec, *XF86XVScreenPtr;
 
 typedef struct {
@@ -60,7 +61,6 @@ typedef struct {
     PutImageFuncPtr PutImage;
     ReputImageFuncPtr ReputImage;
     QueryImageAttributesFuncPtr QueryImageAttributes;
-    ClipNotifyFuncPtr ClipNotify;
 } XvAdaptorRecPrivate, *XvAdaptorRecPrivatePtr;
 
 typedef struct {

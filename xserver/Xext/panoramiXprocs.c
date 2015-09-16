@@ -509,7 +509,7 @@ PanoramiXConfigureWindow(ClientPtr client)
         }
     }
 
-    /* have to go forward or you get expose events before 
+    /* have to go forward or you get expose events before
        ConfigureNotify events */
     FOR_NSCREENS_FORWARD(j) {
         stuff->window = win->info[j].id;
@@ -1037,7 +1037,7 @@ PanoramiXClearToBackground(ClientPtr client)
     return result;
 }
 
-/* 
+/*
     For Window to Pixmap copies you're screwed since each screen's
     pixmap will look like what it sees on its screen.  Unless the
     screens overlap and the window lies on each, the two copies
@@ -1193,9 +1193,8 @@ PanoramiXCopyArea(ClientPtr client)
             Bool overlap;
 
             RegionValidate(&totalReg, &overlap);
-            (*pDst->pScreen->SendGraphicsExpose) (client, &totalReg,
-                                                  stuff->dstDrawable,
-                                                  X_CopyArea, 0);
+            SendGraphicsExpose(client, &totalReg, stuff->dstDrawable,
+                               X_CopyArea, 0);
             RegionUninit(&totalReg);
         }
     }
@@ -1306,9 +1305,8 @@ PanoramiXCopyPlane(ClientPtr client)
         Bool overlap;
 
         RegionValidate(&totalReg, &overlap);
-        (*pdstDraw->pScreen->SendGraphicsExpose) (client, &totalReg,
-                                                  stuff->dstDrawable,
-                                                  X_CopyPlane, 0);
+        SendGraphicsExpose(client, &totalReg, stuff->dstDrawable,
+                           X_CopyPlane, 0);
         RegionUninit(&totalReg);
     }
 
@@ -1910,7 +1908,7 @@ PanoramiXGetImage(ClientPtr client)
     }
 
     rc = dixLookupResourceByClass((void **) &draw, stuff->drawable,
-                                  XRC_DRAWABLE, client, DixWriteAccess);
+                                  XRC_DRAWABLE, client, DixReadAccess);
     if (rc != Success)
         return (rc == BadValue) ? BadDrawable : rc;
 

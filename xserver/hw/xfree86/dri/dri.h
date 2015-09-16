@@ -85,8 +85,6 @@ typedef struct {
     ScreenBlockHandlerProcPtr BlockHandler;
     WindowExposuresProcPtr WindowExposures;
     CopyWindowProcPtr CopyWindow;
-    ValidateTreeProcPtr ValidateTree;
-    PostValidateTreeProcPtr PostValidateTree;
     ClipNotifyProcPtr ClipNotify;
     AdjustFramePtr AdjustFrame;
 } DRIWrappedFuncsRec, *DRIWrappedFuncsPtr;
@@ -282,19 +280,12 @@ extern _X_EXPORT void DRISwapContext(int drmFD, void *oldctx, void *newctx);
 
 extern _X_EXPORT void *DRIGetContextStore(DRIContextPrivPtr context);
 
-extern _X_EXPORT void DRIWindowExposures(WindowPtr pWin,
-                                         RegionPtr prgn, RegionPtr bsreg);
+extern _X_EXPORT void DRIWindowExposures(WindowPtr pWin, RegionPtr prgn);
 
 extern _X_EXPORT Bool DRIDestroyWindow(WindowPtr pWin);
 
 extern _X_EXPORT void DRICopyWindow(WindowPtr pWin,
                                     DDXPointRec ptOldOrg, RegionPtr prgnSrc);
-
-extern _X_EXPORT int DRIValidateTree(WindowPtr pParent,
-                                     WindowPtr pChild, VTKind kind);
-
-extern _X_EXPORT void DRIPostValidateTree(WindowPtr pParent,
-                                          WindowPtr pChild, VTKind kind);
 
 extern _X_EXPORT void DRIClipNotify(WindowPtr pWin, int dx, int dy);
 

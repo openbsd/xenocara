@@ -1,8 +1,8 @@
 /*
  * Xephyr - A kdrive X server thats runs in a host X window.
  *          Authored by Matthew Allum <mallum@o-hand.com>
- * 
- * Copyright © 2004 Nokia 
+ *
+ * Copyright © 2004 Nokia
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -29,6 +29,7 @@
 #include <X11/X.h>
 #include <X11/Xmd.h>
 #include <xcb/xcb.h>
+#include <xcb/render.h>
 #include "ephyr.h"
 
 #define EPHYR_WANT_DEBUG 0
@@ -74,13 +75,21 @@ typedef struct {
 } EphyrRect;
 
 int
-hostx_want_screen_size(KdScreenInfo *screen, int *width, int *height);
+hostx_want_screen_geometry(KdScreenInfo *screen, int *width, int *height, int *x, int *y);
 
 int
  hostx_want_host_cursor(void);
 
 void
  hostx_use_sw_cursor(void);
+
+xcb_cursor_t
+ hostx_get_empty_cursor(void);
+
+void
+ hostx_get_output_geometry(const char *output,
+                           int *x, int *y,
+                           int *width, int *height);
 
 void
  hostx_use_fullscreen(void);
@@ -107,7 +116,7 @@ int
  hostx_init(void);
 
 void
-hostx_add_screen(KdScreenInfo *screen, unsigned long win_id, int screen_num);
+hostx_add_screen(KdScreenInfo *screen, unsigned long win_id, int screen_num, Bool use_geometry, const char *output);
 
 void
  hostx_set_display_name(char *name);
@@ -132,10 +141,11 @@ hostx_get_visual_masks(KdScreenInfo *screen,
                        CARD32 *rmsk, CARD32 *gmsk, CARD32 *bmsk);
 void
 
-hostx_set_cmap_entry(unsigned char idx,
+hostx_set_cmap_entry(ScreenPtr pScreen, unsigned char idx,
                      unsigned char r, unsigned char g, unsigned char b);
 
 void *hostx_screen_init(KdScreenInfo *screen,
+                        int x, int y,
                         int width, int height, int buffer_height,
                         int *bytes_per_line, int *bits_per_pixel);
 

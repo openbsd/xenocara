@@ -310,12 +310,11 @@ device_removed(struct udev_device *device)
         const char *path = udev_device_get_devnode(device);
         dev_t devnum = udev_device_get_devnum(device);
 
-        if (strncmp(sysname,"card", 4) != 0)
-            return;
-        ErrorF("removing GPU device %s %s\n", syspath, path);
-        if (!path)
+        if ((strncmp(sysname,"card", 4) != 0) || (path == NULL))
             return;
 
+        LogMessage(X_INFO, "config/udev: removing GPU device %s %s\n",
+                   syspath, path);
         config_udev_odev_setup_attribs(path, syspath, major(devnum),
                                        minor(devnum), DeleteGPUDeviceRequest);
         /* Retry vtenter after a drm node removal */
@@ -472,12 +471,12 @@ config_udev_odev_setup_attribs(const char *path, const char *syspath,
                                int major, int minor,
                                config_odev_probe_proc_ptr probe_callback)
 {
-    struct OdevAttributes *attribs = config_odev_allocate_attribute_list();
+    struct OdevAttributes *attribs = config_odev_allocate_attributes();
 
-    config_odev_add_attribute(attribs, ODEV_ATTRIB_PATH, path);
-    config_odev_add_attribute(attribs, ODEV_ATTRIB_SYSPATH, syspath);
-    config_odev_add_int_attribute(attribs, ODEV_ATTRIB_MAJOR, major);
-    config_odev_add_int_attribute(attribs, ODEV_ATTRIB_MINOR, minor);
+    attribs->path = XNFstrdup(path);
+    attribs->syspath = XNFstrdup(syspath);
+    attribs->major = major;
+    attribs->minor = minor;
 
     /* ownership of attribs is passed to probe layer */
     probe_callback(attribs);

@@ -8,6 +8,7 @@ cat > sdksyms.c << EOF
 #include <xorg-config.h>
 #endif
 
+
 /* These must be included first */
 #include "misc.h"
 #include "miscstruct.h"
@@ -215,10 +216,7 @@ cat > sdksyms.c << EOF
 #include "mizerarc.h"
 #include "micoord.h"
 #include "mifillarc.h"
-#include "mispans.h"
-#include "miwideline.h"
 #include "mistruct.h"
-#include "mifpoly.h"
 #include "mioverlay.h"
 
 
@@ -311,14 +309,6 @@ cat > sdksyms.c << EOF
 
 EOF
 
-case `gcc -dumpversion` in 
-    [23].*)
-	n=2
-	;;
-    4.*)
-	n=3
-	;;
-esac
 topdir=$1
 shift
 LC_ALL=C
@@ -359,14 +349,26 @@ BEGIN {
 /^extern[ 	]/  {
     if (sdk) {
 	n = 3;
-        printf("/* %s */\n", $0)
+
+        # skip line numbers GCC 5 adds before __attribute__
+        while ($n == "" || $0 ~ /^# [0-9]+ "/) {
+           getline;
+           n = 1;
+        }
+
 	# skip attribute, if any
 	while ($n ~ /^(__attribute__|__global)/ ||
 	    # skip modifiers, if any
 	    $n ~ /^\*?(unsigned|const|volatile|struct|_X_EXPORT)$/ ||
 	    # skip pointer
-	    $n ~ /^[a-zA-Z0-9_]*\*$/)
+	    $n ~ /^[a-zA-Z0-9_]*\*$/) {
 	    n++;
+            # skip line numbers GCC 5 adds after __attribute__
+            while ($n == "" || $0 ~ /^# [0-9]+ "/) {
+               getline;
+               n = 1;
+            }
+        }
 
 	# type specifier may not be set, as in
 	#   extern _X_EXPORT unsigned name(...)

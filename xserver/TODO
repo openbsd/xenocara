@@ -1,0 +1,68 @@
+tree inheritance:
+
+init-cleanup
+
+driver todo for megamerge:
+nuke ddc1 paths
+nuke weak functions
+i810 kms
+mach64 LinearVidMem removal
+openbsd pciaccess fd inversion
+fix linux int10 ReadBIOS and/or merge int10 and generic
+geode/sis/xgi *apVidMem removal
+i128/mga BiosBase removal
+sis virtualFrom removal
+mach64/rendition max[HV]Value removal
+cirrus should prefer 16bpp
+external RAMDAC code motion for glint/s3/tga
+freedreno oslib.h detangle
+
+unify xinerama protocol ~-1kloc
+- add screen id token
+- add removal api
+- add primary flag dealie?
+
+fold up pre-1.2 randr
+s/xf86DefaultModes/DMTModes/ -100
+GLX for Xnest (works-ish on other branch)
+rootless-merge merge
+rootless-using xwayland
+glxproxy something something, -15kloc if you can delete it...
+maybe merge int10/vbe
+fix shadow for multiple pixmaps
+top-level loader (almost, ported api, needs motion)
+loadable glx for all ddxes
+un-special-case colormap privates
+redo fbbits a la sna
+merge the one snafb bugfix
+render: FindGlyph -> FindGlyphs
+miValidateTree: 'forward' might be a pessimization
+RegionOp's overlapFunc is constant
+detach dmx from fb
+destroywindow should return void
+redo de-sdking of opaque.h
+
+PRIVATE_COLORMAP
+only reason this is special is xf86HandleColormaps, which the ddx drivers
+call _after_ creating default colormap, but which registers a devprivate.
+should find some symbol always called before xf86HC but never called in
+randr 1.2 drivers?  xf86ValidateModes perhaps?
+
+XRT Must Die
+Class: Drawable
+Types: Colormap, Damage, GC, Picture, Pixmap, Window
+
+colormaps:
+CreateColormap has a special case for the default cmap
+uninstall is skipped for server cmaps? because default?
+WindowOptRec->colormap is an id not a pointer
+ScreenRec->defColormap is an id not a pointer, but, okay?
+CopyColormapAndFree is... odd.
+AllocColor's CMAPENTRY special case should be moved
+ListInstalledColormaps is godawful
+not clear why vfb/nest duplicate micmap so much
+
+pixmap/window:
+aaaaaaaaaa
+
+

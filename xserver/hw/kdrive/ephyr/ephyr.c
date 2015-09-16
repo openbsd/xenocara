@@ -1,8 +1,8 @@
 /*
  * Xephyr - A kdrive X server thats runs in a host X window.
  *          Authored by Matthew Allum <mallum@openedhand.com>
- * 
- * Copyright © 2004 Nokia 
+ *
+ * Copyright © 2004 Nokia
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -68,6 +68,7 @@ typedef struct _EphyrInputPrivate {
 
 Bool EphyrWantGrayScale = 0;
 Bool EphyrWantResize = 0;
+Bool EphyrWantNoHostGrab = 0;
 
 Bool
 host_has_extension(xcb_extension_t *extension)
@@ -111,13 +112,16 @@ Bool
 ephyrScreenInitialize(KdScreenInfo *screen)
 {
     EphyrScrPriv *scrpriv = screen->driver;
+    int x = 0, y = 0;
     int width = 640, height = 480;
     CARD32 redMask, greenMask, blueMask;
 
-    if (hostx_want_screen_size(screen, &width, &height)
+    if (hostx_want_screen_geometry(screen, &width, &height, &x, &y)
         || !screen->width || !screen->height) {
         screen->width = width;
         screen->height = height;
+        screen->x = x;
+        screen->y = y;
     }
 
     if (EphyrWantGrayScale)
@@ -242,7 +246,8 @@ ephyrMapFramebuffer(KdScreenInfo * screen)
     buffer_height = ephyrBufferHeight(screen);
 
     priv->base =
-        hostx_screen_init(screen, screen->width, screen->height, buffer_height,
+        hostx_screen_init(screen, screen->x, screen->y,
+                          screen->width, screen->height, buffer_height,
                           &priv->bytes_per_line, &screen->fb.bitsPerPixel);
 
     if ((scrpriv->randr & RR_Rotate_0) && !(scrpriv->randr & RR_Reflect_All)) {
@@ -308,8 +313,8 @@ ephyrShadowUpdate(ScreenPtr pScreen, shadowBufPtr pBuf)
     EPHYR_LOG("slow paint");
 
     /* FIXME: Slow Rotated/Reflected updates could be much
-     * much faster efficiently updating via tranforming 
-     * pBuf->pDamage  regions     
+     * much faster efficiently updating via tranforming
+     * pBuf->pDamage  regions
      */
     shadowUpdateRotatePacked(pScreen, pBuf);
     hostx_paint_rect(screen, 0, 0, 0, 0, screen->width, screen->height);
@@ -530,7 +535,7 @@ ephyrRandRSetConfig(ScreenPtr pScreen,
             goto bail4;
     }
     else {
-        /* Without shadow fb ( non rotated ) we need 
+        /* Without shadow fb ( non rotated ) we need
          * to use damage to efficiently update display
          * via signal regions what to copy from 'fb'.
          */
@@ -645,12 +650,18 @@ ephyrInitScreen(ScreenPtr pScreen)
 
     EPHYR_LOG("pScreen->myNum:%d\n", pScreen->myNum);
     hostx_set_screen_number(screen, pScreen->myNum);
-    hostx_set_win_title(screen, "(ctrl+shift grabs mouse and keyboard)");
+    if (EphyrWantNoHostGrab) {
+        hostx_set_win_title(screen, "xephyr");
+    } else {
+        hostx_set_win_title(screen, "(ctrl+shift grabs mouse and keyboard)");
+    }
     pScreen->CreateColormap = ephyrCreateColormap;
 
 #ifdef XV
     if (!ephyrNoXV) {
-        if (!ephyrInitVideo(pScreen)) {
+        if (ephyr_glamor)
+            ephyr_glamor_xv_init(pScreen);
+        else if (!ephyrInitVideo(pScreen)) {
             EPHYR_LOG_ERROR("failed to initialize xvideo\n");
         }
         else {
@@ -676,7 +687,7 @@ ephyrInitScreen(ScreenPtr pScreen)
 Bool
 ephyrFinishInitScreen(ScreenPtr pScreen)
 {
-    /* FIXME: Calling this even if not using shadow.  
+    /* FIXME: Calling this even if not using shadow.
      * Seems harmless enough. But may be safer elsewhere.
      */
     if (!shadowSetup(pScreen))
@@ -756,7 +767,13 @@ ephyrScreenFini(KdScreenInfo * screen)
     }
 }
 
-/*  
+void
+ephyrCloseScreen(ScreenPtr pScreen)
+{
+    ephyrUnsetInternalDamage(pScreen);
+}
+
+/*
  * Port of Mark McLoughlin's Xnest fix for focus in + modifier bug.
  * See https://bugs.freedesktop.org/show_bug.cgi?id=3030
  */
@@ -789,7 +806,11 @@ ephyrUpdateModifierState(unsigned int state)
 
             for (key = 0; key < MAP_LENGTH; key++)
                 if (keyc->xkbInfo->desc->map->modmap[key] & mask) {
-                    if (key_is_down(pDev, key, KEY_PROCESSED))
+                    if (mask == XCB_MOD_MASK_LOCK) {
+                        KdEnqueueKeyboardEvent(ephyrKbd, key, FALSE);
+                        KdEnqueueKeyboardEvent(ephyrKbd, key, TRUE);
+                    }
+                    else if (key_is_down(pDev, key, KEY_PROCESSED))
                         KdEnqueueKeyboardEvent(ephyrKbd, key, TRUE);
 
                     if (--count == 0)
@@ -803,6 +824,8 @@ ephyrUpdateModifierState(unsigned int state)
             for (key = 0; key < MAP_LENGTH; key++)
                 if (keyc->xkbInfo->desc->map->modmap[key] & mask) {
                     KdEnqueueKeyboardEvent(ephyrKbd, key, FALSE);
+                    if (mask == XCB_MOD_MASK_LOCK)
+                        KdEnqueueKeyboardEvent(ephyrKbd, key, TRUE);
                     break;
                 }
     }
@@ -866,7 +889,7 @@ ephyrExposePairedWindow(int a_remote)
     screen = pair->local->drawable.pScreen;
     RegionNull(&reg);
     RegionCopy(&reg, &pair->local->clipList);
-    screen->WindowExposures(pair->local, &reg, NullRegion);
+    screen->WindowExposures(pair->local, &reg);
     RegionUninit(&reg);
 }
 #endif                          /* XF86DRI */
@@ -1080,12 +1103,13 @@ ephyrProcessKeyRelease(xcb_generic_event_t *xev)
     if (!keysyms)
         keysyms = xcb_key_symbols_alloc(conn);
 
-    if (((xcb_key_symbols_get_keysym(keysyms, key->detail, 0) == XK_Shift_L
+    if (!EphyrWantNoHostGrab &&
+        (((xcb_key_symbols_get_keysym(keysyms, key->detail, 0) == XK_Shift_L
           || xcb_key_symbols_get_keysym(keysyms, key->detail, 0) == XK_Shift_R)
          && (key->state & XCB_MOD_MASK_CONTROL)) ||
         ((xcb_key_symbols_get_keysym(keysyms, key->detail, 0) == XK_Control_L
           || xcb_key_symbols_get_keysym(keysyms, key->detail, 0) == XK_Control_R)
-         && (key->state & XCB_MOD_MASK_SHIFT))) {
+         && (key->state & XCB_MOD_MASK_SHIFT)))) {
         KdScreenInfo *screen = screen_from_window(key->event);
         EphyrScrPriv *scrpriv = screen->driver;
 
@@ -1274,7 +1298,7 @@ ephyrPutColors(ScreenPtr pScreen, int n, xColorItem * pdefs)
         if (p > max)
             max = p;
 
-        hostx_set_cmap_entry(p,
+        hostx_set_cmap_entry(pScreen, p,
                              pdefs->red >> 8,
                              pdefs->green >> 8, pdefs->blue >> 8);
         pdefs++;

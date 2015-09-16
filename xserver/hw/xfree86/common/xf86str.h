@@ -403,7 +403,6 @@ typedef struct {
     Bool active;
     Bool inUse;
     int videoRam;
-    int textClockFreq;
     unsigned long BiosBase;     /* Base address of video BIOS */
     unsigned long MemBase;      /* Frame buffer base address */
     unsigned long IOBase;
@@ -569,7 +568,7 @@ typedef struct _PciChipsets {
      * In drivers that don't have a specific vendor (e.g., vga) contains the
      * device ID for either the generic VGA or generic 8514 devices.  This
      * turns out to be the same as the subclass and programming interface
-     * value (e.g., the full 24-bit class for the VGA device is 0x030000 (or 
+     * value (e.g., the full 24-bit class for the VGA device is 0x030000 (or
      * 0x000101) and for 8514 is 0x030001).
      */
     int PCIid;
@@ -753,7 +752,6 @@ typedef struct _ScrnInfoRec {
     unsigned long memPhysBase;  /* Physical address of FB */
     unsigned long fbOffset;     /* Offset of FB in the above */
     int memClk;                 /* memory clock */
-    int textClockFreq;          /* clock of text mode */
     Bool flipPixels;            /* swap default black/white */
     void *options;
 

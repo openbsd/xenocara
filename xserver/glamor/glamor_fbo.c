@@ -126,7 +126,7 @@ glamor_pixmap_fbo_cache_get(glamor_screen_private *glamor_priv,
 #endif
 }
 
-void
+static void
 glamor_purge_fbo(glamor_pixmap_fbo *fbo)
 {
     glamor_make_current(fbo->glamor_priv);
@@ -153,7 +153,7 @@ glamor_pixmap_fbo_cache_put(glamor_pixmap_fbo *fbo)
 #else
     n_format = cache_format(fbo->format);
 
-    if (fbo->fb == 0 || n_format == -1
+    if (fbo->fb == 0 || fbo->external || n_format == -1
         || fbo->glamor_priv->fbo_cache_watermark >= FBO_CACHE_THRESHOLD) {
         fbo->glamor_priv->tick += GLAMOR_CACHE_EXPIRE_MAX;
         glamor_fbo_expire(fbo->glamor_priv);
@@ -237,6 +237,7 @@ glamor_create_fbo_from_tex(glamor_screen_private *glamor_priv,
     fbo->tex = tex;
     fbo->width = w;
     fbo->height = h;
+    fbo->external = FALSE;
     fbo->format = format;
     fbo->glamor_priv = glamor_priv;
 
@@ -347,7 +348,6 @@ _glamor_create_tex(glamor_screen_private *glamor_priv,
         glamor_make_current(glamor_priv);
         glGenTextures(1, &tex);
         glBindTexture(GL_TEXTURE_2D, tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0,
@@ -539,8 +539,6 @@ glamor_pixmap_destroy_fbo(glamor_pixmap_private *priv)
         if (fbo)
             glamor_destroy_fbo(fbo);
     }
-
-    free(priv);
 }
 
 Bool

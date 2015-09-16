@@ -76,18 +76,17 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libglamor_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libglamor_la_OBJECTS = glamor.lo glamor_copyarea.lo \
-	glamor_copywindow.lo glamor_core.lo glamor_fill.lo \
-	glamor_font.lo glamor_glx.lo glamor_glyphs.lo \
-	glamor_polylines.lo glamor_segment.lo glamor_image.lo \
-	glamor_render.lo glamor_gradient.lo glamor_program.lo \
-	glamor_rects.lo glamor_spans.lo glamor_text.lo \
-	glamor_transfer.lo glamor_transform.lo glamor_trapezoid.lo \
-	glamor_tile.lo glamor_triangles.lo glamor_addtraps.lo \
-	glamor_copyplane.lo glamor_glyphblt.lo glamor_points.lo \
-	glamor_pixmap.lo glamor_largepixmap.lo glamor_picture.lo \
-	glamor_vbo.lo glamor_window.lo glamor_fbo.lo \
-	glamor_compositerects.lo
+am_libglamor_la_OBJECTS = glamor.lo glamor_copy.lo glamor_core.lo \
+	glamor_dash.lo glamor_font.lo glamor_glx.lo glamor_glyphs.lo \
+	glamor_image.lo glamor_lines.lo glamor_segs.lo \
+	glamor_render.lo glamor_gradient.lo glamor_prepare.lo \
+	glamor_program.lo glamor_rects.lo glamor_spans.lo \
+	glamor_text.lo glamor_transfer.lo glamor_transform.lo \
+	glamor_trapezoid.lo glamor_triangles.lo glamor_addtraps.lo \
+	glamor_glyphblt.lo glamor_points.lo glamor_pixmap.lo \
+	glamor_largepixmap.lo glamor_picture.lo glamor_vbo.lo \
+	glamor_window.lo glamor_fbo.lo glamor_compositerects.lo \
+	glamor_utils.lo glamor_xv.lo glamor_sync.lo
 libglamor_la_OBJECTS = $(am_libglamor_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -278,6 +277,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -521,20 +521,21 @@ AM_CFLAGS = $(CWARNFLAGS) $(DIX_CFLAGS) $(GLAMOR_CFLAGS)
 libglamor_la_SOURCES = \
 	glamor.c \
 	glamor_context.h \
-	glamor_copyarea.c \
-	glamor_copywindow.c \
+	glamor_copy.c \
 	glamor_core.c \
+	glamor_dash.c \
 	glamor_debug.h \
-	glamor_fill.c \
 	glamor_font.c \
 	glamor_font.h \
 	glamor_glx.c \
 	glamor_glyphs.c \
-	glamor_polylines.c \
-	glamor_segment.c \
 	glamor_image.c \
+	glamor_lines.c \
+	glamor_segs.c \
 	glamor_render.c \
 	glamor_gradient.c \
+	glamor_prepare.c \
+	glamor_prepare.h \
 	glamor_program.c \
 	glamor_program.h \
 	glamor_rects.c \
@@ -545,10 +546,8 @@ libglamor_la_SOURCES = \
 	glamor_transform.c \
 	glamor_transform.h \
 	glamor_trapezoid.c \
-	glamor_tile.c \
 	glamor_triangles.c\
 	glamor_addtraps.c\
-	glamor_copyplane.c\
 	glamor_glyphblt.c\
 	glamor_points.c\
 	glamor_priv.h\
@@ -559,7 +558,10 @@ libglamor_la_SOURCES = \
 	glamor_window.c\
 	glamor_fbo.c\
 	glamor_compositerects.c\
+	glamor_utils.c\
 	glamor_utils.h\
+	glamor_xv.c \
+	glamor_sync.c \
 	glamor.h
 
 libglamor_egl_stubs_la_SOURCES = glamor_egl_stubs.c
@@ -623,13 +625,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_addtraps.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_compositerects.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_copyarea.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_copyplane.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_copywindow.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_copy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_core.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_dash.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_egl_stubs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_fbo.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_fill.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_font.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_glx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_glyphblt.Plo@am__quote@
@@ -637,23 +637,26 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_gradient.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_largepixmap.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_lines.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_picture.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_pixmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_points.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_polylines.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_prepare.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_program.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_rects.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_render.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_segment.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_segs.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_spans.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_sync.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_text.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_tile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_transfer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_transform.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_trapezoid.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_triangles.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_vbo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_window.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glamor_xv.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

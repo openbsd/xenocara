@@ -76,7 +76,7 @@ LTLIBRARIES = $(noinst_LTLIBRARIES)
 libstub_la_LIBADD =
 am_libstub_la_OBJECTS = VTsw_noop.lo agp_noop.lo ioperm_noop.lo \
 	kmod_noop.lo pm_noop.lo vidmem.lo posix_tty.lo sigio.lo \
-	stub_bell.lo stub_bios.lo stub_init.lo stub_video.lo
+	stub_bell.lo stub_init.lo stub_video.lo
 libstub_la_OBJECTS = $(am_libstub_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -234,6 +234,7 @@ KDRIVE_CFLAGS = @KDRIVE_CFLAGS@
 KDRIVE_INCS = @KDRIVE_INCS@
 KDRIVE_LIBS = @KDRIVE_LIBS@
 KDRIVE_LOCAL_LIBS = @KDRIVE_LOCAL_LIBS@
+KDRIVE_MAIN_LIB = @KDRIVE_MAIN_LIB@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
@@ -484,7 +485,6 @@ libstub_la_SOURCES = \
 	$(srcdir)/../shared/posix_tty.c \
 	$(srcdir)/../shared/sigio.c \
 	stub_bell.c \
-	stub_bios.c \
 	stub_init.c \
 	stub_video.c
 
@@ -550,7 +550,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/posix_tty.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sigio.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub_bell.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub_bios.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub_init.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vidmem.Plo@am__quote@

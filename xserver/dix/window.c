@@ -49,13 +49,13 @@ Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
 
 			All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -135,7 +135,7 @@ Equipment Corporation.
 #include <X11/Xatom.h>          /* must come after server includes */
 
 /******
- * Window stuff for server 
+ * Window stuff for server
  *
  *    CreateRootWindow, CreateWindow, ChangeWindowAttributes,
  *    GetWindowAttributes, DeleteWindow, DestroySubWindows,
@@ -357,13 +357,12 @@ SetWindowToDefaults(WindowPtr pWin)
     pWin->firstChild = NullWindow;
     pWin->lastChild = NullWindow;
 
-    pWin->valdata = (ValidatePtr) NULL;
-    pWin->optional = (WindowOptPtr) NULL;
+    pWin->valdata = NULL;
+    pWin->optional = NULL;
     pWin->cursorIsNone = TRUE;
 
     pWin->backingStore = NotUseful;
-    pWin->DIXsaveUnder = FALSE;
-    pWin->backStorage = (void *) NULL;
+    pWin->backStorage = 0;
 
     pWin->mapped = FALSE;       /* off */
     pWin->realized = FALSE;     /* off */
@@ -634,7 +633,7 @@ RealChildHead(WindowPtr pWin)
 
 /*****
  * CreateWindow
- *    Makes a window in response to client request 
+ *    Makes a window in response to client request
  *****/
 
 WindowPtr
@@ -1039,10 +1038,10 @@ SetRootWindowBackground(WindowPtr pWin, ScreenPtr pScreen, Mask *index2)
 
 /*****
  *  ChangeWindowAttributes
- *   
+ *
  *  The value-mask specifies which attributes are to be changed; the
  *  value-list contains one value for each one bit in the mask, from least
- *  to most significant bit in the mask.  
+ *  to most significant bit in the mask.
  *****/
 
 int
@@ -1460,8 +1459,8 @@ ChangeWindowAttributes(WindowPtr pWin, Mask vmask, XID *vlist, ClientPtr client)
     /* We SHOULD check for an error value here XXX */
     (*pScreen->ChangeWindowAttributes) (pWin, vmaskCopy);
 
-    /* 
-       If the border contents have changed, redraw the border. 
+    /*
+       If the border contents have changed, redraw the border.
        Note that this has to be done AFTER pScreen->ChangeWindowAttributes
        for the tile to be rotated, and the correct function selected.
      */
@@ -1551,7 +1550,7 @@ MoveWindowInStack(WindowPtr pWin, WindowPtr pNextSib)
             if (pWin->prevSib)
                 pWin->prevSib->nextSib = pWin->nextSib;
             pWin->nextSib = pParent->firstChild;
-            pWin->prevSib = (WindowPtr) NULL;
+            pWin->prevSib = NULL;
             pNextSib->prevSib = pWin;
             pParent->firstChild = pWin;
         }
@@ -1813,11 +1812,9 @@ ResizeChildrenWinSize(WindowPtr pWin, int dx, int dy, int dw, int dh)
 
 #define ChangeMask ((Mask)(CWX | CWY | CWWidth | CWHeight))
 
-#define IllegalInputOnlyConfigureMask (CWBorderWidth)
-
 /*
  * IsSiblingAboveMe
- *     returns Above if pSib above pMe in stack or Below otherwise 
+ *     returns Above if pSib above pMe in stack or Below otherwise
  */
 
 static int
@@ -1848,7 +1845,7 @@ WindowExtents(WindowPtr pWin, BoxPtr pBox)
     return pBox;
 }
 
-#define IS_SHAPED(pWin)	(wBoundingShape (pWin) != (RegionPtr) NULL)
+#define IS_SHAPED(pWin)	(wBoundingShape (pWin) != NULL)
 
 static RegionPtr
 MakeBoundingRegion(WindowPtr pWin, BoxPtr pBox)
@@ -1917,7 +1914,7 @@ IOverlapAnyWindow(WindowPtr pWin, BoxPtr box)
 }
 
 /*
- *   WhereDoIGoInTheStack() 
+ *   WhereDoIGoInTheStack()
  *	  Given pWin and pSib and the relationshipe smode, return
  *	  the window that pWin should go ABOVE.
  *	  If a pSib is specified:
@@ -1925,7 +1922,7 @@ IOverlapAnyWindow(WindowPtr pWin, BoxPtr box)
  *	      Below:  pWin is placed just below pSib
  *	      TopIf:  if pSib occludes pWin, then pWin is placed
  *		      at the top of the stack
- *	      BottomIf:	 if pWin occludes pSib, then pWin is 
+ *	      BottomIf:	 if pWin occludes pSib, then pWin is
  *			 placed at the bottom of the stack
  *	      Opposite: if pSib occludes pWin, then pWin is placed at the
  *			top of the stack, else if pWin occludes pSib, then
@@ -1954,7 +1951,7 @@ WhereDoIGoInTheStack(WindowPtr pWin,
     WindowPtr pHead, pFirst;
 
     if ((pWin == pWin->parent->firstChild) && (pWin == pWin->parent->lastChild))
-        return ((WindowPtr) NULL);
+        return NULL;
     pHead = RealChildHead(pWin->parent);
     pFirst = pHead ? pHead->nextSib : pWin->parent->firstChild;
     box.x1 = x;
@@ -2062,10 +2059,10 @@ ReflectStackChange(WindowPtr pWin, WindowPtr pSib, VTKind kind)
         if (anyMarked) {
             (*pScreen->ValidateTree) (pLayerWin->parent, pFirstChange, kind);
             (*pScreen->HandleExposures) (pLayerWin->parent);
+            if (pWin->drawable.pScreen->PostValidateTree)
+                (*pScreen->PostValidateTree) (pLayerWin->parent, pFirstChange,
+                                              kind);
         }
-        if (anyMarked && pWin->drawable.pScreen->PostValidateTree)
-            (*pScreen->PostValidateTree) (pLayerWin->parent, pFirstChange,
-                                          kind);
     }
     if (pWin->realized)
         WindowsRestructured();
@@ -2092,8 +2089,7 @@ ConfigureWindow(WindowPtr pWin, Mask mask, XID *vlist, ClientPtr client)
         h = pWin->drawable.height, bw = pWin->borderWidth;
     int rc, action, smode = Above;
 
-    if ((pWin->drawable.class == InputOnly) &&
-        (mask & IllegalInputOnlyConfigureMask))
+    if ((pWin->drawable.class == InputOnly) && (mask & CWBorderWidth))
         return BadMatch;
 
     if ((mask & CWSibling) && !(mask & CWStackMode))
@@ -2320,7 +2316,7 @@ ConfigureWindow(WindowPtr pWin, Mask mask, XID *vlist, ClientPtr client)
  *    For RaiseLowest, raises the lowest mapped child (if any) that is
  *    obscured by another child to the top of the stack.  For LowerHighest,
  *    lowers the highest mapped child (if any) that is obscuring another
- *    child to the bottom of the stack.	 Exposure processing is performed 
+ *    child to the bottom of the stack.	 Exposure processing is performed
  *
  ******/
 
@@ -2580,10 +2576,10 @@ MapWindow(WindowPtr pWin, ClientPtr client)
             if (anyMarked) {
                 (*pScreen->ValidateTree) (pLayerWin->parent, pLayerWin, VTMap);
                 (*pScreen->HandleExposures) (pLayerWin->parent);
+                if (pScreen->PostValidateTree)
+                    (*pScreen->PostValidateTree) (pLayerWin->parent, pLayerWin,
+                                                  VTMap);
             }
-            if (anyMarked && pScreen->PostValidateTree)
-                (*pScreen->PostValidateTree) (pLayerWin->parent, pLayerWin,
-                                              VTMap);
         }
         WindowsRestructured();
     }
@@ -2601,7 +2597,7 @@ MapWindow(WindowPtr pWin, ClientPtr client)
             (*pScreen->PostValidateTree) (NullWindow, pWin, VTMap);
         RegionNull(&temp);
         RegionCopy(&temp, &pWin->clipList);
-        (*pScreen->WindowExposures) (pWin, &temp, NullRegion);
+        (*pScreen->WindowExposures) (pWin, &temp);
         RegionUninit(&temp);
     }
 
@@ -2645,8 +2641,7 @@ MapSubwindows(WindowPtr pParent, ClientPtr client)
                 RealizeTree(pWin);
                 if (pWin->viewable) {
                     anyMarked |= (*pScreen->MarkOverlappedWindows) (pWin, pWin,
-                                                                    (WindowPtr
-                                                                     *) NULL);
+                                                                    NULL);
                 }
             }
         }
@@ -2656,17 +2651,16 @@ MapSubwindows(WindowPtr pParent, ClientPtr client)
         pLayerWin = (*pScreen->GetLayerWindow) (pParent);
         if (pLayerWin->parent != pParent) {
             anyMarked |= (*pScreen->MarkOverlappedWindows) (pLayerWin,
-                                                            pLayerWin,
-                                                            (WindowPtr *) NULL);
+                                                            pLayerWin, NULL);
             pFirstMapped = pLayerWin;
         }
         if (anyMarked) {
             (*pScreen->ValidateTree) (pLayerWin->parent, pFirstMapped, VTMap);
             (*pScreen->HandleExposures) (pLayerWin->parent);
+            if (pScreen->PostValidateTree)
+                (*pScreen->PostValidateTree) (pLayerWin->parent, pFirstMapped,
+                                              VTMap);
         }
-        if (anyMarked && pScreen->PostValidateTree)
-            (*pScreen->PostValidateTree) (pLayerWin->parent, pFirstMapped,
-                                          VTMap);
         WindowsRestructured();
     }
 }
@@ -2760,9 +2754,9 @@ UnmapWindow(WindowPtr pWin, Bool fromConfigure)
         if (!fromConfigure) {
             (*pScreen->ValidateTree) (pLayerWin->parent, pWin, VTUnmap);
             (*pScreen->HandleExposures) (pLayerWin->parent);
+            if (pScreen->PostValidateTree)
+                (*pScreen->PostValidateTree) (pLayerWin->parent, pWin, VTUnmap);
         }
-        if (!fromConfigure && pScreen->PostValidateTree)
-            (*pScreen->PostValidateTree) (pLayerWin->parent, pWin, VTUnmap);
     }
     if (wasRealized && !fromConfigure) {
         WindowsRestructured();
@@ -2807,8 +2801,6 @@ UnmapSubwindows(WindowPtr pWin)
             pChild->mapped = FALSE;
             if (pChild->realized)
                 UnrealizeTree(pChild, FALSE);
-            if (wasViewable) {
-            }
         }
     }
     if (wasViewable) {
@@ -2818,8 +2810,7 @@ UnmapSubwindows(WindowPtr pWin)
             else {
                 WindowPtr ptmp;
 
-                (*pScreen->MarkOverlappedWindows) (pWin, pLayerWin,
-                                                   (WindowPtr *) NULL);
+                (*pScreen->MarkOverlappedWindows) (pWin, pLayerWin, NULL);
                 (*pScreen->MarkWindow) (pLayerWin->parent);
 
                 /* Windows between pWin and pLayerWin may not have been marked */
@@ -2833,9 +2824,10 @@ UnmapSubwindows(WindowPtr pWin)
             }
             (*pScreen->ValidateTree) (pLayerWin->parent, pHead, VTUnmap);
             (*pScreen->HandleExposures) (pLayerWin->parent);
+            if (pScreen->PostValidateTree)
+                (*pScreen->PostValidateTree) (pLayerWin->parent, pHead,
+                                              VTUnmap);
         }
-        if (anyMarked && pScreen->PostValidateTree)
-            (*pScreen->PostValidateTree) (pLayerWin->parent, pHead, VTUnmap);
     }
     if (wasRealized) {
         WindowsRestructured();
@@ -2878,7 +2870,7 @@ HandleSaveSet(ClientPtr client)
     }
     free(client->saveSet);
     client->numSaved = 0;
-    client->saveSet = (SaveSetElt *) NULL;
+    client->saveSet = NULL;
 }
 
 /**
@@ -3251,7 +3243,7 @@ CheckWindowOptionalNeed(WindowPtr w)
         return;
     if (optional->userProps != NULL)
         return;
-    if (optional->backingBitPlanes != ~0L)
+    if (optional->backingBitPlanes != (CARD32)~0L)
         return;
     if (optional->backingPixel != 0)
         return;
@@ -3335,9 +3327,9 @@ MakeWindowOptional(WindowPtr pWin)
  * changing the window cursor (e.g. using XDefineCursor()) will not have any
  * visible effect. Only when one of the device cursors is set to None again,
  * this device's cursor will display the changed standard cursor.
- * 
+ *
  * CursorIsNone of the window struct is NOT modified if you set a device
- * cursor. 
+ * cursor.
  *
  * Assumption: If there is a node for a device in the list, the device has a
  * cursor. If the cursor is set to None, it is inherited by the parent.
@@ -3432,7 +3424,7 @@ ChangeWindowDeviceCursor(WindowPtr pWin, DeviceIntPtr pDev, CursorPtr pCursor)
     if (pOldCursor)
         FreeCursor(pOldCursor, (Cursor) 0);
 
-    /* FIXME: We SHOULD check for an error value here XXX  
+    /* FIXME: We SHOULD check for an error value here XXX
        (comment taken from ChangeWindowAttributes) */
     (*pScreen->ChangeWindowAttributes) (pWin, CWCursor);
 
@@ -3499,7 +3491,7 @@ WindowSeekDeviceCursor(WindowPtr pWin,
 }
 
 /* Return True if a parent has the same device cursor set or False if
- * otherwise 
+ * otherwise
  */
 static Bool
 WindowParentHasDeviceCursor(WindowPtr pWin,
@@ -3594,22 +3586,19 @@ SetRootClip(ScreenPtr pScreen, Bool enable)
         if (pWin->firstChild) {
             anyMarked |= (*pScreen->MarkOverlappedWindows) (pWin->firstChild,
                                                             pWin->firstChild,
-                                                            (WindowPtr *) NULL);
+                                                            NULL);
         }
         else {
             (*pScreen->MarkWindow) (pWin);
             anyMarked = TRUE;
         }
 
-        if (anyMarked)
+        if (anyMarked) {
             (*pScreen->ValidateTree) (pWin, NullWindow, VTOther);
-    }
-
-    if (WasViewable) {
-        if (anyMarked)
             (*pScreen->HandleExposures) (pWin);
-        if (anyMarked && pScreen->PostValidateTree)
-            (*pScreen->PostValidateTree) (pWin, NullWindow, VTOther);
+            if (pScreen->PostValidateTree)
+                (*pScreen->PostValidateTree) (pWin, NullWindow, VTOther);
+        }
     }
     if (pWin->realized)
         WindowsRestructured();
