@@ -72,7 +72,6 @@
 ./usr/X11R6/include/xorg/TI.h
 ./usr/X11R6/include/xorg/XIstubs.h
 ./usr/X11R6/include/xorg/Xprintf.h
-./usr/X11R6/include/xorg/bt829.h
 ./usr/X11R6/include/xorg/callback.h
 ./usr/X11R6/include/xorg/client.h
 ./usr/X11R6/include/xorg/closestr.h
@@ -109,7 +108,6 @@
 ./usr/X11R6/include/xorg/fboverlay.h
 ./usr/X11R6/include/xorg/fbpict.h
 ./usr/X11R6/include/xorg/fbrop.h
-./usr/X11R6/include/xorg/fi1236.h
 ./usr/X11R6/include/xorg/fourcc.h
 ./usr/X11R6/include/xorg/gc.h
 ./usr/X11R6/include/xorg/gcstruct.h
@@ -126,8 +124,6 @@
 ./usr/X11R6/include/xorg/mi.h
 ./usr/X11R6/include/xorg/micmap.h
 ./usr/X11R6/include/xorg/micoord.h
-./usr/X11R6/include/xorg/mifillarc.h
-./usr/X11R6/include/xorg/mifpoly.h
 ./usr/X11R6/include/xorg/migc.h
 ./usr/X11R6/include/xorg/miline.h
 ./usr/X11R6/include/xorg/mioverlay.h
@@ -136,15 +132,12 @@
 ./usr/X11R6/include/xorg/mipointrst.h
 ./usr/X11R6/include/xorg/misc.h
 ./usr/X11R6/include/xorg/miscstruct.h
-./usr/X11R6/include/xorg/mispans.h
 ./usr/X11R6/include/xorg/mistruct.h
 ./usr/X11R6/include/xorg/misync.h
 ./usr/X11R6/include/xorg/misyncfd.h
 ./usr/X11R6/include/xorg/misyncshm.h
 ./usr/X11R6/include/xorg/misyncstr.h
-./usr/X11R6/include/xorg/miwideline.h
 ./usr/X11R6/include/xorg/mizerarc.h
-./usr/X11R6/include/xorg/msp3430.h
 ./usr/X11R6/include/xorg/opaque.h
 ./usr/X11R6/include/xorg/optionstr.h
 ./usr/X11R6/include/xorg/os.h
@@ -179,10 +172,6 @@
 ./usr/X11R6/include/xorg/swaprep.h
 ./usr/X11R6/include/xorg/swapreq.h
 ./usr/X11R6/include/xorg/syncsdk.h
-./usr/X11R6/include/xorg/tda8425.h
-./usr/X11R6/include/xorg/tda9850.h
-./usr/X11R6/include/xorg/tda9885.h
-./usr/X11R6/include/xorg/uda1380.h
 ./usr/X11R6/include/xorg/validate.h
 ./usr/X11R6/include/xorg/vbe.h
 ./usr/X11R6/include/xorg/vbeModes.h
