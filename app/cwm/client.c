@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.209 2015/08/27 18:53:15 okan Exp $
+ * $OpenBSD: client.c,v 1.210 2015/09/23 14:09:40 okan Exp $
  */
 
 #include <sys/types.h>
@@ -48,6 +48,9 @@ client_init(Window win, struct screen_ctx *sc)
 	struct client_ctx	*cc;
 	XWindowAttributes	 wattr;
 	int			 mapped;
+	Window			 rwin, cwin;
+	int			 x, y, wx, wy, activate = 0;
+	unsigned int		 mask;
 
 	if (win == None)
 		return(NULL);
@@ -97,6 +100,10 @@ client_init(Window win, struct screen_ctx *sc)
 		client_move(cc);
 		if ((cc->wmh) && (cc->wmh->flags & StateHint))
 			client_set_wm_state(cc, cc->wmh->initial_state);
+	} else {
+		if ((XQueryPointer(X_Dpy, cc->win, &rwin, &cwin,
+		    &x, &y, &wx, &wy, &mask)) && (cwin != None))
+			activate = 1;
 	}
 
 	XSelectInput(X_Dpy, cc->win, ColormapChangeMask | EnterWindowMask |
@@ -133,6 +140,9 @@ client_init(Window win, struct screen_ctx *sc)
 out:
 	XSync(X_Dpy, False);
 	XUngrabServer(X_Dpy);
+
+	if (activate)
+		client_setactive(cc);
 
 	return(cc);
 }
