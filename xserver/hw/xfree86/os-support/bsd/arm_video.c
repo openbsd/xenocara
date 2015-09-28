@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/bsd/ppc_video.c,v 1.6 2003/10/07 23:14:55 herrb Exp $ */
-/* $OpenBSD: arm_video.c,v 1.13 2015/09/16 19:10:23 matthieu Exp $ */
+/* $OpenBSD: arm_video.c,v 1.14 2015/09/28 07:14:00 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -77,13 +77,6 @@ void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
     pVidMem->initialised = TRUE;
-}
-
-int
-xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
-             int Len)
-{
-    return -1;
 }
 
 /*
