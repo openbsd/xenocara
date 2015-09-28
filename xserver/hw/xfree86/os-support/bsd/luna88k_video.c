@@ -1,4 +1,4 @@
-/* $OpenBSD: luna88k_video.c,v 1.2 2013/07/16 14:39:22 aoyama Exp $	*/
+/* $OpenBSD: luna88k_video.c,v 1.3 2015/09/28 05:59:26 matthieu Exp $	*/
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -42,35 +42,7 @@
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
-	pVidMem->linearSupported = TRUE;
-	pVidMem->mapMem = NULL;   /* luna88kMapVidMem; */
-	pVidMem->unmapMem = NULL; /* luna88kUnmapVidMem; */
 	pVidMem->initialised = TRUE;
-}
-
-_X_EXPORT int
-xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
-	     int Len)
-{
-	return 0;
-}
-
-/***************************************************************************/
-/* Interrupt Handling section                                              */
-/***************************************************************************/
-
-_X_EXPORT Bool
-xf86DisableInterrupts()
-{
-
-	return TRUE;
-}
-
-_X_EXPORT void
-xf86EnableInterrupts()
-{
-
-	return;
 }
 
 #ifdef X_PRIVSEP
