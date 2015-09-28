@@ -45,30 +45,6 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 	pVidMem->initialised = TRUE;
 }
 
-
-_X_EXPORT int
-xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
-	     int Len)
-{
-	return (0);
-}
-
-/***************************************************************************/
-/* Interrupt Handling section                                              */
-/***************************************************************************/
-
-_X_EXPORT Bool
-xf86DisableInterrupts()
-{
-	return(TRUE);
-}
-
-_X_EXPORT void
-xf86EnableInterrupts()
-{
-	return;
-}
-
 #ifdef X_PRIVSEP
 /*
  * Do all things that need root privileges early 
