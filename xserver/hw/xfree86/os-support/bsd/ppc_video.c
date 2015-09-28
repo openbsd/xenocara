@@ -60,19 +60,7 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
     xf86EnableIO();
 }
 
-
 volatile unsigned char *ioBase = MAP_FAILED;
-
-
-static int kmem = -1;
-
-_X_EXPORT int
-xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
-             int Len)
-{
-
-    return -1;
-}
 
 #ifdef X_PRIVSEP
 /*
@@ -81,6 +69,8 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
 _X_EXPORT void
 xf86PrivilegedInit(void)
 {
+    int kmem;
+
     kmem = open(DEV_MEM, 2);
     if (kmem == -1) {
         xf86Msg(X_PROBED,
@@ -92,6 +82,7 @@ xf86PrivilegedInit(void)
 #endif
 
 #ifdef __NetBSD__
+
 Bool xf86EnableIO()
 {
     int fd = xf86Info.consoleFd;
