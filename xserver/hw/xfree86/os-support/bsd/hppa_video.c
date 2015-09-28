@@ -1,4 +1,4 @@
-/* $OpenBSD: hppa_video.c,v 1.9 2014/09/27 17:53:02 matthieu Exp $ */
+/* $OpenBSD: hppa_video.c,v 1.10 2015/09/28 05:53:20 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -35,68 +35,20 @@
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
 
-#ifndef MAP_FAILED
-#define MAP_FAILED ((caddr_t)-1)
-#endif
-
 
 /***************************************************************************/
 /* Video Memory Mapping section                                            */
 /***************************************************************************/
-
-static void *hppaMapVidMem(int, unsigned long, unsigned long, int);
-static void hppaUnmapVidMem(int, void *, unsigned long);
-
 
 void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
 	xf86OpenConsole();
 
-	pVidMem->linearSupported = TRUE;
-	pVidMem->mapMem = hppaMapVidMem;
-	pVidMem->unmapMem = hppaUnmapVidMem;
 #if HAVE_PCI_SYSTEM_INIT_DEV_MEM
        pci_system_init_dev_mem(xf86Info.consoleFd);
 #endif
 	pVidMem->initialised = TRUE;
-}
-
-
-volatile unsigned char *ioBase = MAP_FAILED;
-
-static void *
-hppaMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
-{
-	int fd = xf86Info.consoleFd;
-	void *base;
-
-#ifdef DEBUG
-	xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d\n", 
-	    Base, Size, fd);
-#endif
-
-	base = mmap(0, Size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, Base);
-	if (base == MAP_FAILED)
-		FatalError("%s: could not mmap screen [s=%lx,a=%lx] (%s)",
-			   "xf86MapVidMem", Size, Base, strerror(errno));
-
-	return base;
-}
-
-
-static void
-hppaUnmapVidMem(int ScreenNum, void *Base, unsigned long Size)
-{
-
-	munmap(Base, Size);
-}
-
-int
-xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
-	     int Len)
-{
-	return 0;
 }
 
 /***************************************************************************/
