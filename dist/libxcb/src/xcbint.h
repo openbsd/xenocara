@@ -142,6 +142,7 @@ typedef struct _xcb_in {
     struct event_list *events;
     struct event_list **events_tail;
     struct reader_list *readers;
+    struct special_list *special_waiters;
 
     struct pending_reply *pending_replies;
     struct pending_reply **pending_replies_tail;
@@ -190,8 +191,6 @@ void _xcb_ext_destroy(xcb_connection_t *c);
 
 
 /* xcb_conn.c */
-
-extern const int error_connection;
 
 struct xcb_connection_t {
     /* This must be the first field; see _xcb_conn_ret_error(). */
