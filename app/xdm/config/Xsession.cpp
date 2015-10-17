@@ -1,6 +1,6 @@
 XCOMM!SHELL_CMD
 XCOMM
-XCOMM $OpenBSD: Xsession.cpp,v 1.13 2014/02/25 22:16:24 matthieu Exp $
+XCOMM $OpenBSD: Xsession.cpp,v 1.14 2015/10/17 08:25:11 matthieu Exp $
 
 XCOMM redirect errors to a file in user's home directory if we can
 
@@ -105,9 +105,6 @@ else
                 exec `eval $XDESKTOP`
         }
 #endif
-	if [ -x /usr/local/bin/dbus-launch -a -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
-		eval `dbus-launch --sh-syntax --exit-with-session`
-	fi
 	BINDIR/xterm &
 	BINDIR/fvwm
 fi
