@@ -1,9 +1,9 @@
-#	$OpenBSD: Makefile,v 1.40 2015/07/19 10:39:19 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.41 2015/10/19 07:51:34 dcoppa Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 18.0.12
+FT_VERSION_INFO= 18.1.12
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
 .ifmake includes
@@ -39,7 +39,7 @@ includes: _SUBDIRUSE
 	@cmp -s ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h \
 	  ${.CURDIR}/builds/unix/ftconfig.h || \
 	${INSTALL_DATA} ${.CURDIR}/builds/unix/ftconfig.h \
-	  ${DESTDIR}${X11BASE}/include/freetype2/config/ftconfig.h
+	  ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h
 
 includes-root:
 	cd ${.CURDIR} && exec ${SUDO} ${MAKE} includes
