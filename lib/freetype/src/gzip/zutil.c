@@ -3,8 +3,6 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zutil.c,v 1.9 2015/10/19 07:51:37 dcoppa Exp $ */
-
 #include "zutil.h"
 
 #ifndef STDC
