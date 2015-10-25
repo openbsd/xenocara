@@ -173,47 +173,47 @@ xf86OpenConsole()
         return;
     }
     if (serverGeneration == 1) {
-	/* check if we are run with euid==0 */
-	if (geteuid() != 0 && issetugid()) {
-	    FatalError("xf86OpenConsole: Server must either be suid root"
+        /* check if we are run with euid==0 */
+        if (geteuid() != 0 && issetugid()) {
+            FatalError("xf86OpenConsole: Server must either be suid root"
                        " or without privileges at all");
-	}
-        
-	if (!KeepTty) {
-	    /*
-	     * detaching the controlling tty solves problems of kbd character
-	     * loss.  This is not interesting for CO driver, because it is
-	     * exclusive.
-	     */
-	    setpgrp(0, getpid());
-	    if ((i = open("/dev/tty",O_RDWR)) >= 0) {
-		ioctl(i,TIOCNOTTY,(char *)0);
-		close(i);
-	    }
-	}
-        
-	/* detect which driver we are running on */
-	for (driver = xf86ConsTab; *driver; driver++) {
-	    if ((fd = (*driver)()) >= 0)
-		break;
-	}
-        
-	/* Check that a supported console driver was found */
-	if (fd < 0) {
-	    char cons_drivers[80] = {0, };
-	    for (i = 0; i < sizeof(supported_drivers) / sizeof(char *); i++) {
-		if (i) {
-		    strcat(cons_drivers, ", ");
-		}
-		strcat(cons_drivers, supported_drivers[i]);
-	    }
-	    FatalError(
-		"%s: No console driver found\n\tSupported drivers: %s\n\t%s",
-		"xf86OpenConsole", cons_drivers, CHECK_DRIVER_MSG);
-	}
-	xf86Info.consoleFd = fd;
-        
-	switch (xf86Info.consType) {
+        }
+
+        if (!KeepTty) {
+            /*
+             * detaching the controlling tty solves problems of kbd character
+             * loss.  This is not interesting for CO driver, because it is
+             * exclusive.
+             */
+            setpgrp(0, getpid());
+            if ((i = open("/dev/tty",O_RDWR)) >= 0) {
+                ioctl(i,TIOCNOTTY,(char *)0);
+                close(i);
+            }
+        }
+
+        /* detect which driver we are running on */
+        for (driver = xf86ConsTab; *driver; driver++) {
+            if ((fd = (*driver)()) >= 0)
+                break;
+        }
+
+        /* Check that a supported console driver was found */
+        if (fd < 0) {
+            char cons_drivers[80] = {0, };
+            for (i = 0; i < sizeof(supported_drivers) / sizeof(char *); i++) {
+                if (i) {
+                    strcat(cons_drivers, ", ");
+                }
+                strcat(cons_drivers, supported_drivers[i]);
+            }
+            FatalError(
+                "%s: No console driver found\n\tSupported drivers: %s\n\t%s",
+                "xf86OpenConsole", cons_drivers, CHECK_DRIVER_MSG);
+        }
+        xf86Info.consoleFd = fd;
+
+        switch (xf86Info.consType) {
 #ifdef PCCONS_SUPPORT
         case PCCONS:
             if (ioctl(xf86Info.consoleFd, CONSOLE_X_MODE_ON, 0) < 0) {
