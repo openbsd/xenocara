@@ -207,7 +207,6 @@ glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 
     if (fbo == NULL) {
         fbDestroyPixmap(pixmap);
-        free(pixmap_priv);
         return fbCreatePixmap(screen, w, h, depth, usage);
     }
 
@@ -379,6 +378,20 @@ glamor_init(ScreenPtr screen, unsigned int flags)
         goto fail;
     }
 
+    glamor_priv->saved_procs.close_screen = screen->CloseScreen;
+    screen->CloseScreen = glamor_close_screen;
+
+    /* If we are using egl screen, call egl screen init to
+     * register correct close screen function. */
+    if (flags & GLAMOR_USE_EGL_SCREEN) {
+        glamor_egl_screen_init(screen, &glamor_priv->ctx);
+    } else {
+        if (!glamor_glx_screen_init(&glamor_priv->ctx))
+            goto fail;
+    }
+
+    glamor_make_current(glamor_priv);
+
     if (epoxy_is_desktop_gl())
         glamor_priv->gl_flavor = GLAMOR_GL_DESKTOP;
     else
@@ -462,18 +475,6 @@ glamor_init(ScreenPtr screen, unsigned int flags)
 #endif
 
     glamor_set_debug_level(&glamor_debug_level);
-
-    glamor_priv->saved_procs.close_screen = screen->CloseScreen;
-    screen->CloseScreen = glamor_close_screen;
-
-    /* If we are using egl screen, call egl screen init to
-     * register correct close screen function. */
-    if (flags & GLAMOR_USE_EGL_SCREEN) {
-        glamor_egl_screen_init(screen, &glamor_priv->ctx);
-    } else {
-        if (!glamor_glx_screen_init(&glamor_priv->ctx))
-            goto fail;
-    }
 
     glamor_priv->saved_procs.create_screen_resources =
         screen->CreateScreenResources;

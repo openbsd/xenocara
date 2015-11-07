@@ -238,7 +238,7 @@ turns off auto-repeat.
 turns on auto-repeat.
 .TP 8
 .B -retro
-starts the stipple with the classic stipple and cursor visible.  The default
+starts the server with the classic stipple and cursor visible.  The default
 is to start with a black root window, and to suppress display of the cursor
 until the first time an application calls XDefineCursor(). For kdrive
 servers, this implies -zap.
@@ -391,7 +391,7 @@ ends.
 .B \-class \fIdisplay-class\fP
 XDMCP has an additional display qualifier used in resource lookup for
 display-specific options.  This option sets that value, by default it
-is "MIT-Unspecified" (not a very useful value).
+is "MIT-unspecified" (not a very useful value).
 .TP 8
 .B \-cookie \fIxdm-auth-bits\fP
 When testing XDM-AUTHENTICATION-1, a private key is shared between the
@@ -457,8 +457,8 @@ If no other authorization mechanism is being used,
 this list initially consists of the host on which the server is running as
 well as any machines listed in the file \fI/etc/X\fBn\fI.hosts\fR, where
 \fBn\fP is the display number of the server.  Each line of the file should
-contain either an Internet hostname (e.g. expo.lcs.mit.edu) or a DECnet
-hostname in double colon format (e.g. hydra::) or a complete name in the format
+contain either an Internet hostname (e.g. expo.lcs.mit.edu)
+or a complete name in the format
 \fIfamily\fP:\fIname\fP as described in the \fIxhost\fP(1) manual page.
 There should be no leading or trailing spaces on any lines.  For example:
 .sp
@@ -466,7 +466,6 @@ There should be no leading or trailing spaces on any lines.  For example:
 .nf
 joesworkstation
 corporate.company.com
-star::
 inet:bigcpu
 local:
 .fi

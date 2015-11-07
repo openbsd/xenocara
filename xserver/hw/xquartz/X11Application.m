@@ -1069,12 +1069,12 @@ X11ApplicationCanEnterRandR(void)
     if (!XQuartzIsRootless)
         QuartzShowFullscreen(FALSE);
 
-    switch (NSRunAlertPanel(title, msg,
+    switch (NSRunAlertPanel(title, @"%@",
                             NSLocalizedString(@"Allow",
                                               @""),
                             NSLocalizedString(@"Cancel",
                                               @""),
-                            NSLocalizedString(@"Always Allow", @""))) {
+                            NSLocalizedString(@"Always Allow", @""), msg)) {
     case NSAlertOtherReturn:
         [X11App prefs_set_boolean:@PREFS_NO_RANDR_ALERT value:YES];
         [X11App prefs_synchronize];
@@ -1122,10 +1122,10 @@ X11ApplicationFatalError(const char *f, va_list args)
      */
     dispatch_sync(dispatch_get_main_queue(), ^{
                       if (NSAlertDefaultReturn ==
-                          NSRunAlertPanel (title, msg,
+                          NSRunAlertPanel (title, @"%@",
                                            NSLocalizedString (@"Quit", @""),
-                                           NSLocalizedString (
-                                               @"Report...", @""), nil)) {
+                                           NSLocalizedString (@"Report...", @""),
+                                           nil, msg)) {
                           exit (EXIT_FAILURE);
                       }
                   });
@@ -1160,9 +1160,8 @@ check_xinitrc(void)
             @"Startup xinitrc dialog");
 
     if (NSAlertDefaultReturn ==
-        NSRunAlertPanel(nil, msg, NSLocalizedString(@"Yes", @""),
-                        NSLocalizedString(@"No",
-                                          @""), nil)) {
+        NSRunAlertPanel(nil, @"%@", NSLocalizedString(@"Yes", @""),
+                        NSLocalizedString(@"No", @""), nil, msg)) {
         char buf2[1024];
         int i = -1;
 
@@ -1239,8 +1238,16 @@ X11ApplicationMain(int argc, char **argv, char **envp)
     QuartzModeBundleInit();
 
     /* Calculate the height of the menubar so we can avoid it. */
-    aquaMenuBarHeight = NSHeight([[NSScreen mainScreen] frame]) -
-                        NSMaxY([[NSScreen mainScreen] visibleFrame]);
+    aquaMenuBarHeight = [[NSApp mainMenu] menuBarHeight];
+#if ! __LP64__
+    if (!aquaMenuBarHeight) {
+        aquaMenuBarHeight = [NSMenuView menuBarHeight];
+    }
+#endif
+    if (!aquaMenuBarHeight) {
+        NSScreen* primaryScreen = [[NSScreen screens] objectAtIndex:0];
+        aquaMenuBarHeight = NSHeight([primaryScreen frame]) - NSMaxY([primaryScreen visibleFrame]);
+    }
 
 #ifdef HAVE_LIBDISPATCH
     eventTranslationQueue = dispatch_queue_create(
