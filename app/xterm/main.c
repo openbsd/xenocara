@@ -2598,6 +2598,8 @@ main(int argc, char *argv[]ENVP_ARG)
     if (resource.maximized)
 	RequestMaximize(term, True);
 #endif
+    if (pledge("stdio rpath wpath cpath id proc tty", NULL) == -1)
+	    err(1, "pledge");
     for (;;) {
 #if OPT_TEK4014
 	if (TEK4014_ACTIVE(term))
