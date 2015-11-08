@@ -100,8 +100,8 @@ void free_window_list(window_list *wl)
     window_item *q;
     while (*wl) {
 	q = *wl;
-	free(*wl);
 	*wl = (*wl)->next;
+	free(q);
     }
 }
 
