@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.305 2015/09/16 17:58:25 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.306 2015/11/09 20:03:29 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -79,9 +79,6 @@
 
 #define CWM_TILE_HORIZ 		0x0001
 #define CWM_TILE_VERT 		0x0002
-
-#define CWM_GAP			0x0001
-#define CWM_NOGAP		0x0002
 
 #define CWM_WIN			0x0001
 #define CWM_CMD			0x0002
@@ -224,7 +221,8 @@ TAILQ_HEAD(autogroupwin_q, autogroupwin);
 struct region_ctx {
 	TAILQ_ENTRY(region_ctx)	 entry;
 	int			 num;
-	struct geom		 area;
+	struct geom		 view; /* viewable area */
+	struct geom		 work; /* workable area, gap-applied */
 };
 TAILQ_HEAD(region_ctx_q, region_ctx);
 
@@ -459,7 +457,7 @@ void			 search_print_group(struct menu *, int);
 
 struct geom		 screen_apply_gap(struct screen_ctx *, struct geom);
 struct screen_ctx	*screen_find(Window);
-struct geom		 screen_area(struct screen_ctx *, int, int, int);
+struct region_ctx	*region_find(struct screen_ctx *, int, int);
 void			 screen_init(int);
 void			 screen_update_geometry(struct screen_ctx *);
 void			 screen_updatestackingorder(struct screen_ctx *);
