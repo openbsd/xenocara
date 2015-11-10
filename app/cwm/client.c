@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.211 2015/11/09 20:03:29 okan Exp $
+ * $OpenBSD: client.c,v 1.212 2015/11/10 20:05:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -678,7 +678,7 @@ client_cycle(struct screen_ctx *sc, int flags)
 
 	oldcc = client_current();
 	if (oldcc == NULL)
-		oldcc = (flags & CWM_RCYCLE) ?
+		oldcc = (flags & CWM_CLIENT_RCYCLE) ?
 		    TAILQ_LAST(&sc->clientq, client_ctx_q) :
 		    TAILQ_FIRST(&sc->clientq);
 
@@ -686,12 +686,12 @@ client_cycle(struct screen_ctx *sc, int flags)
 	while (again) {
 		again = 0;
 
-		newcc = (flags & CWM_RCYCLE) ? client_prev(newcc) :
+		newcc = (flags & CWM_CLIENT_RCYCLE) ? client_prev(newcc) :
 		    client_next(newcc);
 
 		/* Only cycle visible and non-ignored windows. */
 		if ((newcc->flags & (CLIENT_HIDDEN | CLIENT_IGNORE))
-		    || ((flags & CWM_INGROUP) &&
+		    || ((flags & CWM_CLIENT_CYCLE_INGRP) &&
 			(newcc->gc != oldcc->gc)))
 			again = 1;
 

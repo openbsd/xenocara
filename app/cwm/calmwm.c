@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.94 2015/09/16 17:58:25 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.95 2015/11/10 20:05:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -116,7 +116,7 @@ main(int argc, char **argv)
 	while (cwm_status == CWM_RUNNING)
 		xev_process();
 	x_teardown();
-	if (cwm_status == CWM_EXECWM)
+	if (cwm_status == CWM_EXEC_WM)
 		u_exec(wm_argv);
 
 	return(0);

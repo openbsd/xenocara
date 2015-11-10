@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.120 2015/08/27 18:53:15 okan Exp $
+ * $OpenBSD: group.c,v 1.121 2015/11/10 20:05:33 okan Exp $
  */
 
 #include <sys/types.h>
@@ -272,7 +272,7 @@ group_cycle(struct screen_ctx *sc, int flags)
 
 	newgc = oldgc;
 	for (;;) {
-		newgc = (flags & CWM_RCYCLE) ? group_prev(newgc) :
+		newgc = (flags & CWM_CLIENT_RCYCLE) ? group_prev(newgc) :
 		    group_next(newgc);
 
 		if (newgc == oldgc)
