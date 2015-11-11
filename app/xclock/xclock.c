@@ -37,6 +37,9 @@ in this Software without prior written authorization from The Open Group.
 # include "config.h"
 #endif
 
+#ifdef HAVE_PLEDGE
+# include <err.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/Xatom.h>
@@ -222,6 +225,11 @@ main(int argc, char *argv[])
 			XA_CARDINAL, 32, PropModeReplace,
 			(unsigned char *) &pid, 1);
     }
+#endif
+
+#ifdef HAVE_PLEDGE
+    if (pledge("stdio", NULL) == -1)
+	    err(1, "pledge");
 #endif
 
     XtAppMainLoop (app_con);

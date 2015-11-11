@@ -39,7 +39,7 @@ AC_CONFIG_HEADERS([config.h])
 
 
 
-AC_CHECK_FUNCS([strlcpy getpid])
+AC_CHECK_FUNCS([strlcpy getpid pledge])
 
 AM_ICONV
 
