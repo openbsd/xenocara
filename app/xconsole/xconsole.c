@@ -79,9 +79,7 @@ extern char *_XawTextGetSTRING(TextWidget ctx, XawTextPosition left,
 
 #ifdef USE_PRIVSEP
 #include <pwd.h>
-extern int priv_init(uid_t, gid_t);
-extern int priv_openpty(int *, int *);
-extern int priv_set_console(int);
+#include "xconsole.h"
 #endif
 
 static void inputReady(XtPointer w, int *source, XtInputId *id);
