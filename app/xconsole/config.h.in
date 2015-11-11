@@ -6,12 +6,6 @@
 /* ENOSYS: Not implemented */
 #undef BROKEN_SETRESUID
 
-/* Define to 1 if you have the 'openpty' function. */
-#undef HAS_OPENPTY
-
-/* Define to 1 if you have the 'setproctitle function. */
-#undef HAS_SETPROCTITLE
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -21,8 +15,14 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the 'openpty' function. */
+#undef HAVE_OPENPTY
+
 /* Define to 1 if you have the <pty.h> header file. */
 #undef HAVE_PTY_H
+
+/* Define to 1 if you have the 'setproctitle function. */
+#undef HAVE_SETPROCTITLE
 
 /* Define to 1 if you have the `setresgid' function. */
 #undef HAVE_SETRESGID

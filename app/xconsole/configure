@@ -4775,18 +4775,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wall"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wall" >&5
-$as_echo_n "checking if $CC supports-Wall... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wall" >&5
+$as_echo_n "checking if $CC supports -Wall... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wall
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4893,18 +4893,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wpointer-arith"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wpointer-arith" >&5
-$as_echo_n "checking if $CC supports-Wpointer-arith... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wpointer-arith" >&5
+$as_echo_n "checking if $CC supports -Wpointer-arith... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wpointer_arith
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5011,18 +5011,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wmissing-declarations"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wmissing-declarations" >&5
-$as_echo_n "checking if $CC supports-Wmissing-declarations... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wmissing-declarations" >&5
+$as_echo_n "checking if $CC supports -Wmissing-declarations... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wmissing_declarations
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5129,18 +5129,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wformat=2"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wformat=2" >&5
-$as_echo_n "checking if $CC supports-Wformat=2... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wformat=2" >&5
+$as_echo_n "checking if $CC supports -Wformat=2... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wformat_2
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5178,18 +5178,18 @@ $as_echo "$supported" >&6; }
 	fi
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wformat"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wformat" >&5
-$as_echo_n "checking if $CC supports-Wformat... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wformat" >&5
+$as_echo_n "checking if $CC supports -Wformat... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wformat
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5298,18 +5298,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wstrict-prototypes"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wstrict-prototypes" >&5
-$as_echo_n "checking if $CC supports-Wstrict-prototypes... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wstrict-prototypes" >&5
+$as_echo_n "checking if $CC supports -Wstrict-prototypes... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wstrict_prototypes
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5416,18 +5416,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wmissing-prototypes"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wmissing-prototypes" >&5
-$as_echo_n "checking if $CC supports-Wmissing-prototypes... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wmissing-prototypes" >&5
+$as_echo_n "checking if $CC supports -Wmissing-prototypes... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wmissing_prototypes
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5534,18 +5534,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wnested-externs"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wnested-externs" >&5
-$as_echo_n "checking if $CC supports-Wnested-externs... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wnested-externs" >&5
+$as_echo_n "checking if $CC supports -Wnested-externs... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wnested_externs
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5652,18 +5652,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wbad-function-cast"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wbad-function-cast" >&5
-$as_echo_n "checking if $CC supports-Wbad-function-cast... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wbad-function-cast" >&5
+$as_echo_n "checking if $CC supports -Wbad-function-cast... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wbad_function_cast
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5770,18 +5770,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wold-style-definition"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wold-style-definition" >&5
-$as_echo_n "checking if $CC supports-Wold-style-definition... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wold-style-definition" >&5
+$as_echo_n "checking if $CC supports -Wold-style-definition... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wold_style_definition
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -5814,6 +5814,55 @@ fi
 $as_echo "$supported" >&6; }
 		if test "$supported" = "yes" ; then
 			BASE_CFLAGS="$BASE_CFLAGS -Wold-style-definition"
+			found="yes"
+		fi
+	fi
+
+	if test $found = "no" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
+			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
+		fi
+
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
+			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
+		fi
+
+		CFLAGS="$CFLAGS -fd"
+
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -fd" >&5
+$as_echo_n "checking if $CC supports -fd... " >&6; }
+		cacheid=xorg_cv_cc_flag__fd
+		if eval \${$cacheid+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+int i;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  eval $cacheid=yes
+else
+  eval $cacheid=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+
+
+		CFLAGS="$xorg_testset_save_CFLAGS"
+
+		eval supported=\$$cacheid
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $supported" >&5
+$as_echo "$supported" >&6; }
+		if test "$supported" = "yes" ; then
+			BASE_CFLAGS="$BASE_CFLAGS -fd"
 			found="yes"
 		fi
 	fi
@@ -5888,18 +5937,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wdeclaration-after-statement"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wdeclaration-after-statement" >&5
-$as_echo_n "checking if $CC supports-Wdeclaration-after-statement... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wdeclaration-after-statement" >&5
+$as_echo_n "checking if $CC supports -Wdeclaration-after-statement... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wdeclaration_after_statement
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6010,18 +6059,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wunused"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wunused" >&5
-$as_echo_n "checking if $CC supports-Wunused... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wunused" >&5
+$as_echo_n "checking if $CC supports -Wunused... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wunused
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6128,18 +6177,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wuninitialized"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wuninitialized" >&5
-$as_echo_n "checking if $CC supports-Wuninitialized... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wuninitialized" >&5
+$as_echo_n "checking if $CC supports -Wuninitialized... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wuninitialized
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6246,18 +6295,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wshadow"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wshadow" >&5
-$as_echo_n "checking if $CC supports-Wshadow... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wshadow" >&5
+$as_echo_n "checking if $CC supports -Wshadow... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wshadow
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6364,136 +6413,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
-			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
-		fi
-
-		CFLAGS="$CFLAGS -Wcast-qual"
-
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wcast-qual" >&5
-$as_echo_n "checking if $CC supports-Wcast-qual... " >&6; }
-		cacheid=xorg_cv_cc_flag__Wcast_qual
-		if eval \${$cacheid+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-int i;
-int
-main ()
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  eval $cacheid=yes
-else
-  eval $cacheid=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-fi
-
-
-		CFLAGS="$xorg_testset_save_CFLAGS"
-
-		eval supported=\$$cacheid
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $supported" >&5
-$as_echo "$supported" >&6; }
-		if test "$supported" = "yes" ; then
-			BASE_CFLAGS="$BASE_CFLAGS -Wcast-qual"
-			found="yes"
-		fi
-	fi
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-xorg_testset_save_CFLAGS="$CFLAGS"
-
-if test "x$xorg_testset_cc_unknown_warning_option" = "x" ; then
-	CFLAGS="$CFLAGS -Werror=unknown-warning-option"
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=unknown-warning-option" >&5
-$as_echo_n "checking if $CC supports -Werror=unknown-warning-option... " >&6; }
-if ${xorg_cv_cc_flag_unknown_warning_option+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-int i;
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  xorg_cv_cc_flag_unknown_warning_option=yes
-else
-  xorg_cv_cc_flag_unknown_warning_option=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $xorg_cv_cc_flag_unknown_warning_option" >&5
-$as_echo "$xorg_cv_cc_flag_unknown_warning_option" >&6; }
-	xorg_testset_cc_unknown_warning_option=$xorg_cv_cc_flag_unknown_warning_option
-	CFLAGS="$xorg_testset_save_CFLAGS"
-fi
-
-if test "x$xorg_testset_cc_unused_command_line_argument" = "x" ; then
-	if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
-		CFLAGS="$CFLAGS -Werror=unknown-warning-option"
-	fi
-	CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=unused-command-line-argument" >&5
-$as_echo_n "checking if $CC supports -Werror=unused-command-line-argument... " >&6; }
-if ${xorg_cv_cc_flag_unused_command_line_argument+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-int i;
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  xorg_cv_cc_flag_unused_command_line_argument=yes
-else
-  xorg_cv_cc_flag_unused_command_line_argument=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $xorg_cv_cc_flag_unused_command_line_argument" >&5
-$as_echo "$xorg_cv_cc_flag_unused_command_line_argument" >&6; }
-	xorg_testset_cc_unused_command_line_argument=$xorg_cv_cc_flag_unused_command_line_argument
-	CFLAGS="$xorg_testset_save_CFLAGS"
-fi
-
-found="no"
-
-	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
-			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
-		fi
-
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wmissing-noreturn"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wmissing-noreturn" >&5
-$as_echo_n "checking if $CC supports-Wmissing-noreturn... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wmissing-noreturn" >&5
+$as_echo_n "checking if $CC supports -Wmissing-noreturn... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wmissing_noreturn
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6600,18 +6531,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wmissing-format-attribute"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wmissing-format-attribute" >&5
-$as_echo_n "checking if $CC supports-Wmissing-format-attribute... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wmissing-format-attribute" >&5
+$as_echo_n "checking if $CC supports -Wmissing-format-attribute... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wmissing_format_attribute
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6649,13 +6580,132 @@ $as_echo "$supported" >&6; }
 	fi
 
 
+# XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wredundant-decls])
+
+
+
+
+
+
+
+
+
+
+
+
+
+xorg_testset_save_CFLAGS="$CFLAGS"
+
+if test "x$xorg_testset_cc_unknown_warning_option" = "x" ; then
+	CFLAGS="$CFLAGS -Werror=unknown-warning-option"
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=unknown-warning-option" >&5
+$as_echo_n "checking if $CC supports -Werror=unknown-warning-option... " >&6; }
+if ${xorg_cv_cc_flag_unknown_warning_option+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+int i;
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  xorg_cv_cc_flag_unknown_warning_option=yes
+else
+  xorg_cv_cc_flag_unknown_warning_option=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $xorg_cv_cc_flag_unknown_warning_option" >&5
+$as_echo "$xorg_cv_cc_flag_unknown_warning_option" >&6; }
+	xorg_testset_cc_unknown_warning_option=$xorg_cv_cc_flag_unknown_warning_option
+	CFLAGS="$xorg_testset_save_CFLAGS"
+fi
+
+if test "x$xorg_testset_cc_unused_command_line_argument" = "x" ; then
+	if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
+		CFLAGS="$CFLAGS -Werror=unknown-warning-option"
+	fi
+	CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=unused-command-line-argument" >&5
+$as_echo_n "checking if $CC supports -Werror=unused-command-line-argument... " >&6; }
+if ${xorg_cv_cc_flag_unused_command_line_argument+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+int i;
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  xorg_cv_cc_flag_unused_command_line_argument=yes
+else
+  xorg_cv_cc_flag_unused_command_line_argument=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $xorg_cv_cc_flag_unused_command_line_argument" >&5
+$as_echo "$xorg_cv_cc_flag_unused_command_line_argument" >&6; }
+	xorg_testset_cc_unused_command_line_argument=$xorg_cv_cc_flag_unused_command_line_argument
+	CFLAGS="$xorg_testset_save_CFLAGS"
+fi
+
+found="no"
+
+	if test $found = "no" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
+			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
+		fi
+
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
+			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
+		fi
+
+		CFLAGS="$CFLAGS -Wlogical-op"
+
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wlogical-op" >&5
+$as_echo_n "checking if $CC supports -Wlogical-op... " >&6; }
+		cacheid=xorg_cv_cc_flag__Wlogical_op
+		if eval \${$cacheid+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+int i;
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  eval $cacheid=yes
+else
+  eval $cacheid=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+
+
+		CFLAGS="$xorg_testset_save_CFLAGS"
+
+		eval supported=\$$cacheid
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $supported" >&5
+$as_echo "$supported" >&6; }
+		if test "$supported" = "yes" ; then
+			BASE_CFLAGS="$BASE_CFLAGS -Wlogical-op"
+			found="yes"
+		fi
+	fi
+
+
 
 # These are currently disabled because they are noisy.  They will be enabled
 # in the future once the codebase is sufficiently modernized to silence
 # them.  For now, I don't want them to drown out the other warnings.
-# XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wlogical-op])
 # XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wparentheses])
 # XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wcast-align])
+# XORG_TESTSET_CFLAG([[BASE_]PREFIX[FLAGS]], [-Wcast-qual])
 
 # Turn some warnings into errors, so we don't accidently get successful builds
 # when there are problems that should be fixed.
@@ -6730,18 +6780,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=implicit"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=implicit" >&5
-$as_echo_n "checking if $CC supports-Werror=implicit... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=implicit" >&5
+$as_echo_n "checking if $CC supports -Werror=implicit... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_implicit
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6779,18 +6829,18 @@ $as_echo "$supported" >&6; }
 	fi
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -errwarn=E_NO_EXPLICIT_TYPE_GIVEN -errwarn=E_NO_IMPLICIT_DECL_ALLOWED"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-errwarn=E_NO_EXPLICIT_TYPE_GIVEN -errwarn=E_NO_IMPLICIT_DECL_ALLOWED" >&5
-$as_echo_n "checking if $CC supports-errwarn=E_NO_EXPLICIT_TYPE_GIVEN -errwarn=E_NO_IMPLICIT_DECL_ALLOWED... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -errwarn=E_NO_EXPLICIT_TYPE_GIVEN -errwarn=E_NO_IMPLICIT_DECL_ALLOWED" >&5
+$as_echo_n "checking if $CC supports -errwarn=E_NO_EXPLICIT_TYPE_GIVEN -errwarn=E_NO_IMPLICIT_DECL_ALLOWED... " >&6; }
 		cacheid=xorg_cv_cc_flag__errwarn_E_NO_EXPLICIT_TYPE_GIVEN__errwarn_E_NO_IMPLICIT_DECL_ALLOWED
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -6897,18 +6947,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=nonnull"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=nonnull" >&5
-$as_echo_n "checking if $CC supports-Werror=nonnull... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=nonnull" >&5
+$as_echo_n "checking if $CC supports -Werror=nonnull... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_nonnull
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7015,18 +7065,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=init-self"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=init-self" >&5
-$as_echo_n "checking if $CC supports-Werror=init-self... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=init-self" >&5
+$as_echo_n "checking if $CC supports -Werror=init-self... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_init_self
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7133,18 +7183,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=main"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=main" >&5
-$as_echo_n "checking if $CC supports-Werror=main... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=main" >&5
+$as_echo_n "checking if $CC supports -Werror=main... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_main
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7251,18 +7301,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=missing-braces"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=missing-braces" >&5
-$as_echo_n "checking if $CC supports-Werror=missing-braces... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=missing-braces" >&5
+$as_echo_n "checking if $CC supports -Werror=missing-braces... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_missing_braces
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7369,18 +7419,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=sequence-point"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=sequence-point" >&5
-$as_echo_n "checking if $CC supports-Werror=sequence-point... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=sequence-point" >&5
+$as_echo_n "checking if $CC supports -Werror=sequence-point... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_sequence_point
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7487,18 +7537,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=return-type"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=return-type" >&5
-$as_echo_n "checking if $CC supports-Werror=return-type... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=return-type" >&5
+$as_echo_n "checking if $CC supports -Werror=return-type... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_return_type
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7536,18 +7586,18 @@ $as_echo "$supported" >&6; }
 	fi
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -errwarn=E_FUNC_HAS_NO_RETURN_STMT"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-errwarn=E_FUNC_HAS_NO_RETURN_STMT" >&5
-$as_echo_n "checking if $CC supports-errwarn=E_FUNC_HAS_NO_RETURN_STMT... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -errwarn=E_FUNC_HAS_NO_RETURN_STMT" >&5
+$as_echo_n "checking if $CC supports -errwarn=E_FUNC_HAS_NO_RETURN_STMT... " >&6; }
 		cacheid=xorg_cv_cc_flag__errwarn_E_FUNC_HAS_NO_RETURN_STMT
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7654,18 +7704,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=trigraphs"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=trigraphs" >&5
-$as_echo_n "checking if $CC supports-Werror=trigraphs... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=trigraphs" >&5
+$as_echo_n "checking if $CC supports -Werror=trigraphs... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_trigraphs
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7772,18 +7822,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=array-bounds"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=array-bounds" >&5
-$as_echo_n "checking if $CC supports-Werror=array-bounds... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=array-bounds" >&5
+$as_echo_n "checking if $CC supports -Werror=array-bounds... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_array_bounds
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -7890,18 +7940,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=write-strings"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=write-strings" >&5
-$as_echo_n "checking if $CC supports-Werror=write-strings... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=write-strings" >&5
+$as_echo_n "checking if $CC supports -Werror=write-strings... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_write_strings
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8008,18 +8058,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=address"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=address" >&5
-$as_echo_n "checking if $CC supports-Werror=address... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=address" >&5
+$as_echo_n "checking if $CC supports -Werror=address... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_address
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8126,18 +8176,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=int-to-pointer-cast"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=int-to-pointer-cast" >&5
-$as_echo_n "checking if $CC supports-Werror=int-to-pointer-cast... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=int-to-pointer-cast" >&5
+$as_echo_n "checking if $CC supports -Werror=int-to-pointer-cast... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_int_to_pointer_cast
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8175,18 +8225,18 @@ $as_echo "$supported" >&6; }
 	fi
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -errwarn=E_BAD_PTR_INT_COMBINATION"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-errwarn=E_BAD_PTR_INT_COMBINATION" >&5
-$as_echo_n "checking if $CC supports-errwarn=E_BAD_PTR_INT_COMBINATION... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -errwarn=E_BAD_PTR_INT_COMBINATION" >&5
+$as_echo_n "checking if $CC supports -errwarn=E_BAD_PTR_INT_COMBINATION... " >&6; }
 		cacheid=xorg_cv_cc_flag__errwarn_E_BAD_PTR_INT_COMBINATION
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8293,18 +8343,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=pointer-to-int-cast"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=pointer-to-int-cast" >&5
-$as_echo_n "checking if $CC supports-Werror=pointer-to-int-cast... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=pointer-to-int-cast" >&5
+$as_echo_n "checking if $CC supports -Werror=pointer-to-int-cast... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_pointer_to_int_cast
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8414,18 +8464,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wimplicit"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wimplicit" >&5
-$as_echo_n "checking if $CC supports-Wimplicit... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wimplicit" >&5
+$as_echo_n "checking if $CC supports -Wimplicit... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wimplicit
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8532,18 +8582,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wnonnull"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wnonnull" >&5
-$as_echo_n "checking if $CC supports-Wnonnull... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wnonnull" >&5
+$as_echo_n "checking if $CC supports -Wnonnull... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wnonnull
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8650,18 +8700,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Winit-self"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Winit-self" >&5
-$as_echo_n "checking if $CC supports-Winit-self... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Winit-self" >&5
+$as_echo_n "checking if $CC supports -Winit-self... " >&6; }
 		cacheid=xorg_cv_cc_flag__Winit_self
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8768,18 +8818,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wmain"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wmain" >&5
-$as_echo_n "checking if $CC supports-Wmain... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wmain" >&5
+$as_echo_n "checking if $CC supports -Wmain... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wmain
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8886,18 +8936,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wmissing-braces"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wmissing-braces" >&5
-$as_echo_n "checking if $CC supports-Wmissing-braces... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wmissing-braces" >&5
+$as_echo_n "checking if $CC supports -Wmissing-braces... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wmissing_braces
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9004,18 +9054,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wsequence-point"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wsequence-point" >&5
-$as_echo_n "checking if $CC supports-Wsequence-point... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wsequence-point" >&5
+$as_echo_n "checking if $CC supports -Wsequence-point... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wsequence_point
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9122,18 +9172,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wreturn-type"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wreturn-type" >&5
-$as_echo_n "checking if $CC supports-Wreturn-type... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wreturn-type" >&5
+$as_echo_n "checking if $CC supports -Wreturn-type... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wreturn_type
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9240,18 +9290,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wtrigraphs"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wtrigraphs" >&5
-$as_echo_n "checking if $CC supports-Wtrigraphs... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wtrigraphs" >&5
+$as_echo_n "checking if $CC supports -Wtrigraphs... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wtrigraphs
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9358,18 +9408,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Warray-bounds"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Warray-bounds" >&5
-$as_echo_n "checking if $CC supports-Warray-bounds... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Warray-bounds" >&5
+$as_echo_n "checking if $CC supports -Warray-bounds... " >&6; }
 		cacheid=xorg_cv_cc_flag__Warray_bounds
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9476,18 +9526,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wwrite-strings"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wwrite-strings" >&5
-$as_echo_n "checking if $CC supports-Wwrite-strings... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wwrite-strings" >&5
+$as_echo_n "checking if $CC supports -Wwrite-strings... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wwrite_strings
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9594,18 +9644,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Waddress"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Waddress" >&5
-$as_echo_n "checking if $CC supports-Waddress... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Waddress" >&5
+$as_echo_n "checking if $CC supports -Waddress... " >&6; }
 		cacheid=xorg_cv_cc_flag__Waddress
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9712,18 +9762,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wint-to-pointer-cast"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wint-to-pointer-cast" >&5
-$as_echo_n "checking if $CC supports-Wint-to-pointer-cast... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wint-to-pointer-cast" >&5
+$as_echo_n "checking if $CC supports -Wint-to-pointer-cast... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wint_to_pointer_cast
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9830,18 +9880,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Wpointer-to-int-cast"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Wpointer-to-int-cast" >&5
-$as_echo_n "checking if $CC supports-Wpointer-to-int-cast... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Wpointer-to-int-cast" >&5
+$as_echo_n "checking if $CC supports -Wpointer-to-int-cast... " >&6; }
 		cacheid=xorg_cv_cc_flag__Wpointer_to_int_cast
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -9981,18 +10031,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -pedantic"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-pedantic" >&5
-$as_echo_n "checking if $CC supports-pedantic... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -pedantic" >&5
+$as_echo_n "checking if $CC supports -pedantic... " >&6; }
 		cacheid=xorg_cv_cc_flag__pedantic
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10099,18 +10149,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror" >&5
-$as_echo_n "checking if $CC supports-Werror... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror" >&5
+$as_echo_n "checking if $CC supports -Werror... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10148,18 +10198,18 @@ $as_echo "$supported" >&6; }
 	fi
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -errwarn"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-errwarn" >&5
-$as_echo_n "checking if $CC supports-errwarn... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -errwarn" >&5
+$as_echo_n "checking if $CC supports -errwarn... " >&6; }
 		cacheid=xorg_cv_cc_flag__errwarn
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10269,18 +10319,18 @@ fi
 found="no"
 
 	if test $found = "no" ; then
-		if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+		if test "x$xorg_testset_cc_unknown_warning_option" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unknown-warning-option"
 		fi
 
-		if test "x$xorg_testset_unused_command_line_argument" = "xyes" ; then
+		if test "x$xorg_testset_cc_unused_command_line_argument" = "xyes" ; then
 			CFLAGS="$CFLAGS -Werror=unused-command-line-argument"
 		fi
 
 		CFLAGS="$CFLAGS -Werror=attributes"
 
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports-Werror=attributes" >&5
-$as_echo_n "checking if $CC supports-Werror=attributes... " >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if $CC supports -Werror=attributes" >&5
+$as_echo_n "checking if $CC supports -Werror=attributes... " >&6; }
 		cacheid=xorg_cv_cc_flag__Werror_attributes
 		if eval \${$cacheid+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -10752,12 +10802,12 @@ fi
 
 ac_fn_c_check_func "$LINENO" "openpty" "ac_cv_func_openpty"
 if test "x$ac_cv_func_openpty" = xyes; then :
-  HAS_OPENPTY="yes"
+  HAVE_OPENPTY="yes"
 fi
 
-if test "x$HAS_OPENPTY" = "xyes" ; then
+if test "x$HAVE_OPENPTY" = "xyes" ; then
 
-$as_echo "#define HAS_OPENPTY 1" >>confdefs.h
+$as_echo "#define HAVE_OPENPTY 1" >>confdefs.h
 
 	for ac_header in util.h libutil.h pty.h
 do :
@@ -10783,7 +10833,7 @@ else
 fi
 
 # Privilege separation requires openpty()
-if test "x$HAS_OPENPTY" = "xno" ; then
+if test "x$HAVE_OPENPTY" = "xno" ; then
 	as_fn_error $? "privilege separation code requires openpty()" "$LINENO" 5
 	USE_PRIVSEP="no"
 fi
@@ -10849,12 +10899,12 @@ fi
 
 	ac_fn_c_check_func "$LINENO" "setproctitle" "ac_cv_func_setproctitle"
 if test "x$ac_cv_func_setproctitle" = xyes; then :
-  HAS_SETPROCTITLE="yes"
+  HAVE_SETPROCTITLE="yes"
 fi
 
-	if  test "x$HAS_SETPROCTILE" = "xyes" ; then
+	if  test "x$HAVE_SETPROCTILE" = "xyes" ; then
 
-$as_echo "#define HAS_SETPROCTITLE 1" >>confdefs.h
+$as_echo "#define HAVE_SETPROCTITLE 1" >>confdefs.h
 
 	fi
 	for ac_func in setresuid

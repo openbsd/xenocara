@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.4 2008/03/24 21:24:52 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.5 2015/11/11 21:18:13 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -44,10 +44,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#ifdef HAS_UTIL_H
+#ifdef HAVE_UTIL_H
 #include <util.h>
 #endif
-#ifdef HAS_PTY_H
+#ifdef HAVE_PTY_H
 #inlude <pty.h>
 #endif
 
@@ -172,7 +172,7 @@ priv_init(uid_t uid, gid_t gid)
 	/* son */
 	for (i = 1; i <= _NSIG; i++) 
 		signal(i, SIG_DFL);
-#ifdef HAS_SETPROCTILE
+#ifdef HAVE_SETPROCTILE
 	setproctitle("[priv]");
 #endif
 	close(socks[1]);

@@ -52,9 +52,9 @@ AC_ARG_WITH(appdefaultdir,
 AC_SUBST(appdefaultdir)
 
 AC_SEARCH_LIBS(openpty, [util])
-AC_CHECK_FUNC(openpty, [HAS_OPENPTY="yes"])
-if test "x$HAS_OPENPTY" = "xyes" ; then
-	AC_DEFINE([HAS_OPENPTY], 1,
+AC_CHECK_FUNC(openpty, [HAVE_OPENPTY="yes"])
+if test "x$HAVE_OPENPTY" = "xyes" ; then
+	AC_DEFINE([HAVE_OPENPTY], 1,
 		[Define to 1 if you have the 'openpty' function.])
 	AC_CHECK_HEADERS([util.h libutil.h pty.h], [break])
 fi
@@ -66,16 +66,16 @@ AC_ARG_ENABLE(privsep,
 	[USE_PRIVSEP="$enableval"],
 	USE_PRIVSEP="no")
 # Privilege separation requires openpty()
-if test "x$HAS_OPENPTY" = "xno" ; then
+if test "x$HAVE_OPENPTY" = "xno" ; then
 	AC_MSG_ERROR([privilege separation code requires openpty()])
 	USE_PRIVSEP="no"
 fi
 if test "x$USE_PRIVSEP" = "xyes" ; then
 	AC_DEFINE([USE_PRIVSEP], 1, [Define to 1 to use privilege separation])
 	AC_SEARCH_LIBS(setproctitle, [util])
-	AC_CHECK_FUNC(setproctitle, [HAS_SETPROCTITLE="yes"])
-	if  test "x$HAS_SETPROCTILE" = "xyes" ; then
-		AC_DEFINE([HAS_SETPROCTITLE], 1,
+	AC_CHECK_FUNC(setproctitle, [HAVE_SETPROCTITLE="yes"])
+	if  test "x$HAVE_SETPROCTILE" = "xyes" ; then
+		AC_DEFINE([HAVE_SETPROCTITLE], 1,
 			[Define to 1 if you have the 'setproctitle function.])
 	fi
 	AC_CHECK_FUNCS(setresuid, [
