@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.27 2014/10/18 14:39:40 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.28 2015/11/11 21:07:49 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -273,6 +273,9 @@ priv_init(uid_t uid, gid_t gid)
 		signal(i, SIG_DFL);
 	setproctitle("[priv]");
 	close(socks[1]);
+
+	if (pledge("stdio rpath wpath sendfd proc", NULL) == -1)
+		err(1, "pledge");
 
 	while (1) {
 		if (read(socks[0], &cmd, sizeof(cmd)) == 0) {
