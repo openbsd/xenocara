@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.213 2015/11/11 14:22:01 okan Exp $
+ * $OpenBSD: client.c,v 1.214 2015/11/12 18:33:30 okan Exp $
  */
 
 #include <sys/types.h>
@@ -839,6 +839,8 @@ client_getsizehints(struct client_ctx *cc)
 	}
 	cc->hint.incw = MAX(1, cc->hint.incw);
 	cc->hint.inch = MAX(1, cc->hint.inch);
+	cc->hint.minw = MAX(1, cc->hint.minw);
+	cc->hint.minh = MAX(1, cc->hint.minh);
 
 	if (size.flags & PAspect) {
 		if (size.min_aspect.x > 0)
