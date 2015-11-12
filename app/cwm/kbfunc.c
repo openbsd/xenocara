@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.124 2015/11/12 18:33:30 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.125 2015/11/12 21:28:03 okan Exp $
  */
 
 #include <sys/types.h>
@@ -450,25 +450,25 @@ kbfunc_client_delete(struct client_ctx *cc, union arg *arg)
 }
 
 void
-kbfunc_client_group(struct client_ctx *cc, union arg *arg)
+kbfunc_group_toggle(struct client_ctx *cc, union arg *arg)
 {
 	group_hidetoggle(cc->sc, arg->i);
 }
 
 void
-kbfunc_client_grouponly(struct client_ctx *cc, union arg *arg)
+kbfunc_group_only(struct client_ctx *cc, union arg *arg)
 {
 	group_only(cc->sc, arg->i);
 }
 
 void
-kbfunc_client_cyclegroup(struct client_ctx *cc, union arg *arg)
+kbfunc_group_cycle(struct client_ctx *cc, union arg *arg)
 {
 	group_cycle(cc->sc, arg->i);
 }
 
 void
-kbfunc_client_nogroup(struct client_ctx *cc, union arg *arg)
+kbfunc_group_alltoggle(struct client_ctx *cc, union arg *arg)
 {
 	group_alltoggle(cc->sc);
 }
