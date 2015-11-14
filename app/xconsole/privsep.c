@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.6 2015/11/11 21:20:12 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.7 2015/11/14 17:12:14 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -165,13 +165,15 @@ priv_init(uid_t uid, gid_t gid)
 	}
 	if (pid != 0) {
 		/* Father - drop privileges and return */
-		if (setgroups(1, &gid) == -1)
-			return -1;
-		
-		if (setresgid(gid, gid, gid) == -1)
-			return -1;
-		if (setresuid(uid, uid, uid) == -1)
-			return -1;
+		if (uid != -1 && gid != -1) {
+			if (setgroups(1, &gid) == -1)
+				return -1;
+
+			if (setresgid(gid, gid, gid) == -1)
+				return -1;
+			if (setresuid(uid, uid, uid) == -1)
+				return -1;
+		}
 		close(socks[0]);
 		priv_fd = socks[1];
 		return 0;
