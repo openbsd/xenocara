@@ -78,6 +78,7 @@ extern char *_XawTextGetSTRING(TextWidget ctx, XawTextPosition left,
 #endif
 
 #ifdef USE_PRIVSEP
+#include <err.h>
 #include <pwd.h>
 #include "xconsole.h"
 #endif
@@ -647,7 +648,11 @@ main(int argc, char *argv[])
 		fprintf(stderr, "priv_init failed\n");
 		exit(2);
 	}
-    }
+    } else
+        if (priv_init(-1, -1) < 0) {
+            fprintf(stderr, "priv_init failed\n");
+            exit(2);
+        }
 #endif
 
     if (app_resources.daemon)
@@ -688,6 +693,12 @@ main(int argc, char *argv[])
 #ifdef USE_OSM
     ioerror = XSetIOErrorHandler(IOError);
 #endif
+
+#ifdef USE_PRIVSEP
+    if (pledge("stdio rpath sendfd recvfd", NULL) == -1)
+           err(1, "pledge");
+#endif
+
     XtMainLoop ();
     return 0;
 }
