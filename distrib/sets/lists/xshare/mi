@@ -3322,6 +3322,7 @@
 ./usr/X11R6/share/X11/xkb/geometry/sgi_vndr/indy
 ./usr/X11R6/share/X11/xkb/geometry/sony
 ./usr/X11R6/share/X11/xkb/geometry/sun
+./usr/X11R6/share/X11/xkb/geometry/teck
 ./usr/X11R6/share/X11/xkb/geometry/thinkpad
 ./usr/X11R6/share/X11/xkb/geometry/typematrix
 ./usr/X11R6/share/X11/xkb/geometry/winbook
