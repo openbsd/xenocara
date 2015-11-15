@@ -185,16 +185,6 @@ This option will work for any directory when the server is run as root
 (i.e, with real-uid 0), or for directories relative to a directory in the
 config directory search path for all other users.
 .TP 8
-.B \-configure
-When this option is specified, the
-.B Xorg
-server loads all video driver modules, probes for available hardware,
-and writes out an initial xorg.conf(__filemansuffix__) file based on
-what was detected.  This option currently has some problems on some
-platforms, but in most cases it is a good way to bootstrap the
-configuration process.  This option is only available when the server
-is run as root (i.e, with real-uid 0).
-.TP 8
 .BI "\-crt /dev/tty" XX
 SCO only.  This is the same as the
 .B vt

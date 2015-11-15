@@ -1436,18 +1436,6 @@ ddxProcessArgument(int argc, char **argv, int i)
         return 1;
     }
 #endif
-    if (!strcmp(argv[i], "-configure")) {
-        if (getuid() != 0 && geteuid() == 0) {
-            ErrorF("The '-configure' option can only be used by root.\n");
-            exit(1);
-        }
-        xf86DoConfigure = TRUE;
-        xf86AllowMouseOpenFail = TRUE;
-#ifdef X_PRIVSEP
-        xf86KeepPriv = TRUE;
-#endif
-        return 1;
-    }
 #ifdef X_PRIVSEP
     if (!strcmp(argv[i], "-keepPriv")) {
         if (getuid() != 0) {
