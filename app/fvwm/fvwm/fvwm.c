@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
+#include <err.h>
 #include "fvwm.h"
 #include "menus.h"
 #include "misc.h"
@@ -524,6 +525,9 @@ int main(int argc, char **argv)
     Scr.ClickTime = -Scr.ClickTime;
   fFvwmInStartup = False;
   DBUG("main","Entering HandleEvents loop...");
+
+  if (pledge("stdio rpath proc exec", NULL) == -1)
+	  err(1, "pledge");
 
   HandleEvents();
   switch( fvwmRunState )

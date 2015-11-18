@@ -20,6 +20,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <err.h>
 
 #ifdef HAVE_SYS_BSDTYPES_H
 #include <sys/bsdtypes.h> /* Saul */
@@ -263,6 +264,9 @@ int main(int argc, char **argv)
 #ifdef DEBUG
   fprintf(stderr,"[main]: back from getting window list, looping\n");
 #endif
+
+  if (pledge("stdio", NULL) == -1)
+    err(1, "pledge");
 
   Loop(fd);
   return 0;
