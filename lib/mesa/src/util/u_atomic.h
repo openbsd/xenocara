@@ -23,6 +23,9 @@
 #define PIPE_ATOMIC_OS_SOLARIS
 #elif defined(_MSC_VER)
 #define PIPE_ATOMIC_MSVC_INTRINSIC
+#elif defined(__ARM_ARCH_4__) || defined(__ARM_ARCH_5__) || \
+      defined(__hppa__) || defined(__sparc__) || defined(__sh__)
+#define PIPE_ATOMIC_UNLOCKED
 #elif defined(__GNUC__)
 #define PIPE_ATOMIC_GCC_INTRINSIC
 #else
@@ -49,7 +52,25 @@
 
 #endif
 
+#if defined(PIPE_ATOMIC_UNLOCKED)
 
+#define PIPE_ATOMIC "Unlocked"
+
+#define p_atomic_set(_v, _i) (*(_v) = (_i))
+#define p_atomic_read(_v) (*(_v))
+#define p_atomic_dec_zero(_v) ((*(_v) -= 1) == 0)
+#define p_atomic_inc(_v) (*(_v) += 1)
+#define p_atomic_dec(_v) (*(_v) -= 1)
+#define p_atomic_add(_v, _i) (*(_v) += (_i))
+#define p_atomic_inc_return(_v) (*(_v) += 1)
+#define p_atomic_dec_return(_v) (*(_v) -= 1)
+#define p_atomic_cmpxchg(_v, old, _new) ({	\
+	__typeof(*_v) _r = *(_v);		\
+	if (*(_v) == old)			\
+		*(_v) = (_new);			\
+	_r;					\
+})
+#endif
 
 /* Unlocked version for single threaded environments, such as some
  * windows kernel modules.
