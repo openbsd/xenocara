@@ -90,6 +90,7 @@ CLEANFILES = \
 	program/program_parse.tab.h \
 	main/git_sha1.h.tmp
 
+if REGEN_SOURCES
 PYTHON_GEN = $(AM_V_GEN)$(PYTHON2) $(PYTHON_FLAGS)
 
 main/get_hash.h: ../mapi/glapi/gen/gl_and_es_API.xml main/get_hash_params.py \
@@ -108,6 +109,7 @@ main/format_pack.c: main/format_pack.py main/formats.csv \
 main/format_unpack.c: main/format_unpack.py main/formats.csv	\
                       main/format_parser.py
 	$(PYTHON_GEN) $(srcdir)/main/format_unpack.py $(srcdir)/main/formats.csv > $@
+endif
 
 main/formats.c: main/format_info.h
 
@@ -189,6 +191,8 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gl.pc
 
 MKDIR_GEN = $(AM_V_at)$(MKDIR_P) $(@D)
+
+if REGEN_SOURCES
 YACC_GEN = $(AM_V_GEN)$(YACC) $(YFLAGS)
 LEX_GEN = $(AM_V_GEN)$(LEX) $(LFLAGS)
 
@@ -199,6 +203,7 @@ program/lex.yy.c: program/program_lexer.l
 program/program_parse.tab.c program/program_parse.tab.h: program/program_parse.y
 	$(MKDIR_GEN)
 	$(YACC_GEN) -o $@ -p "_mesa_program_" --defines=$(builddir)/program/program_parse.tab.h $(srcdir)/program/program_parse.y
+endif
 
 if GEN_ASM_OFFSETS
 matypes.h: $(gen_matypes_SOURCES)

@@ -240,6 +240,7 @@ $(XORG_GLAPI_DIR)/%.h: $(MESA_GLAPI_DIR)/%.h
 
 ######################################################################
 
+if REGEN_SOURCES
 $(MESA_GLAPI_DIR)/glapi_mapi_tmp.h: $(MESA_MAPI_DIR)/mapi_abi.py $(COMMON)
 	$(PYTHON_GEN) $(MESA_MAPI_DIR)/mapi_abi.py \
 		--printer glapi --mode lib $(srcdir)/gl_and_es_API.xml > $@
@@ -337,3 +338,4 @@ $(XORG_GLX_DIR)/indirect_reqsize.c: glX_proto_size.py $(COMMON_GLX)
 $(XORG_GLX_DIR)/indirect_table.c: glX_server_table.py gl_and_glX_API.xml $(COMMON_GLX)
 	$(PYTHON_GEN) $< -f $(srcdir)/gl_and_glX_API.xml \
 	| $(INDENT) $(XORG_INDENT_FLAGS) > $@
+endif

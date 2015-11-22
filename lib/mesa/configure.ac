@@ -140,6 +140,8 @@ else
     fi
 fi
 
+AM_CONDITIONAL(REGEN_SOURCES, test -n "$PYTHON2")
+
 AC_PROG_INSTALL
 
 dnl We need a POSIX shell for parts of the build. Assume we have one
