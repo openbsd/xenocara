@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.28 2015/04/15 09:39:53 ajacoutot Exp $
+# $OpenBSD: Makefile,v 1.29 2015/11/22 07:57:10 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -51,8 +51,8 @@ SUBDIR+= pixman
 .endif
 
 .if ${XENOCARA_BUILD_GL:L} == "yes"
-SUBDIR+= libdrm libgbm
-SUBDIR+= libglapi libGL libEGL libGLESv1_CM libGLESv2
+SUBDIR+= libdrm
+SUBDIR+= mesa
 SUBDIR+= libGLU libGLw libtxc_dxtn
 SUBDIR+= libepoxy
 .endif
