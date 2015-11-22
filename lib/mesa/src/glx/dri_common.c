@@ -73,6 +73,10 @@ dri_message(int level, const char *f, ...)
    }
 }
 
+#ifdef __OpenBSD__
+#define GL_LIB_NAME "libGL.so"
+#endif
+
 #ifndef GL_LIB_NAME
 #define GL_LIB_NAME "libGL.so.1"
 #endif
