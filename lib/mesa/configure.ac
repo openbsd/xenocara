@@ -464,6 +464,18 @@ AC_LINK_IFELSE(
         GC_SECTIONS="";])
 LDFLAGS=$save_LDFLAGS
 
+dnl
+dnl --gc-sections causes ld 2.17 to segfault on ppc
+dnl
+case "$host_os" in
+openbsd*)
+    case "$host_cpu" in
+    powerpc*)
+        GC_SECTIONS="" ;;
+    esac
+    ;;
+esac
+
 AC_SUBST([GC_SECTIONS])
 
 dnl
