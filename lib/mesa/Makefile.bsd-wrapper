@@ -1,0 +1,40 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2015/11/22 03:11:30 jsg Exp $
+
+.include <bsd.own.mk>
+
+SHARED_LIBS=	EGL 1.0 gbm 0.0 glapi 0.1 GL 16.0 GLESv1_CM 1.0 GLESv2 1.0 \
+		OSMesa 9.0
+
+DRI_DRIVERS=		swrast
+GALLIUM_DRIVERS=
+
+.if ${MACHINE} == i386 || ${MACHINE} == amd64
+DRI_DRIVERS=swrast,radeon,r200,i915,i965
+GALLIUM_DRIVERS=r300,r600
+.endif
+
+.if ${MACHINE} == macppc || ${MACHINE} == sparc64
+DRI_DRIVERS=swrast,radeon,r200
+GALLIUM_DRIVERS=r300,r600
+.endif
+
+CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
+			--with-gallium-drivers=${GALLIUM_DRIVERS} \
+			--disable-silent-rules \
+			--disable-gallium-llvm \
+			--disable-llvm-shared-libs \
+			--enable-gles1 --enable-gles2 \
+			--enable-shared-glapi \
+			--enable-osmesa \
+			--enable-gbm \
+			--with-egl-platforms="x11,drm" \
+			--prefix=${X11BASE} \
+			--with-dri-driverdir=${X11BASE}/lib/modules/dri \
+			--with-dri-searchpath=${X11BASE}/lib/modules/dri
+
+depend:
+.if !exists(${.OBJDIR}/src/util/format_srgb.c)
+	lndir -s -e obj -e obj.${MACHINE_ARCH} -e Makefile.bsd-wrapper ${.CURDIR}
+.endif
+
+.include <bsd.xorg.mk>
