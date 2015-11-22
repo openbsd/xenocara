@@ -53,4 +53,4 @@ libdri_test_stubs_la_CFLAGS = $(AM_CFLAGS) -DNO_MAIN
 
 libmegadriver_stub_la_SOURCES = $(megadriver_stub_FILES)
 
-sysconf_DATA = drirc
+sysconf_DATA =
