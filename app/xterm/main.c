@@ -2599,9 +2599,22 @@ main(int argc, char *argv[]ENVP_ARG)
 	RequestMaximize(term, True);
 #endif
 
-    if (pledge("stdio rpath wpath cpath id proc tty", NULL) == -1) {
-	xtermWarning("pledge\n");
-	exit(1);
+    {
+        String data = NULL;
+        getKeymapResources(term, "vt100", "VT100", XtRString, &data, sizeof(data));
+        if (data &&
+            (strstr(data, "exec-formatted") || strstr(data, "exec-selectable"))) {
+
+            if (pledge("stdio rpath wpath cpath id proc exec tty", NULL) == -1) {
+                xtermWarning("pledge\n");
+                exit(1);
+            }
+        } else {
+            if (pledge("stdio rpath wpath cpath id proc tty", NULL) == -1) {
+               xtermWarning("pledge\n");
+               exit(1);
+           }
+       }
     }
 
     for (;;) {
