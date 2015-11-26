@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2015/11/22 03:11:30 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2015/11/26 19:05:49 kettenis Exp $
 
 .include <bsd.own.mk>
 
@@ -31,6 +31,11 @@ CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 			--prefix=${X11BASE} \
 			--with-dri-driverdir=${X11BASE}/lib/modules/dri \
 			--with-dri-searchpath=${X11BASE}/lib/modules/dri
+
+# The i965 driver uses the cmpxchg8b instruction
+.if ${MACHINE} == i386
+CONFIGURE_ARGS+=	USER_CFLAGS="-march=i586" USER_CXXFLAGS="-march=i586"
+.endif
 
 depend:
 .if !exists(${.OBJDIR}/src/util/format_srgb.c)
