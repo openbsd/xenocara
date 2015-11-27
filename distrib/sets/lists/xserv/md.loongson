@@ -1,17 +1,11 @@
 ./usr/X11R6/bin/X
-./usr/X11R6/bin/Xephyr
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
-./usr/X11R6/lib/modules/dri/swrast_dri.so
-./usr/X11R6/lib/modules/drivers/modesetting_drv.la
-./usr/X11R6/lib/modules/drivers/modesetting_drv.so
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.so
-./usr/X11R6/lib/modules/extensions/libglx.la
-./usr/X11R6/lib/modules/extensions/libglx.so
 ./usr/X11R6/lib/modules/input/kbd_drv.la
 ./usr/X11R6/lib/modules/input/kbd_drv.so
 ./usr/X11R6/lib/modules/input/mouse_drv.la
@@ -42,7 +36,6 @@
 ./usr/X11R6/lib/modules/libwfb.so
 ./usr/X11R6/lib/pkgconfig/xorg-mouse.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
-./usr/X11R6/man/man1/Xephyr.1
 ./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xorg.1
 ./usr/X11R6/man/man1/Xserver.1
@@ -52,7 +45,6 @@
 ./usr/X11R6/man/man4/exa.4
 ./usr/X11R6/man/man4/fbdevhw.4
 ./usr/X11R6/man/man4/kbd.4
-./usr/X11R6/man/man4/modesetting.4
 ./usr/X11R6/man/man4/mouse.4
 ./usr/X11R6/man/man4/mousedrv.4
 ./usr/X11R6/man/man4/usbtablet.4
