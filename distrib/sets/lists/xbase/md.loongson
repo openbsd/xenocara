@@ -205,15 +205,14 @@
 ./usr/X11R6/lib/libxcb-cursor.so.0.0
 ./usr/X11R6/lib/libxcb-damage.so.1.0
 ./usr/X11R6/lib/libxcb-dpms.so.1.0
+./usr/X11R6/lib/libxcb-dri2.so.1.1
+./usr/X11R6/lib/libxcb-dri3.so.0.0
 ./usr/X11R6/lib/libxcb-ewmh.so.2.0
 ./usr/X11R6/lib/libxcb-glx.so.1.0
 ./usr/X11R6/lib/libxcb-icccm.so.4.0
 ./usr/X11R6/lib/libxcb-image.so.2.0
 ./usr/X11R6/lib/libxcb-keysyms.so.3.0
 ./usr/X11R6/lib/libxcb-present.so.0.0
-./usr/X11R6/lib/libxcb-dri2.so.1.1
-./usr/X11R6/lib/libxcb-dri3.so.0.0
-./usr/X11R6/lib/libxcb-xf86dri.so.2.0
 ./usr/X11R6/lib/libxcb-randr.so.2.1
 ./usr/X11R6/lib/libxcb-record.so.1.0
 ./usr/X11R6/lib/libxcb-render-util.so.2.0
@@ -225,6 +224,7 @@
 ./usr/X11R6/lib/libxcb-sync.so.1.1
 ./usr/X11R6/lib/libxcb-util.so.0.0
 ./usr/X11R6/lib/libxcb-xevie.so.1.0
+./usr/X11R6/lib/libxcb-xf86dri.so.2.0
 ./usr/X11R6/lib/libxcb-xfixes.so.1.1
 ./usr/X11R6/lib/libxcb-xinerama.so.1.0
 ./usr/X11R6/lib/libxcb-xkb.so.0.0
