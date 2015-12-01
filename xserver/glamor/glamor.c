@@ -715,7 +715,7 @@ glamor_name_from_pixmap(PixmapPtr pixmap, CARD16 *stride, CARD32 *size)
         glamor_get_screen_private(pixmap->drawable.pScreen);
 
     pixmap_priv = glamor_get_pixmap_private(pixmap);
-    if (pixmap_priv == NULL || !glamor_priv->dri3_enabled)
+    if (pixmap_priv == NULL)
         return -1;
     switch (pixmap_priv->type) {
     case GLAMOR_TEXTURE_DRM:
