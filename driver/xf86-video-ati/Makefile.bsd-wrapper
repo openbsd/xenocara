@@ -1,8 +1,12 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2014/04/09 20:21:16 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2015/12/01 21:22:56 kettenis Exp $
 
 .include <bsd.xconf.mk>
 
+.if ${XENOCARA_BUILD_GL:L} != "yes"
 CONFIGURE_ARGS=	--disable-glamor
+.else
+CONFIGURE_ARGS=	--enable-glamor
+.endif
 
 .if ${XENOCARA_BUILD_DRI:L} != "yes"
 CONFIGURE_ARGS+= --disable-dri
