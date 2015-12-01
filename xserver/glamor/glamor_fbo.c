@@ -340,7 +340,7 @@ _glamor_create_tex(glamor_screen_private *glamor_priv,
      * Depending on the implementation, GL_RGBA might not
      * give us ARGB8888. We ask glamor_egl to use get
      * an ARGB8888 based texture for us. */
-    if (glamor_priv->dri3_enabled && format == GL_RGBA) {
+    if (format == GL_RGBA) {
         tex = glamor_egl_create_argb8888_based_texture(glamor_priv->screen,
                                                        w, h);
     }
