@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.57 2015/11/17 10:49:57 aoyama Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.58 2015/12/01 21:20:21 kettenis Exp $
 
 .include <bsd.xconf.mk>
 
@@ -15,6 +15,8 @@ NO_XORG_OPTION=${NO_XORG_${MACHINE}}
 
 .if ${XENOCARA_BUILD_GL:L} != "yes"
 GLX_OPTION=	--disable-glx
+.else
+GLX_OPTION=	--enable-glamor
 .endif
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
