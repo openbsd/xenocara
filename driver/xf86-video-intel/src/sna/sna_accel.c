@@ -17670,9 +17670,6 @@ static bool sna_option_accel_blt(struct sna *sna)
 	const char *s;
 
 	s = xf86GetOptValString(sna->Options, OPTION_ACCEL_METHOD);
-	/* XXX avoid render ring since it gets stuck after resume */
-	if (s == NULL && sna->info->gen >= 0100)
-		return true;
 	if (s == NULL)
 		return false;
 
