@@ -119,6 +119,7 @@
 ./usr/X11R6/include/xorg/gcstruct.h
 ./usr/X11R6/include/xorg/geext.h
 ./usr/X11R6/include/xorg/geint.h
+./usr/X11R6/include/xorg/glamor.h
 ./usr/X11R6/include/xorg/globals.h
 ./usr/X11R6/include/xorg/glx_extinit.h
 ./usr/X11R6/include/xorg/glyphstr.h

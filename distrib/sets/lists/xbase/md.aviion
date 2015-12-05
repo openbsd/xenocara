@@ -68,6 +68,7 @@
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
 ./usr/X11R6/include/xorg
+./usr/X11R6/include/xorg/glamor.h
 ./usr/X11R6/lib/libEGL.la
 ./usr/X11R6/lib/libEGL.so.1.0
 ./usr/X11R6/lib/libFS.so.10.0
