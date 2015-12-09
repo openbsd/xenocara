@@ -22,8 +22,6 @@
 ./usr/X11R6/lib/modules/libfb.so
 ./usr/X11R6/lib/modules/libfbdevhw.la
 ./usr/X11R6/lib/modules/libfbdevhw.so
-./usr/X11R6/lib/modules/libglamoregl.la
-./usr/X11R6/lib/modules/libglamoregl.so
 ./usr/X11R6/lib/modules/libint10.la
 ./usr/X11R6/lib/modules/libint10.so
 ./usr/X11R6/lib/modules/libshadow.la
