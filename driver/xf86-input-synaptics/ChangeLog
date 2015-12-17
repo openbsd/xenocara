@@ -1,3 +1,22 @@
+commit af7d8a15278a968d919bf539628281bf713f747b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 29 12:10:09 2015 +1000
+
+    synaptics 1.8.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3e7508ac087028f8f8e116f5279dad1ebcdc58e6
+Author: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Date:   Thu Aug 14 20:03:42 2014 +0200
+
+    Use cumulative relative touch movements while scrolling
+    
+    Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit ec0901e5f81d9cad6cc8bbdcb5ea075009c13de5)
+
 commit 6f8d4bac14ac8f3fd2714f0a8a9e37c5136a4013
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Mar 27 11:26:55 2015 +1000

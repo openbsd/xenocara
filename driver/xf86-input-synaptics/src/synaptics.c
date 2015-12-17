@@ -3114,9 +3114,11 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
         }
     }
 
-    /* If a physical button is pressed on a clickpad, use cumulative relative
-     * touch movements for motion */
-    if (para->clickpad && (priv->lastButtons & 7) &&
+    /* If a physical button is pressed on a clickpad or a two-finger scrolling
+     * is ongoing, use cumulative relative touch movements for motion */
+    if (para->clickpad &&
+        ((priv->lastButtons & 7) ||
+        (priv->vert_scroll_twofinger_on || priv->horiz_scroll_twofinger_on)) &&
         priv->last_button_area != TOP_BUTTON_AREA) {
         hw->x = hw->cumulative_dx;
         hw->y = hw->cumulative_dy;

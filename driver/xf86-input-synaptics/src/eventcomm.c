@@ -697,9 +697,11 @@ EventReadHwState(InputInfoPtr pInfo,
 
     SynapticsResetTouchHwState(hw, FALSE);
 
-    /* Reset cumulative values if buttons were not previously pressed,
-     * or no finger was previously present. */
-    if ((!hw->left && !hw->right && !hw->middle) || hw->z < para->finger_low) {
+    /* Reset cumulative values if buttons were not previously pressed and no
+     * two-finger scrolling is ongoing, or no finger was previously present. */
+    if (((!hw->left && !hw->right && !hw->middle) &&
+        !(priv->vert_scroll_twofinger_on || priv->vert_scroll_twofinger_on)) ||
+        hw->z < para->finger_low) {
         hw->cumulative_dx = hw->x;
         hw->cumulative_dy = hw->y;
         sync_cumulative = TRUE;
