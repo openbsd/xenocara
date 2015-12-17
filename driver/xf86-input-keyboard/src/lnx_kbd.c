@@ -70,7 +70,7 @@ SetKbdLeds(InputInfoPtr pInfo, int leds)
 static int
 GetKbdLeds(InputInfoPtr pInfo)
 {
-    char real_leds;
+    char real_leds = 0;
     int leds = 0;
 
     ioctl(pInfo->fd, KDGETLED, &real_leds);
@@ -187,8 +187,17 @@ OpenKeyboard(InputInfoPtr pInfo)
 
     s = xf86SetStrOption(pInfo->options, "Device", NULL);
     if (s == NULL) {
+       int rc;
        pInfo->fd = xf86Info.consoleFd;
        pKbd->isConsole = TRUE;
+
+       rc = tcsetpgrp(pInfo->fd, getpgid(0));
+       if (rc < 0) {
+           xf86IDrvMsg(pInfo, X_ERROR,
+                       "failed to set us as foreground pgrp (%s)\n",
+                       strerror(errno));
+       }
+
     } else {
        pInfo->fd = open(s, O_RDONLY | O_NONBLOCK | O_EXCL);
        if (pInfo->fd == -1) {

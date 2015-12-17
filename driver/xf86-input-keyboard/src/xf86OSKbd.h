@@ -97,4 +97,4 @@ typedef struct {
     KbdProtocolId	id;
 } KbdProtocolRec;
 
-Bool xf86OSKbdPreInit(InputInfoPtr pInfo);
+_X_EXPORT Bool xf86OSKbdPreInit(InputInfoPtr pInfo);

@@ -287,6 +287,8 @@
 #define KEY_0x74		0xD3
 #define KEY_0x75		0xD4
 #define KEY_0x76		0xD5
+#define KEY_R_0xF4		0xF4
+#define KEY_R_0xF5		0xF5
 
 /* These are for "notused" and "unknown" entries in translation maps. */
 #define KEY_NOTUSED	  0

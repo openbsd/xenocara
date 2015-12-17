@@ -1,3 +1,86 @@
+commit 13d320076e5de2d6c3cbc170fc7e31c526ed8499
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 7 09:24:38 2015 +1000
+
+    keyboard 1.8.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 65739ef047233567e6053fc57464a42ffe69e989
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 25 13:37:09 2015 +1000
+
+    linux: bring our process group to the foreground (#89653)
+    
+    Required to make the driver receive keyboard events from the console.
+    
+    X.Org Bug  <http://bugs.freedesktop.org/show_bug.cgi?id=89653>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+    Tested-by: Ingo Brückl <ib@wupperonline.de>
+
+commit 85fe6b8f56e75338fde1d3a88b1749fd105eb93b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 22 14:26:00 2015 -0700
+
+    Mark xf86OSKbdPreInit as _X_EXPORT in header to match definitions
+    
+    Fixes Solaris Studio 12.4 compiler error:
+    "sun_kbd.c", line 512: redeclaration must have the same or more restrictive linker scoping: xf86OSKbdPreInit
+    cc: acomp failed for sun_kbd.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0c9619675d26284f03ef428ff76cc09bdd4ace3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 29 16:23:32 2014 +1000
+
+    Init LEDs to zero before querying the value
+    
+    This way if the ioctl fails we don't set any unintended LEDs, but really this
+    patch is more to silence valgrind:
+    
+    ==7129== Conditional jump or move depends on uninitialised value(s)
+    ==7129==    at 0x8DF99A1: GetKbdLeds (lnx_kbd.c:79)
+    ==7129==    by 0x8DF8853: InitKBD (kbd.c:291)
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a327955c9287a317e5792e96601375fa5aabced
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Jan 3 11:48:11 2014 +0100
+
+    Detangle inet keys and jp Henkan/ Muhenkan keys
+    
+    When support for inet keys was added to the keyboard driver
+    back in the early 2000 none of the developers thought of
+    Japanese 106 key keybards which have two extra keys generating
+    the scan codes 0x79 and 0x7d.
+    So for keys prefixed with the scan code 0x60 which were not
+    remapped to anything else the line:
+     *scanCode += 0x78;
+    was added.
+    Thus keys generating the scan codes 0xe0 0x01 and 0xe0 0x03
+    will overlap with the Henkan and Muhenkan keys on Japanese
+    keyboards.
+    A workaround was introduced to xkeyboard-config which makes
+    sure the keycodes 0x79 and 0x7d provide the Henkan and Muhenkan
+    keysyms. As a consequence users might loose some multimedia keys
+    on Japanese keyboards.
+    A different solution would be to either remap keycodes 0x79
+    and 0x7d or keycodes 0xe0 0x01 and 0xe0 0x03 into the range of
+    unused (X-)keycodes above 0xfb.
+    There are downsides with either solution: the legacy keyboard
+    driver and the xkb files would have to be fixed in sync. Otherwise
+    Japanese users would loose their Henkan and Muhenkan keys (in
+    the first case) or some multimedia keys would get lost.
+    The present patch does the latter which seems to be cleaner codewise.
+    
+    Signed-off-by: Egbert Eich <eich@suse.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit ddeb7940b956682451392717b135be4454b5756e
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Nov 1 09:45:21 2013 +1000
