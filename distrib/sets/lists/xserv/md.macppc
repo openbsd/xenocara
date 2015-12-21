@@ -5,6 +5,7 @@
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
+./usr/X11R6/lib/modules/dri/kms_swrast_dri.so
 ./usr/X11R6/lib/modules/dri/r200_dri.so
 ./usr/X11R6/lib/modules/dri/r300_dri.so
 ./usr/X11R6/lib/modules/dri/r600_dri.so

@@ -6,6 +6,7 @@
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
 ./usr/X11R6/bin/ucs2any
+./usr/X11R6/lib/modules/dri/kms_swrast_dri.so
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/drivers/modesetting_drv.la
 ./usr/X11R6/lib/modules/drivers/modesetting_drv.so
