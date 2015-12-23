@@ -1,7 +1,0 @@
-{
-	global:
-		driver_descriptor;
-		swrast_create_screen;
-	local:
-		*;
-};

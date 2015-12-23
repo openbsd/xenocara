@@ -1,5 +1,0 @@
-C_SOURCES := \
-	rbug_core.c \
-	rbug_context.c \
-	rbug_objects.c \
-	rbug_screen.c

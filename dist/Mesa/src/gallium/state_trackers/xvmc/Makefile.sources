@@ -1,6 +1,0 @@
-C_SOURCES := \
-	block.c \
-	surface.c \
-	context.c \
-	subpicture.c \
-	attributes.c
