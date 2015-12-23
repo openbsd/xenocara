@@ -119,10 +119,10 @@ static void si_shader_ls(struct si_shader *shader)
 	si_pm4_set_reg(pm4, R_00B520_SPI_SHADER_PGM_LO_LS, va >> 8);
 	si_pm4_set_reg(pm4, R_00B524_SPI_SHADER_PGM_HI_LS, va >> 40);
 
-	shader->ls_rsrc1 = S_00B528_VGPRS((shader->num_vgprs - 1) / 4) |
+	shader->rsrc1 = S_00B528_VGPRS((shader->num_vgprs - 1) / 4) |
 			   S_00B528_SGPRS((num_sgprs - 1) / 8) |
 		           S_00B528_VGPR_COMP_CNT(vgpr_comp_cnt);
-	shader->ls_rsrc2 = S_00B52C_USER_SGPR(num_user_sgprs) |
+	shader->rsrc2 = S_00B52C_USER_SGPR(num_user_sgprs) |
 			   S_00B52C_SCRATCH_EN(shader->scratch_bytes_per_wave > 0);
 }
 

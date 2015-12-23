@@ -250,14 +250,6 @@ fd4_program_emit(struct fd_ringbuffer *ring, struct fd4_emit *emit,
 		}
 	}
 
-	/* adjust regids for alpha output formats. there is no alpha render
-	 * format, so it's just treated like red
-	 */
-	for (i = 0; i < nr; i++)
-		if (util_format_is_alpha(pipe_surface_format(bufs[i])))
-			color_regid[i] += 3;
-
-
 	/* TODO get these dynamically: */
 	face_regid = s[FS].v->frag_face ? regid(0,0) : regid(63,0);
 	coord_regid = s[FS].v->frag_coord ? regid(0,0) : regid(63,0);

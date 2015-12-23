@@ -62,6 +62,15 @@ fallback_required(struct gl_context *ctx, GLenum target,
    GLuint srcLevel;
    GLenum status;
 
+   /* GL_DRAW_FRAMEBUFFER does not exist in OpenGL ES 1.x, and since
+    * _mesa_meta_begin hasn't been called yet, we have to work-around API
+    * difficulties.  The whole reason that GL_DRAW_FRAMEBUFFER is used instead
+    * of GL_FRAMEBUFFER is that the read framebuffer may be different.  This
+    * is moot in OpenGL ES 1.x.
+    */
+   const GLenum fbo_target = ctx->API == API_OPENGLES
+      ? GL_FRAMEBUFFER : GL_DRAW_FRAMEBUFFER;
+
    /* check for fallbacks */
    if (target == GL_TEXTURE_3D) {
       _mesa_perf_debug(ctx, MESA_DEBUG_SEVERITY_HIGH,
@@ -102,13 +111,13 @@ fallback_required(struct gl_context *ctx, GLenum target,
     */
    if (!mipmap->FBO)
       _mesa_GenFramebuffers(1, &mipmap->FBO);
-   _mesa_BindFramebuffer(GL_DRAW_FRAMEBUFFER, mipmap->FBO);
+   _mesa_BindFramebuffer(fbo_target, mipmap->FBO);
 
-   _mesa_meta_bind_fbo_image(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, baseImage, 0);
+   _mesa_meta_bind_fbo_image(fbo_target, GL_COLOR_ATTACHMENT0, baseImage, 0);
 
-   status = _mesa_CheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+   status = _mesa_CheckFramebufferStatus(fbo_target);
 
-   _mesa_BindFramebuffer(GL_DRAW_FRAMEBUFFER, fboSave);
+   _mesa_BindFramebuffer(fbo_target, fboSave);
 
    if (status != GL_FRAMEBUFFER_COMPLETE_EXT) {
       _mesa_perf_debug(ctx, MESA_DEBUG_SEVERITY_HIGH,
@@ -120,16 +129,21 @@ fallback_required(struct gl_context *ctx, GLenum target,
 }
 
 void
-_mesa_meta_glsl_generate_mipmap_cleanup(struct gen_mipmap_state *mipmap)
+_mesa_meta_glsl_generate_mipmap_cleanup(struct gl_context *ctx,
+                                        struct gen_mipmap_state *mipmap)
 {
    if (mipmap->VAO == 0)
       return;
    _mesa_DeleteVertexArrays(1, &mipmap->VAO);
    mipmap->VAO = 0;
-   _mesa_DeleteBuffers(1, &mipmap->VBO);
-   mipmap->VBO = 0;
+   _mesa_reference_buffer_object(ctx, &mipmap->buf_obj, NULL);
    _mesa_DeleteSamplers(1, &mipmap->Sampler);
    mipmap->Sampler = 0;
+
+   if (mipmap->FBO != 0) {
+      _mesa_DeleteFramebuffers(1, &mipmap->FBO);
+      mipmap->FBO = 0;
+   }
 
    _mesa_meta_blit_shader_table_cleanup(&mipmap->shaders);
 }
@@ -192,11 +206,11 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
     * GenerateMipmap function.
     */
    if (use_glsl_version) {
-      _mesa_meta_setup_vertex_objects(&mipmap->VAO, &mipmap->VBO, true,
+      _mesa_meta_setup_vertex_objects(ctx, &mipmap->VAO, &mipmap->buf_obj, true,
                                       2, 4, 0);
       _mesa_meta_setup_blit_shader(ctx, target, false, &mipmap->shaders);
    } else {
-      _mesa_meta_setup_ff_tnl_for_blit(&mipmap->VAO, &mipmap->VBO, 3);
+      _mesa_meta_setup_ff_tnl_for_blit(ctx, &mipmap->VAO, &mipmap->buf_obj, 3);
       _mesa_set_enable(ctx, target, GL_TRUE);
    }
 
@@ -331,8 +345,8 @@ _mesa_meta_GenerateMipmap(struct gl_context *ctx, GLenum target,
                                          verts[3].tex);
 
          /* upload vertex data */
-         _mesa_BufferData(GL_ARRAY_BUFFER_ARB, sizeof(verts),
-                          verts, GL_DYNAMIC_DRAW_ARB);
+         _mesa_buffer_data(ctx, mipmap->buf_obj, GL_NONE, sizeof(verts), verts,
+                           GL_DYNAMIC_DRAW, __func__);
 
          _mesa_meta_bind_fbo_image(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, dstImage, layer);
 

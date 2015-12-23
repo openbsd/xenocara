@@ -637,6 +637,14 @@ static LLVMValueRef lds_load(struct lp_build_tgsi_context *bld_base,
 			    lp_build_const_int32(gallivm, swizzle));
 
 	value = build_indexed_load(si_shader_ctx, si_shader_ctx->lds, dw_addr);
+	if (type == TGSI_TYPE_DOUBLE) {
+		LLVMValueRef value2;
+		dw_addr = lp_build_add(&bld_base->uint_bld, dw_addr,
+				       lp_build_const_int32(gallivm, swizzle + 1));
+		value2 = build_indexed_load(si_shader_ctx, si_shader_ctx->lds, dw_addr);
+		return radeon_llvm_emit_fetch_double(bld_base, value, value2);
+	}
+
 	return LLVMBuildBitCast(gallivm->builder, value,
 				tgsi2llvmtype(bld_base, type), "");
 }
@@ -3752,12 +3760,14 @@ void si_shader_binary_read_config(const struct si_screen *sscreen,
 			shader->num_sgprs = MAX2(shader->num_sgprs, (G_00B028_SGPRS(value) + 1) * 8);
 			shader->num_vgprs = MAX2(shader->num_vgprs, (G_00B028_VGPRS(value) + 1) * 4);
 			shader->float_mode =  G_00B028_FLOAT_MODE(value);
+			shader->rsrc1 = value;
 			break;
 		case R_00B02C_SPI_SHADER_PGM_RSRC2_PS:
 			shader->lds_size = MAX2(shader->lds_size, G_00B02C_EXTRA_LDS_SIZE(value));
 			break;
 		case R_00B84C_COMPUTE_PGM_RSRC2:
 			shader->lds_size = MAX2(shader->lds_size, G_00B84C_LDS_SIZE(value));
+			shader->rsrc2 = value;
 			break;
 		case R_0286CC_SPI_PS_INPUT_ENA:
 			shader->spi_ps_input_ena = value;

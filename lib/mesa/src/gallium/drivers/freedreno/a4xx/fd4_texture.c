@@ -111,6 +111,7 @@ fd4_sampler_state_create(struct pipe_context *pctx,
 		COND(!cso->normalized_coords, A4XX_TEX_SAMP_1_UNNORM_COORDS);
 
 	if (cso->min_mip_filter != PIPE_TEX_MIPFILTER_NONE) {
+		so->texsamp0 |= A4XX_TEX_SAMP_0_LOD_BIAS(cso->lod_bias);
 		so->texsamp1 |=
 			A4XX_TEX_SAMP_1_MIN_LOD(cso->min_lod) |
 			A4XX_TEX_SAMP_1_MAX_LOD(cso->max_lod);

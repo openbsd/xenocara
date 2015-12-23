@@ -1039,33 +1039,19 @@ fs_visitor::emit_linterp(const fs_reg &attr, const fs_reg &interp,
 }
 
 void
-fs_visitor::emit_general_interpolation(fs_reg attr, const char *name,
+fs_visitor::emit_general_interpolation(fs_reg *attr, const char *name,
                                        const glsl_type *type,
                                        glsl_interp_qualifier interpolation_mode,
-                                       int location, bool mod_centroid,
+                                       int *location, bool mod_centroid,
                                        bool mod_sample)
 {
-   attr.type = brw_type_for_base_type(type->get_scalar_type());
-
    assert(stage == MESA_SHADER_FRAGMENT);
    brw_wm_prog_data *prog_data = (brw_wm_prog_data*) this->prog_data;
    brw_wm_prog_key *key = (brw_wm_prog_key*) this->key;
 
-   unsigned int array_elements;
-
-   if (type->is_array()) {
-      array_elements = type->length;
-      if (array_elements == 0) {
-         fail("dereferenced array '%s' has length 0\n", name);
-      }
-      type = type->fields.array;
-   } else {
-      array_elements = 1;
-   }
-
    if (interpolation_mode == INTERP_QUALIFIER_NONE) {
       bool is_gl_Color =
-         location == VARYING_SLOT_COL0 || location == VARYING_SLOT_COL1;
+         *location == VARYING_SLOT_COL0 || *location == VARYING_SLOT_COL1;
       if (key->flat_shade && is_gl_Color) {
          interpolation_mode = INTERP_QUALIFIER_FLAT;
       } else {
@@ -1073,71 +1059,86 @@ fs_visitor::emit_general_interpolation(fs_reg attr, const char *name,
       }
    }
 
-   for (unsigned int i = 0; i < array_elements; i++) {
-      for (unsigned int j = 0; j < type->matrix_columns; j++) {
-	 if (prog_data->urb_setup[location] == -1) {
-	    /* If there's no incoming setup data for this slot, don't
-	     * emit interpolation for it.
-	     */
-	    attr = offset(attr, bld, type->vector_elements);
-	    location++;
-	    continue;
-	 }
+   if (type->is_array() || type->is_matrix()) {
+      const glsl_type *elem_type = glsl_get_array_element(type);
+      const unsigned length = glsl_get_length(type);
 
-	 if (interpolation_mode == INTERP_QUALIFIER_FLAT) {
-	    /* Constant interpolation (flat shading) case. The SF has
-	     * handed us defined values in only the constant offset
-	     * field of the setup reg.
-	     */
-	    for (unsigned int k = 0; k < type->vector_elements; k++) {
-	       struct brw_reg interp = interp_reg(location, k);
-	       interp = suboffset(interp, 3);
-               interp.type = attr.type;
-               bld.emit(FS_OPCODE_CINTERP, attr, fs_reg(interp));
-	       attr = offset(attr, bld, 1);
-	    }
-	 } else {
-	    /* Smooth/noperspective interpolation case. */
-	    for (unsigned int k = 0; k < type->vector_elements; k++) {
-               struct brw_reg interp = interp_reg(location, k);
-               if (devinfo->needs_unlit_centroid_workaround && mod_centroid) {
-                  /* Get the pixel/sample mask into f0 so that we know
-                   * which pixels are lit.  Then, for each channel that is
-                   * unlit, replace the centroid data with non-centroid
-                   * data.
-                   */
-                  bld.emit(FS_OPCODE_MOV_DISPATCH_TO_FLAGS);
-
-                  fs_inst *inst;
-                  inst = emit_linterp(attr, fs_reg(interp), interpolation_mode,
-                                      false, false);
-                  inst->predicate = BRW_PREDICATE_NORMAL;
-                  inst->predicate_inverse = true;
-                  if (devinfo->has_pln)
-                     inst->no_dd_clear = true;
-
-                  inst = emit_linterp(attr, fs_reg(interp), interpolation_mode,
-                                      mod_centroid && !key->persample_shading,
-                                      mod_sample || key->persample_shading);
-                  inst->predicate = BRW_PREDICATE_NORMAL;
-                  inst->predicate_inverse = false;
-                  if (devinfo->has_pln)
-                     inst->no_dd_check = true;
-
-               } else {
-                  emit_linterp(attr, fs_reg(interp), interpolation_mode,
-                               mod_centroid && !key->persample_shading,
-                               mod_sample || key->persample_shading);
-               }
-               if (devinfo->gen < 6 && interpolation_mode == INTERP_QUALIFIER_SMOOTH) {
-                  bld.MUL(attr, attr, this->pixel_w);
-               }
-	       attr = offset(attr, bld, 1);
-	    }
-
-	 }
-	 location++;
+      for (unsigned i = 0; i < length; i++) {
+         emit_general_interpolation(attr, name, elem_type, interpolation_mode,
+                                    location, mod_centroid, mod_sample);
       }
+   } else if (type->is_record()) {
+      for (unsigned i = 0; i < type->length; i++) {
+         const glsl_type *field_type = type->fields.structure[i].type;
+         emit_general_interpolation(attr, name, field_type, interpolation_mode,
+                                    location, mod_centroid, mod_sample);
+      }
+   } else {
+      assert(type->is_scalar() || type->is_vector());
+
+      if (prog_data->urb_setup[*location] == -1) {
+         /* If there's no incoming setup data for this slot, don't
+          * emit interpolation for it.
+          */
+         *attr = offset(*attr, bld, type->vector_elements);
+         (*location)++;
+         return;
+      }
+
+      attr->type = brw_type_for_base_type(type->get_scalar_type());
+
+      if (interpolation_mode == INTERP_QUALIFIER_FLAT) {
+         /* Constant interpolation (flat shading) case. The SF has
+          * handed us defined values in only the constant offset
+          * field of the setup reg.
+          */
+         for (unsigned int i = 0; i < type->vector_elements; i++) {
+            struct brw_reg interp = interp_reg(*location, i);
+            interp = suboffset(interp, 3);
+            interp.type = attr->type;
+            bld.emit(FS_OPCODE_CINTERP, *attr, fs_reg(interp));
+            *attr = offset(*attr, bld, 1);
+         }
+      } else {
+         /* Smooth/noperspective interpolation case. */
+         for (unsigned int i = 0; i < type->vector_elements; i++) {
+            struct brw_reg interp = interp_reg(*location, i);
+            if (devinfo->needs_unlit_centroid_workaround && mod_centroid) {
+               /* Get the pixel/sample mask into f0 so that we know
+                * which pixels are lit.  Then, for each channel that is
+                * unlit, replace the centroid data with non-centroid
+                * data.
+                */
+               bld.emit(FS_OPCODE_MOV_DISPATCH_TO_FLAGS);
+
+               fs_inst *inst;
+               inst = emit_linterp(*attr, fs_reg(interp), interpolation_mode,
+                                   false, false);
+               inst->predicate = BRW_PREDICATE_NORMAL;
+               inst->predicate_inverse = true;
+               if (devinfo->has_pln)
+                  inst->no_dd_clear = true;
+
+               inst = emit_linterp(*attr, fs_reg(interp), interpolation_mode,
+                                   mod_centroid && !key->persample_shading,
+                                   mod_sample || key->persample_shading);
+               inst->predicate = BRW_PREDICATE_NORMAL;
+               inst->predicate_inverse = false;
+               if (devinfo->has_pln)
+                  inst->no_dd_check = true;
+
+            } else {
+               emit_linterp(*attr, fs_reg(interp), interpolation_mode,
+                            mod_centroid && !key->persample_shading,
+                            mod_sample || key->persample_shading);
+            }
+            if (devinfo->gen < 6 && interpolation_mode == INTERP_QUALIFIER_SMOOTH) {
+               bld.MUL(*attr, *attr, this->pixel_w);
+            }
+            *attr = offset(*attr, bld, 1);
+         }
+      }
+      (*location)++;
    }
 }
 

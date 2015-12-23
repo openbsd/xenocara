@@ -226,8 +226,8 @@ bool r600_common_context_init(struct r600_common_context *rctx,
 	rctx->family = rscreen->family;
 	rctx->chip_class = rscreen->chip_class;
 
-	if (rscreen->family == CHIP_HAWAII)
-		rctx->max_db = 16;
+	if (rscreen->chip_class >= CIK)
+		rctx->max_db = MAX2(8, rscreen->info.r600_num_backends);
 	else if (rscreen->chip_class >= EVERGREEN)
 		rctx->max_db = 8;
 	else
@@ -543,10 +543,11 @@ const char *r600_get_llvm_processor_name(enum radeon_family family)
 	case CHIP_TONGA: return "tonga";
 	case CHIP_ICELAND: return "iceland";
 	case CHIP_CARRIZO: return "carrizo";
-	case CHIP_FIJI: return "fiji";
 #if HAVE_LLVM <= 0x0307
+	case CHIP_FIJI: return "tonga";
 	case CHIP_STONEY: return "carrizo";
 #else
+	case CHIP_FIJI: return "fiji";
 	case CHIP_STONEY: return "stoney";
 #endif
 	default: return "";

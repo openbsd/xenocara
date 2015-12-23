@@ -2,6 +2,9 @@ include $(top_srcdir)/src/gallium/Automake.inc
 
 lib_LTLIBRARIES = lib@OPENCL_LIBNAME@.la
 
+AM_CPPFLAGS = \
+        $(LIBELF_CFLAGS)
+
 lib@OPENCL_LIBNAME@_la_LDFLAGS = \
 	$(LLVM_LDFLAGS) \
 	-no-undefined \
@@ -20,8 +23,8 @@ lib@OPENCL_LIBNAME@_la_LIBADD = \
 	$(top_builddir)/src/gallium/auxiliary/libgallium.la \
 	$(top_builddir)/src/util/libmesautil.la \
 	$(GALLIUM_PIPE_LOADER_WINSYS_LIBS) \
-	$(ELF_LIB) \
-	-ldl \
+	$(LIBELF_LIBS) \
+	$(DLOPEN_LIBS) \
 	-lclangCodeGen \
 	-lclangFrontendTool \
 	-lclangFrontend \

@@ -105,13 +105,40 @@ fs_visitor::nir_setup_inputs(nir_shader *shader)
             emit_percomp(bld, fs_inst(BRW_OPCODE_MOV, bld.dispatch_width(),
                                       input, reg), 0xF);
          } else {
-            emit_general_interpolation(input, var->name, var->type,
+            int location = var->data.location;
+            emit_general_interpolation(&input, var->name, var->type,
                                        (glsl_interp_qualifier) var->data.interpolation,
-                                       var->data.location, var->data.centroid,
+                                       &location, var->data.centroid,
                                        var->data.sample);
          }
          break;
       }
+   }
+}
+
+void
+fs_visitor::nir_setup_single_output_varying(fs_reg &reg,
+                                            const glsl_type *type,
+                                            unsigned &location)
+{
+   if (type->is_array() || type->is_matrix()) {
+      const struct glsl_type *elem_type = glsl_get_array_element(type);
+      const unsigned length = glsl_get_length(type);
+
+      for (unsigned i = 0; i < length; i++) {
+         nir_setup_single_output_varying(reg, elem_type, location);
+      }
+   } else if (type->is_record()) {
+      for (unsigned i = 0; i < type->length; i++) {
+         const struct glsl_type *field_type = type->fields.structure[i].type;
+         nir_setup_single_output_varying(reg, field_type, location);
+      }
+   } else {
+      assert(type->is_scalar() || type->is_vector());
+      this->outputs[location] = reg;
+      this->output_components[location] = type->vector_elements;
+      reg = offset(reg, bld, 4);
+      location++;
    }
 }
 
@@ -130,13 +157,11 @@ fs_visitor::nir_setup_outputs(nir_shader *shader)
                                : var->type->vector_elements;
 
       switch (stage) {
-      case MESA_SHADER_VERTEX:
-         for (int i = 0; i < ALIGN(type_size(var->type), 4) / 4; i++) {
-            int output = var->data.location + i;
-            this->outputs[output] = offset(reg, bld, 4 * i);
-            this->output_components[output] = vector_elements;
-         }
+      case MESA_SHADER_VERTEX: {
+         unsigned location = var->data.location;
+         nir_setup_single_output_varying(reg, var->type, location);
          break;
+      }
       case MESA_SHADER_FRAGMENT:
          if (var->data.index > 0) {
             assert(var->data.location == FRAG_RESULT_DATA0);

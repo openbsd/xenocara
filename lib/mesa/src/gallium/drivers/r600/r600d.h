@@ -130,6 +130,7 @@
 #define EVENT_TYPE_SAMPLE_STREAMOUTSTATS	0x20
 #define EVENT_TYPE_FLUSH_AND_INV_DB_META       0x2c /* supported on r700+ */
 #define EVENT_TYPE_VGT_FLUSH                   0x24
+#define EVENT_TYPE_SQ_NON_EVENT                0x26
 #define EVENT_TYPE_FLUSH_AND_INV_CB_META	46 /* supported on r700+ */
 #define		EVENT_TYPE(x)                           ((x) << 0)
 #define		EVENT_INDEX(x)                          ((x) << 8)

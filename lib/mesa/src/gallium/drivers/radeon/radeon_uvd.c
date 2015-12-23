@@ -951,6 +951,8 @@ static void ruvd_end_frame(struct pipe_video_codec *decoder,
 	dec->msg->body.decode.db_pitch = dec->base.width;
 
 	dt = dec->set_dtb(dec->msg, (struct vl_video_buffer *)target);
+	if (((struct r600_common_screen*)dec->screen)->family >= CHIP_STONEY)
+		dec->msg->body.decode.dt_wa_chroma_top_offset = dec->msg->body.decode.dt_pitch / 2;
 
 	switch (u_reduce_video_profile(picture->profile)) {
 	case PIPE_VIDEO_FORMAT_MPEG4_AVC:

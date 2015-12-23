@@ -2870,6 +2870,12 @@ Converter::handleInstruction(const struct tgsi_full_instruction *insn)
          bb->cfg.attach(&loopBB->cfg, Graph::Edge::BACK);
       }
       setPosition(reinterpret_cast<BasicBlock *>(breakBBs.pop().u.p), true);
+
+      // If the loop never breaks (e.g. only has RET's inside), then there
+      // will be no way to get to the break bb. However BGNLOOP will have
+      // already made a PREBREAK to it, so it must be in the CFG.
+      if (getBB()->cfg.incidentCount() == 0)
+         loopBB->cfg.attach(&getBB()->cfg, Graph::Edge::TREE);
    }
       break;
    case TGSI_OPCODE_BRK:

@@ -981,7 +981,7 @@ brw_upload_wm_abo_surfaces(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
    /* _NEW_PROGRAM */
-   struct gl_shader_program *prog = ctx->Shader._CurrentFragmentProgram;
+   struct gl_shader_program *prog = ctx->_Shader->_CurrentFragmentProgram;
 
    if (prog) {
       /* BRW_NEW_FS_PROG_DATA */
@@ -1257,7 +1257,7 @@ brw_upload_wm_image_surfaces(struct brw_context *brw)
 {
    struct gl_context *ctx = &brw->ctx;
    /* BRW_NEW_FRAGMENT_PROGRAM */
-   struct gl_shader_program *prog = ctx->Shader._CurrentFragmentProgram;
+   struct gl_shader_program *prog = ctx->_Shader->_CurrentFragmentProgram;
 
    if (prog) {
       /* BRW_NEW_FS_PROG_DATA, BRW_NEW_IMAGE_UNITS, _NEW_TEXTURE */

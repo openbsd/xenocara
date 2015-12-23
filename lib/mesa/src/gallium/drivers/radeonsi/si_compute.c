@@ -33,14 +33,6 @@
 #include "sid.h"
 
 #define MAX_GLOBAL_BUFFERS 20
-#if HAVE_LLVM < 0x0305
-#define NUM_USER_SGPRS 2
-#else
-/* XXX: Even though we don't pass the scratch buffer via user sgprs any more
- * LLVM still expects that we specify 4 USER_SGPRS so it can remain compatible
- * with older mesa. */
-#define NUM_USER_SGPRS 4
-#endif
 
 struct si_compute {
 	struct si_context *ctx;
@@ -241,7 +233,6 @@ static void si_launch_grid(
 	uint64_t kernel_args_va;
 	uint64_t scratch_buffer_va = 0;
 	uint64_t shader_va;
-	unsigned arg_user_sgpr_count = NUM_USER_SGPRS;
 	unsigned i;
 	struct si_shader *shader = &program->shader;
 	unsigned lds_blocks;
@@ -365,20 +356,7 @@ static void si_launch_grid(
 	si_pm4_set_reg(pm4, R_00B830_COMPUTE_PGM_LO, (shader_va >> 8) & 0xffffffff);
 	si_pm4_set_reg(pm4, R_00B834_COMPUTE_PGM_HI, shader_va >> 40);
 
-	si_pm4_set_reg(pm4, R_00B848_COMPUTE_PGM_RSRC1,
-		/* We always use at least 3 VGPRS, these come from
-		 * TIDIG_COMP_CNT.
-		 * XXX: The compiler should account for this.
-		 */
-		S_00B848_VGPRS((MAX2(3, shader->num_vgprs) - 1) / 4)
-		/* We always use at least 4 + arg_user_sgpr_count.  The 4 extra
-		 * sgprs are from TGID_X_EN, TGID_Y_EN, TGID_Z_EN, TG_SIZE_EN
-		 * XXX: The compiler should account for this.
-		 */
-		|  S_00B848_SGPRS(((MAX2(4 + arg_user_sgpr_count,
-		                        shader->num_sgprs)) - 1) / 8)
-		|  S_00B028_FLOAT_MODE(shader->float_mode))
-		;
+	si_pm4_set_reg(pm4, R_00B848_COMPUTE_PGM_RSRC1, shader->rsrc1);
 
 	lds_blocks = shader->lds_size;
 	/* XXX: We are over allocating LDS.  For SI, the shader reports LDS in
@@ -394,17 +372,10 @@ static void si_launch_grid(
 
 	assert(lds_blocks <= 0xFF);
 
-	si_pm4_set_reg(pm4, R_00B84C_COMPUTE_PGM_RSRC2,
-		S_00B84C_SCRATCH_EN(shader->scratch_bytes_per_wave > 0)
-		| S_00B84C_USER_SGPR(arg_user_sgpr_count)
-		| S_00B84C_TGID_X_EN(1)
-		| S_00B84C_TGID_Y_EN(1)
-		| S_00B84C_TGID_Z_EN(1)
-		| S_00B84C_TG_SIZE_EN(1)
-		| S_00B84C_TIDIG_COMP_CNT(2)
-		| S_00B84C_LDS_SIZE(lds_blocks)
-		| S_00B84C_EXCP_EN(0))
-		;
+	shader->rsrc2 &= C_00B84C_LDS_SIZE;
+	shader->rsrc2 |=  S_00B84C_LDS_SIZE(lds_blocks);
+
+	si_pm4_set_reg(pm4, R_00B84C_COMPUTE_PGM_RSRC2, shader->rsrc2);
 	si_pm4_set_reg(pm4, R_00B854_COMPUTE_RESOURCE_LIMITS, 0);
 
 	si_pm4_set_reg(pm4, R_00B858_COMPUTE_STATIC_THREAD_MGMT_SE0,

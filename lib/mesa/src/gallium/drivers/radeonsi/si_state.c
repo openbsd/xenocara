@@ -2979,6 +2979,28 @@ static void si_need_gfx_cs_space(struct pipe_context *ctx, unsigned num_dw,
 	si_need_cs_space((struct si_context*)ctx, num_dw, include_draw_vbo);
 }
 
+static void si_init_border_color_buffer(struct si_context *sctx)
+{
+	struct si_pm4_state *pm4 = CALLOC_STRUCT(si_pm4_state);
+	if (!pm4)
+		return;
+
+	assert(sctx->scratch_buffer == NULL);
+	r600_resource_reference(&sctx->scratch_buffer, NULL);
+	sctx->scratch_buffer = si_resource_create_custom(&sctx->screen->b.b,
+							 PIPE_USAGE_DEFAULT,
+							 4096 * 16);
+
+	uint64_t va = sctx->scratch_buffer->gpu_address;
+
+	si_pm4_set_reg(pm4, R_028080_TA_BC_BASE_ADDR, va >> 8);
+	if (sctx->b.chip_class >= CIK)
+		si_pm4_set_reg(pm4, R_028084_TA_BC_BASE_ADDR_HI, va >> 40);
+	si_pm4_add_bo(pm4, sctx->scratch_buffer, RADEON_USAGE_READ,
+		      RADEON_PRIO_SHADER_DATA);
+	si_pm4_set_state(sctx, ta_bordercolor_base, pm4);
+}
+
 static void si_init_config(struct si_context *sctx);
 
 void si_init_state_functions(struct si_context *sctx)
@@ -3045,6 +3067,7 @@ void si_init_state_functions(struct si_context *sctx)
 	}
 
 	si_init_config(sctx);
+	si_init_border_color_buffer(sctx);
 }
 
 static void

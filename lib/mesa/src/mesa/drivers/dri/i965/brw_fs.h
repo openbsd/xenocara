@@ -197,10 +197,10 @@ public:
    fs_reg *emit_frontfacing_interpolation();
    fs_reg *emit_samplepos_setup();
    fs_reg *emit_sampleid_setup();
-   void emit_general_interpolation(fs_reg attr, const char *name,
+   void emit_general_interpolation(fs_reg *attr, const char *name,
                                    const glsl_type *type,
                                    glsl_interp_qualifier interpolation_mode,
-                                   int location, bool mod_centroid,
+                                   int *location, bool mod_centroid,
                                    bool mod_sample);
    fs_reg *emit_vs_system_value(int location);
    void emit_interpolation_setup_gen4();
@@ -240,6 +240,8 @@ public:
 
    void emit_nir_code();
    void nir_setup_inputs(nir_shader *shader);
+   void nir_setup_single_output_varying(fs_reg &reg, const glsl_type *type,
+                                        unsigned &location);
    void nir_setup_outputs(nir_shader *shader);
    void nir_setup_uniforms(nir_shader *shader);
    void nir_setup_uniform(nir_variable *var);

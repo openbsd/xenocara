@@ -1087,6 +1087,11 @@ ttn_tex(struct ttn_compile *c, nir_alu_dest dest, nir_ssa_def **src)
       op = nir_texop_tex;
       num_srcs = 1;
       break;
+   case TGSI_OPCODE_TEX2:
+      op = nir_texop_tex;
+      num_srcs = 1;
+      samp = 2;
+      break;
    case TGSI_OPCODE_TXP:
       op = nir_texop_tex;
       num_srcs = 2;
@@ -1242,10 +1247,12 @@ ttn_tex(struct ttn_compile *c, nir_alu_dest dest, nir_ssa_def **src)
    }
 
    if (instr->is_shadow) {
-      if (instr->coord_components < 3)
-         instr->src[src_number].src = nir_src_for_ssa(ttn_channel(b, src[0], Z));
-      else
+      if (instr->coord_components == 4)
+         instr->src[src_number].src = nir_src_for_ssa(ttn_channel(b, src[1], X));
+      else if (instr->coord_components == 3)
          instr->src[src_number].src = nir_src_for_ssa(ttn_channel(b, src[0], W));
+      else
+         instr->src[src_number].src = nir_src_for_ssa(ttn_channel(b, src[0], Z));
 
       instr->src[src_number].src_type = nir_tex_src_comparitor;
       src_number++;
@@ -1651,6 +1658,7 @@ ttn_emit_instruction(struct ttn_compile *c)
    case TGSI_OPCODE_TXL:
    case TGSI_OPCODE_TXB:
    case TGSI_OPCODE_TXD:
+   case TGSI_OPCODE_TEX2:
    case TGSI_OPCODE_TXL2:
    case TGSI_OPCODE_TXB2:
    case TGSI_OPCODE_TXQ_LZ:

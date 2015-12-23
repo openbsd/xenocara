@@ -153,7 +153,7 @@ enum a4xx_vtx_fmt {
 
 enum a4xx_tex_fmt {
 	TFMT4_5_6_5_UNORM = 11,
-	TFMT4_5_5_5_1_UNORM = 10,
+	TFMT4_5_5_5_1_UNORM = 9,
 	TFMT4_4_4_4_4_UNORM = 8,
 	TFMT4_X8Z24_UNORM = 71,
 	TFMT4_10_10_10_2_UNORM = 33,
@@ -2717,6 +2717,12 @@ static inline uint32_t A4XX_TEX_SAMP_0_WRAP_R(enum a4xx_tex_clamp val)
 static inline uint32_t A4XX_TEX_SAMP_0_ANISO(enum a4xx_tex_aniso val)
 {
 	return ((val) << A4XX_TEX_SAMP_0_ANISO__SHIFT) & A4XX_TEX_SAMP_0_ANISO__MASK;
+}
+#define A4XX_TEX_SAMP_0_LOD_BIAS__MASK				0xfff80000
+#define A4XX_TEX_SAMP_0_LOD_BIAS__SHIFT				19
+static inline uint32_t A4XX_TEX_SAMP_0_LOD_BIAS(float val)
+{
+	return ((((int32_t)(val * 256.0))) << A4XX_TEX_SAMP_0_LOD_BIAS__SHIFT) & A4XX_TEX_SAMP_0_LOD_BIAS__MASK;
 }
 
 #define REG_A4XX_TEX_SAMP_1					0x00000001
