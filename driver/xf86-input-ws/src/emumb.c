@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.13 2012/07/08 14:22:03 shadchin Exp $ */
+/*	$OpenBSD: emumb.c,v 1.14 2015/12/25 15:08:28 matthieu Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -35,6 +35,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <sys/time.h>
 
 #include <xorg-server.h>
 #include <X11/Xatom.h>

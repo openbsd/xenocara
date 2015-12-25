@@ -1,4 +1,4 @@
-/*	$OpenBSD: emuwheel.c,v 1.2 2012/07/08 13:51:11 shadchin Exp $	*/
+/*	$OpenBSD: emuwheel.c,v 1.3 2015/12/25 15:08:28 matthieu Exp $	*/
 /*
 * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
 * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -35,6 +35,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <sys/time.h>
 
 #include <xorg-server.h>
 #include <X11/Xatom.h>
