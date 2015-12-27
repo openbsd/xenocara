@@ -101,14 +101,13 @@ am__EXEEXT_2 = drmsl$(EXEEXT) hash$(EXEEXT) random$(EXEEXT) \
 	$(am__EXEEXT_1)
 dristat_SOURCES = dristat.c
 dristat_OBJECTS = dristat.$(OBJEXT)
-dristat_LDADD = $(LDADD)
-am__DEPENDENCIES_1 =
-@HAVE_LIBUDEV_TRUE@am__DEPENDENCIES_2 = libdrmtest.la \
-@HAVE_LIBUDEV_TRUE@	$(am__DEPENDENCIES_1)
-dristat_DEPENDENCIES = $(top_builddir)/libdrm.la $(am__DEPENDENCIES_2)
+dristat_DEPENDENCIES =
 drmsl_SOURCES = drmsl.c
 drmsl_OBJECTS = drmsl.$(OBJEXT)
 drmsl_LDADD = $(LDADD)
+am__DEPENDENCIES_1 =
+@HAVE_LIBUDEV_TRUE@am__DEPENDENCIES_2 = libdrmtest.la \
+@HAVE_LIBUDEV_TRUE@	$(am__DEPENDENCIES_1)
 drmsl_DEPENDENCIES = $(top_builddir)/libdrm.la $(am__DEPENDENCIES_2)
 drmstat_SOURCES = drmstat.c
 drmstat_OBJECTS = drmstat.$(OBJEXT)
@@ -407,6 +406,7 @@ AM_CFLAGS = \
 	-I $(top_srcdir)
 
 LDADD = $(top_builddir)/libdrm.la $(am__append_7)
+dristat_LDADD = -lm
 @HAVE_LIBUDEV_TRUE@check_LTLIBRARIES = libdrmtest.la
 @HAVE_LIBUDEV_TRUE@libdrmtest_la_SOURCES = \
 @HAVE_LIBUDEV_TRUE@	drmtest.c \

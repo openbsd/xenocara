@@ -20,7 +20,7 @@
 
 AC_PREREQ([2.63])
 AC_INIT([libdrm],
-        [2.4.64],
+        [2.4.65],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=DRI],
         [libdrm])
 
@@ -173,8 +173,8 @@ MAYBE_WARN="-Wall -Wextra \
 -Wpacked -Wswitch-enum -Wmissing-format-attribute \
 -Wstrict-aliasing=2 -Winit-self \
 -Wdeclaration-after-statement -Wold-style-definition \
--Wno-missing-field-initializers -Wno-unused-parameter \
--Wno-attributes -Wno-long-long -Winline"
+-Wno-unused-parameter \
+-Wno-attributes -Wno-long-long -Winline -Wshadow"
 
 # invalidate cached value if MAYBE_WARN has changed
 if test "x$libdrm_cv_warn_maybe" != "x$MAYBE_WARN"; then

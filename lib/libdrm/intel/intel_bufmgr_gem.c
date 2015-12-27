@@ -278,6 +278,11 @@ static void drm_intel_gem_bo_unreference(drm_intel_bo *bo);
 
 static void drm_intel_gem_bo_free(drm_intel_bo *bo);
 
+static inline drm_intel_bo_gem *to_bo_gem(drm_intel_bo *bo)
+{
+        return (drm_intel_bo_gem *)bo;
+}
+
 static unsigned long
 drm_intel_gem_bo_tile_size(drm_intel_bufmgr_gem *bufmgr_gem, unsigned long size,
 			   uint32_t *tiling_mode)
@@ -2127,11 +2132,10 @@ drm_intel_gem_bo_exec(drm_intel_bo *bo, int used,
 		      drm_clip_rect_t * cliprects, int num_cliprects, int DR4)
 {
 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
-	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
 	struct drm_i915_gem_execbuffer execbuf;
 	int ret, i;
 
-	if (bo_gem->has_error)
+	if (to_bo_gem(bo)->has_error)
 		return -ENOMEM;
 
 	pthread_mutex_lock(&bufmgr_gem->lock);
@@ -2176,8 +2180,7 @@ drm_intel_gem_bo_exec(drm_intel_bo *bo, int used,
 		drm_intel_gem_dump_validation_list(bufmgr_gem);
 
 	for (i = 0; i < bufmgr_gem->exec_count; i++) {
-		drm_intel_bo *bo = bufmgr_gem->exec_bos[i];
-		drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
+		drm_intel_bo_gem *bo_gem = to_bo_gem(bufmgr_gem->exec_bos[i]);
 
 		bo_gem->idle = false;
 
@@ -2201,6 +2204,9 @@ do_exec2(drm_intel_bo *bo, int used, drm_intel_context *ctx,
 	struct drm_i915_gem_execbuffer2 execbuf;
 	int ret = 0;
 	int i;
+
+	if (to_bo_gem(bo)->has_error)
+		return -ENOMEM;
 
 	switch (flags & 0x7) {
 	default:
@@ -2274,8 +2280,7 @@ skip_execution:
 		drm_intel_gem_dump_validation_list(bufmgr_gem);
 
 	for (i = 0; i < bufmgr_gem->exec_count; i++) {
-		drm_intel_bo *bo = bufmgr_gem->exec_bos[i];
-		drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *)bo;
+		drm_intel_bo_gem *bo_gem = to_bo_gem(bufmgr_gem->exec_bos[i]);
 
 		bo_gem->idle = false;
 
@@ -2442,14 +2447,19 @@ drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr, int prime_fd, int s
 	struct drm_i915_gem_get_tiling get_tiling;
 	drmMMListHead *list;
 
+	pthread_mutex_lock(&bufmgr_gem->lock);
 	ret = drmPrimeFDToHandle(bufmgr_gem->fd, prime_fd, &handle);
+	if (ret) {
+		DBG("create_from_prime: failed to obtain handle from fd: %s\n", strerror(errno));
+		pthread_mutex_unlock(&bufmgr_gem->lock);
+		return NULL;
+	}
 
 	/*
 	 * See if the kernel has already returned this buffer to us. Just as
 	 * for named buffers, we must not create two bo's pointing at the same
 	 * kernel object
 	 */
-	pthread_mutex_lock(&bufmgr_gem->lock);
 	for (list = bufmgr_gem->named.next;
 	     list != &bufmgr_gem->named;
 	     list = list->next) {
@@ -2459,12 +2469,6 @@ drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr, int prime_fd, int s
 			pthread_mutex_unlock(&bufmgr_gem->lock);
 			return &bo_gem->bo;
 		}
-	}
-
-	if (ret) {
-	  fprintf(stderr,"ret is %d %d\n", ret, errno);
-	  pthread_mutex_unlock(&bufmgr_gem->lock);
-		return NULL;
 	}
 
 	bo_gem = calloc(1, sizeof(*bo_gem));
@@ -2507,6 +2511,7 @@ drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr, int prime_fd, int s
 		       DRM_IOCTL_I915_GEM_GET_TILING,
 		       &get_tiling);
 	if (ret != 0) {
+		DBG("create_from_prime: failed to get tiling: %s\n", strerror(errno));
 		drm_intel_gem_bo_unreference(&bo_gem->bo);
 		return NULL;
 	}

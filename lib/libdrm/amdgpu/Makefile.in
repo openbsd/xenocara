@@ -76,10 +76,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = amdgpu
 DIST_COMMON = $(libdrm_amdgpuinclude_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(srcdir)/libdrm_amdgpu.pc.in \
-	$(top_srcdir)/build-aux/depcomp
+	$(srcdir)/Makefile.in $(srcdir)/Makefile.sources \
+	$(srcdir)/libdrm_amdgpu.pc.in $(top_srcdir)/build-aux/depcomp
+subdir = amdgpu
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -123,9 +123,10 @@ am__installdirs = "$(DESTDIR)$(libdrm_amdgpu_ladir)" \
 	"$(DESTDIR)$(libdrm_amdgpuincludedir)"
 LTLIBRARIES = $(libdrm_amdgpu_la_LTLIBRARIES)
 libdrm_amdgpu_la_DEPENDENCIES = ../libdrm.la
-am_libdrm_amdgpu_la_OBJECTS = amdgpu_bo.lo amdgpu_cs.lo \
-	amdgpu_device.lo amdgpu_gpu_info.lo amdgpu_vamgr.lo \
-	util_hash.lo util_hash_table.lo
+am__objects_1 = amdgpu_bo.lo amdgpu_cs.lo amdgpu_device.lo \
+	amdgpu_gpu_info.lo amdgpu_vamgr.lo util_hash.lo \
+	util_hash_table.lo
+am_libdrm_amdgpu_la_OBJECTS = $(am__objects_1)
 libdrm_amdgpu_la_OBJECTS = $(am_libdrm_amdgpu_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -335,18 +336,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = \
-	$(WARN_CFLAGS) -Wno-switch-enum \
-	-I$(top_srcdir) \
-	$(PTHREADSTUBS_CFLAGS) \
-	-I$(top_srcdir)/include/drm
-
-libdrm_amdgpu_la_LTLIBRARIES = libdrm_amdgpu.la
-libdrm_amdgpu_ladir = $(libdir)
-libdrm_amdgpu_la_LDFLAGS = -version-number 1:0:0 -no-undefined
-libdrm_amdgpu_la_LIBADD = ../libdrm.la @PTHREADSTUBS_LIBS@
-libdrm_amdgpu_la_SOURCES = \
-	amdgpu.h \
+LIBDRM_AMDGPU_FILES := \
 	amdgpu_bo.c \
 	amdgpu_cs.c \
 	amdgpu_device.c \
@@ -358,10 +348,22 @@ libdrm_amdgpu_la_SOURCES = \
 	util_hash_table.c \
 	util_hash_table.h
 
-libdrm_amdgpuincludedir = ${includedir}/libdrm
-libdrm_amdgpuinclude_HEADERS = \
+LIBDRM_AMDGPU_H_FILES := \
 	amdgpu.h
 
+AM_CFLAGS = \
+	$(WARN_CFLAGS) \
+	-I$(top_srcdir) \
+	$(PTHREADSTUBS_CFLAGS) \
+	-I$(top_srcdir)/include/drm
+
+libdrm_amdgpu_la_LTLIBRARIES = libdrm_amdgpu.la
+libdrm_amdgpu_ladir = $(libdir)
+libdrm_amdgpu_la_LDFLAGS = -version-number 1:0:0 -no-undefined
+libdrm_amdgpu_la_LIBADD = ../libdrm.la @PTHREADSTUBS_LIBS@
+libdrm_amdgpu_la_SOURCES = $(LIBDRM_AMDGPU_FILES)
+libdrm_amdgpuincludedir = ${includedir}/libdrm
+libdrm_amdgpuinclude_HEADERS = $(LIBDRM_AMDGPU_H_FILES)
 pkgconfig_DATA = libdrm_amdgpu.pc
 TESTS = amdgpu-symbol-check
 EXTRA_DIST = $(TESTS)
@@ -369,7 +371,7 @@ all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/Makefile.sources $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -390,6 +392,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
+$(srcdir)/Makefile.sources:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
