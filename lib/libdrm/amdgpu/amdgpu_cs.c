@@ -32,6 +32,9 @@
 #include <pthread.h>
 #include <sched.h>
 #include <sys/ioctl.h>
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#endif
 
 #include "xf86drm.h"
 #include "amdgpu_drm.h"
@@ -63,10 +66,6 @@ int amdgpu_cs_ctx_create(amdgpu_device_handle dev,
 
 	gpu_context->dev = dev;
 
-	r = pthread_mutex_init(&gpu_context->sequence_mutex, NULL);
-	if (r)
-		goto error;
-
 	/* Create the context */
 	memset(&args, 0, sizeof(args));
 	args.in.op = AMDGPU_CTX_OP_ALLOC_CTX;
@@ -80,7 +79,6 @@ int amdgpu_cs_ctx_create(amdgpu_device_handle dev,
 	return 0;
 
 error:
-	pthread_mutex_destroy(&gpu_context->sequence_mutex);
 	free(gpu_context);
 	return r;
 }
@@ -100,8 +98,6 @@ int amdgpu_cs_ctx_free(amdgpu_context_handle context)
 
 	if (NULL == context)
 		return -EINVAL;
-
-	pthread_mutex_destroy(&context->sequence_mutex);
 
 	/* now deal with kernel side */
 	memset(&args, 0, sizeof(args));
@@ -200,8 +196,6 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 		chunk_data[i].ib_data.flags = ib->flags;
 	}
 
-	pthread_mutex_lock(&context->sequence_mutex);
-
 	if (user_fence) {
 		i = cs.in.num_chunks++;
 
@@ -254,7 +248,6 @@ static int amdgpu_cs_submit_one(amdgpu_context_handle context,
 	ibs_request->seq_no = cs.out.handle;
 
 error_unlock:
-	pthread_mutex_unlock(&context->sequence_mutex);
 	free(dependencies);
 	return r;
 }
