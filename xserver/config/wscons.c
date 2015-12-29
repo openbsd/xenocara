@@ -139,7 +139,7 @@ wscons_add_keyboard(void)
             break;
         }
     for (i = 0; kbdvar[i].val; i++)
-        if (wsenc == kbdvar[i].val || KB_VARIANT(wsenc) == kbdvar[i].val) {
+        if ((wsenc & kbdvar[i].val) == kbdvar[i].val) {
             LogMessageVerb(X_INFO, 3, "wskbd: using variant %s\n",
                            kbdvar[i].name);
             input_options = input_option_new(input_options,
@@ -147,7 +147,7 @@ wscons_add_keyboard(void)
             break;
         }
     for (i = 0; kbdopt[i].val; i++)
-        if (KB_VARIANT(wsenc) == kbdopt[i].val) {
+        if (KB_VARIANT(wsenc) & kbdopt[i].val) {
             LogMessageVerb(X_INFO, 3, "wskbd: using option %s\n",
                            kbdopt[i].name);
             input_options = input_option_new(input_options,
