@@ -1,0 +1,12 @@
+/* freetype2_30.css */
+
+@import "freetype2.css";
+
+.bar {
+  background: #06175E
+              url("../image/fond3_30.png")
+              no-repeat
+              right
+              top; }
+#top a {
+  border-bottom: 2px solid #16276E; }

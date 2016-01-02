@@ -1,231 +1,284 @@
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en"
-          "http://www.w3.org/TR/REC-html40/loose.dtd">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="en">
+
 <head>
   <meta http-equiv="Content-Type"
-        content="text/html; charset=iso-8859-1">
+        content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type"
+        content="text/css">
+  <meta http-equiv="Content-Script-Type"
+        content="text/javascript">
+  <meta name="description"
+        content="FreeType Documentation">
   <meta name="Author"
         content="David Turner">
-  <title>FreeType Glyph Conventions</title>
+
+  <link rel="icon"
+        href="../image/favicon_-90.ico">
+  <link rel="shortcut icon"
+        href="../image/favicon_-90.ico">
+  <link rel="stylesheet"
+        type="text/css"
+        href="../css/freetype2_-90.css">
+
+  <script type="text/javascript"
+          src="../javascript/jquery-1.11.0.min.js">
+  </script>
+  <script type="text/javascript"
+          src="../javascript/jquery.ba-resize.min.js">
+  </script>
+  <script type="text/javascript"
+          src="../javascript/freetype2.js">
+  </script>
+
+  <title>FreeType Glyph Conventions / IV</title>
 </head>
 
-<body text="#000000"
-      bgcolor="#FFFFFF"
-      link="#0000EF"
-      vlink="#51188E"
-      alink="#FF0000">
 
-<h1 align=center>
-  FreeType Glyph Conventions
-</h1>
+<body>
 
-<h2 align=center>
-  Version&nbsp;2.1
-</h2>
-
-<h3 align=center>
-  Copyright&nbsp;1998-2000 David Turner (<a
-  href="mailto:david@freetype.org">david@freetype.org</a>)<br>
-  Copyright&nbsp;2000 The FreeType Development Team (<a
-  href="mailto:devel@freetype.org">devel@freetype.org</a>)
-</h3>
-
-<center>
-<table width="65%">
-<tr><td>
-
-  <center>
-  <table width="100%"
-         border=0
-         cellpadding=5>
-  <tr bgcolor="#CCFFCC"
-      valign=center>
-    <td align=center
-        width="30%">
-      <a href="glyphs-3.html">Previous</a>
-    </td>
-    <td align=center
-        width="30%">
-      <a href="index.html">Contents</a>
-    </td>
-    <td align=center
-        width="30%">
-      <a href="glyphs-5.html">Next</a>
-    </td>
-  </tr>
-  </table>
-  </center>
-
-  <p><hr></p>
-
-  <table width="100%">
-  <tr bgcolor="#CCCCFF"
-      valign=center><td>
-    <h2>
-      IV. Kerning
-    </h2>
-  </td></tr>
-  </table>
-
-    <p>The term <em>kerning</em> refers to specific information used to
-    adjust the relative positions of coincident glyphs in a string of text.
-    This section describes several types of kerning information, as well as
-    the way to process them when performing text layout.</p>
+<div id="top"
+     class="bar">
+  <h1><a href="http://freetype.org/index.html">FreeType</a> Glyph
+    Conventions&nbsp;/&nbsp;IV</h1>
+</div>
 
 
-    <a name="section-1">
-    <h3>
-      1. Kerning pairs
-    </h3>
+<div id="wrapper">
 
-    <p>Kerning consists of modifying the spacing between two successive
-    glyphs according to their outlines.  For example, a "T" and a "y" can be
-    easily moved closer, as the top of the "y" fits nicely under the upper
-    right bar of the "T".</p>
-
-    <p>When laying out text with only their standard widths, some
-    consecutive glyphs seem a bit too close or too distant.  For example,
-    the space between the "A" and the "V" in the following word seems a
-    little wider than needed.</p>
-
-    <center><p>
-      <img src="bravo_unkerned.png"
-           height=37 width=116
-           alt="the word 'bravo' unkerned">
-    </p></center>
-
-    <p>Compare this to the same word, where the distance between these two
-    letters has been slightly reduced:</p>
-
-    <center><p>
-      <img src="bravo_kerned.png"
-           height=37 width=107
-           alt="the word 'bravo' with kerning">
-    </p></center>
-
-    <p>As you can see, this adjustment can make a great difference.  Some
-    font faces thus include a table containing kerning distances for a set
-    of given glyph pairs for text layout.</p>
-
-    <ul>
-      <li>
-        <p>The pairs are ordered, i.e., the space for pair (A,V) isn't
-        necessarily the space for pair (V,A).  They also index glyphs, and
-        not characters.</p>
-      </li>
-      <li>
-        <p>Kerning distances can be expressed in horizontal or vertical
-        directions, depending on layout and/or script.  For example, some
-        horizontal layouts like Arabic can make use of vertical kerning
-        adjustments between successive glyphs.  A vertical script can have
-        vertical kerning distances.</p>
-      </li>
-      <li>
-        <p>Kerning distances are expressed in grid units.  They are usually
-        oriented in the <i>X</i>&nbsp;axis, which means that a negative
-        value indicates that two glyphs must be set closer in a horizontal
-        layout.</p>
-      </li>
-    </ul>
+<div class="colmask leftmenu">
+  <div class="colright">
+    <div class="col1wrap">
+      <div class="col1">
 
 
-    <a name="section-2">
-    <h3>
-      2. Applying kerning
-    </h3>
+        <!-- ************************************************** -->
 
-    <p>Applying kerning when rendering text is a rather easy process.  It
-    merely consists in adding the scaled kern distance to the pen position
-    before writing each next glyph.  However, the typographically correct
-    renderer must take a few more details in consideration.</p>
+	<div id="kerning">
+	  <h2>IV. Kerning</h2>
 
-    <p>The "sliding dot" problem is a good example: Many font faces include
-    a kerning distance between capital letters like "T" or "F" and a
-    following dot ("."), in order to slide the latter glyph just right to
-    their main leg:</p>
-
-    <center><p>
-      <img src="twlewis1.png"
-           height=38 width=314
-           alt="example for sliding dots">
-    </p></center>
-
-    <p>This sometimes requires additional adjustments between the dot and
-    the letter following it, depending on the shapes of the enclosing
-    letters.  When applying "standard" kerning adjustments, the previous
-    sentence would become:</p>
-
-    <center><p>
-      <img src="twlewis2.png"
-           height=36 width=115
-           alt="example for too much kerning">
-    </p></center>
-
-    <p>This is clearly too contracted.  The solution here, as exhibited in
-    the first example, is to only slide the dots when possible.  Of course,
-    this requires a certain knowledge of the text's meaning.  The above
-    adjustments would not necessarily be welcome if we were rendering the
-    final dot of a given paragraph.</p.
-
-    <p>This is only one example, and there are many others showing that a
-    real typographer is needed to layout text properly.  If not available,
-    some kind of user interaction or tagging of the text could be used to
-    specify some adjustments, but in all cases, this requires some support
-    in applications and text libraries.</p>
-
-    <p>For more mundane and common uses, however, we can have a very simple
-    algorithm, which avoids the sliding dot problem, and others, though not
-    producing optimal results.  It can be seen as</p>
-
-    <ol>
-      <li>
-        Place the first glyph on the baseline.
-      </li>
-      <li>
-        Save the location of the pen position/origin in <tt>pen1</tt>.
-      </li>
-      <li>
-        Adjust the pen position with the kerning distance between the first
-        and second glyph.
-      </li>
-      <li>
-        Place the second glyph and compute the next pen position/origin in
-        <tt>pen2</tt>.
-      </li>
-      <li>
-        Use <tt>pen1</tt> as the next pen position if it is beyond
-        <tt>pen2</tt>, use <tt>pen2</tt> otherwise.
-      </li>
-    </ol>
+	  <p>The term <em>kerning</em> refers to specific information
+	    used to adjust the relative positions of successive glyphs
+	    in a string of text.  This section describes several types
+	    of kerning information, as well as the way to process them
+	    when performing text layout.</p>
 
 
-  <p><hr></p>
+	  <h3 id="section-1">1. Kerning pairs</h3>
 
-  <center>
-  <table width="100%"
-         border=0
-         cellpadding=5>
-  <tr bgcolor="#CCFFCC"
-      valign=center>
-    <td align=center
-        width="30%">
-      <a href="glyphs-3.html">Previous</a>
-    </td>
-    <td align=center
-        width="30%">
-      <a href="index.html">Contents</a>
-    </td>
-    <td align=center
-        width="30%">
-      <a href="glyphs-5.html">Next</a>
-    </td>
-  </tr>
-  </table>
-  </center>
+	  <p>Kerning consists of modifying the spacing between two
+	    successive glyphs according to their outlines.  For
+	    example, a &lsquo;T&rsquo; and a &lsquo;y&rsquo; can be
+	    easily moved closer, as the top of the &lsquo;y&rsquo;
+	    fits nicely under the upper right bar of the
+	    &lsquo;T&rsquo;.</p>
 
-</td></tr>
-</table>
-</center>
+	  <p>When laying out text with only their standard widths,
+	    some consecutive glyphs seem a bit too close or too
+	    distant.  For example, the space between the
+	    &lsquo;A&rsquo; and the &lsquo;V&rsquo; in the following
+	    word seems a little wider than needed.</p>
+
+	  <p align="center">
+	    <img src="bravo_unkerned.png"
+		 height="37"
+		 width="116"
+		 alt="the word 'bravo' unkerned">
+	  </p>
+
+	  <p>Compare this to the same word, where the distance between
+	    these two letters has been slightly reduced:</p>
+
+	  <p align="center">
+	    <img src="bravo_kerned.png"
+		 height="37"
+		 width="107"
+		 alt="the word 'bravo' with kerning">
+	  </p>
+
+	  <p>As you can see, this adjustment can make a great
+	    difference.  Some font faces thus include a table
+	    containing kerning distances for a set of given glyph
+	    pairs for text layout.</p>
+
+	  <ul>
+	    <li>
+              <p>The pairs are ordered, i.e., the space for pair
+		&lsquo;(A,V)&rsquo; isn't necessarily the space for
+		pair &lsquo;(V,A)&rsquo;.  They also use glyph
+		indices, not character codes.</p>
+	    </li>
+	    <li>
+              <p>Kerning distances can be expressed in horizontal or
+		vertical directions, depending on the layout and/or
+		the script.  For example, some horizontal layouts like
+		Arabic can make use of vertical kerning adjustments
+		between successive glyphs.  A vertical script can have
+		vertical kerning distances.</p>
+	    </li>
+	    <li>
+              <p>Kerning distances are expressed in grid units.  They
+		are usually oriented in the <i>X</i>&nbsp;axis, which
+		means that a negative value indicates that two glyphs
+		must be set closer in a horizontal layout.</p>
+	    </li>
+	  </ul>
+
+	  <p>Note that OpenType fonts (OTF) provide two distinct
+	    mechanisms for kerning, using the &lsquo;kern&rsquo; and
+	    &lsquo;GPOS&rsquo; tables, respectively, which are part of
+	    the OTF files.  Older fonts only contain the former, while
+	    recent fonts contain both tables or even
+	    &lsquo;GPOS&rsquo; data only.  FreeType only supports
+	    kerning via the (rather simple) &lsquo;kern&rsquo; table.
+	    For the interpretation of kerning data in the (highly
+	    sophisticated) &lsquo;GPOS&rsquo; table you need a
+	    higher-level library
+	    like <a href="http://icu-project.org/">ICU</a> or
+	    <a href="http://harfbuzz.org">HarfBuzz</a> since it can be
+	    context dependent (this is, the kerning may vary depending
+	    on the position within a text string, for example).</p>
+
+
+	  <h3 id="section-2">2. Applying kerning</h3>
+
+	  <p>Applying kerning when rendering text is a rather easy
+	    process.  It merely consists in adding the scaled kern
+	    distance to the pen position before rendering the next
+	    glyph.  However, the typographically correct renderer must
+	    take a few more details in consideration.</p>
+
+	  <p>The &lsquo;sliding dot&rsquo; problem is a good example:
+	    Many font faces include a kerning distance between capital
+	    letters like &lsquo;T&rsquo; or &lsquo;F&rsquo; and a
+	    following dot (&lsquo;.&rsquo;), in order to slide the
+	    latter glyph just right to their main leg.</p>
+
+	  <p align="center">
+	    <img src="twlewis1.png"
+		 height="38"
+		 width="314"
+		 alt="example for sliding dots">
+	  </p>
+
+	  <p>This sometimes requires additional adjustments between
+	    the dot and the letter following it, depending on the
+	    shapes of the enclosing letters.  When applying
+	    &lsquo;standard&rsquo; kerning adjustments, the previous
+	    sentence would become</p>
+
+	  <p align="center">
+	    <img src="twlewis2.png"
+		 height="36"
+		 width="115"
+		 alt="example for too much kerning">
+	  </p>
+
+	  <p>This is clearly too contracted.  The solution here, as
+	    exhibited in the first example, is to only slide the dots
+	    if the conditions fit.  Of course, this requires a certain
+	    knowledge of the text's meaning, and this is exactly what
+	    &lsquo;GPOS&rsquo; kerning is good for: Depending on the
+	    context, different kerning values can be applied to get a
+	    typographically correct result.</p>
+        </div>
+
+        <!-- ************************************************** -->
+
+        <div class="updated">
+          <p>Last update: 07-Dec-2014</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ************************************************** -->
+
+    <div class="col2">
+    </div>
+  </div>
+</div>
+
+
+<!-- ************************************************** -->
+
+<div id="TOC">
+  <ul>
+    <li class="funding">
+      <p><a href="https://pledgie.com/campaigns/24434">
+        <img alt="Click here to lend your support to the FreeType project and make a donation at pledgie.com!"
+             src="https://pledgie.com/campaigns/24434.png?skin_name=chrome"
+             border="0"
+             align="middle">
+      </a></p>
+
+      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+         target="_blank">
+        <img class="with-border"
+             src="http://api.flattr.com/button/flattr-badge-large.png"
+             alt="Flattr this"
+             title="Flattr this"
+             border="0"
+             align="middle">
+      </a></p>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/index.html">Home</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/index.html#news">News</a>
+    </li>
+    <li class="primary">
+      <a href="../index.html">Overview</a>
+    </li>
+    <li class="primary">
+      <a href="../documentation.html">Documentation</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/developer.html">Development</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/contact.html"
+         class="emphasis">Contact</a>
+    </li>
+
+    <li>
+      &nbsp; <!-- separate primary from secondary entries -->
+    </li>
+
+    <li class="secondary">
+      <a href="index.html">FreeType Glyph Conventions</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-1.html">Basic Typographic Concepts</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-2.html">Glyph Outlines</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-3.html">Glyph Metrics</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-4.html" class="current">Kerning</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-5.html">Text Processing</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-6.html">FreeType Outlines</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-7.html">FreeType Bitmaps</a>
+    </li>
+  </ul>
+</div>
+
+</div> <!-- id="wrapper" -->
+
+<div id="TOC-bottom">
+</div>
 
 </body>
 </html>

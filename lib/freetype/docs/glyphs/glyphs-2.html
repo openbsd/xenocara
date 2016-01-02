@@ -1,395 +1,472 @@
-<!doctype html public "-//w3c//dtd html 4.0 transitional//en"
-          "http://www.w3.org/TR/REC-html40/loose.dtd">
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="en">
+
 <head>
   <meta http-equiv="Content-Type"
-        content="text/html; charset=iso-8859-1">
+        content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type"
+        content="text/css">
+  <meta http-equiv="Content-Script-Type"
+        content="text/javascript">
+  <meta name="description"
+        content="FreeType Documentation">
   <meta name="Author"
         content="David Turner">
-  <title>FreeType Glyph Conventions</title>
+
+  <link rel="icon"
+        href="../image/favicon_-90.ico">
+  <link rel="shortcut icon"
+        href="../image/favicon_-90.ico">
+  <link rel="stylesheet"
+        type="text/css"
+        href="../css/freetype2_-90.css">
+
+  <script type="text/javascript"
+          src="../javascript/jquery-1.11.0.min.js">
+  </script>
+  <script type="text/javascript"
+          src="../javascript/jquery.ba-resize.min.js">
+  </script>
+  <script type="text/javascript"
+          src="../javascript/freetype2.js">
+  </script>
+
+  <title>FreeType Glyph Conventions / II</title>
 </head>
 
-<body text="#000000"
-      bgcolor="#FFFFFF"
-      link="#0000EF"
-      vlink="#51188E"
-      alink="#FF0000">
 
-<h1 align=center>
-  FreeType Glyph Conventions
-</h1>
+<body>
 
-<h2 align=center>
-  Version&nbsp;2.1
-</h2>
-
-<h3 align=center>
-  Copyright&nbsp;1998-2000 David Turner (<a
-  href="mailto:david@freetype.org">david@freetype.org</a>)<br>
-  Copyright&nbsp;2000, 2007 The FreeType Development Team (<a
-  href="mailto:devel@freetype.org">devel@freetype.org</a>)
-</h3>
-
-<center>
-<table width="65%">
-<tr><td>
-
-  <center>
-  <table width="100%"
-         border=0
-         cellpadding=5>
-  <tr bgcolor="#CCFFCC"
-      valign=center>
-    <td align=center
-        width="30%">
-      <a href="glyphs-1.html">Previous</a>
-    </td>
-    <td align=center
-        width="30%">
-      <a href="index.html">Contents</a>
-    </td>
-    <td align=center
-        width="30%">
-      <a href="glyphs-3.html">Next</a>
-    </td>
-  </tr>
-  </table>
-  </center>
-
-  <p><hr></p>
-
-  <table width="100%">
-  <tr bgcolor="#CCCCFF"
-      valign=center><td>
-    <h2>
-      II. Glyph Outlines
-    </h2>
-  </td></tr>
-  </table>
-
-  <p>This section describes the way scalable representations of glyph images,
-  called outlines, are used by FreeType as well as client applications.</p>
-
-    <a name="section-1">
-    <h3>
-      1. Pixels, points and device resolutions
-    </h3>
-
-    <p>Though it is a very common assumption when dealing with computer
-    graphics programs, the physical dimensions of a given pixel (be it for
-    screens or printers) are not squared.  Often, the output device, be it a
-    screen or printer, exhibits varying resolutions in both horizontal and
-    vertical direction, and this must be taken care of when rendering
-    text.</p>
-
-    <p>It is thus common to define a device's characteristics through two
-    numbers expressed in <em>dpi</em> (dots per inch).  For example, a
-    printer with a resolution of 300x600&nbsp;dpi has 300&nbsp;pixels per
-    inch in the horizontal direction, and 600 in the vertical one.  The
-    resolution of a typical computer monitor varies with its size
-    (15"&nbsp;and 17"&nbsp;monitors don't have the same pixel sizes at
-    640x480), and of course the graphics mode resolution.</p>
-
-    <p>As a consequence, the size of text is usually given in
-    <em>points</em>, rather than device-specific pixels.  Points are a
-    simple <em>physical</em> unit, where 1&nbsp;point&nbsp;=&nbsp;1/72th of
-    an inch, in digital typography.  As an example, most Roman books are
-    printed with a body text whose size is somewhere between 10 and
-    14&nbsp;points.</p>
-
-    <p>It is thus possible to compute the size of text in pixels from the
-    size in points with the following formula:</p>
-
-    <center>
-      <tt>pixel_size = point_size * resolution / 72</tt>
-    </center>
-
-    <p>The resolution is expressed in <em>dpi</em>.  Since horizontal and
-    vertical resolutions may differ, a single point size usually defines a
-    different text width and height in pixels.</p>
-
-    <p><em>Unlike what is often thought, the "size of text in pixels" is not
-    directly related to the real dimensions of characters when they are
-    displayed or printed.  The relationship between these two concepts is a
-    bit more complex and relate to some design choices made by the font
-    designer.  This is described in more detail in the next sub-section (see
-    the explanations on the EM square).</em></p>
+<div id="top"
+     class="bar">
+  <h1><a href="http://freetype.org/index.html">FreeType</a> Glyph
+    Conventions&nbsp;/&nbsp;II</h1>
+</div>
 
 
-    <a name="section-2">
-    <h3>
-      2. Vectorial representation
-    </h3>
+<div id="wrapper">
 
-    <p>The source format of outlines is a collection of closed paths called
-    <em>contours</em>.  Each contour delimits an outer or inner
-    <em>region</em> of the glyph, and can be made of either <em>line
-    segments</em> or <em>B&eacute;zier arcs</em>.</p>
-
-    <p>The arcs are defined through <em>control points</em>, and can be
-    either second-order (these are <em>conic</em> B&eacute;ziers) or
-    third-order (<em>cubic</em> B&eacute;ziers) polynomials, depending on
-    the font format.  Note that conic B&eacute;ziers are usually called
-    <em>quadratic</em> B&eacute;ziers in the literature.  Hence, each point
-    of the outline has an associated flag indicating its type (normal or
-    control point).  And scaling the points will scale the whole
-    outline.</p>
-
-    <p>Each glyph's original outline points are located on a grid of
-    indivisible units.  The points are usually stored in a font file as
-    16-bit integer grid coordinates, with the grid origin's being at (0,0);
-    they thus range from -16384 to&nbsp;16383.  (Even though point
-    coordinates can be floats in other formats such as Type&nbsp;1, we will
-    restrict our analysis to integer values for simplicity).</p>
-
-    <p><em>The grid is always oriented like the traditional mathematical
-    two-dimensional plane, i.e., the <i>X</i>&nbsp;axis from the left to the
-    right, and the <i>Y</i>&nbsp;axis from bottom to top.</em></p>
-
-    <p>In creating the glyph outlines, a type designer uses an imaginary
-    square called the <em>EM square</em>.  Typically, the EM square can be
-    thought of as a tablet on which the characters are drawn.  The square's
-    size, i.e., the number of grid units on its sides, is very important for
-    two reasons:</p>
-
-    <ul>
-      <li>
-        <p>It is the reference used to scale the outlines to a given text
-        dimension.  For example, a size of 12pt at 300x300&nbsp;dpi
-        corresponds to 12*300/72&nbsp;=&nbsp;50&nbsp;pixels.  This is the
-        size the EM square would appear on the output device if it was
-        rendered directly.  In other words, scaling from grid units to
-        pixels uses the formula:</p>
-
-        <p><center>
-          <tt>pixel_size = point_size * resolution / 72</tt><br>
-          <tt>pixel_coord = grid_coord * pixel_size / EM_size</tt>
-        </center></p>
-      </li>
-      <li>
-        <p>The greater the EM size is, the larger resolution the designer
-        can use when digitizing outlines.  For example, in the extreme
-        example of an EM size of 4&nbsp;units, there are only 25&nbsp;point
-        positions available within the EM square which is clearly not
-        enough.  Typical TrueType fonts use an EM size of 2048&nbsp;units;
-        Type&nbsp;1 PostScript fonts have a fixed EM size of 1000&nbsp;grid
-        units but point coordinates can be expressed as floating values.</p>
-      </li>
-    </ul>
-
-    <p>Note that glyphs can freely extend beyond the EM square if the font
-    designer wants so.  The EM is used as a convenience, and is a valuable
-    convenience from traditional typography.</p>
-
-    <p>Grid units are very often called <em>font units</em> or <em>EM
-    units</em>.</p>
-
-    <p><em>As said before, <tt>pixel_size</tt> computed in the above formula
-    does not relate directly to the size of characters on the screen.  It
-    simply is the size of the EM square if it was to be displayed.  Each
-    font designer is free to place its glyphs as it pleases him within the
-    square.  This explains why the letters of the following text have not
-    the same height, even though they are displayed at the same point size
-    with distinct fonts:</em>
-
-    <p><center>
-      <img src="body_comparison.png"
-           height=40 width=580
-           alt="Comparison of font heights">
-    </center></p>
-
-    <p>As one can see, the glyphs of the Courier family are smaller than
-    those of Times New Roman, which themselves are slightly smaller than
-    those of Arial, even though everything is displayed or printed at a size
-    of 16&nbsp;points.  This only reflects design choices.</p>
+<div class="colmask leftmenu">
+  <div class="colright">
+    <div class="col1wrap">
+      <div class="col1">
 
 
-    <a name="section-3">
-    <h3>
-      3. Hinting and Bitmap rendering
-    </h3>
+        <!-- ************************************************** -->
 
-    <p>The outline as stored in a font file is called the "master" outline,
-    as its points coordinates are expressed in font units.  Before it can be
-    converted into a bitmap, it must be scaled to a given size/resolution.
-    This is done through a very simple transformation, but always creates
-    undesirable artifacts, e.g. stems of different widths or heights in
-    letters like "E" or "H".</p>
+        <div id="glyph-outlines">
+          <h2>II. Glyph Outlines</h2>
 
-    <p>As a consequence, proper glyph rendering needs the scaled points to
-    be aligned along the target device pixel grid, through an operation
-    called <em>grid-fitting</em> (often called <em>hinting</em>).  One of its
-    main purposes is to ensure that important widths and heights are
-    respected throughout the whole font (for example, it is very often
-    desirable that the "I" and the "T" have their central vertical line of
-    the same pixel width), as well as to manage features like stems and
-    overshoots, which can cause problems at small pixel sizes.</p>
+          <p>This section describes the way scalable representations
+            of glyph images, called outlines, are used by FreeType as
+            well as client applications.</p>
 
-    <p>There are several ways to perform grid-fitting properly; most
-    scalable formats associate some control data or programs with each glyph
-    outline.  Here is an overview:</p>
+          <h3 id="section-1">1. Pixels, points and device
+            resolutions</h3>
 
-    <ul>
-      <li>
-        <p><em>explicit grid-fitting</em></p>
+          <p>Though it is a very common assumption when dealing with
+            computer graphics programs, the physical dimensions of a
+            given pixel (be it for screens or printers) are not
+            squared.  Often, the output device, be it a screen device
+            or a printer, exhibits varying resolutions in both
+            horizontal and vertical directions, and this must be taken
+            care of when rendering text.</p>
 
-        <p>The TrueType format defines a stack-based virtual machine, for
-        which programs can be written with the help of more than
-        200&nbsp;opcodes (most of these relating to geometrical operations).
-        Each glyph is thus made of both an outline and a control program to
-        perform the actual grid-fitting in the way defined by the font
-        designer.</p>
-      </li>
-      <li>
-        <p><em>implicit grid-fitting (also called hinting)</em></p>
+          <p>It is thus common to define a device's characteristics
+            through two numbers expressed in <em>dpi</em> (dots per
+            inch).  For example, a printer with a resolution of
+            300&times;600&nbsp;dpi has 300&nbsp;pixels per inch in the
+            horizontal direction, and 600 in the vertical one.  The
+            resolution of a typical computer monitor varies with its
+            size (10&Prime;&nbsp;and 25&Prime;&nbsp;monitors don't
+            have the same pixel sizes at 1024&times;768), and of
+            course the graphics mode resolution.</p>
 
-        <p>The Type&nbsp;1 format takes a much simpler approach: Each glyph
-        is made of an outline as well as several pieces called
-        <em>hints</em> which are used to describe some important features of
-        the glyph, like the presence of stems, some width regularities, and
-        the like.  There aren't a lot of hint types, and it is up to the
-        final renderer to interpret the hints in order to produce a fitted
-        outline.</p>
-      </li>
-      <li>
-        <p><em>automatic grid-fitting</em></p>
+          <p>As a consequence, the size of text is usually given in
+            <em>points</em>, rather than device-specific pixels.
+            Points are a <em>physical</em> unit, where 1&nbsp;point
+            equals 1/72th of an inch in digital typography.  As an
+            example, most books using the Latin script are printed
+            with a body text size somewhere between 10 and
+            14&nbsp;points.</p>
 
-        <p>Some formats simply include no control information with each
-        glyph outline, apart font metrics like the advance width and height.  It
-        is then up to the renderer to "guess" the more interesting features
-        of the outline in order to perform some decent grid-fitting.</p>
-      </li>
-    </ul>
+          <p>It is thus possible to compute the size of text in pixels
+            from the size in points with the following formula:</p>
 
-    <p>The following table summarises the pros and cons of each scheme.</p>
-
-    <center>
-      <table width="90%"
-             bgcolor="#CCCCCC"
-             cellpadding=5>
-      <tr bgcolor="#999999">
-        <td>
           <center>
-            <b>grid-fitting scheme</b>
+            <tt>pixel_size = point_size * resolution / 72</tt>
           </center>
-        </td>
-        <td>
-          <center>
-            <b>advantages</b>
-          </center>
-        </td>
-        <td>
-          <center>
-            <b>disadvantages</b>
-          </center>
-        </td>
-      </tr>
 
-      <tr>
-        <td valign=top>
-          <center>
-            <b>explicit</b>
-          </center>
-        </td>
+          <p>The resolution is expressed in <em>dpi</em>.  Since
+            horizontal and vertical resolutions may differ, a single
+            point size usually defines a different text width and
+            height in pixels.</p>
 
-        <td valign=top>
-          <p><b>Quality.</b> Excellent results at small sizes are possible.
-          This is very important for screen display.</p>
+          <p><em>Unlike what is often thought, the &lsquo;size of text
+              in pixels&rsquo; is not directly related to the real
+              dimensions of characters when they are displayed or
+              printed.  The relationship between these two concepts is
+              a bit more complex and depend on some design choices
+              made by the font designer.  This is described in more
+              detail in the next sub-section (see the explanations on
+              the EM square).</em></p>
 
-          <p><b>Consistency.</b> All renderers produce the same glyph
-          bitmaps.</p>
-        </td>
 
-        <td valign=top>
-          <p><b>Speed.</b> Interpreting bytecode can be slow if the glyph
-          programs are complex.</p>
+          <h3 id="section-2">2. Vectorial representation</h3>
 
-          <p><b>Size.</b> Glyph programs can be long.</p>
+          <p>The source format of outlines is a collection of closed paths called
+            <em>contours</em>.  Each contour delimits an outer or
+            inner <em>region</em> of the glyph, and can be made of
+            either <em>line segments</em> or <em>B&eacute;zier
+            arcs</em>.</p>
 
-          <p><b>Technical difficulty.</b>
-          It is extremely difficult to write good hinting
-          programs.  Very few tools available.</p>
-        </td>
-      </tr>
-      <tr>
-        <td valign=top>
-          <center>
-            <b>implicit</b>
-          </center>
-        </td>
+          <p>The arcs are defined through <em>control points</em>, and
+            can be either second-order (these are <em>conic</em>
+            B&eacute;ziers) or third-order (<em>cubic</em>
+            B&eacute;ziers) polynomials, depending on the font format.
+            Note that conic B&eacute;ziers are usually called
+            <em>quadratic</em> B&eacute;ziers in the literature.
+            Hence, FreeType associates each point of the outline with
+            flag to indicate its type (normal or control point).  And
+            scaling the points will scale the whole outline.</p>
 
-        <td valign=top>
-          <p><b>Size.</b> Hints are usually much smaller than explicit glyph
-          programs.</p>
+          <p>Each glyph's original outline points are located on a
+            grid of indivisible units.  The points are usually stored
+            in a font file as 16-bit integer grid coordinates, with
+            the grid's origin being at (0,0); they thus range from
+            -32768 to&nbsp;32767.  (Even though point coordinates can
+            be floats in other formats such as Type&nbsp;1, we will
+            restrict our analysis to integer values for
+            simplicity).</p>
 
-          <p><b>Speed.</b>
-          Grid-fitting is usually a fast process.</p>
-        </td>
+          <p><em>The grid is always oriented like the traditional
+              mathematical two-dimensional plane, i.e.,
+              the <i>X</i>&nbsp;axis goes from the left to the right,
+              and the <i>Y</i>&nbsp;axis from bottom to top.</em></p>
+        
+          <p>In creating the glyph outlines, a type designer uses an
+            imaginary square called the <em>EM square</em>.
+            Typically, the EM square can be thought of as a tablet on
+            which the characters are drawn.  The square's size, i.e.,
+            the number of grid units on its sides, is very important
+            for two reasons:</p>
 
-        <td valign=top>
-          <p><b>Quality.</b> Often questionable at small sizes.  Better with
-          anti-aliasing though.</p>
+          <ul>
+            <li>
+              <p>It is the reference size used to scale the outlines
+                to a given text dimension.  For example, a size of
+                12pt at 300&times;300&nbsp;dpi corresponds to
+                12*300/72&nbsp;=&nbsp;50&nbsp;pixels.  This is the
+                size the EM square would appear on the output device
+                if it was rendered directly.  In other words, scaling
+                from grid units to pixels uses the formula:</p>
 
-          <p><b>Inconsistency.</b> Results can vary between different
-          renderers, or even distinct versions of the same engine.</p>
-        </td>
-      </tr>
+              <p align="center">
+                <tt>pixel_size = point_size * resolution / 72</tt><br>
+                <tt>pixel_coord = grid_coord * pixel_size / EM_size</tt>
+              </p>
+            </li>
+            <li>
+              <p>The greater the EM size is, the larger resolution the
+                designer can use when digitizing outlines.  For
+                example, in the extreme example of an EM size of
+                4&nbsp;units, there are only 25&nbsp;point positions
+                available within the EM square which is clearly not
+                enough.  Typical TrueType fonts use an EM size of
+                2048&nbsp;units; Type&nbsp;1 or CFF PostScript fonts
+                traditionally use an EM size of 1000&nbsp;grid units
+                (but point coordinates can be expressed as floating
+                values).</p>
+            </li>
+          </ul>
 
-      <tr>
-        <td valign=top>
-          <center>
-            <b>automatic</b>
-          </center>
-        </td>
+          <p>Note that glyphs can freely extend beyond the EM square
+            if the font designer wants so.  The EM square is thus just
+            a convention in traditional typography.</p>
 
-        <td valign=top>
-          <p><b>Size.</b> No need for control information, resulting in
-          smaller font files.</p>
+          <p>Grid units are very often called <em>font units</em>
+            or <em>EM units</em>.</p>
 
-          <p><b>Speed.</b> Depends on the grid-fitting algorithm.  Usually
-          faster than explicit grid-fitting.</p>
-        </td>
+          <p><em>As said before, <tt>pixel_size</tt> computed in the
+              above formula does not directly relate to the size of
+              characters on the screen.  It simply is the size of the
+              EM square if it was to be displayed.  Each font designer
+              is free to place its glyphs as it pleases him within the
+              square.  This explains why the letters of the following
+              text have not the same height, even though they are
+              displayed at the same point size with distinct
+              fonts:</em></p>
 
-        <td valign=top>
-          <p><b>Quality.</b> Often questionable at small sizes.  Better with
-          anti-aliasing though.</p>
+          <p align="center">
+            <img src="body_comparison.png"
+                 height="40"
+                 width="580"
+                 alt="Comparison of font heights">
+          </p>
 
-          <p><b>Speed.</b> Depends on the grid-fitting algorithm.</p>
+          <p>As one can see, the glyphs of the Courier family are
+            smaller than those of Times New Roman, which themselves
+            are slightly smaller than those of Arial, even though
+            everything is displayed or printed at a size of
+            16&nbsp;points.  This only reflects design choices.</p>
 
-          <p><b>Inconsistency.</b> Results can vary between different
-          renderers, or even distinct versions of the same engine.</p>
-        </td>
-      </tr>
-      </table>
-    </center>
 
-  <p><hr></p>
+          <h3 id="section-3">3. Hinting and Bitmap rendering</h3>
 
-  <center>
-  <table width="100%"
-         border=0
-         cellpadding=5>
-  <tr bgcolor="#CCFFCC"
-      valign=center>
-    <td align=center
-        width="30%">
-      <a href="glyphs-1.html">Previous</a>
-    </td>
-    <td align=center
-        width="30%">
-      <a href="index.html">Contents</a>
-    </td>
-    <td align=center
-        width="30%">
-      <a href="glyphs-3.html">Next</a>
-    </td>
-  </tr>
-  </table>
-  </center>
+          <p>The outline as stored in a font file is called the
+            &lsquo;master&rsquo; outline, as its points coordinates
+            are expressed in font units.  Before it can be converted
+            into a bitmap, it must be scaled to a given size and
+            resolution.  This is done with a very simple
+            transformation, but always creates undesirable artifacts,
+            in particular stems of different widths or heights in
+            letters like &lsquo;E&rsquo; or &lsquo;H&rsquo;.</p>
 
-</td></tr>
-</table>
-</center>
+          <p>As a consequence, proper glyph rendering needs the scaled
+            points to be aligned along the target device pixel grid,
+            through an operation called <em>grid-fitting</em> (often
+            called <em>hinting</em>).  One of its main purposes is to
+            ensure that important widths and heights are respected
+            throughout the whole font (for example, it is very often
+            desirable that the &lsquo;I&rsquo; and the &lsquo;T&rsquo;
+            have their central vertical line of the same pixel width),
+            as well as to manage features like stems and overshoots,
+            which can cause problems at small pixel sizes.</p>
+
+          <p>There are several ways to perform grid-fitting properly;
+            most scalable formats associate some control data or
+            programs with each glyph outline.  Here is an
+            overview:</p>
+
+          <ul>
+            <li class="emph">
+              <p>explicit grid-fitting</p>
+
+              <p>The TrueType format defines a stack-based virtual
+                machine, for which programs can be written with the
+                help of more than 200&nbsp;opcodes (most of them
+                relating to geometrical operations).  Each glyph is
+                thus made of both an outline and a control program to
+                perform the actual grid-fitting in the way defined by
+                the font designer.</p>
+            </li>
+            <li class="emph">
+              <p>implicit grid-fitting (also called hinting)</p>
+
+              <p>The Type&nbsp;1 and CFF formats take a much simpler
+                approach: Each glyph is made of an outline as well as
+                several pieces called <em>hints</em> which are used to
+                describe some important features of the glyph, like
+                the presence of stems, some width regularities, and
+                the like.  There aren't a lot of hint types, and it is
+                up to the final renderer to interpret the hints in
+                order to produce a fitted outline.</p>
+            </li>
+            <li class="emph">
+              <p>automatic grid-fitting</p>
+
+              <p>Some formats include no control information with each
+                glyph outline, apart from font metrics like the
+                advance width and height.  It is then up to the
+                renderer to &lsquo;guess&rsquo; the more interesting
+                features of the outline in order to perform some
+                decent grid-fitting.</p>
+            </li>
+          </ul>
+
+          <p>The following table summarizes the pros and cons of each
+            scheme.</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th align="center">
+                  <b>grid-fitting scheme</b>
+                </th>
+                <th align="center">
+                  <b>advantages</b>
+                </th>
+                <th align="center">
+                  <b>disadvantages</b>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td valign="top" align="center">
+                  <p><b>explicit</b></p>
+                </td>
+
+                <td valign="top">
+                  <p><b>Quality.</b>  Excellent results at small sizes
+                    are possible.  This is very important for screen
+                    display.</p>
+
+                  <p><b>Consistency.</b>  All renderers produce the
+                    same glyph bitmaps (at least in theory).</p>
+                </td>
+
+                <td valign="top">
+                  <p><b>Speed.</b>  Interpreting bytecode can be slow
+                    if the glyph programs are complex.</p>
+
+                  <p><b>Size.</b>  Glyph programs can be long.</p>
+                
+                  <p><b>Technical difficulty.</b>  It is extremely
+                    difficult to write good hinting programs.  Very
+                    few tools available.</p>
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" align="center">
+                  <p><b>implicit</b></p>
+                </td>
+
+                <td valign="top">
+                  <p><b>Size.</b>  Hints are usually much smaller than
+                    explicit glyph programs.</p>
+
+                  <p><b>Speed.</b>  Grid-fitting is usually a fast
+                    process.</p>
+                </td>
+                
+                <td valign="top">
+                  <p><b>Quality.</b>  Often questionable at small
+                    sizes.  Better with anti-aliasing though.</p>
+
+                  <p><b>Inconsistency.</b>  Results can vary between
+                    different renderers, or even distinct versions of
+                    the same engine.</p>
+                </td>
+              </tr>
+        
+              <tr>
+                <td valign="top" align="center">
+                  <p><b>automatic</b></p>
+                </td>
+                
+                <td valign="top">
+                  <p><b>Size.</b>  No need for control information,
+                    resulting in smaller font files.</p>
+                
+                  <p><b>Speed.</b>  Depends on the grid-fitting
+                    algorithm.  Usually faster than explicit
+                    grid-fitting.</p>
+                </td>
+
+                <td valign="top">
+                  <p><b>Quality.</b>  Often questionable at small
+                    sizes.  Better with anti-aliasing though.</p>
+
+                  <p><b>Speed.</b>  Depends on the grid-fitting
+                    algorithm.</p>
+        
+                  <p><b>Inconsistency.</b>  Results can vary between
+                    different renderers, or even distinct versions
+                    of the same engine.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ************************************************** -->
+
+        <div class="updated">
+          <p>Last update: 07-Dec-2014</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ************************************************** -->
+
+    <div class="col2">
+    </div>
+  </div>
+</div>
+
+
+<!-- ************************************************** -->
+
+<div id="TOC">
+  <ul>
+    <li class="funding">
+      <p><a href="https://pledgie.com/campaigns/24434">
+        <img alt="Click here to lend your support to the FreeType project and make a donation at pledgie.com!"
+             src="https://pledgie.com/campaigns/24434.png?skin_name=chrome"
+             border="0"
+             align="middle">
+      </a></p>
+
+      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+         target="_blank">
+        <img class="with-border"
+             src="http://api.flattr.com/button/flattr-badge-large.png"
+             alt="Flattr this"
+             title="Flattr this"
+             border="0"
+             align="middle">
+      </a></p>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/index.html">Home</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/index.html#news">News</a>
+    </li>
+    <li class="primary">
+      <a href="../index.html">Overview</a>
+    </li>
+    <li class="primary">
+      <a href="../documentation.html">Documentation</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/developer.html">Development</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/contact.html"
+         class="emphasis">Contact</a>
+    </li>
+
+    <li>
+      &nbsp; <!-- separate primary from secondary entries -->
+    </li>
+
+    <li class="secondary">
+      <a href="index.html">FreeType Glyph Conventions</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-1.html">Basic Typographic Concepts</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-2.html" class="current">Glyph Outlines</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-3.html">Glyph Metrics</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-4.html">Kerning</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-5.html">Text Processing</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-6.html">FreeType Outlines</a>
+    </li>
+    <li class="tertiary">
+      <a href="glyphs-7.html">FreeType Bitmaps</a>
+    </li>
+  </ul>
+</div>
+
+</div> <!-- id="wrapper" -->
+
+<div id="TOC-bottom">
+</div>
 
 </body>
 </html>

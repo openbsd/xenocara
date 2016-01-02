@@ -1,0 +1,330 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+          "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type"
+        content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type"
+        content="text/css">
+  <meta http-equiv="Content-Script-Type"
+        content="text/javascript">
+  <meta name="description"
+        content="FreeType Overview">
+
+  <link rel="icon"
+        href="image/favicon_-60.ico">
+  <link rel="shortcut icon"
+        href="image/favicon_-60.ico">
+  <link rel="stylesheet"
+        type="text/css"
+        href="css/freetype2_-60.css">
+
+  <script type="text/javascript"
+          src="javascript/jquery-1.11.0.min.js">
+  </script>
+  <script type="text/javascript"
+          src="javascript/jquery.ba-resize.min.js">
+  </script>
+  <script type="text/javascript"
+          src="javascript/freetype2.js">
+  </script>
+
+  <title>FreeType Overview</title>
+</head>
+
+
+<body>
+
+<div id="top"
+     class="bar">
+  <h1><a href="http://freetype.org/index.html">FreeType</a> Overview</h1>
+</div>
+
+
+<div id="wrapper">
+
+<div class="colmask leftmenu">
+  <div class="colright">
+    <div class="col1wrap">
+      <div class="col1">
+
+
+        <!-- ************************************************** -->
+
+        <div id="what-is-freetype">
+          <h2>What is FreeType?</h2>
+
+          <p>FreeType is a software font engine that is designed to
+            be small, efficient, highly customizable, and portable
+            while capable of producing high-quality output (glyph
+            images).  It can be used in graphics libraries, display
+            servers, font conversion tools, text image generation
+            tools, and many other products as well.</p>
+
+          <p>Note that FreeType is a <em>font service</em> and doesn't
+            provide APIs to perform higher-level features like text
+            layout or graphics processing (e.g., colored text
+            rendering, &lsquo;hollowing&rsquo;, etc.).  However, it
+            greatly simplifies these tasks by providing a simple, easy
+            to use, and uniform interface to access the content of
+            font files.</p>
+
+          <p>FreeType is released under two open-source licenses: our
+            own
+            BSD-like <a href="http://git.savannah.gnu.org/cgit/freetype/freetype2.git/tree/docs/FTL.TXT">FreeType
+              License</a> and
+            the <a href="http://git.savannah.gnu.org/cgit/freetype/freetype2.git/tree/docs/GPLv2.TXT">GNU
+              Public License, Version&nbsp;2</a>.  It can thus be used
+            by any kind of projects, be they proprietary or not.</p>
+
+          <p>Please note that &lsquo;FreeType&rsquo; is also called
+            &lsquo;FreeType&nbsp;2&rsquo;, to distinguish it from the
+            old, deprecated &lsquo;FreeType&nbsp;1&rsquo; library, a
+            predecessor no longer maintained and supported.</p>
+        </div>
+
+
+        <!-- ************************************************** -->
+
+        <div id="features">
+          <h2>Features</h2>
+
+          <p>The following is a non-exhaustive list of features
+            provided by FreeType.</p>
+
+          <ul>
+            <li>
+              <p>FreeType provides a simple and easy-to-use API to
+                access font content in a uniform way, independently of
+                the file format.  Additionally, some format-specific
+                APIs can be used to access special data in the font
+                file.</p>
+            </li>
+            <li>
+              <p>The design of FreeType is based on modules that can
+                be either linked statically to the library at compile
+                time, or loaded on demand at runtime.  Modules are
+                used to support specific font formats, or even new
+                glyph image formats!</p>
+            </li>
+            <li>
+              <p>FreeType was written with embedded systems in mind.
+                This means that it doesn't use static writable data
+                (i.e., it can be run from ROM directly), and that
+                client applications can provide their own memory
+                manager and I/O stream implementation.  The latter
+                allows you to easily read from ROM-based, compressed
+                or remote font files with the same API.  Several
+                stream implementations can be used concurrently with a
+                single FreeType instance.</p>
+
+              <p>You can also reduce the size of the FreeType code by
+                only compiling the modules you need for your embedded
+                project or environment.</p>
+            </li>
+            <li>
+              <p>By default, FreeType supports the following font
+                formats.</p>
+
+              <ul>
+                <li>TrueType fonts (TTF) and TrueType collections
+                  (TTC)</li>
+                <li>CFF fonts</li>
+                <li>WOFF fonts</li>
+                <li>OpenType fonts (OTF, both TrueType and CFF
+                  variants) and OpenType collections (OTC)</li>
+                <li>Type&nbsp;1 fonts (PFA and PFB)</li>
+                <li>CID-keyed Type&nbsp;1 fonts</li>
+                <li>SFNT-based bitmap fonts, including color Emoji</li>
+                <li>X11 PCF fonts</li>
+                <li>Windows FNT fonts</li>
+                <li>BDF fonts (including anti-aliased ones)</li>
+                <li>PFR fonts</li>
+                <li>Type&nbsp;42 fonts (limited support)</li>
+              </ul>
+            </li>
+            <li>
+              <p>From a given glyph outline, FreeType is capable of
+                producing a high-quality monochrome bitmap, or
+                anti-aliased pixmap, using 256 levels of
+                &lsquo;gray&rsquo;.</p>
+            </li>
+            <li>
+              <p>FreeType supports all the character mappings defined
+                by the TrueType and OpenType specifications.  It is
+                also capable of automatically synthetizing a Unicode
+                charmap from Type&nbsp;1 fonts, avoiding painful
+                &lsquo;encoding translation&rsquo; problems common
+                with this format (of course, original encodings are
+                also available if necessary).</p>
+            </li>
+            <li>
+              <p>The FreeType core API provides simple functions to
+                access advanced information like glyph names or basic
+                kerning data.</p>
+            </li>
+            <li>
+              <p>A full-featured and efficient TrueType bytecode
+                interpreter, trying to match the results of the
+                Windows bytecode engine.  There is also the
+                possibility to activate subpixel hinting
+                (a.k.a. <em>ClearType</em>, still under
+                development).</p>
+            </li>
+            <li>
+              <p>For those who don't need or want to use the bytecode
+                interpreter for TrueType fonts, we developed our
+                own <em>automatic hinter</em> module.  It is also used
+                by other scalable formats.</p>
+            </li>
+            <li>
+              <p>Due to its modular design, it is easy to enhance the
+                library, providing additional format-specific
+                information through optional APIs (as an example, an
+                optional API is provided to retrieve SFNT tables from
+                TrueType and OpenType fonts).</p>
+            </li>
+            <li>
+              <p>FreeType provides its own caching subsystem.  It can
+                be used to cache either face instances or glyph images
+                efficiently.</p>
+            </li>
+            <li>
+              <p>A bundle of demo programs demonstrate the usage of
+                FreeType; look for the
+                &lsquo;ft2demos-<i>x.x.x</i>&rsquo; archive (or
+                &lsquo;ftdmo<i>xxx</i>&rsquo; in case you are on a
+                Windows platform) at the locations
+                given <a href="http://freetype.org/download.html">here</a>.
+                &lsquo;<i>x.x.x</i>&rsquo; (or
+                &lsquo;<i>xxx</i>&rsquo;) gives the version number,
+                for example &lsquo;2.4.10&rsquo; or
+                &lsquo;2410&rsquo;.</p>
+            </li>
+          </ul>
+        </div>
+
+
+        <!-- ************************************************** -->
+
+        <div id="requirements">
+          <h2>Requirements</h2>
+
+          <p>FreeType is written in industry-standard ANSI&nbsp;C and
+            should compile easily with any compliant C&nbsp;or C++
+            compiler.  We have even taken great care to
+            eliminate <em>all warnings</em> when compiling with
+            popular compilers like gcc, Visual C++, and Borland
+            C++.</p>
+
+          <p>Apart from a standard ANSI&nbsp;C library, FreeType
+            doesn't have any external dependencies and can be compiled
+            and installed on its own on any kind of system.  Some
+            modules <em>need</em> external libraries (e.g., for
+            handling fonts compressed with gzip or bz2), however, they
+            are optional and can be disabled.</p>
+        </div>
+
+
+        <!-- ************************************************** -->
+
+        <div id="patents">
+          <h2>Patent Issues</h2>
+
+          <p>All patents related to the TrueType bytecode interpreter
+            have expired since May 2010.  Support for the still
+            patented ClearType color filtering model is disabled by
+            default.</p>
+
+          <p>More information regarding this topic is available at
+            our <a href="http://freetype.org/patents.html">patents page</a>.</p>
+        </div>
+
+
+        <!-- ************************************************** -->
+
+        <div class="updated">
+          <p>Last update: 7-Dec-2014</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ************************************************** -->
+
+    <div class="col2">
+    </div>
+  </div>
+</div>
+
+
+<!-- ************************************************** -->
+
+<div id="TOC">
+  <ul>
+    <li class="funding">
+      <p><a href="https://pledgie.com/campaigns/24434">
+        <img alt="Click here to lend your support to the FreeType project and make a donation at pledgie.com!"
+             src="https://pledgie.com/campaigns/24434.png?skin_name=chrome"
+             border="0"
+             align="middle">
+      </a></p>
+
+      <p><a href="https://flattr.com/thing/421342/lemzwerg-on-Flattr"
+         target="_blank">
+        <img class="with-border"
+             src="http://api.flattr.com/button/flattr-badge-large.png"
+             alt="Flattr this"
+             title="Flattr this"
+             border="0"
+             align="middle">
+      </a></p>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/index.html">Home</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/index.html#news">News</a>
+    </li>
+    <li class="primary">
+      <a href="index.html" class="current">Overview</a>
+    </li>
+    <li class="primary">
+      <a href="documentation.html">Documentation</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/developer.html">Development</a>
+    </li>
+    <li class="primary">
+      <a href="http://freetype.org/contact.html"
+         class="emphasis">Contact</a>
+    </li>
+
+    <li>
+      &nbsp; <!-- separate primary from secondary entries -->
+    </li>
+
+    <li class="secondary">
+      <a href="#what-is-freetype">What is FreeType?</a>
+    </li>
+    <li class="secondary">
+      <a href="#features">Features</a>
+    </li>
+    <li class="secondary">
+      <a href="#requirements">Requirements</a>
+    </li>
+    <li class="secondary">
+      <a href="#patents">Patents</a>
+    </li>
+  </ul>
+</div>
+
+</div> <!-- id="wrapper" -->
+
+<div id="TOC-bottom">
+</div>
+
+</body>
+</html>

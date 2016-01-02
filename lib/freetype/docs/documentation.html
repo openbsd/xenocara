@@ -12,37 +12,33 @@
         content="text/javascript">
   <meta name="description"
         content="FreeType Documentation">
-  <meta name="Author"
-        content="David Turner">
 
   <link rel="icon"
-        href="../image/favicon_-90.ico">
+        href="image/favicon_-60.ico">
   <link rel="shortcut icon"
-        href="../image/favicon_-90.ico">
+        href="image/favicon_-60.ico">
   <link rel="stylesheet"
         type="text/css"
-        href="../css/freetype2_-90.css">
+        href="css/freetype2_-60.css">
 
   <script type="text/javascript"
-          src="../javascript/jquery-1.11.0.min.js">
+          src="javascript/jquery-1.11.0.min.js">
   </script>
   <script type="text/javascript"
-          src="../javascript/jquery.ba-resize.min.js">
+          src="javascript/jquery.ba-resize.min.js">
   </script>
   <script type="text/javascript"
-          src="../javascript/freetype2.js">
+          src="javascript/freetype2.js">
   </script>
 
-  <title>FreeType Tutorial / III</title>
+  <title>FreeType Documentation</title>
 </head>
-
 
 <body>
 
 <div id="top"
      class="bar">
-  <h1><a href="http://freetype.org/index.html">FreeType</a>
-    Tutorial&nbsp;/&nbsp;III</h1>
+  <h1><a href="http://freetype.org/index.html">FreeType</a> Documentation</h1>
 </div>
 
 
@@ -56,38 +52,50 @@
 
         <!-- ************************************************** -->
 
-        <div id="examples">
-          <h2>III. Examples</h2>
-
-          <p>For completeness, here again a link to
-            the <a href="example1.c">example</a> used and explained in
-            the <a href="step1.html">first part of the
-            tutorial</a>.</p>
-
-          <p><a href="mailto:erik@timetrap.se">Erik Möller</a>
-            contributed a very nice C++ example that shows renderer
-            callbacks in action to draw a coloured glyph with a
-            differently coloured outline.  The source code can be
-            found <a href="example2.cpp">here</a>.</p>
-
-          <p><a href="example3.cpp">Another example</a> demonstrates
-            how to use FreeType's stand-alone rasterizer,
-            <tt>ftraster.c</tt>, both in B/W and 5-levels gray mode.
-            You need files from FreeType version 2.3.10 or newer.</p>
-
-          <p><a href="mailto:gsmiko@gmail.com">Róbert Márki</a>
-            contributed a small
-            <a href="example4.cpp">Qt demonstration program</a>
-            (together with its <a href="example4.pro">qmake file</a>)
-            that shows both direct rendering with a callback and
-            rendering with a buffer, yielding the same result.  You
-            need FreeType 2.4.3 or newer.</p>
+        <div id="introduction">
+          <p>Note that the FreeType documentation is also available as
+            a single archive from
+            our <a href="http://freetype.org/download.html">download page</a>.</p>
         </div>
+
+
+        <!-- ************************************************** -->
+
+        <div id="links">
+          <h3><a href="glyphs/index.html">FreeType Glyph
+              Conventions</a></h3>
+
+          <p>This document is a <em>must-read</em> for any user of the
+            library.</p>
+
+          <h3><a href="ft2faq.html">The FreeType FAQ</a></h3>
+
+          <h3><a href="tutorial/index.html">The FreeType Tutorial</a></h3>
+
+          <h3>The FreeType API Reference</h3>
+
+          <ul>
+            <li>
+              <a href="reference/ft2-toc.html">Table Of
+                Contents</a>
+            </li>
+            <li>
+              <a href="reference/ft2-index.html">Index</a>
+            </li>
+          </ul>
+
+          <h3><a href="design/index.html">The Design of
+              FreeType</a></h3>
+
+          <h3><a href="rasterinfo/rasterinfo.html">The RasterInfo
+              Font</a></h3>
+        </div>
+
 
         <!-- ************************************************** -->
 
         <div class="updated">
-          <p>Last update: 13-Dec-2014</p>
+          <p>Last update: 05-Oct-2015</p>
         </div>
       </div>
     </div>
@@ -130,10 +138,10 @@
       <a href="http://freetype.org/index.html#news">News</a>
     </li>
     <li class="primary">
-      <a href="../index.html">Overview</a>
+      <a href="index.html">Overview</a>
     </li>
     <li class="primary">
-      <a href="../documentation.html">Documentation</a>
+      <a href="documentation.html" class="current">Documentation</a>
     </li>
     <li class="primary">
       <a href="http://freetype.org/developer.html">Development</a>
@@ -148,16 +156,22 @@
     </li>
 
     <li class="secondary">
-      <a href="index.html">FreeType Tutorial</a>
+      <a href="glyphs/index.html">Glyph Conventions</a>
     </li>
-    <li class="tertiary">
-      <a href="step1.html">Simple Glyph Loading</a>
+    <li class="secondary">
+      <a href="ft2faq.html">FAQ</a>
     </li>
-    <li class="tertiary">
-      <a href="step2.html">Managing Glyphs</a>
+    <li class="secondary">
+      <a href="tutorial/step1.html">Tutorial</a>
     </li>
-    <li class="tertiary">
-      <a href="step3.html" class="current">Examples</a>
+    <li class="secondary">
+      <a href="reference/ft2-toc.html">API Reference</a>
+    </li>
+    <li class="secondary">
+      <a href="design/index.html">Design</a>
+    </li>
+    <li class="secondary">
+      <a href="rasterinfo/rasterinfo.html">The RasterInfo Font</a>
     </li>
   </ul>
 </div>

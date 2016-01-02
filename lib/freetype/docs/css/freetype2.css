@@ -1,0 +1,369 @@
+/* freetype2.css */
+
+/* the column container layout is based on */
+/* http://matthewjamestaylor.com/blog/perfect-multi-column-liquid-layouts */
+
+
+/* use Droid fonts */
+@import url("http://fonts.googleapis.com/css?family=Droid+Serif:r,i,b,bi");
+@import url("http://fonts.googleapis.com/css?family=Droid+Sans:r,b");
+@import url("http://fonts.googleapis.com/css?family=Droid+Sans+Mono");
+
+
+/* top-level appearance */
+body {
+  width: 100%;
+  margin: 0em;
+  padding: 0em;
+  border: 0em;
+  text-align: left;
+  font-size: large;
+  font-family: "Droid Serif", "serif";
+  line-height: 140%; }
+
+/* table of contents column; */
+/* width and offsets must be synchronized with col2 below */
+#TOC {
+  background: #F8F8F8;
+  position: fixed;
+  font-family: "Droid Sans", "sans-serif";
+  font-size: 115%;
+  left: 0em;
+  width: 10em; }
+
+#TOC-bottom {
+  background: #F8F8F8;
+  left: 0em;
+  width: 11.5em; }
+
+/* don't display list markers in TOC */
+#TOC ul {
+  list-style: none;
+  text-align: center;
+  margin: 0em;
+  padding: 0em; }
+/* separate items with line */
+#TOC ul li {
+  display: block;
+  padding-top: 0.5ex;
+  padding-bottom: 0.5ex;
+  border-bottom: 1px solid #CCCCCC; }
+/* give more vertical spacing for funding icons */
+#TOC ul li.funding {
+  padding-top: 1ex;
+  padding-bottom: 1ex; }
+#TOC ul li.funding p {
+  margin-top: 1.5ex;
+  margin-bottom: 1.5ex; }
+
+/* this is gray getting black */
+#TOC a:link {
+  color: #666666; }
+#TOC a:visited {
+  color: #666666; }
+#TOC a:active {
+  color: #666666; }
+#TOC a:hover {
+  color: #000000; }
+
+/* this is pale red getting red
+
+  #TOC a.emphasis:link {
+    color: #FF6666; }
+  #TOC a.emphasis:visited {
+    color: #FF6666; }
+  #TOC a.emphasis:active {
+    color: #FF6666; }
+  #TOC a.emphasis:hover {
+    color: #FF0000; }
+*/
+
+#TOC a.emphasis:link {
+  color: #666666; }
+#TOC a.emphasis:visited {
+  color: #666666; }
+#TOC a.emphasis:active {
+  color: #666666; }
+#TOC a.emphasis:hover {
+  color: #000000; }
+
+#TOC a.current:link {
+  color: #000000; }
+#TOC a.current:visited {
+  color: #000000; }
+#TOC a.current:active {
+  color: #000000; }
+#TOC a.current:hover {
+  color: #000000; }
+
+/* top bar */
+#top h1 {
+  position: absolute;
+  top: 25px;
+  left: 20px;
+  margin: 0em;
+  padding: 0em;
+  border: 0em; }
+.bar {
+  clear: both;
+  color: white;
+  background: #06435E
+              url("../image/fond3.png")
+              no-repeat
+              right
+              top;
+  text-align: left;
+  font-family: "Droid Sans", "sans-serif";
+  font-weight: bold;
+  padding: 0em;
+  margin: 0em;
+  border: 0em;
+  height: 134px;
+  vertical-align: bottom; }
+
+#top a {
+  color: white;
+  /* pale underline for links */
+  text-decoration: none;
+  border-bottom: 2px solid #16536E; }
+#top a:link {
+  color: white; }
+#top a:visited {
+  color: white; }
+#top a:active {
+  color: white; }
+#top a:hover {
+  color: #CCCCCC; }
+
+/* column container */
+.colmask {
+  /* this fixes the IE7 overflow hidden bug */
+  /* and stops the layout jumping out of place */
+  position: relative;
+  clear: both;
+  float: left;
+  width: 100%;
+  /* this chops off any overhanging <div>s */
+  overflow: hidden; }
+/* two-column left menu settings (col1 is right, col2 is left) */
+.leftmenu .colright {
+  float: left;
+  width: 200%;
+  position: relative;
+  left: 11.5em; /* pad2_l + wd2 + pad2_r */
+  background: white; }
+.leftmenu .col1wrap {
+  float: right;
+  width: 50%;
+  position: relative;
+  right: 12em; } /* pad2_l + wd2 + pad2_r */
+.leftmenu .col1 {
+  margin: 0 1em   /* pad2_r */
+          0 12em; /* pad2_l + wd2 + pad2_r + pad1_l */
+  position: relative;
+  right: 100%;
+  width: 45em;
+  max-width: 66%;
+  /* overflow: hidden; */
+  padding-left: 2em; }
+.leftmenu .col2 {
+  float: left;
+  width: 10em; /* wd2 */
+  position: relative;
+  right: 11em; } /* wd2 + pad2_r */
+
+/* table of contents */
+#contents ul {
+  list-style: none; }
+
+blockquote {
+  font-style: italic; }
+
+code {
+  font-family: "Droid Sans Mono", "monospace"; }
+
+tt {
+  font-family: "Droid Sans Mono", "monospace"; }
+
+pre {
+  font-family: "Droid Sans Mono", "monospace";
+  margin-left: 1.5em; }
+pre.example {
+  color: purple;
+  font-family: "Droid Sans Mono", "monospace";
+  margin-left: 1.5em; }
+
+span.comment {
+  color: gray; }
+span.important {
+  font-weight: bold; }
+
+a {
+  color: #0000EF;
+  font-weight: bold;
+  /* no underline for links */
+  text-decoration: none; }
+a:link {
+  color: #000080; }
+a:visited {
+  color: #800080; }
+a:active {
+  color: #FE0000; }
+a:hover {
+  color: #1919AA; }
+
+h1 {
+  margin-top: 6ex; }
+h2 {
+  margin-top: 5ex; }
+h3 {
+  margin-top: 4ex; }
+h4 {
+  margin-top: 3ex; }
+h5 { }
+h6 { }
+
+h1.title {
+ text-align: center; }
+h1.header {
+  margin-top: 1ex;
+  line-height: 200%; }
+h2.author {
+ text-align: center; }
+h3.date {
+ text-align: center; }
+h3 + div.date {
+  margin-top: -3ex;
+  margin-bottom: 3ex; }
+h4 + div.date {
+  margin-top: -3ex; }
+
+/* images */
+img.with-border {
+  padding: 0.5em; }
+#TOC img.with-border {
+  padding: 0.3em; }
+
+/* figures */
+div.figure {
+  text-align: center;
+  margin-top: 5ex;
+  margin-bottom: 5ex; }
+p.caption {
+  font-size: smaller; }
+
+/* tables */
+table {
+  border-collapse: collapse;
+  /* the next two lines center the table horizontally */
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 5ex;
+  margin-bottom: 5ex; }
+td {
+  padding-left: 0.8em;
+  padding-right: 0.8em; }
+thead {
+  /* a horizontal rule between table head and body */
+  border-bottom: solid thin; }
+th {
+  padding-left: 0.8em;
+  padding-right: 0.8em;
+  /* some vertical space before the horizontal rule */
+  padding-bottom: 1ex; }
+tbody tr:first-child td {
+  /* some vertical space after the horizontal rule */
+  padding-top: 1ex; }
+
+dl {
+  margin-left: 1em; }
+
+dt {
+  font-weight: bold; }
+
+/* if we have paragraphs in definition lists, */
+/* suppress the very first vertical space */
+dd > p:first-child {
+  margin-top: 0ex; }
+dd > p {
+  margin-bottom: 0ex; }
+
+/* indented text */
+div.quote {
+  margin-left: 1.5em; }
+
+/* list for subsections */
+li.tertiary {
+  font-size: smaller;
+  text-align: left;
+  margin-left: 2em; }
+
+/* list with item headers */
+li.emph p:first-child {
+  font-weight: bold; }
+
+ol.algorithm {
+  font-family: "Droid Sans Mono", "monospace"; }
+
+/* miscellaneous */
+div.date {
+  color: #666666;
+  font-size: smaller; }
+div.webmaintainer {
+  margin-top: 5ex;
+  font-style: italic;
+  font-size: 70%; }
+div.updated {
+  margin-top: 5ex;
+  font-style: italic;
+  font-size: 70%; }
+p.warning {
+  color: red; }
+p.large {
+  font-size: larger; }
+p.note {
+  font-style: italic; }
+
+/*
+@media screen and (max-width: 40.5em) {
+  #TOC,
+  .colmask,
+  .leftmenu .colright,
+  .leftmenu .col1wrap,
+  .leftmenu .col1 {
+    float: none;
+    clear: none;
+    position: relative;
+    width: 100%;
+    left: 0em;
+    right: 100%;
+    max-width: 100%;
+    margin: 0em;
+    padding: 0em;
+    font-family: "sans-serif";
+  }
+
+  #TOC-bottom {
+    display: none;
+  }
+
+  #wrapper {
+    display: table;
+    line-height: 130%;
+    padding: 0em 1em;
+  }
+
+  #TOC {
+    display: table-header-group;
+  }
+
+  .colmask {
+    display: table-footer-group;
+  }
+
+  #TOC br {
+    display: none; }
+}
+*/
+
+/* end of file */
