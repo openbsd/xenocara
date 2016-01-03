@@ -1,3 +1,54 @@
+commit 79b63f0e57cd5baf06ff24252d3f1675dcb64467
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sun May 17 14:29:29 2015 +1000
+
+    randrproto 1.5.0
+
+commit 895ee5264524c7c239ee4ef5e39c4e295323fb51
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Apr 22 10:58:18 2015 +1000
+
+    randrproto: clarify output XID lifetimes.
+    
+    This just makes a note that randr won't make outputs disappear
+    dynamically.
+    
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 98da0d6e48b7d124d6788ea568e9f9e3dc204322
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Feb 2 16:17:56 2015 +1000
+
+    randrproto: add tile property info for randr 1.5
+    
+    expose this as an array of 8 32-bit values.
+    
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 4109f29861a7066970a2afd079d0fc2c12828bcb
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Dec 12 15:57:57 2014 -0800
+
+    Add Monitors, update version to 1.5 (v2)
+    
+    v2: [airlied] add get_active to monitor get
+    interface, to allow normal vs configuration
+    clients to see active vs all monitors. (r-b by keithp)
+    
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit d501a4f08ee3c5435841aa70c0d5cd4b7398bd12
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Dec 12 15:57:40 2014 -0800
+
+    Fix spelling errors in randrproto.txt
+    
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
 commit b1ba68df8a5fc113a387123ec2f312195e28e47f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 14 09:35:04 2015 -0700
