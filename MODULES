@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.340 2016/01/02 09:36:06 matthieu Exp $
+# $OpenBSD: MODULES,v 1.341 2016/01/03 21:09:38 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -234,13 +234,13 @@ proto/inputproto		2.3.1	7.7+
 proto/kbproto			1.0.7	7.7+
 proto/pmproto			1.0.3
 proto/presentproto		1.0	7.7+
-proto/randrproto		1.5.0	7.7+	needs-update
+proto/randrproto		1.5.0	7.7+
 proto/recordproto		1.14.2	7.7
 proto/renderproto		0.11.1	7.7
 proto/resourceproto		1.2.0	7.7
 proto/scrnsaverproto		1.2.2	7.7
 proto/videoproto		2.3.2	7.7+
-proto/x11proto			7.0.28	7.7+	needs-update
+proto/x11proto			7.0.28	7.7+
 proto/xcb-proto			1.11	7.7+
 proto/xcmiscproto		1.2.2	7.7
 proto/xextproto			7.3.0	7.7+
