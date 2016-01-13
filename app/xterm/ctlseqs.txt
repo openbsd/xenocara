@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2015)
-               updated for XTerm Patch #318 (2015/08/19)
+               updated for XTerm Patch #321 (2015/12/30)
 
 
 
@@ -491,6 +491,8 @@ CSI ? Pm h
           resource).
             Ps = 1 0 4 3  -> Enable raising of the window when Control-G
           is received.  (enables the popOnBell resource).
+            Ps = 1 0 4 4  -> Reuse the most recent data copied to CLIP-
+          BOARD.  (This enables the keepClipboard resource).
             Ps = 1 0 4 7  -> Use Alternate Screen Buffer.  (This may be
           disabled by the titeInhibit resource).
             Ps = 1 0 4 8  -> Save cursor as in DECSC.  (This may be dis-
@@ -678,12 +680,12 @@ CSI Pm m  Character Attributes (SGR).
             colons (but after the first colon, colons must be used).
 
           These ISO-8613-3 controls are supported:
-            Ps = 3 8 ; 2 ; Pr; Pg; Pb -> Set foreground color to the
+            Pm = 3 8 ; 2 ; Pr; Pg; Pb -> Set foreground color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-            Ps = 3 8 ; 5 ; Ps -> Set foreground color to the second Ps.
-            Ps = 4 8 ; 2 ; Pr; Pg; Pb -> Set background color to the
+            Pm = 3 8 ; 5 ; Ps -> Set foreground color to the second Ps.
+            Pm = 4 8 ; 2 ; Pr; Pg; Pb -> Set background color to the
           closest match in xterm's palette for the given RGB Pr/Pg/Pb.
-            Ps = 4 8 ; 5 ; Ps -> Set background color to the second Ps.
+            Pm = 4 8 ; 5 ; Ps -> Set background color to the second Ps.
 
 CSI > Ps; Ps m
           Set or reset resource-values used by xterm to decide whether

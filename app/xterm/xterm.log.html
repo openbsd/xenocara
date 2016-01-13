@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2014,2015 by Thomas E. Dickey                              *
+ * Copyright 1997-2015,2016 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1624 2015/08/28 08:40:19 tom Exp $
+  $XTermId: xterm.log.html,v 1.1638 2016/01/02 14:26:50 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
@@ -72,6 +72,10 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_322">Patch #322 - 2016/01/02</a></li>
+
+    <li><a href="#xterm_321">Patch #321 - 2015/12/31</a></li>
+
     <li><a href="#xterm_320">Patch #320 - 2015/08/28</a></li>
 
     <li><a href="#xterm_319">Patch #319 - 2015/08/19</a></li>
@@ -923,6 +927,49 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_322" id="xterm_322">Patch #322 -
+  2016/01/02</a></h1>
+
+  <ul>
+    <li>fix regression due to incorrect fix for compiler warning
+    when allocating storage for <code>/etc/shells</code> (reports
+    by Ashish Shukla, Debian #809646).</li>
+  </ul>
+
+  <h1><a name="xterm_321" id="xterm_321">Patch #321 -
+  2015/12/31</a></h1>
+
+  <ul>
+    <li>add resource <code>keepClipboard</code>, escape sequence
+    and action <code>keep-clipboard</code>.</li>
+
+    <li>add optional feature to capture text copied to clipboard at
+    the time of copying rather than at the time the clipboard
+    contents are requested for pasting (patch by Milan
+    Mehner).</li>
+
+    <li>improve a special case where the <code>-e</code> option was
+    used to pass a single-quoted command via <code>luit</code>, by
+    wrapping it in a &ldquo;sh -c&rdquo; (report by Keith
+    Hedger).</li>
+
+    <li>minor fix for type-cleanliness when allocating storage for
+    <code>/etc/shells</code> (Tobias Stoeckmann).</li>
+
+    <li>fix a typo in manual page (Dan Church).</li>
+
+    <li>fix minor file-descriptor leak; after calling
+    <code>openpty</code>, the slave's file descriptor is not needed
+    (report by Juha Nurmela).</li>
+
+    <li>editorial change to ctlseqs.ms (report by David
+    Gomboc).</li>
+
+    <li>minor updates for autoconf macros.</li>
+
+    <li>update config.guess, config.sub</li>
   </ul>
 
   <h1><a name="xterm_320" id="xterm_320">Patch #320 -

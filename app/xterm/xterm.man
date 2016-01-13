@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.617 2015/08/28 08:48:38 tom Exp $
+.\" $XTermId: xterm.man,v 1.619 2015/12/31 12:41:07 tom Exp $
 .\"
 .\" Copyright 1996-2014,2015 by Thomas E. Dickey
 .\"
@@ -423,7 +423,7 @@ set the amount of time text cursor is off when blinking via the
 .TP 8
 .BI \-bcn " milliseconds"
 set the amount of time text cursor is on when blinking via the
-\fIcursorOffTime\fP resource.
+\fIcursorOnTime\fP resource.
 .TP 8
 .B "\-bdc"
 Set the \fIvt100\fP resource \fBcolorBDMode\fR to \*(``false\*('',
@@ -3222,6 +3222,12 @@ Specifies whether or not jump scroll should be used.
 This corresponds to the VT102 DECSCLM private mode.
 The default is \*(``true\*(''.
 See \fBfastScroll\fP for a variation.
+.TP 8
+.B "keepClipboard (\fPclass\fB KeepClipboard)"
+Specifies whether \fI\*n\fR will reuse the selection data which it
+copied to the keyboard rather than asking the clipboard for its
+current contents when told to provide the selection.
+The default is \*(``false\*(''.
 .TP 8
 .B "keepSelection (\fPclass\fB KeepSelection)"
 Specifies whether \fI\*n\fR will keep the selection even after the
@@ -6177,6 +6183,9 @@ It is also invoked by the \fBfont-linedrawing\fP entry in \fIfontMenu\fP.
 This action sets, unsets or toggles the \fIforcePackedFont\fR's resource
 which controls use of the font's minimum or maximum glyph width.
 It is also invoked by the \fBfont-packed\fP entry in \fIfontMenu\fP.
+.TP 8
+.B "set-keep-clipboard(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBkeepClipboard\fP resource.
 .TP 8
 .B "set-keep-selection(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBkeepSelection\fP resource.

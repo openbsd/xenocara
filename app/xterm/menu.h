@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.135 2014/09/04 00:17:55 tom Exp $ */
+/* $XTermId: menu.h,v 1.136 2015/12/30 09:53:02 tom Exp $ */
 
 /*
- * Copyright 1999-2013,2014 by Thomas E. Dickey
+ * Copyright 1999-2014,2015 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -104,6 +104,7 @@ extern void HandleFullscreen       PROTO_XT_ACTIONS_ARGS;
 extern void HandleHardReset        PROTO_XT_ACTIONS_ARGS;
 extern void HandleHpFunctionKeys   PROTO_XT_ACTIONS_ARGS;
 extern void HandleJumpscroll       PROTO_XT_ACTIONS_ARGS;
+extern void HandleKeepClipboard    PROTO_XT_ACTIONS_ARGS;
 extern void HandleKeepSelection    PROTO_XT_ACTIONS_ARGS;
 extern void HandleLogging          PROTO_XT_ACTIONS_ARGS;
 extern void HandleMarginBell       PROTO_XT_ACTIONS_ARGS;
@@ -450,6 +451,7 @@ extern void update_visualbell(void);
 extern void update_bellIsUrgent(void);
 extern void update_poponbell(void);
 
+#define update_keepClipboard() /* nothing */
 #define update_marginbell() /* nothing */
 
 #if OPT_LOAD_VTFONTS

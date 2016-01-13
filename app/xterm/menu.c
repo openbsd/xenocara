@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.331 2015/04/10 01:11:52 tom Exp $ */
+/* $XTermId: menu.c,v 1.332 2015/12/30 09:40:28 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -157,6 +157,7 @@ static void do_delete_del      PROTO_XT_CALLBACK_ARGS;
 static void do_hardreset       PROTO_XT_CALLBACK_ARGS;
 static void do_interrupt       PROTO_XT_CALLBACK_ARGS;
 static void do_jumpscroll      PROTO_XT_CALLBACK_ARGS;
+static void do_keepClipboard   PROTO_XT_CALLBACK_ARGS;
 static void do_keepSelection   PROTO_XT_CALLBACK_ARGS;
 static void do_kill            PROTO_XT_CALLBACK_ARGS;
 static void do_old_fkeys       PROTO_XT_CALLBACK_ARGS;
@@ -1471,6 +1472,17 @@ do_scrollttyoutput(Widget gw GCC_UNUSED,
 }
 
 static void
+do_keepClipboard(Widget gw GCC_UNUSED,
+		 XtPointer closure GCC_UNUSED,
+		 XtPointer data GCC_UNUSED)
+{
+    TScreen *screen = TScreenOf(term);
+
+    ToggleFlag(screen->keepClipboard);
+    update_keepClipboard();
+}
+
+static void
 do_keepSelection(Widget gw GCC_UNUSED,
 		 XtPointer closure GCC_UNUSED,
 		 XtPointer data GCC_UNUSED)
@@ -2419,6 +2431,15 @@ HandleJumpscroll(Widget w,
 		 Cardinal *param_count)
 {
     HANDLE_VT_TOGGLE(jumpscroll);
+}
+
+void
+HandleKeepClipboard(Widget w,
+		    XEvent *event GCC_UNUSED,
+		    String *params,
+		    Cardinal *param_count)
+{
+    HANDLE_VT_TOGGLE(keepClipboard);
 }
 
 void

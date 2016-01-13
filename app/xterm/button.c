@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.494 2015/08/27 23:47:56 tom Exp $ */
+/* $XTermId: button.c,v 1.498 2015/12/31 11:26:38 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -3829,6 +3829,8 @@ _ConvertSelectionHelper(Widget w,
 			Atom *type,
 			XtPointer *value,
 			unsigned long *length,
+			Char *data,
+			unsigned long remaining,
 			int *format,
 			int (*conversion_function) (Display *,
 						    char **, int,
@@ -3848,9 +3850,8 @@ _ConvertSelectionHelper(Widget w,
 	Display *dpy = XtDisplay(w);
 	XTextProperty textprop;
 	int out_n = 0;
-	unsigned long remaining = screen->selection_length;
 	char *result = 0;
-	char *the_data = (char *) screen->selection_data;
+	char *the_data = (char *) data;
 	char *the_next;
 
 	TRACE(("converting %ld:'%s'\n",
@@ -3937,6 +3938,9 @@ SaveConvertedLength(XtPointer *target, unsigned long source)
     return result;
 }
 
+#define keepClipboard(atom) ((screen->keepClipboard) && \
+	 (atom == XInternAtom(screen->display, "CLIPBOARD", False)))
+
 static Boolean
 ConvertSelection(Widget w,
 		 Atom *selection,
@@ -3950,6 +3954,9 @@ ConvertSelection(Widget w,
     TScreen *screen;
     Bool result = False;
 
+    Char *data;
+    unsigned long data_length;
+
     XtermWidget xw;
 
     if ((xw = getXtermWidget(w)) == 0)
@@ -3960,7 +3967,17 @@ ConvertSelection(Widget w,
     TRACE(("ConvertSelection %s\n",
 	   visibleSelectionTarget(dpy, *target)));
 
-    if (screen->selection_data == NULL) {
+    if (keepClipboard(*selection)) {
+	TRACE(("asked for clipboard\n"));
+	data = screen->clipboard_data;
+	data_length = screen->clipboard_size;
+    } else {
+	TRACE(("asked for selection\n"));
+	data = screen->selection_data;
+	data_length = screen->selection_length;
+    }
+
+    if (data == NULL) {
 	TRACE(("...FIXME: no selection_data\n"));
 	return False;		/* can this happen? */
     }
@@ -4009,28 +4026,32 @@ ConvertSelection(Widget w,
     else if (screen->wide_chars && *target == XA_STRING) {
 	result =
 	    _ConvertSelectionHelper(w,
-				    type, value, length, format,
+				    type, value, length, data,
+				    data_length, format,
 				    Xutf8TextListToTextProperty,
 				    XStringStyle);
 	TRACE(("...Xutf8TextListToTextProperty:%d\n", result));
     } else if (screen->wide_chars && *target == XA_UTF8_STRING(dpy)) {
 	result =
 	    _ConvertSelectionHelper(w,
-				    type, value, length, format,
+				    type, value, length, data,
+				    data_length, format,
 				    Xutf8TextListToTextProperty,
 				    XUTF8StringStyle);
 	TRACE(("...Xutf8TextListToTextProperty:%d\n", result));
     } else if (screen->wide_chars && *target == XA_TEXT(dpy)) {
 	result =
 	    _ConvertSelectionHelper(w,
-				    type, value, length, format,
+				    type, value, length, data,
+				    data_length, format,
 				    Xutf8TextListToTextProperty,
 				    XStdICCTextStyle);
 	TRACE(("...Xutf8TextListToTextProperty:%d\n", result));
     } else if (screen->wide_chars && *target == XA_COMPOUND_TEXT(dpy)) {
 	result =
 	    _ConvertSelectionHelper(w,
-				    type, value, length, format,
+				    type, value, length, data,
+				    data_length, format,
 				    Xutf8TextListToTextProperty,
 				    XCompoundTextStyle);
 	TRACE(("...Xutf8TextListToTextProperty:%d\n", result));
@@ -4053,14 +4074,16 @@ ConvertSelection(Widget w,
     } else if (*target == XA_TEXT(dpy)) {	/* not wide_chars */
 	result =
 	    _ConvertSelectionHelper(w,
-				    type, value, length, format,
+				    type, value, length, data,
+				    data_length, format,
 				    XmbTextListToTextProperty,
 				    XStdICCTextStyle);
 	TRACE(("...XmbTextListToTextProperty(StdICC):%d\n", result));
     } else if (*target == XA_COMPOUND_TEXT(dpy)) {	/* not wide_chars */
 	result =
 	    _ConvertSelectionHelper(w,
-				    type, value, length, format,
+				    type, value, length, data,
+				    data_length, format,
 				    XmbTextListToTextProperty,
 				    XCompoundTextStyle);
 	TRACE(("...XmbTextListToTextProperty(Compound):%d\n", result));
@@ -4069,7 +4092,8 @@ ConvertSelection(Widget w,
     else if (*target == XA_UTF8_STRING(dpy)) {	/* not wide_chars */
 	result =
 	    _ConvertSelectionHelper(w,
-				    type, value, length, format,
+				    type, value, length, data,
+				    data_length, format,
 				    XmbTextListToTextProperty,
 				    XUTF8StringStyle);
 	TRACE(("...XmbTextListToTextProperty(UTF8):%d\n", result));
@@ -4203,6 +4227,16 @@ _OwnSelection(XtermWidget xw,
 			     (int) length,
 			     cutbuffer);
 	    }
+	} else if (keepClipboard(atoms[i])) {
+	    Char *buf;
+	    TRACE(("saving selection to clipboard buffer\n"));
+	    if ((buf = (Char *) malloc((size_t) screen->selection_length)) == 0)
+		SysError(ERROR_BMALLOC2);
+
+	    XtFree((char *) screen->clipboard_data);
+	    memcpy(buf, screen->selection_data, screen->selection_length);
+	    screen->clipboard_data = buf;
+	    screen->clipboard_size = screen->selection_length;
 	} else if (screen->selection_length == 0) {
 	    XtDisownSelection((Widget) xw, atoms[i], screen->selection_time);
 	} else if (!screen->replyToEmacs) {

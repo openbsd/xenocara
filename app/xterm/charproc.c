@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1413 2015/07/15 09:21:40 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1414 2015/12/30 09:38:49 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -279,6 +279,7 @@ static XtActionsRec actionsList[] = {
     { "set-bellIsUrgent",	HandleBellIsUrgent },
     { "set-cursesemul",		HandleCursesEmul },
     { "set-jumpscroll",		HandleJumpscroll },
+    { "set-keep-clipboard",	HandleKeepClipboard },
     { "set-keep-selection",	HandleKeepSelection },
     { "set-marginbell",		HandleMarginBell },
     { "set-old-function-keys",	HandleOldFunctionKeys },
@@ -442,6 +443,7 @@ static XtResource xterm_resources[] =
     Bres(XtNi18nSelections, XtCI18nSelections, screen.i18nSelections, True),
     Bres(XtNfastScroll, XtCFastScroll, screen.fastscroll, False),
     Bres(XtNjumpScroll, XtCJumpScroll, screen.jumpscroll, True),
+    Bres(XtNkeepClipboard, XtCKeepClipboard, screen.keepClipboard, False),
     Bres(XtNkeepSelection, XtCKeepSelection, screen.keepSelection, True),
     Bres(XtNloginShell, XtCLoginShell, misc.login_shell, False),
     Bres(XtNmarginBell, XtCMarginBell, screen.marginbell, False),
@@ -5603,6 +5605,10 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    set_bool_mode(screen->poponbell);
 	    update_poponbell();
 	    break;
+	case srm_KEEP_CLIPBOARD:
+	    set_bool_mode(screen->keepClipboard);
+	    update_keepClipboard();
+	    break;
 	case srm_TITE_INHIBIT:
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM())
@@ -5872,6 +5878,9 @@ savemodes(XtermWidget xw)
 	    break;
 	case srm_POP_ON_BELL:
 	    DoSM(DP_POP_ON_BELL, screen->poponbell);
+	    break;
+	case srm_KEEP_CLIPBOARD:
+	    DoSM(DP_KEEP_CLIPBOARD, screen->keepClipboard);
 	    break;
 #if OPT_TCAP_FKEYS
 	case srm_TCAP_FKEYS:
@@ -6207,6 +6216,10 @@ restoremodes(XtermWidget xw)
 	case srm_POP_ON_BELL:
 	    DoRM(DP_POP_ON_BELL, screen->poponbell);
 	    update_poponbell();
+	    break;
+	case srm_KEEP_CLIPBOARD:
+	    DoRM(DP_KEEP_CLIPBOARD, screen->keepClipboard);
+	    update_keepClipboard();
 	    break;
 #if OPT_TCAP_FKEYS
 	case srm_TCAP_FKEYS:
@@ -7955,6 +7968,7 @@ VTInitialize(Widget wrequest,
     init_Bres(screen.highlight_selection);
     init_Bres(screen.show_wrap_marks);
     init_Bres(screen.i18nSelections);
+    init_Bres(screen.keepClipboard);
     init_Bres(screen.keepSelection);
     init_Bres(screen.selectToClipboard);
     init_Bres(screen.trim_selection);

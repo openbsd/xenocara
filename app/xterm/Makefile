@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.26 2014/08/13 21:02:16 matthieu Exp $
+# $OpenBSD: Makefile,v 1.27 2016/01/13 20:40:08 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -15,8 +15,8 @@ CPPFLAGS+=	-I. -I${.CURDIR} -I${X11BASE}/include \
 		-DFUNCPROTO=15 -DNARROWPROTO -DXFREE86_FT2 -DUTMP \
 		-DDEF_ALLOW_FONT=False -DDEF_ALLOW_TCAP=False \
 		-DDEF_ALLOW_WINDOW=False
-LDADD+=		-L${X11BASE}/lib -lXaw -lXpm -lXt -lSM -lICE \
-		-lXmu -lXft -lXrender -lX11 -lxcb -lXext -lXau -lXdmcp \
+LDADD+=		-L${X11BASE}/lib -lXaw -lXpm -lXt -lSM -lICE -lXmu \
+		-lXft -lXrender -lXinerama -lX11 -lxcb -lXext -lXau -lXdmcp \
 		-lfontconfig -lexpat -lfreetype -lutil -ltermcap -lz
 
 SRCS=	TekPrsTbl.c Tekproc.c VTPrsTbl.c button.c cachedGCs.c \

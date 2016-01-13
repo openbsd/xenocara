@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.823 2015/02/16 00:25:27 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.825 2015/12/30 02:07:03 tom Exp $ */
 
 /*
  * Copyright 1999-2014,2015 by Thomas E. Dickey
@@ -1067,6 +1067,7 @@ typedef enum {
     ,srm_SELECT_TO_CLIPBOARD = 1041
     ,srm_BELL_IS_URGENT = 1042
     ,srm_POP_ON_BELL = 1043
+    ,srm_KEEP_CLIPBOARD = 1044
     ,srm_TITE_INHIBIT = 1048
 #if OPT_TCAP_FKEYS
     ,srm_TCAP_FKEYS = 1050
@@ -1661,6 +1662,7 @@ typedef enum {
 	DP_DECTCEM,
 	DP_DELETE_IS_DEL,
 	DP_EIGHT_BIT_META,
+	DP_KEEP_CLIPBOARD,
 	DP_KEEP_SELECTION,
 	DP_KEYBOARD_TYPE,
 	DP_POP_ON_BELL,
@@ -2320,11 +2322,14 @@ typedef struct {
 	Boolean		trim_selection; /* controls trimming of selection */
 	Boolean		i18nSelections;
 	Boolean		brokenSelections;
+	Boolean		keepClipboard;	/* retain data sent to clipboard */
 	Boolean		keepSelection;	/* do not lose selection on output */
 	Boolean		replyToEmacs;	/* Send emacs escape code when done selecting or extending? */
 	Char		*selection_data; /* the current selection */
 	int		selection_size; /* size of allocated buffer */
 	unsigned long	selection_length; /* number of significant bytes */
+	Char		*clipboard_data; /* the current clipboard */
+	unsigned long	clipboard_size; /*  size of allocated buffer */
 	EventMode	eventMode;
 	Time		selection_time;	/* latest event timestamp */
 	Time		lastButtonUpTime;
