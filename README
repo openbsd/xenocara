@@ -32,9 +32,10 @@ organisation used in X.Org:
 In addition Xenocara uses the following directories:
 
 - dist:	    contains some of the 3rd party sources, when keeping them
-  	    separate helps the build system (Mesa and xkeyboard-config)
+  	    separate helps the build system (fontconfig, xcb and
+            xkeyboard-config)
 - distrib:  all binary distribution related tools and data
-- etc:	    mtree(8) data files
+- etc:	    some default config files
 - share:    make(1) configuration for Xenocara
 
 At the top-level directory two files describe the individual
@@ -89,11 +90,11 @@ drift will cause various problems during builds.
 
 To build Xenocara, you need to have /usr/X11R6/bin in your PATH.
 
-  Sudo
+  Sudo/doas
 
-If the SUDO variable points to your sudo(8) binary in /etc/mk.conf,
-'make build' can be run as a normal user. It will raise its privileges
-whenever needed with sudo. Otherwise, you need to run make build as
+If the SUDO variable in /etc/mk.conf points to your sudo(8) or doas(8)
+binary, 'make build' can be run as a normal user. It will raise its
+privileges whenever needed. Otherwise, you need to run make build as
 root.
 
 If you have installed the full Xenocara X sets on your system, you
@@ -202,4 +203,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.35 2015/12/23 14:28:32 jsg Exp $
+$OpenBSD: README,v 1.36 2016/01/18 18:01:37 matthieu Exp $
