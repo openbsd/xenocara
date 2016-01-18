@@ -1,8 +1,0 @@
-Post-installation instructions for X.Org on OpenBSD/aviion
-----------------------------------------------------------
-
-There is no X server for aviion.  Only userland X.
-
-problem_blurb
-
-$OpenBSD: README.aviion,v 1.1 2013/10/25 18:14:20 miod Exp $
