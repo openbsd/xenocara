@@ -23,13 +23,11 @@ Conventions used in this document:
    or supported or not supported as you wish, you will have to create
    a configuration file.
 
-   Report to http://www.openbsd.org/faq/faq11.html#amd64i386 for details.
-
-   See also Xorg(1), xorg.conf(5).
+   See Xorg(1) and xorg.conf(5) for details.
 
 3. With X.Org XOrgVersion, you can use anti-aliased fonts in many applications.
    visit http://www.openbsd.org/faq/truetype.html for more information.
 
 problem_blurb
 
-$OpenBSD: README.i386,v 1.8 2014/07/30 20:06:30 matthieu Exp $
+$OpenBSD: README.i386,v 1.9 2016/01/18 17:53:58 matthieu Exp $
