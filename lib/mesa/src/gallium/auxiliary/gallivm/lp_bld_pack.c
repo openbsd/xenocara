@@ -461,50 +461,49 @@ lp_build_pack2(struct gallivm_state *gallivm,
    assert(src_type.length * 2 == dst_type.length);
 
    /* Check for special cases first */
-   if((util_cpu_caps.has_sse2 || util_cpu_caps.has_altivec) &&
-       src_type.width * src_type.length >= 128) {
+   if ((util_cpu_caps.has_sse2 || util_cpu_caps.has_altivec) &&
+        src_type.width * src_type.length >= 128) {
       const char *intrinsic = NULL;
       boolean swap_intrinsic_operands = FALSE;
 
       switch(src_type.width) {
       case 32:
          if (util_cpu_caps.has_sse2) {
-           if(dst_type.sign) {
+           if (dst_type.sign) {
               intrinsic = "llvm.x86.sse2.packssdw.128";
-           }
-           else {
+           } else {
               if (util_cpu_caps.has_sse4_1) {
                  intrinsic = "llvm.x86.sse41.packusdw";
               }
            }
          } else if (util_cpu_caps.has_altivec) {
             if (dst_type.sign) {
-              intrinsic = "llvm.ppc.altivec.vpkswus";
-           } else {
-              intrinsic = "llvm.ppc.altivec.vpkuwus";
-           }
+               intrinsic = "llvm.ppc.altivec.vpkswss";
+            } else {
+               intrinsic = "llvm.ppc.altivec.vpkuwus";
+            }
 #ifdef PIPE_ARCH_LITTLE_ENDIAN
-           swap_intrinsic_operands = TRUE;
+            swap_intrinsic_operands = TRUE;
 #endif
          }
          break;
       case 16:
          if (dst_type.sign) {
             if (util_cpu_caps.has_sse2) {
-              intrinsic = "llvm.x86.sse2.packsswb.128";
+               intrinsic = "llvm.x86.sse2.packsswb.128";
             } else if (util_cpu_caps.has_altivec) {
-              intrinsic = "llvm.ppc.altivec.vpkshss";
+               intrinsic = "llvm.ppc.altivec.vpkshss";
 #ifdef PIPE_ARCH_LITTLE_ENDIAN
-              swap_intrinsic_operands = TRUE;
+               swap_intrinsic_operands = TRUE;
 #endif
             }
          } else {
             if (util_cpu_caps.has_sse2) {
-              intrinsic = "llvm.x86.sse2.packuswb.128";
+               intrinsic = "llvm.x86.sse2.packuswb.128";
             } else if (util_cpu_caps.has_altivec) {
-	      intrinsic = "llvm.ppc.altivec.vpkshus";
+               intrinsic = "llvm.ppc.altivec.vpkshus";
 #ifdef PIPE_ARCH_LITTLE_ENDIAN
-              swap_intrinsic_operands = TRUE;
+               swap_intrinsic_operands = TRUE;
 #endif
             }
          }

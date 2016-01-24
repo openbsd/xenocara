@@ -273,6 +273,7 @@ nvc0_tfb_validate(struct nvc0_context *nvc0)
 
       if (!targ->clean)
          nvc0_query_fifo_wait(push, targ->pq);
+      nouveau_pushbuf_space(push, 0, 0, 1);
       BEGIN_NVC0(push, NVC0_3D(TFB_BUFFER_ENABLE(b)), 5);
       PUSH_DATA (push, 1);
       PUSH_DATAh(push, buf->address + targ->pipe.buffer_offset);

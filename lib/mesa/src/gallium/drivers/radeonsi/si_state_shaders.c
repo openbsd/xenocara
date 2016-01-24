@@ -1198,6 +1198,7 @@ static bool si_update_spi_tmpring_size(struct si_context *sctx)
 		si_get_max_scratch_bytes_per_wave(sctx);
 	unsigned scratch_needed_size = scratch_bytes_per_wave *
 		sctx->scratch_waves;
+	unsigned spi_tmpring_size;
 	int r;
 
 	if (scratch_needed_size > 0) {
@@ -1280,8 +1281,12 @@ static bool si_update_spi_tmpring_size(struct si_context *sctx)
 	assert((scratch_needed_size & ~0x3FF) == scratch_needed_size &&
 		"scratch size should already be aligned correctly.");
 
-	sctx->spi_tmpring_size = S_0286E8_WAVES(sctx->scratch_waves) |
-				S_0286E8_WAVESIZE(scratch_bytes_per_wave >> 10);
+	spi_tmpring_size = S_0286E8_WAVES(sctx->scratch_waves) |
+			   S_0286E8_WAVESIZE(scratch_bytes_per_wave >> 10);
+	if (spi_tmpring_size != sctx->spi_tmpring_size) {
+		sctx->spi_tmpring_size = spi_tmpring_size;
+		sctx->emit_scratch_reloc = true;
+	}
 	return true;
 }
 

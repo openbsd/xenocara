@@ -426,6 +426,8 @@ intelInitContext(struct intel_context *intel,
       return false;
    }
 
+   driContextSetFlags(&intel->ctx, flags);
+
    driContextPriv->driverPrivate = intel;
    intel->driContext = driContextPriv;
 

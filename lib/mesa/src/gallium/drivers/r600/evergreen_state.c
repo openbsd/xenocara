@@ -1916,7 +1916,7 @@ static void evergreen_emit_constant_buffers(struct r600_context *rctx,
 
 		if (!gs_ring_buffer) {
 			r600_write_context_reg_flag(cs, reg_alu_constbuf_size + buffer_index * 4,
-						    ALIGN_DIVUP(cb->buffer_size >> 4, 16), pkt_flags);
+						    ALIGN_DIVUP(cb->buffer_size, 256), pkt_flags);
 			r600_write_context_reg_flag(cs, reg_alu_const_cache + buffer_index * 4, va >> 8,
 						    pkt_flags);
 		}

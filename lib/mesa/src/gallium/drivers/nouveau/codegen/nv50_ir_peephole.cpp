@@ -1664,6 +1664,9 @@ AlgebraicOpt::handleCVT_EXTBF(Instruction *cvt)
          arg = shift->getSrc(0);
          offset = imm.reg.data.u32;
       }
+      // We just AND'd the high bits away, which means this is effectively an
+      // unsigned value.
+      cvt->sType = TYPE_U32;
    } else if (insn->op == OP_SHR &&
               insn->sType == cvt->sType &&
               insn->src(1).getImmediate(imm)) {

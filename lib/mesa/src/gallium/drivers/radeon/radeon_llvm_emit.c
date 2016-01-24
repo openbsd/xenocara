@@ -194,8 +194,8 @@ unsigned radeon_llvm_compile(LLVMModuleRef M, struct radeon_shader_binary *binar
 	if (mem_err) {
 		fprintf(stderr, "%s: %s", __FUNCTION__, err);
 		FREE(err);
-		LLVMDisposeTargetMachine(tm);
-		return 1;
+		rval = 1;
+		goto out;
 	}
 
 	if (0 != rval) {
@@ -211,6 +211,7 @@ unsigned radeon_llvm_compile(LLVMModuleRef M, struct radeon_shader_binary *binar
 	/* Clean up */
 	LLVMDisposeMemoryBuffer(out_buffer);
 
+out:
 	if (dispose_tm) {
 		LLVMDisposeTargetMachine(tm);
 	}
