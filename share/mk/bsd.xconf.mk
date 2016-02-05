@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.29 2015/11/25 09:23:59 jsg Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.30 2016/02/05 13:59:11 visa Exp $
 
 # Shared libs?
 .if ${MACHINE} == "vax"
@@ -8,8 +8,7 @@ XENOCARA_HAVE_SHARED_LIBS?=yes
 .endif
 
 # Build GL libs and apps?
-.if ${MACHINE_CPU} == "mips64" || ${MACHINE_ARCH} == "m88k" || \
-    ${MACHINE_ARCH} == "alpha"
+.if ${MACHINE_ARCH} == "m88k" || ${MACHINE_ARCH} == "alpha"
 XENOCARA_BUILD_GL?=no
 XENOCARA_BUILD_DRI?=no
 .else
@@ -19,8 +18,8 @@ XENOCARA_BUILD_DRI?=${XENOCARA_HAVE_SHARED_LIBS:L}
 # Gallium requires gcc 4 __sync_and_fetch() support
 .if ${MACHINE_ARCH} == "arm" || ${MACHINE_ARCH} == "hppa" || \
     ${MACHINE_ARCH} == "hppa64" || ${MACHINE_ARCH} == "m68k" || \
-    ${MACHINE_ARCH} == "m88k" || ${MACHINE_CPU} == "mips64" || \
-    ${MACHINE_ARCH} == "sh" || ${MACHINE_ARCH} == "sparc"
+    ${MACHINE_ARCH} == "m88k" || ${MACHINE_ARCH} == "sh" || \
+    ${MACHINE_ARCH} == "sparc"
 XENOCARA_BUILD_GALLIUM?=no
 .else
 XENOCARA_BUILD_GALLIUM?=${XENOCARA_HAVE_SHARED_LIBS:L}
