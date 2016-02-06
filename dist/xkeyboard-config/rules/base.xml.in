@@ -2272,6 +2272,12 @@
             </languageList>
           </configItem>
         </variant>
+        <variant>
+          <configItem>
+            <name>thinkpad</name>
+            <_description>Portuguese (Brazil, IBM/Lenovo ThinkPad)</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -3108,6 +3114,12 @@
           <configItem>
             <name>mac</name>
             <_description>French (Macintosh)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>azerty</name>
+            <_description>French (Azerty)</_description>
           </configItem>
         </variant>
         <variant>
@@ -5674,6 +5686,16 @@
     </layout>
     <layout>
       <configItem>
+        <name>tg</name>
+        <_shortDescription>fr-tg</_shortDescription>
+        <_description>French (Togo)</_description>
+        <languageList>
+          <iso639Id>fra</iso639Id>
+        </languageList>
+      </configItem>
+    </layout>
+    <layout>
+      <configItem>
         <name>ke</name>
         <!-- Keyboard indicator for Swahili layouts -->
         <_shortDescription>sw</_shortDescription>
@@ -6489,6 +6511,12 @@
       </option>
       <option>
         <configItem>
+          <name>caps:menu</name>
+          <_description>Make Caps Lock an additional Menu key</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
           <name>caps:shiftlock</name>
           <_description>Caps Lock toggles ShiftLock (affects all keys)</_description>
         </configItem>
@@ -6576,6 +6604,12 @@
         <configItem>
           <name>altwin:swap_alt_win</name>
           <_description>Alt is swapped with Win</_description>
+        </configItem>
+      </option>
+      <option>
+        <configItem>
+          <name>altwin:prtsc_rwin</name>
+          <_description>Win is mapped to PrtSc (and the usual Win key)</_description>
         </configItem>
       </option>
     </group>
