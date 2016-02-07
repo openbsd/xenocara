@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.30 2016/02/05 13:59:11 visa Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.31 2016/02/07 10:06:50 jsg Exp $
 
 # Shared libs?
 .if ${MACHINE} == "vax"
@@ -14,15 +14,6 @@ XENOCARA_BUILD_DRI?=no
 .else
 XENOCARA_BUILD_GL?=${XENOCARA_HAVE_SHARED_LIBS:L}
 XENOCARA_BUILD_DRI?=${XENOCARA_HAVE_SHARED_LIBS:L}
-.endif
-# Gallium requires gcc 4 __sync_and_fetch() support
-.if ${MACHINE_ARCH} == "arm" || ${MACHINE_ARCH} == "hppa" || \
-    ${MACHINE_ARCH} == "hppa64" || ${MACHINE_ARCH} == "m68k" || \
-    ${MACHINE_ARCH} == "m88k" || ${MACHINE_ARCH} == "sh" || \
-    ${MACHINE_ARCH} == "sparc"
-XENOCARA_BUILD_GALLIUM?=no
-.else
-XENOCARA_BUILD_GALLIUM?=${XENOCARA_HAVE_SHARED_LIBS:L}
 .endif
 
 # Build pixman?
