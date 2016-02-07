@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.58 2015/12/01 21:20:21 kettenis Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.59 2016/02/07 09:51:01 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -6,7 +6,7 @@ DIST= ${.CURDIR}
 
 # Machines for which we don't build the Xorg Xserver
 NO_XORG_MACHINES=	alpha aviion hppa64 landisk  \
-			octeon solbourne vax
+			octeon vax
 
 .for M in ${NO_XORG_MACHINES} 
 NO_XORG_${M} = --disable-xorg
