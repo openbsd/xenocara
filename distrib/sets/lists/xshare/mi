@@ -3339,6 +3339,7 @@
 ./usr/X11R6/share/X11/xkb/keycodes/fujitsu
 ./usr/X11R6/share/X11/xkb/keycodes/hp
 ./usr/X11R6/share/X11/xkb/keycodes/ibm
+./usr/X11R6/share/X11/xkb/keycodes/jolla
 ./usr/X11R6/share/X11/xkb/keycodes/macintosh
 ./usr/X11R6/share/X11/xkb/keycodes/olpc
 ./usr/X11R6/share/X11/xkb/keycodes/sgi_vndr
@@ -3425,6 +3426,8 @@
 ./usr/X11R6/share/X11/xkb/symbols/ir
 ./usr/X11R6/share/X11/xkb/symbols/is
 ./usr/X11R6/share/X11/xkb/symbols/it
+./usr/X11R6/share/X11/xkb/symbols/jolla_vndr
+./usr/X11R6/share/X11/xkb/symbols/jolla_vndr/sbj
 ./usr/X11R6/share/X11/xkb/symbols/jp
 ./usr/X11R6/share/X11/xkb/symbols/ke
 ./usr/X11R6/share/X11/xkb/symbols/keypad
@@ -3540,6 +3543,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/sun_vndr/us
 ./usr/X11R6/share/X11/xkb/symbols/sy
 ./usr/X11R6/share/X11/xkb/symbols/terminate
+./usr/X11R6/share/X11/xkb/symbols/tg
 ./usr/X11R6/share/X11/xkb/symbols/th
 ./usr/X11R6/share/X11/xkb/symbols/tj
 ./usr/X11R6/share/X11/xkb/symbols/tm
