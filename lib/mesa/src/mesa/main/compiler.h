@@ -66,28 +66,16 @@ extern "C" {
  * Try to use a runtime test instead.
  * For now, only used by some DRI hardware drivers for color/texel packing.
  */
-#if defined(BYTE_ORDER) && defined(BIG_ENDIAN) && BYTE_ORDER == BIG_ENDIAN
-#if defined(__linux__)
-#include <byteswap.h>
-#define CPU_TO_LE32( x )	bswap_32( x )
-#elif defined(__APPLE__)
-#include <CoreFoundation/CFByteOrder.h>
-#define CPU_TO_LE32( x )	CFSwapInt32HostToLittle( x )
-#elif defined(__OpenBSD__)
-#include <sys/types.h>
+#ifdef __OpenBSD__
+#include <endian.h>
 #define CPU_TO_LE32( x )	htole32( x )
-#else /*__linux__ */
-#include <sys/endian.h>
-#define CPU_TO_LE32( x )	bswap32( x )
-#endif /*__linux__*/
+#define LE32_TO_CPU( x )	letoh32( x )
+#if BYTE_ORDER == BIG_ENDIAN
 #define MESA_BIG_ENDIAN 1
 #else
-#define CPU_TO_LE32( x )	( x )
 #define MESA_LITTLE_ENDIAN 1
 #endif
-#define LE32_TO_CPU( x )	CPU_TO_LE32( x )
-
-
+#endif /* __OpenBSD__ */
 
 #define IEEE_ONE 0x3f800000
 
