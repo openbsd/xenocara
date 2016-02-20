@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.31 2016/02/07 10:06:50 jsg Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.32 2016/02/20 10:51:26 matthieu Exp $
 
 # Shared libs?
 .if ${MACHINE} == "vax"
@@ -8,7 +8,7 @@ XENOCARA_HAVE_SHARED_LIBS?=yes
 .endif
 
 # Build GL libs and apps?
-.if ${MACHINE_ARCH} == "m88k" || ${MACHINE_ARCH} == "alpha"
+.if ${MACHINE_ARCH} == "m88k"
 XENOCARA_BUILD_GL?=no
 XENOCARA_BUILD_DRI?=no
 .else
