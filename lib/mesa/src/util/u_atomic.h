@@ -24,7 +24,8 @@
 #elif defined(_MSC_VER)
 #define PIPE_ATOMIC_MSVC_INTRINSIC
 #elif defined(__ARM_ARCH_4__) || defined(__ARM_ARCH_5__) || \
-      defined(__hppa__) || defined(__sparc__) || defined(__sh__)
+	defined(__hppa__) || defined(__sparc__) || defined(__sh__) \
+	|| defined(__alpha__)
 #define PIPE_ATOMIC_UNLOCKED
 #elif defined(__GNUC__)
 #define PIPE_ATOMIC_GCC_INTRINSIC
