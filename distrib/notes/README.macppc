@@ -12,7 +12,7 @@ hardware.  If your hardware is not properly autodetected or supported
 or not supported as you wish, you will have to create a configuration
 file.
 
-The 'r128 and 'ati' drivers are currently known to work on the
+The 'r128' and 'ati' drivers are currently known to work on the
 machines with ATI Rage 128 or Radeon cards. The 'nv' driver works for
 machines with nVidia cards, although some modes may experience
 problems.
@@ -80,4 +80,4 @@ button 2 and mouse button 3 respectively.
 
 problem_blurb
 
-$OpenBSD: README.macppc,v 1.10 2013/06/04 02:31:56 mpi Exp $
+$OpenBSD: README.macppc,v 1.11 2016/02/20 11:00:01 matthieu Exp $
