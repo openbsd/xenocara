@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2015/12/20 12:31:01 jsg Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2016/02/20 10:49:47 matthieu Exp $
 
 .include <bsd.own.mk>
 
@@ -36,6 +36,26 @@ CONFIGURE_ARGS=		--with-dri-drivers=${DRI_DRIVERS} \
 # The i965 driver uses the cmpxchg8b instruction
 .if ${MACHINE} == i386
 CONFIGURE_ARGS+=	USER_CFLAGS="-march=i586" USER_CXXFLAGS="-march=i586"
+.endif
+
+.if ${MACHINE} == alpha
+# -O2 causes gcc ICE on  main/format_pack.c and program/prog_execute.c
+O1= -fdefer-pop  -fguess-branch-probability -fcprop-registers \
+	-fif-conversion -fif-conversion2 -ftree-ccp -ftree-dce \
+	-ftree-dominator-opts -ftree-dse -ftree-ter -ftree-lrs -ftree-sra \
+	-ftree-copyrename -ftree-fre -ftree-ch -funit-at-a-time \
+	-fmerge-constants -fomit-frame-pointer
+
+O2= ${O1} -fthread-jumps -fcrossjumping -foptimize-sibling-calls \
+	-fcse-follow-jumps -fcse-skip-blocks -fgcse -fgcse-lm \
+	-fexpensive-optimizations -frerun-cse-after-loop \
+	-fcaller-saves -fpeephole2 -fschedule-insns -fschedule-insns2 \
+	-fsched-interblock  -fsched-spec -fregmove \
+	-fdelete-null-pointer-checks -freorder-blocks \
+	-freorder-functions -falign-functions -falign-jumps -falign-loops \
+	-falign-labels -ftree-pre
+
+CONFIGURE_ARGS+=       USER_CFLAGS="-O0 ${O2}"
 .endif
 
 depend:
