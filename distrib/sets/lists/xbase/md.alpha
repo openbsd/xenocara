@@ -1,3 +1,4 @@
+./usr/X11R6/bin/glxgears
 ./usr/X11R6/bin/glxinfo
 ./usr/X11R6/bin/ucs2any
 ./usr/X11R6/bin/xdriinfo
