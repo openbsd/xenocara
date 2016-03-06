@@ -93,8 +93,8 @@ XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
     xci->npossible = rep.nPossibleOutput;
     xci->possible = (RROutput *) (xci->outputs + rep.nOutput);
 
-    _XRead32 (dpy, xci->outputs, rep.nOutput << 2);
-    _XRead32 (dpy, xci->possible, rep.nPossibleOutput << 2);
+    _XRead32 (dpy, (long *) xci->outputs, rep.nOutput << 2);
+    _XRead32 (dpy, (long *) xci->possible, rep.nPossibleOutput << 2);
 
     /*
      * Skip any extra data

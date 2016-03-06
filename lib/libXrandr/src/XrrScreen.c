@@ -145,8 +145,8 @@ doGetScreenResources (Display *dpy, Window window, int poll)
     xrsr->modes = (XRRModeInfo *) (xrsr->outputs + rep.nOutputs);
     names = (char *) (xrsr->modes + rep.nModes);
 
-    _XRead32 (dpy, xrsr->crtcs, rep.nCrtcs << 2);
-    _XRead32 (dpy, xrsr->outputs, rep.nOutputs << 2);
+    _XRead32 (dpy, (long *) xrsr->crtcs, rep.nCrtcs << 2);
+    _XRead32 (dpy, (long *) xrsr->outputs, rep.nOutputs << 2);
 
     for (i = 0; i < rep.nModes; i++)  {
 	xRRModeInfo modeInfo;

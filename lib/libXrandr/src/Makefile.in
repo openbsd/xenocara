@@ -95,7 +95,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libXrandr_la_DEPENDENCIES =
 am_libXrandr_la_OBJECTS = Xrandr.lo XrrConfig.lo XrrCrtc.lo XrrMode.lo \
 	XrrOutput.lo XrrProperty.lo XrrScreen.lo XrrProvider.lo \
-	XrrProviderProperty.lo
+	XrrProviderProperty.lo XrrMonitor.lo
 libXrandr_la_OBJECTS = $(am_libXrandr_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -302,7 +302,8 @@ libXrandr_la_SOURCES = \
 	XrrProperty.c	\
 	XrrScreen.c     \
 	XrrProvider.c   \
-	XrrProviderProperty.c
+	XrrProviderProperty.c \
+	XrrMonitor.c
 
 libXrandr_la_LIBADD = @RANDR_LIBS@
 AM_CFLAGS = \
@@ -395,6 +396,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrConfig.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrCrtc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrMode.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrMonitor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrOutput.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrProperty.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XrrProvider.Plo@am__quote@

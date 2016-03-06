@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2013/08/13 07:07:17 guenther Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2016/03/06 13:37:21 matthieu Exp $
 
-SHARED_LIBS=	Xrandr 7.0
+SHARED_LIBS=	Xrandr 7.1
 
 .include <bsd.xorg.mk>

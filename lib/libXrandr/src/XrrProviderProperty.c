@@ -70,7 +70,7 @@ XRRListProviderProperties (Display *dpy, RRProvider provider, int *nprop)
 	    return NULL;
 	}
 
-	_XRead32 (dpy, props, nbytes);
+	_XRead32 (dpy, (long *) props, nbytes);
     }
 
     *nprop = rep.nAtoms;

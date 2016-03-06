@@ -102,9 +102,9 @@ XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output)
     xoi->clones = (RROutput *) (xoi->modes + rep.nModes);
     xoi->name = (char *) (xoi->clones + rep.nClones);
 
-    _XRead32 (dpy, xoi->crtcs, rep.nCrtcs << 2);
-    _XRead32 (dpy, xoi->modes, rep.nModes << 2);
-    _XRead32 (dpy, xoi->clones, rep.nClones << 2);
+    _XRead32 (dpy, (long *) xoi->crtcs, rep.nCrtcs << 2);
+    _XRead32 (dpy, (long *) xoi->modes, rep.nModes << 2);
+    _XRead32 (dpy, (long *) xoi->clones, rep.nClones << 2);
 
     /*
      * Read name and '\0' terminate

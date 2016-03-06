@@ -552,6 +552,36 @@ XRRGetProviderProperty (Display *dpy, RRProvider provider,
 			unsigned long *nitems, unsigned long *bytes_after,
 			unsigned char **prop);
 
+
+typedef struct _XRRMonitorInfo {
+    Atom name;
+    Bool primary;
+    Bool automatic;
+    int noutput;
+    int x;
+    int y;
+    int width;
+    int height;
+    int mwidth;
+    int mheight;
+    RROutput *outputs;
+} XRRMonitorInfo;
+
+XRRMonitorInfo *
+XRRAllocateMonitor(Display *dpy, int noutput);
+
+XRRMonitorInfo *
+XRRGetMonitors(Display *dpy, Window window, Bool get_active, int *nmonitors);
+
+void
+XRRSetMonitor(Display *dpy, Window window, XRRMonitorInfo *monitor);
+
+void
+XRRDeleteMonitor(Display *dpy, Window window, Atom name);
+
+void
+XRRFreeMonitors(XRRMonitorInfo *monitors);
+
 _XFUNCPROTOEND
 
 #endif /* _XRANDR_H_ */

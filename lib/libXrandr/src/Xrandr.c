@@ -219,62 +219,62 @@ static Status XRREventToWire(Display *dpy, XEvent *event, xEvent *wire)
 	awire->subCode = aevent->subtype;
 	switch (aevent->subtype) {
 	case RRNotify_OutputChange: {
-	    xRROutputChangeNotifyEvent *awire = (xRROutputChangeNotifyEvent *) wire;
-	    XRROutputChangeNotifyEvent *aevent = (XRROutputChangeNotifyEvent *) event;
-	    awire->window = aevent->window;
-	    awire->output = aevent->output;
-	    awire->crtc = aevent->crtc;
-	    awire->mode = aevent->mode;
-	    awire->rotation = aevent->rotation;
-	    awire->connection = aevent->connection;
-	    awire->subpixelOrder = aevent->subpixel_order;
+	    xRROutputChangeNotifyEvent *sawire = (xRROutputChangeNotifyEvent *) wire;
+	    XRROutputChangeNotifyEvent *saevent = (XRROutputChangeNotifyEvent *) event;
+	    sawire->window = saevent->window;
+	    sawire->output = saevent->output;
+	    sawire->crtc = saevent->crtc;
+	    sawire->mode = saevent->mode;
+	    sawire->rotation = saevent->rotation;
+	    sawire->connection = saevent->connection;
+	    sawire->subpixelOrder = saevent->subpixel_order;
 	    return True;
 	}
 	case RRNotify_CrtcChange: {
-	    xRRCrtcChangeNotifyEvent *awire = (xRRCrtcChangeNotifyEvent *) wire;
-	    XRRCrtcChangeNotifyEvent *aevent = (XRRCrtcChangeNotifyEvent *) event;
-	    awire->window = aevent->window;
-	    awire->crtc = aevent->crtc;
-	    awire->mode = aevent->mode;
-	    awire->rotation = aevent->rotation;
-	    awire->x = aevent->x;
-	    awire->y = aevent->y;
-	    awire->width = aevent->width;
-	    awire->height = aevent->height;
+	    xRRCrtcChangeNotifyEvent *sawire = (xRRCrtcChangeNotifyEvent *) wire;
+	    XRRCrtcChangeNotifyEvent *saevent = (XRRCrtcChangeNotifyEvent *) event;
+	    sawire->window = saevent->window;
+	    sawire->crtc = saevent->crtc;
+	    sawire->mode = saevent->mode;
+	    sawire->rotation = saevent->rotation;
+	    sawire->x = saevent->x;
+	    sawire->y = saevent->y;
+	    sawire->width = saevent->width;
+	    sawire->height = saevent->height;
 	    return True;
 	}
 	case RRNotify_OutputProperty: {
-	    xRROutputPropertyNotifyEvent *awire = (xRROutputPropertyNotifyEvent *) wire;
-	    XRROutputPropertyNotifyEvent *aevent = (XRROutputPropertyNotifyEvent *) event;
-	    awire->window = aevent->window;
-	    awire->output = aevent->output;
-	    awire->atom = aevent->property;
-	    awire->timestamp = aevent->timestamp;
-	    awire->state = aevent->state;
+	    xRROutputPropertyNotifyEvent *sawire = (xRROutputPropertyNotifyEvent *) wire;
+	    XRROutputPropertyNotifyEvent *saevent = (XRROutputPropertyNotifyEvent *) event;
+	    sawire->window = saevent->window;
+	    sawire->output = saevent->output;
+	    sawire->atom = saevent->property;
+	    sawire->timestamp = saevent->timestamp;
+	    sawire->state = saevent->state;
 	    return True;
 	}
 	case RRNotify_ProviderChange: {
-	    xRRProviderChangeNotifyEvent *awire = (xRRProviderChangeNotifyEvent *) wire;
-	    XRRProviderChangeNotifyEvent *aevent = (XRRProviderChangeNotifyEvent *) event;
-	    awire->window = aevent->window;
-	    awire->provider = aevent->provider;
+	    xRRProviderChangeNotifyEvent *sawire = (xRRProviderChangeNotifyEvent *) wire;
+	    XRRProviderChangeNotifyEvent *saevent = (XRRProviderChangeNotifyEvent *) event;
+	    sawire->window = saevent->window;
+	    sawire->provider = saevent->provider;
 	    return True;
 	}
 	case RRNotify_ProviderProperty: {
-	    xRRProviderPropertyNotifyEvent *awire = (xRRProviderPropertyNotifyEvent *) wire;
-	    XRRProviderPropertyNotifyEvent *aevent = (XRRProviderPropertyNotifyEvent *) event;
-	    awire->window = aevent->window;
-	    awire->provider = aevent->provider;
-	    awire->atom = aevent->property;
-	    awire->timestamp = aevent->timestamp;
-	    awire->state = aevent->state;
+	    xRRProviderPropertyNotifyEvent *sawire = (xRRProviderPropertyNotifyEvent *) wire;
+	    XRRProviderPropertyNotifyEvent *saevent = (XRRProviderPropertyNotifyEvent *) event;
+	    sawire->window = saevent->window;
+	    sawire->provider = saevent->provider;
+	    sawire->atom = saevent->property;
+	    sawire->timestamp = saevent->timestamp;
+	    sawire->state = saevent->state;
 	    return True;
 	}
 	case RRNotify_ResourceChange: {
-	    xRRResourceChangeNotifyEvent *awire = (xRRResourceChangeNotifyEvent *) wire;
-	    XRRResourceChangeNotifyEvent *aevent = (XRRResourceChangeNotifyEvent *) event;
-	    awire->window = aevent->window;
-	    awire->timestamp = aevent->timestamp;
+	    xRRResourceChangeNotifyEvent *sawire = (xRRResourceChangeNotifyEvent *) wire;
+	    XRRResourceChangeNotifyEvent *saevent = (XRRResourceChangeNotifyEvent *) event;
+	    sawire->window = saevent->window;
+	    sawire->timestamp = saevent->timestamp;
 	    return True;
 	}
 	}

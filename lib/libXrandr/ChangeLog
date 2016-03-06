@@ -1,3 +1,46 @@
+commit 4437436906cbba5121115e552d564262e8b4c784
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Dec 16 01:55:30 2014 -0800
+
+    Add monitors, update to version 1.5 (v2)
+    
+    v2: [airlied]
+    xrandr was giving the outputs from 0 for each monitor instead of
+    incrementing the pointer.
+    add get_active support.
+    
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 7402eaa0185110a60cf4aae32d7b470c1372b45b
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Dec 16 17:05:18 2014 -0800
+
+    libXrandr: Clean up compiler warnings
+    
+    This removes warnings about shadowing local variables with the same
+    name, and type mismatches with _XRead32.
+    
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit bc00b4fb0b52ed2f6f8544fa3b5da9693ee7ed90
+Author: Michael Joost <mehl@michael-joost.de>
+Date:   Mon Nov 18 16:11:26 2013 +0100
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 30a7b506ae2071b8d265ce4eaeed1af60bc7ee7b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Sep 7 21:50:49 2013 -0700
