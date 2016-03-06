@@ -34,6 +34,7 @@
 #include "xf86.h"
 #include "xf86Priv.h"
 #include "xf86_OSlib.h"
+#include "osdep.h"
 
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
@@ -91,7 +92,7 @@ static int initialVT = -1;
 #define CHECK_DRIVER_MSG \
   "Check your kernel's console driver configuration and /dev entries"
 
-static char *supported_drivers[] = {
+static const char *supported_drivers[] = {
 #ifdef PCCONS_SUPPORT
     "pccons (with X support)",
 #endif
@@ -155,7 +156,7 @@ static xf86ConsOpen_t xf86ConsTab[] = {
 };
 
 void
-xf86OpenConsole()
+xf86OpenConsole(void)
 {
     int i, fd = -1;
     xf86ConsOpen_t *driver;
@@ -261,7 +262,9 @@ xf86OpenConsole()
 		sleep(1);
 	    }
 #endif
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 acquire_vt:
+#endif
 	    if (!xf86Info.ShareVTs) {
                 /*
                  * now get the VT
@@ -325,7 +328,7 @@ acquire_vt:
 #ifdef PCCONS_SUPPORT
 
 static int
-xf86OpenPccons()
+xf86OpenPccons(void)
 {
     int fd = -1;
 
@@ -350,7 +353,7 @@ xf86OpenPccons()
 #ifdef SYSCONS_SUPPORT
 
 static int
-xf86OpenSyscons()
+xf86OpenSyscons(void)
 {
     int fd = -1;
     vtmode_t vtmode;
@@ -459,12 +462,13 @@ xf86OpenSyscons()
 #ifdef PCVT_SUPPORT
 
 static int
-xf86OpenPcvt()
+xf86OpenPcvt(void)
 {
     /* This looks much like syscons, since pcvt is API compatible */
     int fd = -1;
     vtmode_t vtmode;
-    char vtname[12], *vtprefix;
+    char vtname[12];
+    const char *vtprefix;
     struct pcvtid pcvt_version;
 
 #ifndef __OpenBSD__
@@ -560,12 +564,12 @@ xf86OpenPcvt()
 #ifdef WSCONS_SUPPORT
 
 static int
-xf86OpenWScons()
+xf86OpenWScons(void)
 {
     int fd = -1;
     int mode = WSDISPLAYIO_MODE_MAPPED;
     int i;
-    char ttyname[16];
+    char vtname[16];
     int mib[2];
     size_t len;
     dev_t dev;
@@ -575,8 +579,8 @@ xf86OpenWScons()
     mib[1] = KERN_CONSDEV;
     len = sizeof(dev);
     if (sysctl(mib, 2, &dev, &len, NULL, 0) != -1) {
-	snprintf(ttyname, sizeof(ttyname), "/dev/%s", devname(dev, S_IFCHR));
-	if ((fd = open(ttyname, 2)) != -1) {
+	snprintf(vtname, sizeof(vtname), "/dev/%s", devname(dev, S_IFCHR));
+	if ((fd = open(vtname, 2)) != -1) {
 	    if (ioctl(fd, WSDISPLAYIO_GTYPE, &i) == -1) {
 	        close(fd);
 		fd = -1;
@@ -587,11 +591,11 @@ xf86OpenWScons()
     if (fd == -1) {
 	for (i = 0; i < 8; i++) {
 #if defined(__NetBSD__)
-	    snprintf(ttyname, sizeof(ttyname), "/dev/ttyE%d", i);
+	    snprintf(vtname, sizeof(vtname), "/dev/ttyE%d", i);
 #elif defined(__OpenBSD__)
-	    snprintf(ttyname,  sizeof(ttyname), "/dev/ttyC%x", i);
+	    snprintf(vtname,  sizeof(vtname), "/dev/ttyC%x", i);
 #endif
-	    if ((fd = open(ttyname, 2)) != -1)
+	    if ((fd = open(vtname, 2)) != -1)
 		break;
         }
     }
@@ -609,7 +613,7 @@ xf86OpenWScons()
 #endif                          /* WSCONS_SUPPORT */
 
 void
-xf86CloseConsole()
+xf86CloseConsole(void)
 {
 #if defined(SYSCONS_SUPPORT) || defined(PCVT_SUPPORT)
     struct vt_mode VT;
@@ -689,7 +693,7 @@ xf86ProcessArgument(int argc, char *argv[], int i)
 }
 
 void
-xf86UseMsg()
+xf86UseMsg(void)
 {
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
     ErrorF("vtXX                   use the specified VT number (1-12)\n");
@@ -707,7 +711,7 @@ xf86UseMsg()
  * Otherwise use the real uid.
  */
 void
-xf86DropPriv(char *disp)
+xf86DropPriv(void)
 {
 	struct passwd *pw;
 

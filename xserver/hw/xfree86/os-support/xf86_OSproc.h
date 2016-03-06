@@ -189,6 +189,10 @@ extern _X_EXPORT PMClose xf86OSPMOpen(void);
 
 extern _X_EXPORT void xf86InitVidMem(void);
 
+#ifdef X_PRIVSEP
+extern _X_EXPORT void xf86PrivilegedInit(void);
+extern _X_EXPORT void xf86DropPriv(void);
+#endif
 #endif                          /* XF86_OS_PRIVS */
 
 #ifdef XSERVER_PLATFORM_BUS

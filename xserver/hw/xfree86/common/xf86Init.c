@@ -987,11 +987,6 @@ CloseInput(void)
  *      is called by dix before establishing the well known sockets.
  */
 
-#ifdef X_PRIVSEP
-extern void xf86DropPriv(char *);
-extern void xf86PrivilegedInit(void);
-#endif
- 
 void
 OsVendorInit(void)
 {
@@ -1028,7 +1023,7 @@ OsVendorInit(void)
 #if defined(X_PRIVSEP)
   if (!beenHere && !xf86KeepPriv && geteuid() == 0) {
 	  xf86PrivilegedInit();
-	  xf86DropPriv(display);
+	  xf86DropPriv();
   }
 #endif
 
