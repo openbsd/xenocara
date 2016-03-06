@@ -286,7 +286,7 @@ acquire_vt:
                 if (ioctl(xf86Info.consoleFd, VT_SETMODE, &vtmode) < 0) {
                     FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed");
                 }
-#if !defined(__0penBSD__) && !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
+#if !defined(__OpenBSD__) && !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
                 if (ioctl(xf86Info.consoleFd, KDENABIO, 0) < 0) {
                     FatalError("xf86OpenConsole: KDENABIO failed (%s)",
                                strerror(errno));
