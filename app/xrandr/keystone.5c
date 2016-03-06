@@ -50,7 +50,7 @@ extend namespace Nichrome {
 	}
 
 	protected void natural (cairo_t cr, &quad_t quad) {
-	    rectangle (cr, 0, 0, 256, 256);
+	    rectangle (cr, 0, 0, 400, 300);
 	}
 
 	void text_at (cairo_t cr, point_t p, string text) {
@@ -354,22 +354,50 @@ rescale (m_t m, real limit)
 string
 m_print (m_t m)
 {
-    /*
+
     return sprintf ("%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f,%.8f",
 		    m[0,0],m[0,1],m[0,2],
 		    m[1,0],m[1,1],m[1,2],
 		    m[2,0],m[2,1],m[2,2]);
-     */
+/*
     return sprintf ("%v,%v,%v,%v,%v,%v,%v,%v,%v",
 		    m[0,0],m[0,1],m[0,2],
 		    m[1,0],m[1,1],m[1,2],
 		    m[2,0],m[2,1],m[2,2]);
+*/
 }
 
 int
 fixed (real x)
 {
     return floor (x * 65536 + 0.5) & 0xffffffff;
+}
+
+m_t
+to_fixed(m_t m)
+{
+    m_t r;
+
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+            r[i,j] = floor(m[i,j] * 65536 + 0.5) / 65536;
+    return r;
+}
+
+m_t
+error(m_t r, m_t f)
+{
+    m_t e;
+
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++) {
+            real diff = abs(r[i,j] - f[i,j]);
+            if (r[i,j] != 0)
+                e[i,j] = diff / abs(r[i,j]);
+            else
+                e[i,j] = 0;
+        }
+    return e;
 }
 
 void
@@ -380,6 +408,55 @@ m_print_fix (m_t m)
 	printf (" { 0x%08x, 0x%08x, 0x%08x },\n",
 		fixed (m[i,0]), fixed (m[i,1]), fixed (m[i,2]));
     }
+}
+
+real[2]
+map(m_t m, real x, real y)
+{
+    real[3]     in = { x, y, 1 };
+    real[3]     out = { 0 ... };
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++)
+            out[i] += m[i,j] * in[j];
+    }
+    return (real[2]) { out[0] / out[2], out[1]/ out[2] };
+}
+
+real
+position_error(m_t r, m_t f, real x, real y)
+{
+    real[2]     p_r = map(r, x, y);
+    real[2]     p_f = map(f, x, y);
+    real        error;
+
+    error = sqrt((p_r[0] - p_f[0]) ** 2 + (p_r[1] - p_f[1]) ** 2);
+    printf ("x: %g y: %g error %g\n", x, y, error);
+    printf ("\treal x: %g y: %g\n", p_r[0], p_r[1]);
+    printf ("\tfix  x: %g y: %g\n", p_f[0], p_f[1]);
+    return error;
+}
+
+real
+max_error(m_t r, m_t f) {
+    real        max = 0, max_x = 0, max_y = 0;
+
+    for (int x = 0; x <= 2560; x += 2560)
+        for (int y = 0; y <= 1600; y += 1600) {
+            real error = position_error(r, f, x, y);
+            if (error > max) {
+                max = error;
+                max_x = x;
+                max_y = y;
+            }
+        }
+    printf ("max error %g at %d, %d\n", max, max_x, max_y);
+    real[2] p_r = map(r, max_x ,max_y);
+    real[2] p_f = map(f, max_x, max_y);
+    printf ("\tdesired %7.2f, %7.2f actual %7.2f, %7.2f\n",
+            p_r[0], p_r[1],
+            p_f[0], p_f[1]);
+    return max;
 }
 
 string
@@ -414,18 +491,22 @@ output_t[*] get_outputs () {
     {
 	while (!File::end (randr)) {
 	    string[*] words = String::wordsplit (File::fgets (randr), " ");
-	    if (dim (words) >= 3 && words[1] == "connected" &&
-		File::sscanf (words[2], "%dx%d+%d+%d", 
-			&(int width), &(int height), 
-			&(int x), &(int y)) == 4)
-	    {
-		outputs[dim(outputs)] = (output_t) {
-		    name = words[0],
-		    geometry = { 
-			x = x, y = y, width = width, height = height 
-		    }
-		};
-	    }
+	    if (dim (words) >= 3 && words[1] == "connected") {
+                int     geom = 2;
+                if (words[geom] == "primary")
+                    geom++;
+		if (File::sscanf (words[geom], "%dx%d+%d+%d", 
+                                  &(int width), &(int height), 
+                                  &(int x), &(int y)) == 4)
+                {
+                    outputs[dim(outputs)] = (output_t) {
+                        name = words[0],
+                        geometry = { 
+                            x = x, y = y, width = width, height = height 
+                        }
+                    };
+                }
+            }
 	}
     }
     return outputs;
@@ -433,7 +514,7 @@ output_t[*] get_outputs () {
 
 void main ()
 {
-    m_t	m = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } }, m_i, m_r;
+    m_t	m = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } }, m_i, m_r, m_f, m_e;
     bool m_available = true;
     output_t[*]	outputs = get_outputs ();
     output_t	target_output;
@@ -529,8 +610,13 @@ void main ()
 	    printf ("normal:  %s\n", m_print (m));
 	    printf ("inverse: %s\n", m_print (m_i));
 	    printf ("scaled:  %s\n", m_print (m_r));
+            m_f = to_fixed(m_r);
+            printf ("round:   %s\n", m_print(m_f));
 	    printf ("fixed:\n");
 	    m_print_fix (m_i);
+            m_e = error(m_r, m_f);
+            printf ("error:   %s\n", m_print (m_e));
+            max_error(m_r, m_f);
 	}
     }
     

@@ -1,3 +1,128 @@
+commit 65fd628cdfd1c95bd01a50706d4577655d1dd404
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Feb 23 10:22:26 2016 -0800
+
+    xrandr 1.5.0
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit d62030b506f6b686ffe1e750ea9d3a855beec1f0
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sun Sep 13 11:40:37 2015 +0100
+
+    Only use the current information when setting modes
+    
+    Before we change the state (e.g. adding a mode or applying one to an
+    output), we query the screen resources for the right identifiers. This
+    should only use the current information rather than force a reprobe on
+    all hardware - not only can that reprobe be very slow (e.g. EDID
+    timeouts on the order of seconds), but it may perturb the setup that the
+    user is trying to configure.
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 3d03be780fca4949b11ead46c5ea5d3266c03c32
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Thu Jun 18 08:27:49 2015 +0100
+
+    Mark all CRTC as currently unused for second picking CRTC pass
+    
+    We perform two passes over the CRTC in order to find the preferred CRTC
+    for each enabled output. In the first pass, we try to preserve the
+    existing output <-> CRTC relationships (to avoid unnecessary flicker).
+    If that pass fails, we try again but with all outputs first disabled.
+    However, the logic to preserve an active CRTC was not disabled along
+    with the outputs - meaning that if one was active but its associated
+    output was disabled by the user, then that CRTC would remain unavailable
+    for other outputs. The result would be that we would try to assign more
+    CRTC than available (i.e. if the user request 3 new HDMI outputs on a
+    system with only 3 CRTC, and wished to switch off an active internal
+    panel, we would report "cannot find CRTC" even though that configuration
+    could be established.)
+    
+    Reported-and-tested-by: Nathan Schulte <nmschulte@gmail.com>
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 53ef3fc13b3e282902892e3140765460c6f93276
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Thu Jun 18 08:27:48 2015 +0100
+
+    Mark disabling an output as a change in its CRTC
+    
+    When an output is disabled via the cmdline, we can use that information
+    to prevent assigning the current CRTC to the output and free it up for
+    reuse by other outputs in the first pass of picking CRTC.
+    
+    Reported-and-tested-by: Nathan Schulte <nmschulte@gmail.com>
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit 09989b09a342b273ee30e1d96267dced3cbe61b0
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Apr 9 11:14:54 2015 -0700
+
+    Split verbose mode printing into a helper function
+    
+    Combine the two forms of verbose mode printing into a single function.  Pass the
+    'current' and 'preferred' flags as arguments.  This fixes the code that prints
+    unassociated modes to print the flags as well.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Kenneth Graunke <kenneth@whitecape.org>
+
+commit d06730e94320175d40ff6f2bb38dce55312f2e54
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Dec 16 01:57:45 2014 -0800
+
+    Add monitor support (v2)
+    
+    This adds the ability to query, set and delete monitors
+    
+    v2: [airlied] add list active monitors
+    
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 3076c3494b6f3f00b9c4509c2dab6f40858af4cf
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Mar 31 11:49:00 2015 +1000
+
+    xrandr: don't return NULL from a void
+    
+    Reported-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 6957ad0cf3cdd10e8f4a5638b36f25c7a9b4ea25
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Mar 30 14:51:49 2015 +1000
+
+    xrandr: parse property returns correctly.
+    
+    Xlib uses longs for 32-bit, so when we get values back they
+    are in longs, this fixes the xrandr parsing code to parse
+    the correct sized values according to Xlib.
+    
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f429a517684e8f99c15bc2858e62bbd112331456
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Oct 8 13:16:07 2014 +0200
+
+    keystone: Report matrix error. Deal with "primary" in xrandr output
+    
+    Compute the error cause by the fixed point matrix representation and
+    display that.
+    
+    Accept the 'primary' word found in xrandr output and ignore it.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 527d83dde0cb78cbfbb67d203d073e41e110d4a1
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Jul 9 10:52:52 2012 -0700
+
+    Increase keystone.5c default window size
+
 commit 9887ed4989e0abd48004598be0eb5cb06fa40bd1
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Fri Aug 1 23:14:42 2014 -0700
@@ -7,7 +132,7 @@ Date:   Fri Aug 1 23:14:42 2014 -0700
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 20d76f773cf8de474cf7a3f1082961605732c3f1
-Merge: 00477d8 193a358
+Merge: 00477d88297e 193a358563a5
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Fri Aug 1 23:10:46 2014 -0700
 
@@ -293,7 +418,7 @@ Date:   Tue Feb 12 13:24:38 2013 -0800
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 3e5f160c4198a5160be5e9a3f21ba3f4130d4318
-Merge: dac72db bd16618
+Merge: dac72dbbc750 bd166184f6c1
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Feb 12 12:30:20 2013 -0800
 
@@ -1559,7 +1684,7 @@ Date:   Mon Dec 1 21:45:47 2008 +0100
     Fix build outside of the source dir
 
 commit 63ba316bcbe8ad61ba63d9fe62c82e7d56dcc399
-Merge: a813c4d 1b95e32
+Merge: a813c4da7f0b 1b95e32b4b0a
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Mon Dec 1 21:33:35 2008 +0100
 
@@ -2037,7 +2162,7 @@ Date:   Sun Feb 18 21:27:55 2007 -0800
     Update version number to 1.2.0 for release.
 
 commit 13cef2baa884039e96f5dfd9245bb949aed99448
-Merge: 065f09c a175972
+Merge: 065f09cc304d a175972de6fb
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Sun Feb 18 21:26:50 2007 -0800
 
@@ -2079,7 +2204,7 @@ Date:   Sat Feb 10 16:14:58 2007 -0800
     Display set of available CRTCs per output in --verbose mode.
 
 commit 067cafb5cda0aa6e34773e888fd469ff657760c2
-Merge: 7c25c24 b0a00df
+Merge: 7c25c245bceb b0a00df69f83
 Author: Keith Packard <keithp@guitar.keithp.com>
 Date:   Wed Jan 31 15:25:35 2007 -0800
 
@@ -2238,7 +2363,7 @@ Date:   Tue Dec 19 16:27:46 2006 -0800
     Actually respect the --fb option
 
 commit 7b32611632ab08b6a123db5df1c2b919b3a12104
-Merge: a0df3aa 4bb1a9c
+Merge: a0df3aa81205 4bb1a9cd6f9c
 Author: Keith Packard <keithp@guitar.keithp.com>
 Date:   Tue Dec 19 15:58:38 2006 -0800
 
@@ -2251,7 +2376,7 @@ Date:   Tue Dec 19 15:58:21 2006 -0800
     Correct format for sscanf to double variable "dpi"
 
 commit 4bb1a9cd6f9cc3ed61d7913528afa3f573092833
-Merge: b6c0382 6ef400f
+Merge: b6c03827bae7 6ef400f35d7d
 Author: Keith Packard <keithp@bouzouki.jf.intel.com>
 Date:   Wed Dec 13 11:36:36 2006 -0800
 

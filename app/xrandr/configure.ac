@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xrandr], [1.4.3],
+AC_INIT([xrandr], [1.5.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xrandr])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -40,7 +40,7 @@ XORG_DEFAULT_OPTIONS
 AC_CHECK_LIB(m,floor)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XRANDR, xrandr >= 1.4 xrender x11 xproto >= 7.0.17)
+PKG_CHECK_MODULES(XRANDR, xrandr >= 1.5 xrender x11 xproto >= 7.0.17)
 
 AC_CONFIG_FILES([
 	Makefile
