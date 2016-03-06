@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.342 2016/02/06 07:23:07 matthieu Exp $
+# $OpenBSD: MODULES,v 1.343 2016/03/06 13:46:15 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -70,7 +70,7 @@ app/xmodmap		1.0.9	7.7+
 app/xmore		1.0.2
 app/xpr			1.0.4	7.7
 app/xprop		1.2.2	7.7+
-app/xrandr		1.4.3	7.7+
+app/xrandr		1.5.0	7.7+
 app/xrdb		1.1.0	7.7+
 app/xrefresh		1.0.5	7.7+
 app/xset		1.2.3	7.7+
@@ -99,7 +99,7 @@ driver/xf86-input-penmount	1.5.0
 driver/xf86-input-synaptics	1.8.3	7.7+
 driver/xf86-input-vmmouse	13.1.0	7.7+	needs-update
 driver/xf86-input-void		1.4.1	7.7+	needs-update
-driver/xf86-input-amdgpu	1.0.0		needs-import
+driver/xf86-input-amdgpu	1.0.1		needs-import
 driver/xf86-video-apm		1.2.5
 driver/xf86-video-ark		0.7.5	7.7+
 driver/xf86-video-ast		1.0.1	7.7+
@@ -193,7 +193,7 @@ lib/libXinerama			1.1.3	7.7+
 lib/libXmu			1.1.2	7.7+
 lib/libXpm			3.5.11	7.7+
 lib/libXpresent			1.0.0		needs-import
-lib/libXrandr			1.5.0	7.7+	needs-update
+lib/libXrandr			1.5.0	7.7+
 lib/libXrender			0.9.9	7.7+
 lib/libXres			1.0.7	7.7+
 lib/libXt			1.1.5	7.7+
@@ -257,4 +257,4 @@ util/gccmakedep			1.0.3
 util/macros			1.19.0	7.7+
 util/makedepend			1.0.5	7.7+
 
-xserver				1.18.0	7.7+	needs-update
+xserver				1.18.1	7.7+	needs-update
