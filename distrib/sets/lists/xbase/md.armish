@@ -280,7 +280,7 @@
 ./usr/X11R6/lib/libXmu.so.11.0
 ./usr/X11R6/lib/libXmuu.so.6.0
 ./usr/X11R6/lib/libXpm.so.9.0
-./usr/X11R6/lib/libXrandr.so.7.0
+./usr/X11R6/lib/libXrandr.so.7.1
 ./usr/X11R6/lib/libXrender.so.6.0
 ./usr/X11R6/lib/libXss.so.6.0
 ./usr/X11R6/lib/libXt.so.11.0
