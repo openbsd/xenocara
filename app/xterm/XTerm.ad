@@ -259,6 +259,11 @@
 
 ! OpenBSD local modifications
 
+! Enable UTF-8 mode since OpenBSD does not support any other multibyte
+! locales.  Even for people using the C/POSIX locale for everything,
+! that's safer and more usable than the upstream default of "medium".
+*locale: UTF-8
+
 ! ScrollBar by default
 *scrollBar: true
 
