@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.65 2016/02/20 11:07:10 matthieu Exp $
+# $OpenBSD: Makefile,v 1.66 2016/03/11 13:09:42 okan Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -33,8 +33,6 @@ INPUT_DRV_octeon=
 INPUT_DRV_sgi= ${INPUT_DRV_DEFAULT}
 
 INPUT_DRV_sparc64= ${INPUT_DRV_COMMON}
-
-INPUT_DRV_vax=
 
 INPUT_DRV_zaurus= ${INPUT_DRV_DEFAULT}
 
@@ -94,8 +92,6 @@ VIDEO_DRV_sparc64= \
 	xf86-video-ati xf86-video-mach64 xf86-video-r128 xf86-video-glint \
 	xf86-video-sunffb \
 	xf86-video-wildcatfb xf86-video-wsfb
-
-VIDEO_DRV_vax=
 
 .if defined(VIDEO_DRV_${MACHINE})
 VIDEO_DRV= ${VIDEO_DRV_${MACHINE}}

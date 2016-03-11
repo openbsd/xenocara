@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2014/05/18 10:33:05 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.7 2016/03/11 13:09:42 okan Exp $
 
 .include <bsd.xconf.mk>
 
@@ -68,17 +68,10 @@ fcobjshash.h: fcobjshash.gperf
 
 beforedepend: fcalias.h fcftalias.h fcobjshash.h lib${LIB}.la
 
-.if ${XENOCARA_HAVE_SHARED_LIBS:L} == "yes"
 lib${LIB}.la: ${.CURDIR}/lib${LIB}.la.in
 	sed -e 's#@libdir@#${LIBDIR}#g' \
 	     -e 's#@sharedlibfontconfig@#libfontconfig.so.${SHLIB_MAJOR}.${SHLIB_MINOR}#g' \
 	< $? > $@
-.else
-lib${LIB}.la: ${.CURDIR}/lib${LIB}.la.in
-	sed -e 's#@libdir@#${LIBDIR}#g' \
-	     -e 's#@sharedlibfontconfig@##g' \
-	< $? > $@
-.endif
 
 afterinstall:
 	${INSTALL_DATA} lib${LIB}.la ${DESTDIR}${LIBDIR}

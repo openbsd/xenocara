@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.68 2015/08/24 10:41:21 ajacoutot Exp $
+# $OpenBSD: Makefile,v 1.69 2016/03/11 13:09:42 okan Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -8,14 +8,11 @@ REALAPPD=/etc/X11/app-defaults
 XCONFIG=${XSRCDIR}/etc/X11.${MACHINE}/xorg.conf
 RM?=rm
 
-.if ${MACHINE_ARCH} != "vax"
 XSERVER= xserver
-.endif
 
 .if defined(XENOCARA_BUILD_PIXMAN)
 .if ${XENOCARA_BUILD_PIXMAN:L} == "yes" && \
-    ${XENOCARA_BUILD_GL:L} == "yes" && \
-    ${XENOCARA_HAVE_SHARED_LIBS:L} == "yes"
+    ${XENOCARA_BUILD_GL:L} == "yes"
 XSERVER+= kdrive
 .endif
 .endif
