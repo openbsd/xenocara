@@ -1,4 +1,4 @@
-SUBDIRS = modeprint proptest modetest vbltest
+SUBDIRS = util kms modeprint proptest modetest vbltest
 
 if HAVE_LIBKMS
 SUBDIRS += kmstest
@@ -31,6 +31,7 @@ LDADD = $(top_builddir)/libdrm.la
 
 check_PROGRAMS = \
 	dristat \
+	drmdevice \
 	drmstat
 
 dristat_LDADD = -lm

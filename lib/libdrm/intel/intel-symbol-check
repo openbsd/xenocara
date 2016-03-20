@@ -34,11 +34,13 @@ drm_intel_bo_mrb_exec
 drm_intel_bo_pin
 drm_intel_bo_reference
 drm_intel_bo_references
+drm_intel_bo_set_softpin_offset
 drm_intel_bo_set_tiling
 drm_intel_bo_subdata
 drm_intel_bo_unmap
 drm_intel_bo_unpin
 drm_intel_bo_unreference
+drm_intel_bo_use_48b_address_range
 drm_intel_bo_wait_rendering
 drm_intel_bufmgr_check_aperture_space
 drm_intel_bufmgr_destroy

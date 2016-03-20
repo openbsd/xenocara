@@ -87,6 +87,9 @@
 /* Define to 1 if you have the <sys/mkdev.h> header file. */
 #undef HAVE_SYS_MKDEV_H
 
+/* Define to 1 if you have the <sys/select.h> header file. */
+#undef HAVE_SYS_SELECT_H
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
@@ -105,14 +108,16 @@
 /* Use valgrind intrinsics to suppress false warnings */
 #undef HAVE_VALGRIND
 
+/* Have VC4 support */
+#undef HAVE_VC4
+
 /* Compiler supports __attribute__(("hidden")) */
 #undef HAVE_VISIBILITY
 
 /* Have vmwgfx kernel headers */
 #undef HAVE_VMWGFX
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Name of package */

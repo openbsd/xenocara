@@ -27,6 +27,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <getopt.h>
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,7 +36,9 @@
 #include "xf86drm.h"
 #include "xf86drmMode.h"
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#include "util/common.h"
+#include "util/kms.h"
+
 static inline int64_t U642I64(uint64_t val)
 {
 	return (int64_t)*((int64_t *)&val);
@@ -43,44 +46,6 @@ static inline int64_t U642I64(uint64_t val)
 
 int fd;
 drmModeResPtr res = NULL;
-
-static const char *connector_type_str(uint32_t type)
-{
-	switch (type) {
-	case DRM_MODE_CONNECTOR_Unknown:
-		return "Unknown";
-	case DRM_MODE_CONNECTOR_VGA:
-		return "VGA";
-	case DRM_MODE_CONNECTOR_DVII:
-		return "DVI-I";
-	case DRM_MODE_CONNECTOR_DVID:
-		return "DVI-D";
-	case DRM_MODE_CONNECTOR_DVIA:
-		return "DVI-A";
-	case DRM_MODE_CONNECTOR_Composite:
-		return "Composite";
-	case DRM_MODE_CONNECTOR_SVIDEO:
-		return "SVIDEO";
-	case DRM_MODE_CONNECTOR_LVDS:
-		return "LVDS";
-	case DRM_MODE_CONNECTOR_Component:
-		return "Component";
-	case DRM_MODE_CONNECTOR_9PinDIN:
-		return "9PinDin";
-	case DRM_MODE_CONNECTOR_DisplayPort:
-		return "DisplayPort";
-	case DRM_MODE_CONNECTOR_HDMIA:
-		return "HDMI-A";
-	case DRM_MODE_CONNECTOR_HDMIB:
-		return "HDMI-B";
-	case DRM_MODE_CONNECTOR_TV:
-		return "TV";
-	case DRM_MODE_CONNECTOR_eDP:
-		return "eDP";
-	default:
-		return "Invalid";
-	}
-}
 
 /* dump_blob and dump_prop shamelessly copied from ../modetest/modetest.c */
 static void
@@ -225,7 +190,7 @@ static void listConnectorProperties(void)
 		}
 
 		printf("Connector %u (%s-%u)\n", c->connector_id,
-		       connector_type_str(c->connector_type),
+		       util_lookup_connector_type_name(c->connector_type),
 		       c->connector_type_id);
 
 		listObjectProperties(c->connector_id,
@@ -268,28 +233,32 @@ static int setProperty(char *argv[])
 	uint32_t obj_id, obj_type, prop_id;
 	uint64_t value;
 
-	obj_id = atoi(argv[1]);
+	obj_id = atoi(argv[0]);
 
-	if (!strcmp(argv[2], "connector")) {
+	if (!strcmp(argv[1], "connector")) {
 		obj_type = DRM_MODE_OBJECT_CONNECTOR;
-	} else if (!strcmp(argv[2], "crtc")) {
+	} else if (!strcmp(argv[1], "crtc")) {
 		obj_type = DRM_MODE_OBJECT_CRTC;
 	} else {
 		fprintf(stderr, "Invalid object type.\n");
 		return 1;
 	}
 
-	prop_id = atoi(argv[3]);
-	value = atoll(argv[4]);
+	prop_id = atoi(argv[2]);
+	value = atoll(argv[3]);
 
 	return drmModeObjectSetProperty(fd, obj_id, obj_type, prop_id, value);
 }
 
-static void printUsage(void)
+static void usage(const char *program)
 {
 	printf("Usage:\n"
-"  proptest\n"
-"  proptest [obj id] [obj type] [prop id] [value]\n"
+"  %s [options]\n"
+"  %s [options] [obj id] [obj type] [prop id] [value]\n"
+"\n"
+"options:\n"
+"  -D DEVICE  use the given device\n"
+"  -M MODULE  use the given driver\n"
 "\n"
 "The first form just prints all the existing properties. The second one is\n"
 "used to set the value of a specified property. The object type can be one of\n"
@@ -298,26 +267,37 @@ static void printUsage(void)
 "\n"
 "Example:\n"
 "  proptest 7 connector 2 1\n"
-"will set property 2 of connector 7 to 1\n");
+"will set property 2 of connector 7 to 1\n", program, program);
 }
 
 int main(int argc, char *argv[])
 {
-	const char *modules[] = { "i915", "radeon", "nouveau", "vmwgfx", "omapdrm", "msm", "rockchip" };
-	unsigned int i, ret = 0;
+	static const char optstr[] = "D:M:";
+	int c, args, ret = 0;
+	char *device = NULL;
+	char *module = NULL;
 
-	for (i = 0; i < ARRAY_SIZE(modules); i++){
-		fd = drmOpen(modules[i], NULL);
-		if (fd >= 0) {
-			printf("Module %s loaded.\n", modules[i]);
+	while ((c = getopt(argc, argv, optstr)) != -1) {
+		switch (c) {
+		case 'D':
+			device = optarg;
+			break;
+
+		case 'M':
+			module = optarg;
+			break;
+
+		default:
+			usage(argv[0]);
 			break;
 		}
 	}
 
-	if (i == ARRAY_SIZE(modules)) {
-		fprintf(stderr, "Failed to load drm modules.\n");
+	args = argc - optind;
+
+	fd = util_open(device, module);
+	if (fd < 0)
 		return 1;
-	}
 
 	res = drmModeGetResources(fd);
 	if (!res) {
@@ -327,12 +307,12 @@ int main(int argc, char *argv[])
 		goto done;
 	}
 
-	if (argc < 2) {
+	if (args < 1) {
 		listAllProperties();
-	} else if (argc == 5) {
-		ret = setProperty(argv);
+	} else if (args == 4) {
+		ret = setProperty(&argv[optind]);
 	} else {
-		printUsage();
+		usage(argv[0]);
 		ret = 1;
 	}
 

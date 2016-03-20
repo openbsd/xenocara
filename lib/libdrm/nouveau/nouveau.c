@@ -45,6 +45,11 @@
 #include "nouveau.h"
 #include "private.h"
 
+#include "nvif/class.h"
+#include "nvif/cl0080.h"
+#include "nvif/ioctl.h"
+#include "nvif/unpack.h"
+
 #ifdef DEBUG
 drm_private uint32_t nouveau_debug = 0;
 
@@ -59,6 +64,295 @@ debug_init(char *args)
 }
 #endif
 
+static int
+nouveau_object_ioctl(struct nouveau_object *obj, void *data, uint32_t size)
+{
+	struct nouveau_drm *drm = nouveau_drm(obj);
+	union {
+		struct nvif_ioctl_v0 v0;
+	} *args = data;
+	uint32_t argc = size;
+	int ret = -ENOSYS;
+
+	if (!(ret = nvif_unpack(ret, &data, &size, args->v0, 0, 0, true))) {
+		if (!obj->length) {
+			if (obj != &drm->client)
+				args->v0.object = (unsigned long)(void *)obj;
+			else
+				args->v0.object = 0;
+			args->v0.owner = NVIF_IOCTL_V0_OWNER_ANY;
+			args->v0.route = 0x00;
+		} else {
+			args->v0.route = 0xff;
+			args->v0.token = obj->handle;
+		}
+	} else
+		return ret;
+
+	return drmCommandWriteRead(drm->fd, DRM_NOUVEAU_NVIF, args, argc);
+}
+
+int
+nouveau_object_mthd(struct nouveau_object *obj,
+		    uint32_t mthd, void *data, uint32_t size)
+{
+	struct nouveau_drm *drm = nouveau_drm(obj);
+	struct {
+		struct nvif_ioctl_v0 ioctl;
+		struct nvif_ioctl_mthd_v0 mthd;
+	} *args;
+	uint32_t argc = sizeof(*args) + size;
+	uint8_t stack[128];
+	int ret;
+
+	if (!drm->nvif)
+		return -ENOSYS;
+
+	if (argc > sizeof(stack)) {
+		if (!(args = malloc(argc)))
+			return -ENOMEM;
+	} else {
+		args = (void *)stack;
+	}
+	args->ioctl.version = 0;
+	args->ioctl.type = NVIF_IOCTL_V0_MTHD;
+	args->mthd.version = 0;
+	args->mthd.method = mthd;
+
+	memcpy(args->mthd.data, data, size);
+	ret = nouveau_object_ioctl(obj, args, argc);
+	memcpy(data, args->mthd.data, size);
+	if (args != (void *)stack)
+		free(args);
+	return ret;
+}
+
+void
+nouveau_object_sclass_put(struct nouveau_sclass **psclass)
+{
+	free(*psclass);
+	*psclass = NULL;
+}
+
+int
+nouveau_object_sclass_get(struct nouveau_object *obj,
+			  struct nouveau_sclass **psclass)
+{
+	struct nouveau_drm *drm = nouveau_drm(obj);
+	struct {
+		struct nvif_ioctl_v0 ioctl;
+		struct nvif_ioctl_sclass_v0 sclass;
+	} *args = NULL;
+	struct nouveau_sclass *sclass;
+	int ret, cnt = 0, i;
+	uint32_t size;
+
+	if (!drm->nvif)
+		return abi16_sclass(obj, psclass);
+
+	while (1) {
+		size = sizeof(*args) + cnt * sizeof(args->sclass.oclass[0]);
+		if (!(args = malloc(size)))
+			return -ENOMEM;
+		args->ioctl.version = 0;
+		args->ioctl.type = NVIF_IOCTL_V0_SCLASS;
+		args->sclass.version = 0;
+		args->sclass.count = cnt;
+
+		ret = nouveau_object_ioctl(obj, args, size);
+		if (ret == 0 && args->sclass.count <= cnt)
+			break;
+		cnt = args->sclass.count;
+		free(args);
+		if (ret != 0)
+			return ret;
+	}
+
+	if ((sclass = calloc(args->sclass.count, sizeof(*sclass)))) {
+		for (i = 0; i < args->sclass.count; i++) {
+			sclass[i].oclass = args->sclass.oclass[i].oclass;
+			sclass[i].minver = args->sclass.oclass[i].minver;
+			sclass[i].maxver = args->sclass.oclass[i].maxver;
+		}
+		*psclass = sclass;
+		ret = args->sclass.count;
+	} else {
+		ret = -ENOMEM;
+	}
+
+	free(args);
+	return ret;
+}
+
+int
+nouveau_object_mclass(struct nouveau_object *obj,
+		      const struct nouveau_mclass *mclass)
+{
+	struct nouveau_sclass *sclass;
+	int ret = -ENODEV;
+	int cnt, i, j;
+
+	cnt = nouveau_object_sclass_get(obj, &sclass);
+	if (cnt < 0)
+		return cnt;
+
+	for (i = 0; ret < 0 && mclass[i].oclass; i++) {
+		for (j = 0; j < cnt; j++) {
+			if (mclass[i].oclass  == sclass[j].oclass &&
+			    mclass[i].version >= sclass[j].minver &&
+			    mclass[i].version <= sclass[j].maxver) {
+				ret = i;
+				break;
+			}
+		}
+	}
+
+	nouveau_object_sclass_put(&sclass);
+	return ret;
+}
+
+static void
+nouveau_object_fini(struct nouveau_object *obj)
+{
+	struct {
+		struct nvif_ioctl_v0 ioctl;
+		struct nvif_ioctl_del del;
+	} args = {
+		.ioctl.type = NVIF_IOCTL_V0_DEL,
+	};
+
+	if (obj->data) {
+		abi16_delete(obj);
+		free(obj->data);
+		obj->data = NULL;
+		return;
+	}
+
+	nouveau_object_ioctl(obj, &args, sizeof(args));
+}
+
+static int
+nouveau_object_init(struct nouveau_object *parent, uint32_t handle,
+		    int32_t oclass, void *data, uint32_t size,
+		    struct nouveau_object *obj)
+{
+	struct nouveau_drm *drm = nouveau_drm(parent);
+	struct {
+		struct nvif_ioctl_v0 ioctl;
+		struct nvif_ioctl_new_v0 new;
+	} *args;
+	uint32_t argc = sizeof(*args) + size;
+	int (*func)(struct nouveau_object *);
+	int ret = -ENOSYS;
+
+	obj->parent = parent;
+	obj->handle = handle;
+	obj->oclass = oclass;
+	obj->length = 0;
+	obj->data = NULL;
+
+	if (!abi16_object(obj, &func) && drm->nvif) {
+		if (!(args = malloc(argc)))
+			return -ENOMEM;
+		args->ioctl.version = 0;
+		args->ioctl.type = NVIF_IOCTL_V0_NEW;
+		args->new.version = 0;
+		args->new.route = NVIF_IOCTL_V0_ROUTE_NVIF;
+		args->new.token = (unsigned long)(void *)obj;
+		args->new.object = (unsigned long)(void *)obj;
+		args->new.handle = handle;
+		args->new.oclass = oclass;
+		memcpy(args->new.data, data, size);
+		ret = nouveau_object_ioctl(parent, args, argc);
+		memcpy(data, args->new.data, size);
+		free(args);
+	} else
+	if (func) {
+		obj->length = size ? size : sizeof(struct nouveau_object *);
+		if (!(obj->data = malloc(obj->length)))
+			return -ENOMEM;
+		if (data)
+			memcpy(obj->data, data, obj->length);
+		*(struct nouveau_object **)obj->data = obj;
+
+		ret = func(obj);
+	}
+
+	if (ret) {
+		nouveau_object_fini(obj);
+		return ret;
+	}
+
+	return 0;
+}
+
+int
+nouveau_object_new(struct nouveau_object *parent, uint64_t handle,
+		   uint32_t oclass, void *data, uint32_t length,
+		   struct nouveau_object **pobj)
+{
+	struct nouveau_object *obj;
+	int ret;
+
+	if (!(obj = malloc(sizeof(*obj))))
+		return -ENOMEM;
+
+	ret = nouveau_object_init(parent, handle, oclass, data, length, obj);
+	if (ret) {
+		free(obj);
+		return ret;
+	}
+
+	*pobj = obj;
+	return 0;
+}
+
+void
+nouveau_object_del(struct nouveau_object **pobj)
+{
+	struct nouveau_object *obj = *pobj;
+	if (obj) {
+		nouveau_object_fini(obj);
+		free(obj);
+		*pobj = NULL;
+	}
+}
+
+void
+nouveau_drm_del(struct nouveau_drm **pdrm)
+{
+	free(*pdrm);
+	*pdrm = NULL;
+}
+
+int
+nouveau_drm_new(int fd, struct nouveau_drm **pdrm)
+{
+	struct nouveau_drm *drm;
+	drmVersionPtr ver;
+
+#ifdef DEBUG
+	debug_init(getenv("NOUVEAU_LIBDRM_DEBUG"));
+#endif
+
+	if (!(drm = calloc(1, sizeof(*drm))))
+		return -ENOMEM;
+	drm->fd = fd;
+
+	if (!(ver = drmGetVersion(fd))) {
+		nouveau_drm_del(&drm);
+		return -EINVAL;
+	}
+	*pdrm = drm;
+
+	drm->version = (ver->version_major << 24) |
+		       (ver->version_minor << 8) |
+		        ver->version_patchlevel;
+	drm->nvif = (drm->version >= 0x01000301);
+	drmFreeVersion(ver);
+	return 0;
+}
+
 /* this is the old libdrm's version of nouveau_device_wrap(), the symbol
  * is kept here to prevent AIGLX from crashing if the DDX is linked against
  * the new libdrm, but the DRI driver against the old
@@ -71,80 +365,124 @@ nouveau_device_open_existing(struct nouveau_device **pdev, int close, int fd,
 }
 
 int
-nouveau_device_wrap(int fd, int close, struct nouveau_device **pdev)
+nouveau_device_new(struct nouveau_object *parent, int32_t oclass,
+		   void *data, uint32_t size, struct nouveau_device **pdev)
 {
-	struct nouveau_device_priv *nvdev = calloc(1, sizeof(*nvdev));
-	struct nouveau_device *dev = &nvdev->base;
-	uint64_t chipset, vram, gart, bousage;
-	drmVersionPtr ver;
-	int ret;
+	struct nv_device_info_v0 info = {};
+	union {
+		struct nv_device_v0 v0;
+	} *args = data;
+	uint32_t argc = size;
+	struct nouveau_drm *drm = nouveau_drm(parent);
+	struct nouveau_device_priv *nvdev;
+	struct nouveau_device *dev;
+	uint64_t v;
 	char *tmp;
+	int ret = -ENOSYS;
 
-#ifdef DEBUG
-	debug_init(getenv("NOUVEAU_LIBDRM_DEBUG"));
-#endif
+	if (oclass != NV_DEVICE ||
+	    nvif_unpack(ret, &data, &size, args->v0, 0, 0, false))
+		return ret;
 
-	if (!nvdev)
+	if (!(nvdev = calloc(1, sizeof(*nvdev))))
 		return -ENOMEM;
-	ret = pthread_mutex_init(&nvdev->lock, NULL);
-	if (ret) {
-		free(nvdev);
-		return ret;
-	}
+	dev = *pdev = &nvdev->base;
+	dev->fd = -1;
 
-	nvdev->base.fd = fd;
+	if (drm->nvif) {
+		ret = nouveau_object_init(parent, 0, oclass, args, argc,
+					  &dev->object);
+		if (ret)
+			goto done;
 
-	ver = drmGetVersion(fd);
-	if (ver) dev->drm_version = (ver->version_major << 24) |
-				    (ver->version_minor << 8) |
-				     ver->version_patchlevel;
-	drmFreeVersion(ver);
+		info.version = 0;
 
-	if ( dev->drm_version != 0x00000010 &&
-	    (dev->drm_version <  0x01000000 ||
-	     dev->drm_version >= 0x02000000)) {
-		nouveau_device_del(&dev);
-		return -EINVAL;
-	}
+		ret = nouveau_object_mthd(&dev->object, NV_DEVICE_V0_INFO,
+					  &info, sizeof(info));
+		if (ret)
+			goto done;
 
-	ret = nouveau_getparam(dev, NOUVEAU_GETPARAM_CHIPSET_ID, &chipset);
-	if (ret == 0)
-	ret = nouveau_getparam(dev, NOUVEAU_GETPARAM_FB_SIZE, &vram);
-	if (ret == 0)
-	ret = nouveau_getparam(dev, NOUVEAU_GETPARAM_AGP_SIZE, &gart);
-	if (ret) {
-		nouveau_device_del(&dev);
-		return ret;
-	}
+		nvdev->base.chipset = info.chipset;
+		nvdev->have_bo_usage = true;
+	} else
+	if (args->v0.device == ~0ULL) {
+		nvdev->base.object.parent = &drm->client;
+		nvdev->base.object.handle = ~0ULL;
+		nvdev->base.object.oclass = NOUVEAU_DEVICE_CLASS;
+		nvdev->base.object.length = ~0;
 
-	ret = nouveau_getparam(dev, NOUVEAU_GETPARAM_HAS_BO_USAGE, &bousage);
-	if (ret == 0)
-		nvdev->have_bo_usage = (bousage != 0);
+		ret = nouveau_getparam(dev, NOUVEAU_GETPARAM_CHIPSET_ID, &v);
+		if (ret)
+			goto done;
+		nvdev->base.chipset = v;
 
-	nvdev->close = close;
+		ret = nouveau_getparam(dev, NOUVEAU_GETPARAM_HAS_BO_USAGE, &v);
+		if (ret == 0)
+			nvdev->have_bo_usage = (v != 0);
+	} else
+		return -ENOSYS;
+
+	ret = nouveau_getparam(dev, NOUVEAU_GETPARAM_FB_SIZE, &v);
+	if (ret)
+		goto done;
+	nvdev->base.vram_size = v;
+
+	ret = nouveau_getparam(dev, NOUVEAU_GETPARAM_AGP_SIZE, &v);
+	if (ret)
+		goto done;
+	nvdev->base.gart_size = v;
 
 	tmp = getenv("NOUVEAU_LIBDRM_VRAM_LIMIT_PERCENT");
 	if (tmp)
 		nvdev->vram_limit_percent = atoi(tmp);
 	else
 		nvdev->vram_limit_percent = 80;
+
+	nvdev->base.vram_limit =
+		(nvdev->base.vram_size * nvdev->vram_limit_percent) / 100;
+
 	tmp = getenv("NOUVEAU_LIBDRM_GART_LIMIT_PERCENT");
 	if (tmp)
 		nvdev->gart_limit_percent = atoi(tmp);
 	else
 		nvdev->gart_limit_percent = 80;
-	DRMINITLISTHEAD(&nvdev->bo_list);
-	nvdev->base.object.oclass = NOUVEAU_DEVICE_CLASS;
-	nvdev->base.lib_version = 0x01000000;
-	nvdev->base.chipset = chipset;
-	nvdev->base.vram_size = vram;
-	nvdev->base.gart_size = gart;
-	nvdev->base.vram_limit =
-		(nvdev->base.vram_size * nvdev->vram_limit_percent) / 100;
+
 	nvdev->base.gart_limit =
 		(nvdev->base.gart_size * nvdev->gart_limit_percent) / 100;
 
-	*pdev = &nvdev->base;
+	ret = pthread_mutex_init(&nvdev->lock, NULL);
+	DRMINITLISTHEAD(&nvdev->bo_list);
+done:
+	if (ret)
+		nouveau_device_del(pdev);
+	return ret;
+}
+
+int
+nouveau_device_wrap(int fd, int close, struct nouveau_device **pdev)
+{
+	struct nouveau_drm *drm;
+	struct nouveau_device_priv *nvdev;
+	int ret;
+
+	ret = nouveau_drm_new(fd, &drm);
+	if (ret)
+		return ret;
+	drm->nvif = false;
+
+	ret = nouveau_device_new(&drm->client, NV_DEVICE,
+				 &(struct nv_device_v0) {
+					.device = ~0ULL,
+				 }, sizeof(struct nv_device_v0), pdev);
+	if (ret) {
+		nouveau_drm_del(&drm);
+		return ret;
+	}
+
+	nvdev = nouveau_device(*pdev);
+	nvdev->base.fd = drm->fd;
+	nvdev->base.drm_version = drm->version;
+	nvdev->close = close;
 	return 0;
 }
 
@@ -165,10 +503,15 @@ nouveau_device_del(struct nouveau_device **pdev)
 {
 	struct nouveau_device_priv *nvdev = nouveau_device(*pdev);
 	if (nvdev) {
-		if (nvdev->close)
-			drmClose(nvdev->base.fd);
 		free(nvdev->client);
 		pthread_mutex_destroy(&nvdev->lock);
+		if (nvdev->base.fd >= 0) {
+			struct nouveau_drm *drm =
+				nouveau_drm(&nvdev->base.object);
+			nouveau_drm_del(&drm);
+			if (nvdev->close)
+				drmClose(nvdev->base.fd);
+		}
 		free(nvdev);
 		*pdev = NULL;
 	}
@@ -177,8 +520,9 @@ nouveau_device_del(struct nouveau_device **pdev)
 int
 nouveau_getparam(struct nouveau_device *dev, uint64_t param, uint64_t *value)
 {
+	struct nouveau_drm *drm = nouveau_drm(&dev->object);
 	struct drm_nouveau_getparam r = { .param = param };
-	int fd = dev->fd, ret =
+	int fd = drm->fd, ret =
 		drmCommandWriteRead(fd, DRM_NOUVEAU_GETPARAM, &r, sizeof(r));
 	*value = r.value;
 	return ret;
@@ -187,8 +531,9 @@ nouveau_getparam(struct nouveau_device *dev, uint64_t param, uint64_t *value)
 int
 nouveau_setparam(struct nouveau_device *dev, uint64_t param, uint64_t value)
 {
+	struct nouveau_drm *drm = nouveau_drm(&dev->object);
 	struct drm_nouveau_setparam r = { .param = param, .value = value };
-	return drmCommandWrite(dev->fd, DRM_NOUVEAU_SETPARAM, &r, sizeof(r));
+	return drmCommandWrite(drm->fd, DRM_NOUVEAU_SETPARAM, &r, sizeof(r));
 }
 
 int
@@ -246,106 +591,10 @@ nouveau_client_del(struct nouveau_client **pclient)
 	}
 }
 
-int
-nouveau_object_new(struct nouveau_object *parent, uint64_t handle,
-		   uint32_t oclass, void *data, uint32_t length,
-		   struct nouveau_object **pobj)
-{
-	struct nouveau_device *dev;
-	struct nouveau_object *obj;
-	int ret = -EINVAL;
-
-	if (length == 0)
-		length = sizeof(struct nouveau_object *);
-	obj = malloc(sizeof(*obj) + length);
-	obj->parent = parent;
-	obj->handle = handle;
-	obj->oclass = oclass;
-	obj->length = length;
-	obj->data = obj + 1;
-	if (data)
-		memcpy(obj->data, data, length);
-	*(struct nouveau_object **)obj->data = obj;
-
-	dev = nouveau_object_find(obj, NOUVEAU_DEVICE_CLASS);
-	switch (parent->oclass) {
-	case NOUVEAU_DEVICE_CLASS:
-		switch (obj->oclass) {
-		case NOUVEAU_FIFO_CHANNEL_CLASS:
-		{
-			if (dev->chipset < 0xc0)
-				ret = abi16_chan_nv04(obj);
-			else
-			if (dev->chipset < 0xe0)
-				ret = abi16_chan_nvc0(obj);
-			else
-				ret = abi16_chan_nve0(obj);
-		}
-			break;
-		default:
-			break;
-		}
-		break;
-	case NOUVEAU_FIFO_CHANNEL_CLASS:
-		switch (obj->oclass) {
-		case NOUVEAU_NOTIFIER_CLASS:
-			ret = abi16_ntfy(obj);
-			break;
-		default:
-			ret = abi16_engobj(obj);
-			break;
-		}
-	default:
-		break;
-	}
-
-	if (ret) {
-		free(obj);
-		return ret;
-	}
-
-	*pobj = obj;
-	return 0;
-}
-
-void
-nouveau_object_del(struct nouveau_object **pobj)
-{
-	struct nouveau_object *obj = *pobj;
-	struct nouveau_device *dev;
-	if (obj) {
-		dev = nouveau_object_find(obj, NOUVEAU_DEVICE_CLASS);
-		if (obj->oclass == NOUVEAU_FIFO_CHANNEL_CLASS) {
-			struct drm_nouveau_channel_free req;
-			req.channel = obj->handle;
-			drmCommandWrite(dev->fd, DRM_NOUVEAU_CHANNEL_FREE,
-					&req, sizeof(req));
-		} else {
-			struct drm_nouveau_gpuobj_free req;
-			req.channel = obj->parent->handle;
-			req.handle  = obj->handle;
-			drmCommandWrite(dev->fd, DRM_NOUVEAU_GPUOBJ_FREE,
-					&req, sizeof(req));
-		}
-	}
-	free(obj);
-	*pobj = NULL;
-}
-
-void *
-nouveau_object_find(struct nouveau_object *obj, uint32_t pclass)
-{
-	while (obj && obj->oclass != pclass) {
-		obj = obj->parent;
-		if (pclass == NOUVEAU_PARENT_CLASS)
-			break;
-	}
-	return obj;
-}
-
 static void
 nouveau_bo_del(struct nouveau_bo *bo)
 {
+	struct nouveau_drm *drm = nouveau_drm(&bo->device->object);
 	struct nouveau_device_priv *nvdev = nouveau_device(bo->device);
 	struct nouveau_bo_priv *nvbo = nouveau_bo(bo);
 	struct drm_gem_close req = { .handle = bo->handle };
@@ -362,11 +611,11 @@ nouveau_bo_del(struct nouveau_bo *bo)
 			 * might cause the bo to be closed accidentally while
 			 * re-importing.
 			 */
-			drmIoctl(bo->device->fd, DRM_IOCTL_GEM_CLOSE, &req);
+			drmIoctl(drm->fd, DRM_IOCTL_GEM_CLOSE, &req);
 		}
 		pthread_mutex_unlock(&nvdev->lock);
 	} else {
-		drmIoctl(bo->device->fd, DRM_IOCTL_GEM_CLOSE, &req);
+		drmIoctl(drm->fd, DRM_IOCTL_GEM_CLOSE, &req);
 	}
 	if (bo->map)
 		drm_munmap(bo->map, bo->size);
@@ -403,6 +652,7 @@ static int
 nouveau_bo_wrap_locked(struct nouveau_device *dev, uint32_t handle,
 		       struct nouveau_bo **pbo, int name)
 {
+	struct nouveau_drm *drm = nouveau_drm(&dev->object);
 	struct nouveau_device_priv *nvdev = nouveau_device(dev);
 	struct drm_nouveau_gem_info req = { .handle = handle };
 	struct nouveau_bo_priv *nvbo;
@@ -432,7 +682,7 @@ nouveau_bo_wrap_locked(struct nouveau_device *dev, uint32_t handle,
 		}
 	}
 
-	ret = drmCommandWriteRead(dev->fd, DRM_NOUVEAU_GEM_INFO,
+	ret = drmCommandWriteRead(drm->fd, DRM_NOUVEAU_GEM_INFO,
 				  &req, sizeof(req));
 	if (ret)
 		return ret;
@@ -479,6 +729,7 @@ int
 nouveau_bo_name_ref(struct nouveau_device *dev, uint32_t name,
 		    struct nouveau_bo **pbo)
 {
+	struct nouveau_drm *drm = nouveau_drm(&dev->object);
 	struct nouveau_device_priv *nvdev = nouveau_device(dev);
 	struct nouveau_bo_priv *nvbo;
 	struct drm_gem_open req = { .name = name };
@@ -494,7 +745,7 @@ nouveau_bo_name_ref(struct nouveau_device *dev, uint32_t name,
 		}
 	}
 
-	ret = drmIoctl(dev->fd, DRM_IOCTL_GEM_OPEN, &req);
+	ret = drmIoctl(drm->fd, DRM_IOCTL_GEM_OPEN, &req);
 	if (ret == 0) {
 		ret = nouveau_bo_wrap_locked(dev, req.handle, pbo, name);
 	}
@@ -507,11 +758,12 @@ int
 nouveau_bo_name_get(struct nouveau_bo *bo, uint32_t *name)
 {
 	struct drm_gem_flink req = { .handle = bo->handle };
+	struct nouveau_drm *drm = nouveau_drm(&bo->device->object);
 	struct nouveau_bo_priv *nvbo = nouveau_bo(bo);
 
 	*name = nvbo->name;
 	if (!*name) {
-		int ret = drmIoctl(bo->device->fd, DRM_IOCTL_GEM_FLINK, &req);
+		int ret = drmIoctl(drm->fd, DRM_IOCTL_GEM_FLINK, &req);
 
 		if (ret) {
 			*name = 0;
@@ -542,6 +794,7 @@ int
 nouveau_bo_prime_handle_ref(struct nouveau_device *dev, int prime_fd,
 			    struct nouveau_bo **bo)
 {
+	struct nouveau_drm *drm = nouveau_drm(&dev->object);
 	struct nouveau_device_priv *nvdev = nouveau_device(dev);
 	int ret;
 	unsigned int handle;
@@ -549,7 +802,7 @@ nouveau_bo_prime_handle_ref(struct nouveau_device *dev, int prime_fd,
 	nouveau_bo_ref(NULL, bo);
 
 	pthread_mutex_lock(&nvdev->lock);
-	ret = drmPrimeFDToHandle(dev->fd, prime_fd, &handle);
+	ret = drmPrimeFDToHandle(drm->fd, prime_fd, &handle);
 	if (ret == 0) {
 		ret = nouveau_bo_wrap_locked(dev, handle, bo, 0);
 	}
@@ -560,10 +813,11 @@ nouveau_bo_prime_handle_ref(struct nouveau_device *dev, int prime_fd,
 int
 nouveau_bo_set_prime(struct nouveau_bo *bo, int *prime_fd)
 {
+	struct nouveau_drm *drm = nouveau_drm(&bo->device->object);
 	struct nouveau_bo_priv *nvbo = nouveau_bo(bo);
 	int ret;
 
-	ret = drmPrimeHandleToFD(bo->device->fd, nvbo->base.handle, DRM_CLOEXEC, prime_fd);
+	ret = drmPrimeHandleToFD(drm->fd, nvbo->base.handle, DRM_CLOEXEC, prime_fd);
 	if (ret)
 		return ret;
 
@@ -575,6 +829,7 @@ int
 nouveau_bo_wait(struct nouveau_bo *bo, uint32_t access,
 		struct nouveau_client *client)
 {
+	struct nouveau_drm *drm = nouveau_drm(&bo->device->object);
 	struct nouveau_bo_priv *nvbo = nouveau_bo(bo);
 	struct drm_nouveau_gem_cpu_prep req;
 	struct nouveau_pushbuf *push;
@@ -598,7 +853,7 @@ nouveau_bo_wait(struct nouveau_bo *bo, uint32_t access,
 	if (access & NOUVEAU_BO_NOBLOCK)
 		req.flags |= NOUVEAU_GEM_CPU_PREP_NOWAIT;
 
-	ret = drmCommandWrite(bo->device->fd, DRM_NOUVEAU_GEM_CPU_PREP,
+	ret = drmCommandWrite(drm->fd, DRM_NOUVEAU_GEM_CPU_PREP,
 			      &req, sizeof(req));
 	if (ret == 0)
 		nvbo->access = 0;
@@ -609,10 +864,11 @@ int
 nouveau_bo_map(struct nouveau_bo *bo, uint32_t access,
 	       struct nouveau_client *client)
 {
+	struct nouveau_drm *drm = nouveau_drm(&bo->device->object);
 	struct nouveau_bo_priv *nvbo = nouveau_bo(bo);
 	if (bo->map == NULL) {
 		bo->map = drm_mmap(0, bo->size, PROT_READ | PROT_WRITE,
-			       MAP_SHARED, bo->device->fd, nvbo->map_handle);
+			       MAP_SHARED, drm->fd, nvbo->map_handle);
 		if (bo->map == MAP_FAILED) {
 			bo->map = NULL;
 			return -errno;

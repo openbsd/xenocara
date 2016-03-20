@@ -37,6 +37,7 @@
  * TODO: use cairo to write the mode info on the selected output once
  *       the mode has been programmed, along with possible test patterns.
  */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -52,12 +53,20 @@
 #include <string.h>
 #include <strings.h>
 #include <errno.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <sys/time.h>
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 #include "xf86drm.h"
 #include "xf86drmMode.h"
 #include "drm_fourcc.h"
+
+#include "util/common.h"
+#include "util/format.h"
+#include "util/kms.h"
+#include "util/pattern.h"
 
 #include "buffers.h"
 #include "cursor.h"
@@ -116,69 +125,10 @@ struct device {
 	} mode;
 };
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 static inline int64_t U642I64(uint64_t val)
 {
 	return (int64_t)*((int64_t *)&val);
 }
-
-struct type_name {
-	int type;
-	const char *name;
-};
-
-#define type_name_fn(res) \
-const char * res##_str(int type) {			\
-	unsigned int i;					\
-	for (i = 0; i < ARRAY_SIZE(res##_names); i++) { \
-		if (res##_names[i].type == type)	\
-			return res##_names[i].name;	\
-	}						\
-	return "(invalid)";				\
-}
-
-struct type_name encoder_type_names[] = {
-	{ DRM_MODE_ENCODER_NONE, "none" },
-	{ DRM_MODE_ENCODER_DAC, "DAC" },
-	{ DRM_MODE_ENCODER_TMDS, "TMDS" },
-	{ DRM_MODE_ENCODER_LVDS, "LVDS" },
-	{ DRM_MODE_ENCODER_TVDAC, "TVDAC" },
-	{ DRM_MODE_ENCODER_VIRTUAL, "Virtual" },
-	{ DRM_MODE_ENCODER_DSI, "DSI" },
-	{ DRM_MODE_ENCODER_DPMST, "DPMST" },
-};
-
-static type_name_fn(encoder_type)
-
-struct type_name connector_status_names[] = {
-	{ DRM_MODE_CONNECTED, "connected" },
-	{ DRM_MODE_DISCONNECTED, "disconnected" },
-	{ DRM_MODE_UNKNOWNCONNECTION, "unknown" },
-};
-
-static type_name_fn(connector_status)
-
-struct type_name connector_type_names[] = {
-	{ DRM_MODE_CONNECTOR_Unknown, "unknown" },
-	{ DRM_MODE_CONNECTOR_VGA, "VGA" },
-	{ DRM_MODE_CONNECTOR_DVII, "DVI-I" },
-	{ DRM_MODE_CONNECTOR_DVID, "DVI-D" },
-	{ DRM_MODE_CONNECTOR_DVIA, "DVI-A" },
-	{ DRM_MODE_CONNECTOR_Composite, "composite" },
-	{ DRM_MODE_CONNECTOR_SVIDEO, "s-video" },
-	{ DRM_MODE_CONNECTOR_LVDS, "LVDS" },
-	{ DRM_MODE_CONNECTOR_Component, "component" },
-	{ DRM_MODE_CONNECTOR_9PinDIN, "9-pin DIN" },
-	{ DRM_MODE_CONNECTOR_DisplayPort, "DP" },
-	{ DRM_MODE_CONNECTOR_HDMIA, "HDMI-A" },
-	{ DRM_MODE_CONNECTOR_HDMIB, "HDMI-B" },
-	{ DRM_MODE_CONNECTOR_TV, "TV" },
-	{ DRM_MODE_CONNECTOR_eDP, "eDP" },
-	{ DRM_MODE_CONNECTOR_VIRTUAL, "Virtual" },
-	{ DRM_MODE_CONNECTOR_DSI, "DSI" },
-};
-
-static type_name_fn(connector_type)
 
 #define bit_name_fn(res)					\
 const char * res##_str(int type) {				\
@@ -239,7 +189,7 @@ static void dump_encoders(struct device *dev)
 		printf("%d\t%d\t%s\t0x%08x\t0x%08x\n",
 		       encoder->encoder_id,
 		       encoder->crtc_id,
-		       encoder_type_str(encoder->encoder_type),
+		       util_lookup_encoder_type_name(encoder->encoder_type),
 		       encoder->possible_crtcs,
 		       encoder->possible_clones);
 	}
@@ -383,7 +333,7 @@ static void dump_connectors(struct device *dev)
 		printf("%d\t%d\t%s\t%-15s\t%dx%d\t\t%d\t",
 		       connector->connector_id,
 		       connector->encoder_id,
-		       connector_status_str(connector->connection),
+		       util_lookup_connector_status_name(connector->connection),
 		       _connector->name,
 		       connector->mmWidth, connector->mmHeight,
 		       connector->count_modes);
@@ -607,10 +557,11 @@ static struct resources *get_resources(struct device *dev)
 	/* Set the name of all connectors based on the type name and the per-type ID. */
 	for (i = 0; i < res->res->count_connectors; i++) {
 		struct connector *connector = &res->connectors[i];
+		drmModeConnector *conn = connector->connector;
 
 		asprintf(&connector->name, "%s-%u",
-			 connector_type_str(connector->connector->connector_type),
-			 connector->connector->connector_type_id);
+			 util_lookup_connector_type_name(conn->connector_type),
+			 conn->connector_type_id);
 	}
 
 #define get_properties(_res, __res, type, Type)					\
@@ -1047,7 +998,7 @@ static int set_plane(struct device *dev, struct plane_arg *p)
 		p->w, p->h, p->format_str, plane_id);
 
 	plane_bo = bo_create(dev->fd, p->fourcc, p->w, p->h, handles,
-			     pitches, offsets, PATTERN_TILES);
+			     pitches, offsets, UTIL_PATTERN_TILES);
 	if (plane_bo == NULL)
 		return -1;
 
@@ -1123,8 +1074,9 @@ static void set_mode(struct device *dev, struct pipe_arg *pipes, unsigned int co
 			dev->mode.height = pipe->mode->vdisplay;
 	}
 
-	bo = bo_create(dev->fd, pipes[0].fourcc, dev->mode.width, dev->mode.height,
-		       handles, pitches, offsets, PATTERN_SMPTE);
+	bo = bo_create(dev->fd, pipes[0].fourcc, dev->mode.width,
+		       dev->mode.height, handles, pitches, offsets,
+		       UTIL_PATTERN_SMPTE);
 	if (bo == NULL)
 		return;
 
@@ -1202,7 +1154,7 @@ static void set_cursors(struct device *dev, struct pipe_arg *pipes, unsigned int
 	 * translucent alpha
 	 */
 	bo = bo_create(dev->fd, DRM_FORMAT_ARGB8888, cw, ch, handles, pitches,
-		       offsets, PATTERN_PLAIN);
+		       offsets, UTIL_PATTERN_PLAIN);
 	if (bo == NULL)
 		return;
 
@@ -1241,9 +1193,9 @@ static void test_page_flip(struct device *dev, struct pipe_arg *pipes, unsigned 
 	unsigned int i;
 	int ret;
 
-	other_bo = bo_create(dev->fd, pipes[0].fourcc,
-			     dev->mode.width, dev->mode.height,
-			     handles, pitches, offsets, PATTERN_PLAIN);
+	other_bo = bo_create(dev->fd, pipes[0].fourcc, dev->mode.width,
+			     dev->mode.height, handles, pitches, offsets,
+			     UTIL_PATTERN_PLAIN);
 	if (other_bo == NULL)
 		return;
 
@@ -1391,7 +1343,7 @@ static int parse_connector(struct pipe_arg *pipe, const char *arg)
 		pipe->format_str[4] = '\0';
 	}
 
-	pipe->fourcc = format_fourcc(pipe->format_str);
+	pipe->fourcc = util_format_fourcc(pipe->format_str);
 	if (pipe->fourcc == 0)  {
 		fprintf(stderr, "unknown format %s\n", pipe->format_str);
 		return -1;
@@ -1444,7 +1396,7 @@ static int parse_plane(struct plane_arg *plane, const char *p)
 		strcpy(plane->format_str, "XR24");
 	}
 
-	plane->fourcc = format_fourcc(plane->format_str);
+	plane->fourcc = util_format_fourcc(plane->format_str);
 	if (plane->fourcc == 0) {
 		fprintf(stderr, "unknown format %s\n", plane->format_str);
 		return -EINVAL;
@@ -1554,7 +1506,6 @@ int main(int argc, char **argv)
 	int drop_master = 0;
 	int test_vsync = 0;
 	int test_cursor = 0;
-	const char *modules[] = { "i915", "radeon", "nouveau", "vmwgfx", "omapdrm", "exynos", "tilcdc", "msm", "sti", "tegra", "imx-drm", "rockchip", "atmel-hlcdc" };
 	char *device = NULL;
 	char *module = NULL;
 	unsigned int i;
@@ -1655,29 +1606,9 @@ int main(int argc, char **argv)
 	if (!args)
 		encoders = connectors = crtcs = planes = framebuffers = 1;
 
-	if (module) {
-		dev.fd = drmOpen(module, device);
-		if (dev.fd < 0) {
-			fprintf(stderr, "failed to open device '%s'.\n", module);
-			return 1;
-		}
-	} else {
-		for (i = 0; i < ARRAY_SIZE(modules); i++) {
-			printf("trying to open device '%s'...", modules[i]);
-			dev.fd = drmOpen(modules[i], device);
-			if (dev.fd < 0) {
-				printf("failed.\n");
-			} else {
-				printf("success.\n");
-				break;
-			}
-		}
-
-		if (dev.fd < 0) {
-			fprintf(stderr, "no device found.\n");
-			return 1;
-		}
-	}
+	dev.fd = util_open(device, module);
+	if (dev.fd < 0)
+		return -1;
 
 	if (test_vsync && !page_flipping_supported()) {
 		fprintf(stderr, "page flipping not supported by drm.\n");

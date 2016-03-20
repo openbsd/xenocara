@@ -29,14 +29,16 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <errno.h>
 
 #include "private.h"
 
+#include "nvif/class.h"
 
-drm_private int
+static int
 abi16_chan_nv04(struct nouveau_object *obj)
 {
-	struct nouveau_device *dev = (struct nouveau_device *)obj->parent;
+	struct nouveau_drm *drm = nouveau_drm(obj);
 	struct nv04_fifo *nv04 = obj->data;
 	struct drm_nouveau_channel_alloc req = {
 		.fb_ctxdma_handle = nv04->vram,
@@ -44,7 +46,7 @@ abi16_chan_nv04(struct nouveau_object *obj)
 	};
 	int ret;
 
-	ret = drmCommandWriteRead(dev->fd, DRM_NOUVEAU_CHANNEL_ALLOC,
+	ret = drmCommandWriteRead(drm->fd, DRM_NOUVEAU_CHANNEL_ALLOC,
 				  &req, sizeof(req));
 	if (ret)
 		return ret;
@@ -57,15 +59,15 @@ abi16_chan_nv04(struct nouveau_object *obj)
 	return 0;
 }
 
-drm_private int
+static int
 abi16_chan_nvc0(struct nouveau_object *obj)
 {
-	struct nouveau_device *dev = (struct nouveau_device *)obj->parent;
+	struct nouveau_drm *drm = nouveau_drm(obj);
 	struct drm_nouveau_channel_alloc req = {};
 	struct nvc0_fifo *nvc0 = obj->data;
 	int ret;
 
-	ret = drmCommandWriteRead(dev->fd, DRM_NOUVEAU_CHANNEL_ALLOC,
+	ret = drmCommandWriteRead(drm->fd, DRM_NOUVEAU_CHANNEL_ALLOC,
 				  &req, sizeof(req));
 	if (ret)
 		return ret;
@@ -78,10 +80,10 @@ abi16_chan_nvc0(struct nouveau_object *obj)
 	return 0;
 }
 
-drm_private int
+static int
 abi16_chan_nve0(struct nouveau_object *obj)
 {
-	struct nouveau_device *dev = (struct nouveau_device *)obj->parent;
+	struct nouveau_drm *drm = nouveau_drm(obj);
 	struct drm_nouveau_channel_alloc req = {};
 	struct nve0_fifo *nve0 = obj->data;
 	int ret;
@@ -91,7 +93,7 @@ abi16_chan_nve0(struct nouveau_object *obj)
 		req.tt_ctxdma_handle = nve0->engine;
 	}
 
-	ret = drmCommandWriteRead(dev->fd, DRM_NOUVEAU_CHANNEL_ALLOC,
+	ret = drmCommandWriteRead(drm->fd, DRM_NOUVEAU_CHANNEL_ALLOC,
 				  &req, sizeof(req));
 	if (ret)
 		return ret;
@@ -104,19 +106,39 @@ abi16_chan_nve0(struct nouveau_object *obj)
 	return 0;
 }
 
-drm_private int
+static int
 abi16_engobj(struct nouveau_object *obj)
 {
+	struct nouveau_drm *drm = nouveau_drm(obj);
 	struct drm_nouveau_grobj_alloc req = {
 		.channel = obj->parent->handle,
 		.handle = obj->handle,
 		.class = obj->oclass,
 	};
-	struct nouveau_device *dev;
 	int ret;
 
-	dev = nouveau_object_find(obj, NOUVEAU_DEVICE_CLASS);
-	ret = drmCommandWrite(dev->fd, DRM_NOUVEAU_GROBJ_ALLOC,
+	/* Older kernel versions did not have the concept of nouveau-
+	 * specific classes and abused some NVIDIA-assigned ones for
+	 * a SW class.  The ABI16 layer has compatibility in place to
+	 * translate these older identifiers to the newer ones.
+	 *
+	 * Clients that have been updated to use NVIF are required to
+	 * use the newer class identifiers, which means that they'll
+	 * break if running on an older kernel.
+	 *
+	 * To handle this case, when using ABI16, we translate to the
+	 * older values which work on any kernel.
+	 */
+	switch (req.class) {
+	case NVIF_CLASS_SW_NV04 : req.class = 0x006e; break;
+	case NVIF_CLASS_SW_NV10 : req.class = 0x016e; break;
+	case NVIF_CLASS_SW_NV50 : req.class = 0x506e; break;
+	case NVIF_CLASS_SW_GF100: req.class = 0x906e; break;
+	default:
+		break;
+	}
+
+	ret = drmCommandWrite(drm->fd, DRM_NOUVEAU_GROBJ_ALLOC,
 			      &req, sizeof(req));
 	if (ret)
 		return ret;
@@ -125,20 +147,19 @@ abi16_engobj(struct nouveau_object *obj)
 	return 0;
 }
 
-drm_private int
+static int
 abi16_ntfy(struct nouveau_object *obj)
 {
+	struct nouveau_drm *drm = nouveau_drm(obj);
 	struct nv04_notify *ntfy = obj->data;
 	struct drm_nouveau_notifierobj_alloc req = {
 		.channel = obj->parent->handle,
 		.handle = ntfy->object->handle,
 		.size = ntfy->length,
 	};
-	struct nouveau_device *dev;
 	int ret;
 
-	dev = nouveau_object_find(obj, NOUVEAU_DEVICE_CLASS);
-	ret = drmCommandWriteRead(dev->fd, DRM_NOUVEAU_NOTIFIEROBJ_ALLOC,
+	ret = drmCommandWriteRead(drm->fd, DRM_NOUVEAU_NOTIFIEROBJ_ALLOC,
 				  &req, sizeof(req));
 	if (ret)
 		return ret;
@@ -146,6 +167,110 @@ abi16_ntfy(struct nouveau_object *obj)
 	ntfy->offset = req.offset;
 	ntfy->object->length = sizeof(*ntfy);
 	return 0;
+}
+
+drm_private int
+abi16_sclass(struct nouveau_object *obj, struct nouveau_sclass **psclass)
+{
+	struct nouveau_sclass *sclass;
+	struct nouveau_device *dev;
+
+	if (!(sclass = calloc(8, sizeof(*sclass))))
+		return -ENOMEM;
+	*psclass = sclass;
+
+	switch (obj->oclass) {
+	case NOUVEAU_FIFO_CHANNEL_CLASS:
+		/* Older kernel versions were exposing the wrong video engine
+		 * classes on certain G98:GF100 boards.  This has since been
+		 * corrected, but ABI16 has compatibility in place to avoid
+		 * breaking older userspace.
+		 *
+		 * Clients that have been updated to use NVIF are required to
+		 * use the correct classes, which means that they'll break if
+		 * running on an older kernel.
+		 *
+		 * To handle this issue, if using the older kernel interfaces,
+		 * we'll magic up a list containing the vdec classes that the
+		 * kernel will accept for these boards.  Clients should make
+		 * use of this information instead of hardcoding classes for
+		 * specific chipsets.
+		 */
+		dev = (struct nouveau_device *)obj->parent;
+		if (dev->chipset >= 0x98 &&
+		    dev->chipset != 0xa0 &&
+		    dev->chipset <  0xc0) {
+			*sclass++ = (struct nouveau_sclass){
+				GT212_MSVLD, -1, -1
+			};
+			*sclass++ = (struct nouveau_sclass){
+				GT212_MSPDEC, -1, -1
+			};
+			*sclass++ = (struct nouveau_sclass){
+				GT212_MSPPP, -1, -1
+			};
+		}
+		break;
+	default:
+		break;
+	}
+
+	return sclass - *psclass;
+}
+
+drm_private void
+abi16_delete(struct nouveau_object *obj)
+{
+	struct nouveau_drm *drm = nouveau_drm(obj);
+	if (obj->oclass == NOUVEAU_FIFO_CHANNEL_CLASS) {
+		struct drm_nouveau_channel_free req;
+		req.channel = obj->handle;
+		drmCommandWrite(drm->fd, DRM_NOUVEAU_CHANNEL_FREE,
+				&req, sizeof(req));
+	} else {
+		struct drm_nouveau_gpuobj_free req;
+		req.channel = obj->parent->handle;
+		req.handle  = obj->handle;
+		drmCommandWrite(drm->fd, DRM_NOUVEAU_GPUOBJ_FREE,
+				&req, sizeof(req));
+	}
+}
+
+drm_private bool
+abi16_object(struct nouveau_object *obj, int (**func)(struct nouveau_object *))
+{
+	struct nouveau_object *parent = obj->parent;
+
+	/* nouveau_object::length is (ab)used to determine whether the
+	 * object is a legacy object (!=0), or a real NVIF object.
+	 */
+	if ((parent->length != 0 && parent->oclass == NOUVEAU_DEVICE_CLASS) ||
+	    (parent->length == 0 && parent->oclass == NV_DEVICE)) {
+		if (obj->oclass == NOUVEAU_FIFO_CHANNEL_CLASS) {
+			struct nouveau_device *dev = (void *)parent;
+			if (dev->chipset < 0xc0)
+				*func = abi16_chan_nv04;
+			else
+			if (dev->chipset < 0xe0)
+				*func = abi16_chan_nvc0;
+			else
+				*func = abi16_chan_nve0;
+			return true;
+		}
+	} else
+	if ((parent->length != 0 &&
+	     parent->oclass == NOUVEAU_FIFO_CHANNEL_CLASS)) {
+		if (obj->oclass == NOUVEAU_NOTIFIER_CLASS) {
+			*func = abi16_ntfy;
+			return true;
+		}
+
+		*func = abi16_engobj;
+		return false; /* try NVIF, if supported, before calling func */
+	}
+
+	*func = NULL;
+	return false;
 }
 
 drm_private void
@@ -187,6 +312,7 @@ abi16_bo_init(struct nouveau_bo *bo, uint32_t alignment,
 	      union nouveau_bo_config *config)
 {
 	struct nouveau_device *dev = bo->device;
+	struct nouveau_drm *drm = nouveau_drm(&dev->object);
 	struct drm_nouveau_gem_new req = {};
 	struct drm_nouveau_gem_info *info = &req.info;
 	int ret;
@@ -229,7 +355,7 @@ abi16_bo_init(struct nouveau_bo *bo, uint32_t alignment,
 	if (!nouveau_device(dev)->have_bo_usage)
 		info->tile_flags &= 0x0000ff00;
 
-	ret = drmCommandWriteRead(dev->fd, DRM_NOUVEAU_GEM_NEW,
+	ret = drmCommandWriteRead(drm->fd, DRM_NOUVEAU_GEM_NEW,
 				  &req, sizeof(req));
 	if (ret == 0)
 		abi16_bo_info(bo, &req.info);

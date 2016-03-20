@@ -1,5 +1,5 @@
 /*
- * DRM based mode setting test program
+ * DRM based vblank test program
  * Copyright 2008 Tungsten Graphics
  *   Jakob Bornecrantz <jakob@tungstengraphics.com>
  * Copyright 2008 Intel Corporation
@@ -24,19 +24,6 @@
  * IN THE SOFTWARE.
  */
 
-/*
- * This fairly simple test program dumps output in a similar format to the
- * "xrandr" tool everyone knows & loves.  It's necessarily slightly different
- * since the kernel separates outputs into encoder and connector structures,
- * each with their own unique ID.  The program also allows test testing of the
- * memory management and mode setting APIs by allowing the user to specify a
- * connector and mode to use for mode setting.  If all works as expected, a
- * blue background should be painted on the monitor attached to the specified
- * connector after the selected mode is set.
- *
- * TODO: use cairo to write the mode info on the selected output once
- *       the mode has been programmed, along with possible test patterns.
- */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -48,17 +35,21 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/poll.h>
+#include <poll.h>
 #include <sys/time.h>
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
 
 #include "xf86drm.h"
 #include "xf86drmMode.h"
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#include "util/common.h"
+#include "util/kms.h"
 
 extern char *optarg;
 extern int optind, opterr, optopt;
-static char optstr[] = "s";
+static char optstr[] = "D:M:s";
 
 int secondary = 0;
 
@@ -97,16 +88,19 @@ static void vblank_handler(int fd, unsigned int frame, unsigned int sec,
 
 static void usage(char *name)
 {
-	fprintf(stderr, "usage: %s [-s]\n", name);
-	fprintf(stderr, "\t-s\tuse secondary pipe\n");
+	fprintf(stderr, "usage: %s [-DMs]\n", name);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "options:\n");
+	fprintf(stderr, "  -D DEVICE  open the given device\n");
+	fprintf(stderr, "  -M MODULE  open the given module\n");
+	fprintf(stderr, "  -s         use secondary pipe\n");
 	exit(0);
 }
 
 int main(int argc, char **argv)
 {
-	unsigned i;
+	const char *device = NULL, *module = NULL;
 	int c, fd, ret;
-	const char *modules[] = { "i915", "radeon", "nouveau", "vmwgfx", "exynos", "omapdrm", "tilcdc", "msm", "tegra", "imx-drm" , "rockchip" };
 	drmVBlank vbl;
 	drmEventContext evctx;
 	struct vbl_info handler_info;
@@ -114,6 +108,12 @@ int main(int argc, char **argv)
 	opterr = 0;
 	while ((c = getopt(argc, argv, optstr)) != -1) {
 		switch (c) {
+		case 'D':
+			device = optarg;
+			break;
+		case 'M':
+			module = optarg;
+			break;
 		case 's':
 			secondary = 1;
 			break;
@@ -123,21 +123,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	for (i = 0; i < ARRAY_SIZE(modules); i++) {
-		printf("trying to load module %s...", modules[i]);
-		fd = drmOpen(modules[i], NULL);
-		if (fd < 0) {
-			printf("failed.\n");
-		} else {
-			printf("success.\n");
-			break;
-		}
-	}
-
-	if (i == ARRAY_SIZE(modules)) {
-		fprintf(stderr, "failed to load any modules, aborting.\n");
-		return -1;
-	}
+	fd = util_open(device, module);
+	if (fd < 0)
+		return 1;
 
 	/* Get current count first */
 	vbl.request.type = DRM_VBLANK_RELATIVE;
