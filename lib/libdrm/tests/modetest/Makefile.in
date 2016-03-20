@@ -54,8 +54,6 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.sources $(top_srcdir)/build-aux/depcomp
 @HAVE_INSTALL_TESTS_TRUE@bin_PROGRAMS = modetest$(EXEEXT)
 @HAVE_INSTALL_TESTS_FALSE@noinst_PROGRAMS = modetest$(EXEEXT)
-@HAVE_CAIRO_TRUE@am__append_1 = $(CAIRO_CFLAGS)
-@HAVE_CAIRO_TRUE@am__append_2 = $(CAIRO_LIBS)
 subdir = tests/modetest
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -74,9 +72,8 @@ am__objects_1 = buffers.$(OBJEXT) cursor.$(OBJEXT) modetest.$(OBJEXT)
 am_modetest_OBJECTS = $(am__objects_1)
 modetest_OBJECTS = $(am_modetest_OBJECTS)
 am__DEPENDENCIES_1 =
-@HAVE_CAIRO_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 modetest_DEPENDENCIES = $(top_builddir)/libdrm.la \
-	$(am__DEPENDENCIES_2)
+	$(top_builddir)/tests/util/libutil.la $(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -283,9 +280,15 @@ MODETEST_FILES := \
 	modetest.c
 
 AM_CFLAGS = $(filter-out -Wpointer-arith, $(WARN_CFLAGS)) \
-	-I$(top_srcdir)/include/drm -I$(top_srcdir) $(am__append_1)
+	-I$(top_srcdir)/include/drm -I$(top_srcdir)/tests \
+	-I$(top_srcdir)
 modetest_SOURCES = $(MODETEST_FILES)
-modetest_LDADD = $(top_builddir)/libdrm.la -lpthread $(am__append_2)
+modetest_LDADD = \
+	$(top_builddir)/libdrm.la \
+	$(top_builddir)/tests/util/libutil.la \
+	$(CAIRO_LIBS) \
+	-lpthread
+
 EXTRA_DIST = Android.mk
 all: all-am
 

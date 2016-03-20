@@ -201,7 +201,8 @@ am__klibdrminclude_HEADERS_DIST = include/drm/drm.h \
 	include/drm/r128_drm.h include/drm/radeon_drm.h \
 	include/drm/amdgpu_drm.h include/drm/savage_drm.h \
 	include/drm/sis_drm.h include/drm/tegra_drm.h \
-	include/drm/via_drm.h include/drm/vmwgfx_drm.h
+	include/drm/vc4_drm.h include/drm/via_drm.h \
+	include/drm/vmwgfx_drm.h
 HEADERS = $(klibdrminclude_HEADERS) $(libdrminclude_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
@@ -212,7 +213,7 @@ ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
 DIST_SUBDIRS = . libkms intel nouveau radeon amdgpu omap exynos \
-	freedreno tegra tests man
+	freedreno tegra vc4 tests man
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -439,6 +440,7 @@ LIBDRM_INCLUDE_H_FILES := \
 	include/drm/savage_drm.h \
 	include/drm/sis_drm.h \
 	include/drm/tegra_drm.h \
+	include/drm/vc4_drm.h \
 	include/drm/via_drm.h
 
 LIBDRM_INCLUDE_VMWGFX_H_FILES := \
@@ -452,6 +454,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-radeon \
 	--enable-amdgpu \
 	--enable-nouveau \
+	--enable-vc4 \
 	--enable-vmwgfx \
 	--enable-omap-experimental-api \
 	--enable-exynos-experimental-api \
@@ -460,7 +463,8 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-tegra-experimental-api \
 	--enable-install-test-programs \
 	--enable-cairo-tests \
-	--enable-manpages
+	--enable-manpages \
+	--enable-valgrind
 
 pkgconfig_DATA = libdrm.pc
 @HAVE_LIBKMS_TRUE@LIBKMS_SUBDIR = libkms
@@ -472,6 +476,7 @@ pkgconfig_DATA = libdrm.pc
 @HAVE_EXYNOS_TRUE@EXYNOS_SUBDIR = exynos
 @HAVE_FREEDRENO_TRUE@FREEDRENO_SUBDIR = freedreno
 @HAVE_TEGRA_TRUE@TEGRA_SUBDIR = tegra
+@HAVE_VC4_TRUE@VC4_SUBDIR = vc4
 @BUILD_MANPAGES_TRUE@@HAVE_MANPAGES_STYLESHEET_TRUE@MAN_SUBDIR = man
 SUBDIRS = \
 	. \
@@ -484,6 +489,7 @@ SUBDIRS = \
 	$(EXYNOS_SUBDIR) \
 	$(FREEDRENO_SUBDIR) \
 	$(TEGRA_SUBDIR) \
+	$(VC4_SUBDIR) \
 	tests \
 	$(MAN_SUBDIR)
 

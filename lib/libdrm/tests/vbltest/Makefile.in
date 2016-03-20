@@ -70,7 +70,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_vbltest_OBJECTS = vbltest.$(OBJEXT)
 vbltest_OBJECTS = $(am_vbltest_OBJECTS)
-vbltest_DEPENDENCIES = $(top_builddir)/libdrm.la
+vbltest_DEPENDENCIES = $(top_builddir)/libdrm.la \
+	$(top_builddir)/tests/util/libutil.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -272,13 +273,15 @@ top_srcdir = @top_srcdir@
 AM_CFLAGS = \
 	$(WARN_CFLAGS)\
 	-I$(top_srcdir)/include/drm \
+	-I$(top_srcdir)/tests \
 	-I$(top_srcdir)
 
 vbltest_SOURCES = \
 	vbltest.c
 
 vbltest_LDADD = \
-	$(top_builddir)/libdrm.la
+	$(top_builddir)/libdrm.la \
+	$(top_builddir)/tests/util/libutil.la
 
 all: all-am
 

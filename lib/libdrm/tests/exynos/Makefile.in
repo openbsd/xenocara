@@ -50,8 +50,22 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@HAVE_INSTALL_TESTS_TRUE@@HAVE_LIBKMS_TRUE@bin_PROGRAMS = exynos_fimg2d_test$(EXEEXT)
-@HAVE_INSTALL_TESTS_FALSE@@HAVE_LIBKMS_TRUE@noinst_PROGRAMS = exynos_fimg2d_test$(EXEEXT)
+bin_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
+noinst_PROGRAMS = $(am__EXEEXT_3) $(am__EXEEXT_4)
+@HAVE_INSTALL_TESTS_TRUE@@HAVE_LIBKMS_TRUE@am__append_1 = \
+@HAVE_INSTALL_TESTS_TRUE@@HAVE_LIBKMS_TRUE@	exynos_fimg2d_test
+
+@HAVE_INSTALL_TESTS_FALSE@@HAVE_LIBKMS_TRUE@am__append_2 = \
+@HAVE_INSTALL_TESTS_FALSE@@HAVE_LIBKMS_TRUE@	exynos_fimg2d_test
+
+@HAVE_INSTALL_TESTS_TRUE@am__append_3 = \
+@HAVE_INSTALL_TESTS_TRUE@	exynos_fimg2d_perf \
+@HAVE_INSTALL_TESTS_TRUE@	exynos_fimg2d_event
+
+@HAVE_INSTALL_TESTS_FALSE@am__append_4 = \
+@HAVE_INSTALL_TESTS_FALSE@	exynos_fimg2d_perf \
+@HAVE_INSTALL_TESTS_FALSE@	exynos_fimg2d_event
+
 subdir = tests/exynos
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/build-aux/depcomp
@@ -66,17 +80,31 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+@HAVE_INSTALL_TESTS_TRUE@@HAVE_LIBKMS_TRUE@am__EXEEXT_1 = exynos_fimg2d_test$(EXEEXT)
+@HAVE_INSTALL_TESTS_TRUE@am__EXEEXT_2 = exynos_fimg2d_perf$(EXEEXT) \
+@HAVE_INSTALL_TESTS_TRUE@	exynos_fimg2d_event$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)"
+@HAVE_INSTALL_TESTS_FALSE@@HAVE_LIBKMS_TRUE@am__EXEEXT_3 = exynos_fimg2d_test$(EXEEXT)
+@HAVE_INSTALL_TESTS_FALSE@am__EXEEXT_4 = exynos_fimg2d_perf$(EXEEXT) \
+@HAVE_INSTALL_TESTS_FALSE@	exynos_fimg2d_event$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
-am_exynos_fimg2d_test_OBJECTS = exynos_fimg2d_test.$(OBJEXT)
-exynos_fimg2d_test_OBJECTS = $(am_exynos_fimg2d_test_OBJECTS)
-exynos_fimg2d_test_DEPENDENCIES = $(top_builddir)/libdrm.la \
-	$(top_builddir)/libkms/libkms.la \
+exynos_fimg2d_event_SOURCES = exynos_fimg2d_event.c
+exynos_fimg2d_event_OBJECTS = exynos_fimg2d_event.$(OBJEXT)
+exynos_fimg2d_event_DEPENDENCIES = $(top_builddir)/libdrm.la \
 	$(top_builddir)/exynos/libdrm_exynos.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+exynos_fimg2d_perf_SOURCES = exynos_fimg2d_perf.c
+exynos_fimg2d_perf_OBJECTS = exynos_fimg2d_perf.$(OBJEXT)
+exynos_fimg2d_perf_DEPENDENCIES = $(top_builddir)/libdrm.la \
+	$(top_builddir)/exynos/libdrm_exynos.la
+am_exynos_fimg2d_test_OBJECTS = exynos_fimg2d_test.$(OBJEXT)
+exynos_fimg2d_test_OBJECTS = $(am_exynos_fimg2d_test_OBJECTS)
+exynos_fimg2d_test_DEPENDENCIES = $(top_builddir)/libdrm.la \
+	$(top_builddir)/libkms/libkms.la \
+	$(top_builddir)/exynos/libdrm_exynos.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -111,8 +139,10 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(exynos_fimg2d_test_SOURCES)
-DIST_SOURCES = $(exynos_fimg2d_test_SOURCES)
+SOURCES = exynos_fimg2d_event.c exynos_fimg2d_perf.c \
+	$(exynos_fimg2d_test_SOURCES)
+DIST_SOURCES = exynos_fimg2d_event.c exynos_fimg2d_perf.c \
+	$(exynos_fimg2d_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -278,6 +308,15 @@ AM_CFLAGS = \
 	-I $(top_srcdir)/exynos \
 	-I $(top_srcdir)
 
+exynos_fimg2d_perf_LDADD = \
+	$(top_builddir)/libdrm.la \
+	$(top_builddir)/exynos/libdrm_exynos.la
+
+exynos_fimg2d_event_LDADD = \
+	$(top_builddir)/libdrm.la \
+	$(top_builddir)/exynos/libdrm_exynos.la \
+	-lpthread
+
 exynos_fimg2d_test_LDADD = \
 	$(top_builddir)/libdrm.la \
 	$(top_builddir)/libkms/libkms.la \
@@ -375,6 +414,12 @@ clean-noinstPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
+exynos_fimg2d_event$(EXEEXT): $(exynos_fimg2d_event_OBJECTS) $(exynos_fimg2d_event_DEPENDENCIES) $(EXTRA_exynos_fimg2d_event_DEPENDENCIES) 
+	@rm -f exynos_fimg2d_event$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(exynos_fimg2d_event_OBJECTS) $(exynos_fimg2d_event_LDADD) $(LIBS)
+exynos_fimg2d_perf$(EXEEXT): $(exynos_fimg2d_perf_OBJECTS) $(exynos_fimg2d_perf_DEPENDENCIES) $(EXTRA_exynos_fimg2d_perf_DEPENDENCIES) 
+	@rm -f exynos_fimg2d_perf$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(exynos_fimg2d_perf_OBJECTS) $(exynos_fimg2d_perf_LDADD) $(LIBS)
 exynos_fimg2d_test$(EXEEXT): $(exynos_fimg2d_test_OBJECTS) $(exynos_fimg2d_test_DEPENDENCIES) $(EXTRA_exynos_fimg2d_test_DEPENDENCIES) 
 	@rm -f exynos_fimg2d_test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(exynos_fimg2d_test_OBJECTS) $(exynos_fimg2d_test_LDADD) $(LIBS)
@@ -385,6 +430,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exynos_fimg2d_event.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exynos_fimg2d_perf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exynos_fimg2d_test.Po@am__quote@
 
 .c.o:

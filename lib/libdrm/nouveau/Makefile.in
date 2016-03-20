@@ -52,7 +52,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(libdrm_nouveauinclude_HEADERS) $(srcdir)/Makefile.am \
+DIST_COMMON = $(libdrm_nouveauinclude_HEADERS) \
+	$(libdrm_nouveaunvifinclude_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/Makefile.sources \
 	$(srcdir)/libdrm_nouveau.pc.in $(top_srcdir)/build-aux/depcomp
 subdir = nouveau
@@ -96,7 +97,8 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdrm_nouveau_ladir)" \
 	"$(DESTDIR)$(pkgconfigdir)" \
-	"$(DESTDIR)$(libdrm_nouveauincludedir)"
+	"$(DESTDIR)$(libdrm_nouveauincludedir)" \
+	"$(DESTDIR)$(libdrm_nouveaunvifincludedir)"
 LTLIBRARIES = $(libdrm_nouveau_la_LTLIBRARIES)
 libdrm_nouveau_la_DEPENDENCIES = ../libdrm.la
 am__objects_1 = nouveau.lo pushbuf.lo bufctx.lo abi16.lo
@@ -152,7 +154,8 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 DATA = $(pkgconfig_DATA)
-HEADERS = $(libdrm_nouveauinclude_HEADERS)
+HEADERS = $(libdrm_nouveauinclude_HEADERS) \
+	$(libdrm_nouveaunvifinclude_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors_dummy = \
@@ -332,8 +335,17 @@ libdrm_nouveau_ladir = $(libdir)
 libdrm_nouveau_la_LDFLAGS = -version-number 2:0:0 -no-undefined
 libdrm_nouveau_la_LIBADD = ../libdrm.la @PTHREADSTUBS_LIBS@
 libdrm_nouveau_la_SOURCES = $(LIBDRM_NOUVEAU_FILES)
-libdrm_nouveauincludedir = ${includedir}/libdrm
+libdrm_nouveauincludedir = ${includedir}/libdrm/nouveau
 libdrm_nouveauinclude_HEADERS = $(LIBDRM_NOUVEAU_H_FILES)
+libdrm_nouveaunvifincludedir = ${includedir}/libdrm/nouveau/nvif
+libdrm_nouveaunvifinclude_HEADERS = nvif/class.h \
+				    nvif/cl0080.h \
+				    nvif/cl9097.h \
+				    nvif/if0002.h \
+				    nvif/if0003.h \
+				    nvif/ioctl.h \
+				    nvif/unpack.h
+
 pkgconfig_DATA = libdrm_nouveau.pc
 TESTS = nouveau-symbol-check
 EXTRA_DIST = Android.mk $(TESTS)
@@ -490,6 +502,27 @@ uninstall-libdrm_nouveauincludeHEADERS:
 	@list='$(libdrm_nouveauinclude_HEADERS)'; test -n "$(libdrm_nouveauincludedir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(libdrm_nouveauincludedir)'; $(am__uninstall_files_from_dir)
+install-libdrm_nouveaunvifincludeHEADERS: $(libdrm_nouveaunvifinclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(libdrm_nouveaunvifinclude_HEADERS)'; test -n "$(libdrm_nouveaunvifincludedir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libdrm_nouveaunvifincludedir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libdrm_nouveaunvifincludedir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(libdrm_nouveaunvifincludedir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(libdrm_nouveaunvifincludedir)" || exit $$?; \
+	done
+
+uninstall-libdrm_nouveaunvifincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libdrm_nouveaunvifinclude_HEADERS)'; test -n "$(libdrm_nouveaunvifincludedir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(libdrm_nouveaunvifincludedir)'; $(am__uninstall_files_from_dir)
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -685,7 +718,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdrm_nouveau_ladir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(libdrm_nouveauincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdrm_nouveau_ladir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(libdrm_nouveauincludedir)" "$(DESTDIR)$(libdrm_nouveaunvifincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -742,7 +775,8 @@ info: info-am
 info-am:
 
 install-data-am: install-libdrm_nouveau_laLTLIBRARIES \
-	install-libdrm_nouveauincludeHEADERS install-pkgconfigDATA
+	install-libdrm_nouveauincludeHEADERS \
+	install-libdrm_nouveaunvifincludeHEADERS install-pkgconfigDATA
 
 install-dvi: install-dvi-am
 
@@ -789,7 +823,9 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-libdrm_nouveau_laLTLIBRARIES \
-	uninstall-libdrm_nouveauincludeHEADERS uninstall-pkgconfigDATA
+	uninstall-libdrm_nouveauincludeHEADERS \
+	uninstall-libdrm_nouveaunvifincludeHEADERS \
+	uninstall-pkgconfigDATA
 
 .MAKE: check-am install-am install-strip
 
@@ -801,14 +837,17 @@ uninstall-am: uninstall-libdrm_nouveau_laLTLIBRARIES \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
 	install-info-am install-libdrm_nouveau_laLTLIBRARIES \
-	install-libdrm_nouveauincludeHEADERS install-man install-pdf \
-	install-pdf-am install-pkgconfigDATA install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-libdrm_nouveau_laLTLIBRARIES \
-	uninstall-libdrm_nouveauincludeHEADERS uninstall-pkgconfigDATA
+	install-libdrm_nouveauincludeHEADERS \
+	install-libdrm_nouveaunvifincludeHEADERS install-man \
+	install-pdf install-pdf-am install-pkgconfigDATA install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-libdrm_nouveau_laLTLIBRARIES \
+	uninstall-libdrm_nouveauincludeHEADERS \
+	uninstall-libdrm_nouveaunvifincludeHEADERS \
+	uninstall-pkgconfigDATA
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

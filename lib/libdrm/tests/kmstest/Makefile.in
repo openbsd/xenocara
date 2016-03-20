@@ -70,8 +70,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_kmstest_OBJECTS = main.$(OBJEXT)
 kmstest_OBJECTS = $(am_kmstest_OBJECTS)
-kmstest_DEPENDENCIES = $(top_builddir)/libdrm.la \
-	$(top_builddir)/libkms/libkms.la
+kmstest_DEPENDENCIES = $(top_builddir)/tests/util/libutil.la \
+	$(top_builddir)/libkms/libkms.la $(top_builddir)/libdrm.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -274,14 +274,16 @@ AM_CFLAGS = \
 	$(WARN_CFLAGS)\
 	-I$(top_srcdir)/include/drm \
 	-I$(top_srcdir)/libkms/ \
+	-I$(top_srcdir)/tests/ \
 	-I$(top_srcdir)
 
 kmstest_SOURCES = \
 	main.c
 
 kmstest_LDADD = \
-	$(top_builddir)/libdrm.la \
-	$(top_builddir)/libkms/libkms.la
+	$(top_builddir)/tests/util/libutil.la \
+	$(top_builddir)/libkms/libkms.la \
+	$(top_builddir)/libdrm.la
 
 all: all-am
 

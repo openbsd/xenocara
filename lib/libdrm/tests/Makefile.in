@@ -54,7 +54,8 @@ host_triplet = @host@
 @HAVE_AMDGPU_TRUE@@HAVE_CUNIT_TRUE@am__append_3 = amdgpu
 @HAVE_EXYNOS_TRUE@am__append_4 = exynos
 @HAVE_TEGRA_TRUE@am__append_5 = tegra
-check_PROGRAMS = dristat$(EXEEXT) drmstat$(EXEEXT) $(am__EXEEXT_2)
+check_PROGRAMS = dristat$(EXEEXT) drmdevice$(EXEEXT) drmstat$(EXEEXT) \
+	$(am__EXEEXT_2)
 @HAVE_NOUVEAU_TRUE@am__append_6 = nouveau
 TESTS = drmsl$(EXEEXT) hash$(EXEEXT) random$(EXEEXT) $(am__EXEEXT_1)
 @HAVE_LIBUDEV_TRUE@am__append_7 = \
@@ -102,12 +103,17 @@ am__EXEEXT_2 = drmsl$(EXEEXT) hash$(EXEEXT) random$(EXEEXT) \
 dristat_SOURCES = dristat.c
 dristat_OBJECTS = dristat.$(OBJEXT)
 dristat_DEPENDENCIES =
-drmsl_SOURCES = drmsl.c
-drmsl_OBJECTS = drmsl.$(OBJEXT)
-drmsl_LDADD = $(LDADD)
+drmdevice_SOURCES = drmdevice.c
+drmdevice_OBJECTS = drmdevice.$(OBJEXT)
+drmdevice_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 @HAVE_LIBUDEV_TRUE@am__DEPENDENCIES_2 = libdrmtest.la \
 @HAVE_LIBUDEV_TRUE@	$(am__DEPENDENCIES_1)
+drmdevice_DEPENDENCIES = $(top_builddir)/libdrm.la \
+	$(am__DEPENDENCIES_2)
+drmsl_SOURCES = drmsl.c
+drmsl_OBJECTS = drmsl.$(OBJEXT)
+drmsl_LDADD = $(LDADD)
 drmsl_DEPENDENCIES = $(top_builddir)/libdrm.la $(am__DEPENDENCIES_2)
 drmstat_SOURCES = drmstat.c
 drmstat_OBJECTS = drmstat.$(OBJEXT)
@@ -190,11 +196,11 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libdrmtest_la_SOURCES) dristat.c drmsl.c drmstat.c \
-	getclient.c getstats.c getversion.c hash.c name_from_fd.c \
-	openclose.c random.c setversion.c updatedraw.c
-DIST_SOURCES = $(am__libdrmtest_la_SOURCES_DIST) dristat.c drmsl.c \
+SOURCES = $(libdrmtest_la_SOURCES) dristat.c drmdevice.c drmsl.c \
 	drmstat.c getclient.c getstats.c getversion.c hash.c \
+	name_from_fd.c openclose.c random.c setversion.c updatedraw.c
+DIST_SOURCES = $(am__libdrmtest_la_SOURCES_DIST) dristat.c drmdevice.c \
+	drmsl.c drmstat.c getclient.c getstats.c getversion.c hash.c \
 	name_from_fd.c openclose.c random.c setversion.c updatedraw.c
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
@@ -219,8 +225,8 @@ am__tty_colors_dummy = \
   mgn= red= grn= lgn= blu= brg= std=; \
   am__color_tests=no
 am__tty_colors = $(am__tty_colors_dummy)
-DIST_SUBDIRS = modeprint proptest modetest vbltest kmstest radeon \
-	amdgpu exynos tegra nouveau
+DIST_SUBDIRS = util kms modeprint proptest modetest vbltest kmstest \
+	radeon amdgpu exynos tegra nouveau
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
   dir0=`pwd`; \
@@ -397,7 +403,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = modeprint proptest modetest vbltest $(am__append_1) \
+SUBDIRS = util kms modeprint proptest modetest vbltest $(am__append_1) \
 	$(am__append_2) $(am__append_3) $(am__append_4) \
 	$(am__append_5) $(am__append_6)
 AM_CFLAGS = \
@@ -475,6 +481,9 @@ clean-checkPROGRAMS:
 dristat$(EXEEXT): $(dristat_OBJECTS) $(dristat_DEPENDENCIES) $(EXTRA_dristat_DEPENDENCIES) 
 	@rm -f dristat$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(dristat_OBJECTS) $(dristat_LDADD) $(LIBS)
+drmdevice$(EXEEXT): $(drmdevice_OBJECTS) $(drmdevice_DEPENDENCIES) $(EXTRA_drmdevice_DEPENDENCIES) 
+	@rm -f drmdevice$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(drmdevice_OBJECTS) $(drmdevice_LDADD) $(LIBS)
 drmsl$(EXEEXT): $(drmsl_OBJECTS) $(drmsl_DEPENDENCIES) $(EXTRA_drmsl_DEPENDENCIES) 
 	@rm -f drmsl$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(drmsl_OBJECTS) $(drmsl_LDADD) $(LIBS)
@@ -516,6 +525,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dristat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drmdevice.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drmsl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drmstat.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drmtest.Plo@am__quote@

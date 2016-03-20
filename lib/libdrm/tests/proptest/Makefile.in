@@ -50,11 +50,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/Makefile.sources $(top_srcdir)/build-aux/depcomp
 @HAVE_INSTALL_TESTS_TRUE@bin_PROGRAMS = proptest$(EXEEXT)
 @HAVE_INSTALL_TESTS_FALSE@noinst_PROGRAMS = proptest$(EXEEXT)
 subdir = tests/proptest
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/build-aux/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
@@ -68,9 +68,11 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
-am_proptest_OBJECTS = proptest.$(OBJEXT)
+am__objects_1 = proptest.$(OBJEXT)
+am_proptest_OBJECTS = $(am__objects_1)
 proptest_OBJECTS = $(am_proptest_OBJECTS)
-proptest_DEPENDENCIES = $(top_builddir)/libdrm.la
+proptest_DEPENDENCIES = $(top_builddir)/libdrm.la \
+	$(top_builddir)/tests/util/libutil.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -269,22 +271,25 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+PROPTEST_FILES := \
+	proptest.c
+
 AM_CFLAGS = \
 	$(WARN_CFLAGS)\
 	-I$(top_srcdir)/include/drm \
+	-I$(top_srcdir)/tests \
 	-I$(top_srcdir)
 
-proptest_SOURCES = \
-	proptest.c
-
+proptest_SOURCES = $(PROPTEST_FILES)
 proptest_LDADD = \
-	$(top_builddir)/libdrm.la
+	$(top_builddir)/libdrm.la \
+	$(top_builddir)/tests/util/libutil.la
 
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/Makefile.sources $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -305,6 +310,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
 	esac;
+$(srcdir)/Makefile.sources:
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh

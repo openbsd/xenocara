@@ -261,6 +261,15 @@ drm_intel_bo_get_tiling(drm_intel_bo *bo, uint32_t * tiling_mode,
 }
 
 int
+drm_intel_bo_set_softpin_offset(drm_intel_bo *bo, uint64_t offset)
+{
+	if (bo->bufmgr->bo_set_softpin_offset)
+		return bo->bufmgr->bo_set_softpin_offset(bo, offset);
+
+	return -ENODEV;
+}
+
+int
 drm_intel_bo_disable_reuse(drm_intel_bo *bo)
 {
 	if (bo->bufmgr->bo_disable_reuse)
@@ -290,6 +299,17 @@ drm_intel_bo_madvise(drm_intel_bo *bo, int madv)
 	if (bo->bufmgr->bo_madvise)
 		return bo->bufmgr->bo_madvise(bo, madv);
 	return -1;
+}
+
+int
+drm_intel_bo_use_48b_address_range(drm_intel_bo *bo, uint32_t enable)
+{
+	if (bo->bufmgr->bo_use_48b_address_range) {
+		bo->bufmgr->bo_use_48b_address_range(bo, enable);
+		return 0;
+	}
+
+	return -ENODEV;
 }
 
 int

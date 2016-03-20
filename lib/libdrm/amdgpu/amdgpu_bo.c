@@ -537,18 +537,10 @@ int amdgpu_create_bo_from_user_mem(amdgpu_device_handle dev,
 	int r;
 	struct amdgpu_bo *bo;
 	struct drm_amdgpu_gem_userptr args;
-	uintptr_t cpu0;
-	uint32_t ps, off;
 
-	memset(&args, 0, sizeof(args));
-	ps = getpagesize();
-
-	cpu0 = ROUND_DOWN((uintptr_t)cpu, ps);
-	off = (uintptr_t)cpu - cpu0;
-	size = ROUND_UP(size + off, ps);
-
-	args.addr = cpu0;
-	args.flags = AMDGPU_GEM_USERPTR_ANONONLY | AMDGPU_GEM_USERPTR_REGISTER;
+	args.addr = (uintptr_t)cpu;
+	args.flags = AMDGPU_GEM_USERPTR_ANONONLY | AMDGPU_GEM_USERPTR_REGISTER |
+		AMDGPU_GEM_USERPTR_VALIDATE;
 	args.size = size;
 	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_GEM_USERPTR,
 				&args, sizeof(args));
@@ -591,6 +583,12 @@ int amdgpu_bo_list_create(amdgpu_device_handle dev,
 	if (!list)
 		return -ENOMEM;
 
+	*result = malloc(sizeof(struct amdgpu_bo_list));
+	if (!*result) {
+		free(list);
+		return -ENOMEM;
+	}
+
 	memset(&args, 0, sizeof(args));
 	args.in.operation = AMDGPU_BO_LIST_OP_CREATE;
 	args.in.bo_number = number_of_resources;
@@ -608,10 +606,11 @@ int amdgpu_bo_list_create(amdgpu_device_handle dev,
 	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_BO_LIST,
 				&args, sizeof(args));
 	free(list);
-	if (r)
+	if (r) {
+		free(*result);
 		return r;
+	}
 
-	*result = malloc(sizeof(struct amdgpu_bo_list));
 	(*result)->dev = dev;
 	(*result)->handle = args.out.list_handle;
 	return 0;

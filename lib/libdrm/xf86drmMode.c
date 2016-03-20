@@ -475,12 +475,13 @@ _drmModeGetConnector(int fd, uint32_t connector_id, int probe)
 {
 	struct drm_mode_get_connector conn, counts;
 	drmModeConnectorPtr r = NULL;
+	struct drm_mode_modeinfo stack_mode;
 
 	memclear(conn);
 	conn.connector_id = connector_id;
 	if (!probe) {
 		conn.count_modes = 1;
-		conn.modes_ptr = VOID2U64(drmMalloc(sizeof(struct drm_mode_modeinfo)));
+		conn.modes_ptr = VOID2U64(&stack_mode);
 	}
 
 	if (drmIoctl(fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn))
@@ -504,7 +505,7 @@ retry:
 			goto err_allocs;
 	} else {
 		conn.count_modes = 1;
-		conn.modes_ptr = VOID2U64(drmMalloc(sizeof(struct drm_mode_modeinfo)));
+		conn.modes_ptr = VOID2U64(&stack_mode);
 	}
 
 	if (conn.count_encoders) {
@@ -525,7 +526,8 @@ retry:
 	    counts.count_encoders < conn.count_encoders) {
 		drmFree(U642VOID(conn.props_ptr));
 		drmFree(U642VOID(conn.prop_values_ptr));
-		drmFree(U642VOID(conn.modes_ptr));
+		if (U642VOID(conn.modes_ptr) != &stack_mode)
+			drmFree(U642VOID(conn.modes_ptr));
 		drmFree(U642VOID(conn.encoders_ptr));
 
 		goto retry;
@@ -567,7 +569,8 @@ retry:
 err_allocs:
 	drmFree(U642VOID(conn.prop_values_ptr));
 	drmFree(U642VOID(conn.props_ptr));
-	drmFree(U642VOID(conn.modes_ptr));
+	if (U642VOID(conn.modes_ptr) != &stack_mode)
+		drmFree(U642VOID(conn.modes_ptr));
 	drmFree(U642VOID(conn.encoders_ptr));
 
 	return r;
@@ -1189,6 +1192,9 @@ drmModeAtomicReqPtr drmModeAtomicDuplicate(drmModeAtomicReqPtr old)
 {
 	drmModeAtomicReqPtr new;
 
+	if (!old)
+		return NULL;
+
 	new = drmMalloc(sizeof *new);
 	if (!new)
 		return NULL;
@@ -1213,6 +1219,9 @@ drmModeAtomicReqPtr drmModeAtomicDuplicate(drmModeAtomicReqPtr old)
 
 int drmModeAtomicMerge(drmModeAtomicReqPtr base, drmModeAtomicReqPtr augment)
 {
+	if (!base)
+		return -EINVAL;
+
 	if (!augment || augment->cursor == 0)
 		return 0;
 
@@ -1239,12 +1248,15 @@ int drmModeAtomicMerge(drmModeAtomicReqPtr base, drmModeAtomicReqPtr augment)
 
 int drmModeAtomicGetCursor(drmModeAtomicReqPtr req)
 {
+	if (!req)
+		return -EINVAL;
 	return req->cursor;
 }
 
 void drmModeAtomicSetCursor(drmModeAtomicReqPtr req, int cursor)
 {
-	req->cursor = cursor;
+	if (req)
+		req->cursor = cursor;
 }
 
 int drmModeAtomicAddProperty(drmModeAtomicReqPtr req,
@@ -1252,6 +1264,9 @@ int drmModeAtomicAddProperty(drmModeAtomicReqPtr req,
 			     uint32_t property_id,
 			     uint64_t value)
 {
+	if (!req)
+		return -EINVAL;
+
 	if (req->cursor >= req->size_items) {
 		drmModeAtomicReqItemPtr new;
 
@@ -1308,6 +1323,9 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req, uint32_t flags,
 	uint32_t i;
 	int obj_idx = -1;
 	int ret = -1;
+
+	if (!req)
+		return -EINVAL;
 
 	if (req->cursor == 0)
 		return 0;
