@@ -49,7 +49,6 @@
 ./usr/X11R6/include/epoxy/glx.h
 ./usr/X11R6/include/epoxy/glx_generated.h
 ./usr/X11R6/include/gbm.h
-./usr/X11R6/include/libdrm
 ./usr/X11R6/include/libdrm/amdgpu.h
 ./usr/X11R6/include/libdrm/amdgpu_drm.h
 ./usr/X11R6/include/libdrm/drm.h
@@ -62,9 +61,7 @@
 ./usr/X11R6/include/libdrm/intel_debug.h
 ./usr/X11R6/include/libdrm/mach64_drm.h
 ./usr/X11R6/include/libdrm/mga_drm.h
-./usr/X11R6/include/libdrm/nouveau
 ./usr/X11R6/include/libdrm/nouveau/nouveau.h
-./usr/X11R6/include/libdrm/nouveau/nvif
 ./usr/X11R6/include/libdrm/nouveau/nvif/cl0080.h
 ./usr/X11R6/include/libdrm/nouveau/nvif/cl9097.h
 ./usr/X11R6/include/libdrm/nouveau/nvif/class.h

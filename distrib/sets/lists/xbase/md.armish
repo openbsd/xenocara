@@ -47,7 +47,6 @@
 ./usr/X11R6/include/epoxy/glx.h
 ./usr/X11R6/include/epoxy/glx_generated.h
 ./usr/X11R6/include/gbm.h
-./usr/X11R6/include/libdrm
 ./usr/X11R6/include/libdrm/amdgpu_drm.h
 ./usr/X11R6/include/libdrm/drm.h
 ./usr/X11R6/include/libdrm/drm_fourcc.h
@@ -63,6 +62,7 @@
 ./usr/X11R6/include/libdrm/savage_drm.h
 ./usr/X11R6/include/libdrm/sis_drm.h
 ./usr/X11R6/include/libdrm/tegra_drm.h
+./usr/X11R6/include/libdrm/vc4_drm.h
 ./usr/X11R6/include/libdrm/via_drm.h
 ./usr/X11R6/include/libdrm/vmwgfx_drm.h
 ./usr/X11R6/include/pixman-1/pixman-version.h
