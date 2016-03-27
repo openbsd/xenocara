@@ -38,8 +38,7 @@
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__)
 #include <machine/sysarch.h>
 #endif
-
-#include "shared/xf86Axp.h"
+#include <machine/cpu.h>
 
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
@@ -94,6 +93,25 @@ memory_base(void)
     }
 }
 #endif                          /* __NetBSD__ */
+
+static int
+has_bwx(void)
+{
+    static int bwx = 0;
+    size_t len = sizeof(bwx);
+    int error;
+
+    int mib[3];
+
+    mib[0] = CTL_MACHDEP;
+    mib[1] = CPU_CHIPSET;
+    mib[2] = CPU_CHIPSET_BWX;
+
+    if ((error = sysctl(mib, 3, &bwx, &len, NULL, 0)) < 0)
+        return FALSE;
+    else
+        return bwx;
+}
 
 #define BUS_BASE	dense_base()
 #define BUS_BASE_BWX	memory_base()
@@ -191,72 +209,16 @@ void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
     checkDevMem(TRUE);
-    pVidMem->linearSupported = useDevMem;
 
     if (has_bwx()) {
         xf86Msg(X_PROBED, "Machine type has 8/16 bit access\n");
-        pVidMem->mapMem = mapVidMem;
-        pVidMem->unmapMem = unmapVidMem;
     }
     else {
         xf86Msg(X_PROBED, "Machine needs sparse mapping\n");
-        pVidMem->mapMem = mapVidMemSparse;
-        pVidMem->unmapMem = unmapVidMemSparse;
-#ifndef __NetBSD__
-        if (axpSystem == -1)
-            axpSystem = bsdGetAXP();
-        hae_thresh = xf86AXPParams[axpSystem].hae_thresh;
-        hae_mask = xf86AXPParams[axpSystem].hae_mask;
-#endif                          /* __NetBSD__ */
     }
     pVidMem->initialised = TRUE;
 }
 
-static void *
-mapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
-{
-    void *base;
-
-    checkDevMem(FALSE);
-    Base = Base & ((1L << 32) - 1);
-
-    if (useDevMem) {
-        if (devMemFd < 0) {
-            FatalError("xf86MapVidMem: failed to open %s (%s)\n",
-                       DEV_MEM, strerror(errno));
-        }
-        base = mmap((caddr_t) 0, Size,
-                    (flags & VIDMEM_READONLY) ?
-                    PROT_READ : (PROT_READ | PROT_WRITE),
-                    MAP_FLAGS, devMemFd, (off_t) Base + BUS_BASE_BWX);
-        if (base == MAP_FAILED) {
-            FatalError("%s: could not mmap %s [s=%lx,a=%lx] (%s)\n",
-                       "xf86MapVidMem", DEV_MEM, Size, Base, strerror(errno));
-        }
-        return base;
-    }
-
-    /* else, mmap /dev/vga */
-    if ((unsigned long) Base < 0xA0000 || (unsigned long) Base >= 0xC0000) {
-        FatalError("%s: Address 0x%lx outside allowable range\n",
-                   "xf86MapVidMem", Base);
-    }
-    base = mmap(0, Size,
-                (flags & VIDMEM_READONLY) ?
-                PROT_READ : (PROT_READ | PROT_WRITE),
-                MAP_FLAGS, xf86Info.consoleFd, (unsigned long) Base + BUS_BASE);
-    if (base == MAP_FAILED) {
-        FatalError("xf86MapVidMem: Could not mmap /dev/vga (%s)\n",
-                   strerror(errno));
-    }
-    return base;
-}
-
-static void
-unmapVidMem(int ScreenNum, void *Base, unsigned long Size)
-{
-    munmap((caddr_t) Base, Size);
-}
 
 /*
  * Read BIOS via mmap()ing DEV_MEM
