@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.52 2016/03/28 11:58:22 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.53 2016/03/28 11:59:06 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -282,5 +282,7 @@ _xenocara_obj! _SUBDIRUSE
 .if !target(obj)
 obj:	_xenocara_obj
 .endif
+
+.PHONY: _xenocara_obj
 
 .include <bsd.subdir.mk>
