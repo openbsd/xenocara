@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.51 2014/08/24 15:53:08 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.52 2016/03/28 11:58:22 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -205,11 +205,17 @@ realinstall: beforeinstall
 .if exists(Makefile.bsd-wrapper)
 _wrapper = -f Makefile.bsd-wrapper
 .endif
+.if defined(DESTDIR)
+build:
+	@echo "cannot run make build with DESTDIR set"
+	@exit 2
+.else
 build:
 	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} cleandir
 	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} depend
 	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} all
 	cd ${.CURDIR} && exec ${SUDO} ${MAKE} ${MAKE_FLAGS} ${_wrapper} install
+.endif
 .endif
 
 .if !target(clean) && ${MAKEFILE:T} != "Makefile"
