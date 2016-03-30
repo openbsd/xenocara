@@ -46,7 +46,6 @@
 ./usr/X11R6/include/epoxy/glx.h
 ./usr/X11R6/include/epoxy/glx_generated.h
 ./usr/X11R6/include/gbm.h
-./usr/X11R6/include/libdrm
 ./usr/X11R6/include/libdrm/amdgpu_drm.h
 ./usr/X11R6/include/libdrm/drm.h
 ./usr/X11R6/include/libdrm/drm_fourcc.h
@@ -55,6 +54,7 @@
 ./usr/X11R6/include/libdrm/i915_drm.h
 ./usr/X11R6/include/libdrm/mach64_drm.h
 ./usr/X11R6/include/libdrm/mga_drm.h
+./usr/X11R6/include/libdrm/nouveau_drm.h
 ./usr/X11R6/include/libdrm/qxl_drm.h
 ./usr/X11R6/include/libdrm/r128_drm.h
 ./usr/X11R6/include/libdrm/radeon_drm.h
