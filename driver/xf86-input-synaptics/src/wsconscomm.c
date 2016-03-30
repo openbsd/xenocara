@@ -215,45 +215,29 @@ WSConsReadHwState(InputInfoPtr pInfo,
             hw->y = priv->maxy - event->value + priv->miny;
             hw->cumulative_dy = hw->y;
             break;
-        case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
+        case WSCONS_EVENT_TOUCH_PRESSURE:
             hw->z = event->value;
             break;
-        case WSCONS_EVENT_MOUSE_ABSOLUTE_W:
-            if (priv->model == MODEL_ELANTECH) {
-                /* Elantech touchpads report number of fingers directly. */
+        case WSCONS_EVENT_TOUCH_CONTACTS:
+            hw->numFingers = event->value;
+            if (hw->numFingers == 0)
+                hw->fingerWidth = 0;
+            else if (hw->fingerWidth == 0)
                 hw->fingerWidth = 5;
-                hw->numFingers = event->value;
-                break;
-            }
-            /* XXX magic number mapping which is mirrored in pms driver */
-            switch (event->value) {
-            case 0:
-                hw->fingerWidth = 5;
-                hw->numFingers = 2;
-                break;
-            case 1:
-                hw->fingerWidth = 5;
-                hw->numFingers = 3;
-                break;
-            case 4 ... 5:
-                hw->fingerWidth = event->value;
-                hw->numFingers = 1;
-                break;
-            }
+            break;
+        case WSCONS_EVENT_TOUCH_WIDTH:
+            hw->fingerWidth = event->value;
+            break;
+        case WSCONS_EVENT_TOUCH_RESET:
+            /*
+             * The contact count or the active MT-slot has changed.
+             * Suppress pointer motion and two-finger scrolling.
+             */
+            priv->count_packet_finger = 0;
+            priv->vert_scroll_twofinger_on = FALSE;
+            priv->horiz_scroll_twofinger_on = FALSE;
             break;
         case WSCONS_EVENT_SYNC:
-            if (hw->z == 0) {
-                hw->fingerWidth = 0;
-                hw->numFingers = 0;
-            } else if (hw->numFingers == 0) {
-                /*
-                 * Because W may be 0 already, a two-finger touch on a
-                 * Synaptics touchpad doesn't necessarily produce an update
-                 * event for W.
-                 */
-                hw->fingerWidth = 5;
-                hw->numFingers = 2;
-            }
             hw->millis = 1000 * event->time.tv_sec +
                 event->time.tv_nsec / 1000000;
             SynapticsCopyHwState(hwRet, hw);
