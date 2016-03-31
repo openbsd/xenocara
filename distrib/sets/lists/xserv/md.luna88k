@@ -3,8 +3,6 @@
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
 ./usr/X11R6/bin/Xvfb
-./usr/X11R6/lib/modules/dri/kms_swrast_dri.so
-./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/drivers/modesetting_drv.la
 ./usr/X11R6/lib/modules/drivers/modesetting_drv.so
 ./usr/X11R6/lib/modules/drivers/wsfb_drv.la
