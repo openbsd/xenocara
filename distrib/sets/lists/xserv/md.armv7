@@ -1,8 +1,5 @@
 ./usr/X11R6/bin/X
-./usr/X11R6/bin/Xephyr
-./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xorg
-./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
 ./usr/X11R6/lib/modules/dri/kms_swrast_dri.so
@@ -47,11 +44,7 @@
 ./usr/X11R6/lib/modules/libwfb.so
 ./usr/X11R6/lib/pkgconfig/xorg-mouse.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
-./usr/X11R6/man/man1/Xephyr.1
-./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xorg.1
-./usr/X11R6/man/man1/Xserver.1
-./usr/X11R6/man/man1/Xvfb.1
 ./usr/X11R6/man/man1/cvt.1
 ./usr/X11R6/man/man1/gtf.1
 ./usr/X11R6/man/man4/exa.4
@@ -68,4 +61,3 @@
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man5/xorg.conf.d.5
 ./usr/X11R6/share/aclocal/xorg-server.m4
-./var/db/xkb/README.compiled
