@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.69 2016/03/11 13:09:42 okan Exp $
+# $OpenBSD: Makefile,v 1.70 2016/04/01 03:15:15 jsg Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -10,9 +10,8 @@ RM?=rm
 
 XSERVER= xserver
 
-.if defined(XENOCARA_BUILD_PIXMAN)
-.if ${XENOCARA_BUILD_PIXMAN:L} == "yes" && \
-    ${XENOCARA_BUILD_GL:L} == "yes"
+.if defined(XENOCARA_BUILD_GL)
+.if ${XENOCARA_BUILD_GL:L} == "yes"
 XSERVER+= kdrive
 .endif
 .endif

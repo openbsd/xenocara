@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.29 2015/11/22 07:57:10 jsg Exp $
+# $OpenBSD: Makefile,v 1.30 2016/04/01 03:15:15 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -44,11 +44,7 @@ SUBDIR= libpthread-stubs \
 	libXi libXinerama libxkbfile libxkbui  \
 	libXrandr libXRes libXScrnSaver \
 	libXtst libXv libXvMC libXxf86dga libXxf86misc libXxf86vm \
-	libpciaccess
-
-.if ${XENOCARA_BUILD_PIXMAN:L} == "yes"
-SUBDIR+= pixman
-.endif
+	libpciaccess pixman
 
 .if ${XENOCARA_BUILD_GL:L} == "yes"
 SUBDIR+= libdrm
