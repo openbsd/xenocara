@@ -44,8 +44,10 @@
 void
 xf86VTRequest(int sig)
 {
-#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
-    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT) {
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+    || defined(WSCONS_SUPPORT)
+    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT ||
+        xf86Info.consType == WSCONS) {
         xf86Info.vtRequestsPending = TRUE;
     }
 #endif
@@ -53,10 +55,12 @@ xf86VTRequest(int sig)
 }
 
 Bool
-xf86VTSwitchPending()
+xf86VTSwitchPending(void)
 {
-#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
-    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT) {
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+    || defined(WSCONS_SUPPORT)
+    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT ||
+        xf86Info.consType == WSCONS) {
         return xf86Info.vtRequestsPending ? TRUE : FALSE;
     }
 #endif
@@ -64,10 +68,12 @@ xf86VTSwitchPending()
 }
 
 Bool
-xf86VTSwitchAway()
+xf86VTSwitchAway(void)
 {
-#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
-    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT) {
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+    || defined(WSCONS_SUPPORT)
+    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT ||
+        xf86Info.consType == WSCONS) {
         xf86Info.vtRequestsPending = FALSE;
         if (ioctl(xf86Info.consoleFd, VT_RELDISP, 1) < 0)
             return FALSE;
@@ -79,10 +85,12 @@ xf86VTSwitchAway()
 }
 
 Bool
-xf86VTSwitchTo()
+xf86VTSwitchTo(void)
 {
-#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
-    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT) {
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+    || defined(WSCONS_SUPPORT)
+    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT ||
+        xf86Info.consType == WSCONS) {
         xf86Info.vtRequestsPending = FALSE;
         if (ioctl(xf86Info.consoleFd, VT_RELDISP, VT_ACKACQ) < 0)
             return FALSE;
@@ -96,8 +104,13 @@ xf86VTSwitchTo()
 Bool
 xf86VTActivate(int vtno)
 {
-    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, vtno) < 0) {
-        return FALSE;
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+    || defined(WSCONS_SUPPORT)
+    if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT
+        || xf86Info.consType == WSCONS) {
+        if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, vtno) < 0)
+            return FALSE;
     }
+#endif
     return TRUE;
 }

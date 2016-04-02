@@ -51,7 +51,8 @@ static Bool KeepTty = FALSE;
 #ifdef PCCONS_SUPPORT
 static int devConsoleFd = -1;
 #endif
-#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+    || defined(WSCONS_SUPPORT)
 static int VTnum = -1;
 static int initialVT = -1;
 #endif
@@ -72,12 +73,12 @@ static int initialVT = -1;
 
 #ifdef PCVT_SUPPORT
 /* Hellmuth Michaelis' pcvt driver */
-#ifndef __OpenBSD__
 #define PCVT_CONSOLE_DEV "/dev/ttyv0"
-#else
-#define PCVT_CONSOLE_DEV "/dev/ttyC0"
-#endif
 #define PCVT_CONSOLE_MODE O_RDWR|O_NDELAY
+#endif
+
+#ifdef WSCONS_SUPPORT
+static Bool hasVT = FALSE;      /* has VT support ? */
 #endif
 
 #if defined(WSCONS_SUPPORT) && defined(__NetBSD__)
@@ -140,6 +141,9 @@ static int xf86OpenWScons(void);
  * pcvt or syscons might succesfully probe as pccons.)
  */
 static xf86ConsOpen_t xf86ConsTab[] = {
+#ifdef WSCONS_SUPPORT
+    xf86OpenWScons,
+#endif
 #ifdef PCVT_SUPPORT
     xf86OpenPcvt,
 #endif
@@ -148,9 +152,6 @@ static xf86ConsOpen_t xf86ConsTab[] = {
 #endif
 #ifdef PCCONS_SUPPORT
     xf86OpenPccons,
-#endif
-#ifdef WSCONS_SUPPORT
-    xf86OpenWScons,
 #endif
     (xf86ConsOpen_t) NULL
 };
@@ -161,13 +162,17 @@ xf86OpenConsole(void)
     int i, fd = -1;
     xf86ConsOpen_t *driver;
 
-#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+    || defined(WSCONS_SUPPORT)
     int result;
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
     struct utsname uts;
 #endif
     vtmode_t vtmode;
+#endif
+#ifdef WSCONS_SUPPORT
+    int mode;
 #endif
 
     if (xf86Info.consoleFd != -1) {
@@ -306,13 +311,41 @@ acquire_vt:
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
 #ifdef WSCONS_SUPPORT
           case WSCONS:
-	    /* Nothing to do */
-   	    break;
+
+            if (hasVT) {
+                /* now get the VT */
+                SYSCALL(result =
+                        ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno));
+                if (result != 0) {
+                    xf86Msg(X_WARNING, "xf86OpenConsole: VT_ACTIVATE %d failed\n", xf86Info.vtno);
+                }
+                SYSCALL(result =
+                        ioctl(xf86Info.consoleFd, VT_WAITACTIVE, xf86Info.vtno));
+                if (result != 0) {
+                    xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed\n");
+                }
+
+                signal(SIGUSR2, xf86VTRequest);
+
+                vtmode.mode = VT_PROCESS;
+                vtmode.relsig = SIGUSR2;
+                vtmode.acqsig = SIGUSR2;
+                vtmode.frsig = SIGUSR2;
+                if (ioctl(xf86Info.consoleFd, VT_SETMODE, &vtmode) < 0) {
+                    FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed");
+                }
+            }
+            mode = WSDISPLAYIO_MODE_MAPPED;
+            if (ioctl(fd, WSDISPLAYIO_SMODE, &mode) < 0) {
+                FatalError("%s: WSDISPLAYIO_MODE_MAPPED failed (%s)\n%s",
+                           "xf86OpenConsole", strerror(errno),
+                           CHECK_DRIVER_MSG);
+            }
+            break;
 #endif
         }
-    }
-    else {
-	/* serverGeneration != 1 */
+    } else {
+        /* serverGeneration != 1 */
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
         if (!xf86Info.ShareVTs &&
             (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT)) {
@@ -566,50 +599,78 @@ xf86OpenPcvt(void)
 static int
 xf86OpenWScons(void)
 {
-    int fd = -1;
-    int mode = WSDISPLAYIO_MODE_MAPPED;
-    int i;
-    char vtname[16];
+    char vtname[16], vtprefix[16];
+    char *p;
     int mib[2];
+    int fd = -1;
+    int i;
     size_t len;
     dev_t dev;
+    vtmode_t vtmode;
 
-#ifdef KERN_CONSDEV
+    if (xf86Info.ShareVTs)
+        FatalError("-sharevt is not supported with wscons\n");
+
     mib[0] = CTL_KERN;
     mib[1] = KERN_CONSDEV;
     len = sizeof(dev);
     if (sysctl(mib, 2, &dev, &len, NULL, 0) != -1) {
-	snprintf(vtname, sizeof(vtname), "/dev/%s", devname(dev, S_IFCHR));
-	if ((fd = open(vtname, 2)) != -1) {
+        snprintf(vtprefix, sizeof(vtprefix), "/dev/%s", devname(dev, S_IFCHR));
+        /* strip number, assuming 0 */
+        p = strchr(vtprefix, '0');
+        *p = '\0';
+    } else
+        snprintf(vtprefix, sizeof(vtprefix), "/dev/ttyC");
+
+    if (VTnum != -1) {
+        snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, VTnum - 1);
+        xf86Info.vtno = VTnum;
+    } else {
+        snprintf(vtname, sizeof(vtname), "%s0", vtprefix);
+    }
+    fd = open(vtname, O_RDWR);
+    if (fd == -1)
+        return fd;
+
+    /* Check if USL VTs are supported */
+    if (ioctl(fd, VT_GETACTIVE, &initialVT) < 0) {
+        if (errno == ENOTTY) {
+            /* double-check that this is a wsdisplay screeen */
 	    if (ioctl(fd, WSDISPLAYIO_GTYPE, &i) == -1) {
 	        close(fd);
-		fd = -1;
+		return -1;
 	    }
-	}
-    }
-#endif
-    if (fd == -1) {
-	for (i = 0; i < 8; i++) {
-#if defined(__NetBSD__)
-	    snprintf(vtname, sizeof(vtname), "/dev/ttyE%d", i);
-#elif defined(__OpenBSD__)
-	    snprintf(vtname,  sizeof(vtname), "/dev/ttyC%x", i);
-#endif
-	    if ((fd = open(vtname, 2)) != -1)
-		break;
+            /* NO VTs */
+            initialVT = 1;
+            hasVT = FALSE;
+        } else {
+            close(fd);
+            return -1;
+        }
+    } else {
+        hasVT = TRUE;
+        /* find a free VT */
+        if (xf86Info.vtno == -1) {
+            if (ioctl(fd, VT_OPENQRY, &xf86Info.vtno) < 0) {
+                /* All VTs are in use.  If initialVT was found, use it. */
+                if (initialVT != -1)
+                    xf86Info.vtno = initialVT;
+                else
+                    FatalError("xf86OpenWScons: Cannot find a free VT");
+            }
+            /* re-open the new VT */
+            close(fd);
+            snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix,
+                     xf86Info.vtno - 1);
+            if ((fd = open(vtname, O_RDWR)) < 0)
+                FatalError("xf86OpenWScons: cannot open %s (%s)",
+                           vtname, strerror(errno));
         }
     }
-    if (fd != -1) {
-        if (ioctl(fd, WSDISPLAYIO_SMODE, &mode) < 0) {
-            FatalError("%s: WSDISPLAYIO_MODE_MAPPED failed (%s)\n%s",
-                       "xf86OpenConsole", strerror(errno), CHECK_DRIVER_MSG);
-        }
-        xf86Info.consType = WSCONS;
-        xf86Msg(X_PROBED, "Using wscons driver\n");
-    }
+    xf86Info.consType = WSCONS;
+    xf86Msg(X_PROBED, "Using wscons driver on %s\n", vtname);
     return fd;
 }
-
 #endif                          /* WSCONS_SUPPORT */
 
 void
@@ -652,6 +713,9 @@ xf86CloseConsole(void)
         int mode = WSDISPLAYIO_MODE_EMUL;
 
         ioctl(xf86Info.consoleFd, WSDISPLAYIO_SMODE, &mode);
+        if (initialVT != -1 && hasVT)
+            ioctl(xf86Info.consoleFd, VT_ACTIVATE, initialVT);
+
         break;
     }
 #endif
@@ -679,7 +743,8 @@ xf86ProcessArgument(int argc, char *argv[], int i)
         KeepTty = TRUE;
         return 1;
     }
-#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+        || defined(WSCONS_SUPPORT)
     if ((argv[i][0] == 'v') && (argv[i][1] == 't')) {
         if (sscanf(argv[i], "vt%2d", &VTnum) == 0 || VTnum < 1 || VTnum > 12) {
             UseMsg();
@@ -688,14 +753,15 @@ xf86ProcessArgument(int argc, char *argv[], int i)
         }
         return 1;
     }
-#endif                          /* SYSCONS_SUPPORT || PCVT_SUPPORT */
+#endif	/* SYSCONS_SUPPORT || PCVT_SUPPORT ||WSCONS_SUPPRT */
     return 0;
 }
 
 void
 xf86UseMsg(void)
 {
-#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
+#if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT) \
+    || defined(WSCONS_SUPPORT)
     ErrorF("vtXX                   use the specified VT number (1-12)\n");
 #endif                          /* SYSCONS_SUPPORT || PCVT_SUPPORT */
     ErrorF("-keeptty               ");
