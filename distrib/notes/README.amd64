@@ -25,9 +25,6 @@ Conventions used in this document:
 
    See Xorg(1) and xorg.conf(5) for details.
 
-3. With X.Org XOrgVersion, you can use anti-aliased fonts in many applications.
-   visit http://www.openbsd.org/faq/truetype.html for more information.
-
 problem_blurb
 
-$OpenBSD: README.amd64,v 1.9 2016/01/18 17:53:58 matthieu Exp $
+$OpenBSD: README.amd64,v 1.10 2016/04/02 10:50:50 matthieu Exp $
